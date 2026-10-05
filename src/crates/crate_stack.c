@@ -98,7 +98,8 @@ u8 IsCrateKindBreakable(void *arg0, u32 idx)
  * line up with `struct actor`'s own `x`/`y`/`flags` fields
  * (include/actor.h), kept as raw offsets rather than that struct type
  * to stay consistent with every already-matched sibling in this file
- * family (crate_reset.c-game_loop29.c), which do the same. */
+ * family (crate_reset.c and the other issue #12/#13 files), which do
+ * the same. */
 
 extern void *GetCrateBelow(void *selfArg);
 extern void *GetCrateAbove(void *selfArg);

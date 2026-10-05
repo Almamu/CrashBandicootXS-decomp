@@ -4,7 +4,7 @@ The first pass over this gap
 ([issue-54-issue-56-gap-e0a4.md](issue-54-issue-56-gap-e0a4.md))
 matched 4 of its 25 functions and parked the other 21 as NAKED
 transcriptions, mostly without trying them as C. This pass tried every
-one of them and closed all 21. `src/graphics/actor_part128.c` now has
+one of them and closed all 21. `src/vehicle/jetpack_spawn.c` now has
 no NAKED functions left.
 
 **Compiler:** old_agbcc. `DrawJetpackPlayer` only matches under it, and every
@@ -31,7 +31,7 @@ was needed.
 |---|---|
 | `CreateJetpackActor` | A plain `switch` matched on the first try. It uses case 23's `if` plus a fallthrough into cases 20-22 (the ROM's shared tail) and returns each constructor's result. The first pass's worry that the jump table would be hard to reproduce was unfounded. |
 | `SpawnJetpackActor` | Straight C. The only fix needed was declaring `IsCrystalSaved` as returning `u8`. |
-| `SpawnJetpackBalloon`, `SpawnHovercraftFireball`, `SpawnAirshipFireball`, `SpawnJetpackCannonball`, `SpawnJetpackShot` | The `static inline AllocActor(size)` wrapper from `actor_part_2ac28.c`, which gets the ROM's size-before-flags order for `mem_alloc`. The "r8/sb pressure" noted in the first pass was not a real problem. |
+| `SpawnJetpackBalloon`, `SpawnHovercraftFireball`, `SpawnAirshipFireball`, `SpawnJetpackCannonball`, `SpawnJetpackShot` | The `static inline AllocActor(size)` wrapper from `actor_factory.c`, which gets the ROM's size-before-flags order for `mem_alloc`. The "r8/sb pressure" noted in the first pass was not a real problem. |
 | `CreateJetpackCheckpointText`, `CreateJetpackExplosion`, `InitJetpackPlayer` | The ROM loads the hit-point constant (1 / 100) into a callee-saved register *before* the `InitActorPart` call. An inline base constructor `InitHpActor(obj, rec, x, y, z, hp)` that takes the value as an argument reproduces this. |
 | `SpawnHovercraftSideGun` | The ROM stores the last argument into its stack slot with `add rN, sp, #4; strb`, which is a one-byte struct passed by value. `struct byte_arg { u8 v; } __attribute__((packed))` reproduces it. A promoted `u8` stores with `str`, and an unpacked struct is 4 bytes. |
 | `CreateJetpackPlayer` | Straight C. The chained assignment `g = &(p = ctor(...))->base` keeps the ROM's store order. |
@@ -53,5 +53,5 @@ Nothing. All 25 functions in the range are now real C.
 ## Verification
 
 `rm -rf build && make NON_MATCHING=1 report` gives no warnings from
-`actor_part128.c`. `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+`jetpack_spawn.c`. `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` prints `crashbandicootxs.gba: OK`.

@@ -53,7 +53,7 @@ doesn't depend on that kind of luck.)
 
 `asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s`,
 `asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/gfx/graphics.c`'s
-and `src/graphics/actor_anim.c`'s functions used to live - expect more such splits
+and `src/actor/actor_anim.c`'s functions used to live - expect more such splits
 as more functions get matched out of it over time. **One `.c` file per
 contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 (ROM `0x0803B058`) is nowhere near `QueueVramDmaTransfer`/
@@ -61,11 +61,11 @@ contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
 of the same animation-frame system - since one object file's `.text` can
 only be placed as a single contiguous block by `ldscript.txt`, a function
 whose real address isn't adjacent to an existing matched file's functions
-needs its own new `.c` file (here, `src/graphics/actor_anim.c`), not just an
+needs its own new `.c` file (here, `src/actor/actor_anim.c`), not just an
 addition to the existing one - adding it to the wrong file would silently
 move it to the wrong ROM address.
 
-Third matched function: `GetAnimFrameBaseOffset` in `src/graphics/actor_anim.c` -
+Third matched function: `GetAnimFrameBaseOffset` in `src/actor/actor_anim.c` -
 trivial (a single field read + arithmetic shift), included here mainly to
 confirm the "new `.c` file, non-adjacent region" workflow above works.
 
@@ -1529,7 +1529,7 @@ scratch-test comparisons up to the very last iteration.
 ### Cleanup pass over everything matched so far
 
 After the run of matches above, a pass over `src/gfx/graphics.c`,
-`src/menus/power_dialog_draw.c` and `src/graphics/actor_anim.c` to tighten up readability
+`src/menus/power_dialog_draw.c` and `src/actor/actor_anim.c` to tighten up readability
 without touching generated code (`make compare` re-checked after every
 edit below):
 
@@ -4660,7 +4660,7 @@ respectively), and a handful of small `part`/table accessors:
   `+0x50`, negating X and Z when `part+0x28` bit 4 (`(s32)(flags <<
   27) < 0` - the same 32-bit-shift bit-test idiom already used for
   this exact field in `sprite.c`, confirming
-  `part+0x28` is the actor_part's own flags byte and not a new field)
+  `part+0x28` is the actor part's own flags byte and not a new field)
   is set. `StartCtrlTargetMotionX` additionally duplicates the (possibly negated)
   X component into `part+0x60` - the scaled-copy counterpart of
   `StartCtrlTargetMotionY`'s plain-copy `+0x64` duplication. Both compiled
@@ -5543,8 +5543,8 @@ anticipation; the actual `CpuSet` definition was still raw here.
   whatever's already in this register" trampoline table already
   referenced by name from `src/system/irq.c`'s `VBlankHandler`
   (`_call_via_r0()`, relying on `r0` still holding a function pointer
-  from the preceding `if (*p != 0)` comparison) and several `actor_part*`
-  files. `_call_via_r7` alone covers the `r7`-`sp` entries as one
+  from the preceding `if (*p != 0)` comparison) and several actor and
+  object files. `_call_via_r7` alone covers the `r7`-`sp` entries as one
   function/one label, since nothing in the ROM branches directly into
   those individual offsets.
 - **`_call_via_lr`** - bonus match just past issue #69's own listed range
@@ -5978,7 +5978,7 @@ save_menu`/`struct settings_row_stats` types used across all
 three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
 `overlay_ui` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
-## `actor_part19*.c`: the action-object family's `0x0802BED8`-`0x0802C99C` chunk (issue #52)
+## The polar files (`src/vehicle/polar_*.c`): the action-object family's `0x0802BED8`-`0x0802C99C` chunk (issue #52)
 
 `0x0802BED8`-`0x0802C99C` (25-function chunk), `asm/code_3_2_20_28568.s`
 (the file's own truncation point, already past several other sessions'
@@ -6085,7 +6085,7 @@ tail `UpdatePolarCrate`).
 
 **Parked (`NON_MATCHING`, 3):**
 
-- **`RunPolarPlayerState`** (`actor_part19e.c`, real bytes in
+- **`RunPolarPlayerState`** (`polar_player_dispatch.c`, real bytes in
   `asm/code_3_2_20_28568_c208.s`) - a `gPolarPlayerStateFuncs` stride-8
   trampoline-record dispatcher (`{s16 baseOff; s16 count; s16
   subOffset}`, count-gated between an inline fallback pair and a
@@ -6094,7 +6094,7 @@ tail `UpdatePolarCrate`).
   instruction-scheduling around the two `record = base + state*8`
   re-derivations that resisted every register-pin variant tried in this
   pass.
-- **`DrawPolarCollectedWumpa`** (`actor_part19b.c`, real bytes in
+- **`DrawPolarCollectedWumpa`** (`polar_pickups.c`, real bytes in
   `asm/code_3_2_20_28568_c2fc.s`) - screen-space visibility test and OAM
   setup for one sprite frame. Fully understood and matches ROM
   instruction-for-instruction *except* a single dead `flag = 0`
@@ -6106,7 +6106,7 @@ tail `UpdatePolarCrate`).
   `GetAnimFrameData` call, guarded with an empty-asm or `volatile`
   anti-DCE hint - `volatile register` additionally spills the variable
   to the stack, a bigger mismatch than the one being chased).
-- **`CreatePolarCollectedWumpa`** (`actor_part19c2.c`, real bytes in
+- **`CreatePolarCollectedWumpa`** (`polar_pickups.c`, real bytes in
   `asm/code_3_2_20_28568_c3e8.s`) - a homing/seek-toward-point spawn-
   effect constructor (the `CreateJetpackCollectedWumpa` byte-for-byte twin per
   docs/rom_map.md), computing a Manhattan-distance-style abs-value sum
@@ -6144,6 +6144,9 @@ tail `UpdatePolarCrate`).
 raw `code_3_2_20_28568_c99c.s` (the original file's unchanged
 remainder, from `UpdatePolarTimeCrate` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `actor` category, both updated to match.
+(Every raw piece has since been matched, and #575 merged these objects
+into `src/vehicle/polar_player_actions.c`, `polar_player_dispatch.c`,
+`polar_pickups.c` and `polar_crates.c`; see `tools/file_layout_plan.tsv`.)
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
 

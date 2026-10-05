@@ -1,14 +1,14 @@
 # Issues #51 and #54: NAKED retry
 
 A retry of the 14 NAKED functions left in issue #51's range
-(`0x0802AC28`-`0x0802BED8`, all in `src/graphics/actor_part127.c`) and
-issue #54's range (`0x0802D3A8`-`0x0802E0A4`: `actor_part62.c`,
-`actor_part74.c`, `actor_part75.c`, `actor_part76.c`). 11 closed, 3 are
+(`0x0802AC28`-`0x0802BED8`, all in `src/vehicle/polar_player.c`) and
+issue #54's range (`0x0802D3A8`-`0x0802E0A4`: `polar_objects.c`,
+`yeti_update.c`, `yeti_graphics.c`, `yeti.c`). 11 closed, 3 are
 still NAKED with near-miss C drafts under `#if NON_MATCHING`.
 
 ## Closed (11)
 
-### `actor_part127.c`: all 7, file moved to old_agbcc
+### `polar_player.c`: all 7, file moved to old_agbcc
 
 Every function in the file matches under old_agbcc, including the four
 that were already C. Three of them match only under old_agbcc, so the
@@ -16,15 +16,15 @@ file is now on the Makefile's `OLD_AGBCC_OBJS` list.
 
 | Function | What it took |
 |---|---|
-| `UpdatePolarPlayer` | The per-frame update. It is the same shape as `actor_part128.c`'s `UpdateJetpackPlayer`: branchless `Abs()` for the `visible` word, the inline anim-advance block, and `ACTOR_PMF_CALL(self, gPolarPlayerStateFuncs)`, which covers the "stride-8 keyframe lookup / r7 hazard" in the old note. Two details mattered. The keys are read as a `struct held_pressed_pair` copy with `keys.held & 0x20` and then `u16 right = keys.held & 0x10`, which keeps the key word in r2. The tier argument of `SpawnPolarAkuAku` is read into a local first so it loads before x/y/z. Matches under both compilers. |
-| `DrawPolarPlayer` | The sprite draw. It is `DrawJetpackPlayer` (actor_part128.c) with a `0x2f00000` projection constant, `CurFrame`/`CurAttr` inlines and `GET_TILE_NUM`. Needs old_agbcc; under the current agbcc 2 halfwords are off, in the `attr` load. |
+| `UpdatePolarPlayer` | The per-frame update. It is the same shape as `jetpack_spawn.c`'s `UpdateJetpackPlayer`: branchless `Abs()` for the `visible` word, the inline anim-advance block, and `ACTOR_PMF_CALL(self, gPolarPlayerStateFuncs)`, which covers the "stride-8 keyframe lookup / r7 hazard" in the old note. Two details mattered. The keys are read as a `struct held_pressed_pair` copy with `keys.held & 0x20` and then `u16 right = keys.held & 0x10`, which keeps the key word in r2. The tier argument of `SpawnPolarAkuAku` is read into a local first so it loads before x/y/z. Matches under both compilers. |
+| `DrawPolarPlayer` | The sprite draw. It is `DrawJetpackPlayer` (jetpack_spawn.c) with a `0x2f00000` projection constant, `CurFrame`/`CurAttr` inlines and `GET_TILE_NUM`. Needs old_agbcc; under the current agbcc 2 halfwords are off, in the `attr` load. |
 | `AllocPolarPlayerTiles` | Plain C: `h * w * 32` with `f[1] * f[0]` operand order, and `animTime >> 8` evaluated first. The "multiply into one register, copy to a second" sequence is just what old_agbcc emits for this. Needs old_agbcc. |
 | `PolarPlayerStateMount` | Plain C. `ACTOR_SET_STATE` plus `ACTOR_VCALL(*spawnAddr, m08, 3)`, with the spawn slot read through one `struct actor_self **` local. Matches under both. |
 | `PolarPlayerStateJump` | Plain C. The old comment's `0xA000` threshold is really `0x2800`. Matches under both. |
 | `PolarPlayerStateDash` | Plain C with `u16 bit = *(u32 *)input & 2` reused as the zero. Needs old_agbcc because the `1` mask is loaded before the `ldrh`. |
 | `PolarPlayerStateCaught` | Plain C with `ACTOR_SET_STATE`. Matches under both. |
 
-### `actor_part62.c`: `MovePolarAkuAku` (current agbcc, no pins)
+### `polar_objects.c`: `MovePolarAkuAku` (current agbcc, no pins)
 
 The old note blamed an r7 pin. Without any pins the prologue order
 comes out right on its own. What was left needed three changes:
@@ -39,7 +39,7 @@ comes out right on its own. What was left needed three changes:
 
 A file-level `asm(".align 2, 0")` supplies the ROM's zero padding.
 
-### `actor_part74.c`: `UpdateYetiPalette`, `UpdateYetiBg2` (file moved to old_agbcc)
+### `yeti_update.c`: `UpdateYetiPalette`, `UpdateYetiBg2` (file moved to old_agbcc)
 
 - `UpdateYetiPalette` is the palette ramp. It needs `DmaCopy16`/`DmaFill16`,
   and the two `0x1f` masks must be separate locals (`mask` before the
@@ -56,7 +56,7 @@ A file-level `asm(".align 2, 0")` supplies the ROM's zero padding.
 `UpdateYeti` stays NAKED in the same file. The NAKED body assembles
 identically under either compiler.
 
-### `actor_part76.c`: `sub_802E058` (current agbcc)
+### `yeti.c`: `sub_802E058` (current agbcc)
 
 A plain nested loop. The condition has to be written as the "store
 0xff" test so that branch comes first. The function is UNUSED (it has
@@ -64,7 +64,7 @@ no caller).
 
 ## Not closed (3), drafts in tree
 
-- **`UpdateYeti`** (actor_part74.c): right size, about 52 halfwords
+- **`UpdateYeti`** (yeti_update.c): right size, about 52 halfwords
   off under old_agbcc (55 under agbcc). Box A is built with
   `BoxMove(&a, x, 0, z)`: the zero Y is what gets the ROM's x-then-z
   evaluation order. Box B comes from a struct-returning `ActorBox()`.
@@ -75,12 +75,12 @@ no caller).
   register, and r5/r6 roles shift for the rest of the function. Passing
   the box by value, wrapping the `MemCopy32` call in an inline and
   using pointer locals all failed to fix it.
-- **`IsTouchingYeti`** (actor_part75.c): the same box code as a standalone
+- **`IsTouchingYeti`** (yeti_graphics.c): the same box code as a standalone
   function, with the same `&b` hoist (about 51 halfwords off, plus an
   extra r6 push). This is also the leftover recorded for
   `airship_touch.c`'s `IsTouchingAirship` in issue-58-61-naked-retry.md.
   Whoever fixes it for one of the three should get the other two.
-- **`LoadYetiGraphics`** (actor_part75.c): 5 halfwords off under either
+- **`LoadYetiGraphics`** (yeti_graphics.c): 5 halfwords off under either
   compiler. The two fill loops are a `static inline` copy of
   `sub_802E058`'s body. The clear loop is written as an `s32` address
   walk (`p >= base`, signed, with a separate `zero` local). Only the
@@ -96,7 +96,7 @@ no caller).
 three, so issue #54 has nothing left. `UpdateYeti` and `IsTouchingYeti`
 keep their boxes as members of one stack-frame struct, which makes gcc
 rematerialize `&b` from sp the way the ROM does (old_agbcc;
-`actor_part75.c` moved to it). `LoadYetiGraphics` passes
+`yeti_graphics.c` moved to it). `LoadYetiGraphics` passes
 `gYeti` straight into a `CurFrame()` inline instead of
 going through an `obj` local, which fixes the r8/sb/sl order.
 

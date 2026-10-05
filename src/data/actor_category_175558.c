@@ -167,7 +167,7 @@ const struct category_descriptor gActorCategories[7] = {
 
 /* The three per-type category vtables, `gActorCategoryVtable =
  * &gActorCategoryVtables[type]` in SelectActorCategory
- * (actor_part102.c). Slots 7 and 8 are not code addresses. */
+ * (actor_category_select.c). Slots 7 and 8 are not code addresses. */
 const struct category_vtable gActorCategoryVtables[3] = {
     /* 0 */ { {
         ConstructAnimTableState,

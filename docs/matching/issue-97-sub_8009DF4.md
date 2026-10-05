@@ -44,7 +44,7 @@ tried", including pinning `self` to `r2` directly, and accepted an
 8-byte-larger leaf-with-frame version as unavoidable.
 
 This turned out not to be quite right. `ApplySpriteVelocity` is structurally
-almost identical to `ApplyPlayerVelocity` (issue #9, `src/graphics/
+almost identical to `ApplyPlayerVelocity` (issue #9, `src/player/
 player_update.c`) - same per-axis clamp shape, same field offsets
 (`+0x60`/`+0x50`/`+0x4c`, `+0x64`/`+0x5c`/`+0x58`, `+0x24`, `+0`/`+4`),
 same true-leaf-function ROM shape, differing only in which global gets

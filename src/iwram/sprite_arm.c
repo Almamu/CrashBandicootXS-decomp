@@ -27,7 +27,7 @@ static inline u32 ExpandNibble(u32 nibble)
  * 0x0600A000; 0x1900 bytes). The stream alternates a u16 count of zero
  * words, filled by DMA3, and a u16 count of literal halfwords, each
  * holding four 4bpp pixels that become four 8bpp pixels in palette row
- * 15 (colour 0 stays 0). Called by actor_part74.c/actor_part75.c. */
+ * 15 (colour 0 stays 0). Called by yeti_update.c/yeti_graphics.c. */
 void UnpackNibbleTiles(u16 *src, s32 lowBlock)
 {
     u32 *dst = lowBlock ? (u32 *)(BG_VRAM + 0x8000) : (u32 *)(BG_VRAM + 0xA000);
@@ -60,7 +60,7 @@ void UnpackNibbleTiles(u16 *src, s32 lowBlock)
  * horizontally to its right (running into the next screen block past
  * column 31) and both ways diagonally. Tile numbers count up from the
  * start; `pal` holds one 4-bit palette number per tile, low nibble
- * first. Called by actor_part95.c. */
+ * first. Called by cell_anim.c. */
 void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h)
 {
     u16 *top, *bottom;
@@ -129,7 +129,7 @@ static inline void SiftDown(struct sort_entry **a, s32 root, s32 n)
 }
 
 /* gHeapSortActorsByKeyFunc(n, list): heapsorts `n` actor pointers into
- * ascending order of the u32 at +0x14. Called by actor_part103.c.
+ * ascending order of the u32 at +0x14. Called by actor_category_frame.c.
  *
  * Parked. Same control flow and the same loads, but the ROM tests each
  * comparison as a materialized 1/0 held in two registers hoisted out of
@@ -307,7 +307,7 @@ struct rle_frame {
 
 /* gUnpackRleSpriteFrameFunc(dst, frame): unpacks a frame's w*h tiles into `dst`,
  * zero runs with a DMA3 fill and literal runs with a DMA3 copy. Called
- * by actor_part127.c, actor_part128.c and company_logos.c. */
+ * by polar_player.c, jetpack_spawn.c and company_logos.c. */
 void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
 {
     u16 *end = dst + frame->h * frame->w * 16;

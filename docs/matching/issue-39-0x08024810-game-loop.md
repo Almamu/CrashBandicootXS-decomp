@@ -91,7 +91,7 @@ flat one:
   (`gBgStreamerVtable`/`gBgLayerBaseVtable`) for notifying a parent
   object of size/position changes, following the exact
   `self + *(s16 *)(mgr + N)`/`*(void **)(mgr + N + 4)` idiom
-  `src/graphics/actor_anim.c`'s `UpdatePolarCheckpointText` already established;
+  `src/actor/actor_anim.c`'s `UpdatePolarCheckpointText` already established;
   `GetBgStreamerHeight`/`GetBgStreamerWidth`/`SetBgStreamerSizeVec`/`SetBgStreamerSize` are plain
   position accessors; `ClampBgLayerScrollStep` clamps to `[-0x10, 0x10]`;
   `ClampBgLayerScrollMax` clamps a position pair against an upper-bound pair;

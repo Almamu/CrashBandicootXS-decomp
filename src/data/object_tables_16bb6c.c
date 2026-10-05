@@ -32,7 +32,7 @@ const u8 gSlotCrateTimers[4] = {
 };
 
 /* Per-object-kind flags of the collision system (22 kinds), read by
- * crate_hit.c, crate_stack.c, crate_break.c and game_loop47-49.c. */
+ * crate_hit.c, crate_stack.c and crate_break.c. */
 const u8 gCrateKindCounted[22] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };

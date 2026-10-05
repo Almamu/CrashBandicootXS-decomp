@@ -9,7 +9,7 @@
  * a zero run, then alternately a literal run (count + that many halfwords
  * of 4bpp tile data) and a zero run, until w*h tiles are filled. The IWRAM
  * decoder behind gUnpackRleSpriteFrameFunc (0x03000634) unpacks one frame into a
- * VRAM tile block (actor_part127.c, actor_part128.c,
+ * VRAM tile block (polar_player.c, jetpack_spawn.c,
  * company_logos.c). The frames are stored back to back; the frame
  * pointer tables point at their headers.
  */

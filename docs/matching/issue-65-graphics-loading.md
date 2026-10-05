@@ -31,7 +31,7 @@ behavior. This pass worked those three:
   sets the icon manager's `field_108` to `0x200` and fires its
   `record->slots[6]` trampoline via `_call_via_r1` (the same
   `(u8 *)obj + slot->offset, slot->ptr` pattern already established
-  throughout `src/graphics/actor_part*.c`); DMA3-copies three 0x20-byte
+  throughout the actor and object code); DMA3-copies three 0x20-byte
   palette banks (`gTitleMenuPalette`/`_054`/`_074`) into palette RAM
   at `0x050003A0`/`_C0`/`_E0`; calls `LoadTitleScreenBg`/
   `LoadTitleScreenObjTiles`; allocates and constructs a 0x14-byte object via

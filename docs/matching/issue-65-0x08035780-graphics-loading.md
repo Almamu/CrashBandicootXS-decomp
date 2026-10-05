@@ -74,7 +74,7 @@ Two distinct object shapes turned out to be involved, not one:
     package's pointer lives entirely in the static table).
 
 - **The unrelated `struct anim_part_instance`-shaped actor-part object**
-  (`src/graphics/actor_anim.c`/`actor_part19.c`'s already-documented
+  (`src/actor/actor_anim.c`/`polar_player_actions.c`'s already-documented
   "self", state at `+0x28`, frame accumulator at `+8`, table index at
   `+0xc`, frame halfword/byte at `+0x10`/`+0x12`, counter at `+0x44`):
   - `InitLogoActor` constructs one via `InitActorPart`, sets its vtable

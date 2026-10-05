@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same large per-instance "self" object as actor_part19.c/actor_part19g.c
+/* Same large per-instance "self" object as polar_player_actions.c/polar_pickups.c
  * (`struct actor_self`: state, anim index/timer/done flag, state timer,
  * anim accumulator, anim table pointer and method table), part of a
  * boss-weapon effect state machine - see
@@ -91,7 +91,7 @@ extern u8 gAirshipFireballVtable[];
  * second time into `self+0x58`/`self+0x5c`, `self+0x64 = 0`,
  * `self+0x60 = 0x95`, `self+0x68 (byte) = 0`. Returns `self` - the same
  * shape as the already-matched `CreateHovercraftCannon` (hovercraft_cannon.c) and the
- * still-parked `CreateJetpackShot` (actor_part45c.c), except this one's `d`
+ * still-parked `CreateJetpackShot` (jetpack_shot.c), except this one's `d`
  * argument is itself stack-passed (a 5th real argument total) rather
  * than the 4th register argument. Pinning `d` to `r0` *after* the other
  * register pins (rather than alongside them) is what gets this

@@ -3,9 +3,9 @@
 `DetonateNearbyPolarNitros` (ROM `0x0802C7A8`-`0x0802C8FA`, right before issue #53's
 own `0x0802C99C` chunk start) was the one function GitHub issue #53
 identified as a good semantics-understood candidate outside its literal
-chunk boundary. It sat between `actor_part19g.c`'s `UpdatePolarNitroCrate` and
-`actor_part19d.c`'s `UpdatePolarAkuAkuCrate` - directly adjacent to both once
-matched, so it gets a new file, `src/graphics/actor_part19h.c`, slotted
+chunk boundary. It sat between `polar_pickups.c`'s `UpdatePolarNitroCrate` and
+`polar_crates.c`'s `UpdatePolarAkuAkuCrate` - directly adjacent to both once
+matched, so it gets a new file, `src/vehicle/polar_nitro.c`, slotted
 into `ldscript.txt` at its real ROM address in place of the removed
 `asm/code_3_2_20_28568_c7a8.s`.
 
@@ -15,7 +15,7 @@ issue #53's own chunk (`0x0802C99C`-`0x0802CC9C`, directly adjacent to
 `sub_802CA6C`, `UpdatePolarBasicCrate`, `InitPolarCrate`, `CreatePolarTimeCrate`,
 `CreatePolarQuestionCrate`, `CreatePolarAkuAkuCrate`, `CreatePolarNitroCrate`, `CreatePolarLifeCrate`,
 `sub_802CC54`, `CreatePolarBasicCrate` - all genuinely **matched as real C**, in
-a new file `src/graphics/actor_part19i.c`. The raw
+a new file `src/vehicle/polar_crates.c`. The raw
 `asm/code_3_2_20_28568_c99c.s` fragment (which spanned far beyond this
 chunk) was cut at that boundary and its remainder renamed
 `asm/code_3_2_20_28568_c99c_cc9c.s`, starting at `UpdatePolarElectricFence` - the
@@ -24,7 +24,7 @@ attempted this pass.
 
 ## Semantics
 
-Called from `UpdatePolarNitroCrate` (`actor_part19g.c`) once a "used" pickup
+Called from `UpdatePolarNitroCrate` (`polar_pickups.c`) once a "used" pickup
 (`self`, state `self+0xc == 0x12`) has stayed used for `self+0x44 ==
 0x14` frames. It walks the whole `self+0x4c`-rooted circular actor
 list - the same sentinel-head list `IsActorVisible`/`DestroyPolarPlayer`/
@@ -43,7 +43,7 @@ owning object's own `+0x1c`/`+0x20`/`+0x24` position (each `>>8`) into
 just the `x`/`y`/`z` fields (the `sizeX`/`sizeY`/`sizeZ` half stays raw
 - these are extents, not absolute coordinates). Both boxes are then run
 through `MemCopy32` - the same confirmed no-op `memcpy(dst, dst,
-0xc)` self-copy documented in `actor_part74.c` (`MemCopy32`'s own
+0xc)` self-copy documented in `yeti_update.c` (`MemCopy32`'s own
 definition lives in `src/system/boot.c`, a real `CpuSet`-wrapper
 `memcpy`) - kept byte-faithful, not simplified away. The 3-axis overlap
 test itself compares Z, then Y, then X (matching the ROM's own
@@ -53,7 +53,7 @@ instruction order, not storage order), exactly like `UpdateYeti`/
 On overlap, and only while the candidate node isn't already in the used
 state (`node+0xc != 0x12`), fires the same shared "used"-state
 transition idiom seen throughout this ROM region
-(`UpdatePolarCrate`/`UpdatePolarQuestionCrate`/`UpdatePolarLifeCrate` in `actor_part19g.c`): a
+(`UpdatePolarCrate`/`UpdatePolarQuestionCrate`/`UpdatePolarLifeCrate` in `polar_pickups.c`): a
 sound cue (`PlaySfx(gAudioContext, 4, 0x100)` - the same sound id 4
 `UpdatePolarNitroCrate`'s own proximity-pickup branch uses), the lap-counter tie
 `AddBrokenCrate(gLevelState)`, `node+0x44`/`node+0x12`/`node+8`
@@ -73,7 +73,7 @@ check (since `self` is itself a member of the same list).
 
 This is the exact same heavy-stack-AABB-plus-register-reuse shape this
 project already NAKED-parked twice for `UpdateYeti`/`IsTouchingYeti`
-(`src/graphics/actor_part74.c`/`75.c`, `docs/matching/issue-54-actor-
+(`src/vehicle/yeti_update.c`/`yeti_graphics.c`, `docs/matching/issue-54-actor-
 d3a8.md`) - two 12-byte scratch AABB records built via raw `ldm`/`stm`
 block copies inside one 0x24-byte stack frame, with the second box's
 scratch address (`add r7, sp, #0x18`) computed once and held in `r7`
@@ -120,12 +120,12 @@ inferred control-flow guess.
 
 ## Matched (real C): UpdatePolarTimeCrate-CreatePolarBasicCrate, 12 functions
 
-Directly adjacent to `UpdatePolarAkuAkuCrate` (`actor_part19d.c`), the first 12
+Directly adjacent to `UpdatePolarAkuAkuCrate` (`polar_crates.c`), the first 12
 functions of issue #53's own `0x0802C99C` chunk start are genuinely
-matched as plain C, in `src/graphics/actor_part19i.c`:
+matched as plain C, in `src/vehicle/polar_crates.c`:
 
 - **`UpdatePolarTimeCrate`** - the type-byte-dispatch/proximity family
-  (`UpdatePolarQuestionCrate`'s shape, `actor_part19g.c`): on `IsTouchingPlayer`
+  (`UpdatePolarQuestionCrate`'s shape, `polar_pickups.c`): on `IsTouchingPlayer`
   proximity and `self+0xc != 0x12`, plays a sound, ties the lap
   counter, then `switch`es on `self+0x30`'s type byte (`5`/`6`/`7` each
   dispatch a different `FreezeLevelClock` tier) before the shared used-state
@@ -142,7 +142,7 @@ matched as plain C, in `src/graphics/actor_part19i.c`:
   the `c` parameter's own range (`<= 0x2b`, `<= 6`) - selecting one of
   up to 18 per-kind anim records from the part table (`self[0]`, stride
   `0xc`) to seed `self+0x10`/`self+0x12`/`self+8`, the same idiom as
-  `CreatePolarBoostPad` (`src/graphics/actor_part58.c`).
+  `CreatePolarBoostPad` (`src/vehicle/polar_aku_aku.c`).
 - **`CreatePolarTimeCrate`**, **`CreatePolarQuestionCrate`**, **`CreatePolarAkuAkuCrate`**,
   **`CreatePolarNitroCrate`**, **`sub_802CC54`**, **`CreatePolarBasicCrate`** - thin
   `InitPolarCrate`-forwarding constructors, each installing a different
@@ -226,8 +226,8 @@ after it, finishing this whole gap up to issue #54's own
 ## Later pass: `DetonateNearbyPolarNitros` promoted
 
 `DetonateNearbyPolarNitros` (in GitHub issue #52's range) is now plain C under
-old_agbcc (`actor_part19h.c` moved). It uses the same `ActorsOverlap`
-inline as `actor_part103.c`, with the three boxes in one frame struct.
+old_agbcc (`polar_nitro.c` moved). It uses the same `ActorsOverlap`
+inline as `actor_category_frame.c`, with the three boxes in one frame struct.
 gcc then hoists the third box's address into `r7` by itself, with no
 pin. See
 [issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).

@@ -51,7 +51,7 @@ owning record's pool index for `FreeVramTileBlock`.
   instructions literally, with real `.L`-prefixed named labels (the same
   "opaque asm reaching a named landing point defined by a later, ordinary
   C statement's own `asm volatile(".Lname:")` marker" idiom
-  `UpdateActorPaletteCycle` in `src/graphics/actor_part53.c` established) standing in
+  `UpdateActorPaletteCycle` in `src/actor/actor.c` established) standing in
   for the two ROM-shared merge points a plain C `if`/`return` can't be
   aimed at a chosen physical address: the "not found" early return, and
   the free-list-split/no-split rejoin. The same asm island also had to
@@ -146,7 +146,7 @@ re-DMA the same tiles every call.
   variant - go straight to a hand-written `asm volatile` island
   reproducing the ROM bytes literally, landing on named `.L`-prefixed
   labels a later plain-C statement's own no-op `asm volatile(".Lname:")`
-  marker defines (see `UpdateActorPaletteCycle` in `actor_part53.c` for the idiom
+  marker defines (see `UpdateActorPaletteCycle` in `actor.c` for the idiom
   this project already established, and `AllocVramTileBlock`'s own
   comment for a second worked example spanning a loop, a literal pool
   split, and a free-list-split's CSE quirks all at once).

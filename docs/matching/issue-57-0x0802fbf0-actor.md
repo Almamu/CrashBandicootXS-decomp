@@ -4,7 +4,7 @@
 `AimJetpackPlane`..`AirshipFireballStateSpiralIn`: all 25 of issue #57's range and the first
 two of issue #58's range (`AirshipFireballStateOrbit`/`AirshipFireballStateSpiralIn`, the only raw
 functions #58 had left). **All 27 are now real C** in
-`src/graphics/actor_part_2fbf0.c`, with no NAKED or `NON_MATCHING`
+`src/vehicle/jetpack_plane.c`, with no NAKED or `NON_MATCHING`
 functions. The raw `.s` file is deleted and a clean `make compare`
 passes.
 
@@ -56,7 +56,8 @@ header.
   shape that has been parked NAKED across the project as a toolchain
   hazard: `RunPolarPlayerState`, `RunJetpackPlayerState`, `UpdateJetpackPlane`, `UpdateAirshipFireball`,
   `RunAirshipFireballState`, `RunJetpackBalloonState`, `UpdateJetpackBalloonCrate`, `RunJetpackBalloonCrateState`, and more
-  in `actor_part19e/31/33/37/64/125/129/130.c`. The shape is gcc 2.x's
+  in `polar_player_dispatch.c`, `hovercraft_cannon.c`, `hovercraft_launcher.c`,
+  `jetpack_balloon.c`, `jetpack_crates.c` and `hovercraft.c`. The shape is gcc 2.x's
   expansion of `(this->*table[this->state])()`, where each table entry
   is a `{s16 delta; s16 index; union {s16 vtableOffset; fn}}`
   pointer-to-member (`struct actor_pmf`). The macro `ACTOR_PMF_CALL`
@@ -110,7 +111,7 @@ header.
 
 None of the 27 functions is called by name from other code: they are
 reached through method tables and dispatch tables in data. The
-constructors are called from the raw-bytes NAKED `actor_part128.c`.
+constructors are called from the raw-bytes NAKED `jetpack_spawn.c`.
 
 ## Verification
 

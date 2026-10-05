@@ -5,7 +5,7 @@ Second half of issue #59's Phase 2 gap - the 60 raw functions left after
 pass closed `0x08031784`-`0x08031A6C`. That Phase 2 gap
 (`0x08031A6C`-`0x08033804`, `asm/code_3_2_20_28568_c99c_31784_31a6c.s`)
 was split in half for parallel work: a sibling pass covers the first 30
-functions (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`, `src/graphics/actor_part129.c`);
+functions (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`, `src/vehicle/jetpack_crates.c`);
 this pass covers the last 30 (`CreateJetpackRing`-`nullsub_35`, new file
 `src/bosses/hovercraft.c`).
 
@@ -60,7 +60,7 @@ have entries for this pass, cross-referencing this document).
    same reason: `CreateHovercraft` (the constructor), `SpawnHovercraft`,
    `UpdateHovercraft`, `UpdateHovercraftBg2`, `LoadHovercraftGraphics` all operate on the
    singleton object through raw `self+offset` casts, matching every
-   neighboring `actor_part*.c` file's own convention for this same
+   neighboring actor file's own convention for this same
    large per-instance object family (state at `+0x28`, table-index at
    `+0xc`, anim-frame halfword/byte pair at `+0x10`/`+0x12`, accumulator
    at `+8`, part table at `+0`, "frame offsets" at `+4`, event table at
@@ -195,7 +195,7 @@ elsewhere in this project, re-confirmed rather than re-derived here:
 - **`DrawJetpackCollectedWumpa`** - a bounding-box-culled sprite draw with an
   `r8`-flag-across-calls shape, the same class of gap `DrawPowerDialog`/
   `DrawLanguageSelect`/`GAX2_init` and the hard-won `DrawActor`
-  (issue #50, `actor_part55.c`) already needed elaborate register-pin/
+  (issue #50, `actor.c`) already needed elaborate register-pin/
   stack-spill workarounds for.
 - **`RunHovercraftState`** - fully inlines `SetHovercraftFlashColor`'s own P1/P2
   speed-toggle shape (issue #62) *twice*, once per frame-counter
@@ -227,7 +227,7 @@ OK` (the project's `sha1sum -c checksum.sha1` success message).
 
 This pass's own range (`0x080326E4`-`0x08033804`) is fully closed - 16
 matched, 14 NAKED, 0 left raw. The sibling pass covering
-`0x08031A6C`-`0x080326E4` (`src/graphics/actor_part129.c`, issues #59
+`0x08031A6C`-`0x080326E4` (`src/vehicle/jetpack_crates.c`, issues #59
 rest/#60) is tracked separately; once both land, the whole gap between
 issue #58 and issue #62 (`0x08031784`-`0x08033804`) is closed.
 

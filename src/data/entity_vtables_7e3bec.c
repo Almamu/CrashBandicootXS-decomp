@@ -1124,8 +1124,8 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
- * actor_part129.c, hovercraft.c (DestroyJetpackCollectedWumpa), actor_part19.c,
- * actor_part19c.c, actor_part44.c, actor_part50.c, actor_part52.c. */
+ * jetpack_crates.c, hovercraft.c (DestroyJetpackCollectedWumpa), polar_player_actions.c,
+ * polar_pickups.c, jetpack_player.c, actor.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyActor),
@@ -1133,7 +1133,7 @@ const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part_2ac28.c. */
+/* Used by actor_factory.c. */
 const struct vtable_slot gRiderlessPolarVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyRiderlessPolar),
@@ -1141,7 +1141,7 @@ const struct vtable_slot gRiderlessPolarVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part_2ac28.c (CreatePolarCheckpointText). */
+/* Used by actor_factory.c (CreatePolarCheckpointText). */
 const struct vtable_slot gPolarCheckpointTextVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCheckpointText),
@@ -1149,7 +1149,7 @@ const struct vtable_slot gPolarCheckpointTextVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part127.c, actor_part19.c, actor_part_2ac28.c
+/* Used by polar_player.c, polar_player_actions.c, actor_factory.c
  * (ConstructAnimTableState). */
 const struct vtable_slot gPolarPlayerVtable[4] = {
     VTABLE_SLOT(NULL),
@@ -1158,7 +1158,7 @@ const struct vtable_slot gPolarPlayerVtable[4] = {
     VTABLE_SLOT(DrawPolarPlayer),
 };
 
-/* Used by actor_part19.c, actor_part19c.c, actor_part19c2.c. */
+/* Used by polar_player_actions.c, polar_pickups.c. */
 const struct vtable_slot gPolarCollectedWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCollectedWumpa),
@@ -1166,7 +1166,7 @@ const struct vtable_slot gPolarCollectedWumpaVtable[4] = {
     VTABLE_SLOT(DrawPolarCollectedWumpa),
 };
 
-/* Used by actor_part19.c, actor_part19g.c, actor_part_2ac28.c. */
+/* Used by polar_player_actions.c, polar_pickups.c, actor_factory.c. */
 const struct vtable_slot gPolarWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarWumpa),
@@ -1174,7 +1174,7 @@ const struct vtable_slot gPolarWumpaVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c, actor_part_2ac28.c. */
+/* Used by polar_crates.c, actor_factory.c. */
 const struct vtable_slot gPolarTimeCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarTimeCrate),
@@ -1182,7 +1182,7 @@ const struct vtable_slot gPolarTimeCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c, actor_part_2ac28.c. */
+/* Used by polar_crates.c, actor_factory.c. */
 const struct vtable_slot gPolarQuestionCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarQuestionCrate),
@@ -1190,7 +1190,7 @@ const struct vtable_slot gPolarQuestionCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c, actor_part_2ac28.c. */
+/* Used by polar_crates.c, actor_factory.c. */
 const struct vtable_slot gPolarAkuAkuCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarAkuAkuCrate),
@@ -1198,7 +1198,7 @@ const struct vtable_slot gPolarAkuAkuCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c, actor_part_2ac28.c. */
+/* Used by polar_crates.c, actor_factory.c. */
 const struct vtable_slot gPolarNitroCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarNitroCrate),
@@ -1206,7 +1206,7 @@ const struct vtable_slot gPolarNitroCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c, actor_part_2ac28.c. */
+/* Used by polar_crates.c, actor_factory.c. */
 const struct vtable_slot gPolarLifeCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarLifeCrate),
@@ -1214,7 +1214,7 @@ const struct vtable_slot gPolarLifeCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c, actor_part_2ac28.c. */
+/* Used by polar_crates.c, actor_factory.c. */
 const struct vtable_slot gStaticData_087E4F54[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B25C),
@@ -1222,7 +1222,7 @@ const struct vtable_slot gStaticData_087E4F54[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c, actor_part_2ac28.c. */
+/* Used by polar_crates.c, actor_factory.c. */
 const struct vtable_slot gPolarBasicCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarBasicCrate),
@@ -1230,7 +1230,7 @@ const struct vtable_slot gPolarBasicCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part19i.c. */
+/* Used by polar_crates.c. */
 const struct vtable_slot gPolarCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCrate),
@@ -1238,7 +1238,7 @@ const struct vtable_slot gPolarCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part126.c. */
+/* Used by polar_objects.c. */
 const struct vtable_slot gPolarElectricFenceVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarElectricFence),
@@ -1246,7 +1246,7 @@ const struct vtable_slot gPolarElectricFenceVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part126.c. */
+/* Used by polar_objects.c. */
 const struct vtable_slot gStaticData_087E4FD4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B30C),
@@ -1254,7 +1254,7 @@ const struct vtable_slot gStaticData_087E4FD4[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part126.c. */
+/* Used by polar_objects.c. */
 const struct vtable_slot gPolarLauncherVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarLauncher),
@@ -1262,7 +1262,7 @@ const struct vtable_slot gPolarLauncherVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part126.c. */
+/* Used by polar_objects.c. */
 const struct vtable_slot gPolarPenguinVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarPenguin),
@@ -1270,7 +1270,7 @@ const struct vtable_slot gPolarPenguinVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part126.c. */
+/* Used by polar_objects.c. */
 const struct vtable_slot gPolarIcicleVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarIcicle),
@@ -1278,7 +1278,7 @@ const struct vtable_slot gPolarIcicleVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part58.c. */
+/* Used by polar_aku_aku.c. */
 const struct vtable_slot gPolarAkuAkuVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarAkuAku),
@@ -1286,7 +1286,7 @@ const struct vtable_slot gPolarAkuAkuVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part58.c. */
+/* Used by polar_aku_aku.c. */
 const struct vtable_slot gPolarGoalVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarGoal),
@@ -1294,7 +1294,7 @@ const struct vtable_slot gPolarGoalVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part58.c. */
+/* Used by polar_aku_aku.c. */
 const struct vtable_slot gPolarBoostPadVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarBoostPad),
@@ -1302,7 +1302,7 @@ const struct vtable_slot gPolarBoostPadVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part58.c. */
+/* Used by polar_aku_aku.c. */
 const struct vtable_slot gPolarCheckpointCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCheckpointCrate),
@@ -1310,7 +1310,7 @@ const struct vtable_slot gPolarCheckpointCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part128.c (CreateJetpackCheckpointText). */
+/* Used by jetpack_spawn.c (CreateJetpackCheckpointText). */
 const struct vtable_slot gJetpackCheckpointTextVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackCheckpointText),
@@ -1321,7 +1321,7 @@ const struct vtable_slot gJetpackCheckpointTextVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part128.c (CreateJetpackExplosion). */
+/* Used by jetpack_spawn.c (CreateJetpackExplosion). */
 const struct vtable_slot gJetpackExplosionVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackExplosion),
@@ -1332,7 +1332,7 @@ const struct vtable_slot gJetpackExplosionVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part128.c (CreateJetpackPlayer), actor_part44.c. */
+/* Used by jetpack_spawn.c (CreateJetpackPlayer), jetpack_player.c. */
 const struct vtable_slot gJetpackPlayerVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackPlayer),
@@ -1343,7 +1343,7 @@ const struct vtable_slot gJetpackPlayerVtable[7] = {
     VTABLE_SLOT(GetJetpackPlayerHpPercent),
 };
 
-/* Used by actor_part45c.c. */
+/* Used by jetpack_shot.c. */
 const struct vtable_slot gJetpackShotVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackShot),
@@ -1354,7 +1354,7 @@ const struct vtable_slot gJetpackShotVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part_2fbf0.c (CreateJetpackPlane). */
+/* Used by jetpack_plane.c (CreateJetpackPlane). */
 const struct vtable_slot gJetpackPlaneVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackPlane),
@@ -1365,7 +1365,7 @@ const struct vtable_slot gJetpackPlaneVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part_2fbf0.c (CreateJetpackBomber). */
+/* Used by jetpack_plane.c (CreateJetpackBomber). */
 const struct vtable_slot gJetpackBomberVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackBomber),
@@ -1376,7 +1376,7 @@ const struct vtable_slot gJetpackBomberVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part_2fbf0.c (CreateJetpackCannonball). */
+/* Used by jetpack_plane.c (CreateJetpackCannonball). */
 const struct vtable_slot gJetpackCannonballVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackCannonball),
@@ -1398,7 +1398,7 @@ const struct vtable_slot gAirshipFireballVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part125.c. */
+/* Used by jetpack_balloon.c. */
 const struct vtable_slot gJetpackBalloonVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackBalloon),
@@ -1409,7 +1409,7 @@ const struct vtable_slot gJetpackBalloonVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part129.c. */
+/* Used by jetpack_crates.c. */
 const struct vtable_slot gJetpackHealthCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackHealthCrate),
@@ -1421,7 +1421,7 @@ const struct vtable_slot gJetpackHealthCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by actor_part129.c. */
+/* Used by jetpack_crates.c. */
 const struct vtable_slot gJetpackTimeCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackTimeCrate),
@@ -1433,7 +1433,7 @@ const struct vtable_slot gJetpackTimeCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by actor_part129.c. */
+/* Used by jetpack_crates.c. */
 const struct vtable_slot gJetpackQuestionCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackQuestionCrate),
@@ -1445,7 +1445,7 @@ const struct vtable_slot gJetpackQuestionCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by actor_part129.c. */
+/* Used by jetpack_crates.c. */
 const struct vtable_slot gJetpackBalloonCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackBalloonCrate),
@@ -1457,7 +1457,7 @@ const struct vtable_slot gJetpackBalloonCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by actor_part129.c (CreateJetpackParachuteNitro). */
+/* Used by jetpack_crates.c (CreateJetpackParachuteNitro). */
 const struct vtable_slot gJetpackParachuteNitroVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackParachuteNitro),
@@ -1468,7 +1468,7 @@ const struct vtable_slot gJetpackParachuteNitroVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part129.c. */
+/* Used by jetpack_crates.c. */
 const struct vtable_slot gJetpackRocketVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackRocket),

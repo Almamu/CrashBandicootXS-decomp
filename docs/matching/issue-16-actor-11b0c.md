@@ -6,7 +6,7 @@ different systems by content, not by address contiguity:
 - **The leading 15 functions (`DrawWumpa`-`ResetActionCtrl`, matched
   here)** all operate on plain `struct actor` (`table@0x18`,
   `flags@0xc`, `field_08@8`, `x@0`, `y@4` - the exact layout
-  `include/actor.h`/`actor_part*.c` already established), extended
+  `include/actor.h` and the files using it already established), extended
   with a handful of not-yet-characterized fields beyond its own 0x1c
   bytes (`+0x38`, `+0x48`-`0x4b`, `+0x4c`-`0x50`). This is squarely
   `actor`, matching `docs/status/README.md`'s note that several

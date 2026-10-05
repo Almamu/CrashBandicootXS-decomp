@@ -2,8 +2,8 @@
 
 A scoping investigation of the actor zone found this 2308-byte range -
 the tail of `asm/code_3_2_20_8b7c_ac28.s` right before its own already-
-matched literal tail (`DispensePolarWumpa` onward, `src/graphics/
-actor_part107.c`, `docs/matching/issue-50-actor-bc68.md`) - still
+matched literal tail (`DispensePolarWumpa` onward, `src/vehicle/
+polar_player_states.c`, `docs/matching/issue-50-actor-bc68.md`) - still
 completely raw. `tools/report_units.py`'s `(0x0802AC28, None, "actor")`
 entry covers the still-raw `CreateActor`-`SpawnActor` run before this
 gap; `docs/rom_map.md` had already flagged `UpdatePolarPlayer` itself (740 B,
@@ -11,7 +11,7 @@ vtable-dispatched at an untraced slot of `gPolarPlayerVtable`) from
 disassembly alone.
 
 11 functions total, all on the same `gUnknown_0300148x`-`gUnknown_
-030014Bx` object/global cluster already established in `actor_part107.c`
+030014Bx` object/global cluster already established in `polar_player_states.c`
 (a countdown-timer/respawn pair at `gPolarFinishTimer`/`gUnknown_
 0300149C`, a "camera catch-up" budget at `gPolarPlayerVelY`, and the
 shared reset/state-transition idiom: state at `self+0x28`, table-index
@@ -21,7 +21,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 
 ## Matched (4 of 11 functions)
 
-- **`PolarPlayerStateShocked`** (`src/graphics/actor_part127.c`) - frame-counter
+- **`PolarPlayerStateShocked`** (`src/vehicle/polar_player.c`) - frame-counter
   threshold DMA driver: past `0x2c` frames, DMAs a gauge-strip pair and
   resets `self` to state 6/table-index 5 (arming `gPolarPauseLocked`
   and kicking the mode transition, the same shared idiom `HurtPolarPlayer`
@@ -33,7 +33,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
   literal per store instead of reusing the two already-loaded registers
   the ROM keeps live across both.
 
-- **`HurtPolarPlayer`**/**`ShockPolarPlayer`** (`src/graphics/actor_part127.c`) -
+- **`HurtPolarPlayer`**/**`ShockPolarPlayer`** (`src/vehicle/polar_player.c`) -
   the once-only spawn/reset trigger pair described below, promoted from
   NAKED using the **`goto`-shared-tail idiom**: instead of a plain
   `if (already_used) return 1; ... return 0;` guard clause (which this
@@ -73,7 +73,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
     plain (unregistered) local declared *before* the register variable
     forced the load-then-materialize order the ROM actually uses.
 
-- **`PolarPlayerStateRun`** (`src/graphics/actor_part127.c`) - the state-0x12
+- **`PolarPlayerStateRun`** (`src/vehicle/polar_player.c`) - the state-0x12
   anim-frame edge reset described below, promoted using the same
   `goto`-shared-tail idiom but for an *interior* shared tail rather than
   the whole function's epilogue: explicit `goto tail;`/`goto gated;`/
@@ -96,7 +96,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-The remaining 7 in `src/graphics/actor_part127.c` (`HurtPolarPlayer`,
+The remaining 7 in `src/vehicle/polar_player.c` (`HurtPolarPlayer`,
 `ShockPolarPlayer`, and `PolarPlayerStateRun` were promoted to the "Matched" section
 above in a later pass). Every one was fully understood semantically;
 each resisted a byte-exact plain-C reconstruction for a different
@@ -130,7 +130,7 @@ same approach this project has used for other large NAKED batches.
   table byte-pair lookup (`self`'s part table, indexed by `self+0xc`,
   offset by `self+8`'s frame accumulator, into a *second* pointer array
   at `self+4`) already established for `AllocJetpackPlayerTiles`
-  (`actor_part43b.c`, issue #56) - which itself needed heavy `asm
+  (`jetpack_run.c`, issue #56) - which itself needed heavy `asm
   volatile` register-order forcing for this exact "materialize the
   multiply result into one register, copy it to a second, then shift"
   idiom; transcribed directly here instead of re-chased at the C level.
@@ -184,13 +184,13 @@ were reused verbatim from another worktree after confirming byte-
 identical `graphics/`/`sound/` source trees via `diff -rq` - every
 `.c`/`.s` file that actually changed was still fully recompiled and
 relinked from scratch.) `make NON_MATCHING=1 report` also compiled
-clean, no warnings for `actor_part127.c`.
+clean, no warnings for `polar_player.c`.
 
 A later pass promoted `HurtPolarPlayer`/`ShockPolarPlayer`/`PolarPlayerStateRun` from
 that NAKED batch to real C using the `goto`-shared-tail idiom (see the
 "Matched" section above); re-verified with a fresh `rm -rf build &&
 make NON_MATCHING=1 report` (clean, no warnings for
-`actor_part127.c`) followed by `rm -rf build crashbandicootxs.elf
+`polar_player.c`) followed by `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare`:
 `crashbandicootxs.gba: OK`.
 
@@ -202,10 +202,10 @@ matched/parked list this entry feeds into.
 `UpdatePolarPlayer`, `DrawPolarPlayer`, `AllocPolarPlayerTiles`, `PolarPlayerStateMount`,
 `PolarPlayerStateJump`, `PolarPlayerStateDash` and `PolarPlayerStateCaught` are now real C too, so
 the whole gap is decompiled. None of the reasons recorded above held
-up: `actor_part127.c` is an old_agbcc file (`PolarPlayerStateDash` materializes
+up: `polar_player.c` is an old_agbcc file (`PolarPlayerStateDash` materializes
 its `1` mask before the `ldrh`; `DrawPolarPlayer`/`AllocPolarPlayerTiles` differ only
 in load/multiply operand order under the current agbcc), the "stride-8
 keyframe lookup" in `UpdatePolarPlayer` is a C++ pointer-to-member call
 (`ACTOR_PMF_CALL` on `gPolarPlayerStateFuncs`), and `DrawPolarPlayer` is the
-same code as `actor_part128.c`'s `DrawJetpackPlayer`. No register pins. See
+same code as `jetpack_spawn.c`'s `DrawJetpackPlayer`. No register pins. See
 [issue-51-54-naked-retry.md](issue-51-54-naked-retry.md).

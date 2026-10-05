@@ -17,33 +17,33 @@ was added to `OLD_AGBCC_OBJS`.
 
 | Function | File | Tail after the dispatch |
 |---|---|---|
-| `RunPolarPlayerState` | `actor_part19e.c` | none |
-| `RunJetpackPlayerState` | `actor_part44b.c` | none |
+| `RunPolarPlayerState` | `polar_player_dispatch.c` | none |
+| `RunJetpackPlayerState` | `jetpack_player.c` | none |
 | `RunAirshipFireballState` | `airship_fireball.c` | none |
-| `RunJetpackBalloonState` | `actor_part125.c` | none |
-| `RunJetpackBalloonCrateState` | `actor_part129.c` | none |
+| `RunJetpackBalloonState` | `jetpack_balloon.c` | none |
+| `RunJetpackBalloonCrateState` | `jetpack_crates.c` | none |
 | `RunHovercraftFireballState` | `hovercraft.c` | none |
 | `UpdateAirshipFireball` | `airship_fireball.c` | state-2 destroy (`m08`) or `UpdateActor` |
 | `UpdateHovercraftFireball` | `hovercraft.c` | state-1 destroy or `UpdateActor` |
-| `UpdateJetpackBalloonCrate` | `actor_part129.c` | two destroy conditions or `UpdateActor` |
+| `UpdateJetpackBalloonCrate` | `jetpack_crates.c` | two destroy conditions or `UpdateActor` |
 | `UpdateHovercraftCannon` | `hovercraft_cannon.c` | `UpdateActor` unless state 2 has finished |
 | `UpdateHovercraftLauncher` | `hovercraft_launcher.c` | same, on `gHovercraftLauncherStateFuncs` |
 | `RunHovercraftCannonState` | `hovercraft_cannon.c` | returns 0 once state 2 has finished, else 1 |
 | `RunHovercraftLauncherState` | `hovercraft_launcher.c` | same, on `gHovercraftLauncherStateFuncs` |
-| `UpdateJetpackPlane` | `actor_part46b.c` | position update before the dispatch, then a player push-out/damage block |
+| `UpdateJetpackPlane` | `jetpack_plane.c` | position update before the dispatch, then a player push-out/damage block |
 
 These functions were not the PMF shape, but they sat in the same files
 and closed:
 
 | Function | File | What it is |
 |---|---|---|
-| `UpdateJetpackBalloon` | `actor_part125.c` | per-frame update; its dispatch is a call to `RunJetpackBalloonState` |
-| `DamageJetpackBalloon` | `actor_part125.c` | damage handler: releases a linked object through its `m38` method, then `ACTOR_SET_STATE` |
-| `MoveJetpackBalloon`, `JetpackBalloonStatePop`, `JetpackBalloonStateFloatAway` | `actor_part125.c` | the shared anim-frame-advance-and-clamp idiom |
+| `UpdateJetpackBalloon` | `jetpack_balloon.c` | per-frame update; its dispatch is a call to `RunJetpackBalloonState` |
+| `DamageJetpackBalloon` | `jetpack_balloon.c` | damage handler: releases a linked object through its `m38` method, then `ACTOR_SET_STATE` |
+| `MoveJetpackBalloon`, `JetpackBalloonStatePop`, `JetpackBalloonStateFloatAway` | `jetpack_balloon.c` | the shared anim-frame-advance-and-clamp idiom |
 | `UpdateJetpackCollectedWumpa` | `hovercraft.c` | the same idiom, gated by an out-of-bounds check |
 | `DestroyJetpackCollectedWumpa` | `hovercraft.c` | reward-dispensing destructor |
 
-`actor_part125.c` now has no NAKED functions left.
+`jetpack_balloon.c` now has no NAKED functions left.
 
 ## Techniques
 
@@ -95,7 +95,7 @@ and closed:
 
 ## Skipped (not the PMF shape)
 
-- `actor_part129.c`: `InitJetpackBalloonCrate` (the documented b/c/d param-save
+- `jetpack_crates.c`: `InitJetpackBalloonCrate` (the documented b/c/d param-save
   order gap, skipped as instructed) and `CreateJetpackRocket` (constructor
   register choreography). Neither was attempted. `DestroyJetpackCollectedWumpa` shows
   that parameter-order claims like these can be wrong, so both are

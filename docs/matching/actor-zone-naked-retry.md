@@ -8,9 +8,9 @@ closed as plain C with no register pins. Issue #54 has nothing left.
 
 | Function | File | Compiler | Was |
 |---|---|---|---|
-| `UpdateYeti` | `actor_part74.c` | old_agbcc (file already on it) | 52 off |
-| `IsTouchingYeti` | `actor_part75.c` | old_agbcc (file moved) | 69 off |
-| `LoadYetiGraphics` | `actor_part75.c` | both | 5 off |
+| `UpdateYeti` | `yeti_update.c` | old_agbcc (file already on it) | 52 off |
+| `IsTouchingYeti` | `yeti_graphics.c` | old_agbcc (file moved) | 69 off |
+| `LoadYetiGraphics` | `yeti_graphics.c` | both | 5 off |
 | `IsTouchingAirship` | `airship_touch.c` | old_agbcc (file moved) | 53 off |
 | `DrawAirshipMap` | `airship_map.c` | old_agbcc (file moved) | 11 off |
 | `DrawHovercraftMap` | `hovercraft.c` | old_agbcc (whole file moved) | 11 off |

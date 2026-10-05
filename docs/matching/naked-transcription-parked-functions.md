@@ -1,7 +1,7 @@
 # Six parked functions converted to NAKED transcription (byte-correct, not decompiled C)
 
-Six previously-`NON_MATCHING` functions, spread across `src/util/`,
-`src/graphics/`, and `src/system/`, all shared the same shape: fully
+Six previously-`NON_MATCHING` functions, spread across what were then
+`src/util/`, `src/graphics/`, and `src/system/`, all shared the same shape: fully
 understood semantics (a real, working C reconstruction already existed
 for each, checked into git history under `#if NON_MATCHING`), blocked
 purely on this project's well-documented gcc-2.9 "last mile"

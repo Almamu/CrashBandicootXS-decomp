@@ -31,7 +31,7 @@ struct level_layers {
 };
 
 /* A one-byte by-value argument: the ROM stores it into its stack slot
- * with `strb` (as in actor_part128.c). */
+ * with `strb` (as in jetpack_spawn.c). */
 struct byte_arg {
     u8 v;
 } __attribute__((packed));

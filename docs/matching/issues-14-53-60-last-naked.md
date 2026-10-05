@@ -21,7 +21,7 @@ across the loop. Those are gcc's own strength reduction of
 - The count reset sits inside `if (count != 0)`, and the final call
   spells its position `(self->records + best)->pos`.
 
-## `UpdatePolarElectricFence` (actor_part126.c, issue #53)
+## `UpdatePolarElectricFence` (polar_objects.c, issue #53)
 
 A hazard/proximity state machine that tests the part's own box and three
 `gStaticData_0817A7xx` boxes. The "heavy r5/r6/r7 reuse" in the old note

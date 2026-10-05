@@ -5,7 +5,7 @@ notes on the sprite/actor rendering system. For byte-exact matching
 decompilation notes (workflow, register-allocation gotchas, per-function
 parked/matched log across the whole codebase, including the
 graphics-adjacent functions in `src/gfx/graphics.c`/`src/menus/power_dialog_draw.c`/
-`src/graphics/actor_anim.c`), see [matching.md](./matching.md) instead.
+`src/actor/actor_anim.c`), see [matching.md](./matching.md) instead.
 
 ## Background/tileset extraction (done)
 

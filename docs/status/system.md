@@ -67,7 +67,7 @@ category page - see [game_loop.md](./game_loop.md).
   `_call_via_r2`, `_call_via_r3`, `_call_via_r4`, `_call_via_r5`,
   `_call_via_r6`, `_call_via_r7` (the `bx r0`..`sp` "call through whatever
   register" trampoline table, already referenced by name from `irq.c`'s
-  `VBlankHandler` and several `actor_part*` files), `_call_via_lr` (bonus,
+  `VBlankHandler` and several actor and object files), `_call_via_lr` (bonus,
   just past issue #69's listed range) - GitHub issue #69
 - `src/link/link_handshake.c`/`link_sio.c` (new files - the GBA
   multiplayer link-cable/SIO transport, `0x08001C80`-`0x08002868`,

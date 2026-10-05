@@ -2,7 +2,8 @@
 
 Pause menu and settings/options screens - the composite pause/options
 screen's setup, per-row widgets, and the SIO-handshake spinner dialog.
-Filed under `src/graphics/` on disk (all draw/BG-setup code), tracked
+Now in `src/menus/` and `src/save/` (formerly `src/graphics/`; all
+draw/BG-setup code), tracked
 as its own `overlay_ui` category since `docs/rom_map.md` and the
 `decomp-chunk` issue generator both treat it as a distinct system from
 "core" graphics.

@@ -13,7 +13,8 @@ byte pair at `self+0x10`/`self+0x12`, an accumulator at `self+8`, a
 "part table" pointer at `self+0`, and an event/trampoline table pointer
 at `self+0x50`.
 
-New file: `src/graphics/actor_part129.c` (checked both the highest
+New file: `src/graphics/actor_part129.c`, now
+`src/vehicle/jetpack_crates.c` (checked both the highest
 `actor_part<N>.c` on disk, sorted numerically, and the highest
 `actor_part<N>.o` referenced in `ldscript.txt` before picking `129` -
 both agreed the highest in-use number was `128`).
@@ -38,7 +39,7 @@ established "cut at the boundary" convention.
   `FreezeLevelClock` for `UpdateJetpackTimeCrate`/`DamageJetpackTimeCrate`'s `0x18`-`0x1a`/`0x1d`
   range). Written with explicit `goto`-chained `if` blocks (not a plain
   `switch`) to match this family's already-matched sibling
-  `UpdatePolarQuestionCrate` (`actor_part19g.c`) - its last case does something
+  `UpdatePolarQuestionCrate` (`polar_pickups.c`) - its last case does something
   structurally different from the uniform ones, which a plain `switch`
   doesn't reproduce byte-for-byte here. The state/health-transition
   block at the top of every member of this family needed the ROM's
@@ -54,7 +55,7 @@ established "cut at the boundary" convention.
   `SpawnJetpackBalloon` (kind `0x28`/`0x2a`/`0x29` respectively) with a
   `-15798`-biased position argument - three more members of the
   "spawn effect type N" family (`SpawnHovercraftCannonFlash`-family siblings,
-  `actor_part128.c`). All three needed the literal health constant `2`
+  `jetpack_spawn.c`). All three needed the literal health constant `2`
   pinned to `r8` and kept alive across the `InitActorPart` call,
   matching the established `CreateHovercraftCannon` gap (issue #62) where this
   compiler's own allocator always prefers low registers unless forced.
@@ -104,7 +105,7 @@ established "cut at the boundary" convention.
   tail-calls `UpdateActor`. The state-1/`self+0x12`-set branch needed
   an explicit `if (self != 0) { ...trampoline... } return;` (matching
   the established idiom already used for `UpdatePolarCrate`,
-  `actor_part19g.c`); separately, the state-1/`self+0x12`-clear branch
+  `polar_pickups.c`); separately, the state-1/`self+0x12`-clear branch
   turned out to jump *directly* to the shared tail call
   (`UpdateActor`), **skipping** the `self+0x20` clamp check entirely -
   a real control-flow detail a first pass got backwards (see below).
@@ -271,7 +272,7 @@ the first half of.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState` (`actor_part129.c`) from NAKED to real C. The "r7 table-base"
+A later pass promoted `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState` (`jetpack_crates.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

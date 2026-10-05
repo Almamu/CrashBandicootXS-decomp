@@ -11,7 +11,7 @@
  * "collision box" object every other function in this subsystem
  * operates on - offsets kept raw rather than a named struct, matching
  * every already-matched sibling in this file family
- * (crate_reset.c-game_loop34.c). See
+ * (crate_reset.c-crate_stack.c). See
  * docs/matching/issue-13-fc70-second-continuation.md for the
  * register-pinning technique this needed. */
 

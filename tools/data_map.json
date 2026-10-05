@@ -14,7 +14,7 @@
    "format": "composite: BG0 streamed cell animation A + category-0 sub-effect table",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Reached only through gActorCategories (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). InitCellAnim/UploadCellAnimFrame/ResetCellAnimBg (actor_part95.c) stream it to BG0.",
+   "notes": "Reached only through gActorCategories (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). InitCellAnim/UploadCellAnimFrame/ResetCellAnimBg (cell_anim.c) stream it to BG0.",
    "consumers_indirect": [
     "InitCellAnim",
     "UploadCellAnimFrame",
@@ -366,12 +366,12 @@
    "consumer_files": [
     "player/player_event.c",
     "enemies/enemy_ctrl.c",
-    "graphics/actor_part129.c",
+    "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
-    "graphics/actor_part62.c",
+    "vehicle/polar_objects.c",
     "frontend/starfield.c",
     "menus/level_select_widgets.c",
-    "graphics/actor_part_2fbf0.c",
+    "vehicle/jetpack_plane.c",
     "pickups/extra_life.c",
     "pickups/wumpa_update.c",
     "pickups/extra_life.c"
@@ -3316,10 +3316,10 @@
     "IsActorMaskAssistDue"
    ],
    "consumer_files": [
-    "graphics/actor_part100.c",
-    "graphics/actor_part101.c",
-    "graphics/actor_part104.c",
-    "graphics/actor_part95.c"
+    "actor/actor_category_stats.c",
+    "actor/actor_category_init.c",
+    "actor/actor_vram_pool.c",
+    "actor/cell_anim.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -3343,7 +3343,7 @@
     "InitActorCategory"
    ],
    "consumer_files": [
-    "graphics/actor_part101.c"
+    "actor/actor_category_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 4,
@@ -3361,7 +3361,7 @@
     "InitActorCategory"
    ],
    "consumer_files": [
-    "graphics/actor_part101.c"
+    "actor/actor_category_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 34,
@@ -3379,7 +3379,7 @@
     "SelectActorCategory"
    ],
    "consumer_files": [
-    "graphics/actor_part102.c"
+    "actor/actor_category_select.c"
    ],
    "ptr_words_code": 33,
    "ptr_words_data": 0,
@@ -3403,7 +3403,7 @@
     "UpdateActorPaletteCycle"
    ],
    "consumer_files": [
-    "graphics/actor_part53.c"
+    "actor/actor.c"
    ],
    "ptr_words_code": 16,
    "ptr_words_data": 19,
@@ -3425,7 +3425,7 @@
     "SetActorPaletteCycle"
    ],
    "consumer_files": [
-    "graphics/actor_part54.c"
+    "actor/actor.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3449,7 +3449,7 @@
     "SetActorPaletteCycle"
    ],
    "consumer_files": [
-    "graphics/actor_part54.c"
+    "actor/actor.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3496,8 +3496,8 @@
     "RunPolarPlayerState"
    ],
    "consumer_files": [
-    "graphics/actor_part127.c",
-    "graphics/actor_part19e.c"
+    "vehicle/polar_player.c",
+    "vehicle/polar_player_dispatch.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -3523,7 +3523,7 @@
     "PolarPlayerStateShocked"
    ],
    "consumer_files": [
-    "graphics/actor_part127.c"
+    "vehicle/polar_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3547,7 +3547,7 @@
     "PolarPlayerStateShocked"
    ],
    "consumer_files": [
-    "graphics/actor_part127.c"
+    "vehicle/polar_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3571,7 +3571,7 @@
     "UpdatePolarNitroCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19g.c"
+    "vehicle/polar_pickups.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3592,7 +3592,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3613,7 +3613,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3634,7 +3634,7 @@
     "UpdatePolarElectricFence"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3655,7 +3655,7 @@
     "RefreshPolarAkuAku"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3679,7 +3679,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3703,7 +3703,7 @@
     "UpdatePolarAkuAku"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3728,7 +3728,7 @@
     "YetiStateCharge"
    ],
    "consumer_files": [
-    "graphics/actor_part59.c"
+    "vehicle/yeti_states.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3749,7 +3749,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "graphics/actor_part74.c"
+    "vehicle/yeti_update.c"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -3773,7 +3773,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "graphics/actor_part60.c"
+    "vehicle/yeti.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3794,7 +3794,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "graphics/actor_part60.c"
+    "vehicle/yeti.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 123,
@@ -3818,7 +3818,7 @@
     "UpdateYetiPalette"
    ],
    "consumer_files": [
-    "graphics/actor_part74.c"
+    "vehicle/yeti_update.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3842,7 +3842,7 @@
     "IsTouchingYeti"
    ],
    "consumer_files": [
-    "graphics/actor_part75.c"
+    "vehicle/yeti_graphics.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3863,7 +3863,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "graphics/actor_part74.c"
+    "vehicle/yeti_update.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 191,
@@ -3886,8 +3886,8 @@
     "RunJetpackPlayerState"
    ],
    "consumer_files": [
-    "graphics/actor_part128.c",
-    "graphics/actor_part44b.c"
+    "vehicle/jetpack_spawn.c",
+    "vehicle/jetpack_player.c"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -3911,7 +3911,7 @@
     "AnimateJetpackPlayerPalette"
    ],
    "consumer_files": [
-    "graphics/actor_part44.c"
+    "vehicle/jetpack_player.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3936,8 +3936,7 @@
     "RunJetpackPlaneState"
    ],
    "consumer_files": [
-    "graphics/actor_part46b.c",
-    "graphics/actor_part_2fbf0.c"
+    "vehicle/jetpack_plane.c"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -3962,7 +3961,7 @@
     "RunJetpackBomberState"
    ],
    "consumer_files": [
-    "graphics/actor_part_2fbf0.c"
+    "vehicle/jetpack_plane.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -4138,7 +4137,7 @@
     "RunJetpackBalloonState"
    ],
    "consumer_files": [
-    "graphics/actor_part125.c"
+    "vehicle/jetpack_balloon.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4163,7 +4162,7 @@
     "RunJetpackBalloonCrateState"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4187,7 +4186,7 @@
     "UpdateJetpackRocket"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -8386,14 +8385,13 @@
    ],
    "consumer_files": [
     "frontend/language_select.c",
-    "graphics/actor_anim.c",
-    "graphics/actor_part129.c",
+    "actor/actor_anim.c",
+    "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
-    "graphics/actor_part19.c",
-    "graphics/actor_part19c.c",
-    "graphics/actor_part44.c",
-    "graphics/actor_part50.c",
-    "graphics/actor_part52.c"
+    "vehicle/polar_player_actions.c",
+    "vehicle/polar_pickups.c",
+    "vehicle/jetpack_player.c",
+    "actor/actor.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8417,7 +8415,7 @@
     "CreateActor"
    ],
    "consumer_files": [
-    "graphics/actor_part_2ac28.c"
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8441,7 +8439,7 @@
     "CreatePolarCheckpointText"
    ],
    "consumer_files": [
-    "graphics/actor_part_2ac28.c"
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8466,8 +8464,8 @@
     "DestroyPolarPlayer"
    ],
    "consumer_files": [
-    "graphics/actor_part19.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_player_actions.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8492,8 +8490,7 @@
     "CreatePolarCollectedWumpa"
    ],
    "consumer_files": [
-    "graphics/actor_part19c.c",
-    "graphics/actor_part19c2.c"
+    "vehicle/polar_pickups.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8518,8 +8515,8 @@
     "CreatePolarWumpa"
    ],
    "consumer_files": [
-    "graphics/actor_part19g.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_pickups.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8544,8 +8541,8 @@
     "CreatePolarTimeCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_crates.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8570,8 +8567,8 @@
     "CreatePolarQuestionCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_crates.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8596,8 +8593,8 @@
     "CreatePolarAkuAkuCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_crates.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8622,8 +8619,8 @@
     "CreatePolarNitroCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_crates.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8648,8 +8645,8 @@
     "CreatePolarLifeCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_crates.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8674,8 +8671,8 @@
     "sub_802CC54"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_crates.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8700,8 +8697,8 @@
     "CreatePolarBasicCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c",
-    "graphics/actor_part_2ac28.c"
+    "vehicle/polar_crates.c",
+    "actor/actor_factory.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8725,7 +8722,7 @@
     "InitPolarCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part19i.c"
+    "vehicle/polar_crates.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8749,7 +8746,7 @@
     "CreatePolarElectricFence"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8773,7 +8770,7 @@
     "sub_802CE38"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8797,7 +8794,7 @@
     "CreatePolarLauncher"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8821,7 +8818,7 @@
     "CreatePolarPenguin"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8845,7 +8842,7 @@
     "CreatePolarIcicle"
    ],
    "consumer_files": [
-    "graphics/actor_part126.c"
+    "vehicle/polar_objects.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8869,7 +8866,7 @@
     "CreatePolarAkuAku"
    ],
    "consumer_files": [
-    "graphics/actor_part58.c"
+    "vehicle/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8893,7 +8890,7 @@
     "CreatePolarGoal"
    ],
    "consumer_files": [
-    "graphics/actor_part58.c"
+    "vehicle/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8917,7 +8914,7 @@
     "CreatePolarBoostPad"
    ],
    "consumer_files": [
-    "graphics/actor_part58.c"
+    "vehicle/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8941,7 +8938,7 @@
     "CreatePolarCheckpointCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part58.c"
+    "vehicle/polar_aku_aku.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -8965,7 +8962,7 @@
     "CreateJetpackCheckpointText"
    ],
    "consumer_files": [
-    "graphics/actor_part128.c"
+    "vehicle/jetpack_spawn.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -8989,7 +8986,7 @@
     "CreateJetpackExplosion"
    ],
    "consumer_files": [
-    "graphics/actor_part128.c"
+    "vehicle/jetpack_spawn.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9014,8 +9011,8 @@
     "DestroyJetpackPlayer"
    ],
    "consumer_files": [
-    "graphics/actor_part128.c",
-    "graphics/actor_part44.c"
+    "vehicle/jetpack_spawn.c",
+    "vehicle/jetpack_player.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9039,7 +9036,7 @@
     "CreateJetpackShot"
    ],
    "consumer_files": [
-    "graphics/actor_part45c.c"
+    "vehicle/jetpack_shot.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9063,7 +9060,7 @@
     "CreateJetpackPlane"
    ],
    "consumer_files": [
-    "graphics/actor_part_2fbf0.c"
+    "vehicle/jetpack_plane.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9087,7 +9084,7 @@
     "CreateJetpackBomber"
    ],
    "consumer_files": [
-    "graphics/actor_part_2fbf0.c"
+    "vehicle/jetpack_plane.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9111,7 +9108,7 @@
     "CreateJetpackCannonball"
    ],
    "consumer_files": [
-    "graphics/actor_part_2fbf0.c"
+    "vehicle/jetpack_plane.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9159,7 +9156,7 @@
     "CreateJetpackBalloon"
    ],
    "consumer_files": [
-    "graphics/actor_part125.c"
+    "vehicle/jetpack_balloon.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9183,7 +9180,7 @@
     "CreateJetpackHealthCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9207,7 +9204,7 @@
     "CreateJetpackTimeCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9231,7 +9228,7 @@
     "CreateJetpackQuestionCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9258,7 +9255,7 @@
     "InitJetpackBalloonCrate"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 7,
    "ptr_words_data": 0,
@@ -9282,7 +9279,7 @@
     "CreateJetpackParachuteNitro"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9306,7 +9303,7 @@
     "CreateJetpackRocket"
    ],
    "consumer_files": [
-    "graphics/actor_part129.c"
+    "vehicle/jetpack_crates.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,

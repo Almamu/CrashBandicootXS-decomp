@@ -223,7 +223,7 @@ struct icon_slot {
  * `hud_digit_part`'s own per-type descriptor's slot-8 (`table+0x50`)
  * teardown trampoline via `_call_via_r2`, frees the array itself
  * (`self->parts`, allocated with a leading element-count word per the
- * `[-4]` read below - see the same convention in src/graphics/
+ * `[-4]` read below - see the same convention in src/gfx/
  * palette_cycle.c/actor files), then optionally frees `self` when
  * `flags` bit 0 is set (same "free-self" convention as
  * DestroyPaletteCycles/DestroyLanguageSelect elsewhere in this codebase). The per-type

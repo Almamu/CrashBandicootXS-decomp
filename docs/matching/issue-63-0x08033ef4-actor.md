@@ -206,7 +206,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   (this compiler's own C-driven pool placement for a plain `extern`
   global access always defers to the function's very end and ignores
   an `asm(".pool")` marker around it), the same gap already documented
-  for `UpdateActorPaletteCycle` in `actor_part53.c`. Retires the raw
+  for `UpdateActorPaletteCycle` in `actor.c`. Retires the raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`.
 
 - **`SpawnStar`/`PlotStarfieldPixel`** (`src/frontend/starfield.c`) - a

@@ -8,7 +8,7 @@
  */
 
 /* Category 4's BG1 picture (gActorCategories[4].bgPicture,
- * loaded by LoadBgPicture in actor_part45d.c): 38x16 map, 237 tiles. Built from
+ * loaded by LoadBgPicture in bg_picture.c): 38x16 map, 237 tiles. Built from
  * graphics/category_bg/151ac4_picture.png (palette and map) and
  * 151ac4_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_151ac4 {
@@ -38,7 +38,7 @@ const struct bg_picture_151ac4 gCategory4BgPicture = {
 };
 
 /* Category 4's spawnTable (gActorCategories[4].spawnTable,
- * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
     {
         { 7240, 230, 29, 29, 29, 0, -32, -30 },
@@ -277,7 +277,7 @@ const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
 
 /* The BG1 picture shared by categories 5 and 6
  * (gActorCategories[5..6].bgPicture, loaded by LoadBgPicture
- * in actor_part45d.c): 38x16 map, 374 tiles. Built from
+ * in bg_picture.c): 38x16 map, 374 tiles. Built from
  * graphics/category_bg/155260_picture.png (palette and map) and
  * 155260_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_155260 {
@@ -307,7 +307,7 @@ const struct bg_picture_155260 gCategory5BgPicture = {
 };
 
 /* Category 5's spawnTable (gActorCategories[5].spawnTable,
- * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
     {
         { 8452, 295, 29, 29, 29, 0, -96, -30 },
@@ -610,7 +610,7 @@ const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
 };
 
 /* Category 6's spawnTable (gActorCategories[6].spawnTable,
- * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(1) gCategory6SpawnTable = {
     {
         { 712, 1, 10, 10, 10, 0, 160, 30 },

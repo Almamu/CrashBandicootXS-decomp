@@ -138,10 +138,10 @@ void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirr
 void (*gHeapSortActorsByKeyFunc)(s32 n, void **list) = HeapSortActorsByKey;
 void *gActorList = NULL;
 s32 gCollectedSpawnCount = 0;
-/* Speeds, indexed by sub_802A570 (actor_part126.c). */
+/* Speeds, indexed by sub_802A570 (polar_objects.c). */
 s32 gUnknown_0300088C[3] = { 0x40, 0x62, 0x95 };
 void (*gUnpackNibbleTilesFunc)(void *src, s32 lowBlock) = UnpackNibbleTiles;
-/* Speeds, indexed by sub_802A570 (actor_part_2fbf0.c). */
+/* Speeds, indexed by sub_802A570 (jetpack_plane.c). */
 s32 gUnknown_0300089C[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 
 /* Palette RAM addresses (hovercraft.c, hovercraft_parts.c). */

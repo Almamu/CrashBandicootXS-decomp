@@ -3,7 +3,7 @@
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
- * already tracked in part_list.c-actor_part17.c (see
+ * already tracked in part_list.c-ctrl.c (see
  * docs/matching/issue-9-0x08007634-actor.md). `UpdateGroundSprite`/
  * `sub_800A590` sit between part_list.c's raw tail (still-raw
  * CollideGroundSprite/ProbeGroundSpriteTerrain/ProbeGroundSpriteFloor) and the already-matched

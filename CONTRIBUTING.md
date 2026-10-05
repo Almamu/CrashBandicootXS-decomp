@@ -99,7 +99,9 @@ function in your chunk:
    block ordering, the negative-constant bit-clear idiom, and more).
 5. **Matched:** cut it out of the raw `asm/*.s`, add it to the right
    `src/**/*.c` file, update `ldscript.txt`/`tools/report_units.py` if
-   you introduced or split a file.
+   you introduced or split a file. A new file goes in the subsystem
+   directory that fits what it does and is named after its subject
+   (see [docs/file_layout_plan.md](docs/file_layout_plan.md)).
 6. **Fully understood but genuinely resistant to byte-exact matching:**
    park it under `#if NON_MATCHING` / `.if NON_MATCHING == 0`, with a
    doc comment explaining exactly what you tried and why it didn't work.

@@ -22,8 +22,8 @@ extern void AirshipFireballStateOrbit();
 extern void AirshipFireballStateSpiralIn();
 extern void AirshipFireballStateExplode();
 
-/* Dispatched by UpdateJetpackPlane (actor_part46b.c) and RunJetpackPlaneState
- * (actor_part_2fbf0.c). */
+/* Dispatched by UpdateJetpackPlane and RunJetpackPlaneState
+ * (jetpack_plane.c). */
 const struct actor_pmf gJetpackPlaneStateFuncs[4] = {
     ACTOR_PMF(JetpackPlaneStateFly),
     ACTOR_PMF(sub_802FE58),
@@ -31,7 +31,7 @@ const struct actor_pmf gJetpackPlaneStateFuncs[4] = {
     ACTOR_PMF(JetpackPlaneStateFall),
 };
 
-/* Dispatched by UpdateJetpackBomber and RunJetpackBomberState (actor_part_2fbf0.c). */
+/* Dispatched by UpdateJetpackBomber and RunJetpackBomberState (jetpack_plane.c). */
 const struct actor_pmf gJetpackBomberStateFuncs[7] = {
     ACTOR_PMF(JetpackBomberStateIdle),
     ACTOR_PMF(JetpackBomberStateHome),

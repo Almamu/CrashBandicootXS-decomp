@@ -276,7 +276,7 @@ instructions rebuilding the `gBlendRegs` `REG_BLDCNT`/
 register-by-register as the original parked note described. What
 closed it was the same "one continuous opaque `asm volatile` island"
 technique `AllocVramTileBlock` (`src/gfx/sprite_frame.c`)
-and `UpdateActorPaletteCycle` (`src/graphics/actor_part53.c`) established: instead
+and `UpdateActorPaletteCycle` (`src/actor/actor.c`) established: instead
 of fighting this compiler's natural register allocation instruction by
 instruction, the whole sequence (both the `if`- and `else`-branch
 bodies) is transcribed directly from the ROM disassembly as one literal

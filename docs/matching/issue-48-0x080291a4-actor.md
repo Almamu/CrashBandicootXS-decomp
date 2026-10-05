@@ -9,23 +9,23 @@ same ROM region rather than being part of the category system itself.
 
 ## Matched (real C)
 
-- `SetupActorVramPool` (`actor_part104.c`) - pins the current category's
+- `SetupActorVramPool` (`actor_vram_pool.c`) - pins the current category's
   tile-cache slots (2 for type-0 sprite families, 5 for type-1/2) from
   two still-unnamed ROM-side sub-tables, then (re)builds the category's
   status-icon OAM row via `ConfigureHudParts`.
-- `CountCategoryCrates` (`actor_part100.c`) - counts how many of the current
+- `CountCategoryCrates` (`actor_category_stats.c`) - counts how many of the current
   category's `sub_effect_table` entries (`struct sub_effect_record`,
   `include/actor_anim.h`) match one of two fixed `variantA` byte sets,
   picked by the category's `type` field.
-- `AddActorMissedNitro`/`GetActorMissedNitros`/`GetActorCheckpoint` (`actor_part105.c`) - trivial
+- `AddActorMissedNitro`/`GetActorMissedNitros`/`GetActorCheckpoint` (`actor_category_stats.c`) - trivial
   frame-tick counter accessors.
-- `SetActorCheckpoint`/`IsActorMaskAssistDue` (`actor_part95.c`) - category tick
+- `SetActorCheckpoint`/`IsActorMaskAssistDue` (`cell_anim.c`) - category tick
   re-basing and an active-instance-count threshold test.
-- `nullsub_5`/`GetCellAnimFreeTile` (`actor_part106.c`), `FlipCellAnimPage`
-  (`actor_part96.c`), `GetCellAnimDistance` (`actor_part90.c`), `AdvanceCellAnim`
-  (`actor_part97.c`), `GetCellAnimFrameStep`/`GetCellAnimSpeed` (`actor_part91.c`),
-  `SetCellAnimSpeed`/`InitActorBgScroll`/`UpdateActorBgScroll` (`actor_part98.c`),
-  `ShakeActorBg`/`sub_8029E34`/`sub_8029E40` (`actor_part92.c`) - the
+- `nullsub_5`/`GetCellAnimFreeTile`, `FlipCellAnimPage`,
+  `GetCellAnimDistance`, `AdvanceCellAnim`,
+  `GetCellAnimFrameStep`/`GetCellAnimSpeed` and
+  `SetCellAnimSpeed`/`InitActorBgScroll`/`UpdateActorBgScroll` (all `cell_anim.c`),
+  `ShakeActorBg`/`sub_8029E34`/`sub_8029E40` (`actor_bg.c`) - the
   rest of the BG-tilemap scroll-effect subsystem's small accessors,
   accumulator-advance, and BG2-affine scroll/zoom setup functions.
 
@@ -36,7 +36,7 @@ patterns hit repeatedly across this whole chunk.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`InitActorCategory`** (`actor_part101.c`) - the category
+- **`InitActorCategory`** (`actor_category_init.c`) - the category
   (re)initialization + per-VBlank loading-screen driver. Fully
   understood (stores the category argument, resets active-instance
   counters, decompresses the sprite sheet, rebuilds VRAM pool pins,
@@ -52,7 +52,7 @@ patterns hit repeatedly across this whole chunk.
   `CollidePlayerWithCrates`). Verified byte-for-byte identical to the original raw
   disassembly by assembling both independently and comparing the raw
   `.text` bytes directly (not just against `baserom.gba`).
-- **`UploadCellAnimFrame`/`InitCellAnim`/`ResetCellAnimBg`** (`actor_part95.c`) - a
+- **`UploadCellAnimFrame`/`InitCellAnim`/`ResetCellAnimBg`** (`cell_anim.c`) - a
   DMA copy trigger for the "console"/text-plane cursor cell, the cell
   geometry (re)configuration entry point, and the VRAM tilemap
   double-buffer fill pair it calls. All three reproduce the ROM's exact
@@ -63,7 +63,7 @@ patterns hit repeatedly across this whole chunk.
   against `baserom.gba` directly (relocation-aware: every differing
   byte in the isolated compile falls inside a `bl`/`ABS32` relocation
   range).
-- **`FillCellAnimTilemap`** (`actor_part98.c`) - a VRAM tilemap-fill nested loop
+- **`FillCellAnimTilemap`** (`cell_anim.c`) - a VRAM tilemap-fill nested loop
   sharing `ResetCellAnimBg`'s shape; same register-pressure wall.
 
 ## Debugging notes: recurring gcc-2.9 patterns hit across this whole chunk
@@ -149,6 +149,6 @@ the `gCellAnimTileBytes` store, and `size` is read back from
 ## Later pass: category driver retry
 
 `InitActorCategory` is now plain C, matching under old_agbcc
-(`actor_part101.o` is on `OLD_AGBCC_OBJS`; current agbcc is 3 halfwords
+(`actor_category_init.o` is on `OLD_AGBCC_OBJS`; current agbcc is 3 halfwords
 off). The high-register roles are loop.c's invariant hoisting, not
 pins. See [category-driver-naked-retry.md](category-driver-naked-retry.md).

@@ -114,7 +114,7 @@ extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 
 /* Sets `field_29`'s low nibble from GetSpriteAnimPaletteSlot's result, keeping the
  * high nibble - the recurring last step of every icon constructor that
- * touches a `struct settings_icon_actor` (see src/graphics/
+ * touches a `struct settings_icon_actor` (see src/menus/
  * pause_menu_pages_init.c and src/menus/power_dialog.c). Written with
  * explicit register pins (matching the SUB_8006600_* macros in
  * src/menus/power_dialog_draw.c) because gcc's constant-propagation

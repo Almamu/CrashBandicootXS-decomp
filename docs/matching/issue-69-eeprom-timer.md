@@ -258,7 +258,7 @@ identical class of gap, documented in their own issues:
   the same file, in ROM order - see docs/status/util.md. With all 10
   functions in issue #70's range now matched, **this closes issue
   #70** too.
-- **`DrawJetpackCheckpointText`** (`src/graphics/actor_anim.c`, GitHub issue #71) -
+- **`DrawJetpackCheckpointText`** (`src/actor/actor_anim.c`, GitHub issue #71) -
   the near-identical twin of the still-parked `DrawPolarCollectedWumpa`, fixed-
   position OAM setup. One trailing-padding gotcha found while
   transcribing: the ROM disassembly's final `movs r0, r0` before the
@@ -313,7 +313,7 @@ identical class of gap, documented in their own issues:
   matched on its own with both division routines still fully raw in
   neighboring `asm/*.s` files, so the ordering within the `.c` file
   didn't matter yet); the now-unmatched `Ror32` helper removed.
-- `src/graphics/actor_anim.c` - `DrawJetpackCheckpointText` now `NAKED`, matched.
+- `src/actor/actor_anim.c` - `DrawJetpackCheckpointText` now `NAKED`, matched.
 - `asm/code_3_2_20e_aa08.s`, `asm/code_3_2_20e_aa90.s`,
   `asm/code_3_2_20e_ab54.s`, `asm/code_3_2_20e_3adb4.s`,
   `asm/code_3_2_20e_3ae4c.s`, `asm/code_3_3_b46c.s` - all deleted

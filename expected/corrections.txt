@@ -88,7 +88,7 @@ split 0x0800039C mem_walk_heaps
 rename sub_8006C00 AllocVramDmaQueue
 
 # Seven more hidden functions with no thumb_func_start of their own,
-# same pattern as sub_800039C above - see src/graphics/actor_anim.c's
+# same pattern as sub_800039C above - see src/actor/actor_anim.c's
 # comments on IsJetpackCheckpointTextUnshootable/DestroyJetpackCheckpointText/UpdateJetpackExplosion/IsJetpackExplosionUnshootable/
 # GetActorHp/nullsub_44/IsJetpackPlayerUnshootable.
 split 0x0803B54C IsJetpackCheckpointTextUnshootable

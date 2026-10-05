@@ -4,7 +4,7 @@
 /* Same "boss-weapon self" object family as airship_fireball.c (see that
  * file's header comment and docs/matching/issue-58-0x08030334-actor.md),
  * and the same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` AABB-overlap
- * shape as `IsTouchingYeti`/`UpdateYeti` (actor_part75.c/actor_part74.c,
+ * shape as `IsTouchingYeti`/`UpdateYeti` (yeti_graphics.c/yeti_update.c,
  * see docs/matching/issue-54-actor-d3a8.md) - only runs while the small
  * tracker object's state global (`gAirshipState`) is 2 or 3. Box A:
  * `gAirshipBox` (a fixed keyframe-table box) with the boss-

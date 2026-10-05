@@ -13,7 +13,7 @@ Thumb code, and one for the ARM code of the IWRAM image:
   the commit right after every function it contains was given its final,
   descriptive name where one was known) - i.e. exactly what the ROM's code
   disassembles to for everything matched from September 2026 onward
-  (`src/graphics/`, `src/util/`, and part of `src/system/`), using the same
+  (then `src/graphics/`, `src/util/`, and part of `src/system/`), using the same
   symbol names the current `src/*.c` files use for anything since matched.
 - **`legacy.s`** is `asm/code.s` (the ROM's *entire* code, in one file) as it
   existed at `8b090ca`, the very first commit - covering ROM addresses

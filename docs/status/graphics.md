@@ -1,10 +1,10 @@
 # Status: graphics
 
-`src/graphics/` (core rendering only) - OAM/sprite rendering, screen
+Core rendering only (`src/gfx/`, `src/text/`) - OAM/sprite rendering, screen
 fades, palette blending, per-actor animation frames, text layout. The
 per-instance actor object family, the HUD, pause/options overlay UI,
-and asset-loading/trigger-effect code also live under `src/graphics/`
-on disk but are tracked in their own category pages - see
+and asset-loading/trigger-effect code used to live under `src/graphics/`
+too, but are tracked in their own category pages - see
 [actor.md](./actor.md), [hud.md](./hud.md), [overlay_ui.md](./overlay_ui.md),
 and [graphics_loading.md](./graphics_loading.md).
 
@@ -36,7 +36,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `CountClearGems`, `CountCrystals`
 - `src/gfx/fade.c`: `StepBrightnessFade`, `FadeBrightness`
 - `src/gfx/fade.c`: `DarkenPalette`
-- `src/graphics/actor_anim.c`: `GetAnimFrameBaseOffset`
+- `src/actor/actor_anim.c`: `GetAnimFrameBaseOffset`
 - `src/gfx/fade_to_black.c` (new file - `FadePaletteToBlack`,
   `IsBrightnessFadeActive`) and
   `src/gfx/display.c` (new file - `SetDispcntMode`,

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same "self" object family as actor_part59.c - see that file's header
+/* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Constructor: health defaults to `0x10`, or `0x18` if the
@@ -61,7 +61,7 @@
  *   text - this compiler's own C-driven pool placement always defers
  *   a plain `extern` global access to the function's very end and
  *   ignores an `asm(".pool")` marker around it, exactly the gap
- *   already documented in `actor_part53.c`'s `UpdateActorPaletteCycle`. The
+ *   already documented in `actor.c`'s `UpdateActorPaletteCycle`. The
  *   `self[0x28]=0`/self[0x59] reload pair and the `zeroByte`/`zero2`
  *   register splits below needed the same "which register holds
  *   which cached zero" register-pinning treatment, each in its own

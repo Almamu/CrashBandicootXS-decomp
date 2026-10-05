@@ -10,15 +10,15 @@ Nine closed as plain C, with no register pins:
 
 | Function | File | Compiler | Technique |
 |---|---|---|---|
-| `PolarIsTouchingPlayer` | `actor_part103.c` | old_agbcc (file moved) | one frame struct for the boxes |
-| `JetpackIsTouchingPlayer` | `actor_part103.c` | old_agbcc | same inline as `PolarIsTouchingPlayer` |
-| `FindShotTarget` | `actor_part103.c` | old_agbcc | same inline, inside a list walk |
-| `DetonateNearbyPolarNitros` | `actor_part19h.c` | old_agbcc (file moved) | same inline, inside a list walk |
-| `FillCellAnimTilemap` | `actor_part98.c` | both | `tile++` in each branch |
-| `ResetCellAnimBg` | `actor_part95.c` | both | `FillCellAnimTilemap` inlined twice, upward clear loop |
-| `UploadCellAnimFrame` | `actor_part95.c` | both | expression order and locals |
-| `JetpackIsPauseLocked` | `actor_part94.c` | both | returns the callee's result |
-| `PolarIsPauseLocked` | `actor_part94.c` | both | returns the callee's result |
+| `PolarIsTouchingPlayer` | `actor_category_frame.c` | old_agbcc (file moved) | one frame struct for the boxes |
+| `JetpackIsTouchingPlayer` | `actor_category_frame.c` | old_agbcc | same inline as `PolarIsTouchingPlayer` |
+| `FindShotTarget` | `actor_category_frame.c` | old_agbcc | same inline, inside a list walk |
+| `DetonateNearbyPolarNitros` | `polar_nitro.c` | old_agbcc (file moved) | same inline, inside a list walk |
+| `FillCellAnimTilemap` | `cell_anim.c` | both | `tile++` in each branch |
+| `ResetCellAnimBg` | `cell_anim.c` | both | `FillCellAnimTilemap` inlined twice, upward clear loop |
+| `UploadCellAnimFrame` | `cell_anim.c` | both | expression order and locals |
+| `JetpackIsPauseLocked` | `actor_spawn.c` | both | returns the callee's result |
+| `PolarIsPauseLocked` | `actor_spawn.c` | both | returns the callee's result |
 
 `PolarIsPauseLocked` was not on the list, but it is `JetpackIsPauseLocked`'s twin in the
 same file and parked for the same reason.
@@ -32,8 +32,8 @@ Still NAKED: `InitActorCategory`, `InitCellAnim`, `SelectActorCategory`,
 the same test: copy actor A's `+0x38` box to a stack slot, translate it
 by A's position, copy it to a second slot and run the `MemCopy32`
 self-copy, then do the same for actor B, and compare. In the source this
-is one `static inline` (`ActorsOverlap`, in `actor_part103.c` and again
-in `actor_part19h.c`):
+is one `static inline` (`ActorsOverlap`, in `actor_category_frame.c` and again
+in `polar_nitro.c`):
 
 ```c
 struct {
@@ -74,8 +74,8 @@ called through `_call_via_r1`.
 
 All four need old_agbcc. Current agbcc schedules the `asr`s in the box
 translation differently, which puts them 24-26 halfwords off.
-`actor_part103.c` also holds the NAKED `RunActorCategoryFrame`, which assembles
-the same under either compiler. `actor_part19h.c` holds only
+`actor_category_frame.c` also holds the NAKED `RunActorCategoryFrame`, which assembles
+the same under either compiler. `polar_nitro.c` holds only
 `DetonateNearbyPolarNitros`. Both files moved to `OLD_AGBCC_OBJS`.
 
 ## The tile-map fill: `tile++` in each branch

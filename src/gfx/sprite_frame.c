@@ -212,7 +212,7 @@ extern void FreeVramTileBlock(void *addr);
  * (`.Lalloc_vram_notfound`/`.Lalloc_vram_remzero`) that a later,
  * ordinary-looking C statement's own `asm volatile(".Lname:")` marker
  * defines, the same "opaque asm reaching a named landing point in
- * later plain C" idiom `UpdateActorPaletteCycle` (src/graphics/actor_part53.c)
+ * later plain C" idiom `UpdateActorPaletteCycle` (src/actor/actor.c)
  * established for this project - `.Lalloc_vram_epilogue` marks the
  * point right before the function's one real (compiler-generated)
  * epilogue, split off `return result;`'s value computation via a
@@ -221,7 +221,7 @@ extern void FreeVramTileBlock(void *addr);
  * `.Lalloc_vram_notfound`'s `b .Lalloc_vram_epilogue` forces the
  * `gVramTileBlockRover` literal (loaded via the assembler's own
  * `=symbol` syntax, opaque to this compiler's own pool bookkeeping -
- * see actor_part53.c's own comment for why only that route respects an
+ * see actor.c's own comment for why only that route respects an
  * explicit pool split) to group with the compiler's own
  * `gVramTileBlockSpares` literal in that same ROM-matching mid-function
  * gap instead of at the function's end. The free-list-split logic

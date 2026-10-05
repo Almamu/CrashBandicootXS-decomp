@@ -2,8 +2,8 @@
 
 A scoping investigation of the actor zone found this 4152-byte range -
 the whole of `asm/code_3_2_20_28568_c99c_e0a4.s` - sitting between
-issue #54's chunk (`actor_part61.c`, ending at `YetiStateCaught`/
-`sub_802E0A0`) and issue #56's chunk (`actor_part43.c`, starting at
+issue #54's chunk (`yeti.c`, ending at `YetiStateCaught`/
+`sub_802E0A0`) and issue #56's chunk (`jetpack_run.c`, starting at
 `FinishJetpackRun`) - still completely raw. `docs/rom_map.md` had already
 partly read this range from disassembly alone: `CreateJetpackActor` is "a
 31-case jump table paired with a new stride-40 RAM table,
@@ -26,7 +26,7 @@ of no-argument helpers reading a fixed global object (`gUnknown_
 
 All four are the lowest-register-pressure members of the
 `CreateJetpackActor` constructor family - just `r4`-`r6`, no `r8`/`sb`/`sl` -
-in `src/graphics/actor_part128.c`:
+in `src/vehicle/jetpack_spawn.c`:
 
 - **`YetiStateStop`** - state-3 anim-frame edge reset: while `self`
   (`gYeti`)'s table-index isn't already 3 and its anim-
@@ -39,7 +39,7 @@ in `src/graphics/actor_part128.c`:
   (`gJetpackAnimTable + 0x6E0`) plus the three incoming position
   arguments; the call's own return value is discarded (matching the
   `void` signature already established for this function elsewhere in
-  the codebase, e.g. `actor_part44.c`).
+  the codebase, e.g. `jetpack_player.c`).
 - **`SpawnHovercraftCannonFlash`** - same shape, 0x5c-byte struct, table offset
   0x230, forwards to `CreateHovercraftCannonFlash`.
 - **`SpawnHovercraftLauncher`**/**`SpawnHovercraftCannon`** - same shape, 0x70-byte struct,
@@ -60,11 +60,11 @@ ROM's own build uses the plain `pop {r0}; bx r0` idiom this whole
 codebase's `void` functions use everywhere else, confirming the
 original source never actually returned the forwarded call's result
 here (matching the already-established `void SpawnJetpackCollectedWumpa(s32 x, s32
-y, s32 amount);` extern declaration in `actor_part44.c`).
+y, s32 amount);` extern declaration in `jetpack_player.c`).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-The other 21 functions, all in `src/graphics/actor_part128.c`. Given
+The other 21 functions, all in `src/vehicle/jetpack_spawn.c`. Given
 how heavily this whole neighborhood (issues #50/#52/#56, see their own
 matching docs) has already needed the NAKED-transcription escape hatch
 for gcc-2.9 register-pressure/branch-layout gaps, and the size of this
@@ -103,7 +103,7 @@ raw disassembly.
   consistently NAKED-parked for. Established externs already exist for
   `SpawnHovercraftFireball`, `SpawnAirshipFireball`, and `SpawnJetpackCannonball` (`hovercraft_side_gun.c`,
   `airship_states.c`/`hovercraft_cannon.c`/
-  `actor_part46b.c`).
+  `jetpack_plane.c`).
 - **`CreateJetpackPlayer`** - stashes its first argument into
   `gJetpackAnimTable` then allocates and forwards to `sub_8032ADC` with
   a position derived from the player object (`gActorList`).
@@ -130,7 +130,7 @@ were reused verbatim from another worktree after confirming byte-
 identical `graphics/`/`sound/` source trees via `diff -rq` - every
 `.c`/`.s` file that actually changed was still fully recompiled and
 relinked from scratch.) `make NON_MATCHING=1 report` also compiled
-clean, no warnings for `actor_part128.c`.
+clean, no warnings for `jetpack_spawn.c`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.

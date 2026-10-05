@@ -41,4 +41,4 @@ gone.
 ## Comment-only updates
 
 - **Issue #24:** the NAKED `SpawnDingodileShark` and `UpdateDingodileShield` (dingodile.c) now describe their remaining gaps under old_agbcc (26 and 139 halfwords, register allocation).
-- **Issue #56:** so do `LoadBgPicture` and `FillBgPictureMap` (actor_part45d.c).
+- **Issue #56:** so do `LoadBgPicture` and `FillBgPictureMap` (bg_picture.c).

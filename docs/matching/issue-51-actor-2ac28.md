@@ -1,13 +1,13 @@
 # Issue #51: 0x0802AC28-0x0802B364 - the actor factory
 
 GitHub issue #51 covers `0x0802AC28`-`0x0802BED8`. Its tail was already
-done: `UpdatePolarPlayer`-`PolarPlayerStateCaught` in `actor_part127.c`
+done: `UpdatePolarPlayer`-`PolarPlayerStateCaught` in `polar_player.c`
 ([issue-52-gap-b364.md](./issue-52-gap-b364.md), four real C, seven
-NAKED) and `DispensePolarWumpa`-`PolarPlayerStateBoost` in `actor_part107.c`
+NAKED) and `DispensePolarWumpa`-`PolarPlayerStateBoost` in `polar_player_states.c`
 ([issue-50-actor-bc68.md](./issue-50-actor-bc68.md)). This pass did the
 first seven functions, the whole of what was left in
 `asm/code_3_2_20_8b7c_ac28.s`. They are now real C in
-`src/graphics/actor_part_2ac28.c`, and the raw file is retired.
+`src/actor/actor_factory.c`, and the raw file is retired.
 
 | function | what it is |
 |---|---|
@@ -21,8 +21,8 @@ first seven functions, the whole of what was left in
 
 All seven match under both `agbcc` and `old_agbcc`, since nothing in them
 depends on what differs between the two. They are built with the current
-agbcc like the rest of this zone (`actor_part52.c`/`actor_part54.c`/
-`actor_part127.c`).
+agbcc like the rest of this zone (`actor.c`/
+`polar_player.c`).
 
 ## The pieces
 
@@ -73,7 +73,7 @@ record 0 with `ConstructActorPart`. That function runs `InitActorPart`
 (y = `z ? 0x2800 : -0x5000`), installs `gPolarPlayerVtable`, calls
 `AllocPolarPlayerTiles`, and starts either state 0xD/anim 0xC (when z != 0) or anim
 8. It then resets the `gPolarPauseLocked`-`gPolarPlayerVelY` player-state
-globals (the ones `actor_part19.c`/`actor_part44.c`/`actor_part107.c`
+globals (the ones `polar_player_actions.c`/`jetpack_player.c`/`polar_player_states.c`
 drive).
 
 ## What it took
@@ -112,7 +112,7 @@ drive).
 
 Issue #51 stays open: `UpdatePolarPlayer`, `DrawPolarPlayer`, `AllocPolarPlayerTiles`,
 `PolarPlayerStateMount`, `PolarPlayerStateJump`, `PolarPlayerStateDash` and `PolarPlayerStateCaught`
-(`actor_part127.c`) are still NAKED.
+(`polar_player.c`) are still NAKED.
 
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 (no warnings from the new file) and a full clean `rm -rf build

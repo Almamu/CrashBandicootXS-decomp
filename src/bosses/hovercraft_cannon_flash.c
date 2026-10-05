@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Same "self" object family as actor_part61.c - see that file's header
+/* Same "self" object family as hovercraft_side_gun.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Syncs `self`'s position fields from the singleton's own position plus
