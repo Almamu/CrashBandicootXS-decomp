@@ -35,7 +35,7 @@ Rather than keep chasing one register, `CheckSpritePickup` was converted to
 a `NAKED` function with its body written as a single `asm()` block
 transcribing the real ROM disassembly (`asm/code_3_2_3.s`)
 instruction-for-instruction, the same technique already used for
-several functions in `src/system/link_cable.c` and
+several functions in `src/link/link_handshake.c` and
 `lib/gax/src/gax_swi.c`'s `GaxHuffUnComp`. The transcription:
 
 - Uses GNU-as local numeric labels (`1:`/`1f`/`1b`, ...) in the exact

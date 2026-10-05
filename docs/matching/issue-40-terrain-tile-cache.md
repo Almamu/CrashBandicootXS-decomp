@@ -39,7 +39,7 @@ issue is where they got turned into (attempted) byte-exact C.
   out of scope for this issue).
 - **`DestroyTileCache`** is the exact same "`flags & 1` -> forward to
   `OperatorDelete`" shape already matched as `DestroySpriteBankSet` in
-  `src/graphics/graphics.c`.
+  `src/gfx/graphics.c`.
 - **`SetBitmapBit`/`ClearBitmapBit`** are a floor-divide-by-32 bitmap
   set/clear pair on an arbitrary `void *self` array - unrelated to the
   tile cache, just adjacent in ROM.

@@ -21,7 +21,7 @@ closed 12 of the 19.
   `InitSaveMenuIcons` draft at the end of the file is 5 halfwords off under
   old_agbcc and 23 under agbcc. The ROM loads that function's nibble
   mask before the byte it combines with, which is old_agbcc's tell.
-- `src/system/link_cable.c` is on `OLD_AGBCC_OBJS` for the same
+- `src/link/link_handshake.c` is on `OLD_AGBCC_OBJS` for the same
   reason. Its one matched function, `LinkStop`, compiles the same
   under both. The `MakeLinkHandshakeId` and `ResetLinkSessionState` drafts are closer
   under old_agbcc, and the ROM's `MakeLinkHandshakeId` has the
@@ -116,7 +116,7 @@ NON_MATCHING build, where the C draft replaces them.
   them after the loop, and so do plain stores here. Local pointers get
   them computed early but in other registers, and 0x1fb comes out as
   0x1f8 + 3 instead of from its own literal.
-- **`MakeLinkHandshakeId`** (`link_cable.c`, NAKED): 49 halfwords off under
+- **`MakeLinkHandshakeId`** (`link_handshake.c`, NAKED): 49 halfwords off under
   old_agbcc. The hash loop is a `for (i = 4; i != -1; i--)` countdown,
   which gives the ROM's `cmp r4, r5(-1); bne`. Two things are left:
   - The ROM strength-reduces the fill loop into a pointer compared
@@ -124,7 +124,7 @@ NON_MATCHING build, where the C draft replaces them.
     `self[i] = 0xec`.
   - In the nibble fold, the ROM reloads byte 6. gcc folds
     `(self[7] << 8) | self[6]` back into `hash`.
-- **`ResetLinkSessionState`** (`link_cable.c`, NAKED): 136 halfwords off, same
+- **`ResetLinkSessionState`** (`link_handshake.c`, NAKED): 136 halfwords off, same
   size as the ROM. It establishes `struct link_session`:
   - 0x0c/0x10/0x14 counters.
   - The id word at 0x20, as `lo:4`/`hi:12`.
@@ -139,7 +139,7 @@ NON_MATCHING build, where the C draft replaces them.
   per-player loop: the ROM recomputes `i * 0xc8` for each field,
   computes `i + 1` before the inner copy loop, and keeps that loop
   counting up.
-- **`UpdateLinkSession`** (`link_cable.c`, NAKED): 37 halfwords off under
+- **`UpdateLinkSession`** (`link_handshake.c`, NAKED): 37 halfwords off under
   both compilers, same size as the ROM. Everything from the timeout
   counter on matches. The IRQ indices are `TIMER3` (6) and
   `SERIAL` (7). `LinkStop` is called with the session in r0, so it

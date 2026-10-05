@@ -15,7 +15,7 @@ compare` ("La suma coincide").
 
 - **`EnableMusicVCountIrq`/`MusicVCountIrqHandler`** (audio) - installs a VCount-IRQ
   handler that forwards into the music player's existing per-tick fade
-  update (`UpdateAudio`, `src/audio/music_player.c`). That file's
+  update (`UpdateAudio`, `src/audio/audio.c`). That file's
   header comment already anticipated this pair by name. Matched.
 - **`MakeLinkHandshakeId`-`ReadSaveData`ish** (system) - the genuine GBA
   multiplayer link-cable/SIO transport this document's `rom_map.md`
@@ -47,13 +47,13 @@ compare` ("La suma coincide").
 
 ## Matched (16)
 
-- `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (`src/audio/music_irq.c`) - VCount-IRQ
+- `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (`src/audio/audio.c`) - VCount-IRQ
   registration and handler for the music player's per-tick update.
-- `LinkStop` (`src/system/link_cable.c`) - link-session "stop":
+- `LinkStop` (`src/link/link_handshake.c`) - link-session "stop":
   IME-guarded Serial/Timer3 IRQ disable, RCNT/SIOCNT/TM3CNT reset,
   IF acknowledge.
 - `LinkStart`, `LinkSetupSio`, `ResetLinkSession`, `DestroyLinkSession`,
-  `InitLinkSession`, `LinkSerialIntr`, `LinkTimer3Intr` (`src/system/link_cable2.c`)
+  `InitLinkSession`, `LinkSerialIntr`, `LinkTimer3Intr` (`src/link/link_sio.c`)
   - link-session "start" (counterpart to `LinkStop`), a small
   RCNT/SIOCNT reset helper, a reset-wrapper convenience function, a
   reset+conditional-teardown function (with an inert 4-iteration
@@ -119,7 +119,7 @@ register-choice nondeterminism (see `DrawPowerDialog`/`DrawSaveMenuTitle` for
 the established pattern this project has hit many times before):
 
 - **`MakeLinkHandshakeId`** (`asm/code_3_1_10_3_1cb8.s`, C in
-  `src/system/link_cable.c`) - the per-player CRC-16-style handshake-id
+  `src/link/link_handshake.c`) - the per-player CRC-16-style handshake-id
   hash helper. This project's first attempt at this specific table-walk
   idiom: the leading fill loop and the hash loop's setup match the
   ROM's exact registers, but the per-byte table-index computation
@@ -323,7 +323,7 @@ The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.m
 | `ValidateSaveData` | 18 |
 
 The link-cable drafts establish `struct link_session`,
-`struct link_player` and `struct link_ring`. `link_cable.c` is now on
+`struct link_player` and `struct link_ring`. `link_handshake.c` is now on
 `OLD_AGBCC_OBJS`. `LinkStop` takes the session pointer its callers
 pass in r0; the parameter is unused and its code is unchanged.
 `HandleLinkSerial` was not attempted. Nothing in this range closed, so the
@@ -376,7 +376,7 @@ are set before `p`, so they come before its init as in the ROM. See
 
 ## Later pass: last-eleven NAKED retry
 
-`ResetLinkSessionState` is real C now (`src/system/link_cable_01db4.c`, old_agbcc
+`ResetLinkSessionState` is real C now (`src/link/link_session_reset.c`, old_agbcc
 plus `-fno-rerun-loop-opt`). The 0x1234 magic moved into a
 function-scope local, so its pseudo lives across the whole loop, gets no
 register and is rematerialized at each store, which is the ROM's

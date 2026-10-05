@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_util2.c)
+/* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_step.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 extern void RemoveVBlankCallback(s32 arg0);
@@ -133,7 +133,7 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
     }
 }
 
-/* Sits right after FadeBrightness (ROM 0x0800132C, in src/graphics/fade_util.c)
+/* Sits right after FadeBrightness (ROM 0x0800132C, in src/gfx/fade.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 extern u16 gPaletteBackup[512];

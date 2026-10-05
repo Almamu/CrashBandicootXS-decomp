@@ -138,7 +138,7 @@ pass that also converted this file's five sibling functions
 `DrawSaveSlots` - all built on the same centered-label/positioned-glyph
 primitive, all hitting the identical difficulty class) - see
 `src/graphics/settings_menu.c`'s header comment and
-`src/util/printf_util.c`'s `FindSubstring` for the established NAKED-
+`src/util/printf.c`'s `FindSubstring` for the established NAKED-
 transcription pattern. Every instruction in all six now matches the
 ROM exactly; verified via a full clean `make compare` (`La suma
 coincide`). Per this project's tracking policy, byte-exact NAKED asm

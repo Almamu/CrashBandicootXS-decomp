@@ -180,7 +180,7 @@ sequencing gcc 2.9 never reproduced) never responded to further plain-C
 restructuring, so all four were converted to `NAKED` and their ROM
 disassembly transcribed instruction-for-instruction - the same escape
 hatch this project already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
-(`src/system/link_cable.c`, see
+(`src/link/link_handshake.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). All four share the exact same shape (confirmed
 by the transcription itself matching one-for-one once the twin family
@@ -504,7 +504,7 @@ this) - both fixed with small `asm volatile` blocks:
 
 Both fully understood, every instruction's *content* confirmed matching
 via isolated compile, but both hit the confirmed `r7`-pin gap documented
-for `IsEntityInsideRect` (src/graphics/graphics.c) and `SpawnBonusPlatform` above -
+for `IsEntityInsideRect` (src/gfx/graphics.c) and `SpawnBonusPlatform` above -
 this compiler only adds a hard-pinned register to a function's callee-saved
 push/pop set when it tracks that register as holding a value live across
 a *wider* span than a single inline-asm block, and `r7` in both of these

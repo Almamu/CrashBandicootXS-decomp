@@ -332,7 +332,7 @@ extern void DestroyHovercraftLauncher();
 extern void DestroyHovercraftSideGun();
 extern void DestroyHovercraftCannonFlash();
 
-/* Used by actor_aabb_setup.c, actor_part124.c, actor_part39.c,
+/* Used by aabb_setup.c, actor_part124.c, actor_part39.c,
  * actor_part6.c (DestroySpriteObj), actor_part7.c, graphics.c (nullsub_12,
  * ResetEntity, DestroyEntity). */
 const struct vtable_slot gEntityVtable[11] = {
@@ -1054,7 +1054,7 @@ const struct vtable_slot gPooledBgLayerVtable[10] = {
     VTABLE_SLOT(ClipPooledBgLayerRows),
 };
 
-/* Used by hud_icon_slot.c (sub_802710C). */
+/* Used by palette_cycle.c (sub_802710C). */
 const struct vtable_slot gHudPartVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -1071,7 +1071,7 @@ const struct vtable_slot gHudPartVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by actor_aabb_setup.c, hud_icon_widget_85c4.c (FontDrawGlyph). */
+/* Used by aabb_setup.c, font_glyph.c (FontDrawGlyph). */
 const struct vtable_slot gLargeFontVtable[9] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyLargeFont),
@@ -1084,7 +1084,7 @@ const struct vtable_slot gLargeFontVtable[9] = {
     VTABLE_SLOT(FontUploadTiles),
 };
 
-/* Used by actor_aabb_setup.c, hud_icon_widget_85c4.c (FontDrawGlyph). */
+/* Used by aabb_setup.c, font_glyph.c (FontDrawGlyph). */
 const struct vtable_slot gSmallFontVtable[9] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroySmallFont),
@@ -1097,8 +1097,8 @@ const struct vtable_slot gSmallFontVtable[9] = {
     VTABLE_SLOT(FontUploadTiles),
 };
 
-/* Used by actor_aabb_setup.c, hud_icon_widget5.c (DestroyFont),
- * hud_icon_widget_85c4.c (FontDrawGlyph), hud_icon_widget_8a78.c. */
+/* Used by aabb_setup.c, font.c (DestroyFont),
+ * font_glyph.c (FontDrawGlyph), font.c. */
 const struct vtable_slot gFontVtable[9] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyFont),

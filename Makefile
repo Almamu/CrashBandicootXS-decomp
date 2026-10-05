@@ -317,11 +317,11 @@ NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o
 $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
-# link_cable_01db4 holds only ResetLinkSessionState, which is real C: it keeps the
+# link_session_reset.c holds only ResetLinkSessionState, which is real C: it keeps the
 # ROM's up-counting inner copy loop only with this flag (the rerun pass
 # reverses it; without the flag the matching C is 147 halfwords off and
 # 16 bytes long). The flag changes the matching HandleLinkSerial, which is
-# why ResetLinkSessionState was split out of link_cable.c. See
+# why ResetLinkSessionState was split out of link_handshake.c. See
 # docs/matching/last-ten-naked-retry.md and
 # docs/matching/last-eleven-naked-retry.md.
 NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/link/link_session_reset.o

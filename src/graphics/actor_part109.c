@@ -43,7 +43,7 @@
  *     player's `+0x2d` - the player's hitbox FOR the target action.
  *
  * If AABB1 overlaps AABB2 (`AabbOverlapsInclusiveX`, the inclusive/touching-counts
- * variant - `src/graphics/aabb_util.c`), bails out and returns `0`
+ * variant - `src/util/aabb.c`), bails out and returns `0`
  * immediately: `self`'s hitbox already overlaps the player's CURRENT
  * hitbox, so this is not a fresh trigger. Otherwise, returns `1` only
  * if AABB1 overlaps AABB3 - `self`'s hitbox overlaps the player's

@@ -247,7 +247,7 @@ parked next to), translated from unified to plain (divided) syntax
 renumbered to GNU-as local numeric labels (`N:`, referenced `Nf`/`Nb`) -
 the same established escape hatch this project has used before (see
 `docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
-byte-verified" section, and `src/system/link_cable.c`'s worked
+byte-verified" section, and `src/link/link_handshake.c`'s worked
 examples). This pass's translation was scripted (a small Python helper,
 scratch-only, not committed) rather than done by hand, to avoid
 transcription-typo risk at this scale (11 functions, ~1000 real

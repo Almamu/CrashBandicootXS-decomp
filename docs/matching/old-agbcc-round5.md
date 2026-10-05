@@ -2,8 +2,8 @@
 
 ## Issue #46: the last five HUD functions (old_agbcc)
 
-`FontDrawGlyph`, `InitSmallFont`, `InitLargeFont` (hud_icon_widget_85c4.c),
-`FontMeasureChars` (hud_icon_widget_8890.c) and `FontMeasureText` (hud_icon_widget_8994.c)
+`FontDrawGlyph`, `InitSmallFont`, `InitLargeFont` (font_glyph.c),
+`FontMeasureChars` (font_draw_text.c) and `FontMeasureText` (font_measure.c)
 are plain C. Four of the five only match under `old_agbcc` (agbcc is 2-80
 halfwords off), and every function in the three files matches under it, so
 all three move into `OLD_AGBCC_OBJS`. This is the same region as

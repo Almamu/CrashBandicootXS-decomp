@@ -1,7 +1,7 @@
 #include "core.h"
 #include "level_state.h"
 
-/* Same `struct aabb` shape as src/graphics/aabb_util.c/actor_part*.c -
+/* Same `struct aabb` shape as src/util/aabb.c/actor_part*.c -
  * duplicated here rather than shared, matching this project's existing
  * per-file convention for this struct (see docs/workflow.md/actor_part2.c
  * etc). */

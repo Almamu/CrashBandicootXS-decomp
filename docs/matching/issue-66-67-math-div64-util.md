@@ -38,8 +38,8 @@ happens to ship in").
   remainder-correction mask) - the 64-bit division routines' own
   workhorse, called from both of them (and, project-wide, already
   declared `s32 __udivsi3(s32 value, s32 divisor)` by several
-  already-matched files: `time_util.c`, `word_util.c`,
-  `hud_icon_widget5.c`, `hud_stat_widget2.c`, `gax_playstart.c`,
+  already-matched files: `time_format.c`, `text_box.c`,
+  `font.c`, `hud_stat_widget2.c`, `gax_playstart.c`,
   `gax_channel_table_alloc.c` - this file keeps that exact signature).
 - **`__muldi3`** - 64x64->64 truncating multiply: this ROM's
   compiled copy of libgcc2.c's classic `__muldi3` with `__umulsidi3`'s

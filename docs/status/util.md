@@ -5,23 +5,23 @@ helpers.
 
 ## Matched
 
-- `src/util/math_util.c`: `FixedDistSq`, `FixedDist`, `FixedDiv`,
+- `src/util/fixed_math.c`: `FixedDistSq`, `FixedDist`, `FixedDiv`,
   `FixedMul`, `FixedInverse16`, `FixedDiv16`, `FixedMul16`
-- `src/util/string_util.c`: `itoa`, `FormatPaddedNumber`
-- `src/util/printf_util.c`: `vsprintf`, `sprintf`, `FindSubstring`
+- `src/util/number_format.c`: `itoa`, `FormatPaddedNumber`
+- `src/util/printf.c`: `vsprintf`, `sprintf`, `FindSubstring`
   (case-insensitive `strstr` - was previously NAKED, now matched as
   real C via opaque inline-asm-materialized lowercase folds plus
   deferring the inner loop's match-found computation to a label placed
   after the whole scan/verify loop so gcc's block linearizer places it
   right before the shared epilogue, matching the ROM's own layout - see
   [naked-sub_8000cbc-matched.md](../matching/naked-sub_8000cbc-matched.md))
-- `src/util/string_util2.c`: `CountNonSpaceChars`, `strcat`, `strncpy`,
+- `src/util/string.c`: `CountNonSpaceChars`, `strcat`, `strncpy`,
   `strcpy`, `strlen`
-- `src/util/rand_util.c`: `srand`, `RandRange`, `rand`
-- `src/util/line_util.c`: `InitBresenhamLine`
-- `src/util/time_util.c`: `FormatCentiseconds`
-- `src/util/word_util.c`: `GetWordLength`, `DrawWrappedTextInBox`
-- `src/util/line_util2.c`: `StepBresenhamLine`
+- `src/util/rand.c`: `srand`, `RandRange`, `rand`
+- `src/util/line.c`: `InitBresenhamLine`
+- `src/util/time_format.c`: `FormatCentiseconds`
+- `src/text/text_box.c`: `GetWordLength`, `DrawWrappedTextInBox`
+- `src/util/line_step.c`: `StepBresenhamLine`
 ### libgcc (`lib/libgcc/`, a library - see [docs/libraries.md](../libraries.md))
 
 - `lib/libgcc/libgcc2.c` (GitHub issue #66, ROM

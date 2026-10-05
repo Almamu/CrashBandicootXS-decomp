@@ -38,7 +38,7 @@ touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction
   updated. The ROM holds 0x110 in r7, re-materializes 0x114 in the first
   reposition and derives it as `r7 + 4` (with an r7-to-r6 copy) in the
   second. No source shape tried reproduced that.
-- `ResetLinkSessionState`, `HandleLinkSerial` (link_cable.c), `UpdateEnemyCtrl`
+- `ResetLinkSessionState`, `HandleLinkSerial` (link_handshake.c), `UpdateEnemyCtrl`
   (actor_part112.c), `UpdateWumpa`, `CreateWumpa` (game_loop53.c),
   `UpdateActionCtrl` (actor_part84.c), `ApplyActionCtrlMotion` (actor_part83.c): not
   reached this pass. Their existing notes and drafts are unchanged.

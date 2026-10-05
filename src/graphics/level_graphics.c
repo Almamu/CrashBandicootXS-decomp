@@ -35,7 +35,7 @@ extern u8 gTitleMenuBlinkPalette[0x70];
 /* Loaded onto BG2, via the 5-field package struct at `gTitleScreenBg`
  * - see `struct bg_package` (include/graphics_package.h), shared with
  * `LoadTitleScreenObjTiles` below and with `LoadGraphicsPackage`
- * (src/graphics/graphics_package_1e578.c). */
+ * (src/gfx/graphics_package.c). */
 extern struct bg_package gTitleScreenBg;
 extern void *gTitleObjPackages[4];
 

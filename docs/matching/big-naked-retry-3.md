@@ -7,10 +7,10 @@ drafts that are the same size as the ROM.
 |---|---|---|---|---|
 | `SpawnRoomEntities` | `src/system/game_loop41.c` | #40 | 704 bytes | matched, old_agbcc (object added to `OLD_AGBCC_OBJS`) |
 | `UpdateWumpa` | `src/system/game_loop53.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
-| `HandleLinkSerial` | `src/system/link_cable.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
+| `HandleLinkSerial` | `src/link/link_handshake.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
 
 All three are measured under old_agbcc. `game_loop53.o` and
-`link_cable.o` were already on `OLD_AGBCC_OBJS`.
+`link_handshake.o` were already on `OLD_AGBCC_OBJS`.
 
 ## Loop rotation in old_agbcc
 
@@ -110,7 +110,7 @@ them), the spawn's `movs r5, #1` comes one instruction before
 
 The per-frame SIO pump. The first draft was written straight from the
 ROM, and its control flow and block order match. `data` is a pointer
-(`link_cable2.c` passes `0x04000120`, i.e. SIOMULTI0-3). It fills in
+(`link_sio.c` passes `0x04000120`, i.e. SIOMULTI0-3). It fills in
 two layout details: each player record has a 16-entry `u16 rx[]` ring
 at +0x0a (`field_2c` is its index), and a `link_ring`'s bytes start at
 +4 (`field_8c` is the write index, `field_88` the read index,

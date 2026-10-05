@@ -57,7 +57,7 @@ Each empty asm has a comment in the source.
 
 ## Moved to C as NAKED + draft (not matched)
 
-- **`DrawAffineSpritePieces`** is in the new `src/graphics/graphics_7634.c`, which
+- **`DrawAffineSpritePieces`** is in the new `src/gfx/affine_sprite_pieces.c`, which
   replaces `asm/code_3_2.o` in `ldscript.txt`. It is the affine sibling of
   `DrawSpritePieces`. The draft follows the ROM block for block, with bitfield
   OAM words and the affine-matrix slot allocation. It is 468 halfwords off

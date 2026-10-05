@@ -34,7 +34,7 @@ it `destroy`, taken out of the leading `unused_00` padding. The call goes
 through `_call_via_r2`, linked with the usual `.set`
 alias.
 
-`DisableMusicVCountIrq` takes no argument in `audio_context.c`, but the ROM loads
+`DisableMusicVCountIrq` takes no argument in `audio.c`, but the ROM loads
 the audio context into r0 before calling it, so the local prototype
 passes it.
 

@@ -26,7 +26,7 @@ already found:
   computation) - the documented gap from the first pass. Fixed with an
   `asm volatile("mov r2, #0x80\n\tlsl r2, r2, #2\n\tadd %0, %1, r2" :
   "=r"(addr) : "r"(asset) : "r2")` anchor, the same "hardcode the scratch
-  register, let the output land wherever" idiom `hud_icon_widget_8a78.c`
+  register, let the output land wherever" idiom `font.c`
   uses.
 - The `gSlideshowDispcnt` shadow-byte rebuild (`& ~0x10 | bit`) was not
   actually confirmed correct as the first pass's write-up claimed: gcc's
@@ -86,7 +86,7 @@ one:
    a genuinely written-and-read - r7 to the function's own push/pop list.
    This is the same confirmed, extensively-precedented toolchain gap
    documented at length for `StartTimeTrial` (`src/system/game_loop40.c`)
-   and `LoadGraphicsPackage` (`src/graphics/graphics_package_1e578.c`,
+   and `LoadGraphicsPackage` (`src/gfx/graphics_package.c`,
    itself still `NON_MATCHING` for exactly this reason despite a fully
    pinned `register u16 *src asm("r7")` used throughout the function) -
    and every other `asm("r7")` call-out project-wide (`grep -rn

@@ -15,14 +15,14 @@ a function body and no NAKED.
 ## Result
 
 Every object in the region moves to `OLD_AGBCC_OBJS` whole. The files
-that were already matched (`graphics_package_1e8f8.c`, `_1e964.c` and
+that were already matched (`graphics_package.c`, `_1e964.c` and
 `graphics_loading_1e990.c`) match under old_agbcc unchanged.
 
 | function | file | was |
 |---|---|---|
-| `LoadGraphicsPackage` | `graphics_package_1e578.c` | NAKED |
-| `InitBgSetup` | `graphics_package_1e640.c` | NAKED |
-| `FitScaledSprite`, `DrawScaledSprite` | `graphics_package_1e688.c` | NAKED |
+| `LoadGraphicsPackage` | `graphics_package.c` | NAKED |
+| `InitBgSetup` | `graphics_package.c` | NAKED |
+| `FitScaledSprite`, `DrawScaledSprite` | `graphics_package.c` | NAKED |
 
 ## Types
 
@@ -31,7 +31,7 @@ that were already matched (`graphics_package_1e8f8.c`, `_1e964.c` and
   It holds the char block, screen block and palette bank, and a BGnCNT
   bitfield union at +0x0C that `GetBgSetupControl` reads back. The ROM's
   `& 0x3f` in `InitBgSetup` is its `size = 0`.
-- `graphics_package_1e688.c` uses a hardware `struct oam_attrs`. In it,
+- `graphics_package.c` uses a hardware `struct oam_attrs`. In it,
   `x:9` has to be declared on a `u32`, or `DrawScaledSprite`'s stores schedule
   differently.
 

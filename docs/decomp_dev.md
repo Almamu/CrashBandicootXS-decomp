@@ -63,7 +63,7 @@ same problem `mem_collect` had (see below): objdiff infers a symbol's size
 from the distance to the *next* symbol in the same object when there's no
 explicit `.size`, and `arm-none-eabi-ld -r`-merging two functions that
 aren't really adjacent in the ROM (which is what merging every `Util`
-function into one blob would do - `math_util.c` and `time_util.c` aren't
+function into one blob would do - `fixed_math.c` and `time_format.c` aren't
 next to each other) reintroduces exactly that bug at the merge seam. A
 matched *file*, on the other hand, really is one contiguous ROM region
 (the "one `.c` file per contiguous ROM region" rule in
@@ -83,7 +83,7 @@ For each entry in `tools/report_units.py`'s address table:
   was carved out with, so relocations and literal pools survive intact -
   then `tools/patch_expected_target.py` applies `expected/corrections.txt`
   to the assembled slice (see the next section). Four files
-  (`printf_util.c`, `text_layout.c`, `input_util.c`, `oam_count.c`) contain
+  (`printf.c`, `wrapped_text.c`, `input.c`, `oam_count.c`) contain
   a still-parked function; their range is wider than their own
   `NON_MATCHING=0` object shows, since the parked function's real ROM
   bytes currently live in the *neighboring* still-raw `asm/*.s` chunk

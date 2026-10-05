@@ -16,7 +16,7 @@
  * _call_via_r3 to draw a single OAM entry. `struct icon_record` is an
  * array of these, 8 bytes apart, starting at offset 0x10 - DrawPowerDialog
  * (src/graphics/oam_count.c, parked) uses slots 0 and 2 (a wide icon spanning
- * two OAM entries); DrawWrappedText (src/graphics/text_layout.c, parked) uses slots
+ * two OAM entries); DrawWrappedText (src/text/wrapped_text.c, parked) uses slots
  * 1, 3, and 5 (per-glyph and newline-marker OAM entries). */
 struct icon_slot {
     s16 offset;
@@ -59,7 +59,7 @@ COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
  *
  * The leading `unused_00`/`unused_10c` regions and part of `unused_118`
  * were opaque when this struct was first written (oam_count.c/
- * text_layout.c, both still not byte-matched); GitHub issue #46's chunk
+ * wrapped_text.c, both still not byte-matched); GitHub issue #46's chunk
  * (src/graphics/hud_icon_widget.c) reads and writes them directly and
  * fills in the real shape below. */
 struct bitmap_font {
@@ -90,7 +90,7 @@ struct bitmap_font {
     u32 marginX;
     /* Line height: added to `posY` on a newline character; also used
      * as a plain divisor by `FontHeightToLines`/`DrawWrappedTextInBox`
-     * (src/util/word_util.c). */
+     * (src/text/text_box.c). */
     s32 lineHeight;
     /* Advance width contributed by a literal space character, in place
      * of a `glyphRecords` lookup. */

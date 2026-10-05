@@ -385,7 +385,7 @@ extern void SetEntityPixelPos(void *part, s32 x, s32 y);
 extern void DrawSpriteWithOffset(void *part, s32 dx, s32 dy);
 extern s32 GetSpriteAnimPaletteSlot(void *part);
 extern void AdvanceSpriteAnim(void *p);
-/* Really returns a u8 (src/graphics/graphics.c), but the call site
+/* Really returns a u8 (src/gfx/graphics.c), but the call site
  * re-zero-extends the result, as it would through a wider return type. */
 extern s32 GetPaletteSlot(void *cache, u8 recordId);
 extern void GetSpriteHitbox(struct hit_box *dest, void *part);

@@ -178,7 +178,7 @@ correct against the ROM; the residual 4-byte CSE gap documented above
 never responded to further plain-C restructuring, so it was converted
 to `NAKED` and its ROM disassembly transcribed instruction-for-
 instruction - the same escape hatch this project already established
-for `MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/system/link_cable.c`, see
+for `MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/link/link_handshake.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section).
 

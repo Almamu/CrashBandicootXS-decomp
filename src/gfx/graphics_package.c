@@ -96,7 +96,7 @@ struct oam_attrs {
     s16 affineParam;    // 0x06
 };
 
-/* Same 0x40C-byte OAM shadow buffer `src/graphics/graphics.c` already
+/* Same 0x40C-byte OAM shadow buffer `src/gfx/graphics.c` already
  * names `struct oam_shadow_buffer`. */
 struct oam_shadow_buffer {
     s32 count;

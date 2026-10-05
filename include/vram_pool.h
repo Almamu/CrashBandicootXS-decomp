@@ -3,7 +3,7 @@
 
 /* gObjVramCursor: a bump allocator over OBJ tile VRAM (OBJ_VRAM0,
  * OBJ_VRAM0_SIZE bytes) for tile data uploaded through the VRAM DMA
- * queue - see src/graphics/graphics.c (InitObjVramCursor and the
+ * queue - see src/gfx/graphics.c (InitObjVramCursor and the
  * *ObjVram functions). `offset` is the next free byte, bumped by
  * ReserveObjVram/UploadObjVram; `mark` is a checkpoint MarkObjVram
  * saves and RewindObjVram restores. `baseTile` is the number of tiles
@@ -21,7 +21,7 @@ struct vram_upload_cursor {
  * to OBJ_PLTT by UploadPaletteSlot/UploadPaletteCache. `isFree[bank]`
  * marks a bank available to GetPaletteSlot; `locked[bank]` keeps a bank
  * from being reclaimed by FreeUnlockedPaletteSlots (LockPalette/
- * UnlockPalette). See src/graphics/graphics.c. */
+ * UnlockPalette). See src/gfx/graphics.c. */
 struct palette_cache {
     u16 count;                    // 0x00
     u8 pad_02[2];

@@ -20,7 +20,7 @@ separate, unrelated topic of graphics/sprite asset extraction, and
 [audio.md](./audio.md) for the sound engine.
 
 First two functions turned into real, byte-matching C:
-`QueueVramDmaTransfer` and `FreeVramDmaQueue`, both in `src/graphics/graphics.c`
+`QueueVramDmaTransfer` and `FreeVramDmaQueue`, both in `src/gfx/graphics.c`
 (the DMA-transfer queue used by the animation-frame system - see "Found
 the real per-actor animation-frame system" above). Both compile with
 `tools/agbcc` to output that's byte-identical to the original ROM at
@@ -52,7 +52,7 @@ total by coincidence - the explicit `asm(...)` is the general fix and
 doesn't depend on that kind of luck.)
 
 `asm/code_3.s` (122256 lines) is now split into `asm/code_3_1.s`,
-`asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/graphics/graphics.c`'s
+`asm/code_3_2.s`, and `asm/code_3_3.s` around where `src/gfx/graphics.c`'s
 and `src/graphics/actor_anim.c`'s functions used to live - expect more such splits
 as more functions get matched out of it over time. **One `.c` file per
 contiguous ROM region, not one per "topic":** `GetAnimFrameBaseOffset`
@@ -70,7 +70,7 @@ trivial (a single field read + arithmetic shift), included here mainly to
 confirm the "new `.c` file, non-adjacent region" workflow above works.
 
 Fourth matched function: `FlushVramDmaQueue`, at the top of
-`src/graphics/graphics.c` (ROM `0x08006B1C`, right before `QueueVramDmaTransfer` in
+`src/gfx/graphics.c` (ROM `0x08006B1C`, right before `QueueVramDmaTransfer` in
 the same contiguous region, so no new split/ldscript entry was needed).
 This one took two rounds to get exactly right - the recipe, since it's
 non-obvious:
@@ -135,7 +135,7 @@ difference (both constant-fold identically).
 
 Fifth matched function: `InitOamBuffer` (ROM `0x08006B0C`, immediately
 before `FlushVramDmaQueue` in the same contiguous region - joined
-`src/graphics/graphics.c` right above it, no new split). A trivial one-shot first
+`src/gfx/graphics.c` right above it, no new split). A trivial one-shot first
 try: `void *InitOamBuffer(void *arg0) { ResetOamBuffer(arg0); return arg0; }`
 matched byte-for-byte immediately - a plain "call a helper for its side
 effect, then return the original argument unchanged" idiom, which gcc 2.9
@@ -150,7 +150,7 @@ wrapper - left un-renamed (still `ResetOamBuffer`/`InitOamBuffer`) rather than
 guess at a name from partial evidence.
 
 Sixth matched function: `DestroyOamBuffer` (ROM `0x08006AF4`, immediately
-before `InitOamBuffer`, same contiguous region - joined `src/graphics/graphics.c`
+before `InitOamBuffer`, same contiguous region - joined `src/gfx/graphics.c`
 right above it, no new split). Another one-shot match: a conditional-call
 wrapper, `if (arg1 & 1) OperatorDelete(arg0);` - gcc 2.9 compiles the
 bitwise-AND-then-compare-to-zero idiom for testing a single bit exactly
@@ -159,7 +159,7 @@ instruction, which the ROM also doesn't use here). `OperatorDelete` stays
 unmatched asm.
 
 Seventh matched function: `AddOamEntry` (ROM `0x08006AC8`, immediately
-before `DestroyOamBuffer`, same region - joined `src/graphics/graphics.c` right above
+before `DestroyOamBuffer`, same region - joined `src/gfx/graphics.c` right above
 it). Inserts a 2-pointer record (`arg1[0]`/`arg1[1]`) into a slot
 `arg0 + count*8 + 0xC` of a 128-slot table living inline in `*arg0`
 (bounds-checked against `0x7F`), while preserving the 2-byte value that
@@ -194,7 +194,7 @@ without pinning down what data it actually manages. (Resolved by the next
 function below: the `+0xC` table is an **OAM shadow buffer**.)
 
 Eighth matched function: `CommitOamBuffer` (ROM `0x08006AAC`, immediately
-before `AddOamEntry`, same region - joined `src/graphics/graphics.c` right above
+before `AddOamEntry`, same region - joined `src/gfx/graphics.c` right above
 it). One-shot match, no register tricks needed - a tiny leaf function
 (no `push`/`pop` at all, matching the ROM exactly, since it makes no
 calls and needs no callee-saved registers) that DMAs `arg0 + 0xC` to
@@ -215,7 +215,7 @@ needed.
 
 Ninth, tenth and eleventh matched functions: `RewindOamBuffer`/`MarkOamBufferBase`/
 `ResetOamBuffer` (ROM `0x08006A78`-`0x08006AAC`, immediately before
-`CommitOamBuffer` - joined `src/graphics/graphics.c` right above it, no new split).
+`CommitOamBuffer` - joined `src/gfx/graphics.c` right above it, no new split).
 All three matched byte-exact on the first try, no register tricks. This
 is the little "swap/reset" family mentioned as unidentified back at the
 fifth match (`InitOamBuffer`) - now given a real (if provisionally-named)
@@ -251,7 +251,7 @@ unmatched) most likely **resets the OAM shadow buffer manager to empty**
 counter?) isn't identified.
 
 Twelfth matched function: `HideUnusedOamEntries` (ROM `0x08006A48`, immediately
-before `RewindOamBuffer`, same region - joined `src/graphics/graphics.c` right above
+before `RewindOamBuffer`, same region - joined `src/gfx/graphics.c` right above
 it). The **hardest match yet** - confirms the semantic picture further:
 starting from `arg0`'s current "count", it walks every *unused* slot from
 `count` to `127` and forces bits `[9:8]` of that OAM entry's `attr0` to
@@ -290,7 +290,7 @@ trick or a workaround bug) - see [[matching_decomp_register_pinning]] for
 when to reach for this.
 
 Thirteenth matched function: `AppendOamEntries` (ROM `0x08006A14`, immediately
-before `HideUnusedOamEntries`, same region - joined `src/graphics/graphics.c` right above
+before `HideUnusedOamEntries`, same region - joined `src/gfx/graphics.c` right above
 it). The bulk-copy counterpart to `AddOamEntry`: instead of copying one
 record's fields with the CPU, this DMAs `arg2` whole 8-byte OAM entries
 straight from `arg1` into the shadow buffer at the current count
@@ -304,7 +304,7 @@ the base pointer - no inline asm needed here, unlike the pathological
 case in `HideUnusedOamEntries`.
 
 Fourteenth matched function: `SetOamAffineScales` (ROM `0x080069E8`, immediately
-before `AppendOamEntries`, same region - joined `src/graphics/graphics.c` right above
+before `AppendOamEntries`, same region - joined `src/gfx/graphics.c` right above
 it). Writes OAM **affine parameters**: given a pointer directly to an OAM
 entry (no `+0xC` bias this time - the caller must already point at the
 right shadow-buffer slot) and `arg2` groups, each group writes one `s16`
@@ -652,7 +652,7 @@ memory. It must never be used, even in parked/`NON_MATCHING` code.
 **Refined this session**: the bug is narrower than it first looked. It
 is specific to *explicit* `register T x asm("r7")` pinning (and likely
 inline-asm `"=&r"`-constrained outputs), not to r7 in general. Proof:
-`FadeBrightness` (`src/graphics/fade_util.c`, already matched byte-exact) has a
+`FadeBrightness` (`src/gfx/fade.c`, already matched byte-exact) has a
 do-while loop where a plain, completely unpinned local (`dirBit8`,
 originally just a normal C value) survives repeated calls to
 `WaitForVBlank()` inside the loop, and gcc's own *unforced* allocator
@@ -853,7 +853,7 @@ whenever a hard-to-match function needs to be skipped without blocking
 everything after it.
 
 Seventh matched function: `FixedDistSq` (ROM `0x080008B4`, immediately
-after `ShowBitmapScreen`; lives in new file `src/util/math_util.c`, since it's not
+after `ShowBitmapScreen`; lives in new file `src/util/fixed_math.c`, since it's not
 yet called by anything matched and didn't fit thematically in
 `irq.c`) - a fixed-point squared-distance-style helper:
 `((dx>>8)^2 + (dy>>8)^2) << 8`. Matched first-try structurally; needed
@@ -875,14 +875,14 @@ Six more matched in the same file right after, all first-try:
   around `__divsi3`, sign-extending 16-bit operands in and the result
   back out. `__divsi3` itself looks like an atan2-style angle lookup
   (see its use in `GetCompletionPercent` as `__divsi3(total * 100, 0x48)` in
-  `src/graphics/graphics.c`), which fits `ShowBitmapScreen` calling `FixedInverse16` twice
+  `src/gfx/graphics.c`), which fits `ShowBitmapScreen` calling `FixedInverse16` twice
   to get two BG2 affine scale/rotation parameters from an angle.
 
 Eighth matched function (after a second pass): `itoa`, a custom
 itoa (int-to-string, with a fast path for base 16 using bit-AND +
 arithmetic-shift instead of a division call, falling back to a
 `DivMod` divmod helper for other bases, then reversing the digits
-in place). Lives in new file `src/util/string_util.c`. This one needed
+in place). Lives in new file `src/util/number_format.c`. This one needed
 **every** local pinned to a specific register to match - a good worked
 example of the technique 5 warning in `matching_decomp_register_pinning`
 memory (the same *kind* of value needing different pins at different
@@ -967,7 +967,7 @@ approach in `matching_decomp_register_pinning` memory:
 
 Tenth matched function: `vsprintf` (ROM `0x08000AA8`, right after
 `FormatPaddedNumber`) - the actual printf-style driver these last several
-functions were building toward. Lives in new file `src/util/printf_util.c`.
+functions were building toward. Lives in new file `src/util/printf.c`.
 Walks `fmt`, echoing literal characters, and dispatching `%`-conversions
 through a jump table: `%s` (string copy), `%c` (single byte from the
 arg array - every slot is 4 bytes regardless of the value's real size),
@@ -1027,7 +1027,7 @@ s32 caseInsensitive)` scans `haystack0` for the first occurrence of
 `caseInsensitive` is nonzero (`(u8)(c - 'A') <= 0x19` is the ROM's own
 range check for `'A'`-`'Z'`), returning a pointer into `haystack0` at
 the match or `0` if not found or if `needle` is empty. Kept in
-`printf_util.c` (not printf-related) purely to preserve ROM address
+`printf.c` (not printf-related) purely to preserve ROM address
 order right after `sprintf` without another `ldscript.txt` split.
 
 Register findings: `haystack` (the outer scan cursor) is pinned to
@@ -1068,7 +1068,7 @@ every register correct except this branch shape in the 4 blocks.
 Whichever register ends up hosting the `s32 t` temp needs to be pinned
 without disturbing anything else already correct here; not yet found.
 
-**Build toggle**: this function's C definition in `src/util/printf_util.c` is
+**Build toggle**: this function's C definition in `src/util/printf.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1_2.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
 (same pattern as `DrawPowerDialog`, see above), so exactly one definition is
@@ -1093,13 +1093,13 @@ as `ShowBitmapScreen`'s: it sits between `FindSubstring` (parked, still raw in
 `asm/code_3_1_2.s`) and `strcat` onward, so `asm/code_3_1_2.s` was
 trimmed to end right after `FindSubstring`'s `.endif`, everything from
 `strcat` on moved to a new `asm/code_3_1_3.s` (same three-line
-header), and `CountNonSpaceChars` itself lives in a new `src/util/string_util2.c`
-(not `string_util.c` - that object already links *before*
-`printf_util.o`/`code_3_1_2.o` in `ldscript.txt`, which would put this
+header), and `CountNonSpaceChars` itself lives in a new `src/util/string.c`
+(not `number_format.c` - that object already links *before*
+`printf.o`/`code_3_1_2.o` in `ldscript.txt`, which would put this
 function's code at the wrong address; a fresh translation unit was the
 only way to get its object linked exactly between `code_3_1_2.o` and
 `code_3_1_3.o`). `ldscript.txt` now lists, in order:
-`code_3_1_2.o`, `string_util2.o`, `code_3_1_3.o`. Verified with a full
+`code_3_1_2.o`, `string.o`, `code_3_1_3.o`. Verified with a full
 `rm -rf build && make compare` (and a `NON_MATCHING=1` build to confirm
 `FindSubstring`'s parked toggle still links cleanly around the new
 split).
@@ -1145,7 +1145,7 @@ originally produced this file didn't detect the boundary. Gave it the
 `strlen` name (its ROM address) like every other function here.
 
 Seventeenth through nineteenth matched functions, all first-try, in new
-file `src/util/rand_util.c` (RNG, doesn't fit any existing file): `srand`
+file `src/util/rand.c` (RNG, doesn't fit any existing file): `srand`
 (ROM `0x08000E10`, right after `strlen`) seeds a global LCG state
 (`gRandSeed` in IWRAM) with its argument; `rand` (ROM
 `0x08000E4C`) advances that LCG (`seed = seed * 0x41C64E6D + 0x3039` -
@@ -1167,10 +1167,10 @@ as-is.
 Removed these three functions' raw bytes directly from the existing
 `asm/code_3_1_3.s` (no further file-splitting needed - they sit
 entirely inside one already-open file) and added one `ldscript.txt`
-line for `rand_util.o` between `string_util2.o` and `code_3_1_3.o`.
+line for `rand.o` between `string.o` and `code_3_1_3.o`.
 
 Twentieth matched function: `InitBresenhamLine` (ROM `0x08000E6C`, right after
-`rand`) - Bresenham-line setup, in new file `src/util/line_util.c`
+`rand`) - Bresenham-line setup, in new file `src/util/line.c`
 (doesn't fit any existing file). Given a `struct bresenham_line *` with
 `x0`/`y0`/`x1`/`y1` already filled in, computes `dx`/`dy`, records each
 axis's step direction (`sx`/`sy`, `+1`/`-1`/`0`) and the absolute
@@ -1182,10 +1182,10 @@ non-input fields are left as `field_N` (not e.g. `err`/`step`) since no
 caller has been matched yet to confirm their actual roles. Removed the
 function's raw bytes directly from `asm/code_3_1_3.s` (no further
 splitting needed) and added one more `ldscript.txt` line
-(`line_util.o`, between `rand_util.o` and `code_3_1_3.o`).
+(`line.o`, between `rand.o` and `code_3_1_3.o`).
 
 **Parked, not matched: `DrawWrappedText`** (ROM `0x08000EE4`, right after `InitBresenhamLine`), in new
-file `src/graphics/text_layout.c`. A text-layout/word-wrap renderer: walks a
+file `src/text/wrapped_text.c`. A text-layout/word-wrap renderer: walks a
 NUL-terminated string one "token" at a time (`GetWordLength` returns each
 token's byte length - looks like it splits on word boundaries), drawing
 each token through the OAM-icon system (`_call_via_r3`, returning the
@@ -1272,7 +1272,7 @@ detail) - the same barrier applied to `lineCount` at the bottom check
 trims the byte count further but introduces a new spurious stack store
 there instead, so it's left out pending a real fix.
 
-**Build toggle**: this function's C definition in `src/graphics/text_layout.c`
+**Build toggle**: this function's C definition in `src/text/wrapped_text.c`
 is wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1_3.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
 (same pattern as `DrawPowerDialog`/`FindSubstring`, see above), so exactly
@@ -1283,7 +1283,7 @@ compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
 Twenty-first matched function: `FormatCentiseconds` (ROM `0x0800106C`, right
-after the still-parked `DrawWrappedText`), in new file `src/util/time_util.c` -
+after the still-parked `DrawWrappedText`), in new file `src/util/time_format.c` -
 formats a centisecond count as `"MM:SS.X0"` into a 9-byte buffer (`void
 FormatCentiseconds(s32 value, u8 *buf)`); only one fractional digit is
 actually computed (`value % 10`) - the other is always `'0'`, so the
@@ -1291,7 +1291,7 @@ displayed precision is really just tenths of a second despite the
 two-digit-looking field. Built on two not-yet-matched helpers,
 `__umodsi3` (mod) and `__udivsi3` (div) - both declared here with
 plain `s32`/`s32` signatures despite `__umodsi3` already having a
-`u16`/`s32`-typed extern declaration in `src/util/rand_util.c` for a
+`u16`/`s32`-typed extern declaration in `src/util/rand.c` for a
 different call site; harmless; C linkage doesn't check parameter types
 across translation units, and both signatures compile to the same
 calling convention here anyway. Matched first-try structurally, needed
@@ -1302,13 +1302,13 @@ Extracting this one function required the same kind of split as
 `FindSubstring`'s and `CountNonSpaceChars`'s: `asm/code_3_1_3.s` was trimmed to
 end right after `DrawWrappedText`'s `.endif`, and everything from
 `WaitForKeyPress` on moved to a new `asm/code_3_1_4.s`, with
-`src/util/time_util.c`'s object linked between them in `ldscript.txt`.
+`src/util/time_format.c`'s object linked between them in `ldscript.txt`.
 (`asm/code_3_1_4.s` was later removed again - see `WaitForKeyPress`'s own
 notes just below - once it turned out to hold only one function that
 also needed parking.)
 
 **Parked, not matched: `WaitForKeyPress`** (ROM `0x080010E0`, right after `FormatCentiseconds`), in new
-file `src/system/input_util.c`. Polls input (the same `WaitForVBlank`-then-
+file `src/system/input.c`. Polls input (the same `WaitForVBlank`-then-
 `UpdateKeys` VBlank-wait-and-update-keys pair used elsewhere) until a
 button matching `mask`'s bit 0 (confirm) or bit 3 (cancel) is newly
 pressed, or - if `count != 0` - until `count` polls elapse; returns 0
@@ -1339,11 +1339,11 @@ sense with no special handling at all, which points at a fixed gcc-2.9
 canonicalization for this exact shape rather than something reachable
 from this file's C.
 
-**Build toggle**: this function's C definition in `src/system/input_util.c` is
+**Build toggle**: this function's C definition in `src/system/input.c` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes - now
 living in `asm/code_3_1_5.s`, right before `LoadTaggedAsset` (since
 `asm/code_3_1_4.s`, which held only this one function, was removed
-entirely and its ldscript slot given to `input_util.o` instead) - are
+entirely and its ldscript slot given to `input.o` instead) - are
 wrapped in `.if NON_MATCHING == 0` / `.endif`. Default builds get
 `NON_MATCHING=0` and use the checked-in matching assembly (verified via
 a clean `make compare`); `make NON_MATCHING=1 crashbandicootxs.gba`
@@ -1352,7 +1352,7 @@ and link cleanly with no duplicate-symbol errors).
 
 Twenty-second matched function: `LoadTaggedAsset` (ROM `0x08001174`,
 right after the still-parked `WaitForKeyPress`), in new file
-`src/system/asset_util.c`. Loads (or raw-copies) an asset based on a tag in
+`src/system/asset.c`. Loads (or raw-copies) an asset based on a tag in
 its first word's high nibble: `0` = uncompressed (a manual DMA3 setup -
 `SAD`/`DAD`/`CNT` written directly through a `vu32 *` at `0x040000D4`,
 word-sized transfer, byte count taken from the header's remaining 24
@@ -1378,7 +1378,7 @@ parking `WaitForKeyPress` earlier this session: that function's raw bytes
 had ended up sharing one `asm/code_3_1_5.s` file with everything after
 it, including `LoadTaggedAsset` and `LoadBackgroundTileAndPalette` onward - fine as long
 as `LoadTaggedAsset` stayed raw too, but once it moved to C in
-`asset_util.o`, the linker had no way to slot that object *between*
+`asset.o`, the linker had no way to slot that object *between*
 `WaitForKeyPress`'s raw bytes and `LoadBackgroundTileAndPalette`'s (both still in the same
 `code_3_1_5.o`), producing a build that linked and passed size checks
 but put `LoadTaggedAsset` at the wrong address (silently breaking every
@@ -1386,7 +1386,7 @@ call to it - caught via a direct `cmp -l`/objdump diff showing a `bl`
 target pointing at `WaitForKeyPress`'s address instead). Fixed by splitting
 `asm/code_3_1_5.s` again, right after `WaitForKeyPress`'s `.endif`, into
 itself plus a new `asm/code_3_1_6.s` (`LoadBackgroundTileAndPalette` onward), with
-`asset_util.o` linked between them. **Lesson**: when a parked function's
+`asset.o` linked between them. **Lesson**: when a parked function's
 raw-bytes file also holds *later, still-to-be-matched* functions,
 extracting one of those later functions to C always needs its own
 split at that exact boundary - the parked function's raw bytes can
@@ -1394,29 +1394,29 @@ never end up sharing an object with something that no longer sits
 immediately next to it in the final link.
 
 Twenty-third matched function: `LoadBackgroundTileAndPalette` (ROM `0x080011C0`, right
-after `LoadTaggedAsset`), also in `src/system/asset_util.c` - loads one
+after `LoadTaggedAsset`), also in `src/system/asset.c` - loads one
 background's tile/tileset data (the tagged asset at `asset + 0x200`,
 via `LoadTaggedAsset`) into VRAM at `0x06000000`, then DMAs the first
 `0x200` bytes of `asset` itself (a raw 256-halfword palette) straight
 into palette RAM at `0x05000000`. Matched first-try.
 
 Twenty-fourth matched function: `GetWordLength` (ROM `0x080011F4`, right
-after `LoadBackgroundTileAndPalette`), in new file `src/util/word_util.c` - returns the
+after `LoadBackgroundTileAndPalette`), in new file `src/text/text_box.c` - returns the
 length of the next "word" starting at `s`: the count of characters up
 to and including the first space, or up to (but not including) the NUL
 terminator if no space comes first. This is exactly what the still-
-parked `DrawWrappedText` (`src/graphics/text_layout.c`) uses to walk text one token
+parked `DrawWrappedText` (`src/text/wrapped_text.c`) uses to walk text one token
 at a time. Needed a single shared `goto done;` return point (matching
 the ROM's one `bx lr`) rather than three separate `return` statements,
 which otherwise compile to three separate epilogues.
 
 Extracting this one function needed the same kind of split as before:
 `asm/code_3_1_6.s` (which held only `GetWordLength`) was trimmed to
-nothing and removed, its ldscript slot going to `word_util.o`, with
+nothing and removed, its ldscript slot going to `text_box.o`, with
 everything from `DrawWrappedTextInBox` on moved to a new `asm/code_3_1_7.s`.
 
 Twenty-fifth matched function: `DrawWrappedTextInBox` (ROM `0x08001214`, right
-after `GetWordLength`), also in `src/util/word_util.c` - a thin wrapper around
+after `GetWordLength`), also in `src/text/text_box.c` - a thin wrapper around
 the still-parked `DrawWrappedText`: stashes one field from its `params`
 struct into the render-target object's own `field_118`, computes a
 line-count limit (`params->field_c / self->field_11c`), then forwards
@@ -1437,16 +1437,16 @@ constant plus 4 for the `field_11c` offset instead of recomputing it
 from scratch, incidentally also matching the ROM there).
 
 Twenty-sixth matched function: `StepBresenhamLine` (ROM `0x08001254`, right
-after `DrawWrappedTextInBox`), in new file `src/util/line_util2.c` - advances a
-Bresenham line (set up by `InitBresenhamLine`, `src/util/line_util.c`) by one
+after `DrawWrappedTextInBox`), in new file `src/util/line_step.c` - advances a
+Bresenham line (set up by `InitBresenhamLine`, `src/util/line.c`) by one
 step: the "driving" axis (`x0` if `flag` is set, `y0` otherwise) always
 advances by its sign; the other axis advances only when the
 accumulated error term (`field_10`) is positive, in which case the
 error term is corrected by `field_18` instead of `field_14`. Kept in
 its own file (redefining the same `struct bresenham_line` locally
-rather than sharing `InitBresenhamLine`'s) purely because `line_util.o`
+rather than sharing `InitBresenhamLine`'s) purely because `line.o`
 already links much earlier in `ldscript.txt` and this function's
-address requires it to come after `word_util.o` instead. Two things
+address requires it to come after `text_box.o` instead. Two things
 needed fixing versus a first attempt that seemed to match on casual
 inspection but didn't: the error term must be re-read fresh inside
 *each* of the two `flag` branches (not hoisted above the `if (flag)`
@@ -1460,7 +1460,7 @@ produced an inverted branch (`ble`/fallthrough-swapped) that still
 byte-for-byte. Needed the usual trailing `asm(".align 2, 0")` fix.
 
 Twenty-seventh matched function: `StepBrightnessFade` (ROM `0x080012AC`, right
-after `StepBresenhamLine`), in new file `src/graphics/fade_util.c` - a per-frame
+after `StepBresenhamLine`), in new file `src/gfx/fade.c` - a per-frame
 screen-brightness fade tick. Every `gBrightnessFade.field_0` frames,
 writes the next step to `BLDY` (`0x04000054`), counting up or down
 depending on `field_8`'s top bit (fade in vs. out); after 17 steps (a
@@ -1476,7 +1476,7 @@ the loaded byte in r0 and the constant in r1 instead, one register off,
 regardless of which order the two operands are written in the C.
 
 Twenty-eighth matched function: `FadeBrightness` (ROM `0x0800132C`, right
-after `StepBrightnessFade`), also in `src/graphics/fade_util.c` - starts a screen fade.
+after `StepBrightnessFade`), also in `src/gfx/fade.c` - starts a screen fade.
 `flags` bit 0 selects the blend target (`BLDCNT`, `0xBF` vs `0xFF`),
 bit 7 selects direction (fade in from `0x10` vs fade out from `0`);
 `frameDelay` (clamped to at least 1) is how many frames each of the 17
@@ -1497,7 +1497,7 @@ identical either way and only showed up as a real mismatch once
 directly diffed.
 
 Twenty-ninth matched function: `DarkenPalette` (ROM `0x080013FC`, right
-after `FadeBrightness`), in new file `src/graphics/palette_blend.c` - blends the
+after `FadeBrightness`), in new file `src/gfx/fade.c` - blends the
 whole 512-entry palette at `gPaletteBackup` toward black by
 `factor`/16 per channel (5 bits each, GBA BGR555), writing the result
 to `gPaletteFadeBuffer`. Each channel is extracted via an explicit
@@ -1528,7 +1528,7 @@ scratch-test comparisons up to the very last iteration.
 
 ### Cleanup pass over everything matched so far
 
-After the run of matches above, a pass over `src/graphics/graphics.c`,
+After the run of matches above, a pass over `src/gfx/graphics.c`,
 `src/graphics/oam_count.c` and `src/graphics/actor_anim.c` to tighten up readability
 without touching generated code (`make compare` re-checked after every
 edit below):
@@ -1582,24 +1582,24 @@ Another readability pass over everything matched or parked since the
 previous cleanup, again re-checking both `make compare` and
 `make NON_MATCHING=1` after every edit:
 
-- **Hardware registers**: `src/graphics/fade_util.c`'s raw `0x04000054`/
+- **Hardware registers**: `src/gfx/fade.c`'s raw `0x04000054`/
   `0x04000050`/`0x04000208` became `REG_BLDY`/`REG_BLDCNT`/`REG_IME` -
   the last one had been mislabeled as `REG_IE` in an earlier writeup
   (`0x04000208` is actually `IME`, the interrupt *master* enable, not
   the per-source `IE` at `0x04000200` - an easy mix-up since both are
   "the interrupt enable register" in casual terms, but the ROM's own
   "write 0, do a critical section, write 1" idiom here specifically
-  needs the master switch). `src/system/asset_util.c`'s two raw
+  needs the master switch). `src/system/asset.c`'s two raw
   `0x040000D4`-based `vu32 *dma` pointers became `struct dma_regs *`
   (see next point) through `REG_ADDR_DMA3SAD`.
 - **Struct consolidation**:
-  - `struct dma_regs` (`src/graphics/graphics.c`'s local `{ vu32 src, dst, cnt;
+  - `struct dma_regs` (`src/gfx/graphics.c`'s local `{ vu32 src, dst, cnt;
     }`) moved to `include/gba/dma_macros.h` (the header that already
     holds every other DMA-related macro) and is now shared by
-    `src/system/asset_util.c`'s `LoadTaggedAsset`/`LoadBackgroundTileAndPalette` instead of each
+    `src/system/asset.c`'s `LoadTaggedAsset`/`LoadBackgroundTileAndPalette` instead of each
     doing raw `vu32 *` + manual `[0]`/`[1]`/`[2]` indexing.
   - `struct bresenham_line` (independently declared, identically, in
-    both `src/util/line_util.c` and `src/util/line_util2.c` purely because the
+    both `src/util/line.c` and `src/util/line_step.c` purely because the
     two functions that share it link far apart) moved to a new
     `include/line_util.h`, included by both.
   - `struct bitmap_font`/`struct icon_record` (`src/graphics/oam_count.c`,
@@ -1607,19 +1607,19 @@ previous cleanup, again re-checking both `make compare` and
     directly on `icon_record`) moved to a new `include/bitmap_font.h`
     and `icon_record` was reshaped into `struct icon_slot { s16 offset;
     u8 unused[2]; void *ptr; } slots[6]` - an 8-byte-stride array,
-    confirmed by `DrawWrappedText` (`src/graphics/text_layout.c`, still parked)
+    confirmed by `DrawWrappedText` (`src/text/wrapped_text.c`, still parked)
     independently needing three *more* slots (`slots[1]`/`[3]`/`[5]`,
     at the offsets right in between the two `DrawPowerDialog` already used)
-    for its own per-glyph and newline-marker OAM draws. `text_layout.c`
+    for its own per-glyph and newline-marker OAM draws. `wrapped_text.c`
     now takes a real `struct bitmap_font *`/`struct icon_record *`
     instead of raw `u8 *self + <offset>` arithmetic throughout.
   - Checked for (but didn't find) a similar merge opportunity between
     `DrawWrappedText`'s `struct wrapped_text_box` and `DrawWrappedTextInBox`'s
-    `struct wrapped_text_box_params` (`src/util/word_util.c`) - different field
+    `struct wrapped_text_box_params` (`src/text/text_box.c`) - different field
     layouts (offsets 0/4/8 vs. 0/0xc), not the same object.
   - Left `gKeys` (`src/system/irq.c`)/`gRandSeed`
-    (`src/util/rand_util.c`)/`gBrightnessFade`+`gBrightnessFadeStep`+
-    `gBrightnessFadeTimer` (`src/graphics/fade_util.c`) as separate globals despite
+    (`src/util/rand.c`)/`gBrightnessFade`+`gBrightnessFadeStep`+
+    `gBrightnessFadeTimer` (`src/gfx/fade.c`) as separate globals despite
     being adjacent in IWRAM (`0x7E0`-`0x7F8`) - `irq.c`'s own notes
     already established that combining even just the first pair into
     one struct changes agbcc's literal-pool codegen for already-matched
@@ -1632,7 +1632,7 @@ previous cleanup, again re-checking both `make compare` and
 Matched `sub_8006C00` (right at the boundary between `graphics.c`'s
 matched code and the raw `asm/code_3_2.s` chunk `docs/rom_map.md`'s
 whole-ROM pass calls `game_loop`) as `AllocVramDmaQueue` in
-`src/graphics/graphics.c`, right after `FreeVramDmaQueue` - the missing
+`src/gfx/graphics.c`, right after `FreeVramDmaQueue` - the missing
 constructor counterpart: allocates `DMA_QUEUE_MAX_ENTRIES *
 sizeof(struct dma_queue_entry)` bytes via `mem_alloc`, stores the
 pointer into `gVramDmaQueue.entries`, zeroes `.count`, and returns
@@ -4714,9 +4714,9 @@ it stayed raw until now. Three of its functions resisted byte-exact
 matching for three unrelated reasons, and - since they're interleaved
 with the matched ones rather than clustered at one edge - the whole
 thing needed splitting into *five* files instead of the usual two:
-`asm/code_3_1_7.s` (parked `FadePaletteToBlack` alone), `fade_screen_mode.c`
+`asm/code_3_1_7.s` (parked `FadePaletteToBlack` alone), `fade_to_black.c`
 (`IsBrightnessFadeActive`), `asm/code_3_1_8.s` (parked `SetDispcntMode` alone),
-`fade_screen_mode2.c` (`HideBg3`-`CommitDispcnt`, 13 fns), and
+`display.c` (`HideBg3`-`CommitDispcnt`, 13 fns), and
 `asm/code_3_1_9.s` (parked `CommitBlendRegs`, followed immediately by the
 still-fully-raw `AabbOverlapsInclusiveX` onward - the overlay_ui/pause-menu
 cluster).
@@ -4740,7 +4740,7 @@ cluster).
   `LinkCrateToActiveBucket`'s documented loop-invariant-hoisting gap, applied to
   a memory-mapped-I/O DMA setup instead of a pointer computation.
 - **`IsBrightnessFadeActive`**: `gBrightnessFade.field_0 != -1` (the same
-  "idle" fade sentinel documented on that struct in `fade_util.c`),
+  "idle" fade sentinel documented on that struct in `fade.c`),
   written as a plain `s32` read since this file doesn't share that
   struct definition.
 - **`SetDispcntMode`** (PARKED): sets `gDispcnt`'s low 3 bits
@@ -4780,10 +4780,10 @@ cluster).
 
 All 14 matched functions plus the 3 parked ones were verified via a
 full clean `make compare` after the five-way file split; `ldscript.txt`
-links them in real ROM order: `code_3_1_7.o`, `fade_screen_mode.o`,
-`code_3_1_8.o`, `fade_screen_mode2.o`, `code_3_1_9.o`.
+links them in real ROM order: `code_3_1_7.o`, `fade_to_black.o`,
+`code_3_1_8.o`, `display.o`, `code_3_1_9.o`.
 
-## `aabb_util.c` (`AabbOverlapsInclusiveX`-`IwramAlloc`)
+## `aabb.c` (`AabbOverlapsInclusiveX`-`IwramAlloc`)
 
 Right after the parked `CommitBlendRegs`, two AABB overlap tests plus two
 tiny `mem_free`/`mem_alloc` wrappers:
@@ -4819,13 +4819,13 @@ NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
 before the next raw function - the same alignment fix already
 established for other files' trailing functions.
 
-## `boot_util.c`/`intro_screen.c`: the boot-adjacent BIOS wrappers and the intro's affine BG setup
+## `boot.c`/`bitmap_screen.c`: the boot-adjacent BIOS wrappers and the intro's affine BG setup
 
 Four functions right after `asm/crt0.s`'s permanent hand-written boot
 stub, picked up from issue #2 as an end-to-end test of the chunk-issue
 contribution workflow:
 
-- **`DivMod`** (`src/system/boot_util.c`): a BIOS `Div` (SWI 6)
+- **`DivMod`** (`src/system/boot.c`): a BIOS `Div` (SWI 6)
   wrapper exposing both the quotient (return value) and the remainder
   (via an out-parameter). Written with inline asm rather than a plain
   `register`-pinned call, because the ROM saves the remainder-out
@@ -4843,8 +4843,8 @@ contribution workflow:
 - **`UpdateCtrl`**: empty function; needed the usual trailing
   `asm(".align 2, 0");` for the ROM's zero-fill padding before the next
   function.
-- **`ShowBitmapScreen`** (`src/graphics/intro_screen.c` - a separate file
-  from `boot_util.c` despite being boot-adjacent, since `main.c`/
+- **`ShowBitmapScreen`** (`src/gfx/bitmap_screen.c` - a separate file
+  from `boot.c` despite being boot-adjacent, since `main.c`/
   `memory.c`/`irq.c` sit between them in real ROM order and file order
   has to follow ROM address order, not "logical" grouping). Sets up BG2
   for an affine full-screen image (mode 1), computing a scale-only
@@ -4880,7 +4880,7 @@ stub itself) is permanent hand-written asm per standard GBA-decomp
 convention and isn't tracked as a function to match. `asm/code_3_1.s`
 (which held only `ShowBitmapScreen`) was deleted once matched, and
 `ldscript.txt`/`tools/report_units.py` updated for the new
-`boot_util.o`/`intro_screen.o` split.
+`boot.o`/`bitmap_screen.o` split.
 
 ## `0x080016EC`-`0x08001C80`: the `AudioContext` wrapper layer (first audio matches)
 
@@ -4899,11 +4899,11 @@ reverse-engineered. This is the **first matched code anywhere in the
 GAX2 wrapper/engine address family** - `docs/status/audio.md` no
 longer says "not started."
 
-New files: `src/audio/music_player.c` (`UpdateAudio` per-tick fade
-update, `StartSong` start-song), `src/audio/sfx_ambient.c`
+New files: `src/audio/audio.c` (`UpdateAudio` per-tick fade
+update, `StartSong` start-song), `src/audio/audio.c`
 (`TickAmbientSfx`/`StopSfx`/`ResetAmbientSfx`/`StopAmbientSfx`, the
 ambient/looping-sfx-channel tick/stop/reset/force-expire cluster), and
-`src/audio/audio_context.c` (the remaining 17-function accessor/
+`src/audio/audio.c` (the remaining 17-function accessor/
 state-machine cluster: play/pause/stop, both fade-envelope arm/setter
 pairs, the constructor). Three separate files, not one, because the
 two parked functions below (`PlaySfx` and `PlayAmbientSfx`) sit physically
@@ -5002,7 +5002,7 @@ gap this compiler wouldn't close:
   this one prologue-ordering difference.
 - **`PlayAmbientSfx`** (a sibling to `PlaySfx` driving the ambient-sfx
   channel with an explicit deadline/force-retrigger flag - see its
-  doc comment in `src/audio/audio_context.c`): two gaps. (1) The ROM
+  doc comment in `src/audio/audio.c`): two gaps. (1) The ROM
   reads its 5th (stack) parameter, `forceFlag`, via
   `add rX,sp,#0x14; ldrb rX,[rX]` - compute the stack slot's address,
   then a genuine byte load; this compiler instead reads the full word
@@ -5023,9 +5023,9 @@ Both stay raw in `asm/code_3_1_10.s` (`PlaySfx`) and
 `asm/code_3_1_10_2.s` (`PlayAmbientSfx`) respectively, guarded by
 `.if NON_MATCHING == 0`, with the understood-but-not-matching C
 reconstruction living in the *following* file in ROM order
-(`src/audio/sfx_ambient.c` and `src/audio/audio_context.c`
+(`src/audio/audio.c`
 respectively) under `#if NON_MATCHING` - same convention as
-`CommitBlendRegs`/`aabb_util.c` earlier in this same address range. This
+`CommitBlendRegs`/`aabb.c` earlier in this same address range. This
 split the original `asm/code_3_1_10.s` into three pieces
 (`code_3_1_10.s`/`_2.s`/`_3.s`, the last holding everything from
 `EnableMusicVCountIrq` onward, entirely unchanged) since the two parked
@@ -5088,7 +5088,7 @@ project's "one `.c` file per contiguous ROM region" rule):
     one at the loop's end) into a single merged pool, 4 bytes short.
     The "newly pressed" key read also needed the established
     `addr = &gKeys; keys = *(u16 *)((u8 *)addr + 2);`
-    idiom from `WaitForKeyPress` (`src/system/input_util.c`) - folding the
+    idiom from `WaitForKeyPress` (`src/system/input.c`) - folding the
     `+2` into the literal constant itself compiles to `ldrh r1,[r0]`
     with no offset, not the ROM's `ldrh r1,[r0,#2]`.
   - `LanguageSelectInput`'s bit-3/bit-0 "confirm" cases share their `PlaySfx`
@@ -5378,7 +5378,7 @@ chunk's biggest, least-understood cluster in one pass.
 Both compiled byte-identical to the ROM on the first try - no register
 pins or reordering needed.
 
-**Matched, new `src/graphics/hud_icon_slot.c`** (non-adjacent to
+**Matched, new `src/gfx/palette_cycle.c`** (non-adjacent to
 `hud_counter.o` - `InitHud`-`UpdateHudClock` sit raw between them):
 
 - **`ClearPaletteCycles`**/**`InitPaletteCycles`**: reset/construct a fixed 3-entry
@@ -5489,7 +5489,7 @@ in the source's own comments (`docs/workflow.md` step 7 convention):
 
 **File structure:** `asm/code_3_2_17_231cc.s` is now truncated right
 before `MainLoop`; followed by `main_loop.o`, the new raw
-`code_3_2_17_26f54.s` (`TickPaletteCycles`/`AddPaletteCycle`), `hud_icon_slot.o`,
+`code_3_2_17_26f54.s` (`TickPaletteCycles`/`AddPaletteCycle`), `palette_cycle.o`,
 the new raw `code_3_2_17_27138.s` (`InitHud` through
 `UpdateHudClock` - the original file's unchanged remainder), then the
 existing `hud_counter.o`. `asm/code_3_2_20.s` is now truncated to just
@@ -5505,7 +5505,7 @@ and `make NON_MATCHING=1 report`.
 `code_3_2_17.s`/`code_3_2_20e.s` boundary in the generated issue - the
 real functions live in `code_3_2_20e.s`, right before `__divsi3`'s
 raw division helper). `CpuSet` was *not* already matched despite
-`boot_util.c`'s comment calling it "the already-matched `CpuSet`"
+`boot.c`'s comment calling it "the already-matched `CpuSet`"
 - that comment describes `MemCopy32`'s *own* match, written in
 anticipation; the actual `CpuSet` definition was still raw here.
 
@@ -5517,7 +5517,7 @@ anticipation; the actual `CpuSet` definition was still raw here.
   `CpuFastSet`, `CpuSet`, `LZ77UnCompVram`, `ObjAffineSet`,
   `RLUnCompVram`, `Sqrt`, `VBlankIntrWait` with `r2` zeroed first).
   `LZ77UnCompVram`/`RLUnCompVram` already had their real names
-  from `src/system/asset_util.c`'s `extern` declarations; the rest stay
+  from `src/system/asset.c`'s `extern` declarations; the rest stay
   `sub_XXXXXXXX`.
 - **`EEPROMConfigure`** - picks a 12-byte config table
   (`struct EepromConfig`, in `eeprom_timer.c`) by a "chip type" code (4 or
@@ -5652,7 +5652,7 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   sequence; the `GetDpadDirection(dummy)` call's dummy-argument load
   (`gInput`, ignored by the real callee - same shape as
   `WaitForKeyPress`'s `UpdateKeys(gInput)` in
-  `src/system/input_util.c`) also had to be hoisted into its own
+  `src/system/input.c`) also had to be hoisted into its own
   statement *before* the boolean computation to match the ROM's literal
   instruction order, matching neither statement order alone reproduces
   once both are present in the same function.
@@ -6165,7 +6165,7 @@ raw.
   body) - written via `NAKED` + `asm("mov pc, lr")` instead, the same
   technique `_call_via_lr` used in issue #69's PR.
 - **`SetAabbSize`/`SetAabbPos`** (ROM `0x0803AFDC`, new
-  `src/graphics/actor_aabb_setup.c`) - the shared AABB set-size
+  `src/util/aabb_setup.c`) - the shared AABB set-size
   (`field_8`/`field_c`)/set-position (`field_0`/`field_4`) primitive
   pair, already referenced by name (not yet matched) from
   `actor_part.c`/`actor_part2.c`/`oam_count.c`'s `DrawPowerDialog` entry.
@@ -6202,11 +6202,11 @@ raw.
 in `asm/code_3_2_20e_3adb4.s`/`asm/code_3_2_20e_3ae4c.s`) - a trio of
 generic software division/modulo primitives (no hardware divide on this
 CPU): `__divsi3` is signed division (`a / b`, truncating toward
-zero - the "atan2-style angle helper" `math_util.c` already documents
+zero - the "atan2-style angle helper" `fixed_math.c` already documents
 wrappers around, and the digit-splitter `UpdateHudCrates` calls), and
 `__modsi3`/`__umodsi3` are signed/unsigned modulo respectively
 (`__umodsi3` already had a `mod` note next to a not-yet-matched
-extern in `rand_util.c`/`time_util.c`). All three are classic
+extern in `rand.c`/`time_format.c`). All three are classic
 shift-and-subtract binary long division, 4 bits at a time: normalize a
 `divisor`/`bit`-weight pair up to the dividend's magnitude, then
 repeatedly test the top 4 candidate bit positions before shrinking by
@@ -6265,7 +6265,7 @@ functions) is now four pieces in ROM order: the trimmed
 parked functions under `#if NON_MATCHING` - only `__div0` actually
 contributes bytes in a matching build), the new
 `asm/code_3_2_20e_3ae4c.s` (parked `__modsi3`/`__umodsi3`,
-guarded), and the new `src/graphics/actor_aabb_setup.o`
+guarded), and the new `src/util/aabb_setup.o`
 (`SetAabbSize`-`DestroySmallFont`, all matched) - see `ldscript.txt` and
 `tools/report_units.py`'s `util`/`graphics` categories, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)

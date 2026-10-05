@@ -185,9 +185,9 @@ Searched for, and nothing else found:
   `__umodsi3`/`__div0` and `crt0.s` are all hand-written asm. Compiler
   flags don't apply to them.
 - **Game code that looks like library code.** `irq.c` (IRQ table
-  setup, VBlank handler, key reading), `memory.c` (heap), `rand_util.c`,
-  `string_util*.c`/`printf_util.c` (`itoa`, `strcat` etc. on `u8 *`),
-  `boot_util.c` and the link-cable/SIO files (`link_cable*.c`, a custom
+  setup, VBlank handler, key reading), `memory.c` (heap), `rand.c`,
+  `number_format.c`/`string.c`/`printf.c` (`itoa`, `strcat` etc. on `u8 *`),
+  `boot.c` and the link-cable/SIO files (`src/link/*.c`, a custom
   CRC-16 handshake) sit in the game's own address range with the
   game's own data structures, and none follows an SDK source. As a
   check, the pinned `irq.c` functions `DisableVBlankHandler`, `UpdateKeys`

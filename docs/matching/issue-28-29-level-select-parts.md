@@ -13,7 +13,7 @@ Both files are on the Makefile's `OLD_AGBCC_OBJS` list (they are built
 with `tools/agbcc/bin/old_agbcc`). Compiled with the current `agbcc`, the finished C
 matches only 17/25 and 12/16 functions; with `old_agbcc` all of them match. The
 compiler boundary is not inside this range: the code right after it
-(`graphics_package_1e578.c`, issue #30) still builds with `agbcc`.
+(`graphics_package.c`, issue #30) still builds with `agbcc`.
 
 Verified with a clean `make NON_MATCHING=1 report` (no warnings from these
 files) and a clean `make compare` (`crashbandicootxs.gba: OK`).

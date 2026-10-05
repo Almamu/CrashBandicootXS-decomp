@@ -5,7 +5,7 @@
 extern void OperatorDelete(void *self);
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
- * shape to `DestroySpriteBankSet` (src/graphics/graphics.c). */
+ * shape to `DestroySpriteBankSet` (src/gfx/graphics.c). */
 void DestroyTileCache(void *self, u32 flags)
 {
     if (flags & 1) {

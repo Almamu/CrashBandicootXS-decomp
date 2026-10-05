@@ -2,11 +2,10 @@
 #include "bitmap_font.h"
 #include <agb_syscall.h>
 
-/* Sits between FontMeasureText (src/graphics/hud_icon_widget_8994.c) and
- * InitFont (src/graphics/hud_icon_widget_8a78.c) - FontUploadTiles/
+/* Sits between FontMeasureText (src/text/font_measure.c) and
+ * InitFont (src/text/font.c) - FontUploadTiles/
  * FontSetPalette/FontResetPalette, GitHub issue #46. Same `struct bitmap_font`
- * as hud_icon_widget.c/hud_icon_widget2.c/hud_icon_widget3.c/
- * hud_icon_widget5.c. */
+ * as hud_icon_widget.c and the other src/text/font*.c files. */
 
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern u8 *gPaletteCache;
@@ -70,7 +69,7 @@ extern u8 gFontVtable[];
  * data tables past `record` (the line-height/space-width/glyph fields
  * stay whatever the caller already set) - just the OAM-scratch zero and
  * cursor/margin reset shared with InitSmallFont/B
- * (src/graphics/hud_icon_widget_85c4.c).
+ * (src/text/font_glyph.c).
  *
  * The `posX`/`posY`/`marginX`/`tileCount` zero-init needed the same
  * inline-asm address anchor as InitSmallFont/B - see that
@@ -112,8 +111,8 @@ struct bitmap_font *InitFont(struct bitmap_font *selfArg)
  * rest of the still-raw HUD text/icon-widget driver code
  * (asm/code_3_2_20_8b7c.s, out of GitHub issue #46's chunk scope) -
  * FontHeightToLines through FontSetTileBase, GitHub issue #46. Same
- * `struct bitmap_font` as hud_icon_widget.c/hud_icon_widget2.c/
- * hud_icon_widget3.c/hud_icon_widget4.c.
+ * `struct bitmap_font` as hud_icon_widget.c and the other
+ * src/text/font*.c files.
  *
  * DestroyFont (0x08028B7C, no tracked issue - just the next
  * function in ROM order, immediately after FontSetTileBase above) is
@@ -124,7 +123,7 @@ struct bitmap_font *InitFont(struct bitmap_font *selfArg)
  * slot 1 of gFontVtable; it was once read as a constructor):
  * (`record = &gFontVtable`, then the same conditional
  * `OperatorDelete(self)` teardown-registration idiom
- * DestroyLargeFont/DestroySmallFont (src/graphics/actor_aabb_setup.c) and
+ * DestroyLargeFont/DestroySmallFont (src/util/aabb_setup.c) and
  * InitFont above use elsewhere for the same table). Matched
  * byte-exact via plain struct field access - unlike InitFont's own
  * record write, this one didn't need the inline-asm address anchor
@@ -138,7 +137,7 @@ extern void *_call_via_r1(void *arg0, void *arg1);
 extern s32 __udivsi3(s32 value, s32 divisor);
 
 /* Divides `value` by the widget's own line height (`lineHeight`) - see
- * src/util/word_util.c's DrawWrappedTextInBox, which uses this same field as a
+ * src/text/text_box.c's DrawWrappedTextInBox, which uses this same field as a
  * divisor for a line-count limit. */
 s32 FontHeightToLines(struct bitmap_font *self, s32 value)
 {

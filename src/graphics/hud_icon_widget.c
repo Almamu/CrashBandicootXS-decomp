@@ -3,7 +3,7 @@
 
 /* Sits right after hud_blink.c's blink-timer trio (ROM 0x08028568) and
  * before FontDrawGlyph/InitSmallFont/InitLargeFont/FontPutChar
- * (src/graphics/hud_icon_widget_85c4.c) - see GitHub issue #46. Just
+ * (src/text/font_glyph.c) - see GitHub issue #46. Just
  * `DestroyHud` here: a `struct hud_counter`-parts destructor, unrelated
  * to the `struct bitmap_font` text/icon-glyph renderer the rest of this
  * chunk's functions operate on (see include/bitmap_font.h and the other
@@ -29,7 +29,7 @@ struct icon_slot {
  * teardown trampoline via `_call_via_r2`, frees the array itself
  * (`self->parts`, allocated with a leading element-count word per the
  * `[-4]` read below - see the same convention in src/graphics/
- * hud_icon_slot.c/actor files), then optionally frees `self` when
+ * palette_cycle.c/actor files), then optionally frees `self` when
  * `flags` bit 0 is set (same "free-self" convention as
  * DestroyPaletteCycles/DestroyLanguageSelect elsewhere in this codebase). The per-type
  * descriptor's own shape past its first 0x18 bytes (the `struct actor`-

@@ -1,7 +1,7 @@
 # Issue #71: 0x0803B060-0x0803B4EC (actor)
 
 25 functions, ~1.1 KB, `asm/code_3_3.s`. This chunk sits immediately
-after `src/graphics/actor_aabb_setup.c`/`actor_anim.c`'s existing
+after `src/util/aabb_setup.c`/`actor_anim.c`'s existing
 content (issue #70) - `GetAnimFrameBaseOffset` (already matched in
 `actor_anim.c`) ends exactly at `0x0803B060`, so this chunk's C landed
 in the same file (`actor_anim.c`) rather than a new `actor_partN.c`,

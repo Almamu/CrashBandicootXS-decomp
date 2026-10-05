@@ -154,7 +154,7 @@ this codebase but were freshly re-confirmed here:
 Matched real C for everything except the tile-cache seeding loop's trip
 counter, which the ROM keeps live in r7 for the whole loop - this
 project's **confirmed categorical gcc-2.9 r7-pin bug** (see
-`graphics_package_1e688.c`/`oam_count.c`/`actor_part7.c` and the several
+`graphics_package.c`/`oam_count.c`/`actor_part7.c` and the several
 `docs/matching/naked-*.md` entries): an explicit
 `register s32 counter asm("r7")` pin compiles the exact right
 instructions but this compiler's own push/pop-list computation never

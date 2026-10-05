@@ -24,16 +24,16 @@ for the full write-up.
 
 ## Matched
 
-- `src/audio/music_player.c`: `UpdateAudio` (per-tick fade-envelope
+- `src/audio/audio.c`: `UpdateAudio` (per-tick fade-envelope
   update), `StartSong` (start playing a song).
-- `src/audio/sfx_ambient.c`: `PlaySfx` (`sub_8001854`, one-shot sfx
+- `src/audio/audio.c`: `PlaySfx` (`sub_8001854`, one-shot sfx
   play; real C since the near-miss polish pass, its raw
   `asm/code_3_1_10.s` retired - see
   [near-miss-polish.md](../matching/near-miss-polish.md)),
   `TickAmbientSfx` (ambient/looping-sfx-channel
   tick update), `StopSfx` (stop-if-playing scan), `ResetAmbientSfx`
   (reset), `StopAmbientSfx` (force-expire).
-- `src/audio/audio_context.c`: `PlayAmbientSfx` (ambient-sfx play request;
+- `src/audio/audio.c`: `PlayAmbientSfx` (ambient-sfx play request;
   plain C since the early-ROM NAKED retry, see
   [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)), `GetCurrentSong`,
   `GetSfxVolume`, `GetMusicVolume`, `FadeOutMusic`, `FadeInMusic`,
@@ -41,9 +41,9 @@ for the full write-up.
   `SetSfxVolume`, `PlaySong`, `ResumeSong`, `PauseSong`,
   `StopSong`, `DestroyAudioContext`, `InitAudioContext` (constructor),
   `DisableMusicVCountIrq`.
-- `src/audio/music_irq.c` (new file - `EnableMusicVCountIrq`/`MusicVCountIrqHandler`,
+- `src/audio/audio.c` (new file - `EnableMusicVCountIrq`/`MusicVCountIrqHandler`,
   0x08001C80): installs the VCount-IRQ handler that forwards into
-  `UpdateAudio`'s per-tick fade update above - `music_player.c`'s
+  `UpdateAudio`'s per-tick fade update above - `audio.c`'s
   header comment already anticipated this pair. Matched - GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
 

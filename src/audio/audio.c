@@ -9,7 +9,7 @@
  * docs/rom_map.md's "Found the origin point" section): `UpdateAudio`
  * is the per-tick fade update, `StartSong` starts a song. `PlaySfx`
  * (the very next function in ROM order) stays raw here - see
- * src/audio/sfx_ambient.c's doc comment. */
+ * src/audio/audio.c's doc comment. */
 
 extern void TickAmbientSfx(struct AudioContext *self);
 extern u8 gGaxIrqEnabled;
@@ -139,7 +139,7 @@ void StartSong(struct AudioContext *self, u32 songIndex)
 }
 
 /* `PlaySfx` sits right after the matched `StartSong` (src/audio/
- * music_player.c) and before the other functions this file holds. */
+ * audio.c) and before the other functions this file holds. */
 
 extern u32 gSfxVoiceToggle;
 
@@ -296,7 +296,7 @@ void StopAmbientSfx(struct AudioContext *self)
 asm(".align 2, 0");
 
 /* `PlayAmbientSfx` sits right after the matched `StopAmbientSfx`
- * (src/audio/sfx_ambient.c) and before the matched functions this
+ * (src/audio/audio.c) and before the matched functions this
  * file holds - the rest of the `AudioContext` accessor/state-machine
  * cluster (play/pause/stop, the two fade-envelope arm/setter pairs,
  * the constructor). */
@@ -589,7 +589,7 @@ void MusicVCountIrqHandler(void);
 
 /* Installs `MusicVCountIrqHandler` as the VCount-IRQ handler and arms VCount IRQs
  * with a fixed trigger line (`0x35`) - the music player's per-tick fade
- * update (`UpdateAudio`, `src/audio/music_player.c`) runs off this
+ * update (`UpdateAudio`, `src/audio/audio.c`) runs off this
  * VCount interrupt rather than VBlank. See that file's header comment,
  * which already anticipated this function. */
 void EnableMusicVCountIrq(void)

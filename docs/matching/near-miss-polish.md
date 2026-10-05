@@ -5,7 +5,7 @@ within a few instructions of the ROM. Three of them now match as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `PlaySfx` (`sub_8001854`) | `src/audio/sfx_ambient.c` | agbcc | raw asm, 4 halfwords | unpin `self`, then one empty `asm("" : : "r"(&gSfxVoiceToggle))` |
+| `PlaySfx` (`sub_8001854`) | `src/audio/audio.c` | agbcc | raw asm, 4 halfwords | unpin `self`, then one empty `asm("" : : "r"(&gSfxVoiceToggle))` |
 | `ValidateSaveData` | `src/graphics/settings_menu8e.c` | agbcc | NAKED, 6 halfwords | one empty `asm("" : : "r"(flags))` |
 | `LevelSelectLoop` | `src/graphics/actor_part_1b85c.c` | old_agbcc | NAKED, 1 instruction | statement expression plus an empty `asm("" : "+r"(k.all))` |
 

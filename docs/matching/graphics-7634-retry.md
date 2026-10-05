@@ -1,13 +1,13 @@
 # DrawAffineSpritePieces retry (issue #9)
 
-`DrawAffineSpritePieces` (`src/graphics/graphics_7634.c`, 1044 bytes) was the last
+`DrawAffineSpritePieces` (`src/gfx/affine_sprite_pieces.c`, 1044 bytes) was the last
 NAKED function in issue #9's range. Its old `NON_MATCHING` draft was 468
 halfwords off (1032 bytes under agbcc, 1024 under old_agbcc). It is now
 matched as real C, with no pins and one extra-reference nudge.
 
 | Function | File | Compiler | Before | Now |
 |---|---|---|---|---|
-| `DrawAffineSpritePieces` | `src/graphics/graphics_7634.c` (added to `OLD_AGBCC_OBJS`; the only function in the file) | old_agbcc | 468 | MATCH |
+| `DrawAffineSpritePieces` | `src/gfx/affine_sprite_pieces.c` (added to `OLD_AGBCC_OBJS`; the only function in the file) | old_agbcc | 468 | MATCH |
 
 ## Compiler
 
@@ -79,6 +79,6 @@ diff against the ROM), `var.py` (parallel variant runner),
 ## Verification
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from
-  `graphics_7634.c`.
+  `affine_sprite_pieces.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.

@@ -3,7 +3,7 @@
 
 /*
  * ROM 0x0816AA20: the song table, indexed by song id (StartSong,
- * music_player.c; `AudioContext.currentSong`). Each entry is a song in
+ * audio.c; `AudioContext.currentSong`). Each entry is a song in
  * the GAX2 music block gGaxMusicData, which tools/gax_audio.py
  * builds from sound/; the offsets come from its generated gax_songs.h,
  * so a song can change size.

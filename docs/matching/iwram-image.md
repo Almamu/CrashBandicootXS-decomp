@@ -25,7 +25,7 @@ script and the report. Contents:
 The five string routines have no caller: none of their addresses occurs
 as a word anywhere in the ROM, and Thumb code can only reach ARM code
 through a pointer. They are ARM builds of the Thumb ones in
-`src/util/string_util*.c`.
+`src/util/number_format.c` and `src/util/string.c`.
 
 ## Compiler
 

@@ -7,8 +7,7 @@ uses both. All three were already named/understood at a high level in
 `docs/rom_map.md` before this pass; the work here was turning that
 understanding into byte-exact C.
 
-## The OBJ-tile VRAM allocator (`src/graphics/sprite_frame_pool.c`,
-`src/graphics/sprite_frame_queue.c`)
+## The OBJ-tile VRAM allocator (`src/gfx/sprite_frame.c`)
 
 A small doubly-linked, address-sorted free-block allocator - structurally
 the same design as `mem_alloc`/`mem_free` in `src/system/memory.c` (next-fit
@@ -28,7 +27,7 @@ owning record's pool index for `FreeVramTileBlock`.
 - **`FreeVramTileBlock`** (was `sub_8028C48`) - matched. The `mem_free`-shaped
   two-sided coalesce.
 - **`AllocVramTileBlock`** (was `sub_8028CD4`) - **matched** (moved to
-  `src/graphics/sprite_frame_queue.c`, real bytes in
+  `src/gfx/sprite_frame.c`, real bytes in
   `asm/code_3_2_20_8b7c_cd4.s` deleted). The `mem_alloc`-shaped next-fit
   search, splitting off a spare record when there's leftover space,
   failing the allocation outright if the spare-record stack is empty even
@@ -62,7 +61,7 @@ owning record's pool index for `FreeVramTileBlock`.
   register instead of ROM's redundant reload; deferring the pool to the
   function's end instead of the ROM's mid-function group) that plain C
   couldn't be steered around either. See that function's own comment in
-  `src/graphics/sprite_frame_queue.c` for the full instruction-by-
+  `src/gfx/sprite_frame.c` for the full instruction-by-
   instruction breakdown.
 - **`sub_8028D6C`** - matched, **UNUSED** (no caller anywhere in the ROM,
   checked every `asm/*.s`, `expected/*.s` and `src/**/*.c` for the address
@@ -78,7 +77,7 @@ owning record's pool index for `FreeVramTileBlock`.
   routine). Added a `split 0x08028D94 GetFreeVramTileBytes` correction, the same
   pattern `mem_walk_heaps` already established.
 
-## The overflow OAM/affine queue (`src/graphics/sprite_frame_queue.c`)
+## The overflow OAM/affine queue (`src/gfx/sprite_frame.c`)
 
 A small per-frame buffer that `SetupSpriteFrameOam` appends into instead
 of writing straight to the real hardware-shaped OAM shadow buffer, later
@@ -97,7 +96,7 @@ committed in bulk by `FlushSpriteFrameOamQueue`.
 - **`FlushSpriteFrameOamQueue`** (was `sub_8028EA8`) - matched. Commits the
   queue into the real `struct oam_shadow_buffer` and resets both counts.
 
-## The sprite-frame VRAM cache (`src/graphics/sprite_frame_queue.c`)
+## The sprite-frame VRAM cache (`src/gfx/sprite_frame.c`)
 
 A small two-generation clock cache (`struct sprite_frame_cache_node`,
 matched to the same 128-record-pool-plus-spare-stack shape as the tile

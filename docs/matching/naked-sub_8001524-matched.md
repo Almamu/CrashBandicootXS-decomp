@@ -1,6 +1,6 @@
 # `SetDispcntMode` converted from NAKED transcription to real matched C
 
-`SetDispcntMode` (`src/graphics/fade_screen_mode2.c`) had been parked as a
+`SetDispcntMode` (`src/gfx/display.c`) had been parked as a
 byte-correct NAKED asm transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real
@@ -91,6 +91,6 @@ Full clean `rm -rf build && make NON_MATCHING=1 report`, then full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`. `SetDispcntMode` is now folded into the same
-`src/graphics/fade_screen_mode2.o` unit as the already-matched
+`src/gfx/display.o` unit as the already-matched
 `HideBg3`-`CommitDispcnt` functions in `tools/report_units.py`,
 since it's the same object file.

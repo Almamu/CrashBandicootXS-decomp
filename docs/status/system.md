@@ -24,14 +24,14 @@ category page - see [game_loop.md](./game_loop.md).
   `HeapSortActorsByKey`, `LookupSpriteFrameCache`) and `src/iwram/iwram_data.c` (the
   initialised IWRAM globals) - see
   [iwram-image.md](../matching/iwram-image.md).
-- `src/system/asset_util.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
-- `src/system/input_util.c`: `WaitForKeyPress` (input-poll-until-button/
+- `src/system/asset.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
+- `src/system/input.c`: `WaitForKeyPress` (input-poll-until-button/
   timeout helper) - was previously NAKED, now matched as real C by
   writing the count-limited loop's cancel-check block textually before
   the poll/confirm-check code (matching the ROM's own basic-block
   layout) instead of the natural top-to-bottom order - see
   [naked-sub_80010e0-matched.md](../matching/naked-sub_80010e0-matched.md).
-- `src/system/boot_util.c`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
+- `src/system/boot.c`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
   match); see `docs/matching.md`
@@ -69,7 +69,7 @@ category page - see [game_loop.md](./game_loop.md).
   register" trampoline table, already referenced by name from `irq.c`'s
   `VBlankHandler` and several `actor_part*` files), `_call_via_lr` (bonus,
   just past issue #69's listed range) - GitHub issue #69
-- `src/system/link_cable.c`/`link_cable2.c` (new files - the GBA
+- `src/link/link_handshake.c`/`link_sio.c` (new files - the GBA
   multiplayer link-cable/SIO transport, `0x08001C80`-`0x08002868`,
   interleaved with `audio`/`overlay_ui` in this same address range -
   see `docs/rom_map.md`'s SIO/link-cable section): `LinkStop`
@@ -86,7 +86,7 @@ category page - see [game_loop.md](./game_loop.md).
   matched, GitHub
   issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (`ResetLinkSessionState`,
   the link-session reset/init, is real C in its own
-  `link_cable_01db4.c` since the last-eleven NAKED retry - see
+  `link_session_reset.c` since the last-eleven NAKED retry - see
   [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md); `HandleLinkSerial`, the
   per-frame SIO pump, is real C since the last-seven NAKED retry - see
   [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md). `UpdateLinkSession`, the
@@ -101,7 +101,7 @@ GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 generator, but every function in it turned out to be either a generic
 math primitive or an AABB/actor-table helper - the matched functions
 from it live in `docs/status/util.md` (`lib/libgcc/lib1funcs.s`) and
-[actor.md](./actor.md) (`src/graphics/actor_aabb_setup.c`) instead. See
+[actor.md](./actor.md) (`src/util/aabb_setup.c`) instead. See
 `docs/matching.md`'s issue #70 entry for the original writeup and
 `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
 section for how the division/modulo trio's NAKED transcription pass

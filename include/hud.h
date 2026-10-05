@@ -23,7 +23,7 @@ struct hud_anim_data {
 
 /* A single HUD digit/icon slot. Its first 0x18 bytes plus the `table`
  * field at +0x18 match `struct actor` (include/actor.h) byte for byte -
- * sub_802710C/InitHudPart (src/graphics/hud_icon_slot.c) construct each
+ * sub_802710C/InitHudPart (src/gfx/palette_cycle.c) construct each
  * slot by calling the same generic `struct actor`-based table-swap
  * helpers (DestroyUiSpriteObj/InitUiSpriteObj) already used by the actor/part
  * system, treating this object as one. The rest of the fields

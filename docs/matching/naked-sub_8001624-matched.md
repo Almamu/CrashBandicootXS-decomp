@@ -1,6 +1,6 @@
 # `CommitBlendRegs` converted from NAKED transcription to real matched C
 
-`CommitBlendRegs` (`src/graphics/aabb_util.c`) had been parked as a
+`CommitBlendRegs` (`src/util/aabb.c`) had been parked as a
 byte-correct NAKED asm transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real
@@ -81,6 +81,6 @@ Full clean `rm -rf build && make NON_MATCHING=1 report`, then full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`. `CommitBlendRegs` is folded into the same
-`src/graphics/aabb_util.o` unit as the already-matched
+`src/util/aabb.o` unit as the already-matched
 `AabbOverlapsInclusiveX`-`IwramAlloc` siblings in `tools/report_units.py`, since
 it's the same object file.

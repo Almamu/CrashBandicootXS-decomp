@@ -6,7 +6,7 @@ retries, each with an open parked-function issue. Both are now real C.
 | Function | File | Size | Before | Compiler | Result |
 |---|---|---|---|---|---|
 | `DrawPowerDialog` | `src/graphics/oam_count.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
-| `DrawWrappedText` | `src/graphics/text_layout.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
+| `DrawWrappedText` | `src/text/wrapped_text.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
 
 ## DrawPowerDialog
 
@@ -61,7 +61,7 @@ It was replaced by a plain rewrite:
   r1/r2.
 - **Compiler:** with all of the above, agbcc is left with one difference:
   the `/b` handler's first `ldr rX,[sp,#0x14]` uses r0 where the ROM
-  has r2. old_agbcc matches exactly. `text_layout.c` contains only this
+  has r2. old_agbcc matches exactly. `wrapped_text.c` contains only this
   function, so the whole object moved to `OLD_AGBCC_OBJS`.
 
 The old progress doc's "argument-spill ordering" and "xAddr/yAddr spill
@@ -71,6 +71,6 @@ accessors. They do not need their own workarounds.
 ## Verification
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from
-  `oam_count.c` or `text_layout.c`.
+  `oam_count.c` or `wrapped_text.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
   crashbandicootxs.map && make compare`: `crashbandicootxs.gba: OK`.

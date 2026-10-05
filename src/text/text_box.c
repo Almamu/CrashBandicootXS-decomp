@@ -1,13 +1,13 @@
 #include "core.h"
 #include "bitmap_font.h"
 
-/* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset_util.c)
+/* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 /* Returns the length of the next "word" starting at `s`: the number of
  * characters up to and including the first space, or up to (but not
  * including) the NUL terminator if no space is found first. Used by
- * the still-parked DrawWrappedText (src/graphics/text_layout.c) to walk text one
+ * the still-parked DrawWrappedText (src/text/wrapped_text.c) to walk text one
  * token at a time. */
 s32 GetWordLength(u8 *s)
 {
@@ -46,7 +46,7 @@ struct wrapped_text_box_params {
     s32 field_c;
 };
 
-/* Thin wrapper around the still-parked DrawWrappedText (src/graphics/text_layout.c):
+/* Thin wrapper around the still-parked DrawWrappedText (src/text/wrapped_text.c):
  * stashes `params->field_0` into `self`'s own `marginX`, computes a
  * line-count limit as `params->field_c / self->lineHeight`, then
  * forwards to DrawWrappedText with that limit and returns its result

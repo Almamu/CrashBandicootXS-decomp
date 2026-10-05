@@ -25,7 +25,7 @@ this same chunk that got closed out later.
   push/pop set via the separate `mov r7, sb` high-register relay
   idiom, which doesn't apply to this function). Every instruction is a
   direct, byte-verified transcription of the ROM disassembly (same
-  technique as `src/system/link_cable.c`'s `MakeLinkHandshakeId`), so the
+  technique as `src/link/link_handshake.c`'s `MakeLinkHandshakeId`), so the
   built ROM is byte-identical here - but per this project's current
   tracking policy, a NAKED transcription of a substantial function
   (branches, struct-shaped field access - not a trivial wrapper/stub)

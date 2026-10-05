@@ -117,7 +117,7 @@ second pass against those five.
   the ROM's two (one solo, one shared by three) - 4 bytes short. An
   `asm volatile("" : "+r"(count))` barrier at that one return site (the
   established fix for a *value*-driven cross-jump, see
-  `docs/matching.md`'s `text_layout.c` entry) has no effect here since
+  `docs/matching.md`'s `wrapped_text.c` entry) has no effect here since
   this merge is purely code-shape-driven, not value-driven - the
   barrier's own zero real instructions vanish before this late-stage
   pass runs. No combination of restructuring tried kept that one

@@ -2,7 +2,7 @@
 
 The per-instance actor "self" object family - `struct actor` and its
 many satellite files (`src/graphics/actor_part*.c`,
-`src/graphics/actor_aabb_setup.c`). Filed under `src/graphics/` on disk
+`src/util/aabb_setup.c`). Filed under `src/graphics/` on disk
 (the ROM's actor code lives interleaved with rendering code, and
 several actor functions are themselves OAM/sprite-draw routines), but
 tracked as its own `actor` category here since `docs/rom_map.md` and
@@ -348,7 +348,7 @@ from "core" graphics.
   effect. 12 functions, all matched. See
   [docs/matching/issue-53-issue-54-gap-cc9c.md](../matching/issue-53-issue-54-gap-cc9c.md).
 
-- `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
+- `src/util/aabb_setup.c` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
   trio in `lib/libgcc/lib1funcs.s`, see that file's `docs/matching.md`
   entry): `SetAabbSize`/`SetAabbPos` (the shared AABB set-size/
@@ -965,10 +965,10 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
 ### Matched in the DrawAffineSpritePieces retry
 
-- `src/graphics/graphics_7634.c` - `DrawAffineSpritePieces` (the affine sibling
+- `src/gfx/affine_sprite_pieces.c` - `DrawAffineSpritePieces` (the affine sibling
   of `DrawSpritePieces`: one affine OAM entry per visible piece, pulled
   towards the first piece's centre by the scale), old_agbcc
-  (`graphics_7634.o` joined `OLD_AGBCC_OBJS`; it is the only function in
+  (`affine_sprite_pieces.o` joined `OLD_AGBCC_OBJS`; it is the only function in
   the file). Was 468 halfwords off. Taking the size-table addresses
   before reading `pos` makes reload spill r7, which sets the ROM's
   reload-register rotation. The rest: the pull maths interleaved per
@@ -1160,7 +1160,7 @@ they don't count as "matched" for this project's tracking - the goal
 is readable C, and an asm blob wrapped in a C function signature
 doesn't advance that even when byte-correct. See
 [docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
-(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/system/link_cable.c`) for the
+(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/link/link_handshake.c`) for the
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
@@ -1681,7 +1681,7 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Left raw (not attempted, or attempted and set aside)
 
-- ~~**`DrawAffineSpritePieces`**~~ (`src/graphics/graphics_7634.c`, ROM 0x08007634,
+- ~~**`DrawAffineSpritePieces`**~~ (`src/gfx/affine_sprite_pieces.c`, ROM 0x08007634,
   GitHub issue #9) - real GBA hardware-affine sprite-matrix setup.
   Moved out of `asm/code_3_2.s` as NAKED in the issue #9 raw-asm pass,
   now matched as real C under old_agbcc - see "Matched in the

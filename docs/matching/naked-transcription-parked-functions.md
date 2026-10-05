@@ -11,7 +11,7 @@ canonicalization, and argument-spill ordering - that no amount of
 respelling, reordering, or register-pinning the C source could close.
 Each was converted to a byte-verified NAKED asm transcription instead,
 the established pattern for this class of gap (see
-`src/system/link_cable.c`'s `MakeLinkHandshakeId`/`ResetLinkSessionState` and
+`src/link/link_handshake.c`'s `MakeLinkHandshakeId`/`ResetLinkSessionState` and
 `lib/libgcc/lib1funcs.s`'s `__div0` for the earliest examples).
 
 **Tracking note**: byte-exact NAKED asm is not treated as "matched" in
@@ -19,7 +19,7 @@ this project's `tools/report_units.py`/`docs/status/*.md` tracking -
 only real decompiled C counts, even when the NAKED transcription is
 provably byte-correct against the ROM. All six functions below (and
 their siblings converted the same pass - `PlayAmbientSfx` in
-`src/audio/audio_context.c`, and the eight
+`src/audio/audio.c`, and the eight
 `src/graphics/settings_menu.c`/`settings_menu23.c` functions) are
 tracked as **parked**, not matched, in those files. The functions
 themselves are still real, working, byte-verified code - only the
@@ -27,7 +27,7 @@ progress-tracking classification differs from an ordinary match.
 
 ## Parked - byte-correct NAKED transcriptions
 
-- **`FindSubstring`** (`src/util/printf_util.c`) - a case-insensitive
+- **`FindSubstring`** (`src/util/printf.c`) - a case-insensitive
   `strstr`. The C reconstruction's only gap was one branch shape inside
   the "normalize a char to lowercase" logic: the ROM routes the
   *untaken* branch of the range check through a redundant copy-into-r0
@@ -39,7 +39,7 @@ progress-tracking classification differs from an ordinary match.
   [naked-sub_8000cbc-matched.md](./naked-sub_8000cbc-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked (see `docs/matching.md`).
-- **`DrawWrappedText`** (`src/graphics/text_layout.c`) - a word-wrap text
+- **`DrawWrappedText`** (`src/text/wrapped_text.c`) - a word-wrap text
   renderer. The C reconstruction matched instruction-for-instruction
   except ~8 bytes from two non-semantic codegen details: agbcc always
   spills stack-homed incoming arguments before any register-pinned move
@@ -48,7 +48,7 @@ progress-tracking classification differs from an ordinary match.
   has a redundant two-instruction "correct-sense compare, branch on
   true, fall to an unconditional far branch" pair (likely a Thumb
   conditional-branch-range artifact from the ROM's original build).
-- **`WaitForKeyPress`** (`src/system/input_util.c`) - polls input until a
+- **`WaitForKeyPress`** (`src/system/input.c`) - polls input until a
   button match or a poll-count timeout. The C reconstruction matched
   everywhere except one 4-byte residual: the count-limited loop's
   `if (keys & 1)` bit-test compiled with the opposite branch sense from
@@ -59,7 +59,7 @@ progress-tracking classification differs from an ordinary match.
   see [naked-sub_80010e0-matched.md](./naked-sub_80010e0-matched.md);
   this entry is left as-is since it's a frozen historical record of why
   the function was originally parked (see `docs/matching.md`).
-- **`FadePaletteToBlack`** (`src/graphics/fade_screen_mode.c`) - the
+- **`FadePaletteToBlack`** (`src/gfx/fade_to_black.c`) - the
   fade-to-black palette DMA loop. The ROM caches the blended-buffer
   address in a register across the loop while recomputing the other two
   DMA fields fresh every iteration; this compiler's loop-invariant
@@ -69,7 +69,7 @@ progress-tracking classification differs from an ordinary match.
   [naked-sub_80014a4-matched.md](./naked-sub_80014a4-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked (see `docs/matching.md`).
-- **`SetDispcntMode`** (`src/graphics/fade_screen_mode2.c`) - sets a
+- **`SetDispcntMode`** (`src/gfx/display.c`) - sets a
   packed shadow byte's low 3 bits. This compiler always recognizes `-8`
   as reachable from the already-loaded `7` mask via a single `SUB` and
   folds the ROM's fresh `movs r1,#8; rsbs r1,r1,#0` pair into that
@@ -78,7 +78,7 @@ progress-tracking classification differs from an ordinary match.
   [naked-SetDispcntMode-matched.md](./naked-SetDispcntMode-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked (see `docs/matching.md`).
-- **`CommitBlendRegs`** (`src/graphics/aabb_util.c`) - commits a blend-
+- **`CommitBlendRegs`** (`src/util/aabb.c`) - commits a blend-
   register shadow. The ROM writes a word then does a separate `adds
   r2,#4` on the same register before the second store; this compiler
   always fuses that store-then-increment-same-register pair into a
@@ -110,7 +110,7 @@ real ROM address as a label.
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` passes (`La suma coincide`) with
 all six converted at once, alongside `PlayAmbientSfx`
-(`src/audio/audio_context.c` - see
+(`src/audio/audio.c` - see
 `docs/matching/issue-3-overlay-ui-audio-wrapper.md`) and the eight
 `src/graphics/settings_menu.c`/`settings_menu23.c` functions (see
 `docs/matching/issue-6-0x08003f30-overlay-ui.md`) converted the same

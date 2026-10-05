@@ -145,7 +145,7 @@ CSE decisions this specific gcc 2.9 build makes internally, that don't
 appear to be reachable from C source no matter how the expressions or
 register pins are phrased. `PlayAmbientSfx` stays parked under
 `NON_MATCHING` in `asm/code_3_1_10_2.s`, with the understood
-reconstruction (now closer, one gap down) in `src/audio/audio_context.c`.
+reconstruction (now closer, one gap down) in `src/audio/audio.c`.
 
 ## Verification
 
@@ -174,11 +174,11 @@ ROM does, no matter how the field access or pointer arithmetic was
 phrased. Since the semantics were already fully confirmed (this
 document's own derivation), the function was converted to a
 byte-verified NAKED asm transcription instead - the established pattern
-for this class of gap (see `src/util/printf_util.c`'s `FindSubstring`).
+for this class of gap (see `src/util/printf.c`'s `FindSubstring`).
 Every instruction now matches the ROM exactly; verified via a full
 clean `make compare` (`La suma coincide`). `PlayAmbientSfx` no longer sits
 under `asm/code_3_1_10_2.s` (deleted) - its NAKED definition lives
-directly in `src/audio/audio_context.c`. Per this project's tracking
+directly in `src/audio/audio.c`. Per this project's tracking
 policy, byte-exact NAKED asm doesn't count as "matched" - only real
 decompiled C does - so `PlayAmbientSfx` is tracked as **parked** in
 `tools/report_units.py`/`docs/status/audio.md`, not matched, even

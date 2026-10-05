@@ -459,7 +459,7 @@ void FreeSpriteFrameOamQueue(void)
     mem_free((u8 *)gSpriteOamQueue);
 }
 
-/* Same 0x40C-byte OAM shadow buffer src/graphics/graphics.c already
+/* Same 0x40C-byte OAM shadow buffer src/gfx/graphics.c already
  * names `struct oam_shadow_buffer` (redeclared locally per this
  * project's minimal-local-type convention - see docs/naming.md). */
 struct oam_shadow_buffer {

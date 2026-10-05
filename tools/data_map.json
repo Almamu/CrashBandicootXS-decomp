@@ -400,7 +400,7 @@
     "StartSong"
    ],
    "consumer_files": [
-    "audio/music_player.c"
+    "audio/audio.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 19,
@@ -426,8 +426,8 @@
     "HandleLinkSerial"
    ],
    "consumer_files": [
-    "system/link_cable.c",
-    "system/link_cable_01f50.c"
+    "link/link_handshake.c",
+    "link/link_session.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -881,8 +881,8 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "graphics/graphics_73dc.c",
-    "graphics/graphics_7634.c"
+    "gfx/sprite_pieces.c",
+    "gfx/affine_sprite_pieces.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -904,8 +904,8 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "graphics/graphics_73dc.c",
-    "graphics/graphics_7634.c"
+    "gfx/sprite_pieces.c",
+    "gfx/affine_sprite_pieces.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2773,7 +2773,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "graphics/graphics_package_1e688.c"
+    "gfx/graphics_package.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2798,7 +2798,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "graphics/graphics_package_1e688.c"
+    "gfx/graphics_package.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3234,7 +3234,7 @@
     "InitSmallFont"
    ],
    "consumer_files": [
-    "graphics/hud_icon_widget_85c4.c"
+    "text/font_glyph.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3255,7 +3255,7 @@
     "InitSmallFont"
    ],
    "consumer_files": [
-    "graphics/hud_icon_widget_85c4.c"
+    "text/font_glyph.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3276,7 +3276,7 @@
     "InitLargeFont"
    ],
    "consumer_files": [
-    "graphics/hud_icon_widget_85c4.c"
+    "text/font_glyph.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3297,7 +3297,7 @@
     "InitLargeFont"
    ],
    "consumer_files": [
-    "graphics/hud_icon_widget_85c4.c"
+    "text/font_glyph.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7151,7 +7151,7 @@
    "consumer_files": [
     "graphics/actor_part124.c",
     "graphics/actor_part6.c",
-    "graphics/graphics.c"
+    "gfx/graphics.c"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -8246,7 +8246,7 @@
     "InitHudPart"
    ],
    "consumer_files": [
-    "graphics/hud_icon_slot.c"
+    "gfx/palette_cycle.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8271,8 +8271,8 @@
     "DestroyLargeFont"
    ],
    "consumer_files": [
-    "graphics/actor_aabb_setup.c",
-    "graphics/hud_icon_widget_85c4.c"
+    "util/aabb_setup.c",
+    "text/font_glyph.c"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -8297,8 +8297,8 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "graphics/actor_aabb_setup.c",
-    "graphics/hud_icon_widget_85c4.c"
+    "util/aabb_setup.c",
+    "text/font_glyph.c"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -8327,10 +8327,9 @@
     "DestroySmallFont"
    ],
    "consumer_files": [
-    "graphics/actor_aabb_setup.c",
-    "graphics/hud_icon_widget5.c",
-    "graphics/hud_icon_widget_85c4.c",
-    "graphics/hud_icon_widget_8a78.c"
+    "util/aabb_setup.c",
+    "text/font.c",
+    "text/font_glyph.c"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "bitmap_font.h"
 
-/* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line_util.c) and
+/* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line.c) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s).
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): current agbcc gets the

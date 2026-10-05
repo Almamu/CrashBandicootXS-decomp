@@ -8,7 +8,7 @@
  * The sprite-bank table gSpriteBankTable (sprite_banks_4a5600.c) starts
  * with {banks, tileBase = gSpriteBank00Tiles, palettes =
  * gObjPalettes, 56, 125}. GetSpriteTileBase returns tileBase, and
- * graphics_73dc.c/graphics_7634.c upload a frame's pieces from tileBase +
+ * sprite_pieces.c/affine_sprite_pieces.c upload a frame's pieces from tileBase +
  * (frame.tiles & 0xFFFFFF). The 56 banks own disjoint, back-to-back ranges
  * of that pool in bank order (banks 42 and 47 also reuse one frame of bank
  * 0's), so each bank is one array below, labeled with its ROM address. The
