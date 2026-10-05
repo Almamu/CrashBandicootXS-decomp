@@ -1,18 +1,13 @@
 #include "core.h"
 #include "irq.h"
-#include "link_session.h"
+#include "link.h"
 
 /* The link-cable session's per-frame handshake driver and SIO data pump
  * (split from link_handshake.c so ResetLinkSessionState can sit in its own object;
  * see link_session_reset.c). */
 
 extern void IrqClearHandler(s32 interruptIndex);
-extern u16 gCrc16Table[];
 extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
-extern void LinkSerialIntr(void);
-extern void LinkTimer3Intr(void);
-extern s32 LinkStop(struct link_session *self);
-extern s32 ResetLinkSessionState(struct link_session *self);
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
  * cable section. Called repeatedly (once per frame) until the link is

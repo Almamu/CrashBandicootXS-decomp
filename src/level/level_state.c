@@ -3,6 +3,7 @@
 #include "level_state.h"
 #include "actor.h"
 #include <agb_syscall.h>
+#include "hud.h"
 
 extern void *gHud;
 extern void *gAudioContext;
@@ -13,7 +14,6 @@ extern u8 IsInBonusRound(struct level_state *self);
 extern u8 IsInGemPath(struct level_state *self);
 extern u8 *GetCurrentLevelFlags(struct level_state *self);
 extern void SpawnCrateGem(s32 a, u16 b, u16 c, u16 d);
-extern void ShowHudCrates(void *state);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
@@ -459,8 +459,6 @@ void RaiseMaskLevel(struct level_state *self)
     SetMaskLevel(self, next);
 }
 
-extern void ShowHudLives(void *state);
-
 /* Outside time trials (`timeTrial`, +0x8c): loses a life (`lives`,
  * +0x74) and, while any are left, pings `gHud`
  * (`ShowHudLives`). */
@@ -761,8 +759,6 @@ s32 IsCrystalSaved(struct level_state *self)
     return (u32)(*addr << 31) >> 31;
 }
 
-extern void ShowHudWumpa(void *state);
-
 /* Collects one wumpa fruit (`wumpa`, +0x6c): at 100 it wraps to 0 and
  * adds a life (`lives`, +0x74, capped at 99) with a ping to
  * `gHud` via `ShowHudLives`; either way, always pings it
@@ -852,7 +848,6 @@ extern void SetGemPathDone(struct level_state *self);
 extern void ResetCrateCount(struct level_state *self);
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
-extern void SetHudCrateTotal(void *state, s32 arg1);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;

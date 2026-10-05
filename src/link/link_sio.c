@@ -1,12 +1,9 @@
 #include "core.h"
 #include "irq.h"
+#include "link.h"
 
 extern void IrqClearHandler(s32 interruptIndex);
 extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
-extern void LinkSerialIntr(void);
-extern void LinkTimer3Intr(void);
-extern void LinkStop(void);
-extern void ResetLinkSessionState(u8 *self);
 extern void IwramFree(u8 *address);
 
 /* "Start" step of the link session - counterpart to `LinkStop`
@@ -14,11 +11,11 @@ extern void IwramFree(u8 *address);
  * pattern), installs `LinkSerialIntr` as the Serial IRQ handler and
  * enables it, and - only if `arm3` is set - also installs `LinkTimer3Intr`
  * as the Timer3 IRQ handler, enables it, and arms Timer3 with a fixed
- * reload/control word. Always ends with IME re-enabled. `arg0` (the
+ * reload/control word. Always ends with IME re-enabled. `self` (the
  * session pointer every sibling function in this file takes) is never
  * read past the prologue - the ROM genuinely ignores it here, same as
  * `WaitForVBlank` in src/system/irq.c. */
-s32 LinkStart(void *arg0, u32 flags)
+s32 LinkStart(struct link_session *self, u32 flags)
 {
     u8 arm3 = (u8)flags;
     u16 savedIme;
@@ -35,11 +32,11 @@ s32 LinkStart(void *arg0, u32 flags)
     REG_IME = savedIme;
 
     IrqClearHandler(INTR_INDEX_TIMER3);
-    IrqSetHandler(INTR_INDEX_SERIAL, LinkSerialIntr);
+    IrqSetHandler(INTR_INDEX_SERIAL, (irq_handler_t *)LinkSerialIntr);
     REG_IE |= 0x80;
 
     if (arm3 != 0) {
-        IrqSetHandler(INTR_INDEX_TIMER3, LinkTimer3Intr);
+        IrqSetHandler(INTR_INDEX_TIMER3, (irq_handler_t *)LinkTimer3Intr);
         REG_IE |= 0x40;
         REG_TM3CNT = 0x00C0BBBC;
     }
@@ -60,50 +57,50 @@ s32 LinkSetupSio(void)
 
 /* Convenience "full reset": stop (`LinkStop`) then re-init the
  * session (`ResetLinkSessionState`). Always returns 0. */
-s32 ResetLinkSession(u8 *self)
+s32 ResetLinkSession(struct link_session *self)
 {
-    LinkStop();
+    LinkStop(self);
     ResetLinkSessionState(self);
     return 0;
 }
 
-/* Resets the session (`ResetLinkSession`), then walks a dead loop computing
- * `self+0xd0` from `self+0x3f0` in steps of 0xc8 (4 iterations, result
- * unused - reads as a leftover/inlined bounds-check artifact rather
- * than anything with an observable effect), then - only if `flags` bit
+/* Resets the session (`ResetLinkSession`), then walks a dead loop from
+ * `&players[4]` back to `players` (4 iterations, result unused - the
+ * empty destructor loop of the `players` array), then - only if `flags` bit
  * 0 is set - tears the session down (`IwramFree`, matched in
  * src/util/aabb.c, also used by src/audio/audio.c's
  * `DestroyAudioContext` on an unrelated object - a generic free/release call).
  */
-void DestroyLinkSession(u8 *self, u32 flags)
+void DestroyLinkSession(struct link_session *self, u32 flags)
 {
-    u8 *p;
+    struct link_player *p;
 
     ResetLinkSession(self);
 
-    p = self + 0xd0;
+    p = self->players;
     if (p != NULL) {
-        u8 *q = self + 0x3f0;
+        struct link_player *q = &self->players[4];
         if (p != q) {
             do {
-                q -= 0xc8;
+                q--;
             } while (p != q);
         }
     }
 
     if (flags & 1) {
-        IwramFree(self);
+        IwramFree((u8 *)self);
     }
 }
 
 /* Session object constructor: zeroes the transient TX ring bookkeeping
- * (self+0xc4/0xc8, self+0xcc=0x7f), zeroes the same trio for all 4
- * per-player sub-records (self+0x18c+playerIndex*0xc8, matching the
- * layout `ResetLinkSessionState` above also touches), resets the session
- * (`ResetLinkSession`), clears self+5, and returns `self`. */
-void *InitLinkSession(u8 *arg0)
+ * (`ring.field_84`/`field_88`, `field_8c` = 0x7f), zeroes the same trio
+ * for all 4 per-player rings (`players[i].ring`, at self+0x18c +
+ * playerIndex*0xc8; the loop keeps the raw offset, which the ROM builds
+ * as `0xc6 << 1` in r6), resets the session (`ResetLinkSession`), clears
+ * `field_5`, and returns `self`. */
+struct link_session *InitLinkSession(struct link_session *arg0)
 {
-    register u8 *self asm("r4");
+    register struct link_session *self asm("r4");
     u8 *p;
     register s32 offset asm("r6");
     register s32 i asm("r1");
@@ -112,16 +109,16 @@ void *InitLinkSession(u8 *arg0)
     register s32 sentinel asm("r3");
 
     self = arg0;
-    *(s32 *)(self + 0xc4) = 0;
-    *(s32 *)(self + 0xc8) = 0;
-    *(s32 *)(self + 0xcc) = 0x7f;
+    self->ring.field_84 = 0;
+    self->ring.field_88 = 0;
+    self->ring.field_8c = 0x7f;
 
     i = 3;
     zero = 0;
     fill = 0x7f;
     sentinel = -1;
     offset = 0xc6 << 1;
-    p = self + offset;
+    p = (u8 *)self + offset;
     do {
         *(s32 *)(p + 0) = zero;
         *(s32 *)(p + 4) = zero;
@@ -131,12 +128,11 @@ void *InitLinkSession(u8 *arg0)
     } while (i != sentinel);
 
     ResetLinkSession(self);
-    self[5] = 0;
+    self->field_5 = 0;
 
     return self;
 }
 
-extern s32 HandleLinkSerial(void *session, u32 reg);
 extern void *gLinkSession;
 
 /* The Serial-IRQ handler installed by `LinkStart` above: forwards
@@ -144,7 +140,7 @@ extern void *gLinkSession;
  * session object and SIODATA32's low half register address. */
 void LinkSerialIntr(void)
 {
-    HandleLinkSerial(gLinkSession, REG_ADDR_SIODATA32);
+    HandleLinkSerial(gLinkSession, (u16 *)REG_ADDR_SIODATA32);
 }
 
 /* The Timer3-IRQ handler installed by `LinkStart` above (the

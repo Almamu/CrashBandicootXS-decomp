@@ -1,8 +1,5 @@
 #include "core.h"
-#include "link_session.h"
-
-extern void MakeLinkHandshakeId(u8 *self);
-extern u8 gLinkSessionReset;
+#include "link.h"
 
 /* Link-session reset/init - see docs/rom_map.md's SIO/link-cable
  * section. Sets the link-active flag (`gLinkSessionReset`), resets a

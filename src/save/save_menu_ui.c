@@ -2,6 +2,7 @@
 #include "save_menu.h"
 #include "bitmap_font.h"
 #include "text.h"
+#include "link.h"
 
 /* A small "load my background" sub-widget - the same field_c/field_d
  * bit-flags-pair idiom as `struct language_select`
@@ -187,7 +188,6 @@ s32 GetSaveMenuBlinkPalette(struct save_menu *self)
     return 2;
 }
 
-extern void ResetLinkSession(void *arg0);
 extern void *gLinkSession;
 
 void EndLinkSaveTransfer(void)

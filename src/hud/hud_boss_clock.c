@@ -14,16 +14,7 @@
  * r7, #0` clamp sequence exactly. The position helper takes the part
  * pointer last so the table symbol is loaded before `self->parts`. */
 
-struct hud_pos
-{
-    s32 x;
-    s32 y;
-};
-
-extern s32 gHudSlideOffset;
 extern void *gLevelState;
-extern struct hud_pos gHudPartPositions[];
-extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 GetBossHealth(void *state);
 extern s32 GetClockMinutes(void *state);
 extern s32 GetClockSeconds(void *state);

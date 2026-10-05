@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
+#include "hud.h"
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -135,8 +136,6 @@ extern union level_best_time *GetCurrentLevelFlags(struct level_state *self);
 extern s32 RunLevelSelect(s32 *progress);
 extern void ClearTimeTrial(struct level_state *self);
 extern s32 CountLevelCrates(s32 level);
-extern struct hud_stat_widget *InitHud(void *mem);
-extern void SetHudCrateTotal(void *cache, s32 arg1);
 extern void ClearBonusRoundDone(struct level_state *self);
 extern void ClearInBonusRound(struct level_state *self);
 extern void ClearGemPathDone(struct level_state *self);
@@ -145,7 +144,6 @@ extern void ClearSwitchPressed(struct level_state *self);
 extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 extern void ArmStartSpawn(struct level_state *self);
 extern void FreeUnlockedPaletteSlots(void *cache);
-extern void ConfigureHudParts(void *cache, s32 arg1);
 extern void SetLevelBoss(struct level_state *self, s32 arg1);
 extern void PlayRoomMusic(s32 *progress);
 extern s32 mem_free_bytes(s32 arg0);
@@ -172,7 +170,6 @@ extern void RestoreCheckpoint(struct level_state *self);
 extern s32 GetWumpa(struct level_state *self);
 extern s32 GetCrateCount(struct level_state *self);
 extern s32 CountRoomCrates(struct level_category *cat);
-extern void DestroyHud(void *cache, s32 arg1);
 extern u8 RunContinuePrompt(void);
 
 void UpdateGameFrame(struct level_state *self)

@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "vtable.h"
 #include "level_menu.h"
+#include "hud.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -27,7 +28,6 @@ extern void UploadPaletteCache(struct palette_cache *self);
 extern void UpdateCamera(void *self);
 extern void ScrollLevelLayers(void *self);
 extern void TickPaletteCycles(void *self);
-extern void UpdateHud(void *self);
 extern void DrawPartList(struct dual_array_manager *manager);
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern void DrawCrateList(void *managerArg);

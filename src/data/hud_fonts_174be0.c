@@ -1,17 +1,11 @@
 #include "core.h"
 #include "text.h"
+#include "hud.h"
 
 /*
  * ROM 0x08174BE0-0x08175558. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-/* hud_boss_clock.c's `struct hud_pos`. */
-struct hud_pos
-{
-    s32 x;
-    s32 y;
-};
 
 /* The HUD digit array's 35 slots (hud_init.c, hud_boss_clock.c,
  * hud_counters.c): an animation index and a position per slot. */

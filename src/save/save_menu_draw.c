@@ -5,6 +5,7 @@
 #include "pause_menu.h"
 #include "vram_pool.h"
 #include "text.h"
+#include "link.h"
 
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -44,9 +45,7 @@ extern void WaitForVBlank(void);
 extern void UpdateKeys(void *arg0);
 extern void *gInput;
 extern u32 gKeys;
-extern u8 gLinkSessionReset;
 extern void *gLinkSession;
-extern s32 UpdateLinkSession(void *arg0);
 extern s32 PollSaveTransfer(void *newObj);
 extern s32 GetSaveTransferData(void *newObj);
 extern void MemCopy32(void *arg0, s32 arg1, s32 arg2);

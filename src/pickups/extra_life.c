@@ -1,5 +1,6 @@
 #include "core.h"
 #include "orbit_part.h"
+#include "hud.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -30,7 +31,6 @@ extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern s32 AddLife(void *self);
-extern void ShowHudLives(void *state);
 extern void *OperatorNew(s32 size);
 extern struct actor *InitSpriteObj(struct actor *self);
 extern void AddToPartList(void *manager, void *value);

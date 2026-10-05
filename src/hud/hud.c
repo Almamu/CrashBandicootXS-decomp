@@ -3,18 +3,10 @@
 #include "hud.h"
 
 extern void *gLevelState;
-extern s32 gHudSlideOffset;
 
-extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern void AdvanceSpriteAnim(struct actor *part);
 extern s32 GetBossIndex(void *self);
 extern u8 IsInBonusRound(void *self);
-extern void UpdateHudLives(struct hud_counter *counter);
-extern void UpdateHudPercentCounters(struct hud_counter *self);
-extern void UpdateHudBoss(struct hud_counter *self);
-extern void UpdateHudClock(struct hud_counter *self);
-extern void UpdateHudCrates(struct hud_counter *self);
-extern void UpdateHudWumpa(struct hud_counter *self);
 
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
  * HUD stat-widget family" section. `self` is the same `struct
@@ -50,8 +42,8 @@ void UpdateHud(struct hud_counter *self)
 
     if (IsInBonusRound(gLevelState)) {
         gHudSlideOffset = 0;
-        AdvanceSpriteAnim((struct actor *)((u8 *)sself->parts + 0x880));
-        DrawHudPart((struct hud_digit_part *)((u8 *)sself->parts + 0x880), 0, 0);
+        AdvanceSpriteAnim((struct actor *)&sself->parts[34]);
+        DrawHudPart(&sself->parts[34], 0, 0);
     }
 
     if (*((u8 *)gLevelState + 0x8c) != 0 && sself->livesSlide == 0 && sself->wumpaSlide == 0) {
