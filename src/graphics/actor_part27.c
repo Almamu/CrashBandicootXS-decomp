@@ -105,7 +105,7 @@ void *sub_8017A8C(void *selfArg)
 }
 
 /* `self+0x10` pointer getter - the "part" sub-object. */
-void *sub_8017AAC(void *selfArg)
+void *GetCtrlTarget(void *selfArg)
 {
     return *(void **)((u8 *)selfArg + 0x10);
 }

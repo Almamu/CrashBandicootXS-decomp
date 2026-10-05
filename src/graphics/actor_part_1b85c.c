@@ -7,15 +7,18 @@
  * _call_via_r1/AD80/AD88 call-via-register thunks, inlined member
  * functions):
  *
- * - sub_801B85C-sub_801B980: `struct follow_child`, the 0x80-byte
- *   object (method table gCameraLeadVtable) sub_8017600
+ * - sub_801B85C-GetCameraLeadOffset: `struct follow_child`, the 0x80-byte
+ *   object (method table gCameraLeadVtable) InputCtrlStateStart
  *   (actor_part_17524.c) spawns for the input controller. It trails the
  *   player (gPlayer) at a horizontal offset that eases 2 px per
  *   frame toward a clamped target, and registers itself as
  *   gCamera's follow target while alive.
- * - sub_801B984-sub_801BAD0: a 0x78-byte sprite subclass (method table
- *   gStaticData_087E4B34) with a factory, a player-overlap check that
- *   fires the player's method 13 (0x19), constructor and destructor.
+ * - SpawnLaunchPad-InitLaunchPad: a 0x78-byte sprite subclass (method table
+ *   gLaunchPadVtable) with a factory, a player-overlap check that
+ *   fires the player's method 13 (0x19), constructor and destructor:
+ *   the green pad of entity type 0x3D (sprite bank 28). Player event
+ *   0x19 makes the action controller launch Crash upward in an air
+ *   spin with a full tornado charge (Y motion 0x13, or 0x14 with A held).
  * - RunLevelSelect-LevelSelectCursorRight: `struct level_menu`, the paged level-select
  *   screen (docs/rom_map.md: "a paged menu/screen with a smooth
  *   horizontal page-turn animation"). RunLevelSelect is the whole modal
@@ -28,7 +31,7 @@
  *   with the scroll registers every frame (`CommitDisplay`).
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, expected/ or src/:
- * sub_801B85C, sub_801B960, sub_801B980, sub_801BAD0 (reachable only
+ * sub_801B85C, SetCameraLeadOffset, GetCameraLeadOffset, InitLaunchPad (reachable only
  * through their method tables, if at all). Matched anyway.
  *
  * Everything is plain C. Details, and the two techniques that
@@ -80,7 +83,7 @@ struct player
     s32 x;                  // 0x00
     s32 y;                  // 0x04
     u8 unk_08[4];
-    u8 flags;               // 0x0C - bit 7 tested by sub_801BA60
+    u8 flags;               // 0x0C - bit 7 tested by CheckLaunchPadContact
     u8 unk_0D[0x0B];
     struct method *vtable;  // 0x18
     u8 unk_1C[0x44];
@@ -111,7 +114,7 @@ struct anim_table
 };
 
 /* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs, and the
- * base of the 0x78-byte `sub_801B984` object. */
+ * base of the 0x78-byte `SpawnLaunchPad` object. */
 struct sprite
 {
     s32 x;                    // 0x00
@@ -340,7 +343,7 @@ extern struct level_menu *gLevelSelect;
 extern u8 gNewWorldOpened;
 extern union key_state gKeys;
 extern u8 gCameraLeadVtable[];
-extern u8 gStaticData_087E4B34[];
+extern u8 gLaunchPadVtable[];
 extern struct level_info gLevelTable[];
 extern u8 gLevelSelectPalette[];
 extern u8 gMenuSkyBg[];
@@ -424,9 +427,9 @@ extern void *CreateLevelSelectPageBg(void *mem, s32 a, s32 b);
 extern void *InitZoomBg(void *mem, s32 a, s32 b);
 extern void *CreateLevelSelectCursor(void *mem);
 extern struct item *CreateLevelSelectEntry(void *mem);
-extern void sub_801D638(struct level_menu *self);
-extern void sub_801D5CC(struct level_menu *self);
-extern void sub_801D668(struct level_menu *self);
+extern void LoadLevelSelectEntries(struct level_menu *self);
+extern void PlaceLevelSelectEntries(struct level_menu *self);
+extern void SetLevelSelectEntryBoxes(struct level_menu *self);
 extern void ReloadLevelSelectPalette(struct level_menu *self);
 extern void WaitLevelSelectCursor(struct level_menu *self);
 extern void LevelSelectConfirm(struct level_menu *self);
@@ -436,11 +439,11 @@ extern u8 LevelSelectIsNextWorldOpen(struct level_menu *self);
 extern void LevelSelectPrevWorld(struct level_menu *self);
 extern void LevelSelectNextWorld(struct level_menu *self);
 extern void ScrollLevelSelectPageBg(void *p);
-extern void sub_801D7D4(void *p);
-extern u32 sub_801D7D0(void *p);
+extern void SetLevelSelectPageBgOffsets(void *p);
+extern u32 GetLevelSelectPageBgOffsets(void *p);
 extern void DestroyLevelSelectPageBg(void *p, s32 flags);
-extern s32 sub_801D77C(void *p);
-extern u8 sub_801D780(void *p);
+extern s32 GetLevelSelectPageBgScroll(void *p);
+extern u8 IsLevelSelectPageBgSettled(void *p);
 extern void DestroyZoomBg(void *p, s32 flags);
 extern void UpdateZoomBg(void *p);
 extern void DrawZoomBg(void *p);
@@ -452,9 +455,9 @@ extern u8 IsZoomBgZoomingOut(void *p);
 extern void ClearZoomBgPicture(void *p);
 extern void SetZoomBgPicture(void *p, s32 arg);
 extern u16 GetZoomBgControl(void *p);
-extern u8 sub_801DE28(struct item *p);
-extern s32 sub_801DE2C(struct item *it);
-extern void sub_801DEA0(struct item *it, s32 arg);
+extern u8 IsLevelSelectEntrySelected(struct item *p);
+extern s32 GetLevelSelectEntryLevel(struct item *it);
+extern void SetLevelSelectEntrySelected(struct item *it, s32 arg);
 extern void UpdateLevelSelectCursor(void *p);
 extern void DrawLevelSelectCursor(void *p);
 extern void ParkLevelSelectCursor(void *p);
@@ -520,7 +523,7 @@ static inline void CommitDisplay(struct level_menu *self)
     CommitZoomBg(self->bg2);
     self->scroll++;
     *(vu16 *)REG_ADDR_BG0HOFS = self->scroll >> 3;
-    *(vu32 *)REG_ADDR_BG1HOFS = sub_801D7D0(self->bg1);
+    *(vu32 *)REG_ADDR_BG1HOFS = GetLevelSelectPageBgOffsets(self->bg1);
     *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
     *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     *(vu16 *)PLTT = 0;
@@ -631,7 +634,7 @@ void DestroyCameraLead(struct follow_child *self, s32 flags)
     DestroyMovingSprite(self, flags);
 }
 
-/* Constructor, called from sub_8017600 (actor_part_17524.c). */
+/* Constructor, called from InputCtrlStateStart (actor_part_17524.c). */
 struct follow_child *CreateCameraLead(struct follow_child *self)
 {
     InitMovingSprite(self);
@@ -643,7 +646,7 @@ struct follow_child *CreateCameraLead(struct follow_child *self)
 /* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
  * whole-ROM Thumb-pointer scan). Sets the target offset, clamped to
  * 0xA00-0x3200. */
-void sub_801B960(struct follow_child *self, s32 offset)
+void SetCameraLeadOffset(struct follow_child *self, s32 offset)
 {
     if (offset > 0x3200)
         offset = 0x3200;
@@ -654,12 +657,12 @@ void sub_801B960(struct follow_child *self, s32 offset)
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
  * whole-ROM Thumb-pointer scan). Returns the target offset. */
-s32 sub_801B980(struct follow_child *self)
+s32 GetCameraLeadOffset(struct follow_child *self)
 {
     return self->targetOffset;
 }
 
-/* Factory for the 0x78-byte sprite (method table gStaticData_087E4B34,
+/* Factory for the 0x78-byte sprite (method table gLaunchPadVtable,
  * constructor inlined): places it at (x, y) pixels with record id `id`,
  * registers it with gCollidableList, and starts animation 0 of the
  * table at `**gSpriteBankSet + 0x150`. Called from sub_8021668's
@@ -667,12 +670,12 @@ s32 sub_801B980(struct follow_child *self)
  * materialized with `mov/neg` asm like graphics_loading_21668.c's
  * sub_8021668, since the compiler otherwise derives them from constants
  * already in registers. */
-struct sprite *sub_801B984(u16 id, u16 x, u16 y)
+struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y)
 {
     struct sprite *obj = OperatorNew(0x78);
 
     InitMovingSprite(obj);
-    obj->vtable = (struct method *)gStaticData_087E4B34;
+    obj->vtable = (struct method *)gLaunchPadVtable;
     sub_801BAC4(obj);
     obj->id = id;
     obj->x = x << 8;
@@ -711,7 +714,7 @@ struct sprite *sub_801B984(u16 id, u16 x, u16 y)
 
 /* Method table +0x70: if the player is active (flags bit 7) and overlaps
  * this sprite's hit box, fires the player's method 13 with (0, 0x19, 0). */
-void sub_801BA60(void *self)
+void CheckLaunchPadContact(void *self)
 {
     struct hit_box box;
 
@@ -732,9 +735,9 @@ void sub_801BA60(void *self)
 }
 
 /* Destructor (method table +0x50). */
-void sub_801BAB0(struct sprite *self, s32 flags)
+void DestroyLaunchPad(struct sprite *self, s32 flags)
 {
-    self->vtable = (struct method *)gStaticData_087E4B34;
+    self->vtable = (struct method *)gLaunchPadVtable;
     DestroyMovingSprite(self, flags);
 }
 
@@ -745,12 +748,12 @@ void sub_801BAC4(struct sprite *self)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
- * whole-ROM Thumb-pointer scan; sub_801B984 inlines it instead).
+ * whole-ROM Thumb-pointer scan; SpawnLaunchPad inlines it instead).
  * Constructor. */
-struct sprite *sub_801BAD0(struct sprite *self)
+struct sprite *InitLaunchPad(struct sprite *self)
 {
     InitMovingSprite(self);
-    self->vtable = (struct method *)gStaticData_087E4B34;
+    self->vtable = (struct method *)gLaunchPadVtable;
     sub_801BAC4(self);
     return self;
 }
@@ -883,9 +886,9 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
         for (j = 0; j < 6; j++)
             self->items[j] = CreateLevelSelectEntry(OperatorNew(0x14));
     }
-    sub_801D638(self);
-    sub_801D5CC(self);
-    sub_801D668(self);
+    LoadLevelSelectEntries(self);
+    PlaceLevelSelectEntries(self);
+    SetLevelSelectEntryBoxes(self);
     {
         s32 v;
 
@@ -941,7 +944,7 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
     }
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    *(vu32 *)REG_ADDR_BG1HOFS = sub_801D7D0(self->bg1);
+    *(vu32 *)REG_ADDR_BG1HOFS = GetLevelSelectPageBgOffsets(self->bg1);
     *(vu16 *)REG_ADDR_BG0CNT = GetBgSetupControl(bg0cnt);
     *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
     *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
@@ -993,7 +996,7 @@ void UpdateLevelSelect(struct level_menu *self)
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
     DrawLevelSelectCursor(self->panel);
-    if (IsZoomBgShown(self->bg2) && sub_801DE28(self->items[self->index]))
+    if (IsZoomBgShown(self->bg2) && IsLevelSelectEntrySelected(self->items[self->index]))
     {
         struct icon_slot *slot = &gLargeFont->record->slots[0];
         u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr)) >> 1;
@@ -1004,15 +1007,15 @@ void UpdateLevelSelect(struct level_menu *self)
         if (self->index <= 4)
             DrawLevelSelectRecord(self);
     }
-    sub_801D7D4(self->bg1);
+    SetLevelSelectPageBgOffsets(self->bg1);
     for (i = 0; i <= self->lastIndex; i++)
     {
         struct item *it = self->items[i];
         struct method *m = &it->vtable->m08;
 
-        _call_via_r2((u8 *)it + m->thisOffset, sub_801D77C(self->bg1), m->fn);
+        _call_via_r2((u8 *)it + m->thisOffset, GetLevelSelectPageBgScroll(self->bg1), m->fn);
     }
-    if (sub_801D780(self->bg1))
+    if (IsLevelSelectPageBgSettled(self->bg1))
     {
         if (!IsZoomBgExiting(self->bg2))
         {
@@ -1198,7 +1201,7 @@ void DrawLevelSelect(struct level_menu *self)
 
     ScrollLevelSelectPageBg(self->bg1);
     UpdateLevelSelectCursor(self->panel);
-    if (!sub_801D780(self->bg1))
+    if (!IsLevelSelectPageBgSettled(self->bg1))
         return;
     {
         s32 done = HasLevelSelectCursorArrived(self->panel) << 24;
@@ -1207,16 +1210,16 @@ void DrawLevelSelect(struct level_menu *self)
             goto draw;
     }
     {
-        if (!sub_801DE28(ItemAt(items, self->index)))
+        if (!IsLevelSelectEntrySelected(ItemAt(items, self->index)))
         {
             struct item *it = ItemAt(items, self->index);
 
-            sub_801DEA0(it, 1);
+            SetLevelSelectEntrySelected(it, 1);
             if (!IsZoomBgShown(self->bg2))
             {
                 struct level_info *info;
 
-                self->levelId = sub_801DE2C(it);
+                self->levelId = GetLevelSelectEntryLevel(it);
                 info = &gLevelTable[self->levelId];
                 SetZoomBgPicture(self->bg2, info->theme);
                 self->nameText = GetUiText(info->nameText);
@@ -1373,7 +1376,7 @@ s32 LevelSelectLoop(struct level_menu *self)
     struct level_info *info;
 
     self->result = 0;
-    self->levelId = sub_801DE2C(self->items[self->index]);
+    self->levelId = GetLevelSelectEntryLevel(self->items[self->index]);
     info = &gLevelTable[self->levelId];
     SetZoomBgPicture(self->bg2, info->theme);
     self->nameText = GetUiText(info->nameText);
@@ -1422,7 +1425,7 @@ loop:
     CommitOamBuffer(gOamBuffer);
     CommitDisplay(self);
     DrawLevelSelect(self);
-    if (!sub_801D780(self->bg1))
+    if (!IsLevelSelectPageBgSettled(self->bg1))
         goto loop;
     if (!(u8)HasLevelSelectCursorArrived(self->panel))
         goto loop;
@@ -1454,7 +1457,7 @@ loop:
     }
     if (!(gKeys.half.pressed & 1))
         goto check_exit;
-    if (!sub_801DE28(self->items[self->index]))
+    if (!IsLevelSelectEntrySelected(self->items[self->index]))
         goto check_exit;
     if (!IsZoomBgShown(self->bg2))
         goto check_exit;
@@ -1466,14 +1469,14 @@ end:
     UploadPaletteCache(gPaletteCache);
     CommitOamBuffer(gOamBuffer);
     CommitDisplay(self);
-    return sub_801DE2C(self->items[self->index]);
+    return GetLevelSelectEntryLevel(self->items[self->index]);
 }
 
 /* Deselects the current entry and runs frames until BG2 and the cursor
  * panel settle. Called by the page-turn handlers (LevelSelectPrevWorld/D548). */
 void SettleLevelSelectPage(struct level_menu *self)
 {
-    sub_801DEA0(self->items[self->index], 0);
+    SetLevelSelectEntrySelected(self->items[self->index], 0);
     ClearZoomBgPicture(self->bg2);
     ParkLevelSelectCursor(self->panel);
     while (IsZoomBgZoomingOut(self->bg2) || !(u8)HasLevelSelectCursorArrived(self->panel))
@@ -1498,7 +1501,7 @@ void LevelSelectCursorLeft(struct level_menu *self)
         PlaySfx(gAudioContext, 0x48, 0x100);
         return;
     }
-    sub_801DEA0(self->items[self->index], 0);
+    SetLevelSelectEntrySelected(self->items[self->index], 0);
     ClearZoomBgPicture(self->bg2);
     while (self->index != 0)
     {
@@ -1523,7 +1526,7 @@ void LevelSelectCursorRight(struct level_menu *self)
         PlaySfx(gAudioContext, 0x48, 0x100);
         return;
     }
-    sub_801DEA0(self->items[self->index], 0);
+    SetLevelSelectEntrySelected(self->items[self->index], 0);
     ClearZoomBgPicture(self->bg2);
     while (self->index < self->lastIndex)
     {

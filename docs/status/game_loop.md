@@ -732,12 +732,12 @@ plain C didn't converge.
   (`src/graphics/actor_part123.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
   the entire 43-function cluster). `UpdateEffectCtrl` (NAKED) inlines the
-  "flag active + bitmap-set" idiom (`actor_part27c.c`'s `sub_8018884`)
+  "flag active + bitmap-set" idiom (`actor_part27c.c`'s `UpdateOneShotAnimCtrl`)
   three times over, each independently gated (a `_call_via_r1` hit-probe
   reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
   `EffectCtrlHandleEvent`/`nullsub_3` are genuine empty stubs, matched as real C.
   `DestroyEffectCtrl`/`InitEffectCtrl` (both real C) are two more constructors in
-  the `sub_801886C`/`sub_8018858`/`CreateKnockedEnemyCtrl` family, both re-pointing
+  the `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/`CreateKnockedEnemyCtrl` family, both re-pointing
   `self+0xc` at `gEffectCtrlVtable`. `InitEffectCtrl` sits right at the
   physics/collision subsystem's own boundary
   ([docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
@@ -894,14 +894,14 @@ plain C didn't converge.
   object distinct from `struct actor` and from `AddCollisionCandidate`'s own
   `struct collision_queue`: `SetExtraLifePos` seeds an orbit anchor+start
   position, `SetExtraLifeHop` (re)starts the orbit at a given mode/phase 0,
-  `sub_8011388` sets an adjacent still-unexamined byte, `UpdateExtraLifeHop` is
+  `SetExtraLifeCounter` sets an adjacent still-unexamined byte, `UpdateExtraLifeHop` is
   the per-frame orbit-position update (two lookups into the shared sine
   table `gSineTable` at different strides, combined via the
-  overflow-avoiding fixed-point multiply `FixedMul`), `sub_8011330`
+  overflow-avoiding fixed-point multiply `FixedMul`), `CollideExtraLife`
   fires a `self->table`-driven hit trampoline once "spawned"
   (`self+0x48 == 0`) and a player flag is set, `DrawExtraLife` re-derives
   visibility from a `DrawSprite`/`self+0x38` gate, `DestroyExtraLife`/
-  `InitExtraLife`/`sub_8011308` are a small init/reset/table-repoint trio
+  `InitExtraLife`/`ResetExtraLifePickup` are a small init/reset/table-repoint trio
   (same `InitSpriteObj`/table-swap shape as `actor_part8.c`), and
   `CheckWumpaPickup` is the per-frame player-proximity/hit-resolve step
   (AABB-tests against the player, choosing primary vs. secondary AABB
@@ -919,7 +919,7 @@ plain C didn't converge.
   to `OLD_AGBCC_OBJS`); the object is now `struct orbit_part`
   (`include/orbit_part.h`). See
   [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
-- **`PickUpWumpa`/`UpdateWumpa`/`CreateWumpa`/`SendWumpaToHud`/`sub_801191C`/
+- **`PickUpWumpa`/`UpdateWumpa`/`CreateWumpa`/`SendWumpaToHud`/`StartWumpaPayout`/
   `UpdateWumpaHop`** (`src/system/game_loop53.c`, new file - Phase 2,
   a parallel slice of the same 24-function chunk) - the chunk's tail 6
   functions, contiguous through to the already-matched `actor_part39.c`.
@@ -928,9 +928,9 @@ plain C didn't converge.
   (mode 0-3 on `self->0x48`, with a PlaySfx+`CollectWumpa`+
   collision-bitmap arrival tail and a `DropWumpa` mode-3 spawn);
   `CreateWumpa` is the achievement/unlock-icon spawn helper;
-  `SendWumpaToHud` is `SendExtraLifeToHud`'s alternative; `sub_801191C`/
+  `SendWumpaToHud` is `SendExtraLifeToHud`'s alternative; `StartWumpaPayout`/
   `UpdateWumpaHop` are a tiny mode setter and a `gSineTable`
-  table helper. All but `sub_801191C` (trivial, real C) closed as NAKED
+  table helper. All but `StartWumpaPayout` (trivial, real C) closed as NAKED
   transcription - this neighborhood reconfirms the same gcc-2.9
   register-pressure hazards (r7/r8/sb) already documented at length for
   `BreakCrateTouchedByPlayer`/`QueueCratePlayerCollision`/`ResolveCollisionCandidates` and the already-NAKED

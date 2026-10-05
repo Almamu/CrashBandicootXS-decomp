@@ -10,7 +10,7 @@
  * actor_part_188d0.c): a boss that hops its `part` along parabolic arcs
  * (the 257-entry i*i>>8 table at +0x48) between the gUnknown_030012EC
  * list's anchor objects, stomping them. PickTinyHopTarget picks the next anchor
- * from a per-round table, sub_80186F0 spawns a falling hazard. */
+ * from a per-round table, SpawnTinyFallingLeaves spawns a falling hazard. */
 
 struct hop_method
 {
@@ -180,14 +180,14 @@ extern u8 gTinyHopTargets[];
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *OperatorNew(u32 size);
-extern struct hop_vobj *sub_801886C(void *mem);
-extern struct hop_vobj *sub_80188D0(void *mem);
+extern struct hop_vobj *CreateStompedHopPadCtrl(void *mem);
+extern struct hop_vobj *CreateOneShotAnimCtrl(void *mem);
 extern struct hop_box GetSpriteAttackBox(void *obj);
 extern struct hop_box GetSpriteBodyBox(void *obj);
 extern u8 AabbOverlaps(struct hop_box *a, struct hop_box *b);
 extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
-extern void sub_8018978(struct tiny_tiger *self, struct hop_part *part);
+extern void StartTinyHop(struct tiny_tiger *self, struct hop_part *part);
 extern void nullsub_19(struct tiny_tiger *self, struct hop_part *part);
 extern void SpawnTornadoSpinPower(u32 arg0, u16 x, u16 y, u16 arg3);
 extern struct hop_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
@@ -232,7 +232,7 @@ static inline void SetSlot(struct hop_part *part, s32 v)
 
 void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next);
 s32 PickTinyHopTarget(struct tiny_tiger *self);
-void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n);
+void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 n);
 
 void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 {
@@ -247,7 +247,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 
         if (anchor->ctrl != NULL)
             VCALL1(anchor->ctrl, m48, 3);
-        ctrl = sub_801886C(OperatorNew(0x10));
+        ctrl = CreateStompedHopPadCtrl(OperatorNew(0x10));
         anchor->ctrl = ctrl;
         VCALL1P(ctrl, m18, anchor);
         self->stomped = -1;
@@ -380,7 +380,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
             else
             {
                 self->nextState = 0x46;
-                sub_80186F0(self, part, timer);
+                SpawnTinyFallingLeaves(self, part, timer);
             }
         }
         self->nextState--;
@@ -500,7 +500,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         self->y = -0x3000;
         self->x = part->x;
     hop:
-        sub_8018978(self, part);
+        StartTinyHop(self, part);
         break;
     case 8:
         VCALL2(self, m50, part, 6);
@@ -514,7 +514,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
 
             self->y = part->y - 0x6400;
             self->x = x + 0x6400;
-            sub_8018978(self, part);
+            StartTinyHop(self, part);
         }
         nullsub_19(self, part);
         VCALL2(self, m50, part, 7);
@@ -536,7 +536,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         self->x = x;
         self->y = (gLevelLayers->layer0->height << 8) + 0x4000;
         self->x = x + 0x6400;
-        sub_8018978(self, part);
+        StartTinyHop(self, part);
         break;
     }
     }
@@ -577,9 +577,9 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
 }
 
 /* Spawns a falling hazard (a gCollidableList part driven by a
- * sub_80188D0 object) at the `n`th third of the way from `part` towards
+ * CreateOneShotAnimCtrl object) at the `n`th third of the way from `part` towards
  * the player. */
-void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
+void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 n)
 {
     /* `p` pinned to r4: unpinned, it and `ctrl` swap r4/r5 */
     register struct hop_part *p asm("r4") = CreateMovingSprite(0xFFFF, 0, 0, 0);
@@ -591,7 +591,7 @@ void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
     {
         /* The ROM loads the tag (5, in r0) before its address, and
          * materializes the 0 it later stores to +0x64/+0x54 here, keeping
-         * it in r8 across the calls (like the 0xF of sub_8018CB0,
+         * it in r8 across the calls (like the 0xF of SpawnCortexTarget,
          * actor_part_188d0.c); no plain-C placement of that 0 does this. */
         register s32 t asm("r0") = 5;
         u8 *tp;
@@ -605,7 +605,7 @@ void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);
     SetSpriteAnimDone(p, 0);
-    ctrl = sub_80188D0(OperatorNew(0x10));
+    ctrl = CreateOneShotAnimCtrl(OperatorNew(0x10));
     SetSlot(p, GetSpriteAnimPaletteSlot(p));
     p->ctrl = ctrl;
     VCALL1P(ctrl, m18, p);

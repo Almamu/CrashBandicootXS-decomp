@@ -223,7 +223,7 @@ be a much easier mix: one more popup-family instance with a different
 tail shape, a small `gSpriteBankTable`-record spawner family
 (registering into a manager global `SpawnBodySlamPower`'s family in
 `graphics_loading_21d80.c` doesn't use), a run of plain
-`CreatePlatform`/`sub_801B984` trampolines, one `CreatePeriodicSpawner`-based
+`CreatePlatform`/`SpawnLaunchPad` trampolines, one `CreatePeriodicSpawner`-based
 constructor, and - closing out the file - 12 more plain `CreateCrate`
 entity-constructor trampolines (types `0x12` down to `7`) continuing
 the family `graphics_loading_21bfc.c` already covers for types `1`-`7`
@@ -310,7 +310,7 @@ instance of.
 18 functions, no iteration needed beyond the established call-signature
 patterns: 5 plain `CreatePlatform(arg0, arg1, arg2, arg3, id)` calls (ids
 `8`/`6`/`2`/`1`/`0` - same callee the twin family in `trigger_effect.c`
-uses), one plain `sub_801B984(arg0, arg1, arg2, arg3)` tail call, and
+uses), one plain `SpawnLaunchPad(arg0, arg1, arg2, arg3)` tail call, and
 12 plain `CreateCrate(arg0, arg1, arg2, arg3, type)` calls (types `0x12`
 down to `7`) continuing the entity-constructor trampoline family
 `graphics_loading_21bfc.c` already covers for types `1`-`7`. Every one

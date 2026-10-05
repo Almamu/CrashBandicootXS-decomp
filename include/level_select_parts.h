@@ -66,7 +66,7 @@ COMPILE_TIME_ASSERT(sizeof(struct sprite) == 0x40);
  * animation), `frame` the surrounding box. */
 struct level_item
 {
-    s32 id;                     // 0x00 - level id (sub_801DE2C)
+    s32 id;                     // 0x00 - level id (GetLevelSelectEntryLevel)
     u8 selected;                // 0x04
     u8 unk_05[3];
     struct sprite *icon;        // 0x08

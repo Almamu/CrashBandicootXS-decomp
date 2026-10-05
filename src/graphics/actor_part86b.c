@@ -3,7 +3,7 @@
 
 /* GitHub issue #19: 0x08015DF8-0x08015FDC, the third jump-table dispatcher
  * of the player-input controller class (include/player_ctrl.h), after
- * actor_part86.c's sub_80159F8/sub_8015C6C - see
+ * actor_part86.c's StartPlayerCtrlStroke/StartPlayerCtrlSpin - see
  * docs/matching/issue-19-0x08015840-actor.md. Built with old_agbcc (the
  * Makefile's OLD_AGBCC_OBJS): the "scratch-register copy" before each
  * `>> 2` (`adds r5,r0,r5; adds r1,r5,#0; asrs r6,r1,#2`) that kept this
@@ -24,17 +24,17 @@ extern void *gEntitySpawner;
 extern u8 GetDpadDirection(void *arg);
 extern s32 RandRange(s32 max);
 extern struct spawned *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-extern void sub_80172D0(s32 a, s32 b, s32 c);
-extern void sub_8015FDC(s32 a, s32 b, s32 c);
+extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
+extern void SetPlayerSwimDriftY(s32 a, s32 b, s32 c);
 
 /* Picks three tuning values by `state` - `mag` (always 300), `valB` and
  * `valA` - reads the D-pad direction (GetDpadDirection), on a 1-in-128 frame
  * tick and a coin flip spawns a kind-4 object at the target's position via
  * SpawnEffectPart (clearing its +0x0C bit 2), then feeds the direction's
- * (valB/valA, +-mag) pair, 3/4-scaled on the diagonals, to sub_80172D0 and
- * sub_8015FDC. `mag`/`valB`/`valA` are unsigned, so `x * 3 / 4` is a plain
+ * (valB/valA, +-mag) pair, 3/4-scaled on the diagonals, to SetPlayerSwimDriftX and
+ * SetPlayerSwimDriftY. `mag`/`valB`/`valA` are unsigned, so `x * 3 / 4` is a plain
  * shift and only `-mag * 3 / 4` rounds toward zero. */
-void sub_8015DF8(struct player_ctrl *self)
+void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self)
 {
     u16 mag;
     u8 valB;
@@ -76,40 +76,40 @@ void sub_8015DF8(struct player_ctrl *self)
     switch (dir)
     {
     case 5:
-        sub_80172D0(0, valB * 3 / 4, -mag * 3 / 4);
-        sub_8015FDC(0, valB * 3 / 4, -mag * 3 / 4);
+        SetPlayerSwimDriftX(0, valB * 3 / 4, -mag * 3 / 4);
+        SetPlayerSwimDriftY(0, valB * 3 / 4, -mag * 3 / 4);
         break;
     case 6:
-        sub_80172D0(0, valB * 3 / 4, mag * 3 / 4);
-        sub_8015FDC(0, valB * 3 / 4, -mag * 3 / 4);
+        SetPlayerSwimDriftX(0, valB * 3 / 4, mag * 3 / 4);
+        SetPlayerSwimDriftY(0, valB * 3 / 4, -mag * 3 / 4);
         break;
     case 8:
-        sub_80172D0(0, valB * 3 / 4, mag * 3 / 4);
-        sub_8015FDC(0, valB * 3 / 4, mag * 3 / 4);
+        SetPlayerSwimDriftX(0, valB * 3 / 4, mag * 3 / 4);
+        SetPlayerSwimDriftY(0, valB * 3 / 4, mag * 3 / 4);
         break;
     case 7:
-        sub_80172D0(0, valB * 3 / 4, -mag * 3 / 4);
-        sub_8015FDC(0, valB * 3 / 4, mag * 3 / 4);
+        SetPlayerSwimDriftX(0, valB * 3 / 4, -mag * 3 / 4);
+        SetPlayerSwimDriftY(0, valB * 3 / 4, mag * 3 / 4);
         break;
     case 0:
-        sub_8015FDC(0, valA, 0);
-        sub_80172D0(0, valA, 0);
+        SetPlayerSwimDriftY(0, valA, 0);
+        SetPlayerSwimDriftX(0, valA, 0);
         break;
     case 3:
-        sub_80172D0(0, valB, -mag);
-        sub_8015FDC(0, valA, 0);
+        SetPlayerSwimDriftX(0, valB, -mag);
+        SetPlayerSwimDriftY(0, valA, 0);
         break;
     case 4:
-        sub_80172D0(0, valB, mag);
-        sub_8015FDC(0, valA, 0);
+        SetPlayerSwimDriftX(0, valB, mag);
+        SetPlayerSwimDriftY(0, valA, 0);
         break;
     case 1:
-        sub_80172D0(0, valA, 0);
-        sub_8015FDC(0, valB, -mag);
+        SetPlayerSwimDriftX(0, valA, 0);
+        SetPlayerSwimDriftY(0, valB, -mag);
         break;
     case 2:
-        sub_80172D0(0, valA, 0);
-        sub_8015FDC(0, valB, mag);
+        SetPlayerSwimDriftX(0, valA, 0);
+        SetPlayerSwimDriftY(0, valB, mag);
         break;
     }
 }

@@ -66,7 +66,7 @@ already gave - see "Left untouched" below.
 - **`ResetPlayerForRoom`** (`src/graphics/actor_part48.c`, right after the
   still-parked `ResetPlayer` in the same file): dispatches a sub-state
   byte (`self+0x88`) to one of three teardown helpers
-  (`sub_8015840`/`sub_80159A4`/`sub_8017994`), each called with the
+  (`RestartActionCtrl`/`RestartPlayerCtrl`/`RestartInputCtrl`), each called with the
   same `self+0x44` "record" argument `GetMovingSpriteCtrl` already established,
   after resetting the usual velocity/state fields. Matched with `self`
   pinned to `r3` (kept live across all three `bl` calls); the two

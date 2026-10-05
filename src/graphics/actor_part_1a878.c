@@ -2,7 +2,7 @@
 #include "gobj_1a794.h"
 
 /* GitHub issue #25, ROM 0x0801A878-0x0801AB34: CreatePlatform, the level
- * object spawner (`new` + inlined constructor sub_801B2E4, spawn-record
+ * object spawner (`new` + inlined constructor InitPlatform, spawn-record
  * lookup through the level header at *gEntityFlags, per-type mover
  * attachment). See include/gobj_1a794.h and
  * docs/matching/issue-25-level-objects.md.
@@ -116,7 +116,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
             m = MOVER_NEW(mem, 0, 0, 0);
         }
         else
-            m = sub_801961C(OperatorNew(0x38));
+            m = CreateCortexBossPlatformMover(OperatorNew(0x38));
         obj->mover = m;
         MOVER_CALL2(m, m18, obj);
         break;

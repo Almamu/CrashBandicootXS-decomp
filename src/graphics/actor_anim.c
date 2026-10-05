@@ -646,7 +646,7 @@ s32 GetActorHp(struct actor_self_54 *self)
 asm(".align 2, 0");
 
 /* A fifth hidden function (see IsJetpackCheckpointTextUnshootable above) - a genuinely empty
- * stub, same shape as nullsub_16 (src/graphics/actor_part39.c). */
+ * stub, same shape as ResetStopwatch (src/graphics/actor_part39.c). */
 void nullsub_44(void *self)
 {
 }

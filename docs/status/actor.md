@@ -375,30 +375,30 @@ from "core" graphics.
 - `src/graphics/actor_part27.c` (new file, GitHub issue #22, ROM
   0x08017A44-0x08017AAC - numbered `27` rather than `20` since issue
   #58's parallel PR above independently claimed `actor_part20.c`-
-  `actor_part26.c` first): `sub_8017A44`-`sub_8017AAC` (9 functions) -
+  `actor_part26.c` first): `sub_8017A44`-`GetCtrlTarget` (9 functions) -
   the same player/action-object family as `actor_part18.c`/
   `actor_part19.c` (`self+0xc` table pointer, `self+0x10` part
   pointer); see `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27b.c` (new file, GitHub issue #22, ROM
   0x08017ECC-0x08017FE8, non-adjacent to `actor_part27.c` since the
-  raw `sub_8017AB0` sits between them): `sub_8017ECC`, `sub_8017F14`,
-  `sub_8017F5C`, `sub_8017F80`, `sub_8017FA4`, `sub_8017FD4`,
-  `sub_8017FE8` - a `self+4` double-pointer-chain record lookup (same
+  raw `UpdateChaser` sits between them): `SetChaserMotionYFromSet`, `SetChaserMotionXFromSet`,
+  `StartChaserMotionYFromSet`, `StartChaserMotionXFromSet`, `ResetChaserCtrl`, `DestroyChaserCtrl`,
+  `CreateChaserCtrl` - a `self+4` double-pointer-chain record lookup (same
   shape as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`) feeding the
   `gStaticData_0816C2D8` per-vector-component trampoline table; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27c.c` (new file, GitHub issue #22, ROM
   0x080187FC-0x08018884, non-adjacent to `actor_part27b.c` since the
-  raw `UpdateTiny`-`sub_80186F0` block sits between them):
-  `sub_80187FC`, `sub_8018858`, `sub_801886C`, `sub_8018884`; see
+  raw `UpdateTiny`-`SpawnTinyFallingLeaves` block sits between them):
+  `UpdateStompedHopPad`, `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl`, `UpdateOneShotAnimCtrl`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27a.c` (GitHub issue #22, ROM
-  0x08017AB0-0x08017ECC): `sub_8017AB0` - the player-vs-part 3-state
+  0x08017AB0-0x08017ECC): `UpdateChaser` - the player-vs-part 3-state
   dispatcher, previously a NAKED transcription, now real C built with
   old_agbcc; see `docs/matching/issue-22-0x08018008-hopper.md`.
 - `src/graphics/actor_part_18008.c` (new file, GitHub issue #22, ROM
   0x08018008-0x080187FC, built with old_agbcc): `UpdateTiny`,
-  `SetTinyState`, `PickTinyHopTarget`, `sub_80186F0` - the
+  `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves` - the
   `gTinyVtable` hopping boss's update/enter-state methods,
   target picker and falling-hazard spawner; see
   `docs/matching/issue-22-0x08018008-hopper.md`.
@@ -504,9 +504,9 @@ from "core" graphics.
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 - `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
   0x080119A8-0x08011BD4): `DrawWumpa`, `GetWumpaClassId`, `DestroyWumpa`,
-  `ResetWumpaPickup`, `InitWumpa`, `CollideWumpa`, `sub_8011A50`,
-  `sub_8011A64`, `sub_8011A84`, `UpdateStopwatch`, `CreateStopwatch`,
-  `nullsub_16`, `DestroyStopwatch`, `InitStopwatch`, `ResetActionCtrl` - a run of
+  `ResetWumpaPickup`, `InitWumpa`, `CollideWumpa`, `SetWumpaPos`,
+  `SetWumpaHop`, `SetWumpaCounter`, `UpdateStopwatch`, `CreateStopwatch`,
+  `ResetStopwatch`, `DestroyStopwatch`, `InitStopwatch`, `ResetActionCtrl` - a run of
   `struct actor` vtable-swap constructor helpers (same
   `InitSpriteObj`/`DestroySpriteObj`/`nullsub` shape as `actor_part6.c`), a
   handful of small setters/getters on offsets beyond `struct actor`'s
@@ -630,27 +630,27 @@ from "core" graphics.
   0x08015840-0x080159A4 - recategorized `graphics`->`actor` from the
   issue's label, same self+0xc/self+0x10 trampoline-pair and state/
   counter/table-index-trio family as actor_part38c.c/actor_part38d.c;
-  immediately adjacent to actor_part38d.c's matched span): `sub_8015840`, `DestroyActionCtrl`,
-  `InitActionCtrl`, `sub_80158AC`, `sub_80158B4`, `sub_80158BC`,
-  `sub_80158C4`, `sub_80158CC`, `sub_80158D4`, `sub_80158DC`,
-  `sub_80158E4`, `sub_80158EC`, `sub_80158F4`, `sub_8015908`,
-  `sub_8015920`, `sub_8015938`, `sub_8015950`, `ResetPlayerCtrl`,
-  `sub_80159A4` - a run of small accessors/resetters on the state-trio
+  immediately adjacent to actor_part38d.c's matched span): `RestartActionCtrl`, `DestroyActionCtrl`,
+  `InitActionCtrl`, `sub_80158AC`, `SetActionCtrlMotionYKeepSpeed`, `SetActionCtrlMotionXKeepSpeed`,
+  `SetActionCtrlMotionYPending`, `SetActionCtrlMotionXPending`, `ClearActionCtrlMotionYPending`, `ClearActionCtrlMotionXPending`,
+  `IsActionCtrlMotionYPending`, `IsActionCtrlMotionXPending`, `QueueActionCtrlMotionYKeepSpeed`, `QueueActionCtrlMotionXKeepSpeed`,
+  `QueueActionCtrlMotionY`, `QueueActionCtrlMotionX`, `sub_8015950`, `ResetPlayerCtrl`,
+  `RestartPlayerCtrl` - a run of small accessors/resetters on the state-trio
   bytes, the `gActionCtrlVtable` double-table-set idiom already seen
   in `actor_part27.c`, and a larger field-reset pair; see
   [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
 - `src/graphics/actor_part86.c`/`actor_part86b.c` (GitHub issue #19, ROM
-  0x080159F8-0x08015FDC, built with old_agbcc): `sub_80159F8`,
-  `sub_8015C6C`, `sub_8015DF8` - the player-input controller's three
+  0x080159F8-0x08015FDC, built with old_agbcc): `StartPlayerCtrlStroke`,
+  `StartPlayerCtrlSpin`, `ApplyPlayerCtrlSwimDrift` - the player-input controller's three
   jump-table dispatchers (`level`-indexed speed tables, a kind-4 spawn and
-  the `sub_80172D0`/`sub_8015FDC` feed), promoted from NAKED once built
+  the `SetPlayerSwimDriftX`/`SetPlayerSwimDriftY` feed), promoted from NAKED once built
   with old_agbcc; see
   [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
 - `src/graphics/actor_part57b.c` (new file, GitHub issue #19, ROM
   0x08015FDC, non-adjacent to actor_part57.c since
-  `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` (`actor_part86.c`/`86b.c`)
+  `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` (`actor_part86.c`/`86b.c`)
   sit between them):
-  `sub_8015FDC` - a player-velocity-relative record writer; see
+  `SetPlayerSwimDriftY` - a player-velocity-relative record writer; see
   [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
 - `src/graphics/actor_part58.c` (new file, GitHub issue #54, non-
   adjacent to `actor_part56.c` since the whole 0x0802D3A8-0x0802E0A4
@@ -1079,8 +1079,8 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
   in ROM order. The PMF method record then gets its 8-byte stack slot
   (and the unused `r7` push) by itself.
 - `src/graphics/actor_part83.c` - `ApplyActionCtrlMotion` (issue #16), old_agbcc
-  (the file's compiler). No flag/tag pointer locals: `self->flag2F` and
-  `self->next27` are read through `self` each time and old_agbcc's GCSE
+  (the file's compiler). No flag/tag pointer locals: `self->motionXPending` and
+  `self->motionX` are read through `self` each time and old_agbcc's GCSE
   makes the ROM's address copies; the record lookup is
   `*(gCtrlMotionRecords + i)`; three empty `asm("" : : "r"(self))`
   extra references settle the remaining register ties.
@@ -1690,6 +1690,6 @@ embedded as asm instead. They're tracked as parked, not matched.
   as real C under old_agbcc in `src/graphics/actor_part111.c` (issue #9
   raw-asm pass, `docs/matching/issue-9-raw-asm-pass.md`);
   `asm/code_3_2_16_ac2c.s` is gone.
-- ~~**`sub_8016048`**~~ (ROM 0x08016048, GitHub issue #19) - matched
+- ~~**`CheckPlayerCtrlTurn`**~~ (ROM 0x08016048, GitHub issue #19) - matched
   as real C with issue #20 in `src/graphics/actor_part_16048.c` (listed
   under `graphics.md`) - see `docs/matching/issue-20-player-ctrl.md`.

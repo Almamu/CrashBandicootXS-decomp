@@ -1,13 +1,13 @@
 # NAKED retry (size2): 2 of 3 closed
 
 This pass took three drafts whose size was nearly right:
-`sub_801AB98` (#25), `CreateCrate` (#13) and `LoadCreditsLogos` (#64).
+`ResolvePlatformCollision` (#25), `CreateCrate` (#13) and `LoadCreditsLogos` (#64).
 
 | Function | File | Start | Result |
 |---|---|---|---|
 | `LoadCreditsLogos` (#64) | `src/graphics/actor_part131.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
 | `CreateCrate` (#13) | `src/system/game_loop36.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
-| `sub_801AB98` (#25) | `src/graphics/actor_part_1ab98.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
+| `ResolvePlatformCollision` (#25) | `src/graphics/actor_part_1ab98.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
 
 ## LoadCreditsLogos: GCSE hashes non-volatile asm
 
@@ -78,7 +78,7 @@ The two extra `id` references and the brace variants tried on the way
 were not needed and were removed. The three `type` references from the
 previous pass remain.
 
-## sub_801AB98: not closed
+## ResolvePlatformCollision: not closed
 
 The draft is 565 halfwords off. Most of that is one swap: the ROM
 keeps `self` in sb and `result` in r8, and the draft does the reverse.

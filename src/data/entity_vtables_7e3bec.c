@@ -93,9 +93,9 @@ extern void DestroyCrate();
 extern void CheckExtraLifePickup();
 extern void UpdateExtraLife();
 extern void DrawExtraLife();
-extern void sub_80112F0();
+extern void GetExtraLifeClassId();
 extern void DestroyExtraLife();
-extern void sub_8011330();
+extern void CollideExtraLife();
 extern void CheckWumpaPickup();
 extern void UpdateWumpa();
 extern void DrawWumpa();
@@ -115,55 +115,55 @@ extern void UpdatePlayerCtrl();
 extern void AttachPlayerCtrl();
 extern void DestroyPlayerCtrl();
 extern void UpdateInputCtrl();
-extern void sub_80179D4();
+extern void InputCtrlHandleEvent();
 extern void AttachInputCtrl();
 extern void DestroyInputCtrl();
 extern void sub_8017A70();
 extern void sub_8017A78();
-extern void sub_8017AB0();
-extern void sub_8017F5C();
-extern void sub_8017F80();
-extern void sub_8017FD4();
+extern void UpdateChaser();
+extern void StartChaserMotionYFromSet();
+extern void StartChaserMotionXFromSet();
+extern void DestroyChaserCtrl();
 extern void UpdateTiny();
-extern void sub_80187FC();
-extern void sub_8018858();
-extern void sub_8018884();
-extern void sub_80188E8();
+extern void UpdateStompedHopPad();
+extern void DestroyStompedHopPadCtrl();
+extern void UpdateOneShotAnimCtrl();
+extern void DestroyOneShotAnimCtrl();
 extern void sub_80188FC();
 extern void sub_8018960();
 extern void DestroyTiny();
 extern void UpdateCortexBoss();
-extern void sub_8018E4C();
-extern void sub_8019324();
-extern void sub_8019464();
-extern void sub_80194E0();
-extern void sub_80195D8();
-extern void sub_8019608();
-extern void sub_801964C();
-extern void sub_80196E4();
-extern void sub_8019730();
-extern void sub_8019744();
+extern void UpdateCortexTarget();
+extern void UpdateCortexShot();
+extern void UpdateCortexBossPlatformMover();
+extern void UpdateCortexBossGem();
+extern void DestroyCortexBossGemCtrl();
+extern void DestroyCortexBossPlatformMover();
+extern void DestroyCortexShotCtrl();
+extern void DestroyCortexTargetCtrl();
+extern void UpdateCortexCannon();
+extern void DestroyCortexCannonCtrl();
 extern void DestroyCortexBoss();
 extern void UpdateDingodile();
-extern void sub_801A114();
-extern void sub_801A2A8();
-extern void sub_801A64C();
-extern void sub_801A73C();
-extern void sub_801A750();
-extern void sub_801A780();
+extern void UpdateDingodileShield();
+extern void UpdateDingodileProjectile();
+extern void UpdateDingodileShark();
+extern void DestroyDingodileSharkCtrl();
+extern void DestroyDingodileProjectileCtrl();
+extern void DestroyDingodileShieldCtrl();
 extern void DestroyDingodile();
 extern void CheckPlatformContact();
 extern void UpdatePlatform();
-extern void sub_801B2C0();
+extern void GetPlatformClassId();
 extern void DestroyPlatform();
 extern void UpdatePlatformMover();
-extern void sub_801B77C();
-extern void sub_801B7A0();
+extern void StartPlatformMoverMotionYFromSet();
+extern void StartPlatformMoverMotionXFromSet();
 extern void DestroyPlatformMover();
 extern void UpdateCameraLead();
 extern void DestroyCameraLead();
-extern void sub_801BA60();
-extern void sub_801BAB0();
+extern void CheckLaunchPadContact();
+extern void DestroyLaunchPad();
 extern void AnimateLevelSelectEntry();
 extern void SetLevelSelectEntryLevel();
 extern void SetLevelSelectEntryPos();
@@ -544,7 +544,7 @@ const struct vtable_slot gCrateVtable[13] = {
 /* Used by game_loop52.c, game_loop54.c (UpdateExtraLife). */
 const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8011330),
+    VTABLE_SLOT(CollideExtraLife),
     VTABLE_SLOT(GetSpriteObjHitbox),
     VTABLE_SLOT(UpdateExtraLife),
     VTABLE_SLOT(DrawExtraLife),
@@ -552,7 +552,7 @@ const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(SpriteObjOverlapsRect),
     VTABLE_SLOT(IsSpriteObjNearCamera),
     VTABLE_SLOT(IsSpriteObjInsideRect),
-    VTABLE_SLOT(sub_80112F0),
+    VTABLE_SLOT(GetExtraLifeClassId),
     VTABLE_SLOT(DestroyExtraLife),
     VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(ApplySpriteObjVelocity),
@@ -633,7 +633,7 @@ const struct vtable_slot gPlayerCtrlVtable[13] = {
 const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateInputCtrl),
-    VTABLE_SLOT(sub_80179D4),
+    VTABLE_SLOT(InputCtrlHandleEvent),
     VTABLE_SLOT(AttachInputCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -664,9 +664,9 @@ const struct vtable_slot gStaticData_087E435C[13] = {
 };
 
 /* Used by actor_part27b.c. */
-const struct vtable_slot gStaticData_087E43C4[13] = {
+const struct vtable_slot gChaserCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8017AB0),
+    VTABLE_SLOT(UpdateChaser),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -674,16 +674,16 @@ const struct vtable_slot gStaticData_087E43C4[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_8017FD4),
+    VTABLE_SLOT(DestroyChaserCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(sub_8017F80),
-    VTABLE_SLOT(sub_8017F5C),
+    VTABLE_SLOT(StartChaserMotionXFromSet),
+    VTABLE_SLOT(StartChaserMotionYFromSet),
 };
 
 /* Used by actor_part27c.c. */
-const struct vtable_slot gStaticData_087E442C[13] = {
+const struct vtable_slot gStompedHopPadVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_80187FC),
+    VTABLE_SLOT(UpdateStompedHopPad),
     VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -691,16 +691,16 @@ const struct vtable_slot gStaticData_087E442C[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_8018858),
+    VTABLE_SLOT(DestroyStompedHopPadCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (sub_80188D0, sub_80188E8). */
-const struct vtable_slot gStaticData_087E4494[13] = {
+/* Used by actor_part_188d0.c (CreateOneShotAnimCtrl, DestroyOneShotAnimCtrl). */
+const struct vtable_slot gOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8018884),
+    VTABLE_SLOT(UpdateOneShotAnimCtrl),
     VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -708,7 +708,7 @@ const struct vtable_slot gStaticData_087E4494[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_80188E8),
+    VTABLE_SLOT(DestroyOneShotAnimCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
@@ -749,10 +749,10 @@ const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (sub_80195D8, sub_80195EC). */
-const struct vtable_slot gStaticData_087E45CC[13] = {
+/* Used by actor_part_188d0.c (DestroyCortexBossGemCtrl, CreateCortexBossGemCtrl). */
+const struct vtable_slot gCortexBossGemVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_80194E0),
+    VTABLE_SLOT(UpdateCortexBossGem),
     VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -760,16 +760,16 @@ const struct vtable_slot gStaticData_087E45CC[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_80195D8),
+    VTABLE_SLOT(DestroyCortexBossGemCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (sub_8019608, sub_801961C). */
-const struct vtable_slot gStaticData_087E4634[13] = {
+/* Used by actor_part_188d0.c (DestroyCortexBossPlatformMover, CreateCortexBossPlatformMover). */
+const struct vtable_slot gCortexBossPlatformMoverVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8019464),
+    VTABLE_SLOT(UpdateCortexBossPlatformMover),
     VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -777,16 +777,16 @@ const struct vtable_slot gStaticData_087E4634[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_8019608),
+    VTABLE_SLOT(DestroyCortexBossPlatformMover),
     VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(sub_801B7A0),
-    VTABLE_SLOT(sub_801B77C),
+    VTABLE_SLOT(StartPlatformMoverMotionXFromSet),
+    VTABLE_SLOT(StartPlatformMoverMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (sub_801964C, sub_8019660). */
-const struct vtable_slot gStaticData_087E469C[13] = {
+/* Used by actor_part_188d0.c (DestroyCortexShotCtrl, CreateCortexShotCtrl). */
+const struct vtable_slot gCortexShotVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8019324),
+    VTABLE_SLOT(UpdateCortexShot),
     VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -794,33 +794,16 @@ const struct vtable_slot gStaticData_087E469C[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_801964C),
-    VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
-    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
-};
-
-/* Used by actor_part_1967c.c (sub_80196E4). */
-const struct vtable_slot gStaticData_087E4704[13] = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8018E4C),
-    VTABLE_SLOT(CtrlHandleEvent),
-    VTABLE_SLOT(AttachCtrl),
-    VTABLE_SLOT(SetCtrlMode),
-    VTABLE_SLOT(StartCtrlTargetMotionX),
-    VTABLE_SLOT(StartCtrlTargetMotionY),
-    VTABLE_SLOT(SetCtrlTargetMotionX),
-    VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_80196E4),
+    VTABLE_SLOT(DestroyCortexShotCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (sub_8019744). */
-const struct vtable_slot gStaticData_087E476C[13] = {
+/* Used by actor_part_1967c.c (DestroyCortexTargetCtrl). */
+const struct vtable_slot gCortexTargetVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8019730),
+    VTABLE_SLOT(UpdateCortexTarget),
     VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -828,7 +811,24 @@ const struct vtable_slot gStaticData_087E476C[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_8019744),
+    VTABLE_SLOT(DestroyCortexTargetCtrl),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
+};
+
+/* Used by actor_part_1967c.c (DestroyCortexCannonCtrl). */
+const struct vtable_slot gCortexCannonVtable[13] = {
+    VTABLE_SLOT(NULL),
+    VTABLE_SLOT(UpdateCortexCannon),
+    VTABLE_SLOT(CtrlHandleEvent),
+    VTABLE_SLOT(AttachCtrl),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
+    VTABLE_SLOT(DestroyCortexCannonCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
@@ -851,10 +851,10 @@ const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (sub_801A64C, sub_801A73C). */
-const struct vtable_slot gStaticData_087E483C[13] = {
+/* Used by actor_part_1967c.c (UpdateDingodileShark, DestroyDingodileSharkCtrl). */
+const struct vtable_slot gDingodileSharkVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_801A64C),
+    VTABLE_SLOT(UpdateDingodileShark),
     VTABLE_SLOT(HitEnemy),
     VTABLE_SLOT(AttachEnemyCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -862,16 +862,16 @@ const struct vtable_slot gStaticData_087E483C[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_801A73C),
+    VTABLE_SLOT(DestroyDingodileSharkCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (sub_801A584, sub_801A750). */
-const struct vtable_slot gStaticData_087E48A4[13] = {
+/* Used by actor_part_1967c.c (SpawnDingodileStalactite, DestroyDingodileProjectileCtrl). */
+const struct vtable_slot gDingodileProjectileVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_801A2A8),
+    VTABLE_SLOT(UpdateDingodileProjectile),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -879,17 +879,17 @@ const struct vtable_slot gStaticData_087E48A4[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_801A750),
+    VTABLE_SLOT(DestroyDingodileProjectileCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (sub_801A780), actor_part_1a794.c,
+/* Used by actor_part_1967c.c (DestroyDingodileShieldCtrl), actor_part_1a794.c,
  * gobj_1a794.h. */
-const struct vtable_slot gStaticData_087E490C[13] = {
+const struct vtable_slot gDingodileShieldVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_801A114),
+    VTABLE_SLOT(UpdateDingodileShield),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -897,7 +897,7 @@ const struct vtable_slot gStaticData_087E490C[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_801A780),
+    VTABLE_SLOT(DestroyDingodileShieldCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
@@ -932,7 +932,7 @@ const struct vtable_slot gPlatformVtable[15] = {
     VTABLE_SLOT(SpriteObjOverlapsRect),
     VTABLE_SLOT(IsSpriteObjNearCamera),
     VTABLE_SLOT(IsSpriteObjInsideRect),
-    VTABLE_SLOT(sub_801B2C0),
+    VTABLE_SLOT(GetPlatformClassId),
     VTABLE_SLOT(DestroyPlatform),
     VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(ApplySpriteVelocity),
@@ -953,8 +953,8 @@ const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyPlatformMover),
     VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(sub_801B7A0),
-    VTABLE_SLOT(sub_801B77C),
+    VTABLE_SLOT(StartPlatformMoverMotionXFromSet),
+    VTABLE_SLOT(StartPlatformMoverMotionYFromSet),
 };
 
 /* Used by actor_part_1b85c.c (DestroyCameraLead). */
@@ -976,8 +976,8 @@ const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by actor_part_1b85c.c (sub_801B980, sub_801BAB0, sub_801BAC4). */
-const struct vtable_slot gStaticData_087E4B34[15] = {
+/* Used by actor_part_1b85c.c (GetCameraLeadOffset, DestroyLaunchPad, sub_801BAC4). */
+const struct vtable_slot gLaunchPadVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideMovingSprite),
     VTABLE_SLOT(GetSpriteObjHitbox),
@@ -988,11 +988,11 @@ const struct vtable_slot gStaticData_087E4B34[15] = {
     VTABLE_SLOT(IsSpriteObjNearCamera),
     VTABLE_SLOT(IsSpriteObjInsideRect),
     VTABLE_SLOT(GetMovingSpriteClassId),
-    VTABLE_SLOT(sub_801BAB0),
+    VTABLE_SLOT(DestroyLaunchPad),
     VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(ApplySpriteVelocity),
     VTABLE_SLOT(HitMovingSprite),
-    VTABLE_SLOT(sub_801BA60),
+    VTABLE_SLOT(CheckLaunchPadContact),
 };
 
 /* Used by actor_part_1da38.c (DestroyLevelSelectEntry), actor_part_1dfec.c,

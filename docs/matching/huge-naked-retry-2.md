@@ -21,7 +21,7 @@ the ROM one region at a time and kept the exact size, except where noted.
    *pc = f.a;`). The block copy then takes a copy of the pointer
    (`add r2, sp, #0x2c; adds r1, r2, #0`), as in the ROM. (938 -> 750.)
 3. **No `pp` for `pos` and `p2`.** Their y is written and read through
-   `D18C_PosPtr(&f.pos)->y` (an identity inline, as in `sub_801AB98`),
+   `D18C_PosPtr(&f.pos)->y` (an identity inline, as in `ResolvePlatformCollision`),
    after reading the player's y into a local. gcse then makes the ROM's
    `add r0, sp, #N; str r1, [r0, #4]; adds r2, r0, #0`. `p1` keeps `pp`.
    `p3` does both: it writes y through `D18C_PosPtr` and then sets

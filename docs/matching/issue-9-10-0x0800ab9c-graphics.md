@@ -236,7 +236,7 @@ function had to be rechecked.
   that the 0x0800Axxx neighborhood (`CollidePlayer`, `PlayerHasRoomForAnim`) was
   built with old_agbcc too. Nobody has retried those under it yet.
 - **The argument order.** `CollidePartList` takes the box by value, as
-  PR #432 found for `sub_8017AB0` (`actor_part27a.c`). Three words go in
+  PR #432 found for `UpdateChaser` (`actor_part27a.c`). Three words go in
   `r1`-`r3` and the fourth on the stack. gcc stores a partly-in-registers
   argument after the plain stack arguments, which gives the ROM's order:
   6th, 7th, then the box's last word. The "gap" was never a scheduling

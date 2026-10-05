@@ -61,22 +61,22 @@ static inline struct spark *SpawnSpark(s32 x, s32 y, s32 mirror)
  * the other trio): inline parameters are materialized before the stores. */
 static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = flag;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = flag;
+    self->motionX = next;
 }
 
 static inline void ActSetNextP(struct act *self, u8 *slot, s32 next)
 {
-    self->next32 = 0;
-    self->flag30 = 1;
+    self->motionYKeepSpeed = 0;
+    self->motionYPending = 1;
     *slot = next;
 }
 
@@ -142,7 +142,7 @@ void ActionCtrlStateAirborne(struct act *self)
         HandleActionCtrlAirInput(self);
         if (self->state == 0x1A)
         {
-            u8 *slot = &self->next28;
+            u8 *slot = &self->motionY;
 
             if (*slot == 0)
                 ActSetNextP(self, slot, 4);
@@ -242,9 +242,9 @@ void ActionCtrlStateAirborne(struct act *self)
                     PlaySfx(gAudioContext, 0x19, 0x100);
                     ACT_VCALL1(self, m20, 0x16);
                     ACT_VCALL2(self, m50, self->part, 0x11);
-                    self->next32 = bit4;
-                    self->flag30 = 1;
-                    self->next28 = bit4;
+                    self->motionYKeepSpeed = bit4;
+                    self->motionYPending = 1;
+                    self->motionY = bit4;
                 }
                 return;
             }
@@ -256,9 +256,9 @@ void ActionCtrlStateAirborne(struct act *self)
                     ActTrio27(self, bit4, 1, 1);
                 else
                 {
-                    self->next31 = held;
-                    self->flag2F = 1;
-                    self->next27 = held;
+                    self->motionXKeepSpeed = held;
+                    self->motionXPending = 1;
+                    self->motionX = held;
                 }
                 ActSetNext(self, 0);
                 if (self->unk_22)

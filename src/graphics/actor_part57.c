@@ -9,7 +9,7 @@
  * helper this file's first function calls) and its parked `ActionCtrlSetTargetAnim`
  * right before this chunk starts. Non-adjacent to actor_part57b.c (this
  * chunk's other matched file) since the left-raw
- * `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` sit between them (see
+ * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` sit between them (see
  * asm/code_3_2_17_159f8.s). */
 
 extern void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d);
@@ -18,13 +18,13 @@ extern void InitCtrl(void *selfArg);
 extern void ResetActionCtrl(void *selfArg);
 extern u8 gActionCtrlVtable[];
 extern void *gPlayer;
-extern void sub_8017264(void *selfArg, s32 a, s32 b, s32 c, s32 d);
+extern void SetPlayerCtrlState(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 
 /* Fires the mgr trampoline pair (actions `0`/`0x12`), then resets the
  * `0x27`/`0x2f`/`0x31` and `0x28`/`0x30`/`0x32` state/counter/table-index
  * pairs (same trio shape as `StartActionCtrlHighJump`/`sub_8015558` in
  * actor_part38c.c). */
-void sub_8015840(void *selfArg)
+void RestartActionCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -64,6 +64,13 @@ void *InitActionCtrl(void *selfArg)
     return self;
 }
 
+/* The accessors below work on the action controller's (include/
+ * action_obj.h `struct act`) motion queue, the fields ApplyActionCtrlMotion
+ * consumes: `+0x27`/`+0x28` motionX/motionY (the queued entries),
+ * `+0x2f`/`+0x30` their "pending" flags and `+0x31`/`+0x32` the
+ * "keep speed" flags (apply with SetCtrlTargetMotionX/Y instead of
+ * StartCtrlTargetMotionX/Y). */
+
 /* `self+0x14` word setter, always zero. */
 void sub_80158AC(void *selfArg)
 {
@@ -71,55 +78,55 @@ void sub_80158AC(void *selfArg)
 }
 
 /* `self+0x32` byte setter, always 1. */
-void sub_80158B4(void *selfArg)
+void SetActionCtrlMotionYKeepSpeed(void *selfArg)
 {
     ((u8 *)selfArg)[0x32] = 1;
 }
 
 /* `self+0x31` byte setter, always 1. */
-void sub_80158BC(void *selfArg)
+void SetActionCtrlMotionXKeepSpeed(void *selfArg)
 {
     ((u8 *)selfArg)[0x31] = 1;
 }
 
 /* `self+0x30` byte setter, always 1. */
-void sub_80158C4(void *selfArg)
+void SetActionCtrlMotionYPending(void *selfArg)
 {
     ((u8 *)selfArg)[0x30] = 1;
 }
 
 /* `self+0x2f` byte setter, always 1. */
-void sub_80158CC(void *selfArg)
+void SetActionCtrlMotionXPending(void *selfArg)
 {
     ((u8 *)selfArg)[0x2f] = 1;
 }
 
 /* `self+0x30` byte setter, always 0. */
-void sub_80158D4(void *selfArg)
+void ClearActionCtrlMotionYPending(void *selfArg)
 {
     ((u8 *)selfArg)[0x30] = 0;
 }
 
 /* `self+0x2f` byte setter, always 0. */
-void sub_80158DC(void *selfArg)
+void ClearActionCtrlMotionXPending(void *selfArg)
 {
     ((u8 *)selfArg)[0x2f] = 0;
 }
 
 /* `self+0x30` byte getter. */
-u8 sub_80158E4(void *selfArg)
+u8 IsActionCtrlMotionYPending(void *selfArg)
 {
     return ((u8 *)selfArg)[0x30];
 }
 
 /* `self+0x2f` byte getter. */
-u8 sub_80158EC(void *selfArg)
+u8 IsActionCtrlMotionXPending(void *selfArg)
 {
     return ((u8 *)selfArg)[0x2f];
 }
 
 /* Sets `self+0x32`/`self+0x30` to 1, and `self+0x28` to `val`. */
-void sub_80158F4(void *selfArg, s32 val)
+void QueueActionCtrlMotionYKeepSpeed(void *selfArg, s32 val)
 {
     u8 *self = selfArg;
 
@@ -129,7 +136,7 @@ void sub_80158F4(void *selfArg, s32 val)
 }
 
 /* Sets `self+0x31`/`self+0x2f` to 1, and `self+0x27` to `val`. */
-void sub_8015908(void *selfArg, s32 val)
+void QueueActionCtrlMotionXKeepSpeed(void *selfArg, s32 val)
 {
     u8 *self = selfArg;
 
@@ -139,7 +146,7 @@ void sub_8015908(void *selfArg, s32 val)
 }
 
 /* Sets `self+0x32` to 0, `self+0x30` to 1, and `self+0x28` to `val`. */
-void sub_8015920(void *selfArg, s32 val)
+void QueueActionCtrlMotionY(void *selfArg, s32 val)
 {
     u8 *self = selfArg;
 
@@ -149,7 +156,7 @@ void sub_8015920(void *selfArg, s32 val)
 }
 
 /* Sets `self+0x31` to 0, `self+0x2f` to 1, and `self+0x27` to `val`. */
-void sub_8015938(void *selfArg, s32 val)
+void QueueActionCtrlMotionX(void *selfArg, s32 val)
 {
     u8 *self = selfArg;
 
@@ -206,15 +213,15 @@ void ResetPlayerCtrl(void *selfArg)
     ((u8 *)gPlayer)[0x92] = zero;
 }
 
-/* Fires the mgr trampoline pair via `sub_8017264(self, 0, 0, 0, 0)`,
+/* Fires the mgr trampoline pair via `SetPlayerCtrlState(self, 0, 0, 0, 0)`,
  * then resets `self+0x27`/`self+0x20`/`self+0x21`(=6)/`self+0x22`, the
  * player's `+0x92`, and `self+0x2c`(=1)/`self+0x24`/`self+0x2d`(=1)/
  * `self+0x25`. */
-void sub_80159A4(void *selfArg)
+void RestartPlayerCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_8017264(self, 0, 0, 0, 0);
+    SetPlayerCtrlState(self, 0, 0, 0, 0);
 
     self[0x27] = 0;
     self[0x20] = 0;

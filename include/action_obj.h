@@ -117,14 +117,14 @@ struct act
     u8 unk_23;             // 0x23
     u8 unk_24[2];
     u8 spinCooldown;       // 0x26 - frames until the next spin is allowed (set to 12, counts down)
-    u8 next27;             // 0x27
-    u8 next28;             // 0x28
+    u8 motionX;            // 0x27 - queued X motion entry (anims->first)
+    u8 motionY;            // 0x28 - queued Y motion entry (anims->second)
     u8 unk_29;             // 0x29
     u8 unk_2A[5];
-    u8 flag2F;             // 0x2F
-    u8 flag30;             // 0x30
-    u8 next31;             // 0x31
-    u8 next32;             // 0x32
+    u8 motionXPending;     // 0x2F - ApplyActionCtrlMotion applies motionX
+    u8 motionYPending;     // 0x30 - ApplyActionCtrlMotion applies motionY
+    u8 motionXKeepSpeed;   // 0x31 - apply with SetCtrlTargetMotionX (speed kept), not Start...
+    u8 motionYKeepSpeed;   // 0x32 - the same for Y
     u8 unk_33;
     u8 unk_34;             // 0x34
 };
@@ -194,9 +194,9 @@ static inline void ActOrFlags0D(struct act_part *part, s32 bits)
  * the ROM does. */
 static inline void ActSetNext(struct act *self, s32 next)
 {
-    self->next32 = 0;
-    self->flag30 = 1;
-    self->next28 = next;
+    self->motionYKeepSpeed = 0;
+    self->motionYPending = 1;
+    self->motionY = next;
 }
 
 #endif // GUARD_ACTION_OBJ_H

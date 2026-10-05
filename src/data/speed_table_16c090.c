@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* actor_part86.c's `struct speed_table`: sub_80159F8 copies it. */
+/* actor_part86.c's `struct speed_table`: StartPlayerCtrlStroke copies it. */
 struct speed_table
 {
     s32 v[8];

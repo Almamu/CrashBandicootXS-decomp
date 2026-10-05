@@ -42,15 +42,15 @@ extern u8 HasTurboRun(void *self);
  * materializes the values before the stores. */
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = flag;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = flag;
+    self->motionX = next;
 }
 
 static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
 {
-    self->next31 = 1;
-    self->flag2F = 1;
+    self->motionXKeepSpeed = 1;
+    self->motionXPending = 1;
     *slot = next;
 }
 
@@ -118,21 +118,21 @@ skip:
     if (self->state == 0 || self->state == 0x11) {
         struct act_part *p = gPlayer;
         if (p->speedX != 0 && p->unk_100 == 0) {
-            self->next31 = 0;
-            self->flag2F = 1;
-            self->next27 = 0;
+            self->motionXKeepSpeed = 0;
+            self->motionXPending = 1;
+            self->motionX = 0;
         }
     }
     {
-        u8 f = self->flag2F;
+        u8 f = self->motionXPending;
 
         if (f == 1) {
             struct act_part *q;
 
-            rec = *(gCtrlMotionRecords + (*self->anims)[self->next27].first);
+            rec = *(gCtrlMotionRecords + (*self->anims)[self->motionX].first);
             q = gPlayer;
             if (q->unk_100 && self->part->contact == 8 && q->speedX != 0) {
-                self->next31 = f;
+                self->motionXKeepSpeed = f;
                 /* Three extra references to `self` (no code): they raise its
                  * allocation priority so the ROM's register choice for the
                  * tag-address copy and the rescale temporaries comes out. */
@@ -142,28 +142,28 @@ skip:
                 rec.c = FixedMul(rec.c, 0x180);
                 rec.b /= 2;
             }
-            if (self->next27 == 0x1E) {
-                self->next31 = 0;
+            if (self->motionX == 0x1E) {
+                self->motionXKeepSpeed = 0;
                 if (gPlayer->unk_100) {
                     rec.b = FixedMul(rec.b, 0x200);
                     rec.a = FixedMul(rec.a, 0x180);
                 }
             }
-            if (self->next31)
+            if (self->motionXKeepSpeed)
                 ACT_CALL2(self, m38, self->part, &rec);
             else
                 ACT_CALL2(self, m28, self->part, &rec);
-            self->flag2F = 0;
+            self->motionXPending = 0;
         }
     }
     {
-        if (self->flag30 == 1) {
-            rec = *(gCtrlMotionRecords + (*self->anims)[self->next28].second);
-            if (self->next32)
+        if (self->motionYPending == 1) {
+            rec = *(gCtrlMotionRecords + (*self->anims)[self->motionY].second);
+            if (self->motionYKeepSpeed)
                 ACT_CALL2(self, m40, self->part, &rec);
             else
                 ACT_CALL2(self, m30, self->part, &rec);
-            self->flag30 = 0;
+            self->motionYPending = 0;
         }
     }
 }
@@ -260,7 +260,7 @@ skip:
             struct act_part *p = self->part;
             u8 *slot;
 
-            if (PartByte(p, 0x100) && *(slot = &self->next27) != 0x1F && p->speedX != 0)
+            if (PartByte(p, 0x100) && *(slot = &self->motionX) != 0x1F && p->speedX != 0)
                 ActHold27P(self, slot, 0x1F);
         } else {
             u8 wait = self->unk_24[1];

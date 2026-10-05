@@ -39,7 +39,7 @@ entity's own behavior.
   commit**: walks a linked list of nearby objects
   (`GetCrateBelow`/`GetCrateAbove`, "get next"/"get prev"), accumulates an
   edge-code value (left/right/top/bottom, presumably from
-  `sub_801AB98`), then dispatches a 6-case jump table to per-edge
+  `ResolvePlatformCollision`), then dispatches a 6-case jump table to per-edge
   handlers (`ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`, `BreakCrateInStack`, `ExplodeCrate`,
   `OpenCheckpointCrate`, and a 6th case). Along the way it maintains a 5-slot
   "recently touched" object ring buffer *inside* `gPlayer`

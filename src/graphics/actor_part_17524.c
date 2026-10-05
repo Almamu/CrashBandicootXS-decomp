@@ -3,35 +3,39 @@
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
  *
- * The first six functions are byte accessors for an object not otherwise
- * characterized here (`+0x2C`/`+0x2D` "has value" flags for the bytes at
- * `+0x24`/`+0x25`).
+ * The first six functions are byte accessors of the underwater player
+ * controller (include/player_ctrl.h, actor_part_16048.c right before
+ * them): its queued X/Y motion entries (`+0x24`/`+0x25`) and their
+ * "pending" flags (`+0x2C`/`+0x2D`).
  *
  * The other 19 are one self-contained actor-part subclass,
- * `struct input_ctrl`, whose method table is `gInputCtrlVtable`
+ * `struct input_ctrl`, whose method table is `gInputCtrlVtable`. It is
+ * the controller game_loop39.c attaches in room kind 2, where the player
+ * uses sprite bank 2 (Crash riding a hover vehicle; anim 1 is it
+ * blowing up)
  * (constructor `CreateInputCtrl` - called from game_loop39.c - destructor
  * `DestroyInputCtrl`; every other slot it calls through is a base-class
  * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`UpdateInputCtrl`, table
  * slot +0x0C) it reads the held D-pad bits from `gKeys` and
  * picks animation pairs for its target (`+0x10`) through
  * `gInputCtrlMotionRecords`'s 12-byte records: up/down select one channel
- * (`animB`), left/right the other (`animA`), which also sets a speed-like
- * value at the child object's `+0x78` (`+0x1C`, spawned on demand by
- * `sub_8017600`). Once the target passes the level's right edge
+ * (`motionY`), left/right the other (`motionX`), which also sets a speed-like
+ * value at the camera lead's `+0x78` (`+0x1C`, spawned on demand by
+ * `InputCtrlStateStart`). Once the target passes the level's right edge
  * (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked
  * gone and `RequestRoomExit` is signalled. It then dispatches the current
  * `state` through `gInputCtrlStateFuncs`, a table of gcc 2.x
- * pointer-to-member-functions: state 0 `sub_8017600`, 1 `sub_801796C`,
- * 2 `sub_801793C`, 3 `sub_80178EC`. That call sequence - and the
+ * pointer-to-member-functions: state 0 `InputCtrlStateStart`, 1 `sub_801796C`,
+ * 2 `sub_801793C`, 3 `InputCtrlStateDead`. That call sequence - and the
  * `_call_via_r1`/`AD80`/`AD84` "call via r1/r2/r3" trampolines used for
  * every virtual call - is what gcc's C++ front end emits, so this object
  * was very likely written in C++.
  *
  * UNUSED - no `bl`/`.4byte` reference in the asm/ sources or any .c file under
- * src/, and no Thumb pointer anywhere in the ROM: `sub_8017524`,
- * `sub_801752C`, `sub_8017534`, `sub_801753C`, `sub_8017544`,
- * `sub_8017554`, `sub_8017A20`, `sub_8017A28`, `sub_8017A30`,
- * `sub_8017A38`, `sub_8017A40`. Matched anyway.
+ * src/, and no Thumb pointer anywhere in the ROM: `ClearPlayerCtrlMotionYPending`,
+ * `ClearPlayerCtrlMotionXPending`, `IsPlayerCtrlMotionYPending`, `IsPlayerCtrlMotionXPending`, `QueuePlayerCtrlMotionY`,
+ * `QueuePlayerCtrlMotionX`, `SetInputCtrlMotionYPending`, `SetInputCtrlMotionXPending`, `CancelInputCtrlMotionY`,
+ * `CancelInputCtrlMotionX`, `IsInputCtrlMotionYPending`. Matched anyway.
  *
  * Built with the older compiler, tools/agbcc/bin/old_agbcc (the Makefile's
  * OLD_AGBCC_OBJS), like actor_part_16048.c before it. Under old_agbcc the
@@ -41,20 +45,22 @@
  *
  * Matching notes (details in docs/matching/issue-21-input-ctrl.md): the
  * virtual-call macros take the method-table entry's address once; the
- * `SetAnimA`/`SetAnimB`/`SetChildSpeed` inline helpers reproduce the ROM
+ * `QueueMotionX`/`QueueMotionY`/`SetCameraLeadSpeed` inline helpers reproduce the ROM
  * evaluating the stored constant before the store's own loads; the
  * "mark actor gone" bitmap sequence (MarkEntityGone's, inlined twice) is
  * MARK_GONE, actor_part_16048.c's MarkGone - its word index comes from a signed
  * division of the zero-extended id. */
 
-struct flag_pair_owner
+/* include/player_ctrl.h's `struct player_ctrl`, as far as these
+ * accessors see it */
+struct pctrl_motion_queue
 {
     u8 unk_00[0x24];
-    u8 valueA;   // 0x24
-    u8 valueB;   // 0x25
+    u8 motionX;         // 0x24
+    u8 motionY;         // 0x25
     u8 unk_26[6];
-    u8 hasA;     // 0x2C
-    u8 hasB;     // 0x2D
+    u8 motionXPending;  // 0x2C
+    u8 motionYPending;  // 0x2D
 };
 
 struct ctrl_method
@@ -67,13 +73,13 @@ struct ctrl_method
 struct ctrl_vtable
 {
     u8 unk_00[0x20];
-    struct ctrl_method method_20; // 0x20
-    struct ctrl_method method_28; // 0x28
-    struct ctrl_method method_30; // 0x30
-    struct ctrl_method method_38; // 0x38
-    struct ctrl_method method_40; // 0x40
+    struct ctrl_method setMode;      // 0x20 - SetCtrlMode
+    struct ctrl_method startMotionX; // 0x28 - StartCtrlTargetMotionX
+    struct ctrl_method startMotionY; // 0x30 - StartCtrlTargetMotionY
+    struct ctrl_method setMotionX;   // 0x38 - SetCtrlTargetMotionX
+    struct ctrl_method setMotionY;   // 0x40 - SetCtrlTargetMotionY
     u8 unk_48[8];
-    struct ctrl_method method_50; // 0x50
+    struct ctrl_method setAnim;      // 0x50 - SetCtrlTargetAnim
 };
 
 struct ctrl_target
@@ -124,15 +130,15 @@ struct input_ctrl
     s32 state;                   // 0x08
     struct ctrl_vtable *vtable;  // 0x0C
     struct ctrl_target *target;  // 0x10
-    u8 animA;                    // 0x14
-    u8 animB;                    // 0x15
+    u8 motionX;                  // 0x14 - queued X motion entry (animSet->entries[].a)
+    u8 motionY;                  // 0x15 - queued Y motion entry (animSet->entries[].b)
     u8 dirState;                 // 0x16
-    u8 dirtyA;                   // 0x17
-    u8 dirtyB;                   // 0x18
-    u8 altA;                     // 0x19
-    u8 altB;                     // 0x1A
+    u8 motionXPending;           // 0x17 - ApplyInputCtrlMotion applies motionX
+    u8 motionYPending;           // 0x18 - ApplyInputCtrlMotion applies motionY
+    u8 motionXKeepSpeed;         // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
+    u8 motionYKeepSpeed;         // 0x1A - the same for Y
     u8 unk_1B;
-    struct ctrl_child *child;    // 0x1C
+    struct ctrl_child *cameraLead; // 0x1C - CreateCameraLead's object
     u8 flag20;                   // 0x20
     u8 unk_21[3];
     s32 timer;                   // 0x24
@@ -219,65 +225,65 @@ extern void InitCtrl(void *self);
             SET_ID_BIT((t)->field_08);                                         \
     }
 
-static inline void SetChildSpeed(struct input_ctrl *self, s32 speed)
+static inline void SetCameraLeadSpeed(struct input_ctrl *self, s32 speed)
 {
-    self->child->unk_78 = speed;
+    self->cameraLead->unk_78 = speed;
 }
 
-static inline void SetAnimA(struct input_ctrl *self, u8 anim)
+static inline void QueueMotionX(struct input_ctrl *self, u8 anim)
 {
-    self->dirtyA = 1;
-    self->animA = anim;
+    self->motionXPending = 1;
+    self->motionX = anim;
 }
 
-static inline void SetAnimB(struct input_ctrl *self, u8 anim)
+static inline void QueueMotionY(struct input_ctrl *self, u8 anim)
 {
-    self->dirtyB = 1;
-    self->animB = anim;
+    self->motionYPending = 1;
+    self->motionY = anim;
 }
 
-void sub_80178BC(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 unused4);
-void sub_8017808(struct input_ctrl *self);
+void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 unused4);
+void ApplyInputCtrlMotion(struct input_ctrl *self);
 void ResetInputCtrl(struct input_ctrl *self);
 
-void sub_8017524(struct flag_pair_owner *self)
+void ClearPlayerCtrlMotionYPending(struct pctrl_motion_queue *self)
 {
-    self->hasB = 0;
+    self->motionYPending = 0;
 }
 
-void sub_801752C(struct flag_pair_owner *self)
+void ClearPlayerCtrlMotionXPending(struct pctrl_motion_queue *self)
 {
-    self->hasA = 0;
+    self->motionXPending = 0;
 }
 
-u8 sub_8017534(struct flag_pair_owner *self)
+u8 IsPlayerCtrlMotionYPending(struct pctrl_motion_queue *self)
 {
-    return self->hasB;
+    return self->motionYPending;
 }
 
-u8 sub_801753C(struct flag_pair_owner *self)
+u8 IsPlayerCtrlMotionXPending(struct pctrl_motion_queue *self)
 {
-    return self->hasA;
+    return self->motionXPending;
 }
 
-void sub_8017544(struct flag_pair_owner *self, u8 value)
+void QueuePlayerCtrlMotionY(struct pctrl_motion_queue *self, u8 value)
 {
-    self->hasB = 1;
-    self->valueB = value;
+    self->motionYPending = 1;
+    self->motionY = value;
 }
 
-void sub_8017554(struct flag_pair_owner *self, u8 value)
+void QueuePlayerCtrlMotionX(struct pctrl_motion_queue *self, u8 value)
 {
-    self->hasA = 1;
-    self->valueA = value;
+    self->motionXPending = 1;
+    self->motionX = value;
 }
 
 
 void InputCtrlKillPlayer(struct input_ctrl *self, void *arg)
 {
     PlaySfx(gAudioContext, 0x1B, 0x100);
-    CTRL_CALL2(self, method_20, 3);
-    CTRL_CALL3(self, method_50, self->target, arg);
+    CTRL_CALL2(self, setMode, 3);
+    CTRL_CALL3(self, setAnim, self->target, arg);
     self->target->flag7 = 0;
     self->target->flag6 = 0;
     self->target->dead = 1;
@@ -290,20 +296,20 @@ void InputCtrlKillPlayer(struct input_ctrl *self, void *arg)
     }
 }
 
-void sub_8017600(struct input_ctrl *self)
+void InputCtrlStateStart(struct input_ctrl *self)
 {
-    sub_80178BC(self, 1, NULL, 0, 0);
-    self->dirtyA = 1;
-    self->animA = 1;
-    self->dirtyB = 1;
-    self->animB = 0;
+    SetInputCtrlModeAnim(self, 1, NULL, 0, 0);
+    self->motionXPending = 1;
+    self->motionX = 1;
+    self->motionYPending = 1;
+    self->motionY = 0;
     self->dirState = 0;
-    if (self->child == NULL)
+    if (self->cameraLead == NULL)
     {
-        self->child = CreateCameraLead(OperatorNew(0x80));
-        AddToPartList(gCollidableList, self->child);
+        self->cameraLead = CreateCameraLead(OperatorNew(0x80));
+        AddToPartList(gCollidableList, self->cameraLead);
     }
-    ResetCameraLead(self->child);
+    ResetCameraLead(self->cameraLead);
 }
 
 
@@ -317,38 +323,38 @@ void UpdateInputCtrl(struct input_ctrl *self)
         if (x > (gLevelLayers->layer0->width << 8) - 0xA00)
         {
             {
-                struct ctrl_child *c = self->child;
+                struct ctrl_child *c = self->cameraLead;
 
                 MARK_GONE(c);
             }
-            self->child = NULL;
+            self->cameraLead = NULL;
             RequestRoomExit();
         }
 
         keys = gKeys;
         if ((keys & DPAD_UP) && self->dirState != 1)
         {
-            SetAnimB(self, 3);
+            QueueMotionY(self, 3);
             self->dirState = 1;
         }
         else
         {
             if ((keys & DPAD_DOWN) && self->dirState != 2)
             {
-                SetAnimB(self, 5);
+                QueueMotionY(self, 5);
                 self->dirState = 2;
             }
             else if (!(keys & (DPAD_UP | DPAD_DOWN)))
             {
-                SetAnimB(self, 0);
+                QueueMotionY(self, 0);
                 self->dirState = 0;
             }
         }
 
         if ((keys & DPAD_LEFT) && self->flag20)
         {
-            SetAnimA(self, 7);
-            SetChildSpeed(self, 0x3200);
+            QueueMotionX(self, 7);
+            SetCameraLeadSpeed(self, 0x3200);
             if (++self->timer > 30)
             {
                 self->flag20 = 0;
@@ -357,13 +363,13 @@ void UpdateInputCtrl(struct input_ctrl *self)
         }
         else if (keys & DPAD_RIGHT)
         {
-            SetAnimA(self, 8);
-            SetChildSpeed(self, 0xA00);
+            QueueMotionX(self, 8);
+            SetCameraLeadSpeed(self, 0xA00);
         }
         else if (!(keys & DPAD_SIDEWAYS) || ((keys & DPAD_LEFT) && !self->flag20))
         {
-            SetChildSpeed(self, 0x1E00);
-            SetAnimA(self, 1);
+            SetCameraLeadSpeed(self, 0x1E00);
+            QueueMotionX(self, 1);
         }
 
         if (!self->flag20 && --self->timer < 0)
@@ -399,42 +405,42 @@ void UpdateInputCtrl(struct input_ctrl *self)
             _call_via_r2((u8 *)self + adj, d, fn);
         }
     }
-    sub_8017808(self);
+    ApplyInputCtrlMotion(self);
 }
 
-void sub_8017808(struct input_ctrl *self)
+void ApplyInputCtrlMotion(struct input_ctrl *self)
 {
-    if (self->dirtyA == 1)
+    if (self->motionXPending == 1)
     {
-        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->animA].a * 12;
+        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->motionX].a * 12;
 
-        if (self->altA)
-            CTRL_CALL3(self, method_38, self->target, rec);
+        if (self->motionXKeepSpeed)
+            CTRL_CALL3(self, setMotionX, self->target, rec);
         else
-            CTRL_CALL3(self, method_28, self->target, rec);
-        self->dirtyA = 0;
-        self->altA = 0;
+            CTRL_CALL3(self, startMotionX, self->target, rec);
+        self->motionXPending = 0;
+        self->motionXKeepSpeed = 0;
     }
-    if (self->dirtyB == 1)
+    if (self->motionYPending == 1)
     {
-        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->animB].b * 12;
+        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->motionY].b * 12;
 
-        if (self->altB)
-            CTRL_CALL3(self, method_40, self->target, rec);
+        if (self->motionYKeepSpeed)
+            CTRL_CALL3(self, setMotionY, self->target, rec);
         else
-            CTRL_CALL3(self, method_30, self->target, rec);
-        self->dirtyB = 0;
-        self->altB = 0;
+            CTRL_CALL3(self, startMotionY, self->target, rec);
+        self->motionYPending = 0;
+        self->motionYKeepSpeed = 0;
     }
 }
 
-void sub_80178BC(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 unused4)
+void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 unused4)
 {
-    CTRL_CALL2(self, method_20, mode);
-    CTRL_CALL3(self, method_50, self->target, arg);
+    CTRL_CALL2(self, setMode, mode);
+    CTRL_CALL3(self, setAnim, self->target, arg);
 }
 
-void sub_80178EC(struct input_ctrl *self)
+void InputCtrlStateDead(struct input_ctrl *self)
 {
     struct ctrl_target *t = self->target;
 
@@ -446,39 +452,39 @@ void sub_801793C(struct input_ctrl *self)
 {
     if (self->target->unk_38)
     {
-        sub_80178BC(self, 1, NULL, 0, 0);
-        SetAnimA(self, 2);
+        SetInputCtrlModeAnim(self, 1, NULL, 0, 0);
+        QueueMotionX(self, 2);
     }
 }
 
 void sub_801796C(struct input_ctrl *self)
 {
     if (self->target->unk_38)
-        sub_80178BC(self, 2, NULL, 0, 0);
+        SetInputCtrlModeAnim(self, 2, NULL, 0, 0);
 }
 
-void sub_8017994(struct input_ctrl *self)
+void RestartInputCtrl(struct input_ctrl *self)
 {
-    sub_80178BC(self, 0, NULL, 0, 0);
-    self->dirtyA = 1;
-    self->animA = 0;
-    self->dirtyB = 1;
-    self->animB = 0;
+    SetInputCtrlModeAnim(self, 0, NULL, 0, 0);
+    self->motionXPending = 1;
+    self->motionX = 0;
+    self->motionYPending = 1;
+    self->motionY = 0;
 }
 
 void ResetInputCtrl(struct input_ctrl *self)
 {
     self->state = 1;
-    self->animA = 0;
-    self->animB = 0;
-    self->dirtyA = 1;
-    self->dirtyB = 1;
+    self->motionX = 0;
+    self->motionY = 0;
+    self->motionXPending = 1;
+    self->motionYPending = 1;
     self->target = NULL;
-    self->child = NULL;
+    self->cameraLead = NULL;
     self->flag20 = 0;
 }
 
-void sub_80179D4(struct input_ctrl *self, s32 arg1, s32 arg2)
+void InputCtrlHandleEvent(struct input_ctrl *self, s32 arg1, s32 arg2)
 {
     /* a non-literal lower bound keeps gcc from folding `>= 1` into
      * `> 0` (the ROM compares against 1) and from merging the two tests
@@ -508,29 +514,29 @@ struct input_ctrl *CreateInputCtrl(struct input_ctrl *self)
     return self;
 }
 
-void sub_8017A20(struct input_ctrl *self)
+void SetInputCtrlMotionYPending(struct input_ctrl *self)
 {
-    self->dirtyB = 1;
+    self->motionYPending = 1;
 }
 
-void sub_8017A28(struct input_ctrl *self)
+void SetInputCtrlMotionXPending(struct input_ctrl *self)
 {
-    self->dirtyA = 1;
+    self->motionXPending = 1;
 }
 
-void sub_8017A30(struct input_ctrl *self)
+void CancelInputCtrlMotionY(struct input_ctrl *self)
 {
-    self->dirtyB = 0;
-    self->altB = 0;
+    self->motionYPending = 0;
+    self->motionYKeepSpeed = 0;
 }
 
-void sub_8017A38(struct input_ctrl *self)
+void CancelInputCtrlMotionX(struct input_ctrl *self)
 {
-    self->dirtyA = 0;
-    self->altA = 0;
+    self->motionXPending = 0;
+    self->motionXKeepSpeed = 0;
 }
 
-u8 sub_8017A40(struct input_ctrl *self)
+u8 IsInputCtrlMotionYPending(struct input_ctrl *self)
 {
-    return self->dirtyB;
+    return self->motionYPending;
 }

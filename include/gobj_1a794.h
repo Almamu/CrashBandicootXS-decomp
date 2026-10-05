@@ -12,7 +12,7 @@
  *
  * - `struct gobj`, a 0x80-byte level object built by CreatePlatform (method
  *   table gPlatformVtable: +0x0C CheckPlatformContact player-contact test,
- *   +0x1C UpdatePlatform per-frame/destroy step, +0x4C sub_801B2C0,
+ *   +0x1C UpdatePlatform per-frame/destroy step, +0x4C GetPlatformClassId,
  *   +0x54 DestroyPlatform destructor). Its `type` (+0x78) comes from the
  *   level's spawn record or is forced by the spawn kind; types 1/5/6/7
  *   get a `struct mover` attached at +0x44. The player object
@@ -20,7 +20,7 @@
  *   and `carried` (+0xAC) is the object the player is standing on.
  * - `struct mover`, a 0x38-byte helper (method table gPlatformMoverVtable:
  *   +0x0C UpdatePlatformMover per-frame move, +0x4C DestroyPlatformMover destructor,
- *   +0x5C sub_801B7A0 / +0x64 sub_801B77C velocity setters) that
+ *   +0x5C StartPlatformMoverMotionXFromSet / +0x64 StartPlatformMoverMotionYFromSet velocity setters) that
  *   oscillates its owner back and forth over `rangeX`/`rangeY` pixels
  *   using the 12-byte velocity records of gStaticData_0816C460, and drags
  *   the player along while it is `active` (MovePlayerWithPlatform). */
@@ -219,14 +219,14 @@ extern struct vec_pair gStaticData_0816C418[];
 extern struct vec3 gStaticData_0816C3B8[];
 extern struct vec3 gStaticData_0816C460[];
 extern u8 gStaticData_0816C458[];
-extern u8 gStaticData_087E490C[];
+extern u8 gDingodileShieldVtable[];
 extern u8 gDingodileVtable[];
 extern u8 gPlatformVtable[];
 extern u8 gPlatformMoverVtable[];
 
 extern void *sub_8017A8C(void *self);
 extern void sub_8017A78(void *self, s32 flags);
-extern void sub_8019EBC(void *self, s32 a, u16 b, u16 c, s32 d);
+extern void SpawnDingodileShieldOrRocket(void *self, s32 a, u16 b, u16 c, s32 d);
 extern void *OperatorNew(u32 size);
 extern void InitMovingSprite(void *self);
 extern void DestroyMovingSprite(void *self, s32 flags);
@@ -238,7 +238,7 @@ extern u32 __umodsi3(u32 a, u32 b);
 extern s32 GetBossIndex(void *arg);
 extern u8 IsBonusRoundDone(void *arg);
 extern u8 IsGemPathDone(void *arg);
-extern struct mover *sub_801961C(void *mem);
+extern struct mover *CreateCortexBossPlatformMover(void *mem);
 extern void AddToPartList(void *manager, void *value);
 extern void ResetSpriteFrameTimer(void *self);
 extern void ResetSpriteFrameIndex(void *self);
@@ -259,7 +259,7 @@ extern void InitCtrl(void *self);
 
 void sub_801B2D8(struct gobj *self);
 
-/* The object's constructor body (sub_801B2E4), which CreatePlatform inlines
+/* The object's constructor body (InitPlatform), which CreatePlatform inlines
  * into its `new`. */
 static inline struct gobj *GobjInit(struct gobj *self)
 {
@@ -269,7 +269,7 @@ static inline struct gobj *GobjInit(struct gobj *self)
     return self;
 }
 void sub_801B2A8(struct gobj *self, u8 value);
-void sub_801AB98(struct gobj *self, void *unused);
+void ResolvePlatformCollision(struct gobj *self, void *unused);
 void MovePlayerWithPlatform(struct mover *self, struct gobj *obj);
 
 /* Branchless absolute value, updating `x` in place (same helper as

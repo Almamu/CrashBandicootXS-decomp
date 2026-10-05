@@ -10,12 +10,12 @@ extern void *gUnknown_030012E8;
 extern void *gDecorationList;
 
 extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern struct enemy_ctrl *sub_8017FE8(void *mem);
+extern struct enemy_ctrl *CreateChaserCtrl(void *mem);
 extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
 extern s32 CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetBonusPlatform(void *self, s32 value);
-extern s32 sub_801B984(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern s32 SpawnLaunchPad(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSeal(void);
 extern void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
 
@@ -66,7 +66,7 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
 /* Popup-family variant: builds a CreateMovingSprite part on animation table
  * +0x168 at (arg1, arg2) in Q8, takes its frame from the tile cache
  * record of the first animation, clears the collected bits, attaches a
- * newly allocated sub_8017FE8 header, then shows it (flags: clear bits 7/2/6, set
+ * newly allocated CreateChaserCtrl header, then shows it (flags: clear bits 7/2/6, set
  * bit 4) and registers it with gCollidableList's manager. */
 void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
@@ -84,7 +84,7 @@ void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         ((struct anim_table_21668 *)part->anim)->records->paletteId));
     part->flipX = 0;
     part->unk_28_5 = 0;
-    hdr = sub_8017FE8(OperatorNew(0x24));
+    hdr = CreateChaserCtrl(OperatorNew(0x24));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     part->base.field_0A = 1;
@@ -191,10 +191,10 @@ void SpawnLargePlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CreatePlatform(arg0, arg1, arg2, arg3, 0);
 }
 
-/* Plain tail-call trampoline to `sub_801B984` (still raw). */
+/* Plain tail-call trampoline to `SpawnLaunchPad` (still raw). */
 void sub_80219E0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801B984(arg0, arg1, arg2, arg3);
+    SpawnLaunchPad(arg0, arg1, arg2, arg3);
 }
 
 /* Empty stub. */

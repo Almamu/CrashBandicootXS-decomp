@@ -4,7 +4,7 @@
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
  * (include/player_ctrl.h) documented in
- * docs/matching/issue-19-0x08015840-actor.md. The third, sub_8015DF8, is
+ * docs/matching/issue-19-0x08015840-actor.md. The third, ApplyPlayerCtrlSwimDrift, is
  * actor_part86b.c. All three are called from actor_part_16048.c's
  * per-state handlers.
  *
@@ -13,13 +13,13 @@
  * these are plain C; the "extra scratch-register copy" that kept them
  * NAKED under the current agbcc is simply old_agbcc's register allocation.
  *
- * Both dispatch on `level` (a 13-step direction index). The case bodies
+ * Both dispatch on `tilt` (a 13-step direction index). The case bodies
  * appear in the ROM in the order below (the source order); the shared
  * tails are gcc's cross-jumping, not gotos. */
 
 #define KEEP 0x7FFFFFFF
 
-/* the 8-word per-frame speed table copied to the stack by sub_80159F8 */
+/* the 8-word per-frame speed table copied to the stack by StartPlayerCtrlStroke */
 struct speed_table
 {
     s32 v[8];
@@ -35,15 +35,15 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void ResetSpriteFrameTimer(struct pctrl_target *t);
 extern void ResetSpriteFrameIndex(struct pctrl_target *t);
 extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);
-extern void sub_8017264(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
+extern void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
 
 /* `v`, mirrored when the target faces left */
 #define SIGNED_X(t, v) ((t)->f28.flipX ? -(v) : (v))
 
-/* Sets the target's speed for the current `level` (state 4 instead reads
+/* Sets the target's speed for the current `tilt` (state 4 instead reads
  * the frame-indexed stack copy of gStaticData_0816C090, negated unless
- * `mode` is 6) and steps `level` towards 0/3/6/9/12. */
-void sub_80159F8(struct player_ctrl *self)
+ * `mode` is 6) and steps `tilt` towards 0/3/6/9/12. */
+void StartPlayerCtrlStroke(struct player_ctrl *self)
 {
     struct pctrl_target *t;
 
@@ -66,49 +66,49 @@ void sub_80159F8(struct player_ctrl *self)
     ResetSpriteFrameTimer(t);
     ResetSpriteFrameIndex(t);
     SetSpriteAnimDone(t, 0);
-    sub_8017264(self, 2, 2, KEEP, KEEP);
+    SetPlayerCtrlState(self, 2, 2, KEEP, KEEP);
 
-    switch (self->level)
+    switch (self->tilt)
     {
     case 1:
         self->target->speedX = SIGNED_X(self->target, 176);
         self->target->speedY = -704;
-        self->level = 0;
+        self->tilt = 0;
         break;
     case 2:
         self->target->speedX = SIGNED_X(self->target, 352);
         self->target->speedY = -704;
-        self->level = 3;
+        self->tilt = 3;
         break;
     case 4:
         self->target->speedX = SIGNED_X(self->target, 704);
         self->target->speedY = -352;
-        self->level = 3;
+        self->tilt = 3;
         break;
     case 5:
         self->target->speedX = SIGNED_X(self->target, 704);
         self->target->speedY = -176;
-        self->level = 6;
+        self->tilt = 6;
         break;
     case 7:
         self->target->speedX = SIGNED_X(self->target, 704);
         self->target->speedY = 176;
-        self->level = 6;
+        self->tilt = 6;
         break;
     case 8:
         self->target->speedX = SIGNED_X(self->target, 704);
         self->target->speedY = 352;
-        self->level = 9;
+        self->tilt = 9;
         break;
     case 10:
         self->target->speedX = SIGNED_X(self->target, 352);
         self->target->speedY = 704;
-        self->level = 9;
+        self->tilt = 9;
         break;
     case 11:
         self->target->speedX = SIGNED_X(self->target, 176);
         self->target->speedY = 704;
-        self->level = 12;
+        self->tilt = 12;
         break;
     case 6:
         {
@@ -140,13 +140,13 @@ void sub_80159F8(struct player_ctrl *self)
  * SIGNED_X ternary, so each arm is divided separately). `flag` zeroes the
  * horizontal speed when the target's +0x68 bits are set and the D-pad is
  * not held sideways. */
-void sub_8015C6C(struct player_ctrl *self)
+void StartPlayerCtrlSpin(struct player_ctrl *self)
 {
     u16 speed;
     u8 flag;
     struct pctrl_target *t;
 
-    if (self->cooldown != 0)
+    if (self->spinCooldown != 0)
         return;
 
     speed = 960;
@@ -171,8 +171,8 @@ void sub_8015C6C(struct player_ctrl *self)
         return;
     }
 
-    sub_8017264(self, 3, 3, 0, 24);
-    switch (self->level)
+    SetPlayerCtrlState(self, 3, 3, 0, 24);
+    switch (self->tilt)
     {
     case 6:
         if (!flag)

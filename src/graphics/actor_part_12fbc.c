@@ -42,50 +42,50 @@ extern struct spawned *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, 
  * tested). */
 static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = flag;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = flag;
+    self->motionX = next;
 }
 
 static inline void ActTrio28(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    self->next32 = cur;
-    self->flag30 = flag;
-    self->next28 = next;
+    self->motionYKeepSpeed = cur;
+    self->motionYPending = flag;
+    self->motionY = next;
 }
 
 static inline void ActSetNextP(struct act *self, u8 *slot, s32 next)
 {
-    self->next32 = 0;
-    self->flag30 = 1;
+    self->motionYKeepSpeed = 0;
+    self->motionYPending = 1;
     *slot = next;
 }
 
 static inline void ActNext28P(struct act *self, u8 *slot, s32 flag, s32 next)
 {
-    self->next32 = 0;
-    self->flag30 = flag;
+    self->motionYKeepSpeed = 0;
+    self->motionYPending = flag;
     *slot = next;
 }
 
 static inline void ActSetNext27P(struct act *self, u8 *slot, s32 next)
 {
-    self->next31 = 0;
-    self->flag2F = 1;
+    self->motionXKeepSpeed = 0;
+    self->motionXPending = 1;
     *slot = next;
 }
 
 static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
 {
-    self->next31 = 1;
-    self->flag2F = 1;
+    self->motionXKeepSpeed = 1;
+    self->motionXPending = 1;
     *slot = next;
 }
 
@@ -283,7 +283,7 @@ void ActionCtrlStateJump(struct act *self)
                     ACT_VCALL2(self, m50, self->part, 6);
                 }
                 {
-                    u8 *slot = &self->next28;
+                    u8 *slot = &self->motionY;
 
                     if (*slot == 7)
                         ActSetNextP(self, slot, 0xA);
@@ -294,7 +294,7 @@ void ActionCtrlStateJump(struct act *self)
                 ACT_VCALL1(self, m20, 7);
                 ACT_VCALL2(self, m50, self->part, 0xC);
                 {
-                    u8 *slot = &self->next28;
+                    u8 *slot = &self->motionY;
 
                     if (*slot == 7)
                     {
@@ -315,14 +315,14 @@ void ActionCtrlStateJump(struct act *self)
     {
         if (gPlayer[0x100] == 0)
         {
-            self->next31 = 0;
-            self->flag2F = 1;
-            self->next27 = 0;
+            self->motionXKeepSpeed = 0;
+            self->motionXPending = 1;
+            self->motionX = 0;
         }
     }
     else
     {
-        u8 *slot = &self->next27;
+        u8 *slot = &self->motionX;
 
         if (*slot == 0x1B || *slot == 0x1C)
         {

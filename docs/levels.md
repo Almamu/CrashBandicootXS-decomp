@@ -207,12 +207,14 @@ code it gives the object and where the levels place it:
 | 0x37 | `SpawnLaserBarrier` | hazard, bank 25 |
 | 0x3A, 0x3F | `SpawnSaucerLabAssistant` | enemy, bank 29 |
 | 0x3B | `SpawnPistonCrusher` | hazard, bank 26 |
+| 0x3D | `sub_80219E0` | the green launch pad (`SpawnLaunchPad`, bank 28) |
 | 0x40 | `SpawnFlamethrowerLabAssistant` | enemy, bank 23 |
 | 0x43 | `SpawnRat` | enemy, bank 21 |
 | 0x44 | `SpawnFrog` | enemy, bank 19 |
 | 0x45 | `SpawnDingodile` | Dingodile (`CreateDingodile`, bank 54) |
 | 0x47 | `SpawnTiny` | Tiny Tiger (`CreateTiny`, bank 55) |
 | 0x48 | `SpawnCortexBoss` | the Neo Cortex fight's controller (`CreateCortexBoss`, bank 53); only the "neo cortex" level places it |
+| 0x49 | `sub_8021668` | the chaser (`UpdateChaser`, bank 30); only room 37 places it |
 | 0x4B, 0x4C | `SpawnSeaMine` | hazard, bank 6 |
 | 0x4D | `SpawnWoodenCrusher` | hazard, bank 18 |
 | 0x4E, 0x4F, 0x50 | `SpawnLargePlatform`, `SpawnSmallPlatform`, `SpawnMediumPlatform` | `CreatePlatform` kinds 0-2 (bank 39) |

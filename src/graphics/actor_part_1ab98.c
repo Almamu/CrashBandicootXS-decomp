@@ -1,7 +1,7 @@
 #include "core.h"
 #include "gobj_1a794.h"
 
-/* GitHub issue #25, ROM 0x0801AB98-0x0801B208: sub_801AB98, the
+/* GitHub issue #25, ROM 0x0801AB98-0x0801B208: ResolvePlatformCollision, the
  * player-vs-object collision resolver (see include/gobj_1a794.h and
  * docs/matching/issue-25-level-objects.md for what it computes).
  *
@@ -50,7 +50,7 @@ static inline s32 Span(s32 x, s32 w, s32 o)
     return x + w - o;
 }
 
-void sub_801AB98(struct gobj *selfArg, void *unused)
+void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
 {
     struct gobj *self = selfArg;
     struct aabb a;

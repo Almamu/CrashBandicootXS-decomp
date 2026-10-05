@@ -6,7 +6,7 @@ under `#if NON_MATCHING`. Two closed and two did not.
 | Function | Issue | Before (old_agbcc) | Result |
 |---|---|---|---|
 | `ApplyCrateCollision` (`game_loop47.c`) | #12 | 49 hw | **matched**, old_agbcc |
-| `sub_801AB98` (`actor_part_1ab98.c`) | #25 | 565 hw, 8 bytes short | **matched**, old_agbcc |
+| `ResolvePlatformCollision` (`actor_part_1ab98.c`) | #25 | 565 hw, 8 bytes short | **matched**, old_agbcc |
 | `QueueCratePlayerCollision` (`game_loop47.c`) | #12 | 938 hw | still NAKED |
 | `DrawVvLogoPieces` (`graphics_loading_35d1c.c`) | #65 | 329 hw | still NAKED |
 
@@ -44,7 +44,7 @@ Other attempts, each worse:
   but the address is computed early into r0.
 - A plain struct local is QImode and spills with `strb`.
 
-## sub_801AB98: several independent fixes
+## ResolvePlatformCollision: several independent fixes
 
 Each step was checked with the variant runner (`last5/var.py` specs in
 the scratchpad). In order:
@@ -104,7 +104,7 @@ but the function comes out 4 bytes long, so the draft was left as it
 was. What's left is spread across the function:
 - the `kind * 4` spill slot;
 - the `f.c = f.a` copy registers;
-- the p1/p2/p3/pos pointer copies (the `PosPtr` fix from `sub_801AB98`
+- the p1/p2/p3/pos pointer copies (the `PosPtr` fix from `ResolvePlatformCollision`
   alone didn't help);
 - the placement of the hit-flag `orr`/`str`.
 

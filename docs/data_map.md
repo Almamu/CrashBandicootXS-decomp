@@ -665,8 +665,8 @@ vtable shapes).
 | `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `QueueCratePlayerCollision`, `GetSpriteAttackBox`, `GetSpriteBodyBox` +3 | high | done |
 | `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `GetSpriteFrameAnchor`, `CollidePlayer`, `ActionCtrlHandleEvent` +1 | high | done |
 | `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gActionCtrlMotionEntries`, gActionCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `StartCtrlTargetMotionYFromSet`, `StartCtrlTargetMotionXFromSet`, `ApplyActionCtrlMotion` | high | done |
-| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gPlayerCtrlMotionEntries`, gPlayerCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8016AB0`, `sub_801721C`, `sub_8017240` | high | done |
-| `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8017808` | medium | done |
+| `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gPlayerCtrlMotionEntries`, gPlayerCtrlMotionSet's entries). **Converted** (`src/data/motion_records_16b304.c`) | `ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`, `StartPlayerCtrlMotionXFromSet` | high | done |
+| `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `ApplyInputCtrlMotion` | medium | done |
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gInputCtrlMotionEntries`). **Converted** (`src/data/entry_set_16b93c.c`) | `PlayRoom` | medium | done |
@@ -697,28 +697,28 @@ vtable shapes).
 | `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateExtraLifeHop` | high | done |
 | `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateWumpaHop` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `UpdateActionCtrl` | high | easy |
-| `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdatePlayerCtrl`, `sub_8016DDC`, `sub_80170EC` +2 | high | easy |
-| `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `sub_80159F8` | high | done |
+| `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdatePlayerCtrl`, `PlayerCtrlStateTurn`, `PlayerCtrlStateStop` +2 | high | easy |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartPlayerCtrlStroke` | high | done |
 | `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdatePlayerCtrl` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `UpdateInputCtrl` | high | easy |
-| `0816C2D0` | 0x8 | pointer table (1 data pointers) | `sub_8017FA4` | high | easy |
-| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C` +1 | medium | done |
+| `0816C2D0` | 0x8 | pointer table (1 data pointers) | `ResetChaserCtrl` | high | easy |
+| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `SetChaserMotionYFromSet`, `SetChaserMotionXFromSet`, `StartChaserMotionYFromSet` +1 | medium | done |
 | `0816C308` | 0x3 | small constant (040100). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateTiny`, `SetTinyState` | medium | done |
 | `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `PickTinyHopTarget` | medium | done |
-| `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80196B8` | medium | done |
-| `0816C35C` | 0x3 | small constant (181612). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
-| `0816C35F` | 0x3 | small constant (040404). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
-| `0816C362` | 0x6 | small constant (020202000000). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
+| `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`src/data/actor_tables_16c2d8.c`) | `SetCortexTargetDest` | medium | done |
+| `0816C35C` | 0x3 | small constant (181612). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateCortexTarget` | medium | done |
+| `0816C35F` | 0x3 | small constant (040404). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateCortexTarget` | medium | done |
+| `0816C362` | 0x6 | small constant (020202000000). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateCortexTarget` | medium | done |
 | `0816C368` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
 | `0816C378` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
 | `0816C390` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
 | `0816C3A0` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
-| `0816C3B8` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A64C`, `sub_801A7AC` | high | done |
-| `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
-| `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
-| `0816C418` | 0x40 | table of struct vec_pair | `sub_801A7AC` | high | easy |
+| `0816C3B8` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodileShark`, `StartDingodileMotion` | high | done |
+| `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodileProjectile` | medium | done |
+| `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodileProjectile` | medium | done |
+| `0816C418` | 0x40 | table of struct vec_pair | `StartDingodileMotion` | high | easy |
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `CreatePlatformMover` | high | easy |
-| `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `UpdatePlatformMover`, `sub_801B6EC`, `sub_801B734` +2 | high | done |
+| `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `UpdatePlatformMover`, `SetPlatformMoverMotionYFromSet`, `SetPlatformMoverMotionXFromSet` +2 | high | done |
 | `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `LoadSaveMenuBg`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
 | `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
@@ -728,9 +728,9 @@ vtable shapes).
 | `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `DrawLevelSelectTime` | high | done |
 | `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D5CC` | high | done |
-| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D5CC` | high | done |
-| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D668` | high | done |
+| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
+| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `PlaceLevelSelectEntries` | high | done |
+| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `SetLevelSelectEntryBoxes` | high | done |
 | `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `RefreshLevelSelectPage` | high | done |
 | `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `LoadLevelSelectRecord` | high | done |
 | `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `RunLevelSelect` | medium | done |
@@ -968,25 +968,25 @@ vtable shapes).
 | `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlayerCtrl`, `InitPlayerCtrl` | high | easy |
 | `087E42F4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyInputCtrl`, `CreateInputCtrl` | high | easy |
 | `087E435C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8017A78`, `sub_8017A8C` | high | easy |
-| `087E43C4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8017FD4`, `sub_8017FE8` | high | easy |
-| `087E442C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8018858`, `sub_801886C` | high | easy |
-| `087E4494` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80188D0`, `sub_80188E8` | high | easy |
+| `087E43C4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyChaserCtrl`, `CreateChaserCtrl` | high | easy |
+| `087E442C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl` | high | easy |
+| `087E4494` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateOneShotAnimCtrl`, `DestroyOneShotAnimCtrl` | high | easy |
 | `087E44FC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8018948`, `sub_8018960` | high | easy |
 | `087E4564` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyTiny`, `CreateTiny` | high | easy |
-| `087E45CC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80195D8`, `sub_80195EC` | high | easy |
-| `087E4634` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8019608`, `sub_801961C` | high | easy |
-| `087E469C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801964C`, `sub_8019660` | high | easy |
-| `087E4704` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80196E4`, `sub_80196F8` | high | easy |
-| `087E476C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8019744`, `sub_8019758` | high | easy |
+| `087E45CC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexBossGemCtrl`, `CreateCortexBossGemCtrl` | high | easy |
+| `087E4634` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexBossPlatformMover`, `CreateCortexBossPlatformMover` | high | easy |
+| `087E469C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexShotCtrl`, `CreateCortexShotCtrl` | high | easy |
+| `087E4704` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexTargetCtrl`, `CreateCortexTargetCtrl` | high | easy |
+| `087E476C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexCannonCtrl`, `CreateCortexCannonCtrl` | high | easy |
 | `087E47D4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexBoss`, `CreateCortexBoss` | high | easy |
-| `087E483C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A724`, `sub_801A73C` | high | easy |
-| `087E48A4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A584`, `sub_801A750`, `sub_801A768` | high | easy |
-| `087E490C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A780`, `sub_801A794` | high | easy |
+| `087E483C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateDingodileSharkCtrl`, `DestroyDingodileSharkCtrl` | high | easy |
+| `087E48A4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `SpawnDingodileStalactite`, `DestroyDingodileProjectileCtrl`, `CreateDingodileProjectileCtrl` | high | easy |
+| `087E490C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyDingodileShieldCtrl`, `CreateDingodileShieldCtrl` | high | easy |
 | `087E4974` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyDingodile`, `CreateDingodile` | high | easy |
-| `087E49DC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePlatform`, `DestroyPlatform`, `sub_801B2E4` | high | easy |
+| `087E49DC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePlatform`, `DestroyPlatform`, `InitPlatform` | high | easy |
 | `087E4A54` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlatformMover`, `CreatePlatformMover` | high | easy |
 | `087E4ABC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCameraLead`, `CreateCameraLead` | high | easy |
-| `087E4B34` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B984`, `sub_801BAB0`, `sub_801BAD0` | high | easy |
+| `087E4B34` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `SpawnLaunchPad`, `DestroyLaunchPad`, `InitLaunchPad` | high | easy |
 | `087E4BAC` | 0x30 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyLevelSelectEntry`, `CreateLevelSelectEntry` | high | easy |
 | `087E4BDC` (`gBgStreamerVtable`) | 0x10 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBgStreamer`, `InitBgStreamer` | high | easy |
 | `087E4BEC` (`gBgLayerBaseVtable`) | 0x28 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBgLayerBase`, `InitBgLayerBase` | high | easy |

@@ -1,6 +1,14 @@
 #include "core.h"
 
-/* GitHub issue #22, ROM 0x08017AB0-0x08017ECC - the raw span between
+/* UpdateChaser: the update of the chaser that entity type 0x49 spawns
+ * (sub_8021668, sprite bank 30: a running, grabbing character; only
+ * room 37 places one, at its left end among 34 nitro and 21 TNT
+ * crates). State 0 waits while the player is dead, state 1 runs after
+ * the player, turning to face him and blowing up or breaking every
+ * crate it reaches, and within range state 2 grabs him (player event 1
+ * on frame 8 of anim 1).
+ *
+ * GitHub issue #22, ROM 0x08017AB0-0x08017ECC - the raw span between
  * actor_part27.c (ends 0x08017AAC) and actor_part27b.c (starts
  * 0x08017ECC) that docs/matching/issue-22-0x08017a44-actor.md's first
  * pass left completely untouched ("out of scope... given their size").
@@ -20,7 +28,7 @@
  * immediately, matching docs/rom_map.md's existing read):
  *
  * - Prelude (every state): if `self+0x1c` (a signed timestamp/flag
- *   word) is the sentinel `-1`, fires `sub_8017F14(self, other, 1)`
+ *   word) is the sentinel `-1`, fires `SetChaserMotionXFromSet(self, other, 1)`
  *   and resets it to `0`.
  * - **State 0**: bails if the player's `+0x104` busy gate is set;
  *   otherwise falls into the same "activate/deactivate table entry 3"
@@ -33,12 +41,12 @@
  *   `self+0x20`'s latch and re-stamping `self+0x1c` from the tick
  *   counter `gRoomFrameCount` on a transition), a timeout check
  *   (`gRoomFrameCount - self+0x1c > 0x3c` ticks re-fires
- *   `sub_8017F14` with a mode selected by `other+0x28` bit 4 and
+ *   `SetChaserMotionXFromSet` with a mode selected by `other+0x28` bit 4 and
  *   `self+0x20`), then a screen-relative "reset entry 3's flags"
  *   double gate (X `< `/`>` viewport, mirroring `other+0x28` bits
  *   `0x10`/`0x11`) and finally an in-bounds check (`abs(dx) <=
  *   0x27FF && abs(dy) <= 0x31FF` in the player/other Q8 delta) that
- *   fires `sub_8017F14(self, other, 0)` plus two more trampoline
+ *   fires `SetChaserMotionXFromSet(self, other, 0)` plus two more trampoline
  *   calls, or - out of bounds - falls into a "spawn + scan" cluster:
  *   builds an AABB via `GetSpriteHitbox(&box, other)`, unpacks it into
  *   `CollidePartList(gCollidableList, box.x, box.y, box.w, box.h, 0,
@@ -57,7 +65,7 @@
  *   exits): gated on `other+0x38` (state-2-only) and the player's
  *   `+0x104` busy bit, either fires the `0x58`-indexed trampoline with
  *   mode 3 then the `0x50`/`0x20` pair with modes 0/1 (the "activate"
- *   shape, also `sub_8017F14(self, other, 1)` in place of the `0x58`
+ *   shape, also `SetChaserMotionXFromSet(self, other, 1)` in place of the `0x58`
  *   call when the busy bit was never set), or - only reachable from
  *   state 2's busy-bit-set path - the `0x50`/`0x20`/`0x58` trio with
  *   modes 2/0/0 (the "deactivate" shape).
@@ -209,20 +217,20 @@ extern u32 gRoomFrameCount;
 extern struct ab_player *gPlayer;
 extern void *gCollidableList;
 extern struct ab_list *gCrateList;
-extern void sub_8017F14(void *self, void *part, s32 index);
+extern void SetChaserMotionXFromSet(void *self, void *part, s32 index);
 extern struct ab_box GetSpriteHitbox(void *obj);
 extern void CollidePartList(void *manager, struct ab_box box, s32 unused, void *compareViewport);
 extern void ExplodeCrate(struct ab_part *p, s32 arg);
 extern u8 IsCrateKindBreakable(struct ab_part *p, s32 kind);
 extern void BreakCrate(struct ab_part *p, s32 arg);
 
-void sub_8017AB0(struct ab_self *self, struct ab_part *other)
+void UpdateChaser(struct ab_self *self, struct ab_part *other)
 {
     struct ab_box box;
 
     if (self->stamp == -1)
     {
-        sub_8017F14(self, other, 1);
+        SetChaserMotionXFromSet(self, other, 1);
         self->stamp = 0;
     }
 
@@ -267,12 +275,12 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
             if ((s8)(other->flags28 << 3) >= 0)
             {
                 if (self->latch != 0)
-                    sub_8017F14(self, other, 1);
+                    SetChaserMotionXFromSet(self, other, 1);
                 else
-                    sub_8017F14(self, other, 2);
+                    SetChaserMotionXFromSet(self, other, 2);
             }
             else
-                sub_8017F14(self, other, 3);
+                SetChaserMotionXFromSet(self, other, 3);
         }
         if (gPlayer->x < other->x)
         {
@@ -308,7 +316,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
 
             if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF)
             {
-                sub_8017F14(self, other, 0);
+                SetChaserMotionXFromSet(self, other, 0);
                 VCALL1(self, m20, 2);
                 VCALL2(self, m50, other, 1);
                 return;
@@ -381,7 +389,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
             else
             {
             plain:
-                sub_8017F14(self, other, 1);
+                SetChaserMotionXFromSet(self, other, 1);
             }
             VCALL2(self, m50, other, 0);
             VCALL1(self, m20, 1);

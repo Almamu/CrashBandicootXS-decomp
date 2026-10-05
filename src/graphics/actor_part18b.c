@@ -22,12 +22,12 @@ void ActionCtrlStateCrawlStandUp(struct act *self)
 
     if (part->animDone != 0) {
         SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
-        self->next31 = 0;
-        self->flag2F = 1;
-        self->next27 = 0;
-        self->next32 = 0;
-        self->flag30 = 1;
-        self->next28 = 0;
+        self->motionXKeepSpeed = 0;
+        self->motionXPending = 1;
+        self->motionX = 0;
+        self->motionYKeepSpeed = 0;
+        self->motionYPending = 1;
+        self->motionY = 0;
     }
 }
 
@@ -56,12 +56,12 @@ void ActionCtrlStateBodySlamLand(struct act *self)
 
         if (v == 0) {
             SetActionCtrlModeAnim(self, 0, 0x12, 0, v);
-            self->next31 = v;
-            self->flag2F = 1;
-            self->next27 = v;
-            self->next32 = v;
-            self->flag30 = 1;
-            self->next28 = v;
+            self->motionXKeepSpeed = v;
+            self->motionXPending = 1;
+            self->motionX = v;
+            self->motionYKeepSpeed = v;
+            self->motionYPending = 1;
+            self->motionY = v;
         } else {
             struct act_vtable *mgr = self->vt;
             struct act_method *off;
@@ -72,9 +72,9 @@ void ActionCtrlStateBodySlamLand(struct act *self)
                         (void *)3, off->fn);
             {
                 u8 zero = 0;
-                self->next31 = zero;
-                self->flag2F = 1;
-                self->next27 = zero;
+                self->motionXKeepSpeed = zero;
+                self->motionXPending = 1;
+                self->motionX = zero;
             }
         }
     }
@@ -116,12 +116,12 @@ void ActionCtrlStateLand(struct act *self)
     if (self->part->animDone)
     {
         SetActionCtrlModeAnim(self, 0, 0x12, 0, flag);
-        self->next31 = flag;
-        self->flag2F = 1;
-        self->next27 = flag;
-        self->next32 = flag;
-        self->flag30 = 1;
-        self->next28 = flag;
+        self->motionXKeepSpeed = flag;
+        self->motionXPending = 1;
+        self->motionX = flag;
+        self->motionYKeepSpeed = flag;
+        self->motionYPending = 1;
+        self->motionY = flag;
     }
     ActionCtrlStateIdle(self);
 }

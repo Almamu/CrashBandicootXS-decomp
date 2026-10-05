@@ -34,7 +34,7 @@ extern void ShowHudLives(void *state);
 extern void *OperatorNew(s32 size);
 extern struct actor *InitSpriteObj(struct actor *self);
 extern void AddToPartList(void *manager, void *value);
-extern void sub_8011308(void *self);
+extern void ResetExtraLifePickup(void *self);
 extern void UpdateExtraLifeHop(void *self);
 extern void UpdateSpriteObj(struct actor *part);
 extern s16 gSineTable[];
@@ -111,7 +111,7 @@ void CheckExtraLifePickup(void *selfArg)
 }
 
 /* `docs/rom_map.md`: part of "the randomized-behavior... famil[y]"
- * alongside `sub_8016048`. Plays a hit SFX, sets `self+0x3c` (a
+ * alongside `CheckPlayerCtrlTurn`. Plays a hit SFX, sets `self+0x3c` (a
  * timer/animation field) to `0xa0`, then either derives a randomized
  * `(dx,dy)` offset pair from `rand()` (`randomize` nonzero -
  * `self->0x49` tags which of three `rand()`-driven bands the x-offset
@@ -313,7 +313,7 @@ void UpdateExtraLife(struct orbit_part *self)
  * Allocates a `0x54`-byte object (`OperatorNew`), re-initializes it
  * (`InitSpriteObj`), repoints `self->table` (`self+0x18`) at
  * `gExtraLifeVtable`, clears the "spawned/active" gate byte via
- * `sub_8011308` (`game_loop52.c`), stores `arg0` at `self+8` and
+ * `ResetExtraLifePickup` (`game_loop52.c`), stores `arg0` at `self+8` and
  * `arg1`/`arg2` (Q8-scaled) at `self+0`/`self+4`, mirrored into
  * `self+0x4c`/`self+0x50` (the orbit anchor `SetExtraLifePos`/
  * `UpdateExtraLifeHop` also use), joins the `gUnknown_030012EC`
@@ -334,7 +334,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
     self = OperatorNew(0x54);
     InitSpriteObj(&self->base);
     self->base.table = gExtraLifeVtable;
-    sub_8011308(self);
+    ResetExtraLifePickup(self);
     zero = 0;
     self->base.field_08 = id;
     self->base.x = x << 8;

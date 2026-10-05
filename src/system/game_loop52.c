@@ -21,8 +21,8 @@
  * - `self+0x38` (u8)  - an externally-driven gate byte read (not
  *                       written) by `DrawExtraLife`
  * - `self+0x48` (u8)  - a "spawned/active" gate byte, cleared by
- *                       `sub_8011308`, tested by `sub_8011330`
- * - `self+0x49` (u8)  - unexamined byte setter (`sub_8011388`)
+ *                       `ResetExtraLifePickup`, tested by `CollideExtraLife`
+ * - `self+0x49` (u8)  - unexamined byte setter (`SetExtraLifeCounter`)
  * - `self+0x4a` (u8)  - orbit "mode" (0 = inactive; 1/2 = which way the
  *                       orbit offset is applied to the anchor x; other
  *                       values leave x at the anchor) - set by
@@ -45,13 +45,13 @@
  * same object type `CreateExtraLife`/`SendExtraLifeToHud` (game_loop29.c,
  * Phase 2's neighboring group) spawn/manage - `SetExtraLifePos` seeds an
  * orbit anchor+start position, `SetExtraLifeHop` (re)starts the orbit at a
- * given mode/phase 0, `sub_8011388` sets an adjacent still-unexamined
+ * given mode/phase 0, `SetExtraLifeCounter` sets an adjacent still-unexamined
  * byte, `UpdateExtraLifeHop` is the per-frame orbit-position update,
- * `sub_8011330` fires a `self->table`-driven hit trampoline once the
+ * `CollideExtraLife` fires a `self->table`-driven hit trampoline once the
  * object is "spawned" (`self+0x48 == 0`) and the player has a specific
  * flag set, `DrawExtraLife` re-derives visibility from a
  * `DrawSprite`/`self+0x38` gate and clears flags bit 3 when gated off,
- * `DestroyExtraLife`/`InitExtraLife`/`sub_8011308` are a small
+ * `DestroyExtraLife`/`InitExtraLife`/`ResetExtraLifePickup` are a small
  * init/reset/table-repoint trio (same `InitSpriteObj`/table-swap shape
  * documented throughout `actor_part8.c`), and `CheckWumpaPickup` is the
  * per-frame player-proximity/hit-resolve step: gated by the same
@@ -149,7 +149,7 @@ void DrawExtraLife(void *selfArg)
 }
 
 /* Trivial - always returns 2, ignoring any argument. */
-s32 sub_80112F0(void)
+s32 GetExtraLifeClassId(void)
 {
     return 2;
 }
@@ -167,7 +167,7 @@ void DestroyExtraLife(void *selfArg, u32 arg1)
 }
 
 /* Clears the "spawned/active" gate byte `self+0x48`. */
-void sub_8011308(void *selfArg)
+void ResetExtraLifePickup(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -178,14 +178,14 @@ void sub_8011308(void *selfArg)
  * `actor_part8.c`; its return value is discarded - same "call for
  * side effect only" shape used elsewhere in this object family),
  * repoints `self->table` at `gExtraLifeVtable`, clears the
- * "spawned/active" gate byte via `sub_8011308`, and returns `self`. */
+ * "spawned/active" gate byte via `ResetExtraLifePickup`, and returns `self`. */
 void *InitExtraLife(void *selfArg)
 {
     u8 *self = selfArg;
 
     InitSpriteObj((struct actor *)self);
     *(void **)(self + 0x18) = gExtraLifeVtable;
-    sub_8011308(self);
+    ResetExtraLifePickup(self);
     return self;
 }
 
@@ -195,7 +195,7 @@ void *InitExtraLife(void *selfArg)
  * "offset + fn pointer" pair convention already established throughout
  * this codebase (e.g. `graphics.c`'s own `+0x10`/`+0x14` pair). Always
  * returns 0. */
-s32 sub_8011330(void *selfArg)
+s32 CollideExtraLife(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -246,7 +246,7 @@ void SetExtraLifeHop(void *selfArg, u8 mode)
 /* Unexamined byte setter, `self+0x49` - address-adjacent to the orbit
  * mode/phase pair above but not otherwise read by any function in this
  * group. */
-void sub_8011388(void *selfArg, u8 val)
+void SetExtraLifeCounter(void *selfArg, u8 val)
 {
     u8 *self = selfArg;
 

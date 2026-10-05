@@ -50,8 +50,8 @@ screen in `actor_part_1b85c.c` (issue #26):
   - +0x20 `nullsub_20`
   - +0x28 `DestroyLevelSelectEntry`: destructor
 
-  It also has plain accessors (`sub_801DE28`, `sub_801DE2C`,
-  `sub_801DEA0`) and `SetLevelSelectEntryBox`, which sets the box animation.
+  It also has plain accessors (`IsLevelSelectEntrySelected`, `GetLevelSelectEntryLevel`,
+  `SetLevelSelectEntrySelected`) and `SetLevelSelectEntryBox`, which sets the box animation.
 - **`struct cursor_panel`** (`level_menu.panel`, 0x54 bytes): the
   cursor. Its first member is a `struct bresenham_line`
   (`include/line_util.h`), and `GlideLevelSelectCursor` takes two steps along it per

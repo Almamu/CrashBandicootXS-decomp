@@ -2,14 +2,16 @@
 #define GUARD_PLAYER_CTRL_H
 
 /* The player-input controller object of src/graphics/actor_part_16048.c
- * (GitHub issues #19/#20, ROM 0x08016048-0x08017524): a C++-style class
+ * (GitHub issues #19/#20, ROM 0x08016048-0x08017524): the underwater
+ * (scuba-diving) controller game_loop39.c attaches in room kind 1, with
+ * sprite bank 1 (Crash in an air tank and flippers). It is a C++-style class
  * with gcc 2.x method table gPlayerCtrlVtable (+0x0C UpdatePlayerCtrl
  * per-frame update, +0x14 PlayerCtrlHandleEvent message handler, +0x1C AttachPlayerCtrl
  * set target, +0x4C DestroyPlayerCtrl destructor; the rest are base-class
  * sub_800B6xx/sub_800B8xx functions). Constructor InitPlayerCtrl (called from
  * game_loop39.c), whose field reset is actor_part57.c's ResetPlayerCtrl.
- * The dispatchers sub_80159F8/sub_8015C6C/sub_8015DF8 (actor_part86.c/
- * actor_part86b.c) and sub_8015FDC (actor_part57b.c) are methods of the
+ * The dispatchers StartPlayerCtrlStroke/StartPlayerCtrlSpin/ApplyPlayerCtrlSwimDrift (actor_part86.c/
+ * actor_part86b.c) and SetPlayerSwimDriftY (actor_part57b.c) are methods of the
  * same class. */
 
 struct pctrl_method
@@ -114,16 +116,16 @@ struct player_ctrl
     s32 timer;                    // 0x18
     s32 timerMax;                 // 0x1C
     u8 repeat;                    // 0x20 - D-pad auto-repeat countdown
-    u8 level;                     // 0x21 - 0..12, column of gPlayerCtrlModeAnimRows
-    u8 mode;                      // 0x22 - row of gPlayerCtrlModeAnimRows
-    u8 cooldown;                  // 0x23
-    u8 valueA;                    // 0x24
-    u8 valueB;                    // 0x25
+    u8 tilt;                      // 0x21 - swim direction, 0 (up) .. 6 (level) .. 12 (down); column of gPlayerCtrlModeAnimRows
+    u8 mode;                      // 0x22 - row of gPlayerCtrlModeAnimRows (0 idle, 1 swim, 2 stroke, 3 spin, 4-7 turn)
+    u8 spinCooldown;              // 0x23 - frames until StartPlayerCtrlSpin is allowed again (set to 12)
+    u8 motionX;                   // 0x24 - queued X motion entry (animSet->entries[].a)
+    u8 motionY;                   // 0x25 - queued Y motion entry (animSet->entries[].b)
     u8 unk_26;                    // 0x26
-    u8 counter;                   // 0x27
-    u32 deadline;                 // 0x28 - gRoomFrameCount + 16 (sub_80159F8); the state waits until it passes or the anim ends
-    u8 hasA;                      // 0x2C
-    u8 hasB;                      // 0x2D
+    u8 idleTimer;                 // 0x27 - PlayerCtrlStateIdle's bob timer (Y motion 1 at 30, 2 at 60)
+    u32 deadline;                 // 0x28 - gRoomFrameCount + 16 (StartPlayerCtrlStroke); the state waits until it passes or the anim ends
+    u8 motionXPending;            // 0x2C - motionX is queued
+    u8 motionYPending;            // 0x2D - motionY is queued
 };
 
 #endif /* GUARD_PLAYER_CTRL_H */

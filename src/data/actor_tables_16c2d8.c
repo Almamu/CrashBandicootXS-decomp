@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The 12-byte vector records sub_8017ECC and its siblings
+/* The 12-byte vector records SetChaserMotionYFromSet and its siblings
  * (actor_part27b.c) look up by type id. */
 const s32 gStaticData_0816C2D8[4][3] = {
     { 0, 0, 0 },
@@ -28,12 +28,12 @@ const u8 gTinyHopTargets[77] = {
     3, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 0, 0,
 };
 
-/* sub_80196B8 (actor_part_1967c.c): indexed by the source's index. */
+/* SetCortexTargetDest (actor_part_1967c.c): indexed by the source's index. */
 const u8 gStaticData_0816C358[4] = {
     0x10, 0xE, 0xA, 0x20,
 };
 
-/* sub_8018E4C (actor_part_188d0.c): step counts and two timer
+/* UpdateCortexTarget (actor_part_188d0.c): step counts and two timer
  * thresholds per config index. */
 const u8 gStaticData_0816C35C[3] = {
     24, 22, 18,
@@ -59,8 +59,8 @@ const s32 gStaticData_0816C3A0[6] = {
     0x4B00, 0x6E00, 0xA000, 0xD200, 0xFA00, 0x40000,
 };
 
-/* {x, y, z} vectors (gobj_1a794.h's `struct vec3`): sub_801A64C
- * (actor_part_1967c.c), and sub_801A7AC (actor_part_1a794.c) through the
+/* {x, y, z} vectors (gobj_1a794.h's `struct vec3`): UpdateDingodileShark
+ * (actor_part_1967c.c), and StartDingodileMotion (actor_part_1a794.c) through the
  * entries of entry_set_16c418.c. */
 const s32 gStaticData_0816C3B8[4][3] = {
     { 0, 0, 0 },
@@ -69,7 +69,7 @@ const s32 gStaticData_0816C3B8[4][3] = {
     { 0, 288, 288 },
 };
 
-/* The argument blocks sub_801A2A8 (actor_part_1967c.c) passes to a
+/* The argument blocks UpdateDingodileProjectile (actor_part_1967c.c) passes to a
  * method. */
 const s32 gStaticData_0816C3E8[3] = {
     0, 7, -1024,

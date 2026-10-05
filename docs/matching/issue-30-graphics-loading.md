@@ -696,7 +696,7 @@ spawners reached through the trigger dispatch table at
   to 1 and clears its "hidden" flag bit.
 - `SpawnRedGem`/`SpawnGreenGem`/`SpawnYellowGem` first call
   `GetBossIndex(gLevelState)`; if that returns 1 they hand the
-  spawn to `sub_8018D70` (`actor_part_188d0.c`) with kind 0/1/2.
+  spawn to `SpawnCortexBossGem` (`actor_part_188d0.c`) with kind 0/1/2.
   Otherwise they test bit 0/2/1 of `gLevelState+2` and spawn the
   same way (tags 3/2/0, types 0x1F/0x20/0x22).
 
@@ -712,9 +712,9 @@ The only things the C has to get right:
   narrows it with `lsls #24; lsrs #24`, so it is `u8`; `SpawnCrystal`
   keeps it unnarrowed, so it is `s32` there.
 - **Branch layout of the mode-1 hand-off.** The ROM tests
-  `GetBossIndex(...) == 1` with a `beq` to the `sub_8018D70` call placed
+  `GetBossIndex(...) == 1` with a `beq` to the `SpawnCortexBossGem` call placed
   after the spawn body, which is `if (... != 1) { spawn } else {
-  sub_8018D70(...); }` - the other nesting puts the hand-off first.
+  SpawnCortexBossGem(...); }` - the other nesting puts the hand-off first.
 
 The part object is `struct gfx_part`, moved out of
 `actor_part_188d0.c` into the new shared `include/gfx_part.h` (bits 0-3

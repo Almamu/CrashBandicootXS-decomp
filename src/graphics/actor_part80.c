@@ -41,9 +41,9 @@ u8 CheckActionCtrlLeftGround(void *selfArg)
 
         {
             register s32 four asm("r2") = 4;
-            self->next32 = 0;
-            self->flag30 = 1;
-            self->next28 = four;
+            self->motionYKeepSpeed = 0;
+            self->motionYPending = 1;
+            self->motionY = four;
         }
         return 1;
     }

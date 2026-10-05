@@ -6,9 +6,9 @@
  * docs/matching/issue-25-level-objects.md).
  *
  * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files
- * and the ROM for Thumb pointers): sub_801B2E4 (the gobj constructor -
- * CreatePlatform inlines its body instead), sub_801B6EC, sub_801B734,
- * sub_801B854.
+ * and the ROM for Thumb pointers): InitPlatform (the gobj constructor -
+ * CreatePlatform inlines its body instead), SetPlatformMoverMotionYFromSet, SetPlatformMoverMotionXFromSet,
+ * ClearPlatformMoverActive.
  *
  * Register pins and the few one-instruction-wide inline asm operands
  * below are load-bearing (docs/workflow.md step 7); each is commented. */
@@ -58,7 +58,7 @@ void sub_801B2A8(struct gobj *self, u8 value)
     self->flags2 = (mask & self->flags2) | bit;
 }
 
-s32 sub_801B2C0(void)
+s32 GetPlatformClassId(void)
 {
     return 4;
 }
@@ -76,7 +76,7 @@ void sub_801B2D8(struct gobj *self)
     self->flags = mask & self->flags;
 }
 
-struct gobj *sub_801B2E4(struct gobj *self)
+struct gobj *InitPlatform(struct gobj *self)
 {
     return GobjInit(self);
 }
@@ -418,7 +418,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
     }
 }
 
-void sub_801B6EC(struct mover *self, struct gobj *part, s32 index)
+void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
     struct vec3 *e = &gStaticData_0816C460[self->set->entries[index].b];
 
@@ -444,7 +444,7 @@ void sub_801B6EC(struct mover *self, struct gobj *part, s32 index)
     }
 }
 
-void sub_801B734(struct mover *self, struct gobj *part, s32 index)
+void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
     struct vec3 *e = &gStaticData_0816C460[self->set->entries[index].a];
 
@@ -470,12 +470,12 @@ void sub_801B734(struct mover *self, struct gobj *part, s32 index)
     }
 }
 
-void sub_801B77C(struct mover *self, struct gobj *part, s32 index)
+void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
     StartCtrlTargetMotionY(self, part, &gStaticData_0816C460[self->set->entries[index].b]);
 }
 
-void sub_801B7A0(struct mover *self, struct gobj *part, s32 index)
+void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
     StartCtrlTargetMotionX(self, part, &gStaticData_0816C460[self->set->entries[index].a]);
 }
@@ -523,7 +523,7 @@ struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 
     return self;
 }
 
-void sub_801B854(struct mover *self)
+void ClearPlatformMoverActive(struct mover *self)
 {
     self->active = 0;
 }

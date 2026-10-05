@@ -61,7 +61,7 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `hitAxes`,
   and the per-type field stores are all reconstructed. The allocation
   differs from the prologue on: the ROM has `type` in r7 and slot*2 in
   r8, the draft the other way round.
-- **`sub_801AB98`** (#25, `actor_part_1ab98.c`): the existing draft is
+- **`ResolvePlatformCollision`** (#25, `actor_part_1ab98.c`): the existing draft is
   still 40 bytes short under both compilers (644/656 halfwords). The
   ROM cross-jumps the overlap arithmetic of both `hdir` arms into one
   shared tail, which the draft's allocation prevents. Not iterated

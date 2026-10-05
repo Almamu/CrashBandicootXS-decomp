@@ -56,7 +56,7 @@ void SpawnCheckpointCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* `CreateCrate` trampoline (type `0`), then indexes a small per-record
  * flags byte via `gEntityFlags`'s own table (same
  * `gEntityFlags -> *P -> {+8 array, +0xc base}` shape as
- * `sub_80187FC`'s table read in actor_part27c.c, indexed here by
+ * `UpdateStompedHopPad`'s table read in actor_part27c.c, indexed here by
  * `arg3`) and folds two of its bits into the constructed object's
  * `+0x28` bitfield.
  *

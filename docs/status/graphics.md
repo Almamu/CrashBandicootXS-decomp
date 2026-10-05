@@ -76,23 +76,23 @@ and [graphics_loading.md](./graphics_loading.md).
   `docs/matching.md` for the statement-ordering gotchas.
 
 - `src/graphics/actor_part_16048.c` (new file - GitHub issue #20, plus
-  issue #19's last raw function `sub_8016048`): `sub_8016048`-
-  `sub_801751C` (26 functions), all real C - the player-input controller
+  issue #19's last raw function `CheckPlayerCtrlTurn`): `CheckPlayerCtrlTurn`-
+  `SetPlayerCtrlMotionXPending` (26 functions), all real C - the player-input controller
   class (method table `gPlayerCtrlVtable`, struct in
   `include/player_ctrl.h`): per-frame update `UpdatePlayerCtrl` (D-pad
   auto-repeat level stepping, animation re-apply, pointer-to-member state
   dispatch through `gPlayerCtrlStateFuncs` to the eight state handlers
-  `sub_8016B1C`...`PlayerCtrlStateDead`), message handler `PlayerCtrlHandleEvent`, mode/
-  animation setter `sub_8017264`, player record writer `sub_80172D0`,
+  `PlayerCtrlStateIdle`...`PlayerCtrlStateDead`), message handler `PlayerCtrlHandleEvent`, mode/
+  animation setter `SetPlayerCtrlState`, player record writer `SetPlayerSwimDriftX`,
   constructor/destructor `InitPlayerCtrl`/`DestroyPlayerCtrl`. Nine UNUSED
-  (`sub_8016AB0`, `sub_801721C`, `sub_8017240`, `sub_8017330`,
-  `sub_8017348`, `sub_80174BC`, `sub_801750C`, `sub_8017514`,
-  `sub_801751C`). Built with `tools/agbcc/bin/old_agbcc`; register pins
-  only in `sub_8016AB0`. See
+  (`ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`, `StartPlayerCtrlMotionXFromSet`, `sub_8017330`,
+  `ApplyPlayerCtrlTilt`, `StartPlayerCtrlSwim`, `sub_801750C`, `SetPlayerCtrlMotionYPending`,
+  `SetPlayerCtrlMotionXPending`). Built with `tools/agbcc/bin/old_agbcc`; register pins
+  only in `ApplyPlayerCtrlMotion`. See
   [docs/matching/issue-20-player-ctrl.md](../matching/issue-20-player-ctrl.md).
 
 - `src/graphics/actor_part_17524.c` (new file - GitHub issue #21):
-  `sub_8017524`-`sub_8017A40` (25 functions) - six byte accessors, then a
+  `ClearPlayerCtrlMotionYPending`-`IsInputCtrlMotionYPending` (25 functions) - six byte accessors, then a
   D-pad-driven actor-part subclass (method table `gInputCtrlVtable`):
   per-frame animation/speed selection from the held keys, a gcc 2.x
   pointer-to-member state dispatch (`gInputCtrlStateFuncs`), and the
@@ -102,22 +102,22 @@ and [graphics_loading.md](./graphics_loading.md).
   See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
 
 - `src/graphics/actor_part_188d0.c` (new file - GitHub issue #23):
-  all 25 functions in `sub_80188D0`-`sub_8019660` as real C -
+  all 25 functions in `CreateOneShotAnimCtrl`-`CreateCortexShotCtrl` as real C -
   method-table ("vtable" at `self+0xc`) constructor/destructor pairs
-  (`sub_8018948` is UNUSED; `sub_801961C` base-constructs through
+  (`sub_8018948` is UNUSED; `CreateCortexBossPlatformMover` base-constructs through
   `CreatePlatformMover`), a part-gone bitmap setter, the squares-table
   constructor `CreateTiny`, the two-part effect (state machine
-  `UpdateCortexBoss`, child spawners `sub_8018BDC`/`sub_8018CB0`), the "mover"
-  object (`sub_8018D70` spawner, `sub_8018E4C` per-frame update,
-  `sub_8019094` state setter, `sub_8019214` hit-effect spawner), the part
-  hit test `sub_8019324`, and two more per-frame methods (`sub_8019464`,
-  `sub_80194E0`). Built with `tools/agbcc/bin/old_agbcc`, under which
-  `UpdateCortexBoss` and `sub_801961C` (NAKED under agbcc) closed. See
+  `UpdateCortexBoss`, child spawners `SpawnCortexCannon`/`SpawnCortexTarget`), the "mover"
+  object (`SpawnCortexBossGem` spawner, `UpdateCortexTarget` per-frame update,
+  `SetCortexTargetState` state setter, `FireCortexShot` hit-effect spawner), the part
+  hit test `UpdateCortexShot`, and two more per-frame methods (`UpdateCortexBossPlatformMover`,
+  `UpdateCortexBossGem`). Built with `tools/agbcc/bin/old_agbcc`, under which
+  `UpdateCortexBoss` and `CreateCortexBossPlatformMover` (NAKED under agbcc) closed. See
   [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md)
   and [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md).
 - `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
-  `sub_801B85C`-`sub_801B980` (the player-follow child `sub_8017600`
-  spawns), `sub_801B984`-`sub_801BAD0` (a 0x78-byte sprite subclass),
+  `sub_801B85C`-`GetCameraLeadOffset` (the player-follow child `InputCtrlStateStart`
+  spawns), `SpawnLaunchPad`-`InitLaunchPad` (a 0x78-byte sprite subclass),
   `RunLevelSelect` (the modal level-select screen), `DestroyLevelSelect`,
   `UpdateLevelSelect`, `UpdateLevelSelectPageArrows`, `DrawLevelSelectRecord`, `DrawLevelSelectTime`,
   `DrawLevelSelect`, `SettleLevelSelectPage`, `LevelSelectCursorLeft`, `LevelSelectCursorRight` (its
@@ -130,33 +130,33 @@ and [graphics_loading.md](./graphics_loading.md).
   `LevelSelectTurnPage`-`InitZoomBg` as plain C - the rest of the level-select
   screen: the page-turn animation `LevelSelectTurnPage` and its Down/Up handlers
   `LevelSelectPrevWorld`/`LevelSelectNextWorld`, the A/Start exit loops `LevelSelectConfirm`/
-  `LevelSelectExit`, the page-entry refresh (`sub_801D5CC`/`sub_801D638`/
-  `sub_801D668`), the BG1 page strip (`sub_801D77C`-`CreateLevelSelectPageBg`) and
-  the BG2 icon layer's constructor `InitZoomBg`. `sub_801D698` is
+  `LevelSelectExit`, the page-entry refresh (`PlaceLevelSelectEntries`/`LoadLevelSelectEntries`/
+  `SetLevelSelectEntryBoxes`), the BG1 page strip (`GetLevelSelectPageBgScroll`-`CreateLevelSelectPageBg`) and
+  the BG2 icon layer's constructor `InitZoomBg`. `CommitLevelSelectFrame` is
   UNUSED. Compiled with `old_agbcc`. See
   [docs/matching/issue-27-level-select-pages.md](../matching/issue-27-level-select-pages.md).
 - `src/graphics/actor_part_1967c.c` (new file - GitHub issue #24):
-  `sub_801967C`-`sub_801A780` except the two NAKED ones below (23 of 25
+  `sub_801967C`-`DestroyDingodileShieldCtrl` except the two NAKED ones below (23 of 25
   functions) - six small C++ actor-part controller classes (method
-  tables `gStaticData_087E4704`/`476C`/`47D4`/`483C`/`48A4`/`490C`:
+  tables `gCortexTargetVtable`/`476C`/`47D4`/`483C`/`48A4`/`490C`:
   constructors, destructors and per-frame updates), plus the
   `087E4974` boss-like state machine `UpdateDingodile`, its state-entry
-  dispatcher `SetDingodileState` and the part spawners `sub_8019EBC`/
-  `sub_801A584`. First file compiled with `tools/agbcc/bin/old_agbcc`.
-  `sub_8019718` and `sub_80197F4` are UNUSED (no caller or pointer
+  dispatcher `SetDingodileState` and the part spawners `SpawnDingodileShieldOrRocket`/
+  `SpawnDingodileStalactite`. First file compiled with `tools/agbcc/bin/old_agbcc`.
+  `sub_8019718` and `GetDingodileHits` are UNUSED (no caller or pointer
   anywhere in the ROM). See
   [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
 - GitHub issue #25 (0x0801A794-0x0801B85C, shared structs in
   `include/gobj_1a794.h`): `src/graphics/actor_part_1a794.c`
-  (`sub_801A794`-`sub_801A874`), `src/graphics/actor_part_1ab34.c`
+  (`CreateDingodileShieldCtrl`-`SetDingodileNextState`), `src/graphics/actor_part_1ab34.c`
   (`CheckPlatformContact`) and `src/graphics/actor_part_1b208.c`
-  (`UpdatePlatform`-`sub_801B854`) - 23 functions: the level-object class
+  (`UpdatePlatform`-`ClearPlatformMoverActive`) - 23 functions: the level-object class
   (`gPlatformVtable`) and its oscillating-platform mover
   (`gPlatformMoverVtable`) - plus `src/graphics/actor_part_1a878.c`
   (`CreatePlatform`, the level-object spawner, built with
   `tools/agbcc/bin/old_agbcc`; NAKED under agbcc, see
   [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md)).
-  `sub_801AB98` from the same range was parked, now matched (last-five
+  `ResolvePlatformCollision` from the same range was parked, now matched (last-five
   NAKED retry, below). See
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
@@ -175,7 +175,7 @@ and [graphics_loading.md](./graphics_loading.md).
 - **Near-miss polish pass:** `LevelSelectLoop` (`actor_part_1b85c.c`,
   level-select main loop) promoted from NAKED to real C under old_agbcc.
   See [near-miss-polish.md](../matching/near-miss-polish.md).
-- **Issue #24/#26 NAKED retry:** `sub_801A03C` (`actor_part_1967c.c`,
+- **Issue #24/#26 NAKED retry:** `SpawnDingodileShark` (`actor_part_1967c.c`,
   floor-part spawner) and `InitLevelSelect` (`actor_part_1b85c.c`,
   level-select constructor) promoted from NAKED to real C, both under
   old_agbcc. See
@@ -185,14 +185,14 @@ and [graphics_loading.md](./graphics_loading.md).
   old_agbcc: the ROM's stack-spilled second copy of the record pointer
   is a separate local that `info` copies. See
   [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
-- **Hard-register hold pass:** `sub_801A114` (`actor_part_1967c.c`,
-  issue #24, the `gStaticData_087E490C` controller's per-frame update)
+- **Hard-register hold pass:** `UpdateDingodileShield` (`actor_part_1967c.c`,
+  issue #24, the `gDingodileShieldVtable` controller's per-frame update)
   promoted from NAKED to real C under old_agbcc. r5/r6 held live across
   the box builders make global-alloc start the long-lived values at r7,
   as in the ROM; the state-0 BLDCNT accumulator is a block-scoped r5
   variable set through the constant-init asm. See
   [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
-- **Last-five NAKED retry:** `sub_801AB98` (`actor_part_1ab98.c`, issue
+- **Last-five NAKED retry:** `ResolvePlatformCollision` (`actor_part_1ab98.c`, issue
   #25, player-vs-object collision resolver) promoted from NAKED to real
   C under old_agbcc (object added to `OLD_AGBCC_OBJS`). An r8 hold gives
   `result` r8 and `self` sb; the FindLineCrossing calls pass a reassigned

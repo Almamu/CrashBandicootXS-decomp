@@ -1006,9 +1006,9 @@
    "size": 676,
    "name": "gPlayerCtrlMotionRecords",
    "consumers": [
-    "sub_8016AB0",
-    "sub_801721C",
-    "sub_8017240"
+    "ApplyPlayerCtrlMotion",
+    "StartPlayerCtrlMotionYFromSet",
+    "StartPlayerCtrlMotionXFromSet"
    ],
    "consumer_files": [
     "graphics/actor_part_16048.c"
@@ -1032,7 +1032,7 @@
    "size": 108,
    "name": "gInputCtrlMotionRecords",
    "consumers": [
-    "sub_8017808"
+    "ApplyInputCtrlMotion"
    ],
    "consumer_files": [
     "graphics/actor_part_17524.c"
@@ -1761,10 +1761,10 @@
    "name": "gPlayerCtrlModeAnimRows",
    "consumers": [
     "UpdatePlayerCtrl",
-    "sub_8016DDC",
-    "sub_80170EC",
-    "sub_8017264",
-    "sub_8017348"
+    "PlayerCtrlStateTurn",
+    "PlayerCtrlStateStop",
+    "SetPlayerCtrlState",
+    "ApplyPlayerCtrlTilt"
    ],
    "consumer_files": [
     "graphics/actor_part_16048.c"
@@ -1787,7 +1787,7 @@
    "size": 448,
    "name": "gStaticData_0816C090",
    "consumers": [
-    "sub_80159F8"
+    "StartPlayerCtrlStroke"
    ],
    "consumer_files": [
     "graphics/actor_part86.c"
@@ -1858,7 +1858,7 @@
    "size": 8,
    "name": "gStaticData_0816C2D0",
    "consumers": [
-    "sub_8017FA4"
+    "ResetChaserCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part27b.c"
@@ -1878,10 +1878,10 @@
    "size": 48,
    "name": "gStaticData_0816C2D8",
    "consumers": [
-    "sub_8017ECC",
-    "sub_8017F14",
-    "sub_8017F5C",
-    "sub_8017F80"
+    "SetChaserMotionYFromSet",
+    "SetChaserMotionXFromSet",
+    "StartChaserMotionYFromSet",
+    "StartChaserMotionXFromSet"
    ],
    "consumer_files": [
     "graphics/actor_part27b.c"
@@ -1945,7 +1945,7 @@
    "size": 4,
    "name": "gStaticData_0816C358",
    "consumers": [
-    "sub_80196B8"
+    "SetCortexTargetDest"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -1966,7 +1966,7 @@
    "size": 3,
    "name": "gStaticData_0816C35C",
    "consumers": [
-    "sub_8018E4C"
+    "UpdateCortexTarget"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"
@@ -1987,7 +1987,7 @@
    "size": 3,
    "name": "gStaticData_0816C35F",
    "consumers": [
-    "sub_8018E4C"
+    "UpdateCortexTarget"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"
@@ -2008,7 +2008,7 @@
    "size": 6,
    "name": "gStaticData_0816C362",
    "consumers": [
-    "sub_8018E4C"
+    "UpdateCortexTarget"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"
@@ -2125,8 +2125,8 @@
    "size": 48,
    "name": "gStaticData_0816C3B8",
    "consumers": [
-    "sub_801A64C",
-    "sub_801A7AC"
+    "UpdateDingodileShark",
+    "StartDingodileMotion"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c",
@@ -2152,7 +2152,7 @@
    "size": 12,
    "name": "gStaticData_0816C3E8",
    "consumers": [
-    "sub_801A2A8"
+    "UpdateDingodileProjectile"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -2173,7 +2173,7 @@
    "size": 36,
    "name": "gStaticData_0816C3F4",
    "consumers": [
-    "sub_801A2A8"
+    "UpdateDingodileProjectile"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -2194,7 +2194,7 @@
    "size": 64,
    "name": "gStaticData_0816C418",
    "consumers": [
-    "sub_801A7AC"
+    "StartDingodileMotion"
    ],
    "consumer_files": [
     "graphics/actor_part_1a794.c"
@@ -2238,10 +2238,10 @@
    "name": "gStaticData_0816C460",
    "consumers": [
     "UpdatePlatformMover",
-    "sub_801B6EC",
-    "sub_801B734",
-    "sub_801B77C",
-    "sub_801B7A0"
+    "SetPlatformMoverMotionYFromSet",
+    "SetPlatformMoverMotionXFromSet",
+    "StartPlatformMoverMotionYFromSet",
+    "StartPlatformMoverMotionXFromSet"
    ],
    "consumer_files": [
     "graphics/actor_part_1b208.c"
@@ -2485,7 +2485,7 @@
    "name": "gLevelSelectEntryPositions",
    "consumers": [
     "LevelSelectTurnPage",
-    "sub_801D5CC"
+    "PlaceLevelSelectEntries"
    ],
    "consumer_files": [
     "graphics/actor_part_1cee0.c"
@@ -2510,7 +2510,7 @@
    "name": "gLevelSelectEntryPositionsAllCleared",
    "consumers": [
     "LevelSelectTurnPage",
-    "sub_801D5CC"
+    "PlaceLevelSelectEntries"
    ],
    "consumer_files": [
     "graphics/actor_part_1cee0.c"
@@ -2535,7 +2535,7 @@
    "name": "gLevelSelectWorldEntryBoxAnims",
    "consumers": [
     "LevelSelectTurnPage",
-    "sub_801D668"
+    "SetLevelSelectEntryBoxes"
    ],
    "consumer_files": [
     "graphics/actor_part_1cee0.c"
@@ -7631,10 +7631,10 @@
   {
    "address": "0x087E43C4",
    "size": 104,
-   "name": "gStaticData_087E43C4",
+   "name": "gChaserCtrlVtable",
    "consumers": [
-    "sub_8017FD4",
-    "sub_8017FE8"
+    "DestroyChaserCtrl",
+    "CreateChaserCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part27b.c"
@@ -7656,10 +7656,10 @@
   {
    "address": "0x087E442C",
    "size": 104,
-   "name": "gStaticData_087E442C",
+   "name": "gStompedHopPadVtable",
    "consumers": [
-    "sub_8018858",
-    "sub_801886C"
+    "DestroyStompedHopPadCtrl",
+    "CreateStompedHopPadCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part27c.c"
@@ -7681,10 +7681,10 @@
   {
    "address": "0x087E4494",
    "size": 104,
-   "name": "gStaticData_087E4494",
+   "name": "gOneShotAnimCtrlVtable",
    "consumers": [
-    "sub_80188D0",
-    "sub_80188E8"
+    "CreateOneShotAnimCtrl",
+    "DestroyOneShotAnimCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"
@@ -7756,10 +7756,10 @@
   {
    "address": "0x087E45CC",
    "size": 104,
-   "name": "gStaticData_087E45CC",
+   "name": "gCortexBossGemVtable",
    "consumers": [
-    "sub_80195D8",
-    "sub_80195EC"
+    "DestroyCortexBossGemCtrl",
+    "CreateCortexBossGemCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"
@@ -7781,10 +7781,10 @@
   {
    "address": "0x087E4634",
    "size": 104,
-   "name": "gStaticData_087E4634",
+   "name": "gCortexBossPlatformMoverVtable",
    "consumers": [
-    "sub_8019608",
-    "sub_801961C"
+    "DestroyCortexBossPlatformMover",
+    "CreateCortexBossPlatformMover"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"
@@ -7806,10 +7806,10 @@
   {
    "address": "0x087E469C",
    "size": 104,
-   "name": "gStaticData_087E469C",
+   "name": "gCortexShotVtable",
    "consumers": [
-    "sub_801964C",
-    "sub_8019660"
+    "DestroyCortexShotCtrl",
+    "CreateCortexShotCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"
@@ -7831,10 +7831,10 @@
   {
    "address": "0x087E4704",
    "size": 104,
-   "name": "gStaticData_087E4704",
+   "name": "gCortexTargetVtable",
    "consumers": [
-    "sub_80196E4",
-    "sub_80196F8"
+    "DestroyCortexTargetCtrl",
+    "CreateCortexTargetCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -7856,10 +7856,10 @@
   {
    "address": "0x087E476C",
    "size": 104,
-   "name": "gStaticData_087E476C",
+   "name": "gCortexCannonVtable",
    "consumers": [
-    "sub_8019744",
-    "sub_8019758"
+    "DestroyCortexCannonCtrl",
+    "CreateCortexCannonCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -7906,10 +7906,10 @@
   {
    "address": "0x087E483C",
    "size": 104,
-   "name": "gStaticData_087E483C",
+   "name": "gDingodileSharkVtable",
    "consumers": [
-    "sub_801A724",
-    "sub_801A73C"
+    "CreateDingodileSharkCtrl",
+    "DestroyDingodileSharkCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -7931,11 +7931,11 @@
   {
    "address": "0x087E48A4",
    "size": 104,
-   "name": "gStaticData_087E48A4",
+   "name": "gDingodileProjectileVtable",
    "consumers": [
-    "sub_801A584",
-    "sub_801A750",
-    "sub_801A768"
+    "SpawnDingodileStalactite",
+    "DestroyDingodileProjectileCtrl",
+    "CreateDingodileProjectileCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -7957,10 +7957,10 @@
   {
    "address": "0x087E490C",
    "size": 104,
-   "name": "gStaticData_087E490C",
+   "name": "gDingodileShieldVtable",
    "consumers": [
-    "sub_801A780",
-    "sub_801A794"
+    "DestroyDingodileShieldCtrl",
+    "CreateDingodileShieldCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c",
@@ -8012,7 +8012,7 @@
    "consumers": [
     "CreatePlatform",
     "DestroyPlatform",
-    "sub_801B2E4"
+    "InitPlatform"
    ],
    "consumer_files": [
     "graphics/actor_part_1a878.c",
@@ -8085,11 +8085,11 @@
   {
    "address": "0x087E4B34",
    "size": 120,
-   "name": "gStaticData_087E4B34",
+   "name": "gLaunchPadVtable",
    "consumers": [
-    "sub_801B984",
-    "sub_801BAB0",
-    "sub_801BAD0"
+    "SpawnLaunchPad",
+    "DestroyLaunchPad",
+    "InitLaunchPad"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"

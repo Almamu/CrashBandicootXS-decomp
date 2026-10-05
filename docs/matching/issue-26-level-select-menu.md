@@ -12,9 +12,9 @@ transcriptions** with their C reconstructions kept under
 **Update (old_agbcc retry, docs/matching/old-agbcc-retry.md):** the
 object is now built with `tools/agbcc/bin/old_agbcc` (Makefile
 `OLD_AGBCC_OBJS`), the compiler this region was originally built with.
-All 22 plain-C functions match under it; `sub_801B984` needed its zero/id
+All 22 plain-C functions match under it; `SpawnLaunchPad` needed its zero/id
 pins dropped to do so, and the pins/barriers of `UpdateCameraLead`,
-`sub_801B984`, `UpdateLevelSelect`, `DrawLevelSelectRecord` and `DrawLevelSelect` turned out
+`SpawnLaunchPad`, `UpdateLevelSelect`, `DrawLevelSelectRecord` and `DrawLevelSelect` turned out
 to be unnecessary and were removed. The three NAKED functions still don't
 match under old_agbcc (see "Parked" below) and are unchanged.
 
@@ -24,19 +24,19 @@ Three gcc 2.x C++ classes (method tables, virtual calls through the
 `_call_via_r1`/`AD80`/`AD88` call-via-register thunks, inlined member
 functions):
 
-- **`struct follow_child`** (`sub_801B85C`-`sub_801B980`, method table
-  `gCameraLeadVtable`, 0x80 bytes) - the child object `sub_8017600`
+- **`struct follow_child`** (`sub_801B85C`-`GetCameraLeadOffset`, method table
+  `gCameraLeadVtable`, 0x80 bytes) - the child object `InputCtrlStateStart`
   (`actor_part_17524.c`) spawns. It registers itself as
   `gCamera`'s follow target (`+0x10`) and each frame
   (`UpdateCameraLead`, table slot `+0x18`) eases a Q8 x offset from the
   player (`+0x7C`) toward a target (`+0x78`, clamped to 0xA00-0x3200 by
-  `sub_801B960`) by 0x200, then copies the player's position. The
+  `SetCameraLeadOffset`) by 0x200, then copies the player's position. The
   destructor (`DestroyCameraLead`, slot `+0x50`) hands the follow target back
   to the player.
-- **A 0x78-byte sprite subclass** (`sub_801B984`-`sub_801BAD0`, method
-  table `gStaticData_087E4B34`) - a factory that inlines the constructor
+- **A 0x78-byte sprite subclass** (`SpawnLaunchPad`-`InitLaunchPad`, method
+  table `gLaunchPadVtable`) - a factory that inlines the constructor
   and starts animation 0 of `**gSpriteBankSet + 0x150`, and a slot
-  `+0x70` handler (`sub_801BA60`) that fires the player's method 13 with
+  `+0x70` handler (`CheckLaunchPadContact`) that fires the player's method 13 with
   `(0, 0x19, 0)` when the player (flags bit 7 set) overlaps its hit box.
 - **`struct level_menu`** (`RunLevelSelect`-`LevelSelectCursorRight`, 0xAC bytes) - the
   paged level-select screen docs/rom_map.md found from the other side
@@ -60,9 +60,9 @@ functions):
   `LevelSelectLoop`.
 
 UNUSED (no `bl`/`.4byte` reference in `asm/`, `data/` or `src/`, and no
-Thumb pointer anywhere in the ROM): `sub_801B85C`, `sub_801B960`,
-`sub_801B980`, `sub_801BAD0`. Matched anyway. `UpdateCameraLead`,
-`DestroyCameraLead`, `sub_801BA60` and `sub_801BAB0` are reached only through
+Thumb pointer anywhere in the ROM): `sub_801B85C`, `SetCameraLeadOffset`,
+`GetCameraLeadOffset`, `InitLaunchPad`. Matched anyway. `UpdateCameraLead`,
+`DestroyCameraLead`, `CheckLaunchPadContact` and `DestroyLaunchPad` are reached only through
 their method tables.
 
 ## Techniques
@@ -79,7 +79,7 @@ their method tables.
   expands with the constant first. Used for `sub_801BAC4` (now one
   line) and for the key/flag tests in the NON_MATCHING reconstructions;
   it closes the ordering in isolation but doesn't by itself fix register
-  choice (`sub_801B984`'s masks still need the pinned/`mov`+`neg` form,
+  choice (`SpawnLaunchPad`'s masks still need the pinned/`mov`+`neg` form,
   since `Opaque` there shifts the allocation).
 - **Inline member helpers** reproduce the ROM recomputing field addresses
   after every call (the `static inline` anti-CSE technique from
@@ -106,7 +106,7 @@ their method tables.
   `self + 0x24` above it (`DrawLevelSelect`); a non-volatile barrier or one
   on the derived pointer does not.
 - The rest is the usual register pinning (`ResetCameraLead`, `UpdateCameraLead`,
-  `sub_801B984`, `UpdateLevelSelect`, `UpdateLevelSelectPageArrows`, `DrawLevelSelectRecord`). No pins
+  `SpawnLaunchPad`, `UpdateLevelSelect`, `UpdateLevelSelectPageArrows`, `DrawLevelSelectRecord`). No pins
   on `r7`.
 
 ## Parked (NAKED + NON_MATCHING C)

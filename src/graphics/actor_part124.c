@@ -17,7 +17,7 @@
  * volume calculator, `UpdatePeriodicSpawner`'s conditional `_call_via_r4`
  * trigger) and one instance of the "flag active + bitmap-set" idiom
  * (`UpdateKnockedEnemyCtrl`) already matched as real C once before, in
- * `actor_part27c.c`'s `sub_8018884`.
+ * `actor_part27c.c`'s `UpdateOneShotAnimCtrl`.
  *
  * All 19 matched as **real C**, no NAKED fallback needed anywhere in
  * this file - smaller and more resistant-shape-free than most of this
@@ -212,7 +212,7 @@ extern void InitCtrl(void *self);
  * unconditionally resets `self+0xc` right back to
  * `gCtrlVtable` on every call, so this function's own store
  * never survives past the call - the same harmless double-set pattern
- * already established for `sub_8018858`/`sub_8017A78`/`sub_8017FD4`/
+ * already established for `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`/
  * `DestroyEffectCtrl`. */
 void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
 {
@@ -224,7 +224,7 @@ void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
  * `gEnemyCtrlVtable` table `DestroyEnemyCtrl` above uses, then calls
  * `ResetEnemyCtrl` (clearing this object's own extension fields) and
  * returns `self` - the same "reset, re-point, hook, return self"
- * constructor shape already matched for `sub_801886C`/`sub_8018858`/
+ * constructor shape already matched for `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
  * `CreateKnockedEnemyCtrl`/`InitEffectCtrl`, with `ResetEnemyCtrl` playing the
  * `nullsub_N`-hook role those other constructors give a no-op. */
 void *CreateEnemyCtrl(struct trigger_ctrl *self)
@@ -404,10 +404,10 @@ extern void *_call_via_r1(void *addr, void *fn);
  * on `other` (`other+0xc` |= bit 0; unless `other+8`'s id sentinel-
  * checks as `0xffff`, also sets bit `other+8 & 0x1f` of word
  * `other+8 >> 5` in the `gEntityFlags+0x108` bitmap) - the exact
- * idiom `actor_part27c.c`'s `sub_8018884` already matches as real C.
+ * idiom `actor_part27c.c`'s `UpdateOneShotAnimCtrl` already matches as real C.
  *
  * Needed the same `[[matching_decomp_register_pinning]]` treatment
- * `sub_8018884` itself documents needing: `other` pinned to `r4`
+ * `UpdateOneShotAnimCtrl` itself documents needing: `other` pinned to `r4`
  * (matching the ROM's own register choice, freed up again by the time
  * the bitmap-set idiom's own `0x108`-offset computation reuses it),
  * plus the same chain of `register ... asm("rN")` pins and the

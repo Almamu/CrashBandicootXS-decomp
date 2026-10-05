@@ -330,7 +330,7 @@ void UpdateWumpa(struct orbit_part *self)
  * clears bits 0/5 of `+0x28`, clears `+0x49`, tags `+0x4a`/`+0x4b` both 0
  * (always - `r7`/`r6` are hardcoded 0 locals, not passed through from any
  * argument), and - since that tag is always 0, never 0xff - never fires
- * the `sub_801191C` special-case call the ROM's own dead `cmp r7,#0xff`
+ * the `StartWumpaPayout` special-case call the ROM's own dead `cmp r7,#0xff`
  * still checks for. Finishes with the same `+0x29` nibble-from-
  * `GetPaletteSlot` bitfield combine `DropExtraLife`/`DropWumpa` already use,
  * then returns the new part.
@@ -359,7 +359,7 @@ extern void *OperatorNew(s32 size);
 extern struct actor *InitSpriteObj(struct actor *self);
 extern void AddToPartList(void *manager, void *value);
 extern void ResetWumpaPickup(struct orbit_part *self);
-extern void sub_801191C(struct actor *self);
+extern void StartWumpaPayout(struct actor *self);
 extern void ResetSpriteFrameTimer(struct orbit_part *part);
 extern void ResetSpriteFrameIndex(struct orbit_part *part);
 extern void SetSpriteAnimDone(struct orbit_part *part, u8 val);
@@ -413,7 +413,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     p->mode = mode;
     p->phase = phase;
     if (mode == 0xff)
-        sub_801191C(&p->base);
+        StartWumpaPayout(&p->base);
     p->slotNibble = GetPaletteSlot(gPaletteCache, p->bank->records->paletteId);
     return p;
 }
@@ -463,18 +463,18 @@ void SendWumpaToHud(struct orbit_part *self)
     ShowHudWumpa(gHud);
 }
 
-/* sub_801191C: sibling of SendWumpaToHud above - sets self->0x48 = 3 (mode)
+/* StartWumpaPayout: sibling of SendWumpaToHud above - sets self->0x48 = 3 (mode)
  * and self->0x49 = 0xa (a fixed countdown), no other side effects.
- * Already extern-declared as `void sub_801191C(struct actor *self)` in
+ * Already extern-declared as `void StartWumpaPayout(struct actor *self)` in
  * src/graphics/actor_part39.c. Matched: trivial leaf, no push/pop, plain
  * field stores. */
-void sub_801191C(struct actor *self)
+void StartWumpaPayout(struct actor *self)
 {
     *((u8 *)self + 0x48) = 3;
     *((u8 *)self + 0x49) = 0xa;
 }
 
-/* UpdateWumpaHop: address-adjacent to sub_801191C, a small self->0x4b/
+/* UpdateWumpaHop: address-adjacent to StartWumpaPayout, a small self->0x4b/
  * self->0x4a-driven table helper - copies a fixed 3-word table
  * (gWumpaHopWidths) onto the stack, computes self->y from a
  * gSineTable (shared trig-ish table, see UpdateExtraLife's own doc

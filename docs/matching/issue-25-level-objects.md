@@ -2,7 +2,7 @@
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1a794.s` are now in C
 (the file is deleted). **24 are real C, byte-exact; 1 is parked as a NAKED
-transcription** (`sub_801AB98`) with its near-miss C reconstruction kept
+transcription** (`ResolvePlatformCollision`) with its near-miss C reconstruction kept
 under `#if NON_MATCHING`. Verified with a clean `make compare`
 (`crashbandicootxs.gba: OK`). `CreatePlatform` was NAKED too until the
 old_agbcc retry (docs/matching/old-agbcc-retry.md): its object is now
@@ -15,11 +15,11 @@ The range is split by address into five objects so that
 
 | file | functions | state |
 |---|---|---|
-| `src/graphics/actor_part_1a794.c` | `sub_801A794`-`sub_801A874` (6) | matched |
+| `src/graphics/actor_part_1a794.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
 | `src/graphics/actor_part_1a878.c` | `CreatePlatform` | matched (old_agbcc) |
 | `src/graphics/actor_part_1ab34.c` | `CheckPlatformContact` | matched |
-| `src/graphics/actor_part_1ab98.c` | `sub_801AB98` | NAKED (C under NON_MATCHING) |
-| `src/graphics/actor_part_1b208.c` | `UpdatePlatform`-`sub_801B854` (16) | matched |
+| `src/graphics/actor_part_1ab98.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
+| `src/graphics/actor_part_1b208.c` | `UpdatePlatform`-`ClearPlatformMoverActive` (16) | matched |
 
 Shared structs, externs and the virtual-call macros live in
 `include/gobj_1a794.h`.
@@ -31,26 +31,26 @@ tables are gcc 2.x C++ vtables (`{s16 this-adjust; pad; fn}` entries,
 called through the `_call_via_r1`/`AD80`/`AD84`/`AD88` "call via
 r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
 
-- **`sub_801A794`/`DestroyDingodile`/`CreateDingodile`**: constructor/destructor
+- **`CreateDingodileShieldCtrl`/`DestroyDingodile`/`CreateDingodile`**: constructor/destructor
   bodies of two subclasses of the `sub_8017A8C` object family
-  (`actor_part27.c`), method tables `gStaticData_087E490C` and
+  (`actor_part27.c`), method tables `gDingodileShieldVtable` and
   `gDingodileVtable` (`DestroyDingodile` is the latter's +0x4C destructor).
   `CreateDingodile` is called from `graphics_loading_21280.c`.
-  `sub_801A7AC` is `sub_8017F14`'s mirror-gated velocity copy, but taking
+  `StartDingodileMotion` is `SetChaserMotionXFromSet`'s mirror-gated velocity copy, but taking
   its record index straight from `gStaticData_0816C418` (8-byte `{a, b}`
   pairs into the 12-byte `gStaticData_0816C3B8` vectors).
 - **`struct gobj`** (0x80 bytes, method table `gPlatformVtable`):
   `CreatePlatform(id, x, y, index, kind)` allocates and constructs one (it
-  inlines the constructor `sub_801B2E4`), looks its spawn record up through
+  inlines the constructor `InitPlatform`), looks its spawn record up through
   the level header at `*gEntityFlags` (u16 offset table at +8, records
   at +0xC), derives `type` (+0x78) from the record or forces it from `kind`
   (3/9-12 -> 4, 4 -> 2, 5 -> 3, 6 -> 6, 8 -> 7), and for types 1/5/6/7
-  attaches a `struct mover` (type 6 uses `sub_801961C` instead when
+  attaches a `struct mover` (type 6 uses `CreateCortexBossPlatformMover` instead when
   `GetBossIndex(gLevelState) == 1`). Callers: `trigger_effect.c`,
   `graphics_loading_21280.c`, `graphics_loading_21668.c`.
-  - `CheckPlatformContact` (+0x0C) gates `sub_801AB98` on the player
+  - `CheckPlatformContact` (+0x0C) gates `ResolvePlatformCollision` on the player
     (`gPlayer`) being active and within 0x7FFF on both axes.
-  - `sub_801AB98` resolves player-vs-object contact: two AABBs from
+  - `ResolvePlatformCollision` resolves player-vs-object contact: two AABBs from
     `GetSpriteHitbox`, overlap via `AabbOverlaps`, then a classification into
     push-left/right (1/2), land-on-top (8) or hit-from-below (4) using the
     player's anim-record collision box (`anim_rec` +4..+9) and the
@@ -72,12 +72,12 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   reverses once it exceeds `rangeX`/`rangeY` (twice the constructor's
   distance); kinds 5/6/7 add timed behaviour (see the function comment).
   `MovePlayerWithPlatform` drags the player along by the owner's per-frame
-  displacement while `active`. `sub_801B77C`/`sub_801B7A0` (+0x64/+0x5C)
+  displacement while `active`. `StartPlatformMoverMotionYFromSet`/`StartPlatformMoverMotionXFromSet` (+0x64/+0x5C)
   resolve a record and tail-call `StartCtrlTargetMotionY`/`StartCtrlTargetMotionX`.
 
 UNUSED (no `bl`/`.4byte` in `asm/`, no C caller, no Thumb pointer in the
-ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),
-`sub_801B6EC`, `sub_801B734`, `sub_801B854`.
+ROM): `SetDingodileStep`, `SetDingodileNextState`, `InitPlatform` (inlined instead),
+`SetPlatformMoverMotionYFromSet`, `SetPlatformMoverMotionXFromSet`, `ClearPlatformMoverActive`.
 
 ## Matching notes
 
@@ -97,14 +97,14 @@ ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),
   ROM reuses that address register), written that way explicitly.
 - **`UpdatePlatformMover`**: gcc's `abs()` expands to a branch here; the ROM's
   `asr/eor/sub` is the in-place `ABS32` macro (as in `actor_part50.c`).
-  The "mark actor gone" bitmap update is `sub_80178EC`'s signed-division
+  The "mark actor gone" bitmap update is `InputCtrlStateDead`'s signed-division
   idiom. The rest is register pins (commented in the source).
-- **`sub_801A7AC`**: `index` pinned to r5 and kept live with an empty
+- **`StartDingodileMotion`**: `index` pinned to r5 and kept live with an empty
   `asm("" : : "r"(index))` so the second lookup doesn't shift it in place.
 - **`sub_801B29C`**: `(flags2 >> 4) & 1` (a bitfield read gives
   `lsl #27; lsr #31`).
 
-## Parked: `sub_801AB98` (and, until the old_agbcc retry, `CreatePlatform`)
+## Parked: `ResolvePlatformCollision` (and, until the old_agbcc retry, `CreatePlatform`)
 
 **`CreatePlatform` is matched now.** Built with old_agbcc, the reload
 rotation described below comes out as in the ROM once every register pin
@@ -113,9 +113,9 @@ off - 696 vs 700 bytes, first difference at +0x60). The spawn-record lookup is p
 `recs + offsets[index]`. Two workarounds remain: the hand-built
 outgoing-argument block (old_agbcc also widens a `u8` stack argument to
 `str`; the struct and `MOVER_NEW` moved to `include/mover_new.h`, shared
-with `sub_801961C`), and the barrier on the palette nibble's `0xF`.
+with `CreateCortexBossPlatformMover`), and the barrier on the palette nibble's `0xF`.
 
-`sub_801AB98` stays NAKED: under old_agbcc its NON_MATCHING C is still
+`ResolvePlatformCollision` stays NAKED: under old_agbcc its NON_MATCHING C is still
 ~290 diff lines off (1608 vs 1648 bytes). The first divergence is
 structural rather than register choice - the ROM cross-jumps the
 `x + w - x' + 1` / `y + h - y'` overlap computations of both branches
@@ -125,14 +125,14 @@ the branch - and stripping the pins makes it worse, not better.
 The agbcc-era analysis of both:
 
 Both C reconstructions reproduce control flow, stack layout (including
-`sub_801AB98`'s 0x44-byte frame and all six spill slots, which needed the
+`ResolvePlatformCollision`'s 0x44-byte frame and all six spill slots, which needed the
 locals declared in slot order) and nearly every instruction. What's left
 is reload's choice of scratch register: gcc 2.x `allocate_reload_reg`
 walks the spill registers round-robin from `last_spill_reg`, so every
 `mov rN, r8` base copy and every `movs rN, #c; str rN, [sp, #x]` lands in
 a register decided by how many reloads came before it in the function.
 
-- `sub_801AB98`: the rotation is two steps off from the first constant
+- `ResolvePlatformCollision`: the rotation is two steps off from the first constant
   store on. The ROM loads the player's anim-record tag byte into r3 as a
   reload (so the next reload gets r0); this source's equivalent load is an
   ordinary pseudo, and pinning it to r3 fixes the instruction but not the
@@ -151,12 +151,12 @@ a register decided by how many reloads came before it in the function.
   spawn-record lookup needs `rec` to stay in the index register
   (`asm("" : "+r"(rec))`) to reproduce `add r8, r0`.
 
-`sub_801AB98` is transcribed instruction-for-instruction as a `NAKED`
+`ResolvePlatformCollision` is transcribed instruction-for-instruction as a `NAKED`
 function for the matching build.
 
-## Later pass: sub_801AB98 matched (last-five NAKED retry)
+## Later pass: ResolvePlatformCollision matched (last-five NAKED retry)
 
-`sub_801AB98` is now real C under old_agbcc (`actor_part_1ab98.o` joined
+`ResolvePlatformCollision` is now real C under old_agbcc (`actor_part_1ab98.o` joined
 `OLD_AGBCC_OBJS`). An r8 hard-register hold up to the first overlap test
 gives `result` r8 and `self` sb; both `FindLineCrossing` calls pass a
 reassigned `px`; the player position goes through a `PosPtr` inline

@@ -319,12 +319,12 @@ u16 GetZoomBgControl(struct zoom_bg *self)
     return self->bgcnt.raw;
 }
 
-u8 sub_801DE28(struct level_item *self)
+u8 IsLevelSelectEntrySelected(struct level_item *self)
 {
     return self->selected;
 }
 
-s32 sub_801DE2C(struct level_item *self)
+s32 GetLevelSelectEntryLevel(struct level_item *self)
 {
     return self->id;
 }
@@ -352,7 +352,7 @@ void AnimateLevelSelectEntry(struct level_item *self, s32 phase)
     DrawSpriteWithOffset(self->frame, 0, dy);
 }
 
-void sub_801DEA0(struct level_item *self, u8 selected)
+void SetLevelSelectEntrySelected(struct level_item *self, u8 selected)
 {
     self->selected = selected;
 }

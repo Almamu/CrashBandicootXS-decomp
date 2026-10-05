@@ -3,7 +3,7 @@
 This pass tried the hard-register hold from
 [late-naked-retry-3.md](late-naked-retry-3.md) on six drafts whose gap
 was register rotation or unused registers: `InitSaveMenuIcons` (#6, raw asm),
-`DrawPauseMenu` (#7), `RunRoom` (#37), `sub_801A114` (#24),
+`DrawPauseMenu` (#7), `RunRoom` (#37), `UpdateDingodileShield` (#24),
 `ApplyCrateCollision` (#12) and `SpawnFlamethrowerLabAssistant` (#31). Four closed. The raw
 `asm/code_3_1_10_4.s` is gone.
 
@@ -14,7 +14,7 @@ was register rotation or unused registers: `InitSaveMenuIcons` (#6, raw asm),
 | `InitSaveMenuIcons` | `src/graphics/settings_menu.c` (already old_agbcc) | old_agbcc | Was 5 halfwords off. The pre-header fix from [early-rom-naked-retry-2.md](early-rom-naked-retry-2.md) (plain `u8 *`/`u16 *` stores, an SImode `-16` mask local) left 6: the third icon's `frameIndex = 0`. Splitting the store (`if (frame)` cast store, else a store through a pointer pinned to r0) puts the address in r0 as in the ROM. The ROM reloaded the 0, which advanced reload's round-robin. The pinned version doesn't, so the next nibble mask took r1 where the ROM has r3. An r1 hold at that mask, for frame 0 only, fixes it. The hold's asm statements swapped two stack slots. Three bare `asm("")` at the top of the function restore the order. |
 | `DrawPauseMenu` | `src/graphics/settings_menu21.c` | both | Was 20 halfwords off. In each computed-x `set_icon_mgr_pos` call, an r2 hold over the x computation puts y in r2, and the address reloads then rotate as in the ROM (r4, r3, then r4/r6 for the `ldrsh` offset). The ROM also never ties x (r3) to the value it is computed from (r1). An extra `asm("" : : "r")` reference on `0xf0 - w` (first call, with `w` its own local) and on the 0x8c and `width` (second call) stops local-alloc tying them. |
 | `RunRoom` | `src/system/game_loop56.c` (object added to `OLD_AGBCC_OBJS`; only function in the file) | old_agbcc (agbcc 42 hw) | Was 15 halfwords off. 12 of them were the one-byte `direction` stack argument: as a QImode packed struct, the compound literal is built in a register before the slot address is computed. Adding a zero-length array member (`u8 pad[0]`) makes the struct BLKmode. The literal is then stored straight into the outgoing slot, address first, as in the ROM. The other 2 were the post-fade position copy. With an r0/r1 hold across the player-pointer load (and no r2 pin), both the global's address and the pointer land in r2. |
-| `sub_801A114` | `src/graphics/actor_part_1967c.c` (already old_agbcc) | both | Was 159 halfwords off. As the gap4 note said, the ROM gives out registers in the draft's order but starting at r7. Holding r5 and r6 across the box builders (from `a = GetSpriteAttackBox(other)` to just before `AabbOverlaps`) gives 16. The rest was the state-0 BLDCNT orr chain, which the ROM builds in r5. A block-scoped `register u32 acc asm("r5")`, set with the constant-init asm (`asm("" : "=r"(acc) : "0"(BLDCNT_TGT1_OBJ))`) so it is neither folded nor moved after the first constant, matches. The outside `bld` variable is gone. |
+| `UpdateDingodileShield` | `src/graphics/actor_part_1967c.c` (already old_agbcc) | both | Was 159 halfwords off. As the gap4 note said, the ROM gives out registers in the draft's order but starting at r7. Holding r5 and r6 across the box builders (from `a = GetSpriteAttackBox(other)` to just before `AabbOverlaps`) gives 16. The rest was the state-0 BLDCNT orr chain, which the ROM builds in r5. A block-scoped `register u32 acc asm("r5")`, set with the constant-init asm (`asm("" : "=r"(acc) : "0"(BLDCNT_TGT1_OBJ))`) so it is neither folded nor moved after the first constant, matches. The outside `bld` variable is gone. |
 
 ## Not closed (2)
 
@@ -28,7 +28,7 @@ was register rotation or unused registers: `InitSaveMenuIcons` (#6, raw asm),
 - The hold works for global-alloc as well as reload. A hard register
   that is live across a region conflicts with every pseudo live there,
   so holding callee-saved r5/r6 across calls models "the ROM leaves
-  these registers unused" (`sub_801A114`). The push/pop doesn't change,
+  these registers unused" (`UpdateDingodileShield`). The push/pop doesn't change,
   since the function already saves those registers.
 - A hold inside an inline that is expanded several times (or behind a
   constant `if`) still adds RTL, which can shift temporary numbering and
@@ -38,7 +38,7 @@ was register rotation or unused registers: `InitSaveMenuIcons` (#6, raw asm),
   decides which registers are unavailable. Where the ROM put a *reload*
   in a register (not a pseudo), use a hold. Where it put a pseudo in a
   register the allocator would not choose, use a pin
-  (`InitSaveMenuIcons`'s r0 address, `sub_801A114`'s r5 accumulator).
+  (`InitSaveMenuIcons`'s r0 address, `UpdateDingodileShield`'s r5 accumulator).
 - Not register-related, but new: a struct argument with a zero-length
   array member is BLKmode, and gcc stores a BLKmode compound literal
   directly into the argument slot, address first (`RunRoom`).
