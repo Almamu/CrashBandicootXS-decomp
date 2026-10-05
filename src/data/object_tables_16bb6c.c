@@ -12,13 +12,13 @@ struct entry_set
 };
 
 /* ResetEnemyCtrl's (actor_part124.c) entry set and its entries. */
-extern const u32 gStaticData_0816BB74[4][2];
+extern const u32 gEnemyCtrlMotionEntries[4][2];
 
-const struct entry_set gStaticData_0816BB6C = {
-    gStaticData_0816BB74, 0x100,
+const struct entry_set gEnemyCtrlMotionSet = {
+    gEnemyCtrlMotionEntries, 0x100,
 };
 
-const u32 gStaticData_0816BB74[4][2] = {
+const u32 gEnemyCtrlMotionEntries[4][2] = {
     { 0, 0 },
     { 1, 0 },
     { 40, 40 },
@@ -47,7 +47,7 @@ const u8 gCrateKindUnbreakable[22] = {
 };
 
 /* sub_0800D18C (game_loop47.c): the kind of each of 42 ids. */
-const s32 gStaticData_0816BBF0[42] = {
+const s32 gActionCtrlStateAttackKinds[42] = {
     1, 1, 1, 1, 1, 2, 1, 2, 5, 2, 2, 2, 3, 4,
     4, 4, 1, 1, 1, 1, 1, 1, 5, 1, 5, 5, 2, 1,
     2, 0, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 0,

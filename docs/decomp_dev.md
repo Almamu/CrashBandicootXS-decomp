@@ -391,7 +391,7 @@ constant is hard-coded so the no-ROM path gets the same totals. When
 `baserom.gba` is present, the script checks that the trailing `0xFF` run
 really starts there. Smaller all-`0x00` runs inside still-baserom blobs
 (151 runs of 256+ bytes, 64,716 bytes in total, the largest 2,664 bytes,
-nearly all inside the big `gStaticData_0817E78C`/`gSpriteBankTable`
+nearly all inside the big `gLanguageSelectPalette3`/`gSpriteBankTable`
 blobs) still count as data: they sit inside real data, and there are no
 other `0xFF` runs. Apart from `src/data/`, no C file puts data in the
 ROM: agbcc emits no `.rodata`/`.data` for the code files, and

@@ -31,10 +31,10 @@ extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern u16 gStaticData_0817C512[];
-extern u16 gStaticData_0817C532[];
-extern u16 gStaticData_0817C552[];
-extern u16 gStaticData_0817C572[];
+extern u16 gContinuePromptPalette0[];
+extern u16 gContinuePromptPalette1[];
+extern u16 gContinuePromptPalette2[];
+extern u16 gContinuePromptPalette3[];
 
 /* The other half of the continue prompt's setup, called from
  * `InitContinuePrompt` (actor_part87.c): flushes the shared VRAM upload cursor
@@ -84,10 +84,10 @@ void InitContinuePromptGraphics(struct continue_prompt *self)
         u16 *destB = (u16 *)cache->slots[2];
 
         for (i = 0; i < 16; i++) {
-            destA[i] = gStaticData_0817C512[i];
-            destA[i + 0x10] = gStaticData_0817C532[i];
-            destB[i] = gStaticData_0817C552[i];
-            destB[i + 0x10] = gStaticData_0817C572[i];
+            destA[i] = gContinuePromptPalette0[i];
+            destA[i + 0x10] = gContinuePromptPalette1[i];
+            destB[i] = gContinuePromptPalette2[i];
+            destB[i + 0x10] = gContinuePromptPalette3[i];
         }
     }
     UploadPaletteCache(gPaletteCache);

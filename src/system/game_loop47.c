@@ -18,7 +18,7 @@
  *
  * - Looks up a per-state jump-table id from `self`'s hitbox tag (a
  *   7-case table selecting either the just-built self AABB or a
- *   fallback `gStaticData_0816B2F8` box), tests it for overlap with the
+ *   fallback `gEmptySpriteBox` box), tests it for overlap with the
  *   player's own hitbox-record box (`AabbOverlaps`), and if it overlaps,
  *   dispatches to one of `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`/`BreakCrateInStack`/
  *   `ExplodeCrate`/`OpenCheckpointCrate`/a flag-only case, keyed by an edge-code
@@ -139,10 +139,10 @@ struct d18c_flag8
 
 extern void SetAabbPos(void *buf, s32 x, s32 y);
 extern void SetAabbSize(void *buf, s32 w, s32 h);
-extern s32 gStaticData_0816BBF0[];
+extern s32 gActionCtrlStateAttackKinds[];
 extern u8 gCrateKindUnbreakable[];
 extern u8 gStaticData_0816BF00[];
-extern u8 gStaticData_0816B2F8[];
+extern u8 gEmptySpriteBox[];
 extern s32 gCrateHitResponse[][7];
 extern void *GetSpriteFrame(void *part);
 extern u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b);
@@ -183,17 +183,17 @@ extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 
         case 1:                                                                \
         case 2:                                                                \
         case 3:                                                                \
-            (dst) = (struct d18c_quad *)gStaticData_0816B2F8;                  \
+            (dst) = (struct d18c_quad *)gEmptySpriteBox;                  \
             break;                                                             \
         case 4:                                                                \
             (dst) = (struct d18c_quad *)(_info + 0x1c);                        \
             break;                                                             \
         case 5:                                                                \
         case 6:                                                                \
-            (dst) = (struct d18c_quad *)gStaticData_0816B2F8;                  \
+            (dst) = (struct d18c_quad *)gEmptySpriteBox;                  \
             break;                                                             \
         default:                                                               \
-            (dst) = (struct d18c_quad *)gStaticData_0816B2F8;                  \
+            (dst) = (struct d18c_quad *)gEmptySpriteBox;                  \
             break;                                                             \
         }                                                                      \
     }                                                                          \
@@ -346,7 +346,7 @@ void sub_0800D18C(struct crate *self, s32 idx)
         kind = 6;
     else
     {
-        kind = gStaticData_0816BBF0[idx];
+        kind = gActionCtrlStateAttackKinds[idx];
         if (self->kind == 0xd && kind == 5 && D18C_P->dir == 4)
             kind = 2;
     }

@@ -25,7 +25,7 @@ time), the control flow for the "state 0 or 0x11" test comes out right.
 In the ROM, both paths set the flag address before the branch. Two more
 changes were needed:
 
-- the record lookup is `*(gStaticData_0816B304 + i)`, which loads the
+- the record lookup is `*(gCtrlMotionRecords + i)`, which loads the
   table address after the index is computed, as the ROM does;
 - three empty `asm("" : : "r"(self))` extra references (next to the
   `next31 = f` store) settle the last register ties (the flag byte's

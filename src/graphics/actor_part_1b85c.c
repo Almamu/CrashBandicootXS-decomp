@@ -342,11 +342,11 @@ extern union key_state gKeys;
 extern u8 gCameraLeadVtable[];
 extern u8 gStaticData_087E4B34[];
 extern struct level_info gLevelTable[];
-extern u8 gStaticData_0816C56C[];
-extern u8 gStaticData_0816C484[];
-extern u32 gStaticData_0816C548[];
-extern u32 gStaticData_0816C558[];
-extern struct xy_pair gStaticData_0816C498;
+extern u8 gLevelSelectPalette[];
+extern u8 gMenuSkyBg[];
+extern u32 gLevelSelectWorldAnims[];
+extern u32 gLevelSelectRankAnims[];
+extern struct xy_pair gLevelSelectWorldPos;
 extern struct xy_pair gStaticData_0816C4A0;
 extern struct xy_pair gStaticData_0816C4A8;
 extern struct xy_pair gStaticData_0816C4B0;
@@ -780,7 +780,7 @@ static inline void IconReserve(struct bitmap_font **m)
 
 static inline void LoadMenuPalette(struct tile_cache *cache)
 {
-    CpuSet(gStaticData_0816C56C, cache->palette, 0x10);
+    CpuSet(gLevelSelectPalette, cache->palette, 0x10);
 }
 
 u8 RunLevelSelect(s32 *arg)
@@ -873,7 +873,7 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     self->result = 0;
     self->bg1 = CreateLevelSelectPageBg(OperatorNew(0x28), 0, 0x1D);
     InitBgSetup(bg0cnt, 2, 0x1E, 2, 3);
-    LoadGraphicsPackage(bg0cnt, gStaticData_0816C484);
+    LoadGraphicsPackage(bg0cnt, gMenuSkyBg);
     self->scroll = 0;
     self->panel = CreateLevelSelectCursor(OperatorNew(0x54));
     self->bg2 = InitZoomBg(OperatorNew(0x8C), 3, 0x1F);
@@ -899,8 +899,8 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
         }
     }
     self->sprites[0]->anim = AnimTable(0x234);
-    SetAnim(self->sprites[0], gStaticData_0816C548[self->world]);
-    SetEntityPixelPos(self->sprites[0], gStaticData_0816C498.x, gStaticData_0816C498.y);
+    SetAnim(self->sprites[0], gLevelSelectWorldAnims[self->world]);
+    SetEntityPixelPos(self->sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
     self->sprites[1]->anim = AnimTable(0x234);
     SetAnim(self->sprites[1], 10);
     SetEntityPixelPos(self->sprites[1], gStaticData_0816C4A0.x, gStaticData_0816C4A0.y);
@@ -1313,7 +1313,7 @@ void LoadLevelSelectRecord(struct level_menu *self)
     if (self->rank != 5)
     {
     set_rank_icon:
-        SetAnim(self->sprites[4], gStaticData_0816C558[self->rank]);
+        SetAnim(self->sprites[4], gLevelSelectRankAnims[self->rank]);
         if (self->flag1IconY == self->gemIconY)
         {
             self->flag1IconY -= 6;

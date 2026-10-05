@@ -324,7 +324,7 @@ two), the animation table (`struct anim_table_record`, `actor_anim.h`,
   (`actor_self.h`: duration, index into table_B, loop threshold and
   base, OAM attribute bits). Nothing stores a count.
 - **table_B**: the frames. Record 0's points at compressed frames
-  (`gStaticData_080C2758 + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the
+  (`gPolarPlayerRleFrames + RLE_SPRITES_0C2758_FRAME_nnn`, set C for the
   second family), so it's a `const u8 *const []`. Every other record's
   is `u32` byte offsets into the family's framed sheet
   (`graphics/unknown/00_0b2120/`, `01_14174c/`, decompressed), written
@@ -358,7 +358,7 @@ address in the `/* Data */` block. The pixel conversion is done by
 the 24 cutscene pictures (Mode 4 bitmaps,
 `src/data/cutscene_pictures_5a9f70.c`, see "Cutscenes" below), the actor-category backgrounds
 (see "Category backgrounds" at the end), and the uncompressed tile pools
-of the old `gStaticData_0817E78C` blob (see "Raw tile pools" below).
+of the old `gLanguageSelectPalette3` blob (see "Raw tile pools" below).
 
 This section records the grit feasibility study and the pipeline that
 came out of it. The throwaway scripts behind the measurements aren't in
@@ -510,9 +510,9 @@ Per asset kind:
 
 **Never** use grit's `-gzl`/`-pzl`/`-mzl` or its `-ftc` for LZ77 assets.
 
-### Raw tile pools (`gStaticData_0817E78C`)
+### Raw tile pools (`gLanguageSelectPalette3`)
 
-The 3.3 MB `gStaticData_0817E78C` blob (`0x0817E78C`-`0x084A5600`, see
+The 3.3 MB `gLanguageSelectPalette3` blob (`0x0817E78C`-`0x084A5600`, see
 docs/data_map.md) is five C objects: three of tiles and two of room data.
 None of it is compressed, so there is no gbagfx step: grit's `-ftb`
 output goes straight to `tools/bin2c.py`, and the room data is generated
@@ -520,7 +520,7 @@ C (see "Level data").
 
 | object | contents | source |
 |---|---|---|
-| `level_tilesets_17e78c.c` | `gStaticData_0817E78C` (`u16[16]`), tile sets 1-3 | `graphics/level_tilesets/tileset{1,2,3}_*.png` |
+| `level_tilesets_17e78c.c` | `gLanguageSelectPalette3` (`u16[16]`), tile sets 1-3 | `graphics/level_tilesets/tileset{1,2,3}_*.png` |
 | `level_rooms_24b638.c` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
 | `level_tilesets_270f08.c` | tile sets 4-5 | `graphics/level_tilesets/tileset{4,5}_*.png` |
 | `level_rooms_2b91d0.c` | room data, 8 rooms | same |
@@ -585,12 +585,12 @@ icon positions (`struct icon_pos`), OBJ sizes, motion records and the
 {a, b} entry pairs of the entry sets (see `entry_set_16b92c.c`),
 collision kind tables, and vectors. Labels the code has no symbol for,
 because it only reaches them through a pointer, are named after their
-address: the pairs in `motion_records_16b304.c` (`gStaticData_0816B514`,
-`gStaticData_0816B790`), which `entry_set_16b92c.c` now points at by
+address: the pairs in `motion_records_16b304.c` (`gActionCtrlMotionEntries`,
+`gPlayerCtrlMotionEntries`), which `entry_set_16b92c.c` now points at by
 name, the level animation rows `gStaticData_0816C0B0` that
 `action_table_16bf20.c` points at, and the two link-cable names
 `gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.c`). A few
-byte tables sit at odd addresses (`gStaticData_0816C30B`); brace-list `u8`
+byte tables sit at odd addresses (`gTinyHopTargets`); brace-list `u8`
 arrays aren't aligned by agbcc, so they stay in place.
 
 ### Level data
@@ -757,7 +757,7 @@ countdown slots of `graphics_loading_35d1c.c`: `struct delta_record`s
 (a hold count, positions, velocities, per-frame deltas), in sequences
 that end with a zero hold. The seed tables (`popup_glyphs_17cf40.c`'s
 `gTitleLogoPieceSeeds`, `slot_seeds_17d6c0.c`'s `gVvLogoPieceSeeds`)
-point at each sequence by name now (`gStaticData_0817D0F8`, ...), not at
+point at each sequence by name now (`gTitleLogoPieceMotion0`, ...), not at
 `gUniversalLogoBg + 0x174`-style offsets. The six language names
 after the second set are the strings `digit_glyphs_17e714.c` points at
 (they aren't digit glyphs). The four OBJ sprite packages in front of
@@ -822,8 +822,8 @@ stream padding" below.
 ### Compressed sprite frames
 
 The three blobs next to the category backgrounds that were called
-"rotation strips" (`gStaticData_080C2758`, `gStaticData_080DA1D8`,
-`gStaticData_0815A050`) are sets of **zero-run-compressed OBJ frames**,
+"rotation strips" (`gPolarPlayerRleFrames`, `gYetiRleFrames`,
+`gJetpackPlayerRleFrames`) are sets of **zero-run-compressed OBJ frames**,
 stored back to back (docs/data_map.md has how this was found). A frame
 is:
 
@@ -840,7 +840,7 @@ The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
 `actor_part127.c`, `actor_part128.c` and `graphics_loading_3686c.c`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and
-`gStaticData_0817A880`) point at the frame headers.
+`gYetiFrames`) point at the frame headers.
 
 Each set is one PNG in `graphics/rle_sprites/`, `<addr>_frames.png`:
 4bpp indexed, one frame per `w*8` x `h*8` block, the frames stacked top to
@@ -864,8 +864,8 @@ the literal run, and the frame's leading zeros are always a zero run. It
 rebuilds all 344 frames byte for byte. An edited frame compresses to a
 different length, which moves every later frame, so pointers into a set
 must use the generated offsets: `frame_table_17a880.c` writes
-`gStaticData_080DA1D8 + RLE_SPRITES_0DA1D8_FRAME_nnn`, and the other two
-frame tables (`gStaticData_0817941C`, `gStaticData_0817BA44`, in the
+`gYetiRleFrames + RLE_SPRITES_0DA1D8_FRAME_nnn`, and the other two
+frame tables (`gPolarPlayerFrames`, `gJetpackPlayerFrames`, in the
 category family files) use `RLE_SPRITES_0C2758_FRAME_nnn` /
 `RLE_SPRITES_15A050_FRAME_nnn` the same way.
 

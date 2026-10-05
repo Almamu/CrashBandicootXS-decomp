@@ -18,7 +18,7 @@
  * already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` accessors
  * (src/graphics/actor_part17.c) - same "look up an 8-byte record from
  * self+4's array, translate its type word through the shared
- * gStaticData_0816B304 table, then trigger via self+0xc's anchor pair"
+ * gCtrlMotionRecords table, then trigger via self+0xc's anchor pair"
  * shape, just reusing two *different* pairs of that anchor record
  * (part+0x28/+0x2c vs part+0x30/+0x34) and two different words of the
  * same 8-byte record (word 0 vs word 1) - this resolves two more of the
@@ -32,7 +32,7 @@
  * `self+0x84`: it's not a single small record (the doc's original
  * guess, based on a different, unrelated caller elsewhere), but a
  * per-instance array of pointers, direct-indexed by `mode`, that plays
- * the same "table entry" role `gStaticData_0816B304[type]` plays for
+ * the same "table entry" role `gCtrlMotionRecords[type]` plays for
  * `sub_800C8AC`/`sub_800C8BC` - i.e. a per-object override table
  * parallel to the shared global one. */
 
@@ -62,7 +62,7 @@ void sub_800C8BC(void *selfArg, s32 mode)
 }
 
 /* Caches `mode` into `self->0x68`, then triggers directly (no
- * gStaticData_0816B304 lookup): reads the anchor's part+0x50/+0x54
+ * gCtrlMotionRecords lookup): reads the anchor's part+0x50/+0x54
  * pair for the offset/fn, and indexes `self->0x84`'s own pointer array
  * by `mode` for the table-entry argument. */
 void SetEnemyAnimMode(void *selfArg, s32 mode)

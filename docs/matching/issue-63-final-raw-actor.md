@@ -131,7 +131,7 @@ trampoline slot via `_call_via_r1` (the same `icon_slot` shape
 (`gPaletteCache`, `struct palette_cache`) and pins its first four
 slots (`ClaimPaletteSlot`), hand-seeds those same four slots with four fixed
 32-byte tile patterns straight from ROM data
-(`gStaticData_0817C512`/`532`/`552`/`572`) via a 16-iteration loop with
+(`gContinuePromptPalette0`/`532`/`552`/`572`) via a 16-iteration loop with
 six independent running pointers, flushes the cache, sets the fade
 overlay's `dispcnt`'s OBJ-enable bit, and finally flushes/double-syncs
 the OAM shadow buffer (`gOamBuffer`).

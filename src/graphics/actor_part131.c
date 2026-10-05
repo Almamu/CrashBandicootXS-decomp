@@ -103,7 +103,7 @@ extern void FlushVramDmaQueue(void);
  * with that the "many live values across calls" allocation falls out
  * of plain C. */
 extern struct vram_upload_cursor *gObjVramCursor;
-extern u8 gStaticData_0817C510[];
+extern u8 gContinuePromptCursorText[];
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
@@ -141,7 +141,7 @@ void DrawContinuePrompt(struct continue_prompt *self)
     if (self->selection == 0)
     {
         set_icon_mgr_pos(self->icons, 0x90, 0x87);
-        ICON_TEXT_CALL(self->icons, 2, gStaticData_0817C510);
+        ICON_TEXT_CALL(self->icons, 2, gContinuePromptCursorText);
     }
     set_icon_mgr_pos(self->icons, 0x98, 0x87);
     ICON_TEXT_CALL(self->icons, 2, GetUiText(0x29));
@@ -149,7 +149,7 @@ void DrawContinuePrompt(struct continue_prompt *self)
     if (self->selection == 1)
     {
         set_icon_mgr_pos(self->icons, 0x90, 0x91);
-        ICON_TEXT_CALL(self->icons, 2, gStaticData_0817C510);
+        ICON_TEXT_CALL(self->icons, 2, gContinuePromptCursorText);
     }
     set_icon_mgr_pos(self->icons, 0x98, 0x91);
     ICON_TEXT_CALL(self->icons, 2, GetUiText(0x2a));
@@ -546,7 +546,7 @@ asm(".align 2, 0");
 extern s32 FontTextHeight(struct bitmap_font *mgr, const u8 *text);
 extern s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
 extern void *OperatorNew(s32 size);
-extern u8 gStaticData_0817CF3C[];
+extern u8 gCreditsEmptyText[];
 
 #define ICON_TEXT_CALL3(mgrExpr, n, a, b)                                      \
     ({                                                                          \
@@ -605,8 +605,8 @@ void UpdateCreditsText(struct credits_screen *self)
         lineStart = lineStart->next;
     tail = lineStart;
 
-    widthA = FontTextHeight(gSmallFont, gStaticData_0817CF3C);
-    widthB = FontTextHeight(gLargeFont, gStaticData_0817CF3C);
+    widthA = FontTextHeight(gSmallFont, gCreditsEmptyText);
+    widthB = FontTextHeight(gLargeFont, gCreditsEmptyText);
     maxHeight = widthA;
     penX = 0;
     if (*(const u8 *)self->streamCursor == 0)

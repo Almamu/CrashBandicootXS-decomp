@@ -12,7 +12,7 @@
  * `gUnknown_0300157C`'s spawn-budget counter. Seeds the row/column
  * dimensions (`gUnknown_03001528`/`gUnknown_0300152C`) from
  * `gAirshipPicture`'s first two halfwords, allocates the 0x1c-byte
- * tracker object, wires its event table (`gStaticData_0817C3E4`) and
+ * tracker object, wires its event table (`gAirshipKeyframes`) and
  * part table (`gUnknown_03001580`) pointers plus a fixed `+0x18` flag,
  * registers it via `SetActorAnim`, and stores it into
  * `gAirship`. Resets both boss-weapon state globals
@@ -41,7 +41,7 @@ extern void SetActorAnim(void *self, s32 idx);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void LoadAirshipGraphics(void);
 extern const s16 gAirshipPicture[];
-extern struct anim_frame_record gStaticData_0817C3E4[];
+extern struct anim_frame_record gAirshipKeyframes[];
 extern u32 gUnknown_03001580[];
 
 static inline void BossSetState(s32 st, s32 idx)
@@ -82,7 +82,7 @@ void CreateAirship(s32 level)
     gUnknown_0300152C = gAirshipPicture[1];
     slot = &gAirship;
     t = AllocActor(0x1c);
-    InitAnimPart(t, gStaticData_0817C3E4, gUnknown_03001580, 1);
+    InitAnimPart(t, gAirshipKeyframes, gUnknown_03001580, 1);
     *slot = t;
     BossSetState(0, 0);
     LoadAirshipGraphics();

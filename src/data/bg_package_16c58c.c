@@ -6,15 +6,15 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gStaticData_0861BD48[];
-extern const u8 gStaticData_0862556C[];
-extern const u8 gStaticData_0863053C[];
+extern const u8 gLevelSelectPageBgPalette[];
+extern const u8 gLevelSelectPageBgTiles[];
+extern const u8 gLevelSelectPageBgMap[];
 
 /* BG graphics package loaded by DestroyLevelSelectPageBg (actor_part_1cee0.c). */
-const struct bg_package gStaticData_0816C58C = {
+const struct bg_package gLevelSelectPageBg = {
     0x20,
     0x20,
-    (void *)gStaticData_0861BD48,
-    (void *)gStaticData_0862556C,
-    (void *)gStaticData_0863053C,
+    (void *)gLevelSelectPageBgPalette,
+    (void *)gLevelSelectPageBgTiles,
+    (void *)gLevelSelectPageBgMap,
 };

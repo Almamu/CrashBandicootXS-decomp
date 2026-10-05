@@ -16,15 +16,15 @@ struct entry_set
 };
 
 /* Their entries, in motion_records_16b304.c. */
-extern const u32 gStaticData_0816B514[][2];
-extern const u32 gStaticData_0816B790[][2];
+extern const u32 gActionCtrlMotionEntries[][2];
+extern const u32 gPlayerCtrlMotionEntries[][2];
 
 /* The sets PlayRoom (game_loop39.c) gives the two HUD widgets it
  * builds, through SetCtrlAnimSet (which stores them at +0x04). */
-const struct entry_set gStaticData_0816B92C = {
-    gStaticData_0816B514, 0x100,
+const struct entry_set gActionCtrlMotionSet = {
+    gActionCtrlMotionEntries, 0x100,
 };
 
-const struct entry_set gStaticData_0816B934 = {
-    gStaticData_0816B790, 0x100,
+const struct entry_set gPlayerCtrlMotionSet = {
+    gPlayerCtrlMotionEntries, 0x100,
 };

@@ -674,7 +674,7 @@ plain C didn't converge.
   to the already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
   (`actor_part17.c`); `SetEnemyAnimMode` caches into `self+0x68` and fires
   `_call_via_r3` directly, indexing `self+0x84`'s own pointer array by
-  `mode` rather than going through the shared `gStaticData_0816B304`
+  `mode` rather than going through the shared `gCtrlMotionRecords`
   table the other two use. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 2" section for the full writeup.

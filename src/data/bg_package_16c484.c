@@ -6,17 +6,17 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gStaticData_0861BADC[];
-extern const u8 gStaticData_0861C30C[];
-extern const u8 gStaticData_0862FB24[];
+extern const u8 gMenuSkyBgPalette[];
+extern const u8 gMenuSkyBgTiles[];
+extern const u8 gMenuSkyBgMap[];
 
 /* BG0 graphics package shared by LoadSaveMenuBg (settings_menu2.c),
  * LoadLanguageSelectBg (counter_selector_setup.c), RunLevelSelect
  * (actor_part_1b85c.c) and settings_menu13.c. */
-const struct bg_package gStaticData_0816C484 = {
+const struct bg_package gMenuSkyBg = {
     0x20,
     0x14,
-    (void *)gStaticData_0861BADC,
-    (void *)gStaticData_0861C30C,
-    (void *)gStaticData_0862FB24,
+    (void *)gMenuSkyBgPalette,
+    (void *)gMenuSkyBgTiles,
+    (void *)gMenuSkyBgMap,
 };

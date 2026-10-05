@@ -3,7 +3,7 @@
 /*
  * ROM 0x082BF120-0x084A5600: the sprite tile pool and the 125 OBJ
  * palettes. Linked in ROM order between data/data.s sections by ldscript.txt -
- * see docs/data.md and docs/data_map.md ("gStaticData_0817E78C").
+ * see docs/data.md and docs/data_map.md ("gLanguageSelectPalette3").
  *
  * The sprite-bank table gSpriteBankTable (sprite_banks_4a5600.c) starts
  * with {banks, tileBase = gSpriteBank00Tiles, palettes =

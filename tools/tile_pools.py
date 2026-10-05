@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extracts the raw tile pools inside gStaticData_0817E78C (0x0817E78C-0x084A5600)
+"""Extracts the raw tile pools inside gLanguageSelectPalette3 (0x0817E78C-0x084A5600)
 from baserom.gba as indexed PNGs, the editable sources that graphics.mk
 rebuilds with grit (see docs/data.md, "Resources (grit-style)"):
 
