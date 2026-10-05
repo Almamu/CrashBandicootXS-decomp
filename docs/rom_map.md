@@ -701,7 +701,7 @@ category-descriptor but much smaller and never previously noticed.
 completely separate from the `gUnknown_030012xx` struct this whole
 session has tracked. The function accumulates and clamps fixed-point
 values (range checks against constants like `0x98`/`0x3F`/`0x69`, then
-`>>0xC` scaling) against a `gStaticData_0817C4B0`-family value - reads
+`>>0xC` scaling) against a `gHovercraftBox`-family value - reads
 as a **camera-follow or scroll-velocity smoothing computation**
 (position easing), structurally similar in *purpose* to the
 `CollidePartWithPlayer`/`sub_80096C0` camera-clamp candidate found independently
@@ -805,8 +805,8 @@ mixed-scalar/pointer descriptor-cluster shape as `gStaticData_0817C4xx`
 **vtable-dispatched 8 bytes before the documented `gJetpackBalloonStateFuncs`
 start** - extends that table's known range slightly earlier than
 previously catalogued. It opens by accumulating two pairs of globals
-(`gAirshipX += gUnknown_03001558`,
-`gAirshipY += gUnknown_0300155C`) - a **third position-
+(`gAirshipX += gAirshipVelX`,
+`gAirshipY += gAirshipVelY`) - a **third position-
 accumulation instance** this session, after `CollidePartWithPlayer`/`sub_80096C0`
 in `game_loop` and `sub_8032C0C` in `actor`. These addresses sit only
 ~0xAC bytes before the `gHovercraftX`-`030015EC` family
@@ -849,7 +849,7 @@ reinforce known structures (a third `gUnknown_030014xx` tier-threshold
 sound-cue actor; direct confirmation that `AirshipStateCannon`/`sub_8030E08`
 are the real consumers of the `gAirshipX`/`03001544`
 accumulator pair flagged as a guess last round, clamping toward a
-camera-relative target via a new table `gStaticData_0817C3D8`; a new
+camera-relative target via a new table `gAirshipBox`; a new
 detail that `CreateJetpackActor`'s effect variant depends on current input
 state via `RandRange`, not just proximity) - but three are genuinely
 new mechanisms not previously catalogued in this zone:
@@ -1038,11 +1038,11 @@ A further pass read 9 more actor-zone functions. **New mechanism:
 procedurally generate a vertical meter/fill-level tile graphic** -
 each indexes a per-level table (`gHovercraftPalette`/
 `gAirshipPalette`, real labeled ROM symbols) via
-`gUnknown_030015A0`-family fields, sums heights, computes `0xFF - sum`,
+`gHovercraftMapCols`-family fields, sums heights, computes `0xFF - sum`,
 scales it, and DMAs the result as packed 4-bit nibbles into VRAM tile
 data (`0x06008000`) - a health-bar/water-level-style meter built per-
 frame from per-level source data. Two parallel field sets
-(`gUnknown_030015A0`-family vs. `gUnknown_03001528`-family) suggest a
+(`gHovercraftMapCols`-family vs. `gAirshipMapCols`-family) suggest a
 P1/P2 pair, consistent with this session's other two-player findings.
 **`ConvertAirshipTiles` is called from `LoadAirshipGraphics`, a new confirmed
 `category_vtable` slot** (`include/actor_anim.h`) - lands at
@@ -1096,8 +1096,8 @@ write), and packs each pair into one 16-bit VRAM write (a tile-index-
 pair, not the meter twins' 4-bit-nibble packing). Row stride is `0x20`
 halfwords - exactly a standard 32-tile-wide GBA BG tilemap row; row/
 column counts (both capped near 32) come from
-`gUnknown_03001528`/`152C`, write base from those plus
-`gUnknown_03001520`. Reads as "blit a decoded/raw tile-index pattern
+`gAirshipMapCols`/`152C`, write base from those plus
+`gAirshipBg2Page`. Reads as "blit a decoded/raw tile-index pattern
 into a rectangular region (up to 32x32 tiles) of a BG tilemap" - a
 generic tilemap-composition primitive, related to but mechanically
 distinct from the meter twins (which compute fill-level heights, not
@@ -1193,7 +1193,7 @@ the player once triggered. `UpdateJetpackBomber` indexes a new table
 major environmental feature, not several unrelated small actors.**
 `UpdateAirship`/`AirshipStateFireballs`/`IsTouchingAirship` all touch the dense
 `gUnknown_030015xx` field cluster together with
-`gStaticData_0817C3D8` (the same target table the camera-edge-follower
+`gAirshipBox` (the same target table the camera-edge-follower
 `sub_8030E08` already uses) and `GetAnimFrameBaseOffset`;
 `IsTouchingAirship` specifically does 3D stack-buffer position math
 combining `gAirshipX`/`1544`/`1548` accumulators with
@@ -1219,7 +1219,7 @@ position, and - when the projected tile position changes - **calls
 confirming that function is this object's own on-demand tile
 renderer, not a separate system. `IsTouchingAirship` (gated on the object's
 own state field being 2 or 3) loads a 3D vector from
-`gStaticData_0817C3D8` and calls **`MemCopy32`** - a **fifth+
+`gAirshipBox` and calls **`MemCopy32`** - a **fifth+
 confirmed site** of the actor->`UpdateGameFrame` dispatch tie already
 noted for `SetCheckpointAtPlayer`/`UpdateYeti`/`DetonateNearbyPolarNitros`/`SetCheckpoint`.
 `QueueJetpackWumpa` is a running-total accumulator/tally, not a check.
@@ -1329,7 +1329,7 @@ reaction" family. Separately, **`DrawHovercraftMap`** (the singleton
 object's tile-consumer, called by `UpdateHovercraft`) confirms the same
 BG-tilemap-blit-primitive mechanics as the boss cluster's
 `DrawAirshipMap`, but on an entirely separate global cluster
-(`gUnknown_030015xx`, not `gUnknown_03001520`-family) - the singleton
+(`gUnknown_030015xx`, not `gAirshipBg2Page`-family) - the singleton
 has its own independent instance of the same primitive, not shared
 state with the boss.
 
@@ -1351,7 +1351,7 @@ singleton's live state directly.
 
 **`CreateAirship` closes a real open question from earlier rounds: it's
 the missing P2-side constructor for the VRAM fill-level meter.** Sets
-`gUnknown_03001564 = self`, sets `gUnknown_03001528`/`152C` from
+`gAirshipLevel = self`, sets `gAirshipMapCols`/`152C` from
 `gAirshipPicture` - the exact per-level table `ConvertAirshipTiles` (the
 P2 meter twin) already reads - and finishes by calling the confirmed
 `category_vtable` type-1 slot 6 dispatcher (`LoadAirshipGraphics`). This ties
@@ -1361,7 +1361,7 @@ introducing anything new: a second confirmed evidence trail that
 `DrawHovercraftMap`/`UpdateHovercraftBg2` are real per-frame steps of the
 singleton's update cycle (`LoadHovercraftGraphics`); a third construction site
 tying into the `gHovercraft` singleton
-(`CreateHovercraftSideGun`/`sub_80338DC`); two more independent "player reaction"
+(`CreateHovercraftSideGun`/`GetHovercraftLevel`); two more independent "player reaction"
 trigger paths (`UpdatePolarIcicle`, extending `HurtPolarPlayer`'s call sites);
 a real confirmed caller for the palette-transition function
 `sub_802D204` (`UpdatePolarAkuAku`, decrementing the `gUnknown_030014B8`
@@ -1460,7 +1460,7 @@ object clusters.
 A further pass read 8 more functions. **The standout: `CreateHovercraft`
 is the missing constructor for the singleton object system
 (`gHovercraft`)** - it sets a new pointer global
-`gUnknown_030015D8 = self`, initializes fields from a per-level table
+`gHovercraftLevel = self`, initializes fields from a per-level table
 (`gHovercraftPicture`, same family shape as the meter-twins' tables
 but a distinct address), allocates and stores the object into
 **`gHovercraft`** itself - the singleton pointer everything in

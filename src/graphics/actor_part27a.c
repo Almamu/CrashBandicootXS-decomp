@@ -41,7 +41,7 @@
  *   fires `sub_8017F14(self, other, 0)` plus two more trampoline
  *   calls, or - out of bounds - falls into a "spawn + scan" cluster:
  *   builds an AABB via `GetSpriteHitbox(&box, other)`, unpacks it into
- *   `CollidePartList(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
+ *   `CollidePartList(gCollidableList, box.x, box.y, box.w, box.h, 0,
  *   other)`, then walks the whole `gCrateList` object list -
  *   for each entry whose own table (`+0x18`, offset `0x48`) probes
  *   `==3` and is within a `0x27`/`0x3b` Q8>>8 box of `other` with
@@ -207,7 +207,7 @@ static inline s32 Abs(s32 v)
 
 extern u32 gRoomFrameCount;
 extern struct ab_player *gPlayer;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 extern struct ab_list *gCrateList;
 extern void sub_8017F14(void *self, void *part, s32 index);
 extern struct ab_box GetSpriteHitbox(void *obj);
@@ -318,7 +318,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
          * fourth on the stack): that is what gives the ROM's stack-argument
          * order (6th, 7th, then the box's last word). */
         box = GetSpriteHitbox(other);
-        CollidePartList(gUnknown_030012F0, box, 0, other);
+        CollidePartList(gCollidableList, box, 0, other);
         /* a guarded do-while: a `for` shares the list pointer between the
          * entry test and the body, where the ROM reloads it */
         i = 0;

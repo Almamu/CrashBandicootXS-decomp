@@ -13,7 +13,7 @@ actually `actor`. Two of this chunk's own functions
 `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`, confirming the same object family carries
 straight through.
 
-`gUnknown_030012F0` (only touched by `DoSuperBodySlamShockwave` here) is a small list
+`gCollidableList` (only touched by `DoSuperBodySlamShockwave` here) is a small list
 object - `+4` a count, `+0xc` a `struct actor **` array - not referenced
 by any other already-matched code, so it stays raw-offset rather than a
 guessed struct.
@@ -38,7 +38,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
 
 ## Matched (21/25)
 
-- **`DoSuperBodySlamShockwave`**: scans the `gUnknown_030012F0` list of
+- **`DoSuperBodySlamShockwave`**: scans the `gCollidableList` list of
   `struct actor *`; skips entries whose `+0x48` trampoline
   (`_call_via_r1`) reports a width of 4 or less, entries further than
   0x40 (Manhattan distance) from `self`'s own part, entries without
@@ -47,7 +47,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   `_call_via_r4` with action 0x16 on whatever survives. Needed two real
   compiler-codegen fights:
   - **Anti-CSE across a loop back-edge**: the ROM reloads
-    `gUnknown_030012F0` completely fresh (both the literal-pool address
+    `gCollidableList` completely fresh (both the literal-pool address
     *and* the deref) at both the loop condition and inside the body,
     sharing a single pool word (`_08015034`) between the two `ldr`
     sites. A plain C re-read in the body let gcc reuse the condition's
@@ -59,7 +59,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
     condition and body are separate, hand-written statements) and
     routing both re-reads through the same hand-placed local literal
     pool (`.Lgu12f0_8014f8c`, emitted once via a trailing
-    `asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gUnknown_030012F0")`
+    `asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gCollidableList")`
     after the function) via a real two-instruction
     `ldr %0, .Lgu12f0_8014f8c` / `ldr %0, [%0]` inline-asm block at
     each site - this is opaque to gcc's CSE and reuses the *same*

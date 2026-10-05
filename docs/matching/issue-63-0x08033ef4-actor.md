@@ -55,7 +55,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   ROM's own build does, rather than up front with the others.
 - **`IsHovercraftLauncherUnshootable`** (`src/graphics/actor_part65.c`) - trivial Kind 1
   death-flag getter (`self+0x6c`).
-- **`DamageHovercraftSideGun`/`UpdateHovercraftSideGun`/`sub_80341F8`/`IsHovercraftSideGunUnshootable`/`nullsub_38`**
+- **`DamageHovercraftSideGun`/`UpdateHovercraftSideGun`/`sub_80341F8`/`IsHovercraftSideGunUnshootable`/`DamageHovercraftCannonFlash`**
   (`src/graphics/actor_part67.c`) - Kind 2's damage/death handler (same
   `DamageHovercraftCannon` shape, register-pinned `zero`/`one` reused across the
   `self+0x58`/`+0x2c`/`+0x28`/`+0x44`/`+8` stores and the gate-byte read
@@ -177,7 +177,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   established for other trailing byte arguments (see `DrawSaveMenuMain` in
   `issue-5-overlay-ui-sync.md`), materialized into a `register u32
   asm("r9")` pin mirroring the ROM's own `sb` cache (needed since it
-  survives the following `sub_80338DC()` call) - the same
+  survives the following `GetHovercraftLevel()` call) - the same
   trailing-byte-stack-argument gap already closed elsewhere, not the
   unrelated `DropExtraLife` mask-constant-folding gap this entry used to
   be compared against. The `self+0x5c` spawn-record ternary

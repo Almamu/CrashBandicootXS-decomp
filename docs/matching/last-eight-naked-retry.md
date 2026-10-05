@@ -62,7 +62,7 @@ one long-lived part+0x28 pseudo. It can be two:
 - a stack-resident copy for the second flip.
 
 ```c
-AddToPartList(gUnknown_030012F0, (q2 = (struct popup_bits *)((u8 *)part + 0x28), part));
+AddToPartList(gCollidableList, (q2 = (struct popup_bits *)((u8 *)part + 0x28), part));
 asm("" : : "m"(q2));
 ```
 

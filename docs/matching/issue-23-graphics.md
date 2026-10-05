@@ -64,7 +64,7 @@ controller `+0x44`.
 - `sub_8019324`: box-overlap hit test (`sub_8007CF8`/`sub_8007C30`/
   `GetSpriteHitbox` boxes, `AabbOverlaps` overlap) of a part against the
   player (fires the player's `+0x68` method with code 9 unless it's busy)
-  and against every entry of the `gUnknown_030012F0` list.
+  and against every entry of the `gCollidableList` list.
 - `sub_8019464`, `sub_80194E0`: two more per-frame methods (frame reset
   and loop; a delayed re-skin followed by "mark gone").
 

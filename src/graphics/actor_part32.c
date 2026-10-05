@@ -27,7 +27,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern s32 GetHovercraftX(void);
 extern s32 GetHovercraftY(void);
 extern s32 GetHovercraftZ(void);
-extern void *sub_80338C4(void);
+extern void *GetHovercraftAttack(void);
 
 /* Constructor: forwards to `InitActorPart`, then sets `self`'s health
  * (`+0x54=15`), event/trampoline table (`+0x50=&gHovercraftCannonVtable`),
@@ -81,7 +81,7 @@ void HovercraftCannonStateDestroyed(void *selfArg)
 /* Sets `self`'s position fields (`+0x1c`/`+0x20`/`+0x24`) from the
  * singleton's own position plus a fixed offset, and - while `depth`
  * is still under its `0x4AFF` threshold - switches `self` to state 1/
- * table-index 1, seeding `+0x64`/`+0x68` from `gUnknown_030015DC`'s
+ * table-index 1, seeding `+0x64`/`+0x68` from `gHovercraftAttack`'s
  * table and resetting the anim-frame pair from `self`'s part table's
  * `+0xc` field. */
 void HovercraftCannonStateWait(void *selfArg)
@@ -93,7 +93,7 @@ void HovercraftCannonStateWait(void *selfArg)
     self->base.z = GetHovercraftZ() - 0x100;
 
     if (self->base.depth <= 0x4AFF) {
-        s32 *table = sub_80338C4();
+        s32 *table = GetHovercraftAttack();
 
         self->unk_64 = table[4];
         {

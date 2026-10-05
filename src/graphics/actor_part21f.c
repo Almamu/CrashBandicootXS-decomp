@@ -8,10 +8,10 @@
  *
  * Large weapon-kind projectile spawner: advances the position
  * accumulators (`gAirshipX`/`gAirshipY`/
- * `gAirshipZ`), clears `gUnknown_03001578`'s DMA-refresh
+ * `gAirshipZ`), clears `gAirshipHitFlashTimer`'s DMA-refresh
  * counter, and derives two base screen coordinates from a fixed
- * keyframe-table box (`gStaticData_0817C3D8`, `>>8`) offset by the
- * accumulators. Dispatches on `gUnknown_0300153C` (a frame/flags
+ * keyframe-table box (`gAirshipBox`, `>>8`) offset by the
+ * accumulators. Dispatches on `gAirshipStateTimer` (a frame/flags
  * counter, the same one `LoadAirshipGraphics`'s palette fade reads) through
  * five weapon-kind cases (0xa/0x32/0x50/0x6e/0xaa), each clearing one
  * BG palette bank-1 slot then spawning 1-3 sub-projectiles via
@@ -31,14 +31,14 @@
  * extends its result), and the seek spawn takes `&gActorList`
  * before the last lock check, as the ROM loads that address early. */
 extern s32 gAirshipX;
-extern s32 gUnknown_03001558;
+extern s32 gAirshipVelX;
 extern s32 gAirshipY;
-extern s32 gUnknown_0300155C;
+extern s32 gAirshipVelY;
 extern s32 gAirshipZ;
-extern s32 gUnknown_03001560;
-extern s32 gUnknown_03001578;
-extern const s16 gStaticData_0817C3D8[];
-extern s32 gUnknown_0300153C;
+extern s32 gAirshipVelZ;
+extern s32 gAirshipHitFlashTimer;
+extern const s16 gAirshipBox[];
+extern s32 gAirshipStateTimer;
 extern u16 RandRange(s32 max);
 extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);
 extern void sub_802A4EC(void);
@@ -58,7 +58,7 @@ static inline void BossSetState(s32 st, s32 idx)
 {
     struct actor_self *self;
     gAirshipState = st;
-    gUnknown_0300153C = 0;
+    gAirshipStateTimer = 0;
     self = gAirship;
     self->animIndex = idx;
     self->animTimer = self->anims[idx].duration;
@@ -68,8 +68,8 @@ static inline void BossSetState(s32 st, s32 idx)
 }
 
 /* One sub-projectile, jittered around (x, y) by the box's own +-range. */
-#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(gStaticData_0817C3D8[3] << 8),  \
-                                (y) + RandRange(gStaticData_0817C3D8[4] << 8),  \
+#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(gAirshipBox[3] << 8),  \
+                                (y) + RandRange(gAirshipBox[4] << 8),  \
                                 gAirshipZ - 0x100)
 
 void AirshipStateExplode(void)
@@ -77,37 +77,37 @@ void AirshipStateExplode(void)
     s32 x, y;
     u16 *pal;
 
-    gAirshipX += gUnknown_03001558;
-    gAirshipY += gUnknown_0300155C;
-    gAirshipZ += gUnknown_03001560;
-    gUnknown_03001578 = 0;
+    gAirshipX += gAirshipVelX;
+    gAirshipY += gAirshipVelY;
+    gAirshipZ += gAirshipVelZ;
+    gAirshipHitFlashTimer = 0;
     pal = (u16 *)(BG_PLTT + 0x20);
-    x = gAirshipX + (gStaticData_0817C3D8[0] << 8);
-    y = gAirshipY + (gStaticData_0817C3D8[1] << 8);
+    x = gAirshipX + (gAirshipBox[0] << 8);
+    y = gAirshipY + (gAirshipBox[1] << 8);
 
-    if (gUnknown_0300153C == 0xa) {
+    if (gAirshipStateTimer == 0xa) {
         pal[15] = 0;
         SPAWN(x, y);
-    } else if (gUnknown_0300153C == 0x32) {
+    } else if (gAirshipStateTimer == 0x32) {
         pal[1] = 0;
         SPAWN(x, y);
         SPAWN(x, y);
-    } else if (gUnknown_0300153C == 0x50) {
+    } else if (gAirshipStateTimer == 0x50) {
         pal[4] = 0;
         SPAWN(x, y);
         SPAWN(x, y);
         SPAWN(x, y);
-    } else if (gUnknown_0300153C == 0x6e) {
+    } else if (gAirshipStateTimer == 0x6e) {
         pal[8] = 0;
         SPAWN(x, y);
         SPAWN(x, y);
         SPAWN(x, y);
         SPAWN(x, y);
-    } else if (gUnknown_0300153C == 0xaa) {
+    } else if (gAirshipStateTimer == 0xaa) {
         sub_802A4EC();
         BossSetState(5, 1);
         PlaySfx(gAudioContext, 0x42, 0x100);
-        gUnknown_03001560 = 0x9d;
+        gAirshipVelZ = 0x9d;
         if (gLevelState[0x8c] == 0 && gUnknown_0300157C <= 1) {
             void **pl = &gActorList;
             if (gUnknown_03001506 == 0) {

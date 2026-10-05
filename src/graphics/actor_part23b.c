@@ -10,8 +10,8 @@
  * byte (`gUnknown_03001530`) to each, and packs each pair into one
  * 16-bit VRAM write. Row stride is `0x20` halfwords - a standard
  * 32-tile-wide GBA BG tilemap row; row/column counts (both capped near
- * 32) come from `gUnknown_03001528`/`gUnknown_0300152C`, write base
- * from those plus `gUnknown_03001520`.
+ * 32) come from `gAirshipMapCols`/`gAirshipMapRows`, write base
+ * from those plus `gAirshipBg2Page`.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS). Two details matter:
  * the bias is read as a plain `u8` narrowing of the `s32` global (an
@@ -19,18 +19,18 @@
  * is declared before `i`, so the loop optimizer creates the `row + 0x20`
  * pseudo after `i + 1` and `i + 1` wins the r7/ip tie as in the ROM
  * (docs/matching/issue-58-61-naked-retry.md). */
-extern s32 gUnknown_03001520;
-extern s32 gUnknown_03001528;
-extern s32 gUnknown_0300152C;
+extern s32 gAirshipBg2Page;
+extern s32 gAirshipMapCols;
+extern s32 gAirshipMapRows;
 extern s32 gUnknown_03001530;
 
 void DrawAirshipMap(u16 *src)
 {
-    u8 *row = (u8 *)((gUnknown_03001520 + 0x18) << 11) + (VRAM + (0x20 - gUnknown_03001528) / 4 * 2) + ((0x20 - gUnknown_0300152C) / 2 * 32 + 2);
+    u8 *row = (u8 *)((gAirshipBg2Page + 0x18) << 11) + (VRAM + (0x20 - gAirshipMapCols) / 4 * 2) + ((0x20 - gAirshipMapRows) / 2 * 32 + 2);
     s32 i, j;
 
-    for (i = 0; i < gUnknown_0300152C; i++) {
-        for (j = 0; j < gUnknown_03001528 / 2; j++) {
+    for (i = 0; i < gAirshipMapRows; i++) {
+        for (j = 0; j < gAirshipMapCols / 2; j++) {
             u8 bias = gUnknown_03001530;
             u16 lo = *src++ + bias;
             u16 hi = *src++ + bias;

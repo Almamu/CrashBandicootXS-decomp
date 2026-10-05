@@ -40,20 +40,20 @@ void DestroyActor(void *selfArg, s32 flags)
     }
 }
 
-extern s32 gUnknown_03000888;
-extern void *gUnknown_03001428[];
+extern s32 gCollectedSpawnCount;
+extern void *gCollectedSpawns[];
 
-/* Linear-searches `gUnknown_03001428`'s first `gUnknown_03000888`
+/* Linear-searches `gCollectedSpawns`'s first `gCollectedSpawnCount`
  * entries for `self`, returning whether it's present. */
 s32 IsSpawnCollected(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 i asm("r2") = 0;
-    s32 count = gUnknown_03000888;
+    s32 count = gCollectedSpawnCount;
 
     if (i < count) {
         s32 n = count;
-        register void **p asm("r1") = gUnknown_03001428;
+        register void **p asm("r1") = gCollectedSpawns;
 
         do {
             if (*p == self) {
@@ -66,12 +66,12 @@ s32 IsSpawnCollected(void *selfArg)
     return 0;
 }
 
-/* Appends `self` to `gUnknown_03001428` (capped at 15 entries), unless
+/* Appends `self` to `gCollectedSpawns` (capped at 15 entries), unless
  * it's `NULL`, the array is already full, or it's already present. */
 void MarkSpawnCollected(void *selfArg)
 {
     register u8 *self asm("r3") = selfArg;
-    s32 count = gUnknown_03000888;
+    s32 count = gCollectedSpawnCount;
 
     if (count == 0xf || self == NULL) {
         return;
@@ -82,7 +82,7 @@ void MarkSpawnCollected(void *selfArg)
 
         if (i < count) {
             s32 n = count;
-            void **p = gUnknown_03001428;
+            void **p = gCollectedSpawns;
 
             do {
                 if (*p == self) {
@@ -95,43 +95,43 @@ void MarkSpawnCollected(void *selfArg)
     }
 
     {
-        s32 freshCount = gUnknown_03000888;
+        s32 freshCount = gCollectedSpawnCount;
 
-        gUnknown_03001428[freshCount] = self;
-        gUnknown_03000888 = freshCount + 1;
+        gCollectedSpawns[freshCount] = self;
+        gCollectedSpawnCount = freshCount + 1;
     }
 }
 
-/* Clears `gUnknown_03001428`'s entry count. */
+/* Clears `gCollectedSpawns`'s entry count. */
 void ClearCollectedSpawns(void)
 {
-    gUnknown_03000888 = 0;
+    gCollectedSpawnCount = 0;
 }
 
-extern u8 gUnknown_03001464;
-extern s32 gUnknown_03001468;
-extern s32 gUnknown_0300146C;
-extern s32 gUnknown_03001470;
-extern s32 gUnknown_03001474;
-extern s32 gUnknown_03001478;
+extern u8 gActorPaletteCycleEnabled;
+extern s32 gSavedActorPaletteCycleFrame;
+extern s32 gSavedActorPaletteCycleTarget;
+extern s32 gActorPaletteCycleFrame;
+extern s32 gActorPaletteCycleTarget;
+extern s32 gActorPaletteCycleTimer;
 
-/* Loads the palette-cycle cursor/bound pair (`gUnknown_03001470`/
- * `gUnknown_03001474`, see `UpdateActorPaletteCycle` below) from their saved
- * counterparts (`gUnknown_03001468`/`gUnknown_0300146C`) and resets the
- * DMA-refresh counter `gUnknown_03001478`. */
+/* Loads the palette-cycle cursor/bound pair (`gActorPaletteCycleFrame`/
+ * `gActorPaletteCycleTarget`, see `UpdateActorPaletteCycle` below) from their saved
+ * counterparts (`gSavedActorPaletteCycleFrame`/`gSavedActorPaletteCycleTarget`) and resets the
+ * DMA-refresh counter `gActorPaletteCycleTimer`. */
 void RestoreActorPaletteCycle(void)
 {
-    gUnknown_03001470 = gUnknown_03001468;
-    gUnknown_03001474 = gUnknown_0300146C;
-    gUnknown_03001478 = 0;
+    gActorPaletteCycleFrame = gSavedActorPaletteCycleFrame;
+    gActorPaletteCycleTarget = gSavedActorPaletteCycleTarget;
+    gActorPaletteCycleTimer = 0;
 }
 
 /* The inverse of `RestoreActorPaletteCycle`: saves the current cursor/bound pair back
- * into `gUnknown_03001468`/`gUnknown_0300146C`. */
+ * into `gSavedActorPaletteCycleFrame`/`gSavedActorPaletteCycleTarget`. */
 void SaveActorPaletteCycle(void)
 {
-    gUnknown_03001468 = gUnknown_03001470;
-    gUnknown_0300146C = gUnknown_03001474;
+    gSavedActorPaletteCycleFrame = gActorPaletteCycleFrame;
+    gSavedActorPaletteCycleTarget = gActorPaletteCycleTarget;
 }
 
 asm(".align 2, 0");

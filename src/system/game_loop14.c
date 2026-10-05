@@ -71,7 +71,7 @@ struct actor_flag_bits
 
 extern struct level_info *gLevelLayers;
 extern void ***gSpriteBankSet;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 
 extern struct fx_part *CreateMovingSprite(u16 arg0, u16 x, u16 y, u16 arg3);
 extern void ResetSpriteFrameTimer(struct fx_part *part);
@@ -149,7 +149,7 @@ struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32
 /* Spawns a CreateMovingSprite effect part at (x, y) clamped into the current
  * level's bounds, facing left when `mirror` is set, with animation
  * record `anim` (12-byte stride) and tag `tag`. Attaches it to a fresh
- * sub_800CCE0 manager and registers it with gUnknown_030012F0. */
+ * sub_800CCE0 manager and registers it with gCollidableList. */
 struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror)
 {
     struct fx_part *part;
@@ -180,7 +180,7 @@ struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, 
     _call_via_r2((u8 *)mgr + mgr->vtable->attach.thisOffset, part, mgr->vtable->attach.fn);
     ACTOR_FLAG_BITS(&part->base)->bit2 = 0;
     ACTOR_FLAG_BITS(&part->base)->bit1 = 0;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     return part;
 }
 

@@ -97,7 +97,7 @@ struct enemy_ctrl
 
 extern void ***gSpriteBankSet;
 extern struct level_record_table **gEntityFlags;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 
 extern struct popup_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern s32 GetSpriteAnimPaletteSlot(struct popup_part *part);

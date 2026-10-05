@@ -30,10 +30,10 @@ gating whether the object fires its `+0x50` table's slot-3 trampoline
 instead of animating), a one-shot byte flag at `self+0x2c`, and a
 12-byte little vector block at `self+0x38` (copied from `part+0x14..20`)
 whose first three `s16` slots are a position `sub_802AA0C` integrates a
-per-axis velocity into. A separate, unrelated `gUnknown_03001464`-gated
+per-axis velocity into. A separate, unrelated `gActorPaletteCycleEnabled`-gated
 palette-cycle DMA cluster (`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`/`UpdateActorPaletteCycle`/
 `SetActorPaletteCycle`/`EnableActorPaletteCycle`) and a fixed 15-slot object registry
-(`gUnknown_03001428`/`gUnknown_03000888`, searched/appended by
+(`gCollectedSpawns`/`gCollectedSpawnCount`, searched/appended by
 `IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`) round out the chunk.
 
 The raw source file `asm/code_3_2_20_8b7c.s` (6522 lines, spanning far
@@ -99,10 +99,10 @@ only the tail continuation `..._ac28.s` remains.
   `DestroyPolarPlayer`'s unlink sequence in `actor_part19.c`), and frees it
   when requested.
 - **`IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`** (`src/graphics/actor_part52.c`)
-  - the fixed 15-slot `gUnknown_03001428`/`gUnknown_03000888` registry's
+  - the fixed 15-slot `gCollectedSpawns`/`gCollectedSpawnCount` registry's
   search/append/clear trio. Both search loops needed the counter/array-
   pointer pinned to `r2`/`r1` (`IsSpawnCollected`) or `self` pinned to `r3`
-  with the loop's final store re-reading `gUnknown_03000888` fresh
+  with the loop's final store re-reading `gCollectedSpawnCount` fresh
   instead of reusing the already-checked value (`MarkSpawnCollected`) - a
   register choice this compiler picked differently depending on how many
   *other* functions preceded it in the same translation unit, discovered

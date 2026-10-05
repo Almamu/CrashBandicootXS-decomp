@@ -7,8 +7,8 @@
  *
  * `AirshipStateApproach`/`AirshipStateFireballs`'s third sibling: advances
  * `gAirshipZ` by its per-frame delta and ramps
- * `gUnknown_03001560` toward `0xb2` the same +-1/frame way. While the
- * phase counter (`gUnknown_03001570`) is armed (0), computes the
+ * `gAirshipVelZ` toward `0xb2` the same +-1/frame way. While the
+ * phase counter (`gAirshipFireTimer`) is armed (0), computes the
  * player's (`gActorList`) distance from a target point
  * (`+0x24` axis, offset `+0xa` minus the accumulated position) via
  * `__divsi3`, and - only once that "speed" term is positive -
@@ -16,7 +16,7 @@
  * against `gAirshipX`/`gAirshipY`, scaled by the speed
  * term, `abs`-combined) and, while under a `0x7FF` threshold, spawns an
  * effect via `SpawnJetpackCannonball` (the 5-argument, velocity-carrying sibling of `AirshipStateFireballs`'s
- * `SpawnAirshipFireball`) and advances the same `gUnknown_03001574` counter
+ * `SpawnAirshipFireball`) and advances the same `gAirshipVolleyCount` counter
  * through the weapon table's next threshold slot (`+0x14`/`+0x18`/
  * `+0x10`). Otherwise the phase just decrements. Always re-runs
  * `sub_8030E08` and, past a higher position ceiling (`0x4300`),
@@ -31,20 +31,20 @@
  * `/` goes through the ROM's own `__divsi3` and the
  * absolute values are the branchless `asrs`/`eors`/`subs` form. */
 extern s32 gAirshipZ;
-extern s32 gUnknown_03001560;
-extern s32 gUnknown_03001570;
+extern s32 gAirshipVelZ;
+extern s32 gAirshipFireTimer;
 extern struct actor_self *gActorList;
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 gAirshipX;
 extern s32 gAirshipY;
 extern s32 SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
-extern s32 gUnknown_03001574;
-extern s32 *gUnknown_03001568;
-extern s32 gUnknown_03001554;
+extern s32 gAirshipVolleyCount;
+extern s32 *gAirshipAttack;
+extern s32 gAirshipDistance;
 extern struct actor_self *gAirship;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 gAirshipState;
-extern s32 gUnknown_0300153C;
+extern s32 gAirshipStateTimer;
 extern void sub_8030E08(void);
 extern void UpdateAirshipFlashColor(void);
 
@@ -52,7 +52,7 @@ static inline void BossSetState(s32 st, s32 idx)
 {
     struct actor_self *self;
     gAirshipState = st;
-    gUnknown_0300153C = 0;
+    gAirshipStateTimer = 0;
     self = gAirship;
     self->animIndex = idx;
     self->animTimer = self->anims[idx].duration;
@@ -73,12 +73,12 @@ void AirshipStateCannon(void)
     s32 v;
     s32 phase;
 
-    gAirshipZ += gUnknown_03001560;
-    v = gUnknown_03001560;
+    gAirshipZ += gAirshipVelZ;
+    v = gAirshipVelZ;
     if (v <= 0xb2)
-        gUnknown_03001560 = v + 1;
+        gAirshipVelZ = v + 1;
 
-    phase = gUnknown_03001570;
+    phase = gAirshipFireTimer;
     if (phase == 0) {
         struct actor_self *pl = gActorList;
         s32 speed = (pl->z - (gAirshipZ - 10)) / -0x1AA;
@@ -89,21 +89,21 @@ void AirshipStateCannon(void)
             dy = ((pl->y - (gAirshipY + 0x516D)) * speed) >> 12;
             if (Abs(dx) + Abs(dy) <= 0x7FF) {
                 SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx, dy);
-                if (++gUnknown_03001574 == gUnknown_03001568[5]) {
-                    gUnknown_03001574 = phase;
-                    gUnknown_03001570 = gUnknown_03001568[6];
+                if (++gAirshipVolleyCount == gAirshipAttack[5]) {
+                    gAirshipVolleyCount = phase;
+                    gAirshipFireTimer = gAirshipAttack[6];
                 } else {
-                    gUnknown_03001570 = gUnknown_03001568[4];
+                    gAirshipFireTimer = gAirshipAttack[4];
                 }
             }
         }
     } else {
-        gUnknown_03001570 = phase - 1;
+        gAirshipFireTimer = phase - 1;
     }
     sub_8030E08();
-    if (gUnknown_03001554 > 0x4300) {
-        gUnknown_03001570 = gUnknown_03001568[1];
-        gUnknown_03001574 = 0;
+    if (gAirshipDistance > 0x4300) {
+        gAirshipFireTimer = gAirshipAttack[1];
+        gAirshipVolleyCount = 0;
         BossSetState(2, 0);
     }
     UpdateAirshipFlashColor();

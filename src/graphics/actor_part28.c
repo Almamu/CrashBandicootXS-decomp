@@ -25,12 +25,12 @@ extern s32 gHovercraftState;
 extern s32 gHovercraftX;
 extern s32 gHovercraftY;
 extern s32 gHovercraftZ;
-extern s32 gUnknown_030015C8;
-extern s32 gUnknown_030015CC;
-extern s32 gUnknown_030015D0;
-extern s32 gUnknown_030015D4;
-extern void *gUnknown_030015D8;
-extern void *gUnknown_030015DC;
+extern s32 gHovercraftDistance;
+extern s32 gHovercraftVelX;
+extern s32 gHovercraftVelY;
+extern s32 gHovercraftVelZ;
+extern void *gHovercraftLevel;
+extern void *gHovercraftAttack;
 extern s32 gHovercraftPartsLeft;
 extern s16 gUnknown_030015FC;
 extern u8 gUnknown_030015FE;
@@ -107,11 +107,11 @@ void LoseHovercraftPart(void)
     }
 }
 
-/* Constant getter - returns `gUnknown_030015DC` (a pointer to a small
+/* Constant getter - returns `gHovercraftAttack` (a pointer to a small
  * per-state lookup table used by several functions in this cluster). */
-void *sub_80338C4(void)
+void *GetHovercraftAttack(void)
 {
-    return gUnknown_030015DC;
+    return gHovercraftAttack;
 }
 
 /* Constant getter - returns `gHovercraftState` (the singleton's
@@ -121,11 +121,12 @@ s32 GetHovercraftState(void)
     return gHovercraftState;
 }
 
-/* Constant getter - returns `gUnknown_030015D8` (set to the singleton
- * `self` pointer by its constructor, `CreateHovercraft`). */
-void *sub_80338DC(void)
+/* Constant getter - returns `gHovercraftLevel`, the level index
+ * `CreateHovercraft` caches (it picks the gHovercraftAttacks record; the
+ * side guns test it against 0). */
+void *GetHovercraftLevel(void)
 {
-    return gUnknown_030015D8;
+    return gHovercraftLevel;
 }
 
 /* Constant getter - returns the singleton's Z position field
@@ -198,20 +199,20 @@ void nullsub_36(void)
 }
 
 /* State-transition setter for the singleton, gated by a depth
- * accumulator: advances `gHovercraftZ` by `gUnknown_030015D4`,
- * and - only while `gUnknown_030015C8` is still under its `0x81FF`
- * threshold - resets `gUnknown_030015CC`/`gUnknown_030015D0`, selects
+ * accumulator: advances `gHovercraftZ` by `gHovercraftVelZ`,
+ * and - only while `gHovercraftDistance` is still under its `0x81FF`
+ * threshold - resets `gHovercraftVelX`/`gHovercraftVelY`, selects
  * animation "kind" 2, and runs the same table-index-0 anim-frame-reset
  * sequence as `SetHovercraftState`. */
 void HovercraftStateApproach(void)
 {
     struct actor_self *self;
 
-    gHovercraftZ += gUnknown_030015D4;
+    gHovercraftZ += gHovercraftVelZ;
 
-    if (gUnknown_030015C8 <= 0x81FF) {
-        register s32 *pCC asm("r1") = &gUnknown_030015CC;
-        register s32 *pD0 asm("r0") = &gUnknown_030015D0;
+    if (gHovercraftDistance <= 0x81FF) {
+        register s32 *pCC asm("r1") = &gHovercraftVelX;
+        register s32 *pD0 asm("r0") = &gHovercraftVelY;
         register s32 zeroD0 asm("r5") = 0;
 
         *pD0 = zeroD0;

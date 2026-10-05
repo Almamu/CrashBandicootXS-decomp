@@ -7,12 +7,12 @@
 extern s32 GetHovercraftX(void);
 extern s32 GetHovercraftY(void);
 extern s32 GetHovercraftZ(void);
-extern struct spawn_timing_table *sub_80338C4(void);
+extern struct spawn_timing_table *GetHovercraftAttack(void);
 extern void SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
 extern void SpawnHovercraftCannonFlash(s32 x, s32 y, s32 z);
 extern struct actor_self *gActorList;
 
-/* The singleton's per-spawner timing table (`sub_80338C4`): after each
+/* The singleton's per-spawner timing table (`GetHovercraftAttack`): after each
  * spawn a spawner waits `delay` frames, except every `burst`-th spawn,
  * which resets its count and waits `burstDelay` instead. One record per
  * spawner kind (actor_part67.c reads [0], actor_part29.c [1],
@@ -47,7 +47,7 @@ struct spawner {
  * fixed offset), and - while the `cooldown` slot is zero -
  * measures `self`'s distance to the player; in range, it spawns a pair
  * of effects at `self`'s position and cycles `count` against a
- * threshold from `sub_80338C4`'s table. Once `base.depth` passes
+ * threshold from `GetHovercraftAttack`'s table. Once `base.depth` passes
  * `0x4B00` it resets `self` to its idle animation state.
  *
  * Matched in a later pass (see docs/matching/issue-62-0x08033804-actor.md,
@@ -90,13 +90,13 @@ void HovercraftCannonStateFire(struct spawner *self)
 
                 count = self->count + 1;
                 self->count = count;
-                table = sub_80338C4();
+                table = GetHovercraftAttack();
                 if (count == table->timing[1].burst) {
                     self->count = slot;
-                    table = sub_80338C4();
+                    table = GetHovercraftAttack();
                     next = table->timing[1].burstDelay;
                 } else {
-                    table = sub_80338C4();
+                    table = GetHovercraftAttack();
                     next = table->timing[1].delay;
                 }
                 goto store;

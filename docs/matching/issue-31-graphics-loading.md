@@ -47,7 +47,7 @@ only in a handful of embedded constants:
 6. Looks up two "collected" bits via a `gEntityFlags`-rooted
    `{u16 offsets[], u8 bytes[]}` pair, indexed by `arg3`, and packs them
    into `part->0x28`'s bits 4/5.
-7. Registers itself into `gUnknown_030012F0`'s manager
+7. Registers itself into `gCollidableList`'s manager
    (`AddToPartList`).
 8. Overwrites `header->0x84` with a table pointer
    (`gSquidAnimMap` for this instance) and calls
@@ -290,7 +290,7 @@ reload, in ways the ROM's own codegen never does.
 Same overall shape as `graphics_loading_21d80.c`'s `SpawnBodySlamPower` family
 (`CreateSpriteObj` constructor, `+0x20` table offset, `GetSpriteAnimPaletteSlot`
 frame-nibble update), but two differences: they register into
-`gUnknown_030012F8`'s manager instead of `EC`, and (except
+`gDecorationList`'s manager instead of `EC`, and (except
 `sub_80217D0`, which skips the OAM trio and the `+0x2d`/`+0xa` writes
 entirely) they add a `part->flags = (flags & 0x7f) & -5;` step this
 family didn't need before. That mask needed the same
@@ -568,7 +568,7 @@ one allocates via `CreateMovingSprite` (or, for `SpawnSeal`, the bigger
 `CreateGroundSprite` constructor), hooks its own fixed offset into the
 `gSpriteBankSet`-rooted table at `+0x20`, updates its `+0x29` frame
 nibble via `GetSpriteAnimPaletteSlot`, packs the `gEntityFlags` "collected" bits
-into `+0x28`, registers into `gUnknown_030012F0`, and closes with one of
+into `+0x28`, registers into `gCollidableList`, and closes with one of
 several tail shapes this cluster's earlier passes already catalogued
 (a single header write, a "second `header->0x84` rewrite plus a
 struct-field or record-field copy", an OAM trio, a bit-27 re-test, or -
@@ -700,7 +700,7 @@ one more set of "two-line text popup" family instances, same numbered
 skeleton as documented at the top of this file: a `CreateMovingSprite`-built
 part object, a `gSpriteBankSet`-rooted `+0x20` table offset, a
 `GetSpriteAnimPaletteSlot` frame-nibble update, a `gEntityFlags` two-bit
-"collected" pack into `+0x28`, a `gUnknown_030012F0` manager
+"collected" pack into `+0x28`, a `gCollidableList` manager
 registration, and a header (`CreateEnemyCtrl`) with one or two `_call_via_r2`
 trampoline calls - varying only the embedded offsets/constants and tail
 shape (a header->0x84 double-rewrite plus a record-field/struct-field

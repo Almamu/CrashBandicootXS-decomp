@@ -262,8 +262,8 @@ extern void *gAudioContext;
 extern void *gHud;
 extern void *gUnknown_030012F4;
 extern void *gUnknown_030012EC;
-extern void *gUnknown_030012F0;
-extern void *gUnknown_030012F8;
+extern void *gCollidableList;
+extern void *gDecorationList;
 extern void *gUnknown_030012E8;
 extern void *gInput;
 extern struct gl_entity_list *gCrateList;
@@ -460,8 +460,8 @@ s32 RunRoom(struct gl_self *self)
     }
     CullPartList(gUnknown_030012F4);
     CullPartList(gUnknown_030012EC);
-    CullPartList(gUnknown_030012F0);
-    CullPartList(gUnknown_030012F8);
+    CullPartList(gCollidableList);
+    CullPartList(gDecorationList);
     UpdateRoomFrame(self);
     SetDispcntMode(0);
     SetObjMapping1D();
@@ -504,8 +504,8 @@ s32 RunRoom(struct gl_self *self)
             PMF_CALL(gPlayer, m18);
         UpdateCrateList(gCrateList);
         UpdatePartList(gUnknown_030012EC);
-        UpdatePartList(gUnknown_030012F0);
-        UpdatePartList(gUnknown_030012F8);
+        UpdatePartList(gCollidableList);
+        UpdatePartList(gDecorationList);
         UpdateHudSlides(gHud);
         if (gLevelState->timeTrial)
             TickLevelClock(gLevelState);
@@ -571,8 +571,8 @@ fade:
     ClearPartList(gUnknown_030012E8);
     ResetCrateList(gCrateList);
     ClearPartList(gUnknown_030012EC);
-    ClearPartList(gUnknown_030012F0);
-    ClearPartList(gUnknown_030012F8);
+    ClearPartList(gCollidableList);
+    ClearPartList(gDecorationList);
     ClearPartList(gUnknown_030012F4);
     HideBg0();
     HideBg1();

@@ -8,19 +8,19 @@
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void sub_802A4F8(void);
 extern s32 gAirshipZ;
-extern s32 gUnknown_03001560;
-extern s32 gUnknown_03001554;
-extern s32 gUnknown_03001558;
-extern s32 gUnknown_0300155C;
+extern s32 gAirshipVelZ;
+extern s32 gAirshipDistance;
+extern s32 gAirshipVelX;
+extern s32 gAirshipVelY;
 extern s32 gAirshipState;
-extern s32 gUnknown_0300153C;
+extern s32 gAirshipStateTimer;
 extern struct actor_self *gAirship;
 
 /* Boss-weapon camera-relative position accumulator: advances
- * `gAirshipZ` by its per-frame delta (`gUnknown_03001560`),
- * and - while `gUnknown_03001554` hasn't crossed its ceiling
- * (`0x81FF`) - resets the velocity group (`gUnknown_0300155C`/
- * `gUnknown_03001558`) and fires the state-2/table-index-0 transition
+ * `gAirshipZ` by its per-frame delta (`gAirshipVelZ`),
+ * and - while `gAirshipDistance` hasn't crossed its ceiling
+ * (`0x81FF`) - resets the velocity group (`gAirshipVelY`/
+ * `gAirshipVelX`) and fires the state-2/table-index-0 transition
  * on the small tracker object (`gAirship`, anim frame from
  * its own part-table pointer at `+0`), then always calls
  * `sub_802A4F8`. Same "pin the zero constant so it's loaded before its
@@ -31,12 +31,12 @@ extern struct actor_self *gAirship;
  * scheduler move the `anims[0]` load below the zero constant. */
 void AirshipStateApproach(void)
 {
-    gAirshipZ += gUnknown_03001560;
+    gAirshipZ += gAirshipVelZ;
 
-    if (gUnknown_03001554 <= 0x81FF) {
+    if (gAirshipDistance <= 0x81FF) {
         struct actor_self *self;
-        s32 *p1558 = &gUnknown_03001558;
-        s32 *p155C = &gUnknown_0300155C;
+        s32 *p1558 = &gAirshipVelX;
+        s32 *p155C = &gAirshipVelY;
         register s32 zero asm("r5") = 0;
 
         *p155C = zero;
@@ -45,7 +45,7 @@ void AirshipStateApproach(void)
             register s32 two asm("r1") = 2;
             gAirshipState = two;
         }
-        gUnknown_0300153C = zero;
+        gAirshipStateTimer = zero;
 
         self = gAirship;
         self->animIndex = zero;

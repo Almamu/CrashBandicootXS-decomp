@@ -160,7 +160,7 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gPaletteCache;
 extern void *gEntityFlags;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
 extern struct pmf gInputCtrlStateFuncs[];
@@ -301,7 +301,7 @@ void sub_8017600(struct input_ctrl *self)
     if (self->child == NULL)
     {
         self->child = CreateCameraLead(OperatorNew(0x80));
-        AddToPartList(gUnknown_030012F0, self->child);
+        AddToPartList(gCollidableList, self->child);
     }
     ResetCameraLead(self->child);
 }

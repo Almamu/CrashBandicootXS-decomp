@@ -254,7 +254,7 @@ struct level_state
 };
 
 extern struct part_list *gUnknown_030012EC;
-extern struct part_list *gUnknown_030012F0;
+extern struct part_list *gCollidableList;
 extern struct part *gPlayer;
 extern void ***gSpriteBankSet;
 extern struct level_state *gEntityFlags;
@@ -886,12 +886,12 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
     if (mode == 0)
         AddToPartList(gUnknown_030012EC, p);
     else
-        AddToPartList(gUnknown_030012F0, p);
+        AddToPartList(gCollidableList, p);
 }
 
 /* Spawns one of the boss's floor-tile parts (record index 1 of the
  * `+0x30` table, `kind` 6) at (x, y), with a gStaticData_087E483C
- * controller, facing `facing`, and registers it with gUnknown_030012F0.
+ * controller, facing `facing`, and registers it with gCollidableList.
  *
  * The two virtual calls are written as plain blocks, not VCALL1's
  * `do { } while (0)` (whose loop notes swap the part/controller
@@ -915,7 +915,7 @@ void sub_801A03C(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     p->f28.facing = facing;
     p->fl.b.active = 1;
     VCALL1_B(ctl, m18, p)
-    AddToPartList(gUnknown_030012F0, p);
+    AddToPartList(gCollidableList, p);
 }
 
 /* gStaticData_087E490C's per-frame update (this controller is created
@@ -1144,7 +1144,7 @@ void sub_801A584(struct obj_48a4 *self, u16 x, u16 y)
     p->ctl = c;
     VCALL1(c, m18, p);
     p->fl.b.active = 1;
-    AddToPartList(gUnknown_030012F0, p);
+    AddToPartList(gCollidableList, p);
 }
 
 void sub_801A64C(struct obj_483c *self, struct part *other)

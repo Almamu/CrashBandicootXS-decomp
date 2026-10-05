@@ -28,8 +28,8 @@ extern void DestroyEntitySpawner(void);
 extern struct dual_array_manager *gUnknown_030012E8;
 extern struct dual_array_manager *gUnknown_030012EC;
 extern struct pool_manager *gCrateList;
-extern struct dual_array_manager *gUnknown_030012F0;
-extern struct dual_array_manager *gUnknown_030012F8;
+extern struct dual_array_manager *gCollidableList;
+extern struct dual_array_manager *gDecorationList;
 extern struct dual_array_manager *gUnknown_030012F4;
 extern void *gCamera;
 extern void *gLevelLayers;
@@ -112,11 +112,11 @@ s32 PlayRoom(void *selfArg)
         *slot = InitCrateList(OperatorNew(0x818), 0xc0);
     }
     {
-        struct dual_array_manager **slot = &gUnknown_030012F0;
+        struct dual_array_manager **slot = &gCollidableList;
         *slot = InitPartList(OperatorNew(0x14), 0x80);
     }
     {
-        struct dual_array_manager **slot = &gUnknown_030012F8;
+        struct dual_array_manager **slot = &gDecorationList;
         *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
@@ -282,11 +282,11 @@ s32 PlayRoom(void *selfArg)
     if (gUnknown_030012F4 != NULL) {
         DestroyPartList(gUnknown_030012F4, 3);
     }
-    if (gUnknown_030012F8 != NULL) {
-        DestroyPartList(gUnknown_030012F8, 3);
+    if (gDecorationList != NULL) {
+        DestroyPartList(gDecorationList, 3);
     }
-    if (gUnknown_030012F0 != NULL) {
-        DestroyPartList(gUnknown_030012F0, 3);
+    if (gCollidableList != NULL) {
+        DestroyPartList(gCollidableList, 3);
     }
     if (gCrateList != NULL) {
         DestroyCrateList(gCrateList, 3);

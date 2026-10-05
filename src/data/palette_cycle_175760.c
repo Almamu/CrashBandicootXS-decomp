@@ -7,9 +7,9 @@
 
 /* The BG palette-cycle animation: 32 frames of BG palettes 0-13
  * (0x1C0 bytes each). While it's armed, UpdateActorPaletteCycle (actor_part53.c)
- * DMAs frame gUnknown_03001470 to BG palette RAM every call and every
- * 0x24 calls steps that cursor towards the bound gUnknown_03001474. */
-const u16 gStaticData_08175760[32][14 * 16] = {
+ * DMAs frame gActorPaletteCycleFrame to BG palette RAM every call and every
+ * 0x24 calls steps that cursor towards the bound gActorPaletteCycleTarget. */
+const u16 gActorPaletteCycleFrames[32][14 * 16] = {
     { /* 0 */
         0x03E4, 0x739C, 0x6B7B, 0x6759, 0x6318, 0x5EF7, 0x5EF5, 0x56B5, 0x56B3, 0x5294, 0x5293, 0x4E72, 0x4A51, 0x4631, 0x4210, 0x462F,
         0x03E4, 0x7FFF, 0x7FFE, 0x7BDE, 0x7FFD, 0x7BDE, 0x7BDC, 0x77BC, 0x739B, 0x7379, 0x6B58, 0x6737, 0x6712, 0x5AAE, 0x5269, 0x4A24,
@@ -527,5 +527,5 @@ const u16 gStaticData_08175760[32][14 * 16] = {
 /* The cursor start and bound SetActorPaletteCycle (actor_part54.c) seeds for each
  * cycle: 0->15, 15->0, 16->31 and 31->16 (the first or second half of
  * the frames, forwards or backwards). */
-const s32 gStaticData_08178F60[4] = { 0, 15, 16, 31 };
-const s32 gStaticData_08178F70[4] = { 15, 0, 31, 16 };
+const s32 gActorPaletteCycleStartFrames[4] = { 0, 15, 16, 31 };
+const s32 gActorPaletteCycleTargetFrames[4] = { 15, 0, 31, 16 };

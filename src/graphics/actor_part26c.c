@@ -9,7 +9,7 @@
  * `ConvertHovercraftTiles` (outside this chunk, issue #62's range) that
  * procedurally generates a vertical meter/fill-level tile graphic.
  * Indexes `gAirshipPalette`'s per-level table via the
- * `gUnknown_03001528`/`gUnknown_0300152C` fields (row/column counts,
+ * `gAirshipMapCols`/`gAirshipMapRows` fields (row/column counts,
  * both capped near 32), sums four rows' worth of heights into
  * `gUnknown_03001530`, computes `0xFF - sum` as a fill level, and DMAs
  * the result - packed two nibbles per byte from each row's raw byte
@@ -20,8 +20,8 @@
  * Matched as plain C with the fixes that closed the one-row twin
  * `ConvertHovercraftTiles` (actor_part130.c, see
  * docs/matching/near-miss-polish-3.md). */
-extern s32 gUnknown_03001528;
-extern s32 gUnknown_0300152C;
+extern s32 gAirshipMapCols;
+extern s32 gAirshipMapRows;
 extern s32 gUnknown_03001530;
 extern u8 gAirshipPalette[];
 extern u8 *gUnknown_03001580[];
@@ -51,7 +51,7 @@ void ConvertAirshipTiles(void)
     u8 **rows = gUnknown_03001580;
     u32 m;
 
-    stride = (u32)(gUnknown_03001528 * gUnknown_0300152C + 1) >> 1 << 2;
+    stride = (u32)(gAirshipMapCols * gAirshipMapRows + 1) >> 1 << 2;
     for (k = 0; k < 4; k++) {
         s32 x = *(s32 *)(gAirshipPalette + off);
         heights[k] = x;

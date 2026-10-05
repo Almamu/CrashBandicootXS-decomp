@@ -7,7 +7,7 @@
 extern void *gPaletteCache;
 extern u8 *gLevelState;
 extern void *gUnknown_030012E8;
-extern void *gUnknown_030012F8;
+extern void *gDecorationList;
 
 extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern struct enemy_ctrl *sub_8017FE8(void *mem);
@@ -67,7 +67,7 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
  * +0x168 at (arg1, arg2) in Q8, takes its frame from the tile cache
  * record of the first animation, clears the collected bits, attaches a
  * newly allocated sub_8017FE8 header, then shows it (flags: clear bits 7/2/6, set
- * bit 4) and registers it with gUnknown_030012F0's manager. */
+ * bit 4) and registers it with gCollidableList's manager. */
 void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
@@ -92,12 +92,12 @@ void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit2 = 0;
     PART_FLAGS(part)->bit6 = 0;
     PART_FLAGS(part)->bit4 = 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
 }
 
 /* Builds a CreateSpriteObj sprite part on animation table +0x21c, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
- * registers it with gUnknown_030012F8's manager. */
+ * registers it with gDecorationList's manager. */
 void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
@@ -111,7 +111,7 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    AddToPartList(gUnknown_030012F8, part);
+    AddToPartList(gDecorationList, part);
 }
 
 /* SpawnSeaweed without the animation reset. */
@@ -124,12 +124,12 @@ void sub_80217D0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    AddToPartList(gUnknown_030012F8, part);
+    AddToPartList(gDecorationList, part);
 }
 
 /* Builds a CreateSpriteObj sprite part on animation table +0x210, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
- * registers it with gUnknown_030012F8's manager. */
+ * registers it with gDecorationList's manager. */
 void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
@@ -143,7 +143,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    AddToPartList(gUnknown_030012F8, part);
+    AddToPartList(gDecorationList, part);
 }
 
 /* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as

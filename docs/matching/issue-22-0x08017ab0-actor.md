@@ -74,7 +74,7 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
      (mode 2), and the `0x50`-indexed one (mode 1), then returns.
   6. **Out of bounds - "spawn + scan" cluster**: builds an AABB via
      `GetSpriteHitbox(&box, other)`, unpacks it into
-     `CollidePartList(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
+     `CollidePartList(gCollidableList, box.x, box.y, box.w, box.h, 0,
      other)`, then walks the entire `gCrateList` object list. For
      each `entry` whose own table (`entry+0x18`, offset 0x48) probes
      `==3` via `_call_via_r1`, and whose Q8>>8 position is within a

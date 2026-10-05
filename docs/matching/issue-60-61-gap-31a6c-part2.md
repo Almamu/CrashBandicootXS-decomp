@@ -20,7 +20,7 @@ have entries for this pass, cross-referencing this document).
 ### Two RAM-family findings
 
 1. **The singleton system's own camera-follow/scroll-velocity RAM
-   family, `gUnknown_030015A0`-`030015FF`.** `sub_8032C0C`/`sub_8032EA0`
+   family, `gHovercraftMapCols`-`030015FF`.** `sub_8032C0C`/`sub_8032EA0`
    are the first functions in ROM order to touch most of this family's
    fields (`gHovercraftX`-`030015EC`, ~9 live fields across a
    ~0x38-byte span with a few gaps, plus a separate small cluster at
@@ -42,19 +42,19 @@ have entries for this pass, cross-referencing this document).
    `actor_part28.c` convention for the exact same bytes would be a
    worse outcome than following the a-priori guess. New fields this
    pass adds to the family (not touched by `actor_part28.c`):
-   `gUnknown_030015A0`/`030015A4`/`030015A8` (P2-meter-shaped row/column
+   `gHovercraftMapCols`/`030015A4`/`030015A8` (P2-meter-shaped row/column
    counts and fill level, seeded by `CreateHovercraft` from
    `gHovercraftPicture`), `gUnknown_03001600` (the row-pointer array
    `DrawHovercraftMap`/`ConvertHovercraftTiles` fill, structurally identical to the boss
-   cluster's `gUnknown_03001580`), `gUnknown_030015C0`/`030015C4`
-   (BG2-space dy/dx offsets), `gUnknown_030015C8` (projection-scale
+   cluster's `gUnknown_03001580`), `gHovercraftScreenX`/`030015C4`
+   (BG2-space dy/dx offsets), `gHovercraftDistance` (projection-scale
    source, structurally identical to the boss cluster's
-   `gUnknown_03001554`), `gUnknown_030015E0`/`030015E4`/`030015E8`/
+   `gAirshipDistance`), `gUnknown_030015E0`/`030015E4`/`030015E8`/
    `030015EC`/`030015F0`/`030015F4` (per-"kind" record cache fields and
-   accumulators), `gUnknown_0300159C` (an "apply now" BG2 latch,
-   `u8`, same role as the boss cluster's `gUnknown_03001524`), and
-   `gUnknown_03001598` (a BG2 preset toggle, `s32`, same role as
-   `gUnknown_03001520`).
+   accumulators), `gHovercraftBg2PageFlip` (an "apply now" BG2 latch,
+   `u8`, same role as the boss cluster's `gAirshipBg2PageFlip`), and
+   `gHovercraftBg2Page` (a BG2 preset toggle, `s32`, same role as
+   `gAirshipBg2Page`).
 
 2. **No new "singleton object" struct was introduced either**, for the
    same reason: `CreateHovercraft` (the constructor), `SpawnHovercraft`,

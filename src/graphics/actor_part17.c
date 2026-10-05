@@ -129,7 +129,9 @@ void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index)
     _call_via_r3(addr, arg1, tableEntry, fn);
 }
 
-void nullsub_13(void)
+/* gCtrlVtable slot 2, the base controller's event handler: empty
+ * (ActionCtrlHandleEvent, PlayerCtrlHandleEvent and HitEnemy override it). */
+void CtrlHandleEvent(void)
 {
 }
 asm(".align 2, 0");
