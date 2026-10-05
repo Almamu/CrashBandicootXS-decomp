@@ -198,12 +198,12 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/graphics/actor_part127.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
-                  $(C_BUILDDIR)/graphics/actor_part130.o \
+                  $(C_BUILDDIR)/bosses/hovercraft.o \
                   $(C_BUILDDIR)/frontend/credits.o \
                   $(C_BUILDDIR)/graphics/actor_part19h.o \
-                  $(C_BUILDDIR)/graphics/actor_part23b.o \
-                  $(C_BUILDDIR)/graphics/actor_part24b.o \
-                  $(C_BUILDDIR)/graphics/actor_part27a.o \
+                  $(C_BUILDDIR)/bosses/airship_map.o \
+                  $(C_BUILDDIR)/bosses/airship_touch.o \
+                  $(C_BUILDDIR)/bosses/mega_mix_update.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
                   $(C_BUILDDIR)/graphics/actor_part45d.o \
                   $(C_BUILDDIR)/objects/sprite_anim.o \
@@ -222,21 +222,21 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_hang.o \
                   $(C_BUILDDIR)/player/swim_ctrl.o \
                   $(C_BUILDDIR)/player/input_ctrl.o \
-                  $(C_BUILDDIR)/graphics/actor_part_18008.o \
-                  $(C_BUILDDIR)/graphics/actor_part_188d0.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1967c.o \
+                  $(C_BUILDDIR)/bosses/tiny_update.o \
+                  $(C_BUILDDIR)/bosses/cortex.o \
+                  $(C_BUILDDIR)/bosses/dingodile.o \
                   $(C_BUILDDIR)/objects/platform_create.o \
                   $(C_BUILDDIR)/objects/platform_collide.o \
                   $(C_BUILDDIR)/menus/level_select.o \
                   $(C_BUILDDIR)/menus/level_select_pages.o \
                   $(C_BUILDDIR)/menus/level_select_widgets.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_1e990.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_1ea5c.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_1ef0c.o \
+                  $(C_BUILDDIR)/level/spawn_start_marker.o \
+                  $(C_BUILDDIR)/level/spawn_gems.o \
+                  $(C_BUILDDIR)/level/spawn_enemies.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1fdec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1feec.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
+                  $(C_BUILDDIR)/level/spawn_bosses.o \
+                  $(C_BUILDDIR)/level/spawn_objects.o \
                   $(C_BUILDDIR)/frontend/title_screen.o \
                   $(C_BUILDDIR)/frontend/company_logos.o \
                   $(C_BUILDDIR)/gfx/graphics_package.o \
@@ -252,27 +252,27 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/menus/pause_menu_loop.o \
                   $(C_BUILDDIR)/menus/pause_menu_gems.o \
                   $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
-                  $(C_BUILDDIR)/graphics/trigger_effect.o \
+                  $(C_BUILDDIR)/level/spawn_gem_platforms.o \
                   $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
-                  $(C_BUILDDIR)/system/game_loop14.o \
-                  $(C_BUILDDIR)/system/game_loop16.o \
-                  $(C_BUILDDIR)/system/game_loop29.o \
-                  $(C_BUILDDIR)/system/game_loop3.o \
+                  $(C_BUILDDIR)/level/entity_spawner.o \
+                  $(C_BUILDDIR)/level/bg_layer.o \
+                  $(C_BUILDDIR)/level/drop_extra_life.o \
+                  $(C_BUILDDIR)/level/bg_layer_base.o \
                   $(C_BUILDDIR)/crates/crate_create.o \
                   $(C_BUILDDIR)/cutscene/slideshow.o \
-                  $(C_BUILDDIR)/system/game_loop4.o \
-                  $(C_BUILDDIR)/system/game_loop40.o \
-                  $(C_BUILDDIR)/system/game_loop41.o \
+                  $(C_BUILDDIR)/level/tile_cache.o \
+                  $(C_BUILDDIR)/level/time_trial.o \
+                  $(C_BUILDDIR)/level/room_entities.o \
                   $(C_BUILDDIR)/crates/crate_hit.o \
-                  $(C_BUILDDIR)/system/game_loop46.o \
+                  $(C_BUILDDIR)/level/terrain_probe_axes.o \
                   $(C_BUILDDIR)/crates/crate_break.o \
                   $(C_BUILDDIR)/crates/crate_update.o \
                   $(C_BUILDDIR)/pickups/wumpa_update.o \
                   $(C_BUILDDIR)/pickups/extra_life.o \
-                  $(C_BUILDDIR)/system/game_loop55.o \
-                  $(C_BUILDDIR)/system/game_loop56.o \
+                  $(C_BUILDDIR)/level/game_frame.o \
+                  $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
-                  $(C_BUILDDIR)/system/game_loop8.o \
+                  $(C_BUILDDIR)/level/room_frame.o \
                   $(C_BUILDDIR)/link/link_handshake.o \
                   $(C_BUILDDIR)/link/link_session_reset.o \
                   $(C_BUILDDIR)/link/link_session.o
