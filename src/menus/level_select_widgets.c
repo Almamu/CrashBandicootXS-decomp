@@ -4,6 +4,7 @@
 #include "util.h"
 #include "audio.h"
 #include "menus.h"
+#include "gfx.h"
 
 /* GitHub issue #28: 0x0801DA38-0x0801DFEC, the whole of the former
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
@@ -46,7 +47,9 @@ struct bgcnt_bits
     u16 size:2;
 } __attribute__((packed));
 
-union bgcnt
+/* REG_BGnCNT (graphics_package.h's `union bgcnt`), packed to 2 bytes
+ * inside `struct zoom_bg`. */
+union bgcnt_packed
 {
     u16 raw;
     struct bgcnt_bits bits;
@@ -66,7 +69,7 @@ struct zoom_bg
     s32 dx;                // 0x28 - wobble offset
     s32 dy;                // 0x2C
     u32 phase;             // 0x30 - wobble phase, 0-0xFF
-    union bgcnt bgcnt;     // 0x34 - REG_BG2CNT value (GetZoomBgControl)
+    union bgcnt_packed bgcnt; // 0x34 - REG_BG2CNT value (GetZoomBgControl)
     u8 unk_36[2];
     /* BgAffineSet source, 0x38-0x49 */
     s32 texX;              // 0x38
@@ -275,7 +278,7 @@ void SetZoomBgPicture(struct zoom_bg *self, s32 image)
 void MoveZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t)
 {
     if (t->blink > 0 && (t->timer & 4))
-        DrawSpriteWithOffset(t->part, self->dx, self->dy);
+        DrawSpriteWithOffset((struct actor *)t->part, self->dx, self->dy);
 }
 
 /* Picks a new random frame, duration and blink window for a twinkle. */
@@ -328,14 +331,14 @@ void AnimateLevelSelectEntry(struct level_item *self, s32 phase)
     else
         dy = 0x100 - phase;
     if (self->selected)
-        DrawSpriteWithOffset(self->icon, 0, dy + 2);
+        DrawSpriteWithOffset((struct actor *)self->icon, 0, dy + 2);
     else
-        DrawSpriteWithOffset(self->icon, 0, dy);
+        DrawSpriteWithOffset((struct actor *)self->icon, 0, dy);
     if (self->selected)
         SetFrame(self->frame, 1);
     else
         SetFrame(self->frame, 0);
-    DrawSpriteWithOffset(self->frame, 0, dy);
+    DrawSpriteWithOffset((struct actor *)self->frame, 0, dy);
 }
 
 void SetLevelSelectEntrySelected(struct level_item *self, u8 selected)
@@ -365,15 +368,15 @@ void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index)
 void SetLevelSelectEntryBox(struct level_item *self, s32 kind)
 {
     SetAnim(self->frame, gLevelSelectEntryBoxAnims[kind]);
-    self->frame->palette = GetSpriteAnimPaletteSlot(self->frame);
-    self->icon->palette = GetSpriteAnimPaletteSlot(self->icon);
+    self->frame->palette = GetSpriteAnimPaletteSlot((struct actor *)self->frame);
+    self->icon->palette = GetSpriteAnimPaletteSlot((struct actor *)self->icon);
 }
 
 /* Method +0x18: places the entry at pixel `pos` (x, y). */
 void SetLevelSelectEntryPos(struct level_item *self, s32 *pos)
 {
     SetPosQ8(self->icon, pos[0], pos[1] - 3);
-    SetEntityPixelPos(self->frame, pos[0], pos[1]);
+    SetEntityPixelPos((struct actor *)self->frame, pos[0], pos[1]);
 }
 
 /* Method +0x20. */
@@ -413,44 +416,6 @@ void DestroyLevelSelectEntry(struct level_item *self, s32 flags)
 
 /* One hardware OAM entry. The matrix number is split in three because
  * the ROM writes it three bits + one + one (DrawLevelSelectCursor). */
-struct oam_attrs
-{
-    u32 y:8;            // 0x00
-    u32 affineMode:2;   // 0x01
-    u32 objMode:2;
-    u32 mosaic:1;
-    u32 bpp:1;
-    u32 shape:2;
-    u32 x:9;            // 0x02
-    u32 matrixLo:3;
-    u32 matrixBit3:1;
-    u32 matrixBit4:1;
-    u32 size:2;
-    u16 tileNum:10;     // 0x04
-    u16 priority:2;
-    u16 palette:4;
-    u16 affineParam;    // 0x06
-};
-
-struct oam_entry
-{
-    u16 attr0;
-    u16 attr1;
-    u16 attr2;
-    s16 affineParam;
-};
-
-/* Same 0x40C-byte OAM shadow buffer src/gfx/graphics.c names
- * `struct oam_shadow_buffer`; `matrixCount` counts the affine matrices
- * handed out this frame. */
-struct oam_shadow_buffer
-{
-    s32 count;
-    s32 base;
-    s32 matrixCount;
-    struct oam_entry entries[128];
-};
-
 /* The level-select cursor (CreateLevelSelectCursor, 0x54 bytes). */
 struct cursor_panel
 {
@@ -473,8 +438,6 @@ COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct cursor_panel) == 0x54)
 
 extern struct oam_shadow_buffer *gOamBuffer;
 
-extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
-
 static inline void ResetIdleTimer(struct cursor_panel *self)
 {
     self->timer = (u16)RandRange(300) + 600;
@@ -489,17 +452,17 @@ static inline void MoveToPos(struct cursor_panel *self, struct xy_pair *pos)
  * so that the value is loaded before the address is computed. */
 static inline void SetAffineParam(struct oam_shadow_buffer *buf, s32 n, u16 v)
 {
-    buf->entries[n].affineParam = v;
+    buf->table[n].attr[3] = v;
 }
 
 struct level_item *CreateLevelSelectEntry(struct level_item *self)
 {
     self->vtable = gLevelSelectEntryVtable;
     self->selected = 0;
-    self->frame = InitUiSpriteObj(OperatorNew(0x40));
+    self->frame = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->frame->anim = AnimTable(0x24C);
     SetSpritePriority(self->frame, 1);
-    self->icon = InitUiSpriteObj(OperatorNew(0x40));
+    self->icon = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->icon->anim = AnimTable(0x264);
     SetSpritePriority(self->icon, 1);
     return self;
@@ -507,12 +470,12 @@ struct level_item *CreateLevelSelectEntry(struct level_item *self)
 
 struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self)
 {
-    struct sprite *p = InitUiSpriteObj(OperatorNew(0x40));
+    struct sprite *p = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
 
     self->part = p;
     p->anim = AnimTable(0x240);
     SetAnim(p, 0);
-    self->part->palette = GetSpriteAnimPaletteSlot(self->part);
+    self->part->palette = GetSpriteAnimPaletteSlot((struct actor *)self->part);
     LockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
     SetLevelSelectCursorPos(self, 0x78, 0x35);
     self->oam.y = self->line.y0 - 0x20;
@@ -545,7 +508,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
     switch (self->state)
     {
     case 0:
-        AdvanceSpriteAnim(self->part);
+        AdvanceSpriteAnim((struct box_part *)self->part);
         if (self->timer != 0)
         {
             self->timer--;
@@ -558,7 +521,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     case 1:
-        AdvanceSpriteAnim(self->part);
+        AdvanceSpriteAnim((struct box_part *)self->part);
         if (self->part->animDone)
         {
             self->state = 2;
@@ -566,7 +529,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     case 2:
-        AdvanceSpriteAnim(self->part);
+        AdvanceSpriteAnim((struct box_part *)self->part);
         if (self->part->animDone)
         {
             self->state = 3;
@@ -574,7 +537,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     case 3:
-        AdvanceSpriteAnim(self->part);
+        AdvanceSpriteAnim((struct box_part *)self->part);
         if (self->part->animDone)
         {
             self->state = 0;
@@ -607,7 +570,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
  * affine OBJ with its own matrix; otherwise the sprite part draws it. */
 void DrawLevelSelectCursor(struct cursor_panel *self)
 {
-    SetEntityPixelPos(self->part, self->line.x0, self->line.y0);
+    SetEntityPixelPos((struct actor *)self->part, self->line.x0, self->line.y0);
     switch (self->state)
     {
     case 4 ... 5:
@@ -630,7 +593,7 @@ void DrawLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     default:
-        DrawSpriteWithOffset(self->part, 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->part, 0, 0);
         break;
     }
 }
@@ -736,7 +699,7 @@ void SetLevelSelectCursorPos(struct cursor_panel *self, s32 x, s32 y)
 {
     self->line.x0 = x;
     self->line.y0 = y;
-    SetEntityPixelPos(self->part, x, y);
+    SetEntityPixelPos((struct actor *)self->part, x, y);
 }
 
 void ResetLevelSelectCursorIdleTimer(struct cursor_panel *self)

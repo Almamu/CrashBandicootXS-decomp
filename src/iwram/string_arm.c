@@ -1,4 +1,5 @@
 #include "core.h"
+#include "iwram.h"
 
 /*
  * IWRAM 0x030000D4-0x0300024C (stored in ROM at 0x087E56B8): ARM copies

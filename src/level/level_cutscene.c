@@ -6,6 +6,8 @@
 #include "cutscene.h"
 #include "system.h"
 #include "audio.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.c, which
@@ -35,17 +37,8 @@ extern void *gSpriteRenderer;
 extern void *gSpriteBankSet;
 extern void *gPaletteCache;
 extern void *gEntityFlags;
-extern void *gPaletteCycles;
 
-extern void FreeVramDmaQueue(void);
-extern void DestroyOamBuffer(void *self, u32 flags);
-extern void DestroyObjVramCursor(void *self, u32 flags);
-extern void OperatorDelete(void *p);
-extern void DestroySpriteRenderer(void *self, u32 flags);
-extern void DestroySpriteBankSet(void *self, u32 flags);
-extern void DestroyPaletteCache(void *self, u32 flags);
 extern void DestroyEntityFlags(void *self, s32 flags);
-extern void DestroyPaletteCycles(void *self, s32 flags);
 
 typedef void (*destroy_fn)(void *self, s32 flags);
 
@@ -109,13 +102,6 @@ struct text_rect
     struct text_vec pos;
     struct text_vec size;
 };
-
-extern void SetDispcntMode(s32 val);
-extern void ShowBg2(void);
-extern void ShowObj(void);
-extern void CommitDispcnt(void);
-extern void FreeUnlockedPaletteSlots(void *cache);
-extern void UploadPaletteCache(void *cache);
 
 typedef void (*method_fn)(void *self);
 

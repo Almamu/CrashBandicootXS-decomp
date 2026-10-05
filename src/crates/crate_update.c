@@ -129,6 +129,6 @@ void UpdateCrate(struct crate *self)
     }
     else if ((self->state & 0x7f) == 1)
         FinishBrokenCrate(self);
-    AdvanceSpriteAnim((struct gobj *)self);
+    AdvanceSpriteAnim((struct box_part *)(struct gobj *)self);
     PHYS_CALL(self, m60);
 }

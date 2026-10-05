@@ -23,6 +23,7 @@
 #include "enemies.h"
 #include "util.h"
 #include "audio.h"
+#include "memory.h"
 
 struct bg_scroll_layer {
     u8 unk_00[0x14];
@@ -39,7 +40,6 @@ extern void *gEntityFlags;
 extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern struct level_layers *gLevelLayers;
-extern void *OperatorNew(s32 size);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);

@@ -3,6 +3,8 @@
 #include "actor.h"
 #include "aabb.h"
 #include "crates.h"
+#include "objects.h"
+#include "memory.h"
 
 /* The fields of a level object (`struct gobj`, gobj_1a794.h) that
  * `IsCrateInsideRect` reads. */
@@ -161,7 +163,6 @@ u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
 asm(".align 2, 0");
 
 extern void *gPlayer;
-extern void ResolveCollisionCandidates(void *arg);
 
 /* Refreshes the viewport's own collision box (`ResolveCollisionCandidates` on
  * `gPlayer+0x108`), then increments its `+0x92` counter by
@@ -172,7 +173,7 @@ void ResolvePlayerCollisions(void)
     u8 *p = (u8 *)gPlayer;
     u8 *p2;
 
-    ResolveCollisionCandidates(p + 0x108);
+    ResolveCollisionCandidates((struct candidate_list *)(p + 0x108));
     p2 = (u8 *)gPlayer + 0x92;
     if (*p2 != 0) {
         *p2 = *p2 + 1;
@@ -220,9 +221,6 @@ u32 GetCrateClassId(void)
  * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). */
 
-extern void OperatorDeleteArray(void *ptr);
-extern void DestroySpriteObj(struct actor *self, u32 arg1);
-
 /* Sets `self->table`, then - if `self`'s own `+0x4e` state byte is 3 -
  * frees `self+0x48` (a heap pointer, unless it's the sentinel `-1` or
  * already `NULL`) and clears `self+0x59`, before tail-calling
@@ -244,8 +242,6 @@ void DestroyCrate(struct actor *self, u32 arg1)
 
     DestroySpriteObj(self, arg1);
 }
-
-extern struct actor *InitSpriteObj(struct actor *self);
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched,
  * `sprite_obj.c`), sets `self->table`, clears `self+0x59`, then

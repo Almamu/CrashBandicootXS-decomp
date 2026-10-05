@@ -2,6 +2,7 @@
 #include "level_state.h"
 #include "hud.h"
 #include "vtable.h"
+#include "memory.h"
 
 /* The lives, wumpa and crate counters' slide-in timers (`struct
  * hud_counter`, include/hud.h), shared with `SetHudCrateTotal`/
@@ -193,8 +194,6 @@ void IncHudCrateTotal(struct hud_counter *self)
  * src/text/font*.c files). */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern void OperatorDeleteArray(void *ptr);
-extern void OperatorDelete(void *manager);
 
 /* Destructor for a `struct hud_counter`'s `parts` array (see
  * include/hud.h): walks the array back to front, invoking each

@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/vehicle/polar_player_states.c`
@@ -41,16 +42,9 @@ struct held_pressed_pair {
 };
 extern struct held_pressed_pair gKeys;
 
-extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void LoseLife(void *arg0);
-extern void *AllocVramTileBlock(s32 size);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-
-extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
-
-extern u32 GetSpriteShapeSizeBits(u8 *frame);
-extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 
 static inline s32 Abs(s32 x)
 {
@@ -199,7 +193,7 @@ void DrawPolarPlayer(struct actor_self *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gPolarPlayerLastFrame) {
             gPolarPlayerTileBuffer ^= 1;
-            gUnpackRleSpriteFrameFunc(gPolarPlayerTiles[gPolarPlayerTileBuffer], frame);
+            gUnpackRleSpriteFrameFunc(gPolarPlayerTiles[gPolarPlayerTileBuffer], (struct rle_frame *)frame);
             gPolarPlayerLastFrame = frame;
         }
         {

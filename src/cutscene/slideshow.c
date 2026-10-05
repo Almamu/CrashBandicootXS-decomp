@@ -3,6 +3,7 @@
 #include "cutscene.h"
 #include "system.h"
 #include "audio.h"
+#include "gfx.h"
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/issue-38-medal-results-tally.md
@@ -13,7 +14,6 @@
 struct AudioContext;
 
 extern struct AudioContext *gAudioContext;
-extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 
 /* Starts sound cue `slides[idx]->cue` on the audio context. If the
  * channel already reports that cue, plays the item's secondary sfx

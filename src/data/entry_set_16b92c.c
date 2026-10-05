@@ -1,19 +1,11 @@
 #include "core.h"
+#include "objects.h"
+#include "player.h"
 
 /*
  * ROM 0x0816B92C-0x0816B93C: two entry sets. Linked in ROM order between
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
-
-/* The {entries, 0x100} shape of the entry sets in entry_set_16c418.c
- * (gobj_1a794.h's `struct mover` `set`, +0x04); these two are stored at
- * the same +0x04 of their objects, but what their entries hold hasn't
- * been traced. */
-struct entry_set
-{
-    const void *entries;
-    u32 unk_04;
-};
 
 /* Their entries, in motion_records_16b304.c. */
 extern const u32 gActionCtrlMotionEntries[][2];

@@ -1,19 +1,10 @@
 #include "core.h"
 #include "system.h"
+#include "gfx.h"
 
 /* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_step.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
-extern s32 gBrightnessFadeTimer;
-extern s32 gBrightnessFadeStep;
-
-struct unk_030007E8 {
-    s32 field_0;
-    s32 field_4;
-    u8 field_8;
-};
-
-extern struct unk_030007E8 gBrightnessFade;
 
 /* A per-frame screen-brightness fade tick: every `gBrightnessFade`.
  * `field_0` frames, writes the next brightness step to `REG_BLDY`,
@@ -132,9 +123,6 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
 
 /* Sits right after FadeBrightness (ROM 0x0800132C, in src/gfx/fade.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
-
-extern u16 gPaletteBackup[512];
-extern u16 gPaletteFadeBuffer[512];
 
 /* Blends the whole 512-entry palette at `gPaletteBackup` toward
  * black by `factor`/16 per channel (5 bits each, GBA BGR555), writing

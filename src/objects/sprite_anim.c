@@ -6,8 +6,8 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
-
-extern void *GetSpriteFrame(void *part);
+#include "gfx.h"
+#include "objects.h"
 
 /* Same keyframe-record lookup as `GetSpriteAnimPaletteId`/`IsSpriteAnimLooping` above,
  * returning the record's `+0x16` byte (frame count, also read by
@@ -65,8 +65,6 @@ void SetSpriteAnimIndex(void *part, u8 val)
 {
     *((u8 *)part + 0x2d) = val;
 }
-
-extern void SetSpriteAnimDone(void *part, u8 val);
 
 /* Sets `part`'s frame index (`+0x2d`), then resets the sub-counter,
  * frame counter, and "done" flag (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
@@ -211,8 +209,6 @@ void SetSpriteAffine(struct box_part *part, u16 val)
 }
 
 extern void *gSpriteRenderer;
-extern void DrawAffineSpritePieces(void *unused, void *part, s32 *posPtr);
-extern void DrawSpritePieces(void *unused, void *part, s32 *posPtr);
 
 /* Resolves `part`'s Q8 position plus a caller-supplied offset into a
  * stack `{x, y}` pair, then dispatches to `DrawAffineSpritePieces` or
@@ -226,9 +222,9 @@ void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2)
     pos[1] = (part->y >> 8) + arg2;
 
     if (((struct box_part *)part)->affine != 0) {
-        DrawAffineSpritePieces(gSpriteRenderer, part, pos);
+        DrawAffineSpritePieces(gSpriteRenderer, (struct affine_part *)part, pos);
     } else {
-        DrawSpritePieces(gSpriteRenderer, part, pos);
+        DrawSpritePieces(gSpriteRenderer, (struct oam_part *)part, pos);
     }
 }
 
@@ -257,9 +253,6 @@ s32 GetSpritePriority(void *part)
     return *((u8 *)part + 0x28) >> 6;
 }
 
-extern u8 gUiSpriteObjVtable[];
-extern void DestroySpriteObj(struct actor *self, u32 arg1);
-
 /* Overwrites `part->table` with `gUiSpriteObjVtable`, then tail-
  * calls `DestroySpriteObj` (already matched in `sprite_obj.c`) with the
  * same `arg1` - which immediately overwrites `table` again with
@@ -268,11 +261,9 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
  * as-is. */
 void DestroyUiSpriteObj(struct actor *part, u32 arg1)
 {
-    part->table = gUiSpriteObjVtable;
+    part->table = (void *)gUiSpriteObjVtable;
     DestroySpriteObj(part, arg1);
 }
-
-extern struct actor *InitSpriteObj(struct actor *self);
 
 /* Re-initializes `part` via `InitSpriteObj` (already matched in
  * `sprite_obj.c`, which itself sets `table` to `gSpriteObjVtable`),
@@ -281,7 +272,7 @@ extern struct actor *InitSpriteObj(struct actor *self);
 struct actor *InitUiSpriteObj(struct actor *part)
 {
     InitSpriteObj(part);
-    part->table = gUiSpriteObjVtable;
+    part->table = (void *)gUiSpriteObjVtable;
     return part;
 }
 
@@ -398,8 +389,6 @@ void UpdatePartList(struct part_list *list)
     }
 }
 
-extern void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
-extern void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other);
 extern struct box_part *gPlayer;
 
 /* Walks `list`'s visible parts. For each: asks its method-table +0x48
@@ -443,9 +432,6 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
-extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
-extern struct aabb GetSpriteHitbox(struct box_part *part);
-extern struct aabb GetSpriteBodyBox(struct box_part *part);
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \
@@ -484,7 +470,7 @@ void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_p
         s32 px;
 
         a = GetSpriteHitbox(gPlayer);
-        b = GetSpriteBodyBox(part);
+        GetSpriteBodyBox(&b, part);
         if (!AabbOverlaps(&a, &b))
             return;
         px = part->x;

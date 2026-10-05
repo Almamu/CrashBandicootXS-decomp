@@ -1,4 +1,5 @@
 #include "core.h"
+#include "system.h"
 
 /*
  * ROM 0x08172CD4-0x08174BE0. Linked in ROM order between data/data.s

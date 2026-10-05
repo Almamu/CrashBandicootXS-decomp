@@ -13,6 +13,7 @@
  * r1/r2/r3/r4" thunks. */
 
 #include "menus.h"
+#include "graphics_package.h"
 
 struct method
 {
@@ -169,7 +170,7 @@ struct item
  * InitBgSetup background descriptor (BGxCNT at +0x0C, GetBgSetupControl). */
 struct page_bg
 {
-    u8 desc[0x10];      // 0x00 - InitBgSetup
+    struct bg_setup bg; // 0x00 - BG1 (InitBgSetup)
     s32 scroll;         // 0x10 - current page scroll, Q8 (0x100 = a page)
     s32 target;         // 0x14 - scroll `scroll` eases toward
     u8 unk_18[0x0C];

@@ -3,6 +3,7 @@
 #include "level_state.h"
 #include "aabb.h"
 #include "player.h"
+#include "objects.h"
 
 /* The one player-object field (gPlayer, a `struct gobj`)
  * this file reads. */
@@ -15,10 +16,7 @@ struct player_view
 extern struct level_state *gLevelState;
 extern void *gPlayer;
 extern u32 gRoomFrameCount;
-extern void *GetSpriteAttackBox(void *dest, void *pt);
-extern void *GetSpriteBodyBox(void *dest, void *pt);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void ResolvePlayerContact(void *partArg);
 
 /* Tests `part` for a collision-grid hit against the player
  * (`gPlayer`), gated by a mix of flag bits and a periodic

@@ -3,6 +3,15 @@
 #include "actor.h"
 #include "orbit_part.h"
 #include "pickups.h"
+#include "objects.h"
+#include "memory.h"
+#include "crates.h"
+
+/* codegen: GetSpriteHitbox returns the box by value (objects.h); this
+ * file was matched against the same call written with the destination
+ * as an explicit first argument, and through the struct return gcc adds
+ * a temporary on the stack. docs/headers_plan.md */
+extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox");
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -68,15 +77,7 @@ extern struct level_info *gLevelLayers;
 extern void ***gSpriteBankSet;
 extern void *gCollidableList;
 
-extern struct fx_part *CreateMovingSprite(u16 arg0, u16 x, u16 y, u16 arg3);
-extern void ResetSpriteFrameTimer(struct fx_part *part);
-extern void ResetSpriteFrameIndex(struct fx_part *part);
-extern void SetSpriteAnimDone(struct fx_part *part, s32 val);
-extern s32 GetSpriteAnimPaletteSlot(struct fx_part *part);
-extern void *OperatorNew(s32 size);
-extern struct manager *InitEffectCtrl(void);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
-extern void AddToPartList(void *manager, void *value);
 
 /* Spawns a `SpawnEffectPart` part next to `src` (at `src`'s tile X/Y, facing
  * its way), places it beside `src` by their two `GetSpriteHitbox` AABBs'
@@ -94,7 +95,6 @@ extern void AddToPartList(void *manager, void *value);
  *   (`-speed`, 0x40) are expanded before the stores, and the X offset is
  *   a `?:` so the flip byte is tested before `ox + dist`. */
 struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
-extern void GetSpriteHitbox(struct aabb *dest, void *obj);
 
 static inline void SetVel(struct fx_part *p, s32 v, s32 k)
 {
@@ -119,9 +119,9 @@ struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32
     {
         struct { struct aabb a, b; } f;
 
-        GetSpriteHitbox(&f.a, part);
+        GetSpriteHitbox_p(&f.a, part);
         w1 = f.a.w;
-        GetSpriteHitbox(&f.b, src);
+        GetSpriteHitbox_p(&f.b, src);
         w2 = f.b.w;
     }
     dist = w1 / 2 + w2 / 2 + margin;
@@ -168,9 +168,8 @@ struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, 
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
-    part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x10);
-    mgr = InitEffectCtrl();
+    part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
+    mgr = InitEffectCtrl(OperatorNew(0x10));
     part->mgr = mgr;
     _call_via_r2((u8 *)mgr + mgr->vtable->attach.thisOffset, part, mgr->vtable->attach.fn);
     ACTOR_FLAG_BITS(&part->base)->bit2 = 0;
@@ -257,8 +256,6 @@ void SetEntitySpawnerTable(void *self, s32 a, s32 b)
     *(s32 *)((u8 *)self + 4) = b;
     *(s32 *)self = a;
 }
-
-extern void OperatorDelete(void *self);
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
  * body to `DestroyEntityFlags` above (a second copy at a different ROM

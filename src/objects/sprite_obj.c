@@ -5,6 +5,9 @@
 #include "sprite_bank.h"
 #include "aabb.h"
 #include "util.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* Builds `part`'s AABB (same keyframe-table shape/record layout as
  * GetSpriteHitbox, inlined directly here rather than calling it - this
@@ -63,7 +66,6 @@ s32 SpriteHitboxOverlaps(struct actor *part, void *region)
     return (u8)AabbOverlaps(&buf_, region);
 }
 
-extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
 extern struct palette_cache *gPaletteCache;
 
 /* Reads `part`'s current keyframe record's `+0x14` byte as a
@@ -412,8 +414,6 @@ end:
 }
 asm(".align 2, 0");
 
-extern s32 IsEntityInsideRect(struct actor *self, void *box);
-
 /* `part+0x25 == 1` is the same fast override seen in
  * IsSpriteObjOnScreen/SpriteObjOverlapsRect; otherwise defers to `IsEntityInsideRect` (already
  * matched in graphics.c), forwarding `box` straight through
@@ -432,8 +432,6 @@ s32 IsSpriteObjInsideRect(struct actor *part, void *box)
     }
     return result;
 }
-
-extern u8 IsEntityNearCamera(struct actor *self);
 
 /* Same `part+0x25` fast-override shape as `IsSpriteObjInsideRect` above,
  * deferring to `IsEntityNearCamera` (already matched in `graphics.c`)
@@ -461,7 +459,6 @@ s32 ApplySpriteObjVelocity(void)
     return 1;
 }
 
-extern void DrawSprite(void *self, void *part);
 extern void *gSpriteRenderer;
 
 /* Tail-calls `DrawSprite` (already matched in `sprite.c`) with
@@ -471,7 +468,6 @@ void DrawSpriteObj(void *part)
     DrawSprite(gSpriteRenderer, part);
 }
 
-extern void AdvanceSpriteAnim(struct actor *part);
 extern void *_call_via_r1(void *arg0, void *arg1);
 
 /* Advances `part`'s animation timer (`AdvanceSpriteAnim`), then resolves two
@@ -480,7 +476,7 @@ extern void *_call_via_r1(void *arg0, void *arg1);
  * - table+0x60/+0x64 first, then table+8/+0xc. */
 void UpdateSpriteObj(struct actor *part)
 {
-    AdvanceSpriteAnim(part);
+    AdvanceSpriteAnim((struct box_part *)part);
 
     {
         void *table = part->table;
@@ -620,11 +616,6 @@ s32 GetSpriteObjPriority(void)
     }
 }
 
-extern void *OperatorNew(s32 size);
-extern struct actor *InitEntity(struct actor *self);
-extern void ResetSpriteObj(void *arg0);
-extern u8 gSpriteObjVtable[];
-
 /* Allocates a new `struct actor`-shaped object (`OperatorNew`),
  * initializes it via `InitEntity` (already matched in graphics.c -
  * wires up `gEntityVtable` and clears flags), then overwrites
@@ -632,12 +623,12 @@ extern u8 gSpriteObjVtable[];
  * part-object fields via `ResetSpriteObj` (already matched in
  * sprite.c). `arg0` becomes `field_08`, `arg1`/`arg2` become the
  * Q8 `x`/`y` position. */
-struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2)
+void *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 unused)
 {
     struct actor *part = OperatorNew(0x40);
 
     InitEntity(part);
-    part->table = gSpriteObjVtable;
+    part->table = (void *)gSpriteObjVtable;
     ResetSpriteObj(part);
     part->field_08 = arg0;
     part->x = (s32)arg1 << 8;
@@ -651,7 +642,6 @@ s32 GetSpriteObjClassId(void)
     return 1;
 }
 
-extern void OperatorDelete(void *arg0);
 extern u8 gEntityVtable[];
 
 /* Same `gEntityVtable`/conditional-`OperatorDelete` shape as
@@ -670,7 +660,7 @@ void DestroySpriteObj(struct actor *self, u32 arg1)
 struct actor *InitSpriteObj(struct actor *self)
 {
     InitEntity(self);
-    self->table = gSpriteObjVtable;
+    self->table = (void *)gSpriteObjVtable;
     ResetSpriteObj(self);
     return self;
 }
@@ -720,8 +710,6 @@ void *GetSpriteFrameAnchor(void *part)
     return result;
 }
 
-extern u8 gEmptySpriteBox[];
-
 /* Same `GetSpriteFrame`-derived-record-nibble-switch shape as
  * `GetSpriteFrameAnchor` above, with a different result mapping: 0 and 4
  * select `info+0x1c`, anything else falls back to
@@ -742,17 +730,17 @@ void *GetSpriteFrameThirdBox(void *part)
     case 1:
     case 2:
     case 3:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     case 4:
         result = (u8 *)info + 0x1c;
         break;
     case 5:
     case 6:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     default:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     }
     return result;
@@ -780,13 +768,13 @@ void *GetSpriteFrameAttackBox(void *part)
     case 1:
     case 2:
     case 6:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     case 5:
         result = (u8 *)info + 0xc;
         break;
     default:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     }
     return result;
@@ -806,7 +794,7 @@ void *GetSpriteFrameBodyBox(void *part)
         result = (u8 *)info + 0xc;
         break;
     case 1:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     case 2:
     case 3:
@@ -814,13 +802,13 @@ void *GetSpriteFrameBodyBox(void *part)
         result = (u8 *)info + 0xc;
         break;
     case 5:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     case 6:
         result = (u8 *)info + 0xc;
         break;
     default:
-        result = gEmptySpriteBox;
+        result = (void *)&gEmptySpriteBox;
         break;
     }
     return result;

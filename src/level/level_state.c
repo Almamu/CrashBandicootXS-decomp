@@ -8,6 +8,7 @@
 #include "system.h"
 #include "audio.h"
 #include "bosses.h"
+#include "gfx.h"
 
 extern void *gHud;
 extern void *gAudioContext;
@@ -18,9 +19,6 @@ extern u8 IsInBonusRound(struct level_state *self);
 extern u8 IsInGemPath(struct level_state *self);
 extern u8 *GetCurrentLevelFlags(struct level_state *self);
 extern void SpawnCrateGem(s32 a, u16 b, u16 c, u16 d);
-extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
-extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
-extern void UploadPaletteSlot(struct palette_cache *self, s32 index);
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
@@ -846,11 +844,9 @@ extern void ClearSpawnAtStart(struct level_state *self);
 extern void ClearInGemPath(struct level_state *self);
 extern void SetGemPathDone(struct level_state *self);
 extern void ResetCrateCount(struct level_state *self);
-extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;
-extern void *OperatorNew(s32 size);
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
  * `SetCrateGemPos` two-word setter below). */

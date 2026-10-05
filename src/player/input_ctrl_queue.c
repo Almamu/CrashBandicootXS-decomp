@@ -1,5 +1,6 @@
 #include "core.h"
 #include "player.h"
+#include "objects.h"
 
 /* GitHub issue #22, ROM 0x08017A44-0x08017AAC. Two groups of methods
  * share this file:
@@ -21,9 +22,6 @@
  * `self` is the per-level "player/action" ctrl object documented in
  * action_ctrl_states.c's top-of-file comment; `self+0xc` is its method table
  * and `self+0x10` the "part" it drives. The accesses stay raw offsets. */
-
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
 
 /* input_ctrl.motionXPending (`+0x17`). */
 u8 IsInputCtrlMotionXPending(void *selfArg)

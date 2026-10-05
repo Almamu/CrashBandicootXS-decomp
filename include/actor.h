@@ -230,7 +230,7 @@ extern u8 gUnknown_03001414;
 extern s32 gActorCheckpoint;
 extern s32 gCollectedSpawnCount;
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
-extern void (*gHeapSortActorsByKeyFunc)(s32 n, void **list);
+extern void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list);
 
 /* src/data/palette_cycle_175760.c */
 extern const u16 gActorPaletteCycleFrames[32][14 * 16];

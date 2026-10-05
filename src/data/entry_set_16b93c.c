@@ -1,18 +1,11 @@
 #include "core.h"
+#include "objects.h"
+#include "player.h"
 
 /*
  * ROM 0x0816B93C-0x0816B98C. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-/* The {entries, 0x100} entry set of entry_set_16b92c.c, followed by its
- * entries: the third HUD widget's, which PlayRoom (play_room.c)
- * builds through SetCtrlAnimSet. */
-struct entry_set
-{
-    const u32 (*entries)[2];
-    u32 unk_04;
-};
 
 extern const u32 gInputCtrlMotionEntries[9][2];
 

@@ -114,12 +114,11 @@
  *   r8. */
 #include "crate.h"
 #include "crates.h"
-extern void *OperatorNew(u32 size);
-extern void InitSpriteObj(void *self);
+#include "objects.h"
+#include "memory.h"
 extern u8 sub_802599C(void *level, s32 id);
 extern s32 GetDeaths(void *self);
 extern s32 GetCrateAssistDeaths(void *self);
-extern s32 GetSpriteAnimPaletteSlot(struct crate *self);
 extern void *gCrateList;
 
 struct placement_level
@@ -331,7 +330,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     }
     self->flipX = 0;
     self->flipY = 0;
-    self->slot = GetSpriteAnimPaletteSlot(self);
+    self->slot = GetSpriteAnimPaletteSlot((struct actor *)self);
     self->x = x << 8;
     self->y = y << 8;
     if (sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf)

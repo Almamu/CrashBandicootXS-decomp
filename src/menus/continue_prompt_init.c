@@ -5,11 +5,9 @@
 #include "vram_pool.h"
 #include "audio.h"
 #include "menus.h"
+#include "gfx.h"
+#include "memory.h"
 
-extern void *OperatorNew(s32 size);
-extern void InitBgSetup(u8 *self, u32 arg1, u32 arg2, u32 arg3, u32 arg5);
-extern u16 GetBgSetupControl(u8 *self);
-extern void LoadGraphicsPackage(u8 *selfArg, struct bg_package *pkgArg);
 extern struct AudioContext *gAudioContext;
 
 /* Allocates and initializes the continue prompt's three BG scratch buffers
@@ -59,7 +57,7 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
      * ROM's own build pushes them into r8/sb instead - reproduced here
      * the same way. */
     register struct continue_prompt *self asm("r5") = selfArg;
-    register u8 *buf asm("r0");
+    register struct bg_setup *buf asm("r0");
 
     buf = OperatorNew(0x10);
     InitBgSetup(buf, 0, 0x1f, 0, 3);

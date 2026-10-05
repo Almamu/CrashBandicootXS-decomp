@@ -1,5 +1,8 @@
 #include "core.h"
 #include "hud.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -7,15 +10,7 @@ extern void ***gSpriteBankSet;
 extern void *gLevelState;
 extern u8 *gPaletteCache;
 
-extern void *OperatorNewArray(s32 size);
-extern void SetSpritePriority(struct hud_digit_part *slot, s32 value);
 extern s32 GetBossIndex(void *self);
-extern void ResetSpriteFrameTimer(struct hud_digit_part *slot);
-extern void ResetSpriteFrameIndex(struct hud_digit_part *slot);
-extern void SetSpriteAnimDone(struct hud_digit_part *slot, s32 arg);
-extern void SetEntityPixelPos(struct hud_digit_part *slot, s32 x, s32 y);
-extern u8 GetPaletteSlot(u8 *cache, s32 recordId);
-extern s32 GetSpriteAnimPaletteSlot(struct hud_digit_part *slot);
 
 #define HUD_ANIM(offset) ((struct hud_anim_data *)((u8 *)**gSpriteBankSet + (offset)))
 #define SLOT_RECORD(s) ((s)->anim_data->records[(s)->anim_index])
@@ -38,7 +33,7 @@ static inline void SetSlotFrame(struct hud_digit_part *slot, s32 frame)
 
 static inline void SetSlotPos(struct hud_digit_part *slot, const struct hud_pos *pos)
 {
-    SetEntityPixelPos(slot, pos->x, pos->y);
+    SetEntityPixelPos((struct actor *)slot, pos->x, pos->y);
 }
 
 /* Builds self->parts: a counted array of 35 HUD slots, each given the
@@ -110,7 +105,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
     {
         struct hud_anim_record *records = self->parts[13].anim_data->records;
         struct hud_anim_record *rec = &records[self->parts[13].anim_index];
-        s32 palette = GetPaletteSlot(gPaletteCache, rec->tile_record);
+        s32 palette = GetPaletteSlot((struct palette_cache *)gPaletteCache, rec->tile_record);
 
         self->parts[13].palette = palette;
     }
@@ -165,7 +160,7 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
         self->parts[13].anim_index = gHudPartAnims[13];
         RestartSlot(slot);
     }
-    base = GetSpriteAnimPaletteSlot(&self->parts[13]);
+    base = GetSpriteAnimPaletteSlot((struct actor *)&self->parts[13]);
     self->parts[13].palette = base;
 
     for (i = 0; i <= 0x22; i++)
@@ -191,11 +186,11 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
         case 0x1D:
             if (!self->icon_flag)
                 break;
-            frame = GetSpriteAnimPaletteSlot(&self->parts[i]);
+            frame = GetSpriteAnimPaletteSlot((struct actor *)&self->parts[i]);
             break;
         default:
         get:
-            frame = GetSpriteAnimPaletteSlot(&self->parts[i]);
+            frame = GetSpriteAnimPaletteSlot((struct actor *)&self->parts[i]);
             break;
         }
 

@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
@@ -112,7 +113,6 @@ asm(".align 2, 0");
  * choice (the `w`/`wShift`/`h`/`hShift` load/shift order, the
  * `x`/`y`-position-word pack, the `self+0x18` priority-nibble unpack)
  * matches the ROM's own register roles exactly once pinned to match. */
-extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
 void DrawPolarCollectedWumpa(void *selfArg)
 {

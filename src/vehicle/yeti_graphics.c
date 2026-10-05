@@ -125,7 +125,7 @@ void LoadYetiGraphics(void)
             *(u32 *)p = zero;
     }
     gYetiBg2Page = 1;
-    gUnpackNibbleTilesFunc(CurFrame(gYeti) + 4, 1);
+    gUnpackNibbleTilesFunc((u16 *)(CurFrame(gYeti) + 4), 1);
     gYetiBg2PageFlip = 1;
     UpdateYetiBg2();
     UpdateYetiPalette();

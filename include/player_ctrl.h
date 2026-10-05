@@ -28,14 +28,6 @@ struct pctrl_vtable
     struct pctrl_method setAnim;  // 0x50
 };
 
-/* one gPlayerCtrlMotionRecords record */
-struct pctrl_anim
-{
-    s32 a;
-    s32 b;
-    s32 c;
-};
-
 struct pctrl_anim_pair
 {
     u32 a;

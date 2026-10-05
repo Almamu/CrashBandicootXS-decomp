@@ -2,8 +2,9 @@
 #include "actor.h"
 #include "pickups.h"
 #include "player.h"
+#include "objects.h"
+#include "memory.h"
 
-extern void DrawSprite(void *self, void *part);
 extern void *gSpriteRenderer;
 
 /* Calls `DrawSprite` (already matched in `sprite.c`) with the
@@ -34,8 +35,6 @@ s32 GetWumpaClassId(void)
     return 2;
 }
 
-extern void DestroySpriteObj(struct actor *self, u32 arg1);
-
 /* Sets `self->table` then tail-calls `DestroySpriteObj` (already matched in
  * `sprite_obj.c`), which unconditionally overwrites `table` again
  * with `gEntityVtable` - so this function's own store is
@@ -57,8 +56,6 @@ void ResetWumpaPickup(struct orbit_part *self)
     *(volatile u8 *)&self->base.flags = mask;
     self->state = 0;
 }
-
-extern struct actor *InitSpriteObj(struct actor *self);
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched in
  * `sprite_obj.c`), then overwrites its table with
@@ -128,7 +125,6 @@ void SetWumpaCounter(struct orbit_part *self, u8 value)
     self->counter = value;
 }
 
-extern void UpdateSpriteObj(struct actor *part);
 extern void *gEntityFlags;
 
 /* Distance-gate: if the player (`gPlayer`) is within 0x180
@@ -202,8 +198,6 @@ outOfRange:
 inRange:
     UpdateSpriteObj(self);
 }
-
-extern void *OperatorNew(s32 size);
 
 /* Allocates a new `struct actor`-shaped object (`OperatorNew(0x40)`,
  * same size as `CreateSpriteObj`'s constructor in `sprite_obj.c`),

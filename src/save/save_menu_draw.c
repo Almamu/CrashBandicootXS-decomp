@@ -8,6 +8,8 @@
 #include "save.h"
 #include "util.h"
 #include "system.h"
+#include "gfx.h"
+#include "objects.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -39,10 +41,8 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * siblings `DrawEmptySlotLabel`/`DrawSaveMenuTitle` live in
  * `src/save/save_menu_ui.c`. */
 
-extern void *OperatorNew(s32 size);
 extern void *gInput;
 extern u32 gKeys;
-extern void OperatorDelete(void *newObj);
 
 /* A "connecting..." SIO-handshake spinner dialog: allocates a small
  * icon object from self->field_8c's template, then loops VBlank-
@@ -181,8 +181,6 @@ void DrawYesNoPrompt(struct save_menu *self, s32 value)
     }
 }
 
-extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
-
 /* `rowObjA`/`rowObjB`/`rowObjC` entries (see save_menu.h)
  * are small on-screen objects with just a Q8 `x`/`y` position at their
  * front - `InitSaveMenuIcons` (this chunk's other remaining function,
@@ -198,7 +196,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
 
     o->x = x << 8;
     o->y = y << 8;
-    DrawSpriteWithOffset(o, 0, 0);
+    DrawSpriteWithOffset((struct actor *)o, 0, 0);
 }
 
 /* The shared highlight/dim state call: selected rows draw in the
@@ -342,21 +340,9 @@ void DrawSaveSlots(struct save_menu *self, void *handle, s32 selectedIndex)
 asm(".align 2, 0");
 
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern struct palette_cache *gPaletteCache;
-extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
 extern struct vram_upload_cursor *gObjVramCursor;
-extern void ResetObjVram(struct vram_upload_cursor *self);
-extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
-extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *addr, void *fn);
-extern struct actor *InitUiSpriteObj(struct actor *part);
-extern void ResetSpriteFrameTimer(struct actor *part);
-extern void ResetSpriteFrameIndex(struct actor *part);
-extern void SetSpriteAnimDone(struct actor *part, u8 val);
 extern void ***gSpriteBankSet;
 
 static inline void IconSetup(struct bitmap_font *m, u32 v)

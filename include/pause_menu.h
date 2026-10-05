@@ -2,6 +2,7 @@
 #define __PAUSE_MENU_H__
 
 #include "menus.h"
+#include "graphics_package.h"
 
 /* A small `struct actor`-derived on-screen icon: the first 0x1c bytes
  * are a plain `struct actor` (see actor.h), then a second keyframe-
@@ -55,7 +56,7 @@ struct settings_icon_actor {
  * share some byte offsets by coincidence - see that header's own
  * comment. */
 struct pause_menu {
-    u8 unused_00[0x10];
+    struct bg_setup bg;         /* 0x00 - BG0 (InitBgSetup) */
     void *field_10;             /* 0x10 - a row-stats handle, passed to CountClearGems/CountGems/CountRelics/etc and read via gLevelState's per-level index table in InitPauseTimeTrialPage */
     const struct pause_row *field_14; /* 0x14 - the rows (gPauseMenuRows), see DrawPauseMenuRows/PauseMenuVolumeDown */
     s32 field_18;                   /* 0x18 - currently selected/highlighted row index */

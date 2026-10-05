@@ -488,7 +488,7 @@ extern const struct actor_pmf gPolarPlayerStateFuncs[14];
 /* src/iwram/iwram_data.c */
 extern s32 gUnknown_0300088C[3];
 extern s32 gUnknown_0300089C[6];
-extern void (*gUnpackNibbleTilesFunc)(void *src, s32 lowBlock);
+extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);
 
 /* src/data/anim_family_17aa6c.c */
 extern const struct anim_box gYetiBox;

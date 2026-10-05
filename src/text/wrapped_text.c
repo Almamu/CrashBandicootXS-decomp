@@ -1,6 +1,7 @@
 #include "core.h"
 #include "text.h"
 #include "system.h"
+#include "gfx.h"
 
 /* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line.c) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s).
@@ -25,11 +26,8 @@
  * escape sequences, `/b` (nudge the render Y position down by 4, a
  * half-line break) and `/n` (newline). Returns the number of bytes
  * consumed. */
-extern void ResetOamBuffer(void *arg0);
-extern void HideUnusedOamEntries(void *arg0);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, u8 *arg1, s32 arg2, void *arg3);
-extern void CommitOamBuffer(void *arg0);
 extern void *gOamBuffer;
 
 static inline void set_pos(struct bitmap_font *m, u32 x, u32 y)

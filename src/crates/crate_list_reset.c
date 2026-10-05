@@ -1,5 +1,6 @@
 #include "core.h"
 #include "crates.h"
+#include "box_part.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
@@ -19,44 +20,24 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * `part_list.c`) since its real ROM address, 0x08009914, sits
  * between `CollidePlayerWithCrates` (`crate_player_collide.c`) and `CollideCrateGridPartWithObject`
  * (`crate_list.c`) in ROM order. */
-struct pool_init_link;
-
+/* codegen: `struct pool_node` (crates.h) with untyped fields. Through
+ * the real `struct pool_node *` fields, gcc takes the zeroing stores below
+ * as possible writes to `m->nodeArray` and reloads it. */
 struct pool_init_node {
-    void *unk_00;
-    void *unk_04;
-    struct pool_init_link *link;  // 0x08
-    void *unk_0C;
-    u8 unk_10;
+    void *data;
+    void *next;
+    struct pool_link *wrap;
+    void *link;
+    u8 mark;
 };
 
-struct pool_init_link {
-    struct pool_init_node *node;
-    struct pool_init_link *next;
-};
-
-struct pool_obj {
-    u8 unk_00[0x18];
-    u8 *vtable;         // 0x18
-};
-
-struct pool_init {
-    s32 activeCount;
-    s32 capacity;
-    struct pool_obj **slotArray;
-    struct pool_init_node *nodeArray;
-    void *gridHead[256];
-    void *gridTail[256];
-    struct pool_init_link *freeListArray;
-    struct pool_init_link *freeListHead;
-};
-
-static inline void PoolResetFreeList(struct pool_init *m)
+static inline void PoolResetFreeList(struct pool_manager *m)
 {
     s32 i;
     s32 n = m->capacity;
-    struct pool_init_link **freeList = &m->freeListArray;
-    struct pool_init_link **freeHead = &m->freeListHead;
-    struct pool_init_link **fl;
+    struct pool_link **freeList = &m->freeListArray;
+    struct pool_link **freeHead = &m->freeListHead;
+    struct pool_link **fl;
 
     for (i = 0; i < 256; i++) {
         m->gridHead[i] = NULL;
@@ -66,15 +47,15 @@ static inline void PoolResetFreeList(struct pool_init *m)
     if (i < n) {
         fl = freeList;
         do {
-            struct pool_init_link *link;
-            struct pool_init_link *arr;
+            struct pool_link *link;
+            struct pool_link *arr;
 
             (*fl)[i].node = &m->nodeArray[i];
-            m->nodeArray[i].unk_00 = NULL;
-            m->nodeArray[i].unk_04 = NULL;
-            m->nodeArray[i].unk_0C = NULL;
-            m->nodeArray[i].unk_10 = 0;
-            m->nodeArray[i].link = link = &(arr = *fl)[i];
+            ((struct pool_init_node *)m->nodeArray)[i].data = NULL;
+            ((struct pool_init_node *)m->nodeArray)[i].next = NULL;
+            ((struct pool_init_node *)m->nodeArray)[i].link = NULL;
+            ((struct pool_init_node *)m->nodeArray)[i].mark = 0;
+            ((struct pool_init_node *)m->nodeArray)[i].wrap = link = &(arr = *fl)[i];
             if (i == m->capacity - 1)
                 link->next = NULL;
             else
@@ -85,12 +66,12 @@ static inline void PoolResetFreeList(struct pool_init *m)
     *freeHead = *freeList;
 }
 
-void ResetCrateList(struct pool_init *m)
+void ResetCrateList(struct pool_manager *m)
 {
     s32 i;
 
     for (i = 0; i < m->activeCount; i++) {
-        struct pool_obj *obj = m->slotArray[i];
+        struct box_part *obj = m->slotArray[i];
 
         if (obj != NULL) {
             u8 *m50 = obj->vtable + 0x50;

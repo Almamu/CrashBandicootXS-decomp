@@ -11,6 +11,7 @@
 #include "system.h"
 #include "audio.h"
 #include "actor.h"
+#include "gfx.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
  * off `title_screen_init.c` at `TitleScreenCheatInput` in the issues #64/#65
@@ -29,77 +30,13 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 extern u8 gDispcnt[2];
 extern void *gInput;
-extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
 
-extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
-extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
-extern void CommitDispcnt(void);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void ShowBg2(void);
-extern void *OperatorNewArray(u32 size);
-extern void OperatorDeleteArray(void *ptr);
-extern void *OperatorNew(s32 size);
-extern void *AllocVramTileBlock(u32 size);
-extern void InitObjTileFreeList(void *arg0);
-extern void FreeObjTileFreeList(void);
-extern void InitSpriteFrameOamQueue(void);
-extern void FreeSpriteFrameOamQueue(void);
-extern void FlushSpriteFrameOamQueue(void);
-extern void InitSpriteFrameCache(void);
-extern void FreeSpriteFrameCache(void);
-extern void AgeSpriteFrameCache(void);
-extern void FreeCategorySpriteSheet(void);
-extern void FlushVramDmaQueue(void);
-extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void OperatorDelete(void *self);
-extern s32 GetSpriteShapeSizeBits(void *self);
-extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
-
-/* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits,
- * viewed as its bitfields (field stores give the ROM's byte-wide
- * and/or sequences). */
-struct dispcnt_bits
-{
-    u16 mode:3;
-    u16 cgbMode:1;
-    u16 frame:1;
-    u16 hblankOam:1;
-    u16 objMap1D:1;
-    u16 forcedBlank:1;
-    u16 bg0:1;
-    u16 bg1:1;
-    u16 bg2:1;
-    u16 bg3:1;
-    u16 obj:1;
-    u16 win0:1;
-    u16 win1:1;
-    u16 objWin:1;
-};
-
-/* REG_BGnCNT as bitfields (same layout as `struct bg_setup`'s ctrl in
- * include/graphics_package.h). */
-union bgcnt
-{
-    u16 raw;
-    struct {
-        u16 priority:2;
-        u16 charBase:2;
-        u16 unk_4:2;
-        u16 mosaic:1;
-        u16 colorMode:1;
-        u16 screenBase:5;
-        u16 wrap:1;
-        u16 size:2;
-    } bits;
-};
 
 /* Per-frame updater for the scratch object's 9-slot (`i` = 0..8,
  * stride 0x34, base `self+4`) record array: while a slot's countdown

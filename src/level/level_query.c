@@ -2,6 +2,7 @@
 #include "level_state.h"
 #include "audio.h"
 #include "actor.h"
+#include "memory.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
@@ -53,7 +54,6 @@ struct MedalItemList {
 
 extern void *gEntityFlags;
 extern s32 CountCrateEntities(void *self, void *list);
-extern void OperatorDelete(void *self);
 
 /* Wrapper: if bit 0 of `flags` is set, tears down `self` via
  * `OperatorDelete` (the documented UI-overlay-manager-family destroy

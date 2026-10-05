@@ -4,6 +4,8 @@
 #include "menus.h"
 #include "crates.h"
 #include "bosses.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
@@ -13,10 +15,7 @@ extern u8 *gLevelState;
 extern void *gUpdateOnlyPartList;
 extern void *gDecorationList;
 
-extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
-extern s32 CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetBonusPlatform(void *self, s32 value);
 extern void SpawnSeal(void);
 
@@ -97,7 +96,7 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
-    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
@@ -110,7 +109,7 @@ void sub_80217D0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     struct popup_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     part->anim = POPUP_ANIM(0x21c);
-    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
@@ -129,7 +128,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
-    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
@@ -161,9 +160,9 @@ void SpawnBonusPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     s32 result;
 
     if (IsBonusRoundDone(gLevelState) || gLevelState[0x8c])
-        result = CreatePlatform(arg0, arg1, arg2, arg3, 7);
+        result = (s32)CreatePlatform(arg0, arg1, arg2, arg3, 7);
     else
-        result = CreatePlatform(arg0, arg1, arg2, arg3, 5);
+        result = (s32)CreatePlatform(arg0, arg1, arg2, arg3, 5);
     SetBonusPlatform(gLevelState, result);
 }
 

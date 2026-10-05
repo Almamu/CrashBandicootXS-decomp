@@ -1,8 +1,7 @@
 #include "core.h"
+#include "gfx.h"
 #include "system.h"
 #include "actor.h"
-
-extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 
 /* A meta-node for a doubly-linked, address-ordered free-block list that
  * tracks allocations inside the OBJ tile VRAM pool (OBJ_VRAM0,
@@ -33,12 +32,6 @@ struct vram_tile_block {
  * and uses the 128th (index 127) as the pool's initial single free
  * block, spanning the whole range. */
 #define VRAM_TILE_BLOCK_POOL_COUNT 128
-
-extern struct vram_tile_block *gVramTileBlockPool; /* pool base */
-extern struct vram_tile_block gVramTileBlockList;  /* address-sorted free-block list sentinel */
-extern struct vram_tile_block *gVramTileBlockRover; /* next-fit search cursor ("rover") */
-extern struct vram_tile_block *gVramTileBlockSpares; /* spare-record stack head */
-extern u8 *gVramTileBlockIndex;                     /* tile-index -> pool-record-index lookup table, TOTAL_OBJ_TILE_COUNT bytes */
 
 #define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
 
@@ -170,9 +163,6 @@ void FreeVramTileBlock(void *addr)
         gVramTileBlockSpares = adj;
     }
 }
-
-extern void *AllocVramTileBlock(s32 requestedSize);
-extern void FreeVramTileBlock(void *addr);
 
 /* ROM 0x08028CD4 - next-fit search (starting from and updating the
  * `gVramTileBlockRover` rover, the same strategy `mem_alloc` uses over
@@ -378,11 +368,6 @@ struct queued_oam_entry {
     u8 pad_06[2];
 };
 
-extern struct queued_oam_entry *gSpriteOamQueue; /* queued OAM entries, OAM_ENTRY_COUNT max */
-extern s32 *gSpriteAffineQueue;                     /* queued affine (x,y) pairs, packed one s16 each into a u32, deduped */
-extern s32 gSpriteOamQueueCount;                      /* gSpriteOamQueue count */
-extern s32 gSpriteAffineQueueCount;                      /* gSpriteAffineQueue count */
-
 /* ROM 0x08028DD8 - appends one OAM entry (`attr01`/`attr2`, hardware
  * ATTR0|ATTR1<<16 and ATTR2) to the `gSpriteOamQueue` overflow queue
  * `FlushSpriteFrameOamQueue` later commits. When ATTR0 bit 8 (the
@@ -458,20 +443,7 @@ void FreeSpriteFrameOamQueue(void)
     mem_free((u8 *)gSpriteOamQueue);
 }
 
-/* Same 0x40C-byte OAM shadow buffer src/gfx/graphics.c already
- * names `struct oam_shadow_buffer` (redeclared locally per this
- * project's minimal-local-type convention - see docs/naming.md). */
-struct oam_shadow_buffer {
-    s32 count;
-    s32 base;
-    s32 matrixCount;
-    u8 table[0x400];
-};
-
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void AppendOamEntries(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void SetOamAffineScales(void *arg0, u16 *arg1, s32 arg2);
 
 /* ROM 0x08028EA8 - commits this frame's overflow OAM queue into the
  * real hardware-shaped OAM shadow buffer: appends the queued entries
@@ -528,21 +500,8 @@ void InitSpriteFrameOamQueue(void)
  * frame's in-use entries, newest at the head) and `gSpriteFrameCachePrevious`
  * (last frame's entries, oldest at the tail) - see
  * AgeSpriteFrameCache/LoadSpriteFrameTiles. */
-struct sprite_frame_cache_node {
-    struct sprite_frame_cache_node *next; // 0x00
-    struct sprite_frame_cache_node *prev; // 0x04
-    u8 *frame;                             // 0x08
-    void *vramAddr;                         // 0x0C
-};
-
 #define SPRITE_FRAME_CACHE_POOL_COUNT 128
 
-extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent; /* "this frame" MRU list sentinel */
-extern struct sprite_frame_cache_node gSpriteFrameCachePrevious; /* "last frame" eviction list sentinel */
-extern struct sprite_frame_cache_node *gSpriteFrameCacheSpares; /* spare-record stack head */
-extern struct sprite_frame_cache_node *gSpriteFrameCachePool; /* pool base */
-
-extern void *gLookupSpriteFrameCacheFunc; /* optional frame-source override hook (called via _call_via_r1) */
 extern void *_call_via_r1(void *arg0, void *fn);
 
 /* ROM 0x08028F58 - resolves one animation frame's tile data into VRAM,
@@ -808,9 +767,9 @@ void FreeCategorySpriteSheet(void)
  * stashing the result in `gCategorySpriteSheet` - the same global
  * `GetAnimFrameData` adds to a raw `table_B` pointer for the
  * "decompressed sheet, relative addressing" animation records. */
-void DecompressCategorySpriteSheet(void *sheet)
+void DecompressCategorySpriteSheet(const void *sheet)
 {
-    u32 size = *(u32 *)sheet >> 8;
+    u32 size = *(const u32 *)sheet >> 8;
     void *buf = mem_alloc(size, MEM_HEAP_EWRAM);
 
     gCategorySpriteSheet = buf;

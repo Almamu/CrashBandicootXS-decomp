@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "objects.h"
 
 /* Same `record->table+0x10/0x14`-driven trampoline shape as
  * `DestroyMovingSprite`/`UpdateMovingSprite`, but forwarding `arg1`/`arg2`/`arg3`
@@ -22,9 +23,6 @@ void HitMovingSprite(struct gobj *self, s32 arg1, s32 arg2, s32 arg3)
         _call_via_r4(addr, arg1, arg2, arg3);
     }
 }
-
-extern void *GetSpriteAttackBox(void *dest, void *pt);
-extern void *GetSpriteBodyBox(void *dest, void *pt);
 
 /* Builds `part`'s primary AABB (`GetSpriteAttackBox`) and tests it against
  * `region` (`AabbOverlaps`, the same collision-test function used by

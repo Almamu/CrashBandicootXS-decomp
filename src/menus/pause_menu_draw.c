@@ -9,11 +9,8 @@
 #include "util.h"
 #include <libgcc.h>
 #include "menus.h"
-
-extern void AdvanceSpriteAnim(struct actor *part);
-extern void ResetSpriteFrameTimer(struct actor *part);
-extern void ResetSpriteFrameIndex(struct actor *part);
-extern void SetSpriteAnimDone(struct actor *part, u8 val);
+#include "gfx.h"
+#include "objects.h"
 
 /* A slow reveal/cycle animation over the results screen's icon groups:
  * `field_24` (0-4) selects which group to hide this call (a plain
@@ -27,13 +24,13 @@ void AnimatePauseMenu(struct pause_menu *self)
 {
     switch (self->field_24) {
     case 0:
-        AdvanceSpriteAnim((struct actor *)self->field_88);
+        AdvanceSpriteAnim((struct box_part *)(struct actor *)self->field_88);
         break;
     case 1: {
         struct settings_icon_actor **p = self->icons8c;
         s32 i;
         for (i = 3; i >= 0; i--) {
-            AdvanceSpriteAnim((struct actor *)*p);
+            AdvanceSpriteAnim((struct box_part *)*p);
             p++;
         }
         break;
@@ -42,7 +39,7 @@ void AnimatePauseMenu(struct pause_menu *self)
         struct settings_icon_actor **p = self->icons9c;
         s32 i;
         for (i = 4; i >= 0; i--) {
-            AdvanceSpriteAnim((struct actor *)*p);
+            AdvanceSpriteAnim((struct box_part *)*p);
             p++;
         }
         break;
@@ -51,13 +48,13 @@ void AnimatePauseMenu(struct pause_menu *self)
         struct settings_icon_actor **p = self->iconsB0;
         s32 i;
         for (i = 2; i >= 0; i--) {
-            AdvanceSpriteAnim((struct actor *)*p);
+            AdvanceSpriteAnim((struct box_part *)(struct actor *)*p);
             p++;
         }
         break;
     }
     case 4:
-        AdvanceSpriteAnim((struct actor *)self->field_bc);
+        AdvanceSpriteAnim((struct box_part *)(struct actor *)self->field_bc);
         break;
     }
 
@@ -86,7 +83,7 @@ void AnimatePauseMenu(struct pause_menu *self)
                 result = (u16)RandRange(0x78) + 0x78;
                 goto store;
             } else {
-                AdvanceSpriteAnim((struct actor *)icon);
+                AdvanceSpriteAnim((struct box_part *)(struct actor *)icon);
                 goto done;
             }
         }
@@ -112,11 +109,7 @@ asm(".align 2, 0");
  * pause_menu_loop.c documents. See
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
-extern void ResetOamBuffer(void *arg0);
-extern void RewindObjVram(struct vram_upload_cursor *self);
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void DrawSpriteWithOffset(void *icon, s32 dx, s32 dy);
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct vram_upload_cursor *gObjVramCursor;
 
@@ -225,7 +218,7 @@ void DrawPauseMenu(struct pause_menu *self)
         break;
     }
     if (self->field_c4 == 0)
-        DrawSpriteWithOffset(self->field_c0, 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->field_c0, 0, 0);
     HideUnusedOamEntries(gOamBuffer);
 }
 

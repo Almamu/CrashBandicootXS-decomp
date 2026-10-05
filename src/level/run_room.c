@@ -6,6 +6,8 @@
 #include "menus.h"
 #include "crates.h"
 #include "player.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -263,7 +265,6 @@ extern struct gl_player *gPlayer;
 extern struct gl_scratch *gCamera;
 extern void *gLevelLayers;
 extern struct gl_level *gLevelState;
-extern u8 *gPaletteCycles;
 extern void *gPaletteCache;
 extern void *gAudioContext;
 extern void *gHud;
@@ -291,7 +292,6 @@ extern void CheckAllCratesBroken(void *level);
 extern u8 IsSwitchPressed(void *level);
 extern void SetMaskAssistDeaths(void *level, s32 value);
 extern void SetCrateAssistDeaths(void *level, s32 value);
-extern void ClearPaletteCycles(void *queue);
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
  * makes the struct BLKmode, so the compound literal is stored straight
@@ -304,18 +304,15 @@ struct fx_direction
     u8 pad[0];
 } __attribute__((packed));
 
-extern void AddPaletteCycle(void *queue, u16 *targets, u16 *lists, s32 rate, s32 count, struct fx_direction direction);
+/* codegen: AddPaletteCycle takes a u8 `direction` (gfx.h); passed as a
+ * u8 it is stored to the stack slot as a word. docs/headers_plan.md */
+extern void AddPaletteCycle_fx(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate, s32 count, struct fx_direction direction) asm("AddPaletteCycle");
 
 #define FX_CYCLE(lists, rate, count, dir) \
-    AddPaletteCycle(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
+    AddPaletteCycle_fx(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
                 (struct fx_direction){ (dir) })
 extern void SetupRoomBlend(struct gl_self *self);
 extern void ResetObjBuffers(void);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, s32 arg);
-extern s32 GetSpriteAnimPaletteSlot(void *part);
-extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
 extern void SnapCamera(void *scratch);
 extern void ResetLevelLayers(void *box);
 extern u8 IsInBonusRound(void *level);
@@ -324,27 +321,13 @@ extern u8 IsInBonusRoom(struct gl_self *self);
 extern u8 IsInGemPathRoom(struct gl_self *self);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void CullPartList(void *mgr);
 extern void UpdateRoomFrame(struct gl_self *self);
-extern void SetDispcntMode(s32 arg);
-extern void SetObjMapping1D(void);
-extern void ShowObj(void);
-extern void CommitDispcnt(void);
 extern void ResumeRoomAfterPause(struct gl_self *self);
-extern void UpdatePartList(void *mgr);
 extern void TickLevelClock(struct gl_level *level);
 extern u8 IsRoomExitRequested(void);
-extern void FadePaletteToBlack(void);
 extern s32 *GetBonusPlatform(void *level);
-extern s32 sub_801B29C(s32 *arg);
 extern void SetCheckpoint(void *level, s32 arg, s32 *point);
 extern void AddPendingSwitchCrates(void *level, s32 count);
-extern void ClearPartList(void *mgr);
-extern void HideBg0(void);
-extern void HideBg1(void);
-extern void HideBg2(void);
-extern void HideBg3(void);
-extern void HideObj(void);
 
 #define PAL_RAM ((u16 *)PLTT)
 
@@ -369,7 +352,7 @@ static inline void SpawnNearPlayer(s32 x, s32 y)
     point.x = x;
     point.y = y;
     level = gLevelState;
-    SetCheckpoint(level, sub_801B29C(GetBonusPlatform(level)), &point.x);
+    SetCheckpoint(level, sub_801B29C((struct gobj *)GetBonusPlatform(level)), &point.x);
 }
 
 static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
@@ -425,7 +408,7 @@ s32 RunRoom(struct gl_self *self)
         FX_CYCLE(gThemePaletteCycle5, 0x14, 5, 0);
         break;
     default:
-        *gPaletteCycles = 0;
+        gPaletteCycles->active = 0;
         break;
     }
 
@@ -436,7 +419,7 @@ s32 RunRoom(struct gl_self *self)
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->unk_14 = 2;
     }
-    gPlayer->frameNibble = GetSpriteAnimPaletteSlot(gPlayer);
+    gPlayer->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)gPlayer);
     RefreshPlayerTiles();
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
@@ -525,7 +508,7 @@ fade:
             point.x = x;
             point.y = i;
             x = (s32)gLevelState;
-            SetCheckpoint((void *)x, sub_801B29C(GetBonusPlatform((void *)x)), &point.x);
+            SetCheckpoint((void *)x, sub_801B29C((struct gobj *)GetBonusPlatform((void *)x)), &point.x);
         }
         else if (!IsInGemPathRoom(self) && IsInGemPath(gLevelState))
         {
@@ -568,7 +551,7 @@ fade:
         }
     }
     ClearPartList(gUpdateOnlyPartList);
-    ResetCrateList((struct pool_init *)gCrateList);
+    ResetCrateList((struct pool_manager *)gCrateList);
     ClearPartList(gUnknown_030012EC);
     ClearPartList(gCollidableList);
     ClearPartList(gDecorationList);

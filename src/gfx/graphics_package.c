@@ -1,17 +1,15 @@
 #include "core.h"
 #include "graphics_package.h"
+#include "gfx.h"
 #include "gba/gba.h"
 #include "system.h"
-
-extern void *OperatorNewArray(u32 size);
-extern void OperatorDeleteArray(void *ptr);
 
 /* GitHub issue #30. Loads one BG: the palette into bank `paletteBank`,
  * the tiles into char block `charBlock`, and the tilemap into screen
  * block `screenBlock`, ORing the palette bank into every entry. Palettes
  * of more than 0x20 colors switch the BG to 256-color mode. Built with
  * old_agbcc - see docs/matching/issue-30-old-agbcc.md. */
-void LoadGraphicsPackage(struct bg_setup *self, struct bg_package *pkg)
+void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg)
 {
     u16 *map;
     u16 *src;
@@ -75,10 +73,12 @@ asm(".align 2, 0");
 /* GitHub issue #30: the sprite-box fitter and its OAM writer. Built with
  * old_agbcc - see docs/matching/issue-30-old-agbcc.md. */
 
-/* One hardware OAM entry (attr0/attr1/attr2 plus the interleaved affine
+/* gfx.h's `struct oam_attrs` with u16 storage units for attributes 0-1
+ * (with gfx.h's u32 units, a DrawScaledSprite store changes).
+ * One hardware OAM entry (attr0/attr1/attr2 plus the interleaved affine
  * parameter). matrixNum is split: in affine mode its bits 3-4 double as
  * the h/v-flip bits. */
-struct oam_attrs {
+struct oam_attrs_u16 {
     u16 y:8;            // 0x00
     u16 affineMode:2;
     u16 objMode:2;
@@ -96,15 +96,6 @@ struct oam_attrs {
     s16 affineParam;    // 0x06
 };
 
-/* Same 0x40C-byte OAM shadow buffer `src/gfx/graphics.c` already
- * names `struct oam_shadow_buffer`. */
-struct oam_shadow_buffer {
-    s32 count;
-    s32 base;
-    s32 matrixCount;        // 0x08
-    struct oam_attrs oam[0x80];
-};
-
 /* A sprite box: position, requested size, its OAM template and the
  * preset box it was fitted to. */
 struct gfx_box_obj {
@@ -112,7 +103,7 @@ struct gfx_box_obj {
     s32 y;                  // 0x04
     s32 width;              // 0x08
     s32 height;             // 0x0C
-    struct oam_attrs oam;   // 0x10
+    struct oam_attrs_u16 oam; // 0x10
     s32 sizeIndex;          // 0x18
     u8 unk_1C[4];
     s32 scaleX;             // 0x20 - Q8
@@ -120,10 +111,6 @@ struct gfx_box_obj {
 };
 
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
-
-extern s32 gObjSizeWidths[12];
-extern s32 gObjSizeHeights[12];
 
 /* Picks the smallest-area box preset (gObjSizeWidths/674) that a
  * width x height box fits in at 50% zoom or better, puts its shape/size
@@ -133,8 +120,8 @@ extern s32 gObjSizeHeights[12];
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
 void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height)
 {
-    s32 *widths;
-    s32 *heights;
+    const s32 *widths;
+    const s32 *heights;
     s32 best;
     s32 i;
     s32 idx;
@@ -207,11 +194,11 @@ void DrawScaledSprite(struct gfx_box_obj *self)
              * ahead of its store address. */
             u16 param = self->scaleX;
             s32 i = n * 4;
-            buf->oam[i].affineParam = param;
-            buf->oam[i + 1].affineParam = 0;
-            buf->oam[i + 2].affineParam = 0;
+            buf->table[i].attr[3] = param;
+            buf->table[i + 1].attr[3] = 0;
+            buf->table[i + 2].attr[3] = 0;
             param = self->scaleY;
-            buf->oam[i + 3].affineParam = param;
+            buf->table[i + 3].attr[3] = param;
         }
     }
     AddOamEntry(gOamBuffer, &self->oam);

@@ -6,6 +6,8 @@
 #include "audio.h"
 #include "crates.h"
 #include "player.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* GitHub issue #17, ROM 0x08014674-0x08014F8C, formerly
  * asm/code_3_2_17_14674.s (details in
@@ -21,11 +23,6 @@ extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gInput;
 extern u8 gEmptySpritePoint[];
-extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
-extern void *GetSpriteFrame(struct act_part *part);
-extern void ResetSpriteFrameTimer(struct act_part *p);
-extern void ResetSpriteFrameIndex(struct act_part *p);
-extern void SetSpriteAnimDone(struct act_part *p, s32 arg1);
 
 /* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
  * in kill_player.c only matches that way), but ActionCtrlStateHangMove
@@ -535,7 +532,7 @@ void ActionCtrlStateHangMove(struct act *self)
     }
     if (UpdatePlayerFacing_u8(self))
     {
-        u8 *info = GetSpriteFrame(self->part);
+        u8 *info = GetSpriteFrame((struct gfx_part *)self->part);
         s32 x;
         s32 y;
 

@@ -2,6 +2,8 @@
 #include "actor.h"
 #include "pickups.h"
 #include "crates.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
@@ -90,10 +92,6 @@ extern struct entity_list *gUnknown_030012EC;
 extern struct collision_map *gEntityFlags;
 
 extern void SetMaskLevel(struct level_state *self, s32 arg1);
-extern void ResetSpriteFrameTimer(struct slot_part *part);
-extern void ResetSpriteFrameIndex(struct slot_part *part);
-extern void SetSpriteAnimDone(struct slot_part *part, s32 arg);
-extern void LoadPaletteSlot(void *cache, s32 palette, u8 record);
 extern s32 _call_via_r1(void *self, void *fn);
 
 static inline void SetPartTag(struct slot_part *part, s32 tag)

@@ -5,20 +5,15 @@
 #include "pickups.h"
 #include "util.h"
 #include "audio.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 extern void *gLevelState;
 extern void *gEntityFlags;
 extern void ***gSpriteBankSet;
 extern void *gUnknown_030012EC;
 extern void *gEntitySpawner;
-
-extern void *OperatorNew(s32 size);
-extern struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, u8 val);
-extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
-extern void AddToPartList(void *manager, void *value);
 
 /* Sets `part->field_29`'s low nibble to `GetSpriteAnimPaletteSlot(part)`'s result,
  * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
@@ -338,19 +333,11 @@ void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 extern void *gAudioContext;
 extern void *gSpriteRenderer;
-extern void *gPaletteCycles;
 extern struct palette_cache *gPaletteCache;
-extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
-extern s32 AllocVramDmaQueue(void);
 extern struct oam_shadow_buffer *gOamBuffer;
-extern struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
-extern struct vram_upload_cursor *InitObjVramCursor(struct vram_upload_cursor *self, s32 count);
 extern void *gInput;
-extern struct palette_cycler *InitPaletteCycles(struct palette_cycler *self);
 extern u8 gDispcnt[2];
-extern void SetObjMapping1D(void);
-extern void CommitDispcnt(void);
 extern u8 gSpriteBankTable[];
 
 /* `InitLevelState` (docs/rom_map.md, "Found the origin point"): the

@@ -1,6 +1,8 @@
 #include "core.h"
 #include "cutscene.h"
 #include "audio.h"
+#include "gfx.h"
+#include "memory.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * level_query.c - see level_query.c's header comment and
@@ -27,7 +29,6 @@ void SetSlideshowDispcnt(u32 value)
 struct AudioContext;
 
 extern struct AudioContext *gAudioContext;
-extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 
 /* Tail half of RunSlideshow's per-item body (slideshow.c) - duck-out
  * (`duckMusic`), fade-start (`fadeAfter`), and re-arm (`rearmSfx`/
@@ -65,8 +66,6 @@ void EndSlide(struct cutscene_player *self0, s32 idx)
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
  * This is the tail of the chunk, right after EndSlide (parked/left
  * in asm/code_3_2_17_24790.s). */
-
-extern void OperatorDelete(void *self);
 
 /* Same wrapper shape as sub_802425C (level_query.c): tears `self` down
  * via OperatorDelete if bit 0 of `flags` is set. */

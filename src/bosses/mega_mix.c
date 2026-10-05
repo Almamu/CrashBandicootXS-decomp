@@ -2,6 +2,7 @@
 #include "vtable.h"
 #include "player.h"
 #include "bosses.h"
+#include "objects.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
  * airship_fireball.c since `UpdateMegaMix` (NAKED-parked, see
@@ -26,7 +27,6 @@
  * (player_flags.c). */
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void StartCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec);
 
 /* Reads `rec+4` as the type id (bit 5 mirror test), writes into
  * `part+0x54`/`+0x58`/`+0x5c`. */

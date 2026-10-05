@@ -1,4 +1,6 @@
 #include "core.h"
+#include "gfx.h"
+#include "memory.h"
 
 /* GitHub issue #43: BG layer 0 of the level-layers singleton
  * (`level_layers.c`) and the VRAM tile-slot pool it owns.
@@ -89,9 +91,6 @@ struct pooled_layer
 
 extern void *InitBgLayer(void *self, s32 bgIndex);
 extern void DestroyBgLayerBase(void *self, u32 flags);
-extern void *OperatorNew(u32 size);
-extern void OperatorDelete(void *ptr);
-extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern u8 gPooledBgLayerVtable[];
 extern u8 gBgLayerVtable[];
 

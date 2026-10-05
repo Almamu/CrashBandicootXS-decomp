@@ -1,5 +1,6 @@
 #include "core.h"
 #include "graphics_package.h"
+#include "gfx.h"
 
 /*
  * ROM 0x0816C484-0x0816C498. Linked in ROM order between data/data.s

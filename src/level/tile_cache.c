@@ -1,8 +1,7 @@
 #include "core.h"
+#include "memory.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
-
-extern void OperatorDelete(void *self);
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
  * shape to `DestroySpriteBankSet` (src/gfx/graphics.c). */

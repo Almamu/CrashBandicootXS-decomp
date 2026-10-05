@@ -5,8 +5,8 @@
 #include "text.h"
 #include "system.h"
 #include "menus.h"
+#include "objects.h"
 
-extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Shows (`DrawSpriteWithOffset(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
@@ -26,7 +26,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            DrawSpriteWithOffset(self->icons8c[0], 0, 0);
+            DrawSpriteWithOffset((struct actor *)self->icons8c[0], 0, 0);
             none = 0;
         }
     }
@@ -37,7 +37,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            DrawSpriteWithOffset(self->icons8c[1], 0, 0);
+            DrawSpriteWithOffset((struct actor *)self->icons8c[1], 0, 0);
             none = 0;
         }
     }
@@ -48,7 +48,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            DrawSpriteWithOffset(self->icons8c[2], 0, 0);
+            DrawSpriteWithOffset((struct actor *)self->icons8c[2], 0, 0);
             none = 0;
         }
     }
@@ -59,7 +59,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            DrawSpriteWithOffset(self->icons8c[3], 0, 0);
+            DrawSpriteWithOffset((struct actor *)self->icons8c[3], 0, 0);
             none = 0;
         }
     }

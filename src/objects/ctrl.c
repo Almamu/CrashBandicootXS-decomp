@@ -2,14 +2,10 @@
 #include "actor.h"
 #include "vtable.h"
 #include "util.h"
+#include "objects.h"
+#include "memory.h"
 
-extern u8 gCtrlMotionRecords[];
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, u8 val);
-extern void OperatorDelete(void *self);
-extern u8 gCtrlVtable[];
 
 /* Looks up `selfArg`'s `index`-th 8-byte record (via a double
  * pointer chain at `self+4`), uses its second word as a type index
@@ -34,7 +30,7 @@ void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index)
     asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 4);
-    tableEntry = gCtrlMotionRecords + type * 12;
+    tableEntry = (u8 *)gCtrlMotionRecords + type * 12;
     vtbl = *(struct vtable_slot **)(self + 0xc);
     offset = vtbl[6].delta;
     addr = self + offset;
@@ -120,7 +116,7 @@ void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index)
     asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 0);
-    tableEntry = gCtrlMotionRecords + type * 12;
+    tableEntry = (u8 *)gCtrlMotionRecords + type * 12;
     vtbl = *(struct vtable_slot **)(self + 0xc);
     offset = vtbl[5].delta;
     addr = self + offset;
@@ -176,7 +172,7 @@ void DestroyCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gCtrlVtable;
     if (flags & 1) {
         OperatorDelete(self);
     }
@@ -188,7 +184,7 @@ void InitCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gCtrlVtable;
     *(s32 *)(self + 8) = 0;
 }
 

@@ -2,19 +2,6 @@
 #include "actor.h"
 #include "crates.h"
 
-struct grid_node {
-    void *data;
-    struct grid_node *next;
-};
-
-struct pool_manager {
-    s32 activeCount;
-    s32 capacity;
-    void **slotArray;
-    void *nodeArray;
-    struct grid_node *gridHead[256];
-};
-
 struct bg_scroll_layer {
     s32 x;
     s32 y;
@@ -78,7 +65,7 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
     state = p->state;
     if (state == 3) {
         do {
-            struct grid_node *node;
+            struct pool_node *node;
             for (node = m->gridHead[i]; node != NULL; node = node->next)
                 BreakCrateTouchedByPlayer(node->data);
             i--;
@@ -94,7 +81,7 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
                 mode = 0xd;
         }
         do {
-            struct grid_node *node;
+            struct pool_node *node;
             for (node = m->gridHead[i]; node != NULL; node = node->next)
                 CollideCrateWithPlayer(node->data, mode, px, py);
             i--;

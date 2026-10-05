@@ -2,6 +2,7 @@
 #include "level_state.h"
 #include "util.h"
 #include "text.h"
+#include "memory.h"
 
 /* Set-size primitive - already referenced by name from several other
  * files (sprite.c/power_dialog_draw.c's DrawPowerDialog) as the
@@ -28,8 +29,6 @@ s32 GetLives(struct level_state *self)
 {
     return self->lives;
 }
-
-extern void OperatorDelete(void *self);
 
 /* Both DestroyLargeFont/DestroySmallFont below are per-type descriptor
  * constructors - the same "set one field of a passed-in struct to a

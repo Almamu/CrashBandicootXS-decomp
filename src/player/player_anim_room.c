@@ -50,7 +50,7 @@ extern u8 ProbeTerrain(void *player, s32 dir, struct pos *pos, s32 h, s32 *outY)
 u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
 {
     u8 *rec;
-    struct part_box *box;
+    struct hitbox_quad *box;
     u8 h;
     struct pos pos;
     s32 origY;
@@ -59,7 +59,7 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
 
     rec = (u8 *)&(*self->keyframes)[x];
     rec += 4;
-    box = (struct part_box *)rec;
+    box = (struct hitbox_quad *)rec;
     h = box->h;
     pos = *(struct pos *)self;
     origY = self->y;

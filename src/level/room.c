@@ -1,5 +1,6 @@
 #include "core.h"
 #include "util.h"
+#include "gfx.h"
 
 extern void *gObjVramCursor;
 extern void *gOamBuffer;
@@ -8,15 +9,9 @@ extern void *gLevelLayers;
 extern struct palette_cache *gPaletteCache;
 extern u8 gRoomExitRequested;
 
-extern void UploadPaletteCache(struct palette_cache *self);
-extern void ResetObjVram(struct vram_upload_cursor *self);
-extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void SnapCamera(void *self);
 extern void ResetLevelLayers(void *self);
 extern void UpdateRoomFrame(void *self);
-extern void SetDispcntMode(s32 val);
-extern void ShowObj(void);
-extern void CommitDispcnt(void);
 
 void ClearRoomExit(void)
 {

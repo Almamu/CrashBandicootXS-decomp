@@ -5,19 +5,7 @@
 #include "system.h"
 #include "audio.h"
 #include "crates.h"
-
-struct grid_node {
-    struct box_part *data;
-    struct grid_node *next;
-};
-
-struct pool_manager {
-    s32 activeCount;
-    s32 capacity;
-    void **slotArray;
-    void *nodeArray;
-    struct grid_node *gridHead[256];
-};
+#include "objects.h"
 
 struct bg_scroll_layer {
     s32 x;
@@ -87,9 +75,9 @@ void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struc
     struct bg_scroll_layer *cam;
     s32 lo;
     s32 i;
-    struct grid_node *node;
-    struct grid_node **last;
-    struct grid_node **heads;
+    struct pool_node *node;
+    struct pool_node **last;
+    struct pool_node **heads;
 
     cam = gLevelLayers->layer0;
     {
@@ -130,9 +118,6 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
-extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
-extern struct aabb GetSpriteHitbox(struct box_part *part);
-extern struct aabb GetSpriteBodyBox(struct box_part *part);
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \
@@ -163,7 +148,7 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
         s32 px;
 
         a = GetSpriteHitbox(gPlayer);
-        b = GetSpriteBodyBox(part);
+        GetSpriteBodyBox(&b, part);
         if (!AabbOverlaps(&a, &b))
             return;
         px = part->x;

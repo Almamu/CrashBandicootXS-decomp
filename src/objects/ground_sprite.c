@@ -1,13 +1,8 @@
 #include "core.h"
 #include "actor.h"
 #include "gfx_part.h"
-
-extern s32 DrawSpriteObj(void *arg0);
-extern void *OperatorNew(s32 size);
-extern struct actor *InitMovingSprite(struct actor *part);
-extern void DestroyMovingSprite(struct actor *self, u32 arg1);
-extern u8 gGroundSpriteVtable[];
-extern void ResetGroundSprite(void *selfArg);
+#include "objects.h"
+#include "memory.h"
 
 /* Void tail-call wrapper around the already-matched `DrawSpriteObj`. */
 void DrawGroundSprite(void *arg0)
@@ -26,12 +21,12 @@ s32 GetGroundSpriteClassId(void)
  * table with `gGroundSpriteVtable`, clears it via `ResetGroundSprite`
  * below, then sets `field_08` and the Q8 `x`/`y` position from the
  * three `u16` arguments. */
-struct actor *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2)
+void *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2, u16 unused)
 {
     struct actor *part = OperatorNew(0x80);
 
     InitMovingSprite(part);
-    part->table = gGroundSpriteVtable;
+    part->table = (void *)gGroundSpriteVtable;
     ResetGroundSprite(part);
     part->field_08 = arg0;
     part->x = (s32)arg1 << 8;
@@ -49,7 +44,7 @@ struct actor *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2)
  * whatever register its own caller happened to leave it in. */
 void DestroyGroundSprite(struct actor *self, u32 unusedArg)
 {
-    self->table = gGroundSpriteVtable;
+    self->table = (void *)gGroundSpriteVtable;
     DestroyMovingSprite(self, unusedArg);
 }
 
@@ -121,7 +116,7 @@ void ResetGroundSprite(void *selfArg)
 struct actor *InitGroundSprite(struct actor *self)
 {
     InitMovingSprite(self);
-    self->table = gGroundSpriteVtable;
+    self->table = (void *)gGroundSpriteVtable;
     ResetGroundSprite(self);
     return self;
 }

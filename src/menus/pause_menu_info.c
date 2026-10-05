@@ -5,11 +5,11 @@
 #include "pause_menu.h"
 #include "system.h"
 #include "menus.h"
+#include "gfx.h"
 
 extern s32 GetCurrentLevel(void *arg0);
 extern void *gLevelState;
 extern u8 gLevelTable[];
-extern s32 GetCompletionPercent(void *arg0);
 extern struct AudioContext *gAudioContext;
 
 /* The composite pause/options screen's "results" sub-region

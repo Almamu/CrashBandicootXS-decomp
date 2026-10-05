@@ -2,11 +2,11 @@
 #include "actor.h"
 #include "actor_self.h"
 #include <agb_syscall.h>
+#include "crates.h"
+#include "objects.h"
+#include "memory.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
-extern void OperatorDeleteArray(void *ptr);
-extern void OperatorDelete(void *manager);
-extern void *OperatorNewArray(u32 size);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
 
@@ -230,39 +230,24 @@ struct dual_array_manager *InitPartList(struct dual_array_manager *manager, s32 
  * `mov ip, sb` at the loop head. With `m->freeListArray` read directly
  * instead, the loop optimizer hoists `m + 0x810` above the grid clear,
  * which ties up r1 there and pushes the cached count out of r3. */
-struct pool_init_link;
-
+/* codegen: `struct pool_node` (crates.h) with untyped fields. Through
+ * the real `struct pool_node *` fields, gcc takes the zeroing stores below
+ * as possible writes to `m->nodeArray` and reloads it. */
 struct pool_init_node {
-    void *unk_00;
-    void *unk_04;
-    struct pool_init_link *link;  // 0x08
-    void *unk_0C;
-    u8 unk_10;
+    void *data;
+    void *next;
+    struct pool_link *wrap;
+    void *link;
+    u8 mark;
 };
 
-struct pool_init_link {
-    struct pool_init_node *node;
-    struct pool_init_link *next;
-};
-
-struct pool_init {
-    s32 activeCount;
-    s32 capacity;
-    void **slotArray;
-    struct pool_init_node *nodeArray;
-    void *gridHead[256];
-    void *gridTail[256];
-    struct pool_init_link *freeListArray;
-    struct pool_init_link *freeListHead;
-};
-
-static inline void PoolResetFreeList(struct pool_init *m)
+static inline void PoolResetFreeList(struct pool_manager *m)
 {
     s32 i;
     s32 n = m->capacity;
-    struct pool_init_link **freeList = &m->freeListArray;
-    struct pool_init_link **freeHead = &m->freeListHead;
-    struct pool_init_link **fl;
+    struct pool_link **freeList = &m->freeListArray;
+    struct pool_link **freeHead = &m->freeListHead;
+    struct pool_link **fl;
 
     for (i = 0; i < 256; i++) {
         m->gridHead[i] = NULL;
@@ -272,15 +257,15 @@ static inline void PoolResetFreeList(struct pool_init *m)
     if (i < n) {
         fl = freeList;
         do {
-            struct pool_init_link *link;
-            struct pool_init_link *arr;
+            struct pool_link *link;
+            struct pool_link *arr;
 
             (*fl)[i].node = &m->nodeArray[i];
-            m->nodeArray[i].unk_00 = NULL;
-            m->nodeArray[i].unk_04 = NULL;
-            m->nodeArray[i].unk_0C = NULL;
-            m->nodeArray[i].unk_10 = 0;
-            m->nodeArray[i].link = link = &(arr = *fl)[i];
+            ((struct pool_init_node *)m->nodeArray)[i].data = NULL;
+            ((struct pool_init_node *)m->nodeArray)[i].next = NULL;
+            ((struct pool_init_node *)m->nodeArray)[i].link = NULL;
+            ((struct pool_init_node *)m->nodeArray)[i].mark = 0;
+            ((struct pool_init_node *)m->nodeArray)[i].wrap = link = &(arr = *fl)[i];
             if (i == m->capacity - 1)
                 link->next = NULL;
             else
@@ -291,21 +276,21 @@ static inline void PoolResetFreeList(struct pool_init *m)
     *freeHead = *freeList;
 }
 
-struct pool_init *InitCrateList(struct pool_init *m, s32 count)
+struct pool_manager *InitCrateList(struct pool_manager *m, s32 count)
 {
     m->activeCount = 0;
     m->capacity = count;
     m->slotArray = OperatorNewArray(count * 4);
-    m->nodeArray = OperatorNewArray(m->capacity * sizeof(struct pool_init_node));
+    m->nodeArray = OperatorNewArray(m->capacity * sizeof(struct pool_node));
     {
-        struct pool_init_link **p = &m->freeListArray;
-        *p = OperatorNewArray(m->capacity * sizeof(struct pool_init_link));
+        struct pool_link **p = &m->freeListArray;
+        *p = OperatorNewArray(m->capacity * sizeof(struct pool_link));
     }
     {
         s32 j = m->capacity;
         if (j > 0) {
             void *zero = NULL;
-            void **p = m->slotArray;
+            struct box_part **p = m->slotArray;
             do {
                 *p = zero;
                 p++;
@@ -321,17 +306,6 @@ asm(".align 2, 0");
 /* Same pool-manager struct InitCrateList initializes and crate_list.c
  * operates on - see that file for the full field writeup. Also used by
  * the now-matched `LinkCrateToActiveBucket` (`crate_grid_link.c`). */
-struct pool_manager {
-    s32 activeCount;
-    s32 capacity;
-    void **slotArray;
-    void *nodeArray;
-    void *gridHead[256];
-    void *gridTail[256];
-    void *freeListArray;
-    void *freeListHead;
-};
-
 /* ResetCrateList is reconstructed (semantics fully understood, and now
  * matched) as a NAKED transcription in its own translation unit,
  * `src/crates/crate_list_reset.c` - not appended here since its real

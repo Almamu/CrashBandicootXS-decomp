@@ -115,6 +115,8 @@ extern s32 gHudSlideOffset;
  * (src/data/hud_fonts_174be0.c). */
 extern const u32 gHudPartAnims[35];
 extern const struct hud_pos gHudPartPositions[35];
+/* The HUD parts' method table (src/data/entity_vtables_7e3bec.c). */
+extern const struct vtable_slot gHudPartVtable[13];
 
 /* src/hud/hud.c */
 extern void UpdateHud(struct hud_counter *self);

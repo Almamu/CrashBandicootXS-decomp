@@ -7,6 +7,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
  * (`yeti.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
@@ -52,13 +53,10 @@ struct keys_pair {
     u16 pressed;
 };
 
-extern u32 GetSpriteShapeSizeBits(u8 *frame);
-extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 extern u8 IsCrystalSaved(void *self);
 extern void LoseLife(void *self);
 
 extern struct actor_self *gActorList;
-extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct keys_pair gKeys;
 extern void *gAudioContext;
 extern u8 *gLevelState;
@@ -462,7 +460,7 @@ void DrawJetpackPlayer(struct actor_hp *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gJetpackPlayerLastFrame) {
             gJetpackPlayerTileBuffer ^= 1;
-            gUnpackRleSpriteFrameFunc(gJetpackPlayerTiles[gJetpackPlayerTileBuffer], frame);
+            gUnpackRleSpriteFrameFunc(gJetpackPlayerTiles[gJetpackPlayerTileBuffer], (struct rle_frame *)frame);
             gJetpackPlayerLastFrame = frame;
         }
         {

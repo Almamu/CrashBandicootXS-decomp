@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "gobj_1a794.h"
 #include "player.h"
+#include "objects.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
@@ -174,11 +175,7 @@ asm(".align 2, 0");
  * accessors for it; fields `struct gobj` doesn't cover yet stay as
  * byte offsets. */
 
-extern s32 UpdateGroundSprite(void *self);
-extern void *GetSpriteBodyBox(void *dest, void *pt);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-extern void DestroyCollisionQueue(void *arg0, s32 arg1);
-extern void DestroyGroundSprite(void *self, u32 unusedArg);
 
 /* `rampY.target` (+0x5c) boolean getter (nonzero -> 1). */
 u8 HasPlayerRampYTarget(void *selfArg)
@@ -270,5 +267,5 @@ void DestroyPlayer(void *selfArg, u32 arg1)
         }
     }
     DestroyCollisionQueue(self + 0x108, 2);
-    DestroyGroundSprite(self, arg1);
+    DestroyGroundSprite((struct actor *)self, arg1);
 }

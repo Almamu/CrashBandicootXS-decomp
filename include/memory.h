@@ -48,4 +48,11 @@ s32 mem_heap_init(u32 arg0);
 void mem_collect(s32 arg0);
 void mem_heap_shutdown(void);
 
+/* The C++ new/delete operators: EWRAM allocations through mem_alloc/
+ * mem_free. src/level/camera.c holds them for ROM order. */
+extern void OperatorDeleteArray(void *ptr);
+extern void *OperatorNewArray(u32 size);
+extern void OperatorDelete(void *ptr);
+extern void *OperatorNew(u32 size);
+
 #endif /* !__MEMORY_H__ */

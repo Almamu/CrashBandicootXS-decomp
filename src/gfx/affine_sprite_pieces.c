@@ -1,5 +1,8 @@
 #include "core.h"
 #include "util.h"
+#include "gfx.h"
+#include "vtable.h"
+#include "objects.h"
 
 /* GitHub issue #9: DrawAffineSpritePieces (0x08007634-0x08007A48), the affine
  * (rotation/scaling) sibling of `DrawSpritePieces` (graphics.c) - see
@@ -36,58 +39,15 @@ struct oam_attr01 {
     u32 size:2;
 };
 
-/* u16 fields: the tile store then masks with lsl/lsr #22 as in the ROM
- * (a u32 field loads a 0x3ff constant instead). */
-struct oam_attr2 {
-    u16 tile:10;
-    u16 priority:2;
-    u16 palette:4;
-    u16 unused:16;
-};
-
 struct oam_pair {
     struct oam_attr01 a;
     struct oam_attr2 b;
-};
-
-struct affine_oam {
-    u16 attr[3];
-    s16 param;
-};
-
-struct oam_buffer {
-    u8 unk_00[8];
-    s32 matrixCount;            // 0x08 - next free affine matrix
-    struct affine_oam oam[128]; // 0x0C - param of entry n at +0x12 + 8n
-};
-
-struct piece_offset {
-    s16 x;
-    s16 y;
-};
-
-struct piece_info {
-    struct piece_offset *offsets; // 0x00
-    u8 *ids;                    // 0x04 - low 4 bits: shape/size index
-    union {
-        u32 packed;             // 0x08 - low 24 bits: VRAM source offset
-        struct {
-            u8 src[3];
-            u8 count;           // 0x0B - piece count
-        } b;
-    } u;
 };
 
 struct kf_record {
     u8 unk_00[0x16];
     u8 steps;                   // 0x16
     u8 unk_17[5];
-};
-
-struct part_method7634 {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
 };
 
 struct affine_part {
@@ -116,16 +76,9 @@ struct affine_part {
  * bge`); a 1-bit field test compiles to `movs #0x20; ands` instead. */
 #define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
-extern struct piece_info *GetSpriteFrame(void *part);
-extern s32 GetSpriteTileBase(void *part);
-extern s32 GetObjVramTile(void *cursor);
-extern s32 UploadObjVram(void *cursor, s32 src, s32 size);
-extern void AddOamEntry(void *buffer, void *record);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void *gObjVramCursor;
-extern struct oam_buffer *gOamBuffer;
-extern u8 gObjPieceWidths[];
-extern u8 gObjPieceHeights[];
+extern struct oam_shadow_buffer *gOamBuffer;
 
 /* Shape/size index -> OBJ shape and size. As inline helpers the `& 3`
  * masks survive tree folding and share one `movs #3`, which is what
@@ -153,14 +106,14 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
 {
     struct oam_pair oam;
     s32 total = 0;
-    struct piece_info *info = GetSpriteFrame(part);
+    struct piece_info *info = GetSpriteFrame((struct gfx_part *)part);
     s32 tile = GetObjVramTile(gObjVramCursor);
     s32 scale = part->scale;
     u16 pa;
     u16 pd;
     s32 idx;
     s32 k;
-    struct oam_buffer *buf;
+    struct oam_shadow_buffer *buf;
     s32 baseX, baseY, halfW, halfH, pullX, pullY;
     s32 i;
 
@@ -178,10 +131,10 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
     oam.a.matrixHi = idx >> 3;
     oam.a.matrixTop = idx >> 4;
     k = idx * 4;
-    buf->oam[k].param = pa;
-    buf->oam[k + 1].param = 0;
-    buf->oam[k + 2].param = 0;
-    buf->oam[k + 3].param = pd;
+    buf->table[k].attr[3] = pa;
+    buf->table[k + 1].attr[3] = 0;
+    buf->table[k + 2].attr[3] = 0;
+    buf->table[k + 3].attr[3] = pd;
     /* Extra reference, no code: keeps `pa` live past `pd`, so cse2 leaves
      * the call result in `pa` (r6) and `pd` as the copy (r7), as in the
      * ROM. Without it the two registers swap. */
@@ -190,9 +143,9 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
     oam.a.mosaic = part->mosaic;
     oam.a.colorMode = part->colorMode;
     {
-        struct part_method7634 *m = (struct part_method7634 *)(part->vtable + 0x58);
+        struct vtable_slot *m = (struct vtable_slot *)(part->vtable + 0x58);
 
-        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->thisOffset, m->fn);
+        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->delta, m->fn);
     }
     oam.b.palette = part->palette;
 
@@ -228,10 +181,10 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
                 struct piece_info *first;
                 s32 cx, cy;
                 s32 id0;
-                u8 *pw, *ph;
+                const u8 *pw, *ph;
 
                 ClampTick7634(part, 0);
-                first = GetSpriteFrame(part);
+                first = GetSpriteFrame((struct gfx_part *)part);
                 ClampTick7634(part, saved);
                 /* The size-table addresses are taken before `pos` is read;
                  * that keeps r0-r4 busy at the `pos` reload, which makes
@@ -290,5 +243,5 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    UploadObjVram(gObjVramCursor, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
+    UploadObjVram(gObjVramCursor, (void *)(GetSpriteTileBase(part) + (info->u.packed & 0xffffff)), total);
 }

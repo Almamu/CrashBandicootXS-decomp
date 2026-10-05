@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "objects.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
@@ -8,8 +9,6 @@
  * `sub_800A590` sit between part_list.c's raw tail (still-raw
  * CollideGroundSprite/ProbeGroundSpriteTerrain/ProbeGroundSpriteFloor) and the already-matched
  * ground_sprite.c (DrawGroundSprite onward). */
-
-extern void UpdateMovingSprite(void *self);
 
 /* Looks up `self`'s current "moving platform" record via the
  * virtual method `m10` (the same method-table convention as
@@ -60,7 +59,7 @@ void UpdateGroundSprite(struct gobj *self)
     register void *prev asm("r1");
     register s32 delta asm("r1");
 
-    UpdateMovingSprite(self);
+    UpdateMovingSprite((struct actor *)self);
 
     tbl = self->vtable;
     off = tbl->m10.thisOffset;

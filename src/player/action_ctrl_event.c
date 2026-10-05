@@ -14,6 +14,8 @@
 #include "action_obj.h"
 #include "audio.h"
 #include "player.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* A keyframe record's `{s16 x, s16 y}` offset (see sprite.c). */
 struct part_offset {
@@ -32,8 +34,6 @@ extern void *gAudioContext;
 extern struct follow_state *gCamera;
 extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
-extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
-extern void *GetSpriteFrame(struct act_part *part);
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -47,7 +47,7 @@ static inline void ActSetNext27(struct act *self, s32 next)
  * offset record. A macro so each case assigns `dst` itself. */
 #define PART_OFFSET(dst, part)                                                 \
     if (1) {                                                                   \
-        u8 *_info = GetSpriteFrame(part);                                         \
+        u8 *_info = GetSpriteFrame((struct gfx_part *)(part));                    \
                                                                                \
         switch (**(u8 **)(_info + 4) >> 4) {                                   \
         case 0:                                                                \

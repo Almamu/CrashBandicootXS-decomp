@@ -12,6 +12,7 @@
 #include "system.h"
 #include "audio.h"
 #include "actor.h"
+#include "gfx.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
@@ -27,77 +28,13 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 extern u8 gDispcnt[2];
 extern void *gInput;
-extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
 
-extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
-extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
-extern void CommitDispcnt(void);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void ShowBg2(void);
-extern void *OperatorNewArray(u32 size);
-extern void OperatorDeleteArray(void *ptr);
-extern void *OperatorNew(s32 size);
-extern void *AllocVramTileBlock(u32 size);
-extern void InitObjTileFreeList(void *arg0);
-extern void FreeObjTileFreeList(void);
-extern void InitSpriteFrameOamQueue(void);
-extern void FreeSpriteFrameOamQueue(void);
-extern void FlushSpriteFrameOamQueue(void);
-extern void InitSpriteFrameCache(void);
-extern void FreeSpriteFrameCache(void);
-extern void AgeSpriteFrameCache(void);
-extern void FreeCategorySpriteSheet(void);
-extern void FlushVramDmaQueue(void);
-extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void OperatorDelete(void *self);
-extern s32 GetSpriteShapeSizeBits(void *self);
-extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
-
-/* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits,
- * viewed as its bitfields (field stores give the ROM's byte-wide
- * and/or sequences). */
-struct dispcnt_bits
-{
-    u16 mode:3;
-    u16 cgbMode:1;
-    u16 frame:1;
-    u16 hblankOam:1;
-    u16 objMap1D:1;
-    u16 forcedBlank:1;
-    u16 bg0:1;
-    u16 bg1:1;
-    u16 bg2:1;
-    u16 bg3:1;
-    u16 obj:1;
-    u16 win0:1;
-    u16 win1:1;
-    u16 objWin:1;
-};
-
-/* REG_BGnCNT as bitfields (same layout as `struct bg_setup`'s ctrl in
- * include/graphics_package.h). */
-union bgcnt
-{
-    u16 raw;
-    struct {
-        u16 priority:2;
-        u16 charBase:2;
-        u16 unk_4:2;
-        u16 mosaic:1;
-        u16 colorMode:1;
-        u16 screenBase:5;
-        u16 wrap:1;
-        u16 size:2;
-    } bits;
-};
 
 
 /* The other half of `UpdateVvLogoPieces`'s per-frame slot-array update: if
@@ -112,67 +49,31 @@ union bgcnt
  * "extra" slot pair fed from `self+0x424`/`self+0x42c`/`self+0x434`
  * (the same header fields `LoadVvLogoGraphics` populates), queuing a
  * `QueueVramDmaTransfer` for its tile data first. */
-struct oam_attrs
-{
-    u32 y:8;            // 0x00
-    u32 affineMode:2;   // 0x01
-    u32 objMode:2;
-    u32 mosaic:1;
-    u32 bpp:1;
-    u32 shape:2;
-    u32 x:9;            // 0x02
-    u32 matrixLo:3;
-    u32 matrixBit3:1;
-    u32 matrixBit4:1;
-    u32 size:2;
-    u16 tileNum:10;     // 0x04
-    u16 priority:2;
-    u16 palette:4;
-    u16 affineParam;    // 0x06
-};
 
-struct oam_entry
-{
-    u16 attr0;
-    u16 attr1;
-    u16 attr2;
-    s16 affineParam;
-};
-
-struct oam_buf
-{
-    s32 count;
-    s32 base;
-    s32 matrixCount;
-    struct oam_entry entries[128];
-};
-
-
-static inline void SetAffine(struct oam_buf *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
+static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
 {
     s32 idx = m * 4;
 
-    buf->entries[idx].affineParam = pa;
-    buf->entries[idx + 3].affineParam = pd;
-    buf->entries[idx + 1].affineParam = pb;
-    buf->entries[idx + 2].affineParam = pc;
+    buf->table[idx].attr[3] = pa;
+    buf->table[idx + 3].attr[3] = pd;
+    buf->table[idx + 1].attr[3] = pb;
+    buf->table[idx + 2].attr[3] = pc;
 }
 
 /* The tail's matrix write. Writing the two zero terms as literals
  * (instead of passing 0 through parameters as the slot loop does) is
  * what places the ROM's `movs r3, #0` after the entry address. */
-static inline void SetAffineZ(struct oam_buf *buf, s32 m, u16 pa, u16 pd)
+static inline void SetAffineZ(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 pd)
 {
     s32 idx = m * 4;
 
-    buf->entries[idx].affineParam = pa;
-    buf->entries[idx + 3].affineParam = pd;
-    buf->entries[idx + 1].affineParam = 0;
-    buf->entries[idx + 2].affineParam = 0;
+    buf->table[idx].attr[3] = pa;
+    buf->table[idx + 3].attr[3] = pd;
+    buf->table[idx + 1].attr[3] = 0;
+    buf->table[idx + 2].attr[3] = 0;
 }
 
 #define SLOT_AT(self, i) (&((struct logo_piece *)(self))[i])
-#define OAMBUF ((struct oam_buf *)gOamBuffer)
 
 #define ClearOam(oam)                                           \
 {                                                               \
@@ -251,7 +152,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
                         *flag = z;
                         PlaySfx(gAudioContext, 0x4e, 0x100);
                     }
-                    SetAffine(OAMBUF, matrix, pa, 0, 0, pd);
+                    SetAffine(gOamBuffer, matrix, pa, 0, 0, pd);
                     oamB.affineMode = 1;
                     oamB.matrixLo = matrix;
                     matrix++;
@@ -340,7 +241,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
         asm("" : : "r"(affine));
         if (affine)
         {
-            SetAffineZ(OAMBUF, matrix, pa, pd);
+            SetAffineZ(gOamBuffer, matrix, pa, pd);
             oamC.affineMode = 3;
             oamC.matrixLo = matrix;
         }
@@ -607,7 +508,7 @@ void DrawLogoActor(struct actor_self *self)
             if (frame != gLogoActorLastFrame)
             {
                 gLogoActorTileBuffer ^= 1;
-                gUnpackRleSpriteFrameFunc(gLogoActorTiles[gLogoActorTileBuffer], frame);
+                gUnpackRleSpriteFrameFunc(gLogoActorTiles[gLogoActorTileBuffer], (struct rle_frame *)frame);
                 gLogoActorLastFrame = frame;
             }
             {

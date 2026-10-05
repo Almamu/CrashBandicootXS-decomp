@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "vtable.h"
+#include "objects.h"
 
 /* This file's `manager` is the same `dual_array_manager` struct
  * defined and used in `part_list.c` (capacity/count1/count2/

@@ -1,10 +1,9 @@
 #include "core.h"
 #include "box_part.h"
 #include "actor_self.h"
+#include "objects.h"
 
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
-
-extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
 
 /* `CollidePartWithPlayer`'s sibling: resolves the same collision-hit logic when
  * the "compare viewport" doesn't match the current one (see

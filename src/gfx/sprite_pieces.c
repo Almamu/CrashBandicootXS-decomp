@@ -1,4 +1,7 @@
 #include "core.h"
+#include "gfx.h"
+#include "vtable.h"
+#include "objects.h"
 
 /* DrawSpritePieces (0x080073DC-0x08007634), the plain (non-affine) sibling of
  * `DrawAffineSpritePieces` (affine_sprite_pieces.c). Split out of graphics.c: it is the
@@ -24,40 +27,9 @@ struct oam_attr01 {
     u32 size:2;
 };
 
-/* u16 fields: the tile store then masks with lsl/lsr #22 as in the ROM. */
-struct oam_attr2 {
-    u16 tile:10;
-    u16 priority:2;
-    u16 palette:4;
-    u16 unused:16;
-};
-
 struct oam_pair {
     struct oam_attr01 a;
     struct oam_attr2 b;
-};
-
-struct piece_offset {
-    s16 x;
-    s16 y;
-};
-
-struct piece_info {
-    struct piece_offset *offsets; // 0x00
-    u8 *ids;                    // 0x04 - low 4 bits: shape/size index
-    union {
-        u32 packed;             // 0x08 - low 24 bits: VRAM source offset
-        struct {
-            u8 src[3];
-            u8 count;           // 0x0B - piece count
-        } b;
-    } u;
-};
-
-struct part_method73dc {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
 };
 
 struct oam_part {
@@ -77,16 +49,9 @@ struct oam_part {
 /* The 0x28 flag bits tested as sign tests (`lsl #N; cmp #0; bge`). */
 #define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
-extern struct piece_info *GetSpriteFrame(void *part);
-extern s32 GetSpriteTileBase(void *part);
-extern s32 GetObjVramTile(void *cursor);
-extern s32 UploadObjVram(void *cursor, s32 src, s32 size);
-extern void AddOamEntry(void *buffer, void *record);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void *gObjVramCursor;
 extern void *gOamBuffer;
-extern u8 gObjPieceWidths[];
-extern u8 gObjPieceHeights[];
 
 static inline s32 PieceSize73DC(s32 id)
 {
@@ -102,7 +67,7 @@ void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos)
 {
     struct oam_pair oam;
     s32 total = 0;
-    struct piece_info *info = GetSpriteFrame(part);
+    struct piece_info *info = GetSpriteFrame((struct gfx_part *)part);
     s32 tile = GetObjVramTile(gObjVramCursor);
     s32 i;
 
@@ -111,9 +76,9 @@ void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos)
     oam.a.mosaic = part->mosaic;
     oam.a.colorMode = part->colorMode;
     {
-        struct part_method73dc *m = (struct part_method73dc *)(part->vtable + 0x58);
+        struct vtable_slot *m = (struct vtable_slot *)(part->vtable + 0x58);
 
-        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->thisOffset, m->fn);
+        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->delta, m->fn);
     }
     oam.b.palette = part->palette;
     if (PART_FLAG_SET(part, 27))
@@ -156,5 +121,5 @@ void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    UploadObjVram(gObjVramCursor, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
+    UploadObjVram(gObjVramCursor, (void *)(GetSpriteTileBase(part) + (info->u.packed & 0xffffff)), total);
 }

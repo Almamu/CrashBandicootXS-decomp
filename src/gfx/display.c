@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gfx.h"
 
 /* Continuation of the fade_to_black.c cluster - see docs/matching.md
  * for why this cluster needed splitting into this many pieces.

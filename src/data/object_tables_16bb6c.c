@@ -3,17 +3,12 @@
 #include "enemies.h"
 #include "crates.h"
 #include "player.h"
+#include "objects.h"
 
 /*
  * ROM 0x0816BB6C-0x0816BF20. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-struct entry_set
-{
-    const u32 (*entries)[2];
-    u32 unk_04;
-};
 
 /* ResetEnemyCtrl's (enemy_ctrl.c) entry set and its entries. */
 extern const u32 gEnemyCtrlMotionEntries[4][2];

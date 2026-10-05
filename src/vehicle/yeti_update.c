@@ -112,7 +112,7 @@ void UpdateYeti(void)
     obj = gYeti;
     cur = obj->animTime >> 8;
     if (old != cur) {
-        gUnpackNibbleTilesFunc((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4,
+        gUnpackNibbleTilesFunc((u16 *)((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4),
                           gYetiBg2Page);
         gYetiBg2PageFlip = 1;
     }

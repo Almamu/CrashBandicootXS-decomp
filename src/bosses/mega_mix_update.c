@@ -2,6 +2,7 @@
 #include "aabb.h"
 #include "crates.h"
 #include "bosses.h"
+#include "objects.h"
 
 /* UpdateMegaMix: the update of Mega-Mix, the boss that entity type 0x49
  * spawns (SpawnMegaMix, sprite bank 30). Only room 37 places one, at its
@@ -211,8 +212,6 @@ extern u32 gRoomFrameCount;
 extern struct ab_player *gPlayer;
 extern void *gCollidableList;
 extern struct ab_list *gCrateList;
-extern struct aabb GetSpriteHitbox(void *obj);
-extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
 
 void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 {
@@ -315,8 +314,8 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
         /* The box goes to CollidePartList by value (three words in r1-r3, the
          * fourth on the stack): that is what gives the ROM's stack-argument
          * order (6th, 7th, then the box's last word). */
-        box = GetSpriteHitbox(other);
-        CollidePartList(gCollidableList, box, 0, other);
+        box = GetSpriteHitbox((struct box_part *)other);
+        CollidePartList(gCollidableList, box, 0, (struct box_part *)other);
         /* a guarded do-while: a `for` shares the list pointer between the
          * entry test and the body, where the ROM reloads it */
         i = 0;

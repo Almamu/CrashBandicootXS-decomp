@@ -4,6 +4,7 @@
 #include "system.h"
 #include "audio.h"
 #include "player.h"
+#include "objects.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): two
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -17,21 +18,11 @@
  * matches as plain C under it, and `ApplyActionCtrlMotion` followed in the
  * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
-/* One 12-byte gCtrlMotionRecords animation parameter record. */
-struct anim_rec
-{
-    s32 a;
-    s32 b;
-    s32 c;
-};
-
 extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gPlayer;
 extern void *gInput;
-extern struct anim_rec gCtrlMotionRecords[];
-extern void SetSpritePrevPos(struct act_part *p, s32 x, s32 y);
 extern u8 HasTurboRun(void *self);
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
@@ -86,7 +77,7 @@ static inline u8 PartByte(struct act_part *part, s32 offset)
  */
 void ApplyActionCtrlMotion(struct act *self)
 {
-    struct anim_rec rec;
+    struct motion_rec rec;
     struct act_part *p;
 
     p = gPlayer;
@@ -100,7 +91,7 @@ void ApplyActionCtrlMotion(struct act *self)
                 p->x -= 0x100;
             else if (p->pushRight)
                 p->x += 0x100;
-            SetSpritePrevPos(gPlayer, gPlayer->x, gPlayer->y);
+            SetSpritePrevPos((struct gfx_part *)gPlayer, gPlayer->x, gPlayer->y);
         }
     }
 skip:

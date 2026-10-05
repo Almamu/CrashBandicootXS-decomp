@@ -2,6 +2,8 @@
 #include "util.h"
 #include "audio.h"
 #include "bosses.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
@@ -164,18 +166,9 @@ extern struct hop_list *gUnknown_030012EC;
 extern void *gCollidableList;
 extern struct hop_level *gLevelLayers;
 
-extern void *OperatorNew(u32 size);
-extern struct aabb GetSpriteAttackBox(void *obj);
-extern struct aabb GetSpriteBodyBox(void *obj);
 extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
 extern void SpawnTornadoSpinPower(u32 arg0, u16 x, u16 y, u16 arg3);
-extern struct hop_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void ResetSpriteFrameTimer(struct hop_part *p);
-extern void ResetSpriteFrameIndex(struct hop_part *p);
-extern void SetSpriteAnimDone(struct hop_part *p, s32 arg1);
-extern s32 GetSpriteAnimPaletteSlot(struct hop_part *p);
-extern void AddToPartList(void *list, struct hop_part *p);
 
 /* Byte read-modify-writes of the flags at +0x0C. old_agbcc materializes
  * the constant before loading the byte only when it arrives as an inline
@@ -232,21 +225,21 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 
     if (self->state == 8)
     {
-        a = GetSpriteAttackBox(gPlayer);
-        b = GetSpriteBodyBox(part);
+        GetSpriteAttackBox(&a, gPlayer);
+        GetSpriteBodyBox(&b, part);
         if (a.w != 0 && BOX_VALID(b) && AabbOverlaps(&b, &a)
             && gPlayer->unk_0A == 0x13)
             SetTinyState(self, part, 9);
     }
     else if (gPlayer->busy == 0)
     {
-        a = GetSpriteBodyBox(gPlayer);
+        GetSpriteBodyBox(&a, gPlayer);
         if (a.w == 0)
         {
-            b = GetSpriteAttackBox(gPlayer);
+            GetSpriteAttackBox(&b, gPlayer);
             a = b;
         }
-        b = GetSpriteAttackBox(part);
+        GetSpriteAttackBox(&b, part);
         if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
         {
             struct hop_player *pl = gPlayer;
@@ -582,7 +575,7 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
     ResetSpriteFrameIndex(p);
     SetSpriteAnimDone(p, 0);
     ctrl = CreateOneShotAnimCtrl(OperatorNew(0x10));
-    SetSlot(p, GetSpriteAnimPaletteSlot(p));
+    SetSlot(p, GetSpriteAnimPaletteSlot((struct actor *)p));
     p->ctrl = ctrl;
     VCALL1P(ctrl, m18, p);
     OrFlags(p, 0x10);

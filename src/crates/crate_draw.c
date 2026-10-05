@@ -1,5 +1,6 @@
 #include "core.h"
 #include "crates.h"
+#include "objects.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -17,7 +18,6 @@
  * register-pinning technique this needed. */
 
 extern void *gSpriteRenderer;
-extern void DrawSprite(void *self, void *part);
 
 /* Unless `self`'s own `+0x4d` state byte has bit 7 set or its low 7
  * bits are already nonzero, resets `self+0x38` to 0 and clamps

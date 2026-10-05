@@ -9,6 +9,7 @@
 #include "frontend.h"
 #include "system.h"
 #include "menus.h"
+#include "gfx.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
@@ -26,8 +27,6 @@
  * `RunCredits`: `struct credits_screen` is in frontend.h. */
 
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern void FlushVramDmaQueue(void);
 
 /* Another instance of the by-now-familiar "refresh OAM + center text"
  * pattern (docs/rom_map.md's "DrawContinuePrompt is just another instance of
@@ -47,9 +46,6 @@ extern void FlushVramDmaQueue(void);
  * with that the "many live values across calls" allocation falls out
  * of plain C. */
 extern struct vram_upload_cursor *gObjVramCursor;
-extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* `record->slots[n]` on an icon manager, called with `label` (slot 0
@@ -133,8 +129,6 @@ void CommitContinuePromptFrame(struct continue_prompt *self)
     REG_DISPCNT = self->dispcnt;
 }
 
-extern void OperatorDelete(void *self);
-
 /* --------------------------------------------------------------------
  * DestroyContinuePrompt - the continue prompt's teardown: frees its three BG scratch
  * buffers, then frees `self` too when `mode` bit 0 is set.
@@ -147,8 +141,6 @@ void DestroyContinuePrompt(struct continue_prompt *self, s32 mode)
     if (mode & 1)
         OperatorDelete(self);
 }
-
-extern void *OperatorNew(s32 size);
 
 /* --------------------------------------------------------------------
  * RunContinuePrompt - the "Are you sure?" confirmation-dialog trigger
@@ -202,17 +194,10 @@ asm(".align 2, 0");
  * lengthens the live ranges crossing it by one insn, which is what tips
  * the allocator into giving `&gPaletteCache`/`&gObjVramCursor`
  * r4 and `&gSmallFont` r6 as the ROM does. */
-extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
-extern void UploadPaletteCache(struct palette_cache *arg0);
-extern void ResetObjVram(struct vram_upload_cursor *self);
-extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
-extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *self, void *fn);
-extern void CommitDispcnt(void);
 extern struct palette_cache *gPaletteCache;
 extern u8 gDispcnt[2];
 extern struct AudioContext *gAudioContext;
-extern void *OperatorNew(s32 size);
 
 /* Sets the manager's glyph tile base and fires its slot-6 method. */
 static inline void IconSetBase(struct bitmap_font *m, u32 base)
@@ -369,9 +354,6 @@ struct popup_oam {
     u16 palette:4;
 };
 
-extern s32 GetObjVramTile(struct vram_upload_cursor *self);
-extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
-extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 void DrawCreditsText(struct credits_screen *self)
@@ -467,7 +449,6 @@ asm(".align 2, 0");
  * their own temporaries so the old/new cursor and the `y + 0xa0` term are
  * formed in the ROM's order. */
 extern s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
-extern void *OperatorNew(s32 size);
 
 #define ICON_TEXT_CALL3(mgrExpr, n, a, b)                                      \
     ({                                                                          \
@@ -676,10 +657,6 @@ struct popup_glyph_src {
     u32 unk_10;
 };
 
-extern void *OperatorNewArray(u32 size);
-extern void OperatorDeleteArray(void *ptr);
-extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);
-
 void LoadCreditsLogos(struct credits_screen *self)
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
@@ -763,8 +740,6 @@ void LoadCreditsLogos(struct credits_screen *self)
 
 asm(".align 2, 0");
 
-extern void CommitDispcnt(void);
-extern void UploadPaletteCache(struct palette_cache *arg0);
 extern struct palette_cache *gPaletteCache;
 
 /* --------------------------------------------------------------------
@@ -783,8 +758,6 @@ void CommitCreditsFrame(void *unused)
     CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
 }
-
-extern void OperatorDeleteArray(void *ptr);
 
 /* --------------------------------------------------------------------
  * DestroyCredits - credits screen teardown: kicks the starfield's own

@@ -2,6 +2,9 @@
 #include "audio.h"
 #include "player.h"
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
@@ -156,17 +159,11 @@ extern void *gEntityFlags;
 extern void *gCollidableList;
 extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
-extern u8 gInputCtrlMotionRecords[];
 
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 extern void LoseLife(void *arg0);
-extern void LoadPaletteSlot(void *self, s32 slot, s32 recordId);
-extern void *OperatorNew(u32 size);
-extern void AddToPartList(void *manager, void *value);
 extern void RequestRoomExit(void);
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
 
 /* A virtual call as gcc 2.x lowers it: take the method-table entry's
  * address once, then read its `this` adjustment and function from it.
@@ -390,7 +387,7 @@ void ApplyInputCtrlMotion(struct input_ctrl *self)
 {
     if (self->motionXPending == 1)
     {
-        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->motionX].a * 12;
+        u8 *rec = (u8 *)gInputCtrlMotionRecords + self->animSet->entries[self->motionX].a * 12;
 
         if (self->motionXKeepSpeed)
             CTRL_CALL3(self, setMotionX, self->target, rec);
@@ -401,7 +398,7 @@ void ApplyInputCtrlMotion(struct input_ctrl *self)
     }
     if (self->motionYPending == 1)
     {
-        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->motionY].b * 12;
+        u8 *rec = (u8 *)gInputCtrlMotionRecords + self->animSet->entries[self->motionY].b * 12;
 
         if (self->motionYKeepSpeed)
             CTRL_CALL3(self, setMotionY, self->target, rec);

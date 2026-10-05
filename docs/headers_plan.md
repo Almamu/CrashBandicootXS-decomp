@@ -32,17 +32,20 @@ Batch 5 (system + audio) done: `include/system.h`, `irq.h`/`memory.h`/
 `include/menus.h`, `include/crates.h` and `include/player.h`, see
 "Batch 6" below. Batch 7 (actor + bosses + vehicle, one PR) done:
 `include/actor.h` extended, `include/bosses.h` and `include/vehicle.h`,
-see "Batch 7" below.
+see "Batch 7" below. Batch 8a (gfx + objects + iwram) done:
+`include/gfx.h`, `include/objects.h`, `include/iwram.h`, the new/delete
+operators in `memory.h` and the crate list's pool structs in `crates.h`,
+see "Batch 8a" below. Batch 8b (level) is next.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 |
 
 ## Tools
 
@@ -73,6 +76,13 @@ Audit totals (`tools/extern_audit.py`) as the batches land:
   It doesn't build anything. The header's declarations include those of
   the headers it includes with `#include "..."` (batch 5), so applying
   `system.h` also removes local copies of `irq.h`/`memory.h` symbols.
+
+- **`tools/cast_args.py BUILD_LOG HEADER...`** (batch 8a) reads agbcc's
+  "passing arg N of `F' from incompatible pointer type" warnings from a
+  build log and casts that argument to the header's parameter type, for
+  the functions the headers declare (calls on one line only; it lists the
+  rest). After `apply_headers.py --adopt-all`, the callers that pass a
+  file-local view of an object get their casts this way.
 
 A quick per-file check before the full build: delete the file's `.o`, run
 `make build/crashbandicootxs/src/<dir>/<file>.o` and diff the generated `.s`
@@ -198,13 +208,13 @@ The full list:
 | cutscene | `cutscene.h` (extend) | |
 | enemies | `enemies.h` (new) | |
 | frontend | `frontend.h` (new) | |
-| gfx | `gfx.h` (new) | |
+| gfx | `gfx.h` (**done**, batch 8a) | includes `graphics_package.h` and `vram_pool.h` |
 | hud | `hud.h` (extend) | |
-| iwram | `iwram.h` (new) | the ARM IWRAM routines |
+| iwram | `iwram.h` (**done**, batch 8a) | the ARM IWRAM routines; their hooks are declared with their users |
 | level | `level.h` (new) | includes `level_state.h`, `level_data.h` |
 | link | `link.h` (new) | includes `link_session.h` |
 | menus | `menus.h` (**done**, batch 6) | includes `vtable.h`; `pause_menu.h`, `level_menu.h` and `level_select_parts.h` include it |
-| objects | `objects.h` (new) | |
+| objects | `objects.h` (**done**, batch 8a) | includes `aabb.h`, `byte_arg.h`, `vtable.h`; declares the object structs by tag |
 | pickups | `pickups.h` (new) | |
 | player | `player.h` (**done**, batch 6) | includes `actor_self.h` (`struct actor_pmf`) and `vtable.h` |
 | save | `save.h` (new) | |
@@ -267,8 +277,8 @@ Where the remaining declarations would go (after the pilot):
 | save (**done**, batch 3) | 50 | 2 | 62 | 9 |
 | frontend (**done**, batch 3) | 60 | 2 | 109 | 15 |
 | crates (**done**, batch 6) | 57 | 9 | 74 | 24 |
-| objects | 100 | 36 | 318 | 75 |
-| gfx | 120 | 29 | 383 | 85 |
+| objects (**done**, batch 8a) | 100 | 36 | 318 | 75 |
+| gfx (**done**, batch 8a) | 120 | 29 | 383 | 85 |
 | player (**done**, batch 6) | 129 | 13 | 173 | 33 |
 | menus (**done**, batch 6) | 152 | 8 | 185 | 26 |
 | actor (**done**, batch 7) | 197 | 6 | 365 | 49 |
@@ -404,8 +414,8 @@ before the files that every subsystem touches.
 8. **actor, bosses, vehicle (done):** one PR (batch 7). See "Batch 7"
    below.
 9. **objects, gfx, level:** the hubs, with 110 conflicting symbols between
-   them (`SetSpriteAnimDone` has 13 variants). These may need two PRs each:
-   consistent symbols first, conflicts after.
+   them (`SetSpriteAnimDone` has 13 variants). Two PRs: **8a, gfx +
+   objects + iwram (done)**, see "Batch 8a" below, then **8b, level**.
 10. **`globals.h`:** the 27 shared globals, a few at a time, each after the
     struct merge it needs (`level_state` for `gLevelState`,
     `held_pressed_pair` for `gKeys`, the player/actor structs for
@@ -1155,6 +1165,152 @@ whose local label numbers (`.LCB`) differ. The build has the same 35
 warnings as origin/main.
 
 
+## Batch 8a: gfx + objects + iwram
+
+The first of the two hub PRs. 833 local declarations are gone
+(2,392 -> 1,559; 165 `.c` files touched), and 65 local struct definitions
+(412 -> 347). Seven files needed an asm-label alias (see "Codegen
+exceptions").
+
+- **`include/gfx.h`** (new) declares every function of src/gfx/ (the OAM
+  shadow buffer, the VRAM DMA queue and OBJ VRAM cursor, the palette
+  cache, the `struct actor` entity functions of graphics.c, fades,
+  DISPCNT helpers, BG packages, palette cycles, the sprite frame cache and
+  the sprite piece drawers), their sym_iwram.txt globals and the OBJ size
+  tables. `DrawHudPart`/`InitHudPart` stay in hud.h. It includes
+  `graphics_package.h` and `vram_pool.h`, and holds the structs the gfx
+  files and their callers share:
+  - `struct oam_shadow_buffer` (and `union oam_shadow_entry`), graphics.c's
+    definition. Its copies are gone: sprite_frame.c's (`u8 table[0x400]`),
+    graphics_package.c's (`struct oam_attrs oam[0x80]`),
+    level_select_widgets.c's, company_logos.c's and title_screen_init.c's
+    `struct oam_buf`, affine_sprite_pieces.c's `struct oam_buffer`/`struct
+    affine_oam`, and the three `struct oam_entry` copies. Every view only
+    wrote the affine parameter of entry `n`, now `table[n].attr[3]`.
+  - `struct dispcnt_bits` (4 copies; level_select.c's `hblankFree`/`obj1d`
+    are `hblankOam`/`objMap1D`) and `struct oam_attrs` (3 copies:
+    company_logos.c, title_screen_init.c, level_select_widgets.c).
+    graphics_package.c keeps its own `struct oam_attrs_u16`: with gfx.h's
+    u32 storage units a DrawScaledSprite store changes.
+  - `struct hitbox_quad`, the `{offX, offY, w, h}` hitbox of a keyframe
+    record. It was crates.h's (`xOff`/`yOff`, renamed to the majority's
+    `offX`/`offY`), box_part.h's `struct part_box` (20 uses in 6 files)
+    and the `struct anim_box` of graphics.c and gobj_1a794.h (batch 6 and
+    7's deferral). gobj_1a794.h's `anim_rec` keeps the four fields inline:
+    the quad can't be embedded (agbcc pads it to 8 bytes).
+  - `struct piece_offset`/`struct piece_info`/`struct oam_attr2` (the
+    sprite frame as sprite_pieces.c and affine_sprite_pieces.c read it,
+    2 copies each); their `struct part_method73dc`/`part_method7634` are
+    `struct vtable_slot` (`thisOffset` -> `delta`). Their `oam_attr01`/
+    `oam_pair` differ (the matrix bits vs the flip bits) and stay local.
+  - `struct sprite_frame_cache_node` (sprite_frame.c, sprite_arm.c),
+    `struct palette_cycler` (palette_cycle.c; `gPaletteCycles` is now
+    typed with it, so run_room.c's `*gPaletteCycles = 0` is
+    `gPaletteCycles->active = 0`) and `struct brightness_fade` (fade.c's
+    `struct unk_030007E8`, an anonymous struct in iwram_data.c; fade_to_black.c
+    read it as an `s32`).
+  - `gMenuSkyBg` (`const struct bg_package`; 4 files in 3 subsystems, but
+    one type everywhere, so it didn't wait for `globals.h`), and the hooks
+    `gLookupSpriteFrameCacheFunc`/`gUnpackRleSpriteFrameFunc` (batch 3's
+    deferral), now typed with the ARM routines' real parameters
+    (`u16 *dst, struct rle_frame *frame`); the three callers cast `frame`.
+- **`union bgcnt`** moved into `graphics_package.h`: `struct bg_setup`'s
+  `ctrl` was an anonymous copy, and the three frontend files had their own.
+  level_select_widgets.c's packed 2-byte copy inside `struct zoom_bg` is a
+  different type and is now `union bgcnt_packed`.
+- **`struct bg_setup`** is now the first field of `struct pause_menu`
+  (`unused_00[0x10]`), `struct sub_8006700_actor` (`unused_00[0x10]`) and
+  `struct page_bg` (`desc[0x10]`), named `bg`; `struct continue_prompt`'s
+  three BG buffers are `struct bg_setup *`. The callers pass `&self->bg`,
+  and language_select_setup.c, save_menu_ui.c and level_select.c keep
+  their stack buffer as a `struct bg_setup`.
+- **`include/iwram.h`** (new) declares the ARM routines of sprite_arm.c and
+  string_arm.c and holds `struct rle_frame` (moved from sprite_arm.c).
+  `HeapSortActorsByKey` takes `struct actor_self **` (its C body keeps the
+  `struct sort_entry` view, which compares the key unsigned), and so does
+  `gHeapSortActorsByKeyFunc` (batch 7's deferral; actor_category_frame.c
+  lost its cast). `gUnpackNibbleTilesFunc` takes `u16 *`; the two yeti
+  callers cast. iwram_data.c lost its local declarations of the ARM
+  routines and of the data its pointers are initialised with: the link
+  texts (link.h), the UI and cutscene text tables (system.h,
+  cutscene.h) and the title OBJ packages (frontend.h, `const struct
+  bg_package`; iwram_data.c's `gTitleObjPackages` takes their address).
+- **`include/objects.h`** (new) declares every function of src/objects/
+  except InitCrateList (crates.h), the object vtables, gCtrlMotionRecords,
+  gPlatformMoverMotionSet, gEmptySpriteBox and gLastSpriteVelY. The object
+  structs stay in their type headers (box_part.h, gfx_part.h,
+  gobj_1a794.h, ...) and objects.h declares their tags. It holds:
+  - `struct motion_rec`, the 12-byte motion record, moved from the data
+    file. action_ctrl_idle.c's `struct anim_rec` and player_ctrl.h's
+    `struct pctrl_anim` were copies; ctrl.c and input_ctrl.c read the
+    tables as `u8 []` with byte offsets, now through a `(u8 *)` cast.
+    player.h declares gPlayerCtrlMotionRecords/gInputCtrlMotionRecords and
+    includes objects.h.
+  - `struct entry_set` (5 copies in data files) and the three player-side
+    sets of play_room.c (player.h, `const struct entry_set`).
+  - `struct e08c_pos`, moved from crates.h (crates.h includes objects.h):
+    it is collision_queue.c's candidate position, whose `struct pos_pair`
+    was a copy.
+- **The crate list's pool structs** (batch 6's deferral) are one set in
+  crates.h: `struct pool_manager` (8 copies with two layouts, crate_list_reset.c's
+  and part_list.c's `struct pool_init`), `struct pool_node` (`pool_node` x2,
+  `grid_node` x2, `pool_init_node` x2) and `struct pool_link` (`pool_init_link`
+  x2, `pool_entry`). ResetCrateList and InitCrateList take `struct pool_manager *`.
+  crate_list.c/crate_list_draw.c/crate_grid_link.c walk the grid as raw
+  `void **` and cast. `PoolResetFreeList` (part_list.c, crate_list_reset.c)
+  zeroes the nodes through a local untyped view (see "Codegen findings").
+- **`OperatorNew`/`OperatorNewArray`/`OperatorDelete`/`OperatorDeleteArray`**
+  (src/level/camera.c for ROM order) are in `memory.h` as `void *(u32)` and
+  `void (void *)` (they were defined with `u8 *`). 57 files lost a local
+  copy. gobj_1a794.h, level_select_parts.h and text_popup.h lost 41
+  declarations of gfx, objects and memory functions, and gobj_1a794.h
+  includes objects.h.
+- gobj_1a794.h's data moved to their owners: gDingodileMotionEntries
+  (`const u32 [8][2]`, dingodile_create.c indexes `[i][0]`/`[i][1]`) and
+  gDingodileVtable to bosses.h, gPlatformMoverMotionSet/gPlatformVtable/
+  gPlatformMoverVtable to objects.h, gHudPartVtable to hud.h.
+  `gPlatformMoverMotionRecords` stays there, now `const struct vec3 [3]`.
+- **Definition fixes**, all identical:
+  - `CreateEntity`, `CreateMovingSprite`, `CreateSpriteObj` and
+    `CreateGroundSprite` take an unused fourth `u16` (the spawn
+    trampolines pass four), and the last three return `void *` (most
+    callers use the new object as their own type).
+  - `InitPaletteCache` returns `self` (pause_menu.c uses the result, still
+    in r0); `sub_801B29C` returns `s32` (run_room.c's type; with `u8` the
+    caller adds `lsl`/`lsr`).
+  - `AddOamEntry` takes `const void *entry`, `DestroyOamBuffer` a `struct
+    oam_shadow_buffer *`, `WorldPosToScreen` an `s32 *`,
+    `DestroyPaletteCycles` a `struct palette_cycler *`,
+    `LoadGraphicsPackage` and `DecompressCategorySpriteSheet` a `const`
+    package/asset.
+- **Callers**, all identical: about 160 call sites cast an argument to the
+  definition's parameter type (a sprite part held as `struct gobj *`,
+  `struct sprite *`, `struct hud_digit_part *`, ... passed to a `struct
+  actor *` or `struct box_part *` parameter); `(u8)` for the callers that
+  declared `IsBrightnessFadeActive`/`sub_8009BE0` returning `u8`;
+  `GetSpriteBodyBox`/`GetSpriteAttackBox` take the destination as their
+  first argument and `GetSpriteHitbox` returns the box by value, and the
+  callers that wrote the other form now use the definition's (identical
+  in 6 files; 3 keep an alias); `InitEffectCtrl(OperatorNew(0x10))` in
+  entity_spawner.c; `&gEmptySpriteBox` where the users declared it `u8 []`.
+- **Left for later:**
+  - the level subsystem (batch 8b), including gfx/objects callers' local
+    views of `gLevelLayers`, `gLevelState` and the level objects;
+  - `gEmptySpritePoint` and `sprite_bank.h`'s `struct sprite_box`, which
+    is a `hitbox_quad` with its padding named;
+  - collision_queue.c's two views of the collision queue (`struct
+    candidate_list`/`candidate` and `struct collision_queue`/
+    `collision_candidate`, one file);
+  - gobj_1a794.h's `struct vec3` view of the motion records
+    (`gPlatformMoverMotionRecords`, player_flags.c's
+    `SetCtrlTargetMotionY`), and `gDingodileMotionRecords`;
+  - `gOamBuffer`, `gObjVramCursor`, `gPaletteCache`, `gSpriteRenderer`,
+    `gDispcnt` (`globals.h`).
+
+After a clean build every `.o` and `.s` file in src/ is identical to
+origin/main's. The build has 30 warnings, 4 fewer than origin/main
+(room.c's `struct ... declared inside parameter list`), and no new ones.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -1235,6 +1391,26 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `u8 []`/`void *` palette with byte offsets -> `const u16 [N][16]` and `[frame]` | `gJetpackFlashPalettes`, `gAirshipHitFlashPalettes` | identical; the byte offset `+ (f << 5)` on the `u16` array is `lsl #0xa`, so the index form is needed |
 | one-byte struct stack argument -> `u8` parameter | `CreateHovercraftSideGun` in SpawnHovercraftSideGun | **changes** (`add r2, sp, #4; strb` becomes `str`); kept as an alias |
 | local method records (`gfx_method`, `vmethod`, `hop_method`, `ab_method`) -> `struct actor_method` | cortex.c, dingodile.c, tiny_update.c, mega_mix_update.c | identical |
+| local OAM buffer views (`entries[n].affineParam`, `oam[i].affineParam`, `u8 table[0x400]`) -> `struct oam_shadow_buffer`, `table[n].attr[3]` | company_logos.c, title_screen_init.c, level_select_widgets.c, graphics_package.c, affine_sprite_pieces.c (old_agbcc), sprite_frame.c | identical |
+| u16-unit OAM attribute bitfields -> gfx.h's u32-unit `struct oam_attrs` | graphics_package.c (old_agbcc) | **changes** (an `and` with a loaded `#3` becomes `lsl #0x1e` in DrawScaledSprite); kept as `struct oam_attrs_u16` |
+| `struct anim_box`/`part_box`/`hitbox_quad` -> one `struct hitbox_quad`, `padX`/`xOff` -> `w`/`offX` | graphics.c, platform_collide.c, crate_break.c, crate_hit.c, crate_touch.c, ground_sprite_collide.c, sprite.c, step_probe.c, player_anim_room.c | identical |
+| `u8 buf[0x10]` stack buffer / `u8 unused_00[0x10]` member -> `struct bg_setup` and `&` | language_select_setup.c, save_menu_ui.c, level_select.c, pause_menu.c, power_dialog.c, level_select_pages.c | identical |
+| local `struct tile_cache`/`vram_cursor` views of gPaletteCache/gObjVramCursor -> `struct palette_cache`/`vram_upload_cursor` (`palette[16]` -> `slots[15]`) | level_select.c (old_agbcc) | identical |
+| `void InitPaletteCache(...)` -> returns `self` | graphics.c; pause_menu.c uses the result | identical (`self` is still in r0) |
+| unused 4th `u16` added to a spawn constructor; return `struct actor *` -> `void *` | `CreateEntity`, `CreateMovingSprite`, `CreateSpriteObj`, `CreateGroundSprite` | identical |
+| caller's `s32` declaration -> definition's `u8` return | `GetPaletteSlot` in FontUploadTiles | **changes** (`lsl #0x18; lsr #0x14` for one `lsl #4`); kept as an alias |
+| definition return `u8` -> `s32` (a 0/1 bit) | `sub_801B29C` | identical; with `u8`, run_room.c adds `lsl`/`lsr #0x18` |
+| one-byte struct (`fx_direction`, BLKmode) stack argument -> `u8` parameter | `AddPaletteCycle` in RunRoom | **changes**; kept as an alias |
+| explicit-destination call `F(&box, part)` <-> struct return `box = F(part)` | `GetSpriteHitbox`, `GetSpriteBodyBox`, `GetSpriteAttackBox` | identical in cortex.c, tiny_update.c, level_select.c, sprite_anim.c, extra_life.c, crate_grid_collide.c; **changes** the stack frame in dingodile.c, entity_spawner.c and platform_collide.c (aliases) |
+| s32 parameters read back with `ldrb` (`STACK_ARG_U8_ADDR`) -> `struct byte_arg` parameters | `AddCollisionCandidate` (collision_queue.c) | **changes** the definition (a register swap); kept as `s32`, crate_break.c calls through a `byte_arg` alias |
+| call with the part only -> the definition's `(part, x, y)` | `SetSpritePrevPos` in MovePlayerWithPlatform | not tried with real arguments (r1/r2 hold unrelated values); kept as an alias |
+| `OperatorNew(n); p = F();` -> `p = F(OperatorNew(n))` | `InitEffectCtrl` in entity_spawner.c | identical |
+| `void *`/untyped pool node fields -> `struct pool_node *` fields | `PoolResetFreeList` (part_list.c, crate_list_reset.c) | **changes** (the zeroing stores to `next`/`link` may alias `m->nodeArray`, a `struct pool_node *`, so gcc reloads it); the stores go through a local untyped view, `struct pool_init_node` |
+| typed pool fields (`struct pool_node *gridHead[256]`, `struct box_part **slotArray`) read through `(void **)` casts | crate_list.c, crate_list_draw.c, crate_grid_link.c, crate_grid_unlink.c, crate_list_update.c, crate_grid_collide.c, crate_player_collide.c | identical |
+| `u8 []` extern with `type * 12` byte offsets -> `const struct motion_rec []` through `(u8 *)` | ctrl.c, input_ctrl.c | identical |
+| `u8 []` extern -> `const struct sprite_box` object, `= gEmptySpriteBox` -> `= (void *)&gEmptySpriteBox` | sprite.c, sprite_obj.c, crate_break.c | identical |
+| `.a`/`.b` of a `struct vec_pair []` view -> `[i][0]`/`[i][1]` of the data's `const u32 [8][2]` | dingodile_create.c | identical |
+| hook typed `void (*)(s32, void **)` -> `void (*)(s32, struct actor_self **)`, cast dropped | actor_category_frame.c | identical |
 
 Experiments for later batches:
 
@@ -1268,6 +1444,12 @@ adds its entries here.
 | src/menus/level_select.c | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos")` (and `_rw` for the other) | `const struct xy_pair` (menus.h) | InitLevelSelect reads each twice across calls; through the const object gcc keeps the first loads (old_agbcc) |
 | src/player/action_ctrl_hang.c | `UpdatePlayerFacing` | `u8 UpdatePlayerFacing_u8(void *self) asm("UpdatePlayerFacing")`, used where ActionCtrlStateHangMove tests the result | `s32 (void *)` (player.h) | the test needs the `u8` return's `lsl #0x18`; the definition only matches as `s32` |
 | src/vehicle/jetpack_spawn.c | `CreateHovercraftSideGun` | `void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d, struct byte_arg e) asm("CreateHovercraftSideGun")`, called by SpawnHovercraftSideGun | `void *(void *self, void *part, s32 b, s32 c, s32 d, u8 eByte)` (bosses.h) | the ROM stores the one-byte stack argument with `add r2, sp, #4; strb`; through the `u8` prototype it is a `str` |
+| src/text/font.c | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId) asm("GetPaletteSlot")` | `u8 (struct palette_cache *, s32)` (gfx.h) | FontUploadTiles uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
+| src/level/run_room.c | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction) asm("AddPaletteCycle")`, used by `FX_CYCLE` | `void (..., u8 direction)` (gfx.h) | RunRoom passes the direction as a one-byte BLKmode struct stored with `strb` |
+| src/objects/platform.c | `SetSpritePrevPos` | `void SetSpritePrevPos_1(struct gobj *self) asm("SetSpritePrevPos")` | `void (struct gfx_part *self, s32 x, s32 y)` (objects.h) | MovePlayerWithPlatform passes only the part; r1/r2 hold whatever is there |
+| src/level/entity_spawner.c, src/objects/platform_collide.c | `GetSpriteHitbox` | `void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox")` | `struct aabb (struct box_part *)` (objects.h) | written as a struct return, the call goes through a stack temporary and the frame grows |
+| src/bosses/dingodile.c | `GetSpriteAttackBox`, `GetSpriteBodyBox` | `struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox")` (and `_s` for the other) | `void *(void *dest, void *pt)` (objects.h) | written with an explicit destination, the frame and register allocation change |
+| src/crates/crate_break.c | `AddCollisionCandidate` | `void AddCollisionCandidate_b(..., struct byte_arg f20, struct byte_arg f21) asm("AddCollisionCandidate")` | `void (..., s32 field20, s32 field21)` (objects.h) | QueueCratePlayerCollision stores the two bytes with `strb`; the definition only matches with `s32` parameters |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the
 one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.c`

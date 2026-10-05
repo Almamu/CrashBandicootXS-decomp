@@ -1,5 +1,6 @@
 #include "core.h"
 #include "vtable.h"
+#include "objects.h"
 
 /* GitHub issue #9/#10, tail of the 0x0800B8DC-0x0800D040 cluster (see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the last raw file
@@ -100,9 +101,6 @@ void nullsub_3(void *self)
 {
 }
 
-extern u8 gEffectCtrlVtable[];
-extern void DestroyCtrl(void *self, s32 flags);
-
 /* Sets `self+0xc`'s table pointer to `gEffectCtrlVtable`, then
  * tail-calls `DestroyCtrl` - same double-set pattern as
  * `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`. */
@@ -110,11 +108,9 @@ void DestroyEffectCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gEffectCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gEffectCtrlVtable;
     DestroyCtrl(self, flags);
 }
-
-extern void InitCtrl(void *self);
 
 /* Resets via `InitCtrl`, re-points `self+0xc`'s table pointer at
  * `gEffectCtrlVtable`, and runs `nullsub_3(self)` - the same
@@ -126,7 +122,7 @@ void *InitEffectCtrl(void *selfArg)
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gEffectCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gEffectCtrlVtable;
     nullsub_3(self);
     return self;
 }

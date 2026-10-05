@@ -5,6 +5,7 @@
 #include <libgcc.h>
 #include "audio.h"
 #include "player.h"
+#include "objects.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
@@ -236,8 +237,6 @@ asm(".align 2, 0");
  *  - State 5's velocity stores go through inline setters, which puts
  *    the shared 0 in r2 before the first store. */
 
-extern void StartCtrlTargetMotionYFromSet(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
-extern void StartCtrlTargetMotionXFromSet(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
 extern s32 _call_via_r3(void *self, struct ctrl_target *target, s32 arg, void *fn);
 
 static inline void SetModeA(struct part_ctrl *self, s32 mode)
