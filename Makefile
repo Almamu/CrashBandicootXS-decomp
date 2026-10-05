@@ -183,8 +183,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
                   $(C_BUILDDIR)/text/wrapped_text.o \
-                  $(C_BUILDDIR)/graphics/actor_part101.o \
-                  $(C_BUILDDIR)/graphics/actor_part103.o \
+                  $(C_BUILDDIR)/actor/actor_category_init.o \
+                  $(C_BUILDDIR)/actor/actor_category_frame.o \
                   $(C_BUILDDIR)/crates/crate_touch.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \
@@ -196,19 +196,19 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_list.o \
                   $(C_BUILDDIR)/enemies/enemy_attack.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
-                  $(C_BUILDDIR)/graphics/actor_part127.o \
-                  $(C_BUILDDIR)/graphics/actor_part128.o \
+                  $(C_BUILDDIR)/vehicle/polar_player.o \
+                  $(C_BUILDDIR)/vehicle/jetpack_spawn.o \
                   $(C_BUILDDIR)/bosses/hovercraft.o \
                   $(C_BUILDDIR)/frontend/credits.o \
-                  $(C_BUILDDIR)/graphics/actor_part19h.o \
+                  $(C_BUILDDIR)/vehicle/polar_nitro.o \
                   $(C_BUILDDIR)/bosses/airship_map.o \
                   $(C_BUILDDIR)/bosses/airship_touch.o \
                   $(C_BUILDDIR)/bosses/mega_mix_update.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
-                  $(C_BUILDDIR)/graphics/actor_part45d.o \
+                  $(C_BUILDDIR)/actor/bg_picture.o \
                   $(C_BUILDDIR)/objects/sprite_anim.o \
-                  $(C_BUILDDIR)/graphics/actor_part74.o \
-                  $(C_BUILDDIR)/graphics/actor_part75.o \
+                  $(C_BUILDDIR)/vehicle/yeti_update.o \
+                  $(C_BUILDDIR)/vehicle/yeti_graphics.o \
                   $(C_BUILDDIR)/player/player_collide.o \
                   $(C_BUILDDIR)/objects/part_collide.o \
                   $(C_BUILDDIR)/player/player_event.o \
