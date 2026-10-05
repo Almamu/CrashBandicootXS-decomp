@@ -265,12 +265,21 @@ elif phase == 'refs':
     for w in warnings:
         print('fix by hand:', w)
     # old names still followed by an extension, slash, star or backtick
-    # (but not a same-named `struct foo`)
-    left = re.compile(r'(?<!struct )(?<![\w-])(' + alt(base) + r')(?=\.[cos]\b|[/*`])')
+    # (but not a same-named `struct foo`, a file that only changed
+    # directory, or a report category such as `game_loop` without an extension)
+    cats = set(re.findall(r'"src/[^"]+\.o",\s*"(\w+)"', open('tools/report_units.py').read()))
+    moved = {b for b, nb in base.items() if b != nb}
+    left = re.compile(r'(?<!struct )(?<![\w-])(' + alt(moved) + r')(?=\.[cos]\b|[/*`])')
+    left_cat = re.compile(r'(?<![\w-])(?:' + alt(cats) + r')(?=[/`])') if cats else None
+    def is_left(l):
+        for m in left.finditer(l):
+            if not (left_cat and m.group(1) in cats and left_cat.match(l, m.start())):
+                return True
+        return False
     for f in todo:
         try:
             for i, l in enumerate(open(f), 1):
-                if left.search(l):
+                if is_left(l):
                     print('leftover: %s:%d: %s' % (f, i, l.strip()[:140]))
         except UnicodeDecodeError:
             pass
