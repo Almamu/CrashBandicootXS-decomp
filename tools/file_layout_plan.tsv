@@ -1,0 +1,445 @@
+# Proposed source layout for #575, one row per src/ source file (see docs/file_layout_plan.md). The libraries are in lib/ since #573.
+# merge_group is the merged file's path when several rows land in it, "-" otherwise.
+# Rows are in ldscript.txt (ROM) order. Flags in [] are the Makefile per-object lists the file is in.
+old_path	new_path	merge_group	reason
+src/system/boot_util.c	src/system/boot.c	-	boot helpers: DivMod, MemCopy32, UpdateCtrl (keypad state)
+src/system/main.c	src/system/main.c	-	AgbMain
+src/system/memory.c	src/system/memory.c	-	mem_heap_init, mem_collect, mem_free_bytes, mem_alloc, mem_free (+1 more)
+src/system/irq.c	src/system/irq.c	-	IrqClearHandler, IrqRestoreHandler, IrqSetHandler, IrqDisable, IrqSetup (+12 more)
+src/graphics/intro_screen.c	src/gfx/bitmap_screen.c	-	ShowBitmapScreen
+src/util/math_util.c	src/util/fixed_math.c	-	FixedDistSq, FixedDist, FixedDiv, FixedMul, FixedInverse16 (+2 more)
+src/util/string_util.c	src/util/number_format.c	-	itoa, FormatPaddedNumber
+src/util/printf_util.c	src/util/printf.c	-	vsprintf, sprintf, FindSubstring
+src/util/string_util2.c	src/util/string.c	-	CountNonSpaceChars, strcat, strncpy, strcpy, strlen
+src/util/rand_util.c	src/util/rand.c	-	srand, RandRange, rand
+src/util/line_util.c	src/util/line.c	-	InitBresenhamLine
+src/graphics/text_layout.c	src/text/wrapped_text.c	-	DrawWrappedText [OLD_AGBCC]
+src/util/time_util.c	src/util/time_format.c	-	FormatCentiseconds
+src/system/input_util.c	src/system/input.c	-	WaitForKeyPress
+src/system/asset_util.c	src/system/asset.c	-	LoadTaggedAsset, LoadBackgroundTileAndPalette
+src/util/word_util.c	src/text/text_box.c	-	GetWordLength, DrawWrappedTextInBox
+src/util/line_util2.c	src/util/line_step.c	-	StepBresenhamLine
+src/graphics/fade_util.c	src/gfx/fade.c	src/gfx/fade.c	StepBrightnessFade, FadeBrightness
+src/graphics/palette_blend.c	src/gfx/fade.c	src/gfx/fade.c	DarkenPalette
+src/graphics/fade_screen_mode.c	src/gfx/fade_to_black.c	-	FadePaletteToBlack, IsBrightnessFadeActive
+src/graphics/fade_screen_mode2.c	src/gfx/display.c	-	SetDispcntMode, HideBg3, HideBg2, HideBg1, HideBg0 (+9 more)
+src/graphics/aabb_util.c	src/util/aabb.c	-	also CommitBlendRegs and IwramAlloc/IwramFree; split candidate
+src/audio/music_player.c	src/audio/audio.c	src/audio/audio.c	UpdateAudio, StartSong
+src/audio/sfx_ambient.c	src/audio/audio.c	src/audio/audio.c	PlaySfx, TickAmbientSfx, StopSfx, ResetAmbientSfx, StopAmbientSfx
+src/audio/audio_context.c	src/audio/audio.c	src/audio/audio.c	PlayAmbientSfx, GetCurrentSong, GetSfxVolume, GetMusicVolume, FadeOutMusic (+13 more)
+src/audio/music_irq.c	src/audio/audio.c	src/audio/audio.c	EnableMusicVCountIrq, MusicVCountIrqHandler
+src/system/link_cable.c	src/link/link_handshake.c	-	MakeLinkHandshakeId, LinkStop [OLD_AGBCC]
+src/system/link_cable_01db4.c	src/link/link_session_reset.c	-	ResetLinkSessionState [OLD_AGBCC, NO_RERUN_LOOP_OPT]
+src/system/link_cable_01f50.c	src/link/link_session.c	-	UpdateLinkSession, HandleLinkSerial [OLD_AGBCC]
+src/system/link_cable2.c	src/link/link_sio.c	-	LinkStart, LinkSetupSio, ResetLinkSession, DestroyLinkSession, InitLinkSession (+2 more)
+src/graphics/settings_menu8d.c	src/save/save_data.c	src/save/save_data.c	ReadSaveData, WriteSaveData, LoadSaveData
+src/graphics/settings_menu8e.c	src/save/save_data.c	src/save/save_data.c	ValidateSaveData, CheckSaveChecksum, UpdateSaveChecksum, GetSaveGameId, StoreSaveData (+3 more)
+src/graphics/settings_menu8.c	src/save/save_data.c	src/save/save_data.c	ResetSaveData, IsSaveSlotEmpty, TestSaveFlags, ClearSaveFlags
+src/graphics/settings_menu8a2.c	src/save/save_transfer.c	-	SetSaveFlags, SendSaveTransferChunk, ReceiveSaveTransferChunk
+src/graphics/settings_menu8a3.c	src/save/save_transfer_poll.c	-	PollSaveTransfer
+src/graphics/settings_menu8b.c	src/save/save_menu_input.c	src/save/save_menu_input.c	SetSaveTransferRecord, GetSaveTransferData, ResetSaveTransfer, RunSaveMenu, InitSaveMenu (+7 more)
+src/graphics/settings_menu8c.c	src/save/save_menu_input.c	src/save/save_menu_input.c	SaveMenuOverwriteInput, SaveMenuSaveInput, SaveMenuDeleteInput, SaveMenuConfirmDeleteInput, DrawSaveMenuMain
+src/graphics/settings_menu.c	src/save/save_menu_draw.c	-	LinkExchangeSaveData, DrawSaveMenuMessageLines, DrawSaveMenuCancel, DrawYesNoPrompt, DrawSaveSlotStats (+2 more) [OLD_AGBCC]
+src/graphics/settings_menu2.c	src/save/save_menu_ui.c	src/save/save_menu_ui.c	LoadSaveMenuBg, RefreshSaveSlotSummaries, LoadSaveMenuData, SummarizeProgress
+src/graphics/settings_menu23.c	src/save/save_menu_ui.c	src/save/save_menu_ui.c	DrawEmptySlotLabel, DrawSaveMenuTitle
+src/graphics/settings_menu3.c	src/save/save_menu_ui.c	src/save/save_menu_ui.c	GetSaveMenuBlinkPalette, EndLinkSaveTransfer, BeginLinkSaveTransfer, DrawSaveMenuConfirmDelete, DrawSaveMenuDelete (+7 more)
+src/graphics/settings_menu4.c	src/save/save_menu.c	-	SaveMenuMessageInput, CommitSaveMenuFrame, CloseSaveMenu, OpenSaveMenu
+src/graphics/settings_menu15.c	src/menus/pause_menu.c	-	RunPauseMenu, InitPauseMenu, DestroyPauseMenu
+src/graphics/settings_menu20.c	src/menus/pause_menu_loop.c	-	PauseMenuLoop [OLD_AGBCC]
+src/graphics/settings_menu17.c	src/menus/pause_menu_draw.c	src/menus/pause_menu_draw.c	AnimatePauseMenu
+src/graphics/settings_menu21.c	src/menus/pause_menu_draw.c	src/menus/pause_menu_draw.c	DrawPauseMenu, DrawPauseMenuRows
+src/graphics/settings_menu18.c	src/menus/pause_menu_powers.c	-	DrawPausePowersPage
+src/graphics/settings_menu22.c	src/menus/pause_menu_gems.c	-	DrawPauseGemsPage, DrawPauseRelicsPage [OLD_AGBCC]
+src/graphics/settings_menu19.c	src/menus/pause_menu_info.c	-	InitPauseMenuInfo
+src/graphics/settings_menu6.c	src/menus/pause_menu_pages_init.c	-	InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage, InitPauseTimeTrialPage [OLD_AGBCC]
+src/graphics/settings_menu16.c	src/menus/pause_menu_widgets.c	src/menus/pause_menu_widgets.c	DrawPauseFraction
+src/graphics/settings_menu7.c	src/menus/pause_menu_widgets.c	src/menus/pause_menu_widgets.c	PauseMenuVolumeDown, PauseMenuVolumeUp
+src/graphics/settings_menu5.c	src/menus/pause_menu_widgets.c	src/menus/pause_menu_widgets.c	PauseMenuCursorDown, PauseMenuCursorUp
+src/graphics/settings_menu9.c	src/menus/pause_menu_widgets.c	src/menus/pause_menu_widgets.c	FormatDecimal, FormatVolumePercent
+src/graphics/settings_menu11.c	src/menus/pause_menu_pages_draw.c	src/menus/pause_menu_pages_draw.c	DrawPauseTimeTrialPage, DrawPauseCrystalsPage, DrawPauseMenuPageTitle
+src/graphics/settings_menu12.c	src/menus/pause_menu_pages_draw.c	src/menus/pause_menu_pages_draw.c	CommitPauseMenuFrame
+src/graphics/settings_menu14.c	src/menus/power_dialog.c	src/menus/power_dialog.c	ShowPowerDialog
+src/graphics/settings_menu13.c	src/menus/power_dialog.c	src/menus/power_dialog.c	InitPowerDialog
+src/graphics/settings_menu10.c	src/menus/power_dialog_loop.c	-	PowerDialogLoop [OLD_AGBCC]
+src/graphics/oam_count.c	src/menus/power_dialog_draw.c	-	also the progress tallies (GetProgressLives, Count*Relics)
+src/graphics/graphics.c	src/gfx/graphics.c	-	OAM buffer, VRAM DMA queue, OBJ VRAM cursor, palette cache and the Entity base class (+GetCompletionPercent); split candidate
+src/graphics/graphics_73dc.c	src/gfx/sprite_pieces.c	-	DrawSpritePieces [OLD_AGBCC]
+src/graphics/graphics_7634.c	src/gfx/affine_sprite_pieces.c	-	DrawAffineSpritePieces [OLD_AGBCC]
+src/graphics/actor_part.c	src/objects/sprite.c	src/objects/sprite.c	DrawSpriteAt, DrawSprite, DestroySpriteRenderer, ResetSpriteObj, GetSpriteBounds (+2 more) [OLD_AGBCC]
+src/graphics/actor_part2.c	src/objects/sprite.c	src/objects/sprite.c	GetSpriteAttackBox, GetSpriteBodyBox, CheckSpritePickup [OLD_AGBCC]
+src/graphics/actor_part3.c	src/objects/sprite.c	src/objects/sprite.c	IsSpriteObjOnScreen, SpriteObjOverlapsRect, AdvanceSpriteAnim [OLD_AGBCC]
+src/graphics/actor_part4.c	src/objects/sprite_obj.c	src/objects/sprite_obj.c	SpriteHitboxOverlaps, GetSpriteAnimPaletteSlot
+src/graphics/actor_part5.c	src/objects/sprite_obj.c	src/objects/sprite_obj.c	IsSpriteObjInsideRect, IsSpriteObjNearCamera, ApplySpriteObjVelocity, DrawSpriteObj, UpdateSpriteObj (+3 more)
+src/graphics/actor_part6.c	src/objects/sprite_obj.c	src/objects/sprite_obj.c	GetSpriteObjPriority, CreateSpriteObj, GetSpriteObjClassId, DestroySpriteObj, InitSpriteObj (+31 more)
+src/graphics/actor_part7.c	src/objects/sprite_anim.c	-	GetSpriteAnimFrameCount, GetSpriteAnimDuration, ResetSpriteFrameIndex, SetSpriteFrameTimer, ResetSpriteFrameTimer (+27 more) [OLD_AGBCC]
+src/graphics/actor_part10.c	src/objects/part_list_cull.c	-	CullPartList, ClearPartList, CollidePartsOfClass
+src/graphics/actor_part7b.c	src/objects/part_collide.c	-	CollidePartWithObject [OLD_AGBCC]
+src/graphics/actor_part11.c	src/objects/part_list.c	-	DrawPartList, RemoveFromPartList, RemovePartListAt, AddToPartList, DestroyPartList (+2 more)
+src/graphics/actor_part11b.c	src/crates/crate_grid_unlink.c	-	UnlinkCrateFromGrid [OLD_AGBCC]
+src/graphics/actor_part11g.c	src/crates/crate_grid_link.c	-	LinkCrateToActiveBucket
+src/graphics/actor_part11c.c	src/crates/crate_list_update.c	-	UpdateCrateList [OLD_AGBCC]
+src/graphics/actor_part11h.c	src/crates/crate_list_draw.c	-	DrawCrateList
+src/graphics/actor_part11f.c	src/crates/crate_grid_collide.c	src/crates/crate_grid_collide.c	CollideCrateGrid [OLD_AGBCC]
+src/graphics/actor_part11e.c	src/crates/crate_grid_collide.c	src/crates/crate_grid_collide.c	CollideCrateGridPartWithPlayer [OLD_AGBCC]
+src/graphics/actor_part11d.c	src/crates/crate_player_collide.c	-	CollidePlayerWithCrates [OLD_AGBCC]
+src/graphics/actor_part11i.c	src/crates/crate_list_reset.c	-	ResetCrateList
+src/graphics/actor_part12.c	src/crates/crate_list.c	-	CollideCrateGridPartWithObject, RemoveCrateFromList, RemoveCrateListAt, AddCrateGridNode, LinkCrateInGrid (+2 more) [OLD_AGBCC]
+src/graphics/actor_part12b.c	src/objects/step_probe.c	-	sub_8009BE0
+src/graphics/actor_part13.c	src/objects/player_contact.c	-	CheckPlayerContact, ResolvePlayerContact
+src/graphics/actor_part8.c	src/objects/moving_sprite.c	-	ApplySpriteVelocity, SetSpritePrevPos, GetSpritePrevPos, GetSpritePrevY, GetSpritePrevX (+6 more)
+src/graphics/actor_part9.c	src/objects/moving_sprite_collide.c	-	HitMovingSprite, ClassifySpriteContact, CollideMovingSprite, GetGroundSpriteHitMask, HasGroundSpriteHitMask (+15 more)
+src/graphics/actor_part110.c	src/objects/ground_sprite_collide.c	-	CollideGroundSprite, ProbeGroundSpriteTerrain, ProbeGroundSpriteFloor [OLD_AGBCC]
+src/graphics/actor_part47.c	src/objects/ground_sprite_update.c	-	UpdateGroundSprite
+src/graphics/actor_part14.c	src/objects/ground_sprite.c	-	DrawGroundSprite, GetGroundSpriteClassId, CreateGroundSprite, DestroyGroundSprite, ResetGroundSprite (+11 more)
+src/graphics/actor_part48.c	src/player/player_reset.c	-	ResetPlayer, ResetPlayerForRoom
+src/graphics/actor_part78.c	src/player/player_collide.c	-	CollidePlayer [OLD_AGBCC]
+src/graphics/actor_part108.c	src/player/player_anim_room.c	-	PlayerHasRoomForAnim
+src/graphics/actor_part81.c	src/player/player_event.c	src/player/player_event.c	CollidePlayerWithObjects [OLD_AGBCC]
+src/graphics/actor_part111.c	src/player/player_event.c	src/player/player_event.c	PlayerHandleEvent, DrawPlayer [OLD_AGBCC]
+src/graphics/actor_part49.c	src/player/player_update.c	src/player/player_update.c	ApplyPlayerVelocity
+src/graphics/actor_part15.c	src/player/player_update.c	src/player/player_update.c	HasPlayerRampYTarget, ClearPlayerSpeedY, StopPlayerFalling, UpdatePlayer, PlayerTouchesBox (+1 more)
+src/graphics/actor_part77.c	src/player/player_init.c	-	InitPlayer
+src/graphics/actor_part16.c	src/player/player_flags.c	-	GetPlayerCollisionQueue, ClearPlayerDead, SetPlayerDead, IsPlayerDead, StartPlayerRampX (+39 more)
+src/graphics/actor_part17.c	src/objects/ctrl.c	-	StartCtrlTargetMotionYFromSet, SetCtrlTargetMotionX, StartCtrlTargetMotionX, StartCtrlTargetMotionXFromSet, CtrlHandleEvent (+5 more)
+src/graphics/actor_part112.c	src/enemies/enemy_ctrl_update.c	-	UpdateEnemyCtrl, HitEnemy [OLD_AGBCC]
+src/graphics/actor_part121.c	src/enemies/enemy_shooter.c	-	UpdateEnemyShooter
+src/graphics/actor_part118.c	src/enemies/enemy_patrol.c	-	UpdateEnemyPatrol [OLD_AGBCC]
+src/graphics/actor_part114.c	src/enemies/enemy_motion.c	src/enemies/enemy_motion.c	UpdateEnemyHomingX, UpdateEnemyHomingY
+src/graphics/actor_part119.c	src/enemies/enemy_motion.c	src/enemies/enemy_motion.c	UpdateEnemyHop
+src/graphics/actor_part115.c	src/enemies/enemy_motion.c	src/enemies/enemy_motion.c	UpdateEnemyFlipCycle
+src/graphics/actor_part120.c	src/enemies/enemy_attack.c	src/enemies/enemy_attack.c	UpdateEnemyAttackCycle, UpdateEnemyTriggerBox [OLD_AGBCC]
+src/graphics/actor_part122.c	src/enemies/enemy_attack.c	src/enemies/enemy_attack.c	SetEnemyState, SetEnemyRangeXSpeed, SetEnemyRangeYSpeed, SetEnemyRangeX [OLD_AGBCC]
+src/graphics/actor_part113.c	src/enemies/enemy_ctrl.c	src/enemies/enemy_ctrl.c	SetEnemyMotionY, SetEnemyMotionX, SetEnemyAnimMode
+src/graphics/actor_part116.c	src/enemies/enemy_ctrl.c	src/enemies/enemy_ctrl.c	UpdateEnemyOscillateX, UpdateEnemyBob, UpdateEnemyOscillateY, LaunchHarmfulEffectPart
+src/graphics/actor_part124.c	src/enemies/enemy_ctrl.c	src/enemies/enemy_ctrl.c	AttachEnemyCtrl, GetSfxVolumeAt, ResetEnemyCtrl, DestroyEnemyCtrl, CreateEnemyCtrl (+14 more)
+src/graphics/actor_part117.c	src/enemies/enemy_ctrl.c	src/enemies/enemy_ctrl.c	CreateKnockedEnemyCtrl
+src/graphics/actor_part123.c	src/objects/effect_ctrl.c	-	UpdateEffectCtrl, EffectCtrlHandleEvent, DestroyEffectCtrl, InitEffectCtrl [OLD_AGBCC]
+src/graphics/actor_part109.c	src/crates/crate_touch.c	-	PlayerAnimWouldTouchCrate [OLD_AGBCC]
+src/system/game_loop42.c	src/crates/crate_hit.c	src/crates/crate_hit.c	sub_800CEAC, sub_800CF70 [OLD_AGBCC]
+src/system/game_loop6.c	src/crates/crate_hit.c	src/crates/crate_hit.c	BreakCrateTouchedByPlayer [OLD_AGBCC]
+src/system/game_loop47.c	src/crates/crate_break.c	src/crates/crate_break.c	QueueCratePlayerCollision, ApplyCrateCollision [OLD_AGBCC]
+src/system/game_loop7.c	src/crates/crate_break.c	src/crates/crate_break.c	ClearCrateStackTouched, MarkCrateStackTouched [OLD_AGBCC]
+src/system/game_loop48.c	src/crates/crate_break.c	src/crates/crate_break.c	BounceWumpaCrate, LightTntCrate, OpenCheckpointCrate, BreakCrateInStack, BreakCrate (+3 more) [OLD_AGBCC]
+src/system/game_loop49.c	src/crates/crate_break.c	src/crates/crate_break.c	ExplodeCrate, BlastNearbyCrates, UpdateCrates, DetonateNitroCrates, ActivateNitroSwitchCrate (+7 more) [OLD_AGBCC]
+src/system/game_loop32.c	src/crates/crate_break.c	src/crates/crate_break.c	UpdateCrateFall [OLD_AGBCC]
+src/system/game_loop33.c	src/crates/crate_reset.c	src/crates/crate_reset.c	FindLineCrossing
+src/system/game_loop22.c	src/crates/crate_reset.c	src/crates/crate_reset.c	ResetCrate
+src/system/game_loop36.c	src/crates/crate_create.c	-	CreateCrate [OLD_AGBCC]
+src/system/game_loop35.c	src/crates/crate_draw.c	-	DrawCrate
+src/system/game_loop51.c	src/crates/crate_update.c	-	UpdateCrate [OLD_AGBCC]
+src/system/game_loop23.c	src/crates/crate.c	src/crates/crate.c	IsCrateInsideRect, ResolvePlayerCollisions, GetCrateBelow, GetCrateAbove, SetCrateBelow (+2 more)
+src/system/game_loop31.c	src/crates/crate.c	src/crates/crate.c	DestroyCrate, InitCrate, FindLineCrossingYMajor, FindLineCrossingXMajor
+src/system/game_loop24.c	src/crates/crate_time_trial.c	-	ConvertCratesForTimeTrial, OpenAkuAkuCrate
+src/system/game_loop34.c	src/crates/crate_stack.c	src/crates/crate_stack.c	OpenLifeCrate
+src/system/game_loop25.c	src/crates/crate_stack.c	src/crates/crate_stack.c	IsCrateKindBreakable
+src/system/game_loop30.c	src/crates/crate_stack.c	src/crates/crate_stack.c	GetTopCrate, GetBottomCrate, CollideCrateWithPlayer
+src/system/game_loop26.c	src/crates/slot_crate.c	src/crates/slot_crate.c	GetSlotCrateStage
+src/system/game_loop27.c	src/crates/slot_crate.c	src/crates/slot_crate.c	DecrementSlotCrateStage, SetSlotCrateStage, ClearSlotCrateStage, GetSlotCrateSpins, DecrementSlotCrateSpins (+20 more)
+src/system/game_loop28.c	src/objects/collision_queue.c	src/objects/collision_queue.c	ResolveCollisionCandidates
+src/system/game_loop50.c	src/objects/collision_queue.c	src/objects/collision_queue.c	AddCollisionCandidate, DestroyCollisionQueue, ResetCollisionQueue
+src/system/game_loop54.c	src/pickups/extra_life.c	src/pickups/extra_life.c	CheckExtraLifePickup, PickUpExtraLife, UpdateExtraLife, CreateExtraLife, SendExtraLifeToHud [OLD_AGBCC]
+src/system/game_loop52.c	src/pickups/extra_life.c	src/pickups/extra_life.c	UpdateExtraLifeHop, DrawExtraLife, GetExtraLifeClassId, DestroyExtraLife, ResetExtraLifePickup (+6 more) [OLD_AGBCC]
+src/system/game_loop53.c	src/pickups/wumpa_update.c	-	PickUpWumpa, UpdateWumpa, CreateWumpa, SendWumpaToHud, StartWumpaPayout (+1 more) [OLD_AGBCC]
+src/graphics/actor_part39.c	src/pickups/wumpa.c	-	DrawWumpa, GetWumpaClassId, DestroyWumpa, ResetWumpaPickup, InitWumpa (+10 more)
+src/graphics/actor_part82.c	src/player/action_ctrl_event.c	-	ActionCtrlHandleEvent [OLD_AGBCC]
+src/graphics/actor_part79.c	src/player/kill_player.c	-	KillPlayer, UpdatePlayerFacing (action-controller helpers)
+src/graphics/actor_part84.c	src/player/action_ctrl_update.c	-	UpdateActionCtrl, TryActionCtrlDoubleJump, HandleActionCtrlAirInput [OLD_AGBCC]
+src/graphics/actor_part80.c	src/player/action_ctrl_left_ground.c	-	CheckActionCtrlLeftGround
+src/graphics/actor_part83.c	src/player/action_ctrl_idle.c	-	ApplyActionCtrlMotion, ActionCtrlStateIdle [OLD_AGBCC]
+src/graphics/actor_part_12fbc.c	src/player/action_ctrl_run_jump.c	-	ActionCtrlStateRun, ActionCtrlStateJump [OLD_AGBCC]
+src/graphics/actor_part_134b8.c	src/player/action_ctrl_states.c	src/player/action_ctrl_states.c	ActionCtrlStateAirborne [OLD_AGBCC]
+src/graphics/actor_part_138e8.c	src/player/action_ctrl_states.c	src/player/action_ctrl_states.c	ActionCtrlStateFlipBodySlamStart, ActionCtrlStateSlide [OLD_AGBCC]
+src/graphics/actor_part_13c60.c	src/player/action_ctrl_states.c	src/player/action_ctrl_states.c	ActionCtrlStateSpin, ActionCtrlStateAirSpin, ActionCtrlStateTornadoSpin, ActionCtrlStateCrouchDown, ActionCtrlStateCrouch [OLD_AGBCC]
+src/graphics/actor_part18.c	src/player/action_ctrl_states.c	src/player/action_ctrl_states.c	ActionCtrlStateStandUp, ActionCtrlStateCrawlStart, ActionCtrlStateCrawl [OLD_AGBCC]
+src/graphics/actor_part18b.c	src/player/action_ctrl_land.c	-	ActionCtrlStateCrawlStandUp, ActionCtrlStateBodySlamLand, ActionCtrlStateLand
+src/graphics/actor_part_14674.c	src/player/action_ctrl_hang.c	src/player/action_ctrl_hang.c	ActionCtrlStateLeftGround, ActionCtrlStateDying, ActionCtrlStateWarpIn, ActionCtrlStateHang, ActionCtrlReleaseHang (+4 more) [OLD_AGBCC]
+src/graphics/actor_part38.c	src/player/action_ctrl_hang.c	src/player/action_ctrl_hang.c	DoSuperBodySlamShockwave, StartActionCtrlTornadoSpin [OLD_AGBCC]
+src/graphics/actor_part38b.c	src/player/action_ctrl_moves.c	src/player/action_ctrl_moves.c	EndActionCtrlSpin, SteerActionCtrlSpin [OLD_AGBCC]
+src/graphics/actor_part38c.c	src/player/action_ctrl_moves.c	src/player/action_ctrl_moves.c	SetActionCtrlMode, StartActionCtrlSpin, StartActionCtrlHangSpin, StartActionCtrlRun, StartActionCtrlHighJump (+9 more) [OLD_AGBCC]
+src/graphics/actor_part38d.c	src/player/action_ctrl.c	src/player/action_ctrl.c	ActionCtrlStateTurboRun, SetActionCtrlModeAnim, ActionCtrlSetTargetAnim (+3 more)
+src/graphics/actor_part57.c	src/player/action_ctrl.c	src/player/action_ctrl.c	RestartActionCtrl, DestroyActionCtrl, InitActionCtrl, SetActionCtrlMotionYKeepSpeed, SetActionCtrlMotionXKeepSpeed (+14 more)
+src/graphics/actor_part86.c	src/player/swim_ctrl_stroke.c	src/player/swim_ctrl_stroke.c	StartPlayerCtrlStroke, StartPlayerCtrlSpin [OLD_AGBCC]
+src/graphics/actor_part86b.c	src/player/swim_ctrl_stroke.c	src/player/swim_ctrl_stroke.c	ApplyPlayerCtrlSwimDrift [OLD_AGBCC]
+src/graphics/actor_part57b.c	src/player/swim_ctrl_drift.c	-	SetPlayerSwimDriftY
+src/graphics/actor_part_16048.c	src/player/swim_ctrl.c	-	CheckPlayerCtrlTurn, PlayerCtrlHandleEvent, PlayerCtrlKillPlayer, UpdatePlayerCtrl, ApplyPlayerCtrlMotion (+21 more) [OLD_AGBCC]
+src/graphics/actor_part_17524.c	src/player/input_ctrl.c	-	ClearPlayerCtrlMotionYPending, ClearPlayerCtrlMotionXPending, IsPlayerCtrlMotionYPending, IsPlayerCtrlMotionXPending, QueuePlayerCtrlMotionY (+20 more) [OLD_AGBCC]
+src/graphics/actor_part27.c	src/player/input_ctrl_queue.c	-	InputCtrl motion queue, then the BossCtrl base (BossCtrlHandleEvent, Create/DestroyBossCtrl)
+src/graphics/actor_part27a.c	src/bosses/mega_mix_update.c	-	UpdateMegaMix [OLD_AGBCC]
+src/graphics/actor_part27b.c	src/bosses/mega_mix.c	-	SetMegaMixMotionYFromSet, SetMegaMixMotionXFromSet, StartMegaMixMotionYFromSet, StartMegaMixMotionXFromSet, ResetMegaMixCtrl (+2 more)
+src/graphics/actor_part_18008.c	src/bosses/tiny_update.c	-	UpdateTiny, SetTinyState, PickTinyHopTarget, SpawnTinyFallingLeaves [OLD_AGBCC]
+src/graphics/actor_part27c.c	src/bosses/tiny_hop_pad.c	-	UpdateStompedHopPad, DestroyStompedHopPadCtrl, CreateStompedHopPadCtrl, UpdateOneShotAnimCtrl
+src/graphics/actor_part_188d0.c	src/bosses/cortex.c	-	starts with OneShotAnimCtrl and Tiny create/destroy, then the Cortex boss (UpdateCortexBoss, Cortex shot/gem/platform) [OLD_AGBCC]
+src/graphics/actor_part_1967c.c	src/bosses/dingodile.c	-	starts with the Cortex target/cannon and Create/DestroyCortexBoss, then the Dingodile boss (UpdateDingodile, shark, shield, projectile) [OLD_AGBCC]
+src/graphics/actor_part_1a794.c	src/bosses/dingodile_create.c	-	CreateDingodileShieldCtrl, StartDingodileMotion, DestroyDingodile, CreateDingodile, SetDingodileStep (+1 more)
+src/graphics/actor_part_1a878.c	src/objects/platform_create.c	-	CreatePlatform [OLD_AGBCC]
+src/graphics/actor_part_1ab34.c	src/objects/platform_contact.c	-	CheckPlatformContact
+src/graphics/actor_part_1ab98.c	src/objects/platform_collide.c	-	ResolvePlatformCollision [OLD_AGBCC]
+src/graphics/actor_part_1b208.c	src/objects/platform.c	-	UpdatePlatform, GetPlatformClassId, DestroyPlatform, InitPlatform, UpdatePlatformMover (+11 more)
+src/graphics/actor_part_1b85c.c	src/menus/level_select.c	-	starts with CameraLead (InputCtrl follow child) and the LaunchPad sprite, then the level-select screen (RunLevelSelect, InitLevelSelect, LevelSelectLoop); split candidate [OLD_AGBCC]
+src/graphics/actor_part_1cee0.c	src/menus/level_select_pages.c	-	LevelSelectTurnPage, WaitLevelSelectCursor, LevelSelectConfirm, LevelSelectExit, SetNewWorldOpened (+20 more) [OLD_AGBCC]
+src/graphics/actor_part_1da38.c	src/menus/level_select_widgets.c	src/menus/level_select_widgets.c	DestroyZoomBg, UpdateZoomBg, DrawZoomBg, CommitZoomBg, IsZoomBgExiting (+20 more) [OLD_AGBCC]
+src/graphics/actor_part_1dfec.c	src/menus/level_select_widgets.c	src/menus/level_select_widgets.c	CreateLevelSelectEntry, CreateLevelSelectCursor, UpdateLevelSelectCursor, DrawLevelSelectCursor, SetLevelSelectCursorMatrix (+11 more) [OLD_AGBCC]
+src/graphics/graphics_package_1e578.c	src/gfx/graphics_package.c	src/gfx/graphics_package.c	LoadGraphicsPackage [OLD_AGBCC]
+src/graphics/graphics_package_1e640.c	src/gfx/graphics_package.c	src/gfx/graphics_package.c	GetBgSetupControl, InitBgSetup [OLD_AGBCC]
+src/graphics/graphics_package_1e688.c	src/gfx/graphics_package.c	src/gfx/graphics_package.c	FitScaledSprite, DrawScaledSprite [OLD_AGBCC]
+src/graphics/graphics_package_1e8f8.c	src/gfx/graphics_package.c	src/gfx/graphics_package.c	sub_801E8F8, sub_801E950 [OLD_AGBCC]
+src/graphics/graphics_package_1e964.c	src/gfx/graphics_package.c	src/gfx/graphics_package.c	sub_801E964, sub_801E96C [OLD_AGBCC]
+src/graphics/graphics_loading_1e990.c	src/level/spawn_start_marker.c	-	SpawnStartMarker [OLD_AGBCC]
+src/graphics/graphics_loading_1ea5c.c	src/level/spawn_gems.c	-	SpawnCrystal, SpawnCrateGem, SpawnGemPathGem, SpawnRedGem, SpawnGreenGem (+1 more) [OLD_AGBCC]
+src/graphics/graphics_loading_1ef0c.c	src/level/spawn_enemies.c	src/level/spawn_enemies.c	SpawnLizard, SpawnVulture, SpawnVenusFlytrap, SpawnPatrollingJungleEnemy, SpawnBlowgunTribesman (+7 more) [OLD_AGBCC]
+src/graphics/graphics_loading_1fdec.c	src/level/spawn_enemies.c	src/level/spawn_enemies.c	SpawnSquid [OLD_AGBCC]
+src/graphics/graphics_loading_1feec.c	src/level/spawn_enemies.c	src/level/spawn_enemies.c	SpawnJellyfish, SpawnLaserBarrier, SpawnStationarySpaceEnemy, SpawnPatrollingSpaceEnemy, SpawnSaucerLabAssistant (+8 more) [OLD_AGBCC]
+src/graphics/trigger_effect.c	src/level/spawn_gem_platforms.c	-	SpawnRedGemPlatform, SpawnYellowGemPlatform, SpawnGreenGemPlatform, SpawnBlueGemPlatform [OLD_AGBCC]
+src/graphics/graphics_loading_21280.c	src/level/spawn_bosses.c	-	SpawnRoomExit, SpawnDingodile, SpawnTiny, SpawnCortexBoss [OLD_AGBCC]
+src/graphics/graphics_loading_21668.c	src/level/spawn_objects.c	-	SpawnMegaMix, SpawnSeaweed, SpawnFlame, SpawnRockPlatform, SpawnFlipPlatform (+20 more) [OLD_AGBCC]
+src/graphics/graphics_loading_21bfc.c	src/level/spawn_crates.c	-	SpawnNitroSwitchCrate, SpawnOutlineCrate, SpawnArrowCrate, SpawnIronSwitchCrate, SpawnAkuAkuCrate (+2 more)
+src/graphics/graphics_loading_21d80.c	src/level/spawn_pickups.c	-	also CreateEntitySpawner/DestroyEntitySpawner and InitLevelState
+src/graphics/graphics_loading_22354.c	src/level/level_cutscene.c	-	DestroyLevelState, PlayCutscene
+src/system/game_loop55.c	src/level/game_frame.c	-	UpdateGameFrame [OLD_AGBCC]
+src/system/game_loop.c	src/level/bonus_round.c	-	EndBonusRound, SetCheckpointAtPlayer
+src/system/game_loop40.c	src/level/time_trial.c	-	StartTimeTrial [OLD_AGBCC]
+src/system/game_loop2.c	src/level/level_state.c	src/level/level_state.c	FreezeLevelClock, TickLevelClock, AddBrokenCrate, PressSwitchCrate, GetBonusPlatform (+66 more)
+src/system/game_loop10.c	src/level/level_state.c	src/level/level_state.c	SetGemPlatform, SetBonusPlatform, SetCrateGemPos, RequestGemPath, RequestBonusRound (+10 more)
+src/system/game_loop11.c	src/level/level_state.c	src/level/level_state.c	GetLevelState
+src/system/game_loop39.c	src/level/play_room.c	-	PlayRoom
+src/system/game_loop56.c	src/level/run_room.c	-	RunRoom [OLD_AGBCC]
+src/system/game_loop8.c	src/level/room_frame.c	-	UpdateRoomFrame, SetupRoomBlend [OLD_AGBCC]
+src/system/game_loop9.c	src/level/room.c	-	ClearRoomExit, RequestRoomExit, IsRoomExitRequested, ResumeRoomAfterPause, ResetObjBuffers
+src/system/game_loop17.c	src/level/level_query.c	src/level/level_query.c	CountLevelCrates
+src/system/game_loop18.c	src/level/level_query.c	src/level/level_query.c	LevelHasEntityType, IsInGemPathRoom, IsInBonusRoom, LevelHasYellowGemEntity, LevelHasBlueGemEntity (+9 more)
+src/system/game_loop37.c	src/cutscene/slideshow.c	-	BeginSlide, RunSlideshow, SkipSlides, ShowSlidePicture [OLD_AGBCC]
+src/system/game_loop19.c	src/cutscene/slideshow_display.c	src/cutscene/slideshow_display.c	SetSlideshowDispcnt
+src/system/game_loop38.c	src/cutscene/slideshow_display.c	src/cutscene/slideshow_display.c	EndSlide
+src/system/game_loop20.c	src/cutscene/slideshow_display.c	src/cutscene/slideshow_display.c	DestroySlideshow, ResetSlideshow
+src/system/game_loop57.c	src/cutscene/cutscene_player.c	-	InitSlideshow, the cutscene player, the BG streamer and the BgLayerBase helpers [OLD_AGBCC]
+src/system/game_loop3.c	src/level/bg_layer_base.c	-	ScrollBgLayerBase, ResetBgLayerBase, SetBgLayerSource, IsBgLayerEnabled, GetBgLayerY (+10 more) [OLD_AGBCC]
+src/system/game_loop4.c	src/level/tile_cache.c	-	DestroyTileCache, GetTerrainType [OLD_AGBCC]
+src/system/game_loop5.c	src/level/collision_map.c	-	GetCollisionCell, SetCollisionSource, SetBitmapBit, ClearBitmapBit, ClearBitmap (+1 more)
+src/system/game_loop41.c	src/level/room_entities.c	-	SpawnRoomEntities [OLD_AGBCC]
+src/system/game_loop12.c	src/level/entity_flags.c	src/level/entity_flags.c	CountCrateEntities
+src/system/game_loop13.c	src/level/entity_flags.c	src/level/entity_flags.c	DestroyEntityFlags, InitEntityFlags
+src/system/game_loop29.c	src/level/drop_extra_life.c	-	DropExtraLife [OLD_AGBCC]
+src/system/game_loop14.c	src/level/entity_spawner.c	-	LaunchEffectPart, SpawnEffectPart, DropWumpa, SpawnEntity, SetEntitySpawnerTable (+2 more) [OLD_AGBCC]
+src/system/game_loop15.c	src/level/bg_layer_init.c	-	InitBgLayer, GrowBgLayerRows, GrowBgLayerColumns, ClipBgLayerColumns, ClipBgLayerRows
+src/system/game_loop16.c	src/level/bg_layer.c	src/level/bg_layer.c	ScrollBgLayer, CommitBgLayerScroll, DrawBgLayerColumn [OLD_AGBCC]
+src/system/bg_scroll_layer_25fc8.c	src/level/bg_layer.c	src/level/bg_layer.c	DrawBgLayerRow, RedrawBgLayer, ResetBgLayer, LoadBgLayerTiles, LoadBgLayer (+21 more) [OLD_AGBCC]
+src/system/tile_slot_pool.c	src/level/tile_slot_pool.c	-	DestroyPooledBgLayer, InitPooledBgLayer, ResetTileSlotPool, AcquireTileSlot, ReleaseTileSlot (+3 more)
+src/system/game_loop43.c	src/level/terrain_probe.c	-	ProbeTerrain
+src/system/level_layers.c	src/level/level_layers.c	-	LoadRoom, InitLevelLayers, DestroyLevelLayers, GetLevelLayers, SetLevelScroll (+6 more)
+src/system/game_loop46.c	src/level/terrain_probe_axes.c	-	ProbeTerrainY, ProbeTerrainX [OLD_AGBCC]
+src/system/game_loop44.c	src/level/terrain.c	src/level/terrain.c	GetTerrainFlagsAt
+src/system/game_loop45.c	src/level/terrain.c	src/level/terrain.c	sub_8026BF8, sub_8026C3C, sub_8026C80, sub_8026C8C
+src/system/camera_follow.c	src/level/camera.c	-	gCamera follow (UpdateCamera, SnapCamera) plus OperatorNew/OperatorDelete(Array); split candidate
+src/system/main_loop.c	src/system/main_loop.c	-	MainLoop, GetUiText
+src/graphics/hud_icon_slot.c	src/gfx/palette_cycle.c	-	palette cycles (TickPaletteCycles, AddPaletteCycle) plus DrawHudPart/InitHudPart
+src/graphics/hud_digit_array.c	src/hud/hud_init.c	-	InitHud, ConfigureHudParts [OLD_AGBCC]
+src/graphics/hud_stat_widget.c	src/hud/hud.c	-	UpdateHud
+src/graphics/hud_stat_widget2.c	src/hud/hud_boss_clock.c	-	UpdateHudBoss, UpdateHudClock [OLD_AGBCC]
+src/graphics/hud_counter.c	src/hud/hud_lives.c	-	UpdateHudLives
+src/graphics/hud_stat_widget3.c	src/hud/hud_counters.c	-	UpdateHudCrates, UpdateHudWumpa, UpdateHudPercentCounters [OLD_AGBCC]
+src/graphics/hud_blink.c	src/hud/hud_slide.c	src/hud/hud_slide.c	UpdateHudSlides, ShowHudCrates, ShowHudLives, ShowHudWumpa, ShowHudCounters (+3 more)
+src/graphics/hud_icon_widget.c	src/hud/hud_slide.c	src/hud/hud_slide.c	DestroyHud
+src/graphics/hud_icon_widget_85c4.c	src/text/font_glyph.c	-	FontDrawGlyph, InitSmallFont, InitLargeFont, FontPutChar [OLD_AGBCC]
+src/graphics/hud_icon_widget2.c	src/text/font_draw_chars.c	-	FontDrawChars
+src/graphics/hud_icon_widget_8890.c	src/text/font_draw_text.c	-	FontDrawText, FontMeasureChars [OLD_AGBCC]
+src/graphics/hud_icon_widget3.c	src/text/font_height.c	-	FontTextHeight
+src/graphics/hud_icon_widget_8994.c	src/text/font_measure.c	-	FontMeasureText [OLD_AGBCC]
+src/graphics/hud_icon_widget4.c	src/text/font.c	src/text/font.c	FontUploadTiles, FontSetPalette, FontResetPalette
+src/graphics/hud_icon_widget_8a78.c	src/text/font.c	src/text/font.c	InitFont
+src/graphics/hud_icon_widget5.c	src/text/font.c	src/text/font.c	FontHeightToLines, FontGetTileCount, FontSetPos, FontNewLineAt, FontGetMargin (+5 more)
+src/graphics/sprite_frame_pool.c	src/gfx/sprite_frame.c	src/gfx/sprite_frame.c	InitObjTileFreeList, FreeVramTileBlock
+src/graphics/sprite_frame_queue.c	src/gfx/sprite_frame.c	src/gfx/sprite_frame.c	AllocVramTileBlock, GetFreeVramTileBytes, FreeObjTileFreeList, QueueSpriteFrameOam, FreeSpriteFrameOamQueue (+11 more)
+src/graphics/actor_part104.c	src/actor/actor_vram_pool.c	-	SetupActorVramPool
+src/graphics/actor_part101.c	src/actor/actor_category_init.c	-	InitActorCategory [OLD_AGBCC]
+src/graphics/actor_part100.c	src/actor/actor_category_stats.c	src/actor/actor_category_stats.c	CountCategoryCrates
+src/graphics/actor_part105.c	src/actor/actor_category_stats.c	src/actor/actor_category_stats.c	AddActorMissedNitro, GetActorMissedNitros, GetActorCheckpoint
+src/graphics/actor_part95.c	src/actor/cell_anim.c	src/actor/cell_anim.c	SetActorCheckpoint, IsActorMaskAssistDue, UploadCellAnimFrame, InitCellAnim, ResetCellAnimBg
+src/graphics/actor_part106.c	src/actor/cell_anim.c	src/actor/cell_anim.c	GetCellAnimFreeTile
+src/graphics/actor_part96.c	src/actor/cell_anim.c	src/actor/cell_anim.c	FlipCellAnimPage
+src/graphics/actor_part90.c	src/actor/cell_anim.c	src/actor/cell_anim.c	GetCellAnimDistance
+src/graphics/actor_part97.c	src/actor/cell_anim.c	src/actor/cell_anim.c	AdvanceCellAnim
+src/graphics/actor_part91.c	src/actor/cell_anim.c	src/actor/cell_anim.c	GetCellAnimFrameStep, GetCellAnimSpeed
+src/graphics/actor_part98.c	src/actor/cell_anim.c	src/actor/cell_anim.c	SetCellAnimSpeed, FillCellAnimTilemap, InitActorBgScroll, UpdateActorBgScroll
+src/graphics/actor_part92.c	src/actor/actor_bg.c	src/actor/actor_bg.c	ShakeActorBg
+src/graphics/actor_part99.c	src/actor/actor_bg.c	src/actor/actor_bg.c	CommitActorBgScroll
+src/graphics/actor_part93.c	src/actor/actor_bg.c	src/actor/actor_bg.c	GetActorBgCenterY, GetActorBgCenterX
+src/graphics/actor_part102.c	src/actor/actor_category_select.c	-	SelectActorCategory
+src/graphics/actor_part103.c	src/actor/actor_category_frame.c	-	PolarIsTouchingPlayer, JetpackIsTouchingPlayer, RunActorCategoryFrame, FindShotTarget [OLD_AGBCC]
+src/graphics/actor_part94.c	src/actor/actor_spawn.c	-	actor-category frame/spawn-table helpers (GetActorSpawnOffset, Pause/ResumeActorSpawns, CanPauseActorCategory)
+src/graphics/actor_part50.c	src/actor/actor.c	src/actor/actor.c	JetpackReloadPlayerTiles, PolarReloadPlayerTiles, JetpackReachCourseEnd, PolarReachCourseEnd, IsTouchingPlayer (+2 more)
+src/graphics/actor_part55.c	src/actor/actor.c	src/actor/actor.c	DrawActor
+src/graphics/actor_part56.c	src/actor/actor.c	src/actor/actor.c	UpdateActorDepth, GetActorRecordIndex, SetActorState, GetActorZ, GetActorY (+1 more)
+src/graphics/actor_part51.c	src/actor/actor.c	src/actor/actor.c	sub_802AA0C
+src/graphics/actor_part52.c	src/actor/actor.c	src/actor/actor.c	IsActorVisible, DestroyActor, IsSpawnCollected, MarkSpawnCollected, ClearCollectedSpawns (+2 more)
+src/graphics/actor_part53.c	src/actor/actor.c	src/actor/actor.c	UpdateActorPaletteCycle
+src/graphics/actor_part54.c	src/actor/actor.c	src/actor/actor.c	SetActorPaletteCycle, EnableActorPaletteCycle
+src/graphics/actor_part_2ac28.c	src/actor/actor_factory.c	-	CreateActor, CreatePolarCheckpointText, SpawnPolarCollectedWumpa, SpawnPolarAkuAku, ConstructAnimTableState (+2 more)
+src/graphics/actor_part127.c	src/vehicle/polar_player.c	-	UpdatePolarPlayer, DrawPolarPlayer, HurtPolarPlayer, ShockPolarPlayer, AllocPolarPlayerTiles (+6 more) [OLD_AGBCC]
+src/graphics/actor_part107.c	src/vehicle/polar_player_states.c	-	DispensePolarWumpa, IsPolarPauseLocked, PolarPlayerStateFinishLeap, PolarPlayerStateCarriedOff, PolarPlayerStateKnockedOff (+2 more)
+src/graphics/actor_part19.c	src/vehicle/polar_player_actions.c	-	PolarPlayerStateLaunched, PolarPlayerStateFinish, PolarPlayerStateLand, FinishPolarRun, CatchPolarPlayer (+6 more)
+src/graphics/actor_part19e.c	src/vehicle/polar_player_dispatch.c	-	RunPolarPlayerState
+src/graphics/actor_part19f.c	src/vehicle/polar_pickups.c	src/vehicle/polar_pickups.c	IsPolarPlayerInactive, UpdatePolarCollectedWumpa
+src/graphics/actor_part19b.c	src/vehicle/polar_pickups.c	src/vehicle/polar_pickups.c	DrawPolarCollectedWumpa
+src/graphics/actor_part19c.c	src/vehicle/polar_pickups.c	src/vehicle/polar_pickups.c	DestroyPolarCollectedWumpa
+src/graphics/actor_part19c2.c	src/vehicle/polar_pickups.c	src/vehicle/polar_pickups.c	CreatePolarCollectedWumpa
+src/graphics/actor_part19g.c	src/vehicle/polar_pickups.c	src/vehicle/polar_pickups.c	UpdatePolarWumpa, CreatePolarWumpa, UpdatePolarCrate, UpdatePolarQuestionCrate, UpdatePolarLifeCrate (+1 more)
+src/graphics/actor_part19h.c	src/vehicle/polar_nitro.c	-	DetonateNearbyPolarNitros [OLD_AGBCC]
+src/graphics/actor_part19d.c	src/vehicle/polar_crates.c	src/vehicle/polar_crates.c	UpdatePolarAkuAkuCrate
+src/graphics/actor_part19i.c	src/vehicle/polar_crates.c	src/vehicle/polar_crates.c	UpdatePolarTimeCrate, UpdatePolarBasicCrate, InitPolarCrate, CreatePolarTimeCrate, CreatePolarQuestionCrate (+7 more)
+src/graphics/actor_part126.c	src/vehicle/polar_objects.c	src/vehicle/polar_objects.c	UpdatePolarElectricFence, CreatePolarElectricFence, UpdatePolarLauncher, CreatePolarLauncher, UpdatePolarPenguin (+8 more)
+src/graphics/actor_part62.c	src/vehicle/polar_objects.c	src/vehicle/polar_objects.c	MovePolarAkuAku
+src/graphics/actor_part58.c	src/vehicle/polar_aku_aku.c	-	ClearPolarAkuAkuMask, RemovePolarAkuAkuMask, AddPolarAkuAkuMask, CreatePolarAkuAku, SetPolarMaskLevel (+7 more)
+src/graphics/actor_part74.c	src/vehicle/yeti_update.c	-	UpdateYeti, UpdateYetiPalette, UpdateYetiBg2 [OLD_AGBCC]
+src/graphics/actor_part59.c	src/vehicle/yeti_states.c	-	YetiStateChase, YetiStateCharge
+src/graphics/actor_part75.c	src/vehicle/yeti_graphics.c	-	IsTouchingYeti, LoadYetiGraphics [OLD_AGBCC]
+src/graphics/actor_part60.c	src/vehicle/yeti.c	src/vehicle/yeti.c	StopYeti, DestroyYeti, CreateYeti
+src/graphics/actor_part76.c	src/vehicle/yeti.c	src/vehicle/yeti.c	sub_802E058
+src/graphics/actor_part61.c	src/vehicle/yeti.c	src/vehicle/yeti.c	YetiStateCaught
+src/graphics/actor_part128.c	src/vehicle/jetpack_spawn.c	-	starts with YetiStateStop, then the jetpack spawners and the jetpack player (CreateJetpackPlayer, UpdateJetpackPlayer) [OLD_AGBCC]
+src/graphics/actor_part43.c	src/vehicle/jetpack_run.c	src/vehicle/jetpack_run.c	FinishJetpackRun, PassJetpackRing
+src/graphics/actor_part43b.c	src/vehicle/jetpack_run.c	src/vehicle/jetpack_run.c	AllocJetpackPlayerTiles
+src/graphics/actor_part44.c	src/vehicle/jetpack_player.c	src/vehicle/jetpack_player.c	DispenseJetpackWumpa, CountJetpackBomber, GetJetpackPlayerHpPercent, SetJetpackCheckpoint, IsJetpackPauseLocked (+9 more)
+src/graphics/actor_part44b.c	src/vehicle/jetpack_player.c	src/vehicle/jetpack_player.c	RunJetpackPlayerState
+src/graphics/actor_part45.c	src/vehicle/jetpack_player.c	src/vehicle/jetpack_player.c	IsJetpackPlayerInactive
+src/graphics/actor_part45d.c	src/actor/bg_picture.c	-	LoadBgPicture, FillBgPictureMap (BG1 picture loaders) [OLD_AGBCC]
+src/graphics/actor_part45b.c	src/vehicle/jetpack_shot.c	src/vehicle/jetpack_shot.c	UpdateJetpackShot
+src/graphics/actor_part45c.c	src/vehicle/jetpack_shot.c	src/vehicle/jetpack_shot.c	CreateJetpackShot
+src/graphics/actor_part46.c	src/vehicle/jetpack_shot.c	src/vehicle/jetpack_shot.c	IsJetpackShotUnshootable
+src/graphics/actor_part46b.c	src/vehicle/jetpack_plane.c	src/vehicle/jetpack_plane.c	UpdateJetpackPlane
+src/graphics/actor_part_2fbf0.c	src/vehicle/jetpack_plane.c	src/vehicle/jetpack_plane.c	AimJetpackPlane, DamageJetpackPlane, CreateJetpackPlane, JetpackPlaneStateFall, JetpackPlaneStateFly (+22 more)
+src/graphics/actor_part20.c	src/bosses/airship_fireball.c	src/bosses/airship_fireball.c	DamageAirshipFireball
+src/graphics/actor_part20b.c	src/bosses/airship_fireball.c	src/bosses/airship_fireball.c	UpdateAirshipFireball
+src/graphics/actor_part20d.c	src/bosses/airship_fireball.c	src/bosses/airship_fireball.c	CreateAirshipFireball
+src/graphics/actor_part21.c	src/bosses/airship_fireball.c	src/bosses/airship_fireball.c	AirshipFireballStateExplode
+src/graphics/actor_part21b.c	src/bosses/airship_fireball.c	src/bosses/airship_fireball.c	RunAirshipFireballState
+src/graphics/actor_part22.c	src/bosses/airship_fireball.c	src/bosses/airship_fireball.c	IsAirshipFireballUnshootable
+src/graphics/actor_part21c.c	src/bosses/airship_states.c	src/bosses/airship_states.c	AirshipStateApproach
+src/graphics/actor_part21d.c	src/bosses/airship_states.c	src/bosses/airship_states.c	AirshipStateFireballs
+src/graphics/actor_part21e.c	src/bosses/airship_states.c	src/bosses/airship_states.c	AirshipStateCannon
+src/graphics/actor_part21f.c	src/bosses/airship_explode.c	-	AirshipStateExplode
+src/graphics/actor_part23.c	src/bosses/airship_fall.c	-	AirshipStateFall
+src/graphics/actor_part23b.c	src/bosses/airship_map.c	-	DrawAirshipMap [OLD_AGBCC]
+src/graphics/actor_part23c.c	src/bosses/airship.c	src/bosses/airship.c	SteerAirship
+src/graphics/actor_part23d.c	src/bosses/airship.c	src/bosses/airship.c	CreateAirship
+src/graphics/actor_part23e.c	src/bosses/airship.c	src/bosses/airship.c	SpawnAirship
+src/graphics/actor_part23f.c	src/bosses/airship.c	src/bosses/airship.c	UpdateAirship
+src/graphics/actor_part24.c	src/bosses/airship.c	src/bosses/airship.c	UpdateAirshipBg2
+src/graphics/actor_part24b.c	src/bosses/airship_touch.c	-	IsTouchingAirship [OLD_AGBCC]
+src/graphics/actor_part25.c	src/bosses/airship_damage.c	-	DamageAirship
+src/graphics/actor_part26b.c	src/bosses/airship_load_graphics.c	-	LoadAirshipGraphics
+src/graphics/actor_part26c.c	src/bosses/airship_graphics.c	src/bosses/airship_graphics.c	ConvertAirshipTiles
+src/graphics/actor_part26.c	src/bosses/airship_graphics.c	src/bosses/airship_graphics.c	UpdateAirshipFlashColor, AnimateAirshipPalette
+src/graphics/actor_part125.c	src/vehicle/jetpack_balloon.c	-	starts with GetAirshipHpPercent/DestroyAirship/AirshipStateInactive, then the jetpack balloon
+src/graphics/actor_part129.c	src/vehicle/jetpack_crates.c	-	UpdateJetpackBalloonCrate, UpdateJetpackQuestionCrate, DamageJetpackQuestionCrate, UpdateJetpackHealthCrate, UpdateJetpackTimeCrate (+25 more)
+src/graphics/actor_part130.c	src/bosses/hovercraft.c	-	starts with CreateJetpackRing and the jetpack collected wumpa, then the hovercraft boss (RunHovercraftState, CreateHovercraft) and its fireball [OLD_AGBCC]
+src/graphics/actor_part28.c	src/bosses/hovercraft_parts.c	-	StartHovercraftHitFlash, SetHovercraftFlashColor, GetHovercraftPartsLeft, LoseHovercraftPart, GetHovercraftAttack (+9 more)
+src/graphics/actor_part29.c	src/bosses/hovercraft_cannon.c	src/bosses/hovercraft_cannon.c	HovercraftCannonStateFire
+src/graphics/actor_part30.c	src/bosses/hovercraft_cannon.c	src/bosses/hovercraft_cannon.c	DamageHovercraftCannon
+src/graphics/actor_part31.c	src/bosses/hovercraft_cannon.c	src/bosses/hovercraft_cannon.c	UpdateHovercraftCannon
+src/graphics/actor_part32.c	src/bosses/hovercraft_cannon.c	src/bosses/hovercraft_cannon.c	CreateHovercraftCannon, HovercraftCannonStateDestroyed, HovercraftCannonStateWait
+src/graphics/actor_part33.c	src/bosses/hovercraft_cannon.c	src/bosses/hovercraft_cannon.c	RunHovercraftCannonState
+src/graphics/actor_part34.c	src/bosses/hovercraft_cannon.c	src/bosses/hovercraft_cannon.c	IsHovercraftCannonUnshootable
+src/graphics/actor_part35.c	src/bosses/hovercraft_launcher.c	src/bosses/hovercraft_launcher.c	HovercraftLauncherStateLaunch
+src/graphics/actor_part36.c	src/bosses/hovercraft_launcher.c	src/bosses/hovercraft_launcher.c	DamageHovercraftLauncher
+src/graphics/actor_part37.c	src/bosses/hovercraft_launcher.c	src/bosses/hovercraft_launcher.c	UpdateHovercraftLauncher
+src/graphics/actor_part63.c	src/bosses/hovercraft_launcher.c	src/bosses/hovercraft_launcher.c	CreateHovercraftLauncher, HovercraftLauncherStateDestroyed, HovercraftLauncherStateWait
+src/graphics/actor_part64.c	src/bosses/hovercraft_launcher.c	src/bosses/hovercraft_launcher.c	RunHovercraftLauncherState
+src/graphics/actor_part65.c	src/bosses/hovercraft_launcher.c	src/bosses/hovercraft_launcher.c	IsHovercraftLauncherUnshootable
+src/graphics/actor_part66.c	src/bosses/hovercraft_side_gun.c	src/bosses/hovercraft_side_gun.c	CreateHovercraftSideGun
+src/graphics/actor_part67.c	src/bosses/hovercraft_side_gun.c	src/bosses/hovercraft_side_gun.c	DamageHovercraftSideGun, UpdateHovercraftSideGun, IsHovercraftSideGunUnshootable, DamageHovercraftCannonFlash
+src/graphics/actor_part68.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	UpdateHovercraftCannonFlash
+src/graphics/actor_part69.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	CreateHovercraftCannonFlash
+src/graphics/actor_part70.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	sub_8034314
+src/graphics/actor_part71.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	IsHovercraftCannonFlashUnshootable
+src/graphics/actor_part85.c	src/frontend/starfield.c	src/frontend/starfield.c	InitStarfield, DrawStarfield
+src/graphics/actor_part72.c	src/frontend/starfield.c	src/frontend/starfield.c	SpawnStar, PlotStarfieldPixel
+src/graphics/actor_part73.c	src/frontend/starfield.c	src/frontend/starfield.c	UpdateStarfield, StarfieldWaitForButton, DestroyStarfield
+src/graphics/actor_part87.c	src/menus/continue_prompt_init.c	-	InitContinuePrompt
+src/graphics/actor_part88.c	src/menus/continue_prompt.c	src/menus/continue_prompt.c	InitContinuePromptGraphics [OLD_AGBCC]
+src/graphics/actor_part89.c	src/menus/continue_prompt.c	src/menus/continue_prompt.c	ContinuePromptLoop [OLD_AGBCC]
+src/graphics/actor_part131.c	src/frontend/credits.c	-	starts with the continue prompt (DrawContinuePrompt, RunContinuePrompt), then the credits (InitCredits, CreditsLoop, RunCredits) [OLD_AGBCC]
+src/graphics/level_graphics.c	src/frontend/title_screen_init.c	src/frontend/title_screen_init.c	InitTitleScreen, LoadTitleScreenBg, LoadTitleScreenObjTiles [OLD_AGBCC]
+src/graphics/graphics_loading_35780.c	src/frontend/title_screen_init.c	src/frontend/title_screen_init.c	UpdateTitleLogoPieces, DrawTitleLogoPieces [OLD_AGBCC]
+src/graphics/graphics_loading_35d1c.c	src/frontend/title_screen.c	-	TitleScreenCheatInput, RunTitleScreen, CommitTitleScreenFrame, DrawTitleMenuItem, DrawTitleScreen (+7 more) [OLD_AGBCC, NO_STRENGTH_REDUCE]
+src/graphics/graphics_loading_3686c.c	src/frontend/company_logos.c	-	DrawVvLogoPieces, LoadUniversalLogoBg, InitLogoActor, UpdateLogoActor, DrawLogoActor [OLD_AGBCC]
+src/audio/counter_selector.c	src/frontend/language_select.c	src/frontend/language_select.c	starts with LoadTaggedAssetBuffered, DestroyCompanyLogos, DestroyLogoActor, then the language menu (RunLanguageSelect)
+src/audio/counter_selector_icons.c	src/frontend/language_select.c	src/frontend/language_select.c	DrawLanguageSelect, InitLanguageSelectGraphics
+src/audio/counter_selector_setup.c	src/frontend/language_select_setup.c	-	LoadLanguageSelectBg, LanguageSelectBlink, CommitLanguageSelectFrame, DestroyLanguageSelect, InitLanguageSelect (+2 more)
+src/graphics/actor_aabb_setup.c	src/util/aabb_setup.c	-	SetAabbSize, SetAabbPos, GetLives, DestroyLargeFont, DestroySmallFont
+src/graphics/actor_anim.c	src/actor/actor_anim.c	-	GetAnimFrameBaseOffset, GetAnimFrameAttr, GetAnimFrameData, SetActorAnim, DestroyRiderlessPolar (+47 more)
+src/data/cell_anim_03b8b0.c	src/data/cell_anim_03b8b0.c	-	data, keep: ROM 0x0803B8B0-0x080B2120: BG0 cell animation A (categories 0-2) and category 0's spawnTable
+src/data/sub_effect_0c0c38.c	src/data/sub_effect_0c0c38.c	-	data, keep: ROM 0x080C0C38-0x080C2758: categories 1 and 2's sub_effect_tables
+src/data/rle_sprites_0c2758.c	src/data/rle_sprites_0c2758.c	-	data, keep: ROM 0x080C2758-0x080FF1B0: two zero-run-compressed OBJ frame sets (the old "rotation strips A and B")
+src/data/cell_anim_0ff1b0.c	src/data/cell_anim_0ff1b0.c	-	data, keep: ROM 0x080FF1B0-0x0814174C: BG0 cell animation B (categories 3-6), category 3's BG1 picture and its spawnTable
+src/data/bg_picture_151ac4.c	src/data/bg_picture_151ac4.c	-	data, keep: ROM 0x08151AC4-0x0815A050: categories 4-6's BG1 pictures and sub_effect_tables
+src/data/rle_sprites_15a050.c	src/data/rle_sprites_15a050.c	-	data, keep: ROM 0x0815A050-0x08167AD4: a zero-run-compressed OBJ frame set (the old "rotation strip C"), same format as rle_sprites_0c2758.c
+src/data/boss_pictures_167ad4.c	src/data/boss_pictures_167ad4.c	-	data, keep: ROM 0x08167AD4-0x0816AA20
+src/data/song_table_16aa20.c	src/data/song_table_16aa20.c	-	data, keep: ROM 0x0816AA20: the song table, indexed by song id (StartSong, music_player.c; `AudioContext.currentSong`). Each entry is a song in the GAX2 music block gGaxMusicData, which tools/gax_audio.py builds 
+src/data/link_crc_16af10.c	src/data/link_crc_16af10.c	-	data, keep: ROM 0x0816AF10-0x0816B138
+src/data/menu_tables_16b138.c	src/data/menu_tables_16b138.c	-	data, keep: ROM 0x0816B138-0x0816B284
+src/data/bg_package_16b284.c	src/data/bg_package_16b284.c	-	data, keep: ROM 0x0816B284-0x0816B298
+src/data/pause_rows_16b298.c	src/data/pause_rows_16b298.c	-	data, keep: ROM 0x0816B298-0x0816B2E0
+src/data/obj_sizes_16b2e0.c	src/data/obj_sizes_16b2e0.c	-	data, keep: ROM 0x0816B2E0-0x0816B304
+src/data/motion_records_16b304.c	src/data/motion_records_16b304.c	-	data, keep: ROM 0x0816B304-0x0816B92C
+src/data/entry_set_16b92c.c	src/data/entry_set_16b92c.c	-	data, keep: ROM 0x0816B92C-0x0816B93C: two entry sets
+src/data/entry_set_16b93c.c	src/data/entry_set_16b93c.c	-	data, keep: ROM 0x0816B93C-0x0816B98C
+src/data/popup_tables_16b98c.c	src/data/popup_tables_16b98c.c	-	data, keep: ROM 0x0816B98C-0x0816BB6C
+src/data/object_tables_16bb6c.c	src/data/object_tables_16bb6c.c	-	data, keep: ROM 0x0816BB6C-0x0816BF20
+src/data/action_table_16bf20.c	src/data/action_table_16bf20.c	-	data, keep: ROM 0x0816BF20-0x0816C090: the player's per-action dispatch table and the per-mode animation-row table that follows it
+src/data/speed_table_16c090.c	src/data/speed_table_16c090.c	-	data, keep: ROM 0x0816C090-0x0816C250
+src/data/player_pmf_16c250.c	src/data/player_pmf_16c250.c	-	data, keep: ROM 0x0816C250-0x0816C2D8: two per-state member-function-pointer tables of the player-controller objects, then an entry set
+src/data/actor_tables_16c2d8.c	src/data/actor_tables_16c2d8.c	-	data, keep: ROM 0x0816C2D8-0x0816C418
+src/data/entry_set_16c418.c	src/data/entry_set_16c418.c	-	data, keep: ROM 0x0816C418-0x0816C460: an entry table and the entry set that points into it
+src/data/velocity_16c460.c	src/data/velocity_16c460.c	-	data, keep: ROM 0x0816C460-0x0816C484
+src/data/bg_package_16c484.c	src/data/bg_package_16c484.c	-	data, keep: ROM 0x0816C484-0x0816C498
+src/data/map_tables_16c498.c	src/data/map_tables_16c498.c	-	data, keep: ROM 0x0816C498-0x0816C58C
+src/data/bg_package_16c58c.c	src/data/bg_package_16c58c.c	-	data, keep: ROM 0x0816C58C-0x0816C5A0
+src/data/image_table_16c5a0.c	src/data/image_table_16c5a0.c	-	data, keep: ROM 0x0816C5A0-0x0816C5F0
+src/data/map_tables_16c5f0.c	src/data/map_tables_16c5f0.c	-	data, keep: ROM 0x0816C5F0-0x0816C6A4
+src/data/dispatch_table_16c6a4.c	src/data/dispatch_table_16c6a4.c	-	data, keep: ROM 0x0816C6A4-0x0816C814
+src/data/level_table_16c814.c	src/data/level_table_16c814.c	-	data, keep: ROM 0x0816C814-0x0816D1C8: the level table and the room records under it
+src/data/cutscenes_16d1c8.c	src/data/cutscenes_16d1c8.c	-	data, keep: ROM 0x0816D1C8-0x081725A8: the 11 cutscenes. PlayCutscene (graphics_loading_22354.c) plays cutscene `idx`: the slides of gCutscenes[idx], each shown with the page of text at the same index in the curr
+src/data/terrain_1725a8.c	src/data/terrain_1725a8.c	-	data, keep: ROM 0x081725A8-0x08172CD4
+src/data/ui_text_172cd4.c	src/data/ui_text_172cd4.c	-	data, keep: ROM 0x08172CD4-0x08174BE0
+src/data/hud_fonts_174be0.c	src/data/hud_fonts_174be0.c	-	data, keep: ROM 0x08174BE0-0x08175558
+src/data/actor_category_175558.c	src/data/actor_category_175558.c	-	data, keep: ROM 0x08175558-0x08175760: the actor category descriptors and the per-type category vtables (include/actor_anim.h, docs/graphics.md "An actor \"vtable\" system")
+src/data/palette_cycle_175760.c	src/data/palette_cycle_175760.c	-	data, keep: ROM 0x08175760-0x08178F80
+src/data/anim_family_178f80.c	src/data/anim_family_178f80.c	-	data, keep: ROM 0x08178F80-0x0817A6B8: the data of actor categories 0-2 (the family whose frames are the gPolarSpriteSheet sheet): their OBJ palette, the 41-record animation table gCategoryFamily0AnimTable (inclu
+src/data/actor_pmf_17a6b8.c	src/data/actor_pmf_17a6b8.c	-	data, keep: ROM 0x0817A6B8-0x0817A728
+src/data/actor_tables_17a728.c	src/data/actor_tables_17a728.c	-	data, keep: ROM 0x0817A728-0x0817A840
+src/data/actor_state_fn_17a840.c	src/data/actor_state_fn_17a840.c	-	data, keep: ROM 0x0817A840-0x0817A850
+src/data/anim_frames_17a850.c	src/data/anim_frames_17a850.c	-	data, keep: ROM 0x0817A850-0x0817A880
+src/data/frame_table_17a880.c	src/data/frame_table_17a880.c	-	data, keep: ROM 0x0817A880-0x0817AA6C
+src/data/anim_family_17aa6c.c	src/data/anim_family_17aa6c.c	-	data, keep: ROM 0x0817AA6C-0x0817C1C0: a palette and two boxes of the UpdateYeti actor, then the data of actor categories 3-6 (the family whose frames are the gJetpackSpriteSheet sheet): their two OBJ palettes, t
+src/data/actor_pmf_17c1c0.c	src/data/actor_pmf_17c1c0.c	-	data, keep: ROM 0x0817C1C0-0x0817C200
+src/data/palette_strip_17c200.c	src/data/palette_strip_17c200.c	-	data, keep: ROM 0x0817C200-0x0817C260
+src/data/actor_pmf_17c260.c	src/data/actor_pmf_17c260.c	-	data, keep: ROM 0x0817C260-0x0817C2D0: three per-state member-function-pointer tables (ACTOR_PMF_CALL, include/actor_self.h)
+src/data/weapon_kind_17c2d0.c	src/data/weapon_kind_17c2d0.c	-	data, keep: ROM 0x0817C2D0-0x0817C3FC
+src/data/actor_state_17c3fc.c	src/data/actor_state_17c3fc.c	-	data, keep: ROM 0x0817C3FC-0x0817C444
+src/data/actor_box_17c444.c	src/data/actor_box_17c444.c	-	data, keep: ROM 0x0817C444-0x0817C450
+src/data/actor_pmf_17c450.c	src/data/actor_pmf_17c450.c	-	data, keep: ROM 0x0817C450-0x0817C460
+src/data/singleton_kind_17c460.c	src/data/singleton_kind_17c460.c	-	data, keep: ROM 0x0817C460-0x0817C4C8
+src/data/actor_state_17c4c8.c	src/data/actor_state_17c4c8.c	-	data, keep: ROM 0x0817C4C8-0x0817C510
+src/data/hud_palettes_17c510.c	src/data/hud_palettes_17c510.c	-	data, keep: ROM 0x0817C510-0x0817C594
+src/data/bg_package_17c594.c	src/data/bg_package_17c594.c	-	data, keep: ROM 0x0817C594-0x0817C5D0: the fade overlay's three BG packages, loaded by InitContinuePrompt (actor_part87.c) into its BG0/BG2/BG1 buffers
+src/data/credits_17c5d0.c	src/data/credits_17c5d0.c	-	data, keep: ROM 0x0817C5D0-0x0817CF40
+src/data/popup_glyphs_17cf40.c	src/data/popup_glyphs_17cf40.c	-	data, keep: ROM 0x0817CF40-0x0817CFF4
+src/data/level_gfx_17cff4.c	src/data/level_gfx_17cff4.c	-	data, keep: ROM 0x0817CFF4-0x0817D6C0
+src/data/slot_seeds_17d6c0.c	src/data/slot_seeds_17d6c0.c	-	data, keep: ROM 0x0817D6C0-0x0817D7A4
+src/data/countdown_17d7a4.c	src/data/countdown_17d7a4.c	-	data, keep: ROM 0x0817D7A4-0x0817E714
+src/data/digit_glyphs_17e714.c	src/data/digit_glyphs_17e714.c	-	data, keep: ROM 0x0817E714-0x0817E72C
+src/data/palettes_17e72c.c	src/data/palettes_17e72c.c	-	data, keep: ROM 0x0817E72C-0x0817E78C
+src/data/level_tilesets_17e78c.c	src/data/level_tilesets_17e78c.c	-	data, keep: ROM 0x0817E78C-0x0824B638: the first 0x20 bytes of the old gLanguageSelectPalette3 blob, then level BG tile sets 1-3
+src/data/level_rooms_24b638.c	src/data/level_rooms_24b638.c	-	data, keep: ROM 0x0824B638-0x08270F08: the level data of 33 of the 41 rooms (the other 8 are in level_rooms_2b91d0.c), between level tile sets 3 and 4. Per room, in ROM order: the entity parameter records and the
+src/data/level_tilesets_270f08.c	src/data/level_tilesets_270f08.c	-	data, keep: ROM 0x08270F08-0x082B91D0: level BG tile sets 4 and 5, the same tag-0x00 raw 8bpp tile sets as src/data/level_tilesets_17e78c.c (see there)
+src/data/level_rooms_2b91d0.c	src/data/level_rooms_2b91d0.c	-	data, keep: ROM 0x082B91D0-0x082BF120: the level data of 8 of the 41 rooms, between level tile set 5 and the sprite tile pool. Same layout as level_rooms_24b638.c; see docs/levels.md. The definitions are generate
+src/data/sprite_tiles_2bf120.c	src/data/sprite_tiles_2bf120.c	-	data, keep: ROM 0x082BF120-0x084A5600: the sprite tile pool and the 125 OBJ palettes
+src/data/sprite_banks_4a5600.c	src/data/sprite_banks_4a5600.c	-	data, keep: ROM 0x084a5600-0x084b0ae0: sprite banks 0-9 of the sprite-bank animation system (gSpriteBankTable, include/sprite_bank.h)
+src/data/sprite_banks_4b0ae0.c	src/data/sprite_banks_4b0ae0.c	-	data, keep: ROM 0x084b0ae0-0x084b414c: sprite banks 10-21 of the sprite-bank animation system (gSpriteBankTable, include/sprite_bank.h)
+src/data/sprite_banks_4b414c.c	src/data/sprite_banks_4b414c.c	-	data, keep: ROM 0x084b414c-0x084b9d7c: sprite banks 22-38 of the sprite-bank animation system (gSpriteBankTable, include/sprite_bank.h)
+src/data/sprite_banks_4b9d7c.c	src/data/sprite_banks_4b9d7c.c	-	data, keep: ROM 0x084b9d7c-0x084c0006: sprite banks 39-55 of the sprite-bank animation system (gSpriteBankTable, include/sprite_bank.h)
+src/data/cutscene_pictures_5a9f70.c	src/data/cutscene_pictures_5a9f70.c	-	data, keep: ROM 0x085A9F70-0x0861BADC: the 24 cutscene pictures, each a 256-colour palette directly followed by its Mode 4 bitmap (240x160 8bpp, LZ77). A cutscene slide (src/data/cutscenes_16d1c8.c) points at the
+src/data/entity_vtables_7e3bec.c	src/data/entity_vtables_7e3bec.c	-	data, keep: ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++ object classes (docs/rom_map.md's "93 entity vtables"), in ROM order. Constructors store one at the object's method-table pointer (e.
+src/iwram/string_arm.c	src/iwram/string_arm.c	-	strlen_arm, strcpy_arm, strncpy_arm, strcat_arm, itoa_arm (+1 more) [ARM]
+src/iwram/sprite_arm.c	src/iwram/sprite_arm.c	-	UnpackNibbleTiles, DrawMirroredTilemap, HeapSortActorsByKey, HeapSortActorsByKey, UnpackRleSpriteFrame (+2 more) [ARM]
+src/iwram/iwram_data.c	src/iwram/iwram_data.c	-	initialised IWRAM globals (.data of the IWRAM image), keep
