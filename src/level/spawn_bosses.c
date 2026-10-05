@@ -7,10 +7,10 @@
 extern void *gLevelState;
 extern void *gUnknown_030012F4;
 
-extern struct enemy_ctrl *CreateDingodile(void *block, u16 arg1, u16 arg2);
-extern void SetLevelBoss(void *self, struct enemy_ctrl *hdr);
-extern struct enemy_ctrl *CreateTiny(void);
-extern struct enemy_ctrl *CreateCortexBoss(void);
+extern struct part_ctrl *CreateDingodile(void *block, u16 arg1, u16 arg2);
+extern void SetLevelBoss(void *self, struct part_ctrl *hdr);
+extern struct part_ctrl *CreateTiny(void);
+extern struct part_ctrl *CreateCortexBoss(void);
 
 struct level_guard
 {
@@ -98,7 +98,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x288);
@@ -122,7 +122,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x294);
@@ -146,7 +146,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x27c);

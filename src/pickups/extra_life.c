@@ -1,6 +1,7 @@
 #include "core.h"
 #include "orbit_part.h"
 #include "hud.h"
+#include "pickups.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -34,11 +35,8 @@ extern s32 AddLife(void *self);
 extern void *OperatorNew(s32 size);
 extern struct actor *InitSpriteObj(struct actor *self);
 extern void AddToPartList(void *manager, void *value);
-extern void ResetExtraLifePickup(void *self);
-extern void UpdateExtraLifeHop(struct orbit_part *self);
 extern void UpdateSpriteObj(struct actor *part);
 extern s16 gSineTable[];
-extern u8 gExtraLifeVtable[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
  * NAKED retry: CreateExtraLife matches only under it, and the rest of the
@@ -57,8 +55,6 @@ static inline void OrbitClampFrame(struct orbit_part *self)
 }
 extern s32 rand(void);
 
-void PickUpExtraLife(void *selfArg, u8 randomize);
-
 /* Called from `PickUpExtraLife` below only (the "randomized-behavior"
  * family's own bounds-check gate). No existing cross-reference
  * elsewhere in the codebase. Gated: does nothing unless the orbit is
@@ -72,9 +68,9 @@ void PickUpExtraLife(void *selfArg, u8 randomize);
  * build for both sides - no `player+0xa == 0x13` branch here), and on
  * overlap sets flags bit 3 and calls `PickUpExtraLife(self, 0)` (the fixed,
  * non-randomized despawn-offset path). */
-void CheckExtraLifePickup(void *selfArg)
+void CheckExtraLifePickup(struct orbit_part *selfArg)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
     u8 selfBox[16];
     u8 playerBox[16];
     u8 *player;
@@ -106,7 +102,7 @@ void CheckExtraLifePickup(void *selfArg)
 
         bit |= self[0xc];
         self[0xc] = bit;
-        PickUpExtraLife(self, 0);
+        PickUpExtraLife((struct orbit_part *)self, 0);
     }
 }
 
@@ -123,9 +119,9 @@ void CheckExtraLifePickup(void *selfArg)
  * "distance to travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`)
  * from the results - the exact same tail shape `PickUpWumpa`/
  * `SendExtraLifeToHud`/`SendWumpaToHud` (`wumpa_update.c`) all share. */
-void PickUpExtraLife(void *selfArg, u8 randomize)
+void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
     s32 dx, dy;
     s32 outX, outY;
     s32 newX, newY;
@@ -333,7 +329,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
 
     self = OperatorNew(0x54);
     InitSpriteObj(&self->base);
-    self->base.table = gExtraLifeVtable;
+    self->base.table = (void *)gExtraLifeVtable;
     ResetExtraLifePickup(self);
     zero = 0;
     self->base.field_08 = id;
@@ -362,9 +358,9 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
  * `ShowHudLives(gHud)` - unlike `SendWumpaToHud`'s
  * `ShowHudWumpa`. Notably simpler than its `SendWumpaToHud` sibling: no
  * `self->0x3c`/`self->0x30` table-lookup-clamp setup here at all. */
-void SendExtraLifeToHud(void *selfArg)
+void SendExtraLifeToHud(struct orbit_part *selfArg)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
     s32 outX, outY;
     s32 newX, newY;
 
@@ -460,13 +456,6 @@ extern void DrawSprite(void *self, void *part);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void DestroySpriteObj(struct actor *self, u32 arg1);
-extern s32 gExtraLifeHopWidths[3];
-
-/* Phase 2's neighboring group (not read/matched this pass) - the
- * randomized-position despawn picker `docs/rom_map.md` already
- * documents, called as `PickUpWumpa(entry, 1)`/`(other, 1)` elsewhere
- * (`time_trial.c`/`crate_break.c`). */
-extern void PickUpWumpa(void *self, s32 mode);
 
 /* Per-frame orbit-position update. Reads the current orbit phase
  * (`self+0x4b`) twice, at two different scales into the shared sine
@@ -485,10 +474,6 @@ extern void PickUpWumpa(void *self, s32 mode);
  * the anchor x unchanged otherwise (`self+0x4a == 3`, or in practice
  * any other value - the local `gExtraLifeHopWidths` lookup still runs
  * for mode 3, its result simply unused). */
-struct three_words {
-    s32 a[3];
-};
-
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the sine sample goes
  * through one reused local (`sn`), which old_agbcc keeps in r2 across
  * both calls exactly like the ROM; current agbcc renumbers the first
@@ -496,7 +481,7 @@ struct three_words {
  * same under either compiler. */
 void UpdateExtraLifeHop(struct orbit_part *self)
 {
-    struct three_words scales = *(struct three_words *)gExtraLifeHopWidths;
+    struct three_words scales = *(const struct three_words *)gExtraLifeHopWidths;
     s32 dy;
     s32 sn;
 
@@ -517,9 +502,9 @@ void UpdateExtraLifeHop(struct orbit_part *self)
  * (already matched, `sprite.c`), then clears flags bit 3
  * (`self+0xc`) when `self+0x38` is nonzero - the same "consumed/hit"
  * flag bit `CheckWumpaPickup` below sets. */
-void DrawExtraLife(void *selfArg)
+void DrawExtraLife(struct orbit_part *selfArg)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
 
     DrawSprite(gSpriteRenderer, self);
     if (self[0x38] != 0) {
@@ -540,20 +525,16 @@ s32 GetExtraLifeClassId(void)
  * tail-calls `DestroySpriteObj` (already matched, `moving_sprite.c`) with
  * `self` and this function's own second argument passed straight
  * through. */
-void DestroyExtraLife(void *selfArg, u32 arg1)
+void DestroyExtraLife(struct orbit_part *self, u32 flags)
 {
-    u8 *self = selfArg;
-
-    *(void **)(self + 0x18) = gExtraLifeVtable;
-    DestroySpriteObj((struct actor *)self, arg1);
+    self->base.table = (void *)gExtraLifeVtable;
+    DestroySpriteObj(&self->base, flags);
 }
 
-/* Clears the "spawned/active" gate byte `self+0x48`. */
-void ResetExtraLifePickup(void *selfArg)
+/* Clears the "spawned/active" gate byte `state`. */
+void ResetExtraLifePickup(struct orbit_part *self)
 {
-    u8 *self = selfArg;
-
-    self[0x48] = 0;
+    self->state = 0;
 }
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched,
@@ -561,12 +542,10 @@ void ResetExtraLifePickup(void *selfArg)
  * side effect only" shape used elsewhere in this object family),
  * repoints `self->table` at `gExtraLifeVtable`, clears the
  * "spawned/active" gate byte via `ResetExtraLifePickup`, and returns `self`. */
-void *InitExtraLife(void *selfArg)
+struct orbit_part *InitExtraLife(struct orbit_part *self)
 {
-    u8 *self = selfArg;
-
-    InitSpriteObj((struct actor *)self);
-    *(void **)(self + 0x18) = gExtraLifeVtable;
+    InitSpriteObj(&self->base);
+    self->base.table = (void *)gExtraLifeVtable;
     ResetExtraLifePickup(self);
     return self;
 }
@@ -577,9 +556,9 @@ void *InitExtraLife(void *selfArg)
  * "offset + fn pointer" pair convention already established throughout
  * this codebase (e.g. `graphics.c`'s own `+0x10`/`+0x14` pair). Always
  * returns 0. */
-s32 CollideExtraLife(void *selfArg)
+s32 CollideExtraLife(struct orbit_part *selfArg)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
 
     if (self[0x48] == 0) {
         u8 *player = gPlayer;
@@ -598,9 +577,9 @@ s32 CollideExtraLife(void *selfArg)
 /* Sets `self`/`self+4` (`x`/`y`, Q8) from the raw `x`/`y` arguments
  * scaled by 8, and mirrors both into `self+0x4c`/`self+0x50` - seeding
  * an orbit anchor at the object's own starting position. */
-void SetExtraLifePos(void *selfArg, s32 x, s32 y)
+void SetExtraLifePos(struct orbit_part *selfArg, s32 x, s32 y)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
     s32 qx, qy;
 
     *(s32 *)self = x << 8;
@@ -613,9 +592,9 @@ void SetExtraLifePos(void *selfArg, s32 x, s32 y)
 
 /* Sets the orbit mode (`self+0x4a`) and resets the orbit phase
  * (`self+0x4b`) to 0. */
-void SetExtraLifeHop(void *selfArg, u8 mode)
+void SetExtraLifeHop(struct orbit_part *selfArg, u8 mode)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
     u8 *modePtr;
     u8 zero;
 
@@ -628,11 +607,9 @@ void SetExtraLifeHop(void *selfArg, u8 mode)
 /* Unexamined byte setter, `self+0x49` - address-adjacent to the orbit
  * mode/phase pair above but not otherwise read by any function in this
  * group. */
-void SetExtraLifeCounter(void *selfArg, u8 val)
+void SetExtraLifeCounter(struct orbit_part *self, u8 val)
 {
-    u8 *self = selfArg;
-
-    self[0x49] = val;
+    self->counter = val;
 }
 
 /* Per-frame player-proximity/hit-resolve step. Gated: does nothing
@@ -652,9 +629,9 @@ void SetExtraLifeCounter(void *selfArg, u8 val)
  * player's *secondary* AABB (`GetSpriteHitbox`, the same helper used for
  * `self`'s own box) and tests it the same way; on overlap, sets flags
  * bit 3 and tail-calls `PickUpWumpa(self, 0)` (no SFX on this path). */
-void CheckWumpaPickup(void *selfArg)
+void CheckWumpaPickup(struct orbit_part *selfArg)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
     u8 selfBox[16];
     u8 playerBox[16];
     u8 *player;
@@ -687,7 +664,7 @@ void CheckWumpaPickup(void *selfArg)
 
             bit |= self[0xc];
             self[0xc] = bit;
-            PickUpWumpa(self, 1);
+            PickUpWumpa((struct orbit_part *)self, 1);
             PlaySfx(gAudioContext, 6, 0x80);
         }
     } else {
@@ -697,7 +674,7 @@ void CheckWumpaPickup(void *selfArg)
 
             bit |= self[0xc];
             self[0xc] = bit;
-            PickUpWumpa(self, 0);
+            PickUpWumpa((struct orbit_part *)self, 0);
         }
     }
 }

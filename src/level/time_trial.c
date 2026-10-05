@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "pickups.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
@@ -94,7 +95,6 @@ extern void SetSpriteAnimDone(struct slot_part *part, s32 arg);
 extern void LoadPaletteSlot(void *cache, s32 palette, u8 record);
 extern void ConvertCratesForTimeTrial(void);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void PickUpWumpa(struct actor *self, s32 arg1);
 
 static inline void SetPartTag(struct slot_part *part, s32 tag)
 {
@@ -158,7 +158,7 @@ void StartTimeTrial(struct level_state *self)
             if (_call_via_r1((u8 *)e + m->thisOffset, m->fn) == 2)
             {
                 if ((u8)ACTOR_METHOD(e, m28))
-                    PickUpWumpa(e, 1);
+                    PickUpWumpa((struct orbit_part *)e, 1);
                 else
                 {
                     a->flags |= 1;

@@ -1,19 +1,26 @@
 #include "core.h"
 #include "text_popup.h"
 
+/* codegen: CreateEnemyCtrl takes the 0x8C-byte block OperatorNew
+ * returns (enemies.h). In 11 of the 26 spawners below the registers only
+ * match with the two calls as separate statements, the block passed on
+ * in r0 without a C argument; the other 15 call
+ * `CreateEnemyCtrl(OperatorNew(0x8c))`. docs/headers_plan.md */
+extern struct part_ctrl *CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl");
+
 /* "Two-line text popup" spawners, ROM 0x0801EF0C-0x0801FDEC. Each builds
  * a CreateMovingSprite part, attaches a CreateEnemyCtrl popup header and fills the
  * part's collected bits from its level record; the tails differ. Built
  * with old_agbcc; see include/text_popup.h. */
 
-extern u8 gEnemyDefaultAnimMap[];
-extern u8 gPenguinAnimMap[];
-extern u8 gPufferfishAnimMap[];
-extern u8 gBlowgunTribesmanAnimMap[];
-extern u8 gVenusFlytrapAnimMap[];
-extern u8 gVultureAnimMap[];
-extern u8 gSharkAnimMap[];
-extern u8 gElectricEelAnimMap[];
+extern const s32 gEnemyDefaultAnimMap[8];
+extern const s32 gPenguinAnimMap[8];
+extern const s32 gPufferfishAnimMap[8];
+extern const s32 gBlowgunTribesmanAnimMap[8];
+extern const s32 gVenusFlytrapAnimMap[8];
+extern const s32 gVultureAnimMap[8];
+extern const s32 gSharkAnimMap[8];
+extern const s32 gElectricEelAnimMap[8];
 extern void *gAudioContext;
 
 extern struct popup_part *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
@@ -26,7 +33,7 @@ static inline struct level_record *GetLevelRecord(u16 id)
     return LEVEL_RECORD(id);
 }
 
-static inline void SetEnemyShotTiming(struct enemy_ctrl *hdr, s32 period, s32 phase)
+static inline void SetEnemyShotTiming(struct part_ctrl *hdr, s32 period, s32 phase)
 {
     hdr->shotPeriod = period;
     hdr->shotPhase = phase;
@@ -44,14 +51,13 @@ static inline void SetPartFlipX(struct popup_part *part, u8 value)
 void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x9c);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xd;
     part->hdr = hdr;
@@ -78,13 +84,13 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x84);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xb;
     part->hdr = hdr;
@@ -97,7 +103,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 0x11);
-    hdr->animMap = gVultureAnimMap;
+    hdr->anims = gVultureAnimMap;
     SetEnemyHitBox(hdr, 0, 0, 100, 50);
 }
 
@@ -119,8 +125,8 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     register s32 oneR8 asm("r8");
     void *p2;
     void *p3;
-    register struct enemy_ctrl *hdr asm("r6");
-    struct popup_vtable *table;
+    register struct part_ctrl *hdr asm("r6");
+    struct ctrl_anchor *table;
 
   {
     register s32 idx asm("r5");
@@ -157,17 +163,15 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         *addr = acc;
     }
 
-    OperatorNew(0x8c);
-
-    hdr = CreateEnemyCtrl();
-    table = hdr->vtable;
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
+    table = hdr->anchor;
     _call_via_r2((u8 *)hdr + table->attach.thisOffset, part, table->attach.fn);
     {
         register s32 tagVal asm("r0") = 0xa;
         hdr->kind = tagVal;
     }
     part->hdr = hdr;
-    table = hdr->vtable;
+    table = hdr->anchor;
     {
         /* A bare `register s32 off asm("r3") = 0x18;` pin is silently
          * ignored by this compiler for a simple constant initializer
@@ -253,9 +257,9 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     AddToPartList(gCollidableList, part);
 
     {
-        register void *val asm("r0") = gEnemyDefaultAnimMap;
+        register const void *val asm("r0") = gEnemyDefaultAnimMap;
         register void *statAddr asm("r5") = (u8 *)hdr + 0x84;
-        *(void **)statAddr = val;
+        *(const void **)statAddr = val;
 
         {
             register u8 *addr2d asm("r0") = (u8 *)part + 0x2d;
@@ -274,7 +278,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 
         SetEnemyState(hdr, 3);
 
-        *(void **)statAddr = gVenusFlytrapAnimMap;
+        *(const void **)statAddr = gVenusFlytrapAnimMap;
     }
 
     asm volatile(
@@ -302,14 +306,14 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xa8);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xe;
     part->hdr = hdr;
@@ -332,7 +336,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
     s32 mid;
@@ -340,7 +344,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->anim = POPUP_ANIM(0x90);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xc;
     part->hdr = hdr;
@@ -366,14 +370,13 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xb4);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xf;
     part->hdr = hdr;
@@ -402,13 +405,12 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateGroundSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0xcc);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x11;
     SetPartAnim(part, 0);
@@ -432,14 +434,13 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xc0);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x10;
     part->hdr = hdr;
@@ -464,14 +465,13 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x3c);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 5;
     part->hdr = hdr;
@@ -498,14 +498,13 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x30);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 4;
     part->hdr = hdr;
@@ -531,13 +530,12 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x24);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 3;
     part->hdr = hdr;
@@ -565,14 +563,13 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x60);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 8;
     part->hdr = hdr;
@@ -595,20 +592,20 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* "Two-line text popup" spawner. Built with old_agbcc; see
  * include/text_popup.h. */
 
-extern u8 gSquidAnimMap[];
+extern const s32 gSquidAnimMap[8];
 
 /* Text popup, tag 7: the plainest member of the family. Shows the header
  * with gSquidAnimMap and style 7. */
 void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x54);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 7;
     part->hdr = hdr;
@@ -619,7 +616,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
-    hdr->animMap = gSquidAnimMap;
+    hdr->anims = gSquidAnimMap;
     SetEnemyState(hdr, 7);
 }
 
@@ -627,12 +624,12 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * continuation of the code above. Built with old_agbcc; see
  * include/text_popup.h. */
 
-extern u8 gFlamethrowerLabAssistantAnimMap[];
-extern u8 gStationarySpaceEnemyAnimMap[];
-extern u8 gPatrollingSpaceEnemyAnimMap[];
-extern u8 gPatrollingSewerEnemyAnimMap[];
-extern u8 gCrusherAnimMap[];
-extern u8 gSaucerLabAssistantAnimMap[];
+extern const s32 gFlamethrowerLabAssistantAnimMap[8];
+extern const s32 gStationarySpaceEnemyAnimMap[8];
+extern const s32 gPatrollingSpaceEnemyAnimMap[8];
+extern const s32 gPatrollingSewerEnemyAnimMap[8];
+extern const s32 gCrusherAnimMap[8];
+extern const s32 gSaucerLabAssistantAnimMap[8];
 
 /* Text popup, tag 9. Shows the header with gEnemyDefaultAnimMap and
  * style 6, then copies the level record's +8/+0xc/+4 words into
@@ -640,14 +637,14 @@ extern u8 gSaucerLabAssistantAnimMap[];
 void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x6c);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 9;
     part->hdr = hdr;
@@ -669,13 +666,12 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x12c);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x19;
     part->hdr = hdr;
@@ -707,14 +703,14 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x144);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x1b;
     part->hdr = hdr;
@@ -742,14 +738,14 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x120);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x18;
     part->hdr = hdr;
@@ -776,14 +772,14 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     u16 y = arg2 - 0x28;
     struct popup_part *part = CreateMovingSprite(arg0, arg1, y, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x15c);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x1d;
     part->hdr = hdr;
@@ -809,14 +805,13 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x138);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x1a;
     part->hdr = hdr;
@@ -863,7 +858,7 @@ struct popup_bits
 void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
     struct popup_bits *q2;
@@ -871,8 +866,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     part->anim = POPUP_ANIM(0x114);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x17;
     part->hdr = hdr;
@@ -938,14 +932,13 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x108);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x16;
     part->hdr = hdr;
@@ -972,14 +965,14 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xf0);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x14;
     part->hdr = hdr;
@@ -1004,14 +997,14 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xfc);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x15;
     part->hdr = hdr;
@@ -1035,13 +1028,13 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0xe4);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x13;
     part->hdr = hdr;
@@ -1054,7 +1047,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     part->base.field_0A = 7;
-    hdr->animMap = gPatrollingSewerEnemyAnimMap;
+    hdr->anims = gPatrollingSewerEnemyAnimMap;
     SetEnemyState(hdr, 8);
 }
 
@@ -1065,14 +1058,13 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x48);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 6;
     part->hdr = hdr;
@@ -1099,14 +1091,13 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xd8);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x8c);
-    hdr = CreateEnemyCtrl();
+    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x12;
     part->hdr = hdr;
@@ -1121,7 +1112,7 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 0xa;
     AndPartFlags(part, ~0x40);
-    hdr->animMap = gCrusherAnimMap;
+    hdr->anims = gCrusherAnimMap;
     SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
     SetEnemyState(hdr, 4);
 }

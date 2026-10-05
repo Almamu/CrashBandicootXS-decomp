@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "sprite_bank.h"
 #include "text.h"
+#include "pickups.h"
 
 extern void *gLevelState;
 extern void *gEntityFlags;
@@ -120,7 +121,6 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 extern u8 IsCrystalSaved(void *self);
-extern struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 
 /* Gated spawn (see `SpawnBlueGem` below for the sibling shape), but
  * built via `CreateStopwatch` instead of `CreateSpriteObj`, gated by
@@ -244,18 +244,12 @@ void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 c
     return part;
 }
 
-extern void CreateWumpa(u16 arg0);
-
-/* Only conditionally calls `CreateWumpa(arg0)` (the achievement/
- * unlock-icon family spawner, docs/rom_map.md) when
- * `gLevelState+0x8c` is clear - `arg1`/`arg2`/`arg3` are
- * truncated (matching every other 4-arg dispatch-table slot in this
- * chunk) but never read. */
+/* Spawns a wumpa (`CreateWumpa`, wumpa_update.c) with this slot's four
+ * arguments, unless `gLevelState+0x8c` (time trial) is set. */
 void SpawnWumpa(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    asm volatile("" :: "r" (arg1), "r" (arg2), "r" (arg3));
     if (*((u8 *)gLevelState + 0x8c) == 0) {
-        CreateWumpa(arg0);
+        CreateWumpa(arg0, arg1, arg2, arg3);
     }
 }
 

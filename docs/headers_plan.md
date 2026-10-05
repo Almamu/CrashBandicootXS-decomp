@@ -19,17 +19,19 @@ generated code, and those cases need to be known before a batch starts.
 **Status:** phase 0 done: the audit tool, the apply tool, this plan, and the
 `text` subsystem as the pilot batch (`include/text.h`, see "Pilot" below).
 Batch 1 (link + hud) done: `include/link.h` and `include/hud.h`, see
-"Batch 1" below.
+"Batch 1" below. Batch 2 (cutscene + pickups + enemies) done:
+`include/cutscene.h`, `include/pickups.h` and `include/enemies.h`, see
+"Batch 2" below.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 |
-|---|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 |
-| - conflicting | 231 | 229 |
-| Local struct/union definitions in `.c` files | 548 | 538 |
-| Struct names defined in more than one `.c` file | 75 | 74 |
+| | Pilot merged | After batch 1 | After batch 2 |
+|---|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 |
+| - conflicting | 231 | 229 | 226 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 |
 
 ## Tools
 
@@ -241,9 +243,9 @@ Where the remaining declarations would go (after the pilot):
 |---|---:|---:|---:|---:|
 | link (**done**, batch 1) | 12 | 2 | 19 | 7 |
 | hud (**done**, batch 1) | 19 | 0 | 35 | 17 |
-| cutscene | 24 | 1 | 27 | 9 |
-| pickups | 28 | 3 | 33 | 10 |
-| enemies | 32 | 1 | 34 | 6 |
+| cutscene (**done**, batch 2) | 24 | 1 | 27 | 9 |
+| pickups (**done**, batch 2) | 28 | 3 | 33 | 10 |
+| enemies (**done**, batch 2) | 32 | 1 | 34 | 6 |
 | system | 33 | 6 | 135 | 73 |
 | util | 17 | 9 | 69 | 49 |
 | audio | 22 | 8 | 117 | 80 |
@@ -374,7 +376,8 @@ before the files that every subsystem touches.
 2. **link + hud (done):** 31 symbols, 2 conflicts (`LinkStop`/`ResetLinkSessionState`
    are declared `void (void)`/`void (u8 *)` in `link_sio.c` but defined
    `s32 (struct link_session *)`). See "Batch 1" below.
-3. **cutscene + pickups + enemies:** 84 symbols, 5 conflicts.
+3. **cutscene + pickups + enemies (done):** 84 symbols, 5 conflicts. See
+   "Batch 2" below.
 4. **save, frontend:** 110 symbols, 4 conflicts.
 5. **util + `libgcc.h`:** `RandRange` (see above), `__modsi3`/`__umodsi3`
    variants. `aabb.h` takes the remaining 8 `struct aabb` copies (crates,
@@ -514,6 +517,101 @@ comments.
 
 No file needed an asm-label alias, so batch 1 adds no codegen exceptions.
 
+## Batch 2: cutscene + pickups + enemies
+
+77 local declarations are gone, and 16 local struct definitions
+(538 -> 522).
+
+- **`include/cutscene.h`** (extended) declares every function of the
+  slideshow player (slideshow.c, slideshow_display.c and the first four
+  functions of cutscene_player.c), `gCutscenes`, `gCutsceneTexts` and
+  `gSlideshowDispcnt` (now `u32`, the DISPCNT word it is;
+  `SetSlideshowDispcnt` takes a `u32` too). It gets **`struct
+  cutscene_player`**, which replaces the player's four local views:
+  slideshow.c's and slideshow_display.c's `struct SoundChannelList`,
+  cutscene_player.c's `struct pager` and level_cutscene.c's `struct
+  text_pager` (`slides`, `count`, `toggle`, `pages`, `font`, `box`). Its
+  slides are the header's `struct cutscene_slide` (the two `struct
+  SoundChannelItem` copies and `struct pager_item`; `field_04`..`field_18`
+  became `wait`/`fade`/`fadeAfter`/`buttons`/`duckMusic`/`rearmSfx`/`cue`/
+  `sfx`), its pages `struct cutscene_page` (`struct pager_text`), and
+  level_cutscene.c's `struct text_list` is `struct cutscene_slides`. The
+  pager's box is a `struct aabb` (level_cutscene.c's `box.pos.x`/`size.x`
+  became `box.x`/`box.w`). `ResetSlideshow` and `InitCutscenePlayer`
+  store by field name.
+- **Not in `cutscene.h`:** the background streamer and layer functions in
+  cutscene_player.c (`DecodeLayerChunk`..`StepBgLayerScroll`, and
+  `gBgStreamerVtable`/`gBgLayerBaseVtable`). They only share its ROM range;
+  their subject is the level's background layers (`bg_layer.c`,
+  `bg_layer_base.c`), so they go in `level.h` (ownership rule 1). That
+  includes the `DestroyBgLayerBase` conflict. Likewise `ResetActionCtrl`
+  (wumpa.c) goes in `player.h`.
+- **`include/pickups.h`** (new) declares every wumpa, extra life and
+  stopwatch function, their three vtables and the two hop width tables
+  (`const s32 [3]`, copied as `struct three_words`, which moved there from
+  two local copies). Wumpas and extra lives are `struct orbit_part`s, so
+  every function of extra_life.c, wumpa.c and wumpa_update.c now takes
+  one (they took `void *`, `struct actor *` or `u8 *`). wumpa.c,
+  `StartWumpaPayout` and the small extra_life.c setters use field names;
+  the larger extra_life.c functions keep their `u8 *` body behind a
+  cast. `struct orbit_part` gets `animDone` at 0x38 (the name every other
+  sprite part uses).
+  - Conflicts: `PickUpWumpa` is called on items of the wumpa/extra-life
+    list in crate_break.c and time_trial.c, which cast to `struct
+    orbit_part *`. `StartWumpaPayout` takes the orbit part.
+    `CreateWumpa` was declared `void (u16)` in spawn_pickups.c: SpawnWumpa
+    now passes its four arguments, which also made its `asm volatile`
+    keep-alive of `arg1`..`arg3` unnecessary.
+  - **Definition fix:** `CreateStopwatch` gets a fourth, unused `u16`
+    parameter. SpawnStopwatch passes it in r3 (with three parameters its
+    `.s` changes), and the definition's code is the same.
+  - drop_extra_life.c's `struct spawn_part` was a view of `struct
+    orbit_part` (`anim`/`frameNibble`/`unk_49..4B` are
+    `bank`/`slotNibble`/`counter`/`mode`/`phase`); it is gone.
+- **`include/enemies.h`** (new) declares every function of src/enemies/,
+  the three vtables, `gEnemyCtrlMotionSet` (incomplete `struct
+  entry_set`, defined in the data file), the four `gHomingEnemy*` IWRAM
+  words and `struct periodic_spawner`. `SetEnemyMotionY`/`X` and
+  `SetEnemyAnimMode` moved there from `part_ctrl.h`, which stays the type
+  header.
+  - **One controller struct.** `struct part_ctrl` (`part_ctrl.h`) absorbs
+    enemy_ctrl.c's and enemy_shooter.c's `struct trigger_ctrl` and
+    text_popup.h's `struct enemy_ctrl`; `struct ctrl_anchor` absorbs
+    `struct popup_vtable` (`attach` at 0x18). New fields: `manager`
+    (0x04), `shotPeriod`/`shotPhase` (0x48/0x4C). trigger_ctrl's names
+    lost to the header's: `boxX/Y/W/H` -> `boxL/T/R/B`, `unk_30..38` ->
+    `idleTime`/`attackTime`/`cycleOffset`, `oscDivisor/Phase/Amplitude`
+    -> `period`/`phase`/`amplitude`, `period/phase` -> `shotPeriod`/
+    `shotPhase`, `unk_6c` -> `kind`, `owner` -> `target`, `triggerTable`
+    -> `anims`, `vtable` -> `anchor`. `anims` is `const s32 *`: the anim
+    maps are `const s32 [8]` (popup_tables_16b98c.c), and
+    spawn_enemies.c's local declarations of them (`u8 []`) now say so.
+    The spawners in spawn_enemies/bosses/objects.c use `struct part_ctrl`
+    for their `hdr`.
+  - `CreateEnemyCtrl` was declared `struct enemy_ctrl *(void)` in
+    text_popup.h, with each spawner calling `OperatorNew(0x8c);` and then
+    `CreateEnemyCtrl()` (the block passed on in r0). 15 of the 26 sites
+    now call `CreateEnemyCtrl(OperatorNew(0x8c))`; the other 11 keep the
+    two statements through an alias (see "Codegen exceptions").
+  - spawn_objects.c's `struct periodic_spawner` showed that +0x1C is the
+    spawner's `callback` (`UpdatePeriodicSpawner`'s pinned "dead read"
+    into r4 is the `_call_via_r4` target), so the shared struct names it
+    and `sub_800CB60` takes a function pointer.
+  - The knocked controller is a 0x10-byte base `Ctrl`, not a `struct
+    part_ctrl`: its functions keep `void *` (see enemies.h).
+  - dingodile.c can't include `enemies.h` yet (its local `struct
+    part_list` clashes with box_part.h's), so it declares
+    `CreateEnemyCtrl`/`DestroyEnemyCtrl` with the header's types and casts
+    its `self`. The bosses batch removes them.
+- The vtable and table data files include the new headers; 22
+  unprototyped declarations are gone from entity_vtables_7e3bec.c.
+
+Every touched object file is identical to the clean build's. A few `.s`
+files differ only in local label numbers (`.L`/`.LCB`): cutscene_player.c,
+wumpa.c, crate_break.c, time_trial.c, spawn_pickups.c, drop_extra_life.c.
+Including a header with static inline functions or a changed function
+body can shift gcc's label counter; the labels don't reach the object.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -538,6 +636,12 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `struct { s32 state, timer; } slots[3]` with constant indices -> six named `s32` fields | hud_slide.c | identical |
 | `u8 *` byte offsets -> struct members / array elements, pointer step `-= 0xc8` -> `--` | link_sio.c, hud.c | identical |
 | local struct copy -> `const` table pointer (`const struct hud_pos *`) | hud_init.c (old_agbcc) | identical |
+| `void *` global -> `u32` (DISPCNT shadow, byte and halfword views through casts) | `gSlideshowDispcnt` in slideshow.c (old_agbcc) | identical |
+| parameter `void *`/`struct actor *`/`u8 *` -> `struct orbit_part *`, body kept on a `u8 *` copy | extra_life.c (old_agbcc) | identical, but passing the parameter itself on to a call (rather than the `u8 *` copy) keeps both live: `push {r4, r5, r6}`. Pass the copy (cast) |
+| `OperatorNew(n); p = Create();` (block passed on in r0) -> `p = Create(OperatorNew(n))` | spawn_enemies.c (old_agbcc) | identical in 15 of 26 functions; in 11 the registers change |
+| call with one argument -> all four slot arguments, `asm volatile` keep-alive removed | `CreateWumpa` in SpawnWumpa | identical |
+| call with the 4th argument dropped (3-parameter prototype) | `CreateStopwatch` in SpawnStopwatch | **changes** (r3 setup and a push); the definition takes an unused 4th parameter instead |
+| `u8 []` extern -> `const s32 [8]` (the definition's type), stored through `const void **` | spawn_enemies.c anim maps (old_agbcc) | identical |
 
 Experiments for later batches (not applied in this PR):
 
@@ -564,7 +668,7 @@ adds its entries here.
 
 | File | Symbol | Local form | Header form | Why |
 |---|---|---|---|---|
-| (none yet) | | | | |
+| src/level/spawn_enemies.c | `CreateEnemyCtrl` | `CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl")`, called after a bare `OperatorNew(0x8c);` | `struct part_ctrl *(struct part_ctrl *self)` | in 11 of the 26 spawners (old_agbcc) the registers only match with the block left in r0 by the previous call; the other 15 use the header's prototype |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the
 one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.c`

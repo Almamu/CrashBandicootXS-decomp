@@ -1,5 +1,6 @@
 #include "core.h"
 #include "text_popup.h"
+#include "enemies.h"
 
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
@@ -10,7 +11,7 @@ extern void *gUpdateOnlyPartList;
 extern void *gDecorationList;
 
 extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern struct enemy_ctrl *CreateMegaMixCtrl(void *mem);
+extern struct part_ctrl *CreateMegaMixCtrl(void *mem);
 extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
 extern s32 CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
@@ -45,17 +46,6 @@ struct part_flags_21668
 
 #define PART_FLAGS(part) ((struct part_flags_21668 *)&(part)->base.flags)
 
-/* SpawnSealSpawner's object: an actor with a per-frame callback. */
-struct periodic_spawner
-{
-    struct actor base;          // 0x00
-    void (*callback)(void);     // 0x1C
-    s32 unk_20;
-    s32 unk_24;
-};
-
-extern struct periodic_spawner *CreatePeriodicSpawner(void *mem);
-
 /* Inline so old_agbcc re-truncates GetPaletteSlot's u8 result before the
  * nibble insert, as the ROM does. */
 static inline void SetFrameNibble(struct popup_part *part, s32 frame)
@@ -71,7 +61,7 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
 void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
-    struct enemy_ctrl *hdr;
+    struct part_ctrl *hdr;
 
     part->anim = POPUP_ANIM(0x168);
     part->base.x = arg1 << 8;
@@ -207,7 +197,7 @@ void nullsub_21(void)
 }
 
 /* `new`s a 0x28-byte CreatePeriodicSpawner object, installs SpawnSeal as its
- * callback with +0x20 = 0x78, places it at (arg1, arg2) in Q8, sets
+ * callback with a 0x78-frame period, places it at (arg1, arg2) in Q8, sets
  * flags bit 4 and registers it with gUpdateOnlyPartList's manager. */
 void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
@@ -217,8 +207,8 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     obj = CreatePeriodicSpawner(OperatorNew(0x28));
     zero = 0;
     obj->callback = SpawnSeal;
-    obj->unk_20 = 0x78;
-    obj->unk_24 = zero;
+    obj->period = 0x78;
+    obj->phase = zero;
     obj->base.x = arg1 << 8;
     obj->base.y = arg2 << 8;
     obj->base.flags |= 0x10;

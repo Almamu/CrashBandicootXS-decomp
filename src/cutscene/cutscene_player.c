@@ -1,6 +1,7 @@
 #include "core.h"
 #include "bg_scroll_layer.h"
 #include "text.h"
+#include "cutscene.h"
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -14,24 +15,19 @@
  *
  * Two systems share this address range:
  *
- * - `InitSlideshow`/`RunCutscenePlayer`/`DestroyCutscenePlayer`/`InitCutscenePlayer` extend
- *   `struct SoundChannelList` (slideshow.c/slideshow_display.c) with more
- *   fields: `ResetSlideshow` (already matched, slideshow_display.c) sets
- *   `+0xc` (the VRAM-bank toggle) to 1 - `InitCutscenePlayer` extends that same
- *   constructor to also zero two new fields, `+0x10`/`+0x14`.
- *   `RunCutscenePlayer` is a second per-frame driver loop over the same
- *   `+0/+4` items/count pair `RunSlideshow` (slideshow.c) already
- *   drives, but interleaved with an explicit OAM-shadow-buffer flush
- *   (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
- *   `gOamBuffer`, the same "HUD-icon-plus-number renderer" OAM
- *   pacing pattern docs/matching.md documents elsewhere) and a nested
- *   text-paging loop through a second per-item record array at `+0x10`
- *   (each record `{void **strings; s32 count;}`), rendering each string
- *   via `DrawWrappedText` (wrapped_text.c) against an `bitmap_font *` at
- *   `+0x14` and a 2-word "box" at `+0x18`/`+0x1c`, continuing to the
- *   next string in the current record while a held-input mask (9,
- *   versus `RunSlideshow`'s 8) stays set. `+0x24` feeds `__udivsi3`
- *   (value/divisor) to compute the per-call text-wrap `limit`.
+ * - `InitSlideshow`/`RunCutscenePlayer`/`DestroyCutscenePlayer`/`InitCutscenePlayer`
+ *   are the cutscene player (`struct cutscene_player`, include/cutscene.h)
+ *   that slideshow.c/slideshow_display.c also drive: `ResetSlideshow`
+ *   sets the VRAM-bank toggle to 1, and `InitCutscenePlayer` also clears
+ *   `pages`/`font`. `RunCutscenePlayer` is `RunSlideshow`'s (slideshow.c)
+ *   loop over the slides, interleaved with an explicit OAM-shadow-buffer
+ *   flush (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/
+ *   `CommitOamBuffer` on `gOamBuffer`) and a nested text-paging loop
+ *   through each slide's `struct cutscene_page`, rendering each string
+ *   via `DrawWrappedText` (wrapped_text.c) with `font` into `box`,
+ *   continuing to the next string while a held-input mask (9, versus
+ *   `RunSlideshow`'s 8) stays set. `box.h` divided by the font's line
+ *   height gives the per-call text-wrap `limit`.
  *   `DestroyCutscenePlayer` is a plain two-argument forwarding trampoline to
  *   `DestroySlideshow` (slideshow_display.c).
  *
@@ -105,68 +101,36 @@ struct bg_streamer
     struct streamer_vtable *vtable; // 0x20
 };
 
-extern void ResetSlideshow(void *self);
-extern void DestroySlideshow(void *self, s32 flags);
-
 /* Trivial wrapper: runs `ResetSlideshow`'s reset, then returns `self`
  * unchanged (a "chained constructor" idiom this project sees a lot of -
  * see e.g. `InitBgStreamer` below for another instance). */
-void *InitSlideshow(void *self)
+struct cutscene_player *InitSlideshow(struct cutscene_player *self)
 {
     ResetSlideshow(self);
     return self;
 }
 
-/* Per-frame driver loop over `self`'s `+0/+4` item list (the same
- * `struct SoundChannelList` shape `RunSlideshow` (slideshow.c) drives),
- * interleaved with an explicit OAM-shadow-buffer flush and a nested
- * text-paging walk through a second per-item record array at `+0x10`.
- * See this file's header comment for the full shape.
+/* Per-frame driver loop over `self`'s slides (the loop `RunSlideshow`
+ * (slideshow.c) also runs), interleaved with an explicit OAM-shadow-buffer
+ * flush and a nested text-paging walk through each slide's page. See
+ * this file's header comment for the full shape.
  *
  * Matched (old_agbcc). The ROM reloads `&gOamBuffer` from the
  * literal pool at each of the three OAM flushes (rotating r1/r2/r3):
  * that is a function-scope local `oamp` set to the address before the
  * loop, which global-alloc leaves without a register, so reload
  * rematerializes it at each use and r4 stays free for `self`. The
- * prologue reads the box word and `target` into locals before the
+ * prologue reads the box word and `font` into locals before the
  * store, and the page loop is a plain `for` with `j++`. */
-struct pager_item
-{
-    u8 unk_00[4];
-    s32 count;                  // 0x04 - WaitForKeyPress's count
-    u8 unk_08[8];
-    u8 buttons;                 // 0x10 - WaitForKeyPress's checkButtons
-};
-
-struct pager_text
-{
-    u8 **strings;
-    s32 count;
-};
-
-struct pager
-{
-    struct pager_item **items;  // 0x00
-    s32 count;                  // 0x04
-    u8 unk_08[8];
-    struct pager_text *texts;   // 0x10
-    struct bitmap_font *target; // 0x14
-    struct aabb box;            // 0x18 - text rect
-};
-
 extern void *gOamBuffer;
 extern s32 __udivsi3(s32 value, s32 divisor);
-extern void ShowSlidePicture(struct pager *self, s32 idx);
-extern void BeginSlide(struct pager *self, s32 idx);
-extern void EndSlide(struct pager *self, s32 idx);
-extern s32 SkipSlides(struct pager *self, s32 startIdx, u8 condFlag);
 extern void ResetOamBuffer(void *oam);
 extern void HideUnusedOamEntries(void *oam);
 extern void CommitOamBuffer(void *oam);
 extern void WaitForVBlank(void);
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 
-void RunCutscenePlayer(struct pager *self)
+void RunCutscenePlayer(struct cutscene_player *self)
 {
     void **oamp = &gOamBuffer;
     s32 limit;
@@ -174,7 +138,7 @@ void RunCutscenePlayer(struct pager *self)
 
     {
         s32 b = self->box.x;
-        struct bitmap_font *t = self->target;
+        struct bitmap_font *t = self->font;
 
         t->marginX = b;
         limit = __udivsi3(self->box.h, t->lineHeight);
@@ -189,23 +153,23 @@ void RunCutscenePlayer(struct pager *self)
         WaitForVBlank();
         CommitOamBuffer(*oamp);
         BeginSlide(self, i);
-        if (self->texts[i].count == 0)
+        if (self->pages[i].count == 0)
         {
-            res = WaitForKeyPress(self->items[i]->count, self->items[i]->buttons, 9);
+            res = WaitForKeyPress(self->slides[i]->wait, self->slides[i]->buttons, 9);
         }
         else
         {
             s32 j;
 
-            for (j = 0; j < self->texts[i].count && res == 1; j++)
+            for (j = 0; j < self->pages[i].count && res == 1; j++)
             {
-                u8 *str = self->texts[i].strings[j];
+                u8 *str = (u8 *)self->pages[i].strings[j];
                 s32 pos = 0;
 
                 while (str[pos] != 0 && res == 1)
                 {
-                    pos += DrawWrappedText(str + pos, self->target, &self->box, limit, 1);
-                    res = WaitForKeyPress(self->items[i]->count, self->items[i]->buttons, 9);
+                    pos += DrawWrappedText(str + pos, self->font, &self->box, limit, 1);
+                    res = WaitForKeyPress(self->slides[i]->wait, self->slides[i]->buttons, 9);
                 }
             }
         }
@@ -222,21 +186,17 @@ asm(".align 2, 0");
  * (slideshow_display.c) - a same-shaped alias for a different call site
  * (matches this project's other trivial-wrapper aliases, e.g.
  * `sub_802425C`/`DestroySlideshow` themselves). */
-void DestroyCutscenePlayer(void *self, s32 flags)
+void DestroyCutscenePlayer(struct cutscene_player *self, s32 flags)
 {
     DestroySlideshow(self, flags);
 }
 
-/* Extends `InitSlideshow`'s reset with two more fields this cluster
- * introduces: `+0x10`/`+0x14` (the text-paging record array/its count,
- * per `RunCutscenePlayer` above) both start zeroed. */
-void *InitCutscenePlayer(void *self0)
+/* Extends `InitSlideshow`'s reset: no pages and no font yet. */
+struct cutscene_player *InitCutscenePlayer(struct cutscene_player *self)
 {
-    u8 *self = (u8 *)self0;
-
     InitSlideshow(self);
-    *(s32 *)(self + 0x10) = 0;
-    *(s32 *)(self + 0x14) = 0;
+    self->pages = NULL;
+    self->font = NULL;
     return self;
 }
 

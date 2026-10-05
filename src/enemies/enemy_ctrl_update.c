@@ -19,6 +19,7 @@
  * each other in ROM address order. */
 
 #include "part_ctrl.h"
+#include "enemies.h"
 
 struct bg_scroll_layer {
     u8 unk_00[0x14];
@@ -41,29 +42,6 @@ extern void *gEntityFlags;
 extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern struct level_layers *gLevelLayers;
-extern s32 gHomingEnemyX;
-extern s32 gHomingEnemyXSaved;
-extern s32 gHomingEnemyY;
-extern s32 gHomingEnemyYSaved;
-
-/* All of the following are still-raw siblings in this same cluster
- * (asm/code_3_2_17.s) - treated as opaque callees for this pass, per
- * this investigation's own scope (dispatch shape first, callee
- * semantics are the next phase's job). Signatures are inferred purely
- * from the registers each call site sets. */
-extern void UpdateEnemyPatrol(void *self);
-extern void UpdateEnemyHomingX(void *self);
-extern void UpdateEnemyHomingY(void *self);
-extern void UpdateEnemyHop(void *self);
-extern void UpdateEnemyFlipCycle(void *self);
-extern void UpdateEnemyAttackCycle(void *self);
-extern void UpdateEnemyTriggerBox(void *self);
-extern void UpdateEnemyOscillateX(void *self);
-extern void UpdateEnemyBob(void *self);
-extern void UpdateEnemyOscillateY(void *self);
-extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
-extern void UpdateEnemyShooter(void *self);
-extern void *CreateKnockedEnemyCtrl(void *mem); /* constructor: resets the fresh object and points its +0xC table at gKnockedEnemyCtrlVtable (enemy_ctrl.c) */
 extern void *OperatorNew(s32 size);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);

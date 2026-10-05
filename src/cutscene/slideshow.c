@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gba/dma_macros.h"
+#include "cutscene.h"
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/issue-38-medal-results-tally.md
@@ -8,36 +9,6 @@
  * docs/matching/game-loop-old-agbcc.md. */
 
 struct AudioContext;
-
-struct SoundChannelItem {
-    void *asset;    /* +0x00: tile/gfx asset pointer, ShowSlidePicture only */
-    s32 field_04;     /* +0x04: WaitForKeyPress's "count" arg */
-    s32 field_08;       /* +0x08: OR'd with -0x80 then truncated to a byte
-                         * (bit 7 set), BeginSlide's FadeBrightness arg */
-    s32 field_0c;         /* +0x0c: sentinel -1 means "none"; else
-                            * truncated to a byte and passed to
-                            * FadeBrightness, RunSlideshow/EndSlide */
-    u8 field_10;            /* +0x10: WaitForKeyPress's checkButtons arg;
-                              * also SkipSlides's scan target (==1) */
-    u8 field_11;              /* +0x11: nonzero triggers a duck-out via
-                                * FadeOutMusic */
-    u8 field_12;                /* +0x12: nonzero (and field_18 != 0x63)
-                                  * triggers a re-arm via StopSfx */
-    u8 unused_13;
-    u32 field_14;                  /* +0x14: sound cue id, PlaySong/
-                                     * GetCurrentSong */
-    u32 field_18;                    /* +0x18: secondary sfx id passed to
-                                       * PlaySfx; sentinel 0x63 (99) means
-                                       * "no sfx" */
-};
-
-struct SoundChannelList {
-    struct SoundChannelItem **items; /* +0x00 */
-    s32 count;                        /* +0x04 */
-    u8 unused_08[4];
-    s32 toggle;                          /* +0x0c: ShowSlidePicture's VRAM-bank
-                                           * toggle, alternates each call */
-};
 
 extern struct AudioContext *gAudioContext;
 extern u32 GetCurrentSong(struct AudioContext *self);
@@ -49,39 +20,31 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void WaitForVBlank(void);
-extern void *gSlideshowDispcnt;
 
-/* Forward declaration: ShowSlidePicture is defined further down (after
- * BeginSlide/RunSlideshow/SkipSlides, matching ROM order) but
- * RunSlideshow above it calls it; SkipSlides is matched below but called
- * by RunSlideshow above it too (ROM order). */
-extern void ShowSlidePicture(struct SoundChannelList *self, s32 idx);
-extern s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag);
-
-/* Starts sound cue `items[idx]->field_14` on the audio context. If the
+/* Starts sound cue `slides[idx]->cue` on the audio context. If the
  * channel already reports that cue, plays the item's secondary sfx
  * (unless it is the 0x63 "none" sentinel) and then starts the item's
  * fade; otherwise starts the fade first, then busy-waits for the cue
  * before playing the sfx. */
-void BeginSlide(struct SoundChannelList *self, s32 idx)
+void BeginSlide(struct cutscene_player *self, s32 idx)
 {
-    struct SoundChannelItem *item;
+    const struct cutscene_slide *item;
 
-    PlaySong(gAudioContext, self->items[idx]->field_14);
-    if (GetCurrentSong(gAudioContext) == (item = self->items[idx])->field_14)
+    PlaySong(gAudioContext, self->slides[idx]->cue);
+    if (GetCurrentSong(gAudioContext) == (item = self->slides[idx])->cue)
     {
-        if (item->field_18 != 0x63)
-            PlaySfx(gAudioContext, item->field_18, 0x100);
-        FadeBrightness(self->items[idx]->field_08 | -0x80, 1, 0);
+        if (item->sfx != 0x63)
+            PlaySfx(gAudioContext, item->sfx, 0x100);
+        FadeBrightness(self->slides[idx]->fade | -0x80, 1, 0);
     }
     else
     {
-        FadeBrightness(item->field_08 | -0x80, 1, 0);
-        if (self->items[idx]->field_18 != 0x63)
+        FadeBrightness(item->fade | -0x80, 1, 0);
+        if (self->slides[idx]->sfx != 0x63)
         {
-            while (GetCurrentSong(gAudioContext) != self->items[idx]->field_14)
+            while (GetCurrentSong(gAudioContext) != self->slides[idx]->cue)
                 ;
-            PlaySfx(gAudioContext, self->items[idx]->field_18, 0x100);
+            PlaySfx(gAudioContext, self->slides[idx]->sfx, 0x100);
         }
     }
 }
@@ -89,36 +52,36 @@ void BeginSlide(struct SoundChannelList *self, s32 idx)
 /* Per-frame driver loop over `self`'s item list: for each index, streams
  * the item's VRAM tile bank and refreshes its sound-channel handle
  * (`ShowSlidePicture`/`BeginSlide`), polls input (`WaitForKeyPress`) to get a
- * confirm/cancel result, applies the item's duck-out (`field_11`) and
- * fade-start (`field_0c`, sentinel -1) side effects, re-arms the item's
- * cue if needed (`field_12`/`field_18`), then advances to the next
+ * confirm/cancel result, applies the item's duck-out (`duckMusic`) and
+ * fade-start (`fadeAfter`, sentinel -1) side effects, re-arms the item's
+ * cue if needed (`rearmSfx`/`sfx`), then advances to the next
  * "still active" item via `SkipSlides`.
  *
  * UNUSED - no caller anywhere in the ROM (checked src/, asm/ and every
  * Thumb `bl` and aligned word of baserom.gba for its address). It plays
  * a slide list without text; the cutscenes use RunCutscenePlayer
  * (cutscene_player.c), the same loop with the text pages added. */
-void RunSlideshow(struct SoundChannelList *self0)
+void RunSlideshow(struct cutscene_player *self0)
 {
-    struct SoundChannelList *self = self0;
+    struct cutscene_player *self = self0;
     s32 i;
 
     for (i = 0; i < self->count; i++) {
         u8 checkButtons;
-        struct SoundChannelItem *item;
+        const struct cutscene_slide *item;
 
         ShowSlidePicture(self, i);
         BeginSlide(self, i);
 
-        item = self->items[i];
-        checkButtons = (u8)WaitForKeyPress(item->field_04, item->field_10, 8);
+        item = self->slides[i];
+        checkButtons = (u8)WaitForKeyPress(item->wait, item->buttons, 8);
 
-        if (self->items[i]->field_11 != 0) {
+        if (self->slides[i]->duckMusic != 0) {
             FadeOutMusic(gAudioContext, 0);
         }
 
         {
-            s32 v = self->items[i]->field_0c;
+            s32 v = self->slides[i]->fadeAfter;
 
             if (v != -1) {
                 FadeBrightness((u8)v, 1, 0);
@@ -126,10 +89,10 @@ void RunSlideshow(struct SoundChannelList *self0)
         }
 
         {
-            struct SoundChannelItem *item2 = self->items[i];
+            const struct cutscene_slide *item2 = self->slides[i];
 
-            if (item2->field_12 != 0 && item2->field_18 != 0x63) {
-                StopSfx(gAudioContext, item2->field_18);
+            if (item2->rearmSfx != 0 && item2->sfx != 0x63) {
+                StopSfx(gAudioContext, item2->sfx);
             }
         }
 
@@ -137,17 +100,17 @@ void RunSlideshow(struct SoundChannelList *self0)
     }
 }
 
-/* Scans forward from `startIdx + 1` for the next item whose `field_10`
+/* Scans forward from `startIdx + 1` for the next item whose `buttons`
  * isn't 1 ("busy"), returning the index just before it (or the last
  * index reached if every remaining item is busy). Returns `startIdx`
  * unchanged if `condFlag` is set, or if `startIdx + 1` is already past
  * the list. */
-s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
+s32 SkipSlides(struct cutscene_player *self, s32 startIdx, u8 condFlag)
 {
     s32 cur = startIdx;
     s32 next;
     s32 count;
-    struct SoundChannelItem **items;
+    const struct cutscene_slide *const *items;
 
     if (condFlag) {
         return cur;
@@ -158,9 +121,9 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
     if (next >= count) {
         return cur;
     }
-    items = self->items;
+    items = self->slides;
 
-    while (items[cur + 1]->field_10 == 1) {
+    while (items[cur + 1]->buttons == 1) {
         cur = next;
         next = cur + 1;
         if (next >= count) {
@@ -171,7 +134,7 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
 }
 
 /* Toggles `self`'s VRAM-bank flip-flop (`self->toggle`) and streams
- * `self->items[idx]`'s tile asset (its `+0x200` byte offset - the
+ * `self->slides[idx]`'s tile asset (its `+0x200` byte offset - the
  * asset's second half) to whichever of the two OBJ tile VRAM banks the
  * new toggle state selects (`0x06000000`/`0x0600A000`), via
  * `LoadTaggedAsset`. Then rebuilds `gSlideshowDispcnt`'s bit 4 from the
@@ -205,11 +168,11 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  *   which happens to pick the same destination register (r1, not r5) the
  *   ROM's own `ands r1, r5` uses. See
  * docs/matching/issue-38-sound-channel-family.md. */
-void ShowSlidePicture(struct SoundChannelList *self0, s32 idx)
+void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
 {
-    register struct SoundChannelList *self asm("r5") = self0;
-    struct SoundChannelItem *item = self->items[idx];
-    void *asset = item->asset;
+    register struct cutscene_player *self asm("r5") = self0;
+    const struct cutscene_slide *item = self->slides[idx];
+    void *asset = (void *)item->picture;
     s32 toggle = self->toggle ^ 1;
 
     self->toggle = toggle;
@@ -233,7 +196,7 @@ void ShowSlidePicture(struct SoundChannelList *self0, s32 idx)
             register s32 byte asm("r2");
             register s32 result asm("r0");
 
-            toggleByte = *((u8 *)self + 0xc);
+            toggleByte = *(u8 *)&self->toggle;
             bit4 = (bit4 & toggleByte) << 4;
             asm volatile("" ::: "memory");
             mask = ~0x10;

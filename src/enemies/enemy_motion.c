@@ -1,5 +1,6 @@
 #include "core.h"
 #include "part_ctrl.h"
+#include "enemies.h"
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyHomingX`/

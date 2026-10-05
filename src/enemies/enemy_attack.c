@@ -1,5 +1,6 @@
 #include "core.h"
 #include "part_ctrl.h"
+#include "enemies.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in

@@ -286,8 +286,11 @@ extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
 extern void DestroyBossCtrl(void *self, s32 flags);
 extern void CreateBossCtrl(void *self);
-extern void DestroyEnemyCtrl(void *self, s32 flags);
-extern void CreateEnemyCtrl(void *self);
+/* As in enemies.h, which this file can't include yet: its local `struct
+ * part_list` clashes with box_part.h's (bosses batch). */
+struct part_ctrl;
+extern void DestroyEnemyCtrl(struct part_ctrl *self, s32 flags);
+extern struct part_ctrl *CreateEnemyCtrl(struct part_ctrl *self);
 extern u8 HasSuperBodySlam(void *arg0);
 extern u8 HasTurboRun(void *arg0);
 extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
@@ -1200,7 +1203,7 @@ struct vobj *CreateDingodileSharkCtrl(void *mem)
 {
     struct vobj *self = mem;
 
-    CreateEnemyCtrl(self);
+    CreateEnemyCtrl((struct part_ctrl *)self);
     self->vt = (struct vtable *)gDingodileSharkVtable;
     return self;
 }
@@ -1208,7 +1211,7 @@ struct vobj *CreateDingodileSharkCtrl(void *mem)
 void DestroyDingodileSharkCtrl(struct vobj *self, s32 flags)
 {
     self->vt = (struct vtable *)gDingodileSharkVtable;
-    DestroyEnemyCtrl(self, flags);
+    DestroyEnemyCtrl((struct part_ctrl *)self, flags);
 }
 
 void DestroyDingodileProjectileCtrl(struct obj_48a4 *self, s32 flags)

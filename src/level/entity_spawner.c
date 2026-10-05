@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "orbit_part.h"
+#include "pickups.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -197,9 +198,6 @@ struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, 
  * `t`, and the +0x4B zero is an opaque `zero`, so the `movs r0,#0` lands
  * after the +0x49 address instead of being hoisted above it. */
 extern struct level_state14 { u8 unk_00[0x8C]; u8 timeTrial; } *gLevelState;
-extern struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special);
-extern void StartWumpaPayout(struct orbit_part *self);
-extern void SendWumpaToHud(struct orbit_part *self);
 
 struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 flag5)
 {

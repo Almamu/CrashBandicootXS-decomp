@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "enemies.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyShooter`, the last raw function in the
  * `0x0800B8DC`-`0x0800D040` cluster's own `asm/code_3_2_17_bfa8.s`
@@ -52,28 +53,14 @@
  * make compare` (`La suma coincide`). This closes out
  * `asm/code_3_2_17_bfa8.s` entirely - retired from `ldscript.txt`. */
 
-extern void SetEnemyAnimMode(void *self, s32 mode);
 extern s32 __modsi3(s32 a, s32 b);
-extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
-/* The fields of this cluster's controller object (the class of
- * UpdateEnemyCtrl, see enemy_ctrl.c's `struct trigger_ctrl`) read here:
- * `shotPeriod`/`shotPhase` make the gate below pass once every `shotPeriod` frames,
- * `mode` is the `self+0x68` sub-state and `owner` the controlled
- * object. */
-struct trigger_ctrl {
-    u8 unk_00[0x48];
-    s32 shotPeriod;     // 0x48
-    s32 shotPhase;      // 0x4C
-    u8 unk_50[0x18];
-    s32 mode;           // 0x68
-    u8 unk_6c[4];
-    struct gobj *owner; // 0x70
-};
-
-void UpdateEnemyShooter(void *selfArg)
+/* `shotPeriod`/`shotPhase` make the gate below pass once every
+ * `shotPeriod` frames, `mode` is the `self+0x68` sub-state, and the
+ * controlled part (`target`) is read through its `struct gobj` view. */
+void UpdateEnemyShooter(struct part_ctrl *selfArg)
 {
-    register struct trigger_ctrl *self asm("r4") = selfArg;
+    register struct part_ctrl *self asm("r4") = selfArg;
     struct gobj *owner;
     u8 *record;
     s32 base = (s32)gRoomFrameCount;
@@ -92,7 +79,7 @@ void UpdateEnemyShooter(void *selfArg)
         return;
     }
 
-    owner = self->owner;
+    owner = (struct gobj *)self->target;
     if (owner->animDone != 0) {
         switch (self->mode) {
         case 2:
