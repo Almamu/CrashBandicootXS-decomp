@@ -3,7 +3,7 @@
 
 /* GitHub issue #9/#10: 0x0800AAEC, the input-action-check function the
  * 42-slot `gActionCtrlStateTable` action-dispatch table's own entries
- * (`sub_8013994` etc.) call for their action codes `0xB`/`0x10` (see
+ * (`ActionCtrlStateSlide` etc.) call for their action codes `0xB`/`0x10` (see
  * docs/rom_map.md). Iterates the `gCrateList` object list (the
  * same count-prefixed `{count, unused_4, items}` layout already
  * established in `src/system/game_loop24.c`'s `sub_8010804`), testing

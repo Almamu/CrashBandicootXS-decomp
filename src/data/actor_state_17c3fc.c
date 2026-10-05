@@ -31,14 +31,14 @@ void (*const gAirshipStateFuncs[6])() = {
     AirshipStateFall,
 };
 
-/* Per-state handlers dispatched by sub_8031A08 (actor_part125.c). */
+/* Per-state handlers dispatched by RunJetpackBalloonState (actor_part125.c). */
 const struct actor_pmf gJetpackBalloonStateFuncs[3] = {
     ACTOR_PMF(nullsub_32),
     ACTOR_PMF(sub_80319A0),
     ACTOR_PMF(sub_8031954),
 };
 
-/* Per-state handlers dispatched by UpdateJetpackBalloonCrate and sub_80322F4
+/* Per-state handlers dispatched by UpdateJetpackBalloonCrate and RunJetpackBalloonCrateState
  * (actor_part129.c). */
 const struct actor_pmf gJetpackBalloonCrateStateFuncs[3] = {
     ACTOR_PMF(JetpackBalloonCrateStateHang),

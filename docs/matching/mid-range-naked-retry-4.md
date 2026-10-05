@@ -32,7 +32,7 @@ It matched on the first compile.
 
 ## Improved but not closed
 
-**`sub_8014674`** (#17, `actor_part_14674.c`, old_agbcc): 300
+**`ActionCtrlStateLeftGround`** (#17, `actor_part_14674.c`, old_agbcc): 300
 halfwords off before this pass (one extra instruction shifted
 everything), 1 now.
 Every instruction and register matches. The draft keeps these changes:

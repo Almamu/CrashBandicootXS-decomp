@@ -18,7 +18,7 @@ see below) and closed both functions.
 ### `sub_800AAEC(void *self, s32 x)` - `src/graphics/actor_part108.c`
 
 The input-action-check function the 42-slot `gActionCtrlStateTable`
-action-dispatch table's own entries (`sub_8013994` etc.) call for
+action-dispatch table's own entries (`ActionCtrlStateSlide` etc.) call for
 their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
 
 1. **Gate**: builds an integer `{x, y}` probe position from `self`'s

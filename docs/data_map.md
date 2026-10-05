@@ -664,7 +664,7 @@ vtable shapes).
 | `0816B2EC` | 0xC | table (element layout: see consumers). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `DrawSpritePieces`, `DrawAffineSpritePieces` | medium | done |
 | `0816B2F8` | 0x8 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_0800D18C`, `sub_8007C30`, `sub_8007CF8` +3 | high | done |
 | `0816B300` | 0x4 | all zero (zero-initialised table). **Converted** (`src/data/obj_sizes_16b2e0.c`) | `sub_80084C4`, `CollidePlayer`, `ActionCtrlHandleEvent` +1 | high | done |
-| `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gStaticData_0816B514`, gStaticData_0816B92C's entries). **Converted** (`src/data/motion_records_16b304.c`) | `StartCtrlTargetMotionYFromSet`, `StartCtrlTargetMotionXFromSet`, `sub_8012AF4` | high | done |
+| `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gStaticData_0816B514`, gStaticData_0816B92C's entries). **Converted** (`src/data/motion_records_16b304.c`) | `StartCtrlTargetMotionYFromSet`, `StartCtrlTargetMotionXFromSet`, `ApplyActionCtrlMotion` | high | done |
 | `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gStaticData_0816B790`, gStaticData_0816B934's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8016AB0`, `sub_801721C`, `sub_8017240` | high | done |
 | `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8017808` | medium | done |
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
@@ -698,7 +698,7 @@ vtable shapes).
 | `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateWumpaHop` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `UpdateActionCtrl` | high | easy |
 | `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdatePlayerCtrl`, `sub_8016DDC`, `sub_80170EC` +2 | high | easy |
-| `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gStaticData_0816C0B0`, the rows gStaticData_0816C070 points at). **Converted** (`src/data/speed_table_16c090.c`) | `sub_80159F8` | high | done |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `sub_80159F8` | high | done |
 | `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdatePlayerCtrl` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `UpdateInputCtrl` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `sub_8017FA4` | high | easy |
@@ -770,7 +770,7 @@ vtable shapes).
 | `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `SetActorPaletteCycle` | high | done |
 | `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `SetActorPaletteCycle` | high | done |
 | `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `RunCompanyLogos` | high | done |
-| `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `UpdatePolarPlayer`, `sub_802C208` | high | easy |
+| `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `UpdatePolarPlayer`, `RunPolarPlayerState` | high | easy |
 | `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `HurtPolarPlayer`, `sub_802BB4C` | high | done |
 | `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
 | `0817A768` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarNitroCrate` | medium | done |
@@ -787,20 +787,20 @@ vtable shapes).
 | `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYetiPalette` | high | done |
 | `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `sub_802DD9C` | medium | done |
 | `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYeti` | high | done |
-| `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateJetpackPlayer`, `sub_802F748` | high | easy |
+| `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateJetpackPlayer`, `RunJetpackPlayerState` | high | easy |
 | `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `sub_802F4CC` | high | done |
-| `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `UpdateJetpackPlane`, `sub_802FEA4` | high | easy |
-| `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `UpdateJetpackBomber`, `sub_8030234` | high | easy |
-| `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateAirshipFireball`, `sub_8030648` | high | easy |
+| `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `UpdateJetpackPlane`, `RunJetpackPlaneState` | high | easy |
+| `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `UpdateJetpackBomber`, `RunJetpackBomberState` | high | easy |
+| `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateAirshipFireball`, `RunAirshipFireballState` | high | easy |
 | `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `SpawnAirship` | high | done |
 | `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `SpawnAirship`, `AnimateAirshipPalette` | high | done |
 | `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `AirshipStateExplode`, `sub_8030E08`, `IsTouchingAirship` | high | done |
 | `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `CreateAirship` | high | done |
 | `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `UpdateAirship` | high | easy |
-| `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A08` | high | easy |
-| `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateJetpackBalloonCrate`, `sub_80322F4` | high | easy |
+| `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `RunJetpackBalloonState` | high | easy |
+| `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateJetpackBalloonCrate`, `RunJetpackBalloonCrateState` | high | easy |
 | `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `UpdateJetpackRocket` | medium | done |
-| `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `UpdateHovercraftFireball`, `sub_8032A94` | high | easy |
+| `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `UpdateHovercraftFireball`, `RunHovercraftFireballState` | high | easy |
 | `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `SpawnHovercraft` | high | done |
 | `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `sub_8032C0C` | high | done |
 | `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `CreateHovercraft` | medium | done |

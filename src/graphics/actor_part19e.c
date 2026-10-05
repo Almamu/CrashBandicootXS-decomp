@@ -6,7 +6,7 @@ extern struct actor_pmf gPolarPlayerStateFuncs[];
 
 /* Per-state member-pointer dispatch, `(this->*gPolarPlayerStateFuncs
  * [this->state])()`. */
-void sub_802C208(struct actor_self *self)
+void RunPolarPlayerState(struct actor_self *self)
 {
     ACTOR_PMF_CALL(self, gPolarPlayerStateFuncs);
 }

@@ -39,8 +39,8 @@ under both).
 | `PickUpWumpa` | game_loop53.c | old | Plain C; the tag lands in r7 on its own under old_agbcc (the old r7-hazard note). The `+0x25 = 1` store goes through a `u8` local so the 1 is materialized before the field address. |
 | `SendWumpaToHud` | game_loop53.c | old | The fixed `-0x1000` offsets go through `OrbitOffset(pos, off)`, an inline taking the offset as a parameter: that makes old_agbcc reload `0xFFFFF000` from the pool for each axis (into r1, then r6) while `0x1400` stays shared in r4, as in the ROM. |
 | `CreateExtraLife` | game_loop54.c | old | Plain C: the r8 "zero sentinel" is just a `u8 zero` local stored to +0x49..+0x4B, the anchor copy is `ORBIT_POS`, and the +0x28 bit clears are `s32` 1-bit fields (the ROM's `-17`/`-33` masks). |
-| `sub_8012D24` | actor_part83.c | old | The pad object is loaded before `in` is spilled (`void *pad = gInput` first). The held-0x100 result is what `+0x29` is cleared with. The D-pad part sits after the first `UpdatePlayerFacing` tail, reached by a `goto`, matching the ROM layout. The 3..8 range `case` comes before `case 2`. `part->unk_100` is read through `PartByte(part, 0x100)`, an inline with the offset as a parameter, so the 0x100 is rematerialized instead of reused from the input test. |
-| `sub_801283C` | actor_part84.c | old | Each distance test is two separate `if`s (a `\|\|` gets folded into one compare). The part/type chain is an `if` chain with a shared `goto hit`. The +0x0D bit-0 set in the charge path is a plain `\|= 1` (the `ActOrFlags0D` inline's 1 would be reused for the trio). The trios mix literal stores and parameter-passing inlines exactly where the ROM materializes constants early (`ActTrio28` for the second trio, `ActQueue27(self, 0, 0)` for the idle reset). |
+| `ActionCtrlStateIdle` | actor_part83.c | old | The pad object is loaded before `in` is spilled (`void *pad = gInput` first). The held-0x100 result is what `+0x29` is cleared with. The D-pad part sits after the first `UpdatePlayerFacing` tail, reached by a `goto`, matching the ROM layout. The 3..8 range `case` comes before `case 2`. `part->unk_100` is read through `PartByte(part, 0x100)`, an inline with the offset as a parameter, so the 0x100 is rematerialized instead of reused from the input test. |
+| `HandleActionCtrlAirInput` | actor_part84.c | old | Each distance test is two separate `if`s (a `\|\|` gets folded into one compare). The part/type chain is an `if` chain with a shared `goto hit`. The +0x0D bit-0 set in the charge path is a plain `\|= 1` (the `ActOrFlags0D` inline's 1 would be reused for the trio). The trios mix literal stores and parameter-passing inlines exactly where the ROM materializes constants early (`ActTrio28` for the second trio, `ActQueue27(self, 0, 0)` for the idle reset). |
 
 ## Not closed (7)
 
@@ -50,9 +50,9 @@ under both).
 | `UpdateWumpa` (game_loop53.c) | No draft; it has `UpdateExtraLife`'s mode 1/2 blocks verbatim, so it shares the same two gaps. |
 | `CreateWumpa` (game_loop53.c) | Old_agbcc draft under `NON_MATCHING`, same instructions. The ROM keeps `id` in r8, `special` in sb and `mode` in r7, and its +0x4B store reuses the zero the frame clamp compares against (an SImode pseudo; +0x49 gets a fresh `movs`). Moving/retyping the `mode`/`phase` locals didn't reproduce that. |
 | `ActionCtrlHandleEvent` (actor_part82.c) | Not attempted (1420 B, nested jump tables). |
-| `sub_8012AF4` (actor_part83.c) | Old_agbcc draft under `NON_MATCHING`, same instructions and flow (the 0x102/0x103 tests have to be nested ifs, or gcc merges them into one `ldrh`). Register allocation differs throughout: the ROM puts short-lived constants in r5/r6 and keeps the +0x27 slot in r8. |
+| `ApplyActionCtrlMotion` (actor_part83.c) | Old_agbcc draft under `NON_MATCHING`, same instructions and flow (the 0x102/0x103 tests have to be nested ifs, or gcc merges them into one `ldrh`). Register allocation differs throughout: the ROM puts short-lived constants in r5/r6 and keeps the +0x27 slot in r8. |
 | `UpdateActionCtrl` (actor_part84.c) | Old_agbcc draft under `NON_MATCHING`, with the gcc 2.x pointer-to-member call through `gActionCtrlStateTable` written out like `ACTOR_PMF_CALL`. The ROM keeps the method record in an 8-byte stack slot and pushes an r7 it never uses (a DImode pair spilled after allocation); the draft keeps it in r6:r7. |
-| `sub_8012694` (actor_part84.c) | Old_agbcc draft under `NON_MATCHING`, off only in registers: the ROM loads `self->part` into r0, keeps a copy in r2 and recomputes the +0x2D address for each tag test; old_agbcc keeps the part in r1 and reuses the address. Per-branch `PlaySfx` calls (merged by cross-jumping) and `PartBytePtr` for the player's +0x100 byte already get everything else. |
+| `TryActionCtrlDoubleJump` (actor_part84.c) | Old_agbcc draft under `NON_MATCHING`, off only in registers: the ROM loads `self->part` into r0, keeps a copy in r2 and recomputes the +0x2D address for each tag test; old_agbcc keeps the part in r1 and reuses the address. Per-branch `PlaySfx` calls (merged by cross-jumping) and `PartBytePtr` for the player's +0x100 byte already get everything else. |
 
 ## Techniques worth reusing
 
@@ -60,7 +60,7 @@ under both).
   constant through a `static inline` parameter (`OrbitOffset`,
   `PartByte`, `PartBytePtr`) makes it get materialized fresh at that use
   instead of reusing a register that already holds the same value. This
-  closed `SendWumpaToHud` and `sub_8012D24` and fixed parts of three drafts.
+  closed `SendWumpaToHud` and `ActionCtrlStateIdle` and fixed parts of three drafts.
 - **`u8` stack arguments read with `ldrb`.** agbcc always loads a `u8`
   parameter's whole stack word. `*(u8 *)&arg` gives the `ldrb` (as
   `DropExtraLife` already did); to get both addresses formed before the
@@ -78,11 +78,11 @@ both pass.
 ## Later pass
 
 The second retry (docs/matching/issue-15-16-17-naked-retry-2.md) closed
-`sub_8012694`: the tag tests read `self->part` each time instead of
+`TryActionCtrlDoubleJump`: the tag tests read `self->part` each time instead of
 through a local (old_agbcc's GCSE turns those reloads into the ROM's r2
 copy), and `pressed & 1` folds into `pressed`'s assignment. The other
 functions listed as not closed above are still NAKED.
 
 A third pass (docs/matching/issue-15-16-naked-retry-3.md) closed
-`UpdateActionCtrl` and `sub_8012AF4` as real C under old_agbcc, and left new
+`UpdateActionCtrl` and `ApplyActionCtrlMotion` as real C under old_agbcc, and left new
 or updated drafts for `UpdateWumpa` and `CreateWumpa`.

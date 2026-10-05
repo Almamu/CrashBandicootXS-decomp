@@ -16,7 +16,7 @@ extern void sub_802F640();
 extern void sub_802F69C();
 
 /* Per-state handlers dispatched by UpdateJetpackPlayer (actor_part128.c) and
- * sub_802F748 (actor_part44b.c). */
+ * RunJetpackPlayerState (actor_part44b.c). */
 const struct actor_pmf gJetpackPlayerStateFuncs[8] = {
     ACTOR_PMF(sub_802F69C),
     ACTOR_PMF(JetpackPlayerStateFly),

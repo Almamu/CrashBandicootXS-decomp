@@ -5,7 +5,7 @@
  * actor_part79.c's top-of-file comment for the shared field-offset
  * conventions (`self+0xc`/`self+0x10`/`+0x27`..`+0x32`) this "child
  * object" family uses (include/action_obj.h's `struct act`). Not ROM-adjacent to actor_part79.c's functions
- * (raw `UpdateActionCtrl`/`sub_8012694`/`sub_801283C` sit in between, see
+ * (raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput` sit in between, see
  * asm/code_3_2_17_12420.s), hence its own file. */
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -18,7 +18,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * (id `0x1c`). Either way, sets the second half of the shared
  * state/flag/table-index trio (`self+0x32`=0/`+0x30`=1/`+0x28`=4) and
  * returns 1. */
-u8 sub_8012A7C(void *selfArg)
+u8 CheckActionCtrlLeftGround(void *selfArg)
 {
     struct act *self = selfArg;
     u8 *part = (u8 *)self->part;

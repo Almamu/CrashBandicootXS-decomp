@@ -107,15 +107,15 @@ struct player_ctrl
 {
     u8 unk_00[4];
     struct { struct pctrl_anim_pair *entries; } *animSet; // 0x04
-    s32 state;                    // 0x08 - index into gStaticData_0816C250
+    s32 state;                    // 0x08 - index into gPlayerCtrlStateFuncs
     struct pctrl_vtable *vtable;  // 0x0C
     struct pctrl_target *target;  // 0x10
     s32 unk_14;                   // 0x14
     s32 timer;                    // 0x18
     s32 timerMax;                 // 0x1C
     u8 repeat;                    // 0x20 - D-pad auto-repeat countdown
-    u8 level;                     // 0x21 - 0..12, column of gStaticData_0816C070
-    u8 mode;                      // 0x22 - row of gStaticData_0816C070
+    u8 level;                     // 0x21 - 0..12, column of gPlayerCtrlModeAnimRows
+    u8 mode;                      // 0x22 - row of gPlayerCtrlModeAnimRows
     u8 cooldown;                  // 0x23
     u8 valueA;                    // 0x24
     u8 valueB;                    // 0x25

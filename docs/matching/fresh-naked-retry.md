@@ -3,7 +3,7 @@
 This pass covered NAKED functions that earlier passes had skipped or barely
 touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction` (#7),
 `UnlinkCrateFromGrid` and `UpdateCrateList` (#9), `UpdateEnemyCtrl` (#10), `UpdateExtraLife`,
-`UpdateWumpa` and `CreateWumpa` (#15), and `UpdateActionCtrl` and `sub_8012AF4`
+`UpdateWumpa` and `CreateWumpa` (#15), and `UpdateActionCtrl` and `ApplyActionCtrlMotion`
 (#16).
 
 ## Closed (1)
@@ -40,5 +40,5 @@ touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction
   second. No source shape tried reproduced that.
 - `ResetLinkSessionState`, `HandleLinkSerial` (link_cable.c), `UpdateEnemyCtrl`
   (actor_part112.c), `UpdateWumpa`, `CreateWumpa` (game_loop53.c),
-  `UpdateActionCtrl` (actor_part84.c), `sub_8012AF4` (actor_part83.c): not
+  `UpdateActionCtrl` (actor_part84.c), `ApplyActionCtrlMotion` (actor_part83.c): not
   reached this pass. Their existing notes and drafts are unchanged.

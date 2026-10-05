@@ -46,7 +46,7 @@ hole:
 gWumpaHopWidths:
 	.incbin "baserom.gba", 0x0016BF14, 0x0000000C
 
-@ gActionCtrlStateTable..gStaticData_0816C070: src/data/action_table_16bf20.c
+@ gActionCtrlStateTable..gPlayerCtrlModeAnimRows: src/data/action_table_16bf20.c
 
 .section .rodata.0816C090
 
@@ -587,7 +587,7 @@ collision kind tables, and vectors. Labels the code has no symbol for,
 because it only reaches them through a pointer, are named after their
 address: the pairs in `motion_records_16b304.c` (`gStaticData_0816B514`,
 `gStaticData_0816B790`), which `entry_set_16b92c.c` now points at by
-name, the level animation rows `gStaticData_0816C0B0` that
+name, the level animation rows `gPlayerCtrlModeLevelAnims` that
 `action_table_16bf20.c` points at, and the two link-cable names
 `gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.c`). A few
 byte tables sit at odd addresses (`gStaticData_0816C30B`); brace-list `u8`

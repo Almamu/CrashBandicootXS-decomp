@@ -313,14 +313,14 @@ boundaries - not by re-reading the isolated compiles more carefully.
   `gHovercraftLauncherStateFuncs` stride-8 trampoline-record dispatcher
   returning a 0/1 result instead of tail-calling. Same `{s16 baseOff;
   s16 count; void *fn}` record shape as `UpdateHovercraftCannon`/`RunHovercraftCannonState`/
-  `UpdateHovercraftLauncher` (issue #62) and `sub_802C208` (issue #52) - all hit
+  `UpdateHovercraftLauncher` (issue #62) and `RunPolarPlayerState` (issue #52) - all hit
   the same confirmed categorical gcc-2.9 r7-pin bug (the ROM keeps the
   table's base address alive in `r7` for the whole function; an
   explicit `register T x asm("r7")` compiles correct instructions but
   never makes it into the prologue/epilogue push/pop list, and this
   compiler's own unforced allocator never reaches r7 here either) and
   are transcribed the same way - see
-  docs/matching/issue-52-0x0802bed8-actor.md's `sub_802C208` entry for
+  docs/matching/issue-52-0x0802bed8-actor.md's `RunPolarPlayerState` entry for
   the full account. Every instruction is byte-verified against the ROM
   disassembly, so the built ROM is byte-identical here, but per this
   project's current tracking policy a NAKED transcription of a

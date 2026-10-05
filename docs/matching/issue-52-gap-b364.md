@@ -112,7 +112,7 @@ same approach this project has used for other large NAKED batches.
   `docs/rom_map.md` already flagged. Tail-calls `DispensePolarWumpa` first,
   then drives a `gPolarPlayerStateFuncs` stride-8 keyframe-table lookup
   (the same categorical r7-hazard shape already NAKED-parked elsewhere,
-  e.g. `sub_802C208`) feeding a `_call_via_r3` trampoline dispatch,
+  e.g. `RunPolarPlayerState`) feeding a `_call_via_r3` trampoline dispatch,
   followed by a `gKeys` input-gated position-easing block.
   `r5`/`r6`/`r7` each switch roles repeatedly across the whole function.
 - **`DrawPolarPlayer`** - sprite-frame OAM queuing: computes a keyframe-

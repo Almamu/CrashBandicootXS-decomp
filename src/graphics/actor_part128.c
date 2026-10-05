@@ -2,7 +2,7 @@
 #include "actor_self.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
- * (`actor_part61.c`, ending at `nullsub_27`/`sub_802E0A0`) and issue
+ * (`actor_part61.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
  * #56's chunk (`actor_part43.c`, starting at `sub_802F0DC`). Two things
  * live here:
  *
@@ -166,7 +166,7 @@ static inline s32 Abs(s32 x)
 /* Once the current animation has played through, switches `self`
  * (`gYeti`) to animation sequence 3 (unless it's already
  * on it), restarting its timer from that sequence's first frame. */
-void sub_802E0A4(void)
+void YetiStateStop(void)
 {
     struct actor_self *self = gYeti;
 

@@ -36,9 +36,9 @@ extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
 extern void *GetSpriteFrame(struct act_part *part);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
 extern void KillPlayer(struct act *self, s32 id);
-extern void sub_8012AF4(struct act *self);
+extern void ApplyActionCtrlMotion(struct act *self);
 extern void sub_8015558(struct act *self);
-extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
+extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -153,7 +153,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             PART_OFFSET(from, self->part);
 
             PartSet101(self->part, 1);
-            sub_8015780(self, 0x1f, 0x1d, 0, 0);
+            SetActionCtrlModeAnim(self, 0x1f, 0x1d, 0, 0);
             ActSetNext27(self, 0);
             ActSetNext(self, 0);
             PART_OFFSET(to, self->part);
@@ -167,7 +167,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 24:
         self->part->unk_101 = 0;
-        sub_8015780(self, 0x1a, 0x1b, 0x7FFFFFFF, 0x7FFFFFFF);
+        SetActionCtrlModeAnim(self, 0x1a, 0x1b, 0x7FFFFFFF, 0x7FFFFFFF);
         ActSetNext(self, 4);
         break;
     case 12:
@@ -228,11 +228,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             asm("" : "=r"(one) : "0"(1));
             fire = held & 1;
             if (fire) {
-                sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x10);
             } else {
-                sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0xf);
             }
@@ -252,11 +252,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             asm("" : "=r"(one) : "0"(1));
             fire = held & 1;
             if (fire) {
-                sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x12);
             } else {
-                sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0x11);
             }
@@ -274,7 +274,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             asm("" : "=r"(one) : "0"(1));
             fire = in & 1;
             if (fire) {
-                sub_8015780(self, 0xe, 0x10, 0, 0x18);
+                SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
                 self->unk_22 = 0;
                 self->unk_23 = 0;
                 self->unk_24[0] = 0;
@@ -282,7 +282,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x14);
             } else {
-                sub_8015780(self, 0xe, 0x10, 0, 0x18);
+                SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
                 self->unk_22 = fire;
                 self->unk_23 = fire;
                 self->unk_24[0] = fire;
@@ -290,7 +290,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0x13);
             }
-            sub_8012AF4(self);
+            ApplyActionCtrlMotion(self);
         }
         self->frame = 0;
         break;
@@ -305,7 +305,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
 
             *f &= 0x7f;
         }
-        sub_8015780(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
+        SetActionCtrlModeAnim(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
         LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
                     self->part->bank->records[self->part->tag].paletteId);
         ActSetNext27(self, 0);

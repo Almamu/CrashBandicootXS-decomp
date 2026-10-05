@@ -29,7 +29,7 @@ number after `actor_part38d.c`, this repo's highest existing
 `actor_part*.c` at the time this chunk was picked up). A new
 `asm/code_3_2_17_11bd4.s` picks up the unexamined remainder starting at
 `ActionCtrlHandleEvent` (0x08011BD4) through the end of this chunk's range
-(0x08012FBC, where `sub_8012FBC` - outside this issue's function list -
+(0x08012FBC, where `ActionCtrlStateRun` - outside this issue's function list -
 begins); `ldscript.txt` and `tools/report_units.py`'s `UNITS` list were
 updated to place all three pieces (`code_3_2_17_e560.o`,
 `actor_part39.o`, `code_3_2_17_11bd4.o`) in that exact link order.
@@ -134,8 +134,8 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 ## Left raw (10/25) - `ActionCtrlHandleEvent` onward
 
 `ActionCtrlHandleEvent`, `KillPlayer`, `sub_8012238`, `UpdatePlayerFacing`,
-`UpdateActionCtrl`, `sub_8012694`, `sub_801283C`, `sub_8012A7C`,
-`sub_8012AF4`, `sub_8012D24` (ROM 0x08011BD4-0x08012FBC, now
+`UpdateActionCtrl`, `TryActionCtrlDoubleJump`, `HandleActionCtrlAirInput`, `CheckActionCtrlLeftGround`,
+`ApplyActionCtrlMotion`, `ActionCtrlStateIdle` (ROM 0x08011BD4-0x08012FBC, now
 `asm/code_3_2_17_11bd4.s`) were left completely untouched. All ten
 operate on the same still-unnamed "child object" struct
 `ResetActionCtrl`'s caller hinted at above (`self+0xc`/`+0x10`/`+0x18` as
@@ -150,12 +150,12 @@ functions in detail and reached the same conclusion:
   (`self+0x8 == 0x1d`) with `UpdatePlayerCtrl` (also still raw) - "a
   companion state machine" to that function, not independently
   understood.
-- `UpdateActionCtrl`, `sub_8012694`, `sub_801283C` are all documented as
+- `UpdateActionCtrl`, `TryActionCtrlDoubleJump`, `HandleActionCtrlAirInput` are all documented as
   members of the 42-slot action-dispatch table family
   (`gActionCtrlStateTable`) - real, cross-referenced coverage, but not
   matched to byte-exact precision by that investigation either.
 - The remaining functions (`KillPlayer`, `sub_8012238`, `UpdatePlayerFacing`,
-  `sub_8012A7C`, `sub_8012AF4`, `sub_8012D24`) are direct siblings/
+  `CheckActionCtrlLeftGround`, `ApplyActionCtrlMotion`, `ActionCtrlStateIdle`) are direct siblings/
   callees of the above, sharing the same struct and calling
   conventions.
 

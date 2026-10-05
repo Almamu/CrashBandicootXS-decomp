@@ -15,7 +15,7 @@ struct motion_rec {
     s32 c;
 };
 
-/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (actor_part17.c) and sub_8012AF4
+/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (actor_part17.c) and ApplyActionCtrlMotion
  * (actor_part83.c). */
 const struct motion_rec gStaticData_0816B304[44] = {
     { 0, 32, 0 },

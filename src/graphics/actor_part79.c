@@ -25,14 +25,14 @@ struct palette_cache;
 extern void PlaySfx(struct AudioContext *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void sub_8012AF4(void *self);
+extern void ApplyActionCtrlMotion(void *self);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, u8 val);
 extern void StopSfx(struct AudioContext *self, u32 id);
-extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
+extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 GetDpadDirection(void *dummy);
 
 extern struct AudioContext *gAudioContext;
@@ -45,7 +45,7 @@ extern void *gInput;
  * as its "part" argument, then the `+0x20`/`+0x24` pair with id `0x1d`,
  * resets both halves of the state/flag/table-index trio (`+0x31`/
  * `+0x2f`/`+0x27` and `+0x32`/`+0x30`/`+0x28`) via a single walked
- * pointer, runs `sub_8012AF4`, clears/sets a few more `part` bytes
+ * pointer, runs `ApplyActionCtrlMotion`, clears/sets a few more `part` bytes
  * (`+0x100`/`+0x102`/`+0x103`/`+0x104`, and clears bits `0x20`/`0x10`
  * of `part+0xc`), then calls `LoseLife` and looks up a byte from the
  * per-tag 28-byte-record table (`part+0x20 -> *ptr + tag*0x1C`, the
@@ -86,7 +86,7 @@ void KillPlayer(void *selfArg, void *arg1)
             *w = zero;
         }
 
-        sub_8012AF4(self);
+        ApplyActionCtrlMotion(self);
 
         (*(u8 **)(self + 0x10))[0x100] = zero;
         (*(u8 **)(self + 0x10))[0x102] = zero;
@@ -146,7 +146,7 @@ void KillPlayer(void *selfArg, void *arg1)
  * re-reading the global fresh first) and fires the standard
  * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)` teardown trio.
  * Otherwise (flag clear), on player type `0x25`/`0x26`, plays a sound
- * and resets the state/flag/table-index trio via `sub_8015780`. */
+ * and resets the state/flag/table-index trio via `SetActionCtrlModeAnim`. */
 void sub_8012238(void *selfArg)
 {
     u8 *self = selfArg;
@@ -203,7 +203,7 @@ flag_zero:
             goto end;
     do_call:
         StopSfx(gAudioContext, 0x36);
-        sub_8015780(self, 0, 0x12, 0, flag);
+        SetActionCtrlModeAnim(self, 0, 0x12, 0, flag);
     }
 end:
     return;

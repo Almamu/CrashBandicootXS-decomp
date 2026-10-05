@@ -4,8 +4,8 @@ Continuation of
 [issue-16-actor-12160.md](./issue-16-actor-12160.md), which matched
 four more members of the `gActionCtrlStateTable` 42-slot action-dispatch
 table and left the hardest six of that pass's ten-function remainder
-untouched: `ActionCtrlHandleEvent`, `UpdateActionCtrl`, `sub_8012694`, `sub_801283C`,
-`sub_8012AF4`, `sub_8012D24`. This pass closes out all six - but as
+untouched: `ActionCtrlHandleEvent`, `UpdateActionCtrl`, `TryActionCtrlDoubleJump`, `HandleActionCtrlAirInput`,
+`ApplyActionCtrlMotion`, `ActionCtrlStateIdle`. This pass closes out all six - but as
 NAKED transcriptions, not real decompiled C (see "Why NAKED" below).
 
 ## New files
@@ -13,11 +13,11 @@ NAKED transcriptions, not real decompiled C (see "Why NAKED" below).
 `asm/code_3_2_17_11bd4.s` (just `ActionCtrlHandleEvent`, 0x08011BD4-0x08012160)
 is removed entirely - its function moves to a new
 `src/graphics/actor_part82.c`. `asm/code_3_2_17_12420.s`
-(`UpdateActionCtrl`/`sub_8012694`/`sub_801283C`, 0x08012420-0x08012A7C) is
+(`UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`, 0x08012420-0x08012A7C) is
 also removed entirely, moving to a new `src/graphics/actor_part84.c`.
 `asm/code_3_2_17_12af4.s` is trimmed to drop its leading
-`sub_8012AF4`/`sub_8012D24` span (0x08012AF4-0x08012FBC, which moves to
-a new `src/graphics/actor_part83.c`), now starting at `sub_8012FBC`
+`ApplyActionCtrlMotion`/`ActionCtrlStateIdle` span (0x08012AF4-0x08012FBC, which moves to
+a new `src/graphics/actor_part83.c`), now starting at `ActionCtrlStateRun`
 (0x08012FBC) - the rest of that file was already out of this issue's
 scope per the prior pass's writeup. `ldscript.txt` and
 `tools/report_units.py`'s `UNITS` list were updated to place all three
@@ -37,9 +37,9 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   to compute a Q8 position delta from a `gStaticData_0816B300` record
   (or the object's own `+0x24`/`+0x14` fields as a nibble-1-5
   fallback), then reset the state/flag/table-index trio via
-  `sub_8015780`; case 24 plays sound(s) gated on `gKeys`
+  `SetActionCtrlModeAnim`; case 24 plays sound(s) gated on `gKeys`
   bits and either resets three `self+0x22..0x24` bytes plus calls
-  `sub_8012AF4`, or chains through `FadeOutMusic`/a
+  `ApplyActionCtrlMotion`, or chains through `FadeOutMusic`/a
   `LoadPaletteSlot`-fed 28-byte-record lookup; case 11 resets a child
   object and pool-releases it via one of two dereference-chain-computed
   slots depending on the player's D-pad remap state; cases 9/10 gate
@@ -52,25 +52,25 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `self+8`'s type in `gActionCtrlStateTable` to fire one `_call_via_r3`
   trampoline call, then writes a small fixed value into `part+0xa` from
   a second, 22-case jump table on the same type.
-- **`sub_8012694`** (424 B, `actor_part84.c`) - a helper of
-  `sub_801283C`: gated on the D-pad snapshot's bit 1, `self+0x18`'s
+- **`TryActionCtrlDoubleJump`** (424 B, `actor_part84.c`) - a helper of
+  `HandleActionCtrlAirInput`: gated on the D-pad snapshot's bit 1, `self+0x18`'s
   counter being 0, `gLevelState` passing `HasDoubleJump`, and a
   sub-object type of `6`/`0xb`/`0xc` (each with its own `+0x30 >= 0`
   distance-style gate), bumps `self+0x18`, fires the `+0x50`/`+0x54`
   and `+0x20`/`+0x24` trampoline pairs with type-keyed ids, resets the
   trio to a type-keyed value, plays a fixed sound, and returns 1;
   otherwise returns 0.
-- **`sub_801283C`** (576 B, `actor_part84.c`) - a proximity-triggered
+- **`HandleActionCtrlAirInput`** (576 B, `actor_part84.c`) - a proximity-triggered
   indicator: dispatches `self+8`'s type (`7`/`9`/`0xb`/`0xe`) against
   per-type distance thresholds on `part->field_0x64` (falling back to
-  `sub_8012694` first when within a `0x27f` threshold), setting
+  `TryActionCtrlDoubleJump` first when within a `0x27f` threshold), setting
   `part+0xd` bit 0 and firing the `+0x20`/`+0x24` trampoline (id
   `0x1a`), or tail-calling `sub_80151C8` for type `0xe`. Then, unless
   the type is one of the five gate values, reads the D-pad and remaps
   `self+0x27`'s table-index byte through a further small dispatch
   before a shared tail arming `self+0x31` when the player's `+0x100`
   flag is set.
-- **`sub_8012AF4`** (560 B, `actor_part83.c`) - an OAM-visibility/
+- **`ApplyActionCtrlMotion`** (560 B, `actor_part83.c`) - an OAM-visibility/
   priority pass: nudges the player's saved-position word by a fixed
   delta and calls `SetSpritePrevPos` when `part+0x68` is busy and a flag
   just changed; plays a sound and fires the `+0x50`/`+0x54` trampoline
@@ -81,15 +81,15 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   fires one of two `_call_via_r3` trampoline calls with the stack record
   as payload, and clears the flag; repeats a near-identical sequence
   keyed on `self+0x30`/`self+0x28` against the same table.
-- **`sub_8012D24`** (664 B, `actor_part83.c`) - a further sibling:
+- **`ActionCtrlStateIdle`** (664 B, `actor_part83.c`) - a further sibling:
   reads the D-pad and ticks `self+0x25` down on release; fires the
   `+0x50`/`+0x54` trampoline (id `0x12`) and clears `part+0x33` when
   `part+0x38` is set; bumps `self+0x1c`'s frame counter and, while the
   player's type is `0x12` and `+0x30==0`, fires escalating-id trampoline
   calls once the counter crosses one of two thresholds; bails early if
-  `sub_8012A7C(self)` reports busy; otherwise dispatches the input
+  `CheckActionCtrlLeftGround(self)` reports busy; otherwise dispatches the input
   snapshot's low bits (sound + two trampoline pairs, or a
-  `sub_8015398` tail-call, or a `HasTurboRun`-gated trampoline call) -
+  `StartActionCtrlSpin` tail-call, or a `HasTurboRun`-gated trampoline call) -
   every path converging on `UpdatePlayerFacing`.
 
 ## Why NAKED, not real C
@@ -102,8 +102,8 @@ saved register (`r7`) that the straightforward C translation never
 needed (4 registers, no stack). This is the same unexplained-frame-
 shape/register-budget gap this exact table family (`gActionCtrlStateTable`)
 already hits repeatedly throughout `docs/status/actor.md`'s "Parked -
-NAKED transcription" section (`sub_801434C`, `sub_80145E4`,
-`sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC`,
+NAKED transcription" section (`ActionCtrlStateCrawl`, `ActionCtrlStateLand`,
+`StartActionCtrlTornadoSpin`, `EndActionCtrlSpin`, `SteerActionCtrlSpin`, `ActionCtrlStateBodySlamStart`,
 `ActionCtrlSetTargetAnim`, and the whole `UpdateAirshipFireball`-`ConvertAirshipTiles` boss-weapon
 cluster) - a confirmed categorical difficulty for this class of
 function, not a one-off. Given all six of this remainder's functions
@@ -114,7 +114,7 @@ codebase so far - 25 outer cases plus two independent 7-case inner
 tables), every one was transcribed instruction-for-instruction from the
 ROM disassembly instead, the same escape hatch used for
 `MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/system/link_cable.c`) and
-`sub_801434C` (`actor_part18.c`).
+`ActionCtrlStateCrawl` (`actor_part18.c`).
 
 To keep a function this size transcription-error-free, `ActionCtrlHandleEvent`
 was transcribed mechanically (a small Python pass converting each ROM
@@ -146,7 +146,7 @@ All six of this remainder's functions are now byte-exact, but as NAKED
 transcriptions - parked, not matched, per project policy. Every
 function GitHub issue #16 originally scoped (this remainder plus the
 four matched in `issue-16-actor-12160.md` and the earlier
-`KillPlayer`/`sub_8012238`/`UpdatePlayerFacing`/`sub_8012A7C` matches) is now
+`KillPlayer`/`sub_8012238`/`UpdatePlayerFacing`/`CheckActionCtrlLeftGround` matches) is now
 either real C or a verified NAKED transcription - nothing from this
 issue's original scope is left raw - but since six functions are NAKED
 rather than real decompiled C, the issue itself stays open per this
@@ -155,17 +155,17 @@ CONTRIBUTING.md's "Opening the PR").
 
 ## Later pass: issue #16 NAKED retry
 
-`sub_8012D24` (actor_part83.c) and `sub_801283C` (actor_part84.c) are
+`ActionCtrlStateIdle` (actor_part83.c) and `HandleActionCtrlAirInput` (actor_part84.c) are
 real C now, under old_agbcc (both files moved to `OLD_AGBCC_OBJS`), on
 the `struct act` player/action object from `include/action_obj.h`.
-`sub_8012AF4`, `UpdateActionCtrl` and `sub_8012694` have old_agbcc drafts
+`ApplyActionCtrlMotion`, `UpdateActionCtrl` and `TryActionCtrlDoubleJump` have old_agbcc drafts
 under `NON_MATCHING`; `ActionCtrlHandleEvent` wasn't attempted. See
 [issue-15-16-naked-retry.md](issue-15-16-naked-retry.md).
 
 
 ## Later pass (third issue #15/#16 NAKED retry)
 
-`UpdateActionCtrl` and `sub_8012AF4` are real C under old_agbcc now. See
+`UpdateActionCtrl` and `ApplyActionCtrlMotion` are real C under old_agbcc now. See
 [issue-15-16-naked-retry-3.md](issue-15-16-naked-retry-3.md).
 
 ## Later pass (second big NAKED retry)

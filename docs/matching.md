@@ -5623,10 +5623,10 @@ table, part) has its full shape pinned down yet, so every access stays
 a raw offset with a doc comment rather than a guessed struct.
 
 Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
-`sub_801426C`, `sub_80142B0`, `sub_80144E0`, `sub_8014524`.
+`ActionCtrlStateStandUp`, `ActionCtrlStateCrawlStart`, `ActionCtrlStateCrawlStandUp`, `ActionCtrlStateBodySlamLand`.
 
 - The `part+0xd` bit-clear idiom (`& -2`/`& -3`, shared by
-  `sub_80142B0` and the parked `sub_801434C`) needed the mask and the
+  `ActionCtrlStateCrawlStart` and the parked `ActionCtrlStateCrawl`) needed the mask and the
   `part` pointer each pinned to a fixed register
   (`register u8 *part asm("r1")`/`register s32 mask asm("r0")`) *inside
   its own block scope*, one block per occurrence - without the pins
@@ -5643,7 +5643,7 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   0x50;`) rather than kept as a separate `mgr`+`0x50` pair - this lets
   gcc mutate the same register in place (`adds r2,#0x50` then
   `ldr r3,[r2,#4]`) instead of copying to a new register first.
-- `sub_8014524`'s `gKeys & 0x100 != 0` boolean needed the
+- `ActionCtrlStateBodySlamLand`'s `gKeys & 0x100 != 0` boolean needed the
   global declared `u32` (not its "true" `u16`) in this file so agbcc
   reads it as a full-word `ldr` and materializes the boolean via the
   established `((word << N) ) >> 31` sign-bit idiom (`rsbs`+`lsrs`,
@@ -5656,7 +5656,7 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   statement *before* the boolean computation to match the ROM's literal
   instruction order, matching neither statement order alone reproduces
   once both are present in the same function.
-- The `st == 2 || (st >= 7 && st <= 8)` check (`sub_8014524`) needed to
+- The `st == 2 || (st >= 7 && st <= 8)` check (`ActionCtrlStateBodySlamLand`) needed to
   be written as a `switch (st) { case 2: case 7: case 8: ...}` -
   every plain `if`/`else if` or explicit `<`/`>` chain tried gets
   canonicalized by this compiler into the shorter "subtract, truncate,
@@ -5665,14 +5665,14 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   instruction shorter than the ROM's real four-comparison cascade;
   only the `switch` form reproduces the ROM's literal `cmp;beq;cmp;
   blt;cmp;bgt;cmp;blt` shape.
-- Both `sub_80142B0`/`sub_8014524`'s "reset the flag trio to 0" write
+- Both `ActionCtrlStateCrawlStart`/`ActionCtrlStateBodySlamLand`'s "reset the flag trio to 0" write
   blocks needed the shared zero value pulled into a named local
   (`u8 zero = 0; self[0x31] = zero; ...`) rather than three separate
   `= 0` literals - the ROM computes the constant *before* the field
   address and reuses that same register for every zeroed field in the
   block; three independent literal `0`s let gcc compute the address
   first and reload/reuse the immediate differently per field.
-- `sub_80145E4` additionally needed `self` pinned to `r4`
+- `ActionCtrlStateLand` additionally needed `self` pinned to `r4`
   (`register u8 *self asm("r4")`) to stop gcc inserting a redundant
   `self` copy into a second callee-saved register purely because it's
   read again, in a different branch, after an inner `if` containing a
@@ -5682,7 +5682,7 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   "reset the flag trio" block additionally needed the two walking
   pointers (`p1`/`p2`, one for the first/last field, one for the middle
   four) pinned to `r0`/`r1` to reproduce the ROM's split-register field
-  walk instead of the single-register walk `sub_801426C`/`sub_80144E0`
+  walk instead of the single-register walk `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStandUp`
   get for free with plain code.
 
 Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
@@ -5690,16 +5690,16 @@ Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
 `actor_part18.c`/`actor_part18b.c`):
 
 *Later pass: both are now real C (docs/matching/issue-15-16-17-naked-retry-2.md).
-`sub_801434C` matches under old_agbcc (`actor_part18.o` moved to it) with
-no pins; `sub_80145E4` matches under either compiler once the bit test is
+`ActionCtrlStateCrawl` matches under old_agbcc (`actor_part18.o` moved to it) with
+no pins; `ActionCtrlStateLand` matches under either compiler once the bit test is
 written `if ((flag = ...) != 0)`.*
 
-- **`sub_801434C`** - every load/store, branch and call is confirmed
+- **`ActionCtrlStateCrawl`** - every load/store, branch and call is confirmed
   correct, including the ROM's case-`0`/`2`-before-case-`1` switch
   layout and the shared `_call_via_r3` tail the case-`1` arms reach via
   a `goto` (matching the ROM's own `b _0801446E`/fallthrough sharing,
   with the four call arguments pinned to `r0`-`r3` - see the
-  `sub_80142B0`/`sub_8014524` notes above for the same techniques used
+  `ActionCtrlStateCrawlStart`/`ActionCtrlStateBodySlamLand` notes above for the same techniques used
   successfully elsewhere in this same function). The residual gap is
   purely instruction-*scheduling*: the closing
   `masked = *(u16 *)&snap & 0x180` block's address/constant/load
@@ -5710,8 +5710,8 @@ written `if ((flag = ...) != 0)`.*
   fixed the register choice while losing `u16` truncation semantics on
   later reads (a worse mismatch). Left parked rather than force a
   guess.
-- **`sub_80145E4`** - same shape as `sub_8014524` (boolean-vs-raw-value
-  bit test, `sub_8015780` reset block) but keeps the *raw* masked bit
+- **`ActionCtrlStateLand`** - same shape as `ActionCtrlStateBodySlamLand` (boolean-vs-raw-value
+  bit test, `SetActionCtrlModeAnim` reset block) but keeps the *raw* masked bit
   value (not `!= 0`-normalized) since the ROM reuses the same register
   for both the branch test and the later stores. Every load/store and
   branch matches; the one residual gap is the opening bit-test
@@ -5725,21 +5725,21 @@ written `if ((flag = ...) != 0)`.*
   restructure away.
 
 Left completely untouched (not examined in depth this round):
-`sub_8012FBC`, `sub_8013228`, `sub_80134B8`, `sub_8013994`,
-`sub_8013C60`, `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4`,
-`sub_8014084` (before this cluster) and `sub_8014674` (right after it,
+`ActionCtrlStateRun`, `ActionCtrlStateJump`, `ActionCtrlStateAirborne`, `ActionCtrlStateSlide`,
+`ActionCtrlStateSpin`, `ActionCtrlStateAirSpin`, `ActionCtrlStateTornadoSpin`, `ActionCtrlStateCrouchDown`,
+`ActionCtrlStateCrouch` (before this cluster) and `ActionCtrlStateLeftGround` (right after it,
 now its own raw split file `asm/code_3_2_17_14674.s`) - several of
 these are independently flagged in docs/rom_map.md as among the
 ROM's biggest still-unexplained functions and deserve their own
 focused pass rather than a rushed low-confidence match.
 
 **File structure:** `asm/code_3_2_17.s` (truncated right before
-`sub_801426C`) is followed, in ROM order, by `actor_part18.o`
-(`sub_801426C`/`sub_80142B0`), `code_3_2_17_1434c.s` (raw parked
-`sub_801434C`), `actor_part18b.o` (`sub_80144E0`/`sub_8014524`),
-`code_3_2_17_145e4.s` (raw parked `sub_80145E4`), and finally
+`ActionCtrlStateStandUp`) is followed, in ROM order, by `actor_part18.o`
+(`ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`), `code_3_2_17_1434c.s` (raw parked
+`ActionCtrlStateCrawl`), `actor_part18b.o` (`ActionCtrlStateCrawlStandUp`/`ActionCtrlStateBodySlamLand`),
+`code_3_2_17_145e4.s` (raw parked `ActionCtrlStateLand`), and finally
 `code_3_2_17_14674.s` (the original file's unchanged remainder, from
-`sub_8014674` on) - see `ldscript.txt` and `tools/report_units.py`'s
+`ActionCtrlStateLeftGround` on) - see `ldscript.txt` and `tools/report_units.py`'s
 `graphics` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
 
@@ -6084,7 +6084,7 @@ tail `UpdatePolarCrate`).
 
 **Parked (`NON_MATCHING`, 3):**
 
-- **`sub_802C208`** (`actor_part19e.c`, real bytes in
+- **`RunPolarPlayerState`** (`actor_part19e.c`, real bytes in
   `asm/code_3_2_20_28568_c208.s`) - a `gPolarPlayerStateFuncs` stride-8
   trampoline-record dispatcher (`{s16 baseOff; s16 count; s16
   subOffset}`, count-gated between an inline fallback pair and a
@@ -6131,7 +6131,7 @@ tail `UpdatePolarCrate`).
 **File structure:** `asm/code_3_2_20_28568.s` (truncated right before
 `sub_802BED8`) is followed, in ROM order, by `actor_part19.o`
 (`sub_802BED8`-`DestroyPolarPlayer`), the new raw `code_3_2_20_28568_c208.s`
-(parked `sub_802C208`), `actor_part19e.o` (`sub_802C208`'s
+(parked `RunPolarPlayerState`), `actor_part19e.o` (`RunPolarPlayerState`'s
 `NON_MATCHING`-only twin), `actor_part19f.o` (`sub_802C264`/
 `UpdatePolarCollectedWumpa`), the new raw `code_3_2_20_28568_c2fc.s` (parked
 `DrawPolarCollectedWumpa`), `actor_part19b.o` (its `NON_MATCHING`-only twin),

@@ -8,7 +8,7 @@ extern struct actor_pmf gJetpackPlayerStateFuncs[];
 
 /* Per-state member-pointer dispatch, `(this->*gJetpackPlayerStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`). */
-void sub_802F748(struct actor_self *self)
+void RunJetpackPlayerState(struct actor_self *self)
 {
     ACTOR_PMF_CALL(self, gJetpackPlayerStateFuncs);
 }

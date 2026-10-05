@@ -20,7 +20,7 @@
  * `sub_8017600`). Once the target passes the level's right edge
  * (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked
  * gone and `RequestRoomExit` is signalled. It then dispatches the current
- * `state` through `gStaticData_0816C290`, a table of gcc 2.x
+ * `state` through `gInputCtrlStateFuncs`, a table of gcc 2.x
  * pointer-to-member-functions: state 0 `sub_8017600`, 1 `sub_801796C`,
  * 2 `sub_801793C`, 3 `sub_80178EC`. That call sequence - and the
  * `_call_via_r1`/`AD80`/`AD84` "call via r1/r2/r3" trampolines used for
@@ -163,7 +163,7 @@ extern void *gEntityFlags;
 extern void *gUnknown_030012F0;
 extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
-extern struct pmf gStaticData_0816C290[];
+extern struct pmf gInputCtrlStateFuncs[];
 extern u8 gStaticData_0816B8C0[];
 extern u8 gInputCtrlVtable[];
 
@@ -375,21 +375,21 @@ void UpdateInputCtrl(struct input_ctrl *self)
     }
 
     {
-        s32 idx = gStaticData_0816C290[self->state].index;
+        s32 idx = gInputCtrlStateFuncs[self->state].index;
         struct pmf_entry e;
         void *fn;
 
         if (idx > 0)
         {
-            e = (*(struct pmf_entry **)((u8 *)self + gStaticData_0816C290[self->state].u.vtableOffset))[idx - 1];
+            e = (*(struct pmf_entry **)((u8 *)self + gInputCtrlStateFuncs[self->state].u.vtableOffset))[idx - 1];
             fn = e.fn;
         }
         else
         {
-            fn = gStaticData_0816C290[self->state].u.fn;
+            fn = gInputCtrlStateFuncs[self->state].u.fn;
         }
         {
-            s32 d = gStaticData_0816C290[self->state].delta;
+            s32 d = gInputCtrlStateFuncs[self->state].delta;
             s32 adj;
 
             if (idx > 0)

@@ -22,13 +22,13 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 HasTornadoSpin(void *self);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
-extern u8 sub_8012A7C(struct act *self);
-extern void sub_80152F0(struct act *self, u8 dir);
-extern void sub_8015238(struct act *self, u8 dir, u32 in);
-extern void sub_8015038(struct act *self, s32 id, s32 param);
+extern u8 CheckActionCtrlLeftGround(struct act *self);
+extern void SteerActionCtrlSpin(struct act *self, u8 dir);
+extern void EndActionCtrlSpin(struct act *self, u8 dir, u32 in);
+extern void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param);
 extern void sub_80151C8(struct act *self);
-extern void sub_80134B8(struct act *self);
-extern void sub_8015508(struct act *self);
+extern void ActionCtrlStateAirborne(struct act *self);
+extern void StartActionCtrlHighJump(struct act *self);
 
 /* ActSetNext for the "fire" paths below. There the ROM loads a fresh 1 for
  * +0x30; plain C reuses the 1 of the preceding `pressed & 1` test, which
@@ -51,10 +51,10 @@ static inline void ActSetNextB(struct act *self, s32 next)
 /* Charge-attack step: queues idle (5) once the part leaves contact, jumps
  * to action 7 on fire during contact bit 3, counts alt presses into
  * +0x20 (max 3), and at the animation's end either releases the charge
- * (sub_8015038) or hands off to sub_8015238. The handlers below load
+ * (StartActionCtrlTornadoSpin) or hands off to EndActionCtrlSpin. The handlers below load
  * GetDpadDirection's argument before taking the input snapshot, hence the
  * `pad` local. */
-void sub_8013C60(struct act *self)
+void ActionCtrlStateSpin(struct act *self)
 {
     u32 in;
     u8 dir;
@@ -85,17 +85,17 @@ void sub_8013C60(struct act *self)
         if (++self->charge > 3)
             self->charge = 3;
     }
-    sub_80152F0(self, dir);
+    SteerActionCtrlSpin(self, dir);
     if (++self->frame >= self->frames || self->part->animDone)
     {
         if (self->charge)
-            sub_8015038(self, 0xF, 0xD);
+            StartActionCtrlTornadoSpin(self, 0xF, 0xD);
         else
-            sub_8015238(self, dir, in);
+            EndActionCtrlSpin(self, dir, in);
     }
 }
 
-void sub_8013D94(struct act *self)
+void ActionCtrlStateAirSpin(struct act *self)
 {
     u32 in;
     struct act_part *part;
@@ -111,7 +111,7 @@ void sub_8013D94(struct act *self)
         self->next32 = 0;
         self->flag30 = 1;
         self->next28 = 0;
-        sub_8013C60(self);
+        ActionCtrlStateSpin(self);
         return;
     }
     if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
@@ -134,7 +134,7 @@ void sub_8013D94(struct act *self)
         charge = self->charge;
         if (charge)
         {
-            sub_8015038(self, 0xE, 0xE);
+            StartActionCtrlTornadoSpin(self, 0xE, 0xE);
         }
         else
         {
@@ -146,10 +146,10 @@ void sub_8013D94(struct act *self)
         }
     }
 done:
-    sub_80134B8(self);
+    ActionCtrlStateAirborne(self);
 }
 
-void sub_8013EAC(struct act *self)
+void ActionCtrlStateTornadoSpin(struct act *self)
 {
     u32 in;
     u8 dir;
@@ -186,12 +186,12 @@ void sub_8013EAC(struct act *self)
         if (++self->charge > 3)
             self->charge = 3;
     }
-    sub_80152F0(self, dir);
+    SteerActionCtrlSpin(self, dir);
     if (++self->frame >= self->frames || self->part->animDone)
-        sub_8015038(self, 0xF, 0xD);
+        StartActionCtrlTornadoSpin(self, 0xF, 0xD);
 }
 
-void sub_8013FD4(struct act *self)
+void ActionCtrlStateCrouchDown(struct act *self)
 {
     u32 in;
     s32 fire;
@@ -204,7 +204,7 @@ void sub_8013FD4(struct act *self)
         PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
-        sub_8015508(self);
+        StartActionCtrlHighJump(self);
         return;
     }
     if (self->part->contact == 8 && (u8)(self->next28 - 4) <= 1)
@@ -221,8 +221,8 @@ void sub_8013FD4(struct act *self)
 }
 
 /* On the "confirm" edge (sub_800AAEC(part, 0xB)) hands off to
- * sub_8015508 like sub_80142B0 (actor_part18.c); otherwise, unless
- * sub_8012A7C reports busy, turns the part to face the D-pad direction
+ * StartActionCtrlHighJump like ActionCtrlStateCrawlStart (actor_part18.c); otherwise, unless
+ * CheckActionCtrlLeftGround reports busy, turns the part to face the D-pad direction
  * (setting +0x2F), starts a walk (action 3) on a horizontal direction,
  * and - with neither shoulder button held - either starts action 2 on a
  * sub_800AAEC(part, 2) hit or falls back to idle.
@@ -240,7 +240,7 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
     self->next27 = next;
 }
 
-void sub_8014084(struct act *self)
+void ActionCtrlStateCrouch(struct act *self)
 {
     u32 in;
     u8 dir;
@@ -258,10 +258,10 @@ void sub_8014084(struct act *self)
         PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
-        sub_8015508(self);
+        StartActionCtrlHighJump(self);
         return;
     }
-    if (sub_8012A7C(self))
+    if (CheckActionCtrlLeftGround(self))
         return;
 
     turned = 0;

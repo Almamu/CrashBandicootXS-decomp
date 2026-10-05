@@ -146,7 +146,7 @@ its one function moved to the new `src/graphics/actor_part27a.c`),
 keeping the ROM's own `_0XXXXXXX` hex-address labels verbatim as plain,
 file-local asm symbols (safe since each is a unique ROM address) - the
 same approach `actor_part82.c`'s `ActionCtrlHandleEvent`, `actor_part_12fbc.c`'s
-five functions, and `actor_part18.c`'s `sub_801434C` all already use.
+five functions, and `actor_part18.c`'s `ActionCtrlStateCrawl` all already use.
 Register/argument roles for every external call (`_call_via_r2`/
 `_call_via_r3`/`_call_via_r1`/`_call_via_r4`'s base+offset+fn-pointer
 trampoline convention, `GetSpriteHitbox`/`CollidePartList`'s AABB-relocate-then-
