@@ -224,7 +224,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part83.o \
                   $(C_BUILDDIR)/graphics/actor_part84.o \
                   $(C_BUILDDIR)/graphics/actor_part86.o \
-                  $(C_BUILDDIR)/graphics/actor_part89.o \
                   $(C_BUILDDIR)/graphics/actor_part86b.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
                   $(C_BUILDDIR)/graphics/actor_part_12fbc.o \
@@ -242,7 +241,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/menus/level_select.o \
                   $(C_BUILDDIR)/menus/level_select_pages.o \
                   $(C_BUILDDIR)/menus/level_select_widgets.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1dfec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1e990.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1ea5c.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1ef0c.o \
@@ -250,7 +248,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1feec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
                   $(C_BUILDDIR)/frontend/title_screen.o \
                   $(C_BUILDDIR)/frontend/company_logos.o \
                   $(C_BUILDDIR)/gfx/graphics_package.o \

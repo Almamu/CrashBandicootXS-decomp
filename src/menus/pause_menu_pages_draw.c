@@ -1,5 +1,8 @@
 #include "core.h"
 #include "bitmap_font.h"
+#include "gba/defines.h"
+#include "actor.h"
+#include "pause_menu.h"
 
 /* The three functions below are companion "draw a label centered on an
  * icon widget" steps. Once NAKED transcriptions; they match as plain C
@@ -8,25 +11,13 @@
  * with `this` computed before the label argument - see
  * docs/matching/issue-4-6-8-naked-retry.md. */
 
-/* Same "results" sub-region self object `settings_menu6.c`'s
- * `struct pause_menu` documents (`field_6c`/`field_bc`/
- * `timeBuf` all line up) - the medal-icon-widget's (`InitPauseTimeTrialPage`)
+/* DrawPauseTimeTrialPage, below, takes the `struct pause_menu`
+ * (include/pause_menu.h; `field_6c`/`field_bc`/`timeBuf`) - the medal-icon-widget's (`InitPauseTimeTrialPage`)
  * companion label draw: formats `self->timeBuf` (already filled in by
  * InitPauseTimeTrialPage) centered on the medal icon via the shared
  * `gSmallFont` icon manager, using the same fixed
  * `gPauseTimeTrialIconPos` position pair InitPauseTimeTrialPage itself positions
  * the icon with. */
-struct pause_menu {
-    u8 unused_00[0x2c];
-    u8 buf2c[0x46 - 0x2c];
-    u8 buf46[0x6c - 0x46];
-    u8 field_6c;
-    u8 unused_6d[0x7c - 0x6d];
-    u8 timeBuf[0xc];
-    void *field_88;
-    u8 unused_8c[0xbc - 0x8c];
-    void *field_bc;
-};
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
@@ -55,14 +46,6 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
         _call_via_r2((u8 *)_m + _r->slots[2].offset, (s32)(label), _r->slots[2].ptr); \
     }
 
-/* A fixed {x, y} screen-position pair, as consumed by _call_via_r2's
- * callers here - same shape settings_menu6.c's own `struct icon_pos`
- * documents (kept as a separate local type per this project's
- * minimal-local-type convention). */
-struct icon_pos {
-    s32 x;
-    s32 y;
-};
 extern struct icon_pos gPauseTimeTrialIconPos;
 
 void DrawPauseTimeTrialPage(struct pause_menu *self)
@@ -115,4 +98,46 @@ void DrawPauseMenuPageTitle(struct pause_screen_category_state *self)
 
     set_icon_mgr_pos(gSmallFont, 0xc2 - (w >> 1), 0x2c);
     DRAW_ICON_TEXT(gSmallFont, label);
+}
+
+/* The composite pause/options screen's "apply display registers" step
+ * for its own top-level object - see include/pause_menu.h for
+ * the full reconciled struct (this function only touches field_c8/
+ * field_cc/field_d0). Distinct from - and much larger than -
+ * `struct sub_8006700_actor` (src/graphics/oam_count.c/settings_menu10.c),
+ * which is the smaller per-widget object `src/graphics/oam_count.c`'s
+ * already-matched `CommitPowerDialogFrame` uses for the same job at different
+ * offsets. */
+
+extern void WaitForVBlank(void *arg0);
+extern void UploadPaletteCache(void *arg0);
+extern void CommitOamBuffer(void *arg0);
+extern void FlushVramDmaQueue(void);
+extern void *gPaletteCache;
+extern void *gOamBuffer;
+
+/* `self->field_d0`'s read+store is deliberately routed through an
+ * inline-asm-computed address pinned to `r0` rather than a plain
+ * `self->field_d0` field access: with the latter, this compiler
+ * recognizes `self` (r4) is dead after this point and folds the
+ * address computation directly into r4 (saving a `mov`), one
+ * instruction shorter than the ROM's fresh r0 computation - the ROM
+ * never performs this particular reuse here (though it does for the
+ * `field_c8`/`field_cc` accesses just above, which this reconstruction
+ * gets for free from plain field access). */
+void CommitPauseMenuFrame(struct pause_menu *self)
+{
+    WaitForVBlank(self);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
+    FlushVramDmaQueue();
+    *(vu16 *)PLTT = 0;
+    *(vu32 *)REG_ADDR_BLDCNT = self->field_c8;
+    *(vu16 *)REG_ADDR_BLDY = (u32)(self->field_cc << 27) >> 27;
+    {
+        register u16 *p asm("r0");
+        vu16 *dst = (vu16 *)REG_ADDR_DISPCNT;
+        asm("add %0, %1, #0\n\tadd %0, %0, #0xd0" : "=r" (p) : "r" (self));
+        *dst = *p;
+    }
 }
