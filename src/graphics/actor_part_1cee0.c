@@ -10,9 +10,9 @@
  *   animation (LevelSelectTurnPage, driven by the Down/Up handlers LevelSelectPrevWorld/
  *   LevelSelectNextWorld), the frame loops of the A (LevelSelectConfirm) and Start
  *   (LevelSelectExit) exits, the "previous/next page open" tests, and the
- *   per-page entry refresh (sub_801D5CC/sub_801D638/sub_801D668, also
+ *   per-page entry refresh (PlaceLevelSelectEntries/LoadLevelSelectEntries/SetLevelSelectEntryBoxes, also
  *   inlined into LevelSelectTurnPage).
- * - sub_801D77C-CreateLevelSelectPageBg: `struct page_bg`, BG1 - the page strip whose
+ * - GetLevelSelectPageBgScroll-CreateLevelSelectPageBg: `struct page_bg`, BG1 - the page strip whose
  *   vertical scroll eases 8 per frame toward a Q8 target (0x100 = one
  *   page).
  * - InitZoomBg: `struct zoom_bg`'s constructor, BG2 - clears its screen
@@ -20,7 +20,7 @@
  *   (mirrored per corner).
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/ and no Thumb
- * pointer anywhere in the ROM: sub_801D698. Matched anyway.
+ * pointer anywhere in the ROM: CommitLevelSelectFrame. Matched anyway.
  *
  * Compiled with old_agbcc (see OLD_AGBCC_OBJS in the Makefile and
  * docs/matching/issue-27-level-select-pages.md): it builds the constant
@@ -71,7 +71,7 @@ extern void StartZoomBgExit(struct zoom_bg *p);
 extern void ClearZoomBgPicture(struct zoom_bg *p);
 extern void RandomizeZoomBgTwinkle(struct zoom_bg *p, struct twinkle *slot);
 extern u16 GetZoomBgControl(struct zoom_bg *p);
-extern void sub_801DEA0(struct item *it, s32 arg);
+extern void SetLevelSelectEntrySelected(struct item *it, s32 arg);
 extern void SetLevelSelectEntryBox(struct item *it, u32 arg);
 extern void UpdateLevelSelectCursor(void *panel);
 extern void HideLevelSelectCursor(void *panel);
@@ -79,12 +79,12 @@ extern u8 HasLevelSelectCursorArrived(void *panel);
 extern void MoveLevelSelectCursor(void *panel, s32 x, s32 y);
 extern u16 GetBgSetupControl(void *p);
 
-s32 sub_801D77C(struct page_bg *p);
-u8 sub_801D780(struct page_bg *p);
-void sub_801D790(struct page_bg *p);
-void sub_801D79C(struct page_bg *p);
+s32 GetLevelSelectPageBgScroll(struct page_bg *p);
+u8 IsLevelSelectPageBgSettled(struct page_bg *p);
+void TurnLevelSelectPageBgBack(struct page_bg *p);
+void TurnLevelSelectPageBgForward(struct page_bg *p);
 void ScrollLevelSelectPageBg(struct page_bg *p);
-u32 sub_801D7D0(struct page_bg *p);
+u32 GetLevelSelectPageBgOffsets(struct page_bg *p);
 void WaitLevelSelectCursor(struct level_menu *self);
 u8 LevelSelectHasPrevWorld(struct level_menu *self);
 u8 LevelSelectIsNextWorldOpen(struct level_menu *self);
@@ -101,7 +101,7 @@ static inline void CommitDisplay(struct level_menu *self)
     CommitZoomBg(self->bg2);
     self->scroll++;
     *(vu16 *)REG_ADDR_BG0HOFS = self->scroll >> 3;
-    *(vu32 *)REG_ADDR_BG1HOFS = sub_801D7D0(self->bg1);
+    *(vu32 *)REG_ADDR_BG1HOFS = GetLevelSelectPageBgOffsets(self->bg1);
     *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
     *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     *(vu16 *)PLTT = 0;
@@ -119,7 +119,7 @@ static inline void BeginFrame(struct level_menu *self)
     CommitDisplay(self);
 }
 
-/* sub_801D638: load every entry of the current page. */
+/* LoadLevelSelectEntries: load every entry of the current page. */
 static inline void LoadItems(struct level_menu *self)
 {
     s32 i;
@@ -133,7 +133,7 @@ static inline void LoadItems(struct level_menu *self)
     }
 }
 
-/* sub_801D5CC: pick the cursor layout (six slots once all five levels
+/* PlaceLevelSelectEntries: pick the cursor layout (six slots once all five levels
  * of the page are cleared) and place every entry. */
 static inline void PlaceItems(struct level_menu *self)
 {
@@ -172,7 +172,7 @@ static inline void PlaceItems(struct level_menu *self)
     }
 }
 
-/* sub_801D668. */
+/* SetLevelSelectEntryBoxes. */
 static inline void SkinItems(struct level_menu *self)
 {
     s32 i;
@@ -186,12 +186,12 @@ static inline void SkinItems(struct level_menu *self)
  * entries over to the new page. */
 void LevelSelectTurnPage(struct level_menu *self)
 {
-    while (!sub_801D780(self->bg1))
+    while (!IsLevelSelectPageBgSettled(self->bg1))
     {
         BeginFrame(self);
         ScrollLevelSelectPageBg(self->bg1);
         UpdateLevelSelectCursor(self->panel);
-        if ((sub_801D77C(self->bg1) & 0xFF) == 0xA0)
+        if ((GetLevelSelectPageBgScroll(self->bg1) & 0xFF) == 0xA0)
         {
             LoadItems(self);
             PlaceItems(self);
@@ -218,7 +218,7 @@ void LevelSelectConfirm(struct level_menu *self)
     s32 t;
 
     PlaySfx(gAudioContext, 0x52, 0x100);
-    sub_801DEA0(self->items[self->index], 0);
+    SetLevelSelectEntrySelected(self->items[self->index], 0);
     MoveLevelSelectCursor(self->panel, 0x78, 0x35);
     HideLevelSelectCursor(self->panel);
     WaitLevelSelectCursor(self);
@@ -344,7 +344,7 @@ void LevelSelectPrevWorld(struct level_menu *self)
         goto check;
     loop:
         self->world--;
-        sub_801D790(self->bg1);
+        TurnLevelSelectPageBgBack(self->bg1);
         LevelSelectTurnPage(self);
         UpdateKeys(gInput);
         if (!(gKeys & DPAD_DOWN))
@@ -372,7 +372,7 @@ void LevelSelectNextWorld(struct level_menu *self)
         goto check;
     loop:
         self->world++;
-        sub_801D79C(self->bg1);
+        TurnLevelSelectPageBgForward(self->bg1);
         LevelSelectTurnPage(self);
         UpdateKeys(gInput);
         if (!(gKeys & DPAD_UP))
@@ -389,24 +389,24 @@ void LevelSelectNextWorld(struct level_menu *self)
     }
 }
 
-void sub_801D5CC(struct level_menu *self)
+void PlaceLevelSelectEntries(struct level_menu *self)
 {
     PlaceItems(self);
 }
 
-void sub_801D638(struct level_menu *self)
+void LoadLevelSelectEntries(struct level_menu *self)
 {
     LoadItems(self);
 }
 
-void sub_801D668(struct level_menu *self)
+void SetLevelSelectEntryBoxes(struct level_menu *self)
 {
     SkinItems(self);
 }
 
 /* UNUSED - no caller anywhere in the ROM. One frame of the screen
  * without the menu's own update. */
-void sub_801D698(struct level_menu *self)
+void CommitLevelSelectFrame(struct level_menu *self)
 {
     WaitForVBlank();
     UploadPaletteCache(gPaletteCache);
@@ -423,15 +423,15 @@ void ReloadLevelSelectPalette(struct level_menu *self)
     ClaimPaletteSlot(gPaletteCache, 0xF);
     for (i = 0; i <= 7; i++)
         self->sprites[i]->palette = GetSpriteAnimPaletteSlot(self->sprites[i]);
-    sub_801D668(self);
+    SetLevelSelectEntryBoxes(self);
 }
 
-s32 sub_801D77C(struct page_bg *p)
+s32 GetLevelSelectPageBgScroll(struct page_bg *p)
 {
     return p->scroll;
 }
 
-u8 sub_801D780(struct page_bg *p)
+u8 IsLevelSelectPageBgSettled(struct page_bg *p)
 {
     u8 r = 0;
 
@@ -440,12 +440,12 @@ u8 sub_801D780(struct page_bg *p)
     return r;
 }
 
-void sub_801D790(struct page_bg *p)
+void TurnLevelSelectPageBgBack(struct page_bg *p)
 {
     p->target += 0x100;
 }
 
-void sub_801D79C(struct page_bg *p)
+void TurnLevelSelectPageBgForward(struct page_bg *p)
 {
     p->target -= 0x100;
 }
@@ -461,12 +461,12 @@ void ScrollLevelSelectPageBg(struct page_bg *p)
 }
 
 /* BG1HOFS and BG1VOFS as one word. */
-u32 sub_801D7D0(struct page_bg *p)
+u32 GetLevelSelectPageBgOffsets(struct page_bg *p)
 {
     return *(u32 *)&p->hofs;
 }
 
-void sub_801D7D4(struct page_bg *p)
+void SetLevelSelectPageBgOffsets(struct page_bg *p)
 {
     p->hofs = 8;
     p->vofs = p->scroll + 0x30;

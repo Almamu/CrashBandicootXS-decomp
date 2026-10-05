@@ -40,12 +40,12 @@ static inline void ActSetNextB(struct act *self, s32 next)
     register s32 one asm("r0");
     register u8 *flag asm("r1");
 
-    self->next32 = 0;
-    flag = &self->flag30;
+    self->motionYKeepSpeed = 0;
+    flag = &self->motionYPending;
     one = 1;
     asm("" : "+r"(one));
     *flag = one;
-    self->next28 = next;
+    self->motionY = next;
 }
 
 /* Charge-attack step: queues idle (5) once the part leaves contact, jumps
@@ -108,9 +108,9 @@ void ActionCtrlStateAirSpin(struct act *self)
         ActOrFlags0D(part, 1);
         self->unk_34 = 0;
         ACT_VCALL1(self, m20, 0xD);
-        self->next32 = 0;
-        self->flag30 = 1;
-        self->next28 = 0;
+        self->motionYKeepSpeed = 0;
+        self->motionYPending = 1;
+        self->motionY = 0;
         ActionCtrlStateSpin(self);
         return;
     }
@@ -207,11 +207,11 @@ void ActionCtrlStateCrouchDown(struct act *self)
         StartActionCtrlHighJump(self);
         return;
     }
-    if (self->part->contact == 8 && (u8)(self->next28 - 4) <= 1)
+    if (self->part->contact == 8 && (u8)(self->motionY - 4) <= 1)
     {
-        self->next32 = fire;
-        self->flag30 = 1;
-        self->next28 = fire;
+        self->motionYKeepSpeed = fire;
+        self->motionYPending = 1;
+        self->motionY = fire;
     }
     if (self->part->animDone)
     {
@@ -235,9 +235,9 @@ void ActionCtrlStateCrouchDown(struct act *self)
  * docs/matching/issue-15-16-17-naked-retry-2.md. */
 static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 void ActionCtrlStateCrouch(struct act *self)
@@ -272,7 +272,7 @@ void ActionCtrlStateCrouch(struct act *self)
 
         m &= *p;
         *p = m;
-        self->flag2F = 1;
+        self->motionXPending = 1;
         turned = 1;
         goto turn_done;
     }
@@ -292,7 +292,7 @@ void ActionCtrlStateCrouch(struct act *self)
             m |= 0x10;
             *p = m;
         }
-        self->flag2F = turned;
+        self->motionXPending = turned;
     }
 turn_done:
 
@@ -324,20 +324,20 @@ turn_done:
             {
                 ACT_VCALL1(self, m20, 0x12);
                 ACT_VCALL2(self, m50, self->part, 2);
-                self->next31 = held;
-                self->flag2F = hit;
-                self->next27 = held;
+                self->motionXKeepSpeed = held;
+                self->motionXPending = hit;
+                self->motionX = held;
             }
             else if (!moved)
             {
                 ACT_VCALL1(self, m20, 0x11);
                 ACT_VCALL2(self, m50, self->part, 4);
-                self->next31 = moved;
-                self->flag2F = 1;
-                self->next27 = moved;
-                self->next32 = moved;
-                self->flag30 = 1;
-                self->next28 = moved;
+                self->motionXKeepSpeed = moved;
+                self->motionXPending = 1;
+                self->motionX = moved;
+                self->motionYKeepSpeed = moved;
+                self->motionYPending = 1;
+                self->motionY = moved;
             }
         }
     }

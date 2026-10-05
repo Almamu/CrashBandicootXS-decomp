@@ -187,7 +187,7 @@ struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, 
 /* Same early-out and `+0x49`/`+0x4a`/`+0x4b` tagging shape as
  * `DropExtraLife` (game_loop29.c), but spawns via `CreateWumpa` with a
  * "special" 4th argument (`0xFFFF` when `p5` is set or `p4 == 0xff`,
- * `0` otherwise) and fires `sub_801191C`/`SendWumpaToHud` instead of
+ * `0` otherwise) and fires `StartWumpaPayout`/`SendWumpaToHud` instead of
  * `SendExtraLifeToHud`.
  *
  * `p5` is read as the low byte of its stack word (the ROM's ldrb), and
@@ -198,7 +198,7 @@ struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, 
  * after the +0x49 address instead of being hoisted above it. */
 extern struct level_state14 { u8 unk_00[0x8C]; u8 timeTrial; } *gLevelState;
 extern struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special);
-extern void sub_801191C(struct orbit_part *self);
+extern void StartWumpaPayout(struct orbit_part *self);
 extern void SendWumpaToHud(struct orbit_part *self);
 
 struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 flag5)
@@ -225,7 +225,7 @@ struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 fl
             *t = zero;
         }
         if (p4 == 0xff)
-            sub_801191C(part);
+            StartWumpaPayout(part);
         if (p5)
             SendWumpaToHud(part);
     }

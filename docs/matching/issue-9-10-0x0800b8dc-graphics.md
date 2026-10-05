@@ -68,7 +68,7 @@ identical apparent roles:
 | `0x2D` | table row index, paired with a `+0x20` table pointer at 28-byte stride (`BreakCrateTouchedByPlayer`'s own "keyframe/hitbox record" convention) |
 | `0x30`/`0x34` | a "blocking condition" pair - compared against small magic constants (`8`, `9`, `0xA`) and `0`; non-zero gates several states off entirely |
 | `0x38` | an "enabled"/"active" byte gating most `self+0x68`-dispatch siblings' real work |
-| `0x48`/`0x4C`/`0x50` and `0x54`/`0x58`/`0x5C` | X-axis and Y-axis "velocity-target" triples respectively - written by `UpdateEnemyHomingX` (X) / `UpdateEnemyHomingY` (Y), the same `self+0x60`/`+0x48`/`+0x4C`/`+0x50` "directional-target field" layout `docs/rom_map.md` already ties to `UpdatePlatformMover`/`sub_80159F8`/`HitEnemy` |
+| `0x48`/`0x4C`/`0x50` and `0x54`/`0x58`/`0x5C` | X-axis and Y-axis "velocity-target" triples respectively - written by `UpdateEnemyHomingX` (X) / `UpdateEnemyHomingY` (Y), the same `self+0x60`/`+0x48`/`+0x4C`/`+0x50` "directional-target field" layout `docs/rom_map.md` already ties to `UpdatePlatformMover`/`StartPlayerCtrlStroke`/`HitEnemy` |
 | `0x60`/`0x64` | current velocity/position-delta pair |
 | `0x68` | a small-integer sub-state byte - the *exact* field `UpdateEnemyAttackCycle`'s own independent 6-case dispatcher already uses (`docs/rom_map.md`: "the *exact* field offset `UpdateEnemyCtrl`'s 18-state... machine also uses") |
 | `0x6C` | a second, larger-range state/anim-id byte (values seen: `0xF`, `0x12`, `0x17`, `0x1A`, `0x1E`, `0x21`...) |
@@ -758,7 +758,7 @@ tempted to re-attempt them:
   position, materialize the "clear that bit" mask via a
   `movs #imm; rsbs r,r,#0` negate-trick, AND, OR - all as one shared
   tail, matching the exact shape `src/graphics/actor_part27c.c`'s
-  `sub_8018884` doc comment already documents needing heavy register
+  `UpdateOneShotAnimCtrl` doc comment already documents needing heavy register
   pinning for on a related idiom). Every C rephrasing tried (nested
   ternary, a separate `bit = cond ? 0 : 1;` statement, full if/else
   with separate per-branch stores) got a *different* but still-
@@ -810,13 +810,13 @@ question in favor of 1. And `self+0xc` (the "anchor" record every
 constructed through this path shares the same anchor record, not a
 per-instance one. Matches the exact "reset via `InitCtrl`, re-point
 `self+0xc`, return `self`" shape already established for sibling
-constructors `sub_801886C`/`sub_8018858`.
+constructors `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`.
 
 **Still not attempted**: `UpdateEnemyShooter` (~204B, a further
 `self+0x68`/`0x74`-style dispatcher per `docs/rom_map.md`'s existing
 note) and `UpdateEffectCtrl` (~208B, three repetitions of the "flag active +
 bitmap-set" idiom gated behind a hit-probe and two more flag tests -
-the same idiom `sub_8018884`'s doc comment already documents as
+the same idiom `UpdateOneShotAnimCtrl`'s doc comment already documents as
 needing heavy register pinning, here appearing three times over) -
 both left raw for time-budget reasons, not because they were found
 resistant. Good next targets given `SetEnemyMotionY`/`SetEnemyMotionX`/
@@ -1142,7 +1142,7 @@ this doc.
   (`other->0xc |= 1`, then, unless `other`'s `+8` id sentinel-checks as
   `0xFFFF`, sets bit `other->8 & 0x1f` of word `other->8 >> 5` in the
   `gEntityFlags+0x108` bitmap - the exact idiom `actor_part27c.c`'s
-  `sub_8018884` already matches as real C) **three times**, each
+  `UpdateOneShotAnimCtrl` already matches as real C) **three times**, each
   independently gated: once when a `_call_via_r1(other + offset, fn)`
   hit-probe - reading its `{s16 offset, void *fn}` pair from
   `other->table+0x28`/`+0x2c`, the exact shape
@@ -1158,11 +1158,11 @@ this doc.
 - **`DestroyEffectCtrl(void *self, s32 flags)`** (20 B) - sets `self+0xc`'s
   table pointer to `gEffectCtrlVtable`, then tail-calls
   `DestroyCtrl(self, flags)` - the exact same "double-set" constructor
-  shape as `sub_8018858`/`sub_8017A78`/`sub_8017FD4`.
+  shape as `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`.
 - **`InitEffectCtrl(void *self)`** (32 B) - resets via `InitCtrl`,
   re-points `self+0xc` at the same `gEffectCtrlVtable` table, calls
   `nullsub_3(self)`, returns `self` - the exact same "reset, re-point,
-  return self" constructor shape as `sub_801886C`/`sub_8018858`/
+  return self" constructor shape as `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
   `CreateKnockedEnemyCtrl`, with `nullsub_3` playing the same tail-call-hook role
   `nullsub_14` plays for `CreateKnockedEnemyCtrl`.
 
@@ -1175,7 +1175,7 @@ physics/collision boundary
 Reading its body settles this: it is a plain entity-object constructor
 (reset + table re-point + `nullsub_3` hook + return `self`), structurally
 identical to three other constructors already confirmed part of this
-same 93-vtable entity-object family (`sub_801886C`, `sub_8018858`,
+same 93-vtable entity-object family (`CreateStompedHopPadCtrl`, `DestroyStompedHopPadCtrl`,
 `CreateKnockedEnemyCtrl`) and with none of the physics subsystem's own
 characteristic shapes (no AABB build, no neighbor-list walk, no
 `self+0x4d`/`+0x4e`/`+0x50` field access `BreakCrateTouchedByPlayer`'s own doc
@@ -1189,7 +1189,7 @@ starts.
 ### Matching
 
 `UpdateEffectCtrl` closed as hand-transcribed **NAKED** asm - `actor_part27c.c`'s
-`sub_8018884` doc comment already documents this exact "flag active +
+`UpdateOneShotAnimCtrl` doc comment already documents this exact "flag active +
 bitmap-set" idiom needing heavy `register asm` pinning and a `volatile`
 reload to match even a *single* occurrence (defeating this compiler's
 CSE and shift-instruction folding otherwise); `UpdateEffectCtrl` inlines the
@@ -1250,7 +1250,7 @@ use, but here against `gRoomFrameCount` read as a **plain word**
 self->0x48)`), not the table-base-pointer role `UpdateEnemyAttackCycle` uses that
 same still-unexplained global in. This is a fourth confirmed
 "multi-shaped" site for `gRoomFrameCount` (joining the "plain word"
-sites `sub_8016C94`/`MovePlayerWithPlatform` and the "table base pointer" site
+sites `PlayerCtrlStateStroke`/`MovePlayerWithPlatform` and the "table base pointer" site
 `UpdateEnemyAttackCycle` already flagged in `docs/rom_map.md`).
 
 - **Check passes (result `0`)**: `self->0x68 == 0` triggers
@@ -1365,9 +1365,9 @@ idiom already matched elsewhere in this cluster:
   then tail-call `DestroyCtrl`, which unconditionally resets
   `self+0xc` right back to `gCtrlVtable` regardless - the same
   harmless dead-store double-set pattern already established for
-  `sub_8018858`/`sub_8017A78`/`sub_8017FD4`/`DestroyEffectCtrl`.
+  `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`/`DestroyEffectCtrl`.
 - **`CreateEnemyCtrl(self)`**: the "reset, re-point, hook, return self"
-  constructor shape already matched for `sub_801886C`/`sub_8018858`/
+  constructor shape already matched for `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
   `CreateKnockedEnemyCtrl`/`InitEffectCtrl` - resets via `InitCtrl`, re-points
   `self+0xc` at `gEnemyCtrlVtable`, calls `ResetEnemyCtrl` above (its
   own hook), returns `self`.
@@ -1423,7 +1423,7 @@ idiom already matched elsewhere in this cluster:
   bitmap-set" idiom on `other` (`other+0xc` bit 0; unless `other+8`'s
   id sentinel-checks as `0xffff`, also sets its bit in the
   `gEntityFlags+0x108` bitmap) - the exact idiom
-  `actor_part27c.c`'s `sub_8018884` already matches as real C.
+  `actor_part27c.c`'s `UpdateOneShotAnimCtrl` already matches as real C.
 - **`nullsub_14(self)`**: genuine empty stub (`bx lr`) - `CreateKnockedEnemyCtrl`'s
   own tail-call hook, per that function's own doc comment.
 
@@ -1457,7 +1457,7 @@ established `[[matching_decomp_register_pinning]]` toolbox:
   picked a spare `r3` for it instead, a harmless but byte-different
   register choice from the ROM's own `ldr r4, [r4, #0x1c]`.
 - **`UpdateKnockedEnemyCtrl`**: needed the same register-pinning chain
-  `actor_part27c.c`'s `sub_8018884` doc comment already documents for
+  `actor_part27c.c`'s `UpdateOneShotAnimCtrl` doc comment already documents for
   this exact "flag active + bitmap-set" idiom - `other` pinned to
   `r4` (matching the ROM's own choice, freed up again by the time the
   bitmap-set idiom's own `0x108`-offset computation reuses it), plus

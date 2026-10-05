@@ -3,18 +3,18 @@
 
 /* GitHub issue #19: continuation of actor_part57.c's chunk
  * (0x08015840-0x08016128), non-adjacent since the left-raw
- * `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` (asm/code_3_2_17_159f8.s)
+ * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` (asm/code_3_2_17_159f8.s)
  * sit between them - see docs/matching/issue-19-0x08015840-actor.md.
  * This is the chunk's last matched function; `sub_8016046` right after
  * it in the ROM is disassembler-rendered padding (a zero halfword
  * between this function's 106-byte body and the next 4-byte-aligned
- * function, `sub_8016048`, itself left raw) - not real code, has no
+ * function, `CheckPlayerCtrlTurn`, itself left raw) - not real code, has no
  * caller or symbol reference anywhere in the tree, and is reproduced
  * automatically by this file's own trailing `asm(".align 2, 0")`
  * without needing its own C function (see docs/matching.md's
  * `GetEntityPixelY` entry for the established precedent: a disassembler-
  * rendered `movs r0, r0` at a function gap is usually just a zero-fill
- * halfword, not a literal instruction). `sub_8016048` continues in
+ * halfword, not a literal instruction). `CheckPlayerCtrlTurn` continues in
  * asm/code_3_2_17_16048.s. */
 
 
@@ -24,7 +24,7 @@
  * `gPlayer` record (`velB`, +0x54/+0x58/+0x5c) gets the computed
  * value or a product-sign-selected combination of `arg1`/the computed
  * value. */
-void sub_8015FDC(s32 arg0, s32 arg1arg, s32 arg2arg)
+void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
 {
     register s32 self asm("r6") = arg0;
     register s32 arg1 asm("ip") = arg1arg;

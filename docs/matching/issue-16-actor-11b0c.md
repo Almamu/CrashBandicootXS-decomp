@@ -68,23 +68,23 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   `actor_part12.c`/`actor_part13.c`) on `self` via `_call_via_r1`.
   Matched directly, no register-pinning needed - the natural ABI
   register choice already matched the ROM.
-- **`sub_8011A50`**: sets `self->x`/`self->y` (Q8) from raw pixel
+- **`SetWumpaPos`**: sets `self->x`/`self->y` (Q8) from raw pixel
   `x`/`y`, then mirrors the *stored* value (not the just-computed
   local) into a second `{x, y}` pair at `self+0x4c`/`+0x50` - the ROM
   reloads both fields from memory after storing them rather than
   reusing the shifted register value, so the reconstruction reads them
   back through `volatile` pointers into fresh locals before the second
   pair of stores.
-- **`sub_8011A64`**: sets `self+0x4a`/`+0x4b` via a single walked `u8 *`
+- **`SetWumpaHop`**: sets `self+0x4a`/`+0x4b` via a single walked `u8 *`
   (incremented between the two stores, matching the ROM's own
   `adds r2, #1` pointer-walk rather than two independent offset
-  computations), and calls `sub_801191C` (still raw, just above this
+  computations), and calls `StartWumpaPayout` (still raw, just above this
   ROM region) if `value == 0xff`. The incoming `value` parameter is
   `s32`, not `u8` - a narrower type made the compiler insert an
   entry-sequence truncation (`lsl`/`lsr` pair) the ROM never has, since
   the original C evidently never narrowed it either (the whole
   parameter is compared and stored as-is).
-- **`sub_8011A84`**: trivial one-byte setter at `self+0x49`.
+- **`SetWumpaCounter`**: trivial one-byte setter at `self+0x49`.
 - **`UpdateStopwatch`**: distance-gate - if the player is within 0x180
   (384 px) of `self` on both axes, calls `UpdateSpriteObj` (already
   matched, `actor_part5.c`); otherwise sets `self->flags` bit 0 and,
@@ -106,12 +106,12 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 - **`CreateStopwatch`**: constructor - allocates a `struct actor`-shaped
   object (`OperatorNew(0x40)`, same size as `CreateSpriteObj`'s constructor
   in `actor_part6.c`), re-inits it, sets `table = gStopwatchVtable`,
-  runs the empty `nullsub_16` on it, then sets `field_08`/`x`/`y` from
+  runs the empty `ResetStopwatch` on it, then sets `field_08`/`x`/`y` from
   the raw pixel arguments.
-- **`nullsub_16`**: empty stub.
+- **`ResetStopwatch`**: empty stub.
 - **`DestroyStopwatch`**: same `table`-set/tail-call-`DestroySpriteObj` shape as
   `DestroyWumpa`, different vtable (`gStopwatchVtable`).
-- **`InitStopwatch`**: same re-init/table-set/`nullsub_16` shape as
+- **`InitStopwatch`**: same re-init/table-set/`ResetStopwatch` shape as
   `CreateStopwatch`, but re-initializing an existing `self` rather than
   allocating a new one.
 - **`ResetActionCtrl`**: zeroes/initializes a run of fields from

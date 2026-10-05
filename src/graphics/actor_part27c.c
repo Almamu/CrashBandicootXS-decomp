@@ -2,7 +2,7 @@
 
 /* GitHub issue #22, ROM 0x080187FC-0x08018884 - non-adjacent to
  * actor_part20b.c since the raw `UpdateTiny`/`SetTinyState`/
- * `PickTinyHopTarget`/`sub_80186F0` block sits between them (see
+ * `PickTinyHopTarget`/`SpawnTinyFallingLeaves` block sits between them (see
  * asm/code_3_2_17_18008.s). `obj`'s `+8` word is a small 0/1/2 state
  * counter and `+0xc` is the usual per-category table pointer (same
  * `self+0xc` convention as actor_part20.c/20b.c). `other`/`part`'s
@@ -15,7 +15,7 @@
  * "three objects, none fully pinned down" caution documented in
  * actor_part18.c. */
 
-extern u8 gStaticData_087E442C[];
+extern u8 gStompedHopPadVtable[];
 /* gLevelLayers's view here (level_layers.c's `struct level_layers`):
  * only BG layer 0's `heightPx` is read. */
 struct bg_scroll_layer {
@@ -50,7 +50,7 @@ extern void InitCtrl(void *self);
  * layout - this compiler inverts the branch and reorders the blocks
  * even though nothing about that changes the emitted-instruction count
  * or the C's meaning. */
-void sub_80187FC(void *objArg, void *otherArg)
+void UpdateStompedHopPad(void *objArg, void *otherArg)
 {
     register u8 *obj asm("r3") = objArg;
     register u8 *other asm("r2") = otherArg;
@@ -96,25 +96,25 @@ end:
     ;
 }
 
-/* Sets `self+0xc`'s table pointer to `gStaticData_087E442C`, then
+/* Sets `self+0xc`'s table pointer to `gStompedHopPadVtable`, then
  * tail-calls `DestroyCtrl` - same double-set pattern as
- * `sub_8017A78`/`sub_8017FD4`. */
-void sub_8018858(void *selfArg, s32 flags)
+ * `sub_8017A78`/`DestroyChaserCtrl`. */
+void DestroyStompedHopPadCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gStaticData_087E442C;
+    *(void **)(self + 0xc) = gStompedHopPadVtable;
     DestroyCtrl(self, flags);
 }
 
 /* Resets via `InitCtrl`, then re-points the table at
- * `gStaticData_087E442C`. Returns `self`. */
-void *sub_801886C(void *selfArg)
+ * `gStompedHopPadVtable`. Returns `self`. */
+void *CreateStompedHopPadCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gStaticData_087E442C;
+    *(void **)(self + 0xc) = gStompedHopPadVtable;
     return self;
 }
 
@@ -134,7 +134,7 @@ void *sub_801886C(void *selfArg)
  * the same address (needed there only because the ROM's register
  * allocator picks a different register for the value on each side of
  * the branch). */
-void sub_8018884(void *unusedArg, void *otherArg)
+void UpdateOneShotAnimCtrl(void *unusedArg, void *otherArg)
 {
     register u8 *other asm("r1") = otherArg;
 

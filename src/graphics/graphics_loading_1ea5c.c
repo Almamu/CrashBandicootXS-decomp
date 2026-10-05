@@ -13,7 +13,7 @@
  *   GetCurrentLevelFlags(gLevelState) points at; SpawnCrateGem also spawns a
  *   second (0x2B) effect through SpawnEffectPart.
  * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask GetBossIndex whether
- *   the level is in mode 1, and if so hand over to sub_8018D70
+ *   the level is in mode 1, and if so hand over to SpawnCortexBossGem
  *   (actor_part_188d0.c) with kind 0/1/2 instead; otherwise they test
  *   bits 0/2/1 of gLevelState+2.
  *
@@ -38,7 +38,7 @@ extern void SetSpriteAnimDone(struct gfx_part *part, s32 val);
 extern s32 GetSpriteAnimPaletteSlot(struct gfx_part *part);
 extern void AddToPartList(void *manager, struct gfx_part *part);
 extern struct gfx_part *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-extern void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
+extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
  * constants into callee-saved registers before the CreateSpriteObj call and
@@ -132,7 +132,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
     }
     else
     {
-        sub_8018D70(a0, a1, a2, a3, 0);
+        SpawnCortexBossGem(a0, a1, a2, a3, 0);
     }
 }
 
@@ -158,7 +158,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
     }
     else
     {
-        sub_8018D70(a0, a1, a2, a3, 1);
+        SpawnCortexBossGem(a0, a1, a2, a3, 1);
     }
 }
 
@@ -185,6 +185,6 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
     }
     else
     {
-        sub_8018D70(a0, a1, a2, a3, 2);
+        SpawnCortexBossGem(a0, a1, a2, a3, 2);
     }
 }

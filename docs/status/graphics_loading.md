@@ -68,7 +68,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   effect type N" spawners (a `GetCurrentLevelFlags`/`gLevelState+2`
   collected-bit test, then a `CreateSpriteObj` part with a fixed bank
   offset, tag and type byte registered with `gUnknown_030012EC`; the
-  last three hand over to `sub_8018D70` in level mode 1). All plain C
+  last three hand over to `SpawnCortexBossGem` in level mode 1). All plain C
   once built with **old_agbcc** (`OLD_AGBCC_OBJS`), whose mask-before-
   `ldrb` order the ROM shows; the current agbcc misses all six, which is
   likely also what parked the `trigger_effect.c` siblings.

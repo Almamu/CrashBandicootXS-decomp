@@ -538,7 +538,7 @@ were two near-identical dispatchers calling it.
 same display-commit sequence as `SettleLevelSelectPage` (`FlushVramDmaQueue`, then
 `BG0HOFS`/`BG1HOFS`+`VOFS`/`BG1CNT`/`BG2CNT`/`BLDCNT`/`BLDALPHA`/`BLDY`/
 `DISPCNT`), then checks a couple of completion conditions
-(`sub_801D780`, `HasLevelSelectCursorArrived`) to decide whether to keep looping. Once a
+(`IsLevelSelectPageBgSettled`, `HasLevelSelectCursorArrived`) to decide whether to keep looping. Once a
 completion condition trips, it reads the upper 16 bits of a global,
 **`gKeys`** (word-sized; only the low byte of that same word
 has a separate, already-inferred role in `sym_iwram.txt`'s neighboring
@@ -563,14 +563,14 @@ sequences (enter/exit of a transition, or two flavors of the same event
 structure, unconfirmed) rather than four unrelated functions. Also
 notable: right before this whole loop, `LevelSelectLoop` indexes a ROM data
 table, `gLevelTable`, using a small integer read via
-`sub_801DE2C` - a level- or per-instance-specific parameterization step,
+`GetLevelSelectEntryLevel` - a level- or per-instance-specific parameterization step,
 consistent with this being the level/game **state-machine step that
 runs every frame until some trigger condition fires**, not raw physics
 or input handling itself.
 
 **Addendum found later, while reading further into `game_loop`'s core**:
 the loop has a fifth exit path this section's original read missed -
-gated by two further conditions (`sub_801DE28` then `IsZoomBgShown`, both
+gated by two further conditions (`IsLevelSelectEntrySelected` then `IsZoomBgShown`, both
 must pass) it calls **`LevelSelectConfirm`** (680 B), which opens with a direct
 `PlaySfx` (sound id `0x52`, different from every other id seen so far in
 this document) plus several more `sub_801Dxx` setup calls, then falls
@@ -813,7 +813,7 @@ in `game_loop` and `sub_8032C0C` in `actor`. These addresses sit only
 `sub_8032C0C` uses - very plausibly the **same larger struct at
 different field offsets**, not a fourth separate RAM family as the
 address alone might suggest. Also calls `RandRange`, the same input-
-check function `sub_8015DF8` used back in `game_loop`'s core.
+check function `ApplyPlayerCtrlSwimDrift` used back in `game_loop`'s core.
 
 ### Three more reads, zero new table families - the known structures are absorbing the remainder
 
@@ -1559,7 +1559,7 @@ each subsection's claim by hand.
 Read the two largest functions in the 48.2 KB "undifferentiated core"
 bucket to start narrowing it down. Both point the same direction:
 
-- **`sub_801AB98`** (1648 B, the single biggest function in the entire
+- **`ResolvePlatformCollision`** (1648 B, the single biggest function in the entire
   94.4 KB zone): compares a passed-in object's bounding box against
   `gPlayer`'s rectangle - the single most-referenced symbol in
   the whole zone (140 hits) - using `asrs r0, r0, #8` throughout, i.e.
@@ -1701,7 +1701,7 @@ dispatch already reads) and a per-instance cooldown byte. When the
 gate passes: calls **`PlaySfx`** directly (sound id `0xA`), then lays
 out and draws a short text label via `_call_via_r2`/`_call_via_r3`, and
 writes the result into a field on `gPlayer` - the same
-struct `sub_801AB98`'s collision-edge test reads, reinforcing the
+struct `ResolvePlatformCollision`'s collision-edge test reads, reinforcing the
 camera/viewport-rectangle read on that global. Sound plus a text label
 plus a viewport-relative write, gated by a state-machine transition,
 reads as a **floating bonus/score popup** - ties together three threads
@@ -1769,12 +1769,12 @@ subsection's claim by hand:
 | **Total explained** | **~24.7 KB of 48.2 KB (~51%)** |
 
 Plus several of the core's largest individual functions read end-to-end
-regardless of which bucket they fell in (`sub_801AB98`, `UpdateEnemyCtrl`,
+regardless of which bucket they fell in (`ResolvePlatformCollision`, `UpdateEnemyCtrl`,
 `ActionCtrlStateAirborne`, `QueueCratePlayerCollision`, `UpdatePlayerCtrl`, `ActionCtrlHandleEvent`,
-`CreateCrate`, `sub_8017AB0`, `InitLevelSelect`, `DrawAffineSpritePieces`,
+`CreateCrate`, `UpdateChaser`, `InitLevelSelect`, `DrawAffineSpritePieces`,
 `ApplyCrateCollision`, `LoadLevelSelectRecord`, `UpdatePlatformMover`, and - this round -
 `BreakCrate`, `UpdateSlotCrate`, `DrawPlayer`, `UpdateActionCtrl`,
-`sub_801A2A8`, `CollidePlayer`, `sub_80159F8`, `sub_8016DDC`; see
+`UpdateDingodileProjectile`, `CollidePlayer`, `StartPlayerCtrlStroke`, `PlayerCtrlStateTurn`; see
 below). The remaining ~9.4 KB has no distinguishing signature found
 yet - the next concrete step is more of the same: pick the next-biggest unread
 function, read it, check whether it's vtable-dispatched or
@@ -1812,7 +1812,7 @@ family attached: **`CreateCrate`** (1396 B, entity constructor -
 allocates via `OperatorNew(100)`, sets `self+0x18 = &gCrateVtable`,
 a real address inside the documented 93-entry `gStaticData_087Exxx`
 family, but at a new `+0x18` convention rather than the previously-seen
-`+0xC`); **`sub_8017AB0`** (1052 B, 3-state dispatch gated by
+`+0xC`); **`UpdateChaser`** (1052 B, 3-state dispatch gated by
 `gPlayer[0x104]` and a bit test); **`DrawAffineSpritePieces`** (1044 B,
 clamps a halfword at `self+0x3c`, min `0x40` - likely velocity/timer);
 **`ApplyCrateCollision`** (1032 B, takes 3 stack-passed byte args, extends
@@ -1851,16 +1851,16 @@ Two more cross-ties: **`UpdateActionCtrl`** (628 B) reads
 box) for a pixel-position computation, and calls `sub_8012238` - the
 same function tied to `overlay_ui`'s `ApplyActionCtrlMotion`/`ActionCtrlSetTargetAnim`
 callers - a new concrete `game_loop`<->`overlay_ui` call-graph link.
-**`sub_801A2A8`** (732 B) draws a two-part text label plus a
+**`UpdateDingodileProjectile`** (732 B) draws a two-part text label plus a
 `PlaySfx(0x39)` cue, then gates a second block on `gPlayer`
-byte `+0x104` - the same field `sub_8017AB0` already gates on.
+byte `+0x104` - the same field `UpdateChaser` already gates on.
 
 Smaller reads, same known shapes: **`CollidePlayer`** (616 B) wraps
 `CollideGroundSprite` with a reentrancy-guard-shaped flag at
 `gLevelLayers+0x2a`, and separately calls `_call_via_r1` - another
 member of the BLX-trampoline family (`_call_via_r0`-`94`), so this call
 proves only "makes one indirect call," not real work there.
-**`sub_80159F8`** (628 B) and **`sub_8016DDC`** (616 B) extend the
+**`StartPlayerCtrlStroke`** (628 B) and **`PlayerCtrlStateTurn`** (616 B) extend the
 directional-table/timed-state-machine shapes already found in this
 zone and in `actor` (`gStaticData_0816C090`, `gPlayerCtrlModeAnimRows` -
 two more unlabeled tables in the same family as `gStaticData_0816C460`).
@@ -1871,7 +1871,7 @@ pattern, not exhaustively re-checked against `baserom.gba`).
 
 A further fork read five more functions, with two results that fold
 into an already-counted bucket rather than adding new coverage:
-**`HitEnemy`** and **`sub_8018E4C`** are both **entity-vtable-
+**`HitEnemy`** and **`UpdateCortexTarget`** are both **entity-vtable-
 dispatched** (their thumb-bit-set addresses appear as raw pointer
 values inside the documented `gStaticData_087Exxx` 93-entry entity
 family), so their combined ~1.2 KB already belongs to the "Direct
@@ -1883,21 +1883,21 @@ window registers via `EndBonusRound`/`SetCheckpointAtPlayer`) plus `PlaySfx(0x5a
 or dispatches a 22-case jump table where cases 18/19 allocate an
 object, draw floating text, and write the **exact same
 `self+0x60`/`+0x48`/`+0x4c`/`+0x50` directional-target field layout**
-`UpdatePlatformMover` (actor) and `sub_80159F8` (game_loop core) already
+`UpdatePlatformMover` (actor) and `StartPlayerCtrlStroke` (game_loop core) already
 write - a real synthesis point tying together the window-register
 bitset, the directional-target field convention, the shared
 `RandRange` input-check, and floating-text feedback in one function.
 
 Genuine new coverage (~1.75 KB): **`SetTinyState`** (636 B) and
-`sub_8018E4C` are a linked pair driving large jump tables (15/11
+`UpdateCortexTarget` are a linked pair driving large jump tables (15/11
 cases) that draw text at varying priorities and reference a new
 global-record-array `gUnknown_030012EC` plus a new table family
 (`gTinyRoundAnchors`/`35F`/`5F0`, more members of the
 `0x0816Cxxx` directional/state-table family already seen this
 session) - reads as a floating combo-text/score-popup state machine,
 distinct from the earlier-documented map-screen popup-text system
-(different globals, different tables); shares helpers `sub_8019094`
-and `sub_8019214` with it (the latter the same function already
+(different globals, different tables); shares helpers `SetCortexTargetState`
+and `FireCortexShot` with it (the latter the same function already
 documented as a `gSpriteBankTable` consumer/pickup-object spawner
 - consistent, not a naming collision). **`DrawSpritePieces`** (590 B)
 builds and submits a packed OAM word from the per-level
@@ -1909,7 +1909,7 @@ static data - a palette/gradient generator distinct from the
 documented fade-to-black effect; not fully characterized.
 
 This leaves roughly **~7.6 KB genuinely unexplained** in the core.
-Next candidates: `sub_8019094`, `sub_8018978`, and the unread
+Next candidates: `SetCortexTargetState`, `StartTinyHop`, and the unread
 remainder of `InitZoomBg`.
 
 **Follow-up closed out these three.** **`InitZoomBg`** turned out
@@ -1919,13 +1919,13 @@ writes a gradient directly into VRAM** (DMA3 destination `=
 (param2<<0xb) + 0x06000000`, VRAM base, not palette RAM), then sets
 fixed state fields (`self+0x20=0x78`, `+0x24=0x35`, ...) - reads as
 the constructor for a timed visual effect object (vignette/shadow/glow
-candidate), not a generic gradient generator. **`sub_8019094`** (384 B)
+candidate), not a generic gradient generator. **`SetCortexTargetState`** (384 B)
 is a `self`/`target`/`mode` dispatcher that reads through
 `gLevelLayers` (the documented lazy-singleton text box) in two of
 its modes to compute screen position and draw text - **a new,
 independent consumer of that global**, reinforcing it as shared
 infrastructure with several unrelated callers (already tied to
-`UpdateActionCtrl` and `overlay_ui`'s dialog constructors). **`sub_8018978`**
+`UpdateActionCtrl` and `overlay_ui`'s dialog constructors). **`StartTinyHop`**
 (76 B) is a small position-delta/flag-sync helper, likely called from
 a larger mover object. None are entity-vtable-dispatched; none fold
 into an existing bucket - net new coverage ~988 B, leaving the core at
@@ -1958,7 +1958,7 @@ neighbor search over the hot `gPlayer` global's leading
 fields against a target, populating a stack array of pointers into
 `self`'s own fields - not fully characterized, the loop body past
 setup wasn't read. Next candidates if continued: `ActionCtrlStateHangMove`,
-`CheckSpritePickup`, `ActionCtrlStateCrawl`, `sub_801A114`, and the still-unread
+`CheckSpritePickup`, `ActionCtrlStateCrawl`, `UpdateDingodileShield`, and the still-unread
 `SetupRoomBlend` bitfield-packer.
 
 **Final push on these five: four fold into already-counted buckets,
@@ -1973,7 +1973,7 @@ slot reused by 5 different entity records), and dispatches an 8-case
 table that calls the already-documented **`SpawnEffectPart`** (the
 runtime-indexed 12-byte-record spawner in `gSpriteBankTable`) -
 a concrete new tie between the entity-vtable system and that master
-array. **`sub_801A114`** (404 B) is also entity-vtable-dispatched, and
+array. **`UpdateDingodileShield`** (404 B) is also entity-vtable-dispatched, and
 notably its case 0 builds a BLDCNT-shaped bitmask and writes it
 directly to hardware register `0x04000050` - a **third** distinct
 blend/window-register code path in this ROM, alongside
@@ -2014,14 +2014,14 @@ exactly - simply never named.
 zone, not the `UpdateGameFrame`-`MainLoop` cluster). Runs the same
 OAM-commit sequence seen elsewhere, then writes several BG-scroll/
 window-shaped hardware registers via three unread helpers
-(`sub_801D7D0`/`GetBgSetupControl`/`GetZoomBgControl`), zeroes VRAM at
+(`GetLevelSelectPageBgOffsets`/`GetBgSetupControl`/`GetZoomBgControl`), zeroes VRAM at
 `0x0600A000`, then loops drawing 6 text items via `_call_via_r3` -
 reads as a second-screen/overlay commit function (debug overlay,
 second BG-layer content, or similar), not yet folded into any
 documented bucket.
 
 **Follow-up fully resolved it: a smooth left/right page-scroll
-transition, not a debug overlay.** `sub_801D7D0`/`GetBgSetupControl`/
+transition, not a debug overlay.** `GetLevelSelectPageBgOffsets`/`GetBgSetupControl`/
 `GetZoomBgControl` are trivial one-line field getters reading pre-baked
 register values off two sub-objects (`self+0x1c`/`+0x20`), both
 initialized via the shared `InitBgSetup` constructor `overlay_ui`'s
@@ -2032,7 +2032,7 @@ the same construction convention as other documented UI screens.
 **Its two callers, `LevelSelectPrevWorld`/`LevelSelectNextWorld` (a mirror-image
 pair), resolve the whole picture**: each checks a gate condition; if
 open, plays an entry SFX, then loops - nudging a scroll offset by one
-whole pixel (Q8.8) per frame via `sub_801D790`/`sub_801D79C`, drawing
+whole pixel (Q8.8) per frame via `TurnLevelSelectPageBgBack`/`TurnLevelSelectPageBgForward`, drawing
 one frame via `LevelSelectTurnPage`, polling input - until a page counter
 reaches zero, using the documented blend-effect commit
 (`SettleLevelSelectPage`) at the transition boundary; if the gate is closed, it
@@ -2044,7 +2044,7 @@ high confidence: mechanics fully read, but the actual screen content
 confirmed.
 
 The other genuinely-unread outside-any-bucket
-function sampled, `sub_8017348`, fits already-known conventions
+function sampled, `ApplyPlayerCtrlTilt`, fits already-known conventions
 closely (the type-`0x1d`/28-byte-record family).
 
 **Follow-up resolved `UpdateExtraLife`/`UpdateZoomBg`, and found the "mostly
@@ -2068,7 +2068,7 @@ object, plausibly a boss or major object's loader, distinct from
 anything else documented. `TickZoomBgTwinkle`, `gLevelSelectPictures`'s full
 record layout, and `UpdateZoomBg`'s own caller remain unread and would
 be the natural next step. Most of the other sampled functions
-(`ActionCtrlStateHangMoveStart`, `sub_8019324`) extend already-known conventions
+(`ActionCtrlStateHangMoveStart`, `UpdateCortexShot`) extend already-known conventions
 (the player-input-control family, position/collision checkers) rather
 than introducing anything new.
 
@@ -2101,11 +2101,11 @@ in the main zone), not a boss loader.
 
 **A further pass read 8 more of the genuinely-undocumented main-zone
 functions.** All fit already-known conventions - two concrete new
-data points, no new systems. **`sub_80186F0`** and **`sub_80194E0`**
+data points, no new systems. **`SpawnTinyFallingLeaves`** and **`UpdateCortexBossGem`**
 are more instances of the `gSpriteBankTable` record-indexed
-popup-text spawner: `sub_80186F0` uses a **new record index 55**
+popup-text spawner: `SpawnTinyFallingLeaves` uses a **new record index 55**
 (`0x294` header offset, extending the master-table offset family
-further), `sub_80194E0` reuses the already-confirmed record 53.
+further), `UpdateCortexBossGem` reuses the already-confirmed record 53.
 **`UpdateLevelSelectCursor`** (300 B) is a recurring spawn/despawn cycling
 dispenser with idle bounce animation, tagging a child object from
 `gLevelSelectCursorAnims` - not previously catalogued as its own
@@ -2115,7 +2115,7 @@ per-level table lookup). **`UpdateEnemyPatrol`**/**`UpdateEnemyFlipCycle`** are 
 state-machine selector pattern already noted across unrelated object
 types. **`PickUpWumpa`** is a randomized-position spawn picker, same
 flavor as the documented `OpenMysteryCrate` randomized-behavior selector
-but for position rather than behavior choice. **`sub_8016B1C`** is a
+but for position rather than behavior choice. **`PlayerCtrlStateIdle`** is a
 timed input-driven state machine, a close cousin of the player-
 input-control family but with its own field-offset triple. None of
 these represent a wholly new subsystem.
@@ -2131,11 +2131,11 @@ section's own prose has grown. Read 9 more: **`ProbeGroundSpriteFloor`** (264 B)
 finishes a previously-flagged partial read, confirming it's a
 collision/placement check against the text-box singleton exactly as
 guessed. The rest all fit already-documented conventions -
-`sub_8018D70` (the master-table spawner shape, spawning two objects
+`SpawnCortexBossGem` (the master-table spawner shape, spawning two objects
 per call), `ResetPlayer` (a reset/init function for the directional-
 target field octet, its 5th+ confirmed site), `DrawCrateList` (a
 per-object list updater tied to the text-box singleton's camera
-anchor), `PickUpExtraLife`/`sub_8016048` (the randomized-behavior and
+anchor), `PickUpExtraLife`/`CheckPlayerCtrlTurn` (the randomized-behavior and
 player-input-control families respectively), `InitCrateList`/
 `DrawLevelSelectCursor`/`ResetCrateList` (asset-loading/OAM/text-rendering toolkit
 shapes, not fully characterized in detail but no anomalies). Nothing
@@ -2153,9 +2153,9 @@ point, directly indexing the 36-slot medal table and calling the
 documented BG2 icon driver (`UpdateZoomBg`) - ties the medal table into
 that menu system. **`KillPlayer`** calls `ApplyActionCtrlMotion`, already tied
 to `overlay_ui` elsewhere - a caller-side confirmation of that link.
-**`sub_8018BDC`**/**`sub_801A03C`** extend the master-table spawner
+**`SpawnCortexCannon`**/**`SpawnDingodileShark`** extend the master-table spawner
 family (the latter with a new near-header offset, `+0x30`).
-**`sub_801A64C`** is a 6th+ confirmed site of the directional-target
+**`UpdateDingodileShark`** is a 6th+ confirmed site of the directional-target
 field convention, sourcing from a new table `gStaticData_0816C3B8`.
 **`UpdateEnemyShooter`** is a further instance of the `self+0x68`/`0x74`
 generic state-machine selector pattern. **`sub_800CF70`**, sitting
@@ -2175,13 +2175,13 @@ directional-target field octet for the first time. `UpdateEffectCtrl`
 extends the `gEntityFlags` bitset convention. `GetSpriteAttackBox`
 confirms `SetAabbPos`/`SetAabbSize` as the ROM's general-purpose
 AABB-construction primitive, now reused across 3+ sites (also seen in
-`sub_802DD9C`'s overlap test). `sub_8016C94` is pure input-dispatch
-orchestration. `sub_801A584` extends the master-table spawner family
+`sub_802DD9C`'s overlap test). `PlayerCtrlStateStroke` is pure input-dispatch
+orchestration. `SpawnDingodileStalactite` extends the master-table spawner family
 with a new record index (34) and a new 93-entry-family address.
 `MovePlayerWithPlatform` is a camera-target-position setter extending
 `gPlayer`'s known field layout. **Two new data points worth
 flagging**: a recurring, still-unexplained global **`gRoomFrameCount`**
-(3 independent confirmed sites - `sub_8016C94`, `UpdateEnemyShooter`,
+(3 independent confirmed sites - `PlayerCtrlStateStroke`, `UpdateEnemyShooter`,
 `MovePlayerWithPlatform`) and the confirmed AABB-builder primitive reused widely.
 
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
@@ -2207,7 +2207,7 @@ document shows, just somewhat weaker than the main zone's 87%.
 
 Read two functions: **`SpawnRoomEntities`** (704 B) DMA-writes to OBJ palette
 RAM and a BG window register, then iterates a small count-prefixed
-array touching `gEntitySpawner` - the same global `sub_8015DF8`'s
+array touching `gEntitySpawner` - the same global `ApplyPlayerCtrlSwimDrift`'s
 periodic input-gated check (documented above) also uses. Reads as a
 per-frame visible-object/window list processor. **`GetCollisionChunk`**
 (408 B) is a linear ID→offset lookup scanning fields starting at
@@ -2757,7 +2757,7 @@ tables:
   with a fixed value `0x1A`. Reads as a **proximity-triggered indicator**
   - show a hint icon when near a specific object type, distance varying
   by type.
-- **`sub_8015DF8`** (484 B): dispatches on a `self+8` type (`2`/`3`/
+- **`ApplyPlayerCtrlSwimDrift`** (484 B): dispatches on a `self+8` type (`2`/`3`/
   default), calls the matched `GetDpadDirection` (`src/system/irq.c`), gates
   on `gRoomFrameCount`'s low 7 bits `==0` (a periodic ~128-frame
   check - `gRoomFrameCount` is the same counter the post-fade
@@ -2876,7 +2876,7 @@ a genuinely promising new lead:
   entries** (`ActionCtrlStateSpin`/`ActionCtrlStateAirSpin`/`ActionCtrlStateTornadoSpin`), a shared helper
   several action-table handlers reuse, likely to update one common HUD
   counter glyph.
-- **`sub_8015C6C`** (396 B, read by the same fork that corrected
+- **`StartPlayerCtrlSpin`** (396 B, read by the same fork that corrected
   `CollidePartWithPlayer` above): checks a self-flag, plays `PlaySfx(id=9)`, calls
   the matched `GetDpadDirection`, and on state `self+8==4` writes a signed
   velocity constant (`±0x3C0`) into `self+0x10→+0x60`, direction chosen
@@ -2898,14 +2898,14 @@ fanfare). **Confirmed vtable-dispatched** at `0x087E2178` - inside the
 93-entry entity family's address range, but *before* the documented
 first entry (`0x087E3BEC`), a new low-address data point in that family.
 
-**`sub_8019EBC`** is the **first confirmed consumer of
+**`SpawnDingodileShieldOrRocket`** is the **first confirmed consumer of
 `gSpriteBankTable`** (the 729 KB master asset table) beyond its own
 header-reading code: allocates a tagged object, reads through
 `gSpriteBankSet`'s chain at offset `0x288`, then dispatches on a
 mode parameter to spawn effect objects - the same "spawn effect type N"
 shape as `graphics_loading`'s trigger-effect family, but this one
 concretely ties back into the master table rather than a per-level
-table. **`sub_8019094`** dispatches on a mode parameter touching
+table. **`SetCortexTargetState`** dispatches on a mode parameter touching
 `gLevelLayers` (a hot global referenced elsewhere but not yet
 individually characterized) in a cursor/menu-position-style pattern -
 calls the `_call_via_r3` trampoline with position arguments matching the
@@ -2932,7 +2932,7 @@ a Q8.8 `{x,y}` pair offset by fixed negative constants (≈`-100`/`-60`),
 built into a rect and passed to the `_call_via_r2` trampoline. Reads as
 a **text/label positioning-box singleton** - a margin-adjusted bounding
 rect for UI text, built once and reused for the rest of the session via
-two aliased slots. Consistent with `sub_8019094`'s "cursor/menu-position
+two aliased slots. Consistent with `SetCortexTargetState`'s "cursor/menu-position
 dispatch" characterization above.
 
 **Correction after reading the constructor itself
@@ -3022,7 +3022,7 @@ its opening ties together `gPlayer` (viewport),
 special-cased for value `3`), and *this* table in one place.
 
 **Read the rest of it.** `QueueCratePlayerCollision` is the **collision-response
-commit** that presumably consumes `sub_801AB98`'s edge codes (`1`/`2`/
+commit** that presumably consumes `ResolvePlatformCollision`'s edge codes (`1`/`2`/
 `4`/`8`, left/right/top/bottom): it walks a linked list of nearby
 objects (`GetCrateBelow`/`GetCrateAbove`, "get next"-style calls) accumulating
 an edge-code value, then **dispatches through a 6-case jump table** on
@@ -3391,7 +3391,7 @@ screen plus a separate one-shot achievement-notification sequence.**
   round's framing suggested. Trigger: two call sites for
   `RunPauseMenu`, both in `game_loop` - one gated on a byte at
   `[base]+0x104==0` (plausibly the same `gPlayer[0x104]`
-  field `sub_8017AB0` already gates on) plus a button-press bit,
+  field `UpdateChaser` already gates on) plus a button-press bit,
   reading as a **pause-menu-open trigger during normal gameplay**; the
   other sits in a different, level-init-adjacent context (near
   `SetupActorVramPool`), not fully characterized.
@@ -3574,15 +3574,15 @@ records, matching `gCutscenes`'s confirmed 36-slot count -
 independent confirmation of the medal/threshold-table reading.
 
 **New consumer found, extending the directional-vector-table family**:
-`sub_8017ECC`/`sub_8017F14` index `gStaticData_0816C2D8` via the same
+`SetChaserMotionYFromSet`/`SetChaserMotionXFromSet` index `gStaticData_0816C2D8` via the same
 double-indirection shape already noted for `gStaticData_0816C460`
 (`idx*8` intermediate lookup -> `value*3*4`), fetch a **3-word (x,y,z)
 vector record**, conditionally negate all three components based on a
 flag bit, and write them into `self+0x54`/`+0x58`/`+0x5c` or
 `self+0x48`/`+0x4c`/`+0x50` - the same "directional target" convention
-as `UpdatePlatformMover`/`sub_80159F8`/`HitEnemy`. `sub_8017FD4` ties this
+as `UpdatePlatformMover`/`StartPlayerCtrlStroke`/`HitEnemy`. `DestroyChaserCtrl` ties this
 region directly to the 93-entry entity vtable family: stores
-`&gStaticData_087E43C4` into `self+0xc` then calls `sub_8017A78`.
+`&gChaserCtrlVtable` into `self+0xc` then calls `sub_8017A78`.
 
 Not investigated further: `0x0816C6A4` (0x170B, the largest unread
 sub-blob in the small-tables span), the `0x0816C814`-`862` cluster,
@@ -3821,7 +3821,7 @@ access into the table rather than hardcoding its address everywhere.
 documented `mem_free`). Also resolved: **`SpawnSeal`** (the
 per-instance callback `SpawnSealSpawner` installs) is just another instance
 of the standard `gSpriteBankTable` popup-spawner shape, at a new
-record index (17); **`sub_801B984`** is a standard entity constructor,
+record index (17); **`SpawnLaunchPad`** is a standard entity constructor,
 fits the established `+0x18`-pointer convention exactly, no anomalies.
 
 **`sub_802364C`** (8 B): a trivial wrapper, `PlayCutscene(self, 2)` -
@@ -3961,7 +3961,7 @@ dereference (`gSpriteBankSet → *P → &gSpriteBankTable →
 *table` = the table's own `+0x0` "first real record" field) to
 header-relative offsets not previously sampled:
 
-- **`sub_8019214`** adds `0x9F<<2 = 0x27C` to that dereferenced
+- **`FireCortexShot`** adds `0x9F<<2 = 0x27C` to that dereferenced
   pointer (absolute `table_base + 0x10 + 0x27C = table_base + 0x28C`),
   stores the result into a newly-spawned object's `+0x20` field
   (built via `CreateMovingSprite`, tagged `0xE`/`0x11` at `+0x2D`, then run

@@ -32,18 +32,18 @@ void ActionCtrlReleaseHang(struct act *self);
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio (as ActSetNext) */
 static inline void ActSetNext27(struct act *self, s32 next)
 {
-    self->next31 = 0;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = 0;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 /* The same with the +0x31 value as a parameter too: both are materialized
  * before the stores. */
 static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 static inline void SetTag(struct act_part *part, s32 tag)
@@ -56,15 +56,15 @@ static inline void SetTag(struct act_part *part, s32 tag)
 
 static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
 {
-    self->next32 = a;
-    self->flag30 = b;
-    self->next28 = c;
+    self->motionYKeepSpeed = a;
+    self->motionYPending = b;
+    self->motionY = c;
 }
 
 static inline void ActHold27(struct act *self, u8 *slot, s32 next)
 {
-    self->next31 = 0;
-    self->flag2F = next;
+    self->motionXKeepSpeed = 0;
+    self->motionXPending = next;
     *slot = next;
 }
 
@@ -113,7 +113,7 @@ void ActionCtrlStateLeftGround(struct act *self)
                     self->frame = 0;
                     ACT_VCALL1(self, m20, 3);
                     {
-                        u8 *slot = &self->next27;
+                        u8 *slot = &self->motionX;
 
                         if (*slot != 1)
                             ActHold27(self, slot, 1);
@@ -124,9 +124,9 @@ void ActionCtrlStateLeftGround(struct act *self)
             else if (tag == 0x18)
             {
                 ACT_VCALL1(self, m20, 4);
-                self->next32 = 0;
-                self->flag30 = 1;
-                self->next28 = 0;
+                self->motionYKeepSpeed = 0;
+                self->motionYPending = 1;
+                self->motionY = 0;
                 self->unk_29 = 1;
                 ActQueue27(self, 0, 0x1B);
             }
@@ -140,9 +140,9 @@ void ActionCtrlStateLeftGround(struct act *self)
                 }
                 else
                 {
-                    self->next31 = z;
-                    self->flag2F = 1;
-                    self->next27 = z;
+                    self->motionXKeepSpeed = z;
+                    self->motionXPending = 1;
+                    self->motionX = z;
                 }
                 ActSetNext(self, 0);
                 ACT_VCALL1(self, m20, 0xD);
@@ -150,12 +150,12 @@ void ActionCtrlStateLeftGround(struct act *self)
             else
             {
                 ACT_VCALL1(self, m20, 0);
-                self->next32 = z;
-                self->flag30 = 1;
-                self->next28 = 0;
-                self->next31 = 0;
-                self->flag2F = 1;
-                self->next27 = 0;
+                self->motionYKeepSpeed = z;
+                self->motionYPending = 1;
+                self->motionY = 0;
+                self->motionXKeepSpeed = 0;
+                self->motionXPending = 1;
+                self->motionX = 0;
             }
         }
         return;
@@ -195,15 +195,15 @@ void ActionCtrlStateLeftGround(struct act *self)
                 self->unk_34 = fire;
                 if (gKeys & 0x30)
                 {
-                    self->next31 = fire;
-                    self->flag2F = one;
-                    self->next27 = one;
+                    self->motionXKeepSpeed = fire;
+                    self->motionXPending = one;
+                    self->motionX = one;
                 }
                 else
                 {
-                    self->next31 = 0;
-                    self->flag2F = one;
-                    self->next27 = 0;
+                    self->motionXKeepSpeed = 0;
+                    self->motionXPending = one;
+                    self->motionX = 0;
                 }
                 if ((u32)(self->state - 0xD) > 1)
                     StartActionCtrlSpin(self);
@@ -217,9 +217,9 @@ void ActionCtrlStateLeftGround(struct act *self)
                 ACT_VCALL1(self, m20, 0x10);
                 ACT_VCALL2(self, m50, self->part, 3);
                 self->frames = alt;
-                self->next31 = alt;
-                self->flag2F = one;
-                self->next27 = alt;
+                self->motionXKeepSpeed = alt;
+                self->motionXPending = one;
+                self->motionX = alt;
             }
         }
     }
@@ -228,9 +228,9 @@ void ActionCtrlStateLeftGround(struct act *self)
 
         if (dir == 0)
         {
-            self->next31 = dir;
-            self->flag2F = 1;
-            self->next27 = dir;
+            self->motionXKeepSpeed = dir;
+            self->motionXPending = 1;
+            self->motionX = dir;
         }
     }
 }
@@ -279,12 +279,12 @@ void ActionCtrlStateWarpIn(struct act *self)
     {
         *((u8 *)gPlayer + 0xC) |= 0x80;
         SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
-        self->next31 = 0;
-        self->flag2F = 1;
-        self->next27 = 0;
-        self->next32 = 0;
-        self->flag30 = 1;
-        self->next28 = 0;
+        self->motionXKeepSpeed = 0;
+        self->motionXPending = 1;
+        self->motionX = 0;
+        self->motionYKeepSpeed = 0;
+        self->motionYPending = 1;
+        self->motionY = 0;
         LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
                     self->part->bank->records[self->part->tag].paletteId);
     }
@@ -336,9 +336,9 @@ void sub_8014AEC(struct act *self)
     {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
-        self->next31 = fire;
-        self->flag2F = 1;
-        self->next27 = fire;
+        self->motionXKeepSpeed = fire;
+        self->motionXPending = 1;
+        self->motionX = fire;
     }
 }
 
@@ -396,9 +396,9 @@ void ActionCtrlStateHangMoveStart(struct act *self)
     {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
-        self->next31 = 0;
-        self->flag2F = 1;
-        self->next27 = 0;
+        self->motionXKeepSpeed = 0;
+        self->motionXPending = 1;
+        self->motionX = 0;
         return;
     }
     v = GetDpadDirection(pad);
@@ -406,13 +406,13 @@ void ActionCtrlStateHangMoveStart(struct act *self)
     {
         ACT_CALL1(self, m20, 0x28);
         ACT_CALL2(self, m50, self->part, 0x22);
-        self->next31 = 0;
-        self->flag2F = 1;
-        self->next27 = 0;
+        self->motionXKeepSpeed = 0;
+        self->motionXPending = 1;
+        self->motionX = 0;
         return;
     }
     {
-        u8 cur = self->next27;
+        u8 cur = self->motionX;
 
         if (cur == 0)
         {
@@ -480,9 +480,9 @@ void ActionCtrlStateHangMove(struct act *self)
     {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
-        self->next31 = fire;
-        self->flag2F = 1;
-        self->next27 = fire;
+        self->motionXKeepSpeed = fire;
+        self->motionXPending = 1;
+        self->motionX = fire;
         return;
     }
     if (dir == 0)
@@ -497,31 +497,31 @@ void ActionCtrlStateHangMove(struct act *self)
             {
                 ACT_CALL1(self, m20, 0x28);
                 ACT_CALL2(self, m50, self->part, 0x22);
-                self->next31 = alt;
-                self->flag2F = 1;
-                self->next27 = alt;
+                self->motionXKeepSpeed = alt;
+                self->motionXPending = 1;
+                self->motionX = alt;
             }
             else if (f <= 4)
             {
                 ACT_CALL1(self, m20, 0x28);
                 ACT_CALL2(self, m50, self->part, 0x23);
-                self->next31 = alt;
-                self->flag2F = 1;
-                self->next27 = alt;
+                self->motionXKeepSpeed = alt;
+                self->motionXPending = 1;
+                self->motionX = alt;
             }
             else if (f > 9)
             {
                 ACT_CALL1(self, m20, 0x28);
                 ACT_CALL2(self, m50, self->part, 0x22);
-                self->next31 = alt;
-                self->flag2F = 1;
-                self->next27 = alt;
+                self->motionXKeepSpeed = alt;
+                self->motionXPending = 1;
+                self->motionX = alt;
             }
             else
             {
-                self->next31 = alt;
-                self->flag2F = 1;
-                self->next27 = alt;
+                self->motionXKeepSpeed = alt;
+                self->motionXPending = 1;
+                self->motionX = alt;
             }
         }
     }
@@ -592,9 +592,9 @@ void ActionCtrlStateHangStop(struct act *self)
     {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
-        self->next31 = fire;
-        self->flag2F = 1;
-        self->next27 = fire;
+        self->motionXKeepSpeed = fire;
+        self->motionXPending = 1;
+        self->motionX = fire;
         return;
     }
     if (self->part->animDone)

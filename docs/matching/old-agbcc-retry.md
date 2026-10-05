@@ -13,15 +13,15 @@ compared it against the ROM.
 | function | file | result |
 |---|---|---|
 | `UpdateCortexBoss` | `actor_part_188d0.c` (#23) | **matched**, NON_MATCHING C unchanged |
-| `sub_801961C` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
+| `CreateCortexBossPlatformMover` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
 | `CreatePlatform` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
-| `sub_801AB98` | `actor_part_1ab98.c` (#25) | still NAKED |
+| `ResolvePlatformCollision` | `actor_part_1ab98.c` (#25) | still NAKED |
 | `InitLevelSelect` | `actor_part_1b85c.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
 | `LoadLevelSelectRecord` | `actor_part_1b85c.c` (#26) | still NAKED |
 | `LevelSelectLoop` | `actor_part_1b85c.c` (#26) | still NAKED |
 
 Issue #23 has no NAKED/NON_MATCHING functions left. Issue #25 still has
-`sub_801AB98`, and issue #26 still has all three.
+`ResolvePlatformCollision`, and issue #26 still has all three.
 
 ## Whole-file switches, no splits
 
@@ -34,11 +34,11 @@ their agbcc-era C unchanged; a few needed a workaround *removed*. So both
 files moved to old_agbcc whole:
 
 - `actor_part_188d0.c`: under old_agbcc as-is, only three functions
-  differed. `sub_8018E4C` and `sub_80194E0` each had an `asm("ldrsh ...")`
+  differed. `UpdateCortexTarget` and `UpdateCortexBossGem` each had an `asm("ldrsh ...")`
   with a pinned zero index. Plain `CALL3` gives the ROM's register there
-  now. `sub_8019324` had its `part` pinned to r8 and matches with the pin
+  now. `UpdateCortexShot` had its `part` pinned to r8 and matches with the pin
   removed.
-- `actor_part_1b85c.c`: only `sub_801B984` differed (2 bytes), and it
+- `actor_part_1b85c.c`: only `SpawnLaunchPad` differed (2 bytes), and it
   matches once its zero/id pins are dropped.
 - `actor_part_1a878.c` was already on its own.
 
@@ -59,27 +59,27 @@ are removed from the tree.
 - **`asm("" : "+r"(c))` constant barriers** in the byte-RMW helpers `AndFlags`/`OrFlags` (#23). old_agbcc already puts
   the constant before the `ldrb`, but only when the constant arrives as
   an inline helper's `s32` parameter. The same statement written in place
-  still loads first. Also removed: the barriers in `sub_8018D70`,
-  `sub_8018E4C`, `sub_8019094`, `sub_8019214`, `sub_8018BDC` and
-  `sub_8018978`.
-- **Pins**: `SetTag`'s r0 pin, and those in `sub_80188FC`, `sub_8018978`
-  (`ip`), `sub_8018BDC`, `sub_8019094`, `sub_80194E0`, `sub_8019324` (r8)
-  and `sub_8018E4C`'s `steps` (r8) (#23). In #26: `UpdateCameraLead`,
-  `sub_801B984`, `UpdateLevelSelect`, `DrawLevelSelectRecord` and `DrawLevelSelect`'s
+  still loads first. Also removed: the barriers in `SpawnCortexBossGem`,
+  `UpdateCortexTarget`, `SetCortexTargetState`, `FireCortexShot`, `SpawnCortexCannon` and
+  `StartTinyHop`.
+- **Pins**: `SetTag`'s r0 pin, and those in `sub_80188FC`, `StartTinyHop`
+  (`ip`), `SpawnCortexCannon`, `SetCortexTargetState`, `UpdateCortexBossGem`, `UpdateCortexShot` (r8)
+  and `UpdateCortexTarget`'s `steps` (r8) (#23). In #26: `UpdateCameraLead`,
+  `SpawnLaunchPad`, `UpdateLevelSelect`, `DrawLevelSelectRecord` and `DrawLevelSelect`'s
   `asm volatile` self barrier.
 - **The zero-index `ldrsh` asm** (#23, see above).
 
 Still needed under old_agbcc: `SetFrameNibble`/`CopyFlipX`'s pinned
 `mov/neg` helpers, `MARK_GONE`'s per-site registers, `SET_FRAME_R`,
-`StepHeight`'s copy asm, `sub_801B984`'s `mov/neg` masks, the
+`StepHeight`'s copy asm, `SpawnLaunchPad`'s `mov/neg` masks, the
 `CreatePlatform` palette-nibble `0xF` barrier, and the `s32` mask local in
 the same spot (a `~0xF & u8` narrows to `movs #0xF0`). Removing any of
 them breaks the match.
 
-## The stack-passed byte (`sub_801961C`)
+## The stack-passed byte (`CreateCortexBossPlatformMover`)
 
 Both compilers widen a `u8` argument passed on the stack to a word `str`.
-The ROM `strb`s `CreatePlatformMover`'s fifth argument. `sub_801961C`'s packed
+The ROM `strb`s `CreatePlatformMover`'s fifth argument. `CreateCortexBossPlatformMover`'s packed
 one-byte struct argument gives the `strb`, but under either compiler it
 materializes the 0 before `mov r1, sp`, the reverse of the ROM. What
 matches is the idiom `CreatePlatform` already used: `volatile` stores of both
@@ -117,7 +117,7 @@ write-ups, not applied.
   blend/BLDY/DISPCNT constant blocks (which register holds 0/1/2/0x10,
   and a separate `self + 0xA9` address), in the item loop's r4/r5 roles,
   and in the ROM hoisting the sprites' `0x80` into r8.
-- **`sub_801AB98`** (#25), 1608 vs 1648 bytes, about 290 diff lines.
+- **`ResolvePlatformCollision`** (#25), 1608 vs 1648 bytes, about 290 diff lines.
   The first divergence is structural: the ROM cross-jumps both branches'
   overlap arithmetic (`x + w - x' + 1`) into one shared tail. Stripping
   the pins makes it worse.

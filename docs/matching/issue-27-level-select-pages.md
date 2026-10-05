@@ -26,19 +26,19 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   (`LevelSelectHasPrevWorld`: `world != 0`; `LevelSelectIsNextWorldOpen`: bit 5/7/6 of save byte 2
   for pages 0/1/2), each one settles the cursor (`SettleLevelSelectPage`) and
   plays 0x56/0x55. Then it loops while the key stays held: step `world`,
-  move BG1's scroll target a page (`sub_801D790` +0x100 /
-  `sub_801D79C` -0x100), run `LevelSelectTurnPage`, wait a frame. After the loop,
+  move BG1's scroll target a page (`TurnLevelSelectPageBgBack` +0x100 /
+  `TurnLevelSelectPageBgForward` -0x100), run `LevelSelectTurnPage`, wait a frame. After the loop,
   `RefreshLevelSelectPage` switches the page-title sprite's animation
   (`gLevelSelectWorldAnims[world]`) and puts the cursor panel back on the
   clamped cursor. A blocked move plays 0x48.
 - **`LevelSelectTurnPage`** runs frames until BG1's scroll reaches its target
   (`ScrollLevelSelectPageBg` eases it 8 per frame). When the low byte of the scroll
   reaches 0xA0 (the halfway point), it reloads the page entries. This
-  is `sub_801D638` (item method +0x10 `(world, slot)`),
-  `sub_801D5CC` (choose the cursor layout
+  is `LoadLevelSelectEntries` (item method +0x10 `(world, slot)`),
+  `PlaceLevelSelectEntries` (choose the cursor layout
   `gLevelSelectEntryPositionsAllCleared`/`4D8` and `lastIndex` 5/4, depending on whether
   all five levels of the page are cleared, then item method +0x18
-  `(&positions[i])`) and `sub_801D668`
+  `(&positions[i])`) and `SetLevelSelectEntryBoxes`
   (`SetLevelSelectEntryBox(item, gLevelSelectWorldEntryBoxAnims[world])`), all three inlined.
 - **Exits.** `LevelSelectConfirm` handles A on an open entry: sound 0x52, panel
   to (0x78, 0x35), wait for the panel and the icon layer, then fade
@@ -49,8 +49,8 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   sprites.
 - **`struct page_bg`** (BG1, `CreateLevelSelectPageBg`): the `InitBgSetup`
   background descriptor, then `scroll`/`target` (Q8, starting at
-  0x300) and the BG1HOFS/VOFS pair (`sub_801D7D0` returns both as one
-  word, `sub_801D7D4` resets them). `DestroyLevelSelectPageBg` is its destructor
+  0x300) and the BG1HOFS/VOFS pair (`GetLevelSelectPageBgOffsets` returns both as one
+  word, `SetLevelSelectPageBgOffsets` resets them). `DestroyLevelSelectPageBg` is its destructor
   body.
 - **`struct zoom_bg`** (formerly `icon_bg`; BG2, `InitZoomBg`, 0x8C bytes): the BG2CNT
   shadow (priority 1, 256 colours), a cleared screen block with an 8x4
@@ -60,7 +60,7 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   is in issue #28's range.
 - `SetNewWorldOpened` sets `gNewWorldOpened` (called from `game_loop55.c`).
 
-**UNUSED:** `sub_801D698` (one frame of the screen without the menu's
+**UNUSED:** `CommitLevelSelectFrame` (one frame of the screen without the menu's
 update). It has no `bl`/`.4byte` reference and no Thumb pointer anywhere
 in the ROM. It is matched anyway.
 
@@ -83,7 +83,7 @@ types the save block (`struct menu_save`) and the two background layers.
 - **`RefreshLevelSelectPage`**: an inline `SetAnim(sprite, u32 idx)`. Passing the
   table word (not a `u8`) keeps the word load, and the load happens
   after the sprite pointer, as in the ROM.
-- **`sub_801D5CC`'s cleared count**: `levels[k].b.cleared`, with
+- **`PlaceLevelSelectEntries`'s cleared count**: `levels[k].b.cleared`, with
   `k = world * 5 + j` in its own local and `j` a counter separate from
   the second loop's `i`. This gives the ROM's order (world*5, then load
   `save`, then *4) and its registers. A byte-wide view of the save word

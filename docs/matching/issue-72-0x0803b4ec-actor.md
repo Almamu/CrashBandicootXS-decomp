@@ -44,7 +44,7 @@ their bytes to the preceding labelled function:
   return and `nullsub_44` below. `ldr r0,[r0,#0x54]; bx lr` - a plain
   `self->field_54` getter.
 - **`nullsub_44`** (0x0803B5E0, 2 bytes, 2-byte aligned pad after) -
-  `bx lr` alone, a genuinely empty stub (same shape as `nullsub_16` in
+  `bx lr` alone, a genuinely empty stub (same shape as `ResetStopwatch` in
   `src/graphics/actor_part39.c`) - next available `nullsub_N`, since
   `_call_via_lr` was already taken.
 - **`IsJetpackPlayerUnshootable`** (0x0803B5E4, 4 bytes) - between `nullsub_44`'s

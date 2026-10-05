@@ -186,27 +186,27 @@ branch-by-branch this pass, per Phase 1's scope).
 | `DestroyCollisionQueue` | 24 B | `void DestroyCollisionQueue(void *arg0, s32 arg1)` - called as `DestroyCollisionQueue(self+0x108, 2)` from `actor_part15.c`. Sibling of `AddCollisionCandidate`/`ResetCollisionQueue` (see above) - mode-parameterized queue insert. |
 | `ResetCollisionQueue` | 8 B | `void ResetCollisionQueue(void *arg0)` - called as `ResetCollisionQueue(self+0x108)` from `actor_part77.c`, "clears its trailing `+0x108`/`+0x10c` fields" - queue reset (`count`+`unk4`). |
 | `CheckExtraLifePickup` | 120 B | No existing cross-reference found. |
-| `PickUpExtraLife` | 224 B | `docs/rom_map.md`: part of "the randomized-behavior... famil[y]" alongside `sub_8016048`. |
+| `PickUpExtraLife` | 224 B | `docs/rom_map.md`: part of "the randomized-behavior... famil[y]" alongside `CheckPlayerCtrlTurn`. |
 | `UpdateExtraLife` | 392 B | `docs/rom_map.md`: "a bounds-checked, mode-selected object state machine that self-destructs off-screen" - default mode reads `gSineTable` (shared trig table), a rotating/orbiting projectile-or-hazard behavior. |
 | `CreateExtraLife` | 164 B | `struct actor *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` - spawns a part-object; extern in `game_loop29.c`. |
 | `SendExtraLifeToHud` | 144 B | `void SendExtraLifeToHud(void *part)` - extern in `game_loop29.c`; `game_loop14.c` notes a sibling call site uses `SendWumpaToHud` "instead of `SendExtraLifeToHud`" (mutually-exclusive alternative behavior). |
 | `UpdateExtraLifeHop` | 124 B | No existing cross-reference found. |
 | `DrawExtraLife` | 44 B | No existing cross-reference found. |
-| `sub_80112F0` | 4 B | No existing cross-reference found - tiny, likely a trivial accessor/tail-call stub. |
+| `GetExtraLifeClassId` | 4 B | No existing cross-reference found - tiny, likely a trivial accessor/tail-call stub. |
 | `DestroyExtraLife` | 20 B | No existing cross-reference found. |
-| `sub_8011308` | 8 B | No existing cross-reference found. |
+| `ResetExtraLifePickup` | 8 B | No existing cross-reference found. |
 | `InitExtraLife` | 32 B | No existing cross-reference found. |
-| `sub_8011330` | 52 B | No existing cross-reference found. |
+| `CollideExtraLife` | 52 B | No existing cross-reference found. |
 | `SetExtraLifePos` | 20 B | No existing cross-reference found. |
 | `SetExtraLifeHop` | 16 B | No existing cross-reference found. |
-| `sub_8011388` | 8 B | No existing cross-reference found. |
+| `SetExtraLifeCounter` | 8 B | No existing cross-reference found. |
 | `CheckWumpaPickup` | 184 B | No existing cross-reference found. |
 | `PickUpWumpa` | 256 B | `docs/rom_map.md`: "a randomized-position spawn picker, same flavor as the documented `OpenMysteryCrate` randomized-behavior selector but for position rather than behavior choice." Called as `PickUpWumpa(entry, 1)`/`(other, 1)` from `game_loop40.c`/`game_loop49.c` for despawn. |
 | `UpdateWumpa` | 500 B | `docs/rom_map.md`: entity-vtable-dispatched (`gStaticData_087Exxx` 93-entry family); "integrates position from velocity fields, manages a wrapping counter with mode-gated increment/decrement, and on a branch plays `PlaySfx(0xe, 0x100)` plus calls a scoring/counter candidate, `CollectWumpa`." |
 | `CreateWumpa` | 308 B | `void CreateWumpa(u16 arg0)` - the achievement/unlock-icon spawn helper; extern in `graphics_loading_21d80.c`, referenced from `game_loop14.c`/`docs/rom_map.md`. |
 | `SendWumpaToHud` | 172 B | Alternative to `SendExtraLifeToHud` (see above), called from `game_loop14.c`. |
-| `sub_801191C` | 16 B | `void sub_801191C(struct actor *self)` - extern in `actor_part39.c`; also called from `game_loop14.c` alongside `CreateWumpa` for a "special" 4th spawn-mode case. |
-| `UpdateWumpaHop` | 16 B | No existing cross-reference found - address-adjacent to `sub_801191C`, likely a closely related tiny accessor. |
+| `StartWumpaPayout` | 16 B | `void StartWumpaPayout(struct actor *self)` - extern in `actor_part39.c`; also called from `game_loop14.c` alongside `CreateWumpa` for a "special" 4th spawn-mode case. |
+| `UpdateWumpaHop` | 16 B | No existing cross-reference found - address-adjacent to `StartWumpaPayout`, likely a closely related tiny accessor. |
 
 **11 functions in the middle (`UpdateExtraLifeHop`-`CheckWumpaPickup`, addresses
 `0x08011248`-`0x08011398`) have zero existing cross-references** and
@@ -219,7 +219,7 @@ struct they operate on is identified), separate groups for the larger,
 already-partially-characterized functions above and below it
 (`CheckExtraLifePickup`/`PickUpExtraLife`/`UpdateExtraLife`/`CreateExtraLife`/`SendExtraLifeToHud`
 as one group; `PickUpWumpa`/`UpdateWumpa`/`CreateWumpa`/`SendWumpaToHud`/
-`sub_801191C`/`UpdateWumpaHop` as another), plus the confirmed
+`StartWumpaPayout`/`UpdateWumpaHop` as another), plus the confirmed
 `DestroyCollisionQueue`/`ResetCollisionQueue` queue-accessor pair as a quick standalone
 win given how well-understood they already are from this pass.
 
@@ -303,7 +303,7 @@ functions' raw bytes at once (as planned) revealed a shared struct
 immediately: `SetExtraLifePos` (seed anchor+position) and `UpdateExtraLifeHop`
 (per-frame position update) both touch `self+0x0`/`self+4` (current
 Q8 x/y) and `self+0x4c`/`self+0x50` (Q8 anchor x/y) with the exact same
-offsets, and `SetExtraLifeHop`/`sub_8011388`/`sub_8011330`/`CheckWumpaPickup`
+offsets, and `SetExtraLifeHop`/`SetExtraLifeCounter`/`CollideExtraLife`/`CheckWumpaPickup`
 all touch the adjacent `self+0x48`-`self+0x4b` byte run - a small
 **"orbiting hazard" behavior** family on a further still-unnamed "part"
 object (distinct from `struct actor`'s own 0x1c bytes and from
@@ -313,14 +313,14 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 |---|---|---|
 | `UpdateExtraLifeHop` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gSineTable` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
 | `DrawExtraLife` | 44B | Re-derives visibility via `DrawSprite(gSpriteRenderer, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
-| `sub_80112F0` | 4B | Trivial - always returns 2. |
+| `GetExtraLifeClassId` | 4B | Trivial - always returns 2. |
 | `DestroyExtraLife` | 20B | Repoints `self->table` at `gExtraLifeVtable`, tail-calls `DestroySpriteObj` (already matched) with `self`+its own 2nd argument passed through. |
-| `sub_8011308` | 8B | Clears the "spawned/active" gate byte `self+0x48`. |
-| `InitExtraLife` | 32B | `InitSpriteObj(self)` (already matched, return discarded) + table repoint (`gExtraLifeVtable`) + `sub_8011308(self)`; returns `self`. Same init/reset/table-repoint trio shape as `actor_part8.c`. |
-| `sub_8011330` | 52B | If `self+0x48 == 0` and the player's `+0xc` bit 7 is set, fires `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`, already matched) - the usual "offset + fn pointer" pair convention. Always returns 0. |
+| `ResetExtraLifePickup` | 8B | Clears the "spawned/active" gate byte `self+0x48`. |
+| `InitExtraLife` | 32B | `InitSpriteObj(self)` (already matched, return discarded) + table repoint (`gExtraLifeVtable`) + `ResetExtraLifePickup(self)`; returns `self`. Same init/reset/table-repoint trio shape as `actor_part8.c`. |
+| `CollideExtraLife` | 52B | If `self+0x48 == 0` and the player's `+0xc` bit 7 is set, fires `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`, already matched) - the usual "offset + fn pointer" pair convention. Always returns 0. |
 | `SetExtraLifePos` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
 | `SetExtraLifeHop` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
-| `sub_8011388` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
+| `SetExtraLifeCounter` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
 | `CheckWumpaPickup` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gPlayer`) - primary AABB (`GetSpriteAttackBox`) when the player's own `+0xa == 0x13`, secondary AABB (`GetSpriteHitbox`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `PickUpWumpa` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
 
 All matched as real C except `UpdateExtraLifeHop`, closed as a NAKED
@@ -403,7 +403,7 @@ Two agents worked Phase 2 in parallel, each in an isolated worktree, on
 non-overlapping subsets of the 24-function chunk. This slice covers the
 6 largest/individually-characterized functions the Phase 2 table above
 already flagged with real cross-references: `PickUpWumpa`, `UpdateWumpa`,
-`CreateWumpa`, `SendWumpaToHud`, `sub_801191C`, `UpdateWumpaHop` - all 6
+`CreateWumpa`, `SendWumpaToHud`, `StartWumpaPayout`, `UpdateWumpaHop` - all 6
 **matched**, confirmed by a full clean `make compare` ("La suma
 coincide").
 
@@ -472,7 +472,7 @@ coincide").
   `table[tag]->+0x16` clamp idiom `PickUpWumpa`/`SendWumpaToHud` use,
   clears bits 0/5 of `+0x28`, and always tags `+0x4a`/`+0x4b` both `0`
   (the ROM's own `cmp r7,#0xff` dead-code check for a
-  `sub_801191C` special case is unreachable - `r7` is a hardcoded `0`
+  `StartWumpaPayout` special case is unreachable - `r7` is a hardcoded `0`
   local here, not an argument). Finishes with the same `+0x29`
   nibble-from-`GetPaletteSlot` bitfield combine `DropExtraLife`/`DropWumpa`
   already use, returning the new part.
@@ -486,13 +486,13 @@ coincide").
   a fixed `-0x1000` offset on both axes, then
   `ShowHudWumpa(gHud)` (not `ShowHudLives`, unlike
   `SendExtraLifeToHud`).
-- **`sub_801191C`** (16B) - a trivial leaf: `self->0x48 = 3`,
+- **`StartWumpaPayout`** (16B) - a trivial leaf: `self->0x48 = 3`,
   `self->0x49 = 0xa`. Already extern-declared as `void
-  sub_801191C(struct actor *self)` in `actor_part39.c`.
+  StartWumpaPayout(struct actor *self)` in `actor_part39.c`.
 - **`UpdateWumpaHop`** (124B, not 16B as the Phase 1 table above estimated
   - that estimate was a Phase-1 address-delta approximation that turned
   out wrong for this one entry; corrected here from this pass's own
-  direct byte read) - address-adjacent to `sub_801191C`, a small
+  direct byte read) - address-adjacent to `StartWumpaPayout`, a small
   `self->0x4b`/`self->0x4a`-driven table helper. Copies a fixed 3-word
   table (`gWumpaHopWidths`) onto the stack, computes `self->y` from
   a `gSineTable[self->0x4b*4]` lookup scaled by `FixedMul`
@@ -506,7 +506,7 @@ coincide").
 
 ### Matching result: NAKED transcription for 5 of 6, real C for 1
 
-`sub_801191C` is a trivial two-field-store leaf with no push/pop -
+`StartWumpaPayout` is a trivial two-field-store leaf with no push/pop -
 matched as plain C outright (`*((u8*)self+0x48)=3; *((u8*)self+0x49)=
 0xa;`), first try.
 
@@ -657,7 +657,7 @@ position).
   `PickUpExtraLife(self, 0)` - i.e. this is `PickUpExtraLife`'s own player-
   proximity trigger, the "randomized-behavior family"'s entry point.
 - **`PickUpExtraLife`** (224B) - `docs/rom_map.md`'s "randomized-behavior"
-  family sibling of `sub_8016048`, confirmed as one more member of the
+  family sibling of `CheckPlayerCtrlTurn`, confirmed as one more member of the
   "(dx,dy) offset then distance-pair" tail shape shared with
   `PickUpWumpa`/`SendWumpaToHud`/`SendExtraLifeToHud`: plays a hit SFX, sets
   `self->0x3c = 0xa0`, then either derives a randomized `(dx,dy)` from
@@ -693,7 +693,7 @@ position).
   matching the extern's own always-`0` call sites. Allocates a
   `0x54`-byte object, re-initializes it, repoints `self->table` at
   `gExtraLifeVtable`, clears the "spawned/active" gate
-  (`sub_8011308`), stores `arg0` at `self+8` and `arg1`/`arg2` (Q8) at
+  (`ResetExtraLifePickup`), stores `arg0` at `self+8` and `arg1`/`arg2` (Q8) at
   `self+0`/`self+4` mirrored into the orbit anchor
   `self+0x4c`/`self+0x50`, joins the `gUnknown_030012EC`
   `dual_array_manager` list, derives `self+0x30` from the
@@ -789,7 +789,7 @@ followed by `make compare` ("La suma coincide"):
   different register survivors" shape already documented for
   `UpdateWumpa` (`game_loop53.c`).
 - `CreateExtraLife` needs a `0` sentinel alive in `r8` across the
-  `OperatorNew`/`InitSpriteObj`/`sub_8011308` call sequence purely so it
+  `OperatorNew`/`InitSpriteObj`/`ResetExtraLifePickup` call sequence purely so it
   can later be spilled back out for three trailing byte stores - the
   same confirmed `mov r_lo,r_hi`/`push {r_lo,...}` high-register
   save/restore dance this compiler only reproduces when its own

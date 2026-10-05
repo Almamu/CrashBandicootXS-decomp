@@ -60,50 +60,50 @@ extern void SetMaskLevel(void *self, s32 arg);
  * materializes the values before the stores. */
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = flag;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = flag;
+    self->motionX = next;
 }
 
 static inline void ActTrio28(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    self->next32 = cur;
-    self->flag30 = flag;
-    self->next28 = next;
+    self->motionYKeepSpeed = cur;
+    self->motionYPending = flag;
+    self->motionY = next;
 }
 
 static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 static inline void ActSet27(struct act *self, s32 next)
 {
-    self->next31 = 0;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = 0;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 static inline void ActSet28(struct act *self, s32 next)
 {
-    self->next32 = 0;
-    self->flag30 = 1;
-    self->next28 = next;
+    self->motionYKeepSpeed = 0;
+    self->motionYPending = 1;
+    self->motionY = next;
 }
 
 static inline void ActSetNext27P(struct act *self, u8 *slot, s32 next)
 {
-    self->next31 = 0;
-    self->flag2F = 1;
+    self->motionXKeepSpeed = 0;
+    self->motionXPending = 1;
     *slot = next;
 }
 
 static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
 {
-    self->next31 = 1;
-    self->flag2F = 1;
+    self->motionXKeepSpeed = 1;
+    self->motionXPending = 1;
     *slot = next;
 }
 
@@ -221,7 +221,7 @@ void UpdateActionCtrl(struct act *self)
             u8 left = --self->unk_2A[1];
 
             if (left == 0) {
-                if (self->next27 == 0) {
+                if (self->motionX == 0) {
                     ActQueue27(self, left, self->unk_2A[2]);
                     self->unk_2A[2] = left;
                 }
@@ -254,11 +254,11 @@ void UpdateActionCtrl(struct act *self)
     }
     self->part->contact &= 8;
     if (self->part->contact == 8) {
-        u8 *slot = &self->next28;
+        u8 *slot = &self->motionY;
 
         if (*slot == 4 || *slot == 5) {
-            self->next32 = 0;
-            self->flag30 = 1;
+            self->motionYKeepSpeed = 0;
+            self->motionYPending = 1;
             *slot = 0;
         }
     }
@@ -433,9 +433,9 @@ done:
             tag = self->unk_2A[3];
             if (tag == 9 || self->state == 9) {
                 ACT_CALL1(self, m20, 0xA);
-                self->next31 = busy;
-                self->flag2F = 1;
-                self->next27 = busy;
+                self->motionXKeepSpeed = busy;
+                self->motionXPending = 1;
+                self->motionX = busy;
                 ActTrio28(self, busy, 1, 0x16);
                 ActionCtrlStateFlipBodySlamStart(self);
                 self->unk_2A[0] = busy;
@@ -444,9 +444,9 @@ done:
             if (tag == 7) {
                 ACT_CALL1(self, m20, 8);
                 ACT_CALL2(self, m50, self->part, 0x19);
-                self->next31 = busy;
-                self->flag2F = 1;
-                self->next27 = busy;
+                self->motionXKeepSpeed = busy;
+                self->motionXPending = 1;
+                self->motionX = busy;
                 ActTrio28(self, busy, 1, 0x15);
             }
         }
@@ -455,7 +455,7 @@ done:
         if (GetDpadDirection(gInput) <= 2) {
             ActQueue27(self, 0, 0);
         } else {
-            u8 *slot = &self->next27;
+            u8 *slot = &self->motionX;
 
             if (*slot == 0x1B || *slot == 0x1C)
                 ActHold27P(self, slot, 0x1C);
@@ -468,7 +468,7 @@ done:
                 ActSetNext27P(self, slot, 7);
         }
         if (gPlayer->unk_100)
-            self->next31 = 1;
+            self->motionXKeepSpeed = 1;
     }
 }
 /* Trailing byte count isn't a multiple of 4 - pad with zeros, not a nop. */

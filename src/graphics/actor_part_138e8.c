@@ -25,16 +25,16 @@ extern void StartActionCtrlRun(struct act *self);
  * `ActQueue27` stores a literal 1 for +0x2F, `ActTrio27` a caller value. */
 static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = flag;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = flag;
+    self->motionX = next;
 }
 
 /* Picks the part animation from its state: with tag 6, animation 9 on

@@ -16,15 +16,25 @@
  * go through the _call_via_r2/AD84/AD88 call-via-register trampolines with
  * gcc 2.x's {this-adjust, fn} method entries.
  *
- * - UpdateCortexBoss/sub_8018BDC/sub_8018CB0: a two-part effect that spawns two
+ * Most of these classes are pieces of the Neo Cortex fight (sprite bank
+ * 53: the Tesla cannon at three angles in anims 3-5, the green/red
+ * crosshairs in 0xF/0x10/0x12, the shots in 0xE/0x11 and the shrinking
+ * gems in 9-0xD): the cannon (SpawnCortexCannon) aims at a crosshair
+ * (SpawnCortexTarget, UpdateCortexTarget) that hops across the level and
+ * then chases the player, firing a shot at each stop (FireCortexShot,
+ * UpdateCortexShot). In this fight the red/green/yellow gem spawners
+ * hand over to SpawnCortexBossGem (bank 32's gems), which a ring shot
+ * shrinks away.
+ *
+ * - UpdateCortexBoss/SpawnCortexCannon/SpawnCortexTarget: a two-part effect that spawns two
  *   child parts, aims them at each other and sinks off the bottom of the
  *   level.
- * - sub_8018D70/sub_8018E4C/sub_8019094/sub_8019214: a "mover" that glides
- *   its part between targets (sub_80196B8 sets the target, sub_8018E4C
+ * - SpawnCortexBossGem/UpdateCortexTarget/SetCortexTargetState/FireCortexShot: a "mover" that glides
+ *   its part between targets (SetCortexTargetDest sets the target, UpdateCortexTarget
  *   interpolates it), bouncing across the level in a height pattern chosen
  *   by the level config (gStaticData_0816C358-0816C362 per-config timings),
- *   and spawns hit effects (sub_8019214).
- * - sub_8019324: hit test of a part against the player and the
+ *   and spawns hit effects (FireCortexShot).
+ * - UpdateCortexShot: hit test of a part against the player and the
  *   gCollidableList list (sub_8007xxx boxes, AabbOverlaps overlap).
  * - CreateTiny: allocates a 257-entry table of i*i>>8 squares.
  *
@@ -36,7 +46,7 @@
  * agbcc; the ROM was built with the older compiler, and this file is
  * built with old_agbcc (Makefile OLD_AGBCC_OBJS,
  * docs/matching/old-agbcc-retry.md), under which UpdateCortexBoss and
- * sub_801961C match as C and several of the workarounds were dropped.
+ * CreateCortexBossPlatformMover match as C and several of the workarounds were dropped.
  *
  * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
  * sources, every .c file under src/, and every word-aligned Thumb pointer
@@ -90,7 +100,7 @@ struct gfx_pair_ctrl
     struct gfx_part *childB;    // 0x20
 };
 
-/* sub_8018978 */
+/* StartTinyHop */
 struct gfx_offset_ctrl
 {
     u8 unk_00[0x30];
@@ -108,7 +118,7 @@ struct gfx_level_cfg
     s32 index;  // 0x10
 };
 
-/* sub_8018E4C/sub_8019094/sub_8019214 */
+/* UpdateCortexTarget/SetCortexTargetState/FireCortexShot */
 struct gfx_mover
 {
     u8 unk_00[8];
@@ -132,7 +142,7 @@ struct gfx_mover
     struct gfx_level_cfg *cfg;  // 0x3C
 };
 
-/* sub_8019324 */
+/* UpdateCortexShot */
 struct gfx_hit_ctrl
 {
     u8 unk_00[0x10];
@@ -141,7 +151,7 @@ struct gfx_hit_ctrl
     struct gfx_ctrl *owner;     // 0x14
 };
 
-/* sub_80194E0 */
+/* UpdateCortexBossGem */
 struct gfx_kind_ctrl
 {
     u8 unk_00[8];
@@ -190,12 +200,12 @@ extern struct gfx_player *gPlayer;
 extern struct gfx_list *gCollidableList;
 extern void *gUnknown_030012F4;
 extern struct gfx_level *gLevelLayers;
-extern u8 gStaticData_087E4494[];
+extern u8 gOneShotAnimCtrlVtable[];
 extern u8 gStaticData_087E44FC[];
 extern u8 gTinyVtable[];
-extern u8 gStaticData_087E45CC[];
-extern u8 gStaticData_087E4634[];
-extern u8 gStaticData_087E469C[];
+extern u8 gCortexBossGemVtable[];
+extern u8 gCortexBossPlatformMoverVtable[];
+extern u8 gCortexShotVtable[];
 extern u8 gStaticData_0816C35C[];
 extern u8 gStaticData_0816C35F[];
 extern u8 gStaticData_0816C362[];
@@ -226,18 +236,18 @@ extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteHitbox(void *dest, void *pt);
 extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void DestroyPlatformMover(void *self, s32 flags);
-extern void *sub_8019758(void *mem);
-extern void *sub_80196F8(void *mem, void *owner);
-extern void sub_80196B8(void *self, struct gfx_part *part, s32 x, s32 y);
+extern void *CreateCortexCannonCtrl(void *mem);
+extern void *CreateCortexTargetCtrl(void *mem, void *owner);
+extern void SetCortexTargetDest(void *self, struct gfx_part *part, s32 x, s32 y);
 extern void sub_801967C(void *self, u8 flag);
-extern void sub_8019770(void *self, struct gfx_part *part, s32 mode);
+extern void SetCortexBossState(void *self, struct gfx_part *part, s32 mode);
 
-void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part);
-void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part);
-void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode);
-void sub_8019214(struct gfx_mover *self, struct gfx_part *part, s32 kind);
-void *sub_80195EC(void *self, s32 kind);
-void *sub_8019660(void *self, void *cfg);
+void SpawnCortexCannon(struct gfx_pair_ctrl *self, struct gfx_part *part);
+void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part);
+void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mode);
+void FireCortexShot(struct gfx_mover *self, struct gfx_part *part, s32 kind);
+void *CreateCortexBossGemCtrl(void *self, s32 kind);
+void *CreateCortexShotCtrl(void *self, void *cfg);
 
 #define CALL2(obj, m, a)                                                       \
     do                                                                         \
@@ -367,7 +377,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
 
 /* "Mark part gone": set flags bit 0, then unless its id is 0xFFFF set the
  * id's bit in the gEntityFlags+0x108 bitmap - the same sequence as
- * MarkEntityGone (graphics.c) and sub_80178EC (actor_part_17524.c), inlined.
+ * MarkEntityGone (graphics.c) and InputCtrlStateDead (actor_part_17524.c), inlined.
  * The id is re-read (`volatile`) after the 0xFFFF test, and the word index
  * is a *signed* division of that zero-extended value, which is what gives
  * the ROM's copy + `asr #5` + subtract. The register pins are
@@ -388,7 +398,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
     } while (0)
 
 #define GONE_SLOT(slot, base) slot = (u32 *)((base) + 0x108)
-/* sub_8019324: the ROM holds the 0x108 bitmap offset in r4, where the
+/* UpdateCortexShot: the ROM holds the 0x108 bitmap offset in r4, where the
  * allocator would otherwise pick r5 */
 #define GONE_SLOT_R4(slot, base)                                               \
     {                                                                          \
@@ -428,16 +438,16 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
         }                                                                      \
     } while (0)
 
-void *sub_80188D0(struct gfx_ctrl *self)
+void *CreateOneShotAnimCtrl(struct gfx_ctrl *self)
 {
     InitCtrl(self);
-    self->vtable = (struct gfx_vtable *)gStaticData_087E4494;
+    self->vtable = (struct gfx_vtable *)gOneShotAnimCtrlVtable;
     return self;
 }
 
-void sub_80188E8(struct gfx_ctrl *self, s32 flags)
+void DestroyOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags)
 {
-    self->vtable = (struct gfx_vtable *)gStaticData_087E4494;
+    self->vtable = (struct gfx_vtable *)gOneShotAnimCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -465,7 +475,7 @@ void nullsub_19(void)
 {
 }
 
-void sub_8018978(struct gfx_offset_ctrl *self, struct gfx_part *part)
+void StartTinyHop(struct gfx_offset_ctrl *self, struct gfx_part *part)
 {
     s32 px = part->pos.x;
 
@@ -513,7 +523,7 @@ void *CreateTiny(struct gfx_squares *self)
     return self;
 }
 
-/* State machine for the two-part effect built by sub_8018BDC/sub_8018CB0:
+/* State machine for the two-part effect built by SpawnCortexCannon/SpawnCortexTarget:
  * state 0 spawns both children and moves to state 1; state 1 picks the
  * first child's animation tag from the second child's height, mirrors
  * both parts towards the second child and sets both parts' frame from
@@ -528,8 +538,8 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
     switch (self->state)
     {
     case 0:
-        sub_8018BDC(self, part);
-        sub_8018CB0(self, part);
+        SpawnCortexCannon(self, part);
+        SpawnCortexTarget(self, part);
         AndFlags(part, -5);
         goto mode1;
     case 1:
@@ -562,11 +572,11 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
     case 2:
         if (++self->counter > 2)
         {
-            sub_8019770(self, part, 3);
+            SetCortexBossState(self, part, 3);
             break;
         }
     mode1:
-        sub_8019770(self, part, 1);
+        SetCortexBossState(self, part, 1);
         break;
     case 4:
         break;
@@ -577,13 +587,13 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
         {
             if (HasTurboRun(gLevelState))
                 RequestRoomExit();
-            sub_8019770(self, part, 4);
+            SetCortexBossState(self, part, 4);
         }
         break;
     }
 }
 
-void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
+void SpawnCortexCannon(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct gfx_ctrl *ctrl;
@@ -591,7 +601,7 @@ void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
     c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
     SetTag(c, 3);
     c->animating = 0;
-    ctrl = sub_8019758(OperatorNew(0x10));
+    ctrl = CreateCortexCannonCtrl(OperatorNew(0x10));
     SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
@@ -602,7 +612,7 @@ void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
     self->childA = c;
 }
 
-void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
+void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct gfx_ctrl *ctrl;
@@ -628,7 +638,7 @@ void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
         SetSpriteAnimDone(c, 0);
         SetFrameNibbleM(c, GetSpriteAnimPaletteSlot(c), k);
     }
-    ctrl = sub_80196F8(OperatorNew(0x40), self);
+    ctrl = CreateCortexTargetCtrl(OperatorNew(0x40), self);
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     x = part->pos.x;
@@ -647,7 +657,7 @@ void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
     }
 }
 
-void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
+void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
 {
     struct gfx_part *c = CreateMovingSprite(a0, a1, a2, a3);
     struct gfx_ctrl *ctrl;
@@ -666,7 +676,7 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         break;
     }
     SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
-    ctrl = sub_80195EC(OperatorNew(0x14), kind);
+    ctrl = CreateCortexBossGemCtrl(OperatorNew(0x14), kind);
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->kind = 0;
@@ -678,7 +688,7 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     AddToPartList(gCollidableList, c);
 }
 
-void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
+void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
 {
     /* pinned so `self` is left the ROM's r7 */
     register struct gfx_part *part asm("r6") = partArg;
@@ -708,7 +718,7 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
         b = PART_FLAGS(part);
         m &= b;
         PART_FLAGS(part) = m;
-        sub_8019094(self, part, 1);
+        SetCortexTargetState(self, part, 1);
         break;
     }
     case 1:
@@ -720,18 +730,18 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
     case 3:
         self->nextState = 4;
         CALL3(self, method_50, part, 0x12);
-        sub_8019094(self, part, 7);
+        SetCortexTargetState(self, part, 7);
         break;
     case 4:
-        sub_8019214(self, part, 0);
-        sub_8019094(self, part, 2);
+        FireCortexShot(self, part, 0);
+        SetCortexTargetState(self, part, 2);
         CALL3(self, method_50, part, 0xF);
         break;
     case 7:
         if (part->animDone)
         {
         next:
-            sub_8019094(self, part, self->nextState);
+            SetCortexTargetState(self, part, self->nextState);
         }
         break;
     case 5:
@@ -754,8 +764,8 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
             break;
         if (--self->timer == 0)
         {
-            sub_8019094(self, part, 1);
-            sub_8019214(self, part, 1);
+            SetCortexTargetState(self, part, 1);
+            FireCortexShot(self, part, 1);
             break;
         }
         if (self->timer == gStaticData_0816C35F[self->cfg->index])
@@ -773,7 +783,7 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
             *blinking = left;
             SET_FRAME_R(part, 1, "r3", "r4");
         }
-        sub_80196B8(self, part, gPlayer->x, gPlayer->y - 0xA00);
+        SetCortexTargetDest(self, part, gPlayer->x, gPlayer->y - 0xA00);
         {
             s32 i = self->cfg->index;
 
@@ -783,10 +793,10 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
     }
     case 8:
         self->nextState = 10;
-        sub_8019094(self, part, 6);
+        SetCortexTargetState(self, part, 6);
         break;
     case 9:
-        sub_8019094(self, part, 8);
+        SetCortexTargetState(self, part, 8);
         break;
     case 10:
         break;
@@ -847,12 +857,12 @@ toggleTop:
     }
 }
 
-void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
+void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mode)
 {
     switch (mode)
     {
     case 8:
-        sub_80196B8(self, part, (u32)(gLevelLayers->layer0->width << 8) >> 1,
+        SetCortexTargetDest(self, part, (u32)(gLevelLayers->layer0->width << 8) >> 1,
                     (gLevelLayers->layer0->height << 8) + 0x2000);
         break;
     case 1:
@@ -871,7 +881,7 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
         self->high = mode;
         self->top = zero;
     }
-        sub_80196B8(self, part, (gLevelLayers->layer0->width << 8) - 0x400, 0x9800);
+        SetCortexTargetDest(self, part, (gLevelLayers->layer0->width << 8) - 0x400, 0x9800);
         self->nextState = 2;
         break;
     case 2:
@@ -906,7 +916,7 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
         {
             y = 0x8200;
         }
-        sub_80196B8(self, part, x, y);
+        SetCortexTargetDest(self, part, x, y);
         break;
     }
     case 5:
@@ -918,7 +928,7 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
     CALL2(self, method_20, mode);
 }
 
-void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
+void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
 {
     /* pinned so `self` is left the ROM's r7 (see the file comment) */
     register struct gfx_part *part asm("r6") = partArg;
@@ -937,7 +947,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
         break;
     }
     SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
-    ctrl = sub_8019660(OperatorNew(0x18), self->cfg);
+    ctrl = CreateCortexShotCtrl(OperatorNew(0x18), self->cfg);
     ctrl->fast = kind == 1;
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
@@ -960,7 +970,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
         PlaySfx(gAudioContext, 0x32, 0x100);
 }
 
-void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
+void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 {
     struct gfx_part *part = partArg;
     struct gfx_box a;
@@ -1046,7 +1056,7 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
     }
 }
 
-void sub_8019464(struct gfx_ctrl *self, struct gfx_part *part)
+void UpdateCortexBossPlatformMover(struct gfx_ctrl *self, struct gfx_part *part)
 {
     s32 target;
 
@@ -1075,7 +1085,7 @@ void sub_8019464(struct gfx_ctrl *self, struct gfx_part *part)
     }
 }
 
-void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
+void UpdateCortexBossGem(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
 {
     struct gfx_part *part = partArg;
 
@@ -1108,59 +1118,59 @@ void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
     }
 }
 
-void sub_80195D8(struct gfx_ctrl *self, s32 flags)
+void DestroyCortexBossGemCtrl(struct gfx_ctrl *self, s32 flags)
 {
-    self->vtable = (struct gfx_vtable *)gStaticData_087E45CC;
+    self->vtable = (struct gfx_vtable *)gCortexBossGemVtable;
     DestroyCtrl(self, flags);
 }
 
-void *sub_80195EC(void *selfArg, s32 kind)
+void *CreateCortexBossGemCtrl(void *selfArg, s32 kind)
 {
     struct gfx_kind_ctrl *self = selfArg;
 
     InitCtrl(self);
-    self->vtable = (struct gfx_vtable *)gStaticData_087E45CC;
+    self->vtable = (struct gfx_vtable *)gCortexBossGemVtable;
     self->kind = kind;
     return self;
 }
 
-void sub_8019608(struct gfx_ctrl *self, s32 flags)
+void DestroyCortexBossPlatformMover(struct gfx_ctrl *self, s32 flags)
 {
-    self->vtable = (struct gfx_vtable *)gStaticData_087E4634;
+    self->vtable = (struct gfx_vtable *)gCortexBossPlatformMoverVtable;
     DestroyPlatformMover(self, flags);
 }
 
 /* Constructor: base-constructs through CreatePlatformMover(self, 0, 0, 0, {0}, 6)
- * and points the method table at gStaticData_087E4634.
+ * and points the method table at gCortexBossPlatformMoverVtable.
  *
  * The fifth argument is a byte the ROM stores with `strb` into its
  * outgoing stack slot; like CreatePlatform (actor_part_1a878.c), the call
  * writes both stack slots itself through MOVER_NEW's 4-argument view
  * (include/mover_new.h), which also gives the ROM's `mov r1, sp` before
  * the 0. */
-void *sub_801961C(struct gfx_ctrl *self)
+void *CreateCortexBossPlatformMover(struct gfx_ctrl *self)
 {
     struct mover_stack_args args;
 
     *(volatile u8 *)&args.dirY = 0;
     *(volatile s32 *)&args.kind = 6;
     MOVER_NEW(self, 0, 0, 0);
-    self->vtable = (struct gfx_vtable *)gStaticData_087E4634;
+    self->vtable = (struct gfx_vtable *)gCortexBossPlatformMoverVtable;
     return self;
 }
 
-void sub_801964C(struct gfx_ctrl *self, s32 flags)
+void DestroyCortexShotCtrl(struct gfx_ctrl *self, s32 flags)
 {
-    self->vtable = (struct gfx_vtable *)gStaticData_087E469C;
+    self->vtable = (struct gfx_vtable *)gCortexShotVtable;
     DestroyCtrl(self, flags);
 }
 
-void *sub_8019660(void *selfArg, void *cfg)
+void *CreateCortexShotCtrl(void *selfArg, void *cfg)
 {
     struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 unk_10[4]; void *cfg; } *self = selfArg;
 
     InitCtrl(self);
-    self->vtable = (struct gfx_vtable *)gStaticData_087E469C;
+    self->vtable = (struct gfx_vtable *)gCortexShotVtable;
     self->cfg = cfg;
     return self;
 }

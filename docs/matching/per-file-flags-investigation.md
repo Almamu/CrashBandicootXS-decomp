@@ -156,7 +156,7 @@ old_agbcc files:
 - `actor_part_18008.c` (`PickTinyHopTarget`)
 - `actor_part_188d0.c` (`CreateTiny`)
 - `actor_part_1b85c.c` (`DestroyLevelSelect`)
-- `actor_part_1cee0.c` (`LevelSelectTurnPage`, `sub_801D5CC`, `InitZoomBg`)
+- `actor_part_1cee0.c` (`LevelSelectTurnPage`, `PlaceLevelSelectEntries`, `InitZoomBg`)
 - `graphics_package_1e578.c` (`LoadGraphicsPackage`)
 - `graphics_package_1e688.c` (`FitScaledSprite`)
 - `hud_digit_array.c` (`InitHud`)

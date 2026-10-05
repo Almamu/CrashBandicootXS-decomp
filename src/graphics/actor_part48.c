@@ -8,9 +8,9 @@
  * (`DrawGroundSprite`-`GetMovingSpriteCtrl`). */
 
 extern s32 GetSpriteAnimPaletteSlot(void *part);
-extern void sub_8015840(void *arg0);
-extern void sub_80159A4(void *arg0);
-extern void sub_8017994(void *arg0);
+extern void RestartActionCtrl(void *arg0);
+extern void RestartPlayerCtrl(void *arg0);
+extern void RestartInputCtrl(void *arg0);
 
 /* `part`-object constructor/reset: clears the velocity/accel fields
  * `sub_800A590`/`ApplySpriteVelocity` consume, resets state (`+0x68`) to 8,
@@ -269,7 +269,7 @@ asm(".align 2, 0");
  * a sub-state byte at `+0x88` to one of three per-state teardown
  * helpers (each called with the same single `+0x44` "record" argument
  * `GetMovingSpriteCtrl`/`DestroyMovingSprite` already established): state 0 ->
- * `sub_8015840`, state 1 -> `sub_80159A4`, state 3 -> `sub_8017994`;
+ * `RestartActionCtrl`, state 1 -> `RestartPlayerCtrl`, state 3 -> `RestartInputCtrl`;
  * state 2 and anything else is a no-op.
  *
  * Needed `self` pinned to `r3` (kept live across the three `bl` calls),
@@ -340,13 +340,13 @@ void ResetPlayerForRoom(void *selfArg)
         if (state2 == 3) goto do3;
         goto endDispatch;
     do0:
-        sub_8015840(self->mover);
+        RestartActionCtrl(self->mover);
         goto endDispatch;
     do1:
-        sub_80159A4(self->mover);
+        RestartPlayerCtrl(self->mover);
         goto endDispatch;
     do3:
-        sub_8017994(self->mover);
+        RestartInputCtrl(self->mover);
     endDispatch:
         ;
     }

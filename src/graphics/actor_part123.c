@@ -30,7 +30,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * gated: once when the `_call_via_r1` hit-probe against `other->table`'s
  * own +0x28/+0x2c pair reports *no* hit, once when `other->0xc` bit 3
  * is already set, and once when `other->0x38` is nonzero. This is the
- * exact idiom `actor_part27c.c`'s `sub_8018884` already matches as
+ * exact idiom `actor_part27c.c`'s `UpdateOneShotAnimCtrl` already matches as
  * real C (its own doc comment: "needs several `register asm` pins ...
  * without them this compiler ... folds the ROM's shift-setup pair ...
  * and CSEs away the ROM's second, seemingly redundant reload") - here
@@ -105,7 +105,7 @@ extern void DestroyCtrl(void *self, s32 flags);
 
 /* Sets `self+0xc`'s table pointer to `gEffectCtrlVtable`, then
  * tail-calls `DestroyCtrl` - same double-set pattern as
- * `sub_8018858`/`sub_8017A78`/`sub_8017FD4`. */
+ * `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`. */
 void DestroyEffectCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
@@ -119,7 +119,7 @@ extern void InitCtrl(void *self);
 /* Resets via `InitCtrl`, re-points `self+0xc`'s table pointer at
  * `gEffectCtrlVtable`, and runs `nullsub_3(self)` - the same
  * "reset via `InitCtrl`, re-point `self+0xc`, return `self`"
- * constructor shape already matched for `sub_801886C`/`sub_8018858`/
+ * constructor shape already matched for `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
  * `CreateKnockedEnemyCtrl`. */
 void *InitEffectCtrl(void *selfArg)
 {

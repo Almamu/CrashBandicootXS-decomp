@@ -96,7 +96,7 @@ s32 CollideWumpa(struct actor *self)
 /* Sets `self->x`/`self->y` (Q8 fixed-point) from raw pixel `x`/`y`,
  * and mirrors the result into a second `{x, y}` pair at `self+0x4c`/
  * `+0x50` (not otherwise characterized in this ROM region yet). */
-void sub_8011A50(struct actor *self, s32 x, s32 y)
+void SetWumpaPos(struct actor *self, s32 x, s32 y)
 {
     s32 storedX, storedY;
 
@@ -108,12 +108,12 @@ void sub_8011A50(struct actor *self, s32 x, s32 y)
     *(s32 *)((u8 *)self + 0x50) = storedY;
 }
 
-extern void sub_801191C(struct actor *self);
+extern void StartWumpaPayout(struct actor *self);
 
 /* Sets `self+0x4a`/`+0x4b` (not otherwise characterized yet), and if
- * `value == 0xff` also calls `sub_801191C` (still raw asm just above
+ * `value == 0xff` also calls `StartWumpaPayout` (still raw asm just above
  * this ROM region, `0x0801191C`) on `self`. */
-void sub_8011A64(struct actor *self, s32 value)
+void SetWumpaHop(struct actor *self, s32 value)
 {
     u8 *p = (u8 *)self + 0x4a;
     u8 zero = 0;
@@ -122,13 +122,13 @@ void sub_8011A64(struct actor *self, s32 value)
     p++;
     *p = zero;
     if (value == 0xff) {
-        sub_801191C(self);
+        StartWumpaPayout(self);
     }
 }
 
 /* Trivial one-byte setter - `self+0x49` (not otherwise characterized
  * yet). */
-void sub_8011A84(struct actor *self, u8 value)
+void SetWumpaCounter(struct actor *self, u8 value)
 {
     *((u8 *)self + 0x49) = value;
 }
@@ -209,13 +209,13 @@ inRange:
 }
 
 extern void *OperatorNew(s32 size);
-extern void nullsub_16(void *self);
+extern void ResetStopwatch(void *self);
 extern u8 gStopwatchVtable[];
 
 /* Allocates a new `struct actor`-shaped object (`OperatorNew(0x40)`,
  * same size as `CreateSpriteObj`'s constructor in `actor_part6.c`),
  * re-initializes it via `InitSpriteObj`, overwrites its table with
- * `gStopwatchVtable`, and runs the empty `nullsub_16` on it before
+ * `gStopwatchVtable`, and runs the empty `ResetStopwatch` on it before
  * setting `field_08`/`x`/`y` from the raw pixel arguments. */
 struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2)
 {
@@ -223,7 +223,7 @@ struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2)
 
     InitSpriteObj(self);
     self->table = gStopwatchVtable;
-    nullsub_16(self);
+    ResetStopwatch(self);
     self->field_08 = arg0;
     self->x = (s32)arg1 << 8;
     self->y = (s32)arg2 << 8;
@@ -231,7 +231,7 @@ struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2)
 }
 
 /* Empty stub. */
-void nullsub_16(void *self)
+void ResetStopwatch(void *self)
 {
 }
 
@@ -243,7 +243,7 @@ void DestroyStopwatch(struct actor *self, u32 arg1)
     DestroySpriteObj(self, arg1);
 }
 
-/* Same re-init/table-set/`nullsub_16` shape as `CreateStopwatch` above,
+/* Same re-init/table-set/`ResetStopwatch` shape as `CreateStopwatch` above,
  * but re-initializing an existing `self` instead of allocating a new
  * one - the same relationship `InitSpriteObj` itself has to
  * `CreateSpriteObj` (see `actor_part6.c`'s note on that pair). */
@@ -251,7 +251,7 @@ struct actor *InitStopwatch(struct actor *self)
 {
     InitSpriteObj(self);
     self->table = gStopwatchVtable;
-    nullsub_16(self);
+    ResetStopwatch(self);
     return self;
 }
 

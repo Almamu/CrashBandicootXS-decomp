@@ -2,7 +2,7 @@
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1967c.s` now live
 in the new `src/graphics/actor_part_1967c.c` (named by address, like
-`actor_part_17524.c`). **23 are real C; `sub_801A03C` and `sub_801A114`
+`actor_part_17524.c`). **23 are real C; `SpawnDingodileShark` and `UpdateDingodileShield`
 are NAKED transcriptions** with complete C reconstructions kept under
 `#if NON_MATCHING`. Issue #24 stays open for those two.
 
@@ -32,7 +32,7 @@ inline setter. Other files handled this pattern with per-site register
 pins (`actor_part_17524.c`'s `register s32 m asm("r0") = 0x7F`,
 `graphics_loading_1fdec.c`'s inline-asm `mov r1, #0x10; neg r1, r1`).
 With `old_agbcc` the natural C gives these sequences with no pins.
-`sub_801A584`, for example, matches as plain C under `old_agbcc` and
+`SpawnDingodileStalactite`, for example, matches as plain C under `old_agbcc` and
 does not match at all under `agbcc`.
 
 The Makefile now has an `OLD_AGBCC_OBJS` list. Objects in it are
@@ -91,16 +91,16 @@ Thumb pointers:
 
 | table | ctor | dtor | other methods |
 |---|---|---|---|
-| `gStaticData_087E4704` | `sub_80196F8` | `sub_80196E4` | `sub_80196B8` (position/delta setter, `gStaticData_0816C358` byte lookup) |
-| `gStaticData_087E476C` | `sub_8019758` | `sub_8019744` | `sub_8019730` (update), `sub_8019770` (set-state wrapper; state 3 also pokes its part's controller and `SpawnBodySlamPower`) |
+| `gCortexTargetVtable` | `CreateCortexTargetCtrl` | `DestroyCortexTargetCtrl` | `SetCortexTargetDest` (position/delta setter, `gStaticData_0816C358` byte lookup) |
+| `gCortexCannonVtable` | `CreateCortexCannonCtrl` | `DestroyCortexCannonCtrl` | `UpdateCortexCannon` (update), `SetCortexBossState` (set-state wrapper; state 3 also pokes its part's controller and `SpawnBodySlamPower`) |
 | `gCortexBossVtable` | `CreateCortexBoss` | `DestroyCortexBoss` | - |
-| `gStaticData_087E483C` | `sub_801A724` | `sub_801A73C` | `sub_801A64C` (update: sets the part's velocity from `gStaticData_0816C3B8`, removes it past either level edge) |
-| `gStaticData_087E48A4` | `sub_801A768` | `sub_801A750` | `sub_801A2A8` (update) |
-| `gStaticData_087E490C` | `sub_801A794` (issue #25) | `sub_801A780` | `sub_801A114` (update) |
+| `gDingodileSharkVtable` | `CreateDingodileSharkCtrl` | `DestroyDingodileSharkCtrl` | `UpdateDingodileShark` (update: sets the part's velocity from `gStaticData_0816C3B8`, removes it past either level edge) |
+| `gDingodileProjectileVtable` | `CreateDingodileProjectileCtrl` | `DestroyDingodileProjectileCtrl` | `UpdateDingodileProjectile` (update) |
+| `gDingodileShieldVtable` | `CreateDingodileShieldCtrl` (issue #25) | `DestroyDingodileShieldCtrl` | `UpdateDingodileShield` (update) |
 | `gDingodileVtable` | (issue #25 range) | `DestroyDingodile` (issue #25) | `UpdateDingodile` (update) |
 
 `sub_801967C` sets `kind` (+0x0A) on every part in `gUnknown_030012EC`'s list.
-`sub_8019718`/`sub_80197F4` are **UNUSED**: no `bl`, no `.4byte` and no
+`sub_8019718`/`GetDingodileHits` are **UNUSED**: no `bl`, no `.4byte` and no
 Thumb pointer anywhere in the ROM. They are matched anyway.
 
 The `087E4974` object (`struct dingodile_boss`) is a boss-like state machine.
@@ -108,13 +108,13 @@ The `087E4974` object (`struct dingodile_boss`) is a boss-like state machine.
 (overlap of the player's box with the boss's hurt box while the player's
 `kind` is 0x13), walks the boss along the level using the approach
 tables `gStaticData_0816C368/78` (facing) and `0816C390/A0`, turns it
-round at either level edge, spawns projectiles (`sub_8019EBC` mode 1)
+round at either level edge, spawns projectiles (`SpawnDingodileShieldOrRocket` mode 1)
 on animation frame 0x14, and finally, once the part falls below the
 level, signals `RequestRoomExit` (the "entity ready" barrier in
 `docs/rom_map.md`). `SetDingodileState` is its "enter state N" routine: it
 calls the object's slot +0x20 method and then runs the state's
-animation, spawns and sounds. `sub_8019EBC`, `sub_801A03C` and
-`sub_801A584` spawn parts through `CreateMovingSprite`. `sub_8019EBC` reads the
+animation, spawns and sounds. `SpawnDingodileShieldOrRocket`, `SpawnDingodileShark` and
+`SpawnDingodileStalactite` spawn parts through `CreateMovingSprite`. `SpawnDingodileShieldOrRocket` reads the
 level's "collected" bits (`gEntityFlags->info`) into the new part's
 `+0x28` flags.
 
@@ -151,16 +151,16 @@ low nibble slot, `+0x2D` tag, `+0x30` frame, `+0x38` "animation done",
   `hit` value copied into r0), `Approach()` (the ROM's distance lands in
   r0), and `SetTag()` (a setter parameter makes old_agbcc load the tag
   constant before the address).
-- `sub_8019EBC` case 0 holds the constant 1 in r5 across three calls for
+- `SpawnDingodileShieldOrRocket` case 0 holds the constant 1 in r5 across three calls for
   the `kind` store: an `s32 kind = 1` local does this; a `u8` or a
   literal does not. `mode`/`kind` otherwise match via a `switch`, not an
   if-chain (the ROM puts the default block first).
-- `sub_8019EBC` mode 0 attaches a new `087E490C` controller
+- `SpawnDingodileShieldOrRocket` mode 0 attaches a new `087E490C` controller
   (`struct obj_490c`, 0x28 bytes, `+0x24` target = the boss's part) to
-  the part it spawns. `sub_801A114` then blinks that part.
-- `sub_801A2A8`'s hit test is `(fl.raw >> 6) & 1`, a value extract rather
+  the part it spawns. `UpdateDingodileShield` then blinks that part.
+- `UpdateDingodileProjectile`'s hit test is `(fl.raw >> 6) & 1`, a value extract rather
   than a bit test.
-- `sub_801A64C`/`sub_801A2A8`'s "mark gone" (`MarkCollected`, the
+- `UpdateDingodileShark`/`UpdateDingodileProjectile`'s "mark gone" (`MarkCollected`, the
   `MarkEntityGone` bitmap idiom) matches as a plain inline under
   `old_agbcc`: `w /= 32` gives the ROM's `asr`, and loading the global
   before copying the id gives its register order. When `MarkCollected` is
@@ -169,7 +169,7 @@ low nibble slot, `+0x2D` tag, `+0x30` frame, `+0x38` "animation done",
 
 ## NAKED
 
-### `sub_801A03C` (floor-part spawner)
+### `SpawnDingodileShark` (floor-part spawner)
 
 The only difference is register allocation. gcc gives the new
 controller r4 and the part r5. The ROM has the part in r4 and the
@@ -182,7 +182,7 @@ part to r4 blocks the controller's own `add r5, r5, r0` at the second
 call. Pinning `one` to r8 drops r8 from push/pop (the known agbcc
 callee-saved-register bug), so it is not an option.
 
-### `sub_801A114` (`087E490C` controller's per-frame update)
+### `UpdateDingodileShield` (`087E490C` controller's per-frame update)
 
 The ROM keeps `other` in r9, `&gPlayer` in r10, the player-box
 pointer in r8 and `self` in r7, which leaves r4-r6 for temporaries. gcc
@@ -196,17 +196,17 @@ temporary appears on the stack.
 
 ## Later pass (issue #12/#24/#26 NAKED retry)
 
-`sub_801A03C` is real C now: its two virtual calls are plain blocks
+`SpawnDingodileShark` is real C now: its two virtual calls are plain blocks
 (`VCALL1_B`) instead of VCALL1's `do { } while (0)`, whose loop notes
 swapped the part/controller registers, and `facing` is stored into the
 1-bit field unmasked (the explicit `& 1` made the tag store reuse the
-held constant 1). `sub_801A114` stays NAKED; its state-0 `orr` chain is
+held constant 1). `UpdateDingodileShield` stays NAKED; its state-0 `orr` chain is
 now reproduced (see
 [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md)).
 
 ## Later pass: hard-register hold
 
-`sub_801A114` is now real C (old_agbcc, also identical under agbcc).
+`UpdateDingodileShield` is now real C (old_agbcc, also identical under agbcc).
 r5 and r6 held live across the box builders make global-alloc start
 the long-lived values at r7, as the gap4 note predicted (159 -> 16
 halfwords). The state-0 BLDCNT accumulator is a block-scoped r5

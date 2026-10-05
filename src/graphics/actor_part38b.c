@@ -156,9 +156,9 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
             {
                 u8 idx = 0x1b;
 
-                self->next31 = 0;
-                self->flag2F = one;
-                self->next27 = idx;
+                self->motionXKeepSpeed = 0;
+                self->motionXPending = one;
+                self->motionX = idx;
             }
         } else {
             StartActionCtrlRun(self);
@@ -169,12 +169,12 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
         u8 zero = 0;
 
         SetActionCtrlModeAnim(self, 0, 0x12, 0, zero);
-        self->next31 = zero;
-        self->flag2F = 1;
-        self->next27 = zero;
-        self->next32 = zero;
-        self->flag30 = 1;
-        self->next28 = zero;
+        self->motionXKeepSpeed = zero;
+        self->motionXPending = 1;
+        self->motionX = zero;
+        self->motionYKeepSpeed = zero;
+        self->motionYPending = 1;
+        self->motionY = zero;
         break;
     }
     }

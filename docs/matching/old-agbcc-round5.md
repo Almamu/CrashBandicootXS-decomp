@@ -40,5 +40,5 @@ gone.
 
 ## Comment-only updates
 
-- **Issue #24:** the NAKED `sub_801A03C` and `sub_801A114` (actor_part_1967c.c) now describe their remaining gaps under old_agbcc (26 and 139 halfwords, register allocation).
+- **Issue #24:** the NAKED `SpawnDingodileShark` and `UpdateDingodileShield` (actor_part_1967c.c) now describe their remaining gaps under old_agbcc (26 and 139 halfwords, register allocation).
 - **Issue #56:** so do `LoadBgPicture` and `FillBgPictureMap` (actor_part45d.c).

@@ -7,7 +7,7 @@
 
 /* `struct xy_pair` positions and animation ids of the level-select
  * screens: actor_part_1b85c.c (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
- * sub_801BAD0) and actor_part_1cee0.c (its level menu's item positions
+ * InitLaunchPad) and actor_part_1cee0.c (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
 struct xy_pair {
     s32 x;
@@ -49,7 +49,7 @@ const u32 gLevelSelectRankAnims[5] = {
     1, 3, 2, 4, 0,
 };
 
-/* 16 halfwords sub_801BAD0 copies into its palette cache (like the other
+/* 16 halfwords InitLaunchPad copies into its palette cache (like the other
  * mostly-0xFFFF slot-2 halves). */
 const u16 gLevelSelectPalette[16] = {
     0x0000, 0x0000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,

@@ -101,7 +101,7 @@ const u32 gActionCtrlMotionEntries[33][2] = {
     { 33, 0 },
 };
 
-/* Read by sub_8016AB0, sub_801721C and sub_8017240 (actor_part_16048.c). */
+/* Read by ApplyPlayerCtrlMotion, StartPlayerCtrlMotionYFromSet and StartPlayerCtrlMotionXFromSet (actor_part_16048.c). */
 const struct motion_rec gPlayerCtrlMotionRecords[31] = {
     { 0, 0, 0 },
     { 192, 0, 192 },
@@ -178,7 +178,7 @@ const u32 gPlayerCtrlMotionEntries[38][2] = {
     { 0, 30 },
 };
 
-/* The records sub_8017808 (actor_part_17524.c) indexes by its entry
+/* The records ApplyInputCtrlMotion (actor_part_17524.c) indexes by its entry
  * set's entries. */
 const struct motion_rec gInputCtrlMotionRecords[9] = {
     { 0, 0, 0 },

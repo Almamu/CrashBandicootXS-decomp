@@ -17,7 +17,7 @@
  * path shares the same anchor record. Follows the exact same
  * "reset via `InitCtrl`, then re-point `self+0xc`'s table pointer,
  * return `self`" shape already matched for sibling constructors
- * `sub_801886C` (`src/graphics/actor_part16.c`) and `sub_8018858`
+ * `CreateStompedHopPadCtrl` (`src/graphics/actor_part16.c`) and `DestroyStompedHopPadCtrl`
  * (`src/graphics/actor_part18.c`), plus a `nullsub_14(self)` no-op
  * tail call specific to this object type. */
 extern u8 gKnockedEnemyCtrlVtable[];

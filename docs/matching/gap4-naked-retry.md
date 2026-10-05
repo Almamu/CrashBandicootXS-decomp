@@ -6,9 +6,9 @@ This pass took the four drafts that the mix-6 pass
 | Function | File | Start | Result |
 |---|---|---|---|
 | CreateWumpa (#15) | `src/system/game_loop53.c` | 95 hw, 312 vs 308 B | **Closed**, real C, old_agbcc (the file already builds with it). |
-| sub_801AB98 (#25) | `src/graphics/actor_part_1ab98.c` | 644 hw, 1608 vs 1648 B | Not closed. The draft is now 1640 B. What's left is register copies and reload phase. |
+| ResolvePlatformCollision (#25) | `src/graphics/actor_part_1ab98.c` | 644 hw, 1608 vs 1648 B | Not closed. The draft is now 1640 B. What's left is register copies and reload phase. |
 | CreateCrate (#13) | `src/system/game_loop36.c` | 508 hw, 1416 vs 1396 B | Not closed. The type/slot*2 swap is fixed and the draft is 1388 B. Placement-record pointer copies are still missing. |
-| sub_801A114 (#24) | `src/graphics/actor_part_1967c.c` | 159 hw, 392 vs 404 B | Not closed. Only the note changed. |
+| UpdateDingodileShield (#24) | `src/graphics/actor_part_1967c.c` | 159 hw, 392 vs 404 B | Not closed. Only the note changed. |
 
 ## CreateWumpa
 
@@ -37,7 +37,7 @@ Three smaller pieces:
 call is lost by CSE at the list join, so the ROM's dead
 `cmp r7,#0xff` stays.
 
-## sub_801AB98 (1608 to 1640 bytes)
+## ResolvePlatformCollision (1608 to 1640 bytes)
 
 - **Missing jump table.** The 40 missing bytes were the 9-entry jump
   table for `switch (result)`. Cases 1 and 2 share a label and merge
@@ -80,7 +80,7 @@ Still open:
 - Case 15's two ands are folded into one. Two `&=` statements keep both
   ands but change the stack frame.
 
-## sub_801A114
+## UpdateDingodileShield
 
 The size gap is only the hi-register saves. The ROM's four long-lived
 values are allocated in the same order as the draft's, but from r7

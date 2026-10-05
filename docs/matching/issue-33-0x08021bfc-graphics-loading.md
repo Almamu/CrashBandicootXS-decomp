@@ -17,7 +17,7 @@ function at the very end:
   trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
   with type constants `1`-`7`. `SpawnBasicCrate` additionally indexes a
   small per-record flags byte via `gEntityFlags`'s own table (same
-  shape as `sub_80187FC`'s table read in `actor_part27c.c`) and folds
+  shape as `UpdateStompedHopPad`'s table read in `actor_part27c.c`) and folds
   two of its bits into the constructed object's `+0x28` bitfield.
 - **`SpawnBodySlamPower`/`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`/
   `SpawnBlueGem`/`SpawnStopwatch`/`sub_80220C4`**: the `gSpriteBankTable`

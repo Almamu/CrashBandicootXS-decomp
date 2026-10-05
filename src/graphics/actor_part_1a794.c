@@ -2,15 +2,15 @@
 #include "gobj_1a794.h"
 
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see include/gobj_1a794.h
- * and docs/matching/issue-25-level-objects.md). sub_801A794/DestroyDingodile/
+ * and docs/matching/issue-25-level-objects.md). CreateDingodileShieldCtrl/DestroyDingodile/
  * CreateDingodile are constructor/destructor bodies of a subclass of the
  * sub_8017A8C object family (actor_part27.c), method tables
- * gStaticData_087E490C / gDingodileVtable; sub_801A7AC is the same
- * mirror-gated velocity-record copy as sub_8017F14 (actor_part27b.c) but
+ * gDingodileShieldVtable / gDingodileVtable; StartDingodileMotion is the same
+ * mirror-gated velocity-record copy as SetChaserMotionXFromSet (actor_part27b.c) but
  * indexed straight into gStaticData_0816C418.
  *
  * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files
- * and the ROM for Thumb pointers): sub_801A870, sub_801A874. */
+ * and the ROM for Thumb pointers): SetDingodileStep, SetDingodileNextState. */
 
 /* The sub_8017A8C-family object (actor_part27.c): only the fields touched
  * here. */
@@ -24,17 +24,17 @@ struct seq_obj
     s32 unk_24;         // 0x24
 };
 
-struct seq_obj *sub_801A794(struct seq_obj *self)
+struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self)
 {
     sub_8017A8C(self);
-    self->vtable = gStaticData_087E490C;
+    self->vtable = gDingodileShieldVtable;
     return self;
 }
 
 /* `self` is unused. The pins keep `part` in r3 and `index` in r5 (copied
  * in that order), and the empty asm keeps `index` live to the end so the
  * second lookup doesn't clobber it in place (docs/workflow.md step 7). */
-void sub_801A7AC(void *self, struct gobj *partArg, s32 indexArg)
+void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 {
     register struct gobj *part asm("r3") = partArg;
     register s32 index asm("r5") = indexArg;
@@ -86,16 +86,16 @@ struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b)
 {
     sub_8017A8C(self);
     self->vtable = gDingodileVtable;
-    sub_8019EBC(self, 0, (u16)a, (u16)b, 0);
+    SpawnDingodileShieldOrRocket(self, 0, (u16)a, (u16)b, 0);
     return self;
 }
 
-void sub_801A870(struct seq_obj *self, s32 value)
+void SetDingodileStep(struct seq_obj *self, s32 value)
 {
     self->unk_1C = value;
 }
 
-void sub_801A874(struct seq_obj *self, s32 value)
+void SetDingodileNextState(struct seq_obj *self, s32 value)
 {
     self->unk_24 = value;
 }

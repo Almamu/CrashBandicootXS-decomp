@@ -177,7 +177,7 @@ struct page_bg
     s32 scroll;         // 0x10 - current page scroll, Q8 (0x100 = a page)
     s32 target;         // 0x14 - scroll `scroll` eases toward
     u8 unk_18[0x0C];
-    u16 hofs;           // 0x24 - BG1HOFS (sub_801D7D0 returns hofs|vofs)
+    u16 hofs;           // 0x24 - BG1HOFS (GetLevelSelectPageBgOffsets returns hofs|vofs)
     u16 vofs;           // 0x26 - BG1VOFS
 };
 

@@ -2,7 +2,7 @@
 #include "vtable.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
- * actor_part20.c since `sub_8017AB0` (NAKED-parked, see
+ * actor_part20.c since `UpdateChaser` (NAKED-parked, see
  * actor_part27a.c) sits between them. `self` uses the same `self+4` double-
  * pointer-chain record lookup as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
  * (actor_part17.c): `self+4` is a manager pointer whose own first
@@ -16,7 +16,7 @@
  * `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`. `self+0xc`'s table convention and
  * `self+0x1c`/`self+0x20` also match actor_part20.c's group.
  *
- * `sub_8017ECC`/`sub_8017F14` pin `part`/`tableEntry` to r3/r2 and read
+ * `SetChaserMotionYFromSet`/`SetChaserMotionXFromSet` pin `part`/`tableEntry` to r3/r2 and read
  * the table entry's Z component before Y - without this, this compiler
  * spills `part` to a callee-saved register across the branch (an
  * unneeded push/pop the true-leaf ROM function doesn't have), the same
@@ -25,7 +25,7 @@
 
 extern u8 gStaticData_0816C2D8[];
 extern u8 gStaticData_0816C2D0[];
-extern u8 gStaticData_087E43C4[];
+extern u8 gChaserCtrlVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void StartCtrlTargetMotionY(void *unused, void *selfArg, s32 *vec);
 extern void StartCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec);
@@ -34,7 +34,7 @@ extern void *sub_8017A8C(void *selfArg);
 
 /* Reads `rec+4` as the type id (bit 5 mirror test), writes into
  * `part+0x54`/`+0x58`/`+0x5c`. */
-void sub_8017ECC(void *selfArg, void *partArg, s32 index)
+void SetChaserMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
     u8 *self = selfArg;
     register u8 *part asm("r3") = partArg;
@@ -73,9 +73,9 @@ void sub_8017ECC(void *selfArg, void *partArg, s32 index)
     }
 }
 
-/* Same shape as `sub_8017ECC`, reading `rec+0` as the type id (bit 4
+/* Same shape as `SetChaserMotionYFromSet`, reading `rec+0` as the type id (bit 4
  * mirror test) and writing into `part+0x48`/`+0x4c`/`+0x50` instead. */
-void sub_8017F14(void *selfArg, void *partArg, s32 index)
+void SetChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
     u8 *self = selfArg;
     register u8 *part asm("r3") = partArg;
@@ -115,9 +115,9 @@ void sub_8017F14(void *selfArg, void *partArg, s32 index)
 }
 
 /* Resolves the same `rec+4`-typed `gStaticData_0816C2D8` table entry
- * as `sub_8017ECC`, then tail-calls `StartCtrlTargetMotionY` (actor_part16.c,
+ * as `SetChaserMotionYFromSet`, then tail-calls `StartCtrlTargetMotionY` (actor_part16.c,
  * still parked) to do the mirror-gated copy itself. */
-void sub_8017F5C(void *selfArg, void *partArg, s32 index)
+void StartChaserMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
     register u8 *arr asm("r3") = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
     register s32 acc asm("r2") = index * 8;
@@ -133,9 +133,9 @@ void sub_8017F5C(void *selfArg, void *partArg, s32 index)
     StartCtrlTargetMotionY(selfArg, partArg, (s32 *)acc);
 }
 
-/* Resolves the `rec+0`-typed table entry like `sub_8017F14`, then
+/* Resolves the `rec+0`-typed table entry like `SetChaserMotionXFromSet`, then
  * tail-calls `StartCtrlTargetMotionX` (actor_part17.c). */
-void sub_8017F80(void *selfArg, void *partArg, s32 index)
+void StartChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
     register u8 *arr asm("r3") = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
     register s32 acc asm("r2") = index * 8;
@@ -155,7 +155,7 @@ void sub_8017F80(void *selfArg, void *partArg, s32 index)
  * (action `1`) via `_call_via_r2`, clears `self+0x20`'s byte, resets
  * `self+0x1c` to `-1`, and re-points `self+4` at
  * `gStaticData_0816C2D0`. */
-void sub_8017FA4(void *selfArg)
+void ResetChaserCtrl(void *selfArg)
 {
     u8 *self = selfArg;
     struct vtable_slot *table = *(struct vtable_slot **)(self + 0xc);
@@ -171,26 +171,26 @@ void sub_8017FA4(void *selfArg)
     *(void **)(self + 4) = gStaticData_0816C2D0;
 }
 
-/* Re-points `self+0xc`'s table pointer at `gStaticData_087E43C4`, then
+/* Re-points `self+0xc`'s table pointer at `gChaserCtrlVtable`, then
  * tail-calls `sub_8017A78` (which promptly overwrites it again via
  * `DestroyCtrl` - same double-set pattern as `sub_8017A78` itself). */
-void sub_8017FD4(void *selfArg, s32 flags)
+void DestroyChaserCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gStaticData_087E43C4;
+    *(void **)(self + 0xc) = gChaserCtrlVtable;
     sub_8017A78(self, flags);
 }
 
 /* `sub_8017A8C`-style init, but re-pointing the table at
- * `gStaticData_087E43C4` and finishing with `sub_8017FA4` instead of
+ * `gChaserCtrlVtable` and finishing with `ResetChaserCtrl` instead of
  * zeroing `self+0x10`/`+0x14`/`+0x18` directly. Returns `self`. */
-void *sub_8017FE8(void *selfArg)
+void *CreateChaserCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
     sub_8017A8C(self);
-    *(void **)(self + 0xc) = gStaticData_087E43C4;
-    sub_8017FA4(self);
+    *(void **)(self + 0xc) = gChaserCtrlVtable;
+    ResetChaserCtrl(self);
     return self;
 }

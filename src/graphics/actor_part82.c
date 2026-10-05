@@ -43,9 +43,9 @@ extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
 static inline void ActSetNext27(struct act *self, s32 next)
 {
-    self->next31 = 0;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = 0;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 /* GetSpriteFrameAnchor inlined: points `dst` at the part's current keyframe
@@ -94,9 +94,9 @@ static inline void PartSet90(struct act_part *p, s32 v)
 
 static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
 {
-    self->next32 = a;
-    self->flag30 = b;
-    self->next28 = c;
+    self->motionYKeepSpeed = a;
+    self->motionYPending = b;
+    self->motionY = c;
 }
 
 static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
@@ -182,17 +182,17 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             s32 m = arg3 & 3;
 
             if (m == 2) {
-                if (self->next27 != 0 && (s8)(gPlayer->flags28 << 3) < 0) {
-                    self->unk_2A[2] = self->next27;
+                if (self->motionX != 0 && (s8)(gPlayer->flags28 << 3) < 0) {
+                    self->unk_2A[2] = self->motionX;
                     ActSetNext27(self, 0);
                     self->part->speedX = 0;
                 }
             } else if (m == 1) {
-                if (self->next27 != 0 && !((u32)(gPlayer->flags28 << 27) >> 31)) {
-                    self->unk_2A[2] = self->next27;
-                    self->next31 = 0;
-                    self->flag2F = m;
-                    self->next27 = 0;
+                if (self->motionX != 0 && !((u32)(gPlayer->flags28 << 27) >> 31)) {
+                    self->unk_2A[2] = self->motionX;
+                    self->motionXKeepSpeed = 0;
+                    self->motionXPending = m;
+                    self->motionX = 0;
                     self->part->speedX = 0;
                 }
             } else {

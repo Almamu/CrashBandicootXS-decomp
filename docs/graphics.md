@@ -379,7 +379,7 @@ prologue - which is exactly why the original disassembly's "does it start
 with a push" heuristic skipped them. Two were more involved: a 12-case
 switch/jump-table dispatcher (`sub_8008188`, using the classic agbcc
 `mov pc, r0` indexed-jump pattern) and a pair of near-identical
-vector-transform functions (`sub_801B6EC`/`sub_801B734`). One
+vector-transform functions (`SetPlatformMoverMotionYFromSet`/`SetPlatformMoverMotionXFromSet`). One
 (`_08039E9C`) turned out to be a **false function boundary** - it's
 reached only via a mid-function `ble`, not a call, so it was relabeled as
 a plain local branch target instead of a fake `sub_` function. A few

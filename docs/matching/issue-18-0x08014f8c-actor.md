@@ -34,7 +34,7 @@ back-to-back), `code_3_2_17_156ec.s`, `code_3_2_17_157c4.s`. The
 original `asm/code_3_2_17_14674.s` is truncated to end right before
 `DoSuperBodySlamShockwave` (0x08014F8C, unchanged name/start address), and a new
 `asm/code_3_2_17_15840.s` picks up the still-raw remainder from
-`sub_8015840` onward (unexamined, out of scope for this pass).
+`RestartActionCtrl` onward (unexamined, out of scope for this pass).
 
 ## Matched (21/25)
 

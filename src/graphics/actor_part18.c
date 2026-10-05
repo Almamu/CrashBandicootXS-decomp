@@ -104,9 +104,9 @@ extern void *gInput;
  * parameters, `cur`/`next` are materialized before the stores. */
 static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 {
-    self->next31 = cur;
-    self->flag2F = 1;
-    self->next27 = next;
+    self->motionXKeepSpeed = cur;
+    self->motionXPending = 1;
+    self->motionX = next;
 }
 
 /* The shared handler `ActionCtrlStateCrawlStart` tail-calls: same "confirm" edge check
@@ -159,16 +159,16 @@ void ActionCtrlStateCrawl(void *selfArg)
         {
             ACT_VCALL1(self, m20, 0x15);
             ACT_VCALL2(self, m50, self->part, 2);
-            self->next31 = busy;
-            self->flag2F = dir;
-            self->next27 = busy;
+            self->motionXKeepSpeed = busy;
+            self->motionXPending = dir;
+            self->motionX = busy;
             break;
         }
         ACT_VCALL1(self, m20, 0x11);
         ACT_VCALL2(self, m50, self->part, 4);
-        self->next31 = busy;
-        self->flag2F = dir;
-        self->next27 = busy;
+        self->motionXKeepSpeed = busy;
+        self->motionXPending = dir;
+        self->motionX = busy;
         break;
     }
     held = INPUT_HELD(in) & 0x180;
@@ -176,9 +176,9 @@ void ActionCtrlStateCrawl(void *selfArg)
     {
         ACT_CALL1(self, m20, 0x12);
         ACT_CALL2(self, m50, self->part, 2);
-        self->next31 = held;
-        self->flag2F = hit;
-        self->next27 = held;
+        self->motionXKeepSpeed = held;
+        self->motionXPending = hit;
+        self->motionX = held;
     }
     UpdatePlayerFacing(self);
 }
