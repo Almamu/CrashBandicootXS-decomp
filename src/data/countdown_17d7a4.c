@@ -27,16 +27,16 @@ struct delta_record
     s32 deltaE;
 };
 
-extern const u8 gStaticData_0861C1FC[];
-extern const u8 gStaticData_0862D0CC[];
-extern const u8 gStaticData_086315BC[];
+extern const u8 gUniversalLogoBgPalette[];
+extern const u8 gUniversalLogoBgTiles[];
+extern const u8 gUniversalLogoBgMap[];
 /* The BG2 picture LoadUniversalLogoBg (graphics_loading_3686c.c) loads. */
-const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gStaticData_0861C1FC, (void *)gStaticData_0862D0CC, (void *)gStaticData_086315BC };
+const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gUniversalLogoBgPalette, (void *)gUniversalLogoBgTiles, (void *)gUniversalLogoBgMap };
 
 /* The motion sequences of the twenty countdown slots of InitVvLogoPieces
  * (graphics_loading_35d1c.c), which slot_seeds_17d6c0.c's
  * gVvLogoPieceSeeds seeds: each ends with a zero hold. */
-const struct delta_record gStaticData_0817D7B8[11] = {
+const struct delta_record gVvLogoPieceMotion00[11] = {
     { 79, 120, 80, 0, 76, 76, 0, 0, 0, 580, 580 },
     { 4, 120, 80, 0, 256, 256, 0, -819, 0, 3276, 3276 },
     { 4, 120, 79, 0, 307, 307, 0, 819, 0, -3276, -3276 },
@@ -50,7 +50,7 @@ const struct delta_record gStaticData_0817D7B8[11] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817D918[6] = {
+const struct delta_record gVvLogoPieceMotion01[6] = {
     { 18, 248, 68, 0, 256, 256, -575260, 0, 0, 0, 0 },
     { 4, 90, 68, 0, 256, 256, -262144, 0, 0, -8192, 8192 },
     { 4, 74, 68, 0, 128, 384, 262144, 0, 0, 8192, -8192 },
@@ -59,7 +59,7 @@ const struct delta_record gStaticData_0817D918[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817D9D8[6] = {
+const struct delta_record gVvLogoPieceMotion02[6] = {
     { 14, 248, 68, 0, 256, 256, -711533, 0, 0, 0, 0 },
     { 2, 96, 68, 0, 256, 256, -262144, 0, 0, -16384, 16384 },
     { 4, 88, 68, 0, 128, 384, 262144, 0, 0, 8192, -8192 },
@@ -68,7 +68,7 @@ const struct delta_record gStaticData_0817D9D8[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DA98[6] = {
+const struct delta_record gVvLogoPieceMotion03[6] = {
     { 12, 248, 70, 0, 256, 256, -720896, 0, 0, 0, 0 },
     { 4, 116, 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 116, 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -77,7 +77,7 @@ const struct delta_record gStaticData_0817DA98[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DB58[6] = {
+const struct delta_record gVvLogoPieceMotion04[6] = {
     { 14, 248, 70, 0, 256, 256, -547693, 0, 0, 0, 0 },
     { 4, 131, 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 131, 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -86,7 +86,7 @@ const struct delta_record gStaticData_0817DB58[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DC18[6] = {
+const struct delta_record gVvLogoPieceMotion05[6] = {
     { 13, 248, 69, 0, 256, 256, -514205, 0, 0, 0, 0 },
     { 4, 146, 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 146, 69, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -95,7 +95,7 @@ const struct delta_record gStaticData_0817DC18[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DCD8[6] = {
+const struct delta_record gVvLogoPieceMotion06[6] = {
     { 13, 248, 68, 0, 256, 256, -458752, 0, 0, 0, 0 },
     { 4, 157, 68, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 157, 68, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -104,7 +104,7 @@ const struct delta_record gStaticData_0817DCD8[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DD98[6] = {
+const struct delta_record gVvLogoPieceMotion07[6] = {
     { 12, 248, 69, 0, 256, 256, -425984, 0, 0, 0, 0 },
     { 4, 170, 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 170, 69, 0, 128, 384, 0, 0, 0, 8192, -8191 },
@@ -113,7 +113,7 @@ const struct delta_record gStaticData_0817DD98[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DE58[6] = {
+const struct delta_record gVvLogoPieceMotion08[6] = {
     { 12, 248, 69, 0, 256, 256, -338602, 0, 0, 0, 0 },
     { 4, 186, 69, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 186, 69, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -122,7 +122,7 @@ const struct delta_record gStaticData_0817DE58[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DF18[6] = {
+const struct delta_record gVvLogoPieceMotion09[6] = {
     { 11, 248, 70, 0, 256, 256, -274059, 0, 0, 0, 0 },
     { 4, 202, 70, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 202, 70, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -131,7 +131,7 @@ const struct delta_record gStaticData_0817DF18[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817DFD8[6] = {
+const struct delta_record gVvLogoPieceMotion10[6] = {
     { 11, 248, 64, 0, 256, 256, -190650, 0, 0, 0, 0 },
     { 4, 216, 64, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 216, 64, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -140,7 +140,7 @@ const struct delta_record gStaticData_0817DFD8[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E098[6] = {
+const struct delta_record gVvLogoPieceMotion11[6] = {
     { 19, 248, 92, 0, 256, 256, -517389, 0, 0, 0, 0 },
     { 4, 98, 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 98, 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -149,7 +149,7 @@ const struct delta_record gStaticData_0817E098[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E158[6] = {
+const struct delta_record gVvLogoPieceMotion12[6] = {
     { 18, 248, 92, 0, 256, 256, -495160, 0, 0, 0, 0 },
     { 4, 112, 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 112, 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -158,14 +158,14 @@ const struct delta_record gStaticData_0817E158[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E218[4] = {
+const struct delta_record gVvLogoPieceMotion13[4] = {
     { 17, 248, 95, 0, 256, 256, -470317, 0, 0, 0, 0 },
     { 23, 126, 95, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, 126, 95, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E298[6] = {
+const struct delta_record gVvLogoPieceMotion14[6] = {
     { 16, 248, 92, 0, 256, 256, -458752, 0, 0, 0, 0 },
     { 4, 136, 92, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 136, 92, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -174,7 +174,7 @@ const struct delta_record gStaticData_0817E298[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E358[6] = {
+const struct delta_record gVvLogoPieceMotion15[6] = {
     { 14, 248, 95, 0, 256, 256, -458752, 0, 0, 0, 0 },
     { 4, 150, 95, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 150, 95, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -183,7 +183,7 @@ const struct delta_record gStaticData_0817E358[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E418[6] = {
+const struct delta_record gVvLogoPieceMotion16[6] = {
     { 12, 248, 95, 0, 256, 256, -447829, 0, 0, 0, 0 },
     { 4, 166, 95, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 166, 95, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -192,7 +192,7 @@ const struct delta_record gStaticData_0817E418[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E4D8[6] = {
+const struct delta_record gVvLogoPieceMotion17[6] = {
     { 10, 248, 94, 0, 256, 256, -432537, 0, 0, 0, 0 },
     { 4, 182, 94, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 182, 94, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -201,7 +201,7 @@ const struct delta_record gStaticData_0817E4D8[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E598[6] = {
+const struct delta_record gVvLogoPieceMotion18[6] = {
     { 9, 248, 91, 0, 256, 256, -364088, 0, 0, 0, 0 },
     { 4, 198, 91, 0, 256, 256, 0, 0, 0, -8192, 8192 },
     { 4, 198, 91, 0, 128, 384, 0, 0, 0, 8192, -8192 },
@@ -210,7 +210,7 @@ const struct delta_record gStaticData_0817E598[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-const struct delta_record gStaticData_0817E658[4] = {
+const struct delta_record gVvLogoPieceMotion19[4] = {
     { 8, 240, 100, 0, 256, 256, -1212416, 0, 0, 0, 0 },
     { 1, 92, 100, 0, 256, 256, 0, 0, 0, 0, 0 },
     { 1, 92, 100, 0, 256, 256, 0, 0, 0, 0, 0 },

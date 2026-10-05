@@ -2343,7 +2343,7 @@ same `SetAabbPos`/`SetAabbSize`-based shape as `GetSpriteBounds`/
 `GetSpriteHitbox`, but this time the 6-byte `{s16 x, s16 y, u8 w, u8 h}`
 record is chosen by a `switch` on `(*(GetSpriteFrame(part)+4))>>4` (0-6,
 else default) among `info+0x14`, `info+0xc`, or a fixed fallback table
-`gStaticData_0816B2F8` - the ROM compiles this `switch` to a real
+`gEmptySpriteBox` - the ROM compiles this `switch` to a real
 7-entry jump table (`mov pc, rX`), which only happened here once every
 case value 0-6 got its own explicit label (cases 1/2/6 all just
 `break` to the same fallback, but leaving them implicit merged the
@@ -2407,7 +2407,7 @@ after `sub_8007C30`, matched too - see below.)
 **`sub_8007CF8`** (ROM `0x08007CF8`, right after `sub_8007C30`, same
 file): the fourth and last of the AABB-for-keyframe builders, identical
 shape to `sub_8007C30` with an even simpler `switch` - only two
-outcomes, `info+0xc` (cases 0/2/3/4/6) or the `gStaticData_0816B2F8`
+outcomes, `info+0xc` (cases 0/2/3/4/6) or the `gEmptySpriteBox`
 fallback (cases 1/5). Copied `sub_8007C30`'s already-proven template
 directly and it matched on the first real attempt, with one genuine
 bug caught along the way: initially wrote the `default:` case as
@@ -2415,12 +2415,12 @@ bug caught along the way: initially wrote the `default:` case as
 group" assumption from `sub_8007C30`, where that happened to be
 correct), which put the wrong code block at the jump table's
 out-of-range (`bhi`) target and reordered the two switch bodies
-relative to the ROM (`gStaticData_0816B2F8` first, `info+0xc` second,
+relative to the ROM (`gEmptySpriteBox` first, `info+0xc` second,
 where the ROM has it the other way around) - not just a register
 mismatch but a real behavioral difference for out-of-range `type`
 values. The ROM's own `bhi` target is the fallback block, confirmed by
 reading the raw disassembly directly rather than assuming symmetry
-with `sub_8007C30`; fixing `default:` to match (`gStaticData_0816B2F8`,
+with `sub_8007C30`; fixing `default:` to match (`gEmptySpriteBox`,
 same as cases 1/5) fixed both the byte-exact match and the switch's
 actual semantics in one edit. Also caught and fixed a copy-paste
 naming slip from working off `sub_8007C30`'s template: the function was
@@ -3020,7 +3020,7 @@ file): looks up `part`'s keyframe record via `GetSpriteFrame` (parked as
 `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it based
 on the record's `+4` byte's upper nibble - 0 selects `info+0x24`, 6
 selects `info+0x14`, and everything else (1-5, or anything above 6)
-falls back to the fixed table `gStaticData_0816B300`.
+falls back to the fixed table `gEmptySpritePoint`.
 
 This is a genuine native `switch` (unlike the label-array/computed-
 goto approach considered and discarded below), but getting gcc to
@@ -3067,7 +3067,7 @@ this attempt once the case-scatter trick was found.
 file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape as
 `sub_80084C4` immediately above, with a different result mapping - 0
 and 4 select `info+0x1c`, everything else (1, 2, 3, 5, 6, or above 6)
-falls back to `gStaticData_0816B2F8`. No case-scattering trick was
+falls back to `gEmptySpriteBox`. No case-scattering trick was
 needed this time: writing the cases in plain ascending order (`case
 0:`, `case 1: case 2: case 3:`, `case 4:`, `case 5: case 6:`,
 `default:`) was already enough to produce a jump table, because 0 and
@@ -3082,7 +3082,7 @@ file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape
 again, this time reusing `sub_8007C30`'s exact case-to-block mapping
 (already matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5
 selects `info+0xc`, and 1/2/6/anything-above-6 fall back to
-`gStaticData_0816B2F8`. That mapping is non-contiguous on its own
+`gEmptySpriteBox`. That mapping is non-contiguous on its own
 (same reasoning as `sub_8008518`), so plain ascending case order
 produced the ROM's jump table with no scattering needed. Matched on
 the first attempt.
@@ -3090,7 +3090,7 @@ the first attempt.
 **`sub_80085B8`** (ROM `0x080085B8`, right after `sub_8008564`, same
 file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape
 once more - 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall
-back to `gStaticData_0816B2F8`. Non-contiguous enough on its own
+back to `gEmptySpriteBox`. Non-contiguous enough on its own
 (1 and 5 are isolated within a run of the other result), so plain
 ascending case order produced the jump table directly. Matched on the
 first attempt.
@@ -4637,7 +4637,7 @@ respectively), and a handful of small `part`/table accessors:
   (`**(void***)(self+4)`, i.e. `self+4` holds a pointer to an object
   whose own first field is the actual array base), use the record's
   second word (`StartCtrlTargetMotionYFromSet`) or first word (`StartCtrlTargetMotionXFromSet`) as a type
-  index into the 12-byte-stride `gStaticData_0816B304` table (a new
+  index into the 12-byte-stride `gCtrlMotionRecords` table (a new
   table, distinct from the already-matched `gMovingSpriteVtable`/
   `gPlayerVtable`), and fire that table entry's trampoline via
   `_call_via_r3` at `self + (int16 offset from self->0xc's part+0x30`
@@ -4684,7 +4684,7 @@ respectively), and a handful of small `part`/table accessors:
 - **`sub_800B8A4`**: `self+0` word setter.
 - **`DestroyCtrl`**: resets `self+0xc`'s table pointer to
   `gCtrlVtable` (a third static table alongside
-  `gMovingSpriteVtable`/`gStaticData_0816B304`), then fires
+  `gMovingSpriteVtable`/`gCtrlMotionRecords`), then fires
   `OperatorDelete(self)` if flags bit 0 is set.
 - **`InitCtrl`**: resets `self+0xc`'s table pointer to
   `gCtrlVtable` and clears `self+8`.
@@ -5623,10 +5623,10 @@ table, part) has its full shape pinned down yet, so every access stays
 a raw offset with a doc comment rather than a guessed struct.
 
 Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
-`sub_801426C`, `sub_80142B0`, `sub_80144E0`, `sub_8014524`.
+`ActionCtrlStateStandUp`, `ActionCtrlStateCrawlStart`, `ActionCtrlStateCrawlStandUp`, `ActionCtrlStateBodySlamLand`.
 
 - The `part+0xd` bit-clear idiom (`& -2`/`& -3`, shared by
-  `sub_80142B0` and the parked `sub_801434C`) needed the mask and the
+  `ActionCtrlStateCrawlStart` and the parked `ActionCtrlStateCrawl`) needed the mask and the
   `part` pointer each pinned to a fixed register
   (`register u8 *part asm("r1")`/`register s32 mask asm("r0")`) *inside
   its own block scope*, one block per occurrence - without the pins
@@ -5643,7 +5643,7 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   0x50;`) rather than kept as a separate `mgr`+`0x50` pair - this lets
   gcc mutate the same register in place (`adds r2,#0x50` then
   `ldr r3,[r2,#4]`) instead of copying to a new register first.
-- `sub_8014524`'s `gKeys & 0x100 != 0` boolean needed the
+- `ActionCtrlStateBodySlamLand`'s `gKeys & 0x100 != 0` boolean needed the
   global declared `u32` (not its "true" `u16`) in this file so agbcc
   reads it as a full-word `ldr` and materializes the boolean via the
   established `((word << N) ) >> 31` sign-bit idiom (`rsbs`+`lsrs`,
@@ -5656,7 +5656,7 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   statement *before* the boolean computation to match the ROM's literal
   instruction order, matching neither statement order alone reproduces
   once both are present in the same function.
-- The `st == 2 || (st >= 7 && st <= 8)` check (`sub_8014524`) needed to
+- The `st == 2 || (st >= 7 && st <= 8)` check (`ActionCtrlStateBodySlamLand`) needed to
   be written as a `switch (st) { case 2: case 7: case 8: ...}` -
   every plain `if`/`else if` or explicit `<`/`>` chain tried gets
   canonicalized by this compiler into the shorter "subtract, truncate,
@@ -5665,14 +5665,14 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   instruction shorter than the ROM's real four-comparison cascade;
   only the `switch` form reproduces the ROM's literal `cmp;beq;cmp;
   blt;cmp;bgt;cmp;blt` shape.
-- Both `sub_80142B0`/`sub_8014524`'s "reset the flag trio to 0" write
+- Both `ActionCtrlStateCrawlStart`/`ActionCtrlStateBodySlamLand`'s "reset the flag trio to 0" write
   blocks needed the shared zero value pulled into a named local
   (`u8 zero = 0; self[0x31] = zero; ...`) rather than three separate
   `= 0` literals - the ROM computes the constant *before* the field
   address and reuses that same register for every zeroed field in the
   block; three independent literal `0`s let gcc compute the address
   first and reload/reuse the immediate differently per field.
-- `sub_80145E4` additionally needed `self` pinned to `r4`
+- `ActionCtrlStateLand` additionally needed `self` pinned to `r4`
   (`register u8 *self asm("r4")`) to stop gcc inserting a redundant
   `self` copy into a second callee-saved register purely because it's
   read again, in a different branch, after an inner `if` containing a
@@ -5682,7 +5682,7 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   "reset the flag trio" block additionally needed the two walking
   pointers (`p1`/`p2`, one for the first/last field, one for the middle
   four) pinned to `r0`/`r1` to reproduce the ROM's split-register field
-  walk instead of the single-register walk `sub_801426C`/`sub_80144E0`
+  walk instead of the single-register walk `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStandUp`
   get for free with plain code.
 
 Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
@@ -5690,16 +5690,16 @@ Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
 `actor_part18.c`/`actor_part18b.c`):
 
 *Later pass: both are now real C (docs/matching/issue-15-16-17-naked-retry-2.md).
-`sub_801434C` matches under old_agbcc (`actor_part18.o` moved to it) with
-no pins; `sub_80145E4` matches under either compiler once the bit test is
+`ActionCtrlStateCrawl` matches under old_agbcc (`actor_part18.o` moved to it) with
+no pins; `ActionCtrlStateLand` matches under either compiler once the bit test is
 written `if ((flag = ...) != 0)`.*
 
-- **`sub_801434C`** - every load/store, branch and call is confirmed
+- **`ActionCtrlStateCrawl`** - every load/store, branch and call is confirmed
   correct, including the ROM's case-`0`/`2`-before-case-`1` switch
   layout and the shared `_call_via_r3` tail the case-`1` arms reach via
   a `goto` (matching the ROM's own `b _0801446E`/fallthrough sharing,
   with the four call arguments pinned to `r0`-`r3` - see the
-  `sub_80142B0`/`sub_8014524` notes above for the same techniques used
+  `ActionCtrlStateCrawlStart`/`ActionCtrlStateBodySlamLand` notes above for the same techniques used
   successfully elsewhere in this same function). The residual gap is
   purely instruction-*scheduling*: the closing
   `masked = *(u16 *)&snap & 0x180` block's address/constant/load
@@ -5710,8 +5710,8 @@ written `if ((flag = ...) != 0)`.*
   fixed the register choice while losing `u16` truncation semantics on
   later reads (a worse mismatch). Left parked rather than force a
   guess.
-- **`sub_80145E4`** - same shape as `sub_8014524` (boolean-vs-raw-value
-  bit test, `sub_8015780` reset block) but keeps the *raw* masked bit
+- **`ActionCtrlStateLand`** - same shape as `ActionCtrlStateBodySlamLand` (boolean-vs-raw-value
+  bit test, `SetActionCtrlModeAnim` reset block) but keeps the *raw* masked bit
   value (not `!= 0`-normalized) since the ROM reuses the same register
   for both the branch test and the later stores. Every load/store and
   branch matches; the one residual gap is the opening bit-test
@@ -5725,21 +5725,21 @@ written `if ((flag = ...) != 0)`.*
   restructure away.
 
 Left completely untouched (not examined in depth this round):
-`sub_8012FBC`, `sub_8013228`, `sub_80134B8`, `sub_8013994`,
-`sub_8013C60`, `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4`,
-`sub_8014084` (before this cluster) and `sub_8014674` (right after it,
+`ActionCtrlStateRun`, `ActionCtrlStateJump`, `ActionCtrlStateAirborne`, `ActionCtrlStateSlide`,
+`ActionCtrlStateSpin`, `ActionCtrlStateAirSpin`, `ActionCtrlStateTornadoSpin`, `ActionCtrlStateCrouchDown`,
+`ActionCtrlStateCrouch` (before this cluster) and `ActionCtrlStateLeftGround` (right after it,
 now its own raw split file `asm/code_3_2_17_14674.s`) - several of
 these are independently flagged in docs/rom_map.md as among the
 ROM's biggest still-unexplained functions and deserve their own
 focused pass rather than a rushed low-confidence match.
 
 **File structure:** `asm/code_3_2_17.s` (truncated right before
-`sub_801426C`) is followed, in ROM order, by `actor_part18.o`
-(`sub_801426C`/`sub_80142B0`), `code_3_2_17_1434c.s` (raw parked
-`sub_801434C`), `actor_part18b.o` (`sub_80144E0`/`sub_8014524`),
-`code_3_2_17_145e4.s` (raw parked `sub_80145E4`), and finally
+`ActionCtrlStateStandUp`) is followed, in ROM order, by `actor_part18.o`
+(`ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`), `code_3_2_17_1434c.s` (raw parked
+`ActionCtrlStateCrawl`), `actor_part18b.o` (`ActionCtrlStateCrawlStandUp`/`ActionCtrlStateBodySlamLand`),
+`code_3_2_17_145e4.s` (raw parked `ActionCtrlStateLand`), and finally
 `code_3_2_17_14674.s` (the original file's unchanged remainder, from
-`sub_8014674` on) - see `ldscript.txt` and `tools/report_units.py`'s
+`ActionCtrlStateLeftGround` on) - see `ldscript.txt` and `tools/report_units.py`'s
 `graphics` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
 
@@ -6074,7 +6074,7 @@ tail `UpdatePolarCrate`).
   `UpdatePolarCollectedWumpa`'s branch polarity) also fixed `UpdatePolarNitroCrate`'s top-level
   `state == 0x12` dispatch, which the ROM places at the very end of the
   function via a forward branch rather than inline.
-- **`UpdatePolarNitroCrate`'s `self+0x38` AABB refresh from `gStaticData_0817A768`**
+- **`UpdatePolarNitroCrate`'s `self+0x38` AABB refresh from `gPolarNitroCrateBox`**
   (a 12-byte/3-word copy) needed an anonymous 3-`s32`-field struct
   assignment (`*(struct vec3_words *)dst = *(struct vec3_words
   *)src;`) to trigger this compiler's `ldm`/`stm` multi-register
@@ -6084,7 +6084,7 @@ tail `UpdatePolarCrate`).
 
 **Parked (`NON_MATCHING`, 3):**
 
-- **`sub_802C208`** (`actor_part19e.c`, real bytes in
+- **`RunPolarPlayerState`** (`actor_part19e.c`, real bytes in
   `asm/code_3_2_20_28568_c208.s`) - a `gPolarPlayerStateFuncs` stride-8
   trampoline-record dispatcher (`{s16 baseOff; s16 count; s16
   subOffset}`, count-gated between an inline fallback pair and a
@@ -6131,7 +6131,7 @@ tail `UpdatePolarCrate`).
 **File structure:** `asm/code_3_2_20_28568.s` (truncated right before
 `sub_802BED8`) is followed, in ROM order, by `actor_part19.o`
 (`sub_802BED8`-`DestroyPolarPlayer`), the new raw `code_3_2_20_28568_c208.s`
-(parked `sub_802C208`), `actor_part19e.o` (`sub_802C208`'s
+(parked `RunPolarPlayerState`), `actor_part19e.o` (`RunPolarPlayerState`'s
 `NON_MATCHING`-only twin), `actor_part19f.o` (`sub_802C264`/
 `UpdatePolarCollectedWumpa`), the new raw `code_3_2_20_28568_c2fc.s` (parked
 `DrawPolarCollectedWumpa`), `actor_part19b.o` (its `NON_MATCHING`-only twin),
@@ -6471,7 +6471,7 @@ refresh/self-teardown utility, `PauseMenuLoop` the settings-row cursor
 driver, `InitPauseMenuInfo` the widget-building orchestrator that calls every
 icon constructor above) - genuinely not "not understood," just out of
 scope for this pass: every one of them shares the same
-icon-manager-positioning-math shape (`_call_via_r2`/`gStaticData_0816B21C`-
+icon-manager-positioning-math shape (`_call_via_r2`/`gPauseGemIconPos`-
 style tables) that made `DrawPowerDialog` a multi-pass parking effort on its
 own, and writing+verifying eleven-plus functions of that shape was more
 than this session's budget covered. Left for a follow-up pass; issue #7

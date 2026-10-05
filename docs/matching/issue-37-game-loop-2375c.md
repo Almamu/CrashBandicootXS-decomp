@@ -30,7 +30,7 @@ level object's own `+0xdc->+8` state field is `2`
    field and dispatches on it (0/1/2) to construct one of three HUD
    counter/ring-buffer widgets, each via
    `InitActionCtrl`/`InitPlayerCtrl`/`CreateInputCtrl` (three different
-   constructors, still raw) plus a `gStaticData_0816B92C`/`0816B934`/
+   constructors, still raw) plus a `gActionCtrlMotionSet`/`0816B934`/
    `0816B93C` action-table pointer stashed at `widget+4`
    (`SetCtrlAnimSet`). Widget kind `1` additionally builds an OAM entry via
    the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` trio. All

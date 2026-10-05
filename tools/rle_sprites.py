@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The zero-run-compressed OBJ frame sets of the actor categories (the old
-"rotation strips" gStaticData_080C2758, gStaticData_080DA1D8 and
-gStaticData_0815A050, see docs/data.md "Compressed sprite frames").
+"rotation strips" gPolarPlayerRleFrames, gYetiRleFrames and
+gJetpackPlayerRleFrames, see docs/data.md "Compressed sprite frames").
 
 Every frame is a 4-byte header {w, h, 0x30, 0} (w x h 8x8 tiles), then a
 stream of u16 counts. The IWRAM decoder at 0x03000634 (the

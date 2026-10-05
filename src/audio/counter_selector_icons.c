@@ -65,7 +65,7 @@ void DrawLanguageSelect(struct language_select *self)
 /* Resets several OAM-manager globals, then hand-fills
  * `gPaletteCache`'s (`struct palette_cache`, include/vram_pool.h)
  * `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
- * `gStaticData_0817E72C`/`_74C`/`_76C`/`_78C`, and finally runs
+ * `gLanguageSelectPalette0`..`gLanguageSelectPalette3`, and finally runs
  * `gSmallFont`'s/`gLargeFont`'s `record->slots[6]` method
  * (`_call_via_r1`) plus a VRAM reserve (`ReserveObjVram`) for each, copying
  * `tileCount` into the other manager's `tileBase`.
@@ -81,10 +81,10 @@ void DrawLanguageSelect(struct language_select *self)
 #include "vram_pool.h"
 extern struct palette_cache *gPaletteCache;
 extern struct bitmap_font *gLargeFont;
-extern const u16 gStaticData_0817E72C[16];
-extern const u16 gStaticData_0817E74C[16];
-extern const u16 gStaticData_0817E76C[16];
-extern const u16 gStaticData_0817E78C[16];
+extern const u16 gLanguageSelectPalette0[16];
+extern const u16 gLanguageSelectPalette1[16];
+extern const u16 gLanguageSelectPalette2[16];
+extern const u16 gLanguageSelectPalette3[16];
 extern void WaitForVBlank(void);
 extern void CommitOamBuffer(void *arg0);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
@@ -127,10 +127,10 @@ void InitLanguageSelectGraphics(void *unused)
         u16 *destB = (u16 *)cache->slots[2];
 
         for (i = 0; i < 16; i++) {
-            destA[i] = gStaticData_0817E72C[i];
-            destA[i + 0x10] = gStaticData_0817E74C[i];
-            destB[i] = gStaticData_0817E76C[i];
-            destB[i + 0x10] = gStaticData_0817E78C[i];
+            destA[i] = gLanguageSelectPalette0[i];
+            destA[i + 0x10] = gLanguageSelectPalette1[i];
+            destB[i] = gLanguageSelectPalette2[i];
+            destB[i + 0x10] = gLanguageSelectPalette3[i];
         }
     }
     {

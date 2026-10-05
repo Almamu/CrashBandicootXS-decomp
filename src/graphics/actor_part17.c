@@ -2,7 +2,7 @@
 #include "actor.h"
 #include "vtable.h"
 
-extern u8 gStaticData_0816B304[];
+extern u8 gCtrlMotionRecords[];
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 extern s32 FixedMul(s32 a, s32 b);
 extern void ResetSpriteFrameTimer(void *part);
@@ -13,7 +13,7 @@ extern u8 gCtrlVtable[];
 
 /* Looks up `selfArg`'s `index`-th 8-byte record (via a double
  * pointer chain at `self+4`), uses its second word as a type index
- * into the 12-byte-stride `gStaticData_0816B304` table, and calls
+ * into the 12-byte-stride `gCtrlMotionRecords` table, and calls
  * slot 6 of the vtable at `self+0xc` with that table entry - the same
  * base+offset+fn-pointer convention already seen in
  * `DestroyPlayer`/`ResolvePlayerContact`. */
@@ -34,7 +34,7 @@ void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index)
     asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 4);
-    tableEntry = gStaticData_0816B304 + type * 12;
+    tableEntry = gCtrlMotionRecords + type * 12;
     vtbl = *(struct vtable_slot **)(self + 0xc);
     offset = vtbl[6].delta;
     addr = self + offset;
@@ -120,7 +120,7 @@ void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index)
     asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 0);
-    tableEntry = gStaticData_0816B304 + type * 12;
+    tableEntry = gCtrlMotionRecords + type * 12;
     vtbl = *(struct vtable_slot **)(self + 0xc);
     offset = vtbl[5].delta;
     addr = self + offset;

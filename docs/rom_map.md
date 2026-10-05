@@ -741,7 +741,7 @@ smaller, thread of its own: **`UpdateCreditsText`** (520 B) is a **linked-list
 countdown/expiry walker** - decrements a timer pair, unlinks and frees
 (`OperatorDelete`, confirmed `mem_free`) on expiry, then walks a string
 byte-by-byte computing width via a new symbol,
-**`FontTextHeight(char, gStaticData_0817CF3C)`**, against the same hot
+**`FontTextHeight(char, gCreditsEmptyText)`**, against the same hot
 text-centering globals (`gSmallFont`/`gLargeFont`) used
 elsewhere. Reads as a **queued/expiring text-message manager** -
 plausibly the thing underneath `game_loop`'s "message type N" dispatcher
@@ -768,7 +768,7 @@ the zone.
 uncatalogued table** - `gYetiStateFuncs`, a plain 4-entry array of
 raw function pointers (matching the `menu_ui`/trigger-effect
 convention, not the `{0,ptr}` pairing), with neighboring scalar-only
-records (`gStaticData_0817A850`, `gStaticData_0817A7F8` - the latter
+records (`gYetiKeyframes`, `gStaticData_0817A7F8` - the latter
 reading as a lookup table of `{const, varying, tier}` triples). The
 function itself opens a **third RAM-struct family**:
 `gYeti`/`030014C8`/`030014CC` - distinct from both the
@@ -794,8 +794,8 @@ not four independent behaviors, one coherent **position-tracking
 system with tier-threshold sound cues**: `sub_802DCC0` confirms the
 same accumulate-into-`030014C8`/`CC`-then-clamp-at-`0xA000` pattern
 `sub_802DB2C` established, branching to different `PlaySfx` IDs by
-tier; `sub_802E0A0` resolves to the already-named `nullsub_27` (a real,
-deliberate no-op for this context, not a gap); `sub_802E0A4` is a small
+tier; `sub_802E0A0` resolves to the already-named `YetiStateCaught` (a real,
+deliberate no-op for this context, not a gap); `YetiStateStop` is a small
 state-snapshot trigger on the same object. Confirmed the table's
 neighbors (`gStaticData_0817A7F8`, `0817A850`) are the same
 mixed-scalar/pointer descriptor-cluster shape as `gStaticData_0817C4xx`
@@ -860,7 +860,7 @@ new mechanisms not previously catalogued in this zone:
   (0/1/2/3/0xA=terminator) at `self+8` and drawing text via
   `_call_via_r3` positioned relative to `gSmallFont`/
   `gLargeFont` (likely P1/P2 structs), indexed into a new table
-  `gStaticData_0817CF3C` (stride 8, 3 entries/state). `LoadCreditsLogos`
+  `gCreditsEmptyText` (stride 8, 3 entries/state). `LoadCreditsLogos`
   (416 B) is its asset loader: iterates a 5-entry table
   `gCreditsLogos` (stride `0x14`) and DMA3-transfers custom
   glyph tile data via `LoadTaggedAsset` into `gPaletteCache+0x2c`.
@@ -951,7 +951,7 @@ into a much larger 18-field consecutive run
 references a run of 5 unread sibling functions
 (`sub_802A504`/`51C`/`540`/`558`/`570`); `InitContinuePromptGraphics` is an asset/
 screen refresh function touching known hot globals plus a new table
-cluster `gStaticData_0817C512`/`532`/`552`/`572`.
+cluster `gContinuePromptPalette0`/`532`/`552`/`572`.
 
 ### The `sub_802A5xx` siblings pin down `sub_effect_table`'s runtime shape; `RunContinuePrompt` is a separate screen trigger
 
@@ -1303,7 +1303,7 @@ shape as `AirshipFireballStateOrbit`, but with a *shrinking* radius (decremented
 other consumers. **`sub_802D204`** is a mode-driven palette/state
 transition keyed on the recurring `gLevelState+0x78` "mode"
 field: DMA-loads a mode-indexed 32-byte palette chunk from a new
-table `gStaticData_0817A798` into Palette RAM, and touches a newly-
+table `gPolarAkuAkuPalette1` into Palette RAM, and touches a newly-
 seen field in the `gUnknown_030014xx` tier-threshold family
 (`gUnknown_030014B8`, tied to a ~500-frame timer) - reads as a
 palette-swap-driven mode/phase change (a power-up or similar).
@@ -1693,7 +1693,7 @@ rather than fully data-driven entity instantiation.
 ### A third data-driven dispatch, and a likely "bonus/score popup" event
 
 Kept reading the biggest still-unexplained functions in the 48.2 KB core
-past the vtable cross-reference. **`sub_80134B8`** (1072 B): watches a
+past the vtable cross-reference. **`ActionCtrlStateAirborne`** (1072 B): watches a
 state field (`self+8`) for a specific transition (out of a range that
 includes state `0x18`/`0x19`), gated by a flag bit in
 `gKeys` (the same upper-16-bits flags word `LevelSelectLoop`'s
@@ -1708,7 +1708,7 @@ reads as a **floating bonus/score popup** - ties together three threads
 this document already had going (`PlaySfx`, the `sub_803ADxx` text
 family, and `gPlayer`) into one plausible concrete event.
 
-Its one caller, **`sub_8013D94`**, is itself dispatched through a
+Its one caller, **`ActionCtrlStateAirSpin`**, is itself dispatched through a
 pointer - not via `bl` from anywhere in raw asm, same pattern as the
 93-vtable system - but this time the pointer sits inside
 **`gActionCtrlStateTable`**, already part of the documented per-level
@@ -1725,24 +1725,24 @@ address** - unlike the sparse entity vtables, this table has no unused
 slots at all. Cross-referencing the 37 unique targets against every
 function already read or flagged as one of the "biggest unexplained
 `game_loop` functions" landed several direct hits at once:
-`sub_8012D24`, `sub_8012FBC`, `sub_8013228`, `sub_80134B8` (the bonus
-popup above), `sub_8013994`, `sub_8014674` were *all* already on this
+`ActionCtrlStateIdle`, `ActionCtrlStateRun`, `ActionCtrlStateJump`, `ActionCtrlStateAirborne` (the bonus
+popup above), `ActionCtrlStateSlide`, `ActionCtrlStateLeftGround` were *all* already on this
 document's "biggest still-unexplained" list independently - this one
 table explains a large fraction of them in a single stroke.
 
-Read one of the twin-sized entries, **`sub_8013994`** (716 B, tied with
-`sub_8014674` for size): checks individual bits of `gKeys`'s
+Read one of the twin-sized entries, **`ActionCtrlStateSlide`** (716 B, tied with
+`ActionCtrlStateLeftGround` for size): checks individual bits of `gKeys`'s
 *lower* half this time (a different half of the same flags word
 `LevelSelectLoop`'s dispatch reads from the upper half) against specific
 action codes (`0xB`, `0x10`) via `sub_800AAEC`, and on a match plays a
 distinct `PlaySfx` id, clears flag bits, and hands off to a further
-per-action handler (`sub_8015508`/`sub_8015398`). Reads as **player
+per-action handler (`StartActionCtrlHighJump`/`StartActionCtrlSpin`). Reads as **player
 input/action handling** - which specific button or trigger maps to
 which of the 42 slots isn't resolved, but the shape (flag-bit checks →
 action-code lookup → sound + state change) is a clean, specific claim.
 
 Six of the 37 unique targets are the *same* address
-(`sub_80134B8`/`0x080134b9`, appearing at 6 of the 42 slots) - a shared
+(`ActionCtrlStateAirborne`/`0x080134b9`, appearing at 6 of the 42 slots) - a shared
 default/fallback handler for whichever action slots don't have a
 level-specific response, the same "many slots, few unique
 implementations" reuse pattern as every other table/vtable in this
@@ -1770,7 +1770,7 @@ subsection's claim by hand:
 
 Plus several of the core's largest individual functions read end-to-end
 regardless of which bucket they fell in (`sub_801AB98`, `UpdateEnemyCtrl`,
-`sub_80134B8`, `sub_0800D18C`, `UpdatePlayerCtrl`, `ActionCtrlHandleEvent`,
+`ActionCtrlStateAirborne`, `sub_0800D18C`, `UpdatePlayerCtrl`, `ActionCtrlHandleEvent`,
 `CreateCrate`, `sub_8017AB0`, `InitLevelSelect`, `DrawAffineSpritePieces`,
 `sub_800E08C`, `LoadLevelSelectRecord`, `UpdatePlatformMover`, and - this round -
 `BreakCrate`, `UpdateSlotCrate`, `DrawPlayer`, `UpdateActionCtrl`,
@@ -1801,7 +1801,7 @@ dispatched (all reached via `bl`); the two concrete new leads:
   (`src/system/irq.c`), gates on a child object's `+0x2D` type field
   against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
   `self+0x22` - strong evidence of core **player movement/action
-  control**, referencing a new unlabeled table `gStaticData_0816C250`.
+  control**, referencing a new unlabeled table `gPlayerCtrlStateFuncs`.
   `ActionCtrlHandleEvent` (1420 B) bails unless `self+0x8==0x1d` (the same
   type ID), then runs a 25-case jump table on a second parameter, with
   a further 7-case sub-dispatch on a nibble of a child object's `+4`
@@ -1849,7 +1849,7 @@ sites now confirming the same dereference shape.
 Two more cross-ties: **`UpdateActionCtrl`** (628 B) reads
 `gLevelLayers→+0x10→+0x14` (the documented lazy-singleton text
 box) for a pixel-position computation, and calls `sub_8012238` - the
-same function tied to `overlay_ui`'s `sub_8012AF4`/`ActionCtrlSetTargetAnim`
+same function tied to `overlay_ui`'s `ApplyActionCtrlMotion`/`ActionCtrlSetTargetAnim`
 callers - a new concrete `game_loop`<->`overlay_ui` call-graph link.
 **`sub_801A2A8`** (732 B) draws a two-part text label plus a
 `PlaySfx(0x39)` cue, then gates a second block on `gPlayer`
@@ -1862,7 +1862,7 @@ member of the BLX-trampoline family (`_call_via_r0`-`94`), so this call
 proves only "makes one indirect call," not real work there.
 **`sub_80159F8`** (628 B) and **`sub_8016DDC`** (616 B) extend the
 directional-table/timed-state-machine shapes already found in this
-zone and in `actor` (`gStaticData_0816C090`, `gStaticData_0816C070` -
+zone and in `actor` (`gStaticData_0816C090`, `gPlayerCtrlModeAnimRows` -
 two more unlabeled tables in the same family as `gStaticData_0816C460`).
 None of the eight showed vtable-dispatch patterns in this pass (spot
 pattern, not exhaustively re-checked against `baserom.gba`).
@@ -1892,7 +1892,7 @@ Genuine new coverage (~1.75 KB): **`SetTinyState`** (636 B) and
 `sub_8018E4C` are a linked pair driving large jump tables (15/11
 cases) that draw text at varying priorities and reference a new
 global-record-array `gUnknown_030012EC` plus a new table family
-(`gStaticData_0816C308`/`35F`/`5F0`, more members of the
+(`gTinyRoundAnchors`/`35F`/`5F0`, more members of the
 `0x0816Cxxx` directional/state-table family already seen this
 session) - reads as a floating combo-text/score-popup state machine,
 distinct from the earlier-documented map-screen popup-text system
@@ -1938,7 +1938,7 @@ family) - not new core coverage, but mechanically interesting: it
 integrates position from velocity fields, manages a wrapping counter
 with mode-gated increment/decrement, and on a branch plays
 `PlaySfx(0xe, 0x100)` plus calls a scoring/counter candidate,
-`CollectWumpa`. **`sub_8014084`** (488 B) is directly referenced *from
+`CollectWumpa`. **`ActionCtrlStateCrouch`** (488 B) is directly referenced *from
 inside the 42-slot action dispatch table's own ROM span* (`0x0816BFAC`,
 `0x8C` bytes past `gActionCtrlStateTable`'s base) - a concrete new tie,
 and also folds into the already-counted action-table bucket. It
@@ -1957,15 +1957,15 @@ reads as an AI/behavior pattern selector for some actor type.
 neighbor search over the hot `gPlayer` global's leading
 fields against a target, populating a stack array of pointers into
 `self`'s own fields - not fully characterized, the loop body past
-setup wasn't read. Next candidates if continued: `sub_8014D18`,
-`CheckSpritePickup`, `sub_801434C`, `sub_801A114`, and the still-unread
+setup wasn't read. Next candidates if continued: `ActionCtrlStateHangMove`,
+`CheckSpritePickup`, `ActionCtrlStateCrawl`, `sub_801A114`, and the still-unread
 `SetupRoomBlend` bitfield-packer.
 
 **Final push on these five: four fold into already-counted buckets,
-one closes out.** **`sub_8014D18`** (456 B) and **`sub_801434C`**
+one closes out.** **`ActionCtrlStateHangMove`** (456 B) and **`ActionCtrlStateCrawl`**
 (404 B) are both confirmed slots in the 42-slot action dispatch table
 (`gActionCtrlStateTable`, slots 38/20) - part of one cohesive family
-with `sub_8014084`: interactive player-input handlers sharing an
+with `ActionCtrlStateCrouch`: interactive player-input handlers sharing an
 identical tag-field triple (`self+0x31`/`+0x2f`/`+0x27`) across both
 functions. **`CheckSpritePickup`** (444 B) is entity-vtable-dispatched (5
 separate hits in the `gStaticData_087Exxx` family - one shared generic
@@ -2068,7 +2068,7 @@ object, plausibly a boss or major object's loader, distinct from
 anything else documented. `TickZoomBgTwinkle`, `gLevelSelectPictures`'s full
 record layout, and `UpdateZoomBg`'s own caller remain unread and would
 be the natural next step. Most of the other sampled functions
-(`sub_8014BCC`, `sub_8019324`) extend already-known conventions
+(`ActionCtrlStateHangMoveStart`, `sub_8019324`) extend already-known conventions
 (the player-input-control family, position/collision checkers) rather
 than introducing anything new.
 
@@ -2108,7 +2108,7 @@ popup-text spawner: `sub_80186F0` uses a **new record index 55**
 further), `sub_80194E0` reuses the already-confirmed record 53.
 **`UpdateLevelSelectCursor`** (300 B) is a recurring spawn/despawn cycling
 dispenser with idle bounce animation, tagging a child object from
-`gStaticData_0816C634` - not previously catalogued as its own
+`gLevelSelectCursorAnims` - not previously catalogued as its own
 behavior, though built entirely from known toolkit pieces (OAM trio,
 per-level table lookup). **`UpdateEnemyPatrol`**/**`sub_800C314`** are a
 5th+ instance of the recurring `self+0x68`/`self+0x74` generic
@@ -2151,7 +2151,7 @@ tail" framing above. Read 8 of the 14, all fitting already-documented
 conventions: **`DrawLevelSelect`** is a page-scroll-menu orchestration
 point, directly indexing the 36-slot medal table and calling the
 documented BG2 icon driver (`UpdateZoomBg`) - ties the medal table into
-that menu system. **`KillPlayer`** calls `sub_8012AF4`, already tied
+that menu system. **`KillPlayer`** calls `ApplyActionCtrlMotion`, already tied
 to `overlay_ui` elsewhere - a caller-side confirmation of that link.
 **`sub_8018BDC`**/**`sub_801A03C`** extend the master-table spawner
 family (the latter with a new near-header offset, `+0x30`).
@@ -2703,7 +2703,7 @@ boolean byte, with a confirmed accessor triple: `ClearRoomExit` clears it,
 confirming the entry point precisely: `UpdateGameFrame` →
 `PlayRoom` → `RunRoom`. The **setter is called from six
 different places**, all in the actor/entity address range
-(`PlayerHandleEvent`, `sub_8015690`, `UpdateInputCtrl`, `UpdateTiny`,
+(`PlayerHandleEvent`, `ActionCtrlStateWarpOut`, `UpdateInputCtrl`, `UpdateTiny`,
 `UpdateCortexBoss`, `UpdateDingodile`). Reads as a **readiness/synchronization
 flag**: clear it before the wait loop, let one of several entity
 behaviors set it back once they've finished whatever they're doing,
@@ -2747,8 +2747,8 @@ time). None hit the entity vtable family via the raw-pointer search -
 consistent with a real, different pattern rather than more of the same
 tables:
 
-- **`sub_801283C`** (576 B) - itself a helper of the already-documented
-  `sub_80134B8` "bonus popup" action-table entry, so already indirectly
+- **`HandleActionCtrlAirInput`** (576 B) - itself a helper of the already-documented
+  `ActionCtrlStateAirborne` "bonus popup" action-table entry, so already indirectly
   explained, just not itself table-tagged. Dispatches on a `self+8`
   "type" field (values `7`/`9`/`0xB`/`0xE` seen) with **per-type
   distance thresholds** checked against a sub-object's position
@@ -2817,7 +2817,7 @@ table, indexes by) and, when not early-exiting, indexes its *own*
 `gCrateHitResponse`'s stride exactly, but clearly a different table
 instance. Its only caller is `sub_800AAEC` - the same input-action-check
 function the 42-slot action dispatch table's own entries
-(`sub_8013994` etc.) call. Three previously-separate threads
+(`ActionCtrlStateSlide` etc.) call. Three previously-separate threads
 (`menu_ui`, the physics subsystem's per-state table shape, and the
 action-dispatch table's input checking) all turn out to share this same
 small handful of field-offset and stride conventions, applied to
@@ -2864,16 +2864,16 @@ a genuinely promising new lead:
   within a viewport-sized box (`0xF0`×`0xA0` in Q8.8 - screen
   dimensions) via the `_call_via_r2` trampoline. Reads as a **broad-phase
   visibility/proximity query** over nearby objects.
-- **`sub_8012694`** (424 B, a helper of the already-documented
-  `sub_801283C`): sets/checks a type-tag value of `6` at a sub-object's
+- **`TryActionCtrlDoubleJump`** (424 B, a helper of the already-documented
+  `HandleActionCtrlAirInput`): sets/checks a type-tag value of `6` at a sub-object's
   `+0x2D` field - the **exact same type-tag** the `graphics_loading`
   fork's "trigger effect type N" family uses when spawning its own
   visual-effect objects. A concrete, if narrow, cross-reference between
   two previously-separate threads.
-- **`sub_8015038`** (400 B): dispatches a small enum to fixed hex glyph
+- **`StartActionCtrlTornadoSpin`** (400 B): dispatches a small enum to fixed hex glyph
   constants, the same shape as the HUD digit-counter pattern - and is
   **called from three of the 42-slot action table's own confirmed
-  entries** (`sub_8013C60`/`sub_8013D94`/`sub_8013EAC`), a shared helper
+  entries** (`ActionCtrlStateSpin`/`ActionCtrlStateAirSpin`/`ActionCtrlStateTornadoSpin`), a shared helper
   several action-table handlers reuse, likely to update one common HUD
   counter glyph.
 - **`sub_8015C6C`** (396 B, read by the same fork that corrected
@@ -2958,7 +2958,7 @@ held - reads as an **"is this object responsive to a directional input
 toggle" gate**, plausibly switches or pushable platforms. **All 12 of
 its callers are entries in the confirmed 42-slot action dispatch
 table** - a **second shared helper** several action-table handlers
-reuse, alongside the glyph-constant dispatcher (`sub_8015038`) found
+reuse, alongside the glyph-constant dispatcher (`StartActionCtrlTornadoSpin`) found
 earlier. The action table increasingly looks like it's built from a
 small library of common per-action helpers, not 37 fully-independent
 implementations.
@@ -3245,7 +3245,7 @@ a level.
 label table is RAM-resident) - but did find one more concrete tie:
 `InitSaveMenuIcons` copies from **the very first four tables in the
 documented per-level `gStaticData_0816Bxxx` family**
-(`gStaticData_0816B13A`/`15A`/`17A`/`19A`) into this screen's own
+(`gSaveMenuPalette0`/`15A`/`17A`/`19A`) into this screen's own
 per-item arrays. A real, direct link between this settings screen and
 the same central per-level data region `menu_ui`, the 36-slot table,
 and the 42-slot action table all bottom out in - four different
@@ -3326,7 +3326,7 @@ pause-menu screens sharing one constructor toolkit**:
   against three thresholds in a new per-level table
   `gLevelTable` (`+8`/`+0xc`/`+0x10` - a bronze/silver/gold
   shape), and tags a new object with an icon selected from
-  `gStaticData_0816B270[0]`/`[4]`/`[8]`. Runs the standard OAM trio.
+  `gPauseRelicIconFrames[0]`/`[4]`/`[8]`. Runs the standard OAM trio.
 - **`InitPowerDialog` builds a two-string dialog/message box**
   (parameterized by two label pointers and a type tag), called by
   **`ShowPowerDialog`**, a higher-level constructor that resets palette
@@ -3348,7 +3348,7 @@ pause-menu screens sharing one constructor toolkit**:
   *local* blend-register setup at `0x04000050` (same field-offset
   convention as `InitLevelSelect`/`SettleLevelSelectPage`, but per-screen rather
   than shared) → `LoadGraphicsPackage` with a per-screen package
-  (`gStaticData_0816B284` for `InitPauseMenu`, `gStaticData_0816C484`
+  (`gPauseMenuBg` for `InitPauseMenu`, `gMenuSkyBg`
   for `InitPowerDialog`) → allocate an object → reach through
   `gSpriteBankSet`'s triple-dereference into `gSpriteBankTable`
   at a **new header-relative offset each time**. New offsets this
@@ -3843,7 +3843,7 @@ layout `docs/audio.md` already documents) and sets a per-channel mute
 byte (`handler+0x24 = 1`), with a special-case for parameter `-1`
 suggesting "stop all channels" versus "stop one specific channel."
 Six callers total, spanning *both* the `overlay_ui` region
-(`sub_8012238`/`sub_8012AF4`/`ActionCtrlSetTargetAnim`) and the `game_loop` region
+(`sub_8012238`/`ApplyActionCtrlMotion`/`ActionCtrlSetTargetAnim`) and the `game_loop` region
 (`PlayIntroCutscene`/`RunSlideshow`/`EndSlide`) - narrower than `PlaySfx`
 (a true hub), but still cross-cutting, used whenever some unrelated
 subsystem needs to "stop this sound if it's currently playing." Fits
@@ -3949,7 +3949,7 @@ index - both just read the same fixed header fields. Whether the
 remaining ~729 KB past this header is itself a repeating-record array
 is still open - not established either way. One live lead left
 unexplored: `RunPauseMenu` calls `CpuSet`/`ClaimPaletteSlot`
-immediately after, with `gStaticData_0816B2C0` (an already-documented
+immediately after, with `gPauseMenuPalette` (an already-documented
 per-level symbol) - a real, concrete tie between this table and the
 per-level data region, worth following if anyone continues this
 specific thread.

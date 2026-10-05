@@ -16,23 +16,23 @@ const u8 gMenuCursorText[] = ">";
 
 /* InitSaveMenuIcons (settings_menu.c) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
- * (the same four as actor_part88.c's gStaticData_0817C512 ... 0817C572). */
-const u16 gStaticData_0816B13A[16] = {
+ * (the same four as actor_part88.c's gContinuePromptPalette0 ... 0817C572). */
+const u16 gSaveMenuPalette0[16] = {
     0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,
     0x0ABE, 0xA27F, 0x09BE, 0x1D5F, 0x886B, 0x94DF, 0x0C9B, 0x0873,
 };
 
-const u16 gStaticData_0816B15A[16] = {
+const u16 gSaveMenuPalette1[16] = {
     0x03E0, 0x1CC6, 0x359E, 0x0D04, 0x4FDE, 0x094C, 0x0864, 0x05D4,
     0x3AFE, 0x36BE, 0x223E, 0x35FE, 0x086B, 0x35DE, 0x35DB, 0x0873,
 };
 
-const u16 gStaticData_0816B17A[16] = {
+const u16 gSaveMenuPalette2[16] = {
     0x0000, 0x9CC6, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
 
-const u16 gStaticData_0816B19A[16] = {
+const u16 gSaveMenuPalette3[16] = {
     0x0000, 0x001F, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
@@ -50,19 +50,19 @@ const s32 gPauseMenuPageTitles[5] = {
 /* Icon positions and frame indices of the menu screens in
  * settings_menu6.c (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
  * InitPauseTimeTrialPage), settings_menu11.c and settings_menu22.c. */
-const struct icon_pos gStaticData_0816B1E4 = { 212, 112 };
-const struct icon_pos gStaticData_0816B1EC[4] = {
+const struct icon_pos gPauseCrystalIconPos = { 212, 112 };
+const struct icon_pos gPausePowerIconPos[4] = {
     { 180, 96 },
     { 212, 96 },
     { 180, 128 },
     { 212, 128 },
 };
 
-const s32 gStaticData_0816B20C[4] = {
+const s32 gPausePowerIconFrames[4] = {
     3, 2, 0, 1,
 };
 
-const struct icon_pos gStaticData_0816B21C[5] = {
+const struct icon_pos gPauseGemIconPos[5] = {
     { 200, 90 },
     { 168, 110 },
     { 184, 110 },
@@ -70,18 +70,18 @@ const struct icon_pos gStaticData_0816B21C[5] = {
     { 216, 110 },
 };
 
-const s32 gStaticData_0816B244[5] = {
+const s32 gPauseGemIconFrames[5] = {
     1, 3, 2, 4, 0,
 };
 
-const struct icon_pos gStaticData_0816B258[3] = {
+const struct icon_pos gPauseRelicIconPos[3] = {
     { 172, 100 },
     { 194, 100 },
     { 216, 100 },
 };
 
-const s32 gStaticData_0816B270[3] = {
+const s32 gPauseRelicIconFrames[3] = {
     1, 2, 0,
 };
 
-const struct icon_pos gStaticData_0816B27C = { 196, 120 };
+const struct icon_pos gPauseTimeTrialIconPos = { 196, 120 };

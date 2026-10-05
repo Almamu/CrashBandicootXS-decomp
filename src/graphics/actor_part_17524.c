@@ -14,13 +14,13 @@
  * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`UpdateInputCtrl`, table
  * slot +0x0C) it reads the held D-pad bits from `gKeys` and
  * picks animation pairs for its target (`+0x10`) through
- * `gStaticData_0816B8C0`'s 12-byte records: up/down select one channel
+ * `gInputCtrlMotionRecords`'s 12-byte records: up/down select one channel
  * (`animB`), left/right the other (`animA`), which also sets a speed-like
  * value at the child object's `+0x78` (`+0x1C`, spawned on demand by
  * `sub_8017600`). Once the target passes the level's right edge
  * (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked
  * gone and `RequestRoomExit` is signalled. It then dispatches the current
- * `state` through `gStaticData_0816C290`, a table of gcc 2.x
+ * `state` through `gInputCtrlStateFuncs`, a table of gcc 2.x
  * pointer-to-member-functions: state 0 `sub_8017600`, 1 `sub_801796C`,
  * 2 `sub_801793C`, 3 `sub_80178EC`. That call sequence - and the
  * `_call_via_r1`/`AD80`/`AD84` "call via r1/r2/r3" trampolines used for
@@ -163,8 +163,8 @@ extern void *gEntityFlags;
 extern void *gCollidableList;
 extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
-extern struct pmf gStaticData_0816C290[];
-extern u8 gStaticData_0816B8C0[];
+extern struct pmf gInputCtrlStateFuncs[];
+extern u8 gInputCtrlMotionRecords[];
 extern u8 gInputCtrlVtable[];
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -375,21 +375,21 @@ void UpdateInputCtrl(struct input_ctrl *self)
     }
 
     {
-        s32 idx = gStaticData_0816C290[self->state].index;
+        s32 idx = gInputCtrlStateFuncs[self->state].index;
         struct pmf_entry e;
         void *fn;
 
         if (idx > 0)
         {
-            e = (*(struct pmf_entry **)((u8 *)self + gStaticData_0816C290[self->state].u.vtableOffset))[idx - 1];
+            e = (*(struct pmf_entry **)((u8 *)self + gInputCtrlStateFuncs[self->state].u.vtableOffset))[idx - 1];
             fn = e.fn;
         }
         else
         {
-            fn = gStaticData_0816C290[self->state].u.fn;
+            fn = gInputCtrlStateFuncs[self->state].u.fn;
         }
         {
-            s32 d = gStaticData_0816C290[self->state].delta;
+            s32 d = gInputCtrlStateFuncs[self->state].delta;
             s32 adj;
 
             if (idx > 0)
@@ -406,7 +406,7 @@ void sub_8017808(struct input_ctrl *self)
 {
     if (self->dirtyA == 1)
     {
-        u8 *rec = gStaticData_0816B8C0 + self->animSet->entries[self->animA].a * 12;
+        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->animA].a * 12;
 
         if (self->altA)
             CTRL_CALL3(self, method_38, self->target, rec);
@@ -417,7 +417,7 @@ void sub_8017808(struct input_ctrl *self)
     }
     if (self->dirtyB == 1)
     {
-        u8 *rec = gStaticData_0816B8C0 + self->animSet->entries[self->animB].b * 12;
+        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->animB].b * 12;
 
         if (self->altB)
             CTRL_CALL3(self, method_40, self->target, rec);

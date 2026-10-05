@@ -82,7 +82,7 @@ of the engine's rendering/actor system.
 
 ### The two largest untyped ROM regions
 
-- `gStaticData_0817E78C` — ~3.2 MB (ROM `0x0817E78C`-`0x084A5600`)
+- `gLanguageSelectPalette3` — ~3.2 MB (ROM `0x0817E78C`-`0x084A5600`)
 - `gSpriteBankTable` — ~747 KB
 
 Together these are over half the ROM and by far the largest remaining
@@ -424,11 +424,11 @@ environment.
 
 The background-loading trace above (`LoadTitleScreenBg`) led to a graphics
 package struct, `gTitleScreenBg`, whose tile pointer turned out to be
-`gStaticData_0862E3B0` - one of the blocks from the original "garbled
+`gTitleScreenBgTiles` - one of the blocks from the original "garbled
 mess" pass that got reclassified as raw binary because it looked like
 noise as 4bpp tile data at every width tried. Decompressing it, its
-declared palette (`gStaticData_0861C224`) and its tilemap
-(`gStaticData_0863183C`) together and compositing them properly produced
+declared palette (`gTitleScreenBgPalette`) and its tilemap
+(`gTitleScreenBgMap`) together and compositing them properly produced
 a perfectly clean image: **the "Crash Bandicoot XS" title/logo art**. The
 reason it looked garbled before: it isn't 4bpp at all, **it's 8bpp**
 (64 bytes/tile, not 32) - the original extraction pass assumed 4bpp
@@ -462,13 +462,13 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
 
 - **`graphics/tileset1/01`-`10` (10 files) were all real 8bpp graphics** -
   once rendered with the palette sitting right next to them in ROM
-  (`gStaticData_0863CF98`, already-extracted as `11_63cf98.pal`), they turned
+  (`gLevelSelectPicture0Palette`, already-extracted as `11_63cf98.pal`), they turned
   out to be **circular level-select map icons** - a waterfall, a ship/dock
   scene, and others, each clearly a distinct level's thumbnail. All 10
   converted to proper `_8bpp_tiles.png` sources using that real palette and
   verified byte-exact.
   - **Correction (fixed):** rendering all 10 with the single shared
-    `gStaticData_0863CF98` palette was wrong for 9 of them. An array at
+    `gLevelSelectPicture0Palette` palette was wrong for 9 of them. An array at
     `gLevelSelectPictures` (10 `{palette_ptr, tile_ptr}` 8-byte pairs, read
     by `sub_801DB6C`) gives each icon its own dedicated 256-color palette -
     only icon `01_637a70`'s pairing with `0863CF98` was actually correct;
@@ -526,12 +526,12 @@ compositing them gives a clean, confirmed picture in every case:
 
 | package | tile data | content |
 |---|---|---|
-| `gStaticData_0816C484` | `36_61c30c` (4bpp) | sky/clouds background |
-| `gStaticData_0816B284` | `37_61e5f8` (8bpp) | Crash's face in a blue badge, metallic warp-room background |
-| `gStaticData_0816C58C` | `38_62556c` (8bpp) | level-select platform icon: blue gem pool, palm trees, small ruins, magenta transparent bg |
-| `gStaticData_0817C594` | `39_628c50` (4bpp) | red/fiery smoke texture |
-| `gStaticData_0817C5A8` | `40_62a958` (4bpp) | fire/aura glow effect: green transparent bg, orange/red/magenta outline |
-| `gStaticData_0817C5BC` | `41_62b34c` (8bpp) | Uka Uka's mask |
+| `gMenuSkyBg` | `36_61c30c` (4bpp) | sky/clouds background |
+| `gPauseMenuBg` | `37_61e5f8` (8bpp) | Crash's face in a blue badge, metallic warp-room background |
+| `gLevelSelectPageBg` | `38_62556c` (8bpp) | level-select platform icon: blue gem pool, palm trees, small ruins, magenta transparent bg |
+| `gContinuePromptSmokeBg` | `39_628c50` (4bpp) | red/fiery smoke texture |
+| `gContinuePromptGlowBg` | `40_62a958` (4bpp) | fire/aura glow effect: green transparent bg, orange/red/magenta outline |
+| `gContinuePromptUkaUkaBg` | `41_62b34c` (8bpp) | Uka Uka's mask |
 
 Fixes applied (all verified byte-exact via a full clean rebuild):
 
@@ -748,7 +748,7 @@ present in the code, and confirmed by directly decompressing
 matches `graphics/unknown/00_0b2120.bin` exactly) and checking real
 records against it:
 
-- **Category 0-2's record 0** (the "mask", `table_B = gStaticData_0817941C`)
+- **Category 0-2's record 0** (the "mask", `table_B = gPolarPlayerFrames`)
   holds full absolute ROM addresses (`0x080Cxxxx`) and reads real
   uncompressed ROM data directly - `gCategorySpriteSheet` is unset/0 for
   this path, making the add in `GetAnimFrameData` a no-op. This is the

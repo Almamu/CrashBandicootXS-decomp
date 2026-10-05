@@ -57,7 +57,7 @@ screen in `actor_part_1b85c.c` (issue #26):
   (`include/line_util.h`), and `GlideLevelSelectCursor` takes two steps along it per
   frame toward the target `MoveLevelSelectCursor` sets. `MoveLevelSelectCursor` also derives
   the zoom speed from half the major-axis distance. `UpdateLevelSelectCursor` runs an
-  idle animation cycle (`gStaticData_0816C634`) at random intervals
+  idle animation cycle (`gLevelSelectCursorAnims`) at random intervals
   (`sub_801E504`), plus the grow-in and shrink-away states 4 and 5. While
   growing or shrinking, `DrawLevelSelectCursor` draws the cursor itself as an affine
   OBJ. It takes the next matrix slot from the OAM shadow buffer

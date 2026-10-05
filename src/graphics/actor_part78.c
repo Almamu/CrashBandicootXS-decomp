@@ -12,7 +12,7 @@ extern void *GetSpriteFrame(void *part);
 extern s32 sub_8026BC0(void *arg0, s32 x, s32 y);
 extern void *gLevelLayers;
 extern void *gLevelState;
-extern u8 gStaticData_0816B300[];
+extern u8 gEmptySpritePoint[];
 
 struct a884_game {
     u8 unk_00[0x29];
@@ -61,7 +61,7 @@ struct a884_method {
  * dispatches on `gLevelLayers+0x29` (a pending-action "kind"
  * byte, cleared back to 0 by every path here): kind 0 additionally
  * resets `+0x100`/`+0x102`/`+0x103` if `self+0x68` is exactly 8; kinds
- * 1/5/7/9 (`gStaticData_0816B300`'s index scheme - see the `case`
+ * 1/5/7/9 (`gEmptySpritePoint`'s index scheme - see the `case`
  * labels below) are no-ops beyond the shared reset; kind 1 also sets
  * `self+0xc` bit 6, clears `+0x8c`, calls `SetMaskLevel`, and fires the
  * `self->table+0x68` trampoline (arg 1); kind 5 sets the `+0x100`
@@ -71,7 +71,7 @@ struct a884_method {
  * `+4` byte's upper nibble - the exact same `sub_80084C4`
  * (`actor_part6.c`) case-to-block mapping (0 -> `info+0x24`, 6 ->
  * `info+0x14`, anything else -> the fixed fallback
- * `gStaticData_0816B300`) - applies it (mirrored by `self+0x28` bit 4)
+ * `gEmptySpritePoint`) - applies it (mirrored by `self+0x28` bit 4)
  * to `self`'s de-Q8'd position, and probes the result via
  * `sub_8026BC0` (still raw). A hit (code 6) snaps `self`'s Y position
  * down to the next multiple of 8 (unless `+0x101` is already set) and
@@ -137,20 +137,20 @@ static inline s16 *A884Offset(void *part)
         break;
     case 3:
     case 4:
-        result = (s16 *)gStaticData_0816B300;
+        result = (s16 *)gEmptySpritePoint;
         break;
     case 1:
     case 2:
-        result = (s16 *)gStaticData_0816B300;
+        result = (s16 *)gEmptySpritePoint;
         break;
     case 5:
-        result = (s16 *)gStaticData_0816B300;
+        result = (s16 *)gEmptySpritePoint;
         break;
     case 6:
         result = (s16 *)((u8 *)info + 0x14);
         break;
     default:
-        result = (s16 *)gStaticData_0816B300;
+        result = (s16 *)gEmptySpritePoint;
         break;
     }
     return result;

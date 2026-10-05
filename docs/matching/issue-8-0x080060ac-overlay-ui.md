@@ -92,12 +92,12 @@ of it.
   icon-widget constructors:
   - `DrawPauseTimeTrialPage` draws `self->timeBuf` (a `FormatCentiseconds`
     result) centered on the medal-icon widget `InitPauseTimeTrialPage` builds,
-    using the same fixed `gStaticData_0816B27C` position pair that
+    using the same fixed `gPauseTimeTrialIconPos` position pair that
     icon itself is positioned with. `self` is the same `struct
     pause_menu` `settings_menu6.c` already documents
     (`field_6c`/`field_bc`/`timeBuf` all line up at their existing
     offsets).
-  - `DrawPauseCrystalsPage` positions the icon manager at `gStaticData_0816B1E4`
+  - `DrawPauseCrystalsPage` positions the icon manager at `gPauseCrystalIconPos`
     (the same fixed point `InitPauseCrystalsPage`'s `field_88` icon uses) and
     hands off to the still-raw `DrawPauseFraction` (GitHub issue #7) to
     actually draw the two small result-count strings `InitPauseCrystalsPage`

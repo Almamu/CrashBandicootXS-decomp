@@ -5,10 +5,10 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern void nullsub_27();
+extern void YetiStateCaught();
 extern void sub_802DB2C();
 extern void sub_802DCC0();
-extern void sub_802E0A4();
+extern void YetiStateStop();
 
 /* Per-state update functions of the gYeti gauge object,
  * called as `gYetiStateFuncs[gYetiState]()` by
@@ -16,6 +16,6 @@ extern void sub_802E0A4();
 void (*const gYetiStateFuncs[4])() = {
     sub_802DB2C,
     sub_802DCC0,
-    nullsub_27,
-    sub_802E0A4,
+    YetiStateCaught,
+    YetiStateStop,
 };

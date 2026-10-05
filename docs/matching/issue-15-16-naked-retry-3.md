@@ -5,7 +5,7 @@ closed; two got new or better drafts; three were not attempted.
 
 | Function | File | Result |
 | --- | --- | --- |
-| `sub_8012AF4` | `actor_part83.c` | **Real C**, old_agbcc |
+| `ApplyActionCtrlMotion` | `actor_part83.c` | **Real C**, old_agbcc |
 | `UpdateActionCtrl` | `actor_part84.c` | **Real C**, old_agbcc |
 | `CreateWumpa` | `game_loop53.c` | Still NAKED, analysis added to the draft's note |
 | `UpdateWumpa` | `game_loop53.c` | Still NAKED, first C draft under `NON_MATCHING` |
@@ -15,7 +15,7 @@ closed; two got new or better drafts; three were not attempted.
 
 ## Closed
 
-### `sub_8012AF4` (issue #16)
+### `ApplyActionCtrlMotion` (issue #16)
 
 The old draft kept the `+0x2F` flag and the `+0x27` tag in pointer
 locals. The ROM computes each address once and then uses a copy, which
@@ -25,7 +25,7 @@ time), the control flow for the "state 0 or 0x11" test comes out right.
 In the ROM, both paths set the flag address before the branch. Two more
 changes were needed:
 
-- the record lookup is `*(gStaticData_0816B304 + i)`, which loads the
+- the record lookup is `*(gCtrlMotionRecords + i)`, which loads the
   table address after the index is computed, as the ROM does;
 - three empty `asm("" : : "r"(self))` extra references (next to the
   `next31 = f` store) settle the last register ties (the flag byte's
@@ -96,7 +96,7 @@ themselves. So did the first draft's "temporaries in r6".
 - **Drop pointer locals the ROM copies.** A pointer computed once and
   then copied into another register (`adds r3, r5, #0x27` ...
   `mov r8, r3`) comes from old_agbcc's GCSE over repeated `self->field`
-  reads, not from a local. This closed `sub_8012AF4`.
+  reads, not from a local. This closed `ApplyActionCtrlMotion`.
 - **Read a field into a local to fix load order.** If the ROM loads a
   field before a longer expression it is compared against, read the
   field into a local first.

@@ -94,7 +94,7 @@ struct act_part
 };
 
 /* One entry of the per-object table `act.anims` points at: indices into
- * gStaticData_0816B304's 12-byte records for the +0x27 and +0x28 actions. */
+ * gCtrlMotionRecords's 12-byte records for the +0x27 and +0x28 actions. */
 struct act_anim_pair
 {
     s32 first;
@@ -149,7 +149,7 @@ typedef void (*act_fn2)(void *self, void *a, s32 b);
  * `do { ... } while (0)` (include/actor_self.h explains the difference).
  * agbcc treats the `do`/`while` as a loop, which keeps CSE from carrying
  * a constant from before the call to a store after it. Most handlers match
- * either way; sub_8013D94 needs the loop form and sub_8014D18 (and the
+ * either way; ActionCtrlStateAirSpin needs the loop form and ActionCtrlStateHangMove (and the
  * other handlers that keep a 1 in a callee-saved register across the
  * calls) needs this one. */
 #define ACT_CALL1(obj, m, a)                                                   \

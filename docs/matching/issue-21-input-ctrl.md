@@ -41,11 +41,11 @@ A's (7 with speed 0x3200 while the left-hold flag lasts - it expires after
 left released - 8 with speed 0xA00, else 1 with speed 0x1E00). Once the target's x passes the level's right edge
 (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked gone
 and `RequestRoomExit` is signalled. `sub_8017808` then applies any dirty
-channel through the method table using `gStaticData_0816B8C0`'s 12-byte
+channel through the method table using `gInputCtrlMotionRecords`'s 12-byte
 records.
 
 The state dispatch at the end of `UpdateInputCtrl` goes through
-`gStaticData_0816C290`, a table of gcc 2.x pointer-to-member-functions
+`gInputCtrlStateFuncs`, a table of gcc 2.x pointer-to-member-functions
 (`{s16 delta; s16 index; union {fn, s16 vtable offset}}`): state 0
 `sub_8017600` (reset the pairs, spawn the child), 1 `sub_801796C`,
 2 `sub_801793C`, 3 `sub_80178EC` (mark the target gone). That call
@@ -94,7 +94,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
 - **`InputCtrlKillPlayer`** loads `gPaletteCache` and computes the tag byte's
   address before loading the record table - done with explicit
   statements; `+0x29`'s slot is a 4-bit bitfield (`lsl #28/lsr #28`).
-- **`UpdateInputCtrl`'s PMF dispatch** re-indexes `gStaticData_0816C290[state]`
+- **`UpdateInputCtrl`'s PMF dispatch** re-indexes `gInputCtrlStateFuncs[state]`
   for each field and copies the virtual entry through a stack struct,
   which is what gives the ROM's `sub sp, #8` frame; the up/down `else if`
   chain is written with a pinned `dirState` read and a `goto` (the only
@@ -122,7 +122,7 @@ All 25 functions still match. What became unnecessary:
 - **`UpdateInputCtrl`'s up/down chain**: the pinned `dirState` read and the
   `goto` are gone. It is an ordinary `if`/`else if` chain.
 - **`sub_8017808`**: all pins and both `asm("" : "+r")` barriers. The
-  record is `gStaticData_0816B8C0 + self->animSet->entries[idx].a * 12`,
+  record is `gInputCtrlMotionRecords + self->animSet->entries[idx].a * 12`,
   and the `dirtyB` test is a plain `if`.
 - The virtual-call macros use `if (1) { } else (void)0` instead of
   `do`/`while (0)` (both match here; this is the form

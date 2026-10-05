@@ -39,12 +39,12 @@ extern s32 sub_802A558(s32 idx);
 extern s32 sub_802A540(s32 idx);
 extern s32 sub_802A504(s32 idx);
 
-extern u8 gStaticData_0817A78C[];
-extern u8 gStaticData_0817A774[];
-extern u8 gStaticData_0817A780[];
-extern u8 gStaticData_0817A798[];
-extern u8 gStaticData_0817A7D8[];
-extern u8 gStaticData_0817A7B8[];
+extern u8 gPolarElectricFenceWireBox[];
+extern u8 gPolarElectricFenceLeftPostBox[];
+extern u8 gPolarElectricFenceRightPostBox[];
+extern u8 gPolarAkuAkuPalette1[];
+extern u8 gPolarAkuAkuPalette3[];
+extern u8 gPolarAkuAkuPalette2[];
 extern u8 gPolarElectricFenceVtable[];
 extern u8 gStaticData_087E4FD4[];
 extern u8 gStaticData_087E4FF4[];
@@ -126,7 +126,7 @@ struct hazard {
 
 /* Once-per-frame hazard/proximity update. Latches `deep` once `depth`
  * passes 0x15FF. While unused (sequence 0) it tests the part table's own
- * box with sub_802DD9C, then gStaticData_0817A78C's box with IsTouchingPlayer
+ * box with sub_802DD9C, then gPolarElectricFenceWireBox's box with IsTouchingPlayer
  * (a hit there only counts if ShockPolarPlayer agrees), or failing that the
  * 0817A774 and 0817A780 boxes; any hit switches to sequence 1. Once used,
  * fires method 0x08 with 3 when the sequence has played through. */
@@ -142,17 +142,17 @@ void UpdatePolarElectricFence(void *selfArg)
         if (sub_802DD9C(self)) {
             HAZARD_HIT(self);
         }
-        self->box = *(struct box12 *)gStaticData_0817A78C;
+        self->box = *(struct box12 *)gPolarElectricFenceWireBox;
         if (IsTouchingPlayer(self)) {
             if (ShockPolarPlayer(gActorList)) {
                 HAZARD_HIT(self);
             }
         } else {
-            self->box = *(struct box12 *)gStaticData_0817A774;
+            self->box = *(struct box12 *)gPolarElectricFenceLeftPostBox;
             if (IsTouchingPlayer(self)) {
                 HAZARD_HIT(self);
             }
-            self->box = *(struct box12 *)gStaticData_0817A780;
+            self->box = *(struct box12 *)gPolarElectricFenceRightPostBox;
             if (IsTouchingPlayer(self)) {
                 HAZARD_HIT(self);
             }
@@ -541,7 +541,7 @@ void *CreatePolarIcicle(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
 /* VRAM-gauge/state-transition driver for a `gUnknown_030014B8`-counted
  * effect: while the current mask level (`maskLevel`) (`gLevelState->0x78`)
  * and the `retrigger` flag are both zero, just clears `self+0x2c`;
- * otherwise DMAs one of four `gStaticData_0817A798`-indexed gauge
+ * otherwise DMAs one of four `gPolarAkuAkuPalette1`-indexed gauge
  * strips and resets `self`'s table index/anim, arming `self+0x2c`.
  * Then: tier 3 arms a long `gUnknown_030014B8` countdown and
  * transitions to state 1; tier 0 with `retrigger` set transitions to
@@ -559,7 +559,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
     } else {
         register s32 zero asm("r6");
 
-        QueueVramDmaTransfer(gStaticData_0817A798 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+        QueueVramDmaTransfer(gPolarAkuAkuPalette1 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         {
             u8 *addr = &self->visible;
 
@@ -652,8 +652,8 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
 }
 
 /* Drives `gUnknown_030014B8`'s countdown, DMAing one of two gauge
- * strips per frame (`gStaticData_0817A7D8` on the low bit set,
- * `gStaticData_0817A7B8` otherwise) and, once it expires, resetting
+ * strips per frame (`gPolarAkuAkuPalette3` on the low bit set,
+ * `gPolarAkuAkuPalette2` otherwise) and, once it expires, resetting
  * the mask level (`maskLevel`) via `SetMaskLevel(gLevelState, 2)` then
  * `sub_802D204(self, 0)`. Independently re-fires `sub_802D204` once
  * state 2's own `self+0x12` edge trips. Always advances `self`'s own
@@ -665,9 +665,9 @@ void UpdatePolarAkuAku(void *selfArg)
 
     if (gUnknown_030014B8 != 0) {
         if (gUnknown_030014B8 & 4) {
-            QueueVramDmaTransfer(gStaticData_0817A7D8, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+            QueueVramDmaTransfer(gPolarAkuAkuPalette3, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         } else {
-            QueueVramDmaTransfer(gStaticData_0817A7B8, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+            QueueVramDmaTransfer(gPolarAkuAkuPalette2, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         }
 
         gUnknown_030014B8 -= 1;

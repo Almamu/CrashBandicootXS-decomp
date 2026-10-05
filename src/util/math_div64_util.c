@@ -15,7 +15,7 @@
  * lookup `count_leading_zeros`, `umul_ppmm` - plus the
  * `UDIV_NEEDS_NORMALIZATION` branch of `__udivmoddi4`) and match
  * byte-for-byte under agbcc. Each of the two division objects carried
- * its own static `__clz_tab` (`gStaticData_085A4C70`/`085A4D70`), as
+ * its own static `__clz_tab` (`__clz_tab_divdi3`/`085A4D70`), as
  * old libgcc2.c did.
  *
  * `__udivsi3` stays a NAKED transcription: it's
@@ -47,8 +47,8 @@ typedef union {
  * (below) and `__umodsi3` (src/util/math_div_util.c). */
 
 extern void __div0(void);
-extern const UQItype gStaticData_085A4C70[256];
-extern const UQItype gStaticData_085A4D70[256];
+extern const UQItype __clz_tab_divdi3[256];
+extern const UQItype __clz_tab_udivdi3[256];
 
 #define SI_TYPE_SIZE 32
 #define __BITS4 (SI_TYPE_SIZE / 4)
@@ -149,13 +149,13 @@ static inline DItype __negdi2(DItype u)
 }
 
 #define UDIVMODDI4 __udivmoddi4_divdi3
-#define CLZ_TAB gStaticData_085A4C70
+#define CLZ_TAB __clz_tab_divdi3
 #include "libgcc2_udivmoddi4.h"
 #undef UDIVMODDI4
 #undef CLZ_TAB
 
 #define UDIVMODDI4 __udivmoddi4_udivdi3
-#define CLZ_TAB gStaticData_085A4D70
+#define CLZ_TAB __clz_tab_udivdi3
 #include "libgcc2_udivmoddi4.h"
 #undef UDIVMODDI4
 #undef CLZ_TAB

@@ -94,7 +94,7 @@
     {
      "address": "0x080C2758",
      "size": 96896,
-     "format": "compressed OBJ frame set A (old 'rotation strip A'): 152 back-to-back frames {w=8,h=8,0x30,0} + u16 zero/literal run stream, decoded by the IWRAM hook gUnpackRleSpriteFrameFunc (0x03000634); addressed by the 152 absolute pointers in table_B gStaticData_0817941C (categories 0-2, anim record 0, 148 distinct)",
+     "format": "compressed OBJ frame set A (old 'rotation strip A'): 152 back-to-back frames {w=8,h=8,0x30,0} + u16 zero/literal run stream, decoded by the IWRAM hook gUnpackRleSpriteFrameFunc (0x03000634); addressed by the 152 absolute pointers in table_B gPolarPlayerFrames (categories 0-2, anim record 0, 148 distinct)",
      "effort": "medium",
      "notes": "the frames do not overlap: the old 'sliding window' reading assumed w*h*32 raw bytes per frame",
      "status": "converted: src/data/rle_sprites_0c2758.c (graphics/rle_sprites/0c2758_frames.png, tools/rle_sprites.py)"
@@ -102,7 +102,7 @@
     {
      "address": "0x080DA1D8",
      "size": 151512,
-     "format": "compressed OBJ frame set B (old 'rotation strip B'): 112 back-to-back frames {w=10,h=10,0x30,0} + run stream, addressed by the 123 pointers in gStaticData_0817A880 (table_B of the CreateYeti singleton)",
+     "format": "compressed OBJ frame set B (old 'rotation strip B'): 112 back-to-back frames {w=10,h=10,0x30,0} + run stream, addressed by the 123 pointers in gYetiFrames (table_B of the CreateYeti singleton)",
      "effort": "medium",
      "notes": "the last frame ends exactly at 0x080FF1B0",
      "status": "converted: src/data/rle_sprites_0c2758.c (graphics/rle_sprites/0da1d8_frames.png, tools/rle_sprites.py)"
@@ -207,7 +207,7 @@
     {
      "address": "0x0815A050",
      "size": 55940,
-     "format": "compressed OBJ frame set C (old 'rotation strip C'): 80 back-to-back frames {w=8,h=8,0x30,0} + run stream, addressed by table_B gStaticData_0817BA44 (categories 3-6, anim record 0, 80 pointers)",
+     "format": "compressed OBJ frame set C (old 'rotation strip C'): 80 back-to-back frames {w=8,h=8,0x30,0} + run stream, addressed by table_B gJetpackPlayerFrames (categories 3-6, anim record 0, 80 pointers)",
      "effort": "medium",
      "notes": "the last frame ends exactly at 0x08167AD4",
      "status": "converted: src/data/rle_sprites_15a050.c (graphics/rle_sprites/15a050_frames.png, tools/rle_sprites.py)"
@@ -468,7 +468,7 @@
   {
    "address": "0x0816B13A",
    "size": 32,
-   "name": "gStaticData_0816B13A",
+   "name": "gSaveMenuPalette0",
    "consumers": [
     "InitSaveMenuIcons"
    ],
@@ -492,7 +492,7 @@
   {
    "address": "0x0816B15A",
    "size": 32,
-   "name": "gStaticData_0816B15A",
+   "name": "gSaveMenuPalette1",
    "consumers": [
     "InitSaveMenuIcons"
    ],
@@ -516,7 +516,7 @@
   {
    "address": "0x0816B17A",
    "size": 32,
-   "name": "gStaticData_0816B17A",
+   "name": "gSaveMenuPalette2",
    "consumers": [
     "InitSaveMenuIcons"
    ],
@@ -540,7 +540,7 @@
   {
    "address": "0x0816B19A",
    "size": 34,
-   "name": "gStaticData_0816B19A",
+   "name": "gSaveMenuPalette3",
    "consumers": [
     "InitSaveMenuIcons"
    ],
@@ -612,7 +612,7 @@
   {
    "address": "0x0816B1E4",
    "size": 8,
-   "name": "gStaticData_0816B1E4",
+   "name": "gPauseCrystalIconPos",
    "consumers": [
     "InitPauseCrystalsPage",
     "DrawPauseCrystalsPage"
@@ -638,7 +638,7 @@
   {
    "address": "0x0816B1EC",
    "size": 32,
-   "name": "gStaticData_0816B1EC",
+   "name": "gPausePowerIconPos",
    "consumers": [
     "InitPausePowersPage"
    ],
@@ -662,7 +662,7 @@
   {
    "address": "0x0816B20C",
    "size": 16,
-   "name": "gStaticData_0816B20C",
+   "name": "gPausePowerIconFrames",
    "consumers": [
     "InitPausePowersPage"
    ],
@@ -686,7 +686,7 @@
   {
    "address": "0x0816B21C",
    "size": 40,
-   "name": "gStaticData_0816B21C",
+   "name": "gPauseGemIconPos",
    "consumers": [
     "DrawPauseGemsPage",
     "InitPauseGemsPage"
@@ -712,7 +712,7 @@
   {
    "address": "0x0816B244",
    "size": 20,
-   "name": "gStaticData_0816B244",
+   "name": "gPauseGemIconFrames",
    "consumers": [
     "InitPauseGemsPage"
    ],
@@ -736,7 +736,7 @@
   {
    "address": "0x0816B258",
    "size": 24,
-   "name": "gStaticData_0816B258",
+   "name": "gPauseRelicIconPos",
    "consumers": [
     "DrawPauseRelicsPage",
     "InitPauseRelicsPage"
@@ -762,7 +762,7 @@
   {
    "address": "0x0816B270",
    "size": 12,
-   "name": "gStaticData_0816B270",
+   "name": "gPauseRelicIconFrames",
    "consumers": [
     "InitPauseRelicsPage",
     "InitPauseTimeTrialPage"
@@ -787,7 +787,7 @@
   {
    "address": "0x0816B27C",
    "size": 8,
-   "name": "gStaticData_0816B27C",
+   "name": "gPauseTimeTrialIconPos",
    "consumers": [
     "InitPauseTimeTrialPage",
     "DrawPauseTimeTrialPage"
@@ -813,7 +813,7 @@
   {
    "address": "0x0816B284",
    "size": 20,
-   "name": "gStaticData_0816B284",
+   "name": "gPauseMenuBg",
    "consumers": [
     "InitPauseMenu"
    ],
@@ -854,7 +854,7 @@
   {
    "address": "0x0816B2C0",
    "size": 32,
-   "name": "gStaticData_0816B2C0",
+   "name": "gPauseMenuPalette",
    "consumers": [
     "RunPauseMenu"
    ],
@@ -921,7 +921,7 @@
   {
    "address": "0x0816B2F8",
    "size": 8,
-   "name": "gStaticData_0816B2F8",
+   "name": "gEmptySpriteBox",
    "consumers": [
     "sub_0800D18C",
     "sub_8007C30",
@@ -949,12 +949,12 @@
   {
    "address": "0x0816B300",
    "size": 4,
-   "name": "gStaticData_0816B300",
+   "name": "gEmptySpritePoint",
    "consumers": [
     "sub_80084C4",
     "CollidePlayer",
     "ActionCtrlHandleEvent",
-    "sub_8014D18"
+    "ActionCtrlStateHangMove"
    ],
    "consumer_files": [
     "graphics/actor_part6.c",
@@ -976,11 +976,11 @@
   {
    "address": "0x0816B304",
    "size": 792,
-   "name": "gStaticData_0816B304",
+   "name": "gCtrlMotionRecords",
    "consumers": [
     "StartCtrlTargetMotionYFromSet",
     "StartCtrlTargetMotionXFromSet",
-    "sub_8012AF4"
+    "ApplyActionCtrlMotion"
    ],
    "consumer_files": [
     "graphics/actor_part17.c",
@@ -1004,7 +1004,7 @@
   {
    "address": "0x0816B61C",
    "size": 676,
-   "name": "gStaticData_0816B61C",
+   "name": "gPlayerCtrlMotionRecords",
    "consumers": [
     "sub_8016AB0",
     "sub_801721C",
@@ -1030,7 +1030,7 @@
   {
    "address": "0x0816B8C0",
    "size": 108,
-   "name": "gStaticData_0816B8C0",
+   "name": "gInputCtrlMotionRecords",
    "consumers": [
     "sub_8017808"
    ],
@@ -1051,7 +1051,7 @@
   {
    "address": "0x0816B92C",
    "size": 8,
-   "name": "gStaticData_0816B92C",
+   "name": "gActionCtrlMotionSet",
    "consumers": [
     "PlayRoom"
    ],
@@ -1071,7 +1071,7 @@
   {
    "address": "0x0816B934",
    "size": 8,
-   "name": "gStaticData_0816B934",
+   "name": "gPlayerCtrlMotionSet",
    "consumers": [
     "PlayRoom"
    ],
@@ -1091,7 +1091,7 @@
   {
    "address": "0x0816B93C",
    "size": 80,
-   "name": "gStaticData_0816B93C",
+   "name": "gInputCtrlMotionSet",
    "consumers": [
     "PlayRoom"
    ],
@@ -1472,7 +1472,7 @@
   {
    "address": "0x0816BB6C",
    "size": 40,
-   "name": "gStaticData_0816BB6C",
+   "name": "gEnemyCtrlMotionSet",
    "consumers": [
     "ResetEnemyCtrl"
    ],
@@ -1616,7 +1616,7 @@
   {
    "address": "0x0816BBF0",
    "size": 168,
-   "name": "gStaticData_0816BBF0",
+   "name": "gActionCtrlStateAttackKinds",
    "consumers": [
     "sub_0800D18C"
    ],
@@ -1758,7 +1758,7 @@
   {
    "address": "0x0816C070",
    "size": 32,
-   "name": "gStaticData_0816C070",
+   "name": "gPlayerCtrlModeAnimRows",
    "consumers": [
     "UpdatePlayerCtrl",
     "sub_8016DDC",
@@ -1809,7 +1809,7 @@
   {
    "address": "0x0816C250",
    "size": 64,
-   "name": "gStaticData_0816C250",
+   "name": "gPlayerCtrlStateFuncs",
    "consumers": [
     "UpdatePlayerCtrl"
    ],
@@ -1833,7 +1833,7 @@
   {
    "address": "0x0816C290",
    "size": 64,
-   "name": "gStaticData_0816C290",
+   "name": "gInputCtrlStateFuncs",
    "consumers": [
     "UpdateInputCtrl"
    ],
@@ -1900,7 +1900,7 @@
   {
    "address": "0x0816C308",
    "size": 3,
-   "name": "gStaticData_0816C308",
+   "name": "gTinyRoundAnchors",
    "consumers": [
     "UpdateTiny",
     "SetTinyState"
@@ -1922,7 +1922,7 @@
   {
    "address": "0x0816C30B",
    "size": 77,
-   "name": "gStaticData_0816C30B",
+   "name": "gTinyHopTargets",
    "consumers": [
     "PickTinyHopTarget"
    ],
@@ -2263,7 +2263,7 @@
   {
    "address": "0x0816C484",
    "size": 20,
-   "name": "gStaticData_0816C484",
+   "name": "gMenuSkyBg",
    "consumers": [
     "LoadSaveMenuBg",
     "InitPowerDialog",
@@ -2289,7 +2289,7 @@
   {
    "address": "0x0816C498",
    "size": 8,
-   "name": "gStaticData_0816C498",
+   "name": "gLevelSelectWorldPos",
    "consumers": [
     "InitLevelSelect"
    ],
@@ -2482,7 +2482,7 @@
   {
    "address": "0x0816C4D8",
    "size": 48,
-   "name": "gStaticData_0816C4D8",
+   "name": "gLevelSelectEntryPositions",
    "consumers": [
     "LevelSelectTurnPage",
     "sub_801D5CC"
@@ -2507,7 +2507,7 @@
   {
    "address": "0x0816C508",
    "size": 48,
-   "name": "gStaticData_0816C508",
+   "name": "gLevelSelectEntryPositionsAllCleared",
    "consumers": [
     "LevelSelectTurnPage",
     "sub_801D5CC"
@@ -2532,7 +2532,7 @@
   {
    "address": "0x0816C538",
    "size": 16,
-   "name": "gStaticData_0816C538",
+   "name": "gLevelSelectWorldEntryBoxAnims",
    "consumers": [
     "LevelSelectTurnPage",
     "sub_801D668"
@@ -2557,7 +2557,7 @@
   {
    "address": "0x0816C548",
    "size": 16,
-   "name": "gStaticData_0816C548",
+   "name": "gLevelSelectWorldAnims",
    "consumers": [
     "InitLevelSelect",
     "RefreshLevelSelectPage"
@@ -2583,7 +2583,7 @@
   {
    "address": "0x0816C558",
    "size": 20,
-   "name": "gStaticData_0816C558",
+   "name": "gLevelSelectRankAnims",
    "consumers": [
     "LoadLevelSelectRecord"
    ],
@@ -2607,7 +2607,7 @@
   {
    "address": "0x0816C56C",
    "size": 32,
-   "name": "gStaticData_0816C56C",
+   "name": "gLevelSelectPalette",
    "consumers": [
     "RunLevelSelect"
    ],
@@ -2628,7 +2628,7 @@
   {
    "address": "0x0816C58C",
    "size": 20,
-   "name": "gStaticData_0816C58C",
+   "name": "gLevelSelectPageBg",
    "consumers": [
     "CreateLevelSelectPageBg"
    ],
@@ -2671,7 +2671,7 @@
   {
    "address": "0x0816C5F0",
    "size": 32,
-   "name": "gStaticData_0816C5F0",
+   "name": "gZoomBgSlotOffsets",
    "consumers": [
     "InitZoomBg"
    ],
@@ -2695,7 +2695,7 @@
   {
    "address": "0x0816C610",
    "size": 20,
-   "name": "gStaticData_0816C610",
+   "name": "gLevelSelectEntryBoxAnims",
    "consumers": [
     "SetLevelSelectEntryBox"
    ],
@@ -2719,7 +2719,7 @@
   {
    "address": "0x0816C624",
    "size": 16,
-   "name": "gStaticData_0816C624",
+   "name": "gLevelSelectEntryWorldAnims",
    "consumers": [
     "SetLevelSelectEntryLevel"
    ],
@@ -2743,7 +2743,7 @@
   {
    "address": "0x0816C634",
    "size": 16,
-   "name": "gStaticData_0816C634",
+   "name": "gLevelSelectCursorAnims",
    "consumers": [
     "UpdateLevelSelectCursor"
    ],
@@ -3498,7 +3498,7 @@
    "name": "gPolarPlayerStateFuncs",
    "consumers": [
     "UpdatePolarPlayer",
-    "sub_802C208"
+    "RunPolarPlayerState"
    ],
    "consumer_files": [
     "graphics/actor_part127.c",
@@ -3571,7 +3571,7 @@
   {
    "address": "0x0817A768",
    "size": 12,
-   "name": "gStaticData_0817A768",
+   "name": "gPolarNitroCrateBox",
    "consumers": [
     "UpdatePolarNitroCrate"
    ],
@@ -3592,7 +3592,7 @@
   {
    "address": "0x0817A774",
    "size": 12,
-   "name": "gStaticData_0817A774",
+   "name": "gPolarElectricFenceLeftPostBox",
    "consumers": [
     "UpdatePolarElectricFence"
    ],
@@ -3613,7 +3613,7 @@
   {
    "address": "0x0817A780",
    "size": 12,
-   "name": "gStaticData_0817A780",
+   "name": "gPolarElectricFenceRightPostBox",
    "consumers": [
     "UpdatePolarElectricFence"
    ],
@@ -3634,7 +3634,7 @@
   {
    "address": "0x0817A78C",
    "size": 12,
-   "name": "gStaticData_0817A78C",
+   "name": "gPolarElectricFenceWireBox",
    "consumers": [
     "UpdatePolarElectricFence"
    ],
@@ -3655,7 +3655,7 @@
   {
    "address": "0x0817A798",
    "size": 32,
-   "name": "gStaticData_0817A798",
+   "name": "gPolarAkuAkuPalette1",
    "consumers": [
     "sub_802D204"
    ],
@@ -3679,7 +3679,7 @@
   {
    "address": "0x0817A7B8",
    "size": 32,
-   "name": "gStaticData_0817A7B8",
+   "name": "gPolarAkuAkuPalette2",
    "consumers": [
     "UpdatePolarAkuAku"
    ],
@@ -3703,7 +3703,7 @@
   {
    "address": "0x0817A7D8",
    "size": 32,
-   "name": "gStaticData_0817A7D8",
+   "name": "gPolarAkuAkuPalette3",
    "consumers": [
     "UpdatePolarAkuAku"
    ],
@@ -3773,7 +3773,7 @@
   {
    "address": "0x0817A850",
    "size": 48,
-   "name": "gStaticData_0817A850",
+   "name": "gYetiKeyframes",
    "consumers": [
     "CreateYeti"
    ],
@@ -3794,7 +3794,7 @@
   {
    "address": "0x0817A880",
    "size": 492,
-   "name": "gStaticData_0817A880",
+   "name": "gYetiFrames",
    "consumers": [
     "CreateYeti"
    ],
@@ -3888,7 +3888,7 @@
    "name": "gJetpackPlayerStateFuncs",
    "consumers": [
     "UpdateJetpackPlayer",
-    "sub_802F748"
+    "RunJetpackPlayerState"
    ],
    "consumer_files": [
     "graphics/actor_part128.c",
@@ -3938,7 +3938,7 @@
    "name": "gJetpackPlaneStateFuncs",
    "consumers": [
     "UpdateJetpackPlane",
-    "sub_802FEA4"
+    "RunJetpackPlaneState"
    ],
    "consumer_files": [
     "graphics/actor_part46b.c",
@@ -3964,7 +3964,7 @@
    "name": "gJetpackBomberStateFuncs",
    "consumers": [
     "UpdateJetpackBomber",
-    "sub_8030234"
+    "RunJetpackBomberState"
    ],
    "consumer_files": [
     "graphics/actor_part_2fbf0.c"
@@ -3989,7 +3989,7 @@
    "name": "gAirshipFireballStateFuncs",
    "consumers": [
     "UpdateAirshipFireball",
-    "sub_8030648"
+    "RunAirshipFireballState"
    ],
    "consumer_files": [
     "graphics/actor_part20b.c",
@@ -4091,7 +4091,7 @@
   {
    "address": "0x0817C3E4",
    "size": 24,
-   "name": "gStaticData_0817C3E4",
+   "name": "gAirshipKeyframes",
    "consumers": [
     "CreateAirship"
    ],
@@ -4141,7 +4141,7 @@
    "size": 24,
    "name": "gJetpackBalloonStateFuncs",
    "consumers": [
-    "sub_8031A08"
+    "RunJetpackBalloonState"
    ],
    "consumer_files": [
     "graphics/actor_part125.c"
@@ -4166,7 +4166,7 @@
    "name": "gJetpackBalloonCrateStateFuncs",
    "consumers": [
     "UpdateJetpackBalloonCrate",
-    "sub_80322F4"
+    "RunJetpackBalloonCrateState"
    ],
    "consumer_files": [
     "graphics/actor_part129.c"
@@ -4188,7 +4188,7 @@
   {
    "address": "0x0817C444",
    "size": 12,
-   "name": "gStaticData_0817C444",
+   "name": "gJetpackRocketBox",
    "consumers": [
     "UpdateJetpackRocket"
    ],
@@ -4212,7 +4212,7 @@
    "name": "gHovercraftFireballStateFuncs",
    "consumers": [
     "UpdateHovercraftFireball",
-    "sub_8032A94"
+    "RunHovercraftFireballState"
    ],
    "consumer_files": [
     "graphics/actor_part130.c"
@@ -4282,7 +4282,7 @@
   {
    "address": "0x0817C4BC",
    "size": 12,
-   "name": "gStaticData_0817C4BC",
+   "name": "gHovercraftKeyframes",
    "consumers": [
     "CreateHovercraft"
    ],
@@ -4379,7 +4379,7 @@
   {
    "address": "0x0817C510",
    "size": 2,
-   "name": "gStaticData_0817C510",
+   "name": "gContinuePromptCursorText",
    "consumers": [
     "DrawContinuePrompt"
    ],
@@ -4400,7 +4400,7 @@
   {
    "address": "0x0817C512",
    "size": 32,
-   "name": "gStaticData_0817C512",
+   "name": "gContinuePromptPalette0",
    "consumers": [
     "InitContinuePromptGraphics"
    ],
@@ -4424,7 +4424,7 @@
   {
    "address": "0x0817C532",
    "size": 32,
-   "name": "gStaticData_0817C532",
+   "name": "gContinuePromptPalette1",
    "consumers": [
     "InitContinuePromptGraphics"
    ],
@@ -4448,7 +4448,7 @@
   {
    "address": "0x0817C552",
    "size": 32,
-   "name": "gStaticData_0817C552",
+   "name": "gContinuePromptPalette2",
    "consumers": [
     "InitContinuePromptGraphics"
    ],
@@ -4472,7 +4472,7 @@
   {
    "address": "0x0817C572",
    "size": 34,
-   "name": "gStaticData_0817C572",
+   "name": "gContinuePromptPalette3",
    "consumers": [
     "InitContinuePromptGraphics"
    ],
@@ -4496,7 +4496,7 @@
   {
    "address": "0x0817C594",
    "size": 20,
-   "name": "gStaticData_0817C594",
+   "name": "gContinuePromptSmokeBg",
    "consumers": [
     "InitContinuePrompt"
    ],
@@ -4516,7 +4516,7 @@
   {
    "address": "0x0817C5A8",
    "size": 20,
-   "name": "gStaticData_0817C5A8",
+   "name": "gContinuePromptGlowBg",
    "consumers": [
     "InitContinuePrompt"
    ],
@@ -4536,7 +4536,7 @@
   {
    "address": "0x0817C5BC",
    "size": 20,
-   "name": "gStaticData_0817C5BC",
+   "name": "gContinuePromptUkaUkaBg",
    "consumers": [
     "InitContinuePrompt"
    ],
@@ -4578,7 +4578,7 @@
   {
    "address": "0x0817CF3C",
    "size": 4,
-   "name": "gStaticData_0817CF3C",
+   "name": "gCreditsEmptyText",
    "consumers": [
     "UpdateCreditsText"
    ],
@@ -4799,7 +4799,7 @@
   {
    "address": "0x0817D768",
    "size": 20,
-   "name": "gStaticData_0817D768",
+   "name": "gVvLogoEmblemObj",
    "consumers": [
     "LoadVvLogoGraphics"
    ],
@@ -4819,7 +4819,7 @@
   {
    "address": "0x0817D77C",
    "size": 20,
-   "name": "gStaticData_0817D77C",
+   "name": "gVvLogoLettersObj",
    "consumers": [
     "LoadVvLogoGraphics"
    ],
@@ -4839,7 +4839,7 @@
   {
    "address": "0x0817D790",
    "size": 20,
-   "name": "gStaticData_0817D790",
+   "name": "gVvLogoUrlObj",
    "consumers": [
     "LoadVvLogoGraphics"
    ],
@@ -4904,7 +4904,7 @@
   {
    "address": "0x0817E72C",
    "size": 32,
-   "name": "gStaticData_0817E72C",
+   "name": "gLanguageSelectPalette0",
    "consumers": [
     "InitLanguageSelectGraphics"
    ],
@@ -4928,7 +4928,7 @@
   {
    "address": "0x0817E74C",
    "size": 32,
-   "name": "gStaticData_0817E74C",
+   "name": "gLanguageSelectPalette1",
    "consumers": [
     "InitLanguageSelectGraphics"
    ],
@@ -4952,7 +4952,7 @@
   {
    "address": "0x0817E76C",
    "size": 32,
-   "name": "gStaticData_0817E76C",
+   "name": "gLanguageSelectPalette2",
    "consumers": [
     "InitLanguageSelectGraphics"
    ],
@@ -4976,7 +4976,7 @@
   {
    "address": "0x0817E78C",
    "size": 3305076,
-   "name": "gStaticData_0817E78C",
+   "name": "gLanguageSelectPalette3",
    "consumers": [
     "InitLanguageSelectGraphics"
    ],
@@ -5008,7 +5008,7 @@
     {
      "address": "0x0817E78C",
      "size": 32,
-     "format": "u16[16] (InitLanguageSelectGraphics, same shape as gStaticData_0817E72C/74C/76C)",
+     "format": "u16[16] (InitLanguageSelectGraphics, same shape as gLanguageSelectPalette0/74C/76C)",
      "effort": "easy"
     },
     {
@@ -5206,7 +5206,7 @@
   {
    "address": "0x085A4C70",
    "size": 256,
-   "name": "gStaticData_085A4C70",
+   "name": "__clz_tab_divdi3",
    "consumers": [
     "__divdi3"
    ],
@@ -5231,7 +5231,7 @@
   {
    "address": "0x085A4D70",
    "size": 256,
-   "name": "gStaticData_085A4D70",
+   "name": "__clz_tab_udivdi3",
    "consumers": [
     "__udivdi3"
    ],

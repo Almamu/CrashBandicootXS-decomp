@@ -65,20 +65,20 @@ the same class. The target (`+0x10`) is the player object.
   Otherwise `level` drifts back towards 6. On each step it re-applies the
   target's animation (`ApplyLevel`; its out-of-line copy is
   `sub_8017348`). Then it runs the current state's handler through
-  `gStaticData_0816C250`. That table holds gcc 2.x pointer-to-member
+  `gPlayerCtrlStateFuncs`. That table holds gcc 2.x pointer-to-member
   functions for states 0-7: `sub_8016B1C`, `sub_8016C08`, `sub_8016C94`,
   `sub_8016D5C`, `sub_8016DDC`, `sub_80170EC`, `sub_8017044`,
-  `sub_8017184`. It then clears the player's speeds on contact
+  `PlayerCtrlStateDead`. It then clears the player's speeds on contact
   (`+0x74`), calls `sub_8015DF8`, and sets the target's `+0x0A`.
 - `sub_8017264(self, a, mode, timer, timerMax)` calls method `+0x20(a)`,
   stores `mode`, then calls method `+0x50(target, anim)`. The animation
-  comes from `gStaticData_0816C070[mode][level]`, 8 rows of 13 words read
+  comes from `gPlayerCtrlModeAnimRows[mode][level]`, 8 rows of 13 words read
   as bytes. `0x7FFFFFFF` means "leave `timer`/`timerMax` unchanged".
 - `sub_80172D0` writes the player's `+0x48`/`+0x4C`/`+0x50` record from its
   speed. It is the `+0x54` twin of `sub_8015FDC`. `sub_8017330` is its
   `v * v / 0x4000 + 4` term on its own.
 - `sub_8016AB0`/`sub_801721C`/`sub_8017240` apply animation pairs through
-  `gStaticData_0816B61C` (12-byte records). They are the same shape as
+  `gPlayerCtrlMotionRecords` (12-byte records). They are the same shape as
   #21's `sub_8017808`.
 
 UNUSED: there is no reference in `asm/`, `src/` or `data/`, and no Thumb
@@ -105,7 +105,7 @@ pointer anywhere in the ROM, for `sub_8016AB0`, `sub_801721C`,
   and also emitted out of line. The C keeps a `static inline` helper, and
   the out-of-line function is a one-line call to it:
   `SetState`/`sub_8017264` (inlined in `sub_8016DDC` and `sub_80170EC`),
-  `SetPlayerRecord`/`sub_80172D0` (inlined in `sub_8017184`) and
+  `SetPlayerRecord`/`sub_80172D0` (inlined in `PlayerCtrlStateDead`) and
   `ApplyLevel`/`sub_8017348`. `ResetMode` (`sub_80174BC`'s body, a
   call to `sub_8017264`) has to be an inline helper at its call sites.
   Written as a direct call in place, the `0x7FFFFFFF` literal load is

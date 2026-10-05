@@ -9,9 +9,9 @@
 
 #include "rle_sprites/15a050_frames.h"
 
-/* Categories 3-6's animation record 0 (table_B gStaticData_0817BA44):
+/* Categories 3-6's animation record 0 (table_B gJetpackPlayerFrames):
  * 80 frames of 8x8 tiles (64x64). Built from
  * graphics/rle_sprites/15a050_frames.png. */
-const u8 gStaticData_0815A050[RLE_SPRITES_15A050_SIZE] = {
+const u8 gJetpackPlayerRleFrames[RLE_SPRITES_15A050_SIZE] = {
 #include "rle_sprites/15a050_frames.inc"
 };

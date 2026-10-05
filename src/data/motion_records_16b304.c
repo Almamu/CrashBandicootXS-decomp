@@ -15,9 +15,9 @@ struct motion_rec {
     s32 c;
 };
 
-/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (actor_part17.c) and sub_8012AF4
+/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (actor_part17.c) and ApplyActionCtrlMotion
  * (actor_part83.c). */
-const struct motion_rec gStaticData_0816B304[44] = {
+const struct motion_rec gCtrlMotionRecords[44] = {
     { 0, 32, 0 },
     { 128, 32, 128 },
     { 256, 32, 256 },
@@ -64,8 +64,8 @@ const struct motion_rec gStaticData_0816B304[44] = {
     { 0, 0, 0 },
 };
 
-/* gStaticData_0816B92C's entries: indices into gStaticData_0816B304. */
-const u32 gStaticData_0816B514[33][2] = {
+/* gActionCtrlMotionSet's entries: indices into gCtrlMotionRecords. */
+const u32 gActionCtrlMotionEntries[33][2] = {
     { 0, 0 },
     { 3, 0 },
     { 7, 11 },
@@ -102,7 +102,7 @@ const u32 gStaticData_0816B514[33][2] = {
 };
 
 /* Read by sub_8016AB0, sub_801721C and sub_8017240 (actor_part_16048.c). */
-const struct motion_rec gStaticData_0816B61C[31] = {
+const struct motion_rec gPlayerCtrlMotionRecords[31] = {
     { 0, 0, 0 },
     { 192, 0, 192 },
     { 192, 2, 0 },
@@ -136,8 +136,8 @@ const struct motion_rec gStaticData_0816B61C[31] = {
     { 1, 8, 0 },
 };
 
-/* gStaticData_0816B934's entries: indices into gStaticData_0816B61C. */
-const u32 gStaticData_0816B790[38][2] = {
+/* gPlayerCtrlMotionSet's entries: indices into gPlayerCtrlMotionRecords. */
+const u32 gPlayerCtrlMotionEntries[38][2] = {
     { 0, 0 },
     { 0, 8 },
     { 0, 9 },
@@ -180,7 +180,7 @@ const u32 gStaticData_0816B790[38][2] = {
 
 /* The records sub_8017808 (actor_part_17524.c) indexes by its entry
  * set's entries. */
-const struct motion_rec gStaticData_0816B8C0[9] = {
+const struct motion_rec gInputCtrlMotionRecords[9] = {
     { 0, 0, 0 },
     { 768, 96, 768 },
     { 768, 96, 768 },

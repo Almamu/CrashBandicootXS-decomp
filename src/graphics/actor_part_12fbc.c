@@ -26,12 +26,12 @@ extern void *gEntitySpawner;
 extern void *gInput;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
-extern u8 sub_8012A7C(struct act *self);
+extern u8 CheckActionCtrlLeftGround(struct act *self);
 extern void UpdatePlayerFacing(struct act *self);
 extern void sub_800B334(struct act_part *part);
-extern void sub_8015398(struct act *self);
-extern void sub_8015460(struct act *self);
-extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
+extern void StartActionCtrlSpin(struct act *self);
+extern void StartActionCtrlRun(struct act *self);
+extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 HasTurboRun(void *self);
 extern struct spawned *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
@@ -96,24 +96,24 @@ static inline void ActSetContact(struct act_part *p, s32 v)
     p->contact = v;
 }
 
-/* Unless sub_8012A7C reports busy: fire (pressed bit 0) plays action 5's
- * animations and queues action 7; alt (bit 1) hands off to sub_8015398;
+/* Unless CheckActionCtrlLeftGround reports busy: fire (pressed bit 0) plays action 5's
+ * animations and queues action 7; alt (bit 1) hands off to StartActionCtrlSpin;
  * bit 8 plays animations 0xC/0xF, queues 0x1E, clears the player's +0x94
  * and spawns a 0x29 object from gEntitySpawner. Then the D-pad: 0 goes
- * through sub_8015780 and queues 0x1D by hand, 2/7/8 play animations
+ * through SetActionCtrlModeAnim and queues 0x1D by hand, 2/7/8 play animations
  * 0x10/3 and queue 0x1D. Held bit 9 in state 3 (and HasTurboRun) plays
- * 4/0x18 and queues 0x1B; without it, state 4 hands off to sub_8015460.
+ * 4/0x18 and queues 0x1B; without it, state 4 hands off to StartActionCtrlRun.
  *
  * The method calls use ACT_CALL (include/action_obj.h): with the
  * do/while form CSE doesn't carry the fire test's 1 (r7) into the +0x2F
  * stores after the calls. gInput's address is taken up front,
  * which is what keeps it in r8 across the calls, and the spawned object's
  * bits are bitfields so their masks come out as the ROM's -5/-4. */
-void sub_8012FBC(struct act *self)
+void ActionCtrlStateRun(struct act *self)
 {
     void **pad = &gInput;
     u32 in = gKeys;
-    u8 busy = sub_8012A7C(self);
+    u8 busy = CheckActionCtrlLeftGround(self);
 
     if (busy)
         return;
@@ -131,7 +131,7 @@ void sub_8012FBC(struct act *self)
 
         if (alt)
         {
-            sub_8015398(self);
+            StartActionCtrlSpin(self);
             return;
         }
         if (INPUT_PRESSED(in) & 0x100)
@@ -159,7 +159,7 @@ void sub_8012FBC(struct act *self)
         switch (dir)
         {
         case 0:
-            sub_8015780(self, 0, 0x12, 0, dir);
+            SetActionCtrlModeAnim(self, 0, 0x12, 0, dir);
             ActTrio27(self, dir, 1, dir);
             ActTrio28(self, dir, 1, dir);
             ActTrio27(self, dir, 1, 0x1D);
@@ -197,7 +197,7 @@ void sub_8012FBC(struct act *self)
         else if (self->state == 4)
         {
             self->unk_29 = held;
-            sub_8015460(self);
+            StartActionCtrlRun(self);
         }
         else if (self->frame != 0)
         {
@@ -219,7 +219,7 @@ void sub_8012FBC(struct act *self)
  * The 1 for the 9/8 +0x30 stores is set before the `cur & 1` test and
  * kept apart from the test's own constant (which the ROM rematerializes);
  * the barrier keeps gcc from folding the two into one register. */
-void sub_8013228(struct act *self)
+void ActionCtrlStateJump(struct act *self)
 {
     ActAndFlags0D(self->part, -2);
     ActAndFlags0D(self->part, -3);

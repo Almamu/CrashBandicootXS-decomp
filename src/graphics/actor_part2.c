@@ -11,7 +11,7 @@ struct aabb {
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern void *GetSpriteFrame(void *part);
-extern u8 gStaticData_0816B2F8[];
+extern u8 gEmptySpriteBox[];
 
 /* A third AABB-for-keyframe builder (see GetSpriteBounds/GetSpriteHitbox in
  * src/graphics/actor_part.c), this time selecting its 6-byte
@@ -20,7 +20,7 @@ extern u8 gStaticData_0816B2F8[];
  * `info+4` points to a byte whose upper nibble (0-15, but only 0-6
  * handled - anything above 6 and unhandled 1/2/6 fall through to the
  * same default) selects one of `info+0x14`, `info+0xc`, or the fixed
- * fallback table `gStaticData_0816B2F8`. */
+ * fallback table `gEmptySpriteBox`. */
 void *sub_8007C30(void *dest, void *pt)
 {
     register void *part asm("r6") = pt;
@@ -43,13 +43,13 @@ void *sub_8007C30(void *dest, void *pt)
     case 1:
     case 2:
     case 6:
-        rec = gStaticData_0816B2F8;
+        rec = gEmptySpriteBox;
         break;
     case 5:
         rec = (u8 *)info + 0xc;
         break;
     default:
-        rec = gStaticData_0816B2F8;
+        rec = gEmptySpriteBox;
         break;
     }
 
@@ -89,7 +89,7 @@ void *sub_8007C30(void *dest, void *pt)
 }
 
 /* Same shape as sub_8007C30 above, with a simpler switch: only
- * `info+0xc` or the `gStaticData_0816B2F8` fallback are ever selected
+ * `info+0xc` or the `gEmptySpriteBox` fallback are ever selected
  * (cases 0/2/3/4/6 to `info+0xc`; cases 1/5 and the out-of-range
  * default all to the fallback). */
 void *sub_8007CF8(void *dest, void *pt)
@@ -115,10 +115,10 @@ void *sub_8007CF8(void *dest, void *pt)
         break;
     case 1:
     case 5:
-        rec = gStaticData_0816B2F8;
+        rec = gEmptySpriteBox;
         break;
     default:
-        rec = gStaticData_0816B2F8;
+        rec = gEmptySpriteBox;
         break;
     }
 

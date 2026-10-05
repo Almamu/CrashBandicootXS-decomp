@@ -240,4 +240,4 @@ const u8 gCreditsText[] =
     "\n";
 
 /* An empty string: UpdateCreditsText measures the fonts' line heights with it. */
-const u8 gStaticData_0817CF3C[4] = "";
+const u8 gCreditsEmptyText[4] = "";

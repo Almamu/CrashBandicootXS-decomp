@@ -139,7 +139,7 @@ Retried this pass, none of which closed it:
   not more - moving further from a match, not closer.
 
 Both gaps are the same general class already cataloged elsewhere in
-this project (`FadePaletteToBlack`, `UpdateAirshipFireball`/`sub_8030648` in
+this project (`FadePaletteToBlack`, `UpdateAirshipFireball`/`RunAirshipFireballState` in
 `docs/matching/issue-58-0x08030334-actor.md`): register-allocation and
 CSE decisions this specific gcc 2.9 build makes internally, that don't
 appear to be reachable from C source no matter how the expressions or

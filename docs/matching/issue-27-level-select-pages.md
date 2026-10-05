@@ -29,17 +29,17 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   move BG1's scroll target a page (`sub_801D790` +0x100 /
   `sub_801D79C` -0x100), run `LevelSelectTurnPage`, wait a frame. After the loop,
   `RefreshLevelSelectPage` switches the page-title sprite's animation
-  (`gStaticData_0816C548[world]`) and puts the cursor panel back on the
+  (`gLevelSelectWorldAnims[world]`) and puts the cursor panel back on the
   clamped cursor. A blocked move plays 0x48.
 - **`LevelSelectTurnPage`** runs frames until BG1's scroll reaches its target
   (`ScrollLevelSelectPageBg` eases it 8 per frame). When the low byte of the scroll
   reaches 0xA0 (the halfway point), it reloads the page entries. This
   is `sub_801D638` (item method +0x10 `(world, slot)`),
   `sub_801D5CC` (choose the cursor layout
-  `gStaticData_0816C508`/`4D8` and `lastIndex` 5/4, depending on whether
+  `gLevelSelectEntryPositionsAllCleared`/`4D8` and `lastIndex` 5/4, depending on whether
   all five levels of the page are cleared, then item method +0x18
   `(&positions[i])`) and `sub_801D668`
-  (`SetLevelSelectEntryBox(item, gStaticData_0816C538[world])`), all three inlined.
+  (`SetLevelSelectEntryBox(item, gLevelSelectWorldEntryBoxAnims[world])`), all three inlined.
 - **Exits.** `LevelSelectConfirm` handles A on an open entry: sound 0x52, panel
   to (0x78, 0x35), wait for the panel and the icon layer, then fade
   (`BLDCNT` effect 3 on all first targets, `evy = t / 2`).
@@ -55,7 +55,7 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
 - **`struct zoom_bg`** (formerly `icon_bg`; BG2, `InitZoomBg`, 0x8C bytes): the BG2CNT
   shadow (priority 1, 256 colours), a cleared screen block with an 8x4
   block of tile entries, and four corner sprites (bank `+0x258`,
-  positions `gStaticData_0816C5F0` around (0x78, 0x35), mirrored X/Y
+  positions `gZoomBgSlotOffsets` around (0x78, 0x35), mirrored X/Y
   per corner) registered through `RandomizeZoomBgTwinkle`. The rest of this class
   is in issue #28's range.
 - `SetNewWorldOpened` sets `gNewWorldOpened` (called from `game_loop55.c`).

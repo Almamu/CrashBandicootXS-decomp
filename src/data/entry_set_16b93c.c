@@ -14,13 +14,13 @@ struct entry_set
     u32 unk_04;
 };
 
-extern const u32 gStaticData_0816B944[9][2];
+extern const u32 gInputCtrlMotionEntries[9][2];
 
-const struct entry_set gStaticData_0816B93C = {
-    gStaticData_0816B944, 0x100,
+const struct entry_set gInputCtrlMotionSet = {
+    gInputCtrlMotionEntries, 0x100,
 };
 
-const u32 gStaticData_0816B944[9][2] = {
+const u32 gInputCtrlMotionEntries[9][2] = {
     { 0, 0 },
     { 1, 0 },
     { 2, 0 },

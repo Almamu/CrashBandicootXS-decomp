@@ -12,15 +12,15 @@
  *   up/down with auto-repeat (`repeat`) steps `level` (0..12) and
  *   re-applies the target's animation (ApplyLevel, whose out-of-line copy
  *   is sub_8017348), then runs the per-state handler through
- *   gStaticData_0816C250, a table of gcc 2.x pointer-to-member-functions:
+ *   gPlayerCtrlStateFuncs, a table of gcc 2.x pointer-to-member-functions:
  *   states 0..7 are sub_8016B1C, sub_8016C08, sub_8016C94, sub_8016D5C,
- *   sub_8016DDC, sub_80170EC, sub_8017044, sub_8017184.
+ *   sub_8016DDC, sub_80170EC, sub_8017044, PlayerCtrlStateDead.
  * - PlayerCtrlHandleEvent (+0x14) is the message handler, AttachPlayerCtrl (+0x1C) sets
  *   the target, DestroyPlayerCtrl (+0x4C) is the destructor and InitPlayerCtrl the
  *   constructor (called from game_loop39.c).
  * - sub_8017264 sets the mode through the method table (+0x20/+0x50,
  *   called through the _call_via_r2/_call_via_r3 `_call_via_rN` thunks) and
- *   picks the animation from gStaticData_0816C070[mode][level].
+ *   picks the animation from gPlayerCtrlModeAnimRows[mode][level].
  * - sub_80172D0 writes the player's +0x48/+0x4C/+0x50 record from its
  *   speed, like actor_part57b.c's sub_8015FDC does for +0x54..+0x5C.
  *
@@ -70,15 +70,15 @@ extern void *gLevelState;
 extern void *gPaletteCache;
 extern u8 *gEntityFlags;
 extern struct pctrl_target *gPlayer;
-extern struct pmf gStaticData_0816C250[];
+extern struct pmf gPlayerCtrlStateFuncs[];
 struct level_anim
 {
     u8 anim;
     u8 unk_1[3];
 };
 
-extern struct level_anim *gStaticData_0816C070[];
-extern struct pctrl_anim gStaticData_0816B61C[];
+extern struct level_anim *gPlayerCtrlModeAnimRows[];
+extern struct pctrl_anim gPlayerCtrlMotionRecords[];
 extern u8 gPlayerCtrlVtable[];
 
 extern u8 GetDpadDirection(void *arg);
@@ -124,7 +124,7 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
 
 static inline u8 LevelAnim(struct player_ctrl *self)
 {
-    return gStaticData_0816C070[self->mode][self->level].anim;
+    return gPlayerCtrlModeAnimRows[self->mode][self->level].anim;
 }
 
 /* the out-of-line copy is sub_8017264 */
@@ -269,7 +269,7 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
 /* Runs the pointer-to-member handler for the current state. */
 #define PMF_DISPATCH(self)                                                      \
     {                                                                          \
-        s32 idx = gStaticData_0816C250[(self)->state].index;                   \
+        s32 idx = gPlayerCtrlStateFuncs[(self)->state].index;                   \
         struct pmf_entry e;                                                    \
         void *fn;                                                              \
         s32 d;                                                                 \
@@ -277,14 +277,14 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
                                                                                \
         if (idx > 0)                                                           \
         {                                                                      \
-            e = (*(struct pmf_entry **)((u8 *)(self) + gStaticData_0816C250[(self)->state].u.vtableOffset))[idx - 1]; \
+            e = (*(struct pmf_entry **)((u8 *)(self) + gPlayerCtrlStateFuncs[(self)->state].u.vtableOffset))[idx - 1]; \
             fn = e.fn;                                                         \
         }                                                                      \
         else                                                                   \
         {                                                                      \
-            fn = gStaticData_0816C250[(self)->state].u.fn;                     \
+            fn = gPlayerCtrlStateFuncs[(self)->state].u.fn;                     \
         }                                                                      \
-        d = gStaticData_0816C250[(self)->state].delta;                         \
+        d = gPlayerCtrlStateFuncs[(self)->state].delta;                         \
         if (idx > 0)                                                           \
             adj = e.delta + d;                                                 \
         else                                                                   \
@@ -380,7 +380,7 @@ static inline void ApplyLevel(struct player_ctrl *self)
         s32 frame = t->frame;
         s32 f34 = t->stepTimer;
 
-        *tag = gStaticData_0816C070[self->mode][self->level].anim;
+        *tag = gPlayerCtrlModeAnimRows[self->mode][self->level].anim;
         ResetSpriteFrameTimer(t);
         ResetSpriteFrameIndex(t);
         SetSpriteAnimDone(t, 0);
@@ -525,7 +525,7 @@ void sub_8016AB0(struct player_ctrl *self)
             register u32 i asm("r1") = self->animSet->entries[self->valueA].a;
             register u32 off asm("r0") = i * sizeof(struct pctrl_anim);
 
-            rec = (struct pctrl_anim *)(off + (u32)gStaticData_0816B61C);
+            rec = (struct pctrl_anim *)(off + (u32)gPlayerCtrlMotionRecords);
         }
         StartCtrlTargetMotionX(self, self->target, rec);
     }
@@ -538,7 +538,7 @@ void sub_8016AB0(struct player_ctrl *self)
             register u32 i asm("r1") = self->animSet->entries[self->valueB].b;
             register u32 off asm("r0") = i * sizeof(struct pctrl_anim);
 
-            rec = (struct pctrl_anim *)(off + (u32)gStaticData_0816B61C);
+            rec = (struct pctrl_anim *)(off + (u32)gPlayerCtrlMotionRecords);
         }
         StartCtrlTargetMotionY(self, self->target, rec);
     }
@@ -670,13 +670,13 @@ void sub_8016DDC(struct player_ctrl *self)
         case 7:
             frame = self->target->frame;
             self->mode = 6;
-            SET_ANIM(self, self->target, gStaticData_0816C070[6][self->level].anim);
+            SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[6][self->level].anim);
             ClampFrame(self->target, frame);
             break;
         case 5:
             frame = self->target->frame;
             self->mode = 4;
-            SET_ANIM(self, self->target, gStaticData_0816C070[4][self->level].anim);
+            SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[4][self->level].anim);
             ClampFrame(self->target, frame);
             break;
         }
@@ -692,7 +692,7 @@ void sub_8016DDC(struct player_ctrl *self)
             self->mode = 5;
         else
             self->mode = 7;
-        SET_ANIM(self, self->target, gStaticData_0816C070[self->mode][self->level].anim);
+        SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[self->mode][self->level].anim);
         sub_8015C6C(self);
         ClampFrame(self->target, frame);
         return;
@@ -775,7 +775,7 @@ void sub_80170EC(struct player_ctrl *self)
     sub_8016048(self);
 }
 
-void sub_8017184(struct player_ctrl *self)
+void PlayerCtrlStateDead(struct player_ctrl *self)
 {
     sub_8015FDC(0, 5, 0);
     SetPlayerRecord(0, 5, 0);
@@ -791,13 +791,13 @@ void AttachPlayerCtrl(struct player_ctrl *self, struct pctrl_target *target)
 /* UNUSED */
 void sub_801721C(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    StartCtrlTargetMotionY(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].b]);
+    StartCtrlTargetMotionY(self, target, &gPlayerCtrlMotionRecords[self->animSet->entries[idx].b]);
 }
 
 /* UNUSED */
 void sub_8017240(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    StartCtrlTargetMotionX(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].a]);
+    StartCtrlTargetMotionX(self, target, &gPlayerCtrlMotionRecords[self->animSet->entries[idx].a]);
 }
 
 void sub_8017264(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax)

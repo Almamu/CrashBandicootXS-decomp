@@ -11,17 +11,17 @@ extern void *gInput;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern u8 GetDpadDirection(void *dummy);
-extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
+extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 
-/* Same shape as `sub_801426C` (actor_part18.c) - resets the same
- * flag/counter/table-index trio via `sub_8015780` while `part+0x38` is
+/* Same shape as `ActionCtrlStateStandUp` (actor_part18.c) - resets the same
+ * flag/counter/table-index trio via `SetActionCtrlModeAnim` while `part+0x38` is
  * set. */
-void sub_80144E0(struct act *self)
+void ActionCtrlStateCrawlStandUp(struct act *self)
 {
     struct act_part *part = self->part;
 
     if (part->animDone != 0) {
-        sub_8015780(self, 0, 0x12, 0, 0);
+        SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
         self->next31 = 0;
         self->flag2F = 1;
         self->next27 = 0;
@@ -34,9 +34,9 @@ void sub_80144E0(struct act *self)
 /* While `part+0x38` is set: computes `v = (gKeys bit 0x100)
  * != 0`, forced to `1` when `GetDpadDirection`'s D-pad-remap result is `2` or
  * in `[7,8]`. If still clear, resets the same flag/counter/table-index
- * trio as `sub_801426C` via `sub_8015780`; otherwise fires the usual
+ * trio as `ActionCtrlStateStandUp` via `SetActionCtrlModeAnim`; otherwise fires the usual
  * base+offset+fn-pointer trampoline pair. */
-void sub_8014524(struct act *self)
+void ActionCtrlStateBodySlamLand(struct act *self)
 {
     struct act_part *part = self->part;
 
@@ -55,7 +55,7 @@ void sub_8014524(struct act *self)
         }
 
         if (v == 0) {
-            sub_8015780(self, 0, 0x12, 0, v);
+            SetActionCtrlModeAnim(self, 0, 0x12, 0, v);
             self->next31 = v;
             self->flag2F = 1;
             self->next27 = v;
@@ -84,16 +84,16 @@ void sub_8014524(struct act *self)
  * docs/matching.md's alignment-padding gotcha). */
 asm(".align 2, 0");
 
-extern void sub_8012D24(void *self);
+extern void ActionCtrlStateIdle(void *self);
 
 /* Clears `self+0x18`. If `gKeys` bit `0x100` is set, fires
  * the usual base+offset+fn-pointer trampoline pair and clears
  * `self+0x1c` too. Otherwise, while `part+0x38` is set, resets the same
- * flag/counter/table-index trio as `sub_801426C` via `sub_8015780`
+ * flag/counter/table-index trio as `ActionCtrlStateStandUp` via `SetActionCtrlModeAnim`
  * (storing the raw masked bit value, not a normalized boolean, since
  * the ROM reuses the same register for both the branch test and the
- * stores here - unlike `sub_8014524`'s `!= 0`-normalized version of the
- * same test), then tail-calls `sub_8012D24`.
+ * stores here - unlike `ActionCtrlStateBodySlamLand`'s `!= 0`-normalized version of the
+ * same test), then tail-calls `ActionCtrlStateIdle`.
  *
  * Formerly NAKED (docs/matching/issue-15-16-17-naked-retry-2.md): the
  * old gap - the masked bit landing in a scratch register before being
@@ -101,7 +101,7 @@ extern void sub_8012D24(void *self);
  * sits inside the test, `if ((flag = ...) != 0)`. Matches under both
  * compilers. */
 
-void sub_80145E4(struct act *self)
+void ActionCtrlStateLand(struct act *self)
 {
     u16 flag;
 
@@ -115,7 +115,7 @@ void sub_80145E4(struct act *self)
     }
     if (self->part->animDone)
     {
-        sub_8015780(self, 0, 0x12, 0, flag);
+        SetActionCtrlModeAnim(self, 0, 0x12, 0, flag);
         self->next31 = flag;
         self->flag2F = 1;
         self->next27 = flag;
@@ -123,7 +123,7 @@ void sub_80145E4(struct act *self)
         self->flag30 = 1;
         self->next28 = flag;
     }
-    sub_8012D24(self);
+    ActionCtrlStateIdle(self);
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see

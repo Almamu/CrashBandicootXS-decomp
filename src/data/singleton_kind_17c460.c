@@ -24,6 +24,6 @@ const struct singleton_kind gHovercraftAttacks[2] = {
 const struct anim_box gHovercraftBox = { -102, -12, -2, 51, 68, 4 };
 
 /* The one keyframe CreateHovercraft (actor_part130.c) gives the singleton. */
-const struct anim_frame_record gStaticData_0817C4BC[1] = {
+const struct anim_frame_record gHovercraftKeyframes[1] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
 };

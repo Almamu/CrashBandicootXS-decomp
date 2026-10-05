@@ -41,7 +41,7 @@ struct sprite_box {
 };
 
 /* A point relative to the part (sub_80084C4; the fallback when a frame has
- * none is gStaticData_0816B300). */
+ * none is gEmptySpritePoint). */
 struct sprite_point {
     s16 x;
     s16 y;

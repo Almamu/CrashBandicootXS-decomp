@@ -1,4 +1,4 @@
-# Mix NAKED retry 5: `sub_8014674`, `sub_8014B54`, `UpdateWumpa`, GAX
+# Mix NAKED retry 5: `ActionCtrlStateLeftGround`, `ActionCtrlReleaseHang`, `UpdateWumpa`, GAX
 
 A retry of five parked NAKED functions with C drafts. **2 of 5 closed
 as real C**, both under old_agbcc. Their files were already on
@@ -6,16 +6,16 @@ as real C**, both under old_agbcc. Their files were already on
 
 | Function | File | Issue | Before | Now |
 |---|---|---|---|---|
-| `sub_8014674` | `actor_part_14674.c` | #17 | 1 hw (branch target) | **real C** |
+| `ActionCtrlStateLeftGround` | `actor_part_14674.c` | #17 | 1 hw (branch target) | **real C** |
 | `UpdateWumpa` | `game_loop53.c` | #15 | 21 hw | **real C** |
-| `sub_8014B54` | `actor_part_14674.c` | #17 | 3 hw | NAKED, unchanged |
+| `ActionCtrlReleaseHang` | `actor_part_14674.c` | #17 | 3 hw | NAKED, unchanged |
 | `GaxChannelMix` | `gax_note_trigger.c` | #68 | ~237 seq | NAKED, draft ~202 seq |
 | `GAX2_init` | `gax_playstart.c` | #66 | ~294 seq | NAKED, not retried |
 
 "seq" is the alignment-insensitive count from
 [gax-naked-retry-2.md](gax-naked-retry-2.md).
 
-## `sub_8014674`: the tag test is a `switch`
+## `ActionCtrlStateLeftGround`: the tag test is a `switch`
 
 The ROM tests the part's tag like this:
 
@@ -79,7 +79,7 @@ differences left. Each one had its own fix:
 
 ## What didn't close
 
-- **`sub_8014B54`** (3 halfwords). The 0x600 in `part->y += 0x600` is
+- **`ActionCtrlReleaseHang`** (3 halfwords). The 0x600 in `part->y += 0x600` is
   a reload, and it lands in r2 where the ROM uses r3. The greg dump
   shows reload spilling r2 for that insn. These made no change:
   instruction-count padding (0-7 `asm("")`), extra references on

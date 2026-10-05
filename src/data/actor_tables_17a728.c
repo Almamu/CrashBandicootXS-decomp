@@ -21,26 +21,26 @@ const u16 gStaticData_0817A748[16] = {
 /* Boxes (struct anim_box): the one UpdatePolarNitroCrate (actor_part19g.c) copies
  * into a part's +0x38 box, and the three UpdatePolarElectricFence (actor_part126.c)
  * picks from. */
-const struct anim_box gStaticData_0817A768 = { -15, -15, -2, 30, 30, 5 };
-const struct anim_box gStaticData_0817A774 = { -24, -25, 0, 10, 40, 1 };
-const struct anim_box gStaticData_0817A780 = { 14, -25, 0, 10, 40, 1 };
-const struct anim_box gStaticData_0817A78C = { -14, -25, 0, 28, 40, 1 };
+const struct anim_box gPolarNitroCrateBox = { -15, -15, -2, 30, 30, 5 };
+const struct anim_box gPolarElectricFenceLeftPostBox = { -24, -25, 0, 10, 40, 1 };
+const struct anim_box gPolarElectricFenceRightPostBox = { 14, -25, 0, 10, 40, 1 };
+const struct anim_box gPolarElectricFenceWireBox = { -14, -25, 0, 28, 40, 1 };
 
 /* 16-colour palettes actor_part126.c queues for OBJ palette 14:
- * sub_802D204 takes gStaticData_0817A798 + (tier - 1) * 0x20, so the
+ * sub_802D204 takes gPolarAkuAkuPalette1 + (tier - 1) * 0x20, so the
  * higher tiers read the palettes after it; UpdatePolarAkuAku blinks
- * between gStaticData_0817A7D8 and gStaticData_0817A7B8. */
-const u16 gStaticData_0817A798[16] = {
+ * between gPolarAkuAkuPalette3 and gPolarAkuAkuPalette2. */
+const u16 gPolarAkuAkuPalette1[16] = {
     0x35AC, 0x2192, 0x14EF, 0x04F6, 0x1179, 0x023F, 0x03FF, 0x03E9,
     0x1248, 0x42FA, 0x5D87, 0x7E60, 0x4414, 0x401F, 0x001C, 0x0000,
 };
 
-const u16 gStaticData_0817A7B8[16] = {
+const u16 gPolarAkuAkuPalette2[16] = {
     0x35AC, 0x26B4, 0x14EF, 0x04F6, 0x1179, 0x023F, 0x03FF, 0x03BF,
     0x02B7, 0x333C, 0x1AF7, 0x03FE, 0x0293, 0x03DF, 0x035F, 0x0000,
 };
 
-const u16 gStaticData_0817A7D8[16] = {
+const u16 gPolarAkuAkuPalette3[16] = {
     0x03E0, 0x56B5, 0x2529, 0x2D6B, 0x3DEF, 0x4E73, 0x739C, 0x6F7B,
     0x4E73, 0x6739, 0x56B5, 0x6F7B, 0x4631, 0x6F7B, 0x6739, 0x0000,
 };

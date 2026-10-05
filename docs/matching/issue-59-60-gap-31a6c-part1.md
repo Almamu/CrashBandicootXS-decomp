@@ -147,19 +147,19 @@ the "Update" note on its own entry below and
 [issue-59-60-m-operand-scheduling.md](issue-59-60-m-operand-scheduling.md)),
 leaving 4 of 30 still parked.
 
-- **`UpdateJetpackBalloonCrate`**, **`sub_80322F4`** - near-duplicate keyframe-table-
+- **`UpdateJetpackBalloonCrate`**, **`RunJetpackBalloonCrateState`** - near-duplicate keyframe-table-
   relative dispatch helpers indexing `gJetpackBalloonCrateStateFuncs` (stride 8)
   by `self+0x28`, structurally identical in their core to the
-  already-parked `sub_8031A08` (issue #59 Phase 1, same table-family
+  already-parked `RunJetpackBalloonState` (issue #59 Phase 1, same table-family
   shape, different table). Resist a byte-exact reproduction of the
   ROM's specific `r7`-as-table-base-pin choice, the same gap that
-  parked `sub_8031A08` - transcribed NAKED, byte-verified against the
+  parked `RunJetpackBalloonState` - transcribed NAKED, byte-verified against the
   original disassembly rather than re-attempting a reconstruction
   already shown not to converge for this exact shape.
   `UpdateJetpackBalloonCrate` additionally has trailing state/trampoline logic (fires
   a second `self+0x50`-table call while state 1 with a running
   health-style timer past `0xe100`, or state 2 with `self+0x12` set,
-  falling back to `UpdateActor` otherwise) that `sub_80322F4` doesn't.
+  falling back to `UpdateActor` otherwise) that `RunJetpackBalloonCrateState` doesn't.
 - **`InitJetpackBalloonCrate`** - a parameterized `SpawnJetpackBalloon`-based constructor,
   same shape as `CreateJetpackTimeCrate`/`CreateJetpackHealthCrate`/`CreateJetpackQuestionCrate` above except
   the "kind" is a 6th caller-supplied byte argument instead of a fixed
@@ -271,7 +271,7 @@ the first half of.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `UpdateJetpackBalloonCrate`/`sub_80322F4` (`actor_part129.c`) from NAKED to real C. The "r7 table-base"
+A later pass promoted `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState` (`actor_part129.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

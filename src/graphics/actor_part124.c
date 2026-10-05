@@ -34,7 +34,7 @@
  * - `self+0x4`: the "manager" pointer Phase 2's doc already
  *   identified (`StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`'s own 8-byte-record
  *   array base) - `ResetEnemyCtrl` resets it to the fixed global
- *   `gStaticData_0816BB6C`.
+ *   `gEnemyCtrlMotionSet`.
  * - `self+0x84`: the per-instance mode-indexed pointer table Phase 2
  *   already identified (`SetEnemyAnimMode`/`SetEnemyState`'s own trigger
  *   table) - `sub_800CAC0` is its setter, `ResetEnemyCtrl` clears it.
@@ -181,12 +181,12 @@ s32 GetSfxVolumeAt(s32 x, s32 y)
     return 0x100 - (d - 0x20) * 2;
 }
 
-extern u8 gStaticData_0816BB6C[];
+extern u8 gEnemyCtrlMotionSet[];
 
 /* Resets `self+0x70` ("owner"), `self+0x84` (the per-instance
  * mode-indexed pointer table) and `self+0x88` (the floating-popup
  * child pointer) to null, and re-points `self+4` (the "manager"
- * pointer, per the Phase 2 doc) at the fixed `gStaticData_0816BB6C`
+ * pointer, per the Phase 2 doc) at the fixed `gEnemyCtrlMotionSet`
  * table - an initializer/reset for this object's own extension
  * fields, called by `CreateEnemyCtrl` below as part of its own
  * construction sequence. */
@@ -194,7 +194,7 @@ void ResetEnemyCtrl(struct trigger_ctrl *self)
 {
     self->owner = NULL;
     self->triggerTable = NULL;
-    self->manager = gStaticData_0816BB6C;
+    self->manager = gEnemyCtrlMotionSet;
     self->popup = NULL;
 }
 

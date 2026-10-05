@@ -6,13 +6,13 @@
  * same "self" action-table object family documented at the top of
  * actor_part18.c (`self+0xc` a per-category `{s16 offset; void *fn}`
  * table, `self+0x10` a `struct actor *` sub-object, `self+0x27`-`0x32` a
- * shared state/flag/table-index trio) - `sub_8015508`/`sub_8015780` are
- * both called directly by `sub_801426C`/`sub_80142B0` there, confirming
+ * shared state/flag/table-index trio) - `StartActionCtrlHighJump`/`SetActionCtrlModeAnim` are
+ * both called directly by `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart` there, confirming
  * the same object shapes carry over. `gCollidableList` (only touched
- * by `sub_8014F8C` here) is a small list object - `+4` a count, `+0xc`
+ * by `DoSuperBodySlamShockwave` here) is a small list object - `+4` a count, `+0xc`
  * a `struct actor **` array - not referenced by any already-matched
  * code yet, so it stays raw-offset rather than a guessed struct. This
- * file covers `sub_8014F8C` and `sub_8015038` (both matched); the chunk continues in actor_part28b.c/c.c/d.c, split
+ * file covers `DoSuperBodySlamShockwave` and `StartActionCtrlTornadoSpin` (both matched); the chunk continues in actor_part28b.c/c.c/d.c, split
  * at each parked function's raw-asm gap - see docs/matching/
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 
@@ -32,7 +32,7 @@ extern void BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3);
  * more than 0x11 away vertically - then fires the `+0x68` trampoline
  * pair via `_call_via_r4` with action `0x16` on whatever survives all
  * four checks. */
-void sub_8014F8C(void *selfArg)
+void DoSuperBodySlamShockwave(void *selfArg)
 {
     u8 *self = selfArg;
     struct actor *part;
@@ -153,7 +153,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
 /* Same `mgr`/`{s16 offset; void *fn}` trampoline pair at `self+0xc`
- * (`+0x20`/`+0x24` and `+0x50`/`+0x54`) as `sub_801426C`/`sub_80142B0`.
+ * (`+0x20`/`+0x24` and `+0x50`/`+0x54`) as `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`.
  * `self+0x24` selects one of two variants: while clear, picks a
  * table-index (`+0x21`) from `self+0x22` (1->0x28, 2->0x27, default
  * 0x17), stores it back, fires both trampolines with `id`/that index,
@@ -172,7 +172,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * old_agbcc's GCSE inserts its copy of `self + 0x22` (end of the block,
  * before the compare), so the load goes through the copy in r5
  * (`adds r5, r0, #0; ldrb r2, [r5]`) as in the ROM. */
-void sub_8015038(u8 *self, s32 id, s32 param2)
+void StartActionCtrlTornadoSpin(u8 *self, s32 id, s32 param2)
 {
     struct vtable_slot *mgr;
     u8 *off;

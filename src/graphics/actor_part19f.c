@@ -2,7 +2,7 @@
 #include "actor_self.h"
 
 /* Continuation of actor_part19.c's player/action-object family, right
- * after `sub_802C208` (matched C, see actor_part19e.c) - same `self`
+ * after `RunPolarPlayerState` (matched C, see actor_part19e.c) - same `self`
  * object and conventions documented there. */
 
 /* `self` with the velocity pair this class adds after the common

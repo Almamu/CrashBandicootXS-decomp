@@ -9,7 +9,7 @@ five-file family was renumbered together (not just the one that
 literally collided) to keep it visually contiguous.
 
 25-function `decomp-chunk` covering `asm/code_3_2_20_28568_c99c.s`'s
-`MovePolarAkuAku`-`sub_802E058`/`nullsub_27` range. Two distinct object
+`MovePolarAkuAku`-`sub_802E058`/`YetiStateCaught` range. Two distinct object
 families live in this chunk:
 
 - The `InitActorPart`/`gActorList`-rooted "self" object family
@@ -107,12 +107,12 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   into `r1`) each written as a single combined `asm volatile` block per
   group to force this compiler's argument-register-copy order to match
   the ROM's (it otherwise processes `r0`-`r3` in a fixed, source-order-
-  independent sequence) - and the `gStaticData_0817A850`/`0817A880`/
+  independent sequence) - and the `gYetiKeyframes`/`0817A880`/
   `0xf` triple written as three named locals assigned before any of the
   three stores, so all three loads happen before any store (this
   project's established "compute both loads before either use"
   technique, extended to three).
-- **`nullsub_27`** (`src/graphics/actor_part61.c`) - a genuine no-op
+- **`YetiStateCaught`** (`src/graphics/actor_part61.c`) - a genuine no-op
   stub.
 
 ## Parked (1 of 25 functions, `NON_MATCHING`)

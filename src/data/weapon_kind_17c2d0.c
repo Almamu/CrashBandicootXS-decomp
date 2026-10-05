@@ -52,7 +52,7 @@ const u16 gAirshipHitFlashPalettes[3][16] = {
 const struct anim_box gAirshipBox = { -102, -12, -2, 51, 68, 4 };
 
 /* The two keyframes CreateAirship (actor_part23d.c) gives its tracker part. */
-const struct anim_frame_record gStaticData_0817C3E4[2] = {
+const struct anim_frame_record gAirshipKeyframes[2] = {
     { 64, 0, 4, 0, 0x0, { 0, 0 } },
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
 };

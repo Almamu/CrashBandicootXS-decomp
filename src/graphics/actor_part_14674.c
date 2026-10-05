@@ -14,20 +14,20 @@ extern void *gPaletteCache;
 extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gInput;
-extern u8 gStaticData_0816B300[];
+extern u8 gEmptySpritePoint[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
-extern void sub_8015398(struct act *self);
-extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
+extern void StartActionCtrlSpin(struct act *self);
+extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
-extern void sub_80153FC(struct act *self);
+extern void StartActionCtrlHangSpin(struct act *self);
 extern u8 UpdatePlayerFacing(struct act *self);
 extern void *GetSpriteFrame(struct act_part *part);
 extern void ResetSpriteFrameTimer(struct act_part *p);
 extern void ResetSpriteFrameIndex(struct act_part *p);
 extern void SetSpriteAnimDone(struct act_part *p, s32 arg1);
 
-void sub_8014B54(struct act *self);
+void ActionCtrlReleaseHang(struct act *self);
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio (as ActSetNext) */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -77,7 +77,7 @@ static inline void ActHold27(struct act *self, u8 *slot, s32 next)
  * `beq` for 0xD is threaded past the inner re-test of 0xD while the
  * 0x18 path keeps it, which an `||` test does not reproduce (see
  * docs/matching/mix-naked-retry-5.md). */
-void sub_8014674(struct act *self)
+void ActionCtrlStateLeftGround(struct act *self)
 {
     u8 hit = self->part->contact & 8;
 
@@ -206,7 +206,7 @@ void sub_8014674(struct act *self)
                     self->next27 = 0;
                 }
                 if ((u32)(self->state - 0xD) > 1)
-                    sub_8015398(self);
+                    StartActionCtrlSpin(self);
                 else
                     ACT_VCALL1(self, m20, 0xD);
             }
@@ -235,7 +235,7 @@ void sub_8014674(struct act *self)
     }
 }
 
-void sub_8014940(struct act *self)
+void ActionCtrlStateDying(struct act *self)
 {
     struct act_part *part = self->part;
 
@@ -273,12 +273,12 @@ void sub_8014940(struct act *self)
     }
 }
 
-void sub_80149BC(struct act *self)
+void ActionCtrlStateWarpIn(struct act *self)
 {
     if (self->part->animDone)
     {
         *((u8 *)gPlayer + 0xC) |= 0x80;
-        sub_8015780(self, 0, 0x12, 0, 0);
+        SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
         self->next31 = 0;
         self->flag2F = 1;
         self->next27 = 0;
@@ -290,7 +290,7 @@ void sub_80149BC(struct act *self)
     }
 }
 
-void sub_8014A3C(struct act *self)
+void ActionCtrlStateHang(struct act *self)
 {
     u8 dir = GetDpadDirection(gInput);
     u32 in = gKeys;
@@ -307,12 +307,12 @@ void sub_8014A3C(struct act *self)
     if (INPUT_PRESSED(in) & 1)
     {
         PlaySfx(gAudioContext, 0xD, 0x100);
-        sub_8014B54(self);
+        ActionCtrlReleaseHang(self);
         return;
     }
     if (INPUT_PRESSED(in) & 2)
     {
-        sub_80153FC(self);
+        StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
     }
     else
@@ -329,12 +329,12 @@ void sub_8014AEC(struct act *self)
     if (fire)
     {
         PlaySfx(gAudioContext, 0xD, 0x100);
-        sub_8014B54(self);
+        ActionCtrlReleaseHang(self);
         return;
     }
     if (INPUT_PRESSED(in) & 2)
     {
-        sub_80153FC(self);
+        StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->next31 = fire;
         self->flag2F = 1;
@@ -353,7 +353,7 @@ void sub_8014AEC(struct act *self)
  * register variable in r2, set and used only by empty asms (no code).
  * It keeps r2 live across the add, so reload spills r3 there instead
  * (docs/matching/late-naked-retry-3.md). */
-void sub_8014B54(struct act *self)
+void ActionCtrlReleaseHang(struct act *self)
 {
     struct act_part *part;
     s32 count;
@@ -371,15 +371,15 @@ void sub_8014B54(struct act *self)
     ActSetNext(self, 4);
 }
 
-/* Crouch/aim handler: fire jumps (sub_8014B54), alt hands off to
- * sub_80153FC, an idle D-pad plays animations 0x28/0x22, a sideways one
+/* Crouch/aim handler: fire jumps (ActionCtrlReleaseHang), alt hands off to
+ * StartActionCtrlHangSpin, an idle D-pad plays animations 0x28/0x22, a sideways one
  * queues action 0x20 on the +0x31/+0x2F/+0x27 trio, and at the end of
  * the animation it replays 0x26/0x21 from frame 5.
  *
  * The alt and idle trios are written out twice (gcc cross-jumps them into
  * the ROM's one block), so each gets the fire test's 1 from CSE; the
  * method calls use ACT_CALL (include/action_obj.h). */
-void sub_8014BCC(struct act *self)
+void ActionCtrlStateHangMoveStart(struct act *self)
 {
     void *pad = gInput;
     u32 in = gKeys;
@@ -389,12 +389,12 @@ void sub_8014BCC(struct act *self)
     {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActQueue27(self, 0, 0);
-        sub_8014B54(self);
+        ActionCtrlReleaseHang(self);
         return;
     }
     if (INPUT_PRESSED(in) & 2)
     {
-        sub_80153FC(self);
+        StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->next31 = 0;
         self->flag2F = 1;
@@ -445,9 +445,9 @@ void sub_8014BCC(struct act *self)
 }
 
 /* Walk handler: retags a finished part (0x21), handles fire/alt like
- * sub_8014BCC, steps a 4-frame idle timer that picks animation 0x22/0x23
+ * ActionCtrlStateHangMoveStart, steps a 4-frame idle timer that picks animation 0x22/0x23
  * from the part's frame, and while UpdatePlayerFacing reports a step moves the
- * part by the GetSpriteFrame record's (or gStaticData_0816B300's) X offset,
+ * part by the GetSpriteFrame record's (or gEmptySpritePoint's) X offset,
  * mirrored by part+0x28 bit 4.
  *
  * The idle dispatch is written out per case: the ROM's one shared
@@ -457,7 +457,7 @@ void sub_8014BCC(struct act *self)
  * calls use ACT_CALL (see include/action_obj.h). The record kind is
  * switched on 0..6 with separate case bodies, which is what makes gcc
  * emit the ROM's jump table. */
-void sub_8014D18(struct act *self)
+void ActionCtrlStateHangMove(struct act *self)
 {
     u8 dir = GetDpadDirection(gInput);
     u32 in = gKeys;
@@ -472,13 +472,13 @@ void sub_8014D18(struct act *self)
     {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActQueue27(self, 0, 0);
-        sub_8014B54(self);
+        ActionCtrlReleaseHang(self);
         return;
     }
     alt = INPUT_PRESSED(in) & 2;
     if (alt)
     {
-        sub_80153FC(self);
+        StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->next31 = fire;
         self->flag2F = 1;
@@ -542,25 +542,25 @@ void sub_8014D18(struct act *self)
             info += 0x24;
             break;
         case 1:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 2:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 3:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 4:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 5:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 6:
             info += 0x14;
             break;
         default:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         }
         x = self->part->x >> 8;
@@ -574,7 +574,7 @@ void sub_8014D18(struct act *self)
     }
 }
 
-void sub_8014EE0(struct act *self)
+void ActionCtrlStateHangStop(struct act *self)
 {
     u32 in = gKeys;
     s32 fire = INPUT_PRESSED(in) & 1;
@@ -584,13 +584,13 @@ void sub_8014EE0(struct act *self)
     {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActSetNext27(self, 0);
-        sub_8014B54(self);
+        ActionCtrlReleaseHang(self);
         return;
     }
     alt = INPUT_PRESSED(in) & 2;
     if (alt)
     {
-        sub_80153FC(self);
+        StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->next31 = fire;
         self->flag2F = 1;

@@ -3,13 +3,13 @@
 
 /* Continuation of actor_part28c.c (issue #18's chunk, the last one) -
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
- * to actor_part28c.c since the parked `sub_80156EC` sits raw between
+ * to actor_part28c.c since the parked `ActionCtrlStateBodySlamStart` sits raw between
  * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
  * at the top of actor_part18.c/actor_part28.c. */
 
-extern void sub_8015460(void *selfArg);
-extern void sub_8012FBC(void *self);
-extern void sub_8012D24(void *self);
+extern void StartActionCtrlRun(void *selfArg);
+extern void ActionCtrlStateRun(void *self);
+extern void ActionCtrlStateIdle(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
@@ -17,16 +17,16 @@ void nullsub_17(void)
 {
 }
 
-/* While `self+0x29` is clear: tail-calls `sub_8015460` first. Always
- * tail-calls `sub_8012FBC` afterward. */
-void sub_8015750(void *selfArg)
+/* While `self+0x29` is clear: tail-calls `StartActionCtrlRun` first. Always
+ * tail-calls `ActionCtrlStateRun` afterward. */
+void ActionCtrlStateTurboRun(void *selfArg)
 {
     register u8 *self asm("r4") = selfArg;
 
     if (self[0x29] == 0) {
-        sub_8015460(self);
+        StartActionCtrlRun(self);
     }
-    sub_8012FBC(self);
+    ActionCtrlStateRun(self);
 }
 
 void nullsub_18(void)
@@ -36,13 +36,13 @@ void nullsub_18(void)
 /* Trivial tail-call. */
 void sub_8015774(void *selfArg)
 {
-    sub_8012D24(selfArg);
+    ActionCtrlStateIdle(selfArg);
 }
 
 /* Fires the mgr trampoline pair with `a`/`b` as the two action
  * arguments, then conditionally latches `frame`/`frames` from
  * `c`/`d` unless either is the `0x7FFFFFFF` sentinel. */
-void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct act *self = selfArg;
     struct act_vtable *mgr = self->vt;

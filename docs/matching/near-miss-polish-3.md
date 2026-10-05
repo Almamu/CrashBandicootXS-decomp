@@ -16,7 +16,7 @@ Five now match as real C:
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
 | `UpdateSlotCrate` | `src/system/game_loop49.c` | old_agbcc | 7 | count update split into in-place steps on a fresh local; one earlier `"+r"` barrier dropped |
-| `sub_8014084` | `src/graphics/actor_part_13c60.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
+| `ActionCtrlStateCrouch` | `src/graphics/actor_part_13c60.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
 | `LoadLevelSelectRecord` | `src/graphics/actor_part_1b85c.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
 | `UpdateExtraLife` | `src/system/game_loop54.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
 | `ConvertHovercraftTiles` | `src/graphics/actor_part130.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
@@ -38,7 +38,7 @@ The earlier `asm("" : "+r"(ph0))` barrier turned out to be unnecessary
 once this was fixed and is gone.
 
 **A scoped `volatile` pointer to fix one address computation
-(`sub_8014084`).** The facing block's second branch computes `part +
+(`ActionCtrlStateCrouch`).** The facing block's second branch computes `part +
 0x28` into the part copy's own register (`adds r2, #40`) before
 loading -0x11. A plain `u8 *p = &self->part->flags28` gets the order
 but puts the address in a fresh register; `volatile u8 *p` gets both.
@@ -90,7 +90,7 @@ take the same changes.
 
 | Function | Was | Now | What was observed |
 |---|---|---|---|
-| `sub_8014B54` | 3 | 3 | The 0x600 is a reload: the ROM puts it in r3, the draft in r2. With the constant trick it becomes a pseudo, which changes the later `ldrsh` offset reloads too (9-14 halfwords). 72 combinations of spellings of the `unk_101` store and the `y` add (both orders; locals, `6 << 8`, `-= -0x600`, a part local) all stay at 3. |
+| `ActionCtrlReleaseHang` | 3 | 3 | The 0x600 is a reload: the ROM puts it in r3, the draft in r2. With the constant trick it becomes a pseudo, which changes the later `ldrsh` offset reloads too (9-14 halfwords). 72 combinations of spellings of the `unk_101` store and the `y` add (both orders; locals, `6 << 8`, `-= -0x600`, a part local) all stay at 3. |
 | `InitSaveMenuIcons` (raw) | 5 | 5 | With the constant trick for 0x80, gcc hoists the `asm` too far (into the palette-loop area, 116 halfwords); an `asm volatile` stays put but is no better (20+). |
 | `PauseMenuLoop` | 5 | 5 | The ROM computes the fade-in loop's `self+0xcc` (r4) before `disp`; here after. Constant-trick/`"+r"` forms of `disp`, first-loop shapes, a label before `disp`, and a fade pointer local for the fade-in loop don't move it. |
 | `MakeLinkHandshakeId` | 11 | 11 | Mask spellings of the tail (`& 0xf0`, `& ~0xf`, `& -16`) and `"+r"` barriers on `hash` make it worse (27-51). The ROM's `sub r0, #0x1f` (-16 from the 15 in r0) looks like reload's move2add, which the draft doesn't trigger. |

@@ -17,12 +17,12 @@ was added to `OLD_AGBCC_OBJS`.
 
 | Function | File | Tail after the dispatch |
 |---|---|---|
-| `sub_802C208` | `actor_part19e.c` | none |
-| `sub_802F748` | `actor_part44b.c` | none |
-| `sub_8030648` | `actor_part21b.c` | none |
-| `sub_8031A08` | `actor_part125.c` | none |
-| `sub_80322F4` | `actor_part129.c` | none |
-| `sub_8032A94` | `actor_part130.c` | none |
+| `RunPolarPlayerState` | `actor_part19e.c` | none |
+| `RunJetpackPlayerState` | `actor_part44b.c` | none |
+| `RunAirshipFireballState` | `actor_part21b.c` | none |
+| `RunJetpackBalloonState` | `actor_part125.c` | none |
+| `RunJetpackBalloonCrateState` | `actor_part129.c` | none |
+| `RunHovercraftFireballState` | `actor_part130.c` | none |
 | `UpdateAirshipFireball` | `actor_part20b.c` | state-2 destroy (`m08`) or `UpdateActor` |
 | `UpdateHovercraftFireball` | `actor_part130.c` | state-1 destroy or `UpdateActor` |
 | `UpdateJetpackBalloonCrate` | `actor_part129.c` | two destroy conditions or `UpdateActor` |
@@ -37,7 +37,7 @@ and closed:
 
 | Function | File | What it is |
 |---|---|---|
-| `UpdateJetpackBalloon` | `actor_part125.c` | per-frame update; its dispatch is a call to `sub_8031A08` |
+| `UpdateJetpackBalloon` | `actor_part125.c` | per-frame update; its dispatch is a call to `RunJetpackBalloonState` |
 | `DamageJetpackBalloon` | `actor_part125.c` | damage handler: releases a linked object through its `m38` method, then `ACTOR_SET_STATE` |
 | `MoveJetpackBalloon`, `sub_8031954`, `sub_80319A0` | `actor_part125.c` | the shared anim-frame-advance-and-clamp idiom |
 | `UpdateJetpackCollectedWumpa` | `actor_part130.c` | the same idiom, gated by an out-of-bounds check |
@@ -77,7 +77,7 @@ and closed:
 - **`UpdateJetpackBalloon`** shares its destroy tail between the "fell behind the
   camera" path and the state checks. A `goto destroy` into the
   `if` body reproduces the ROM's block order. An `else if (!(...))`
-  form puts the `sub_8031A08` call first.
+  form puts the `RunJetpackBalloonState` call first.
 - **`DestroyJetpackCollectedWumpa`** had been parked on a claimed parameter-copy order
   gap (`flags` before `self`). A plain C destructor, with the list
   unlink written as `self->l4c->l48 = self->l48; self->l48->l4c =

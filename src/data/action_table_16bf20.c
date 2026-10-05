@@ -9,104 +9,115 @@
 
 extern void nullsub_17();
 extern void nullsub_18();
-extern void sub_8012D24();
-extern void sub_8012FBC();
-extern void sub_8013228();
-extern void sub_80134B8();
-extern void sub_80138E8();
-extern void sub_8013994();
-extern void sub_8013C60();
-extern void sub_8013D94();
-extern void sub_8013EAC();
-extern void sub_8013FD4();
-extern void sub_8014084();
-extern void sub_801426C();
-extern void sub_80142B0();
-extern void sub_801434C();
-extern void sub_80144E0();
-extern void sub_8014524();
-extern void sub_80145E4();
-extern void sub_8014674();
-extern void sub_8014940();
-extern void sub_80149BC();
-extern void sub_8014A3C();
+extern void ActionCtrlStateIdle();
+extern void ActionCtrlStateRun();
+extern void ActionCtrlStateJump();
+extern void ActionCtrlStateAirborne();
+extern void ActionCtrlStateFlipBodySlamStart();
+extern void ActionCtrlStateSlide();
+extern void ActionCtrlStateSpin();
+extern void ActionCtrlStateAirSpin();
+extern void ActionCtrlStateTornadoSpin();
+extern void ActionCtrlStateCrouchDown();
+extern void ActionCtrlStateCrouch();
+extern void ActionCtrlStateStandUp();
+extern void ActionCtrlStateCrawlStart();
+extern void ActionCtrlStateCrawl();
+extern void ActionCtrlStateCrawlStandUp();
+extern void ActionCtrlStateBodySlamLand();
+extern void ActionCtrlStateLand();
+extern void ActionCtrlStateLeftGround();
+extern void ActionCtrlStateDying();
+extern void ActionCtrlStateWarpIn();
+extern void ActionCtrlStateHang();
 extern void sub_8014AEC();
-extern void sub_8014B54();
-extern void sub_8014BCC();
-extern void sub_8014D18();
-extern void sub_8014EE0();
+extern void ActionCtrlReleaseHang();
+extern void ActionCtrlStateHangMoveStart();
+extern void ActionCtrlStateHangMove();
+extern void ActionCtrlStateHangStop();
 extern void sub_80155AC();
 extern void sub_80155B8();
-extern void sub_80155F8();
-extern void sub_8015650();
-extern void sub_8015690();
-extern void sub_80156B4();
-extern void sub_80156EC();
-extern void sub_8015750();
+extern void ActionCtrlStateHangSpin();
+extern void ActionCtrlStateHangGrab();
+extern void ActionCtrlStateWarpOut();
+extern void ActionCtrlStateCrawlStop();
+extern void ActionCtrlStateBodySlamStart();
+extern void ActionCtrlStateTurboRun();
 extern void sub_8015774();
 
 /* 42-slot action dispatch table: one member-function pointer per player
  * action, indexed by the action id (actor_part84.c's `struct act_pmf`
  * view; docs/rom_map.md "gActionCtrlStateTable is a 42-slot,
- * fully-populated action dispatch table"). sub_80134B8 is the shared
- * default handler (6 slots). */
+ * fully-populated action dispatch table"). ActionCtrlStateAirborne is the shared
+ * handler of the six airborne states (7 jump, 9 flip jump, 0xB high jump,
+ * 0x18 body slam, 0x19 super body slam, 0x1A fall).
+ *
+ * The state ids, from the modes each handler sets and the player
+ * animation (sprite bank 0) it plays: 0 idle, 3 run, 4 turbo run, 5 jump
+ * takeoff, 8/0xA body slam start (from a jump / a flip), 0xC slide,
+ * 0xD/0xE/0xF spin (ground / air / tornado), 0x10 crouch down, 0x11
+ * crouch, 0x12 stand up, 0x13/0x14 crawl, 0x15 stand up from a crawl,
+ * 0x16 body slam landing, 0x17 landing, 0x1B crawl stop, 0x1C just left
+ * the ground, 0x1D dying, 0x1E warp out, 0x1F-0x28 hanging (grab, hang,
+ * hang spin, move, stop), 0x29 warp in. Nothing sets states 1, 2, 6,
+ * 0x22, 0x23, 0x24 or 0x27. */
 const struct actor_pmf gActionCtrlStateTable[42] = {
-    ACTOR_PMF(sub_8012D24),
+    ACTOR_PMF(ActionCtrlStateIdle),
     ACTOR_PMF(sub_8015774),
     ACTOR_PMF(nullsub_18),
-    ACTOR_PMF(sub_8012FBC),
-    ACTOR_PMF(sub_8015750),
-    ACTOR_PMF(sub_8013228),
+    ACTOR_PMF(ActionCtrlStateRun),
+    ACTOR_PMF(ActionCtrlStateTurboRun),
+    ACTOR_PMF(ActionCtrlStateJump),
     ACTOR_PMF(nullsub_17),
-    ACTOR_PMF(sub_80134B8),
-    ACTOR_PMF(sub_80156EC),
-    ACTOR_PMF(sub_80134B8),
-    ACTOR_PMF(sub_80138E8),
-    ACTOR_PMF(sub_80134B8),
-    ACTOR_PMF(sub_8013994),
-    ACTOR_PMF(sub_8013C60),
-    ACTOR_PMF(sub_8013D94),
-    ACTOR_PMF(sub_8013EAC),
-    ACTOR_PMF(sub_8013FD4),
-    ACTOR_PMF(sub_8014084),
-    ACTOR_PMF(sub_801426C),
-    ACTOR_PMF(sub_80142B0),
-    ACTOR_PMF(sub_801434C),
-    ACTOR_PMF(sub_80144E0),
-    ACTOR_PMF(sub_8014524),
-    ACTOR_PMF(sub_80145E4),
-    ACTOR_PMF(sub_80134B8),
-    ACTOR_PMF(sub_80134B8),
-    ACTOR_PMF(sub_80134B8),
-    ACTOR_PMF(sub_80156B4),
-    ACTOR_PMF(sub_8014674),
-    ACTOR_PMF(sub_8014940),
-    ACTOR_PMF(sub_8015690),
-    ACTOR_PMF(sub_8015650),
-    ACTOR_PMF(sub_8014A3C),
-    ACTOR_PMF(sub_80155F8),
+    ACTOR_PMF(ActionCtrlStateAirborne),
+    ACTOR_PMF(ActionCtrlStateBodySlamStart),
+    ACTOR_PMF(ActionCtrlStateAirborne),
+    ACTOR_PMF(ActionCtrlStateFlipBodySlamStart),
+    ACTOR_PMF(ActionCtrlStateAirborne),
+    ACTOR_PMF(ActionCtrlStateSlide),
+    ACTOR_PMF(ActionCtrlStateSpin),
+    ACTOR_PMF(ActionCtrlStateAirSpin),
+    ACTOR_PMF(ActionCtrlStateTornadoSpin),
+    ACTOR_PMF(ActionCtrlStateCrouchDown),
+    ACTOR_PMF(ActionCtrlStateCrouch),
+    ACTOR_PMF(ActionCtrlStateStandUp),
+    ACTOR_PMF(ActionCtrlStateCrawlStart),
+    ACTOR_PMF(ActionCtrlStateCrawl),
+    ACTOR_PMF(ActionCtrlStateCrawlStandUp),
+    ACTOR_PMF(ActionCtrlStateBodySlamLand),
+    ACTOR_PMF(ActionCtrlStateLand),
+    ACTOR_PMF(ActionCtrlStateAirborne),
+    ACTOR_PMF(ActionCtrlStateAirborne),
+    ACTOR_PMF(ActionCtrlStateAirborne),
+    ACTOR_PMF(ActionCtrlStateCrawlStop),
+    ACTOR_PMF(ActionCtrlStateLeftGround),
+    ACTOR_PMF(ActionCtrlStateDying),
+    ACTOR_PMF(ActionCtrlStateWarpOut),
+    ACTOR_PMF(ActionCtrlStateHangGrab),
+    ACTOR_PMF(ActionCtrlStateHang),
+    ACTOR_PMF(ActionCtrlStateHangSpin),
     ACTOR_PMF(sub_8014AEC),
     ACTOR_PMF(sub_80155B8),
-    ACTOR_PMF(sub_8014B54),
-    ACTOR_PMF(sub_8014BCC),
-    ACTOR_PMF(sub_8014D18),
+    ACTOR_PMF(ActionCtrlReleaseHang),
+    ACTOR_PMF(ActionCtrlStateHangMoveStart),
+    ACTOR_PMF(ActionCtrlStateHangMove),
     ACTOR_PMF(sub_80155AC),
-    ACTOR_PMF(sub_8014EE0),
-    ACTOR_PMF(sub_80149BC),
+    ACTOR_PMF(ActionCtrlStateHangStop),
+    ACTOR_PMF(ActionCtrlStateWarpIn),
 };
 
 /* The 13-level animation rows (4-byte `struct level_anim` records,
- * gStaticData_0816C0B0 in speed_table_16c090.c), one pointer per mode:
- * actor_part_16048.c reads `gStaticData_0816C070[mode][level]`. */
-extern const u8 gStaticData_0816C0B0[8][13][4];
+ * gPlayerCtrlModeLevelAnims in speed_table_16c090.c), one pointer per mode:
+ * actor_part_16048.c reads `gPlayerCtrlModeAnimRows[mode][level]`. */
+extern const u8 gPlayerCtrlModeLevelAnims[8][13][4];
 
-const u8 *const gStaticData_0816C070[8] = {
-    gStaticData_0816C0B0[0][0],
-    gStaticData_0816C0B0[1][0],
-    gStaticData_0816C0B0[2][0],
-    gStaticData_0816C0B0[3][0],
-    gStaticData_0816C0B0[4][0],
-    gStaticData_0816C0B0[5][0],
-    gStaticData_0816C0B0[6][0],
-    gStaticData_0816C0B0[7][0],
+const u8 *const gPlayerCtrlModeAnimRows[8] = {
+    gPlayerCtrlModeLevelAnims[0][0],
+    gPlayerCtrlModeLevelAnims[1][0],
+    gPlayerCtrlModeLevelAnims[2][0],
+    gPlayerCtrlModeLevelAnims[3][0],
+    gPlayerCtrlModeLevelAnims[4][0],
+    gPlayerCtrlModeLevelAnims[5][0],
+    gPlayerCtrlModeLevelAnims[6][0],
+    gPlayerCtrlModeLevelAnims[7][0],
 };

@@ -57,7 +57,7 @@ extern s32 GetBgSetupControl(void *buf);
 extern void PlaySong(void *self, s32 id);
 
 extern void ***gSpriteBankSet;
-extern u8 gStaticData_0816C484[];
+extern u8 gMenuSkyBg[];
 extern void *gAudioContext;
 
 /* Builds the actual two-string dialog/message box object: a small
@@ -67,7 +67,7 @@ extern void *gAudioContext;
  * BLDCNT+BLDALPHA/BLDY blend-register pair, forced to a fixed "fully
  * blended" value here rather than read from a caller-supplied source)
  * and `field_28` (a fixed priority/flags pair), stashes the two label
- * pointers at `field_10`/`field_14`, loads `gStaticData_0816C484`'s
+ * pointers at `field_10`/`field_14`, loads `gMenuSkyBg`'s
  * background package, and builds the background icon the same way
  * `settings_menu6.c`'s icon-constructor family does (allocate via
  * `InitUiSpriteObj(OperatorNew(0x40))`, point `field_20` at the shared
@@ -201,7 +201,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         self->field_14 = t2;
     }
 
-    LoadGraphicsPackage(self, gStaticData_0816C484);
+    LoadGraphicsPackage(self, gMenuSkyBg);
     self->field_1c = 0;
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));

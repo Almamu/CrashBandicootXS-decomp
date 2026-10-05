@@ -48,7 +48,7 @@ list:
   steps the current hop or timer.
 - `PickTinyHopTarget` picks the next anchor: the one nearest the player
   (Manhattan distance) selects a column of the per-round, per-anchor
-  table at `gStaticData_0816C30B`.
+  table at `gTinyHopTargets`.
 - `sub_80186F0` spawns a falling hazard (a `gCollidableList` part
   with a `sub_80188D0` controller) at the `n`th third of the way from
   the boss towards the player. `UpdateTiny` calls it on a 0x46-frame

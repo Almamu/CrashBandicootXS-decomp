@@ -149,7 +149,7 @@ $(C_BUILDDIR)/data/cell_anim_03b8b0.o: $(CATBG_DIR)/03b8b0_cell_anim.pal.inc $(C
 $(C_BUILDDIR)/data/cell_anim_0ff1b0.o: $(CATBG_DIR)/0ff1b0_cell_anim.pal.inc $(CATBG_DIR)/0ff1b0_cell_anim_frames.inc $(call catbg_picture_incs,13d934)
 $(C_BUILDDIR)/data/bg_picture_151ac4.o: $(call catbg_picture_incs,151ac4 155260)
 
-# Raw (uncompressed) tile pools of gStaticData_0817E78C, see docs/data.md:
+# Raw (uncompressed) tile pools of gLanguageSelectPalette3, see docs/data.md:
 # the 56 sprite banks and the 125 fixed OBJ tiles (4bpp, graphics/sprites/)
 # and the five tag-0x00 level BG tile sets (8bpp, graphics/level_tilesets/).
 # grit does the layout, tools/bin2c.py the initializer bytes. The PNGs are

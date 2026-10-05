@@ -81,8 +81,8 @@ and [graphics_loading.md](./graphics_loading.md).
   class (method table `gPlayerCtrlVtable`, struct in
   `include/player_ctrl.h`): per-frame update `UpdatePlayerCtrl` (D-pad
   auto-repeat level stepping, animation re-apply, pointer-to-member state
-  dispatch through `gStaticData_0816C250` to the eight state handlers
-  `sub_8016B1C`...`sub_8017184`), message handler `PlayerCtrlHandleEvent`, mode/
+  dispatch through `gPlayerCtrlStateFuncs` to the eight state handlers
+  `sub_8016B1C`...`PlayerCtrlStateDead`), message handler `PlayerCtrlHandleEvent`, mode/
   animation setter `sub_8017264`, player record writer `sub_80172D0`,
   constructor/destructor `InitPlayerCtrl`/`DestroyPlayerCtrl`. Nine UNUSED
   (`sub_8016AB0`, `sub_801721C`, `sub_8017240`, `sub_8017330`,
@@ -95,7 +95,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `sub_8017524`-`sub_8017A40` (25 functions) - six byte accessors, then a
   D-pad-driven actor-part subclass (method table `gInputCtrlVtable`):
   per-frame animation/speed selection from the held keys, a gcc 2.x
-  pointer-to-member state dispatch (`gStaticData_0816C290`), and the
+  pointer-to-member state dispatch (`gInputCtrlStateFuncs`), and the
   inlined "mark actor gone" bitmap sequence matched without inline asm.
   Built with old_agbcc since a later pass, which dropped all of its
   register pins and barriers.

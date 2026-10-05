@@ -240,7 +240,7 @@ void JetpackPlaneStateFly(struct jetpack_plane *self)
 }
 
 /* Per-frame update: calls this state's gJetpackPlaneStateFuncs handler. */
-void sub_802FEA4(struct jetpack_plane *self)
+void RunJetpackPlaneState(struct jetpack_plane *self)
 {
     ACTOR_PMF_CALL(&self->base, gJetpackPlaneStateFuncs);
 }
@@ -404,7 +404,7 @@ void DamageJetpackBomber(struct jetpack_bomber *self, s32 damage)
 }
 
 /* Calls this state's gJetpackBomberStateFuncs handler. */
-void sub_8030234(struct jetpack_bomber *self)
+void RunJetpackBomberState(struct jetpack_bomber *self)
 {
     ACTOR_PMF_CALL(&self->base, gJetpackBomberStateFuncs);
 }

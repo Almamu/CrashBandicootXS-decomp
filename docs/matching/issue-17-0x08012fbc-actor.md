@@ -6,24 +6,24 @@ family issue #16's remainder (`docs/matching/issue-16-actor-12160.md`,
 0x08012D24. Issue #17 itself scopes the whole 0x08012FBC-0x08014F8C
 range (~8.0 KB, 25 functions per `tools/chunk_remaining_work.py`'s
 generation pass); this pass covers only its first five functions,
-0x08012FBC-0x08013C60 - the rest (`sub_8013C60` onward, through
+0x08012FBC-0x08013C60 - the rest (`ActionCtrlStateSpin` onward, through
 0x08014F8C) stays raw in the trimmed `asm/code_3_2_17_12af4.s` for a
 future pass.
 
 `docs/rom_map.md`'s whole-ROM reconnaissance pass had already read two
 of these five end-to-end before any matching work started:
-`sub_80134B8` (the table's shared "bonus/score popup" handler, reused
-across 6 of the table's 42 slots) and `sub_8013994` ("player input/
+`ActionCtrlStateAirborne` (the table's shared "bonus/score popup" handler, reused
+across 6 of the table's 42 slots) and `ActionCtrlStateSlide` ("player input/
 action handling" - flag-bit checks against action codes via
 `sub_800AAEC`, then sound + state change). Both readings are confirmed
 accurate by this pass's own full transcription.
 
 ## New files
 
-`src/graphics/actor_part_12fbc.c` (`sub_8012FBC`/`sub_8013228`,
+`src/graphics/actor_part_12fbc.c` (`ActionCtrlStateRun`/`ActionCtrlStateJump`,
 0x08012FBC-0x080134B8), `src/graphics/actor_part_134b8.c`
-(`sub_80134B8`, 0x080134B8-0x080138E8), and
-`src/graphics/actor_part_138e8.c` (`sub_80138E8`/`sub_8013994`,
+(`ActionCtrlStateAirborne`, 0x080134B8-0x080138E8), and
+`src/graphics/actor_part_138e8.c` (`ActionCtrlStateFlipBodySlamStart`/`ActionCtrlStateSlide`,
 0x080138E8-0x08013C60). All three are named `actor_part_<addr>.c`
 (address-suffixed) rather than the next sequential `actor_partNN`
 (`actor_part85.c`/`86.c`/...) - `actor_part85.c` turned out to already
@@ -58,7 +58,7 @@ neighbor.
 `ldscript.txt` and `tools/report_units.py`'s `UNITS` list were updated:
 the three new files are inserted in ROM order right after
 `actor_part83.o` (0x08012AF4-0x08012FBC) and before the trimmed
-`asm/code_3_2_17_12af4.o` (now starting at `sub_8013C60`,
+`asm/code_3_2_17_12af4.o` (now starting at `ActionCtrlStateSpin`,
 0x08013C60). Category changed from the placeholder `graphics` to
 `actor`, matching every ROM-adjacent neighbor in this same "self"
 child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
@@ -66,14 +66,14 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
 
 ## Semantics (all five)
 
-- **`sub_8012FBC`** (620 B, `actor_part_12fbc.c`) - bails immediately
-  (no `UpdatePlayerFacing` call at all) if `sub_8012A7C(self)` reports busy.
+- **`ActionCtrlStateRun`** (620 B, `actor_part_12fbc.c`) - bails immediately
+  (no `UpdatePlayerFacing` call at all) if `CheckActionCtrlLeftGround(self)` reports busy.
   Otherwise reads `gKeys`'s high 16 bits: bit 0 plays a
   fixed sound (id `0xd`), fires the `+0x20`/`+0x24` and `+0x50`/`+0x54`
   trampoline pairs (ids `5`/`0x13`), sets the trio `self+0x18=0`/
   `+0x32=0`/`+0x30=1`/`+0x28=7`, then returns directly - skipping the
   shared tail entirely, unlike every other case. Bit 1 tail-calls
-  `sub_8015398(self)`. Bit `0x100` plays a different sound (id `0x1a`),
+  `StartActionCtrlSpin(self)`. Bit `0x100` plays a different sound (id `0x1a`),
   fires another trampoline pair (ids `0xc`/`0xf`), resets `self+0x18`/
   `+0x1c`, clears the trio `+0x31`/`+0x2f`/`+0x27` to `0`/`1`/`0x1e`,
   zeroes the player's `+0x94` byte (written twice - the same "no
@@ -86,16 +86,16 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   shared tail: dispatching `GetDpadDirection(gInput)`'s result -
   `2`, or `7..8` - resets `self+0x1c=0`, fires one more trampoline pair
   (ids `0x10`/`3`), and sets the trio to `0x1d`/`1`/`0` directly; `0`
-  instead calls `sub_8015780(self, 0, 0x12, 0, 0)` then re-sets the same
+  instead calls `SetActionCtrlModeAnim(self, 0, 0x12, 0, 0)` then re-sets the same
   trio fields to the same `0x1d`/`1`/`0`/`0x1d` shape by hand. Finally,
   if `gKeys`'s low-half bit `0x200` is set: for `self+8==3`,
   gates `HasTurboRun(gLevelState)` to set `self+0x29=1`, fire a
   trampoline pair (ids `4`/`0x18`), and set the trio to `0`/`1`/`0x1b`;
   for `self+8==4`, sets `self+0x29` from the bit test and tail-calls
-  `sub_8015460(self)`; otherwise, while `self+0x18` is already nonzero,
+  `StartActionCtrlRun(self)`; otherwise, while `self+0x18` is already nonzero,
   overwrites it with the same bit-test value. Every path but the very
   first (bit-0) case ends with `UpdatePlayerFacing(self)`.
-- **`sub_8013228`** (656 B, `actor_part_12fbc.c`) - first clears two
+- **`ActionCtrlStateJump`** (656 B, `actor_part_12fbc.c`) - first clears two
   `part+0xd` bits (`&= ~2`, then `&= ~3`, each via the runtime-negated-
   mask idiom, not a folded AND-immediate). If `part+0x68` bit 2 is set:
   fires the `+0x20`/`+0x24` and `+0x50`/`+0x54` trampoline pairs (ids
@@ -119,7 +119,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `0x1c`; a nonzero `self+0x18` (tag `!=0xd`) resets it to `0`/`1`/`0xd`;
   and a clear player `+0x100` flag resets it to `0`/`1`/`7` - before
   tail-calling `UpdatePlayerFacing(self)`.
-- **`sub_80134B8`** (1072 B, `actor_part_134b8.c`) - confirmed by this
+- **`ActionCtrlStateAirborne`** (1072 B, `actor_part_134b8.c`) - confirmed by this
   pass as `docs/rom_map.md`'s "bonus/score popup" handler, the table's
   shared default reused across 6 of its 42 slots. Caches `part+0x68`
   (busy flag) and `GetDpadDirection`'s D-pad-remap result up front. Unless
@@ -127,26 +127,26 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   range checks fail, plays a fixed sound (id `0xa`) and fires the usual
   `+0x20`/`+0x24` and `+0x50`/`+0x54` trampoline pairs (ids `0xe`/
   `0x10`), resetting `self+0x18`/`+0x1c` and the `+0x21..+0x24` run plus
-  the player's `+0x92` byte - the same shape `sub_8013228` establishes.
+  the player's `+0x92` byte - the same shape `ActionCtrlStateJump` establishes.
   If `part+0x68` was clear: calls `UpdatePlayerFacing(self)`, then ticks
   `self+0x25`'s countdown (resetting it once the D-pad result is also
   clear) and returns. Otherwise (`part+0x68` set): calls
-  `sub_801283C(self)`; for `self+8==0x1a` with `self+0x28==0`, sets the
+  `HandleActionCtrlAirInput(self)`; for `self+8==0x1a` with `self+0x28==0`, sets the
   trio to `4`/`1`/`7` and returns. Otherwise, keyed on `part+0x68` bit
   2: when set, arms `part+0xd` bit 0 and `self+0x34=0`, fires a
   trampoline pair (ids `0x1a`/`0x15`, skipped for `self+8==0xe`),
-  clamps `part+0x30` via the same table-lookup idiom `sub_8013228`
+  clamps `part+0x30` via the same table-lookup idiom `ActionCtrlStateJump`
   uses, and calls `sub_800B334(part)` (or, for `self+8==0x1a`, instead
-  re-runs `UpdatePlayerFacing`/`sub_801283C` and clears `part+0x68`); when
+  re-runs `UpdatePlayerFacing`/`HandleActionCtrlAirInput` and clears `part+0x68`); when
   clear, a D-pad result of `1`/`2` similarly re-runs `UpdatePlayerFacing`/
-  `sub_801283C` and resets `part+0x68`, while bit 3 (and `part->0x64
+  `HandleActionCtrlAirInput` and resets `part+0x68`, while bit 3 (and `part->0x64
   >= 0`) arms `part+0xd` bit 0, clears `self+0x34`, and - for `self+8`
   in `0x18..0x19` - spawns two objects via
   `SpawnEffectPart(gEntitySpawner, 0x29, 1, x, y, tag)` at the player's
   de-Q8'd `+0x14`-anchored position (`+0x14` and `-0x14` X offsets),
   packing bitmasked tag/flag bytes (`+0x28`, `+0xc`) into each spawned
   object via `sl`/`sb`/`r8`-cached negated-mask idioms, and clamping
-  each one's own `part+0x30` the same way; calls `sub_8014F8C(self)`
+  each one's own `part+0x30` the same way; calls `DoSuperBodySlamShockwave(self)`
   for `self+8==0x19`; then, unless `self+8==0x1d`, plays a further
   sound (id `0x19`) and fires one more trampoline pair (ids `0x16`/
   `0x11`) before resetting the trio to `0`/`1`/`0`. Outside the
@@ -155,7 +155,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `1`/`1`/`1c` or `0`/`1`/tag(0/1); otherwise, gated on
   `gPlayer+0x100` and `GetDpadDirection`'s result, fires one more
   trampoline pair (ids `0x17`/`0x16`) and sets the trio to `0`/`1`.
-- **`sub_80138E8`** (172 B, `actor_part_138e8.c`) - a thin
+- **`ActionCtrlStateFlipBodySlamStart`** (172 B, `actor_part_138e8.c`) - a thin
   `_call_via_r3` dispatcher on `part`'s state. While `part+0x2d==6`: for
   `part->0x30==3`, fires the `+0x50`/`+0x54` trampoline with id `9`;
   for `part->0x30>3` or `part+0x38!=0`, fires it with id `8` instead
@@ -163,15 +163,15 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `HasSuperBodySlam(gLevelState)` true fires the `+0x20`/`+0x24`
   trampoline (id `0x19`) then the `+0x50`/`+0x54` trampoline (id `7`);
   false fires only the `+0x20`/`+0x24` trampoline (id `0x18`).
-- **`sub_8013994`** (716 B, `actor_part_138e8.c`) - confirmed by this
+- **`ActionCtrlStateSlide`** (716 B, `actor_part_138e8.c`) - confirmed by this
   pass as `docs/rom_map.md`'s "player input/action handling" reader. If
   `part+0x68==0`: sets the trio to `5`/`1`/`0` directly and returns (no
   trampoline calls). Otherwise, on the "confirm" input edge
   (`gKeys` low bit 0 plus `sub_800AAEC(part, 0xb)`): plays a
   sound (id `0xc`), clears two `part+0xd` bits (the same runtime
-  `-2`/`-3` negated-mask idiom `sub_80142B0`, actor_part18.c, uses),
-  and tail-calls `sub_8015508(self)`. On bit 1 plus
-  `sub_800AAEC(part, 0x10)`: tail-calls `sub_8015398(self)` and sets
+  `-2`/`-3` negated-mask idiom `ActionCtrlStateCrawlStart`, actor_part18.c, uses),
+  and tail-calls `StartActionCtrlHighJump(self)`. On bit 1 plus
+  `sub_800AAEC(part, 0x10)`: tail-calls `StartActionCtrlSpin(self)` and sets
   the trio to `1`/`1`/`1`. Otherwise falls into a shared tail:
   increments `self+0x18`, and while it's still below `self+0x1c`,
   clears `part+0x34` and clamps `part+0x30` via the usual table-lookup
@@ -180,24 +180,24 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   and `+0x50`/`+0x54` trampoline pair (ids `0x1a`/`0x1b`) and sets the
   trio to `4`/`1`/`0`; else, on `gKeys`'s low-half bit
   `0x100`: fires a further pair (ids `0x14`/`0`), resets `self+0x1c`,
-  sets the trio to `0`/`1`/`3`, and tail-calls `sub_801434C(self)`
+  sets the trio to `0`/`1`/`3`, and tail-calls `ActionCtrlStateCrawl(self)`
   (actor_part18.c); otherwise dispatches `GetDpadDirection`
   (`gInput`) and `sub_800AAEC(part, 2)`: when both fire and
   the D-pad result is `3`/`4`, gates `HasTurboRun(gLevelState)`
   behind a further bit test to either fire a trampoline pair (ids
   `4`/`0x18`) and set the trio to `0x1b`, or tail-call
-  `sub_8015460(self)`; any other combination fires one more trampoline
+  `StartActionCtrlRun(self)`; any other combination fires one more trampoline
   pair (ids `0x12`/`2` or `0x11`/`4`) and sets the trio's flag/state
   halves to `1`/`0`.
 
 ## Why NAKED, not real C
 
-Two of the five (`sub_8012FBC`, `sub_80134B8`) show the same
+Two of the five (`ActionCtrlStateRun`, `ActionCtrlStateAirborne`) show the same
 "unexplained extended-register-budget" wall this table family already
 hit repeatedly (`docs/matching/issue-16-actor-remainder.md` and
 `docs/status/actor.md`'s "Parked - NAKED transcription" section):
-`sub_8012FBC` pushes `r8` (holding `&gInput` across a
-`sub_8012A7C` call) on top of the usual `r4-r7`; `sub_80134B8` goes
+`ActionCtrlStateRun` pushes `r8` (holding `&gInput` across a
+`CheckActionCtrlLeftGround` call) on top of the usual `r4-r7`; `ActionCtrlStateAirborne` goes
 further still, keeping `r8`/`sb`/`sl` all three live simultaneously
 through the object-spawn/tag-mask block around `SpawnEffectPart` - by far
 the most extreme register-budget shape seen in this table family so
@@ -208,14 +208,14 @@ far. Both were recognized immediately from their prologues
 attempt, per this project's established policy of not re-litigating an
 already-diagnosed wall.
 
-The other three (`sub_8013228`, `sub_80138E8`, `sub_8013994`) have
+The other three (`ActionCtrlStateJump`, `ActionCtrlStateFlipBodySlamStart`, `ActionCtrlStateSlide`) have
 ordinary-looking `r4-r6`/`lr` (or `r4`/`lr`) prologues, so each got a
 genuine attempt:
 
-- **`sub_8013228`**: a first plain-C draft, structured as straightforward
+- **`ActionCtrlStateJump`**: a first plain-C draft, structured as straightforward
   nested `if`/`else` mirroring the ROM's own branch shape (reusing the
   exact `mgr = *(u8 **)(self + 0xc); _call_via_r2(...)` idiom already
-  matched in `actor_part18.c`'s `sub_80142B0`, plus the register-pinned
+  matched in `actor_part18.c`'s `ActionCtrlStateCrawlStart`, plus the register-pinned
   "clamp against a `part+0x20`-manager/`part+0x2d`-tag table" block
   already matched for `DrawCrate`, game_loop35.c), compiled and
   isolated-assembled cleanly but diverged at the very first instructions:
@@ -223,26 +223,26 @@ genuine attempt:
   ROM's 3) for the live `mgr`/`part` pointers, and `part[0xd] &= ~2`
   compiled to a folded `movs r0,#0xfd; ands r0,r1` instead of the ROM's
   runtime `movs r0,#2; rsbs r0,r0,#0` negation (the same idiom
-  `sub_80142B0` already needed register-pinning to reproduce for its own
+  `ActionCtrlStateCrawlStart` already needed register-pinning to reproduce for its own
   `part[0xd]` bit clears) - not a one-line fix, given how many more
   `self+0xc`/`self+0x10` trampoline-pair call sites the rest of the
   function repeats verbatim. Given the immediate divergence and the
   size of the remaining function, this was not pursued further.
-- **`sub_80138E8`**: its `part[0x38]`-gated single-vs-double
+- **`ActionCtrlStateFlipBodySlamStart`**: its `part[0x38]`-gated single-vs-double
   `_call_via_r2`/`_call_via_r3` trampoline call (keyed on
   `HasSuperBodySlam(gLevelState)`) reproduces the *exact* shape
-  already confirmed unmatchable in `sub_80156EC`
+  already confirmed unmatchable in `ActionCtrlStateBodySlamStart`
   (`actor_part38c.c`, `docs/matching/issue-18-0x08014f8c-actor.md`'s
-  "Parked, not matched: sub_80156EC" - gcc 2.9 insists on an extra
+  "Parked, not matched: ActionCtrlStateBodySlamStart" - gcc 2.9 insists on an extra
   push/pop to recompute `self` into a fresh register in the `else` arm
   once `mgr` is locally redeclared there, where the ROM reuses the same
   register throughout). Recognized from the shape alone; not attempted
   again given the already-confirmed, unrelated-to-register-pinning
   nature of that specific gap.
-- **`sub_8013994`**: shares the same action-table frame-shape wall
+- **`ActionCtrlStateSlide`**: shares the same action-table frame-shape wall
   its ROM-adjacent neighbors already hit, and additionally repeats the
   identical `HasTurboRun`-gated single-vs-double trampoline idiom
-  `sub_8013228` and `sub_80138E8` both show. Given the two more
+  `ActionCtrlStateJump` and `ActionCtrlStateFlipBodySlamStart` both show. Given the two more
   isolated, smaller occurrences of this idiom in this very batch both
   resisted or were recognized as the same wall, this larger function
   (716 B, the most call-site-dense of the five) was NAKED-transcribed
@@ -275,31 +275,31 @@ crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare`) confirms `La suma coincide` against the real ROM. Issue #17
 itself stays open - only 5 of its 25 scoped functions are covered here
 (and all 5 as NAKED, not real C, so none count as "matched" either);
-`sub_8013C60` through 0x08014F8C remains for a future pass.
+`ActionCtrlStateSpin` through 0x08014F8C remains for a future pass.
 
 ## Second pass: 0x08013C60-0x08014F8C (14 functions)
 
 This pass covers the rest of the chunk, the two raw files
-`asm/code_3_2_17_12af4.s` (`sub_8013C60`-`sub_8014084`, now
+`asm/code_3_2_17_12af4.s` (`ActionCtrlStateSpin`-`ActionCtrlStateCrouch`, now
 `src/graphics/actor_part_13c60.c`) and `asm/code_3_2_17_14674.s`
-(`sub_8014674`-`sub_8014EE0`, now `src/graphics/actor_part_14674.c`).
+(`ActionCtrlStateLeftGround`-`ActionCtrlStateHangStop`, now `src/graphics/actor_part_14674.c`).
 Both raw files are retired. Of the 14 functions, 9 are real C and 5 are
 NAKED transcriptions, each with its C kept under `#if NON_MATCHING`.
 
 | function | result |
 |---|---|
-| `sub_8013C60`, `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4` | matched |
-| `sub_8014084` | NAKED |
-| `sub_8014674` | NAKED |
-| `sub_8014940`, `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC` | matched |
-| `sub_8014B54`, `sub_8014BCC`, `sub_8014D18` | NAKED |
-| `sub_8014EE0` | matched |
+| `ActionCtrlStateSpin`, `ActionCtrlStateAirSpin`, `ActionCtrlStateTornadoSpin`, `ActionCtrlStateCrouchDown` | matched |
+| `ActionCtrlStateCrouch` | NAKED |
+| `ActionCtrlStateLeftGround` | NAKED |
+| `ActionCtrlStateDying`, `ActionCtrlStateWarpIn`, `ActionCtrlStateHang`, `sub_8014AEC` | matched |
+| `ActionCtrlReleaseHang`, `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove` | NAKED |
+| `ActionCtrlStateHangStop` | matched |
 
 ### Compiler: old_agbcc
 
 This range was built with old_agbcc too. The ROM shows its tell
 throughout (`movs r0, #8; ldrb r1, [r1]; ands r0, r1` for `contact &
-8`). `sub_8013FD4` is the cleanest proof: the same C is byte-exact under
+8`). `ActionCtrlStateCrouchDown` is the cleanest proof: the same C is byte-exact under
 old_agbcc and differs in 8 bytes under the current agbcc. Both new objects are
 on `OLD_AGBCC_OBJS`. The chunk's first five functions
 (`actor_part_12fbc.c`/`_134b8.c`/`_138e8.c`, all NAKED without C) were
@@ -328,14 +328,14 @@ use. The older files in this family still use raw offsets.
   constant arrives as an inline `s32` parameter
   (`ActAndFlags0D`/`ActOrFlags0D`).
 - **The "next action" trios.** `ActSetNext(self, next)` makes the ROM
-  load `next` before the three stores. In `sub_8013C60`/`sub_8013EAC`
+  load `next` before the three stores. In `ActionCtrlStateSpin`/`ActionCtrlStateTornadoSpin`
   the ROM loads a fresh 1 for +0x30 on the fire path, where C reuses the
   `& 1` test's constant from a callee-saved register. A barriered,
   pinned variant (`ActSetNextB`) handles that.
 - **Ranges.** `dir` range tests the ROM writes as `cmp #8; bgt; cmp #3;
   blt` come from a GNU range `case 3 ... 8:`. An `if` gets folded to an
   unsigned `dir - 3 <= 5`.
-- **`sub_8014940`'s bitmap set** is `actor_part_188d0.c`'s
+- **`ActionCtrlStateDying`'s bitmap set** is `actor_part_188d0.c`'s
   `MARK_GONE_BITMAP` with the same pins. Its word index needs a barriered
   signed shift: gcc knows a zero-extended `u16` can't be negative and
   would use `lsr`.
@@ -345,18 +345,18 @@ use. The older files in this family still use raw offsets.
 In all five, the C has the ROM's blocks and instruction sequence. They
 differ only in register roles:
 
-- `sub_8014084`: in the facing block the ROM loads `self->part` into
+- `ActionCtrlStateCrouch`: in the facing block the ROM loads `self->part` into
   r0, tests its +0x28 bit through r1, and keeps a copy in r2 for the
   rest of the block. Every phrasing tried either merges the two
   pseudo-registers or loads straight into r2. That covers a separate
   local, the assignment inside the test, a pinned or barriered copy, and
   a `mirror` bitfield.
-- `sub_8014B54`: the `+= 0x600` constant is a reload that the ROM puts
+- `ActionCtrlReleaseHang`: the `+= 0x600` constant is a reload that the ROM puts
   in r3 where gcc picks r2. Pinning it shifts the rotation for every
   later reload instead.
-- `sub_8014BCC`, `sub_8014D18`, `sub_8014674`: the ROM keeps the
-  constant 1 (and in `sub_8014BCC` the `&self->next27` pointer, in r8)
-  in different callee-saved registers from gcc's choice. `sub_8014D18`
+- `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove`, `ActionCtrlStateLeftGround`: the ROM keeps the
+  constant 1 (and in `ActionCtrlStateHangMoveStart` the `&self->next27` pointer, in r8)
+  in different callee-saved registers from gcc's choice. `ActionCtrlStateHangMove`
   also shares one `_call_via_r3` call between its 0x22/0x23 animation
   paths.
 
@@ -374,21 +374,21 @@ are now real C. Three stay NAKED, each with its best C under
 
 | function | file | result |
 |---|---|---|
-| `sub_8012FBC`, `sub_8013228` | `actor_part_12fbc.c` | matched |
-| `sub_80134B8` | `actor_part_134b8.c` | matched |
-| `sub_80138E8`, `sub_8013994` | `actor_part_138e8.c` | matched |
-| `sub_8014084` | `actor_part_13c60.c` | NAKED |
-| `sub_8014674`, `sub_8014B54` | `actor_part_14674.c` | NAKED |
-| `sub_8014BCC`, `sub_8014D18` | `actor_part_14674.c` | matched |
+| `ActionCtrlStateRun`, `ActionCtrlStateJump` | `actor_part_12fbc.c` | matched |
+| `ActionCtrlStateAirborne` | `actor_part_134b8.c` | matched |
+| `ActionCtrlStateFlipBodySlamStart`, `ActionCtrlStateSlide` | `actor_part_138e8.c` | matched |
+| `ActionCtrlStateCrouch` | `actor_part_13c60.c` | NAKED |
+| `ActionCtrlStateLeftGround`, `ActionCtrlReleaseHang` | `actor_part_14674.c` | NAKED |
+| `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove` | `actor_part_14674.c` | matched |
 
 `actor_part_12fbc.o`, `actor_part_134b8.o` and `actor_part_138e8.o` now
 build with old_agbcc (Makefile `OLD_AGBCC_OBJS`). The first pass left
 all three with NAKED functions only, so moving the whole object was
 safe and no split was needed. All five first-pass functions match under
 old_agbcc. Their "unexplained extended-register-budget" walls (`r8`,
-`r8`/`sb`/`sl`) and `sub_80138E8`'s "unmatchable `sub_80156EC` shape"
-were just the wrong compiler. `sub_80138E8` matches under both
-compilers. `sub_8013994` differs in 35 bytes under the current agbcc.
+`r8`/`sb`/`sl`) and `ActionCtrlStateFlipBodySlamStart`'s "unmatchable `ActionCtrlStateBodySlamStart` shape"
+were just the wrong compiler. `ActionCtrlStateFlipBodySlamStart` matches under both
+compilers. `ActionCtrlStateSlide` differs in 35 bytes under the current agbcc.
 
 ### What made them match
 
@@ -404,8 +404,8 @@ compilers. `sub_8013994` differs in 35 bytes under the current agbcc.
   store needs is visible in the ROM: a constant loaded before the first
   store, a fresh `movs rX, #1` at the +0x2F store, or a register.
 - **Duplicated tails.** Where the ROM shares one method call plus trio
-  between two paths (`sub_8013994`'s 0x12/0x11 tails, `sub_8014D18`'s
-  0x22/0x23 idle animations, `sub_8014BCC`'s alt/idle trio), the C
+  between two paths (`ActionCtrlStateSlide`'s 0x12/0x11 tails, `ActionCtrlStateHangMove`'s
+  0x22/0x23 idle animations, `ActionCtrlStateHangMoveStart`'s alt/idle trio), the C
   writes the tail out on each path. gcc's cross-jumping merges them back
   and each copy keeps its own CSE state. A shared `goto` label instead
   starts a new basic block, and the 1 stored after it gets reloaded.
@@ -414,53 +414,53 @@ compilers. `sub_8013994` differs in 35 bytes under the current agbcc.
   same finding as `include/actor_self.h`. `ACT_VCALL`'s
   `do { } while (0)` puts loop notes around every call. CSE then won't
   carry the fire test's constant 1 (kept in `r6`/`r7`) into the +0x2F
-  stores after the calls, but the ROM does. `sub_8012FBC`,
-  `sub_8014BCC` and `sub_8014D18` need `ACT_CALL`. `sub_8013D94`
+  stores after the calls, but the ROM does. `ActionCtrlStateRun`,
+  `ActionCtrlStateHangMoveStart` and `ActionCtrlStateHangMove` need `ACT_CALL`. `ActionCtrlStateAirSpin`
   (already matched) needs `ACT_VCALL` and breaks with `ACT_CALL`, so
   the header keeps both forms.
 - **Zero/one kept across calls.** Where the ROM loads a 0 into a
   callee-saved register before a pair of method calls and stores it
-  afterwards (`self->frames = 0` in `sub_8013994`/`sub_8012FBC`,
-  `self->frame = 0` in `sub_8014BCC`), a `s32 zero = 0;` local declared
-  before the calls reproduces it. `sub_8013228` keeps its 9/8 +0x30 1
+  afterwards (`self->frames = 0` in `ActionCtrlStateSlide`/`ActionCtrlStateRun`,
+  `self->frame = 0` in `ActionCtrlStateHangMoveStart`), a `s32 zero = 0;` local declared
+  before the calls reproduces it. `ActionCtrlStateJump` keeps its 9/8 +0x30 1
   apart from the `cur & 1` test's constant behind one `asm("" : "+r")`
   barrier. That is the only barrier in these files, and the plain C
   differs in 187 bytes.
-- **Bitfields for the spawned objects' masks.** `sub_8012FBC`'s and
-  `sub_80134B8`'s spawned objects clear and set bits in +0x0C/+0x28. As
+- **Bitfields for the spawned objects' masks.** `ActionCtrlStateRun`'s and
+  `ActionCtrlStateAirborne`'s spawned objects clear and set bits in +0x0C/+0x28. As
   bitfields, gcc emits the ROM's `-5`/`-4` masks, and the `| 1` in
-  QImode picks up the ROM's `r4` 1. `sub_80134B8`'s -0x11 mirror mask
+  QImode picks up the ROM's `r4` 1. `ActionCtrlStateAirborne`'s -0x11 mirror mask
   goes through an `s32`-parameter helper so it stays in SImode. The
   ROM derives it from the 1 already in `r7` (`subs r7, #0x12`). The
   first spark's bit-2 clear is written twice. The second store folds
   away, but the extra use of the -5 mask gives it `sb` (and the -0x11
   mask `r8`), as in the ROM.
-- **Smaller shapes.** `sub_8012FBC` takes `&gInput` into a
+- **Smaller shapes.** `ActionCtrlStateRun` takes `&gInput` into a
   local up front, which is what keeps the address in `r8` across the
-  calls. `sub_80134B8` computes the spark coordinates as
+  calls. `ActionCtrlStateAirborne` computes the spark coordinates as
   `x = pl->x; x >>= 8; x += 0x14;` and passes them through an inline
   `SpawnSpark(x, y, mirror)`, which fixes their evaluation order.
-  `sub_8013228`/`sub_80134B8` clear `part+0x68` through
+  `ActionCtrlStateJump`/`ActionCtrlStateAirborne` clear `part+0x68` through
   `ActSetContact(part, 0)`, an inline with an `s32` parameter, so the 0
-  is loaded before the part pointer. `sub_8014D18` switches on the
+  is loaded before the part pointer. `ActionCtrlStateHangMove` switches on the
   record kind with separate case bodies for 1..5, which is what makes
   gcc emit the ROM's 7-entry jump table.
 
 ### Still NAKED
 
-- **`sub_8014084`.** The facing block needs the second
+- **`ActionCtrlStateCrouch`.** The facing block needs the second
   `flags28 << 27` test to use different hard registers from the first.
   That is what stops jump2's thread_jumps from folding it away, as it
   does for every C tried. The ROM loads `self->part` into `r0` and keeps
   a copy in `r2`. In every form tried, gcc either merges the two
   pseudos or gives the re-test the same registers.
-- **`sub_8014674`.** The contact path's `tag == 0xD`/`tag == 0x18`
+- **`ActionCtrlStateLeftGround`.** The contact path's `tag == 0xD`/`tag == 0x18`
   re-tests have the same problem. The ROM keeps `cmp #0xD` / `cmp #0x18`
   after the `||` test. The C gets them threaded, and the constant 1 is
   then carried through into the 0x18 block. Tried: an inline `Land()`
   helper, a `switch`, a barrier-copied tag, and `do`/`while` around the
   path. `decomp-permuter` didn't find a form either.
-- **`sub_8014B54`.** One reload register is off: the 0x600 constant goes
+- **`ActionCtrlReleaseHang`.** One reload register is off: the 0x600 constant goes
   to `r2`, the ROM's to `r3`. The rest is byte-exact. Reload picks it
   from its spill-register rotation (`order_regs_for_reload` /
   `allocate_reload_reg`). Nothing tried in the C (a pinned or named
@@ -469,33 +469,33 @@ compilers. `sub_8013994` differs in 35 bytes under the current agbcc.
 
 ## Later pass (issue #15/#16/#17 second NAKED retry)
 
-See docs/matching/issue-15-16-17-naked-retry-2.md. `sub_801434C` and
-`sub_80145E4` (actor_part18.c/actor_part18b.c) are now real C.
-`sub_8014084`'s draft is down to one misplaced instruction: its facing
+See docs/matching/issue-15-16-17-naked-retry-2.md. `ActionCtrlStateCrawl` and
+`ActionCtrlStateLand` (actor_part18.c/actor_part18b.c) are now real C.
+`ActionCtrlStateCrouch`'s draft is down to one misplaced instruction: its facing
 block now reads `self->part` for every access (GCSE produces the ROM's
 r2 copy) and spells the two bit tests differently so the second is not
-threaded away. `sub_8014674` and `sub_8014B54` are unchanged.
+threaded away. `ActionCtrlStateLeftGround` and `ActionCtrlReleaseHang` are unchanged.
 
 ## Later pass: third near-miss sweep
 
-`sub_8014084` is real C under old_agbcc. The facing block's second
+`ActionCtrlStateCrouch` is real C under old_agbcc. The facing block's second
 branch writes through a scoped `volatile u8 *`, which keeps its `adds
 r2, #40` in the part copy's register ahead of the -0x11 mask.
-`sub_8014674` and `sub_8014B54` are unchanged. See
+`ActionCtrlStateLeftGround` and `ActionCtrlReleaseHang` are unchanged. See
 [near-miss-polish-3.md](near-miss-polish-3.md).
 
 ## Later pass: mix NAKED retry 5
 
-`sub_8014674` is real C under old_agbcc. The 0xD/0x18 tag test is a
+`ActionCtrlStateLeftGround` is real C under old_agbcc. The 0xD/0x18 tag test is a
 `switch (tag = self->part->tag)` with a shared `case 0xD: case 0x18:`
 and the inner tests on `tag`. That threads the `beq` for 0xD past the
 inner re-test while the 0x18 path keeps it, which no `||` spelling
-did. `sub_8014B54` is unchanged (3 halfwords, the 0x600 reload
+did. `ActionCtrlReleaseHang` is unchanged (3 halfwords, the 0x600 reload
 register). See [mix-naked-retry-5.md](mix-naked-retry-5.md).
 
 ## Later pass: late NAKED retry 3
 
-`sub_8014B54` is real C under old_agbcc, the last NAKED function in the
+`ActionCtrlReleaseHang` is real C under old_agbcc, the last NAKED function in the
 issue's range. The 0x600 is still a reload. An `r2` register variable,
 set and used only by empty asms around the add, keeps r2 live there, so
 reload spills r3 for the constant as the ROM does. See

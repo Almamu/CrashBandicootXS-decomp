@@ -397,7 +397,7 @@ trigger" primitive.** The delegate differs per function:
   (`src/graphics/actor_part17.c`). `StartCtrlTargetMotionYFromSet` itself: looks up an
   8-byte record at `(*(self+4))[mode]`, reads that record's **second**
   word (`+4`) as a type index into the shared, 12-byte-stride
-  `gStaticData_0816B304` table, then reads `self->0xc`'s "anchor"
+  `gCtrlMotionRecords` table, then reads `self->0xc`'s "anchor"
   pointer (called `part` in `StartCtrlTargetMotionYFromSet`'s own existing comment) and
   its **`+0x30`/`+0x34`** `{s16 offset, void *fn}` pair, and fires
   `_call_via_r3(self + offset, owner, tableEntry, fn)`.
@@ -406,7 +406,7 @@ trigger" primitive.** The delegate differs per function:
   reads the record's **first** word (`+0`) as the type index and the
   anchor's **`+0x28`/`+0x2c`** pair instead.
 - **`SetEnemyAnimMode(self, mode)`**: `self->0x68 = mode;` then triggers
-  *directly*, with no `gStaticData_0816B304` lookup at all: reads the
+  *directly*, with no `gCtrlMotionRecords` lookup at all: reads the
   anchor's **`+0x50`/`+0x54`** pair for the offset/fn, and gets its
   table-entry argument by indexing **`self->0x84`'s own pointer array
   directly by `mode`** (`((void **)self->0x84)[mode]`), then fires the
@@ -434,9 +434,9 @@ trigger" primitive.** The delegate differs per function:
   here it's read as `*(void ***)(self+0x84)` and direct-indexed by
   `mode` (`table[mode]`, 4-byte stride) - i.e. a **per-instance array
   of pointers**, playing the exact same "table entry" role
-  `gStaticData_0816B304[type]` plays for `sub_800C8AC`/`sub_800C8BC`.
+  `gCtrlMotionRecords[type]` plays for `sub_800C8AC`/`sub_800C8BC`.
   Reads as a per-object override table parallel to the shared global
-  one (`self->0x84[mode]` instead of `gStaticData_0816B304[recordType]`).
+  one (`self->0x84[mode]` instead of `gCtrlMotionRecords[recordType]`).
   The Phase 1 doc's original `+0xC`/`+0x14`-record guess isn't
   necessarily wrong for that *other* caller - `self->0x84` may simply
   be reused with two different shapes by two different call sites, not
@@ -1356,7 +1356,7 @@ idiom already matched elsewhere in this cluster:
   (the per-instance mode-indexed pointer table Phase 2 already
   identified) and `self->0x88` (the floating-popup child pointer) to
   null, and re-points `self->4` (the "manager" pointer Phase 2 already
-  identified) at the fixed `gStaticData_0816BB6C` table.
+  identified) at the fixed `gEnemyCtrlMotionSet` table.
 - **`DestroyEnemyCtrl(self, flags)`** / **`DestroyKnockedEnemyCtrl(self, flags)`**: both
   the same "double-set" shape as `sub_800CCCC` (`actor_part123.c`) -
   set `self+0xc`'s table pointer (to `gEnemyCtrlVtable` and

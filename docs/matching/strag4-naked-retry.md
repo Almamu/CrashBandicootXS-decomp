@@ -1,7 +1,7 @@
-# strag4 retry: issue #18's last function (`sub_8015038`)
+# strag4 retry: issue #18's last function (`StartActionCtrlTornadoSpin`)
 
 The strag2 retry (`docs/matching/strag2-naked-retry.md`) left
-`sub_8015038` (`src/graphics/actor_part38.c`, 400 bytes) NAKED. Its
+`StartActionCtrlTornadoSpin` (`src/graphics/actor_part38.c`, 400 bytes) NAKED. Its
 C draft was 2 halfwords off under both compilers.
 
 **1 of 1 closed**, under old_agbcc (`actor_part38.o` was already on
@@ -11,7 +11,7 @@ C draft was 2 halfwords off under both compilers.
 
 | Function | File | Was | Technique |
 |---|---|---|---|
-| `sub_8015038` | `actor_part38.c` | NAKED (draft 2 hw off) | test `self[0x22]` directly in the `self+0x24 != 0` arm instead of through a `u8 v` local; one no-code `r1` hold spanning the test |
+| `StartActionCtrlTornadoSpin` | `actor_part38.c` | NAKED (draft 2 hw off) | test `self[0x22]` directly in the `self+0x24 != 0` arm instead of through a `u8 v` local; one no-code `r1` hold spanning the test |
 
 ## What was wrong
 
@@ -42,7 +42,7 @@ C draft was 2 halfwords off under both compilers.
 - The strag2 draft's `r0` hold (first arm) and `r2` hold (`0x17`) are
   no longer needed under old_agbcc, so they were dropped.
 - Current agbcc is still 54 halfwords off with this form. The object
-  stays on `OLD_AGBCC_OBJS`, and `sub_8014F8C` in the same file matches
+  stays on `OLD_AGBCC_OBJS`, and `DoSuperBodySlamShockwave` in the same file matches
   under both compilers.
 
 ## Verification

@@ -61,7 +61,7 @@ record that these two were reviewed but not attempted.
   (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
   `gOamBuffer`, `FreeUnlockedPaletteSlots`/four `ClaimPaletteSlot` calls on
   `gPaletteCache`), copies the first four per-level
-  `gStaticData_0816Bxxx` tables (`gStaticData_0816B13A`/`15A`/`17A`/
+  `gStaticData_0816Bxxx` tables (`gSaveMenuPalette0`/`15A`/`17A`/
   `19A` - the same tables `docs/rom_map.md`'s settings-menu
   investigation already links to this screen) into a 16-row loop
   writing halfwords at `self+0x2c`/`+0x4c` and `self+0x6c`/`+0x8c`

@@ -6,7 +6,7 @@
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
  * This file covers the whole contiguous run of accessors/accumulator-
  * drivers/state-transition helpers for the singleton and its `self`
- * object between the parked `AllocJetpackPlayerTiles` and `sub_802F748`.
+ * object between the parked `AllocJetpackPlayerTiles` and `RunJetpackPlayerState`.
  *
  * The animation-reset blocks (`anim`/`zero1`/`zero2` register groups)
  * store through `*(T *)&self->field` casts: plain member stores let

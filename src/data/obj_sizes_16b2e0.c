@@ -20,5 +20,5 @@ const u8 gObjPieceHeights[12] = {
 
 /* The box and the point used when a sprite frame has none (the layout
  * types without one, include/sprite_bank.h): all zero. */
-const struct sprite_box gStaticData_0816B2F8 = { 0 };
-const struct sprite_point gStaticData_0816B300 = { 0 };
+const struct sprite_box gEmptySpriteBox = { 0 };
+const struct sprite_point gEmptySpritePoint = { 0 };

@@ -95,8 +95,8 @@ struct image_pair
 extern void *gAudioContext;
 extern s16 gSineTable[];
 extern struct image_pair gLevelSelectPictures[];
-extern u32 gStaticData_0816C610[];
-extern u32 gStaticData_0816C624[];
+extern u32 gLevelSelectEntryBoxAnims[];
+extern u32 gLevelSelectEntryWorldAnims[];
 
 extern void PlaySfx(void *ctx, s32 sfx, s32 volume);
 extern void BgAffineSet(void *src, void *dst, s32 count);
@@ -370,15 +370,15 @@ void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index)
     else
     {
         self->id = world + 0x14;
-        SetAnim(self->icon, gStaticData_0816C624[world]);
+        SetAnim(self->icon, gLevelSelectEntryWorldAnims[world]);
     }
 }
 
-/* Sets the box's animation (gStaticData_0816C610[kind]) and refreshes
+/* Sets the box's animation (gLevelSelectEntryBoxAnims[kind]) and refreshes
  * both parts' palettes. */
 void SetLevelSelectEntryBox(struct level_item *self, s32 kind)
 {
-    SetAnim(self->frame, gStaticData_0816C610[kind]);
+    SetAnim(self->frame, gLevelSelectEntryBoxAnims[kind]);
     self->frame->palette = GetSpriteAnimPaletteSlot(self->frame);
     self->icon->palette = GetSpriteAnimPaletteSlot(self->icon);
 }
