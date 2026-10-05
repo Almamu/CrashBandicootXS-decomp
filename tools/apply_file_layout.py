@@ -5,7 +5,7 @@ phases:
   rename  git mv every single-file row and every merge group's first member
           to its new path; rewrite ldscript/Makefile/report_units tokens.
   merge   append the remaining members of each merge group to the group's
-          file (ROM order, .pool rule, leading #includes hoisted), git rm
+          file (ROM order, .pool rule, file-scope #includes hoisted), git rm
           them, drop their ldscript lines and Makefile entries, point their
           report_units entries at the merged object.
   refs    rewrite path / file-name mentions in docs, comments and tools.
@@ -67,6 +67,29 @@ def split_includes(src):
         i += 1
     return inc, '\n'.join(lines[i:])
 
+def hoist_includes(inc, body):
+    """Move file-scope #include lines found later in body (e.g. after a
+    header comment, outside any #if) up into inc; drop repeats."""
+    out = []; depth = 0; skip_blank = False
+    for l in body.split('\n'):
+        if re.match(r'#\s*if', l):
+            depth += 1
+        elif re.match(r'#\s*endif', l):
+            depth -= 1
+        if depth == 0 and l.startswith('#include'):
+            if l not in inc:
+                inc.append(l)
+            # its following blank line goes too, unless it is the only
+            # break between what came before and after
+            skip_blank = not out or not out[-1].strip()
+            continue
+        if skip_blank and not l.strip():
+            skip_blank = False
+            continue
+        skip_blank = False
+        out.append(l)
+    return '\n'.join(out)
+
 if phase == 'rename':
     mapping = {}
     for n, olds in groups.items():
@@ -106,7 +129,8 @@ elif phase == 'merge':
             prev_src = src
             git('rm', '-q', o)
             dropped[stem(o)] = stem(n)
-        open(n, 'w').write('\n'.join(inc) + '\n\n' + '\n\n'.join(parts) + '\n')
+        body = hoist_includes(inc, '\n\n'.join(parts))
+        open(n, 'w').write('\n'.join(inc) + '\n\n' + body.lstrip('\n') + '\n')
     # ldscript: drop members' lines
     def ld(s):
         out = []
@@ -147,12 +171,13 @@ elif phase == 'refs':
     # a C/shell/markdown line continuation: newline, indent, optional comment leader
     CONT = r'(?:[ \t]*\n[ \t]*(?:\*(?!/)|//|#)?[ \t]*)'
     # 0) shorthand lists: game_loop37.c/38.c, hud_icon_widget2/3/4.c -> full names
-    pat_short = re.compile(r'(?<![\w-])(' + alt(base) + r')(\.[cos])?/(' + CONT + r'?)([0-9a-z]{1,4})(?=[./])')
+    #    (also `game_loop37.c`/`38.c`, each name in its own backticks)
+    pat_short = re.compile(r'(?<![\w-])(' + alt(base) + r')(\.[cos])?((?<=\.[cos])`/`|/' + CONT + r'?)([0-9a-z]{1,4})(?=[./])')
     def expand(m):
         prev, ext, gap, suf = m.group(1), m.group(2) or '', m.group(3), m.group(4)
         for cand in (prev[:len(prev) - len(suf)] + suf, prev.rstrip('0123456789') + suf):
             if cand in base and cand != prev:
-                return '%s%s/%s%s' % (prev, ext, gap, cand)
+                return '%s%s%s%s' % (prev, ext, gap, cand)
         return m.group(0)
     # 1) dir-qualified (optionally src/ or build prefixes), 2) bare basename,
     #    also right after another file name and a slash (a.c/b.c)
@@ -173,7 +198,9 @@ elif phase == 'refs':
             tok = m.group(0)
             key = (os.path.basename(tok.strip('`"')), tok[0] if tok[0] in '`"' else '')
             if prev and prev[1] == key and SEP.fullmatch(s[prev[0]:m.start()]):
+                # a run of three or more: compare the next one with this
                 out.append(s[last:prev[0]]); last = m.end()
+                prev = (m.end(), key)
                 continue
             prev = (m.end(), key)
         out.append(s[last:])
