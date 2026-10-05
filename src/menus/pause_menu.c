@@ -4,13 +4,11 @@
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "pause_menu.h"
-#include "memory.h"
+#include "system.h"
 #include <agb_syscall.h>
 #include "text.h"
 #include "util.h"
 
-extern void StopAmbientSfx(struct AudioContext *self);
-extern void WaitForVBlank(void);
 extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
 extern struct vram_upload_cursor *gObjVramCursor;

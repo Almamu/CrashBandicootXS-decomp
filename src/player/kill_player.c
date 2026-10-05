@@ -1,6 +1,8 @@
 #include "core.h"
 #include "vtable.h"
 #include "action_obj.h"
+#include "system.h"
+#include "audio.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - the
  * "child object" family docs/rom_map.md's "Undifferentiated core"
@@ -22,7 +24,6 @@
 struct AudioContext;
 struct palette_cache;
 
-extern void PlaySfx(struct AudioContext *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void ApplyActionCtrlMotion(void *self);
@@ -31,9 +32,7 @@ extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, u8 val);
-extern void StopSfx(struct AudioContext *self, u32 id);
 extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
-extern u8 GetDpadDirection(void *dummy);
 
 extern struct AudioContext *gAudioContext;
 extern void *gLevelState;

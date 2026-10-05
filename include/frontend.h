@@ -13,8 +13,8 @@
  * Not here, by ownership (docs/headers_plan.md, "Who owns a symbol"):
  * the continue prompt functions at the start of credits.c
  * (DrawContinuePrompt..RunContinuePrompt) belong with the rest of the
- * continue prompt in src/menus/, and LoadTaggedAssetBuffered
- * (language_select.c) with LoadTaggedAsset in the system subsystem. */
+ * continue prompt in src/menus/. LoadTaggedAssetBuffered
+ * (language_select.c) is in system.h, with LoadTaggedAsset. */
 
 #include "core.h"
 #include "actor_self.h"

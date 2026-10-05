@@ -4,6 +4,8 @@
 #include "bitmap_font.h"
 #include "text.h"
 #include "cutscene.h"
+#include "system.h"
+#include "audio.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.c, which
@@ -34,16 +36,11 @@ extern void *gSpriteBankSet;
 extern void *gPaletteCache;
 extern void *gEntityFlags;
 extern void *gPaletteCycles;
-extern s32 gLanguage;
 
 extern void FreeVramDmaQueue(void);
 extern void DestroyOamBuffer(void *self, u32 flags);
 extern void DestroyObjVramCursor(void *self, u32 flags);
 extern void OperatorDelete(void *p);
-/* Takes no argument (audio.c), but the ROM loads the audio
- * context into r0 before calling it anyway. */
-extern void DisableMusicVCountIrq(void *audio);
-extern void DestroyAudioContext(void *audio, u32 flags);
 extern void DestroySpriteRenderer(void *self, u32 flags);
 extern void DestroySpriteBankSet(void *self, u32 flags);
 extern void DestroyPaletteCache(void *self, u32 flags);

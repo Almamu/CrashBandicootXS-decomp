@@ -1,5 +1,6 @@
 #include "core.h"
 #include "cutscene.h"
+#include "audio.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * level_query.c - see level_query.c's header comment and
@@ -26,9 +27,7 @@ void SetSlideshowDispcnt(u32 value)
 struct AudioContext;
 
 extern struct AudioContext *gAudioContext;
-extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
-extern void StopSfx(struct AudioContext *self, u32 id);
 
 /* Tail half of RunSlideshow's per-item body (slideshow.c) - duck-out
  * (`duckMusic`), fade-start (`fadeAfter`), and re-arm (`rearmSfx`/

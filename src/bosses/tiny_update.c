@@ -1,5 +1,6 @@
 #include "core.h"
 #include "util.h"
+#include "audio.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
@@ -171,7 +172,6 @@ extern struct hop_level *gLevelLayers;
 extern u8 gTinyRoundAnchors[];
 extern u8 gTinyHopTargets[];
 
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *OperatorNew(u32 size);
 extern struct hop_vobj *CreateStompedHopPadCtrl(void *mem);
 extern struct hop_vobj *CreateOneShotAnimCtrl(void *mem);

@@ -4,6 +4,8 @@
 #include "text.h"
 #include "util.h"
 #include <libgcc.h>
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -362,7 +364,6 @@ extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 /* Calls the function in r4 with r0-r3 (see the `register ... asm("r4")`
  * pin at the call site). */
 extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
-extern s32 mem_free_bytes(s32 flags);
 
 /* Sprite parts. */
 extern struct sprite *InitUiSpriteObj(void *mem);
@@ -382,8 +383,6 @@ extern void GetSpriteHitbox(struct aabb *dest, void *part);
 extern u8 PlayerTouchesBox(void *actor, struct aabb *box);
 
 /* Display, VRAM and sound. */
-extern void WaitForVBlank(void);
-extern void UpdateKeys(void *p);
 extern void FreeUnlockedPaletteSlots(void *cache);
 extern void ClaimPaletteSlot(void *cache, s32 arg);
 extern void UploadPaletteCache(void *p);
@@ -397,9 +396,6 @@ extern void RewindObjVram(struct vram_cursor *p);
 extern void FlushVramDmaQueue(void);
 extern void InitBgSetup(void *dst, s32 a, s32 b, s32 c, s32 d);
 extern void LoadGraphicsPackage(void *dst, void *pkg);
-extern void PlaySong(void *arg0, s32 arg1);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 GetUiText(s32 id);
 
 /* Save data. */
 extern u8 *PackSaveData(void *p);

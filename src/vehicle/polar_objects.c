@@ -2,6 +2,7 @@
 #include "actor_self.h"
 #include "util.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family (state at `self+0x28`, table-index/"kind" at `self+0xc`, an
@@ -27,7 +28,6 @@ extern u8 HurtPolarPlayer(void *arg0);
 extern u8 ShockPolarPlayer(void *arg0);
 extern void UpdateActor(void *self);
 extern void UpdateActorDepth(void *self);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);

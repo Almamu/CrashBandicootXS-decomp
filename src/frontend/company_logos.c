@@ -8,6 +8,8 @@
 #include "frontend.h"
 #include "util.h"
 #include <libgcc.h>
+#include "system.h"
+#include "audio.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
@@ -31,24 +33,17 @@ extern struct held_pressed_pair {
 
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
 extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void CommitDispcnt(void);
-extern void PlaySong(struct AudioContext *self, u32 id);
-extern s32 GetUiText(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void ShowBg2(void);
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 extern void *OperatorNew(s32 size);
-extern void LoadTaggedAsset(void *asset, void *dest);
-extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
-extern void *mem_alloc(u32 size, u32 flags);
 extern void InitObjTileFreeList(void *arg0);
 extern void FreeObjTileFreeList(void);
 extern void InitSpriteFrameOamQueue(void);
@@ -60,7 +55,6 @@ extern void AgeSpriteFrameCache(void);
 extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void UpdateKeys(void *arg0);
 extern void OperatorDelete(void *self);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);

@@ -2,6 +2,7 @@
 #include "memory.h"
 #include "level_state.h"
 #include "actor_self.h"
+#include "audio.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family documented in actor.c/polar_player_actions.c: a "part table"
@@ -22,7 +23,6 @@ extern struct level_state *gLevelState;
 extern void *gAudioContext;
 extern s32 SetMaskLevel(struct level_state *arg0, s32 arg1);
 extern void RefreshPolarAkuAku(void *self, s32 arg1);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);

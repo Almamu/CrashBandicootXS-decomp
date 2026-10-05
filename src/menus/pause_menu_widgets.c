@@ -4,6 +4,7 @@
 #include "pause_menu.h"
 #include "text.h"
 #include <libgcc.h>
+#include "audio.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -79,9 +80,6 @@ void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2)
 
 extern s32 FormatDecimal(s32 value, u8 *dest);
 extern void *gAudioContext;
-extern void SetMusicVolume(void *self, u32 value);
-extern void SetSfxVolume(void *self, u32 value);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* One entry of the per-row record array at `field_14` (8-byte stride;
  * `type` 4/5 are the two editable-percentage rows). */

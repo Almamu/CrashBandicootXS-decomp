@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "util.h"
+#include "audio.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/vehicle/polar_player_states.c`
@@ -44,7 +45,6 @@ struct held_pressed_pair {
 };
 extern struct held_pressed_pair gKeys;
 
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void SetCellAnimSpeed(s32 arg0);
 extern void LoseLife(void *arg0);

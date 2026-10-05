@@ -1,5 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
+#include "system.h"
+#include "audio.h"
 
 /* Sits right after polar_pickups.c's `UpdatePolarNitroCrate` and before
  * polar_crates.c's `UpdatePolarAkuAkuCrate` - directly adjacent to both now,
@@ -14,8 +16,6 @@
 extern struct actor_self *gActorList;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void AddBrokenCrate(void *self);
 
 /* The actor_category_frame.c AABB helpers: the three scratch boxes live in

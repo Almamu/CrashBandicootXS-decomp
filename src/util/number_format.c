@@ -1,7 +1,6 @@
 #include "core.h"
 #include "util.h"
-
-extern s32 DivMod(s32 value, s32 base, s32 *remainder);
+#include "system.h"
 
 /* Custom itoa: converts `value` to a NUL-terminated string in `buffer`
  * (base 2-36), returning the digit count (not including the NUL or the

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "audio.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -10,7 +11,6 @@
 extern void *gAudioContext;
 extern void *gEntityFlags;
 extern void *gEntitySpawner;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 sub_802599C(void *self, s32 n);
 extern void sub_80259D4(void *self, s32 n);
 /* DropExtraLife is parked (NON_MATCHING) as of entity_spawner.c. This call

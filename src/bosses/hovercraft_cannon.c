@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "audio.h"
 
 /* Same singleton system as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
@@ -137,7 +138,6 @@ extern void *gAudioContext;
  * "dead" flag. */
 extern void StartHovercraftHitFlash(void);
 extern void LoseHovercraftPart(void);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
 /* Applies `dmg` damage to `hp`, and once it drops to zero (or
  * below), marks `self` dead (`dead = 1`), fires the singleton's own

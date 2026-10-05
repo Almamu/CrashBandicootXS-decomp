@@ -3,9 +3,7 @@
 #include <agb_eeprom.h>
 #include "gba/dma_macros.h"
 #include "save.h"
-
-extern void MemCopy32(void *dst, void *src, s32 len);
-extern void (*gIntrTableTimer2)(void);
+#include "system.h"
 
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
@@ -136,9 +134,6 @@ fail_restore:
 }
 
 extern struct AudioContext *gAudioContext;
-extern u32 GetCurrentSong(struct AudioContext *self);
-extern void StopSong(struct AudioContext *self);
-extern void PlaySong(struct AudioContext *self, u32 id);
 
 /* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,

@@ -1,5 +1,7 @@
 #include "core.h"
 #include "action_obj.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
@@ -24,8 +26,6 @@ extern void *gLevelState;
 extern u8 *gPlayer;
 extern void *gEntitySpawner;
 extern void *gInput;
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 GetDpadDirection(void *pad);
 extern u8 CheckActionCtrlLeftGround(struct act *self);
 extern void UpdatePlayerFacing(struct act *self);
 extern void ClearPlayerSpeedY(struct act_part *part);

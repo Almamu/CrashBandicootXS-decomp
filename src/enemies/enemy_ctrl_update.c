@@ -22,6 +22,7 @@
 #include "part_ctrl.h"
 #include "enemies.h"
 #include "util.h"
+#include "audio.h"
 
 struct bg_scroll_layer {
     u8 unk_00[0x14];
@@ -41,8 +42,6 @@ extern struct level_layers *gLevelLayers;
 extern void *OperatorNew(s32 size);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 
 typedef void (*ctrl_bounce_fn)(void *self, s32 a, s32 b, s32 c);

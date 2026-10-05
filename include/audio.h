@@ -2,6 +2,7 @@
 #define __AUDIO_H__
 
 #include "core.h"
+#include "byte_arg.h"
 #include <gax.h>
 
 /* The music/SFX-trigger "context" object `PlaySfx` and its neighbors take
@@ -78,5 +79,46 @@ struct SfxTableEntry {
 };
 
 extern struct SfxTableEntry gSfxTable[99];
+
+/* The GAX2 music block (data/data.s, built by tools/gax_audio.py) and
+ * the song table pointing into it (src/data/song_table_16aa20.c). */
+extern const u8 gGaxMusicData[];
+extern const void *const gSongTable[19];
+
+/* src/iwram/iwram_data.c */
+/* VBlankHandler (src/system/irq.c) calls GAX_irq while this is set. */
+extern u8 gGaxIrqEnabled;
+/* PlaySfx's two-voice round robin. */
+extern u32 gSfxVoiceToggle;
+
+/* src/audio/audio.c */
+extern void UpdateAudio(struct AudioContext *self);
+extern void StartSong(struct AudioContext *self, u32 songIndex);
+extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
+extern void TickAmbientSfx(struct AudioContext *self);
+extern void StopSfx(struct AudioContext *self, u32 id);
+extern void ResetAmbientSfx(struct AudioContext *self);
+extern void StopAmbientSfx(struct AudioContext *self);
+extern void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset,
+                           s32 volumeMul, struct byte_arg force);
+extern u32 GetCurrentSong(struct AudioContext *self);
+extern s32 GetSfxVolume(struct AudioContext *self);
+extern s32 GetMusicVolume(struct AudioContext *self);
+extern void FadeOutMusic(struct AudioContext *self, u32 value);
+extern void FadeInMusic(struct AudioContext *self);
+extern void FadeOutMasterVolume(struct AudioContext *self, u32 value);
+extern void FadeInMasterVolume(struct AudioContext *self, u32 value);
+extern void sub_8001B14(struct AudioContext *self, u32 value);
+extern void SetMusicVolume(struct AudioContext *self, u32 value);
+extern void SetSfxVolume(struct AudioContext *self, u32 value);
+extern void PlaySong(struct AudioContext *self, u32 id);
+extern void ResumeSong(struct AudioContext *self);
+extern void PauseSong(struct AudioContext *self);
+extern void StopSong(struct AudioContext *self);
+extern void DestroyAudioContext(struct AudioContext *self, u32 flags);
+extern struct AudioContext *InitAudioContext(struct AudioContext *self);
+extern void DisableMusicVCountIrq(struct AudioContext *self);
+extern void EnableMusicVCountIrq(void);
+extern void MusicVCountIrqHandler(void);
 
 #endif /* __AUDIO_H__ */

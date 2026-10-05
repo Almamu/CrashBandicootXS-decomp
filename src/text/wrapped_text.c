@@ -1,5 +1,6 @@
 #include "core.h"
 #include "text.h"
+#include "system.h"
 
 /* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line.c) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s).
@@ -28,7 +29,6 @@ extern void ResetOamBuffer(void *arg0);
 extern void HideUnusedOamEntries(void *arg0);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, u8 *arg1, s32 arg2, void *arg3);
-extern void WaitForVBlank(void);
 extern void CommitOamBuffer(void *arg0);
 extern void *gOamBuffer;
 

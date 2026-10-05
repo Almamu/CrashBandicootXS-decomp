@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "audio.h"
 
 /* Tail continuation of GitHub issue #50's chunk
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
@@ -29,7 +30,6 @@ extern void *gAudioContext;
 
 extern s32 CollectWumpa(void *self);
 extern void SpawnPolarCollectedWumpa(s32 a, s32 b, s32 c);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void SetCellAnimSpeed(s32 arg0);
 
 /* Accumulator-drain/reward-dispenser for the `gPolarQueuedWumpa`

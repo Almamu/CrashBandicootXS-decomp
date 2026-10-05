@@ -3,6 +3,7 @@
 #include "graphics_package.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
+#include "audio.h"
 
 /* GitHub issue #63's final remaining raw span, right after the
  * three-kind `InitActorPart` cluster (`hovercraft_launcher.c`-`starfield.c`)
@@ -41,7 +42,6 @@ extern u8 gContinuePromptUkaUkaBg[];
 extern u8 gContinuePromptSmokeBg[];
 extern u8 gContinuePromptGlowBg[];
 extern struct AudioContext *gAudioContext;
-extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern struct continue_prompt *InitContinuePromptGraphics(struct continue_prompt *self);
 
 /* Allocates and initializes the continue prompt's three BG scratch buffers

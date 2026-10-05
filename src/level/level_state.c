@@ -5,6 +5,8 @@
 #include <agb_syscall.h>
 #include "hud.h"
 #include "frontend.h"
+#include "system.h"
+#include "audio.h"
 
 extern void *gHud;
 extern void *gAudioContext;
@@ -15,7 +17,6 @@ extern u8 IsInBonusRound(struct level_state *self);
 extern u8 IsInGemPath(struct level_state *self);
 extern u8 *GetCurrentLevelFlags(struct level_state *self);
 extern void SpawnCrateGem(s32 a, u16 b, u16 c, u16 d);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
 extern void UploadPaletteSlot(struct palette_cache *self, s32 index);
@@ -420,7 +421,6 @@ void ResetLives(struct level_state *self)
 }
 
 struct AudioContext;
-extern void StartSong(struct AudioContext *self, u32 songIndex);
 extern void PlayRoomMusic(void *self);
 
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
@@ -847,12 +847,10 @@ extern void ClearSpawnAtStart(struct level_state *self);
 extern void ClearInGemPath(struct level_state *self);
 extern void SetGemPathDone(struct level_state *self);
 extern void ResetCrateCount(struct level_state *self);
-extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;
-extern void StopSfx(struct AudioContext *self, u32 id);
 extern void *OperatorNew(s32 size);
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the

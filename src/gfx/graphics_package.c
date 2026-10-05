@@ -1,8 +1,8 @@
 #include "core.h"
 #include "graphics_package.h"
 #include "gba/gba.h"
+#include "system.h"
 
-extern void LoadTaggedAsset(void *asset, void *dest);
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 

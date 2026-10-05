@@ -1,5 +1,7 @@
 #include "core.h"
 #include "player_ctrl.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
  * (0x08016128-0x08017524): the player-input controller class of
@@ -87,8 +89,6 @@ extern struct level_anim *gPlayerCtrlModeAnimRows[];
 extern struct pctrl_anim gPlayerCtrlMotionRecords[];
 extern u8 gPlayerCtrlVtable[];
 
-extern u8 GetDpadDirection(void *arg);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
 extern void ResetSpriteFrameTimer(struct pctrl_target *t);

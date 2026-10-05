@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after the still-raw `DetonateNearbyPolarNitros` (see docs/matching.md) - same
@@ -14,7 +15,6 @@ extern u8 IsTouchingPlayer(void *self);
 extern u8 IsTouchingYeti(void *self);
 extern void AddBrokenCrate(void *self);
 extern void GivePolarPlayerMask(void *arg0);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void UpdatePolarCrate(void *selfArg);
 
 /* On proximity (`IsTouchingPlayer`), ties the lap counter and the lock-timer

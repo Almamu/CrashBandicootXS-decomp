@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "audio.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md.
@@ -7,7 +8,6 @@
  * documents. */
 
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 extern s32 gAirshipHp;
 extern s32 gAirshipHitFlashTimer;

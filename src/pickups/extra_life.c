@@ -3,6 +3,7 @@
 #include "hud.h"
 #include "pickups.h"
 #include "util.h"
+#include "audio.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -26,7 +27,6 @@ extern void *gEntityFlags;
 extern void *gUnknown_030012EC;
 extern void *gHud;
 
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *GetSpriteHitbox(void *dest, void *pt);
 extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 AddLife(void *self);
@@ -448,7 +448,6 @@ void SendExtraLifeToHud(struct orbit_part *selfArg)
 
 extern void *gSpriteRenderer;
 
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void DrawSprite(void *self, void *part);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *_call_via_r1(void *arg0, void *fn);

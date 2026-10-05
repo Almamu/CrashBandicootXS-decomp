@@ -1,9 +1,9 @@
 #include "core.h"
+#include "system.h"
 
 /* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_step.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
-extern void RemoveVBlankCallback(s32 arg0);
 extern s32 gBrightnessFadeTimer;
 extern s32 gBrightnessFadeStep;
 
@@ -57,9 +57,6 @@ void StepBrightnessFade(void)
         }
     }
 }
-
-extern s32 AddVBlankCallback(void *callback);
-extern void WaitForVBlank(void);
 
 /* Starts a screen-brightness fade: `flags` bit 0 selects the blend
  * target (`REG_BLDCNT`, `0xBF` vs `0xFF`), bit 7 selects

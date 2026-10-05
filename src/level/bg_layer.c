@@ -1,5 +1,6 @@
 #include "core.h"
 #include "bg_scroll_layer.h"
+#include "system.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -127,7 +128,6 @@ extern void SetBgLayerSource(struct bg_scroll_layer *self, struct bg_layer_desc 
 extern void DestroyBgLayerBase(struct bg_scroll_layer *self, u32 flags);
 extern void _call_via_r1(void *self, void *fn);
 extern void _call_via_r2(void *self, s32 arg, void *fn);
-extern void LoadTaggedAsset(void *asset, void *dest);
 extern u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile);
 extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
 extern void ResetTileSlotPool(struct tile_slot_pool *pool);

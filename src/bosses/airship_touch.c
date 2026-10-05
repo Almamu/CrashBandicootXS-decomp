@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "system.h"
 
 /* Same "boss-weapon self" object family as airship_fireball.c (see that
  * file's header comment and docs/matching/issue-58-0x08030334-actor.md),
@@ -25,7 +26,6 @@ extern s32 gAirshipState;
 extern s32 gAirshipX;
 extern s32 gAirshipY;
 extern s32 gAirshipZ;
-extern void *MemCopy32(void *dest, void *src, s32 size);
 
 struct box3 {
     s16 x, y, z;

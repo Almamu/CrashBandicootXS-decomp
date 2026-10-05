@@ -3,16 +3,14 @@
 #include "actor.h"
 #include "bitmap_font.h"
 #include "pause_menu.h"
+#include "system.h"
 
-extern s32 GetUiText(s32 arg0);
 extern s32 GetCurrentLevel(void *arg0);
 extern void *gLevelState;
 extern u8 gLevelTable[];
 extern s32 GetCompletionPercent(void *arg0);
 extern s32 FormatDecimal(s32 value, void *dest);
 extern void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out);
-extern s32 GetMusicVolume(void *arg0);
-extern s32 GetSfxVolume(void *arg0);
 extern struct AudioContext *gAudioContext;
 extern void InitPauseCrystalsPage(struct pause_menu *self);
 extern void InitPausePowersPage(struct pause_menu *self);

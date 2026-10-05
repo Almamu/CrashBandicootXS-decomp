@@ -4,6 +4,7 @@
 #include "pickups.h"
 #include "enemies.h"
 #include "frontend.h"
+#include "system.h"
 
 /*
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
@@ -23,7 +24,6 @@ extern void EffectCtrlHandleEvent();
 extern void nullsub_20();
 extern void DamageHovercraftCannonFlash();
 extern void DamageActor();
-extern void UpdateCtrl();
 extern void IsEntityNearCamera();
 extern void CheckEntityPlayerContact();
 extern void UpdateEntity();

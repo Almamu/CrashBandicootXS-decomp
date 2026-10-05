@@ -1,9 +1,10 @@
 #include "core.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
-#include "memory.h"
+#include "system.h"
 #include "actor.h"
 #include "text.h"
+#include "audio.h"
 
 /* `ShowPowerDialog` (GitHub issue #8) - the higher-level dialog spawner:
  * resets palette color 0 and `REG_DISPCNT`, re-initializes the popup-
@@ -47,9 +48,6 @@ struct sub_8006700_actor {
 };
 
 extern void *OperatorNew(s32 size);
-extern s32 GetUiText(s32 arg0);
-extern void WaitForVBlank(void);
-extern s32 mem_free_bytes(s32 flags);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
@@ -147,7 +145,6 @@ extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 GetBgSetupControl(void *buf);
-extern void PlaySong(void *self, s32 id);
 
 extern void ***gSpriteBankSet;
 extern u8 gMenuSkyBg[];

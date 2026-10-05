@@ -1,10 +1,8 @@
 #include "core.h"
-#include "memory.h"
+#include "system.h"
 #include "frontend.h"
 
 extern void *gLevelState;
-extern s32 gLanguage;
-extern s32 *gUiTextTables[];
 
 extern void *GetLevelState(void);
 extern void PlayBootCutscene(void);
@@ -44,5 +42,5 @@ s32 MainLoop(void)
  * `RunLanguageSelect`'s return) picks one. */
 s32 GetUiText(s32 index)
 {
-    return gUiTextTables[gLanguage][index];
+    return (s32)gUiTextTables[gLanguage][index];
 }

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "audio.h"
 
 /* Same large per-instance "self" object as polar_player_actions.c/polar_pickups.c
  * (`struct actor_self`: state, anim index/timer/done flag, state timer,
@@ -7,7 +8,6 @@
  * boss-weapon effect state machine - see
  * docs/matching/issue-58-0x08030334-actor.md and docs/status/actor.md. */
 
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 
 struct actor_timed {

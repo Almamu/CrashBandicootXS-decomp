@@ -4,6 +4,8 @@
 #include "box_part.h"
 #include "hud.h"
 #include "util.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -42,7 +44,6 @@ struct ab9c_obj
 };
 
 extern void GetSpriteAttackBox(struct aabb *dest, void *obj);
-extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
 extern void CollidePlayerWithCrates(void *manager, s32 arg1);
 extern void CollidePartsOfClass(void *manager, s32 arg1);
@@ -267,7 +268,6 @@ extern void *gEntitySpawner;
 extern void *gHud;
 extern u32 gRoomFrameCount;
 extern u8 *GetCurrentLevelFlags(void *game);
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void RequestRoomExit(void);
 extern void FreezeLevelClock(void *game, s32 n);
 extern void RequestBonusRound(void *game);

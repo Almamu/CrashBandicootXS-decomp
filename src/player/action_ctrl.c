@@ -1,5 +1,6 @@
 #include "core.h"
 #include "action_obj.h"
+#include "audio.h"
 
 /* Continuation of action_ctrl_moves.c (issue #18's chunk, the last one) -
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
@@ -63,8 +64,6 @@ void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
 extern void *gAudioContext;
 extern void *gPlayer;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern void StopSfx(void *self, u32 id);
 extern u8 SetCtrlTargetAnim(void *unused, void *partArg, s32 newVal);
 
 /* If the player's `+0x100` flag is set: picks a replacement `mode` for

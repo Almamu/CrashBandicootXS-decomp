@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment, docs/matching/issue-56-0x0802f0dc-actor.md and
@@ -123,7 +124,6 @@ extern s32 sub_802A540(s32 idx);
 extern s32 sub_802A558(s32 idx);
 extern s32 sub_802A570(s32 idx);
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 /* Defined as a no-argument counter in jetpack_player.c, but the ROM passes
  * the player object here (a C++ method ignoring its `this`). */

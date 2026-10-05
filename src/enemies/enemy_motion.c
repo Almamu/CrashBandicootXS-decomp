@@ -1,6 +1,7 @@
 #include "core.h"
 #include "part_ctrl.h"
 #include "enemies.h"
+#include "audio.h"
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyHomingX`/
@@ -112,7 +113,6 @@ asm(".align 2, 0");
  *
  * Real C since the issue #9-#11 NAKED retry (see below). */
 
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 
 /* Real C (issue #9-#11 NAKED retry): the only gap in the old draft was

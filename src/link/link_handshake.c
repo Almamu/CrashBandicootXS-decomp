@@ -1,5 +1,5 @@
 #include "core.h"
-#include "irq.h"
+#include "system.h"
 #include "link.h"
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
@@ -7,9 +7,6 @@
  * `gLinkSession` (still uncharacterized beyond the offsets touched
  * here and in src/save/save_transfer.c/save_menu_draw.c); 4
  * per-player 0xc8-byte sub-records live at session+playerIndex*0xc8. */
-
-extern void IrqClearHandler(s32 interruptIndex);
-extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
 
 /* Fills `self`'s first 8 bytes with a fixed 0xEC pattern (byte 0 masked
  * to its low nibble, byte 1 zeroed), then hashes bytes 1-5 with a

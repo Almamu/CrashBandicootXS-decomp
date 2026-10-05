@@ -3,9 +3,9 @@
 #include "bitmap_font.h"
 #include "pause_menu.h"
 #include "text.h"
+#include "system.h"
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
-extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Shows (`DrawSpriteWithOffset(icon, 0, 0)`) whichever of `icons8c[0..3]` has a

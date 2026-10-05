@@ -1,9 +1,9 @@
 #include "core.h"
 #include "gba/io_reg.h"
 #include "save.h"
+#include "audio.h"
 
 extern void *gAudioContext;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* Confirm/cancel handler for the composite pause/options screen: on
  * either flags bit 0 or bit 3, plays the standard "confirm" cue and

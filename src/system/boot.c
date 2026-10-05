@@ -1,5 +1,6 @@
 #include "core.h"
 #include <agb_syscall.h>
+#include "system.h"
 
 /* Sits right after the permanent hand-written `start`/`init_vector`
  * boot stub in asm/crt0.s (never decompiled - it's the CPU-mode/stack

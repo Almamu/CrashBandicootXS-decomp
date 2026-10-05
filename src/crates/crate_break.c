@@ -4,6 +4,7 @@
 #include "hud.h"
 #include "pickups.h"
 #include "util.h"
+#include "audio.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -994,7 +995,6 @@ tail:
  * BreakCrateInStack in case 3. A one-byte struct argument goes in QImode, so
  * the spilled union's low byte is reloaded with `mov r5, sp; ldrb` in
  * argument order, as in the ROM. */
-extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void *gAudioContext;
 extern s32 gCrateHitResponse[][7];
 extern void ActivateNitroSwitchCrate(struct crate *self);
@@ -1305,7 +1305,6 @@ asm(".align 2, 0");
 
 extern void LinkCrateToActiveBucket(struct crate_list *list, struct crate *obj);
 extern struct crate_list *gCrateList;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gEntitySpawner;
 extern u8 gCrateKindCounted[];
 extern u8 gCrateKindExplosive[];

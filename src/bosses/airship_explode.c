@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "util.h"
+#include "audio.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_states.c - see
@@ -46,7 +47,6 @@ extern s32 gAirshipState;
 extern struct actor_self *gAirship;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void *gAudioContext;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern u8 *gLevelState;
 extern s32 gAirshipCheckpointCount;
 extern void *gActorList;

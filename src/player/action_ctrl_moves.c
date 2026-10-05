@@ -2,6 +2,7 @@
 #include "action_obj.h"
 #include "vtable.h"
 #include "actor.h"
+#include "audio.h"
 
 /* Continuation of action_ctrl_hang.c (issue #18's chunk) - covers
  * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
@@ -228,7 +229,6 @@ asm(".align 2, 0");
 
 extern void *gAudioContext;
 extern void *gPlayer;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern void ActionCtrlReleaseHang(void *self);
 extern void RequestRoomExit(void);
 

@@ -2,6 +2,8 @@
 #include "action_obj.h"
 #include "actor.h"
 #include "vtable.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #17, ROM 0x08014674-0x08014F8C, formerly
  * asm/code_3_2_17_14674.s (details in
@@ -17,8 +19,6 @@ extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gInput;
 extern u8 gEmptySpritePoint[];
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 GetDpadDirection(void *pad);
 extern void StartActionCtrlSpin(struct act *self);
 extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
@@ -624,7 +624,6 @@ asm(".align 2, 0");
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 
 extern void *gCollidableList;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);

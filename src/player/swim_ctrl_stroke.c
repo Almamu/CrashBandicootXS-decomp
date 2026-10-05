@@ -1,6 +1,8 @@
 #include "core.h"
 #include "player_ctrl.h"
 #include "util.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
@@ -31,8 +33,6 @@ extern void *gAudioContext;
 extern void *gInput;
 extern const struct speed_table gStaticData_0816C090;
 
-extern u8 GetDpadDirection(void *arg);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void ResetSpriteFrameTimer(struct pctrl_target *t);
 extern void ResetSpriteFrameIndex(struct pctrl_target *t);
 extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);

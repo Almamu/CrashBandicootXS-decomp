@@ -4,6 +4,7 @@
 #include "level_state.h"
 #include <agb_syscall.h>
 #include "hud.h"
+#include "system.h"
 
 extern void *gPlayer;
 extern void *gEntityFlags;
@@ -13,7 +14,6 @@ extern struct palette_cache *gPaletteCache;
 extern s32 GetCrateCount(void *self);
 extern void ResetDeaths(void *self);
 extern void ClearSpawnAtStart(void *self);
-extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void SetBonusRoundDone(void *self);
 extern void ClearInBonusRound(void *self);
 extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);

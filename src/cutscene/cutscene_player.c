@@ -3,6 +3,7 @@
 #include "text.h"
 #include "cutscene.h"
 #include <libgcc.h>
+#include "system.h"
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -127,8 +128,6 @@ extern void *gOamBuffer;
 extern void ResetOamBuffer(void *oam);
 extern void HideUnusedOamEntries(void *oam);
 extern void CommitOamBuffer(void *oam);
-extern void WaitForVBlank(void);
-extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 
 void RunCutscenePlayer(struct cutscene_player *self)
 {
