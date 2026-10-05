@@ -1,4 +1,5 @@
 #include "core.h"
+#include "bosses.h"
 
 /*
  * ROM 0x0816C2D8-0x0816C418. Linked in ROM order between data/data.s

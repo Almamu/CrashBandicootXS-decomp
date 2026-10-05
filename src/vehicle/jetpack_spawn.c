@@ -1,8 +1,12 @@
 #include "core.h"
 #include "byte_arg.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "system.h"
 #include "audio.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
  * (`yeti.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
@@ -43,91 +47,22 @@ struct spawn_rec {
     s32 z;          // 0x0C
 };
 
-/* `actor_self` plus the hit-point word every class built here keeps at
- * +0x54. */
-struct actor_hp {
-    struct actor_self base;
-    s32 hp;         // 0x54
-};
-
-/* The camera-ish object `DrawJetpackPlayer` reads through `self+0x30`. */
-struct cam_ref {
-    u8 unk_00[0x10];
-    s32 depth;      // 0x10 - the depth at which sprites draw unscaled
-};
-
 struct keys_pair {
     u16 held;
     u16 pressed;
 };
 
-extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 extern u8 IsCrystalSaved(void *self);
 extern void LoseLife(void *self);
-extern u8 IsActorMaskAssistDue(void);
-extern s32 GetCellAnimDistance(void);
-extern void SetCellAnimSpeed(s32 a);
-extern void UpdateActorBgScroll(s32 x, s32 y);
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
-extern u8 IsSpawnCollected(void *spawn);
-extern void AllocJetpackPlayerTiles(void *self);
-extern void DispenseJetpackWumpa(void *self);
-extern void AnimateJetpackPlayerPalette(void *self);
-extern void SpawnAirship(s32 k, s32 x, s32 y, s32 z);
-extern void SpawnHovercraft(s32 k, s32 x, s32 y, s32 z);
-extern s32 CreateJetpackPlane(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z, void *spawn);
-extern s32 CreateJetpackBomber(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
-extern s32 CreateJetpackHealthCrate(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
-extern s32 CreateJetpackQuestionCrate(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z, void *spawn);
-extern s32 CreateJetpackTimeCrate(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
-extern s32 CreateJetpackParachuteNitro(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
-extern s32 CreateJetpackRocket(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
-extern s32 CreateJetpackRing(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
-extern s32 CreateJetpackBalloon(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d);
-extern s32 CreateJetpackCollectedWumpa(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern s32 CreateHovercraftCannonFlash(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern void *CreateHovercraftSideGun(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, struct byte_arg d);
-extern s32 CreateHovercraftLauncher(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern s32 CreateHovercraftCannon(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern void CreateHovercraftFireball(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern void CreateAirshipFireball(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern void CreateJetpackCannonball(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
-extern void CreateJetpackShot(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
 
 extern struct actor_self *gActorList;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct keys_pair gKeys;
 extern void *gAudioContext;
 extern u8 *gLevelState;
-extern void *gYeti;
-extern struct kind_entry *gJetpackAnimTable;
-extern s32 gJetpackBomberSfxTimer;
-extern s32 gJetpackBomberCount;
-extern s32 gJetpackPlayerMaxHp;
-extern u8 gJetpackPauseLocked;
-extern s32 gJetpackRingLastFrame;
-extern s32 gJetpackRingChain;
-extern s32 gJetpackFlashTimer;
-extern s32 gJetpackWumpaDispenseTimer;
-extern s32 gJetpackQueuedWumpa;
-extern s32 gJetpackShotCooldown;
-extern u8 gJetpackPlayerHalted;
-extern u8 gJetpackFadeStarted;
 extern u8 gJetpackPlayerInactive;
-extern u8 gJetpackInputEnabled;
-extern s32 gJetpackPlayerVelY;
-extern s32 gJetpackPlayerVelX;
-extern s32 gJetpackPlayerTileBuffer;
-extern u8 *gJetpackPlayerLastFrame;
-extern u8 *gJetpackPlayerTiles[2];
-extern struct actor_pmf gJetpackPlayerStateFuncs[];
-extern u8 gJetpackCheckpointTextVtable[];
-extern u8 gJetpackExplosionVtable[];
-extern u8 gJetpackPlayerVtable[];
 
 /* `operator new`: the ROM materializes the size before the heap flags. */
 static inline void *AllocActor(u32 size)
@@ -178,13 +113,11 @@ void YetiStateStop(void)
     }
 }
 
-s32 CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
-
 /* Spawns the object a level spawn record describes: its kind comes from
  * byte 0, byte 1 in the alternate game mode (kind 0x17 there becomes
  * 0x14) or byte 2 when `alt` is set. Kind 0x1d only spawns while
  * `IsCrystalSaved` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
-s32 SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz)
+void *SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz)
 {
     u8 kind = rec->kind[0];
     s32 x, y, z;
@@ -216,7 +149,7 @@ s32 SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz)
 /* The spawn dispatcher: offsets the position by the kind's record and
  * constructs the kind's object. Kind 23 turns into kind 20's object
  * when `IsSpawnCollected` says so; kind 31 spawns a kind-43 companion first. */
-s32 CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
+void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
 {
     x += gJetpackAnimTable[kind].dx;
     y += gJetpackAnimTable[kind].dy;
@@ -229,17 +162,17 @@ s32 CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 7:
     case 8:
     case 9:
-        return CreateJetpackBomber(AllocActor(0x64), &gJetpackAnimTable[kind], x, y, z);
+        return CreateJetpackBomber(AllocActor(0x64), (u8 *)&gJetpackAnimTable[kind], x, y, z);
     case 19:
         return CreateJetpackHealthCrate(AllocActor(0x70), &gJetpackAnimTable[kind], x, y, z);
     case 23:
-        if (IsSpawnCollected(spawn))
-            return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[20], x, y, z, spawn);
+        if ((u8)IsSpawnCollected(spawn))
+            return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[20], x, y, z, (s32)spawn);
         /* fallthrough */
     case 20:
     case 21:
     case 22:
-        return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[kind], x, y, z, spawn);
+        return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[kind], x, y, z, (s32)spawn);
     case 24:
     case 25:
     case 26:
@@ -286,7 +219,7 @@ void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c)
 }
 
 /* `CreateJetpackBalloon`-class constructor for any kind. */
-s32 SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
+void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
 {
     return CreateJetpackBalloon(AllocActor(0x64), &gJetpackAnimTable[kind], a, b, c, d);
 }
@@ -297,13 +230,20 @@ void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c)
     CreateHovercraftCannonFlash(AllocActor(0x5c), &gJetpackAnimTable[14], a, b, c);
 }
 
+/* codegen: CreateHovercraftSideGun takes a `u8 eByte`, but this caller was
+ * matched passing a one-byte struct: through the u8 prototype the stack
+ * argument is stored with `str` in place of `add r2, sp, #4; strb`.
+ * docs/headers_plan.md */
+extern void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d, struct byte_arg e)
+    asm("CreateHovercraftSideGun");
+
 /* Kind-13 constructor; the last argument is passed as a single byte. */
 void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 d)
 {
     struct byte_arg arg;
 
     arg.v = d;
-    CreateHovercraftSideGun(AllocActor(0x70), &gJetpackAnimTable[13], a, b, c, arg);
+    CreateHovercraftSideGun_b(AllocActor(0x70), &gJetpackAnimTable[13], a, b, c, arg);
 }
 
 /* Kind-12 constructor. */
@@ -344,8 +284,6 @@ void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e)
 {
     CreateJetpackShot(AllocActor(0x60), &gJetpackAnimTable[2], a, b, c, d, e);
 }
-
-struct actor_hp *InitJetpackPlayer(struct actor_hp *self, struct kind_entry *rec, s32 z);
 
 /* Installs the level's per-kind table and builds the player vehicle
  * from its first record, making it the (self-linked) player object. */
@@ -391,7 +329,7 @@ struct actor_hp *InitJetpackPlayer(struct actor_hp *self, struct kind_entry *rec
     gJetpackRingLastFrame = -0xbe;
     gJetpackRingChain = 0;
     gJetpackPauseLocked = 0;
-    if (IsActorMaskAssistDue())
+    if ((u8)IsActorMaskAssistDue())
         self->hp = 0x78;
     gJetpackPlayerMaxHp = self->hp;
     gJetpackBomberCount = 0;
@@ -443,7 +381,7 @@ void UpdateJetpackPlayer(struct actor_hp *self)
     self->base.stateTime++;
     self->base.animTime += *(s16 *)&self->base.animTimer;
     self->base.animDone = 0;
-    if (GetAnimFrameBaseOffset(self) >= self->base.anims[self->base.animIndex].loopThreshold) {
+    if (GetAnimFrameBaseOffset((struct actor_self *)self) >= self->base.anims[self->base.animIndex].loopThreshold) {
         self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
                                 - self->base.anims[self->base.animIndex].loopBase) << 8;
         self->base.animDone = 1;
@@ -497,7 +435,7 @@ void DrawJetpackPlayer(struct actor_hp *self)
     halfW = w * 4;
     h = frame[1];
     halfH = h * 4;
-    if (self->base.depth == (*(struct cam_ref **)&self->base.record)->depth) {
+    if (self->base.depth == self->base.record->baseDepth) {
         scale = 0x100;
         sy = (self->base.y + GetActorBgCenterY()) >> 8;
         sx = (self->base.x + GetActorBgCenterX()) >> 8;
@@ -505,7 +443,7 @@ void DrawJetpackPlayer(struct actor_hp *self)
         s32 depth = self->base.depth;
         s32 f;
 
-        scale = (depth << 8) / (*(struct cam_ref **)&self->base.record)->depth;
+        scale = (depth << 8) / self->base.record->baseDepth;
         f = 0x1c00000 / depth;
         sy = (((self->base.y * f) >> 12) + GetActorBgCenterY()) >> 8;
         sx = (((self->base.x * f) >> 12) + GetActorBgCenterX()) >> 8;

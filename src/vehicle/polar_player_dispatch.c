@@ -1,8 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
+#include "vehicle.h"
 
-
-extern struct actor_pmf gPolarPlayerStateFuncs[];
 
 /* Per-state member-pointer dispatch, `(this->*gPolarPlayerStateFuncs
  * [this->state])()`. */

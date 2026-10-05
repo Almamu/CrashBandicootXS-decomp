@@ -17,11 +17,10 @@
  * ahead of that so the two can be matched up directly once it is.
  */
 
-/* A box in the actors' 16-bit world units: position then size. The code
- * reads it through several local views (yeti_update.c's `struct box16`,
- * airship_touch.c's `struct box3`, polar_objects.c's `struct box12`,
- * ...). The anim_table_record's box_14 and several small src/data tables
- * are this. */
+/* A box in the actors' 16-bit world units: position then size. The
+ * anim_table_record's box_14, `actor_self.box` and several small src/data
+ * tables are this. A fixed box is copied into an actor as three words
+ * (`struct vec3_words`, vehicle.h) for the ROM's `ldm`/`stm`. */
 struct anim_box {
     s16 x, y, z;
     s16 w, h, d;

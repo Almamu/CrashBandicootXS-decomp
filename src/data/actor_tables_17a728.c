@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_anim.h"
+#include "vehicle.h"
 
 /*
  * ROM 0x0817A728-0x0817A840. Linked in ROM order between data/data.s

@@ -2,6 +2,7 @@
 #include "gba/io_reg.h"
 #include "bitmap_font.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 #include "text.h"
@@ -10,6 +11,7 @@
 #include <libgcc.h>
 #include "system.h"
 #include "audio.h"
+#include "actor.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
@@ -56,17 +58,8 @@ extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void OperatorDelete(void *self);
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
-
-/* The camera-ish object an actor part reads through `self+0x30`
- * (same shape as jetpack_spawn.c's). */
-struct cam_ref {
-    u8 unk_00[0x10];
-    s32 depth;      // 0x10 - the depth at which sprites draw unscaled
-};
 
 /* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits,
  * viewed as its bitfields (field stores give the ROM's byte-wide
@@ -476,7 +469,7 @@ struct actor_self *InitLogoActor(struct actor_self *self, const void *anim)
 {
     u8 *frame;
 
-    InitActorPart(self, (s32)anim, 0, 0, 0x100);
+    InitActorPart(self, (void *)anim, 0, 0, 0x100);
     self->vtable = (struct actor_vtable *)gLogoActorVtable;
     frame = CurFrame(self);
     gLogoActorTiles[0] = AllocVramTileBlock(frame[1] * frame[0] * 32);
@@ -593,7 +586,7 @@ void DrawLogoActor(struct actor_self *self)
         h = frame[1];
         halfH = h * 4;
         depth = self->z;
-        scale = (depth << 8) / (*(struct cam_ref **)&self->record)->depth;
+        scale = (depth << 8) / self->record->baseDepth;
         f = 0x100000 / depth;
         sy = (((self->y * f) >> 12) + 0x5000) >> 8;
         sx = (((self->x * f) >> 12) + 0x7800) >> 8;

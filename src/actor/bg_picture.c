@@ -1,5 +1,8 @@
 #include "core.h"
 #include "actor_anim.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
@@ -41,7 +44,6 @@
  *    itself declared `inline`.
  *  - two `asm("" : : "r"(cols))` before the call: `cols` and row+1 tie
  *    for r8/sl otherwise. */
-extern s32 GetCellAnimFreeTile(void);
 
 static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
 {

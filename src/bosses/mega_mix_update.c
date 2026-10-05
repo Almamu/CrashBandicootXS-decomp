@@ -1,6 +1,7 @@
 #include "core.h"
 #include "aabb.h"
 #include "crates.h"
+#include "bosses.h"
 
 /* UpdateMegaMix: the update of Mega-Mix, the boss that entity type 0x49
  * spawns (SpawnMegaMix, sprite bank 30). Only room 37 places one, at its
@@ -86,24 +87,17 @@
  * comes from passing the box by value. See
  * docs/matching/issue-22-0x08018008-hopper.md. */
 
-struct ab_method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
 struct ab_vtable
 {
     u8 unk_00[0x20];
-    struct ab_method m20; // 0x20
-    struct ab_method m28; // 0x28
+    struct actor_method m20; // 0x20
+    struct actor_method m28; // 0x28
     u8 unk_30[0x18];
-    struct ab_method m48; // 0x48
-    struct ab_method m50; // 0x50
-    struct ab_method m58; // 0x58
+    struct actor_method m48; // 0x48
+    struct actor_method m50; // 0x50
+    struct actor_method m58; // 0x58
     u8 unk_60[8];
-    struct ab_method m68; // 0x68
+    struct actor_method m68; // 0x68
 };
 
 struct ab_self
@@ -167,27 +161,27 @@ typedef s32 (*ab_probe_s)(void *self);
 #define VCALL1(obj, m, a)                                                      \
     do                                                                         \
     {                                                                          \
-        struct ab_method *_m = &(obj)->vt->m;                                  \
+        struct actor_method *_m = &(obj)->vt->m;                                  \
         ((ab_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));              \
     } while (0)
 #define VCALL2(obj, m, a, b)                                                   \
     do                                                                         \
     {                                                                          \
-        struct ab_method *_m = &(obj)->vt->m;                                  \
+        struct actor_method *_m = &(obj)->vt->m;                                  \
         ((ab_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
 
 /* virtual queries on `part`'s own method table (+0x18) */
 static inline u8 Probe28(struct ab_part *p)
 {
-    struct ab_method *m = &p->vt->m28;
+    struct actor_method *m = &p->vt->m28;
 
     return ((ab_probe)m->fn)((u8 *)p + m->thisOffset);
 }
 
 static inline s32 Probe48(struct ab_part *p)
 {
-    struct ab_method *m = &p->vt->m48;
+    struct actor_method *m = &p->vt->m48;
 
     return ((ab_probe_s)m->fn)((u8 *)p + m->thisOffset);
 }
@@ -217,7 +211,6 @@ extern u32 gRoomFrameCount;
 extern struct ab_player *gPlayer;
 extern void *gCollidableList;
 extern struct ab_list *gCrateList;
-extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern struct aabb GetSpriteHitbox(void *obj);
 extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
 
@@ -367,7 +360,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
             if (Abs(pl->x - other->x) > 0x27FF || Abs(pl->y - other->y) > 0x31FF)
                 goto test;
             {
-                struct ab_method *m = &pl->vt->m68;
+                struct actor_method *m = &pl->vt->m68;
                 void *t = (u8 *)pl + m->thisOffset;
 
                 ((ab_fn3)m->fn)(t, 0, 1, 0);

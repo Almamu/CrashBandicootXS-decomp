@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gfx_part.h"
+#include "bosses.h"
 
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six of the "trigger effect type N" spawners
@@ -38,7 +39,6 @@ extern void SetSpriteAnimDone(struct gfx_part *part, s32 val);
 extern s32 GetSpriteAnimPaletteSlot(struct gfx_part *part);
 extern void AddToPartList(void *manager, struct gfx_part *part);
 extern struct gfx_part *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
  * constants into callee-saved registers before the CreateSpriteObj call and

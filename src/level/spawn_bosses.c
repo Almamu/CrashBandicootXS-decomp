@@ -1,5 +1,6 @@
 #include "core.h"
 #include "text_popup.h"
+#include "bosses.h"
 
 /* Text-popup variants with their own header constructors, ROM
  * 0x08021280-0x08021668. Built with old_agbcc; see include/text_popup.h. */
@@ -7,10 +8,7 @@
 extern void *gLevelState;
 extern void *gUnknown_030012F4;
 
-extern struct part_ctrl *CreateDingodile(void *block, u16 arg1, u16 arg2);
 extern void SetLevelBoss(void *self, struct part_ctrl *hdr);
-extern struct part_ctrl *CreateTiny(void);
-extern struct part_ctrl *CreateCortexBoss(void);
 
 struct level_guard
 {
@@ -109,7 +107,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
-    hdr = CreateDingodile(OperatorNew(0x30), arg1, arg2);
+    hdr = (struct part_ctrl *)CreateDingodile(OperatorNew(0x30), arg1, arg2);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetLevelBoss(gLevelState, hdr);
@@ -127,8 +125,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     part->anim = POPUP_ANIM(0x294);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x4c);
-    hdr = CreateTiny();
+    hdr = CreateTiny(OperatorNew(0x4c));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     rec = LEVEL_RECORD(arg3);
@@ -155,8 +152,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
-    OperatorNew(0x24);
-    hdr = CreateCortexBoss();
+    hdr = (struct part_ctrl *)CreateCortexBoss(OperatorNew(0x24));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     rec = LEVEL_RECORD(arg3);

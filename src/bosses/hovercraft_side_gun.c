@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 #include "audio.h"
+#include "actor.h"
+#include "bosses.h"
 
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
@@ -68,10 +70,6 @@
  *   which cached zero" register-pinning treatment, each in its own
  *   narrowly-scoped block so the pin doesn't widen past where the ROM
  *   actually needs that register reserved. */
-extern void *GetHovercraftLevel(void);
-extern void *InitActorPart(void *selfArg, void *part, s32 b, s32 c, s32 d);
-extern u8 gHovercraftSideGunVtable[];
-extern struct orbit_table *GetHovercraftAttack(void);
 
 void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
 {
@@ -143,7 +141,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
         u8 *p2c = self + 0x2c;
         zero2 = 0;
         *p2c = (u8)zero2;
-        *(s32 *)(self + 0x68) = *(s32 *)((u8 *)GetHovercraftAttack() + 4);
+        *(s32 *)(self + 0x68) = GetHovercraftAttack()->timing[0].delay;
         *(s32 *)(self + 0x6c) = zero2;
     }
 
@@ -165,8 +163,6 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
  * `UpdateHovercraftSideGun`'s position-plus-effect-spawn step. See
  * docs/matching/issue-63-0x08033ef4-actor.md. */
 
-extern void StartHovercraftHitFlash(void);
-extern void LoseHovercraftPart(void);
 extern void *gAudioContext;
 
 /* The second object kind (vtable gHovercraftSideGunVtable). */
@@ -181,14 +177,6 @@ struct actor_orbiter {
     s32 offZ;           // 0x64
     s32 orbitTimer;     // 0x68 - frames until the next effect spawn
     s32 lap;            // 0x6C
-};
-
-/* The singleton table GetHovercraftAttack returns. */
-struct orbit_table {
-    s32 unk_00;
-    s32 period;         // 0x04 - orbitTimer reload within a lap cycle
-    s32 laps;           // 0x08 - lap count that ends a cycle
-    s32 cyclePeriod;    // 0x0C - orbitTimer reload once a cycle ends
 };
 
 /* Applies `dmg` damage to `self+0x54` and once it drops to zero (or
@@ -243,12 +231,6 @@ void DamageHovercraftSideGun(void *selfArg, s32 dmg)
     }
 }
 
-extern void UpdateActor(void *self);
-extern s32 GetHovercraftX(void);
-extern s32 GetHovercraftY(void);
-extern s32 GetHovercraftZ(void);
-extern void SpawnHovercraftFireball(s32 x, s32 y);
-
 /* Per-frame position sync (`+0x1c`/`+0x20`/`+0x24` from the singleton's
  * position plus `self`'s own `+0x5c`/`+0x60`/`+0x64` offsets), calling
  * `UpdateActor(self)` first for the frame's regular update. While `self`
@@ -279,15 +261,15 @@ void UpdateHovercraftSideGun(void *selfArg)
         if (origCounter == 0) {
             register s32 lap asm("r4");
 
-            SpawnHovercraftFireball(self->base.x, self->base.y);
+            SpawnHovercraftFireball(self->base.x, self->base.y, self->base.z);
             lap = self->lap + 1;
             self->lap = lap;
 
-            if (lap == GetHovercraftAttack()->laps) {
+            if (lap == GetHovercraftAttack()->timing[0].burst) {
                 self->lap = origCounter;
-                result = GetHovercraftAttack()->cyclePeriod;
+                result = GetHovercraftAttack()->timing[0].burstDelay;
             } else {
-                result = GetHovercraftAttack()->period;
+                result = GetHovercraftAttack()->timing[0].delay;
             }
         } else {
             result = origCounter - 1;
@@ -320,15 +302,15 @@ void sub_80341F8(void *selfArg)
         if (origCounter == 0) {
             register s32 lap asm("r4");
 
-            SpawnHovercraftFireball(self->base.x, self->base.y);
+            SpawnHovercraftFireball(self->base.x, self->base.y, self->base.z);
             lap = self->lap + 1;
             self->lap = lap;
 
-            if (lap == GetHovercraftAttack()->laps) {
+            if (lap == GetHovercraftAttack()->timing[0].burst) {
                 self->lap = origCounter;
-                result = GetHovercraftAttack()->cyclePeriod;
+                result = GetHovercraftAttack()->timing[0].burstDelay;
             } else {
-                result = GetHovercraftAttack()->period;
+                result = GetHovercraftAttack()->timing[0].delay;
             }
         } else {
             result = origCounter - 1;

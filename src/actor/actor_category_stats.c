@@ -1,5 +1,8 @@
 #include "core.h"
 #include "actor_anim.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* Counts how many of category `categoryIdx`'s sub-effect-table entries
  * (see `struct sub_effect_record`/`category_descriptor.spawnTable`
@@ -77,13 +80,6 @@ s32 CountCategoryCrates(s32 categoryIdx)
     return count;
 }
 
-/* A frame-tick counter, incremented every category-load-loop tick
- * (see InitActorCategory, still raw) and snapshotted into
- * gActorMissedNitros at the top of SelectActorCategory (also still raw)
- * for the "how long has this sub-effect run" bookkeeping the
- * gActorSpawnTable spawnTable accessors use. */
-extern s32 gActorMissedNitros;
-extern s32 gActorCheckpoint;
 
 void AddActorMissedNitro(void)
 {

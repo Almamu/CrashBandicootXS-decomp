@@ -3,6 +3,9 @@
 #include <libgcc.h>
 #include "system.h"
 #include "audio.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* Start of the boss-weapon/singleton-object cluster's next raw range
  * (issue #58/#62's shared "self" object family continues here - state
@@ -13,20 +16,7 @@
  * docs/matching/issue-62-0x08033804-actor.md and this range's own
  * write-up in docs/matching/. */
 
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 GetAnimFrameBaseOffset(void *self);
-extern void UpdateActorDepth(void *self);
-extern void ClearJetpackCrateBalloon(void *obj);
-
-extern s32 gAirshipState;
-extern s32 gAirshipHp;
-extern void *gAirshipAttack;
-extern void *gAirship;
-extern s32 gActorNearClipDepth;
-extern void RunJetpackBalloonState(struct actor_self *self);
 extern void *gAudioContext;
-extern u8 gJetpackBalloonVtable[];
-extern struct actor_pmf gJetpackBalloonStateFuncs[];
 
 /* The gJetpackBalloonVtable class built by CreateJetpackBalloon. */
 struct jetpack_balloon {
@@ -56,7 +46,7 @@ s32 GetAirshipHpPercent(void)
     }
 
     countdown = gAirshipHp;
-    result = __divsi3(countdown * 100, *(s32 *)gAirshipAttack);
+    result = __divsi3(countdown * 100, gAirshipAttack->unk_00);
     if (result == 0 && countdown > 0) {
         result = 1;
     }
@@ -90,7 +80,7 @@ void AirshipStateInactive(void)
  * the ROM's branch layout shares it between both paths. */
 void UpdateJetpackBalloon(struct jetpack_balloon *self)
 {
-    UpdateActorDepth(self);
+    UpdateActorDepth((struct actor_self *)self);
     if (self->base.depth < gActorNearClipDepth - 0x200) {
         if (self->pending != NULL) {
             ClearJetpackCrateBalloon(self->pending);
@@ -194,15 +184,15 @@ void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
  * stack-passed) into `self+0x58`, and clears `self+0x5c` (byte). Same
  * shape as the already-matched `CreateAirshipFireball` (airship_fireball.c), except
  * with a 6th argument instead of a second stash of `c`. */
-void *CreateJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
+void *CreateJetpackBalloon(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e)
 {
     u8 *self = selfArg;
     register s32 eReg asm("r6") = e;
     register s32 health asm("r5") = 2;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gJetpackBalloonVtable;
+    *(void **)(self + 0x50) = (void *)gJetpackBalloonVtable;
     *(s32 *)(self + 0x58) = eReg;
     self[0x5c] = 0;
 
@@ -241,7 +231,7 @@ void JetpackBalloonStateFloatAway(struct jetpack_balloon *self)
     self->base.stateTime++;
     self->base.animTime += *(s16 *)&self->base.animTimer;
     self->base.animDone = 0;
-    base = GetAnimFrameBaseOffset(self);
+    base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
         self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
                                 - self->base.anims[self->base.animIndex].loopBase) << 8;

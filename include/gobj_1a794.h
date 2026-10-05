@@ -6,6 +6,7 @@
 #include "util.h"
 #include "crates.h"
 #include "player.h"
+#include "bosses.h"
 
 /* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
@@ -233,15 +234,12 @@ extern u8 *gEntityFlags;
 extern u8 ***gSpriteBankSet;
 extern u32 gRoomFrameCount;
 extern struct vec_pair gDingodileMotionEntries[];
-extern struct vec3 gDingodileMotionRecords[];
 extern struct vec3 gPlatformMoverMotionRecords[];
 extern u8 gPlatformMoverMotionSet[];
-extern u8 gDingodileShieldVtable[];
 extern u8 gDingodileVtable[];
 extern u8 gPlatformVtable[];
 extern u8 gPlatformMoverVtable[];
 
-extern void SpawnDingodileShieldOrRocket(void *self, s32 a, u16 b, u16 c, s32 d);
 extern void *OperatorNew(u32 size);
 extern void InitMovingSprite(void *self);
 extern void DestroyMovingSprite(void *self, s32 flags);
@@ -252,7 +250,6 @@ extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
 extern s32 GetBossIndex(void *arg);
 extern u8 IsBonusRoundDone(void *arg);
 extern u8 IsGemPathDone(void *arg);
-extern struct mover *CreateCortexBossPlatformMover(void *mem);
 extern void AddToPartList(void *manager, void *value);
 extern void ResetSpriteFrameTimer(void *self);
 extern void ResetSpriteFrameIndex(void *self);

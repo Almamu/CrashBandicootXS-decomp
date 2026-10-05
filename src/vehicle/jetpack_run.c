@@ -2,6 +2,8 @@
 #include "actor_self.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Same large per-instance "self" object family as ctrl.c/
  * action_ctrl_states.c/polar_player_actions.c/airship_fireball.c (state at `self+0x28`,
@@ -14,27 +16,11 @@
  * `gHovercraft` one. See docs/matching/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
 
-extern void SetCellAnimSpeed(s32 arg0);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
-extern s32 GetActorCategoryFrameCount(void);
 extern s32 AddLife(void *self);
 extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 gJetpackPlayerHalted;
 extern u8 gJetpackPlayerInactive;
-extern u8 gJetpackInputEnabled;
-extern s32 gJetpackPlayerVelY;
-extern s32 gJetpackPlayerVelX;
-extern s32 gJetpackPlayerMaxHp;
-extern s32 gJetpackRingLastFrame;
-extern s32 gJetpackRingChain;
-extern s32 gJetpackWumpaDispenseTimer;
-extern s32 gJetpackQueuedWumpa;
-
-struct actor_hp {
-    struct actor_self base;
-    s32 hp;             // 0x54 - refilled by PassJetpackRing, capped at gJetpackPlayerMaxHp
-};
 
 /* Constructor/reset: while the singleton flag (`gJetpackPlayerInactive`) is
  * off, resets `self` to state 5/table-index 4 (idle-ish), plays a cue,
@@ -228,9 +214,6 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
  * and the final byte-load pair (`rec[0]`/`rec[1]`) pinned per-block to
  * the exact registers the ROM's `ldrb` pair uses. */
 extern void *AllocVramTileBlock(s32 size);
-extern void *gJetpackPlayerTiles[2];
-extern s32 gJetpackPlayerTileBuffer;
-extern s32 gJetpackPlayerLastFrame;
 
 void AllocJetpackPlayerTiles(void *selfArg)
 {

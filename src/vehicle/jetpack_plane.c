@@ -2,15 +2,14 @@
 #include "actor_self.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
+#include "bosses.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment, docs/matching/issue-56-0x0802f0dc-actor.md and
  * docs/matching/pmf-dispatch-retry.md. */
 
-extern void SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
-extern u8 IsTouchingPlayer(void *self);
-extern void UpdateActor(void *self);
-extern struct actor_pmf gJetpackPlaneStateFuncs[];
 extern struct actor_self *gActorList;
 
 struct actor_fa38 {
@@ -79,7 +78,7 @@ void UpdateJetpackPlane(struct actor_fa38 *self)
         }
     }
 
-    if (self->unk_7C == 0 && IsTouchingPlayer(self)) {
+    if (self->unk_7C == 0 && (u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         ACTOR_VCALL(&self->base, m20, 4);
     }
@@ -118,24 +117,8 @@ asm(".align 2, 0");
  * (ACTOR_VCALL/ACTOR_PMF_CALL), which Thumb gcc emits as
  * `bl _call_via_rN` (lib/libgcc/lib1funcs.s). */
 
-extern s32 sub_802A504(s32 idx);
-extern s32 sub_802A51C(s32 idx);
-extern s32 sub_802A540(s32 idx);
-extern s32 sub_802A558(s32 idx);
-extern s32 sub_802A570(s32 idx);
-extern s32 GetAnimFrameBaseOffset(void *self);
-extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-/* Defined as a no-argument counter in jetpack_player.c, but the ROM passes
- * the player object here (a C++ method ignoring its `this`). */
-extern s32 CountJetpackBomber(void *player);
-
-extern s32 gUnknown_0300089C[];
 extern void *gAudioContext;
 extern s16 gSineTable[];
-extern struct actor_pmf gJetpackBomberStateFuncs[];
-extern u8 gJetpackPlaneVtable[];
-extern u8 gJetpackBomberVtable[];
-extern u8 gJetpackCannonballVtable[];
 
 struct jetpack_plane {
     struct actor_self base;
@@ -176,11 +159,6 @@ struct actor_orbit {
     s32 radius;         // 0x64
 };
 
-struct spawn_arg {
-    u8 unk_00[0x10];
-    s32 target;         // 0x10
-};
-
 /* Aims the next hop at sub-effect target `target`: looks up the hop
  * speed for that target's kind, derives the step count from the height
  * difference, and solves for per-step accelerations that land on the
@@ -219,14 +197,14 @@ void AimJetpackPlane(struct jetpack_plane *self, s32 target)
         self->base.animIndex = 3;
         self->base.animTimer = self->base.anims[3].duration;
         self->base.animDone = 0;
-        if (GetAnimFrameBaseOffset(self) >= self->base.anims[self->base.animIndex].loopThreshold) {
+        if (GetAnimFrameBaseOffset((struct actor_self *)self) >= self->base.anims[self->base.animIndex].loopThreshold) {
             self->base.animTime = 0;
         }
     } else {
         self->base.animIndex = 0;
         self->base.animTimer = self->base.anims[0].duration;
         self->base.animDone = 0;
-        if (GetAnimFrameBaseOffset(self) >= self->base.anims[self->base.animIndex].loopThreshold) {
+        if (GetAnimFrameBaseOffset((struct actor_self *)self) >= self->base.anims[self->base.animIndex].loopThreshold) {
             self->base.animTime = 0;
         }
     }
@@ -396,7 +374,7 @@ void UpdateJetpackBomber(struct jetpack_bomber *self)
 {
     if (self->base.state != 6) {
         CountJetpackBomber(gActorList);
-        if (self->base.state != 6 && IsTouchingPlayer(self)) {
+        if (self->base.state != 6 && (u8)IsTouchingPlayer(self)) {
             ACTOR_VCALL(gActorList, m20, 10);
             self->base.palette = 4;
             PlaySfx(gAudioContext, 4, 0x100);
@@ -517,7 +495,7 @@ void UpdateJetpackCannonball(struct jetpack_cannonball *self)
     self->base.x += self->velX;
     self->base.y += self->velY;
     self->base.z += -0x100;
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 2);
         if (self != NULL) {
             ACTOR_VCALL(&self->base, destroy, 3);
@@ -600,7 +578,7 @@ void AirshipFireballStateOrbit(struct actor_orbit *self)
         ACTOR_SET_STATE(&self->base, 1, 0);
         self->base.stateTime = t;
     }
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
@@ -644,7 +622,7 @@ void AirshipFireballStateSpiralIn(struct actor_orbit *self)
         self->base.x = cx + ((sine[(angle + 0x40) & 0xff] * self->radius) >> 8);
         self->base.y = cy + ((sine[angle] * self->radius) >> 8);
     }
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);

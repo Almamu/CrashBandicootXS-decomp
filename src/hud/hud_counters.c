@@ -1,6 +1,7 @@
 #include "core.h"
 #include "hud.h"
 #include <libgcc.h>
+#include "bosses.h"
 
 /* The object `UpdateHudPercentCounters` reads its percentage from, called through a
  * gcc 2.x pointer-to-member (delta + function) slot in its vtable. */
@@ -21,7 +22,6 @@ struct pct_source
 extern struct pct_source *gActorList;
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 GetBossIndex(void *state);
-extern s32 GetAirshipHpPercent(void);
 extern void AdvanceSpriteAnim(struct hud_digit_part *part);
 extern void *gLevelState;
 extern s32 GetCrateCount(void *state);

@@ -1,7 +1,10 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "util.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/vehicle/polar_player_states.c`
@@ -31,13 +34,6 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
-extern void *gRiderlessPolar;
-extern void *gPolarAkuAku;
-extern s32 gPolarInvulnTimer;
-extern s32 gPolarPlayerVelY;
-extern u8 gPolarPauseLocked;
-extern u8 gPolarPlayerInactive;
-extern u8 gPolarSteerEnabled;
 
 struct held_pressed_pair {
     u16 held;
@@ -46,45 +42,15 @@ struct held_pressed_pair {
 extern struct held_pressed_pair gKeys;
 
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void SetCellAnimSpeed(s32 arg0);
 extern void LoseLife(void *arg0);
-extern void StopYeti(void);
-extern s32 RemovePolarAkuAkuMask(void *self);
-extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void *AllocVramTileBlock(s32 size);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
-extern void DispensePolarWumpa(void *selfArg);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-extern u8 gPolarPlayerShockPalette[];
-extern u8 gPolarPlayerShockBlinkPalette[];
-
-extern s32 gPolarFinishTimer;
-extern s32 gPolarSteerTime;
-extern u8 gPolarPlayerHalted;
-extern struct actor_pmf gPolarPlayerStateFuncs[];
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
-extern void *gPolarPlayerTiles[2];     // the two VRAM tile buffers
-extern s32 gPolarPlayerTileBuffer;          // which buffer holds the current frame
-extern u8 *gPolarPlayerLastFrame;          // the frame last uploaded
 
-/* The camera object `self+0x30` points at. */
-struct cam_ref {
-    u8 unk_00[0x10];
-    s32 depth;      // 0x10 - the depth at which sprites draw unscaled
-};
-
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
-extern u8 IsActorMaskAssistDue(void);
-extern s32 GetCellAnimDistance(void);
-extern void UpdateActorBgScroll(s32 x, s32 y);
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
-extern void *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 tier);
-extern void MovePolarAkuAku(void *obj, s32 x, s32 y, s32 z);
-extern s32 AddPolarAkuAkuMask(void *obj);
 
 static inline s32 Abs(s32 x)
 {
@@ -165,7 +131,7 @@ void UpdatePolarPlayer(struct actor_self *self)
         s32 tier = gLevelState->maskLevel;
 
         gPolarAkuAku = SpawnPolarAkuAku(self->x, self->y, self->z, tier);
-        if (IsActorMaskAssistDue())
+        if ((u8)IsActorMaskAssistDue())
             AddPolarAkuAkuMask(gPolarAkuAku);
     }
 }
@@ -206,7 +172,7 @@ void DrawPolarPlayer(struct actor_self *self)
     halfW = w * 4;
     h = frame[1];
     halfH = h * 4;
-    if (self->depth == (*(struct cam_ref **)&self->record)->depth) {
+    if (self->depth == self->record->baseDepth) {
         scale = 0x100;
         sy = (self->y + GetActorBgCenterY()) >> 8;
         sx = (self->x + GetActorBgCenterX()) >> 8;
@@ -214,7 +180,7 @@ void DrawPolarPlayer(struct actor_self *self)
         s32 depth = self->depth;
         s32 f;
 
-        scale = (depth << 8) / (*(struct cam_ref **)&self->record)->depth;
+        scale = (depth << 8) / self->record->baseDepth;
         f = 0x2f00000 / depth;
         sy = (((self->y * f) >> 12) + GetActorBgCenterY()) >> 8;
         sx = (((self->x * f) >> 12) + GetActorBgCenterX()) >> 8;
@@ -282,13 +248,13 @@ s32 HurtPolarPlayer(void *selfArg)
     }
 
     {
-        register void **effectAddr asm("r2") = &gPolarAkuAku;
+        register struct actor_self **effectAddr asm("r2") = &gPolarAkuAku;
         void **playerAddr = (void **)&gLevelState;
         s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
 
         if (tier == 0) {
             PlaySfx(gAudioContext, 0x1b, 0x100);
-            QueueVramDmaTransfer(gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
+            QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
             {
                 register s32 state asm("r0") = 6;
                 register s32 idx asm("r1") = 5;
@@ -358,7 +324,7 @@ s32 ShockPolarPlayer(void *selfArg)
     }
 
     {
-        register void **effectAddr asm("r4") = &gPolarAkuAku;
+        register struct actor_self **effectAddr asm("r4") = &gPolarAkuAku;
         void **playerAddr = (void **)&gLevelState;
         s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
 
@@ -640,7 +606,7 @@ void PolarPlayerStateShocked(void *selfArg)
     s32 counter = self->stateTime;
 
     if (counter > 0x2c) {
-        QueueVramDmaTransfer(gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
         gPolarPauseLocked = 1;
         {
             register s32 state asm("r0") = 6;
@@ -666,9 +632,9 @@ void PolarPlayerStateShocked(void *selfArg)
             LoseLife(gLevelState);
         }
     } else if (counter & 4) {
-        QueueVramDmaTransfer(gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
     } else {
-        QueueVramDmaTransfer(gPolarPlayerShockBlinkPalette, (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer((void *)gPolarPlayerShockBlinkPalette, (void *)OBJ_PLTT, 0x20, 0x10);
     }
 }
 

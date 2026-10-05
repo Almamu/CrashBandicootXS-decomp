@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "system.h"
+#include "bosses.h"
 
 /* Same "boss-weapon self" object family as airship_fireball.c (see that
  * file's header comment and docs/matching/issue-58-0x08030334-actor.md),
@@ -21,18 +23,8 @@
  * rematerialized from sp, and only the copied box's address stays live
  * across the `MemCopy32` call. Built with old_agbcc
  * (docs/matching/issue-58-61-naked-retry.md). */
-extern u8 gAirshipBox[];
-extern s32 gAirshipState;
-extern s32 gAirshipX;
-extern s32 gAirshipY;
-extern s32 gAirshipZ;
 
-struct box3 {
-    s16 x, y, z;
-    s16 w, h, d;
-};
-
-static inline void BoxOffset(struct box3 *b, s32 x, s32 y, s32 z)
+static inline void BoxOffset(struct anim_box *b, s32 x, s32 y, s32 z)
 {
     b->x += x;
     b->y += y;
@@ -45,13 +37,13 @@ u8 IsTouchingAirship(void *selfArg)
 
     if ((u32)(gAirshipState - 2) <= 1) {
         struct {
-            struct box3 a, c, t;
+            struct anim_box a, c, t;
         } f;
-        struct box3 *pa, *pc;
+        struct anim_box *pa, *pc;
 
-        f.a = *(struct box3 *)gAirshipBox;
+        f.a = gAirshipBox;
         BoxOffset(&f.a, gAirshipX >> 8, gAirshipY >> 8, gAirshipZ >> 8);
-        f.t = *(struct box3 *)self->box;
+        f.t = *(struct anim_box *)self->box;
         BoxOffset(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
         f.c = f.t;
         pc = &f.c;

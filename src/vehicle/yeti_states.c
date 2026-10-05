@@ -2,6 +2,8 @@
 #include "memory.h"
 #include "util.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A
@@ -16,11 +18,6 @@
  * four vtable slots operating on this object (see
  * docs/matching/issue-54-actor-d3a8.md). */
 
-extern s32 GetCellAnimSpeed(void);
-extern s32 GetCellAnimDistance(void);
-extern s32 gYetiDistance;
-extern s32 gYetiPosition;
-extern void *gYeti;
 extern void *gAudioContext;
 /* codegen: PlayAmbientSfx takes a fifth argument, a one-byte struct on
  * the stack (audio.h). YetiStateChase stores the byte at sp itself
@@ -28,10 +25,6 @@ extern void *gAudioContext;
  * schedules the `mov r1, #1` before the `mov r4, sp`.
  * docs/headers_plan.md */
 extern void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx");
-extern void ShakeActorBg(s32 arg0);
-extern s32 gYetiParamsIndex;
-extern u8 gYetiChargeParams[];
-extern s32 gYetiState;
 
 /* Re-derives `gYetiPosition`/`030014CC` (a small per-frame ease
  * toward a `GetCellAnimDistance()`-driven target, with a `+0x99` nudge on the
@@ -100,7 +93,7 @@ void YetiStateChase(void)
 
             if (GetCellAnimSpeed() > 0x24) {
                 s32 v = (u16)RandRange(0x100);
-                u8 *tableBase = gYetiChargeParams;
+                u8 *tableBase = (u8 *)gYetiChargeParams;
                 s32 offset = gYetiParamsIndex * 0xc;
                 u8 *tablePlus4 = tableBase + 4;
                 s32 threshold = *(s32 *)(tablePlus4 + offset);
@@ -115,7 +108,7 @@ void YetiStateChase(void)
             }
             {
                 s32 v = (u16)RandRange(0x100);
-                u8 *tableBase = gYetiChargeParams;
+                u8 *tableBase = (u8 *)gYetiChargeParams;
                 s32 offset = gYetiParamsIndex * 0xc;
                 u8 *tablePlus8 = tableBase + 8;
                 s32 threshold = *(s32 *)(tablePlus8 + offset);
@@ -128,7 +121,7 @@ void YetiStateChase(void)
         do_transition:
             gYetiState = 1;
             {
-                u8 *bc = gYeti;
+                u8 *bc = (u8 *)gYeti;
 
                 *(s32 *)(bc + 0xc) = 1;
                 {
@@ -163,7 +156,7 @@ void YetiStateChase(void)
 void YetiStateCharge(void)
 {
     s32 *c8 = &gYetiPosition;
-    u8 *table = gYetiChargeParams;
+    u8 *table = (u8 *)gYetiChargeParams;
     s32 idx = gYetiParamsIndex;
 
     *c8 += *(s32 *)(table + idx * 0xc);
@@ -192,7 +185,7 @@ void YetiStateCharge(void)
     }
 
     {
-        u8 *bc = gYeti;
+        u8 *bc = (u8 *)gYeti;
 
         if (bc[0x12] != 0) {
             s32 *d0 = &gYetiState;

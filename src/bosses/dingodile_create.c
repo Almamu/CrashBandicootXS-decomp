@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "bosses.h"
 
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see include/gobj_1a794.h
  * and docs/matching/issue-25-level-objects.md). CreateDingodileShieldCtrl/DestroyDingodile/
@@ -27,7 +28,7 @@ struct seq_obj
 struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self)
 {
     CreateBossCtrl(self);
-    self->vtable = gDingodileShieldVtable;
+    self->vtable = (void *)gDingodileShieldVtable;
     return self;
 }
 
@@ -38,7 +39,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 {
     register struct gobj *part asm("r3") = partArg;
     register s32 index asm("r5") = indexArg;
-    struct vec3 *e = &gDingodileMotionRecords[gDingodileMotionEntries[index].a];
+    const struct vec3 *e = (const struct vec3 *)gDingodileMotionRecords[gDingodileMotionEntries[index].a];
 
     if ((s32)(part->mirror << 27) < 0)
     {
@@ -63,7 +64,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         part->rampX.target = z;
     }
     {
-        struct vec3 *e2 = &gDingodileMotionRecords[gDingodileMotionEntries[index].b];
+        const struct vec3 *e2 = (const struct vec3 *)gDingodileMotionRecords[gDingodileMotionEntries[index].b];
         s32 x = e2->x;
         s32 y = e2->y;
         s32 z = e2->z;
@@ -86,7 +87,7 @@ struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b)
 {
     CreateBossCtrl(self);
     self->vtable = gDingodileVtable;
-    SpawnDingodileShieldOrRocket(self, 0, (u16)a, (u16)b, 0);
+    SpawnDingodileShieldOrRocket((struct dingodile_boss *)self, 0, (u16)a, (u16)b, 0);
     return self;
 }
 

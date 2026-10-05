@@ -2,17 +2,13 @@
 #include "actor_anim.h"
 #include "gba/io_reg.h"
 #include <libgcc.h>
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
-extern s32 gActorCategoryDeaths;
-extern s32 gUnknown_03001388;
-extern s32 gActorMissedNitros;
-extern s32 gActorCheckpointMissedNitros;
-extern s32 gActorCheckpoint;
 extern void *gLevelState;
 
-extern s32 GetActorSpawnOffset(void);
 extern void SetCheckpointAtPlayer(void *arg0);
-extern void SaveActorPaletteCycle(void);
 
 /* Re-bases the category's secondary tick counter from `arg0` (net of
  * `GetActorSpawnOffset`'s current Q8.8 offset), resets the active-instance
@@ -28,8 +24,6 @@ void SetActorCheckpoint(s32 arg0)
     SaveActorPaletteCycle();
 }
 
-extern s32 gActorCategory;
-
 /* True once the running active-instance count reaches the current
  * category's `unknown_20` threshold. The cast to `s32` matches the
  * ROM's own signed comparison (`blt`) - `unknown_20` is declared `u32`
@@ -41,17 +35,6 @@ s32 IsActorMaskAssistDue(void)
 {
     return gActorCategoryDeaths >= (s32)gActorCategories[gActorCategory].unknown_20;
 }
-
-extern s32 gCellAnimTime;
-extern s32 gCellAnimFrameSize;
-extern void *gCellAnim;
-extern u8 gCellAnimHasBanks;
-extern u8 gCellAnimPage;
-extern s32 gCellAnimTileBytes;
-extern void (*gDrawMirroredTilemapFunc)(void *src, s32 arg1, s32 arg2, s32 arg3);
-extern s32 gCellAnimCols;
-extern s32 gCellAnimRows;
-extern u8 gCellAnimUploaded;
 
 /* Kicks off a DMA copy of `gCellAnimTileBytes` bytes from the current
  * "console"/text-plane cursor cell into VRAM (one of three fixed
@@ -84,13 +67,6 @@ void UploadCellAnimFrame(void)
     gCellAnimUploaded = 1;
 }
 
-extern s32 gCellAnimLength;
-extern s32 gUnknown_030013C8;
-extern s32 gCellAnimDistance;
-extern s32 gCellAnimSpeed;
-extern s32 gCellAnimFrameStep;
-extern void ResetCellAnimBg(void);
-
 /* (Re)configures the console/text-plane cell geometry from a fresh
  * cell record at `arg1` (a `struct cell_anim_header`: its `cols`/`rows`) - cell pixel area, its DMA-scroll-wrap threshold, and the
  * initial X/Y scroll accumulators - then rebuilds both VRAM screen
@@ -107,9 +83,9 @@ extern void ResetCellAnimBg(void);
  * `gCellAnimTileBytes` store so that global's address loads before the
  * multiply, and `size` is read back from `gCellAnimTileBytes` between
  * taking the address and copying it. Matches under both compilers. */
-void InitCellAnim(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
+void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
 {
-    struct cell_anim_header *cell = (struct cell_anim_header *)arg1;
+    struct cell_anim_header *cell = cellAnim;
     s32 area;
     s32 flag;
     s32 size;
@@ -130,7 +106,7 @@ void InitCellAnim(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
         if (flag)
             size += (area + 7) / 8 * 4;
         *a4 = size;
-        gCellAnimLength = __divsi3(arg2 - 0x204, *reload) << 8;
+        gCellAnimLength = __divsi3(animSize - 0x204, *reload) << 8;
     }
     gCellAnimTime = 0;
     ResetCellAnimBg();
@@ -256,9 +232,6 @@ s32 GetCellAnimDistance(void)
     return gCellAnimDistance;
 }
 
-extern void UploadCellAnimFrame(void);
-extern void UpdateActorPaletteCycle(void);
-
 /* Advances the console/text-plane's horizontal scroll accumulator by
  * `gCellAnimSpeed` (a Q8.8 per-frame velocity), wrapping it against
  * `gCellAnimLength`, and - whenever the whole-tile column actually
@@ -366,22 +339,6 @@ void FillCellAnimTilemap(s32 arg0, s32 w, s32 h)
         base += 0x20;
     }
 }
-
-extern s32 gActorBgScrollType;
-extern s32 gActorNearClipDepth;
-extern s32 gActorFarClipDepth;
-extern s32 gActorBgWidth;
-extern s32 gActorBgHeight;
-extern s32 gActorBgScrollEaseShift;
-extern s32 gUnknown_030013E4;
-extern s32 gUnknown_030013E8;
-extern s32 gActorBg0VOffset;
-extern s32 gActorBgScrollMaxX;
-extern s32 gActorBgScrollMaxY;
-extern s32 gActorBgScrollX;
-extern s32 gActorBgScrollY;
-extern s32 gActorBgShake;
-extern s32 gUnknown_030013D8;
 
 /* Selects one of two fixed BG0/BG1 scroll-effect parameter sets
  * (arg0 == 0 vs nonzero), then derives the shared initial scroll

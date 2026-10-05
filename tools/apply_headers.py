@@ -20,6 +20,8 @@ compares each one with the header's declaration, ignoring parameter names,
     `--adopt SYMBOL` (repeatable) treats SYMBOL's differing declarations
     as matching, so they are deleted and the file takes the header's type:
     use it once you have checked that the change is byte-neutral.
+    `--adopt-all` does that for every symbol of the header (a first pass
+    over a large header; the build then shows the call sites to check).
 
 Files that define a symbol the header declares are skipped unless named on
 the command line (the defining file should include its own header, but its
@@ -116,7 +118,7 @@ def apply(path, hdr_path, hdecls, adopt, dry_run, allow_definer):
             continue
         if d['asm'] != h['asm']:
             conflicts.append('%s: asm label %r vs header %r' % (sym, d['asm'], h['asm']))
-        elif not same_type(d, h) and sym not in adopt:
+        elif not same_type(d, h) and sym not in adopt and '*' not in adopt:
             conflicts.append('%s:%d: %s\n        header: %s' % (path, d['line'], d['text'], h['text']))
         elif d.get('ndecl', 1) != 1:
             conflicts.append('%s:%d: %s is one of several declarators; edit by hand' % (path, d['line'], sym))
@@ -181,6 +183,7 @@ def main():
     ap.add_argument('files', nargs='*')
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--adopt', action='append', default=[], metavar='SYMBOL')
+    ap.add_argument('--adopt-all', action='store_true', help="adopt the header's type for every symbol")
     args = ap.parse_args()
     os.chdir(ROOT)
     hdecls = header_decls(args.header)
@@ -190,7 +193,8 @@ def main():
     files = args.files or sorted(glob.glob('src/**/*.c', recursive=True) + glob.glob('lib/**/*.c', recursive=True))
     status = {}
     for p in files:
-        r = apply(p, args.header, hdecls, set(args.adopt), args.dry_run, explicit)
+        adopt = set(args.adopt) | ({'*'} if args.adopt_all else set())
+        r = apply(p, args.header, hdecls, adopt, args.dry_run, explicit)
         if r is None:
             continue
         st, msgs = r

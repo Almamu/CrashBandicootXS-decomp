@@ -1,5 +1,8 @@
 #include "core.h"
 #include "actor_anim.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /*
  * ROM 0x08175558-0x08175760: the actor category descriptors and the
@@ -7,34 +10,6 @@
  * actor \"vtable\" system"). Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-extern void ConstructAnimTableState();
-extern void PolarIsTouchingPlayer();
-extern void JetpackIsTouchingPlayer();
-extern void JetpackIsPauseLocked();
-extern void PolarIsPauseLocked();
-extern void JetpackReloadPlayerTiles();
-extern void PolarReloadPlayerTiles();
-extern void JetpackReachCourseEnd();
-extern void PolarReachCourseEnd();
-extern void SpawnActor();
-extern void UpdateYeti();
-extern void UpdateYetiBg2();
-extern void LoadYetiGraphics();
-extern void DestroyYeti();
-extern void CreateYeti();
-extern void SpawnJetpackActor();
-extern void CreateJetpackPlayer();
-extern void CreateAirship();
-extern void UpdateAirship();
-extern void UpdateAirshipBg2();
-extern void LoadAirshipGraphics();
-extern void DestroyAirship();
-extern void CreateHovercraft();
-extern void UpdateHovercraft();
-extern void UpdateHovercraftBg2();
-extern void LoadHovercraftGraphics();
-extern void DestroyHovercraft();
 
 extern const u8 gCategoryFamily0CellAnim[];
 extern const u8 gCategory0SpawnTable[];
@@ -170,48 +145,48 @@ const struct category_descriptor gActorCategories[7] = {
  * (actor_category_select.c). Slots 7 and 8 are not code addresses. */
 const struct category_vtable gActorCategoryVtables[3] = {
     /* 0 */ { {
-        ConstructAnimTableState,
-        SpawnActor,
-        CreateYeti,
+        (void (*)(void))ConstructAnimTableState,
+        (void (*)(void))SpawnActor,
+        (void (*)(void))CreateYeti,
         UpdateYeti,
         UpdateYetiBg2,
         DestroyYeti,
         LoadYetiGraphics,
         (void (*)(void))0xffffffef,
         (void (*)(void))0xffffffd1,
-        PolarIsTouchingPlayer,
-        PolarReachCourseEnd,
-        PolarReloadPlayerTiles,
-        PolarIsPauseLocked,
+        (void (*)(void))PolarIsTouchingPlayer,
+        (void (*)(void))PolarReachCourseEnd,
+        (void (*)(void))PolarReloadPlayerTiles,
+        (void (*)(void))PolarIsPauseLocked,
     } },
     /* 1 */ { {
-        CreateJetpackPlayer,
-        SpawnJetpackActor,
-        CreateAirship,
+        (void (*)(void))CreateJetpackPlayer,
+        (void (*)(void))SpawnJetpackActor,
+        (void (*)(void))CreateAirship,
         UpdateAirship,
         UpdateAirshipBg2,
         DestroyAirship,
         LoadAirshipGraphics,
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
-        JetpackIsTouchingPlayer,
-        JetpackReachCourseEnd,
-        JetpackReloadPlayerTiles,
-        JetpackIsPauseLocked,
+        (void (*)(void))JetpackIsTouchingPlayer,
+        (void (*)(void))JetpackReachCourseEnd,
+        (void (*)(void))JetpackReloadPlayerTiles,
+        (void (*)(void))JetpackIsPauseLocked,
     } },
     /* 2 */ { {
-        CreateJetpackPlayer,
-        SpawnJetpackActor,
-        CreateHovercraft,
+        (void (*)(void))CreateJetpackPlayer,
+        (void (*)(void))SpawnJetpackActor,
+        (void (*)(void))CreateHovercraft,
         UpdateHovercraft,
         UpdateHovercraftBg2,
         DestroyHovercraft,
         LoadHovercraftGraphics,
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
-        JetpackIsTouchingPlayer,
-        JetpackReachCourseEnd,
-        JetpackReloadPlayerTiles,
-        JetpackIsPauseLocked,
+        (void (*)(void))JetpackIsTouchingPlayer,
+        (void (*)(void))JetpackReachCourseEnd,
+        (void (*)(void))JetpackReloadPlayerTiles,
+        (void (*)(void))JetpackIsPauseLocked,
     } },
 };

@@ -5,6 +5,9 @@
 #include "hud.h"
 #include "util.h"
 #include "menus.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /*
  * `InitActorCategory` - the category (re)initialization + loading-screen
@@ -40,12 +43,6 @@
  *    `strh`).
  */
 
-extern s32 gActorCheckpointMissedNitros;
-extern s32 gActorCategory;
-extern s32 gActorCheckpoint;
-extern s32 gActorCategoryDeaths;
-extern s32 gUnknown_03001388;
-extern s32 gActorMissedNitros;
 extern u8 *gLevelState;
 extern void *gOamBuffer;
 extern void *gInput;
@@ -55,39 +52,20 @@ extern u32 gKeys;
 
 extern void SetCheckpointAtPlayer(void *arg0);
 extern void DecompressCategorySpriteSheet(const u8 *sheet);
-extern void SetupActorVramPool(void);
-extern void ClearCollectedSpawns(void);
-extern void EnableActorPaletteCycle(s32 flag);
-extern void InitActorBgScroll(s32 kind);
 extern void RestoreCheckpoint(void *arg0);
 extern void FadeBrightness(s32 a, s32 b, s32 c);
-extern void InitCellAnim(s32 arg0, void *arg1, u32 arg2, s32 arg3);
-extern void LoadBgPicture(void);
-extern void RestoreActorPaletteCycle(void);
-extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variant, s32 tick);
-extern void AdvanceCellAnim(void);
-extern s32 RunActorCategoryFrame(void);
 extern void TickLevelClock(void *arg0);
 extern void ResetObjVram(void *self);
 extern void RewindOamBuffer(void *arg0);
 extern void FlushSpriteFrameOamQueue(void);
-extern void CommitActorBgScroll(void);
 extern void CommitOamBuffer(void *arg0);
 extern void FlushVramDmaQueue(void);
-extern void FlipCellAnimPage(void);
-extern void UpdateActorCategoryBg2(void);
 extern void AgeSpriteFrameCache(void);
 extern u8 IsBrightnessFadeActive(void);
-extern u8 CanPauseActorCategory(void);
 extern void FreeSpriteFrameCache(void);
 extern void FreeSpriteFrameOamQueue(void);
 extern void FreeObjTileFreeList(void);
-extern void ResetCellAnimBg(void);
-extern void ReloadActorCategoryGraphics(void);
 extern void FreeCategorySpriteSheet(void);
-extern void nullsub_5(void);
-extern void nullsub_6(void);
-extern void DestroyAllActors(void);
 
 #define CUR_CATEGORY (gActorCategories[gActorCategory])
 #define PAUSED (gLevelState[0x8c])
@@ -137,7 +115,7 @@ s32 InitActorCategory(s32 category)
         InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
                     gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
-            LoadBgPicture();
+            LoadBgPicture(CUR_CATEGORY.bgPicture);
         RestoreActorPaletteCycle();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= (s32)CUR_CATEGORY.active_count_threshold, variant,
@@ -188,7 +166,7 @@ s32 InitActorCategory(s32 category)
             } else {
                 open = 0;
                 if (IsBrightnessFadeActive() == 0 && ((gKeys >> 16) & 8))
-                    open = -CanPauseActorCategory() < 0;
+                    open = -(u8)CanPauseActorCategory() < 0;
                 if (open) {
                     buf = mem_alloc(0x200, 0x80000000);
                     dma->src = OBJ_PLTT;
@@ -208,7 +186,7 @@ s32 InitActorCategory(s32 category)
                     mem_free(buf);
                     ResetCellAnimBg();
                     if (CUR_CATEGORY.bgPicture != NULL)
-                        LoadBgPicture();
+                        LoadBgPicture(CUR_CATEGORY.bgPicture);
                     ReloadActorCategoryGraphics();
                     if (result == 2) {
                         ret = 2;

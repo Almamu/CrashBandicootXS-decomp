@@ -1,4 +1,5 @@
 #include "core.h"
+#include "bosses.h"
 
 /* GitHub issue #22, ROM 0x080187FC-0x08018884 - non-adjacent to
  * airship_fireball.c since the raw `UpdateTiny`/`SetTinyState`/
@@ -15,7 +16,6 @@
  * "three objects, none fully pinned down" caution documented in
  * action_ctrl_states.c. */
 
-extern u8 gStompedHopPadVtable[];
 /* gLevelLayers's view here (level_layers.c's `struct level_layers`):
  * only BG layer 0's `heightPx` is read. */
 struct bg_scroll_layer {
@@ -103,7 +103,7 @@ void DestroyStompedHopPadCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gStompedHopPadVtable;
+    *(void **)(self + 0xc) = (void *)gStompedHopPadVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -114,7 +114,7 @@ void *CreateStompedHopPadCtrl(void *selfArg)
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gStompedHopPadVtable;
+    *(void **)(self + 0xc) = (void *)gStompedHopPadVtable;
     return self;
 }
 

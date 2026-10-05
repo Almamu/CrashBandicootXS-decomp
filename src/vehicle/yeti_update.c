@@ -1,6 +1,9 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "system.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Sits right after polar_aku_aku.c's `CreatePolarCheckpointCrate` and before
  * yeti_states.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
@@ -16,28 +19,9 @@
  * Built with old_agbcc: `UpdateYetiBg2` only matches under it, and
  * `UpdateYetiPalette` matches under both. */
 
-extern s32 gYetiState;
-extern s32 gYetiX;
 extern struct actor_self *gActorList;
-extern struct actor_self *gYeti;
-extern s32 GetAnimFrameBaseOffset(void *self);
-extern void (*gYetiStateFuncs[])(void);
 extern void _call_via_r0(void *fn);
-extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
 extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
-extern u8 gYetiBg2Page;
-extern u8 gYetiBg2PageFlip;
-extern s32 gYetiDistance;
-extern void sub_8029E34(s32 arg0);
-extern void UpdateYetiPalette(void);
-extern u8 gYetiCatchBox[];
-extern s32 gYetiPosition;
-extern u8 gPolarPlayerInactive;
-extern void CatchPolarPlayer(void *self);
-extern void SetCellAnimSpeed(s32 arg0);
-extern u16 gYetiPalette[];
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
 
 /* One of two confirmed slots (index 3, dispatched via
  * `gYetiStateFuncs[gYetiState]`) of the type-0
@@ -87,19 +71,14 @@ extern s32 GetActorBgCenterX(void);
  * uses its own `g` local for the gauge object (the function-wide `obj`
  * would be allocated a callee-saved register). Built with old_agbcc
  * (docs/matching/issue-51-54-naked-retry.md, later pass). */
-struct box16 {
-    s16 x, y, z;
-    s16 w, h, d;
-};
-
-static inline void BoxMove(struct box16 *b, s32 x, s32 y, s32 z)
+static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 {
     b->x += x;
     b->y += y;
     b->z += z;
 }
 
-static inline u8 BoxOverlap(struct box16 *b, struct box16 *a)
+static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
 {
     if (b->z < a->z + a->d && b->z + b->d > a->z
         && b->y < a->y + a->h && b->y + b->h > a->y
@@ -113,7 +92,7 @@ hit:
 void UpdateYeti(void)
 {
     struct {
-        struct box16 a, b, t;
+        struct anim_box a, b, t;
     } f;
     struct actor_self *obj;
     s32 old, cur;
@@ -139,17 +118,17 @@ void UpdateYeti(void)
     }
     sub_8029E34(gYetiDistance);
     UpdateYetiPalette();
-    f.a = *(struct box16 *)gYetiCatchBox;
+    f.a = gYetiCatchBox;
     BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);
     if ((u32)gYetiState <= 1) {
         struct actor_self **playerAddr = &gActorList;
         struct actor_self *pl;
-        struct box16 *b;
+        struct anim_box *b;
 
         if (gPolarPlayerInactive != 0)
             return;
         pl = *playerAddr;
-        f.t = *(struct box16 *)pl->box;
+        f.t = *(struct anim_box *)pl->box;
         BoxMove(&f.t, pl->x >> 8, pl->y >> 8, pl->z >> 8);
         f.b = f.t;
         b = &f.b;
@@ -196,7 +175,7 @@ void UpdateYetiPalette(void)
         s32 f = ((0xbe00 - v) << 8) / 0x6e00;
         s32 mask = 0x1f;
         u16 *dst = (u16 *)(PLTT + 0x1E0);
-        u16 *src = gYetiPalette;
+        const u16 *src = gYetiPalette;
         s32 mask2 = 0x1f;
         s32 i;
 

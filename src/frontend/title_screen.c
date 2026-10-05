@@ -10,6 +10,7 @@
 #include <libgcc.h>
 #include "system.h"
 #include "audio.h"
+#include "actor.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
  * off `title_screen_init.c` at `TitleScreenCheatInput` in the issues #64/#65
@@ -59,17 +60,8 @@ extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void OperatorDelete(void *self);
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
-
-/* The camera-ish object an actor part reads through `self+0x30`
- * (same shape as jetpack_spawn.c's). */
-struct cam_ref {
-    u8 unk_00[0x10];
-    s32 depth;      // 0x10 - the depth at which sprites draw unscaled
-};
 
 /* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits,
  * viewed as its bitfields (field stores give the ROM's byte-wide

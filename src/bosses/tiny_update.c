@@ -1,6 +1,7 @@
 #include "core.h"
 #include "util.h"
 #include "audio.h"
+#include "bosses.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
@@ -14,23 +15,16 @@
  * list's anchor objects, stomping them. PickTinyHopTarget picks the next anchor
  * from a per-round table, SpawnTinyFallingLeaves spawns a falling hazard. */
 
-struct hop_method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
 struct hop_vtable
 {
     u8 unk_00[0x18];
-    struct hop_method m18; // 0x18
-    struct hop_method m20; // 0x20
+    struct actor_method m18; // 0x18
+    struct actor_method m20; // 0x20
     u8 unk_28[0x20];
-    struct hop_method m48; // 0x48
-    struct hop_method m50; // 0x50
+    struct actor_method m48; // 0x48
+    struct actor_method m50; // 0x50
     u8 unk_58[0x10];
-    struct hop_method m68; // 0x68
+    struct actor_method m68; // 0x68
 };
 
 struct hop_vobj
@@ -140,25 +134,25 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
 #define VCALL1(obj, m, a)                                                      \
     do                                                                         \
     {                                                                          \
-        struct hop_method *_m = &(obj)->vt->m;                                 \
+        struct actor_method *_m = &(obj)->vt->m;                                 \
         ((hop_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));             \
     } while (0)
 #define VCALL1P(obj, m, a)                                                     \
     do                                                                         \
     {                                                                          \
-        struct hop_method *_m = &(obj)->vt->m;                                 \
+        struct actor_method *_m = &(obj)->vt->m;                                 \
         ((hop_fn1p)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a));         \
     } while (0)
 #define VCALL2(obj, m, a, b)                                                   \
     do                                                                         \
     {                                                                          \
-        struct hop_method *_m = &(obj)->vt->m;                                 \
+        struct actor_method *_m = &(obj)->vt->m;                                 \
         ((hop_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
 #define VCALL3(obj, m, a, b, c)                                                \
     do                                                                         \
     {                                                                          \
-        struct hop_method *_m = &(obj)->vt->m;                                 \
+        struct actor_method *_m = &(obj)->vt->m;                                 \
         ((hop_fn3)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c));        \
     } while (0)
 
@@ -169,18 +163,12 @@ extern struct hop_player *gPlayer;
 extern struct hop_list *gUnknown_030012EC;
 extern void *gCollidableList;
 extern struct hop_level *gLevelLayers;
-extern u8 gTinyRoundAnchors[];
-extern u8 gTinyHopTargets[];
 
 extern void *OperatorNew(u32 size);
-extern struct hop_vobj *CreateStompedHopPadCtrl(void *mem);
-extern struct hop_vobj *CreateOneShotAnimCtrl(void *mem);
 extern struct aabb GetSpriteAttackBox(void *obj);
 extern struct aabb GetSpriteBodyBox(void *obj);
 extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
-extern void StartTinyHop(struct tiny_tiger *self, struct hop_part *part);
-extern void nullsub_19(struct tiny_tiger *self, struct hop_part *part);
 extern void SpawnTornadoSpinPower(u32 arg0, u16 x, u16 y, u16 arg3);
 extern struct hop_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void ResetSpriteFrameTimer(struct hop_part *p);
@@ -222,10 +210,6 @@ static inline void SetSlot(struct hop_part *part, s32 v)
     *p = m;
 }
 
-void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next);
-s32 PickTinyHopTarget(struct tiny_tiger *self);
-void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 n);
-
 void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 {
     struct aabb a;
@@ -266,7 +250,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
         {
             struct hop_player *pl = gPlayer;
-            struct hop_method *m = &pl->vt->m68;
+            struct actor_method *m = &pl->vt->m68;
             void *t = (u8 *)pl + m->thisOffset;
             ((hop_fn3)m->fn)(t, 0, 1, 0);
         }
@@ -492,7 +476,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         self->y = -0x3000;
         self->x = part->x;
     hop:
-        StartTinyHop(self, part);
+        StartTinyHop((struct gfx_offset_ctrl *)self, (struct gfx_part *)part);
         break;
     case 8:
         VCALL2(self, m50, part, 6);
@@ -506,7 +490,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
 
             self->y = part->y - 0x6400;
             self->x = x + 0x6400;
-            StartTinyHop(self, part);
+            StartTinyHop((struct gfx_offset_ctrl *)self, (struct gfx_part *)part);
         }
         nullsub_19(self, part);
         VCALL2(self, m50, part, 7);
@@ -528,7 +512,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         self->x = x;
         self->y = (gLevelLayers->layer0->height << 8) + 0x4000;
         self->x = x + 0x6400;
-        StartTinyHop(self, part);
+        StartTinyHop((struct gfx_offset_ctrl *)self, (struct gfx_part *)part);
         break;
     }
     }

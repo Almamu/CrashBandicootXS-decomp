@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 #include "audio.h"
+#include "actor.h"
+#include "bosses.h"
 
 /* A second per-instance "self" object family sharing the exact same
  * layout convention already documented for the boss-weapon cluster
@@ -21,28 +23,7 @@
  * `DamageAirshipFireball`/`AirshipStateFall`/`DamageAirship`. See
  * docs/matching/issue-62-0x08033804-actor.md. */
 
-extern struct actor_self *gHovercraft;
-extern s32 gHovercraftState;
-extern s32 gHovercraftX;
-extern s32 gHovercraftY;
-extern s32 gHovercraftZ;
-extern s32 gHovercraftDistance;
-extern s32 gHovercraftVelX;
-extern s32 gHovercraftVelY;
-extern s32 gHovercraftVelZ;
-extern void *gHovercraftLevel;
-extern void *gHovercraftAttack;
-extern s32 gHovercraftPartsLeft;
-extern s16 gHovercraftHitFlashTimer;
-extern u8 gHovercraftHitFlashOn;
-extern u8 gHovercraftGone;
-extern u16 gHovercraftFlashSavedColor;
-extern s32 gHovercraftFlashColorSaved;
-extern void *gFlashBgPalette;
-extern void *gFlashObjPalette;
 extern void *gAudioContext;
-
-extern s32 GetAnimFrameBaseOffset(void *self);
 
 /* One-shot latch: if neither `gHovercraftHitFlashOn` nor `gHovercraftHitFlashTimer`
  * has been set yet, arms both. */
@@ -90,8 +71,6 @@ s32 GetHovercraftPartsLeft(void)
     return gHovercraftPartsLeft;
 }
 
-extern void SetHovercraftState(s32 a0, s32 a1);
-
 /* The singleton's death/reset transition: plays the death sound, then
  * decrements the lifetime counter `gHovercraftPartsLeft`, and once it
  * reaches zero clears `gHovercraftGone` and fires the state-5/
@@ -109,7 +88,7 @@ void LoseHovercraftPart(void)
 
 /* Constant getter - returns `gHovercraftAttack` (a pointer to a small
  * per-state lookup table used by several functions in this cluster). */
-void *GetHovercraftAttack(void)
+const struct singleton_kind *GetHovercraftAttack(void)
 {
     return gHovercraftAttack;
 }
@@ -124,7 +103,7 @@ s32 GetHovercraftState(void)
 /* Constant getter - returns `gHovercraftLevel`, the level index
  * `CreateHovercraft` caches (it picks the gHovercraftAttacks record; the
  * side guns test it against 0). */
-void *GetHovercraftLevel(void)
+s32 GetHovercraftLevel(void)
 {
     return gHovercraftLevel;
 }

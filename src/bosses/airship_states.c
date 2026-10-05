@@ -1,21 +1,13 @@
 #include "core.h"
 #include "actor_self.h"
 #include <libgcc.h>
+#include "actor.h"
+#include "vehicle.h"
+#include "bosses.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c/airship_damage.c - see airship_fireball.c's header comment
  * and docs/matching/issue-58-0x08030334-actor.md. */
-
-extern s32 GetAnimFrameBaseOffset(void *self);
-extern void PauseActorSpawns(void);
-extern s32 gAirshipZ;
-extern s32 gAirshipVelZ;
-extern s32 gAirshipDistance;
-extern s32 gAirshipVelX;
-extern s32 gAirshipVelY;
-extern s32 gAirshipState;
-extern s32 gAirshipStateTimer;
-extern struct actor_self *gAirship;
 
 /* Boss-weapon camera-relative position accumulator: advances
  * `gAirshipZ` by its per-frame delta (`gAirshipVelZ`),
@@ -102,15 +94,6 @@ void AirshipStateApproach(void)
  * as parameters): that is what makes the compiler materialize the
  * state constant right before its own store instead of hoisting its
  * address load ahead of it (the gap that kept this NAKED before). */
-extern void UpdateAirshipFlashColor(void);
-extern void SteerAirship(void);
-extern s32 SpawnAirshipFireball(s32 x, s32 y, s32 z);
-
-extern s32 gAirshipFireTimer;
-extern s32 gAirshipVolleyCount;
-extern s32 *gAirshipAttack;
-extern s32 gAirshipX;
-extern s32 gAirshipY;
 
 static inline void BossSetState(s32 st, s32 idx)
 {
@@ -137,18 +120,18 @@ void AirshipStateFireballs(void)
 
     if (gAirshipFireTimer == 0) {
         SpawnAirshipFireball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10);
-        if (++gAirshipVolleyCount == gAirshipAttack[2]) {
+        if (++gAirshipVolleyCount == gAirshipAttack->unk_08) {
             gAirshipVolleyCount = 0;
-            gAirshipFireTimer = gAirshipAttack[3];
+            gAirshipFireTimer = gAirshipAttack->unk_0C;
         } else {
-            gAirshipFireTimer = gAirshipAttack[1];
+            gAirshipFireTimer = gAirshipAttack->unk_04;
         }
     } else {
         gAirshipFireTimer--;
     }
     SteerAirship();
     if (gAirshipDistance <= 0x31FF) {
-        gAirshipFireTimer = gAirshipAttack[4];
+        gAirshipFireTimer = gAirshipAttack->unk_10;
         gAirshipVolleyCount = 0;
         BossSetState(3, 0);
     }
@@ -185,7 +168,6 @@ void AirshipStateFireballs(void)
  * `/` goes through the ROM's own `__divsi3` and the
  * absolute values are the branchless `asrs`/`eors`/`subs` form. */
 extern struct actor_self *gActorList;
-extern s32 SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
 
 static inline s32 Abs(s32 x)
 {
@@ -215,11 +197,11 @@ void AirshipStateCannon(void)
             dy = ((pl->y - (gAirshipY + 0x516D)) * speed) >> 12;
             if (Abs(dx) + Abs(dy) <= 0x7FF) {
                 SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx, dy);
-                if (++gAirshipVolleyCount == gAirshipAttack[5]) {
+                if (++gAirshipVolleyCount == gAirshipAttack->unk_14) {
                     gAirshipVolleyCount = phase;
-                    gAirshipFireTimer = gAirshipAttack[6];
+                    gAirshipFireTimer = gAirshipAttack->unk_18;
                 } else {
-                    gAirshipFireTimer = gAirshipAttack[4];
+                    gAirshipFireTimer = gAirshipAttack->unk_10;
                 }
             }
         }
@@ -228,7 +210,7 @@ void AirshipStateCannon(void)
     }
     SteerAirship();
     if (gAirshipDistance > 0x4300) {
-        gAirshipFireTimer = gAirshipAttack[1];
+        gAirshipFireTimer = gAirshipAttack->unk_04;
         gAirshipVolleyCount = 0;
         BossSetState(2, 0);
     }

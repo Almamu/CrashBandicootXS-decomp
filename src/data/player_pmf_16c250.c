@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "player.h"
+#include "bosses.h"
 
 /*
  * ROM 0x0816C250-0x0816C2D8: two per-state member-function-pointer

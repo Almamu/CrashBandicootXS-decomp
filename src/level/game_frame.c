@@ -8,6 +8,7 @@
 #include "system.h"
 #include "audio.h"
 #include "menus.h"
+#include "actor.h"
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -139,8 +140,6 @@ extern void FreeUnlockedPaletteSlots(void *cache);
 extern void SetLevelBoss(struct level_state *self, s32 arg1);
 extern void PlayRoomMusic(s32 *progress);
 extern s32 PlayRoom(s32 *progress);
-extern s32 InitActorCategory(u16 category);
-extern s32 GetActorMissedNitros(void);
 extern void AddPendingSwitchCrates(struct level_state *self, s32 arg1);
 extern void SetMaskLevel(struct level_state *self, s32 tier);
 extern u8 IsInBonusRoom(s32 *progress);

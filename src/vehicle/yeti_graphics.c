@@ -1,16 +1,14 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "system.h"
+#include "vehicle.h"
 
 /* Sits right after yeti_states.c's `YetiStateCharge` and before
  * yeti.c's `StopYeti` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_dd9c.s`. Both functions continue the
  * `gYeti`-rooted "gauge" object documented in yeti_states.c/
  * yeti_update.c's header comments. */
-
-extern u8 gYetiBox[];
-extern s32 gYetiX;
-extern s32 gYetiPosition;
 
 /* `UpdateYeti`'s (yeti_update.c) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
@@ -33,19 +31,14 @@ extern s32 gYetiPosition;
  * from sp instead of being kept in callee-saved registers, and only
  * `&f.b` goes through a pointer local across the `MemCopy32` call.
  * Needs old_agbcc (docs/matching/issue-51-54-naked-retry.md). */
-struct box16 {
-    s16 x, y, z;
-    s16 w, h, d;
-};
-
-static inline void BoxMove(struct box16 *b, s32 x, s32 y, s32 z)
+static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 {
     b->x += x;
     b->y += y;
     b->z += z;
 }
 
-static inline u8 BoxOverlap(struct box16 *b, struct box16 *a)
+static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
 {
     if (b->z < a->z + a->d && b->z + b->d > a->z
         && b->y < a->y + a->h && b->y + b->h > a->y
@@ -59,26 +52,19 @@ hit:
 u8 IsTouchingYeti(struct actor_self *self)
 {
     struct {
-        struct box16 a, b, t;
+        struct anim_box a, b, t;
     } f;
-    struct box16 *b;
+    struct anim_box *b;
 
-    f.a = *(struct box16 *)gYetiBox;
+    f.a = gYetiBox;
     BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);
-    f.t = *(struct box16 *)self->box;
+    f.t = *(struct anim_box *)self->box;
     BoxMove(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
     f.b = f.t;
     b = &f.b;
     MemCopy32(b, b, sizeof(*b));
     return BoxOverlap(&f.a, b);
 }
-
-extern u8 gYetiBg2Page;
-extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
-extern struct actor_self *gYeti;
-extern u8 gYetiBg2PageFlip;
-extern void UpdateYetiBg2(void);
-extern void UpdateYetiPalette(void);
 
 /* The `gYeti` object's own initial VRAM-pattern/DMA setup
  * (called once from `CreateYeti`'s constructor, yeti.c): sets

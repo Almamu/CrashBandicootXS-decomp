@@ -1,6 +1,7 @@
 #include "core.h"
 #include "vtable.h"
 #include "player.h"
+#include "bosses.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
  * airship_fireball.c since `UpdateMegaMix` (NAKED-parked, see
@@ -24,9 +25,6 @@
  * class of gap documented for `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
  * (player_flags.c). */
 
-extern u8 gMegaMixMotionRecords[];
-extern u8 gMegaMixMotionSet[];
-extern u8 gMegaMixCtrlVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void StartCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec);
 
@@ -49,7 +47,7 @@ void SetMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 4);
     typeOffset = type * 12;
-    base = gMegaMixMotionRecords;
+    base = (u8 *)gMegaMixMotionRecords;
     asm("add %0, %1, %2" : "=r" (tableEntry) : "r" (typeOffset), "r" (base));
 
     if ((s32)(part[0x28] << 26) < 0) {
@@ -90,7 +88,7 @@ void SetMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 0);
     typeOffset = type * 12;
-    base = gMegaMixMotionRecords;
+    base = (u8 *)gMegaMixMotionRecords;
     asm("add %0, %1, %2" : "=r" (tableEntry) : "r" (typeOffset), "r" (base));
 
     if ((s32)(part[0x28] << 27) < 0) {
@@ -125,7 +123,7 @@ void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
     asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
     type = *(s32 *)((u8 *)acc + 4);
     acc = type * 12;
-    base = gMegaMixMotionRecords;
+    base = (u8 *)gMegaMixMotionRecords;
     asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
 
     StartCtrlTargetMotionY(selfArg, partArg, (struct vec3 *)acc);
@@ -143,7 +141,7 @@ void StartMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
     asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
     type = *(s32 *)((u8 *)acc + 0);
     acc = type * 12;
-    base = gMegaMixMotionRecords;
+    base = (u8 *)gMegaMixMotionRecords;
     asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
 
     StartCtrlTargetMotionX(selfArg, partArg, (s32 *)acc);
@@ -166,7 +164,7 @@ void ResetMegaMixCtrl(void *selfArg)
     zero = 0;
     *p = zero;
     *(s32 *)(self + 0x1c) = zero - 1;
-    *(void **)(self + 4) = gMegaMixMotionSet;
+    *(void **)(self + 4) = (void *)&gMegaMixMotionSet;
 }
 
 /* Re-points `self+0xc`'s table pointer at `gMegaMixCtrlVtable`, then
@@ -176,7 +174,7 @@ void DestroyMegaMixCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gMegaMixCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gMegaMixCtrlVtable;
     DestroyBossCtrl(self, flags);
 }
 
@@ -188,7 +186,7 @@ void *CreateMegaMixCtrl(void *selfArg)
     u8 *self = selfArg;
 
     CreateBossCtrl(self);
-    *(void **)(self + 0xc) = gMegaMixCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gMegaMixCtrlVtable;
     ResetMegaMixCtrl(self);
     return self;
 }

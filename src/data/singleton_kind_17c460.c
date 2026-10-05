@@ -1,22 +1,18 @@
 #include "core.h"
 #include "actor_self.h"
 #include "actor_anim.h"
+#include "bosses.h"
 
 /*
  * ROM 0x0817C460-0x0817C4C8. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* hovercraft.c's `struct singleton_kind` (0x28 bytes, fields not
- * named yet), written as ten words. SpawnHovercraft picks one by
- * gHovercraftLevel. */
-struct singleton_kind {
-    s32 words[10];
-};
-
+/* The hovercraft's attack parameters (struct singleton_kind, bosses.h).
+ * SpawnHovercraft picks one by gHovercraftLevel. */
 const struct singleton_kind gHovercraftAttacks[2] = {
-    { { 60, 45, 6, 210, 20, 5, 90, 32, 3, 160 } },
-    { { 60, 70, 4, 230, 20, 3, 90, 40, 2, 160 } },
+    { 60, { { 45, 6, 210 }, { 20, 5, 90 }, { 32, 3, 160 } } },
+    { 60, { { 70, 4, 230 }, { 20, 3, 90 }, { 40, 2, 160 } } },
 };
 
 /* The camera-offset target box (struct anim_box) HovercraftStateCloseIn

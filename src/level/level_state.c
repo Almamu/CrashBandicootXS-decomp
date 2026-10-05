@@ -7,6 +7,7 @@
 #include "frontend.h"
 #include "system.h"
 #include "audio.h"
+#include "bosses.h"
 
 extern void *gHud;
 extern void *gAudioContext;
@@ -661,8 +662,6 @@ s32 LevelHasGemPathGem(void *self, s32 idx)
 {
     return LevelHasGemPathGemEntity(idx);
 }
-
-extern s32 GetHovercraftPartsLeft(void);
 
 /* Dispatches on `self+0xc4`'s "current index" field: index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,

@@ -1,23 +1,12 @@
 #include "core.h"
 #include "actor_self.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /*
  * ROM 0x0817C3FC-0x0817C444. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-extern void AirshipStateInactive();
-extern void nullsub_32();
-extern void nullsub_33();
-extern void AirshipStateApproach();
-extern void AirshipStateFireballs();
-extern void AirshipStateCannon();
-extern void AirshipStateExplode();
-extern void AirshipStateFall();
-extern void JetpackBalloonStatePop();
-extern void JetpackBalloonStateFloatAway();
-extern void JetpackBalloonCrateStateFall();
-extern void JetpackBalloonCrateStateHang();
 
 /* Per-state step functions of the weapon-kind tracker, called through
  * _call_via_r0 as `gAirshipStateFuncs[gAirshipState]` by

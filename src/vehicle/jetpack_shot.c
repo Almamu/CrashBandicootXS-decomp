@@ -1,5 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
@@ -43,11 +46,7 @@
  * calls `UpdateJetpackShot` by name (only indirectly via a `void *`-typed
  * function-pointer table entry), so the parameter's own type here
  * doesn't need to match the usual `void *` convention. */
-extern void *FindShotTarget(void *selfArg);
-extern u8 IsTouchingAirship(void *selfArg);
-extern void DamageAirship(s32 delta);
 extern s32 _call_via_r2(void *pos, s32 arg1, void *table);
-extern void UpdateActor(void *selfArg);
 
 struct actor_falling {
     struct actor_self base;
@@ -66,7 +65,7 @@ void UpdateJetpackShot(struct actor_falling *self)
     self->base.z += 0x400;
 
     {
-        struct actor_self *hit = FindShotTarget(self);
+        struct actor_self *hit = FindShotTarget((struct actor_self *)self);
 
         if (hit != 0) {
             struct actor_vtable *hitTable = hit->vtable;
@@ -101,9 +100,6 @@ asm(".align 2, 0");
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
 
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern u8 gJetpackShotVtable[];
-
 /* An `InitActorPart`-based constructor for this cluster's `self` object:
  * forwards its first three real arguments plus one stack argument
  * straight to `InitActorPart`, then marks `self+0x54` = 1, sets
@@ -128,16 +124,16 @@ extern u8 gJetpackShotVtable[];
  * - and, in this exact declaration order (`self`, then `one`, then
  * `eReg`, then `fReg`), schedules the loads in the ROM's own
  * self/d/e/f/one order. */
-void *CreateJetpackShot(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e, s32 f)
+void *CreateJetpackShot(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e, s32 f)
 {
     u8 *self = selfArg;
     register s32 one asm("r5") = 1;
     register s32 eReg = e;
     register s32 fReg = f;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     *(s32 *)(self + 0x54) = one;
-    *(void **)(self + 0x50) = gJetpackShotVtable;
+    *(void **)(self + 0x50) = (void *)gJetpackShotVtable;
     *(s32 *)(self + 0x58) = eReg;
     *(s32 *)(self + 0x5c) = fReg;
 

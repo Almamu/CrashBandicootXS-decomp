@@ -1,5 +1,6 @@
 #include "core.h"
 #include <libgcc.h>
+#include "bosses.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c/airship_load_graphics.c - see
  * airship_fireball.c's header comment and
@@ -21,11 +22,6 @@
  * Matched as plain C with the fixes that closed the one-row twin
  * `ConvertHovercraftTiles` (hovercraft.c, see
  * docs/matching/near-miss-polish-3.md). */
-extern s32 gAirshipMapCols;
-extern s32 gAirshipMapRows;
-extern s32 gAirshipMapTileBase;
-extern u8 gAirshipPalette[];
-extern u8 *gAirshipMapFrames[];
 
 /* The height is re-read after the row-pointer store (the ROM's `ldm
  * r1!`), the second loop has its own counter, its header is written in
@@ -54,11 +50,11 @@ void ConvertAirshipTiles(void)
 
     stride = (u32)(gAirshipMapCols * gAirshipMapRows + 1) >> 1 << 2;
     for (k = 0; k < 4; k++) {
-        s32 x = *(s32 *)(gAirshipPalette + off);
+        s32 x = *(const s32 *)((const u8 *)gAirshipPalette + off);
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = gAirshipPalette + off;
+        rows[k] = (u8 *)gAirshipPalette + off;
         /* forces the height to be re-read (the ROM's `ldm r1!`) */
         asm("" : "+m"(heights[k]));
         off += stride;
@@ -107,8 +103,6 @@ void ConvertAirshipTiles(void)
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md. */
 
-extern s32 gAirshipStateTimer;
-
 /* Sets BG palette bank 1's last color (index 15) to either a near-white
  * flash color or a dim default, gated by bit 3 of `gAirshipStateTimer`
  * (a flags word driving this effect's per-frame look). */
@@ -124,8 +118,6 @@ void UpdateAirshipFlashColor(void)
 }
 
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
-extern s32 gAirshipHitFlashTimer;
-extern u8 gAirshipHitFlashPalettes[];
 
 /* While `gAirshipHitFlashTimer`'s DMA-refresh counter is armed, decrements
  * it and re-queues one "frame" of `gAirshipHitFlashPalettes`'s palette
@@ -146,5 +138,5 @@ void AnimateAirshipPalette(void)
         v = 5 - v;
     }
 
-    QueueVramDmaTransfer(gAirshipHitFlashPalettes + (v << 5), (void *)(BG_PLTT + 0x20), 0x20, 0x10);
+    QueueVramDmaTransfer((void *)gAirshipHitFlashPalettes[v], (void *)(BG_PLTT + 0x20), 0x20, 0x10);
 }
