@@ -1,6 +1,7 @@
 #include "core.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
+#include "text.h"
 
 /* Same continue prompt ("fade overlay") self object as `continue_prompt_init.c` (`InitContinuePrompt`) -
  * redeclared locally here per this project's minimal-local-type
@@ -24,7 +25,6 @@ struct continue_prompt {
 
 extern struct vram_upload_cursor *gObjVramCursor;
 extern void ResetObjVram(struct vram_upload_cursor *self);
-extern struct bitmap_font *gSmallFont;
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern void MarkObjVram(struct vram_upload_cursor *self);

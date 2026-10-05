@@ -2,6 +2,7 @@
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
 #include "bitmap_font.h"
+#include "text.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.c, which
@@ -27,8 +28,6 @@ extern void *gOamBuffer;
 extern void *gObjVramCursor;
 extern void *gInput;
 extern void *gAudioContext;
-extern struct bitmap_font *gLargeFont;
-extern struct bitmap_font *gSmallFont;
 extern void *gSpriteRenderer;
 extern void *gSpriteBankSet;
 extern void *gPaletteCache;
@@ -143,7 +142,6 @@ extern void ShowObj(void);
 extern void CommitDispcnt(void);
 extern void FreeUnlockedPaletteSlots(void *cache);
 extern void UploadPaletteCache(void *cache);
-extern void FontResetPalette(struct bitmap_font *self);
 extern void InitCutscenePlayer(struct text_pager *self);
 extern void SetSlideshowDispcnt(u32 value);
 extern void RunCutscenePlayer(struct text_pager *self);

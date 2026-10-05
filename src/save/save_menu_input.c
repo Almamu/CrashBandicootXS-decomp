@@ -3,6 +3,7 @@
 #include "save_menu.h"
 #include "box_part.h"
 #include "bitmap_font.h"
+#include "text.h"
 
 extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
@@ -767,8 +768,6 @@ void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
     }
 }
 
-extern struct bitmap_font *gSmallFont;
-extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 GetSaveMenuBlinkPalette(struct save_menu *self);
 extern void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
 extern s32 gSaveMenuOptions[];

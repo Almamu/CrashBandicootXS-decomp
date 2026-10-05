@@ -1,5 +1,5 @@
 #include "core.h"
-#include "bitmap_font.h"
+#include "text.h"
 
 /* Sits between FontDrawText/FontMeasureChars (src/text/font_draw_text.c)
  * and FontMeasureText (src/text/font_measure.c) - just

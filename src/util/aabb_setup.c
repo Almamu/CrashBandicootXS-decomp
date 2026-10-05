@@ -1,32 +1,23 @@
 #include "core.h"
 #include "level_state.h"
-
-/* Same `struct aabb` shape as src/util/aabb.c and the sprite-object files -
- * duplicated here rather than shared, matching this project's existing
- * per-file convention for this struct (see docs/workflow.md and
- * sprite.c etc). */
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
+#include "aabb.h"
+#include "text.h"
 
 /* Set-size primitive - already referenced by name from several other
  * files (sprite.c/power_dialog_draw.c's DrawPowerDialog) as the
  * shared `SetAabbPos`(set-position)/`SetAabbSize`(set-size) pair. */
 void SetAabbSize(struct aabb *dest, s32 w, s32 h)
 {
-    dest->field_8 = w;
-    dest->field_c = h;
+    dest->w = w;
+    dest->h = h;
 }
 asm(".align 2, 0");
 
 /* Set-position primitive, see SetAabbSize above. */
 void SetAabbPos(struct aabb *dest, s32 x, s32 y)
 {
-    dest->field_0 = x;
-    dest->field_4 = y;
+    dest->x = x;
+    dest->y = y;
 }
 asm(".align 2, 0");
 
@@ -38,9 +29,6 @@ s32 GetLives(struct level_state *self)
     return self->lives;
 }
 
-extern u8 gLargeFontVtable[];
-extern u8 gSmallFontVtable[];
-extern u8 gFontVtable[];
 extern void OperatorDelete(void *self);
 
 /* Both DestroyLargeFont/DestroySmallFont below are per-type descriptor
@@ -66,9 +54,9 @@ void DestroyLargeFont(void *self, u32 flags)
     void **addr;
 
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gLargeFontVtable;
+    *addr = (void *)gLargeFontVtable;
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gFontVtable;
+    *addr = (void *)gFontVtable;
     if (flags & 1) {
         OperatorDelete(self);
     }
@@ -80,9 +68,9 @@ void DestroySmallFont(void *self, u32 flags)
     void **addr;
 
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gSmallFontVtable;
+    *addr = (void *)gSmallFontVtable;
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gFontVtable;
+    *addr = (void *)gFontVtable;
     if (flags & 1) {
         OperatorDelete(self);
     }

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "bitmap_font.h"
+#include "text.h"
 #include <agb_syscall.h>
 
 /* Sits between FontMeasureText (src/text/font_measure.c) and
@@ -45,7 +45,7 @@ void FontSetPalette(struct bitmap_font *self, u8 val)
  * docs/rom_map.md's `gSpriteBankTable` investigation) via
  * `GetPaletteSlot`, and folds the result into the same `oam_scratch[5]`
  * nibble FontSetPalette sets above. */
-void FontResetPalette(struct bitmap_font *self, u32 unused)
+void FontResetPalette(struct bitmap_font *self)
 {
     u8 *cache = gPaletteCache;
     void *rec = *(void **)((u8 *)(**gSpriteBankSet) + (0xD2 << 1));
@@ -62,8 +62,6 @@ void FontResetPalette(struct bitmap_font *self, u32 unused)
     mask |= shifted;
     self->oam_scratch[5] = mask;
 }
-
-extern u8 gFontVtable[];
 
 /* Constructor variant used for a widget that's never assigned its own
  * data tables past `record` (the line-height/space-width/glyph fields

@@ -4,6 +4,7 @@
 #include "graphics_package.h"
 #include "gba/io_reg.h"
 #include "actor_self.h"
+#include "text.h"
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110) starts here, right at
  * the 40.4 KB actor-per-type-behavior zone's own end (docs/rom_map.md's
@@ -12,7 +13,6 @@
  * already high-confidence `graphics_loading` per docs/rom_map.md's own
  * table before this chunk (`0x080354E0`-`0x08035780`ish). */
 
-extern struct bitmap_font *gSmallFont;
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 
@@ -20,7 +20,6 @@ extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern void FontSetPalette(struct bitmap_font *self, u8 val);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void *OperatorNew(s32 size);
 extern void *InitStarfield(void *arg0);

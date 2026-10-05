@@ -1,5 +1,5 @@
 #include "core.h"
-#include "bitmap_font.h"
+#include "text.h"
 
 /* GitHub issue #46: whole-string draw and fixed-count measure for the HUD
  * icon/text widget. Built with old_agbcc, which FontMeasureChars needs. */

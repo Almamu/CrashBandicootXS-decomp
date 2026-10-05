@@ -1,5 +1,5 @@
 #include "core.h"
-#include "bitmap_font.h"
+#include "text.h"
 
 /* GitHub issue #46. Built with old_agbcc, which FontMeasureText needs. */
 

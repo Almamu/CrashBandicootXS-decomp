@@ -1,6 +1,7 @@
 #include "core.h"
 #include "save_menu.h"
 #include "bitmap_font.h"
+#include "text.h"
 
 /* A small "load my background" sub-widget - the same field_c/field_d
  * bit-flags-pair idiom as `struct language_select`
@@ -106,11 +107,8 @@ void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src)
     dest->percent = GetCompletionPercent(src);
 }
 
-extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct bitmap_font *gLargeFont;
-extern struct bitmap_font *gSmallFont;
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {

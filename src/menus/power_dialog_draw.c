@@ -2,6 +2,7 @@
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "actor.h"
+#include "text.h"
 
 /* A small per-category threshold table: CountSapphireRelics/CountGoldRelics/
  * CountPlatinumRelics each count how many of a caller's 20 records fall between
@@ -55,12 +56,8 @@ extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern s32 DrawWrappedTextInBox(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 GetUiText(s32 arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
-
-extern struct bitmap_font *gLargeFont;
-extern struct bitmap_font *gSmallFont;
 
 /* Sets an icon manager's draw position. Both coordinates are inline
  * arguments, so gcc evaluates them (and re-reads the manager global)
@@ -82,7 +79,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * docs/matching/strag3-naked-retry.md. */
 void DrawPowerDialog(struct sub_8006700_actor *arg0)
 {
-    u8 buf[16];
+    struct aabb box;
     s32 w;
     s32 n;
     u32 x;
@@ -97,9 +94,9 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
     set_icon_mgr_pos(gLargeFont, x, 0x2d);
     r = gLargeFont->record;
     _call_via_r2((u8 *)gLargeFont + r->slots[2].offset, arg0->field_10, r->slots[2].ptr);
-    SetAabbPos(buf, 0x10, 0x6a);
-    SetAabbSize(buf, 0xd0, 0x35);
-    DrawWrappedTextInBox(arg0->field_14, gSmallFont, buf, 0);
+    SetAabbPos(&box, 0x10, 0x6a);
+    SetAabbSize(&box, 0xd0, 0x35);
+    DrawWrappedTextInBox(arg0->field_14, gSmallFont, &box, 0);
     n = GetUiText(0x2e);
     r = gSmallFont->record;
     w = _call_via_r2((u8 *)gSmallFont + r->slots[0].offset, n, r->slots[0].ptr);

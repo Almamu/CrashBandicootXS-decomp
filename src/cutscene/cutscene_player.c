@@ -1,5 +1,6 @@
 #include "core.h"
 #include "bg_scroll_layer.h"
+#include "text.h"
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -143,21 +144,14 @@ struct pager_text
     s32 count;
 };
 
-struct pager_target
-{
-    u8 unk_000[0x118];
-    s32 box0;                   // 0x118
-    s32 divisor;                // 0x11C
-};
-
 struct pager
 {
     struct pager_item **items;  // 0x00
     s32 count;                  // 0x04
     u8 unk_08[8];
     struct pager_text *texts;   // 0x10
-    struct pager_target *target; // 0x14
-    s32 box[4];                 // 0x18 - text rect {x, y, w, h}
+    struct bitmap_font *target; // 0x14
+    struct aabb box;            // 0x18 - text rect
 };
 
 extern void *gOamBuffer;
@@ -171,7 +165,6 @@ extern void HideUnusedOamEntries(void *oam);
 extern void CommitOamBuffer(void *oam);
 extern void WaitForVBlank(void);
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
-extern s32 DrawWrappedText(u8 *text, void *target, s32 *box, s32 limit, s32 mode);
 
 void RunCutscenePlayer(struct pager *self)
 {
@@ -180,11 +173,11 @@ void RunCutscenePlayer(struct pager *self)
     s32 i;
 
     {
-        s32 b = self->box[0];
-        struct pager_target *t = self->target;
+        s32 b = self->box.x;
+        struct bitmap_font *t = self->target;
 
-        t->box0 = b;
-        limit = __udivsi3(self->box[3], t->divisor);
+        t->marginX = b;
+        limit = __udivsi3(self->box.h, t->lineHeight);
     }
     for (i = 0; i < self->count; i++)
     {
@@ -211,7 +204,7 @@ void RunCutscenePlayer(struct pager *self)
 
                 while (str[pos] != 0 && res == 1)
                 {
-                    pos += DrawWrappedText(str + pos, self->target, self->box, limit, 1);
+                    pos += DrawWrappedText(str + pos, self->target, &self->box, limit, 1);
                     res = WaitForKeyPress(self->items[i]->count, self->items[i]->buttons, 9);
                 }
             }

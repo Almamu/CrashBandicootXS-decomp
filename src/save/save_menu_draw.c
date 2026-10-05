@@ -4,12 +4,10 @@
 #include "actor.h"
 #include "pause_menu.h"
 #include "vram_pool.h"
+#include "text.h"
 
-extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct bitmap_font *gLargeFont;
-extern struct bitmap_font *gSmallFont;
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {

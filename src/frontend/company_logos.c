@@ -5,6 +5,7 @@
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 #include "logo_screen.h"
+#include "text.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
@@ -50,7 +51,6 @@ extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
-extern void FontSetPalette(struct bitmap_font *self, u8 val);
 extern s32 GetUiText(s32 arg0);
 extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
