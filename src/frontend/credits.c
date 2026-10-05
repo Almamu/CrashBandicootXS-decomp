@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "gba/dma_macros.h"
 #include <agb_syscall.h>
+#include "text.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
@@ -108,7 +109,6 @@ extern u8 gContinuePromptCursorText[];
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
-extern s32 FontSetPalette(void *mgr, u8 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 s32 GetContinuePromptBlink(struct continue_prompt *self, s32 mode);
@@ -268,7 +268,6 @@ asm(".align 2, 0");
  * r4 and `&gSmallFont` r6 as the ROM does. */
 extern void *InitStarfield(void *arg0);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
-extern void FontResetPalette(struct bitmap_font *mgr);
 extern void LoadCreditsLogos(struct credits_screen *self);
 extern void UploadPaletteCache(struct palette_cache *arg0);
 extern void ResetObjVram(struct vram_upload_cursor *self);
@@ -278,8 +277,6 @@ extern void _call_via_r1(void *self, void *fn);
 extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern struct palette_cache *gPaletteCache;
-extern struct bitmap_font *gSmallFont;
-extern struct bitmap_font *gLargeFont;
 extern u8 gDispcnt[2];
 extern struct AudioContext *gAudioContext;
 extern u8 gCreditsText[];
@@ -543,7 +540,6 @@ asm(".align 2, 0");
  * as the ROM does; the cursor advance and the popup y placement keep
  * their own temporaries so the old/new cursor and the `y + 0xa0` term are
  * formed in the ROM's order. */
-extern s32 FontTextHeight(struct bitmap_font *mgr, const u8 *text);
 extern s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
 extern void *OperatorNew(s32 size);
 extern u8 gCreditsEmptyText[];

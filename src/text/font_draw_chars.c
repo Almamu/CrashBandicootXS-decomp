@@ -1,5 +1,5 @@
 #include "core.h"
-#include "bitmap_font.h"
+#include "text.h"
 
 /* Sits between FontDrawGlyph/InitSmallFont/InitLargeFont/
  * FontPutChar (src/text/font_glyph.c) and FontDrawText/

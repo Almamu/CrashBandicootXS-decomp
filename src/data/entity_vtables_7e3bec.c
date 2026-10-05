@@ -1,5 +1,6 @@
 #include "core.h"
 #include "vtable.h"
+#include "text.h"
 
 /*
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
@@ -12,10 +13,7 @@
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
-extern void DestroyFont();
-extern void FontMeasureText();
 extern void DrawActor();
-extern void FontUploadTiles();
 extern void DrawEntity();
 extern void CtrlHandleEvent();
 extern void EffectCtrlHandleEvent();
@@ -190,11 +188,6 @@ extern void ResetPooledBgLayer();
 extern void LoadPooledBgLayerTiles();
 extern void DestroyPooledBgLayer();
 extern void sub_802710C();
-extern void FontDrawGlyph();
-extern void FontPutChar();
-extern void FontDrawChars();
-extern void FontDrawText();
-extern void FontMeasureChars();
 extern void UpdateActor();
 extern void DestroyActor();
 extern void UpdatePolarPlayer();
@@ -282,8 +275,6 @@ extern void IsHovercraftCannonFlashUnshootable();
 extern void UpdateLogoActor();
 extern void DrawLogoActor();
 extern void DestroyLogoActor();
-extern void DestroyLargeFont();
-extern void DestroySmallFont();
 extern void DestroyRiderlessPolar();
 extern void UpdatePolarCheckpointText();
 extern void DestroyPolarCheckpointText();

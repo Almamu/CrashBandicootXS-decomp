@@ -1,5 +1,5 @@
 #include "core.h"
-#include "bitmap_font.h"
+#include "text.h"
 
 /* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line.c) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s).
@@ -14,7 +14,7 @@
  * the render target's `record->slots[1]` method and drawing it with
  * `slots[3]` (gcc 2.x virtual calls through `_call_via_r3` =
  * `_call_via_r3`) while accumulating a running pixel width against a
- * per-line budget (`box->field_8`). When the running width would
+ * per-line budget (`box->w`). When the running width would
  * overflow, it advances to a new line (`slots[5]` with a '\n', then
  * re-draws the just-measured token at the line's start) and optionally
  * flushes (`WaitForVBlank` then `CommitOamBuffer(gOamBuffer)`)
@@ -24,15 +24,8 @@
  * escape sequences, `/b` (nudge the render Y position down by 4, a
  * half-line break) and `/n` (newline). Returns the number of bytes
  * consumed. */
-struct wrapped_text_box {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-};
-
 extern void ResetOamBuffer(void *arg0);
 extern void HideUnusedOamEntries(void *arg0);
-extern s32 GetWordLength(u8 *cursor);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, u8 *arg1, s32 arg2, void *arg3);
 extern void WaitForVBlank(void);
@@ -52,7 +45,7 @@ static inline void set_pos(struct bitmap_font *m, u32 x, u32 y)
 static inline u32 *pos_x(struct bitmap_font *m) { return &m->posX; }
 static inline u32 *pos_y(struct bitmap_font *m) { return &m->posY; }
 
-s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct wrapped_text_box *box, s32 limit, s32 mode)
+s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 limit, s32 mode)
 {
     s32 widthAccum;
     s32 lineCount;
@@ -68,7 +61,7 @@ s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct wrapped_text_box 
         ResetOamBuffer(gOamBuffer);
         HideUnusedOamEntries(gOamBuffer);
     }
-    set_pos(self, box->field_0, box->field_4);
+    set_pos(self, box->x, box->y);
     widthAccum = 0;
     lineCount = 0;
     token = text;
@@ -97,7 +90,7 @@ s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct wrapped_text_box 
             r = self->record;
             charWidth = _call_via_r3((u8 *)self + r->slots[1].offset, token, len, r->slots[1].ptr);
             combined = widthAccum + charWidth;
-            if (combined <= box->field_8) {
+            if (combined <= box->w) {
                 r = self->record;
                 _call_via_r3((u8 *)self + r->slots[3].offset, token, len, r->slots[3].ptr);
                 widthAccum = combined;

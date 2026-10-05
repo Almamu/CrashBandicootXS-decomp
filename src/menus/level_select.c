@@ -1,6 +1,7 @@
 #include "core.h"
 #include "bitmap_font.h"
 #include <agb_syscall.h>
+#include "text.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -335,8 +336,6 @@ extern void *gCollidableList;
 extern struct tile_cache *gPaletteCache;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern struct bitmap_font *gSmallFont;
-extern struct bitmap_font *gLargeFont;
 extern struct vram_cursor *gObjVramCursor;
 extern void *gOamBuffer;
 extern void *gInput;
@@ -410,8 +409,6 @@ extern void LoadGraphicsPackage(void *dst, void *pkg);
 extern void PlaySong(void *arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetUiText(s32 id);
-extern void FontSetPalette(struct bitmap_font *m, u8 v);
-extern void FontResetPalette(struct bitmap_font *m);
 extern void FormatCentiseconds(s32 value, char *buf);
 
 /* Save data. */

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "bitmap_font.h"
+#include "text.h"
 #include <agb_syscall.h>
 
 /* GitHub issue #46: the HUD icon/text widget's glyph drawer and its two
@@ -9,15 +9,6 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern void AddOamEntry(void *arg0, void *arg1);
 extern struct oam_shadow_buffer *gOamBuffer;
-extern u8 gSmallFontChars[];
-extern u8 gSmallFontGlyphs[];
-extern u8 gFontVtable[];
-extern u8 gSmallFontVtable[];
-extern u8 gLargeFontVtable[];
-extern u8 gSmallFontTiles[];
-extern u8 gLargeFontTiles[];
-extern u8 gLargeFontChars[];
-extern u8 gLargeFontGlyphs[];
 
 /* `bitmap_font.oam_scratch` viewed as the OAM-shaped draw request
  * AddOamEntry consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X
@@ -89,7 +80,7 @@ struct bitmap_font *InitSmallFont(struct bitmap_font *self)
     self->record = (struct icon_record *)gSmallFontVtable;
     self->lineHeight = 9;
     self->spaceWidth = 4;
-    self->tiles = gSmallFontTiles;
+    self->tiles = (void *)gSmallFontTiles;
     self->glyphTileStride = 2;
     self->glyphRecords = (struct icon_glyph_metrics *)gSmallFontGlyphs;
     for (i = 0; i <= 0xff; i++)
@@ -121,7 +112,7 @@ struct bitmap_font *InitLargeFont(struct bitmap_font *self)
     self->spaceWidth = 6;
     self->glyphTileStride = 4;
     self->glyphRecords = (struct icon_glyph_metrics *)gLargeFontGlyphs;
-    self->tiles = gLargeFontTiles;
+    self->tiles = (void *)gLargeFontTiles;
     ((struct glyph_oam *)self->oam_scratch)->size = 1;
     for (i = 0; i <= 0xff; i++)
     {

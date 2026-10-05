@@ -1,17 +1,10 @@
 #include "core.h"
+#include "text.h"
 
 /*
  * ROM 0x08174BE0-0x08175558. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-/* include/bitmap_font.h's `struct icon_glyph_metrics`. */
-struct icon_glyph_metrics {
-    s32 width;
-    s32 shape;
-    u8 yOffset;
-    u8 unused_9[3];
-};
 
 /* hud_boss_clock.c's `struct hud_pos`. */
 struct hud_pos

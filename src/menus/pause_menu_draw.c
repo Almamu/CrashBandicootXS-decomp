@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "vram_pool.h"
 #include "memory.h"
+#include "text.h"
 
 extern void AdvanceSpriteAnim(struct actor *part);
 extern s32 __modsi3(s32 dividend, s32 divisor);
@@ -124,10 +125,7 @@ extern void DrawPauseRelicsPage(struct pause_menu *self);
 extern void DrawSpriteWithOffset(void *icon, s32 dx, s32 dy);
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct vram_upload_cursor *gObjVramCursor;
-extern struct bitmap_font *gSmallFont;
-extern struct bitmap_font *gLargeFont;
 extern void *GetUiText(s32 id);
-extern void FontResetPalette(struct bitmap_font *self);
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
@@ -237,8 +235,6 @@ void DrawPauseMenu(struct pause_menu *self)
         DrawSpriteWithOffset(self->field_c0, 0, 0);
     HideUnusedOamEntries(gOamBuffer);
 }
-
-extern s32 FontSetPalette(struct bitmap_font *self, s32 val);
 
 /* One 8-byte record of `self->field_14`'s per-row array: a runtime
  * string-table label id, then a type tag (`DrawPauseMenuRows` branches on

@@ -3,6 +3,7 @@
 #include "gba/defines.h"
 #include "actor.h"
 #include "pause_menu.h"
+#include "text.h"
 
 /* The three functions below are companion "draw a label centered on an
  * icon widget" steps. Once NAKED transcriptions; they match as plain C
@@ -21,7 +22,6 @@
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern struct bitmap_font *gSmallFont;
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {

@@ -5,6 +5,7 @@
 #include "vram_pool.h"
 #include "pause_menu.h"
 #include "memory.h"
+#include "text.h"
 
 /* DrawPauseGemsPage + DrawPauseRelicsPage: mutually address-adjacent, bracketed by
  * the already-matched DrawPausePowersPage (pause_menu_powers.c) before and
@@ -19,7 +20,6 @@ extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern struct icon_pos gPauseGemIconPos[];
 extern void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct bitmap_font *gSmallFont;
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {

@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
+#include "text.h"
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
  * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
@@ -171,13 +172,11 @@ void LanguageSelectInput(struct language_select *self, u32 flags)
 
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
-extern struct bitmap_font *gSmallFont;
 /* The six language names. */
 extern void *gLanguageNames[6];
 extern void ResetOamBuffer(void *arg0);
 extern void RewindObjVram(void *arg0);
 extern void HideUnusedOamEntries(void *arg0);
-extern s32 FontSetPalette(struct bitmap_font *mgr, u8 frame);
 extern s32 LanguageSelectBlink(struct language_select *self);
 /* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
@@ -240,7 +239,6 @@ void DrawLanguageSelect(struct language_select *self)
  * `zero` local shared by the `field_8`/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
 extern struct palette_cache *gPaletteCache;
-extern struct bitmap_font *gLargeFont;
 extern const u16 gLanguageSelectPalette0[16];
 extern const u16 gLanguageSelectPalette1[16];
 extern const u16 gLanguageSelectPalette2[16];

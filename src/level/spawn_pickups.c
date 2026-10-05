@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "sprite_bank.h"
+#include "text.h"
 
 extern void *gLevelState;
 extern void *gEntityFlags;
@@ -349,10 +350,6 @@ extern void *gSpriteRenderer;
 extern void *gPaletteCycles;
 extern struct palette_cache *gPaletteCache;
 extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
-extern struct bitmap_font *gSmallFont;
-extern struct bitmap_font *gLargeFont;
-extern struct bitmap_font *InitSmallFont(struct bitmap_font *self);
-extern struct bitmap_font *InitLargeFont(struct bitmap_font *self);
 extern s32 AllocVramDmaQueue(void);
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *arg0);

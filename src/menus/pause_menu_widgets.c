@@ -2,9 +2,8 @@
 #include "actor.h"
 #include "bitmap_font.h"
 #include "pause_menu.h"
+#include "text.h"
 
-extern struct bitmap_font *gSmallFont;
-extern struct bitmap_font *gLargeFont;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Draws `label1`/`label2` (a small "N/M" fraction readout - a row's

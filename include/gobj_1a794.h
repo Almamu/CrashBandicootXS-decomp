@@ -2,6 +2,7 @@
 #define GUARD_GOBJ_1A794_H
 
 #include "mover_new.h"
+#include "aabb.h"
 
 /* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
@@ -207,14 +208,6 @@ struct pos2
 {
     s32 x;
     s32 y;
-};
-
-struct aabb
-{
-    s32 x;
-    s32 y;
-    s32 w;
-    s32 h;
 };
 
 struct spawn_rec
