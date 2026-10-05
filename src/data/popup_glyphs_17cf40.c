@@ -1,20 +1,20 @@
 #include "core.h"
-#include "graphics_package.h"
+#include "frontend.h"
 
 /*
  * ROM 0x0817CF40-0x0817CFF4. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gTitleLogoPieceMotion0[];
-extern const u8 gTitleLogoPieceMotion1[];
-extern const u8 gTitleLogoPieceMotion2[];
-extern const u8 gTitleLogoPieceMotion3[];
-extern const u8 gTitleLogoPieceMotion4[];
-extern const u8 gTitleLogoPieceMotion5[];
-extern const u8 gTitleLogoPieceMotion6[];
-extern const u8 gTitleLogoPieceMotion7[];
-extern const u8 gTitleLogoPieceMotion8[];
+extern const struct delta_record gTitleLogoPieceMotion0[];
+extern const struct delta_record gTitleLogoPieceMotion1[];
+extern const struct delta_record gTitleLogoPieceMotion2[];
+extern const struct delta_record gTitleLogoPieceMotion3[];
+extern const struct delta_record gTitleLogoPieceMotion4[];
+extern const struct delta_record gTitleLogoPieceMotion5[];
+extern const struct delta_record gTitleLogoPieceMotion6[];
+extern const struct delta_record gTitleLogoPieceMotion7[];
+extern const struct delta_record gTitleLogoPieceMotion8[];
 extern const u8 gCreditsRedEyeStudiosLogoPalette[];
 extern const u8 gCreditsShinenLogoPalette[];
 extern const u8 gCreditsCosmigoLogoPalette[];
@@ -25,13 +25,6 @@ extern const u8 gCreditsShinenLogoTiles[];
 extern const u8 gCreditsCosmigoLogoTiles[];
 extern const u8 gCreditsUniversalLogoTiles[];
 extern const u8 gCreditsVvLogoTiles[];
-
-/* title_screen.c's view of one countdown-slot seed. */
-struct slot_seed
-{
-    const void *record;
-    s32 hold;
-};
 
 /* Five popup glyph sources, each a {w, h, palette, tiles, 0}
  * package (LoadCreditsLogos, credits.c, reads them as its

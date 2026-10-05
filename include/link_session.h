@@ -11,14 +11,16 @@ struct nibble_pair {
     u8 hi:4;
 } __attribute__((packed));
 
-/* A 0x90-byte receive ring (the session header has one at +0x40, each
- * player record one at +0x38). */
+/* A 0x90-byte byte ring: the session's outgoing ring at +0x40 and each
+ * player record's incoming ring at +0x38 (SendSaveTransferChunk and
+ * ReceiveSaveTransferChunk, src/save/save_transfer.c, stream the save
+ * data through them). */
 struct link_ring {
     u8 unused_00[4];
-    u8 buf[0x80];       /* 0x04 - written/read at field_8c/field_88 */
-    s32 field_84;
-    s32 field_88;
-    s32 field_8c;       /* reset to 0x7f */
+    u8 buf[0x80];       /* 0x04 - written at writePos, read at readPos */
+    s32 count;          /* 0x84 - bytes pending */
+    s32 readPos;        /* 0x88 */
+    s32 writePos;       /* 0x8c - reset to 0x7f */
 };
 
 /* One per-player 0xc8-byte record of the link session. */

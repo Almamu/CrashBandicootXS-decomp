@@ -1,44 +1,37 @@
 #include "core.h"
-#include "graphics_package.h"
+#include "frontend.h"
 
 /*
  * ROM 0x0817D6C0-0x0817D7A4. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gVvLogoPieceMotion00[];
-extern const u8 gVvLogoPieceMotion01[];
-extern const u8 gVvLogoPieceMotion02[];
-extern const u8 gVvLogoPieceMotion03[];
-extern const u8 gVvLogoPieceMotion04[];
-extern const u8 gVvLogoPieceMotion05[];
-extern const u8 gVvLogoPieceMotion06[];
-extern const u8 gVvLogoPieceMotion07[];
-extern const u8 gVvLogoPieceMotion08[];
-extern const u8 gVvLogoPieceMotion09[];
-extern const u8 gVvLogoPieceMotion10[];
-extern const u8 gVvLogoPieceMotion11[];
-extern const u8 gVvLogoPieceMotion12[];
-extern const u8 gVvLogoPieceMotion13[];
-extern const u8 gVvLogoPieceMotion14[];
-extern const u8 gVvLogoPieceMotion15[];
-extern const u8 gVvLogoPieceMotion16[];
-extern const u8 gVvLogoPieceMotion17[];
-extern const u8 gVvLogoPieceMotion18[];
-extern const u8 gVvLogoPieceMotion19[];
+extern const struct delta_record gVvLogoPieceMotion00[];
+extern const struct delta_record gVvLogoPieceMotion01[];
+extern const struct delta_record gVvLogoPieceMotion02[];
+extern const struct delta_record gVvLogoPieceMotion03[];
+extern const struct delta_record gVvLogoPieceMotion04[];
+extern const struct delta_record gVvLogoPieceMotion05[];
+extern const struct delta_record gVvLogoPieceMotion06[];
+extern const struct delta_record gVvLogoPieceMotion07[];
+extern const struct delta_record gVvLogoPieceMotion08[];
+extern const struct delta_record gVvLogoPieceMotion09[];
+extern const struct delta_record gVvLogoPieceMotion10[];
+extern const struct delta_record gVvLogoPieceMotion11[];
+extern const struct delta_record gVvLogoPieceMotion12[];
+extern const struct delta_record gVvLogoPieceMotion13[];
+extern const struct delta_record gVvLogoPieceMotion14[];
+extern const struct delta_record gVvLogoPieceMotion15[];
+extern const struct delta_record gVvLogoPieceMotion16[];
+extern const struct delta_record gVvLogoPieceMotion17[];
+extern const struct delta_record gVvLogoPieceMotion18[];
+extern const struct delta_record gVvLogoPieceMotion19[];
 extern const u8 gVvLogoEmblemPalette[];
 extern const u8 gVvLogoLettersPalette[];
 extern const u8 gVvLogoUrlPalette[];
 extern const u8 gVvLogoEmblemTiles[];
 extern const u8 gVvLogoLettersTiles[];
 extern const u8 gVvLogoUrlTiles[];
-
-/* title_screen.c's view of one countdown-slot seed. */
-struct slot_seed
-{
-    const void *record;
-    s32 hold;
-};
 
 /* Twenty {record, hold} seeds read by InitVvLogoPieces
  * (title_screen.c): the motion sequences in

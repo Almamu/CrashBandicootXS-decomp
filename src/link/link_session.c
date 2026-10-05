@@ -223,26 +223,26 @@ struct link_rx_word {
  * the fast loop: the ROM builds that loop's field addresses from a copy
  * made right after the id copy (`adds r4, r7, #0`), and the wrap loop's
  * from the original. The bounds test goes through `rd`, the caller's
- * `&ring.field_88`. */
+ * `&ring.readPos`. */
 static inline void LinkRingPop(struct link_ring *r, struct link_ring *rf, u8 *dst, s32 n, s32 *rd)
 {
     s32 k;
 
     if (*rd < 0x80 - n) {
         for (k = n - 1; k != -1; k--) {
-            *dst++ = rf->buf[rf->field_88];
-            rf->field_88++;
-            rf->field_84--;
+            *dst++ = rf->buf[rf->readPos];
+            rf->readPos++;
+            rf->count--;
         }
     } else {
         for (k = n - 1; k != -1; k--) {
-            s32 old = r->field_88;
+            s32 old = r->readPos;
             s32 nw = 0;
 
             if (old != 0x7f)
                 nw = old + 1;
-            r->field_88 = nw;
-            r->field_84--;
+            r->readPos = nw;
+            r->count--;
             *dst++ = r->buf[old];
         }
     }
@@ -395,19 +395,19 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 /* The bounds test reaches the ring through an escaped copy
                  * of `p` (no code), so CSE doesn't share its address with
                  * the loop pre-headers, which recompute it as the ROM does. */
-                if (({ struct link_player *_q = p; asm("" : "+r"(_q)); _q; })->ring.field_8c < 0x80 - n) {
+                if (({ struct link_player *_q = p; asm("" : "+r"(_q)); _q; })->ring.writePos < 0x80 - n) {
                     for (k = n - 1; k != -1; k--) {
-                        p->ring.field_8c++;
-                        p->ring.field_84++;
-                        p->ring.buf[p->ring.field_8c] = *src++;
+                        p->ring.writePos++;
+                        p->ring.count++;
+                        p->ring.buf[p->ring.writePos] = *src++;
                     }
                 } else {
                     for (k = n - 1; k != -1; k--) {
                         u8 b = *src++;
 
-                        p->ring.field_8c = p->ring.field_8c == 0x7f ? 0 : p->ring.field_8c + 1;
-                        p->ring.field_84++;
-                        p->ring.buf[p->ring.field_8c] = b;
+                        p->ring.writePos = p->ring.writePos == 0x7f ? 0 : p->ring.writePos + 1;
+                        p->ring.count++;
+                        p->ring.buf[p->ring.writePos] = b;
                     }
                 }
                 p->field_34 += n;
@@ -439,9 +439,9 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             self->field_3f0 = 0;
             id = self->id;
             ring = &self->ring;
-            cnt = &self->ring.field_84;
+            cnt = &self->ring.count;
             dst = &self->id[2];
-            rd = &self->ring.field_88;
+            rd = &self->ring.readPos;
             {
                 u8 *d = self->field_28;
                 u8 *s = id;

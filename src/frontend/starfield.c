@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gba/dma_macros.h"
+#include "frontend.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
@@ -49,7 +50,6 @@ extern void *OperatorNewArray(u32 size);
 extern void SetDispcntMode(s32 val);
 extern void ShowBg0(void);
 extern void CommitDispcnt(void);
-extern void SpawnStar(void *mgrArg, s32 idx);
 extern u8 gDispcnt[2];
 
 /* Constructs the particle-trail BG0 object. Fully matched as real C.
@@ -512,9 +512,6 @@ asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_side_gun.c - see
  * docs/matching/issue-63-0x08033ef4-actor.md. */
-
-extern void DrawStarfield(void *mgr);
-extern void SpawnStar(void *mgr, s32 idx);
 
 /* Calls `DrawStarfield(mgr)` (the OAM/tile-scan update this object's part
  * table drives), then - while the particle `count` is still under

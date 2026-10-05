@@ -6,6 +6,7 @@
 #include "gba/dma_macros.h"
 #include <agb_syscall.h>
 #include "text.h"
+#include "frontend.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
@@ -40,47 +41,8 @@ struct continue_prompt {
 };
 
 /* The credits screen (RunCredits; docs/rom_map.md read it as a
- * "between-level map/progress screen"): a starfield plus the credits
- * text (gCreditsText) as floating lines and logos, run from the title
- * menu and after the ending (game_frame.c), allocated `OperatorNew(0x98)` by `RunCredits`. Only
- * the fields this file's functions actually touch are named. */
-
-/* One timed text-popup node (0x18 bytes, `OperatorNew`-allocated by
- * UpdateCreditsText, drawn by DrawCreditsText). */
-struct popup_node {
-    struct popup_node *next; /* 0x00 */
-    s32 x;                   /* 0x04 */
-    s32 y;                   /* 0x08 - counts down while alive */
-    s32 timer;               /* 0x0c - node dies once y + timer <= 0 */
-    s32 mode;                /* 0x10 - 0/1: text via icon manager DC/E0, 2: glyph */
-    u8 index;                /* 0x14 - glyph index / character */
-};
-
-/* One of the five custom popup glyphs `LoadCreditsLogos` loads (0x18 bytes
- * each, at `credits_screen+0x1c`). */
-struct popup_glyph {
-    s32 cols;    /* 0x00 - width in 32-px OAM cells */
-    s32 rows;    /* 0x04 - height in 32-px OAM cells */
-    s32 height;  /* 0x08 - pixel height */
-    s32 width;   /* 0x0c - pixel advance */
-    u8 palette;  /* 0x10 */
-    void *tiles; /* 0x14 - heap buffer, freed by DestroyCredits */
-};
-
-struct credits_screen {
-    struct popup_node *popupListHead; /* 0x00 - timed text-popup node list, see UpdateCreditsText */
-    const void *streamBase;   /* 0x04 - popup byte-opcode stream base */
-    const void *streamCursor; /* 0x08 - popup byte-opcode stream cursor */
-    void *starfield;             /* 0x0c - the starfield, InitStarfield */
-    s32 drawMode;              /* 0x10 */
-    s32 suppressCounter;        /* 0x14 */
-    u8 unused_18[4];
-    struct popup_glyph glyphs[5]; /* 0x1c */
-    u32 frameParity; /* 0x94 */
-};
-
-
-COMPILE_TIME_ASSERT(sizeof(struct credits_screen) == 0x98);
+ * "between-level map/progress screen"), allocated `OperatorNew(0x98)` by
+ * `RunCredits`: `struct credits_screen` is in frontend.h. */
 
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
@@ -266,9 +228,7 @@ asm(".align 2, 0");
  * lengthens the live ranges crossing it by one insn, which is what tips
  * the allocator into giving `&gPaletteCache`/`&gObjVramCursor`
  * r4 and `&gSmallFont` r6 as the ROM does. */
-extern void *InitStarfield(void *arg0);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
-extern void LoadCreditsLogos(struct credits_screen *self);
 extern void UploadPaletteCache(struct palette_cache *arg0);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
@@ -279,7 +239,6 @@ extern void PlaySong(struct AudioContext *self, u32 id);
 extern struct palette_cache *gPaletteCache;
 extern u8 gDispcnt[2];
 extern struct AudioContext *gAudioContext;
-extern u8 gCreditsText[];
 extern void *OperatorNew(s32 size);
 
 /* Sets the manager's glyph tile base and fires its slot-6 method. */
@@ -339,10 +298,6 @@ struct credits_screen *InitCredits(struct credits_screen *self)
 asm(".align 2, 0");
 
 extern void UpdateKeys(void *arg0);
-extern void UpdateCreditsText(struct credits_screen *self);
-extern void DrawCreditsText(struct credits_screen *self);
-extern void CommitCreditsFrame(void *unused);
-extern void UpdateStarfield(void *starfield);
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern struct AudioContext *gAudioContext;
 extern void *gInput;
@@ -542,7 +497,6 @@ asm(".align 2, 0");
  * formed in the ROM's order. */
 extern s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
 extern void *OperatorNew(s32 size);
-extern u8 gCreditsEmptyText[];
 
 #define ICON_TEXT_CALL3(mgrExpr, n, a, b)                                      \
     ({                                                                          \
@@ -601,8 +555,8 @@ void UpdateCreditsText(struct credits_screen *self)
         lineStart = lineStart->next;
     tail = lineStart;
 
-    widthA = FontTextHeight(gSmallFont, gCreditsEmptyText);
-    widthB = FontTextHeight(gLargeFont, gCreditsEmptyText);
+    widthA = FontTextHeight(gSmallFont, (u8 *)gCreditsEmptyText);
+    widthB = FontTextHeight(gLargeFont, (u8 *)gCreditsEmptyText);
     maxHeight = widthA;
     penX = 0;
     if (*(const u8 *)self->streamCursor == 0)
@@ -740,8 +694,9 @@ asm(".align 2, 0");
  * hoist are untouched. `ps` is an r1 register variable (the ROM reloads
  * `slot` into r1) and gets one extra `asm("" : : "r")` reference after
  * the shift, so the shift result goes to r0 instead of reusing r1. */
-/* One `gCreditsLogos` record (0x14 bytes): a popup glyph's size
- * in 8-px tiles and its tagged palette/tile assets. */
+/* One `gCreditsLogos` record (0x14 bytes), read through its own view of
+ * `struct bg_package`: a popup glyph's size in 8-px tiles (signed here;
+ * the loops compare them signed) and its tagged palette/tile assets. */
 struct popup_glyph_src {
     s32 w;               /* 0x00 */
     s32 h;               /* 0x04 */
@@ -750,7 +705,6 @@ struct popup_glyph_src {
     u32 unk_10;
 };
 
-extern struct popup_glyph_src gCreditsLogos[];
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 extern void LoadTaggedAsset(const void *asset, void *dest);
@@ -764,7 +718,7 @@ void LoadCreditsLogos(struct credits_screen *self)
 
     for (i = 0; i <= 4; i++)
     {
-        struct popup_glyph_src *src = &gCreditsLogos[i];
+        struct popup_glyph_src *src = (struct popup_glyph_src *)&gCreditsLogos[i];
         struct popup_glyph *glyph = (struct popup_glyph *)((u8 *)self + 0x1c + (i * 2 + i) * 8);
         u8 *tiles;
         u16 *pal;
@@ -860,7 +814,6 @@ void CommitCreditsFrame(void *unused)
     FlushVramDmaQueue();
 }
 
-extern void DestroyStarfield(void *self, s32 arg1);
 extern void OperatorDeleteArray(void *ptr);
 
 /* --------------------------------------------------------------------

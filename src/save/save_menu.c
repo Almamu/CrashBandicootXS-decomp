@@ -1,6 +1,6 @@
 #include "core.h"
 #include "gba/io_reg.h"
-#include "save_menu.h"
+#include "save.h"
 
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
@@ -39,8 +39,6 @@ void CommitSaveMenuFrame(struct save_menu *self)
     FlushVramDmaQueue();
 }
 
-extern void *gSaveMenu;
-extern void DestroySaveMenu(void *self, u32 flags);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 
 /* Tears down the "connecting..." SIO-handshake spinner object (see
@@ -57,14 +55,13 @@ void CloseSaveMenu(void)
 }
 
 extern void *OperatorNew(s32 size);
-extern void *InitSaveMenu(void *arg0);
 
 /* Allocates and constructs a fresh SIO-handshake spinner object (the
  * counterpart to CloseSaveMenu's teardown above), stashing it in the same
  * gSaveMenu global CloseSaveMenu tears down. */
 void OpenSaveMenu(void)
 {
-    void **dest;
+    struct save_menu **dest;
 
     FreeUnlockedPaletteSlots(gPaletteCache);
     dest = &gSaveMenu;

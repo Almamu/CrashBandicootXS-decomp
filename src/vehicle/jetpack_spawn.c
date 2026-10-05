@@ -1,4 +1,5 @@
 #include "core.h"
+#include "byte_arg.h"
 #include "actor_self.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
@@ -57,12 +58,6 @@ struct keys_pair {
     u16 held;
     u16 pressed;
 };
-
-/* A one-byte by-value argument: the ROM stores it into its stack slot
- * with `strb` (a promoted `u8` would be stored with `str`). */
-struct byte_arg {
-    u8 v;
-} __attribute__((packed));
 
 extern u8 *mem_alloc(u32 size, s32 flags);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);

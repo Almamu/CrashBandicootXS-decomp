@@ -4,8 +4,8 @@
 #include "actor_self.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
-#include "logo_screen.h"
 #include "text.h"
+#include "frontend.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
@@ -21,25 +21,11 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 extern u8 gDispcnt[2];
 extern void *gInput;
-extern void *gLogoActorTiles[2];
-extern s32 gLogoActorTileBuffer;
-extern void *gLogoActorLastFrame;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
-
-extern u8 gTitleLogoPieceSeeds[];
-extern u8 gTitleArrowPieceOffsets[];
-extern u8 gLogoActorAnim[];
-extern u8 gPolarCategoryPalette[];
-extern u8 gVvLogoEmblemObj[];
-extern u8 gVvLogoLettersObj[];
-extern u8 gVvLogoUrlObj[];
-extern u8 gVvLogoPieceSeeds[];
-extern u8 gUniversalLogoBg[];
-extern u8 gLogoActorVtable[];
 
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
@@ -52,7 +38,6 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern s32 GetUiText(s32 arg0);
-extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void ShowBg2(void);
@@ -60,7 +45,6 @@ extern s32 RandRange(s32 arg0);
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 extern void *OperatorNew(s32 size);
-extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
@@ -79,7 +63,6 @@ extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
 extern void OperatorDelete(void *self);
 extern s32 __modsi3(void *self, s32 arg1);
-extern void DestroyStarfield(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
@@ -422,7 +405,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
  * and gives it r4 ahead of `y`/`bg2cnt`. */
 void LoadUniversalLogoBg(u32 *self)
 {
-    struct bg_package *pkg = (struct bg_package *)gUniversalLogoBg;
+    const struct bg_package *pkg = &gUniversalLogoBg;
     u16 *palBuf;
     u16 *mapBuf;
     u16 *dest;
@@ -496,11 +479,11 @@ static inline u8 *CurFrame(struct actor_self *self)
     return (u8 *)self->frameOffsets[val];
 }
 
-struct actor_self *InitLogoActor(struct actor_self *self, void *a)
+struct actor_self *InitLogoActor(struct actor_self *self, const void *anim)
 {
     u8 *frame;
 
-    InitActorPart(self, (s32)a, 0, 0, 0x100);
+    InitActorPart(self, (s32)anim, 0, 0, 0x100);
     self->vtable = (struct actor_vtable *)gLogoActorVtable;
     frame = CurFrame(self);
     gLogoActorTiles[0] = AllocVramTileBlock(frame[1] * frame[0] * 32);

@@ -1,7 +1,6 @@
 #include "core.h"
-#include "settings_sync.h"
-
-extern void UpdateSaveChecksum(void *arg0);
+#include "link.h"
+#include "save.h"
 
 void SetSaveFlags(struct save_data *self, u8 flags)
 {
@@ -20,42 +19,19 @@ void SetSaveFlags(struct save_data *self, u8 flags)
  * the matching_decomp_alignment_fix convention). */
 asm(".align 2, 0");
 
-/* One direction of the SIO session's byte transport (0xc8 bytes): a
- * 0x80-byte ring plus its pending count and read/write positions. */
-struct sio_channel
-{
-    u32 unk_00;
-    u8 ring[0x80];      /* 0x04 */
-    s32 count;          /* 0x84 */
-    s32 readPos;        /* 0x88 */
-    s32 writePos;       /* 0x8c */
-    u8 unk_90[0x38];
-};
-
-/* The SIO session object gLinkSession points at: the outgoing
- * channel at +0x40 and one incoming channel per player from +0x108. */
-struct sio_session
-{
-    u8 unk_00[0x40];
-    struct sio_channel tx;      /* 0x040 */
-    struct sio_channel rx[4];   /* 0x108 */
-};
-
-extern struct sio_session *gLinkSession;
-
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * save_data out of `self->tmpl`) into the SIO session's
- * outgoing ring, once the previous batch has been taken (`tx.count`
+ * outgoing ring, once the previous batch has been taken (`ring.count`
  * back to 0). Marks `sendDone` once `remaining` is fully drained. The
- * channel pointer has to be its own local: written as `s->tx.`
+ * channel pointer has to be its own local: written as `s->ring.`
  * throughout, gcc keeps the first `&count` computation alive for both
  * fill loops instead of recomputing it as the ROM does. */
 void SendSaveTransferChunk(struct settings_sync_pump *self)
 {
     if (self->remaining != 0)
     {
-        struct sio_session *s = gLinkSession;
-        struct sio_channel *ch = &s->tx;
+        struct link_session *s = gLinkSession;
+        struct link_ring *ch = &s->ring;
 
         if (ch->count == 0)
         {
@@ -72,7 +48,7 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
                 {
                     ch->writePos++;
                     ch->count++;
-                    ch->ring[ch->writePos] = *src++;
+                    ch->buf[ch->writePos] = *src++;
                 }
             }
             else
@@ -83,21 +59,21 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
 
                     ch->writePos = ch->writePos == 0x7f ? 0 : ch->writePos + 1;
                     ch->count++;
-                    ch->ring[ch->writePos] = b;
+                    ch->buf[ch->writePos] = b;
                 }
             }
             self->cursor += n;
             self->remaining -= n;
         }
     }
-    else if (gLinkSession->tx.count == 0)
+    else if (gLinkSession->ring.count == 0)
     {
         self->sendDone = 1;
     }
 }
 
 /* Counterpart to SendSaveTransferChunk above: drains whatever's available from
- * `playerIndex`'s incoming channel (`gLinkSession->rx[playerIndex]`)
+ * `playerIndex`'s incoming channel (`gLinkSession->players[playerIndex].ring`)
  * into `self->data` via `self->writePtr`, and marks `receiveDone` once
  * `totalReceived` reaches a full record's worth.
  *
@@ -112,7 +88,7 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
  * `if` + `do`/`while` so the pin is set after the zero-trip test. */
 void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
 {
-    struct sio_session *s = gLinkSession;
+    struct link_session *s = gLinkSession;
     s32 pi = playerIndex;
     /* One 0xc8 register for both products: the second multiplies
      * straight into it (`muls r2, r1`), and it then becomes the channel
@@ -120,11 +96,12 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
     register s32 c asm("r2") = 0xc8;
     s32 n;
 
+    /* players[pi].ring.count: the session's 0xd0 + 0x38 + 0x84 */
     n = *(s32 *)((u8 *)(pi * c + (s32)s) + 0x18c);
     if (n != 0)
     {
         u8 *dst;
-        struct sio_channel *ch;
+        struct link_ring *ch;
         s32 *rd;
         s32 i;
 
@@ -132,7 +109,8 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
             u8 **wp = &self->writePtr;
 
             c = c * pi + (s32)s;
-            /* No code: keeps the +0x108 out of the field offsets, and the
+            /* &players[pi].ring (0xd0 + 0x38). No code: keeps the +0x108
+             * out of the field offsets, and the
              * plain "r" input gives `ch` no copy preference for r2. */
             asm volatile("" : "=r"(ch) : "r"(c + 0x108));
             dst = *wp;
@@ -142,7 +120,7 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
         {
             for (i = n - 1; i != -1; i--)
             {
-                *dst++ = ch->ring[ch->readPos];
+                *dst++ = ch->buf[ch->readPos];
                 ch->readPos++;
                 ch->count--;
             }
@@ -165,7 +143,7 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
                         nw = old + 1;
                     *rd = nw;
                     (*cnt)--;
-                    *dst++ = ch->ring[old];
+                    *dst++ = ch->buf[old];
                 } while (--i != -1);
             }
         }

@@ -1,11 +1,11 @@
 #include "core.h"
 #include "bitmap_font.h"
-#include "save_menu.h"
 #include "actor.h"
 #include "pause_menu.h"
 #include "vram_pool.h"
 #include "text.h"
 #include "link.h"
+#include "save.h"
 
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -39,15 +39,10 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * `src/save/save_menu_ui.c`. */
 
 extern void *OperatorNew(s32 size);
-extern void SetSaveTransferRecord(void *newObj, void *tmpl);
-extern void ResetSaveTransfer(void *newObj);
 extern void WaitForVBlank(void);
 extern void UpdateKeys(void *arg0);
 extern void *gInput;
 extern u32 gKeys;
-extern void *gLinkSession;
-extern s32 PollSaveTransfer(void *newObj);
-extern s32 GetSaveTransferData(void *newObj);
 extern void MemCopy32(void *arg0, s32 arg1, s32 arg2);
 extern void OperatorDelete(void *newObj);
 
@@ -86,7 +81,7 @@ s32 LinkExchangeSaveData(struct save_menu *self)
         }
     } while (state == 1);
     if (state == 0) {
-        s32 result = GetSaveTransferData(spinner);
+        s32 result = (s32)GetSaveTransferData(spinner);
 
         MemCopy32(self->field_90, result, 0x200);
     }
@@ -138,8 +133,6 @@ void DrawSaveMenuCancel(struct save_menu *self, u8 highlight)
     ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x23));
 }
 
-extern u8 gMenuCursorText[];
-
 
 /* Draws `value`'s label centered at Y=0x87, then draws a
  * highlighted/plain pair of fixed labels (0x29/0x2a, purpose
@@ -190,7 +183,6 @@ void DrawYesNoPrompt(struct save_menu *self, s32 value)
     }
 }
 
-extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
@@ -202,13 +194,6 @@ struct row_obj {
     s32 x;
     s32 y;
 };
-
-/* A one-byte by-value argument: the caller stores it into its stack
- * slot with `strb` and the callee reads it back with `ldrb` (a promoted
- * `u8` parameter is stored with `str` and read as a whole word). */
-struct byte_arg {
-    u8 v;
-} __attribute__((packed));
 
 static inline void place_row_obj(void *p, s32 x, s32 y)
 {
@@ -376,10 +361,6 @@ extern void ResetSpriteFrameTimer(struct actor *part);
 extern void ResetSpriteFrameIndex(struct actor *part);
 extern void SetSpriteAnimDone(struct actor *part, u8 val);
 extern void ***gSpriteBankSet;
-extern u16 gSaveMenuPalette0[16];
-extern u16 gSaveMenuPalette1[16];
-extern u16 gSaveMenuPalette2[16];
-extern u16 gSaveMenuPalette3[16];
 
 struct icon_frame_nibble {
     u8 lo:4;

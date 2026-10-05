@@ -1,4 +1,5 @@
 #include "core.h"
+#include "frontend.h"
 
 /*
  * ROM 0x0817C5D0-0x0817CF40. Linked in ROM order between data/data.s

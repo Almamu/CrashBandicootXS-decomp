@@ -3,6 +3,7 @@
 #include "text.h"
 #include "pickups.h"
 #include "enemies.h"
+#include "frontend.h"
 
 /*
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
@@ -252,9 +253,6 @@ extern void UpdateHovercraftSideGun();
 extern void IsHovercraftSideGunUnshootable();
 extern void UpdateHovercraftCannonFlash();
 extern void IsHovercraftCannonFlashUnshootable();
-extern void UpdateLogoActor();
-extern void DrawLogoActor();
-extern void DestroyLogoActor();
 extern void DestroyRiderlessPolar();
 extern void UpdatePolarCheckpointText();
 extern void DestroyPolarCheckpointText();

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "byte_arg.h"
 
 /* GitHub issue #9/#10: foundational investigation of the large, fully
  * raw 0x0800B8DC-0x0800D040 cluster (43 functions, ~5988 bytes) sitting
@@ -30,12 +31,6 @@ struct level_layers {
     u8 unk_00[0x10];
     struct bg_scroll_layer *layer0; // 0x10
 };
-
-/* A one-byte by-value argument: the ROM stores it into its stack slot
- * with `strb` (as in jetpack_spawn.c). */
-struct byte_arg {
-    u8 v;
-} __attribute__((packed));
 
 extern void *gPlayer;
 extern void *gEntityFlags;

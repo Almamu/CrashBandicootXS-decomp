@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "frontend.h"
 
 extern void *gLevelState;
 extern s32 gLanguage;
@@ -8,9 +9,6 @@ extern s32 *gUiTextTables[];
 extern void *GetLevelState(void);
 extern void PlayBootCutscene(void);
 extern void ShowCompanyLogos(void *state);
-extern void OpenLanguageSelect(void);
-extern s32 RunLanguageSelect(void);
-extern void CloseLanguageSelect(void);
 extern void PlayIntroCutscene(void *state);
 extern void UpdateGameFrame(void *state);
 

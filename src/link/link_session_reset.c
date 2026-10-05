@@ -19,9 +19,9 @@
  * docs/matching/last-eleven-naked-retry.md. */
 static inline void ring_reset(struct link_ring *r)
 {
-    r->field_84 = 0;
-    r->field_88 = 0;
-    r->field_8c = 0x7f;
+    r->count = 0;
+    r->readPos = 0;
+    r->writePos = 0x7f;
 }
 
 /* How the shape is reproduced:

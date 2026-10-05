@@ -21,17 +21,19 @@ generated code, and those cases need to be known before a batch starts.
 Batch 1 (link + hud) done: `include/link.h` and `include/hud.h`, see
 "Batch 1" below. Batch 2 (cutscene + pickups + enemies) done:
 `include/cutscene.h`, `include/pickups.h` and `include/enemies.h`, see
-"Batch 2" below.
+"Batch 2" below. Batch 3 (save + frontend) done: `include/save.h`,
+`include/frontend.h` and `gLinkSession` in `include/link.h`, see
+"Batch 3" below.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 |
-|---|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 |
-| - conflicting | 231 | 229 | 226 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 |
+|---|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 |
+| - conflicting | 231 | 229 | 226 | 222 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 |
 
 ## Tools
 
@@ -251,8 +253,8 @@ Where the remaining declarations would go (after the pilot):
 | audio | 22 | 8 | 117 | 80 |
 | libgcc (without `_call_via_rN`) | 8 | 2 | 53 | 39 |
 | lib/gax (internal) | 43 | 3 | 74 | 22 |
-| save | 50 | 2 | 62 | 9 |
-| frontend | 60 | 2 | 109 | 15 |
+| save (**done**, batch 3) | 50 | 2 | 62 | 9 |
+| frontend (**done**, batch 3) | 60 | 2 | 109 | 15 |
 | crates | 57 | 9 | 74 | 24 |
 | objects | 100 | 36 | 318 | 75 |
 | gfx | 120 | 29 | 383 | 85 |
@@ -378,7 +380,8 @@ before the files that every subsystem touches.
    `s32 (struct link_session *)`). See "Batch 1" below.
 3. **cutscene + pickups + enemies (done):** 84 symbols, 5 conflicts. See
    "Batch 2" below.
-4. **save, frontend:** 110 symbols, 4 conflicts.
+4. **save, frontend (done):** 110 symbols, 4 conflicts, plus
+   `gLinkSession` from batch 1. See "Batch 3" below.
 5. **util + `libgcc.h`:** `RandRange` (see above), `__modsi3`/`__umodsi3`
    variants. `aabb.h` takes the remaining 8 `struct aabb` copies (crates,
    gfx, objects, player, `src/util/aabb.c`).
@@ -460,10 +463,10 @@ comments.
   includes `link_session.h`, and the four link files include `link.h` in
   its place. 22 local declarations are gone (17 in `src/link/`, 5 in
   save_menu_draw/input/ui.c).
-- **`gLinkSession` is not in `link.h` yet.** It is defined `void *` in
-  iwram_data.c, and save_transfer.c declares it as a `struct sio_session
-  *`, its own view of the session. It goes in with the save batch, once
-  `struct sio_session` is merged into `struct link_session` (rule 5).
+- **`gLinkSession` was left out of `link.h`** in this batch: it was
+  defined `void *` in iwram_data.c, and save_transfer.c declared it as a
+  `struct sio_session *`, its own view of the session. Batch 3 merged
+  that view and added it (see "Batch 3").
 - **Definition fixes in link_sio.c**, all byte-identical:
   `ResetLinkSession`/`DestroyLinkSession`/`InitLinkSession`/`LinkStart`
   took `u8 *`/`void *` and now take `struct link_session *`.
@@ -612,6 +615,105 @@ wumpa.c, crate_break.c, time_trial.c, spawn_pickups.c, drop_extra_life.c.
 Including a header with static inline functions or a changed function
 body can shift gcc's label counter; the labels don't reach the object.
 
+## Batch 3: save + frontend
+
+157 local declarations are gone (4,436 -> 4,279), and 21 local struct
+definitions (522 -> 501). No file needed an asm-label alias.
+
+- **`include/save.h`** (new) declares every function of src/save/, the
+  save menu (`gSaveMenu`, now `struct save_menu *` in iwram_data.c), the
+  menu tables in menu_tables_16b138.c (`const`), `gEepromNeedsInit` and
+  the two link-text pointers (`const u8 *`). It includes `save_menu.h`
+  and `settings_sync.h`, which stay as type headers; the save files
+  include `save.h` in their place.
+  - Definition fixes: `SummarizeProgress` takes `struct save_menu *`
+    (was `void *`, unused). `EndLinkSaveTransfer` takes an unused
+    `struct save_menu *self`: SaveMenuLinkInput passes it (the ROM sets
+    it up in r0), so the caller had declared it with a parameter.
+    `LoadSaveMenuBg` takes `struct save_menu *`: its local
+    `struct bg_widget` was the save menu's DISPCNT shadow (`field_1c`)
+    seen as two bytes, now `((u8 *)&self->field_1c)[0]`/`[1]`.
+  - `CheckSaveChecksum` returns `u32`; save_menu_input.c had declared it
+    `u8`. SaveMenuLinkInput now writes `!(u8)CheckSaveChecksum(...)`, the
+    same cast save_data.c uses. Without it the bytes change.
+  - `RunSaveMenu` is `u8 (u32, u32)`; game_frame.c declared `s32 (s32,
+    s32)`. Identical with the header's type.
+  - Block-scope `extern`s of save symbols in save_menu_input.c are gone.
+- **`gLinkSession` is in `link.h`** as `struct link_session *` (the
+  definition in iwram_data.c too). save_transfer.c's `struct
+  sio_session`/`struct sio_channel` were `struct link_session` and
+  `struct link_ring`: `tx` is `ring` (+0x40) and `rx[i]` is
+  `players[i].ring` (+0x108, stride 0xc8). `struct link_ring` takes the
+  channel's names: `field_84`/`field_88`/`field_8c` became
+  `count`/`readPos`/`writePos` (link_sio.c, link_session.c and
+  link_session_reset.c use them too). ReceiveSaveTransferChunk keeps its
+  raw `0x18c`/`0x108` offsets (pinned registers), with comments naming
+  the fields. Begin/EndLinkSaveTransfer store `field_5` by name.
+- **`include/byte_arg.h`** (new) holds `struct byte_arg`, the packed
+  one-byte argument of `DrawSaveSlotStats`. The copies in
+  save_menu_draw.c, enemy_ctrl_update.c and jetpack_spawn.c are gone.
+- **`include/frontend.h`** (new) declares every function of the
+  language select, company logos, title screen, credits and starfield,
+  and their data: `gLanguageSelect` (now typed in iwram_data.c), the
+  language names and palettes, the logo actor's anim record (incomplete
+  `struct anim_record_view`), vtable and IWRAM tile words, the logo piece
+  seeds and motions, the title and logo graphics packages (`const struct
+  bg_package`, which the users used to declare `u8 []` and cast) and the
+  credits text and logos. It includes `actor_self.h`,
+  `graphics_package.h`, `logo_screen.h` and `vtable.h`.
+  - Struct merges: `struct language_select` (2 copies), `struct
+    delta_record` (4 copies, two in data files), `struct slot_seed` (4
+    copies; its `record` is a `const struct delta_record *` and the data
+    files declare the motion tables with that type), title_screen_init.c's
+    copy of `struct logo_piece` (logo_screen.h's is complete), and
+    language_select.c's `struct linked_node`, which was a view of `struct
+    actor_self` (`DestroyLogoActor` takes one). `struct credits_screen`
+    and its node/glyph structs moved into the header with the credits
+    prototypes.
+  - Definition fixes: `LanguageSelectBlink` takes `struct
+    language_select *` (was `s32 *`; `frame` is now `s32`, which keeps the
+    ROM's `asr`), `DestroyLanguageSelect` takes it too, and
+    `InitLogoActor`'s anim record is `const void *`.
+  - Conflicts: `UpdateStarfield` was declared `void (s32)` in three
+    callers, which now pass the pointer (`self[0x82]` with a cast).
+    `RunCompanyLogos` is `void (u32 *)`; level_state.c declared `s32
+    (void)` and now passes the block it already holds in r0. Identical.
+  - credits.c reads `gCreditsLogos` (`const struct bg_package [5]`)
+    through its own `struct popup_glyph_src`: the loops compare the size
+    fields signed, and `bg_package` has them `u32`. The view stays, with
+    a cast at the one use.
+- Not done here, by ownership (each goes with its subject's batch):
+  - the continue prompt functions at the start of credits.c
+    (`DrawContinuePrompt`..`RunContinuePrompt`) and `struct
+    continue_prompt` (3 copies with different views of +0x10) go to
+    `menus.h`, with the rest of the continue prompt;
+  - `LoadTaggedAssetBuffered` (language_select.c) and `gIntrTableTimer2`
+    (save_data.c) go to the system batch, `gUnpackRleSpriteFrameFunc` to
+    gfx;
+  - the display register views copied into company_logos.c,
+    title_screen.c and title_screen_init.c (`struct dispcnt_bits`, `union
+    bgcnt`, `struct oam_attrs`, `struct oam_entry`, `struct oam_buf`) go
+    with the gfx batch: menus and gfx have other versions of each (a
+    packed `union bgcnt`, a 0x10-byte `struct oam_attrs`, four views of
+    `struct oam_shadow_buffer`), and the unpacked `union bgcnt` here is 4
+    bytes on the stack;
+  - `struct cam_ref` (the actor's `record` seen as a camera) goes with
+    the actor batch, `struct held_pressed_pair` (`gKeys`) with
+    `globals.h`, `struct icon_frame_nibble` (save_menu_draw.c,
+    pause_menu_pages_init.c) with menus.
+- **Surprise:** `COMPILE_TIME_ASSERT` names its typedef after the line
+  number, so two headers with an assert on the same line can't be
+  included together (`logo_screen.h:49` and `actor_anim.h:49`).
+  anim_family_178f80.c (defines `gPolarCategoryPalette`) doesn't include
+  `frontend.h` for that reason.
+- The data files that define the new headers' tables include them, so
+  the compiler checks each definition. level_gfx_17cff4.c's anim record
+  points into `gPolarCategoryPalette` by byte offset, now through a
+  `(const u8 *)` cast.
+
+Every touched object file is identical to the clean build's, and so is
+every `.s` file.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -642,6 +744,16 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | call with one argument -> all four slot arguments, `asm volatile` keep-alive removed | `CreateWumpa` in SpawnWumpa | identical |
 | call with the 4th argument dropped (3-parameter prototype) | `CreateStopwatch` in SpawnStopwatch | **changes** (r3 setup and a push); the definition takes an unused 4th parameter instead |
 | `u8 []` extern -> `const s32 [8]` (the definition's type), stored through `const void **` | spawn_enemies.c anim maps (old_agbcc) | identical |
+| caller's `u8` return -> definition's `u32`, call written `!(u8)f(...)` | `CheckSaveChecksum` in SaveMenuLinkInput | identical; without the cast the `lsl #0x18` is missing and r6/r7 swap |
+| return `s32` -> `u8`, parameters `s32` -> `u32` | `RunSaveMenu` in game_frame.c | identical |
+| call with no argument -> passing the value already in r0 | `RunCompanyLogos(tmp)` in ShowCompanyLogos | identical |
+| unused parameter added to a `(void)` definition the caller passes `self` to | `EndLinkSaveTransfer` | identical |
+| local struct view of two bytes -> `((u8 *)&self->field_1c)[n]` of the real struct | `LoadSaveMenuBg` | identical |
+| local `struct sio_session`/`sio_channel` -> `struct link_session`/`link_ring` | save_transfer.c | identical |
+| `s32 *` parameter read as `>> 2 & 1` -> struct pointer, field made `s32` | `LanguageSelectBlink` | identical (keeps `asr`) |
+| `u8 []` extern cast to `struct bg_package *` -> `const struct bg_package` and `&` | company_logos.c, title_screen.c (old_agbcc) | identical |
+| local list-node struct -> `struct actor_self` (`prev`/`next`/`vtable`) | `DestroyLogoActor` | identical |
+| `(s32)` argument -> pointer, `u32` element -> `(void *)` cast | `UpdateStarfield` in title_screen.c (old_agbcc) | identical |
 
 Experiments for later batches (not applied in this PR):
 

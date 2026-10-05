@@ -5,6 +5,7 @@
 #include "gba/io_reg.h"
 #include "actor_self.h"
 #include "text.h"
+#include "frontend.h"
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110) starts here, right at
  * the 40.4 KB actor-per-type-behavior zone's own end (docs/rom_map.md's
@@ -22,30 +23,15 @@ extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void *OperatorNew(s32 size);
-extern void *InitStarfield(void *arg0);
 extern void SetObjMapping1D(void);
 extern void ShowObj(void);
 extern void SetDispcntMode(s32 val);
 extern void CommitDispcnt(void);
 extern void StartSong(struct AudioContext *self, u32 songIndex);
 
-extern u8 gTitleMenuPalette[0x20];
-extern u8 gTitleMenuSelectedPalette[0x20];
-extern u8 gTitleMenuBlinkPalette[0x70];
-
-/* Loaded onto BG2, via the 5-field package struct at `gTitleScreenBg`
- * - see `struct bg_package` (include/graphics_package.h), shared with
- * `LoadTitleScreenObjTiles` below and with `LoadGraphicsPackage`
- * (src/gfx/graphics_package.c). */
-extern struct bg_package gTitleScreenBg;
-extern void *gTitleObjPackages[4];
-
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 extern void LoadTaggedAsset(void *asset, void *dest);
-
-void LoadTitleScreenBg(u32 *self);
-void LoadTitleScreenObjTiles(u32 *self);
 
 /* The 0x220-byte title-screen object `UpdateGameFrame` allocates
  * (`OperatorNew(0x220)`) and passes here - most of its fields are still
@@ -133,7 +119,7 @@ void *InitTitleScreen(u32 *self)
  * docs/matching/issue-65-graphics-loading.md. */
 void LoadTitleScreenBg(u32 *self)
 {
-    struct bg_package *pkg = &gTitleScreenBg;
+    const struct bg_package *pkg = &gTitleScreenBg;
     u16 *mapBuf;
     u16 *dest;
     s32 i;
@@ -319,25 +305,11 @@ void LoadTitleScreenObjTiles(u32 *self)
 
 extern u8 gDispcnt[2];
 extern void *gInput;
-extern void *gLogoActorTiles[2];
-extern s32 gLogoActorTileBuffer;
-extern void *gLogoActorLastFrame;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
-
-extern u8 gTitleLogoPieceSeeds[];
-extern u8 gTitleArrowPieceOffsets[];
-extern u8 gLogoActorAnim[];
-extern u8 gPolarCategoryPalette[];
-extern u8 gVvLogoEmblemObj[];
-extern u8 gVvLogoLettersObj[];
-extern u8 gVvLogoUrlObj[];
-extern u8 gVvLogoPieceSeeds[];
-extern u8 gUniversalLogoBg[];
-extern u8 gLogoActorVtable[];
 
 extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
 extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
@@ -345,7 +317,6 @@ extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern s32 GetUiText(s32 arg0);
-extern void UpdateStarfield(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void ShowBg2(void);
 extern s32 RandRange(s32 arg0);
@@ -366,7 +337,6 @@ extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
 extern void OperatorDelete(void *self);
 extern s32 __modsi3(void *self, s32 arg1);
-extern void DestroyStarfield(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
@@ -417,19 +387,6 @@ union bgcnt
     } bits;
 };
 
-/* One entry of the 8-byte {delta-record pointer, initial hold} seed
- * tables (`gTitleLogoPieceSeeds`/`gVvLogoPieceSeeds`) the slot arrays
- * are initialized from. */
-struct slot_seed
-{
-    struct delta_record *record;
-    s32 hold;
-};
-
-void DrawTitleLogoPieces(u32 *self);
-void DrawTitleScreen(u32 *self);
-void CommitTitleScreenFrame(u32 *self);
-
 /* Per-frame updater for the scratch object's 9-slot (`i` = 0..8,
  * stride 0x34, base `self+4`) record array: while a slot's countdown
  * word at `self+0x14+i*0x34` is nonzero, decrements it; on reaching 0,
@@ -464,21 +421,6 @@ void CommitTitleScreenFrame(u32 *self);
  * explicit register pins to land in the exact temp registers the
  * ROM's own build chose instead of whatever this compiler naturally
  * picks. */
-struct delta_record
-{
-    s16 hold;      // 0x0 - countdown reload value
-    u16 dPosA;     // 0x2 - Q16.16 position (<<16)
-    u16 dPosB;     // 0x4 - Q16.16 position (<<16)
-    u16 dPosC;     // 0x6 - Q16.16 position (<<16)
-    s16 dVelA;     // 0x8 - Q24.8 velocity (<<8)
-    s16 dVelB;     // 0xa - Q24.8 velocity (<<8)
-    s32 deltaA;    // 0xc  - raw delta for dPosA's live field
-    s32 deltaB;    // 0x10 - raw delta for dPosB's live field
-    s32 deltaC;    // 0x14 - raw delta for dPosC's live field
-    s32 deltaD;    // 0x18 - raw delta for dVelA's live field
-    s32 deltaE;    // 0x1c - raw delta for dVelB's live field
-};
-
 static inline struct delta_record **RecordAt(u32 *self, s32 stride)
 {
     u8 *base = (u8 *)self + 0x40;
@@ -699,24 +641,6 @@ struct oam_buf
     s32 base;
     s32 matrixCount;
     struct oam_entry entries[128];
-};
-
-struct logo_piece
-{
-    u8 active;          // 0x00
-    u8 pad_01[3];
-    s32 countdown;      // 0x04
-    union {
-        s32 q;          // 0x08 - Q16.16 x
-        struct { u16 frac; s16 i; } h;
-    } posA;
-    union {
-        s32 q;          // 0x0c - Q16.16 y
-        struct { u16 frac; s16 i; } h;
-    } posB;
-    s32 posC;           // 0x10
-    s32 velA;           // 0x14 - depth
-    u8 pad_18[0x1c];
 };
 
 static inline void SetAffine(struct oam_buf *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
