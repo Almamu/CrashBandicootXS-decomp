@@ -733,7 +733,7 @@ from "core" graphics.
   account), a particle-spawn-budget driver, an input-poll busy-wait, and a
   buffer-release/teardown helper.
 - **`InitContinuePrompt`** (`src/graphics/actor_part87.c`, GitHub issue #63) - a
-  standalone `struct fade_overlay` object's constructor half: allocates
+  standalone `struct continue_prompt` object's constructor half: allocates
   and loads its three BG scratch buffers, builds DISPCNT, hands off to
   `InitContinuePromptGraphics`, then builds the BLDCNT/BLDALPHA alpha-blend value.
   Previously parked (`NON_MATCHING`) over a final handful of accumulator/

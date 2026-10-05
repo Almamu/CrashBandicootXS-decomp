@@ -18,12 +18,12 @@ object family:
   (see `include/hud.h`) - unrelated to everything else in this chunk,
   just adjacent in ROM.
 - **Everything else** (`FontDrawGlyph` through `FontSetTileBase`) operates on
-  `struct icon_manager` (`include/icon_manager.h`), an object
+  `struct bitmap_font` (`include/bitmap_font.h`), an object
   `src/graphics/oam_count.c`/`src/graphics/text_layout.c` had already
   partially characterized (an OAM icon positioner with `posX`/`posY`/
   `record` fields) but left most of its leading `unused_00`/`unused_10c`/
   `unused_118` byte ranges opaque. This chunk's functions read and write
-  those ranges directly, so `include/icon_manager.h` now documents the
+  those ranges directly, so `include/bitmap_font.h` now documents the
   real shape:
   - `oam_scratch[8]` (was `unused_00`'s first 8 bytes) - a 6-byte
     OAM-shaped draw-request scratch buffer `FontDrawGlyph` rebuilds fresh
@@ -165,7 +165,7 @@ difficulty in this codebase:
 ## Cross-references
 
 - `docs/status/hud.md` - matched/parked lists updated.
-- `include/icon_manager.h` - `struct icon_manager`'s `unused_00`/
+- `include/bitmap_font.h` - `struct bitmap_font`'s `unused_00`/
   `unused_10c`/`unused_118` byte ranges filled in with real named
   fields, and the new `struct icon_glyph_metrics` type added.
 - `src/audio/counter_selector_setup.c` - `InitLanguageSelectGraphics`'s own comment

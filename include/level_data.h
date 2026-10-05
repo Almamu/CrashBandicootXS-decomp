@@ -130,9 +130,11 @@ struct level_info
                         //        gThemeMusicCues (PlayRoomMusic)
     u32 times[3];       // 0x08 - time-trial thresholds, centiseconds,
                         //        loosest first
-    s32 unk_14;         // 0x14 - SetMaskAssistDeaths
-    s32 unk_18;         // 0x18 - sub_8023110
-    u8 unk_1C;          // 0x1C - CheckAllCratesBroken runs at level start if 0
+    s32 maskAssistDeaths;  // 0x14 - level_state.maskAssistDeaths (SetMaskAssistDeaths)
+    s32 crateAssistDeaths; // 0x18 - level_state.crateAssistDeaths (sub_8023110)
+    u8 isBoss;          // 0x1C - 1 for the five boss levels (tiny, dingodile,
+                        //        n. gin, neo cortex, mega-mix); RunRoom runs
+                        //        CheckAllCratesBroken at level start only if 0
     const struct level_room_list *rooms; // 0x20
 };
 

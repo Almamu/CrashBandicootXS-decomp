@@ -26,7 +26,7 @@ extern struct EepromConfig *gEepromConfig;
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
  * buffer sized `len` (always 0x200, `sizeof(struct
- * settings_sync_record)`, from every call site), then copies the whole
+ * save_data)`, from every call site), then copies the whole
  * buffer into `self`. One-time-inits the EEPROM chip config
  * (`EEPROMConfigure`) and claims hardware timer 2 for the transfer
  * (`SetEepromTimerIntr`, installing its handler straight into the Timer 2
@@ -156,7 +156,7 @@ extern u32 GetCurrentSong(struct AudioContext *self);
 extern void StopSong(struct AudioContext *self);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern s32 ReadSaveData(void *self, s32 len);
-extern u32 CheckSaveChecksum(struct settings_sync_record *self);
+extern u32 CheckSaveChecksum(struct save_data *self);
 
 /* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
@@ -165,7 +165,7 @@ extern u32 CheckSaveChecksum(struct settings_sync_record *self);
  * marker bytes and checksum. Returns 4 (EEPROM read failed after
  * retries), 2 (bad `magic` marker), 1 (bad `versionNibble`
  * marker), 3 (checksum mismatch) or 0 (fully valid). */
-s32 LoadSaveData(struct settings_sync_record *self)
+s32 LoadSaveData(struct save_data *self)
 {
     struct AudioContext *audio;
     s32 flag;

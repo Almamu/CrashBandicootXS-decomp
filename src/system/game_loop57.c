@@ -26,7 +26,7 @@
  *   pacing pattern docs/matching.md documents elsewhere) and a nested
  *   text-paging loop through a second per-item record array at `+0x10`
  *   (each record `{void **strings; s32 count;}`), rendering each string
- *   via `sub_8000EE4` (text_layout.c) against an `icon_manager *` at
+ *   via `sub_8000EE4` (text_layout.c) against an `bitmap_font *` at
  *   `+0x14` and a 2-word "box" at `+0x18`/`+0x1c`, continuing to the
  *   next string in the current record while a held-input mask (9,
  *   versus `RunSlideshow`'s 8) stays set. `+0x24` feeds `__udivsi3`

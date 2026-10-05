@@ -1,8 +1,8 @@
-#ifndef __ICON_MANAGER_H__
-#define __ICON_MANAGER_H__
+#ifndef __BITMAP_FONT_H__
+#define __BITMAP_FONT_H__
 
-/* `struct icon_manager` is the game's bitmap-font text renderer (the
- * name is historical). There are two fonts, gSmallFont (InitSmallFont)
+/* `struct bitmap_font` is the game's bitmap-font text renderer
+ * (formerly `struct icon_manager`). There are two fonts, gSmallFont (InitSmallFont)
  * and gLargeFont (InitLargeFont), both built in InitLevelState; menus,
  * the credits and the dialogs draw all their text with them. Calls go
  * through the font's vtable (`record`, gFontVtable/gSmallFontVtable/
@@ -35,8 +35,8 @@ struct icon_record {
     struct icon_slot slots[7];
 };
 
-/* A single glyph's draw metrics - `icon_manager.glyphRecords` is an
- * array of these, 12 bytes apart, indexed by `icon_manager.charLookup`.
+/* A single glyph's draw metrics - `bitmap_font.glyphRecords` is an
+ * array of these, 12 bytes apart, indexed by `bitmap_font.charLookup`.
  * Established by GitHub issue #46's chunk (`FontDrawGlyph`/`FontMeasureChars`/
  * `FontMeasureText`, src/graphics/hud_icon_widget.c): `width` is the glyph's
  * horizontal advance (added to `posX` after each draw, and what
@@ -53,18 +53,16 @@ struct icon_glyph_metrics {
 
 COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
 
-/* An OAM "icon" positioner: screen X/Y for the icon, then a pointer to
- * a small record describing which OAM slot(s) to draw it into.
- * gLargeFont/gSmallFont (src/graphics/oam_count.c) are two
- * instances of this, used for a left/right icon pair flanking a number
- * in DrawPowerDialog; sub_8000EE4 takes one as its render-target object.
+/* The bitmap font (see the top of this file). gLargeFont/gSmallFont
+ * are its two instances; sub_8000EE4 takes one as its render-target
+ * object.
  *
  * The leading `unused_00`/`unused_10c` regions and part of `unused_118`
  * were opaque when this struct was first written (oam_count.c/
  * text_layout.c, both still not byte-matched); GitHub issue #46's chunk
  * (src/graphics/hud_icon_widget.c) reads and writes them directly and
  * fills in the real shape below. */
-struct icon_manager {
+struct bitmap_font {
     /* A 6-byte OAM-shaped draw-request scratch buffer, rebuilt fresh by
      * `FontDrawGlyph` for every glyph drawn (byte 0/1, halfword at 2,
      * halfword at 4) then handed to `AddOamEntry`; zeroed 8 bytes at a
@@ -112,6 +110,6 @@ struct icon_manager {
     struct icon_record *record;
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct icon_manager) == 0x134);
+COMPILE_TIME_ASSERT(sizeof(struct bitmap_font) == 0x134);
 
-#endif /* __ICON_MANAGER_H__ */
+#endif /* __BITMAP_FONT_H__ */

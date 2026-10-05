@@ -27,7 +27,7 @@ either.
 `actor_part131.o` joined the Makefile's `OLD_AGBCC_OBJS`. The whole
 object matches under old_agbcc, which `InitCredits`, `DrawCreditsText` and
 `UpdateCreditsText` need, and its previously matched functions compile the
-same under both compilers. `struct map_screen` now spells out the five
+same under both compilers. `struct credits_screen` now spells out the five
 0x18-byte `struct popup_glyph` records at `+0x1c`, replacing the old
 `asset0`-`asset4` placeholders. `struct popup_node` (the 0x18-byte text
 popup node) is named too.

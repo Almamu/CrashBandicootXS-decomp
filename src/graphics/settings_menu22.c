@@ -1,9 +1,9 @@
 #include "core.h"
 #include "audio.h"
 #include "actor.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 #include "memory.h"
 
 /* DrawPauseGemsPage + DrawPauseRelicsPage: mutually address-adjacent, bracketed by
@@ -17,11 +17,11 @@
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern struct icon_pos gStaticData_0816B21C[];
-extern void DrawPauseFraction(struct pause_screen_results *self, void *label1, void *label2);
+extern void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gSmallFont;
 
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -34,7 +34,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * argument, as in the ROM. */
 #define DRAW_ICON_TEXT(mgrExpr, label)                                          \
     {                                                                           \
-        struct icon_manager *_m = (mgrExpr);                                    \
+        struct bitmap_font *_m = (mgrExpr);                                    \
         struct icon_record *_r = _m->record;                                    \
         _call_via_r2((u8 *)_m + _r->slots[2].offset, (label), _r->slots[2].ptr); \
     }
@@ -48,7 +48,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * calls `DrawPauseFraction` with `self->buf32`/`self->buf49` (the count/total
  * buffers `InitPauseGemsPage` - src/graphics/settings_menu6.c - already fills
  * for this same icon row). */
-void DrawPauseGemsPage(struct pause_screen_results *self)
+void DrawPauseGemsPage(struct pause_menu *self)
 {
     if (((u8 *)self->field_10)[2] & 1)
         DrawSpriteWithOffset(self->icons9c[1], 0, 0);
@@ -77,7 +77,7 @@ extern struct icon_pos gStaticData_0816B258[];
  * with `self->buf35`/`buf4c` (the total/threshold buffers
  * `InitPauseRelicsPage` - src/graphics/settings_menu6.c - fills for this
  * row). */
-void DrawPauseRelicsPage(struct pause_screen_results *self)
+void DrawPauseRelicsPage(struct pause_menu *self)
 {
     s32 i;
 

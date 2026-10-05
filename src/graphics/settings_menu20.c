@@ -1,9 +1,9 @@
 #include "core.h"
 #include "audio.h"
 #include "actor.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 #include "memory.h"
 
 /* PauseMenuLoop alone: ROM-address-adjacent to settings_menu15.c's
@@ -16,12 +16,12 @@
 extern void UpdateKeys(void *arg0);
 extern void *gInput;
 extern u32 gKeys;
-extern void PauseMenuCursorDown(struct pause_screen_results *self);
-extern s32 PauseMenuCursorUp(struct pause_screen_results *self);
-extern void PauseMenuVolumeDown(struct pause_screen_results *self);
-extern void PauseMenuVolumeUp(struct pause_screen_results *self);
-extern void CommitPauseMenuFrame(struct pause_screen_results *self);
-extern void AnimatePauseMenu(struct pause_screen_results *self);
+extern void PauseMenuCursorDown(struct pause_menu *self);
+extern s32 PauseMenuCursorUp(struct pause_menu *self);
+extern void PauseMenuVolumeDown(struct pause_menu *self);
+extern void PauseMenuVolumeUp(struct pause_menu *self);
+extern void CommitPauseMenuFrame(struct pause_menu *self);
+extern void AnimatePauseMenu(struct pause_menu *self);
 extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
 
 /* The composite pause/options screen's blocking cursor/confirm/cancel
@@ -56,7 +56,7 @@ extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
  * before the input loop it lands ahead of that insertion
  * (docs/matching/early-rom-naked-retry-2.md). */
 extern struct AudioContext *gAudioContext;
-extern void DrawPauseMenu(struct pause_screen_results *self);
+extern void DrawPauseMenu(struct pause_menu *self);
 
 /* gKeys as the {held, newly pressed} key-state pair. */
 struct pause_keys {
@@ -84,14 +84,14 @@ struct pause_row {
     s32 type;
 };
 
-static inline void draw_frame(struct pause_screen_results *self)
+static inline void draw_frame(struct pause_menu *self)
 {
     DrawPauseMenu(self);
     CommitPauseMenuFrame(self);
     AnimatePauseMenu(self);
 }
 
-s32 PauseMenuLoop(struct pause_screen_results *self)
+s32 PauseMenuLoop(struct pause_menu *self)
 {
     s32 result;
     u16 *disp;

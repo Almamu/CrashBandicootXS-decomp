@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 extern void CpuSet(void *src, void *dst, s32 control);
 extern u8 gFontVtable[];
@@ -15,9 +15,9 @@ extern u8 gFontVtable[];
  * function's own comment for the full account of why. Unlike A/B, there
  * is no charLookup-building loop here, so this one reaches a full
  * byte-exact match. */
-struct icon_manager *InitFont(struct icon_manager *selfArg)
+struct bitmap_font *InitFont(struct bitmap_font *selfArg)
 {
-    register struct icon_manager *self asm("r4") = selfArg;
+    register struct bitmap_font *self asm("r4") = selfArg;
     s32 zero;
     struct icon_record **recordAddr;
 

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor.h"
-#include "icon_manager.h"
-#include "pause_screen_results.h"
+#include "bitmap_font.h"
+#include "pause_menu.h"
 
 extern void AdvanceSpriteAnim(struct actor *part);
 extern s32 __modsi3(s32 dividend, s32 divisor);
@@ -18,7 +18,7 @@ extern s32 RandRange(s32 max);
  * while it's ticking down, just decrement it; once it hits 0, either
  * re-show the icon with a fresh random countdown (0x78-0xef) if it's
  * currently "armed" (`field_38`), or hide it otherwise. */
-void AnimatePauseMenu(struct pause_screen_results *self)
+void AnimatePauseMenu(struct pause_menu *self)
 {
     switch (self->field_24) {
     case 0:

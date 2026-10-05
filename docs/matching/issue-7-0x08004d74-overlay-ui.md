@@ -21,11 +21,11 @@ isolated `DrawPauseFraction` (0x08005E5C-0x08005EF4, between
 5 of the 12 are now matched; 7 stay parked under `NON_MATCHING`. Issue
 #7 stays open - not every function closed.
 
-## New shared header: `include/pause_screen_results.h`
+## New shared header: `include/pause_menu.h`
 
 Before this pass, the composite screen's 0xd4-byte top-level object had
 three independent, non-overlapping partial views: `struct
-pause_screen_results` (settings_menu6.c), `struct
+pause_menu` (settings_menu6.c), `struct
 pause_screen_row_counts` (settings_menu7.c), and `struct
 pause_screen_apply_state` (settings_menu12.c). Tracing the real call
 chain this pass (`RunPauseMenu` allocates the object and hands it to
@@ -33,7 +33,7 @@ chain this pass (`RunPauseMenu` allocates the object and hands it to
 hands it to `InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`; `InitPauseMenu`
 separately hands it to `CommitPauseMenuFrame`/`PauseMenuLoop`) confirms these
 three views are genuinely the same allocation - merging them into one
-struct in `include/pause_screen_results.h`, with all three previously-
+struct in `include/pause_menu.h`, with all three previously-
 separate field sets agreeing at zero-overlap boundaries once combined
 (strong independent confirmation this is one real object, not a
 coincidence). `settings_menu6.c`, `settings_menu7.c`, and
@@ -46,7 +46,7 @@ Also moved: `struct settings_icon_actor`, `struct icon_pos`, and the
 `settings_menu6.c`), since the new file needs them too.
 
 Distinct from (and still not reconciled with) `struct
-pause_options_screen` (`include/pause_options_screen.h`) - a smaller,
+save_menu` (`include/save_menu.h`) - a smaller,
 separately-allocated settings-sync/spinner object that happens to share
 some byte offsets by coincidence, per that header's own comment.
 

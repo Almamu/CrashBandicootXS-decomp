@@ -3,8 +3,8 @@
 #include "settings_sync.h"
 
 extern void MemCopy32(void *dst, void *src, s32 len);
-extern void EraseSaveSlot(struct settings_sync_record *self, s32 row);
-extern void UpdateSaveChecksum(struct settings_sync_record *self);
+extern void EraseSaveSlot(struct save_data *self, s32 row);
+extern void UpdateSaveChecksum(struct save_data *self);
 
 /* Validates the record's checksum (inline word-sum, same shape as
  * `CheckSaveChecksum` below but not a call to it - the ROM genuinely inlines
@@ -25,7 +25,7 @@ extern void UpdateSaveChecksum(struct settings_sync_record *self);
  * to `flags`, which lifts its allocation priority (floor_log2(refs) *
  * refs / live length) above `field_1fb`'s. */
 /* An inlined copy of CheckSaveChecksum below. */
-static inline u32 checksum_ok(struct settings_sync_record *self)
+static inline u32 checksum_ok(struct save_data *self)
 {
     u32 *p = (u32 *)self;
     u32 sum = 0;
@@ -43,7 +43,7 @@ static inline u32 checksum_ok(struct settings_sync_record *self)
     return result;
 }
 
-void ValidateSaveData(struct settings_sync_record *self)
+void ValidateSaveData(struct save_data *self)
 {
     s32 i;
 
@@ -78,7 +78,7 @@ void ValidateSaveData(struct settings_sync_record *self)
  * 0x1fc bytes (127 words) and compares it against the stored
  * `checksum` field, returning 1 on match. Counterpart to `UpdateSaveChecksum`
  * below, which stores instead of comparing. */
-u32 CheckSaveChecksum(struct settings_sync_record *self)
+u32 CheckSaveChecksum(struct save_data *self)
 {
     u32 *p = (u32 *)self;
     u32 sum = 0;
@@ -102,7 +102,7 @@ u32 CheckSaveChecksum(struct settings_sync_record *self)
  * checksum in sync - see src/graphics/settings_menu8.c's header
  * comment, which already anticipated this function (it was matched
  * from a later chunk, issue #5, before this one). */
-void UpdateSaveChecksum(struct settings_sync_record *self)
+void UpdateSaveChecksum(struct save_data *self)
 {
     u32 *p = (u32 *)self;
     u32 sum = 0;
@@ -115,7 +115,7 @@ void UpdateSaveChecksum(struct settings_sync_record *self)
 }
 
 /* `versionNibble`'s high-nibble accessor. */
-u32 GetSaveGameId(struct settings_sync_record *self)
+u32 GetSaveGameId(struct save_data *self)
 {
     return self->versionNibble >> 4;
 }
@@ -131,7 +131,7 @@ extern s32 WriteSaveData(void *self, s32 len);
  * `LoadSaveData` (src/graphics/settings_menu8d.c) does (checksum
  * refreshed first via `UpdateSaveChecksum`, before the mute). Returns 4
  * (EEPROM write failed after retries) or 0 (success). */
-s32 StoreSaveData(struct settings_sync_record *self)
+s32 StoreSaveData(struct save_data *self)
 {
     struct AudioContext *audio;
     s32 flag;
@@ -174,7 +174,7 @@ s32 StoreSaveData(struct settings_sync_record *self)
  * hasn't been explicitly selected/edited (`slotEmpty[row] == 0`) -
  * refreshes a caller-side scratch copy with the stored default/synced
  * value while leaving a user-edited row alone. */
-void ReadSaveSlot(struct settings_sync_record *self, s32 row, void *dst)
+void ReadSaveSlot(struct save_data *self, s32 row, void *dst)
 {
     if (self->slotEmpty[row] == 0) {
         register s32 offset asm("r1");
@@ -188,7 +188,7 @@ void ReadSaveSlot(struct settings_sync_record *self, s32 row, void *dst)
 /* Force-writes `src` into row `row`'s 0x70-byte slot, clears the row's
  * `slotEmpty` flag (marking it "not explicitly edited" again), and
  * refreshes the checksum. */
-void WriteSaveSlot(struct settings_sync_record *self, s32 row, void *src)
+void WriteSaveSlot(struct save_data *self, s32 row, void *src)
 {
     register s32 offset asm("r0");
 
@@ -203,7 +203,7 @@ void WriteSaveSlot(struct settings_sync_record *self, s32 row, void *src)
  * checksum. See `include/settings_sync.h`'s `slotEmpty` field
  * comment, which already anticipated this function (matched from a
  * later chunk, issue #5, before this one). */
-void EraseSaveSlot(struct settings_sync_record *self, s32 row)
+void EraseSaveSlot(struct save_data *self, s32 row)
 {
     self->slotEmpty[row] = 1;
     UpdateSaveChecksum(self);

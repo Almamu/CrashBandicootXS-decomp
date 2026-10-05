@@ -40,7 +40,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 6);
-    SetPopupBox(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_04);
+    SetEnemyWave(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_04);
 }
 
 /* Text popup, tag 0x19, anim +0x12c. Flips the part's flipX, sets
@@ -328,7 +328,7 @@ void sub_8020788(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 9);
     SetEnemyRangeXSpeed(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
-    SetPopupBox(hdr, 0x80, 0, 0x14);
+    SetEnemyWave(hdr, 0x80, 0, 0x14);
 }
 
 /* Text popup, tag 0x14, anim +0xf0. After registering the part it points

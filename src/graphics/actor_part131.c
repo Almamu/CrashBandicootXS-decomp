@@ -1,6 +1,6 @@
 #include "core.h"
 #include "gba/io_reg.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "audio.h"
 #include "gba/dma_macros.h"
@@ -9,30 +9,30 @@
  * straight on from issue #63's fade-overlay cluster (actor_part87.c/
  * actor_part88.c/actor_part89.c) - the first five functions here
  * (DrawContinuePrompt/GetContinuePromptBlink/CommitContinuePromptFrame/DestroyContinuePrompt/RunContinuePrompt) are more
- * methods on that same `struct fade_overlay` "self" object, then the
+ * methods on that same `struct continue_prompt` "self" object, then the
  * chunk moves on to the credits screen (RunCredits, read at first as
  * a "between-level map/progress screen") (see docs/rom_map.md's
  * "RunContinuePrompt turns out to be a separate screen trigger"/"A fourth
  * thing in this file" sections) - see
  * docs/matching/issue-64-0x08034aa4-actor.md for the full write-up. */
 
-/* Same `struct fade_overlay` as actor_part87.c/88.c/89.c, redeclared
+/* Same `struct continue_prompt` as actor_part87.c/88.c/89.c, redeclared
  * locally per this project's minimal-local-type convention. This
  * chunk's functions pin down real meanings for two fields actor_part87.c
  * left vague: `unused_1c` is a per-item blink/flash toggle counter
  * (kept the same field name there since that file never touches it),
- * and `flag_20` - guessed there as "which of two alternating cue sfx
- * last fired" - turns out, in this sibling function set, to hold the
+ * and `selection` (once `flag_20`, guessed as "which of two alternating
+ * cue sfx last fired") turns out, in this sibling function set, to hold the
  * Yes/No dialog's currently-selected option index (0/1; any other value
  * means neither option is highlighted) instead. Same field, a related
  * but distinct use by this file's functions. */
-struct fade_overlay {
+struct continue_prompt {
     u8 *bg1Buf;   /* 0x00 */
     u8 *bg0Buf;   /* 0x04 */
     u8 *bg2Buf;   /* 0x08 */
     u16 dispcnt;  /* 0x0c */
     u8 unused_0e[0xa];
-    struct icon_manager *icons; /* 0x18 */
+    struct bitmap_font *icons; /* 0x18 */
     s32 blinkCounter; /* 0x1c */
     s32 selection;     /* 0x20 */
 };
@@ -55,7 +55,7 @@ struct popup_node {
 };
 
 /* One of the five custom popup glyphs `LoadCreditsLogos` loads (0x18 bytes
- * each, at `map_screen+0x1c`). */
+ * each, at `credits_screen+0x1c`). */
 struct popup_glyph {
     s32 cols;    /* 0x00 - width in 32-px OAM cells */
     s32 rows;    /* 0x04 - height in 32-px OAM cells */
@@ -65,7 +65,7 @@ struct popup_glyph {
     void *tiles; /* 0x14 - heap buffer, freed by DestroyCredits */
 };
 
-struct map_screen {
+struct credits_screen {
     struct popup_node *popupListHead; /* 0x00 - timed text-popup node list, see UpdateCreditsText */
     const void *streamBase;   /* 0x04 - popup byte-opcode stream base */
     const void *streamCursor; /* 0x08 - popup byte-opcode stream cursor */
@@ -78,7 +78,7 @@ struct map_screen {
 };
 
 
-COMPILE_TIME_ASSERT(sizeof(struct map_screen) == 0x98);
+COMPILE_TIME_ASSERT(sizeof(struct credits_screen) == 0x98);
 
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
@@ -110,24 +110,24 @@ extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern s32 FontSetPalette(void *mgr, u8 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-s32 GetContinuePromptBlink(struct fade_overlay *self, s32 mode);
+s32 GetContinuePromptBlink(struct continue_prompt *self, s32 mode);
 
 /* `record->slots[n]` on an icon manager, called with `label` (slot 0
  * measures and returns the pixel width, slot 2 draws). */
 #define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
     ({                                                                          \
-        struct icon_manager *_m = (mgrExpr);                                    \
+        struct bitmap_font *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
         _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
     })
 
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
 }
 
-void DrawContinuePrompt(struct fade_overlay *self)
+void DrawContinuePrompt(struct continue_prompt *self)
 {
     s32 w;
 
@@ -165,7 +165,7 @@ asm(".align 2, 0");
  * value (a 0/2 flicker mask consumed by DrawContinuePrompt to hide the label
  * every other frame-pair).
  * ------------------------------------------------------------------ */
-s32 GetContinuePromptBlink(struct fade_overlay *self, s32 mode)
+s32 GetContinuePromptBlink(struct continue_prompt *self, s32 mode)
 {
     register s32 result asm("r0");
     s32 counter;
@@ -185,7 +185,7 @@ s32 GetContinuePromptBlink(struct fade_overlay *self, s32 mode)
  * the shared OAM shadow buffer, flushes the VRAM upload queue, then
  * re-applies the overlay's own DISPCNT mirror.
  * ------------------------------------------------------------------ */
-void CommitContinuePromptFrame(struct fade_overlay *self)
+void CommitContinuePromptFrame(struct continue_prompt *self)
 {
     WaitForVBlank();
     CommitOamBuffer(gOamBuffer);
@@ -199,7 +199,7 @@ extern void OperatorDelete(void *self);
  * DestroyContinuePrompt - the continue prompt's teardown: frees its three BG scratch
  * buffers, then frees `self` too when `mode` bit 0 is set.
  * ------------------------------------------------------------------ */
-void DestroyContinuePrompt(struct fade_overlay *self, s32 mode)
+void DestroyContinuePrompt(struct continue_prompt *self, s32 mode)
 {
     OperatorDelete(self->bg0Buf);
     OperatorDelete(self->bg1Buf);
@@ -223,7 +223,7 @@ extern s32 ContinuePromptLoop(void *selfArg);
  * ------------------------------------------------------------------ */
 s32 RunContinuePrompt(void)
 {
-    struct fade_overlay *self;
+    struct continue_prompt *self;
     u8 result;
 
     mem_free_bytes(0xc0000000);
@@ -267,8 +267,8 @@ asm(".align 2, 0");
  * r4 and `&gSmallFont` r6 as the ROM does. */
 extern void *InitStarfield(void *arg0);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
-extern void FontResetPalette(struct icon_manager *mgr);
-extern void LoadCreditsLogos(struct map_screen *self);
+extern void FontResetPalette(struct bitmap_font *mgr);
+extern void LoadCreditsLogos(struct credits_screen *self);
 extern void UploadPaletteCache(struct palette_cache *arg0);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
@@ -277,15 +277,15 @@ extern void _call_via_r1(void *self, void *fn);
 extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern struct palette_cache *gPaletteCache;
-extern struct icon_manager *gSmallFont;
-extern struct icon_manager *gLargeFont;
+extern struct bitmap_font *gSmallFont;
+extern struct bitmap_font *gLargeFont;
 extern u8 gDispcnt[2];
 extern struct AudioContext *gAudioContext;
 extern u8 gCreditsText[];
 extern void *OperatorNew(s32 size);
 
 /* Sets the manager's glyph tile base and fires its slot-6 method. */
-static inline void IconSetBase(struct icon_manager *m, u32 base)
+static inline void IconSetBase(struct bitmap_font *m, u32 base)
 {
     struct icon_slot *slot;
 
@@ -296,12 +296,12 @@ static inline void IconSetBase(struct icon_manager *m, u32 base)
 
 /* Reserves `m`'s glyph tiles (`tileCount` tiles) from the VRAM upload
  * cursor `c`. */
-static inline void IconReserveVram(struct vram_upload_cursor *c, struct icon_manager *m)
+static inline void IconReserveVram(struct vram_upload_cursor *c, struct bitmap_font *m)
 {
     ReserveObjVram(c, m->tileCount << 5);
 }
 
-struct map_screen *InitCredits(struct map_screen *self)
+struct credits_screen *InitCredits(struct credits_screen *self)
 {
     self->starfield = InitStarfield(OperatorNew(0x14));
     ResetOamBuffer(gOamBuffer);
@@ -341,8 +341,8 @@ struct map_screen *InitCredits(struct map_screen *self)
 asm(".align 2, 0");
 
 extern void UpdateKeys(void *arg0);
-extern void UpdateCreditsText(struct map_screen *self);
-extern void DrawCreditsText(struct map_screen *self);
+extern void UpdateCreditsText(struct credits_screen *self);
+extern void DrawCreditsText(struct credits_screen *self);
 extern void CommitCreditsFrame(void *unused);
 extern void UpdateStarfield(void *starfield);
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
@@ -364,7 +364,7 @@ extern struct held_pressed_pair gKeys;
  * hardware registers directly; then frees every remaining popup-text
  * list node.
  * ------------------------------------------------------------------ */
-void CreditsLoop(struct map_screen *self)
+void CreditsLoop(struct credits_screen *self)
 {
     s32 i;
 
@@ -419,7 +419,7 @@ asm(".align 2, 0");
 
 /* The credits screen's per-frame OAM-icon draw dispatcher for the starfield
  * object (`self->starfield`, the `sp[0xc]`-cached argument throughout):
- * for `starfield->drawMode` (see `struct map_screen` above) 0/1/2 draws a
+ * for `starfield->drawMode` (see `struct credits_screen` above) 0/1/2 draws a
  * single centered label via `_call_via_r2` against
  * `gSmallFont`/`gLargeFont`; for any other drawMode value
  * (docs/rom_map.md's starfield/radar-dot description) DMA3-transfers a
@@ -451,7 +451,7 @@ extern void CpuSet(void *src, void *dst, s32 control);
 extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-void DrawCreditsText(struct map_screen *self)
+void DrawCreditsText(struct credits_screen *self)
 {
     struct popup_node *node;
 
@@ -459,7 +459,7 @@ void DrawCreditsText(struct map_screen *self)
     RewindObjVram(gObjVramCursor);
     for (node = self->popupListHead; node != NULL; node = node->next)
     {
-        struct icon_manager *m;
+        struct bitmap_font *m;
 
         switch (node->mode)
         {
@@ -524,7 +524,7 @@ asm(".align 2, 0");
  * (`+8`/`+0xc`) and unlinking/freeing (`OperatorDelete`) any node whose
  * sum has expired; then, unless `self->suppressCounter` is still
  * counting down, parses `self`'s byte-opcode stream
- * (`streamCursor`/`streamBase`, `struct map_screen`) - opcodes 0/1
+ * (`streamCursor`/`streamBase`, `struct credits_screen`) - opcodes 0/1
  * allocate and link a new 0x18-byte popup node (mode 0/1 respectively),
  * 2/3 set `self->drawMode`, 0xA terminates a line (measuring both
  * `gSmallFont`/`gLargeFont`'s text width via `FontTextHeight` first)
@@ -543,31 +543,31 @@ asm(".align 2, 0");
  * as the ROM does; the cursor advance and the popup y placement keep
  * their own temporaries so the old/new cursor and the `y + 0xa0` term are
  * formed in the ROM's order. */
-extern s32 FontTextHeight(struct icon_manager *mgr, const u8 *text);
+extern s32 FontTextHeight(struct bitmap_font *mgr, const u8 *text);
 extern s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
 extern void *OperatorNew(s32 size);
 extern u8 gStaticData_0817CF3C[];
 
 #define ICON_TEXT_CALL3(mgrExpr, n, a, b)                                      \
     ({                                                                          \
-        struct icon_manager *_m = (mgrExpr);                                    \
+        struct bitmap_font *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
         _call_via_r3((u8 *)_m + _s->offset, (a), (b), _s->ptr);                  \
     })
 
-static inline s32 *GlyphHeightAt(struct map_screen *self, s32 off)
+static inline s32 *GlyphHeightAt(struct credits_screen *self, s32 off)
 {
     u8 *base = (u8 *)&self->glyphs[0].height;
     return (s32 *)(base + off);
 }
 
-static inline s32 *GlyphWidthAt(struct map_screen *self, s32 off)
+static inline s32 *GlyphWidthAt(struct credits_screen *self, s32 off)
 {
     u8 *base = (u8 *)&self->glyphs[0].width;
     return (s32 *)(base + off);
 }
 
-void UpdateCreditsText(struct map_screen *self)
+void UpdateCreditsText(struct credits_screen *self)
 {
     struct popup_node **link;
     struct popup_node *lineStart;
@@ -724,7 +724,7 @@ asm(".align 2, 0");
 
 /* The credits screen's popup-text asset loader (docs/rom_map.md's
  * `LoadCreditsLogos` note): iterates `gCreditsLogos`'s 5 records
- * (stride 0x14) into `self->asset0`-`asset4` (`struct map_screen` above
+ * (stride 0x14) into `self->asset0`-`asset4` (`struct credits_screen` above
  * - each `sp[4]+0x1c+i*0x18`-relative in the ROM's own indexing),
  * converting each record's raw width/height into rounded Q-something
  * runtime units, DMA3-transferring custom glyph tile data
@@ -760,7 +760,7 @@ extern void OperatorDeleteArray(void *ptr);
 extern void LoadTaggedAsset(const void *asset, void *dest);
 extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);
 
-void LoadCreditsLogos(struct map_screen *self)
+void LoadCreditsLogos(struct credits_screen *self)
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
     s32 slot = 1;
@@ -873,7 +873,7 @@ extern void OperatorDeleteArray(void *ptr);
  * of the five popup-asset buffers still allocated, then frees `self`
  * too when `mode` bit 0 is set.
  * ------------------------------------------------------------------ */
-void DestroyCredits(struct map_screen *self, s32 mode)
+void DestroyCredits(struct credits_screen *self, s32 mode)
 {
     u8 *slot;
     s32 i;
@@ -902,7 +902,7 @@ void DestroyCredits(struct map_screen *self, s32 mode)
  * ------------------------------------------------------------------ */
 void RunCredits(void)
 {
-    struct map_screen *self = InitCredits(OperatorNew(0x98));
+    struct credits_screen *self = InitCredits(OperatorNew(0x98));
 
     CreditsLoop(self);
     if (self != NULL)

@@ -9,15 +9,15 @@
  * music volumes - see SaveGameToSlot), a per-slot "empty" flag, two
  * marker bytes ('C' and 0x12), a flag byte and an additive word-sum
  * checksum over the first 0x1fc bytes (UpdateSaveChecksum/
- * CheckSaveChecksum). The save menu (gSaveMenu, pause_options_screen.h)
+ * CheckSaveChecksum). The save menu (gSaveMenu, save_menu.h)
  * holds two copies: the cartridge's (`field_8c`) and the one received
- * over the link cable (`field_90`). The struct keeps its historical
- * name. See docs/matching/issue-5-overlay-ui-sync.md.
+ * over the link cable (`field_90`). Formerly
+ * `struct settings_sync_record`. See docs/matching/issue-5-overlay-ui-sync.md.
  * Shared (via this header) between src/graphics/settings_menu8.c and
  * settings_menu8b.c/settings_menu8c.c, split apart so the two parked
  * functions between them (SendSaveTransferChunk/ReceiveSaveTransferChunk/PollSaveTransfer,
  * SaveGameToSlot) can stay raw asm without breaking ROM link order. */
-struct settings_sync_record {
+struct save_data {
     u8 unused_000[0x1f4];
     u8 slotEmpty[4]; /* 0x1f4 - IsSaveSlotEmpty here; EraseSaveSlot (still raw) sets it */
     u8 magic;       /* 0x1f8 - init'd to 'C' (0x43) by ResetSaveData */
@@ -26,12 +26,12 @@ struct settings_sync_record {
     u8 field_1fb;             /* 0x1fb - zeroed by ResetSaveData, otherwise untouched in this chunk */
     u32 checksum;               /* 0x1fc - UpdateSaveChecksum/CheckSaveChecksum (still raw) */
 };
-COMPILE_TIME_ASSERT(sizeof(struct settings_sync_record) == 0x200);
+COMPILE_TIME_ASSERT(sizeof(struct save_data) == 0x200);
 
-/* A transient SIO send/receive envelope wrapping a settings_sync_record
+/* A transient SIO send/receive envelope wrapping a save_data
  * copy - allocated per "connecting..." spinner-dialog session
  * (LinkExchangeSaveData, src/graphics/settings_menu.c, parked) and torn down
- * with it. `tmpl`/`cursor` stream a settings_sync_record's bytes out to
+ * with it. `tmpl`/`cursor` stream a save_data's bytes out to
  * the SIO session's per-player ring buffer (SendSaveTransferChunk); `data`
  * receives the remote side's copy of the same shape from its own ring
  * buffer (ReceiveSaveTransferChunk), with `writePtr` as the fill cursor. See
@@ -40,9 +40,9 @@ COMPILE_TIME_ASSERT(sizeof(struct settings_sync_record) == 0x200);
 struct settings_sync_pump {
     u32 remaining;      /* 0x000 - bytes left to send out of `tmpl`, reset to sizeof(data) */
     u32 totalReceived;    /* 0x004 - running total of bytes received into `data` */
-    struct settings_sync_record *tmpl; /* 0x008 - the record SetSaveTransferRecord copies in */
+    struct save_data *tmpl; /* 0x008 - the record SetSaveTransferRecord copies in */
     u8 *cursor;                          /* 0x00c - read cursor into `tmpl` while draining `remaining` */
-    u8 data[sizeof(struct settings_sync_record)]; /* 0x010 - the received record's raw bytes */
+    u8 data[sizeof(struct save_data)]; /* 0x010 - the received record's raw bytes */
     u8 *writePtr;                                    /* 0x210 - write cursor into `data` */
     u32 sendDone;                                     /* 0x214 - set 1 once `remaining` fully drains (send complete) */
     u32 receiveDone;                                       /* 0x218 - set 1 once `totalReceived` reaches sizeof(data) (receive complete) */

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
 
 /* Same continue prompt ("fade overlay") self object as `actor_part87.c` (`InitContinuePrompt`) -
@@ -7,18 +7,18 @@
  * convention for a type already anchored in another translation unit
  * (see e.g. settings_menu10.c's own `struct sub_8006700_actor`
  * comment). Only the fields this file actually touches are named. */
-struct fade_overlay {
+struct continue_prompt {
     u8 unused_00[0xc];
     u16 dispcnt; /* 0x0c */
     u8 unused_0e[2];
     u32 unused_10;      /* 0x10 */
     u8 unused_14[4];
-    struct icon_manager *icons; /* 0x18 */
+    struct bitmap_font *icons; /* 0x18 */
 };
 
 extern struct vram_upload_cursor *gObjVramCursor;
 extern void ResetObjVram(struct vram_upload_cursor *self);
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gSmallFont;
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern void MarkObjVram(struct vram_upload_cursor *self);
@@ -51,9 +51,9 @@ extern u16 gStaticData_0817C572[];
  * the up-counting trip counter (r7) the ROM has. Written with explicit
  * pointer increments, `i` has nothing left to do but count, and gcc
  * reverses it into a down-counter. */
-void InitContinuePromptGraphics(struct fade_overlay *self)
+void InitContinuePromptGraphics(struct continue_prompt *self)
 {
-    struct icon_manager *icons;
+    struct bitmap_font *icons;
     struct palette_cache *cache;
     s32 i;
 

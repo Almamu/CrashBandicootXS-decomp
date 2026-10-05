@@ -1,8 +1,8 @@
 #include "core.h"
-#include "pause_options_screen.h"
+#include "save_menu.h"
 
 /* A small "load my background" sub-widget - the same field_c/field_d
- * bit-flags-pair idiom as `struct counter_widget`
+ * bit-flags-pair idiom as `struct language_select`
  * (src/audio/counter_selector_setup.c's LoadLanguageSelectBg), just at offsets
  * 0x1c/0x1d here - this chunk doesn't include whatever embeds it in a
  * bigger object, so it gets its own minimal type. */
@@ -21,7 +21,7 @@ extern u8 gStaticData_0816C484[];
 /* Same shape as LoadLanguageSelectBg (src/audio/counter_selector_setup.c) - reset
  * two bit-flag bytes, request a BG tile/map graphics package, set BG0's
  * control register from it - plus zeroing `field_0`, which LoadLanguageSelectBg's
- * counter_widget doesn't have. */
+ * language_select doesn't have. */
 void LoadSaveMenuBg(struct bg_widget *self)
 {
     u8 buf[0x10];
@@ -58,7 +58,7 @@ extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 
 /* Refreshes each of the 4 settings rows' aggregate stats from `handle`,
  * skipping any row IsSaveSlotEmpty reports as inactive/hidden. */
-void RefreshSaveSlotSummaries(struct pause_options_screen *self, void *handle)
+void RefreshSaveSlotSummaries(struct save_menu *self, void *handle)
 {
     struct settings_row_stats *row;
     u8 buf[0x70];
@@ -84,7 +84,7 @@ extern s32 LoadSaveData(void *arg0);
 extern s32 StoreSaveData(void *arg0);
 extern void ResetSaveData(void *arg0);
 
-void LoadSaveMenuData(struct pause_options_screen *self)
+void LoadSaveMenuData(struct save_menu *self)
 {
     s32 v = LoadSaveData(self->field_8c);
     if ((u32)(v - 1) <= 3) {

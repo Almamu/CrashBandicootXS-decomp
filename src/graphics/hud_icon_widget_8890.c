@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* GitHub issue #46: whole-string draw and fixed-count measure for the HUD
  * icon/text widget. Built with old_agbcc, which FontMeasureChars needs. */
@@ -21,9 +21,9 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
  * tested first with a forward `beq`, space inline as the fallthrough,
  * dispatch last) - the same techniques already established for
  * FontPutChar's identical-shaped dispatcher. */
-void FontDrawText(struct icon_manager *selfArg, u8 *strArg)
+void FontDrawText(struct bitmap_font *selfArg, u8 *strArg)
 {
-    register struct icon_manager *self asm("r4") = selfArg;
+    register struct bitmap_font *self asm("r4") = selfArg;
     register u8 *str asm("r5") = strArg;
     u8 c = *str;
 
@@ -75,7 +75,7 @@ asm(".align 2, 0");
  * (`FontMeasureText`'s fixed-count sibling): newline contributes nothing,
  * space contributes `spaceWidth`, everything else contributes
  * `glyphRecords[charLookup[c]].width`. */
-s32 FontMeasureChars(struct icon_manager *self, u8 *str, s32 count)
+s32 FontMeasureChars(struct bitmap_font *self, u8 *str, s32 count)
 {
     s32 total = 0;
     s32 i;

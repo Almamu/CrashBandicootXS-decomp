@@ -12,7 +12,7 @@ issue #63 with zero fully-raw functions - though the issue itself still
 has 8 parked (7 NON_MATCHING + 1 NAKED) functions from the earlier pass
 plus these two newly-parked ones, so it stays open (see "Tally" below).
 
-## A new, unrelated "self" object: `struct fade_overlay`
+## A new, unrelated "self" object: `struct continue_prompt`
 
 Unlike every other function in this chunk (all members of the
 `InitActorPart`-rooted per-instance object family), these three
@@ -22,7 +22,7 @@ family's `self+0xc` table-index/`self+0x28` state/`self+0x44` frame
 counter conventions at all:
 
 ```c
-struct fade_overlay {
+struct continue_prompt {
     u8 *bg1Buf;   // 0x00 - LoadGraphicsPackage "self" scratch for BG1
     u8 *bg0Buf;   // 0x04 - ditto for BG0
     u8 *bg2Buf;   // 0x08 - ditto for BG2
@@ -30,9 +30,9 @@ struct fade_overlay {
     u8 unused_0e[2];
     union { u32 word; struct { u8 bldcntLo, bldcntHi, bldalphaLo, bldalphaHi; } b; } blend; // 0x10
     u8 unused_14[4];
-    struct icon_manager *icons; // 0x18
+    struct bitmap_font *icons; // 0x18
     u32 unused_1c;
-    u32 flag_20;  // 0x20 - which of two alternating cue sfx last fired
+    u32 selection; // 0x20 - the Yes/No cursor (was `flag_20`)
 };
 ```
 
@@ -122,8 +122,8 @@ supplies the real bytes at that link position on its own).
 The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
 the shared VRAM upload cursor (`gObjVramCursor`, `struct
 vram_upload_cursor`), hooks `self->icons` up to the global text icon
-manager (`gSmallFont`, `struct icon_manager` - already fully
-described in `include/icon_manager.h`), fires its 7th (index 6) OAM
+manager (`gSmallFont`, `struct bitmap_font` - already fully
+described in `include/bitmap_font.h`), fires its 7th (index 6) OAM
 trampoline slot via `_call_via_r1` (the same `icon_slot` shape
 `CollideWumpa`/`actor_part39.c` already established), clears
 `icons->field_118` and re-derives the cursor's limit from

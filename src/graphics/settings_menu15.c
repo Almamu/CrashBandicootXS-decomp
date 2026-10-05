@@ -1,17 +1,17 @@
 #include "core.h"
 #include "audio.h"
 #include "actor.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 #include "memory.h"
 
 extern void StopAmbientSfx(struct AudioContext *self);
 extern void WaitForVBlank(void);
 extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
-extern struct icon_manager *gSmallFont;
-extern struct icon_manager *gLargeFont;
+extern struct bitmap_font *gSmallFont;
+extern struct bitmap_font *gLargeFont;
 extern struct vram_upload_cursor *gObjVramCursor;
 extern u8 gSpriteBankTable[];
 extern u8 gStaticData_0816B2C0[];
@@ -19,13 +19,13 @@ extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u
 extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
 extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
 extern void CpuSet(const void *src, void *dst, u32 cnt);
-extern void FontResetPalette(struct icon_manager *self);
+extern void FontResetPalette(struct bitmap_font *self);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern void *OperatorNew(s32 size);
-extern struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self);
-extern s32 PauseMenuLoop(struct pause_screen_results *self);
-extern void DestroyPauseMenu(struct pause_screen_results *self, u32 flags);
+extern struct pause_menu *InitPauseMenu(struct pause_menu *self);
+extern s32 PauseMenuLoop(struct pause_menu *self);
+extern void DestroyPauseMenu(struct pause_menu *self, u32 flags);
 
 /* The composite pause/options screen's own constructor/driver
  * (docs/rom_map.md's "overlay_ui" section, "one composite pause/options
@@ -35,7 +35,7 @@ extern void DestroyPauseMenu(struct pause_screen_results *self, u32 flags);
  * sized for this screen's icon graphics (seeding slot 15 from
  * `gStaticData_0816B2C0`), re-inits both icon managers (copying
  * `tileCount` between them and firing each one's slot-6 trampoline, the
- * same `_call_via_r1` pattern documented throughout `icon_manager.h`),
+ * same `_call_via_r1` pattern documented throughout `bitmap_font.h`),
  * builds the screen object (`InitPauseMenu`) and hands it to the blocking
  * cursor/confirm/cancel driver (`PauseMenuLoop`), then tears the screen
  * down (`DestroyPauseMenu`, flags=3) and restores the original tile cache
@@ -70,7 +70,7 @@ struct pause_gfx_pkg {
     u16 count;
 };
 
-static inline void init_icon_mgr(struct icon_manager *mgr, u32 base)
+static inline void init_icon_mgr(struct bitmap_font *mgr, u32 base)
 {
     mgr->tileBase = base;
     ICON_SLOT6_CALL(mgr);
@@ -83,7 +83,7 @@ static inline void reserve_icon_vram(u32 n)
 }
 
 /* Keeps CSE from sharing the 0x12c offset between reads (see above). */
-static inline u32 mgr_12c(struct icon_manager *m)
+static inline u32 mgr_12c(struct bitmap_font *m)
 {
     return m->tileCount;
 }
@@ -91,7 +91,7 @@ static inline u32 mgr_12c(struct icon_manager *m)
 s32 RunPauseMenu(void)
 {
     struct palette_cache *oldCache;
-    struct pause_screen_results *screen;
+    struct pause_menu *screen;
     s32 result;
 
     mem_free_bytes(MEM_HEAP_BOTH);
@@ -142,7 +142,7 @@ extern s32 GetBgSetupControl(void *buf);
 extern void *gLevelState;
 extern void ***gSpriteBankSet;
 extern void *PackSaveData(void *arg0);
-extern void InitPauseMenuInfo(struct pause_screen_results *self);
+extern void InitPauseMenuInfo(struct pause_menu *self);
 extern struct actor *InitUiSpriteObj(struct actor *part);
 extern s32 RandRange(s32 max);
 extern u8 gStaticData_0816B284[];
@@ -151,7 +151,7 @@ extern u8 gPauseMenuRows[];
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
  * (allocated by the caller, `RunPauseMenu`, as a fresh 0xd4-byte
- * `struct pause_screen_results`) gets `InitBgSetup` init, a local
+ * `struct pause_menu`) gets `InitBgSetup` init, a local
  * BLDCNT/BLDY/DISPCNT setup (`field_c8`/`field_cc`/`field_d0`, the same
  * fields `CommitPauseMenuFrame` applies), `LoadGraphicsPackage`, a row-stats
  * handle from `gLevelState`, then hands off to `InitPauseMenuInfo` to
@@ -160,7 +160,7 @@ extern u8 gPauseMenuRows[];
  * row bookkeeping fields (`field_14`/`field_18`/`field_1c`/`field_20`/
  * `field_24`/`field_28`), and applies BG0CNT/BG0HOFS before returning
  * `self` unchanged. */
-struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
+struct pause_menu *InitPauseMenu(struct pause_menu *self)
 {
     register s32 zero asm("r6");
 
@@ -313,9 +313,9 @@ extern void OperatorDelete(void *arg0);
  * order) via `REFRESH_ICON_WIDGET` above, then frees `self` if bit 0 of
  * `flags` is set - the same trailing shape DestroyPowerDialog uses for its
  * own single-icon `arg0`. */
-void DestroyPauseMenu(struct pause_screen_results *selfArg, u32 flagsArg)
+void DestroyPauseMenu(struct pause_menu *selfArg, u32 flagsArg)
 {
-    register struct pause_screen_results *self asm("r6") = selfArg;
+    register struct pause_menu *self asm("r6") = selfArg;
     register u32 flags asm("sl") = flagsArg;
     struct settings_icon_actor **icons9cBase;
     register struct settings_icon_actor **icons8cBase asm("r8") = NULL;

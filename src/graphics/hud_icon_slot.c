@@ -22,7 +22,7 @@
  * ever appends at `count` (no wraparound seen in either function - the
  * caller resets the queue via `ClearPaletteCycles`/`InitPaletteCycles` between
  * bursts rather than this pair enforcing the 3-slot cap itself). */
-struct hud_fx_queue {
+struct palette_cycler {
     u8 active;              /* +0x00 */
     u8 unknown_01[3];       /* +0x01 */
     s32 fields_e[3];        /* +0x04 - only ever written (to 0) by
@@ -42,7 +42,7 @@ struct hud_fx_queue {
     u8 unknown_45[3];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct hud_fx_queue) == 0x48);
+COMPILE_TIME_ASSERT(sizeof(struct palette_cycler) == 0x48);
 
 extern void OperatorDelete(void *ptr);
 extern s32 gHudSlideOffset;
@@ -58,7 +58,7 @@ extern u32 __umodsi3(u32 a, u32 b);
 /* Per-frame consumer: for each active slot whose period has elapsed
  * this frame, rotates `targets[i]` by one position along the order
  * `lists[i]` gives - see the struct's doc comment above. */
-void TickPaletteCycles(struct hud_fx_queue *self)
+void TickPaletteCycles(struct palette_cycler *self)
 {
     register s32 i asm("r4");
     s32 count;
@@ -220,7 +220,7 @@ void TickPaletteCycles(struct hud_fx_queue *self)
 
 /* Producer: appends a new slot at `count` (no wraparound - see the
  * struct's doc comment), computing `periods[count]` as 60 / `rate` (`__divsi3`). */
-void AddPaletteCycle(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 rate, s32 list_count, u8 direction_arg)
+void AddPaletteCycle(struct palette_cycler *self, u16 *targets_arg, u16 *lists, s32 rate, s32 list_count, u8 direction_arg)
 {
     /* ROM reads this 6th (stack-passed) `u8` argument as a genuine
      * `ldrb` off a computed stack address, right at function entry.
@@ -286,12 +286,12 @@ void AddPaletteCycle(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s3
     self->direction = direction;
 }
 
-/* Resets an `hud_fx_queue` to empty - clears the "active" flag, the
+/* Resets an `palette_cycler` to empty - clears the "active" flag, the
  * first three slots of its two touched parallel arrays, and the entry
  * count. Called right before `AddPaletteCycle` (the raw producer) queues a
  * fresh entry - see the call sites in the still-raw game_loop chunk
  * (e.g. `asm/code_3_2_17_231cc.s` around `_08023AF4`). */
-void ClearPaletteCycles(struct hud_fx_queue *self)
+void ClearPaletteCycles(struct palette_cycler *self)
 {
     s32 i;
 
@@ -316,7 +316,7 @@ void DestroyPaletteCycles(void *self, s32 flags)
  * `mem_alloc`'d memory doesn't need it) but returns `self` - this is
  * the queue's constructor, called right after its `OperatorNew(0x48)`
  * allocation. */
-struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self)
+struct palette_cycler *InitPaletteCycles(struct palette_cycler *self)
 {
     s32 i;
 

@@ -158,7 +158,7 @@ none of the three matches, but two got much closer with small changes
   Testing the saved time with `*(u16 *)sv & 0xFFF8` gives the ROM's
   `ldrh`/mask test, and the ROM's compares are unsigned (`bhi`). What is
   left: the ROM's frame is 12 bytes (it spills the `info` pointer to
-  `[sp]` besides the `unk_90`/`unk_94` addresses; this C has an 8-byte
+  `[sp]` besides the `trialIconY`/`trialIcon2Y` addresses; this C has an 8-byte
   frame), and the ROM keeps `time << 16` live and re-shifts `>> 19` for
   each compare, reusing the loaded threshold registers as the next
   `FormatCentiseconds` argument.
@@ -172,7 +172,7 @@ none of the three matches, but two got much closer with small changes
 
 ## Struct notes
 
-- `struct level_menu` (0xAC) is fully laid out; `unk_80`-`unk_94` are the
+- `struct level_menu` (0xAC) is fully laid out; `panelSlideX` and `clearedIconY`-`trialIcon2Y` are the
   record panel's slide offset and per-row y offsets (0 or 0x1C),
   `rank` is the first of `sub_802336C`/`LevelHasRedGem`/`LevelHasGreenGem`/
   `LevelHasBlueGem`/`LevelHasYellowGem` that holds for the level (5 = none), and

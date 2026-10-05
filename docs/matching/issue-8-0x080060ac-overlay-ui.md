@@ -94,7 +94,7 @@ of it.
     result) centered on the medal-icon widget `InitPauseTimeTrialPage` builds,
     using the same fixed `gStaticData_0816B27C` position pair that
     icon itself is positioned with. `self` is the same `struct
-    pause_screen_results` `settings_menu6.c` already documents
+    pause_menu` `settings_menu6.c` already documents
     (`field_6c`/`field_bc`/`timeBuf` all line up at their existing
     offsets).
   - `DrawPauseCrystalsPage` positions the icon manager at `gStaticData_0816B1E4`

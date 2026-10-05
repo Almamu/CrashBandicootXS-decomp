@@ -1,9 +1,9 @@
 #include "core.h"
 #include "audio.h"
 #include "actor.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 #include "memory.h"
 
 /* DrawPauseMenu + DrawPauseMenuRows: mutually address-adjacent (nothing real
@@ -17,22 +17,22 @@ extern void ResetOamBuffer(void *arg0);
 extern void RewindObjVram(struct vram_upload_cursor *self);
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void DrawPauseMenuRows(struct pause_screen_results *self);
-extern void DrawPauseMenuPageTitle(struct pause_screen_results *self);
-extern void DrawPauseCrystalsPage(struct pause_screen_results *self);
-extern void DrawPauseTimeTrialPage(struct pause_screen_results *self);
-extern void DrawPausePowersPage(struct pause_screen_results *self);
-extern void DrawPauseGemsPage(struct pause_screen_results *self);
-extern void DrawPauseRelicsPage(struct pause_screen_results *self);
+extern void DrawPauseMenuRows(struct pause_menu *self);
+extern void DrawPauseMenuPageTitle(struct pause_menu *self);
+extern void DrawPauseCrystalsPage(struct pause_menu *self);
+extern void DrawPauseTimeTrialPage(struct pause_menu *self);
+extern void DrawPausePowersPage(struct pause_menu *self);
+extern void DrawPauseGemsPage(struct pause_menu *self);
+extern void DrawPauseRelicsPage(struct pause_menu *self);
 extern void DrawSpriteWithOffset(void *icon, s32 dx, s32 dy);
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct vram_upload_cursor *gObjVramCursor;
-extern struct icon_manager *gSmallFont;
-extern struct icon_manager *gLargeFont;
+extern struct bitmap_font *gSmallFont;
+extern struct bitmap_font *gLargeFont;
 extern void *GetUiText(s32 id);
-extern void FontResetPalette(struct icon_manager *self);
+extern void FontResetPalette(struct bitmap_font *self);
 
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -41,7 +41,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 /* slot 0: measure a label's width; slot 2: draw it. */
 #define ICON_SLOT_CALL(mgrExpr, slot, label)                                         \
     ({                                                                               \
-        struct icon_manager *_m = (mgrExpr);                                         \
+        struct bitmap_font *_m = (mgrExpr);                                         \
         struct icon_record *_r = _m->record;                                         \
         _call_via_r2((u8 *)_m + _r->slots[slot].offset, (label), _r->slots[slot].ptr); \
     })
@@ -69,7 +69,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * and the address reloads that follow rotate as in the ROM (r4, r3,
  * then r4/r6 for the `ldrsh` offset). The extra references on the
  * temporaries stop local-alloc tying them to x. */
-void DrawPauseMenu(struct pause_screen_results *self)
+void DrawPauseMenu(struct pause_menu *self)
 {
     void *label;
     u32 width;
@@ -141,7 +141,7 @@ void DrawPauseMenu(struct pause_screen_results *self)
     HideUnusedOamEntries(gOamBuffer);
 }
 
-extern s32 FontSetPalette(struct icon_manager *self, s32 val);
+extern s32 FontSetPalette(struct bitmap_font *self, s32 val);
 
 /* One 8-byte record of `self->field_14`'s per-row array: a runtime
  * string-table label id, then a type tag (`DrawPauseMenuRows` branches on
@@ -165,7 +165,7 @@ struct pause_screen_row_record {
  * string drawn immediately after at the same position (auto-advancing
  * - "label <NN%>" on one line).
  */
-void DrawPauseMenuRows(struct pause_screen_results *self)
+void DrawPauseMenuRows(struct pause_menu *self)
 {
     s32 y = 0x4a;
     s32 i;

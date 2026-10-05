@@ -3,7 +3,7 @@
 
 extern void UpdateSaveChecksum(void *arg0);
 
-void SetSaveFlags(struct settings_sync_record *self, u8 flags)
+void SetSaveFlags(struct save_data *self, u8 flags)
 {
     register u8 loaded asm("r3");
     register u8 v asm("r1");
@@ -44,7 +44,7 @@ struct sio_session
 extern struct sio_session *gLinkSession;
 
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
- * settings_sync_record out of `self->tmpl`) into the SIO session's
+ * save_data out of `self->tmpl`) into the SIO session's
  * outgoing ring, once the previous batch has been taken (`tx.count`
  * back to 0). Marks `sendDone` once `remaining` is fully drained. The
  * channel pointer has to be its own local: written as `s->tx.`

@@ -1,17 +1,17 @@
 #include "core.h"
-#include "icon_manager.h"
-#include "pause_options_screen.h"
+#include "bitmap_font.h"
+#include "save_menu.h"
 #include "actor.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 #include "vram_pool.h"
 
 extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gLargeFont;
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gLargeFont;
+extern struct bitmap_font *gSmallFont;
 
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -23,7 +23,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * `this` is computed before the label argument, as in the ROM. */
 #define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
     ({                                                                          \
-        struct icon_manager *_m = (mgrExpr);                                    \
+        struct bitmap_font *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
         _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
     })
@@ -67,7 +67,7 @@ extern void OperatorDelete(void *newObj);
  * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
  * value the ROM reuses to clear `gLinkSessionReset`, and the
  * `GetSaveTransferData` result is taken before `self->field_90` is loaded. */
-s32 LinkExchangeSaveData(struct pause_options_screen *self)
+s32 LinkExchangeSaveData(struct save_menu *self)
 {
     void *spinner = OperatorNew(0x220);
     s32 state;
@@ -103,7 +103,7 @@ s32 LinkExchangeSaveData(struct pause_options_screen *self)
  * Once a NAKED transcription; it matches as plain C under both
  * compilers once the centre X gets its own local (`x = (0xf0 - w) >> 1`),
  * which is what puts it in r3 and the Y constant in ip. */
-void DrawSaveMenuMessageLines(struct pause_options_screen *self, s32 label1, s32 label2)
+void DrawSaveMenuMessageLines(struct save_menu *self, s32 label1, s32 label2)
 {
     s32 w, x;
 
@@ -128,7 +128,7 @@ void DrawSaveMenuMessageLines(struct pause_options_screen *self, s32 label1, s32
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers (same shape as DrawEmptySlotLabel, src/graphics/settings_menu23.c). */
-void DrawSaveMenuCancel(struct pause_options_screen *self, u8 highlight)
+void DrawSaveMenuCancel(struct save_menu *self, u8 highlight)
 {
     s32 w;
 
@@ -157,7 +157,7 @@ extern u8 gMenuCursorText[];
  * constant 0x87 in sb: `y` is pinned to r9 and set after the
  * manager pointer is loaded (the unpinned draft swapped the two, as
  * global-alloc ranks 0x87 slightly above 0x130). */
-void DrawYesNoPrompt(struct pause_options_screen *self, s32 value)
+void DrawYesNoPrompt(struct save_menu *self, s32 value)
 {
     s32 w;
     register s32 y asm("r9");
@@ -166,7 +166,7 @@ void DrawYesNoPrompt(struct pause_options_screen *self, s32 value)
     w = ICON_TEXT_CALL(gSmallFont, 0, GetUiText(value));
     {
         s32 x = 0xa0 - w;
-        struct icon_manager *m = gSmallFont;
+        struct bitmap_font *m = gSmallFont;
         y = 0x87;
         set_icon_mgr_pos(m, x, y);
     }
@@ -197,7 +197,7 @@ extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
-/* `rowObjA`/`rowObjB`/`rowObjC` entries (see pause_options_screen.h)
+/* `rowObjA`/`rowObjB`/`rowObjC` entries (see save_menu.h)
  * are small on-screen objects with just a Q8 `x`/`y` position at their
  * front - `InitSaveMenuIcons` (this chunk's other remaining function,
  * currently still fully raw) allocates and positions them. */
@@ -258,7 +258,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
  * stores it with `strb`. Each block keeps running `x`/`y` locals, and
  * the third block re-derives `y` the same way the second does, which
  * reproduces the ROM spilling it. See docs/matching/issue-4-6-8-naked-retry.md. */
-void DrawSaveSlotStats(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, struct byte_arg flagArg)
+void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx, struct byte_arg flagArg)
 {
     u8 flag = flagArg.v;
     u8 buf[8];
@@ -314,7 +314,7 @@ void DrawSaveSlotStats(struct pause_options_screen *self, s32 label1, s32 label2
 
 /* An inlined copy of DrawEmptySlotLabel (src/graphics/settings_menu23.c): the
  * row's highlighted/dimmed 0x25 glyph centred at (arg1 + 0x1d, arg2 + 0xc). */
-static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
+static inline void draw_row_mark(struct save_menu *self, s32 arg1, s32 arg2, u8 arg3)
 {
     s32 x = arg1 + 0x1d;
     s32 y = arg2 + 0xc;
@@ -353,7 +353,7 @@ static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s3
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The "selected" branch is an inlined copy of DrawEmptySlotLabel
  * (src/graphics/settings_menu23.c), `draw_row_mark` above. */
-void DrawSaveSlots(struct pause_options_screen *self, void *handle, s32 selectedIndex)
+void DrawSaveSlots(struct save_menu *self, void *handle, s32 selectedIndex)
 {
     DRAW_ROW(0, 0x26, 0x21);
     DRAW_ROW(1, 0x26, 0x53);
@@ -392,7 +392,7 @@ struct icon_frame_nibble {
 #define SET_ICON_FRAME_NIBBLE(iconExpr) \
     (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = GetSpriteAnimPaletteSlot(&(iconExpr)->base))
 
-static inline void IconSetup(struct icon_manager *m, u32 v)
+static inline void IconSetup(struct bitmap_font *m, u32 v)
 {
     struct icon_slot *slot;
 
@@ -401,7 +401,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
     _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
-static inline void IconReserve(struct icon_manager **m)
+static inline void IconReserve(struct bitmap_font **m)
 {
     struct vram_upload_cursor *c = gObjVramCursor;
 
@@ -474,7 +474,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
  * stores in new_row_icon fix the loop pre-header (see
  * docs/matching/early-rom-naked-retry-2.md); the frame-0 address pin,
  * the r1 hold and the padding below fix the last 6 halfwords. */
-void InitSaveMenuIcons(struct pause_options_screen *self)
+void InitSaveMenuIcons(struct save_menu *self)
 {
     u16 (*pal)[16];
     struct settings_icon_actor **a, **b, **c;

@@ -1,10 +1,10 @@
 #include "core.h"
-#include "pause_options_screen.h"
+#include "save_menu.h"
 
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern void SaveGameToSlot(struct pause_options_screen *self, s32 rowIndex);
-extern void SaveMenuMoveCursor(struct pause_options_screen *self, u32 flags);
+extern void SaveGameToSlot(struct save_menu *self, s32 rowIndex);
+extern void SaveMenuMoveCursor(struct save_menu *self, u32 flags);
 extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
@@ -16,7 +16,7 @@ extern s32 StoreSaveData(void *arg0);
  * if it was already the "current" row (`field_10==0`), else re-enters
  * state 5 to reselect; cancel (bit 1) re-enters state 5 too; L/R toggle
  * `field_10` between 0/1. */
-void SaveMenuOverwriteInput(struct pause_options_screen *self, u32 flags)
+void SaveMenuOverwriteInput(struct save_menu *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
@@ -60,7 +60,7 @@ void SaveMenuOverwriteInput(struct pause_options_screen *self, u32 flags)
  * (IsSaveSlotEmpty), enters state 9 to edit it, else commits it directly
  * (SaveGameToSlot) and returns to state 0; cancel (bit 1) resets to state
  * 0; otherwise falls through to the shared L/R cursor mover. */
-void SaveMenuSaveInput(struct pause_options_screen *self, u32 flags)
+void SaveMenuSaveInput(struct save_menu *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
@@ -97,7 +97,7 @@ void SaveMenuSaveInput(struct pause_options_screen *self, u32 flags)
 /* State 6's input handler - same shape as SaveMenuSaveInput above, a
  * different row-selection sub-menu (state 7 on confirm-when-unselected,
  * field_10 target value 3 rather than 2). */
-void SaveMenuDeleteInput(struct pause_options_screen *self, u32 flags)
+void SaveMenuDeleteInput(struct save_menu *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
@@ -133,7 +133,7 @@ void SaveMenuDeleteInput(struct pause_options_screen *self, u32 flags)
  * unconditionally (ReadSaveSlot+EraseSaveSlot+optional WriteSaveSlot) then
  * settles at state 0; cancel (bit 1) re-enters state 6; L/R toggle
  * `field_10` between 0/1. */
-void SaveMenuConfirmDeleteInput(struct pause_options_screen *self, u32 flags)
+void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
 {
     u8 buf[0x70];
 
@@ -184,14 +184,14 @@ void SaveMenuConfirmDeleteInput(struct pause_options_screen *self, u32 flags)
     }
 }
 
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gSmallFont;
 extern s32 FontSetPalette(void *mgr, s32 arg1);
-extern s32 GetSaveMenuBlinkPalette(struct pause_options_screen *self);
+extern s32 GetSaveMenuBlinkPalette(struct save_menu *self);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void DrawSaveSlotStats(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
+extern void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
 extern s32 gSaveMenuOptions[];
 
 /* Draws the 5-entry state-select sub-menu label list (SaveMenuMainInput's
@@ -219,9 +219,9 @@ extern s32 gSaveMenuOptions[];
  * same pinned C locals (`self`/`mgrAddr`/`y`/`i`/`label`/`mgr`) the rest
  * of this file's register-pinned functions use - see
  * docs/matching/issue-5-overlay-ui-sync.md for the write-up. */
-void DrawSaveMenuMain(struct pause_options_screen *self)
+void DrawSaveMenuMain(struct save_menu *self)
 {
-    register struct pause_options_screen *selfReg asm("r9") = self;
+    register struct save_menu *selfReg asm("r9") = self;
     register s32 y asm("sl") = 0x64;
     s32 i = 0;
     /* `mgrAddr`'s init is deliberately kept last (right before the loop
@@ -235,9 +235,9 @@ void DrawSaveMenuMain(struct pause_options_screen *self)
      * the loop body's first asm block below, right after its own
      * unconditional `b`, is what actually lands this literal in the
      * ROM's exact early slot. */
-    register struct icon_manager **mgrAddr asm("r8");
+    register struct bitmap_font **mgrAddr asm("r8");
     register s32 label asm("r6");
-    register struct icon_manager *mgr asm("r4");
+    register struct bitmap_font *mgr asm("r4");
 
     asm volatile(
         "ldr r1, =gSmallFont\n"

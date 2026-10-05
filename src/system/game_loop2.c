@@ -262,7 +262,7 @@ void *GetBonusPlatform(struct level_state *self)
 
 void sub_8023110(struct level_state *self, s32 value)
 {
-    self->unk_88 = value;
+    self->crateAssistDeaths = value;
 }
 
 void SetMaskAssistDeaths(struct level_state *self, s32 value)
@@ -277,7 +277,7 @@ void sub_8023120(struct level_state *self, s32 value)
 
 s32 sub_8023128(struct level_state *self)
 {
-    return self->unk_88;
+    return self->crateAssistDeaths;
 }
 
 s32 GetMaskAssistDeaths(struct level_state *self)
@@ -678,15 +678,15 @@ s32 GetBossHealth(struct level_state *self)
         return GetHovercraftPartsLeft();
     case 0x14: {
         struct level_state_1c8 *p = self->boss;
-        return 3 - p->unk_10;
+        return 3 - p->hits;
     }
     case 0x16: {
         struct level_state_1c8 *p = self->boss;
-        return 3 - p->unk_10;
+        return 3 - p->hits;
     }
     case 0x17: {
         struct level_state_1c8 *p = self->boss;
-        return 3 - p->unk_10;
+        return 3 - p->hits;
     }
     default:
         return 0;

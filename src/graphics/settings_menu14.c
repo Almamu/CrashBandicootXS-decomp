@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "memory.h"
 
@@ -49,7 +49,7 @@ extern s32 GetUiText(s32 arg0);
 extern void WaitForVBlank(void);
 extern s32 mem_free_bytes(s32 flags);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void FontResetPalette(struct icon_manager *self);
+extern void FontResetPalette(struct bitmap_font *self);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern void MarkObjVram(struct vram_upload_cursor *self);
@@ -60,10 +60,10 @@ extern struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *self,
 
 extern struct palette_cache *gPaletteCache;
 extern struct vram_upload_cursor *gObjVramCursor;
-extern struct icon_manager *gSmallFont;
-extern struct icon_manager *gLargeFont;
+extern struct bitmap_font *gSmallFont;
+extern struct bitmap_font *gLargeFont;
 
-static inline void IconSetup(struct icon_manager *m, u32 v)
+static inline void IconSetup(struct bitmap_font *m, u32 v)
 {
     struct icon_slot *slot;
 
@@ -72,7 +72,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
     _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
-static inline void IconReserve(struct icon_manager **m)
+static inline void IconReserve(struct bitmap_font **m)
 {
     struct vram_upload_cursor *c = gObjVramCursor;
 

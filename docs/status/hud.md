@@ -47,7 +47,7 @@ system from "core" graphics.
 
 - `src/graphics/hud_icon_widget2.c` (new file, GitHub issue #46):
   `FontDrawChars` - draws a fixed-count run of characters via the
-  `struct icon_manager` widget's own record trampoline.
+  `struct bitmap_font` widget's own record trampoline.
 
 - `src/graphics/hud_icon_widget_8890.c` (GitHub issue #46, second pass):
   `FontDrawText`.
@@ -67,11 +67,11 @@ system from "core" graphics.
 - `src/graphics/hud_icon_widget5.c` (new file, GitHub issue #46):
   `FontHeightToLines`, `FontGetTileCount`, `FontSetPos`, `FontNewLineAt`,
   `FontGetMargin`, `FontSetMargin`, `FontGetY`, `FontGetX`,
-  `FontSetTileBase` - trivial `struct icon_manager` getter/setter/
+  `FontSetTileBase` - trivial `struct bitmap_font` getter/setter/
   trampoline-forwarder family. Also includes `DestroyFont`
   (`0x08028B7C`, no tracked issue - just the next function in ROM
   order): a minimal `record`-pointer constructor for the same `struct
-  icon_manager`, matched byte-exact on the first try with plain struct
+  bitmap_font`, matched byte-exact on the first try with plain struct
   field access - see
   [docs/matching/naked-DestroyFont.md](../matching/naked-DestroyFont.md)
   (misnomer aside - it's plain C, not a NAKED transcription; named to
@@ -100,7 +100,7 @@ and all of them are real C.
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 GitHub issue #46's own write-up (icon/text-widget renderer, including
-`include/icon_manager.h`'s newly-documented field layout) is
+`include/bitmap_font.h`'s newly-documented field layout) is
 [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md).
 GitHub issue #45's second-pass write-up (the stat-widget dispatcher, and
 why the rest of the family stayed raw) is

@@ -9,7 +9,7 @@
  * src/graphics/graphics_loading_1ea5c.c. The same object is described
  * under other local names elsewhere (`struct gobj` in
  * include/gobj_1a794.h, `struct settings_icon_actor` in
- * include/pause_screen_results.h) - not merged yet. */
+ * include/pause_menu.h) - not merged yet. */
 
 struct anim_record
 {

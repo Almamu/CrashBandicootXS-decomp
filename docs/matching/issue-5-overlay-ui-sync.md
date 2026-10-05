@@ -11,9 +11,9 @@ The chunk's first cluster (`ResetSaveData`-`PollSaveTransfer`) turned out to
 be a multiplayer settings-sync protocol built on two small object
 types, both now named and documented in `include/settings_sync.h`:
 
-- **`struct settings_sync_record`** (0x200 bytes) - the actual
+- **`struct save_data`** (0x200 bytes) - the actual
   checksummed settings payload. `self->field_8c`/`field_90`
-  (`pause_options_screen.h`) are two instances of this. Per-row
+  (`save_menu.h`) are two instances of this. Per-row
   "selected" flags at +0x1f4, two fixed marker bytes at +0x1f8/+0x1f9
   (`ResetSaveData` stamps `'C'`/`0x12`; `GetSaveGameId`, still raw, reads
   the `0x1f9` high nibble as a protocol-version-ish value elsewhere),
@@ -21,7 +21,7 @@ types, both now named and documented in `include/settings_sync.h`:
   a running additive checksum at +0x1fc (`UpdateSaveChecksum`/`CheckSaveChecksum`,
   both still raw - a plain word-sum loop over the first 0x1f8 bytes).
 - **`struct settings_sync_pump`** (0x220 bytes) - a transient SIO
-  send/receive envelope wrapping a `settings_sync_record` copy.
+  send/receive envelope wrapping a `save_data` copy.
   Allocated per "connecting..." spinner-dialog session
   (`LinkExchangeSaveData`, `src/graphics/settings_menu.c`, parked) via
   `SetSaveTransferRecord`/`ResetSaveTransfer` and torn down with it.
@@ -54,11 +54,11 @@ settling at 0.
 to double as the constructor/destructor for **both** the composite
 pause/options screen *and* the "connecting..." spinner dialog
 (`OpenSaveMenu`/`CloseSaveMenu`, `src/graphics/settings_menu4.c`,
-already matched) - both allocate a `struct pause_options_screen`
+already matched) - both allocate a `struct save_menu`
 (0xe4 bytes) and build the exact same `field_8c`/`field_90` pair, and
 `RunSaveMenu`'s blocking modal input loop (used only by the spinner
 dialog) drives the same `SaveMenuInput` dispatcher/`DrawSaveMenu` state
-machine the real screen's per-frame update uses. `pause_options_screen.h`
+machine the real screen's per-frame update uses. `save_menu.h`
 picked up two more named fields from this chunk: `field_20` (a
 "result ready" poll flag, read by `RunSaveMenu`) and `currentStats`
 (a single scratch `settings_row_stats`, at 0x28-0x3b, right before the
@@ -163,10 +163,10 @@ branch and call is semantically confirmed, real bytes stay in the
 
 ## Struct/header changes
 
-- `include/settings_sync.h` (new) - `struct settings_sync_record`,
+- `include/settings_sync.h` (new) - `struct save_data`,
   `struct settings_sync_pump`, shared across
   `settings_menu8.c`/`settings_menu8a2.c`/`settings_menu8b.c`.
-- `include/pause_options_screen.h` - added `field_8` (u8, "input loop
+- `include/save_menu.h` - added `field_8` (u8, "input loop
   should exit" flag), `field_20` (u8, "result ready" flag),
   `currentStats` (a `settings_row_stats` at 0x28-0x3b, replacing
   `unused_28`), and split `unused_1e[6]` to carve out `field_20`;

@@ -44,7 +44,7 @@ to its input: `asm("" : "=r"(reload) : "0"(a4))`.
 **`static inline` accessors to break CSE (`RunPauseMenu`).** The ROM
 rebuilds the 0x12c offset (`movs r1, #150; lsls r1, #1`) for every
 `field_12c` read, even twice within one expression. Reading through
-`static inline u32 mgr_12c(struct icon_manager *m)` stops CSE from
+`static inline u32 mgr_12c(struct bitmap_font *m)` stops CSE from
 sharing it, which frees the register it held. The five callee-saved
 pointers then fall into the ROM's r4-r7.
 

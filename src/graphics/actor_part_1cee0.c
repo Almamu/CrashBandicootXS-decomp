@@ -15,7 +15,7 @@
  * - sub_801D77C-CreateLevelSelectPageBg: `struct page_bg`, BG1 - the page strip whose
  *   vertical scroll eases 8 per frame toward a Q8 target (0x100 = one
  *   page).
- * - InitZoomBg: `struct icon_bg`'s constructor, BG2 - clears its screen
+ * - InitZoomBg: `struct zoom_bg`'s constructor, BG2 - clears its screen
  *   block, writes an 8x4 tile block and spawns four corner sprites
  *   (mirrored per corner).
  *
@@ -62,15 +62,15 @@ extern void InitBgSetup(void *self, s32 a, s32 b, s32 c, s32 d);
 
 extern void UpdateLevelSelect(struct level_menu *self);
 extern void SettleLevelSelectPage(struct level_menu *self);
-extern void UpdateZoomBg(struct icon_bg *p);
-extern void CommitZoomBg(struct icon_bg *p);
-extern u8 IsZoomBgGone(struct icon_bg *p);
-extern u8 IsZoomBgShown(struct icon_bg *p);
-extern u8 IsZoomBgWaiting(struct icon_bg *p);
-extern void StartZoomBgExit(struct icon_bg *p);
-extern void ClearZoomBgPicture(struct icon_bg *p);
-extern void RandomizeZoomBgTwinkle(struct icon_bg *p, struct icon_slot *slot);
-extern u16 GetZoomBgControl(struct icon_bg *p);
+extern void UpdateZoomBg(struct zoom_bg *p);
+extern void CommitZoomBg(struct zoom_bg *p);
+extern u8 IsZoomBgGone(struct zoom_bg *p);
+extern u8 IsZoomBgShown(struct zoom_bg *p);
+extern u8 IsZoomBgWaiting(struct zoom_bg *p);
+extern void StartZoomBgExit(struct zoom_bg *p);
+extern void ClearZoomBgPicture(struct zoom_bg *p);
+extern void RandomizeZoomBgTwinkle(struct zoom_bg *p, struct twinkle *slot);
+extern u16 GetZoomBgControl(struct zoom_bg *p);
 extern void sub_801DEA0(struct item *it, s32 arg);
 extern void SetLevelSelectEntryBox(struct item *it, u32 arg);
 extern void UpdateLevelSelectCursor(void *panel);
@@ -521,7 +521,7 @@ static inline void SetPos(struct sprite *s, s32 x, s32 y)
  * left, and four corner sprites (animation bank `+0x258` of the level
  * graphics, mirrored per corner) positioned around (x, y) = (0x78, 0x35)
  * by gStaticData_0816C5F0. */
-struct icon_bg *InitZoomBg(struct icon_bg *self, s32 charBlock, s32 screenBlock)
+struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
 {
     s32 i;
 
@@ -554,28 +554,28 @@ struct icon_bg *InitZoomBg(struct icon_bg *self, s32 charBlock, s32 screenBlock)
             dst += 8;
         }
     }
-    self->unk_10 = 0xB;
-    self->unk_0C = 2;
-    self->unk_14 = 8;
-    self->unk_28 = self->unk_2C = self->unk_30 = 0;
-    self->unk_3C = self->unk_38 = 0x2000;
+    self->image = 0xB;
+    self->state = 2;
+    self->scale = 8;
+    self->dx = self->dy = self->phase = 0;
+    self->texY = self->texX = 0x2000;
     self->x16 = self->x;
     self->y16 = self->y;
-    self->unk_48 = 0;
+    self->alpha = 0;
     for (i = 0; i <= 3; i++)
     {
-        self->slots[i].sprite = InitUiSpriteObj(OperatorNew(0x40));
-        self->slots[i].sprite->anim = (struct anim_table *)((u8 *)**gSpriteBankSet + 0x258);
-        SetMode(self->slots[i].sprite, 1);
-        SetPos(self->slots[i].sprite, self->x + gStaticData_0816C5F0[i].x, self->y + gStaticData_0816C5F0[i].y);
-        SetSpritePriority(self->slots[i].sprite, 1);
-        SetPalette(self->slots[i].sprite, GetSpriteAnimPaletteSlot(self->slots[0].sprite));
-        RandomizeZoomBgTwinkle(self, &self->slots[i]);
+        self->twinkles[i].part = InitUiSpriteObj(OperatorNew(0x40));
+        self->twinkles[i].part->anim = (struct anim_table *)((u8 *)**gSpriteBankSet + 0x258);
+        SetMode(self->twinkles[i].part, 1);
+        SetPos(self->twinkles[i].part, self->x + gStaticData_0816C5F0[i].x, self->y + gStaticData_0816C5F0[i].y);
+        SetSpritePriority(self->twinkles[i].part, 1);
+        SetPalette(self->twinkles[i].part, GetSpriteAnimPaletteSlot(self->twinkles[0].part));
+        RandomizeZoomBgTwinkle(self, &self->twinkles[i]);
     }
-    LockPalette(gPaletteCache, self->slots[0].sprite->anim->records[self->slots[0].sprite->animIndex].tileRecord);
-    SetFlipX(self->slots[1].sprite, 1);
-    SetFlipY(self->slots[2].sprite, 1);
-    SetFlipX(self->slots[3].sprite, 1);
-    SetFlipY(self->slots[3].sprite, 1);
+    LockPalette(gPaletteCache, self->twinkles[0].part->anim->records[self->twinkles[0].part->animIndex].tileRecord);
+    SetFlipX(self->twinkles[1].part, 1);
+    SetFlipY(self->twinkles[2].part, 1);
+    SetFlipX(self->twinkles[3].part, 1);
+    SetFlipY(self->twinkles[3].part, 1);
     return self;
 }

@@ -3,7 +3,7 @@
 #include "gba/dma_macros.h"
 #include "memory.h"
 
-struct counter_widget {
+struct language_select {
     u32 frame;
     u8 done;
     u8 pad_5[3];
@@ -37,11 +37,11 @@ extern void SetObjMapping1D(void);
 extern void ShowObj(void);
 extern void SetDispcntMode(s32 val);
 extern void CommitDispcnt(void);
-extern struct counter_widget *gLanguageSelect;
+extern struct language_select *gLanguageSelect;
 
 /* Left raw (asm/code_3_2_20a.s, alongside DrawLanguageSelect) rather than
  * matched here - it fully decodes (initializes gPaletteCache's tile
- * cache with 4 fixed OBJ tiles, then copies a few icon_manager fields
+ * cache with 4 fixed OBJ tiles, then copies a few bitmap_font fields
  * from gSmallFont's instance into gLargeFont's), but hits
  * the same class of gcc-2.9 register-allocation difficulty already
  * documented for DrawPowerDialog (src/graphics/oam_count.c) - the compiler
@@ -55,7 +55,7 @@ extern void InitLanguageSelectGraphics(void *unused);
 /* Resets `self`'s two byte flags, requests a BG tile/map graphics
  * package, and sets BG0's control register from it - a shared "load my
  * background" helper for the widget above. */
-void LoadLanguageSelectBg(struct counter_widget *self)
+void LoadLanguageSelectBg(struct language_select *self)
 {
     u8 buf[0x10];
     u32 zero = 0;
@@ -90,7 +90,7 @@ s32 LanguageSelectBlink(s32 *arg0)
     return 2;
 }
 
-void CommitLanguageSelectFrame(struct counter_widget *self)
+void CommitLanguageSelectFrame(struct language_select *self)
 {
     REG_DISPCNT = *(u16 *)&self->field_c;
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
@@ -113,7 +113,7 @@ void DestroyLanguageSelect(void *self, u32 flags)
 
 /* Loads the widget's graphics, sets up its (16-tile) map/palette upload
  * request, and kicks off the fade/screen machinery. Returns `self`. */
-void *InitLanguageSelect(struct counter_widget *self)
+void *InitLanguageSelect(struct language_select *self)
 {
     FreeUnlockedPaletteSlots(gPaletteCache);
     InitLanguageSelectGraphics(self);

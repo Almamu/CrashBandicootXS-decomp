@@ -572,7 +572,7 @@ pixel width via `GetUiText`, then positions a second icon the same way
 slots. None of `RewindObjVram`, `DrawSpriteWithOffset`, `_call_via_r2`,
 `SetAabbPos`, `SetAabbSize`, `sub_8001214`, `GetUiText` are matched or
 even confidently typed beyond the argument shapes this call site
-implies. Uses `struct icon_record`/`struct icon_manager` for the two
+implies. Uses `struct icon_record`/`struct bitmap_font` for the two
 OAM-slot-record pairs it reads, and extends the existing `struct
 sub_8006700_actor` (shared with `AnimatePowerDialog`/`CommitPowerDialogFrame`/
 `DestroyPowerDialog`) with `field_10`/`field_14` for `self`'s shape rather than
@@ -1602,16 +1602,16 @@ previous cleanup, again re-checking both `make compare` and
     both `src/util/line_util.c` and `src/util/line_util2.c` purely because the
     two functions that share it link far apart) moved to a new
     `include/line_util.h`, included by both.
-  - `struct icon_manager`/`struct icon_record` (`src/graphics/oam_count.c`,
+  - `struct bitmap_font`/`struct icon_record` (`src/graphics/oam_count.c`,
     previously with `field_10`/`field_14`/`field_20`/`field_24` named
-    directly on `icon_record`) moved to a new `include/icon_manager.h`
+    directly on `icon_record`) moved to a new `include/bitmap_font.h`
     and `icon_record` was reshaped into `struct icon_slot { s16 offset;
     u8 unused[2]; void *ptr; } slots[6]` - an 8-byte-stride array,
     confirmed by `sub_8000EE4` (`src/graphics/text_layout.c`, still parked)
     independently needing three *more* slots (`slots[1]`/`[3]`/`[5]`,
     at the offsets right in between the two `DrawPowerDialog` already used)
     for its own per-glyph and newline-marker OAM draws. `text_layout.c`
-    now takes a real `struct icon_manager *`/`struct icon_record *`
+    now takes a real `struct bitmap_font *`/`struct icon_record *`
     instead of raw `u8 *self + <offset>` arithmetic throughout.
   - Checked for (but didn't find) a similar merge opportunity between
     `sub_8000EE4`'s `struct sub_8000EE4_box` and `sub_8001214`'s
@@ -5050,7 +5050,7 @@ project's "one `.c` file per contiguous ROM region" rule):
   `DestroyCompanyLogos`, `DestroyLogoActor`, `RunLanguageSelect`, `LanguageSelectInput`) - reads
   like game/HUD-side code that merely *calls into* audio (`PlaySfx`)
   rather than GAX2 engine internals: a small on-screen 0-5 "counter"
-  widget (`counter_widget`, 0x14 bytes: a frame counter, a "done" flag,
+  widget (`language_select`, 0x14 bytes: a frame counter, a "done" flag,
   the 0-5 value, and a child-object pointer) that cycles its value with
   D-pad-style input and confirms/cancels with a `PlaySfx` cue. Not
   confidently identified as any one specific screen - a jukebox/sound
@@ -5072,7 +5072,7 @@ project's "one `.c` file per contiguous ROM region" rule):
     slot 1 (the destructor) of `gLogoActorVtable`, which `RunCompanyLogos`
     calls with the deleting flags 3 (an earlier note here called it
     UNUSED). It operates on a completely different, much larger object
-    (fields at +0x48/+0x4c/+0x50) than the 0x14-byte `counter_widget`
+    (fields at +0x48/+0x4c/+0x50) than the 0x14-byte `language_select`
     every neighboring function here uses, so it gets its own minimal
     `struct linked_node` instead: frees the logo actor's two VRAM tile
     blocks (`FreeVramTileBlock`) between setting its vtable to
@@ -5382,7 +5382,7 @@ pins or reordering needed.
 `hud_counter.o` - `InitHud`-`UpdateHudClock` sit raw between them):
 
 - **`ClearPaletteCycles`**/**`InitPaletteCycles`**: reset/construct a fixed 3-entry
-  particle/effect queue object (new local `struct hud_fx_queue`,
+  particle/effect queue object (new local `struct palette_cycler`,
   0x48 bytes - `active` flag, two touched 3-element parallel arrays at
   `+0x10`/`+0x1c`, `count` at `+0x40`) - the consumer (`TickPaletteCycles`)
   and producer (`AddPaletteCycle`) that actually use the other two parallel
@@ -5467,7 +5467,7 @@ in the source's own comments (`docs/workflow.md` step 7 convention):
 
 - **`TickPaletteCycles`/`AddPaletteCycle`** (new `asm/code_3_2_17_26f54.s`) - the
   fixed-3-entry queue's consumer and producer (see
-  `struct hud_fx_queue` above); `docs/rom_map.md`'s "fx" investigation
+  `struct palette_cycler` above); `docs/rom_map.md`'s "fx" investigation
   read these in detail (an angle field via `__divsi3`, suggesting a
   particle/projectile trajectory queue) but didn't reach byte-precision
   confidence.
@@ -5972,8 +5972,8 @@ empty. `asm/code_3_1_10_4.s` (new: `DrawYesNoPrompt` through `InitSaveMenuIcons`
 and `asm/code_3_1_10_5.s` (new: `DrawEmptySlotLabel`/`DrawSaveMenuTitle`) hold the
 other two parked/raw runs, and `asm/code_3_1_10_6.s` is the original
 file's unchanged remainder from `SaveMenuMessageInput` (outside this chunk) on.
-`include/pause_options_screen.h` holds the shared `struct
-pause_options_screen`/`struct settings_row_stats` types used across all
+`include/save_menu.h` holds the shared `struct
+save_menu`/`struct settings_row_stats` types used across all
 three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
 `overlay_ui` category, both updated to match. Verified via a full clean
 `make compare` (`La suma coincide`) and `make NON_MATCHING=1 report`.
@@ -6398,9 +6398,9 @@ parked, 12 left untouched - see below for the split.
   doesn't keep the constant `1` live in a register the way the ROM's
   two-step `ands`/`ands` does for the later `str` of `field_10`.
 - **`CommitSaveMenuFrame`** (`src/graphics/settings_menu4.c`) - restores
-  `REG_DISPCNT`/`REG_BG0HOFS` from two newly-named `pause_options_screen`
+  `REG_DISPCNT`/`REG_BG0HOFS` from two newly-named `save_menu`
   fields (`field_1c`/`field_0`) and re-flushes the VRAM/OAM commit
-  queues. Extended `pause_options_screen.h`'s `unused_00`/`unused_1c`
+  queues. Extended `save_menu.h`'s `unused_00`/`unused_1c`
   padding into named fields for these two, per docs/workflow.md step 7.
 - **`CloseSaveMenu`/`OpenSaveMenu`** (`src/graphics/settings_menu4.c`) - a
   teardown/construct pair for the "connecting..." SIO-handshake spinner
@@ -6413,9 +6413,9 @@ parked, 12 left untouched - see below for the split.
   computation after both calls instead.
 - **`InitPauseCrystalsPage`** (`src/graphics/settings_menu6.c`) - the first of five
   settings-row icon-widget constructors on the composite screen's
-  "results" sub-region (new locally-scoped `struct pause_screen_results`/
+  "results" sub-region (new locally-scoped `struct pause_menu`/
   `struct settings_icon_actor` - see their header comments for why they
-  aren't reconciled with `pause_options_screen`). Needed: (1) the
+  aren't reconciled with `save_menu`). Needed: (1) the
   destination field computed through an explicit `T **dest = &self->x`
   local, assigned *after* the allocation calls but reused for the
   post-call reload, to reproduce the ROM's `r4 = &self->field_88`
@@ -6430,7 +6430,7 @@ parked, 12 left untouched - see below for the split.
 - **`PauseMenuCursorDown`/`PauseMenuCursorUp`** (`src/graphics/settings_menu5.c`) - a
   small wrap-increment/decrement counter pair on a settings-row
   sub-widget (new minimal `struct row_counter_widget`, deliberately not
-  asserted identical to `pause_screen_results` despite the call graph
+  asserted identical to `pause_menu` despite the call graph
   suggesting they're likely the same underlying object - see the
   struct's header comment). Matched with no register-pin tricks needed.
 
@@ -6491,7 +6491,7 @@ untouched), `src/graphics/settings_menu6.c` (`InitPauseCrystalsPage` matched,
 `asm/code_3_1_10_11.s` (the original file's unchanged remainder, from
 `FormatDecimal` on, including its pre-existing parked `DrawPowerDialog` guard)
 - see `ldscript.txt` and `tools/report_units.py`'s `overlay_ui` entries,
-both updated to match. `include/pause_options_screen.h` gained two named
+both updated to match. `include/save_menu.h` gained two named
 fields (`field_0`/`field_1c`, both previously padding) for
 `CommitSaveMenuFrame`'s use. Verified via a full clean `make compare`
 (`La suma coincide`) and `make NON_MATCHING=1 report`.

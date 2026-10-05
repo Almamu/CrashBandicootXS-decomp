@@ -77,16 +77,16 @@ struct enemy_ctrl
     u8 unk_00[0xC];
     struct popup_vtable *vtable; // 0x0C
     u8 unk_10[0x10];
-    s32 unk_20;
-    s32 unk_24;
-    s32 unk_28;
-    s32 unk_2C;
+    s32 boxL;                   // 0x20 - hit box, relative to the part
+    s32 boxT;                   // 0x24   (part_ctrl.boxL..boxB)
+    s32 boxR;                   // 0x28
+    s32 boxB;                   // 0x2C
     s32 unk_30;
     s32 unk_34;
     s32 unk_38;
-    s32 unk_3C;
-    s32 unk_40;
-    s32 unk_44;
+    s32 period;                 // 0x3C - oscillator (part_ctrl.period/
+    s32 phase;                  // 0x40   phase/amplitude, sub_800C8F8)
+    s32 amplitude;              // 0x44
     s32 unk_48;
     s32 unk_4C;
     u8 unk_50[0x1C];
@@ -160,12 +160,12 @@ static inline void SetPartAnim(struct popup_part *part, s32 anim)
 
 /* The multi-field setters load every value before storing any, as the ROM
  * does; written as separate statements, each load/store pair interleaves. */
-static inline void SetPopupRect(struct enemy_ctrl *hdr, s32 x, s32 y, s32 w, s32 h)
+static inline void SetEnemyHitBox(struct enemy_ctrl *hdr, s32 l, s32 t, s32 r, s32 b)
 {
-    hdr->unk_20 = x;
-    hdr->unk_28 = w;
-    hdr->unk_24 = y;
-    hdr->unk_2C = h;
+    hdr->boxL = l;
+    hdr->boxR = r;
+    hdr->boxT = t;
+    hdr->boxB = b;
 }
 
 static inline void SetPopupSpan(struct enemy_ctrl *hdr, s32 a, s32 b, s32 c)
@@ -175,11 +175,11 @@ static inline void SetPopupSpan(struct enemy_ctrl *hdr, s32 a, s32 b, s32 c)
     hdr->unk_38 = c;
 }
 
-static inline void SetPopupBox(struct enemy_ctrl *hdr, s32 a, s32 b, s32 c)
+static inline void SetEnemyWave(struct enemy_ctrl *hdr, s32 period, s32 phase, s32 amplitude)
 {
-    hdr->unk_3C = a;
-    hdr->unk_40 = b;
-    hdr->unk_44 = c;
+    hdr->period = period;
+    hdr->phase = phase;
+    hdr->amplitude = amplitude;
 }
 
 #endif /* GUARD_TEXT_POPUP_H */
