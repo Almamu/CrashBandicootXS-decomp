@@ -1,5 +1,6 @@
 #include "core.h"
 #include "level_data.h"
+#include "level.h"
 
 /*
  * ROM 0x0816C814-0x0816D1C8: the level table and the room records under
@@ -199,11 +200,7 @@ const u16 gThemePaletteCycle5[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
 
 /*
  * The levels, indexed by level id (the game's level numbering; `nameText`
- * is the text id of the level's name). Read through local views all over
- * the game loop: `struct level_info` (level_select.c),
- * `threshold_table_entry` (pause_menu_pages_init.c, power_dialog_draw.c),
- * `MedalTableEntry` (level_query.c), `level_guard`
- * (spawn_bosses.c) and `gl_level_entry` (run_room.c).
+ * is the text id of the level's name). Declared in level.h.
  */
 const struct level_info gLevelTable[25] = {
     { 1, 1, { 355, 275, 233 }, 4, 4, 0, &gLevelRoomLists[0] },

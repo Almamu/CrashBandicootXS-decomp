@@ -22,6 +22,7 @@ struct gfx_box_obj;
 struct oam_part;
 struct queued_oam_entry;
 struct rle_frame;
+struct sprite_bank_table;
 struct vram_tile_block;
 
 /* One shadow OAM entry: attributes 0-2, then the affine-parameter
@@ -136,6 +137,49 @@ struct oam_attrs {
     u16 priority:2;
     u16 palette:4;
     u16 affineParam;    // 0x06
+};
+
+/* REG_BLDCNT and REG_BLDALPHA as one word of bitfields, and REG_BLDY. */
+struct blend_bits
+{
+    u32 bg0First:1;     // BLDCNT 1st target
+    u32 bg1First:1;
+    u32 bg2First:1;
+    u32 bg3First:1;
+    u32 objFirst:1;
+    u32 bdFirst:1;
+    u32 effect:2;
+    u32 bg0Second:1;    // BLDCNT 2nd target
+    u32 bg1Second:1;
+    u32 bg2Second:1;
+    u32 bg3Second:1;
+    u32 objSecond:1;
+    u32 bdSecond:1;
+    u32 unk_14:2;
+    u32 eva:5;          // BLDALPHA
+    u32 unk_21:3;
+    u32 evb:5;
+    u32 unk_29:3;
+};
+
+union blend
+{
+    u32 raw;
+    struct blend_bits bits;
+};
+
+struct bldy
+{
+    u32 evy:5;
+    u32 unk_5:27;
+};
+
+/* `gBlendRegs`, the blend register shadow SetupRoomBlend builds and
+ * CommitBlendRegs (util/aabb.c) writes: BLDCNT/BLDALPHA as one word, then
+ * the BLDY byte. */
+struct blend_regs {
+    union blend blend;  // 0x00
+    u8 bldy;            // 0x04
 };
 
 /* The brightness fade state (fade.c). `field_0` is the frame period of
@@ -369,6 +413,13 @@ extern void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos);
 /* The menus' sky background (src/data/bg_package_16c484.c): the language
  * select, level select, power dialog and save menu load it on BG0. */
 extern const struct bg_package gMenuSkyBg;
+
+/* The blend register shadow (sym_iwram.txt). */
+extern struct blend_regs gBlendRegs;
+
+/* The master sprite bank table (src/data/sprite_banks_4a5600.c,
+ * sprite_bank.h): its palettes seed the palette cache. */
+extern const struct sprite_bank_table gSpriteBankTable;
 
 /* The palette cycler instance (sym_iwram.txt; NULL outside a level). */
 extern struct palette_cycler *gPaletteCycles;

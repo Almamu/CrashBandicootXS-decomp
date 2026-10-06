@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "level.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family (state at `self+0x28`, table-index/"kind" at `self+0xc`, an
@@ -24,7 +25,6 @@ extern void *gActorList;
 extern void *gAudioContext;
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern s32 SetMaskLevel(void *arg0, s32 arg1);
 
 /* The gLevelState fields read here. */
 struct game_state {

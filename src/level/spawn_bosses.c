@@ -4,6 +4,7 @@
 #include "gfx.h"
 #include "actor.h"
 #include "objects.h"
+#include "level.h"
 
 /* Text-popup variants with their own header constructors, ROM
  * 0x08021280-0x08021668. Built with old_agbcc; see include/text_popup.h. */
@@ -11,23 +12,7 @@
 extern void *gLevelState;
 extern void *gUnknown_030012F4;
 
-extern void SetLevelBoss(void *self, struct part_ctrl *hdr);
-
-struct level_guard
-{
-    s32 unk_00;
-    s32 guard;
-    u8 unk_08[0x1C];
-};
-
-extern struct level_guard gLevelTable[];
 extern u8 *gPlayer;
-extern void *gUpdateOnlyPartList;
-extern u8 IsInGemPath(void *self);
-extern u8 IsInBonusRound(void *self);
-extern s32 sub_8023324(void *self);
-extern s32 GetCurrentLevel(void *self);
-extern void SetCrateGemPos(void *self, s32 *point);
 
 /* Entity type 0x55, the room's exit. Every room but room 16 and the boss
  * rooms places exactly one. The tag-0x12 zone is collision class 0x12,
@@ -49,13 +34,13 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState)
         && !sub_8023324(gLevelState)
-        && gLevelTable[GetCurrentLevel(gLevelState)].guard == 0)
+        && gLevelTable[GetCurrentLevel(gLevelState)].theme == 0)
     {
         struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
         SetEntitySize(part, 0x64, 0x64);
         part->field_0A = 0x12;
-        AddToPartList(gUpdateOnlyPartList, part);
+        AddToPartList((struct part_list *)gUpdateOnlyPartList, part);
     }
     else if (gPlayer[0x88] == 0)
     {
@@ -79,7 +64,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
         SetEntitySize(part, 0x28, 0x28);
         part->field_0A = 0x12;
-        AddToPartList(gUpdateOnlyPartList, part);
+        AddToPartList((struct part_list *)gUpdateOnlyPartList, part);
     }
 }
 
@@ -104,7 +89,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = (struct part_ctrl *)CreateDingodile(OperatorNew(0x30), arg1, arg2);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetLevelBoss(gLevelState, hdr);
+    SetLevelBoss(gLevelState, (struct level_state_1c8 *)hdr);
 }
 
 /* "Two-line text popup" variant whose header comes from CreateTiny
@@ -127,7 +112,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipY = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
     AddToPartList(gCollidableList, part);
-    SetLevelBoss(gLevelState, hdr);
+    SetLevelBoss(gLevelState, (struct level_state_1c8 *)hdr);
 }
 
 /* "Two-line text popup" variant with the OAM-trio setup: animation 1 at
@@ -155,5 +140,5 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags |= 0x10;
     AddToPartList(gUnknown_030012F4, part);
     part->animating = 0;
-    SetLevelBoss(gLevelState, hdr);
+    SetLevelBoss(gLevelState, (struct level_state_1c8 *)hdr);
 }

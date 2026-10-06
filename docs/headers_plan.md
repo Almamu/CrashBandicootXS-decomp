@@ -35,17 +35,18 @@ Batch 5 (system + audio) done: `include/system.h`, `irq.h`/`memory.h`/
 see "Batch 7" below. Batch 8a (gfx + objects + iwram) done:
 `include/gfx.h`, `include/objects.h`, `include/iwram.h`, the new/delete
 operators in `memory.h` and the crate list's pool structs in `crates.h`,
-see "Batch 8a" below. Batch 8b (level) is next.
+see "Batch 8a" below. Batch 8b (level) done: `include/level.h`, see
+"Batch 8b" below. Next is `globals.h` (step 10).
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 |
 
 ## Tools
 
@@ -211,7 +212,7 @@ The full list:
 | gfx | `gfx.h` (**done**, batch 8a) | includes `graphics_package.h` and `vram_pool.h` |
 | hud | `hud.h` (extend) | |
 | iwram | `iwram.h` (**done**, batch 8a) | the ARM IWRAM routines; their hooks are declared with their users |
-| level | `level.h` (new) | includes `level_state.h`, `level_data.h` |
+| level | `level.h` (**done**, batch 8b) | includes `level_state.h`, `level_data.h`, `bg_scroll_layer.h`, `vtable.h` |
 | link | `link.h` (new) | includes `link_session.h` |
 | menus | `menus.h` (**done**, batch 6) | includes `vtable.h`; `pause_menu.h`, `level_menu.h` and `level_select_parts.h` include it |
 | objects | `objects.h` (**done**, batch 8a) | includes `aabb.h`, `byte_arg.h`, `vtable.h`; declares the object structs by tag |
@@ -284,7 +285,7 @@ Where the remaining declarations would go (after the pilot):
 | actor (**done**, batch 7) | 197 | 6 | 365 | 49 |
 | bosses (**done**, batch 7) | 239 | 10 | 344 | 35 |
 | vehicle (**done**, batch 7) | 277 | 13 | 374 | 38 |
-| level | 311 | 45 | 534 | 116 |
+| level (**done**, batch 8b) | 311 | 45 | 534 | 116 |
 | globals | 27 | 19 | 540 | 162 |
 | (data-only, stays) | 329 | 0 | 329 | 19 |
 
@@ -415,7 +416,8 @@ before the files that every subsystem touches.
    below.
 9. **objects, gfx, level:** the hubs, with 110 conflicting symbols between
    them (`SetSpriteAnimDone` has 13 variants). Two PRs: **8a, gfx +
-   objects + iwram (done)**, see "Batch 8a" below, then **8b, level**.
+   objects + iwram (done)**, see "Batch 8a" below, then **8b, level
+   (done)**, see "Batch 8b" below.
 10. **`globals.h`:** the 27 shared globals, a few at a time, each after the
     struct merge it needs (`level_state` for `gLevelState`,
     `held_pressed_pair` for `gKeys`, the player/actor structs for
@@ -1311,6 +1313,107 @@ After a clean build every `.o` and `.s` file in src/ is identical to
 origin/main's. The build has 30 warnings, 4 fewer than origin/main
 (room.c's `struct ... declared inside parameter list`), and no new ones.
 
+## Batch 8b: level
+
+The second hub PR, stacked on 8a. 443 local declarations are gone
+(1,559 -> 1,116; 98 `.c` files touched), and 49 local struct definitions
+(347 -> 298). Two files needed an asm-label alias (`SetCheckpointAtPlayer`,
+see "Codegen exceptions").
+
+- **`include/level.h`** (new) declares every function of src/level/
+  except the new/delete operators (memory.h, batch 8a), and the BG
+  streamer and BG layer base functions that cutscene_player.c holds for
+  ROM order (batch 2's deferral, including the `DestroyBgLayerBase`
+  conflict). It declares the level's data: the BG layer vtables, the
+  enemy anim maps, the entity spawn table, the terrain height and type
+  tables, the theme music cues and palette cycles, `gLevelTable` (`const
+  struct level_info [25]`), the level part lists and the iwram_data.c
+  singletons (now typed `struct level_layers *`/`struct level_state *`).
+  It includes `level_state.h`, `level_data.h`, `bg_scroll_layer.h` and
+  `vtable.h`, and holds:
+  - `struct level_layers`, level_layers.c's definition, with its layers
+    typed `struct bg_scroll_layer *`;
+  - `struct tile_cache` (4 copies), `struct probe_pos` (5 copies, two in
+    src/objects/) and `struct terrain_type` (bg_layer_base.c and the data
+    file);
+  - `entity_spawn_fn`, the spawner type of `gEntitySpawnFuncs` (it was an
+    unprototyped `void (*const [92])()`); its 11 entries with other
+    parameters are cast.
+- Data that went elsewhere: `gSpriteBankTable` (gfx.h, `const struct
+  sprite_bank_table`; spawn_pickups.c and pause_menu.c take its address),
+  `gPlayerCtrl` (player.h), `gBlendRegs` (gfx.h, batch 4's deferral).
+- **Struct merges** (49 local definitions gone):
+  - the level layers: the five files that read `gLevelLayers->layer0`
+    (tiny_hop_pad.c, crate_player_collide.c, crate_grid_collide.c,
+    enemy_ctrl_update.c, sprite_anim.c) had their own `struct level_layers`
+    and a short `struct bg_scroll_layer`; dingodile.c and
+    entity_spawner.c read the layer through `struct level_layer` (`width`/
+    `height` are `widthPx`/`heightPx`; entity_spawner.c's were `u32`, so
+    it casts) and entity_spawner.c called the layers object `struct
+    level_info`. level_layers.c's `struct layer`/`layer_vtable`/
+    `layer_method` are bg_scroll_layer.h's (`method_10` is `reset`), its
+    `struct level_desc` is level_data.h's (`layerData`/`layer0Data`/
+    `tileData`/`unk_1C`/`unk_20` are `layers`/`layer0`/`collision`/
+    `entities`/`links`) and `LoadRoom` takes the room record, `const struct
+    level_room *` (its `struct level_load_args`). bg_layer.c's `struct
+    bg_layer_desc` is `struct level_layer_desc`.
+  - the level state: time_trial.c's, drop_extra_life.c's and game_frame.c's
+    copies (and game_frame.c's `struct level_category`) are level_state.h's.
+    time_trial.c's `unk_90[5]` is `minutes`..`countdown` and its `level->state`
+    is `cat->kind`; spawn_gem_platforms.c's `struct level_progress` was the
+    level state too (`collected` is `flags`). dingodile.c's `struct
+    level_state` was the entity flags object (`gEntityFlags`) and is now
+    named `struct entity_flags`.
+  - the level table: `struct threshold_table_entry` (pause_menu_pages_init.c,
+    power_dialog_draw.c), `MedalTableEntry` (level_query.c), `level_guard`
+    (spawn_bosses.c), `gl_level_entry` (run_room.c) and level_select.c's
+    `struct level_info` are level_data.h's `struct level_info`
+    (`threshold_08/0C/10` and `time0/1/2` are `times[3]`, `guard`/`state`/
+    `cueTableOffset` are `theme`, `itemList` is `rooms`).
+  - objects' `struct dual_array_manager` (part_list.c) was box_part.h's
+    `struct part_list` (`count1`/`count2`/`array1`/`array2` are `count`/
+    `visibleCount`/`items`/`visible`); the part list functions,
+    gDecorationList and gUpdateOnlyPartList use it.
+  - the blend registers: level_menu.h's and level_select.c's `struct
+    blend_bits`/`union blend`/`struct bldy` moved to gfx.h, and
+    `gBlendRegs` is a `struct blend_regs { union blend blend; u8 bldy; }`
+    (room_frame.c's `union blend` view and util/aabb.c's `struct
+    unk_03001280`).
+- **Definition fixes**, all identical:
+  - an unused parameter where the callers pass one: `InitBgLayerBase`
+    (InitBgLayer passes its `bgIndex`), `SpawnRoomEntities` (a 5th 0),
+    `ShowCompanyLogos` (`gLevelState`);
+  - `CreateEntitySpawner`/`DestroyEntitySpawner` take nothing (their
+    spawn-slot parameters were never read and PlayRoom passes none);
+  - `nullsub_4` (the tile cache's empty constructor) and `InitEntityFlags`
+    return `self` (their callers use the result, still in r0);
+  - `SetCheckpoint` takes an `s32` flag (with `u8`, RunRoom adds
+    `lsl`/`lsr`); `SpawnEntity`'s second parameter is the entity id it
+    passes on (it was `void *self`); `SetEntitySpawnerTable` takes the table
+    and its count; `SpawnEffectPart`/`LaunchEffectPart` return `void *`.
+- **Callers**, all identical: `(u8)F(...)` for the callers that declared a
+  `u8` return where the definition returns `s32` (`HasTurboRun` and the
+  other power tests, `IsInBonusRoom`, `IsInGemPathRoom`, `NextRoom`,
+  `SelectRoom`, `IsCrystalSaved`, `ProbeTerrain`, `LevelHasRedGem` and its
+  siblings, `sub_8025968`, `sub_802599C`; 47 calls in 16 files); about 80
+  argument casts (`tools/cast_args.py`); `PlayBootCutscene(gLevelState)`
+  in MainLoop (the value is already in r0); play_room.c declares
+  `gLevelLayers` as `struct level_layers *` (with `void *`, the
+  `GetLevelLayers()` store schedules differently).
+- **Left for later:**
+  - level_query.c's `struct MedalListItem`/`MedalItemList` and
+    level_state.h's `struct level_category` are views of level_data.h's
+    `struct level_room`/`level_room_list`;
+  - the level files' other file-local object views (`struct gl_self`,
+    `lk_self`, `level_ctx`, `fx_part`, `camera`, ...), declared in level.h
+    by tag;
+  - `gLevelState`, `gLevelLayers`, `gEntityFlags`, `gEntitySpawner`,
+    `gCamera`, `gPlayer` and the other shared globals (`globals.h`).
+
+After a clean build every `.o` and `.s` file in src/ is identical to
+origin/main's. The build has the same 30 warnings as batch 8a and no new
+ones.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -1411,6 +1514,18 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `u8 []` extern -> `const struct sprite_box` object, `= gEmptySpriteBox` -> `= (void *)&gEmptySpriteBox` | sprite.c, sprite_obj.c, crate_break.c | identical |
 | `.a`/`.b` of a `struct vec_pair []` view -> `[i][0]`/`[i][1]` of the data's `const u32 [8][2]` | dingodile_create.c | identical |
 | hook typed `void (*)(s32, void **)` -> `void (*)(s32, struct actor_self **)`, cast dropped | actor_category_frame.c | identical |
+| caller's `u8` return -> definition's `s32`, call written `(u8)F(...)` | the level power tests, room queries and gem tests in 16 files (old_agbcc and agbcc) | identical; without the cast the `lsl #0x18` is missing |
+| local `struct layer`/`level_desc`/`level_load_args` views -> `struct bg_scroll_layer`/level_data.h's `level_desc`/`level_room` | level_layers.c | identical |
+| short local `struct level_layers`/`bg_scroll_layer` copies -> level.h's/bg_scroll_layer.h's | tiny_hop_pad.c, crate_player_collide.c, crate_grid_collide.c, enemy_ctrl_update.c, sprite_anim.c, dingodile.c, entity_spawner.c | identical; entity_spawner.c's `u32` width reads keep their sign through `(u32)` casts |
+| local `struct level_state` copies -> level_state.h's, `unk_90[5]` -> named fields, `s32` platform fields read through `(struct slot_part *)` casts | time_trial.c, drop_extra_life.c, game_frame.c (old_agbcc) | identical |
+| local views of gLevelTable -> `const struct level_info` (`times[3]`, `theme`, `rooms`) | pause_menu_pages_init.c, power_dialog_draw.c, spawn_bosses.c, run_room.c (its `switch` on the now `u32` theme), level_query.c, level_select.c | identical |
+| `void` constructor -> returns `self` | `nullsub_4`, `InitEntityFlags` | identical |
+| `u8` parameter -> `s32` (stored with `strb` either way) | `SetCheckpoint` | identical; with `u8` RunRoom adds `lsl`/`lsr #0x18` |
+| `void *` global assigned the result of a function returning `struct level_layers *` | `gLevelLayers = GetLevelLayers()` in PlayRoom | **changes** (the global's address is loaded before the call); the file declares `gLevelLayers` with the real type |
+| call with no argument -> passing the global just stored from r0 | `PlayBootCutscene(gLevelState)` in MainLoop | identical |
+| array extern of a struct type that is still incomplete where it is declared (the file completes it later) | `gTerrainTypes` in bg_layer_base.c, while level.h only had the `struct terrain_type` tag | **changes** (sub_8025228's `modeValue[n]` loads change); with the struct defined in level.h, identical |
+| `struct dual_array_manager` -> `struct part_list` (`void **` -> `struct box_part **` arrays, read through `(void **)` casts) | part_list.c | identical |
+| `union blend` global view / `struct unk_03001280` -> `struct blend_regs` | room_frame.c, util/aabb.c | identical |
 
 Experiments for later batches:
 
@@ -1427,9 +1542,9 @@ Experiments for later batches:
     `extern s32 RandRange_s32(s32) asm("RandRange");` and still include the
     header. That build's `.s` is identical to today's. This is the alias
     pattern from rule 3, and batch 4 applied it.
-- **`HasTurboRun`/`HasSuperBodySlam` (level):** `action_ctrl_moves.c`
-  declares them returning `s32`, but they return `u8`. Switching to `u8` is
-  identical, because the call sites already cast the result to `(u8)`.
+- **`HasTurboRun`/`HasSuperBodySlam` (level, applied in batch 8b):** the
+  definitions return `s32`; the callers that declared `u8` now write
+  `(u8)HasTurboRun(...)`, which is identical.
 
 ## Codegen exceptions
 
@@ -1450,6 +1565,7 @@ adds its entries here.
 | src/level/entity_spawner.c, src/objects/platform_collide.c | `GetSpriteHitbox` | `void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox")` | `struct aabb (struct box_part *)` (objects.h) | written as a struct return, the call goes through a stack temporary and the frame grows |
 | src/bosses/dingodile.c | `GetSpriteAttackBox`, `GetSpriteBodyBox` | `struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox")` (and `_s` for the other) | `void *(void *dest, void *pt)` (objects.h) | written with an explicit destination, the frame and register allocation change |
 | src/crates/crate_break.c | `AddCollisionCandidate` | `void AddCollisionCandidate_b(..., struct byte_arg f20, struct byte_arg f21) asm("AddCollisionCandidate")` | `void (..., s32 field20, s32 field21)` (objects.h) | QueueCratePlayerCollision stores the two bytes with `strb`; the definition only matches with `s32` parameters |
+| src/actor/actor_category_init.c, src/actor/cell_anim.c | `SetCheckpointAtPlayer` | `void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer")` | `void (struct level_state *self, u8 flag)` (level.h) | the callers pass the state only and leave r1 as it is; the definition stores `flag` |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the
 one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.c`

@@ -24,13 +24,12 @@ struct candidate_list;
 struct cbf4_other;
 struct collect_part;
 struct collision_queue;
-struct dual_array_manager;
+struct part_list;
 struct gfx_part;
 struct gfx_vec;
 struct gobj;
 struct hitbox_quad;
 struct mover;
-struct part_list;
 struct sprite_box;
 
 /* A position pair: a collision candidate's (src/objects/collision_queue.c),
@@ -153,12 +152,12 @@ extern u8 GetGroundSpriteProbeTries(struct gobj *self);
 extern void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other);
 
 /* src/objects/part_list.c */
-extern void DrawPartList(struct dual_array_manager *manager);
-extern void RemoveFromPartList(struct dual_array_manager *manager, void *target);
-extern void RemovePartListAt(struct dual_array_manager *manager, s32 index);
-extern void AddToPartList(struct dual_array_manager *manager, void *value);
-extern void DestroyPartList(struct dual_array_manager *manager, s32 flags);
-extern struct dual_array_manager *InitPartList(struct dual_array_manager *manager, s32 count);
+extern void DrawPartList(struct part_list *manager);
+extern void RemoveFromPartList(struct part_list *manager, void *target);
+extern void RemovePartListAt(struct part_list *manager, s32 index);
+extern void AddToPartList(struct part_list *manager, void *value);
+extern void DestroyPartList(struct part_list *manager, s32 flags);
+extern struct part_list *InitPartList(struct part_list *manager, s32 count);
 
 /* src/objects/part_list_cull.c */
 extern void CullPartList(void *manager);

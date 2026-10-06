@@ -8,6 +8,7 @@
 #include "bosses.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -196,8 +197,6 @@ extern struct gfx_level *gLevelLayers;
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern u8 HasTurboRun(void *self);
-extern void RequestRoomExit(void);
 
 #define CALL2(obj, m, a)                                                       \
     do                                                                         \
@@ -539,7 +538,7 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
         part->pos.y += 0x80;
         if (part->pos.y >= (gLevelLayers->layer0->height << 8) + 0x4000)
         {
-            if (HasTurboRun(gLevelState))
+            if ((u8)HasTurboRun(gLevelState))
                 RequestRoomExit();
             SetCortexBossState((struct obj_476c *)self, (s32)part, 4);
         }
@@ -639,7 +638,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         m &= PART_FLAGS(c);
         PART_FLAGS(c) = m | 0x10;
     }
-    AddToPartList((struct dual_array_manager *)gCollidableList, c);
+    AddToPartList((struct part_list *)gCollidableList, c);
 }
 
 void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)

@@ -4,6 +4,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "level.h"
 
 /* Tail continuation of GitHub issue #50's chunk
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
@@ -27,8 +28,6 @@
 
 extern void *gLevelState;
 extern void *gAudioContext;
-
-extern s32 CollectWumpa(void *self);
 
 /* Accumulator-drain/reward-dispenser for the `gPolarQueuedWumpa`
  * accumulator (filled by `QueuePolarWumpa`, still raw): while the "locked"

@@ -2,6 +2,7 @@
 #include "gba/defines.h"
 #include "hud.h"
 #include <libgcc.h>
+#include "level.h"
 
 /* Icon-indicator widget (lives display) - see
  * docs/matching/issue-45-hud-stat-widget-dispatcher.md for the full
@@ -16,10 +17,6 @@
  * pointer last so the table symbol is loaded before `self->parts`. */
 
 extern void *gLevelState;
-extern s32 GetBossHealth(void *state);
-extern s32 GetClockMinutes(void *state);
-extern s32 GetClockSeconds(void *state);
-extern s32 GetClockTenths(void *state);
 
 static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
 {

@@ -6,6 +6,7 @@
 #include "audio.h"
 #include "player.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
@@ -69,7 +70,6 @@
  * byte count needs the trailing `asm(".align 2, 0")` (the ROM
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 
-extern struct ctrl_target *LaunchEffectPart(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
 extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gEntitySpawner;
@@ -78,7 +78,7 @@ extern struct ctrl_target *gPlayer;
 /* `LaunchHarmfulEffectPart` (enemy_ctrl.c), inlined. */
 static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, struct ctrl_target *f)
 {
-    struct ctrl_target *obj = LaunchEffectPart(gEntitySpawner, a, b, c, d, e, f);
+    struct ctrl_target *obj = LaunchEffectPart(gEntitySpawner, a, b, c, d, e, (struct fx_part *)f);
     obj->visible = 1;
     obj->flag6 = 0;
     return obj;

@@ -4,6 +4,7 @@
 #include "system.h"
 #include "audio.h"
 #include "vehicle.h"
+#include "level.h"
 
 /* Sits right after polar_pickups.c's `UpdatePolarNitroCrate` and before
  * polar_crates.c's `UpdatePolarAkuAkuCrate` - directly adjacent to both now,
@@ -18,7 +19,6 @@
 extern struct actor_self *gActorList;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void AddBrokenCrate(void *self);
 
 /* The actor_category_frame.c AABB helpers: the three scratch boxes live in
  * one frame struct so each box address is rematerialized from `sp`

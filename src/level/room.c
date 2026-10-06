@@ -1,17 +1,13 @@
 #include "core.h"
 #include "util.h"
 #include "gfx.h"
+#include "level.h"
 
 extern void *gObjVramCursor;
 extern void *gOamBuffer;
 extern void *gCamera;
 extern void *gLevelLayers;
 extern struct palette_cache *gPaletteCache;
-extern u8 gRoomExitRequested;
-
-extern void SnapCamera(void *self);
-extern void ResetLevelLayers(void *self);
-extern void UpdateRoomFrame(void *self);
 
 void ClearRoomExit(void)
 {

@@ -4,6 +4,7 @@
 #include "bosses.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
@@ -166,10 +167,6 @@ extern struct hop_list *gUnknown_030012EC;
 extern void *gCollidableList;
 extern struct hop_level *gLevelLayers;
 
-extern u8 HasTornadoSpin(void *self);
-extern void RequestRoomExit(void);
-extern void SpawnTornadoSpinPower(u32 arg0, u16 x, u16 y, u16 arg3);
-
 /* Byte read-modify-writes of the flags at +0x0C. old_agbcc materializes
  * the constant before loading the byte only when it arrives as an inline
  * helper's `s32` parameter (docs/matching/old-agbcc-retry.md). */
@@ -283,7 +280,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         PlaySfx(gAudioContext, 0x2A, 0x100);
         if (self->state == 15)
         {
-            if (HasTornadoSpin(gLevelState))
+            if ((u8)HasTornadoSpin(gLevelState))
                 RequestRoomExit();
             SetTinyState(self, part, 16);
         }
@@ -494,7 +491,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         s32 x = anchor->x;
         s32 y = anchor->y - 0x1800;
 
-        if (!HasTornadoSpin(gLevelState))
+        if (!(u8)HasTornadoSpin(gLevelState))
             SpawnTornadoSpinPower(0xFFFF, x >> 8, y >> 8, 0);
         break;
     }

@@ -9,6 +9,7 @@
 #include "player.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -133,8 +134,6 @@ struct d18c_level
     u8 unk_00[0x78];
     s32 mode;           // 0x78
 };
-
-extern void SetMaskLevel(void *self, s32 arg);
 
 #define D18C_CALL68(a, b, c) \
     PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
@@ -1254,11 +1253,6 @@ asm(".align 2, 0");
 
 extern struct crate_list *gCrateList;
 extern void *gEntitySpawner;
-extern void AddBrokenCrate(void *self);
-extern void SetCheckpointAtPlayer(void *self, u8 arg1);
-extern void FreezeLevelClock(void *arg, s32 n);
-extern void sub_80259D4(void *self, s32 n);
-extern s32 sub_802599C(void *self, s32 n);
 
 /* The effect object SpawnEffectPart spawns (only the fields set here). */
 struct phys_puff
@@ -1278,10 +1272,6 @@ struct phys_puff
     u8 unk_60[4];
     s32 velY;           // 0x64
 };
-
-extern struct phys_puff *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-extern void *DropWumpa(void *pool, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
-extern void *DropExtraLife(void *pool, u16 x, u16 y, u8 p3, u32 p4, u8 p5);
 
 /* DropWumpa/DropExtraLife take a stack-passed word (p4) and byte (p5).
  * The ROM stores the byte with `add rX, sp, #4; strb`, but this compiler
@@ -2018,9 +2008,6 @@ void DropCratesAbove(struct crate *self)
  * NAKED-retry sections). */
 
 extern void *gHud;
-extern void PressSwitchCrate(void *arg);
-extern void sub_8025A0C(u8 *bitmap, u16 id);
-extern void AddBrokenCrate(void *arg);
 
 /* Per-edge jump table's **case 4 handler**
  * (`QueueCratePlayerCollision(self+0x4d & 0x7f == 0) -> ExplodeCrate(self, 1)`, and

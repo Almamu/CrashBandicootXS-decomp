@@ -6,6 +6,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the four icon-group
  * constructors below only match under it, and InitPauseCrystalsPage compiles
@@ -134,23 +135,6 @@ void InitPauseRelicsPage(struct pause_menu *self)
 }
 
 extern void *gLevelState;
-extern s32 GetCurrentLevel(void *arg0);
-
-/* Same per-level bronze/silver/gold threshold table src/menus/power_dialog_draw.c's
- * `struct threshold_table_entry`/`gLevelTable` already document -
- * duplicated locally (rather than shared via a header) per that file's
- * own comment on the type, matching this project's minimal-local-type
- * convention. */
-struct threshold_table_entry {
-    u8 unused_00[8];
-    u32 threshold_08;
-    u32 threshold_0C;
-    u32 threshold_10;
-    u8 unused_14[0x24 - 0x14];
-};
-COMPILE_TIME_ASSERT(pause_menu_pages_init_c, sizeof(struct threshold_table_entry) == 0x24);
-
-extern struct threshold_table_entry gLevelTable[];
 
 /* Tags `icon` with medal frame `frame` and restarts its animation. The
  * frame is a word parameter (not u8) so the table word is loaded after
@@ -176,7 +160,7 @@ void InitPauseTimeTrialPage(struct pause_menu *self)
 {
     s32 levelIdx;
     u32 time;
-    struct threshold_table_entry *entry;
+    const struct level_info *entry;
     struct settings_icon_actor **slot;
     u8 earned;
 
@@ -191,7 +175,7 @@ void InitPauseTimeTrialPage(struct pause_menu *self)
     FormatCentiseconds(time, self->timeBuf);
     entry = &gLevelTable[levelIdx];
     earned = 0;
-    if (time != 0 && time <= entry->threshold_08)
+    if (time != 0 && time <= entry->times[0])
         earned = 1;
     self->field_6c = earned;
 
@@ -201,11 +185,11 @@ void InitPauseTimeTrialPage(struct pause_menu *self)
     set_icon_pos(&(*slot)->base, &gPauseTimeTrialIconPos);
 
     if (time != 0) {
-        if (time <= entry->threshold_08)
+        if (time <= entry->times[0])
             set_icon_frame(*slot, gPauseRelicIconFrames[2]);
-        if (time <= entry->threshold_0C)
+        if (time <= entry->times[1])
             set_icon_frame(*slot, gPauseRelicIconFrames[1]);
-        if (time <= entry->threshold_10)
+        if (time <= entry->times[2])
             set_icon_frame(*slot, gPauseRelicIconFrames[0]);
         SET_ICON_FRAME_NIBBLE(*slot);
     }

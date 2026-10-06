@@ -1,6 +1,7 @@
 #include "core.h"
 #include "bosses.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issue #22, ROM 0x080187FC-0x08018884 - non-adjacent to
  * airship_fireball.c since the raw `UpdateTiny`/`SetTinyState`/
@@ -19,18 +20,6 @@
 
 /* gLevelLayers's view here (level_layers.c's `struct level_layers`):
  * only BG layer 0's `heightPx` is read. */
-struct bg_scroll_layer {
-    s32 x;
-    s32 y;
-    u8 unk_08[0xC];
-    s32 heightPx;       // 0x14 - the level's height in pixels; `<< 8` then `+ 0x2000` is the charge target
-};
-
-struct level_layers {
-    u8 unk_00[0x10];
-    struct bg_scroll_layer *layer0; // 0x10
-};
-
 extern struct level_layers *gLevelLayers;
 extern void *gEntityFlags;
 extern s32 _call_via_r3(void *addr, void *arg1, void *arg2, void *fn);

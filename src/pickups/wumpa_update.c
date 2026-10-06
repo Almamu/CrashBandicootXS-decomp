@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -166,8 +167,6 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
 extern void *gEntityFlags;
 extern void *gEntitySpawner;
 extern struct orbit_part *gPlayer;
-extern void CollectWumpa(void *state);
-extern struct actor *DropWumpa(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
 /* flags |= 1 and, unless the id is 0xffff, the id's bit in the

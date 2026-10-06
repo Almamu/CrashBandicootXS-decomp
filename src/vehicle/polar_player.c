@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "level.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/vehicle/polar_player_states.c`
@@ -42,8 +43,6 @@ struct held_pressed_pair {
 };
 extern struct held_pressed_pair gKeys;
 
-extern void LoseLife(void *arg0);
-extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 static inline s32 Abs(s32 x)
@@ -273,7 +272,7 @@ s32 HurtPolarPlayer(void *selfArg)
                             struct game_state *player = *playerAddr;
 
                             if (player->timeTrial == 0) {
-                                LoseLife(player);
+                                LoseLife((struct level_state *)player);
                             }
                         }
                         gPolarSteerEnabled = zero;
@@ -623,7 +622,7 @@ void PolarPlayerStateShocked(void *selfArg)
             }
         }
         if (gLevelState->timeTrial == 0) {
-            LoseLife(gLevelState);
+            LoseLife((struct level_state *)gLevelState);
         }
     } else if (counter & 4) {
         QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
@@ -650,7 +649,7 @@ void PolarPlayerStateCaught(struct actor_self *self)
             struct game_state *player = gLevelState;
 
             if (player->timeTrial == 0)
-                LoseLife(player);
+                LoseLife((struct level_state *)player);
         }
     }
 }

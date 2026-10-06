@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gfx.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #43: BG layer 0 of the level-layers singleton
  * (`level_layers.c`) and the VRAM tile-slot pool it owns.
@@ -89,13 +90,6 @@ struct pooled_layer
     struct tile_slot_pool *pool;  // 0x5C
 };
 
-extern void *InitBgLayer(void *self, s32 bgIndex);
-extern void DestroyBgLayerBase(void *self, u32 flags);
-extern u8 gPooledBgLayerVtable[];
-extern u8 gBgLayerVtable[];
-
-void UploadTileSlot(struct tile_slot_pool *pool, s32 tileId, s32 slot);
-
 static inline void PushFreeSlot(struct tile_slot_pool *pool, s32 slot)
 {
     pool->freeSlots[--pool->freeTop] = slot;
@@ -123,17 +117,17 @@ static inline u16 GetTileSlot(struct tile_slot_pool *pool, s32 id)
 
 void DestroyPooledBgLayer(struct pooled_layer *self, u32 flags)
 {
-    self->vtable = gPooledBgLayerVtable;
+    self->vtable = (void *)gPooledBgLayerVtable;
     if (self->pool != NULL)
         OperatorDelete(self->pool);
-    self->vtable = gBgLayerVtable;
+    self->vtable = (void *)gBgLayerVtable;
     DestroyBgLayerBase(self, flags);
 }
 
 struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
 {
     InitBgLayer(self, bgIndex);
-    self->vtable = gPooledBgLayerVtable;
+    self->vtable = (void *)gPooledBgLayerVtable;
     {
         /* bit7 = 1, bits2_3 = 0. This compiler folds both masks to
          * immediates; the ROM keeps the `& 0x7f` and derives `-0xd` from

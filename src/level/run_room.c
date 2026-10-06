@@ -8,6 +8,7 @@
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -214,17 +215,6 @@ struct gl_entity_list
     struct gl_entity **items;       /* +0x08 */
 };
 
-struct gl_level_entry
-{
-    s32 unk_00;
-    s32 state;                      /* +0x04 */
-    u8 unk_08[0xC];
-    s32 maskAssistDeaths;           /* +0x14 */
-    s32 crateAssistDeaths;          /* +0x18 */
-    u8 isBoss;                      /* +0x1C */
-    u8 unk_1D[7];
-};
-
 struct gl_widget_kind
 {
     u8 unk_00[8];
@@ -271,27 +261,14 @@ extern void *gHud;
 extern void *gUnknown_030012F4;
 extern void *gUnknown_030012EC;
 extern void *gCollidableList;
-extern void *gDecorationList;
 /* Updated and cleared, but never culled or drawn: the invisible objects,
  * the entity type 0x55 room-exit zones (spawn_bosses.c) and
  * SpawnSealSpawner's spawner. */
-extern void *gUpdateOnlyPartList;
 extern void *gInput;
 extern struct gl_entity_list *gCrateList;
 extern s32 gRoomFrameCount;
 extern union gl_input gKeys;
-extern struct gl_level_entry gLevelTable[];
-extern u16 gThemePaletteCycle2[];
-extern u16 gThemePaletteCycle1A[];
-extern u16 gThemePaletteCycle1B[];
-extern u16 gThemePaletteCycle3[];
-extern u16 gThemePaletteCycle5[];
 
-extern void LoadRoom(void *box, void *widget);
-extern void CheckAllCratesBroken(void *level);
-extern u8 IsSwitchPressed(void *level);
-extern void SetMaskAssistDeaths(void *level, s32 value);
-extern void SetCrateAssistDeaths(void *level, s32 value);
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
  * makes the struct BLKmode, so the compound literal is stored straight
@@ -306,28 +283,13 @@ struct fx_direction
 
 /* codegen: AddPaletteCycle takes a u8 `direction` (gfx.h); passed as a
  * u8 it is stored to the stack slot as a word. docs/headers_plan.md */
-extern void AddPaletteCycle_fx(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate, s32 count, struct fx_direction direction) asm("AddPaletteCycle");
+extern void AddPaletteCycle_fx(struct palette_cycler *self, u16 *targets, const u16 *lists, s32 rate, s32 count, struct fx_direction direction) asm("AddPaletteCycle");
 
 #define FX_CYCLE(lists, rate, count, dir) \
     AddPaletteCycle_fx(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
                 (struct fx_direction){ (dir) })
-extern void SetupRoomBlend(struct gl_self *self);
-extern void ResetObjBuffers(void);
-extern void SnapCamera(void *scratch);
-extern void ResetLevelLayers(void *box);
-extern u8 IsInBonusRound(void *level);
-extern u8 IsInGemPath(void *level);
-extern u8 IsInBonusRoom(struct gl_self *self);
-extern u8 IsInGemPathRoom(struct gl_self *self);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void UpdateRoomFrame(struct gl_self *self);
-extern void ResumeRoomAfterPause(struct gl_self *self);
-extern void TickLevelClock(struct gl_level *level);
-extern u8 IsRoomExitRequested(void);
-extern s32 *GetBonusPlatform(void *level);
-extern void SetCheckpoint(void *level, s32 arg, s32 *point);
-extern void AddPendingSwitchCrates(void *level, s32 count);
 
 #define PAL_RAM ((u16 *)PLTT)
 
@@ -352,7 +314,7 @@ static inline void SpawnNearPlayer(s32 x, s32 y)
     point.x = x;
     point.y = y;
     level = gLevelState;
-    SetCheckpoint(level, sub_801B29C((struct gobj *)GetBonusPlatform(level)), &point.x);
+    SetCheckpoint(level, sub_801B29C((struct gobj *)GetBonusPlatform((struct level_state *)level)), &point.x);
 }
 
 static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
@@ -379,15 +341,15 @@ s32 RunRoom(struct gl_self *self)
     ResetPlayerForRoom(gPlayer);
     gCamera->player = gPlayer;
     gCamera->unk_14 = ret;
-    LoadRoom(gLevelLayers, self->widget);
+    LoadRoom(gLevelLayers, (const struct level_room *)self->widget);
     if (!gLevelTable[self->level].isBoss)
         CheckAllCratesBroken(gLevelState);
-    if (IsSwitchPressed(gLevelState))
+    if (IsSwitchPressed((struct level_state *)gLevelState))
         UpdateCrates();
-    SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].maskAssistDeaths);
-    SetCrateAssistDeaths(gLevelState, gLevelTable[self->level].crateAssistDeaths);
+    SetMaskAssistDeaths((struct level_state *)gLevelState, gLevelTable[self->level].maskAssistDeaths);
+    SetCrateAssistDeaths((struct level_state *)gLevelState, gLevelTable[self->level].crateAssistDeaths);
 
-    switch (gLevelTable[self->level].state)
+    switch (gLevelTable[self->level].theme)
     {
     case 2:
         ClearPaletteCycles(gPaletteCycles);
@@ -412,7 +374,7 @@ s32 RunRoom(struct gl_self *self)
         break;
     }
 
-    SetupRoomBlend(self);
+    SetupRoomBlend((struct level_ctx *)self);
     ResetObjBuffers();
     if (self->widget->kind == 1)
     {
@@ -421,13 +383,13 @@ s32 RunRoom(struct gl_self *self)
     }
     gPlayer->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)gPlayer);
     RefreshPlayerTiles();
-    SnapCamera(gCamera);
+    SnapCamera((struct camera *)gCamera);
     ResetLevelLayers(gLevelLayers);
 
     if (self->widget->kind == 0)
     {
-        if ((IsInBonusRound(gLevelState) && IsInBonusRoom(self))
-            || (IsInGemPath(gLevelState) && IsInGemPathRoom(self)))
+        if ((IsInBonusRound((struct level_state *)gLevelState) && (u8)IsInBonusRoom((struct level_progress *)self))
+            || (IsInGemPath((struct level_state *)gLevelState) && (u8)IsInGemPathRoom((struct level_progress *)self)))
         {
             struct gl_attach *a;
 
@@ -490,7 +452,7 @@ s32 RunRoom(struct gl_self *self)
         UpdatePartList(gDecorationList);
         UpdateHudSlides(gHud);
         if (gLevelState->timeTrial)
-            TickLevelClock(gLevelState);
+            TickLevelClock((struct level_state *)gLevelState);
         gRoomFrameCount++;
     }
 fade:
@@ -498,19 +460,19 @@ fade:
     if (IsRoomExitRequested())
     {
         ret = 0;
-        if (!IsInBonusRoom(self) && IsInBonusRound(gLevelState))
+        if (!(u8)IsInBonusRoom((struct level_progress *)self) && IsInBonusRound((struct level_state *)gLevelState))
         {
             struct gl_point point;
             s32 x;
 
-            x = *GetBonusPlatform(gLevelState) + -0x1E00;
+            x = *(s32 *)GetBonusPlatform((struct level_state *)gLevelState) + -0x1E00;
             i = gPlayer->pos.y + 0x1200;
             point.x = x;
             point.y = i;
             x = (s32)gLevelState;
             SetCheckpoint((void *)x, sub_801B29C((struct gobj *)GetBonusPlatform((void *)x)), &point.x);
         }
-        else if (!IsInGemPathRoom(self) && IsInGemPath(gLevelState))
+        else if (!(u8)IsInGemPathRoom((struct level_progress *)self) && IsInGemPath((struct level_state *)gLevelState))
         {
             struct gl_point point;
             struct gl_player *pl;
@@ -547,7 +509,7 @@ fade:
                     i++;
                 } while (i < (*list)->count);
             }
-            AddPendingSwitchCrates(gLevelState, count);
+            AddPendingSwitchCrates((struct level_state *)gLevelState, count);
         }
     }
     ClearPartList(gUpdateOnlyPartList);

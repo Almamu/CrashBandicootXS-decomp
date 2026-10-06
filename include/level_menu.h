@@ -13,7 +13,7 @@
  * r1/r2/r3/r4" thunks. */
 
 #include "menus.h"
-#include "graphics_package.h"
+#include "gfx.h"
 
 struct method
 {
@@ -106,41 +106,6 @@ struct menu_save
     u8 open;            // 0x02 - bit 5/7/6: pages 1/2/3 reachable
     u8 unk_03;
     union level_record levels[1];  // 0x04, five per page
-};
-
-/* Shadow copies of the blend/display registers, committed every frame. */
-struct blend_bits
-{
-    u32 bg0First:1;     // BLDCNT 1st target
-    u32 bg1First:1;
-    u32 bg2First:1;
-    u32 bg3First:1;
-    u32 objFirst:1;
-    u32 bdFirst:1;
-    u32 effect:2;
-    u32 bg0Second:1;    // BLDCNT 2nd target
-    u32 bg1Second:1;
-    u32 bg2Second:1;
-    u32 bg3Second:1;
-    u32 objSecond:1;
-    u32 bdSecond:1;
-    u32 unk_14:2;
-    u32 eva:5;          // BLDALPHA
-    u32 unk_21:3;
-    u32 evb:5;
-    u32 unk_29:3;
-};
-
-union blend
-{
-    u32 raw;
-    struct blend_bits bits;
-};
-
-struct bldy
-{
-    u32 evy:5;
-    u32 unk_5:27;
 };
 
 union dispcnt

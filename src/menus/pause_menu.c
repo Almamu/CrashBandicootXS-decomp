@@ -11,11 +11,11 @@
 #include "menus.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
 extern struct vram_upload_cursor *gObjVramCursor;
-extern u8 gSpriteBankTable[];
 extern void *_call_via_r1(void *arg0, void *fn);
 
 /* The composite pause/options screen's own constructor/driver
@@ -92,8 +92,8 @@ s32 RunPauseMenu(void)
 
     oldCache = gPaletteCache;
     gPaletteCache = InitPaletteCache(OperatorNew(sizeof(struct palette_cache)));
-    SetPaletteCacheSource(gPaletteCache, ((struct pause_gfx_pkg *)gSpriteBankTable)->count,
-                ((struct pause_gfx_pkg *)gSpriteBankTable)->records);
+    SetPaletteCacheSource(gPaletteCache, ((struct pause_gfx_pkg *)&gSpriteBankTable)->count,
+                ((struct pause_gfx_pkg *)&gSpriteBankTable)->records);
     ClaimPaletteSlot(gPaletteCache, 0xf);
     {
         u8 *dst = (u8 *)gPaletteCache;
@@ -128,7 +128,6 @@ s32 RunPauseMenu(void)
 
 extern void *gLevelState;
 extern void ***gSpriteBankSet;
-extern void *PackSaveData(void *arg0);
 
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`

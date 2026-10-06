@@ -5,24 +5,11 @@
 #include "crates.h"
 #include "objects.h"
 #include "memory.h"
+#include "box_part.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
-
-/* The "filter into a second array" manager struct also used by
- * `CullPartList`/`ClearPartList`/`CollidePartsOfClass` in `part_list_cull.c` -
- * `array1` is the primary list (bounded by `count1`, up to
- * `capacity`), `array2` a filtered/derived list built from it
- * (bounded by `count2`). `InitPartList` below is this struct's own
- * initializer. */
-struct dual_array_manager {
-    s32 capacity;     // +0x0
-    s32 count1;         // +0x4
-    s32 count2;           // +0x8
-    void **array1;          // +0xc
-    void **array2;             // +0x10
-};
 
 /* What the managers' lists hold: level objects with a gcc 2.x method
  * table at +0x18 (the same prefix as gobj_1a794.h's `struct gobj`, whose
@@ -39,13 +26,13 @@ struct listed_obj {
 };
 
 /* Calls the `m20` virtual method (via the `_call_via_r1` call thunk) of
- * every object in `manager->array2` (bounded by `count2`). */
-void DrawPartList(struct dual_array_manager *manager)
+ * every object in `manager->visible` (bounded by `visibleCount`). */
+void DrawPartList(struct part_list *manager)
 {
     s32 i;
 
-    for (i = 0; i < manager->count2; i++) {
-        struct listed_obj *part = manager->array2[i];
+    for (i = 0; i < manager->visibleCount; i++) {
+        struct listed_obj *part = (struct listed_obj *)manager->visible[i];
         struct listed_obj_vtable *tbl = part->vtable;
         s16 offset = tbl->m20.thisOffset;
         void *addr = (u8 *)part + offset;
@@ -55,14 +42,14 @@ void DrawPartList(struct dual_array_manager *manager)
     }
 }
 
-/* Searches `manager->array1` (bounded by `capacity`) for an entry
+/* Searches `manager->items` (bounded by `capacity`) for an entry
  * equal to `target`; if found, compacts the array by shifting every
  * following entry down by one slot via the BIOS `CpuSet` wrapper
- * `CpuSet`, decrements `count1`, and clears the now-unused
+ * `CpuSet`, decrements `count`, and clears the now-unused
  * trailing slot. Same removal logic as `RemovePartListAt` below, but
  * locates the index by value instead of taking it directly as an
  * argument. */
-void RemoveFromPartList(struct dual_array_manager *manager, void *target)
+void RemoveFromPartList(struct part_list *manager, void *target)
 {
     s32 i = 0;
     s32 count = manager->capacity;
@@ -72,7 +59,7 @@ void RemoveFromPartList(struct dual_array_manager *manager, void *target)
         goto done;
     }
     {
-        void **p0 = manager->array1;
+        void **p0 = (void **)manager->items;
         void *val = *p0;
         base = p0;
         if (val != target) {
@@ -92,24 +79,24 @@ void RemoveFromPartList(struct dual_array_manager *manager, void *target)
         s32 srcOff = off + 4;
         void *src = (u8 *)base + srcOff;
         void *dst = (u8 *)base + off;
-        s32 control = (manager->count1 - i) & 0x1FFFFF;
+        s32 control = (manager->count - i) & 0x1FFFFF;
         s32 newCount;
 
         control |= 0x4000000;
         CpuSet(src, dst, control);
 
-        newCount = manager->count1 - 1;
-        manager->count1 = newCount;
-        manager->array1[newCount] = 0;
+        newCount = manager->count - 1;
+        manager->count = newCount;
+        manager->items[newCount] = 0;
     }
 done:
     return;
 }
 
-/* Removes the entry at `index` from `manager->array1`, compacting via
+/* Removes the entry at `index` from `manager->items`, compacting via
  * `CpuSet` the same way `RemoveFromPartList` does after its own
  * search. */
-void RemovePartListAt(struct dual_array_manager *manager, s32 index)
+void RemovePartListAt(struct part_list *manager, s32 index)
 {
     if (index < manager->capacity) {
         s32 off = index * 4;
@@ -119,69 +106,69 @@ void RemovePartListAt(struct dual_array_manager *manager, s32 index)
         s32 control;
         s32 newCount;
 
-        base = (u8 *)manager->array1;
+        base = (u8 *)manager->items;
         src = base + srcOff;
         dst = base + off;
-        control = (manager->count1 - index) & 0x1FFFFF;
+        control = (manager->count - index) & 0x1FFFFF;
         control |= 0x4000000;
         CpuSet(src, dst, control);
 
-        newCount = manager->count1 - 1;
-        manager->count1 = newCount;
-        manager->array1[newCount] = 0;
+        newCount = manager->count - 1;
+        manager->count = newCount;
+        manager->items[newCount] = 0;
     }
 }
 
-/* Appends `value` to `manager->array1` if there's room (`count1` <
+/* Appends `value` to `manager->items` if there's room (`count` <
  * `capacity`). */
-void AddToPartList(struct dual_array_manager *manager, void *value)
+void AddToPartList(struct part_list *manager, void *value)
 {
-    s32 count = manager->count1;
+    s32 count = manager->count;
 
     if (count < manager->capacity) {
-        manager->array1[count] = value;
-        manager->count1 = count + 1;
+        manager->items[count] = value;
+        manager->count = count + 1;
     }
 }
 
-/* Tears down a manager: frees both of its arrays (`array2` and
- * `array1`, each via `OperatorDeleteArray` if non-`NULL`), and, if bit 0 of
+/* Tears down a manager: frees both of its arrays (`visible` and
+ * `items`, each via `OperatorDeleteArray` if non-`NULL`), and, if bit 0 of
  * `flags` is set, frees the manager struct itself via
  * `OperatorDelete`. */
-void DestroyPartList(struct dual_array_manager *manager, s32 flags)
+void DestroyPartList(struct part_list *manager, s32 flags)
 {
-    if (manager->array2 != 0) {
-        OperatorDeleteArray(manager->array2);
+    if (manager->visible != 0) {
+        OperatorDeleteArray(manager->visible);
     }
-    if (manager->array1 != 0) {
-        OperatorDeleteArray(manager->array1);
+    if (manager->items != 0) {
+        OperatorDeleteArray(manager->items);
     }
     if (flags & 1) {
         OperatorDelete(manager);
     }
 }
 
-/* Initializes a manager: sets `count1`/`count2` to 0, `capacity` to
+/* Initializes a manager: sets `count`/`visibleCount` to 0, `capacity` to
  * `count`, allocates two `count`-word arrays via `OperatorNewArray` for
- * `array1`/`array2`, and zero-fills `array1`. Returns `manager`. */
-struct dual_array_manager *InitPartList(struct dual_array_manager *manager, s32 count)
+ * `items`/`visible`, and zero-fills `items`. Returns `manager`. */
+struct part_list *InitPartList(struct part_list *manager, s32 count)
 {
     s32 i;
     void **arr;
     s32 allocSize;
 
-    manager->count1 = 0;
-    manager->count2 = 0;
+    manager->count = 0;
+    manager->visibleCount = 0;
     manager->capacity = count;
 
     allocSize = count * 4;
-    manager->array1 = OperatorNewArray(allocSize);
-    manager->array2 = OperatorNewArray(allocSize);
+    manager->items = OperatorNewArray(allocSize);
+    manager->visible = OperatorNewArray(allocSize);
 
     i = manager->capacity;
     if (i > 0) {
         void *zero = 0;
-        arr = manager->array1;
+        arr = (void **)manager->items;
         do {
             *arr = zero;
             arr++;

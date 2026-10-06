@@ -6,25 +6,17 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
-extern void CreateEntitySpawner(void);
-extern void ClearRoomExit(void);
-extern void *GetLevelLayers(void);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern s32 RunRoom(void *self);
-extern void DestroyLevelLayers(void *self, s32 flag);
-extern void DestroyEntitySpawner(void);
 
-extern struct dual_array_manager *gUpdateOnlyPartList;
-extern struct dual_array_manager *gUnknown_030012EC;
+extern struct part_list *gUnknown_030012EC;
 extern struct pool_manager *gCrateList;
-extern struct dual_array_manager *gCollidableList;
-extern struct dual_array_manager *gDecorationList;
-extern struct dual_array_manager *gUnknown_030012F4;
+extern struct part_list *gCollidableList;
+extern struct part_list *gUnknown_030012F4;
 extern void *gCamera;
-extern void *gLevelLayers;
+extern struct level_layers *gLevelLayers;
 extern void *gPlayer;
-extern void *gPlayerCtrl;
 extern void ***gSpriteBankSet;
 
 /* PlayRoom's argument (game_frame.c passes `&self->level`; the same
@@ -88,11 +80,11 @@ s32 PlayRoom(void *selfArg)
     ClearRoomExit();
 
     {
-        struct dual_array_manager **slot = &gUpdateOnlyPartList;
+        struct part_list **slot = &gUpdateOnlyPartList;
         *slot = InitPartList(OperatorNew(0x14), 0x20);
     }
     {
-        struct dual_array_manager **slot = &gUnknown_030012EC;
+        struct part_list **slot = &gUnknown_030012EC;
         *slot = InitPartList(OperatorNew(0x14), 0xc0);
     }
     {
@@ -100,15 +92,15 @@ s32 PlayRoom(void *selfArg)
         *slot = InitCrateList(OperatorNew(0x818), 0xc0);
     }
     {
-        struct dual_array_manager **slot = &gCollidableList;
+        struct part_list **slot = &gCollidableList;
         *slot = InitPartList(OperatorNew(0x14), 0x80);
     }
     {
-        struct dual_array_manager **slot = &gDecorationList;
+        struct part_list **slot = &gDecorationList;
         *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
-        struct dual_array_manager **slot = &gUnknown_030012F4;
+        struct part_list **slot = &gUnknown_030012F4;
         *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
@@ -253,7 +245,7 @@ s32 PlayRoom(void *selfArg)
     }
     }
 
-    result = RunRoom(self);
+    result = RunRoom((struct gl_self *)self);
 
     if (gLevelLayers != NULL) {
         DestroyLevelLayers(gLevelLayers, 3);
@@ -271,7 +263,7 @@ s32 PlayRoom(void *selfArg)
         DestroyPartList(gUnknown_030012F4, 3);
     }
     if (gDecorationList != NULL) {
-        DestroyPartList(gDecorationList, 3);
+        DestroyPartList((struct part_list *)gDecorationList, 3);
     }
     if (gCollidableList != NULL) {
         DestroyPartList(gCollidableList, 3);
@@ -283,7 +275,7 @@ s32 PlayRoom(void *selfArg)
         DestroyPartList(gUnknown_030012EC, 3);
     }
     if (gUpdateOnlyPartList != NULL) {
-        DestroyPartList(gUpdateOnlyPartList, 3);
+        DestroyPartList((struct part_list *)gUpdateOnlyPartList, 3);
     }
 
     DestroyEntitySpawner();

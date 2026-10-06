@@ -4,16 +4,13 @@
 #include "level_data.h"
 #include "util.h"
 #include "audio.h"
+#include "level.h"
 
 extern struct level_state *gLevelState;
 extern void *gEntityFlags;
 extern struct actor *gPlayer;
 extern void *gAudioContext;
 
-extern u8 GetSpawnAtStart(void *self);
-extern s32 GetDeaths(void *self);
-extern s32 GetMaskAssistDeaths(void *self);
-extern u8 IsInBonusRound(void *self);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* Sound-trigger dispatch/position writer - the last of the

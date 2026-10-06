@@ -116,9 +116,7 @@
 #include "crates.h"
 #include "objects.h"
 #include "memory.h"
-extern u8 sub_802599C(void *level, s32 id);
-extern s32 GetDeaths(void *self);
-extern s32 GetCrateAssistDeaths(void *self);
+#include "level.h"
 extern void *gCrateList;
 
 struct placement_level
@@ -152,7 +150,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         self = obj;
     }
     self->id = id;
-    if (type == 9 && id != 0xffff && sub_802599C(gEntityFlags, id))
+    if (type == 9 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id))
         type = 0;
     if (*((u8 *)gLevelState + 0x8c) == 0
         && GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState))
@@ -192,7 +190,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         special = 1;
         break;
     case 3:
-        if (sub_802599C(gEntityFlags, id))
+        if ((u8)sub_802599C(gEntityFlags, id))
             type = 7;
         break;
     }
@@ -333,10 +331,10 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->slot = GetSpriteAnimPaletteSlot((struct actor *)self);
     self->x = x << 8;
     self->y = y << 8;
-    if (sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf)
+    if ((u8)sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf)
         && (PLACEMENT(slot)[0] & 0x80))
         type = 1;
-    if (type == 1 && id != 0xffff && sub_802599C(gEntityFlags, id))
+    if (type == 1 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id))
     {
         PhysSetTag(self, 0x1b);
         self->frame = self->anim->records[self->tag].frames - 1;
@@ -349,7 +347,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     asm("" : : "r"(type));
     asm("" : : "r"(type));
     asm("" : : "r"(type));
-    if (type == 5 && sub_802599C(gEntityFlags, id))
+    if (type == 5 && (u8)sub_802599C(gEntityFlags, id))
         SolidifyOutlineCrate(self);
     AddCrateToList(gCrateList, self);
     return self;

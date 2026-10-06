@@ -8,6 +8,7 @@
 #include "system.h"
 #include "audio.h"
 #include "gfx.h"
+#include "level.h"
 
 void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
 {
@@ -85,7 +86,6 @@ u8 RunSaveMenu(u32 state, u32 field10)
 extern void *gAudioContext;
 extern struct palette_cache *gPaletteCache;
 extern void *gLevelState;
-extern void *PackSaveData(void *arg0);
 
 /* The composite pause/options screen's (and the spinner dialog's, via
  * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
@@ -369,9 +369,6 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
     }
 }
 
-extern void UnpackSaveData(void *cache, void *buf);
-extern void SetCurrentLevel(void *cache, u8 arg1);
-
 /* States 1/2's input handler (the two icon slider rows, `handle` =
  * field_8c/field_90 respectively): confirm/cancel-combo either resets
  * to state 0 (if maxed out) or, if the currently-highlighted row isn't
@@ -471,8 +468,6 @@ void SaveMenuLinkInput(struct save_menu *self)
     }
     self->field_18 = GetUiText(0x2e);
 }
-
-extern s32 GetCurrentLevel(void *arg0);
 
 /* Shared "commit or refresh row `rowIndex`" step used by states 5-9
  * below: pulls the row's stats/name/icon scratch data, feeds it through

@@ -6,16 +6,7 @@
 #include "audio.h"
 #include "crates.h"
 #include "objects.h"
-
-struct bg_scroll_layer {
-    s32 x;
-    s32 y;
-};
-
-struct level_layers {
-    u8 unk_00[0x10];
-    struct bg_scroll_layer *layer0; // 0x10
-};
+#include "level.h"
 
 extern struct level_layers *gLevelLayers;
 extern struct box_part *gPlayer;

@@ -6,6 +6,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "level.h"
 
 /* First half of the `0x08031A6C`-`0x08032858` remainder issue #59's
  * foundational pass (docs/matching/issue-59-0x08031784-actor.md) left
@@ -43,10 +44,6 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 
-extern void AddBrokenCrate(void *self);
-extern void FreezeLevelClock(void *arg0, s32 arg1);
-extern void StartTimeTrial(void *arg0);
-extern s32 AddLife(void *self);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern u8 gSineTable[];

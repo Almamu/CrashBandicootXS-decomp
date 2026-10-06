@@ -4,6 +4,7 @@
 #include "crates.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
@@ -54,25 +55,6 @@ struct entity
     u8 unk_1C[0];
 };
 
-struct level_obj
-{
-    u8 unk_00[8];
-    s32 state;                  // 0x08
-};
-
-struct level_state
-{
-    u8 unk_00[0x8C];
-    u8 timeTrial;                  // 0x8C
-    u8 unk_8D[3];
-    s32 unk_90[5];              // 0x90-0xA0
-    u8 unk_A4[0x38];
-    struct level_obj *level;    // 0xDC
-    u8 unk_E0[0xD8];
-    struct slot_part *bonusPlatform;    // 0x1B8
-    struct slot_part *gemPlatform;    // 0x1BC
-};
-
 struct entity_list
 {
     u8 unk_00[4];
@@ -91,7 +73,6 @@ extern void *gPaletteCache;
 extern struct entity_list *gUnknown_030012EC;
 extern struct collision_map *gEntityFlags;
 
-extern void SetMaskLevel(struct level_state *self, s32 arg1);
 extern s32 _call_via_r1(void *self, void *fn);
 
 static inline void SetPartTag(struct slot_part *part, s32 tag)
@@ -116,15 +97,15 @@ void StartTimeTrial(struct level_state *self)
 
     SetMaskLevel(self, 0);
     self->timeTrial = 1;
-    self->unk_90[0] = 0;
-    self->unk_90[1] = 0;
-    self->unk_90[2] = 0;
-    self->unk_90[3] = 0;
-    self->unk_90[4] = 0;
-    if (self->level->state == 3)
+    self->minutes = 0;
+    self->seconds = 0;
+    self->tenths = 0;
+    self->frames = 0;
+    self->countdown = 0;
+    if (self->cat->kind == 3)
         return;
 
-    part = self->bonusPlatform;
+    part = (struct slot_part *)self->bonusPlatform;
     if (part != NULL)
     {
         SetPartTag(part, 7);
@@ -132,15 +113,15 @@ void StartTimeTrial(struct level_state *self)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
     }
-    part = self->gemPlatform;
+    part = (struct slot_part *)self->gemPlatform;
     if (part != NULL)
     {
         SetPartTag(part, 0xc);
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        LoadPaletteSlot(gPaletteCache, self->gemPlatform->frameNibble,
-                    self->gemPlatform->anim->records[self->gemPlatform->tag].tileRecord);
+        LoadPaletteSlot(gPaletteCache, ((struct slot_part *)self->gemPlatform)->frameNibble,
+                    ((struct slot_part *)self->gemPlatform)->anim->records[((struct slot_part *)self->gemPlatform)->tag].tileRecord);
     }
     ConvertCratesForTimeTrial();
 

@@ -4,6 +4,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "level.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after the still-raw `DetonateNearbyPolarNitros` (see docs/matching.md) - same
@@ -12,8 +13,6 @@
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
-
-extern void AddBrokenCrate(void *self);
 
 /* On proximity (`IsTouchingPlayer`), ties the lap counter and the lock-timer
  * setter `GivePolarPlayerMask`, then transitions to the shared "used"
@@ -74,8 +73,6 @@ asm(".align 2, 0");
  * `animIndex` state field, the `+0x10`/`+0x12`/`+8` anim-reset idiom,
  * the `+0x30` type-byte indirection, and the `InitActorPart`-based
  * constructor family already matched throughout this ROM region). */
-
-extern void FreezeLevelClock(void *arg0, s32 arg1);
 
 /* Extends the type-byte event dispatch family (`UpdateJetpackTimeCrate`/etc, per
  * docs/rom_map.md; the `UpdatePolarQuestionCrate` shape in polar_pickups.c) with

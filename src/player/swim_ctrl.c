@@ -5,6 +5,7 @@
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
  * (0x08016128-0x08017524): the player-input controller class of
@@ -63,8 +64,6 @@ extern void *gLevelState;
 extern void *gPaletteCache;
 extern u8 *gEntityFlags;
 extern struct pctrl_target *gPlayer;
-
-extern void LoseLife(void *arg0);
 
 typedef void (*pctrl_fn1)(void *self, s32 a);
 typedef void (*pctrl_fn2)(void *self, struct pctrl_target *t, s32 a);

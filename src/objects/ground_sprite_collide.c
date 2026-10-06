@@ -1,6 +1,7 @@
 #include "core.h"
 #include "box_part.h"
 #include "objects.h"
+#include "level.h"
 
 /* Dedicated deep investigation (GitHub issue #9/#10,
  * docs/matching/issue-9-0x0800a178-graphics.md): `ProbeGroundSpriteTerrain`/
@@ -234,15 +235,7 @@ u8 CollideGroundSprite(struct box_part *self)
 }
 
 extern s32 _call_via_r1(void *addr, void *fn);
-extern s32 ProbeTerrain(void *player, s32 mode, void *pos, s32 span, void *outValue);
-extern s32 sub_8026C3C(void *player, void *pos, void *outValue);
-extern s32 sub_8026BF8(void *player, void *pos, void *outValue);
 extern void *gLevelLayers;
-
-struct probe_pos {
-    s32 x;
-    s32 y;
-};
 
 /* See the file-level header comment above for this function's
  * semantics. `self`'s only argument; returns the accumulated result

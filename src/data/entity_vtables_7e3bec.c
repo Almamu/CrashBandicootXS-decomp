@@ -13,6 +13,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /*
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
@@ -24,28 +25,6 @@
  * leading slots, the ROM's own inheritance. Linked in ROM order between
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
-
-extern void DestroyBgStreamer();
-extern void DestroyBgLayerBase();
-extern void ClampBgLayerScrollStep();
-extern void ScrollBgLayerBase();
-extern void ResetBgLayerBase();
-extern void ClipBgLayerColumns();
-extern void ClipBgLayerRows();
-extern void ScrollBgLayer();
-extern void DrawBgLayerColumn();
-extern void DrawBgLayerRow();
-extern void ResetBgLayer();
-extern void LoadBgLayerTiles();
-extern void DestroyBgLayer();
-extern void DrawPooledBgLayerColumn();
-extern void ClampPooledBgLayerScrollStep();
-extern void ClipPooledBgLayerColumns();
-extern void ClipPooledBgLayerRows();
-extern void DrawPooledBgLayerRow();
-extern void ResetPooledBgLayer();
-extern void LoadPooledBgLayerTiles();
-extern void DestroyPooledBgLayer();
 
 /* Used by aabb_setup.c, enemy_ctrl.c, wumpa.c,
  * sprite_obj.c (DestroySpriteObj), sprite_anim.c, graphics.c (nullsub_12,

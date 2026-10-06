@@ -2,6 +2,7 @@
 #include "gfx_part.h"
 #include "bosses.h"
 #include "objects.h"
+#include "level.h"
 
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six of the "trigger effect type N" spawners
@@ -30,10 +31,6 @@ extern void *gLevelState;
 extern u8 ***gSpriteBankSet;
 extern void *gEntitySpawner;
 extern void *gUnknown_030012EC;
-
-extern u8 *GetCurrentLevelFlags(void *self);
-extern s32 GetBossIndex(void *self);
-extern struct gfx_part *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
  * constants into callee-saved registers before the CreateSpriteObj call and

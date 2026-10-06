@@ -1,4 +1,5 @@
 #include "core.h"
+#include "level.h"
 
 /* GitHub issues #9/#10/#41's remaining piece of `ProbeTerrain`'s own
  * "umbrella 5-mode dispatcher" cluster (`terrain_probe.c`,
@@ -45,20 +46,6 @@
  *     into `self+0x29` (the same doc's "dispatch nibble" byte).
  *     Returns the scan's own hit flag either way. */
 
-struct probe_pos
-{
-    s32 x;
-    s32 y;
-};
-
-/* bg_layer_base.c's `struct tile_cache`, as far as these read it. */
-struct tile_cache
-{
-    u8 unk_00[0x10];
-    s32 unk010;         // 0x10 - width in tiles
-    s32 unk014;         // 0x14 - height in tiles
-};
-
 /* The gLevelLayers-shaped collider these resolvers run on. */
 struct collider
 {
@@ -68,8 +55,6 @@ struct collider
     u8 nibble;                  // 0x29
     u8 flagHeld;                // 0x2A
 };
-
-extern void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 
 /* Y-axis resolver: scans the tiles under [pos->x, pos->x + span) at
  * pos->y's row until GetSolidTerrainHeights reports a hit. On a hit, moves

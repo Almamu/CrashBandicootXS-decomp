@@ -6,10 +6,9 @@
 #include "system.h"
 #include "menus.h"
 #include "gfx.h"
+#include "level.h"
 
-extern s32 GetCurrentLevel(void *arg0);
 extern void *gLevelState;
-extern u8 gLevelTable[];
 extern struct AudioContext *gAudioContext;
 
 /* The composite pause/options screen's "results" sub-region
@@ -25,7 +24,7 @@ extern struct AudioContext *gAudioContext;
 void InitPauseMenuInfo(struct pause_menu *self)
 {
     s32 levelIdx = GetCurrentLevel(gLevelState);
-    u32 labelId = *(u32 *)(gLevelTable + levelIdx * 0x24);
+    u32 labelId = *(u32 *)((u8 *)gLevelTable + levelIdx * 0x24);
 
     self->field_70 = (void *)GetUiText(labelId);
 

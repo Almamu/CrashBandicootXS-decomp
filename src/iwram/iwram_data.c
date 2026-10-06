@@ -14,6 +14,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "iwram.h"
+#include "level.h"
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
@@ -81,7 +82,7 @@ s32 gAkuAkuInvincibleFrame = 0;
 s32 gAkuAkuFollowFrame = 0;
 struct level_menu *gLevelSelect = NULL;
 u8 gNewWorldOpened = 0;
-void *gLevelStateSingleton = NULL;
+struct level_state *gLevelStateSingleton = NULL;
 u32 gRoomFrameCount = 0;
 u8 gRoomExitRequested = 0;
 
@@ -96,7 +97,7 @@ const struct cutscene_page *const *gCutsceneTexts[6] = {
     gCutsceneTextDutch,
 };
 
-void *gLevelLayersSingleton = NULL; /* struct level_layers * */
+struct level_layers *gLevelLayersSingleton = NULL;
 
 /* Per-language string tables (main_loop.c indexes them by
  * gLanguage), src/data/ui_text_172cd4.c. */

@@ -9,27 +9,19 @@
 #include "menus.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
-/* A small per-category threshold table: CountSapphireRelics/CountGoldRelics/
- * CountPlatinumRelics each count how many of a caller's 20 records fall between
- * two adjacent thresholds here (threshold_08/_0C for one function,
- * threshold_0C/_10 for the next, and just threshold_10 alone for the
- * simplest one) - looks like nested difficulty/category boundaries.
+/* gLevelTable's time-trial thresholds (`level_info.times`, level.h):
+ * CountSapphireRelics/CountGoldRelics/CountPlatinumRelics each count how
+ * many of a caller's 20 records fall between two adjacent thresholds
+ * (times[0]/[1] for one function, times[1]/[2] for the next, and just
+ * times[2] alone for the simplest one).
  * CountSapphireRelics/CountGoldRelics read through inline asm rather than plain
  * struct field access on purpose: gcc's CSE otherwise shares the
  * "table[i]" address between the two threshold reads even though the
  * ROM recomputes it fresh for each one (see docs/matching.md, "Matching
  * decompilation"). */
-struct threshold_table_entry {
-    u8 unused_00[8];
-    u32 threshold_08;
-    u32 threshold_0C;
-    u32 threshold_10;
-    u8 unused_14[0x24 - 0x14];
-};
-COMPILE_TIME_ASSERT(power_dialog_draw_c, sizeof(struct threshold_table_entry) == 0x24);
 
-extern struct threshold_table_entry gLevelTable[];
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern struct palette_cache *gPaletteCache;
 extern void *gOamBuffer;
@@ -143,7 +135,7 @@ s32 GetProgressLives(void *arg0)
     return (u32)(*(u8 *)arg0 << 25) >> 25;
 }
 
-/* Counts records whose derived value is <= threshold_10 alone (no lower
+/* Counts records whose derived value is <= times[2] alone (no lower
  * bound) - the simplest of the three CountGoldRelics/CountSapphireRelics/CountPlatinumRelics
  * threshold checks. */
 s32 CountPlatinumRelics(void *arg0)
@@ -158,7 +150,7 @@ s32 CountPlatinumRelics(void *arg0)
 
     count = 0;
     base = (u8 *)gLevelTable;
-    bound = base + 0x10; /* &gLevelTable[0].threshold_10 */
+    bound = base + 0x10; /* &gLevelTable[0].times[2] */
     p = (u8 *)arg0;
     i = 0x13;
     do {
@@ -176,10 +168,10 @@ s32 CountPlatinumRelics(void *arg0)
     return count;
 }
 
-/* Counts records whose derived value falls in (threshold_10, threshold_0C]
- * of the matching gLevelTable entry - see the comment on
- * struct threshold_table_entry above for why this reads through inline
- * asm instead of entry->threshold_0C/entry->threshold_10. */
+/* Counts records whose derived value falls in (times[2], times[1]]
+ * of the matching gLevelTable entry - see the comment at the top of this
+ * file for why this reads through inline asm instead of
+ * entry->times[1]/entry->times[2]. */
 s32 CountGoldRelics(void *arg0)
 {
     register u8 *p asm("r3");
@@ -214,7 +206,7 @@ s32 CountGoldRelics(void *arg0)
 }
 
 /* Same shape as CountGoldRelics above, one threshold pair up:
- * (threshold_0C, threshold_08]. */
+ * (times[1], times[0]]. */
 s32 CountSapphireRelics(void *arg0)
 {
     register u8 *p asm("r3");

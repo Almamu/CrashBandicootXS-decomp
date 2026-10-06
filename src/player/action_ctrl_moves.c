@@ -4,6 +4,7 @@
 #include "actor.h"
 #include "audio.h"
 #include "player.h"
+#include "level.h"
 
 /* Continuation of action_ctrl_hang.c (issue #18's chunk) - covers
  * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
@@ -110,7 +111,6 @@ asm(".align 2, 0");
 extern void *gLevelState;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern s32 HasTurboRun(void *self);
 
 /* Always sets `self+0x26 = 0xc`. For `mode` `3`/`4`: if `flags` bit
  * `0x200` is set and `HasTurboRun(gLevelState)` is true, latches
@@ -226,7 +226,6 @@ asm(".align 2, 0");
 
 extern void *gAudioContext;
 extern void *gPlayer;
-extern void RequestRoomExit(void);
 
 /* Clears `self+0x33`, saves `self+8`'s previous value (truncated) into
  * `self+0x2d`, overwrites `self+8` with `arg1`, and clears
@@ -558,8 +557,6 @@ void ActionCtrlStateCrawlStop(void *selfArg)
                     *(void **)(off + 4));
     }
 }
-
-extern s32 HasSuperBodySlam(void *self);
 
 /* While `part+0x38` is set: when `HasSuperBodySlam(gLevelState)` is
  * true, fires the mgr trampoline pair with actions `0x19`/`7`;

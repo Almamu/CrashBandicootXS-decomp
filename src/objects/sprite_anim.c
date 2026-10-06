@@ -8,6 +8,7 @@
 #include "audio.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* Same keyframe-record lookup as `GetSpriteAnimPaletteId`/`IsSpriteAnimLooping` above,
  * returning the record's `+0x16` byte (frame count, also read by
@@ -283,16 +284,6 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 /* gLevelLayers's view here (level_layers.c's `struct level_layers`):
  * BG layer 0's scroll position (include/bg_scroll_layer.h), which is the
  * camera position in pixels. */
-struct bg_scroll_layer {
-    s32 x;
-    s32 y;
-};
-
-struct level_layers {
-    u8 unk_00[0x10];
-    struct bg_scroll_layer *layer0; // 0x10
-};
-
 extern struct level_layers *gLevelLayers;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);

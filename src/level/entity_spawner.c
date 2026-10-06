@@ -6,6 +6,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "crates.h"
+#include "level.h"
 
 /* codegen: GetSpriteHitbox returns the box by value (objects.h); this
  * file was matched against the same call written with the destination
@@ -14,19 +15,6 @@
 extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox");
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
-
-struct level_layer
-{
-    u8 unk_00[0x10];
-    u32 width;                  // 0x10 - extent in the low 24 bits
-    u32 height;                 // 0x14 - extent in the low 24 bits
-};
-
-struct level_info
-{
-    u8 unk_00[0x10];
-    struct level_layer *layer;  // 0x10
-};
 
 struct method
 {
@@ -73,7 +61,7 @@ struct actor_flag_bits
 
 #define ACTOR_FLAG_BITS(a) ((struct actor_flag_bits *)&(a)->flags)
 
-extern struct level_info *gLevelLayers;
+extern struct level_layers *gLevelLayers;
 extern void ***gSpriteBankSet;
 extern void *gCollidableList;
 
@@ -94,7 +82,6 @@ extern s32 _call_via_r2(void *self, void *arg, void *fn);
  * - the velocity seed goes through the `SetVel` inline, whose arguments
  *   (`-speed`, 0x40) are expanded before the stores, and the X offset is
  *   a `?:` so the flip byte is tested before `ox + dist`. */
-struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
 
 static inline void SetVel(struct fx_part *p, s32 v, s32 k)
 {
@@ -104,7 +91,7 @@ static inline void SetVel(struct fx_part *p, s32 v, s32 k)
     p->rampXTarget = v;
 }
 
-struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src)
+void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src)
 {
     struct fx_part *part;
     s32 w1, w2, dist, x;
@@ -145,22 +132,22 @@ struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32
  * level's bounds, facing left when `mirror` is set, with animation
  * record `anim` (12-byte stride) and tag `tag`. Attaches it to a fresh
  * InitEffectCtrl manager and registers it with gCollidableList. */
-struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror)
+void *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror)
 {
     struct fx_part *part;
-    struct level_layer *layer;
+    struct bg_scroll_layer *layer;
     struct manager *mgr;
 
     if (x < 0)
         x = 0;
-    layer = gLevelLayers->layer;
+    layer = gLevelLayers->layer0;
     /* Compared sign-extended from 24 bits, clamped zero-extended. */
-    if (x >= (s32)(layer->width << 8) >> 8)
-        x = (layer->width << 8 >> 8) - 1;
+    if (x >= (s32)((u32)layer->widthPx << 8) >> 8)
+        x = ((u32)layer->widthPx << 8 >> 8) - 1;
     if (y < 0)
         y = 0;
-    if (y >= (s32)(layer->height << 8) >> 8)
-        y = (layer->height << 8 >> 8) - 1;
+    if (y >= (s32)((u32)layer->heightPx << 8) >> 8)
+        y = ((u32)layer->heightPx << 8 >> 8) - 1;
     part = CreateMovingSprite(0xffff, x, y, 0);
     part->flipX = mirror != 0;
     part->anim = (u8 *)**gSpriteBankSet + anim * 12;
@@ -233,9 +220,9 @@ struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 fl
  * which register this compiler's allocator happens to land the
  * function pointer in, hence the `register ... asm("r5")` pin plus the
  * empty-asm "keep this value live" barrier right before the call. */
-extern void _call_via_r5(void *a0, u16 a1, u16 a2, u16 a3);
+extern void _call_via_r5(u32 id, u16 a1, u16 a2, u16 a3);
 
-void SpawnEntity(void **table, void *self, u16 *rec)
+void SpawnEntity(void **table, s32 id, u16 *rec)
 {
     register void *tablePtr asm("r1") = *table;
     register u16 idx asm("r3") = rec[0];
@@ -247,14 +234,14 @@ void SpawnEntity(void **table, void *self, u16 *rec)
     register void *fn asm("r5") = *(void **)entry;
 
     asm("" :: "r"(fn));
-    _call_via_r5(self, p1, p2, p3);
+    _call_via_r5(id, p1, p2, p3);
 }
 
 /* Stores `{a, b}` into the two Q8 words at `self+0`/`self+4`. */
-void SetEntitySpawnerTable(void *self, s32 a, s32 b)
+void SetEntitySpawnerTable(void *self, const void *table, s32 count)
 {
-    *(s32 *)((u8 *)self + 4) = b;
-    *(s32 *)self = a;
+    *(s32 *)((u8 *)self + 4) = count;
+    *(const void **)self = table;
 }
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical

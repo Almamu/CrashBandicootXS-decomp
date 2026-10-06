@@ -3,6 +3,7 @@
 #include "system.h"
 #include "audio.h"
 #include "player.h"
+#include "level.h"
 
 /* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
@@ -27,8 +28,6 @@ extern void *gLevelState;
 extern u8 *gPlayer;
 extern void *gEntitySpawner;
 extern void *gInput;
-extern u8 HasTurboRun(void *self);
-extern struct spawned *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 /* Stores to the two "next action" trios. As inline parameters, old_agbcc
  * materializes the values before the stores; the `Set` forms store a
@@ -143,7 +142,7 @@ void ActionCtrlStateRun(struct act *self)
             ActQueue27(self, alt, 0x1E);
             gPlayer[0x94] = alt;
             gPlayer[0x94] = alt;
-            obj = LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xA, alt, gPlayer);
+            obj = LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xA, alt, (struct fx_part *)gPlayer);
             obj->unk_0C_2 = 0;
             obj->unk_28_0 = 1;
         }
@@ -178,7 +177,7 @@ void ActionCtrlStateRun(struct act *self)
 
         if (held)
         {
-            if (self->state == 3 && HasTurboRun(gLevelState))
+            if (self->state == 3 && (u8)HasTurboRun(gLevelState))
             {
                 s32 zero;
 

@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "level.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family documented in actor.c/polar_player_actions.c: a "part table"
@@ -23,9 +24,7 @@
 
 extern struct level_state *gLevelState;
 extern void *gAudioContext;
-extern s32 SetMaskLevel(struct level_state *arg0, s32 arg1);
 extern void *gActorList;
-extern void AddBrokenCrate(struct level_state *self);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 
 /* `actor_self` plus the one-shot byte flag UpdatePolarBoostPad/CreatePolarBoostPad use.

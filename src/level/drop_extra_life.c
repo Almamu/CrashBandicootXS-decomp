@@ -2,14 +2,9 @@
 #include "actor.h"
 #include "pickups.h"
 #include "objects.h"
+#include "level.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
-
-struct level_state
-{
-    u8 unk_00[0x8C];
-    u8 timeTrial;                  // 0x8C
-};
 
 extern struct level_state *gLevelState;
 extern void ***gSpriteBankSet;
