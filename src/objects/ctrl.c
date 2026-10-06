@@ -5,125 +5,122 @@
 #include "util.h"
 #include "objects.h"
 #include "memory.h"
+#include "gobj_1a794.h"
 
-extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
-
-/* Looks up `selfArg`'s `index`-th 8-byte record (via a double
- * pointer chain at `self+4`), uses its second word as a type index
- * into the 12-byte-stride `gCtrlMotionRecords` table, and calls
- * slot 6 of the vtable at `self+0xc` with that table entry - the same
- * base+offset+fn-pointer convention already seen in
+/* Looks up the `index`-th {a, b} pair of the controller's entry set
+ * (`animSet`), uses its `b` as an index into gCtrlMotionRecords, and calls
+ * slot 6 of the controller's method table (StartCtrlTargetMotionY) with that
+ * record - the same base+offset+fn-pointer convention already seen in
  * `DestroyPlayer`/`ResolvePlayerContact`. */
 void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index)
 {
-    u8 *self = selfArg;
-    void **mgr = *(void ***)(self + 4);
-    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)mgr;
+    struct ctrl *self = selfArg;
+    const struct entry_set *set = self->animSet;
+    MATCH_HOLD_REG(const u32 *, arr, r3) = *set->entries;
     MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
-    u8 *rec;
+    const u32 *rec;
     s32 type;
-    u8 *tableEntry;
-    struct vtable_slot *vtbl;
+    const struct speed_ramp *tableEntry;
+    const struct vtable_slot *vtbl;
     s16 offset;
     void *addr;
     void *fn;
 
     asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
-    rec = (u8 *)recOffset;
-    type = *(s32 *)(rec + 4);
-    tableEntry = (u8 *)gCtrlMotionRecords + type * 12;
-    vtbl = *(struct vtable_slot **)(self + 0xc);
+    rec = (const u32 *)recOffset;
+    type = rec[1];
+    tableEntry = &gCtrlMotionRecords[type];
+    vtbl = self->vtable;
     offset = vtbl[6].delta;
-    addr = self + offset;
+    addr = (u8 *)self + offset;
     fn = vtbl[6].fn;
 
-    _call_via_r3(addr, arg1, tableEntry, fn);
+    _call_via_r3(addr, arg1, (s32)tableEntry, fn);
 }
 
-/* Scales `vec` by `FixedMul(component, self->field4->field4)` per
- * axis and writes the result into `part+0x48`/`+0x4c`/`+0x50`,
- * negating X and Z when `part+0x28` bit 4 (a mirror flag, distinct
- * from the bit 5 flag used elsewhere) is set. */
+/* Scales `vec` by the entry set's `scale` and writes it into `part`'s X
+ * speed ramp (`rampX`: start, step, target), negating the start and the
+ * target when `part` is X-mirrored (`mirror` bit 4). */
 void SetCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec)
 {
-    u8 *self = selfArg;
-    u8 *part = partArg;
+    struct ctrl *self = selfArg;
+    struct gobj *part = partArg;
 
-    if ((s32)(part[0x28] << 27) < 0) {
-        s32 x = -FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 z = -FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
+    if ((s32)(part->mirror << 27) < 0) {
+        s32 x = -FixedMul(vec[0], self->animSet->scale);
+        s32 y = FixedMul(vec[1], self->animSet->scale);
+        s32 z = -FixedMul(vec[2], self->animSet->scale);
 
-        *(s32 *)(part + 0x48) = x;
-        *(s32 *)(part + 0x4c) = y;
-        *(s32 *)(part + 0x50) = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     } else {
-        s32 x = FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 z = FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 x = FixedMul(vec[0], self->animSet->scale);
+        s32 y = FixedMul(vec[1], self->animSet->scale);
+        s32 z = FixedMul(vec[2], self->animSet->scale);
 
-        *(s32 *)(part + 0x48) = x;
-        *(s32 *)(part + 0x4c) = y;
-        *(s32 *)(part + 0x50) = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     }
 }
 
-/* Same scaled-vector write as `SetCtrlTargetMotionX`, also duplicating the
- * (possibly negated) X component into `part+0x60` - the scaled-copy
- * counterpart of `StartCtrlTargetMotionY`'s plain-copy `+0x64` duplication. */
+/* Same scaled ramp write as `SetCtrlTargetMotionX`, also loading the
+ * (possibly negated) start into `speedX` - the scaled-copy counterpart
+ * of `StartCtrlTargetMotionY`'s plain-copy `speedY` load. */
 void StartCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec)
 {
-    u8 *self = selfArg;
-    u8 *part = partArg;
+    struct ctrl *self = selfArg;
+    struct gobj *part = partArg;
 
-    if ((s32)(part[0x28] << 27) < 0) {
-        s32 x = -FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 z = -FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
+    if ((s32)(part->mirror << 27) < 0) {
+        s32 x = -FixedMul(vec[0], self->animSet->scale);
+        s32 y = FixedMul(vec[1], self->animSet->scale);
+        s32 z = -FixedMul(vec[2], self->animSet->scale);
 
-        *(s32 *)(part + 0x60) = x;
-        *(s32 *)(part + 0x48) = x;
-        *(s32 *)(part + 0x4c) = y;
-        *(s32 *)(part + 0x50) = z;
+        part->speedX = x;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     } else {
-        s32 x = FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
-        s32 z = FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 x = FixedMul(vec[0], self->animSet->scale);
+        s32 y = FixedMul(vec[1], self->animSet->scale);
+        s32 z = FixedMul(vec[2], self->animSet->scale);
 
-        *(s32 *)(part + 0x60) = x;
-        *(s32 *)(part + 0x48) = x;
-        *(s32 *)(part + 0x4c) = y;
-        *(s32 *)(part + 0x50) = z;
+        part->speedX = x;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     }
 }
 
-/* Same shape as `StartCtrlTargetMotionYFromSet`, reading the record's FIRST word as
- * the type index instead of its second, and vtable slot 5 instead of
- * slot 6 - a sibling accessor for a second axis. */
+/* Same shape as `StartCtrlTargetMotionYFromSet`, reading the pair's `a`
+ * as the record index instead of its `b`, and method table slot 5
+ * (StartCtrlTargetMotionX) instead of slot 6. */
 void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index)
 {
-    u8 *self = selfArg;
-    void **mgr = *(void ***)(self + 4);
-    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)mgr;
+    struct ctrl *self = selfArg;
+    const struct entry_set *set = self->animSet;
+    MATCH_HOLD_REG(const u32 *, arr, r3) = *set->entries;
     MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
-    u8 *rec;
+    const u32 *rec;
     s32 type;
-    u8 *tableEntry;
-    struct vtable_slot *vtbl;
+    const struct speed_ramp *tableEntry;
+    const struct vtable_slot *vtbl;
     s16 offset;
     void *addr;
     void *fn;
 
     asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
-    rec = (u8 *)recOffset;
-    type = *(s32 *)(rec + 0);
-    tableEntry = (u8 *)gCtrlMotionRecords + type * 12;
-    vtbl = *(struct vtable_slot **)(self + 0xc);
+    rec = (const u32 *)recOffset;
+    type = rec[0];
+    tableEntry = &gCtrlMotionRecords[type];
+    vtbl = self->vtable;
     offset = vtbl[5].delta;
-    addr = self + offset;
+    addr = (u8 *)self + offset;
     fn = vtbl[5].fn;
 
-    _call_via_r3(addr, arg1, tableEntry, fn);
+    _call_via_r3(addr, arg1, (s32)tableEntry, fn);
 }
 
 /* gCtrlVtable slot 2, the base controller's event handler: empty
@@ -133,28 +130,28 @@ void CtrlHandleEvent(void)
 }
 asm(".align 2, 0");
 
-/* Sets `part`'s frame index (`+0x2d`) to `newVal`, but only if it
- * actually changed - otherwise a no-op returning 0. On a real change,
- * resets the sub-counter/frame-counter/"done" flag exactly like
- * `SetSpriteAnim` (not called directly here - inlined instead), clears
- * `part+0xc` bit 3, and returns 1. */
+/* Sets `part`'s animation (`tag`) to `newVal`, but only if it actually
+ * changed - otherwise a no-op returning 0. On a real change, resets the
+ * sub-counter/frame-counter/"done" flag exactly like `SetSpriteAnim` (not
+ * called directly here - inlined instead), clears `flags` bit 3, and
+ * returns 1. */
 u8 SetCtrlTargetAnim(void *unused, void *partArg, s32 newVal)
 {
-    u8 *part = partArg;
+    struct gobj *part = partArg;
     u8 result = 0;
 
-    if (part[0x2d] != newVal) {
-        part[0x2d] = newVal;
+    if (part->tag != newVal) {
+        part->tag = newVal;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         {
             MATCH_HOLD_REG(s32, mask, r0) = -9;
-            MATCH_HOLD_REG(s32, byte, r1) = part[0xc];
+            MATCH_HOLD_REG(s32, byte, r1) = part->flags;
             MATCH_HOLD_REG(s32, masked, r0);
 
             masked = mask & byte;
-            part[0xc] = masked;
+            part->flags = masked;
         }
         result = 1;
     }
@@ -167,30 +164,29 @@ void AttachCtrl(void *selfArg, s32 val)
     *(s32 *)selfArg = val;
 }
 
-/* Resets `self+0xc`'s table pointer to `gCtrlVtable`, then
- * (if bit 0 of `flags` is set) fires `OperatorDelete` on `self`. */
+/* Resets the method table to `gCtrlVtable`, then (if bit 0 of `flags`
+ * is set) fires `OperatorDelete` on `self`. */
 void DestroyCtrl(void *selfArg, s32 flags)
 {
-    u8 *self = selfArg;
+    struct ctrl *self = selfArg;
 
-    *(void **)(self + 0xc) = (void *)gCtrlVtable;
+    self->vtable = gCtrlVtable;
     if (flags & 1) {
         OperatorDelete(self);
     }
 }
 
-/* Resets `self+0xc`'s table pointer to `gCtrlVtable` and
- * clears `self+8`. */
+/* Resets the method table to `gCtrlVtable` and clears `state`. */
 void InitCtrl(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct ctrl *self = selfArg;
 
-    *(void **)(self + 0xc) = (void *)gCtrlVtable;
-    *(s32 *)(self + 8) = 0;
+    self->vtable = gCtrlVtable;
+    self->state = 0;
 }
 
-/* `self+8` word getter. */
+/* `state` getter. */
 s32 GetCtrlMode(void *selfArg)
 {
-    return *(s32 *)((u8 *)selfArg + 8);
+    return ((struct ctrl *)selfArg)->state;
 }

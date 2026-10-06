@@ -5,12 +5,6 @@
 #include "globals.h"
 #include "player.h"
 
-/* The player's controller (struct player.ctrl): its state. */
-struct ctrl {
-    u8 unk_00[8];
-    s32 mode;
-};
-
 /* Another per-frame spatial-hash-grid pass over `manager`, scoped to
  * the same 3-bucket window `[baseIdx, baseIdx+2]` (`baseIdx` computed
  * the same way as `UpdateCrateList`'s: `max(gLevelLayers`'s
@@ -51,7 +45,7 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
             i--;
         } while (i >= lo);
     } else {
-        s32 mode = ((struct ctrl *)p->ctrl)->mode;
+        s32 mode = ((struct ctrl *)p->ctrl)->state;
         s32 px = p->x;
         s32 py = p->y;
 

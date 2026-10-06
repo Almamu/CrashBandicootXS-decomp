@@ -57,7 +57,7 @@ s32 ClassifySpriteContact(void *part, void *region)
             goto end;
         }
         {
-            MATCH_HOLD_REG(u32, flags, r5) = *((u8 *)part + 0xc);
+            MATCH_HOLD_REG(u32, flags, r5) = ((struct gobj *)part)->flags;
             MATCH_HOLD_REG(u32, shifted, r0) = flags >> 6;
             MATCH_HOLD_REG(u32, test, r0);
             MATCH_HOLD_REG(u32, mask, r1) = 1;
@@ -75,32 +75,31 @@ end:
 }
 
 
-/* Fires a `self->table+0x70/0x74`-driven trampoline via `_call_via_r1`
- * (same `table+N`/`table+N+4` convention used throughout this ROM
- * region) and always returns 0. Needed the trampoline's `addr = self
+/* Calls the object's `checkContact` method (CheckPlayerContact) via
+ * `_call_via_r1` and always returns 0. Needed the trampoline's `addr = self
  * + offset` computed before the `fn` load (reusing the adjusted table
  * pointer's own dying register for `fn`), the same accumulator-style
  * fix established for `DestroyMovingSprite`/`UpdateMovingSprite` above. */
 s32 CollideMovingSprite(struct gobj *self)
 {
-    MATCH_HOLD_REG(u8 *, tblAdj, r1) = (u8 *)self->vtable + 0x70;
-    MATCH_HOLD_REG(s32, offset, r2) = *(s16 *)tblAdj;
+    MATCH_HOLD_REG(struct actor_method *, m, r1) = &self->vtable->checkContact;
+    MATCH_HOLD_REG(s32, offset, r2) = m->thisOffset;
     MATCH_HOLD_REG(void *, addr, r0);
     MATCH_HOLD_REG(void *, fn, r1);
 
     addr = (u8 *)self + offset;
-    fn = *(void **)(tblAdj + 4);
+    fn = m->fn;
     _call_via_r1(addr, fn);
     return 0;
 }
 
-/* `self+0x74` get/clear/OR-set accessors. */
+/* `hitMask` get/clear/OR-set accessors. */
 s32 GetGroundSpriteHitMask(struct gobj *self)
 {
     return self->hitMask;
 }
 
-/* `self+0x74 != 0`, via the branchless `(-x | x) >> 31` idiom rather
+/* `hitMask != 0`, via the branchless `(-x | x) >> 31` idiom rather
  * than a plain comparison. */
 s32 HasGroundSpriteHitMask(struct gobj *self)
 {
@@ -118,7 +117,7 @@ void AddGroundSpriteHitMask(struct gobj *self, s32 val)
     self->hitMask |= val;
 }
 
-/* `self+0x68` byte get/set pair. */
+/* `hitAxes` get/set pair. */
 void SetGroundSpriteHitAxes(struct gobj *self, u8 val)
 {
     self->hitAxes = val;
@@ -129,7 +128,7 @@ u8 GetGroundSpriteHitAxes(struct gobj *self)
     return self->hitAxes;
 }
 
-/* `self+0x64`/`self+0x60` setters. */
+/* `speedY`/`speedX` setters. */
 void SetSpriteSpeedY(struct gobj *self, s32 val)
 {
     self->speedY = val;
@@ -140,7 +139,7 @@ void SetSpriteSpeedX(struct gobj *self, s32 val)
     self->speedX = val;
 }
 
-/* `self+0x60`/`self+0x64` getters - the setters' siblings above. */
+/* `speedX`/`speedY` getters - the setters' siblings above. */
 s32 GetSpriteSpeedX(struct gobj *self)
 {
     return self->speedX;
@@ -151,15 +150,15 @@ s32 GetSpriteSpeedY(struct gobj *self)
     return self->speedY;
 }
 
-/* `self+0x44` (the keyframe/table record pointer used by
- * `DestroyMovingSprite`/`UpdateMovingSprite`/`AttachSpriteCtrl`) getter. */
+/* `mover` (the controller `DestroyMovingSprite`/`UpdateMovingSprite`/
+ * `AttachSpriteCtrl` use) getter. */
 struct mover *GetSpriteCtrl(struct gobj *self)
 {
     return self->mover;
 }
 
-/* Sets `self+0x44` to `rec`, then fires `rec->table+0x18/0x1c`'s
- * trampoline via `_call_via_r2` with `self` as the second argument.
+/* Sets `mover` to `rec`, then calls `rec`'s `m18` method (AttachCtrl in
+ * gCtrlVtable) via `_call_via_r2` with `self` as the second argument.
  * Same `addr`-before-`fn` fix as `DestroyMovingSprite`/`UpdateMovingSprite`. */
 void AttachSpriteCtrl(struct gobj *self, struct mover *rec)
 {
@@ -177,8 +176,8 @@ void AttachSpriteCtrl(struct gobj *self, struct mover *rec)
     }
 }
 
-/* `self+0x64`/`self+0x54`/`self+0x58`/`self+0x5c` bulk setter -
- * `self+0x64` and `self+0x54` both get the same first argument. */
+/* `speedY` + `rampY` bulk setter - `speedY` and `rampY.start` both get
+ * the same first argument. */
 void StartSpriteMotionY(struct gobj *self, s32 a, s32 b, s32 c)
 {
     self->speedY = a;
@@ -187,7 +186,7 @@ void StartSpriteMotionY(struct gobj *self, s32 a, s32 b, s32 c)
     self->rampY.target = c;
 }
 
-/* Same shape as `StartSpriteMotionY` above, without the `self+0x64` write. */
+/* Same shape as `StartSpriteMotionY` above, without the `speedY` write. */
 void SetSpriteMotionY(struct gobj *self, s32 a, s32 b, s32 c)
 {
     self->rampY.start = a;
@@ -195,9 +194,9 @@ void SetSpriteMotionY(struct gobj *self, s32 a, s32 b, s32 c)
     self->rampY.target = c;
 }
 
-/* `self+0x60`/`self+0x48`/`self+0x4c`/`self+0x50` bulk setter - the
- * velocity/accel/max-velocity pair `ApplySpriteVelocity` clamps, same
- * "shared first write" shape as `StartSpriteMotionY`. */
+/* `speedX` + `rampX` bulk setter - the speed and ramp
+ * `ApplySpriteVelocity` steps, same "shared first write" shape as
+ * `StartSpriteMotionY`. */
 void StartSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
 {
     self->speedX = a;
@@ -206,7 +205,7 @@ void StartSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
     self->rampX.target = c;
 }
 
-/* Same shape as `StartSpriteMotionX` above, without the `self+0x60` write. */
+/* Same shape as `StartSpriteMotionX` above, without the `speedX` write. */
 void SetSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
 {
     self->rampX.start = a;
@@ -214,8 +213,7 @@ void SetSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
     self->rampX.target = c;
 }
 
-/* `self+0x69` (cleared by `ResetMovingSprite`, set 0 by that same
- * initializer) getter. */
+/* `probeTries` (cleared by `ResetMovingSprite`) getter. */
 u8 GetGroundSpriteProbeTries(struct gobj *self)
 {
     return self->probeTries;

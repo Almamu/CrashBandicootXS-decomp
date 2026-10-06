@@ -67,8 +67,9 @@ struct gobj_vtable {
     u8 unk_18[0x20];
     struct actor_method m38; // 0x38
     u8 unk_40[0x20];
-    struct actor_method m60; // 0x60
-    struct actor_method m68; // 0x68
+    struct actor_method m60;          // 0x60
+    struct actor_method m68;          // 0x68
+    struct actor_method checkContact; // 0x70 - CheckPlayerContact (CollideMovingSprite)
 };
 
 struct mover;
@@ -100,7 +101,8 @@ struct gobj {
     u8 animDone;   // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
     u8 unk_39[3];
     u16 affine; // 0x3C - box_part.h's `affine` (ResetSpriteObj clears it)
-    u8 unk_3E[6];
+    u8 unk_3E[2];
+    s32 unk_40;              // 0x40 - ResetMovingSprite clears it; nothing reads it
     struct mover *mover;     // 0x44
     struct speed_ramp rampX; // 0x48 - speedX's ramp (ApplySpriteVelocity)
     struct speed_ramp rampY; // 0x54 - speedY's ramp
@@ -122,7 +124,9 @@ struct mover_vtable {
     struct actor_method m08; // 0x08
     struct actor_method m10; // 0x10
     struct actor_method m18; // 0x18
-    u8 unk_20[0x40];
+    u8 unk_20[0x28];
+    struct actor_method destroy; // 0x48 - the destructor (DestroyMovingSprite passes 3)
+    u8 unk_50[0x10];
     struct actor_method m60; // 0x60
 };
 

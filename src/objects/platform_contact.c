@@ -12,7 +12,7 @@ s32 CheckPlatformContact(struct gobj *self)
 {
     if (self->type != 6 || self->frame <= 0x12) {
         MATCH_HOLD_REG(struct player *, p, r3) = gPlayer;
-        void *arg = *(void **)((u8 *)p->ctrl + 8);
+        void *arg = (void *)((struct ctrl *)p->ctrl)->state;
         MATCH_HOLD_REG(u32, f, r1) = p->flags.all;
         MATCH_HOLD_REG(u32, top, r0) = f >> 7;
 

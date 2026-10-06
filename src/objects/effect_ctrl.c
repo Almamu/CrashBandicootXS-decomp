@@ -104,28 +104,28 @@ void ResetEffectCtrl(void *self)
 {
 }
 
-/* Sets `self+0xc`'s table pointer to `gEffectCtrlVtable`, then
- * tail-calls `DestroyCtrl` - same double-set pattern as
+/* Sets the method table to `gEffectCtrlVtable`, then tail-calls
+ * `DestroyCtrl` - same double-set pattern as
  * `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`. */
 void DestroyEffectCtrl(void *selfArg, s32 flags)
 {
-    u8 *self = selfArg;
+    struct ctrl *self = selfArg;
 
-    *(void **)(self + 0xc) = (void *)gEffectCtrlVtable;
+    self->vtable = gEffectCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
-/* Resets via `InitCtrl`, re-points `self+0xc`'s table pointer at
+/* Resets via `InitCtrl`, re-points the method table at
  * `gEffectCtrlVtable`, and runs `ResetEffectCtrl(self)` - the same
- * "reset via `InitCtrl`, re-point `self+0xc`, return `self`"
+ * "reset via `InitCtrl`, re-point the method table, return `self`"
  * constructor shape already matched for `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
  * `CreateKnockedEnemyCtrl`. */
 void *InitEffectCtrl(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct ctrl *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = (void *)gEffectCtrlVtable;
+    self->vtable = gEffectCtrlVtable;
     ResetEffectCtrl(self);
     return self;
 }

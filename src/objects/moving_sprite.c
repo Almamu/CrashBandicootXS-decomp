@@ -4,17 +4,17 @@
 #include "gfx_part.h"
 #include "objects.h"
 #include "memory.h"
+#include "gobj_1a794.h"
 
-/* A velocity/position integrator: for each axis (X at `self+0x60`,
- * `self+0x50` max, `self+0x4c` accel; Y at `self+0x64`/`self+0x5c`/
- * `self+0x58`), steps the velocity toward its max by the accel amount,
- * clamping so it never overshoots. Builds a "direction" byte at
- * `self+0x24` from the sign of each clamped velocity (1=right,
- * 2=left, 8=down, 4=up, OR'd together, matching this ROM's earlier
+/* A velocity/position integrator: for each axis (`speedX` with `rampX`,
+ * `speedY` with `rampY`), steps the speed toward the ramp's `target` by
+ * its `step`, clamping so it never overshoots. Builds the direction byte
+ * `dir` from the sign of each clamped speed (1=right, 2=left, 8=down,
+ * 4=up, OR'd together, matching this ROM's earlier
  * `GetSpriteBounds`-style mirror-flag bit encoding). Caches the pre-move
- * position at `self+0x6c`/`self+0x70` (read back by `GetSpritePrevPos`/
- * `GetSpritePrevY`/`GetSpritePrevX`), then applies the clamped velocity to
- * `self+0`/`self+4`. Finally updates the global `gLastSpriteVelY`
+ * position in `prevX`/`prevY` (read back by `GetSpritePrevPos`/
+ * `GetSpritePrevY`/`GetSpritePrevX`), then applies the clamped speed to
+ * `x`/`y`. Finally updates the global `gLastSpriteVelY`
  * with the Y velocity (a redundant-looking early write of 0 happens
  * only on the path where the Y velocity is already 0, so it's a
  * genuine no-op preserved as found) and returns whether either axis
@@ -34,20 +34,20 @@
  * choice directly. */
 s32 ApplySpriteVelocity(void *arg0)
 {
-    MATCH_HOLD_REG(s32 *, w, r2) = (s32 *)arg0;
+    MATCH_HOLD_REG(struct gobj *, w, r2) = arg0;
     MATCH_HOLD_REG(u8 *, flags, r1);
     s32 fx, fy;
 
     {
-        MATCH_HOLD_REG(s32, v, r1) = w[0x60 / 4];
-        MATCH_HOLD_REG(s32, target, r3) = w[0x50 / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w->speedX;
+        MATCH_HOLD_REG(s32, target, r3) = w->rampX.target;
 
         if (v >= target)
             goto case1_ge;
         {
-            s32 step = w[0x4c / 4];
+            s32 step = w->rampX.step;
             MATCH_HOLD_REG(s32, result, r0) = v + step;
-            w[0x60 / 4] = result;
+            w->speedX = result;
             if (result <= target)
                 goto case1_done;
             goto case1_clamp;
@@ -56,27 +56,27 @@ s32 ApplySpriteVelocity(void *arg0)
         if (v <= target)
             goto case1_done;
         {
-            s32 step = w[0x4c / 4];
+            s32 step = w->rampX.step;
             MATCH_HOLD_REG(s32, result, r0) = v - step;
-            w[0x60 / 4] = result;
+            w->speedX = result;
             if (result >= target)
                 goto case1_done;
         }
     case1_clamp:
-        w[0x60 / 4] = target;
+        w->speedX = target;
     case1_done:;
     }
 
     {
-        MATCH_HOLD_REG(s32, v, r1) = w[0x64 / 4];
-        MATCH_HOLD_REG(s32, target, r3) = w[0x5c / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w->speedY;
+        MATCH_HOLD_REG(s32, target, r3) = w->rampY.target;
 
         if (v >= target)
             goto case2_ge;
         {
-            s32 step = w[0x58 / 4];
+            s32 step = w->rampY.step;
             MATCH_HOLD_REG(s32, result, r0) = v + step;
-            w[0x64 / 4] = result;
+            w->speedY = result;
             if (result <= target)
                 goto case2_done;
             goto case2_clamp;
@@ -85,27 +85,27 @@ s32 ApplySpriteVelocity(void *arg0)
         if (v <= target)
             goto case2_done;
         {
-            s32 step = w[0x58 / 4];
+            s32 step = w->rampY.step;
             MATCH_HOLD_REG(s32, result, r0) = v - step;
-            w[0x64 / 4] = result;
+            w->speedY = result;
             if (result >= target)
                 goto case2_done;
         }
     case2_clamp:
-        w[0x64 / 4] = target;
+        w->speedY = target;
     case2_done:;
     }
 
-    flags = (u8 *)w + 0x24;
+    flags = &w->dir;
     *flags = 0;
 
-    fx = w[0x60 / 4];
+    fx = w->speedX;
     if (fx > 0)
         *flags = 1;
     else if (fx < 0)
         *flags = 2;
 
-    fy = w[0x64 / 4];
+    fy = w->speedY;
     {
         MATCH_HOLD_REG(s32, mask, r0);
         if (fy > 0) {
@@ -121,21 +121,21 @@ s32 ApplySpriteVelocity(void *arg0)
 skipY:
 
     {
-        s32 x0 = w[0];
-        s32 y0 = w[1];
-        w[0x6c / 4] = x0;
-        w[0x70 / 4] = y0;
+        s32 x0 = w->x;
+        s32 y0 = w->y;
+        w->prevX = x0;
+        w->prevY = y0;
     }
     {
-        s32 x = *(vs32 *)&w[0];
-        MATCH_HOLD_REG(s32, vx, r3) = w[0x60 / 4];
+        s32 x = *(vs32 *)&w->x;
+        MATCH_HOLD_REG(s32, vx, r3) = w->speedX;
         x = x + vx;
-        w[0] = x;
+        w->x = x;
         {
-            s32 y = *(vs32 *)&w[1];
-            s32 vy = w[0x64 / 4];
+            s32 y = *(vs32 *)&w->y;
+            s32 vy = w->speedY;
             y = y + vy;
-            w[1] = y;
+            w->y = y;
 
             {
                 MATCH_HOLD_REG(vs32 *, g, r0) = &gLastSpriteVelY;
@@ -214,11 +214,9 @@ void *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 unused)
     return part;
 }
 
-extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-
-/* Overwrites `self->table`, then (if `self+0x44`'s record is set)
- * fires a `record->table+0x48/0x4c`-driven trampoline with a constant
- * argument `3` via `_call_via_r2` (same convention as
+/* Overwrites `self->table`, then (if `self`'s mover is set) calls the
+ * mover's destructor (`destroy`) with a constant argument `3` via
+ * `_call_via_r2` (same convention as
  * `UpdatePartList`/`IsEntityNearCamera`), and finally tail-calls `DestroySpriteObj`
  * (already matched in `sprite_obj.c`). The trampoline's `addr =
  * rec + offset` needed computing before the `fn` load (reusing
@@ -231,16 +229,16 @@ void DestroyMovingSprite(struct actor *self, u32 arg1)
     self->table = (void *)gMovingSpriteVtable;
 
     {
-        MATCH_HOLD_REG(void *, rec, r2) = *(void **)((u8 *)self + 0x44);
+        MATCH_HOLD_REG(struct mover *, rec, r2) = ((struct gobj *)self)->mover;
 
         if (rec != 0) {
-            MATCH_HOLD_REG(u8 *, tblAdj, r1) = *(u8 **)((u8 *)rec + 0xc) + 0x48;
-            MATCH_HOLD_REG(s32, offset, r0) = *(s16 *)tblAdj;
+            MATCH_HOLD_REG(struct actor_method *, m, r1) = &rec->vtable->destroy;
+            MATCH_HOLD_REG(s32, offset, r0) = m->thisOffset;
             MATCH_HOLD_REG(void *, addr, r0);
             MATCH_HOLD_REG(void *, fn, r2);
 
             addr = (u8 *)rec + offset;
-            fn = *(void **)(tblAdj + 4);
+            fn = m->fn;
             _call_via_r2(addr, (void *)3, fn);
         }
     }
@@ -250,43 +248,45 @@ void DestroyMovingSprite(struct actor *self, u32 arg1)
 
 /* Part-object field clearer/initializer, called from every
  * `CreateMovingSprite`-family constructor above and below. Sets `flags` bit
- * 6, clears `part+0xd` bit 3 (same `-9` mask trick as `ClearPartSolid`),
- * zeroes the velocity/accel/max-velocity fields consumed by
- * `ApplySpriteVelocity` (`+0x60`/`+0x64`/`+0x48`/`+0x4c`/`+0x50`/`+0x54`/
- * `+0x58`/`+0x5c`) plus `+0x24`/`+0x44`/`+0x40`, and sets `+0x68` to
- * 8 and clears `+0x69`. */
-void ResetMovingSprite(void *self)
+ * 6, clears `flags2` bit 3 (same `-9` mask trick as `ClearPartSolid`),
+ * zeroes the speeds and speed ramps `ApplySpriteVelocity` steps plus
+ * `dir`/`mover`/`unk_40`, sets `hitAxes` to 8 and clears `probeTries`. */
+void ResetMovingSprite(void *selfArg)
 {
+    struct gobj *self = selfArg;
+
+    /* The two flag stores are retyped stores: as plain member stores the
+     * zero for the fields below is loaded above the first one. */
     {
         MATCH_HOLD_REG(s32, mask, r0) = 0x40;
-        MATCH_HOLD_REG(s32, byte, r1) = *((u8 *)self + 0xc);
+        MATCH_HOLD_REG(s32, byte, r1) = self->flags;
         MATCH_HOLD_REG(s32, result, r0);
 
         result = mask | byte;
-        *((u8 *)self + 0xc) = result;
+        *(u8 *)&self->flags = result;
     }
     {
         MATCH_HOLD_REG(s32, mask, r0) = -9;
-        MATCH_HOLD_REG(s32, byte, r1) = *((u8 *)self + 0xd);
+        MATCH_HOLD_REG(s32, byte, r1) = self->flags2;
         MATCH_HOLD_REG(s32, result, r0);
 
         result = mask & byte;
-        *((u8 *)self + 0xd) = result;
+        *(u8 *)&self->flags2 = result;
     }
 
-    *(s32 *)((u8 *)self + 0x60) = 0;
-    *(s32 *)((u8 *)self + 0x64) = 0;
-    *(s32 *)((u8 *)self + 0x48) = 0;
-    *(s32 *)((u8 *)self + 0x4c) = 0;
-    *(s32 *)((u8 *)self + 0x50) = 0;
-    *(s32 *)((u8 *)self + 0x54) = 0;
-    *(s32 *)((u8 *)self + 0x58) = 0;
-    *(s32 *)((u8 *)self + 0x5c) = 0;
-    *((u8 *)self + 0x68) = 8;
-    *((u8 *)self + 0x24) = 0;
-    *((u8 *)self + 0x69) = 0;
-    *(s32 *)((u8 *)self + 0x44) = 0;
-    *(s32 *)((u8 *)self + 0x40) = 0;
+    self->speedX = 0;
+    self->speedY = 0;
+    self->rampX.start = 0;
+    self->rampX.step = 0;
+    self->rampX.target = 0;
+    self->rampY.start = 0;
+    self->rampY.step = 0;
+    self->rampY.target = 0;
+    self->hitAxes = 8;
+    self->dir = 0;
+    self->probeTries = 0;
+    self->mover = 0;
+    self->unk_40 = 0;
 }
 
 /* Same `InitSpriteObj`/table-swap/`ResetMovingSprite` shape as `CreateMovingSprite`
@@ -302,25 +302,25 @@ struct actor *InitMovingSprite(struct actor *part)
 }
 
 /* Calls `UpdateSpriteObj` (already matched in `sprite_obj.c`), then (if
- * `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven
- * trampoline via `_call_via_r2` with `self` itself as the second
+ * `self`'s mover is set) calls the mover's `m08` method (its per-frame
+ * update) via `_call_via_r2` with `self` itself as the second
  * argument. Same `addr`-before-`fn` ordering fix as `DestroyMovingSprite`
  * above. */
 void UpdateMovingSprite(struct actor *self)
 {
-    MATCH_HOLD_REG(void *, rec, r2) = *(void **)((u8 *)self + 0x44);
+    MATCH_HOLD_REG(struct mover *, rec, r2) = ((struct gobj *)self)->mover;
 
     UpdateSpriteObj(self);
-    rec = *(void **)((u8 *)self + 0x44);
+    rec = ((struct gobj *)self)->mover;
     if (rec != 0) {
-        MATCH_HOLD_REG(u8 *, tbl, r1) = *(u8 **)((u8 *)rec + 0xc);
-        MATCH_HOLD_REG(s32, offset, r0) = *(s16 *)(tbl + 8);
+        MATCH_HOLD_REG(struct mover_vtable *, tbl, r1) = rec->vtable;
+        MATCH_HOLD_REG(s32, offset, r0) = tbl->m08.thisOffset;
         MATCH_HOLD_REG(void *, addr, r0);
         MATCH_HOLD_REG(void *, fn, r2);
         MATCH_HOLD_REG(void *, arg1, r1);
 
         addr = (u8 *)rec + offset;
-        fn = *(void **)(tbl + 0xc);
+        fn = tbl->m08.fn;
         arg1 = self;
         _call_via_r2(addr, arg1, fn);
     }
