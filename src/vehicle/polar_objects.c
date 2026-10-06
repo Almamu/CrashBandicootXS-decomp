@@ -414,8 +414,8 @@ void UpdatePolarIcicle(void *selfArg)
         frame = GetAnimFrameBaseOffset(self);
         {
             MATCH_HOLD_REG(s32, idx2, r2) = self->animIndex;
-            MATCH_HOLD_REG(u8 *, table2, r3) = (u8 *)self->anims;
-            MATCH_HOLD_REG(s32, threshold, r1) = *(s16 *)(table2 + idx2 * 0xc + 4);
+            MATCH_HOLD_REG(struct anim_frame_record *, table2, r3) = self->anims;
+            MATCH_HOLD_REG(s32, threshold, r1) = table2[idx2].loopThreshold;
 
             if (frame >= threshold) {
                 self->animTime = 0;
@@ -440,8 +440,8 @@ void UpdatePolarIcicle(void *selfArg)
             frame = GetAnimFrameBaseOffset(self);
             {
                 MATCH_HOLD_REG(s32, idx2, r2) = self->animIndex;
-                MATCH_HOLD_REG(u8 *, table2, r3) = (u8 *)self->anims;
-                MATCH_HOLD_REG(s32, threshold, r1) = *(s16 *)(table2 + idx2 * 0xc + 4);
+                MATCH_HOLD_REG(struct anim_frame_record *, table2, r3) = self->anims;
+                MATCH_HOLD_REG(s32, threshold, r1) = table2[idx2].loopThreshold;
 
                 if (frame >= threshold) {
                     self->animTime = zero;
@@ -533,9 +533,9 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
         {
             s32 frame = GetAnimFrameBaseOffset(self);
             s32 idx = self->animIndex;
-            u8 *table = (u8 *)self->anims;
+            struct anim_frame_record *table = self->anims;
 
-            if (frame >= *(s16 *)(table + idx * 0xc + 4)) {
+            if (frame >= table[idx].loopThreshold) {
                 self->animTime = zero;
             }
         }
@@ -645,15 +645,16 @@ void UpdatePolarAkuAku(void *selfArg)
     {
         s32 frame = GetAnimFrameBaseOffset(self);
         MATCH_HOLD_REG(s32, idx2, r2) = self->animIndex;
-        MATCH_HOLD_REG(u8 *, table2, r3) = (u8 *)self->anims;
-        MATCH_HOLD_REG(u8 *, record, r1) = (u8 *)(idx2 * 0xc);
+        MATCH_HOLD_REG(struct anim_frame_record *, table2, r3) = self->anims;
+        MATCH_HOLD_REG(struct anim_frame_record *, record, r1) =
+            (struct anim_frame_record *)(idx2 * 0xc);
 
         asm("add %0, %0, %1" : "+r"(record) : "r"(table2));
         {
-            MATCH_HOLD_REG(s32, threshold, r2) = *(s16 *)(record + 4);
+            MATCH_HOLD_REG(s32, threshold, r2) = record->loopThreshold;
 
             if (frame >= threshold) {
-                MATCH_HOLD_REG(s32, diff, r0) = (threshold - *(s16 *)(record + 6)) << 8;
+                MATCH_HOLD_REG(s32, diff, r0) = (threshold - record->loopBase) << 8;
 
                 self->animTime -= diff;
                 *(u8 *)&self->animDone = 1;

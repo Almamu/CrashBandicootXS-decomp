@@ -99,11 +99,11 @@ void UpdateJetpackBalloon(struct jetpack_balloon *self)
     }
 }
 
-/* Trivial `self+0x58` clearing setter. */
+/* Trivial setter: forgets the attached crate (`pending`). */
 void ClearJetpackBalloonCrate(void *selfArg)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 0x58) = 0;
+    struct jetpack_balloon *self = selfArg;
+    self->pending = NULL;
 }
 
 /* Damage handler: once hit points run out, marks `self` dying,
@@ -127,31 +127,32 @@ void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
     ACTOR_SET_STATE(&self->base, 2, 1);
 }
 
-/* Full reset idiom (state=1, counter/accumulator/table-index cleared,
- * anim frame re-synced from `self`'s own part table) - same shape as
- * the boss cluster's established reset blocks (`AirshipStateApproach`,
- * airship_states.c). */
+/* Drops the attached crate and restarts state 1 (floating away) with
+ * animation 0 - same shape as the boss cluster's reset blocks
+ * (`AirshipStateApproach`, airship_states.c). The `animTimer`/`animDone`
+ * stores go through `*(T *)&` casts: as plain member stores gcc drops
+ * the r3 zero and reuses r1. */
 void ReleaseJetpackBalloon(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct jetpack_balloon *self = selfArg;
     MATCH_HOLD_REG(s32, zero, r2) = 0;
 
-    *(s32 *)(self + 0x58) = zero;
-    *(s32 *)(self + 0x60) = zero;
+    self->pending = (struct actor_self *)zero;
+    self->velY = zero;
     {
         MATCH_HOLD_REG(s32, one, r1) = 1;
-        *(s32 *)(self + 0x28) = one;
+        self->base.state = one;
     }
-    *(s32 *)(self + 0x44) = zero;
-    *(s32 *)(self + 0xc) = zero;
+    self->base.stateTime = zero;
+    self->base.animIndex = zero;
     {
-        MATCH_HOLD_REG(u16, anim, r1) = *(u16 *)(*(u8 **)self);
+        MATCH_HOLD_REG(u16, anim, r1) = self->base.anims[0].duration;
         MATCH_HOLD_REG(u8, zero3, r3) = 0;
 
-        *(u16 *)(self + 0x10) = anim;
-        self[0x12] = zero3;
+        *(u16 *)&self->base.animTimer = anim;
+        *(u8 *)&self->base.animDone = zero3;
     }
-    *(s32 *)(self + 8) = zero;
+    self->base.animTime = zero;
 }
 
 /* Moves `self` to (x, y, z), then runs the shared
@@ -181,22 +182,22 @@ void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
 
 /* An `InitActorPart`-based constructor: forwards its first 4 real
  * arguments straight to `InitActorPart` (the last, `d`, stack-passed),
- * then marks `self+0x54 = 2`, sets `self+0x50`'s event/trampoline table
- * to `gJetpackBalloonVtable`, stashes a 6th argument (`e`, also
- * stack-passed) into `self+0x58`, and clears `self+0x5c` (byte). Same
+ * then sets `hp = 2` and the `gJetpackBalloonVtable` vtable, stores the
+ * 6th argument (`e`, the attached crate, also stack-passed) in `pending`,
+ * and clears `dying`. Same
  * shape as the already-matched `CreateAirshipFireball` (airship_fireball.c), except
  * with a 6th argument instead of a second stash of `c`. */
 void *CreateJetpackBalloon(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e)
 {
-    u8 *self = selfArg;
+    struct jetpack_balloon *self = selfArg;
     MATCH_HOLD_REG(s32, eReg, r6) = e;
     MATCH_HOLD_REG(s32, health, r5) = 2;
 
     InitActorPart(self, part, b, c, d);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = (void *)gJetpackBalloonVtable;
-    *(s32 *)(self + 0x58) = eReg;
-    self[0x5c] = 0;
+    self->hp = health;
+    self->base.vtable = (struct actor_vtable *)gJetpackBalloonVtable;
+    self->pending = (struct actor_self *)eReg;
+    self->dying = 0;
 
     return self;
 }

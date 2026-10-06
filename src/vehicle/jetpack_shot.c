@@ -103,9 +103,9 @@ asm(".align 2, 0");
 
 /* An `InitActorPart`-based constructor for this cluster's `self` object:
  * forwards its first three real arguments plus one stack argument
- * straight to `InitActorPart`, then marks `self+0x54` = 1, sets
- * `self+0x50`'s event/trampoline table to `gJetpackShotVtable`, and
- * stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`.
+ * straight to `InitActorPart`, then sets `hp = 1` and the
+ * `gJetpackShotVtable` vtable, and stores its remaining two stack
+ * arguments in `velX`/`velY`.
  * The same 7-argument `InitActorPart`-wrapper shape already left raw as
  * `CreateAirshipFireball` (docs/matching/archive/issue-58-0x08030334-actor.md). The ROM
  * wants `self`/the constant `1`/`e`/`f` pinned to `r4`/`r5`/`r6`/`r7`
@@ -117,7 +117,7 @@ asm(".align 2, 0");
  * push/pop list outright (a genuine agbcc/gcc 2.9 Thumb-prologue bug,
  * not just a missed optimization). The fix: pin only the constant `1`
  * to `r5`; leave `self`, `d` and both `e`/`f` completely unpinned
- * (`self` as a plain `u8 *` local, `d` used directly as the call's
+ * (`self` as a plain local, `d` used directly as the call's
  * stack argument, `e`/`f` as plain `register` locals with no explicit
  * hardware register). With that much natural register pressure, this
  * compiler's own allocator picks `r4`/`r6`/`r7` for `self`/`e`/`f` on
@@ -127,16 +127,16 @@ asm(".align 2, 0");
  * self/d/e/f/one order. */
 void *CreateJetpackShot(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e, s32 f)
 {
-    u8 *self = selfArg;
+    struct actor_falling *self = selfArg;
     MATCH_HOLD_REG(s32, one, r5) = 1;
     register s32 eReg = e;
     register s32 fReg = f;
 
     InitActorPart(self, part, b, c, d);
-    *(s32 *)(self + 0x54) = one;
-    *(void **)(self + 0x50) = (void *)gJetpackShotVtable;
-    *(s32 *)(self + 0x58) = eReg;
-    *(s32 *)(self + 0x5c) = fReg;
+    self->hp = one;
+    self->base.vtable = (struct actor_vtable *)gJetpackShotVtable;
+    self->velX = eReg;
+    self->velY = fReg;
 
     return self;
 }

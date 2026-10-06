@@ -1,6 +1,7 @@
 #include "core.h"
 #include "match.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include <libgcc.h>
 #include "audio.h"
 #include "actor.h"
@@ -89,7 +90,7 @@ void UpdatePolarTimeCrate(void *selfArg)
         PlaySfx(gAudioContext, 3, 0x100);
         AddBrokenCrate(gLevelState);
 
-        typeByte = **(u8 **)((u8 *)self + 0x30);
+        typeByte = *(u8 *)&self->record->index;
 
         switch (typeByte) {
         case 5:
@@ -294,15 +295,15 @@ void *CreatePolarNitroCrate(void *selfArg, void *part, s32 b, s32 c, s32 lastArg
     return self;
 }
 
-/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gPolarLifeCrateVtable`, plus
- * a 6th argument stashed straight into `self+0x54`. */
+/* Same shape as `CreatePolarTimeCrate`, with `gPolarLifeCrateVtable`, plus
+ * a 6th argument, the spawn record, stored in `spawn`. */
 void *CreatePolarLifeCrate(void *selfArg, void *part, s32 b, s32 c, s32 lastArg, s32 arg6)
 {
-    struct actor_self *self = selfArg;
+    struct polar_life_crate *self = selfArg;
 
     InitPolarCrate(self, part, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gPolarLifeCrateVtable;
-    *(s32 *)((u8 *)self + 0x54) = arg6;
+    self->base.vtable = (struct actor_vtable *)gPolarLifeCrateVtable;
+    self->spawn = (void *)arg6;
     return self;
 }
 

@@ -75,14 +75,11 @@ void PolarReachCourseEnd(void *arg0)
 
 extern s32 _call_via_r1(void *arg0, void *fn);
 
-/* Passes its own `self` argument through to `_call_via_r1`, alongside a
- * function pointer read from `gActorCategoryVtable`'s own `+0x24` field
- * (`gActorCategoryVtable` is itself a pointer to some shared record). */
+/* Passes its own `self` argument through to `_call_via_r1`, alongside
+ * slot 9 (`+0x24`) of the selected category's vtable. */
 s32 IsTouchingPlayer(void *self)
 {
-    void *tab = (void *)gActorCategoryVtable;
-
-    return _call_via_r1(self, *(void **)((u8 *)tab + 0x24));
+    return _call_via_r1(self, gActorCategoryVtable->fn[9]);
 }
 
 
@@ -240,16 +237,16 @@ void UpdateActor(void *selfArg)
         s32 idx = self->animIndex;
         u8 *table = (u8 *)self->anims;
         s32 recordAddr = idx * 0xc;
-        MATCH_HOLD_REG(u8 *, record, r1);
+        MATCH_HOLD_REG(struct anim_frame_record *, record, r1);
 
         recordAddr += (s32)table;
-        record = (u8 *)recordAddr;
+        record = (struct anim_frame_record *)recordAddr;
 
         {
-            s32 v4 = *(s16 *)(record + 4);
+            s32 v4 = record->loopThreshold;
 
             if (frame >= v4) {
-                s32 v6 = *(s16 *)(record + 6);
+                s32 v6 = record->loopBase;
 
                 self->animTime -= (v4 - v6) << 8;
                 self->animDone = 1;
@@ -642,31 +639,31 @@ asm(".align 2, 0");
  * comment and docs/matching/archive/issue-50-actor-2a69c.md. (This was a
  * separate file while `GetActorWorldBox`, above, was still raw.) */
 
-/* Trivial getter: `self+0x2c` (the constructor's one-shot byte flag). */
+/* Trivial getter for `visible`. */
 u8 IsActorVisible(void *selfArg)
 {
-    return *((u8 *)selfArg + 0x2c);
+    return ((struct actor_self *)selfArg)->visible;
 }
 
-/* Teardown: marks `self` "dead" (`+0x50 = gActorVtable`), unlinks
- * it from the circular `+0x48`(prev)/`+0x4c`(next) list, and frees it
+/* Teardown: marks `self` "dead" (`vtable = gActorVtable`), unlinks
+ * it from the circular `prev`/`next` list, and frees it
  * when `flags & 1`. Same shape as `DestroyPolarPlayer`'s unlink sequence in
  * polar_player_actions.c. */
 void DestroyActor(void *selfArg, s32 flags)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
-    *(u8 **)(self + 0x50) = (u8 *)gActorVtable;
+    self->vtable = (struct actor_vtable *)gActorVtable;
 
     {
-        u8 *next = *(u8 **)(self + 0x4c);
-        u8 *prev = *(u8 **)(self + 0x48);
-        *(u8 **)(next + 0x48) = prev;
+        struct actor_self *next = self->next;
+        struct actor_self *prev = self->prev;
+        next->prev = prev;
     }
     {
-        u8 *prev = *(u8 **)(self + 0x48);
-        u8 *next = *(u8 **)(self + 0x4c);
-        *(u8 **)(prev + 0x4c) = next;
+        struct actor_self *prev = self->prev;
+        struct actor_self *next = self->next;
+        prev->next = next;
     }
 
     if (flags & 1) {

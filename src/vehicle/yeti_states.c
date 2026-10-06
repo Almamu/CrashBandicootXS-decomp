@@ -58,7 +58,7 @@ void YetiStateChase(void)
     }
 
     {
-        s32 tier = *(s32 *)((u8 *)gYeti + 8) >> 8;
+        s32 tier = gYeti->animTime >> 8;
 
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xc) {
@@ -88,7 +88,7 @@ void YetiStateChase(void)
     }
 
     {
-        if (((u8 *)gYeti)[0x12] != 0) {
+        if (gYeti->animDone != 0) {
             if (gYetiDistance > 0x5A00) {
                 goto do_transition;
             }
@@ -123,17 +123,17 @@ void YetiStateChase(void)
         do_transition:
             gYetiState = 1;
             {
-                u8 *bc = (u8 *)gYeti;
+                struct actor_self *bc = gYeti;
 
-                *(s32 *)(bc + 0xc) = 1;
+                bc->animIndex = 1;
                 {
-                    u16 anim = *(u16 *)(*(u8 **)bc + 0xc);
+                    u16 anim = bc->anims[1].duration;
                     MATCH_HOLD_REG(u8, zero1, r2) = 0;
                     MATCH_HOLD_REG(s32, zero2, r3) = 0;
 
-                    *(u16 *)(bc + 0x10) = anim;
-                    bc[0x12] = zero1;
-                    *(s32 *)(bc + 8) = zero2;
+                    *(u16 *)&bc->animTimer = anim;
+                    *(u8 *)&bc->animDone = zero1;
+                    bc->animTime = zero2;
                 }
             }
 
@@ -169,7 +169,7 @@ void YetiStateCharge(void)
     }
 
     {
-        s32 tier = *(s32 *)((u8 *)gYeti + 8) >> 8;
+        s32 tier = gYeti->animTime >> 8;
 
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xb) {
@@ -186,21 +186,21 @@ void YetiStateCharge(void)
     }
 
     {
-        u8 *bc = (u8 *)gYeti;
+        struct actor_self *bc = gYeti;
 
-        if (bc[0x12] != 0) {
+        if (bc->animDone != 0) {
             s32 *d0 = &gYetiState;
             MATCH_HOLD_REG(s32, zero, r1) = 0;
 
             *d0 = zero;
-            *(s32 *)(bc + 0xc) = zero;
+            bc->animIndex = zero;
             {
-                u16 anim = *(u16 *)(*(u8 **)bc);
+                u16 anim = bc->anims[0].duration;
                 MATCH_HOLD_REG(u8, zero2, r2) = 0;
 
-                *(u16 *)(bc + 0x10) = anim;
-                bc[0x12] = zero2;
-                *(s32 *)(bc + 8) = zero;
+                *(u16 *)&bc->animTimer = anim;
+                *(u8 *)&bc->animDone = zero2;
+                bc->animTime = zero;
             }
         }
     }

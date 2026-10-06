@@ -352,14 +352,14 @@ void LaunchPolarPlayer(void *selfArg)
  * calls into `CollectWumpa(gLevelState)`, runs two
  * `FreeVramTileBlock` cleanup calls on `gPolarPlayerTiles[0]`/`[1]`, sets
  * `vtable` to the "dead" vtable `gActorVtable`, unlinks
- * `self` from the circular `+0x48`(prev)/`+0x4c`(next) list, and frees
+ * `self` from the circular `prev`/`next` list, and frees
  * `self` when `arg1 & 1`. */
 void DestroyPolarPlayer(void *selfArg, u32 arg1param)
 {
-    MATCH_HOLD_REG(u8 *, self, r5) = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r5) = selfArg;
     u32 arg1 = arg1param;
 
-    *(u8 **)(self + 0x50) = (u8 *)gPolarPlayerVtable;
+    self->vtable = (struct actor_vtable *)gPolarPlayerVtable;
 
     if (gPolarQueuedWumpa != 0) {
         do {
@@ -371,17 +371,17 @@ void DestroyPolarPlayer(void *selfArg, u32 arg1param)
     FreeVramTileBlock(gPolarPlayerTiles[0]);
     FreeVramTileBlock(gPolarPlayerTiles[1]);
 
-    *(u8 **)(self + 0x50) = (u8 *)gActorVtable;
+    self->vtable = (struct actor_vtable *)gActorVtable;
 
     {
-        u8 *next = *(u8 **)(self + 0x4c);
-        u8 *prev = *(u8 **)(self + 0x48);
-        *(u8 **)(next + 0x48) = prev;
+        struct actor_self *next = self->next;
+        struct actor_self *prev = self->prev;
+        next->prev = prev;
     }
     {
-        u8 *prev = *(u8 **)(self + 0x48);
-        u8 *next = *(u8 **)(self + 0x4c);
-        *(u8 **)(prev + 0x4c) = next;
+        struct actor_self *prev = self->prev;
+        struct actor_self *next = self->next;
+        prev->next = next;
     }
 
     if (arg1 & 1) {

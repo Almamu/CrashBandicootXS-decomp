@@ -38,6 +38,14 @@ struct jetpack_ring {
     u8 cued; // 0x58
 };
 
+/* A polar life crate (CreatePolarLifeCrate, polar_crates.c; vtable
+ * gPolarLifeCrateVtable): `actor_self` plus the spawn record that
+ * UpdatePolarLifeCrate hands to MarkSpawnCollected's 15-entry list. */
+struct polar_life_crate {
+    struct actor_self base;
+    void *spawn; // 0x54 - CreatePolarLifeCrate's 6th argument
+};
+
 /* The spawn argument of CreateJetpackPlane and CreatePolarPenguin. */
 struct spawn_arg {
     u8 unk_00[0x10];

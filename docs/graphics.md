@@ -1042,7 +1042,7 @@ matching record.
 
 The matching C data layout - `struct category_descriptor`,
 `struct category_vtable`, `struct anim_table_record`,
-`struct keyframe_entry`, `struct sprite_frame` - is written up in
+`struct keyframe_entry`, `struct actor_frame_pixels` - is written up in
 `include/actor_anim.h`, field-for-field with this section (same offsets,
 same names where a role is known, same honest `unknown_XX` where it
 isn't). It's data-layout only - none of the functions that walk these

@@ -32,16 +32,11 @@
  * AimPolarPenguin) use to fly to a target spawn: its X/Y/Z, its kind (which
  * picks their speed) and its next target. */
 
-/* The category vtable object (include/actor_anim.h's 13-fn-pointer
- * `struct category_vtable`) only has slots 0-6 confirmed as real
- * per-type behavior entries (docs/rom_map.md) - slots past that
- * (byte offsets 0x10/0x14/0x18/0x2c/0x30, i.e. indices 4/5/6/11/12)
- * are read here as plain data values passed straight into
- * `_call_via_r0`, never called, and their real role/type isn't pinned
- * down yet - kept as raw-offset `void *` accesses rather than forcing
- * them into the `fn[13]` function-pointer typing, per docs/workflow.md
- * step 7 (don't force a struct/field guess where the shape isn't
- * actually known). Set by SelectActorCategory (still raw). */
+/* The category vtable (include/actor_anim.h's 13-slot
+ * `struct category_vtable`): the functions below call slots 4/5/6/11/12
+ * (byte offsets 0x10/0x14/0x18/0x2c/0x30) through `_call_via_r0`, so
+ * they take and return whatever that thunk's prototype says; their real
+ * signatures aren't known yet. Set by SelectActorCategory. */
 
 extern s32 _call_via_r0(void *arg);
 extern void _call_via_r2(s32 self, s32 arg, s32 fn);
@@ -147,15 +142,15 @@ s32 GetActorSpawnKindIndex(s32 idx)
  * step 3. */
 s32 CanPauseActorCategory(void)
 {
-    s32 result = _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x30));
+    s32 result = _call_via_r0(gActorCategoryVtable->fn[12]);
     asm volatile("movs r1, #1\n\teor r0, r1" : "+r"(result) : : "r1");
     return result;
 }
 
 void ReloadActorCategoryGraphics(void)
 {
-    _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x18));
-    _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x2c));
+    _call_via_r0(gActorCategoryVtable->fn[6]);
+    _call_via_r0(gActorCategoryVtable->fn[11]);
 }
 
 /* Calls every actor's `destroy` virtual method with 3 (the "destroy" call,
@@ -183,8 +178,8 @@ void DestroyAllActors(void)
     struct actor_self *cur;
     struct actor_self *next;
 
-    if (*(void **)((u8 *)gActorCategoryVtable + 0x14) != NULL) {
-        _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x14));
+    if (gActorCategoryVtable->fn[5] != NULL) {
+        _call_via_r0(gActorCategoryVtable->fn[5]);
     }
 
     {
@@ -243,8 +238,8 @@ void DestroyAllActors(void)
 
 void UpdateActorCategoryBg2(void)
 {
-    if (*(void **)((u8 *)gActorCategoryVtable + 0x10) != NULL) {
-        _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x10));
+    if (gActorCategoryVtable->fn[4] != NULL) {
+        _call_via_r0(gActorCategoryVtable->fn[4]);
     }
 }
 

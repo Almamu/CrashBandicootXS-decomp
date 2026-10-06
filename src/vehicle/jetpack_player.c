@@ -316,10 +316,10 @@ void JetpackPlayerStateEnter(void *selfArg)
  * and optionally frees it. */
 void DestroyJetpackPlayer(void *selfArg, s32 flags)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
     s32 flagsReg = flags;
 
-    *(void **)(self + 0x50) = (void *)gJetpackPlayerVtable;
+    self->vtable = (struct actor_vtable *)gJetpackPlayerVtable;
 
     if (gJetpackQueuedWumpa != 0) {
         do {
@@ -331,10 +331,10 @@ void DestroyJetpackPlayer(void *selfArg, s32 flags)
     FreeVramTileBlock(gJetpackPlayerTiles[0]);
     FreeVramTileBlock(gJetpackPlayerTiles[1]);
 
-    *(void **)(self + 0x50) = (void *)gActorVtable;
+    self->vtable = (struct actor_vtable *)gActorVtable;
 
-    *(u8 **)(*(u8 **)(self + 0x4c) + 0x48) = *(u8 **)(self + 0x48);
-    *(u8 **)(*(u8 **)(self + 0x48) + 0x4c) = *(u8 **)(self + 0x4c);
+    self->next->prev = self->prev;
+    self->prev->next = self->next;
 
     if (flagsReg & 1) {
         mem_free(self);
