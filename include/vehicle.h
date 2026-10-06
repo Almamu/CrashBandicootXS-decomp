@@ -502,6 +502,6 @@ extern const u8 *const gYetiFrames[123];
 extern const struct anim_frame_record gYetiKeyframes[4];
 
 /* src/data/actor_state_fn_17a840.c */
-extern void (*const gYetiStateFuncs[4])();
+extern void (*const gYetiStateFuncs[4])(void);
 
 #endif /* !GUARD_VEHICLE_H */

@@ -18,7 +18,7 @@ GRIT := tools/grit/grit
 # fail the build, locally and in CI. A fix must keep the ROM matching;
 # see "Compiler warnings" in CONTRIBUTING.md for how to handle a warning
 # byte-neutrally and the per-site escape hatches.
-WARNFLAGS := -Wall -Wmissing-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror
+WARNFLAGS := -Wall -Wmissing-prototypes -Wstrict-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror
 CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fhex-asm  -fprologue-bugfix
 # The libraries' public headers (lib/*/include) are on the -I path, so
 # game code includes them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.

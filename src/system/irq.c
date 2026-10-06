@@ -38,7 +38,7 @@ void IrqDisable(void) {
     REG_IME = 0;
 }
 
-u32 IrqSetup() {
+u32 IrqSetup(void) {
     u32* intrbuffer = &IntrMain_Buffer;
     irq_handler_t fn = IrqEmptyHandler;
     irq_handler_t *dst1 = gPrevIntrTable;
@@ -56,7 +56,7 @@ u32 IrqSetup() {
     return 0;
 }
 
-void IrqEmptyHandler() {}
+void IrqEmptyHandler(void) {}
 
 __asm__(".align 2,0");
 

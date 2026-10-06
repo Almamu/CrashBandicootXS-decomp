@@ -431,7 +431,7 @@ extern const struct hovercraft_picture gHovercraftPicture;
 #define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))
 
 /* src/data/actor_state_17c3fc.c */
-extern void (*const gAirshipStateFuncs[6])();
+extern void (*const gAirshipStateFuncs[6])(void);
 
 /* src/data/actor_tables_16c2d8.c */
 extern const u8 gCortexTargetBlinkStartTimes[3];
@@ -461,7 +461,7 @@ extern const struct anim_frame_record gHovercraftKeyframes[1];
 /* src/data/actor_state_17c4c8.c */
 extern const struct actor_pmf gHovercraftCannonStateFuncs[3];
 extern const struct actor_pmf gHovercraftLauncherStateFuncs[3];
-extern void (*const gHovercraftStateFuncs[6])();
+extern void (*const gHovercraftStateFuncs[6])(void);
 
 /* src/data/actor_pmf_17c450.c */
 extern const struct actor_pmf gHovercraftFireballStateFuncs[2];

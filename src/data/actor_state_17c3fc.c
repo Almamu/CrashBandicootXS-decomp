@@ -11,7 +11,7 @@
 /* Per-state step functions of the weapon-kind tracker, called through
  * _call_via_r0 as `gAirshipStateFuncs[gAirshipState]` by
  * UpdateAirship (airship.c). */
-void (*const gAirshipStateFuncs[6])() = {
+void (*const gAirshipStateFuncs[6])(void) = {
     AirshipStateInactive,
     AirshipStateApproach,
     AirshipStateFireballs,
