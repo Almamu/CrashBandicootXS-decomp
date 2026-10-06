@@ -192,28 +192,40 @@ void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
     }
 }
 
-#define OBJ_TILE_INDEX(addr) (((u32)(addr) - (u32)OBJ_VRAM0) >> 5)
-
 #if NON_MATCHING
+/* (vramAddr - OBJ_VRAM0) >> 5, the OBJ tile index of a VRAM address.
+ * OBJ_VRAM0 (0x06010000) is subtracted in two statements, each a valid
+ * ARM immediate. Written as one expression, fold-const keeps the
+ * -0x06010000 whole, addsi3 has arm_split_constant build it in a
+ * register (with -fexpensive-optimizations preserve_subexpressions_p()
+ * is always true), and loop.c hoists that register out of both loops.
+ * As two statements combine merges them into one `plus` that
+ * *addsi3_insn accepts ("?n"), and the post-reload split prints it in
+ * place as the ROM's `add #0xF9000000; add #0xFF0000`. */
+static inline s32 ObjTileIndex(u32 vramAddr)
+{
+    vramAddr -= 0x07000000;
+    vramAddr += 0xFF0000;
+    return vramAddr >> 5;
+}
+
 /* gLookupSpriteFrameCacheFunc(frame), LoadSpriteFrameTiles's override hook (see
  * sprite_frame.c): returns the OBJ tile index of `frame` if it is
  * already in VRAM, or -1. Hits in this frame's list are returned as they
  * are; a hit in last frame's list is moved to the head of this frame's
  * list first.
  *
- * Parked. The ROM computes the tile index in place at each return
- * (`add #0xF9000000; add #0xFF0000`) and returns with
- * `ldmfd sp!, {lr}; bx lr` three times. agbcc_arm hoists the
- * -0x06010000 into a register before the first loop (with
- * -fno-expensive-optimizations only the second loop stays in place).
- * The returns are out of its reach. Three copies of the exit sequence
- * mean three `return` insns (the text epilogue is printed once), and
- * agbcc_arm's output_return_instruction pops an interworking return into
- * ip: with only lr saved it prints `ldmfd sp!, {ip}; bx ip`
- * (`ldmeqfd`/`bxeq` when conditional). It never prints
- * `ldmfd sp!, {lr}; bx lr`. Checked by compiling this draft: with
- * -fno-expensive-optimizations it saves only lr and prints exactly
- * that. */
+ * Parked, six instructions short (fifth pass). Everything but the
+ * returns matches under the object's flags: 44 of the 50 instructions,
+ * same registers, schedule and literal pool. The ROM returns with
+ * `ldmfd sp!, {lr}; bx lr` three times; agbcc_arm prints
+ * `ldmfd sp!, {ip}; bx ip` at each. Three copies of the exit sequence
+ * mean three `return` insns (the text epilogue, which does print
+ * `ldmfd sp!, {lr}; bx lr`, is printed once per function), and
+ * agbcc_arm's output_return_instruction pops an interworking return
+ * without a frame pointer into ip (arm.c: `if (TARGET_THUMB_INTERWORK
+ * && really_return) strcat (instr, reg_names[12])`, then
+ * `bx ... ip`). See docs/matching/iwram-image.md. */
 s32 LookupSpriteFrameCache(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
@@ -221,7 +233,7 @@ s32 LookupSpriteFrameCache(u8 *frame)
     for (node = gSpriteFrameCacheCurrent.next; node != &gSpriteFrameCacheCurrent;
          node = node->next) {
         if (node->frame == frame)
-            return OBJ_TILE_INDEX(node->vramAddr);
+            return ObjTileIndex((u32)node->vramAddr);
     }
     for (node = gSpriteFrameCachePrevious.next; node != &gSpriteFrameCachePrevious;
          node = node->next) {
@@ -232,7 +244,7 @@ s32 LookupSpriteFrameCache(u8 *frame)
             node->next = gSpriteFrameCacheCurrent.next;
             gSpriteFrameCacheCurrent.next->prev = node;
             gSpriteFrameCacheCurrent.next = node;
-            return OBJ_TILE_INDEX(node->vramAddr);
+            return ObjTileIndex((u32)node->vramAddr);
         }
     }
     return -1;

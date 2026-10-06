@@ -103,19 +103,31 @@ void strcat_arm(u8 *dst, u8 *src)
  * `push {r4, r5, r6}` and returns with `pop {r4, r5, r6}; bx lr`,
  * without saving lr. agbcc_arm's arm_expand_prologue adds lr to every
  * register push ("If we have to push any regs, then we must push lr as
- * well"), so no C makes it push r4-r6 without lr. Other differences: the
- * ROM never uses lr (base in ip, buf/len/neg in r6/r5/r4), and its hex
- * test is `cmp r1, #10` + `addge`/`addlt`. agbcc_arm's fold-const.c
- * rewrites `digit < 10` to `digit <= 9` (`cmp r1, #9`), and combine turns
- * the `+ '0'` into `orr`. */
+ * well"), and the only prologue that skips r4-r10 (a noreturn function)
+ * pushes nothing, so no C makes it push r4-r6 without lr. The hex test
+ * is `cmp r1, #10` + `addge`/`addlt` in the ROM; fold-const.c rewrites
+ * `digit >= 10` to `digit > 9`, and combine's simplify_comparison does
+ * the same to any constant it substitutes into a compare (`cmp r1, #9`).
+ * See docs/matching/iwram-image.md (fifth pass).
+ *
+ * The pins put base/buf/len/neg in the ROM's ip/r6/r5/r4 (without them
+ * agbcc_arm keeps len in lr). `neg` doubles as the '-' and as the
+ * swap's left index, as r4 does in the ROM; MATCH_CONST keeps cse from
+ * reusing len's zero for `neg = 0`. Still different from the ROM, apart
+ * from the two blockers: the schedule of the prologue and of each
+ * loop's `add`/`cmp`, `subne r4, r4, #45` for `neg = 0`, and the
+ * swap's temporary (r2 for the ROM's r0). */
 s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
     MATCH_HOLD_REG(s32, num, r0);
     MATCH_HOLD_REG(s32, digit, r1);
-    s32 len = 0;
-    s32 neg;
-    s32 i, j;
+    MATCH_HOLD_REG(u8 *, b, r6);
+    MATCH_HOLD_REG(s32, len, r5);
+    MATCH_HOLD_REG(s32, neg, r4);
+    MATCH_HOLD_REG(s32, divisor, ip);
+    s32 j;
 
+    MATCH_CONST(len, 0);
     num = value;
     if (num < 0) {
         neg = 1;
@@ -123,39 +135,42 @@ s32 itoa_arm(s32 value, u8 *buf, s32 base)
     } else {
         neg = 0;
     }
+    b = buf;
+    divisor = base;
     if (base != 16) {
         do {
-            digit = base;
+            digit = divisor;
             asm("swi 0x60000" : "=r"(num), "=r"(digit) : "0"(num), "1"(digit) : "r3");
-            buf[len] = digit + '0';
+            b[len] = digit + '0';
             len++;
         } while (num != 0);
     } else {
         do {
             digit = num & 15;
             num >>= 4;
-            if (digit < 10)
-                digit += '0';
-            else
+            if (digit >= 10)
                 digit += 'A' - 10;
-            buf[len] = digit;
+            else
+                digit += '0';
+            b[len] = digit;
             len++;
         } while (num != 0);
     }
     if (neg) {
-        buf[len] = '-';
+        neg = '-';
+        b[len] = neg;
         len++;
+        neg = 0;
     }
-    buf[len] = 0;
-    i = 0;
+    b[len] = neg;
     j = len - 1;
     do {
-        u8 t = buf[i];
-        buf[i] = buf[j];
-        buf[j] = t;
-        i++;
+        u8 t = b[j];
+        b[j] = b[neg];
+        b[neg] = t;
+        neg++;
         j--;
-    } while (i < j);
+    } while (neg < j);
     return len;
 }
 #else

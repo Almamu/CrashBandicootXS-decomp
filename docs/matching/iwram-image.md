@@ -333,6 +333,165 @@ from one if_then_else, and phase two needs sl/r8), `MATCH_KEEP` and
 variants of the comparator, and ten first-phase and six second-phase
 loop shapes.
 
+## Fifth pass: both blockers re-checked, LookupSpriteFrameCache six instructions off
+
+This pass treated the second pass's two "impossible" verdicts as
+hypotheses. It read every path in agbcc_arm's back end that can push
+registers or print a return (SAT-R/agbcc `gcc_arm/config/arm/arm.c` and
+`arm.md`; `arm_020422.c` has the same code at shifted lines), and it
+traced the drafts through the RTL dumps (`-da`). Both verdicts hold, and
+the exact lines are below. Neither function matches. But
+LookupSpriteFrameCache's draft is now exact apart from the three return
+sequences, and itoa_arm's is closer. Both drafts were updated. Line
+numbers are `arm.c`'s.
+
+**itoa_arm: no path pushes r4-r6 without lr.**
+
+- **The prologue is RTL.** `arm.md` defines `prologue` (it calls
+  `arm_expand_prologue`) and no `epilogue`, so the push always comes from
+  `arm_expand_prologue` (5712). It collects r0-r10 from `regs_ever_live`
+  (5732-5735), adds lr if lr is live (5737-5738), and then does
+  `if (live_regs_mask) { live_regs_mask |= 0x4000; emit_multi_reg_push
+  (...) }` (5757-5762, "If we have to push any regs, then we must push
+  lr as well"). Nothing in between can clear bit 14.
+- **The other paths don't help.**
+  - A `volatile`/noreturn function (`TREE_THIS_VOLATILE`, 5722) skips
+    both loops (5732, 5737), so it pushes nothing at all, not r4-r6.
+  - The pretend-args push (`0xf0 >> n`) only covers r0-r3.
+  - `frame_pointer_needed` adds fp/ip/lr/pc (`0xD800`).
+  - `naked` (`arm_naked_function_p`, 5726) emits no prologue at all.
+  - This version has no `interrupt`/`isr` attribute (no match in
+    `arm.c`).
+  - `-mapcs-frame` only adds a frame.
+  - The only `stmfd sp!, {rN, rN+1, rN+2}` printed outside the prologue
+    is `output_mov_long_double_fpu_from_arm` (4356), an FPA move that
+    is followed by an `ldfe`.
+- **lr can't be dropped from the restore either.**
+  `output_func_prologue` sets `lr_save_eliminated` only when nothing else
+  is saved (5322-5342). The epilogue then puts lr back into every restore
+  (5565-5566, 5593-5594). A return insn adds lr's slot whenever any
+  register is saved (5172-5181).
+- **The same holds even if lr isn't used.** With pins (below), the draft
+  never touches lr, as in the ROM. agbcc_arm still prints
+  `stmfd sp!, {r4, r5, r6, lr}` / `ldmfd sp!, {r4, r5, r6, lr}`. That is
+  two instructions the ROM has without lr.
+
+**itoa_arm: the `cmp r1, #10` + `addge`/`addlt` test.**
+
+- **The tree folder.** fold-const.c 6005-6022 rewrites `X >= C` to
+  `X > C-1` and `X < C` to `X <= C-1` for any positive constant. That
+  covers every spelling tried: `<`, `>=`, `!(>=)`, `(... >= 10) == 0`, a
+  `(s16)`/`(s64)` cast, and `10 + 0 * num`. All give `cmp #9`. A `(u64)`
+  cast gives `ls`/`hi`, and `digit - 10 < 0` gives `cmp #10` with
+  `mi`/`pl`.
+- **combine.** A local `s32 ten = 10` survives the tree folder and
+  gives the ROM's `lt`/`ge`, but as `cmp r3, ip` with the 10 loaded
+  outside the loop. Without that load (a goto loop, so loop.c doesn't
+  hoist it), combine substitutes the 10 into the compare.
+  `simplify_comparison` (combine.c 9775-9784) then makes it `LE 9`
+  again.
+- **What's left.** The only way left for the immediate to reach the
+  compare after combine is reload putting in a spilled pseudo's
+  `REG_EQUIV` constant (`reload_cse_simplify_operands` only replaces
+  constants with registers, not the reverse). That needs register
+  pressure that itoa_arm doesn't have. So the test can't match either.
+- **Arm order.** `if (digit >= 10) digit += 'A' - 10; else digit +=
+  '0';` does give the ROM's order, the +55 arm first.
+
+**itoa_arm: closest C.** The new draft pins base/buf/len/neg to the
+ROM's ip/r6/r5/r4 (without the pins agbcc_arm keeps len in lr). It uses
+`neg` for the '-' and as the swap's left index, as the ROM's r4 does.
+`MATCH_CONST(len, 0)` keeps cse from reusing len's zero for
+`neg = 0`. The draft compiles to 45 instructions, the ROM's count. What
+still differs:
+
+- the two blockers (lr in the push and pop, `cmp #9`);
+- the prologue's schedule (`mov r5, #0` after the `cmp`, `cmp ip, #16`
+  instead of `cmp r2, #16`);
+- each loop's `cmp r0, #0` ahead of the `add r5`;
+- `subne r4, r4, #45` instead of `movne r4, #0`. cse finds 0 as
+  "'-' minus 45". A `MATCH_CONST` there breaks the ccfsm block instead.
+- the swap's temporary in r2 instead of r0.
+
+objdiff scores it 72.6%.
+
+**LookupSpriteFrameCache: no return insn pops into lr.**
+
+- **Three exits mean three return insns.** The ROM's three
+  `ldmfd sp!, {lr}; bx lr` exits can't come from the text epilogue,
+  which final.c prints once per function (`FUNCTION_EPILOGUE`,
+  final.c 1403).
+- **The text epilogue alone would be right.** `output_func_epilogue`
+  prints exactly `ldmfd sp!, {lr}` + `bx lr` for an interworking
+  function that saved only lr (5562-5575). But when return insns were
+  used, it skips itself (5372, `use_return_insn (FALSE) &&
+  return_used_this_function`).
+- **Every return insn pops into ip.** The return insns are the
+  `return`, `*cond_return` and `*cond_return_inverted` patterns
+  (arm.md 4340-4395), and all three call `output_return_instruction`
+  with `really_return` = TRUE. Without a frame pointer, that function
+  pops the return address into ip when interworking (5213-5215,
+  `if (TARGET_THUMB_INTERWORK && really_return) strcat (instr,
+  reg_names[12])`) and then prints `bx ip` (5222-5228,
+  `frame_pointer_needed ? "lr" : "ip"`).
+- **The other paths don't help.**
+  - Popping into lr needs `frame_pointer_needed` (`ldmea fp, {fp, sp,
+    lr}`).
+  - The call+return peepholes print `ldmfd sp!, {lr}` with `b func`
+    (`really_return` = FALSE), a tail call, not `bx lr`.
+  - Without interworking the pop goes into pc.
+  - Making `use_return_insn` false (varargs, a frame, `naked`) turns every
+    return into a jump to the one epilogue.
+  - gcc 2.9 has no basic-block duplication, and the epilogue isn't RTL,
+    so cross-jumping or an `asm("")` can't copy it.
+
+**LookupSpriteFrameCache: the hoisted constant is fixed.** The second
+pass couldn't keep `vramAddr - 0x06010000` in place in the first loop.
+The cause:
+
+- **The expander.** The addsi3 expander calls `arm_split_constant` with
+  `subtargets = preserve_subexpressions_p ()`. With
+  `-fexpensive-optimizations` that is always 1 (stmt.c 2334). So the
+  -0x06010000 is built in its own register (`mov rN, #0xF9000000; add
+  rN, rN, #0xFF0000`), and loop.c hoists that register.
+- **The `-fno-expensive-optimizations` result.** With that flag,
+  `preserve_subexpressions_p` is 1 only within `n_non_fixed_regs * 3`
+  insn UIDs of the loop's start label (stmt.c 2337-2344). That is why
+  only the second loop, whose hit block is far from its start, stayed
+  in place.
+- **The fix.** Subtract the constant in two statements, each a valid
+  immediate: `vramAddr -= 0x07000000; vramAddr += 0xFF0000;` in an
+  `ObjTileIndex` inline. Expansion then needs no constant register.
+  combine merges the two into one `plus` with -0x06010000, which
+  `*addsi3_insn` accepts through its `?n` alternative. The split before
+  sched1 prints it in place as `add r0, r0, #0xF9000000; add r0, r0,
+  #0xFF0000`, as in the ROM.
+
+**LookupSpriteFrameCache: the result.** With the object's own flags
+(`-O2 -fomit-frame-pointer`, no `-fno-expensive-optimizations`), the
+draft compiles to the ROM's 50 instructions. 44 of them are identical,
+with the same registers, schedule, `ldm ip, {r1, r3}` peephole and
+literal pool. The six that differ are the three
+`ldmfd sp!, {ip}; bx ip` returns, where the ROM has `{lr}; bx lr`.
+objdiff scores it 99.4%.
+
+**Other things tried.**
+
+- A goto-built first loop also keeps the constant in place. But
+  loop.c's `find_and_verify_loops` (loop.c 2758-2900) then moves the
+  second loop's hit block after the first return's barrier, so it was
+  dropped.
+- Up to 20 `MATCH_BARRIER()`s in each hit block (to raise loop.c's insn
+  count) didn't stop the hoisting.
+- MATCH_CONST of the constant wasn't needed.
+
+**Verdict.** Both functions stay `NAKED`. Each blocker is a fixed
+string in `arm.c`'s output code (5215/5227 for the returns,
+5757-5762 for the push), not something C shape or flags reach.
+Matching them needs the later Cygnus/Red Hat build the third pass
+pointed to, or a modified compiler. A modified compiler isn't a real
+toolchain, so this pass didn't build one.
+
 ## Data
 
 `iwram_data.c` defines every global from `0x030007CC` up to
@@ -362,3 +521,9 @@ defined by these objects.
   code 242,990 / 243,378 (99.84%), functions 2,057 / 2,059 (the two
   left are itoa_arm and LookupSpriteFrameCache); data 8,036,176 /
   8,036,176 (100%). The other functions in `sprite_arm.o` still match.
+- Fifth pass (drafts only, both still `NAKED`): `make tidy`, full
+  build, `make compare`: `crashbandicootxs.gba: OK`. `rm -rf build
+  objdiff.json && make NON_MATCHING=1 report` and `objdiff-cli report
+  generate`: code 242,990 / 243,378, functions 2,057 / 2,059, data
+  8,036,176 / 8,036,176 (unchanged). Draft scores: itoa_arm 72.6%,
+  LookupSpriteFrameCache 99.4%.
