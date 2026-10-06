@@ -91,8 +91,8 @@ void AppendOamEntries(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
     if (arg2 == 0) {
         return;
     }
-    DMA3.src = arg1;
-    DMA3.dst = (u8 *)arg0 + ((*(s32 *)arg0 << 3) + 0xC);
+    DMA3.src = (u32)arg1;
+    DMA3.dst = (u32)((u8 *)arg0 + ((*(s32 *)arg0 << 3) + 0xC));
     DMA3.cnt = (arg2 << 1) | ((DMA_ENABLE | DMA_32BIT) << 16);
     (void)DMA3.cnt;
     *(s32 *)arg0 = *(s32 *)arg0 + arg2;
@@ -153,8 +153,8 @@ void ResetOamBuffer(struct oam_shadow_buffer *arg0)
 
 void CommitOamBuffer(struct oam_shadow_buffer *arg0)
 {
-    DMA3.src = (u8 *)arg0 + 0xC;
-    DMA3.dst = (void *)OAM;
+    DMA3.src = (u32)((u8 *)arg0 + 0xC);
+    DMA3.dst = OAM;
     DMA3.cnt = ((DMA_ENABLE | DMA_32BIT) << 16) | 0x100;
     (void)DMA3.cnt;
 }
@@ -216,14 +216,14 @@ void FlushVramDmaQueue(void)
     for (i = 0; i < QUEUE_COUNT; i++) {
         entry = &gVramDmaQueue.entries[i];
         if (entry->unit == 0x20) {
-            DMA3.src = entry->src;
-            DMA3.dst = entry->dest;
+            DMA3.src = (u32)entry->src;
+            DMA3.dst = (u32)entry->dest;
             raw = entry->size;
             shifted = raw >> 2;
             shifted |= (DMA_ENABLE | DMA_32BIT) << 16;
         } else {
-            DMA3.src = entry->src;
-            DMA3.dst = entry->dest;
+            DMA3.src = (u32)entry->src;
+            DMA3.dst = (u32)entry->dest;
             raw = entry->size;
             shifted = raw >> 1;
             shifted |= (DMA_ENABLE | DMA_16BIT) << 16;
@@ -362,8 +362,8 @@ void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId)
     dst = (u8 *)self + 0x2c;
     src += recordId << 5;
     dst += slot << 5;
-    DMA3.src = src;
-    DMA3.dst = dst;
+    DMA3.src = (u32)src;
+    DMA3.dst = (u32)dst;
     DMA3.cnt = (DMA_ENABLE << 16) | 16;
     (void)DMA3.cnt;
 }
@@ -418,7 +418,7 @@ void LockPalette(struct palette_cache *self, s32 index)
 
 void UploadPaletteSlot(struct palette_cache *self, s32 index)
 {
-    DMA3.src = self->slots[index];
+    DMA3.src = (u32)self->slots[index];
     DMA3.dst = OBJ_PLTT + (index << 5);
     DMA3.cnt = (DMA_ENABLE << 16) | 16;
     (void)DMA3.cnt;
@@ -427,7 +427,7 @@ void UploadPaletteSlot(struct palette_cache *self, s32 index)
 void UploadPaletteCache(struct palette_cache *self)
 {
     if (self->dirty) {
-        DMA3.src = self->slots;
+        DMA3.src = (u32)self->slots;
         DMA3.dst = OBJ_PLTT;
         DMA3.cnt = (DMA_ENABLE << 16) | 0x100;
         (void)DMA3.cnt;
@@ -470,8 +470,8 @@ u8 GetPaletteSlot(struct palette_cache *self, s32 recordId)
             shiftedId = pRecordId << 5;
             src += shiftedId;
             dst += i << 5;
-            DMA3.src = src;
-            DMA3.dst = dst;
+            DMA3.src = (u32)src;
+            DMA3.dst = (u32)dst;
             DMA3.cnt = (DMA_ENABLE << 16) | 16;
             (void)DMA3.cnt;
             return (u8)i;

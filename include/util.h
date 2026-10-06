@@ -10,9 +10,9 @@
  * (docs/headers_plan.md, "Codegen exceptions").
  *
  * DestroyLargeFont/DestroySmallFont (src/util/aabb_setup.c) are in
- * text.h. strlen/strcpy (src/util/string.c) are not declared here:
- * their `u8 *` prototypes conflict with gcc's built-ins, which warns in
- * every file that sees them, and nothing outside string.c calls them. */
+ * text.h. strcpy/strlen (src/util/string.c, defined under the C names
+ * CopyString/StringLength to avoid gcc's built-ins) are not declared
+ * here: nothing outside string.c calls them. */
 
 #include "core.h"
 #include "aabb.h"

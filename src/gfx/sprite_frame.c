@@ -66,9 +66,9 @@ void InitObjTileFreeList(void *base)
         addr = &zero;
         val = 0;
         *addr = val;
-        DMA3.src = addr;
+        DMA3.src = (u32)addr;
     }
-    DMA3.dst = base;
+    DMA3.dst = (u32)base;
     DMA3.cnt = (len / 2) | ((DMA_ENABLE | DMA_SRC_FIXED) << 16);
     (void)DMA3.cnt;
 
@@ -484,8 +484,8 @@ void InitSpriteFrameOamQueue(void)
         val = tmp;
         *addr = val;
     }
-    DMA3.src = &hideValue;
-    DMA3.dst = (void *)OAM;
+    DMA3.src = (u32)&hideValue;
+    DMA3.dst = OAM;
     DMA3.cnt = (OAM_ENTRY_COUNT * 8 / 2) | ((DMA_ENABLE | DMA_SRC_FIXED) << 16);
     (void)DMA3.cnt;
 }

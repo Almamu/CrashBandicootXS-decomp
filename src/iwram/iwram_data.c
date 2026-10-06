@@ -37,7 +37,7 @@
  * mem_heap_init (checked by mem_heap_shutdown). */
 struct mem_heap *mem_iwram_heap_pointer = NULL;
 struct mem_heap *mem_ewram_heap_pointer = NULL;
-int *mem_initial_free_bytes = NULL;
+s32 mem_initial_free_bytes = 0;
 
 /* irq.c: the frame counter the VBlank handler increments, and the
  * frame-rate limiter's enable flag. */
