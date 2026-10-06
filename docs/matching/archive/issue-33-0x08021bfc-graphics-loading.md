@@ -39,7 +39,7 @@ function at the very end:
 - **`SpawnWumpa`**: conditionally calls `CreateWumpa` (the
   achievement/unlock-icon family spawner) when `gLevelState+0x8c`
   is clear.
-- **`SpawnHoverPlayerPosition`/`nullsub_23`**: empty stubs, the same "shared no-op
+- **`SpawnHoverPlayerPosition`/`SpawnStartMarkerStub`**: empty stubs, the same "shared no-op
   fallback" convention already documented for the 42-slot action table
   and this same 92-slot array.
 - **`SpawnHoverStartMarker`/`SpawnUnderwaterStartMarker`**: plain tail-call trampolines to

@@ -296,9 +296,12 @@ void SpawnPlayerPosition(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
- * table). An empty stub after SpawnPlayerPosition, in the slot type 0x00's
- * pair would take; type 0x00 is SpawnStartMarker. */
-void nullsub_23(void)
+ * table). The spawners in this stretch of ROM run in descending type order
+ * (SpawnWumpa 0x06, SpawnHoverPlayerPosition 0x05 ... SpawnPlayerPosition
+ * 0x01), so this empty stub sits where type 0x00's spawner would; the
+ * table's type 0x00 is SpawnStartMarker (spawn_start_marker.c, 0x0801E990)
+ * instead. */
+void SpawnStartMarkerStub(void)
 {
 }
 
@@ -337,7 +340,8 @@ void CreateEntitySpawner(void)
  * references - `gAudioContext` (an 8340-byte `AudioContext`
  * allocation), `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/
  * `03001304`/`030012B4`/`C8`, clears `gDispcnt`'s mode byte,
- * and zeroes `self+0xc0` before returning `self` unchanged.
+ * and zeroes `self+0xc0` (`level_state.unusedFlags`) before returning
+ * `self` unchanged.
  * `gSpriteBankSet` gets pointed at a freshly-allocated 4-byte pointer cell
  * which itself is set to `&gSpriteBankTable` (the 729 KB master
  * asset index, resolved separately in docs/rom_map.md).

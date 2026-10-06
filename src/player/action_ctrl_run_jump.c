@@ -126,7 +126,7 @@ void ActionCtrlStateRun(struct act *self)
             gPlayer->listCount = alt;
             obj = LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xA, alt, (struct fx_part *)gPlayer);
             obj->hidden = 0;
-            obj->unk_28_0 = 1;
+            obj->gfxMode = 1;
         }
     }
     {
