@@ -92,7 +92,7 @@ s32 RunPauseMenu(void)
     oldCache = gPaletteCache;
     gPaletteCache = InitPaletteCache(OperatorNew(sizeof(struct palette_cache)));
     SetPaletteCacheSource(gPaletteCache, ((struct pause_gfx_pkg *)&gSpriteBankTable)->count,
-                ((struct pause_gfx_pkg *)&gSpriteBankTable)->records);
+                          ((struct pause_gfx_pkg *)&gSpriteBankTable)->records);
     ClaimPaletteSlot(gPaletteCache, 0xf);
     {
         u8 *dst = (u8 *)gPaletteCache;
@@ -176,7 +176,9 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
                 MATCH_HOLD_REG(u32, bldcntVal, r0) = *c8Addr;
                 MATCH_HOLD_REG(u32, bldyVal, r0);
 
+                // clang-format off
                 asm volatile("str %1, [%0]\n\tadd %0, %0, #4" : "+r" (bldcntAddr) : "r" (bldcntVal));
+                // clang-format on
                 {
                     MATCH_HOLD_REG(u8, byte2, r2) = *addr;
                     bldyVal = ((u32)byte2 << 27) >> 27;
@@ -212,13 +214,17 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         InitPauseMenuInfo(self);
 
         {
-            MATCH_HOLD_REG(struct settings_icon_actor **, field_c0_addr, r4) = (struct settings_icon_actor **)((u8 *)c8Addr - 8);
-            struct settings_icon_actor *icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
+            MATCH_HOLD_REG(struct settings_icon_actor **, field_c0_addr, r4) =
+                (struct settings_icon_actor **)((u8 *)c8Addr - 8);
+            struct settings_icon_actor *icon =
+                (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
 
             *field_c0_addr = icon;
             {
                 MATCH_HOLD_REG(u8 *, base, r1) = SPRITE_BANK_BASE;
+                // clang-format off
                 asm volatile("mov r3, #0x8a\n\tlsl r3, r3, #2\n\tadd %0, %0, r3" : "+r" (base) :: "r3");
+                // clang-format on
                 icon->field_20 = (void **)base;
             }
             {
@@ -228,7 +234,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
                 MATCH_HOLD_REG(u8, _byte, r3);
                 _mask = 0xf;
                 _ret &= _mask;
-                asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r" (_mask));
+                asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r"(_mask));
                 _byte = *_addr;
                 _mask &= _byte;
                 _mask |= _ret;

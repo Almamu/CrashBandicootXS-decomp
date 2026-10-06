@@ -106,8 +106,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     }
     /* Emits nothing: end of the r8 hold. */
     MATCH_USE(hold8);
-    if (AabbOverlaps(&a, pb))
-    {
+    if (AabbOverlaps(&a, pb)) {
         result = 0;
         above = 0;
         if (b.y < a.y)
@@ -117,39 +116,29 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         side = 2;
         if (px > tx)
             side = 1;
-        if ((gPlayer->x >> 8) < (self->x >> 8))
-        {
+        if ((gPlayer->x >> 8) < (self->x >> 8)) {
             hdir = 1;
             ox = Span(b.x, b.w, a.x) + 1;
-        }
-        else
-        {
+        } else {
             hdir = 2;
             ox = Span(a.x, a.w, b.x) + 1;
         }
-        if ((gPlayer->y >> 8) > (self->y >> 8))
-        {
+        if ((gPlayer->y >> 8) > (self->y >> 8)) {
             vdir = 4;
             oy = Span(a.y, a.h, b.y);
-        }
-        else
-        {
+        } else {
             vdir = 8;
             oy = Span(b.y, b.h, a.y);
         }
-        if (self->type != 1 && self->type != 5 && self->type != 6)
-        {
-            if (ty == py)
-            {
-                if (tx == px)
-                {
+        if (self->type != 1 && self->type != 5 && self->type != 6) {
+            if (ty == py) {
+                if (tx == px) {
                     result = hdir;
                     if (oy <= 2)
                         result = 8;
                     goto classified;
                 }
-                if (GetSpritePrevY((struct gfx_part *)self) == (self->y >> 8) && oy > 2)
-                {
+                if (GetSpritePrevY((struct gfx_part *)self) == (self->y >> 8) && oy > 2) {
                     result = hdir;
                     goto classified;
                 }
@@ -158,34 +147,24 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 result = vdir;
         }
     classified:
-        if (ty <= py && above)
-        {
-            if (result == 0)
-            {
+        if (ty <= py && above) {
+            if (result == 0) {
                 ty += box->offY + box->h;
-                if (ty <= a.y + a.h)
-                {
-                    if (side == 1)
-                    {
+                if (ty <= a.y + a.h) {
+                    if (side == 1) {
                         if (b.x + b.w >= a.x && ox > 2)
                             result = 8;
-                    }
-                    else
-                    {
+                    } else {
                         if (b.x <= a.x + a.w && ox > 2)
                             result = 8;
                     }
-                    if (result == 0)
-                    {
+                    if (result == 0) {
                         py += box->offY + box->h;
-                        if (hdir == 1)
-                        {
+                        if (hdir == 1) {
                             tx += box->offX + box->w;
                             px = b.x + b.w;
                             r = FindLineCrossing(tx, ty, px, py, a.x);
-                        }
-                        else
-                        {
+                        } else {
                             tx += box->offX;
                             px = b.x;
                             r = FindLineCrossing(tx, ty, px, py, a.x + a.w);
@@ -195,45 +174,33 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                         else
                             result = hdir;
                     }
-                }
-                else
+                } else
                     goto set_hdir;
             }
-        }
-        else
-        {
+        } else {
             MATCH_HOLD_REG(s32, hold5, r5);
 
             /* Emits nothing: r5 is live across the `result == 0` test,
              * so its reload of `result` takes r0 as in the ROM. */
             MATCH_HOLD(hold5);
-            if (result == 0)
-            {
+            if (result == 0) {
                 MATCH_USE(hold5);
                 ty += box->offY;
-                if (ty >= a.y)
-                {
-                    if (side == 1)
-                    {
+                if (ty >= a.y) {
+                    if (side == 1) {
                         if (b.x + b.w >= a.x && ox > 3)
                             result = 4;
-                    }
-                    else
-                    {
+                    } else {
                         if (b.x <= a.x + a.w && ox > 3)
                             result = 4;
                     }
-                    if (result == 0)
-                    {
+                    if (result == 0) {
                         py += box->offY;
-                        if (hdir == 1)
-                        {
+                        if (hdir == 1) {
                             tx += box->offX + box->w;
                             px = b.x + b.w;
                             r = FindLineCrossing(tx, ty, px, py, a.x);
-                        }
-                        else
-                        {
+                        } else {
                             tx += box->offX;
                             px = b.x;
                             r = FindLineCrossing(tx, ty, px, py, a.x + a.w);
@@ -243,9 +210,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                         else
                             result = hdir;
                     }
-                }
-                else
-                {
+                } else {
                 set_hdir:
                     result = hdir;
                 }
@@ -259,16 +224,14 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         if (oy < 0)
             oy = 0;
         flags = 0;
-        switch (result)
-        {
+        switch (result) {
         case 0: /* empty case: makes gcc use the ROM's jump table */
             break;
         case 4:
             {
                 struct player *q = gPlayer;
 
-                if (!(q->hitAxes & 8))
-                {
+                if (!(q->hitAxes & 8)) {
                     Call68(q, 0, 0xC, 4);
                     PosPtr(&pos)->y = (oy << 8) + PosPtr(&pos)->y;
                 }
@@ -286,12 +249,10 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 pos.x -= ox << 8;
             break;
         }
-        if (result == 8 || oy <= 1)
-        {
+        if (result == 8 || oy <= 1) {
             struct player *q = gPlayer;
 
-            if (!(q->dir & 4) && above)
-            {
+            if (!(q->dir & 4) && above) {
                 q->carried = self;
                 {
                     u8 m = 8;
@@ -308,29 +269,24 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             }
         }
         SetEntityPos((struct actor *)gPlayer, pos.x, PosPtr(&pos)->y);
-        if (flags)
-        {
+        if (flags) {
             Call68(gPlayer, 0, 0xC, flags);
             gPlayer->hitMask |= flags;
         }
-        if (result == 8)
-        {
+        if (result == 8) {
             s32 type = self->type;
 
             if (type == 1 || type == 5 || type == 6)
                 self->mover->active = 1;
-            else
-            {
+            else {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 
                 sign = d >> 31;
                 d ^= sign;
                 d -= sign;
-                if (d <= 7)
-                {
-                    switch (type)
-                    {
+                if (d <= 7) {
+                    switch (type) {
                     case 2:
                         Call68(gPlayer, 0, 0x11, 0);
                         break;
@@ -346,17 +302,13 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 }
             }
         }
-    }
-    else
-    {
+    } else {
         a.y -= 4;
         a.h += 4;
-        switch (self->type)
-        {
+        switch (self->type) {
         case 0:
         case 7:
-            if (AabbOverlaps(&a, pb))
-            {
+            if (AabbOverlaps(&a, pb)) {
                 struct player *q = gPlayer;
 
                 q->carried = self;
@@ -368,8 +320,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             }
             break;
         case 2:
-            if (AabbOverlaps(&a, pb))
-            {
+            if (AabbOverlaps(&a, pb)) {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 
@@ -381,9 +332,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             }
             break;
         case 3:
-            if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial
-                && AabbOverlaps(&a, pb))
-            {
+            if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 
@@ -395,9 +344,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             }
             break;
         case 4:
-            if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial
-                && AabbOverlaps(&a, pb))
-            {
+            if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 

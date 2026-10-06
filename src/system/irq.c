@@ -7,75 +7,83 @@
 #include "globals.h"
 
 /* Points an IRQ's handler at IrqEmptyHandler (its IE bit is left alone). */
-void IrqClearHandler(s32 interruptIndex) {
+void IrqClearHandler(s32 interruptIndex)
+{
     gIntrTable[interruptIndex] = IrqEmptyHandler;
 }
 
 /* Undoes IrqSetHandler(): reinstalls the handler it replaced (and masks
  * the IRQ in IE if there was none), then forgets the saved one. */
-void IrqRestoreHandler(s32 interruptIndex) {
+void IrqRestoreHandler(s32 interruptIndex)
+{
     irq_handler_t tmp = gIntrTable[interruptIndex] = gPrevIntrTable[interruptIndex];
-    
+
     if (tmp == NULL) {
         u16 previousIMEvalue = REG_IME;
-        REG_IME = 0; // disable IME
+        REG_IME = 0;                      // disable IME
         REG_IE &= ~(1 << interruptIndex); // disable specific interrupt
-        REG_IME = previousIMEvalue; // bring back previous IME status
+        REG_IME = previousIMEvalue;       // bring back previous IME status
     }
-    
+
     gPrevIntrTable[interruptIndex] = IrqEmptyHandler;
 }
 
 /* Installs `fn` as an IRQ's handler, saving the old one for
  * IrqRestoreHandler(), and enables the IRQ in IE. */
-void IrqSetHandler(s32 interruptIndex, irq_handler_t fn) {
+void IrqSetHandler(s32 interruptIndex, irq_handler_t fn)
+{
     gPrevIntrTable[interruptIndex] = gIntrTable[interruptIndex];
     gIntrTable[interruptIndex] = fn;
     REG_IE |= 1 << interruptIndex;
 }
 
 
-void IrqDisable(void) {
+void IrqDisable(void)
+{
     REG_IME = 0;
 }
 
-u32 IrqSetup(void) {
-    u32* intrbuffer = &IntrMain_Buffer;
+u32 IrqSetup(void)
+{
+    u32 *intrbuffer = &IntrMain_Buffer;
     irq_handler_t fn = IrqEmptyHandler;
     irq_handler_t *dst1 = gPrevIntrTable;
     irq_handler_t *dst2 = gIntrTable;
     s32 count;
 
-    for (count = 0xD; count >= 0; count --) {
+    for (count = 0xD; count >= 0; count--) {
         *dst1++ = fn;
         *dst2++ = fn;
     }
-    
+
     INTR_VECTOR = intrbuffer;
     REG_IME = 1;
-    
+
     return 0;
 }
 
-void IrqEmptyHandler(void) {}
+void IrqEmptyHandler(void)
+{
+}
 
 __asm__(".align 2,0");
 
 /* Clears the VBlank callbacks, installs VBlankHandler and enables the
  * VBlank IRQ in DISPSTAT. Called once from AgbMain. */
-void EnableVBlankHandler(void) {
+void EnableVBlankHandler(void)
+{
     irq_handler_t fn = VBlankHandler;
-    struct vblank_callbacks* base = &gVBlankCallbacks;
+    struct vblank_callbacks *base = &gVBlankCallbacks;
     s32 unknown = 0;
-    s32* current = &base->funcs[7];
+    s32 *current = &base->funcs[7];
     // this does not look right, but matches generated assembly
     u8 tmp;
     MATCH_HOLD_REG(u8 *, value, r1);
-    
+
     do {
         *current-- = unknown;
-    } while ((s32) current >= (s32) &base->funcs[0]);
-    
+    } while ((s32)current >= (s32)&base->funcs[0]);
+
     IrqSetHandler(INTR_INDEX_VBLANK, fn);
 
     value = (u8 *)REG_ADDR_DISPSTAT;
@@ -85,23 +93,26 @@ void EnableVBlankHandler(void) {
 
 /* The inverse of EnableVBlankHandler: disables the VBlank IRQ in
  * DISPSTAT and reinstalls the previous VBlank handler. */
-void DisableVBlankHandler(void) {
+void DisableVBlankHandler(void)
+{
     MATCH_HOLD_REG(vu8 *, dispstat, r1) = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VBLANK_INTR;
-    
+
     *dispstat &= ~tmp;
-    
+
     IrqRestoreHandler(INTR_INDEX_VBLANK);
 }
 
 /* Frees the callback slot AddVBlankCallback() returned. */
-void RemoveVBlankCallback(s32 index) {
+void RemoveVBlankCallback(s32 index)
+{
     gVBlankCallbacks.funcs[index] = 0;
 }
 
 /* Puts `fn` in the first free VBlank callback
  * slot and returns the slot, or -1 if all eight are taken. */
-s32 AddVBlankCallback(void (*fn)(void)) {
+s32 AddVBlankCallback(void (*fn)(void))
+{
     s32 index = 0;
 
     while (index <= 7) {
@@ -110,7 +121,7 @@ s32 AddVBlankCallback(void (*fn)(void)) {
             return index;
         }
 
-        index ++;
+        index++;
     }
 
     return -1;
@@ -192,10 +203,14 @@ void VBlankHandler(void)
 u8 GetDpadDirection(void *input)
 {
     u8 idx = 0;
-    if (gKeys.half.held & 0x10) idx |= 8;
-    if (gKeys.half.held & 0x20) idx |= 4;
-    if (gKeys.half.held & 0x80) idx |= 2;
-    if (gKeys.half.held & 0x40) idx |= 1;
+    if (gKeys.half.held & 0x10)
+        idx |= 8;
+    if (gKeys.half.held & 0x20)
+        idx |= 4;
+    if (gKeys.half.held & 0x80)
+        idx |= 2;
+    if (gKeys.half.held & 0x40)
+        idx |= 1;
     return gDpadDirectionTable[idx];
 }
 

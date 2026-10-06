@@ -17,7 +17,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * definitions). */
 struct listed_obj_vtable {
     u8 unk_00[0x20];
-    struct actor_method m20;    // 0x20 - per-frame update
+    struct actor_method m20; // 0x20 - per-frame update
 };
 
 struct listed_obj {

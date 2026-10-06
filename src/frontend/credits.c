@@ -73,16 +73,14 @@ void DrawContinuePrompt(struct continue_prompt *self)
     set_icon_mgr_pos(self->icons, 0x88 - w, 0x87);
     ICON_TEXT_CALL(self->icons, 2, GetUiText(0x28));
     FontSetPalette(self->icons, GetContinuePromptBlink(self, 0));
-    if (self->selection == 0)
-    {
+    if (self->selection == 0) {
         set_icon_mgr_pos(self->icons, 0x90, 0x87);
         ICON_TEXT_CALL(self->icons, 2, gContinuePromptCursorText);
     }
     set_icon_mgr_pos(self->icons, 0x98, 0x87);
     ICON_TEXT_CALL(self->icons, 2, GetUiText(0x29));
     FontSetPalette(self->icons, GetContinuePromptBlink(self, 1));
-    if (self->selection == 1)
-    {
+    if (self->selection == 1) {
         set_icon_mgr_pos(self->icons, 0x90, 0x91);
         ICON_TEXT_CALL(self->icons, 2, gContinuePromptCursorText);
     }
@@ -348,12 +346,10 @@ void DrawCreditsText(struct credits_screen *self)
 
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
-    for (node = self->popupListHead; node != NULL; node = node->next)
-    {
+    for (node = self->popupListHead; node != NULL; node = node->next) {
         struct bitmap_font *m;
 
-        switch (node->mode)
-        {
+        switch (node->mode) {
         case 0:
             m = gSmallFont;
             goto draw;
@@ -361,47 +357,46 @@ void DrawCreditsText(struct credits_screen *self)
             m = gLargeFont;
         draw:
             set_icon_mgr_pos(m, node->x, node->y);
-            _call_via_r2((u8 *)m + m->record->slots[4].offset, (void *)(u32)node->index, m->record->slots[4].ptr);
+            _call_via_r2((u8 *)m + m->record->slots[4].offset, (void *)(u32)node->index,
+                         m->record->slots[4].ptr);
             break;
         case 2:
-        {
-            /* `node->index` is read twice, as the ROM does. */
-            struct popup_glyph *glyph = (struct popup_glyph *)((u8 *)self + 0x1c + (node->index * 2 + node->index) * 8);
-            s32 tile;
-            u32 zero;
-            struct popup_oam oam;
-            s32 y;
-            s32 i;
-
-            tile = GetObjVramTile(gObjVramCursor);
-            UploadObjVram(gObjVramCursor, glyph->tiles, (glyph->rows * glyph->cols) << 9);
-            zero = 0;
-            CpuSet(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
-            oam.size = 2;
-            oam.palette = glyph->palette;
-            y = node->y;
-            for (i = 0; i < glyph->rows; i++)
             {
-                s32 x;
-                s32 j;
+                /* `node->index` is read twice, as the ROM does. */
+                struct popup_glyph *glyph =
+                    (struct popup_glyph *)((u8 *)self + 0x1c + (node->index * 2 + node->index) * 8);
+                s32 tile;
+                u32 zero;
+                struct popup_oam oam;
+                s32 y;
+                s32 i;
 
-                oam.y = y;
-                x = node->x;
-                for (j = 0; j < glyph->cols; j++)
-                {
-                    if ((u32)(y + 0x1f) <= 0xbe)
-                    {
-                        oam.x = x;
-                        oam.tile = tile;
-                        AddOamEntry(gOamBuffer, &oam);
+                tile = GetObjVramTile(gObjVramCursor);
+                UploadObjVram(gObjVramCursor, glyph->tiles, (glyph->rows * glyph->cols) << 9);
+                zero = 0;
+                CpuSet(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
+                oam.size = 2;
+                oam.palette = glyph->palette;
+                y = node->y;
+                for (i = 0; i < glyph->rows; i++) {
+                    s32 x;
+                    s32 j;
+
+                    oam.y = y;
+                    x = node->x;
+                    for (j = 0; j < glyph->cols; j++) {
+                        if ((u32)(y + 0x1f) <= 0xbe) {
+                            oam.x = x;
+                            oam.tile = tile;
+                            AddOamEntry(gOamBuffer, &oam);
+                        }
+                        tile += 0x10;
+                        x += 0x20;
                     }
-                    tile += 0x10;
-                    x += 0x20;
+                    y += 0x20;
                 }
-                y += 0x20;
+                break;
             }
-            break;
-        }
         }
     }
     HideUnusedOamEntries(gOamBuffer);
@@ -467,23 +462,18 @@ void UpdateCreditsText(struct credits_screen *self)
     const u8 *p;
 
     link = (struct popup_node **)&self->popupListHead;
-    while (*link != NULL)
-    {
+    while (*link != NULL) {
         struct popup_node *n = *link;
 
-        if (--n->y + n->timer <= 0)
-        {
+        if (--n->y + n->timer <= 0) {
             *link = n->next;
             OperatorDelete(n);
-        }
-        else
-        {
+        } else {
             link = &n->next;
         }
     }
 
-    if (self->suppressCounter != 0)
-    {
+    if (self->suppressCounter != 0) {
         self->suppressCounter--;
         return;
     }
@@ -500,27 +490,19 @@ void UpdateCreditsText(struct credits_screen *self)
     if (*(const u8 *)self->streamCursor == 0)
         self->streamCursor = self->streamBase;
     p = self->streamCursor;
-    if (*p != '\n')
-    {
-        if (*p != 0)
-        {
+    if (*p != '\n') {
+        if (*p != 0) {
             u8 c;
 
-            do
-            {
+            do {
                 s32 advance = 0;
                 s32 height = 0;
 
-                if (*p == 2)
-                {
+                if (*p == 2) {
                     self->drawMode = height;
-                }
-                else if (*p == 3)
-                {
+                } else if (*p == 3) {
                     self->drawMode = 1;
-                }
-                else if (*p == 1)
-                {
+                } else if (*p == 1) {
                     struct popup_node *n;
 
                     self->streamCursor = p + 1;
@@ -539,21 +521,15 @@ void UpdateCreditsText(struct credits_screen *self)
                         height = *GlyphHeightAt(self, off);
                         advance = *GlyphWidthAt(self, off);
                     }
-                }
-                else
-                {
-                    if (self->drawMode == 0)
-                    {
+                } else {
+                    if (self->drawMode == 0) {
                         advance = ICON_TEXT_CALL3(gSmallFont, 1, p, 1);
                         height = widthA;
-                    }
-                    else
-                    {
+                    } else {
                         advance = ICON_TEXT_CALL3(gLargeFont, 1, p, 1);
                         height = widthB;
                     }
-                    if (*(const u8 *)self->streamCursor != ' ')
-                    {
+                    if (*(const u8 *)self->streamCursor != ' ') {
                         struct popup_node *n = OperatorNew(0x18);
 
                         tail->next = n;
@@ -590,12 +566,10 @@ place:
         struct popup_node *n = lineStart->next;
         s32 counter = maxHeight + 6;
 
-        if (n != NULL)
-        {
+        if (n != NULL) {
             s32 dx = (0xf0 - penX) / 2;
 
-            do
-            {
+            do {
                 s32 y = n->y;
                 s32 top = y + 0xa0;
 
@@ -636,10 +610,10 @@ asm(".align 2, 0");
  * `struct bg_package`: a popup glyph's size in 8-px tiles (signed here;
  * the loops compare them signed) and its tagged palette/tile assets. */
 struct popup_glyph_src {
-    s32 w;               /* 0x00 */
-    s32 h;               /* 0x04 */
-    const u32 *palette;  /* 0x08 - tagged asset, size in the header's bits 9+ */
-    const u32 *tiles;    /* 0x0c - tagged asset, size in the header's bits 8+ */
+    s32 w;              /* 0x00 */
+    s32 h;              /* 0x04 */
+    const u32 *palette; /* 0x08 - tagged asset, size in the header's bits 9+ */
+    const u32 *tiles;   /* 0x0c - tagged asset, size in the header's bits 8+ */
     u32 unk_10;
 };
 
@@ -649,8 +623,7 @@ void LoadCreditsLogos(struct credits_screen *self)
     s32 slot = 1;
     s32 i;
 
-    for (i = 0; i <= 4; i++)
-    {
+    for (i = 0; i <= 4; i++) {
         struct popup_glyph_src *src = (struct popup_glyph_src *)&gCreditsLogos[i];
         struct popup_glyph *glyph = (struct popup_glyph *)((u8 *)self + 0x1c + (i * 2 + i) * 8);
         u8 *tiles;
@@ -680,12 +653,10 @@ void LoadCreditsLogos(struct credits_screen *self)
             dma->cnt = (size / 4) | 0x85000000;
             dma->cnt;
         }
-        for (y = 0; y < src->h; y++)
-        {
+        for (y = 0; y < src->h; y++) {
             s32 x;
 
-            for (x = 0; x < src->w; x++)
-            {
+            for (x = 0; x < src->w; x++) {
                 s32 cell = (y >> 2) * glyph->cols + (x >> 2);
                 s32 sub = (x & 3) + ((y & 3) << 2);
                 struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;

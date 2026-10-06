@@ -28,7 +28,7 @@ void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index)
     void *addr;
     void *fn;
 
-    asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
+    asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 4);
     tableEntry = (u8 *)gCtrlMotionRecords + type * 12;
@@ -114,7 +114,7 @@ void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index)
     void *addr;
     void *fn;
 
-    asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
+    asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 0);
     tableEntry = (u8 *)gCtrlMotionRecords + type * 12;

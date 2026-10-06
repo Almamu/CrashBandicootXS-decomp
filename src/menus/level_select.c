@@ -65,8 +65,7 @@ COMPILE_TIME_ASSERT(level_select_c, sizeof(struct follow_child) == 0x80);
  * its low byte, for the fade-in decrement
  * (a byte-sized test is what makes gcc narrow the `evy != 0` check to
  * an `and` of the loaded byte). */
-struct bldy_byte
-{
+struct bldy_byte {
     u8 evy:5;
     u8 unk_5:3;
 } __attribute__((packed));
@@ -216,16 +215,13 @@ void UpdateCameraLead(struct follow_child *self)
     }
     cur = self->offset;
     tgt = self->targetOffset;
-    if (cur < tgt)
-    {
+    if (cur < tgt) {
         cur += 0x200;
         if (cur > tgt)
             self->offset = tgt;
         else
             self->offset = cur;
-    }
-    else if (cur > tgt)
-    {
+    } else if (cur > tgt) {
         cur -= 0x200;
         if (cur < tgt)
             self->offset = tgt;
@@ -336,11 +332,9 @@ void CheckLaunchPadContact(void *self)
 {
     struct aabb box;
 
-    if (gPlayer->flags.all >> 7)
-    {
+    if (gPlayer->flags.all >> 7) {
         box = GetSpriteHitbox(self);
-        if (box.w != 0 && PlayerTouchesBox(gPlayer, &box))
-        {
+        if (box.w != 0 && PlayerTouchesBox(gPlayer, &box)) {
             struct player *p = gPlayer;
             const struct actor_method *m = &p->vtable->handleEvent;
             void *addr = (u8 *)p + m->thisOffset;
@@ -479,13 +473,10 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     self->dispcnt.bits.bg0 = 1;
     self->dispcnt.bits.bg1 = 1;
     self->dispcnt.bits.obj = 1;
-    if (arg <= 0x13)
-    {
+    if (arg <= 0x13) {
         self->world = __divsi3(arg, 5);
         self->index = __modsi3(arg, 5);
-    }
-    else
-    {
+    } else {
         self->world = arg - 0x14;
         self->index = 5;
     }
@@ -510,8 +501,7 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     {
         s32 v;
 
-        for (i = 0, v = 0x80; i < 8; i++)
-        {
+        for (i = 0, v = 0x80; i < 8; i++) {
             s = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
             self->sprites[i] = s;
             SetSpritePriority(s, 1);
@@ -521,42 +511,49 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     }
     self->sprites[0]->anim = AnimTable(0x234);
     SetAnim(self->sprites[0], gLevelSelectWorldAnims[self->world]);
-    SetEntityPixelPos((struct actor *)self->sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
+    SetEntityPixelPos((struct actor *)self->sprites[0], gLevelSelectWorldPos.x,
+                      gLevelSelectWorldPos.y);
     self->sprites[1]->anim = AnimTable(0x234);
     SetAnim(self->sprites[1], 10);
-    SetEntityPixelPos((struct actor *)self->sprites[1], gStaticData_0816C4A0.x, gStaticData_0816C4A0.y);
+    SetEntityPixelPos((struct actor *)self->sprites[1], gStaticData_0816C4A0.x,
+                      gStaticData_0816C4A0.y);
     self->sprites[2]->anim = AnimTable(0x1BC);
-    SetEntityPixelPos((struct actor *)self->sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
+    SetEntityPixelPos((struct actor *)self->sprites[2], gLevelSelectCrystalPos.x,
+                      gLevelSelectCrystalPos.y);
     self->sprites[3]->anim = AnimTable(0x180);
     SetAnim(self->sprites[3], 1);
-    SetEntityPixelPos((struct actor *)self->sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[3], gLevelSelectGemPos_rw.x,
+                      gLevelSelectGemPos_rw.y);
     self->sprites[4]->anim = AnimTable(0x180);
     SetAnim(self->sprites[4], 1);
-    SetEntityPixelPos((struct actor *)self->sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[4], gLevelSelectGemPos_rw.x,
+                      gLevelSelectGemPos_rw.y);
     self->sprites[5]->anim = AnimTable(0x18C);
-    SetEntityPixelPos((struct actor *)self->sprites[5], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[5], gLevelSelectTrialIconPos_rw.x,
+                      gLevelSelectTrialIconPos_rw.y);
     self->sprites[6]->anim = AnimTable(0x18C);
-    SetEntityPixelPos((struct actor *)self->sprites[6], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[6], gLevelSelectTrialIconPos_rw.x,
+                      gLevelSelectTrialIconPos_rw.y);
     self->sprites[7]->anim = AnimTable(0x18C);
-    SetEntityPixelPos((struct actor *)self->sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
+    SetEntityPixelPos((struct actor *)self->sprites[7], gLevelSelectTimePos.x,
+                      gLevelSelectTimePos.y);
     s = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[8] = s;
     SetSpritePriority(s, 1);
     self->sprites[8]->anim = AnimTable(0x270);
     SetAnim(self->sprites[8], 1);
-    SetEntityPixelPos((struct actor *)self->sprites[8], gStaticData_0816C4C8.x, gStaticData_0816C4C8.y);
+    SetEntityPixelPos((struct actor *)self->sprites[8], gStaticData_0816C4C8.x,
+                      gStaticData_0816C4C8.y);
     s = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[9] = s;
     SetSpritePriority(s, 1);
     self->sprites[9]->anim = AnimTable(0x270);
     SetAnim(self->sprites[9], 0);
-    SetEntityPixelPos((struct actor *)self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
-    if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self))
-    {
+    SetEntityPixelPos((struct actor *)self->sprites[9], gStaticData_0816C4D0.x,
+                      gStaticData_0816C4D0.y);
+    if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self)) {
         ParkLevelSelectCursor(self->panel);
-    }
-    else
-    {
+    } else {
         const struct xy_pair *pos = &self->positions[self->index];
 
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
@@ -580,8 +577,7 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
         SPRITE_CALL(s, m50, 3);
     if ((s = self->sprites[8]) != NULL)
         SPRITE_CALL(s, m50, 3);
-    for (i = 0; i < 8; i++)
-    {
+    for (i = 0; i < 8; i++) {
         if ((s = self->sprites[i]) != NULL)
             SPRITE_CALL(s, m50, 3);
     }
@@ -589,8 +585,7 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
         DestroyLevelSelectCursor(self->panel, 3);
     if (self->bg2 != NULL)
         DestroyZoomBg(self->bg2, 3);
-    for (i = 0; i < 6; i++)
-    {
+    for (i = 0; i < 6; i++) {
         struct level_item *it = self->items[i];
 
         if (it != NULL)
@@ -614,10 +609,12 @@ void UpdateLevelSelect(struct level_menu *self)
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
     DrawLevelSelectCursor(self->panel);
-    if (IsZoomBgShown(self->bg2) && IsLevelSelectEntrySelected(self->items[self->index]))
-    {
+    if (IsZoomBgShown(self->bg2) && IsLevelSelectEntrySelected(self->items[self->index])) {
         struct icon_slot *slot = &gLargeFont->record->slots[0];
-        u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr)) >> 1;
+        // clang-format off
+        u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText,
+                                          slot->ptr)) >> 1;
+        // clang-format on
 
         SetIconPos(gLargeFont, x, -self->panelSlideX + 2);
         slot = &gLargeFont->record->slots[2];
@@ -626,20 +623,18 @@ void UpdateLevelSelect(struct level_menu *self)
             DrawLevelSelectRecord(self);
     }
     SetLevelSelectPageBgOffsets(self->bg1);
-    for (i = 0; i <= self->lastIndex; i++)
-    {
+    for (i = 0; i <= self->lastIndex; i++) {
         struct level_item *it = self->items[i];
         struct actor_method *m = &it->vtable->m08;
 
         _call_via_r2((u8 *)it + m->thisOffset, GetLevelSelectPageBgScroll(self->bg1), m->fn);
     }
-    if (IsLevelSelectPageBgSettled(self->bg1))
-    {
-        if (!IsZoomBgExiting(self->bg2))
-        {
+    if (IsLevelSelectPageBgSettled(self->bg1)) {
+        if (!IsZoomBgExiting(self->bg2)) {
             s32 text = GetUiText(0x2F);
             struct icon_slot *slot = &gSmallFont->record->slots[0];
-            u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gSmallFont + slot->offset, text, slot->ptr)) >> 1;
+            u32 x =
+                (u32)(0xF0 - _call_via_r2((u8 *)gSmallFont + slot->offset, text, slot->ptr)) >> 1;
 
             SetIconPos(gSmallFont, x, 0x96);
             FontSetPalette(gSmallFont, 0xF);
@@ -649,16 +644,13 @@ void UpdateLevelSelect(struct level_menu *self)
         }
         DrawZoomBg(self->bg2);
     }
-    if (IsZoomBgWaiting(self->bg2))
-    {
+    if (IsZoomBgWaiting(self->bg2)) {
         u8 *q = (u8 *)&self->dispcnt + 1;
         s32 m = -5;
 
         m &= *q;
         *q = m;
-    }
-    else
-    {
+    } else {
         u8 *q = (u8 *)&self->dispcnt + 1;
         s32 m = 4;
 
@@ -702,18 +694,14 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
         highMask |= pal;
         *p = highMask;
     }
-    if (self->world <= 2)
-    {
+    if (self->world <= 2) {
         MATCH_HOLD_REG(struct sprite *, s, r1);
         MATCH_HOLD_REG(s32, f, r4);
 
-        if (LevelSelectIsNextWorldOpen(self))
-        {
+        if (LevelSelectIsNextWorldOpen(self)) {
             s = self->sprites[8];
             f = 0;
-        }
-        else
-        {
+        } else {
             s = self->sprites[8];
             f = 1;
         }
@@ -722,7 +710,8 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             MATCH_HOLD_REG(u8 *, pi, r3) = &s->animIndex;
             MATCH_HOLD_REG(const struct sprite_anim *, recs, r2) = a->anims;
             MATCH_HOLD_REG(u32, idx, r5) = *pi;
-            MATCH_HOLD_REG(const struct sprite_anim *, rec, r0) = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
+            MATCH_HOLD_REG(const struct sprite_anim *, rec, r0) =
+                (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
             MATCH_HOLD_REG(s32, n, r2) = rec->frameCount;
             MATCH_HOLD_REG(struct sprite *, t, r0) = s;
 
@@ -732,15 +721,15 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             DrawSpriteWithOffset((struct actor *)t, 0, 0);
         }
     }
-    if (LevelSelectHasPrevWorld(self))
-    {
+    if (LevelSelectHasPrevWorld(self)) {
         MATCH_HOLD_REG(struct sprite *, s, r3) = self->sprites[9];
         MATCH_HOLD_REG(s32, f, r4) = 0;
         MATCH_HOLD_REG(const struct sprite_bank *, a, r0) = s->anim;
         MATCH_HOLD_REG(u8 *, pi, r2) = &s->animIndex;
         MATCH_HOLD_REG(const struct sprite_anim *, recs, r1) = a->anims;
         MATCH_HOLD_REG(u32, idx, r5) = *pi;
-        MATCH_HOLD_REG(const struct sprite_anim *, rec, r0) = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
+        MATCH_HOLD_REG(const struct sprite_anim *, rec, r0) =
+            (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
         MATCH_HOLD_REG(s32, n, r0) = rec->frameCount;
 
         if (f >= n)
@@ -783,25 +772,25 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
     DrawSpriteWithOffset((struct actor *)self->sprites[5], -self->panelSlideX, self->trialIconY);
     DrawSpriteWithOffset((struct actor *)self->sprites[6], -self->panelSlideX, self->trialIcon2Y);
     info = &gLevelTable[self->levelId];
-    if (time != 0 && time <= info->times[2])
-    {
+    if (time != 0 && time <= info->times[2]) {
         struct icon_slot *slot;
 
-        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10,
+                   gLevelSelectTimePos.y - 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
-    }
-    else
-    {
+    } else {
         struct icon_slot *slot;
 
         DrawSpriteWithOffset((struct actor *)self->sprites[7], self->panelSlideX, 0);
         FontSetPalette(gLargeFont, self->sprites[7]->palette);
-        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10,
+                   gLevelSelectTimePos.y - 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->recordText, slot->ptr);
         FontResetPalette(gLargeFont);
-        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y + 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10,
+                   gLevelSelectTimePos.y + 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
     }
@@ -828,13 +817,11 @@ void DrawLevelSelect(struct level_menu *self)
             goto draw;
     }
     {
-        if (!IsLevelSelectEntrySelected(ItemAt(items, self->index)))
-        {
+        if (!IsLevelSelectEntrySelected(ItemAt(items, self->index))) {
             struct level_item *it = ItemAt(items, self->index);
 
             SetLevelSelectEntrySelected(it, 1);
-            if (!IsZoomBgShown(self->bg2))
-            {
+            if (!IsZoomBgShown(self->bg2)) {
                 const struct level_info *info;
 
                 self->levelId = GetLevelSelectEntryLevel(it);
@@ -843,8 +830,7 @@ void DrawLevelSelect(struct level_menu *self)
                 self->nameText = GetUiText(info->nameText);
             }
             self->panelSlideX = 0;
-            if (self->index <= 4)
-            {
+            if (self->index <= 4) {
                 LoadLevelSelectRecord(self);
                 FreeUnlockedPaletteSlots(gPaletteCache);
                 ReloadLevelSelectPalette(self);
@@ -854,8 +840,7 @@ void DrawLevelSelect(struct level_menu *self)
     }
 draw:
     sprites = self->sprites;
-    for (i = 5; i >= 0; i--)
-    {
+    for (i = 5; i >= 0; i--) {
         struct level_item *it = *items++;
         struct item_vtable *vt = it->vtable;
 
@@ -904,8 +889,7 @@ void LoadLevelSelectRecord(struct level_menu *self)
         self->clearedIconY = 0x1C;
     if (sv->flag1)
         self->flag1IconY = 0x1C;
-    switch (*rank)
-    {
+    switch (*rank) {
     case 0:
         if (sv->flag2)
             self->gemIconY = 0x1C;
@@ -931,18 +915,15 @@ void LoadLevelSelectRecord(struct level_menu *self)
     default:
         goto set_rank_icon;
     }
-    if (self->rank != 5)
-    {
+    if (self->rank != 5) {
     set_rank_icon:
         SetAnim(self->sprites[4], gLevelSelectRankAnims[self->rank]);
-        if (self->flag1IconY == self->gemIconY)
-        {
+        if (self->flag1IconY == self->gemIconY) {
             self->flag1IconY -= 6;
             self->gemIconY += 6;
         }
     }
-    if (sv->cleared)
-    {
+    if (sv->cleared) {
         const struct level_info *entry = &gLevelTable[self->levelId];
         const struct level_info *info = entry;
 
@@ -951,25 +932,19 @@ void LoadLevelSelectRecord(struct level_menu *self)
         SetAnim(self->sprites[5], 0);
         SetAnim(self->sprites[6], 0);
         SetAnim(self->sprites[7], 0);
-        if (sv->time != 0)
-        {
-            if (sv->time <= info->times[2])
-            {
+        if (sv->time != 0) {
+            if (sv->time <= info->times[2]) {
                 self->trialIcon2Y = 0x1C;
                 self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 1);
                 SetAnim(self->sprites[6], 1);
-            }
-            else if (sv->time <= info->times[1])
-            {
+            } else if (sv->time <= info->times[1]) {
                 FormatCentiseconds(info->times[2], self->recordText);
                 self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 2);
                 SetAnim(self->sprites[6], 1);
                 SetAnim(self->sprites[7], 1);
-            }
-            else if (sv->time <= entry->times[0])
-            {
+            } else if (sv->time <= entry->times[0]) {
                 FormatCentiseconds(info->times[1], self->recordText);
                 self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 0);
@@ -998,8 +973,7 @@ s32 LevelSelectLoop(struct level_menu *self)
     info = &gLevelTable[self->levelId];
     SetZoomBgPicture(self->bg2, info->theme);
     self->nameText = GetUiText(info->nameText);
-    while (!IsZoomBgShown(self->bg2))
-    {
+    while (!IsZoomBgShown(self->bg2)) {
         {
             struct bldy_byte *f = (struct bldy_byte *)&self->bldy;
 
@@ -1022,8 +996,7 @@ s32 LevelSelectLoop(struct level_menu *self)
     self->blend.bits.bdSecond = 1;
     self->blend.bits.eva = 0x10;
     self->blend.bits.evb = 0x10;
-    if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self))
-    {
+    if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self)) {
         self->index = 0;
         LevelSelectNextWorld(self);
     }
@@ -1031,8 +1004,7 @@ s32 LevelSelectLoop(struct level_menu *self)
     goto loop;
 
 check_exit:
-    if (gKeys.half.pressed & 8)
-    {
+    if (gKeys.half.pressed & 8) {
         LevelSelectExit(self);
         goto end;
     }
@@ -1065,8 +1037,7 @@ loop:
                      hit;
                  }))
             LevelSelectPrevWorld(self);
-        else
-        {
+        else {
             if (k.half.pressed & 0x20)
                 LevelSelectCursorLeft(self);
             else if (keys.half.pressed & 0x10)
@@ -1097,8 +1068,7 @@ void SettleLevelSelectPage(struct level_menu *self)
     SetLevelSelectEntrySelected(self->items[self->index], 0);
     ClearZoomBgPicture(self->bg2);
     ParkLevelSelectCursor(self->panel);
-    while (IsZoomBgZoomingOut(self->bg2) || !(u8)HasLevelSelectCursorArrived(self->panel))
-    {
+    while (IsZoomBgZoomingOut(self->bg2) || !(u8)HasLevelSelectCursorArrived(self->panel)) {
         UpdateLevelSelect(self);
         WaitForVBlank();
         UploadPaletteCache(gPaletteCache);
@@ -1114,15 +1084,13 @@ void SettleLevelSelectPage(struct level_menu *self)
  * first entry. */
 void LevelSelectCursorLeft(struct level_menu *self)
 {
-    if (self->index == 0)
-    {
+    if (self->index == 0) {
         PlaySfx(gAudioContext, 0x48, 0x100);
         return;
     }
     SetLevelSelectEntrySelected(self->items[self->index], 0);
     ClearZoomBgPicture(self->bg2);
-    while (self->index != 0)
-    {
+    while (self->index != 0) {
         const struct xy_pair *pos;
 
         self->index--;
@@ -1139,15 +1107,13 @@ void LevelSelectCursorLeft(struct level_menu *self)
  * the last entry. */
 void LevelSelectCursorRight(struct level_menu *self)
 {
-    if (self->index == self->lastIndex)
-    {
+    if (self->index == self->lastIndex) {
         PlaySfx(gAudioContext, 0x48, 0x100);
         return;
     }
     SetLevelSelectEntrySelected(self->items[self->index], 0);
     ClearZoomBgPicture(self->bg2);
-    while (self->index < self->lastIndex)
-    {
+    while (self->index < self->lastIndex) {
         const struct xy_pair *pos;
 
         self->index++;

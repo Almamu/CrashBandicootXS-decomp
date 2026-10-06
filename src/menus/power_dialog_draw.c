@@ -188,9 +188,13 @@ s32 CountGoldRelics(void *arg0)
         raw = *(u16 *)(p + 4);
         val = raw >> 3;
         if (val != 0) {
+            // clang-format off
             asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
+            // clang-format on
             if (val <= *(u32 *)addr) {
+                // clang-format off
                 asm volatile("add %0, %1, #0\n\tadd %0, %0, #0x10\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
+                // clang-format on
                 if (val > *(u32 *)addr) {
                     count++;
                 }
@@ -223,9 +227,13 @@ s32 CountSapphireRelics(void *arg0)
         raw = *(u16 *)(p + 4);
         val = raw >> 3;
         if (val != 0) {
+            // clang-format off
             asm volatile("add %0, %1, #0\n\tadd %0, %0, #8\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
+            // clang-format on
             if (val <= *(u32 *)addr) {
+                // clang-format off
                 asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
+                // clang-format on
                 if (val > *(u32 *)addr) {
                     count++;
                 }

@@ -81,7 +81,8 @@ void *InitStarfield(void *selfArg)
      * register, then fills in every bit the halfword write actually reads
      * via the ORs below (negative-constant bit-clear idiom, see
      * LoadTitleScreenBg's `bg2cnt`, src/frontend/title_screen_init.c). */
-    u32 bg0cnt = bg0cnt; /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
+    /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
+    u32 bg0cnt = bg0cnt;
     s32 gradIdx;
     s32 gradCount;
     s32 row;
@@ -108,8 +109,8 @@ void *InitStarfield(void *selfArg)
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 
     bg0cnt &= -0x10000;
-    bg0cnt |= 3;                /* priority 3 */
-    bg0cnt |= 0xf8 << 5;        /* screen base block 31 */
+    bg0cnt |= 3;         /* priority 3 */
+    bg0cnt |= 0xf8 << 5; /* screen base block 31 */
     REG_BG0CNT = bg0cnt;
 
     self->tileVramBase = VRAM;
@@ -297,6 +298,7 @@ void DrawStarfield(void *selfArg)
                 /* Opaque tail reproducing the ROM's own
                  * `mask`(r0)/`cell`(r2) `bic`/`orr`/`strh` sequence - see
                  * point 3 above. */
+                // clang-format off
                 asm volatile(
                     "mov r0, #0xf\n"
                     "lsl r0, %0\n"
@@ -310,6 +312,7 @@ void DrawStarfield(void *selfArg)
                     : "r"(shift), "r"(entry), "r"(trailVal)
                     : "r0", "r2", "memory"
                 );
+                // clang-format on
             }
 
             {
@@ -355,6 +358,7 @@ void DrawStarfield(void *selfArg)
                     addr += (yPix2 & sevenMask) << 3;
                     entry = (u16 *)((u8 *)self->tileBuffer + ((addr >> 2) << 1));
                     shift = (addr & 3) << 2;
+                    // clang-format off
                     asm volatile(
                         "mov r0, #0xf\n"
                         "lsl r0, %0\n"
@@ -368,6 +372,7 @@ void DrawStarfield(void *selfArg)
                         : "r"(shift), "r"(entry), "r"(oldVal)
                         : "r0", "r2", "memory"
                     );
+                    // clang-format on
                 }
             }
 
@@ -487,6 +492,7 @@ void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
             MATCH_HOLD_REG(u16 *, tileMapEntry, r2) = (u16 *)(*(u8 **)(mgr + 0x10) + off);
 
             shift = (addr & 3) << 2;
+            // clang-format off
             asm volatile(
                 "mov r0, #0xf\n"
                 "lsl r0, %1\n"
@@ -500,6 +506,7 @@ void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
                 : "r"(shift), "r"(tileMapEntry)
                 : "r0", "r4", "memory"
             );
+            // clang-format on
         }
     }
 }

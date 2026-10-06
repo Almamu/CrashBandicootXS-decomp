@@ -21,11 +21,11 @@
 /* The gJetpackBalloonVtable class built by CreateJetpackBalloon. */
 struct jetpack_balloon {
     struct actor_self base;
-    s32 hp;             // 0x54
+    s32 hp;                     // 0x54
     struct actor_self *pending; // 0x58
-    u8 dying;           // 0x5C
+    u8 dying;                   // 0x5C
     u8 unk_5D[3];
-    s32 velY;           // 0x60
+    s32 velY; // 0x60
 };
 
 /* Gates the boss-weapon tracker's own "ready" check: while the tracker
@@ -88,8 +88,8 @@ void UpdateJetpackBalloon(struct jetpack_balloon *self)
         }
         goto destroy;
     }
-    if ((self->base.state == 2 && self->base.animDone != 0)
-        || (self->base.state == 1 && self->base.y < -0xE100)) {
+    if ((self->base.state == 2 && self->base.animDone != 0) ||
+        (self->base.state == 1 && self->base.y < -0xE100)) {
     destroy:
         if (self != NULL) {
             ACTOR_VCALL(&self->base, destroy, 3);
@@ -171,8 +171,10 @@ void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
     self->animDone = 0;
     base = GetAnimFrameBaseOffset(self);
     if (base >= self->anims[self->animIndex].loopThreshold) {
-        self->animTime -= (self->anims[self->animIndex].loopThreshold
-                           - self->anims[self->animIndex].loopBase) << 8;
+        // clang-format off
+        self->animTime -= (self->anims[self->animIndex].loopThreshold -
+                           self->anims[self->animIndex].loopBase) << 8;
+        // clang-format on
         self->animDone = 1;
     }
 }
@@ -210,8 +212,10 @@ void JetpackBalloonStatePop(struct actor_self *self)
     self->animDone = 0;
     base = GetAnimFrameBaseOffset(self);
     if (base >= self->anims[self->animIndex].loopThreshold) {
-        self->animTime -= (self->anims[self->animIndex].loopThreshold
-                           - self->anims[self->animIndex].loopBase) << 8;
+        // clang-format off
+        self->animTime -= (self->anims[self->animIndex].loopThreshold -
+                           self->anims[self->animIndex].loopBase) << 8;
+        // clang-format on
         self->animDone = 1;
     }
 }
@@ -233,8 +237,10 @@ void JetpackBalloonStateFloatAway(struct jetpack_balloon *self)
     self->base.animDone = 0;
     base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
-        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
-                                - self->base.anims[self->base.animIndex].loopBase) << 8;
+        // clang-format off
+        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold -
+                                self->base.anims[self->base.animIndex].loopBase) << 8;
+        // clang-format on
         self->base.animDone = 1;
     }
 }

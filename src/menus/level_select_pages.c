@@ -67,8 +67,7 @@ static inline void LoadItems(struct level_menu *self)
 {
     s32 i;
 
-    for (i = 0; i <= 5; i++)
-    {
+    for (i = 0; i <= 5; i++) {
         struct level_item *it = self->items[i];
         struct actor_method *m = &it->vtable->m10;
 
@@ -89,25 +88,20 @@ static inline void PlaceItems(struct level_menu *self)
     {
         s32 j;
 
-        for (j = 0; j <= 4; j++)
-        {
+        for (j = 0; j <= 4; j++) {
             s32 k = self->world * 5 + j;
 
             n += self->save->levels[k].b.cleared;
         }
     }
-    if (n == 5)
-    {
+    if (n == 5) {
         self->positions = gLevelSelectEntryPositionsAllCleared;
         self->lastIndex = n;
-    }
-    else
-    {
+    } else {
         self->positions = gLevelSelectEntryPositions;
         self->lastIndex = 4;
     }
-    for (i = 0; i <= 5; i++)
-    {
+    for (i = 0; i <= 5; i++) {
         struct level_item *it = self->items[i];
         struct actor_method *m = &it->vtable->m18;
 
@@ -121,7 +115,8 @@ static inline void SkinItems(struct level_menu *self)
     s32 i;
 
     for (i = 0; i <= 5; i++)
-        SetLevelSelectEntryBox((struct level_item *)self->items[i], gLevelSelectWorldEntryBoxAnims[self->world]);
+        SetLevelSelectEntryBox((struct level_item *)self->items[i],
+                               gLevelSelectWorldEntryBoxAnims[self->world]);
 }
 
 /* Runs the page-turn animation: steps BG1's scroll toward its target one
@@ -129,13 +124,11 @@ static inline void SkinItems(struct level_menu *self)
  * entries over to the new page. */
 void LevelSelectTurnPage(struct level_menu *self)
 {
-    while (!IsLevelSelectPageBgSettled(self->bg1))
-    {
+    while (!IsLevelSelectPageBgSettled(self->bg1)) {
         BeginFrame(self);
         ScrollLevelSelectPageBg(self->bg1);
         UpdateLevelSelectCursor(self->panel);
-        if ((GetLevelSelectPageBgScroll(self->bg1) & 0xFF) == 0xA0)
-        {
+        if ((GetLevelSelectPageBgScroll(self->bg1) & 0xFF) == 0xA0) {
             LoadItems(self);
             PlaceItems(self);
             SkinItems(self);
@@ -146,8 +139,7 @@ void LevelSelectTurnPage(struct level_menu *self)
 /* Runs frames until the cursor panel settles. */
 void WaitLevelSelectCursor(struct level_menu *self)
 {
-    while (!HasLevelSelectCursorArrived(self->panel))
-    {
+    while (!HasLevelSelectCursorArrived(self->panel)) {
         BeginFrame(self);
         UpdateLevelSelectCursor(self->panel);
         UpdateZoomBg(self->bg2);
@@ -165,8 +157,7 @@ void LevelSelectConfirm(struct level_menu *self)
     MoveLevelSelectCursor(self->panel, 0x78, 0x35);
     HideLevelSelectCursor(self->panel);
     WaitLevelSelectCursor(self);
-    while (!IsZoomBgShown(self->bg2))
-    {
+    while (!IsZoomBgShown(self->bg2)) {
         BeginFrame(self);
         UpdateLevelSelectCursor(self->panel);
         UpdateZoomBg(self->bg2);
@@ -181,8 +172,7 @@ void LevelSelectConfirm(struct level_menu *self)
     self->bldy.evy = 0;
     t = 0;
     StartZoomBgExit(self->bg2);
-    while (!IsZoomBgGone(self->bg2))
-    {
+    while (!IsZoomBgGone(self->bg2)) {
         BeginFrame(self);
         UpdateLevelSelectCursor(self->panel);
         UpdateZoomBg(self->bg2);
@@ -207,8 +197,7 @@ void LevelSelectExit(struct level_menu *self)
     self->bldy.evy = 0;
     t = 0;
     ClearZoomBgPicture(self->bg2);
-    while (!IsZoomBgWaiting(self->bg2))
-    {
+    while (!IsZoomBgWaiting(self->bg2)) {
         BeginFrame(self);
         UpdateLevelSelectCursor(self->panel);
         UpdateZoomBg(self->bg2);
@@ -237,8 +226,7 @@ u8 LevelSelectIsNextWorldOpen(struct level_menu *self)
 {
     u8 r = 0;
 
-    switch (self->world)
-    {
+    switch (self->world) {
     case 0:
         r = (self->save->open >> 5) & 1;
         break;
@@ -280,8 +268,7 @@ void RefreshLevelSelectPage(struct level_menu *self)
  * block order (the test sits after the body, entered by a jump). */
 void LevelSelectPrevWorld(struct level_menu *self)
 {
-    if (LevelSelectHasPrevWorld(self))
-    {
+    if (LevelSelectHasPrevWorld(self)) {
         SettleLevelSelectPage(self);
         PlaySfx(gAudioContext, 0x56, 0x100);
         goto check;
@@ -297,9 +284,7 @@ void LevelSelectPrevWorld(struct level_menu *self)
             goto loop;
     done:
         RefreshLevelSelectPage(self);
-    }
-    else
-    {
+    } else {
         PlaySfx(gAudioContext, 0x48, 0x100);
     }
 }
@@ -308,8 +293,7 @@ void LevelSelectPrevWorld(struct level_menu *self)
  * page is open; sound 0x48 otherwise. */
 void LevelSelectNextWorld(struct level_menu *self)
 {
-    if (LevelSelectIsNextWorldOpen(self))
-    {
+    if (LevelSelectIsNextWorldOpen(self)) {
         SettleLevelSelectPage(self);
         PlaySfx(gAudioContext, 0x55, 0x100);
         goto check;
@@ -325,9 +309,7 @@ void LevelSelectNextWorld(struct level_menu *self)
             goto loop;
     done:
         RefreshLevelSelectPage(self);
-    }
-    else
-    {
+    } else {
         PlaySfx(gAudioContext, 0x48, 0x100);
     }
 }
@@ -485,12 +467,10 @@ struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
 
         DmaFill16(3, 0, dst, 0x100);
         v = 0x100;
-        for (row = 0; row <= 7; row++)
-        {
+        for (row = 0; row <= 7; row++) {
             s32 j;
 
-            for (j = 0; j <= 3; j++)
-            {
+            for (j = 0; j <= 3; j++) {
                 dst[j] = v;
                 v += 0x202;
             }
@@ -505,17 +485,19 @@ struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
     self->x16 = self->x;
     self->y16 = self->y;
     self->alpha = 0;
-    for (i = 0; i <= 3; i++)
-    {
+    for (i = 0; i <= 3; i++) {
         self->twinkles[i].part = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
         self->twinkles[i].part->anim = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x258);
         SetMode(self->twinkles[i].part, 1);
-        SetPos(self->twinkles[i].part, self->x + gZoomBgSlotOffsets[i].x, self->y + gZoomBgSlotOffsets[i].y);
+        SetPos(self->twinkles[i].part, self->x + gZoomBgSlotOffsets[i].x,
+               self->y + gZoomBgSlotOffsets[i].y);
         SetSpritePriority(self->twinkles[i].part, 1);
-        SetPalette(self->twinkles[i].part, GetSpriteAnimPaletteSlot((struct actor *)self->twinkles[0].part));
+        SetPalette(self->twinkles[i].part,
+                   GetSpriteAnimPaletteSlot((struct actor *)self->twinkles[0].part));
         RandomizeZoomBgTwinkle(self, &self->twinkles[i]);
     }
-    LockPalette(gPaletteCache, self->twinkles[0].part->anim->anims[self->twinkles[0].part->animIndex].paletteId);
+    LockPalette(gPaletteCache,
+                self->twinkles[0].part->anim->anims[self->twinkles[0].part->animIndex].paletteId);
     SetFlipX(self->twinkles[1].part, 1);
     SetFlipY(self->twinkles[2].part, 1);
     SetFlipX(self->twinkles[3].part, 1);

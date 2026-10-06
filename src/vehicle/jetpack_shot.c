@@ -51,9 +51,9 @@ extern s32 _call_via_r2(void *pos, s32 arg1, void *table);
 
 struct actor_falling {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 velX;           // 0x58
-    s32 velY;           // 0x5C
+    s32 hp;   // 0x54
+    s32 velX; // 0x58
+    s32 velY; // 0x5C
 };
 
 void UpdateJetpackShot(struct actor_falling *self)
@@ -82,13 +82,13 @@ void UpdateJetpackShot(struct actor_falling *self)
             asm volatile("mov r3, #8\n\tldrsh %0, [%1, r3]" : "=r"(off) : "r"(table));
             goto tail;
         } else if (self->base.depth > 0x8200) {
-merge:
+        merge:
             if (self == 0) {
                 return;
             }
             table = self->base.vtable;
             asm volatile("mov r2, #8\n\tldrsh %0, [%1, r2]" : "=r"(off) : "r"(table));
-tail:
+        tail:
             _call_via_r2((u8 *)self + off, 3, table->destroy.fn);
         } else {
             UpdateActor(self);

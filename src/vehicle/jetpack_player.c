@@ -26,7 +26,7 @@
  * of 120 (`GetJetpackPlayerHpPercent`). */
 struct meter_actor {
     struct actor_self base;
-    s32 meter;                  // 0x54
+    s32 meter; // 0x54
 };
 
 

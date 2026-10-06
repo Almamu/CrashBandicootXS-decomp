@@ -33,7 +33,7 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
  * storing the register it was pinned to (same trick as airship_fireball.c). */
 struct actor_once {
     struct actor_self base;
-    u8 once;            // 0x54
+    u8 once; // 0x54
 };
 
 /* Passes its argument through to `SetMaskLevel(gLevelState, 0)`,

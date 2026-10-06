@@ -153,7 +153,8 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  *   requested register, matching the ROM's own reuse of whichever
  *   register happened to be free at that point in its own allocation
  *   (typically `r3`, left over from an unrelated adjacent OR-chain). */
-struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32 label1Arg, s32 label2Arg, s32 typeArg)
+struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32 label1Arg,
+                                          s32 label2Arg, s32 typeArg)
 {
     MATCH_HOLD_REG(struct sub_8006700_actor *, self, r5) = selfArg;
     MATCH_HOLD_REG(s32, label1, r8) = label1Arg;

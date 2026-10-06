@@ -28,33 +28,36 @@ void AnimatePauseMenu(struct pause_menu *self)
     case 0:
         AdvanceSpriteAnim((struct box_part *)(struct actor *)self->field_88);
         break;
-    case 1: {
-        struct settings_icon_actor **p = self->icons8c;
-        s32 i;
-        for (i = 3; i >= 0; i--) {
-            AdvanceSpriteAnim((struct box_part *)*p);
-            p++;
+    case 1:
+        {
+            struct settings_icon_actor **p = self->icons8c;
+            s32 i;
+            for (i = 3; i >= 0; i--) {
+                AdvanceSpriteAnim((struct box_part *)*p);
+                p++;
+            }
+            break;
         }
-        break;
-    }
-    case 2: {
-        struct settings_icon_actor **p = self->icons9c;
-        s32 i;
-        for (i = 4; i >= 0; i--) {
-            AdvanceSpriteAnim((struct box_part *)*p);
-            p++;
+    case 2:
+        {
+            struct settings_icon_actor **p = self->icons9c;
+            s32 i;
+            for (i = 4; i >= 0; i--) {
+                AdvanceSpriteAnim((struct box_part *)*p);
+                p++;
+            }
+            break;
         }
-        break;
-    }
-    case 3: {
-        struct settings_icon_actor **p = self->iconsB0;
-        s32 i;
-        for (i = 2; i >= 0; i--) {
-            AdvanceSpriteAnim((struct box_part *)(struct actor *)*p);
-            p++;
+    case 3:
+        {
+            struct settings_icon_actor **p = self->iconsB0;
+            s32 i;
+            for (i = 2; i >= 0; i--) {
+                AdvanceSpriteAnim((struct box_part *)(struct actor *)*p);
+                p++;
+            }
+            break;
         }
-        break;
-    }
     case 4:
         AdvanceSpriteAnim((struct box_part *)(struct actor *)self->field_bc);
         break;

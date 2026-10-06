@@ -181,6 +181,7 @@ kind8_12:
         MATCH_HOLD_REG(void *, recReg, r2) = rec;
         MATCH_HOLD_REG(s32, result, r1);
 
+        // clang-format off
         asm volatile(
             "mov r0, #2\n\t"
             "ldrsh r1, [r2, r0]\n\t"
@@ -190,6 +191,7 @@ kind8_12:
             :
             : "r0"
         );
+        // clang-format on
 
         result <<= 8;
         *(s32 *)((u8 *)dest + 4) -= result;
@@ -265,6 +267,7 @@ kind8_12:
         MATCH_HOLD_REG(void *, recReg, r2) = rec;
         MATCH_HOLD_REG(s32, result, r1);
 
+        // clang-format off
         asm volatile(
             "mov r0, #2\n\t"
             "ldrsh r1, [r2, r0]\n\t"
@@ -274,6 +277,7 @@ kind8_12:
             :
             : "r0"
         );
+        // clang-format on
 
         result <<= 8;
         *(s32 *)((u8 *)dest + 4) += result;
@@ -385,6 +389,7 @@ kind8_12:
     {
         MATCH_HOLD_REG(s32, result, r1);
 
+        // clang-format off
         asm volatile(
             "mov r0, #2\n\t"
             "ldrsh r1, [r2, r0]\n\t"
@@ -394,6 +399,7 @@ kind8_12:
             : "r"(rec)
             : "r0"
         );
+        // clang-format on
         v = result;
     }
 
@@ -578,11 +584,13 @@ void *GetSpriteFrame(struct gfx_part *part)
         /* The ROM's `adds r0, r0, r1` (byteOffset-then-recPtr operand
          * order) versus this compiler's always-canonicalized
          * `adds r0, r1, r0` - see the doc comment above. */
+        // clang-format off
         asm volatile(
             "add r0, r0, r1\n\t"
             : "=r"(arr)
             : "0"(byteOffset), "r"(recPtr)
         );
+        // clang-format on
 
         ptrArray = (void **)bank->frames;
         idx2 = *arr;
@@ -841,7 +849,7 @@ void SetSpriteFrameIndex(struct actor *part, s32 frame)
     MATCH_HOLD_REG(s32, offset, r0) = idx * 0x1c;
     void *rec;
 
-    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
     rec = (void *)offset;
 
     {
@@ -891,7 +899,7 @@ void ToggleSpriteHidden(void *part)
     MATCH_HOLD_REG(s32, mask, r1);
     MATCH_HOLD_REG(s32, result, r1);
 
-    asm("eor %0, %0, %2\n\tand %0, %0, %2" : "=r" (bit), "+r" (one) : "1" (one), "0" (shifted));
+    asm("eor %0, %0, %2\n\tand %0, %0, %2" : "=r"(bit), "+r"(one) : "1"(one), "0"(shifted));
     shiftedBit = bit << 2;
 
     mask = -5;
@@ -1027,7 +1035,7 @@ void SetSpriteFlipX(void *part, u8 value)
     MATCH_HOLD_REG(s32, byte, r3);
     MATCH_HOLD_REG(s32, result, r2);
 
-    asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
+    asm("and %0, %0, %1" : "+r"(truncVal), "+r"(one));
     shiftedBit = truncVal << 4;
     mask = -0x11;
     byte = *addr;
@@ -1048,7 +1056,7 @@ void SetSpriteFlipY(void *part, u8 value)
     MATCH_HOLD_REG(s32, byte, r3);
     MATCH_HOLD_REG(s32, result, r2);
 
-    asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
+    asm("and %0, %0, %1" : "+r"(truncVal), "+r"(one));
     shiftedBit = truncVal << 5;
     mask = -0x21;
     byte = *addr;
@@ -1079,7 +1087,7 @@ u8 GetSpriteAnimPaletteId(struct actor *part)
     MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
     void *rec;
 
-    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
     rec = (void *)offset;
     return *((u8 *)rec + 0x14);
 }
@@ -1108,7 +1116,7 @@ void SetSpritePalette(void *part, s32 value)
     MATCH_HOLD_REG(s32, byte, r3);
     MATCH_HOLD_REG(s32, result, r2);
 
-    asm("and %0, %0, %1" : "+r" (value_), "+r" (fifteen));
+    asm("and %0, %0, %1" : "+r"(value_), "+r"(fifteen));
     lowNibble = value_;
 
     mask = -0x10;
@@ -1163,7 +1171,7 @@ u8 IsSpriteAnimLooping(struct actor *part)
     MATCH_HOLD_REG(s32, flags, r1);
     MATCH_HOLD_REG(s32, test, r0);
 
-    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
     rec = (void *)offset;
 
     mask = 2;

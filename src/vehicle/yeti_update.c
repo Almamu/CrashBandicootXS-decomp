@@ -81,9 +81,8 @@ static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 
 static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
 {
-    if (b->z < a->z + a->d && b->z + b->d > a->z
-        && b->y < a->y + a->h && b->y + b->h > a->y
-        && b->x < a->x + a->w && b->x + b->w > a->x)
+    if (b->z < a->z + a->d && b->z + b->d > a->z && b->y < a->y + a->h && b->y + b->h > a->y &&
+        b->x < a->x + a->w && b->x + b->w > a->x)
         goto hit;
     return 0;
 hit:
@@ -105,16 +104,17 @@ void UpdateYeti(void)
     obj->animTime += *(s16 *)&obj->animTimer;
     obj->animDone = 0;
     if (GetAnimFrameBaseOffset(obj) >= obj->anims[obj->animIndex].loopThreshold) {
-        obj->animTime -= (obj->anims[obj->animIndex].loopThreshold
-                          - obj->anims[obj->animIndex].loopBase) << 8;
+        obj->animTime -=
+            (obj->anims[obj->animIndex].loopThreshold - obj->anims[obj->animIndex].loopBase) << 8;
         obj->animDone = 1;
     }
     gYetiStateFuncs[gYetiState]();
     obj = gYeti;
     cur = obj->animTime >> 8;
     if (old != cur) {
-        gUnpackNibbleTilesFunc((u16 *)((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4),
-                          gYetiBg2Page);
+        gUnpackNibbleTilesFunc(
+            (u16 *)((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4),
+            gYetiBg2Page);
         gYetiBg2PageFlip = 1;
     }
     sub_8029E34(gYetiDistance);

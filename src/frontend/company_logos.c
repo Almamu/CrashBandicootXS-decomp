@@ -96,8 +96,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
     {
         struct logo_piece *hdr = SLOT_AT(self, 19);
 
-        if (hdr->active)
-        {
+        if (hdr->active) {
             u32 tiles;
             s32 j;
 
@@ -109,8 +108,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             oamA.y = hdr->posB.q >> 16;
             oamA.x = hdr->posA.h.i;
             oamA.tileNum = tiles >> 5;
-            for (j = 0; j < 4; j++)
-            {
+            for (j = 0; j < 4; j++) {
                 AddOamEntry(gOamBuffer, &oamA);
                 oamA.tileNum += 8;
                 oamA.x += 0x20;
@@ -121,23 +119,19 @@ void DrawVvLogoPieces(struct logo_screen *self)
         struct logo_piece *slot = SLOT_AT(self, 1);
         u32 tile = (self->tilesA - (u32)OBJ_VRAM0) >> 5;
 
-        for (i = 0; i <= 0x11; i++)
-        {
-            if (slot->active)
-            {
+        for (i = 0; i <= 0x11; i++) {
+            if (slot->active) {
                 s32 pa, pd, affine;
 
                 ClearOam(&oamB);
                 pa = 0x1000000 / slot->velA;
                 pd = 0x1000000 / slot->velB;
                 affine = (pa != 0x100 || pd != pa);
-                if (affine)
-                {
+                if (affine) {
                     u8 *flags = self->sfxPending;
                     u8 *flag = flags + i;
 
-                    if (*flag)
-                    {
+                    if (*flag) {
                         /* A u8 local for the 0 gives the ROM's r3
                          * reload for the store (and so the matrix
                          * reload in r0 below). */
@@ -167,8 +161,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             slot++;
         }
     }
-    if (SLOT_AT(self, 0)->active)
-    {
+    if (SLOT_AT(self, 0)->active) {
         u8 *flag = self->sfxPending;
         struct logo_piece *slot;
         u32 tile;
@@ -182,8 +175,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
          * `d` (the reduced `base + row * 0x100 + 0x60`) r3 in the loop. */
         MATCH_HOLD_REG(struct dma_regs *, dma, r2);
 
-        if (*flag)
-        {
+        if (*flag) {
             PlaySfx(gAudioContext, 0x4d, 0x100);
             *flag = 0;
         }
@@ -202,8 +194,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
          * pointer (the ROM's r3). `buf + 0x800` stays unreduced: `buf`
          * steps by a 0x100 loaded inside the loop, so `buf` is no biv. */
         base = buf;
-        for (row = 0; row < 8; row++)
-        {
+        for (row = 0; row < 8; row++) {
             dma->src = (u32)src;
             dma->dst = (u32)(base + row * 0x100 + 0x60);
             dma->cnt = 0x80000050;
@@ -233,8 +224,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
          * global-alloc priority, which keeps sb (preferred by `matrix`)
          * out of its first-pass choice, so it lands in r7. No code. */
         MATCH_USE(affine);
-        if (affine)
-        {
+        if (affine) {
             SetAffineZ(gOamBuffer, matrix, pa, pd);
             oamC.affineMode = 3;
             oamC.matrixLo = matrix;
@@ -242,26 +232,21 @@ void DrawVvLogoPieces(struct logo_screen *self)
         oamC.palette = 0xf;
         oamC.size = 3;
         oamC.shape = 0;
-        if (affine)
-        {
+        if (affine) {
             oamC.y = (slot->posB.q >> 16) - 0x40;
             oamC.x = slot->posA.h.i - ((slot->velA << 5) >> 16) - 0x40;
-        }
-        else
-        {
+        } else {
             oamC.y = (slot->posB.q >> 16) - 0x20;
             oamC.x = slot->posA.h.i - 0x40;
         }
         oamC.tileNum = tile;
         AddOamEntry(gOamBuffer, &oamC);
-        if (affine)
-        {
+        if (affine) {
             /* Read first, as the ROM loads posA before velA. */
             s32 x = slot->posA.h.i;
 
             oamC.x = ((slot->velA << 5) >> 16) + x - 0x40;
-        }
-        else
+        } else
             oamC.x = slot->posA.h.i;
         oamC.tileNum = tile + 0x40;
         AddOamEntry(gOamBuffer, &oamC);
@@ -309,17 +294,12 @@ void LoadUniversalLogoBg(u32 *self)
     mapBuf = OperatorNewArray((s32)pkg->height * (s32)pkg->width * 2);
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
     dest = (u16 *)(VRAM + 0xF000);
-    for (y = 0; y <= 0x1f; y++)
-    {
-        for (x = 0; x <= 0x1f; x += 2)
-        {
-            if (y < (s32)pkg->height && x < (s32)pkg->width)
-            {
+    for (y = 0; y <= 0x1f; y++) {
+        for (x = 0; x <= 0x1f; x += 2) {
+            if (y < (s32)pkg->height && x < (s32)pkg->width) {
                 s32 i = (s32)pkg->width * y + x;
                 *dest++ = (mapBuf[i] & 0xff) | ((mapBuf[i + 1] & 0xff) << 8);
-            }
-            else
-            {
+            } else {
                 *dest++ = 0;
             }
         }
@@ -394,24 +374,20 @@ void UpdateLogoActor(struct actor_self *self)
 {
     s32 time = ++self->stateTime;
 
-    switch ((u32)self->state)
-    {
+    switch ((u32)self->state) {
     case 0:
-        if (self->animDone)
-        {
+        if (self->animDone) {
             ACTOR_SET_STATE(self, 1, 1);
         }
         break;
     case 1:
-        if ((self->animTime >> 8) == 0x12)
-        {
+        if ((self->animTime >> 8) == 0x12) {
             ACTOR_SET_STATE(self, 2, 7);
             PlaySfx(gAudioContext, 0x4f, 0x100);
         }
         break;
     case 2:
-        if ((self->animTime >> 8) == 7)
-        {
+        if ((self->animTime >> 8) == 7) {
             self->animTimer = 0;
             self->state = 3;
             self->stateTime = 0;
@@ -427,10 +403,11 @@ void UpdateLogoActor(struct actor_self *self)
     }
     self->animTime += *(s16 *)&self->animTimer;
     self->animDone = 0;
-    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold)
-    {
-        self->animTime -= (self->anims[self->animIndex].loopThreshold
-                           - self->anims[self->animIndex].loopBase) << 8;
+    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
+        // clang-format off
+        self->animTime -= (self->anims[self->animIndex].loopThreshold -
+                           self->anims[self->animIndex].loopBase) << 8;
+        // clang-format on
         self->animDone = 1;
     }
 }
@@ -486,23 +463,21 @@ void DrawLogoActor(struct actor_self *self)
         sy = (((self->y * f) >> 12) + 0x5000) >> 8;
         sx = (((self->x * f) >> 12) + 0x7800) >> 8;
         attr1 = 0x100;
-        if (scale <= 0xff)
-        {
+        if (scale <= 0xff) {
             attr1 |= 0x200;
             halfW = w * 8;
             halfH = h * 8;
         }
         sx -= halfW;
         sy -= halfH;
-        if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0)
-        {
+        if (sy <= 0x9f && sy + halfH * 2 >= 0 && sx <= 0xef && sx + halfW * 2 >= 0) {
             u32 attr = (s32)rec->attr << 16;
 
             attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
-            if (frame != gLogoActorLastFrame)
-            {
+            if (frame != gLogoActorLastFrame) {
                 gLogoActorTileBuffer ^= 1;
-                gUnpackRleSpriteFrameFunc(gLogoActorTiles[gLogoActorTileBuffer], (struct rle_frame *)frame);
+                gUnpackRleSpriteFrameFunc(gLogoActorTiles[gLogoActorTileBuffer],
+                                          (struct rle_frame *)frame);
                 gLogoActorLastFrame = frame;
             }
             {
@@ -514,4 +489,3 @@ void DrawLogoActor(struct actor_self *self)
         }
     }
 }
-

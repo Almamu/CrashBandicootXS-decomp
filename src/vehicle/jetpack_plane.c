@@ -14,14 +14,14 @@
 
 struct actor_fa38 {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 cooldown;       // 0x58
-    s32 hits;           // 0x5C
-    s32 velX;           // 0x60
-    s32 velY;           // 0x64
-    s32 velZ;           // 0x68
+    s32 hp;       // 0x54
+    s32 cooldown; // 0x58
+    s32 hits;     // 0x5C
+    s32 velX;     // 0x60
+    s32 velY;     // 0x64
+    s32 velZ;     // 0x68
     u8 unk_6C[0x10];
-    u8 unk_7C;          // 0x7C
+    u8 unk_7C; // 0x7C
 };
 
 /* Per-frame update: flags `self` as "deep" past a depth threshold,
@@ -119,41 +119,41 @@ asm(".align 2, 0");
 
 struct jetpack_plane {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 unk_58;         // 0x58
-    s32 unk_5C;         // 0x5C
-    s32 velX;           // 0x60
-    s32 velY;           // 0x64
-    s32 speed;          // 0x68
-    s32 accX;           // 0x6C
-    s32 accY;           // 0x70
-    s32 steps;          // 0x74
-    s32 next;           // 0x78
-    u8 dying;           // 0x7C
+    s32 hp;     // 0x54
+    s32 unk_58; // 0x58
+    s32 unk_5C; // 0x5C
+    s32 velX;   // 0x60
+    s32 velY;   // 0x64
+    s32 speed;  // 0x68
+    s32 accX;   // 0x6C
+    s32 accY;   // 0x70
+    s32 steps;  // 0x74
+    s32 next;   // 0x78
+    u8 dying;   // 0x7C
 };
 
 struct jetpack_bomber {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 homeX;          // 0x58
-    s32 homeY;          // 0x5C
-    u8 unk_60;          // 0x60
+    s32 hp;    // 0x54
+    s32 homeX; // 0x58
+    s32 homeY; // 0x5C
+    u8 unk_60; // 0x60
 };
 
 struct jetpack_cannonball {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 velX;           // 0x58
-    s32 velY;           // 0x5C
+    s32 hp;   // 0x54
+    s32 velX; // 0x58
+    s32 velY; // 0x5C
 };
 
 struct actor_orbit {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 centerX;        // 0x58
-    s32 centerY;        // 0x5C
-    s32 velZ;           // 0x60
-    s32 radius;         // 0x64
+    s32 hp;      // 0x54
+    s32 centerX; // 0x58
+    s32 centerY; // 0x5C
+    s32 velZ;    // 0x60
+    s32 radius;  // 0x64
 };
 
 /* Aims the next hop at sub-effect target `target`: looks up the hop
@@ -185,8 +185,14 @@ void AimJetpackPlane(struct jetpack_plane *self, s32 target)
             s32 steps = self->steps;
             scale = __divsi3(0x8000, steps);
         }
-        self->accX = ((((sub_802A558(target) - self->base.x) - ((self->velX * self->steps) >> 4)) * scale >> 13) * (scale2 = scale * 2)) >> 13;
-        self->accY = ((((sub_802A540(target) - self->base.y) - ((self->velY * self->steps) >> 4)) * scale >> 13) * scale2) >> 13;
+        // clang-format off
+        self->accX = ((((sub_802A558(target) - self->base.x) -
+                        ((self->velX * self->steps) >> 4)) * scale >> 13) *
+                      (scale2 = scale * 2)) >> 13;
+        self->accY = ((((sub_802A540(target) - self->base.y) -
+                        ((self->velY * self->steps) >> 4)) * scale >> 13) *
+                      scale2) >> 13;
+        // clang-format on
         self->next = sub_802A504(target);
     }
 
@@ -194,14 +200,16 @@ void AimJetpackPlane(struct jetpack_plane *self, s32 target)
         self->base.animIndex = 3;
         self->base.animTimer = self->base.anims[3].duration;
         self->base.animDone = 0;
-        if (GetAnimFrameBaseOffset((struct actor_self *)self) >= self->base.anims[self->base.animIndex].loopThreshold) {
+        if (GetAnimFrameBaseOffset((struct actor_self *)self) >=
+            self->base.anims[self->base.animIndex].loopThreshold) {
             self->base.animTime = 0;
         }
     } else {
         self->base.animIndex = 0;
         self->base.animTimer = self->base.anims[0].duration;
         self->base.animDone = 0;
-        if (GetAnimFrameBaseOffset((struct actor_self *)self) >= self->base.anims[self->base.animIndex].loopThreshold) {
+        if (GetAnimFrameBaseOffset((struct actor_self *)self) >=
+            self->base.anims[self->base.animIndex].loopThreshold) {
             self->base.animTime = 0;
         }
     }
@@ -235,7 +243,8 @@ void DamageJetpackPlane(struct jetpack_plane *self, s32 damage)
  * hop starts higher up and with the faster speed. The constant 4 is
  * pinned to r4 so it is loaded before the InitActorPart call like the
  * ROM does (docs/workflow.md). */
-void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d, struct spawn_arg *arg)
+void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d,
+                         struct spawn_arg *arg)
 {
     MATCH_HOLD_REG(s32, four, r4) = 4;
 
@@ -432,7 +441,8 @@ void JetpackBomberStateCircle(struct jetpack_bomber *self)
 void JetpackBomberStateSwingHorizontal(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
-        self->base.x = self->homeX + gSineTable[((((self->base.stateTime * 10) >> 4) & 0xff) + 0x40) & 0xff] * 80;
+        self->base.x = self->homeX +
+                       gSineTable[((((self->base.stateTime * 10) >> 4) & 0xff) + 0x40) & 0xff] * 80;
     } else {
         HomeJetpackBomber(self);
     }
@@ -506,7 +516,8 @@ void UpdateJetpackCannonball(struct jetpack_cannonball *self)
  * CreateJetpackShot (jetpack_shot.c), matched with the same register
  * arrangement (the constant pinned to r5, the two stack arguments left
  * to the allocator). */
-void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c, s32 d, s32 velX, s32 velY)
+void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c, s32 d,
+                              s32 velX, s32 velY)
 {
     MATCH_HOLD_REG(s32, one, r5) = 1;
     register s32 vx = velX;

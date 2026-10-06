@@ -40,9 +40,8 @@ static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 
 static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
 {
-    if (b->z < a->z + a->d && b->z + b->d > a->z
-        && b->y < a->y + a->h && b->y + b->h > a->y
-        && b->x < a->x + a->w && b->x + b->w > a->x)
+    if (b->z < a->z + a->d && b->z + b->d > a->z && b->y < a->y + a->h && b->y + b->h > a->y &&
+        b->x < a->x + a->w && b->x + b->w > a->x)
         goto hit;
     return 0;
 hit:

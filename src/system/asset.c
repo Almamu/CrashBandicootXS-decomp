@@ -27,16 +27,17 @@ void LoadTaggedAsset(const void *asset, void *dest)
     u32 type = (header << 24) >> 28;
 
     switch (type) {
-    case 0: {
-        struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        u32 size;
-        dma->src = (u32)asset + 4;
-        dma->dst = (u32)dest;
-        size = *(const u32 *)asset;
-        dma->cnt = ((size >> 8) - 4) >> 2 | 0x84000000;
-        size = dma->cnt;
-        break;
-    }
+    case 0:
+        {
+            struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
+            u32 size;
+            dma->src = (u32)asset + 4;
+            dma->dst = (u32)dest;
+            size = *(const u32 *)asset;
+            dma->cnt = ((size >> 8) - 4) >> 2 | 0x84000000;
+            size = dma->cnt;
+            break;
+        }
     case 1:
         LZ77UnCompVram((void *)asset);
         break;

@@ -58,7 +58,8 @@ void DrawPauseTimeTrialPage(struct pause_menu *self)
     if (self->field_6c)
         DrawSpriteWithOffset((struct actor *)self->field_bc, 0, 0);
     w = MEASURE_ICON_TEXT(gSmallFont, self->timeBuf);
-    set_icon_mgr_pos(gSmallFont, gPauseTimeTrialIconPos.x - (w >> 1) - 2, gPauseTimeTrialIconPos.y - 0x23);
+    set_icon_mgr_pos(gSmallFont, gPauseTimeTrialIconPos.x - (w >> 1) - 2,
+                     gPauseTimeTrialIconPos.y - 0x23);
     DRAW_ICON_TEXT(gSmallFont, self->timeBuf);
 }
 
@@ -121,7 +122,7 @@ void CommitPauseMenuFrame(struct pause_menu *self)
     {
         MATCH_HOLD_REG(u16 *, p, r0);
         vu16 *dst = (vu16 *)REG_ADDR_DISPCNT;
-        asm("add %0, %1, #0\n\tadd %0, %0, #0xd0" : "=r" (p) : "r" (self));
+        asm("add %0, %1, #0\n\tadd %0, %0, #0xd0" : "=r"(p) : "r"(self));
         *dst = *p;
     }
 }

@@ -114,15 +114,15 @@ void LoadTitleScreenBg(u32 *self)
     u16 *mapBuf;
     u16 *dest;
     s32 i;
-    u32 bg2cnt = bg2cnt; /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
+    /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
+    u32 bg2cnt = bg2cnt;
 
     LoadTaggedAsset(pkg->paletteAsset, (void *)BG_PLTT);
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
     mapBuf = OperatorNewArray((s32)pkg->height * (s32)pkg->width * 2);
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
     dest = (u16 *)BG_SCREEN_ADDR(30);
-    for (i = 0; i < (s32)pkg->height * (s32)pkg->width; i += 2)
-    {
+    for (i = 0; i < (s32)pkg->height * (s32)pkg->width; i += 2) {
         *dest = (mapBuf[i] & 0xff) | ((mapBuf[i + 1] & 0xff) << 8);
         dest++;
     }
@@ -232,6 +232,7 @@ void LoadTitleScreenObjTiles(u32 *self)
             do {
                 /* ROM: mov r0,ip / ldrh r4,[r2] / ands r0,r4 / lsls r0,#5 /
                  * adds r0,r6,r0 / str r0,[r3] - see doc comment above. */
+                // clang-format off
                 asm volatile(
                     "mov r0, %2\n\t"
                     "ldrh r4, [%1]\n\t"
@@ -243,10 +244,12 @@ void LoadTitleScreenObjTiles(u32 *self)
                     : "r"(dma2), "r"(src), "r"(mask), "r"(tileBuf)
                     : "r0", "r4"
                 );
+                // clang-format on
                 dma2->dst = (u32)tileDest;
                 dma2->cnt = dmaCnt2;
                 /* ROM: ldr r0,[r3,#8] / movs r4,#0x20 / add sl,r4 - see
                  * doc comment above. */
+                // clang-format off
                 asm volatile(
                     "ldr r0, [%1, #8]\n\t"
                     "mov r4, #0x20\n\t"
@@ -255,6 +258,7 @@ void LoadTitleScreenObjTiles(u32 *self)
                     : "r"(dma2)
                     : "r0", "r4"
                 );
+                // clang-format on
                 src += 2;
                 i--;
             } while (i != 0);
@@ -401,18 +405,15 @@ void UpdateTitleLogoPieces(u32 *self_arg)
     MATCH_HOLD_REG(u32 *, self, ip) = self_arg;
     s32 i;
 
-    for (i = 0; i <= 8; i++)
-    {
+    for (i = 0; i <= 8; i++) {
         s32 stride = i * 0x34;
         u8 *countdownBase = (u8 *)self + 0x14;
         s32 *countdownPtr = (s32 *)(countdownBase + stride);
 
-        if (*countdownPtr != 0)
-        {
+        if (*countdownPtr != 0) {
             s32 countdown = *countdownPtr - 1;
             *countdownPtr = countdown;
-            if (countdown == 0)
-            {
+            if (countdown == 0) {
                 struct delta_record **recordPtrAddr = RecordAt(self, stride);
                 /* Pinned to r0 to match the ROM's own register split:
                  * the loaded pointer is kept in one temp (r0) purely to
@@ -427,8 +428,7 @@ void UpdateTitleLogoPieces(u32 *self_arg)
                 {
                     s32 hold = record->hold;
                     *countdownPtr = hold;
-                    if (hold != 0)
-                    {
+                    if (hold != 0) {
                         {
                             s32 *dst = PosCAt(self, stride);
                             MATCH_HOLD_REG(u16, tmp, r4) = record->dPosC;
@@ -456,9 +456,7 @@ void UpdateTitleLogoPieces(u32 *self_arg)
                         *DeltaBAt(self, stride) = record->deltaB;
                     }
                 }
-            }
-            else
-            {
+            } else {
                 {
                     u8 *dstBase = (u8 *)self + 0x20;
                     s32 *dst = (s32 *)(dstBase + stride);
@@ -561,8 +559,7 @@ void DrawTitleLogoPieces(u32 *self)
     {
         struct logo_piece *slot = (struct logo_piece *)((u8 *)self + 0x1b0);
 
-        if (slot->active)
-        {
+        if (slot->active) {
             u16 scale = 0x1000000 / slot->velA;
             SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
             ClearOam(&oamA);
@@ -589,12 +586,10 @@ void DrawTitleLogoPieces(u32 *self)
             matrix = 2;
         }
     }
-    for (i = 0; i <= 4; i++)
-    {
+    for (i = 0; i <= 4; i++) {
         struct logo_piece *slot = SLOT_AT(self, 7) - i;
 
-        if (slot->active)
-        {
+        if (slot->active) {
             s32 *cnt;
             s32 d;
             u16 scale;
@@ -605,8 +600,7 @@ void DrawTitleLogoPieces(u32 *self)
                 u32 base = (u32)self + 0x1e4;
                 cnt = (s32 *)(base + idx);
             }
-            if (*cnt != 0)
-            {
+            if (*cnt != 0) {
                 if (*cnt == -1)
                     *cnt = 10;
                 if (--*cnt == 0)
@@ -617,13 +611,10 @@ void DrawTitleLogoPieces(u32 *self)
             SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
             ClearOam(&oamB);
             off = 0;
-            if (d != 0x100)
-            {
+            if (d != 0x100) {
                 off = -32;
                 oamB.affineMode = 3;
-            }
-            else
-            {
+            } else {
                 oamB.affineMode = 1;
             }
             oamB.matrixLo = matrix;
@@ -647,13 +638,11 @@ void DrawTitleLogoPieces(u32 *self)
 
         k = 0;
         dma2 = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        for (; k <= 1; k++)
-        {
+        for (; k <= 1; k++) {
             struct logo_piece *slot = SLOT_AT(self, k);
             s32 j;
 
-            if (slot->active)
-            {
+            if (slot->active) {
                 s32 *cnt;
                 {
                     u32 off = k << 2;
@@ -661,15 +650,11 @@ void DrawTitleLogoPieces(u32 *self)
                     cnt = (s32 *)(base + off);
                 }
 
-                if (*cnt != 0)
-                {
-                    if (*cnt == -1)
-                    {
+                if (*cnt != 0) {
+                    if (*cnt == -1) {
                         *cnt = 8;
                         PlaySfx(gAudioContext, 0x3d, 0x100);
-                    }
-                    else if (--*cnt == 0)
-                    {
+                    } else if (--*cnt == 0) {
                         *(s32 *)((u8 *)self + 0x20c) = 30;
                     }
                 }
@@ -683,13 +668,11 @@ void DrawTitleLogoPieces(u32 *self)
             oamC.tileNum = (k << 6) + 0x140;
             oamC.size = 2;
             oamC.priority = 2;
-            for (j = 0; j < 4; j++)
-            {
+            for (j = 0; j < 4; j++) {
                 s32 x = (slot->posA.q >> 16) + *tbl++;
                 s32 y = (slot->posB.q >> 16) + *tbl++;
 
-                if (y <= 0x8b)
-                {
+                if (y <= 0x8b) {
                     oamC.x = x;
                     oamC.y = y;
                     if (slot->active)
@@ -702,8 +685,7 @@ void DrawTitleLogoPieces(u32 *self)
     {
         struct logo_piece *rec = SLOT_AT(self, 2);
 
-        if (rec->active)
-        {
+        if (rec->active) {
             s32 a, b;
             s32 *shake;
             s32 *q;
@@ -712,8 +694,7 @@ void DrawTitleLogoPieces(u32 *self)
             a = rec->posA.q;
             b = rec->posB.q;
             shake = (s32 *)((u8 *)self + 0x20c);
-            if (*shake != 0)
-            {
+            if (*shake != 0) {
                 --*shake;
                 {
                     s32 r = RandRange_s32(10);
