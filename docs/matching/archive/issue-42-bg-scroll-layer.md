@@ -9,10 +9,10 @@ the middle of the file:
 
 - `0x0802612C` had no label. It followed `GetBgLayerScreenIndex`'s `bx lr` and a
   padding halfword, so the listing folded it into `GetBgLayerScreenIndex`. It's a real
-  function (`col % 32`), now `sub_802612C`.
+  function (`col % 32`), now `WrapBgLayerColumn`.
 - `sub_802613E` really starts at `0x0802613C`. Its first instruction
-  (`adds r0, r1, #0`) sat on the line above the label. Now `sub_802613C`, a
-  byte-identical twin of `sub_802612C`.
+  (`adds r0, r1, #0`) sat on the line above the label. Now `WrapBgLayerRow`, a
+  byte-identical twin of `WrapBgLayerColumn`.
 
 No code or data references either address, so the names only appear in the
 docs.
@@ -82,8 +82,8 @@ just points the pool at the character block and the asset's tile data.
 `RedrawBgLayer` derives the resident ranges from the scroll position (a
 240x160 screen) and draws every row through the table.
 
-Unused (no caller, not in a method table): `GetBgLayerScreenIndex`, `sub_802612C`,
-`sub_802613C`, `SetBgLayerScreenBase`-`SetBgLayerCharBase` (BGnCNT setters/getter),
+Unused (no caller, not in a method table): `GetBgLayerScreenIndex`, `WrapBgLayerColumn`,
+`WrapBgLayerRow`, `SetBgLayerScreenBase`-`SetBgLayerCharBase` (BGnCNT setters/getter),
 `WriteBgLayerOffsetRegs`, `WriteBgLayerCntReg` and `nullsub_26`.
 
 ## Matching notes
@@ -91,7 +91,7 @@ Unused (no caller, not in a method table): `GetBgLayerScreenIndex`, `sub_802612C
 - **`Mod32` inline.** Writing `% 32` directly in `GetBgLayerScreenIndex`, `DrawPooledBgLayerColumn`
   and `DrawBgLayerRow` puts the wrong register or order on the first
   modulo. A `static inline s32 Mod32(s32)` fixes all three. (With
-  `sub_802612C`/`sub_802613C` sitting right there, the original likely
+  `WrapBgLayerColumn`/`WrapBgLayerRow` sitting right there, the original likely
   called a small inline helper.)
 - **`DrawPooledBgLayerRow`**: the ROM computes `c % 32` before the
   `AcquireTileSlot` call, which keeps `dst` in `r8`. Doing it in a separate

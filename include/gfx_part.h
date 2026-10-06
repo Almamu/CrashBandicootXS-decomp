@@ -41,7 +41,7 @@ struct gfx_part {
     u8 unk_0D[0x13];
     struct anim_bank *bank; // 0x20
     u8 unk_24[4];
-    u8 unk_28_0:2; // 0x28
+    u8 gfxMode:2; // 0x28 - OBJ mode (box_part.gfxMode, Get/SetSpriteGfxMode); 1: semi-transparent
     u8 unk_28_2:2;
     u8 flipX:1;
     u8 unk_28_5:3;

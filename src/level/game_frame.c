@@ -71,7 +71,7 @@ void UpdateGameFrame(struct level_state *self)
     ResetLives(self);
     ResetWumpa(self);
     ResetCrateCount(self);
-    sub_8023120(self, 5);
+    SetUnusedAssistDeaths(self, 5);
     SetMaskAssistDeaths(self, 5);
     SetCrateAssistDeaths(self, 5);
     self->level = 0;

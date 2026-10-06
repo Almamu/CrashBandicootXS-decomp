@@ -18,7 +18,7 @@ struct level_state_1c8;
 struct level_state {
     // 0x000 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8)
     // (UnpackSaveData/PackSaveData)
-    u8 unk_00[2];
+    u8 packedStats[2];
     // 0x002 - bits 0-3: colored gems (CountGems); bits 4-7: powers
     // (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump)
     u8 flags;
@@ -34,7 +34,9 @@ struct level_state {
     s32 lives;     // 0x074 - 5 at the start (ResetLives), capped at 99
     s32 maskLevel; // 0x078 - 0-3; 3 plays the invincibility jingle (SetMaskLevel)
     s32 deaths;    // 0x07C - maskless hits since the last checkpoint (AddDeath, ResetDeaths)
-    s32 unk_80;    // 0x080
+    // 0x080 - 5 at game start (UpdateGameFrame); SetUnusedAssistDeaths/
+    // GetUnusedAssistDeaths, but nothing reads it
+    s32 unusedAssistDeaths;
     // 0x084 - deaths after which the start marker hands out a mask (spawn_start_marker.c)
     s32 maskAssistDeaths;
     // 0x088 - from the level table (SetCrateAssistDeaths, 5 by default); once
@@ -62,8 +64,10 @@ struct level_state {
     s32 savedCrateCount;
     s32 savedLives; // 0x0B8 - same
     s32 crateTotal; // 0x0BC - the level's crate count (CountLevelCrates), crateCount's target
-    s32 unk_c0;     // 0x0C0 - bit mask (sub_802314C/sub_8023158)
-    s32 level;      // 0x0C4 - also the head of the room block (struct level_progress, below)
+    // 0x0C0 - bit mask, zeroed by InitLevelState; only the unused
+    // SetUnusedFlags/TestUnusedFlags touch it
+    s32 unusedFlags;
+    s32 level; // 0x0C4 - also the head of the room block (struct level_progress, below)
     // 0x0C8 - the current room's index in the level's room list (SelectRoom,
     // NextRoom, GetRoomIndex)
     s32 roomIndex;

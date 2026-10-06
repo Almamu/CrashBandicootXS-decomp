@@ -124,11 +124,11 @@ split 0x08028D94 GetFreeVramTileBytes
 split 0x08010AF8 IsCrateBusy
 
 # src/level/bg_layer.c: the original disassembly folded
-# sub_802612C (and its padding) into sub_8026108, then labelled its
-# byte-identical twin sub_802613C two bytes late, mid-instruction, as
+# WrapBgLayerColumn (and its padding) into sub_8026108, then labelled its
+# byte-identical twin WrapBgLayerRow two bytes late, mid-instruction, as
 # sub_802613E.
-split 0x0802612C sub_802612C
-split 0x0802613C sub_802613C
+split 0x0802612C WrapBgLayerColumn
+split 0x0802613C WrapBgLayerRow
 unlabel sub_802613E
 
 # Return points of GAX_CALL_ARM/GAX_CALL_ARM_R (the nop or shared
@@ -2827,3 +2827,9 @@ rename gUnknown_030013E8 gActorBgScrollRangeY
 rename gUnknown_03001414 gActorSpawnUseBonus
 rename gStaticData_0816BF00 gAttackKindBreakLimited
 rename gStaticData_0816C090 gPlayerCtrlTurnSpeeds
+rename sub_8021B00 SpawnReinforcedCrate
+rename sub_8023120 SetUnusedAssistDeaths
+rename sub_8023138 GetUnusedAssistDeaths
+rename sub_802314C SetUnusedFlags
+rename sub_8023158 TestUnusedFlags
+rename nullsub_23 SpawnStartMarkerStub

@@ -174,7 +174,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 y >>= 8;
                 y += 0xC;
                 obj = SpawnSpark(x, y, 1);
-                obj->unk_28_0 = 1;
+                obj->gfxMode = 1;
                 obj->hidden = 0;
                 obj->hidden = 0;
                 OrMaskByte((u8 *)obj + 0x28, -0x11, 0x10);
@@ -191,7 +191,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 y >>= 8;
                 y += 0xC;
                 obj = SpawnSpark(x, y, bit4);
-                obj->unk_28_0 = 1;
+                obj->gfxMode = 1;
                 obj->hidden = 0;
                 AndByte((u8 *)obj + 0x28, -0x11);
                 frame = 3;

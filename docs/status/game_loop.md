@@ -27,9 +27,9 @@ system from "core" system startup/init code.
   the on-screen counter widget, then runs `UpdateGameFrame` forever) -
   and `GetUiText`, the UI string lookup in the current language
 - `src/level/level_state.c`: `AddBrokenCrate`, `PressSwitchCrate`, `GetBonusPlatform`,
-  `SetCrateAssistDeaths`, `SetMaskAssistDeaths`, `sub_8023120`, `GetCrateAssistDeaths`,
-  `GetMaskAssistDeaths`, `sub_8023138`, `AddPendingSwitchCrates`, `sub_802314C`,
-  `sub_8023158`, `ClearPowers`, `GiveTornadoSpin`, `GiveSuperBodySlam`,
+  `SetCrateAssistDeaths`, `SetMaskAssistDeaths`, `SetUnusedAssistDeaths`, `GetCrateAssistDeaths`,
+  `GetMaskAssistDeaths`, `GetUnusedAssistDeaths`, `AddPendingSwitchCrates`, `SetUnusedFlags`,
+  `TestUnusedFlags`, `ClearPowers`, `GiveTornadoSpin`, `GiveSuperBodySlam`,
   `GiveTurboRun`, `GiveDoubleJump`, `HasTornadoSpin`, `HasSuperBodySlam`,
   `HasTurboRun` (GitHub issue #34, `UpdateGameFrame`-`MainLoop` cluster -
   a `self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0`/`+2`-flags accessor family
@@ -309,7 +309,7 @@ system from "core" system startup/init code.
   `ProbeTerrain`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
   resolvers, 208/216 B. Plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md) and
   [docs/matching/archive/issue-9-10-41-0x08026628-game-loop.md](../matching/archive/issue-9-10-41-0x08026628-game-loop.md).
-- **`DrawBgLayerRow`/`RedrawBgLayer`/`ResetBgLayer`/`LoadBgLayerTiles`/`LoadBgLayer`/`GetBgLayerScreenIndex`/`sub_802612C`/`sub_802613C`/`SetBgLayerScreenBase`/`SetBgLayerPriority`/`SetBgLayerColors256`/`GetBgLayerCharBase`/`SetBgLayerCharBase`/`WriteBgLayerOffsetRegs`/`WriteBgLayerCntReg`/`DestroyBgLayer`/`DrawPooledBgLayerColumn`/`ClampPooledBgLayerScrollStep`/`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`/`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`/`DrawPooledBgLayerRow`/`ResetPooledBgLayer`/`LoadPooledBgLayerTiles`/`nullsub_26`**
+- **`DrawBgLayerRow`/`RedrawBgLayer`/`ResetBgLayer`/`LoadBgLayerTiles`/`LoadBgLayer`/`GetBgLayerScreenIndex`/`WrapBgLayerColumn`/`WrapBgLayerRow`/`SetBgLayerScreenBase`/`SetBgLayerPriority`/`SetBgLayerColors256`/`GetBgLayerCharBase`/`SetBgLayerCharBase`/`WriteBgLayerOffsetRegs`/`WriteBgLayerCntReg`/`DestroyBgLayer`/`DrawPooledBgLayerColumn`/`ClampPooledBgLayerScrollStep`/`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`/`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`/`DrawPooledBgLayerRow`/`ResetPooledBgLayer`/`LoadPooledBgLayerTiles`/`nullsub_26`**
   (`src/level/bg_layer.c`, new file - GitHub issue #42,
   compiled with **old_agbcc**) - the BG-scroll layer's methods (base
   table `gBgLayerVtable`: destroy, reset, load tiles, draw row,
@@ -318,7 +318,7 @@ system from "core" system startup/init code.
   (table `gPooledBgLayerVtable`: draw row/column through the pool,
   release a row/column, shrink the resident range, reset, load tiles,
   clamp a scroll step). All plain C; `DrawBgLayerRow` needed a goto loop.
-  `sub_802612C` was hidden in the old disassembly and `sub_802613E` was
+  `WrapBgLayerColumn` was hidden in the old disassembly and `sub_802613E` was
   mislabelled (it starts at `0x0802613C`). `asm/code_3_2_17_25fc8.s`
   removed. See
   [docs/matching/archive/issue-42-bg-scroll-layer.md](../matching/archive/issue-42-bg-scroll-layer.md).

@@ -40,16 +40,80 @@ struct popup_part {
 };
 
 /* One level record, at `params + paramOffsets[id]` (bytes) in the
- * room's entity list (gEntityFlags->list). */
+ * room's entity list (gEntityFlags->list). After the flags come
+ * per-type parameter words; `p` has one view per layout, named after
+ * the part_ctrl setters spawn_enemies.c hands them to (SetEnemyRangeX:
+ * `rangeX`/`rangeY` are pixels either side of the spawn point;
+ * SetEnemyRangeXSpeed/SetEnemyRangeYSpeed: `speed`/`accel`;
+ * SetEnemyAttackCycle: `idleTime`/`attackTime`/`cycleOffset`;
+ * SetEnemyWave: `period`/`phase`/`amplitude`). */
 struct level_record {
     u8 flags; // bit 1: clear = X-mirrored (popup_part.flipX), bit 2: Y-mirrored
     u8 unk_01[3];
-    s32 unk_04;
-    s32 unk_08;
-    s32 unk_0C;
-    s32 unk_10;
-    s32 unk_14;
-    s32 unk_18;
+    union {
+        // lizard, patrolling jungle enemy, polar bear, patrolling sewer enemy, rat
+        struct {
+            s32 rangeX; // 0x04
+        } patrol;
+        // blowgun tribesman, pufferfish (with the wave), piston crusher, wooden
+        // crusher; the saucer lab assistant reads only `cycleOffset`
+        struct {
+            s32 idleTime;      // 0x04
+            s32 attackTime;    // 0x08
+            s32 cycleOffset;   // 0x0C
+            s32 waveAmplitude; // 0x10
+            s32 wavePeriod;    // 0x14
+            s32 wavePhase;     // 0x18
+        } cycle;
+        // stationary space enemy, flamethrower lab assistant
+        struct {
+            s32 attackTime;  // 0x04
+            s32 idleTime;    // 0x08
+            s32 cycleOffset; // 0x0C
+        } attackFirst;
+        // electric eel, patrolling space enemy
+        struct {
+            s32 rangeX;      // 0x04
+            s32 idleTime;    // 0x08
+            s32 attackTime;  // 0x0C
+            s32 cycleOffset; // 0x10
+        } rangeCycle;
+        // penguin
+        struct {
+            s32 rangeX;      // 0x04
+            s32 attackTime;  // 0x08
+            s32 idleTime;    // 0x0C
+            s32 cycleOffset; // 0x10
+        } rangeAttackFirst;
+        // shark: X range, Y homing
+        struct {
+            s32 rangeX; // 0x04
+            s32 rangeY; // 0x08
+            s32 speedY; // 0x0C
+            s32 accelY; // 0x10
+        } rangeHomingY;
+        // jellyfish
+        struct {
+            s32 amplitude; // 0x04
+            s32 period;    // 0x08
+            s32 phase;     // 0x0C
+        } wave;
+        // homing sewer enemy
+        struct {
+            s32 rangeX; // 0x04
+            s32 speedX; // 0x08
+            s32 accelX; // 0x0C
+        } homingX;
+        // sea mine
+        struct {
+            s32 rangeY; // 0x04
+            s32 speedY; // 0x08
+            s32 accelY; // 0x0C
+            s32 rangeX; // 0x10
+            s32 speedX; // 0x14
+            s32 accelX; // 0x18
+        } homingXY;
+    } p;
 };
 
 

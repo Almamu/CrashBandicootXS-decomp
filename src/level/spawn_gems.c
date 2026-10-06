@@ -71,7 +71,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
         {
             struct gfx_part *p = SpawnEffectPart(gEntitySpawner, 0x2B, 2, a1, a2, bit);
-            p->unk_28_0 = 1;
+            p->gfxMode = 1;
             p->hidden = 0;
         }
     }

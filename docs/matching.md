@@ -5258,7 +5258,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   functions): plain get/set/OR/add/bit-test accessors on the same
   `self` object as the rest of this chunk. Two recurring idioms,
   confirmed matching this compiler's known behavior:
-  - **Single-bit boolean tests** (`sub_8023158`'s `(flags & mask) !=
+  - **Single-bit boolean tests** (`TestUnusedFlags`'s `(flags & mask) !=
     0`, and `HasTornadoSpin`/`BC`/`C4`'s "read bit N of `self+2`") compile
     branchless only when written as the `(-x | x) >> 31` idiom (for
     `!= 0`) or `(x << (31-N)) >> 31` (for a single bit), matching the

@@ -67,7 +67,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     SetEnemyState(hdr, 2);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyRangeX(hdr, rec2->p.patrol.rangeX);
 }
 
 /* Text popup, tag 0xB. Draws the header with gEnemyDefaultAnimMap,
@@ -329,7 +329,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 2);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyRangeX(hdr, rec2->p.patrol.rangeX);
 }
 
 /* Text popup, tag 0xC. Copies the level record's +4/+8/+0xC words into
@@ -360,9 +360,10 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = GetLevelRecord(arg3);
     SetEnemyAnimMap(hdr, gBlowgunTribesmanAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
-    mid = (rec2->unk_04 + rec2->unk_08) / 2;
-    SetEnemyShotTiming(hdr, mid, rec2->unk_0C + mid / 4);
+    SetEnemyAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
+                        rec2->p.cycle.cycleOffset);
+    mid = (rec2->p.cycle.idleTime + rec2->p.cycle.attackTime) / 2;
+    SetEnemyShotTiming(hdr, mid, rec2->p.cycle.cycleOffset + mid / 4);
     SetEnemyState(hdr, 0x10);
 }
 
@@ -396,8 +397,9 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     SetEnemyAnimMap(hdr, gPenguinAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_0C, rec2->unk_08, rec2->unk_10);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyAttackCycle(hdr, rec2->p.rangeAttackFirst.idleTime, rec2->p.rangeAttackFirst.attackTime,
+                        rec2->p.rangeAttackFirst.cycleOffset);
+    SetEnemyRangeX(hdr, rec2->p.rangeAttackFirst.rangeX);
     SetEnemyState(hdr, 0xd);
 }
 
@@ -457,7 +459,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec2 = LEVEL_RECORD(arg3);
     part->base.kind = 6;
     SetEnemyState(hdr, 2);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyRangeX(hdr, rec2->p.patrol.rangeX);
 }
 
 /* Popup spawner, tag 5. Restarts the part on animation 2, sets
@@ -489,8 +491,10 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetPartAnim(part, 2);
     part->base.kind = 5;
     SetEnemyAnimMap(hdr, gPufferfishAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
-    SetEnemyWave(hdr, rec2->unk_14, rec2->unk_18, rec2->unk_10);
+    SetEnemyAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
+                        rec2->p.cycle.cycleOffset);
+    SetEnemyWave(hdr, rec2->p.cycle.wavePeriod, rec2->p.cycle.wavePhase,
+                 rec2->p.cycle.waveAmplitude);
     SetEnemyState(hdr, 14);
 }
 
@@ -522,8 +526,9 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.kind = 6;
     SetEnemyAnimMap(hdr, gSharkAnimMap);
     SetEnemyState(hdr, 15);
-    SetEnemyRangeX(hdr, rec2->unk_04);
-    SetEnemyRangeYSpeed(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
+    SetEnemyRangeX(hdr, rec2->p.rangeHomingY.rangeX);
+    SetEnemyRangeYSpeed(hdr, rec2->p.rangeHomingY.rangeY, rec2->p.rangeHomingY.speedY,
+                        rec2->p.rangeHomingY.accelY);
 }
 
 /* Popup spawner, tag 3. Restarts the part on animation 0, inverts the
@@ -586,8 +591,9 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec2 = LEVEL_RECORD(arg3);
     part->base.kind = 3;
     SetEnemyAnimMap(hdr, gElectricEelAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyAttackCycle(hdr, rec2->p.rangeCycle.idleTime, rec2->p.rangeCycle.attackTime,
+                        rec2->p.rangeCycle.cycleOffset);
+    SetEnemyRangeX(hdr, rec2->p.rangeCycle.rangeX);
     SetEnemyState(hdr, 13);
 }
 
@@ -651,7 +657,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 6);
-    SetEnemyWave(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_04);
+    SetEnemyWave(hdr, rec2->p.wave.period, rec2->p.wave.phase, rec2->p.wave.amplitude);
 }
 
 /* Text popup, tag 0x19, anim +0x12c. Flips the part's flipX, sets
@@ -717,7 +723,8 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyAnimMap(hdr, gStationarySpaceEnemyAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->p.attackFirst.idleTime, rec2->p.attackFirst.attackTime,
+                        rec2->p.attackFirst.cycleOffset);
     SetEnemyState(hdr, 4);
 }
 
@@ -752,8 +759,9 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyAnimMap(hdr, gPatrollingSpaceEnemyAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyAttackCycle(hdr, rec2->p.rangeCycle.idleTime, rec2->p.rangeCycle.attackTime,
+                        rec2->p.rangeCycle.cycleOffset);
+    SetEnemyRangeX(hdr, rec2->p.rangeCycle.rangeX);
     SetEnemyState(hdr, 0xd);
 }
 
@@ -786,7 +794,7 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyAnimMap(hdr, gSaucerLabAssistantAnimMap);
-    SetEnemyAttackCycle(hdr, 0x78, 0x5a, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, 0x78, 0x5a, rec2->p.cycle.cycleOffset);
     SetEnemyRangeX(hdr, 0x28);
     SetEnemyState(hdr, 0x12);
 }
@@ -820,7 +828,8 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetPartKind(part, 0xa);
     AndPartFlags(part, ~0x40);
     SetEnemyAnimMap(hdr, gCrusherAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
+                        rec2->p.cycle.cycleOffset);
     SetEnemyState(hdr, 4);
 }
 
@@ -912,7 +921,8 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
     SetPartKind(part, 1);
     SetEnemyAnimMap(hdr, gFlamethrowerLabAssistantAnimMap);
-    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->p.attackFirst.idleTime, rec2->p.attackFirst.attackTime,
+                        rec2->p.attackFirst.cycleOffset);
     SetEnemyState(hdr, 4);
 }
 
@@ -946,7 +956,8 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 9);
-    SetEnemyRangeXSpeed(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyRangeXSpeed(hdr, rec2->p.homingX.rangeX, rec2->p.homingX.speedX,
+                        rec2->p.homingX.accelX);
     SetEnemyWave(hdr, 0x80, 0, 0x14);
 }
 
@@ -981,7 +992,7 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyAnimMap(hdr, gPatrollingSewerEnemyAnimMap);
     SetEnemyState(hdr, 2);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyRangeX(hdr, rec2->p.patrol.rangeX);
 }
 
 /* "Two-line text popup" spawner, tag 0x15. After the shared setup it
@@ -1012,7 +1023,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 2);
-    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyRangeX(hdr, rec2->p.patrol.rangeX);
 }
 
 /* "Two-line text popup" spawner, tag 0x13. The tail points the header at
@@ -1073,8 +1084,10 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec2 = LEVEL_RECORD(arg3);
     part->base.kind = 4;
     SetEnemyState(hdr, 0xb);
-    SetEnemyRangeXSpeed(hdr, rec2->unk_10, rec2->unk_14, rec2->unk_18);
-    SetEnemyRangeYSpeed(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyRangeXSpeed(hdr, rec2->p.homingXY.rangeX, rec2->p.homingXY.speedX,
+                        rec2->p.homingXY.accelX);
+    SetEnemyRangeYSpeed(hdr, rec2->p.homingXY.rangeY, rec2->p.homingXY.speedY,
+                        rec2->p.homingXY.accelY);
 }
 
 /* "Two-line text popup" spawner, tag 0x12. The tail sets the part's
@@ -1107,6 +1120,7 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.kind = 0xa;
     AndPartFlags(part, ~0x40);
     hdr->anims = gCrusherAnimMap;
-    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->p.cycle.idleTime, rec2->p.cycle.attackTime,
+                        rec2->p.cycle.cycleOffset);
     SetEnemyState(hdr, 4);
 }

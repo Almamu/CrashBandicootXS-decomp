@@ -2628,7 +2628,7 @@ never individually named in this document's prose.** For completeness:
 display), `UnpackSaveData`/`PackSaveData` (a getter/setter pair for a
 packed state round-tripping through `MemCopy32`), `StepBgLayerScroll`
 (a two-line text draw, same family as the icon-renderer shapes), and
-`GetBgLayerScreenIndex`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `sub_802612C`, sits between them - see docs/matching/archive/issue-42-bg-scroll-layer.md). Two
+`GetBgLayerScreenIndex`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `WrapBgLayerColumn`, sits between them - see docs/matching/archive/issue-42-bg-scroll-layer.md). Two
 functions are genuinely new to this pass: **`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`**
 are bounded-range bulk-release helpers for the cache-slot system -
 each loops calling the already-documented single-call release
