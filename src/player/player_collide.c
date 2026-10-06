@@ -5,6 +5,7 @@
 #include "player.h"
 #include "objects.h"
 #include "level.h"
+#include "sprite_bank.h"
 #include "globals.h"
 
 /* GitHub issue #9/#10: 0x0800A884 - the player object's (`struct
@@ -85,13 +86,13 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
 
 static inline s16 *A884Offset(void *part)
 {
-    void *info = GetSpriteFrame(part);
-    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    const struct sprite_frame *info = GetSpriteFrame(part);
+    u8 type = info->pieces[0] >> 4;
     MATCH_HOLD_REG(s16 *, result, r3); /* the ROM builds it in r3 */
 
     switch (type) {
     case 0:
-        result = (s16 *)((u8 *)info + 0x24);
+        result = (s16 *)&((const struct sprite_frame_3box_anchor *)info)->anchor;
         break;
     case 3:
     case 4:
@@ -105,7 +106,7 @@ static inline s16 *A884Offset(void *part)
         result = (s16 *)&gEmptySpritePoint;
         break;
     case 6:
-        result = (s16 *)((u8 *)info + 0x14);
+        result = (s16 *)&((const struct sprite_frame_1box_anchor *)info)->anchor;
         break;
     default:
         result = (s16 *)&gEmptySpritePoint;

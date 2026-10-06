@@ -69,11 +69,11 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
     i = 0;
     if (i < gCrateList->activeCount)
         do {
-            u8 *entry = (u8 *)gCrateList->slotArray[i];
-            u8 *method = *(u8 **)(entry + 0x18) + 0x48;
+            struct box_part *entry = gCrateList->slotArray[i];
+            struct part_method *method = PART_METHOD(entry, 0x48);
 
-            if (_call_via_r1(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
-                if (PlayerAnimWouldTouchCrate((struct box_part *)entry, x) == 1)
+            if (_call_via_r1((u8 *)entry + method->thisOffset, method->fn) == 3) {
+                if (PlayerAnimWouldTouchCrate(entry, x) == 1)
                     return 0;
             }
             i++;

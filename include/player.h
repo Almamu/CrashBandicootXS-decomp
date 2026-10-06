@@ -188,7 +188,8 @@ struct player {
     s32 prevX;   // 0x6C - previous position (Q8), cached by ApplyPlayerVelocity
     s32 prevY;   // 0x70
     u32 hitMask; // 0x74 - probe axes hit this frame (bits 0-1: X, 2-3: Y)
-    u8 unk_78[8];
+    s32 type;    // 0x78 - struct gobj.type; ResetPlayer clears it
+    u8 unk_7C[4];
     u8 busy; // 0x80 - set while a triggered crate animation runs (the crate's state
              //        bit 7), cleared when it ends; enemies skip the player meanwhile
     u8 unk_81[7];
@@ -244,6 +245,16 @@ COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
  * `struct act` (action_obj.h) and the swim controller `struct
  * player_ctrl` (player_ctrl.h); the input and boss controllers are
  * below. */
+
+/* That base on its own, as the accessors that take any controller
+ * (SetCtrlMode, SetCtrlAnimSet) read it. */
+struct ctrl_base {
+    u8 unk_00[4];
+    const struct entry_set *animSet; // 0x04 - the motion entry set (SetCtrlAnimSet)
+    s32 state;                       // 0x08 - SetCtrlMode
+    const void *vtable;              // 0x0C
+    void *target;                    // 0x10 - the controlled part (AttachCtrl)
+};
 
 /* The input controller's method table (gInputCtrlVtable), as its calls
  * read it. */

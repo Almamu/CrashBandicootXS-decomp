@@ -9,6 +9,9 @@
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
+#include "sprite_bank.h"
+#include "box_part.h"
 #include "globals.h"
 
 /* GitHub issue #17, ROM 0x08014674-0x08014F8C, formerly
@@ -223,7 +226,7 @@ void ActionCtrlStateDying(struct act *self)
 
             if (cur != none) {
                 MATCH_HOLD_REG(s32, id, r3) = *(vu16 *)&part->id;
-                MATCH_HOLD_REG(u8 *, base, r2) = (u8 *)gEntityFlags;
+                MATCH_HOLD_REG(struct entity_flags *, base, r2) = gEntityFlags;
                 MATCH_HOLD_REG(s32, word, r0) = id;
                 s32 off;
                 u32 *slot;
@@ -233,7 +236,7 @@ void ActionCtrlStateDying(struct act *self)
                 MATCH_KEEP(word);
                 word >>= 5;
                 off = word * 4;
-                slot = (u32 *)(base + 0x108);
+                slot = base->bits0Copy;
                 slot = (u32 *)((u8 *)slot + off);
                 word = id - (word << 5);
                 *slot |= 1 << word;
@@ -245,7 +248,9 @@ void ActionCtrlStateDying(struct act *self)
 void ActionCtrlStateWarpIn(struct act *self)
 {
     if (self->part->animDone) {
-        *((u8 *)gPlayer + 0xC) |= 0x80;
+        /* a retyped store: through the member, gcc builds the zero of the
+         * later stores before the read-modify-write */
+        *(u8 *)&gPlayer->flags |= 0x80;
         SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
         self->motionXKeepSpeed = 0;
         self->motionXPending = 1;
@@ -475,42 +480,43 @@ void ActionCtrlStateHangMove(struct act *self)
         ActQueue27(self, alt, 0x20);
     }
     if (UpdatePlayerFacing_u8(self)) {
-        u8 *info = GetSpriteFrame((struct gfx_part *)self->part);
+        const struct sprite_frame *frame = GetSpriteFrame((struct gfx_part *)self->part);
+        const struct sprite_point *info;
         s32 x;
         s32 y;
 
-        switch (**(u8 **)(info + 4) >> 4) {
+        switch (frame->pieces[0] >> 4) {
         case 0:
-            info += 0x24;
+            info = &((const struct sprite_frame_3box_anchor *)frame)->anchor;
             break;
         case 1:
-            info = (u8 *)&gEmptySpritePoint;
+            info = &gEmptySpritePoint;
             break;
         case 2:
-            info = (u8 *)&gEmptySpritePoint;
+            info = &gEmptySpritePoint;
             break;
         case 3:
-            info = (u8 *)&gEmptySpritePoint;
+            info = &gEmptySpritePoint;
             break;
         case 4:
-            info = (u8 *)&gEmptySpritePoint;
+            info = &gEmptySpritePoint;
             break;
         case 5:
-            info = (u8 *)&gEmptySpritePoint;
+            info = &gEmptySpritePoint;
             break;
         case 6:
-            info += 0x14;
+            info = &((const struct sprite_frame_1box_anchor *)frame)->anchor;
             break;
         default:
-            info = (u8 *)&gEmptySpritePoint;
+            info = &gEmptySpritePoint;
             break;
         }
         x = self->part->x >> 8;
         y = self->part->y;
         if ((s8)(self->part->mirror.all << 3) < 0)
-            x += *(s16 *)info;
+            x += info->x;
         else
-            x -= *(s16 *)info;
+            x -= info->x;
         self->part->x = x << 8;
         self->part->y = y;
     }
@@ -565,13 +571,13 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
-/* For each `struct actor *` in the `gCollidableList` list: skips
- * entries whose `+0x48` trampoline (`_call_via_r1`) reports a width of 4
+/* For each part (`struct box_part`) in `gCollidableList`: skips
+ * entries whose class id (method +0x48, through `_call_via_r1`) is 4
  * or less, entries further than 0x40 (Manhattan distance) from `self`'s
- * own part, entries without their `+0xc` bit 6 flag set, and entries
- * more than 0x11 away vertically - then fires the `+0x68` trampoline
- * pair via `_call_via_r4` with action `0x16` on whatever survives all
- * four checks. */
+ * own part, entries without their `flags` bit 6 (vulnerable) set, and
+ * entries more than 0x11 away vertically - then calls method +0x68 (the
+ * hit handler) via `_call_via_r4` with event `0x16` on whatever survives
+ * all four checks. */
 void DoSuperBodySlamShockwave(struct act *self)
 {
     struct actor *part;
@@ -579,11 +585,11 @@ void DoSuperBodySlamShockwave(struct act *self)
     s32 px, py;
     s32 i;
 
-    part = *(struct actor **)((u8 *)self + 0x10);
+    part = (struct actor *)self->part;
     BreakCratesInArea(part->x >> 8, part->y >> 8, 0x40, 0x12);
     threshold = 0x40;
 
-    part = *(struct actor **)((u8 *)self + 0x10);
+    part = (struct actor *)self->part;
     px = part->x >> 8;
     py = part->y >> 8;
 
@@ -592,9 +598,9 @@ void DoSuperBodySlamShockwave(struct act *self)
 
 loop_body:
     {
-        u8 *list;
-        struct actor *other;
-        u8 *rec;
+        struct part_list *list;
+        struct box_part *other;
+        struct part_method *rec;
         s16 offset;
         void *addr;
         void *fn;
@@ -619,11 +625,11 @@ loop_body:
          * literal in the ROM (`_08015034` referenced from both
          * `_08014FB8` and `_0801501E`). */
         asm volatile("ldr %0, .Lgu12f0_8014f8c\n\tldr %0, [%0]" : "=r"(list));
-        other = (*(struct actor ***)(list + 0xc))[i];
-        rec = (u8 *)other->table + 0x48;
-        offset = *(s16 *)rec;
+        other = list->items[i];
+        rec = PART_METHOD(other, 0x48);
+        offset = rec->thisOffset;
         addr = (u8 *)other + offset;
-        fn = *(void **)(rec + 4);
+        fn = rec->fn;
 
         if (_call_via_r1(addr, fn) <= 4) {
             goto loop_inc;
@@ -662,10 +668,10 @@ loop_body:
         }
 
         {
-            u8 *rec2 = (u8 *)other->table + 0x68;
-            s16 offset2 = *(s16 *)rec2;
+            struct part_method *rec2 = PART_METHOD(other, 0x68);
+            s16 offset2 = rec2->thisOffset;
             void *addr2 = (u8 *)other + offset2;
-            MATCH_HOLD_REG(void *, fn2, r4) = *(void *volatile *)(rec2 + 4);
+            MATCH_HOLD_REG(void *, fn2, r4) = *(void *volatile *)&rec2->fn;
 
             _call_via_r4(addr2, 0, 0x16, 0);
             (void)fn2;
@@ -676,10 +682,10 @@ loop_inc:
     i++;
 loop_cond:
     {
-        void *listVal;
+        struct part_list *listVal;
 
         asm volatile("ldr %0, .Lgu12f0_8014f8c\n\tldr %0, [%0]" : "=r"(listVal));
-        if (i < *(s32 *)((u8 *)listVal + 4)) {
+        if (i < listVal->count) {
             goto loop_body;
         }
     }
@@ -705,11 +711,13 @@ asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gCollidableList");
  * `u8` local: the byte load then comes after the point where
  * old_agbcc's GCSE inserts its copy of `self + 0x22` (end of the block,
  * before the compare), so the load goes through the copy in r5
- * (`adds r5, r0, #0; ldrb r2, [r5]`) as in the ROM. */
+ * (`adds r5, r0, #0; ldrb r2, [r5]`) as in the ROM. The m50 slot is
+ * reached as the table pointer plus 10 slots: `&self->vt->m50` loads the
+ * table into another register and copies it first. */
 void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
 {
     struct vtable_slot *mgr;
-    u8 *off;
+    struct act_method *off;
 
     if (self->tornadoUnwinding == 0) {
         s32 idx = 0x17;
@@ -728,9 +736,9 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
         wait = 0x14;
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)id, mgr[4].fn);
-        off = (u8 *)self->vt;
-        off += 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx, *(void **)(off + 4));
+        off = (struct act_method *)self->vt;
+        off += 10; /* m50 */
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)idx, off->fn);
         self->frame = zero;
         self->frames = wait;
         PlaySfx(gAudioContext, self->tornadoVariant + 0x57, 0x100);
@@ -766,14 +774,14 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             wait = 0x14;
             mgr = (struct vtable_slot *)self->vt;
             _call_via_r2((u8 *)self + mgr[4].delta, (void *)id, mgr[4].fn);
-            off = (u8 *)self->vt;
-            off += 0x50;
-            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx, *(void **)(off + 4));
+            off = (struct act_method *)self->vt;
+            off += 10; /* m50 */
+            _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)idx, off->fn);
             self->frame = zero;
             self->frames = wait;
             PlaySfx(gAudioContext, self->tornadoVariant + 0x57, 0x100);
         } else {
-            u8 *p21 = (u8 *)self + 0x21;
+            u8 *p21 = &self->tornadoVariant;
             s32 zero = 0;
             s32 wait;
 
@@ -782,9 +790,9 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             wait = 0x18;
             mgr = (struct vtable_slot *)self->vt;
             _call_via_r2((u8 *)self + mgr[4].delta, (void *)param2, mgr[4].fn);
-            off = (u8 *)self->vt;
-            off += 0x50;
-            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x10, *(void **)(off + 4));
+            off = (struct act_method *)self->vt;
+            off += 10; /* m50 */
+            _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x10, off->fn);
             self->frame = zero;
             self->frames = wait;
             PlaySfx(gAudioContext, 0xa, 0x100);

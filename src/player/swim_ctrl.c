@@ -262,7 +262,7 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     p->rampX.target = c;
 }
 
-/* Sets bit `id` of the gEntityFlags+0x108 bitmap. Kept a
+/* Sets bit `id` of gEntityFlags->bits0Copy. Kept a
  * do/while(0) macro: its loop notes stop CSE from reusing the id already
  * loaded for the caller's 0xFFFF test, so the ROM's reload comes out
  * naturally, and the word index is gcc's signed division of it. */
@@ -270,10 +270,10 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = (u8 *)gEntityFlags;                                  \
+        struct entity_flags *_base = gEntityFlags;                             \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
-        u32 *_slot = (u32 *)(_base + 0x108);                                   \
+        u32 *_slot = _base->bits0Copy;                                         \
                                                                                \
         _slot = (u32 *)((u8 *)_slot + _off);                                   \
         *_slot |= 1 << (_id - _word * 32);                                     \

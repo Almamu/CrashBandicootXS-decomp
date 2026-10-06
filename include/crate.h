@@ -197,17 +197,17 @@ static inline void PhysSetFrame(struct crate *obj, s32 idx)
     obj->frame = idx;
 }
 
-/* Sets bit `id` of the gEntityFlags+0x108 bitmap - the same
+/* Sets bit `id` of gEntityFlags->bits0Copy (level.h) - the same
  * sequence (and the same do/while(0) trick) as swim_ctrl.c's
  * SET_ID_BIT. */
 #define PHYS_SET_ID_BIT(idExpr)                                                \
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = (u8 *)gEntityFlags;                                  \
+        struct entity_flags *_base = gEntityFlags;                             \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
-        u32 *_slot = (u32 *)(_base + 0x108);                                   \
+        u32 *_slot = _base->bits0Copy;                                         \
                                                                                \
         _slot = (u32 *)((u8 *)_slot + _off);                                   \
         *_slot |= 1 << (_id - _word * 32);                                     \

@@ -413,8 +413,8 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
             struct ctrl_target *t;
             s32 a, v;
 
-            *(struct launch_obj **)((u8 *)self->target + 0x44) = obj;
-            m = (struct part_method *)(obj->vtable + 0x18);
+            self->target->ctrl = obj;
+            m = PART_METHOD(obj, 0x18);
             ((bd48_method_fn)m->fn)((u8 *)obj + m->thisOffset, self->target);
             self->target->flag7 = 0;
             t = self->target;

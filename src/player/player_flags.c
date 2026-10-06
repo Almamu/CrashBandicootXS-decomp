@@ -295,17 +295,17 @@ void StorePlayerListEntry(struct player *selfArg, s32 val)
     }
 }
 
-/* `self+8`/`self+4` word set accessors. */
+/* The controller base's `state`/`animSet` setters (struct ctrl_base). */
 void SetCtrlMode(void *selfArg, s32 val)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 8) = val;
+    struct ctrl_base *self = selfArg;
+    self->state = val;
 }
 
 void SetCtrlAnimSet(void *selfArg, s32 val)
 {
-    u8 *self = selfArg;
-    *(s32 *)(self + 4) = val;
+    struct ctrl_base *self = selfArg;
+    self->animSet = (const struct entry_set *)val;
 }
 
 /* Copies `ramp` into `self+0x54`/`self+0x58`/`self+0x5c`, negating the

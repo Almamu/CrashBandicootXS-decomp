@@ -24,8 +24,8 @@
  * hence a separate file per the one-file-per-contiguous-region rule).
  * The `+0x27`-`+0x32` bytes are the same shared state/flag/table-index
  * trio pair action_ctrl_states.c documents. `self` is the action
- * controller (`struct act`, action_obj.h); the register-pinned byte
- * stores keep their raw offsets. */
+ * controller (`struct act`, action_obj.h); its `part` is the player
+ * (`struct player`). */
 
 struct AudioContext;
 struct palette_cache;
@@ -54,8 +54,8 @@ void KillPlayer(struct act *self, s32 id)
     }
 
     {
-        u8 *off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)id, *(void **)(off + 4));
+        struct act_method *off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)id, off->fn);
     }
     {
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
@@ -67,7 +67,7 @@ void KillPlayer(struct act *self, s32 id)
         MATCH_HOLD_REG(s32, one, r5);
 
         {
-            MATCH_HOLD_REG(u8 *, w, r0) = (u8 *)self + 0x31;
+            MATCH_HOLD_REG(u8 *, w, r0) = &self->motionXKeepSpeed;
             *w = zero;
             w -= 2;
             one = 1;
@@ -84,22 +84,22 @@ void KillPlayer(struct act *self, s32 id)
 
         ApplyActionCtrlMotion(self);
 
-        (*(u8 **)((u8 *)self + 0x10))[0x100] = zero;
-        (*(u8 **)((u8 *)self + 0x10))[0x102] = zero;
-        (*(u8 **)((u8 *)self + 0x10))[0x103] = zero;
+        self->part->slippery = zero;
+        self->part->pushLeft = zero;
+        self->part->pushRight = zero;
 
         {
-            MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10);
+            MATCH_HOLD_REG(struct player *, p, r1) = self->part;
             MATCH_HOLD_REG(s32, mask, r0) = 0x7f;
-            mask &= p[0xc];
-            p[0xc] = mask;
+            mask &= p->flags.all;
+            p->flags.all = mask;
         }
         {
-            MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10);
+            MATCH_HOLD_REG(struct player *, p, r1) = self->part;
             MATCH_HOLD_REG(s32, mask, r0) = 0x41;
             mask = -mask;
-            mask &= p[0xc];
-            p[0xc] = mask;
+            mask &= p->flags.all;
+            p->flags.all = mask;
         }
 
         {
@@ -109,7 +109,7 @@ void KillPlayer(struct act *self, s32 id)
              * inline-asm anchor (matching_decomp_register_pinning) is
              * the only way found to pin the folded constant's own
              * register. */
-            MATCH_HOLD_REG(u8 *, addr, r0) = *(u8 **)((u8 *)self + 0x10);
+            MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)self->part;
             MATCH_HOLD_REG(s32, v, r1);
             asm volatile("mov %0, #0x82\n\tlsl %0, %0, #1" : "=r"(v));
             addr += v;
@@ -121,17 +121,17 @@ void KillPlayer(struct act *self, s32 id)
 
     {
         MATCH_HOLD_REG(struct palette_cache *, cache, r0) = gPaletteCache;
-        MATCH_HOLD_REG(u8 *, p, r3) = *(u8 **)((u8 *)self + 0x10);
-        MATCH_HOLD_REG(u32, nibble, r1) = (u32)(p[0x29] << 28) >> 28;
-        MATCH_HOLD_REG(u8 **, xptr, r2) = *(u8 ***)(p + 0x20);
+        MATCH_HOLD_REG(struct player *, p, r3) = self->part;
+        MATCH_HOLD_REG(u32, nibble, r1) = p->slot;
+        MATCH_HOLD_REG(struct act_anim_bank *, xptr, r2) = p->anim;
+        MATCH_HOLD_REG(u8 *, tagp, r3) = &p->tag;
 
-        p = p + 0x2d;
         {
-            MATCH_HOLD_REG(u8 *, base, r4) = *xptr;
-            MATCH_HOLD_REG(u8, tag, r5) = *p;
+            MATCH_HOLD_REG(struct act_anim_record *, base, r4) = xptr->records;
+            MATCH_HOLD_REG(u8, tag, r5) = *tagp;
             MATCH_HOLD_REG(s32, record, r2) = tag * 0x1c;
             record += (s32)base;
-            LoadPaletteSlot(cache, nibble, ((u8 *)record)[0x14]);
+            LoadPaletteSlot(cache, nibble, ((struct act_anim_record *)record)->paletteId);
         }
     }
 }
@@ -240,14 +240,14 @@ s32 UpdatePlayerFacing(struct act *self)
 
 do_it:
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10) + 0x28;
+        MATCH_HOLD_REG(u8 *, p, r1) = &self->part->mirror.all;
         MATCH_HOLD_REG(s32, mask, r0) = -0x21;
         MATCH_HOLD_REG(s32, val, r5) = *p;
         mask &= val;
         *p = mask;
     }
 
-    if ((*(u8 **)((u8 *)self + 0x10))[0x28] << 27 >= 0)
+    if (self->part->mirror.all << 27 >= 0)
         goto check_2nd;
     if (dpad == 4 || dpad == 6 || dpad == 8)
         goto branch1;
@@ -255,21 +255,21 @@ do_it:
 
 branch1:
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10);
+        MATCH_HOLD_REG(struct player *, part, r1) = self->part;
         MATCH_HOLD_REG(s32, zero, r2) = 0;
-        p += 0x28;
+        MATCH_HOLD_REG(u8 *, p, r1) = &part->mirror.all;
         {
             MATCH_HOLD_REG(s32, mask, r0) = -0x11;
             mask &= *p;
             *p = mask;
         }
         {
-            MATCH_HOLD_REG(u8 *, addr1, r1) = (u8 *)self + 0x2f;
+            MATCH_HOLD_REG(u8 *, addr1, r1) = &self->motionXPending;
             MATCH_HOLD_REG(s32, one, r0) = 1;
             *addr1 = one;
         }
         {
-            MATCH_HOLD_REG(u8 *, addr2, r0) = (u8 *)self + 0x29;
+            MATCH_HOLD_REG(u8 *, addr2, r0) = &self->turboRun;
             *addr2 = zero;
         }
     }
@@ -277,8 +277,8 @@ branch1:
 
 check_2nd:
     {
-        MATCH_HOLD_REG(u8 *, part, r0) = *(u8 **)((u8 *)self + 0x10);
-        MATCH_HOLD_REG(u8 *, addr, r1) = part + 0x28;
+        MATCH_HOLD_REG(struct player *, part, r0) = self->part;
+        MATCH_HOLD_REG(u8 *, addr, r1) = &part->mirror.all;
         if (*addr << 27 < 0)
             goto end;
         if (dpad == 3 || dpad == 5 || dpad == 7)
@@ -288,17 +288,17 @@ check_2nd:
     branch2:
         {
             MATCH_HOLD_REG(s32, one, r3) = 1;
-            MATCH_HOLD_REG(u8 *, p, r2) = part + 0x28;
+            MATCH_HOLD_REG(u8 *, p, r2) = &part->mirror.all;
             MATCH_HOLD_REG(s32, mask, r0) = -0x11;
             MATCH_HOLD_REG(s32, val, r5) = *p;
             mask &= val;
             mask |= 0x10;
             *p = mask;
             {
-                MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)self + 0x2f;
+                MATCH_HOLD_REG(u8 *, addr, r0) = &self->motionXPending;
                 MATCH_HOLD_REG(s32, zero, r1) = 0;
                 *addr = one;
-                addr -= 6;
+                addr -= 6; /* turboRun */
                 *addr = zero;
             }
         }
