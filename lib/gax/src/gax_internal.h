@@ -107,17 +107,21 @@ struct GaxInstrumentSeqEntry {
 };
 
 struct GaxChannelInstrument {
-    u8 pad_00;
+    /* 0x00 - nonzero = an empty placeholder (instrument 0):
+     * GaxChannelSetInstrument leaves the channel without an instrument */
+    u8 empty;
     u8 waveIdx[4]; /* 0x01 - per-row wave index */
-    u8 pad_05[4];
+    u8 pad_05[3];
+    u8 vibratoDelay; /* 0x08 - initial GaxChannelState.vibratoDelay */
     /* 0x09 - Q8 scale of the vibrato table value, 0 = off (GaxChannelTickVibrato) */
     u8 vibratoDepth;
     u8 vibratoSpeed; /* 0x0a - phase step per tick */
     u8 pad_0b;
     struct GaxInstrumentRow rows[4]; /* 0x0c */
     struct GaxEnvelope *envelope;    /* 0x7c */
-    u8 pad_80[5];
-    u8 seqLen; /* 0x85 */
+    u8 pad_80[4];
+    u8 seqSpeed; /* 0x84 - ticks per sequence step, GaxChannelState.cutDelay's initial value */
+    u8 seqLen;   /* 0x85 */
     u8 pad_86[2];
     struct GaxInstrumentSeqEntry *seq; /* 0x88 - per-tick instrument sequence */
 };
@@ -136,12 +140,12 @@ struct GaxSongData {
     u16 loopOrder;   /* 0x06 - order position the song loops back to */
     u16 volume;      /* 0x08 - Q8 master volume */
     u8 pad_0a[2];
-    u8 *patterns; /* 0x0c - base of the packed pattern streams */
-    u8 pad_10[4];
-    struct GaxWave *waves; /* 0x14 */
-    u16 mixRate;           /* 0x18 - default mix rate */
-    u8 numSfx;             /* 0x1a - default number of SFX voices */
-    u8 field_1b;           /* 0x1b */
+    u8 *patterns;                              /* 0x0c - base of the packed pattern streams */
+    struct GaxChannelInstrument **instruments; /* 0x10 - indexed by instrument number */
+    struct GaxWave *waves;                     /* 0x14 */
+    u16 mixRate;                               /* 0x18 - default mix rate */
+    u8 numSfx;                                 /* 0x1a - default number of SFX voices */
+    u8 field_1b;                               /* 0x1b */
 };
 
 /* One entry of a Channel handler type's order list. */

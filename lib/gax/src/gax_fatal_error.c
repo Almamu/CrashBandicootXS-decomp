@@ -1,5 +1,10 @@
 #include "gax_internal.h"
 
+/* One 4bpp pixel row (4 bytes) of tile `tile` in the font's char block 1. */
+#define HALT_FONT_ROW(tile, row) (*(vu32 *)(BG_CHAR_ADDR(1) + (tile) * 32 + (row) * 4))
+/* BG palette entry `n`. */
+#define BG_PLTT_COLOR(n) (*(vu16 *)(BG_PLTT + (n) * 2))
+
 /* GAX2's fatal-error screen: disables Timer0/1/2/3 direct-sound-output
  * ticking (GaxStopDma, still raw, has the same hardware-register
  * NOP-delay compiler quirk documented for GaxResetSoundHardware), zeroes the
@@ -7,9 +12,7 @@
  * Huffman-compressed font in the IWRAM image - src/iwram/iwram_data.c)
  * via the HuffUnComp
  * SWI wrapper into BG char block 1, blanks its first tile (the "space"
- * glyph), pokes a handful of raw tilemap entries (0x060044B8/
- * 0x060044C8/0x060044FC - not modeled as named screen-block macros
- * since they don't fall on a screen-block boundary), draws a fixed
+ * glyph), draws the '.', ':' and '_' glyphs the font lacks, draws a fixed
  * header string plus the two caller-supplied message lines via
  * GaxDrawText (still raw - a word-wrap text/console-tile renderer),
  * resets the BG0/backdrop palette to black-on-white, enables BG0 only,
@@ -39,18 +42,20 @@ void GaxFatalError(const char *msg1, const char *msg2)
         dst++;
     }
 
-    *(vu32 *)0x060044B8 = 0x1000;
-    *(vu32 *)0x060044C8 = 0x10000;
-    *(vu32 *)0x060044D4 = 0x10000;
-    *(vu32 *)0x060044FC = 0x01111110;
+    /* The font has no punctuation: draw the three glyphs GaxDrawText
+     * maps '.', ':' and '_' to (tiles 37-39) a pixel row at a time. */
+    HALT_FONT_ROW(37, 6) = 0x1000;  /* '.' */
+    HALT_FONT_ROW(38, 2) = 0x10000; /* ':' */
+    HALT_FONT_ROW(38, 5) = 0x10000;
+    HALT_FONT_ROW(39, 7) = 0x01111110; /* '_' */
 
     GaxDrawText(0, 0, gGaxHaltBannerPtr);
     GaxDrawText(0, 5, gGaxHaltFunctionLabel);
     GaxDrawText(0xf, 5, msg1);
     GaxDrawText(0, 7, msg2);
 
-    *(vu16 *)0x05000002 = 0;
-    *(vu16 *)0x05000000 = 0x7FFF;
+    BG_PLTT_COLOR(1) = 0;      /* black text */
+    BG_PLTT_COLOR(0) = 0x7FFF; /* on white */
 
     REG_BG0CNT = 4;
     REG_DISPCNT = 0x100;

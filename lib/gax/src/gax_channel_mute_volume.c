@@ -47,9 +47,9 @@ void GAX_stop_fx(s32 idx)
 }
 
 /* Sets a volume byte (`volume`, clamped to 0xff) on one of the
- * player's song channels - `handlers[idx + 3]`, reached directly as
- * `chan[idx*4 + 0xc]` rather than through the mixer's children like
- * GAX_stop_fx above - bounds-checked against the mixer type's
+ * player's song channels - `handlers[idx + 3]`, reached directly
+ * rather than through the mixer's children like GAX_stop_fx above -
+ * bounds-checked against the mixer type's
  * `childCount` (the number of song channels). `idx == -1` sets every
  * entry; any `idx > -2` (i.e. `idx >= 0`, written this way to match the
  * ROM's own signed compare against -2 byte for byte) sets just that one,
@@ -64,9 +64,9 @@ void GAX_set_music_volume(s32 idx, u32 vol)
         s32 i;
 
         for (i = 0; i < GAX_MIXER()->type->childCount; i++) {
-            MATCH_HOLD_REG(u8 *, chan, r1) = GAX_CHAN();
+            MATCH_HOLD_REG(struct GaxHandler **, chan, r1) = GAX_CHAN();
             MATCH_HOLD_REG(u32, off, r0) = (u32)i << 2;
-            MATCH_HOLD_REG(u8 *, entryAddr, r0);
+            MATCH_HOLD_REG(struct GaxChannelState **, entryAddr, r0);
             struct GaxChannelState *entry;
 
             /* Forces the ROM's exact "adds r0, r0, r1" register-operand
@@ -79,22 +79,22 @@ void GAX_set_music_volume(s32 idx, u32 vol)
              * list (rather than a bare asm string) keeps gcc from
              * treating `chan`/`off`'s defining loads as dead. */
             asm("add %0, %0, %1" : "=r"(entryAddr) : "r"(chan), "0"(off));
-            entry = ((struct GaxChannelState **)entryAddr)[3];
+            entry = entryAddr[3];
             entry->volume = vol;
         }
     } else if (idx > -2) {
-        MATCH_HOLD_REG(u8 *, chan, r1) = GAX_CHAN();
-        struct GaxMixerHandler *obj = *(struct GaxMixerHandler **)chan;
+        MATCH_HOLD_REG(struct GaxHandler **, chan, r1) = GAX_CHAN();
+        struct GaxMixerHandler *obj = (struct GaxMixerHandler *)chan[0];
 
         if (idx < obj->type->childCount) {
             MATCH_HOLD_REG(u32, off, r0) = (u32)idx << 2;
-            MATCH_HOLD_REG(u8 *, entryAddr, r0);
+            MATCH_HOLD_REG(struct GaxChannelState **, entryAddr, r0);
             struct GaxChannelState *entry;
 
             /* Same "adds r0, r0, r1" operand-order gap as the loop body
              * above. */
             asm("add %0, %0, %1" : "=r"(entryAddr) : "r"(chan), "0"(off));
-            entry = ((struct GaxChannelState **)entryAddr)[3];
+            entry = entryAddr[3];
             entry->volume = vol;
         }
     }

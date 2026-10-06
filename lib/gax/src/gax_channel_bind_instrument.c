@@ -1,15 +1,12 @@
 #include "gax_internal.h"
 #include "match.h"
 
-/* Binds a new instrument/entry to a per-channel voice object (`self`) from
- * `table->0x10[cmd]` and resets most of the voice's envelope/state fields
- * to their defaults, then (if the freshly-bound entry's own first byte is
- * non-zero, meaning it's some kind of "invalid"/placeholder entry) clears
- * the binding back out; finally, if a binding is still in place, records
- * `cmd` into the current song's `+0x34` per-slot table at index
- * `self->0x53`. Channel/voice/song object shapes aren't modeled yet
- * (same situation as the neighboring GAX2 engine internals in this
- * directory) - kept as raw offsets throughout.
+/* Binds instrument `cmd` of the song's `instruments[]` table to a channel
+ * and resets the channel's per-note state (envelope, vibrato, sequence,
+ * portamento); an `empty` placeholder instrument leaves the channel
+ * unbound. If an instrument is bound, `cmd` is also recorded in the song
+ * header's `scratch` table at the channel's `index` (4 bytes per
+ * channel).
  *
  * Was NAKED asm, not plain C, for two prior passes: the ROM's own
  * register choreography for `self` - reloaded fresh from `ip` (never
@@ -21,7 +18,7 @@
  * ip for the whole leaf-ish function" idiom already established for
  * `SetEntityIdActivated` (entity_flags.c, see
  * docs/matching/archive/naked-sub_80259d4-matched.md): `self` is pinned
- * to a `MATCH_HOLD_REG(void *, selfIP, ip)` local, materialized from the
+ * to a `MATCH_HOLD_REG(struct GaxChannelState *, selfIP, ip)` local, materialized from the
  * incoming `r0`
  * together with `cmd`'s own copy (`r4`) via one opaque `asm volatile`
  * instruction pair (this compiler always schedules a lone `n`-copy ahead
@@ -31,69 +28,73 @@
  * (`s1`/`s3`/`s0`/`s3b`/... below, one per ROM `mov`). The one genuine
  * surprise: the final `str r2, [r3, #0x3c]` (clearing the binding back
  * out) reuses the register holding the already-materialized `zero16`
- * constant, but plain C (even referencing the same pinned local, `*(s32
- * *)(...) = zero16;`) let `-O2`'s constant propagation flatten it back
+ * constant, but plain C (even referencing the same pinned local,
+ * `s3c->instrument = zero16`) let `-O2`'s constant propagation flatten it back
  * to a fresh literal load in a different scratch register - a single
  * opaque `asm volatile("str %1, [%0, #0x3c]" ...)` anchor, spelling out
  * the exact instruction with both already-pinned operands, was needed to
- * stop that. */
+ * stop that. Most of the other stores of a pinned constant are retyped
+ * (`*(u16 *)&s3->envPos = zero16`): as a plain struct-member store gcc
+ * copies the value into a scratch register first (and turns `ff` into
+ * `-1`). */
 void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 cmd,
                              struct GaxSongData *table)
 {
-    MATCH_HOLD_REG(void *, selfIP, ip);
+    MATCH_HOLD_REG(struct GaxChannelState *, selfIP, ip);
     MATCH_HOLD_REG(s32, n, r4);
 
     asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(selfIP), "=r"(n) : "r"(self), "r"(cmd));
 
     if (n != 0) {
-        void **entryTable = *(void ***)((u8 *)table + 0x10);
-        void *entry = entryTable[n];
+        struct GaxChannelInstrument **entryTable = table->instruments;
+        struct GaxChannelInstrument *entry = entryTable[n];
 
         {
-            MATCH_HOLD_REG(u8 *, s1, r1) = (u8 *)selfIP;
-            *(void **)(s1 + 0x3c) = entry;
+            MATCH_HOLD_REG(struct GaxChannelState *, s1, r1) = selfIP;
+            s1->instrument = entry;
         }
 
         {
             MATCH_HOLD_REG(u8, zero8, r1) = 0;
             MATCH_HOLD_REG(u16, zero16, r2) = 0;
-            MATCH_HOLD_REG(u8 *, s3, r3) = (u8 *)selfIP;
-            *(u16 *)(s3 + 0x38) = zero16;
+            MATCH_HOLD_REG(struct GaxChannelState *, s3, r3) = selfIP;
+            *(u16 *)&s3->envPos = zero16;
 
             {
-                MATCH_HOLD_REG(u8 *, s0, r0) = (u8 *)selfIP + 0x22;
+                MATCH_HOLD_REG(u8 *, s0, r0) = &selfIP->released;
                 *s0 = zero8;
             }
 
-            *(u16 *)(s3 + 0x3a) = zero16;
+            *(u16 *)&s3->vibratoPhase = zero16;
 
             {
-                void *entry2 = *(void **)(s3 + 0x3c);
-                u8 v8 = *(u8 *)((u8 *)entry2 + 8);
-                MATCH_HOLD_REG(u8 *, s3b, r3) = s3 + 0x23;
+                struct GaxChannelInstrument *entry2 = s3->instrument;
+                u8 v8 = entry2->vibratoDelay;
+                MATCH_HOLD_REG(u8 *, s3b, r3) = &s3->vibratoDelay;
                 *s3b = v8;
 
                 {
-                    MATCH_HOLD_REG(u8 *, s0b, r0) = (u8 *)selfIP;
-                    *(u16 *)(s0b + 0x36) = zero16;
-                    *(u8 *)(s0b + 0x1f) = zero8;
-                    *(u8 *)(s0b + 0x20) = zero8;
+                    MATCH_HOLD_REG(struct GaxChannelState *, s0b, r0) = selfIP;
+                    *(u16 *)&s0b->seqPos = zero16;
+                    *(u8 *)&s0b->cutTimer = zero8;
+                    s0b->seqLoopCount = zero8;
                 }
 
                 {
                     MATCH_HOLD_REG(u8, ff, r0) = 0xff;
-                    MATCH_HOLD_REG(u8 *, s1b, r1) = (u8 *)selfIP;
-                    *(u8 *)(s1b + 0x15) = ff;
+                    MATCH_HOLD_REG(struct GaxChannelState *, s1b, r1) = selfIP;
+                    *(u8 *)&s1b->vol15 = ff;
 
                     {
-                        void *entry3 = *(void **)(s1b + 0x3c);
-                        u8 v84 = *((u8 *)entry3 + 0x84);
-                        MATCH_HOLD_REG(u8 *, s3c, r3) = (u8 *)selfIP;
-                        *(u8 *)(s3c + 0x1e) = v84;
-                        *(u16 *)(s3c + 0x32) = zero16;
-                        *(u16 *)(s3c + 0x30) = zero16;
+                        struct GaxChannelInstrument *entry3 = s1b->instrument;
+                        u8 seqSpeed = entry3->seqSpeed;
+                        MATCH_HOLD_REG(struct GaxChannelState *, s3c, r3) = selfIP;
+                        s3c->cutDelay = seqSpeed;
+                        *(u16 *)&s3c->slideRate = zero16;
+                        *(u16 *)&s3c->slideTarget = zero16;
 
-                        if (*(u8 *)entry3 != 0) {
+                        if (entry3->empty != 0) {
+                            /* s3c->instrument = NULL, from zero16's register */
                             asm volatile("str %1, [%0, #0x3c]" : : "r"(s3c), "r"(zero16));
                         }
                     }
@@ -102,13 +103,13 @@ void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler
         }
 
         {
-            MATCH_HOLD_REG(u8 *, s1c, r1) = (u8 *)selfIP;
-            void *bound = *(void **)(s1c + 0x3c);
+            MATCH_HOLD_REG(struct GaxChannelState *, s1c, r1) = selfIP;
+            struct GaxChannelInstrument *bound = s1c->instrument;
             if (bound != 0) {
-                void *songPtr = gGaxPlayerState->songPtr;
-                u8 *slotTable = *(u8 **)((u8 *)songPtr + 0x34);
+                struct GaxSongHeader *songPtr = gGaxPlayerState->songPtr;
+                u8 *slotTable = songPtr->scratch;
                 if (slotTable != 0) {
-                    MATCH_HOLD_REG(u8 *, s0d, r0) = (u8 *)selfIP + 0x53;
+                    MATCH_HOLD_REG(u8 *, s0d, r0) = &selfIP->index;
                     u8 idx = *s0d;
                     slotTable[idx * 4] = n;
                 }

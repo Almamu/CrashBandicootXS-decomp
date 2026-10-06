@@ -1,47 +1,44 @@
 #include "gax_internal.h"
 #include "match.h"
 
-/* Resets a per-channel voice object to its default state (clears the
- * accumulator/instrument-pointer fields, arms the `0x8AD0` "no note"
- * sentinel envelope, sets a default "unmuted" priority (`0xff`) and
- * portamento speed (`-1`, i.e. "off")), then picks a starting value for
- * `+0x52` from a single flag byte at `gGaxPlayerState`'s own `+0x42`
- * (two settings, 1 or 2) whose meaning isn't confirmed yet. Voice object
- * shape not modeled - same situation as the neighboring channel
- * functions in this file's ROM region. */
+/* The FX channel type's init method: resets a sound-effect voice to its
+ * defaults (no instrument, the `0x8AD0` "no note" sentinel, full vol15,
+ * default volume (-1), lowest voice-steal priority) and picks the
+ * resampler mode from the player's `fullResampler` flag (1, or 2 with
+ * the full resampler). */
 void GaxFxChannelInit(void *self)
 {
-    u8 *p = self;
+    struct GaxChannelState *p = self;
     u32 zeroA = 0;
     MATCH_HOLD_REG(u32, zeroB, r1);
     u16 val;
     u8 b;
 
-    *(u32 *)(p + 0x44) = zeroA;
-    *(u8 *)(p + 0x10) = (u8)zeroA;
-    *(u32 *)(p + 0x3c) = zeroA;
+    p->samplePos = zeroA;
+    p->row = (u8)zeroA;
+    p->instrument = NULL;
     zeroB = 0;
     val = 0x8AD0;
-    *(u16 *)(p + 0x2a) = val;
-    *(u8 *)(p + 0x11) = 1;
-    *(u8 *)(p + 0x15) = 0xff;
+    p->note = val;
+    *(u8 *)&p->direction = 1; /* as an s8 store, gcc reuses this 1 for negOne */
+    p->vol15 = 0xff;
     {
         s32 negOne = 1;
         negOne = -negOne;
-        *(u8 *)(p + 0x18) = negOne;
+        p->volume = negOne;
     }
-    *(u8 *)(p + 0xc) = zeroB;
-    *(u8 *)(p + 0x12) = zeroB;
-    *(u8 *)(p + 0xd) = zeroB;
-    *(u8 *)(p + 0x24) = zeroB;
-    *(u8 *)(p + 0x25) = zeroB;
-    *(u32 *)(p + 0x4c) = 0x80000000;
-    b = *((u8 *)gGaxPlayerState + 0x42);
+    p->muted = zeroB;
+    p->sweepOn = zeroB;
+    p->isFirst = zeroB;
+    p->pendingNote = zeroB;
+    p->pendingInstrument = zeroB;
+    p->priority = 0x80000000;
+    b = gGaxPlayerState->fullResampler;
     {
         u32 v = 1;
         if (b != 0) {
             v = 2;
         }
-        *(u8 *)(p + 0x52) = v;
+        p->mixMode = v;
     }
 }

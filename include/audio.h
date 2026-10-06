@@ -7,21 +7,18 @@
 
 /* The music/SFX-trigger "context" object `PlaySfx` and its neighbors take
  * as their first argument - `*gAudioContext` in the ROM, an
- * 8340-byte allocation made by `InitLevelState` (see docs/rom_map.md's
- * "Found the origin point" section). Only the leading 0x58 bytes this
- * cluster of functions models by field are covered here. At +0x58 sits
- * the music player's GAX2 parameter block (`struct GaxSongHeader`,
- * <gax.h>: GAX2_new fills it, StartSong sets its work buffer (+0x94,
+ * 8340-byte (0x2094) allocation made by `InitLevelState` (see
+ * docs/rom_map.md's "Found the origin point" section). At +0x58 sits the
+ * music player's GAX2 parameter block (`gax`, a `struct GaxSongHeader`,
+ * <gax.h>: GAX2_new fills it, StartSong sets its work buffer (`gaxWork`,
  * 0x2000 bytes), `numSfx`, `sfxTypes` and `layout`, and hands it to
- * GAX2_init), followed by GAX2's work RAM. StartSong and SetMusicFilter
- * (its `filter`, +0x62) still write it through raw offsets: the
- * AudioContext isn't extended over it yet.
+ * GAX2_init), followed by that work RAM.
  *
  * Two independent fade-envelope pairs are tracked, each ramping by a
  * fixed +-0x10 (Q8.8, ~0.06) per `UpdateAudio` tick once its direction
  * flag is armed:
- *   - `musicVolCurrent`/`musicVolTarget` (+0x18/+0x1c, hardware-mirrored
- *     as a u16 at +0x68 - just past this struct) - independent of the
+ *   - `musicVolCurrent`/`musicVolTarget` (+0x18/+0x1c, mirrored into
+ *     the parameter block's master `volume`, +0x68) - independent of the
  *     ducking pair below.
  *   - `duckVolCurrent`/`duckVolTarget` (+0x24/+0x28) - the music-ducking
  *     ramp `FadeOutMusic` (duck out, explicit target)/`FadeInMusic` (duck
@@ -57,7 +54,7 @@ struct AudioContext {
     s32 duckVolTarget;  // 0x28
     s32 sfxVolume;      // 0x2c - PlaySfx's own volume multiplier
     // 0x30 - GAX2 low-pass filter amount, mirrored into the parameter block's `filter`
-    // (self+0x62) while playing (SetMusicFilter)
+    // (gax.filter, +0x62) while playing (SetMusicFilter)
     u32 musicFilter;
     // 0x34 - the ambient-sfx channel's own current fade volume (ramps toward activeSfx.volume,
     // TickAmbientSfx - signed, compared with bgt/bge/ble)
@@ -70,10 +67,12 @@ struct AudioContext {
     u8 duckVolFadeDownArmed;     // 0x53
     // 0x54 - only ever cleared in this cluster (StartSong, on a successful song start)
     u8 field_54;
-    u8 pad_55[3]; // 0x55-0x57
+    u8 pad_55[3];             // 0x55-0x57
+    struct GaxSongHeader gax; // 0x58 - the music player's GAX2 parameter block
+    u8 gaxWork[0x2000];       // 0x94 - GAX2's work RAM (gax.workBuf)
 };
 
-COMPILE_TIME_ASSERT(audio_h, sizeof(struct AudioContext) == 0x58);
+COMPILE_TIME_ASSERT(audio_h, sizeof(struct AudioContext) == 0x2094);
 
 /* One record of the 99-entry sound-effect trigger table at ROM
  * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound
