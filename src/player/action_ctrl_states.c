@@ -285,8 +285,6 @@ asm(".align 2, 0");
  * gActionCtrlStateTable action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 
-extern void *gLevelState;
-
 /* Picks the part animation from its state: with tag 6, animation 9 on
  * frame 3 or 8 past it (or once finished); otherwise, once finished, 0x19
  * plus part animation 7 if HasSuperBodySlam allows it, else 0x18. */

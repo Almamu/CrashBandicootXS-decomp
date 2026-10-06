@@ -36,9 +36,6 @@
  * cross-jumping of two call sites (a single call with an `id` variable
  * truncates a0 once, after the join). */
 
-extern struct level_state *gLevelState;
-extern void *gUnknown_030012EC;
-
 /* The `tag` locals are set before the CreateSpriteObj call on purpose: the
  * ROM loads the constant into a callee-saved register up front and
  * stores it from there afterwards. */

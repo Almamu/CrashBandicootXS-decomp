@@ -50,17 +50,15 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  *    `strh`).
  */
 
-extern u8 *gLevelState;
-
 #define CUR_CATEGORY (gActorCategories[gActorCategory])
-#define PAUSED (gLevelState[0x8c])
+#define PAUSED (gLevelState->timeTrial)
 
 s32 InitActorCategory(s32 category)
 {
     s32 ret = 1;
     s32 *activeCount;
     s32 *variantCount;
-    u8 **state;
+    struct level_state **state;
     struct dma_regs *dma;
     vu16 zero;
     u32 variant;
@@ -85,7 +83,7 @@ s32 InitActorCategory(s32 category)
         activeCount = &gActorCategoryDeaths;
         variantCount = &gUnknown_03001388;
         gActorMissedNitros = gActorCheckpointMissedNitros;
-        RestoreCheckpoint((struct level_state *)gLevelState);
+        RestoreCheckpoint(gLevelState);
         if (*variantCount >= (s32)CUR_CATEGORY.unknown_28)
             variant = CUR_CATEGORY.unknown_30;
         else
@@ -115,8 +113,8 @@ s32 InitActorCategory(s32 category)
             UpdateKeys(gInput);
             AdvanceCellAnim();
             status = RunActorCategoryFrame();
-            if ((*state)[0x8c] != 0)
-                TickLevelClock((struct level_state *)*state);
+            if ((*state)->timeTrial != 0)
+                TickLevelClock(*state);
             ResetObjVram(gObjVramCursor);
             RewindOamBuffer(gOamBuffer);
             UpdateHudSlides(gHud);
@@ -134,11 +132,11 @@ s32 InitActorCategory(s32 category)
                 if (status == 1) {
                     ret = 0;
                 } else if (status == 2) {
-                    if ((*state)[0x8c] != 0)
+                    if ((*state)->timeTrial != 0)
                         goto again;
                     goto both;
                 } else if (status == 3) {
-                    if ((*state)[0x8c] != 0)
+                    if ((*state)->timeTrial != 0)
                         goto again;
                     if (CUR_CATEGORY.type != 0) {
                     both:
@@ -195,7 +193,7 @@ s32 InitActorCategory(s32 category)
     done:
         DestroyAllActors();
         nullsub_5();
-    } while (ret == 1 && GetLives((struct level_state *)gLevelState) >= 0 && PAUSED == 0);
+    } while (ret == 1 && GetLives(gLevelState) >= 0 && PAUSED == 0);
 
     nullsub_6();
     FreeSpriteFrameCache();

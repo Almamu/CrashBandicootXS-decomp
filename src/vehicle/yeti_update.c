@@ -4,6 +4,7 @@
 #include "system.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "globals.h"
 
 /* Sits right after polar_aku_aku.c's `CreatePolarCheckpointCrate` and before
  * yeti_states.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
@@ -19,7 +20,6 @@
  * Built with old_agbcc: `UpdateYetiBg2` only matches under it, and
  * `UpdateYetiPalette` matches under both. */
 
-extern struct actor_self *gActorList;
 extern void _call_via_r0(void *fn);
 extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
 
@@ -98,7 +98,7 @@ void UpdateYeti(void)
     s32 old, cur;
 
     if (gYetiState != 3)
-        gYetiX += (((struct actor_self *)gActorList)->x - gYetiX) / 32;
+        gYetiX += ((gActorList)->x - gYetiX) / 32;
     obj = gYeti;
     old = obj->animTime >> 8;
     obj->animTime += *(s16 *)&obj->animTimer;

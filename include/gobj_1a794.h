@@ -222,9 +222,6 @@ struct spawn_rec
 };
 
 extern struct gobj *gPlayer;
-extern void *gLevelState;
-extern void *gUnknown_030012EC;
-extern u8 *gEntityFlags;
 /* src/data/velocity_16c460.c defines it as `const s32 [3][3]`. */
 extern const struct vec3 gPlatformMoverMotionRecords[3];
 

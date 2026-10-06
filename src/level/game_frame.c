@@ -62,15 +62,12 @@ union level_best_time
     u16 raw;
 };
 
-extern void *gEntityFlags;
-extern struct level_state *gLevelState;
-
 void UpdateGameFrame(struct level_state *self)
 {
     vu16 zero;
     s32 best;
     s32 status;
-    void **bitmap;
+    struct entity_flags **bitmap;
 
     self->unk_68 = 0;
     ResetLives(self);
@@ -162,7 +159,7 @@ void UpdateGameFrame(struct level_state *self)
         ResetCrateCount(self);
         ClearSwitchPressed(self);
         self->pendingSwitchCrates = 0;
-        *(s32 *)gEntityFlags = 0;
+        gEntityFlags->list = NULL;
         best = self->maskLevel;
         SetCheckpointAtPlayer(self, 0);
         ArmStartSpawn(self);

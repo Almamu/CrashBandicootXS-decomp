@@ -3,6 +3,7 @@
 #include "system.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #43: the level-layers singleton (`gLevelLayersSingleton`,
  * 0x2C bytes, created on first use by `GetLevelLayers`) - the object
@@ -45,8 +46,6 @@
 
 struct tile_cache;
 
-extern void *gEntityFlags;
-
 extern s32 _call_via_r2(void *self, void *arg1, void *fn);
 
 void LoadRoom(struct level_layers *self, const struct level_room *args)
@@ -83,7 +82,7 @@ void LoadRoom(struct level_layers *self, const struct level_room *args)
     if (self->layers[2]->enabled)
         ShowBg3();
 
-    SpawnRoomEntities(gEntityFlags, (struct lk_list *)args->desc->entities, (struct lk_links *)args->desc->links, 0, 0);
+    SpawnRoomEntities(gEntityFlags, args->desc->entities, args->desc->links, 0, 0);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)args->palette;
@@ -101,11 +100,11 @@ struct level_layers *InitLevelLayers(struct level_layers *self)
     self->layers[0] = InitBgLayer(OperatorNew(0x5C), 1);
     self->layers[1] = InitBgLayer(OperatorNew(0x5C), 2);
     self->layers[2] = InitBgLayer(OperatorNew(0x5C), 3);
-    self->unk_29 = 0;
+    self->kind = 0;
     self->asset = NULL;
     self->assetOwned = 0;
     self->unk_2B = 0;
-    self->unk_2A = 0;
+    self->probeFlag = 0;
     return self;
 }
 

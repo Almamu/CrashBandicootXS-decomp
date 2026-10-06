@@ -38,17 +38,18 @@ operators in `memory.h` and the crate list's pool structs in `crates.h`,
 see "Batch 8a" below. Batch 8b (level) done: `include/level.h`, see
 "Batch 8b" below. `globals.h` (step 10) is split in sub-batches: 9a (the
 input, display, palette/OAM/VRAM, audio and HUD singletons) done, see
-"Batch 9a" below. Next are the level globals (9b) and `gPlayer` (9c).
+"Batch 9a" below; 9b (the level globals) done, see "Batch 9b" below.
+Next are `gPlayer` (9c) and the leftovers (9d).
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 |
 
 ## Tools
 
@@ -225,7 +226,7 @@ The full list:
 | text | `text.h` (**done**, pilot) | |
 | util | `util.h` (**done**, batch 4) | includes `aabb.h` and `line_util.h` |
 | vehicle | `vehicle.h` (**done**, batch 7) | includes `actor.h` |
-| (shared globals) | `globals.h` (9a done) | see below |
+| (shared globals) | `globals.h` (9a and 9b done) | see below |
 | libgcc | `lib/libgcc/include/libgcc.h` (**done**, batch 4) | `__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3` and the three 64-bit routines; not `_call_via_rN` |
 | GAX2, AgbEeprom, SWI | `<gax.h>`, `<agb_eeprom.h>`, `<agb_syscall.h>` | already exist (docs/libraries.md) |
 
@@ -288,7 +289,7 @@ Where the remaining declarations would go (after the pilot):
 | bosses (**done**, batch 7) | 239 | 10 | 344 | 35 |
 | vehicle (**done**, batch 7) | 277 | 13 | 374 | 38 |
 | level (**done**, batch 8b) | 311 | 45 | 534 | 116 |
-| globals (9a: 14 symbols done) | 27 | 19 | 540 | 162 |
+| globals (9a: 14 symbols, 9b: 9 symbols done) | 27 | 19 | 540 | 162 |
 | (data-only, stays) | 329 | 0 | 329 | 19 |
 
 ## Rules for every batch
@@ -426,9 +427,10 @@ before the files that every subsystem touches.
     `gPlayer`). With this done, most of `docs/file_layout_plan.md`'s
     "Kept separate" pairs can become merges. Sub-batches: **9a, the
     input/display/gfx/audio/HUD singletons (done)**, see "Batch 9a"
-    below; 9b, the level globals (`gLevelState`, `gLevelLayers`,
-    `gEntityFlags`, `gCamera`, the part lists, `gActorList`); 9c,
-    `gPlayer`; then the leftovers.
+    below; **9b, the level globals (`gLevelState`, `gLevelLayers`,
+    `gEntityFlags`, `gCamera`, the part lists, `gCrateList`,
+    `gActorList`) (done)**, see "Batch 9b" below; 9c, `gPlayer`; then
+    the leftovers (9d).
 
 The lib batches (GAX2 internals in `gax_internal.h`) can go anywhere. They
 don't interact with game code.
@@ -1482,6 +1484,97 @@ After a clean build every `.o` and `.s` file in src/ and lib/ is
 identical to origin/main's. The build has the same 30 warnings and no new
 ones.
 
+## Batch 9b: globals.h, the level globals
+
+The second `globals.h` PR. 181 local declarations are gone (812 -> 631;
+109 `.c` files touched), and 41 local struct definitions (286 -> 245).
+No codegen exception was needed.
+
+- **`include/globals.h`** declares the level's nine shared globals with
+  their real types (the structs are only declared by tag there):
+  - `gLevelState` (`struct level_state *`, level_state.h). The views were
+    `u8 *`, `void *`, game_frame.c's `struct level_state` and four
+    copies of `struct game_state` (polar_player.c, polar_objects.c,
+    crate_grid_collide.c, sprite_anim.c), player_event.c's `struct
+    orbit_game` (`flags2` is `flags`), run_room.c's `struct gl_level`,
+    entity_spawner.c's `struct level_state14` and crate_break.c's
+    `struct d18c_level` (`mode` is `maskLevel`). The byte reads
+    `gLevelState[0x8c]`/`*((u8 *)gLevelState + 0x8c)` are
+    `gLevelState->timeTrial` (16 files) and `((u8 *)gLevelState)[2]` is
+    `->flags`.
+  - `gLevelLayers` (`struct level_layers *`, level.h). The views were
+    cortex.c's `struct gfx_level` and tiny_update.c's `struct hop_level`
+    (`layer0->width`/`height`/`unk_04` are `widthPx`/`heightPx`/`y`),
+    input_ctrl.c's anonymous struct, action_ctrl_update.c's `struct
+    cam`/`cam_target` (its `target->y` is `layer0->heightPx`),
+    player_collide.c's `struct a884_game`, step_probe.c's `struct
+    probe_world`, crate_list_update.c's `struct track_obj` and the byte
+    offsets `+0x10`/`+0x24`/`+0x2b` (`layer0`/`asset`/`unk_2B`).
+    `unk_29`/`unk_2A` are now `kind`/`probeFlag`: ProbeTerrainX/Y record
+    the terrain kind they hit in `kind` while `probeFlag` is set, and
+    CollidePlayer sets `probeFlag` around its ground probe
+    (player_collide.c called them `kind`/`busy`, step_probe.c `probeFlag`,
+    terrain_probe_axes.c `nibble`/`flagHeld`). terrain_probe_axes.c's
+    `struct collider` was this struct too: ProbeTerrainX/Y take a
+    `struct level_layers *`.
+  - `gEntityFlags` (`struct entity_flags *`, new in level.h, 0x408
+    bytes): the room's entity list (`list`, a `const struct
+    level_entity_list *`), SpawnRoomEntities's position (`pos`) and four
+    `u32 [64]` bitmaps (`bits0`, `bits0Copy`, `bits1`, `bits1Copy` at
+    0x8/0x108/0x208/0x308). The names are room_entities.c's `struct
+    lk_self`, the most complete copy; dingodile.c had `struct
+    entity_flags` (`bitmap` at 0x108, the list as `struct collect_info`),
+    time_trial.c `struct collision_map` (`seen`), text_popup.h `struct
+    level_record_table **`, crate_create.c `struct placement_level` and
+    spawn_start_marker.c/spawn_crates.c/platform_create.c read the list
+    through `*(T **)gEntityFlags`. Those are `gEntityFlags->list` now,
+    with level_data.h's `paramOffsets`/`params` for `offsets`/`bytes`/
+    `records`. SpawnRoomEntities takes `struct entity_flags *`, `const
+    struct level_entity_list *` and `const struct level_link_list *`
+    (its `lk_list`/`lk_group`/`lk_item`/`lk_link`/`lk_links` views are
+    gone), so LoadRoom passes the room's lists without casts.
+  - `gCamera` (`struct camera *`): camera.c's `struct camera` and
+    `struct camera_target` moved to level.h. run_room.c's `struct
+    gl_scratch` (`player`/`unk_14`), action_ctrl_event.c's `struct
+    follow_state` and level_select.c's `struct follow_owner` (`follow`)
+    are `target`/`mode`; the stores cast to `struct camera_target *`.
+  - `gCollidableList`, `gUnknown_030012EC`, `gUnknown_030012F4` (`struct
+    part_list *`, box_part.h): cortex.c's `struct gfx_list`,
+    tiny_update.c's `struct hop_list`, time_trial.c's `struct
+    entity_list` and crate.h's `struct phys_obj_list2` (all `count` at 4,
+    `items` at 0xC); the item reads cast `items[i]` to the file's object
+    type.
+  - `gCrateList` (`struct pool_manager *`, crates.h). crate.h's `struct crate_list`, mega_mix_update.c's `struct
+    ab_list`, room_entities.c's `struct lk_actor_list`, run_room.c's
+    `struct gl_entity_list` and player_anim_room.c's `struct
+    actor_list` are `activeCount`/`slotArray` (`count`/`items`); the
+    `(struct pool_manager *)gCrateList` casts are gone.
+  - `gActorList` (`struct actor_self *`): the definition in
+    iwram_data.c was `void *`. hud_counters.c's `struct
+    pct_source`/`pct_vtable` were `struct actor_self` and its
+    `actor_vtable`, which now names the slot at 0x30 (`m30`, the value
+    UpdateHudPercentCounters shows).
+- gobj_1a794.h and text_popup.h lost their declarations of these globals;
+  text_popup.h's `LEVEL_RECORD` reads `gEntityFlags->list`.
+- **Definition fix:** `GetLevelState` returns `struct level_state *`
+  (it was `void *`); see "Codegen findings".
+- **Callers**, all identical: `(u8 *)gEntityFlags` where the inline
+  MarkEntityGone copies take the object as bytes (`base + 0x108`; 15
+  files, several with pinned registers, so their spelling is kept),
+  `(s32 *)gEntityFlags` in SetCheckpointAtPlayer, and typed locals for
+  the globals' addresses (`struct level_state **`, `struct camera **`,
+  `struct entity_flags **`, `struct pool_manager **`, `struct
+  part_list **`, `struct actor_self **`).
+- **Left for later:** `gPlayer` (9c); the leftovers listed under batches
+  8a and 8b; the MarkEntityGone copies could become one helper on
+  `gEntityFlags->bits0Copy` once someone checks each copy's bytes; level.h
+  still takes `void *` for most of the level-state and entity-flags
+  accessors (entity_flags.c's bit functions, ProbeTerrain).
+
+After a clean build every `.o` and `.s` file in src/ and lib/ is
+identical to origin/main's. The build has the same 30 warnings and no new
+ones.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -1601,6 +1694,11 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `u8 gDispcnt[2]` -> `u16`, byte users `((u8 *)&gDispcnt)[1]` | credits.c | **changes** (`.word gDispcnt+0x1`); the header keeps the users' `u8 [2]` |
 | `**gSpriteBankSet` (`void ***`) -> `*(u8 *const *)gSpriteBankSet->table` (`SPRITE_BANK_BASE`) | 25 files | identical |
 | `s16 []` extern -> `const s16 [256]`, locals `const s16 *` (also a pinned `register ... asm("r5")`) | gSineTable's 10 users | identical |
+| `void *`/`u8 *`/local-struct globals -> `struct level_state *`, `struct level_layers *`, `struct entity_flags *`, `struct camera *`, `struct part_list *`, `struct pool_manager *`, `struct actor_self *` | about 110 files (old_agbcc and agbcc) | identical |
+| byte offsets on the level globals -> fields (`[0x8c]` -> `timeTrial`, `+0x10`/`+0x24`/`+0x2b` -> `layer0`/`asset`/`unk_2B`, `*(T **)gEntityFlags` -> `->list`) | 30 files, including the pinned `rec` in spawn_crates.c/spawn_start_marker.c | identical |
+| `gCrateList->count`/`items[i]` (local views) -> `activeCount`/`(T *)slotArray[i]` | crate_break.c, crate_time_trial.c, mega_mix_update.c, room_entities.c (old_agbcc), run_room.c, player_anim_room.c | identical |
+| `void *` global assigned the result of a `void *` function, global made `struct level_state *` | `gLevelState = GetLevelState()` in MainLoop | **changes** (the global's address is loaded before the call, as with `gLevelLayers` in 8b); with GetLevelState returning `struct level_state *` it is identical, and so is GetLevelState |
+| `vt = src->vtable` (`struct pct_vtable *`, fields at 0x30/0x34) -> `struct actor_method *vt = &src->vtable->m30` | UpdateHudPercentCounters | `.o` identical, but the `.s` label numbers shift; `struct actor_vtable *vt = src->vtable` and `vt->m30.thisOffset`/`.fn` keep the `.s` identical too |
 
 Experiments for later batches:
 

@@ -124,8 +124,6 @@ void SetWumpaCounter(struct orbit_part *self, u8 value)
     self->counter = value;
 }
 
-extern void *gEntityFlags;
-
 /* Distance-gate: if the player (`gPlayer`) is within 0x180
  * (384 px) of `self` on both axes, calls `UpdateSpriteObj` (already
  * matched in `sprite_obj.c`) on `self`. Otherwise sets `self->flags`

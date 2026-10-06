@@ -28,9 +28,6 @@
  * siblings, issue #31). See docs/matching/issue-30-graphics-loading.md,
  * "Tenth pass". */
 
-extern void *gLevelState;
-extern void *gUnknown_030012EC;
-
 /* The `tag`/`type` locals are not just naming: the ROM loads both
  * constants into callee-saved registers before the CreateSpriteObj call and
  * stores them from there afterwards, which is how this compiler treats a
@@ -105,7 +102,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (GetBossIndex(gLevelState) != 1)
     {
-        if ((((u8 *)gLevelState)[2] & 1) == 0)
+        if ((gLevelState->flags & 1) == 0)
         {
             u8 tag = 3;
             u8 type = 0x1F;
@@ -131,7 +128,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (GetBossIndex(gLevelState) != 1)
     {
-        if ((((u8 *)gLevelState)[2] & 4) == 0)
+        if ((gLevelState->flags & 4) == 0)
         {
             u8 tag = 2;
             u8 type = 0x20;
@@ -157,7 +154,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (GetBossIndex(gLevelState) != 1)
     {
-        u8 bit = ((u8 *)gLevelState)[2] & 2;
+        u8 bit = gLevelState->flags & 2;
 
         if (bit == 0)
         {

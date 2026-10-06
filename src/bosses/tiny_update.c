@@ -5,6 +5,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "box_part.h"
 #include "globals.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
@@ -89,20 +90,6 @@ struct hop_player
     u8 busy;                      // 0x104
 };
 
-struct hop_list
-{
-    u8 unk_00[4];
-    s32 count;                    // 0x04
-    u8 unk_08[4];
-    struct hop_part **items;      // 0x0C
-};
-
-struct hop_level
-{
-    u8 unk_00[0x10];
-    struct { u8 unk_00[4]; s32 unk_04; u8 unk_08[8]; s32 width; s32 height; } *layer0;
-};
-
 /* gTinyVtable class */
 struct tiny_tiger
 {
@@ -160,11 +147,7 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
         ((hop_fn3)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c));        \
     } while (0)
 
-extern void *gLevelState;
 extern struct hop_player *gPlayer;
-extern struct hop_list *gUnknown_030012EC;
-extern void *gCollidableList;
-extern struct hop_level *gLevelLayers;
 
 /* Byte read-modify-writes of the flags at +0x0C. old_agbcc materializes
  * the constant before loading the byte only when it arrives as an inline
@@ -207,7 +190,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 
     if (self->stomped != -1)
     {
-        struct hop_part *anchor = gUnknown_030012EC->items[self->stomped];
+        struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[self->stomped];
         struct hop_vobj *ctrl;
 
         if (anchor->ctrl != NULL)
@@ -431,7 +414,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         else
             VCALL2(self, m50, part, 1);
         SetFrame(part, 4);
-        anchor = gUnknown_030012EC->items[self->target];
+        anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
         x = anchor->x;
         self->x = x;
         if (next == 11 || next == 13)
@@ -449,7 +432,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
 
         self->target = PickTinyHopTarget(self);
         VCALL2(self, m50, part, 4);
-        anchor = gUnknown_030012EC->items[self->target];
+        anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
         ax = anchor->x;
         ay = anchor->y;
         y = ay - 0x2400;
@@ -486,7 +469,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         break;
     case 14:
     {
-        struct hop_part *anchor = gUnknown_030012EC->items[2];
+        struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[2];
         s32 x = anchor->x;
         s32 y = anchor->y - 0x1800;
 
@@ -499,7 +482,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         s32 x = part->x;
 
         self->x = x;
-        self->y = (gLevelLayers->layer0->height << 8) + 0x4000;
+        self->y = (gLevelLayers->layer0->heightPx << 8) + 0x4000;
         self->x = x + 0x6400;
         StartTinyHop((struct gfx_offset_ctrl *)self, (struct gfx_part *)part);
         break;
@@ -525,7 +508,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
 
     for (i = 0; i < gUnknown_030012EC->count; i++)
     {
-        struct hop_part *anchor = gUnknown_030012EC->items[i];
+        struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[i];
         s32 px = gPlayer->x;
         s32 py = gPlayer->y;
         s32 ax = anchor->x;
@@ -590,7 +573,7 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
         s32 y;
 
         x = x0 + (gPlayer->x - x0) * (n - 1) / 3;
-        y = gLevelLayers->layer0->unk_04 << 8;
+        y = gLevelLayers->layer0->y << 8;
         p->x = x;
         p->y = y;
     }

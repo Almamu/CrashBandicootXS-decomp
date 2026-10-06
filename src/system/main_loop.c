@@ -2,8 +2,7 @@
 #include "system.h"
 #include "frontend.h"
 #include "level.h"
-
-extern void *gLevelState;
+#include "globals.h"
 
 /* The game's top-level loop (called once from `AgbMain`, see
  * src/system/main.c): sets up the central per-level state object

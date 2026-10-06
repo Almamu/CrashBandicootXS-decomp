@@ -30,8 +30,6 @@
  * parallel-agent convention reserves collision-avoidance for a single
  * name (wumpa_update.c) - see the issue doc's own follow-up note. */
 
-extern void *gLevelState;
-
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
  * NAKED retry: PickUpWumpa and UpdateWumpaHop match only under it, and the
  * rest of the file compiles identically under either compiler. */
@@ -162,7 +160,6 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * signed `ble`; the state is re-read for each test. The integrate step
  * (ORBIT_STEP), the spawn argument's address and the state-3 tail's
  * locals settle the last register and order differences. */
-extern void *gEntityFlags;
 extern struct orbit_part *gPlayer;
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
@@ -181,7 +178,7 @@ typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
     if (1)                                                                     \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gEntityFlags;                                         \
+        u8 *_base = (u8 *)gEntityFlags;                                  \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \
@@ -340,8 +337,6 @@ void UpdateWumpa(struct orbit_part *self)
  *   +0x4B stores it where +0x49 gets its own fresh zero. Writing the tag
  *   through `t` with the byte `one` places the `mov r6,#0` between the
  *   tag address and its `strb`. */
-extern void *gUnknown_030012EC;
-extern void *gUnknown_030012F4;
 
 struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
 {

@@ -9,8 +9,6 @@
 /* Same singleton system as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-extern struct actor_self *gActorList;
-
 /* HovercraftCannonStateFire: a proximity-triggered effect/hazard detector. Syncs
  * `self`'s position fields to the singleton's current position (plus a
  * fixed offset), and - while the `cooldown` slot is zero -

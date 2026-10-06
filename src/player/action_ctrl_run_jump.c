@@ -23,7 +23,6 @@ struct spawned
     u8 unk_28_2:6;
 };
 
-extern void *gLevelState;
 extern u8 *gPlayer;
 
 /* Stores to the two "next action" trios. As inline parameters, old_agbcc

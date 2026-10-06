@@ -9,6 +9,8 @@
 #include <libgcc.h>
 #include "menus.h"
 #include "player.h"
+#include "level.h"
+#include "globals.h"
 
 struct dma_queue_entry {
     void *dest;
@@ -593,7 +595,6 @@ void nullsub_1(void)
 asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void *gLevelLayers;
 
 /* `self` uses the shared `struct actor` layout (see actor.h) - the
  * "field_18 -> {s16 offset; ...; void *text}" convention docs/rom_map.md
@@ -619,7 +620,7 @@ u8 IsEntityNearCamera(struct actor *self)
         buf[2] = a;
         buf[3] = b;
 
-        subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+        subObj = gLevelLayers->layer0;
         c = (*(s32 *)subObj << 8) + (s32)0xFFFF9C00;
         d = (*(s32 *)((u8 *)subObj + 4) << 8) + (s32)0xFFFFC400;
         buf[0] = c;
@@ -839,7 +840,7 @@ void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
     void *subObj;
     s32 dx, dy;
 
-    subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+    subObj = gLevelLayers->layer0;
     dx = (*(s32 *)subObj << 8) >> 8;
     dy = (*(s32 *)((u8 *)subObj + 4) << 8) >> 8;
     *arg3 = arg1 - dx;
@@ -860,7 +861,7 @@ void WorldPosToScreen(s32 *arg0, s32 *arg1, s32 *arg2)
     if (y & 0x80) {
         y += 0x80;
     }
-    subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+    subObj = gLevelLayers->layer0;
     subX = *(s32 *)subObj << 8;
     subY = *(s32 *)((u8 *)subObj + 4) << 8;
     *arg1 = (x - subX) >> 8;
@@ -1037,8 +1038,6 @@ void ClearEntityGone(struct actor *self)
     result &= tmp;
     self->flags = result;
 }
-
-extern void *gEntityFlags;
 
 /* Always sets self->flags bit0; if self->field_08 (an id) isn't the
  * sentinel 0xFFFF, also sets bit `field_08 & 0x1F` of a 32-bit-word

@@ -8,8 +8,6 @@
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-extern void *gLevelState;
-
 #define HUD_ANIM(offset) ((struct hud_anim_data *)(SPRITE_BANK_BASE + (offset)))
 #define SLOT_RECORD(s) ((s)->anim_data->records[(s)->anim_index])
 

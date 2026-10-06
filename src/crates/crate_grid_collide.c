@@ -9,7 +9,6 @@
 #include "level.h"
 #include "globals.h"
 
-extern struct level_layers *gLevelLayers;
 extern struct box_part *gPlayer;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
@@ -102,13 +101,6 @@ void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struc
 asm(".align 2, 0");
 
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
-
-struct game_state {
-    u8 unk_00[0x78];
-    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
-};
-
-extern struct game_state *gLevelState;
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \

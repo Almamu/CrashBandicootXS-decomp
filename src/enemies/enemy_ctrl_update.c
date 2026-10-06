@@ -28,8 +28,6 @@
 #include "globals.h"
 
 extern void *gPlayer;
-extern void *gEntityFlags;
-extern struct level_layers *gLevelLayers;
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
@@ -43,7 +41,7 @@ static inline void MarkGone(struct ctrl_target *t)
     if (t->id != 0xFFFF)
         do {
             s32 id = t->id;
-            u8 *base = gEntityFlags;
+            u8 *base = (u8 *)gEntityFlags;
             s32 word = id / 32;
             s32 off = word * 4;
             u32 *slot = (u32 *)(base + 0x108);
@@ -369,7 +367,7 @@ static inline void MarkGoneHeld(struct ctrl_target *t)
 
             asm("" : : "r"(hold)); /* no code: ...to here */
             id = t->id;
-            base = gEntityFlags;
+            base = (u8 *)gEntityFlags;
             word = id / 32;
             off = word * 4;
             slot = (u32 *)(base + 0x108);
@@ -386,7 +384,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
     if (t->id != 0xFFFF)
         do {
             s32 id = t->id;
-            u8 *base = gEntityFlags;
+            u8 *base = (u8 *)gEntityFlags;
             s32 word = id / 32;
             s32 off = word * 4;
             u32 *slot = (u32 *)(base + 0x108);

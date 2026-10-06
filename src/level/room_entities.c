@@ -68,50 +68,6 @@
  *   `u32 zero` for the DMA fills.
  * - The first search's id is pinned to r1 (see the comment there).
  */
-struct lk_item
-{
-    u16 tableIdx;
-    u16 p1;
-    u16 p2;
-    u16 p3;
-};
-
-struct lk_group
-{
-    u16 unk_00;
-    u16 count;                      /* +0x02 */
-    struct lk_item *items;          /* +0x04 */
-};
-
-struct lk_list
-{
-    u16 unk_00;
-    u16 count;                      /* +0x02 */
-    struct lk_group *groups;        /* +0x04 */
-};
-
-struct lk_self
-{
-    struct lk_list *list;           /* +0x000 */
-    s32 pos;                        /* +0x004 */
-    u8 bits0[0x100];                /* +0x008 */
-    u8 bits0Copy[0x100];            /* +0x108 */
-    u8 bits1[0x100];                /* +0x208 */
-    u8 bits1Copy[0x100];            /* +0x308 */
-};
-
-struct lk_link
-{
-    s32 from;
-    s32 to;
-};
-
-struct lk_links
-{
-    s32 count;
-    struct lk_link links[0];
-};
-
 struct lk_point
 {
     s32 x;
@@ -139,23 +95,15 @@ struct lk_actor
     struct lk_vtable *vtable;       /* +0x18 */
 };
 
-struct lk_actor_list
-{
-    s32 count;
-    u8 unk_04[4];
-    struct lk_actor **items;        /* +0x08 */
-};
-
-extern struct lk_actor_list *gCrateList;
 extern u8 *_call_via_r1(void *self, void *fn);
 
-void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_links *links, s32 posArg, s32 unused)
+void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list, const struct level_link_list *links, s32 posArg, s32 unused)
 {
     s32 i;
     s32 counter;
     s32 g;
     s32 n;
-    struct lk_link *lk;
+    const struct level_link *lk;
     u32 zero = 0;
 
     if (list != self->list)
@@ -169,15 +117,15 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
     self->pos = posArg >> 8;
 
     counter = 0;
-    for (g = self->list->count - 1; g >= 0; g--)
+    for (g = self->list->groupCount - 1; g >= 0; g--)
     {
-        struct lk_group *group = &self->list->groups[g];
+        const struct level_entity_group *group = &self->list->groups[g];
         s32 k;
 
         for (k = 0; k < group->count; k++)
         {
             if (!(u8)sub_8025968(self, counter))
-                SpawnEntity(gEntitySpawner, counter, (u16 *)&group->items[k]);
+                SpawnEntity(gEntitySpawner, counter, (u16 *)&group->entities[k]);
             counter++;
         }
     }
@@ -188,9 +136,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
     lk = links->links;
 
     {
-        for (i = gCrateList->count - 1; i >= 0; i--)
+        for (i = gCrateList->activeCount - 1; i >= 0; i--)
         {
-            struct lk_actor *actor = gCrateList->items[i];
+            struct lk_actor *actor = (struct lk_actor *)gCrateList->slotArray[i];
             u16 id = actor->id;
             s32 j;
 
@@ -207,9 +155,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                         s32 missing;
                         s32 m;
 
-                        for (k = gCrateList->count - 1; k >= 0; k--)
+                        for (k = gCrateList->activeCount - 1; k >= 0; k--)
                         {
-                            struct lk_actor *other = gCrateList->items[k];
+                            struct lk_actor *other = (struct lk_actor *)gCrateList->slotArray[k];
 
                             if (to == other->id)
                             {
@@ -258,9 +206,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
             s32 got;
             s32 m;
 
-            for (k = 0; k < gCrateList->count; k++)
+            for (k = 0; k < gCrateList->activeCount; k++)
             {
-                if (gCrateList->items[k]->id == from)
+                if (((struct lk_actor *)gCrateList->slotArray[k])->id == from)
                 {
                     found = 1;
                     goto chk;
@@ -285,14 +233,14 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                     {
                         missing = 0;
                         next = (u16)lk[m].to;
-                        for (k2 = 0; k2 < gCrateList->count; k2++)
+                        for (k2 = 0; k2 < gCrateList->activeCount; k2++)
                         {
                             /* Pinned: the ROM keeps the item pointer in
                              * r0 and the id in r1. As a local temporary
                              * the id is allocated first and takes r0. */
                             register u16 aid asm("r1");
 
-                            actor = gCrateList->items[k2];
+                            actor = (struct lk_actor *)gCrateList->slotArray[k2];
                             aid = actor->id;
                             if (aid == to)
                             {
@@ -308,9 +256,9 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                     goto move;
                 if (missing)
                 {
-                    for (k3 = 0; k3 < gCrateList->count; k3++)
+                    for (k3 = 0; k3 < gCrateList->activeCount; k3++)
                     {
-                        struct lk_actor *a = gCrateList->items[k3];
+                        struct lk_actor *a = (struct lk_actor *)gCrateList->slotArray[k3];
 
                         if (a->id == to)
                         {

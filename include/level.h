@@ -24,14 +24,10 @@
 struct MedalListItem;
 struct bg_streamer;
 struct camera;
-struct collider;
 struct fx_part;
 struct gl_self;
 struct level_ctx;
 struct level_progress;
-struct lk_links;
-struct lk_list;
-struct lk_self;
 struct orbit_part;
 struct pooled_layer;
 struct part_list;
@@ -98,9 +94,57 @@ struct level_layers
     struct tile_cache *tiles;           // 0x20 - 0x1064 bytes
     void *asset;                        // 0x24
     u8 assetOwned;                      // 0x28
-    u8 unk_29;                          // 0x29
-    u8 unk_2A;                          // 0x2A
+    u8 kind;                            // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set (ProbeTerrainX/Y; terrain_probe_axes.c's `nibble`)
+    u8 probeFlag;                       // 0x2A - CollidePlayer sets it around its ground probe (player_collide.c's `busy`, terrain_probe_axes.c's `flagHeld`)
     u8 unk_2B;                          // 0x2B
+};
+
+/* The entity flags (`gEntityFlags`, 0x408 bytes, InitEntityFlags; built
+ * by UpdateGameFrame): the room's entity list and two pairs of bitmaps,
+ * one bit per entity id (entity_flags.c's bit accessors, sub_8025944
+ * through sub_8025A0C). SpawnRoomEntities skips the entities set in
+ * `bits0` and copies `bits0`/`bits1` to `bits0Copy`/`bits1Copy` when the
+ * room loads; MarkEntityGone and its inline copies set an entity's bit
+ * in `bits0Copy` when it is collected, broken or killed, and
+ * SetCheckpointAtPlayer copies the two back. The names are room_entities.c's
+ * (`struct lk_self`); dingodile.c called the object `struct entity_flags`
+ * (`bits0Copy` was `bitmap`, the list `struct collect_info`), time_trial.c
+ * `struct collision_map` (`seen`), text_popup.h a `struct
+ * level_record_table **`. */
+struct entity_flags
+{
+    const struct level_entity_list *list; // 0x000 - the room's entities and their parameters
+    s32 pos;                            // 0x004 - SpawnRoomEntities's position argument >> 8
+    u32 bits0[64];                      // 0x008
+    u32 bits0Copy[64];                  // 0x108
+    u32 bits1[64];                      // 0x208
+    u32 bits1Copy[64];                  // 0x308
+};
+
+/* The camera's followed object (gPlayer, or level_select.c's follow
+ * child). */
+struct camera_target
+{
+    s32 x;           // 0x00 - Q8
+    s32 y;           // 0x04 - Q8
+    u8 unk_08[0x1C]; // 0x08-0x23
+    u8 dirFlags;     // 0x24 - bit 0/1 = +x/-x, bit 2/3 = -y/+y (mode 2 look-ahead)
+    u8 unk_25[3];    // 0x25-0x27
+    u8 flags;        // 0x28 - bit 4 is the mirror flag
+};
+
+/* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.c):
+ * a Q8 position, a Q8 look-ahead offset, the followed object and the
+ * mode. run_room.c called it `struct gl_scratch`, action_ctrl_event.c
+ * `struct follow_state` and level_select.c `struct follow_owner`. */
+struct camera
+{
+    s32 x;                        // 0x00 - Q8
+    s32 y;                        // 0x04 - Q8
+    s32 vx;                       // 0x08 - Q8 look-ahead
+    s32 vy;                       // 0x0C - Q8 look-ahead
+    struct camera_target *target; // 0x10
+    s32 mode;                     // 0x14 - 1/2 select StepCameraFacing/StepCameraDirectional
 };
 
 /* src/level/bg_layer.c */
@@ -325,7 +369,7 @@ extern void PlayBootCutscene(void *self);
 extern void nullsub_24(void);
 extern void UnpackSaveData(struct level_state *self, void *src);
 extern void *PackSaveData(void *self);
-extern void *GetLevelState(void);
+extern struct level_state *GetLevelState(void);
 
 /* src/level/play_room.c */
 extern s32 PlayRoom(void *self);
@@ -338,7 +382,7 @@ extern void ResumeRoomAfterPause(void *self);
 extern void ResetObjBuffers(void);
 
 /* src/level/room_entities.c */
-extern void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_links *links, s32 pos, s32 unused);
+extern void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list, const struct level_link_list *links, s32 pos, s32 unused);
 
 /* src/level/room_frame.c */
 extern void UpdateRoomFrame(void *self);
@@ -465,8 +509,8 @@ extern s32 sub_8026C8C(void);
 extern s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *outValue);
 
 /* src/level/terrain_probe_axes.c */
-extern s32 ProbeTerrainY(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
-extern s32 ProbeTerrainX(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
+extern s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
+extern s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
 
 /* src/level/tile_cache.c */
 extern void DestroyTileCache(void *self, u32 flags);
@@ -517,6 +561,9 @@ extern const struct vtable_slot gPooledBgLayerVtable[10];
 /* sym_iwram.txt */
 extern struct part_list *gDecorationList;
 extern struct level_state *gUnknown_030012C4;
+/* Updated and cleared, but never culled or drawn: the invisible objects,
+ * the entity type 0x55 room-exit zones (spawn_bosses.c) and
+ * SpawnSealSpawner's spawner. */
 extern struct part_list *gUpdateOnlyPartList;
 
 /* The enemies' anim maps (src/data/popup_tables_16b98c.c), stored in their

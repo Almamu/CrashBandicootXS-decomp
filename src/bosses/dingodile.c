@@ -232,26 +232,7 @@ struct obj_48a4
     struct part *target; // 0x1C
 };
 
-struct collect_info
-{
-    u8 unk_00[8];
-    u16 *offset;               // 0x08
-    u8 *bits;                  // 0x0C
-};
-
-struct entity_flags
-{
-    struct collect_info *info; // 0x00
-    u8 unk_04[0x104];
-    u32 bitmap[1];             // 0x108
-};
-
-extern struct part_list *gUnknown_030012EC;
-extern struct part_list *gCollidableList;
 extern struct part *gPlayer;
-extern struct entity_flags *gEntityFlags;
-extern void *gLevelState;
-extern struct level_layers *gLevelLayers;
 
 typedef void (*method1_fn)(void *self, s32 a);
 typedef void (*method2_fn)(void *self, void *a, s32 b);
@@ -343,7 +324,7 @@ static inline void MarkCollected(struct part *p)
         s32 w = id;
 
         w /= 32;
-        ls->bitmap[w] |= 1 << (id - w * 32);
+        ls->bits0Copy[w] |= 1 << (id - w * 32);
     }
 }
 
@@ -821,14 +802,14 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
     p->slot = GetSpriteAnimPaletteSlot((struct actor *)p);
     p->ctl = ctl;
     VCALL1(ctl, m18, p);
-    bits = &gEntityFlags->info->bits[*gEntityFlags->info->offset];
+    bits = &((u8 *)gEntityFlags->list->params)[*gEntityFlags->list->paramOffsets];
     p->f28.facing = ((*bits >> 1) ^ 1) & 1;
     p->f28.flag5 = (*bits >> 2) & 1;
     p->fl.b.active = 1;
     if (mode == 0)
-        AddToPartList((struct part_list *)gUnknown_030012EC, p);
+        AddToPartList(gUnknown_030012EC, p);
     else
-        AddToPartList((struct part_list *)gCollidableList, p);
+        AddToPartList(gCollidableList, p);
 }
 
 /* Spawns one of the boss's floor-tile parts (record index 1 of the
@@ -857,7 +838,7 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     p->f28.facing = facing;
     p->fl.b.active = 1;
     VCALL1_B(ctl, m18, p)
-    AddToPartList((struct part_list *)gCollidableList, p);
+    AddToPartList(gCollidableList, p);
 }
 
 /* gDingodileShieldVtable's per-frame update (this controller is created
@@ -1086,7 +1067,7 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     p->ctl = c;
     VCALL1(c, m18, p);
     p->fl.b.active = 1;
-    AddToPartList((struct part_list *)gCollidableList, p);
+    AddToPartList(gCollidableList, p);
 }
 
 void UpdateDingodileShark(struct obj_483c *self, struct part *other)

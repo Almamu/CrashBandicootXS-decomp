@@ -19,8 +19,6 @@
  * `gHovercraft` one. See docs/matching/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
 
-extern void *gLevelState;
-
 /* Constructor/reset: while the singleton flag (`gJetpackPlayerInactive`) is
  * off, resets `self` to state 5/table-index 4 (idle-ish), plays a cue,
  * and - only if the current game-mode flag at `gLevelState+0x8c`
@@ -54,7 +52,7 @@ void FinishJetpackRun(void *selfArg)
         }
         self->animTime = zero;
         PlaySfx(gAudioContext, 0x3b, 0x100);
-        if (*((u8 *)gLevelState + 0x8c) != 0) {
+        if (gLevelState->timeTrial != 0) {
             FreezeLevelClock(gLevelState, 0x2710);
         }
     }
@@ -118,7 +116,7 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
         self->base.stateTime = zero;
     }
 
-    paused = *((u8 *)gLevelState + 0x8c);
+    paused = gLevelState->timeTrial;
     if (paused != 0) {
         return;
     }
@@ -133,7 +131,7 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
 
     switch (gJetpackRingChain) {
     case 0:
-        if (*((u8 *)gLevelState + 0x8c) == 0) {
+        if (gLevelState->timeTrial == 0) {
             if (gJetpackQueuedWumpa == 0) {
                 gJetpackWumpaDispenseTimer = 0xf;
             }
@@ -141,7 +139,7 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
         }
         break;
     case 1:
-        if (*((u8 *)gLevelState + 0x8c) == 0) {
+        if (gLevelState->timeTrial == 0) {
             if (gJetpackQueuedWumpa == 0) {
                 gJetpackWumpaDispenseTimer = 0xf;
             }
@@ -149,7 +147,7 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
         }
         break;
     case 2:
-        if (*((u8 *)gLevelState + 0x8c) == 0) {
+        if (gLevelState->timeTrial == 0) {
             if (gJetpackQueuedWumpa == 0) {
                 gJetpackWumpaDispenseTimer = 0xf;
             }
@@ -174,7 +172,7 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
         }
         break;
     case 4:
-        if (*((u8 *)gLevelState + 0x8c) == 0) {
+        if (gLevelState->timeTrial == 0) {
             AddLife(gLevelState);
             PlaySfx(gAudioContext, 7, 0x100);
         }

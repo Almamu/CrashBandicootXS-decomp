@@ -10,8 +10,6 @@
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-extern struct actor_self *gActorList;
-
 /* HovercraftLauncherStateLaunch: `HovercraftCannonStateFire`'s sibling. Sets `self`'s position fields
  * from the singleton's own position plus a different fixed offset,
  * and - while `cooldown` is zero - measures `self`'s

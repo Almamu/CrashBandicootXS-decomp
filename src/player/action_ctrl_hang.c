@@ -17,7 +17,6 @@
  * More gActionCtrlStateTable action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
 
-extern void *gEntityFlags;
 extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
 
@@ -251,7 +250,7 @@ void ActionCtrlStateDying(struct act *self)
             if (cur != none)
             {
                 register s32 id asm("r3") = *(vu16 *)&part->id;
-                register u8 *base asm("r2") = gEntityFlags;
+                register u8 *base asm("r2") = (u8 *)gEntityFlags;
                 register s32 word asm("r0") = id;
                 s32 off;
                 u32 *slot;
@@ -618,7 +617,6 @@ asm(".align 2, 0");
  * at each parked function's raw-asm gap - see docs/matching/
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 
-extern void *gCollidableList;
 extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);

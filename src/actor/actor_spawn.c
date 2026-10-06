@@ -4,6 +4,8 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "level_state.h"
+#include "globals.h"
 
 /* gActorSpawnTable[] - the category's "spawnTable" runtime array,
  * category_descriptor.spawnTable (include/actor_anim.h, offset
@@ -33,8 +35,6 @@ struct sub_effect_record {
 };
 COMPILE_TIME_ASSERT(actor_spawn_c, sizeof(struct sub_effect_record) == 0x14);
 
-extern void *gLevelState;
-extern void *gActorList;
 /* The category vtable object (include/actor_anim.h's 13-fn-pointer
  * `struct category_vtable`) only has slots 0-6 confirmed as real
  * per-type behavior entries (docs/rom_map.md) - slots past that
@@ -128,7 +128,7 @@ s32 sub_802A570(s32 idx)
     u8 v;
 
     v = record->kind;
-    if (*((u8 *)gLevelState + 0x8c) != 0) {
+    if (gLevelState->timeTrial != 0) {
         v = record->altKind;
     } else if (gUnknown_03001414 != 0) {
         v = record->bonusKind;

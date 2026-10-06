@@ -41,9 +41,6 @@
  * include/actor_self.h) - once parked NAKED as an "r7 table-base-pin"
  * hazard, see docs/matching/pmf-dispatch-retry.md. */
 
-extern void *gLevelState;
-extern void *gActorList;
-
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern u8 gActorVtable[];

@@ -20,7 +20,6 @@
  * matches as plain C under it, and `ApplyActionCtrlMotion` followed in the
  * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
-extern void *gLevelState;
 extern struct act_part *gPlayer;
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc

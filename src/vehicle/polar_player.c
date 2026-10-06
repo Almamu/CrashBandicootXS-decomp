@@ -28,16 +28,6 @@
  * docs/matching/issue-51-54-naked-retry.md. */
 
 /* The gLevelState fields read here. */
-struct game_state {
-    u8 unk_00[0x78];
-    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
-    u8 unk_7C[0x10];
-    u8 timeTrial;       // 0x8C
-};
-
-extern struct game_state *gLevelState;
-
-
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 static inline s32 Abs(s32 x)
@@ -237,8 +227,8 @@ s32 HurtPolarPlayer(void *selfArg)
 
     {
         register struct actor_self **effectAddr asm("r2") = &gPolarAkuAku;
-        void **playerAddr = (void **)&gLevelState;
-        s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
+        struct level_state **playerAddr = &gLevelState;
+        s32 tier = (*playerAddr)->maskLevel;
 
         if (tier == 0) {
             PlaySfx(gAudioContext, 0x1b, 0x100);
@@ -264,7 +254,7 @@ s32 HurtPolarPlayer(void *selfArg)
 
                         *reg1480 = one;
                         {
-                            struct game_state *player = *playerAddr;
+                            struct level_state *player = *playerAddr;
 
                             if (player->timeTrial == 0) {
                                 LoseLife((struct level_state *)player);
@@ -313,8 +303,8 @@ s32 ShockPolarPlayer(void *selfArg)
 
     {
         register struct actor_self **effectAddr asm("r4") = &gPolarAkuAku;
-        void **playerAddr = (void **)&gLevelState;
-        s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
+        struct level_state **playerAddr = &gLevelState;
+        s32 tier = (*playerAddr)->maskLevel;
 
         if (tier == 0) {
             register s32 state asm("r0") = 0xc;
@@ -617,7 +607,7 @@ void PolarPlayerStateShocked(void *selfArg)
             }
         }
         if (gLevelState->timeTrial == 0) {
-            LoseLife((struct level_state *)gLevelState);
+            LoseLife(gLevelState);
         }
     } else if (counter & 4) {
         QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
@@ -641,7 +631,7 @@ void PolarPlayerStateCaught(struct actor_self *self)
         ACTOR_SET_STATE(self, 8, 7);
         gPolarPauseLocked = 1;
         {
-            struct game_state *player = gLevelState;
+            struct level_state *player = gLevelState;
 
             if (player->timeTrial == 0)
                 LoseLife((struct level_state *)player);

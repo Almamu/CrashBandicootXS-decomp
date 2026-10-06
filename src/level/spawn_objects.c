@@ -12,8 +12,6 @@
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
 
-extern u8 *gLevelState;
-
 /* Same shape as level_select_parts.h's anim_table/anim_record. */
 struct anim_record_21668
 {
@@ -154,11 +152,11 @@ void SpawnBonusPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     s32 result;
 
-    if (IsBonusRoundDone((struct level_state *)gLevelState) || gLevelState[0x8c])
+    if (IsBonusRoundDone(gLevelState) || gLevelState->timeTrial)
         result = (s32)CreatePlatform(arg0, arg1, arg2, arg3, 7);
     else
         result = (s32)CreatePlatform(arg0, arg1, arg2, arg3, 5);
-    SetBonusPlatform((struct level_state *)gLevelState, result);
+    SetBonusPlatform(gLevelState, result);
 }
 
 /* Plain `CreatePlatform` trampoline, id `2`. */

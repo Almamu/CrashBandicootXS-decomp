@@ -11,7 +11,6 @@
  * `GetBottomCrate`/`CollideCrateWithPlayer` right after this function are matched in
  * crate_stack.c. */
 
-extern void *gEntityFlags;
 /* DropExtraLife is parked (NON_MATCHING) as of entity_spawner.c. This call
  * site's own arguments are spelled out entirely in inline asm below -
  * see the comment right above that block for why. */

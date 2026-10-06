@@ -11,10 +11,6 @@
 #include "level.h"
 #include "globals.h"
 
-extern void *gLevelState;
-extern void *gEntityFlags;
-extern void *gUnknown_030012EC;
-
 /* Sets `part->field_29`'s low nibble to `GetSpriteAnimPaletteSlot(part)`'s result,
  * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
  * (src/menus/pause_menu_pages_init.c, confirmed matching for `InitPauseCrystalsPage`),
@@ -161,11 +157,11 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 tag asm("r5");
     register u8 field0A asm("r6");
     struct actor *part;
-    register u8 *gv asm("r1") = gLevelState;
+    register struct level_state *gv asm("r1") = gLevelState;
     register s32 mask asm("r0") = 8;
     register u8 byte asm("r1");
 
-    byte = gv[2];
+    byte = gv->flags;
     if (mask & byte) {
         return;
     }
@@ -241,7 +237,7 @@ void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 c
  * arguments, unless `gLevelState+0x8c` (time trial) is set. */
 void SpawnWumpa(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (*((u8 *)gLevelState + 0x8c) == 0) {
+    if (gLevelState->timeTrial == 0) {
         CreateWumpa(arg0, arg1, arg2, arg3);
     }
 }
@@ -411,7 +407,7 @@ void *InitLevelState(void *self)
         *addr = tmp;
     }
     {
-        void **addr = (void **)&gEntityFlags;
+        struct entity_flags **addr = &gEntityFlags;
         register void *tmp asm("r0") = OperatorNew(0x81 << 3);
 
         asm volatile("bl InitEntityFlags" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");

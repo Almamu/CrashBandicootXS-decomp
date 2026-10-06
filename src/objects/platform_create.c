@@ -30,10 +30,10 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
     obj->x = x << 8;
     obj->y = y << 8;
     {
-        u8 *lvl = *(u8 **)gEntityFlags;
-        u16 *offsets = *(u16 **)(lvl + 8);
+        const struct level_entity_list *lvl = gEntityFlags->list;
+        const u16 *offsets = lvl->paramOffsets;
 
-        rec = (struct spawn_rec *)(*(u8 **)(lvl + 0xC) + offsets[index]);
+        rec = (struct spawn_rec *)((const u8 *)lvl->params + offsets[index]);
         type = rec->type;
     }
     switch (kind)

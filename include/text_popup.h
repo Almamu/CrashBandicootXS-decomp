@@ -14,6 +14,7 @@
 #include "enemies.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 #include "globals.h"
 
 /* The sprite part CreateMovingSprite returns. Same layout as cortex.c's
@@ -39,8 +40,8 @@ struct popup_part
     struct part_ctrl *hdr;      // 0x44
 };
 
-/* One level record, at `bytes + offsets[id]` in gEntityFlags's
- * table. */
+/* One level record, at `params + paramOffsets[id]` (bytes) in the
+ * room's entity list (gEntityFlags->list). */
 struct level_record
 {
     u8 flags;                   // bit 1: clear = X-mirrored (popup_part.flipX), bit 2: Y-mirrored
@@ -53,15 +54,6 @@ struct level_record
     s32 unk_18;
 };
 
-struct level_record_table
-{
-    u8 unk_00[8];
-    u16 *offsets;
-    u8 *bytes;
-};
-
-extern struct level_record_table **gEntityFlags;
-extern void *gCollidableList;
 
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
@@ -73,8 +65,8 @@ extern s32 _call_via_r2(void *self, void *arg, void *fn);
                 (hdr)->anchor->attach.fn)
 
 #define LEVEL_RECORD(id)                                                       \
-    ((struct level_record *)((*gEntityFlags)->bytes +                     \
-                             (*gEntityFlags)->offsets[id]))
+    ((struct level_record *)((const u8 *)gEntityFlags->list->params +  \
+                             gEntityFlags->list->paramOffsets[id]))
 
 /* The setters below are inline because old_agbcc schedules a store's
  * value before its address only when the value arrives as an inline

@@ -102,12 +102,6 @@ struct player
     s32 unk_60;             // 0x60
 };
 
-struct follow_owner
-{
-    u8 unk_00[0x10];
-    void *follow;           // 0x10 - the player, or a live follow_child
-};
-
 /* One 28-byte animation record, `anim_table.records[animIndex]`. */
 struct anim_record
 {
@@ -239,9 +233,6 @@ COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_menu) == 0xAC);
 
 
 extern struct player *gPlayer;
-extern struct follow_owner *gCamera;
-extern void *gCollidableList;
-extern void *gLevelState;
 
 /* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
  * (menus.h), but InitLevelSelect reads each one twice, across calls,
@@ -343,7 +334,7 @@ void ResetCameraLead(struct follow_child *self)
 
     if (!(v & one))
         self->visible = v ^ 1;
-    gCamera->follow = self;
+    gCamera->target = (struct camera_target *)self;
     {
         struct player *p = gPlayer;
         register s32 x asm("r0") = p->x;
@@ -413,7 +404,7 @@ void UpdateCameraLead(struct follow_child *self)
 void DestroyCameraLead(struct follow_child *self, s32 flags)
 {
     self->vtable = gCameraLeadVtable;
-    gCamera->follow = gPlayer;
+    gCamera->target = (struct camera_target *)gPlayer;
     DestroyMovingSprite((struct actor *)self, flags);
 }
 

@@ -4,20 +4,13 @@
 #include "player.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #9/#10: 0x0800A884 - the same big, still-unnamed "part"
  * object family as `player_update.c`/`player_reset.c`; raw offset casts
  * throughout for the same reason those files give. */
 
-extern void *gLevelLayers;
-extern void *gLevelState;
 extern u8 gEmptySpritePoint[];
-
-struct a884_game {
-    u8 unk_00[0x29];
-    u8 kind;            // 0x29
-    u8 busy;            // 0x2A
-};
 
 struct a884_part {
     s32 x;              // 0x00
@@ -170,13 +163,13 @@ u8 CollidePlayer(struct a884_part *self)
         self->f105 = zero;
         CALL_M70H(self);
         self->f105 = 1;
-        ((struct a884_game *)gLevelLayers)->busy = 1;
+        gLevelLayers->probeFlag = 1;
         CollideGroundSprite((struct box_part *)self);
         /* r3 hold (no code) over the flag resets and the kind switch:
          * the ROM's reloads rotate through r0-r2 only, so the flag
          * offsets reuse one register (`adds r1, #3`, `subs r2, #3`). */
         asm("" : "=r"(hold));
-        ((struct a884_game *)gLevelLayers)->busy = zero;
+        gLevelLayers->probeFlag = zero;
         if (self->carried != 0) {
             self->hitAxes |= 8;
             self->carried = zero;
@@ -184,7 +177,7 @@ u8 CollidePlayer(struct a884_part *self)
             self->pushLeft = zero;
             self->pushRight = zero;
         }
-        kind = ((struct a884_game *)gLevelLayers)->kind;
+        kind = gLevelLayers->kind;
         if (kind != 0) {
             switch (kind) {
             case 1:
@@ -243,7 +236,7 @@ u8 CollidePlayer(struct a884_part *self)
                 }
                 break;
             }
-            ((struct a884_game *)gLevelLayers)->kind = 0;
+            gLevelLayers->kind = 0;
         } else if (self->hitAxes == 8) {
             self->pushLeft = 0;
             self->pushRight = 0;

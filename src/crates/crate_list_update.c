@@ -3,10 +3,11 @@
 #include "box_part.h"
 #include <agb_syscall.h>
 #include "crates.h"
+#include "level.h"
+#include "globals.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *_call_via_r1(void *arg0, void *fn);
-extern void *gLevelLayers;
 
 /* A per-frame spatial-hash-grid maintenance pass over `manager`'s
  * `struct pool_manager` (`crate_list.c`), scoped to the 3-bucket
@@ -43,11 +44,6 @@ extern void *gLevelLayers;
  *
  * Built with old_agbcc (see `OLD_AGBCC_OBJS` in the Makefile).
  * docs/matching/issue-9-raw-asm-pass.md has how it was matched. */
-struct track_obj {
-    u8 unused_00[0x10];
-    s32 *pos;
-};
-
 /* `RemoveCrateFromList`'s body, inlined. `holdR2` is a constant: nonzero only
  * for the first loop's copy (see the hold below). */
 static inline void pool_remove(struct pool_manager *manager, struct box_part *target, s32 holdR2)
@@ -154,7 +150,7 @@ void UpdateCrateList(struct pool_manager *manager)
     v3 = 0x11800;
     box[2] = v2;
     box[3] = v3;
-    pos = ((struct track_obj *)gLevelLayers)->pos;
+    pos = (s32 *)gLevelLayers->layer0;
     v0 = (pos[0] << 8) - 0x6400;
     v1 = (pos[1] << 8) - 0x3c00;
     box[0] = v0;

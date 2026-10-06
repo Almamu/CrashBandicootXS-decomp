@@ -6,10 +6,10 @@
 #include "objects.h"
 #include "memory.h"
 #include "box_part.h"
+#include "globals.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-extern void *gLevelLayers;
 
 /* What the managers' lists hold: level objects with a gcc 2.x method
  * table at +0x18 (the same prefix as gobj_1a794.h's `struct gobj`, whose

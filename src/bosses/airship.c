@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
@@ -26,7 +27,6 @@
  * set of fixed ranges/bias points (`0xa000`/`0x4FFF`, `0xFFFFD300`/
  * `0x13FF`) and a final `0x180`/`-0x180`, `0x100`/`-0x100` hard clamp.
  */
-extern struct actor_self *gActorList;
 
 static inline s32 Abs(s32 x)
 {

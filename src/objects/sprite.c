@@ -313,7 +313,6 @@ void *GetSpriteBodyBox(void *dest, void *pt)
 
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gPlayer;
-extern void *gEntityFlags;
 
 /* `part` (a `struct actor`, same layout used throughout this ROM
  * region) collides with the player (`gPlayer`, tested via
@@ -391,7 +390,7 @@ s32 CheckSpritePickup(struct collect_part *part)
                 COLLECT_FLAGS(part) |= one;
                 if (part->id != 0xFFFF) do {
                     s32 id = part->id;
-                    u8 *base = gEntityFlags;
+                    u8 *base = (u8 *)gEntityFlags;
                     s32 word = id / 32;
                     s32 off = word * 4;
                     u32 *slot = (u32 *)(base + 0x108);
@@ -435,7 +434,6 @@ s32 CheckSpritePickup(struct collect_part *part)
 }
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void *gLevelLayers;
 
 /* Same shape as IsEntityNearCamera (graphics.c) - `part+0x25 == 1` is a fast
  * "always visible" override; otherwise `part+0xd` bit 2 gates an
@@ -464,7 +462,7 @@ s32 IsSpriteObjOnScreen(struct box_part *part)
             register void *subObj asm("r0");
             struct part_method *table;
 
-            subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+            subObj = gLevelLayers->layer0;
             {
                 s32 field0 = *(s32 *)subObj << 8;
                 s32 field4 = *(s32 *)((u8 *)subObj + 4) << 8;

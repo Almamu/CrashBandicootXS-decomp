@@ -1,6 +1,7 @@
 #include "core.h"
 #include "vtable.h"
 #include "objects.h"
+#include "globals.h"
 
 /* GitHub issue #9/#10, tail of the 0x0800B8DC-0x0800D040 cluster (see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the last raw file
@@ -13,7 +14,6 @@
  * 43-function cluster investigation that began with `UpdateEnemyCtrl`/
  * `HitEnemy`. */
 
-extern void *gEntityFlags;
 extern void *_call_via_r1(void *arg0, void *fn);
 
 /* `other` (the second argument - `self`, the first, is never read)
@@ -66,7 +66,7 @@ struct cbf4_other {
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gEntityFlags;                                         \
+        u8 *_base = (u8 *)gEntityFlags;                                  \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \

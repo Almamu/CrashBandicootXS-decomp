@@ -118,17 +118,10 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
-extern void *gCrateList;
 
-struct placement_level
-{
-    u8 unk_00[8];
-    u16 *offsets;       // 0x08
-    u8 *records;        // 0x0C
-};
-
-#define PLACEMENT_LEVEL (*(struct placement_level **)gEntityFlags)
-#define PLACEMENT(i) (PLACEMENT_LEVEL->records + PLACEMENT_LEVEL->offsets[i])
+/* The room's entity parameter records (struct level_entity_list). */
+#define PLACEMENT_LEVEL (gEntityFlags->list)
+#define PLACEMENT(i) ((u8 *)PLACEMENT_LEVEL->params + PLACEMENT_LEVEL->paramOffsets[i])
 /* PLACEMENT as an inline: its return value is copied, which gives the
  * ROM's pointer copies (see the note above) */
 static inline u8 *Placement(u16 i)
@@ -153,7 +146,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->id = id;
     if (type == 9 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id))
         type = 0;
-    if (*((u8 *)gLevelState + 0x8c) == 0
+    if (gLevelState->timeTrial == 0
         && GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState))
     {
         if (type == 0xb)
@@ -206,7 +199,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 self->trialKind = 0x15;
             else
                 self->trialKind = *(s16 *)(rec + 4);
-            if (*((u8 *)gLevelState + 0x8c))
+            if (gLevelState->timeTrial)
                 type = self->trialKind - 0x15;
         }
     }
@@ -259,7 +252,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         if (!flagged)
         {
             self->trialKind = 0x15;
-            if (*((u8 *)gLevelState + 0x8c))
+            if (gLevelState->timeTrial)
                 type = 0;
         }
         break;

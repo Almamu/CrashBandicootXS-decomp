@@ -166,23 +166,6 @@ struct phys_player
 
 #define PHYS_PLAYER ((struct phys_player *)gPlayer)
 
-/* gCrateList: the active-object list these functions scan. */
-struct crate_list
-{
-    s32 count;
-    s32 capacity;
-    struct crate **items;
-};
-
-/* gUnknown_030012EC, the second object list BlastNearbyCrates scans. */
-struct phys_obj_list2
-{
-    s32 unk_00;
-    s32 count;
-    s32 unk_08;
-    struct crate **items;
-};
-
 typedef s32 (*phys_method_fn)(void *self);
 
 /* Calls method `m` (a gcc 2.x {s16 thisOffset; fn} vtable slot) on `obj`. */
@@ -237,7 +220,7 @@ static inline void PhysSetFrame(struct crate *obj, s32 idx)
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gEntityFlags;                                         \
+        u8 *_base = (u8 *)gEntityFlags;                                  \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \

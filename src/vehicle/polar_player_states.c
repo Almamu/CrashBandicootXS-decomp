@@ -27,8 +27,6 @@
  * `self` is `struct actor_self`; the animation-reset blocks store
  * through `*(T *)&self->field` casts, as in polar_player_actions.c. */
 
-extern void *gLevelState;
-
 /* Accumulator-drain/reward-dispenser for the `gPolarQueuedWumpa`
  * accumulator (filled by `QueuePolarWumpa`, still raw): while the "locked"
  * flag `gPolarPlayerInactive` is set, fully drains it via repeated

@@ -4,9 +4,6 @@
 #include "level.h"
 #include "globals.h"
 
-extern void *gCamera;
-extern void *gLevelLayers;
-
 void ClearRoomExit(void)
 {
     gRoomExitRequested = 0;

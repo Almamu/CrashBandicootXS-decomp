@@ -10,6 +10,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "box_part.h"
 #include "globals.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
@@ -129,12 +130,6 @@ extern void AddCollisionCandidate_b(void *queue, struct crate *obj, s32 kind, s3
     }                                                                          \
     else                                                                       \
         (void)0
-
-struct d18c_level
-{
-    u8 unk_00[0x78];
-    s32 mode;           // 0x78
-};
 
 #define D18C_CALL68(a, b, c) \
     PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
@@ -312,7 +307,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     }
     px = D18C_P->x >> 8;
     py = D18C_P->y >> 8;
-    if (((struct d18c_level *)gLevelState)->mode == 3)
+    if (gLevelState->maskLevel == 3)
         kind = 6;
     else
     {
@@ -573,7 +568,7 @@ tail:
             }
             if (dx > 5 && f21 == 0)
             {
-                if ((((struct d18c_level *)gLevelState)->mode == 0
+                if ((gLevelState->maskLevel == 0
                      && ((D18C_P->flags >> 6) & 1)
                      && !D18C_TimerOver())
                     || self->kind != 0xd)
@@ -1251,8 +1246,6 @@ asm(".align 2, 0");
  * OLD_AGBCC_OBJS) - see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry section. */
 
-extern struct crate_list *gCrateList;
-
 /* The effect object SpawnEffectPart spawns (only the fields set here). */
 struct phys_puff
 {
@@ -1443,7 +1436,7 @@ void LightTntCrate(struct crate *selfArg)
                 : "r1", "cc", "memory"
             );
         }
-        LinkCrateToActiveBucket((struct pool_manager *)gCrateList, (struct crate *)self);
+        LinkCrateToActiveBucket(gCrateList, (struct crate *)self);
 
         {
             register u8 **p2 asm("r0") = *(u8 ***)(self + 0x20);
@@ -1667,7 +1660,7 @@ void BreakCrate(struct crate *self, u32 arg1)
     if (GetCrateAbove(self) != NULL && flag == 0)
         chained = 1;
     PHYS_FLAG4(self) = 1;
-    LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, self);
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     one = 1;
@@ -1684,7 +1677,7 @@ void BreakCrate(struct crate *self, u32 arg1)
         AddBrokenCrate(gLevelState);
     {
         s32 id = self->id;
-        u8 *base = gEntityFlags;
+        u8 *base = (u8 *)gEntityFlags;
         s32 word = id / 32;
         s32 off = word * 4;
         u32 *slot = (u32 *)(base + 0x108);
@@ -1967,7 +1960,7 @@ void DropCratesAbove(struct crate *self)
             n->fallSpeed = t + d;
         }
         n->flags |= 0x10;
-        LinkCrateToActiveBucket((struct pool_manager *)gCrateList, n);
+        LinkCrateToActiveBucket(gCrateList, n);
         if (tbl[n->kind] && self->u48.blastState == 0 && n->fallDistance > 0x1600)
         {
             struct crate *next = GetCrateAbove(n);
@@ -2018,7 +2011,7 @@ void DropCratesAbove(struct crate *self)
  * `self+0x4f`, clears `self+0x4d`'s low 7 bits, resets
  * `gPlayer+0x80`, sets `self+0xc` bit `0x10` (a "collision
  * response active" render/update flag matched elsewhere in this
- * subsystem), and calls `LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self)` (adds
+ * subsystem), and calls `LinkCrateToActiveBucket(gCrateList, self)` (adds
  * `self` back onto the shared active-object list). Sets `self+0x4d`'s
  * `0x80` bit unconditionally, then ORs in `arg1` on top of that -
  * `arg1` ends up as the low bit of `self+0x4d`.
@@ -2074,7 +2067,7 @@ void ExplodeCrate(struct crate *self, u8 near)
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     self->flags |= 0x10;
-    LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, self);
     one = 1;
     self->state = (self->state & 0x80) | one;
     if (self->kind == 0xa) {
@@ -2144,11 +2137,11 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
 {
     s32 i = 0;
 
-    if (i < gCrateList->count) {
+    if (i < gCrateList->activeCount) {
         u32 commit = (u32)gCrateKindExplosive;
 
         do {
-            struct crate *o = gCrateList->items[i];
+            struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = (o->x >> 8) - (self->x >> 8);
@@ -2171,15 +2164,15 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
                 }
             }
             i++;
-        } while (i < gCrateList->count);
+        } while (i < gCrateList->activeCount);
     }
 
     i = 0;
-    if (i < ((struct phys_obj_list2 *)gUnknown_030012EC)->count) {
-        struct phys_obj_list2 **list = (struct phys_obj_list2 **)&gUnknown_030012EC;
+    if (i < gUnknown_030012EC->count) {
+        struct part_list **list = &gUnknown_030012EC;
 
         do {
-            struct crate *o = (*list)->items[i];
+            struct crate *o = (struct crate *)(*list)->items[i];
 
             if (PHYS_CALL(o, m48) == 2) {
                 s32 t1 = (o->x >> 8) - (self->x >> 8);
@@ -2223,12 +2216,12 @@ void UpdateCrates(void)
     DetonateNitroCrates();
     do {
         gCrateListChanged = 0;
-        for (i = 0; i < gCrateList->count; i++) {
-            struct crate *o = gCrateList->items[i];
+        for (i = 0; i < gCrateList->activeCount; i++) {
+            struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 if (o->flags & 1) {
-                    RemoveCrateListAt((struct pool_manager *)gCrateList, i);
+                    RemoveCrateListAt(gCrateList, i);
                     if (o != NULL)
                         PHYS_CALL1(o, m50, 3);
                     i--;
@@ -2254,18 +2247,18 @@ void DetonateNitroCrates(void)
 {
     s32 i = 0;
 
-    if (i < gCrateList->count) {
-        struct crate_list **list = &gCrateList;
+    if (i < gCrateList->activeCount) {
+        struct pool_manager **list = &gCrateList;
 
         do {
-            struct crate *o = (*list)->items[i];
+            struct crate *o = (struct crate *)(*list)->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3 && o->kind == 0xa) {
                 if ((o->state & 0x7f) == 0)
                     ExplodeCrate(o, 0);
             }
             i++;
-        } while (i < (*list)->count);
+        } while (i < (*list)->activeCount);
     }
 }
 
@@ -2362,7 +2355,7 @@ void ActivateIronSwitchCrate(struct crate *self)
         return;
 
     self->flags |= 0x10;
-    LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, self);
     self->state |= 0x80;
     {
         struct gobj *player = gPlayer;
@@ -2379,9 +2372,9 @@ void ActivateIronSwitchCrate(struct crate *self)
     sub_8025A0C(gEntityFlags, self->id);
 
     i = 0;
-    if (i < gCrateList->count) {
+    if (i < gCrateList->activeCount) {
         do {
-            struct crate *o = gCrateList->items[i];
+            struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3 && (o->state & 0x7f) == 0) {
                 if (o->kind == 5 && o->paramA == self->paramA) {
@@ -2392,7 +2385,7 @@ void ActivateIronSwitchCrate(struct crate *self)
                 }
             }
             i++;
-        } while (i < gCrateList->count);
+        } while (i < gCrateList->activeCount);
     }
 
     if (n != 0) {
@@ -2564,11 +2557,11 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
 {
     s32 i = 0;
 
-    if (i < gCrateList->count) {
+    if (i < gCrateList->activeCount) {
         const u8 *commit = gCrateKindExplosive;
 
         do {
-            struct crate *o = gCrateList->items[i];
+            struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = (o->x >> 8) - x;
@@ -2588,7 +2581,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
                 }
             }
             i++;
-        } while (i < gCrateList->count);
+        } while (i < gCrateList->activeCount);
     }
 }
 

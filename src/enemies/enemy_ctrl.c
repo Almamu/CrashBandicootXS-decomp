@@ -589,7 +589,6 @@ void sub_800CB60(struct periodic_spawner *self, void (*callback)(void))
     self->callback = callback;
 }
 
-extern void *gEntityFlags;
 extern void *_call_via_r1(void *addr, void *fn);
 
 /* `self` (the first argument) is never read - only `other` matters.
@@ -641,7 +640,7 @@ void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
 
             if (val != sentinel) {
                 register u16 val2 asm("r3") = *(u16 volatile *)(other + 8);
-                register u8 *base asm("r2") = gEntityFlags;
+                register u8 *base asm("r2") = (u8 *)gEntityFlags;
                 register s32 idx asm("r0");
                 s32 idxOffset;
                 s32 *bitmap;

@@ -4,6 +4,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c/airship_damage.c - see airship_fireball.c's header comment
@@ -167,7 +168,6 @@ void AirshipStateFireballs(void)
  * `(a + K) - b` directly, the compiler shares `b - K` instead). The
  * `/` goes through the ROM's own `__divsi3` and the
  * absolute values are the branchless `asrs`/`eors`/`subs` form. */
-extern struct actor_self *gActorList;
 
 static inline s32 Abs(s32 x)
 {

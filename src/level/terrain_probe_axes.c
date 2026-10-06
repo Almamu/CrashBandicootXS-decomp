@@ -9,7 +9,7 @@
  * one actually resolves" section). Both are plain C, built with
  * old_agbcc - see docs/matching/game-loop-old-agbcc.md.
  *
- * `s32 fn(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue,
+ * `s32 fn(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
  * s32 submode)`:
  *
  *   - `ProbeTerrainY` (the Y-axis/floor-ceiling resolver, `mode ==
@@ -46,21 +46,11 @@
  *     into `self+0x29` (the same doc's "dispatch nibble" byte).
  *     Returns the scan's own hit flag either way. */
 
-/* The gLevelLayers-shaped collider these resolvers run on. */
-struct collider
-{
-    u8 unk_00[0x20];
-    struct tile_cache *cache;   // 0x20
-    u8 unk_24[5];
-    u8 nibble;                  // 0x29
-    u8 flagHeld;                // 0x2A
-};
-
 /* Y-axis resolver: scans the tiles under [pos->x, pos->x + span) at
  * pos->y's row until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (down for submode 2, up for submode 0).
  * Returns whether anything was hit. */
-s32 ProbeTerrainY(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -73,11 +63,11 @@ s32 ProbeTerrainY(struct collider *self, struct probe_pos *pos, s32 span, s32 *o
     end >>= 3;
     if (x == -1)
         x = 0;
-    if (end == self->cache->unk010)
+    if (end == self->tiles->unk010)
         end--;
     for (; x <= end && !hit; x++)
     {
-        if (GetSolidTerrainHeights(self->cache, x, y, submode, &flag))
+        if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))
             hit = 1;
     }
     if (hit)
@@ -92,8 +82,8 @@ s32 ProbeTerrainY(struct collider *self, struct probe_pos *pos, s32 span, s32 *o
             break;
         }
     }
-    if (self->flagHeld && flag)
-        self->nibble = flag;
+    if (self->probeFlag && flag)
+        self->kind = flag;
     return hit;
 }
 
@@ -101,7 +91,7 @@ s32 ProbeTerrainY(struct collider *self, struct probe_pos *pos, s32 span, s32 *o
  * pos->x's column until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (right for submode 3, left for submode 1),
  * one unit past it. Returns whether anything was hit. */
-s32 ProbeTerrainX(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -114,11 +104,11 @@ s32 ProbeTerrainX(struct collider *self, struct probe_pos *pos, s32 span, s32 *o
     end >>= 3;
     if (y == -1)
         y = 0;
-    if (end == self->cache->unk014)
+    if (end == self->tiles->unk014)
         end--;
     for (; y <= end && !hit; y++)
     {
-        if (GetSolidTerrainHeights(self->cache, x, y, submode, &flag))
+        if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))
             hit = 1;
     }
     if (hit)
@@ -139,8 +129,8 @@ s32 ProbeTerrainX(struct collider *self, struct probe_pos *pos, s32 span, s32 *o
             break;
         }
     }
-    if (self->flagHeld && flag)
-        self->nibble = flag;
+    if (self->probeFlag && flag)
+        self->kind = flag;
     return hit;
 }
 

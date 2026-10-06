@@ -9,6 +9,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "box_part.h"
 #include "globals.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
@@ -172,26 +173,7 @@ struct gfx_player
     u8 dead;                     // 0x104
 };
 
-struct gfx_list
-{
-    u8 unk_00[4];
-    s32 count;                  // 0x04
-    u8 unk_08[4];
-    struct gfx_part **items;    // 0x0C
-};
-
-struct gfx_level
-{
-    u8 unk_00[0x10];
-    struct { u8 unk_00[0x10]; s32 width; s32 height; } *layer0;
-};
-
-extern void *gEntityFlags;
-extern void *gLevelState;
 extern struct gfx_player *gPlayer;
-extern struct gfx_list *gCollidableList;
-extern void *gUnknown_030012F4;
-extern struct gfx_level *gLevelLayers;
 
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
@@ -371,7 +353,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
             if (_cur != _none)                                                 \
             {                                                                  \
                 register s32 _id asm("r3") = *(vu16 *)&(t)->id;                \
-                register u8 *_base asm(R_BASE) = gEntityFlags;            \
+                register u8 *_base asm(R_BASE) = (u8 *)gEntityFlags;     \
                 register s32 _word asm("r0") = _id;                            \
                 s32 _off;                                                      \
                 u32 *_slot;                                                    \
@@ -510,7 +492,7 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
         part->flipX = n >= 0;
         self->childA->flipX = n >= 0;
         {
-            s32 w = gLevelLayers->layer0->width << 8;
+            s32 w = gLevelLayers->layer0->widthPx << 8;
 
             n = __udivsi3(Abs(n) * 12, w);
         }
@@ -535,7 +517,7 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
     case 3:
         self->childA->pos.y += 0x80;
         part->pos.y += 0x80;
-        if (part->pos.y >= (gLevelLayers->layer0->height << 8) + 0x4000)
+        if (part->pos.y >= (gLevelLayers->layer0->heightPx << 8) + 0x4000)
         {
             if ((u8)HasTurboRun(gLevelState))
                 RequestRoomExit();
@@ -637,7 +619,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         m &= PART_FLAGS(c);
         PART_FLAGS(c) = m | 0x10;
     }
-    AddToPartList((struct part_list *)gCollidableList, c);
+    AddToPartList(gCollidableList, c);
 }
 
 void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
@@ -814,8 +796,8 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
     switch (mode)
     {
     case 8:
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, (u32)(gLevelLayers->layer0->width << 8) >> 1,
-                    (gLevelLayers->layer0->height << 8) + 0x2000);
+        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, (u32)(gLevelLayers->layer0->widthPx << 8) >> 1,
+                    (gLevelLayers->layer0->heightPx << 8) + 0x2000);
         break;
     case 1:
     {
@@ -833,7 +815,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
         self->high = mode;
         self->top = zero;
     }
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, (gLevelLayers->layer0->width << 8) - 0x400, 0x9800);
+        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, (gLevelLayers->layer0->widthPx << 8) - 0x400, 0x9800);
         self->nextState = 2;
         break;
     case 2:
@@ -847,7 +829,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
             if (x - 0x1800 <= 0x400)
                 self->dirLeft = 0;
         }
-        else if (x + 0x1C00 >= gLevelLayers->layer0->width << 8)
+        else if (x + 0x1C00 >= gLevelLayers->layer0->widthPx << 8)
         {
             self->nextState = 5;
         }
@@ -969,7 +951,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 
             for (i = 0; i < n; i++)
             {
-                struct gfx_part *e = gCollidableList->items[i];
+                struct gfx_part *e = (struct gfx_part *)gCollidableList->items[i];
 
                 c = GetSpriteHitbox((struct box_part *)e);
                 if (AabbOverlaps(&c, &b))

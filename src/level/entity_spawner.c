@@ -62,9 +62,6 @@ struct actor_flag_bits
 
 #define ACTOR_FLAG_BITS(a) ((struct actor_flag_bits *)&(a)->flags)
 
-extern struct level_layers *gLevelLayers;
-extern void *gCollidableList;
-
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
 /* Spawns a `SpawnEffectPart` part next to `src` (at `src`'s tile X/Y, facing
@@ -177,7 +174,6 @@ void *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror
  * Matched (old_agbcc): the three tag bytes are written through a pointer
  * `t`, and the +0x4B zero is an opaque `zero`, so the `movs r0,#0` lands
  * after the +0x49 address instead of being hoisted above it. */
-extern struct level_state14 { u8 unk_00[0x8C]; u8 timeTrial; } *gLevelState;
 
 struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 flag5)
 {

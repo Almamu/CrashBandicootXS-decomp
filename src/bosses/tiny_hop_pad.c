@@ -2,6 +2,7 @@
 #include "bosses.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #22, ROM 0x080187FC-0x08018884 - non-adjacent to
  * airship_fireball.c since the raw `UpdateTiny`/`SetTinyState`/
@@ -18,10 +19,6 @@
  * "three objects, none fully pinned down" caution documented in
  * action_ctrl_states.c. */
 
-/* gLevelLayers's view here (level_layers.c's `struct level_layers`):
- * only BG layer 0's `heightPx` is read. */
-extern struct level_layers *gLevelLayers;
-extern void *gEntityFlags;
 extern s32 _call_via_r3(void *addr, void *arg1, void *arg2, void *fn);
 
 /* A two-state (`obj+8`: 0 then 1 then 2) "charge" handler. State 0
@@ -141,7 +138,7 @@ void UpdateOneShotAnimCtrl(void *unusedArg, void *otherArg)
 
             if (val != sentinel) {
                 register u16 val2 asm("r3") = *(u16 volatile *)(other + 8);
-                register u8 *base asm("r2") = gEntityFlags;
+                register u8 *base asm("r2") = (u8 *)gEntityFlags;
                 register s32 idx asm("r0");
                 s32 idxOffset;
                 s32 *bitmap;

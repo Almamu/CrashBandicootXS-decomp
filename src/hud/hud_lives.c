@@ -2,8 +2,7 @@
 #include "hud.h"
 #include "util.h"
 #include <libgcc.h>
-
-extern void *gLevelState;
+#include "globals.h"
 
 void UpdateHudLives(struct hud_counter *counter)
 {
@@ -17,7 +16,7 @@ void UpdateHudLives(struct hud_counter *counter)
     }
 
     {
-        register void **state_slot asm("r4") = &gLevelState;
+        register struct level_state **state_slot asm("r4") = &gLevelState;
         register s32 value asm("r0");
 
         if (GetLives(*state_slot) > 0) {

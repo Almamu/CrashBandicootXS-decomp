@@ -7,6 +7,7 @@
 #include "bosses.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* Branchless absolute value, matching this ROM's own codegen for `abs()`
  * (`asrs`/`eors`/`subs` on the value's own sign-extended shift, updating
@@ -42,8 +43,6 @@
  * `sortKey` the threshold pair) and the constructor's `part` a `struct
  * anim_table_record` (actor_anim.h). See
  * docs/matching/issue-50-actor-2a69c.md. */
-
-extern struct actor_self *gActorList;
 
 /* Trivial forwarder - ignores its own argument and calls
  * `AllocJetpackPlayerTiles(gActorList)` (the player object), discarding its

@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 #include "globals.h"
 
 /* Builds `part`'s AABB (same keyframe-table shape/record layout as
@@ -589,8 +590,6 @@ void *GetSpriteFrame(struct gfx_part *part)
 }
 asm(".align 2, 0");
 
-extern void *gLevelLayers;
-
 /* If `gLevelLayers+0x2b` is nonzero, returns
  * `(gLevelLayers's sub-object)+0x34`'s low 2 bits minus 1;
  * otherwise returns those same low 2 bits unmodified. Same
@@ -598,13 +597,13 @@ extern void *gLevelLayers;
  * region (see `IsSpriteObjOnScreen`/`IsEntityNearCamera`). */
 s32 GetSpriteObjPriority(void)
 {
-    if (*((u8 *)gLevelLayers + 0x2b) == 0) {
-        void *subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+    if (gLevelLayers->unk_2B == 0) {
+        void *subObj = gLevelLayers->layer0;
         u8 byte2 = *((u8 *)subObj + 0x34);
         u32 result = ((u32)byte2 << 30) >> 30;
         return result;
     } else {
-        void *subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+        void *subObj = gLevelLayers->layer0;
         u8 byte2 = *((u8 *)subObj + 0x34);
         u32 result = ((u32)byte2 << 30) >> 30;
         return result - 1;

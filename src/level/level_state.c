@@ -821,7 +821,6 @@ void CheckAllCratesBroken(void *selfArg)
 }
 
 extern void *gPlayer;
-extern void *gEntityFlags;
 
 struct AudioContext;
 
@@ -905,7 +904,7 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
         dst[1] = py;
     }
 
-    pair = gEntityFlags;
+    pair = (s32 *)gEntityFlags;
     {
         void *a = (u8 *)pair + 0x108;
         void *b = (u8 *)pair + 8;
@@ -1095,7 +1094,7 @@ void *PackSaveData(void *selfArg)
  * asm/code_3_2_17_23a1c.s after), so it can't share an object file
  * with either matched neighbor without splitting the ROM-contiguous
  * layout. */
-void *GetLevelState(void)
+struct level_state *GetLevelState(void)
 {
     if (gLevelStateSingleton == NULL) {
         gLevelStateSingleton = InitLevelState(OperatorNew(0x1cc));

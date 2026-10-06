@@ -109,7 +109,6 @@ void sub_80151C8(void *selfArg)
  * alignment-padding gotcha). */
 asm(".align 2, 0");
 
-extern void *gLevelState;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 

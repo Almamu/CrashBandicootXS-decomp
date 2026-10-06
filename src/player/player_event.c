@@ -48,10 +48,6 @@ struct ab9c_obj
     struct ab9c_link link; // 0x108
 };
 
-extern void *gCollidableList;
-extern void *gCrateList;
-extern void *gUnknown_030012EC;
-
 /* Bit 1 of +0x0C: builds the object's AABB (GetSpriteAttackBox), copies it
  * (MemCopy32, a CpuSet memcpy) and hands the copy to CollidePartList by value
  * - three words in r1-r3, the fourth on the stack, which is what gives the
@@ -245,15 +241,6 @@ struct ac2c_self {
     struct ac2c_pos maskTrail[8];    // 0xB8
 };
 
-struct orbit_game {
-    u8 unk_00[2];
-    u8 flags2;                  // 0x02
-    u8 unk_03[0x75];
-    s32 maskLevel;              // 0x78
-    u8 unk_7C[0x10];
-    u8 timeTrial;               // 0x8C
-};
-
 struct ac2c_player {
     u8 unk_00[0x88];
     u8 unk_88;                  // 0x88
@@ -261,7 +248,6 @@ struct ac2c_player {
 
 typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 
-extern struct orbit_game *gLevelState;
 extern struct ac2c_player *gPlayer;
 
 #define NOTIFY(self, a, b, c)                                                  \
@@ -298,7 +284,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
 {
     switch (code) {
     case 27:
-        *GetCurrentLevelFlags((struct level_state *)gLevelState) |= 1;
+        *GetCurrentLevelFlags(gLevelState) |= 1;
         PlaySfx(gAudioContext, 0x1c, 0x100);
         break;
     case 18:
@@ -307,7 +293,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
         break;
     case 17:
         {
-            struct orbit_game *game = gLevelState;
+            struct level_state *game = gLevelState;
 
             if (game->timeTrial)
                 FreezeLevelClock((struct level_state *)game, 100);
@@ -316,42 +302,42 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
         ShowHudCounters(gHud);
         break;
     case 15:
-        RequestBonusRound((struct level_state *)gLevelState);
+        RequestBonusRound(gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 16:
-        RequestGemPath((struct level_state *)gLevelState);
+        RequestGemPath(gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 28:
         if (gLevelState->maskLevel == 3)
             self->deadline = 0;
         PlaySfx(gAudioContext, 0x18, 0x100);
-        StartTimeTrial((struct level_state *)gLevelState);
+        StartTimeTrial(gLevelState);
         break;
     case 29:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        *GetCurrentLevelFlags((struct level_state *)gLevelState) |= 2;
+        *GetCurrentLevelFlags(gLevelState) |= 2;
         break;
     case 30:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        *GetCurrentLevelFlags((struct level_state *)gLevelState) |= 4;
+        *GetCurrentLevelFlags(gLevelState) |= 4;
         break;
     case 34:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        gLevelState->flags2 |= 2;
+        gLevelState->flags |= 2;
         break;
     case 32:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        gLevelState->flags2 |= 4;
+        gLevelState->flags |= 4;
         break;
     case 31:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        gLevelState->flags2 |= 1;
+        gLevelState->flags |= 1;
         break;
     case 33:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        gLevelState->flags2 |= 8;
+        gLevelState->flags |= 8;
         break;
     case 35:
     case 36:
@@ -371,7 +357,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
             s32 mode = gLevelState->maskLevel;
 
             if ((mode <= 2 && gPlayer->unk_88 != 1) || mode <= 1)
-                RaiseMaskLevel((struct level_state *)gLevelState);
+                RaiseMaskLevel(gLevelState);
         }
         if (gLevelState->maskLevel == 3)
             self->deadline = gRoomFrameCount + 1200;
@@ -388,7 +374,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
     case 10:
         if ((self->flags >> 6) & 1) {
             if (!Ac2cArmed(self)) {
-                struct orbit_game *game = gLevelState;
+                struct level_state *game = gLevelState;
 
                 if (game->maskLevel != 0) {
                     if (game->maskLevel <= 2) {
@@ -551,7 +537,7 @@ void DrawPlayer(struct orbit_self *self)
     /* End of the hold above (emits no code). */
     asm("" : : "r"(hold));
     {
-        struct orbit_game *game = gLevelState;
+        struct level_state *game = gLevelState;
 
         if (game->maskLevel == 3 && !BlinkArmed(self))
             SetMaskLevel(game, 2);

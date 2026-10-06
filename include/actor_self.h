@@ -43,7 +43,8 @@ struct actor_vtable {
     struct actor_method destroy; // 0x08 - slot 1, the (virtual) destructor; called with 3 to delete
     u8 unk_10[0x10];
     struct actor_method m20;   // 0x20 - "damage" (called on the player with a strength)
-    u8 unk_28[0x10];
+    u8 unk_28[8];
+    struct actor_method m30;   // 0x30 - the percentage UpdateHudPercentCounters shows (called on gActorList's root)
     struct actor_method m38;   // 0x38 - "release" (no argument; DamageJetpackBalloon)
 };
 

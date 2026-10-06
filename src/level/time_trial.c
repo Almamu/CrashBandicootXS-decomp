@@ -5,6 +5,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "box_part.h"
 #include "globals.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
@@ -55,23 +56,6 @@ struct entity
     struct actor base;          // 0x00 (+0x08: id, +0x0C: flags)
     u8 unk_1C[0];
 };
-
-struct entity_list
-{
-    u8 unk_00[4];
-    s32 count;                  // 0x04
-    u8 unk_08[4];
-    struct actor **items;       // 0x0C
-};
-
-struct collision_map
-{
-    u8 unk_000[0x108];
-    u32 seen[1];                // 0x108
-};
-
-extern struct entity_list *gUnknown_030012EC;
-extern struct collision_map *gEntityFlags;
 
 extern s32 _call_via_r1(void *self, void *fn);
 
@@ -130,7 +114,7 @@ void StartTimeTrial(struct level_state *self)
     {
         do
         {
-            struct actor *e = gUnknown_030012EC->items[i];
+            struct actor *e = (struct actor *)gUnknown_030012EC->items[i];
             struct actor *a = e;
             struct vmethod *m = &((struct entity_vtable *)e->table)->m48;
 
@@ -144,7 +128,7 @@ void StartTimeTrial(struct level_state *self)
                     if (a->field_08 != 0xffff)
                     {
                         s32 id = a->field_08;
-                        gEntityFlags->seen[id / 32] |= 1 << (id % 32);
+                        gEntityFlags->bits0Copy[id / 32] |= 1 << (id % 32);
                     }
                 }
             }

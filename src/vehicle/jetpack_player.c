@@ -28,7 +28,6 @@ struct meter_actor {
     s32 meter;                  // 0x54
 };
 
-extern struct level_state *gLevelState;
 extern u8 gActorVtable[];
 
 /* Accumulator-drain/reward-dispenser for the `gJetpackQueuedWumpa`
