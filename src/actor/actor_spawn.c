@@ -1,6 +1,7 @@
 #include "core.h"
 #include "memory.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
@@ -22,18 +23,9 @@
  * matching the exact ROM instruction order: this compiler computes the
  * base+constant step before the base+idx*stride step for these two
  * specifically, unlike every plain record[idx].field access elsewhere
- * in this file, which folds its constant straight into the load). */
-struct sub_effect_record {
-    s32 field_00;   /* 0x00 */
-    s32 field_04;   /* 0x04 */
-    u8 kind;    /* 0x08 */
-    u8 altKind;    /* 0x09 */
-    u8 bonusKind;    /* 0x0a */
-    u8 pad_0b;
-    s32 offsetX;    /* 0x0c - stored raw, <<8 by the accessors that read it */
-    s32 offsetY;    /* 0x10 - stored raw, <<8 by the accessors that read it */
-};
-COMPILE_TIME_ASSERT(actor_spawn_c, sizeof(struct sub_effect_record) == 0x14);
+ * in this file, which folds its constant straight into the load).
+ * The record is actor_anim.h's `struct sub_effect_record` (this file had
+ * a copy). */
 
 /* The category vtable object (include/actor_anim.h's 13-fn-pointer
  * `struct category_vtable`) only has slots 0-6 confirmed as real

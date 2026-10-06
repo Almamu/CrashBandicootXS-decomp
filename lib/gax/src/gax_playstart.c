@@ -25,8 +25,6 @@
  * block-local read after the first types[] load, and three no-code
  * register nudges (commented at each use). */
 
-struct GaxLayoutList { u32 count; struct GaxHandlerLayout *layouts[1]; };
-
 #define ALIGN4(buf, size)                                  \
     {                                                      \
         u32 pad_ = (((u32)(buf) + 4) & ~3) - (u32)(buf);   \

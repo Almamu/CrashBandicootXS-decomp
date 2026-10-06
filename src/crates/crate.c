@@ -163,7 +163,7 @@ void ResolvePlayerCollisions(void)
     struct player *p = gPlayer;
     u8 *p2;
 
-    ResolveCollisionCandidates((struct candidate_list *)p->collisionQueue);
+    ResolveCollisionCandidates(&p->collisionQueue);
     p2 = &gPlayer->bounce;
     if (*p2 != 0) {
         *p2 = *p2 + 1;

@@ -27,71 +27,8 @@
  * docs/matching/issue-24-boss-actor.md). Every function is real C; see
  * docs/matching/issue-28-29-level-select-parts.md. */
 
-struct twinkle
-{
-    s32 timer;             // 0x00 - frames until a new frame is picked
-    s32 blink;             // 0x04 - blink window, counts down with timer
-    struct sprite *part;   // 0x08
-};
-
-/* REG_BG2CNT's layout. `packed` keeps the union 2 bytes: this ABI rounds
- * every struct up to a word. */
-struct bgcnt_bits
-{
-    u16 priority:2;
-    u16 charBase:2;
-    u16 unk_4:2;
-    u16 mosaic:1;
-    u16 colors256:1;
-    u16 screenBase:5;
-    u16 wrap:1;
-    u16 size:2;
-} __attribute__((packed));
-
-/* REG_BGnCNT (graphics_package.h's `union bgcnt`), packed to 2 bytes
- * inside `struct zoom_bg`. */
-union bgcnt_packed
-{
-    u16 raw;
-    struct bgcnt_bits bits;
-} __attribute__((packed));
-
-/* The level-select screen's BG2 picture (InitZoomBg, 0x8C bytes). */
-struct zoom_bg
-{
-    u8 unk_00[0x0C];
-    s32 state;             // 0x0C - see UpdateZoomBg
-    s32 image;             // 0x10 - gLevelSelectPictures index, 11 = none
-    s32 scale;             // 0x14 - zoom, 0x100 = 1:1, 8 = smallest
-    s32 charBase;          // 0x18
-    s32 screenBase;        // 0x1C
-    s32 x;                 // 0x20 - screen centre
-    s32 y;                 // 0x24
-    s32 dx;                // 0x28 - wobble offset
-    s32 dy;                // 0x2C
-    u32 phase;             // 0x30 - wobble phase, 0-0xFF
-    union bgcnt_packed bgcnt; // 0x34 - REG_BG2CNT value (GetZoomBgControl)
-    u8 unk_36[2];
-    /* BgAffineSet source, 0x38-0x49 */
-    s32 texX;              // 0x38
-    s32 texY;              // 0x3C
-    s16 scrX;              // 0x40
-    s16 scrY;              // 0x42
-    s16 sx;                // 0x44
-    s16 sy;                // 0x46
-    u16 alpha;             // 0x48 - rotation
-    u8 unk_4A[2];
-    /* BgAffineSet destination, committed by CommitZoomBg */
-    s16 pa;                // 0x4C
-    s16 pb;                // 0x4E
-    s16 pc;                // 0x50
-    s16 pd;                // 0x52
-    s32 bgx;               // 0x54
-    s32 bgy;               // 0x58
-    struct twinkle twinkles[4]; // 0x5C
-};
-
-COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct zoom_bg) == 0x8C);
+/* `struct twinkle`, `struct zoom_bg` (with its BG2CNT views) and `struct
+ * level_item` are level_menu.h's. */
 
 static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
 {
@@ -102,7 +39,7 @@ static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
 /* Destructor (`level_menu.bg2`, called from DestroyLevelSelect). */
 void DestroyZoomBg(struct zoom_bg *self, s32 flags)
 {
-    UnlockPalette(gPaletteCache, PART_RECORD(self->twinkles[0].part).tileRecord);
+    UnlockPalette(gPaletteCache, PART_RECORD(self->twinkles[0].part).paletteId);
     DELETE_PART(self->twinkles[3].part);
     DELETE_PART(self->twinkles[2].part);
     DELETE_PART(self->twinkles[1].part);
@@ -153,7 +90,7 @@ void UpdateZoomBg(struct zoom_bg *self)
         LoadTaggedAsset(gLevelSelectPictures[self->image].palette, buf);
         DmaCopy16(3, buf, BG_PLTT, 0x40);
         LoadTaggedAsset(gLevelSelectPictures[self->image].tiles,
-                        (void *)(BG_VRAM + (self->charBase << 14)));
+                        (void *)(BG_VRAM + (self->charBlock << 14)));
         self->state = 0;
         break;
     case 4:
@@ -190,8 +127,8 @@ void DrawZoomBg(struct zoom_bg *self)
     {
         u16 s;
 
-        self->scrX = self->x + self->dx;
-        self->scrY = self->y + self->dy;
+        self->x16 = self->x + self->dx;
+        self->y16 = self->y + self->dy;
         s = 0x10000 / self->scale;
         self->sx = s;
         self->sy = s;
@@ -249,7 +186,7 @@ u8 IsZoomBgZoomingOut(struct zoom_bg *self)
 /* Starts the exit zoom, with BG2 at the front. */
 void StartZoomBgExit(struct zoom_bg *self)
 {
-    self->bgcnt.bits.priority = 0;
+    self->bgcnt.bits16.priority = 0;
     self->state = 4;
 }
 
@@ -385,7 +322,7 @@ void nullsub_20(void)
 /* Method +0x28: destructor. */
 void DestroyLevelSelectEntry(struct level_item *self, s32 flags)
 {
-    self->vtable = gLevelSelectEntryVtable;
+    self->vtable = (struct item_vtable *)gLevelSelectEntryVtable;
     DELETE_PART(self->icon);
     DELETE_PART(self->frame);
     if (flags & 1)
@@ -453,7 +390,7 @@ static inline void SetAffineParam(struct oam_shadow_buffer *buf, s32 n, u16 v)
 
 struct level_item *CreateLevelSelectEntry(struct level_item *self)
 {
-    self->vtable = gLevelSelectEntryVtable;
+    self->vtable = (struct item_vtable *)gLevelSelectEntryVtable;
     self->selected = 0;
     self->frame = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->frame->anim = AnimTable(0x24C);
@@ -472,7 +409,7 @@ struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self)
     p->anim = AnimTable(0x240);
     SetAnim(p, 0);
     self->part->palette = GetSpriteAnimPaletteSlot((struct actor *)self->part);
-    LockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
+    LockPalette(gPaletteCache, PART_RECORD(self->part).paletteId);
     SetLevelSelectCursorPos(self, 0x78, 0x35);
     self->oam.y = self->line.y0 - 0x20;
     self->oam.affineMode = 1;
@@ -706,7 +643,7 @@ void ResetLevelSelectCursorIdleTimer(struct cursor_panel *self)
 /* Destructor (`level_menu.panel`, called from DestroyLevelSelect). */
 void DestroyLevelSelectCursor(struct cursor_panel *self, s32 flags)
 {
-    UnlockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
+    UnlockPalette(gPaletteCache, PART_RECORD(self->part).paletteId);
     DELETE_PART(self->part);
     if (flags & 1)
         OperatorDelete(self);

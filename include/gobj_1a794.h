@@ -36,24 +36,10 @@
  *   using the 12-byte velocity records of gPlatformMoverMotionRecords, and drags
  *   the player along while it is `active` (MovePlayerWithPlatform). */
 
-struct vec3
-{
-    s32 x;
-    s32 y;
-    s32 z;
-};
-
 struct vec_pair
 {
     u32 a;
     u32 b;
-};
-
-struct method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
 };
 
 struct anim_rec
@@ -78,12 +64,12 @@ struct anim_table
 struct gobj_vtable
 {
     u8 unk_00[0x10];
-    struct method m10; // 0x10 - returns the platform record the object stands on (UpdateGroundSprite)
+    struct actor_method m10; // 0x10 - returns the platform record the object stands on (UpdateGroundSprite)
     u8 unk_18[0x20];
-    struct method m38; // 0x38
+    struct actor_method m38; // 0x38
     u8 unk_40[0x20];
-    struct method m60; // 0x60
-    struct method m68; // 0x68
+    struct actor_method m60; // 0x60
+    struct actor_method m68; // 0x68
 };
 
 struct mover;
@@ -132,11 +118,11 @@ struct gobj
 struct mover_vtable
 {
     u8 unk_00[8];
-    struct method m08; // 0x08
-    struct method m10; // 0x10
-    struct method m18; // 0x18
+    struct actor_method m08; // 0x08
+    struct actor_method m10; // 0x10
+    struct actor_method m18; // 0x18
     u8 unk_20[0x40];
-    struct method m60; // 0x60
+    struct actor_method m60; // 0x60
 };
 
 struct mover
@@ -178,9 +164,6 @@ struct spawn_rec
     s16 flag;           // 0x14
 };
 
-/* src/data/velocity_16c460.c defines it as `const s32 [3][3]`. */
-extern const struct vec3 gPlatformMoverMotionRecords[3];
-
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
@@ -203,7 +186,7 @@ static inline struct gobj *GobjInit(struct gobj *self)
 #define MOVER_CALL3(obj, m, a, b)                                              \
     do                                                                         \
     {                                                                          \
-        struct method *_m = &(obj)->vtable->m;                                 \
+        struct actor_method *_m = &(obj)->vtable->m;                                 \
         _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } while (0)
 
@@ -211,7 +194,7 @@ static inline struct gobj *GobjInit(struct gobj *self)
 #define OBJ_CALL68(obj, a, b, c)                                               \
     do                                                                         \
     {                                                                          \
-        struct method *_m = &(obj)->vtable->m68;                               \
+        struct actor_method *_m = &(obj)->vtable->m68;                               \
         void *_this = (u8 *)(obj) + _m->thisOffset;                            \
         register void *_fn asm("r4") = _m->fn;                                 \
                                                                                \
@@ -222,14 +205,14 @@ static inline struct gobj *GobjInit(struct gobj *self)
 #define OBJ_CALL1(obj, m)                                                      \
     do                                                                         \
     {                                                                          \
-        struct method *_m = &(obj)->vtable->m;                                 \
+        struct actor_method *_m = &(obj)->vtable->m;                                 \
         _call_via_r1((u8 *)(obj) + _m->thisOffset, _m->fn);                     \
     } while (0)
 
 #define MOVER_CALL2(obj, m, a)                                                 \
     do                                                                         \
     {                                                                          \
-        struct method *_m = &(obj)->vtable->m;                                 \
+        struct actor_method *_m = &(obj)->vtable->m;                                 \
         _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } while (0)
 

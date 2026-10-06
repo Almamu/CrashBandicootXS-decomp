@@ -17,6 +17,7 @@
 
 #include "core.h"
 #include "actor.h"
+#include "objects.h"
 
 /* A spawner object of the hovercraft fight (the cannon, launcher and
  * side gun, hovercraft_parts.c): `actor_self` plus a hit-point word, its
@@ -437,7 +438,7 @@ extern const u8 gCortexTargetBlinkStartTimes[3];
 extern const u8 gCortexTargetBlinkStopTimes[3];
 extern const u8 gCortexTargetChaseSteps[3];
 extern const u8 gCortexTargetHopSteps[4];
-extern const s32 gDingodileMotionRecords[4][3];
+extern const struct speed_ramp gDingodileMotionRecords[4];
 extern const s32 gDingodileRocketRiseMotion[3];
 extern const s32 gDingodileStalactiteFallMotion[9];
 extern const s32 gDingodileStopXLeft[4];

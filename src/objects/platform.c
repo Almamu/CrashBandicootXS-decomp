@@ -22,7 +22,7 @@ extern void SetSpritePrevPos_1(struct gobj *self) asm("SetSpritePrevPos");
 
 void UpdatePlatform(struct gobj *self)
 {
-    struct method *m = &self->vtable->m38;
+    struct actor_method *m = &self->vtable->m38;
 
     if ((u8)_call_via_r1((u8 *)self + m->thisOffset, m->fn))
     {
@@ -90,12 +90,12 @@ struct gobj *InitPlatform(struct gobj *self)
 
 /* &gPlatformMoverMotionRecords[self->set->entries[1].a], with the scaled index
  * in r0 as the ROM computes it (docs/workflow.md step 7) */
-static inline struct vec3 *MoverVec(struct mover *self)
+static inline struct speed_ramp *MoverVec(struct mover *self)
 {
-    register u32 off asm("r0") = self->set->entries[1].a * sizeof(struct vec3);
+    register u32 off asm("r0") = self->set->entries[1].a * sizeof(struct speed_ramp);
     register u32 base asm("r1") = (u32)gPlatformMoverMotionRecords;
 
-    return (struct vec3 *)(off + base);
+    return (struct speed_ramp *)(off + base);
 }
 
 /* struct mover's per-frame step (method table +0x0C). On the first frame
@@ -119,15 +119,15 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
 
     if (self->lastX == 0 && self->rangeX > 0)
     {
-        register struct vec3 *e asm("r3");
+        register struct speed_ramp *e asm("r3");
 
         self->lastX = obj->x >> 8;
         e = MoverVec(self);
         if (self->dirX)
         {
-            s32 x = e->x;
-            s32 y = e->y;
-            s32 z = e->z;
+            s32 x = e->start;
+            s32 y = e->step;
+            s32 z = e->target;
 
             obj->speedX = x;
             obj->rampX.start = x;
@@ -136,9 +136,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         }
         else
         {
-            s32 x = -e->x;
-            s32 z = -e->z;
-            s32 y = e->y;
+            s32 x = -e->start;
+            s32 z = -e->target;
+            s32 y = e->step;
 
             obj->speedX = x;
             obj->rampX.start = x;
@@ -148,15 +148,15 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
     }
     if (self->lastY == 0 && self->rangeY > 0)
     {
-        register struct vec3 *e asm("r3");
+        register struct speed_ramp *e asm("r3");
 
         self->lastY = obj->y >> 8;
         e = MoverVec(self);
         if (self->dirY)
         {
-            s32 x = e->x;
-            s32 y = e->y;
-            s32 z = e->z;
+            s32 x = e->start;
+            s32 y = e->step;
+            s32 z = e->target;
 
             obj->speedY = x;
             obj->rampY.start = x;
@@ -165,9 +165,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         }
         else
         {
-            s32 x = -e->x;
-            s32 z = -e->z;
-            s32 y = e->y;
+            s32 x = -e->start;
+            s32 z = -e->target;
+            s32 y = e->step;
 
             obj->speedY = x;
             obj->rampY.start = x;
@@ -193,7 +193,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 sign;
 
             ABS32(v, sign);
-            if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].z)
+            if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].target)
                 self->distX = 0;
         }
     }
@@ -214,14 +214,14 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 sign;
 
             ABS32(v, sign);
-            if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].z)
+            if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].target)
                 self->distY = 0;
         }
     }
 
     if (self->distX > self->rangeX && self->rangeX != 0)
     {
-        register struct vec3 *e asm("r3");
+        register struct speed_ramp *e asm("r3");
         register u8 *dp asm("r0") = &self->dirX;
         u8 one = 1;
         register u32 cur asm("r1") = *dp;
@@ -232,9 +232,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         e = MoverVec(self);
         if (d)
         {
-            s32 x = e->x;
-            s32 y = e->y;
-            s32 z = e->z;
+            s32 x = e->start;
+            s32 y = e->step;
+            s32 z = e->target;
 
             obj->rampX.start = x;
             obj->rampX.step = y;
@@ -242,9 +242,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         }
         else
         {
-            s32 x = -e->x;
-            s32 z = -e->z;
-            s32 y = e->y;
+            s32 x = -e->start;
+            s32 z = -e->target;
+            s32 y = e->step;
 
             obj->rampX.start = x;
             obj->rampX.step = y;
@@ -254,7 +254,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
     }
     if (self->distY > self->rangeY && self->rangeY != 0)
     {
-        register struct vec3 *e asm("r3");
+        register struct speed_ramp *e asm("r3");
         register u8 *dp asm("r0") = &self->dirY;
         u8 one = 1;
         register u32 cur asm("r5") = *dp;
@@ -265,9 +265,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         e = MoverVec(self);
         if (d)
         {
-            s32 x = e->x;
-            s32 y = e->y;
-            s32 z = e->z;
+            s32 x = e->start;
+            s32 y = e->step;
+            s32 z = e->target;
 
             obj->rampY.start = x;
             obj->rampY.step = y;
@@ -275,9 +275,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         }
         else
         {
-            s32 x = -e->x;
-            s32 z = -e->z;
-            s32 y = e->y;
+            s32 x = -e->start;
+            s32 z = -e->target;
+            s32 y = e->step;
 
             obj->rampY.start = x;
             obj->rampY.step = y;
@@ -427,13 +427,13 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
 
 void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    const struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].b];
+    const struct speed_ramp *e = &gPlatformMoverMotionRecords[self->set->entries[index].b];
 
     if ((s32)(part->mirror << 26) < 0)
     {
-        s32 x = -e->x;
-        s32 z = -e->z;
-        s32 y = e->y;
+        s32 x = -e->start;
+        s32 z = -e->target;
+        s32 y = e->step;
 
         part->rampY.start = x;
         part->rampY.step = y;
@@ -441,9 +441,9 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
     }
     else
     {
-        s32 x = e->x;
-        s32 y = e->y;
-        s32 z = e->z;
+        s32 x = e->start;
+        s32 y = e->step;
+        s32 z = e->target;
 
         part->rampY.start = x;
         part->rampY.step = y;
@@ -453,13 +453,13 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
 
 void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    const struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].a];
+    const struct speed_ramp *e = &gPlatformMoverMotionRecords[self->set->entries[index].a];
 
     if ((s32)(part->mirror << 27) < 0)
     {
-        s32 x = -e->x;
-        s32 z = -e->z;
-        s32 y = e->y;
+        s32 x = -e->start;
+        s32 z = -e->target;
+        s32 y = e->step;
 
         part->rampX.start = x;
         part->rampX.step = y;
@@ -467,9 +467,9 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
     }
     else
     {
-        s32 x = e->x;
-        s32 y = e->y;
-        s32 z = e->z;
+        s32 x = e->start;
+        s32 y = e->step;
+        s32 z = e->target;
 
         part->rampX.start = x;
         part->rampX.step = y;
@@ -479,7 +479,7 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
 
 void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    StartCtrlTargetMotionY(self, part, (struct vec3 *)&gPlatformMoverMotionRecords[self->set->entries[index].b]);
+    StartCtrlTargetMotionY(self, part, &gPlatformMoverMotionRecords[self->set->entries[index].b]);
 }
 
 void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)

@@ -72,7 +72,7 @@ static inline u8 PartByte(struct player *part, s32 offset)
  */
 void ApplyActionCtrlMotion(struct act *self)
 {
-    struct motion_rec rec;
+    struct speed_ramp rec;
     struct player *p;
 
     p = gPlayer;
@@ -121,14 +121,14 @@ skip:
                 asm("" : : "r"(self));
                 asm("" : : "r"(self));
                 asm("" : : "r"(self));
-                rec.c = FixedMul(rec.c, 0x180);
-                rec.b /= 2;
+                rec.target = FixedMul(rec.target, 0x180);
+                rec.step /= 2;
             }
             if (self->motionX == 0x1E) {
                 self->motionXKeepSpeed = 0;
                 if (gPlayer->slippery) {
-                    rec.b = FixedMul(rec.b, 0x200);
-                    rec.a = FixedMul(rec.a, 0x180);
+                    rec.step = FixedMul(rec.step, 0x200);
+                    rec.start = FixedMul(rec.start, 0x180);
                 }
             }
             if (self->motionXKeepSpeed)

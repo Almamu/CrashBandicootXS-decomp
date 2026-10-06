@@ -20,17 +20,8 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * `part_list.c`) since its real ROM address, 0x08009914, sits
  * between `CollidePlayerWithCrates` (`crate_player_collide.c`) and `CollideCrateGridPartWithObject`
  * (`crate_list.c`) in ROM order. */
-/* codegen: `struct pool_node` (crates.h) with untyped fields. Through
- * the real `struct pool_node *` fields, gcc takes the zeroing stores below
- * as possible writes to `m->nodeArray` and reloads it. */
-struct pool_init_node {
-    void *data;
-    void *next;
-    struct pool_link *wrap;
-    void *link;
-    u8 mark;
-};
-
+/* The zeroing stores go through `struct pool_init_node` (crates.h), the
+ * untyped view of the node. */
 static inline void PoolResetFreeList(struct pool_manager *m)
 {
     s32 i;

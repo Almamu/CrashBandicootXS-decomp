@@ -9,7 +9,7 @@
 
 /* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (ctrl.c) and ApplyActionCtrlMotion
  * (action_ctrl_idle.c). */
-const struct motion_rec gCtrlMotionRecords[44] = {
+const struct speed_ramp gCtrlMotionRecords[44] = {
     { 0, 32, 0 },
     { 128, 32, 128 },
     { 256, 32, 256 },
@@ -94,7 +94,7 @@ const u32 gActionCtrlMotionEntries[33][2] = {
 };
 
 /* Read by ApplyPlayerCtrlMotion, StartPlayerCtrlMotionYFromSet and StartPlayerCtrlMotionXFromSet (swim_ctrl.c). */
-const struct motion_rec gPlayerCtrlMotionRecords[31] = {
+const struct speed_ramp gPlayerCtrlMotionRecords[31] = {
     { 0, 0, 0 },
     { 192, 0, 192 },
     { 192, 2, 0 },
@@ -172,7 +172,7 @@ const u32 gPlayerCtrlMotionEntries[38][2] = {
 
 /* The records ApplyInputCtrlMotion (input_ctrl.c) indexes by its entry
  * set's entries. */
-const struct motion_rec gInputCtrlMotionRecords[9] = {
+const struct speed_ramp gInputCtrlMotionRecords[9] = {
     { 0, 0, 0 },
     { 768, 96, 768 },
     { 768, 96, 768 },

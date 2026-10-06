@@ -1,41 +1,24 @@
 #ifndef GUARD_LEVEL_MENU_H
 #define GUARD_LEVEL_MENU_H
 
-/* The level-select screen (`struct level_menu`) and its two background
- * layers, shared by src/menus/level_select_pages.c (GitHub issue #27).
+/* The level-select screen (`struct level_menu`, src/menus/level_select.c,
+ * GitHub issue #26), its two background layers (level_select_pages.c,
+ * issue #27), its page entries and its UI sprite parts (shared with
+ * level_select_widgets.c through level_select_parts.h, issues #28/#29).
  *
- * The layouts are the ones src/menus/level_select.c (issue #26)
- * worked out for the same objects; that file still carries its own
- * copies of these definitions and can switch to this header.
+ * level_select.c, level_select_widgets.c and level_select_parts.h used to
+ * carry their own copies of these types (two different `struct sprite`s,
+ * `anim_record`/`anim_table`, `item`/`level_item`, `twinkle`/`zoom_bg`);
+ * they were merged here (#574, batch 9e).
  *
  * All of it is gcc 2.x C++: method tables of {s16 this-adjust; pad; fn}
- * entries, called through the _call_via_r1/AD80/AD84/AD88 "call via
- * r1/r2/r3/r4" thunks. */
+ * entries (`struct actor_method`), called through the
+ * _call_via_r1/AD80/AD84/AD88 "call via r1/r2/r3/r4" thunks. */
 
 #include "menus.h"
 #include "gfx.h"
-
-struct method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
-/* One 28-byte animation record, `anim_table.records[animIndex]`. */
-struct anim_record
-{
-    u8 unk_00[0x14];
-    u8 tileRecord;          // 0x14 - GetPaletteSlot/LockPalette record id
-    u8 unk_15;
-    u8 frameCount;          // 0x16
-    u8 unk_17[5];
-};
-
-struct anim_table
-{
-    struct anim_record *records;
-};
+#include "actor_self.h"
+#include "sprite_bank.h"
 
 /* Bits of a sprite's `+0x28` byte (see struct part_f28 in
  * dingodile.c). */
@@ -48,28 +31,42 @@ struct sprite_f28
     u8 unk_6:2;
 } __attribute__((packed));
 
-/* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs. */
+/* The sprite part's method table (at part+0x18); +0x50 (slot 10) is the
+ * destructor. */
+struct sprite_vtable
+{
+    u8 unk_00[0x50];
+    struct actor_method m50;    // 0x50
+};
+
+/* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs, and
+ * the base of level_select.c's 0x78-byte `SpawnLaunchPad` object. Its
+ * animation set is a sprite bank (sprite_bank.h; the records were
+ * `struct anim_record`/`anim_table`, whose `tileRecord`/`paletteId` is
+ * `sprite_anim.paletteId`). */
 struct sprite
 {
-    s32 x;                    // 0x00
-    s32 y;                    // 0x04
-    u16 id;                   // 0x08
+    s32 x;                      // 0x00 - Q8
+    s32 y;                      // 0x04 - Q8
+    u16 id;                     // 0x08
     u8 unk_0A[2];
-    u8 flags;                 // 0x0C
+    u8 flags;                   // 0x0C
     u8 unk_0D[0x0B];
-    struct method *vtable;    // 0x18
+    struct sprite_vtable *vtable; // 0x18
     u8 unk_1C[4];
-    struct anim_table *anim;  // 0x20
+    const struct sprite_bank *anim; // 0x20
     u8 unk_24[4];
-    struct sprite_f28 f28;    // 0x28
-    u8 palette:4;             // 0x29
+    struct sprite_f28 f28;      // 0x28
+    u8 palette:4;               // 0x29
     u8 unk_29_4:4;
     u8 unk_2A[3];
-    u8 animIndex;             // 0x2D
+    u8 animIndex;               // 0x2D
     u8 unk_2E[2];
-    s32 frame;                // 0x30
-    u8 unk_34[8];
-    u16 unk_3C;               // 0x3C
+    s32 frame;                  // 0x30
+    u8 unk_34[4];
+    u8 animDone;                // 0x38
+    u8 unk_39[3];
+    u16 unk_3C;                 // 0x3C
     u8 unk_3E[2];
 };
 
@@ -85,6 +82,18 @@ struct level_save
     u32 unk_16:16;
 };
 
+/* The same word with halfword bitfields: level_select.c's reads load it
+ * with `ldrh` (byte 2 of the save block itself holds four more flags
+ * LoadLevelSelectRecord tests). */
+struct level_save_h
+{
+    u16 cleared:1;
+    u16 flag1:1;
+    u16 flag2:1;
+    u16 time:13;        // best time, centiseconds (0 = none)
+    u16 unk_16;
+};
+
 /* The same word, read a byte at a time. */
 struct level_save_b
 {
@@ -96,6 +105,7 @@ struct level_save_b
 union level_record
 {
     struct level_save w;
+    struct level_save_h h;
     struct level_save_b b;
 };
 
@@ -111,24 +121,34 @@ struct menu_save
 union dispcnt
 {
     u16 raw;
+    struct dispcnt_bits bits;
 };
 
-/* Method table of a page entry (`struct item`, CreateLevelSelectEntry). */
+/* Method table of a page entry (`struct level_item`, gLevelSelectEntryVtable). */
 struct item_vtable
 {
-    struct method unk_00;
-    struct method m08;          // 0x08 - per-frame update
-    struct method m10;          // 0x10 - (world, slot): load the entry
-    struct method m18;          // 0x18 - (struct xy_pair *): place it
-    struct method m20;          // 0x20 - draw
-    struct method m28;          // 0x28 - destructor
+    struct actor_method unk_00;
+    struct actor_method m08;    // 0x08 - per-frame update (AnimateLevelSelectEntry)
+    struct actor_method m10;    // 0x10 - (world, slot): load the entry (SetLevelSelectEntryLevel)
+    struct actor_method m18;    // 0x18 - (struct xy_pair *): place it (SetLevelSelectEntryPos)
+    struct actor_method m20;    // 0x20 - draw
+    struct actor_method m28;    // 0x28 - destructor (DestroyLevelSelectEntry)
 };
 
-/* One level entry on the current page (CreateLevelSelectEntry, 0x14 bytes). */
-struct item
+/* One level entry on the level-select page (0x14 bytes, constructor
+ * CreateLevelSelectEntry, destructor DestroyLevelSelectEntry, method table
+ * gLevelSelectEntryVtable). `icon` shows the level's picture (or, past
+ * index 4, a per-world animation), `frame` the surrounding box.
+ * level_menu.h's `struct item` and level_select.c's `struct level_item`
+ * were its method-table views. */
+struct level_item
 {
-    u8 unk_00[0x10];
-    struct item_vtable *vtable; // 0x10
+    s32 id;                     // 0x00 - level id (GetLevelSelectEntryLevel)
+    u8 selected;                // 0x04
+    u8 unk_05[3];
+    struct sprite *icon;        // 0x08
+    struct sprite *frame;       // 0x0C
+    struct item_vtable *vtable; // 0x10 - gLevelSelectEntryVtable
 };
 
 /* BG1, the page strip (CreateLevelSelectPageBg). The first 0x10 bytes are the
@@ -145,17 +165,29 @@ struct page_bg
 
 COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct page_bg) == 0x28);
 
-/* One twinkle sprite at the picture's corners, handed to
- * RandomizeZoomBgTwinkle (`struct twinkle` in level_select_widgets.c: the
- * first 8 bytes are its timer and blink window). */
+/* One twinkle sprite at the picture's corners (RandomizeZoomBgTwinkle,
+ * TickZoomBgTwinkle). */
 struct twinkle
 {
-    u8 unk_00[8];
+    s32 timer;                  // 0x00 - frames until a new frame is picked
+    s32 blink;                  // 0x04 - blink window, counts down with timer
     struct sprite *part;        // 0x08
 };
 
-/* BG2, the zooming level picture (InitZoomBg, BG2CNT through
- * GetZoomBgControl; `struct zoom_bg` in level_select_widgets.c). */
+/* REG_BG2CNT's layout in halfword bitfields (GetZoomBgControl's side). */
+struct bgcnt_bits16
+{
+    u16 priority:2;
+    u16 charBase:2;
+    u16 unk_4:2;
+    u16 mosaic:1;
+    u16 colors256:1;
+    u16 screenBase:5;
+    u16 wrap:1;
+    u16 size:2;
+} __attribute__((packed));
+
+/* BG2, the zooming level picture (InitZoomBg, 0x8C bytes). */
 struct zoom_bg
 {
     u8 unk_00[0x0C];
@@ -164,17 +196,20 @@ struct zoom_bg
     s32 scale;                  // 0x14 - zoom, 0x100 = 1:1, 8 = smallest
     s32 charBlock;              // 0x18
     s32 screenBlock;            // 0x1C
-    s32 x;                      // 0x20
+    s32 x;                      // 0x20 - screen centre
     s32 y;                      // 0x24
     s32 dx;                     // 0x28 - wobble offset
     s32 dy;                     // 0x2C
-    s32 phase;                  // 0x30 - wobble phase, 0-0xFF
+    u32 phase;                  // 0x30 - wobble phase, 0-0xFF
+    /* The BG2CNT shadow (GetZoomBgControl). InitZoomBg sets it through
+     * byte bitfields (`bits`), UpdateZoomBg through halfword ones
+     * (`bits16`); `packed` keeps the union 2 bytes. */
     union
     {
         u16 raw;
         struct
         {
-            u8 priority:2;      // 0x34 - BG2CNT shadow
+            u8 priority:2;      // 0x34
             u8 charBase:2;
             u8 unk_34_4:3;
             u8 color256:1;
@@ -182,15 +217,25 @@ struct zoom_bg
             u8 unk_35_5:1;
             u8 screenSize:2;
         } __attribute__((packed)) bits;
+        struct bgcnt_bits16 bits16;
     } __attribute__((packed)) bgcnt;
     u8 unk_36[2];
-    s32 texX;                   // 0x38 - BgAffineSet source
+    /* BgAffineSet source, 0x38-0x49 */
+    s32 texX;                   // 0x38
     s32 texY;                   // 0x3C
-    u16 x16;                    // 0x40
-    u16 y16;                    // 0x42
-    u8 unk_44[4];
+    s16 x16;                    // 0x40 - screen centre
+    s16 y16;                    // 0x42
+    s16 sx;                     // 0x44
+    s16 sy;                     // 0x46
     u16 alpha;                  // 0x48 - rotation
-    u8 unk_4A[0x12];
+    u8 unk_4A[2];
+    /* BgAffineSet destination, committed by CommitZoomBg */
+    s16 pa;                     // 0x4C
+    s16 pb;                     // 0x4E
+    s16 pc;                     // 0x50
+    s16 pd;                     // 0x52
+    s32 bgx;                    // 0x54
+    s32 bgy;                    // 0x58
     struct twinkle twinkles[4]; // 0x5C
 };
 
@@ -209,7 +254,7 @@ struct level_menu
     const struct xy_pair *positions; // 0x18 - cursor position per index
     struct page_bg *bg1;        // 0x1C - CreateLevelSelectPageBg, BG1
     struct zoom_bg *bg2;        // 0x20 - InitZoomBg, BG2 (the level picture)
-    struct item *items[6];      // 0x24
+    struct level_item *items[6]; // 0x24
     void *panel;                // 0x3C - CreateLevelSelectCursor, the cursor panel
     struct sprite *sprites[10]; // 0x40
     char timeText[9];           // 0x68 - best time
@@ -222,7 +267,7 @@ struct level_menu
     s32 gemIconY;               // 0x8C - sprite 4's (the `rank` gem icon)
     s32 trialIconY;             // 0x90 - sprite 5's (time-trial icons)
     s32 trialIcon2Y;            // 0x94 - sprite 6's
-    s32 rank;                   // 0x98
+    s32 rank;                   // 0x98 - LoadLevelSelectRecord's classification, 5 = none
     struct menu_save *save;     // 0x9C - PackSaveData's save block
     union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
     struct bldy bldy;           // 0xA4 - REG_BLDY

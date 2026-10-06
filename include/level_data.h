@@ -92,9 +92,11 @@ struct level_desc
 
 /*
  * One room record of the level table (src/data/level_table_16c814.c):
- * the record RunRoom hands to LoadRoom (level_layers.c's
- * `struct level_load_args`, the palette and descriptor), `MedalListItem`
- * in level_query.c, `gl_widget_kind` in run_room.c.
+ * the record RunRoom hands to LoadRoom, and the current room
+ * (`level_state.cat`, `level_progress.cat`). It merges level_layers.c's
+ * `struct level_load_args` (batch 8b), level_query.c's `MedalListItem`
+ * (`linkedObj`/`type` are `desc`/`kind`), level_state.h's `struct
+ * level_category` and run_room.c's `gl_widget_kind` (#574, batch 9e).
  */
 struct level_room
 {
@@ -108,7 +110,8 @@ struct level_room
     u16 unk_12;                      // 0x12
 };
 
-/* A level's rooms: `MedalItemList` in level_query.c. */
+/* A level's rooms (level_query.c's `MedalItemList` was a view: `items` is
+ * `rooms`). */
 struct level_room_list
 {
     s32 count;

@@ -2,84 +2,19 @@
 #define GUARD_LEVEL_SELECT_PARTS_H
 
 /* Shared by src/menus/level_select_widgets.c
- * (GitHub issues #28/#29, ROM 0x0801DA38-0x0801E578): the level-select
- * screen's (level_select.c's `struct level_menu`) sub-objects - the
- * zooming BG2 picture, the per-level page entries and the cursor panel.
- * All of them own animated sprite parts built by InitUiSpriteObj. */
+ * (GitHub issues #28/#29, ROM 0x0801DA38-0x0801E578): the helpers for the
+ * level-select screen's (`struct level_menu`) sub-objects - the zooming
+ * BG2 picture, the per-level page entries and the cursor panel. All of
+ * them own animated sprite parts built by InitUiSpriteObj. The types are
+ * level_menu.h's. */
 
 #include "menus.h"
 #include "gfx.h"
+#include "actor_self.h"
+#include "level_menu.h"
 #include "objects.h"
 #include "memory.h"
 #include "globals.h"
-
-struct vmethod
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
-/* The sprite part's method table (at part+0x18); +0x50 is the
- * destructor. */
-struct sprite_vtable
-{
-    u8 unk_00[0x50];
-    struct vmethod m50; // 0x50
-};
-
-/* One 28-byte animation record, `anim_table.records[animIndex]`. */
-struct anim_record
-{
-    u8 unk_00[0x14];
-    u8 tileRecord; // 0x14 - UnlockPalette/LockPalette tile-cache record
-    u8 unk_15;
-    u8 frameCount; // 0x16
-    u8 unk_17[5];
-};
-
-struct anim_table
-{
-    struct anim_record *records;
-};
-
-/* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs. */
-struct sprite
-{
-    s32 x;                        // 0x00 - Q8
-    s32 y;                        // 0x04 - Q8
-    u8 unk_08[0x10];
-    struct sprite_vtable *vtable; // 0x18
-    u8 unk_1C[4];
-    struct anim_table *anim;      // 0x20
-    u8 unk_24[5];
-    u8 palette:4;                 // 0x29
-    u8 unk_29_4:4;
-    u8 unk_2A[3];
-    u8 animIndex;                 // 0x2D
-    u8 unk_2E[2];
-    s32 frame;                    // 0x30
-    u8 unk_34[4];
-    u8 animDone;                  // 0x38
-    u8 unk_39[7];
-};
-
-COMPILE_TIME_ASSERT(level_select_parts_h, sizeof(struct sprite) == 0x40);
-
-/* One level entry on the level-select page (0x14 bytes, constructor
- * CreateLevelSelectEntry, destructor DestroyLevelSelectEntry, method table gLevelSelectEntryVtable).
- * `icon` shows the level's picture (or, past index 4, a per-world
- * animation), `frame` the surrounding box. */
-struct level_item
-{
-    s32 id;                     // 0x00 - level id (GetLevelSelectEntryLevel)
-    u8 selected;                // 0x04
-    u8 unk_05[3];
-    struct sprite *icon;        // 0x08
-    struct sprite *frame;       // 0x0C
-    const struct vtable_slot *vtable; // 0x10 - gLevelSelectEntryVtable
-};
-
 
 extern void LoadTaggedAsset(const void *asset, void *dest);
 
@@ -92,18 +27,18 @@ typedef void (*dtor_fn)(void *self, s32 flags);
         struct sprite *_p = (p);                                               \
         if (_p != NULL)                                                        \
         {                                                                      \
-            struct vmethod *_m = &_p->vtable->m50;                             \
+            struct actor_method *_m = &_p->vtable->m50;                       \
             ((dtor_fn)_m->fn)((u8 *)_p + _m->thisOffset, 3);                   \
         }                                                                      \
     } while (0)
 
 /* The part's current animation record. A macro, not an inline: an
  * inline returning the record's address changes the load order. */
-#define PART_RECORD(p) ((p)->anim->records[(p)->animIndex])
+#define PART_RECORD(p) ((p)->anim->anims[(p)->animIndex])
 
-static inline struct anim_table *AnimTable(s32 offset)
+static inline const struct sprite_bank *AnimTable(s32 offset)
 {
-    return (struct anim_table *)(SPRITE_BANK_BASE + offset);
+    return (const struct sprite_bank *)(SPRITE_BANK_BASE + offset);
 }
 
 /* Shows animation frame `frame`, clamped to the animation's last one. */

@@ -7,9 +7,10 @@
  * ROM always leaves 0, and the (Thumb) code address. Slot 0 is the
  * type-info slot, empty (all zero) everywhere - the game has no RTTI.
  *
- * This is the layout the code reads through `struct method`
- * (gobj_1a794.h) and `struct actor_method` (actor_self.h); this type is
- * for defining the tables themselves (src/data, see docs/data.md).
+ * This is the layout the code reads through `struct actor_method`
+ * (actor_self.h; gobj_1a794.h's and level_menu.h's `struct method` and the
+ * file-local `*_method` copies were merged into it, #574 batch 9e); this
+ * type is for defining the tables themselves (src/data, see docs/data.md).
  */
 struct vtable_slot
 {

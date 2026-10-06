@@ -1,5 +1,6 @@
 #include "core.h"
 #include "player_ctrl.h"
+#include "gfx_part.h"
 #include "util.h"
 #include "system.h"
 #include "audio.h"
@@ -214,14 +215,6 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
  * NAKED under the current agbcc is what old_agbcc emits for plain C. */
 
 /* the object SpawnEffectPart returns */
-struct spawned
-{
-    u8 unk_00[0xC];
-    u8 unk_0C_0:2; // 0x0C
-    u8 unk_0C_2:1;
-    u8 unk_0C_3:5;
-};
-
 /* Picks three tuning values by `state` - `mag` (always 300), `valB` and
  * `valA` - reads the D-pad direction (GetDpadDirection), on a 1-in-128 frame
  * tick and a coin flip spawns a kind-4 object at the target's position via
@@ -262,10 +255,10 @@ void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self)
         s32 x = t->x >> 8;
         s32 y = (t->y >> 8) - 20;
         s32 flip = t->mirror.bits.flipX;
-        struct spawned *obj = SpawnEffectPart(gEntitySpawner, 40, 4, x, y, flip);
+        struct gfx_part *obj = SpawnEffectPart(gEntitySpawner, 40, 4, x, y, flip);
 
         if (obj != NULL)
-            obj->unk_0C_2 = 0;
+            obj->hidden = 0;
     }
 
     switch (dir)

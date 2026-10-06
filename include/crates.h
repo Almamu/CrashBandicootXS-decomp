@@ -46,6 +46,19 @@ struct pool_node {
     u8 mark2;                   // 0x11
 };
 
+/* codegen: `struct pool_node` with untyped fields, the view
+ * PoolResetFreeList (crate_list_reset.c, part_list.c) zeroes the nodes
+ * through. Through the real `struct pool_node *` fields, gcc takes the
+ * zeroing stores as possible writes to `m->nodeArray` and reloads it
+ * (docs/headers_plan.md, "Codegen findings"). Both files had a copy. */
+struct pool_init_node {
+    void *data;
+    void *next;
+    struct pool_link *wrap;
+    void *link;
+    u8 mark;
+};
+
 /* The crate list (`gCrateList`): a fixed-slot pool of the crates and
  * other collidable parts, set up by InitCrateList. `slotArray` holds the
  * active objects (bounded by `activeCount`, up to `capacity`);

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "sprite_bank.h"
 #include "text_popup.h"
 #include "enemies.h"
 #include "menus.h"
@@ -11,18 +12,6 @@
 
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
-
-/* Same shape as level_select_parts.h's anim_table/anim_record. */
-struct anim_record_21668
-{
-    u8 unk_00[0x14];
-    u8 paletteId; // 0x14
-};
-
-struct anim_table_21668
-{
-    struct anim_record_21668 *records;
-};
 
 /* Bit view of actor.flags (+0x0C). */
 struct part_flags_21668
@@ -63,7 +52,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     SetFrameNibble(part, GetPaletteSlot(gPaletteCache,
-        ((struct anim_table_21668 *)part->anim)->records->paletteId));
+        ((const struct sprite_bank *)part->anim)->anims->paletteId));
     part->flipX = 0;
     part->flipY = 0;
     hdr = CreateMegaMixCtrl(OperatorNew(0x24));

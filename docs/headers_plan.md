@@ -44,18 +44,19 @@ player and crate functions' `void *self`) done, see "Batch 9c2" below.
 The leftovers are split in three PRs off main: 9d (the last externs: the
 base vtables, `gEmptySpritePoint`, the boss pictures and the GAX
 internals) done, see "Batch 9d" below; 9e (the struct views and the
-duplicate struct names) and 9f (the action controller's `struct act`,
-the crate list functions, and the final status) are next.
+duplicate struct names) done, see "Batch 9e" below; 9f (the action
+controller's `struct act`, the crate list functions, and the final
+status) is next.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b | After batch 9c | After batch 9c2 | After batch 9d |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 | 589 | 587 | 494 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 | 405 | 405 | 355 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 | 7 | 7 | 4 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 | 233 | 223 | 220 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 | 10 | 10 | 8 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b | After batch 9c | After batch 9c2 | After batch 9d | After batch 9e |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 | 589 | 587 | 494 | 494 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 | 405 | 405 | 355 | 355 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 | 7 | 7 | 4 | 4 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 | 233 | 223 | 220 | 164 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 | 10 | 10 | 8 | 0 |
 
 ## Tools
 
@@ -68,6 +69,12 @@ Audit totals (`tools/extern_audit.py`) as the batches land:
   - `--conflicts` lists every conflicting symbol.
   - `--symbol NAME` prints one symbol's full record: the definition, every
     variant, the files that declare it and its users by subsystem.
+
+  `--views` (batch 9e) lists the `.c`-file structs whose layout
+  signature (size and field offsets, three fields or more) matches a
+  header struct's: the candidates for a copy or a view of a header type.
+  Most matches are coincidences (any four-word struct matches `struct
+  aabb`), so each one needs a look at its readers.
 
   Since batch 9d it also sorts the declarations that are still in `.c`
   files by the exception that keeps them there (see "Exceptions" below):
@@ -445,7 +452,8 @@ before the files that every subsystem touches.
     (done)**, see "Batch 9c" below; **9c2, the player and crate
     functions' `void *self` (done)**, see "Batch 9c2" below; then the
     leftovers: **9d, the last externs (done)**, see "Batch 9d" below,
-    then 9e (struct views) and 9f (`struct act`, final status).
+    **9e, the struct views (done)**, see "Batch 9e" below, then 9f
+    (`struct act`, final status).
 
 The lib batches (GAX2 internals in `gax_internal.h`) can go anywhere. They
 don't interact with game code.
@@ -1795,6 +1803,139 @@ After a clean build every `.o` and `.s` file in src/ and lib/ is
 identical to origin/main's. The build has the same warnings as origin/main
 and no new ones.
 
+## Batch 9e: the struct views and the duplicate types
+
+The second leftovers PR: no struct name is defined in more than one `.c`
+file any more, and the views of header types that batches 7, 8b and 9d
+left are merged. 56 local struct definitions are gone (220 -> 164), and
+the duplicate names went from 8 to 0. No declaration moved (494) and no
+codegen exception was needed.
+
+- **The level's rooms** (level_data.h, level_state.h). level_query.c's
+  `struct MedalListItem`/`MedalItemList` are `struct level_room`/
+  `level_room_list` (`linkedObj`/`type`/`items` are `desc`/`kind`/
+  `rooms`; `*(void **)(linkedObj + 0x1c)` is `desc->entities`, and
+  LevelHasEntityType's `nested + 0x10` table is its `typeCounts`).
+  level_state.h's `struct level_category` is gone: `level_state.cat` is a
+  `const struct level_room *` (`category` is `catIndex`).
+  `CountRoomCrates` takes the room, `CountCrateEntities` the entity
+  list.
+- **`struct level_progress`** (level_state.h, new): the room block of
+  the level state from `level` (+0xC4) on, which game_frame.c passes as
+  `&self->level`. It merges level_query.c's `level_progress` (`item` is
+  `cat`), play_room.c's `level_start_args` (`spawnX`/`spawnY`/`room` are
+  `checkpointX`/`checkpointY`/`cat`) and run_room.c's `gl_self`
+  (`widget` is `cat`; `gl_widget_kind` was the room). `PlayRoom` and
+  `RunRoom` take it.
+- **`struct hitbox_quad`** (hitbox_quad.h, new, included by gfx.h and
+  sprite_bank.h): sprite_bank.h's `struct sprite_box` was the same
+  8-byte box with its padding named (`x`/`y` are `offX`/`offY`, the pad
+  is `unk_06`). The sprite frames and animations, and gEmptySpriteBox,
+  use it.
+- **The collision queue** (objects.h): `struct collision_candidate`
+  (collision_queue.c's `struct candidate` and `struct
+  collision_candidate`; the fields take ApplyCrateCollision's parameter
+  names, `code`/`edge`/`depth`/`hit`/`p20`/`p21`) and `struct
+  collision_queue` (`candidate_list`, collision_queue.c's
+  `collision_queue` and player_event.c's `ab9c_link`). The player is
+  0x350 bytes, so the queue holds 16 candidates: `struct
+  player.collisionQueue` is the embedded queue (it was `u8 [4]` plus
+  `unk_10C`), and player.h asserts the player's size. The queue
+  functions, `GetPlayerCollisionQueue` and crate_break.c's
+  `D18C_QUEUE`/`D18C_COMMIT` use it.
+- **The motion records** (objects.h): a motion record is a `struct
+  speed_ramp` (`start`/`step`/`target`), the record the setters copy
+  into `rampX`/`rampY`. objects.h's `struct motion_rec` (`a`/`b`/`c`)
+  and gobj_1a794.h's `struct vec3` (`x`/`y`/`z`) are gone;
+  gCtrlMotionRecords, the player's two tables, gPlatformMoverMotionRecords
+  (now declared in objects.h; the data file defined it `s32 [3][3]`) and
+  gDingodileMotionRecords (`s32 [4][3]`, so bosses.h includes
+  objects.h) use it, and `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
+  take a `const struct speed_ramp *`. The X setters in ctrl.c keep their
+  `s32 *` and the Mega Mix table its `s32 [4][3]` (both read by byte
+  offset).
+- **The method record**: gobj_1a794.h's and level_menu.h's `struct
+  method`, level_select_parts.h's `vmethod` and the file-local copies
+  (entity_spawner.c's and level_select.c's `method`, `widget_method`,
+  `lk_method` (`delta`), `gl_method`, `vmethod`, `collect_method` (a
+  typed `fn`; its one call casts), `ctrl_method`, `ac2c_method`) are
+  actor_self.h's `struct actor_method`.
+- **The level-select types** (level_menu.h). level_menu.h and
+  level_select_parts.h each had a `struct sprite`; there is now one, with
+  both field sets (`id`/`flags`/`f28` and `animDone`) and
+  level_select_parts.h's `struct sprite_vtable` (`m50`, the destructor;
+  level_select.c's `SPRITE_CALL(s, 10, ...)` is `SPRITE_CALL(s, m50,
+  ...)`). Its animation set is sprite_bank.h's `struct sprite_bank`
+  (`anim_record`/`anim_table` and their `tileRecord`/`paletteId` are
+  `sprite_anim`/`sprite_bank` and `paletteId`). level_menu.h's `struct
+  item`, level_select.c's `struct level_item` view and
+  level_select_parts.h's `struct level_item` are one `struct level_item`.
+  `struct twinkle` and `struct zoom_bg` take level_select_widgets.c's
+  fields (`timer`/`blink`, `sx`/`sy`, the BgAffineSet destination
+  `pa`..`bgy`; level_menu.h's names `charBlock`/`screenBlock`/`x16`/`y16`
+  won over `charBase`/`screenBase`/`scrX`/`scrY`), and its BG2CNT union
+  has both bit views: `bits` (byte containers, InitZoomBg) and `bits16`
+  (halfword containers, UpdateZoomBg). `union dispcnt` gets level_select.c's
+  `bits`, and `union level_record` its halfword `struct level_save_h`.
+  level_select.c includes level_menu.h and lost its copies of
+  `anim_record`, `anim_table`, `sprite`, `level_save`, `dispcnt`,
+  `item_vtable`, `level_item` and `level_menu`; level_select_parts.h
+  includes level_menu.h; level_select_widgets.c lost `twinkle`,
+  `bgcnt_bits`, `bgcnt_packed` and `zoom_bg`. `level_menu.save` is a
+  `struct menu_save *` (level_select.c reads `save->open` and the record
+  words through a `(u8 *)` cast), `positions` is `const`, and `bg1`/`bg2`
+  are typed.
+- **Other sprite-bank views**: time_trial.c's `anim_record`/
+  `anim_table`, dingodile.c's `anim_rec`, tiny_update.c's
+  `hop_anim_record`/`hop_anim_bank`, spawn_objects.c's
+  `anim_record_21668`/`anim_table_21668` and affine_sprite_pieces.c's
+  `kf_record` (`steps` is `frameCount`) are `struct sprite_anim`/
+  `sprite_bank`.
+- **The camera lead** (camera_lead.h, new): level_select.c's `struct
+  follow_child` and input_ctrl.c's `struct ctrl_child` (`unk_78` is
+  `targetOffset`). The flags byte at +0x0C is a packed union: `all`
+  (level_select.c ORs the byte) and `bits.gone` (input_ctrl.c's
+  `MARK_GONE`).
+- **The other duplicate names**: sprite_pieces.c's and
+  affine_sprite_pieces.c's `oam_pair`/`oam_attr01` (and gfx.h's
+  `oam_attr2`) are gfx.h's `struct oam_attrs` (`objMode`/`gfxMode`/
+  `colorMode`/`hflip`/`vflip`/`matrix`/`matrixHi`/`matrixTop`/`tile` are
+  `affineMode`/`objMode`/`bpp`/`matrixBit3`/`matrixBit4`/`matrixLo`/
+  `matrixBit3`/`matrixBit4`/`tileNum`); action_ctrl_run_jump.c's and
+  swim_ctrl_stroke.c's `struct spawned` is gfx_part.h's `struct gfx_part`
+  (`unk_0C_2` is `hidden`); the two `struct pool_init_node` copies are
+  one in crates.h (the codegen view, see "Codegen findings"); the two
+  `struct GaxLayoutList` copies are one in gax_internal.h;
+  actor_spawn.c's `struct sub_effect_record` is actor_anim.h's; and
+  level_gfx_17cff4.c's `anim_record_view` is actor_anim.h's `struct
+  anim_table_record` (gLogoActorAnim, frontend.h).
+- **Left as they are**, after a look at the readers:
+  - gax_unknownc_play.c's `struct UnknownC` and its parts: the mixer
+    handler (`struct GaxMixerHandler`), but read through a typed `ops`/
+    `counts`/`isFirst` shape the header's handler structs don't have;
+  - cortex.c's `gfx_ctrl` and dingodile.c's `obj_483c` (two different
+    classes on the 0x10-byte base controller, which has no header struct
+    yet), and the vehicle/boss objects that share an `actor_self` head
+    (`actor_2718`, `jetpack_cannonball`, `actor_falling`,
+    `polar_collected_wumpa`; `actor_orbit`, `polar_penguin`): different
+    classes, not copies;
+  - entity_spawner.c's `actor_flag_bits` (its bits split differently from
+    crate.h's `phys_flag_bits`) and level_select.c's `bldy_byte` (the
+    byte view of `struct bldy` the fade-in needs);
+  - jetpack_spawn.c's `struct spawn_rec` has the name of an unrelated
+    gobj_1a794.h struct (a type-name question for #569);
+  - the header views of the sprite bank (gfx_part.h's `anim_record`/
+    `anim_bank`, gobj_1a794.h's `anim_table`/`anim_rec`, player.h's
+    `act_anim_record`/`act_anim_bank`, crate.h's `anim_table`), which
+    many files read.
+- **Tools:** `extern_audit.py --views` (see "Tools").
+
+After a clean build every `.o` file in src/ and lib/ is identical to
+origin/main's, and so is every `.s` file except collision_queue.s, whose
+local label numbers shift (it now includes crate.h for `struct crate`,
+see "Codegen findings"). The build has the same warnings as origin/main
+and no new ones.
+
 ## Exceptions
 
 The declarations that stay in `.c` files on purpose. `tools/extern_audit.py`
@@ -1954,6 +2095,21 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `const u8 *` -> `const char *` parameters (char is unsigned here), `u8 *dest` -> `void *` with a local `u8 *` | GaxFatalError, GaxDrawText (pinned), GaxZeroFill (pinned) | identical |
 | `u8 []` ARM-code labels -> `const u32 []`, byte offsets through `(const u8 *)` casts | GaxChannelMix's patch macro | identical |
 | `void *` accessor return -> `struct crate *`, callers cast | GetCrateAbove/GetCrateBelow in crate_hit.c (old_agbcc), room_entities.c (old_agbcc) | identical |
+| `struct level_category`/`MedalListItem`/`MedalItemList` views -> `const struct level_room`/`level_room_list`, `*(void **)((u8 *)item->linkedObj + 0x1c)` -> `item->desc->entities`, `*(u8 **)(nested + 0x10)` -> `nested->typeCounts` (pinned `register u32`) | level_query.c, level_state.c, bonus_round.c, game_frame.c | identical |
+| three file-local views of the level state's room block -> one `struct level_progress`; `void *`/`struct gl_self *` parameters -> `struct level_progress *` | play_room.c (pinned r8/r4 copies), run_room.c, level_query.c | identical |
+| `struct sprite_box` -> `struct hitbox_quad` with the pad named (`u16 unk_06`) | sprite_bank.h's frames and animations, gEmptySpriteBox | identical |
+| `u8 collisionQueue[4]`/`unk_10C` -> embedded `struct collision_queue`; `(u8 *)p + 0x108` with `q[4]` -> `&p->collisionQueue` with `q->unk_04` | crate_break.c (old_agbcc), player_event.c, player_flags.c, crate.c | identical |
+| u8 candidate bytes stored as `struct byte_arg` members (`.p20.v = f20`) | AddCollisionCandidate | identical |
+| `#include "crate.h"` (with gobj_1a794.h; static inlines) in a file that didn't include it | collision_queue.c | `.o` identical, `.s` label numbers shift; kept, for `struct crate` |
+| `struct vec3`/`motion_rec`/`s32 [N][3]` motion records -> `struct speed_ramp` (`.x`/`.a` -> `.start`, ...), `(const struct vec3 *)tbl[i]` -> `&tbl[i]` | platform.c (pinned `register` pointers), dingodile.c, dingodile_create.c, action_ctrl_idle.c (old_agbcc), swim_ctrl.c, player_flags.c | identical |
+| local `*_method` records -> `struct actor_method`, a typed `fn` call -> a cast call | 12 files (old_agbcc and agbcc) | identical |
+| level_select.c's local level-select types -> level_menu.h's: `u8 flags28` -> packed `struct sprite_f28`, `struct actor_method *vtable` with `&vtable[10]` -> `struct sprite_vtable *` with `&vtable->m50`, `u8 *save` -> `struct menu_save *` read through `(u8 *)`/`save->open`, `void *bg1` -> `struct page_bg *` (`&bg1->bg`) | level_select.c (old_agbcc) | identical, including the pinned `anim`/`records` registers |
+| `struct anim_record`/`anim_table` and other sprite-bank views -> `const struct sprite_anim`/`sprite_bank` (`records` -> `anims`, `tileRecord` -> `paletteId`, `(*kf)[i]` -> `kf->anims[i]`) | level_select.c, level_select_pages.c, level_select_widgets.c, time_trial.c, dingodile.c, tiny_update.c, spawn_objects.c, affine_sprite_pieces.c | identical |
+| two `zoom_bg` copies -> one with both BG2CNT bit views (byte containers for InitZoomBg, halfword ones for UpdateZoomBg); `s32 phase` -> `u32`, `u16 x16` -> `s16` (stores only in InitZoomBg) | level_select_pages.c, level_select_widgets.c (old_agbcc) | identical |
+| stack `struct oam_pair` (`oam_attr01` + `oam_attr2`) -> `struct oam_attrs` | DrawSpritePieces, DrawAffineSpritePieces | identical |
+| `struct spawned` effect-part views -> `struct gfx_part` (`unk_0C_2` -> `hidden`) | action_ctrl_run_jump.c, swim_ctrl_stroke.c | identical |
+| u8 flags byte and a `gone:1` view -> one packed union (`flags.all`, `flags.bits.gone`) | level_select.c (the pinned OR of the byte), input_ctrl.c (`MARK_GONE`) | identical |
+| `const struct anim_record_view` data object -> `const struct anim_table_record` with cast initializers | gLogoActorAnim | identical data |
 
 Experiments for later batches:
 

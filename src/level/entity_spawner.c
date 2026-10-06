@@ -17,17 +17,10 @@ extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbo
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-struct method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
 struct manager
 {
     u8 unk_00[0xC];
-    struct { u8 unk_00[0x18]; struct method attach; } *vtable; // 0x0C
+    struct { u8 unk_00[0x18]; struct actor_method attach; } *vtable; // 0x0C
 };
 
 struct fx_part

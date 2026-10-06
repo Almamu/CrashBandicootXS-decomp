@@ -108,7 +108,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
  * copy, reusing the register chain exactly like the ROM. */
 void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
 {
-    struct level_category *level = self->cat;
+    const struct level_room *level = self->cat;
 
     if (level->kind == 3) {
         self->checkpointCrateCount = GetCrateCount(self);

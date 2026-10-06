@@ -49,7 +49,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     void *p3, *header, *record;
     void *p3b, *headerb, *recordb;
     u8 recordId, slot;
-    struct level_category *level;
+    const struct level_room *level;
 
     PlaySfx(gAudioContext, 0x18, 0x100);
 
@@ -123,7 +123,7 @@ void TickLevelClock(struct level_state *self)
             void *p3, *header, *record;
             void *p3b, *headerb, *recordb;
             u8 recordId, slot;
-            struct level_category *level;
+            const struct level_room *level;
 
             base = gPaletteCache;
             p3 = (void *)gSpriteBankSet->table;
@@ -194,7 +194,7 @@ void AddBrokenCrate(struct level_state *self)
 
     if (self->crateCount == self->crateTotal) {
         if (!IsInBonusRound(self) && !IsInGemPath(self)) {
-            struct level_category *level = self->cat;
+            const struct level_room *level = self->cat;
 
             if (level->kind == 3) {
                 u8 *flags = GetCurrentLevelFlags(self);
@@ -235,7 +235,7 @@ void PressSwitchCrate(struct level_state *self)
     }
 
     if (!IsInBonusRound(self) && !IsInGemPath(self)) {
-        struct level_category *level = self->cat;
+        const struct level_room *level = self->cat;
 
         if (level->kind == 3) {
             u8 *flags = GetCurrentLevelFlags(self);
@@ -789,7 +789,7 @@ void CheckAllCratesBroken(void *selfArg)
 
     if (self->crateCount == self->crateTotal
         && !IsInBonusRound(self) && !IsInGemPath(self)) {
-        struct level_category *level = self->cat;
+        const struct level_room *level = self->cat;
 
         if (level->kind == 3) {
             u8 *flags = GetCurrentLevelFlags(self);

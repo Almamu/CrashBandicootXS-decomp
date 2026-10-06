@@ -741,6 +741,8 @@ def main():
     ap.add_argument('--symbol', action='append', default=[], help='print the full record for SYMBOL')
     ap.add_argument('--remaining', action='store_true',
                     help='list the declarations no exception covers (file: symbol)')
+    ap.add_argument('--views', action='store_true',
+                    help='list the .c-file structs whose layout matches a header struct')
     args = ap.parse_args()
 
     os.chdir(ROOT)
@@ -859,10 +861,19 @@ def main():
                     if td:
                         known_global[td] = (sz, al)
     header_structs = collections.defaultdict(list)
+    # layout signature (>= 3 fields) -> header structs with it, to spot the
+    # .c-file structs that are copies or views of a header type
+    header_sigs = collections.defaultdict(list)
     for p, fs in hscans.items():
         for skind, tag, td, body, packed, line, st in fs.structs:
             for nm in filter(None, ['%s %s' % (skind, tag) if tag else None, td]):
                 header_structs[nm].append(p)
+            sz, al, fields = hlay.layout(skind, body, packed)
+            if sz is not None and len(fields) >= 3:
+                sig = 'size=0x%x;' % sz + ','.join('%x:%d' % (o, s) for o, s, _ in fields)
+                nm = ('%s %s' % (skind, tag)) if tag else td
+                if nm:
+                    header_sigs[sig].append('%s (%s)' % (nm, p))
     for p, fs in scans.items():
         known = dict(known_global)
         lay = Layout(known)
@@ -882,7 +893,8 @@ def main():
                 rows.append(dict(file=p, line=line, name=name, typedef=td, kind=skind,
                                  size=sz, nfields=len(fields), signature=sig,
                                  fields=[f[2] for f in fields],
-                                 in_header=sorted(set(header_structs.get(name, []) + header_structs.get(td or '', [])))))
+                                 in_header=sorted(set(header_structs.get(name, []) + header_structs.get(td or '', []))),
+                                 header_layout=sorted(set(header_sigs.get(sig, []))) if sig and len(fields) >= 3 else []))
         struct_rows.extend(rows)
 
     by_name = collections.defaultdict(list)
@@ -959,6 +971,9 @@ def main():
     print('  layout signatures (>=3 fields) shared by >1 definition: %d groups, %d definitions, %d distinct names' % (
         len(sig_groups), sum(len(v) for v in sig_groups.values()),
         len({r['name'] for v in sig_groups.values() for r in v})))
+    views = [r for r in struct_rows if r['header_layout']]
+    print('  same layout as a header struct (>=3 fields): %d%s' % (
+        len(views), '' if args.views or not views else ' (--views lists them)'))
     sub = collections.Counter(subsystem_of(r['file']) for r in struct_rows)
     print('  per subsystem: ' + ', '.join('%s %d' % kv for kv in sub.most_common()))
     print()
@@ -974,6 +989,10 @@ def main():
             print('%s (%s, owner %s, %d files):' % (s['symbol'], s['conflict'], s['owner'], s['declared_in']))
             for v in s['variants']:
                 print('    %-60s %s' % (v['type'], ' '.join(v['files'])))
+    if args.views:
+        print()
+        for r in sorted(views, key=lambda r: (r['file'], r['line'])):
+            print('%s:%d: %s ~ %s' % (r['file'], r['line'], r['name'], ', '.join(r['header_layout'])))
     if args.remaining:
         print()
         for p, sym in sorted(remaining):

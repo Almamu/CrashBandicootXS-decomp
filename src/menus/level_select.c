@@ -7,6 +7,8 @@
 #include "system.h"
 #include "audio.h"
 #include "menus.h"
+#include "level_menu.h"
+#include "camera_lead.h"
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
@@ -55,99 +57,11 @@
  * Under it the shadow-register blocks are plain bitfield stores; the
  * `Opaque`/register-pinned forms were current-agbcc workarounds. */
 
-struct method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
-struct follow_child
-{
-    s32 x;              // 0x00
-    s32 y;              // 0x04
-    u16 field_08;       // 0x08
-    u8 unk_0A[2];
-    u8 flags;           // 0x0C
-    u8 bit0_1:2;        // 0x0D
-    u8 visible:1;
-    u8 bit3_7:5;
-    u8 unk_0E[0x0A];
-    const struct vtable_slot *vtable; // 0x18 - gCameraLeadVtable
-    u8 unk_1C[8];
-    u8 unk_24;          // 0x24
-    u8 unk_25[0x0D];
-    u8 unk_32;          // 0x32
-    u8 unk_33[0x2D];
-    s32 unk_60;         // 0x60 - copied from the player every frame
-    u8 unk_64[4];
-    u8 unk_68;          // 0x68
-    u8 unk_69[0x0F];
-    s32 targetOffset;   // 0x78 - Q8 x offset from the player, 0xA00-0x3200
-    s32 offset;         // 0x7C - eases toward targetOffset
-};
-
+/* `struct follow_child` is camera_lead.h's. */
 COMPILE_TIME_ASSERT(level_select_c, sizeof(struct follow_child) == 0x80);
 
-/* One 28-byte animation record, `anim_table.records[animIndex]`. */
-struct anim_record
-{
-    u8 unk_00[0x14];
-    u8 paletteId;          // 0x14 - GetPaletteSlot record id
-    u8 unk_15;
-    u8 frameCount;          // 0x16
-    u8 unk_17[5];
-};
-
-COMPILE_TIME_ASSERT(level_select_c, sizeof(struct anim_record) == 0x1C);
-
-struct anim_table
-{
-    struct anim_record *records;
-};
-
-/* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs, and the
- * base of the 0x78-byte `SpawnLaunchPad` object. */
-struct sprite
-{
-    s32 x;                    // 0x00
-    s32 y;                    // 0x04
-    u16 id;                   // 0x08
-    u8 unk_0A[2];
-    u8 flags;                 // 0x0C
-    u8 unk_0D[0x0B];
-    struct method *vtable;    // 0x18
-    u8 unk_1C[4];
-    struct anim_table *anim;  // 0x20
-    u8 unk_24[4];
-    u8 flags28;               // 0x28
-    u8 palette:4;             // 0x29
-    u8 unk_29_4:4;
-    u8 unk_2A[3];
-    u8 animIndex;             // 0x2D
-    u8 unk_2E[2];
-    s32 frame;                // 0x30
-    u8 unk_34[8];
-    u16 unk_3C;               // 0x3C
-    u8 unk_3E[2];
-};
-
-COMPILE_TIME_ASSERT(level_select_c, sizeof(struct sprite) == 0x40);
-
-
-/* One level's saved record word (`level_menu.save + 4 + id * 4`; byte 2
- * of the save block itself holds four more flags LoadLevelSelectRecord tests). */
-struct level_save
-{
-    u16 cleared:1;
-    u16 flag1:1;
-    u16 flag2:1;
-    u16 time:13;        // best time, centiseconds (0 = none)
-    u16 unk_16;
-};
-
-/* Shadow copies of the blend/display registers, committed every frame. */
-/* The same register viewed as its low byte, for the fade-in decrement
+/* The BLDY shadow (`level_menu.bldy`, gfx.h's `struct bldy`) viewed as
+ * its low byte, for the fade-in decrement
  * (a byte-sized test is what makes gcc narrow the `evy != 0` check to
  * an `and` of the loaded byte). */
 struct bldy_byte
@@ -156,65 +70,9 @@ struct bldy_byte
     u8 unk_5:3;
 } __attribute__((packed));
 
-union dispcnt
-{
-    u16 raw;
-    struct dispcnt_bits bits;
-};
-
-struct item_vtable
-{
-    struct method unk_00;
-    struct method m08;          // 0x08 - per-frame update (UpdateLevelSelect)
-    struct method m10;          // 0x10
-    struct method m18;          // 0x18
-    struct method m20;          // 0x20 - draw (DrawLevelSelect)
-    struct method m28;          // 0x28 - destructor (DestroyLevelSelect)
-};
-
-/* One level entry on the current page (CreateLevelSelectEntry, 0x14 bytes):
- * level_select_parts.h's `struct level_item`, seen through its method
- * table. */
-struct level_item
-{
-    u8 unk_00[0x10];
-    struct item_vtable *vtable; // 0x10
-};
-
-/* The level-select screen object (0xAC bytes, InitLevelSelect). */
-struct level_menu
-{
-    u8 result;                  // 0x00 - returned by RunLevelSelect
-    u8 unk_01[3];
-    s32 lastIndex;              // 0x04 - last valid `index` on this page
-    s32 index;                  // 0x08 - cursor, 0-5
-    s32 world;                  // 0x0C - page
-    s32 levelId;                // 0x10 - gLevelTable index
-    s32 nameText;               // 0x14 - the level name's text
-    struct xy_pair *positions;  // 0x18 - cursor position per index
-    void *bg1;                  // 0x1C - CreateLevelSelectPageBg, BG1
-    void *bg2;                  // 0x20 - InitZoomBg, BG2 (the level picture)
-    struct level_item *items[6];      // 0x24
-    void *panel;                // 0x3C - CreateLevelSelectCursor, the cursor panel
-    struct sprite *sprites[10]; // 0x40
-    char timeText[9];           // 0x68 - best time
-    char recordText[9];         // 0x71 - next threshold to beat
-    u8 unk_7A[2];
-    u32 scroll;                 // 0x7C - BG0 auto-scroll counter
-    s32 panelSlideX;            // 0x80 - x offset of the record panel
-    s32 clearedIconY;           // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadLevelSelectRecord
-    s32 flag1IconY;             // 0x88 - sprite 3's
-    s32 gemIconY;               // 0x8C - sprite 4's (the `rank` gem icon)
-    s32 trialIconY;             // 0x90 - sprite 5's (time-trial icons)
-    s32 trialIcon2Y;            // 0x94 - sprite 6's
-    s32 rank;                   // 0x98 - LoadLevelSelectRecord's classification, 5 = none
-    u8 *save;                   // 0x9C - PackSaveData's save block
-    union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
-    struct bldy bldy;           // 0xA4 - REG_BLDY
-    union dispcnt dispcnt;      // 0xA8 - REG_DISPCNT
-};
-
-COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_menu) == 0xAC);
+/* `struct sprite`, `struct level_item`, `struct level_menu` and the rest
+ * of the screen's types are level_menu.h's (this file had its own copies,
+ * merged in #574 batch 9e). */
 
 /* Held keys in the low half, newly-pressed keys in the high half. */
 
@@ -257,9 +115,9 @@ static inline void SetAnim(struct sprite *s, s32 idx)
     SetSpriteAnimDone(s, 0);
 }
 
-static inline struct anim_table *AnimTable(s32 offset)
+static inline const struct sprite_bank *AnimTable(s32 offset)
 {
-    return (struct anim_table *)(SPRITE_BANK_BASE + offset);
+    return (const struct sprite_bank *)(SPRITE_BANK_BASE + offset);
 }
 
 static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
@@ -283,7 +141,7 @@ static inline void CommitDisplay(struct level_menu *self)
     self->scroll++;
     *(vu16 *)REG_ADDR_BG0HOFS = self->scroll >> 3;
     *(vu32 *)REG_ADDR_BG1HOFS = GetLevelSelectPageBgOffsets(self->bg1);
-    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
+    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(&self->bg1->bg);
     *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     *(vu16 *)PLTT = 0;
     *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
@@ -296,7 +154,7 @@ static inline void CommitDisplay(struct level_menu *self)
 #define SPRITE_CALL(obj, idx, a)                                               \
     do                                                                         \
     {                                                                          \
-        struct method *_m = &(obj)->vtable[idx];                               \
+        struct actor_method *_m = &(obj)->vtable->idx;                         \
         _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } while (0)
 
@@ -331,8 +189,8 @@ void ResetCameraLead(struct follow_child *self)
         {
             register s32 f asm("r0") = 0x10;
 
-            f |= self->flags;
-            self->flags = f;
+            f |= self->flags.all;
+            self->flags.all = f;
         }
         self->targetOffset = off;
         self->offset = off;
@@ -434,13 +292,13 @@ struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused)
     struct sprite *obj = OperatorNew(0x78);
 
     InitMovingSprite((struct actor *)obj);
-    obj->vtable = (struct method *)gLaunchPadVtable;
+    obj->vtable = (struct sprite_vtable *)gLaunchPadVtable;
     sub_801BAC4(obj);
     obj->id = id;
     obj->x = x << 8;
     obj->y = y << 8;
     AddToPartList(gCollidableList, obj);
-    obj->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x150);
+    obj->anim = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x150);
     obj->animIndex = 0;
     ResetSpriteFrameTimer(obj);
     ResetSpriteFrameIndex(obj);
@@ -454,9 +312,9 @@ struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused)
         *p28 = m;
     }
     {
-        struct anim_record *recs = obj->anim->records;
+        const struct sprite_anim *recs = obj->anim->anims;
         u32 idx = obj->animIndex;
-        struct anim_record *rec = &recs[idx];
+        const struct sprite_anim *rec = &recs[idx];
         s32 pal = (u8)GetPaletteSlot(gPaletteCache, rec->paletteId);
         s32 m;
         u8 *p = (u8 *)obj + 0x29;
@@ -496,7 +354,7 @@ void CheckLaunchPadContact(void *self)
 /* Destructor (method table +0x50). */
 void DestroyLaunchPad(struct sprite *self, s32 flags)
 {
-    self->vtable = (struct method *)gLaunchPadVtable;
+    self->vtable = (struct sprite_vtable *)gLaunchPadVtable;
     DestroyMovingSprite((struct actor *)self, flags);
 }
 
@@ -512,7 +370,7 @@ void sub_801BAC4(struct sprite *self)
 struct sprite *InitLaunchPad(struct sprite *self)
 {
     InitMovingSprite((struct actor *)self);
-    self->vtable = (struct method *)gLaunchPadVtable;
+    self->vtable = (struct sprite_vtable *)gLaunchPadVtable;
     sub_801BAC4(self);
     return self;
 }
@@ -698,14 +556,14 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     }
     else
     {
-        struct xy_pair *pos = &self->positions[self->index];
+        const struct xy_pair *pos = &self->positions[self->index];
 
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
     }
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     *(vu32 *)REG_ADDR_BG1HOFS = GetLevelSelectPageBgOffsets(self->bg1);
     *(vu16 *)REG_ADDR_BG0CNT = GetBgSetupControl(&bg0cnt);
-    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
+    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(&self->bg1->bg);
     *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     return self;
 }
@@ -718,13 +576,13 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
     s32 i;
 
     if ((s = self->sprites[9]) != NULL)
-        SPRITE_CALL(s, 10, 3);
+        SPRITE_CALL(s, m50, 3);
     if ((s = self->sprites[8]) != NULL)
-        SPRITE_CALL(s, 10, 3);
+        SPRITE_CALL(s, m50, 3);
     for (i = 0; i < 8; i++)
     {
         if ((s = self->sprites[i]) != NULL)
-            SPRITE_CALL(s, 10, 3);
+            SPRITE_CALL(s, m50, 3);
     }
     if (self->panel != NULL)
         DestroyLevelSelectCursor(self->panel, 3);
@@ -770,7 +628,7 @@ void UpdateLevelSelect(struct level_menu *self)
     for (i = 0; i <= self->lastIndex; i++)
     {
         struct level_item *it = self->items[i];
-        struct method *m = &it->vtable->m08;
+        struct actor_method *m = &it->vtable->m08;
 
         _call_via_r2((u8 *)it + m->thisOffset, GetLevelSelectPageBgScroll(self->bg1), m->fn);
     }
@@ -859,11 +717,11 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             f = 1;
         }
         {
-            register struct anim_table *a asm("r0") = s->anim;
+            register const struct sprite_bank *a asm("r0") = s->anim;
             register u8 *pi asm("r3") = &s->animIndex;
-            register struct anim_record *recs asm("r2") = a->records;
+            register const struct sprite_anim *recs asm("r2") = a->anims;
             register u32 idx asm("r5") = *pi;
-            register struct anim_record *rec asm("r0") = (struct anim_record *)(idx * sizeof(struct anim_record) + (u32)recs);
+            register const struct sprite_anim *rec asm("r0") = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
             register s32 n asm("r2") = rec->frameCount;
             register struct sprite *t asm("r0") = s;
 
@@ -877,11 +735,11 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
     {
         register struct sprite *s asm("r3") = self->sprites[9];
         register s32 f asm("r4") = 0;
-        register struct anim_table *a asm("r0") = s->anim;
+        register const struct sprite_bank *a asm("r0") = s->anim;
         register u8 *pi asm("r2") = &s->animIndex;
-        register struct anim_record *recs asm("r1") = a->records;
+        register const struct sprite_anim *recs asm("r1") = a->anims;
         register u32 idx asm("r5") = *pi;
-        register struct anim_record *rec asm("r0") = (struct anim_record *)(idx * sizeof(struct anim_record) + (u32)recs);
+        register const struct sprite_anim *rec asm("r0") = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
         register s32 n asm("r0") = rec->frameCount;
 
         if (f >= n)
@@ -902,9 +760,9 @@ void DrawLevelSelectRecord(struct level_menu *self)
     if (self->rank != 5)
         DrawSpriteWithOffset((struct actor *)self->sprites[4], -self->panelSlideX, self->gemIconY);
     {
-        u8 **ps = &self->save;
+        u8 **ps = (u8 **)&self->save;
         s32 off = self->levelId * 4 + 4;
-        struct level_save *sv = (struct level_save *)(*ps + off);
+        struct level_save_h *sv = (struct level_save_h *)(*ps + off);
         s32 one = 1;
         s32 b = *(u8 *)sv;
 
@@ -1022,7 +880,7 @@ draw:
 void LoadLevelSelectRecord(struct level_menu *self)
 {
     s32 *rank = &self->rank;
-    struct level_save *sv;
+    struct level_save_h *sv;
 
     *rank = 5;
     if ((u8)LevelHasGemPathGem(gLevelState, self->levelId))
@@ -1040,7 +898,7 @@ void LoadLevelSelectRecord(struct level_menu *self)
     self->gemIconY = 0;
     self->trialIconY = 0;
     self->trialIcon2Y = 0;
-    sv = (struct level_save *)(self->save + (self->levelId * 4 + 4));
+    sv = (struct level_save_h *)((u8 *)self->save + (self->levelId * 4 + 4));
     if (sv->cleared)
         self->clearedIconY = 0x1C;
     if (sv->flag1)
@@ -1052,19 +910,19 @@ void LoadLevelSelectRecord(struct level_menu *self)
             self->gemIconY = 0x1C;
         break;
     case 1:
-        if (self->save[2] & 1)
+        if (self->save->open & 1)
             self->gemIconY = 0x1C;
         break;
     case 2:
-        if (self->save[2] & 4)
+        if (self->save->open & 4)
             self->gemIconY = 0x1C;
         break;
     case 3:
-        if (self->save[2] & 8)
+        if (self->save->open & 8)
             self->gemIconY = 0x1C;
         break;
     case 4:
-        if (self->save[2] & 2)
+        if (self->save->open & 2)
             self->gemIconY = 0x1C;
         break;
     case 5:
@@ -1264,7 +1122,7 @@ void LevelSelectCursorLeft(struct level_menu *self)
     ClearZoomBgPicture(self->bg2);
     while (self->index != 0)
     {
-        struct xy_pair *pos;
+        const struct xy_pair *pos;
 
         self->index--;
         pos = &self->positions[self->index];
@@ -1289,7 +1147,7 @@ void LevelSelectCursorRight(struct level_menu *self)
     ClearZoomBgPicture(self->bg2);
     while (self->index < self->lastIndex)
     {
-        struct xy_pair *pos;
+        const struct xy_pair *pos;
 
         self->index++;
         pos = &self->positions[self->index];

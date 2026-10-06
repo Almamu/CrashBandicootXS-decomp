@@ -11,15 +11,7 @@
  * snapshots into `checkpointData`/`saveData` and restores from (game_frame.c).
  */
 
-/* The level's category record (level_state.cat) - one of the medal
- * table's list items (level_query.c's `struct MedalListItem`). */
-struct level_category
-{
-    u8 unk_00[8];
-    s32 kind;                       // 0x08 - 0-2 plain level, 3 actor-category level
-    u8 unk_0c[4];
-    u16 category;                   // 0x10
-};
+#include "level_data.h"
 
 struct level_state_1c8;
 
@@ -58,15 +50,15 @@ struct level_state
     s32 savedLives;                 // 0x0B8 - same
     s32 crateTotal;                 // 0x0BC - the level's crate count (CountLevelCrates), crateCount's target
     s32 unk_c0;                     // 0x0C0 - bit mask (sub_802314C/sub_8023158)
-    s32 level;                      // 0x0C4 - also the head of the progress record (level_query.c's struct level_progress)
-    s32 unk_c8;                     // 0x0C8
+    s32 level;                      // 0x0C4 - also the head of the room block (struct level_progress, below)
+    s32 unk_c8;                     // 0x0C8 - level_progress.itemIndex, the current room's index in the level's room list (SelectRoom)
     s32 checkpointCrateCount;       // 0x0CC - checkpoint copy of crateCount (SetCheckpoint/RestoreCheckpoint)
     u8 checkpointSwitchPressed;     // 0x0D0 - checkpoint copy of switchPressed
     u8 unk_d1[3];
     s32 checkpointX;                // 0x0D4 - the player's position at the checkpoint
     s32 checkpointY;                // 0x0D8
-    struct level_category *cat;     // 0x0DC - level_progress.item
-    u8 unk_e0;                      // 0x0E0 - checkpoint flag (SetCheckpoint)
+    const struct level_room *cat;   // 0x0DC - the current room (SelectRoom); kind 3 is a stage played in an actor category
+    u8 unk_e0;                      // 0x0E0 - checkpoint flag (SetCheckpoint); bit 0: PlayRoom starts the player X-mirrored (level_progress.flags)
     u8 unk_e1[3];
     u8 checkpointData[0x68];        // 0x0E4 - the first 0x68 bytes at the last checkpoint (SetCheckpoint/RestoreCheckpoint)
     u8 saveData[0x68];              // 0x14C - the committed progress: restored before each level, updated when one is won, packed for the save menus (PackSaveData)
@@ -79,6 +71,29 @@ struct level_state
 };
 
 COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_state) == 0x1CC);
+
+/*
+ * The room block of `struct level_state`, from `level` (+0x0C4) on: the
+ * record the room functions take (game_frame.c passes
+ * `&gLevelState->level`): SelectRoom, NextRoom, EnterBonusRoom and the
+ * other level_query.c functions, PlayRoom (play_room.c) and RunRoom
+ * (run_room.c). Field names are the level state's. It merges the three
+ * file-local views `level_progress` (level_query.c), `level_start_args`
+ * (play_room.c; `spawnX`/`spawnY` were `checkpointX`/`checkpointY`) and
+ * `gl_self` (run_room.c; `widget` was `cat`) (#574, batch 9e).
+ */
+struct level_progress
+{
+    s32 level;                      // 0x00 (0x0C4) - index into gLevelTable
+    s32 itemIndex;                  // 0x04 (0x0C8) - the current room's index in the room list
+    s32 checkpointCrateCount;       // 0x08 (0x0CC)
+    u8 checkpointSwitchPressed;     // 0x0C (0x0D0)
+    u8 unk_0d[3];
+    s32 checkpointX;                // 0x10 (0x0D4) - where PlayRoom places the player
+    s32 checkpointY;                // 0x14 (0x0D8)
+    const struct level_room *cat;   // 0x18 (0x0DC) - the current room
+    u8 flags;                       // 0x1C (0x0E0) - bit 0: start X-mirrored (PlayRoom)
+};
 
 /* The record `level_state.boss` points at (GetBossHealth). */
 struct level_state_1c8

@@ -21,8 +21,8 @@
  * object classes (docs/rom_map.md's "93 entity vtables"), in ROM order.
  * Constructors store one at the object's method-table pointer (e.g.
  * `obj->table = gEntityVtable` in graphics.c, `self->vtable` in
- * gobj_1a794.h); the code reads the slots through `struct method` /
- * `struct actor_method`. Tables of the same class family share their
+ * gobj_1a794.h); the code reads the slots through `struct actor_method`
+ * (actor_self.h). Tables of the same class family share their
  * leading slots, the ROM's own inheritance. Linked in ROM order between
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */

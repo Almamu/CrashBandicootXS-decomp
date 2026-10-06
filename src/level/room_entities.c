@@ -1,4 +1,5 @@
 #include "core.h"
+#include "actor_self.h"
 #include <agb_syscall.h>
 #include "crates.h"
 #include "gfx.h"
@@ -74,17 +75,10 @@ struct lk_point
     s32 y;
 };
 
-struct lk_method
-{
-    s16 delta;
-    u8 unk_02[2];
-    void *fn;
-};
-
 struct lk_vtable
 {
     u8 unk_00[0x10];
-    struct lk_method height;        /* +0x10 */
+    struct actor_method height;        /* +0x10 */
 };
 
 struct lk_actor
@@ -278,8 +272,8 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
         move:
             if (got && actor != NULL)
             {
-                struct lk_method *hm = &actor->vtable->height;
-                s32 lift = (_call_via_r1((u8 *)actor + hm->delta, hm->fn)[5] + 1) << 8;
+                struct actor_method *hm = &actor->vtable->height;
+                s32 lift = (_call_via_r1((u8 *)actor + hm->thisOffset, hm->fn)[5] + 1) << 8;
                 struct lk_point p;
                 struct lk_point *pp = &p;
 

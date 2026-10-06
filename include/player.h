@@ -30,7 +30,6 @@ struct gobj;
 struct input_ctrl;
 struct pctrl_motion_queue;
 struct player_ctrl;
-struct vec3;
 
 /* The swim stroke's speed per step, copied to the stack in one go by
  * StartPlayerCtrlStroke (gStaticData_0816C090). */
@@ -234,12 +233,13 @@ struct player
                         //         kill handlers); blocks pause and further hits
     u8 cleared;         // 0x105 - CollidePlayerWithObjects
     u8 unk_106[2];
-    u8 collisionQueue[4]; // 0x108 - the embedded collision queue (ResetCollisionQueue/
-                          //         DestroyCollisionQueue; GetPlayerCollisionQueue returns its address)
-    u8 unk_10C;         // 0x10C - the queue's "position committed" byte (ResetCollisionQueue
-                        //         clears it, crate_break.c's D18C_COMMIT sets it): nonzero,
-                        //         ApplyCrateCollision leaves the position alone
+    struct collision_queue collisionQueue; // 0x108 - the embedded collision queue (objects.h;
+                        //         ResetCollisionQueue/DestroyCollisionQueue; GetPlayerCollisionQueue
+                        //         returns its address). Its `unk_04` (0x10C) is the "position
+                        //         committed" byte
 };
+
+COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
 
 /* The method tables (src/data/entity_vtables_7e3bec.c). */
 extern const struct vtable_slot gPlayerVtable[15];
@@ -270,9 +270,9 @@ extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
 
 /* The player controller's and the input controller's motion records
- * (src/data/motion_records_16b304.c; `struct motion_rec`, objects.h). */
-extern const struct motion_rec gPlayerCtrlMotionRecords[31];
-extern const struct motion_rec gInputCtrlMotionRecords[9];
+ * (src/data/motion_records_16b304.c; `struct speed_ramp`, objects.h). */
+extern const struct speed_ramp gPlayerCtrlMotionRecords[31];
+extern const struct speed_ramp gInputCtrlMotionRecords[9];
 
 /* The entry sets PlayRoom gives the action, player and input controllers
  * through SetCtrlAnimSet (src/data/entry_set_16b92c.c,
@@ -438,7 +438,7 @@ extern void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c);
 extern void DrawPlayer(struct player *self);
 
 /* src/player/player_flags.c */
-extern void *GetPlayerCollisionQueue(struct player *self);
+extern struct collision_queue *GetPlayerCollisionQueue(struct player *self);
 extern void ClearPlayerDead(struct player *self);
 extern void SetPlayerDead(struct player *self);
 extern u8 IsPlayerDead(struct player *self);
@@ -480,8 +480,8 @@ extern s32 sub_800B650(struct player *self, s32 idx);
 extern void sub_800B678(struct player *self, s32 val);
 extern void SetCtrlMode(void *self, s32 val);
 extern void SetCtrlAnimSet(void *self, s32 val);
-extern void SetCtrlTargetMotionY(void *unused, void *self, struct vec3 *vec);
-extern void StartCtrlTargetMotionY(void *unused, void *self, struct vec3 *vec);
+extern void SetCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
+extern void StartCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
 
 /* src/player/player_init.c */
 extern struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused);

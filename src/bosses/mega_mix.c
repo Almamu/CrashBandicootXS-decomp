@@ -126,7 +126,7 @@ void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
     base = (u8 *)gMegaMixMotionRecords;
     asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
 
-    StartCtrlTargetMotionY(selfArg, partArg, (struct vec3 *)acc);
+    StartCtrlTargetMotionY(selfArg, partArg, (const struct speed_ramp *)acc);
 }
 
 /* Resolves the `rec+0`-typed table entry like `SetMegaMixMotionXFromSet`, then

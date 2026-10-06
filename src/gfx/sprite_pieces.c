@@ -14,25 +14,6 @@
  * (mirrored per the part's flag bits) and sends the part's whole tile
  * total to `UploadObjVram` once after the loop. */
 
-struct oam_attr01 {
-    u32 y:8;
-    u32 objMode:2;
-    u32 gfxMode:2;
-    u32 mosaic:1;
-    u32 colorMode:1;
-    u32 shape:2;
-    u32 x:9;
-    u32 unused:3;
-    u32 hflip:1;
-    u32 vflip:1;
-    u32 size:2;
-};
-
-struct oam_pair {
-    struct oam_attr01 a;
-    struct oam_attr2 b;
-};
-
 struct oam_part {
     u8 unk_00[0x18];
     u8 *vtable;                 // 0x18
@@ -64,30 +45,31 @@ static inline s32 PieceShape73DC(s32 id)
 
 void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos)
 {
-    struct oam_pair oam;
+    struct oam_attrs oam;
     s32 total = 0;
     struct piece_info *info = GetSpriteFrame((struct gfx_part *)part);
     s32 tile = GetObjVramTile(gObjVramCursor);
     s32 i;
 
-    oam.a.objMode = 0;
-    oam.a.gfxMode = part->gfxMode;
-    oam.a.mosaic = part->mosaic;
-    oam.a.colorMode = part->colorMode;
+    oam.affineMode = 0;
+    oam.objMode = part->gfxMode;
+    oam.mosaic = part->mosaic;
+    oam.bpp = part->colorMode;
     {
         struct vtable_slot *m = (struct vtable_slot *)(part->vtable + 0x58);
 
-        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->delta, m->fn);
+        oam.priority = (u16)_call_via_r1((u8 *)part + m->delta, m->fn);
     }
-    oam.b.palette = part->palette;
+    oam.palette = part->palette;
+    /* Not affine: matrixBit3/matrixBit4 are the h/v flip. */
     if (PART_FLAG_SET(part, 27))
-        oam.a.hflip = 1;
+        oam.matrixBit3 = 1;
     else
-        oam.a.hflip = 0;
+        oam.matrixBit3 = 0;
     if (PART_FLAG_SET(part, 26))
-        oam.a.vflip = 1;
+        oam.matrixBit4 = 1;
     else
-        oam.a.vflip = 0;
+        oam.matrixBit4 = 0;
 
     for (i = 0; i != info->u.b.count; i++) {
         s32 id = info->ids[i] & 0xf;
@@ -106,11 +88,11 @@ void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos)
             else
                 x = pos[0] + info->offsets[i].x;
             if (x + w > 0 && x <= 0xef) {
-                oam.a.y = y;
-                oam.a.shape = PieceShape73DC(id);
-                oam.a.x = x;
-                oam.a.size = PieceSize73DC(id);
-                oam.b.tile = tile;
+                oam.y = y;
+                oam.shape = PieceShape73DC(id);
+                oam.x = x;
+                oam.size = PieceSize73DC(id);
+                oam.tileNum = tile;
                 AddOamEntry(gOamBuffer, &oam);
             }
         }

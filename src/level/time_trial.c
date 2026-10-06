@@ -6,29 +6,18 @@
 #include "objects.h"
 #include "level.h"
 #include "box_part.h"
+#include "sprite_bank.h"
 #include "globals.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
-
-struct anim_record
-{
-    u8 unk_00[0x14];
-    u8 tileRecord;              // 0x14
-    u8 unk_15[7];
-};
-
-struct anim_table
-{
-    struct anim_record *records;
-};
 
 /* An OAM-backed part (same layout as cortex.c's gfx_part). */
 struct slot_part
 {
     struct actor base;          // 0x00
     u8 unk_1C[4];
-    struct anim_table *anim;    // 0x20
+    const struct sprite_bank *anim; // 0x20
     u8 unk_24[5];
     u8 frameNibble:4;           // 0x29
     u8 unk_29_4:4;
@@ -36,19 +25,12 @@ struct slot_part
     u8 tag;                     // 0x2D
 };
 
-struct vmethod
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
 struct entity_vtable
 {
     u8 unk_00[0x28];
-    struct vmethod m28;         // 0x28
+    struct actor_method m28;         // 0x28
     u8 unk_30[0x18];
-    struct vmethod m48;         // 0x48
+    struct actor_method m48;         // 0x48
 };
 
 struct entity
@@ -105,7 +87,7 @@ void StartTimeTrial(struct level_state *self)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         LoadPaletteSlot(gPaletteCache, ((struct slot_part *)self->gemPlatform)->frameNibble,
-                    ((struct slot_part *)self->gemPlatform)->anim->records[((struct slot_part *)self->gemPlatform)->tag].tileRecord);
+                    ((struct slot_part *)self->gemPlatform)->anim->anims[((struct slot_part *)self->gemPlatform)->tag].paletteId);
     }
     ConvertCratesForTimeTrial();
 
@@ -116,7 +98,7 @@ void StartTimeTrial(struct level_state *self)
         {
             struct actor *e = (struct actor *)gUnknown_030012EC->items[i];
             struct actor *a = e;
-            struct vmethod *m = &((struct entity_vtable *)e->table)->m48;
+            struct actor_method *m = &((struct entity_vtable *)e->table)->m48;
 
             if (_call_via_r1((u8 *)e + m->thisOffset, m->fn) == 2)
             {

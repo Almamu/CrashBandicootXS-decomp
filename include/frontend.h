@@ -120,7 +120,7 @@ extern const u16 gLanguageSelectPalette3[16];
  * (src/data/level_gfx_17cff4.c, an anim_table_record), its method table
  * (entity_vtables_7e3bec.c) and the two VRAM tile blocks DrawLogoActor
  * double-buffers its frames in (IWRAM, sym_iwram.txt). */
-extern const struct anim_record_view gLogoActorAnim;
+extern const struct anim_table_record gLogoActorAnim; /* actor_anim.h */
 extern const struct vtable_slot gLogoActorVtable[4];
 extern void *gLogoActorTiles[2];
 extern s32 gLogoActorTileBuffer;    /* the block on screen, 0 or 1 */
