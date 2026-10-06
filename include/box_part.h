@@ -7,21 +7,30 @@
 /* The collision/animation view of a `part` object (the same object as
  * include/gfx_part.h's `struct gfx_part` / include/gobj_1a794.h's
  * `struct gobj` / include/actor.h's `struct actor`), as read by the
- * early actor/collision core in src/objects/sprite.c, sprite_anim.c, part_collide.c and player_anim_room.c.
- * Only the fields those functions touch are named.
+ * early actor/collision core in src/objects/sprite.c, sprite_anim.c,
+ * sprite_obj.c, part_collide.c and player_anim_room.c. Only the fields
+ * those functions touch are named.
  *
  * The mirror bits at 0x28 are `u32` bitfields on purpose: that is what
  * makes the compiler test them with `lsl #27`/`lsl #26` + a sign test,
- * as the ROM does (a `u8` container gives `movs #0x10; ands`). */
+ * as the ROM does (a `u8` container gives `movs #0x10; ands`). Being
+ * bitfields, the bytes at 0x28/0x29 have no address: the setters that
+ * update them as a whole byte (SetSpriteFlipX, SetSpritePalette, ...)
+ * go through `(u8 *)part + 0x28`, and ResetSpriteObj clears both through
+ * gobj_1a794.h's byte-wide `mirror`/`slot`. */
 
-/* One KEYFRAME_SIZE-byte keyframe record. The {offX, offY, w, h}
- * collision box (struct hitbox_quad, gfx.h) sits at +0x4 or +0xc depending
- * on which table the part uses. */
+/* One KEYFRAME_SIZE-byte keyframe record: an animation of the part's
+ * sprite bank (the same record as sprite_bank.h's `struct sprite_anim`).
+ * The {offX, offY, w, h} collision box (struct hitbox_quad, gfx.h) is
+ * `box[0]` (+0x4) or `box[1]` (+0xc) depending on which table the part
+ * uses. */
 struct keyframe {
-    u8 unk_00[0x15];
-    u8 duration; // 0x15 - ticks per step
-    u8 steps;    // 0x16 - steps before the keyframe ends
-    u8 flags;    // 0x17 - bit 1: loops (animDone is not set)
+    const u16 *seq;            // 0x00 - frame indices into the bank's frames
+    struct hitbox_quad box[2]; // 0x04, 0x0C
+    u8 paletteId;              // 0x14 - GetPaletteSlot record id
+    u8 duration;               // 0x15 - ticks per step
+    u8 steps;                  // 0x16 - steps before the keyframe ends
+    u8 flags;                  // 0x17 - bit 1: loops (animDone is not set)
     u8 unk_18[4];
 };
 
@@ -51,12 +60,19 @@ struct box_part {
     u8 unk_1C[4];
     struct keyframe **keyframes; // 0x20
     u8 moveAxes;                 // 0x24 - bits 0-1: X probe mode, bits 2-3: Y probe mode
-    u8 unk_25[3];
-    u32 unk_28_0:4; // 0x28
-    u32 mirrorX:1;
-    u32 mirrorY:1;
-    u32 unk_28_6:2;
-    u8 unk_29[3];
+    // 0x25 - 1: x/y are screen coordinates (DrawSpriteAt skips WorldToScreen;
+    //        always counts as on screen)
+    u8 screenSpace;
+    u8 unk_26[2];
+    u32 gfxMode:2;   // 0x28 - bits 0-1 (Get/SetSpriteGfxMode)
+    u32 mosaic:1;    //        bit 2
+    u32 colorMode:1; //        bit 3
+    u32 mirrorX:1;   //        bit 4
+    u32 mirrorY:1;   //        bit 5
+    u32 priority:2;  //        bits 6-7 - OBJ priority (Get/SetSpritePriority)
+    u32 palette:4;   // 0x29 - low nibble: OBJ palette slot
+    u32 unk_29_4:4;
+    u8 unk_2A[2];
     u8 animating; // 0x2C - nonzero while the keyframe timer runs
     u8 frame;     // 0x2D - current keyframe index
     u8 unk_2E[2];

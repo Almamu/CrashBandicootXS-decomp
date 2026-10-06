@@ -2,6 +2,8 @@
 #include "match.h"
 #include "actor.h"
 #include "box_part.h"
+#include "gobj_1a794.h"
+#include "sprite_bank.h"
 #include "util.h"
 #include "gfx.h"
 #include "objects.h"
@@ -10,7 +12,7 @@
 #include "globals.h"
 #include "player.h"
 
-/* `part+0x25` selects whether (x, y) are already screen-relative
+/* `screenSpace` selects whether (x, y) are already screen-relative
  * (nonzero - used as-is) or need the camera-relative conversion
  * WorldToScreen applies (zero - the common case). Either way, the
  * resolved {x, y} pair is forwarded to DrawSpritePieces (parked as
@@ -20,7 +22,7 @@ void DrawSpriteAt(void *self, void *part, s32 x, s32 y)
 {
     s32 pos[2];
 
-    if (*((u8 *)part + 0x25) == 0) {
+    if (((struct box_part *)part)->screenSpace == 0) {
         WorldToScreen(part, x, y, &pos[0], &pos[1]);
     } else {
         pos[0] = x;
@@ -36,7 +38,7 @@ asm(".align 2, 0");
  * position at its own start. */
 void DrawSprite(void *self, void *part)
 {
-    DrawSpriteAt(self, part, *(s32 *)part >> 8, *(s32 *)((u8 *)part + 4) >> 8);
+    DrawSpriteAt(self, part, ((struct box_part *)part)->x >> 8, ((struct box_part *)part)->y >> 8);
 }
 asm(".align 2, 0");
 
@@ -55,18 +57,20 @@ void InitSpriteRenderer(void)
 }
 asm(".align 2, 0");
 
-/* Initializes/clears several `part`-object fields also seen used in
- * DrawSpritePieces/DrawAffineSpritePieces: 0x20/0x30/0x34 (position-interpolation
- * state), 0x28-0x29 (the flags byte pair packed into attr1/attr2),
- * 0x2d (keyframe counter), 0x3c (Q8 "scale" factor), and 0x25 (the
- * screen-vs-camera-relative flag DrawSpriteAt tests). `part+0xd` is a
- * second, separate flags byte from `part+0xc`.
+/* Initializes/clears the sprite fields also used by
+ * DrawSpritePieces/DrawAffineSpritePieces: the animation state (`anim`,
+ * `tag`, `frame`, `stepTimer`, `animDone`; `animating` is set), the
+ * `mirror`/`slot` byte pair packed into attr1/attr2 (cleared as one
+ * halfword), `affine`, `dir`, and `screenSpace` (the
+ * screen-vs-camera-relative flag DrawSpriteAt tests); clears `flags`
+ * bits 6/7 and `flags2` bit 2. Written through `struct gobj`
+ * (gobj_1a794.h), whose `mirror`/`slot` are plain bytes.
  *
  * Register pins throughout match the ROM's own choices for the two
  * bit-clear sequences (constant computed before the byte load, result
  * landing in the constant's own register - the same accumulator
  * pattern documented at length for `struct actor`'s flags field in
- * graphics.c) and for the final `0x2c` store (the ROM computes that
+ * graphics.c) and for the final `animating` store (the ROM computes that
  * address into a *fresh* register rather than reusing `part`'s, even
  * though `part` is dead afterward - plain C let the allocator reuse
  * it instead). The running `p` pointer (advanced by `+8` then `+0xb`
@@ -76,28 +80,30 @@ asm(".align 2, 0");
  * value reuse - see docs/matching.md, "Matching decompilation". */
 void ResetSpriteObj(void *arg0)
 {
-    MATCH_HOLD_REG(void *, part, r3) = arg0;
+    MATCH_HOLD_REG(struct gobj *, part, r3) = arg0;
     MATCH_HOLD_REG(s32, result, r0);
     MATCH_HOLD_REG(s32, tmp, r1);
 
     result = 0x7f;
-    tmp = *((u8 *)part + 0xc);
+    tmp = part->flags;
     result &= tmp;
     tmp = -0x41;
     result &= tmp;
-    *((u8 *)part + 0xc) = result;
+    /* A retyped store: as a plain member store the `zero` below is
+     * scheduled above it. */
+    *(u8 *)&part->flags = result;
 
     {
-        u8 *p = (u8 *)part + 0x25;
+        u8 *p = &part->screenSpace;
         s32 zero = 0;
         *p = zero;
-        *(s32 *)((u8 *)part + 0x20) = zero;
-        p += 8;
+        part->anim = (struct anim_table *)zero;
+        p += 8; /* &part->tag */
         *p = zero;
-        *(s32 *)((u8 *)part + 0x30) = zero;
-        *(s32 *)((u8 *)part + 0x34) = zero;
-        *(u16 *)((u8 *)part + 0x28) = zero;
-        p += 0xb;
+        part->frame = zero;
+        part->stepTimer = zero;
+        *(u16 *)&part->mirror = zero; /* `mirror` and `slot` */
+        p += 0xb;                     /* &part->animDone */
         *p = zero;
     }
 
@@ -106,30 +112,29 @@ void ResetSpriteObj(void *arg0)
         MATCH_HOLD_REG(s32, tmp2, r4);
 
         result2 = -5;
-        tmp2 = *((u8 *)part + 0xd);
+        tmp2 = part->flags2;
         result2 &= tmp2;
-        *((u8 *)part + 0xd) = result2;
+        part->flags2 = result2;
     }
 
-    *((u8 *)part + 0x24) = 0;
-    *(u16 *)((u8 *)part + 0x3c) = 0;
+    part->dir = 0;
+    part->affine = 0;
     {
-        MATCH_HOLD_REG(u8 *, p2, r1) = (u8 *)part + 0x2c;
+        MATCH_HOLD_REG(u8 *, p2, r1) = &part->animating;
         *p2 = 1;
     }
 }
 
 /* Builds the AABB (via the shared SetAabbPos set-position/SetAabbSize
- * set-size pair) for `part`'s current animation keyframe, whose box sits
- * at record+0xc, and mirrors it horizontally/vertically around `part`'s
- * own position per the 0x28 mirror bits. Returned by value (the hidden
+ * set-size pair) for `part`'s current animation keyframe, whose box is
+ * `box[1]` (+0xc), and mirrors it horizontally/vertically around `part`'s
+ * own position per the `mirrorX`/`mirrorY` bits. Returned by value (the hidden
  * return pointer is the `dest` the ROM keeps in r8 and hands back in r0).
  * Matches under old_agbcc - see docs/matching/archive/issue-9-naked-retry.md. */
 struct aabb GetSpriteBounds(struct box_part *part)
 {
     struct aabb box;
-    u8 *rec = (u8 *)&(*part->keyframes)[part->frame];
-    struct hitbox_quad *pb = (struct hitbox_quad *)(rec + 0xc);
+    struct hitbox_quad *pb = &(*part->keyframes)[part->frame].box[1];
     s32 px = part->x >> 8;
     s32 offX = pb->offX;
     s32 py = part->y >> 8;
@@ -147,13 +152,11 @@ struct aabb GetSpriteBounds(struct box_part *part)
 }
 
 /* Same as GetSpriteBounds above for the other keyframe-table layout, whose
- * box sits at record+0x4 instead (the collision box `struct anim_box` in
- * include/gobj_1a794.h). */
+ * box is `box[0]` (+0x4) instead. */
 struct aabb GetSpriteHitbox(struct box_part *part)
 {
     struct aabb box;
-    u8 *rec = (u8 *)&(*part->keyframes)[part->frame];
-    struct hitbox_quad *pb = (struct hitbox_quad *)(rec + 4);
+    struct hitbox_quad *pb = &(*part->keyframes)[part->frame].box[0];
     s32 px = part->x >> 8;
     s32 offX = pb->offX;
     s32 py = part->y >> 8;
@@ -172,51 +175,51 @@ struct aabb GetSpriteHitbox(struct box_part *part)
 asm(".align 2, 0");
 
 /* A third AABB-for-keyframe builder (see GetSpriteBounds/GetSpriteHitbox
- * above), this time selecting its 6-byte
- * `{s16 x, s16 y, u8 w, u8 h}` record via a `GetSpriteFrame(part)`-derived
- * "info" struct rather than `part`'s own keyframe table pointer:
- * `info+4` points to a byte whose upper nibble (0-15, but only 0-6
- * handled - anything above 6 and unhandled 1/2/6 fall through to the
- * same default) selects one of `info+0x14`, `info+0xc`, or the fixed
- * fallback table `gEmptySpriteBox`. */
+ * above), this time selecting its `struct hitbox_quad` from the current
+ * sprite frame (`GetSpriteFrame(part)`, sprite_bank.h) rather than
+ * `part`'s own keyframe table: the upper nibble of the frame's first
+ * piece byte (its layout type; only 0-6 handled - anything above 6 and
+ * unhandled 1/2/6 fall through to the same default) selects `box[1]`,
+ * `box[0]`, or the fixed fallback `gEmptySpriteBox`. The mirror tests
+ * read the byte at +0x28 (`mirrorX`/`mirrorY`) through its address. */
 void *GetSpriteAttackBox(void *dest, void *pt)
 {
-    MATCH_HOLD_REG(void *, part, r6) = pt;
+    MATCH_HOLD_REG(struct box_part *, part, r6) = pt;
     struct aabb buf_;
-    void *info;
-    void *rec;
+    const struct sprite_frame_3box *info;
+    const struct hitbox_quad *rec;
     s32 offX, offY;
     s32 w, h;
     s32 x, y;
     u8 type;
 
-    info = GetSpriteFrame(part);
-    type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    info = GetSpriteFrame((struct gfx_part *)part);
+    type = info->frame.pieces[0] >> 4;
     switch (type) {
     case 0:
     case 3:
     case 4:
-        rec = (u8 *)info + 0x14;
+        rec = &info->box[1];
         break;
     case 1:
     case 2:
     case 6:
-        rec = (void *)&gEmptySpriteBox;
+        rec = &gEmptySpriteBox;
         break;
     case 5:
-        rec = (u8 *)info + 0xc;
+        rec = &info->box[0];
         break;
     default:
-        rec = (void *)&gEmptySpriteBox;
+        rec = &gEmptySpriteBox;
         break;
     }
 
-    x = *(s32 *)part >> 8;
-    offX = *(s16 *)((u8 *)rec + 0);
-    y = *(s32 *)((u8 *)part + 4) >> 8;
-    offY = *(s16 *)((u8 *)rec + 2);
-    w = *((u8 *)rec + 4);
-    h = *((u8 *)rec + 5);
+    x = part->x >> 8;
+    offX = rec->offX;
+    y = part->y >> 8;
+    offY = rec->offY;
+    w = rec->w;
+    h = rec->h;
 
     offX = offX + x;
     offY = offY + y;
@@ -231,14 +234,14 @@ void *GetSpriteAttackBox(void *dest, void *pt)
         flags = *flagsAddr;
         shifted = flags << 27;
         if (shifted < 0) {
-            buf_.x = (*(s32 *)part >> 8) * 2 - (buf_.x + buf_.w);
+            buf_.x = (part->x >> 8) * 2 - (buf_.x + buf_.w);
         }
         {
             MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
             asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r"(shifted), "+r"(addr));
         }
         if (shifted < 0) {
-            buf_.y = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf_.y + buf_.h);
+            buf_.y = (part->y >> 8) * 2 - (buf_.y + buf_.h);
         }
     }
 
@@ -247,45 +250,45 @@ void *GetSpriteAttackBox(void *dest, void *pt)
 }
 
 /* Same shape as GetSpriteAttackBox above, with a simpler switch: only
- * `info+0xc` or the `gEmptySpriteBox` fallback are ever selected
- * (cases 0/2/3/4/6 to `info+0xc`; cases 1/5 and the out-of-range
+ * `box[0]` or the `gEmptySpriteBox` fallback are ever selected
+ * (cases 0/2/3/4/6 to `box[0]`; cases 1/5 and the out-of-range
  * default all to the fallback). */
 void *GetSpriteBodyBox(void *dest, void *pt)
 {
-    MATCH_HOLD_REG(void *, part, r6) = pt;
+    MATCH_HOLD_REG(struct box_part *, part, r6) = pt;
     struct aabb buf_;
-    void *info;
-    void *rec;
+    const struct sprite_frame_3box *info;
+    const struct hitbox_quad *rec;
     s32 offX, offY;
     s32 w, h;
     s32 x, y;
     u8 type;
 
-    info = GetSpriteFrame(part);
-    type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    info = GetSpriteFrame((struct gfx_part *)part);
+    type = info->frame.pieces[0] >> 4;
     switch (type) {
     case 0:
     case 2:
     case 3:
     case 4:
     case 6:
-        rec = (u8 *)info + 0xc;
+        rec = &info->box[0];
         break;
     case 1:
     case 5:
-        rec = (void *)&gEmptySpriteBox;
+        rec = &gEmptySpriteBox;
         break;
     default:
-        rec = (void *)&gEmptySpriteBox;
+        rec = &gEmptySpriteBox;
         break;
     }
 
-    x = *(s32 *)part >> 8;
-    offX = *(s16 *)((u8 *)rec + 0);
-    y = *(s32 *)((u8 *)part + 4) >> 8;
-    offY = *(s16 *)((u8 *)rec + 2);
-    w = *((u8 *)rec + 4);
-    h = *((u8 *)rec + 5);
+    x = part->x >> 8;
+    offX = rec->offX;
+    y = part->y >> 8;
+    offY = rec->offY;
+    w = rec->w;
+    h = rec->h;
 
     offX = offX + x;
     offY = offY + y;
@@ -300,14 +303,14 @@ void *GetSpriteBodyBox(void *dest, void *pt)
         flags = *flagsAddr;
         shifted = flags << 27;
         if (shifted < 0) {
-            buf_.x = (*(s32 *)part >> 8) * 2 - (buf_.x + buf_.w);
+            buf_.x = (part->x >> 8) * 2 - (buf_.x + buf_.w);
         }
         {
             MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
             asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r"(shifted), "+r"(addr));
         }
         if (shifted < 0) {
-            buf_.y = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf_.y + buf_.h);
+            buf_.y = (part->y >> 8) * 2 - (buf_.y + buf_.h);
         }
     }
 
@@ -315,20 +318,17 @@ void *GetSpriteBodyBox(void *dest, void *pt)
     return dest;
 }
 
-extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-
 /* `part` (a `struct actor`, same layout used throughout this ROM
  * region) collides with the player (`gPlayer`, tested via
  * two `GetSpriteHitbox` AABBs and `AabbOverlaps`) and, if so, plays a sound
  * at the player's position (the `table+0x68` offset/dead-read idiom
  * matches CheckEntityPlayerContact's `_call_via_r4` call exactly, just keyed off
- * `part->field_0A` instead of `self->field_0A`) and marks itself
+ * `part->kind`) and marks itself
  * "collected" (`gEntityFlags` bitmap, same convention as
- * MarkEntityGone). `part->field_0A - 0x1b` (0-7) then selects a "kind" to
+ * MarkEntityGone). `part->kind - 0x1b` (0-7) then selects a "kind" to
  * spawn via `SpawnEffectPart` at `part`'s own position - case 1 and any
  * out-of-range value spawn nothing. If something spawned, its
- * `+0x28`/`+0xc` flag bytes get tagged - kept as raw offsets since the
- * spawned object's own type isn't established yet.
+ * `mode` is set to 1 and its `visible` bit cleared.
  *
  * Real C under old_agbcc (issue #9-#11 NAKED retry; the whole file
  * matches under it, so sprite.o is in OLD_AGBCC_OBJS - old_agbcc
@@ -433,12 +433,10 @@ s32 CheckSpritePickup(struct collect_part *part)
     return 0;
 }
 
-extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-
-/* Same shape as IsEntityNearCamera (graphics.c) - `part+0x25 == 1` is a fast
- * "always visible" override; otherwise `part+0xd` bit 2 gates an
+/* Same shape as IsEntityNearCamera (graphics.c) - `screenSpace == 1` is a
+ * fast "always visible" override; otherwise `flags2` bit 2 gates an
  * on-screen check via `_call_via_r2`, using a 4-word "region" of
- * `{gLevelLayers's sub-object's two Q8 fields, 240<<8, 160<<8}`
+ * `{layer 0's x and y in Q8, 240<<8, 160<<8}`
  * (the GBA's screen width/height) and the same
  * `table+N`/`table+N+4` offset/pointer slot pair convention
  * IsEntityNearCamera reads at `table+0x40`, here at `table+0x30` (the
@@ -447,7 +445,7 @@ s32 IsSpriteObjOnScreen(struct box_part *part)
 {
     MATCH_HOLD_REG(s32, result, r3) = 0;
 
-    if (*((u8 *)part + 0x25) == 1) {
+    if (part->screenSpace == 1) {
         return 1;
     }
 
@@ -455,20 +453,20 @@ s32 IsSpriteObjOnScreen(struct box_part *part)
         MATCH_HOLD_REG(u32, flags, r1);
         MATCH_HOLD_REG(s32, bit2, r0);
 
-        flags = *((u8 *)part + 0xd);
+        flags = part->flags2;
         bit2 = (flags >> 2) & 1;
         if (!bit2) {
             s32 buf[4];
-            MATCH_HOLD_REG(void *, subObj, r0);
+            MATCH_HOLD_REG(struct bg_scroll_layer *, cam, r0);
             struct part_method *table;
 
-            subObj = gLevelLayers->layer0;
+            cam = gLevelLayers->layer0;
             {
-                s32 field0 = *(s32 *)subObj << 8;
-                s32 field4 = *(s32 *)((u8 *)subObj + 4) << 8;
+                s32 x = cam->x << 8;
+                s32 y = cam->y << 8;
 
-                buf[0] = field0;
-                buf[1] = field4;
+                buf[0] = x;
+                buf[1] = y;
             }
             {
                 s32 width = 0xf0 << 8;
@@ -485,14 +483,14 @@ s32 IsSpriteObjOnScreen(struct box_part *part)
     return result;
 }
 
-/* Same `part+0x25`/`part+0xd` bit-2 fast-path shape as IsSpriteObjOnScreen
+/* Same `screenSpace`/`flags2` bit-2 fast-path shape as IsSpriteObjOnScreen
  * above, but the real check is an AABB-overlap test: `part`'s own box
  * (via GetSpriteBounds) against `region`'s `{s32 x, y, w, h}`. */
 s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region)
 {
     MATCH_HOLD_REG(s32, earlyResult, r3) = 0;
 
-    if (*((u8 *)part + 0x25) == 1) {
+    if (((struct box_part *)part)->screenSpace == 1) {
         return 1;
     }
 
@@ -500,7 +498,7 @@ s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region)
         MATCH_HOLD_REG(u32, flags, r1);
         MATCH_HOLD_REG(s32, bit2, r0);
 
-        flags = *((u8 *)part + 0xd);
+        flags = ((struct box_part *)part)->flags2;
         bit2 = (flags >> 2) & 1;
         if (bit2) {
             return earlyResult;

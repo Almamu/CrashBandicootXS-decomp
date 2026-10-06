@@ -2,6 +2,7 @@
 #include "match.h"
 #include "actor.h"
 #include "gfx_part.h"
+#include "gobj_1a794.h"
 #include "objects.h"
 #include "memory.h"
 
@@ -51,18 +52,17 @@ void DestroyGroundSprite(struct actor *self, u32 unusedArg)
 
 /* Part-object field clearer/initializer, the `gGroundSpriteVtable`-
  * table sibling of `ResetMovingSprite`'s own `gMovingSpriteVtable`-table
- * clearer: sets `flags` bits 6/7, zeroes the same velocity/accel/
- * max-velocity fields `ApplySpriteVelocity` consumes (`+0x60`/`+0x64`/`+0x48`/
- * `+0x4c`/`+0x50`/`+0x54`/`+0x58`/`+0x5c`) plus `+0x24`/`+0x44`/
- * `+0x78`/`+0x1c`, sets `+0x68` to 8, and (unlike `ResetMovingSprite`) sets
- * `+0xd` bit 0 instead of clearing bit 3. */
+ * clearer: sets `flags` bits 6/7, zeroes the speeds and speed ramps
+ * `ApplySpriteVelocity` consumes (`speedX`/`speedY`, `rampX`/`rampY`) plus
+ * `dir`/`mover`/`type`/`lastHitbox`, sets `hitAxes` to 8, and (unlike
+ * `ResetMovingSprite`) sets `flags2` bit 0 instead of clearing bit 3. */
 void ResetGroundSprite(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
 
     {
         MATCH_HOLD_REG(s32, mask1, r0) = 0x80;
-        MATCH_HOLD_REG(s32, curFlags, r1) = self[0xc];
+        MATCH_HOLD_REG(s32, curFlags, r1) = self->flags;
         MATCH_HOLD_REG(s32, combined, r0);
 
         combined = mask1 | curFlags;
@@ -71,42 +71,42 @@ void ResetGroundSprite(void *selfArg)
             MATCH_HOLD_REG(s32, result, r0);
 
             result = combined | mask2;
-            self[0xc] = result;
+            self->flags = result;
         }
     }
     {
         MATCH_HOLD_REG(s32, zero, r0) = 0;
 
-        *(s32 *)(self + 0x60) = zero;
-        *(s32 *)(self + 0x64) = zero;
-        *(s32 *)(self + 0x48) = zero;
-        *(s32 *)(self + 0x4c) = zero;
-        *(s32 *)(self + 0x50) = zero;
-        *(s32 *)(self + 0x54) = zero;
-        *(s32 *)(self + 0x58) = zero;
-        *(s32 *)(self + 0x5c) = zero;
+        self->speedX = zero;
+        self->speedY = zero;
+        self->rampX.start = zero;
+        self->rampX.step = zero;
+        self->rampX.target = zero;
+        self->rampY.start = zero;
+        self->rampY.step = zero;
+        self->rampY.target = zero;
         {
-            MATCH_HOLD_REG(u8 *, addr68, r2) = self + 0x68;
+            MATCH_HOLD_REG(u8 *, addr68, r2) = &self->hitAxes;
             MATCH_HOLD_REG(s32, eight, r1) = 8;
 
             *addr68 = eight;
         }
         {
-            MATCH_HOLD_REG(u8 *, addr24, r1) = self + 0x24;
+            MATCH_HOLD_REG(u8 *, addr24, r1) = &self->dir;
 
             *addr24 = zero;
         }
-        *(s32 *)(self + 0x44) = zero;
-        *(s32 *)(self + 0x78) = zero;
-        *(s32 *)(self + 0x1c) = zero;
+        self->mover = (struct mover *)zero;
+        self->type = zero;
+        self->lastHitbox = (void *)zero;
     }
     {
         MATCH_HOLD_REG(s32, mask, r0) = 1;
-        MATCH_HOLD_REG(s32, byte, r1) = self[0xd];
+        MATCH_HOLD_REG(s32, byte, r1) = self->flags2;
         MATCH_HOLD_REG(s32, result, r0);
 
         result = mask | byte;
-        self[0xd] = result;
+        self->flags2 = result;
     }
 }
 
@@ -122,98 +122,98 @@ struct actor *InitGroundSprite(struct actor *self)
     return self;
 }
 
-/* `self+0xd` bit 1 get/set/clear accessors. */
+/* `flags2` bit 1 get/set/clear accessors. */
 u8 IsGroundSpriteGrounded(void *selfArg)
 {
-    u8 *self = selfArg;
-    return (self[0xd] >> 1) & 1;
+    struct gobj *self = selfArg;
+    return (self->flags2 >> 1) & 1;
 }
 
 void ClearGroundSpriteGrounded(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
     MATCH_HOLD_REG(s32, mask, r1) = -3;
-    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, byte, r2) = self->flags2;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
-    self[0xd] = result;
+    self->flags2 = result;
 }
 
 void SetGroundSpriteGrounded(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
     MATCH_HOLD_REG(s32, mask, r1) = 2;
-    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, byte, r2) = self->flags2;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
-    self[0xd] = result;
+    self->flags2 = result;
 }
 
-/* `self+0xd` bit 0 get/set/clear accessors. */
+/* `flags2` bit 0 get/set/clear accessors. */
 u8 IsGroundSpriteFloorProbeEnabled(void *selfArg)
 {
-    MATCH_HOLD_REG(u8 *, self, r1);
+    MATCH_HOLD_REG(struct gobj *, self, r1);
     MATCH_HOLD_REG(s32, mask, r0) = 1;
     MATCH_HOLD_REG(s32, byte, r1);
     MATCH_HOLD_REG(s32, result, r0);
 
     self = selfArg;
-    byte = self[0xd];
+    byte = self->flags2;
     result = mask & byte;
     return result;
 }
 
 void DisableGroundSpriteFloorProbe(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
     MATCH_HOLD_REG(s32, mask, r1) = -2;
-    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, byte, r2) = self->flags2;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
-    self[0xd] = result;
+    self->flags2 = result;
 }
 
 void EnableGroundSpriteFloorProbe(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
     MATCH_HOLD_REG(s32, mask, r1) = 1;
-    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, byte, r2) = self->flags2;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
-    self[0xd] = result;
+    self->flags2 = result;
 }
 
 /* `flags` bit 5 clear/set/get accessors. */
 void ClearSpriteObjFlag5(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
     MATCH_HOLD_REG(s32, mask, r1) = -0x21;
-    MATCH_HOLD_REG(s32, byte, r2) = self[0xc];
+    MATCH_HOLD_REG(s32, byte, r2) = self->flags;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
-    self[0xc] = result;
+    self->flags = result;
 }
 
 void SetSpriteObjFlag5(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct gobj *self = selfArg;
     MATCH_HOLD_REG(s32, mask, r1) = 0x20;
-    MATCH_HOLD_REG(s32, byte, r2) = self[0xc];
+    MATCH_HOLD_REG(s32, byte, r2) = self->flags;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
-    self[0xc] = result;
+    self->flags = result;
 }
 
 u8 GetSpriteObjFlag5(void *selfArg)
 {
-    u8 *self = selfArg;
-    return (self[0xc] >> 5) & 1;
+    struct gobj *self = selfArg;
+    return (self->flags >> 5) & 1;
 }
 
 /* `ctrl` getter (the same "record" field `DestroyMovingSprite`/`UpdateMovingSprite`

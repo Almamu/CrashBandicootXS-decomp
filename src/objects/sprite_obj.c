@@ -3,6 +3,7 @@
 #include "actor.h"
 #include "vram_pool.h"
 #include "gfx_part.h"
+#include "box_part.h"
 #include "sprite_bank.h"
 #include "aabb.h"
 #include "util.h"
@@ -16,43 +17,41 @@
  * GetSpriteHitbox, inlined directly here rather than calling it - this
  * function needs the box on the stack for the final overlap test, not
  * written out through a `dest` pointer) and mirrors it per
- * `part+0x28` bits 4/5, then tests it for overlap against `region` via
+ * `mirrorX`/`mirrorY`, then tests it for overlap against `region` via
  * `AabbOverlaps` - the same collision-test function `CheckSpritePickup`
  * uses. */
-s32 SpriteHitboxOverlaps(struct actor *part, void *region)
+s32 SpriteHitboxOverlaps(struct actor *self, void *region)
 {
+    struct box_part *part = (struct box_part *)self;
     struct aabb buf_;
-    void **tablePtr;
-    MATCH_HOLD_REG(void *, rec, r0);
+    struct keyframe **tablePtr;
+    MATCH_HOLD_REG(struct keyframe *, rec, r0);
     MATCH_HOLD_REG(u8, idx, r3);
-    void *rec4;
+    struct hitbox_quad *box;
     s32 offset;
     s32 offX, offY;
     s32 w, h;
     s32 x, y;
     s32 xpos, ypos;
-    u8 flags;
     s32 mirrorX, mirrorY;
 
-    flags = *((u8 *)part + 0x28);
-    mirrorX = ((u32)flags << 27) >> 31;
-    mirrorY = ((u32)flags << 26) >> 31;
+    mirrorX = part->mirrorX;
+    mirrorY = part->mirrorY;
 
-    xpos = *(s32 *)part >> 8;
-    ypos = *(s32 *)((u8 *)part + 4) >> 8;
+    xpos = part->x >> 8;
+    ypos = part->y >> 8;
 
-    tablePtr = *(void ***)((u8 *)part + 0x20);
-    part = (struct actor *)((u8 *)part + 0x2d);
-    idx = *(u8 *)part;
-    offset = idx * 0x1c;
+    tablePtr = part->keyframes;
+    idx = part->frame;
+    offset = idx * KEYFRAME_SIZE;
     rec = *tablePtr;
-    rec = (u8 *)rec + offset;
-    rec4 = (u8 *)rec + 4;
+    rec = (struct keyframe *)((u8 *)rec + offset);
+    box = &rec->box[0];
 
-    offX = *(s16 *)((u8 *)rec + 4);
-    offY = *(s16 *)((u8 *)rec4 + 2);
-    w = *((u8 *)rec4 + 4);
-    h = *((u8 *)rec4 + 5);
+    offX = rec->box[0].offX; /* through `rec`, not `box`: the ROM's [rec + 4] */
+    offY = box->offY;
+    w = box->w;
+    h = box->h;
 
     x = offX + xpos;
     y = offY + ypos;
@@ -69,24 +68,26 @@ s32 SpriteHitboxOverlaps(struct actor *part, void *region)
     return (u8)AabbOverlaps(&buf_, region);
 }
 
-/* Reads `part`'s current keyframe record's `+0x14` byte as a
+/* Reads `part`'s current keyframe record's `paletteId` as a
  * `GetPaletteSlot` record id, looked up against the global tile-asset
  * cache `gPaletteCache`. */
-s32 GetSpriteAnimPaletteSlot(struct actor *part)
+s32 GetSpriteAnimPaletteSlot(struct actor *self)
 {
+    struct box_part *part = (struct box_part *)self;
     struct palette_cache *cache = gPaletteCache;
-    void **tablePtr;
-    void *table;
+    struct keyframe **tablePtr;
+    struct keyframe *table;
+    u8 *idxAddr;
     MATCH_HOLD_REG(u8, idx, r4);
     MATCH_HOLD_REG(s32, rec, r1);
 
-    tablePtr = *(void ***)((u8 *)part + 0x20);
-    part = (struct actor *)((u8 *)part + 0x2d);
+    tablePtr = part->keyframes;
+    idxAddr = &part->frame;
     table = *tablePtr;
-    idx = *(u8 *)part;
-    rec = idx * 0x1c;
+    idx = *idxAddr;
+    rec = idx * KEYFRAME_SIZE;
     rec = rec + (s32)table;
-    rec = *((u8 *)rec + 0x14);
+    rec = ((struct keyframe *)rec)->paletteId;
 
     return (u8)GetPaletteSlot(cache, rec);
 }
@@ -94,18 +95,16 @@ s32 GetSpriteAnimPaletteSlot(struct actor *part)
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
  * data tables). The inverse of `OffsetToHitboxEdge`: moves the Q8
  * position `dest` back from the edge of hitbox `rec` (`struct
- * hitbox_quad`: `rec+2` yOff, `rec+4` w, `rec+5` h) that faces direction
+ * hitbox_quad`) that faces direction
  * `kind` (ProbeTerrain's 1 right, 2 left, 4 up, 8 down) to the object's
  * origin.
  *
- * Adjusts `dest`'s `{s32 field_0, field_4}` per `kind` (`kind-1` is the real switch selector, 0-11;
+ * Adjusts `dest`'s `{x, y}` per `kind` (`kind-1` is the real switch selector, 0-11;
  * anything else - including the four explicit no-op cases 2/4/5/6/8/9/
- * 10 - does nothing): kind 1/2 add/subtract `rec+4`'s byte (Q8,
- * shifted by 7 not 8 - half-Q8?) from `dest->field_0`; kind 4
- * subtracts `rec+2`'s signed 16-bit value (shifted by 8, full Q8) from
- * `dest->field_4`; kinds 8/12 do the same but add `rec+5`'s byte to
- * the `rec+2` value first. `dest`/`rec` kept raw - neither type is
- * established yet.
+ * 10 - does nothing): kind 1/2 add/subtract `rec->w` (Q8 shifted by 7,
+ * so half the width) from `dest->x`; kind 4 subtracts `rec->offY`
+ * (shifted by 8, full Q8) from `dest->y`; kinds 8/12 do the same but
+ * add `rec->h` to `rec->offY` first.
  *
  * Matched in a later session than the original NAKED transcription
  * (see docs/matching.md's "Parked, not matched: OffsetFromHitboxEdge" for the
@@ -130,36 +129,38 @@ s32 GetSpriteAnimPaletteSlot(struct actor *part)
  * `OffsetToHitboxEdgeStart` below, where a `case` body with real code physically
  * displaced a fallthrough block gcc would otherwise have placed
  * directly after its neighbor). */
-void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec)
+void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
 {
+    struct gfx_vec *dest = destArg;
+    struct hitbox_quad *rec = recArg;
     s32 idx = kind - 1;
 
     switch (idx) {
     case 1:
         {
-            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, byteVal, r2) = rec->w;
             MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
-            *(s32 *)dest += shifted;
+            dest->x += shifted;
         }
         goto end;
     case 0:
         {
-            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, byteVal, r2) = rec->w;
             MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
-            *(s32 *)dest -= shifted;
+            dest->x -= shifted;
         }
         goto end;
     case 2:
         goto end;
     case 3:
         {
-            s32 v = *(s16 *)((u8 *)rec + 2);
+            s32 v = rec->offY;
             v <<= 8;
-            *(s32 *)((u8 *)dest + 4) -= v;
+            dest->y -= v;
         }
         goto end;
     case 4:
@@ -184,7 +185,7 @@ void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec)
 
 kind8_12:
     {
-        MATCH_HOLD_REG(void *, recReg, r2) = rec;
+        MATCH_HOLD_REG(struct hitbox_quad *, recReg, r2) = rec;
         MATCH_HOLD_REG(s32, result, r1);
 
         // clang-format off
@@ -200,7 +201,7 @@ kind8_12:
         // clang-format on
 
         result <<= 8;
-        *(s32 *)((u8 *)dest + 4) -= result;
+        dest->y -= result;
     }
 end:
     return;
@@ -213,8 +214,8 @@ end:
  * point under the object's feet.
  *
  * Same shape as `OffsetFromHitboxEdge` above (mirror-image add/subtract
- * directions: kind 1/2 do the opposite sign on `dest->field_0`, and
- * kinds 4/8/12 add to `dest->field_4` instead of subtracting).
+ * directions: kind 1/2 do the opposite sign on `dest->x`, and
+ * kinds 4/8/12 add to `dest->y` instead of subtracting).
  *
  * Matched in a later session, same `goto`-unified-block technique as
  * `OffsetFromHitboxEdge` above - see its doc comment for the full account of
@@ -222,36 +223,38 @@ end:
  * reached via `goto` from both `case 8` and `case 12`, rather than an
  * asm anchor on just the `add` inside two ordinary switch-case
  * bodies. */
-void OffsetToHitboxEdge(void *dest, s32 kind, void *rec)
+void OffsetToHitboxEdge(void *destArg, s32 kind, void *recArg)
 {
+    struct gfx_vec *dest = destArg;
+    struct hitbox_quad *rec = recArg;
     s32 idx = kind - 1;
 
     switch (idx) {
     case 1:
         {
-            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, byteVal, r2) = rec->w;
             MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
-            *(s32 *)dest -= shifted;
+            dest->x -= shifted;
         }
         goto end;
     case 0:
         {
-            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, byteVal, r2) = rec->w;
             MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
-            *(s32 *)dest += shifted;
+            dest->x += shifted;
         }
         goto end;
     case 2:
         goto end;
     case 3:
         {
-            s32 v = *(s16 *)((u8 *)rec + 2);
+            s32 v = rec->offY;
             v <<= 8;
-            *(s32 *)((u8 *)dest + 4) += v;
+            dest->y += v;
         }
         goto end;
     case 4:
@@ -276,7 +279,7 @@ void OffsetToHitboxEdge(void *dest, s32 kind, void *rec)
 
 kind8_12:
     {
-        MATCH_HOLD_REG(void *, recReg, r2) = rec;
+        MATCH_HOLD_REG(struct hitbox_quad *, recReg, r2) = rec;
         MATCH_HOLD_REG(s32, result, r1);
 
         // clang-format off
@@ -292,7 +295,7 @@ kind8_12:
         // clang-format on
 
         result <<= 8;
-        *(s32 *)((u8 *)dest + 4) += result;
+        dest->y += result;
     }
 end:
     return;
@@ -305,10 +308,10 @@ end:
  * end of the top or bottom edge (x - w/2; the scan runs right over `w`).
  *
  * A third variant of `OffsetFromHitboxEdge`'s shape: kind 1/2 update
- * `dest->field_0` (sub/add) AND unconditionally also add `rec+2`'s
- * short (Q8) to `dest->field_4`; kinds 4/8/12 add to `dest->field_4`
- * (same as `OffsetFromHitboxEdge`'s kinds) AND additionally always subtract
- * `rec+4`'s byte (Q8, `<<7`) from `dest->field_0` afterward.
+ * `dest->x` (sub/add) AND unconditionally also add `rec->offY` (Q8)
+ * to `dest->y`; kinds 4/8/12 add to `dest->y` (same as
+ * `OffsetFromHitboxEdge`'s kinds) AND additionally always subtract
+ * `rec->w` (Q8, `<<7`) from `dest->x` afterward.
  *
  * Matched in a later session, same `goto`-unified atomic-asm-block
  * technique as `OffsetFromHitboxEdge` above for the shared kind-8/12 gap.
@@ -335,9 +338,10 @@ end:
  * code out to its own `goto` target, laid out in the exact order the
  * ROM's own blocks appear, fixed the layout without changing anything
  * about the kind-8/12 fix itself. */
-void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec_)
+void OffsetToHitboxEdgeStart(void *destArg, s32 kind, void *recArg)
 {
-    MATCH_HOLD_REG(void *, rec, r2) = rec_;
+    struct gfx_vec *dest = destArg;
+    MATCH_HOLD_REG(struct hitbox_quad *, rec, r2) = recArg;
     MATCH_HOLD_REG(s32, field0, r0);
     s32 idx = kind - 1;
     s32 v;
@@ -373,34 +377,34 @@ void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec_)
 
 subCase:
     {
-        MATCH_HOLD_REG(s32, byteVal, r0) = *((u8 *)rec + 4);
+        MATCH_HOLD_REG(s32, byteVal, r0) = rec->w;
         MATCH_HOLD_REG(s32, shifted, r1);
 
         shifted = byteVal << 7;
-        field0 = *(s32 *)dest - shifted;
+        field0 = dest->x - shifted;
     }
     goto field4tail;
 
 addCase:
     {
-        MATCH_HOLD_REG(s32, byteVal, r0) = *((u8 *)rec + 4);
+        MATCH_HOLD_REG(s32, byteVal, r0) = rec->w;
         MATCH_HOLD_REG(s32, shifted, r1);
 
         shifted = byteVal << 7;
-        field0 = *(s32 *)dest + shifted;
+        field0 = dest->x + shifted;
     }
 
 field4tail:
-    *(s32 *)dest = field0;
+    dest->x = field0;
     {
-        s32 v2 = *(s16 *)((u8 *)rec + 2);
+        s32 v2 = rec->offY;
         v2 <<= 8;
-        *(s32 *)((u8 *)dest + 4) += v2;
+        dest->y += v2;
     }
     goto end;
 
 kind4Case:
-    v = *(s16 *)((u8 *)rec + 2);
+    v = rec->offY;
     goto bigtail;
 
 kind8_12:
@@ -423,30 +427,30 @@ kind8_12:
 
 bigtail:
     v <<= 8;
-    *(s32 *)((u8 *)dest + 4) += v;
+    dest->y += v;
     {
-        MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+        MATCH_HOLD_REG(s32, byteVal, r2) = rec->w;
         MATCH_HOLD_REG(s32, shifted, r1);
         MATCH_HOLD_REG(s32, field0b, r0);
 
         shifted = byteVal << 7;
-        field0b = *(s32 *)dest;
+        field0b = dest->x;
         field0b -= shifted;
-        *(s32 *)dest = field0b;
+        dest->x = field0b;
     }
 end:
     return;
 }
 asm(".align 2, 0");
 
-/* `part+0x25 == 1` is the same fast override seen in
+/* `screenSpace == 1` is the same fast override seen in
  * IsSpriteObjOnScreen/SpriteObjOverlapsRect; otherwise defers to `IsEntityInsideRect` (already
  * matched in graphics.c), forwarding `box` straight through
  * unmodified. */
 s32 IsSpriteObjInsideRect(struct actor *part, void *box)
 {
     s32 result = 0;
-    MATCH_HOLD_REG(u8 *, addr, r2) = (u8 *)part + 0x25;
+    MATCH_HOLD_REG(u8 *, addr, r2) = &((struct box_part *)part)->screenSpace;
     MATCH_HOLD_REG(u8, byteVal, r2);
 
     byteVal = *addr;
@@ -458,7 +462,7 @@ s32 IsSpriteObjInsideRect(struct actor *part, void *box)
     return result;
 }
 
-/* Same `part+0x25` fast-override shape as `IsSpriteObjInsideRect` above,
+/* Same `screenSpace` fast-override shape as `IsSpriteObjInsideRect` above,
  * deferring to `IsEntityNearCamera` (already matched in `graphics.c`)
  * instead - a single-argument sibling, so the address scratch
  * naturally lands in `r1` instead of `r2` (no second call argument to
@@ -466,7 +470,7 @@ s32 IsSpriteObjInsideRect(struct actor *part, void *box)
 s32 IsSpriteObjNearCamera(struct actor *part)
 {
     s32 result = 0;
-    MATCH_HOLD_REG(u8 *, addr, r1) = (u8 *)part + 0x25;
+    MATCH_HOLD_REG(u8 *, addr, r1) = &((struct box_part *)part)->screenSpace;
     MATCH_HOLD_REG(u8, byteVal, r1);
 
     byteVal = *addr;
@@ -493,66 +497,62 @@ void DrawSpriteObj(void *part)
 
 extern void *_call_via_r1(void *arg0, void *arg1);
 
-/* Advances `part`'s animation timer (`AdvanceSpriteAnim`), then resolves two
- * `table+N`/`table+N+4` offset/pointer slot pairs (the same convention
- * documented for `IsEntityNearCamera`/`IsSpriteObjOnScreen`) into `_call_via_r1` calls
- * - table+0x60/+0x64 first, then table+8/+0xc. */
+/* Advances `part`'s animation timer (`AdvanceSpriteAnim`), then calls two
+ * of its methods (PART_METHOD, the same convention as
+ * `IsEntityNearCamera`/`IsSpriteObjOnScreen`) through `_call_via_r1`:
+ * the one at +0x60 first, then the one at +8. */
 void UpdateSpriteObj(struct actor *part)
 {
     AdvanceSpriteAnim((struct box_part *)part);
 
     {
-        void *table = part->table;
-        void *slot = (u8 *)table + 0x60;
-        s32 offset = *(s16 *)slot;
+        struct part_method *m = PART_METHOD((struct box_part *)part, 0x60);
+        s32 offset = m->thisOffset;
         void *addr = (u8 *)part + offset;
-        void *ptr = *(void **)((u8 *)slot + 4);
+        void *ptr = m->fn;
 
         _call_via_r1(addr, ptr);
     }
     {
-        void *table = part->table;
-        s32 offset = *(s16 *)((u8 *)table + 8);
+        struct part_method *m = PART_METHOD((struct box_part *)part, 8);
+        s32 offset = m->thisOffset;
         void *addr = (u8 *)part + offset;
-        void *ptr = *(void **)((u8 *)table + 0xc);
+        void *ptr = m->fn;
 
         _call_via_r1(addr, ptr);
     }
 }
 
-/* Returns a pointer to `part`'s current keyframe record's `+4` field -
+/* Returns a pointer to `part`'s current keyframe record's `box[0]` -
  * the same keyframe-table lookup used throughout this ROM region. */
 void *GetSpriteObjHitbox(struct actor *part)
 {
-    MATCH_HOLD_REG(void **, tablePtr, r2) = *(void ***)((u8 *)part + 0x20);
-    MATCH_HOLD_REG(u8, idx, r3) = *((u8 *)part + 0x2d);
-    s32 offset = idx * 0x1c;
-    void *table = *tablePtr;
-    void *rec = (u8 *)table + offset;
-    return (u8 *)rec + 4;
+    MATCH_HOLD_REG(struct keyframe **, tablePtr, r2) = ((struct box_part *)part)->keyframes;
+    MATCH_HOLD_REG(u8, idx, r3) = ((struct box_part *)part)->frame;
+    s32 offset = idx * KEYFRAME_SIZE;
+    struct keyframe *table = *tablePtr;
+    struct keyframe *rec = (struct keyframe *)((u8 *)table + offset);
+    return &rec->box[0];
 }
 
 /* Ignores its `part` argument entirely (the ROM never reads r0 before
  * overwriting it) - already declared with this signature at its
- * `DrawSpritePieces` call site in graphics.c. Returns
- * `(*(void **)gSpriteBankSet)+4`'s value. */
+ * `DrawSpritePieces` call site in graphics.c. Returns the sprite bank
+ * table's `tileBase`. */
 s32 GetSpriteTileBase(void *part)
 {
-    void *p2 = (void *)gSpriteBankSet->table;
-    return *(s32 *)((u8 *)p2 + 4);
+    return (s32)gSpriteBankSet->table->tileBase;
 }
 
 /* Looks up `part`'s current keyframe record (same convention as
- * elsewhere in this ROM region). If `part+0x38` ("done", set by
- * `AdvanceSpriteAnim`) is set and the record's `+0x17` flags byte bit 1 is
- * clear (not looping), clamps `part`'s frame index (`+0x30`) to the
- * last frame (`record+0x16 - 1`) and resets the sub-counter
- * (`+0x34`) to the record's duration (`record+0x15`). Either way,
- * then resolves a final pointer: the record's own `+0` field is
- * itself a pointer (`recPtr`) to a per-frame `u16` array, indexed by
- * the (possibly just-clamped) frame index; that `u16` in turn indexes
- * a pointer array at `table+4`, and the result is that array's
- * pointer at the looked-up index.
+ * elsewhere in this ROM region). If `animDone` (set by
+ * `AdvanceSpriteAnim`) is set and the record's SPRITE_ANIM_LOOP flag is
+ * clear, clamps `part`'s step (`frame`) to the last one
+ * (`frameCount - 1`) and resets `stepTimer` to the record's `duration`.
+ * Either way, then resolves a final pointer: the record's `seq` is a
+ * per-step `u16` array, indexed by the (possibly just-clamped) step;
+ * that `u16` in turn indexes the bank's `frames`, and the result is
+ * that array's pointer at the looked-up index.
  *
  * Matched in a later session than the original NAKED transcription -
  * see docs/matching.md's "Parked, not matched: GetSpriteFrame" for the
@@ -624,14 +624,14 @@ asm(".align 2, 0");
 s32 GetSpriteObjPriority(void)
 {
     if (gLevelLayers->raiseObjPriority == 0) {
-        void *subObj = gLevelLayers->layer0;
-        u8 byte2 = *((u8 *)subObj + 0x34);
-        u32 result = ((u32)byte2 << 30) >> 30;
+        struct bg_scroll_layer *layer = gLevelLayers->layer0;
+        u8 cnt = *(u8 *)&layer->cnt; /* the low byte: `priority` in bits 0-1 */
+        u32 result = ((u32)cnt << 30) >> 30;
         return result;
     } else {
-        void *subObj = gLevelLayers->layer0;
-        u8 byte2 = *((u8 *)subObj + 0x34);
-        u32 result = ((u32)byte2 << 30) >> 30;
+        struct bg_scroll_layer *layer = gLevelLayers->layer0;
+        u8 cnt = *(u8 *)&layer->cnt; /* the low byte: `priority` in bits 0-1 */
+        u32 result = ((u32)cnt << 30) >> 30;
         return result - 1;
     }
 }
@@ -687,9 +687,10 @@ struct actor *InitSpriteObj(struct actor *self)
 
 /* Looks up `part`'s keyframe record via `GetSpriteFrame` (already parked
  * as `NON_MATCHING` in `sprite_obj.c`), then picks a pointer off it
- * per the record's `+4` byte's upper nibble: 0 -> `info+0x24`, 6 ->
- * `info+0x14`, anything else (1-5, or above 6) -> the fixed fallback
- * table `gEmptySpritePoint`. Needed the case labels scattered
+ * per its layout type (the upper nibble of its first piece byte,
+ * sprite_bank.h): 0 -> the 3-box frame's `anchor`, 6 -> the 1-box
+ * frame's `anchor`, anything else (1-5, or above 6) -> the fixed
+ * fallback `gEmptySpritePoint`. Needed the case labels scattered
  * out of numeric order (rather than grouped into the obvious
  * contiguous "0 / 1-5 / 6" ranges) to get gcc to emit a real jump
  * table instead of a compare chain - this compiler only builds a
@@ -699,13 +700,13 @@ struct actor *InitSpriteObj(struct actor *self)
  * jump table here. */
 void *GetSpriteFrameAnchor(void *part)
 {
-    void *info = GetSpriteFrame(part);
-    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    const struct sprite_frame *info = GetSpriteFrame(part);
+    u8 type = info->pieces[0] >> 4;
     void *result;
 
     switch (type) {
     case 0:
-        result = (u8 *)info + 0x24;
+        result = (void *)&((const struct sprite_frame_3box_anchor *)info)->anchor;
         break;
     case 3:
     case 4:
@@ -719,7 +720,7 @@ void *GetSpriteFrameAnchor(void *part)
         result = (void *)&gEmptySpritePoint;
         break;
     case 6:
-        result = (u8 *)info + 0x14;
+        result = (void *)&((const struct sprite_frame_1box_anchor *)info)->anchor;
         break;
     default:
         result = (void *)&gEmptySpritePoint;
@@ -730,20 +731,20 @@ void *GetSpriteFrameAnchor(void *part)
 
 /* Same `GetSpriteFrame`-derived-record-nibble-switch shape as
  * `GetSpriteFrameAnchor` above, with a different result mapping: 0 and 4
- * select `info+0x1c`, anything else falls back to
+ * select `box[2]`, anything else falls back to
  * `gEmptySpriteBox`. Unlike `GetSpriteFrameAnchor`, no case-scattering
  * trick was needed here - 0 and 4 are already non-adjacent, which is
  * enough on its own to make gcc emit a jump table instead of a
  * compare chain. */
 void *GetSpriteFrameThirdBox(void *part)
 {
-    void *info = GetSpriteFrame(part);
-    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    const struct sprite_frame *info = GetSpriteFrame(part);
+    u8 type = info->pieces[0] >> 4;
     void *result;
 
     switch (type) {
     case 0:
-        result = (u8 *)info + 0x1c;
+        result = (void *)&((const struct sprite_frame_3box *)info)->box[2];
         break;
     case 1:
     case 2:
@@ -751,7 +752,7 @@ void *GetSpriteFrameThirdBox(void *part)
         result = (void *)&gEmptySpriteBox;
         break;
     case 4:
-        result = (u8 *)info + 0x1c;
+        result = (void *)&((const struct sprite_frame_3box *)info)->box[2];
         break;
     case 5:
     case 6:
@@ -766,22 +767,22 @@ void *GetSpriteFrameThirdBox(void *part)
 
 /* Same `GetSpriteFrame`-derived-record-nibble `switch` shape again, with
  * the exact same case-to-block mapping as `GetSpriteAttackBox` (already
- * matched in `sprite.c`) - 0/3/4 select `info+0x14`, 5 selects
- * `info+0xc`, and 1/2/6/anything-above-6 fall back to
+ * matched in `sprite.c`) - 0/3/4 select `box[1]`, 5 selects
+ * `box[0]`, and 1/2/6/anything-above-6 fall back to
  * `gEmptySpriteBox`. That mapping is non-contiguous on its own,
  * so plain ascending case order was enough for a jump table here too,
  * no scattering needed. */
 void *GetSpriteFrameAttackBox(void *part)
 {
-    void *info = GetSpriteFrame(part);
-    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    const struct sprite_frame *info = GetSpriteFrame(part);
+    u8 type = info->pieces[0] >> 4;
     void *result;
 
     switch (type) {
     case 0:
     case 3:
     case 4:
-        result = (u8 *)info + 0x14;
+        result = (void *)&((const struct sprite_frame_3box *)info)->box[1];
         break;
     case 1:
     case 2:
@@ -789,7 +790,7 @@ void *GetSpriteFrameAttackBox(void *part)
         result = (void *)&gEmptySpriteBox;
         break;
     case 5:
-        result = (u8 *)info + 0xc;
+        result = (void *)&((const struct sprite_frame_1box *)info)->box[0];
         break;
     default:
         result = (void *)&gEmptySpriteBox;
@@ -799,17 +800,17 @@ void *GetSpriteFrameAttackBox(void *part)
 }
 
 /* Same `GetSpriteFrame`-derived-record-nibble `switch` shape once more -
- * 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall back to
+ * 0/2/3/4/6 select `box[0]`, 1/5/anything-above-6 fall back to
  * `gEmptySpriteBox`. */
 void *GetSpriteFrameBodyBox(void *part)
 {
-    void *info = GetSpriteFrame(part);
-    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    const struct sprite_frame *info = GetSpriteFrame(part);
+    u8 type = info->pieces[0] >> 4;
     void *result;
 
     switch (type) {
     case 0:
-        result = (u8 *)info + 0xc;
+        result = (void *)&((const struct sprite_frame_1box *)info)->box[0];
         break;
     case 1:
         result = (void *)&gEmptySpriteBox;
@@ -817,13 +818,13 @@ void *GetSpriteFrameBodyBox(void *part)
     case 2:
     case 3:
     case 4:
-        result = (u8 *)info + 0xc;
+        result = (void *)&((const struct sprite_frame_1box *)info)->box[0];
         break;
     case 5:
         result = (void *)&gEmptySpriteBox;
         break;
     case 6:
-        result = (u8 *)info + 0xc;
+        result = (void *)&((const struct sprite_frame_1box *)info)->box[0];
         break;
     default:
         result = (void *)&gEmptySpriteBox;
@@ -833,21 +834,20 @@ void *GetSpriteFrameBodyBox(void *part)
 }
 
 /* Same keyframe-record lookup used throughout this ROM region (see
- * `GetSpriteObjHitbox`) - `part`'s `+0x20` table pointer dereferenced twice,
- * indexed by the `+0x2d` frame index, times the record size (0x1c). */
+ * `GetSpriteObjHitbox`) - `part`'s `keyframes` dereferenced twice,
+ * indexed by its `frame` (the animation index) times KEYFRAME_SIZE. */
 void *GetSpriteAnimRecord(struct actor *part)
 {
-    MATCH_HOLD_REG(void **, tablePtr, r2) = *(void ***)((u8 *)part + 0x20);
-    MATCH_HOLD_REG(u8, idx, r3) = *((u8 *)part + 0x2d);
-    s32 offset = idx * 0x1c;
-    void *table = *tablePtr;
+    MATCH_HOLD_REG(struct keyframe **, tablePtr, r2) = ((struct box_part *)part)->keyframes;
+    MATCH_HOLD_REG(u8, idx, r3) = ((struct box_part *)part)->frame;
+    s32 offset = idx * KEYFRAME_SIZE;
+    struct keyframe *table = *tablePtr;
     return (u8 *)table + offset;
 }
 
-/* Clamps `frame` to `part`'s current keyframe record's duration
- * (`+0x16`) minus one if it's out of range, then stores the result
- * into `part+0x30` (the frame index also read/written by
- * `GetSpriteFrame`). Needed explicit register pins on the whole
+/* Clamps `frame` to `part`'s current keyframe record's `steps` minus
+ * one if it's out of range, then stores the result into `tick` (the
+ * step also read/written by `GetSpriteFrame`). Needed explicit register pins on the whole
  * tablePtr/idxAddr/table/idx chain to get the ROM's `r5` (rather than
  * a tighter, naturally-reused register) - `idx` genuinely outlives
  * `table`'s own register here. The final `rec = table + offset` add
@@ -859,44 +859,44 @@ void *GetSpriteAnimRecord(struct actor *part)
  * `asm` anchor for just this add gets a fully byte-exact match. */
 void SetSpriteFrameIndex(struct actor *part, s32 frame)
 {
-    MATCH_HOLD_REG(void **, tablePtr, r0) = *(void ***)((u8 *)part + 0x20);
-    MATCH_HOLD_REG(u8 *, idxAddr, r2) = (u8 *)part + 0x2d;
-    MATCH_HOLD_REG(void *, table, r1) = *tablePtr;
+    MATCH_HOLD_REG(struct keyframe **, tablePtr, r0) = ((struct box_part *)part)->keyframes;
+    MATCH_HOLD_REG(u8 *, idxAddr, r2) = &((struct box_part *)part)->frame;
+    MATCH_HOLD_REG(struct keyframe *, table, r1) = *tablePtr;
     MATCH_HOLD_REG(u8, idx, r5) = *idxAddr;
-    MATCH_HOLD_REG(s32, offset, r0) = idx * 0x1c;
-    void *rec;
+    MATCH_HOLD_REG(s32, offset, r0) = idx * KEYFRAME_SIZE;
+    struct keyframe *rec;
 
     asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
-    rec = (void *)offset;
+    rec = (struct keyframe *)offset;
 
     {
-        u8 duration = *((u8 *)rec + 0x16);
+        u8 steps = rec->steps;
 
-        if (frame >= duration) {
-            frame = duration - 1;
+        if (frame >= steps) {
+            frame = steps - 1;
         }
-        *(s32 *)((u8 *)part + 0x30) = frame;
+        ((struct box_part *)part)->tick = frame;
     }
 }
 
-/* `part+0x25` accessor pair - plain byte get/set, no other logic. */
+/* `screenSpace` accessor pair - plain byte get/set, no other logic. */
 u8 GetSpriteScreenSpace(void *part)
 {
-    return *((u8 *)part + 0x25);
+    return ((struct box_part *)part)->screenSpace;
 }
 
 void SetSpriteScreenSpace(void *part, u8 val)
 {
-    *((u8 *)part + 0x25) = val;
+    ((struct box_part *)part)->screenSpace = val;
 }
 
-/* `part+0xd` bit-2 getter. */
+/* `flags2` bit-2 getter. */
 s32 IsSpriteHidden(void *part)
 {
-    return (*((u8 *)part + 0xd) >> 2) & 1;
+    return (((struct box_part *)part)->flags2 >> 2) & 1;
 }
 
-/* Toggles `part+0xd` bit 2. Needed the bit-flip (`(byte>>2)^1)&1`)
+/* Toggles `flags2` bit 2. Needed the bit-flip (`(byte>>2)^1)&1`)
  * done via genuinely separate `eor`+`and` instructions instead of the
  * single `bic` this compiler normally folds that pattern into -
  * forced via a two-instruction inline `asm` block, whose "one" input
@@ -908,7 +908,7 @@ s32 IsSpriteHidden(void *part)
  * mask, matching the ROM's own instruction order. */
 void ToggleSpriteHidden(void *part)
 {
-    MATCH_HOLD_REG(u32, byte, r3) = *((u8 *)part + 0xd);
+    MATCH_HOLD_REG(u32, byte, r3) = ((struct box_part *)part)->flags2;
     MATCH_HOLD_REG(u32, shifted, r2) = byte >> 2;
     MATCH_HOLD_REG(u32, one, r1) = 1;
     MATCH_HOLD_REG(u32, bit, r2);
@@ -922,17 +922,17 @@ void ToggleSpriteHidden(void *part)
     mask = -5;
     result = mask & byte;
     result |= shiftedBit;
-    *((u8 *)part + 0xd) = result;
+    ((struct box_part *)part)->flags2 = result;
 }
 
-/* `part+0xd` bit-3 getter - same shape as `IsSpriteHidden` above, one
+/* `flags2` bit-3 (solid) getter - same shape as `IsSpriteHidden` above, one
  * bit over. */
 s32 IsPartSolid(void *part)
 {
-    return (*((u8 *)part + 0xd) >> 3) & 1;
+    return (((struct box_part *)part)->flags2 >> 3) & 1;
 }
 
-/* Clears `part+0xd` bit 3. Needed the mask register-pinned to a
+/* Clears `flags2` bit 3. Needed the mask register-pinned to a
  * literal `-9` (computed via `movs r1, #9; negs r1, r1`, same
  * `-(N+1) == ~N` trick as `ToggleSpriteHidden`'s `-5` mask above) instead of
  * `~8`, which this compiler folds directly into a single `mov #0xf7`
@@ -940,25 +940,25 @@ s32 IsPartSolid(void *part)
 void ClearPartSolid(void *part)
 {
     MATCH_HOLD_REG(s32, mask, r1) = -9;
-    MATCH_HOLD_REG(s32, byte, r2) = *((u8 *)part + 0xd);
+    MATCH_HOLD_REG(s32, byte, r2) = ((struct box_part *)part)->flags2;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
-    *((u8 *)part + 0xd) = result;
+    ((struct box_part *)part)->flags2 = result;
 }
 
-/* Sets `part+0xd` bit 3. Needed the mask register-pinned and computed
+/* Sets `flags2` bit 3. Needed the mask register-pinned and computed
  * before the byte load (matching the ROM's own instruction order) -
  * the natural allocation loads the byte first. Same accumulator-
  * register pattern used for every AND/OR accessor below. */
 void SetPartSolid(void *part)
 {
     MATCH_HOLD_REG(s32, mask, r1) = 8;
-    MATCH_HOLD_REG(s32, byte, r2) = *((u8 *)part + 0xd);
+    MATCH_HOLD_REG(s32, byte, r2) = ((struct box_part *)part)->flags2;
     MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
-    *((u8 *)part + 0xd) = result;
+    ((struct box_part *)part)->flags2 = result;
 }
 
 /* `part->flags` bit-6 getter. */
@@ -989,10 +989,10 @@ void SetSpriteObjVulnerable(struct actor *part)
     part->flags = result;
 }
 
-/* Resets `part`'s frame index (`+0x2d`) to 0. */
+/* Resets `part`'s animation index (`frame`) to 0. */
 void ResetSpriteAnimIndex(void *part)
 {
-    *((u8 *)part + 0x2d) = 0;
+    ((struct box_part *)part)->frame = 0;
 }
 
 /* `part->flags` bit-7 getter - no mask needed since the shift already
@@ -1024,18 +1024,18 @@ void EnableSpriteObjCollision(struct actor *part)
     part->flags = result;
 }
 
-/* `part+0x2c` byte get/set pair. */
+/* `animating` get/set pair. */
 u8 GetSpriteAnimating(void *part)
 {
-    return *((u8 *)part + 0x2c);
+    return ((struct box_part *)part)->animating;
 }
 
 void SetSpriteAnimating(void *part, u8 val)
 {
-    *((u8 *)part + 0x2c) = val;
+    ((struct box_part *)part)->animating = val;
 }
 
-/* Sets `part+0x28` bit 4 to `value & 1`. Needed the low-bit extraction
+/* Sets `mirrorX` (bit 4 of the byte at +0x28) to `value & 1`. Needed the low-bit extraction
  * done via a two-instruction inline `asm` AND (rather than this
  * compiler's own `& 1`, which produces the same result but as three
  * instructions once the u8 parameter's mandatory entry truncation is
@@ -1061,8 +1061,8 @@ void SetSpriteFlipX(void *part, u8 value)
     *addr = result;
 }
 
-/* Same shape as `SetSpriteFlipX` immediately above, sets `part+0x28` bit
- * 5 instead. */
+/* Same shape as `SetSpriteFlipX` immediately above, sets `mirrorY` (bit
+ * 5 of +0x28) instead. */
 void SetSpriteFlipY(void *part, u8 value)
 {
     MATCH_HOLD_REG(s32, truncVal, r1) = value;
@@ -1082,41 +1082,40 @@ void SetSpriteFlipY(void *part, u8 value)
     *addr = result;
 }
 
-/* `part+0x38` ("done" flag, also read/written by `GetSpriteFrame`)
+/* `animDone` ("done" flag, also read/written by `GetSpriteFrame`)
  * setter. */
 void SetSpriteAnimDone(void *part, u8 val)
 {
-    *((u8 *)part + 0x38) = val;
+    ((struct box_part *)part)->animDone = val;
 }
 
 /* Same keyframe-record lookup used throughout this ROM region (see
- * `GetSpriteObjHitbox`/`GetSpriteAnimRecord`), returning the record's `+0x14` byte
+ * `GetSpriteObjHitbox`/`GetSpriteAnimRecord`), returning the record's `paletteId`
  * instead of the record pointer itself. The final `rec = table +
  * offset` add hit the same resistant operand-order gap as
  * `SetSpriteFrameIndex` - fixed the same way, with a one-instruction inline
  * `asm` anchor. */
 u8 GetSpriteAnimPaletteId(struct actor *part)
 {
-    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
-    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
-    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(struct keyframe **, tablePtr, r1) = ((struct box_part *)part)->keyframes;
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = &((struct box_part *)part)->frame;
+    MATCH_HOLD_REG(struct keyframe *, table, r2) = *tablePtr;
     MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
-    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
-    void *rec;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * KEYFRAME_SIZE;
+    struct keyframe *rec;
 
     asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
-    rec = (void *)offset;
-    return *((u8 *)rec + 0x14);
+    rec = (struct keyframe *)offset;
+    return rec->paletteId;
 }
 
-/* `part+0x29` low-nibble getter. */
+/* `palette` (the low nibble of +0x29) getter. */
 s32 GetSpritePalette(void *part)
 {
-    u32 byte = *((u8 *)part + 0x29);
-    return (byte << 0x1c) >> 0x1c;
+    return ((struct box_part *)part)->palette;
 }
 
-/* Sets `part+0x29`'s low nibble to `value & 0xf`. Needed the
+/* Sets `palette` (the low nibble of the byte at +0x29) to `value & 0xf`. Needed the
  * parameter typed `s32` rather than `u8` - the `& 0xf` mask on a `u8`-
  * typed parameter compiles to a much longer defensive shift-based
  * sequence in this compiler (confirmed in isolation), which the ROM
@@ -1143,19 +1142,19 @@ void SetSpritePalette(void *part, s32 value)
     *addr = result;
 }
 
-/* `part+0x20` table-pointer get/set pair. */
+/* `keyframes` (the sprite bank) get/set pair. */
 void SetSpriteAnimTable(void *part, void *val)
 {
-    *(void **)((u8 *)part + 0x20) = val;
+    ((struct box_part *)part)->keyframes = val;
 }
 
 void *GetSpriteAnimTable(void *part)
 {
-    return *(void **)((u8 *)part + 0x20);
+    return ((struct box_part *)part)->keyframes;
 }
 
 /* Same keyframe-record lookup as `GetSpriteAnimPaletteId` above, testing the
- * record's `+0x17` flags bit 1 and returning it as a plain 0/1 value.
+ * record's `flags` bit 1 (looping) and returning it as a plain 0/1 value.
  * Matched after the NAKED transcription this function briefly used
  * (see git history and docs/matching.md's "Parked, not matched:
  * IsSpriteAnimLooping" entry for that account): every instruction here
@@ -1178,21 +1177,21 @@ void *GetSpriteAnimTable(void *part)
  * to the compiler's own return-conversion codegen. */
 u8 IsSpriteAnimLooping(struct actor *part)
 {
-    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
-    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
-    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(struct keyframe **, tablePtr, r1) = ((struct box_part *)part)->keyframes;
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = &((struct box_part *)part)->frame;
+    MATCH_HOLD_REG(struct keyframe *, table, r2) = *tablePtr;
     MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
-    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
-    void *rec;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * KEYFRAME_SIZE;
+    struct keyframe *rec;
     MATCH_HOLD_REG(s32, mask, r0);
     MATCH_HOLD_REG(s32, flags, r1);
     MATCH_HOLD_REG(s32, test, r0);
 
     asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
-    rec = (void *)offset;
+    rec = (struct keyframe *)offset;
 
     mask = 2;
-    flags = *((u8 *)rec + 0x17);
+    flags = rec->flags;
     test = mask & flags;
     MATCH_KEEP_VOLATILE(test);
     return test;

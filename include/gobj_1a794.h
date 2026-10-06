@@ -98,7 +98,9 @@ struct gobj {
     s32 frame;     // 0x30
     s32 stepTimer; // 0x34 - ticks spent on the current step (ResetSpriteFrameTimer)
     u8 animDone;   // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
-    u8 unk_39[0xB];
+    u8 unk_39[3];
+    u16 affine; // 0x3C - box_part.h's `affine` (ResetSpriteObj clears it)
+    u8 unk_3E[6];
     struct mover *mover;     // 0x44
     struct speed_ramp rampX; // 0x48 - speedX's ramp (ApplySpriteVelocity)
     struct speed_ramp rampY; // 0x54 - speedY's ramp
