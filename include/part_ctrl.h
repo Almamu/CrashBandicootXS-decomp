@@ -63,7 +63,8 @@ struct ctrl_target {
     s32 tick;    // 0x30
     s32 timer;   // 0x34
     u8 animDone; // 0x38
-    u8 unk_39[0xF];
+    u8 unk_39[0xB];
+    void *ctrl;   // 0x44 - its controller (struct gobj.mover; HitEnemy attaches the knocked one)
     s32 rampX[3]; // 0x48 - speedX's ramp: start, step, target (struct gobj.rampX)
     s32 rampY[3]; // 0x54 - speedY's ramp
     s32 speedX;   // 0x60

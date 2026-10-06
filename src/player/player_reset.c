@@ -97,14 +97,14 @@ void ResetPlayer(struct player *selfArg)
         self[0xd] = m | b;
     }
 
-    *(s32 *)(self + 0x60) = 0;
-    *(s32 *)(self + 0x64) = 0;
-    *(s32 *)(self + 0x48) = 0;
-    *(s32 *)(self + 0x4c) = 0;
-    *(s32 *)(self + 0x50) = 0;
-    *(s32 *)(self + 0x54) = 0;
-    *(s32 *)(self + 0x58) = 0;
-    *(s32 *)(self + 0x5c) = 0;
+    selfArg->speedX = 0;
+    selfArg->speedY = 0;
+    selfArg->rampX.start = 0;
+    selfArg->rampX.step = 0;
+    selfArg->rampX.target = 0;
+    selfArg->rampY.start = 0;
+    selfArg->rampY.step = 0;
+    selfArg->rampY.target = 0;
 
     /* The ROM builds these field addresses as two running-pointer
      * cursors (r1/r0) incremented/decremented by the literal relative
@@ -126,9 +126,9 @@ void ResetPlayer(struct player *selfArg)
 
     p0 = self + 0x24;
     *p0 = 0;
-    *(s32 *)(self + 0x44) = 0;
-    *(s32 *)(self + 0x78) = 0;
-    *(s32 *)(self + 0x1c) = 0;
+    selfArg->ctrl = 0;
+    selfArg->type = 0;
+    selfArg->lastHitbox = 0;
     p0 += 0x6c; /* self+0x90 */
     *p0 = 0;
     p0 += 0x1c; /* self+0xac */

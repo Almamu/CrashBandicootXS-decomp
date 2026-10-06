@@ -12,8 +12,8 @@
  * (docs/headers_plan.md).
  *
  * The knocked controller is a plain 0x10-byte controller (InitCtrl,
- * src/objects/ctrl.c), so its functions take `void *` until the objects
- * subsystem's header gives that class a type. */
+ * src/objects/ctrl.c; player.h's `struct ctrl_base`), so its functions
+ * take `void *`. */
 
 #include "core.h"
 #include "actor.h"

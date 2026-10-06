@@ -3,6 +3,7 @@
 #include "action_obj.h"
 #include "audio.h"
 #include "player.h"
+#include "player_ctrl.h"
 #include "objects.h"
 #include "globals.h"
 
@@ -202,7 +203,7 @@ struct act *InitActionCtrl(struct act *self)
  * word (ResetActionCtrl also clears it), so it stays unnamed. */
 void sub_80158AC(struct act *self)
 {
-    *(s32 *)self->unk_14 = 0;
+    self->unk_14 = 0;
 }
 
 /* `self+0x32` byte setter, always 1. */
@@ -292,20 +293,20 @@ u8 GetActionCtrlPrevState(struct act *self)
     return self->prevState;
 }
 
-/* Big field reset: clears `self+0x26`/`self+8`/`self+0x24`/`self+0x25`,
- * sets `self+0x2c`/`self+0x2d` to 1, clears `self+0x14`/`self+0x10`/
- * `self+0x22`/`self+0x23`/`self+0x27`/`self+0x20`, sets `self+0x21` to
- * 6, clears `self+0x18`/`self+0x1c`, and clears the player's `+0x92`
- * byte. */
+/* Big field reset: clears `unk_26`/`state`/`motionX`/`motionY`, sets
+ * `motionXPending`/`motionYPending` to 1, clears `unk_14`/`target`/
+ * `mode`/`spinCooldown`/`idleTimer`/`repeat`, sets `tilt` to 6, clears
+ * `timer`/`timerMax`, and clears the player's `bounce`. The byte stores
+ * walk one pointer from `unk_26`, as the ROM does. */
 void ResetPlayerCtrl(struct player_ctrl *selfArg)
 {
-    MATCH_HOLD_REG(u8 *, self, r3) = (u8 *)selfArg;
-    MATCH_HOLD_REG(u8 *, p, r0) = self + 0x26;
+    MATCH_HOLD_REG(struct player_ctrl *, self, r3) = selfArg;
+    MATCH_HOLD_REG(u8 *, p, r0) = &self->unk_26;
     MATCH_HOLD_REG(s32, zero, r1) = 0;
     MATCH_HOLD_REG(s32, one, r2);
 
     *p = zero;
-    *(s32 *)(self + 8) = zero;
+    self->state = zero;
     p -= 2;
     *p = zero;
     p += 1;
@@ -315,8 +316,8 @@ void ResetPlayerCtrl(struct player_ctrl *selfArg)
     *p = one;
     p += 1;
     *p = one;
-    *(s32 *)(self + 0x14) = zero;
-    *(s32 *)(self + 0x10) = zero;
+    self->unk_14 = zero;
+    self->target = (struct player *)zero;
     p -= 0xb;
     *p = zero;
     p += 1;
@@ -326,32 +327,32 @@ void ResetPlayerCtrl(struct player_ctrl *selfArg)
     p -= 7;
     *p = zero;
     {
-        MATCH_HOLD_REG(u8 *, p21, r2) = self + 0x21;
+        MATCH_HOLD_REG(u8 *, p21, r2) = &self->tilt;
         *p21 = 6;
     }
-    *(s32 *)(self + 0x18) = zero;
-    *(s32 *)(self + 0x1c) = zero;
+    self->timer = zero;
+    self->timerMax = zero;
     gPlayer->bounce = zero;
 }
 
 /* Fires the mgr trampoline pair via `SetPlayerCtrlState(self, 0, 0, 0, 0)`,
- * then resets `self+0x27`/`self+0x20`/`self+0x21`(=6)/`self+0x22`, the
- * player's `bounce`, and `self+0x2c`(=1)/`self+0x24`/`self+0x2d`(=1)/
- * `self+0x25`. */
+ * then resets `idleTimer`/`repeat`/`tilt`(=6)/`mode`, the player's
+ * `bounce`, and `motionXPending`(=1)/`motionX`/`motionYPending`(=1)/
+ * `motionY`. */
 void RestartPlayerCtrl(struct player_ctrl *selfArg)
 {
-    u8 *self = (u8 *)selfArg;
+    struct player_ctrl *self = selfArg;
 
     SetPlayerCtrlState(selfArg, 0, 0, 0, 0);
 
-    self[0x27] = 0;
-    self[0x20] = 0;
-    self[0x21] = 6;
-    self[0x22] = 0;
+    self->idleTimer = 0;
+    self->repeat = 0;
+    self->tilt = 6;
+    self->mode = 0;
     gPlayer->bounce = 0;
-    self[0x2c] = 1;
-    self[0x24] = 0;
-    self[0x2d] = 1;
-    self[0x25] = 0;
+    self->motionXPending = 1;
+    self->motionX = 0;
+    self->motionYPending = 1;
+    self->motionY = 0;
 }
 asm(".align 2, 0");

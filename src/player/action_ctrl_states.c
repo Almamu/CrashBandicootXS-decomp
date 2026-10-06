@@ -5,28 +5,12 @@
 #include "audio.h"
 #include "player.h"
 #include "level.h"
+#include "gfx_part.h"
 #include "globals.h"
 
 /* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
  * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
  * old_agbcc. */
-
-/* The spark object SpawnEffectPart spawns, as far as it is used. */
-struct spark {
-    u8 unk_00[0xC];
-    u8 unk_0C_0:2;
-    u8 unk_0C_2:1;
-    u8 unk_0C_3:5;
-    u8 unk_0D[0x13];
-    struct act_anim_bank *bank; // 0x20
-    u8 unk_24[4];
-    u8 unk_28_0:2; // 0x28
-    u8 unk_28_2:6;
-    u8 unk_29[4];
-    u8 tag; // 0x2D
-    u8 unk_2E[2];
-    s32 frame; // 0x30
-};
 
 /* Byte masks with the mask as an `s32` parameter: the AND stays in SImode
  * (a plain `*p & -0x11` is narrowed to 0xEF), so the -0x11 the ROM derives
@@ -42,9 +26,9 @@ static inline void OrMaskByte(u8 *p, s32 clear, s32 set)
     *p = (*p & clear) | set;
 }
 
-/* The coordinates are inline parameters, so they are computed before the
+/* A spark (a gfx_part). The coordinates are inline parameters, so they are computed before the
  * pool pointer is loaded, as in the ROM. */
-static inline struct spark *SpawnSpark(s32 x, s32 y, s32 mirror)
+static inline struct gfx_part *SpawnSpark(s32 x, s32 y, s32 mirror)
 {
     return SpawnEffectPart(gEntitySpawner, 0x29, 1, x, y, mirror);
 }
@@ -177,7 +161,7 @@ void ActionCtrlStateAirborne(struct act *self)
             self->slamBlocked = bit4;
             st = self->state;
             if ((u32)(st - 0x18) <= 1) {
-                struct spark *obj;
+                struct gfx_part *obj;
                 s32 x;
                 s32 y;
                 s32 frame;
@@ -191,8 +175,8 @@ void ActionCtrlStateAirborne(struct act *self)
                 y += 0xC;
                 obj = SpawnSpark(x, y, 1);
                 obj->unk_28_0 = 1;
-                obj->unk_0C_2 = 0;
-                obj->unk_0C_2 = 0;
+                obj->hidden = 0;
+                obj->hidden = 0;
                 OrMaskByte((u8 *)obj + 0x28, -0x11, 0x10);
                 frame = 3;
                 count = obj->bank->records[obj->tag].frameCount;
@@ -208,7 +192,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 y += 0xC;
                 obj = SpawnSpark(x, y, bit4);
                 obj->unk_28_0 = 1;
-                obj->unk_0C_2 = 0;
+                obj->hidden = 0;
                 AndByte((u8 *)obj + 0x28, -0x11);
                 frame = 3;
                 count = obj->bank->records[obj->tag].frameCount;
@@ -746,7 +730,7 @@ void ActionCtrlStateCrawlStart(struct act *self)
 {
     u32 snap = *(u32 *)&gKeys;
 
-    if ((*(u16 *)((u8 *)&snap + 2) & 1) != 0 &&
+    if ((INPUT_PRESSED(snap) & 1) != 0 &&
         PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
         PlaySfx(gAudioContext, 0xc, 0x100);
 

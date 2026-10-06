@@ -18,14 +18,8 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "sprite_bank.h"
 #include "globals.h"
-
-/* A keyframe record's `{s16 x, s16 y}` offset (see sprite.c). */
-struct part_offset {
-    s16 x;
-    s16 y;
-};
-
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -39,32 +33,32 @@ static inline void ActSetNext27(struct act *self, s32 next)
  * offset record. A macro so each case assigns `dst` itself. */
 #define PART_OFFSET(dst, part)                                                 \
     if (1) {                                                                   \
-        u8 *_info = GetSpriteFrame((struct gfx_part *)(part));                    \
+        const struct sprite_frame *_info = GetSpriteFrame((struct gfx_part *)(part)); \
                                                                                \
-        switch (**(u8 **)(_info + 4) >> 4) {                                   \
+        switch (_info->pieces[0] >> 4) {                                       \
         case 0:                                                                \
-            (dst) = (struct part_offset *)(_info + 0x24);                      \
+            (dst) = (struct sprite_point *)&((const struct sprite_frame_3box_anchor *)_info)->anchor; \
             break;                                                             \
         case 1:                                                                \
-            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
+            (dst) = (struct sprite_point *)&gEmptySpritePoint;                \
             break;                                                             \
         case 2:                                                                \
-            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
+            (dst) = (struct sprite_point *)&gEmptySpritePoint;                \
             break;                                                             \
         case 3:                                                                \
-            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
+            (dst) = (struct sprite_point *)&gEmptySpritePoint;                \
             break;                                                             \
         case 4:                                                                \
-            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
+            (dst) = (struct sprite_point *)&gEmptySpritePoint;                \
             break;                                                             \
         case 5:                                                                \
-            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
+            (dst) = (struct sprite_point *)&gEmptySpritePoint;                \
             break;                                                             \
         case 6:                                                                \
-            (dst) = (struct part_offset *)(_info + 0x14);                      \
+            (dst) = (struct sprite_point *)&((const struct sprite_frame_1box_anchor *)_info)->anchor; \
             break;                                                             \
         default:                                                               \
-            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
+            (dst) = (struct sprite_point *)&gEmptySpritePoint;                \
             break;                                                             \
         }                                                                      \
     } else (void)0
@@ -134,8 +128,8 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
     switch (arg2) {
     case 23:
         {
-            struct part_offset *from;
-            struct part_offset *to;
+            struct sprite_point *from;
+            struct sprite_point *to;
 
             PART_OFFSET(from, self->part);
 

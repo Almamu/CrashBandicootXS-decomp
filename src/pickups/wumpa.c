@@ -267,7 +267,7 @@ void ResetActionCtrl(struct act *selfArg)
     *q = 1;
     q += 1;
     *q = 1;
-    *(s32 *)p->unk_14 = zero;
+    p->unk_14 = zero;
     p->part = (struct player *)zero;
     q -= 0xa;
     *q = zero;

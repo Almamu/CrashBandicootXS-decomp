@@ -52,20 +52,20 @@
  * still lands in `r1` naturally - and pinning only `vx` to `r3`. */
 s32 ApplyPlayerVelocity(struct player *self)
 {
-    MATCH_HOLD_REG(s32 *, w, r2) = (s32 *)self;
+    MATCH_HOLD_REG(struct player *, w, r2) = self;
     MATCH_HOLD_REG(u8 *, flags, r1);
     s32 fx, fy;
 
     {
-        MATCH_HOLD_REG(s32, v, r1) = w[0x60 / 4];
-        MATCH_HOLD_REG(s32, target, r3) = w[0x50 / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w->speedX;
+        MATCH_HOLD_REG(s32, target, r3) = w->rampX.target;
 
         if (v >= target)
             goto case1_ge;
         {
-            s32 step = w[0x4c / 4];
+            s32 step = w->rampX.step;
             MATCH_HOLD_REG(s32, result, r0) = v + step;
-            w[0x60 / 4] = result;
+            w->speedX = result;
             if (result <= target)
                 goto case1_done;
             goto case1_clamp;
@@ -74,27 +74,27 @@ s32 ApplyPlayerVelocity(struct player *self)
         if (v <= target)
             goto case1_done;
         {
-            s32 step = w[0x4c / 4];
+            s32 step = w->rampX.step;
             MATCH_HOLD_REG(s32, result, r0) = v - step;
-            w[0x60 / 4] = result;
+            w->speedX = result;
             if (result >= target)
                 goto case1_done;
         }
     case1_clamp:
-        w[0x60 / 4] = target;
+        w->speedX = target;
     case1_done:;
     }
 
     {
-        MATCH_HOLD_REG(s32, v, r1) = w[0x64 / 4];
-        MATCH_HOLD_REG(s32, target, r3) = w[0x5c / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w->speedY;
+        MATCH_HOLD_REG(s32, target, r3) = w->rampY.target;
 
         if (v >= target)
             goto case2_ge;
         {
-            s32 step = w[0x58 / 4];
+            s32 step = w->rampY.step;
             MATCH_HOLD_REG(s32, result, r0) = v + step;
-            w[0x64 / 4] = result;
+            w->speedY = result;
             if (result <= target)
                 goto case2_done;
             goto case2_clamp;
@@ -103,27 +103,27 @@ s32 ApplyPlayerVelocity(struct player *self)
         if (v <= target)
             goto case2_done;
         {
-            s32 step = w[0x58 / 4];
+            s32 step = w->rampY.step;
             MATCH_HOLD_REG(s32, result, r0) = v - step;
-            w[0x64 / 4] = result;
+            w->speedY = result;
             if (result >= target)
                 goto case2_done;
         }
     case2_clamp:
-        w[0x64 / 4] = target;
+        w->speedY = target;
     case2_done:;
     }
 
-    flags = (u8 *)w + 0x24;
+    flags = &w->dir;
     *flags = 0;
 
-    fx = w[0x60 / 4];
+    fx = w->speedX;
     if (fx > 0)
         *flags = 1;
     else if (fx < 0)
         *flags = 2;
 
-    fy = w[0x64 / 4];
+    fy = w->speedY;
     {
         MATCH_HOLD_REG(s32, mask, r0);
         if (fy > 0) {
@@ -139,21 +139,21 @@ s32 ApplyPlayerVelocity(struct player *self)
 skipY:
 
     {
-        s32 x0 = w[0];
-        s32 y0 = w[1];
-        w[0x6c / 4] = x0;
-        w[0x70 / 4] = y0;
+        s32 x0 = w->x;
+        s32 y0 = w->y;
+        w->prevX = x0;
+        w->prevY = y0;
     }
     {
-        s32 x = *(vs32 *)&w[0];
-        MATCH_HOLD_REG(s32, vx, r3) = w[0x60 / 4];
+        s32 x = *(vs32 *)&w->x;
+        MATCH_HOLD_REG(s32, vx, r3) = w->speedX;
         x = x + vx;
-        w[0] = x;
+        w->x = x;
         {
-            s32 y = *(vs32 *)&w[1];
-            s32 vy = w[0x64 / 4];
+            s32 y = *(vs32 *)&w->y;
+            s32 vy = w->speedY;
             y = y + vy;
-            w[1] = y;
+            w->y = y;
             {
                 MATCH_HOLD_REG(vs32 *, g, r0) = (vs32 *)0x0300129c;
 
@@ -257,10 +257,10 @@ void DestroyPlayer(struct player *self, u32 arg1)
         struct box_part *rec = self->child;
 
         if (rec != 0) {
-            u8 *tbl = rec->vtable + 0x50;
-            s16 offset = *(s16 *)tbl;
+            struct part_method *tbl = PART_METHOD(rec, 0x50);
+            s16 offset = tbl->thisOffset;
             void *addr = (u8 *)rec + offset;
-            void *fn = *(void **)(tbl + 4);
+            void *fn = tbl->fn;
 
             _call_via_r2(addr, (void *)3, fn);
         }

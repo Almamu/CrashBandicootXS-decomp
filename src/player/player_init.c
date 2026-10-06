@@ -3,6 +3,7 @@
 #include "actor.h"
 #include "player.h"
 #include "objects.h"
+#include "gfx_part.h"
 #include "globals.h"
 
 /* GitHub issue #9/#10: 0x0800B3F0 - the player object's constructor
@@ -30,7 +31,7 @@
  * `struct actor` - and returns `self`. */
 struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused)
 {
-    struct actor *child;
+    struct gfx_part *child;
 
     InitGroundSprite((struct actor *)self);
     self->vtable = (const struct player_vtable *)gPlayerVtable;
@@ -38,7 +39,7 @@ struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16
 
     child = CreateSpriteObj(0, 0, 0, 0);
     self->child = (struct box_part *)child;
-    *(void **)((u8 *)child + 0x20) = SPRITE_BANK_BASE + (0xcc << 1);
+    child->bank = (struct anim_bank *)(SPRITE_BANK_BASE + (0xcc << 1));
 
     /* Register-pinned: the ROM keeps this `0` constant alive in `sl`
      * across all three `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` calls
@@ -52,7 +53,9 @@ struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16
     {
         MATCH_HOLD_REG(s32, zero, sl) = 0;
 
-        *((u8 *)child + 0x2d) = zero;
+        /* a retyped store: through the member, gcc stores a 0 it has in
+         * r0 instead of `sl` */
+        *(u8 *)&child->tag = zero;
         ResetSpriteFrameTimer(child);
         ResetSpriteFrameIndex(child);
         SetSpriteAnimDone(child, 0);

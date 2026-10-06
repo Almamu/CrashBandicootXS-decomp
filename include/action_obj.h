@@ -46,9 +46,9 @@ struct act {
     s32 state;                    // 0x08
     struct act_vtable *vt;        // 0x0C
     struct player *part;          // 0x10
-    u8 unk_14[4];
-    s32 frame;  // 0x18
-    s32 frames; // 0x1C
+    s32 unk_14;                   // 0x14 - only ever cleared (ResetActionCtrl, sub_80158AC)
+    s32 frame;                    // 0x18
+    s32 frames;                   // 0x1C
     // 0x20 - extra tornado-spin turns queued by pressing B again during a spin
     //        (max 3; needs HasTornadoSpin)
     u8 charge;

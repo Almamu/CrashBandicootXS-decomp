@@ -24,8 +24,8 @@
  * clears `slamBlocked` (`self+0x34`). */
 void StartActionCtrlTornadoFall(struct act *selfArg)
 {
-    MATCH_HOLD_REG(u8 *, self, r3) = (u8 *)selfArg;
-    u8 *p23 = self + 0x23;
+    MATCH_HOLD_REG(struct act *, self, r3) = selfArg;
+    u8 *p23 = &self->tornadoFallQueued;
 
     if (*p23 != 0) {
         return;
@@ -49,7 +49,7 @@ void StartActionCtrlTornadoFall(struct act *selfArg)
      * matches whatever the compiler already has it in. */
     {
         MATCH_HOLD_REG(s32, val, r2);
-        MATCH_HOLD_REG(u8 *, selfIn, r3) = self;
+        MATCH_HOLD_REG(struct act *, selfIn, r3) = self;
 
         // clang-format off
         asm volatile(
@@ -99,15 +99,15 @@ void StartActionCtrlTornadoFall(struct act *selfArg)
     }
 
     {
-        MATCH_HOLD_REG(u8 *, part, r1) = *(u8 **)(self + 0x10);
+        MATCH_HOLD_REG(struct player *, part, r1) = self->part;
         MATCH_HOLD_REG(s32, one, r0) = 1;
-        MATCH_HOLD_REG(u8, old, r2) = part[0xd];
+        MATCH_HOLD_REG(u8, old, r2) = part->flags2;
 
         one |= old;
-        part[0xd] = one;
+        part->flags2 = one;
     }
     {
-        MATCH_HOLD_REG(u8 *, p34, r1) = self + 0x34;
+        MATCH_HOLD_REG(u8 *, p34, r1) = &self->slamBlocked;
         MATCH_HOLD_REG(s32, zero, r0) = 0;
 
         *p34 = zero;
@@ -245,17 +245,17 @@ void SetActionCtrlMode(struct act *self, s32 arg1)
     s32 old;
 
     self->idleFidget = 0;
-    old = *(s32 *)((u8 *)self + 8);
+    old = self->state;
     self->prevState = (u8)old;
-    *(s32 *)((u8 *)self + 8) = arg1;
+    self->state = arg1;
     self->bumpedMotionX = 0;
     self->bumpTimer = 0;
 
     if ((u32)(arg1 - 0xd) > 1) {
-        struct actor *part = *(struct actor **)((u8 *)self + 0x10);
+        struct player *part = self->part;
         u8 *player;
 
-        ((u8 *)part)[0x90] = 0;
+        part->bumped = 0;
 
         /* bounce (0x92) and listCount (0x94), as byte stores: as struct
          * member stores the 0 is not kept in r4 */
@@ -276,14 +276,14 @@ void StartActionCtrlSpin(struct act *self)
 
     if (self->spinCooldown == 0) {
         struct vtable_slot *mgr;
-        u8 *off;
+        struct act_method *off;
 
         PlaySfx(gAudioContext, 0xa, 0x100);
         self->frame = 0;
         self->frames = 0x18;
 
-        off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x10, *(void **)(off + 4));
+        off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x10, off->fn);
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xd, mgr[4].fn);
 
@@ -303,7 +303,7 @@ void StartActionCtrlHangSpin(struct act *self)
 
     if (self->spinCooldown == 0) {
         struct vtable_slot *mgr;
-        u8 *off;
+        struct act_method *off;
 
         PlaySfx(gAudioContext, 0xa, 0x100);
         self->frame = 0;
@@ -315,8 +315,8 @@ void StartActionCtrlHangSpin(struct act *self)
         self->tornadoFallQueued = 0;
         self->tornadoUnwinding = 0;
 
-        off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1e, *(void **)(off + 4));
+        off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1e, off->fn);
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x21, mgr[4].fn);
     }
@@ -331,42 +331,42 @@ void StartActionCtrlRun(struct act *self)
 {
 
     if (self->turboRun != 0) {
-        u8 *off;
+        struct act_method *off;
         struct vtable_slot *mgr;
         u8 *p31;
 
         self->frame = 0;
 
-        off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x18, *(void **)(off + 4));
+        off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x18, off->fn);
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)4, mgr[4].fn);
 
         {
             u8 val = 0x1b;
 
-            p31 = (u8 *)self + 0x31;
+            p31 = &self->motionXKeepSpeed;
             *p31 = 0;
             {
-                u8 *p2f = (u8 *)self + 0x2f;
+                u8 *p2f = &self->motionXPending;
                 u8 one = 1;
 
                 *p2f = one;
                 p2f -= 8;
                 *p2f = val;
 
-                if (((u8 *)self->part)[0x100] != 0) {
+                if (self->part->slippery != 0) {
                     *p31 = one;
                 }
             }
         }
     } else {
-        u8 *off;
+        struct act_method *off;
         struct vtable_slot *mgr;
         u8 *p31;
 
-        off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xd, *(void **)(off + 4));
+        off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0xd, off->fn);
         self->frame = 0;
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)3, mgr[4].fn);
@@ -375,14 +375,14 @@ void StartActionCtrlRun(struct act *self)
             u8 one = 1;
             u8 *p2f;
 
-            p31 = (u8 *)self + 0x31;
+            p31 = &self->motionXKeepSpeed;
             *p31 = 0;
-            p2f = (u8 *)self + 0x2f;
+            p2f = &self->motionXPending;
             *p2f = one;
             p2f -= 8;
             *p2f = one;
 
-            if (((u8 *)self->part)[0x100] != 0) {
+            if (self->part->slippery != 0) {
                 *p31 = one;
             }
         }
@@ -399,21 +399,21 @@ void StartActionCtrlHighJump(struct act *self)
     MATCH_HOLD_REG(s32, zero, r5) = 0;
     MATCH_HOLD_REG(u8, idx, r2);
     struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
-    u8 *off;
+    struct act_method *off;
     u8 *p28;
 
     _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xb, mgr[4].fn);
-    off = (u8 *)self->vt + 0x50;
-    _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xb, *(void **)(off + 4));
+    off = &self->vt->m50;
+    _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0xb, off->fn);
 
     self->frame = zero;
     idx = 0xb;
-    ((u8 *)self)[0x32] = zero;
-    ((u8 *)self)[0x30] = 1;
-    p28 = (u8 *)self + 0x28;
+    *(u8 *)&self->motionYKeepSpeed = zero;
+    *(u8 *)&self->motionYPending = 1;
+    p28 = &self->motionY;
     MATCH_KEEP_VOLATILE(p28);
     *p28 = idx;
-    (*(u8 **)((u8 *)self + 0x10))[0x68] = zero;
+    self->part->hitAxes = zero;
 }
 
 /* Same shape as `StartActionCtrlHighJump`, table-index `7` instead of `0xb`. */
@@ -422,21 +422,21 @@ void sub_8015558(struct act *self)
     MATCH_HOLD_REG(s32, zero, r5) = 0;
     MATCH_HOLD_REG(u8, idx, r2);
     struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
-    u8 *off;
+    struct act_method *off;
     u8 *p28;
 
     _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xb, mgr[4].fn);
-    off = (u8 *)self->vt + 0x50;
-    _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xb, *(void **)(off + 4));
+    off = &self->vt->m50;
+    _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0xb, off->fn);
 
     self->frame = zero;
     idx = 7;
-    ((u8 *)self)[0x32] = zero;
-    ((u8 *)self)[0x30] = 1;
-    p28 = (u8 *)self + 0x28;
+    *(u8 *)&self->motionYKeepSpeed = zero;
+    *(u8 *)&self->motionYPending = 1;
+    p28 = &self->motionY;
     MATCH_KEEP_VOLATILE(p28);
     *p28 = idx;
-    (*(u8 **)((u8 *)self + 0x10))[0x68] = zero;
+    self->part->hitAxes = zero;
 }
 
 /* Single-instruction store: `part = player` (the ctrl's AttachCtrl slot). */
@@ -458,14 +458,14 @@ void ActionCtrlStateUnusedHangRelease(struct act *self)
 void ActionCtrlStateUnusedHangGrab(struct act *self)
 {
 
-    if (((u8 *)*(struct actor **)((u8 *)self + 0x10))[0x38] != 0) {
+    if (self->part->animDone != 0) {
         MATCH_HOLD_REG(s32, zero, r4) = 0;
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
-        u8 *off;
+        struct act_method *off;
 
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x20, mgr[4].fn);
-        off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1f, *(void **)(off + 4));
+        off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1f, off->fn);
 
         self->frame = zero;
         self->frames = zero;
@@ -505,14 +505,14 @@ void ActionCtrlStateHangSpin(struct act *self)
 void ActionCtrlStateHangGrab(struct act *self)
 {
 
-    if (((u8 *)*(struct actor **)((u8 *)self + 0x10) + 0x38)[0] != 0) {
+    if (self->part->animDone != 0) {
         MATCH_HOLD_REG(s32, zero, r4) = 0;
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
-        u8 *off;
+        struct act_method *off;
 
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x20, mgr[4].fn);
-        off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1f, *(void **)(off + 4));
+        off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1f, off->fn);
 
         self->frame = zero;
         self->frames = zero;
@@ -524,7 +524,7 @@ void ActionCtrlStateHangGrab(struct act *self)
 void ActionCtrlStateWarpOut(struct act *self)
 {
 
-    if (((u8 *)*(struct actor **)((u8 *)self + 0x10) + 0x38)[0] != 0) {
+    if (self->part->animDone != 0) {
         MATCH_HOLD_REG(struct player *, player, r1) = gPlayer;
         MATCH_HOLD_REG(s32, bit, r0) = 0x80;
         MATCH_HOLD_REG(u8, old, r2) = player->flags.all;
@@ -540,13 +540,13 @@ void ActionCtrlStateWarpOut(struct act *self)
 void ActionCtrlStateCrawlStop(struct act *self)
 {
 
-    if (((u8 *)*(struct actor **)((u8 *)self + 0x10) + 0x38)[0] != 0) {
+    if (self->part->animDone != 0) {
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
-        u8 *off;
+        struct act_method *off;
 
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x11, mgr[4].fn);
-        off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)4, *(void **)(off + 4));
+        off = &self->vt->m50;
+        _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)4, off->fn);
     }
 }
 

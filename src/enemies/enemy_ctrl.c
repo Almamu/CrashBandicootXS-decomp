@@ -50,51 +50,42 @@
 
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
-/* Caches `mode` into `self->0x7c`, then delegates to `StartCtrlTargetMotionYFromSet`
+/* Caches `mode` into `modeA`, then delegates to `StartCtrlTargetMotionYFromSet`
  * (the anchor's part+0x30/+0x34 pair, record word 1 as type). */
-void SetEnemyMotionY(struct part_ctrl *selfArg, s32 mode)
+void SetEnemyMotionY(struct part_ctrl *self, s32 mode)
 {
-    u8 *self = (u8 *)selfArg;
-
-    *(s32 *)(self + 0x7c) = mode;
-    StartCtrlTargetMotionYFromSet(self, *(void **)(self + 0x70), mode);
+    self->modeA = mode;
+    StartCtrlTargetMotionYFromSet(self, self->target, mode);
 }
 
-/* Same shape as `SetEnemyMotionY`, caching into `self->0x78` and
+/* Same shape as `SetEnemyMotionY`, caching into `modeB` and
  * delegating to `StartCtrlTargetMotionXFromSet` instead (the anchor's part+0x28/+0x2c
  * pair, record word 0 as type). */
-void SetEnemyMotionX(struct part_ctrl *selfArg, s32 mode)
+void SetEnemyMotionX(struct part_ctrl *self, s32 mode)
 {
-    u8 *self = (u8 *)selfArg;
-
-    *(s32 *)(self + 0x78) = mode;
-    StartCtrlTargetMotionXFromSet(self, *(void **)(self + 0x70), mode);
+    self->modeB = mode;
+    StartCtrlTargetMotionXFromSet(self, self->target, mode);
 }
 
-/* Caches `mode` into `self->0x68`, then triggers directly (no
- * gCtrlMotionRecords lookup): reads the anchor's part+0x50/+0x54
- * pair for the offset/fn, and indexes `self->0x84`'s own pointer array
- * by `mode` for the table-entry argument. */
-void SetEnemyAnimMode(struct part_ctrl *selfArg, s32 mode)
+/* Caches `mode` into `self->mode`, then triggers directly (no
+ * gCtrlMotionRecords lookup): calls the anchor's `trigger` method
+ * (+0x50) with `anims[mode]` as the table-entry argument. */
+void SetEnemyAnimMode(struct part_ctrl *self, s32 mode)
 {
-    u8 *self = (u8 *)selfArg;
-    u8 *rec;
+    struct part_method *rec;
     s16 offset;
     void *addr;
     void *owner;
-    void **table;
     void *entry;
     void *fn;
 
-    *(s32 *)(self + 0x68) = mode;
-    rec = *(u8 **)(self + 0xc);
-    rec += 0x50;
-    offset = *(s16 *)rec;
-    addr = self + offset;
-    owner = *(void **)(self + 0x70);
-    table = *(void ***)(self + 0x84);
-    entry = table[mode];
-    fn = *(void **)(rec + 4);
+    self->mode = mode;
+    rec = &self->anchor->trigger;
+    offset = rec->thisOffset;
+    addr = (u8 *)self + offset;
+    owner = self->target;
+    entry = (void *)self->anims[mode];
+    fn = rec->fn;
 
     _call_via_r3(addr, owner, entry, fn);
 }
@@ -627,28 +618,28 @@ struct probe_vtable {
 
 void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
 {
-    MATCH_HOLD_REG(u8 *, other, r4) = (u8 *)otherArg;
-    struct probe_vtable *table = ((struct actor *)other)->table;
+    MATCH_HOLD_REG(struct actor *, other, r4) = otherArg;
+    struct probe_vtable *table = other->table;
     s16 offset = table->m28.thisOffset;
-    void *addr = other + offset;
+    void *addr = (u8 *)other + offset;
     void *fn = table->m28.fn;
 
     (void)selfArg;
 
     if ((u8)(s32)_call_via_r1(addr, fn) == 0) {
         MATCH_HOLD_REG(s32, one, r0) = 1;
-        MATCH_HOLD_REG(u8, flags, r1) = other[0xc];
+        MATCH_HOLD_REG(u8, flags, r1) = other->flags;
 
         one |= flags;
-        other[0xc] = one;
+        other->flags = one;
 
         {
             MATCH_HOLD_REG(s32, sentinel, r0) = 0xFFFF;
-            MATCH_HOLD_REG(u16, val, r2) = *(u16 *)(other + 8);
+            MATCH_HOLD_REG(u16, val, r2) = other->id;
 
             if (val != sentinel) {
-                MATCH_HOLD_REG(u16, val2, r3) = *(u16 volatile *)(other + 8);
-                MATCH_HOLD_REG(u8 *, base, r2) = (u8 *)gEntityFlags;
+                MATCH_HOLD_REG(u16, val2, r3) = *(u16 volatile *)&other->id;
+                MATCH_HOLD_REG(struct entity_flags *, base, r2) = gEntityFlags;
                 MATCH_HOLD_REG(s32, idx, r0);
                 s32 idxOffset;
                 s32 *bitmap;
@@ -656,7 +647,7 @@ void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
 
                 asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(idx) : "r"(val2));
                 idxOffset = idx * 4;
-                bitmap = (s32 *)(base + 0x108);
+                bitmap = (s32 *)base->bits0Copy;
                 bitmap = (s32 *)((u8 *)bitmap + idxOffset);
                 bit = val2 - (idx << 5);
                 *bitmap |= 1 << bit;
@@ -681,7 +672,7 @@ asm(".align 2, 0");
  * store as `DestroyEnemyCtrl`). */
 void DestroyKnockedEnemyCtrl(void *self, s32 flags)
 {
-    *(const void **)((u8 *)self + 0xc) = gKnockedEnemyCtrlVtable;
+    ((struct ctrl_base *)self)->vtable = gKnockedEnemyCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -707,10 +698,10 @@ void DestroyKnockedEnemyCtrl(void *self, s32 flags)
  * tail call specific to this object type. */
 void *CreateKnockedEnemyCtrl(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct ctrl_base *self = selfArg;
 
     InitCtrl(self);
-    *(const void **)(self + 0xc) = gKnockedEnemyCtrlVtable;
+    self->vtable = gKnockedEnemyCtrlVtable;
     ResetKnockedEnemyCtrl(self);
     return self;
 }
