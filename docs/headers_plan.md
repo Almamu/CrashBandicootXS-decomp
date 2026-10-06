@@ -38,18 +38,20 @@ operators in `memory.h` and the crate list's pool structs in `crates.h`,
 see "Batch 8a" below. Batch 8b (level) done: `include/level.h`, see
 "Batch 8b" below. `globals.h` (step 10) is split in sub-batches: 9a (the
 input, display, palette/OAM/VRAM, audio and HUD singletons) done, see
-"Batch 9a" below; 9b (the level globals) done, see "Batch 9b" below.
-Next are `gPlayer` (9c) and the leftovers (9d).
+"Batch 9a" below; 9b (the level globals) done, see "Batch 9b" below;
+9c (`gPlayer` and `struct player`) done, see "Batch 9c" below. Next are
+9c2 (the player and crate functions' `void *self`, see "Batch 9c") and
+the leftovers (9d).
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b | After batch 9c |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 | 589 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 | 405 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 | 7 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 | 233 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 | 10 |
 
 ## Tools
 
@@ -220,13 +222,13 @@ The full list:
 | menus | `menus.h` (**done**, batch 6) | includes `vtable.h`; `pause_menu.h`, `level_menu.h` and `level_select_parts.h` include it |
 | objects | `objects.h` (**done**, batch 8a) | includes `aabb.h`, `byte_arg.h`, `vtable.h`; declares the object structs by tag |
 | pickups | `pickups.h` (new) | |
-| player | `player.h` (**done**, batch 6) | includes `actor_self.h` (`struct actor_pmf`) and `vtable.h` |
+| player | `player.h` (**done**, batch 6) | includes `actor_self.h` (`struct actor_pmf`) and `vtable.h`; `struct player` (batch 9c) |
 | save | `save.h` (new) | |
 | system | `system.h` (**done**, batch 5) | includes `irq.h` (the IRQ table and VBlank callbacks) and `memory.h` (the heap), which got the rest of irq.c's and memory.c's prototypes |
 | text | `text.h` (**done**, pilot) | |
 | util | `util.h` (**done**, batch 4) | includes `aabb.h` and `line_util.h` |
 | vehicle | `vehicle.h` (**done**, batch 7) | includes `actor.h` |
-| (shared globals) | `globals.h` (9a and 9b done) | see below |
+| (shared globals) | `globals.h` (9a, 9b and 9c done) | see below |
 | libgcc | `lib/libgcc/include/libgcc.h` (**done**, batch 4) | `__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3` and the three 64-bit routines; not `_call_via_rN` |
 | GAX2, AgbEeprom, SWI | `<gax.h>`, `<agb_eeprom.h>`, `<agb_syscall.h>` | already exist (docs/libraries.md) |
 
@@ -289,7 +291,7 @@ Where the remaining declarations would go (after the pilot):
 | bosses (**done**, batch 7) | 239 | 10 | 344 | 35 |
 | vehicle (**done**, batch 7) | 277 | 13 | 374 | 38 |
 | level (**done**, batch 8b) | 311 | 45 | 534 | 116 |
-| globals (9a: 14 symbols, 9b: 9 symbols done) | 27 | 19 | 540 | 162 |
+| globals (9a: 14 symbols, 9b: 9 symbols, 9c: `gPlayer` done) | 27 | 19 | 540 | 162 |
 | (data-only, stays) | 329 | 0 | 329 | 19 |
 
 ## Rules for every batch
@@ -429,8 +431,9 @@ before the files that every subsystem touches.
     input/display/gfx/audio/HUD singletons (done)**, see "Batch 9a"
     below; **9b, the level globals (`gLevelState`, `gLevelLayers`,
     `gEntityFlags`, `gCamera`, the part lists, `gCrateList`,
-    `gActorList`) (done)**, see "Batch 9b" below; 9c, `gPlayer`; then
-    the leftovers (9d).
+    `gActorList`) (done)**, see "Batch 9b" below; **9c, `gPlayer`
+    (done)**, see "Batch 9c" below; 9c2, the player and crate
+    functions' `void *self`; then the leftovers (9d).
 
 The lib batches (GAX2 internals in `gax_internal.h`) can go anywhere. They
 don't interact with game code.
@@ -1565,7 +1568,7 @@ No codegen exception was needed.
   the globals' addresses (`struct level_state **`, `struct camera **`,
   `struct entity_flags **`, `struct pool_manager **`, `struct
   part_list **`, `struct actor_self **`).
-- **Left for later:** `gPlayer` (9c); the leftovers listed under batches
+- **Left for later:** `gPlayer` (9c, done); the leftovers listed under batches
   8a and 8b; the MarkEntityGone copies could become one helper on
   `gEntityFlags->bits0Copy` once someone checks each copy's bytes; level.h
   still takes `void *` for most of the level-state and entity-flags
@@ -1574,6 +1577,84 @@ No codegen exception was needed.
 After a clean build every `.o` and `.s` file in src/ and lib/ is
 identical to origin/main's. The build has the same 30 warnings and no new
 ones.
+
+## Batch 9c: globals.h, `gPlayer`
+
+The third `globals.h` PR. `gPlayer` had 16 types in 42 files; it is now
+`struct player *` in globals.h. 42 local declarations are gone
+(631 -> 589; 59 files touched), and 12 local struct definitions
+(245 -> 233). No codegen exception was needed.
+
+- **`struct player`** (player.h, new): the player object, a ground
+  sprite (`struct gobj`'s 0x80-byte base, with its names) and the
+  player's fields up to 0x10C. The names past 0x80 are player_flags.c's
+  accessors' (`busy`, `ctrlMode`, `deadline`, `bumped`, `countdown`,
+  `listCount`/`list`, `carried`, `slippery`, `hanging`, `pushLeft`/
+  `pushRight`, `dead`, `collisionQueue`) and the other views' (`child`,
+  `maskTrailIdx`/`maskTrail` from player_event.c, `bounce` from crate.h,
+  `cleared`). It merges:
+  - the header views: action_obj.h's `struct act_part` (`struct act.part`
+    is now `struct player *`; `flags0C`/`flags0D`/`bank`/`flags28`/
+    `slotNibble`/`contact` are `flags`/`flags2`/`anim`/`mirror`/`slot`/
+    `hitAxes`, the six ramp words are `rampX`/`rampY`), player_ctrl.h's
+    `struct pctrl_target` with `pctrl_f28` and `pctrl_anim_rec`
+    (`struct player_ctrl.target`), and crate.h's `struct phys_player`
+    and `PHYS_PLAYER` (`handled`/`ringCount`/`ring` are `countdown`/
+    `listCount`/`list`);
+  - the local views: crate_break.c's `d18c_player` and `D18C_P`
+    (`velX`/`velY`/`velZ` are `rampY`, `timer` is `deadline`),
+    crate_hit.c's `ceac_player` (`wide` is `bumped`: crate_hit.c widens
+    the box while it is set) and `gPlayerPart`, crate_player_collide.c's
+    and level_select.c's `struct player` (`state` is `ctrlMode`, `unk_60`
+    is `speedX`), cortex.c's `gfx_player`, mega_mix_update.c's
+    `ab_player`, tiny_update.c's `hop_player` (their `busy` at 0x104 is
+    `dead`; dingodile.c's `struct part` loses its player-only `busy`),
+    run_room.c's `gl_player` and `gl_anim_record`, player_event.c's
+    `ac2c_player`, player_contact.c's `player_view`,
+    enemy_ctrl_update.c's `player_ring`, and the `void *`/`u8 *` users'
+    byte offsets (`[0x88]`, `[0x92]`, `[0x94]`, `[0x100]`, `+0x80`,
+    `+0x108`).
+  - Two packed one-byte unions keep the access forms the ROM needs:
+    `flags` (`.all`, and `.bits` with part_ctrl.h's bit names) and
+    `mirror` (`.all`; `.bits`, `u32` fields; `.sbits`, `s32` fields, the
+    layout of `struct crate`). See "Codegen findings".
+  - `struct player_vtable` names gPlayerVtable's slots after the
+    functions in them (`update`, `draw`, `isOnScreen`, `destroy`,
+    `handleEvent`, ...), as `struct actor_method`. The hit-handler calls
+    that read `vtable + 0x68` as bytes, `vtable[13]` or a local method
+    table (`hop_vtable.m68`, `ab_vtable.m68`, `gl_vtable.m38`/`m18`,
+    `struct method`) read `&gPlayer->vtable->handleEvent` and the other
+    slots.
+- Moved: action_obj.h's `struct act_anim_record`/`act_anim_bank` to
+  player.h (action_obj.h includes player.h; the record gets gobj_1a794.h
+  `anim_rec`'s `offX`/`offY`/`padX`/`padY`), and gobj_1a794.h's `struct
+  speed_ramp` to objects.h. gobj_1a794.h no longer declares `gPlayer`.
+- **Callers:** the player is a sprite part, so the calls that take a
+  base-class object (`GetSpriteHitbox`, `SetEntityPos`,
+  `GetSpritePrevX`, sprite_anim.c's and crate_grid_collide.c's
+  `CALL_HIT`, `struct gobj *` helpers) cast `gPlayer` to that type.
+  `struct player.ctrl` is `void *` (the action, swim, input or boss
+  controller); crate_player_collide.c and mega_mix_update.c read its
+  state through their controller views.
+- **Kept in their old spelling**, because the field form changes the
+  code (see "Codegen findings") or the code is register-pinned:
+  action_ctrl_moves.c's three `player[0x92]`/`[0x94]` byte
+  stores through `*(u8 *volatile *)&gPlayer`, the register-pinned byte
+  writes in play_room.c and spawn_start_marker.c, and run_room.c's
+  8-byte position copy (`*(struct gl_point *)&pl->x`).
+- **Left for later (9c2):** the player functions still take `void *`
+  (player_flags.c's accessors read the player through `struct gobj`,
+  whose fields past 0x80 are the player's); the `self` views of the
+  player's own methods (player_collide.c's `a884_part`, player_event.c's
+  `ac2c_self`/`orbit_self`/`ab9c_obj`, input_ctrl.c's `ctrl_target`);
+  the crate functions' `void *self` (batch 6's deferral); `struct gobj`
+  can lose its player half once player_flags.c takes `struct player *`.
+  Not player-related: `gAirship` (bosses, not in the shared-globals
+  list) goes with 9d.
+
+After a clean build every `.o` and `.s` file in src/ and lib/ is
+identical to origin/main's (723 files). The build has the same warnings
+as origin/main and no new ones.
 
 ## Codegen findings
 
@@ -1699,6 +1780,17 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `gCrateList->count`/`items[i]` (local views) -> `activeCount`/`(T *)slotArray[i]` | crate_break.c, crate_time_trial.c, mega_mix_update.c, room_entities.c (old_agbcc), run_room.c, player_anim_room.c | identical |
 | `void *` global assigned the result of a `void *` function, global made `struct level_state *` | `gLevelState = GetLevelState()` in MainLoop | **changes** (the global's address is loaded before the call, as with `gLevelLayers` in 8b); with GetLevelState returning `struct level_state *` it is identical, and so is GetLevelState |
 | `vt = src->vtable` (`struct pct_vtable *`, fields at 0x30/0x34) -> `struct actor_method *vt = &src->vtable->m30` | UpdateHudPercentCounters | `.o` identical, but the `.s` label numbers shift; `struct actor_vtable *vt = src->vtable` and `vt->m30.thisOffset`/`.fn` keep the `.s` identical too |
+| `void *`/`u8 *`/16 local-struct `gPlayer` views -> `struct player *`, byte offsets -> fields (`[0x88]` -> `ctrlMode`, `+0x80` -> `busy`, `[0x92]` -> `bounce`, `[0x100]` -> `slippery`, `+0x108` -> `collisionQueue`) | 59 files (old_agbcc and agbcc) | identical |
+| `gPlayer->x` etc. through a `struct player *` instead of `struct box_part *`/`struct actor *`; base-class calls through a cast | sprite_anim.c, crate_grid_collide.c, crate_touch.c, enemy_ctrl.c, ... | identical |
+| `u8` bitfields at +0x0C (`flag7 = 0; flag6 = 0`) -> byte `&= 0x7F; &= 0xBF` or `&= ~0x40` | PlayerCtrlKillPlayer | **changes** (`mov r0, #0xbf` for the ROM's `mov r0, #0x41; neg`); `struct player.flags` is a union with the bit view |
+| struct member stores `player->bounce = 0; player->listCount = 0` for `player[0x92]`/`[0x94]` | ActionCtrlHandleEvent's tail (action_ctrl_moves.c) | **changes** (the 0 isn't kept in r4); kept as byte stores |
+| `s32 flipX:1` (4-byte container) -> `u32 flipX:1` in a packed one-byte struct | crate_break.c | `.o` identical, but the `.LCB` labels shift (the signed field expands to more insns); `mirror.sbits` keeps the signed view |
+| `u32` mirror bits of a 4-byte struct (`ceac_player`, `box_part`) -> packed `mirror.bits` | crate_hit.c, crate_touch.c | identical |
+| `point = pl->pos` (8-byte struct copy) -> `point.x = pl->x; point.y = pl->y` | RunRoom | **changes** (`ldr; ldr; str; str` order); kept as a copy through `*(struct gl_point *)&pl->x` |
+| `#include "action_obj.h"` (it defines static inlines) in a file that didn't include it | run_room.c | `.o` identical, `.s` label numbers shift; the records it needed moved to player.h instead |
+| `(*p->anim)[tag].tileRecord`/`(*keyframes)[tag]` -> `p->anim->records[tag].paletteId` | run_room.c, crate_touch.c, crate_hit.c | identical |
+| `vtable + 0x68` bytes / `vtable[13]` / local `m68` -> `&p->vtable->handleEvent`, with `*(void *const volatile *)&m->fn` | graphics.c, level_select.c, cortex.c, crate_time_trial.c, player_contact.c, sprite.c, tiny_update.c, mega_mix_update.c, dingodile.c, platform_collide.c, play_room.c (`destroy`), room_frame.c (`isOnScreen`/`draw`) | identical |
+| `struct gl_method`'s `delta` -> `thisOffset` and `__typeof__` in `PMF_CALL` | run_room.c | identical |
 
 Experiments for later batches:
 

@@ -10,6 +10,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
 /* Sets `part->field_29`'s low nibble to `GetSpriteAnimPaletteSlot(part)`'s result,
  * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
@@ -246,8 +247,6 @@ void SpawnWumpa(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void nullsub_22(void)
 {
 }
-
-extern struct actor *gPlayer;
 
 /* Entity type 0x04: the player start of the kind-2 (hover vehicle) room
  * 16, the only room that places it. Forwards to `SpawnStartMarker`

@@ -32,8 +32,6 @@ struct palette_cache;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
-extern void *gPlayer;
-
 /* Plays a sound, fires the `+0x50`/`+0x54` trampoline pair with `id`
  * (the death animation, 0x1c/0x2a-0x2f from ActionCtrlHandleEvent) as
  * its argument, then the `+0x20`/`+0x24` pair with id `0x1d`,
@@ -144,7 +142,7 @@ void KillPlayer(void *selfArg, s32 id)
 void sub_8012238(void *selfArg)
 {
     u8 *self = selfArg;
-    struct act_part *player = gPlayer;
+    struct player *player = gPlayer;
     register s32 flag asm("r5") = player->slippery;
 
     if (flag == 0)

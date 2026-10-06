@@ -68,7 +68,6 @@ struct orbit_part *InitWumpa(struct orbit_part *self)
 }
 
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void *gPlayer;
 
 /* If `state` is zero and the player (`gPlayer`)'s top
  * flag bit is set, fires a `self->table+0x68`-driven trampoline (the
@@ -77,9 +76,9 @@ extern void *gPlayer;
 s32 CollideWumpa(struct orbit_part *self)
 {
     if (self->state == 0) {
-        struct actor *player = gPlayer;
+        struct player *player = gPlayer;
 
-        if (player->flags >> 7) {
+        if (player->flags.all >> 7) {
             u8 *rec = (u8 *)self->base.table + 0x68;
             s16 offset = *(s16 *)rec;
 
@@ -134,7 +133,7 @@ void SetWumpaCounter(struct orbit_part *self, u8 value)
  * doesn't reproduce the ROM's exact instruction here). */
 void UpdateStopwatch(struct actor *self)
 {
-    struct actor *player = gPlayer;
+    struct player *player = gPlayer;
     register s32 rawX asm("r0") = player->x;
     register s32 dxPart asm("r1");
     s32 dx;

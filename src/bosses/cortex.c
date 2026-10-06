@@ -163,18 +163,6 @@ struct gfx_kind_ctrl
     s32 kind;                   // 0x10
 };
 
-struct gfx_player
-{
-    s32 x;                      // 0x00
-    s32 y;                      // 0x04
-    u8 unk_08[0x10];
-    u8 *vtable;                 // 0x18
-    u8 unk_1C[0xE8];
-    u8 dead;                     // 0x104
-};
-
-extern struct gfx_player *gPlayer;
-
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
@@ -922,16 +910,16 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
         GetSpriteAttackBox(&b, part);
         if (AabbOverlaps(&a, &b))
         {
-            struct gfx_player *p = gPlayer;
+            struct player *p = gPlayer;
 
             if (p->dead == 0)
             {
                 /* _call_via_r4 calls through r4: the method's function
                  * pointer is loaded there but never passed in r0-r3 (same
                  * idiom as player_collide.c's _call_via_r4 calls) */
-                u8 *tbl = p->vtable + 0x68;
-                void *thisp = (u8 *)p + *(s16 *)tbl;
-                register void *fn asm("r4") = *(void *volatile *)(tbl + 4);
+                const struct actor_method *tbl = &p->vtable->handleEvent;
+                void *thisp = (u8 *)p + tbl->thisOffset;
+                register void *fn asm("r4") = *(void *const volatile *)&tbl->fn;
 
                 (void)fn;
                 _call_via_r4(thisp, 0, 9, 0);

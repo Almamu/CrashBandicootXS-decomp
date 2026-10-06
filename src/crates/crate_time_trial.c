@@ -52,8 +52,8 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `crate` (the Aku Aku crate) is unused; BreakCrate passes it. */
 void OpenAkuAkuCrate(struct crate *crate)
 {
-    u8 *self = (u8 *)gPlayer;
-    register u8 flags asm("r1") = self[0xc];
+    struct player *self = gPlayer;
+    register u8 flags asm("r1") = self->flags.all;
     register u32 bit asm("r0");
 
     /* Inline-asm-anchored: this compiler always shifts in place
@@ -63,10 +63,10 @@ void OpenAkuAkuCrate(struct crate *crate)
     asm volatile("lsr r0, r1, #7" : "=r"(bit) : "r"(flags));
 
     if (bit != 0) {
-        u8 *rec = *(u8 **)(self + 0x18) + 0x68;
-        s16 offset = *(s16 *)rec;
-        void *addr = self + offset;
-        register void *fn asm("r4") = *(void *volatile *)(rec + 4);
+        const struct actor_method *rec = &self->vtable->handleEvent;
+        s16 offset = rec->thisOffset;
+        void *addr = (u8 *)self + offset;
+        register void *fn asm("r4") = *(void *const volatile *)&rec->fn;
 
         _call_via_r4(addr, 0, 0x1a, 0);
         (void)fn;

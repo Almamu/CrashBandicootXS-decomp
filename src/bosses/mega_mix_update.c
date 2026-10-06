@@ -4,6 +4,7 @@
 #include "bosses.h"
 #include "objects.h"
 #include "globals.h"
+#include "player.h"
 
 /* UpdateMegaMix: the update of Mega-Mix, the boss that entity type 0x49
  * spawns (SpawnMegaMix, sprite bank 30). Only room 37 places one, at its
@@ -30,7 +31,7 @@
  * `_call_via_r3`); `other` (r5) is the "part" object passed alongside
  * it, with its own analogous table at `other+0x18`. `gPlayer`
  * is the player/camera-viewport object (see docs/rom_map.md) - its
- * `+0x104` byte is the "player busy" gate this function's state 0/2
+ * `dead` byte (+0x104) is the gate this function's state 0/2
  * paths both check, and its `+0x18`-table feeds two more trampoline
  * calls (a `_call_via_r1` busy check at STATE1 entry, a `_call_via_r4`
  * call at STATE2's tail).
@@ -41,7 +42,7 @@
  * - Prelude (every state): if `self+0x1c` (a signed timestamp/flag
  *   word) is the sentinel `-1`, fires `SetMegaMixMotionXFromSet(self, other, 1)`
  *   and resets it to `0`.
- * - **State 0**: bails if the player's `+0x104` busy gate is set;
+ * - **State 0**: bails if the player's `dead` byte is set;
  *   otherwise falls into the same "activate/deactivate table entry 3"
  *   block state 2 also reaches (see below).
  * - **State 1**: a "busy-toggle" gate on `other+0x18`'s own table
@@ -74,7 +75,7 @@
  *   tail state 0 also reaches.
  * - **Shared tail** (state 0 direct, or state 2's two "otherwise"
  *   exits): gated on `other+0x38` (state-2-only) and the player's
- *   `+0x104` busy bit, either fires the `0x58`-indexed trampoline with
+ *   `dead` byte, either fires the `0x58`-indexed trampoline with
  *   mode 3 then the `0x50`/`0x20` pair with modes 0/1 (the "activate"
  *   shape, also `SetMegaMixMotionXFromSet(self, other, 1)` in place of the `0x58`
  *   call when the busy bit was never set), or - only reachable from
@@ -116,18 +117,6 @@ struct ab_ctrl
 {
     u8 unk_00[8];
     s32 state;              // 0x08
-};
-
-struct ab_player
-{
-    s32 x;                  // 0x00
-    s32 y;                  // 0x04
-    u8 unk_08[0x10];
-    struct ab_vtable *vt;   // 0x18
-    u8 unk_1C[0x28];
-    struct ab_ctrl *ctrl;   // 0x44
-    u8 unk_48[0xBC];
-    u8 busy;                // 0x104
 };
 
 struct ab_part
@@ -181,11 +170,11 @@ static inline s32 Probe48(struct ab_part *p)
     return ((ab_probe_s)m->fn)((u8 *)p + m->thisOffset);
 }
 
-/* The player's busy byte (+0x104). Written in place, the 0x104 offset is
+/* The player's `dead` byte (+0x104). Written in place, the 0x104 offset is
  * a reload whose register rotates through r1-r3; the ROM's rotation is one
  * step off from what gcc picks for this C, so two of the three reads spell
  * out the ROM's registers (r3 for the offset, r0 for the address). */
-static inline u8 Busy(struct ab_player *pl)
+static inline u8 IsDead(struct player *pl)
 {
     register s32 off asm("r3") = 0x104;
     register u8 *p asm("r0");
@@ -202,8 +191,6 @@ static inline s32 Abs(s32 v)
     return (v ^ sign) - sign;
 }
 
-extern struct ab_player *gPlayer;
-
 void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 {
     struct aabb box;
@@ -217,7 +204,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
     switch (self->state)
     {
     case 0:
-        if (gPlayer->busy != 0)
+        if (gPlayer->dead != 0)
             return;
     test:
         if ((s8)(other->flags28 << 3) < 0)
@@ -228,7 +215,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
         s32 i;
         s32 px;
 
-        if (Busy(gPlayer) != 0 || gPlayer->ctrl->state == 0x1E)
+        if (IsDead(gPlayer) != 0 || ((struct ab_ctrl *)gPlayer->ctrl)->state == 0x1E)
         {
             VCALL2(self, m50, other, 2);
             VCALL1(self, m20, 0);
@@ -292,7 +279,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
             }
         }
         {
-            struct ab_player *pl = gPlayer;
+            struct player *pl = gPlayer;
 
             if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF)
             {
@@ -345,12 +332,12 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
     case 2:
         if (other->frame == 8 && other->unk_34 == 0)
         {
-            struct ab_player *pl = gPlayer;
+            struct player *pl = gPlayer;
 
             if (Abs(pl->x - other->x) > 0x27FF || Abs(pl->y - other->y) > 0x31FF)
                 goto test;
             {
-                struct actor_method *m = &pl->vt->m68;
+                const struct actor_method *m = &pl->vtable->handleEvent;
                 void *t = (u8 *)pl + m->thisOffset;
 
                 ((ab_fn3)m->fn)(t, 0, 1, 0);
@@ -359,7 +346,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
         }
         if (!other->animDone)
             return;
-        if (Busy(gPlayer) == 0)
+        if (IsDead(gPlayer) == 0)
         {
             if ((s8)(other->flags28 << 3) < 0)
             {

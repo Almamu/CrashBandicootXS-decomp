@@ -17,7 +17,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * set. */
 void ActionCtrlStateCrawlStandUp(struct act *self)
 {
-    struct act_part *part = self->part;
+    struct player *part = self->part;
 
     if (part->animDone != 0) {
         SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
@@ -37,7 +37,7 @@ void ActionCtrlStateCrawlStandUp(struct act *self)
  * base+offset+fn-pointer trampoline pair. */
 void ActionCtrlStateBodySlamLand(struct act *self)
 {
-    struct act_part *part = self->part;
+    struct player *part = self->part;
 
     if (part->animDone != 0) {
         void *dummy = gInput;

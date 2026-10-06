@@ -11,6 +11,7 @@
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
@@ -820,8 +821,6 @@ void CheckAllCratesBroken(void *selfArg)
     }
 }
 
-extern void *gPlayer;
-
 struct AudioContext;
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
@@ -935,9 +934,9 @@ void EndGemPath(struct level_state *self, u8 flag)
         SetGemPathDone(self);
         SetHudCrateTotal(gHud, self->crateTotal);
         {
-            struct actor *player = (struct actor *)gPlayer;
+            struct player *player = gPlayer;
             s32 *p = &self->checkpointX;
-            SetEntityPos(player, p[0], p[1]);
+            SetEntityPos((struct actor *)player, p[0], p[1]);
         }
         SetCheckpointAtPlayer(self, self->unk_e0);
     } else {

@@ -28,8 +28,6 @@ struct spark
     s32 frame;             // 0x30
 };
 
-extern struct act_part *gPlayer;
-
 /* Byte masks with the mask as an `s32` parameter: the AND stays in SImode
  * (a plain `*p & -0x11` is narrowed to 0xEF), so the -0x11 the ROM derives
  * from the 1 already in r7 (`subs r7, #0x12`) can be shared by both
@@ -74,9 +72,9 @@ static inline void ActSetNextP(struct act *self, u8 *slot, s32 next)
     *slot = next;
 }
 
-static inline void ActSetContact(struct act_part *p, s32 v)
+static inline void ActSetContact(struct player *p, s32 v)
 {
-    p->contact = v;
+    p->hitAxes = v;
 }
 
 /* The table's shared airborne handler (docs/rom_map.md, reused by 6 of
@@ -94,7 +92,7 @@ void ActionCtrlStateAirborne(struct act *self)
 {
     void *pad = gInput;
     u32 in = gKeys.all;
-    u8 contact = self->part->contact;
+    u8 contact = self->part->hitAxes;
     u8 dir = GetDpadDirection(pad);
     s32 state = self->state;
 
@@ -117,7 +115,7 @@ void ActionCtrlStateAirborne(struct act *self)
             self->unk_22 = busy;
             self->unk_23 = busy;
             self->unk_24[0] = busy;
-            ((u8 *)gPlayer)[0x92] = busy;
+            gPlayer->bounce = busy;
         }
     }
     if (contact == 0)
@@ -154,7 +152,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 self->slamBlocked = 0;
                 if (self->state != 0xE)
                 {
-                    struct act_part *part;
+                    struct player *part;
                     s32 frame;
                     s32 count;
 
@@ -162,7 +160,7 @@ void ActionCtrlStateAirborne(struct act *self)
                     ACT_VCALL2(self, m50, self->part, 0x15);
                     part = self->part;
                     frame = 2;
-                    count = part->bank->records[part->tag].frameCount;
+                    count = part->anim->records[part->tag].frameCount;
                     if (frame >= count)
                         frame = count - 1;
                     part->frame = frame;
@@ -178,7 +176,7 @@ void ActionCtrlStateAirborne(struct act *self)
         {
             UpdatePlayerFacing(self);
             HandleActionCtrlAirInput(self);
-            self->part->contact = bit4;
+            self->part->hitAxes = bit4;
             return;
         }
         if ((contact & 8) && self->part->speedY >= 0)
@@ -261,7 +259,7 @@ void ActionCtrlStateAirborne(struct act *self)
                     ACT_VCALL1(self, m20, 0xD);
                 return;
             }
-            if (((u8 *)gPlayer)[0x100])
+            if (gPlayer->slippery)
             {
                 ACT_VCALL1(self, m20, 0x17);
                 ACT_VCALL2(self, m50, self->part, 0x16);
@@ -290,7 +288,7 @@ asm(".align 2, 0");
  * plus part animation 7 if HasSuperBodySlam allows it, else 0x18. */
 void ActionCtrlStateFlipBodySlamStart(struct act *self)
 {
-    struct act_part *part = self->part;
+    struct player *part = self->part;
 
     if (part->tag == 6)
     {
@@ -332,9 +330,9 @@ void ActionCtrlStateSlide(struct act *self)
     u32 in = gKeys.all;
 
     {
-        struct act_part *part = self->part;
+        struct player *part = self->part;
 
-        if (part->contact == 0)
+        if (part->hitAxes == 0)
         {
             ActSetNext(self, 5);
         }
@@ -362,25 +360,25 @@ void ActionCtrlStateSlide(struct act *self)
 
     if (++self->frame < self->frames)
     {
-        struct act_part *part = self->part;
+        struct player *part = self->part;
         s32 frame;
         s32 count;
 
         part->stepTimer = 0;
         frame = 3;
-        count = part->bank->records[part->tag].frameCount;
+        count = part->anim->records[part->tag].frameCount;
         if (frame >= count)
             frame = count - 1;
         part->frame = frame;
         return;
     }
     {
-        struct act_part *part = self->part;
+        struct player *part = self->part;
         u8 contact;
 
         if (!part->animDone)
             return;
-        contact = part->contact;
+        contact = part->hitAxes;
         if (contact == 0)
         {
             ACT_VCALL1(self, m20, 0x1A);
@@ -494,11 +492,11 @@ void ActionCtrlStateSpin(struct act *self)
         in = gKeys.all;
         dir = GetDpadDirection(pad);
     }
-    if (self->part->contact == 0)
+    if (self->part->hitAxes == 0)
     {
         ActSetNext(self, 5);
     }
-    if ((INPUT_PRESSED(in) & 1) && (self->part->contact & 8))
+    if ((INPUT_PRESSED(in) & 1) && (self->part->hitAxes & 8))
     {
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
@@ -506,7 +504,7 @@ void ActionCtrlStateSpin(struct act *self)
         ActSetNextB(self, 7);
         self->unk_22 = 0;
         self->unk_23 = 0;
-        self->part->contact = 0;
+        self->part->hitAxes = 0;
         return;
     }
     if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
@@ -527,12 +525,12 @@ void ActionCtrlStateSpin(struct act *self)
 void ActionCtrlStateAirSpin(struct act *self)
 {
     u32 in;
-    struct act_part *part;
+    struct player *part;
 
     in = gKeys.all;
     part = self->part;
 
-    if ((part->contact & 8) && part->speedY > 0)
+    if ((part->hitAxes & 8) && part->speedY > 0)
     {
         ActOrFlags0D(part, 1);
         self->slamBlocked = 0;
@@ -589,7 +587,7 @@ void ActionCtrlStateTornadoSpin(struct act *self)
         in = gKeys.all;
         dir = GetDpadDirection(pad);
     }
-    if (self->part->contact == 0)
+    if (self->part->hitAxes == 0)
     {
         if (self->unk_22)
         {
@@ -600,14 +598,14 @@ void ActionCtrlStateTornadoSpin(struct act *self)
             ActSetNext(self, 5);
         }
     }
-    if ((INPUT_PRESSED(in) & 1) && (self->part->contact & 8))
+    if ((INPUT_PRESSED(in) & 1) && (self->part->hitAxes & 8))
     {
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
         ACT_VCALL1(self, m20, 0xE);
         ActSetNextB(self, 7);
         self->unk_23 = 0;
-        self->part->contact = 0;
+        self->part->hitAxes = 0;
         return;
     }
     if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
@@ -636,7 +634,7 @@ void ActionCtrlStateCrouchDown(struct act *self)
         StartActionCtrlHighJump(self);
         return;
     }
-    if (self->part->contact == 8 && (u8)(self->motionY - 4) <= 1)
+    if (self->part->hitAxes == 8 && (u8)(self->motionY - 4) <= 1)
     {
         self->motionYKeepSpeed = fire;
         self->motionYPending = 1;
@@ -687,9 +685,9 @@ void ActionCtrlStateCrouch(struct act *self)
         return;
 
     turned = 0;
-    if ((s32)(self->part->flags28 << 27) < 0 && (dir == 4 || dir == 6 || dir == 8))
+    if ((s32)(self->part->mirror.all << 27) < 0 && (dir == 4 || dir == 6 || dir == 8))
     {
-        u8 *p = &self->part->flags28;
+        u8 *p = &self->part->mirror.all;
         s32 m = -0x11;
 
         m &= *p;
@@ -698,7 +696,7 @@ void ActionCtrlStateCrouch(struct act *self)
         turned = 1;
         goto turn_done;
     }
-    if ((s8)(self->part->flags28 << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7))
+    if ((s8)(self->part->mirror.all << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7))
     {
         s32 m;
 
@@ -707,7 +705,7 @@ void ActionCtrlStateCrouch(struct act *self)
             /* volatile: keeps the `+0x28` address in the part copy's
              * register and computed ahead of the -0x11 mask, as in the
              * ROM (a plain pointer lands in a fresh register) */
-            volatile u8 *p = &self->part->flags28;
+            volatile u8 *p = &self->part->mirror.all;
 
             m = -0x11;
             m &= *p;

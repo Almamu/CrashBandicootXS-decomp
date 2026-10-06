@@ -7,8 +7,6 @@
 #include "level.h"
 #include "globals.h"
 
-extern struct actor *gPlayer;
-
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* Sound-trigger dispatch/position writer - the last of the
@@ -40,7 +38,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * history, including the register-choice gap that blocked a real match
  * (the `+0x28` write's address/value register split) and how it closed:
  * the r3-pinned local had to model the *address of the global*
- * (`&gPlayer`, a `struct actor **`) with `+0x28` computed as
+ * (`&gPlayer`, a `struct player **`) with `+0x28` computed as
  * a single dereference-and-add into r1, rather than modeling the
  * *dereferenced value* itself and copying it into r1 afterward - the
  * latter is semantically equivalent but makes gcc materialize the
@@ -53,7 +51,7 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
         register u16 *arrayBase asm("r0");
         register s32 addr asm("r1");
         register u8 *tmp asm("r0");
-        register struct actor **d8ptr asm("r3");
+        register struct player **d8ptr asm("r3");
 
         rec = gEntityFlags->list;
         arrayBase = (u16 *)rec->paramOffsets;

@@ -68,50 +68,6 @@
  * docs/matching/huge-naked-retry-2.md and docs/matching/huge-naked-retry-3.md
  * for what each step fixed. */
 
-/* The player (gPlayer) as this function reads it. */
-struct d18c_player
-{
-    s32 x;              // 0x00
-    s32 y;              // 0x04
-    u8 unk_08[4];
-    u8 flags;           // 0x0C - bit 6
-    u8 unk_0D[0xB];
-    struct crate_vtable *vtable; // 0x18
-    u8 unk_1C[4];
-    struct anim_table *anim; // 0x20
-    u8 dir;             // 0x24
-    u8 unk_25[3];
-    u32 unk_28_0:4;     // 0x28
-    s32 flipX:1;
-    s32 flipY:1;
-    u32 unk_28_6:2;
-    u32 unk_29:24;
-    u8 unk_2C;
-    u8 tag;             // 0x2D
-    u8 unk_2E[0x26];
-    s32 velX;           // 0x54
-    s32 velY;           // 0x58
-    s32 velZ;           // 0x5C
-    u8 unk_60[4];
-    s32 speedY;         // 0x64
-    u8 hitAxes;         // 0x68
-    u8 unk_69[0xB];
-    u32 hitMask;        // 0x74
-    u8 unk_78[8];
-    u8 busy;            // 0x80
-    u8 unk_81[7];
-    u8 ctrlMode;        // 0x88
-    u8 unk_89[3];
-    u32 timer;          // 0x8C
-    u8 unk_90[2];
-    u8 bounce;          // 0x92
-    u8 unk_93;
-    u8 ringCount;       // 0x94
-    u8 unk_95[3];
-    struct crate *ring[5]; // 0x98
-};
-
-#define D18C_P ((struct d18c_player *)gPlayer)
 /* codegen: AddCollisionCandidate's two trailing byte arguments are s32
  * in its definition (objects.h), which reads them back with `ldrb`; the
  * ROM stores them here with `strb`, as one-byte structs. docs/headers_plan.md */
@@ -124,7 +80,7 @@ extern void AddCollisionCandidate_b(void *queue, struct crate *obj, s32 kind, s3
 #define D18C_COMMIT()                                                          \
     if (1)                                                                     \
     {                                                                          \
-        u8 *_q = D18C_QUEUE(D18C_P);                                           \
+        u8 *_q = D18C_QUEUE(gPlayer);                                           \
                                                                                \
         _q[4] = 1;                                                             \
     }                                                                          \
@@ -132,7 +88,7 @@ extern void AddCollisionCandidate_b(void *queue, struct crate *obj, s32 kind, s3
         (void)0
 
 #define D18C_CALL68(a, b, c) \
-    PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
+    PhysCall3(gPlayer, (struct method *)&gPlayer->vtable->handleEvent, (a), (b), (c))
 
 /* GetSpriteFrameThirdBox inlined: the player's current hitbox quad. */
 #define D18C_HITBOX(dst, part)                                                 \
@@ -169,10 +125,10 @@ extern void AddCollisionCandidate_b(void *queue, struct crate *obj, s32 kind, s3
 #define D18C_RING_PUSH(obj)                                                    \
     if (1)                                                                     \
     {                                                                          \
-        if (D18C_CtrlMode() == 0 && D18C_P->ringCount <= 4)                 \
-            D18C_P->ring[D18C_P->ringCount] = (obj);                           \
-        if (D18C_P->ctrlMode == 0)                                           \
-            D18C_P->ringCount++;                                               \
+        if (D18C_CtrlMode() == 0 && gPlayer->listCount <= 4)                 \
+            gPlayer->list[gPlayer->listCount] = (obj);                         \
+        if (gPlayer->ctrlMode == 0)                                            \
+            gPlayer->listCount++;                                              \
     }                                                                          \
     else                                                                       \
         (void)0
@@ -207,7 +163,7 @@ static inline s32 D18C_CodeIn(const s32 (*t)[7], u8 *row, s32 k)
  * ROM re-tests (its `bne` goes to the second load). */
 static inline s32 D18C_CtrlMode(void)
 {
-    return D18C_P->ctrlMode;
+    return gPlayer->ctrlMode;
 }
 
 /* The ring count as an int. The first `!= 0` test then loads it with the
@@ -216,7 +172,7 @@ static inline s32 D18C_CtrlMode(void)
  * to a QImode load and the loop test reloads it. */
 static inline s32 D18C_RingCount(void)
 {
-    return D18C_P->ringCount;
+    return gPlayer->listCount;
 }
 
 static inline s32 D18C_Span(s32 a, s32 b, s32 c)
@@ -224,19 +180,19 @@ static inline s32 D18C_Span(s32 a, s32 b, s32 c)
     return a + b - c;
 }
 
-static inline void D18C_Hit(struct d18c_player *p, u32 bit)
+static inline void D18C_Hit(struct player *p, u32 bit)
 {
     p->hitMask |= bit;
 }
 
-static inline void D18C_SetBusy(struct d18c_player *p, u8 v)
+static inline void D18C_SetBusy(struct player *p, u8 v)
 {
     p->busy = v;
 }
 
 static inline s32 D18C_TimerOver(void)
 {
-    return D18C_P->timer > gRoomFrameCount;
+    return gPlayer->deadline > gRoomFrameCount;
 }
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
@@ -305,14 +261,14 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         if (self->flipY)
             f.a.y = py * 2 - (f.a.y + f.a.h);
     }
-    px = D18C_P->x >> 8;
-    py = D18C_P->y >> 8;
+    px = gPlayer->x >> 8;
+    py = gPlayer->y >> 8;
     if (gLevelState->maskLevel == 3)
         kind = 6;
     else
     {
         kind = gActionCtrlStateAttackKinds[idx];
-        if (self->kind == 0xd && kind == 5 && D18C_P->dir == 4)
+        if (self->kind == 0xd && kind == 5 && gPlayer->dir == 4)
             kind = 2;
     }
     {
@@ -330,7 +286,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     {
         s32 empty;
 
-        D18C_HITBOX(hb, D18C_P);
+        D18C_HITBOX(hb, gPlayer);
         empty = 0;
         if (hb->w == 0)
             if (hb->h == 0)
@@ -354,9 +310,9 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
             SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (D18C_P->flipX)
+        if (gPlayer->mirror.sbits.flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (D18C_P->flipY)
+        if (gPlayer->mirror.sbits.flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     bb = BOX_ADDR(&f.b);
@@ -369,7 +325,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         obj = self;
     code = D18C_CodeIn(gCrateHitResponse, &obj->kind, kind);
     {
-        s32 bnc = D18C_P->bounce;
+        s32 bnc = gPlayer->bounce;
 
         if (bnc > 4)
             code = 0;
@@ -378,12 +334,12 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     {
         s32 i;
 
-        for (i = 0; i < D18C_P->ringCount; i++)
+        for (i = 0; i < gPlayer->listCount; i++)
         {
             struct crate *e;
 
-            if (D18C_P->ctrlMode == 0 && (i <= 4 || i < D18C_P->ringCount))
-                e = D18C_P->ring[i];
+            if (gPlayer->ctrlMode == 0 && (i <= 4 || i < gPlayer->listCount))
+                e = gPlayer->list[i];
             else
                 e = NULL;
             if (e != NULL)
@@ -420,13 +376,13 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         break;
     case 2:
         obj->state |= 0x80;
-        D18C_SetBusy(D18C_P, 1);
+        D18C_SetBusy(gPlayer, 1);
         break;
     case 3:
         BreakCrateInStack(obj, 0, 0, 0);
-        if (D18C_P->ringCount == 0)
+        if (gPlayer->listCount == 0)
         {
-            u8 *rec = (u8 *)&D18C_P->anim->records[D18C_P->tag];
+            u8 *rec = (u8 *)&gPlayer->anim->records[gPlayer->tag];
 
             if (kind != 3 && sub_800CEAC(self, (struct hitbox_quad *)(rec + 4), &f.a, px, py))
             {
@@ -441,33 +397,33 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
                     else if (c2 == 2)
                     {
                         e->state |= 0x80;
-                        D18C_SetBusy(D18C_P, 1);
+                        D18C_SetBusy(gPlayer, 1);
                     }
                     else if (c2 == 4)
                         ExplodeCrate(e, 1);
                 }
             }
-            else if (D18C_P->dir != 0)
+            else if (gPlayer->dir != 0)
                 n += 2;
         }
         if (f.found == 0)
             return;
-        if ((D18C_P->x >> 8) < (self->x >> 8))
+        if ((gPlayer->x >> 8) < (self->x >> 8))
         {
             if (kind != 3 || GetCrateAbove(obj) != NULL)
             {
                 D18C_CALL68(0, 0xc, 1);
-                D18C_Hit(D18C_P, 1);
+                D18C_Hit(gPlayer, 1);
             }
         }
         else if (kind != 3 || GetCrateAbove(obj) != NULL)
         {
             D18C_CALL68(0, 0xc, 2);
-            D18C_Hit(D18C_P, 2);
+            D18C_Hit(gPlayer, 2);
         }
         D18C_RING_PUSH(obj);
-        if (D18C_P->bounce == 0)
-            D18C_P->bounce = 1;
+        if (gPlayer->bounce == 0)
+            gPlayer->bounce = 1;
         for (; n != 0; n--)
             D18C_RING_PUSH(NULL);
         return;
@@ -482,7 +438,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
 tail:
     if (kind == 5)
     {
-        if (D18C_P->dir == 4)
+        if (gPlayer->dir == 4)
             kind = 2;
     }
     else if (kind == 3)
@@ -503,7 +459,7 @@ tail:
     if (kind != 6)
         MarkCrateStackTouched(self, &f.a);
     {
-        u8 *rec = (u8 *)&D18C_P->anim->records[D18C_P->tag];
+        u8 *rec = (u8 *)&gPlayer->anim->records[gPlayer->tag];
         s32 offX;
         s32 offY;
         u8 w;
@@ -520,9 +476,9 @@ tail:
             SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (D18C_P->flipX)
+        if (gPlayer->mirror.sbits.flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (D18C_P->flipY)
+        if (gPlayer->mirror.sbits.flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     bb = BOX_ADDR(&f.b);
@@ -543,10 +499,10 @@ tail:
              * call: a leftover of a compare deleted after reload. The empty
              * asm emits nothing; it only uses ax and px, which gives the
              * same reload into r1. */
-            s32 ax = GetSpritePrevX((struct gfx_part *)(struct gobj *)D18C_P);
+            s32 ax = GetSpritePrevX((struct gfx_part *)gPlayer);
 
             asm("" : : "r"(ax), "r"(px));
-            if ((D18C_P->x >> 8) < (self->x >> 8))
+            if ((gPlayer->x >> 8) < (self->x >> 8))
             {
                 dirX = 1;
                 dx = D18C_Span(f.b.x, f.b.w, f.c.x) + 1;
@@ -556,7 +512,7 @@ tail:
                 dirX = 2;
                 dx = D18C_Span(f.c.x, f.c.w, f.b.x) + 1;
             }
-            if ((D18C_P->y >> 8) > (self->y >> 8))
+            if ((gPlayer->y >> 8) > (self->y >> 8))
             {
                 dirY = 4;
                 dy = D18C_Span(f.c.y, f.c.h, f.b.y);
@@ -569,11 +525,11 @@ tail:
             if (dx > 5 && f21 == 0)
             {
                 if ((gLevelState->maskLevel == 0
-                     && ((D18C_P->flags >> 6) & 1)
+                     && ((gPlayer->flags.all >> 6) & 1)
                      && !D18C_TimerOver())
                     || self->kind != 0xd)
                 {
-                    D18C_P->flags |= 0x40;
+                    gPlayer->flags.all |= 0x40;
                     SetMaskLevel(gLevelState, 0);
                     D18C_CALL68(0, 0xa, 0);
                 }
@@ -588,51 +544,51 @@ tail:
             {
                 s32 y;
 
-                f.p1.x = D18C_P->x;
-                y = D18C_P->y;
+                f.p1.x = gPlayer->x;
+                y = gPlayer->y;
                 pp = &f.p1;
                 pp->y = y - ((dy - 1) << 8);
-                D18C_P->speedY = 0;
-                SetEntityPos((struct actor *)D18C_P, f.p1.x, pp->y);
+                gPlayer->speedY = 0;
+                SetEntityPos((struct actor *)gPlayer, f.p1.x, pp->y);
                 D18C_COMMIT();
-                D18C_Hit(D18C_P, dirY);
+                D18C_Hit(gPlayer, dirY);
                 return;
             }
             else if (dx <= 6 && dy > 2)
             {
                 s32 y;
 
-                f.p2.x = D18C_P->x;
-                y = D18C_P->y;
+                f.p2.x = gPlayer->x;
+                y = gPlayer->y;
                 D18C_PosPtr(&f.p2)->y = y;
                 if (dirX == 2)
                     f.p2.x = (dx << 8) + f.p2.x;
                 else if (dirX == 1)
                     f.p2.x -= dx << 8;
-                SetEntityPos((struct actor *)D18C_P, f.p2.x, D18C_PosPtr(&f.p2)->y);
+                SetEntityPos((struct actor *)gPlayer, f.p2.x, D18C_PosPtr(&f.p2)->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, 0xc, dirX);
-                D18C_Hit(D18C_P, dirX);
+                D18C_Hit(gPlayer, dirX);
                 return;
             }
             else
             {
                 s32 y;
 
-                if (D18C_P->ctrlMode != 1)
+                if (gPlayer->ctrlMode != 1)
                     return;
-                f.p3.x = D18C_P->x;
-                y = D18C_P->y;
+                f.p3.x = gPlayer->x;
+                y = gPlayer->y;
                 D18C_PosPtr(&f.p3)->y = y;
                 pp = &f.p3; /* shared with the p1 arm, where it gets r2 */
                 if (dirY == 4)
                     pp->y = (dy << 8) + pp->y;
                 else if (dirX == 8)
                     pp->y -= dy << 8;
-                SetEntityPos((struct actor *)D18C_P, f.p3.x, pp->y);
+                SetEntityPos((struct actor *)gPlayer, f.p3.x, pp->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, 0xc, dirY);
-                D18C_Hit(D18C_P, dirY);
+                D18C_Hit(gPlayer, dirY);
                 return;
             }
         }
@@ -657,13 +613,13 @@ tail:
     }
     else
     {
-        s32 ax = GetSpritePrevX((struct gfx_part *)(struct gobj *)D18C_P);
-        s32 ay = GetSpritePrevY((struct gfx_part *)(struct gobj *)D18C_P);
+        s32 ax = GetSpritePrevX((struct gfx_part *)gPlayer);
+        s32 ay = GetSpritePrevY((struct gfx_part *)gPlayer);
         s32 side = 2;
 
         if (px > ax)
             side = 1;
-        if ((D18C_P->x >> 8) < (self->x >> 8))
+        if ((gPlayer->x >> 8) < (self->x >> 8))
         {
             dirX = 1;
             dx = D18C_Span(f.b.x, f.b.w, f.a.x) + 1;
@@ -673,7 +629,7 @@ tail:
             dirX = 2;
             dx = D18C_Span(f.a.x, f.a.w, f.b.x) + 1;
         }
-        if ((D18C_P->y >> 8) > (self->y >> 8))
+        if ((gPlayer->y >> 8) > (self->y >> 8))
         {
             dirY = 4;
             dy = D18C_Span(f.a.y, f.a.h, f.b.y);
@@ -705,7 +661,7 @@ tail:
              * gets r6, so cross-jumping sends this arm to the r6 copy of
              * `edge = dirX` (the one the first slope check ends in), as the
              * ROM's branch does. */
-            else if (dy <= 2 && (dx > 3 || !HasPlayerRampYTarget(D18C_P)))
+            else if (dy <= 2 && (dx > 3 || !HasPlayerRampYTarget(gPlayer)))
             {
                 edge = 4;
                 if (f21 != 0)
@@ -800,7 +756,7 @@ tail:
                         px = f.b.x;
                         r = FindLineCrossing(ax, ay, px, py, f.a.x + f.a.w);
                     }
-                    if (D18C_P->ctrlMode == 1)
+                    if (gPlayer->ctrlMode == 1)
                         r += 2;
                     if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= f.a.y + f.a.h))
                         edge = 4;
@@ -818,8 +774,8 @@ tail:
     {
         s32 y;
 
-        f.pos.x = D18C_P->x;
-        y = D18C_P->y;
+        f.pos.x = gPlayer->x;
+        y = gPlayer->y;
         D18C_PosPtr(&f.pos)->y = y;
     }
     if (dx < 0)
@@ -845,27 +801,27 @@ tail:
         if (kind <= 3 || kind == 6 || (kind == 4 && code <= 2))
         {
             D18C_CALL68(0, 0xc, 4);
-            D18C_Hit(D18C_P, 4);
-            if (D18C_P->hitAxes != 8)
+            D18C_Hit(gPlayer, 4);
+            if (gPlayer->hitAxes != 8)
                 D18C_PosPtr(&f.pos)->y = (dy << 8) + D18C_PosPtr(&f.pos)->y;
         }
         break;
     case 8:
         tgt = GetTopCrate(self);
         code = D18C_Code(tgt->kind, kind);
-        if (kind == 4 && tgt->kind != 0xa && D18C_P->ringCount != 0)
+        if (kind == 4 && tgt->kind != 0xa && gPlayer->listCount != 0)
         {
-            D18C_P->speedY = 0;
-            D18C_P->velX = 0;
-            D18C_P->velY = 0;
-            D18C_P->velZ = 0;
+            gPlayer->speedY = 0;
+            gPlayer->rampY.start = 0;
+            gPlayer->rampY.step = 0;
+            gPlayer->rampY.target = 0;
             code = 1;
         }
         if (code == 1 || code == 2)
         {
             D18C_PosPtr(&f.pos)->y -= (dy - 1) << 8;
             D18C_PosPtr(&f.pos)->y &= ~0xff;
-            SetEntityPos((struct actor *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
+            SetEntityPos((struct actor *)gPlayer, f.pos.x, D18C_PosPtr(&f.pos)->y);
             D18C_COMMIT();
         }
         else if (code == 0 || code == 2)
@@ -896,7 +852,7 @@ tail:
                 if (kind == 4 && code == 2)
                     code = 0;
                 if (kind == 5 && code == 3)
-                    f.pos.x = D18C_P->x;
+                    f.pos.x = gPlayer->x;
             }
             else if (dy <= 4 && dx > 3 && f21 != 0)
             {
@@ -906,7 +862,7 @@ tail:
             }
             else if (gCrateHitResponse[self->kind][kind] == 4)
             {
-                f.pos.x = D18C_P->x;
+                f.pos.x = gPlayer->x;
                 code = gCrateHitResponse[self->kind][kind];
             }
         }
@@ -915,7 +871,7 @@ tail:
             s32 ok = 1;
             struct crate *next = GetCrateAbove(self);
             struct crate *prev = GetCrateBelow(self);
-            s32 vy = D18C_P->speedY >> 8;
+            s32 vy = gPlayer->speedY >> 8;
 
             if (dirY == 8 && next == NULL && (vy >= dy - 1 || dy <= 2))
                 ok = 0;
@@ -923,16 +879,16 @@ tail:
                 ok = 0;
             if (ok)
             {
-                SetEntityPos((struct actor *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
+                SetEntityPos((struct actor *)gPlayer, f.pos.x, D18C_PosPtr(&f.pos)->y);
                 D18C_COMMIT();
             }
         }
         break;
     }
-    if (D18C_P->ctrlMode == 1 && self->kind == 0xe && code <= 1
+    if (gPlayer->ctrlMode == 1 && self->kind == 0xe && code <= 1
         && AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         LightTntCrate(tgt);
-    AddCollisionCandidate_b(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
+    AddCollisionCandidate_b(D18C_QUEUE(gPlayer), tgt, kind, code, edge, dy, f.pos, hit,
                 (struct byte_arg){f20}, (struct byte_arg){f21});
 }
 
@@ -960,7 +916,7 @@ tail:
  * argument order, as in the ROM. */
 
 #define E08C_CALL68(a, b) \
-    PhysCall3(PHYS_PLAYER, (struct method *)&PHYS_PLAYER->vtable->m68, 0, (a), (b))
+    PhysCall3(gPlayer, (struct method *)&gPlayer->vtable->handleEvent, 0, (a), (b))
 
 /* BreakCrateInStack as this caller sees it: the flag argument is a one-byte
  * struct, passed in QImode. */
@@ -980,15 +936,15 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
     forcedIn = pforced.v;
     if ((self->state & 0x7f) != 0)
         goto commit;
-    if (PHYS_PLAYER->ctrlMode == 1 && code > 2)
+    if (gPlayer->ctrlMode == 1 && code > 2)
     {
-        pos.x = PHYS_PLAYER->x;
-        pos.y = PHYS_PLAYER->y;
+        pos.x = gPlayer->x;
+        pos.y = gPlayer->y;
     }
     if ((u32)(code - 2) <= 1 || code == 5)
     {
         u8 k = self->kind;
-        s32 dir = PHYS_PLAYER->dir;
+        s32 dir = gPlayer->dir;
         s32 d4 = dir & 4;
 
         if (d4 == 0)
@@ -1004,19 +960,19 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                     }
                     else
                         E08C_CALL68(0xd, 8);
-                    PHYS_PLAYER->speedY = 0;
-                    PHYS_PLAYER->rampYStart = 0;
-                    PHYS_PLAYER->rampYStep = 0;
-                    PHYS_PLAYER->rampYTarget = 0;
+                    gPlayer->speedY = 0;
+                    gPlayer->rampY.start = 0;
+                    gPlayer->rampY.step = 0;
+                    gPlayer->rampY.target = 0;
                 }
                 else if ((u32)(kind - 5) <= 1 && k == 8)
                 {
                     PlaySfx(gAudioContext, 2, 0x100);
                     E08C_CALL68(0xe, 8);
-                    PHYS_PLAYER->speedY = 0;
-                    PHYS_PLAYER->rampYStart = 0;
-                    PHYS_PLAYER->rampYStep = 0;
-                    PHYS_PLAYER->rampYTarget = 0;
+                    gPlayer->speedY = 0;
+                    gPlayer->rampY.start = 0;
+                    gPlayer->rampY.step = 0;
+                    gPlayer->rampY.target = 0;
                 }
             }
             else if (code == 2)
@@ -1025,7 +981,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                 {
                     u8 one = 1;
 
-                    PHYS_PLAYER->busy = one;
+                    gPlayer->busy = one;
                 }
                 code = 1;
             }
@@ -1042,36 +998,36 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         code = gCrateHitResponse[self->kind][kind];
     }
     forced = forcedIn;
-    if (code == 1 && kind == 4 && PHYS_PLAYER->bounce == 1 && !(PHYS_PLAYER->dir & 0xc))
+    if (code == 1 && kind == 4 && gPlayer->bounce == 1 && !(gPlayer->dir & 0xc))
     {
         code = gCrateHitResponse[self->kind][kind];
-        PHYS_PLAYER->bounce = 2;
-        PHYS_PLAYER->bounce++;
-        PHYS_PLAYER->bounce++;
-        PHYS_PLAYER->bounce++;
+        gPlayer->bounce = 2;
+        gPlayer->bounce++;
+        gPlayer->bounce++;
+        gPlayer->bounce++;
         forced = 1;
     }
     switch (code)
     {
     case 0:
     case 1:
-        if (!(PHYS_PLAYER->dir & 4) && f21 != 0)
+        if (!(gPlayer->dir & 4) && f21 != 0)
         {
             if ((edge == 8 && depth <= 1) || (depth <= 1 && code == 1) || (depth <= 7 && code == 1 && edge == 8))
             {
-                PHYS_PLAYER->carried = self;
+                gPlayer->carried = (struct gobj *)self;
                 {
                     u8 m = 8;
 
-                    PHYS_PLAYER->hitAxes = m;
+                    gPlayer->hitAxes = m;
                 }
                 {
                     struct e08c_pos *pp = &pos;
-                    s32 y = PHYS_PLAYER->y;
+                    s32 y = gPlayer->y;
 
                     pp->y = y - ((depth - 1) << 8);
                     hit = 0;
-                    pp->x = PHYS_PLAYER->x;
+                    pp->x = gPlayer->x;
                 }
             }
         }
@@ -1080,7 +1036,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         if ((u32)(edge - 1) <= 1 && kind <= 1)
         {
             hit = 0;
-            pos.x = PHYS_PLAYER->x;
+            pos.x = gPlayer->x;
         }
         if (self->kind == 6)
             ActivateNitroSwitchCrate(self);
@@ -1096,7 +1052,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         {
             self->state |= 0x80;
             {
-                struct phys_player *p = PHYS_PLAYER;
+                struct player *p = gPlayer;
                 u8 one = 1;
 
                 p->busy = one;
@@ -1112,17 +1068,17 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
             sub_800E7A8_flag(self, 0, f20.s, edge);
         else
         {
-            struct phys_player **pp = (struct phys_player **)&gPlayer;
+            struct player **pp = &gPlayer;
 
-            if ((*pp)->ringCount != 0 && forced == 0)
+            if ((*pp)->listCount != 0 && forced == 0)
                 return;
             if (edge == 8 || edge == 4)
             {
                 BreakCrateInStack(self, 0, 0, edge);
-                if ((*pp)->ctrlMode == 0 && (*pp)->ringCount <= 4)
-                    (*pp)->ring[(*pp)->ringCount] = self;
-                if (PHYS_PLAYER->ctrlMode == 0)
-                    PHYS_PLAYER->ringCount++;
+                if ((*pp)->ctrlMode == 0 && (*pp)->listCount <= 4)
+                    (*pp)->list[(*pp)->listCount] = self;
+                if (gPlayer->ctrlMode == 0)
+                    gPlayer->listCount++;
             }
         }
         return;
@@ -1136,7 +1092,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
     }
 commit:
     {
-        struct phys_player *p = PHYS_PLAYER;
+        struct player *p = gPlayer;
         u8 *q = (u8 *)p + 0x108;
 
         if (q[4] == 0)
@@ -1145,7 +1101,7 @@ commit:
     if (hit != 0)
     {
         E08C_CALL68(0xc, hit);
-        PHYS_PLAYER->hitMask |= hit;
+        gPlayer->hitMask |= hit;
     }
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
@@ -1338,7 +1294,7 @@ void BounceWumpaCrate(struct crate *self)
             } else {
                 self->state |= 0x80;
                 {
-                    struct phys_player *p = PHYS_PLAYER;
+                    struct player *p = gPlayer;
                     u8 one = 1;
 
                     p->busy = one;
@@ -1546,7 +1502,7 @@ void OpenCheckpointCrate(struct crate *self)
         AddBrokenCrate(gLevelState);
     SetCheckpointAtPlayer(gLevelState, self->paramA != 0);
     self->state &= 0x7f;
-    PHYS_PLAYER->busy = 0;
+    gPlayer->busy = 0;
     one = 1;
     self->state = (self->state & 0x80) | one;
 }
@@ -1574,10 +1530,10 @@ void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 dir)
     struct crate *q;
 
     if ((u8)arg2) {
-        if (PHYS_PLAYER->handled != 0)
+        if (gPlayer->countdown != 0)
             return;
-        PHYS_PLAYER->handled = 1;
-        PHYS_PLAYER->handled++;
+        gPlayer->countdown = 1;
+        gPlayer->countdown++;
     }
     if (dir == 4) {
         p = GetCrateBelow(self);
@@ -1662,7 +1618,7 @@ void BreakCrate(struct crate *self, u32 arg1)
     PHYS_FLAG4(self) = 1;
     LinkCrateToActiveBucket(gCrateList, self);
     self->state &= 0x7f;
-    PHYS_PLAYER->busy = 0;
+    gPlayer->busy = 0;
     one = 1;
     self->state = (self->state & 0x80) | one;
     PhysSetTag(self, 0x1d);
@@ -1813,10 +1769,10 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
         break;
     case 7:
         {
-            struct gobj *p = gPlayer;
+            struct player *p = gPlayer;
 
-            if (p->flags >> 7) {
-                PhysCall3(p, &p->vtable->m68, 0, 0x1a, 0);
+            if (p->flags.all >> 7) {
+                PhysCall3(p, (struct method *)&p->vtable->handleEvent, 0, 0x1a, 0);
                 PhysSfx(1);
             }
         }
@@ -2047,7 +2003,7 @@ void DropCratesAbove(struct crate *self)
  * state most of this cluster's state machines converge on - see
  * `UpdateTntCountdown` below). */
 
-static inline s32 PhysComboMaxed(struct gobj *player)
+static inline s32 PhysComboMaxed(struct player *player)
 {
     s32 maxed = FALSE;
 
@@ -2065,7 +2021,7 @@ void ExplodeCrate(struct crate *self, u8 near)
 
     self->timer = 0;
     self->state &= 0x7f;
-    PHYS_PLAYER->busy = 0;
+    gPlayer->busy = 0;
     self->flags |= 0x10;
     LinkCrateToActiveBucket(gCrateList, self);
     one = 1;
@@ -2083,8 +2039,8 @@ void ExplodeCrate(struct crate *self, u8 near)
     PlaySfx(gAudioContext, 4, 0x100);
     DropCratesAbove(self);
 
-    if ((gPlayer->flags >> 6) & 1 && !PhysComboMaxed(gPlayer)) {
-        struct gobj *p;
+    if ((gPlayer->flags.all >> 6) & 1 && !PhysComboMaxed(gPlayer)) {
+        struct player *p;
         s32 t1 = (gPlayer->x >> 8) - (self->x >> 8);
         s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
 
@@ -2098,7 +2054,7 @@ void ExplodeCrate(struct crate *self, u8 near)
         if (near) {
         call:
             p = gPlayer;
-            PhysCall3(p, &p->vtable->m68, 0, 4, 0);
+            PhysCall3(p, (struct method *)&p->vtable->handleEvent, 0, 4, 0);
         }
     }
     if (self->kind != 0xa)
@@ -2295,7 +2251,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
 
         self->state |= 0x80;
         {
-            struct gobj *player = gPlayer;
+            struct player *player = gPlayer;
             one = 1;
             player->busy = one;
         }
@@ -2358,7 +2314,7 @@ void ActivateIronSwitchCrate(struct crate *self)
     LinkCrateToActiveBucket(gCrateList, self);
     self->state |= 0x80;
     {
-        struct gobj *player = gPlayer;
+        struct player *player = gPlayer;
         u8 one = 1;
         player->busy = one;
     }
@@ -2608,10 +2564,10 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
  * `gCrateListChanged = 1` (a one-shot "re-scan next pass" flag -
  * `UpdateCrates`'s own outer loop condition above) unconditionally. */
 
-static inline struct crate *PhysRingAt(struct phys_player *p, s32 i)
+static inline struct crate *PhysRingAt(struct player *p, s32 i)
 {
-    if (p->ctrlMode == 0 && (i <= 4 || i < p->ringCount))
-        return p->ring[i];
+    if (p->ctrlMode == 0 && (i <= 4 || i < p->listCount))
+        return p->list[i];
     return NULL;
 }
 
@@ -2645,14 +2601,14 @@ void FinishBrokenCrate(struct crate *self)
         if (self->id != 0xffff)
             PHYS_SET_ID_BIT(self->id);
         i = 0;
-        if (i < PHYS_PLAYER->ringCount) {
-            struct phys_player **pp = (struct phys_player **)&gPlayer;
+        if (i < gPlayer->listCount) {
+            struct player **pp = &gPlayer;
 
             do {
                 if (PhysRingAt(*pp, i) == self)
-                    (*pp)->ringCount = 0;
+                    (*pp)->listCount = 0;
                 i++;
-            } while (i < (*pp)->ringCount);
+            } while (i < (*pp)->listCount);
         }
     } else if (self->kind != 1) {
         gCrateListChanged = 1;
@@ -2756,7 +2712,7 @@ void UpdateSlotCrate(struct crate *self)
     w = self->u48.slotState;
     if (!(w & 0xc0))
     {
-        struct gobj *pl = gPlayer;
+        struct player *pl = gPlayer;
         s32 d;
 
         d = pl->x >> 8;
@@ -2978,7 +2934,7 @@ void UpdateCrateFall(struct crate *self)
         {
             if (remaining > 0)
             {
-                if (PHYS_PLAYER->ctrlMode == 1)
+                if (gPlayer->ctrlMode == 1)
                 {
                     acc += 0x40;
                     remaining -= 0x40;

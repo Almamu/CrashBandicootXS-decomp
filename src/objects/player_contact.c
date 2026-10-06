@@ -6,22 +6,13 @@
 #include "objects.h"
 #include "globals.h"
 
-/* The one player-object field (gPlayer, a `struct gobj`)
- * this file reads. */
-struct player_view
-{
-    u8 unk_00[0x8c];
-    u32 unk_8C;                     // 0x8c - a gRoomFrameCount deadline
-};
-
-extern void *gPlayer;
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* Tests `part` for a collision-grid hit against the player
  * (`gPlayer`), gated by a mix of flag bits and a periodic
  * "fast path" check against `gRoomFrameCount` (the same ~128-frame
  * counter documented in docs/rom_map.md): if `part->flags` bit 2 is
- * set and the player's `unk_8C` field is ahead of the frame counter
+ * set and the player's `deadline` is ahead of the frame counter
  * and `gLevelState`'s mode (`maskLevel`) is 3, or independently if
  * `part`'s `+0xd` byte bit 3 is set and the mode is 3, builds `part`'s
  * primary AABB via `GetSpriteAttackBox` and tests it against the player via
@@ -40,10 +31,10 @@ void CheckPlayerContact(void *partArg)
     flagsBit = flagsShifted & mask;
     if (flagsBit) {
         s32 fast;
-        struct player_view *player = gPlayer;
+        struct player *player = gPlayer;
 
         fast = 0;
-        if (player->unk_8C > gRoomFrameCount) {
+        if (player->deadline > gRoomFrameCount) {
             fast = 1;
         }
         if (fast != 0) {
@@ -164,24 +155,24 @@ void ResolvePlayerContact(void *partArg)
 
 mode0:
     {
-        register struct actor *player asm("r0") = gPlayer;
-        u8 *rec = (u8 *)player->table + 0x68;
-        s16 offset = *(s16 *)rec;
+        register struct player *player asm("r0") = gPlayer;
+        const struct actor_method *rec = &player->vtable->handleEvent;
+        s16 offset = rec->thisOffset;
         addr = (u8 *)player + offset;
         arg2 = part->field_0A;
-        deadRead = *(void *volatile *)(rec + 4);
+        deadRead = *(void *const volatile *)&rec->fn;
         arg1 = 0;
         goto tail;
     }
 
 mode1or2:
     {
-        struct actor *player = gPlayer;
-        u8 *rec = (u8 *)player->table + 0x68;
-        s16 offset = *(s16 *)rec;
+        struct player *player = gPlayer;
+        const struct actor_method *rec = &player->vtable->handleEvent;
+        s16 offset = rec->thisOffset;
         void *addr0 = (u8 *)player + offset;
         u8 someByte = part->field_0A;
-        register void *deadRead0 asm("r4") = *(void *volatile *)(rec + 4);
+        register void *deadRead0 asm("r4") = *(void *const volatile *)&rec->fn;
         (void)deadRead0;
 
         _call_via_r4(addr0, 0, someByte, 0);

@@ -25,8 +25,6 @@
  * `AddCollisionCandidate` and the already-matched `src/pickups/wumpa.c`
  * (`DrawWumpa`) is now matched. */
 
-extern void *gPlayer;
-
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
  * NAKED retry: CreateExtraLife matches only under it, and the rest of the
  * file compiles identically under either compiler. */
@@ -61,10 +59,10 @@ void CheckExtraLifePickup(struct orbit_part *selfArg)
     u8 *self = (u8 *)selfArg;
     struct aabb selfBox;
     struct aabb playerBox;
-    u8 *player;
+    struct player *player;
 
     if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
-        if (((u8 *)gPlayer)[0x88] != 3) {
+        if (gPlayer->ctrlMode != 3) {
             return;
         }
     }
@@ -543,9 +541,9 @@ s32 CollideExtraLife(struct orbit_part *selfArg)
     u8 *self = (u8 *)selfArg;
 
     if (self[0x48] == 0) {
-        u8 *player = gPlayer;
+        struct player *player = gPlayer;
 
-        if (player[0xc] >> 7) {
+        if (player->flags.all >> 7) {
             u8 *entry = *(u8 **)(self + 0x18) + 0x68;
             void *addr = self + *(s16 *)entry;
             void *fn = *(void **)(entry + 4);
@@ -616,10 +614,10 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
     u8 *self = (u8 *)selfArg;
     struct aabb selfBox;
     struct aabb playerBox;
-    u8 *player;
+    struct player *player;
 
     if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
-        if (((u8 *)gPlayer)[0x88] != 3) {
+        if (gPlayer->ctrlMode != 3) {
             return;
         }
     }
@@ -639,7 +637,7 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
     selfBox = GetSpriteHitbox((struct box_part *)self);
     player = gPlayer;
 
-    if (player[0xa] == 0x13) {
+    if (player->kind == 0x13) {
         GetSpriteAttackBox(&playerBox, player);
         if (AabbOverlaps(&playerBox, &selfBox)) {
             register s32 bit asm("r0") = 8;

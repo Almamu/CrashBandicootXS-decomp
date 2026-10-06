@@ -160,7 +160,6 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * signed `ble`; the state is re-read for each test. The integrate step
  * (ORBIT_STEP), the spawn argument's address and the state-3 tail's
  * locals settle the last register and order differences. */
-extern struct orbit_part *gPlayer;
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
 /* flags |= 1 and, unless the id is 0xffff, the id's bit in the
@@ -288,8 +287,8 @@ void UpdateWumpa(struct orbit_part *self)
             UpdateWumpaHop(self);
         }
     } else if (self->state == 3) {
-        struct orbit_part *p = gPlayer;
-        s32 px = p->base.x, py = p->base.y;
+        struct player *p = gPlayer;
+        s32 px = p->x, py = p->y;
         s32 nx = px - 0x400, ny = py - 0xe00;
 
         self->base.x = nx;

@@ -9,7 +9,7 @@
  * by the per-frame updaters UpdateExtraLife/UpdateWumpa and the orbit helpers
  * UpdateExtraLifeHop/UpdateWumpaHop (GitHub issues #14/#15). It starts with the
  * shared `struct actor` header; `bank` is the same animation-record bank
- * `struct act_part` (action_obj.h) points at (records are 0x1C bytes,
+ * `struct player` (player.h) points at (records are 0x1C bytes,
  * `frameCount` at +0x16). */
 struct orbit_vec
 {

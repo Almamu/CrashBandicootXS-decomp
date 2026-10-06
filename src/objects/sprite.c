@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
 /* `part+0x25` selects whether (x, y) are already screen-relative
  * (nonzero - used as-is) or need the camera-relative conversion
@@ -312,7 +313,6 @@ void *GetSpriteBodyBox(void *dest, void *pt)
 }
 
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern struct actor *gPlayer;
 
 /* `part` (a `struct actor`, same layout used throughout this ROM
  * region) collides with the player (`gPlayer`, tested via
@@ -371,20 +371,20 @@ static inline struct collect_part *SpawnPickup(s32 kind, s32 x, s32 y)
 s32 CheckSpritePickup(struct collect_part *part)
 {
     struct aabb a, b;
-    struct collect_part *player;
+    struct player *player;
     struct collect_part *spawned;
     u32 flags = COLLECT_FLAGS(part) << 24;
     register u32 one asm("r6");
 
     if (!((flags >> 27) & (one = 1)) && ((flags >> 26) & one)) {
         a = GetSpriteHitbox((struct box_part *)part);
-        if (COLLECT_FLAGS(gPlayer) >> 7) {
+        if (gPlayer->flags.all >> 7) {
             b = GetSpriteHitbox((struct box_part *)gPlayer);
             if (AabbOverlaps(&b, &a)) {
                 COLLECT_FLAGS(part) |= 8;
-                player = (struct collect_part *)gPlayer;
+                player = gPlayer;
                 {
-                    struct collect_method *m = (struct collect_method *)(player->vtable + 0x68);
+                    const struct collect_method *m = (const struct collect_method *)&player->vtable->handleEvent;
                     m->fn((u8 *)player + m->thisOffset, 0, part->kind, 0);
                 }
                 COLLECT_FLAGS(part) |= one;

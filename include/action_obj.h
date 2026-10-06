@@ -12,6 +12,8 @@
  * +0x27..+0x32 bytes two "next action" trios (+0x31/+0x2F/+0x27 and
  * +0x32/+0x30/+0x28) the table's dispatcher consumes. */
 
+#include "player.h"
+
 struct act_method
 {
     s16 thisOffset;
@@ -33,66 +35,6 @@ struct act_vtable
     struct act_method m50; // 0x50 - "set part animation"
 };
 
-struct act_anim_record
-{
-    u8 unk_00[0x14];
-    u8 paletteId;          // 0x14 - LoadPaletteSlot/GetPaletteSlot record id
-    u8 unk_15;
-    u8 frameCount;         // 0x16
-    u8 unk_17[5];
-};
-
-struct act_anim_bank
-{
-    struct act_anim_record *records;
-    u8 unk_04[6];
-    u16 unk_0A;            // 0x0A
-};
-
-struct act_part
-{
-    s32 x;                 // 0x00 (Q8)
-    s32 y;                 // 0x04 (Q8)
-    u16 id;                // 0x08
-    u8 kind;               // 0x0A - object kind passed to the hit handlers (0x13: player;
-                           //        0x14-0x16 during some attack actions)
-    u8 unk_0B;
-    u8 flags0C;            // 0x0C
-    u8 flags0D;            // 0x0D
-    u8 unk_0E[0x12];
-    struct act_anim_bank *bank; // 0x20
-    u8 unk_24[4];
-    u8 flags28;            // 0x28 - bit 4: X mirror
-    u8 slotNibble:4;       // 0x29 - palette slot
-    u8 unk_29_4:4;
-    u8 unk_2A[3];
-    u8 tag;                // 0x2D
-    u8 unk_2E[2];
-    s32 frame;             // 0x30
-    s32 stepTimer;         // 0x34 - ticks spent on the current step
-    u8 animDone;           // 0x38
-    u8 unk_39[0xF];
-    s32 rampXStart;        // 0x48 - struct gobj's rampX/rampY (start, step, target),
-    s32 rampXStep;         // 0x4C   as separate words
-    s32 rampXTarget;       // 0x50
-    s32 rampYStart;        // 0x54
-    s32 rampYStep;         // 0x58
-    s32 rampYTarget;       // 0x5C
-    s32 speedX;            // 0x60
-    s32 speedY;            // 0x64
-    u8 contact;            // 0x68
-    u8 unk_69[0x23];
-    s32 deadline;          // 0x8C - struct gobj.deadline
-    u8 bumped;             // 0x90 - struct gobj.bumped
-    u8 unk_91[3];
-    u8 listCount;          // 0x94 - struct gobj.listCount
-    u8 unk_95[0x6B];
-    u8 slippery;           // 0x100 - struct gobj.slippery (terrain kind 5: keeps sliding)
-    u8 hanging;            // 0x101 - struct gobj.hanging (set on event 0x17, cleared on 0x18)
-    u8 pushLeft;           // 0x102 - nonzero: moves the standing player 1px left per frame
-    u8 pushRight;          // 0x103 - nonzero: moves the standing player 1px right per frame
-};
-
 /* One entry of the per-object table `act.anims` points at: indices into
  * gCtrlMotionRecords's 12-byte records for the +0x27 and +0x28 actions. */
 struct act_anim_pair
@@ -107,7 +49,7 @@ struct act
     struct act_anim_pair **anims; // 0x04
     s32 state;             // 0x08
     struct act_vtable *vt; // 0x0C
-    struct act_part *part; // 0x10
+    struct player *part; // 0x10
     u8 unk_14[4];
     s32 frame;             // 0x18
     s32 frames;            // 0x1C
@@ -188,12 +130,12 @@ typedef void (*act_fn2)(void *self, void *a, s32 b);
  * old_agbcc materializes it before the load. */
 #define ACT_PART_FLAGS0D(p) (*((u8 *)(p) + 0xD))
 
-static inline void ActAndFlags0D(struct act_part *part, s32 mask)
+static inline void ActAndFlags0D(struct player *part, s32 mask)
 {
     ACT_PART_FLAGS0D(part) &= mask;
 }
 
-static inline void ActOrFlags0D(struct act_part *part, s32 bits)
+static inline void ActOrFlags0D(struct player *part, s32 bits)
 {
     ACT_PART_FLAGS0D(part) |= bits;
 }

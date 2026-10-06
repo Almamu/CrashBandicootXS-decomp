@@ -25,7 +25,6 @@ struct part_offset {
     s16 y;
 };
 
-extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
@@ -70,12 +69,12 @@ static inline void ActSetNext27(struct act *self, s32 next)
         }                                                                      \
     } else (void)0
 
-static inline void PartSetHanging(struct act_part *p, s32 v)
+static inline void PartSetHanging(struct player *p, s32 v)
 {
     p->hanging = v;
 }
 
-static inline void PartSetBumped(struct act_part *p, s32 v)
+static inline void PartSetBumped(struct player *p, s32 v)
 {
     p->bumped = v;
 }
@@ -87,12 +86,12 @@ static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
     self->motionY = c;
 }
 
-static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
+static inline void PartSetVelY(struct player *p, s32 a, s32 b, s32 c)
 {
     p->speedY = a;
-    p->rampYStart = a;
-    p->rampYStep = b;
-    p->rampYTarget = c;
+    p->rampY.start = a;
+    p->rampY.step = b;
+    p->rampY.target = c;
 }
 
 /* docs/rom_map.md's "25-case jump table on a second parameter, with a
@@ -162,7 +161,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         if (self->state == 0) {
             ActSetNext27(self, 0);
             self->bumpedMotionX = 0;
-            self->part->contact |= arg3;
+            self->part->hitAxes |= arg3;
             self->part->speedX = 0;
             break;
         }
@@ -170,13 +169,13 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             s32 m = arg3 & 3;
 
             if (m == 2) {
-                if (self->motionX != 0 && (s8)(gPlayer->flags28 << 3) < 0) {
+                if (self->motionX != 0 && (s8)(gPlayer->mirror.all << 3) < 0) {
                     self->bumpedMotionX = self->motionX;
                     ActSetNext27(self, 0);
                     self->part->speedX = 0;
                 }
             } else if (m == 1) {
-                if (self->motionX != 0 && !((u32)(gPlayer->flags28 << 27) >> 31)) {
+                if (self->motionX != 0 && !((u32)(gPlayer->mirror.all << 27) >> 31)) {
                     self->bumpedMotionX = self->motionX;
                     self->motionXKeepSpeed = 0;
                     self->motionXPending = m;
@@ -193,14 +192,14 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         }
     check_c:
         if (self->state == 0xc && gPlayer->frame != 0) {
-            struct act_part *pl = gPlayer;
+            struct player *pl = gPlayer;
 
             self->frame = self->frames;
             self->bumpTimer = 0;
-            pl->frame = pl->bank->records[pl->tag].frameCount - 1;
+            pl->frame = pl->anim->records[pl->tag].frameCount - 1;
             break;
         }
-        self->part->contact |= arg3;
+        self->part->hitAxes |= arg3;
         self->part->speedX = 0;
         break;
     case 13:
@@ -289,13 +288,13 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
     case 17:
         PlaySfx(gAudioContext, 0x2c, 0x100);
         {
-            u8 *f = &gPlayer->flags0C;
+            u8 *f = &gPlayer->flags.all;
 
             *f &= 0x7f;
         }
         SetActionCtrlModeAnim(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
-        LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
-                    self->part->bank->records[self->part->tag].paletteId);
+        LoadPaletteSlot(gPaletteCache, self->part->slot,
+                    self->part->anim->records[self->part->tag].paletteId);
         ActSetNext27(self, 0);
         ActSetNext(self, 0);
         break;
@@ -318,7 +317,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
     case 4:
     case 6:
         {
-            struct act_part *p;
+            struct player *p;
             s32 z;
 
             KillPlayer(self, 0x1c);
@@ -326,9 +325,9 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             z = 0;
             if (p->slippery == 0)
                 p->speedX = z;
-            p->rampXStart = z;
-            p->rampXStep = z;
-            p->rampXTarget = z;
+            p->rampX.start = z;
+            p->rampX.step = z;
+            p->rampX.target = z;
             PartSetVelY(self->part, -0x100, 0, -0x100);
             gCamera->mode = 3;
         }
@@ -337,7 +336,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         KillPlayer(self, 0x2a);
         break;
     case 11:
-        if ((gPlayer->contact & 8) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
+        if ((gPlayer->hitAxes & 8) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);
             ActAndFlags0D(self->part, -3);
             sub_8015558(self);

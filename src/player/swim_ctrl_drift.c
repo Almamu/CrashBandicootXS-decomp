@@ -30,7 +30,7 @@ void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
     register s32 self asm("r6") = arg0;
     register s32 arg1 asm("ip") = arg1arg;
     register s32 arg2 asm("r5") = arg2arg;
-    register struct gobj *player asm("r3") = gPlayer;
+    register struct player *player asm("r3") = gPlayer;
     register s32 vel asm("r4") = player->speedY;
     register s32 sq asm("r1") = vel;
     s32 result;

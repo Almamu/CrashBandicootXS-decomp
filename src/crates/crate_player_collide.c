@@ -3,24 +3,13 @@
 #include "crates.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
+/* The player's controller (struct player.ctrl): its state. */
 struct ctrl {
     u8 unk_00[8];
     s32 mode;
 };
-
-struct player {
-    s32 x;
-    s32 y;
-    u8 unk_08[2];
-    u8 kind;            // 0x0A
-    u8 unk_0B[0x39];
-    struct ctrl *ctrl;  // 0x44
-    u8 unk_48[0x40];
-    u8 state;           // 0x88
-};
-
-extern struct player *gPlayer;
 
 /* Another per-frame spatial-hash-grid pass over `manager`, scoped to
  * the same 3-bucket window `[baseIdx, baseIdx+2]` (`baseIdx` computed
@@ -53,7 +42,7 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
         lo = 0;
     i = lo + 2;
     p = gPlayer;
-    state = p->state;
+    state = p->ctrlMode;
     if (state == 3) {
         do {
             struct pool_node *node;
@@ -62,7 +51,7 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
             i--;
         } while (i >= lo);
     } else {
-        s32 mode = p->ctrl->mode;
+        s32 mode = ((struct ctrl *)p->ctrl)->mode;
         s32 px = p->x;
         s32 py = p->y;
 

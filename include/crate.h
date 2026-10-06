@@ -128,44 +128,6 @@ struct crate
     u8 groupAllocated;  // 0x59 - ActivateIronSwitchCrate allocated `u48.group` (freed when it fires)
 };
 
-/* The fields of the player object (gPlayer, a `struct gobj`)
- * this cluster uses: a 5-slot ring of recently touched boxes. */
-struct phys_player
-{
-    s32 x;              // 0x00
-    s32 y;              // 0x04
-    u8 unk_08[0x10];
-    struct gobj_vtable *vtable; // 0x18
-    u8 unk_1C[8];
-    u8 dir;             // 0x24 - bit 2: blocks the landing checks
-    u8 unk_25[0x2F];
-    s32 rampYStart;     // 0x54 - struct gobj.rampY (start, step, target)
-    s32 rampYStep;      // 0x58
-    s32 rampYTarget;    // 0x5C
-    u8 unk_60[4];
-    s32 speedY;         // 0x64
-    u8 hitAxes;         // 0x68 - struct gobj.hitAxes; 8: standing (on `carried`)
-    u8 unk_69[0xB];
-    u32 hitMask;        // 0x74
-    u8 unk_78[8];
-    u8 busy;            // 0x80
-    u8 unk_81[7];
-    u8 ctrlMode;        // 0x88 - struct gobj.ctrlMode; 1: crates fall at quarter speed, touched
-                        //        enemies just vanish; nonzero stops the ring recording
-    u8 unk_89[8];
-    u8 handled;         // 0x91
-    u8 bounce;          // 0x92
-    u8 unk_93;
-    u8 ringCount;       // 0x94
-    u8 unk_95[3];
-    struct crate *ring[5]; // 0x98
-    struct crate *carried; // 0xAC
-    u8 unk_B0[0x5C];
-    u8 unk_10C;         // 0x10C - nonzero: ApplyCrateCollision leaves the position alone
-};
-
-#define PHYS_PLAYER ((struct phys_player *)gPlayer)
-
 typedef s32 (*phys_method_fn)(void *self);
 
 /* Calls method `m` (a gcc 2.x {s16 thisOffset; fn} vtable slot) on `obj`. */

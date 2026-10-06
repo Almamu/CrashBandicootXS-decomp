@@ -9,14 +9,13 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
 struct palette_cache;
 struct part_list;
 struct oam_shadow_buffer;
-
-extern void *gPlayer;
 
 extern void *_call_via_r1(void *arg0, void *arg1);
 
@@ -36,12 +35,12 @@ void UpdateRoomFrame(void *self)
         DrawPartList(gUnknown_030012F4);
 
         {
-            struct actor *p = (struct actor *)gPlayer;
-            struct vtable_slot *tbl = p->table;
-            if ((u8)(s32)_call_via_r1((u8 *)p + tbl[5].delta, tbl[5].fn) != 0) {
-                struct actor *p2 = (struct actor *)gPlayer;
-                struct vtable_slot *tbl2 = p2->table;
-                _call_via_r1((u8 *)p2 + tbl2[4].delta, tbl2[4].fn);
+            struct player *p = gPlayer;
+            const struct player_vtable *tbl = p->vtable;
+            if ((u8)(s32)_call_via_r1((u8 *)p + tbl->isOnScreen.thisOffset, tbl->isOnScreen.fn) != 0) {
+                struct player *p2 = gPlayer;
+                const struct player_vtable *tbl2 = p2->vtable;
+                _call_via_r1((u8 *)p2 + tbl2->draw.thisOffset, tbl2->draw.fn);
             }
         }
 

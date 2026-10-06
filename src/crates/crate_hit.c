@@ -3,6 +3,8 @@
 #include "box_part.h"
 #include "util.h"
 #include "crates.h"
+#include "globals.h"
+#include "player.h"
 
 /* Dedicated deep investigation (docs/matching/issue-9-10-0x0800ceac-graphics.md):
  * these two functions sit in the still-raw span `tools/report_units.py`
@@ -25,24 +27,10 @@
  * exactly (see its own doc comment below) and additionally reveals its
  * sibling `sub_800CEAC`, entirely unremarked anywhere until now. */
 
-extern void *gPlayer;
-
 /* `struct hitbox_quad` (gfx.h): the caller (`QueueCratePlayerCollision`)
  * passes a pointer directly to the quad itself (`playerRecordBase + 4`),
  * not the 28-byte record's own base - so this function only ever sees
  * the 4-byte-wide quad and never reads the record's own leading word. */
-
-/* The player as these two read it: box_part's mirror bits at +0x28 and
- * a "wide hitbox" byte at +0x90. */
-struct ceac_player {
-    u8 unk_00[0x28];
-    u32 unk_28_0:4;     // 0x28
-    u32 mirrorX:1;
-    u32 mirrorY:1;
-    u32 unk_28_6:2;
-    u8 unk_29[0x67];
-    u8 wide;            // 0x90
-};
 
 /* Called once by `QueueCratePlayerCollision` (its only caller), passing the
  * player's (`gPlayer`) own hitbox quad (`player's +0x20`
@@ -93,7 +81,9 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
 {
     struct aabb b;
 
-    if (((struct ceac_player *)gPlayer)->wide) {
+    /* bumped: a crate's side stopped the player, so its box is 2 px wider
+     * on each side */
+    if (gPlayer->bumped) {
         s32 x = quad->offX;
         s32 y = quad->offY;
         u8 h = quad->h;
@@ -114,9 +104,9 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
         SetAabbPos(&b, x + xOffset, y + yOffset);
         SetAabbSize(&b, w, h);
     }
-    if (((struct ceac_player *)gPlayer)->mirrorX)
+    if (gPlayer->mirror.bits.flipX)
         b.x = xOffset * 2 - (b.x + b.w);
-    if (((struct ceac_player *)gPlayer)->mirrorY)
+    if (gPlayer->mirror.bits.flipY)
         b.y = yOffset * 2 - (b.y + b.h);
     if (AabbOverlaps(box, &b))
         return 1;
@@ -216,8 +206,6 @@ asm(".align 2, 0");
  * tangled functions and are left untouched for now; see
  * docs/matching/issue-12-physics-collision.md. */
 
-#define gPlayerPart (*(struct box_part **)&gPlayer)
-
 /* Builds two AABBs - one for `self`, one for the player
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
  * table convention already established by `GetSpriteBounds`/`GetSpriteHitbox`
@@ -295,9 +283,9 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
         u8 w;
         u8 h;
 
-        px = gPlayerPart->x >> 8;
-        py = gPlayerPart->y >> 8;
-        rec = (u8 *)&(*gPlayerPart->keyframes)[gPlayerPart->frame];
+        px = gPlayer->x >> 8;
+        py = gPlayer->y >> 8;
+        rec = (u8 *)&gPlayer->anim->records[gPlayer->tag];
         pb = (struct hitbox_quad *)(rec + 4);
         offX = pb->offX;
         offY = pb->offY;
@@ -308,9 +296,9 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
             SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (gPlayerPart->mirrorX)
+        if (gPlayer->mirror.bits.flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayerPart->mirrorY)
+        if (gPlayer->mirror.bits.flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     if (AabbOverlaps(&f.a, BOX_ADDR(&f.b)))

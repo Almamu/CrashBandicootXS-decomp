@@ -3,6 +3,7 @@
 #include "enemies.h"
 #include "audio.h"
 #include "globals.h"
+#include "player.h"
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyHomingX`/
@@ -32,8 +33,6 @@
  * moves duplicated, exactly as in the ROM. The `-speed` case keeps its
  * own stores because its registers differ. Same bytes under both
  * compilers. */
-
-extern struct ctrl_target *gPlayer;
 
 #define SET_VEL(v, a_, b_) \
     {                      \

@@ -241,14 +241,7 @@ struct ac2c_self {
     struct ac2c_pos maskTrail[8];    // 0xB8
 };
 
-struct ac2c_player {
-    u8 unk_00[0x88];
-    u8 unk_88;                  // 0x88
-};
-
 typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
-
-extern struct ac2c_player *gPlayer;
 
 #define NOTIFY(self, a, b, c)                                                  \
     if (1) {                                                                   \
@@ -356,7 +349,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
         {
             s32 mode = gLevelState->maskLevel;
 
-            if ((mode <= 2 && gPlayer->unk_88 != 1) || mode <= 1)
+            if ((mode <= 2 && gPlayer->ctrlMode != 1) || mode <= 1)
                 RaiseMaskLevel(gLevelState);
         }
         if (gLevelState->maskLevel == 3)

@@ -20,8 +20,6 @@
 
 typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
 
-extern struct act_part *gPlayer;
-
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
@@ -76,12 +74,12 @@ static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
 /* Byte fields of the part read/written through an offset parameter, which
  * keeps old_agbcc from reusing an earlier 0x100 constant for the address
  * (the ROM rematerializes it). */
-static inline u8 PartByte(struct act_part *part, s32 offset)
+static inline u8 PartByte(struct player *part, s32 offset)
 {
     return *((u8 *)part + offset);
 }
 
-static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
+static inline u8 *PartBytePtr(struct player *part, s32 offset)
 {
     return (u8 *)part + offset;
 }
@@ -147,22 +145,22 @@ void UpdateActionCtrl(struct act *self)
         sub_8012238(self);
     self->prevSlippery = PartByte(self->part, 0x100);
     {
-        struct act_part *part = self->part;
+        struct player *part = self->part;
         s32 py = part->y;
 
         if (py > (gLevelLayers->layer0->heightPx << 8) - 0x1400) {
-            part->flags0C &= 0x7F;
+            part->flags.all &= 0x7F;
             {
-                struct act_part *q = self->part;
+                struct player *q = self->part;
 
                 if (PartByte(q, 0x100) == 0)
                     q->speedX = 0;
-                q->rampXStart = 0;
-                q->rampXStep = 0;
-                q->rampXTarget = 0;
+                q->rampX.start = 0;
+                q->rampX.step = 0;
+                q->rampX.target = 0;
             }
             {
-                struct act_part *r = self->part;
+                struct player *r = self->part;
                 s32 py2 = r->y;
 
                 if (py2 > (gLevelLayers->layer0->heightPx << 8) + 0x1400) {
@@ -218,8 +216,8 @@ void UpdateActionCtrl(struct act *self)
             fn((u8 *)self + d);
         }
     }
-    self->part->contact &= 8;
-    if (self->part->contact == 8) {
+    self->part->hitAxes &= 8;
+    if (self->part->hitAxes == 8) {
         u8 *slot = &self->motionY;
 
         if (*slot == 4 || *slot == 5) {
@@ -230,15 +228,15 @@ void UpdateActionCtrl(struct act *self)
     }
     ApplyActionCtrlMotion(self);
     {
-        struct act_part *part = self->part;
-        u32 top = part->flags0C >> 7;
+        struct player *part = self->part;
+        u32 top = part->flags.all >> 7;
 
         if (top == 0) {
             if (PartByte(part, 0x100) == 0)
                 part->speedX = top;
-            part->rampXStart = top;
-            part->rampXStep = top;
-            part->rampXTarget = top;
+            part->rampX.start = top;
+            part->rampX.step = top;
+            part->rampX.target = top;
         }
     }
     switch (self->state) {
@@ -350,7 +348,7 @@ void HandleActionCtrlAirInput(struct act *self)
     }
     in = gKeys.all;
     {
-        struct act_part *part;
+        struct player *part;
 
         if (self->state == 7) {
             part = self->part;

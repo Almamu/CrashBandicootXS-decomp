@@ -102,7 +102,7 @@ void UpdateCrate(struct crate *self)
             PhysSetFrame(self, 0);
             self->animDone = 0;
             self->state &= 0x7f;
-            PHYS_PLAYER->busy = 0;
+            gPlayer->busy = 0;
             if (self->kind == 6)
             {
                 struct anim_rec *recs;

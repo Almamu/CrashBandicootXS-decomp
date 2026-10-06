@@ -89,19 +89,6 @@ struct follow_child
 
 COMPILE_TIME_ASSERT(level_select_c, sizeof(struct follow_child) == 0x80);
 
-/* gPlayer, only the fields used here. */
-struct player
-{
-    s32 x;                  // 0x00
-    s32 y;                  // 0x04
-    u8 unk_08[4];
-    u8 flags;               // 0x0C - bit 7 tested by CheckLaunchPadContact
-    u8 unk_0D[0x0B];
-    struct method *vtable;  // 0x18
-    u8 unk_1C[0x44];
-    s32 unk_60;             // 0x60
-};
-
 /* One 28-byte animation record, `anim_table.records[animIndex]`. */
 struct anim_record
 {
@@ -231,8 +218,6 @@ COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_menu) == 0xAC);
 
 /* Held keys in the low half, newly-pressed keys in the high half. */
 
-
-extern struct player *gPlayer;
 
 /* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
  * (menus.h), but InitLevelSelect reads each one twice, across calls,
@@ -396,7 +381,7 @@ void UpdateCameraLead(struct follow_child *self)
         self->x = x + self->offset;
         self->y = y;
     }
-    self->unk_60 = gPlayer->unk_60;
+    self->unk_60 = gPlayer->speedX;
 }
 
 /* Destructor (method table +0x50): hands gCamera's follow
@@ -492,15 +477,15 @@ void CheckLaunchPadContact(void *self)
 {
     struct aabb box;
 
-    if (gPlayer->flags >> 7)
+    if (gPlayer->flags.all >> 7)
     {
         box = GetSpriteHitbox(self);
         if (box.w != 0 && PlayerTouchesBox(gPlayer, &box))
         {
             struct player *p = gPlayer;
-            struct method *m = &p->vtable[13];
+            const struct actor_method *m = &p->vtable->handleEvent;
             void *addr = (u8 *)p + m->thisOffset;
-            register void *fn asm("r4") = *(void *volatile *)&m->fn;
+            register void *fn asm("r4") = *(void *const volatile *)&m->fn;
 
             _call_via_r4(addr, 0, 0x19, 0);
             (void)fn;

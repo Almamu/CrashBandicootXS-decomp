@@ -5,6 +5,8 @@
 #include "crates.h"
 #include "objects.h"
 #include "memory.h"
+#include "globals.h"
+#include "player.h"
 
 /* The fields of a level object (`struct gobj`, gobj_1a794.h) that
  * `IsCrateInsideRect` reads. */
@@ -162,19 +164,17 @@ u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
  * docs/matching.md's alignment-padding gotcha). */
 asm(".align 2, 0");
 
-extern void *gPlayer;
-
 /* Refreshes the viewport's own collision box (`ResolveCollisionCandidates` on
- * `gPlayer+0x108`), then increments its `+0x92` counter by
+ * `gPlayer->collisionQueue`), then increments its `bounce` counter by
  * one as long as it isn't already zero (a saturating-at-zero
  * "recently hit" style counter, never incremented back up from 0). */
 void ResolvePlayerCollisions(void)
 {
-    u8 *p = (u8 *)gPlayer;
+    struct player *p = gPlayer;
     u8 *p2;
 
-    ResolveCollisionCandidates((struct candidate_list *)(p + 0x108));
-    p2 = (u8 *)gPlayer + 0x92;
+    ResolveCollisionCandidates((struct candidate_list *)p->collisionQueue);
+    p2 = &gPlayer->bounce;
     if (*p2 != 0) {
         *p2 = *p2 + 1;
     }
