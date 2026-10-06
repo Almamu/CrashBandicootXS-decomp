@@ -91,11 +91,11 @@ DESCRIPTOR_FIELD_NAMES = {
     0x14: 'sub_effect_table_14',
     0x18: 'anim_table_base_18',
     0x1C: 'sprite_sheet_1C',
-    0x20: 'unknown_20',
-    0x24: 'threshold_24',
-    0x28: 'unknown_28',
-    0x2C: 'flag_2C',
-    0x30: 'unknown_30',
+    0x20: 'maskAssistDeaths',
+    0x24: 'bonusKindDeaths',
+    0x28: 'retryBossDeaths',
+    0x2C: 'bossLevel',
+    0x30: 'retryBossLevel',
 }
 
 

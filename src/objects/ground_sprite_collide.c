@@ -138,7 +138,7 @@
  * docs/matching/archive/issue-9-0x0800a178-graphics.md for why (same
  * resistant multi-high-register shape this immediate ROM neighborhood
  * has already hit four times: `ProbeHitboxEdgeTerrain`, `PlayerAnimWouldTouchCrate`,
- * `sub_800CEAC`, `sub_800CF70`).
+ * `PlayerHitboxOverlapsAt`, `ResolveStackCrateHit`).
  *
  * ## Matching
  *

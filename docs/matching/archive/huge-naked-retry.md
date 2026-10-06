@@ -23,7 +23,7 @@ The draft names the fields through a local `struct d18c_player` view of
 1. It builds `self`'s box and the player's box. The player's hitbox quad
    comes from the inlined `GetSpriteFrameThirdBox` switch. If the boxes overlap, it
    picks the object that was hit: `self`, or the neighbour
-   `sub_800CF70` finds. It then reads a response code from
+   `ResolveStackCrateHit` finds. It then reads a response code from
    `gCrateHitResponse[obj->kind][kind]`.
 2. The code is cleared if `obj` is already in the player's 5-slot ring,
    or is chained to an object in it. It is then dispatched through a
@@ -101,7 +101,7 @@ made the draft exactly 3840 bytes.
   two builder calls (`SetAabbPos`/`SetAabbSize`) into one pseudo. That
   pseudo lives across the first call and gets r6 or r4. The ROM
   recomputes `add r0, sp, #0x3c` before each call and only holds the
-  pointer (in r4) from `AabbOverlaps` to `sub_800CF70`. In the rebuild
+  pointer (in r4) from `AabbOverlaps` to `ResolveStackCrateHit`. In the rebuild
   this pushes w/h into r5/r6 instead of r4/r5. The
   `&gPlayer` GCSE temp then lands in sb instead of r6, which
   adds four `mov rX, sb` instructions. Things that did not stop the
@@ -142,7 +142,7 @@ The helpers are in the scratch area `huge/`. They were not committed.
 The `&f.b` blocker is fixed for the first player box. Its builder calls
 take the address through an empty `asm("" : "+r")` copy (`BOX_ADDR`),
 and a `bb` local holds it (also from `BOX_ADDR`) from `AabbOverlaps` to
-`sub_800CF70`. That block now matches the ROM, including `r4`, and the
+`ResolveStackCrateHit`. That block now matches the ROM, including `r4`, and the
 draft is 938 halfwords off at the exact size. The same fix on the
 rebuilt box matches that block too, and puts the `&gPlayer`
 temp in r6 as in the ROM. But other low registers then shift and the

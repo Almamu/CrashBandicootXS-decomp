@@ -2776,3 +2776,54 @@ rename nullsub_7 InitCompanyLogos
 rename gStaticData_0816C4A0 gLevelSelectCrashIconPos
 rename gStaticData_0816C4C8 gLevelSelectNextWorldArrowPos
 rename gStaticData_0816C4D0 gLevelSelectPrevWorldArrowPos
+
+# Naming pass round 6 (#558): player, crates, actor and pickups leftovers -
+# the action controller's unreachable states and tornado-spin fall, the
+# player's unused accessors, the crate-stack hit helpers, the actor zone's
+# spawn-table accessors, BG layer depth and scroll ranges, and their data.
+rename nullsub_18 ActionCtrlStateNop2
+rename nullsub_17 ActionCtrlStateNop6
+rename sub_8015774 ActionCtrlStateUnusedIdle
+rename sub_8014AEC ActionCtrlStateUnusedHang
+rename sub_80155B8 ActionCtrlStateUnusedHangGrab
+rename sub_80155AC ActionCtrlStateUnusedHangRelease
+rename sub_80151C8 StartActionCtrlTornadoFall
+rename sub_8015950 GetActionCtrlPrevState
+rename sub_8012238 UpdateActionCtrlSkidAnim
+rename sub_8017330 GetPlayerSwimDriftStep
+rename sub_800B4F8 DecrementPlayerCountdown
+rename sub_800B508 ClearPlayerCountdown
+rename sub_800B510 IncrementPlayerCountdown
+rename sub_800B51C GetPlayerCountdown
+rename sub_800B584 ClearPlayerListCount
+rename sub_800B58C IncrementPlayerListCount
+rename sub_800B5A0 GetPlayerListCount
+rename sub_800B5A8 ClearPlayerListCountAlt
+rename sub_800B5B0 IncrementPlayerListCountAlt
+rename sub_800B5BC GetPlayerListCountAlt
+rename sub_800B5C4 ClearPlayerBounce
+rename sub_800B5CC IncrementPlayerBounce
+rename sub_800B5D8 GetPlayerBounce
+rename sub_800B650 GetPlayerListEntry
+rename sub_800B678 StorePlayerListEntry
+rename sub_800CEAC PlayerHitboxOverlapsAt
+rename sub_800CF70 ResolveStackCrateHit
+rename nullsub_5 ActorCategoryAttemptEndStub
+rename nullsub_6 ActorCategoryEndStub
+rename sub_8029E34 SetActorBgLayerDepth
+rename sub_8029E40 GetActorBgLayerDepth
+rename sub_802A504 GetActorSpawnNextTarget
+rename sub_802A51C GetActorSpawnZ
+rename sub_802A540 GetActorSpawnY
+rename sub_802A558 GetActorSpawnX
+rename sub_802A570 GetActorSpawnKindIndex
+rename sub_802AA0C GetActorWorldBox
+rename sub_803B30C DestroyPolarObstacle
+rename gUnknown_03001388 gActorCategoryBossDeaths
+rename gUnknown_030013C8 gActorFocalLength
+rename gUnknown_030013D8 gActorBgLayerDepth
+rename gUnknown_030013E4 gActorBgScrollRangeX
+rename gUnknown_030013E8 gActorBgScrollRangeY
+rename gUnknown_03001414 gActorSpawnUseBonus
+rename gStaticData_0816BF00 gAttackKindBreakLimited
+rename gStaticData_0816C090 gPlayerCtrlTurnSpeeds

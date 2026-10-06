@@ -9,15 +9,20 @@
 #include "globals.h"
 
 /* Continuation of action_ctrl_hang.c (issue #18's chunk) - covers
- * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
+ * `StartActionCtrlTornadoFall`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
  * family documented at the top of action_ctrl_states.c/hovercraft_parts.c. */
 
-/* One-shot guard (`self+0x23`): the first time through, picks a value
- * (`0x18`/`0x19`/`0x1a`) from `self+0x22` (a small jump table for
- * `[0,1]`/`2`/`[3,4]`, no-op if `self+0x22 > 4`) into `self+0x28`
- * (latching `self+0x30`/`clearing self+0x32` alongside it), then always
- * sets bit 0 of `part+0xd` and clears `self+0x34`. */
-void sub_80151C8(struct act *selfArg)
+/* The tornado spin's slow descent, once per spin (`tornadoFallQueued`,
+ * `self+0x23`): called once the spinning player leaves the ground
+ * (ActionCtrlStateTornadoSpin) or, in the air spin, starts falling
+ * (UpdateActionCtrl). Queues Y motion entry
+ * 0x18/0x19/0x1a by `tornadoTurn` (`self+0x22`; a small jump table for
+ * `[0,1]`/`2`/`[3,4]`, no-op if it is above 4) into `motionY` (`self+0x28`,
+ * latching `self+0x30`/clearing `self+0x32` alongside it). Those entries
+ * are gCtrlMotionRecords 29-31, {8, 18/14/6, 1280}: the more turns, the
+ * slower the fall speeds up. Then always sets bit 0 of `part+0xd` and
+ * clears `slamBlocked` (`self+0x34`). */
+void StartActionCtrlTornadoFall(struct act *selfArg)
 {
     MATCH_HOLD_REG(u8 *, self, r3) = (u8 *)selfArg;
     u8 *p23 = self + 0x23;
@@ -282,11 +287,11 @@ void StartActionCtrlSpin(struct act *self)
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xd, mgr[4].fn);
 
-        self->unk_21 = 0;
+        self->tornadoVariant = 0;
         self->charge = 0;
-        self->unk_22 = 0;
-        self->unk_23 = 0;
-        self->unk_24[0] = 0;
+        self->tornadoTurn = 0;
+        self->tornadoFallQueued = 0;
+        self->tornadoUnwinding = 0;
     }
 }
 
@@ -304,11 +309,11 @@ void StartActionCtrlHangSpin(struct act *self)
         self->frame = 0;
         self->frames = 0x18;
 
-        self->unk_21 = 0;
+        self->tornadoVariant = 0;
         self->charge = 0;
-        self->unk_22 = 0;
-        self->unk_23 = 0;
-        self->unk_24[0] = 0;
+        self->tornadoTurn = 0;
+        self->tornadoFallQueued = 0;
+        self->tornadoUnwinding = 0;
 
         off = (u8 *)self->vt + 0x50;
         _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1e, *(void **)(off + 4));
@@ -440,15 +445,17 @@ void AttachActionCtrl(struct act *self, struct player *player)
     self->part = player;
 }
 
-/* Trivial tail-call. */
-void sub_80155AC(struct act *self)
+/* gActionCtrlStateTable's slot 0x27, a state nothing sets: runs
+ * ActionCtrlReleaseHang. */
+void ActionCtrlStateUnusedHangRelease(struct act *self)
 {
     ActionCtrlReleaseHang(self);
 }
 
-/* While `part+0x38` is set: fires the mgr trampoline pair (actions
- * `0x20`/`0x1f`) and clears `self+0x18`/`0x1c`. */
-void sub_80155B8(struct act *self)
+/* gActionCtrlStateTable's slot 0x23, a state nothing sets; the same code as
+ * ActionCtrlStateHangGrab (slot 0x1F). While `part+0x38` is set: fires the
+ * mgr trampoline pair (actions `0x20`/`0x1f`) and clears `self+0x18`/`0x1c`. */
+void ActionCtrlStateUnusedHangGrab(struct act *self)
 {
 
     if (((u8 *)*(struct actor **)((u8 *)self + 0x10))[0x38] != 0) {
@@ -492,7 +499,7 @@ void ActionCtrlStateHangSpin(struct act *self)
     UpdatePlayerFacing(self);
 }
 
-/* Same shape as `sub_80155B8` - byte-identical ROM encoding at a
+/* Same shape as `ActionCtrlStateUnusedHangGrab` - byte-identical ROM encoding at a
  * different address (no shared caller; kept as a separate copy rather
  * than a wrapper to match). */
 void ActionCtrlStateHangGrab(struct act *self)

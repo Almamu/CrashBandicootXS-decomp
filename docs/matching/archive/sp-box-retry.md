@@ -84,7 +84,7 @@ was 45 halfwords off. With them shared, it matched.
 
 The first player box now matches the ROM. The builder calls use the
 macro, and a `bb` local, set with `bb = BOX_ADDR(&f.b)`, holds the
-box from `AabbOverlaps` to `sub_800CF70` in r4. The draft is still
+box from `AabbOverlaps` to `ResolveStackCrateHit` in r4. The draft is still
 exactly 3840 bytes.
 
 The same fix on the rebuilt box (builder calls plus

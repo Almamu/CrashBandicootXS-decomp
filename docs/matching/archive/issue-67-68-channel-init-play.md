@@ -115,7 +115,7 @@ packed-row decode - the same many-register gcc-2.9 allocation ceiling
 already documented throughout this ROM region for `GAX2_init`'s cluster
 (`docs/status/audio.md`). Its 15-entry jump table is hand-placed with named
 local labels (the same "hand-placed local labels shared across a single
-literal pool" idea as `action_ctrl_moves.c`'s `sub_80151C8` jump table) rather
+literal pool" idea as `action_ctrl_moves.c`'s `StartActionCtrlTornadoFall` jump table) rather
 than numbered ones, given how many branch targets this function has.
 
 Both were transcribed instruction-for-instruction from the ROM disassembly

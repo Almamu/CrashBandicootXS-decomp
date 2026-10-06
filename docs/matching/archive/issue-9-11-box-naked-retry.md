@@ -22,7 +22,7 @@ compilers and diffing each against the ROM:
   `fl = freeList` copy taken inside the `if (i < n)` guard, right
   before the `do`, is the ROM's `mov ip, sb`. Read directly from
   `m->freeListArray`, the loop optimizer hoists `m + 0x810` above the
-  grid clear and the whole allocation shifts. `sub_800CF70`: a local
+  grid clear and the whole allocation shifts. `ResolveStackCrateHit`: a local
   copy of the `self` parameter makes the ROM copy r0 last.
   `ProbeGroundSpriteTerrain`: the `self+0x24` pointer taken after its `& 0xc` test
   value.
@@ -54,8 +54,8 @@ compilers and diffing each against the ROM:
 | `UpdateEnemyTriggerBox` | enemy_attack.c | both | the `kind == 0xB` prelude's target in a block local pinned to r1. |
 | `UpdateEnemyOscillateX` | enemy_ctrl.c | both | product into a fresh `v` pinned to r2, then the target load. |
 | `UpdateEffectCtrl` | effect_ctrl.c | old | inline `MarkGone` with the do/while(0) `SET_ID_BIT`; gone bit via a bitfield view, bit 3 tested via the byte view (4-byte union). File moved to old_agbcc. |
-| `sub_800CEAC` | crate_hit.c | both | the wide-mode x as `x += xOffset; x -= 2;`. |
-| `sub_800CF70` | crate_hit.c | old | local copy of the `self` parameter. File moved to old_agbcc. |
+| `PlayerHitboxOverlapsAt` | crate_hit.c | both | the wide-mode x as `x += xOffset; x -= 2;`. |
+| `ResolveStackCrateHit` | crate_hit.c | old | local copy of the `self` parameter. File moved to old_agbcc. |
 
 `CollideGroundSprite` (ground_sprite_collide.c, already real C) lost its register pins
 when the file moved to old_agbcc; the only shape left is its

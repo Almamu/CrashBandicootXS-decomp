@@ -10,18 +10,24 @@ void ShakeActorBg(s32 arg0)
     gActorBgShake = arg0;
 }
 
-void sub_8029E34(s32 arg0)
+/* gActorBgLayerDepth's setter and getter: the depth past which actors
+ * draw behind the BG2 boss layer. The yeti, airship and hovercraft set it
+ * to their own distance; UpdateActor/UpdateActorDepth compare each actor's
+ * depth with it. */
+void SetActorBgLayerDepth(s32 arg0)
 {
-    gUnknown_030013D8 = arg0;
+    gActorBgLayerDepth = arg0;
 }
 
-s32 sub_8029E40(void)
+s32 GetActorBgLayerDepth(void)
 {
-    return gUnknown_030013D8;
+    return gActorBgLayerDepth;
 }
 
-/* Genuine no-op stub - see nullsub_5 (cell_anim.c). */
-void nullsub_6(void)
+/* Empty hook InitActorCategory calls once the category is over (after its
+ * retry loop), before freeing the sprite caches. See
+ * ActorCategoryAttemptEndStub (cell_anim.c). */
+void ActorCategoryEndStub(void)
 {
 }
 

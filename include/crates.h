@@ -90,7 +90,7 @@ extern const u8 gCrateKindBreakable[22];
 extern const u8 gCrateKindExplosive[22];
 extern const u8 gCrateKindUnbreakable[22];
 extern const s32 gCrateHitResponse[22][7];
-extern const u8 gStaticData_0816BF00[8];
+extern const u8 gAttackKindBreakLimited[8];
 
 /* Set when the crate list changes (sym_iwram.txt). */
 extern u8 gCrateListChanged;
@@ -156,9 +156,9 @@ extern void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_par
 extern void UnlinkCrateFromGrid(struct pool_manager *manager, struct pool_item *item);
 
 /* src/crates/crate_hit.c */
-extern u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset,
-                      s32 yOffset);
-extern struct crate *sub_800CF70(struct crate *self, struct aabb *box, u8 *foundFlag);
+extern u8 PlayerHitboxOverlapsAt(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
+                                 s32 xOffset, s32 yOffset);
+extern struct crate *ResolveStackCrateHit(struct crate *self, struct aabb *box, u8 *foundFlag);
 extern void BreakCrateTouchedByPlayer(struct box_part *self);
 
 /* src/crates/crate_list.c */

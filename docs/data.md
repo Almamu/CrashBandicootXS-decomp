@@ -52,8 +52,8 @@ gWumpaHopWidths:
 
 .section .rodata.0816C090
 
-.global gStaticData_0816C090
-gStaticData_0816C090:
+.global gPlayerCtrlTurnSpeeds
+gPlayerCtrlTurnSpeeds:
 	.incbin "baserom.gba", 0x0016C090, 0x000001C0
 ```
 

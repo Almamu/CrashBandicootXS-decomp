@@ -1742,7 +1742,7 @@ exception was needed.
   accessors, `IsCrateInsideRect`, `GetCrateBelow`/`GetCrateAbove`/
   `SetCrateBelow`/`SetCrateAbove` (which return and take `struct crate
   *`), `GetTopCrate`/`GetBottomCrate`, `CollideCrateWithPlayer`,
-  `DrawCrate`, `ResetCrate` and `sub_800CEAC` (its unused `self` is the
+  `DrawCrate`, `ResetCrate` and `PlayerHitboxOverlapsAt` (its unused `self` is the
   crate QueueCratePlayerCollision passes). `DrawCrateList` takes `struct
   pool_manager *`. `struct crate` gains `above`/`below` (+0x5C/+0x60,
   the stack links) and `struct crate_vtable` names `m10`. crate.c's
@@ -1756,7 +1756,7 @@ exception was needed.
   `_call_via_r1` (crate.c), which gobj_1a794.h declares.
 - **Left for later:** the action controller's functions (action_ctrl*.c,
   kill_player.c, input_ctrl_queue.c's boss controller) still take `void
-  *` or `u8 *` for `struct act`; `sub_800CF70` reads the crate through
+  *` or `u8 *` for `struct act`; `ResolveStackCrateHit` reads the crate through
   `struct box_part`; the crate list functions take `void *obj`.
 
 After a clean build every `.o` file in src/ and lib/ is identical to
@@ -1960,7 +1960,7 @@ and no new ones.
 ## Batch 9f: the controllers' structs and the wrap-up
 
 The last PR. The controller functions take their controller's struct,
-`sub_800CF70` and the crate list functions take their object's, and the
+`ResolveStackCrateHit` and the crate list functions take their object's, and the
 plan, CONTRIBUTING.md and docs/workflow.md get the final status and the
 rules for new code. No declaration moved (494, remaining 0); 3 local
 struct definitions are gone (164 -> 161), and the one `.c` struct whose
@@ -1985,7 +1985,7 @@ name a header also used is renamed. No codegen exception was needed.
     where the code is register-pinned or a field store changes it
     (`StartActionCtrlHighJump`/`sub_8015558`'s two queue stores,
     `KillPlayer`'s walked pointer, `UpdatePlayerFacing`'s pinned part
-    bytes), and `sub_80151C8` and `ActionCtrlStateTurboRun` keep their
+    bytes), and `StartActionCtrlTornadoFall` and `ActionCtrlStateTurboRun` keep their
     pinned `register` copies.
   - The swim controller's `ResetPlayerCtrl`/`RestartPlayerCtrl` (in
     action_ctrl.c for ROM order) take `struct player_ctrl *`.
@@ -2007,7 +2007,7 @@ name a header also used is renamed. No codegen exception was needed.
   `unk_14`/`frame`), and the subclasses (Mega Mix, Tiny, Neo Cortex's
   fight, Dingodile and his shield) extend it past 0x1C. Their 13 calls of
   `CreateBossCtrl`/`DestroyBossCtrl` cast `self` (`tools/cast_args.py`).
-- **`sub_800CF70`** takes and returns `struct crate *` (it was `struct
+- **`ResolveStackCrateHit`** takes and returns `struct crate *` (it was `struct
   box_part *`): `physMode` is `state`, the keyframe table is
   `anim->records[tag]`, `mirrorX`/`mirrorY` are `flipX`/`flipY`, and the
   `GetCrateAbove`/`GetCrateBelow` calls lost their casts. crate_hit.c
@@ -2255,9 +2255,9 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `void *selfArg` + `u8 *self = selfArg` copy -> `struct act *self` parameter, bytes read as `((u8 *)self)[n]` or fields | action_ctrl.c, action_ctrl_moves.c, action_ctrl_hang.c (old_agbcc), action_ctrl_states.c (old_agbcc), action_ctrl_left_ground.c, kill_player.c, wumpa.c | identical |
 | `u8 *self` parameter -> `struct act *selfArg` with a `u8 *self = (u8 *)selfArg` copy | StartActionCtrlTornadoSpin (old_agbcc) | **changes** (the ROM saves r8 and r9 and keeps `self` in r6; with the copy only r8 is saved and the registers shift); the parameter itself, read through casts or fields, is identical |
 | `self[0x32] = zero; self[0x30] = 1` with `zero` pinned to r5 -> `self->motionYKeepSpeed`/`motionYPending` | StartActionCtrlHighJump, sub_8015558 | **changes**; kept as byte stores through `(u8 *)self` (the `vt`/`part`/`frame` reads and store are fields, identical) |
-| `u8 *self = selfArg` copies removed from KillPlayer and sub_8012238 | kill_player.c | `.o` identical, but UpdatePlayerFacing's `.LCB` label numbers shift by one; sub_8012238 keeps a `struct act *self = selfArg` copy, which keeps the `.s` identical |
+| `u8 *self = selfArg` copies removed from KillPlayer and UpdateActionCtrlSkidAnim | kill_player.c | `.o` identical, but UpdatePlayerFacing's `.LCB` label numbers shift by one; UpdateActionCtrlSkidAnim keeps a `struct act *self = selfArg` copy, which keeps the `.s` identical |
 | raw `self + 0x14`/`0x18`/`0xc`/`0x10` and `self[0x14..0x1a]` -> `struct boss_ctrl`/`struct input_ctrl` fields | input_ctrl_queue.c | identical |
-| `struct box_part *` crate view (`physMode`, `(*keyframes)[frame]`, `u32 mirrorX:1`) -> `struct crate *` (`state`, `anim->records[tag]`, `s32 flipX:1`) | sub_800CF70 (old_agbcc) | `.o` identical; including crate.h shifts crate_hit.s's label numbers |
+| `struct box_part *` crate view (`physMode`, `(*keyframes)[frame]`, `u32 mirrorX:1`) -> `struct crate *` (`state`, `anim->records[tag]`, `s32 flipX:1`) | ResolveStackCrateHit (old_agbcc) | `.o` identical; including crate.h shifts crate_hit.s's label numbers |
 | `void *obj` -> `struct box_part *obj` (bodies unchanged), callers cast `struct crate *` | the crate list functions, crate_create.c, crate_break.c | identical |
 
 Experiments for later batches:

@@ -104,7 +104,7 @@ asm(".align 2, 0");
  *
  * - gJetpackPlaneVtable (`struct jetpack_plane`, AimJetpackPlane-IsJetpackPlaneUnshootable):
  *   a hopping pickup/hazard that ballistically jumps between the
- *   level's sub-effect target points (`sub_802A5xx` accessors - see
+ *   level's sub-effect target points (`GetActorSpawn*` accessors - see
  *   docs/rom_map.md), with a "dying" flag and 4 hit points.
  * - gJetpackBomberVtable (`struct jetpack_bomber`, CreateJetpackBomber-IsJetpackBomberUnshootable):
  *   a 2-hit-point object whose spawn kind (4-9) picks its initial
@@ -176,8 +176,8 @@ void AimJetpackPlane(struct jetpack_plane *self, s32 target)
         s32 scale;
         s32 scale2;
 
-        self->speed = gJetpackPlaneHopSpeeds[sub_802A570(target)];
-        self->steps = __divsi3((sub_802A51C(target) - self->base.z) << 8, self->speed) >> 4;
+        self->speed = gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(target)];
+        self->steps = __divsi3((GetActorSpawnZ(target) - self->base.z) << 8, self->speed) >> 4;
         if (self->steps == 0) {
             self->steps = 1;
         }
@@ -186,14 +186,14 @@ void AimJetpackPlane(struct jetpack_plane *self, s32 target)
             scale = __divsi3(0x8000, steps);
         }
         // clang-format off
-        self->accX = ((((sub_802A558(target) - self->base.x) -
+        self->accX = ((((GetActorSpawnX(target) - self->base.x) -
                         ((self->velX * self->steps) >> 4)) * scale >> 13) *
                       (scale2 = scale * 2)) >> 13;
-        self->accY = ((((sub_802A540(target) - self->base.y) -
+        self->accY = ((((GetActorSpawnY(target) - self->base.y) -
                         ((self->velY * self->steps) >> 4)) * scale >> 13) *
                       scale2) >> 13;
         // clang-format on
-        self->next = sub_802A504(target);
+        self->next = GetActorSpawnNextTarget(target);
     }
 
     if (self->speed <= 0x955) {
@@ -257,7 +257,7 @@ void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s
     self->velY = 0;
     self->velX = 0;
     self->speed = 0x955;
-    if (arg->target >= 0 && gJetpackPlaneHopSpeeds[sub_802A570(arg->target)] > 0x955) {
+    if (arg->target >= 0 && gJetpackPlaneHopSpeeds[GetActorSpawnKindIndex(arg->target)] > 0x955) {
         self->base.z += -0x8e00;
         self->speed = 0xd55;
     }

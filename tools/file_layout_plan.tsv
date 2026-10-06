@@ -115,7 +115,7 @@ src/graphics/actor_part124.c	src/enemies/enemy_ctrl.c	src/enemies/enemy_ctrl.c	A
 src/graphics/actor_part117.c	src/enemies/enemy_ctrl.c	src/enemies/enemy_ctrl.c	CreateKnockedEnemyCtrl
 src/graphics/actor_part123.c	src/objects/effect_ctrl.c	-	UpdateEffectCtrl, EffectCtrlHandleEvent, DestroyEffectCtrl, InitEffectCtrl [OLD_AGBCC]
 src/graphics/actor_part109.c	src/crates/crate_touch.c	-	PlayerAnimWouldTouchCrate [OLD_AGBCC]
-src/system/game_loop42.c	src/crates/crate_hit.c	src/crates/crate_hit.c	sub_800CEAC, sub_800CF70 [OLD_AGBCC]
+src/system/game_loop42.c	src/crates/crate_hit.c	src/crates/crate_hit.c	PlayerHitboxOverlapsAt, ResolveStackCrateHit [OLD_AGBCC]
 src/system/game_loop6.c	src/crates/crate_hit.c	src/crates/crate_hit.c	BreakCrateTouchedByPlayer [OLD_AGBCC]
 src/system/game_loop47.c	src/crates/crate_break.c	src/crates/crate_break.c	QueueCratePlayerCollision, ApplyCrateCollision [OLD_AGBCC]
 src/system/game_loop7.c	src/crates/crate_break.c	src/crates/crate_break.c	ClearCrateStackTouched, MarkCrateStackTouched [OLD_AGBCC]
@@ -269,7 +269,7 @@ src/graphics/actor_part94.c	src/actor/actor_spawn.c	-	actor-category frame/spawn
 src/graphics/actor_part50.c	src/actor/actor.c	src/actor/actor.c	JetpackReloadPlayerTiles, PolarReloadPlayerTiles, JetpackReachCourseEnd, PolarReachCourseEnd, IsTouchingPlayer (+2 more)
 src/graphics/actor_part55.c	src/actor/actor.c	src/actor/actor.c	DrawActor
 src/graphics/actor_part56.c	src/actor/actor.c	src/actor/actor.c	UpdateActorDepth, GetActorRecordIndex, SetActorState, GetActorZ, GetActorY (+1 more)
-src/graphics/actor_part51.c	src/actor/actor.c	src/actor/actor.c	sub_802AA0C
+src/graphics/actor_part51.c	src/actor/actor.c	src/actor/actor.c	GetActorWorldBox
 src/graphics/actor_part52.c	src/actor/actor.c	src/actor/actor.c	IsActorVisible, DestroyActor, IsSpawnCollected, MarkSpawnCollected, ClearCollectedSpawns (+2 more)
 src/graphics/actor_part53.c	src/actor/actor.c	src/actor/actor.c	UpdateActorPaletteCycle
 src/graphics/actor_part54.c	src/actor/actor.c	src/actor/actor.c	SetActorPaletteCycle, EnableActorPaletteCycle

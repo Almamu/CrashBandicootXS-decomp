@@ -17,7 +17,7 @@ usage) were left raw again, still out of scope.
 ## New files
 
 `asm/code_3_2_17_11bd4.s` is trimmed to just `ActionCtrlHandleEvent` (unchanged
-start address, 0x08011BD4-0x08012160). `KillPlayer`/`sub_8012238`/
+start address, 0x08011BD4-0x08012160). `KillPlayer`/`UpdateActionCtrlSkidAnim`/
 `UpdatePlayerFacing` (contiguous, 0x08012160-0x08012420) move to a new
 `src/player/kill_player.c`. A new `asm/code_3_2_17_12420.s` picks up
 `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput` (0x08012420-0x08012A7C).
@@ -59,7 +59,7 @@ order.
   to force the ROM's `Rd==Rs` `adds r2, r2, r4` encoding instead of the
   compiler's own (numerically identical, but differently-encoded)
   `adds r2, r4, r2`.
-- **`sub_8012238`**: if the player (`gPlayer`)'s `+0x100`
+- **`UpdateActionCtrlSkidAnim`**: if the player (`gPlayer`)'s `+0x100`
   flag is set, dispatches on the player's `+0x2d` type byte - `0x12`
   (only when `+0x60` is nonzero) or `0xd`/`0x18` re-tag the player
   `0x25`/`0x26` and fire the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/

@@ -75,7 +75,7 @@ the same class. The target (`+0x10`) is the player object.
   comes from `gPlayerCtrlModeAnimRows[mode][level]`, 8 rows of 13 words read
   as bytes. `0x7FFFFFFF` means "leave `timer`/`timerMax` unchanged".
 - `SetPlayerSwimDriftX` writes the player's `+0x48`/`+0x4C`/`+0x50` record from its
-  speed. It is the `+0x54` twin of `SetPlayerSwimDriftY`. `sub_8017330` is its
+  speed. It is the `+0x54` twin of `SetPlayerSwimDriftY`. `GetPlayerSwimDriftStep` is its
   `v * v / 0x4000 + 4` term on its own.
 - `ApplyPlayerCtrlMotion`/`StartPlayerCtrlMotionYFromSet`/`StartPlayerCtrlMotionXFromSet` apply animation pairs through
   `gPlayerCtrlMotionRecords` (12-byte records). They are the same shape as
@@ -83,7 +83,7 @@ the same class. The target (`+0x10`) is the player object.
 
 UNUSED: there is no reference in `asm/`, `src/` or `data/`, and no Thumb
 pointer anywhere in the ROM, for `ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`,
-`StartPlayerCtrlMotionXFromSet`, `sub_8017330`, `ApplyPlayerCtrlTilt`, `StartPlayerCtrlSwim`, `sub_801750C`,
+`StartPlayerCtrlMotionXFromSet`, `GetPlayerSwimDriftStep`, `ApplyPlayerCtrlTilt`, `StartPlayerCtrlSwim`, `sub_801750C`,
 `SetPlayerCtrlMotionYPending` and `SetPlayerCtrlMotionXPending`.
 
 ## Matching notes

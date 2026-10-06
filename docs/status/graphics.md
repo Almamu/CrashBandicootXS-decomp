@@ -85,7 +85,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `PlayerCtrlStateIdle`...`PlayerCtrlStateDead`), message handler `PlayerCtrlHandleEvent`, mode/
   animation setter `SetPlayerCtrlState`, player record writer `SetPlayerSwimDriftX`,
   constructor/destructor `InitPlayerCtrl`/`DestroyPlayerCtrl`. Nine UNUSED
-  (`ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`, `StartPlayerCtrlMotionXFromSet`, `sub_8017330`,
+  (`ApplyPlayerCtrlMotion`, `StartPlayerCtrlMotionYFromSet`, `StartPlayerCtrlMotionXFromSet`, `GetPlayerSwimDriftStep`,
   `ApplyPlayerCtrlTilt`, `StartPlayerCtrlSwim`, `sub_801750C`, `SetPlayerCtrlMotionYPending`,
   `SetPlayerCtrlMotionXPending`). Built with `tools/agbcc/bin/old_agbcc`; register pins
   only in `ApplyPlayerCtrlMotion`. See

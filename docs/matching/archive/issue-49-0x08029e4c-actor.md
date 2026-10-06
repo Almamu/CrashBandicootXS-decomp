@@ -12,7 +12,7 @@ of this chunk hit.
 
 ## Matched (real C)
 
-- `nullsub_6`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX`
+- `ActorCategoryEndStub`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX`
   (`actor_bg.c`) - the tail of
   the BG2-affine scroll/zoom subsystem: a no-op stub, committing the
   scroll accumulators to `REG_BG0*`/`REG_BG1*`, and two small target-
@@ -27,7 +27,7 @@ of this chunk hit.
 
 - **`SelectActorCategory`** (`actor_category_select.c`) - sets up the selected
   category's runtime state (`gActorCategoryVtable` vtable pointer,
-  `gActorSpawnTable` `sub_effect_table` pointer, `gUnknown_03001414`
+  `gActorSpawnTable` `sub_effect_table` pointer, `gActorSpawnUseBonus`
   variant byte), draws the vtable's slot-0 icon, then runs a two-pass
   scan over `gActorSpawnTable[]` comparing each entry's threshold
   against the vtable's own `+0x20` slot. Fully understood; a real-C

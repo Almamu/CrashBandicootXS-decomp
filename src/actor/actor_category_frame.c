@@ -111,7 +111,7 @@ s32 JetpackIsTouchingPlayer(struct actor_self *self)
  * `gActorCategoryVtable->fn[3]`/`fn[0xa]` (the selected category's vtable,
  * `struct category_vtable`), drives a `gActorSpawnTable`-rooted
  * sub-effect-table draw loop (`_call_via_r3`, same record family as
- * `sub_802A504`/`sub_802A51C`/`sub_802A540`/`sub_802A558`/`sub_802A570`),
+ * `GetActorSpawnNextTarget`/`GetActorSpawnZ`/`GetActorSpawnY`/`GetActorSpawnX`/`GetActorSpawnKindIndex`),
  * then walks the whole `gActorList`-rooted circular actor list
  * twice: once unconditionally (drawing each node's own `self+0x50`
  * trampoline-record icon via `_call_via_r1`), once collecting every node
@@ -125,7 +125,7 @@ s32 JetpackIsTouchingPlayer(struct actor_self *self)
  * (jump.c's duplicate_loop_exit_test), so the loop body starts at a
  * label and re-reads every global. The test must stay free of inline
  * functions (their block notes stop the copy), hence the macro, and
- * builds the "next record" address in the `sub_802A51C` order
+ * builds the "next record" address in the `GetActorSpawnZ` order
  * (`off`, then `base + 0x14`, then the sum) through two locals.
  * Matches under old_agbcc, this file's compiler. */
 
@@ -142,10 +142,10 @@ struct actor_draw_methods {
 typedef void (*actor_draw_fn)(void *self);
 
 /* "The next sub-effect record's threshold has scrolled into view":
- * `gActorSpawnTable[idx + 1].field_00 + gActorSpawnOffset <= scroll +
+ * `gActorSpawnTable[idx + 1].depth + gActorSpawnOffset <= scroll +
  * vtable slot 7` (read as a value), bounded by record 0's entry count. */
 #define SUB_EFFECT_DUE()                                                       \
-    (gActorSpawnIndex < gActorSpawnTable->field_04                           \
+    (gActorSpawnIndex < gActorSpawnTable->link                                 \
      && (off = gActorSpawnIndex * 0x14, tb = (u8 *)gActorSpawnTable + 0x14, \
          *(s32 *)(tb + off)) + gActorSpawnOffset                              \
             <= scroll + (s32)gActorCategoryVtable->fn[7])
@@ -162,14 +162,14 @@ s32 RunActorCategoryFrame(void)
         _call_via_r0(gActorCategoryVtable->fn[3]);
     gActorCategoryExitStatus = 0;
     scroll = GetCellAnimDistance();
-    if (scroll - gActorSpawnOffset > gActorSpawnTable->field_00)
+    if (scroll - gActorSpawnOffset > gActorSpawnTable->depth)
         _call_via_r0(gActorCategoryVtable->fn[10]);
     if (gActorSpawnsPaused != 0) {
         gActorSpawnOffset += GetCellAnimFrameStep();
     } else {
         while (SUB_EFFECT_DUE()) {
             ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])(
-                (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8), gUnknown_03001414,
+                (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8), gActorSpawnUseBonus,
                 gActorSpawnOffset << 8);
             gActorSpawnIndex++;
         }

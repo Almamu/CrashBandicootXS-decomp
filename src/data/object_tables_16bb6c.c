@@ -79,8 +79,10 @@ const s32 gCrateHitResponse[22][7] = {
     { 1, 1, 1, 4, 4, 4, 4 },
 };
 
-/* QueueCratePlayerCollision: a flag per kind. */
-const u8 gStaticData_0816BF00[8] = {
+/* QueueCratePlayerCollision: per attack kind (gActionCtrlStateAttackKinds),
+ * whether its crate breaks go through the player's `countdown` limiter
+ * (ApplyCrateCollision -> BreakCrateInStack). Only kind 2. */
+const u8 gAttackKindBreakLimited[8] = {
     0, 0, 1, 0, 0, 0, 0, 0,
 };
 

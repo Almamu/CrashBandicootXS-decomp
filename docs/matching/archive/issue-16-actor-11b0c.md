@@ -133,7 +133,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 
 ## Left raw (10/25) - `ActionCtrlHandleEvent` onward
 
-`ActionCtrlHandleEvent`, `KillPlayer`, `sub_8012238`, `UpdatePlayerFacing`,
+`ActionCtrlHandleEvent`, `KillPlayer`, `UpdateActionCtrlSkidAnim`, `UpdatePlayerFacing`,
 `UpdateActionCtrl`, `TryActionCtrlDoubleJump`, `HandleActionCtrlAirInput`, `CheckActionCtrlLeftGround`,
 `ApplyActionCtrlMotion`, `ActionCtrlStateIdle` (ROM 0x08011BD4-0x08012FBC, now
 `asm/code_3_2_17_11bd4.s`) were left completely untouched. All ten
@@ -154,7 +154,7 @@ functions in detail and reached the same conclusion:
   members of the 42-slot action-dispatch table family
   (`gActionCtrlStateTable`) - real, cross-referenced coverage, but not
   matched to byte-exact precision by that investigation either.
-- The remaining functions (`KillPlayer`, `sub_8012238`, `UpdatePlayerFacing`,
+- The remaining functions (`KillPlayer`, `UpdateActionCtrlSkidAnim`, `UpdatePlayerFacing`,
   `CheckActionCtrlLeftGround`, `ApplyActionCtrlMotion`, `ActionCtrlStateIdle`) are direct siblings/
   callees of the above, sharing the same struct and calling
   conventions.

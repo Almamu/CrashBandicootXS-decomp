@@ -1661,7 +1661,7 @@
   {
    "address": "0x0816BF00",
    "size": 8,
-   "name": "gStaticData_0816BF00",
+   "name": "gAttackKindBreakLimited",
    "consumers": [
     "QueueCratePlayerCollision"
    ],
@@ -1781,7 +1781,7 @@
   {
    "address": "0x0816C090",
    "size": 448,
-   "name": "gStaticData_0816C090",
+   "name": "gPlayerCtrlTurnSpeeds",
    "consumers": [
     "StartPlayerCtrlStroke"
    ],
@@ -8358,7 +8358,7 @@
     "DestroyPolarBasicCrate",
     "DestroyPolarCrate",
     "DestroyPolarElectricFence",
-    "sub_803B30C",
+    "DestroyPolarObstacle",
     "DestroyPolarLauncher",
     "DestroyPolarPenguin",
     "DestroyPolarIcicle",

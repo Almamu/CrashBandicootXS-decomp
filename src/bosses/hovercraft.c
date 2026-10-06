@@ -927,7 +927,7 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     scale = __divsi3(0x1C00000, gHovercraftDistance);
     gHovercraftScreenX = (gHovercraftX * scale) >> 12;
     gHovercraftScreenY = (scale * gHovercraftY) >> 12;
-    sub_8029E34(gHovercraftDistance);
+    SetActorBgLayerDepth(gHovercraftDistance);
     {
         struct actor_self *self = gHovercraft;
         s32 t = self->animTime >> 8;
@@ -948,7 +948,7 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
  * (`gHovercraftState`) is active, the usual anim-frame-advance-and-
  * clamp idiom; then recomputes the projection scale and BG2-space
  * offsets (`gHovercraftScreenX`/`gHovercraftScreenY`) from the current position
- * and `gHovercraftDistance`, calling `sub_8029E34` on the result;
+ * and `gHovercraftDistance`, calling `SetActorBgLayerDepth` on the result;
  * finally, if the (Q8.8-truncated) frame index changed this tick,
  * streams the new tile row through `DrawHovercraftMap` and arms the "apply
  * now" BG2 latch (`gHovercraftBg2PageFlip`). The divide is an explicit call
@@ -978,7 +978,7 @@ void UpdateHovercraft(void)
         scale = __divsi3(0x1C00000, gHovercraftDistance);
         gHovercraftScreenX = (gHovercraftX * scale) >> 12;
         gHovercraftScreenY = (scale * gHovercraftY) >> 12;
-        sub_8029E34(gHovercraftDistance);
+        SetActorBgLayerDepth(gHovercraftDistance);
         {
             struct actor_self *cur = gHovercraft;
             s32 t = cur->animTime >> 8;

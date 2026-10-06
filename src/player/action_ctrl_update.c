@@ -87,9 +87,9 @@ static inline u8 *PartBytePtr(struct player *part, s32 offset)
 
 /* Clears `slamBlocked` (+0x34) once R (`gKeys` bit `0x100`) is
  * released. If `part->slippery` (+0x100) changed since last frame
- * (`prevSlippery`), re-runs `sub_8012238`. Then, using
+ * (`prevSlippery`), re-runs `UpdateActionCtrlSkidAnim`. Then, using
  * the height of `gLevelLayers`'s layer 0 (pixels, `<< 8` to Q8) as
- * the anchor, checks `part->field_04` against two thresholds: past the near
+ * the anchor, checks `part->y` against two thresholds: past the near
  * one, resets `part`'s `+0x48`/`+0x4c`/`+0x50` velocity-target fields
  * (and `+0x60` unless slippery); past the far one, additionally
  * clears `part+0x8c` and fires a state-close call (`SetMaskLevel`) plus
@@ -143,7 +143,7 @@ void UpdateActionCtrl(struct act *self)
             self->slamBlocked = held;
     }
     if (self->prevSlippery != PartByte(self->part, 0x100))
-        sub_8012238(self);
+        UpdateActionCtrlSkidAnim(self);
     self->prevSlippery = PartByte(self->part, 0x100);
     {
         struct player *part = self->part;
@@ -329,7 +329,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
  * `self+8`'s type (`7`/`9`/`0xb`/`0xe`, each with its own distance
  * threshold against `part->field_0x64`/its negation) to set `part+0xd`
  * bit 0 and fire the `+0x20`/`+0x24` trampoline with a fixed id
- * (`0x1a`), or (type `0xe`) tail-call `sub_80151C8`. Then, unless the
+ * (`0x1a`), or (type `0xe`) tail-call `StartActionCtrlTornadoFall`. Then, unless the
  * type is `7`/`9`/`0xb`/`0xe`/`0x1a`, reads the D-pad and remaps
  * `self+0x27`'s table-index byte through a further small dispatch
  * (types `9`/`0x1c`-`0x1d` fire `_call_via_r2`/`ActionCtrlStateFlipBodySlamStart` variants,
@@ -378,7 +378,7 @@ void HandleActionCtrlAirInput(struct act *self)
             ActOrFlags0D(part, 1);
             ACT_CALL1(self, m20, 0x1A);
         } else if (self->state == 0xE) {
-            if (self->unk_22) {
+            if (self->tornadoTurn) {
                 s32 x;
 
                 part = self->part;
@@ -386,7 +386,7 @@ void HandleActionCtrlAirInput(struct act *self)
                 if (-x <= 0x7F)
                     ActOrFlags0D(part, 1);
                 if (x > 0)
-                    sub_80151C8(self);
+                    StartActionCtrlTornadoFall(self);
             }
         }
     }

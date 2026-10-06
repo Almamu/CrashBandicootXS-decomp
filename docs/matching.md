@@ -4574,10 +4574,10 @@ of the run:
   `HasPlayerRampYTarget` above), producing a longer flag-accumulate-then-copy
   sequence instead of the ROM's compact set-0/conditionally-set-1/
   return pattern.
-- **`sub_800B650`/`sub_800B678`**: indexed getter/setter into a
+- **`GetPlayerListEntry`/`StorePlayerListEntry`**: indexed getter/setter into a
   5-element `s32` array at `self+0x98`, gated by `self+0x88` and (for
   index > 4) `self+0x94`'s own count. Both needed real work:
-  - `sub_800B650`'s guard-clause form (`if (bad) return 0;` twice)
+  - `GetPlayerListEntry`'s guard-clause form (`if (bad) return 0;` twice)
     compiled *correctly* but 2 bytes *short* - GCC merged the two
     `return 0;` epilogues and placed the merged block right after the
     first check, while the ROM places its single `return 0` block at
@@ -4589,7 +4589,7 @@ of the run:
     computed into two clearly separate locals (`s32 *arr = ...; result
     = arr[idx];`) - a plain `((s32*)(self+0x98))[idx]` computed
     everything through one register and mismatched.
-  - `sub_800B678` needed heavier register surgery: the ROM keeps
+  - `StorePlayerListEntry` needed heavier register surgery: the ROM keeps
     `val` copied into `r3` up front (the usual "redundant copy the
     natural codegen drops" idiom), and - critically - loads the
     `self+0x94` count byte into `r1` *while leaving `r0` still holding

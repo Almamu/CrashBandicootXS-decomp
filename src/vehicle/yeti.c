@@ -28,7 +28,7 @@ void DestroyYeti(void)
  * `SetActorAnim`) into `gYeti`, resets the position-tracking
  * pair (`gYetiX` to 0, `030014CC` to `0xA000`,
  * `030014C8` derived the same way `YetiStateChase`/`YetiStateCharge` do),
- * primes `sub_8029E34`, clears `gYetiState`, and finally calls
+ * primes `SetActorBgLayerDepth`, clears `gYetiState`, and finally calls
  * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
  * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */
 void CreateYeti(void *arg0)
@@ -58,7 +58,7 @@ void CreateYeti(void *arg0)
     gYetiX = 0;
     gYetiDistance = 0xa000;
     gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
-    sub_8029E34(gYetiDistance);
+    SetActorBgLayerDepth(gYetiDistance);
 
     gYetiState = 0;
     LoadYetiGraphics();

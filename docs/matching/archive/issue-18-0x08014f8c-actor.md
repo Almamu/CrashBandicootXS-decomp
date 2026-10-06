@@ -77,7 +77,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
     bit-6 test - each pin was needed to stop gcc's own register
     allocator from picking a different (but logically equivalent) home
     for the same value.
-- **`sub_80151C8`**: one-shot guard (`self+0x23`); the first time
+- **`StartActionCtrlTornadoFall`**: one-shot guard (`self+0x23`); the first time
   through, a 5-entry jump table on `self+0x22` (`[0,1]`→0x18, `2`→0x19,
   `[3,4]`→0x1a) into `self+0x28`; always sets `part+0xd` bit 0 and
   clears `self+0x34`. The jump table itself needed a full hand-written
@@ -127,8 +127,8 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   the `self+0x28` pointer to stop the final `+6`-style offset folding
   into the `strb`'s own addressing mode.
 - **`AttachActionCtrl`**: single-instruction store, `self+0x10 = val`.
-- **`sub_80155AC`**: trivial tail-call to `ActionCtrlReleaseHang`.
-- **`sub_80155B8`**/**`ActionCtrlStateHangGrab`**: byte-identical ROM encoding at
+- **`ActionCtrlStateUnusedHangRelease`**: trivial tail-call to `ActionCtrlReleaseHang`.
+- **`ActionCtrlStateUnusedHangGrab`**/**`ActionCtrlStateHangGrab`**: byte-identical ROM encoding at
   two different addresses (no shared caller) - `part+0x38`-gated mgr
   trampoline pair, clear `self+0x18`/`0x1c`. Needed a
   `register s32 zero asm("r4")` pin (matching the ROM's persistent
@@ -136,7 +136,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   at each use with a fresh `movs r0,#0`).
 - **`ActionCtrlStateHangSpin`**: bumps `self+0x18`; once it reaches `self+0x1c` (or
   `part+0x38` is already set), resets via the same mgr trampoline
-  pair/state-clear as `sub_80155B8`, then tail-calls `UpdatePlayerFacing`.
+  pair/state-clear as `ActionCtrlStateUnusedHangGrab`, then tail-calls `UpdatePlayerFacing`.
   Needed the `self+0x26` pointer computed *before* the `zero` register
   materializes (opposite of the natural declaration order) to match
   the ROM's `adds r1,r5,#0x26` / `movs r4,#0` / `strb` sequence.
@@ -144,17 +144,17 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   0x80 and tail-calls `RequestRoomExit`. Needed
   `register u8 *player asm("r1")`/`register s32 bit asm("r0")`/
   `register u8 old asm("r2")` pins for the `orrs`/`strb` pair, same
-  reason as `sub_80151C8`'s trailing `part[0xd] |= 1`.
+  reason as `StartActionCtrlTornadoFall`'s trailing `part[0xd] |= 1`.
 - **`ActionCtrlStateCrawlStop`**: `part+0x38`-gated mgr trampoline pair with actions
   0x11/4 - matched with no register pins needed.
-- **`nullsub_17`**/**`nullsub_18`**: empty stubs.
+- **`ActionCtrlStateNop6`**/**`ActionCtrlStateNop2`**: empty stubs.
 - **`ActionCtrlStateTurboRun`**: while `self+0x29` is clear, tail-calls
   `StartActionCtrlRun` first; always tail-calls `ActionCtrlStateRun` after. Needed
   `self` pinned to `register u8 *self asm("r4")` (the ROM keeps it in
   `r4` for the whole function; a plain local picked a two-instruction
   double-copy through an intermediate register instead of the ROM's
   single `adds r4,r0,#0`).
-- **`sub_8015774`**: trivial tail-call to `ActionCtrlStateIdle`.
+- **`ActionCtrlStateUnusedIdle`**: trivial tail-call to `ActionCtrlStateIdle`.
 - **`SetActionCtrlModeAnim`**: fires the mgr trampoline pair with `a`/`b` as the
   two action arguments (note: `a` is a real, *used* parameter here,
   passed straight through as `_call_via_r2`'s action index - not the
@@ -163,7 +163,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   from `c`/`d` unless either equals the `0x7FFFFFFF` sentinel. Matched
   with no register pins needed.
 
-## Jump-table layout: `sub_80151C8`
+## Jump-table layout: `StartActionCtrlTornadoFall`
 
 The `switch (self[0x22]) { case 0/1: 0x18; case 2: 0x19; case 3/4:
 0x1a; }` dispatch compiles to a real jump table either way, but this

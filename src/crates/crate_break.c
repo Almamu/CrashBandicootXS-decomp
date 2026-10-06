@@ -315,7 +315,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         goto tail;
     f.found = 0;
     if (kind <= 4)
-        obj = sub_800CF70(self, bb, &f.found);
+        obj = ResolveStackCrateHit(self, bb, &f.found);
     else
         obj = self;
     code = D18C_CodeIn(gCrateHitResponse, &obj->kind, kind);
@@ -370,7 +370,8 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         if (gPlayer->listCount == 0) {
             u8 *rec = (u8 *)&gPlayer->anim->records[gPlayer->tag];
 
-            if (kind != 3 && sub_800CEAC(self, (struct hitbox_quad *)(rec + 4), &f.a, px, py)) {
+            if (kind != 3 &&
+                PlayerHitboxOverlapsAt(self, (struct hitbox_quad *)(rec + 4), &f.a, px, py)) {
                 struct crate *e = GetCrateAbove(obj);
 
                 if (e != NULL && (e->state & 0x7f) != 1) {
@@ -700,7 +701,7 @@ tail:
     if (dy < 0)
         dy = 0;
     hit = 0;
-    f20 = gStaticData_0816BF00[kind];
+    f20 = gAttackKindBreakLimited[kind];
     tgt = self;
     switch (edge) {
     case 0:

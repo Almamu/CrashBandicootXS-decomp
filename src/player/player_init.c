@@ -24,7 +24,7 @@
  * `ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio. Clears `self+0xb4`, then
  * calls `ResetPlayer` (matched in `player_reset.c`) to finish resetting
  * `self`'s velocity/state fields and hook the `self+0xb0` child up via
- * its own `GetSpriteAnimPaletteSlot` call. Finally sets `self+8`'s `field_08` and
+ * its own `GetSpriteAnimPaletteSlot` call. Finally sets `id` (`self+8`) and
  * the Q8 `x`/`y` position from the three `u16` arguments - the same
  * tail `CreateGroundSprite` (`ground_sprite.c`) uses for its own, smaller
  * `struct actor` - and returns `self`. */

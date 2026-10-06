@@ -258,7 +258,7 @@ void DestroyPolarElectricFence(struct actor_self *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B30C(struct actor_self *self, u32 flags)
+void DestroyPolarObstacle(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
     self->next->prev = self->prev;

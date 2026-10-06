@@ -49,11 +49,21 @@ struct act {
     u8 unk_14[4];
     s32 frame;  // 0x18
     s32 frames; // 0x1C
-    u8 charge;  // 0x20
-    u8 unk_21;
-    u8 unk_22; // 0x22
-    u8 unk_23; // 0x23
-    u8 unk_24[2];
+    // 0x20 - extra tornado-spin turns queued by pressing B again during a spin
+    //        (max 3; needs HasTornadoSpin)
+    u8 charge;
+    // 0x21 - the current tornado turn's variant, 0-2 (anims 0x17/0x28/0x27, sfx 0x57+n)
+    u8 tornadoVariant;
+    // 0x22 - tornado turns played: counts up to `charge`, then back down
+    //        (StartActionCtrlTornadoSpin); picks StartActionCtrlTornadoFall's descent
+    u8 tornadoTurn;
+    // 0x23 - StartActionCtrlTornadoFall has queued its slow descent this spin
+    u8 tornadoFallQueued;
+    // 0x24 - set once `tornadoTurn` reached `charge`: the turns count back down
+    u8 tornadoUnwinding;
+    // 0x25 - while nonzero (counting down), the idle and airborne states ignore
+    //        the D-pad; releasing it clears the timer
+    u8 dpadLockTimer;
     u8 spinCooldown; // 0x26 - frames until the next spin is allowed (set to 12, counts down)
     u8 motionX;      // 0x27 - queued X motion entry (anims->first)
     u8 motionY;      // 0x28 - queued Y motion entry (anims->second)
@@ -65,7 +75,7 @@ struct act {
     u8 bumpedMotionX; // 0x2C - the motionX that bump cancelled
     u8 prevState;     // 0x2D - `state` before the last SetActionCtrlMode (a flip jump, 9,
                       //        turns the mid-air body slam into the flip body slam)
-    // 0x2E - part->slippery last frame; UpdateActionCtrl calls sub_8012238 on a change
+    // 0x2E - part->slippery last frame; UpdateActionCtrl calls UpdateActionCtrlSkidAnim on a change
     u8 prevSlippery;
     u8 motionXPending;   // 0x2F - ApplyActionCtrlMotion applies motionX
     u8 motionYPending;   // 0x30 - ApplyActionCtrlMotion applies motionY

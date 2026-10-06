@@ -23,19 +23,20 @@
  * IsEntityNearCamera/CheckEntityPlayerContact/IsEntityInsideRect/UpdateEntity/ResetEntity/etc. and
  * by power_dialog_draw.c's DestroyPowerDialog - none of that table's own shape is
  * understood yet, so it stays a raw `void *` here). Exactly 0x1c bytes -
- * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. Several
- * fields (0x0A, 0x0B, 0x0D-0x0F, 0x16-0x17) are read/written but not
- * understood beyond their offset yet - named `unusedNN`/`fieldNN`
- * rather than guessed. `struct power_dialog.icon` (in
+ * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. The
+ * fields at 0x0B, 0x0D-0x0F and 0x16-0x17 aren't understood beyond their
+ * offset yet - named `unusedNN` rather than guessed. `id` and `kind`
+ * have the same offsets and roles as `struct gobj`'s and `struct
+ * player`'s. `struct power_dialog.icon` (in
  * power_dialog_draw.c) points at one of these. */
 struct actor {
     s32 x; // 0x00 - Q8 fixed-point screen position
     s32 y; // 0x04 - Q8 fixed-point screen position
-    // 0x08 - an object/record id used as a 32-bit-word bitmap index (see MarkEntityGone)
-    u16 field_08;
+    // 0x08 - the spawn's bit index in the "gone" bitmap (MarkEntityGone); 0xFFFF: none
+    u16 id;
     // 0x0A - the object kind sent to the player's hit method
     // on contact (CheckEntityPlayerContact, Get/SetEntityKind)
-    u8 field_0A;
+    u8 kind;
     u8 unused_0B;    // 0x0B
     u8 flags;        // 0x0C - bit 0 gone (MarkEntityGone), 1 unknown, 2 player contact enabled,
                      //        3 touched by the player, 4 always active (skips the camera tests);
@@ -75,7 +76,7 @@ extern void SetActorState(struct actor_self *self, s32 a, s32 kind);
 extern s32 GetActorZ(struct actor_self *self);
 extern s32 GetActorY(struct actor_self *self);
 extern s32 GetActorX(struct actor_self *self);
-extern void *sub_802AA0C(void *out, void *self);
+extern void *GetActorWorldBox(void *out, void *self);
 extern u8 IsActorVisible(void *self);
 extern void DestroyActor(void *self, s32 flags);
 extern s32 IsSpawnCollected(void *self);
@@ -93,15 +94,15 @@ extern s32 GetAnimFrameAttr(struct actor_self *self);
 extern u8 *GetAnimFrameData(struct actor_self *self);
 extern void SetActorAnim(struct actor_self *self, s32 idx);
 extern void sub_803B25C(struct actor_self *self, u32 flags);
-extern void sub_803B30C(struct actor_self *self, u32 flags);
+extern void DestroyPolarObstacle(struct actor_self *self, u32 flags);
 extern s32 GetActorHp(struct actor_self_54 *self);
 extern void DamageActor(void *self);
 
 /* src/actor/actor_bg.c */
 extern void ShakeActorBg(s32 arg0);
-extern void sub_8029E34(s32 arg0);
-extern s32 sub_8029E40(void);
-extern void nullsub_6(void);
+extern void SetActorBgLayerDepth(s32 arg0);
+extern s32 GetActorBgLayerDepth(void);
+extern void ActorCategoryEndStub(void);
 extern void CommitActorBgScroll(void);
 extern s32 GetActorBgCenterY(void);
 extern s32 GetActorBgCenterX(void);
@@ -135,11 +136,11 @@ extern s32 GetActorCategoryFrameCount(void);
 extern s32 GetActorSpawnOffset(void);
 extern void ResumeActorSpawns(void);
 extern void PauseActorSpawns(void);
-extern s32 sub_802A504(s32 idx);
-extern s32 sub_802A51C(s32 idx);
-extern s32 sub_802A540(s32 idx);
-extern s32 sub_802A558(s32 idx);
-extern s32 sub_802A570(s32 idx);
+extern s32 GetActorSpawnNextTarget(s32 idx);
+extern s32 GetActorSpawnZ(s32 idx);
+extern s32 GetActorSpawnY(s32 idx);
+extern s32 GetActorSpawnX(s32 idx);
+extern s32 GetActorSpawnKindIndex(s32 idx);
 extern s32 CanPauseActorCategory(void);
 extern void ReloadActorCategoryGraphics(void);
 extern void DestroyAllActors(void);
@@ -159,7 +160,7 @@ extern s32 IsActorMaskAssistDue(void);
 extern void UploadCellAnimFrame(void);
 extern void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3);
 extern void ResetCellAnimBg(void);
-extern void nullsub_5(void);
+extern void ActorCategoryAttemptEndStub(void);
 extern s32 GetCellAnimFreeTile(void);
 extern void FlipCellAnimPage(void);
 extern s32 GetCellAnimDistance(void);
@@ -181,8 +182,8 @@ extern s32 gActorBgScrollMaxY;
 extern s32 gActorBgScrollType;
 extern s32 gActorBgScrollX;
 extern s32 gActorBgScrollY;
-/* gActorBgShake and gUnknown_030013D8: the BG2 affine reference point
- * targets, written by UpdateActorBgScroll and read by CommitActorBgScroll. */
+/* gActorBgShake: a Y bias UpdateActorBgScroll subtracts from the BG
+ * scroll (ShakeActorBg sets it, CommitActorBgScroll clears it). */
 extern s32 gActorBgShake;
 extern s32 gActorBgWidth;
 extern s32 gActorCategory;
@@ -224,12 +225,26 @@ extern u8 gCellAnimUploaded;
 extern void *gCollectedSpawns[];
 extern s32 gSavedActorPaletteCycleFrame;
 extern s32 gSavedActorPaletteCycleTarget;
-extern s32 gUnknown_03001388;
-extern s32 gUnknown_030013C8;
-extern s32 gUnknown_030013D8;
-extern s32 gUnknown_030013E4;
-extern s32 gUnknown_030013E8;
-extern u8 gUnknown_03001414;
+/* The deaths since the checkpoint that count towards the category's
+ * `retryBossDeaths` (InitActorCategory): being carried off by the yeti
+ * (exit status 2) in a type-0 category, any death in the others. */
+extern s32 gActorCategoryBossDeaths;
+/* The projection distance (Q8): DrawActor scales x/y by
+ * gActorFocalLength / depth, and InitCellAnim starts the cell animation
+ * this far from the checkpoint. Set by InitActorBgScroll. */
+extern s32 gActorFocalLength;
+/* The depth of the BG2 boss layer (the yeti, airship or hovercraft):
+ * actors deeper than it get OBJ priority 2 and draw behind it (bit 15 of
+ * their sortKey). InitActorBgScroll resets it to gActorFarClipDepth; the
+ * bosses set it to their own distance (SetActorBgLayerDepth). */
+extern s32 gActorBgLayerDepth;
+/* UpdateActorBgScroll's input ranges: an input of +-range scrolls the BG
+ * to either end of [0, gActorBgScrollMaxX/Y]. Set by InitActorBgScroll. */
+extern s32 gActorBgScrollRangeX;
+extern s32 gActorBgScrollRangeY;
+/* SelectActorCategory's `active` argument (the deaths reached the
+ * category's `bonusKindDeaths`): spawns use their record's `bonusKind`. */
+extern u8 gActorSpawnUseBonus;
 
 /* src/iwram/iwram_data.c */
 extern s32 gActorCheckpoint;
