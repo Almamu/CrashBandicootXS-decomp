@@ -175,7 +175,7 @@ void DestroyMegaMixCtrl(void *selfArg, s32 flags)
     u8 *self = selfArg;
 
     *(void **)(self + 0xc) = (void *)gMegaMixCtrlVtable;
-    DestroyBossCtrl(self, flags);
+    DestroyBossCtrl((struct boss_ctrl *)self, flags);
 }
 
 /* `CreateBossCtrl`-style init, but re-pointing the table at
@@ -185,7 +185,7 @@ void *CreateMegaMixCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
-    CreateBossCtrl(self);
+    CreateBossCtrl((struct boss_ctrl *)self);
     *(void **)(self + 0xc) = (void *)gMegaMixCtrlVtable;
     ResetMegaMixCtrl(self);
     return self;

@@ -72,45 +72,6 @@ struct pctrl_motion_queue
     u8 motionYPending;  // 0x2D
 };
 
-struct ctrl_vtable
-{
-    u8 unk_00[0x20];
-    struct actor_method setMode;      // 0x20 - SetCtrlMode
-    struct actor_method startMotionX; // 0x28 - StartCtrlTargetMotionX
-    struct actor_method startMotionY; // 0x30 - StartCtrlTargetMotionY
-    struct actor_method setMotionX;   // 0x38 - SetCtrlTargetMotionX
-    struct actor_method setMotionY;   // 0x40 - SetCtrlTargetMotionY
-    u8 unk_48[8];
-    struct actor_method setAnim;      // 0x50 - SetCtrlTargetAnim
-};
-
-struct anim_pair
-{
-    u32 a;
-    u32 b;
-};
-
-struct input_ctrl
-{
-    u8 unk_00[4];
-    struct { struct anim_pair *entries; } *animSet; // 0x04
-    s32 state;                   // 0x08
-    struct ctrl_vtable *vtable;  // 0x0C
-    struct player *target;       // 0x10
-    u8 motionX;                  // 0x14 - queued X motion entry (animSet->entries[].a)
-    u8 motionY;                  // 0x15 - queued Y motion entry (animSet->entries[].b)
-    u8 dirState;                 // 0x16
-    u8 motionXPending;           // 0x17 - ApplyInputCtrlMotion applies motionX
-    u8 motionYPending;           // 0x18 - ApplyInputCtrlMotion applies motionY
-    u8 motionXKeepSpeed;         // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed;         // 0x1A - the same for Y
-    u8 unk_1B;
-    struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
-    u8 flag20;                   // 0x20
-    u8 unk_21[3];
-    s32 timer;                   // 0x24
-};
-
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 

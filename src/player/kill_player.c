@@ -22,9 +22,9 @@
  * this file's functions are siblings of (not ROM-adjacent to them,
  * hence a separate file per the one-file-per-contiguous-region rule).
  * The `+0x27`-`+0x32` bytes are the same shared state/flag/table-index
- * trio pair action_ctrl_states.c documents; none of the three objects' full
- * shapes are pinned down yet, so every access here stays a raw offset
- * rather than a guessed struct, same as that file. */
+ * trio pair action_ctrl_states.c documents. `self` is the action
+ * controller (`struct act`, action_obj.h); the register-pinned byte
+ * stores keep their raw offsets. */
 
 struct AudioContext;
 struct palette_cache;
@@ -43,10 +43,8 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * per-tag 28-byte-record table (`part+0x20 -> *ptr + tag*0x1C`, the
  * same dereference chain docs/rom_map.md's "eight more core reads"
  * documented from three other call sites) to feed `LoadPaletteSlot`. */
-void KillPlayer(void *selfArg, s32 id)
+void KillPlayer(struct act *self, s32 id)
 {
-    u8 *self = selfArg;
-
     {
         register void *a0 asm("r0") = gAudioContext;
         register s32 a2 asm("r2") = 0x100;
@@ -55,12 +53,12 @@ void KillPlayer(void *selfArg, s32 id)
     }
 
     {
-        u8 *off = *(u8 **)(self + 0xc) + 0x50;
-        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)id, *(void **)(off + 4));
+        u8 *off = (u8 *)self->vt + 0x50;
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)id, *(void **)(off + 4));
     }
     {
-        struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
-        _call_via_r2(self + mgr[4].delta, (void *)0x1d, mgr[4].fn);
+        struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x1d, mgr[4].fn);
     }
 
     {
@@ -68,7 +66,7 @@ void KillPlayer(void *selfArg, s32 id)
         register s32 one asm("r5");
 
         {
-            register u8 *w asm("r0") = self + 0x31;
+            register u8 *w asm("r0") = (u8 *)self + 0x31;
             *w = zero; w -= 2;
             one = 1;
             *w = one;  w -= 8;
@@ -78,20 +76,20 @@ void KillPlayer(void *selfArg, s32 id)
             *w = zero;
         }
 
-        ApplyActionCtrlMotion((struct act *)self);
+        ApplyActionCtrlMotion(self);
 
-        (*(u8 **)(self + 0x10))[0x100] = zero;
-        (*(u8 **)(self + 0x10))[0x102] = zero;
-        (*(u8 **)(self + 0x10))[0x103] = zero;
+        (*(u8 **)((u8 *)self + 0x10))[0x100] = zero;
+        (*(u8 **)((u8 *)self + 0x10))[0x102] = zero;
+        (*(u8 **)((u8 *)self + 0x10))[0x103] = zero;
 
         {
-            register u8 *p asm("r1") = *(u8 **)(self + 0x10);
+            register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10);
             register s32 mask asm("r0") = 0x7f;
             mask &= p[0xc];
             p[0xc] = mask;
         }
         {
-            register u8 *p asm("r1") = *(u8 **)(self + 0x10);
+            register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10);
             register s32 mask asm("r0") = 0x41;
             mask = -mask;
             mask &= p[0xc];
@@ -105,7 +103,7 @@ void KillPlayer(void *selfArg, s32 id)
              * inline-asm anchor (matching_decomp_register_pinning) is
              * the only way found to pin the folded constant's own
              * register. */
-            register u8 *addr asm("r0") = *(u8 **)(self + 0x10);
+            register u8 *addr asm("r0") = *(u8 **)((u8 *)self + 0x10);
             register s32 v asm("r1");
             asm volatile("mov %0, #0x82\n\tlsl %0, %0, #1" : "=r"(v));
             addr += v;
@@ -117,7 +115,7 @@ void KillPlayer(void *selfArg, s32 id)
 
     {
         register struct palette_cache *cache asm("r0") = gPaletteCache;
-        register u8 *p asm("r3") = *(u8 **)(self + 0x10);
+        register u8 *p asm("r3") = *(u8 **)((u8 *)self + 0x10);
         register u32 nibble asm("r1") = (u32)(p[0x29] << 28) >> 28;
         register u8 **xptr asm("r2") = *(u8 ***)(p + 0x20);
 
@@ -139,9 +137,11 @@ void KillPlayer(void *selfArg, s32 id)
  * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)` teardown trio.
  * Otherwise (flag clear), on player type `0x25`/`0x26`, plays a sound
  * and resets the state/flag/table-index trio via `SetActionCtrlModeAnim`. */
-void sub_8012238(void *selfArg)
+void sub_8012238(struct act *selfArg)
 {
-    u8 *self = selfArg;
+    /* The copy emits nothing, but without it the `.s` label numbers of
+     * UpdatePlayerFacing shift by one. */
+    struct act *self = selfArg;
     struct player *player = gPlayer;
     register s32 flag asm("r5") = player->slippery;
 
@@ -210,12 +210,11 @@ end:
  * setting bit `0x10` back (D-pad remap `3`/`5`/`7`), in both cases also
  * setting the state/flag pair `self+0x2f`=1/`self+0x29`=0 and
  * returning 1; every other value/path returns 0. */
-s32 UpdatePlayerFacing(void *selfArg)
+s32 UpdatePlayerFacing(struct act *self)
 {
-    u8 *self = selfArg;
     register s32 dpad asm("r3") = GetDpadDirection(gInput);
     register s32 result asm("r2") = 0;
-    s32 type = *(s32 *)(self + 8);
+    s32 type = self->state;
 
     if ((u32)type > 0x26)
         goto end;
@@ -230,14 +229,14 @@ s32 UpdatePlayerFacing(void *selfArg)
 
 do_it:
     {
-        register u8 *p asm("r1") = *(u8 **)(self + 0x10) + 0x28;
+        register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10) + 0x28;
         register s32 mask asm("r0") = -0x21;
         register s32 val asm("r5") = *p;
         mask &= val;
         *p = mask;
     }
 
-    if ((*(u8 **)(self + 0x10))[0x28] << 27 >= 0)
+    if ((*(u8 **)((u8 *)self + 0x10))[0x28] << 27 >= 0)
         goto check_2nd;
     if (dpad == 4 || dpad == 6 || dpad == 8)
         goto branch1;
@@ -245,7 +244,7 @@ do_it:
 
 branch1:
     {
-        register u8 *p asm("r1") = *(u8 **)(self + 0x10);
+        register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10);
         register s32 zero asm("r2") = 0;
         p += 0x28;
         {
@@ -254,12 +253,12 @@ branch1:
             *p = mask;
         }
         {
-            register u8 *addr1 asm("r1") = self + 0x2f;
+            register u8 *addr1 asm("r1") = (u8 *)self + 0x2f;
             register s32 one asm("r0") = 1;
             *addr1 = one;
         }
         {
-            register u8 *addr2 asm("r0") = self + 0x29;
+            register u8 *addr2 asm("r0") = (u8 *)self + 0x29;
             *addr2 = zero;
         }
     }
@@ -267,7 +266,7 @@ branch1:
 
 check_2nd:
     {
-        register u8 *part asm("r0") = *(u8 **)(self + 0x10);
+        register u8 *part asm("r0") = *(u8 **)((u8 *)self + 0x10);
         register u8 *addr asm("r1") = part + 0x28;
         if (*addr << 27 < 0)
             goto end;
@@ -285,7 +284,7 @@ check_2nd:
             mask |= 0x10;
             *p = mask;
             {
-                register u8 *addr asm("r0") = self + 0x2f;
+                register u8 *addr asm("r0") = (u8 *)self + 0x2f;
                 register s32 zero asm("r1") = 0;
                 *addr = one;
                 addr -= 6;

@@ -42,7 +42,7 @@ struct kind_entry {
 };
 
 /* A level spawn record, as passed to `SpawnJetpackActor`. */
-struct spawn_rec {
+struct jetpack_spawn_rec {
     u8 kind[3];     // 0x00 - normal / alternate-mode / `alt`-gated kind
     u8 pad;
     s32 x;          // 0x04 - tile units (<< 8 to Q8)
@@ -103,7 +103,7 @@ void YetiStateStop(void)
  * byte 0, byte 1 in the alternate game mode (kind 0x17 there becomes
  * 0x14) or byte 2 when `alt` is set. Kind 0x1d only spawns while
  * `IsCrystalSaved` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
-void *SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz)
+void *SpawnJetpackActor(struct jetpack_spawn_rec *rec, u8 alt, s32 dz)
 {
     u8 kind = rec->kind[0];
     s32 x, y, z;

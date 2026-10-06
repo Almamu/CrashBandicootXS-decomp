@@ -135,7 +135,7 @@ s32 PlayRoom(struct level_progress *selfArg)
 
     switch (mode) {
     case 0: {
-        u8 *widget = InitActionCtrl(OperatorNew(0x38));
+        u8 *widget = (u8 *)InitActionCtrl(OperatorNew(0x38));
 
         SetCtrlAnimSet(widget, (s32)&gActionCtrlMotionSet);
 

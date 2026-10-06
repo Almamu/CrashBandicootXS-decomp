@@ -16,7 +16,14 @@ the survey numbers, the rules every batch follows and the batch order. It
 also records the codegen surprises found so far: a prototype can change the
 generated code, and those cases need to be known before a batch starts.
 
-**Status:** phase 0 done: the audit tool, the apply tool, this plan, and the
+**Status: complete.** Every batch below has landed, the last one being
+9f. `tools/extern_audit.py` reports "remaining: 0" (every declaration
+still in a `.c` file is one of the exceptions in "Exceptions" below)
+and no struct name is defined in more than one `.c` file. New code
+follows the rules in CONTRIBUTING.md ("Declarations and headers") and
+docs/workflow.md (step 7).
+
+History: phase 0 done: the audit tool, the apply tool, this plan, and the
 `text` subsystem as the pilot batch (`include/text.h`, see "Pilot" below).
 Batch 1 (link + hud) done: `include/link.h` and `include/hud.h`, see
 "Batch 1" below. Batch 2 (cutscene + pickups + enemies) done:
@@ -46,17 +53,24 @@ base vtables, `gEmptySpritePoint`, the boss pictures and the GAX
 internals) done, see "Batch 9d" below; 9e (the struct views and the
 duplicate struct names) done, see "Batch 9e" below; 9f (the action
 controller's `struct act`, the crate list functions, and the final
-status) is next.
+status) done, see "Batch 9f" below.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b | After batch 9c | After batch 9c2 | After batch 9d | After batch 9e |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 | 589 | 587 | 494 | 494 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 | 405 | 405 | 355 | 355 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 | 7 | 7 | 4 | 4 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 | 233 | 223 | 220 | 164 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 | 10 | 10 | 8 | 0 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b | After batch 9c | After batch 9c2 | After batch 9d | After batch 9e | After batch 9f (final) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 | 589 | 587 | 494 | 494 | 494 |
+| - not covered by an exception ("remaining") | | | | | | | | | | | | | | | 0 | 0 | 0 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 | 405 | 405 | 355 | 355 | 355 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 | 7 | 7 | 4 | 4 | 4 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 | 233 | 223 | 220 | 164 | 161 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 | 10 | 10 | 8 | 0 | 0 |
+| Local struct names that a header also defines | | | | | | | | | | | | | | | | 1 | 0 |
+
+From the survey to the end: 4,648 declarations of symbols defined
+elsewhere became 494, all of them exceptions; 553 local struct
+definitions became 161, none of them a second copy. The 4 conflicting
+symbols left are `_call_via_rN`, whose declarations differ on purpose.
 
 ## Tools
 
@@ -245,7 +259,7 @@ The full list:
 | text | `text.h` (**done**, pilot) | |
 | util | `util.h` (**done**, batch 4) | includes `aabb.h` and `line_util.h` |
 | vehicle | `vehicle.h` (**done**, batch 7) | includes `actor.h` |
-| (shared globals) | `globals.h` (9a, 9b and 9c done) | see below |
+| (shared globals) | `globals.h` (**done**, batches 9a-9d) | see below |
 | libgcc | `lib/libgcc/include/libgcc.h` (**done**, batch 4) | `__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3` and the three 64-bit routines; not `_call_via_rN` |
 | GAX2, AgbEeprom, SWI | `<gax.h>`, `<agb_eeprom.h>`, `<agb_syscall.h>` | already exist (docs/libraries.md) |
 
@@ -308,7 +322,7 @@ Where the remaining declarations would go (after the pilot):
 | bosses (**done**, batch 7) | 239 | 10 | 344 | 35 |
 | vehicle (**done**, batch 7) | 277 | 13 | 374 | 38 |
 | level (**done**, batch 8b) | 311 | 45 | 534 | 116 |
-| globals (9a: 14 symbols, 9b: 9 symbols, 9c: `gPlayer` done) | 27 | 19 | 540 | 162 |
+| globals (**done**, 9a: 14 symbols, 9b: 9 symbols, 9c: `gPlayer`, 9d: the base vtables) | 27 | 19 | 540 | 162 |
 | (data-only, stays) | 329 | 0 | 329 | 19 |
 
 ## Rules for every batch
@@ -452,8 +466,9 @@ before the files that every subsystem touches.
     (done)**, see "Batch 9c" below; **9c2, the player and crate
     functions' `void *self` (done)**, see "Batch 9c2" below; then the
     leftovers: **9d, the last externs (done)**, see "Batch 9d" below,
-    **9e, the struct views (done)**, see "Batch 9e" below, then 9f
-    (`struct act`, final status).
+    **9e, the struct views (done)**, see "Batch 9e" below, and **9f,
+    the controllers' structs and the wrap-up (done)**, see "Batch 9f"
+    below.
 
 The lib batches (GAX2 internals in `gax_internal.h`) can go anywhere. They
 don't interact with game code.
@@ -1936,19 +1951,140 @@ local label numbers shift (it now includes crate.h for `struct crate`,
 see "Codegen findings"). The build has the same warnings as origin/main
 and no new ones.
 
+## Batch 9f: the controllers' structs and the wrap-up
+
+The last PR. The controller functions take their controller's struct,
+`sub_800CF70` and the crate list functions take their object's, and the
+plan, CONTRIBUTING.md and docs/workflow.md get the final status and the
+rules for new code. No declaration moved (494, remaining 0); 3 local
+struct definitions are gone (164 -> 161), and the one `.c` struct whose
+name a header also used is renamed. No codegen exception was needed.
+
+- **The action controller** (`struct act`, action_obj.h). Every function
+  of action_ctrl*.c, kill_player.c and `ResetActionCtrl` (wumpa.c) takes
+  `struct act *` (46 functions had `void *self` or `u8 *self`), and
+  player.h declares them so. `InitActionCtrl` returns `struct act *`,
+  `AttachActionCtrl` takes the `struct player *` it stores in `part`,
+  and `ActionCtrlSetTargetAnim` (the vtable's slot at 0x50) takes the
+  controller and its `struct player *part`. The bodies:
+  - use the fields where that is identical: the motion queue accessors
+    and setters in action_ctrl.c (`motionXPending`, `motionYKeepSpeed`,
+    ...), `SteerActionCtrlSpin`, `ActionCtrlStateBodySlamStart` (its
+    method calls read `&self->vt->m20`/`m50`), `StartActionCtrlTornadoSpin`
+    (`unk_21`/`unk_22`/`charge`/`frame`/`frames`), `ActionCtrlStateStandUp`,
+    `UpdatePlayerFacing`'s `state`, and the method table and part reads
+    (`self->vt`, `self->part`) of the action_ctrl_moves.c handlers and
+    `KillPlayer`;
+  - keep the byte offsets through `(u8 *)self` casts of the parameter
+    where the code is register-pinned or a field store changes it
+    (`StartActionCtrlHighJump`/`sub_8015558`'s two queue stores,
+    `KillPlayer`'s walked pointer, `UpdatePlayerFacing`'s pinned part
+    bytes), and `sub_80151C8` and `ActionCtrlStateTurboRun` keep their
+    pinned `register` copies.
+  - The swim controller's `ResetPlayerCtrl`/`RestartPlayerCtrl` (in
+    action_ctrl.c for ROM order) take `struct player_ctrl *`.
+  - action_ctrl_states.c's calls lost their `(u8 *)self` casts, and the
+    `UpdatePlayerFacing_u8` codegen alias in action_ctrl_hang.c takes
+    `struct act *` too.
+- **The input controller** (`struct input_ctrl`): input_ctrl.c's
+  definition and its `ctrl_vtable`/`anim_pair` moved to player.h, and
+  input_ctrl_queue.c's five queue accessors take it and use its fields
+  (they read `self[0x17]` and so on).
+- **The boss controller** (`struct boss_ctrl`, player.h, new): the
+  0x1C-byte base class of the bosses' controllers (gBossCtrlVtable):
+  the controller base (`animSet`, `state`, `vtable`, `target`) and the
+  event slot's `msg`/`arg`. `BossCtrlHandleEvent`, `DestroyBossCtrl`,
+  `CreateBossCtrl` (which returns it) and `GetCtrlTarget` take it, with
+  field names in place of the raw offsets. It is not a `struct act`:
+  both extend the same controller base, but from +0x14 on they differ
+  (the boss controller has `msg`/`arg` where the action controller has
+  `unk_14`/`frame`), and the subclasses (Mega Mix, Tiny, Neo Cortex's
+  fight, Dingodile and his shield) extend it past 0x1C. Their 13 calls of
+  `CreateBossCtrl`/`DestroyBossCtrl` cast `self` (`tools/cast_args.py`).
+- **`sub_800CF70`** takes and returns `struct crate *` (it was `struct
+  box_part *`): `physMode` is `state`, the keyframe table is
+  `anim->records[tag]`, `mirrorX`/`mirrorY` are `flipX`/`flipY`, and the
+  `GetCrateAbove`/`GetCrateBelow` calls lost their casts. crate_hit.c
+  includes crate.h for it; QueueCratePlayerCollision (crate_break.c)
+  calls it without casts.
+- **The crate list functions** (`AddCrateToList`, `LinkCrateInGrid`,
+  `AddCrateGridNode`, `RemoveCrateFromList`, `LinkCrateToActiveBucket`)
+  take `struct box_part *`, the type of the list's `slotArray` and of a
+  grid node's `data` (the list holds crates and other collidable parts).
+  Their bodies keep the byte offsets (pinned registers). The 6 callers,
+  which hold a `struct crate *`, cast.
+- **`struct spawn_rec`**: jetpack_spawn.c's spawn record had the name of
+  gobj_1a794.h's unrelated `struct spawn_rec` (9e left it for #569), and
+  vehicle.h declared `SpawnJetpackActor` with that tag, so a file that
+  included both headers saw the other struct in its prototype. It is
+  now `struct jetpack_spawn_rec`.
+- **Docs:** CONTRIBUTING.md has a "Declarations and headers" section and
+  docs/workflow.md's step 7 a bullet with the rules for new code: which
+  header a declaration goes in, no local `extern`s, the asm-label alias
+  for codegen exceptions, what stays local, clean builds after header
+  edits, checking `make`'s exit status, and `tools/extern_audit.py`.
+
+After a clean build every `.o` file in src/ and lib/ is identical to
+origin/main's, and so is every `.s` file except crate_hit.s, whose local
+label numbers shift (it now includes crate.h for `struct crate`, as
+collision_queue.c did in 9e). The build has the same 31 warnings as
+origin/main and no new ones.
+
 ## Exceptions
 
-The declarations that stay in `.c` files on purpose. `tools/extern_audit.py`
-counts each kind; after batch 9d it finds no other declaration of a
-symbol defined elsewhere.
+Everything #574 leaves in place on purpose. `tools/extern_audit.py`
+counts each kind of declaration; since batch 9d it finds no other
+declaration of a symbol defined elsewhere, and since 9f no struct name
+is defined twice (in two `.c` files, or in a `.c` file and a header).
 
-| Kind | Declarations (after 9d) | Why |
+**Declarations kept in `.c` files** (494, final):
+
+| Kind | Declarations | Why |
 |---|---:|---|
 | Codegen aliases (`extern T Foo_x(...) asm("Foo");`) | 17 | the file needs another type for byte-identical code; each one is listed under "Codegen exceptions" below |
 | `_call_via_r0`..`_call_via_r5` | 143 | libgcc's register-call thunks: each call site declares the shape it calls with, which decides how the call is set up ("Who owns a symbol", rule 5) |
 | Data-to-data references | 329 | a `src/data/` table naming another data table or a `data/data.s` label (graphics, palettes, maps). Address-only, many generated ("Who owns a symbol", rule 4) |
 | Library-internal | 3 | libgcc2.c's `__div0` and the two per-object `__clz_tab` copies, declared where gcc's own libgcc2.c declares them |
 | Documented | 2 | asset.c's one-argument `LZ77UnCompVram`/`RLUnCompVram` (docs/libraries.md) |
+
+The 4 symbols the audit still counts as conflicting are `_call_via_r0`
+..`_call_via_r3`, whose call sites declare different shapes on purpose.
+The 17 codegen aliases are the rows of "Codegen exceptions" below
+(13 rows; `gLevelSelectGemPos`/`gLevelSelectTrialIconPos`,
+`GetSpriteAttackBox`/`GetSpriteBodyBox` and the two-file rows count
+twice).
+
+**Local structs kept in `.c` files** (161). Each is used by one file, and
+none has a second copy. Most are file-local object views that no header
+needs (rule "Duplicate structs", first bullet). The ones a reader might
+take for a copy of a header type, checked in 9e and left as they are:
+
+- gax_unknownc_play.c's `struct UnknownC` and its parts (the mixer
+  handler read through a shape the header's handler structs don't have);
+- cortex.c's `gfx_ctrl` and dingodile.c's `obj_483c` (two classes on the
+  0x10-byte controller base), and the vehicle/boss objects that share an
+  `actor_self` head (`actor_2718`, `jetpack_cannonball`, `actor_falling`,
+  `polar_collected_wumpa`, `actor_orbit`, `polar_penguin`);
+- entity_spawner.c's `actor_flag_bits` and level_select.c's `bldy_byte`
+  (other bit splits of a byte the header types also describe);
+- crate_player_collide.c's `struct ctrl` (the controller's `state` word,
+  read through `struct player.ctrl`, which can be any of the four
+  controllers);
+- graphics_package.c's `struct oam_attrs_u16`, a codegen view of gfx.h's
+  `struct oam_attrs` (as is crates.h's `struct pool_init_node` of
+  `struct pool_node`; see "Codegen findings").
+
+The header views of the sprite bank (gfx_part.h's `anim_record`/
+`anim_bank`, gobj_1a794.h's `anim_table`/`anim_rec`, player.h's
+`act_anim_record`/`act_anim_bank`, crate.h's `anim_table`) stay too:
+many files read them, and merging them is a #557/#569 question.
+
+**Object files**: every `.o` built from src/ and lib/ is the same as
+before #574. A few `.s` files differ from their pre-#574 form only in
+gcc's local label numbers (`.L`/`.LCB`), which never reach the object:
+crate.s, collision_queue.s and crate_hit.s include crate.h (and its
+static inlines) for `struct crate`, and earlier batches noted the same
+for other files when an include or a removed copy changed the count.
 
 ## Codegen findings
 
@@ -2110,6 +2246,13 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `struct spawned` effect-part views -> `struct gfx_part` (`unk_0C_2` -> `hidden`) | action_ctrl_run_jump.c, swim_ctrl_stroke.c | identical |
 | u8 flags byte and a `gone:1` view -> one packed union (`flags.all`, `flags.bits.gone`) | level_select.c (the pinned OR of the byte), input_ctrl.c (`MARK_GONE`) | identical |
 | `const struct anim_record_view` data object -> `const struct anim_table_record` with cast initializers | gLogoActorAnim | identical data |
+| `void *selfArg` + `u8 *self = selfArg` copy -> `struct act *self` parameter, bytes read as `((u8 *)self)[n]` or fields | action_ctrl.c, action_ctrl_moves.c, action_ctrl_hang.c (old_agbcc), action_ctrl_states.c (old_agbcc), action_ctrl_left_ground.c, kill_player.c, wumpa.c | identical |
+| `u8 *self` parameter -> `struct act *selfArg` with a `u8 *self = (u8 *)selfArg` copy | StartActionCtrlTornadoSpin (old_agbcc) | **changes** (the ROM saves r8 and r9 and keeps `self` in r6; with the copy only r8 is saved and the registers shift); the parameter itself, read through casts or fields, is identical |
+| `self[0x32] = zero; self[0x30] = 1` with `zero` pinned to r5 -> `self->motionYKeepSpeed`/`motionYPending` | StartActionCtrlHighJump, sub_8015558 | **changes**; kept as byte stores through `(u8 *)self` (the `vt`/`part`/`frame` reads and store are fields, identical) |
+| `u8 *self = selfArg` copies removed from KillPlayer and sub_8012238 | kill_player.c | `.o` identical, but UpdatePlayerFacing's `.LCB` label numbers shift by one; sub_8012238 keeps a `struct act *self = selfArg` copy, which keeps the `.s` identical |
+| raw `self + 0x14`/`0x18`/`0xc`/`0x10` and `self[0x14..0x1a]` -> `struct boss_ctrl`/`struct input_ctrl` fields | input_ctrl_queue.c | identical |
+| `struct box_part *` crate view (`physMode`, `(*keyframes)[frame]`, `u32 mirrorX:1`) -> `struct crate *` (`state`, `anim->records[tag]`, `s32 flipX:1`) | sub_800CF70 (old_agbcc) | `.o` identical; including crate.h shifts crate_hit.s's label numbers |
+| `void *obj` -> `struct box_part *obj` (bodies unchanged), callers cast `struct crate *` | the crate list functions, crate_create.c, crate_break.c | identical |
 
 Experiments for later batches:
 
@@ -2141,7 +2284,7 @@ adds its entries here.
 | src/level/spawn_enemies.c | `CreateEnemyCtrl` | `CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl")`, called after a bare `OperatorNew(0x8c);` | `struct part_ctrl *(struct part_ctrl *self)` | in 11 of the 26 spawners (old_agbcc) the registers only match with the block left in r0 by the previous call; the other 15 use the header's prototype |
 | src/vehicle/yeti_states.c | `PlayAmbientSfx` | `void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx")`, the byte stored at sp through a pinned r4 | `void (struct AudioContext *, u32, u32, s32, struct byte_arg)` (audio.h) | passing a `struct byte_arg` schedules `mov r1, #1` before `mov r4, sp` in YetiStateChase |
 | src/menus/level_select.c | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos")` (and `_rw` for the other) | `const struct xy_pair` (menus.h) | InitLevelSelect reads each twice across calls; through the const object gcc keeps the first loads (old_agbcc) |
-| src/player/action_ctrl_hang.c | `UpdatePlayerFacing` | `u8 UpdatePlayerFacing_u8(void *self) asm("UpdatePlayerFacing")`, used where ActionCtrlStateHangMove tests the result | `s32 (void *)` (player.h) | the test needs the `u8` return's `lsl #0x18`; the definition only matches as `s32` |
+| src/player/action_ctrl_hang.c | `UpdatePlayerFacing` | `u8 UpdatePlayerFacing_u8(struct act *self) asm("UpdatePlayerFacing")`, used where ActionCtrlStateHangMove tests the result | `s32 (struct act *)` (player.h) | the test needs the `u8` return's `lsl #0x18`; the definition only matches as `s32` |
 | src/vehicle/jetpack_spawn.c | `CreateHovercraftSideGun` | `void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d, struct byte_arg e) asm("CreateHovercraftSideGun")`, called by SpawnHovercraftSideGun | `void *(void *self, void *part, s32 b, s32 c, s32 d, u8 eByte)` (bosses.h) | the ROM stores the one-byte stack argument with `add r2, sp, #4; strb`; through the `u8` prototype it is a `str` |
 | src/text/font.c | `GetPaletteSlot` | `s32 GetPaletteSlot_s32(u8 *cache, s32 recordId) asm("GetPaletteSlot")` | `u8 (struct palette_cache *, s32)` (gfx.h) | FontUploadTiles uses the slot as a word; through the `u8` return the shift is `lsl #0x18; lsr #0x14` for the ROM's `lsl #4` |
 | src/level/run_room.c | `AddPaletteCycle` | `void AddPaletteCycle_fx(..., struct fx_direction direction) asm("AddPaletteCycle")`, used by `FX_CYCLE` | `void (..., u8 direction)` (gfx.h) | RunRoom passes the direction as a one-byte BLKmode struct stored with `strb` |

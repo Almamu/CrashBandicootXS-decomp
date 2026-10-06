@@ -429,14 +429,14 @@ void DestroyTiny(struct gfx_squares *self, s32 flags)
     self->vtable = (struct gfx_vtable *)gTinyVtable;
     if (self->squares != NULL)
         OperatorDeleteArray(self->squares);
-    DestroyBossCtrl(self, flags);
+    DestroyBossCtrl((struct boss_ctrl *)self, flags);
 }
 
 void *CreateTiny(struct gfx_squares *self)
 {
     s32 i;
 
-    CreateBossCtrl(self);
+    CreateBossCtrl((struct boss_ctrl *)self);
     self->vtable = (struct gfx_vtable *)gTinyVtable;
     self->unk_24 = -1;
     self->squares = OperatorNewArray(0x202);

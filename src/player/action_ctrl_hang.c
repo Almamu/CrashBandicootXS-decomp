@@ -21,7 +21,7 @@
 /* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
  * in kill_player.c only matches that way), but ActionCtrlStateHangMove
  * tests the result as a u8 (`lsl #0x18`). docs/headers_plan.md */
-extern u8 UpdatePlayerFacing_u8(void *self) asm("UpdatePlayerFacing");
+extern u8 UpdatePlayerFacing_u8(struct act *self) asm("UpdatePlayerFacing");
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio (as ActSetNext) */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -627,19 +627,18 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * more than 0x11 away vertically - then fires the `+0x68` trampoline
  * pair via `_call_via_r4` with action `0x16` on whatever survives all
  * four checks. */
-void DoSuperBodySlamShockwave(void *selfArg)
+void DoSuperBodySlamShockwave(struct act *self)
 {
-    u8 *self = selfArg;
     struct actor *part;
     register s32 threshold asm("r8");
     s32 px, py;
     s32 i;
 
-    part = *(struct actor **)(self + 0x10);
+    part = *(struct actor **)((u8 *)self + 0x10);
     BreakCratesInArea(part->x >> 8, part->y >> 8, 0x40, 0x12);
     threshold = 0x40;
 
-    part = *(struct actor **)(self + 0x10);
+    part = *(struct actor **)((u8 *)self + 0x10);
     px = part->x >> 8;
     py = part->y >> 8;
 
@@ -765,94 +764,94 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * old_agbcc's GCSE inserts its copy of `self + 0x22` (end of the block,
  * before the compare), so the load goes through the copy in r5
  * (`adds r5, r0, #0; ldrb r2, [r5]`) as in the ROM. */
-void StartActionCtrlTornadoSpin(u8 *self, s32 id, s32 param2)
+void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
 {
     struct vtable_slot *mgr;
     u8 *off;
 
-    if (self[0x24] == 0) {
+    if (self->unk_24[0] == 0) {
         s32 idx = 0x17;
         s32 zero;
         s32 wait;
 
-        self[0x21] = 0;
-        if (self[0x22] == 1) {
+        self->unk_21 = 0;
+        if (self->unk_22 == 1) {
             idx = 0x28;
-            self[0x21] = 1;
-        } else if (self[0x22] == 2) {
+            self->unk_21 = 1;
+        } else if (self->unk_22 == 2) {
             idx = 0x27;
-            self[0x21] = 2;
+            self->unk_21 = 2;
         }
         zero = 0;
         wait = 0x14;
-        mgr = *(struct vtable_slot **)(self + 0xc);
-        _call_via_r2(self + mgr[4].delta, (void *)id, mgr[4].fn);
-        off = *(u8 **)(self + 0xc);
+        mgr = (struct vtable_slot *)self->vt;
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)id, mgr[4].fn);
+        off = (u8 *)self->vt;
         off += 0x50;
-        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx,
                     *(void **)(off + 4));
-        *(s32 *)(self + 0x18) = zero;
-        *(s32 *)(self + 0x1c) = wait;
-        PlaySfx(gAudioContext, self[0x21] + 0x57, 0x100);
-        if (++self[0x22] >= self[0x20]) {
-            self[0x24] = 1;
-            if (self[0x22] > 1)
-                self[0x22] = 1;
+        self->frame = zero;
+        self->frames = wait;
+        PlaySfx(gAudioContext, self->unk_21 + 0x57, 0x100);
+        if (++self->unk_22 >= self->charge) {
+            self->unk_24[0] = 1;
+            if (self->unk_22 > 1)
+                self->unk_22 = 1;
             else
-                self[0x22] = zero;
+                self->unk_22 = zero;
         }
     } else {
         register s32 hold1 asm("r1");
 
-        /* No code: keeps r1 live across the `self[0x22]` test so the
+        /* No code: keeps r1 live across the `self->unk_22` test so the
          * byte loads into r2 and `id` stays in ip, as in the ROM. */
         asm("" : "=r"(hold1));
-        if (self[0x22] > 0xf0) {
+        if (self->unk_22 > 0xf0) {
             s32 idx;
             s32 zero;
             s32 wait;
 
             asm("" : : "r"(hold1)); /* end of the r1 hold (no code) */
             idx = 0x17;
-            self[0x21] = 0;
-            if (self[0x22] == 1) {
+            self->unk_21 = 0;
+            if (self->unk_22 == 1) {
                 idx = 0x28;
-                self[0x21] = 1;
-            } else if (self[0x22] == 2) {
+                self->unk_21 = 1;
+            } else if (self->unk_22 == 2) {
                 idx = 0x27;
-                self[0x21] = 2;
+                self->unk_21 = 2;
             }
             zero = 0;
             wait = 0x14;
-            mgr = *(struct vtable_slot **)(self + 0xc);
-            _call_via_r2(self + mgr[4].delta, (void *)id, mgr[4].fn);
-            off = *(u8 **)(self + 0xc);
+            mgr = (struct vtable_slot *)self->vt;
+            _call_via_r2((u8 *)self + mgr[4].delta, (void *)id, mgr[4].fn);
+            off = (u8 *)self->vt;
             off += 0x50;
-            _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
+            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx,
                         *(void **)(off + 4));
-            *(s32 *)(self + 0x18) = zero;
-            *(s32 *)(self + 0x1c) = wait;
-            PlaySfx(gAudioContext, self[0x21] + 0x57, 0x100);
+            self->frame = zero;
+            self->frames = wait;
+            PlaySfx(gAudioContext, self->unk_21 + 0x57, 0x100);
         } else {
-            u8 *p21 = self + 0x21;
+            u8 *p21 = (u8 *)self + 0x21;
             s32 zero = 0;
             s32 wait;
 
             *p21 = zero;
-            self[0x20] = zero;
+            self->charge = zero;
             wait = 0x18;
-            mgr = *(struct vtable_slot **)(self + 0xc);
-            _call_via_r2(self + mgr[4].delta, (void *)param2, mgr[4].fn);
-            off = *(u8 **)(self + 0xc);
+            mgr = (struct vtable_slot *)self->vt;
+            _call_via_r2((u8 *)self + mgr[4].delta, (void *)param2, mgr[4].fn);
+            off = (u8 *)self->vt;
             off += 0x50;
-            _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
+            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x10,
                         *(void **)(off + 4));
-            *(s32 *)(self + 0x18) = zero;
-            *(s32 *)(self + 0x1c) = wait;
+            self->frame = zero;
+            self->frames = wait;
             PlaySfx(gAudioContext, 0xa, 0x100);
-            self[0x26] = 0x63;
+            self->spinCooldown = 0x63;
         }
-        self[0x22]--;
+        self->unk_22--;
     }
-    self[0x23] = 0;
+    self->unk_23 = 0;
 }

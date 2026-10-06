@@ -116,6 +116,26 @@ incomplete pass and should be finished before moving on.
      rebuilding, not by assumption. When something has to stay low-level
      for this reason, leave a one-line comment saying so (pointing at
      this doc) instead of leaving it unexplained.
+   - **Declarations go in headers, not in the `.c` file** (#574,
+     [docs/headers_plan.md](./headers_plan.md)). Include the header that
+     declares what the function calls or reads, and declare the
+     function itself in its subsystem's header (`include/<subsystem>.h`;
+     `include/globals.h` for a global three or more subsystems use;
+     `lib/gax/src/gax_internal.h` for GAX internals), with its
+     definition's prototype. Don't add `extern`s to the `.c` file. The
+     two exceptions that stay local are `_call_via_rN` (each call site
+     declares the shape it calls with) and references from one
+     `src/data/` table to another. If the file only matches with another
+     type for a symbol, keep an asm-label alias with a comment, and add
+     it to the plan's "Codegen exceptions" table:
+     `/* codegen: ... docs/headers_plan.md */ extern s32 RandRange_s32(s32 max) asm("RandRange");`.
+     After editing a header, only a clean build is reliable: the
+     Makefile doesn't track header dependencies. agbcc's compile errors
+     don't contain the word "error", so check `make`'s exit status, not
+     the log. `python3 tools/extern_audit.py` (after a build) must
+     still report "remaining: 0" and no struct name defined in two `.c`
+     files; `--remaining` lists the uncovered declarations and `--views`
+     the `.c`-file structs shaped like a header struct.
    - Replace magic numeric constants with an existing named constant
      when one already covers this exact value/meaning elsewhere in the
      project (`OAM_ENTRY_COUNT`, `DMA_ENABLE`, and so on); don't invent a
