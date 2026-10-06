@@ -21,6 +21,15 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
 
+    # The matching workarounds are spelled with include/match.h's macros
+    # (docs/matching_techniques.md). This fails if one is written out by
+    # hand outside the documented exceptions, or if a macro stops
+    # expanding to the exact tokens it stands for.
+    - name: Check matching idioms
+      run: |
+        python3 tools/match_idioms.py --check
+        python3 tools/match_idioms.py --check-macros
+
     - name: Checkout agbcc
       uses: actions/checkout@v5
       with:

@@ -153,10 +153,9 @@ s32 SkipSlides(struct cutscene_player *self, s32 startIdx, u8 condFlag)
  *   fix: gcc's front end always schedules the `& ~0x10` mask/byte-read
  *   pair *before* the toggle-bit `& 1 << 4` shift-and-mask when both are
  *   written as independent statements (this reconstruction's first
- *   attempt), where the ROM computes the shifted toggle bit first; an
- *   `asm volatile("" ::: "memory")` ordering barrier right after it
- *   fixes that. But the barrier alone widens `bit4`'s tracked value range
- *   just enough that the final `orr` gets an extra defensive
+ *   attempt), where the ROM computes the shifted toggle bit first; a
+ *   `MATCH_MEMORY_BARRIER()` right after it fixes that. But the barrier
+ *   alone widens `bit4`'s tracked value range just enough that the final `orr` gets an extra defensive
  *   `lsl #24; lsr #24` truncation pair the ROM doesn't have - avoided by
  *   writing the AND as `bit4 & toggleByte` (not `toggleByte & bit4`),
  *   which happens to pick the same destination register (r1, not r5) the
@@ -192,7 +191,7 @@ void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
 
             toggleByte = *(u8 *)&self->toggle;
             bit4 = (bit4 & toggleByte) << 4;
-            asm volatile("" ::: "memory");
+            MATCH_MEMORY_BARRIER();
             mask = ~0x10;
             byte = *shadow;
             result = mask & byte;

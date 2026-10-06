@@ -497,7 +497,7 @@ tail:
              * same reload into r1. */
             s32 ax = GetSpritePrevX((struct gfx_part *)gPlayer);
 
-            asm("" : : "r"(ax), "r"(px));
+            MATCH_USE2(ax, px);
             if ((gPlayer->x >> 8) < (self->x >> 8))
             {
                 dirX = 1;

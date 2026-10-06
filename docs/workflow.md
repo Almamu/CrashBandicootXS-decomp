@@ -48,7 +48,8 @@ incomplete pass and should be finished before moving on.
    mismatches are all fair game (see
    [matching_techniques.md](./matching_techniques.md) for the
    established techniques, and `include/match.h` for the macros that
-   spell the asm idioms). If a genuine gap resists every technique
+   spell the asm idioms and register pins; `tools/match_idioms.py
+   --check` flags a hand-spelled one). If a genuine gap resists every technique
    tried, park it under the `NON_MATCHING` build toggle instead of
    leaving raw asm or giving up on the C reconstruction entirely - see
    `matching_decomp_non_matching_toggle` memory and the "Parked, not

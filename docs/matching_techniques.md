@@ -16,13 +16,34 @@ plainer version doesn't.
   [include/match.h](../include/match.h) (see [The match.h macros](#the-matchh-macros)).
 - [tools/match_idioms.py](../tools/match_idioms.py) counts every idiom
   by kind and file (`--kind K --show` lists the sites), checks that the
-  macros expand to the spellings they replace (`--check-macros`) and
-  converts a kind to its macro (`--convert K`).
+  macros expand to the spellings they replace (`--check-macros`),
+  converts a kind to its macro (`--convert K`) and fails if an idiom
+  that has a macro is written out by hand (`--check`, run by CI).
 - The process (isolated compiles, clean rebuilds, `make compare`, the
   report) is in [workflow.md](./workflow.md) and
   [CONTRIBUTING.md](../CONTRIBUTING.md#verification). An isolated compile
   is never proof of a match: register allocation depends on the whole
   object.
+
+## Writing new matching code
+
+- **Use the macros.** Spell a pin, an empty asm or a register/memory
+  clobber with its [match.h](../include/match.h) macro
+  ([table](#the-matchh-macros)), not by hand: write
+  `MATCH_HOLD_REG(s32, k, r6)`, not `register s32 k asm("r6")`, and
+  `MATCH_USE(x)`, not `asm("" : : "r"(x))`. Give each use a comment
+  saying what it fixes.
+- **Check with the tool.** `tools/match_idioms.py --check` fails on a
+  hand-spelled idiom outside the few documented exceptions (its
+  `ALLOWED_SPELLED` list, also [below](#other-empty-asm-forms)); CI runs
+  it with `--check-macros`. If a new shape really has no macro, add one
+  to match.h with a `--check-macros` case, rather than a new exception.
+- **Per-object flags** (old_agbcc, `-O1`, `-fno-strength-reduce`, ...)
+  are set in the Makefile, each list with a comment giving its evidence,
+  and listed in the [table below](#per-object-flags). A new one needs the
+  same evidence: every matched function in the object stays exact.
+- Prefer a source-shape fix to any workaround, and remove a workaround
+  when a clean rebuild shows it's no longer needed.
 
 ## Contents
 
@@ -42,7 +63,7 @@ plainer version doesn't.
    `.pool`, instruction asm
 8. [Warnings](#warnings): `x = x` self-init
 9. [NON_MATCHING](#non_matching)
-10. [Survey and conversion plan (#576)](#survey-and-conversion-plan-576)
+10. [Survey and conversion record (#576)](#survey-and-conversion-record-576)
 
 ## Compilers and flags
 
@@ -66,7 +87,7 @@ How to tell, from the ROM's code:
 - old_agbcc has no `-fprologue-bugfix` (the Makefile filters it out).
   For agbcc objects the flag is needed (GAX2 breaks without it). An
   unused callee-saved register in a `push` is not the prologue bugfix;
-  see `asm("" : : : "r5")` [below](#other-empty-asm-forms).
+  see `MATCH_CLOBBER(r5)` [below](#other-empty-asm-forms).
 
 A file joins `OLD_AGBCC_OBJS` as a whole: every matched function in the
 object must stay byte-exact under old_agbcc. If one doesn't, split the
@@ -365,31 +386,34 @@ opaque pointer copy), `src/actor/actor_category_select.c` (use).
 
 ### Other empty-asm forms
 
-These have no macro yet (few sites each); `tools/match_idioms.py` counts
-them:
+The rarer forms, a few sites each:
 
-- `asm("" : : : "r5")` (`reg_clobber`): tells gcc r5 is clobbered, so
-  the prologue saves it even though nothing uses it, as the ROM does
-  ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md),
-  `UpdateEnemyBob`; `src/enemies/enemy_ctrl.c`).
-- `asm volatile("" ::: "memory")` (`mem_barrier`): only makes gcc forget
-  memory; it does not stop address CSE, which is what it was usually
-  tried for.
-- `"m"` operands (`mem_ref`): `asm("" : : "m"(q))` keeps `q` in its
-  stack slot; an asm that reads a field through `"m"` fixes the order of
-  a load against a constant
-  ([issue-59-60-m-operand-scheduling.md](./matching/archive/issue-59-60-m-operand-scheduling.md)).
-- Several operands in one asm (`use`/`use_volatile`/`keep_volatile` and
-  `empty_other` sites the converter skips): one insn that uses or
-  changes two values at once is not two `MATCH_USE`s, since splitting it
-  changes the insn stream. There are five, written out:
-  `asm("" : : "r"(ax), "r"(px))` in `src/crates/crate_break.c`,
-  `asm("" : : "r"(t), "r"(width))` in `src/menus/pause_menu_draw.c`,
-  `asm volatile("" : "+r"(flags) : "r"(m))` in
-  `src/player/action_ctrl_moves.c`,
-  `asm volatile("" : : "r"(r0), "r"(r1))` in `lib/gax/src/gax_swi.c`
-  and `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
-  `src/save/save_transfer.c`.
+| Spelling | Macro | Sites | What it does |
+|---|---|---|---|
+| `asm("" : : "r"(a), "r"(b))` | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | 3 | `MATCH_USE` of two values in one insn. Not the same as two `MATCH_USE`s, which are two insns. |
+| `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 3 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.c`); also forces a reload of whatever it held (`src/level/play_room.c`). |
+| `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 2 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for (`src/frontend/title_screen.c`). |
+| `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
+| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 1 | `x` must be in memory here: keeps it in its stack slot across a call (`src/level/spawn_enemies.c`). |
+
+An asm that reads a field through `"m"` can also fix the order of a load
+against a constant
+([issue-59-60-m-operand-scheduling.md](./matching/archive/issue-59-60-m-operand-scheduling.md)).
+
+Three empty asms stay written out, each a one-off shape that no macro
+covers (a macro for one site would only add a name to look up). They
+are `ALLOWED_SPELLED` in `tools/match_idioms.py`, with the five cortex.c
+pins ([Register pins](#register-pins)):
+
+- `asm volatile("" : : "m"(src), "m"(dst))` in `lib/gax/src/gax_swi.c`:
+  two `"m"` inputs in one insn (`mem_ref`).
+- `asm volatile("" : "+r"(flags) : "r"(m))` in
+  `src/player/action_ctrl_moves.c`: a keep and a use in one insn
+  (`keep_volatile`).
+- `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
+  `src/save/save_transfer.c`: an opaque copy whose input isn't tied to
+  the output (`"r"`, not `MATCH_CONST`'s `"0"`), so `ch` gets no copy
+  preference for the input's register (`empty_other`).
 
 ## Memory accesses
 
@@ -475,9 +499,10 @@ point to another ARM compiler build than agbcc_arm. See
 
 [include/match.h](../include/match.h) gives each one-statement idiom a
 name. Each macro is exactly the spelling it replaces, token for token
-(`tools/match_idioms.py --check-macros` checks this), so converting a
-site never changes the object. Every use keeps a comment saying what it
-fixes.
+(`tools/match_idioms.py --check-macros` checks this, comparing the
+preprocessed tokens; `::` counts as two `:`, as it does to agbcc's C
+lexer), so converting a site never changes the object. Every use keeps a
+comment saying what it fixes.
 
 | Macro | Expands to |
 |---|---|
@@ -487,45 +512,68 @@ fixes.
 | `MATCH_KEEP(x)`, `MATCH_KEEP_VOLATILE(x)` | `asm("" : "+r"(x))`, `asm volatile(...)` |
 | `MATCH_HOLD(x)`, `MATCH_HOLD_VOLATILE(x)` | `asm("" : "=r"(x))`, `asm volatile(...)` |
 | `MATCH_CONST(v, K)`, `MATCH_CONST_VOLATILE(v, K)` | `asm("" : "=r"(v) : "0"(K))`, `asm volatile(...)` |
+| `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | `asm("" : : "r"(a), "r"(b))`, `asm volatile(...)` |
+| `MATCH_CLOBBER(rN)`, `MATCH_CLOBBER_VOLATILE(rN)` | `asm("" : : : "rN")`, `asm volatile(...)` |
+| `MATCH_MEMORY_BARRIER()` | `asm volatile("" : : : "memory")` |
+| `MATCH_KEEP_MEM(x)`, `MATCH_USE_MEM(x)` | `asm("" : "+m"(x))`, `asm("" : : "m"(x))` |
 | `MATCH_KEEP_EXPR(T, e)` | `({ T _p = (e); asm("" : "+r"(_p)); _p; })` |
 | `BOX_ADDR(a)` | `MATCH_KEEP_EXPR(struct aabb *, a)` |
 
-## Survey and conversion plan (#576)
+## Survey and conversion record (#576)
 
-`tools/match_idioms.py` on main before part 3 (sites / files):
+The conversion is complete. `tools/match_idioms.py` after part 4
+(sites / files; "spelled" is what's still written out by hand):
 
-| Kind | Sites | Macro | Status |
-|---|---|---|---|
-| register pins | 2158 / 169 | `MATCH_HOLD_REG` | **converted in part 3**; 5 pins with macro-parameter register names stay |
-| `asm("" : : "r"(x))` | 80 / 33 | `MATCH_USE` | **converted in part 2**; 3 multi-operand sites stay |
-| `asm("" : "+r"(x))` | 60 / 32 | `MATCH_KEEP` | **converted in part 2**; 1 multi-operand site stays, 1 statement expression became `MATCH_KEEP_EXPR` |
-| `asm("" : "=r"(x))` | 22 / 14 | `MATCH_HOLD` | **converted in part 2** |
-| `asm("")` | 15 / 8 | `MATCH_BARRIER` | **converted in part 2** |
-| `asm("" : "=r"(v) : "0"(K))` | 29 / 19 | `MATCH_CONST` | **converted in part 1** |
-| `BOX_ADDR` | 12 / 3 | in match.h | **definition moved in part 1** |
-| file-scope `.align 2, 0` | 276 / 131 | none | stays (an assembler directive) |
-| instruction asm | 253 / 90 | none | stays; each needs a comment |
-| retyped field stores/reads | 191 / 31, 71 / 34 | none | part of the struct cleanup |
-| asm-label aliases | 20 / 16 | none | stay (headers_plan's codegen exceptions) |
-| self-init | 6 / 6 | none | stays |
-| per-object flags | 6 groups | none | stay, documented in the Makefile |
+| Kind | Macro sites | Spelled | Macro | Converted in |
+|---|---|---|---|---|
+| register pins | 2153 / 169 | 5 (cortex.c macros) | `MATCH_HOLD_REG` | part 3 |
+| `asm("" : : "r"(x))` | 83 / 34 | 0 | `MATCH_USE`, `MATCH_USE2` | parts 2 and 4 |
+| `asm("" : "+r"(x))` | 60 / 32 | 1 (`+r` with an input) | `MATCH_KEEP` | part 2; 1 statement expression became `MATCH_KEEP_EXPR` |
+| `asm("" : "=r"(x))` | 22 / 14 | 0 | `MATCH_HOLD` | part 2 |
+| `asm("")` | 15 / 8 | 0 | `MATCH_BARRIER` | part 2 |
+| `asm("" : "=r"(v) : "0"(K))` | 29 / 19 | 0 | `MATCH_CONST` | part 1 |
+| `asm("" : : : "rN")` | 3 / 2 | 0 | `MATCH_CLOBBER` | part 4 |
+| `asm volatile("" ::: "memory")` | 2 / 2 | 0 | `MATCH_MEMORY_BARRIER` | part 4 |
+| `"+m"` / `"m"` operands | 3 / 3 | 1 (two `"m"` inputs) | `MATCH_KEEP_MEM`, `MATCH_USE_MEM` | part 4 |
+| other empty asms | - | 1 (untied `"=r"`/`"r"`) | none | - |
+| `BOX_ADDR` | 12 / 3 | 0 | in match.h | part 1 (definition moved) |
 
-Remaining parts, one idiom per PR, each off main, each converted by
-`tools/match_idioms.py --convert` and checked object by object against a
-build of main plus the two clean checks:
+The 8 spelled-out sites are `tools/match_idioms.py`'s `ALLOWED_SPELLED`
+list, which `--check` (and CI) enforces; they're described under
+[Register pins](#register-pins) and
+[Other empty-asm forms](#other-empty-asm-forms).
 
-- **Part 2 (done):** `MATCH_BARRIER`, `MATCH_USE`, `MATCH_KEEP`,
-  `MATCH_HOLD` (with their `_VOLATILE` forms), 178 sites, plus the
-  source comments that quoted the old spellings. The four multi-operand
-  sites listed under "Other empty-asm forms" stay written out.
-- **Part 3 (done):** register pins to `MATCH_HOLD_REG`, 2153 sites in
-  169 files, by `tools/match_idioms.py --convert pin` (which splits each
-  declarator into type and name and leaves any initialiser in place),
-  plus the source comments that quoted the old spelling. The five pins
-  in `cortex.c`'s macros stay written out (see
-  [Register pins](#register-pins)).
-- **Part 4:** the small kinds (`reg_clobber`, `mem_barrier`, `mem_ref`),
-  if a macro helps them, and a final pass on this page.
+These have no macro, by design:
 
-Not in scope here: re-testing whether individual pins and nudges are
-still needed (the optional item in #576).
+| Kind | Sites | Why it stays |
+|---|---|---|
+| file-scope `.align 2, 0` | 276 / 131 | an assembler directive |
+| instruction asm | 253 / 90 | each is a specific instruction sequence; each needs a comment |
+| retyped field stores/reads | 191 / 31, 71 / 34 | part of the struct cleanup |
+| asm-label aliases | 20 / 16 | headers_plan's codegen exceptions |
+| scoped volatile casts and locals | 52 / 22 | a type, not a statement |
+| self-init | 6 / 6 | a declaration |
+| per-object flags | 6 groups | documented in the Makefile and [above](#per-object-flags) |
+
+How it was done: one PR per idiom group, each off main, converted with
+`tools/match_idioms.py --convert` (or by hand for the part 4 kinds) and
+checked object by object (`.o` and `.s`) against a build of main, plus
+the two clean checks (`make compare`; the objdiff report at 2056/2059
+functions and 100% data).
+
+- **Part 1 (#623):** match.h, this page, the tool, `MATCH_CONST` (29
+  sites), `BOX_ADDR` moved to match.h.
+- **Part 2 (#624):** `MATCH_BARRIER`, `MATCH_USE`, `MATCH_KEEP`,
+  `MATCH_HOLD` (with their `_VOLATILE` forms), 178 sites, plus the source
+  comments that quoted the old spellings.
+- **Part 3 (#625):** register pins to `MATCH_HOLD_REG`, 2153 sites in
+  169 files, by `--convert pin` (which splits each declarator into type
+  and name and leaves any initialiser in place).
+- **Part 4:** `MATCH_USE2`, `MATCH_CLOBBER`, `MATCH_MEMORY_BARRIER`,
+  `MATCH_KEEP_MEM` and `MATCH_USE_MEM` (11 sites), `--check` and its CI
+  step, and the [Writing new matching code](#writing-new-matching-code)
+  section.
+
+Not done: re-testing whether individual pins and nudges are still needed
+(the optional item in #576). Removing one is fine whenever a clean
+rebuild shows the object stays identical.

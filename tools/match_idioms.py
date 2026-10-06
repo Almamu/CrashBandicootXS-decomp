@@ -20,6 +20,9 @@ Usage:
                                          expands to the spelling it replaces
   tools/match_idioms.py --convert K  rewrite kind K's sites to its match.h
                                      macro (see CONVERTERS)
+  tools/match_idioms.py --check      fail if a spelled-out idiom that has a
+                                     match.h macro appears outside
+                                     ALLOWED_SPELLED (run by CI)
 """
 
 import argparse
@@ -44,7 +47,7 @@ KINDS = collections.OrderedDict([
     ("barrier_macro", "MATCH_BARRIER()"),
     ("use", 'extra-reference nudge / hold end: `asm("" : : "r"(x))`'),
     ("use_volatile", 'extra-reference nudge: `asm volatile("" : : "r"(x))`'),
-    ("use_macro", "MATCH_USE(x) / MATCH_USE_VOLATILE(x)"),
+    ("use_macro", "MATCH_USE(x) / MATCH_USE2(a, b) / their _VOLATILE forms"),
     ("keep", 'value keeper: `asm("" : "+r"(x))`'),
     ("keep_volatile", 'value keeper: `asm volatile("" : "+r"(x))`'),
     ("keep_macro", "MATCH_KEEP(x) / MATCH_KEEP_VOLATILE(x)"),
@@ -55,8 +58,11 @@ KINDS = collections.OrderedDict([
     ("const_volatile", 'constant-init: `asm volatile("" : "=r"(v) : "0"(K))`'),
     ("const_macro", "MATCH_CONST(v, K) / MATCH_CONST_VOLATILE(v, K)"),
     ("mem_barrier", 'memory barrier: `asm volatile("" ::: "memory")`'),
+    ("mem_barrier_macro", "MATCH_MEMORY_BARRIER()"),
     ("reg_clobber", 'register clobber: `asm("" : : : "rN")`'),
+    ("clobber_macro", "MATCH_CLOBBER(rN) / MATCH_CLOBBER_VOLATILE(rN)"),
     ("mem_ref", 'memory-operand nudge: `asm("" : "+m"(x))` / `asm("" : : "m"(x))`'),
+    ("mem_ref_macro", "MATCH_KEEP_MEM(x) / MATCH_USE_MEM(x)"),
     ("empty_other", "other empty-template asm with operands"),
     ("insn", "inline asm that emits instructions (`add`, `lsl`, `mov`, ...)"),
     ("file_align", 'file-scope `asm(".align 2, 0")` padding'),
@@ -259,10 +265,13 @@ def scan_file(path, rel, hits):
     macro_re = {
         "pin_macro": HOLD_REG,
         "barrier_macro": re.compile(r"\bMATCH_BARRIER\s*\("),
-        "use_macro": re.compile(r"\bMATCH_USE(?:_VOLATILE)?\s*\("),
+        "use_macro": re.compile(r"\bMATCH_USE2?(?:_VOLATILE)?\s*\("),
         "keep_macro": re.compile(r"\bMATCH_KEEP(?:_VOLATILE)?\s*\("),
         "hold_macro": re.compile(r"\bMATCH_HOLD(?:_VOLATILE)?\s*\("),
         "const_macro": re.compile(r"\bMATCH_CONST(?:_VOLATILE)?\s*\("),
+        "mem_barrier_macro": re.compile(r"\bMATCH_MEMORY_BARRIER\s*\("),
+        "clobber_macro": re.compile(r"\bMATCH_CLOBBER(?:_VOLATILE)?\s*\("),
+        "mem_ref_macro": re.compile(r"\bMATCH_(?:KEEP|USE)_MEM\s*\("),
     }
     for kind, rx in macro_re.items():
         for m in rx.finditer(text):
@@ -506,6 +515,8 @@ MACRO_CHECKS = [
     ('MATCH_BARRIER();', 'asm("");'),
     ('MATCH_USE(x);', 'asm("" : : "r"(x));'),
     ('MATCH_USE_VOLATILE(x);', 'asm volatile("" : : "r"(x));'),
+    ('MATCH_USE2(ax, px);', 'asm("" : : "r"(ax), "r"(px));'),
+    ('MATCH_USE2_VOLATILE(r0, r1);', 'asm volatile("" : : "r"(r0), "r"(r1));'),
     ('MATCH_KEEP(x);', 'asm("" : "+r"(x));'),
     ('MATCH_KEEP_VOLATILE(x);', 'asm volatile("" : "+r"(x));'),
     ('MATCH_HOLD(hold);', 'asm("" : "=r"(hold));'),
@@ -513,6 +524,11 @@ MACRO_CHECKS = [
     ('MATCH_CONST(zero, 0);', 'asm("" : "=r"(zero) : "0"(0));'),
     ('MATCH_CONST(t2, (void *)label2);', 'asm("" : "=r"(t2) : "0"((void *)label2));'),
     ('MATCH_CONST_VOLATILE(state, 2);', 'asm volatile("" : "=r"(state) : "0"(2));'),
+    ('MATCH_CLOBBER(r5);', 'asm("" : : : "r5");'),
+    ('MATCH_CLOBBER_VOLATILE(r4);', 'asm volatile("" ::: "r4");'),
+    ('MATCH_MEMORY_BARRIER();', 'asm volatile("" ::: "memory");'),
+    ('MATCH_KEEP_MEM(heights[k]);', 'asm("" : "+m"(heights[k]));'),
+    ('MATCH_USE_MEM(q2);', 'asm("" : : "m"(q2));'),
     ('f(MATCH_KEEP_EXPR(u8 *, a + 1));',
      'f(({ u8 *_p = (a + 1); asm("" : "+r"(_p)); _p; }));'),
     ('f(BOX_ADDR(&f.a));',
@@ -538,6 +554,52 @@ def check_macros():
     return 1 if bad else 0
 
 
+# --check: the kinds that have a match.h macro and so must not be spelled
+# out in new code.
+SPELLED_KINDS = ("pin", "empty", "empty_volatile", "use", "use_volatile", "keep",
+                 "keep_volatile", "hold", "hold_volatile", "const", "const_volatile",
+                 "mem_barrier", "reg_clobber", "mem_ref", "empty_other")
+# The sites that stay spelled out, as (file, kind) -> (count, reason).
+# docs/matching_techniques.md lists them too. Keep the counts exact: a
+# new site fails the check, and so does a stale entry.
+ALLOWED_SPELLED = {
+    ("src/bosses/cortex.c", "pin"):
+        (5, "the register is a macro parameter holding a string (asm(R_FRAME)); "
+            "MATCH_HOLD_REG stringizes a bare name"),
+    ("lib/gax/src/gax_swi.c", "mem_ref"):
+        (1, 'two "m" inputs in one volatile asm; no macro has that shape'),
+    ("src/player/action_ctrl_moves.c", "keep_volatile"):
+        (1, 'a "+r" output plus an "r" input in one asm; no macro has that shape'),
+    ("src/save/save_transfer.c", "empty_other"):
+        (1, 'an "=r" output from an untied "r" input (not MATCH_CONST\'s "0"); '
+            'no macro has that shape'),
+}
+
+
+def check_spelled(hits):
+    bad = 0
+    counts = collections.Counter()
+    for kind in SPELLED_KINDS:
+        for rel, _ in hits.get(kind, []):
+            counts[(rel, kind)] += 1
+    for (rel, kind), n in sorted(counts.items()):
+        if n > ALLOWED_SPELLED.get((rel, kind), (0, None))[0]:
+            bad += 1
+            for r, ln in sorted(hits[kind]):
+                if r == rel:
+                    print("%s:%d: spelled-out %s; use its include/match.h macro (%s)"
+                          % (r, ln, kind, KINDS[kind]))
+    for (rel, kind), (n, _) in sorted(ALLOWED_SPELLED.items()):
+        if counts[(rel, kind)] < n:
+            bad += 1
+            print("%s: ALLOWED_SPELLED expects %d %s site(s), found %d; update the list"
+                  % (rel, n, kind, counts[(rel, kind)]))
+    if not bad:
+        print("ok: no spelled-out matching idioms outside the %d documented exceptions"
+              % sum(n for n, _ in ALLOWED_SPELLED.values()))
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--files", action="store_true", help="list files per kind")
@@ -551,6 +613,9 @@ def main():
     ap.add_argument("--check-macros", action="store_true",
                     help="check that each match.h macro expands to the tokens "
                          "of the spelling it replaces")
+    ap.add_argument("--check", action="store_true",
+                    help="fail if an idiom that has a match.h macro is spelled out "
+                         "outside ALLOWED_SPELLED")
     args = ap.parse_args()
 
     if args.check_macros:
@@ -589,6 +654,9 @@ def main():
                 rel = os.path.relpath(p, ROOT)
                 if fn.endswith((".c", ".h")) and rel not in SKIP_FILES:
                     scan_file(p, rel, hits)
+
+    if args.check:
+        return check_spelled(hits)
 
     if args.kind:
         if args.kind not in KINDS:

@@ -58,7 +58,9 @@ matched code - read it before starting.** In short:
   each technique and what it does to the compiler, and
   [include/match.h](include/match.h) has the named macros for the
   one-statement idioms (`MATCH_CONST`, `MATCH_KEEP`, `BOX_ADDR`, ...):
-  use those rather than spelling the `asm` out.
+  use those rather than spelling the `asm` out. CI runs
+  `tools/match_idioms.py --check`, which fails on a hand-spelled idiom
+  (see "Writing new matching code" in that doc).
 - **Renames** follow [docs/naming.md](docs/naming.md): rename only once
   the meaning is understood confidently, and go through its "What
   renaming touches" checklist, including the `rename` line in

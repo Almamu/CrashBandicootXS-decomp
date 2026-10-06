@@ -128,7 +128,7 @@ s32 PlayRoom(struct level_progress *selfArg)
      * otherwise elide, since r4 still holds that exact value from the
      * block above) - the barrier below forces the reload to keep the
      * instruction count matching. */
-    asm volatile("" ::: "r4");
+    MATCH_CLOBBER_VOLATILE(r4);
     {
         MATCH_HOLD_REG(struct level_progress *, p, r4) = self;
         mode = p->cat->kind;

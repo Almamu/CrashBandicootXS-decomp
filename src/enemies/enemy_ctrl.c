@@ -202,7 +202,7 @@ void UpdateEnemyBob(struct part_ctrl *self)
     MATCH_HOLD_REG(s32, k, r6);
 
     /* Empty: marks r5 as used so the prologue saves it, as in the ROM. */
-    asm("" : : : "r5");
+    MATCH_CLOBBER(r5);
     t = gRoomFrameCount >> 1;
     ph = self->phase;
     /* Emits only the `ldr r6, =0xFFFFFF00`; see above. */
@@ -217,7 +217,7 @@ void UpdateEnemyOscillateY(struct part_ctrl *self)
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
 
     /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
-    asm("" : : : "r8");
+    MATCH_CLOBBER(r8);
     target->y = self->baseY + Wave(table, t, self->phase - 0x100) * self->amplitude;
 }
 

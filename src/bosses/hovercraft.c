@@ -1062,7 +1062,7 @@ void LoadHovercraftGraphics(void)
  * cluster's own per-level table (`gHovercraftPalette`) and row-pointer
  * array (`gHovercraftMapFrames`). */
 /* The one-row twin of `ConvertAirshipTiles` (airship_graphics.c). The height is
- * re-read after the row-pointer store (the `"+m"` asm) and the second
+ * re-read after the row-pointer store (the `MATCH_KEEP_MEM`) and the second
  * loop has its own counter (sharing `k` makes the first loop's reversed
  * counter start from a constant instead of `sum`'s zero register). The
  * row header is written out step by step in the ROM's order, `d` being
@@ -1097,7 +1097,7 @@ void ConvertHovercraftTiles(void)
         off += 4;
         rows[k] = ((u8 *)gHovercraftPalette) + off;
         /* forces the height to be re-read (the ROM's `ldm r1!`) */
-        asm("" : "+m"(heights[k]));
+        MATCH_KEEP_MEM(heights[k]);
         off += stride;
         off += heights[k] << 5;
     }

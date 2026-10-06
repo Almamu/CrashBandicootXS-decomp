@@ -23,6 +23,6 @@ void GaxHuffUnComp(void *src, void *dst)
     {
         MATCH_HOLD_REG(void *, r0, r0) = savedSrc;
         MATCH_HOLD_REG(void *, r1, r1) = savedDst;
-        asm volatile("" : : "r"(r0), "r"(r1));
+        MATCH_USE2_VOLATILE(r0, r1);
     }
 }
