@@ -29,6 +29,15 @@ struct actor_hp {
     s32 hp; // 0x54
 };
 
+/* A jetpack ring (CreateJetpackRing, hovercraft.c; vtable
+ * gJetpackRingVtable): `actor_self` plus hit points and a flag that makes
+ * UpdateJetpackRing play its cue only once. */
+struct jetpack_ring {
+    struct actor_self base;
+    s32 hp;  // 0x54
+    u8 cued; // 0x58
+};
+
 /* The spawn argument of CreateJetpackPlane and CreatePolarPenguin. */
 struct spawn_arg {
     u8 unk_00[0x10];

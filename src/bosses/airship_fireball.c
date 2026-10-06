@@ -12,12 +12,9 @@
  * boss-weapon effect state machine - see
  * docs/matching/archive/issue-58-0x08030334-actor.md and docs/status/actor.md. */
 
-struct actor_timed {
-    struct actor_self base;
-    s32 timer; // 0x54 - countdown until the transition fires
-};
+/* The fireball is `struct actor_orbit` (bosses.h). */
 
-/* Countdown `timer`: once it reaches zero, plays a sound, sets the
+/* Takes `delta` off `hp`: once it reaches zero, plays a sound, sets the
  * "table-index 4" tag at `palette`, and fires the state-2/anim-1
  * transition (ACTOR_SET_STATE's stores, with the ROM's registers
  * pinned). The `animTimer`/`animDone` stores go through a cast of the
@@ -25,10 +22,10 @@ struct actor_timed {
  * which lets the scheduler move the zero into a different register. */
 void DamageAirshipFireball(void *selfArg, s32 delta)
 {
-    struct actor_timed *self = selfArg;
+    struct actor_orbit *self = selfArg;
 
-    self->timer -= delta;
-    if (self->timer <= 0) {
+    self->hp -= delta;
+    if (self->hp <= 0) {
         self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         {
@@ -82,10 +79,10 @@ asm(".align 2, 0");
 
 /* An `InitActorPart`-based constructor: forwards all 4 of its own real
  * arguments (the last stack-passed) straight to `InitActorPart`, then
- * marks `self+0x54 = 2`, sets `self+0x50`'s event/trampoline table to
- * `gAirshipFireballVtable`, and stashes its own `b`/`c` arguments a
- * second time into `self+0x58`/`self+0x5c`, `self+0x64 = 0`,
- * `self+0x60 = 0x95`, `self+0x68 (byte) = 0`. Returns `self` - the same
+ * sets `hp = 2` and the method table to `gAirshipFireballVtable`, and
+ * stashes its own `b`/`c` arguments a second time as the orbit's
+ * `centerX`/`centerY`, with `radius = 0`, `velZ = 0x95` and
+ * `exploding = 0`. Returns `self` - the same
  * shape as the already-matched `CreateHovercraftCannon` (hovercraft_cannon.c) and the
  * still-parked `CreateJetpackShot` (jetpack_shot.c), except this one's `d`
  * argument is itself stack-passed (a 5th real argument total) rather
@@ -97,20 +94,20 @@ asm(".align 2, 0");
  * permutation" this function previously resisted. */
 void *CreateAirshipFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct actor_orbit *self = selfArg;
     MATCH_HOLD_REG(s32, bReg, r6) = b;
     MATCH_HOLD_REG(s32, cReg, r8) = c;
     MATCH_HOLD_REG(s32, dReg, r0) = d;
     MATCH_HOLD_REG(s32, health, r5) = 2;
 
     InitActorPart(self, part, b, c, dReg);
-    *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = (void *)gAirshipFireballVtable;
-    *(s32 *)(self + 0x58) = bReg;
-    *(s32 *)(self + 0x5c) = cReg;
-    *(s32 *)(self + 0x64) = 0;
-    *(s32 *)(self + 0x60) = 0x95;
-    self[0x68] = 0;
+    self->hp = health;
+    self->base.vtable = (struct actor_vtable *)gAirshipFireballVtable;
+    self->centerX = bReg;
+    self->centerY = cReg;
+    self->radius = 0;
+    self->velZ = 0x95;
+    self->exploding = 0;
 
     return self;
 }
@@ -120,12 +117,11 @@ asm(".align 2, 0");
 /* Same boss-weapon "self" object family as above - see this
  * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
-/* Trivial setter: marks `self+0x68` (a small state/flag byte, meaning
- * not yet understood beyond its offset). */
+/* Trivial setter: marks the fireball `exploding`. */
 void AirshipFireballStateExplode(void *selfArg)
 {
-    u8 *self = selfArg;
-    self[0x68] = 1;
+    struct actor_orbit *self = selfArg;
+    self->exploding = 1;
 }
 
 /* Same "self" object family as above - see
@@ -146,11 +142,11 @@ asm(".align 2, 0");
  * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* Trivial getter counterpart to `AirshipFireballStateExplode` (above): reads
- * `self+0x68`. */
+ * `exploding`. */
 u8 IsAirshipFireballUnshootable(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x68];
+    struct actor_orbit *self = selfArg;
+    return self->exploding;
 }
 
 asm(".align 2, 0");

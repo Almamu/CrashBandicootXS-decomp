@@ -86,12 +86,7 @@ struct swing_actor {
     u8 hit;       // 0x65
 };
 
-/* `UpdateJetpackRing`: plays its cue once. */
-struct trigger_actor {
-    struct actor_self base;
-    u8 unk_54[4];
-    u8 cued; // 0x58
-};
+/* `UpdateJetpackRing`'s object is `struct jetpack_ring` (vehicle.h). */
 
 /* Per-state member-pointer dispatch, `(this->*gJetpackBalloonCrateStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once state 1
@@ -1157,11 +1152,11 @@ u8 IsJetpackRocketUnshootable(void *selfArg)
 /* Type-byte-gated (`self+0x30`'s type byte `== 0x1f`) proximity check:
  * on trigger, feeds the offset between `x` and the type-byte
  * table's own `+0x20` field, plus `y`, into `PassJetpackRing`, then
- * latches a one-shot cue via `self+0x58`. Tail-calls `UpdateActor`
+ * latches the one-shot `cued`. Tail-calls `UpdateActor`
  * unconditionally. */
 void UpdateJetpackRing(void *selfArg)
 {
-    struct trigger_actor *self = selfArg;
+    struct jetpack_ring *self = selfArg;
 
     if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && (u8)IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;

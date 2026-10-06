@@ -6,10 +6,10 @@
 /* Same "self" object family as hovercraft_side_gun.c - see that file's header
  * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
-/* Syncs `self`'s position fields from the singleton's own position plus
- * a fixed offset, sets the one-shot flag (`+0x58=1`), and - if
- * `self+0x12` is set and `self` is non-NULL - fires the `self+0x50`
- * event table's slot-3 trampoline; otherwise calls `UpdateActor(self)`.
+/* Syncs `self`'s position from the singleton's own position plus a
+ * fixed offset, sets `unshootable`, and - once the animation is done
+ * (`animDone`) and `self` is non-NULL - calls the "destroy" virtual
+ * with 3; otherwise calls `UpdateActor(self)`.
  *
  * The ROM computes a "should animate" 0/1 value into a register and
  * then re-checks it against zero before deciding whether to call
@@ -25,19 +25,19 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
 void UpdateHovercraftCannonFlash(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct cannon_flash *self = selfArg;
     MATCH_HOLD_REG(s32, doAnim, r0);
 
-    *(s32 *)(self + 0x24) = GetHovercraftZ() - 0x200;
-    *(s32 *)(self + 0x1c) = GetHovercraftX() + 0x2000;
-    *(s32 *)(self + 0x20) = GetHovercraftY() + 0x3000;
-    self[0x58] = 1;
+    self->base.z = GetHovercraftZ() - 0x200;
+    self->base.x = GetHovercraftX() + 0x2000;
+    self->base.y = GetHovercraftY() + 0x3000;
+    self->unshootable = 1;
 
-    if (self[0x12] != 0) {
+    if (self->base.animDone != 0) {
         if (self != NULL) {
-            u8 *table = *(u8 **)(self + 0x50);
-            u8 *addr = self + *(s16 *)(table + 8);
-            void *fn = *(void **)(table + 0xc);
+            struct actor_vtable *table = self->base.vtable;
+            u8 *addr = (u8 *)self + table->destroy.thisOffset;
+            void *fn = table->destroy.fn;
 
             _call_via_r2(addr, (void *)3, fn);
         }
@@ -56,38 +56,38 @@ asm(".align 2, 0");
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
  * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. This is a
- * third, much smaller object kind (vtable `gHovercraftCannonFlashVtable`) that
- * reuses `self+0x58` as a plain one-shot flag rather than a health
- * countdown. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */
+ * third, much smaller object kind (`struct cannon_flash`, vtable
+ * `gHovercraftCannonFlashVtable`) whose only own fields are `hp` and the
+ * `unshootable` flag. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Constructor: forwards straight through to `InitActorPart`, then sets
- * health (`+0x54=1`), the event table (`+0x50=&gHovercraftCannonFlashVtable`),
- * resets state/frame-counter/table-index/anim/accumulator, and sets the
- * one-shot flag (`+0x58=1`). Returns `self`. */
+ * `hp = 1` and the method table (`gHovercraftCannonFlashVtable`), resets
+ * the state and animation (ACTOR_SET_STATE's stores, state 0), and sets
+ * `unshootable`. Returns `self`. */
 void *CreateHovercraftCannonFlash(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct cannon_flash *self = selfArg;
     MATCH_HOLD_REG(s32, one, r5) = 1;
 
     InitActorPart(self, part, b, c, d);
-    *(s32 *)(self + 0x54) = one;
-    *(void **)(self + 0x50) = (void *)gHovercraftCannonFlashVtable;
+    self->hp = one;
+    self->base.vtable = (struct actor_vtable *)gHovercraftCannonFlashVtable;
     {
         MATCH_HOLD_REG(s32, zero, r1) = 0;
 
-        *(s32 *)(self + 0x28) = zero;
-        *(s32 *)(self + 0x44) = zero;
-        *(s32 *)(self + 0xc) = zero;
+        self->base.state = zero;
+        self->base.stateTime = zero;
+        self->base.animIndex = zero;
         {
-            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)*(void **)self;
+            MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[0].duration;
             MATCH_HOLD_REG(u8, zero2, r2) = 0;
 
-            *(u16 *)(self + 0x10) = anim;
-            self[0x12] = zero2;
+            *(u16 *)&self->base.animTimer = anim;
+            *(u8 *)&self->base.animDone = zero2;
         }
-        *(s32 *)(self + 8) = zero;
+        self->base.animTime = zero;
     }
-    self[0x58] = one;
+    self->unshootable = one;
 
     return self;
 }
@@ -111,19 +111,19 @@ asm(".align 2, 0");
 
 s32 RunHovercraftCannonFlashState(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct cannon_flash *self = selfArg;
     s32 doAnim;
 
-    *(s32 *)(self + 0x24) = GetHovercraftZ() - 0x200;
-    *(s32 *)(self + 0x1c) = GetHovercraftX() + 0x2000;
-    *(s32 *)(self + 0x20) = GetHovercraftY() + 0x3000;
-    self[0x58] = 1;
+    self->base.z = GetHovercraftZ() - 0x200;
+    self->base.x = GetHovercraftX() + 0x2000;
+    self->base.y = GetHovercraftY() + 0x3000;
+    self->unshootable = 1;
 
-    if (self[0x12] != 0) {
+    if (self->base.animDone != 0) {
         if (self != NULL) {
-            u8 *table = *(u8 **)(self + 0x50);
-            u8 *addr = self + *(s16 *)(table + 8);
-            void *fn = *(void **)(table + 0xc);
+            struct actor_vtable *table = self->base.vtable;
+            u8 *addr = (u8 *)self + table->destroy.thisOffset;
+            void *fn = table->destroy.fn;
 
             _call_via_r2(addr, (void *)3, fn);
         }
@@ -140,12 +140,12 @@ asm(".align 2, 0");
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
-/* Constant getter - returns `self`'s one-shot flag (`self+0x58`). */
+/* Constant getter - returns `self`'s `unshootable` flag. */
 u8 IsHovercraftCannonFlashUnshootable(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct cannon_flash *self = selfArg;
 
-    return self[0x58];
+    return self->unshootable;
 }
 
 asm(".align 2, 0");

@@ -147,14 +147,7 @@ struct jetpack_cannonball {
     s32 velY; // 0x5C
 };
 
-struct actor_orbit {
-    struct actor_self base;
-    s32 hp;      // 0x54
-    s32 centerX; // 0x58
-    s32 centerY; // 0x5C
-    s32 velZ;    // 0x60
-    s32 radius;  // 0x64
-};
+/* The airship fireball, `struct actor_orbit`, is in bosses.h. */
 
 /* Aims the next hop at sub-effect target `target`: looks up the hop
  * speed for that target's kind, derives the step count from the height

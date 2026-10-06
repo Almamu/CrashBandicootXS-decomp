@@ -204,16 +204,17 @@ void HovercraftCannonStateDestroyed(void *selfArg)
     ShakeActorBg(0x400);
 
     if (self->base.animDone != 0 && self != NULL) {
-        MATCH_HOLD_REG(u8 *, table, r1) = (u8 *)self->base.vtable;
+        MATCH_HOLD_REG(struct actor_vtable *, table, r1) = self->base.vtable;
         MATCH_HOLD_REG(u8 *, addr, r0);
         void *fn;
 
         {
             MATCH_HOLD_REG(s32, eight, r2) = 8;
 
+            /* table->destroy.thisOffset, with the 8 built in r2 */
             addr = (u8 *)self + *(s16 *)((u8 *)table + eight);
         }
-        fn = *(void **)(table + 0xc);
+        fn = table->destroy.fn;
 
         _call_via_r2(addr, (void *)3, fn);
     }
