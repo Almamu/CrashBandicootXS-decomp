@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "byte_arg.h"
 
 /* GitHub issue #9/#10: foundational investigation of the large, fully
@@ -388,7 +389,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
 
             slot = (u32 *)((u8 *)slot + off);
             sh = id - word * 32;
-            asm("" : "=r"(bit) : "0"(1)); /* movs #1 here, not CSE'd */
+            MATCH_CONST(bit, 1); /* movs #1 here, not CSE'd */
             *slot |= bit << sh;
         } while (0);
 }

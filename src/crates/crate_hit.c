@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "box_part.h"
 #include "util.h"
@@ -236,11 +237,6 @@ asm(".align 2, 0");
  * x/y are computed first so that the `add r0, sp, #16` comes after them.
  * The same fix closed `PlayerAnimWouldTouchCrate` (crate_touch.c); see
  * docs/matching/archive/sp-box-retry.md. */
-
-/* `a` through a copy that an empty asm claims to modify (emits nothing):
- * it hides the copy's value from cse, so each use of a stack box address
- * is its own pseudo instead of one held across calls. */
-#define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
 void BreakCrateTouchedByPlayer(struct box_part *self)
 {

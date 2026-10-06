@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
 #include "audio.h"
@@ -899,7 +900,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
 
             /* Constant-init (emits the `movs r5, #0x10`): a plain
              * assignment is folded into the orr chain. */
-            asm("" : "=r"(acc) : "0"(BLDCNT_TGT1_OBJ));
+            MATCH_CONST(acc, BLDCNT_TGT1_OBJ);
             acc |= BLDCNT_TGT2_BG0;
             acc |= BLDCNT_TGT2_BG1;
             acc |= BLDCNT_TGT2_BG2;

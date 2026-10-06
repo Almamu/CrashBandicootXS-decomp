@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "audio.h"
 #include "actor.h"
@@ -84,7 +85,7 @@ void HovercraftCannonStateFire(struct spawner *self)
             u8 zero;
 
             /* separate byte zero: the ROM materializes its own movs for it */
-            asm("" : "=r"(zero) : "0"(0));
+            MATCH_CONST(zero, 0);
             self->base.animTimer = anim;
             self->base.animDone = zero;
         }

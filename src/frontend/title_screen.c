@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gba/io_reg.h"
 #include "bitmap_font.h"
 #include "actor_self.h"
@@ -451,7 +452,7 @@ void HashTitleCheatInput(u32 *selfArg, u32 val)
 /* Closed in the issues #64/#65 second NAKED retry. The loop is a
  * hand-written `goto` loop (no loop notes), so nothing is hoisted, as in
  * the ROM. The rest is global-alloc priority:
- * - `stride` starts from an empty asm (`"=r"(stride) : "0"(0)`). A plain
+ * - `stride` starts from a constant-init (`MATCH_CONST(stride, 0)`). A plain
  *   `stride = 0` makes local-alloc double its live length, which drops
  *   it below `slot` (r5/r4 swapped).
  * - One extra `self` reference in the loop and `seedBase`/`zero`
@@ -476,7 +477,7 @@ void ResetTitleLogoPieces(u32 *self)
     counter = (s32 *)((u8 *)self + 0x1e4);
     seed = seedBase;
     slot = (u8 *)self;
-    asm("" : "=r"(stride) : "0"(0));
+    MATCH_CONST(stride, 0);
 loop:
     zero = 0;
     slot[0x10] = zero;

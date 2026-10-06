@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "actor_self.h"
 #include "part_ctrl.h"
@@ -205,7 +206,7 @@ void UpdateEnemyBob(struct part_ctrl *self)
     t = gRoomFrameCount >> 1;
     ph = self->phase;
     /* Emits only the `ldr r6, =0xFFFFFF00`; see above. */
-    asm("" : "=r"(k) : "0"(-0x100));
+    MATCH_CONST(k, -0x100);
     target->y = self->baseY + Wave(table, t, ph + k) * self->amplitude;
 }
 

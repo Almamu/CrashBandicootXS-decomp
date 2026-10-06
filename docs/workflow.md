@@ -45,10 +45,10 @@ incomplete pass and should be finished before moving on.
    for the exact invocation).
 3. Iterate on the C until it's byte-exact - register-variable pins,
    inline-asm anchors, and a trailing `asm(".align 2, 0")` for padding
-   mismatches are all fair game (see `matching_decomp_register_pinning`/
-   `matching_decomp_alignment_fix` memory for the established
-   techniques, and matching.md's alignment-padding gotcha for one
-   specific recurring case). If a genuine gap resists every technique
+   mismatches are all fair game (see
+   [matching_techniques.md](./matching_techniques.md) for the
+   established techniques, and `include/match.h` for the macros that
+   spell the asm idioms). If a genuine gap resists every technique
    tried, park it under the `NON_MATCHING` build toggle instead of
    leaving raw asm or giving up on the C reconstruction entirely - see
    `matching_decomp_non_matching_toggle` memory and the "Parked, not

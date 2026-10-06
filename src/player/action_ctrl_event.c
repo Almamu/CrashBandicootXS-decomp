@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - see
  * kill_player.c's top-of-file comment for the shared field-offset
@@ -211,7 +212,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             if (held & 0x100)
                 self->slamBlocked = 1;
             /* one = 1, kept apart from the fire test's 1 (see above). */
-            asm("" : "=r"(one) : "0"(1));
+            MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
                 SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
@@ -235,7 +236,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             if (held & 0x100)
                 self->slamBlocked = 1;
             /* one = 1, kept apart from the fire test's 1 (see above). */
-            asm("" : "=r"(one) : "0"(1));
+            MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
                 SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
@@ -257,7 +258,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
 
             PlaySfx(gAudioContext, 0xa, 0x100);
             /* one = 1, kept apart from the fire test's 1 (see above). */
-            asm("" : "=r"(one) : "0"(1));
+            MATCH_CONST(one, 1);
             fire = in & 1;
             if (fire) {
                 SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);

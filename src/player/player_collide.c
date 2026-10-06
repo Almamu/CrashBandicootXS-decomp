@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "actor_self.h"
 #include "player.h"
@@ -123,7 +124,7 @@ u8 CollidePlayer(struct player *self)
         register s32 hold asm("r3");
 
         /* Constant-init without live-range doubling (no code). */
-        asm("" : "=r"(zero) : "0"(0));
+        MATCH_CONST(zero, 0);
         self->hitAxes = zero;
         self->cleared = zero;
         CALL_M70H(self);
@@ -168,7 +169,7 @@ u8 CollidePlayer(struct player *self)
                      * address, as in the ROM, which keeps the kind-5 tail
                      * from being cross-jumped. */
                     s32 _one;
-                    asm("" : "=r"(_one) : "0"(1));
+                    MATCH_CONST(_one, 1);
                     self->slippery = _one;
                 }
                 break;
@@ -180,7 +181,7 @@ u8 CollidePlayer(struct player *self)
                      * address, as in the ROM, which keeps the kind-5 tail
                      * from being cross-jumped. */
                     s32 _one;
-                    asm("" : "=r"(_one) : "0"(1));
+                    MATCH_CONST(_one, 1);
                     self->pushLeft = _one;
                 }
                 break;
@@ -196,7 +197,7 @@ u8 CollidePlayer(struct player *self)
                      * address, as in the ROM, which keeps the kind-5 tail
                      * from being cross-jumped. */
                     s32 _one;
-                    asm("" : "=r"(_one) : "0"(1));
+                    MATCH_CONST(_one, 1);
                     self->pushRight = _one;
                 }
                 break;

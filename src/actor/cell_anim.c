@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_anim.h"
 #include "gba/io_reg.h"
 #include <libgcc.h>
@@ -78,7 +79,7 @@ void UploadCellAnimFrame(void)
  * `gCellAnimFrameSize` once, after the `if`, then reloads it for the
  * division through a *copy* of its address taken before the branch
  * (`ldr r4, =A4; ...; add r1, r4, #0`). The copy is
- * `asm("" : "=r"(reload) : "0"(a4))`, which emits no code but gives
+ * `MATCH_CONST(reload, a4)` (include/match.h), which emits no code but gives
  * gcc a second pointer it can't merge back into `a4`. Evaluation order
  * fixes the rest: the flag goes through a pointer to
  * `gCellAnimHasBanks` loaded first, `area` is assigned inside the
@@ -104,7 +105,7 @@ void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
         s32 *reload;
 
         size = gCellAnimTileBytes;
-        asm("" : "=r"(reload) : "0"(a4));
+        MATCH_CONST(reload, a4);
         if (flag)
             size += (area + 7) / 8 * 4;
         *a4 = size;

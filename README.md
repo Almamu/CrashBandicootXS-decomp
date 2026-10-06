@@ -141,6 +141,7 @@ reason, that's a completely reasonable position - just know it going in.
 - [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and notes on the sprite/actor system
 - [docs/levels.md](./docs/levels.md) - the level data: rooms, layers, chunk streams, entities
+- [docs/matching_techniques.md](./docs/matching_techniques.md) - the matching techniques (compilers and flags, source shapes, register pins and holds, the `include/match.h` asm idioms)
 - [docs/matching/](./docs/matching/) - the current matching references (the IWRAM image, per-file flags), plus [archive/](./docs/matching/archive/) and [docs/matching.md](./docs/matching.md), the frozen per-pass matching logs
 - [docs/decomp_dev.md](./docs/decomp_dev.md) - how this project's [decomp.dev](https://decomp.dev) progress report is generated in CI
 - [docs/rom_map.md](./docs/rom_map.md) - the historical whole-ROM map used to plan the matching work

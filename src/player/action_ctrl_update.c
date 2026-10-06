@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "system.h"
 #include "audio.h"
@@ -113,7 +114,7 @@ static inline s32 K100(void)
 {
     s32 k;
 
-    asm("" : "=r"(k) : "0"(0x100));
+    MATCH_CONST(k, 0x100);
     return k;
 }
 

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "util.h"
 #include "audio.h"
@@ -90,8 +91,8 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
          * (`movs r2, #0; movs r0, #2`); the "=r"/"0" escapes keep both
          * as registers, and the volatile one stops the 2 from being
          * sunk to its store. */
-        asm("" : "=r"(zero32) : "0"(0));
-        asm volatile("" : "=r"(state) : "0"(2));
+        MATCH_CONST(zero32, 0);
+        MATCH_CONST_VOLATILE(state, 2);
         self->base.state = zero32;
         self->base.stateTime = zero32;
         self->base.animIndex = state;
@@ -100,7 +101,7 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
             u8 zero;
 
             /* separate byte zero: the ROM materializes its own movs for it */
-            asm("" : "=r"(zero) : "0"(0));
+            MATCH_CONST(zero, 0);
             self->base.animTimer = anim;
             self->base.animDone = zero;
         }

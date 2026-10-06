@@ -54,6 +54,11 @@ matched code - read it before starting.** In short:
   register allocation or instruction order in place. Replace one only
   when the rebuild shows the cleaner version produces the same bytes;
   otherwise leave it, with a one-line comment saying why.
+  [docs/matching_techniques.md](docs/matching_techniques.md) explains
+  each technique and what it does to the compiler, and
+  [include/match.h](include/match.h) has the named macros for the
+  one-statement idioms (`MATCH_CONST`, `MATCH_KEEP`, `BOX_ADDR`, ...):
+  use those rather than spelling the `asm` out.
 - **Renames** follow [docs/naming.md](docs/naming.md): rename only once
   the meaning is understood confidently, and go through its "What
   renaming touches" checklist, including the `rename` line in

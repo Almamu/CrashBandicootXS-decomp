@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 
 /* GitHub issue #9/#10: 0x0800CD00, `PlayerHasRoomForAnim`'s (`player_anim_room.c`)
  * only caller/callee companion - `PlayerHasRoomForAnim` calls this once per
@@ -74,11 +75,6 @@
 #include "crates.h"
 #include "globals.h"
 #include "player.h"
-
-/* `a` through a copy that an empty asm claims to modify (emits nothing):
- * it hides the copy's value from cse, so each use of a stack box address
- * is its own pseudo instead of one held across calls. */
-#define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
 u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
 {
