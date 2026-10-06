@@ -63,7 +63,7 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
         do {
             struct pool_node *node;
             for (node = m->gridHead[i]; node != NULL; node = node->next)
-                CollideCrateWithPlayer(node->data, mode, px, py);
+                CollideCrateWithPlayer((struct crate *)node->data, mode, px, py);
             i--;
         } while (i >= lo);
     }

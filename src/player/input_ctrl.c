@@ -90,29 +90,6 @@ struct ctrl_vtable
     struct ctrl_method setAnim;      // 0x50 - SetCtrlTargetAnim
 };
 
-struct ctrl_target
-{
-    s32 x;            // 0x00
-    s32 y;            // 0x04
-    u16 field_08;     // 0x08 - bitmap id (see MarkEntityGone)
-    u8 unk_0A[2];
-    u8 gone:1;        // 0x0C - bit 0: removed (see MarkEntityGone)
-    u8 unk_0C_1:5;
-    u8 flag6:1;
-    u8 flag7:1;
-    u8 unk_0D[0x13];
-    struct { u8 *records; } *table; // 0x20
-    u8 unk_24[5];
-    u8 slot:4;        // 0x29 - low nibble
-    u8 unk_29_4:4;
-    u8 unk_2A[3];
-    u8 tag;           // 0x2D
-    u8 unk_2E[0xA];
-    u8 unk_38;        // 0x38
-    u8 unk_39[0xCB];
-    u8 dead;           // 0x104
-};
-
 /* The camera lead (CreateCameraLead), as far as this file reads it:
  * level_select.c's `struct follow_child` sees the byte at 0x0C whole. */
 struct ctrl_child
@@ -139,7 +116,7 @@ struct input_ctrl
     struct { struct anim_pair *entries; } *animSet; // 0x04
     s32 state;                   // 0x08
     struct ctrl_vtable *vtable;  // 0x0C
-    struct ctrl_target *target;  // 0x10
+    struct player *target;       // 0x10
     u8 motionX;                  // 0x14 - queued X motion entry (animSet->entries[].a)
     u8 motionY;                  // 0x15 - queued Y motion entry (animSet->entries[].b)
     u8 dirState;                 // 0x16
@@ -188,12 +165,13 @@ extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
         *_slot |= 1 << (_id - _word * 32);                                     \
     } while (0)
 
-/* "Mark gone": MarkEntityGone's sequence (graphics.c), inlined */
-#define MARK_GONE(t)                                                           \
+/* "Mark gone": MarkEntityGone's sequence (graphics.c), inlined, on an
+ * object's `gone` bit and bitmap id */
+#define MARK_GONE(gone, id)                                                    \
     {                                                                          \
-        (t)->gone = 1;                                                         \
-        if ((t)->field_08 != 0xFFFF)                                           \
-            SET_ID_BIT((t)->field_08);                                         \
+        (gone) = 1;                                                            \
+        if ((id) != 0xFFFF)                                                    \
+            SET_ID_BIT(id);                                                    \
     }
 
 static inline void SetCameraLeadSpeed(struct input_ctrl *self, s32 speed)
@@ -251,15 +229,15 @@ void InputCtrlKillPlayer(struct input_ctrl *self, void *arg)
     PlaySfx(gAudioContext, 0x1B, 0x100);
     CTRL_CALL2(self, setMode, 3);
     CTRL_CALL3(self, setAnim, self->target, arg);
-    self->target->flag7 = 0;
-    self->target->flag6 = 0;
+    self->target->flags.bits.flag7 = 0;
+    self->target->flags.bits.flag6 = 0;
     self->target->dead = 1;
     LoseLife(gLevelState);
     {
         void *cache = gPaletteCache;
-        struct ctrl_target *t = self->target;
+        struct player *t = self->target;
 
-        LoadPaletteSlot(cache, t->slot, t->table->records[t->tag * 28 + 0x14]);
+        LoadPaletteSlot(cache, t->slot, t->anim->records[t->tag].paletteId);
     }
 }
 
@@ -292,7 +270,7 @@ void UpdateInputCtrl(struct input_ctrl *self)
             {
                 struct ctrl_child *c = self->cameraLead;
 
-                MARK_GONE(c);
+                MARK_GONE(c->gone, c->field_08);
             }
             self->cameraLead = NULL;
             RequestRoomExit();
@@ -409,15 +387,15 @@ void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unus
 
 void InputCtrlStateDead(struct input_ctrl *self)
 {
-    struct ctrl_target *t = self->target;
+    struct player *t = self->target;
 
-    if (t->unk_38)
-        MARK_GONE(t);
+    if (t->animDone)
+        MARK_GONE(t->flags.bits.gone, t->id);
 }
 
 void sub_801793C(struct input_ctrl *self)
 {
-    if (self->target->unk_38)
+    if (self->target->animDone)
     {
         SetInputCtrlModeAnim(self, 1, NULL, 0, 0);
         QueueMotionX(self, 2);
@@ -426,7 +404,7 @@ void sub_801793C(struct input_ctrl *self)
 
 void sub_801796C(struct input_ctrl *self)
 {
-    if (self->target->unk_38)
+    if (self->target->animDone)
         SetInputCtrlModeAnim(self, 2, NULL, 0, 0);
 }
 
@@ -462,7 +440,7 @@ void InputCtrlHandleEvent(struct input_ctrl *self, s32 arg1, s32 arg2)
         InputCtrlKillPlayer(self, (void *)1);
 }
 
-void AttachInputCtrl(struct input_ctrl *self, struct ctrl_target *target)
+void AttachInputCtrl(struct input_ctrl *self, struct player *target)
 {
     self->target = target;
 }

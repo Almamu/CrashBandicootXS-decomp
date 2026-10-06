@@ -243,9 +243,9 @@ returnNeg1:
  * countdown to -1 (disabled). Matches the "get next"/"get prev" field
  * pair (`+0x5c`/`+0x60`) `GetCrateBelow`/`GetCrateAbove` in crate.c
  * read/write. */
-void ResetCrate(void *selfArg)
+void ResetCrate(struct crate *selfArg)
 {
-    register u8 *self asm("r2") = selfArg;
+    register u8 *self asm("r2") = (u8 *)selfArg;
     u8 v = 4;
     register u8 *addr asm("r3");
     u8 zero;

@@ -76,7 +76,7 @@
  * file is built with old_agbcc for `sub_800CF70`): the wide-mode x is
  * `x += xOffset; x -= 2;` as two statements (the ROM's `adds r1, r1, r7;
  * subs r1, #2`). */
-u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
+u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
                s32 xOffset, s32 yOffset)
 {
     struct aabb b;
@@ -162,8 +162,8 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
 struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *foundFlag)
 {
     struct box_part *self = selfArg;
-    struct box_part *next = GetCrateAbove(self);
-    struct box_part *prev = GetCrateBelow(self);
+    struct box_part *next = (struct box_part *)GetCrateAbove((struct crate *)self);
+    struct box_part *prev = (struct box_part *)GetCrateBelow((struct crate *)self);
 
     if (next == NULL && prev == NULL)
         return self;

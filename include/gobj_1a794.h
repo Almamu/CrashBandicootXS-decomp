@@ -27,10 +27,8 @@
  *   +0x54 DestroyPlatform destructor). Its `type` (+0x78) comes from the
  *   level's spawn record or is forced by the spawn kind; types 1/5/6/7
  *   get a `struct mover` attached at +0x44. The player object
- *   (gPlayer, player.h's `struct player`) is built on the same base:
- *   the fields past 0x80 here are the player's, read by the accessors
- *   in player_flags.c, and `carried` (+0xAC) is the object the player
- *   is standing on.
+ *   (gPlayer, player.h's `struct player`) is built on the same 0x80-byte
+ *   base and adds its own fields after it.
  * - `struct mover`, a 0x38-byte helper (method table gPlatformMoverVtable:
  *   +0x0C UpdatePlatformMover per-frame move, +0x4C DestroyPlatformMover destructor,
  *   +0x5C StartPlatformMoverMotionXFromSet / +0x64 StartPlatformMoverMotionYFromSet velocity setters) that
@@ -129,37 +127,6 @@ struct gobj
     s32 hitMask;        // 0x74 - probe axes hit this frame (OR-accumulated, see box_part.h)
     s32 type;           // 0x78
     u8 unk_7C[4];
-    u8 busy;            // 0x80 - set while a triggered crate animation runs (the crate's state
-                        //        bit 7), cleared when it ends; enemies skip the player meanwhile
-    u8 unk_81[7];
-    u8 ctrlMode;        // 0x88 - player control mode 0-3: picks the `mover` controller update
-                        //        (player_reset.c); nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
-    u8 unk_89[3];
-    u32 deadline;       // 0x8C - gRoomFrameCount frame IsPlayerInvulnerable tests against
-    u8 bumped;          // 0x90 - set when a crate's side stopped the player's X motion
-                        //        (ActionCtrlHandleEvent event 12); cleared when the
-                        //        controller's bumpTimer runs out or its mode changes
-    u8 countdown;       // 0x91
-    u8 unk_92;          // 0x92 - a counter
-    u8 unk_93;
-    u8 listCount;       // 0x94
-    u8 unk_95[3];
-    s32 list[5];        // 0x98 - appended to by sub_800B678
-    struct gobj *carried; // 0xAC
-    /* The rest is only reached by the base-class accessors in
-     * player_flags.c. */
-    u8 unk_B0[0x50];
-    u8 slippery;        // 0x100 - standing on terrain kind 5 (CollidePlayer): the player keeps
-                        //         sliding (speedX isn't zeroed, motion keeps its speed, steps halve)
-                        //         and skids (anims 0x25/0x26, sfx 0x36; ActionCtrlSetTargetAnim)
-    u8 hanging;         // 0x101 - hanging from hang terrain (code 6): CollidePlayer sends event
-                        //         0x17 to grab and 0x18 when it's gone; ActionCtrlHandleEvent sets/clears it
-    u8 pushLeft;        // 0x102 - nonzero: moves the standing player 1px left per frame
-    u8 pushRight;       // 0x103 - nonzero: moves the standing player 1px right per frame
-    u8 dead;            // 0x104 - the player died (KillPlayer and the other controllers' kill handlers); blocks pause and further hits
-    u8 unk_105[3];
-    u8 collisionQueue[4]; // 0x108 - the embedded collision queue (ResetCollisionQueue/
-                          //         DestroyCollisionQueue; GetPlayerCollisionQueue returns its address)
 };
 
 struct mover_vtable

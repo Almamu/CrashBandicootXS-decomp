@@ -52,7 +52,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * single-instruction `asm` (matching the ROM's own operand order
  * exactly, `"add %0, %1, %2"` with the base as `%1`) closes it without
  * disturbing anything else. */
-void DrawCrateList(void *managerArg)
+void DrawCrateList(struct pool_manager *managerArg)
 {
     register struct pool_manager *manager asm("r3") = managerArg;
     s32 box[4];

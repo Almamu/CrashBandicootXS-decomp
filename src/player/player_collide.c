@@ -6,43 +6,10 @@
 #include "level.h"
 #include "globals.h"
 
-/* GitHub issue #9/#10: 0x0800A884 - the same big, still-unnamed "part"
- * object family as `player_update.c`/`player_reset.c`; raw offset casts
- * throughout for the same reason those files give. */
+/* GitHub issue #9/#10: 0x0800A884 - the player object's (`struct
+ * player`, player.h) collision method. */
 
 extern u8 gEmptySpritePoint[];
-
-struct a884_part {
-    s32 x;              // 0x00
-    s32 y;              // 0x04
-    u8 unk_08[4];
-    u8 flags;           // 0x0C - bit 7: active, bit 6: set by kind 1
-    u8 unk_0d[0xb];
-    u8 *vtable;         // 0x18
-    u8 unk_1c[0xc];
-    u32 unk_28_0:4;     // 0x28
-    u32 mirrorX:1;
-    u32 unk_28_5:27;
-    u8 unk_2c[0x3c];
-    u8 hitAxes;         // 0x68
-    u8 unk_69[0x23];
-    s32 deadline;       // 0x8C - struct gobj.deadline (invulnerability)
-    u8 unk_90[0x1c];
-    s32 carried;        // 0xAC - struct gobj.carried
-    u8 unk_b0[0x50];
-    u8 slippery;        // 0x100 - terrain kind 5 (struct gobj.slippery)
-    u8 hanging;         // 0x101 - see the hang-terrain probe at the end
-    u8 pushLeft;        // 0x102 - terrain kind 7
-    u8 pushRight;       // 0x103 - terrain kind 10
-    u8 dead;            // 0x104
-    u8 f105;            // 0x105
-};
-
-struct a884_method {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
-};
 
 /* A per-frame "reentrancy guard"-shaped wrapper (only runs if
  * `self+0xc` bit 7 is set): fires `self->table+0x70`'s trampoline via
@@ -80,13 +47,12 @@ struct a884_method {
  * reload's move2add reusing a reload register; they come from r3 holds
  * (no code) that keep reload rotating through r0-r2 only. */
 
-#define A884_METHOD(obj, off) ((struct a884_method *)((obj)->vtable + (off)))
 typedef void (*a884_fn0)(void *self);
 typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
 
 #define CALL_M68(obj, a, b, c)                                                 \
     if (1) {                                                                   \
-        struct a884_method *_m = A884_METHOD(obj, 0x68);                       \
+        const struct actor_method *_m = &(obj)->vtable->handleEvent;           \
         ((a884_fn3)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c));       \
     } else (void)0
 
@@ -96,10 +62,10 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
 #define CALL_M70H(obj)                                                         \
     if (1) {                                                                   \
         register s32 _h asm("r3");                                             \
-        struct a884_method *_m;                                                \
+        const struct actor_method *_m;                                         \
         void *_t;                                                              \
         asm("" : "=r"(_h)); /* r3 hold starts: no code */                      \
-        _m = A884_METHOD(obj, 0x70);                                           \
+        _m = &(obj)->vtable->collideWithObjects;                               \
         _t = (u8 *)(obj) + _m->thisOffset;                                     \
         asm("" : : "r"(_h)); /* r3 hold ends: no code */                       \
         ((a884_fn0)_m->fn)(_t);                                                \
@@ -108,10 +74,10 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
 #define CALL_M68H(obj, a, b, c)                                                \
     if (1) {                                                                   \
         register s32 _h asm("r3");                                             \
-        struct a884_method *_m;                                                \
+        const struct actor_method *_m;                                         \
         void *_t;                                                              \
         asm("" : "=r"(_h)); /* r3 hold starts: no code */                      \
-        _m = A884_METHOD(obj, 0x68);                                           \
+        _m = &(obj)->vtable->handleEvent;                                      \
         _t = (u8 *)(obj) + _m->thisOffset;                                     \
         asm("" : : "r"(_h)); /* r3 hold ends: no code */                       \
         ((a884_fn3)_m->fn)(_t, (a), (b), (c));                                 \
@@ -148,9 +114,9 @@ static inline s16 *A884Offset(void *part)
     return result;
 }
 
-u8 CollidePlayer(struct a884_part *self)
+u8 CollidePlayer(struct player *self)
 {
-    if (self->flags >> 7) {
+    if (self->flags.all >> 7) {
         u8 kind;
         s16 *off;
         s32 x, y;
@@ -160,9 +126,9 @@ u8 CollidePlayer(struct a884_part *self)
         /* Constant-init without live-range doubling (no code). */
         asm("" : "=r"(zero) : "0"(0));
         self->hitAxes = zero;
-        self->f105 = zero;
+        self->cleared = zero;
         CALL_M70H(self);
-        self->f105 = 1;
+        self->cleared = 1;
         gLevelLayers->probeFlag = 1;
         CollideGroundSprite((struct box_part *)self);
         /* r3 hold (no code) over the flag resets and the kind switch:
@@ -172,7 +138,7 @@ u8 CollidePlayer(struct a884_part *self)
         gLevelLayers->probeFlag = zero;
         if (self->carried != 0) {
             self->hitAxes |= 8;
-            self->carried = zero;
+            self->carried = (struct gobj *)zero;
             self->slippery = zero;
             self->pushLeft = zero;
             self->pushRight = zero;
@@ -181,10 +147,10 @@ u8 CollidePlayer(struct a884_part *self)
         if (kind != 0) {
             switch (kind) {
             case 1:
-                self->flags |= 0x40;
+                self->flags.all |= 0x40;
                 {
                     /* The ROM stores a fresh 0 from r0 (address in r1). */
-                    s32 *_p = &self->deadline;
+                    u32 *_p = &self->deadline;
                     register s32 _z asm("r0") = 0;
                     *_p = _z;
                 }
@@ -247,7 +213,7 @@ u8 CollidePlayer(struct a884_part *self)
         off = A884Offset(self);
         x = self->x >> 8;
         y = self->y >> 8;
-        if (self->mirrorX)
+        if (self->mirror.bits.flipX)
             x -= off[0];
         else
             x += off[0];

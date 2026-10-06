@@ -26,11 +26,11 @@
  * establishes). Always tail-fires `DrawSprite(gSpriteRenderer,
  * self)`, then - only if `self+0x38` ended up nonzero - clears
  * `self+0xc` bit 3. */
-void DrawCrate(void *selfArg)
+void DrawCrate(struct crate *selfArg)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (matching every sibling in this file family). */
-    register u8 *self asm("r4") = selfArg;
+    register u8 *self asm("r4") = (u8 *)selfArg;
     u8 state = self[0x4d];
 
     if ((state & 0x80) == 0) {

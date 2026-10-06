@@ -14,7 +14,8 @@
  * layout as `struct gobj`. See docs/matching/issue-12-physics-collision.md. */
 struct crate_vtable
 {
-    u8 unk_00[0x18];
+    u8 unk_00[0x10];
+    struct method m10; // 0x10 - slot 2, the hitbox record (GetSpriteObjHitbox; IsCrateInsideRect)
     struct method m18; // 0x18 - slot 3, the per-frame update (UpdateCrate)
     u8 unk_20[0x28];
     struct method m48; // 0x48 - returns the object's class id (3: box)
@@ -126,6 +127,9 @@ struct crate
                         //        0x1B read as 0x15); -1: none (ResetCrate). See ConvertCratesForTimeTrial
     u8 touched;         // 0x58
     u8 groupAllocated;  // 0x59 - ActivateIronSwitchCrate allocated `u48.group` (freed when it fires)
+    u8 unk_5A[2];
+    struct crate *above; // 0x5C - the crate stacked on this one (GetCrateAbove/SetCrateAbove)
+    struct crate *below; // 0x60 - the crate this one stands on (GetCrateBelow/SetCrateBelow)
 };
 
 typedef s32 (*phys_method_fn)(void *self);

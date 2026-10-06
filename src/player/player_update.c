@@ -3,6 +3,7 @@
 #include "gobj_1a794.h"
 #include "player.h"
 #include "objects.h"
+#include "box_part.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
@@ -48,9 +49,9 @@
  * triggered by a different register pair here) rather than a cosmetic
  * mismatch. Fixed by leaving `vy` as a plain, unpinned local - it
  * still lands in `r1` naturally - and pinning only `vx` to `r3`. */
-s32 ApplyPlayerVelocity(void *selfArg)
+s32 ApplyPlayerVelocity(struct player *self)
 {
-    register s32 *w asm("r2") = (s32 *)selfArg;
+    register s32 *w asm("r2") = (s32 *)self;
     register u8 *flags asm("r1");
     s32 fx, fy;
 
@@ -168,20 +169,12 @@ skipY:
 }
 asm(".align 2, 0");
 
-/* This file's `self` is a bigger object (at least 0x108 bytes)
- * distinct from `struct actor` - the level-object layout `struct gobj`
- * (gobj_1a794.h) describes, which the player object shares. Most of
- * these functions are pure single-field get/set/increment/clear
- * accessors for it; fields `struct gobj` doesn't cover yet stay as
- * byte offsets. */
-
-extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
+/* The player object's (`struct player`, player.h) small accessors and
+ * methods. */
 
 /* `rampY.target` (+0x5c) boolean getter (nonzero -> 1). */
-u8 HasPlayerRampYTarget(void *selfArg)
+u8 HasPlayerRampYTarget(struct player *self)
 {
-    struct gobj *self = selfArg;
-
     if (self->rampY.target != 0) {
         return 1;
     } else {
@@ -190,16 +183,15 @@ u8 HasPlayerRampYTarget(void *selfArg)
 }
 
 /* `speedY` (+0x64) clear. */
-void ClearPlayerSpeedY(void *selfArg)
+void ClearPlayerSpeedY(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->speedY = 0;
 }
 
 /* Clamps `speedY`/`rampY.start`/`rampY.step` (+0x64/+0x54/+0x58) to `<= 0`. */
-void StopPlayerFalling(void *selfArg)
+void StopPlayerFalling(struct player *selfArg)
 {
-    register struct gobj *self asm("r1") = selfArg;
+    register struct player *self asm("r1") = selfArg;
 
     if (self->speedY > 0) {
         self->speedY = 0;
@@ -212,53 +204,49 @@ void StopPlayerFalling(void *selfArg)
     }
 }
 
-/* Decrements the `self+0x91` countdown byte (if nonzero), then tail-
+/* Decrements the `countdown` byte (if nonzero), then tail-
  * calls `UpdateGroundSprite` (still raw, in the CollideGroundSprite-sub_800A590
  * span). */
-void UpdatePlayer(void *selfArg)
+void UpdatePlayer(struct player *self)
 {
-    u8 *self = selfArg;
-
-    if (self[0x91] != 0) {
-        self[0x91] -= 1;
+    if (self->countdown != 0) {
+        self->countdown -= 1;
     }
-    UpdateGroundSprite(selfArg);
+    UpdateGroundSprite((struct gobj *)self);
 }
 
 /* The `gPlayer` collision check used throughout this whole
  * session (`CheckPlayerContact`/`CollideCrateGridPartWithPlayer`/`CollideCrateGridPartWithObject` etc all call
  * this by name via an `extern` declaration, finally matched for
- * real): builds `selfArg`'s secondary AABB via `GetSpriteBodyBox`
+ * real): builds `self`'s secondary AABB via `GetSpriteBodyBox`
  * (already matched), and - only if it has a region (`field_8 > 0`) -
- * tests it against `buf` via `AabbOverlaps` (already matched),
+ * tests it against `box` via `AabbOverlaps` (already matched),
  * returning the low byte of that result; otherwise returns 0. */
-u8 PlayerTouchesBox(void *selfArg, void *buf)
+u8 PlayerTouchesBox(struct player *self, struct aabb *box)
 {
-    s32 tmp[4];
+    struct aabb body;
     u8 result = 0;
 
-    GetSpriteBodyBox(tmp, selfArg);
-    if (tmp[2] > 0) {
-        result = AabbOverlaps((struct aabb *)tmp, buf);
+    GetSpriteBodyBox(&body, self);
+    if (body.w > 0) {
+        result = AabbOverlaps(&body, box);
     }
     return result;
 }
 
-/* Overwrites `self->table` with `gPlayerVtable`, then (if
- * `self+0xb0`'s child object is set) fires its `table+0x50/0x54`-
+/* Overwrites `self->vtable` with `gPlayerVtable`, then (if
+ * the `child` sprite object is set) fires its `table+0x50/0x54`-
  * driven trampoline via `_call_via_r2` with constant arg `3`, then
- * calls `DestroyCollisionQueue(self+0x108, 2)` and tail-calls `DestroyGroundSprite`
+ * calls `DestroyCollisionQueue(self->collisionQueue, 2)` and tail-calls `DestroyGroundSprite`
  * (already matched in `ground_sprite.c`). */
-void DestroyPlayer(void *selfArg, u32 arg1)
+void DestroyPlayer(struct player *self, u32 arg1)
 {
-    u8 *self = selfArg;
-
-    *(void **)(self + 0x18) = (void *)gPlayerVtable;
+    self->vtable = (const struct player_vtable *)gPlayerVtable;
     {
-        void *rec = *(void **)(self + 0xb0);
+        struct box_part *rec = self->child;
 
         if (rec != 0) {
-            u8 *tbl = *(u8 **)((u8 *)rec + 0x18) + 0x50;
+            u8 *tbl = rec->vtable + 0x50;
             s16 offset = *(s16 *)tbl;
             void *addr = (u8 *)rec + offset;
             void *fn = *(void **)(tbl + 4);
@@ -266,6 +254,6 @@ void DestroyPlayer(void *selfArg, u32 arg1)
             _call_via_r2(addr, (void *)3, fn);
         }
     }
-    DestroyCollisionQueue(self + 0x108, 2);
+    DestroyCollisionQueue(self->collisionQueue, 2);
     DestroyGroundSprite((struct actor *)self, arg1);
 }
