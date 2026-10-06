@@ -218,6 +218,14 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   types let cse fold the constants back, and the loop scope picks which
   preheader loop.c hoists them to (`HeapSortActorsByKey`,
   [iwram-image.md](./matching/iwram-image.md), fourth pass).
+- **agbcc_arm: a two-instruction constant added in place** (`add r0, r0,
+  #0xF9000000; add r0, r0, #0xFF0000` inside a loop, not a register
+  loaded before it): subtract it in two statements, each with a valid ARM
+  immediate (`a -= 0x07000000; a += 0xFF0000;`). As one expression the
+  addsi3 expander builds the constant in a register, which loop.c
+  hoists. As two, combine merges them into one `plus` that is split
+  back in place after reload (`LookupSpriteFrameCache`'s draft,
+  [iwram-image.md](./matching/iwram-image.md), fifth pass).
 
 ## Calls
 
@@ -508,7 +516,9 @@ checked-in `NAKED` transcription under `#else`; the progress report
 scores the C draft. Both builds have to work. Two functions remain,
 both ARM code of the IWRAM image (`itoa_arm`, `LookupSpriteFrameCache`,
 #553), whose returns and prologues point to another ARM compiler build
-than agbcc_arm. See
+than agbcc_arm (the fifth pass traced both blockers to agbcc_arm's
+`arm.c`; `LookupSpriteFrameCache`'s draft is now off only in its three
+return sequences). See
 [matching/iwram-image.md](./matching/iwram-image.md) and
 [naked-transcription-parked-functions.md](./matching/archive/naked-transcription-parked-functions.md).
 
