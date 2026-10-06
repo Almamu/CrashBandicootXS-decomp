@@ -23,5 +23,5 @@ const struct actor_pmf gPolarPlayerStateFuncs[14] = {
     ACTOR_PMF(PolarPlayerStateFinish),
     ACTOR_PMF(PolarPlayerStateFinishLeap),
     ACTOR_PMF(PolarPlayerStateShocked),
-    ACTOR_PMF(sub_802BD24),
+    ACTOR_PMF(PolarPlayerStateRecover),
 };

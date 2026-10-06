@@ -293,7 +293,7 @@ src/graphics/actor_part74.c	src/vehicle/yeti_update.c	-	UpdateYeti, UpdateYetiPa
 src/graphics/actor_part59.c	src/vehicle/yeti_states.c	-	YetiStateChase, YetiStateCharge
 src/graphics/actor_part75.c	src/vehicle/yeti_graphics.c	-	IsTouchingYeti, LoadYetiGraphics [OLD_AGBCC]
 src/graphics/actor_part60.c	src/vehicle/yeti.c	src/vehicle/yeti.c	StopYeti, DestroyYeti, CreateYeti
-src/graphics/actor_part76.c	src/vehicle/yeti.c	src/vehicle/yeti.c	sub_802E058
+src/graphics/actor_part76.c	src/vehicle/yeti.c	src/vehicle/yeti.c	BuildYetiBg2Map
 src/graphics/actor_part61.c	src/vehicle/yeti.c	src/vehicle/yeti.c	YetiStateCaught
 src/graphics/actor_part128.c	src/vehicle/jetpack_spawn.c	-	starts with YetiStateStop, then the jetpack spawners and the jetpack player (CreateJetpackPlayer, UpdateJetpackPlayer) [OLD_AGBCC]
 src/graphics/actor_part43.c	src/vehicle/jetpack_run.c	src/vehicle/jetpack_run.c	FinishJetpackRun, PassJetpackRing
@@ -349,7 +349,7 @@ src/graphics/actor_part66.c	src/bosses/hovercraft_side_gun.c	src/bosses/hovercra
 src/graphics/actor_part67.c	src/bosses/hovercraft_side_gun.c	src/bosses/hovercraft_side_gun.c	DamageHovercraftSideGun, UpdateHovercraftSideGun, IsHovercraftSideGunUnshootable, DamageHovercraftCannonFlash
 src/graphics/actor_part68.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	UpdateHovercraftCannonFlash
 src/graphics/actor_part69.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	CreateHovercraftCannonFlash
-src/graphics/actor_part70.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	sub_8034314
+src/graphics/actor_part70.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	RunHovercraftCannonFlashState
 src/graphics/actor_part71.c	src/bosses/hovercraft_cannon_flash.c	src/bosses/hovercraft_cannon_flash.c	IsHovercraftCannonFlashUnshootable
 src/graphics/actor_part85.c	src/frontend/starfield.c	src/frontend/starfield.c	InitStarfield, DrawStarfield
 src/graphics/actor_part72.c	src/frontend/starfield.c	src/frontend/starfield.c	SpawnStar, PlotStarfieldPixel

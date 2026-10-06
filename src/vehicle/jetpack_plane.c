@@ -14,22 +14,22 @@
 
 struct actor_fa38 {
     struct actor_self base;
-    s32 hp;       // 0x54
-    s32 cooldown; // 0x58
-    s32 hits;     // 0x5C
-    s32 velX;     // 0x60
-    s32 velY;     // 0x64
-    s32 velZ;     // 0x68
+    s32 hp;        // 0x54
+    s32 cooldown;  // 0x58
+    s32 shotCount; // 0x5C
+    s32 velX;      // 0x60
+    s32 velY;      // 0x64
+    s32 velZ;      // 0x68
     u8 unk_6C[0x10];
-    u8 unk_7C; // 0x7C
+    u8 dying; // 0x7C - struct jetpack_plane's `dying`
 };
 
 /* Per-frame update: flags `self` as "deep" past a depth threshold,
  * integrates its velocity (Q4), runs the per-state member-pointer
  * dispatch `(this->*gJetpackPlaneStateFuncs[this->state])()`, and while
- * animation 3 plays and the cooldown has run out, pushes the player
- * away (SpawnJetpackCannonball) when it is close in front - every third hit takes
- * a long cooldown. Then the usual player-contact damage exchange, and
+ * animation 3 plays and the cooldown has run out, fires a cannonball at
+ * the player (SpawnJetpackCannonball) when it is close in front - every
+ * third shot takes a long cooldown. Then the usual player-contact damage exchange, and
  * finally "destroy" once state 3 rises past a height, else the
  * standard UpdateActor step. */
 void UpdateJetpackPlane(struct actor_fa38 *self)
@@ -65,8 +65,8 @@ void UpdateJetpackPlane(struct actor_fa38 *self)
 
                 if (absDx + absDy <= 0x5FF) {
                     SpawnJetpackCannonball(self->base.x, self->base.y, self->base.z - 10, dx, dy);
-                    if (++self->hits == 3) {
-                        self->hits = cooldown;
+                    if (++self->shotCount == 3) {
+                        self->shotCount = cooldown;
                         self->cooldown = 0x3C;
                     } else {
                         self->cooldown = 0x14;
@@ -78,7 +78,7 @@ void UpdateJetpackPlane(struct actor_fa38 *self)
         }
     }
 
-    if (self->unk_7C == 0 && (u8)IsTouchingPlayer(self)) {
+    if (self->dying == 0 && (u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         ACTOR_VCALL(&self->base, m20, 4);
     }
@@ -119,25 +119,25 @@ asm(".align 2, 0");
 
 struct jetpack_plane {
     struct actor_self base;
-    s32 hp;     // 0x54
-    s32 unk_58; // 0x58
-    s32 unk_5C; // 0x5C
-    s32 velX;   // 0x60
-    s32 velY;   // 0x64
-    s32 speed;  // 0x68
-    s32 accX;   // 0x6C
-    s32 accY;   // 0x70
-    s32 steps;  // 0x74
-    s32 next;   // 0x78
-    u8 dying;   // 0x7C
+    s32 hp;        // 0x54
+    s32 cooldown;  // 0x58 - frames to the next cannonball (UpdateJetpackPlane)
+    s32 shotCount; // 0x5C - cannonballs fired since the last long cooldown
+    s32 velX;      // 0x60
+    s32 velY;      // 0x64
+    s32 speed;     // 0x68
+    s32 accX;      // 0x6C
+    s32 accY;      // 0x70
+    s32 steps;     // 0x74
+    s32 next;      // 0x78
+    u8 dying;      // 0x7C
 };
 
 struct jetpack_bomber {
     struct actor_self base;
-    s32 hp;    // 0x54
-    s32 homeX; // 0x58
-    s32 homeY; // 0x5C
-    u8 unk_60; // 0x60
+    s32 hp;         // 0x54
+    s32 homeX;      // 0x58
+    s32 homeY;      // 0x5C
+    u8 unshootable; // 0x60 - only ever cleared
 };
 
 struct jetpack_cannonball {
@@ -176,7 +176,7 @@ void AimJetpackPlane(struct jetpack_plane *self, s32 target)
         s32 scale;
         s32 scale2;
 
-        self->speed = gUnknown_0300089C[sub_802A570(target)];
+        self->speed = gJetpackPlaneHopSpeeds[sub_802A570(target)];
         self->steps = __divsi3((sub_802A51C(target) - self->base.z) << 8, self->speed) >> 4;
         if (self->steps == 0) {
             self->steps = 1;
@@ -251,13 +251,13 @@ void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s
     InitActorPart(self, part, b, c, d);
     self->hp = four;
     self->base.vtable = (struct actor_vtable *)gJetpackPlaneVtable;
-    self->unk_58 = 0x3c;
-    self->unk_5C = 0;
+    self->cooldown = 0x3c;
+    self->shotCount = 0;
     self->dying = 0;
     self->velY = 0;
     self->velX = 0;
     self->speed = 0x955;
-    if (arg->target >= 0 && gUnknown_0300089C[sub_802A570(arg->target)] > 0x955) {
+    if (arg->target >= 0 && gJetpackPlaneHopSpeeds[sub_802A570(arg->target)] > 0x955) {
         self->base.z += -0x8e00;
         self->speed = 0xd55;
     }
@@ -274,9 +274,10 @@ void JetpackPlaneStateFall(struct jetpack_plane *self)
     }
 }
 
-/* When the current animation finishes, switches to the landing
- * animation (2 or 5) in state 3 with a fixed Y acceleration. */
-void sub_802FE1C(struct jetpack_plane *self)
+/* gJetpackPlaneStateFuncs[2], entered by DamageJetpackPlane with the
+ * knock-out animation (1 or 4): when it finishes, switches to the
+ * landing animation (2 or 5) in state 3 with a fixed Y acceleration. */
+void JetpackPlaneStateKnockedOut(struct jetpack_plane *self)
 {
     s32 idx;
 
@@ -292,8 +293,11 @@ void sub_802FE1C(struct jetpack_plane *self)
     ACTOR_SET_STATE(&self->base, 3, idx);
 }
 
-/* Sets the velocity to 1/16 of the offset to the player. */
-void sub_802FE58(struct jetpack_plane *self)
+/* gJetpackPlaneStateFuncs[1], entered by AimJetpackPlane at the end of a
+ * slow hop chain: sets the velocity to 1/16 of the offset to the player,
+ * so the plane follows the player (and fires cannonballs from pose 3,
+ * UpdateJetpackPlane). */
+void JetpackPlaneStateFollow(struct jetpack_plane *self)
 {
     struct actor_self *player = gActorList;
 
@@ -343,7 +347,7 @@ void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s
     self->base.vtable = (struct actor_vtable *)gJetpackBomberVtable;
     self->homeX = bReg;
     self->homeY = cReg;
-    self->unk_60 = 0;
+    self->unshootable = 0;
     {
         MATCH_HOLD_REG(u8 *, kindPtr, r1) = partReg;
         kind = *kindPtr;
@@ -491,7 +495,7 @@ void RunJetpackBomberState(struct jetpack_bomber *self)
 /* Getter for the +0x60 flag byte. */
 u8 IsJetpackBomberUnshootable(struct jetpack_bomber *self)
 {
-    return self->unk_60;
+    return self->unshootable;
 }
 
 /* Projectile step: moves by its velocity and falls; on player contact

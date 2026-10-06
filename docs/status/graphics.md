@@ -136,14 +136,14 @@ and [graphics_loading.md](./graphics_loading.md).
   UNUSED. Compiled with `old_agbcc`. See
   [docs/matching/archive/issue-27-level-select-pages.md](../matching/archive/issue-27-level-select-pages.md).
 - `src/bosses/dingodile.c` (new file - GitHub issue #24):
-  `sub_801967C`-`DestroyDingodileShieldCtrl` except the two NAKED ones below (23 of 25
+  `SetCortexPlatformsKind`-`DestroyDingodileShieldCtrl` except the two NAKED ones below (23 of 25
   functions) - six small C++ actor-part controller classes (method
   tables `gCortexTargetVtable`/`476C`/`47D4`/`483C`/`48A4`/`490C`:
   constructors, destructors and per-frame updates), plus the
   `087E4974` boss-like state machine `UpdateDingodile`, its state-entry
   dispatcher `SetDingodileState` and the part spawners `SpawnDingodileShieldOrRocket`/
   `SpawnDingodileStalactite`. First file compiled with `tools/agbcc/bin/old_agbcc`.
-  `sub_8019718` and `GetDingodileHits` are UNUSED (no caller or pointer
+  `SetCortexCannonState` and `GetDingodileHits` are UNUSED (no caller or pointer
   anywhere in the ROM). See
   [docs/matching/archive/issue-24-boss-actor.md](../matching/archive/issue-24-boss-actor.md).
 - GitHub issue #25 (0x0801A794-0x0801B85C, shared structs in

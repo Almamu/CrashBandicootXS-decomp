@@ -11,7 +11,7 @@ into `ldscript.txt` at its real ROM address in place of the removed
 
 With that done, this pass also picked up the first 12 functions of
 issue #53's own chunk (`0x0802C99C`-`0x0802CC9C`, directly adjacent to
-`DetonateNearbyPolarNitros`/`UpdatePolarAkuAkuCrate`) - `UpdatePolarTimeCrate`, `sub_802CA28`,
+`DetonateNearbyPolarNitros`/`UpdatePolarAkuAkuCrate`) - `UpdatePolarTimeCrate`, `DetonatePolarNitroCrate`,
 `sub_802CA6C`, `UpdatePolarBasicCrate`, `InitPolarCrate`, `CreatePolarTimeCrate`,
 `CreatePolarQuestionCrate`, `CreatePolarAkuAkuCrate`, `CreatePolarNitroCrate`, `CreatePolarLifeCrate`,
 `sub_802CC54`, `CreatePolarBasicCrate` - all genuinely **matched as real C**, in
@@ -130,7 +130,7 @@ matched as plain C, in `src/vehicle/polar_crates.c`:
   counter, then `switch`es on `self+0x30`'s type byte (`5`/`6`/`7` each
   dispatch a different `FreezeLevelClock` tier) before the shared used-state
   transition; tail-calls `UpdatePolarCrate`.
-- **`sub_802CA28`** - the same used-state transition, unconditional
+- **`DetonatePolarNitroCrate`** - the same used-state transition, unconditional
   (no `IsTouchingPlayer` guard), also clearing `self+0x44`; no tail call.
 - **`sub_802CA6C`**/**`UpdatePolarBasicCrate`** - the proximity-gated shape again,
   forwarding a fixed accumulator delta (`4`/`1`) to
@@ -154,7 +154,7 @@ matched as plain C, in `src/vehicle/polar_crates.c`:
 Every one of these matched cleanly on the first or second isolated
 compile except two register-order gotchas worth recording:
 
-1. **`sub_802CA28`'s doubled zero.** A first draft wrote
+1. **`DetonatePolarNitroCrate`'s doubled zero.** A first draft wrote
    `*(s32 *)(self + 0x44) = 0;` as a plain literal, separate from the
    later `register s32 zero2 asm("r2") = 0;` used for the shared
    anim-reset block's `self+8` store. The ROM reuses a *single* `r2`

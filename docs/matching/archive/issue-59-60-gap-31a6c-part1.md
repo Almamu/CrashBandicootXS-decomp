@@ -80,7 +80,7 @@ established "cut at the boundary" convention.
   (matching the ROM's exact choice) since a plain top-to-bottom
   translation put them in the opposite registers - same total
   instruction count, but two swapped operand-register encodings.
-- **`nullsub_33`** - no-op stub.
+- **`JetpackBalloonCrateStateDestroyed`** - no-op stub.
 - **`JetpackBalloonCrateStateFall`** - trivial `self+0x20`/`self+0x6c` accumulator,
   clamped to `0x4c0`. Needed `self+0x20`'s own prior value read into a
   local *before* `self+0x6c`'s delta (matching the ROM's load order),

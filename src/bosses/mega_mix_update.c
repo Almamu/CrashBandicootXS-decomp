@@ -125,12 +125,12 @@ struct ab_part {
     u8 unk_1C[0xC];
     u8 flags28; // 0x28 - bit 4: X mirror
     u8 unk_29[7];
-    s32 frame;   // 0x30
-    s32 unk_34;  // 0x34
-    u8 animDone; // 0x38
+    s32 frame;     // 0x30
+    s32 stepTimer; // 0x34 - ticks spent on the current step
+    u8 animDone;   // 0x38
     u8 unk_39[0x14];
-    u8 unk_4D; // 0x4D
-    u8 kind;   // 0x4E
+    u8 physMode; // 0x4D - box_part.h `physMode`
+    u8 kind;     // 0x4E
 };
 
 typedef void (*ab_fn1)(void *self, s32 a);
@@ -291,7 +291,8 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 
                         MATCH_KEEP(t);
                         if (Abs((e->x >> 8) - (other->x >> 8)) <= 0x27 &&
-                            Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B && (e->unk_4D & 0x7F) == 0) {
+                            Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B &&
+                            (e->physMode & 0x7F) == 0) {
                             MATCH_HOLD_REG(s32, kind, r1) = e->kind;
 
                             if (kind == 0xE || kind == 0x13 || kind == 0x14 || kind == 0x15 ||
@@ -307,7 +308,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
             return;
         }
     case 2:
-        if (other->frame == 8 && other->unk_34 == 0) {
+        if (other->frame == 8 && other->stepTimer == 0) {
             struct player *pl = gPlayer;
 
             if (Abs(pl->x - other->x) > 0x27FF || Abs(pl->y - other->y) > 0x31FF)

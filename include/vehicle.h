@@ -136,7 +136,7 @@ extern void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z);
 extern void *CreateJetpackBalloon(void *self, void *part, s32 b, s32 c, s32 d, s32 e);
 extern void JetpackBalloonStatePop(struct actor_self *self);
 extern void JetpackBalloonStateFloatAway(struct jetpack_balloon *self);
-extern void nullsub_32(void);
+extern void JetpackBalloonStateAttached(void);
 extern void RunJetpackBalloonState(struct actor_self *self);
 extern u8 IsJetpackBalloonUnshootable(void *self);
 
@@ -156,7 +156,7 @@ extern void BreakJetpackBalloonCrate(void *self);
 extern void DamageJetpackBalloonCrate(void *self, s32 delta);
 extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
 extern void *InitJetpackBalloonCrate(void *self, void *part, s32 b, s32 c, s32 d, u8 kind);
-extern void nullsub_33(void *self);
+extern void JetpackBalloonCrateStateDestroyed(void *self);
 extern void JetpackBalloonCrateStateFall(void *self);
 extern void JetpackBalloonCrateStateHang(void *self);
 extern void RunJetpackBalloonCrateState(void *self);
@@ -179,8 +179,8 @@ extern void DamageJetpackPlane(struct jetpack_plane *self, s32 damage);
 extern void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d,
                                 struct spawn_arg *arg);
 extern void JetpackPlaneStateFall(struct jetpack_plane *self);
-extern void sub_802FE1C(struct jetpack_plane *self);
-extern void sub_802FE58(struct jetpack_plane *self);
+extern void JetpackPlaneStateKnockedOut(struct jetpack_plane *self);
+extern void JetpackPlaneStateFollow(struct jetpack_plane *self);
 extern void JetpackPlaneStateFly(struct jetpack_plane *self);
 extern void RunJetpackPlaneState(struct jetpack_plane *self);
 extern u8 IsJetpackPlaneUnshootable(struct jetpack_plane *self);
@@ -268,7 +268,7 @@ extern void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32
 /* src/vehicle/polar_crates.c */
 extern void UpdatePolarAkuAkuCrate(struct actor_self *self);
 extern void UpdatePolarTimeCrate(void *self);
-extern void sub_802CA28(void *self);
+extern void DetonatePolarNitroCrate(void *self);
 extern void sub_802CA6C(void *self);
 extern void UpdatePolarBasicCrate(void *self);
 extern void *InitPolarCrate(void *self, void *part, s32 b, s32 c, s32 last);
@@ -286,8 +286,8 @@ extern void DetonateNearbyPolarNitros(struct actor_self *self);
 /* src/vehicle/polar_objects.c */
 extern void UpdatePolarElectricFence(void *self);
 extern void *CreatePolarElectricFence(void *self, void *part, s32 b, s32 c, s32 d);
-extern void sub_802CE10(void *self);
-extern void *sub_802CE38(void *self, void *part, s32 b, s32 c, s32 d);
+extern void UpdatePolarObstacle(void *self);
+extern void *CreatePolarObstacle(void *self, void *part, s32 b, s32 c, s32 d);
 extern void UpdatePolarLauncher(void *self);
 extern void *CreatePolarLauncher(void *self, void *part, s32 b, s32 c, s32 d);
 extern void UpdatePolarPenguin(void *self);
@@ -344,7 +344,7 @@ extern void RunPolarPlayerState(struct actor_self *self);
 /* src/vehicle/polar_player_states.c */
 extern void DispensePolarWumpa(void *self);
 extern s32 IsPolarPauseLocked(void *player);
-extern void sub_802BD24(void *self);
+extern void PolarPlayerStateRecover(void *self);
 extern void PolarPlayerStateFinishLeap(void *self);
 extern void PolarPlayerStateCarriedOff(void *self);
 extern void PolarPlayerStateKnockedOff(void *self);
@@ -354,7 +354,7 @@ extern void PolarPlayerStateBoost(void *self);
 extern void StopYeti(void);
 extern void DestroyYeti(void);
 extern void CreateYeti(void *arg0);
-extern void sub_802E058(u8 *dst, u8 seed);
+extern void BuildYetiBg2Map(u8 *dst, u8 seed);
 extern void YetiStateCaught(void);
 
 /* src/vehicle/yeti_graphics.c */
@@ -457,7 +457,7 @@ extern const struct vtable_slot gPolarQuestionCrateVtable[4];
 extern const struct vtable_slot gPolarTimeCrateVtable[4];
 extern const struct vtable_slot gPolarWumpaVtable[4];
 extern const struct vtable_slot gRiderlessPolarVtable[4];
-extern const struct vtable_slot gStaticData_087E4FD4[4];
+extern const struct vtable_slot gPolarObstacleVtable[4];
 
 /* src/data/actor_pmf_17c260.c */
 extern const struct actor_pmf gJetpackBomberStateFuncs[7];
@@ -488,8 +488,8 @@ extern const s32 gYetiChargeParams[6][3];
 extern const struct actor_pmf gPolarPlayerStateFuncs[14];
 
 /* src/iwram/iwram_data.c */
-extern s32 gUnknown_0300088C[3];
-extern s32 gUnknown_0300089C[6];
+extern s32 gPolarPenguinSpeeds[3];
+extern s32 gJetpackPlaneHopSpeeds[6];
 extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);
 
 /* src/data/anim_family_17aa6c.c */

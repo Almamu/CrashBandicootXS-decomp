@@ -4016,12 +4016,12 @@
    "ptr_words_data": 0,
    "incoming_data_ptrs": 0,
    "c_decls": [
-    "struct weapon_kind X[]"
+    "struct airship_attack X[]"
    ],
-   "element_type": "struct weapon_kind",
+   "element_type": "struct airship_attack",
    "element_size": null,
    "element_count": null,
-   "format": "table of struct weapon_kind",
+   "format": "table of struct airship_attack",
    "effort": "easy",
    "confidence": "high",
    "status": "converted: src/data/weapon_kind_17c2d0.c"
@@ -4238,12 +4238,12 @@
    "ptr_words_data": 0,
    "incoming_data_ptrs": 0,
    "c_decls": [
-    "struct singleton_kind X[]"
+    "struct hovercraft_attack X[]"
    ],
-   "element_type": "struct singleton_kind",
+   "element_type": "struct hovercraft_attack",
    "element_size": null,
    "element_count": null,
-   "format": "table of struct singleton_kind",
+   "format": "table of struct hovercraft_attack",
    "effort": "easy",
    "confidence": "high",
    "status": "converted: src/data/singleton_kind_17c460.c"
@@ -8765,9 +8765,9 @@
   {
    "address": "0x087E4FD4",
    "size": 32,
-   "name": "gStaticData_087E4FD4",
+   "name": "gPolarObstacleVtable",
    "consumers": [
-    "sub_802CE38"
+    "CreatePolarObstacle"
    ],
    "consumer_files": [
     "vehicle/polar_objects.c"
