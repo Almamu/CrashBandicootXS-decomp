@@ -80,7 +80,7 @@ void *InitStarfield(void *selfArg)
      * register, then fills in every bit the halfword write actually reads
      * via the ORs below (negative-constant bit-clear idiom, see
      * LoadTitleScreenBg's `bg2cnt`, src/frontend/title_screen_init.c). */
-    u32 bg0cnt;
+    u32 bg0cnt = bg0cnt; /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
     s32 gradIdx;
     s32 gradCount;
     s32 row;

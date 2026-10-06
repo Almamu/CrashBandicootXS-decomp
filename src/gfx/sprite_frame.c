@@ -394,7 +394,10 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
     if (attr01 & 0x100) {
         register s32 x asm("r0");
         register s32 y asm("r1");
-        s32 combined;
+        /* Self-initialized: the ROM merges both halves into whatever the
+         * register held, so it is never zeroed; this silences
+         * -Wuninitialized without adding code (#577). */
+        s32 combined = combined;
 
         if (attr01 & 0x10000000) {
             x = -priority;

@@ -55,7 +55,10 @@ s32 GAX_fx(u32 instrument)
 {
     s32 best = 0x7fffffff;
     u32 i;
-    s32 sel;
+    /* Self-initialized to silence -Wuninitialized: like the original,
+     * `sel` stays unset if there is no SFX voice, and `= 0` changes the
+     * code (#577). */
+    s32 sel = sel;
 
     for (i = 0; i < GAX_MIXER()->extraChildren; i++) {
         if (GAX_SFX_VOICE(i)->priority <= best) {

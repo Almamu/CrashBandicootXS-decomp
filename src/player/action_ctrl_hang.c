@@ -741,9 +741,6 @@ loop_cond:
 }
 asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gCollidableList");
 
-extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-
 /* Same `mgr`/`{s16 offset; void *fn}` trampoline pair at `self+0xc`
  * (`+0x20`/`+0x24` and `+0x50`/`+0x54`) as `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`.
  * `self+0x24` selects one of two variants: while clear, picks a

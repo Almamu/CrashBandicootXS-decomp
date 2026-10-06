@@ -157,8 +157,6 @@ struct mover *GetSpriteCtrl(struct gobj *self)
     return self->mover;
 }
 
-extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-
 /* Sets `self+0x44` to `rec`, then fires `rec->table+0x18/0x1c`'s
  * trampoline via `_call_via_r2` with `self` as the second argument.
  * Same `addr`-before-`fn` fix as `DestroyMovingSprite`/`UpdateMovingSprite`. */

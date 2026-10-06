@@ -113,7 +113,7 @@ void LoadTitleScreenBg(u32 *self)
     u16 *mapBuf;
     u16 *dest;
     s32 i;
-    u32 bg2cnt;
+    u32 bg2cnt = bg2cnt; /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
 
     LoadTaggedAsset(pkg->paletteAsset, (void *)BG_PLTT);
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));

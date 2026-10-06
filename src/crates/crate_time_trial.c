@@ -10,8 +10,6 @@
  * `InitCrate`/the two Bresenham-line helpers `FindLineCrossingYMajor`/
  * `FindLineCrossingXMajor` right before `ConvertCratesForTimeTrial` are left untouched raw. */
 
-extern s32 _call_via_r1(void *addr, void *fn);
-
 /* Walks the `gCrateList` object list (the same list/table
  * layout `UpdateCrates`/`DetonateNitroCrates` elsewhere in this raw region
  * read); for each box (vtable `m48`, the class id, reports `3`) whose
@@ -42,8 +40,6 @@ void ConvertCratesForTimeTrial(void)
         } while (i < (*listAddr)->activeCount);
     }
 }
-
-extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* If the viewport's `+0xc` bit 7 flag is set, fires its own `+0x18`
  * table's `+0x68` trampoline pair (`_call_via_r4`, action `0x1a`) and

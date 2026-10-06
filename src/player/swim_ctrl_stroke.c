@@ -134,7 +134,6 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
 {
     u16 speed;
     u8 flag;
-    struct player *t;
 
     if (self->spinCooldown != 0)
         return;

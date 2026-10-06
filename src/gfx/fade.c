@@ -147,7 +147,7 @@ void DarkenPalette(s32 factor)
     s32 i;
 
     for (i = 0; i <= 0x1FF; i++) {
-        s32 color;
+        s32 color = color; /* self-init: never zeroed (see above); silences -Wuninitialized (#577) */
         register s32 ch asm("r1");
         s32 scaled;
         register s32 raw asm("r1");

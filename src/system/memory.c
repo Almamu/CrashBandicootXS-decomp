@@ -199,7 +199,6 @@ void *mem_alloc(u32 requestedSize, u32 flags) {
     struct mem_block* current;
     struct mem_block* end;
     struct mem_heap* heap;
-    struct mem_block* result;
     u32 alignedSize = requestedSize;
     s32 freeBytesAfterReservation;
 
