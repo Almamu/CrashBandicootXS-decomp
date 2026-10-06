@@ -7,7 +7,7 @@ document is the loop you run *within* that process for each function,
 not how to find one to work on.
 
 **Where this stands now:** the matching campaign is over. Every function
-except the three parked IWRAM ARM ones (#553) is byte-exact C, and no
+except the two parked IWRAM ARM ones (#553) is byte-exact C, and no
 `asm/code_3_*.s` file is left. Steps 1 to 8 below are the full loop,
 still the one to follow for a parked function. For changes to matched
 code (renames, cleanup, warnings, formatting), the steps that apply are

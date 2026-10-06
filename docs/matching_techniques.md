@@ -180,6 +180,14 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   them differently or put a `MATCH_BARRIER()` in one; to get the ROM's
   separate reload registers, sometimes the shared tail has to be written
   in both branches.
+- **Rotated-loop tests.** jump2 also cross-jumps a rotated `while`
+  loop's duplicated entry test with its bottom test when a label sits
+  before each `cmp` (the entry becomes a `b` to the bottom test, or the
+  bottom one a `b` to the entry). If the ROM keeps both, a
+  `MATCH_BARRIER()` before the loop and one at the end of its body block
+  the two directions; nothing else is emitted
+  (`HeapSortActorsByKey`, [iwram-image.md](./matching/iwram-image.md),
+  fourth pass).
 - **Early return vs one epilogue.** An early `return` gets its own copy
   of the epilogue. If the ROM branches to one, use `goto end;` and a
   single `return`. An early return can also flip which branch falls
@@ -201,6 +209,15 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   ([issue-12-13-25-naked-retry.md](./matching/archive/issue-12-13-25-naked-retry.md)).
 - Operand spelling matters: `a + b*16` and `b*16 + a` and `b << 4` can
   give different code (see [inline-argument order](#inline-argument-order)).
+- **A 1/0 flag tested from registers** (`mov r3, rOne; movls r3, rZero;
+  cmp r3, #0`, the constants loaded before the loop): an inline `u8`
+  comparator that returns two `u8` parameters, `return zero;` /
+  `return one;`, fed from `u8 one = 1, zero = 0;` declared inside the
+  loop body. Literal returns give immediates (`mov r3, #1; movls r3,
+  #0`), an `int` result is folded into the branches, wider parameter
+  types let cse fold the constants back, and the loop scope picks which
+  preheader loop.c hoists them to (`HeapSortActorsByKey`,
+  [iwram-image.md](./matching/iwram-image.md), fourth pass).
 
 ## Calls
 
@@ -488,10 +505,10 @@ The order of escape hatches (self-init, `UNUSED`, a per-object
 defines it for C (`-D`) and assembly (`--defsym`). A function that
 can't be matched yet keeps its C draft under `#if NON_MATCHING` and the
 checked-in `NAKED` transcription under `#else`; the progress report
-scores the C draft. Both builds have to work. Three functions remain,
-all ARM code of the IWRAM image (`itoa_arm`, `HeapSortActorsByKey`,
-`LookupSpriteFrameCache`, #553), whose returns, prologues and compares
-point to another ARM compiler build than agbcc_arm. See
+scores the C draft. Both builds have to work. Two functions remain,
+both ARM code of the IWRAM image (`itoa_arm`, `LookupSpriteFrameCache`,
+#553), whose returns and prologues point to another ARM compiler build
+than agbcc_arm. See
 [matching/iwram-image.md](./matching/iwram-image.md) and
 [naked-transcription-parked-functions.md](./matching/archive/naked-transcription-parked-functions.md).
 

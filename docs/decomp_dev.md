@@ -303,11 +303,10 @@ where each is handled:
 
 After these fixes, every function in a matched unit scores 100%. Every
 compiled Thumb function in the ROM is matched. Code progress is below
-100% only because of three ARM functions in the IWRAM image
-(`itoa_arm`, `HeapSortActorsByKey`, `LookupSpriteFrameCache`), parked
-because agbcc_arm's output differs from the ROM's compiler there. For
-two of them agbcc_arm's source shows no C can match
-(docs/matching/iwram-image.md). Any other
+100% only because of two ARM functions in the IWRAM image
+(`itoa_arm`, `LookupSpriteFrameCache`), parked because agbcc_arm's
+output differs from the ROM's compiler there; agbcc_arm's source shows
+no C can match either (docs/matching/iwram-image.md). Any other
 function below 100% in a future report is either genuinely unmatched or
 a new case of one of the causes above.
 

@@ -17,7 +17,7 @@ script and the report. Contents:
 | `03000198` | `itoa_arm` | same | parked, UNUSED |
 | `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.c` | matched |
 | `0300036C` | `DrawMirroredTilemap` (`gDrawMirroredTilemapFunc`) | same | matched |
-| `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | parked |
+| `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | matched (fourth pass) |
 | `03000634` | `UnpackRleSpriteFrame` (`gUnpackRleSpriteFrameFunc`) | same | matched |
 | `030006FC` | `LookupSpriteFrameCache` (`gLookupSpriteFrameCacheFunc`) | same | parked |
 | `030007CC`-`030009E8` | initialised globals | `src/iwram/iwram_data.c` | typed C, data |
@@ -31,15 +31,19 @@ through a pointer. They are ARM builds of the Thumb ones in
 
 The ARM functions are gcc output, and `tools/agbcc/bin/agbcc_arm`
 (gcc 2.9-arm-000512, installed by SAT-R/agbcc next to agbcc and
-old_agbcc) reproduces seven of them byte for byte (six from the first
-pass, strncpy_arm from the second) with
-`-mthumb-interwork -O2 -fomit-frame-pointer` (without the last flag it
+old_agbcc) reproduces eight of them byte for byte (six from the first
+pass, strncpy_arm from the second, HeapSortActorsByKey from the fourth)
+with `-mthumb-interwork -O2 -fomit-frame-pointer` (without the last flag it
 sets up an APCS frame the ROM doesn't have). The Makefile builds
 `string_arm.o` and `sprite_arm.o` that way (`ARM_OBJS`). Adding
 `-fno-expensive-optimizations` breaks the string functions, so it isn't
 used.
 
 ## Why three are parked
+
+(Written before the fourth pass, which matched HeapSortActorsByKey. Its
+"constant materialization" point below turned out to be C shape, not
+the compiler. Two functions stay parked.)
 
 The three parked functions are `NAKED` transcriptions in the matching
 build, with their C under `#if NON_MATCHING` (what the report scores).
@@ -256,7 +260,78 @@ unlikely: everything apart from frame handling is gcc output, and
 agbcc_arm's own gcc output at that. Until such a compiler turns up, the
 three stay `NAKED` with their drafts. `HeapSortActorsByKey` is still the
 only one that might be reachable from C under agbcc_arm, since its
-prologue and epilogue fit.
+prologue and epilogue fit. (It was: see the fourth pass. itoa_arm and
+LookupSpriteFrameCache stay `NAKED`.)
+
+## Fourth pass: HeapSortActorsByKey matched
+
+HeapSortActorsByKey matches under agbcc_arm with the existing
+`-mthumb-interwork -O2 -fomit-frame-pointer` (no new flags, no new
+object). Its 1/0-in-registers tests weren't a compiler difference. They
+come from four C details, found by reading the RTL dumps (`-da`) rather
+than sweeping flags:
+
+1. **The comparator takes its results as arguments.** The tests aren't
+   if-converted conditional moves. agbcc_arm keeps them as
+   `x = one; if (key > key) goto L; x = zero; L:` until final, and the
+   ARM ccfsm prints that as `mov r3, one; movls r3, zero`. So the arms
+   are registers when the inline function returns two *variables*:
+   `static inline u8 KeyGreater(a, i, j, u8 one, u8 zero)`, whose body is
+   `if (a[i]->key <= a[j]->key) return zero; return one;`, with
+   `u8 one = 1, zero = 0;` declared in the caller. The u8 types matter.
+   With int or u32 parameters cse propagates the constants back into the
+   returns (immediates again). With s32 locals passed to u8 parameters,
+   an `and rN, rM, #255` truncation is left in the loop.
+2. **The locals are scoped to the sift loop's body.** loop.c then
+   hoists `one = 1; zero = 0` to the sift loop's own preheader (the
+   ROM's `mov r9, #1; mov sl, #0` after the `bge`). Declared at function
+   or sift-function scope, they go to the outermost preheader instead.
+   In the second phase cse2 replaces the hoisted constants with
+   registers already holding 1 and 0 (`mov sl, ip; mov r8, r4`), as in
+   the ROM.
+3. **The comparator takes indices, not pointers.** Each inlined
+   `child + 1` argument is a separate pseudo. gcse turns them into
+   copies of one register (the ROM's `add r3, ip, #1` ... `mov r0, r3`)
+   but can't then see that the two `a[child + 1]` loads are the same,
+   so the second test reloads it, as in the ROM. The PRE placement of
+   `a[root]` (loaded at the top and again after the first test) and
+   `a[child]` (top only) falls out of the same shape.
+4. **The sift loop is written out in both phases on shared
+   `root`/`child` locals.** An `inline SiftDown(a, root, n)` gets
+   different register priorities (`a` in ip and `child` in lr, swapped
+   with the ROM). Spelled out as
+   `for (root = i; (child = root * 2 + 1) < n; root = child)` in both
+   loops, with `for (i = n / 2; i > 0;) { i--; ... }` for the first
+   phase, every register matches.
+
+That leaves one difference: agbcc_arm's jump2 cross-jumps the
+`while (n > 1)` loop's duplicated entry test (`cmp r7, #1; ble`) with
+its bottom test (`cmp r7, #1; bgt`). `find_cross_jump` (jump.c) accepts
+the single matching `cmp` because a label precedes it (the first loop's
+skip jumps there, or the inner loop's exits land there). The ROM keeps
+both tests. The first loop escapes this only because sched1 puts
+`mov lr, r1` between its `cmp` and `ble`. No spelling of the second
+loop was found that avoids it: `for (; n > 1;)`, `if () do {} while`,
+`for (;;) { if (n <= 1) break; ...}`, `1 < n`, `n >= 2` and `--n` in
+the index all cross-jump. Shapes that don't (a `for (i = n - 1; ...)`
+counter, `n--` at the end) change the rest of the loop. So two
+`MATCH_BARRIER()`s block it, one before the loop and one at the end of
+its body. An `asm("")` is an `ASM_INPUT`, which `find_cross_jump`
+refuses to match, and it emits nothing. Each one blocks one direction:
+the first stops the entry test from matching the bottom one, the
+second the reverse. With only the first, the bottom test is
+cross-jumped instead.
+
+The C is in `src/iwram/sprite_arm.c`. The `NAKED` transcription and the
+`NON_MATCHING` draft are gone. Without the barriers the function is
+19 instruction lines off (the two jumps and their shifted offsets).
+
+What was tried before the match, beyond the second pass's list:
+`MATCH_HOLD_REG` pins of 1/0 in r9/sl (registers right, but `movhi; movls`
+from one if_then_else, and phase two needs sl/r8), `MATCH_KEEP` and
+`MATCH_CONST` on the locals (immediates, or `movhi; movls`), s32/u32/s8
+variants of the comparator, and ten first-phase and six second-phase
+loop shapes.
 
 ## Data
 
@@ -281,3 +356,9 @@ defined by these objects.
 - Second pass (strncpy_arm matched): `make tidy`, full build,
   `make compare`: `crashbandicootxs.gba: OK`. Report: code 242,542 /
   243,378 (99.66%), functions 2,056 / 2,059; data unchanged.
+- Fourth pass (HeapSortActorsByKey matched): `make tidy`, full build,
+  `make compare`: `crashbandicootxs.gba: OK`. `rm -rf build objdiff.json
+  && make NON_MATCHING=1 report` and `objdiff-cli report generate`:
+  code 242,990 / 243,378 (99.84%), functions 2,057 / 2,059 (the two
+  left are itoa_arm and LookupSpriteFrameCache); data 8,036,176 /
+  8,036,176 (100%). The other functions in `sprite_arm.o` still match.
