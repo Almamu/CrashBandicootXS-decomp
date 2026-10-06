@@ -45,7 +45,7 @@ void SetHovercraftFlashColor(u8 flag)
     MATCH_HOLD_REG(u16, val, r1);
 
     if (gHovercraftFlashColorSaved == 0) {
-        gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
+        gHovercraftFlashSavedColor = gFlashBgPalette[15];
         gHovercraftFlashColorSaved = 1;
     }
 
@@ -61,7 +61,7 @@ void SetHovercraftFlashColor(u8 flag)
         p[15] = val;
     }
 
-    ((u16 *)gFlashObjPalette)[15] = val;
+    gFlashObjPalette[15] = val;
 }
 
 /* Constant getter - returns the singleton's lifetime counter

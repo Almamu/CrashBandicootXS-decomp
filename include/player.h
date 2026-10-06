@@ -294,7 +294,7 @@ struct input_ctrl {
  * extends it. Its event slot keeps the event's msg and arg. */
 struct boss_ctrl {
     u8 unk_00[4];
-    const void *animSet;              // 0x04
+    const struct entry_set *animSet;  // 0x04
     s32 state;                        // 0x08
     const struct vtable_slot *vtable; // 0x0C - gBossCtrlVtable or a subclass's
     void *target;                     // 0x10 - the controlled part

@@ -98,35 +98,25 @@ struct actor_2890 {
 };
 
 /* The patrol object built by CreateHovercraftFireball (method table
- * gHovercraftFireballVtable). Same layout as the airship fireball
- * (`struct actor_orbit`, jetpack_plane.c): it sets up that one's orbit
- * fields but never reads them. */
-struct actor_29d4 {
-    struct actor_self base;
-    s32 hp;       // 0x54
-    s32 centerX;  // 0x58 - the constructor's `b` (unused here)
-    s32 centerY;  // 0x5C - the constructor's `c` (unused here)
-    s32 speed;    // 0x60 - Z step, decays by 5 down to 0x14
-    s32 radius;   // 0x64 - unused here
-    u8 exploding; // 0x68 - set by HovercraftFireballStateExplode
-};
+ * gHovercraftFireballVtable) is the airship fireball's class, `struct
+ * actor_orbit` (bosses.h): it sets up the orbit fields but never reads
+ * them. */
 
 /* An `InitActorPart`-based constructor: forwards its 4 real arguments
- * straight through (the 5th, `d`, is itself stack-passed), marks
- * `self+0x54 = 1` (health-like), sets `self+0x50`'s event/trampoline
- * table, and clears the `self+0x58` byte. Same shape as the
+ * straight through (the 5th, `d`, is itself stack-passed), sets
+ * `hp = 1` and the method table, and clears `cued`. Same shape as the
  * already-matched `CreateAirshipFireball` (issue #58, `airship_fireball.c`), minus
- * that function's extra `b`/`c` re-stash into `self+0x58`/`self+0x5c`. */
+ * that function's extra `b`/`c` re-stash into `centerX`/`centerY`. */
 void *CreateJetpackRing(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
-    u8 *self = selfArg;
+    struct jetpack_ring *self = selfArg;
     MATCH_HOLD_REG(s32, dReg, r0) = d;
     MATCH_HOLD_REG(s32, one, r5) = 1;
 
     InitActorPart(self, part, b, c, dReg);
-    *(s32 *)(self + 0x54) = one;
-    *(void **)(self + 0x50) = (void *)gJetpackRingVtable;
-    self[0x58] = 0;
+    self->hp = one;
+    self->base.vtable = (struct actor_vtable *)gJetpackRingVtable;
+    self->cued = 0;
 
     return self;
 }
@@ -384,7 +374,7 @@ void UpdateHovercraftFireball(void *selfArg)
  * matched verbatim for `CreateAirshipFireball` (issue #58, `airship_fireball.c`). */
 void *CreateHovercraftFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
-    struct actor_29d4 *self = selfArg;
+    struct actor_orbit *self = selfArg;
     MATCH_HOLD_REG(s32, bReg, r6) = b;
     MATCH_HOLD_REG(s32, cReg, r8) = c;
     MATCH_HOLD_REG(s32, dReg, r0) = d;
@@ -396,7 +386,7 @@ void *CreateHovercraftFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
     self->centerX = bReg;
     self->centerY = cReg;
     self->radius = 0;
-    self->speed = 0x95;
+    self->velZ = 0x95;
     self->exploding = 0;
 
     return self;
@@ -405,7 +395,7 @@ void *CreateHovercraftFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 /* Trivial `exploding` setter. */
 void HovercraftFireballStateExplode(void *selfArg)
 {
-    struct actor_29d4 *self = selfArg;
+    struct actor_orbit *self = selfArg;
     self->exploding = 1;
 }
 
@@ -419,16 +409,16 @@ void HovercraftFireballStateExplode(void *selfArg)
  * `DamageHovercraftFireball` above. */
 void HovercraftFireballStateFly(void *selfArg)
 {
-    MATCH_HOLD_REG(struct actor_29d4 *, self, r4) = selfArg;
+    MATCH_HOLD_REG(struct actor_orbit *, self, r4) = selfArg;
     s32 sum = self->base.z;
-    s32 delta = self->speed;
+    s32 delta = self->velZ;
 
     sum += delta;
     self->base.z = sum;
     delta -= 5;
-    self->speed = delta;
+    self->velZ = delta;
     if (delta <= 0x13) {
-        self->speed = 0x14;
+        self->velZ = 0x14;
     }
 
     if ((u8)IsTouchingPlayer(self)) {
@@ -473,7 +463,7 @@ void RunHovercraftFireballState(void *selfArg)
 /* Trivial `exploding` getter. */
 u8 IsHovercraftFireballUnshootable(void *selfArg)
 {
-    struct actor_29d4 *self = selfArg;
+    struct actor_orbit *self = selfArg;
     return self->exploding;
 }
 
@@ -518,7 +508,7 @@ void UpdateHovercraftHitFlash(void)
         MATCH_HOLD_REG(u16, white, r4) = 0x7fff;
         const u16 *src = gHovercraftPalette;
         vu16 *dst = (vu16 *)(PLTT + 0x20);
-        vu16 *end = (vu16 *)((u8 *)dst + 0x1e);
+        vu16 *end = dst + 15;
 
         do {
             if (*flagAddr != 0) {
@@ -553,10 +543,10 @@ void UpdateHovercraftHitFlash(void)
  * "kind" through the third table family (`gHovercraftStateFuncs`), the
  * same convention already documented for the entity/actor category
  * vtables. */
-static inline void CommitSpeed(u8 *p, u16 val)
+static inline void CommitSpeed(u16 *p, u16 val)
 {
-    *(u16 *)(p + 0x1e) = val;
-    *(u16 *)((u8 *)gFlashObjPalette + 0x1e) = val;
+    p[15] = val;
+    gFlashObjPalette[15] = val;
 }
 
 void RunHovercraftState(void)
@@ -566,11 +556,11 @@ void RunHovercraftState(void)
 
     if ((counter & 0xf) == 0) {
         if (gHovercraftFlashColorSaved == 0) {
-            gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
+            gHovercraftFlashSavedColor = gFlashBgPalette[15];
             gHovercraftFlashColorSaved = 1;
         }
         {
-            MATCH_HOLD_REG(u8 *, p, r0) = gFlashBgPalette;
+            MATCH_HOLD_REG(u16 *, p, r0) = gFlashBgPalette;
             MATCH_HOLD_REG(u16, val, r1);
 
             MATCH_KEEP(p);
@@ -579,11 +569,11 @@ void RunHovercraftState(void)
         }
     } else if ((counter & 7) == 0) {
         if (gHovercraftFlashColorSaved == 0) {
-            gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
+            gHovercraftFlashSavedColor = gFlashBgPalette[15];
             gHovercraftFlashColorSaved = 1;
         }
         {
-            MATCH_HOLD_REG(u8 *, p, r0) = gFlashBgPalette;
+            MATCH_HOLD_REG(u16 *, p, r0) = gFlashBgPalette;
             MATCH_HOLD_REG(u16, val, r1);
 
             MATCH_KEEP(p);

@@ -9,17 +9,30 @@
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
+/* The second object kind (vtable gHovercraftSideGunVtable). */
+struct actor_orbiter {
+    struct actor_self base;
+    s32 hp;  // 0x54
+    u8 dead; // 0x58
+    u8 gate; // 0x59 - the constructor's cached gate byte
+    u8 unk_5A[2];
+    s32 offX;       // 0x5C - added to the singleton's position
+    s32 offY;       // 0x60
+    s32 offZ;       // 0x64
+    s32 orbitTimer; // 0x68 - frames until the next effect spawn
+    s32 lap;        // 0x6C
+};
+
 /* Constructor: health defaults to `0x10`, or `0x18` if the
  * `gHovercraft` singleton hasn't been constructed yet
- * (`GetHovercraftLevel() == 0`). Forwards to `InitActorPart`, sets the event
- * table (`+0x50=&gHovercraftSideGunVtable`), caches the constructor's 6th
- * (byte, stack-passed) argument at `+0x59`, selects table-index 0 or 1
- * depending on whether that byte is set, resets the usual state/frame-
- * counter/anim fields, clears the death flag (`+0x58=0`), seeds the
- * "spawn/orbit" record (`+0x5c` from the `+0x59` byte, `+0x60=0xa00`,
- * `+0x64=-1`), clears the one-shot flag (`+0x2c=0`), caches the
- * singleton table's `+4` field at `+0x68`, and clears `+0x6c`. Returns
- * `self`.
+ * (`GetHovercraftLevel() == 0`). Forwards to `InitActorPart`, sets the
+ * method table (`gHovercraftSideGunVtable`), caches the constructor's 6th
+ * (byte, stack-passed) argument in `gate`, selects animation 0 or 1
+ * depending on whether that byte is set, resets the usual state/
+ * animation fields, clears `dead`, seeds the offsets (`offX` from
+ * `gate`, `offY = 0xa00`, `offZ = -1`), clears `visible`, takes
+ * `orbitTimer` from the attack's side-gun `delay`, and clears `lap`.
+ * Returns `self`.
  *
  * Two gaps closed to get this byte-exact, both `asm volatile` anchors
  * (this compiler's own C-driven codegen can't reproduce either shape):
@@ -35,7 +48,7 @@
  *   the `MATCH_HOLD_REG(u32, eByteVal, r9)` pin that mirrors the ROM's
  *   own `sb`/r9 cache (needed since it survives the following
  *   `GetHovercraftLevel()` call).
- * - The `+0x5c` spawn-record ternary (`(self[0x59] != 0) ? 0xFFFFBF00
+ * - The `offX` ternary (`(self->gate != 0) ? 0xFFFFBF00
  *   : 0x8400`): the ROM computes this as a genuine two-way diamond (a
  *   forward `beq`/`ldr`/`b` skipping a `movs`/`lsls` false-branch,
  *   with `gHovercraftSideGunVtable`'s pending literal and `0xFFFFBF00`
@@ -67,7 +80,7 @@
  *   a plain `extern` global access to the function's very end and
  *   ignores an `asm(".pool")` marker around it, exactly the gap
  *   already documented in `actor.c`'s `UpdateActorPaletteCycle`. The
- *   `self[0x28]=0`/self[0x59] reload pair and the `zeroByte`/`zero2`
+ *   `state = 0`/`gate` reload pair and the `zeroByte`/`zero2`
  *   register splits below needed the same "which register holds
  *   which cached zero" register-pinning treatment, each in its own
  *   narrowly-scoped block so the pin doesn't widen past where the ROM
@@ -75,7 +88,7 @@
 
 void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
 {
-    u8 *self;
+    struct actor_orbiter *self;
     MATCH_HOLD_REG(u32, eByteVal, r9);
     MATCH_HOLD_REG(s32, health, r4);
     s32 idx;
@@ -91,7 +104,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
     health = (GetHovercraftLevel() == 0) ? 0x18 : 0x10;
 
     InitActorPart(self, part, b, cParam, d);
-    *(s32 *)(self + 0x54) = health;
+    self->hp = health;
     // clang-format off
     asm volatile (
         "ldr r0, =gHovercraftSideGunVtable\n\t"
@@ -101,26 +114,26 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
         : "r0", "memory"
     );
     // clang-format on
-    p59 = self + 0x59;
+    p59 = &self->gate;
     zero = 0;
     *p59 = (u8)eByteVal;
-    *(s32 *)(self + 0x28) = zero;
+    self->base.state = zero;
     byte59 = *p59;
     idx = 1;
     if (byte59 != 0) {
         idx = 0;
     }
-    *(s32 *)(self + 0x28) = zero;
-    *(s32 *)(self + 0x44) = zero;
-    *(s32 *)(self + 0xc) = idx;
+    self->base.state = zero;
+    self->base.stateTime = zero;
+    self->base.animIndex = idx;
     {
         MATCH_HOLD_REG(u8, zeroByte, r1);
-        u16 tmp16 = *(u16 *)(*(u8 **)self + idx * 12);
+        u16 tmp16 = self->base.anims[idx].duration;
         zeroByte = 0;
-        *(u16 *)(self + 0x10) = tmp16;
-        self[0x12] = zeroByte;
-        *(s32 *)(self + 8) = zero;
-        self[0x58] = zeroByte;
+        *(u16 *)&self->base.animTimer = tmp16;
+        *(u8 *)&self->base.animDone = zeroByte;
+        self->base.animTime = zero;
+        self->dead = zeroByte;
     }
     // clang-format off
     asm volatile (
@@ -140,15 +153,15 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
         : "r0", "memory"
     );
     // clang-format on
-    *(s32 *)(self + 0x60) = 0xa00;
-    *(s32 *)(self + 0x64) = -1;
+    self->offY = 0xa00;
+    self->offZ = -1;
     {
         MATCH_HOLD_REG(s32, zero2, r4);
-        u8 *p2c = self + 0x2c;
+        u8 *p2c = &self->base.visible;
         zero2 = 0;
         *p2c = (u8)zero2;
-        *(s32 *)(self + 0x68) = GetHovercraftAttack()->timing[0].delay;
-        *(s32 *)(self + 0x6c) = zero2;
+        self->orbitTimer = GetHovercraftAttack()->timing[0].delay;
+        self->lap = zero2;
     }
 
     return self;
@@ -168,20 +181,6 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
  * `self+0x5c`/`self+0x60`/`self+0x64`/`self+0x68`/`self+0x6c` driving
  * `UpdateHovercraftSideGun`'s position-plus-effect-spawn step. See
  * docs/matching/archive/issue-63-0x08033ef4-actor.md. */
-
-/* The second object kind (vtable gHovercraftSideGunVtable). */
-struct actor_orbiter {
-    struct actor_self base;
-    s32 hp;  // 0x54
-    u8 dead; // 0x58
-    u8 gate; // 0x59 - the constructor's cached gate byte
-    u8 unk_5A[2];
-    s32 offX;       // 0x5C - added to the singleton's position
-    s32 offY;       // 0x60
-    s32 offZ;       // 0x64
-    s32 orbitTimer; // 0x68 - frames until the next effect spawn
-    s32 lap;        // 0x6C
-};
 
 /* Applies `dmg` damage to `self+0x54` and once it drops to zero (or
  * below): marks `self` dead (`+0x58=1`), sets `visible`

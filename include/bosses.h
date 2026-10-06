@@ -11,13 +11,14 @@
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. Many take a file-local view of their object (`struct
- * gfx_ctrl`, `struct obj_4704`, ...), declared here only by tag. A .c
+ * gfx_mover`, `struct obj_4704`, ...), declared here only by tag. A .c
  * file that needs a different local declaration for codegen keeps it as
  * an asm-label alias with a `codegen:` comment (docs/headers_plan.md). */
 
 #include "core.h"
 #include "actor.h"
 #include "objects.h"
+#include "player.h"
 
 /* A spawner object of the hovercraft fight (the cannon, launcher and
  * side gun, hovercraft_parts.c): `actor_self` plus a hit-point word, its
@@ -31,6 +32,59 @@ struct spawner {
     s32 cooldown; // 0x64
     s32 count;    // 0x68
     u8 dead;      // 0x6C
+};
+
+/* The airship's and the hovercraft's fireballs (CreateAirshipFireball,
+ * CreateHovercraftFireball): `actor_self` plus hit points, the orbit
+ * that AirshipFireballStateOrbit/AirshipFireballStateSpiralIn
+ * (jetpack_plane.c) fly around the constructor's `b`/`c`, and an
+ * "exploding" flag. The hovercraft's sets the orbit up but never reads
+ * it; it only flies straight on at `velZ`. */
+struct actor_orbit {
+    struct actor_self base;
+    s32 hp;       // 0x54
+    s32 centerX;  // 0x58 - the constructor's `b`
+    s32 centerY;  // 0x5C - the constructor's `c`
+    s32 velZ;     // 0x60 - Z step, decays by 5 down to 0x14
+    s32 radius;   // 0x64
+    u8 exploding; // 0x68 - set by the StateExplode methods; the
+                  //        Is...Unshootable getters return it
+};
+
+/* The hovercraft cannon's muzzle flash (CreateHovercraftCannonFlash,
+ * vtable gHovercraftCannonFlashVtable): `actor_self` plus hit points and
+ * a flag that is always set. */
+struct cannon_flash {
+    struct actor_self base;
+    s32 hp;         // 0x54
+    u8 unshootable; // 0x58
+};
+
+/* The method table of the InitCtrl-based controllers (ctrl.c) of
+ * cortex.c and tiny_hop_pad.c, as their calls read it. */
+struct gfx_vtable {
+    u8 unk_00[0x18];
+    struct actor_method method_18; // 0x18 - "attach to part"
+    struct actor_method method_20; // 0x20 - "set state"
+    u8 unk_28[0x28];
+    struct actor_method method_50; // 0x50 - SetCtrlTargetAnim
+};
+
+/* Those controllers' base (InitCtrl/DestroyCtrl; see player.h's
+ * description of the controller base). */
+struct gfx_ctrl {
+    u8 unk_00[8];
+    s32 state;                 // 0x08
+    struct gfx_vtable *vtable; // 0x0C
+};
+
+/* The Mega Mix controller (CreateMegaMixCtrl, vtable gMegaMixCtrlVtable):
+ * a boss controller plus a frame stamp and a latch byte (UpdateMegaMix's
+ * `struct ab_self` view, mega_mix_update.c). */
+struct mega_mix_ctrl {
+    struct boss_ctrl base;
+    s32 stamp; // 0x1C - reset to -1 by ResetMegaMixCtrl
+    u8 latch;  // 0x20
 };
 
 /* The airship's attack parameters, one per kind and level
@@ -73,10 +127,8 @@ struct hovercraft_attack {
 struct anim_box;
 struct ab_part;
 struct ab_self;
-struct actor_orbit;
 struct dingodile_boss;
 struct entry_set;
-struct gfx_ctrl;
 struct gfx_hit_ctrl;
 struct gfx_kind_ctrl;
 struct gfx_mover;
@@ -458,8 +510,8 @@ extern const u8 gTinyHopTargets[77];
 extern const u8 gTinyRoundAnchors[3];
 
 /* src/iwram/iwram_data.c */
-extern void *gFlashBgPalette;
-extern void *gFlashObjPalette;
+extern u16 *gFlashBgPalette;
+extern u16 *gFlashObjPalette;
 
 /* src/data/singleton_kind_17c460.c */
 extern const struct hovercraft_attack gHovercraftAttacks[2];

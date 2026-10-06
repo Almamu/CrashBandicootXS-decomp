@@ -64,20 +64,7 @@
  * in baserom.gba): CreateUnusedOneShotAnimCtrl (the gUnusedOneShotAnimCtrlVtable class's
  * constructor). Matched anyway. */
 
-struct gfx_vtable {
-    u8 unk_00[0x18];
-    struct actor_method method_18; // 0x18 - "attach to part"
-    struct actor_method method_20; // 0x20 - "set state"
-    u8 unk_28[0x28];
-    struct actor_method method_50; // 0x50
-};
-
-
-struct gfx_ctrl {
-    u8 unk_00[8];
-    s32 state;                 // 0x08
-    struct gfx_vtable *vtable; // 0x0C
-};
+/* `struct gfx_ctrl` and its `struct gfx_vtable` are in bosses.h. */
 
 /* CreateTiny/DestroyTiny (vtable gTinyVtable) */
 struct gfx_squares {

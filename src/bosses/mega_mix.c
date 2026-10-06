@@ -4,21 +4,20 @@
 #include "player.h"
 #include "bosses.h"
 #include "objects.h"
+#include "gobj_1a794.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
  * airship_fireball.c since `UpdateMegaMix` (NAKED-parked, see
- * mega_mix_update.c) sits between them. `self` uses the same `self+4` double-
- * pointer-chain record lookup as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
- * (ctrl.c): `self+4` is a manager pointer whose own first
- * word is an array of 8-byte records, indexed here by `index`. Each
- * record's word (offset 0 or 4, depending on the function) is a type
- * id into the 12-byte-stride `gMegaMixMotionRecords` table - the same
+ * mega_mix_update.c) sits between them. `self` (`struct mega_mix_ctrl`,
+ * bosses.h) uses the same motion entry set lookup as
+ * `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` (ctrl.c):
+ * `animSet->entries[index]` is an `{a, b}` pair (`a` for X, `b` for Y),
+ * each an index into the 12-byte `gMegaMixMotionRecords` table - the same
  * base+offset+fn-pointer-table family already named in
  * action_ctrl_states.c, just a per-vector-component variant instead of the
- * per-action variant. `part+0x28` bit 4/bit 5 mirror flags negate the
- * X/Z components exactly like `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/
- * `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`. `self+0xc`'s table convention and
- * `self+0x1c`/`self+0x20` also match airship_fireball.c's group.
+ * per-action variant. `part->mirror` bit 4/bit 5 negate the record's
+ * `start`/`target` exactly like `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/
+ * `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`.
  *
  * `SetMegaMixMotionYFromSet`/`SetMegaMixMotionXFromSet` pin `part`/`tableEntry` to r3/r2 and read
  * the table entry's Z component before Y - without this, this compiler
@@ -27,156 +26,163 @@
  * class of gap documented for `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
  * (player_flags.c). */
 
-extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+/* `_call_via_r2` is declared by gobj_1a794.h. */
 
-/* Reads `rec+4` as the type id (bit 5 mirror test), writes into
- * `part+0x54`/`+0x58`/`+0x5c`. */
+/* Reads the entry's `b` as the record index (bit 5 mirror test), writes
+ * into `part->rampY`. */
 void SetMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
-    u8 *self = selfArg;
-    MATCH_HOLD_REG(u8 *, part, r3) = partArg;
-    void **mgr = *(void ***)(self + 4);
-    MATCH_HOLD_REG(u8 *, arr, r0) = *(u8 **)mgr;
+    struct mega_mix_ctrl *self = selfArg;
+    MATCH_HOLD_REG(struct gobj *, part, r3) = partArg;
+    const struct entry_set *set = self->base.animSet;
+    MATCH_HOLD_REG(const struct anim_pair *, arr, r0) = (const struct anim_pair *)set->entries;
     MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
-    u8 *rec;
+    const struct anim_pair *rec;
     MATCH_HOLD_REG(s32, type, r1);
     MATCH_HOLD_REG(s32, typeOffset, r0);
-    MATCH_HOLD_REG(u8 *, base, r1);
-    MATCH_HOLD_REG(u8 *, tableEntry, r2);
+    MATCH_HOLD_REG(const s32 *, base, r1);
+    MATCH_HOLD_REG(const struct speed_ramp *, tableEntry, r2);
 
+    /* &set->entries[index], then &gMegaMixMotionRecords[type], each one
+     * add in the ROM's registers */
     asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
-    rec = (u8 *)recOffset;
-    type = *(s32 *)(rec + 4);
+    rec = (const struct anim_pair *)recOffset;
+    type = rec->b;
     typeOffset = type * 12;
-    base = (u8 *)gMegaMixMotionRecords;
+    base = gMegaMixMotionRecords[0];
     asm("add %0, %1, %2" : "=r"(tableEntry) : "r"(typeOffset), "r"(base));
 
-    if ((s32)(part[0x28] << 26) < 0) {
-        s32 x = -*(s32 *)(tableEntry + 0);
-        s32 z = -*(s32 *)(tableEntry + 8);
-        s32 y = *(s32 *)(tableEntry + 4);
+    if ((s32)(part->mirror << 26) < 0) {
+        s32 x = -tableEntry->start;
+        s32 z = -tableEntry->target;
+        s32 y = tableEntry->step;
 
-        *(s32 *)(part + 0x54) = x;
-        *(s32 *)(part + 0x58) = y;
-        *(s32 *)(part + 0x5c) = z;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     } else {
-        s32 x = *(s32 *)(tableEntry + 0);
-        s32 y = *(s32 *)(tableEntry + 4);
-        s32 z = *(s32 *)(tableEntry + 8);
+        s32 x = tableEntry->start;
+        s32 y = tableEntry->step;
+        s32 z = tableEntry->target;
 
-        *(s32 *)(part + 0x54) = x;
-        *(s32 *)(part + 0x58) = y;
-        *(s32 *)(part + 0x5c) = z;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     }
 }
 
-/* Same shape as `SetMegaMixMotionYFromSet`, reading `rec+0` as the type id (bit 4
- * mirror test) and writing into `part+0x48`/`+0x4c`/`+0x50` instead. */
+/* Same shape as `SetMegaMixMotionYFromSet`, reading `a` as the record
+ * index (bit 4 mirror test) and writing into `part->rampX` instead. */
 void SetMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
-    u8 *self = selfArg;
-    MATCH_HOLD_REG(u8 *, part, r3) = partArg;
-    void **mgr = *(void ***)(self + 4);
-    MATCH_HOLD_REG(u8 *, arr, r0) = *(u8 **)mgr;
+    struct mega_mix_ctrl *self = selfArg;
+    MATCH_HOLD_REG(struct gobj *, part, r3) = partArg;
+    const struct entry_set *set = self->base.animSet;
+    MATCH_HOLD_REG(const struct anim_pair *, arr, r0) = (const struct anim_pair *)set->entries;
     MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
-    u8 *rec;
+    const struct anim_pair *rec;
     MATCH_HOLD_REG(s32, type, r1);
     MATCH_HOLD_REG(s32, typeOffset, r0);
-    MATCH_HOLD_REG(u8 *, base, r1);
-    MATCH_HOLD_REG(u8 *, tableEntry, r2);
+    MATCH_HOLD_REG(const s32 *, base, r1);
+    MATCH_HOLD_REG(const struct speed_ramp *, tableEntry, r2);
 
+    /* &set->entries[index], then &gMegaMixMotionRecords[type], each one
+     * add in the ROM's registers */
     asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
-    rec = (u8 *)recOffset;
-    type = *(s32 *)(rec + 0);
+    rec = (const struct anim_pair *)recOffset;
+    type = rec->a;
     typeOffset = type * 12;
-    base = (u8 *)gMegaMixMotionRecords;
+    base = gMegaMixMotionRecords[0];
     asm("add %0, %1, %2" : "=r"(tableEntry) : "r"(typeOffset), "r"(base));
 
-    if ((s32)(part[0x28] << 27) < 0) {
-        s32 x = -*(s32 *)(tableEntry + 0);
-        s32 z = -*(s32 *)(tableEntry + 8);
-        s32 y = *(s32 *)(tableEntry + 4);
+    if ((s32)(part->mirror << 27) < 0) {
+        s32 x = -tableEntry->start;
+        s32 z = -tableEntry->target;
+        s32 y = tableEntry->step;
 
-        *(s32 *)(part + 0x48) = x;
-        *(s32 *)(part + 0x4c) = y;
-        *(s32 *)(part + 0x50) = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     } else {
-        s32 x = *(s32 *)(tableEntry + 0);
-        s32 y = *(s32 *)(tableEntry + 4);
-        s32 z = *(s32 *)(tableEntry + 8);
+        s32 x = tableEntry->start;
+        s32 y = tableEntry->step;
+        s32 z = tableEntry->target;
 
-        *(s32 *)(part + 0x48) = x;
-        *(s32 *)(part + 0x4c) = y;
-        *(s32 *)(part + 0x50) = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     }
 }
 
-/* Resolves the same `rec+4`-typed `gMegaMixMotionRecords` table entry
+/* Resolves the same `b`-indexed `gMegaMixMotionRecords` table entry
  * as `SetMegaMixMotionYFromSet`, then tail-calls `StartCtrlTargetMotionY` (player_flags.c,
  * still parked) to do the mirror-gated copy itself. */
 void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
-    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
+    struct mega_mix_ctrl *self = selfArg;
+    MATCH_HOLD_REG(const struct anim_pair *, arr, r3) =
+        (const struct anim_pair *)self->base.animSet->entries;
     MATCH_HOLD_REG(s32, acc, r2) = index * 8;
     MATCH_HOLD_REG(s32, type, r3);
-    MATCH_HOLD_REG(u8 *, base, r3);
+    MATCH_HOLD_REG(const s32 *, base, r3);
 
     asm("add %0, %0, %1" : "+r"(acc) : "r"(arr));
-    type = *(s32 *)((u8 *)acc + 4);
+    type = ((const struct anim_pair *)acc)->b;
     acc = type * 12;
-    base = (u8 *)gMegaMixMotionRecords;
+    base = gMegaMixMotionRecords[0];
     asm("add %0, %0, %1" : "+r"(acc) : "r"(base));
 
     StartCtrlTargetMotionY(selfArg, partArg, (const struct speed_ramp *)acc);
 }
 
-/* Resolves the `rec+0`-typed table entry like `SetMegaMixMotionXFromSet`, then
+/* Resolves the `a`-indexed table entry like `SetMegaMixMotionXFromSet`, then
  * tail-calls `StartCtrlTargetMotionX` (ctrl.c). */
 void StartMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
-    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
+    struct mega_mix_ctrl *self = selfArg;
+    MATCH_HOLD_REG(const struct anim_pair *, arr, r3) =
+        (const struct anim_pair *)self->base.animSet->entries;
     MATCH_HOLD_REG(s32, acc, r2) = index * 8;
     MATCH_HOLD_REG(s32, type, r3);
-    MATCH_HOLD_REG(u8 *, base, r3);
+    MATCH_HOLD_REG(const s32 *, base, r3);
 
     asm("add %0, %0, %1" : "+r"(acc) : "r"(arr));
-    type = *(s32 *)((u8 *)acc + 0);
+    type = ((const struct anim_pair *)acc)->a;
     acc = type * 12;
-    base = (u8 *)gMegaMixMotionRecords;
+    base = gMegaMixMotionRecords[0];
     asm("add %0, %0, %1" : "+r"(acc) : "r"(base));
 
     StartCtrlTargetMotionX(selfArg, partArg, (s32 *)acc);
 }
 
-/* Fires the usual `self+0xc`-table base+offset+fn-pointer trampoline
- * (action `1`) via `_call_via_r2`, clears `self+0x20`'s byte, resets
- * `self+0x1c` to `-1`, and re-points `self+4` at
+/* Calls method table slot 4 (SetCtrlMode) with 1 via `_call_via_r2`,
+ * clears `latch`, resets `stamp` to `-1`, and re-points `animSet` at
  * `gMegaMixMotionSet`. */
 void ResetMegaMixCtrl(void *selfArg)
 {
-    u8 *self = selfArg;
-    struct vtable_slot *table = *(struct vtable_slot **)(self + 0xc);
+    struct mega_mix_ctrl *self = selfArg;
+    const struct vtable_slot *table = self->base.vtable;
 
     MATCH_HOLD_REG(s32, zero, r0);
     u8 *p;
 
-    _call_via_r2(self + table[4].delta, (void *)1, table[4].fn);
-    p = self + 0x20;
+    _call_via_r2((u8 *)self + table[4].delta, (void *)1, table[4].fn);
+    p = &self->latch;
     zero = 0;
     *p = zero;
-    *(s32 *)(self + 0x1c) = zero - 1;
-    *(void **)(self + 4) = (void *)&gMegaMixMotionSet;
+    self->stamp = zero - 1;
+    self->base.animSet = &gMegaMixMotionSet;
 }
 
-/* Re-points `self+0xc`'s table pointer at `gMegaMixCtrlVtable`, then
+/* Re-points the method table at `gMegaMixCtrlVtable`, then
  * tail-calls `DestroyBossCtrl` (which promptly overwrites it again via
  * `DestroyCtrl` - same double-set pattern as `DestroyBossCtrl` itself). */
 void DestroyMegaMixCtrl(void *selfArg, s32 flags)
 {
-    u8 *self = selfArg;
+    struct mega_mix_ctrl *self = selfArg;
 
-    *(void **)(self + 0xc) = (void *)gMegaMixCtrlVtable;
-    DestroyBossCtrl((struct boss_ctrl *)self, flags);
+    self->base.vtable = gMegaMixCtrlVtable;
+    DestroyBossCtrl(&self->base, flags);
 }
 
 /* `CreateBossCtrl`-style init, but re-pointing the table at
@@ -184,10 +190,10 @@ void DestroyMegaMixCtrl(void *selfArg, s32 flags)
  * zeroing `self+0x10`/`+0x14`/`+0x18` directly. Returns `self`. */
 void *CreateMegaMixCtrl(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct mega_mix_ctrl *self = selfArg;
 
-    CreateBossCtrl((struct boss_ctrl *)self);
-    *(void **)(self + 0xc) = (void *)gMegaMixCtrlVtable;
+    CreateBossCtrl(&self->base);
+    self->base.vtable = gMegaMixCtrlVtable;
     ResetMegaMixCtrl(self);
     return self;
 }
