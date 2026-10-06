@@ -489,7 +489,10 @@ re-running `chunk_remaining_work.py`'s `scan_cleanup_candidates()` (the
 same scan that generates the per-file cleanup issues) and marking a unit
 `complete: true` only if its source file has zero raw offset casts and
 zero raw hardware addresses outside `#if NON_MATCHING` blocks; anything
-else gets `complete: false`. Still-raw units (no `base_path`) never get
+else gets `complete: false`. (The advisory `offset_addr` kind, a byte
+pointer plus a constant left as an address, is listed by
+`--cleanup-report` but doesn't count: it is as often a payload past a
+header as a field.) Still-raw units (no `base_path`) never get
 a `complete` key at all - it isn't applicable until something's matched.
 
 `objdiff-cli report generate` aggregates this automatically into the

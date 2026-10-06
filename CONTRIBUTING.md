@@ -26,8 +26,10 @@ real detail.
   has a page per category.
 - `python3 tools/chunk_remaining_work.py --cleanup-scan --issues-dir /tmp/issues`
   scans `src/` and `lib/` for raw pointer-arithmetic field access and raw
-  hardware addresses. It reports none today; run it to check that new
-  code doesn't add any (#550 lists the forms it still misses).
+  hardware addresses. `--cleanup-report FILE` (or `-`) lists every site
+  by subsystem and file. #550 is converting the sites it found when it
+  learned the line-start, double-pointer and byte-pointer forms; run it
+  to check that new code doesn't add more.
 
 ## Claiming work
 

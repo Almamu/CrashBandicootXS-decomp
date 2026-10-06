@@ -6278,7 +6278,7 @@ and `make NON_MATCHING=1 report`.
 
 First pass at this chunk's 25 raw functions. `docs/rom_map.md` had
 already characterized 8 of them in earlier investigation rounds (the
-15-slot `gStaticData_0816C7D8` "trigger effect type N" dispatch table
+15-slot "trigger effect type N" dispatch table (`gEntitySpawnFuncs[0x4D]`-`[0x5B]`)
 and its neighbors) without ever writing C for any of them - this pass
 picked the most tractable-looking four, the confirmed twin family
 `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform` (slots 4-7 of

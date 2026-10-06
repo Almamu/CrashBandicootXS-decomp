@@ -282,7 +282,7 @@ UNITS = [
     (0x0801EF0C, "src/level/spawn_enemies.o", "graphics_loading"),  # GitHub issue #31: SpawnLizard-SpawnElectricEel, the "two-line text popup" spawners (include/text_popup.h); all matched, built with old_agbcc. Nine were NAKED under agbcc (the "r7 gap"), and SpawnVenusFlytrap keeps its agbcc-era pinned C (plain C is 5 halfwords off) - see docs/matching/archive/issue-31-old-agbcc.md
     (0x0801FDEC, "src/level/spawn_enemies.o", "graphics_loading"),  # GitHub issue #31: SpawnSquid, text popup tag 7; matched, built with old_agbcc
     (0x0801FEEC, "src/level/spawn_enemies.o", "graphics_loading"),  # GitHub issue #31: SpawnJellyfish-SpawnWoodenCrusher, more text popup spawners; all matched, built with old_agbcc (all but SpawnFrog NAKED under agbcc; SpawnFlamethrowerLabAssistant closed in docs/matching/archive/last-eleven-naked-retry.md) - see docs/matching/archive/issue-31-old-agbcc.md
-    (0x08020E84, "src/level/spawn_gem_platforms.o", "graphics_loading"),  # GitHub issue #31: SpawnRedGemPlatform/SpawnYellowGemPlatform/SpawnGreenGemPlatform/SpawnBlueGemPlatform - the "trigger effect type N" spawners (4 of the 15-slot gStaticData_0816C7D8 dispatch table's slots); plain C under old_agbcc - see docs/matching/archive/issue-31-trigger-effect-type-n.md
+    (0x08020E84, "src/level/spawn_gem_platforms.o", "graphics_loading"),  # GitHub issue #31: SpawnRedGemPlatform/SpawnYellowGemPlatform/SpawnGreenGemPlatform/SpawnBlueGemPlatform - the "trigger effect type N" spawners (gEntitySpawnFuncs[0x51]-[0x54]); plain C under old_agbcc - see docs/matching/archive/issue-31-trigger-effect-type-n.md
     (0x08021280, "src/level/spawn_bosses.o", "graphics_loading"),  # GitHub issue #31: SpawnRoomExit-SpawnCortexBoss - a three-way spawner gated by the gLevelTable guard (was NAKED; closed with four register pins plus an empty asm nudge, docs/matching/archive/naked-retry-mid45.md) and text popups with their own header constructors; all matched, built with old_agbcc - see docs/matching/archive/issue-31-old-agbcc.md
     (0x08021668, "src/level/spawn_objects.o", "graphics_loading"),  # GitHub issue #31: SpawnMegaMix-SpawnIronCrate, the last text popup plus the CreateSpriteObj/CreatePlatform/CreateCrate spawner-table entries; all matched, built with old_agbcc (SpawnBonusPlatform was NAKED under agbcc) - see docs/matching/archive/issue-31-old-agbcc.md
     (0x08021BFC, "src/level/spawn_crates.o", "graphics_loading"),  # GitHub issue #33: SpawnNitroSwitchCrate-SpawnCheckpointCrate matched (CreateCrate entity-constructor trampolines) - see docs/matching/archive/issue-33-0x08021bfc-graphics-loading.md
@@ -987,7 +987,7 @@ def main():
     # False - objdiff/decomp.dev track this as a status independent of
     # match percentage, so a byte-exact-but-uncleaned file still shows
     # 100% matched while correctly not counting as "complete".
-    needs_cleanup = {entry["file"] for entry in scan_cleanup_candidates()}
+    needs_cleanup = {entry["file"] for entry in scan_cleanup_candidates() if entry["blocking"]}
 
     code_units = [(UNITS[i], UNITS[i + 1][0], None) for i in range(len(UNITS) - 1)]
     code_units += [(IWRAM_UNITS[i], IWRAM_UNITS[i + 1][0], IWRAM_CODE) for i in range(len(IWRAM_UNITS) - 1)]

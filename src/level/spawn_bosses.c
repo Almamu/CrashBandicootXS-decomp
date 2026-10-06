@@ -73,7 +73,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->anim = POPUP_ANIM(0x288);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     part->base.flags |= 0x10;
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->flipY = rec->flags >> 2 & 1;
