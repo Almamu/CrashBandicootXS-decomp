@@ -107,7 +107,7 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
 
             cnt = manager->activeCount;
             base3 = manager->slotArray;
-            *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
+            base3[cnt - 1] = 0;
             cnt -= 1;
             manager->activeCount = cnt;
         }

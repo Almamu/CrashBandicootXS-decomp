@@ -6,6 +6,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "globals.h"
+#include "level.h"
 
 /* Calls `DrawSprite` (already matched in `sprite.c`) with the
  * global `gSpriteRenderer` as `self` - same tail-call shape as
@@ -80,10 +81,11 @@ s32 CollideWumpa(struct orbit_part *self)
         struct player *player = gPlayer;
 
         if (player->flags.all >> 7) {
-            u8 *rec = (u8 *)self->base.table + 0x68;
-            s16 offset = *(s16 *)rec;
+            const struct vtable_slot *methods = self->base.table;
+            const struct vtable_slot *rec = &methods[13];
+            s16 offset = rec->delta;
 
-            _call_via_r1((u8 *)self + offset, *(void **)(rec + 4));
+            _call_via_r1((u8 *)self + offset, rec->fn);
         }
     }
     return 0;
@@ -175,14 +177,14 @@ outOfRange:
 
         if (field08a != ffff) {
             MATCH_HOLD_REG(u16, field08b, r3) = *(volatile u16 *)&self->id;
-            void *base = gEntityFlags;
+            struct entity_flags *base = gEntityFlags;
             MATCH_HOLD_REG(s32, word, r0);
             s32 wordOffset;
 
             asm volatile("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(word) : "r"((s32)field08b));
             wordOffset = word << 2;
             {
-                u8 *bitmapAddr = (u8 *)base + 0x108;
+                u8 *bitmapAddr = (u8 *)base->bits0Copy;
 
                 bitmapAddr = bitmapAddr + wordOffset;
                 word = field08b - (word << 5);
@@ -249,12 +251,12 @@ struct actor *InitStopwatch(struct actor *self)
  * through the pinned byte cursor `q` the ROM steps. */
 void ResetActionCtrl(struct act *selfArg)
 {
-    MATCH_HOLD_REG(u8 *, p, r3) = (u8 *)selfArg;
-    MATCH_HOLD_REG(u8 *, q, r1) = p + 0x29;
+    MATCH_HOLD_REG(struct act *, p, r3) = selfArg;
+    MATCH_HOLD_REG(u8 *, q, r1) = &p->turboRun;
     MATCH_HOLD_REG(s32, zero, r0) = 0;
 
     *q = zero;
-    *(s32 *)(p + 8) = zero;
+    p->state = zero;
     q += 3;
     *q = zero;
     q -= 5;
@@ -265,8 +267,8 @@ void ResetActionCtrl(struct act *selfArg)
     *q = 1;
     q += 1;
     *q = 1;
-    *(s32 *)(p + 0x14) = zero;
-    *(s32 *)(p + 0x10) = zero;
+    *(s32 *)p->unk_14 = zero;
+    p->part = (struct player *)zero;
     q -= 0xa;
     *q = zero;
     q += 4;
@@ -275,8 +277,8 @@ void ResetActionCtrl(struct act *selfArg)
     *q = zero;
     q += 6;
     *q = zero;
-    *(s32 *)(p + 0x18) = zero;
-    *(s32 *)(p + 0x1c) = zero;
+    p->frame = zero;
+    p->frames = zero;
     q += 8;
     *q = zero;
     q += 1;

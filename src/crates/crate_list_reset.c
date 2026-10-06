@@ -65,8 +65,8 @@ void ResetCrateList(struct pool_manager *m)
         struct box_part *obj = m->slotArray[i];
 
         if (obj != NULL) {
-            u8 *m50 = obj->vtable + 0x50;
-            _call_via_r2((u8 *)obj + *(s16 *)m50, (void *)3, *(void **)(m50 + 4));
+            struct part_method *m50 = PART_METHOD(obj, 0x50);
+            _call_via_r2((u8 *)obj + m50->thisOffset, (void *)3, m50->fn);
         }
         m->slotArray[i] = NULL;
     }

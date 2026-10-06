@@ -214,22 +214,24 @@ u32 GetCrateClassId(void)
  * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/archive/issue-13-graphics-fc70.md). */
 
-/* Sets `self->table`, then - if `self`'s own `+0x4e` state byte is 3 -
- * frees `self+0x48` (a heap pointer, unless it's the sentinel `-1` or
- * already `NULL`) and clears `self+0x59`, before tail-calling
+/* Sets `self->table`, then - for an iron switch crate (`kind` 3) -
+ * frees its outline-crate `group` (unless it's PHYS_NO_GROUP or
+ * `NULL`) and clears `groupAllocated`, before tail-calling
  * `DestroySpriteObj` (already matched, `sprite_obj.c`) - same table-set/
  * tail-call shape as `DestroyWumpa` (`wumpa.c`). */
 void DestroyCrate(struct actor *self, u32 arg1)
 {
+    struct crate *crate = (struct crate *)self;
+
     self->table = (void *)gCrateVtable;
 
-    if (*((u8 *)self + 0x4e) == 3) {
-        void *p = *(void **)((u8 *)self + 0x48);
-        if ((u32)((u8 *)p + 1) > 1) {
-            if (p != NULL) {
-                OperatorDeleteArray(p);
+    if (crate->kind == 3) {
+        struct crate_group *group = crate->u48.group;
+        if (PHYS_HAS_GROUP(group)) {
+            if (group != NULL) {
+                OperatorDeleteArray(group);
             }
-            *((u8 *)self + 0x59) = 0;
+            crate->groupAllocated = 0;
         }
     }
 
@@ -237,14 +239,14 @@ void DestroyCrate(struct actor *self, u32 arg1)
 }
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched,
- * `sprite_obj.c`), sets `self->table`, clears `self+0x59`, then
+ * `sprite_obj.c`), sets `self->table`, clears `groupAllocated`, then
  * resets `self`'s own collision-response state via `ResetCrate`
  * (`crate_reset.c`). */
 struct actor *InitCrate(struct actor *self)
 {
     InitSpriteObj(self);
     self->table = (void *)gCrateVtable;
-    *((u8 *)self + 0x59) = 0;
+    ((struct crate *)self)->groupAllocated = 0;
     ResetCrate((struct crate *)self);
     return self;
 }

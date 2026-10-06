@@ -132,6 +132,24 @@ struct crate {
     struct crate *below; // 0x60 - the crate this one stands on (GetCrateBelow/SetCrateBelow)
 };
 
+/* A crate's placement record: entry `slot` of the room's parameter
+ * records (`gEntityFlags->list`, level_data.h), as CreateCrate reads it.
+ * Bytes 6-8 are per-kind (see `struct crate` paramA/paramB/fallSpeed/u48). */
+struct crate_placement {
+    u8 flags;   // 0x00 - bit 5: has a time-trial kind; bit 6: Aku Aku when assisted
+                //        (checkpoint: SetCheckpointAtPlayer's flag); bit 7: checkpoint
+                //        when assisted
+    u8 options; // 0x01 - bit 0: life crate when assisted; bits 1-3 (slot): its faces
+    u8 unk_02[2];
+    s16 trialKind;     // 0x04 - kind + 0x15 in a time trial, 0x1B read as 0x15
+    u8 param6;         // 0x06 - 3/5: paramA (group id); 11/15: paramB
+    u8 param7;         // 0x07 - 3/5: paramB (step count / step)
+    union {            // 0x08
+        u8 stepDelay;  // 3 (iron switch): fallSpeed
+        s16 solidKind; // 5 (outline): u48.solidKind
+    } u08;
+};
+
 typedef s32 (*phys_method_fn)(void *self);
 
 /* Calls method `m` (a gcc 2.x {s16 thisOffset; fn} vtable slot) on `obj`. */

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "match.h"
+#include "crate.h"
 #include "crates.h"
 #include "globals.h"
 #include "player.h"
@@ -248,24 +249,24 @@ returnNeg1:
  * behavior. `UpdateCrateFall`/`FindLineCrossing` immediately before this
  * function are left untouched raw - see the write-up doc. */
 
-/* Resets `self`'s collision-response bookkeeping: sets flags `+0xc`
- * bits 2/6, clears the low 7 bits of `+0x4d` (state byte) while also
- * clearing the global `gPlayer->busy` "hit" latch, then
- * zeroes the timer/list-link block `+0x44`-`+0x51`/`+0x58` and the two
- * neighbor-list pointers `+0x5c`/`+0x60`, and sets the `+0x54`
- * countdown to -1 (disabled). Matches the "get next"/"get prev" field
- * pair (`+0x5c`/`+0x60`) `GetCrateBelow`/`GetCrateAbove` in crate.c
- * read/write. */
+/* Resets `self`'s collision-response bookkeeping: sets `flags` bits
+ * 2/6, clears the low 7 bits of `state` while also clearing the global
+ * `gPlayer->busy` "hit" latch, then zeroes the fall/per-kind fields
+ * (`fallDistance` through `paramB`, and `touched`) and the stack links
+ * `above`/`below` (GetCrateAbove/GetCrateBelow in crate.c), and sets
+ * `trialKind` to -1 (none). */
 void ResetCrate(struct crate *selfArg)
 {
-    MATCH_HOLD_REG(u8 *, self, r2) = (u8 *)selfArg;
+    MATCH_HOLD_REG(struct crate *, self, r2) = selfArg;
     u8 v = 4;
     MATCH_HOLD_REG(u8 *, addr, r3);
     u8 zero;
 
-    v |= self[0xc];
+    v |= self->flags;
     v |= 0x40;
-    self[0xc] = v;
+    /* Retyped store: through the plain member, gcc builds the `zero`
+     * below before this store instead of after it. */
+    *(u8 *)&self->flags = v;
 
     /* Inline-asm-anchored: the ROM computes the 0x7f/0x80 mask
      * immediate *before* the `ldrb` byte load in both of these
@@ -277,7 +278,7 @@ void ResetCrate(struct crate *selfArg)
      * either load the byte first or land the AND result in the wrong
      * register. Anchoring the exact instruction sequence here was
      * more reliable than continuing to chase the scheduler. */
-    addr = self + 0x4d;
+    addr = &self->state;
     {
         MATCH_HOLD_REG(u8, result, r0);
         // clang-format off
@@ -303,14 +304,14 @@ void ResetCrate(struct crate *selfArg)
     );
     // clang-format on
 
-    *(u32 *)(self + 0x44) = zero;
-    self[0x4c] = zero;
-    *(u32 *)(self + 0x48) = zero;
-    self[0x4f] = zero;
-    self[0x50] = zero;
-    self[0x51] = zero;
-    self[0x58] = zero;
-    *(s32 *)(self + 0x54) = -1;
-    *(u32 *)(self + 0x5c) = zero;
-    *(u32 *)(self + 0x60) = zero;
+    self->fallDistance = zero;
+    self->fallSpeed = zero;
+    self->u48.solidKind = zero;
+    self->timer = zero;
+    self->paramA = zero;
+    self->paramB = zero;
+    self->touched = zero;
+    self->trialKind = -1;
+    self->above = (struct crate *)(u32)zero;
+    self->below = (struct crate *)(u32)zero;
 }

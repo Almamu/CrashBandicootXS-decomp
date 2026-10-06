@@ -55,21 +55,20 @@ static inline void OrbitClampFrame(struct orbit_part *self)
  * build for both sides - no `player+0xa == 0x13` branch here), and on
  * overlap sets flags bit 3 and calls `PickUpExtraLife(self, 0)` (the fixed,
  * non-randomized despawn-offset path). */
-void CheckExtraLifePickup(struct orbit_part *selfArg)
+void CheckExtraLifePickup(struct orbit_part *self)
 {
-    u8 *self = (u8 *)selfArg;
     struct aabb selfBox;
     struct aabb playerBox;
     struct player *player;
 
-    if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
+    if (self->mode != 0 && self->phase <= 0x16) {
         if (gPlayer->ctrlMode != 3) {
             return;
         }
     }
 
     {
-        u8 flags = self[0xc];
+        u8 flags = self->base.flags;
         u32 shifted = (u32)flags << 0x18;
 
         if ((shifted >> 0x1b) & 1) {
@@ -87,28 +86,25 @@ void CheckExtraLifePickup(struct orbit_part *selfArg)
     if (AabbOverlaps(&playerBox, &selfBox)) {
         MATCH_HOLD_REG(s32, bit, r0) = 8;
 
-        bit |= self[0xc];
-        self[0xc] = bit;
-        PickUpExtraLife((struct orbit_part *)self, 0);
+        bit |= self->base.flags;
+        self->base.flags = bit;
+        PickUpExtraLife(self, 0);
     }
 }
 
 /* `docs/rom_map.md`: part of "the randomized-behavior... famil[y]"
- * alongside `CheckPlayerCtrlTurn`. Plays a hit SFX, sets `self+0x3c` (a
- * timer/animation field) to `0xa0`, then either derives a randomized
- * `(dx,dy)` offset pair from `rand()` (`randomize` nonzero -
- * `self->0x49` tags which of three `rand()`-driven bands the x-offset
- * came from, `self->0x48 = 2`) or uses a fixed `(0xb400,0xc00)` offset
- * and fires `ShowHudLives(gHud)` (`self->0x48 = 1`). Either
- * way: `self->0xc |= 0x10`, `self->0x25 = 1`, then calls
- * `WorldToScreen(self, self->x>>8, self->y>>8, &outX, &outY)` and
- * re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a
- * "distance to travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`)
+ * alongside `CheckPlayerCtrlTurn`. Plays a hit SFX, sets `timer` to
+ * `0xa0`, then either derives a randomized `(dx,dy)` offset pair from
+ * `rand()` (`randomize` nonzero - `counter` tags which of three
+ * `rand()`-driven bands the x-offset came from, `state = 2`) or uses a
+ * fixed `(0xb400,0xc00)` offset and fires `ShowHudLives(gHud)`
+ * (`state = 1`). Either way: `flags |= 0x10`, `screenSpace = 1`, then
+ * calls `WorldToScreen(self, x>>8, y>>8, &outX, &outY)` and re-derives
+ * `x`/`y` plus `velX`/`velY` (a "distance to travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`)
  * from the results - the exact same tail shape `PickUpWumpa`/
  * `SendExtraLifeToHud`/`SendWumpaToHud` (`wumpa_update.c`) all share. */
-void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
+void PickUpExtraLife(struct orbit_part *self, u8 randomize)
 {
-    u8 *self = (u8 *)selfArg;
     s32 dx, dy;
     s32 outX, outY;
     s32 newX, newY;
@@ -116,13 +112,13 @@ void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
     MATCH_KEEP_VOLATILE(self);
 
     PlaySfx(gAudioContext, 7, 0x100);
-    *(u16 *)(self + 0x3c) = 0xa0;
+    self->timer = 0xa0;
 
     if (randomize) {
         u32 rv = (u16)rand();
         u8 lowbit = rv & 1;
 
-        self[0x49] = lowbit;
+        self->counter = lowbit;
         if (lowbit) {
             if (rv & 2) {
                 dx = ((rv & 0x3f) + 5) << 8;
@@ -133,35 +129,37 @@ void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
             dx = ((rv & 0x7f) + 0x24) << 8;
         }
         dy = ((rv & 0x1f) + 0x10) << 8;
-        self[0x48] = 2;
+        self->state = 2;
     } else {
         dx = 0xb400;
         dy = 0xc00;
-        self[0x48] = 1;
+        self->state = 1;
         ShowHudLives(gHud);
     }
 
     {
         MATCH_HOLD_REG(s32, mask, r0) = 0x10;
 
-        mask |= self[0xc];
-        self[0xc] = mask;
+        mask |= self->base.flags;
+        self->base.flags = mask;
     }
     {
         MATCH_HOLD_REG(u8, one, r0) = 1;
 
-        self[0x25] = one;
+        /* Retyped store: through the plain member, the `1` is built
+         * after the field's address instead of before it. */
+        *(u8 *)&self->screenSpace = one;
     }
 
-    WorldToScreen(self, *(s32 *)self >> 8, *(s32 *)(self + 4) >> 8, &outX, &outY);
+    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
 
     newX = outX << 8;
-    *(s32 *)self = newX;
-    *(s32 *)(self + 0x40) = -FixedDiv(newX - dx, 0x1400);
+    self->base.x = newX;
+    self->velX = -FixedDiv(newX - dx, 0x1400);
 
     newY = outY << 8;
-    *(s32 *)(self + 4) = newY;
-    *(s32 *)(self + 0x44) = -FixedDiv(newY - dy, 0x1400);
+    self->base.y = newY;
+    self->velY = -FixedDiv(newY - dy, 0x1400);
 }
 
 /* `docs/rom_map.md`: "a bounds-checked, mode-selected object state
@@ -336,40 +334,39 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
 /* `void SendExtraLifeToHud(void *part)` - extern already declared in
  * `drop_extra_life.c`; the documented "mutually exclusive alternative" is
  * `SendWumpaToHud` (`wumpa_update.c`, already matched). Plays a hit SFX,
- * sets `self->0x48 = 1`, nudges `self->x -= self->0x4a<<8`, sets
- * `self->0x25 = 1`, calls `WorldToScreen(self, x>>8, y>>8, &outX, &outY)`
- * and re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44`
+ * sets `state = 1`, nudges `x -= mode << 8`, sets `screenSpace = 1`,
+ * calls `WorldToScreen(self, x>>8, y>>8, &outX, &outY)` and re-derives
+ * `x`/`y` plus `velX`/`velY`
  * (the same `-FixedDiv(newPos<<8 - offset, 0x1400)` "distance to
  * travel" idiom `PickUpExtraLife`/`PickUpWumpa`/`SendWumpaToHud` all share),
  * with fixed `0xb400`/`0xc00` offsets on x/y respectively, then fires
  * `ShowHudLives(gHud)` - unlike `SendWumpaToHud`'s
  * `ShowHudWumpa`. Notably simpler than its `SendWumpaToHud` sibling: no
- * `self->0x3c`/`self->0x30` table-lookup-clamp setup here at all. */
-void SendExtraLifeToHud(struct orbit_part *selfArg)
+ * `timer`/`frame` table-lookup-clamp setup here at all. */
+void SendExtraLifeToHud(struct orbit_part *self)
 {
-    u8 *self = (u8 *)selfArg;
     s32 outX, outY;
     s32 newX, newY;
 
     PlaySfx(gAudioContext, 7, 0x100);
-    self[0x48] = 1;
+    self->state = 1;
     {
-        MATCH_HOLD_REG(s32, off, r0) = self[0x4a];
+        MATCH_HOLD_REG(s32, off, r0) = self->mode;
         MATCH_HOLD_REG(s32, shifted, r1) = off << 8;
 
-        *(s32 *)self -= shifted;
+        self->base.x -= shifted;
     }
-    self[0x25] = 1;
+    self->screenSpace = 1;
 
-    WorldToScreen(self, *(s32 *)self >> 8, *(s32 *)(self + 4) >> 8, &outX, &outY);
+    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
 
     newX = outX << 8;
-    *(s32 *)self = newX;
-    *(s32 *)(self + 0x40) = -FixedDiv(newX - 0xb400, 0x1400);
+    self->base.x = newX;
+    self->velX = -FixedDiv(newX - 0xb400, 0x1400);
 
     newY = outY << 8;
-    *(s32 *)(self + 4) = newY;
-    *(s32 *)(self + 0x44) = -FixedDiv(newY - 0xc00, 0x1400);
+    self->base.y = newY;
+    self->velY = -FixedDiv(newY - 0xc00, 0x1400);
 
     ShowHudLives(gHud);
 }
@@ -384,35 +381,8 @@ void SendExtraLifeToHud(struct orbit_part *selfArg)
  * (collision_queue.c) operate on - the same "big, mostly-uncharacterized
  * object, individual fields named only by offset" situation already
  * documented for this object family in `src/player/player_update.c`'s
- * own file header. Every function here operates on a handful of fields
- * clustered at `self+0xc`/`+0x18`/`+0x38`/`+0x48`-`+0x50`:
- *
- * - `self+0xc`  (u8)  - flags byte (bit 2/bit 3 tested/set by
- *                       `DrawExtraLife`/`CheckWumpaPickup`)
- * - `self+0x18` (void*) - the usual per-category data table pointer
- *                       (same convention as `struct actor.table`)
- * - `self+0x38` (u8)  - an externally-driven gate byte read (not
- *                       written) by `DrawExtraLife`
- * - `self+0x48` (u8)  - a "spawned/active" gate byte, cleared by
- *                       `ResetExtraLifePickup`, tested by `CollideExtraLife`
- * - `self+0x49` (u8)  - unexamined byte setter (`SetExtraLifeCounter`)
- * - `self+0x4a` (u8)  - orbit "mode" (0 = inactive; 1/2 = which way the
- *                       orbit offset is applied to the anchor x; other
- *                       values leave x at the anchor) - set by
- *                       `SetExtraLifeHop`, tested by `UpdateExtraLifeHop`'s output
- *                       branch and `CheckWumpaPickup`'s activity gate
- * - `self+0x4b` (u8)  - orbit phase/angle index into the shared sine
- *                       table `gSineTable`, reset to 0 by
- *                       `SetExtraLifeHop`, advanced elsewhere (not in this
- *                       group), read by `UpdateExtraLifeHop`/`CheckWumpaPickup`
- * - `self+0x4c` (s32) - orbit anchor x (Q8)
- * - `self+0x50` (s32) - orbit anchor y (Q8)
- * - `self+0x0`  (s32) - current x (Q8) - `SetExtraLifePos` seeds it from
- *                       the anchor; `UpdateExtraLifeHop` never touches it
- *                       (only rewrites `self+4`'s `y`, despite what its
- *                       own field-order might suggest - see below)
- * - `self+0x4`  (s32) - current y (Q8), recomputed every call by
- *                       `UpdateExtraLifeHop`
+ * own file header. The fields these functions use are named in `struct
+ * orbit_part` (orbit_part.h).
  *
  * Confirms this is a small "orbiting hazard" behavior mixed into the
  * same object type `CreateExtraLife`/`SendExtraLifeToHud` (drop_extra_life.c,
@@ -480,19 +450,18 @@ void UpdateExtraLifeHop(struct orbit_part *self)
 }
 
 /* Re-derives visibility via `DrawSprite(gSpriteRenderer, self)`
- * (already matched, `sprite.c`), then clears flags bit 3
- * (`self+0xc`) when `self+0x38` is nonzero - the same "consumed/hit"
+ * (already matched, `sprite.c`), then clears `flags` bit 3 when
+ * `animDone` is set - the same "consumed/hit"
  * flag bit `CheckWumpaPickup` below sets. */
-void DrawExtraLife(struct orbit_part *selfArg)
+void DrawExtraLife(struct orbit_part *self)
 {
-    u8 *self = (u8 *)selfArg;
 
     DrawSprite(gSpriteRenderer, self);
-    if (self[0x38] != 0) {
+    if (self->animDone != 0) {
         MATCH_HOLD_REG(s32, mask, r0) = 9;
         mask = -mask;
-        mask &= self[0xc];
-        self[0xc] = mask;
+        mask &= self->base.flags;
+        self->base.flags = mask;
     }
 }
 
@@ -531,23 +500,22 @@ struct orbit_part *InitExtraLife(struct orbit_part *self)
     return self;
 }
 
-/* If `self+0x48` (the "spawned/active" gate) is clear and the player's
- * (`gPlayer`) own `+0xc` byte has bit 7 set, fires
- * `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`) - the usual
+/* If `state` (the "spawned/active" gate) is clear and the player's
+ * (`gPlayer`) flags have bit 7 set, fires method table slot 13
+ * (`table+0x68/0x6c`)'s trampoline (`_call_via_r1`) - the usual
  * "offset + fn pointer" pair convention already established throughout
  * this codebase (e.g. `graphics.c`'s own `+0x10`/`+0x14` pair). Always
  * returns 0. */
-s32 CollideExtraLife(struct orbit_part *selfArg)
+s32 CollideExtraLife(struct orbit_part *self)
 {
-    u8 *self = (u8 *)selfArg;
-
-    if (self[0x48] == 0) {
+    if (self->state == 0) {
         struct player *player = gPlayer;
 
         if (player->flags.all >> 7) {
-            u8 *entry = *(u8 **)(self + 0x18) + 0x68;
-            void *addr = self + *(s16 *)entry;
-            void *fn = *(void **)(entry + 4);
+            const struct vtable_slot *methods = self->base.table;
+            const struct vtable_slot *entry = &methods[13];
+            void *addr = (u8 *)self + entry->delta;
+            void *fn = entry->fn;
 
             _call_via_r1(addr, fn);
         }
@@ -555,37 +523,34 @@ s32 CollideExtraLife(struct orbit_part *selfArg)
     return 0;
 }
 
-/* Sets `self`/`self+4` (`x`/`y`, Q8) from the raw `x`/`y` arguments
- * scaled by 8, and mirrors both into `self+0x4c`/`self+0x50` - seeding
+/* Sets `x`/`y` (Q8) from the raw `x`/`y` arguments scaled by 8, and
+ * mirrors both into `anchor` - seeding
  * an orbit anchor at the object's own starting position. */
-void SetExtraLifePos(struct orbit_part *selfArg, s32 x, s32 y)
+void SetExtraLifePos(struct orbit_part *self, s32 x, s32 y)
 {
-    u8 *self = (u8 *)selfArg;
     s32 qx, qy;
 
-    *(s32 *)self = x << 8;
-    *(s32 *)(self + 4) = y << 8;
-    qx = *(volatile s32 *)self;
-    qy = *(volatile s32 *)(self + 4);
-    *(s32 *)(self + 0x4c) = qx;
-    *(s32 *)(self + 0x50) = qy;
+    self->base.x = x << 8;
+    self->base.y = y << 8;
+    qx = *(volatile s32 *)&self->base.x;
+    qy = *(volatile s32 *)&self->base.y;
+    self->anchor.x = qx;
+    self->anchor.y = qy;
 }
 
-/* Sets the orbit mode (`self+0x4a`) and resets the orbit phase
- * (`self+0x4b`) to 0. */
-void SetExtraLifeHop(struct orbit_part *selfArg, u8 mode)
+/* Sets the orbit `mode` and resets the orbit `phase` to 0. */
+void SetExtraLifeHop(struct orbit_part *self, u8 mode)
 {
-    u8 *self = (u8 *)selfArg;
     u8 *modePtr;
     u8 zero;
 
-    modePtr = self + 0x4a;
+    modePtr = &self->mode;
     zero = 0;
     *modePtr = mode;
-    self[0x4b] = zero;
+    self->phase = zero;
 }
 
-/* Unexamined byte setter, `self+0x49` - address-adjacent to the orbit
+/* Unexamined byte setter, `counter` - address-adjacent to the orbit
  * mode/phase pair above but not otherwise read by any function in this
  * group. */
 void SetExtraLifeCounter(struct orbit_part *self, u8 val)
@@ -610,21 +575,20 @@ void SetExtraLifeCounter(struct orbit_part *self, u8 val)
  * player's *secondary* AABB (`GetSpriteHitbox`, the same helper used for
  * `self`'s own box) and tests it the same way; on overlap, sets flags
  * bit 3 and tail-calls `PickUpWumpa(self, 0)` (no SFX on this path). */
-void CheckWumpaPickup(struct orbit_part *selfArg)
+void CheckWumpaPickup(struct orbit_part *self)
 {
-    u8 *self = (u8 *)selfArg;
     struct aabb selfBox;
     struct aabb playerBox;
     struct player *player;
 
-    if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
+    if (self->mode != 0 && self->phase <= 0x16) {
         if (gPlayer->ctrlMode != 3) {
             return;
         }
     }
 
     {
-        u8 flags = self[0xc];
+        u8 flags = self->base.flags;
         u32 shifted = (u32)flags << 0x18;
 
         if ((shifted >> 0x1b) & 1) {
@@ -643,9 +607,9 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
         if (AabbOverlaps(&playerBox, &selfBox)) {
             MATCH_HOLD_REG(s32, bit, r0) = 8;
 
-            bit |= self[0xc];
-            self[0xc] = bit;
-            PickUpWumpa((struct orbit_part *)self, 1);
+            bit |= self->base.flags;
+            self->base.flags = bit;
+            PickUpWumpa(self, 1);
             PlaySfx(gAudioContext, 6, 0x80);
         }
     } else {
@@ -653,9 +617,9 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
         if (AabbOverlaps(&playerBox, &selfBox)) {
             MATCH_HOLD_REG(s32, bit, r0) = 8;
 
-            bit |= self[0xc];
-            self[0xc] = bit;
-            PickUpWumpa((struct orbit_part *)self, 0);
+            bit |= self->base.flags;
+            self->base.flags = bit;
+            PickUpWumpa(self, 0);
         }
     }
 }

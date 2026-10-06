@@ -13,6 +13,7 @@
 #include "level.h"
 #include "box_part.h"
 #include "globals.h"
+#include "sprite_bank.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -96,12 +97,12 @@ extern void AddCollisionCandidate_b(struct collision_queue *queue, struct crate 
 #define D18C_HITBOX(dst, part)                                                 \
     if (1)                                                                     \
     {                                                                          \
-        u8 *_info = GetSpriteFrame((struct gfx_part *)(part));                    \
+        struct sprite_frame_3box *_info = GetSpriteFrame((struct gfx_part *)(part)); \
                                                                                \
-        switch (**(u8 **)(_info + 4) >> 4)                                     \
+        switch (_info->frame.pieces[0] >> 4)                                   \
         {                                                                      \
         case 0:                                                                \
-            (dst) = (struct hitbox_quad *)(_info + 0x1c);                        \
+            (dst) = &_info->box[2];                                            \
             break;                                                             \
         case 1:                                                                \
         case 2:                                                                \
@@ -109,7 +110,7 @@ extern void AddCollisionCandidate_b(struct collision_queue *queue, struct crate 
             (dst) = (struct hitbox_quad *)&gEmptySpriteBox;                  \
             break;                                                             \
         case 4:                                                                \
-            (dst) = (struct hitbox_quad *)(_info + 0x1c);                        \
+            (dst) = &_info->box[2];                                            \
             break;                                                             \
         case 5:                                                                \
         case 6:                                                                \
@@ -1288,8 +1289,8 @@ void LightTntCrate(struct crate *selfArg)
         LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
 
         {
-            MATCH_HOLD_REG(u8 **, p2, r0) = *(u8 ***)(self + 0x20);
-            MATCH_HOLD_REG(u8 *, table2, r1) = *p2;
+            MATCH_HOLD_REG(struct anim_table *, p2, r0) = selfArg->anim;
+            MATCH_HOLD_REG(u8 *, table2, r1) = (u8 *)p2->records;
             MATCH_HOLD_REG(u8, tag2, r2) = *addr2d;
             MATCH_HOLD_REG(u8 *, entry2, r1);
 

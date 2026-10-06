@@ -4,6 +4,7 @@
 #include "box_part.h"
 #include "crates.h"
 #include "globals.h"
+#include "level.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
@@ -12,8 +13,8 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * and `crate_list.c` operates on - see that file (and
  * `part_list.c`) for the full field writeup. */
 /* Same "extended screen box" filter shape as `CullPartList` (the plain
- * 240x160 GBA screen region, in Q8, at the `gLevelLayers`
- * sub-object's own position), but instead of filtering into a second
+ * 240x160 GBA screen region, in Q8, at `gLevelLayers->layer0`'s
+ * scroll position), but instead of filtering into a second
  * array, iterates `manager`'s spatial hash grid buckets directly (from
  * `baseIdx+2` down to `baseIdx` inclusive - a fixed 3-bucket window,
  * where `baseIdx` is the screen-box's own X position clamped to
@@ -21,7 +22,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * compare is against `baseIdx` itself, not a literal 0) and, for every
  * node whose `table+0x30/0x34`-driven trampoline passes the box test,
  * fires its `table+0x20/0x24`-driven trampoline and marks it
- * (`node+0x11 = 1`) so the second pass - over the special "large
+ * (`node->mark2 = 1`) so the second pass - over the special "large
  * object" bucket 255 - knows to skip nodes already handled via their
  * primary bucket (clearing the mark instead) rather than
  * double-processing them, while still running the same
@@ -57,10 +58,10 @@ void DrawCrateList(struct pool_manager *managerArg)
 {
     MATCH_HOLD_REG(struct pool_manager *, manager, r3) = managerArg;
     s32 box[4];
-    MATCH_HOLD_REG(void *, P, r0) = gLevelLayers;
-    MATCH_HOLD_REG(void *, subObj, r2) = *(void **)((u8 *)P + 0x10);
-    MATCH_HOLD_REG(s32, v0, r1) = *(s32 *)subObj << 8;
-    MATCH_HOLD_REG(s32, v1, r0) = *(s32 *)((u8 *)subObj + 4) << 8;
+    MATCH_HOLD_REG(struct level_layers *, P, r0) = gLevelLayers;
+    MATCH_HOLD_REG(struct bg_scroll_layer *, subObj, r2) = P->layer0;
+    MATCH_HOLD_REG(s32, v0, r1) = subObj->x << 8;
+    MATCH_HOLD_REG(s32, v1, r0) = subObj->y << 8;
     s32 v2, v3;
     MATCH_HOLD_REG(s32, baseIdx, r5);
     s32 bucket;
@@ -72,7 +73,7 @@ void DrawCrateList(struct pool_manager *managerArg)
     box[2] = v2;
     box[3] = v3;
 
-    baseIdx = *(s32 *)subObj >> 8;
+    baseIdx = subObj->x >> 8;
     if (baseIdx < 0) {
         baseIdx = 0;
     }
@@ -80,12 +81,12 @@ void DrawCrateList(struct pool_manager *managerArg)
     bucket = baseIdx + 2;
     {
         void **gridHeadBase = (void **)manager->gridHead;
-        MATCH_HOLD_REG(void **, gridHead255, r8) = (void **)&manager->gridHead[255];
+        MATCH_HOLD_REG(struct pool_node **, gridHead255, r8) = &manager->gridHead[255];
 
         do {
             s32 off = bucket << 2;
             u8 *slot;
-            void *node;
+            struct pool_node *node;
             s32 nextBucket;
 
             /* Same value as `(u8 *)gridHeadBase + off`, but forces the
@@ -94,29 +95,29 @@ void DrawCrateList(struct pool_manager *managerArg)
              * offset-then-base order (`adds r0, r0, r7`) - both encode
              * the identical addition, just as different bytes. */
             asm("add %0, %1, %2" : "=r"(slot) : "r"((u8 *)gridHeadBase), "r"(off));
-            node = *(void **)slot;
+            node = *(struct pool_node **)slot;
             nextBucket = bucket - 1;
 
             if (node != 0) {
                 do {
-                    struct box_part *part = *(struct box_part **)node;
+                    struct box_part *part = node->data;
                     struct part_method *tbl = PART_METHOD(part, 0x30);
                     s16 offset = tbl->thisOffset;
                     void *addr = (u8 *)part + offset;
                     void *fn = tbl->fn;
 
                     if ((u8)_call_via_r2(addr, box, fn)) {
-                        struct box_part *part2 = *(struct box_part **)node;
+                        struct box_part *part2 = node->data;
                         struct part_method *tbl2 = PART_METHOD(part2, 0x20);
                         s16 offset2 = tbl2->thisOffset;
                         void *addr2 = (u8 *)part2 + offset2;
                         void *fn2 = tbl2->fn;
 
                         _call_via_r1(addr2, fn2);
-                        *((u8 *)node + 0x11) = 1;
+                        node->mark2 = 1;
                     }
 
-                    node = *(void **)((u8 *)node + 4);
+                    node = node->next;
                 } while (node != 0);
             }
 
@@ -124,20 +125,20 @@ void DrawCrateList(struct pool_manager *managerArg)
         } while (bucket >= baseIdx);
 
         {
-            void *node = *gridHead255;
+            struct pool_node *node = *gridHead255;
 
             while (node != 0) {
-                void *node2 = *(void **)((u8 *)node + 0xc);
+                struct pool_node *node2 = node->link;
 
-                if (*((u8 *)node2 + 0x11) == 0) {
-                    struct box_part *part = *(struct box_part **)node;
+                if (node2->mark2 == 0) {
+                    struct box_part *part = node->data;
                     struct part_method *tbl = PART_METHOD(part, 0x30);
                     s16 offset = tbl->thisOffset;
                     void *addr = (u8 *)part + offset;
                     void *fn = tbl->fn;
 
                     if ((u8)_call_via_r2(addr, box, fn)) {
-                        struct box_part *part2 = *(struct box_part **)node;
+                        struct box_part *part2 = node->data;
                         struct part_method *tbl2 = PART_METHOD(part2, 0x20);
                         s16 offset2 = tbl2->thisOffset;
                         void *addr2 = (u8 *)part2 + offset2;
@@ -146,10 +147,10 @@ void DrawCrateList(struct pool_manager *managerArg)
                         _call_via_r1(addr2, fn2);
                     }
                 } else {
-                    *((u8 *)node2 + 0x11) = 0;
+                    node2->mark2 = 0;
                 }
 
-                node = *(void **)((u8 *)node + 4);
+                node = node->next;
             }
         }
     }

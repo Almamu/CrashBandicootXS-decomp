@@ -1,5 +1,6 @@
 #include "core.h"
 #include "match.h"
+#include "crate.h"
 #include "crates.h"
 #include "objects.h"
 #include "globals.h"
@@ -11,28 +12,22 @@
  * asm/code_3_2_17_e560_ff0c.s) and `UpdateCrate` (real bytes in the
  * new asm/code_3_2_17_e560_104e4.s), so it needs its own file rather
  * than joining an existing one - see docs/workflow.md's "one file per
- * contiguous ROM region" rule. `self` throughout is the same
- * "collision box" object every other function in this subsystem
- * operates on - offsets kept raw rather than a named struct, matching
- * every already-matched sibling in this file family
- * (crate_reset.c-crate_stack.c). See
+ * contiguous ROM region" rule. `self` is the crate (`struct crate`,
+ * crate.h). See
  * docs/matching/archive/issue-13-fc70-second-continuation.md for the
  * register-pinning technique this needed. */
 
-/* Unless `self`'s own `+0x4d` state byte has bit 7 set or its low 7
- * bits are already nonzero, resets `self+0x38` to 0 and clamps
- * `self+0x30`'s index to the `self+0x20`-pointer-to-manager/
- * `self+0x2d`-tag/0x1c-stride hitbox-record's own `+0x16` count
- * (the same table-lookup convention `BreakCrateTouchedByPlayer`, crate_hit.c,
- * establishes). Always tail-fires `DrawSprite(gSpriteRenderer,
- * self)`, then - only if `self+0x38` ended up nonzero - clears
- * `self+0xc` bit 3. */
+/* Unless `self` is busy (`state` bit 7) or its state (low 7 bits) is
+ * nonzero, clears `animDone` and clamps `frame` to the current tag's
+ * frame count (the same table lookup as `BreakCrateTouchedByPlayer`,
+ * crate_hit.c). Always calls `DrawSprite(gSpriteRenderer, self)`, then -
+ * only if `animDone` is set - clears `flags` bit 3. */
 void DrawCrate(struct crate *selfArg)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (matching every sibling in this file family). */
-    MATCH_HOLD_REG(u8 *, self, r4) = (u8 *)selfArg;
-    u8 state = self[0x4d];
+    MATCH_HOLD_REG(struct crate *, self, r4) = selfArg;
+    u8 state = self->state;
 
     if ((state & 0x80) == 0) {
         u8 masked7f = state & 0x7f;
@@ -42,15 +37,15 @@ void DrawCrate(struct crate *selfArg)
              * store rather than a fresh `0` immediate, matching the
              * ROM's own register reuse (`strb r1,[r0]` right after
              * computing `r1 = state & 0x7f`). */
-            self[0x38] = masked7f;
+            self->animDone = masked7f;
 
             {
                 MATCH_HOLD_REG(s32, idx, r3) = 0;
                 {
-                    MATCH_HOLD_REG(void *, p, r0) = *(void **)(self + 0x20);
-                    MATCH_HOLD_REG(u8 *, tagAddr, r2) = self + 0x2d;
+                    MATCH_HOLD_REG(struct anim_table *, p, r0) = self->anim;
+                    MATCH_HOLD_REG(u8 *, tagAddr, r2) = &self->tag;
                     {
-                        MATCH_HOLD_REG(void *, table, r1) = *(void **)p;
+                        MATCH_HOLD_REG(struct anim_rec *, table, r1) = p->records;
                         MATCH_HOLD_REG(u8, tag, r5) = *tagAddr;
                         /* Register-pinned r0: the ROM computes this
                          * address as `offset(r0) + table(r1)`, not
@@ -59,22 +54,23 @@ void DrawCrate(struct crate *selfArg)
                          * this compiler pick the same destination
                          * register (r0, the offset's own register)
                          * instead of reusing `table`'s (r1). */
-                        MATCH_HOLD_REG(u8 *, record, r0) = (u8 *)(tag * 0x1c + (s32)table);
-                        u8 limit = record[0x16];
+                        MATCH_HOLD_REG(struct anim_rec *, record, r0) =
+                            (struct anim_rec *)(tag * sizeof(*table) + (s32)table);
+                        u8 limit = record->frames;
 
                         if (idx >= limit) {
                             idx = limit - 1;
                         }
                     }
                 }
-                *(s32 *)(self + 0x30) = idx;
+                self->frame = idx;
             }
         }
     }
 
     DrawSprite(gSpriteRenderer, self);
 
-    if (self[0x38] != 0) {
+    if (self->animDone != 0) {
         /* Anchored: the ROM computes the `~8` clear-mask at runtime
          * (`movs r0,#9; rsbs r0,r0,#0`, the negative-constant
          * register-pinned mask idiom - see

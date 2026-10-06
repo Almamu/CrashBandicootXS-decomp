@@ -83,7 +83,7 @@ void RemoveCrateFromList(struct pool_manager *manager, struct box_part *target)
 
             cnt = manager->activeCount;
             base3 = (void **)manager->slotArray;
-            *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
+            base3[cnt - 1] = 0;
             cnt -= 1;
             manager->activeCount = cnt;
         }
@@ -118,7 +118,7 @@ void RemoveCrateListAt(struct pool_manager *manager, s32 index)
 
             cnt = manager->activeCount;
             base3 = (void **)manager->slotArray;
-            *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
+            base3[cnt - 1] = 0;
             cnt -= 1;
             manager->activeCount = cnt;
         }
@@ -126,27 +126,27 @@ void RemoveCrateListAt(struct pool_manager *manager, s32 index)
 }
 
 /* Pops a node off `manager->freeListHead` (unlinked via the wrapper
- * entry's own `+4` "next" field), reuses it to wrap `data`/`extra`,
+ * entry's own `next` field), reuses it to wrap `data`/`extra`,
  * and inserts it into the spatial hash grid bucket `bucket`:
  * `gridHead` holds each bucket's head pointer (set only the first
  * time a bucket goes from empty), `gridTail` holds each bucket's tail
- * pointer (always updated, chaining the previous tail's `+4` "next"
- * field to the new node). Returns the
+ * pointer (always updated, chaining the previous tail's `next` field
+ * to the new node). Returns the
  * node. */
 void *AddCrateGridNode(struct pool_manager *manager, struct box_part *data, s32 bucket, s32 extra)
 {
-    void **headField = (void **)&manager->freeListHead;
-    void **entry = *headField;
-    void *node = *(void **)entry;
+    struct pool_link **headField = &manager->freeListHead;
+    struct pool_link *entry = *headField;
+    struct pool_node *node = entry->node;
 
-    *headField = *(void **)((u8 *)entry + 4);
-    *(void **)((u8 *)entry + 4) = 0;
+    *headField = entry->next;
+    entry->next = 0;
 
-    *(void **)node = data;
-    *(void **)((u8 *)node + 4) = 0;
-    *(s32 *)((u8 *)node + 0xc) = extra;
-    *((u8 *)node + 0x10) = 0;
-    *((u8 *)node + 0x11) = 0;
+    node->data = data;
+    node->next = 0;
+    node->link = (struct pool_node *)extra;
+    node->mark = 0;
+    node->mark2 = 0;
 
     {
         s32 off = bucket * 4;
@@ -158,9 +158,9 @@ void *AddCrateGridNode(struct pool_manager *manager, struct box_part *data, s32 
         {
             void **gridBBase = (void **)manager->gridTail;
             void **gridBSlot = (void **)((u8 *)gridBBase + off);
-            void *tail = *gridBSlot;
+            struct pool_node *tail = *gridBSlot;
             if (tail != 0) {
-                *(void **)((u8 *)tail + 4) = node;
+                tail->next = node;
             }
             *gridBSlot = node;
         }
@@ -170,21 +170,22 @@ void *AddCrateGridNode(struct pool_manager *manager, struct box_part *data, s32 
 }
 
 /* Inserts `obj` into the grid via `AddCrateGridNode`, bucketed by
- * `obj`'s own `+2` field. If `obj->flags` bit 4 is set (a "large
+ * the high halfword of `obj->x` (its 256-px column; the ROM loads it
+ * with one `ldrsh` from +2). If `obj->flags` bit 4 is set (a "large
  * object" case, spanning more than one cell), also inserts it into
  * the special bucket 0xff (using the first node as the second
- * insertion's "extra" argument), linking the first node's `+0xc`
- * field to the second node - the two nodes referencing each other.
+ * insertion's "extra" argument), linking the first node's `link`
+ * to the second node - the two nodes referencing each other.
  * The ROM never sets up a return value here (its only caller,
  * `AddCrateToList`, ignores it), so this is `void` despite `AddCrateGridNode`
  * itself returning the node. */
 void LinkCrateInGrid(struct pool_manager *manager, struct box_part *obj)
 {
-    s16 bucket = *(s16 *)((u8 *)obj + 2);
-    void *node1 = AddCrateGridNode(manager, obj, bucket, 0);
+    s16 bucket = obj->x >> 16;
+    struct pool_node *node1 = AddCrateGridNode(manager, obj, bucket, 0);
 
     {
-        MATCH_HOLD_REG(u8, byte, r1) = *((u8 *)obj + 0xc);
+        MATCH_HOLD_REG(u8, byte, r1) = obj->flags;
         MATCH_HOLD_REG(s32, shifted, r0) = byte >> 4;
         MATCH_HOLD_REG(s32, mask, r1) = 1;
         MATCH_HOLD_REG(s32, test, r0);
@@ -196,7 +197,7 @@ void LinkCrateInGrid(struct pool_manager *manager, struct box_part *obj)
     }
     {
         void *node2 = AddCrateGridNode(manager, obj, 0xff, (s32)node1);
-        *(void **)((u8 *)node1 + 0xc) = node2;
+        node1->link = node2;
     }
 }
 
