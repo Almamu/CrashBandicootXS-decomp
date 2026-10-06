@@ -30,9 +30,15 @@ struct follow_child {
             u8 unk_1:7;
         } __attribute__((packed)) bits;
     } __attribute__((packed)) flags; // 0x0C
-    u8 bit0_1:2;                     // 0x0D
-    u8 visible:1;
-    u8 bit3_7:5;
+    /* ResetCameraLead reads the byte whole and sets `visible`. */
+    union {
+        u8 all;
+        struct {
+            u8 bit0_1:2;
+            u8 visible:1;
+            u8 bit3_7:5;
+        } __attribute__((packed)) bits;
+    } __attribute__((packed)) state; // 0x0D
     u8 unk_0E[0x0A];
     const struct vtable_slot *vtable; // 0x18 - gCameraLeadVtable
     u8 unk_1C[8];

@@ -229,11 +229,11 @@ void SpawnEntity(void **table, s32 id, u16 *rec)
     _call_via_r5(id, p1, p2, p3);
 }
 
-/* Stores `{a, b}` into the two Q8 words at `self+0`/`self+4`. */
+/* Sets the spawner's function table and its length. */
 void SetEntitySpawnerTable(void *self, const void *table, s32 count)
 {
-    *(s32 *)((u8 *)self + 4) = count;
-    *(const void **)self = table;
+    ((struct entity_spawner *)self)->count = count;
+    ((struct entity_spawner *)self)->funcs = table;
 }
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
@@ -246,10 +246,10 @@ void DestroyEntitySpawnerObj(void *self, s32 flags)
     }
 }
 
-/* Zeroes the two Q8 position words at `self+0`/`self+4` - identical
- * body to `InitEntityFlags` above. */
+/* Clears the spawner's table and count - identical body to
+ * `InitEntityFlags` above. */
 void InitEntitySpawner(void *self)
 {
-    *(s32 *)self = 0;
-    *(s32 *)((u8 *)self + 4) = 0;
+    ((struct entity_spawner *)self)->funcs = NULL;
+    ((struct entity_spawner *)self)->count = 0;
 }

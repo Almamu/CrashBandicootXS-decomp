@@ -4,18 +4,17 @@
 #include "level.h"
 
 /* GitHub issue #41: 0x08025894-0x08025FC8. Counts, across every group
- * in `list` (a `{count:u16 @2, groups:ptr @4}` header) and every item
- * in each group (`{count:u16 @2, items:ptr @4}`, items 8 bytes apart),
+ * in `list` and every entity in each group,
  * how many items have an "effective type" that falls in
  * `[0x15, 0x27]` but is not one of `{0x18, 0x1a, 0x1b, 0x1c, 0x1d}`
  * (the ROM's jump table sends those five cases to the no-increment
  * path, everything else in range to the increment path, anything
  * outside the range skips the table read entirely via the `bhi`
- * short-circuit). An item's raw type (`u16 @item+0`) is used directly
- * unless it's `0x1a`, in which case the effective type is instead
- * looked up indirectly: `list->8` (a `u16` array) indexed by
- * `item->6` gives a byte offset into `list->0xc`, and the effective
- * type is the `s16` eight bytes past that.
+ * short-circuit). An item's `type` is used directly unless it's `0x1a`,
+ * in which case the effective type is instead looked up indirectly:
+ * `list->paramOffsets[item->param]` gives a byte offset into
+ * `list->params`, and the effective type is the `s16` eight bytes past
+ * that.
  *
  * The `item->type == 0x1a` lookup does its whole four-load chain
  * using only `r0`/`r1` as scratch in the ROM, aggressively overwriting
@@ -31,30 +30,30 @@
  * this keeps the block's own internal register churn invisible to the
  * surrounding function-level allocator, so `i` stays cleanly in `r2`
  * and the `r7` push/pop disappears. Splitting `i`'s own init
- * (`*(u16 *)(l + 2)` then `- 1`) into two statements was also needed:
+ * (`l->groupCount` then `- 1`) into two statements was also needed:
  * as one combined expression this compiler loads the count into a
  * scratch register before subtracting into `i`'s register, instead of
  * the ROM's direct load-then-decrement-in-place into the same
  * register - see docs/matching/archive/issue-41-game-loop-25894.md. */
 s32 CountCrateEntities(void *self, const struct level_entity_list *list)
 {
-    u8 *l = (u8 *)list;
+    const struct level_entity_list *l = list;
     s32 count = 0;
     s32 i;
 
-    i = *(u16 *)(l + 2);
+    i = l->groupCount;
     i -= 1;
 
     for (; i >= 0; i--) {
-        u8 *group = *(u8 **)(l + 4) + i * 8;
+        const struct level_entity_group *group = &l->groups[i];
         s32 j;
 
-        for (j = 0; j < *(u16 *)(group + 2); j++) {
-            u8 *item = *(u8 **)(group + 4) + j * 8;
-            s32 type = *(u16 *)item;
+        for (j = 0; j < group->count; j++) {
+            const struct level_entity *item = &group->entities[j];
+            s32 type = item->type;
 
             if (type == 0x1a) {
-                MATCH_HOLD_REG(void *, itemReg, r1) = item;
+                MATCH_HOLD_REG(const void *, itemReg, r1) = item;
                 MATCH_HOLD_REG(s32, result, r0);
 
                 // clang-format off
@@ -255,7 +254,7 @@ void MarkEntityIdActivated(void *self, s32 n)
  * the Q8 `val` as pixels in `pos` (`self+4`), as SpawnRoomEntities does. */
 void SetEntityFlagsPos(void *self, s32 val)
 {
-    *(s32 *)((u8 *)self + 4) = val >> 8;
+    ((struct entity_flags *)self)->pos = val >> 8;
 }
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
@@ -268,10 +267,10 @@ void DestroyEntityFlags(void *self, s32 flags)
     }
 }
 
-/* Zeroes the two Q8 position words at `self+0`/`self+4`. */
+/* Clears `list` and `pos`. */
 void *InitEntityFlags(void *self)
 {
-    *(s32 *)self = 0;
-    *(s32 *)((u8 *)self + 4) = 0;
+    ((struct entity_flags *)self)->list = NULL;
+    ((struct entity_flags *)self)->pos = 0;
     return self;
 }

@@ -140,8 +140,8 @@ void DestroySaveMenu(struct save_menu *self, u32 flags)
         DestroyLinkSession(gLinkSession, 3);
     }
 
-    OperatorDelete(*(void **)((u8 *)self + 0x90));
-    OperatorDelete(*(void **)((u8 *)self + 0x8c));
+    OperatorDelete(self->linkSave);
+    OperatorDelete(self->cartSave);
 
     c = (void **)self->rowObjC;
     b = (void **)self->rowObjB;
@@ -370,7 +370,7 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
  * through to the shared cursor mover. */
 void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
 {
-    u8 buf[0x70];
+    struct save_slot buf;
 
     if (flags & 1) {
         goto confirm;
@@ -388,11 +388,11 @@ void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
             return;
         }
         PlaySfx(gAudioContext, 0x49, 0x100);
-        ReadSaveSlot(handle, self->cursor, buf);
-        UnpackSaveData(gLevelState, buf);
-        SetCurrentLevel(gLevelState, buf[0x68]);
-        SetSfxVolume(gAudioContext, *(u16 *)&buf[0x6a]);
-        SetMusicVolume(gAudioContext, *(u16 *)&buf[0x6c]);
+        ReadSaveSlot(handle, self->cursor, &buf);
+        UnpackSaveData(gLevelState, &buf);
+        SetCurrentLevel(gLevelState, buf.level);
+        SetSfxVolume(gAudioContext, buf.sfxVolume);
+        SetMusicVolume(gAudioContext, buf.musicVolume);
         SummarizeProgress(self, &self->currentStats, PackSaveData(gLevelState));
         self->gameLoaded = 1;
         self->done = 1;
@@ -469,7 +469,7 @@ void SaveMenuLinkInput(struct save_menu *self)
  * row's aggregate stats. */
 void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
 {
-    u8 buf[0xe0];
+    struct save_slot buf[2]; /* [0] the slot's old contents, [1] the new */
     void **handleAddr = &self->cartSave;
     void **handleAddr2;
     u32 wasSelected;
@@ -486,18 +486,18 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
     c0Addr = &gLevelState;
     {
         /* The ROM evaluates PackSaveData()'s result before computing
-         * `buf + 0x70` (the ROM's own callee-arg setup order for
+         * `&buf[1]` (the ROM's own callee-arg setup order for
          * MemCopy32, not the other way around) - a plain nested call
          * expression here lets this compiler compute the pointer
          * argument first instead. */
         void *result = PackSaveData(*c0Addr);
-        MemCopy32(buf + 0x70, result, 0x68);
+        MemCopy32(&buf[1], result, 0x68);
     }
-    *(u8 *)(buf + 0xd8) = (u8)GetCurrentLevel(*c0Addr);
+    buf[1].level = (u8)GetCurrentLevel(*c0Addr);
 
     bcAddr = &gAudioContext;
-    *(u16 *)(buf + 0xda) = (u16)GetSfxVolume(*bcAddr);
-    *(u16 *)(buf + 0xdc) = (u16)GetMusicVolume(*bcAddr);
+    buf[1].sfxVolume = (u16)GetSfxVolume(*bcAddr);
+    buf[1].musicVolume = (u16)GetMusicVolume(*bcAddr);
 
     /* The ROM recomputes `self->cartSave`'s address a second time here
      * (a fresh `adds r4, r7, #0` / `adds r4, #0x8c` pair) rather than
@@ -506,12 +506,12 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
      * matching the technique noted in docs/matching.md for this class
      * of gap. */
     handleAddr2 = &self->cartSave;
-    WriteSaveSlot(*handleAddr2, rowIndex, buf + 0x70);
+    WriteSaveSlot(*handleAddr2, rowIndex, &buf[1]);
     if (StoreSaveData(*handleAddr2)) {
         if (wasSelected) {
             EraseSaveSlot(*handleAddr2, rowIndex);
         } else {
-            WriteSaveSlot(*handleAddr2, rowIndex, buf);
+            WriteSaveSlot(*handleAddr2, rowIndex, &buf[0]);
         }
     } else {
         SummarizeProgress(self, &self->rowStats[rowIndex], PackSaveData(*c0Addr));

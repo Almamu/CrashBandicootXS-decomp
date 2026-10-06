@@ -7,6 +7,7 @@
 #include "audio.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
@@ -26,7 +27,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  *    (spawn_pickups.c) already do elsewhere in this cluster.
  *
  * 2. Unless the level state's `timeTrial` flag is set: fires the
- *    player's `table+0x68` trampoline (via `_call_via_r4`, action
+ *    player's `handleEvent` method (via `_call_via_r4`, event
  *    `0x1a`) and plays SFX `0x100` through `gAudioContext`,
  *    unless a budget/reentrancy guard trips first - either the
  *    player's spawn counter (`GetDeaths`, `+0x7c`) has room against
@@ -86,9 +87,9 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
         }
 
         {
-            MATCH_HOLD_REG(u8 *, obj2, r1) = (u8 *)*d8ptr;
-            *(u32 *)obj2 = x << 8;
-            *(u32 *)(obj2 + 4) = y << 8;
+            MATCH_HOLD_REG(struct player *, obj2, r1) = *d8ptr;
+            obj2->x = x << 8;
+            obj2->y = y << 8;
         }
     }
 
@@ -113,18 +114,17 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
     }
 fire:
     {
-        MATCH_HOLD_REG(u8 *, d8obj, r0);
-        MATCH_HOLD_REG(u8 *, entry, r1);
+        MATCH_HOLD_REG(struct player *, d8obj, r0);
+        MATCH_HOLD_REG(const struct actor_method *, entry, r1);
         MATCH_HOLD_REG(s32, fnOffset, r2);
         MATCH_HOLD_REG(void *, fn, r0);
         MATCH_HOLD_REG(u32, dead, r4);
 
-        d8obj = (u8 *)gPlayer;
-        entry = *(u8 **)(d8obj + 0x18);
-        entry = entry + 0x68;
+        d8obj = gPlayer;
+        entry = &d8obj->vtable->handleEvent;
         asm volatile("mov r3, #0\n\tldrsh %0, [%1, r3]" : "=r"(fnOffset) : "r"(entry) : "r3");
-        fn = d8obj + fnOffset;
-        dead = *(u32 volatile *)(entry + 4);
+        fn = (u8 *)d8obj + fnOffset;
+        dead = *(vu32 *)&entry->fn;
         (void)dead;
         _call_via_r4(fn, 0, 0x1a, 0);
         PlaySfx(gAudioContext, 1, 0x100);

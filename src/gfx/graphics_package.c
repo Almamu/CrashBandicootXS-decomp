@@ -107,7 +107,7 @@ struct gfx_box_obj {
     s32 height;               // 0x0C
     struct oam_attrs_u16 oam; // 0x10
     s32 sizeIndex;            // 0x18
-    s32 color;                // 0x1C - SetScaledSpriteColor (written through a raw offset)
+    s32 color;                // 0x1C - SetScaledSpriteColor
     s32 scaleX;               // 0x20 - Q8
     s32 scaleY;               // 0x24 - Q8
 };
@@ -218,7 +218,7 @@ void SetScaledSpriteColor(u8 *selfArg, s32 arg1)
     vu32 *dma;
 
     val = arg1;
-    *(s32 *)(self + 0x1c) = val;
+    ((struct gfx_box_obj *)self)->color = val;
     aligned = val;
     if (val < 0) {
         aligned += 0xf;
@@ -241,7 +241,7 @@ void SetScaledSpriteColor(u8 *selfArg, s32 arg1)
     acc |= aligned;
     mask |= acc;
 
-    dadVal = 0x06017800;
+    dadVal = (u32)(OBJ_VRAM0 + 0x3C0 * TILE_SIZE_4BPP);
     buf = mask;
     dma = (vu32 *)REG_ADDR_DMA3SAD;
     dma[0] = (u32)&buf;
@@ -279,10 +279,10 @@ void SetScaledSpritePriority(u8 *self, u32 arg1)
 
 /* UNUSED (see SetScaledSpriteColor). Sets the sprite box's position
  * (`x`/`y`, +0x00/+0x04). */
-void SetScaledSpritePos(u8 *self, u32 arg1, u32 arg2)
+void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2)
 {
-    *(u32 *)(self + 0) = arg1;
-    *(u32 *)(self + 4) = arg2;
+    self->x = arg1;
+    self->y = arg2;
 }
 
 /* UNUSED (see SetScaledSpriteColor). Resets the OAM template's

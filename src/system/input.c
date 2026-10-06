@@ -51,7 +51,7 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
     MATCH_HOLD_REG(u8, flagR, r4);
     MATCH_HOLD_REG(s32, keys, r1);
     s32 confirm;
-    u16 *addr;
+    struct held_pressed_pair *addr;
 
     flagR = checkButtons;
     result = 1;
@@ -75,9 +75,9 @@ checkCount:
     }
     WaitForVBlank();
     UpdateKeys(gInput);
-    addr = &gKeys.half.held;
+    addr = &gKeys.half;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
-    keys &= *(u16 *)((u8 *)addr + 2);
+    keys &= addr->pressed;
     if (flagR == 0) {
         goto increment;
     }
@@ -94,9 +94,9 @@ noLimit:
 loopNoLimit:
     WaitForVBlank();
     UpdateKeys(gInput);
-    addr = &gKeys.half.held;
+    addr = &gKeys.half;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
-    keys &= *(u16 *)((u8 *)addr + 2);
+    keys &= addr->pressed;
     if ((keys & 1) != 0) {
         goto done;
     }

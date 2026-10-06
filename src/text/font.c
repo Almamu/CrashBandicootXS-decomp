@@ -7,6 +7,7 @@
 #include "gfx.h"
 #include "crates.h"
 #include "globals.h"
+#include "sprite_bank.h"
 
 /* Sits between FontMeasureText (src/text/font_measure.c) and
  * InitFont (src/text/font.c) - FontUploadTiles/
@@ -26,7 +27,7 @@ void FontUploadTiles(struct bitmap_font *self)
     void *asset = self->tiles;
 
     self->tileCount = *(u32 *)asset >> 13;
-    LoadTaggedAsset(asset, (void *)(0x06010000 + (self->tileBase << 5)));
+    LoadTaggedAsset(asset, OBJ_VRAM0 + (self->tileBase << 5));
 }
 
 /* Sets the low nibble of `oam_scratch[5]` from `val`'s low byte - a
@@ -46,16 +47,15 @@ void FontSetPalette(struct bitmap_font *self, u8 val)
     self->oam_scratch[5] = mask;
 }
 
-/* Looks up a tile-cache slot for the byte at
- * `(**gSpriteBankSet)[0x1A4]`'s own `+0x14` field (see
- * docs/rom_map.md's `gSpriteBankTable` investigation) via
+/* Looks up a palette-cache slot for sprite bank 35's first animation's
+ * palette (see docs/rom_map.md's `gSpriteBankTable` investigation) via
  * `GetPaletteSlot`, and folds the result into the same `oam_scratch[5]`
  * nibble FontSetPalette sets above. */
 void FontResetPalette(struct bitmap_font *self)
 {
     u8 *cache = (u8 *)gPaletteCache;
-    void *rec = *(void **)(SPRITE_BANK_BASE + (0xD2 << 1));
-    u8 field = ((u8 *)rec)[0x14];
+    const struct sprite_anim *anim = gSpriteBankSet->table->banks[35].anims;
+    u8 field = anim->paletteId;
     s32 slot = GetPaletteSlot_s32(cache, field);
     u32 shifted = slot << 4;
     MATCH_HOLD_REG(u8, mask, r1);

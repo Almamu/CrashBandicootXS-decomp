@@ -24,6 +24,13 @@
  * speed, and DrawStarfield moves them outwards, plotting a short trail.
  * The language menu, the credits and the level-loading screens run it
  * behind their text. */
+struct particle_slot {
+    s32 x;
+    s32 y;
+    s32 dx;
+    s32 dy;
+};
+
 struct particle_bg {
     /* Always `VRAM` - the BG tile *graphics* VRAM this object's whole
      * `tileBuffer` gets DMA'd into every frame. */
@@ -33,8 +40,8 @@ struct particle_bg {
      * construction time as one sequential tile index per 8x8 cell. */
     u32 mapVramBase;
     /* 128-slot particle array (`OperatorNewArray(0x800)`, 16-byte stride - see
-     * `struct particle_slot`, starfield.c). */
-    void *particles;
+     * `struct particle_slot`). */
+    struct particle_slot *particles;
     /* Active particle count (0-0x80). */
     s32 count;
     /* 240x160, 4-bit-per-pixel shadow tile-graphics buffer
@@ -42,13 +49,6 @@ struct particle_bg {
      * trail into this every frame, then DMAs it wholesale into
      * `tileVramBase`. */
     void *tileBuffer;
-};
-
-struct particle_slot {
-    s32 x;
-    s32 y;
-    s32 dx;
-    s32 dy;
 };
 
 /* Constructs the particle-trail BG0 object. Fully matched as real C.
@@ -124,7 +124,7 @@ void *InitStarfield(void *selfArg)
     /* A 3-step white-to-black grayscale gradient into BG palette bank 15's
      * last 3 entries (from palette index 240), used by the
      * tilemap-fill loop below's palette-bank-15 tile entries. */
-    gradDst = &((u16 *)BG_PLTT)[240];
+    gradDst = (u16 *)(BG_PLTT + 240 * sizeof(u16));
     dma2Src = &dmaFillSrc32;
     gradIdx = 0;
     gradCount = 2;
@@ -408,7 +408,7 @@ asm(".align 2, 0");
  * choice here needed no register pins or opaque asm at all. */
 void SpawnStar(void *mgrArg, s32 idx)
 {
-    u8 *mgr = mgrArg;
+    struct particle_bg *mgr = mgrArg;
     struct particle_slot *slot;
     s32 rng1;
     s32 speed;
@@ -418,7 +418,7 @@ void SpawnStar(void *mgrArg, s32 idx)
         }
     }
 
-    slot = (struct particle_slot *)(*(u8 **)(mgr + 8) + (idx << 4));
+    slot = &mgr->particles[idx];
     slot->x = 0x7800;
     slot->y = 0x5000;
 
@@ -476,7 +476,7 @@ void SpawnStar(void *mgrArg, s32 idx)
  * `val` (already pinned to `r3`) as an in/out operand. */
 void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
 {
-    u8 *mgr = mgrArg;
+    struct particle_bg *mgr = mgrArg;
     MATCH_HOLD_REG(s32, val, r3) = valArg;
 
     if (x <= 0xef && y >= 0 && y <= 0x9f) {
@@ -489,7 +489,7 @@ void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
         addr += (y & 7) << 3;
         {
             MATCH_HOLD_REG(s32, off, r0) = (addr >> 2) << 1;
-            MATCH_HOLD_REG(u16 *, tileMapEntry, r2) = (u16 *)(*(u8 **)(mgr + 0x10) + off);
+            MATCH_HOLD_REG(u16 *, tileMapEntry, r2) = (u16 *)((u8 *)mgr->tileBuffer + off);
 
             shift = (addr & 3) << 2;
             // clang-format off
@@ -551,7 +551,7 @@ void UpdateStarfield(void *mgrArg)
 
 /* Busy-waits (yielding a frame via `WaitForVBlank`/`UpdateStarfield` each
  * time) until the input-poll result from `UpdateKeys(gInput)`
- * has either of bits 0/3 set in `gKeys`'s `+2` halfword. */
+ * has either of bits 0/3 set in `gKeys.half.pressed`. */
 void StarfieldWaitForButton(void *mgrArg)
 {
     u8 *mgr = mgrArg;
@@ -564,12 +564,12 @@ body:
 check:
     UpdateKeys(gInput);
     {
-        MATCH_HOLD_REG(u8 *, addr, r1) = (u8 *)&gKeys;
+        MATCH_HOLD_REG(struct held_pressed_pair *, addr, r1) = &gKeys.half;
         MATCH_HOLD_REG(s32, nine, r0) = 9;
         MATCH_HOLD_REG(s32, flag, r1);
         MATCH_HOLD_REG(s32, r, r0);
 
-        flag = *(u16 *)(addr + 2);
+        flag = addr->pressed;
         r = nine & flag;
         result = r;
     }
@@ -578,18 +578,18 @@ check:
     }
 }
 
-/* Releases `self+0x10`/`self+8`'s dynamically-allocated buffers (each,
+/* Releases `tileBuffer`/`particles` (each,
  * if non-NULL, via `OperatorDeleteArray`) and, if bit 0 of `flags` is set, also
  * releases `self` itself via `OperatorDelete`. */
 void DestroyStarfield(void *selfArg, s32 flags)
 {
-    u8 *self = selfArg;
+    struct particle_bg *self = selfArg;
 
-    if (*(void **)(self + 0x10) != NULL) {
-        OperatorDeleteArray(*(void **)(self + 0x10));
+    if (self->tileBuffer != NULL) {
+        OperatorDeleteArray(self->tileBuffer);
     }
-    if (*(void **)(self + 8) != NULL) {
-        OperatorDeleteArray(*(void **)(self + 8));
+    if (self->particles != NULL) {
+        OperatorDeleteArray(self->particles);
     }
     if ((flags & 1) != 0) {
         OperatorDelete(self);

@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "text.h"
 #include "menus.h"
+#include "level_menu.h"
 #include "objects.h"
 
 /* DrawPauseGemsPage + DrawPauseRelicsPage: mutually address-adjacent, bracketed by
@@ -49,13 +50,13 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * for this same icon row). */
 void DrawPauseGemsPage(struct pause_menu *self)
 {
-    if (((u8 *)self->progress)[2] & 1)
+    if (self->progress->flags & 1)
         DrawSpriteWithOffset((struct actor *)self->icons9c[1], 0, 0);
-    if (((u8 *)self->progress)[2] & 4)
+    if (self->progress->flags & 4)
         DrawSpriteWithOffset((struct actor *)self->icons9c[2], 0, 0);
-    if (((u8 *)self->progress)[2] & 8)
+    if (self->progress->flags & 8)
         DrawSpriteWithOffset((struct actor *)self->icons9c[3], 0, 0);
-    if (((u8 *)self->progress)[2] & 2)
+    if (self->progress->flags & 2)
         DrawSpriteWithOffset((struct actor *)self->icons9c[4], 0, 0);
     DrawSpriteWithOffset((struct actor *)self->icons9c[0], 0, 0);
 

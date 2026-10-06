@@ -92,15 +92,12 @@ void DestroyLinkSession(struct link_session *self, u32 flags)
 
 /* Session object constructor: zeroes the transient TX ring bookkeeping
  * (`ring.count`/`readPos`, `writePos` = 0x7f), zeroes the same trio
- * for all 4 per-player rings (`players[i].ring`, at self+0x18c +
- * playerIndex*0xc8; the loop keeps the raw offset, which the ROM builds
- * as `0xc6 << 1` in r6), resets the session (`ResetLinkSession`), clears
- * `enabled`, and returns `self`. */
+ * for all 4 per-player rings (`players[i].ring`), resets the session
+ * (`ResetLinkSession`), clears `enabled`, and returns `self`. */
 struct link_session *InitLinkSession(struct link_session *arg0)
 {
     MATCH_HOLD_REG(struct link_session *, self, r4);
-    u8 *p;
-    MATCH_HOLD_REG(s32, offset, r6);
+    struct link_player *player;
     MATCH_HOLD_REG(s32, i, r1);
     MATCH_HOLD_REG(s32, zero, r2);
     MATCH_HOLD_REG(s32, fill, r5);
@@ -115,13 +112,12 @@ struct link_session *InitLinkSession(struct link_session *arg0)
     zero = 0;
     fill = 0x7f;
     sentinel = -1;
-    offset = 0xc6 << 1;
-    p = (u8 *)self + offset;
+    player = self->players;
     do {
-        *(s32 *)(p + 0) = zero;
-        *(s32 *)(p + 4) = zero;
-        *(s32 *)(p + 8) = fill;
-        p += 0xc8;
+        player->ring.count = zero;
+        player->ring.readPos = zero;
+        player->ring.writePos = fill;
+        player++;
         i--;
     } while (i != sentinel);
 

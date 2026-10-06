@@ -13,10 +13,13 @@
 #include "level.h"
 #include "globals.h"
 #include "player.h"
+#include "sprite_bank.h"
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
- * record 47") - `TickLevelClock` is its decrementer/consumer.
+ * record 47") - `TickLevelClock` is its decrementer/consumer. It gets a
+ * palette slot for sprite bank 47's animation 1 palette and loads
+ * animation 4's palette into it.
  *
  * The ROM keeps `&gSpriteBankSet` and `&gPaletteCache` alive
  * across the `GetPaletteSlot` call in `r4`/`r7` (only 4 low registers
@@ -47,8 +50,9 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
 {
     MATCH_HOLD_REG(s32, off, r2);
     struct palette_cache *base;
-    void *p3, *header, *record;
-    void *p3b, *headerb, *recordb;
+    const struct sprite_bank_table *p3, *p3b;
+    const struct sprite_bank *header, *headerb;
+    const struct sprite_anim *record, *recordb;
     u8 recordId, slot;
     const struct level_room *level;
 
@@ -57,17 +61,17 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     self->countdown += seconds * 60;
 
     base = gPaletteCache;
-    p3 = (void *)gSpriteBankSet->table;
-    header = *(void **)p3;
-    off = 0x8d << 2;
-    record = *(void **)((u8 *)header + off);
-    recordId = *((u8 *)record + 0x30);
+    p3 = gSpriteBankSet->table;
+    header = p3->banks;
+    off = 0x8d << 2; /* &banks[47] */
+    record = *(const struct sprite_anim **)((u8 *)header + off);
+    recordId = record[1].paletteId;
     slot = GetPaletteSlot(base, recordId);
 
-    p3b = (void *)gSpriteBankSet->table;
-    headerb = *(void **)p3b;
-    recordb = *(void **)((u8 *)headerb + 0x234);
-    recordId = *((u8 *)recordb + 0x84);
+    p3b = gSpriteBankSet->table;
+    headerb = p3b->banks;
+    recordb = headerb[47].anims;
+    recordId = recordb[4].paletteId;
     LoadPaletteSlot(gPaletteCache, slot, recordId);
 
     level = self->cat;
@@ -79,8 +83,8 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
 /* Countdown-gated periodic event trigger (docs/rom_map.md, "A per-level
  * completion-time cascade..."): decrements `self+0xa0`'s countdown and,
  * on reaching 0, fires record 47's spawn (`FreezeLevelClock`'s sibling,
- * reusing `+0x30` for both the lookup and the slot-fill argument this
- * time). While the countdown is already 0, instead runs a cascading
+ * using animation 1's palette for both the lookup and the slot fill
+ * this time). While the countdown is already 0, instead runs a cascading
  * digit-counter carry over `self+0x9c`/`0x98`/`0x94`/`0x90` (thresholds
  * `5`/`9`/`0x3b`/`0x63`) - shaped like a minutes:seconds:centiseconds
  * odometer, saturating (not wrapping) once the top field hits its cap.
@@ -121,23 +125,24 @@ void TickLevelClock(struct level_state *self)
         if (newCountdown == 0) {
             MATCH_HOLD_REG(s32, off, r2);
             struct palette_cache *base;
-            void *p3, *header, *record;
-            void *p3b, *headerb, *recordb;
+            const struct sprite_bank_table *p3, *p3b;
+            const struct sprite_bank *header, *headerb;
+            const struct sprite_anim *record, *recordb;
             u8 recordId, slot;
             const struct level_room *level;
 
             base = gPaletteCache;
-            p3 = (void *)gSpriteBankSet->table;
-            header = *(void **)p3;
-            off = 0x8d << 2;
-            record = *(void **)((u8 *)header + off);
-            recordId = *((u8 *)record + 0x30);
+            p3 = gSpriteBankSet->table;
+            header = p3->banks;
+            off = 0x8d << 2; /* &banks[47] */
+            record = *(const struct sprite_anim **)((u8 *)header + off);
+            recordId = record[1].paletteId;
             slot = GetPaletteSlot(base, recordId);
 
-            p3b = (void *)gSpriteBankSet->table;
-            headerb = *(void **)p3b;
-            recordb = *(void **)((u8 *)headerb + 0x234);
-            recordId = *((u8 *)recordb + 0x30);
+            p3b = gSpriteBankSet->table;
+            headerb = p3b->banks;
+            recordb = headerb[47].anims;
+            recordId = recordb[1].paletteId;
             LoadPaletteSlot(gPaletteCache, slot, recordId);
 
             level = self->cat;

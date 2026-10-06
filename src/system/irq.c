@@ -237,17 +237,17 @@ s32 UpdateKeys(void *input)
 {
     u16 keys;
     u16 keysCopy;
-    MATCH_HOLD_REG(u16 *, addr, r2);
+    MATCH_HOLD_REG(struct held_pressed_pair *, addr, r2);
     MATCH_HOLD_REG(u16, prevKeys, r3);
     MATCH_HOLD_REG(u16, keysR1, r1);
     MATCH_HOLD_REG(s32, mask, r0);
 
     keys = (u16)~REG_KEYINPUT;
-    addr = &gKeys.half.held;
+    addr = &gKeys.half;
     asm volatile("add %0, %1, #0" : "=r"(keysCopy) : "r"(keys));
-    prevKeys = *addr;
-    *(u16 *)((u8 *)addr + 2) = keysCopy & ~prevKeys;
-    *addr = keys;
+    prevKeys = addr->held;
+    addr->pressed = keysCopy & ~prevKeys;
+    addr->held = keys;
     keysR1 = keys;
     mask = 0xF;
     keysR1 &= mask;
@@ -260,13 +260,15 @@ s32 UpdateKeys(void *input)
 /* Clears gKeys (held and newly pressed). */
 void ClearKeys(void)
 {
-    MATCH_HOLD_REG(u16 *, addr, r2);
+    MATCH_HOLD_REG(struct held_pressed_pair *, addr, r2);
     MATCH_HOLD_REG(u16, zero, r1);
 
-    addr = &gKeys.half.held;
+    addr = &gKeys.half;
     zero = 0;
-    *addr = zero;
-    *(u16 *)((u8 *)addr + 2) = zero;
+    /* Retyped store: as a plain member store gcc copies `zero` into r0
+     * for it. */
+    *(u16 *)&addr->held = zero;
+    addr->pressed = zero;
 }
 
 __asm__(".align 2,0");

@@ -41,24 +41,16 @@ void ScrollBgLayer(struct bg_scroll_layer *self, void *vec2)
     GrowBgLayerRows(self, rowLo, rowHi);
 }
 
-/* Truncates the Q8 X/Y position (self+0/self+4) to plain tile-scroll
- * halfwords at self+0x54/self+0x56 (read back together as one 32-bit
- * word), then writes that packed pair through the pointer at
- * self+0x58 - the `BGnHOFS`/`BGnVOFS` register pair address
- * `InitBgLayer` (bg_layer_init.c) caches there. */
-void CommitBgLayerScroll(void *self)
+/* Truncates the X/Y position to the `hofs`/`vofs` halfwords, then
+ * writes the pair as one word through `ofsReg` - the `BGnHOFS`/`BGnVOFS`
+ * register pair address `InitBgLayer` (bg_layer_init.c) caches there. */
+void CommitBgLayerScroll(void *selfArg)
 {
-    s32 x = *(s32 *)self;
-    u8 *dst1 = (u8 *)self + 0x54;
+    struct bg_scroll_layer *self = selfArg;
 
-    *(s16 *)dst1 = x;
-    {
-        s32 y = *(s32 *)((u8 *)self + 4);
-        u8 *dst2 = (u8 *)self + 0x56;
-
-        *(s16 *)dst2 = y;
-    }
-    *(s32 *)(*(void **)((u8 *)self + 0x58)) = *(s32 *)((u8 *)self + 0x54);
+    self->hofs = self->x;
+    self->vofs = self->y;
+    *self->ofsReg = *(u32 *)&self->hofs;
 }
 
 /* Base `drawCol` (table +0x38): copies the resident rows of map column

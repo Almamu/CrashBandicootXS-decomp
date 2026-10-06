@@ -29,7 +29,8 @@ struct logo_piece {
     s32 posC; // 0x10
     s32 velA; // 0x14 - x scale
     s32 velB; // 0x18 - y scale
-    u8 pad_1c[0x18];
+    u8 pad_1c[0x14];
+    const struct delta_record *record; // 0x30 - the next motion step (frontend.h)
 };
 
 struct logo_screen {

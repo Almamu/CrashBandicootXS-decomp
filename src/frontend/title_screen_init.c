@@ -179,7 +179,7 @@ void LoadTitleScreenBg(u32 *self)
 void LoadTitleScreenObjTiles(u32 *self)
 {
     MATCH_HOLD_REG(struct bg_package **, pkgPtr, r7) = (struct bg_package **)gTitleObjPackages;
-    void *tileDest = (void *)0x06010000;
+    void *tileDest = OBJ_VRAM0;
     void *paletteDest = (void *)OBJ_PLTT;
     void *paletteBuf;
     void *tileBuf;
@@ -282,8 +282,8 @@ void LoadTitleScreenObjTiles(u32 *self)
  * the title-screen object `InitTitleScreen` builds (still a
  * raw `u32 *` here - stride-0x34 slot records at `self+0x10` holding
  * Q16.16 position / velocity fields fed by a per-slot "delta record"
- * pointer, a BG2 affine-scroll block at `self+0x214..0x21c` and a
- * rolling-hash "cheat code" detector at `self+0x210`), or on the
+ * pointer, a BG2 affine-scroll block (`bgX`/`bgY`/`bgScale`) and a
+ * rolling-hash "cheat code" detector (`cheatHash`), struct title_screen), or on the
  * 20-slot variant `RunCompanyLogos`'s subsystem uses; `InitLogoActor`/
  * `UpdateLogoActor`/`DrawLogoActor` operate on a `struct actor_self` actor
  * part.
@@ -655,7 +655,7 @@ void DrawTitleLogoPieces(u32 *self)
                         *cnt = 8;
                         PlaySfx(gAudioContext, 0x3d, 0x100);
                     } else if (--*cnt == 0) {
-                        *(s32 *)((u8 *)self + 0x20c) = 30;
+                        TITLE_SCREEN(self)->shake = 30;
                     }
                 }
             }
@@ -693,7 +693,7 @@ void DrawTitleLogoPieces(u32 *self)
             ShowBg2();
             a = rec->posA.q;
             b = rec->posB.q;
-            shake = (s32 *)((u8 *)self + 0x20c);
+            shake = &TITLE_SCREEN(self)->shake;
             if (*shake != 0) {
                 --*shake;
                 {
@@ -707,10 +707,10 @@ void DrawTitleLogoPieces(u32 *self)
                     b = t + (u16)r;
                 }
             }
-            q = (s32 *)((u8 *)self + 0x21c);
+            q = &TITLE_SCREEN(self)->bgScale;
             *q = 0x1000000 / rec->velA;
-            *(s32 *)((u8 *)self + 0x214) = *q * (-a >> 16) + 0x4000;
-            *(s32 *)((u8 *)self + 0x218) = (-b >> 16) * *q + 0x4000;
+            TITLE_SCREEN(self)->bgX = *q * (-a >> 16) + 0x4000;
+            TITLE_SCREEN(self)->bgY = (-b >> 16) * *q + 0x4000;
         }
     }
 }

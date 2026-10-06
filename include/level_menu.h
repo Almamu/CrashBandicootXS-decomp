@@ -105,9 +105,12 @@ union level_record {
 /* The save block PackSaveData returns, as far as the menu reads it. */
 struct menu_save {
     u8 unk_00[2];
-    u8 open; // 0x02 - bit 5/7/6: pages 1/2/3 reachable
+    /* 0x02 - level_state.flags: bits 0-3 the colored gems (CountGems,
+     * DrawPauseGemsPage), bits 4-7 the powers; bits 5/7/6 make level-select
+     * pages 1/2/3 reachable */
+    u8 flags;
     u8 unk_03;
-    union level_record levels[1]; // 0x04, five per page
+    union level_record levels[0x19]; // 0x04, level_state.levelFlags; five per page
 };
 
 union dispcnt {

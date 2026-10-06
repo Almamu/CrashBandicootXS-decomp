@@ -352,7 +352,7 @@ extern void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height);
 extern void DrawScaledSprite(struct gfx_box_obj *self);
 extern void SetScaledSpriteColor(u8 *self, s32 arg1);
 extern void SetScaledSpritePriority(u8 *self, u32 arg1);
-extern void SetScaledSpritePos(u8 *self, u32 arg1, u32 arg2);
+extern void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2);
 extern void ResetScaledSpriteAttrs(u8 *self);
 
 /* src/gfx/palette_cycle.c */
