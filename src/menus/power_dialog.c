@@ -36,7 +36,7 @@
  * compilers: the icon-manager set-up is the same `IconSetup`/
  * `IconReserve` inline-helper sequence `RunLevelSelect`
  * (src/menus/level_select.c) uses, and `FontResetPalette` takes one
- * argument. See docs/matching/issue-4-6-8-naked-retry.md. */
+ * argument. See docs/matching/archive/issue-4-6-8-naked-retry.md. */
 
 extern void _call_via_r1(void *addr, void *fn);
 

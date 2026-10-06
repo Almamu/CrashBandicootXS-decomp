@@ -12,12 +12,12 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `IsCrateInsideRect` prepended
+ * docs/matching/archive/issue-13-graphics-fc70.md). `IsCrateInsideRect` prepended
  * ahead of the already-matched `ResolvePlayerCollisions` run below - it's
  * immediately ROM-adjacent (no gap), so it joins this file rather
  * than getting its own per docs/workflow.md's "one file per
  * contiguous ROM region" rule. See
- * docs/matching/issue-13-fc70-second-continuation.md for the
+ * docs/matching/archive/issue-13-fc70-second-continuation.md for the
  * register-pinning/toolchain-bug notes this one needed. */
 
 /* AABB-overlap test between `self`'s own table-driven half-width/
@@ -205,7 +205,7 @@ u32 GetCrateClassId(void)
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). */
+ * docs/matching/archive/issue-13-graphics-fc70.md). */
 
 /* Sets `self->table`, then - if `self`'s own `+0x4e` state byte is 3 -
  * frees `self+0x48` (a heap pointer, unless it's the sentinel `-1` or

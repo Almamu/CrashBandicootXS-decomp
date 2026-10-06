@@ -34,7 +34,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  *    level state's `maskLevel` field agree it's still safe to fire.
  *
  * Was a NAKED asm transcription for a long time - see
- * docs/matching/naked-sub_801e990-matched.md for the full derivation
+ * docs/matching/archive/naked-sub_801e990-matched.md for the full derivation
  * history, including the register-choice gap that blocked a real match
  * (the `+0x28` write's address/value register split) and how it closed:
  * the r3-pinned local had to model the *address of the global*

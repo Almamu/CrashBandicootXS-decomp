@@ -15,8 +15,8 @@
  * Built with old_agbcc plus `-fno-rerun-loop-opt` (this object is on
  * both OLD_AGBCC_OBJS and NO_RERUN_LOOP_OPT_OBJS in the Makefile; the
  * flag would change the matching HandleLinkSerial, hence the split). See
- * docs/matching/last-ten-naked-retry.md and
- * docs/matching/last-eleven-naked-retry.md. */
+ * docs/matching/archive/last-ten-naked-retry.md and
+ * docs/matching/archive/last-eleven-naked-retry.md. */
 static inline void ring_reset(struct link_ring *r)
 {
     r->count = 0;

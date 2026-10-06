@@ -19,7 +19,7 @@
  * touch r7, so it isn't affected, and is spelled out as a direct
  * instruction-for-instruction transcription of the ROM's own
  * disassembly like the rest of this chunk's r7-affected neighbours -
- * see docs/matching/issue-5-overlay-ui-sync.md. */
+ * see docs/matching/archive/issue-5-overlay-ui-sync.md. */
 s32 PollSaveTransfer(struct settings_sync_pump *self)
 {
     register s32 result asm("r0");

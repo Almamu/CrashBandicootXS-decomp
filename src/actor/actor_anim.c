@@ -357,7 +357,7 @@ asm(".align 2, 0");
  * at the fixed screen position (120, 106): builds the OAM attribute
  * words (masked position, `GetAnimFrameAttr`'s attr flag, and a priority/
  * palette nibble from `self+0x18`/`self+0x14`) and calls
- * `SetupSpriteFrameOam`. See docs/matching/issue-71-0x0803b060-actor.md
+ * `SetupSpriteFrameOam`. See docs/matching/archive/issue-71-0x0803b060-actor.md
  * for the full semantic account.
  *
  * The dead `flag`-equivalent `| 0` closes via the established opaque

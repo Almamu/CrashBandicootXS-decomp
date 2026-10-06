@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* GitHub issue #9/#10: one of the four `self+0x68`-dispatching siblings
- * the Phase 1/2 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
+ * the Phase 1/2 investigation (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md)
  * flagged as the next highest-value target in the 0x0800B8DC-0x0800D040
  * cluster - independently called from several of UpdateEnemyCtrl's own
  * `self+0x74` dispatch states (2, 13, 15, 18).
@@ -23,7 +23,7 @@
  * `self+0x6c == 0xf`. Any other mode is a silent no-op.
  *
  * Real C under old_agbcc (issue #10 NAKED retry,
- * docs/matching/issue-10-naked-retry.md). Two details carry it:
+ * docs/matching/archive/issue-10-naked-retry.md). Two details carry it:
  *  - The position gate's second clause re-tests the mirror bit (`cmp r3,
  *    #0; blt`) instead of being jump-threaded away. That needs the two
  *    tests to differ in RTL until after jump threading: the first reads

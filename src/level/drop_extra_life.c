@@ -5,7 +5,7 @@
 #include "level.h"
 #include "globals.h"
 
-/* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
+/* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 static inline void SetPartTag(struct orbit_part *part, s32 tag)
 {

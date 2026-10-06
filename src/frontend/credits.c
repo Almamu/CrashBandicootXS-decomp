@@ -21,7 +21,7 @@
  * a "between-level map/progress screen") (see docs/rom_map.md's
  * "RunContinuePrompt turns out to be a separate screen trigger"/"A fourth
  * thing in this file" sections) - see
- * docs/matching/issue-64-0x08034aa4-actor.md for the full write-up. */
+ * docs/matching/archive/issue-64-0x08034aa4-actor.md for the full write-up. */
 
 /* The credits screen (RunCredits; docs/rom_map.md read it as a
  * "between-level map/progress screen"), allocated `OperatorNew(0x98)` by

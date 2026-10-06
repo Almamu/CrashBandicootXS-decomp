@@ -13,7 +13,7 @@
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
  * (`asm/code_3_2_17_e560_10d54.s`) - see
- * docs/matching/issue-14-0x08010d54-physics-apply.md's "Not integrated
+ * docs/matching/archive/issue-14-0x08010d54-physics-apply.md's "Not integrated
  * this pass" section for the individual draft characterizations this
  * file finishes integrating: `CheckExtraLifePickup`, `PickUpExtraLife`, `UpdateExtraLife`,
  * `CreateExtraLife`, `SendExtraLifeToHud`. All 5 operate on the same still-unnamed
@@ -376,7 +376,7 @@ void SendExtraLifeToHud(struct orbit_part *selfArg)
 /* GitHub issue #12/#14 Phase 2, "accessor cluster" group: `UpdateExtraLifeHop`
  * through `CheckWumpaPickup` (11 functions, `0x08011248`-`0x08011448`),
  * carved out of the middle of the still-unexamined 24-function tail
- * documented in docs/matching/issue-14-0x08010d54-physics-apply.md.
+ * documented in docs/matching/archive/issue-14-0x08010d54-physics-apply.md.
  * `self` here is a further, still-unnamed "part"-shaped object -
  * distinct from `struct actor` (only 0x1c bytes) and from the
  * `struct collision_queue` `AddCollisionCandidate`/`DestroyCollisionQueue`/`ResetCollisionQueue`

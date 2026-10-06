@@ -22,7 +22,7 @@
  *
  * GitHub issue #22, ROM 0x08017AB0-0x08017ECC - the raw span between
  * input_ctrl_queue.c (ends 0x08017AAC) and mega_mix.c (starts
- * 0x08017ECC) that docs/matching/issue-22-0x08017a44-actor.md's first
+ * 0x08017ECC) that docs/matching/archive/issue-22-0x08017a44-actor.md's first
  * pass left completely untouched ("out of scope... given their size").
  * `self` (r4) is the same large per-level "player/action" object this
  * whole object family shares (`self+0xc` per-category table pointer,
@@ -88,7 +88,7 @@
  * it both close under old_agbcc - the list walk's per-iteration pointer
  * reload is a guarded do-while, and the CollidePartList stack-argument order
  * comes from passing the box by value. See
- * docs/matching/issue-22-0x08018008-hopper.md. */
+ * docs/matching/archive/issue-22-0x08018008-hopper.md. */
 
 struct ab_vtable
 {

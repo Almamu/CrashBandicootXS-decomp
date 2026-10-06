@@ -12,7 +12,7 @@
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
  * (include/player_ctrl.h) documented in
- * docs/matching/issue-19-0x08015840-actor.md. The third, ApplyPlayerCtrlSwimDrift, is
+ * docs/matching/archive/issue-19-0x08015840-actor.md. The third, ApplyPlayerCtrlSwimDrift, is
  * swim_ctrl_stroke.c. All three are called from swim_ctrl.c's
  * per-state handlers.
  *
@@ -208,7 +208,7 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
 /* GitHub issue #19: 0x08015DF8-0x08015FDC, the third jump-table dispatcher
  * of the player-input controller class (include/player_ctrl.h), after
  * StartPlayerCtrlStroke/StartPlayerCtrlSpin above - see
- * docs/matching/issue-19-0x08015840-actor.md. Built with old_agbcc (the
+ * docs/matching/archive/issue-19-0x08015840-actor.md. Built with old_agbcc (the
  * Makefile's OLD_AGBCC_OBJS): the "scratch-register copy" before each
  * `>> 2` (`adds r5,r0,r5; adds r1,r5,#0; asrs r6,r1,#2`) that kept this
  * NAKED under the current agbcc is what old_agbcc emits for plain C. */

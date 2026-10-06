@@ -6,7 +6,7 @@
 #include "globals.h"
 
 /* Icon-indicator widget (lives display) - see
- * docs/matching/issue-45-hud-stat-widget-dispatcher.md for the full
+ * docs/matching/archive/issue-45-hud-stat-widget-dispatcher.md for the full
  * semantic account: positions and clamps the primary icon slot
  * (parts[22]) unconditionally, then a second icon (parts[23]) only when
  * GetBossHealth's count exceeds 1.

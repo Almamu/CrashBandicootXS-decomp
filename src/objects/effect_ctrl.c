@@ -4,7 +4,7 @@
 #include "globals.h"
 
 /* GitHub issue #9/#10, tail of the 0x0800B8DC-0x0800D040 cluster (see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the last raw file
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): the last raw file
  * in the cluster, `asm/code_3_2_17_cbf4.s` - `UpdateEffectCtrl`,
  * `EffectCtrlHandleEvent`, `nullsub_3`, `DestroyEffectCtrl`, `InitEffectCtrl`, ROM
  * 0x0800CBF4-0x0800CD00 (contiguous, no gap on either side -

@@ -13,7 +13,7 @@
 #include "globals.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
- * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
+ * asm/code_3_2_17_188d0.s (details in docs/matching/archive/issue-23-graphics.md).
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
  * family as input_ctrl.c/input_ctrl_queue.c/mega_mix.c: each class here is a
@@ -55,7 +55,7 @@
  * couple of per-site macros. Those were written against the current
  * agbcc; the ROM was built with the older compiler, and this file is
  * built with old_agbcc (Makefile OLD_AGBCC_OBJS,
- * docs/matching/old-agbcc-retry.md), under which UpdateCortexBoss and
+ * docs/matching/archive/old-agbcc-retry.md), under which UpdateCortexBoss and
  * CreateCortexBossPlatformMover match as C and several of the workarounds were dropped.
  *
  * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/

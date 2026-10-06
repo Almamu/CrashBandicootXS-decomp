@@ -8,7 +8,7 @@
  * builds a sprite part with CreateMovingSprite, attaches a freshly constructed
  * enemy controller (CreateEnemyCtrl) to it, and fills the part's two "collected" bits
  * from the level's record table. This ROM region was built with
- * old_agbcc (see docs/matching/old-agbcc-retry.md). */
+ * old_agbcc (see docs/matching/archive/old-agbcc-retry.md). */
 
 #include "actor.h"
 #include "enemies.h"

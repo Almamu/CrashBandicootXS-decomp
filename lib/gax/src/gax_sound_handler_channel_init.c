@@ -19,7 +19,7 @@ static inline void SetMixRateReciprocal(u64 *dst, struct GaxChannelState *self)
  *
  * Was NAKED (the division call's register choreography "resisted every
  * plain-C form"); the inline destination-pointer helper above closes it
- * - see docs/matching/gax-toolchain-retry.md. */
+ * - see docs/matching/archive/gax-toolchain-retry.md. */
 void GaxChannelInit(struct GaxChannelState *self)
 {
     u32 i;

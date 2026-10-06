@@ -26,7 +26,7 @@
  * into their own local variables in the exact order this compiler
  * evaluates them (icon array pointer, then the array base, then the
  * index) to reproduce the ROM's exact register assignment - see
- * docs/matching/issue-XX-0x080291a4-actor.md. */
+ * docs/matching/archive/issue-48-0x080291a4-actor.md. */
 void SetupActorVramPool(void)
 {
     u8 *entityTable;

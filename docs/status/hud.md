@@ -18,7 +18,7 @@ system from "core" graphics.
   adjacent to `hud_lives.c` since `InitHud`-`UpdateHudClock` sit raw
   between them): `TickPaletteCycles`/`AddPaletteCycle` (the fx ring-buffer's
   per-frame consumer/producer pair - see
-  `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Third pass"
+  `docs/matching/archive/issue-45-hud-stat-widget-dispatcher.md`'s "Third pass"
   section for the register-pinning/instruction-ordering gotchas this
   pair needed), `ClearPaletteCycles`, `DestroyPaletteCycles`, `InitPaletteCycles`,
   `DrawHudPart`, `sub_802710C` (UNUSED - no caller anywhere in the
@@ -73,7 +73,7 @@ system from "core" graphics.
   order): a minimal `record`-pointer constructor for the same `struct
   bitmap_font`, matched byte-exact on the first try with plain struct
   field access - see
-  [docs/matching/naked-DestroyFont.md](../matching/naked-DestroyFont.md)
+  [docs/matching/archive/naked-InitHudTextWidget.md](../matching/archive/naked-InitHudTextWidget.md)
   (misnomer aside - it's plain C, not a NAKED transcription; named to
   match this repo's existing untracked-function-writeup convention).
 
@@ -92,7 +92,7 @@ system from "core" graphics.
   of them were NAKED until the NAKED retry pass. The "r7 miscompile"
   that parked them turned out to be a compiler mismatch: under
   old_agbcc the plain clamp compiles byte for byte. See
-  [naked-retry-mid45.md](../matching/naked-retry-mid45.md).
+  [naked-retry-mid45.md](../matching/archive/naked-retry-mid45.md).
 
 All 24 functions in the `0x08026EEC`-`0x08028568` chunk are byte-exact,
 and all of them are real C.
@@ -101,24 +101,24 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 GitHub issue #46's own write-up (icon/text-widget renderer, including
 `include/bitmap_font.h`'s newly-documented field layout) is
-[docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md).
+[docs/matching/archive/issue-46-hud-icon-widget.md](../matching/archive/issue-46-hud-icon-widget.md).
 GitHub issue #45's second-pass write-up (the stat-widget dispatcher, and
 why the rest of the family stayed raw) is
-[docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md).
+[docs/matching/archive/issue-45-hud-stat-widget-dispatcher.md](../matching/archive/issue-45-hud-stat-widget-dispatcher.md).
 
 - **`FontDrawGlyph`**, **`InitSmallFont`**, **`InitLargeFont`**
   (`src/text/font_glyph.c`), **`FontMeasureChars`**
   (`font_draw_text.c`) and **`FontMeasureText`** (`font_measure.c`)
   - GitHub issue #46's last five, the glyph writer, the two icon-manager
   constructors and the text walkers. Plain C, built with old_agbcc (all
-  three files move to it); they were NAKED. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
+  three files move to it); they were NAKED. See [old-agbcc-round5.md](../matching/archive/old-agbcc-round5.md).
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
 - GitHub issue #46: none `NON_MATCHING` - all 25 functions in the chunk
   are byte-exact. Five of them are NAKED transcriptions tracked as
   parked, not matched - see below. See
-  [docs/matching/issue-46-hud-icon-widget.md](../matching/issue-46-hud-icon-widget.md)
+  [docs/matching/archive/issue-46-hud-icon-widget.md](../matching/archive/issue-46-hud-icon-widget.md)
   for the full history.
 
 ### NAKED transcription (byte-exact, but not real decompiled C)

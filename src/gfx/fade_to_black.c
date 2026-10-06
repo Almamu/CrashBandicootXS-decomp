@@ -18,7 +18,7 @@
  * restores the original backed-up palette.
  *
  * Was NAKED asm, not plain C - see
- * docs/matching/naked-sub_80014a4-matched.md for the derivation of how
+ * docs/matching/archive/naked-sub_80014a4-matched.md for the derivation of how
  * this was finally matched as real C. The gap: the ROM caches the
  * blended-buffer address (`gPaletteFadeBuffer`) in a register across
  * the loop while recomputing the other two DMA fields (the 0x05000000

@@ -8,7 +8,7 @@
 #include "globals.h"
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* HovercraftLauncherStateLaunch: `HovercraftCannonStateFire`'s sibling. Sets `self`'s position fields
  * from the singleton's own position plus a different fixed offset,
@@ -21,7 +21,7 @@
  * its idle animation state.
  *
  * Matched in a later pass with the same shape as `HovercraftCannonStateFire` (see
- * docs/matching/issue-62-0x08033804-actor.md, "Later pass: strag2 retry"): no
+ * docs/matching/archive/issue-62-0x08033804-actor.md, "Later pass: strag2 retry"): no
  * register pins at all - the old `r7` blocker came from a wrong
  * source shape, not from a register the allocator couldn't reach. */
 void HovercraftLauncherStateLaunch(struct spawner *self)
@@ -111,7 +111,7 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
 asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* `DamageHovercraftCannon`'s gated twin: only applies damage while `self` is in
  * state 1. On death, uses table-index 3 and the anim frame from
@@ -158,7 +158,7 @@ void DamageHovercraftLauncher(struct spawner *self, s32 dmg)
 }
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gHovercraftLauncherStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then the standard
@@ -190,7 +190,7 @@ void UpdateHovercraftLauncher(struct actor_self *self)
  * `CreateHovercraftLauncher`, vtable `gHovercraftLauncherVtable`) additionally caches its
  * own constructor `b`/`c` arguments at `self+0x58`/`self+0x5c` and has a
  * death/"dead" byte flag at `self+0x6c` - see
- * docs/matching/issue-63-0x08033ef4-actor.md. */
+ * docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* The `*(T *)&self->...` byte/halfword stores below are deliberate: as plain
  * struct-member stores gcc moves the anim load and rebuilds the byte
@@ -304,7 +304,7 @@ void HovercraftLauncherStateWait(void *selfArg)
 }
 
 /* Same "self" object family as above (constructed by
- * `CreateHovercraftLauncher`) - see docs/matching/issue-63-0x08033ef4-actor.md. */
+ * `CreateHovercraftLauncher`) - see docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gHovercraftLauncherStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`); returns 0 once the
@@ -323,7 +323,7 @@ s32 RunHovercraftLauncherState(struct actor_self *self)
  * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. A second
  * object kind (constructed by the parked `CreateHovercraftSideGun`, vtable
  * `gHovercraftSideGunVtable`) reuses a death/"dead" byte flag at
- * `self+0x6c`. See docs/matching/issue-63-0x08033ef4-actor.md. */
+ * `self+0x6c`. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Constant getter - returns `self`'s death flag (`self+0x6c`), the same
  * shape as `IsHovercraftCannonUnshootable` (hovercraft_cannon.c). */

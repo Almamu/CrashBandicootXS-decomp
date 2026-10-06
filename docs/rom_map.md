@@ -1495,7 +1495,7 @@ consistent with the earlier "homing/seek-toward-point" reading.
 
 ### Issue #59 Phase 2 second half closes the singleton's camera-follow RAM family, and corrects a floor/ceiling misreading
 
-`docs/matching/issue-60-61-gap-31a6c-part2.md` matched/NAKED all 30
+`docs/matching/archive/issue-60-61-gap-31a6c-part2.md` matched/NAKED all 30
 functions from `0x080326E4` to `0x08033804` (`src/bosses/hovercraft.c`).
 Two things worth recording here rather than only in that writeup:
 
@@ -2500,7 +2500,7 @@ umbrella 5-mode dispatcher unifying the already-documented
 `ProbeTerrainX`/`ProbeTerrainY` collision resolvers under one API
 (**resolved in a later pass**: 4 real dispatch arms, not 5 - the "5th"
 is a no-op default; now matched as real C, see
-`docs/matching/issue-9-10-41-0x08026628-game-loop.md`, which also
+`docs/matching/archive/issue-9-10-41-0x08026628-game-loop.md`, which also
 pins down which of `ProbeTerrainX`/`ProbeTerrainY` resolves which axis;
 a further pass closed `ProbeTerrainX`/`ProbeTerrainY` themselves too, as
 hand-transcribed NAKED functions - same doc).
@@ -2628,7 +2628,7 @@ never individually named in this document's prose.** For completeness:
 display), `UnpackSaveData`/`PackSaveData` (a getter/setter pair for a
 packed state round-tripping through `MemCopy32`), `StepBgLayerScroll`
 (a two-line text draw, same family as the icon-renderer shapes), and
-`GetBgLayerScreenIndex`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `sub_802612C`, sits between them - see docs/matching/issue-42-bg-scroll-layer.md). Two
+`GetBgLayerScreenIndex`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `sub_802612C`, sits between them - see docs/matching/archive/issue-42-bg-scroll-layer.md). Two
 functions are genuinely new to this pass: **`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`**
 are bounded-range bulk-release helpers for the cache-slot system -
 each loops calling the already-documented single-call release
@@ -4062,7 +4062,7 @@ helper.
 
 ## Follow-up: `sub_800CF70`'s partial note confirmed, `sub_800CEAC` found and both closed
 
-A dedicated deep-investigation pass (`docs/matching/issue-9-10-0x0800ceac-graphics.md`)
+A dedicated deep-investigation pass (`docs/matching/archive/issue-9-10-0x0800ceac-graphics.md`)
 read the real disassembly for the `sub_800CF70` note above (line ~2137)
 and its immediately-preceding, previously entirely-unremarked sibling
 `sub_800CEAC`. The existing note is confirmed correct and sharpened:
@@ -4084,7 +4084,7 @@ recategorization issue #12 already applied to the neighboring
 ## Follow-up: `ProbeGroundSpriteTerrain`'s `self+0x74` note confirmed and completed, both it and `ProbeGroundSpriteFloor` closed
 
 A dedicated deep-investigation pass
-(`docs/matching/issue-9-0x0800a178-graphics.md`) read the real
+(`docs/matching/archive/issue-9-0x0800a178-graphics.md`) read the real
 disassembly for the `ProbeGroundSpriteTerrain` note above (line ~2624) and its
 sibling `ProbeGroundSpriteFloor`. The `self+0x74` zeroing observation is confirmed
 exactly as described - unconditional once the function's two leading
@@ -4112,9 +4112,9 @@ only caller, stays raw - its own gate logic depends on the also-still-
 raw `sub_8009BE0`.
 
 **Update (follow-up session)**: `sub_8009BE0` is now fully understood
-(a physics/collision step-probe, `docs/matching/naked-spatial-grid-tail.md`),
+(a physics/collision step-probe, `docs/matching/archive/naked-spatial-grid-tail.md`),
 which unblocked `CollideGroundSprite` itself - now matched as real C (not
-NAKED), see `docs/matching/issue-9-0x0800a178-graphics.md`'s "Follow-up"
+NAKED), see `docs/matching/archive/issue-9-0x0800a178-graphics.md`'s "Follow-up"
 section. `self+0x68`, the byte `CollideGroundSprite` reads/writes/returns, is a
 persistent per-object cumulative collision-axis mask (OR'd from
 `ProbeGroundSpriteTerrain`'s own per-call result), distinct from `self+0x74`'s

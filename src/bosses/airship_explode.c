@@ -12,7 +12,7 @@
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_states.c - see
  * airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Large weapon-kind projectile spawner: advances the position
  * accumulators (`gAirshipX`/`gAirshipY`/

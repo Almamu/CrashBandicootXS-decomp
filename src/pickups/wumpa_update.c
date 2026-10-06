@@ -14,7 +14,7 @@
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
  * (asm/code_3_2_17_e560_10d54.s) - see
- * docs/matching/issue-14-0x08010d54-physics-apply.md's Phase 2 planning
+ * docs/matching/archive/issue-14-0x08010d54-physics-apply.md's Phase 2 planning
  * section for the full function/size list. This file carves out only
  * PickUpWumpa-UpdateWumpaHop (the chunk's last 6 functions, contiguous
  * through to the already-matched src/pickups/wumpa.c at
@@ -150,8 +150,8 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * src/objects/sprite_obj.c).
  *
  * Matched (old_agbcc) over three passes, see
- * docs/matching/big-naked-retry-3.md and
- * docs/matching/mix-naked-retry-5.md. The three "flags |= 1, set the id
+ * docs/matching/archive/big-naked-retry-3.md and
+ * docs/matching/archive/mix-naked-retry-5.md. The three "flags |= 1, set the id
  * bit" tails are merged by cross-jumping as in the ROM: the spawn's byte
  * argument is a plain `*(volatile u8 *)` store of a QImode 1 that cse
  * reuses for mode 3's `flags |= 1` but not for the SImode `1 << bit`;

@@ -10,7 +10,7 @@
 #include "globals.h"
 
 /* First half of the `0x08031A6C`-`0x08032858` remainder issue #59's
- * foundational pass (docs/matching/issue-59-0x08031784-actor.md) left
+ * foundational pass (docs/matching/archive/issue-59-0x08031784-actor.md) left
  * for "Phase 2" - the first 30 of the 60 still-raw functions in
  * `asm/code_3_2_20_28568_c99c_31784_31a6c.s`, `UpdateJetpackBalloonCrate` through
  * `UpdateJetpackRing` inclusive. Same shared "self" object family documented
@@ -39,7 +39,7 @@
  * `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState` are the per-state member-pointer
  * dispatches through `gJetpackBalloonCrateStateFuncs` (`ACTOR_PMF_CALL`,
  * include/actor_self.h) - once parked NAKED as an "r7 table-base-pin"
- * hazard, see docs/matching/pmf-dispatch-retry.md. */
+ * hazard, see docs/matching/archive/pmf-dispatch-retry.md. */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
@@ -718,7 +718,7 @@ void DestroyJetpackBalloonCrate(void *selfArg, s32 flags)
  * compiler "couldn't reproduce"); none of them exists for this plain
  * form - `kind` declared `u8` and `health` an ordinary local - which
  * matches under both agbcc and old_agbcc (see
- * docs/matching/issue-59-60-m-operand-scheduling.md). */
+ * docs/matching/archive/issue-59-60-m-operand-scheduling.md). */
 void *InitJetpackBalloonCrate(void *selfArg, void *part, s32 b, s32 c, s32 d, u8 kind)
 {
     struct orbit_actor *self = selfArg;

@@ -29,7 +29,7 @@
  * the bit mask before loading the byte it is ANDed with, old_agbcc's
  * tell. Under it all four are plain C with no pins; they had been
  * parked as NAKED after drafts under the current agbcc stalled on
- * register allocation (see docs/matching/issue-31-trigger-effect-type-n.md,
+ * register allocation (see docs/matching/archive/issue-31-trigger-effect-type-n.md,
  * "Old-compiler pass"). The two CreatePlatform calls are written
  * separately, one per sound id: the ROM repeats the a0 truncation in
  * both arms and shares the rest of the call, which is gcc's

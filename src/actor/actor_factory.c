@@ -30,7 +30,7 @@
  *
  * Matches under either compiler (nothing here tells them apart); built
  * with the current agbcc like the rest of this zone. See
- * docs/matching/issue-51-actor-2ac28.md. */
+ * docs/matching/archive/issue-51-actor-2ac28.md. */
 
 /* An inline wrapper rather than a macro: the ROM materializes the size
  * before the heap flags, i.e. evaluates it as an argument of its own. */

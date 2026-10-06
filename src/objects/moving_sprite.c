@@ -20,7 +20,7 @@
  * is still moving.
  *
  * Fully matched as real C, closed using the exact fix worked out for
- * its near-identical twin `ApplyPlayerVelocity` (`docs/matching/issue-9-0x08007634-actor.md`):
+ * its near-identical twin `ApplyPlayerVelocity` (`docs/matching/archive/issue-9-0x08007634-actor.md`):
  * same per-axis clamp structure, `self` pinned to `r2`, `vs32`-forced
  * reloads for the ROM's own redundant `self->x`/`self->y` re-reads,
  * `vx` pinned to `r3` while `vy` stays an unpinned local (it lands in

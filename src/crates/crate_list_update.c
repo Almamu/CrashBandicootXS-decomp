@@ -43,7 +43,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
  *    marking convention (there via `node+0x11`).
  *
  * Built with old_agbcc (see `OLD_AGBCC_OBJS` in the Makefile).
- * docs/matching/issue-9-raw-asm-pass.md has how it was matched. */
+ * docs/matching/archive/issue-9-raw-asm-pass.md has how it was matched. */
 /* `RemoveCrateFromList`'s body, inlined. `holdR2` is a constant: nonzero only
  * for the first loop's copy (see the hold below). */
 static inline void pool_remove(struct pool_manager *manager, struct box_part *target, s32 holdR2)

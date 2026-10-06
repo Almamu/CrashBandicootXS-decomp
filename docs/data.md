@@ -805,6 +805,11 @@ grit does all the conversion (flags in `graphics.mk`):
 | picture map + banks | `-gt -gB4 -p! -m -mRtp -mLf -fx <tiles.png>` | `tools/grit_bg.py map` / `banks` split the entries into the index and the bank nibbles |
 | animation banks | `-gt -gB4 -p! -m -mRtp -mLf` | only the bank bits are used; `tools/grit_bg.py frames --banks` packs them after each frame's tiles |
 
+grit also writes the `-fx` tile set back out when it finishes, so the map
+rule hands it a copy under `build/` rather than the PNG in `graphics/`.
+Rewriting the source PNG raced with the tiles rule reading it in a
+parallel build.
+
 grit takes a tile's bank from its first pixel with a non-zero low
 nibble, so a cell that is entirely colour 0 would lose its bank. None of
 these assets has such a cell; an edit that adds one needs the pixel to

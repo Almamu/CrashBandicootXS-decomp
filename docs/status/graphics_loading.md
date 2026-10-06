@@ -14,7 +14,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   The `mem_alloc`-shaped next-fit search over that same free list, closed
   via one continuous `asm volatile` island spanning the search loop
   through the free-list split - see
-  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
+  [issue-47-graphics-loading.md](../matching/archive/issue-47-graphics-loading.md)
   for the full writeup of the gcc-2.9 cross-jump/tail-merging gap this
   closed and the technique used.
 - **`sub_8028D6C`**, **`GetFreeVramTileBytes`** (`src/gfx/sprite_frame.c`) -
@@ -29,7 +29,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   (`src/gfx/sprite_frame.c`) - the per-frame overflow OAM/affine
   queue and the sprite-frame VRAM cache built on top of the allocator
   above; matched. See
-  [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
+  [issue-47-graphics-loading.md](../matching/archive/issue-47-graphics-loading.md)
   for the full write-up (issue #47).
 
 - **`LoadGraphicsPackage`**-**`sub_801E96C`** (`src/gfx/graphics_package.c`) -
@@ -38,8 +38,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   and the sprite-box fitter `FitScaledSprite`/`DrawScaledSprite`. All built with
   old_agbcc (as is `spawn_start_marker.c`). The four that were NAKED
   under agbcc (the dropped-`r7` gap) are now plain C. See
-  [issue-30-old-agbcc.md](../matching/issue-30-old-agbcc.md), and
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
+  [issue-30-old-agbcc.md](../matching/archive/issue-30-old-agbcc.md), and
+  [issue-30-graphics-loading.md](../matching/archive/issue-30-graphics-loading.md)
   for the earlier accessor passes (`sub_801E8F8`'s DMA-register load
   order, the trailing `asm(".align 2, 0")` zero-padding fix).
 
@@ -50,18 +50,18 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   display registers, DMA3-copies three palette banks, calls
   `LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, runs the fade/audio-reset
   quartet, and starts song `0xb` - see
-  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
+  [issue-65-graphics-loading.md](../matching/archive/issue-65-graphics-loading.md).
 - **`LoadTitleScreenObjTiles`** (`src/frontend/title_screen_init.c`) - the
   OBJ-sprite tileset/palette loader (4-pass over `gTitleObjPackages`),
   closed via a register-pinning + opaque-asm-island pass on top of the
   previously-parked semantically-faithful reconstruction - see
-  [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md)'s
+  [issue-65-graphics-loading.md](../matching/archive/issue-65-graphics-loading.md)'s
   "Third pass".
 - **`SpawnNitroSwitchCrate`**-**`SpawnBasicCrate`** (`src/level/spawn_crates.c`)
   - the `CreateCrate` entity-constructor trampoline family, types `0`-`7`,
   all matched (`SpawnBasicCrate`, type `0`, closed via register-pinning the
   table-resolution chain to the ROM's own registers) - see
-  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
+  [issue-33-0x08021bfc-graphics-loading.md](../matching/archive/issue-33-0x08021bfc-graphics-loading.md).
 - **`SpawnCrystal`**, **`SpawnCrateGem`**, **`SpawnGemPathGem`**,
   **`SpawnRedGem`**, **`SpawnGreenGem`**, **`SpawnYellowGem`**
   (`src/level/spawn_gems.c`) - issue #30: six "trigger
@@ -74,7 +74,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   likely also what parked the `spawn_gem_platforms.c` siblings.
   Retires `asm/code_3_2_17_1e990.s`. Uses the new shared
   `include/gfx_part.h` (moved out of `cortex.c`). See
-  [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
+  [issue-30-graphics-loading.md](../matching/archive/issue-30-graphics-loading.md)'s
   "Tenth pass".
 - **`SpawnRedGemPlatform`**, **`SpawnYellowGemPlatform`**, **`SpawnGreenGemPlatform`**,
   **`SpawnBlueGemPlatform`** (`src/level/spawn_gem_platforms.c`) - issue #31: the
@@ -83,7 +83,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   full-spawn effect triggers gated by a `gLevelState+2` flag bit.
   Parked as NAKED for a long time; all four are plain C with no pins
   once built with **old_agbcc** (`OLD_AGBCC_OBJS`). See
-  [issue-31-trigger-effect-type-n.md](../matching/issue-31-trigger-effect-type-n.md)'s
+  [issue-31-trigger-effect-type-n.md](../matching/archive/issue-31-trigger-effect-type-n.md)'s
   "Old-compiler pass".
 - **`DestroyLevelState`** (UNUSED), **`PlayCutscene`**
   (`src/level/level_cutscene.c`) - the gap between issues #33
@@ -92,11 +92,11 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   per-level text-list pager with its palette blank/BG2-affine reset.
   Real C, current agbcc (both compilers match). Retires
   `asm/code_3_2_17_22354.s`. See
-  [gap-22354-game-context.md](../matching/gap-22354-game-context.md).
+  [gap-22354-game-context.md](../matching/archive/gap-22354-game-context.md).
 - **`SpawnLizard`**-**`SpawnElectricEel`** (`src/level/spawn_enemies.c`),
   **`SpawnSquid`** (`spawn_enemies.c`), **`SpawnJellyfish`**-
   **`SpawnWoodenCrusher`** (`spawn_enemies.c`; `SpawnFlamethrowerLabAssistant` closed in
-  [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),
+  [last-eleven-naked-retry.md](../matching/archive/last-eleven-naked-retry.md)),
   **`SpawnRoomExit`**-**`SpawnCortexBoss`** (`spawn_bosses.c`) and
   **`SpawnMegaMix`**-**`SpawnIronCrate`** (`spawn_objects.c`) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
@@ -107,8 +107,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   `SpawnVenusFlytrap` keeps its agbcc-era pinned C (plain C is 5 halfwords
   off). `SpawnRoomExit` was NAKED until the NAKED retry pass; it needs four
   register pins and an empty `asm` nudge (see
-  [naked-retry-mid45.md](../matching/naked-retry-mid45.md)). See
-  [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
+  [naked-retry-mid45.md](../matching/archive/naked-retry-mid45.md)). See
+  [issue-31-old-agbcc.md](../matching/archive/issue-31-old-agbcc.md).
 - **`SpawnBodySlamPower`**, **`SpawnTornadoSpinPower`**, **`SpawnDoubleJumpPower`**, **`SpawnTurboRunPower`**,
   **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`sub_80220C4`**, **`SpawnCrateGemMarker`**,
   **`SpawnWumpa`**, **`nullsub_22`**, **`SpawnHoverStartMarker`**, **`sub_80221A4`**,
@@ -119,7 +119,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   `{table_base, count}` descriptor pair, and `InitLevelState` itself - the
   "origin point" that constructs nearly every hot IWRAM global this ROM
   region references. See
-  [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
+  [issue-33-0x08021bfc-graphics-loading.md](../matching/archive/issue-33-0x08021bfc-graphics-loading.md).
 - **`SpawnStartMarker`** (`src/level/spawn_start_marker.c`) - the
   sound-trigger dispatch/position writer at the end of the
   `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
@@ -130,7 +130,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   (`struct actor **`) rather than its dereferenced value, so gcc
   dereferences directly into the same register the `+0x28` add needs,
   with no extra `mov` - see
-  [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
+  [docs/matching/archive/naked-sub_801e990-matched.md](../matching/archive/naked-sub_801e990-matched.md)
   for the full derivation.
 - **`TitleScreenCheatInput`**, **`UpdateVvLogoPieces`**, **`LoadUniversalLogoBg`**
   (`src/frontend/title_screen.c`, issue #65) - the "cheat
@@ -140,7 +140,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   copied), the drain loop's end pointer as its own local (computed ahead
   of the hoisted constants), and `*dest++` in both remap branches
   (doubles `dest`'s reference count, giving it r4). See
-  [issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md).
+  [issue-64-65-naked-retry.md](../matching/archive/issue-64-65-naked-retry.md).
 - **`HashTitleCheatInput`** (`src/frontend/title_screen.c`) - a
   standalone one-shot rolling-hash update (rotate-left-1 then multiply
   by 521), the same primitive `TitleScreenCheatInput` inlines for its "cheat code"
@@ -148,7 +148,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   (`hi`/`lo` to `r3`/`r2`) to stop agbcc folding the natural
   `(v << 1) | (v >> 31)` idiom into a single Thumb `ROR` instruction the
   ROM's own build never emits. See
-  [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
+  [issue-65-0x08035780-graphics-loading.md](../matching/archive/issue-65-0x08035780-graphics-loading.md).
 - **`UpdateTitleLogoPieces`** (`src/frontend/title_screen_init.c`) - the
   9-slot record-array per-frame updater documented under "Parked" below
   for its siblings; promoted to real C in a follow-up pass via the
@@ -158,7 +158,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   offset), which stops this compiler's inliner from hoisting a shared
   `self+i*0x34` slot-base register the way any single plain-C
   reconstruction otherwise does. See
-  [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
+  [issue-59-60-static-inline-cse-promotion.md](../matching/archive/issue-59-60-static-inline-cse-promotion.md).
 - **`LoadTitleScreenBg`** (`src/frontend/title_screen_init.c`), and
   **`CommitTitleScreenFrame`**, **`DrawTitleMenuItem`**, **`DrawTitleScreen`**,
   **`DestroyTitleScreen`**, **`RunCompanyLogos`**, **`LoadVvLogoGraphics`**,
@@ -174,7 +174,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   source-order details (a chained `REG_BG2PA = scale = ...`, a
   destination pointer taken before an allocation call, a nested block
   for the ROM's stack-slot order). See
-  [issue-65-naked-retry.md](../matching/issue-65-naked-retry.md).
+  [issue-65-naked-retry.md](../matching/archive/issue-65-naked-retry.md).
 - **`InitVvLogoPieces`** (`src/frontend/title_screen.c`) - the
   20-slot seeder. Real C once the object is built with
   `-fno-strength-reduce` (the Makefile's `NO_STRENGTH_REDUCE_OBJS`):
@@ -193,13 +193,13 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   needs strength reduction on (its up-counting inner loop gets
   reversed), so the old file was split at `TitleScreenCheatInput`: the second
   half keeps `-fno-strength-reduce` for `InitVvLogoPieces`. See
-  [issue-64-65-naked-retry-2.md](../matching/issue-64-65-naked-retry-2.md).
+  [issue-64-65-naked-retry-2.md](../matching/archive/issue-64-65-naked-retry-2.md).
 - **`DrawVvLogoPieces`** (`src/frontend/company_logos.c`) - the
   20-slot OAM builder. NAKED until the #65 strength-reduction retry. It
   needs strength reduction on, so `title_screen.c` was split
   at `0x0803686C`; the new file (with `LoadUniversalLogoBg`..`DrawLogoActor`) is
   old_agbcc without `-fno-strength-reduce`. See
-  [sr65-naked-retry.md](../matching/sr65-naked-retry.md).
+  [sr65-naked-retry.md](../matching/archive/sr65-naked-retry.md).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 

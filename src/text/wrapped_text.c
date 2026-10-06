@@ -9,7 +9,7 @@
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): current agbcc gets the
  * `/b` handler's first hoisted-address reload in r0 where the ROM has r2;
- * old_agbcc reproduces it. See docs/matching/strag3-naked-retry.md. */
+ * old_agbcc reproduces it. See docs/matching/archive/strag3-naked-retry.md. */
 
 /* A text-layout/word-wrap renderer: walks a NUL-terminated string one
  * "token" at a time (`GetWordLength` returns each token's byte length -

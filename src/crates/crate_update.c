@@ -5,7 +5,7 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). Sits between the matched
+ * docs/matching/archive/issue-13-graphics-fc70.md). Sits between the matched
  * `DrawCrate` (crate_draw.c) and `IsCrateInsideRect` (crate.c) in
  * ROM, so it needs its own file - see docs/workflow.md's "one file
  * per contiguous ROM region" rule. `self` throughout is the same
@@ -46,7 +46,7 @@
  *
  * Matches under old_agbcc. The old NAKED note blamed register pressure
  * on the field addresses; the source-level causes were (see
- * docs/matching/issue-12-13-25-naked-retry.md):
+ * docs/matching/archive/issue-12-13-25-naked-retry.md):
  * - the 0x13-0x15 range test is two nested `if`s on an `s32` copy of
  *   `kind` (one `&&` gets folded into an unsigned subtract-and-compare;
  *   testing the u8 field directly gives unsigned branches);

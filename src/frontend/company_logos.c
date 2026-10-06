@@ -23,7 +23,7 @@
  * `&oamA`, which only strength reduction emits, while `InitVvLogoPieces`
  * (still in `title_screen.c`) needs it off. The shared
  * declarations below are copied from the first file. See
- * docs/matching/sr65-naked-retry.md. */
+ * docs/matching/archive/sr65-naked-retry.md. */
 
 
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -80,7 +80,7 @@ static inline void SetAffineZ(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 
 }
 
 /* Matched in the #65 strength-reduction retry
- * (docs/matching/sr65-naked-retry.md). It needs strength reduction ON,
+ * (docs/matching/archive/sr65-naked-retry.md). It needs strength reduction ON,
  * which is why this file was split off `title_screen.c`. */
 void DrawVvLogoPieces(struct logo_screen *self)
 {

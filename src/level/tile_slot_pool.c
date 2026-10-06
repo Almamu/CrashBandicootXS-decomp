@@ -40,7 +40,7 @@
  * update is a narrow inline-asm block (same case as `InitBgLayer`), and
  * `AcquireTileSlot` needs two more (constant-before-load for the residency
  * test, and its refcount update) - see the comments there. See
- * docs/matching/issue-43-level-layers.md.
+ * docs/matching/archive/issue-43-level-layers.md.
  *
  * Real bytes formerly the tail of `asm/code_3_2_17_25fc8.s` (that file
  * now ends at `nullsub_26`). */

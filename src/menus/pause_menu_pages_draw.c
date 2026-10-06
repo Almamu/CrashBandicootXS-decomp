@@ -15,7 +15,7 @@
  * under both compilers once the icon-manager draws are written as the
  * gcc 2.x virtual calls they are (through libgcc's `_call_via_r2`),
  * with `this` computed before the label argument - see
- * docs/matching/issue-4-6-8-naked-retry.md. */
+ * docs/matching/archive/issue-4-6-8-naked-retry.md. */
 
 /* DrawPauseTimeTrialPage, below, takes the `struct pause_menu`
  * (include/pause_menu.h; `field_6c`/`field_bc`/`timeBuf`) - the medal-icon-widget's (`InitPauseTimeTrialPage`)

@@ -7,7 +7,7 @@
 
 /* A second per-instance "self" object family sharing the exact same
  * layout convention already documented for the boss-weapon cluster
- * (airship_fireball.c-airship_graphics.c, docs/matching/issue-58-0x08030334-actor.md):
+ * (airship_fireball.c-airship_graphics.c, docs/matching/archive/issue-58-0x08030334-actor.md):
  * state at `+0x28`, table-index/"kind" at `+0xc`, an anim-frame
  * halfword/byte pair at `+0x10`/`+0x12`, an accumulator at `+8`, a
  * "part table" pointer at `+0`, and an event/trampoline table pointer
@@ -22,7 +22,7 @@
  * `HovercraftStateApproach` are the same state-transition/animation-frame-reset
  * sequence already documented for the boss cluster's
  * `DamageAirshipFireball`/`AirshipStateFall`/`DamageAirship`. See
- * docs/matching/issue-62-0x08033804-actor.md. */
+ * docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* One-shot latch: if neither `gHovercraftHitFlashOn` nor `gHovercraftHitFlashTimer`
  * has been set yet, arms both. */

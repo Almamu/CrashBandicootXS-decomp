@@ -7,7 +7,7 @@
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
- * (see docs/matching/issue-9-0x08007634-actor.md). `ApplyPlayerVelocity` sits
+ * (see docs/matching/archive/issue-9-0x08007634-actor.md). `ApplyPlayerVelocity` sits
  * right after the still-raw `DrawPlayer`, at the end of that raw span. */
 
 /* Per-frame velocity integrator: moves `self+0x60`/`self+0x64` (current

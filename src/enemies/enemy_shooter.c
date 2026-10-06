@@ -31,7 +31,7 @@
  * owner)` call (`d = -0xa` for mode 2, `d = 8` for mode 7) behind an
  * `owner->0x30`/`owner->0x34` magic-constant check (`0xa`/`0` and
  * `8`/`0` respectively - the same blocking-condition pair
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md's field table
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md's field table
  * already documents); on success the returned record's `+0xa` byte is
  * set to `8`.
  *

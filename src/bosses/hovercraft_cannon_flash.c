@@ -3,7 +3,7 @@
 #include "bosses.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
+ * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Syncs `self`'s position fields from the singleton's own position plus
  * a fixed offset, sets the one-shot flag (`+0x58=1`), and - if
@@ -57,7 +57,7 @@ asm(".align 2, 0");
  * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. This is a
  * third, much smaller object kind (vtable `gHovercraftCannonFlashVtable`) that
  * reuses `self+0x58` as a plain one-shot flag rather than a health
- * countdown. See docs/matching/issue-63-0x08033ef4-actor.md. */
+ * countdown. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Constructor: forwards straight through to `InitActorPart`, then sets
  * health (`+0x54=1`), the event table (`+0x50=&gHovercraftCannonFlashVtable`),
@@ -94,7 +94,7 @@ void *CreateHovercraftCannonFlash(void *selfArg, void *part, s32 b, s32 c, s32 d
 asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
+ * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Same position-sync/flag/trampoline shape as `UpdateHovercraftCannonFlash`
  * (above), but returns the "should animate" boolean directly
@@ -133,7 +133,7 @@ s32 sub_8034314(void *selfArg)
 asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
+ * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Constant getter - returns `self`'s one-shot flag (`self+0x58`). */
 u8 IsHovercraftCannonFlashUnshootable(void *selfArg)

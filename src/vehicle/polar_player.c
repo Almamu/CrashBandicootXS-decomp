@@ -11,7 +11,7 @@
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/vehicle/polar_player_states.c`
- * (issue #50's leftover tail, `docs/matching/issue-50-actor-bc68.md`) -
+ * (issue #50's leftover tail, `docs/matching/archive/issue-50-actor-bc68.md`) -
  * same `self` object and global family (a countdown-timer/respawn
  * pair at `gPolarFinishTimer`/`gPolarInvulnTimer`, a "camera catch-up"
  * budget at `gPolarPlayerVelY`, and the shared reset/state-transition
@@ -25,7 +25,7 @@
  * the `ldrh` it is ANDed with) and `DrawPolarPlayer`/`AllocPolarPlayerTiles` (operand
  * order of their loads and multiplies) only match under it, and every
  * other function here matches under both compilers - see
- * docs/matching/issue-51-54-naked-retry.md. */
+ * docs/matching/archive/issue-51-54-naked-retry.md. */
 
 /* The gLevelState fields read here. */
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
@@ -207,7 +207,7 @@ void DrawPolarPlayer(struct actor_self *self)
  * than duplicating it - a single `return result;` at one shared `end`
  * label (reached by `goto` from the early-return case) reproduces that,
  * per the `goto`-shared-tail idiom in
- * `docs/matching/issue-52-gap-b364.md`. The three addresses this
+ * `docs/matching/archive/issue-52-gap-b364.md`. The three addresses this
  * function keeps alive throughout (`gPolarInvulnTimer`, `gUnknown_
  * 03001494`, `&gLevelState`) are each read once into their own
  * pointer local and reused from there, matching the ROM's own register
@@ -343,7 +343,7 @@ end:
  * keyframe-table byte-pair lookup (`self`'s part table, indexed by
  * `self+0xc`, offset by `self+8`'s frame accumulator, into a *second*
  * pointer array at `self+4`) already established for `AllocJetpackPlayerTiles`
- * (`jetpack_run.c`, `docs/matching/issue-56-0x0802f0dc-actor.md`);
+ * (`jetpack_run.c`, `docs/matching/archive/issue-56-0x0802f0dc-actor.md`);
  * arms `gPolarPlayerTileBuffer`, clears `gPolarPlayerLastFrame`. The ROM's
  * "multiply into a copy, copy again, then shift" sequence is simply
  * old_agbcc's code for `h * w * 32` - no register forcing needed. */
@@ -420,7 +420,7 @@ void PolarPlayerStateMount(struct actor_self *self)
  * branch structure below is written with explicit `goto`s to the same
  * `tail`/`join` labels the ROM's own branches target, per the
  * `goto`-shared-tail idiom documented in
- * `docs/matching/issue-52-gap-b364.md`. */
+ * `docs/matching/archive/issue-52-gap-b364.md`. */
 void PolarPlayerStateRun(void *selfArg)
 {
     struct actor_self *self = selfArg;

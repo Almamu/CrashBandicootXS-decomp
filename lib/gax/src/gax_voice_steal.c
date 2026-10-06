@@ -8,7 +8,7 @@
  * "nested-pointer register allocation" note; written plainly against
  * the handler structs in gax_internal.h - re-deriving the player /
  * mixer chain at every use, as the ROM does - all three match outright.
- * See docs/matching/gax-toolchain-retry.md. */
+ * See docs/matching/archive/gax-toolchain-retry.md. */
 
 /* Per-frame mixer tick: once playing, clears the song's scratch
  * buffer, clamps and forwards a couple of song-header values into the

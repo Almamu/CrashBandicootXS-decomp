@@ -4,7 +4,7 @@
  * right after the DMA3 transfer helper `DMA3Transfer`
  * (eeprom_timer_stop.c) and before the matched verify/retry
  * pair in eeprom_verify.c. See
- * docs/matching/issue-69-eeprom-timer.md and
+ * docs/matching/archive/issue-69-eeprom-timer.md and
  * docs/matching/eeprom-sdk-o1.md.
  *
  * Both are Nintendo's AgbEeprom SDK library C (the ROM carries its

@@ -5,7 +5,7 @@
 #include "vehicle.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* A physics-step-and-collision-react updater: advances `self`'s
  * position by its `velX`/`velY` pair (with a fixed
@@ -98,7 +98,7 @@ tail:
 asm(".align 2, 0");
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* An `InitActorPart`-based constructor for this cluster's `self` object:
  * forwards its first three real arguments plus one stack argument
@@ -106,7 +106,7 @@ asm(".align 2, 0");
  * `self+0x50`'s event/trampoline table to `gJetpackShotVtable`, and
  * stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`.
  * The same 7-argument `InitActorPart`-wrapper shape already left raw as
- * `CreateAirshipFireball` (docs/matching/issue-58-0x08030334-actor.md). The ROM
+ * `CreateAirshipFireball` (docs/matching/archive/issue-58-0x08030334-actor.md). The ROM
  * wants `self`/the constant `1`/`e`/`f` pinned to `r4`/`r5`/`r6`/`r7`
  * respectively, all kept live across the `InitActorPart` call, with a
  * matching 4-register `push`/`pop`. Explicitly pinning `e`/`f` to their
@@ -143,7 +143,7 @@ void *CreateJetpackShot(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e, s
 asm(".align 2, 0");
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* Trivial constant predicate - always "true". */
 s32 IsJetpackShotUnshootable(void)

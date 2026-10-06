@@ -10,7 +10,7 @@
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Position-easing helper, called from `AirshipStateFireballs`/`AirshipStateCannon`
  * (airship_states.c): advances the position
@@ -40,7 +40,7 @@ static inline s32 Abs(s32 x)
  * block has before cross-jumping merges them: the X step stores its
  * `vx -+ 3` result once, the Y step stores in each branch. That makes
  * the Y address the higher-priority pseudo for global-alloc, as in the
- * ROM (docs/matching/issue-58-61-naked-retry.md). */
+ * ROM (docs/matching/archive/issue-58-61-naked-retry.md). */
 void SteerAirship(void)
 {
     s32 vx;
@@ -123,7 +123,7 @@ dy_done:
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Constructor for the small tracker object (`gAirship`):
  * stashes its level-index argument into `gAirshipLevel`, and - if
@@ -195,7 +195,7 @@ void CreateAirship(s32 level)
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * A large "spawn/arm this weapon-kind instance" setup routine: resets
  * the ramp/velocity globals, fires the tracker object's state-1/
@@ -255,7 +255,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * A large per-frame "advance this weapon-kind instance" driver: fires
  * a stride-4 trampoline (`gAirshipStateFuncs`, indexed by the
@@ -316,7 +316,7 @@ void UpdateAirship(void)
 
 /* Same boss-weapon subsystem as airship_fireball.c/airship_fall.c - see
  * airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md. */
+ * docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* If `gAirshipBg2PageFlip` (an "apply now" latch) is set, toggles
  * `BG2CNT` between two palette/priority presets (tracked by

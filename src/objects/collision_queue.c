@@ -97,7 +97,7 @@ asm(".align 2, 0");
  * 0x08010D54 into a large, still-unexamined 25-function/~27KB chunk
  * (asm/code_3_2_17_e560_10d54.s). This file is Phase 1 of that chunk's
  * examination: just the entry point, `AddCollisionCandidate` itself - see
- * docs/matching/issue-14-0x08010d54-physics-apply.md for the full
+ * docs/matching/archive/issue-14-0x08010d54-physics-apply.md for the full
  * semantic map and Phase 2 planning notes on the other 24 functions. */
 
 /* Physics/collision subsystem's **apply/commit step** - the final call
@@ -156,7 +156,7 @@ void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor,
  * clear, so that call site is itself a no-op (the manager call never
  * fires); nevertheless this confirms `self` is the same
  * `struct collision_queue` `AddCollisionCandidate` above operates on (Phase 2 of
- * docs/matching/issue-14-0x08010d54-physics-apply.md's own planning:
+ * docs/matching/archive/issue-14-0x08010d54-physics-apply.md's own planning:
  * this was already flagged there as a "mode-parameterized insert"
  * sibling before being read branch-by-branch - turns out to be this
  * simpler shape instead, `flags` gates a VRAM-manager refresh rather

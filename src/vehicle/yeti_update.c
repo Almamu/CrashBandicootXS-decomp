@@ -11,7 +11,7 @@
  * range that used to be `asm/code_3_2_20_28568_c99c_d7b0.s`. All three
  * functions here operate on the `gYeti`-rooted "position-
  * tracking object with tier-threshold sound cues" documented in
- * yeti_states.c's header comment and docs/matching/issue-54-actor-d3a8.md
+ * yeti_states.c's header comment and docs/matching/archive/issue-54-actor-d3a8.md
  * (the "third RAM-struct family" from docs/rom_map.md). See that issue
  * doc's "Second pass" section for how the 12-byte AABB-record layout
  * used here and by `IsTouchingYeti` (yeti_graphics.c) was finally pinned
@@ -70,7 +70,7 @@ extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
  * it, and A's address is taken again after the call. The hit block
  * uses its own `g` local for the gauge object (the function-wide `obj`
  * would be allocated a callee-saved register). Built with old_agbcc
- * (docs/matching/issue-51-54-naked-retry.md, later pass). */
+ * (docs/matching/archive/issue-51-54-naked-retry.md, later pass). */
 static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 {
     b->x += x;

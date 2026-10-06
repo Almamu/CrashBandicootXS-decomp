@@ -7,10 +7,10 @@
  * object spawner (`new` + inlined constructor InitPlatform, spawn-record
  * lookup through the level header at *gEntityFlags, per-type mover
  * attachment). See include/gobj_1a794.h and
- * docs/matching/issue-25-level-objects.md.
+ * docs/matching/archive/issue-25-level-objects.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS, see
- * docs/matching/old-agbcc-retry.md). Under the current agbcc reload's
+ * docs/matching/archive/old-agbcc-retry.md). Under the current agbcc reload's
  * scratch-register rotation never matched and the function was parked as
  * NAKED; under old_agbcc it matches with every register pin removed. Two
  * workarounds remain: the hand-written outgoing-argument block for

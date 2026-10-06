@@ -157,7 +157,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
              * first store and uses its `[r0, #4]` immediate-offset
              * form. Reproduced with a local pointer and indexed
              * stores - same gotcha as `SetCrateGemPos`/`SetCheckpoint` in
-             * docs/matching/issue-37-game-loop-234e8.md. */
+             * docs/matching/archive/issue-37-game-loop-234e8.md. */
             s32 *dst = &self->checkpointX;
 
             dst[0] = x;

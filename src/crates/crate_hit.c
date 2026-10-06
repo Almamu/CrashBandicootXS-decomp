@@ -7,7 +7,7 @@
 #include "globals.h"
 #include "player.h"
 
-/* Dedicated deep investigation (docs/matching/issue-9-10-0x0800ceac-graphics.md):
+/* Dedicated deep investigation (docs/matching/archive/issue-9-10-0x0800ceac-graphics.md):
  * these two functions sit in the still-raw span `tools/report_units.py`
  * tracked as parked (`base_object=None`) between the just-closed
  * `PlayerAnimWouldTouchCrate` (src/crates/crate_touch.c, issue #9/#10) and the
@@ -15,7 +15,7 @@
  * the physics/collision subsystem's documented entry point). Both are
  * called *only* from `QueueCratePlayerCollision` (asm/code_3_2_17_d18c.s, the
  * subsystem's ~1960-byte collision-response commit function,
- * docs/matching/issue-12-physics-collision.md) - recategorized
+ * docs/matching/archive/issue-12-physics-collision.md) - recategorized
  * `graphics` -> `game_loop` here to match that caller, the same
  * recategorization issue #12 already applied to `BreakCrateTouchedByPlayer` itself.
  *
@@ -47,7 +47,7 @@
  * currently is". When `gPlayer+0x90` (an unconfirmed player
  * state/mode byte, not documented elsewhere under this exact offset -
  * `+0x92`/`+0x94` are separately documented state bytes right next to
- * it, see `docs/matching/issue-18-0x08014f8c-actor.md`) is nonzero,
+ * it, see `docs/matching/archive/issue-18-0x08014f8c-actor.md`) is nonzero,
  * the box is widened by 4 (2 either side: position shifted left by 2,
  * width padded by 4) before the mirror step - a "wide mode" hitbox
  * variant.
@@ -205,7 +205,7 @@ asm(".align 2, 0");
  * already-matched `game_loop` code - `QueueCratePlayerCollision` and `ApplyCrateCollision`
  * immediately after it are two of the subsystem's largest, most
  * tangled functions and are left untouched for now; see
- * docs/matching/issue-12-physics-collision.md. */
+ * docs/matching/archive/issue-12-physics-collision.md. */
 
 /* Builds two AABBs - one for `self`, one for the player
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
@@ -235,7 +235,7 @@ asm(".align 2, 0");
  * combine folds into the `add` right before the call. The first build's
  * x/y are computed first so that the `add r0, sp, #16` comes after them.
  * The same fix closed `PlayerAnimWouldTouchCrate` (crate_touch.c); see
- * docs/matching/sp-box-retry.md. */
+ * docs/matching/archive/sp-box-retry.md. */
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
  * it hides the copy's value from cse, so each use of a stack box address

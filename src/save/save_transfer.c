@@ -77,7 +77,7 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
  * into `self->data` via `self->writePtr`, and marks `receiveDone` once
  * `totalReceived` reaches a full record's worth.
  *
- * Matched in the last-eight pass (docs/matching/last-eight-naked-retry.md).
+ * Matched in the last-eight pass (docs/matching/archive/last-eight-naked-retry.md).
  * The ROM computes `playerIndex * 0xc8 + s` twice, the second time
  * multiplying straight into the 0xc8 register (`muls r2, r1`), hence
  * the pinned `c`. The channel pointer comes out of an asm with a plain

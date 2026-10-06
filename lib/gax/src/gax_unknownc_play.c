@@ -22,7 +22,7 @@ asm(".set memcpy, MemCopy32");
  *
  * All four were NAKED until a later pass found the call idiom is
  * reproducible as narrow inline asm with a `"m"` operand (see
- * docs/matching/gax-toolchain-retry.md). */
+ * docs/matching/archive/gax-toolchain-retry.md). */
 
 /* Only the parts of the song/channel/handler objects this file touches. */
 struct GaxSongInfo3 {

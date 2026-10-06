@@ -5,7 +5,7 @@
 #include "globals.h"
 
 /* Dedicated deep investigation (GitHub issue #9/#10,
- * docs/matching/issue-9-0x0800a178-graphics.md): `ProbeGroundSpriteTerrain`/
+ * docs/matching/archive/issue-9-0x0800a178-graphics.md): `ProbeGroundSpriteTerrain`/
  * `ProbeGroundSpriteFloor`, the last two functions in the `CollideGroundSprite`-through-
  * `ProbeGroundSpriteFloor` still-raw span `tools/report_units.py` tracked as
  * parked. `CollideGroundSprite` itself (the caller of `ProbeGroundSpriteTerrain`, see
@@ -26,7 +26,7 @@
  * into `self+0x74` on each successful `ProbeTerrain` axis-probe hit -
  * i.e. `self+0x74` really is "which movement axes/directions collided
  * this call", zeroed up front and rebuilt bit by bit as each probe
- * fires. `docs/matching/issue-9-0x08007634-actor.md` (line ~206) had
+ * fires. `docs/matching/archive/issue-9-0x08007634-actor.md` (line ~206) had
  * also already flagged both functions as built on `sub_8008200`/
  * `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
  * (`sub_8008200`, `ProbeTerrain`) are already matched this session
@@ -134,7 +134,7 @@
  * Both are Y-axis (floor-height) probes, matching how `ProbeGroundSpriteTerrain`
  * uses them (against `self.y`/`self->y`, never `self.x`). Full byte-
  * exact matching for either wasn't attempted this session - see
- * docs/matching/issue-9-0x0800a178-graphics.md for why (same
+ * docs/matching/archive/issue-9-0x0800a178-graphics.md for why (same
  * resistant multi-high-register shape this immediate ROM neighborhood
  * has already hit four times: `sub_8009BE0`, `PlayerAnimWouldTouchCrate`,
  * `sub_800CEAC`, `sub_800CF70`).
@@ -143,7 +143,7 @@
  *
  * All three functions in this file are real C built with old_agbcc
  * (Makefile OLD_AGBCC_OBJS; issue #9-#11 NAKED retry,
- * docs/matching/issue-9-11-box-naked-retry.md). They were first parked
+ * docs/matching/archive/issue-9-11-box-naked-retry.md). They were first parked
  * as NAKED transcriptions on the theory that the ROM's `sb`/`sl`/`r8`
  * cross-block register reuse resists gcc 2.9 - under the right
  * compiler it falls out of plain C; the few source-shape details that
@@ -155,7 +155,7 @@
  * remaining content of `asm/code_3_2_11.s`). It stayed raw the first
  * pass through this cluster because its own gate logic calls
  * `sub_8009BE0` (parked NAKED, `src/objects/step_probe.c`, see
- * `docs/matching/naked-spatial-grid-tail.md`) - at the time that
+ * `docs/matching/archive/naked-spatial-grid-tail.md`) - at the time that
  * function's semantics were still unresolved. `sub_8009BE0` is now
  * fully understood (a physics/collision step-probe: converts `self`'s
  * position to plain ints via `sub_8008278`, probes it through

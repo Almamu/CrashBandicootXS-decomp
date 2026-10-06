@@ -108,7 +108,7 @@ asm(".align 2, 0");
  * AnimatePauseMenu (pause_menu_draw.c) before and DrawPausePowersPage
  * (pause_menu_powers.c) after - own object file for the same reason
  * pause_menu_loop.c documents. See
- * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
+ * docs/matching/archive/issue-7-0x08004d74-overlay-ui.md. */
 
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -142,7 +142,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * (`field_c4`) has reached 0.
  *
  * Was NAKED; matches as plain C under both compilers since the
- * hard-register hold pass (docs/matching/hard-register-hold-retry.md).
+ * hard-register hold pass (docs/matching/archive/hard-register-hold-retry.md).
  * In both computed-x `set_icon_mgr_pos` calls the ROM keeps r2 free
  * while it computes x (r3), and never ties x to the value it is
  * computed from (r1). An r2 hold over the x computation puts y in r2,

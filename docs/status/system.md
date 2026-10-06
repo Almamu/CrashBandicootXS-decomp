@@ -30,7 +30,7 @@ category page - see [game_loop.md](./game_loop.md).
   writing the count-limited loop's cancel-check block textually before
   the poll/confirm-check code (matching the ROM's own basic-block
   layout) instead of the natural top-to-bottom order - see
-  [naked-sub_80010e0-matched.md](../matching/naked-sub_80010e0-matched.md).
+  [naked-sub_80010e0-matched.md](../matching/archive/naked-sub_80010e0-matched.md).
 - `src/system/boot.c`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
@@ -84,17 +84,17 @@ category page - see [game_loop.md](./game_loop.md).
   reproduce with the actual field/loop structure; plain C matches
   byte-for-byte) - all
   matched, GitHub
-  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (`ResetLinkSessionState`,
+  issue #4, see `docs/matching/archive/issue-4-sio-settings-sync.md`. (`ResetLinkSessionState`,
   the link-session reset/init, is real C in its own
   `link_session_reset.c` since the last-eleven NAKED retry - see
-  [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md); `HandleLinkSerial`, the
+  [last-eleven-naked-retry.md](../matching/archive/last-eleven-naked-retry.md); `HandleLinkSerial`, the
   per-frame SIO pump, is real C since the last-seven NAKED retry - see
-  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md). `UpdateLinkSession`, the
+  [last-seven-naked-retry.md](../matching/archive/last-seven-naked-retry.md). `UpdateLinkSession`, the
   link handshake driver, is real C since the second near-miss sweep -
-  see [near-miss-polish-2.md](../matching/near-miss-polish-2.md) - and
+  see [near-miss-polish-2.md](../matching/archive/near-miss-polish-2.md) - and
   `MakeLinkHandshakeId`, the per-player CRC-16-style handshake-id hash helper,
   since the early-ROM NAKED retry 2 - see
-  [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).)
+  [early-rom-naked-retry-2.md](../matching/archive/early-rom-naked-retry-2.md).)
 
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
 `lib1funcs.s` above) was categorized `system` by the chunk
@@ -103,7 +103,7 @@ math primitive or an AABB/actor-table helper - the matched functions
 from it live in `docs/status/util.md` (`lib/libgcc/lib1funcs.s`) and
 [actor.md](./actor.md) (`src/util/aabb_setup.c`) instead. See
 `docs/matching.md`'s issue #70 entry for the original writeup and
-`docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
+`docs/matching/archive/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
 section for how the division/modulo trio's NAKED transcription pass
 went (now tracked as parked, not matched - see below).
 

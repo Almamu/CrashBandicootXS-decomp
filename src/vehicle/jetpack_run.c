@@ -16,7 +16,7 @@
  * attack" singleton whose own flags/counters live at
  * `gJetpackBomberCount`-`gJetpackPlayerTiles` - a different singleton
  * cluster than issue #58's `gAirship` one and issue #62's
- * `gHovercraft` one. See docs/matching/issue-56-0x0802f0dc-actor.md
+ * `gHovercraft` one. See docs/matching/archive/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
 
 /* Constructor/reset: while the singleton flag (`gJetpackPlayerInactive`) is
@@ -187,7 +187,7 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
 }
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md.
  *
  * Computes two `self`-keyframe-driven sizes (byte0*byte1, scaled by
  * 32) via `AllocVramTileBlock`, storing them into the `gJetpackPlayerTiles`

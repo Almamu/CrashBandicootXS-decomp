@@ -86,7 +86,7 @@ The per-object flags moved with the files, unchanged:
 |---|---|---|
 | `lib/gax/src/*.o`, `lib/*/data/*.o` | agbcc | default (`-O2 -mthumb-interwork ... -fprologue-bugfix`) |
 | `lib/agb_eeprom/src/*.o` | agbcc | `-O1` instead of `-O2` (`O1_OBJS`, [eeprom-sdk-o1.md](./matching/eeprom-sdk-o1.md)) |
-| `lib/libgcc/_divdi3.o`, `_udivdi3.o`, `_muldi3.o` | agbcc | no `-mthumb-interwork` (`NO_INTERWORK_OBJS`, [gax-toolchain-retry.md](./matching/gax-toolchain-retry.md)) |
+| `lib/libgcc/_divdi3.o`, `_udivdi3.o`, `_muldi3.o` | agbcc | no `-mthumb-interwork` (`NO_INTERWORK_OBJS`, [gax-toolchain-retry.md](./matching/archive/gax-toolchain-retry.md)) |
 | `lib/libgcc/_*.o` from lib1funcs.s, `lib/libagbsyscall/*.o` | as | `ASFLAGS` |
 
 No library object uses old_agbcc, agbcc_arm, `-fno-strength-reduce` or

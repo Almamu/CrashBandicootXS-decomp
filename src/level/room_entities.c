@@ -45,7 +45,7 @@
  *
  * Built with old_agbcc (room_entities.o is on OLD_AGBCC_OBJS; this file
  * holds only this function). Earlier passes had it NAKED (153, then 219
- * halfwords off); the third pass (docs/matching/big-naked-retry-3.md)
+ * halfwords off); the third pass (docs/matching/archive/big-naked-retry-3.md)
  * closed it:
  * - old_agbcc's expand_end_loop rotation does not stop at a nested
  *   loop, so a `break` inside a search loop is taken as the loop's exit

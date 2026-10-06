@@ -5,7 +5,7 @@
 /* GitHub issue #19: continuation of action_ctrl.c's chunk
  * (0x08015840-0x08016128), non-adjacent since the left-raw
  * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` (asm/code_3_2_17_159f8.s)
- * sit between them - see docs/matching/issue-19-0x08015840-actor.md.
+ * sit between them - see docs/matching/archive/issue-19-0x08015840-actor.md.
  * This is the chunk's last matched function; `sub_8016046` right after
  * it in the ROM is disassembler-rendered padding (a zero halfword
  * between this function's 106-byte body and the next 4-byte-aligned

@@ -34,7 +34,7 @@
  * aliases `gridTail[0]`. That is what the original source did, so the
  * C below does it too. Matches under old_agbcc (the object is on the
  * Makefile's OLD_AGBCC_OBJS list); see
- * docs/matching/issue-9-naked-retry.md. */
+ * docs/matching/archive/issue-9-naked-retry.md. */
 struct pool_item {
     u8 unused_00[2];
     s16 bucket;

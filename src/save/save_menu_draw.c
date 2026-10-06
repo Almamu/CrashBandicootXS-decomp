@@ -33,9 +33,9 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 
 /* The functions below (0x08003B40-0x080041BC) were NAKED
  * transcriptions until the issue #4/#6/#8 retry
- * (docs/matching/issue-4-6-8-naked-retry.md); DrawYesNoPrompt followed in
- * docs/matching/early-rom-naked-retry.md, and the raw `InitSaveMenuIcons` at
- * the end of the file in docs/matching/hard-register-hold-retry.md.
+ * (docs/matching/archive/issue-4-6-8-naked-retry.md); DrawYesNoPrompt followed in
+ * docs/matching/archive/early-rom-naked-retry.md, and the raw `InitSaveMenuIcons` at
+ * the end of the file in docs/matching/archive/hard-register-hold-retry.md.
  * All now match as plain C; the file is built with old_agbcc (Makefile
  * OLD_AGBCC_OBJS) because `InitSaveMenuIcons` only matches under it - every
  * other function here compiles identically under both compilers. Their
@@ -232,7 +232,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
  * (`struct byte_arg`): the callee reads it with `ldrb` and the caller
  * stores it with `strb`. Each block keeps running `x`/`y` locals, and
  * the third block re-derives `y` the same way the second does, which
- * reproduces the ROM spilling it. See docs/matching/issue-4-6-8-naked-retry.md. */
+ * reproduces the ROM spilling it. See docs/matching/archive/issue-4-6-8-naked-retry.md. */
 void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx, struct byte_arg flagArg)
 {
     u8 flag = flagArg.v;
@@ -417,9 +417,9 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
  * 1/2/0, `field_3c` = 0x80) and places five of them.
  *
  * Was raw asm (asm/code_3_1_10_4.s) with a NON_MATCHING draft; closed
- * in docs/matching/hard-register-hold-retry.md. The plain-pointer
+ * in docs/matching/archive/hard-register-hold-retry.md. The plain-pointer
  * stores in new_row_icon fix the loop pre-header (see
- * docs/matching/early-rom-naked-retry-2.md); the frame-0 address pin,
+ * docs/matching/archive/early-rom-naked-retry-2.md); the frame-0 address pin,
  * the r1 hold and the padding below fix the last 6 halfwords. */
 void InitSaveMenuIcons(struct save_menu *self)
 {

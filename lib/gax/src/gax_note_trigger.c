@@ -25,13 +25,13 @@
  * never called from anywhere. Like gax_unknownc_play.c's return points,
  * it no longer has a label of its own.
  *
- * Matched (plain agbcc) in GAX retry 6 (docs/matching/gax-naked-retry-6.md)
- * after five register-allocation passes (docs/matching/gax-toolchain-retry.md,
+ * Matched (plain agbcc) in GAX retry 6 (docs/matching/archive/gax-naked-retry-6.md)
+ * after five register-allocation passes (docs/matching/archive/gax-toolchain-retry.md,
  * mix-naked-retry-5.md, gax-naked-retry-3.md to -5.md). */
 
 /* MemCopy32 is this ROM's memcpy (the work item's initializer). The
  * 64-bit multiply is a `__muldi3` libcall, which does not clobber
- * memory (see docs/matching/gax-naked-retry-2.md). */
+ * memory (see docs/matching/archive/gax-naked-retry-2.md). */
 asm(".set memcpy, MemCopy32");
 
 struct GaxMixItem {

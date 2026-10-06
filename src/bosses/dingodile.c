@@ -45,7 +45,7 @@ extern struct aabb GetSpriteBodyBox_s(void *part) asm("GetSpriteBodyBox");
  * him, and a bank-4 shark (SpawnDingodileShark) that crosses the level.
  *
  * This file is compiled with tools/agbcc/bin/old_agbcc (see Makefile and
- * docs/matching/issue-24-boss-actor.md): the old compiler reproduces
+ * docs/matching/archive/issue-24-boss-actor.md): the old compiler reproduces
  * this region's "constant before the byte it's combined with" ordering
  * without register pins. The code was C++: virtual calls are indirect
  * calls through libgcc's `_call_via_rN` helpers
@@ -846,7 +846,7 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
  * the long-lived values (`self` r7, `&b` r8, `other` r9,
  * &gPlayer r10); the draft's allocation order was already the
  * ROM's, but it started at r5. Holding r5 and r6 across the box builders
- * (docs/matching/hard-register-hold-retry.md) makes global-alloc skip
+ * (docs/matching/archive/hard-register-hold-retry.md) makes global-alloc skip
  * them. The state-0 BLDCNT accumulator lives in r5 in the ROM: a
  * block-scoped r5 variable, initialised through the constant-init asm so
  * the orr chain is neither folded nor reordered, reproduces it. */

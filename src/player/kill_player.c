@@ -11,7 +11,7 @@
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - the
  * "child object" family docs/rom_map.md's "Undifferentiated core"
- * investigation and docs/matching/issue-16-actor-11b0c.md both already
+ * investigation and docs/matching/archive/issue-16-actor-11b0c.md both already
  * identified but left raw pending a dedicated pass (`self+0xc`/`+0x10`
  * hold pointers to further sub-records, distinct from `struct actor`).
  * `self+0xc` is a per-category table of `{s16 offset; void *fn}` pairs

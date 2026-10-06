@@ -12,7 +12,7 @@
 #include "player.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
- * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
+ * functions the Phase 1 investigation (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md)
  * flagged as the highest-value next target in the 0x0800B8DC-0x0800D040
  * cluster - shared by nearly every one of UpdateEnemyCtrl's dispatch states
  * and by all four of its self+0x68 sub-dispatchers.
@@ -100,7 +100,7 @@ void SetEnemyAnimMode(struct part_ctrl *selfArg, s32 mode)
 asm(".align 2, 0");
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyOscillateX`/
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyOscillateX`/
  * `UpdateEnemyBob`/`UpdateEnemyOscillateY`, a family of three "sine-wave
  * oscillator" writers sharing the same 256-entry sine-ish table
  * `gSineTable` (already established elsewhere in this ROM,
@@ -260,7 +260,7 @@ void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
 }
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the small gap the
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): the small gap the
  * three parallel closing sessions all missed - `asm/code_3_2_17_ca04.s`
  * (ROM 0x0800CA04-0x0800CBD4, 464 bytes, 19 functions/stubs), sitting
  * directly between two already-matched neighbors from the same
@@ -675,7 +675,7 @@ void DestroyKnockedEnemyCtrl(void *self, s32 flags)
 }
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `CreateKnockedEnemyCtrl`,
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): `CreateKnockedEnemyCtrl`,
  * `HitEnemy` states 19-20's "spawn a child object" allocator
  * (called right after `OperatorNew(0x10)`, whose leftover return
  * value is the implicit `self` argument here per the Phase 1 doc's

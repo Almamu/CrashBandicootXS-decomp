@@ -11,7 +11,7 @@
  * 9 life, 10 nitro, 11 "?", 12 bouncy wumpa, 14 TNT, 16-18 time crates,
  * 19-21 lit TNT). Only the fields those functions touch are named;
  * the head (position, flags, anim table/tag, mirror bits) has the same
- * layout as `struct gobj`. See docs/matching/issue-12-physics-collision.md. */
+ * layout as `struct gobj`. See docs/matching/archive/issue-12-physics-collision.md. */
 struct crate_vtable
 {
     u8 unk_00[0x10];

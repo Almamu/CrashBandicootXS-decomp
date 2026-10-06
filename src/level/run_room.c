@@ -11,7 +11,7 @@
 #include "level.h"
 #include "globals.h"
 
-/* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
+/* GitHub issue #37 follow-up to `docs/matching/archive/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
  * `play_room.c`, but left this one "not yet confidently understood
  * branch-by-branch"). `self` (r7) is the level object `PlayRoom`
@@ -132,7 +132,7 @@
  *
  * Was a NAKED transcription (from `asm/code_3_2_17_23a1c.s`); matches
  * as plain C under old_agbcc since the hard-register hold pass
- * (docs/matching/hard-register-hold-retry.md), so this object is on the
+ * (docs/matching/archive/hard-register-hold-retry.md), so this object is on the
  * Makefile's OLD_AGBCC_OBJS list (it is the file's only function;
  * agbcc is 42 halfwords off). The shared `_08023BA6` tail is ordinary
  * cross-jumping. The one-byte `direction` stack argument is a BLKmode

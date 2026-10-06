@@ -6,7 +6,7 @@
 #include "player.h"
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyHomingX`/
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyHomingX`/
  * `UpdateEnemyHomingY`, the X-axis/Y-axis "homing velocity-target setter"
  * pair the Phase 1 doc's own priority list flagged as the cluster's
  * next likely-real-C win. Both take only `self` and write into
@@ -25,7 +25,7 @@
  * carrying the diagonal-approach rate while this axis's own drift
  * stops.
  *
- * Real C (issue #10 NAKED retry, see docs/matching/issue-10-naked-retry.md).
+ * Real C (issue #10 NAKED retry, see docs/matching/archive/issue-10-naked-retry.md).
  * The earlier "cross-jump divergence" note was a source-shape problem:
  * each of the five cases does its own `{a, b, a}` store triple through
  * a block-scoped `a`/`b` pair (SET_VEL below); the compiler's cross-jump
@@ -89,7 +89,7 @@ void UpdateEnemyHomingY(struct part_ctrl *self)
 asm(".align 2, 0");
 
 /* GitHub issue #9/#10: `UpdateEnemyHop`, another of the four
- * `self+0x68`-dispatching siblings (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
+ * `self+0x68`-dispatching siblings (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md)
  * - called from UpdateEnemyCtrl's own state 8.
  *
  * Unconditional prelude: if `owner->4` (Y position) is still less than
@@ -159,7 +159,7 @@ void UpdateEnemyHop(struct part_ctrl *self)
 }
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyFlipCycle`,
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyFlipCycle`,
  * `UpdateEnemyCtrl`'s state-7 callee. Early-outs unless `owner+0x38`
  * (self+0x70, the "owner" object) is set, then dispatches on
  * `self+0x68` (values 0, 1, 6 handled; anything else no-ops):
@@ -179,7 +179,7 @@ void UpdateEnemyHop(struct part_ctrl *self)
  *   advance, then the same `SetEnemyMotionX`/`SetEnemyMotionY`/`SetEnemyAnimMode`
  *   trigger triple as case 1.
  *
- * Real C (issue #10 NAKED retry, docs/matching/issue-10-naked-retry.md).
+ * Real C (issue #10 NAKED retry, docs/matching/archive/issue-10-naked-retry.md).
  * The old blocker was the bit toggle: reading the bit into a local
  * first (`m = bit; bit = !m;`) gives the ROM's order - load, shift-test,
  * then the 0/1 materialized, shifted and merged with the `-0x11` mask.

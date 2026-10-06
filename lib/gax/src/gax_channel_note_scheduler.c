@@ -10,7 +10,7 @@
  *
  * Was NAKED ("r8/sb allocation ceiling"); written plainly - every
  * access through `self->instrument` directly, no cached local - it
- * matches outright, see docs/matching/gax-toolchain-retry.md. (Caching
+ * matches outright, see docs/matching/archive/gax-toolchain-retry.md. (Caching
  * `self->instrument` in a local drops the ROM's one `mov` between the
  * load and its callee-saved copy.) */
 void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHandler *info)

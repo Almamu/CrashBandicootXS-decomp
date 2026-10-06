@@ -15,7 +15,7 @@
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
- * docs/matching/issue-12-physics-collision.md). These are the two
+ * docs/matching/archive/issue-12-physics-collision.md). These are the two
  * functions left untouched between crate_hit.c's `BreakCrateTouchedByPlayer` and
  * crate_break.c's `ClearCrateStackTouched` - the subsystem's largest, most tangled
  * dispatchers. Real bytes formerly in asm/code_3_2_17_d18c.s (now
@@ -23,7 +23,7 @@
 
 /* The physics/collision subsystem's **collision-response commit**
  * function (~3840 B, not the ~1960 B this issue's write-up originally
- * estimated - see docs/matching/issue-12-physics-collision.md's
+ * estimated - see docs/matching/archive/issue-12-physics-collision.md's
  * "Phase 1" appendix for the correction). Builds `self`'s and the
  * player's (`gPlayer`) AABBs via the shared
  * `self+0x20`-table/`self+0x2d`-tag/28-byte-stride hitbox-record
@@ -37,7 +37,7 @@
  *   `ExplodeCrate`/`OpenCheckpointCrate`/a flag-only case, keyed by an edge-code
  *   value looked up from `gCrateHitResponse` (`self+0x4e` row,
  *   dispatch-id column) - the 6-case jump table
- *   docs/matching/issue-12-physics-collision.md already documented from
+ *   docs/matching/archive/issue-12-physics-collision.md already documented from
  *   `docs/rom_map.md`'s read-only pass, now confirmed byte-for-byte
  *   (see this issue doc's dispatch-map appendix for the exact
  *   case-to-target mapping).
@@ -64,8 +64,8 @@
  *
  * Real C under old_agbcc (this file is on OLD_AGBCC_OBJS; it does not
  * match under current agbcc). It was parked as NAKED asm for a long
- * time; it closed over three passes, see docs/matching/huge-naked-retry.md,
- * docs/matching/huge-naked-retry-2.md and docs/matching/huge-naked-retry-3.md
+ * time; it closed over three passes, see docs/matching/archive/huge-naked-retry.md,
+ * docs/matching/archive/huge-naked-retry-2.md and docs/matching/archive/huge-naked-retry-3.md
  * for what each step fixed. */
 
 /* codegen: AddCollisionCandidate's two trailing byte arguments are s32
@@ -908,7 +908,7 @@ tail:
  *
  * Built with old_agbcc (this file is on OLD_AGBCC_OBJS; the NAKED
  * `QueueCratePlayerCollision` above is compiler-independent). Closed in the last-five
- * NAKED retry (docs/matching/last5-naked-retry.md): the first flag byte
+ * NAKED retry (docs/matching/archive/last5-naked-retry.md): the first flag byte
  * is a register union of a u32 and a one-byte struct, stored whole
  * (`str`) in the prologue, and passed as that one-byte struct to
  * BreakCrateInStack in case 3. A one-byte struct argument goes in QImode, so
@@ -1111,7 +1111,7 @@ asm(".align 2, 0");
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
- * docs/matching/issue-12-physics-collision.md). Compiled with
+ * docs/matching/archive/issue-12-physics-collision.md). Compiled with
  * old_agbcc (see the Makefile's OLD_AGBCC_OBJS). */
 
 
@@ -1193,13 +1193,13 @@ asm(".align 2, 0");
 
 /* GitHub issue #12 Phase 2: 0x0800E560-0x0800EEF0, the lower-address
  * half of the remaining tail of the physics/collision subsystem's
- * per-edge handler family (see docs/matching/issue-12-physics-collision.md's
+ * per-edge handler family (see docs/matching/archive/issue-12-physics-collision.md's
  * "Phase 1" appendix for the confirmed dispatch map both
  * QueueCratePlayerCollision/ApplyCrateCollision, src/crates/crate_break.c, dispatch into).
  * `self` throughout is the same "collision box" object every other
  * function in this subsystem operates on (`struct crate`,
  * include/crate.h). Compiled with old_agbcc (the Makefile's
- * OLD_AGBCC_OBJS) - see docs/matching/issue-12-physics-collision.md's
+ * OLD_AGBCC_OBJS) - see docs/matching/archive/issue-12-physics-collision.md's
  * NAKED-retry section. */
 
 /* The effect object SpawnEffectPart spawns (only the fields set here). */
@@ -1260,7 +1260,7 @@ static inline void PhysArgByte(u8 *p, u8 v)
 /* Dispatch-id-5 handler. Both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s
  * per-edge jump tables' case 3 eventually reach this handler
  * transitively (via `BreakCrateInStack`), see
- * docs/matching/issue-12-physics-collision.md's dispatch map.
+ * docs/matching/archive/issue-12-physics-collision.md's dispatch map.
  *
  * Arms `self`'s `+0x48` frame-countdown timer to `0x168` (360) the
  * first time it's seen at its sentinel value (`-0x2a`), clearing
@@ -1335,7 +1335,7 @@ void BounceWumpaCrate(struct crate *self)
 
 /* Case-2 handler ("dispatch id 0xe") both `QueueCratePlayerCollision`'s and
  * `ApplyCrateCollision`'s per-edge jump tables select - see
- * docs/matching/issue-12-physics-collision.md's dispatch map. Switches
+ * docs/matching/archive/issue-12-physics-collision.md's dispatch map. Switches
  * `self` into a fresh sub-state (`+0x4e = 0x15`, hitbox tag `+0x2d =
  * 0x14`), rebuilds its hitbox record (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
  * `SetSpriteAnimDone`, the same trio every hitbox-rebuild call in this
@@ -1457,7 +1457,7 @@ void LightTntCrate(struct crate *selfArg)
 
 /* Case-5 handler both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
  * jump tables select unconditionally - see
- * docs/matching/issue-12-physics-collision.md's dispatch map. Spawns
+ * docs/matching/archive/issue-12-physics-collision.md's dispatch map. Spawns
  * a particle-effect object (`SpawnEffectPart`, kind `0x2a`) at `self`'s
  * position (minus 10 pixels on X), initializes it (clearing flag bits
  * `+0xc`/`+0x28`, arming `+0x64`/`+0x54`/`+0x58`/`+0x5c` with a fixed
@@ -1508,7 +1508,7 @@ void OpenCheckpointCrate(struct crate *self)
 }
 
 /* Case-3 handler both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
- * jump tables select (see docs/matching/issue-12-physics-collision.md's
+ * jump tables select (see docs/matching/archive/issue-12-physics-collision.md's
  * dispatch map): counts `self` into `gPlayer+0x91`'s
  * "objects handled this frame" tally (saturating at a nonzero value -
  * only the very first caller of the frame actually increments it,
@@ -1574,7 +1574,7 @@ other:
 /* `BreakCrateInStack`'s (and, transitively, both of the subsystem's
  * top-level dispatchers') shared "actually apply the collision
  * response" landing point - see
- * docs/matching/issue-12-physics-collision.md's dispatch map. Early-
+ * docs/matching/archive/issue-12-physics-collision.md's dispatch map. Early-
  * outs when `self+0x4d & 0x7f == 1` (already fully handled this
  * frame). Otherwise: registers `self` with the object-pool grid,
  * resets its `+0x4d` state byte to `0x81` and clears
@@ -1595,7 +1595,7 @@ other:
  * epilogue.
  *
  * Real C under old_agbcc (the old "r8/sb accumulators" note was wrong;
- * see docs/matching/issue-12-13-25-naked-retry.md): the tag switch goes
+ * see docs/matching/archive/issue-12-13-25-naked-retry.md): the tag switch goes
  * through PhysSetTag (constant loaded before the tag address), the
  * frame clamp through PhysSetFrame(self, 3), bit 4 of `flags` is set as
  * a bitfield (a plain `|= 0x10` leaves a zero pseudo that CSE shares
@@ -1698,7 +1698,7 @@ void BreakCrate(struct crate *self, u32 arg1)
 }
 
 /* Case-11 handler of `BreakCrate`'s own 23-case jump table (dispatch
- * id `0xb`) - see docs/matching/issue-12-physics-collision.md's
+ * id `0xb`) - see docs/matching/archive/issue-12-physics-collision.md's
  * dispatch map. Plays SFX 3, then (the first time `self`'s `+0x51`
  * retry counter is exactly `9`) rolls a random "escalation level"
  * (`1`/`4`/`7`/`8`, weighted via three `rand()` thresholds) into that
@@ -1795,7 +1795,7 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
 }
 
 /* Case-15 handler of `BreakCrate`'s own 23-case jump table (dispatch
- * id `0xf`) - see docs/matching/issue-12-physics-collision.md's
+ * id `0xf`) - see docs/matching/archive/issue-12-physics-collision.md's
  * dispatch map. Plays SFX 3, then switches on `self+0x48 & 7`: `1`
  * plays SFX 3 again, notifies `sub_80259D4` unless `self`'s `+8` id
  * is the sentinel `0xffff` (or is already scheduled per
@@ -1847,7 +1847,7 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
 
 /* Neighbor "impact spread" propagation, called once from
  * `BreakCrate`'s own body (not through either jump table) - see
- * docs/matching/issue-12-physics-collision.md's dispatch map. Derives
+ * docs/matching/archive/issue-12-physics-collision.md's dispatch map. Derives
  * a base spread budget from `self`'s hitbox record's own `+9` byte
  * (`+1`, scaled by 256), then walks `self`'s "get next" neighbor
  * chain (`GetCrateAbove`), redistributing that budget across each
@@ -1941,7 +1941,7 @@ void DropCratesAbove(struct crate *self)
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
- * docs/matching/issue-12-physics-collision.md). Phase 2, higher-address
+ * docs/matching/archive/issue-12-physics-collision.md). Phase 2, higher-address
  * half: the twelve functions from `ExplodeCrate` through `UpdateSlotCrate`
  * (0x0800EEF0-0x0800FC70, the end of this whole cluster), all direct or
  * transitive callees of `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
@@ -1952,7 +1952,7 @@ void DropCratesAbove(struct crate *self)
  * is a sibling pass's territory and untouched here).
  *
  * Compiled with old_agbcc (the Makefile's OLD_AGBCC_OBJS): all twelve
- * are real C (see docs/matching/issue-12-physics-collision.md's
+ * are real C (see docs/matching/archive/issue-12-physics-collision.md's
  * NAKED-retry sections). */
 
 /* Per-edge jump table's **case 4 handler**
@@ -2669,7 +2669,7 @@ void UpdateTntCountdown(struct crate *self)
  * `0x080104E4` continuation (`self+0x4e == 0xf`, outside this issue's
  * scope) - a **per-frame position-wrap/edge-scan advance**, structurally
  * similar to the already-parked `UpdateCrateFall`
- * (docs/matching/issue-13-fc70-continuation.md) that immediately
+ * (docs/matching/archive/issue-13-fc70-continuation.md) that immediately
  * follows this whole cluster.
  *
  * First, unless `self+0x48` already has its `0xc0` high bits set,
@@ -2874,7 +2874,7 @@ void UpdateSlotCrate(struct crate *self)
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). */
+ * docs/matching/archive/issue-13-graphics-fc70.md). */
 
 /* A per-frame position-wrap advance: `self+0x4c` is a signed "speed"
  * (defaulting to 1 when 0), `self+0x44` a signed Q8-ish countdown
@@ -2898,7 +2898,7 @@ void UpdateSlotCrate(struct crate *self)
  *
  * Matches under old_agbcc (the NAKED note blamed the "two extra
  * high-register accumulators"; see
- * docs/matching/issue-12-13-25-naked-retry.md). What mattered: the
+ * docs/matching/archive/issue-12-13-25-naked-retry.md). What mattered: the
  * speed byte is re-read through `self->unk_4C` each time (GCSE keeps
  * its address in sb), `speed--` is written in both step arms, the
  * neighbour walk skips the first neighbour, and one temporary `t` both

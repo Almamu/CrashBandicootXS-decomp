@@ -12,7 +12,7 @@
 
 /* GitHub issue #17, ROM 0x08014674-0x08014F8C, formerly
  * asm/code_3_2_17_14674.s (details in
- * docs/matching/issue-17-0x08012fbc-actor.md, "Second pass").
+ * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Second pass").
  *
  * More gActionCtrlStateTable action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
@@ -70,7 +70,7 @@ static inline void ActHold27(struct act *self, u8 *slot, s32 next)
  * The tag test is a `switch` with a shared 0xD/0x18 case: the ROM's
  * `beq` for 0xD is threaded past the inner re-test of 0xD while the
  * 0x18 path keeps it, which an `||` test does not reproduce (see
- * docs/matching/mix-naked-retry-5.md). */
+ * docs/matching/archive/mix-naked-retry-5.md). */
 void ActionCtrlStateLeftGround(struct act *self)
 {
     u8 hit = self->part->hitAxes & 8;
@@ -346,7 +346,7 @@ void sub_8014AEC(struct act *self)
  * spill-register set {1,2,6} instead of the ROM's {1,3,6}. `hold` is a
  * register variable in r2, set and used only by empty asms (no code).
  * It keeps r2 live across the add, so reload spills r3 there instead
- * (docs/matching/late-naked-retry-3.md). */
+ * (docs/matching/archive/late-naked-retry-3.md). */
 void ActionCtrlReleaseHang(struct act *self)
 {
     struct player *part;

@@ -168,7 +168,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
          * ignored by this compiler for a simple constant initializer
          * (lands the two-step mov/lsl synthesis in whatever register it
          * likes, not the ROM's r3) - the same gotcha
-         * docs/matching/issue-31-graphics-loading.md documents for
+         * docs/matching/archive/issue-31-graphics-loading.md documents for
          * SpawnDingodile's own `+0x20` table-offset constant. Spelled out
          * as a full hand-written trampoline call instead. */
         register void *tbl asm("r1") = table;
@@ -817,7 +817,7 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * the header at gFlamethrowerLabAssistantAnimMap, copies the level record's
  * +8/+4/+0xc words into header+0x30/0x34/0x38 and shows it with style 4.
  * Register allocation took several passes (see
- * docs/matching/last-eleven-naked-retry.md and the passes it links).
+ * docs/matching/archive/last-eleven-naked-retry.md and the passes it links).
  * The ROM keeps arg3 in r4, part+0x28 in r3 across AddToPartList through a
  * stack slot (`str r3, [sp]` after the argument setup, `ldr r3, [sp]`
  * before the second flip), &gEntityFlags in sb and -0x11 in sl.

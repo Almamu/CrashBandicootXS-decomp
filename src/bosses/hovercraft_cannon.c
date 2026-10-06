@@ -7,7 +7,7 @@
 #include "globals.h"
 
 /* Same singleton system as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* HovercraftCannonStateFire: a proximity-triggered effect/hazard detector. Syncs
  * `self`'s position fields to the singleton's current position (plus a
@@ -17,7 +17,7 @@
  * threshold from `GetHovercraftAttack`'s table. Once `base.depth` passes
  * `0x4B00` it resets `self` to its idle animation state.
  *
- * Matched in a later pass (see docs/matching/issue-62-0x08033804-actor.md,
+ * Matched in a later pass (see docs/matching/archive/issue-62-0x08033804-actor.md,
  * "Later pass: strag2 retry"): both divisions are plain `/` through the ROM's own
  * `__divsi3` - as a libcall they don't clobber memory, so
  * `base.z` stays CSE'd in `r6` across them - the divisor is -0x1AA
@@ -95,7 +95,7 @@ void HovercraftCannonStateFire(struct spawner *self)
 asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* Applies `dmg` damage to `hp`, and once it drops to zero (or
  * below), marks `self` dead (`dead = 1`), fires the singleton's own
@@ -138,7 +138,7 @@ void DamageHovercraftCannon(struct spawner *self, s32 dmg)
 }
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gHovercraftCannonStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then the standard
@@ -161,7 +161,7 @@ void UpdateHovercraftCannon(struct actor_self *self)
 }
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* The animation-reset blocks below store through `*(T *)&self->field`
  * casts: plain member stores let gcc move the zero load
@@ -260,7 +260,7 @@ void HovercraftCannonStateWait(void *selfArg)
 }
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gHovercraftCannonStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`); returns 0 once the
@@ -276,7 +276,7 @@ s32 RunHovercraftCannonState(struct actor_self *self)
 }
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
- * comment and docs/matching/issue-62-0x08033804-actor.md. */
+ * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
 /* Constant getter - returns `self`'s death flag (`self+0x6c`). */
 u8 IsHovercraftCannonUnshootable(void *selfArg)

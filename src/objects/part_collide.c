@@ -18,7 +18,7 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
  * just that. Kept in its own translation unit since its ROM address,
  * 0x08008D80, isn't adjacent to sprite_anim.c's functions
  * (part_list_cull.c's CullPartList/ClearPartList/CollidePartsOfClass sit between).
- * See docs/matching/issue-9-naked-retry.md. */
+ * See docs/matching/archive/issue-9-naked-retry.md. */
 void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other)
 {
     if (ClassifySpriteContact(part, &box)) {

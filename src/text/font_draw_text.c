@@ -68,7 +68,7 @@ void FontDrawText(struct bitmap_font *selfArg, u8 *strArg)
 /* Ends 2 bytes short of a 4-byte boundary; the ROM zero-pads the gap,
  * this compiler's own trailing alignment fill doesn't - see
  * docs/matching.md's alignment-padding gotcha (also documented in
- * docs/matching/issue-46-hud-icon-widget.md's "Real gotchas" section). */
+ * docs/matching/archive/issue-46-hud-icon-widget.md's "Real gotchas" section). */
 asm(".align 2, 0");
 
 /* Sums the advance width of `count` characters starting at `str`

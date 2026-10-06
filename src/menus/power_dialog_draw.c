@@ -42,7 +42,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * register-letter gap; closed by computing the centered X into its own
  * local before passing it to the inline setter (passing the expression
  * straight in swapped the X/Y and 0x130/240 registers) - see
- * docs/matching/strag3-naked-retry.md. */
+ * docs/matching/archive/strag3-naked-retry.md. */
 void DrawPowerDialog(struct sub_8006700_actor *arg0)
 {
     struct aabb box;

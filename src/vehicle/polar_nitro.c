@@ -12,7 +12,7 @@
  * closing the raw gap issue #53 tracked. Same `self` object and
  * conventions documented in polar_pickups.c/yeti_update.c: the
  * 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` AABB record (per
- * docs/matching/issue-54-actor-d3a8.md's "Pinning down the 12-byte
+ * docs/matching/archive/issue-54-actor-d3a8.md's "Pinning down the 12-byte
  * AABB-record layout" section) and the shared "used"-state transition
  * idiom (`+0xc = 0x12`, `+0x10`/`+0x12` anim reset, `+8` accumulator
  * reset). */

@@ -13,8 +13,8 @@
  * at `self+0x28`, table-index/"kind" at `self+0xc`, anim-frame
  * halfword/byte pair at `self+0x10`/`self+0x12`, an accumulator at
  * `self+8`, a "part table" pointer at `self+0`, and an event/trampoline
- * table pointer at `self+0x50`). See docs/matching/issue-58-0x08030334-actor.md,
- * docs/matching/issue-62-0x08033804-actor.md and this range's own
+ * table pointer at `self+0x50`). See docs/matching/archive/issue-58-0x08030334-actor.md,
+ * docs/matching/archive/issue-62-0x08033804-actor.md and this range's own
  * write-up in docs/matching/. */
 
 /* The gJetpackBalloonVtable class built by CreateJetpackBalloon. */
@@ -157,7 +157,7 @@ void ReleaseJetpackBalloon(void *selfArg)
  * anim-frame-advance-and-clamp idiom. Each `anims[animIndex]` field is
  * re-indexed rather than read through a record pointer - that is what
  * gives the ROM's `#4`/`#6` constant scheduling
- * (docs/matching/pmf-dispatch-retry.md). */
+ * (docs/matching/archive/pmf-dispatch-retry.md). */
 void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
 {
     s32 base;

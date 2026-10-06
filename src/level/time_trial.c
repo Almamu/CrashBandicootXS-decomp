@@ -10,7 +10,7 @@
 #include "globals.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
- * Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
+ * Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 /* An OAM-backed part (same layout as cortex.c's gfx_part). */
 struct slot_part

@@ -5,7 +5,7 @@
  * raw 0x0800B8DC-0x0800D040 cluster (43 functions, ~5988 bytes) sitting
  * right after `ctrl.c`'s span and right before the already-
  * documented physics/collision subsystem (`BreakCrateTouchedByPlayer`,
- * crate_hit.c). See docs/matching/issue-9-10-0x0800b8dc-graphics.md
+ * crate_hit.c). See docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md
  * for the full semantic map this pass produced - the 18-case dispatch
  * table, `HitEnemy`'s own 22-case table, and field-layout notes for
  * whoever picks up the cluster's other ~41 functions next.
@@ -107,7 +107,7 @@ static inline u32 TargetHit(struct ctrl_target *t)
  * `OLD_AGBCC_OBJS`). The case bodies are in the ROM's block order;
  * 1 and 12 are explicit empty cases so the table is indexed by
  * `state - 1`. What the match needed (see
- * docs/matching/big-naked-retry-2.md):
+ * docs/matching/archive/big-naked-retry-2.md):
  * - state 18's second `animDone` test reads the byte through a
  *   `vu8`, so jump threading can't fold it into the first test (the
  *   ROM reloads the target and tests again);
@@ -320,7 +320,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
  * bucket active" idiom, not specific to either function.
  *
  * Real C since the late NAKED retry 3 (old_agbcc,
- * docs/matching/late-naked-retry-3.md). The draft was off only in
+ * docs/matching/archive/late-naked-retry-3.md). The draft was off only in
  * reload registers and in where the layer's `1` is loaded:
  * - The first MarkGone's id compare is a reload. The ROM uses r3 for
  *   it; reload would spill r2, the lowest free register.

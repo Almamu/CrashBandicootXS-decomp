@@ -9,7 +9,7 @@
  * (`struct actor_self`: state, anim index/timer/done flag, state timer,
  * anim accumulator, anim table pointer and method table), part of a
  * boss-weapon effect state machine - see
- * docs/matching/issue-58-0x08030334-actor.md and docs/status/actor.md. */
+ * docs/matching/archive/issue-58-0x08030334-actor.md and docs/status/actor.md. */
 
 struct actor_timed {
     struct actor_self base;
@@ -54,7 +54,7 @@ void DamageAirshipFireball(void *selfArg, s32 delta)
 }
 
 /* Same large per-instance "self" object family as above - see
- * this file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
+ * this file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gAirshipFireballStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then either the "destroy"
@@ -77,7 +77,7 @@ void UpdateAirshipFireball(struct actor_self *self)
 asm(".align 2, 0");
 
 /* Same large per-instance "self" object family as above - see this file's header comment and
- * docs/matching/issue-58-0x08030334-actor.md. */
+ * docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* An `InitActorPart`-based constructor: forwards all 4 of its own real
  * arguments (the last stack-passed) straight to `InitActorPart`, then
@@ -117,7 +117,7 @@ void *CreateAirshipFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 asm(".align 2, 0");
 
 /* Same boss-weapon "self" object family as above - see this
- * file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
+ * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* Trivial setter: marks `self+0x68` (a small state/flag byte, meaning
  * not yet understood beyond its offset). */
@@ -128,7 +128,7 @@ void AirshipFireballStateExplode(void *selfArg)
 }
 
 /* Same "self" object family as above - see
- * docs/matching/issue-58-0x08030334-actor.md. */
+ * docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* `UpdateAirshipFireball`'s (above) per-state member-pointer dispatch
  * without its tail: `(this->*gAirshipFireballStateFuncs[this->state])()`
@@ -142,7 +142,7 @@ void RunAirshipFireballState(struct actor_self *self)
 asm(".align 2, 0");
 
 /* Same boss-weapon "self" object family as above - see this
- * file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
+ * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* Trivial getter counterpart to `AirshipFireballStateExplode` (above): reads
  * `self+0x68`. */

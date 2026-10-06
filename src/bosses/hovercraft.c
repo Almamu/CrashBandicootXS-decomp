@@ -13,8 +13,8 @@
 
 /* Second half of issue #59's Phase 2 gap (`CreateJetpackRing`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
- * docs/matching/issue-59-0x08031784-actor.md and
- * docs/matching/issue-60-61-gap-31a6c-part2.md for the full writeup. A
+ * docs/matching/archive/issue-59-0x08031784-actor.md and
+ * docs/matching/archive/issue-60-61-gap-31a6c-part2.md for the full writeup. A
  * sibling pass (`src/vehicle/jetpack_crates.c`) covers the first half
  * of the same file (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`).
  *
@@ -138,7 +138,7 @@ s32 IsJetpackRingUnshootable(void *self)
  * plays sound 0xE and destroys itself, otherwise runs the shared
  * anim-frame-advance-and-clamp idiom. The idiom's `#4`/`#6` scheduling
  * gap closes by re-indexing `anims[animIndex]` for each field instead
- * of through a record pointer (docs/matching/pmf-dispatch-retry.md). */
+ * of through a record pointer (docs/matching/archive/pmf-dispatch-retry.md). */
 void UpdateJetpackCollectedWumpa(void *selfArg)
 {
     struct actor_2718 *self = selfArg;
@@ -227,7 +227,7 @@ void DrawJetpackCollectedWumpa(void *selfArg)
  * `+0x48`/`+0x4c` circular list, and free `self` if `flags & 1`. The
  * parameter-copy order the earlier NAKED note blamed on the compiler
  * comes out as in the ROM from this plain form
- * (docs/matching/pmf-dispatch-retry.md). */
+ * (docs/matching/archive/pmf-dispatch-retry.md). */
 struct actor_283c {
     u8 unk_00[0x48];
     struct actor_283c *l48;
@@ -820,7 +820,7 @@ void HovercraftStateFall(void)
  * `gAirshipBg2Page`-family). Same source as that twin: the bias is a
  * plain `u8` narrowing of the `s32` global, and `row` is declared before
  * `i` so `i + 1` wins the r7/ip tie. Needs old_agbcc, which is why this
- * file is on OLD_AGBCC_OBJS (docs/matching/issue-58-61-naked-retry.md). */
+ * file is on OLD_AGBCC_OBJS (docs/matching/archive/issue-58-61-naked-retry.md). */
 void DrawHovercraftMap(void *tileRow)
 {
     u16 *src = tileRow;

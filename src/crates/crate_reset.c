@@ -5,7 +5,7 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see `ResetCrate`'s header comment below and
- * docs/matching/issue-13-graphics-fc70.md). */
+ * docs/matching/archive/issue-13-graphics-fc70.md). */
 
 /* Full 4-octant Bresenham-line-style line-stepper: treats `(pos,
  * count)` and `(a, b)` as two `(position, value)` pairs, sorts them by
@@ -29,7 +29,7 @@
  * copy separate (its own early-return is never reached from any other
  * case) while still sharing the other three. Closed with the same
  * `goto`-to-a-physically-earlier-label technique already proven for
- * `GetTopCrate`/`GetBottomCrate` (docs/matching/naked-GetTopCrate-matched.md):
+ * `GetTopCrate`/`GetBottomCrate` (docs/matching/archive/naked-sub_8010914-matched.md):
  * the X-major-increasing case's own return is written as a `goto
  * returnSolo;` whose target is placed immediately after that case's
  * own loop (before case 2's code, matching the ROM's own block
@@ -225,8 +225,8 @@ returnNeg1:
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C - continues the physics/
  * collision subsystem `crate_hit.c`/`crate_break.c` started (see
- * docs/matching/issue-12-physics-collision.md and
- * docs/matching/issue-13-graphics-fc70.md), still in the same
+ * docs/matching/archive/issue-12-physics-collision.md and
+ * docs/matching/archive/issue-13-graphics-fc70.md), still in the same
  * `asm/code_3_2_17_e560.s` region issue #12 left untouched past its
  * own scope. Recategorized `graphics` -> `game_loop` for the same
  * reason issue #12 recategorized the previous span: this whole

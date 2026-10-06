@@ -3,7 +3,7 @@
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Per docs/rom_map.md ("a rectangular BG-tilemap blit routine"):
  * streams 16-bit tile-index-pair values from `self`'s own data
@@ -19,7 +19,7 @@
  * `ldrb` hoisted out of the inner loop into a copy register), and `row`
  * is declared before `i`, so the loop optimizer creates the `row + 0x20`
  * pseudo after `i + 1` and `i + 1` wins the r7/ip tie as in the ROM
- * (docs/matching/issue-58-61-naked-retry.md). */
+ * (docs/matching/archive/issue-58-61-naked-retry.md). */
 
 void DrawAirshipMap(u16 *src)
 {

@@ -15,7 +15,7 @@
  * a temporary on the stack. docs/headers_plan.md */
 extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox");
 
-/* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
+/* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 struct manager
 {

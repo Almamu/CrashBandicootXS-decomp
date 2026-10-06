@@ -92,7 +92,7 @@ asm(".align 2, 0");
  * stores here - unlike `ActionCtrlStateBodySlamLand`'s `!= 0`-normalized version of the
  * same test), then tail-calls `ActionCtrlStateIdle`.
  *
- * Formerly NAKED (docs/matching/issue-15-16-17-naked-retry-2.md): the
+ * Formerly NAKED (docs/matching/archive/issue-15-16-17-naked-retry-2.md): the
  * old gap - the masked bit landing in a scratch register before being
  * copied to the register `flag` keeps - goes away when the assignment
  * sits inside the test, `if ((flag = ...) != 0)`. Matches under both
