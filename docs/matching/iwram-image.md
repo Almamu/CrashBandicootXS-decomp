@@ -492,6 +492,74 @@ Matching them needs the later Cygnus/Red Hat build the third pass
 pointed to, or a modified compiler. A modified compiler isn't a real
 toolchain, so this pass didn't build one.
 
+## Sixth pass (decomp-permuter)
+
+This pass ran [decomp-permuter](https://github.com/simonlindholm/decomp-permuter)
+on both drafts with agbcc_arm. The setup is now in
+[tools/permuter/](../../tools/permuter/README.md).
+
+**Setup.** The compile script preprocesses with the repo's include
+paths and compiles with the objects' flags (`-mthumb-interwork -O2
+-fomit-frame-pointer`). The target `.o` is the `NAKED` asm, assembled
+on its own. `itoa_arm`'s `base.c` is the draft with the pins and the
+SWI in `PERM_IGNORE`, behind `#pragma _permuter latedefine` copies of
+the macros. `LookupSpriteFrameCache`'s has `PERM_GENERAL` alternatives
+for each return (a direct `return`, a `goto` to a shared return, a
+result variable with one `return`) and for the first loop's kind. The
+script also saves any candidate that pushes without lr, or that has two
+`ldmfd sp!, {lr}; bx lr` returns, whatever its score.
+
+**Runs.** Two sessions, `-j24`, `--better-only`:
+
+| Function | Iterations | Base score | Best score |
+|---|---|---|---|
+| `itoa_arm` | about 2.56 million (1.97M, then 0.59M from the improved draft) | 1060, then 535 | 525, then 320 |
+| `LookupSpriteFrameCache` | about 1.98 million, plus about 2,300 with the return alternatives (most of which don't compile) | 30 | 30 |
+
+Neither function reached 0, and nothing showed either blocked shape.
+Both floors are the fifth pass's blockers: `LookupSpriteFrameCache`'s 30
+is its three return pairs, and the permuter never got under it.
+
+**The lr-pop hit was a false positive.** An early version of the
+script counted `ldmfd sp!, {lr}` lines alone. It saved one
+`LookupSpriteFrameCache` variant that ends in `return (float) new_var;`
+on both arms of an `if`. Compiled with the object's flags, it has
+`stmfd sp!, {lr}` and no frame pointer. Its two `ldmfd sp!, {lr}` are
+the call+return peephole's tail calls (`bl __floatsisf; ldmfd sp!,
+{lr}; b __fixsfsi`). The two real returns are still `ldmfd sp!, {ip};
+bx ip`. That is the fifth pass's `really_return` = FALSE path, so it
+doesn't help. The script now needs `bx lr` right after the pop.
+
+**itoa_arm: two fixes for the draft.**
+
+- **The hex test matches.** `if (digit >= (ten = 10))` gives the ROM's
+  `cmp r1, #10` + `addge`/`addlt`. fold-const.c's `X >= C` to `X > C-1`
+  rewrite needs a constant operand, and the assignment isn't one. The
+  constant survives to the compare. This overturns the fifth pass's
+  verdict on the test, which only tried a separate `ten` variable.
+- **`mov r5, #0` ahead of the `cmp`.** The sign test, `neg` and
+  `b = buf` inside `do { ... } while (0)` move the zeroing of `len` back
+  before `cmp r0, #0`, as in the ROM.
+
+The draft's diff against the ROM dropped from 32 to 22 instruction lines
+(16 to 11 instructions, out of 45). The difference left: the lr push/pop
+(the blocker); `movge r4, #0` after the `movlt`/`rsblt` pair; `cmp ip,
+#16` for `cmp r2, #16`; each loop's `add`/`cmp` order; the
+terminator's `strb` and the swap's `add`/`sub` order; `subne r4, r4,
+#45` for `movne r4, #0`; and the swap's temporary (r2 for r0). objdiff
+scores it 72.8% (was 72.6%).
+
+The permuter's best scores below these (320 for `itoa_arm`) all change
+what the function does: an uninitialized local for `neg = 0`, or
+`b[neg]` loaded once before the swap loop. They weren't used.
+Its other `itoa_arm` hits (`b[len] = (neg = '-')` for `movne r4, #0`)
+fix one line and break two (the '-' goes into r3).
+
+**Verdict.** Unchanged: both stay `NAKED`, for the fifth pass's
+reasons. `LookupSpriteFrameCache`'s draft is already at the floor, and
+`itoa_arm`'s other differences are scheduling and register choices
+around the blocker.
+
 ## Data
 
 `iwram_data.c` defines every global from `0x030007CC` up to
@@ -526,4 +594,10 @@ defined by these objects.
   objdiff.json && make NON_MATCHING=1 report` and `objdiff-cli report
   generate`: code 242,990 / 243,378, functions 2,057 / 2,059, data
   8,036,176 / 8,036,176 (unchanged). Draft scores: itoa_arm 72.6%,
+  LookupSpriteFrameCache 99.4%.
+- Sixth pass (itoa_arm draft only, both still `NAKED`): `make tidy`,
+  full build, `make compare`: `crashbandicootxs.gba: OK`. `rm -rf build
+  objdiff.json && make NON_MATCHING=1 report` and `objdiff-cli report
+  generate`: code 242,990 / 243,378, functions 2,057 / 2,059, data
+  8,036,176 / 8,036,176 (unchanged). Draft scores: itoa_arm 72.8%,
   LookupSpriteFrameCache 99.4%.

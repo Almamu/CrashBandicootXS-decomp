@@ -104,19 +104,23 @@ void strcat_arm(u8 *dst, u8 *src)
  * without saving lr. agbcc_arm's arm_expand_prologue adds lr to every
  * register push ("If we have to push any regs, then we must push lr as
  * well"), and the only prologue that skips r4-r10 (a noreturn function)
- * pushes nothing, so no C makes it push r4-r6 without lr. The hex test
- * is `cmp r1, #10` + `addge`/`addlt` in the ROM; fold-const.c rewrites
- * `digit >= 10` to `digit > 9`, and combine's simplify_comparison does
- * the same to any constant it substitutes into a compare (`cmp r1, #9`).
- * See docs/matching/iwram-image.md (fifth pass).
+ * pushes nothing, so no C makes it push r4-r6 without lr (the one
+ * blocker left, two instructions). See docs/matching/iwram-image.md
+ * (fifth and sixth passes).
  *
  * The pins put base/buf/len/neg in the ROM's ip/r6/r5/r4 (without them
  * agbcc_arm keeps len in lr). `neg` doubles as the '-' and as the
  * swap's left index, as r4 does in the ROM; MATCH_CONST keeps cse from
- * reusing len's zero for `neg = 0`. Still different from the ROM, apart
- * from the two blockers: the schedule of the prologue and of each
- * loop's `add`/`cmp`, `subne r4, r4, #45` for `neg = 0`, and the
- * swap's temporary (r2 for the ROM's r0). */
+ * reusing len's zero for `neg = 0`. The hex test's `(ten = 10)` gives
+ * the ROM's `cmp r1, #10` + `addge`/`addlt`: a plain `digit >= 10` is
+ * folded to `digit > 9` (`cmp r1, #9`), but fold-const.c doesn't fold
+ * through the assignment. The `do { } while (0)` around the sign test
+ * puts `mov r5, #0` ahead of the `cmp`, as in the ROM. (Both found by
+ * decomp-permuter.) Still different from the ROM, apart from the
+ * blocker: `movge r4, #0` after the `movlt`/`rsblt` pair, `cmp ip, #16`
+ * for `cmp r2, #16`, each loop's `add`/`cmp` order, the terminator's
+ * `strb` and the swap's `add`/`sub` order, `subne r4, r4, #45` for
+ * `neg = 0`, and the swap's temporary (r2 for the ROM's r0). */
 s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
     MATCH_HOLD_REG(s32, num, r0);
@@ -126,16 +130,19 @@ s32 itoa_arm(s32 value, u8 *buf, s32 base)
     MATCH_HOLD_REG(s32, neg, r4);
     MATCH_HOLD_REG(s32, divisor, ip);
     s32 j;
+    s32 ten;
 
     MATCH_CONST(len, 0);
-    num = value;
-    if (num < 0) {
-        neg = 1;
-        num = -num;
-    } else {
-        neg = 0;
-    }
-    b = buf;
+    do {
+        num = value;
+        if (num < 0) {
+            neg = 1;
+            num = -num;
+        } else {
+            neg = 0;
+        }
+        b = buf;
+    } while (0);
     divisor = base;
     if (base != 16) {
         do {
@@ -148,7 +155,7 @@ s32 itoa_arm(s32 value, u8 *buf, s32 base)
         do {
             digit = num & 15;
             num >>= 4;
-            if (digit >= 10)
+            if (digit >= (ten = 10))
                 digit += 'A' - 10;
             else
                 digit += '0';

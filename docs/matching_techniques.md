@@ -226,6 +226,12 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   hoists. As two, combine merges them into one `plus` that is split
   back in place after reload (`LookupSpriteFrameCache`'s draft,
   [iwram-image.md](./matching/iwram-image.md), fifth pass).
+- **`cmp #10` with `ge`/`lt`, not `cmp #9` with `gt`/`le`.**
+  fold-const.c rewrites `x >= 10` to `x > 9` and `x < 10` to `x <= 9`.
+  Assigning the constant inside the compare, `x >= (ten = 10)` with a
+  local `ten`, isn't folded and still compares with the immediate
+  (`itoa_arm`'s draft, found by decomp-permuter;
+  [iwram-image.md](./matching/iwram-image.md), sixth pass).
 
 ## Calls
 
@@ -521,6 +527,17 @@ than agbcc_arm (the fifth pass traced both blockers to agbcc_arm's
 return sequences). See
 [matching/iwram-image.md](./matching/iwram-image.md) and
 [naked-transcription-parked-functions.md](./matching/archive/naked-transcription-parked-functions.md).
+
+To search a draft with
+[decomp-permuter](https://github.com/simonlindholm/decomp-permuter),
+use [tools/permuter/](../tools/permuter/README.md): a compile script with
+the agbcc_arm objects' exact flags, `setup.sh` to build a permuter
+directory (the target `.o` comes from the function's `NAKED` asm), and
+the two functions' `base.c`/`settings.toml`. For a Thumb function, copy
+`compile.sh` and swap in `agbcc` or `old_agbcc` and the object's flags.
+Treat its output as hints: it often reaches a lower score with C that
+changes what the function does (an uninitialized local, a load hoisted
+out of a loop), so port only the changes that keep the behaviour.
 
 ## The match.h macros
 
