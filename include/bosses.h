@@ -24,26 +24,26 @@
  * spawn cooldown/count and a "dead" flag. */
 struct spawner {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
-    s32 spawnY;         // 0x5C
+    s32 hp;     // 0x54
+    s32 spawnX; // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
+    s32 spawnY; // 0x5C
     u8 unk_60[4];
-    s32 cooldown;       // 0x64
-    s32 count;          // 0x68
-    u8 dead;            // 0x6C
+    s32 cooldown; // 0x64
+    s32 count;    // 0x68
+    u8 dead;      // 0x6C
 };
 
 /* The airship's attack parameters, one per kind and level
  * (gAirshipAttacks, src/data/weapon_kind_17c2d0.c): seven words, none
  * named yet. SpawnAirship points gAirshipAttack at one. */
 struct weapon_kind {
-    s32 unk_00;     // 0x00 - the airship's hit points
-    s32 unk_04;     // 0x04
-    s32 unk_08;     // 0x08
-    s32 unk_0C;     // 0x0C - the first fire timer
-    s32 unk_10;     // 0x10
-    s32 unk_14;     // 0x14
-    s32 unk_18;     // 0x18
+    s32 unk_00; // 0x00 - the airship's hit points
+    s32 unk_04; // 0x04
+    s32 unk_08; // 0x08
+    s32 unk_0C; // 0x0C - the first fire timer
+    s32 unk_10; // 0x10
+    s32 unk_14; // 0x14
+    s32 unk_18; // 0x18
 };
 
 /* One spawner's timing: after each spawn it waits `delay` frames, except
@@ -60,9 +60,9 @@ struct spawn_timing {
  * (gHovercraftAttacks, src/data/singleton_kind_17c460.c). SpawnHovercraft
  * points gHovercraftAttack at one, and GetHovercraftAttack returns it. */
 struct singleton_kind {
-    s32 unk_00;                     // 0x00
-    struct spawn_timing timing[3];  // 0x04 - per spawner kind: [0] the side
-                                    //        gun, [1] the cannon, [2] the launcher
+    s32 unk_00;                    // 0x00
+    struct spawn_timing timing[3]; // 0x04 - per spawner kind: [0] the side
+                                   //        gun, [1] the cannon, [2] the launcher
 };
 
 /* actor_anim.h, and the file-local views of the objects (defined in the
@@ -186,7 +186,8 @@ extern struct vobj *CreateCortexBoss(struct vobj *self);
 extern s32 GetDingodileHits(struct dingodile_boss *self);
 extern void UpdateDingodile(struct dingodile_boss *self, struct part *other);
 extern void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next);
-extern void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct part *arg);
+extern void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, u16 y,
+                                         struct part *arg);
 extern void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing);
 extern void UpdateDingodileShield(struct obj_490c *self, struct part *other);
 extern void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other);
@@ -424,8 +425,8 @@ struct boss_picture_size {
     s16 cols;
     s16 rows;
 };
-struct airship_picture;     /* 4 frames */
-struct hovercraft_picture;  /* 1 frame */
+struct airship_picture;    /* 4 frames */
+struct hovercraft_picture; /* 1 frame */
 extern const struct airship_picture gAirshipPicture;
 extern const struct hovercraft_picture gHovercraftPicture;
 #define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))

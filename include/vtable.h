@@ -12,11 +12,10 @@
  * file-local `*_method` copies were merged into it, #574 batch 9e); this
  * type is for defining the tables themselves (src/data, see docs/data.md).
  */
-struct vtable_slot
-{
-    s16 delta;  // 0x00 - added to `this` before the call
-    s16 index;  // 0x02 - always 0
-    void *fn;   // 0x04 - NULL only in slot 0
+struct vtable_slot {
+    s16 delta; // 0x00 - added to `this` before the call
+    s16 index; // 0x02 - always 0
+    void *fn;  // 0x04 - NULL only in slot 0
 };
 
 #define VTABLE_SLOT(func) { 0, 0, (void *)(func) }

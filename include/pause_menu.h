@@ -16,17 +16,17 @@
  * `OperatorNew(0x40)` - bigger than plain `struct actor` (0x1c), so it
  * has more trailing fields this chunk's functions never touch. */
 struct settings_icon_actor {
-    struct actor base;    /* 0x00-0x1b */
+    struct actor base; /* 0x00-0x1b */
     u8 unused_1c[0x20 - 0x1c];
-    void **field_20;        /* 0x20 - keyframe-table pointer, see GetSpriteAnimPaletteSlot */
+    void **field_20; /* 0x20 - keyframe-table pointer, see GetSpriteAnimPaletteSlot */
     u8 unused_24[0x29 - 0x24];
-    u8 field_29;               /* 0x29 - low nibble set from GetSpriteAnimPaletteSlot's result */
+    u8 field_29; /* 0x29 - low nibble set from GetSpriteAnimPaletteSlot's result */
     u8 unused_2a[0x2d - 0x2a];
-    u8 frameIndex;                /* 0x2d - current keyframe index, see GetSpriteAnimPaletteSlot */
+    u8 frameIndex; /* 0x2d - current keyframe index, see GetSpriteAnimPaletteSlot */
     u8 unused_2e[0x38 - 0x2e];
-    u8 field_38;                    /* 0x38 - AnimatePauseMenu: "currently highlighted/armed" flag */
+    u8 field_38; /* 0x38 - AnimatePauseMenu: "currently highlighted/armed" flag */
     u8 unused_39[0x3c - 0x39];
-    u16 field_3c;                   /* 0x3c - InitPauseGemsPage/InitPauseRelicsPage only, set to 0x80 */
+    u16 field_3c; /* 0x3c - InitPauseGemsPage/InitPauseRelicsPage only, set to 0x80 */
 };
 
 /* The pause menu (built by `RunPauseMenu`/`InitPauseMenu`, GitHub issue
@@ -58,47 +58,56 @@ struct settings_icon_actor {
  * share some byte offsets by coincidence - see that header's own
  * comment. */
 struct pause_menu {
-    struct bg_setup bg;         /* 0x00 - BG0 (InitBgSetup) */
-    void *field_10;             /* 0x10 - a row-stats handle, passed to CountClearGems/CountGems/CountRelics/etc and read via gLevelState's per-level index table in InitPauseTimeTrialPage */
-    const struct pause_row *field_14; /* 0x14 - the rows (gPauseMenuRows), see DrawPauseMenuRows/PauseMenuVolumeDown */
-    s32 field_18;                   /* 0x18 - currently selected/highlighted row index */
-    s32 field_1c;                     /* 0x1c - row count (4 or 5, from gLevelState+0x8c) */
-    s32 field_20;                       /* 0x20 - per-row Y spacing (16) */
-    s32 field_24;                         /* 0x24 - AnimatePauseMenu's jump-table state (0-4) */
-    s32 field_28;                           /* 0x28 - AnimatePauseMenu's countdown (init 0xb4) */
-    u8 buf2c[3];    /* InitPauseCrystalsPage */
-    u8 buf2f[3];    /* InitPauseGemsPage */
-    u8 buf32[3];    /* InitPauseGemsPage */
-    u8 buf35[3];    /* InitPauseRelicsPage */
-    u8 buf38[3];    /* InitPauseRelicsPage */
-    u8 buf3b[3];    /* InitPauseRelicsPage */
-    u8 buf3e[3];    /* InitPauseRelicsPage */
-    u8 buf41[5];     /* InitPauseMenuInfo - itoa(value) + '%' + NUL */
-    u8 buf46[3];    /* InitPauseCrystalsPage */
-    u8 buf49[3];    /* InitPauseGemsPage */
-    u8 buf4c[3];    /* InitPauseRelicsPage */
-    u8 soundVolumeText[8];         /* " <NNN%>" scratch string, see PauseMenuVolumeDown/PauseMenuVolumeUp */
-    u8 musicVolumeText[9];           /* same shape as soundVolumeText */
-    s32 musicVolume;             /* 0x60 - 0-20, in 5% steps (the "music" row) */
-    s32 soundVolume;               /* 0x64 - 0-20, in 5% steps (the "sound" row) */
-    s32 field_68;                 /* 0x68 - highlight-flash countdown, PauseMenuLoop */
-    u8 field_6c;                    /* 0x6c - "earned" flag, InitPauseTimeTrialPage */
+    struct bg_setup bg; /* 0x00 - BG0 (InitBgSetup) */
+    /* 0x10 - a row-stats handle, passed to CountClearGems/CountGems/CountRelics/etc and read via
+     * gLevelState's per-level index table in InitPauseTimeTrialPage */
+    void *field_10;
+    /* 0x14 - the rows (gPauseMenuRows), see DrawPauseMenuRows/PauseMenuVolumeDown */
+    const struct pause_row *field_14;
+    s32 field_18;          /* 0x18 - currently selected/highlighted row index */
+    s32 field_1c;          /* 0x1c - row count (4 or 5, from gLevelState+0x8c) */
+    s32 field_20;          /* 0x20 - per-row Y spacing (16) */
+    s32 field_24;          /* 0x24 - AnimatePauseMenu's jump-table state (0-4) */
+    s32 field_28;          /* 0x28 - AnimatePauseMenu's countdown (init 0xb4) */
+    u8 buf2c[3];           /* InitPauseCrystalsPage */
+    u8 buf2f[3];           /* InitPauseGemsPage */
+    u8 buf32[3];           /* InitPauseGemsPage */
+    u8 buf35[3];           /* InitPauseRelicsPage */
+    u8 buf38[3];           /* InitPauseRelicsPage */
+    u8 buf3b[3];           /* InitPauseRelicsPage */
+    u8 buf3e[3];           /* InitPauseRelicsPage */
+    u8 buf41[5];           /* InitPauseMenuInfo - itoa(value) + '%' + NUL */
+    u8 buf46[3];           /* InitPauseCrystalsPage */
+    u8 buf49[3];           /* InitPauseGemsPage */
+    u8 buf4c[3];           /* InitPauseRelicsPage */
+    u8 soundVolumeText[8]; /* " <NNN%>" scratch string, see PauseMenuVolumeDown/PauseMenuVolumeUp */
+    u8 musicVolumeText[9]; /* same shape as soundVolumeText */
+    s32 musicVolume;       /* 0x60 - 0-20, in 5% steps (the "music" row) */
+    s32 soundVolume;       /* 0x64 - 0-20, in 5% steps (the "sound" row) */
+    s32 field_68;          /* 0x68 - highlight-flash countdown, PauseMenuLoop */
+    u8 field_6c;           /* 0x6c - "earned" flag, InitPauseTimeTrialPage */
     u8 unused_6d[0x70 - 0x6d];
-    void *field_70;                   /* 0x70 - current level's name label text ptr, InitPauseMenuInfo/DrawPauseMenu */
-    void *field_74;                     /* 0x74 - secondary label text ptr (or NULL past level 0x13), InitPauseMenuInfo/DrawPauseMenu */
-    u8 buf78[4];                       /* small text scratch, DrawPauseGemsPage/DrawPauseRelicsPage */
-    u8 timeBuf[0xc];         /* 0x7c - InitPauseTimeTrialPage, FormatCentiseconds dest */
-    struct settings_icon_actor *field_88;      /* InitPauseCrystalsPage */
-    struct settings_icon_actor *icons8c[4];      /* InitPausePowersPage */
-    struct settings_icon_actor *icons9c[5];        /* InitPauseGemsPage */
-    struct settings_icon_actor *iconsB0[3];          /* InitPauseRelicsPage */
-    struct settings_icon_actor *field_bc;              /* InitPauseTimeTrialPage */
-    struct settings_icon_actor *field_c0;                /* 0xc0 - currently-highlighted row's icon, AnimatePauseMenu/PauseMenuLoop */
-    s32 field_c4;                                          /* 0xc4 - field_c0's blink/reveal countdown */
-    u32 field_c8;                                            /* 0xc8 - REG_BLDCNT value, applied by CommitPauseMenuFrame */
-    u8 field_cc;                                              /* 0xcc - REG_BLDY value (low 5 bits); PauseMenuLoop animates this as a fade level */
+    /* 0x70 - current level's name label text ptr, InitPauseMenuInfo/DrawPauseMenu */
+    void *field_70;
+    /* 0x74 - secondary label text ptr (or NULL past level 0x13), InitPauseMenuInfo/DrawPauseMenu */
+    void *field_74;
+    /* small text scratch, DrawPauseGemsPage/DrawPauseRelicsPage */
+    u8 buf78[4];
+    /* 0x7c - InitPauseTimeTrialPage, FormatCentiseconds dest */
+    u8 timeBuf[0xc];
+    struct settings_icon_actor *field_88;   /* InitPauseCrystalsPage */
+    struct settings_icon_actor *icons8c[4]; /* InitPausePowersPage */
+    struct settings_icon_actor *icons9c[5]; /* InitPauseGemsPage */
+    struct settings_icon_actor *iconsB0[3]; /* InitPauseRelicsPage */
+    struct settings_icon_actor *field_bc;   /* InitPauseTimeTrialPage */
+    /* 0xc0 - currently-highlighted row's icon, AnimatePauseMenu/PauseMenuLoop */
+    struct settings_icon_actor *field_c0;
+    s32 field_c4; /* 0xc4 - field_c0's blink/reveal countdown */
+    u32 field_c8; /* 0xc8 - REG_BLDCNT value, applied by CommitPauseMenuFrame */
+    /* 0xcc - REG_BLDY value (low 5 bits); PauseMenuLoop animates this as a fade level */
+    u8 field_cc;
     u8 unused_cd[3];
-    u16 field_d0;                                              /* 0xd0 - REG_DISPCNT value, applied by CommitPauseMenuFrame */
+    u16 field_d0; /* 0xd0 - REG_DISPCNT value, applied by CommitPauseMenuFrame */
     u8 unused_d2[2];
 };
 COMPILE_TIME_ASSERT(pause_menu_h, sizeof(struct pause_menu) == 0xd4);

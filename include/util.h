@@ -50,8 +50,7 @@ extern void StepBresenhamLine(struct bresenham_line *line);
 
 /* src/util/number_format.c */
 extern s32 itoa(s32 value, u8 *buffer, s32 base);
-extern u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
-                              s32 *charsConsumedPtr);
+extern u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsConsumedPtr);
 
 /* src/util/printf.c */
 extern void vsprintf(u8 *dest, u8 *fmt, u32 *args);

@@ -165,11 +165,9 @@ DItype __divdi3(DItype u, DItype v)
     vv.ll = v;
 
     if (uu.s.high < 0)
-        c = ~c,
-        uu.ll = __negdi2(uu.ll);
+        c = ~c, uu.ll = __negdi2(uu.ll);
     if (vv.s.high < 0)
-        c = ~c,
-        vv.ll = __negdi2(vv.ll);
+        c = ~c, vv.ll = __negdi2(vv.ll);
 
     w = __udivmoddi4(uu.ll, vv.ll, (UDItype *)0);
     if (c)
@@ -201,16 +199,14 @@ DItype __muldi3(DItype u, DItype v)
     DIunion w;
     DIunion uu, vv;
 
-    uu.ll = u,
-    vv.ll = v;
+    uu.ll = u, vv.ll = v;
 
     {
         DIunion __w;
         umul_ppmm(__w.s.high, __w.s.low, uu.s.low, vv.s.low);
         w.ll = __w.ll;
     }
-    w.s.high += ((USItype)uu.s.low * (USItype)vv.s.high
-                 + (USItype)uu.s.high * (USItype)vv.s.low);
+    w.s.high += ((USItype)uu.s.low * (USItype)vv.s.high + (USItype)uu.s.high * (USItype)vv.s.low);
 
     return w.ll;
 }

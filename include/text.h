@@ -80,6 +80,7 @@ extern s32 GetWordLength(u8 *s);
 extern s32 DrawWrappedTextInBox(u8 *text, struct bitmap_font *self, struct aabb *box, s32 mode);
 
 /* src/text/wrapped_text.c */
-extern s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 limit, s32 mode);
+extern s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 limit,
+                           s32 mode);
 
 #endif /* GUARD_TEXT_H */

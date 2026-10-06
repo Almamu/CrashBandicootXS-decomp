@@ -75,7 +75,8 @@ extern s32 LinkExchangeSaveData(struct save_menu *self);
 extern void DrawSaveMenuMessageLines(struct save_menu *self, s32 label1, s32 label2);
 extern void DrawSaveMenuCancel(struct save_menu *self, u8 highlight);
 extern void DrawYesNoPrompt(struct save_menu *self, s32 value);
-extern void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx, struct byte_arg flag);
+extern void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx,
+                              struct byte_arg flag);
 extern void DrawSaveSlots(struct save_menu *self, void *handle, s32 selectedIndex);
 extern void InitSaveMenuIcons(struct save_menu *self);
 

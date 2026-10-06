@@ -25,33 +25,30 @@
 struct bitmap_font;
 
 /* One slide. */
-struct cutscene_slide
-{
-    const u16 *picture;     // 0x00 - a 256-colour palette, followed by the
-                            //        LZ77 Mode 4 bitmap (ShowSlidePicture reads
-                            //        it at +0x200)
-    s32 wait;               // 0x04 - WaitForKeyPress's frame count
-    s32 fade;               // 0x08 - FadeBrightness flags (| 0x80) as the
-                            //        slide starts
-    s32 fadeAfter;          // 0x0C - FadeBrightness flags after it, -1 = none
-    u8 buttons;             // 0x10 - WaitForKeyPress's checkButtons; 1 = the
-                            //        slide is skipped past (SkipSlides)
-    u8 duckMusic;           // 0x11 - FadeOutMusic after the slide
-    u8 rearmSfx;            // 0x12 - replay `sfx` after the slide
-    u32 cue;                // 0x14 - music cue (PlaySong)
-    u32 sfx;                // 0x18 - sound effect, 99 = none
+struct cutscene_slide {
+    const u16 *picture; // 0x00 - a 256-colour palette, followed by the
+                        //        LZ77 Mode 4 bitmap (ShowSlidePicture reads
+                        //        it at +0x200)
+    s32 wait;           // 0x04 - WaitForKeyPress's frame count
+    s32 fade;           // 0x08 - FadeBrightness flags (| 0x80) as the
+                        //        slide starts
+    s32 fadeAfter;      // 0x0C - FadeBrightness flags after it, -1 = none
+    u8 buttons;         // 0x10 - WaitForKeyPress's checkButtons; 1 = the
+                        //        slide is skipped past (SkipSlides)
+    u8 duckMusic;       // 0x11 - FadeOutMusic after the slide
+    u8 rearmSfx;        // 0x12 - replay `sfx` after the slide
+    u32 cue;            // 0x14 - music cue (PlaySong)
+    u32 sfx;            // 0x18 - sound effect, 99 = none
 };
 
 /* A cutscene's slides. */
-struct cutscene_slides
-{
+struct cutscene_slides {
     const struct cutscene_slide *const *slides;
     s32 count;
 };
 
 /* The text of one slide: strings shown one after the other. */
-struct cutscene_page
-{
+struct cutscene_page {
     const u8 *const *strings;
     s32 count;
 };
@@ -60,16 +57,15 @@ struct cutscene_page
  * (PlayCutscene keeps it on the stack), RunCutscenePlayer shows its
  * slides with their pages of text, and RunSlideshow (unused) shows the
  * slides alone. */
-struct cutscene_player
-{
+struct cutscene_player {
     const struct cutscene_slide *const *slides; // 0x00
-    s32 count;                  // 0x04
+    s32 count;                                  // 0x04
     u8 unk_08[4];
-    s32 toggle;                 // 0x0C - ShowSlidePicture's VRAM-bank flip-flop,
-                                //        1 after ResetSlideshow
+    s32 toggle;                        // 0x0C - ShowSlidePicture's VRAM-bank flip-flop,
+                                       //        1 after ResetSlideshow
     const struct cutscene_page *pages; // 0x10 - one per slide
-    struct bitmap_font *font;   // 0x14
-    struct aabb box;            // 0x18 - the text rectangle
+    struct bitmap_font *font;          // 0x14
+    struct aabb box;                   // 0x18 - the text rectangle
 };
 
 /* The cutscenes, one {slides, count} header each

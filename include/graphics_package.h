@@ -39,10 +39,10 @@ union bgcnt {
  * LoadGraphicsPackage; GetBgSetupControl reads the control value back for
  * REG_BGnCNT. */
 struct bg_setup {
-    u32 charBlock;      // 0x00
-    u32 screenBlock;    // 0x04
-    u32 paletteBank;    // 0x08
-    union bgcnt ctrl;   // 0x0C - BGnCNT
+    u32 charBlock;    // 0x00
+    u32 screenBlock;  // 0x04
+    u32 paletteBank;  // 0x08
+    union bgcnt ctrl; // 0x0C - BGnCNT
 };
 
 #endif /* __GRAPHICS_PACKAGE_H__ */

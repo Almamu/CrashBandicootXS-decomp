@@ -26,14 +26,14 @@
  * gJetpackPlayerMaxHp). */
 struct actor_hp {
     struct actor_self base;
-    s32 hp;             // 0x54
+    s32 hp; // 0x54
 };
 
 /* The spawn argument of CreateJetpackPlane and CreatePolarPenguin. */
 struct spawn_arg {
     u8 unk_00[0x10];
-    s32 target;         // 0x10 - the first hop target index (AimJetpackPlane,
-                        //        AimPolarPenguin)
+    s32 target; // 0x10 - the first hop target index (AimJetpackPlane,
+                //        AimPolarPenguin)
 };
 
 /* An actor box (`struct anim_box`, actor_anim.h) copied as three words:
@@ -176,7 +176,8 @@ extern void UpdateJetpackRing(void *self);
 extern void UpdateJetpackPlane(struct actor_fa38 *self);
 extern void AimJetpackPlane(struct jetpack_plane *self, s32 target);
 extern void DamageJetpackPlane(struct jetpack_plane *self, s32 damage);
-extern void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d, struct spawn_arg *arg);
+extern void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d,
+                                struct spawn_arg *arg);
 extern void JetpackPlaneStateFall(struct jetpack_plane *self);
 extern void sub_802FE1C(struct jetpack_plane *self);
 extern void sub_802FE58(struct jetpack_plane *self);
@@ -197,7 +198,8 @@ extern void DamageJetpackBomber(struct jetpack_bomber *self, s32 damage);
 extern void RunJetpackBomberState(struct jetpack_bomber *self);
 extern u8 IsJetpackBomberUnshootable(struct jetpack_bomber *self);
 extern void UpdateJetpackCannonball(struct jetpack_cannonball *self);
-extern void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c, s32 d, s32 velX, s32 velY);
+extern void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c,
+                                     s32 d, s32 velX, s32 velY);
 extern s32 IsJetpackCannonballUnshootable(struct jetpack_cannonball *self);
 
 /* src/vehicle/jetpack_player.c */
@@ -396,9 +398,9 @@ extern s32 gPolarInvulnTimer;
 extern u8 gPolarPauseLocked;
 extern u8 gPolarPlayerHalted;
 extern u8 gPolarPlayerInactive;
-extern u8 *gPolarPlayerLastFrame;         // the frame last uploaded
-extern s32 gPolarPlayerTileBuffer;        // which buffer holds the current frame
-extern void *gPolarPlayerTiles[2];       // the two VRAM tile buffers
+extern u8 *gPolarPlayerLastFrame;  // the frame last uploaded
+extern s32 gPolarPlayerTileBuffer; // which buffer holds the current frame
+extern void *gPolarPlayerTiles[2]; // the two VRAM tile buffers
 extern s32 gPolarPlayerVelY;
 extern s32 gPolarQueuedWumpa;
 extern u8 gPolarSteerEnabled;

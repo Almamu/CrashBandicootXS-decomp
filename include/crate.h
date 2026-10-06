@@ -12,10 +12,10 @@
  * 19-21 lit TNT). Only the fields those functions touch are named;
  * the head (position, flags, anim table/tag, mirror bits) has the same
  * layout as `struct gobj`. See docs/matching/archive/issue-12-physics-collision.md. */
-struct crate_vtable
-{
+struct crate_vtable {
     u8 unk_00[0x10];
-    struct actor_method m10; // 0x10 - slot 2, the hitbox record (GetSpriteObjHitbox; IsCrateInsideRect)
+    // 0x10 - slot 2, the hitbox record (GetSpriteObjHitbox; IsCrateInsideRect)
+    struct actor_method m10;
     struct actor_method m18; // 0x18 - slot 3, the per-frame update (UpdateCrate)
     u8 unk_20[0x28];
     struct actor_method m48; // 0x48 - returns the object's class id (3: box)
@@ -30,21 +30,19 @@ struct crate;
 /* UpdateSlotCrate's view of crate.u48: this compiler pads the struct to a
  * word, so a copy of it lives in one register and its bitfields are
  * updated with word-sized masks. */
-struct phys_b48
-{
-    u8 phase:3;         // face 0-3; bit 2: the spin has started
-    u8 spins:3;         // full turns left at this stage
-    u8 stage:2;         // 0 idle, 1-3 faster each time (gSlotCrateTimers); past 3 it turns to iron
+struct phys_b48 {
+    u8 phase:3; // face 0-3; bit 2: the spin has started
+    u8 spins:3; // full turns left at this stage
+    u8 stage:2; // 0 idle, 1-3 faster each time (gSlotCrateTimers); past 3 it turns to iron
 };
 
 
 /* Bit view of crate.flags (a separate struct: this compiler pads
  * every struct to a word, so it can't be embedded). */
-struct phys_flag_bits
-{
-    u8 gone:1;          // removed (see MarkEntityGone)
+struct phys_flag_bits {
+    u8 gone:1; // removed (see MarkEntityGone)
     u8 unk_1:3;
-    u8 bit4:1;          // set by BreakCrate (also `flags |= 0x10` elsewhere)
+    u8 bit4:1; // set by BreakCrate (also `flags |= 0x10` elsewhere)
     u8 unk_5:3;
 };
 
@@ -52,8 +50,7 @@ struct phys_flag_bits
 #define PHYS_FLAG4(obj) (((struct phys_flag_bits *)&(obj)->flags)->bit4)
 
 /* A group of objects that trigger together (ActivateIronSwitchCrate builds it). */
-struct crate_group
-{
+struct crate_group {
     s32 count;
     struct crate *items[0];
 };
@@ -61,72 +58,75 @@ struct crate_group
 #define PHYS_NO_GROUP ((struct crate_group *)-1)
 #define PHYS_HAS_GROUP(g) ((u32)(g) + 1 > 1)
 
-struct crate
-{
-    s32 x;              // 0x00
-    s32 y;              // 0x04
-    u16 id;             // 0x08 - 0xffff: none
+struct crate {
+    s32 x;  // 0x00
+    s32 y;  // 0x04
+    u16 id; // 0x08 - 0xffff: none
     u8 unk_0A[2];
-    u8 flags;           // 0x0C - bit 0: removed, see PHYS_GONE
+    u8 flags; // 0x0C - bit 0: removed, see PHYS_GONE
     u8 unk_0D[0xB];
     struct crate_vtable *vtable; // 0x18
     u8 unk_1C[4];
     struct anim_table *anim; // 0x20
     u8 unk_24[4];
-    u32 unk_28_0:4;     // 0x28
-    s32 flipX:1;        //      bit 4: X mirrored
-    s32 flipY:1;        //      bit 5: Y mirrored
+    u32 unk_28_0:4; // 0x28
+    s32 flipX:1;    //      bit 4: X mirrored
+    s32 flipY:1;    //      bit 5: Y mirrored
     u32 unk_28_6:2;
-    u32 slot:4;         // 0x29 - palette/tile slot
+    u32 slot:4; // 0x29 - palette/tile slot
     u32 unk_29_4:4;
     u32 unk_2A:16;
-    u8 animating;       // 0x2C - nonzero while the keyframe timer runs (box_part.h)
-    u8 tag;             // 0x2D
+    u8 animating; // 0x2C - nonzero while the keyframe timer runs (box_part.h)
+    u8 tag;       // 0x2D
     u8 unk_2E[2];
-    s32 frame;          // 0x30
-    s32 stepTimer;      // 0x34 - ticks spent on the current step (FinishBrokenCrate blasts on its first tick)
-    u8 animDone;        // 0x38 - set once the animation ends; UpdateCrate then resets `frame`
-                        //        and clears the busy bit
+    s32 frame; // 0x30
+    // 0x34 - ticks spent on the current step (FinishBrokenCrate blasts on its first tick)
+    s32 stepTimer;
+    u8 animDone; // 0x38 - set once the animation ends; UpdateCrate then resets `frame`
+                 //        and clears the busy bit
     u8 unk_39[7];
-    s32 fallTargetY;    // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it; UpdateCrateFall
-                        //        snaps `y` to it when the fall ends)
-    s32 fallDistance;   // 0x44 - Q8 distance still to fall, 0: resting
-    union {             // 0x48 - one word, read per kind (placement halfword +8 for outlines):
-        s32 solidKind;  //   5 (outline): kind + 0x15 it turns into (SolidifyOutlineCrate); also
-                        //   loaded from `trialKind` by ConvertCratesForTimeTrial
-        struct crate_group *group; // 3 (iron switch): its outline crates; NULL or PHYS_NO_GROUP: none
+    s32 fallTargetY;   // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it; UpdateCrateFall
+                       //        snaps `y` to it when the fall ends)
+    s32 fallDistance;  // 0x44 - Q8 distance still to fall, 0: resting
+    union {            // 0x48 - one word, read per kind (placement halfword +8 for outlines):
+        s32 solidKind; //   5 (outline): kind + 0x15 it turns into (SolidifyOutlineCrate); also
+                       //   loaded from `trialKind` by ConvertCratesForTimeTrial
+        // 3 (iron switch): its outline crates; NULL or PHYS_NO_GROUP: none
+        struct crate_group *group;
         s32 bounceTimer; // 12 (bouncy wumpa): -0x2A until the first bounce, then 360 frames
-                        //   counted down by UpdateCrate (BounceWumpaCrate)
-        s32 slotState;  // 15 (slot): bits 0-2 phase (face 0-3, bit 2 started), 3-5 spins
-                        //   left at this stage, 6-7 stage (gSlotCrateTimers index; 0 idle);
-                        //   see struct phys_b48 and UpdateSlotCrate
-        s32 pressed;    // 6 (nitro switch): set once ActivateNitroSwitchCrate has fired
-        s32 blastState; // explosive kinds: 1 once it has fallen far enough to explode on
-                        //   landing (DropCratesAbove/UpdateCrateFall), 0xFF once it has
-                        //   blasted (BlastNearbyCrates)
+                         //   counted down by UpdateCrate (BounceWumpaCrate)
+        s32 slotState;   // 15 (slot): bits 0-2 phase (face 0-3, bit 2 started), 3-5 spins
+                         //   left at this stage, 6-7 stage (gSlotCrateTimers index; 0 idle);
+                         //   see struct phys_b48 and UpdateSlotCrate
+        s32 pressed;     // 6 (nitro switch): set once ActivateNitroSwitchCrate has fired
+        s32 blastState;  // explosive kinds: 1 once it has fallen far enough to explode on
+                         //   landing (DropCratesAbove/UpdateCrateFall), 0xFF once it has
+                         //   blasted (BlastNearbyCrates)
         struct phys_b48 b;
     } u48;
-    s8 fallSpeed;       // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron switch
-                        //        instead keeps its step delay here (placement byte 8, reloaded
-                        //        into `timer` after each step)
-    u8 state;           // 0x4D - low 7 bits: state (1: committed), bit 7: busy
-    u8 kind;            // 0x4E - index into the gStaticData_0816BB** tables
-    u8 timer;           // 0x4F
-    u8 paramA;          // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
-                        //        1 (checkpoint): placement flag bit 6, handed to SetCheckpointAtPlayer;
-                        //        3 (iron switch): group id, then the step counter once activated;
-                        //        5 (outline): group id (matches its switch's);
-                        //        12 (bouncy wumpa): set while a bounce animation runs;
-                        //        15 (slot): mask of the faces it may stop on (placement byte 1 bits 1-3)
-    u8 paramB;          // 0x51 - per-kind parameter (placement byte 6/7):
-                        //        3 (iron switch): number of steps; 5 (outline): the step it solidifies on;
-                        //        11 ("?"): contents (9: random, OpenMysteryCrate);
-                        //        12 (bouncy wumpa): bounces so far (breaks after 5); 15 (slot): placement byte 6
+    s8 fallSpeed; // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron switch
+                  //        instead keeps its step delay here (placement byte 8, reloaded
+                  //        into `timer` after each step)
+    u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy
+    u8 kind;      // 0x4E - index into the gStaticData_0816BB** tables
+    u8 timer;     // 0x4F
+    u8 paramA;    // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
+                  //        1 (checkpoint): placement flag bit 6, handed to SetCheckpointAtPlayer;
+                  //        3 (iron switch): group id, then the step counter once activated;
+                  //        5 (outline): group id (matches its switch's);
+                  //        12 (bouncy wumpa): set while a bounce animation runs;
+                  //        15 (slot): mask of the faces it may stop on (placement byte 1 bits 1-3)
+    // 0x51 - per-kind parameter (placement byte 6/7):
+    //        3 (iron switch): number of steps; 5 (outline): the step it solidifies on;
+    //        11 ("?"): contents (9: random, OpenMysteryCrate);
+    //        12 (bouncy wumpa): bounces so far (breaks after 5); 15 (slot): placement byte 6
+    u8 paramB;
     u8 unk_52[2];
-    s32 trialKind;      // 0x54 - kind + 0x15 the crate becomes in a time trial (placement halfword +4,
-                        //        0x1B read as 0x15); -1: none (ResetCrate). See ConvertCratesForTimeTrial
-    u8 touched;         // 0x58
-    u8 groupAllocated;  // 0x59 - ActivateIronSwitchCrate allocated `u48.group` (freed when it fires)
+    // 0x54 - kind + 0x15 the crate becomes in a time trial (placement halfword +4,
+    //        0x1B read as 0x15); -1: none (ResetCrate). See ConvertCratesForTimeTrial
+    s32 trialKind;
+    u8 touched;        // 0x58
+    u8 groupAllocated; // 0x59 - ActivateIronSwitchCrate allocated `u48.group` (freed when it fires)
     u8 unk_5A[2];
     struct crate *above; // 0x5C - the crate stacked on this one (GetCrateAbove/SetCrateAbove)
     struct crate *below; // 0x60 - the crate this one stands on (GetCrateBelow/SetCrateBelow)

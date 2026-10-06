@@ -14,8 +14,7 @@
  * `args` (the only thing in its frame, i.e. at sp+0/sp+4 - exactly the
  * outgoing-argument area) and calls through a 4-argument view. The
  * stores go through `volatile` so they stay put. */
-struct mover_stack_args
-{
+struct mover_stack_args {
     u8 dirY;
     u8 unk_1[3];
     s32 kind;

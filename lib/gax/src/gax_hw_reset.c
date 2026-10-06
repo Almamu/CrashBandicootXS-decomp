@@ -17,10 +17,12 @@ void GaxResetSoundHardware(void)
     s32 i;
 
     REG_DMA1CNT_H = 0x8640;
+    // clang-format off
     asm(".byte 0x1b, 0x1c\n\t"
         "mov r8, r8\n\t"
         "mov r8, r8\n\t"
         "mov r8, r8");
+    // clang-format on
     REG_DMA1CNT_H = 0xc8 << 3;
     REG_DMA1CNT = 4;
     REG_SOUNDCNT_X = 0;

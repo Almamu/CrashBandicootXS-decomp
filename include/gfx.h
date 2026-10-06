@@ -30,7 +30,7 @@ struct vram_tile_block;
  * halfword the hardware interleaves between entries. */
 union oam_shadow_entry {
     u32 words[2];
-    u16 attr[4];    // [3] is the affine parameter
+    u16 attr[4]; // [3] is the affine parameter
 };
 
 /* Manages a shadow copy of a chunk of the 128-entry hardware OAM table:
@@ -61,12 +61,12 @@ struct piece_offset {
 
 struct piece_info {
     struct piece_offset *offsets; // 0x00
-    u8 *ids;                    // 0x04 - low 4 bits: shape/size index
+    u8 *ids;                      // 0x04 - low 4 bits: shape/size index
     union {
-        u32 packed;             // 0x08 - low 24 bits: VRAM source offset
+        u32 packed; // 0x08 - low 24 bits: VRAM source offset
         struct {
             u8 src[3];
-            u8 count;           // 0x0B - piece count
+            u8 count; // 0x0B - piece count
         } b;
     } u;
 };
@@ -102,54 +102,51 @@ struct dispcnt_bits {
  * oam_pair`/`oam_attr01` and gfx.h's `oam_attr2` were copies, #574
  * batch 9e). */
 struct oam_attrs {
-    u32 y:8;            // 0x00
-    u32 affineMode:2;   // 0x01
+    u32 y:8;          // 0x00
+    u32 affineMode:2; // 0x01
     u32 objMode:2;
     u32 mosaic:1;
     u32 bpp:1;
     u32 shape:2;
-    u32 x:9;            // 0x02
+    u32 x:9; // 0x02
     u32 matrixLo:3;
     u32 matrixBit3:1;
     u32 matrixBit4:1;
     u32 size:2;
-    u16 tileNum:10;     // 0x04
+    u16 tileNum:10; // 0x04
     u16 priority:2;
     u16 palette:4;
-    u16 affineParam;    // 0x06
+    u16 affineParam; // 0x06
 };
 
 /* REG_BLDCNT and REG_BLDALPHA as one word of bitfields, and REG_BLDY. */
-struct blend_bits
-{
-    u32 bg0First:1;     // BLDCNT 1st target
+struct blend_bits {
+    u32 bg0First:1; // BLDCNT 1st target
     u32 bg1First:1;
     u32 bg2First:1;
     u32 bg3First:1;
     u32 objFirst:1;
     u32 bdFirst:1;
     u32 effect:2;
-    u32 bg0Second:1;    // BLDCNT 2nd target
+    u32 bg0Second:1; // BLDCNT 2nd target
     u32 bg1Second:1;
     u32 bg2Second:1;
     u32 bg3Second:1;
     u32 objSecond:1;
     u32 bdSecond:1;
     u32 unk_14:2;
-    u32 eva:5;          // BLDALPHA
+    u32 eva:5; // BLDALPHA
     u32 unk_21:3;
     u32 evb:5;
     u32 unk_29:3;
 };
 
-union blend
-{
+union blend {
     u32 raw;
     struct blend_bits bits;
 };
 
-struct bldy
-{
+struct bldy {
     u32 evy:5;
     u32 unk_5:27;
 };
@@ -158,8 +155,8 @@ struct bldy
  * CommitBlendRegs (util/aabb.c) writes: BLDCNT/BLDALPHA as one word, then
  * the BLDY byte. */
 struct blend_regs {
-    union blend blend;  // 0x00
-    u8 bldy;            // 0x04
+    union blend blend; // 0x00
+    u8 bldy;           // 0x04
 };
 
 /* The brightness fade state (fade.c). `field_0` is the frame period of
@@ -181,8 +178,8 @@ struct brightness_fade {
 struct sprite_frame_cache_node {
     struct sprite_frame_cache_node *next; // 0x00
     struct sprite_frame_cache_node *prev; // 0x04
-    u8 *frame;                             // 0x08
-    void *vramAddr;                         // 0x0C
+    u8 *frame;                            // 0x08
+    void *vramAddr;                       // 0x0C
 };
 
 /* Up to three palette colour cycles, at `gPaletteCycles`
@@ -206,22 +203,22 @@ struct sprite_frame_cache_node {
  * caller resets the queue via `ClearPaletteCycles`/`InitPaletteCycles` between
  * bursts rather than this pair enforcing the 3-slot cap itself). */
 struct palette_cycler {
-    u8 active;              /* +0x00 */
-    u8 unknown_01[3];       /* +0x01 */
-    s32 fields_e[3];        /* +0x04 - only ever written (to 0) by
-                              * AddPaletteCycle; never read by either function
-                              * matched here. Purpose unconfirmed. */
-    u16 *targets[3];        /* +0x10 - array TickPaletteCycles rotates. */
-    u16 *lists[3];           /* +0x1c - permutation order (as u16 indices
-                               * into `targets[i]`), `counts[i]` long. */
-    s32 periods[3];           /* +0x28 - AddPaletteCycle sets this from
-                                * __divsi3(0x3C, rate); TickPaletteCycles
-                                * rotates slot i once every `periods[i]`
-                                * frames. */
-    s32 counts[3];             /* +0x34 - `lists[i]`'s element count. */
-    s32 count;                  /* +0x40 - number of active slots (0-3). */
-    u8 direction;                 /* +0x44 - 0/1 selects which end of
-                                    * `lists[i]` the rotation starts from. */
+    u8 active;        /* +0x00 */
+    u8 unknown_01[3]; /* +0x01 */
+    s32 fields_e[3];  /* +0x04 - only ever written (to 0) by
+                       * AddPaletteCycle; never read by either function
+                       * matched here. Purpose unconfirmed. */
+    u16 *targets[3];  /* +0x10 - array TickPaletteCycles rotates. */
+    u16 *lists[3];    /* +0x1c - permutation order (as u16 indices
+                       * into `targets[i]`), `counts[i]` long. */
+    s32 periods[3];   /* +0x28 - AddPaletteCycle sets this from
+                       * __divsi3(0x3C, rate); TickPaletteCycles
+                       * rotates slot i once every `periods[i]`
+                       * frames. */
+    s32 counts[3];    /* +0x34 - `lists[i]`'s element count. */
+    s32 count;        /* +0x40 - number of active slots (0-3). */
+    u8 direction;     /* +0x44 - 0/1 selects which end of
+                       * `lists[i]` the rotation starts from. */
     u8 unknown_45[3];
 };
 COMPILE_TIME_ASSERT(gfx_h, sizeof(struct palette_cycler) == 0x48);
@@ -351,7 +348,8 @@ extern void DestroyEntity(struct actor *self, u32 flags);
 /* src/gfx/graphics_package.c */
 extern void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg);
 extern u16 GetBgSetupControl(struct bg_setup *self);
-extern struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock, u32 paletteBank, u32 priority);
+extern struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock,
+                                    u32 paletteBank, u32 priority);
 extern void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height);
 extern void DrawScaledSprite(struct gfx_box_obj *self);
 extern void sub_801E8F8(u8 *self, s32 arg1);
@@ -361,7 +359,8 @@ extern void sub_801E96C(u8 *self);
 
 /* src/gfx/palette_cycle.c */
 extern void TickPaletteCycles(struct palette_cycler *self);
-extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate, s32 listCount, u8 direction);
+extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate,
+                            s32 listCount, u8 direction);
 extern void ClearPaletteCycles(struct palette_cycler *self);
 extern void DestroyPaletteCycles(struct palette_cycler *self, s32 flags);
 extern struct palette_cycler *InitPaletteCycles(struct palette_cycler *self);
@@ -430,22 +429,25 @@ extern u16 gPaletteFadeBuffer[512];
 extern struct dma_queue gVramDmaQueue;
 
 /* sym_iwram.txt: the OBJ tile allocator (sprite_frame.c) */
-extern struct vram_tile_block *gVramTileBlockPool;  /* pool base */
-extern struct vram_tile_block gVramTileBlockList;   /* address-sorted free-block list sentinel */
-extern struct vram_tile_block *gVramTileBlockRover; /* next-fit search cursor ("rover") */
+extern struct vram_tile_block *gVramTileBlockPool;   /* pool base */
+extern struct vram_tile_block gVramTileBlockList;    /* address-sorted free-block list sentinel */
+extern struct vram_tile_block *gVramTileBlockRover;  /* next-fit search cursor ("rover") */
 extern struct vram_tile_block *gVramTileBlockSpares; /* spare-record stack head */
-extern u8 *gVramTileBlockIndex;                     /* tile-index -> pool-record-index lookup table, TOTAL_OBJ_TILE_COUNT bytes */
+/* tile-index -> pool-record-index lookup table, TOTAL_OBJ_TILE_COUNT bytes */
+extern u8 *gVramTileBlockIndex;
 
 /* sym_iwram.txt: the overflow OAM queue (sprite_frame.c) */
 extern struct queued_oam_entry *gSpriteOamQueue; /* queued OAM entries, OAM_ENTRY_COUNT max */
-extern s32 *gSpriteAffineQueue;                   /* queued affine (x,y) pairs, packed one s16 each into a u32, deduped */
-extern s32 gSpriteOamQueueCount;                  /* gSpriteOamQueue count */
-extern s32 gSpriteAffineQueueCount;               /* gSpriteAffineQueue count */
+/* queued affine (x,y) pairs, packed one s16 each into a u32, deduped */
+extern s32 *gSpriteAffineQueue;
+extern s32 gSpriteOamQueueCount;    /* gSpriteOamQueue count */
+extern s32 gSpriteAffineQueueCount; /* gSpriteAffineQueue count */
 
 /* sym_iwram.txt: the sprite frame cache (sprite_frame.c, sprite_arm.c) */
-extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent;  /* "this frame" MRU list sentinel */
-extern struct sprite_frame_cache_node gSpriteFrameCachePrevious; /* "last frame" eviction list sentinel */
-extern struct sprite_frame_cache_node *gSpriteFrameCacheSpares;  /* spare-record stack head */
-extern struct sprite_frame_cache_node *gSpriteFrameCachePool;    /* pool base */
+extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent; /* "this frame" MRU list sentinel */
+/* "last frame" eviction list sentinel */
+extern struct sprite_frame_cache_node gSpriteFrameCachePrevious;
+extern struct sprite_frame_cache_node *gSpriteFrameCacheSpares; /* spare-record stack head */
+extern struct sprite_frame_cache_node *gSpriteFrameCachePool;   /* pool base */
 
 #endif /* __GFX_H__ */

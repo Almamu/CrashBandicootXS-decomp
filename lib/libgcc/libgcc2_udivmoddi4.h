@@ -153,4 +153,3 @@ static inline UDItype UDIVMODDI4(UDItype n, UDItype d, UDItype *rp)
     ww.s.high = q1;
     return ww.ll;
 }
-

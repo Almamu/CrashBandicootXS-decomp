@@ -37,35 +37,32 @@
  *   using the 12-byte velocity records of gPlatformMoverMotionRecords, and drags
  *   the player along while it is `active` (MovePlayerWithPlatform). */
 
-struct vec_pair
-{
+struct vec_pair {
     u32 a;
     u32 b;
 };
 
-struct anim_rec
-{
+struct anim_rec {
     u8 unk_00[4];
-    s16 offX;   // 0x04 - a struct hitbox_quad (gfx.h)
-    s16 offY;   // 0x06
-    u8 padX;    // 0x08
-    u8 padY;    // 0x09
+    s16 offX; // 0x04 - a struct hitbox_quad (gfx.h)
+    s16 offY; // 0x06
+    u8 padX;  // 0x08
+    u8 padY;  // 0x09
     u8 unk_0A[0xA];
     u8 paletteId; // 0x14 - GetPaletteSlot(gPaletteCache, paletteId) gives the OBJ palette slot
     u8 unk_15;
-    u8 frames;  // 0x16
+    u8 frames; // 0x16
     u8 unk_17[5];
 };
 
-struct anim_table
-{
+struct anim_table {
     struct anim_rec *records;
 };
 
-struct gobj_vtable
-{
+struct gobj_vtable {
     u8 unk_00[0x10];
-    struct actor_method m10; // 0x10 - returns the platform record the object stands on (UpdateGroundSprite)
+    // 0x10 - returns the platform record the object stands on (UpdateGroundSprite)
+    struct actor_method m10;
     u8 unk_18[0x20];
     struct actor_method m38; // 0x38
     u8 unk_40[0x20];
@@ -75,49 +72,49 @@ struct gobj_vtable
 
 struct mover;
 
-struct gobj
-{
-    s32 x;              // 0x00
-    s32 y;              // 0x04
-    u16 id;             // 0x08
+struct gobj {
+    s32 x;  // 0x00
+    s32 y;  // 0x04
+    u16 id; // 0x08
     u8 unk_0A[2];
-    u8 flags;           // 0x0C
-    u8 flags2;          // 0x0D
+    u8 flags;  // 0x0C
+    u8 flags2; // 0x0D
     u8 unk_0E[0xA];
     struct gobj_vtable *vtable; // 0x18
-    void *platform;     // 0x1C - the last m10 record (UpdateGroundSprite/sub_800A590)
-    struct anim_table *anim; // 0x20
-    u8 dir;             // 0x24
-    u8 screenSpace;     // 0x25 - 1: x/y are screen coordinates (DrawSpriteAt skips WorldToScreen;
-                        //        always counts as on screen). GetSpriteScreenSpace/SetSpriteScreenSpace
+    void *platform;             // 0x1C - the last m10 record (UpdateGroundSprite/sub_800A590)
+    struct anim_table *anim;    // 0x20
+    u8 dir;                     // 0x24
+    // 0x25 - 1: x/y are screen coordinates (DrawSpriteAt skips WorldToScreen;
+    //        always counts as on screen). GetSpriteScreenSpace/SetSpriteScreenSpace
+    u8 screenSpace;
     u8 unk_26[2];
-    u8 mirror;          // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
-    u8 slot;            // 0x29 - low nibble: palette/tile slot
+    u8 mirror; // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
+    u8 slot;   // 0x29 - low nibble: palette/tile slot
     u8 unk_2A[2];
-    u8 animating;       // 0x2C - nonzero while the keyframe timer runs (box_part.h)
-    u8 tag;             // 0x2D
+    u8 animating; // 0x2C - nonzero while the keyframe timer runs (box_part.h)
+    u8 tag;       // 0x2D
     u8 unk_2E[2];
-    s32 frame;          // 0x30
-    s32 stepTimer;      // 0x34 - ticks spent on the current step (ResetSpriteFrameTimer)
-    u8 animDone;        // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
+    s32 frame;     // 0x30
+    s32 stepTimer; // 0x34 - ticks spent on the current step (ResetSpriteFrameTimer)
+    u8 animDone;   // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
     u8 unk_39[0xB];
-    struct mover *mover; // 0x44
+    struct mover *mover;     // 0x44
     struct speed_ramp rampX; // 0x48 - speedX's ramp (ApplySpriteVelocity)
     struct speed_ramp rampY; // 0x54 - speedY's ramp
-    s32 speedX;         // 0x60
-    s32 speedY;         // 0x64
-    u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
-    u8 probeTries;      // 0x69
+    s32 speedX;              // 0x60
+    s32 speedY;              // 0x64
+    // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
+    u8 hitAxes;
+    u8 probeTries; // 0x69
     u8 unk_6A[2];
-    s32 prevX;          // 0x6C - previous position (Q8), cached by ApplySpriteVelocity
-    s32 prevY;          // 0x70
-    s32 hitMask;        // 0x74 - probe axes hit this frame (OR-accumulated, see box_part.h)
-    s32 type;           // 0x78
+    s32 prevX;   // 0x6C - previous position (Q8), cached by ApplySpriteVelocity
+    s32 prevY;   // 0x70
+    s32 hitMask; // 0x74 - probe axes hit this frame (OR-accumulated, see box_part.h)
+    s32 type;    // 0x78
     u8 unk_7C[4];
 };
 
-struct mover_vtable
-{
+struct mover_vtable {
     u8 unk_00[8];
     struct actor_method m08; // 0x08
     struct actor_method m10; // 0x10
@@ -126,43 +123,42 @@ struct mover_vtable
     struct actor_method m60; // 0x60
 };
 
-struct mover
-{
+struct mover {
     u8 unk_00[4];
-    struct { struct vec_pair *entries; } *set; // 0x04
+    struct {
+        struct vec_pair *entries;
+    } *set; // 0x04
     u8 unk_08[4];
     struct mover_vtable *vtable; // 0x0C
-    s32 kind;           // 0x10
-    s32 timer;          // 0x14
-    s32 distX;          // 0x18
-    s32 distY;          // 0x1C
-    s32 lastX;          // 0x20
-    s32 lastY;          // 0x24
-    s32 rangeX;         // 0x28
-    s32 rangeY;         // 0x2C
-    u8 dirX;            // 0x30
-    u8 dirY;            // 0x31
-    u8 active;          // 0x32
+    s32 kind;                    // 0x10
+    s32 timer;                   // 0x14
+    s32 distX;                   // 0x18
+    s32 distY;                   // 0x1C
+    s32 lastX;                   // 0x20
+    s32 lastY;                   // 0x24
+    s32 rangeX;                  // 0x28
+    s32 rangeY;                  // 0x2C
+    u8 dirX;                     // 0x30
+    u8 dirY;                     // 0x31
+    u8 active;                   // 0x32
     u8 unk_33;
-    u32 time;           // 0x34
+    u32 time; // 0x34
 };
 
-struct pos2
-{
+struct pos2 {
     s32 x;
     s32 y;
 };
 
-struct spawn_rec
-{
-    u8 flags;           // 0x00
+struct spawn_rec {
+    u8 flags; // 0x00
     u8 unk_01[3];
-    u32 type;           // 0x04
-    s32 distX;          // 0x08
-    s32 distY;          // 0x0C
-    s16 dirX;           // 0x10
-    s16 dirY;           // 0x12
-    s16 flag;           // 0x14
+    u32 type;  // 0x04
+    s32 distX; // 0x08
+    s32 distY; // 0x0C
+    s16 dirX;  // 0x10
+    s16 dirY;  // 0x12
+    s16 flag;  // 0x14
 };
 
 extern s32 _call_via_r1(void *self, void *fn);

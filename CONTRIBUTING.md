@@ -235,8 +235,8 @@ editors the basics (4 spaces, LF, final newline, 100 columns):
 Format with the script rather than calling clang-format directly:
 
 ```
-python3 tools/format.py               # format the formatted paths in place
-python3 tools/format.py src/foo       # format another file or directory
+python3 tools/format.py               # format the whole tree in place
+python3 tools/format.py src/foo       # format just this file or directory
 python3 tools/format.py --check       # what CI runs; changes nothing
 ```
 
@@ -252,16 +252,30 @@ statement (and every one-line one longer than 100 columns) in
 operand layout stay as written. Do the same by hand for anything else
 whose layout is the point, such as a table aligned in columns.
 
-The tree is being formatted a few directories at a time. `FORMATTED` in
-`tools/format.py` lists the paths done so far, and CI fails a PR that
-leaves a file there unformatted; run `tools/format.py` before
-committing changes to them. Formatting only moves whitespace and line
-breaks, so the objects stay identical (`__LINE__` only reaches
-`COMPILE_TIME_ASSERT`'s typedef names, which emit nothing); still run
-the two clean checks above. A trailing comment that would push its line
-past 100 columns makes clang-format split the declaration in front of
-it instead (`void *` on one line, the name on the next), so move a long
-comment onto its own line above the member before formatting.
+All the C is formatted (`src/`, `include/` and `lib/`) except the data:
+`src/data` and `lib/*/data` (`UNFORMATTED` in `tools/format.py`). Those
+files are ROM-order tables emitted by the extraction tools, laid out one
+entry per line with row labels; that layout is their documentation, and
+clang-format would pack the entries into columns and split the labels
+off their rows. CI fails a PR that leaves any other C file unformatted,
+so run `tools/format.py` before committing. Formatting only moves
+whitespace and line breaks, so the objects stay identical (`__LINE__`
+only reaches `COMPILE_TIME_ASSERT`'s typedef names, which emit nothing);
+still run the two clean checks above.
+
+A trailing comment that would push its line past 100 columns makes
+clang-format split the declaration in front of it instead (`void *` on
+one line, the name on the next), or give up aligning it with its
+neighbours' comments, so move a long comment onto its own line above
+the member before formatting.
+
+clang-format never reflows a comment, and when it re-indents a
+multi-line `/* */` comment it moves only the first line. `--check`
+therefore also fails on a block comment whose continuation lines don't
+line up with its opening line: a ` * ` line must have its `*` one
+column right of the `/*`, and any other line must start three columns
+right of it. Re-indent the rest of the comment by hand when that
+happens (a trailing comment realigned, a `case` block indented).
 
 Two smaller quirks: in a one-line asm, write an empty operand list as
 `: :`, since clang-format reads `::` as C++'s scope operator and glues

@@ -31,8 +31,9 @@ jobs:
         python3 tools/match_idioms.py --check-macros
 
     # The C style (.clang-format, CONTRIBUTING.md "Code style"), checked on
-    # the paths formatted so far (FORMATTED in tools/format.py). The
-    # clang-format version is pinned: other versions format differently.
+    # all the C but the data tables (FORMATTED/UNFORMATTED in
+    # tools/format.py). The clang-format version is pinned: other versions
+    # format differently.
     - name: Check formatting
       run: |
         pipx install clang-format==21.1.8

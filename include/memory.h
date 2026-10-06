@@ -2,16 +2,16 @@
 #define __MEMORY_H__
 
 struct mem_block {
-    int size; // 0x00
-    int status; // 0x04
-    struct mem_block* next; // 0x08
-    struct mem_block* tail; // 0x0C
+    int size;               // 0x00
+    int status;             // 0x04
+    struct mem_block *next; // 0x08
+    struct mem_block *tail; // 0x0C
     u8 buffer[0];
 };
 
 struct mem_heap_header {
     struct mem_block header;
-    struct mem_block* nextFreeBlock; // 0x10
+    struct mem_block *nextFreeBlock; // 0x10
 };
 
 struct mem_heap {
@@ -28,13 +28,13 @@ struct mem_heap {
 #define MEM_HEAP_BOTH (MEM_HEAP_EWRAM | MEM_HEAP_IWRAM)
 
 // ensure some structs don't change size
-COMPILE_TIME_ASSERT(memory_h, sizeof (struct mem_block) == 0x10);
-COMPILE_TIME_ASSERT(memory_h, sizeof (struct mem_heap_header) == 0x14);
+COMPILE_TIME_ASSERT(memory_h, sizeof(struct mem_block) == 0x10);
+COMPILE_TIME_ASSERT(memory_h, sizeof(struct mem_heap_header) == 0x14);
 
 extern struct mem_heap mem_ewram_heap;
 extern struct mem_heap mem_iwram_heap;
-extern struct mem_heap* mem_iwram_heap_pointer;
-extern struct mem_heap* mem_ewram_heap_pointer;
+extern struct mem_heap *mem_iwram_heap_pointer;
+extern struct mem_heap *mem_ewram_heap_pointer;
 extern s32 mem_initial_free_bytes;
 extern int iwram_end;
 

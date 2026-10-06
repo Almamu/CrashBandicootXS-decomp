@@ -36,8 +36,7 @@ struct part_list;
  * (sub_8025228) and `heights` the surface height of each of the cell's
  * 8 pixel columns per mode, 0-7, 0xFF where there is none (GetTerrainHeights,
  * GetSolidTerrainHeights). */
-struct terrain_type
-{
+struct terrain_type {
     u8 modeValue[4];
     u8 heights[4][8];
 };
@@ -56,22 +55,22 @@ struct terrain_type
  * shape isn't confirmed enough to commit to one. (terrain_probe_axes.c
  * reads `unk010`/`unk014` as the width and height in tiles.) */
 struct tile_cache {
-    void *source;      /* 0x000 */
-    void *decodeBase;  /* 0x004 - gLevelLayers's camera offset + source->4; DecodeCollisionChunk's decode-table base */
-    s32 unk008;         /* 0x008 - source->0x1a << 3; not read anywhere in this cluster */
-    s32 unk00c;          /* 0x00c - source->0x1c << 3; not read anywhere in this cluster */
-    s32 unk010;           /* 0x010 - copy of source->0x1a; not read anywhere in this cluster */
-    s32 unk014;            /* 0x014 - copy of source->0x1c; not read anywhere in this cluster */
-    s32 width;               /* 0x018 - tiles, copy of source->0x16 */
-    s32 height;                /* 0x01c - tiles, copy of source->0x18; not read anywhere in this cluster */
-    u8 buf[16][0x100];           /* 0x020 - 0x1020, 16 decoded 256-byte chunks */
-    s32 id[16];                    /* 0x1020 - 0x105c, record IDs resident in `buf` */
-    s32 nextSlot;                    /* 0x1060 */
+    void *source; /* 0x000 */
+    /* 0x004 - gLevelLayers's camera offset + source->4; DecodeCollisionChunk's decode-table base */
+    void *decodeBase;
+    s32 unk008;        /* 0x008 - source->0x1a << 3; not read anywhere in this cluster */
+    s32 unk00c;        /* 0x00c - source->0x1c << 3; not read anywhere in this cluster */
+    s32 unk010;        /* 0x010 - copy of source->0x1a; not read anywhere in this cluster */
+    s32 unk014;        /* 0x014 - copy of source->0x1c; not read anywhere in this cluster */
+    s32 width;         /* 0x018 - tiles, copy of source->0x16 */
+    s32 height;        /* 0x01c - tiles, copy of source->0x18; not read anywhere in this cluster */
+    u8 buf[16][0x100]; /* 0x020 - 0x1020, 16 decoded 256-byte chunks */
+    s32 id[16];        /* 0x1020 - 0x105c, record IDs resident in `buf` */
+    s32 nextSlot;      /* 0x1060 */
 };
 
 /* A terrain probe's position (ProbeTerrain and its helpers). */
-struct probe_pos
-{
+struct probe_pos {
     s32 x;
     s32 y;
 };
@@ -81,20 +80,23 @@ struct probe_pos
  * pooled_bg_layer`, 0x60 bytes, InitPooledBgLayer) and the three other BG
  * layers (0x5C bytes each, InitBgLayer), the collision tile cache and the
  * loaded level asset. */
-struct level_layers
-{
-    s32 maxScrollX;                     // 0x00 - pixels
-    s32 maxScrollY;                     // 0x04
-    s32 scrollX;                        // 0x08 - pixels
-    s32 scrollY;                        // 0x0C
-    struct bg_scroll_layer *layer0;     // 0x10 - a struct pooled_bg_layer
-    struct bg_scroll_layer *layers[3];  // 0x14
-    struct tile_cache *tiles;           // 0x20 - 0x1064 bytes
-    void *asset;                        // 0x24
-    u8 assetOwned;                      // 0x28
-    u8 kind;                            // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set (ProbeTerrainX/Y; terrain_probe_axes.c's `nibble`)
-    u8 probeFlag;                       // 0x2A - CollidePlayer sets it around its ground probe (player_collide.c's `busy`, terrain_probe_axes.c's `flagHeld`)
-    u8 unk_2B;                          // 0x2B
+struct level_layers {
+    s32 maxScrollX;                    // 0x00 - pixels
+    s32 maxScrollY;                    // 0x04
+    s32 scrollX;                       // 0x08 - pixels
+    s32 scrollY;                       // 0x0C
+    struct bg_scroll_layer *layer0;    // 0x10 - a struct pooled_bg_layer
+    struct bg_scroll_layer *layers[3]; // 0x14
+    struct tile_cache *tiles;          // 0x20 - 0x1064 bytes
+    void *asset;                       // 0x24
+    u8 assetOwned;                     // 0x28
+    // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set
+    // (ProbeTerrainX/Y; terrain_probe_axes.c's `nibble`)
+    u8 kind;
+    // 0x2A - CollidePlayer sets it around its ground probe (player_collide.c's `busy`,
+    // terrain_probe_axes.c's `flagHeld`)
+    u8 probeFlag;
+    u8 unk_2B; // 0x2B
 };
 
 /* The entity flags (`gEntityFlags`, 0x408 bytes, InitEntityFlags; built
@@ -109,20 +111,18 @@ struct level_layers
  * (`bits0Copy` was `bitmap`, the list `struct collect_info`), time_trial.c
  * `struct collision_map` (`seen`), text_popup.h a `struct
  * level_record_table **`. */
-struct entity_flags
-{
+struct entity_flags {
     const struct level_entity_list *list; // 0x000 - the room's entities and their parameters
-    s32 pos;                            // 0x004 - SpawnRoomEntities's position argument >> 8
-    u32 bits0[64];                      // 0x008
-    u32 bits0Copy[64];                  // 0x108
-    u32 bits1[64];                      // 0x208
-    u32 bits1Copy[64];                  // 0x308
+    s32 pos;                              // 0x004 - SpawnRoomEntities's position argument >> 8
+    u32 bits0[64];                        // 0x008
+    u32 bits0Copy[64];                    // 0x108
+    u32 bits1[64];                        // 0x208
+    u32 bits1Copy[64];                    // 0x308
 };
 
 /* The camera's followed object (gPlayer, or level_select.c's follow
  * child). */
-struct camera_target
-{
+struct camera_target {
     s32 x;           // 0x00 - Q8
     s32 y;           // 0x04 - Q8
     u8 unk_08[0x1C]; // 0x08-0x23
@@ -135,8 +135,7 @@ struct camera_target
  * a Q8 position, a Q8 look-ahead offset, the followed object and the
  * mode. run_room.c called it `struct gl_scratch`, action_ctrl_event.c
  * `struct follow_state` and level_select.c `struct follow_owner`. */
-struct camera
-{
+struct camera {
     s32 x;                        // 0x00 - Q8
     s32 y;                        // 0x04 - Q8
     s32 vx;                       // 0x08 - Q8 look-ahead
@@ -233,7 +232,8 @@ extern void DestroyEntityFlags(void *self, s32 flags);
 extern void *InitEntityFlags(void *self);
 
 /* src/level/entity_spawner.c */
-extern void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src);
+extern void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed,
+                              struct fx_part *src);
 extern void *SpawnEffectPart(void *unused, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
 extern struct orbit_part *DropWumpa(void *unused, u32 x, u32 y, u32 p3, u32 p4, u32 flag5);
 extern void SpawnEntity(void **table, s32 id, u16 *rec);
@@ -380,7 +380,8 @@ extern void ResumeRoomAfterPause(void *self);
 extern void ResetObjBuffers(void);
 
 /* src/level/room_entities.c */
-extern void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list, const struct level_link_list *links, s32 pos, s32 unused);
+extern void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
+                              const struct level_link_list *links, s32 pos, s32 unused);
 
 /* src/level/room_frame.c */
 extern void UpdateRoomFrame(void *self);
@@ -507,8 +508,10 @@ extern s32 sub_8026C8C(void);
 extern s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *outValue);
 
 /* src/level/terrain_probe_axes.c */
-extern s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
-extern s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
+extern s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
+                         s32 submode);
+extern s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
+                         s32 submode);
 
 /* src/level/tile_cache.c */
 extern void DestroyTileCache(void *self, u32 flags);
@@ -555,8 +558,10 @@ extern void StepBgLayerScroll(void *self, void *delta);
 /* The BG layer method tables (src/data/entity_vtables_7e3bec.c) */
 extern const struct vtable_slot gBgLayerVtable[10];
 extern const struct vtable_slot gPooledBgLayerVtable[10];
-extern const struct vtable_slot gBgStreamerVtable[2];   /* InitBgStreamer/DestroyBgStreamer (cutscene_player.c) */
-extern const struct vtable_slot gBgLayerBaseVtable[5];  /* InitBgLayerBase/DestroyBgLayerBase (cutscene_player.c) */
+/* InitBgStreamer/DestroyBgStreamer (cutscene_player.c) */
+extern const struct vtable_slot gBgStreamerVtable[2];
+/* InitBgLayerBase/DestroyBgLayerBase (cutscene_player.c) */
+extern const struct vtable_slot gBgLayerBaseVtable[5];
 
 /* sym_iwram.txt */
 extern struct part_list *gDecorationList;

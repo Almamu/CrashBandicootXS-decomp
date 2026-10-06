@@ -61,18 +61,18 @@ struct sprite_bank_set {
 /* src/iwram/iwram_data.c */
 extern union key_state gKeys;
 extern u32 gRoomFrameCount;
-extern struct actor_self *gActorList;               /* the circular actor list's root (actor_self.prev/next) */
+extern struct actor_self *gActorList; /* the circular actor list's root (actor_self.prev/next) */
 
 /* sym_iwram.txt */
-extern u8 gDispcnt[2];                              /* the REG_DISPCNT shadow (CommitDispcnt), read and written bytewise */
+extern u8 gDispcnt[2]; /* the REG_DISPCNT shadow (CommitDispcnt), read and written bytewise */
 extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
-extern void *gSpriteRenderer;                       /* an empty 4-byte object (DrawSprite ignores it) */
+extern void *gSpriteRenderer; /* an empty 4-byte object (DrawSprite ignores it) */
 extern struct sprite_bank_set *gSpriteBankSet;
 extern void *gEntitySpawner;
 extern struct vram_upload_cursor *gObjVramCursor;
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void *gInput;                                /* UpdateKeys's object; it only reads gKeys */
+extern void *gInput; /* UpdateKeys's object; it only reads gKeys */
 extern struct hud_counter *gHud;
 extern u8 gJetpackPlayerInactive;
 

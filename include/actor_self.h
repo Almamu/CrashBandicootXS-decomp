@@ -22,12 +22,13 @@
  * matched functions are named; the rest (0xa-0xb) isn't exercised by
  * any function matched so far. */
 struct anim_frame_record {
-    u16 duration;       // 0x00 - copied into the owning self's `animTimer` on a sequence reset
-    s16 frameIndex;     // 0x02 - added to GetAnimFrameBaseOffset()'s result, indexes frameOffsets
-    s16 loopThreshold;  // 0x04 - UpdateJetpackCheckpointText wraps self->animTime back once the frame base
-                        // offset reaches this value
-    s16 loopBase;       // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
-    u16 attr;           // 0x08 - packed into the high halfword of GetAnimFrameAttr's return value
+    u16 duration;   // 0x00 - copied into the owning self's `animTimer` on a sequence reset
+    s16 frameIndex; // 0x02 - added to GetAnimFrameBaseOffset()'s result, indexes frameOffsets
+    // 0x04 - UpdateJetpackCheckpointText wraps self->animTime back once the frame base
+    // offset reaches this value
+    s16 loopThreshold;
+    s16 loopBase; // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
+    u16 attr;     // 0x08 - packed into the high halfword of GetAnimFrameAttr's return value
     u8 unknown_0a[2];
 };
 
@@ -42,10 +43,11 @@ struct actor_vtable {
     u8 unk_00[8];
     struct actor_method destroy; // 0x08 - slot 1, the (virtual) destructor; called with 3 to delete
     u8 unk_10[0x10];
-    struct actor_method m20;   // 0x20 - "damage" (called on the player with a strength)
+    struct actor_method m20; // 0x20 - "damage" (called on the player with a strength)
     u8 unk_28[8];
-    struct actor_method m30;   // 0x30 - the percentage UpdateHudPercentCounters shows (called on gActorList's root)
-    struct actor_method m38;   // 0x38 - "release" (no argument; DamageJetpackBalloon)
+    // 0x30 - the percentage UpdateHudPercentCounters shows (called on gActorList's root)
+    struct actor_method m30;
+    struct actor_method m38; // 0x38 - "release" (no argument; DamageJetpackBalloon)
 };
 
 /* A gcc 2.x pointer-to-member-function record, as stored in the
@@ -53,11 +55,11 @@ struct actor_vtable {
  * `index > 0` selects virtual slot `index - 1` of the method table
  * found at `this + vtableOffset`, otherwise `fn` is called directly. */
 struct actor_pmf {
-    s16 thisOffset;             // 0x00
-    s16 index;                  // 0x02
+    s16 thisOffset; // 0x00
+    s16 index;      // 0x02
     union {
-        s16 vtableOffset;       // 0x04 - index > 0
-        void *fn;               // 0x04 - index <= 0
+        s16 vtableOffset; // 0x04 - index > 0
+        void *fn;         // 0x04 - index <= 0
     } u;
 };
 
@@ -70,31 +72,31 @@ struct anim_table_record;
 
 struct actor_self {
     struct anim_frame_record *anims; // 0x00
-    u32 *frameOffsets;          // 0x04
-    s32 animTime;               // 0x08 - Q8 frame accumulator
-    s32 animIndex;              // 0x0C - current index into anims
-    u16 animTimer;              // 0x10
-    u8 animDone;                // 0x12 - set once the current sequence has played through
+    u32 *frameOffsets;               // 0x04
+    s32 animTime;                    // 0x08 - Q8 frame accumulator
+    s32 animIndex;                   // 0x0C - current index into anims
+    u16 animTimer;                   // 0x10
+    u8 animDone;                     // 0x12 - set once the current sequence has played through
     u8 unk_13;
-    s32 sortKey;                // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list
-                                //        by it (HeapSortActorsByKey); bit 15 also sets OAM priority
-    s32 palette;                // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
-    s32 x;                      // 0x1C
-    s32 y;                      // 0x20
-    s32 z;                      // 0x24
-    s32 state;                  // 0x28
-    u8 visible;                 // 0x2C - nonzero: drawn (RunActorCategoryFrame only puts these in
-                                //        gActorDrawList); InitActorPart sets it to 1
+    s32 sortKey; // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list
+                 //        by it (HeapSortActorsByKey); bit 15 also sets OAM priority
+    s32 palette; // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
+    s32 x;       // 0x1C
+    s32 y;       // 0x20
+    s32 z;       // 0x24
+    s32 state;   // 0x28
+    u8 visible;  // 0x2C - nonzero: drawn (RunActorCategoryFrame only puts these in
+                 //        gActorDrawList); InitActorPart sets it to 1
     u8 unk_2D[3];
     struct anim_table_record *record; // 0x30 - the record InitActorPart was given (actor_anim.h);
-                                //        the draw functions scale by its baseDepth
-    s32 depth;                  // 0x34
-    u8 box[0xC];                // 0x38 - collision box, copied from record->box_14 by InitActorPart
-                                //        (ActorsOverlap and friends read it as a struct box16)
-    s32 stateTime;              // 0x44 - frames spent in `state`
-    struct actor_self *prev;    // 0x48 - circular actor list (rooted at the player, gActorList):
-    struct actor_self *next;    // 0x4C   InitActorPart appends before the head; the draw and
-                                //        teardown loops walk `next` from the head
+                                      //        the draw functions scale by its baseDepth
+    s32 depth;                        // 0x34
+    u8 box[0xC];             // 0x38 - collision box, copied from record->box_14 by InitActorPart
+                             //        (ActorsOverlap and friends read it as a struct box16)
+    s32 stateTime;           // 0x44 - frames spent in `state`
+    struct actor_self *prev; // 0x48 - circular actor list (rooted at the player, gActorList):
+    struct actor_self *next; // 0x4C   InitActorPart appends before the head; the draw and
+                             //        teardown loops walk `next` from the head
     struct actor_vtable *vtable; // 0x50
 };
 

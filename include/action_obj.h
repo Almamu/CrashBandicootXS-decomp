@@ -14,15 +14,13 @@
 
 #include "player.h"
 
-struct act_method
-{
+struct act_method {
     s16 thisOffset;
     u8 unk_2[2];
     void *fn;
 };
 
-struct act_vtable
-{
+struct act_vtable {
     u8 unk_00[0x10];
     struct act_method m10; // 0x10
     u8 unk_18[8];
@@ -37,47 +35,46 @@ struct act_vtable
 
 /* One entry of the per-object table `act.anims` points at: indices into
  * gCtrlMotionRecords's 12-byte records for the +0x27 and +0x28 actions. */
-struct act_anim_pair
-{
+struct act_anim_pair {
     s32 first;
     s32 second;
 };
 
-struct act
-{
+struct act {
     u8 unk_00[4];
     struct act_anim_pair **anims; // 0x04
-    s32 state;             // 0x08
-    struct act_vtable *vt; // 0x0C
-    struct player *part; // 0x10
+    s32 state;                    // 0x08
+    struct act_vtable *vt;        // 0x0C
+    struct player *part;          // 0x10
     u8 unk_14[4];
-    s32 frame;             // 0x18
-    s32 frames;            // 0x1C
-    u8 charge;             // 0x20
+    s32 frame;  // 0x18
+    s32 frames; // 0x1C
+    u8 charge;  // 0x20
     u8 unk_21;
-    u8 unk_22;             // 0x22
-    u8 unk_23;             // 0x23
+    u8 unk_22; // 0x22
+    u8 unk_23; // 0x23
     u8 unk_24[2];
-    u8 spinCooldown;       // 0x26 - frames until the next spin is allowed (set to 12, counts down)
-    u8 motionX;            // 0x27 - queued X motion entry (anims->first)
-    u8 motionY;            // 0x28 - queued Y motion entry (anims->second)
-    u8 turboRun;           // 0x29 - set on entering the turbo run (L, state 4); landing resumes it
-                           //        instead of the plain run; the idle state clears it
+    u8 spinCooldown; // 0x26 - frames until the next spin is allowed (set to 12, counts down)
+    u8 motionX;      // 0x27 - queued X motion entry (anims->first)
+    u8 motionY;      // 0x28 - queued Y motion entry (anims->second)
+    u8 turboRun;     // 0x29 - set on entering the turbo run (L, state 4); landing resumes it
+                     //        instead of the plain run; the idle state clears it
     u8 unk_2A;
-    u8 bumpTimer;          // 0x2B - 3 after a crate's side stopped the X motion (event 12); counts down
-                           //        while at most one crate is touched, then re-queues bumpedMotionX
-    u8 bumpedMotionX;      // 0x2C - the motionX that bump cancelled
-    u8 prevState;          // 0x2D - `state` before the last SetActionCtrlMode (a flip jump, 9,
-                           //        turns the mid-air body slam into the flip body slam)
-    u8 prevSlippery;       // 0x2E - part->slippery last frame; UpdateActionCtrl calls sub_8012238 on a change
-    u8 motionXPending;     // 0x2F - ApplyActionCtrlMotion applies motionX
-    u8 motionYPending;     // 0x30 - ApplyActionCtrlMotion applies motionY
-    u8 motionXKeepSpeed;   // 0x31 - apply with SetCtrlTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed;   // 0x32 - the same for Y
-    u8 idleFidget;         // 0x33 - an idle fidget anim (0xE/5/0x1A, after 8/20/30 s) is playing;
-                           //        UpdateActionCtrl doesn't force the idle anim back meanwhile
-    u8 slamBlocked;        // 0x34 - R was held through a bounce (events 13/14): the mid-air body
-                           //        slam needs R released first (UpdateActionCtrl clears it then)
+    u8 bumpTimer;     // 0x2B - 3 after a crate's side stopped the X motion (event 12); counts down
+                      //        while at most one crate is touched, then re-queues bumpedMotionX
+    u8 bumpedMotionX; // 0x2C - the motionX that bump cancelled
+    u8 prevState;     // 0x2D - `state` before the last SetActionCtrlMode (a flip jump, 9,
+                      //        turns the mid-air body slam into the flip body slam)
+    // 0x2E - part->slippery last frame; UpdateActionCtrl calls sub_8012238 on a change
+    u8 prevSlippery;
+    u8 motionXPending;   // 0x2F - ApplyActionCtrlMotion applies motionX
+    u8 motionYPending;   // 0x30 - ApplyActionCtrlMotion applies motionY
+    u8 motionXKeepSpeed; // 0x31 - apply with SetCtrlTargetMotionX (speed kept), not Start...
+    u8 motionYKeepSpeed; // 0x32 - the same for Y
+    u8 idleFidget;       // 0x33 - an idle fidget anim (0xE/5/0x1A, after 8/20/30 s) is playing;
+                         //        UpdateActionCtrl doesn't force the idle anim back meanwhile
+    u8 slamBlocked;      // 0x34 - R was held through a bounce (events 13/14): the mid-air body
+                         //        slam needs R released first (UpdateActionCtrl clears it then)
 };
 
 typedef void (*act_fn1)(void *self, s32 a);

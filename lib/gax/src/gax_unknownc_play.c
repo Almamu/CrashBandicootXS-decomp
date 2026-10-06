@@ -27,7 +27,7 @@ asm(".set memcpy, MemCopy32");
 /* Only the parts of the song/channel/handler objects this file touches. */
 struct GaxSongInfo3 {
     u8 pad_00[0x1b];
-    u8 field_1b;                 /* 0x1b */
+    u8 field_1b; /* 0x1b */
 };
 
 struct GaxSongInfo2 {
@@ -42,68 +42,68 @@ struct GaxSongInfo1 {
 
 struct GaxSong {
     u8 pad_00[0xc];
-    u16 flags;                   /* 0x0c */
+    u16 flags; /* 0x0c */
     u8 pad_0e[0x30 - 0xe];
     struct GaxSongInfo1 *field_30; /* 0x30 */
 };
 
 struct GaxVoice {
     u8 pad_00[0x18];
-    u8 active;                   /* 0x18 */
+    u8 active; /* 0x18 */
 };
 
 struct GaxChanInfo {
     u8 pad_00[0x1f];
-    u8 field_1f;                 /* 0x1f */
+    u8 field_1f; /* 0x1f */
 };
 
 struct GaxChannel {
     u32 field_00;
-    struct GaxChanInfo *info;    /* 0x04 */
+    struct GaxChanInfo *info; /* 0x04 */
     u32 field_08;
-    struct GaxVoice *voices[1];  /* 0x0c - really hdr->childCount long */
+    struct GaxVoice *voices[1]; /* 0x0c - really hdr->childCount long */
 };
 
 struct UnknownCFormat {
     u8 pad_00;
-    u8 channels;                 /* 0x01 */
+    u8 channels; /* 0x01 */
     u8 pad_02[2];
-    u16 frames;                  /* 0x04 */
+    u16 frames; /* 0x04 */
 };
 
 struct UnknownCChild;
 
 struct UnknownCChildOps {
     u32 field_00[2];
-    u8 (*play)(struct UnknownCChild *child, u32 *buf, u32 arg);  /* 0x08 */
+    u8 (*play)(struct UnknownCChild *child, u32 *buf, u32 arg); /* 0x08 */
 };
 
 struct UnknownCChild {
     struct UnknownCChildOps *ops;
     u8 pad_04[9];
-    u8 isFirst;                  /* 0x0d */
+    u8 isFirst; /* 0x0d */
 };
 
 struct UnknownCCounts {
-    u32 primary;                 /* 0x00 */
-    u32 field_04;                /* 0x04 */
+    u32 primary;  /* 0x00 */
+    u32 field_04; /* 0x04 */
 };
 
 struct UnknownCHdr {
     u8 pad_00[8];
-    u8 (*step)(void *self, u32 a, u32 b);  /* 0x08 */
-    u32 childCount;              /* 0x0c */
+    u8 (*step)(void *self, u32 a, u32 b); /* 0x08 */
+    u32 childCount;                       /* 0x0c */
     u8 pad_10[8];
     struct UnknownCCounts *counts; /* 0x18 */
 };
 
 struct UnknownC {
-    struct UnknownCHdr *hdr;       /* 0x00 */
-    struct UnknownCFormat *format; /* 0x04 */
+    struct UnknownCHdr *hdr;         /* 0x00 */
+    struct UnknownCFormat *format;   /* 0x04 */
     struct UnknownCChild **children; /* 0x08 */
-    u32 pos;                       /* 0x0c */
-    u32 field_10;                  /* 0x10 */
-    u32 extraChildren;             /* 0x14 */
+    u32 pos;                         /* 0x0c */
+    u32 field_10;                    /* 0x10 */
+    u32 extraChildren;               /* 0x14 */
 };
 
 struct GaxWorkItem5 {
@@ -153,7 +153,9 @@ void sub_803A2C8(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count)
     u32 bytes = self->format->frames * self->format->channels * 2;
     struct GaxPlayerState *st = gGaxPlayerState;
     u32 f20 = st->echoBuf;
-    struct GaxWorkItem7 item = { buf, bytes, 0x55 - clampArg, count, f20, st->echoLen, st->echoTaps };
+    struct GaxWorkItem7 item = {
+        buf, bytes, 0x55 - clampArg, count, f20, st->echoLen, st->echoTaps
+    };
     void *arg;
 
     arg = &item;
@@ -299,6 +301,7 @@ void GaxMixFrame(struct GaxMixerHandler *self, u32 *buf)
  * expected/code_3.s disassembly actually labels (this raw span's own
  * start has no such label). The code copies of these at
  * `gGaxPlayerState+0x48`/`+0x9c` are what `GAX_CALL_ARM` enters. */
+// clang-format off
 asm(
         ".align 2, 0\n\t"
         "_0803A628:\n\t"
@@ -373,3 +376,4 @@ asm(
         ".byte 0x04, 0x00, 0x51, 0xE1, 0xE6, 0xFF, 0xFF, 0xDA, 0x02, 0x10, 0x41, 0xE2, 0x08, 0x20, 0x42, 0xE0\n\t"
         ".byte 0xE3, 0xFF, 0xFF, 0xEA\n\t"
 );
+// clang-format on
