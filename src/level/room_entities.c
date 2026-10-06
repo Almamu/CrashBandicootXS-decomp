@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include <agb_syscall.h>
 #include "crates.h"
@@ -232,7 +233,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                             /* Pinned: the ROM keeps the item pointer in
                              * r0 and the id in r1. As a local temporary
                              * the id is allocated first and takes r0. */
-                            register u16 aid asm("r1");
+                            MATCH_HOLD_REG(u16, aid, r1);
 
                             actor = (struct lk_actor *)gCrateList->slotArray[k2];
                             aid = actor->id;

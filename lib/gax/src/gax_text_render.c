@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* Word-wrap text/console-tile renderer used by the fatal-error screen
  * (GaxFatalError): writes `str`'s characters as tile indices into BG
@@ -45,13 +46,13 @@
  * shared `(u8)`-truncation tail. */
 void GaxDrawText(u32 col, u32 row, const char *str)
 {
-    register u8 *dst asm("r3");
-    register s32 colIdx asm("r1");
-    register const u8 *s asm("r5");
-    register u32 c asm("r6");
-    register s32 peekSeed asm("r2");
-    register s32 len asm("r4");
-    register s32 mask asm("ip");
+    MATCH_HOLD_REG(u8 *, dst, r3);
+    MATCH_HOLD_REG(s32, colIdx, r1);
+    MATCH_HOLD_REG(const u8 *, s, r5);
+    MATCH_HOLD_REG(u32, c, r6);
+    MATCH_HOLD_REG(s32, peekSeed, r2);
+    MATCH_HOLD_REG(s32, len, r4);
+    MATCH_HOLD_REG(s32, mask, ip);
     u32 base;
 
     s = (const u8 *)str;
@@ -74,7 +75,7 @@ void GaxDrawText(u32 col, u32 row, const char *str)
              * function - the ROM loads the 0x3f mask into r0 and ANDs
              * dst into it there, only shifting into colIdx (r1) as a
              * separate last step. */
-            register s32 t asm("r0") = 0x3f;
+            MATCH_HOLD_REG(s32, t, r0) = 0x3f;
             t &= (s32)dst;
             colIdx = t >> 1;
         }
@@ -82,7 +83,7 @@ void GaxDrawText(u32 col, u32 row, const char *str)
         next = s + 1;
 
         if (colIdx <= 0x1f) {
-            register s32 peek asm("r0") = peekSeed;
+            MATCH_HOLD_REG(s32, peek, r0) = peekSeed;
 
             /* The ROM re-tests `colIdx > 0x1f` at the top of every
              * lookahead iteration (not just once on entry, which the
@@ -153,13 +154,13 @@ term_check:
         if (colIdx == ' ') {
             colIdx = 0;
         } else if ((u32)colIdx <= 0x40) {
-            register s32 tmp asm("r0") = colIdx - 0x2f;
+            MATCH_HOLD_REG(s32, tmp, r0) = colIdx - 0x2f;
             colIdx = (u8)tmp;
         } else if ((u32)colIdx > 0x60) {
-            register s32 tmp asm("r0") = colIdx - 0x56;
+            MATCH_HOLD_REG(s32, tmp, r0) = colIdx - 0x56;
             colIdx = (u8)tmp;
         } else if ((u32)colIdx > 0x40) {
-            register s32 tmp asm("r0") = colIdx - 0x36;
+            MATCH_HOLD_REG(s32, tmp, r0) = colIdx - 0x36;
             colIdx = (u8)tmp;
         }
 

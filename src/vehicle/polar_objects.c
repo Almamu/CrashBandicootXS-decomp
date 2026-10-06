@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "util.h"
 #include <libgcc.h>
@@ -170,7 +171,7 @@ void *sub_802CE38(void *selfArg, void *part, s32 b, s32 c, s32 d)
 void UpdatePolarLauncher(void *selfArg)
 {
     struct actor_self *self = selfArg;
-    register s32 state asm("r5") = self->state;
+    MATCH_HOLD_REG(s32, state, r5) = self->state;
 
     if (state == 0) {
         goto case0;
@@ -182,7 +183,7 @@ void UpdatePolarLauncher(void *selfArg)
 
 case0:
     {
-        register s32 fired asm("r6") = (u8)IsTouchingPlayer(self);
+        MATCH_HOLD_REG(s32, fired, r6) = (u8)IsTouchingPlayer(self);
 
         if (fired) {
             LaunchPolarPlayer(gActorList);
@@ -191,8 +192,8 @@ case0:
             self->stateTime = state;
             self->animIndex = 1;
             {
-                register u16 anim asm("r0") = self->anims[1].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = self->anims[1].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
@@ -206,8 +207,8 @@ case0:
             self->stateTime = fired;
             self->animIndex = 1;
             {
-                register u16 anim asm("r0") = self->anims[1].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = self->anims[1].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
@@ -255,7 +256,7 @@ void *CreatePolarLauncher(void *selfArg, void *part, s32 b, s32 c, s32 d)
 void UpdatePolarPenguin(void *selfArg)
 {
     struct polar_penguin *self = selfArg;
-    register s32 state asm("r6");
+    MATCH_HOLD_REG(s32, state, r6);
 
     self->base.x += self->velX;
     self->base.y += self->velY;
@@ -270,7 +271,7 @@ void UpdatePolarPenguin(void *selfArg)
         }
 
         {
-            register s32 fired asm("r5") = (u8)IsTouchingPlayer(self);
+            MATCH_HOLD_REG(s32, fired, r5) = (u8)IsTouchingPlayer(self);
 
             if (fired) {
                 if ((u8)HurtPolarPlayer(gActorList)) {
@@ -284,8 +285,8 @@ void UpdatePolarPenguin(void *selfArg)
                     self->base.stateTime = state;
                     self->base.animIndex = state;
                     {
-                        register u16 anim asm("r0") = self->base.anims[0].duration;
-                        register u8 zero1 asm("r1") = 0;
+                        MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[0].duration;
+                        MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                         *(u16 *)&self->base.animTimer = anim;
                         *(u8 *)&self->base.animDone = zero1;
@@ -303,8 +304,8 @@ void UpdatePolarPenguin(void *selfArg)
                 self->base.stateTime = fired;
                 self->base.animIndex = fired;
                 {
-                    register u16 anim asm("r0") = self->base.anims[0].duration;
-                    register u8 zero1 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[0].duration;
+                    MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                     *(u16 *)&self->base.animTimer = anim;
                     *(u8 *)&self->base.animDone = zero1;
@@ -349,8 +350,8 @@ void AimPolarPenguin(void *selfArg, s32 target)
         }
 
         {
-            register s32 countdown2 asm("r1") = self->countdown;
-            register s32 lit asm("r0") = 0x1000;
+            MATCH_HOLD_REG(s32, countdown2, r1) = self->countdown;
+            MATCH_HOLD_REG(s32, lit, r0) = 0x1000;
 
             factor = __divsi3(lit, countdown2);
         }
@@ -385,8 +386,8 @@ void *CreatePolarPenguin(void *selfArg, void *part, s32 b, s32 c, s32 d, struct 
 void UpdatePolarIcicle(void *selfArg)
 {
     struct actor_self *self = selfArg;
-    register s32 threshold1 asm("r0");
-    register s32 depth asm("r1");
+    MATCH_HOLD_REG(s32, threshold1, r0);
+    MATCH_HOLD_REG(s32, depth, r1);
 
     if ((u8)IsTouchingPlayer(self)) {
         (u8)HurtPolarPlayer(gActorList);
@@ -398,21 +399,21 @@ void UpdatePolarIcicle(void *selfArg)
     if ((depth > threshold1 && self->state == 2)
         || (depth > 0x5A00 && self->state == 1)) {
         s32 frame;
-        register s32 idx asm("r1") = self->animIndex + 1;
+        MATCH_HOLD_REG(s32, idx, r1) = self->animIndex + 1;
 
         self->animIndex = idx;
         {
-            register u16 anim asm("r0") = self->anims[idx].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[idx].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
         }
         frame = GetAnimFrameBaseOffset(self);
         {
-            register s32 idx2 asm("r2") = self->animIndex;
-            register u8 *table2 asm("r3") = (u8 *)self->anims;
-            register s32 threshold asm("r1") = *(s16 *)(table2 + idx2 * 0xc + 4);
+            MATCH_HOLD_REG(s32, idx2, r2) = self->animIndex;
+            MATCH_HOLD_REG(u8 *, table2, r3) = (u8 *)self->anims;
+            MATCH_HOLD_REG(s32, threshold, r1) = *(s16 *)(table2 + idx2 * 0xc + 4);
 
             if (frame >= threshold) {
                 self->animTime = 0;
@@ -420,25 +421,25 @@ void UpdatePolarIcicle(void *selfArg)
         }
         goto increment;
     } else if (depth > 0x5000) {
-        register s32 zero asm("r5") = self->state;
+        MATCH_HOLD_REG(s32, zero, r5) = self->state;
 
         if (zero == 0) {
             s32 frame;
-            register s32 idx asm("r1") = self->animIndex + 1;
+            MATCH_HOLD_REG(s32, idx, r1) = self->animIndex + 1;
 
             self->animIndex = idx;
             {
-                register u16 anim asm("r0") = self->anims[idx].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = self->anims[idx].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
             }
             frame = GetAnimFrameBaseOffset(self);
             {
-                register s32 idx2 asm("r2") = self->animIndex;
-                register u8 *table2 asm("r3") = (u8 *)self->anims;
-                register s32 threshold asm("r1") = *(s16 *)(table2 + idx2 * 0xc + 4);
+                MATCH_HOLD_REG(s32, idx2, r2) = self->animIndex;
+                MATCH_HOLD_REG(u8 *, table2, r3) = (u8 *)self->anims;
+                MATCH_HOLD_REG(s32, threshold, r1) = *(s16 *)(table2 + idx2 * 0xc + 4);
 
                 if (frame >= threshold) {
                     self->animTime = zero;
@@ -467,7 +468,7 @@ tail:
 void *CreatePolarIcicle(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
 {
     struct actor_self *self = selfArg;
-    register s32 kind asm("r1");
+    MATCH_HOLD_REG(s32, kind, r1);
 
     InitActorPart(self, b, c, d, e);
     self->vtable = (struct actor_vtable *)gPolarIcicleVtable;
@@ -479,9 +480,9 @@ void *CreatePolarIcicle(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
     kind = kind * 4 - 0x40;
     self->animIndex = kind;
     {
-        register u16 anim asm("r0") = self->anims[kind].duration;
-        register u8 zero1 asm("r1") = 0;
-        register s32 zero2 asm("r2") = 0;
+        MATCH_HOLD_REG(u16, anim, r0) = self->anims[kind].duration;
+        MATCH_HOLD_REG(u8, zero1, r1) = 0;
+        MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
         *(u16 *)&self->animTimer = anim;
         *(u8 *)&self->animDone = zero1;
@@ -504,12 +505,12 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
 {
     struct actor_self *self = selfArg;
     u8 retrigger = (u8)retriggerParam;
-    register s32 tier asm("r5") = gLevelState->maskLevel;
+    MATCH_HOLD_REG(s32, tier, r5) = gLevelState->maskLevel;
 
     if (tier == 0 && retrigger == 0) {
         self->visible = tier;
     } else {
-        register s32 zero asm("r6");
+        MATCH_HOLD_REG(s32, zero, r6);
 
         QueueVramDmaTransfer((u8 *)gPolarAkuAkuPalette1 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         {
@@ -520,8 +521,8 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
         }
         self->animIndex = zero;
         {
-            register u16 anim asm("r0") = self->anims[0].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[0].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -539,21 +540,21 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
 
     if (tier == 3) {
         {
-            register s32 *addr asm("r1") = &gPolarAkuAkuInvincibleTimer;
-            register s32 val asm("r0") = 0x1F4;
+            MATCH_HOLD_REG(s32 *, addr, r1) = &gPolarAkuAkuInvincibleTimer;
+            MATCH_HOLD_REG(s32, val, r0) = 0x1F4;
 
             *addr = val;
         }
         {
-            register s32 state asm("r0") = 1;
-            register s32 zero asm("r2") = 0;
+            MATCH_HOLD_REG(s32, state, r0) = 1;
+            MATCH_HOLD_REG(s32, zero, r2) = 0;
 
             self->state = state;
             self->stateTime = zero;
             self->animIndex = zero;
             {
-                register u16 anim asm("r0") = self->anims[0].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = self->anims[0].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
@@ -562,8 +563,8 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
         }
         return;
     } else if (tier == 0 && retrigger != 0) {
-        register s32 two asm("r0");
-        register s32 one asm("r1");
+        MATCH_HOLD_REG(s32, two, r0);
+        MATCH_HOLD_REG(s32, one, r1);
 
         gPolarAkuAkuInvincibleTimer = tier;
         two = 2;
@@ -572,8 +573,8 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
         self->stateTime = tier;
         self->animIndex = one;
         {
-            register u16 anim asm("r0") = self->anims[1].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[1].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -581,8 +582,8 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
         self->animTime = tier;
         return;
     } else {
-        register s32 *addr asm("r0") = &gPolarAkuAkuInvincibleTimer;
-        register s32 zero asm("r2") = 0;
+        MATCH_HOLD_REG(s32 *, addr, r0) = &gPolarAkuAkuInvincibleTimer;
+        MATCH_HOLD_REG(s32, zero, r2) = 0;
 
         *addr = zero;
         if (self->state == 0) {
@@ -593,8 +594,8 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
         self->stateTime = zero;
         self->animIndex = zero;
         {
-            register u16 anim asm("r0") = self->anims[0].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[0].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -640,16 +641,16 @@ void UpdatePolarAkuAku(void *selfArg)
 
     {
         s32 frame = GetAnimFrameBaseOffset(self);
-        register s32 idx2 asm("r2") = self->animIndex;
-        register u8 *table2 asm("r3") = (u8 *)self->anims;
-        register u8 *record asm("r1") = (u8 *)(idx2 * 0xc);
+        MATCH_HOLD_REG(s32, idx2, r2) = self->animIndex;
+        MATCH_HOLD_REG(u8 *, table2, r3) = (u8 *)self->anims;
+        MATCH_HOLD_REG(u8 *, record, r1) = (u8 *)(idx2 * 0xc);
 
         asm("add %0, %0, %1" : "+r" (record) : "r" (table2));
         {
-            register s32 threshold asm("r2") = *(s16 *)(record + 4);
+            MATCH_HOLD_REG(s32, threshold, r2) = *(s16 *)(record + 4);
 
             if (frame >= threshold) {
-                register s32 diff asm("r0") = (threshold - *(s16 *)(record + 6)) << 8;
+                MATCH_HOLD_REG(s32, diff, r0) = (threshold - *(s16 *)(record + 6)) << 8;
 
                 self->animTime -= diff;
                 *(u8 *)&self->animDone = 1;

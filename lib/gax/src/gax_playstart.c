@@ -47,7 +47,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
     /* no-code hold: the ROM leaves r3 unused while `layout` is live
      * between the first tap scan and its `types[2]` test, so `layout`
      * lands in r4 */
-    register u32 hold asm("r3");
+    MATCH_HOLD_REG(u32, hold, r3);
 
     if (size <= 0x18b)
         goto fail;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "box_part.h"
 #include "bitmap_font.h"
 #include "text.h"
@@ -89,11 +90,11 @@ u8 RunSaveMenu(u32 state, u32 field10)
  * a VBlank IRQ request. */
 struct save_menu *InitSaveMenu(struct save_menu *arg0)
 {
-    register struct save_menu *self asm("r5") = arg0;
-    register void **field8cAddr asm("r9") = &self->field_8c;
-    register void **field90Addr asm("r8");
-    register s32 size asm("r6") = 0x200;
-    register void *obj asm("r4");
+    MATCH_HOLD_REG(struct save_menu *, self, r5) = arg0;
+    MATCH_HOLD_REG(void **, field8cAddr, r9) = &self->field_8c;
+    MATCH_HOLD_REG(void **, field90Addr, r8);
+    MATCH_HOLD_REG(s32, size, r6) = 0x200;
+    MATCH_HOLD_REG(void *, obj, r4);
 
     obj = OperatorNew(size);
     ResetSaveData(obj);
@@ -113,7 +114,7 @@ struct save_menu *InitSaveMenu(struct save_menu *arg0)
     RefreshSaveSlotSummaries(self, *field8cAddr);
 
     {
-        register struct link_session **sessionAddr asm("r4") = &gLinkSession;
+        MATCH_HOLD_REG(struct link_session **, sessionAddr, r4) = &gLinkSession;
         *sessionAddr = InitLinkSession(IwramAlloc(0x408));
     }
     FadeBrightness(0x80, 1, 0);
@@ -130,10 +131,10 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * - only when `flags` bit 0 is set - destroys `self` itself. */
 void DestroySaveMenu(struct save_menu *self, u32 flags)
 {
-    register void **c asm("r6");
-    register void **b asm("r5");
-    register void **a asm("r4");
-    register s32 n asm("r8");
+    MATCH_HOLD_REG(void **, c, r6);
+    MATCH_HOLD_REG(void **, b, r5);
+    MATCH_HOLD_REG(void **, a, r4);
+    MATCH_HOLD_REG(s32, n, r8);
 
     if (gLinkSession != NULL) {
         DestroyLinkSession(gLinkSession, 3);
@@ -149,7 +150,7 @@ void DestroySaveMenu(struct save_menu *self, u32 flags)
     n = 4;
     do {
         void *obj;
-        register struct part_method *p asm("r1");
+        MATCH_HOLD_REG(struct part_method *, p, r1);
 
         /* rowObjA/B/C[i]'s icon descriptor at +0x18 holds a {s16 offset,
          * u8 pad[2], void *fn} record at +0x50 - the same (offset, fn)
@@ -722,8 +723,8 @@ void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
  * docs/matching/archive/issue-5-overlay-ui-sync.md for the write-up. */
 void DrawSaveMenuMain(struct save_menu *self)
 {
-    register struct save_menu *selfReg asm("r9") = self;
-    register s32 y asm("sl") = 0x64;
+    MATCH_HOLD_REG(struct save_menu *, selfReg, r9) = self;
+    MATCH_HOLD_REG(s32, y, sl) = 0x64;
     s32 i = 0;
     /* `mgrAddr`'s init is deliberately kept last (right before the loop
      * body) - the ROM computes it right there too, not up front with
@@ -736,9 +737,9 @@ void DrawSaveMenuMain(struct save_menu *self)
      * the loop body's first asm block below, right after its own
      * unconditional `b`, is what actually lands this literal in the
      * ROM's exact early slot. */
-    register struct bitmap_font **mgrAddr asm("r8");
-    register s32 label asm("r6");
-    register struct bitmap_font *mgr asm("r4");
+    MATCH_HOLD_REG(struct bitmap_font **, mgrAddr, r8);
+    MATCH_HOLD_REG(s32, label, r6);
+    MATCH_HOLD_REG(struct bitmap_font *, mgr, r4);
 
     asm volatile(
         "ldr r1, =gSmallFont\n"

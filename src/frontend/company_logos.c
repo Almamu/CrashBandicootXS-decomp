@@ -180,7 +180,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
         u8 affine;
         /* Pinned so the local `self + 0x430` address below takes r3 and
          * `d` (the reduced `base + row * 0x100 + 0x60`) r3 in the loop. */
-        register struct dma_regs *dma asm("r2");
+        MATCH_HOLD_REG(struct dma_regs *, dma, r2);
 
         if (*flag)
         {
@@ -507,7 +507,7 @@ void DrawLogoActor(struct actor_self *self)
             }
             {
                 /* the ROM computes the tile number in r0 */
-                register u32 tile asm("r0") = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
+                MATCH_HOLD_REG(u32, tile, r0) = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
 
                 QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
             }

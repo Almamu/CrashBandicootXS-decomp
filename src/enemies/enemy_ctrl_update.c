@@ -349,7 +349,7 @@ static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
 /* MarkGone with r2 held live across the id compare (see above). */
 static inline void MarkGoneHeld(struct ctrl_target *t)
 {
-    register s32 hold asm("r2");
+    MATCH_HOLD_REG(s32, hold, r2);
 
     t->gone = 1;
     MATCH_HOLD(hold); /* no code: r2 live from here */

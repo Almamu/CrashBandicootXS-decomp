@@ -1,11 +1,12 @@
 #include "core.h"
+#include "match.h"
 #include "link.h"
 #include "save.h"
 
 void SetSaveFlags(struct save_data *self, u8 flags)
 {
-    register u8 loaded asm("r3");
-    register u8 v asm("r1");
+    MATCH_HOLD_REG(u8, loaded, r3);
+    MATCH_HOLD_REG(u8, v, r1);
 
     loaded = self->flags;
     v = loaded | flags;
@@ -93,7 +94,7 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
     /* One 0xc8 register for both products: the second multiplies
      * straight into it (`muls r2, r1`), and it then becomes the channel
      * pointer. */
-    register s32 c asm("r2") = 0xc8;
+    MATCH_HOLD_REG(s32, c, r2) = 0xc8;
     s32 n;
 
     /* players[pi].ring.count: the session's 0xd0 + 0x38 + 0x84 */
@@ -132,7 +133,7 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
             {
                 /* The ROM keeps the count pointer in r1, which leaves r2
                  * for `old`. */
-                register s32 *cnt asm("r1") = &ch->count;
+                MATCH_HOLD_REG(s32 *, cnt, r1) = &ch->count;
 
                 do
                 {

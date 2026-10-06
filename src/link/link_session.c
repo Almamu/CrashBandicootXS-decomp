@@ -475,7 +475,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             LINK_HASH(hash, &self->id[1]);
             {
                 /* The ROM sets this 0 in r0 before the hash store. */
-                register s32 z asm("r0") = 0;
+                MATCH_HOLD_REG(s32, z, r0) = 0;
 
                 *(u16 *)&self->id[6] = hash;
                 self->field_3c = z;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "vtable.h"
 #include "actor.h"
 #include "aabb.h"
@@ -42,23 +43,23 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
      * r0,r0,#24` a `u8`-typed register return always adds, that the
      * ROM never has - callers here still only read the low byte, so
      * the wider C return type changes nothing observable). */
-    register struct crate *self asm("r5") = selfArg;
-    register struct aabb *box asm("r6") = boxArg;
+    MATCH_HOLD_REG(struct crate *, self, r5) = selfArg;
+    MATCH_HOLD_REG(struct aabb *, box, r6) = boxArg;
     u8 skip = (self->flags >> 4) & 1;
-    register u32 result asm("r1");
+    MATCH_HOLD_REG(u32, result, r1);
 
     if (self->fallDistance != 0) {
         skip = 1;
     }
 
     if (!skip) {
-        register struct vtable_slot *table asm("r1") = (struct vtable_slot *)self->vtable;
-        register u8 *rec asm("r0") =
+        MATCH_HOLD_REG(struct vtable_slot *, table, r1) = (struct vtable_slot *)self->vtable;
+        MATCH_HOLD_REG(u8 *, rec, r0) =
             (u8 *)_call_via_r1((u8 *)self + table[2].delta, table[2].fn);
-        register s32 left asm("r4");
-        register s32 right asm("r1");
-        register s32 top asm("r5");
-        register s32 bottom asm("r3");
+        MATCH_HOLD_REG(s32, left, r4);
+        MATCH_HOLD_REG(s32, right, r1);
+        MATCH_HOLD_REG(s32, top, r5);
+        MATCH_HOLD_REG(s32, bottom, r3);
         u8 success;
 
         /* Anchored: builds `self`'s AABB (half-extents from the
@@ -114,9 +115,9 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
          * it correctly for save/restore. */
         success = 0;
         {
-            register s32 boxX asm("r2") = box->x;
+            MATCH_HOLD_REG(s32, boxX, r2) = box->x;
             if (left > boxX) {
-                register s32 boxRight asm("r0");
+                MATCH_HOLD_REG(s32, boxRight, r0);
                 asm volatile(
                     "ldr r0, [r6, #8]\n\t"
                     "add r0, r2, r0\n\t"
@@ -125,9 +126,9 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
                     : "cc"
                 );
                 if (right < boxRight) {
-                    register s32 boxY asm("r2") = box->y;
+                    MATCH_HOLD_REG(s32, boxY, r2) = box->y;
                     if (top > boxY) {
-                        register s32 boxBottom asm("r0");
+                        MATCH_HOLD_REG(s32, boxBottom, r0);
                         asm volatile(
                             "ldr r0, [r6, #0xc]\n\t"
                             "add r0, r2, r0\n\t"

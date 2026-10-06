@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "util.h"
 #include "system.h"
 
@@ -27,16 +28,16 @@
  * memory; letting gcc pick r7 on its own always does). */
 s32 itoa(s32 value, u8 *buffer, s32 base)
 {
-    register s32 v asm("r3");
-    register u8 *buf asm("r6");
-    register s32 baseR asm("r4");
+    MATCH_HOLD_REG(s32, v, r3);
+    MATCH_HOLD_REG(u8 *, buf, r6);
+    MATCH_HOLD_REG(s32, baseR, r4);
     s32 len;
-    register s32 negative asm("r5");
-    register s32 rem asm("r1");
+    MATCH_HOLD_REG(s32, negative, r5);
+    MATCH_HOLD_REG(s32, rem, r1);
     s32 temp;
-    register s32 i asm("r1");
-    register s32 j asm("r4");
-    register s32 k asm("r5");
+    MATCH_HOLD_REG(s32, i, r1);
+    MATCH_HOLD_REG(s32, j, r4);
+    MATCH_HOLD_REG(s32, k, r5);
 
     v = value;
     buf = buffer;
@@ -48,7 +49,7 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
         v = -v;
     }
     if (baseR == 16) {
-        register s32 mask asm("r2") = 0xF;
+        MATCH_HOLD_REG(s32, mask, r2) = 0xF;
         do {
             rem = v & mask;
             temp = v;
@@ -153,8 +154,8 @@ u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
     s32 width;
     s32 digitCount;
     s32 i;
-    register u8 *srcp asm("r2");
-    register u8 *dstp asm("r3");
+    MATCH_HOLD_REG(u8 *, srcp, r2);
+    MATCH_HOLD_REG(u8 *, dstp, r3);
     u8 ch;
     s32 charsConsumed;
 
@@ -199,7 +200,7 @@ skipSub:
     width -= 1;
 
     {
-        register s32 negOne asm("r0") = -1;
+        MATCH_HOLD_REG(s32, negOne, r0) = -1;
         charsConsumed = fmt - fmtStart;
         if (width != negOne) {
             do {
@@ -222,7 +223,7 @@ check:
         ch = *srcp;
     } while (ch != 0);
     {
-        register u8 zero asm("r0");
+        MATCH_HOLD_REG(u8, zero, r0);
         asm volatile("mov %0, #0" : "=r"(zero));
         *dstp = zero;
     }

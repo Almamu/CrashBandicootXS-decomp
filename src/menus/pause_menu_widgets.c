@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "bitmap_font.h"
 #include "pause_menu.h"
@@ -205,7 +206,7 @@ s32 PauseMenuCursorUp(struct pause_menu *self)
  * for r7 by itself). */
 s32 FormatDecimal(s32 value, u8 *dest)
 {
-    register s32 val asm("r5") = value;
+    MATCH_HOLD_REG(s32, val, r5) = value;
     u8 buf[0xc];
     s32 count;
     s32 i;

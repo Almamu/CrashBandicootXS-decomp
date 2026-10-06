@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "gfx_part.h"
 #include "objects.h"
@@ -60,21 +61,21 @@ void ResetGroundSprite(void *selfArg)
     u8 *self = selfArg;
 
     {
-        register s32 mask1 asm("r0") = 0x80;
-        register s32 curFlags asm("r1") = self[0xc];
-        register s32 combined asm("r0");
+        MATCH_HOLD_REG(s32, mask1, r0) = 0x80;
+        MATCH_HOLD_REG(s32, curFlags, r1) = self[0xc];
+        MATCH_HOLD_REG(s32, combined, r0);
 
         combined = mask1 | curFlags;
         {
-            register s32 mask2 asm("r1") = 0x40;
-            register s32 result asm("r0");
+            MATCH_HOLD_REG(s32, mask2, r1) = 0x40;
+            MATCH_HOLD_REG(s32, result, r0);
 
             result = combined | mask2;
             self[0xc] = result;
         }
     }
     {
-        register s32 zero asm("r0") = 0;
+        MATCH_HOLD_REG(s32, zero, r0) = 0;
 
         *(s32 *)(self + 0x60) = zero;
         *(s32 *)(self + 0x64) = zero;
@@ -85,13 +86,13 @@ void ResetGroundSprite(void *selfArg)
         *(s32 *)(self + 0x58) = zero;
         *(s32 *)(self + 0x5c) = zero;
         {
-            register u8 *addr68 asm("r2") = self + 0x68;
-            register s32 eight asm("r1") = 8;
+            MATCH_HOLD_REG(u8 *, addr68, r2) = self + 0x68;
+            MATCH_HOLD_REG(s32, eight, r1) = 8;
 
             *addr68 = eight;
         }
         {
-            register u8 *addr24 asm("r1") = self + 0x24;
+            MATCH_HOLD_REG(u8 *, addr24, r1) = self + 0x24;
 
             *addr24 = zero;
         }
@@ -100,9 +101,9 @@ void ResetGroundSprite(void *selfArg)
         *(s32 *)(self + 0x1c) = zero;
     }
     {
-        register s32 mask asm("r0") = 1;
-        register s32 byte asm("r1") = self[0xd];
-        register s32 result asm("r0");
+        MATCH_HOLD_REG(s32, mask, r0) = 1;
+        MATCH_HOLD_REG(s32, byte, r1) = self[0xd];
+        MATCH_HOLD_REG(s32, result, r0);
 
         result = mask | byte;
         self[0xd] = result;
@@ -131,9 +132,9 @@ u8 IsGroundSpriteGrounded(void *selfArg)
 void ClearGroundSpriteGrounded(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 mask asm("r1") = -3;
-    register s32 byte asm("r2") = self[0xd];
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = -3;
+    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
     self[0xd] = result;
@@ -142,9 +143,9 @@ void ClearGroundSpriteGrounded(void *selfArg)
 void SetGroundSpriteGrounded(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 mask asm("r1") = 2;
-    register s32 byte asm("r2") = self[0xd];
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = 2;
+    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
     self[0xd] = result;
@@ -153,10 +154,10 @@ void SetGroundSpriteGrounded(void *selfArg)
 /* `self+0xd` bit 0 get/set/clear accessors. */
 u8 IsGroundSpriteFloorProbeEnabled(void *selfArg)
 {
-    register u8 *self asm("r1");
-    register s32 mask asm("r0") = 1;
-    register s32 byte asm("r1");
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, self, r1);
+    MATCH_HOLD_REG(s32, mask, r0) = 1;
+    MATCH_HOLD_REG(s32, byte, r1);
+    MATCH_HOLD_REG(s32, result, r0);
 
     self = selfArg;
     byte = self[0xd];
@@ -167,9 +168,9 @@ u8 IsGroundSpriteFloorProbeEnabled(void *selfArg)
 void DisableGroundSpriteFloorProbe(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 mask asm("r1") = -2;
-    register s32 byte asm("r2") = self[0xd];
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = -2;
+    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
     self[0xd] = result;
@@ -178,9 +179,9 @@ void DisableGroundSpriteFloorProbe(void *selfArg)
 void EnableGroundSpriteFloorProbe(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 mask asm("r1") = 1;
-    register s32 byte asm("r2") = self[0xd];
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = 1;
+    MATCH_HOLD_REG(s32, byte, r2) = self[0xd];
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
     self[0xd] = result;
@@ -190,9 +191,9 @@ void EnableGroundSpriteFloorProbe(void *selfArg)
 void ClearSpriteObjFlag5(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 mask asm("r1") = -0x21;
-    register s32 byte asm("r2") = self[0xc];
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = -0x21;
+    MATCH_HOLD_REG(s32, byte, r2) = self[0xc];
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
     self[0xc] = result;
@@ -201,9 +202,9 @@ void ClearSpriteObjFlag5(void *selfArg)
 void SetSpriteObjFlag5(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 mask asm("r1") = 0x20;
-    register s32 byte asm("r2") = self[0xc];
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = 0x20;
+    MATCH_HOLD_REG(s32, byte, r2) = self[0xc];
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
     self[0xc] = result;

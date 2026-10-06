@@ -143,7 +143,7 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  *   recomputing fresh from `self` - the ROM always recomputes fresh
  *   here. A second, differently-named pointer variable (a fresh
  *   register) avoids the reuse.
- * - A plain `register T v asm("rN") = expr;` initializer is only a
+ * - A plain `MATCH_HOLD_REG(T, v, rN) = expr;` initializer is only a
  *   hint - gcc still felt free to materialize `expr` into a different
  *   register than `rN` for a handful of these single-use copies
  *   (`field_10`/`field_14`/`frameIndex`). Routing the copy through an
@@ -155,21 +155,21 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  *   (typically `r3`, left over from an unrelated adjacent OR-chain). */
 struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32 label1Arg, s32 label2Arg, s32 typeArg)
 {
-    register struct sub_8006700_actor *self asm("r5") = selfArg;
-    register s32 label1 asm("r8") = label1Arg;
-    register s32 label2 asm("r9") = label2Arg;
-    register s32 type asm("sl") = typeArg;
-    register s32 one asm("r3");
-    register s32 sixteen asm("r4");
+    MATCH_HOLD_REG(struct sub_8006700_actor *, self, r5) = selfArg;
+    MATCH_HOLD_REG(s32, label1, r8) = label1Arg;
+    MATCH_HOLD_REG(s32, label2, r9) = label2Arg;
+    MATCH_HOLD_REG(s32, type, sl) = typeArg;
+    MATCH_HOLD_REG(s32, one, r3);
+    MATCH_HOLD_REG(s32, sixteen, r4);
     struct settings_icon_actor *icon;
 
     InitBgSetup(&self->bg, 0, 0x1f, 0, 3);
 
     self->field_20 = 0;
     {
-        register u8 *addr asm("r2");
-        register s32 v asm("r0");
-        register s32 d asm("r1");
+        MATCH_HOLD_REG(u8 *, addr, r2);
+        MATCH_HOLD_REG(s32, v, r0);
+        MATCH_HOLD_REG(s32, d, r1);
 
         addr = (u8 *)self + 0x20;
         v = 0xc0;
@@ -198,7 +198,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         *addr = v;
 
         {
-            register vu32 *bldp asm("r1");
+            MATCH_HOLD_REG(vu32 *, bldp, r1);
 
             bldp = (vu32 *)REG_ADDR_BLDCNT;
             v = self->field_20;
@@ -212,9 +212,9 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
 
     self->field_28.all = 0;
     {
-        register u8 *addr asm("r2");
-        register s32 v asm("r0");
-        register s32 d asm("r1");
+        MATCH_HOLD_REG(u8 *, addr, r2);
+        MATCH_HOLD_REG(s32, v, r0);
+        MATCH_HOLD_REG(s32, d, r1);
 
         addr = (u8 *)self + 0x28;
         v = 0x40;
@@ -226,7 +226,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         *addr = v;
 
         {
-            register u8 *addr2 asm("r0");
+            MATCH_HOLD_REG(u8 *, addr2, r0);
 
             addr2 = (u8 *)self + 0x29;
             d = *addr2;
@@ -237,8 +237,8 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
     }
 
     {
-        register s32 t1 asm("r3");
-        register void *t2 asm("r0");
+        MATCH_HOLD_REG(s32, t1, r3);
+        MATCH_HOLD_REG(void *, t2, r0);
 
         MATCH_CONST_VOLATILE(t1, label1);
         self->field_10 = t1;
@@ -253,8 +253,8 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
     self->field_18 = icon;
     icon->field_20 = (void **)(SPRITE_BANK_BASE + (0xe4 << 1));
     {
-        register u8 *addr asm("r0");
-        register u8 t3 asm("r3");
+        MATCH_HOLD_REG(u8 *, addr, r0);
+        MATCH_HOLD_REG(u8, t3, r3);
 
         addr = (u8 *)icon + 0x2d;
         MATCH_CONST_VOLATILE(t3, (u8)type);
@@ -265,8 +265,8 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
     SetSpriteAnimDone(&icon->base, 0);
 
     {
-        register struct actor *iconAddr asm("r0");
-        register s32 v asm("r1");
+        MATCH_HOLD_REG(struct actor *, iconAddr, r0);
+        MATCH_HOLD_REG(s32, v, r1);
 
         iconAddr = &self->field_18->base;
         v = 0xf0 << 7;
@@ -275,10 +275,10 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         iconAddr->y = v;
 
         {
-            register s32 ret asm("r0") = GetSpriteAnimPaletteSlot(iconAddr);
-            register u8 *addr asm("r2") = &self->field_18->field_29;
-            register s32 mask asm("r1");
-            register u8 byte asm("r3");
+            MATCH_HOLD_REG(s32, ret, r0) = GetSpriteAnimPaletteSlot(iconAddr);
+            MATCH_HOLD_REG(u8 *, addr, r2) = &self->field_18->field_29;
+            MATCH_HOLD_REG(s32, mask, r1);
+            MATCH_HOLD_REG(u8, byte, r3);
 
             mask = 0xf;
             ret &= mask;

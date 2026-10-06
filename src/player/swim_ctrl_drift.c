@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "player.h"
 
@@ -27,21 +28,21 @@
  * value. */
 void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
 {
-    register s32 self asm("r6") = arg0;
-    register s32 arg1 asm("ip") = arg1arg;
-    register s32 arg2 asm("r5") = arg2arg;
-    register struct player *player asm("r3") = gPlayer;
-    register s32 vel asm("r4") = player->speedY;
-    register s32 sq asm("r1") = vel;
+    MATCH_HOLD_REG(s32, self, r6) = arg0;
+    MATCH_HOLD_REG(s32, arg1, ip) = arg1arg;
+    MATCH_HOLD_REG(s32, arg2, r5) = arg2arg;
+    MATCH_HOLD_REG(struct player *, player, r3) = gPlayer;
+    MATCH_HOLD_REG(s32, vel, r4) = player->speedY;
+    MATCH_HOLD_REG(s32, sq, r1) = vel;
     s32 result;
 
     sq = vel * sq;
     if (sq < 0) {
-        register s32 bias asm("r0") = 0x3FFF;
+        MATCH_HOLD_REG(s32, bias, r0) = 0x3FFF;
         sq += bias;
     }
     {
-        register s32 tmp asm("r0");
+        MATCH_HOLD_REG(s32, tmp, r0);
 
         sq >>= 0xe;
         sq += 4;
@@ -52,13 +53,13 @@ void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
     }
 
     {
-        register s32 signVel asm("r0") = vel >> 0x1f;
-        register s32 absVel asm("r1") = vel;
+        MATCH_HOLD_REG(s32, signVel, r0) = vel >> 0x1f;
+        MATCH_HOLD_REG(s32, absVel, r1) = vel;
 
         absVel = (absVel ^ signVel) - signVel;
         {
-            register s32 signArg2 asm("r2") = arg2 >> 0x1f;
-            register s32 absArg2 asm("r0") = arg2;
+            MATCH_HOLD_REG(s32, signArg2, r2) = arg2 >> 0x1f;
+            MATCH_HOLD_REG(s32, absArg2, r0) = arg2;
 
             absArg2 = (absArg2 ^ signArg2) - signArg2;
 
@@ -66,7 +67,7 @@ void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
                 player->rampY.start = self;
                 player->rampY.step = result;
             } else {
-                register s32 prod asm("r0") = vel;
+                MATCH_HOLD_REG(s32, prod, r0) = vel;
 
                 prod *= arg2;
                 if (prod < 0) {

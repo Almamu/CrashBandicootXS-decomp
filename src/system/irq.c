@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "system.h"
 #include "audio.h"
 #include <gax.h>
@@ -69,7 +70,7 @@ void EnableVBlankHandler(void) {
     s32* current = &base->funcs[7];
     // this does not look right, but matches generated assembly
     u8 tmp;
-    register u8* value asm("r1");
+    MATCH_HOLD_REG(u8 *, value, r1);
     
     do {
         *current-- = unknown;
@@ -85,7 +86,7 @@ void EnableVBlankHandler(void) {
 /* The inverse of EnableVBlankHandler: disables the VBlank IRQ in
  * DISPSTAT and reinstalls the previous VBlank handler. */
 void DisableVBlankHandler(void) {
-    register vu8* dispstat asm("r1") = (vu8 *)REG_ADDR_DISPSTAT;
+    MATCH_HOLD_REG(vu8 *, dispstat, r1) = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VBLANK_INTR;
     
     *dispstat &= ~tmp;
@@ -221,10 +222,10 @@ s32 UpdateKeys(void *input)
 {
     u16 keys;
     u16 keysCopy;
-    register u16 *addr asm("r2");
-    register u16 prevKeys asm("r3");
-    register u16 keysR1 asm("r1");
-    register s32 mask asm("r0");
+    MATCH_HOLD_REG(u16 *, addr, r2);
+    MATCH_HOLD_REG(u16, prevKeys, r3);
+    MATCH_HOLD_REG(u16, keysR1, r1);
+    MATCH_HOLD_REG(s32, mask, r0);
 
     keys = (u16)~REG_KEYINPUT;
     addr = &gKeys.half.held;
@@ -244,8 +245,8 @@ s32 UpdateKeys(void *input)
 /* Clears gKeys (held and newly pressed). */
 void ClearKeys(void)
 {
-    register u16 *addr asm("r2");
-    register u16 zero asm("r1");
+    MATCH_HOLD_REG(u16 *, addr, r2);
+    MATCH_HOLD_REG(u16, zero, r1);
 
     addr = &gKeys.half.held;
     zero = 0;

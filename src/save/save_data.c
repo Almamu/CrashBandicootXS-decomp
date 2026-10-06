@@ -212,7 +212,7 @@ static inline u32 checksum_ok(struct save_data *self)
     u32 *p = (u32 *)self;
     u32 sum = 0;
     s32 i;
-    register u32 result asm("r1");
+    MATCH_HOLD_REG(u32, result, r1);
 
     for (i = 0x7e; i >= 0; i--) {
         sum += *p++;
@@ -230,7 +230,7 @@ void ValidateSaveData(struct save_data *self)
     s32 i;
 
     if (!checksum_ok(self)) {
-        register u8 *marker asm("r6");
+        MATCH_HOLD_REG(u8 *, marker, r6);
         u8 *flags, *f1fb, *version;
 
         DmaFill16(3, 0, self, 0x200);
@@ -265,7 +265,7 @@ u32 CheckSaveChecksum(struct save_data *self)
     u32 *p = (u32 *)self;
     u32 sum = 0;
     s32 i;
-    register u32 result asm("r1");
+    MATCH_HOLD_REG(u32, result, r1);
 
     for (i = 0x7e; i >= 0; i--) {
         sum += *p++;
@@ -353,7 +353,7 @@ s32 StoreSaveData(struct save_data *self)
 void ReadSaveSlot(struct save_data *self, s32 row, void *dst)
 {
     if (self->slotEmpty[row] == 0) {
-        register s32 offset asm("r1");
+        MATCH_HOLD_REG(s32, offset, r1);
 
         offset = row * 0x70;
         offset = offset + (s32)self;
@@ -366,7 +366,7 @@ void ReadSaveSlot(struct save_data *self, s32 row, void *dst)
  * refreshes the checksum. */
 void WriteSaveSlot(struct save_data *self, s32 row, void *src)
 {
-    register s32 offset asm("r0");
+    MATCH_HOLD_REG(s32, offset, r0);
 
     self->slotEmpty[row] = 0;
     offset = row * 0x70;
@@ -416,7 +416,7 @@ u8 IsSaveSlotEmpty(struct save_data *self, s32 rowIndex)
 
 u8 TestSaveFlags(struct save_data *self, u8 flags)
 {
-    register u8 v asm("r1");
+    MATCH_HOLD_REG(u8, v, r1);
     u8 result;
 
     v = flags & self->flags;
@@ -429,8 +429,8 @@ u8 TestSaveFlags(struct save_data *self, u8 flags)
 
 void ClearSaveFlags(struct save_data *self, u8 flags)
 {
-    register u8 loaded asm("r3");
-    register u8 v asm("r1");
+    MATCH_HOLD_REG(u8, loaded, r3);
+    MATCH_HOLD_REG(u8, v, r1);
 
     loaded = self->flags;
     loaded &= ~flags;

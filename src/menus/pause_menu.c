@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "audio.h"
 #include "actor.h"
 #include "bitmap_font.h"
@@ -138,14 +139,14 @@ s32 RunPauseMenu(void)
  * `self` unchanged. */
 struct pause_menu *InitPauseMenu(struct pause_menu *self)
 {
-    register s32 zero asm("r6");
+    MATCH_HOLD_REG(s32, zero, r6);
 
     InitBgSetup(&self->bg, 0, 0x1f, 0, 3);
 
     {
-        register u32 *c8Addr asm("r4") = &self->field_c8;
-        register s32 orTen asm("r5");
-        register s32 one asm("r3");
+        MATCH_HOLD_REG(u32 *, c8Addr, r4) = &self->field_c8;
+        MATCH_HOLD_REG(s32, orTen, r5);
+        MATCH_HOLD_REG(s32, one, r3);
         u8 v;
 
         zero = 0;
@@ -163,21 +164,21 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         *(u8 *)c8Addr = v;
 
         {
-            register u8 *addr asm("r2") = &self->field_cc;
-            register s32 mask asm("r0") = -0x20;
-            register u8 byte asm("r1") = *addr;
+            MATCH_HOLD_REG(u8 *, addr, r2) = &self->field_cc;
+            MATCH_HOLD_REG(s32, mask, r0) = -0x20;
+            MATCH_HOLD_REG(u8, byte, r1) = *addr;
             mask &= byte;
             mask |= orTen;
             *addr = mask;
 
             {
-                register u32 bldcntAddr asm("r1") = REG_ADDR_BLDCNT;
-                register u32 bldcntVal asm("r0") = *c8Addr;
-                register u32 bldyVal asm("r0");
+                MATCH_HOLD_REG(u32, bldcntAddr, r1) = REG_ADDR_BLDCNT;
+                MATCH_HOLD_REG(u32, bldcntVal, r0) = *c8Addr;
+                MATCH_HOLD_REG(u32, bldyVal, r0);
 
                 asm volatile("str %1, [%0]\n\tadd %0, %0, #4" : "+r" (bldcntAddr) : "r" (bldcntVal));
                 {
-                    register u8 byte2 asm("r2") = *addr;
+                    MATCH_HOLD_REG(u8, byte2, r2) = *addr;
                     bldyVal = ((u32)byte2 << 27) >> 27;
                 }
                 *(vu16 *)bldcntAddr = bldyVal;
@@ -185,9 +186,9 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         }
 
         {
-            register void *addr asm("r2") = &self->field_d0;
-            register s32 v2 asm("r0");
-            register s32 r1v asm("r1");
+            MATCH_HOLD_REG(void *, addr, r2) = &self->field_d0;
+            MATCH_HOLD_REG(s32, v2, r0);
+            MATCH_HOLD_REG(s32, r1v, r1);
 
             *(u16 *)addr = zero;
             v2 = 0x40;
@@ -200,7 +201,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
 
         {
             u8 *hi = (u8 *)self + 0xd1;
-            register u8 byte2 asm("r2") = *hi;
+            MATCH_HOLD_REG(u8, byte2, r2) = *hi;
             one |= byte2;
             one |= orTen;
             *hi = one;
@@ -211,20 +212,20 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         InitPauseMenuInfo(self);
 
         {
-            register struct settings_icon_actor **field_c0_addr asm("r4") = (struct settings_icon_actor **)((u8 *)c8Addr - 8);
+            MATCH_HOLD_REG(struct settings_icon_actor **, field_c0_addr, r4) = (struct settings_icon_actor **)((u8 *)c8Addr - 8);
             struct settings_icon_actor *icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
 
             *field_c0_addr = icon;
             {
-                register u8 *base asm("r1") = SPRITE_BANK_BASE;
+                MATCH_HOLD_REG(u8 *, base, r1) = SPRITE_BANK_BASE;
                 asm volatile("mov r3, #0x8a\n\tlsl r3, r3, #2\n\tadd %0, %0, r3" : "+r" (base) :: "r3");
                 icon->field_20 = (void **)base;
             }
             {
-                register s32 _ret asm("r0") = GetSpriteAnimPaletteSlot((struct actor *)icon);
-                register u8 *_addr asm("r2") = &(*field_c0_addr)->field_29;
-                register s32 _mask asm("r1");
-                register u8 _byte asm("r3");
+                MATCH_HOLD_REG(s32, _ret, r0) = GetSpriteAnimPaletteSlot((struct actor *)icon);
+                MATCH_HOLD_REG(u8 *, _addr, r2) = &(*field_c0_addr)->field_29;
+                MATCH_HOLD_REG(s32, _mask, r1);
+                MATCH_HOLD_REG(u8, _byte, r3);
                 _mask = 0xf;
                 _ret &= _mask;
                 asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r" (_mask));
@@ -290,11 +291,11 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * own single-icon `arg0`. */
 void DestroyPauseMenu(struct pause_menu *selfArg, u32 flagsArg)
 {
-    register struct pause_menu *self asm("r6") = selfArg;
-    register u32 flags asm("sl") = flagsArg;
+    MATCH_HOLD_REG(struct pause_menu *, self, r6) = selfArg;
+    MATCH_HOLD_REG(u32, flags, sl) = flagsArg;
     struct settings_icon_actor **icons9cBase;
-    register struct settings_icon_actor **icons8cBase asm("r8") = NULL;
-    register struct settings_icon_actor **field88Addr asm("r9") = NULL;
+    MATCH_HOLD_REG(struct settings_icon_actor **, icons8cBase, r8) = NULL;
+    MATCH_HOLD_REG(struct settings_icon_actor **, field88Addr, r9) = NULL;
     struct settings_icon_actor **p;
     s32 i;
 

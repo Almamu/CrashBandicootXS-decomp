@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
 
@@ -11,14 +12,14 @@ s32 CheckPlatformContact(struct gobj *self)
 {
     if (self->type != 6 || self->frame <= 0x12)
     {
-        register struct player *p asm("r3") = gPlayer;
+        MATCH_HOLD_REG(struct player *, p, r3) = gPlayer;
         void *arg = *(void **)((u8 *)p->ctrl + 8);
-        register u32 f asm("r1") = p->flags.all;
-        register u32 top asm("r0") = f >> 7;
+        MATCH_HOLD_REG(u32, f, r1) = p->flags.all;
+        MATCH_HOLD_REG(u32, top, r0) = f >> 7;
 
         if (top)
         {
-            register s32 d asm("r2") = self->x;
+            MATCH_HOLD_REG(s32, d, r2) = self->x;
 
             d -= p->x;
             if (d < 0)

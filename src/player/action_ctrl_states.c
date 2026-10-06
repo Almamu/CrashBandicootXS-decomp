@@ -465,8 +465,8 @@ void ActionCtrlStateSlide(struct act *self)
  * store the ROM's registers. */
 static inline void ActSetNextB(struct act *self, s32 next)
 {
-    register s32 one asm("r0");
-    register u8 *flag asm("r1");
+    MATCH_HOLD_REG(s32, one, r0);
+    MATCH_HOLD_REG(u8 *, flag, r1);
 
     self->motionYKeepSpeed = 0;
     flag = &self->motionYPending;
@@ -818,15 +818,15 @@ void ActionCtrlStateCrawlStart(struct act *self)
         PlaySfx(gAudioContext, 0xc, 0x100);
 
         {
-            register u8 *part asm("r1") = (u8 *)self->part;
-            register s32 mask asm("r0") = 2;
+            MATCH_HOLD_REG(u8 *, part, r1) = (u8 *)self->part;
+            MATCH_HOLD_REG(s32, mask, r0) = 2;
             mask = -mask;
             mask &= part[0xd];
             part[0xd] = mask;
         }
         {
-            register u8 *part asm("r1") = (u8 *)self->part;
-            register s32 mask asm("r0") = 3;
+            MATCH_HOLD_REG(u8 *, part, r1) = (u8 *)self->part;
+            MATCH_HOLD_REG(s32, mask, r0) = 3;
             mask = -mask;
             mask &= part[0xd];
             part[0xd] = mask;

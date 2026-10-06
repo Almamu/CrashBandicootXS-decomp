@@ -102,7 +102,7 @@ asm(".align 2, 0");
  * ------------------------------------------------------------------ */
 s32 GetContinuePromptBlink(struct continue_prompt *self, s32 mode)
 {
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(s32, result, r0);
     s32 counter;
 
     if (mode != self->selection) {
@@ -268,8 +268,8 @@ void CreditsLoop(struct credits_screen *self)
     while (1) {
         UpdateKeys(gInput);
         {
-            register struct held_pressed_pair *p asm("r1") = &gKeys.half;
-            register s32 mask asm("r0") = 9;
+            MATCH_HOLD_REG(struct held_pressed_pair *, p, r1) = &gKeys.half;
+            MATCH_HOLD_REG(s32, mask, r0) = 9;
 
             mask &= p->pressed;
             if (mask)
@@ -703,7 +703,7 @@ void LoadCreditsLogos(struct credits_screen *self)
         {
             u16 *s = pal;
             /* Escaped copy of `slot`: see the note above. */
-            register s32 ps asm("r1") = slot;
+            MATCH_HOLD_REG(s32, ps, r1) = slot;
             s32 sh;
             u16 *d;
             s32 k;

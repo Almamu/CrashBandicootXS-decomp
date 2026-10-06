@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "gfx_part.h"
 #include "objects.h"
@@ -33,18 +34,18 @@
  * choice directly. */
 s32 ApplySpriteVelocity(void *arg0)
 {
-    register s32 *w asm("r2") = (s32 *)arg0;
-    register u8 *flags asm("r1");
+    MATCH_HOLD_REG(s32 *, w, r2) = (s32 *)arg0;
+    MATCH_HOLD_REG(u8 *, flags, r1);
     s32 fx, fy;
 
     {
-        register s32 v asm("r1") = w[0x60 / 4];
-        register s32 target asm("r3") = w[0x50 / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w[0x60 / 4];
+        MATCH_HOLD_REG(s32, target, r3) = w[0x50 / 4];
 
         if (v >= target) goto case1_ge;
         {
             s32 step = w[0x4c / 4];
-            register s32 result asm("r0") = v + step;
+            MATCH_HOLD_REG(s32, result, r0) = v + step;
             w[0x60 / 4] = result;
             if (result <= target) goto case1_done;
             goto case1_clamp;
@@ -53,7 +54,7 @@ s32 ApplySpriteVelocity(void *arg0)
         if (v <= target) goto case1_done;
         {
             s32 step = w[0x4c / 4];
-            register s32 result asm("r0") = v - step;
+            MATCH_HOLD_REG(s32, result, r0) = v - step;
             w[0x60 / 4] = result;
             if (result >= target) goto case1_done;
         }
@@ -64,13 +65,13 @@ s32 ApplySpriteVelocity(void *arg0)
     }
 
     {
-        register s32 v asm("r1") = w[0x64 / 4];
-        register s32 target asm("r3") = w[0x5c / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w[0x64 / 4];
+        MATCH_HOLD_REG(s32, target, r3) = w[0x5c / 4];
 
         if (v >= target) goto case2_ge;
         {
             s32 step = w[0x58 / 4];
-            register s32 result asm("r0") = v + step;
+            MATCH_HOLD_REG(s32, result, r0) = v + step;
             w[0x64 / 4] = result;
             if (result <= target) goto case2_done;
             goto case2_clamp;
@@ -79,7 +80,7 @@ s32 ApplySpriteVelocity(void *arg0)
         if (v <= target) goto case2_done;
         {
             s32 step = w[0x58 / 4];
-            register s32 result asm("r0") = v - step;
+            MATCH_HOLD_REG(s32, result, r0) = v - step;
             w[0x64 / 4] = result;
             if (result >= target) goto case2_done;
         }
@@ -98,7 +99,7 @@ s32 ApplySpriteVelocity(void *arg0)
 
     fy = w[0x64 / 4];
     {
-        register s32 mask asm("r0");
+        MATCH_HOLD_REG(s32, mask, r0);
         if (fy > 0) {
             mask = 8;
         } else if (fy < 0) {
@@ -119,7 +120,7 @@ skipY:
     }
     {
         s32 x = *(vs32 *)&w[0];
-        register s32 vx asm("r3") = w[0x60 / 4];
+        MATCH_HOLD_REG(s32, vx, r3) = w[0x60 / 4];
         x = x + vx;
         w[0] = x;
         {
@@ -129,7 +130,7 @@ skipY:
             w[1] = y;
 
             {
-                register vs32 *g asm("r0") = &gLastSpriteVelY;
+                MATCH_HOLD_REG(vs32 *, g, r0) = &gLastSpriteVelY;
 
                 asm volatile(
                     "ldr r2, [%0, #0]\n\t"
@@ -220,13 +221,13 @@ void DestroyMovingSprite(struct actor *self, u32 arg1)
     self->table = (void *)gMovingSpriteVtable;
 
     {
-        register void *rec asm("r2") = *(void **)((u8 *)self + 0x44);
+        MATCH_HOLD_REG(void *, rec, r2) = *(void **)((u8 *)self + 0x44);
 
         if (rec != 0) {
-            register u8 *tblAdj asm("r1") = *(u8 **)((u8 *)rec + 0xc) + 0x48;
-            register s32 offset asm("r0") = *(s16 *)tblAdj;
-            register void *addr asm("r0");
-            register void *fn asm("r2");
+            MATCH_HOLD_REG(u8 *, tblAdj, r1) = *(u8 **)((u8 *)rec + 0xc) + 0x48;
+            MATCH_HOLD_REG(s32, offset, r0) = *(s16 *)tblAdj;
+            MATCH_HOLD_REG(void *, addr, r0);
+            MATCH_HOLD_REG(void *, fn, r2);
 
             addr = (u8 *)rec + offset;
             fn = *(void **)(tblAdj + 4);
@@ -247,17 +248,17 @@ void DestroyMovingSprite(struct actor *self, u32 arg1)
 void ResetMovingSprite(void *self)
 {
     {
-        register s32 mask asm("r0") = 0x40;
-        register s32 byte asm("r1") = *((u8 *)self + 0xc);
-        register s32 result asm("r0");
+        MATCH_HOLD_REG(s32, mask, r0) = 0x40;
+        MATCH_HOLD_REG(s32, byte, r1) = *((u8 *)self + 0xc);
+        MATCH_HOLD_REG(s32, result, r0);
 
         result = mask | byte;
         *((u8 *)self + 0xc) = result;
     }
     {
-        register s32 mask asm("r0") = -9;
-        register s32 byte asm("r1") = *((u8 *)self + 0xd);
-        register s32 result asm("r0");
+        MATCH_HOLD_REG(s32, mask, r0) = -9;
+        MATCH_HOLD_REG(s32, byte, r1) = *((u8 *)self + 0xd);
+        MATCH_HOLD_REG(s32, result, r0);
 
         result = mask & byte;
         *((u8 *)self + 0xd) = result;
@@ -297,16 +298,16 @@ struct actor *InitMovingSprite(struct actor *part)
  * above. */
 void UpdateMovingSprite(struct actor *self)
 {
-    register void *rec asm("r2") = *(void **)((u8 *)self + 0x44);
+    MATCH_HOLD_REG(void *, rec, r2) = *(void **)((u8 *)self + 0x44);
 
     UpdateSpriteObj(self);
     rec = *(void **)((u8 *)self + 0x44);
     if (rec != 0) {
-        register u8 *tbl asm("r1") = *(u8 **)((u8 *)rec + 0xc);
-        register s32 offset asm("r0") = *(s16 *)(tbl + 8);
-        register void *addr asm("r0");
-        register void *fn asm("r2");
-        register void *arg1 asm("r1");
+        MATCH_HOLD_REG(u8 *, tbl, r1) = *(u8 **)((u8 *)rec + 0xc);
+        MATCH_HOLD_REG(s32, offset, r0) = *(s16 *)(tbl + 8);
+        MATCH_HOLD_REG(void *, addr, r0);
+        MATCH_HOLD_REG(void *, fn, r2);
+        MATCH_HOLD_REG(void *, arg1, r1);
 
         addr = (u8 *)rec + offset;
         fn = *(void **)(tbl + 0xc);

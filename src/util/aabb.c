@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "util.h"
 #include "level.h"
@@ -25,11 +26,11 @@
  * otherwise encode as a direct AND-immediate instead. */
 void CommitBlendRegs(void)
 {
-    register vu32 *bldReg asm("r2") = (vu32 *)REG_ADDR_BLDCNT;
-    register struct blend_regs *src asm("r1") = &gBlendRegs;
-    register u32 word asm("r0") = src->blend.raw;
-    register u32 bldy asm("r1");
-    register u32 masked asm("r0");
+    MATCH_HOLD_REG(vu32 *, bldReg, r2) = (vu32 *)REG_ADDR_BLDCNT;
+    MATCH_HOLD_REG(struct blend_regs *, src, r1) = &gBlendRegs;
+    MATCH_HOLD_REG(u32, word, r0) = src->blend.raw;
+    MATCH_HOLD_REG(u32, bldy, r1);
+    MATCH_HOLD_REG(u32, masked, r0);
 
     asm volatile("str %1, [%0]\n\tadd %0, %0, #4" : "+r"(bldReg) : "r"(word));
 

@@ -390,8 +390,8 @@ fade:
         {
             struct gl_point point;
             struct player *pl;
-            register s32 hold asm("r0");
-            register s32 hold1 asm("r1");
+            MATCH_HOLD_REG(s32, hold, r0);
+            MATCH_HOLD_REG(s32, hold1, r1);
 
             /* Hard-register hold (no code): with r0 and r1 live, the
              * global's address and the player pointer both land in r2,

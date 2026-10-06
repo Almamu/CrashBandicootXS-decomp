@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "util.h"
 #include "audio.h"
@@ -63,8 +64,8 @@ void YetiStateChase(void)
                 void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
                 s32 a3 = 0x100;
-                register u8 *stackPtr asm("r4") = &dummyStack;
-                register u8 one asm("r1") = 1;
+                MATCH_HOLD_REG(u8 *, stackPtr, r4) = &dummyStack;
+                MATCH_HOLD_REG(u8, one, r1) = 1;
 
                 *stackPtr = one;
                 PlayAmbientSfx_4(a0, 0x3f, a2, a3);
@@ -73,8 +74,8 @@ void YetiStateChase(void)
                 void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
                 s32 a3 = 0x100;
-                register u8 *stackPtr asm("r4") = &dummyStack;
-                register u8 one asm("r1") = 1;
+                MATCH_HOLD_REG(u8 *, stackPtr, r4) = &dummyStack;
+                MATCH_HOLD_REG(u8, one, r1) = 1;
 
                 *stackPtr = one;
                 PlayAmbientSfx_4(a0, 0x40, a2, a3);
@@ -126,8 +127,8 @@ void YetiStateChase(void)
                 *(s32 *)(bc + 0xc) = 1;
                 {
                     u16 anim = *(u16 *)(*(u8 **)bc + 0xc);
-                    register u8 zero1 asm("r2") = 0;
-                    register s32 zero2 asm("r3") = 0;
+                    MATCH_HOLD_REG(u8, zero1, r2) = 0;
+                    MATCH_HOLD_REG(s32, zero2, r3) = 0;
 
                     *(u16 *)(bc + 0x10) = anim;
                     bc[0x12] = zero1;
@@ -189,13 +190,13 @@ void YetiStateCharge(void)
 
         if (bc[0x12] != 0) {
             s32 *d0 = &gYetiState;
-            register s32 zero asm("r1") = 0;
+            MATCH_HOLD_REG(s32, zero, r1) = 0;
 
             *d0 = zero;
             *(s32 *)(bc + 0xc) = zero;
             {
                 u16 anim = *(u16 *)(*(u8 **)bc);
-                register u8 zero2 asm("r2") = 0;
+                MATCH_HOLD_REG(u8, zero2, r2) = 0;
 
                 *(u16 *)(bc + 0x10) = anim;
                 bc[0x12] = zero2;

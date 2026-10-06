@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "level_state.h"
 #include "aabb.h"
@@ -22,11 +23,11 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * same hit test. */
 void CheckPlayerContact(void *partArg)
 {
-    register struct actor *part asm("r4") = partArg;
-    register u8 flagsByte asm("r1") = part->flags;
-    register s32 flagsShifted asm("r0") = flagsByte >> 2;
-    register s32 mask asm("r5") = 1;
-    register s32 flagsBit asm("r0");
+    MATCH_HOLD_REG(struct actor *, part, r4) = partArg;
+    MATCH_HOLD_REG(u8, flagsByte, r1) = part->flags;
+    MATCH_HOLD_REG(s32, flagsShifted, r0) = flagsByte >> 2;
+    MATCH_HOLD_REG(s32, mask, r5) = 1;
+    MATCH_HOLD_REG(s32, flagsBit, r0);
 
     flagsBit = flagsShifted & mask;
     if (flagsBit) {
@@ -43,9 +44,9 @@ void CheckPlayerContact(void *partArg)
             }
         }
         {
-            register u8 fieldD asm("r1") = *((u8 *)part + 0xd);
-            register s32 shifted asm("r0") = fieldD >> 3;
-            register s32 bit asm("r0");
+            MATCH_HOLD_REG(u8, fieldD, r1) = *((u8 *)part + 0xd);
+            MATCH_HOLD_REG(s32, shifted, r0) = fieldD >> 3;
+            MATCH_HOLD_REG(s32, bit, r0);
 
             bit = shifted & mask;
             if (!bit) {
@@ -55,10 +56,10 @@ void CheckPlayerContact(void *partArg)
     }
 gate2:
     {
-        register u8 fieldD asm("r1") = *((u8 *)part + 0xd);
-        register s32 shifted asm("r0") = fieldD >> 3;
-        register s32 one asm("r1") = 1;
-        register s32 bit asm("r0");
+        MATCH_HOLD_REG(u8, fieldD, r1) = *((u8 *)part + 0xd);
+        MATCH_HOLD_REG(s32, shifted, r0) = fieldD >> 3;
+        MATCH_HOLD_REG(s32, one, r1) = 1;
+        MATCH_HOLD_REG(s32, bit, r0);
 
         bit = shifted & one;
         if (!bit) {
@@ -124,17 +125,17 @@ doCheck:
  * Matched. */
 void ResolvePlayerContact(void *partArg)
 {
-    register struct actor *part asm("r5") = partArg;
+    MATCH_HOLD_REG(struct actor *, part, r5) = partArg;
     s32 mode;
-    register void *addr asm("r0");
-    register s32 arg1 asm("r1");
-    register s32 arg2 asm("r2");
-    register void *deadRead asm("r4");
+    MATCH_HOLD_REG(void *, addr, r0);
+    MATCH_HOLD_REG(s32, arg1, r1);
+    MATCH_HOLD_REG(s32, arg2, r2);
+    MATCH_HOLD_REG(void *, deadRead, r4);
 
     {
-        register s32 flagBit asm("r0") = 8;
-        register u8 curFlags asm("r1") = part->flags;
-        register s32 newFlags asm("r0");
+        MATCH_HOLD_REG(s32, flagBit, r0) = 8;
+        MATCH_HOLD_REG(u8, curFlags, r1) = part->flags;
+        MATCH_HOLD_REG(s32, newFlags, r0);
 
         newFlags = flagBit | curFlags;
         part->flags = newFlags;
@@ -155,7 +156,7 @@ void ResolvePlayerContact(void *partArg)
 
 mode0:
     {
-        register struct player *player asm("r0") = gPlayer;
+        MATCH_HOLD_REG(struct player *, player, r0) = gPlayer;
         const struct actor_method *rec = &player->vtable->handleEvent;
         s16 offset = rec->thisOffset;
         addr = (u8 *)player + offset;
@@ -172,7 +173,7 @@ mode1or2:
         s16 offset = rec->thisOffset;
         void *addr0 = (u8 *)player + offset;
         u8 someByte = part->field_0A;
-        register void *deadRead0 asm("r4") = *(void *const volatile *)&rec->fn;
+        MATCH_HOLD_REG(void *, deadRead0, r4) = *(void *const volatile *)&rec->fn;
         (void)deadRead0;
 
         _call_via_r4(addr0, 0, someByte, 0);
@@ -190,7 +191,7 @@ mode1or2:
 
 tail:
     {
-        register s32 arg3 asm("r3") = 0;
+        MATCH_HOLD_REG(s32, arg3, r3) = 0;
         _call_via_r4(addr, arg1, arg2, arg3);
     }
     return;
@@ -200,7 +201,7 @@ checkMode3:
         u8 *rec = (u8 *)part->table + 0x68;
         s16 offset = *(s16 *)rec;
         void *addr3 = (u8 *)part + offset;
-        register void *deadRead3 asm("r4") = *(void *volatile *)(rec + 4);
+        MATCH_HOLD_REG(void *, deadRead3, r4) = *(void *volatile *)(rec + 4);
         (void)deadRead3;
         _call_via_r4(addr3, 1, 1, 0);
     }

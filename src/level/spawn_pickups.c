@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "sprite_bank.h"
 #include "text.h"
@@ -22,10 +23,10 @@
  * shared via a header since both files only need it locally. */
 #define UPDATE_PART_FRAME_NIBBLE(partPtr) \
     do { \
-        register s32 _ret asm("r0") = GetSpriteAnimPaletteSlot(partPtr); \
-        register u8 *_addr asm("r2") = (u8 *)(partPtr) + 0x29; \
-        register s32 _mask asm("r1"); \
-        register u8 _byte asm("r3"); \
+        MATCH_HOLD_REG(s32, _ret, r0) = GetSpriteAnimPaletteSlot(partPtr); \
+        MATCH_HOLD_REG(u8 *, _addr, r2) = (u8 *)(partPtr) + 0x29; \
+        MATCH_HOLD_REG(s32, _mask, r1); \
+        MATCH_HOLD_REG(u8, _byte, r3); \
         _mask = 0xf; \
         _ret &= _mask; \
         asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r" (_mask)); \
@@ -49,8 +50,8 @@
  * `+0x2d`/`+0xa` constants. */
 void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    register u8 tag asm("r5") = 1;
-    register u8 field0A asm("r6") = 0x25;
+    MATCH_HOLD_REG(u8, tag, r5) = 1;
+    MATCH_HOLD_REG(u8, field0A, r6) = 0x25;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
@@ -66,8 +67,8 @@ void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Same shape as `SpawnBodySlamPower` above, tag `0`, `+0xa = 0x24`. */
 void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    register u8 tag asm("r5") = 0;
-    register u8 field0A asm("r6") = 0x24;
+    MATCH_HOLD_REG(u8, tag, r5) = 0;
+    MATCH_HOLD_REG(u8, field0A, r6) = 0x24;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
@@ -83,8 +84,8 @@ void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Same shape as `SpawnBodySlamPower` above, tag `2`, `+0xa = 0x23`. */
 void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    register u8 tag asm("r5") = 2;
-    register u8 field0A asm("r6") = 0x23;
+    MATCH_HOLD_REG(u8, tag, r5) = 2;
+    MATCH_HOLD_REG(u8, field0A, r6) = 0x23;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
@@ -100,8 +101,8 @@ void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Same shape as `SpawnBodySlamPower` above, tag `3`, `+0xa = 0x26`. */
 void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    register u8 tag asm("r5") = 3;
-    register u8 field0A asm("r6") = 0x26;
+    MATCH_HOLD_REG(u8, tag, r5) = 3;
+    MATCH_HOLD_REG(u8, field0A, r6) = 0x26;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
@@ -123,12 +124,12 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if ((u8)IsCrystalSaved(gLevelState)) {
-        register struct actor *part asm("r4") = CreateStopwatch(arg0, arg1, arg2, arg3);
+        MATCH_HOLD_REG(struct actor *, part, r4) = CreateStopwatch(arg0, arg1, arg2, arg3);
 
         *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1b0;
         {
-            register u8 tag asm("r0") = 0;
-            register u8 *addr asm("r1") = (u8 *)part + 0x2d;
+            MATCH_HOLD_REG(u8, tag, r0) = 0;
+            MATCH_HOLD_REG(u8 *, addr, r1) = (u8 *)part + 0x2d;
             *addr = tag;
         }
         ResetSpriteFrameTimer(part);
@@ -137,8 +138,8 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         UPDATE_PART_FRAME_NIBBLE(part);
         *((u8 *)part + 0xa) = 0x1c;
         {
-            register u8 mask asm("r0") = 0x10;
-            register u8 old asm("r1") = part->flags;
+            MATCH_HOLD_REG(u8, mask, r0) = 0x10;
+            MATCH_HOLD_REG(u8, old, r1) = part->flags;
 
             mask |= old;
             part->flags = mask;
@@ -155,12 +156,12 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * there - matches a `void` return exactly). */
 void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    register u8 tag asm("r5");
-    register u8 field0A asm("r6");
+    MATCH_HOLD_REG(u8, tag, r5);
+    MATCH_HOLD_REG(u8, field0A, r6);
     struct actor *part;
-    register struct level_state *gv asm("r1") = gLevelState;
-    register s32 mask asm("r0") = 8;
-    register u8 byte asm("r1");
+    MATCH_HOLD_REG(struct level_state *, gv, r1) = gLevelState;
+    MATCH_HOLD_REG(s32, mask, r0) = 8;
+    MATCH_HOLD_REG(u8, byte, r1);
 
     byte = gv->flags;
     if (mask & byte) {
@@ -196,10 +197,10 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * choice directly. */
 void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
 {
-    register u32 rx asm("r1") = arg1;
-    register u32 ry asm("r2") = arg2;
-    register s32 x asm("r3");
-    register s32 y asm("r4");
+    MATCH_HOLD_REG(u32, rx, r1) = arg1;
+    MATCH_HOLD_REG(u32, ry, r2) = arg2;
+    MATCH_HOLD_REG(s32, x, r3);
+    MATCH_HOLD_REG(s32, y, r4);
     s32 point[2];
 
     asm volatile(
@@ -308,7 +309,7 @@ void DestroyEntitySpawner(void)
 void CreateEntitySpawner(void)
 {
     void **addr = &gEntitySpawner;
-    register void *obj asm("r0") = OperatorNew(8);
+    MATCH_HOLD_REG(void *, obj, r0) = OperatorNew(8);
 
     asm volatile("bl InitEntitySpawner" : "+r" (obj) :: "r1", "r2", "r3", "lr", "cc");
     *addr = obj;
@@ -340,7 +341,7 @@ void *InitLevelState(void *self)
 {
     {
         void **addr = (void **)&gAudioContext;
-        register void *audio asm("r0") = IwramAlloc(0x2094);
+        MATCH_HOLD_REG(void *, audio, r0) = IwramAlloc(0x2094);
 
         asm volatile("bl InitAudioContext" : "+r" (audio) :: "r1", "r2", "r3", "lr", "cc");
         *addr = audio;
@@ -351,14 +352,14 @@ void *InitLevelState(void *self)
 
     {
         void **addr = (void **)&gSpriteRenderer;
-        register void *tmp asm("r0") = OperatorNew(4);
+        MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
         asm volatile("bl nullsub_2" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {
         struct sprite_bank_set **addr = &gSpriteBankSet;
-        register void *tmp asm("r0") = OperatorNew(4);
+        MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
         asm volatile("bl nullsub_1" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
@@ -366,14 +367,14 @@ void *InitLevelState(void *self)
     }
     {
         struct palette_cache **addr = &gPaletteCache;
-        register struct palette_cache *cache asm("r0") = OperatorNew(0x8c << 2);
+        MATCH_HOLD_REG(struct palette_cache *, cache, r0) = OperatorNew(0x8c << 2);
 
         asm volatile("bl InitPaletteCache" : "+r" (cache) :: "r1", "r2", "r3", "lr", "cc");
         *addr = cache;
         {
-            register u16 count asm("r1") =
+            MATCH_HOLD_REG(u16, count, r1) =
                 gSpriteBankTable.paletteCount;
-            register const u8 *records asm("r2") =
+            MATCH_HOLD_REG(const u8 *, records, r2) =
                 gSpriteBankTable.palettes;
 
             SetPaletteCacheSource(cache, count, records);
@@ -400,14 +401,14 @@ void *InitLevelState(void *self)
     }
     {
         void **addr = (void **)&gInput;
-        register void *tmp asm("r0") = OperatorNew(4);
+        MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
         asm volatile("bl ClearKeys" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {
         struct entity_flags **addr = &gEntityFlags;
-        register void *tmp asm("r0") = OperatorNew(0x81 << 3);
+        MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(0x81 << 3);
 
         asm volatile("bl InitEntityFlags" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
@@ -418,14 +419,14 @@ void *InitLevelState(void *self)
         *addr = InitPaletteCycles(OperatorNew(0x48));
     }
     {
-        register u8 *addr asm("r0") = gDispcnt;
-        register u16 zero asm("r4") = 0;
+        MATCH_HOLD_REG(u8 *, addr, r0) = gDispcnt;
+        MATCH_HOLD_REG(u16, zero, r4) = 0;
 
         *(u16 *)addr = zero;
         SetObjMapping1D();
         CommitDispcnt();
         {
-            register u8 *addr2 asm("r0") = (u8 *)self + 0xc0;
+            MATCH_HOLD_REG(u8 *, addr2, r0) = (u8 *)self + 0xc0;
 
             asm volatile("str %1, [%0]" :: "r" (addr2), "r" (zero) : "memory");
         }

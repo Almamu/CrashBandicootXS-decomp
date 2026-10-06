@@ -34,8 +34,8 @@ void FontUploadTiles(struct bitmap_font *self)
 void FontSetPalette(struct bitmap_font *self, u8 val)
 {
     u32 shifted;
-    register u8 mask asm("r2");
-    register u8 field asm("r3");
+    MATCH_HOLD_REG(u8, mask, r2);
+    MATCH_HOLD_REG(u8, field, r3);
 
     shifted = val << 4;
     mask = 0xF;
@@ -58,8 +58,8 @@ void FontResetPalette(struct bitmap_font *self)
     u8 field = ((u8 *)rec)[0x14];
     s32 slot = GetPaletteSlot_s32(cache, field);
     u32 shifted = slot << 4;
-    register u8 mask asm("r1");
-    register u8 b asm("r2");
+    MATCH_HOLD_REG(u8, mask, r1);
+    MATCH_HOLD_REG(u8, b, r2);
 
     mask = 0xF;
     MATCH_KEEP_VOLATILE(mask);
@@ -82,7 +82,7 @@ void FontResetPalette(struct bitmap_font *self)
  * byte-exact match. */
 struct bitmap_font *InitFont(struct bitmap_font *selfArg)
 {
-    register struct bitmap_font *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct bitmap_font *, self, r4) = selfArg;
     s32 zero;
     struct icon_record **recordAddr;
 

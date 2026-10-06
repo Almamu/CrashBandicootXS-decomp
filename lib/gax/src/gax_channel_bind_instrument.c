@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* Binds a new instrument/entry to a per-channel voice object (`self`) from
  * `table->0x10[cmd]` and resets most of the voice's envelope/state fields
@@ -19,8 +20,9 @@
  * version doesn't spend. Closed this pass using the same "self lives in
  * ip for the whole leaf-ish function" idiom already established for
  * `sub_80259D4` (entity_flags.c, see
- * docs/matching/archive/naked-sub_80259d4-matched.md): `self` is pinned to a
- * `register void *asm("ip")` local, materialized from the incoming `r0`
+ * docs/matching/archive/naked-sub_80259d4-matched.md): `self` is pinned
+ * to a `MATCH_HOLD_REG(void *, selfIP, ip)` local, materialized from the
+ * incoming `r0`
  * together with `cmd`'s own copy (`r4`) via one opaque `asm volatile`
  * instruction pair (this compiler always schedules a lone `n`-copy ahead
  * of the `self`-stash otherwise, regardless of C statement order), and
@@ -38,8 +40,8 @@
 void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 cmd,
                              struct GaxSongData *table)
 {
-    register void *selfIP asm("ip");
-    register s32 n asm("r4");
+    MATCH_HOLD_REG(void *, selfIP, ip);
+    MATCH_HOLD_REG(s32, n, r4);
 
     asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(selfIP), "=r"(n) : "r"(self), "r"(cmd));
 
@@ -48,18 +50,18 @@ void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler
         void *entry = entryTable[n];
 
         {
-            register u8 *s1 asm("r1") = (u8 *)selfIP;
+            MATCH_HOLD_REG(u8 *, s1, r1) = (u8 *)selfIP;
             *(void **)(s1 + 0x3c) = entry;
         }
 
         {
-            register u8 zero8 asm("r1") = 0;
-            register u16 zero16 asm("r2") = 0;
-            register u8 *s3 asm("r3") = (u8 *)selfIP;
+            MATCH_HOLD_REG(u8, zero8, r1) = 0;
+            MATCH_HOLD_REG(u16, zero16, r2) = 0;
+            MATCH_HOLD_REG(u8 *, s3, r3) = (u8 *)selfIP;
             *(u16 *)(s3 + 0x38) = zero16;
 
             {
-                register u8 *s0 asm("r0") = (u8 *)selfIP + 0x22;
+                MATCH_HOLD_REG(u8 *, s0, r0) = (u8 *)selfIP + 0x22;
                 *s0 = zero8;
             }
 
@@ -68,25 +70,25 @@ void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler
             {
                 void *entry2 = *(void **)(s3 + 0x3c);
                 u8 v8 = *(u8 *)((u8 *)entry2 + 8);
-                register u8 *s3b asm("r3") = s3 + 0x23;
+                MATCH_HOLD_REG(u8 *, s3b, r3) = s3 + 0x23;
                 *s3b = v8;
 
                 {
-                    register u8 *s0b asm("r0") = (u8 *)selfIP;
+                    MATCH_HOLD_REG(u8 *, s0b, r0) = (u8 *)selfIP;
                     *(u16 *)(s0b + 0x36) = zero16;
                     *(u8 *)(s0b + 0x1f) = zero8;
                     *(u8 *)(s0b + 0x20) = zero8;
                 }
 
                 {
-                    register u8 ff asm("r0") = 0xff;
-                    register u8 *s1b asm("r1") = (u8 *)selfIP;
+                    MATCH_HOLD_REG(u8, ff, r0) = 0xff;
+                    MATCH_HOLD_REG(u8 *, s1b, r1) = (u8 *)selfIP;
                     *(u8 *)(s1b + 0x15) = ff;
 
                     {
                         void *entry3 = *(void **)(s1b + 0x3c);
                         u8 v84 = *((u8 *)entry3 + 0x84);
-                        register u8 *s3c asm("r3") = (u8 *)selfIP;
+                        MATCH_HOLD_REG(u8 *, s3c, r3) = (u8 *)selfIP;
                         *(u8 *)(s3c + 0x1e) = v84;
                         *(u16 *)(s3c + 0x32) = zero16;
                         *(u16 *)(s3c + 0x30) = zero16;
@@ -100,13 +102,13 @@ void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler
         }
 
         {
-            register u8 *s1c asm("r1") = (u8 *)selfIP;
+            MATCH_HOLD_REG(u8 *, s1c, r1) = (u8 *)selfIP;
             void *bound = *(void **)(s1c + 0x3c);
             if (bound != 0) {
                 void *songPtr = gGaxPlayerState->songPtr;
                 u8 *slotTable = *(u8 **)((u8 *)songPtr + 0x34);
                 if (slotTable != 0) {
-                    register u8 *s0d asm("r0") = (u8 *)selfIP + 0x53;
+                    MATCH_HOLD_REG(u8 *, s0d, r0) = (u8 *)selfIP + 0x53;
                     u8 idx = *s0d;
                     slotTable[idx * 4] = n;
                 }

@@ -173,7 +173,7 @@ void UpdateEnemyOscillateX(struct part_ctrl *self)
 {
     const s16 *table = gSineTable;
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
-    register s32 v asm("r2");
+    MATCH_HOLD_REG(s32, v, r2);
     s32 w;
     struct ctrl_target *target;
 
@@ -195,11 +195,11 @@ void UpdateEnemyOscillateX(struct part_ctrl *self)
  * - C97C: `table` pinned to r6, which puts `target` in r5 as in the ROM. */
 void UpdateEnemyBob(struct part_ctrl *self)
 {
-    register struct ctrl_target *target asm("r3") = self->target;
+    MATCH_HOLD_REG(struct ctrl_target *, target, r3) = self->target;
     const s16 *table = gSineTable;
     u32 t;
     s32 ph;
-    register s32 k asm("r6");
+    MATCH_HOLD_REG(s32, k, r6);
 
     /* Empty: marks r5 as used so the prologue saves it, as in the ROM. */
     asm("" : : : "r5");
@@ -213,7 +213,7 @@ void UpdateEnemyBob(struct part_ctrl *self)
 void UpdateEnemyOscillateY(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
-    register const s16 *table asm("r6") = gSineTable;
+    MATCH_HOLD_REG(const s16 *, table, r6) = gSineTable;
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
 
     /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
@@ -370,11 +370,11 @@ void AttachEnemyCtrl(struct part_ctrl *self, struct ctrl_target *target)
  * the negated branch condition into `cmp r1, #0x1f; bgt`. */
 s32 GetSfxVolumeAt(s32 x, s32 y)
 {
-    register s32 dx asm("r0") = x;
-    register s32 dy asm("r1") = y;
-    register struct player *obj asm("r3") = gPlayer;
-    register s32 mask asm("r2");
-    register s32 d asm("r1");
+    MATCH_HOLD_REG(s32, dx, r0) = x;
+    MATCH_HOLD_REG(s32, dy, r1) = y;
+    MATCH_HOLD_REG(struct player *, obj, r3) = gPlayer;
+    MATCH_HOLD_REG(s32, mask, r2);
+    MATCH_HOLD_REG(s32, d, r1);
 
     mask = obj->x >> 8;
     dx = dx - mask;
@@ -384,7 +384,7 @@ s32 GetSfxVolumeAt(s32 x, s32 y)
 
     dy = dy - (obj->y >> 8);
     {
-        register s32 mask2 asm("r0");
+        MATCH_HOLD_REG(s32, mask2, r0);
         mask2 = dy >> 31;
         dy = dy ^ mask2;
         dy = dy - mask2;
@@ -541,7 +541,7 @@ void UpdatePeriodicSpawner(struct periodic_spawner *self)
             void *arg0 = (void *)0xFFFF;
             u32 arg1 = ((u32)selfX << 16) >> 16;
             u32 arg2 = ((u32)self->base.y << 8) >> 16;
-            register s32 fn asm("r4");
+            MATCH_HOLD_REG(s32, fn, r4);
 
             fn = *(volatile s32 *)&self->callback;
             (void)fn;
@@ -606,7 +606,7 @@ extern void *_call_via_r1(void *addr, void *fn);
  * `UpdateOneShotAnimCtrl` itself documents needing: `other` pinned to `r4`
  * (matching the ROM's own register choice, freed up again by the time
  * the bitmap-set idiom's own `0x108`-offset computation reuses it),
- * plus the same chain of `register ... asm("rN")` pins and the
+ * plus the same chain of `MATCH_HOLD_REG` pins and the
  * `volatile` reload of `other+8` that function's own doc comment
  * already explains is needed to stop this compiler CSE-ing away the
  * ROM's own seemingly-redundant second `ldrh` and folding the
@@ -618,7 +618,7 @@ struct probe_vtable {
 
 void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
 {
-    register u8 *other asm("r4") = (u8 *)otherArg;
+    MATCH_HOLD_REG(u8 *, other, r4) = (u8 *)otherArg;
     struct probe_vtable *table = ((struct actor *)other)->table;
     s16 offset = table->m28.thisOffset;
     void *addr = other + offset;
@@ -627,23 +627,23 @@ void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
     (void)selfArg;
 
     if ((u8)(s32)_call_via_r1(addr, fn) == 0) {
-        register s32 one asm("r0") = 1;
-        register u8 flags asm("r1") = other[0xc];
+        MATCH_HOLD_REG(s32, one, r0) = 1;
+        MATCH_HOLD_REG(u8, flags, r1) = other[0xc];
 
         one |= flags;
         other[0xc] = one;
 
         {
-            register s32 sentinel asm("r0") = 0xFFFF;
-            register u16 val asm("r2") = *(u16 *)(other + 8);
+            MATCH_HOLD_REG(s32, sentinel, r0) = 0xFFFF;
+            MATCH_HOLD_REG(u16, val, r2) = *(u16 *)(other + 8);
 
             if (val != sentinel) {
-                register u16 val2 asm("r3") = *(u16 volatile *)(other + 8);
-                register u8 *base asm("r2") = (u8 *)gEntityFlags;
-                register s32 idx asm("r0");
+                MATCH_HOLD_REG(u16, val2, r3) = *(u16 volatile *)(other + 8);
+                MATCH_HOLD_REG(u8 *, base, r2) = (u8 *)gEntityFlags;
+                MATCH_HOLD_REG(s32, idx, r0);
                 s32 idxOffset;
                 s32 *bitmap;
-                register s32 bit asm("r0");
+                MATCH_HOLD_REG(s32, bit, r0);
 
                 asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r" (idx) : "r" (val2));
                 idxOffset = idx * 4;

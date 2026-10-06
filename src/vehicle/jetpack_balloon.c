@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
 #include "system.h"
@@ -37,7 +38,7 @@ struct jetpack_balloon {
  * running (`> 0`); otherwise passes the scaled ratio straight through. */
 s32 GetAirshipHpPercent(void)
 {
-    register s32 countdown asm("r4");
+    MATCH_HOLD_REG(s32, countdown, r4);
     s32 result;
 
     if (gAirshipState == 0) {
@@ -133,19 +134,19 @@ void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
 void ReleaseJetpackBalloon(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 zero asm("r2") = 0;
+    MATCH_HOLD_REG(s32, zero, r2) = 0;
 
     *(s32 *)(self + 0x58) = zero;
     *(s32 *)(self + 0x60) = zero;
     {
-        register s32 one asm("r1") = 1;
+        MATCH_HOLD_REG(s32, one, r1) = 1;
         *(s32 *)(self + 0x28) = one;
     }
     *(s32 *)(self + 0x44) = zero;
     *(s32 *)(self + 0xc) = zero;
     {
-        register u16 anim asm("r1") = *(u16 *)(*(u8 **)self);
-        register u8 zero3 asm("r3") = 0;
+        MATCH_HOLD_REG(u16, anim, r1) = *(u16 *)(*(u8 **)self);
+        MATCH_HOLD_REG(u8, zero3, r3) = 0;
 
         *(u16 *)(self + 0x10) = anim;
         self[0x12] = zero3;
@@ -186,8 +187,8 @@ void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
 void *CreateJetpackBalloon(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e)
 {
     u8 *self = selfArg;
-    register s32 eReg asm("r6") = e;
-    register s32 health asm("r5") = 2;
+    MATCH_HOLD_REG(s32, eReg, r6) = e;
+    MATCH_HOLD_REG(s32, health, r5) = 2;
 
     InitActorPart(self, part, b, c, d);
     *(s32 *)(self + 0x54) = health;

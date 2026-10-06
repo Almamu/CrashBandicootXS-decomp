@@ -208,20 +208,20 @@ struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 fl
  * (`lib/libgcc/lib1funcs.s`) rather than a direct `blx` - which
  * specific trampoline (here, `_call_via_r5`/"bx r5") depends purely on
  * which register this compiler's allocator happens to land the
- * function pointer in, hence the `register ... asm("r5")` pin plus the
+ * function pointer in, hence the `MATCH_HOLD_REG(..., r5)` pin plus the
  * empty-asm "keep this value live" barrier right before the call. */
 extern void _call_via_r5(u32 id, u16 a1, u16 a2, u16 a3);
 
 void SpawnEntity(void **table, s32 id, u16 *rec)
 {
-    register void *tablePtr asm("r1") = *table;
-    register u16 idx asm("r3") = rec[0];
-    register s32 shifted asm("r0") = idx << 2;
+    MATCH_HOLD_REG(void *, tablePtr, r1) = *table;
+    MATCH_HOLD_REG(u16, idx, r3) = rec[0];
+    MATCH_HOLD_REG(s32, shifted, r0) = idx << 2;
     void *entry = (u8 *)shifted + (s32)tablePtr;
     u16 p1 = rec[1];
     u16 p2 = rec[2];
     u16 p3 = rec[3];
-    register void *fn asm("r5") = *(void **)entry;
+    MATCH_HOLD_REG(void *, fn, r5) = *(void **)entry;
 
     MATCH_USE(fn);
     _call_via_r5(id, p1, p2, p3);

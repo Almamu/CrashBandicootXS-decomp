@@ -107,21 +107,21 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * loads 1->r9, 0->sl, 1->r8. */
 void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 {
-    register u32 raw0 asm("r0") = arg0;
-    register u32 raw1 asm("r1") = arg1;
-    register u32 raw2 asm("r2") = arg2;
-    register u32 raw3 asm("r3") = arg3;
-    register struct popup_part *part asm("r4");
-    register s32 oneSb asm("sb");
-    register s32 zeroSl asm("sl");
-    register s32 oneR8 asm("r8");
+    MATCH_HOLD_REG(u32, raw0, r0) = arg0;
+    MATCH_HOLD_REG(u32, raw1, r1) = arg1;
+    MATCH_HOLD_REG(u32, raw2, r2) = arg2;
+    MATCH_HOLD_REG(u32, raw3, r3) = arg3;
+    MATCH_HOLD_REG(struct popup_part *, part, r4);
+    MATCH_HOLD_REG(s32, oneSb, sb);
+    MATCH_HOLD_REG(s32, zeroSl, sl);
+    MATCH_HOLD_REG(s32, oneR8, r8);
     void *p2;
     void *p3;
-    register struct part_ctrl *hdr asm("r6");
+    MATCH_HOLD_REG(struct part_ctrl *, hdr, r6);
     struct ctrl_anchor *table;
 
   {
-    register s32 idx asm("r5");
+    MATCH_HOLD_REG(s32, idx, r5);
 
     asm volatile(
         "add r5, r3, #0\n\t"
@@ -145,9 +145,9 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     *(void **)((u8 *)part + 0x20) = (u8 *)p3 + 0x78;
 
     {
-        register s32 result asm("r0") = GetSpriteAnimPaletteSlot((struct actor *)part);
-        register u8 *addr asm("r2") = (u8 *)part + 0x29;
-        register s32 acc asm("r1");
+        MATCH_HOLD_REG(s32, result, r0) = GetSpriteAnimPaletteSlot((struct actor *)part);
+        MATCH_HOLD_REG(u8 *, addr, r2) = (u8 *)part + 0x29;
+        MATCH_HOLD_REG(s32, acc, r1);
         result &= 0xf;
         asm volatile("mov r1, #0x10\n\tneg r1, r1\n\t" : "=r" (acc));
         acc &= *addr;
@@ -159,20 +159,20 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     table = hdr->anchor;
     _call_via_r2((u8 *)hdr + table->attach.thisOffset, part, table->attach.fn);
     {
-        register s32 tagVal asm("r0") = 0xa;
+        MATCH_HOLD_REG(s32, tagVal, r0) = 0xa;
         hdr->kind = tagVal;
     }
     part->hdr = hdr;
     table = hdr->anchor;
     {
-        /* A bare `register s32 off asm("r3") = 0x18;` pin is silently
+        /* A bare `MATCH_HOLD_REG(s32, off, r3) = 0x18;` pin is silently
          * ignored by this compiler for a simple constant initializer
          * (lands the two-step mov/lsl synthesis in whatever register it
          * likes, not the ROM's r3) - the same gotcha
          * docs/matching/archive/issue-31-graphics-loading.md documents for
          * SpawnDingodile's own `+0x20` table-offset constant. Spelled out
          * as a full hand-written trampoline call instead. */
-        register void *tbl asm("r1") = table;
+        MATCH_HOLD_REG(void *, tbl, r1) = table;
         asm volatile(
             "mov r3, #0x18\n\t"
             "ldrsh r0, [r1, r3]\n\t"
@@ -203,7 +203,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         : "r0", "r1", "r2", "r3", "memory");
 
     {
-        register void *gAddr asm("r0") = &gEntityFlags;
+        MATCH_HOLD_REG(void *, gAddr, r0) = &gEntityFlags;
 
         asm volatile(
             "ldr r0, [r0]\n\t"
@@ -249,13 +249,13 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     AddToPartList(gCollidableList, part);
 
     {
-        register const void *val asm("r0") = gEnemyDefaultAnimMap;
-        register void *statAddr asm("r5") = (u8 *)hdr + 0x84;
+        MATCH_HOLD_REG(const void *, val, r0) = gEnemyDefaultAnimMap;
+        MATCH_HOLD_REG(void *, statAddr, r5) = (u8 *)hdr + 0x84;
         *(const void **)statAddr = val;
 
         {
-            register u8 *addr2d asm("r0") = (u8 *)part + 0x2d;
-            register s32 tagVal2 asm("r3") = oneSb;
+            MATCH_HOLD_REG(u8 *, addr2d, r0) = (u8 *)part + 0x2d;
+            MATCH_HOLD_REG(s32, tagVal2, r3) = oneSb;
             *addr2d = tagVal2;
         }
 
@@ -264,7 +264,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         SetSpriteAnimDone(part, 0);
 
         {
-            register s32 six asm("r0") = 6;
+            MATCH_HOLD_REG(s32, six, r0) = 6;
             *(u8 *)((u8 *)part + 0xa) = six;
         }
 
@@ -845,7 +845,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     struct level_record *rec;
     struct level_record *rec2;
     struct popup_bits *q2;
-    register s32 h3 asm("r3");
+    MATCH_HOLD_REG(s32, h3, r3);
 
     part->anim = POPUP_ANIM(0x114);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);

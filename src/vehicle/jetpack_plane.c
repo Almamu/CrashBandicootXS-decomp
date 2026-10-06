@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
 #include "audio.h"
@@ -236,7 +237,7 @@ void DamageJetpackPlane(struct jetpack_plane *self, s32 damage)
  * ROM does (docs/workflow.md). */
 void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d, struct spawn_arg *arg)
 {
-    register s32 four asm("r4") = 4;
+    MATCH_HOLD_REG(s32, four, r4) = 4;
 
     InitActorPart(self, part, b, c, d);
     self->hp = four;
@@ -321,11 +322,11 @@ u8 IsJetpackPlaneUnshootable(struct jetpack_plane *self)
  * byte is read through r1 as in the ROM (docs/workflow.md). */
 void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s32 d)
 {
-    register u8 *partReg asm("r8") = part;
-    register s32 bReg asm("r5") = b;
-    register s32 cReg asm("r6") = c;
-    register s32 dReg asm("r0") = d;
-    register s32 two asm("r4") = 2;
+    MATCH_HOLD_REG(u8 *, partReg, r8) = part;
+    MATCH_HOLD_REG(s32, bReg, r5) = b;
+    MATCH_HOLD_REG(s32, cReg, r6) = c;
+    MATCH_HOLD_REG(s32, dReg, r0) = d;
+    MATCH_HOLD_REG(s32, two, r4) = 2;
     s32 kind;
 
     InitActorPart(self, part, b, c, dReg);
@@ -335,7 +336,7 @@ void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s
     self->homeY = cReg;
     self->unk_60 = 0;
     {
-        register u8 *kindPtr asm("r1") = partReg;
+        MATCH_HOLD_REG(u8 *, kindPtr, r1) = partReg;
         kind = *kindPtr;
     }
     switch (kind) {
@@ -507,7 +508,7 @@ void UpdateJetpackCannonball(struct jetpack_cannonball *self)
  * to the allocator). */
 void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c, s32 d, s32 velX, s32 velY)
 {
-    register s32 one asm("r5") = 1;
+    MATCH_HOLD_REG(s32, one, r5) = 1;
     register s32 vx = velX;
     register s32 vy = velY;
 
@@ -550,9 +551,9 @@ void AirshipFireballStateOrbit(struct actor_orbit *self)
     {
         struct actor_self *player = gActorList;
         s32 px, py, tx, ty;
-        register s32 cx asm("r3");
-        register s32 cy asm("r4");
-        register const s16 *sine asm("r5");
+        MATCH_HOLD_REG(s32, cx, r3);
+        MATCH_HOLD_REG(s32, cy, r4);
+        MATCH_HOLD_REG(const s16 *, sine, r5);
 
         px = player->x;
         cx = self->centerX;
@@ -599,9 +600,9 @@ void AirshipFireballStateSpiralIn(struct actor_orbit *self)
     {
         struct actor_self *player = gActorList;
         s32 px, py, tx, ty;
-        register s32 cx asm("r3");
-        register s32 cy asm("r4");
-        register const s16 *sine asm("r5");
+        MATCH_HOLD_REG(s32, cx, r3);
+        MATCH_HOLD_REG(s32, cy, r4);
+        MATCH_HOLD_REG(const s16 *, sine, r5);
 
         px = player->x;
         cx = self->centerX;

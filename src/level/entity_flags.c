@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "level.h"
 
@@ -53,8 +54,8 @@ s32 CountCrateEntities(void *self, const struct level_entity_list *list)
             s32 type = *(u16 *)item;
 
             if (type == 0x1a) {
-                register void *itemReg asm("r1") = item;
-                register s32 result asm("r0");
+                MATCH_HOLD_REG(void *, itemReg, r1) = item;
+                MATCH_HOLD_REG(s32, result, r0);
 
                 asm volatile (
                     "ldr r0, [%1, #8]\n\t"
@@ -184,13 +185,13 @@ asm(".align 2, 0");
  * `t` in place reproduces that split. */
 void sub_80259D4(void *self, s32 n)
 {
-    register u8 *base asm("ip");
-    register s32 t asm("r2");
+    MATCH_HOLD_REG(u8 *, base, ip);
+    MATCH_HOLD_REG(s32, t, r2);
     s32 adjusted, wordIndex;
-    register s32 bitIndex asm("r0");
-    register s32 mask asm("r2");
-    register s32 shifted asm("r3");
-    register s32 addr asm("r1");
+    MATCH_HOLD_REG(s32, bitIndex, r0);
+    MATCH_HOLD_REG(s32, mask, r2);
+    MATCH_HOLD_REG(s32, shifted, r3);
+    MATCH_HOLD_REG(s32, addr, r1);
 
     asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(base), "=r"(t) : "r"(self), "r"(n));
 

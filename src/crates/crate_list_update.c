@@ -52,7 +52,7 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
     s32 i = 0;
     s32 searchCount = manager->capacity;
     struct box_part **base;
-    register s32 hold asm("r2");
+    MATCH_HOLD_REG(s32, hold, r2);
 
     /* Emits no code. It keeps gcse's copy of `capacity` from landing
      * right after the load; cse2 would otherwise swap the two and put

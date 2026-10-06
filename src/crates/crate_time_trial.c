@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "crate.h"
 #include "audio.h"
 #include "crates.h"
@@ -49,8 +50,8 @@ void ConvertCratesForTimeTrial(void)
 void OpenAkuAkuCrate(struct crate *crate)
 {
     struct player *self = gPlayer;
-    register u8 flags asm("r1") = self->flags.all;
-    register u32 bit asm("r0");
+    MATCH_HOLD_REG(u8, flags, r1) = self->flags.all;
+    MATCH_HOLD_REG(u32, bit, r0);
 
     /* Inline-asm-anchored: this compiler always shifts in place
      * (`lsrs r1,r1,#7`) regardless of C phrasing, while the ROM keeps
@@ -62,7 +63,7 @@ void OpenAkuAkuCrate(struct crate *crate)
         const struct actor_method *rec = &self->vtable->handleEvent;
         s16 offset = rec->thisOffset;
         void *addr = (u8 *)self + offset;
-        register void *fn asm("r4") = *(void *const volatile *)&rec->fn;
+        MATCH_HOLD_REG(void *, fn, r4) = *(void *const volatile *)&rec->fn;
 
         _call_via_r4(addr, 0, 0x1a, 0);
         (void)fn;

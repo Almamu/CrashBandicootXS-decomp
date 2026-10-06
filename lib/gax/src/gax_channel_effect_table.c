@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* Per-tick vibrato update of a channel's `field_2e` (the pitch offset
  * added to the note when mixing) from a signed waveform table
@@ -10,7 +11,7 @@
  * Q8 multiply-down). */
 void GaxChannelTickVibrato(struct GaxChannelState *self)
 {
-    register struct GaxChannelState *p asm("r2") = self;
+    MATCH_HOLD_REG(struct GaxChannelState *, p, r2) = self;
     struct GaxChannelInstrument *inst = p->instrument;
     u32 result = inst->vibratoDepth;
 

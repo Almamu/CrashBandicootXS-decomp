@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "crates.h"
 
@@ -50,7 +51,7 @@ struct pool_item {
  * the wrapper r1, or loads the wrapper first). */
 #define POOL_FREE_NODE(m, node)                                         \
     {                                                                   \
-        register struct pool_link *_head asm("r1") = (m)->freeListHead; \
+        MATCH_HOLD_REG(struct pool_link *, _head, r1) = (m)->freeListHead; \
         (node)->wrap->next = _head;                                     \
         (m)->freeListHead = (node)->wrap;                               \
     }

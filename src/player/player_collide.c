@@ -61,7 +61,7 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
  * register, so the `ldrsh` index reload takes r2 as in the ROM. */
 #define CALL_M70H(obj)                                                         \
     if (1) {                                                                   \
-        register s32 _h asm("r3");                                             \
+        MATCH_HOLD_REG(s32, _h, r3);                                           \
         const struct actor_method *_m;                                         \
         void *_t;                                                              \
         MATCH_HOLD(_h); /* r3 hold starts: no code */                          \
@@ -73,7 +73,7 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
 
 #define CALL_M68H(obj, a, b, c)                                                \
     if (1) {                                                                   \
-        register s32 _h asm("r3");                                             \
+        MATCH_HOLD_REG(s32, _h, r3);                                           \
         const struct actor_method *_m;                                         \
         void *_t;                                                              \
         MATCH_HOLD(_h); /* r3 hold starts: no code */                          \
@@ -87,7 +87,7 @@ static inline s16 *A884Offset(void *part)
 {
     void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
-    register s16 *result asm("r3"); /* the ROM builds it in r3 */
+    MATCH_HOLD_REG(s16 *, result, r3); /* the ROM builds it in r3 */
 
     switch (type) {
     case 0:
@@ -121,7 +121,7 @@ u8 CollidePlayer(struct player *self)
         s16 *off;
         s32 x, y;
         s32 zero;
-        register s32 hold asm("r3");
+        MATCH_HOLD_REG(s32, hold, r3);
 
         /* Constant-init without live-range doubling (no code). */
         MATCH_CONST(zero, 0);
@@ -151,7 +151,7 @@ u8 CollidePlayer(struct player *self)
                 {
                     /* The ROM stores a fresh 0 from r0 (address in r1). */
                     u32 *_p = &self->deadline;
-                    register s32 _z asm("r0") = 0;
+                    MATCH_HOLD_REG(s32, _z, r0) = 0;
                     *_p = _z;
                 }
                 SetMaskLevel(gLevelState, 0);

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "save.h"
 
 /* Polls the SIO-handshake spinner's transfer state once per frame: if
@@ -22,7 +23,7 @@
  * see docs/matching/archive/issue-5-overlay-ui-sync.md. */
 s32 PollSaveTransfer(struct settings_sync_pump *self)
 {
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(s32, result, r0);
 
     asm volatile(
         "add r4, %1, #0\n"

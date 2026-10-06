@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "enemies.h"
 #include <libgcc.h>
@@ -39,7 +40,7 @@
  * `self`/`owner` multi-field-liveness register-pressure trap. Needed
  * two of this project's established gcc-2.9 register-allocation
  * techniques (see matching_decomp_register_pinning memory /
- * docs/matching.md): pinning `self` to `asm("r4")` (gcc's unforced
+ * docs/matching.md): pinning `self` to r4 (`MATCH_HOLD_REG`; gcc's unforced
  * allocator otherwise duplicates `self` into a spare `r5` purely to
  * re-read `self->0x68` a second time, pushing/popping a register the
  * ROM never touches), and hoisting the `gRoomFrameCount` read into
@@ -60,7 +61,7 @@
  * controlled part (`target`) is read through its `struct gobj` view. */
 void UpdateEnemyShooter(struct part_ctrl *selfArg)
 {
-    register struct part_ctrl *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct part_ctrl *, self, r4) = selfArg;
     struct gobj *owner;
     u8 *record;
     s32 base = (s32)gRoomFrameCount;

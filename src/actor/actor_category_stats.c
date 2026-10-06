@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
@@ -14,7 +15,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
 {
     struct sub_effect_record *table;
     s32 total;
-    register s32 count asm("r4");
+    MATCH_HOLD_REG(s32, count, r4);
     s32 i;
 
     count = 0;
@@ -54,7 +55,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
 
         if (count < total2) {
             do {
-                register u8 v asm("r1") = table->kind;
+                MATCH_HOLD_REG(u8, v, r1) = table->kind;
 
                 if ((u8)(v - 0x13) <= 4) {
                     count++;
@@ -65,7 +66,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
                      * inline-asm island forces the redundant move back
                      * in, matching the ROM's exact register (`r0`)
                      * and instruction (see docs/workflow.md step 3). */
-                    register s32 v2 asm("r0");
+                    MATCH_HOLD_REG(s32, v2, r0);
                     asm("add %0, %1, #0" : "=r"(v2) : "r"((s32)v));
                     if (v2 == 0x1b || v2 == 0x1e) {
                         count++;

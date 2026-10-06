@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "actor.h"
@@ -171,13 +172,13 @@ s32 CountPlatinumRelics(void *arg0)
  * entry->times[1]/entry->times[2]. */
 s32 CountGoldRelics(void *arg0)
 {
-    register u8 *p asm("r3");
-    register s32 i asm("r5");
-    register s32 count asm("r6");
-    register s32 offset asm("r4");
-    register s32 val asm("r1");
-    register s32 addr asm("r0");
-    register u16 raw asm("r0");
+    MATCH_HOLD_REG(u8 *, p, r3);
+    MATCH_HOLD_REG(s32, i, r5);
+    MATCH_HOLD_REG(s32, count, r6);
+    MATCH_HOLD_REG(s32, offset, r4);
+    MATCH_HOLD_REG(s32, val, r1);
+    MATCH_HOLD_REG(s32, addr, r0);
+    MATCH_HOLD_REG(u16, raw, r0);
 
     count = 0;
     offset = 0;
@@ -206,13 +207,13 @@ s32 CountGoldRelics(void *arg0)
  * (times[1], times[0]]. */
 s32 CountSapphireRelics(void *arg0)
 {
-    register u8 *p asm("r3");
-    register s32 i asm("r5");
-    register s32 count asm("r6");
-    register s32 offset asm("r4");
-    register s32 val asm("r1");
-    register s32 addr asm("r0");
-    register u16 raw asm("r0");
+    MATCH_HOLD_REG(u8 *, p, r3);
+    MATCH_HOLD_REG(s32, i, r5);
+    MATCH_HOLD_REG(s32, count, r6);
+    MATCH_HOLD_REG(s32, offset, r4);
+    MATCH_HOLD_REG(s32, val, r1);
+    MATCH_HOLD_REG(s32, addr, r0);
+    MATCH_HOLD_REG(u16, raw, r0);
 
     count = 0;
     offset = 0;
@@ -253,9 +254,9 @@ s32 CountRelics(void *arg0)
 
 s32 CountGems(void *arg0)
 {
-    register u8 *p asm("r2");
-    register s32 total asm("r4");
-    register s32 i asm("r3");
+    MATCH_HOLD_REG(u8 *, p, r2);
+    MATCH_HOLD_REG(s32, total, r4);
+    MATCH_HOLD_REG(s32, i, r3);
     s32 result;
     u8 flags;
     u8 byte;
@@ -301,11 +302,11 @@ s32 CountClearGems(void *arg0)
 
 s32 CountCrystals(void *arg0)
 {
-    register u8 *p asm("r1");
-    register s32 i asm("r2");
-    register s32 count asm("r3");
-    register u8 byte asm("r4");
-    register u32 bit asm("r0");
+    MATCH_HOLD_REG(u8 *, p, r1);
+    MATCH_HOLD_REG(s32, i, r2);
+    MATCH_HOLD_REG(s32, count, r3);
+    MATCH_HOLD_REG(u8, byte, r4);
+    MATCH_HOLD_REG(u32, bit, r0);
 
     count = 0;
     p = (u8 *)arg0;

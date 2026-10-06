@@ -340,7 +340,7 @@ void UpdateWumpa(struct orbit_part *self)
 
 struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
 {
-    register struct orbit_part *self asm("r4");
+    MATCH_HOLD_REG(struct orbit_part *, self, r4);
     struct orbit_part *p;
     u8 mode = 0;
     u8 phase;

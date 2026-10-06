@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "crates.h"
 #include "objects.h"
 #include "globals.h"
@@ -30,7 +31,7 @@ void DrawCrate(struct crate *selfArg)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (matching every sibling in this file family). */
-    register u8 *self asm("r4") = (u8 *)selfArg;
+    MATCH_HOLD_REG(u8 *, self, r4) = (u8 *)selfArg;
     u8 state = self[0x4d];
 
     if ((state & 0x80) == 0) {
@@ -44,13 +45,13 @@ void DrawCrate(struct crate *selfArg)
             self[0x38] = masked7f;
 
             {
-                register s32 idx asm("r3") = 0;
+                MATCH_HOLD_REG(s32, idx, r3) = 0;
                 {
-                    register void *p asm("r0") = *(void **)(self + 0x20);
-                    register u8 *tagAddr asm("r2") = self + 0x2d;
+                    MATCH_HOLD_REG(void *, p, r0) = *(void **)(self + 0x20);
+                    MATCH_HOLD_REG(u8 *, tagAddr, r2) = self + 0x2d;
                     {
-                        register void *table asm("r1") = *(void **)p;
-                        register u8 tag asm("r5") = *tagAddr;
+                        MATCH_HOLD_REG(void *, table, r1) = *(void **)p;
+                        MATCH_HOLD_REG(u8, tag, r5) = *tagAddr;
                         /* Register-pinned r0: the ROM computes this
                          * address as `offset(r0) + table(r1)`, not
                          * `table + offset` - writing the addition with
@@ -58,7 +59,7 @@ void DrawCrate(struct crate *selfArg)
                          * this compiler pick the same destination
                          * register (r0, the offset's own register)
                          * instead of reusing `table`'s (r1). */
-                        register u8 *record asm("r0") =
+                        MATCH_HOLD_REG(u8 *, record, r0) =
                             (u8 *)(tag * 0x1c + (s32)table);
                         u8 limit = record[0x16];
 

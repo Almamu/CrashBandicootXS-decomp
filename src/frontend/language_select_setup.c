@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "vram_pool.h"
 #include "gba/dma_macros.h"
 #include "system.h"
@@ -15,8 +16,8 @@ void LoadLanguageSelectBg(struct language_select *self)
     struct bg_setup buf;
     u32 zero = 0;
     s32 a;
-    register s32 b asm("r2");
-    register s32 mask asm("r1");
+    MATCH_HOLD_REG(s32, b, r2);
+    MATCH_HOLD_REG(s32, mask, r1);
 
     *(u16 *)&self->field_c = zero;
     a = 0x40;

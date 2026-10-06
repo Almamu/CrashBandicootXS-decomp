@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "level_state.h"
 #include <libgcc.h>
@@ -38,7 +39,7 @@ struct meter_actor {
  * plays a cue. */
 void DispenseJetpackWumpa(void *selfArg)
 {
-    register struct meter_actor *self asm("r1") = selfArg;
+    MATCH_HOLD_REG(struct meter_actor *, self, r1) = selfArg;
     s32 acc = gJetpackQueuedWumpa;
 
     if (acc == 0) {
@@ -175,18 +176,18 @@ void QueueJetpackWumpa(void *selfArg, s32 delta)
  * clears `gJetpackPlayerInactive` flags, playing a cue. */
 void JetpackPlayerStateResume(void *selfArg)
 {
-    register struct meter_actor *self asm("r2") = selfArg;
+    MATCH_HOLD_REG(struct meter_actor *, self, r2) = selfArg;
 
     if (self->base.animDone != 0) {
-        register s32 state asm("r5") = 1;
-        register s32 zero asm("r1") = 0;
+        MATCH_HOLD_REG(s32, state, r5) = 1;
+        MATCH_HOLD_REG(s32, zero, r1) = 0;
 
         self->base.state = state;
         self->base.stateTime = zero;
         self->base.animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
-            register u8 zero2 asm("r4") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[0].duration;
+            MATCH_HOLD_REG(u8, zero2, r4) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero2;
@@ -204,15 +205,15 @@ void JetpackPlayerStateResume(void *selfArg)
  * and plays a cue. */
 void JetpackPlayerStateBoost(void *selfArg)
 {
-    register struct meter_actor *self asm("r3") = selfArg;
+    MATCH_HOLD_REG(struct meter_actor *, self, r3) = selfArg;
 
     if (self->base.animIndex == 5 && self->base.animDone != 0) {
-        register s32 zero asm("r2") = 0;
+        MATCH_HOLD_REG(s32, zero, r2) = 0;
 
         self->base.animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[0].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;
@@ -284,18 +285,18 @@ void JetpackPlayerStateFinish(void *selfArg)
  * idle-reset idiom. */
 void JetpackPlayerStateEnter(void *selfArg)
 {
-    register struct meter_actor *self asm("r2") = selfArg;
+    MATCH_HOLD_REG(struct meter_actor *, self, r2) = selfArg;
 
     if (self->base.y > 0x1E00) {
-        register s32 state asm("r5") = 1;
-        register s32 zero asm("r1") = 0;
+        MATCH_HOLD_REG(s32, state, r5) = 1;
+        MATCH_HOLD_REG(s32, zero, r1) = 0;
 
         self->base.state = state;
         self->base.stateTime = zero;
         self->base.animIndex = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
-            register u8 zero2 asm("r4") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[0].duration;
+            MATCH_HOLD_REG(u8, zero2, r4) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero2;

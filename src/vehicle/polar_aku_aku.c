@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "level_state.h"
 #include "actor_self.h"
@@ -118,7 +119,7 @@ s32 GetPolarMaskLevel(void)
  * advances via `UpdateActor`. */
 void UpdatePolarGoal(void *selfArg)
 {
-    register struct actor_self *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r4) = selfArg;
 
     if (self->stateTime > 5) {
         self->visible = 1;
@@ -149,7 +150,7 @@ void *CreatePolarGoal(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
  * plays a sound. Always advances via `UpdateActor`. */
 void UpdatePolarBoostPad(void *selfArg)
 {
-    register struct actor_once *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct actor_once *, self, r4) = selfArg;
 
     if ((u8)IsTouchingPlayer(self)) {
         BoostPolarPlayer(gActorList, self->base.x);
@@ -198,8 +199,8 @@ void *CreatePolarBoostPad(struct actor_once *self, void *part, s32 posY, s32 c, 
     {
         struct anim_frame_record *table = self->base.anims;
         u16 anim = table[idx].duration;
-        register u8 zeroShared asm("r2") = 0;
-        register s32 zeroAccum asm("r1") = 0;
+        MATCH_HOLD_REG(u8, zeroShared, r2) = 0;
+        MATCH_HOLD_REG(s32, zeroAccum, r1) = 0;
 
         self->base.animTimer = anim;
         *(u8 *)&self->base.animDone = zeroShared;
@@ -223,7 +224,7 @@ void *CreatePolarBoostPad(struct actor_once *self, void *part, s32 posY, s32 c, 
  * ROM); otherwise advances via `UpdateActor`. */
 void UpdatePolarCheckpointCrate(void *selfArg)
 {
-    register struct actor_self *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r4) = selfArg;
     s32 kind = self->animIndex;
 
     if (kind == 0) {
@@ -232,7 +233,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
             {
                 struct anim_frame_record *table = self->anims;
                 u16 anim = table[1].duration;
-                register u8 zero asm("r1") = 0;
+                MATCH_HOLD_REG(u8, zero, r1) = 0;
 
                 self->animTimer = anim;
                 *(u8 *)&self->animDone = zero;
@@ -251,7 +252,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
             {
                 struct anim_frame_record *table = self->anims;
                 u16 anim = table[3].duration;
-                register u8 zero asm("r1") = 0;
+                MATCH_HOLD_REG(u8, zero, r1) = 0;
 
                 self->animTimer = anim;
                 *(u8 *)&self->animDone = zero;
@@ -293,8 +294,8 @@ void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32 b, s32
         {
             struct anim_frame_record *table = self->anims;
             u16 anim = table[2].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;

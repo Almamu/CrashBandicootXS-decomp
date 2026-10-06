@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "box_part.h"
 #include "crates.h"
@@ -54,14 +55,14 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * disturbing anything else. */
 void DrawCrateList(struct pool_manager *managerArg)
 {
-    register struct pool_manager *manager asm("r3") = managerArg;
+    MATCH_HOLD_REG(struct pool_manager *, manager, r3) = managerArg;
     s32 box[4];
-    register void *P asm("r0") = gLevelLayers;
-    register void *subObj asm("r2") = *(void **)((u8 *)P + 0x10);
-    register s32 v0 asm("r1") = *(s32 *)subObj << 8;
-    register s32 v1 asm("r0") = *(s32 *)((u8 *)subObj + 4) << 8;
+    MATCH_HOLD_REG(void *, P, r0) = gLevelLayers;
+    MATCH_HOLD_REG(void *, subObj, r2) = *(void **)((u8 *)P + 0x10);
+    MATCH_HOLD_REG(s32, v0, r1) = *(s32 *)subObj << 8;
+    MATCH_HOLD_REG(s32, v1, r0) = *(s32 *)((u8 *)subObj + 4) << 8;
     s32 v2, v3;
-    register s32 baseIdx asm("r5");
+    MATCH_HOLD_REG(s32, baseIdx, r5);
     s32 bucket;
 
     box[0] = v0;
@@ -79,7 +80,7 @@ void DrawCrateList(struct pool_manager *managerArg)
     bucket = baseIdx + 2;
     {
         void **gridHeadBase = (void **)manager->gridHead;
-        register void **gridHead255 asm("r8") = (void **)&manager->gridHead[255];
+        MATCH_HOLD_REG(void **, gridHead255, r8) = (void **)&manager->gridHead[255];
 
         do {
             s32 off = bucket << 2;

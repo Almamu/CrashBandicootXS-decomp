@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
@@ -52,8 +53,8 @@
 void StepCameraDirectional(struct camera *cam)
 {
     // r2/r3 pins are load-bearing (see docs/workflow.md step 7 and the file comment)
-    register s32 tx asm("r2") = cam->target->x;
-    register s32 ty asm("r3") = cam->target->y;
+    MATCH_HOLD_REG(s32, tx, r2) = cam->target->x;
+    MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
     u8 dir = cam->target->dirFlags;
 
     if (dir != 0)
@@ -89,7 +90,7 @@ void StepCameraDirectional(struct camera *cam)
     ty += cam->vy;
     {
         // r4 pin and separate `n` are load-bearing (see the file comment)
-        register s32 cur asm("r4") = cam->x;
+        MATCH_HOLD_REG(s32, cur, r4) = cam->x;
         s32 n = cur + (tx - cur) / 4;
         cam->x = n;
         cur = cam->y;
@@ -101,8 +102,8 @@ void StepCameraDirectional(struct camera *cam)
 void StepCameraFacing(struct camera *cam)
 {
     // r2/r3 pins are load-bearing (see docs/workflow.md step 7 and the file comment)
-    register s32 tx asm("r2") = cam->target->x;
-    register s32 ty asm("r3") = cam->target->y;
+    MATCH_HOLD_REG(s32, tx, r2) = cam->target->x;
+    MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
 
     if ((cam->target->flags << 27) < 0)
     {

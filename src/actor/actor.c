@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -100,9 +101,9 @@ s32 IsTouchingPlayer(void *self)
 void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
 {
     struct actor_self *self = selfArg;
-    register struct anim_table_record *part asm("r4") = partArg;
-    register s32 bReg asm("r5") = b;
-    register s32 cReg asm("r6") = c;
+    MATCH_HOLD_REG(struct anim_table_record *, part, r4) = partArg;
+    MATCH_HOLD_REG(s32, bReg, r5) = b;
+    MATCH_HOLD_REG(s32, cReg, r6) = c;
 
     {
         u8 vC = part->palette;
@@ -128,7 +129,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
     self->visible = 1;
 
     {
-        register s32 value asm("r2") = self->z - (GetCellAnimDistance() << 8);
+        MATCH_HOLD_REG(s32, value, r2) = self->z - (GetCellAnimDistance() << 8);
         s32 sign;
 
         ABS32(value, sign);
@@ -190,7 +191,7 @@ void UpdateActor(void *selfArg)
     struct actor_self *self = selfArg;
 
     {
-        register s32 value asm("r2") = self->z - (GetCellAnimDistance() << 8);
+        MATCH_HOLD_REG(s32, value, r2) = self->z - (GetCellAnimDistance() << 8);
         s32 sign;
 
         ABS32(value, sign);
@@ -240,7 +241,7 @@ void UpdateActor(void *selfArg)
         s32 idx = self->animIndex;
         u8 *table = (u8 *)self->anims;
         s32 recordAddr = idx * 0xc;
-        register u8 *record asm("r1");
+        MATCH_HOLD_REG(u8 *, record, r1);
 
         recordAddr += (s32)table;
         record = (u8 *)recordAddr;
@@ -282,10 +283,10 @@ asm(".align 2, 0");
  * pinned to a caller-saved register). */
 void DrawActor(void *selfArg)
 {
-    register struct actor_self *self asm("r6") = selfArg;
-    register s32 scale asm("r8");
+    MATCH_HOLD_REG(struct actor_self *, self, r6) = selfArg;
+    MATCH_HOLD_REG(s32, scale, r8);
     s32 dist = self->depth;
-    register s32 scaleY asm("r5");
+    MATCH_HOLD_REG(s32, scaleY, r5);
     s32 posX;
     s32 posY;
     /* The ROM keeps GetAnimFrameData's raw return value alive in r0
@@ -297,10 +298,10 @@ void DrawActor(void *selfArg)
      * makes the r7 copy an explicit second variable, matching the ROM's
      * own register choice for each of the three reads instead of gcc's
      * single-register default. */
-    register u8 *frame asm("r0");
+    MATCH_HOLD_REG(u8 *, frame, r0);
     u8 *frameCopy;
-    register u32 flag asm("r2");
-    register s32 delta0 asm("r1");
+    MATCH_HOLD_REG(u32, flag, r2);
+    MATCH_HOLD_REG(s32, delta0, r1);
     s32 delta1;
 
     scale = __divsi3(dist << 8, ACTOR_RECORD(self)->baseDepth);
@@ -308,7 +309,7 @@ void DrawActor(void *selfArg)
 
     {
         s32 off = GetActorBgCenterY();
-        register s32 tmp asm("r1") = self->y;
+        MATCH_HOLD_REG(s32, tmp, r1) = self->y;
 
         posX = tmp * scaleY;
         posX >>= 0xc;
@@ -318,7 +319,7 @@ void DrawActor(void *selfArg)
 
     {
         s32 off = GetActorBgCenterX();
-        register s32 tmp asm("r1") = self->x;
+        MATCH_HOLD_REG(s32, tmp, r1) = self->x;
 
         tmp = tmp * scaleY;
         tmp >>= 0xc;
@@ -331,7 +332,7 @@ void DrawActor(void *selfArg)
 
     flag = 0;
     {
-        register s32 scaleCmp asm("r1");
+        MATCH_HOLD_REG(s32, scaleCmp, r1);
 
         asm("mov %0, r8" : "=r" (scaleCmp));
         if (scaleCmp <= 0xff) {
@@ -340,10 +341,10 @@ void DrawActor(void *selfArg)
     }
 
     if (flag != 0) {
-        register u8 b asm("r3") = frameCopy[0];
+        MATCH_HOLD_REG(u8, b, r3) = frameCopy[0];
         delta0 = b << 3;
     } else {
-        register u8 b asm("r3") = frameCopy[0];
+        MATCH_HOLD_REG(u8, b, r3) = frameCopy[0];
         delta0 = b << 2;
     }
 
@@ -360,7 +361,7 @@ void DrawActor(void *selfArg)
     if (posX + delta1 * 2 < 0) return;
     if (posY > 0xef) return;
     {
-        register s32 shifted asm("r0") = delta0 << 1;
+        MATCH_HOLD_REG(s32, shifted, r0) = delta0 << 1;
 
         if (posY + shifted < 0) return;
     }
@@ -372,7 +373,7 @@ void DrawActor(void *selfArg)
     {
         /* `flag` is pinned to r2 (matching the ROM's own choice, needed
          * to reproduce the r7/r0 split above), but a plain
-         * `register ... asm("r2")` variable is the caller's own
+         * `MATCH_HOLD_REG(..., r2)` variable is the caller's own
          * responsibility across a call - gcc, unlike with an ordinary
          * pseudo-register it owns, won't insert protective spill code
          * for it automatically the way it does for a normal local stuck
@@ -385,7 +386,7 @@ void DrawActor(void *selfArg)
          * compiler to notice on its own. */
         u32 flagStack[1];
         s32 attr;
-        register void *callArg asm("r0") = self;
+        MATCH_HOLD_REG(void *, callArg, r0) = self;
 
         asm volatile("str %1, %0" : "=m" (flagStack[0]) : "r" (flag));
         attr = GetAnimFrameAttr(callArg);
@@ -394,7 +395,7 @@ void DrawActor(void *selfArg)
             u32 packed;
             u32 v;
             u32 pre;
-            register u32 shifted asm("r0");
+            MATCH_HOLD_REG(u32, shifted, r0);
             u32 attr2;
 
             packed = posX & 0xff;
@@ -437,7 +438,7 @@ asm(".align 2, 0");
  * update tail - just refreshes `depth`/`sortKey`. */
 void UpdateActorDepth(struct actor_self *self)
 {
-    register s32 value asm("r2") = self->z - (GetCellAnimDistance() << 8);
+    MATCH_HOLD_REG(s32, value, r2) = self->z - (GetCellAnimDistance() << 8);
     s32 sign;
 
     ABS32(value, sign);
@@ -482,16 +483,16 @@ u8 GetActorRecordIndex(struct actor_self *self)
  * accesses, which changes where the byte zero is built. */
 void SetActorState(struct actor_self *self, s32 a, s32 kind)
 {
-    register s32 zero asm("r4");
+    MATCH_HOLD_REG(s32, zero, r4);
 
     self->state = a;
     zero = 0;
     self->stateTime = zero;
     self->animIndex = kind;
     {
-        register struct anim_frame_record *table asm("r3") = self->anims;
-        register u16 anim asm("r1") = table[kind].duration;
-        register u8 zero2 asm("r2") = 0;
+        MATCH_HOLD_REG(struct anim_frame_record *, table, r3) = self->anims;
+        MATCH_HOLD_REG(u16, anim, r1) = table[kind].duration;
+        MATCH_HOLD_REG(u8, zero2, r2) = 0;
 
         *(u16 *)&self->animTimer = anim;
         *(u8 *)&self->animDone = zero2;
@@ -547,9 +548,9 @@ void *sub_802AA0C(void *outArg, void *selfArg)
 
     struct actor_self *self = selfArg;
     struct blob0xc buf = *(struct blob0xc *)self->box;
-    register s32 d0 asm("r3");
-    register s32 d1 asm("r5");
-    register s32 d2 asm("r4");
+    MATCH_HOLD_REG(s32, d0, r3);
+    MATCH_HOLD_REG(s32, d1, r5);
+    MATCH_HOLD_REG(s32, d2, r4);
 
     /* The ROM computes all three per-axis deltas up front (a strict
      * load/shift, load/shift, load/shift run) before touching any of
@@ -584,7 +585,7 @@ void *sub_802AA0C(void *outArg, void *selfArg)
          * 3-bit base-register field), so this pins the copy to r2
          * explicitly instead of trusting the constraint to materialize
          * one. */
-        register s16 *sp2 asm("r2") = (s16 *)&buf;
+        MATCH_HOLD_REG(s16 *, sp2, r2) = (s16 *)&buf;
 
         asm volatile(
             "ldrh r1, [r2]\n"
@@ -607,8 +608,8 @@ void *sub_802AA0C(void *outArg, void *selfArg)
          * r4-r6 (the same registers the initial self->buf copy used,
          * long dead by this point) - register-pinning both ends forces
          * the same choice back. */
-        register void *dst asm("r2") = outArg;
-        register s16 *src asm("r1") = (s16 *)&buf;
+        MATCH_HOLD_REG(void *, dst, r2) = outArg;
+        MATCH_HOLD_REG(s16 *, src, r1) = (s16 *)&buf;
 
         asm volatile(
             "ldmia r1!, {r4, r5, r6}\n"
@@ -666,12 +667,12 @@ void DestroyActor(void *selfArg, s32 flags)
 s32 IsSpawnCollected(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 i asm("r2") = 0;
+    MATCH_HOLD_REG(s32, i, r2) = 0;
     s32 count = gCollectedSpawnCount;
 
     if (i < count) {
         s32 n = count;
-        register void **p asm("r1") = gCollectedSpawns;
+        MATCH_HOLD_REG(void **, p, r1) = gCollectedSpawns;
 
         do {
             if (*p == self) {
@@ -688,7 +689,7 @@ s32 IsSpawnCollected(void *selfArg)
  * it's `NULL`, the array is already full, or it's already present. */
 void MarkSpawnCollected(void *selfArg)
 {
-    register u8 *self asm("r3") = selfArg;
+    MATCH_HOLD_REG(u8 *, self, r3) = selfArg;
     s32 count = gCollectedSpawnCount;
 
     if (count == 0xf || self == NULL) {

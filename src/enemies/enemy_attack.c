@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "part_ctrl.h"
 #include "enemies.h"
 #include "util.h"
@@ -144,7 +145,7 @@ void UpdateEnemyTriggerBox(struct part_ctrl *self)
 
     if (self->kind == 0xb) {
         /* r1 pin: the allocator otherwise swaps target/baseY (r2/r1). */
-        register struct ctrl_target *t asm("r1") = self->target;
+        MATCH_HOLD_REG(struct ctrl_target *, t, r1) = self->target;
         if (t->y < self->baseY) {
             t->y = self->baseY;
             SetEnemyMotionY(self, 0);

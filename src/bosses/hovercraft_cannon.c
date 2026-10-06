@@ -113,19 +113,19 @@ void DamageHovercraftCannon(struct spawner *self, s32 dmg)
 
     if (self->hp <= 0) {
         u8 *deadFlag = &self->dead;
-        register s32 zero asm("r4") = 0;
+        MATCH_HOLD_REG(s32, zero, r4) = 0;
 
         *deadFlag = 1;
         LoseHovercraftPart();
         {
-            register s32 stateVal asm("r0") = 2;
+            MATCH_HOLD_REG(s32, stateVal, r0) = 2;
 
             self->base.state = stateVal;
             self->base.stateTime = zero;
             self->base.animIndex = stateVal;
             {
-                register u16 anim asm("r0") = self->base.anims[2].duration;
-                register u8 zero2 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[2].duration;
+                MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                 *(u16 *)&self->base.animTimer = anim;
                 *(u8 *)&self->base.animDone = zero2;
@@ -178,10 +178,10 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 void *CreateHovercraftCannon(void *selfArg, void *part, s32 b, s32 cParam, s32 d)
 {
     struct spawner *self = selfArg;
-    register s32 bReg asm("r6") = b;
-    register s32 c asm("r8") = cParam;
-    register s32 dReg asm("r0") = d;
-    register s32 health asm("r5") = 15;
+    MATCH_HOLD_REG(s32, bReg, r6) = b;
+    MATCH_HOLD_REG(s32, c, r8) = cParam;
+    MATCH_HOLD_REG(s32, dReg, r0) = d;
+    MATCH_HOLD_REG(s32, health, r5) = 15;
 
     InitActorPart(self, part, b, cParam, dReg);
     self->hp = health;
@@ -204,12 +204,12 @@ void HovercraftCannonStateDestroyed(void *selfArg)
     ShakeActorBg(0x400);
 
     if (self->base.animDone != 0 && self != NULL) {
-        register u8 *table asm("r1") = (u8 *)self->base.vtable;
-        register u8 *addr asm("r0");
+        MATCH_HOLD_REG(u8 *, table, r1) = (u8 *)self->base.vtable;
+        MATCH_HOLD_REG(u8 *, addr, r0);
         void *fn;
 
         {
-            register s32 eight asm("r2") = 8;
+            MATCH_HOLD_REG(s32, eight, r2) = 8;
 
             addr = (u8 *)self + *(s16 *)((u8 *)table + eight);
         }
@@ -238,18 +238,18 @@ void HovercraftCannonStateWait(void *selfArg)
 
         self->cooldown = table->timing[1].delay;
         {
-            register s32 zero asm("r2") = 0;
+            MATCH_HOLD_REG(s32, zero, r2) = 0;
 
             self->count = zero;
             {
-                register s32 one asm("r0") = 1;
+                MATCH_HOLD_REG(s32, one, r0) = 1;
 
                 self->base.state = one;
                 self->base.stateTime = zero;
                 self->base.animIndex = one;
                 {
-                    register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-                    register u8 zero2 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+                    MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                     *(u16 *)&self->base.animTimer = anim;
                     *(u8 *)&self->base.animDone = zero2;

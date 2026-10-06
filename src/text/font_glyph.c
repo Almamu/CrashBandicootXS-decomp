@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "text.h"
 #include <agb_syscall.h>
 #include "gfx.h"
@@ -156,11 +157,11 @@ struct bitmap_font *InitLargeFont(struct bitmap_font *self)
  * place, not into a fresh register) - fixed it. */
 void FontPutChar(struct bitmap_font *self, u32 charByte)
 {
-    register u32 raw asm("r1") = charByte;
-    register struct bitmap_font *s asm("r3");
-    register u32 c asm("r4");
-    register u32 *destAddr asm("r2");
-    register u32 offset asm("r0");
+    MATCH_HOLD_REG(u32, raw, r1) = charByte;
+    MATCH_HOLD_REG(struct bitmap_font *, s, r3);
+    MATCH_HOLD_REG(u32, c, r4);
+    MATCH_HOLD_REG(u32 *, destAddr, r2);
+    MATCH_HOLD_REG(u32, offset, r0);
 
     asm volatile(
         "add %0, %3, #0\n\t"
@@ -181,8 +182,8 @@ newline:
      * `&posX + 8` (sharing the `0x88<<1` offset register), not as two
      * independent field-offset computations. */
     {
-        register u32 *posXAddr asm("r1");
-        register u32 *field118Addr asm("r0");
+        MATCH_HOLD_REG(u32 *, posXAddr, r1);
+        MATCH_HOLD_REG(u32 *, field118Addr, r0);
 
         asm volatile(
             "mov r2, #0x88\n\tlsl r2, r2, #1\n\tadd %0, %2, r2\n\t"
@@ -201,7 +202,7 @@ newline:
     );
 tail:
     {
-        register u32 *fieldAddr asm("r1") = (u32 *)((u8 *)s + offset);
+        MATCH_HOLD_REG(u32 *, fieldAddr, r1) = (u32 *)((u8 *)s + offset);
         *destAddr += *fieldAddr;
     }
     return;

@@ -102,7 +102,7 @@ s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 li
                     /* Emits nothing; keeping r1 live here moves the
                      * spilled lineCount's reload to r2 and the limit's
                      * to r0, as in the ROM (hard-register hold, #489). */
-                    register s32 hold asm("r1");
+                    MATCH_HOLD_REG(s32, hold, r1);
                     MATCH_HOLD(hold);
                     lineCount++;
                     MATCH_USE(hold);

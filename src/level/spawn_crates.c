@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "text_popup.h"
 #include "crates.h"
@@ -67,12 +68,12 @@ void SpawnCheckpointCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * bitfield writes closes the whole function. */
 void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    register void *obj asm("r5");
-    register const struct level_entity_list *rec asm("r1");
-    register u16 *arrayBase asm("r0");
-    register s32 loaded asm("r4");
-    register u8 *tmp asm("r0");
-    register u8 *flagsAddr asm("r3");
+    MATCH_HOLD_REG(void *, obj, r5);
+    MATCH_HOLD_REG(const struct level_entity_list *, rec, r1);
+    MATCH_HOLD_REG(u16 *, arrayBase, r0);
+    MATCH_HOLD_REG(s32, loaded, r4);
+    MATCH_HOLD_REG(u8 *, tmp, r0);
+    MATCH_HOLD_REG(u8 *, flagsAddr, r3);
 
     obj = CreateCrate(arg0, arg1, arg2, arg3, 0);
 
@@ -87,14 +88,14 @@ void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     asm volatile("add %0, %1, #0" : "=r"(flagsAddr) : "r"(tmp));
 
     {
-        register s32 two asm("r0") = 2;
-        register u8 flagByte asm("r1");
+        MATCH_HOLD_REG(s32, two, r0) = 2;
+        MATCH_HOLD_REG(u8, flagByte, r1);
         flagByte = *flagsAddr;
         two &= flagByte;
         if (two) {
-            register u8 *addr asm("r0") = (u8 *)obj + 0x28;
-            register s32 mask asm("r1");
-            register u8 byte asm("r2");
+            MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)obj + 0x28;
+            MATCH_HOLD_REG(s32, mask, r1);
+            MATCH_HOLD_REG(u8, byte, r2);
             asm volatile("mov %0, #0x11\n\tneg %0, %0" : "=r"(mask));
             byte = *addr;
             mask &= byte;
@@ -103,14 +104,14 @@ void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         }
     }
     {
-        register s32 four asm("r0") = 4;
-        register u8 flagByte asm("r3");
+        MATCH_HOLD_REG(s32, four, r0) = 4;
+        MATCH_HOLD_REG(u8, flagByte, r3);
         flagByte = *flagsAddr;
         four &= flagByte;
         if (four) {
-            register u8 *addr asm("r0") = (u8 *)obj + 0x28;
-            register s32 mask asm("r1");
-            register u8 byte asm("r2");
+            MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)obj + 0x28;
+            MATCH_HOLD_REG(s32, mask, r1);
+            MATCH_HOLD_REG(u8, byte, r2);
             asm volatile("mov %0, #0x21\n\tneg %0, %0" : "=r"(mask));
             byte = *addr;
             mask &= byte;

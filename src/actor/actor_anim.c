@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "actor_self.h" /* struct anim_frame_record */
 #include "actor.h"
@@ -60,8 +61,8 @@ void SetActorAnim(struct actor_self *self, s32 idx)
 {
     struct anim_frame_record *table;
     u16 duration;
-    register u8 zero1 asm("r2");
-    register s32 zero2 asm("r3");
+    MATCH_HOLD_REG(u8, zero1, r2);
+    MATCH_HOLD_REG(s32, zero2, r3);
 
     self->animIndex = idx;
     table = self->anims;
@@ -371,15 +372,15 @@ asm(".align 2, 0");
  * `DrawPolarCollectedWumpa`'s `0x140` - the two twins differ here. */
 void DrawJetpackCheckpointText(void *selfArg)
 {
-    register u8 *self asm("r5") = selfArg;
-    register s32 x asm("r4") = 120;
-    register s32 y asm("r6") = 106;
+    MATCH_HOLD_REG(u8 *, self, r5) = selfArg;
+    MATCH_HOLD_REG(s32, x, r4) = 120;
+    MATCH_HOLD_REG(s32, y, r6) = 106;
     u8 *frame;
-    register u32 packed asm("r3");
-    register s32 w asm("r0");
-    register s32 wShift asm("r2");
-    register s32 h asm("r1");
-    register s32 hShift asm("r0");
+    MATCH_HOLD_REG(u32, packed, r3);
+    MATCH_HOLD_REG(s32, w, r0);
+    MATCH_HOLD_REG(s32, wShift, r2);
+    MATCH_HOLD_REG(s32, h, r1);
+    MATCH_HOLD_REG(s32, hShift, r0);
 
     frame = GetAnimFrameData((struct actor_self *)self);
     w = frame[0];
@@ -392,7 +393,7 @@ void DrawJetpackCheckpointText(void *selfArg)
         return;
     }
     {
-        register s32 hCheck asm("r0") = h << 3;
+        MATCH_HOLD_REG(s32, hCheck, r0) = h << 3;
         if (y + hCheck < 0) {
             return;
         }
@@ -401,21 +402,21 @@ void DrawJetpackCheckpointText(void *selfArg)
         return;
     }
     {
-        register s32 wCheck asm("r0") = wShift << 1;
+        MATCH_HOLD_REG(s32, wCheck, r0) = wShift << 1;
         if (x + wCheck < 0) {
             return;
         }
     }
 
     {
-        register s32 attrFlag asm("r0") = GetAnimFrameAttr((struct actor_self *)self);
-        register s32 a0 asm("r3") = 0xff;
-        register s32 xm asm("r4") = x;
+        MATCH_HOLD_REG(s32, attrFlag, r0) = GetAnimFrameAttr((struct actor_self *)self);
+        MATCH_HOLD_REG(s32, a0, r3) = 0xff;
+        MATCH_HOLD_REG(s32, xm, r4) = x;
 
         a0 &= y;
         {
-            register s32 mask asm("r1") = 0x1ff;
-            register s32 shifted asm("r1");
+            MATCH_HOLD_REG(s32, mask, r1) = 0x1ff;
+            MATCH_HOLD_REG(s32, shifted, r1);
 
             xm &= mask;
             shifted = xm << 16;
@@ -423,32 +424,32 @@ void DrawJetpackCheckpointText(void *selfArg)
         }
         a0 |= attrFlag;
         {
-            register s32 zero asm("r0") = 0;
+            MATCH_HOLD_REG(s32, zero, r0) = 0;
             asm volatile("orr %0, %0, %1" : "+r"(a0) : "r"(zero));
         }
         packed = a0;
     }
 
     {
-        register s32 field24 asm("r4") = *(s32 *)(self + 24);
+        MATCH_HOLD_REG(s32, field24, r4) = *(s32 *)(self + 24);
         s32 a2 = field24 << 12;
         s32 field20 = *(s32 *)(self + 20);
-        register u32 attr2 asm("r2");
+        MATCH_HOLD_REG(u32, attr2, r2);
 
         if (field20 & 0x8000) {
             a2 |= 0x800;
             {
-                register s32 shifted asm("r0") = a2 << 16;
+                MATCH_HOLD_REG(s32, shifted, r0) = a2 << 16;
                 attr2 = (u32)shifted >> 16;
             }
         } else {
-            register s32 shifted asm("r0") = field24 << 28;
+            MATCH_HOLD_REG(s32, shifted, r0) = field24 << 28;
             attr2 = (u32)shifted >> 16;
         }
         {
-            register u8 *argFrame asm("r0") = frame;
-            register u32 argPacked asm("r1") = packed;
-            register s32 argPriority asm("r3") = 0x100;
+            MATCH_HOLD_REG(u8 *, argFrame, r0) = frame;
+            MATCH_HOLD_REG(u32, argPacked, r1) = packed;
+            MATCH_HOLD_REG(s32, argPriority, r3) = 0x100;
 
             SetupSpriteFrameOam(argFrame, argPacked, attr2, argPriority);
         }
@@ -477,7 +478,7 @@ void UpdateJetpackCheckpointText(void *selfArg)
      * home) but still needs r4 for the other branch (used again after
      * the GetAnimFrameBaseOffset() call) - the ROM picks r4 for both
      * branches uniformly instead of branch-locally optimizing. */
-    register struct actor_self *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r4) = selfArg;
 
     self->sortKey = 1;
 
@@ -492,7 +493,7 @@ void UpdateJetpackCheckpointText(void *selfArg)
         struct anim_frame_record *table;
         struct anim_frame_record *rec;
 
-        register s32 delta asm("r1");
+        MATCH_HOLD_REG(s32, delta, r1);
         asm("mov r3, #0x10\n\tldrsh r1, [r4, r3]" : "=r"(delta) : : "r3");
         self->animTime += delta;
         self->animDone = 0;

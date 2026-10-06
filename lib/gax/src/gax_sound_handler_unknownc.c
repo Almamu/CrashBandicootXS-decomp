@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
 
@@ -26,7 +27,7 @@ void GaxMixerInit(void *self)
 {
     struct GaxMixerHandler *p = self;
     u32 i;
-    register u32 limit asm("r0");
+    MATCH_HOLD_REG(u32, limit, r0);
 
     p->pos = 1;
     for (i = 0; ; i++) {

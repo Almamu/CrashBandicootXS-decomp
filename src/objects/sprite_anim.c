@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "actor_self.h"
 #include "box_part.h"
@@ -17,11 +18,11 @@
  * `GetSpriteFrame`). */
 u8 GetSpriteAnimFrameCount(struct actor *part)
 {
-    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
-    register void *table asm("r2") = *tablePtr;
-    register u8 idx asm("r3") = *idxAddr;
-    register s32 offset asm("r1") = idx * 0x1c;
+    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
+    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
     void *rec;
 
     asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
@@ -34,11 +35,11 @@ u8 GetSpriteAnimFrameCount(struct actor *part)
  * instead. */
 u8 GetSpriteAnimDuration(struct actor *part)
 {
-    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
-    register void *table asm("r2") = *tablePtr;
-    register u8 idx asm("r3") = *idxAddr;
-    register s32 offset asm("r1") = idx * 0x1c;
+    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
+    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
     void *rec;
 
     asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
@@ -137,13 +138,13 @@ s32 GetSpriteGfxMode(void *part)
  * value instead of via a fresh `movs`+`negs`. */
 void SetSpriteGfxMode(void *part, s32 value)
 {
-    register s32 val asm("r1") = value;
-    register u8 *addr asm("r0") = (u8 *)part + 0x28;
-    register s32 three asm("r2") = 3;
-    register s32 masked asm("r1");
-    register s32 mask asm("r2");
-    register s32 byte asm("r3");
-    register s32 result asm("r2");
+    MATCH_HOLD_REG(s32, val, r1) = value;
+    MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)part + 0x28;
+    MATCH_HOLD_REG(s32, three, r2) = 3;
+    MATCH_HOLD_REG(s32, masked, r1);
+    MATCH_HOLD_REG(s32, mask, r2);
+    MATCH_HOLD_REG(s32, byte, r3);
+    MATCH_HOLD_REG(s32, result, r2);
 
     asm("and %0, %0, %1" : "+r" (val), "+r" (three));
     masked = val;
@@ -235,11 +236,11 @@ void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2)
  * later `<< 6` into a single, ROM-mismatching shift pair. */
 void SetSpritePriority(void *part, s32 value)
 {
-    register u8 *addr asm("r0") = (u8 *)part + 0x28;
-    register s32 shiftedVal asm("r1") = value << 6;
-    register s32 mask asm("r2") = 0x3f;
-    register s32 byte asm("r3");
-    register s32 result asm("r2");
+    MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)part + 0x28;
+    MATCH_HOLD_REG(s32, shiftedVal, r1) = value << 6;
+    MATCH_HOLD_REG(s32, mask, r2) = 0x3f;
+    MATCH_HOLD_REG(s32, byte, r3);
+    MATCH_HOLD_REG(s32, result, r2);
 
     byte = *addr;
     result = mask & byte;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gfx.h"
 #include "system.h"
 #include "actor.h"
@@ -60,8 +61,8 @@ void InitObjTileFreeList(void *base)
     len = (s32)((u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE - (u8 *)base);
 
     {
-        register u16 *addr asm("r1");
-        register u16 val asm("r0");
+        MATCH_HOLD_REG(u16 *, addr, r1);
+        MATCH_HOLD_REG(u16, val, r0);
 
         addr = &zero;
         val = 0;
@@ -110,11 +111,11 @@ void FreeVramTileBlock(void *addr)
     struct vram_tile_block *adj;
     struct vram_tile_block **poolSlot;
     u32 index;
-    register u8 byteVal asm("r0");
-    register u32 shifted asm("r1");
-    register u16 target_size asm("r4");
-    register u16 other_size asm("r1");
-    register u16 sum asm("r0");
+    MATCH_HOLD_REG(u8, byteVal, r0);
+    MATCH_HOLD_REG(u32, shifted, r1);
+    MATCH_HOLD_REG(u16, target_size, r4);
+    MATCH_HOLD_REG(u16, other_size, r1);
+    MATCH_HOLD_REG(u16, sum, r0);
 
     if (addr == NULL) {
         return;
@@ -232,9 +233,9 @@ void FreeVramTileBlock(void *addr)
  * function has no free low register for). */
 void *AllocVramTileBlock(s32 requestedSizeArg)
 {
-    register s32 requestedSize asm("r4") = requestedSizeArg;
-    register struct vram_tile_block **roverSlot asm("r6");
-    register struct vram_tile_block *cur asm("r3");
+    MATCH_HOLD_REG(s32, requestedSize, r4) = requestedSizeArg;
+    MATCH_HOLD_REG(struct vram_tile_block **, roverSlot, r6);
+    MATCH_HOLD_REG(struct vram_tile_block *, cur, r3);
     void *result;
 
     asm volatile(
@@ -392,8 +393,8 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
     struct queued_oam_entry *entry;
 
     if (attr01 & 0x100) {
-        register s32 x asm("r0");
-        register s32 y asm("r1");
+        MATCH_HOLD_REG(s32, x, r0);
+        MATCH_HOLD_REG(s32, y, r1);
         /* Self-initialized: the ROM merges both halves into whatever the
          * register held, so it is never zeroed; this silences
          * -Wuninitialized without adding code (#577). */
@@ -423,9 +424,9 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
     }
 
     {
-        register s32 count asm("r1");
-        register struct queued_oam_entry *base asm("r2");
-        register s32 offset asm("r0");
+        MATCH_HOLD_REG(s32, count, r1);
+        MATCH_HOLD_REG(struct queued_oam_entry *, base, r2);
+        MATCH_HOLD_REG(s32, offset, r0);
 
         count = gSpriteOamQueueCount;
         base = gSpriteOamQueue;
@@ -478,9 +479,9 @@ void InitSpriteFrameOamQueue(void)
     gSpriteAffineQueueCount = 0;
 
     {
-        register u16 *addr asm("r1");
-        register u16 tmp asm("r2");
-        register u16 val asm("r0");
+        MATCH_HOLD_REG(u16 *, addr, r1);
+        MATCH_HOLD_REG(u16, tmp, r2);
+        MATCH_HOLD_REG(u16, val, r0);
 
         addr = &hideValue;
         tmp = 0x80 << 2;
@@ -543,9 +544,9 @@ s32 LoadSpriteFrameTiles(u8 *frame)
     gSpriteFrameCacheCurrent.next = node;
 
     {
-        register u32 w asm("r1");
-        register u32 h asm("r3");
-        register u32 product asm("r0");
+        MATCH_HOLD_REG(u32, w, r1);
+        MATCH_HOLD_REG(u32, h, r3);
+        MATCH_HOLD_REG(u32, product, r0);
 
         w = frame[0];
         h = frame[1];
@@ -557,7 +558,7 @@ s32 LoadSpriteFrameTiles(u8 *frame)
     spareSlot = &gSpriteFrameCacheSpares;
 
     {
-        register void *vramAddr asm("r1");
+        MATCH_HOLD_REG(void *, vramAddr, r1);
 
         vramAddr = AllocVramTileBlock(byteCount);
         node->vramAddr = vramAddr;
@@ -589,9 +590,9 @@ s32 LoadSpriteFrameTiles(u8 *frame)
  * `priority` (used only for the affine-scale path). */
 void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
 {
-    register s32 w asm("r1");
-    register s32 h asm("r0");
-    register u32 shapeBits asm("r2");
+    MATCH_HOLD_REG(s32, w, r1);
+    MATCH_HOLD_REG(s32, h, r0);
+    MATCH_HOLD_REG(u32, shapeBits, r2);
     u16 packed;
     s32 tileIdx;
 
@@ -609,7 +610,7 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
             shapeBits = 0x80 << 23;
         }
     } else {
-        register s32 diff asm("r0");
+        MATCH_HOLD_REG(s32, diff, r0);
 
         shapeBits = 0x80 << 7;
         if (w < h) {
@@ -618,7 +619,7 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
 
         diff = w - h;
         {
-            register s32 mask asm("r1");
+            MATCH_HOLD_REG(s32, mask, r1);
             mask = diff >> 31;
             diff = (diff ^ mask) - mask;
         }
@@ -713,8 +714,8 @@ void InitSpriteFrameCache(void)
  * pins (docs/workflow.md step 7). */
 u32 GetSpriteShapeSizeBits(u8 *frame)
 {
-    register u32 result asm("r2");
-    register s32 diff asm("r0");
+    MATCH_HOLD_REG(u32, result, r2);
+    MATCH_HOLD_REG(s32, diff, r0);
     s32 w = frame[0];
     s32 h = frame[1];
 
@@ -736,7 +737,7 @@ u32 GetSpriteShapeSizeBits(u8 *frame)
     }
 
     {
-        register s32 mask asm("r1");
+        MATCH_HOLD_REG(s32, mask, r1);
 
         diff = w - h;
         mask = diff >> 31;

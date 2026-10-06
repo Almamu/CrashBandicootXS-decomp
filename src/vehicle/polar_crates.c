@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
 #include "audio.h"
@@ -30,9 +31,9 @@ void UpdatePolarAkuAkuCrate(struct actor_self *self)
         GivePolarPlayerMask(gActorList);
         self->animIndex = 0x12;
         {
-            register u16 anim asm("r0") = self->anims[0x12].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[0x12].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -46,9 +47,9 @@ void UpdatePolarAkuAkuCrate(struct actor_self *self)
         AddBrokenCrate(gLevelState);
         self->animIndex = 0x12;
         {
-            register u16 anim asm("r0") = self->anims[0x12].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[0x12].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -104,9 +105,9 @@ void UpdatePolarTimeCrate(void *selfArg)
 
         self->animIndex = 0x12;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -129,13 +130,13 @@ void sub_802CA28(void *selfArg)
         PlaySfx(gAudioContext, 4, 0x100);
         AddBrokenCrate(gLevelState);
         {
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             self->stateTime = zero2;
             self->animIndex = 0x12;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
@@ -159,9 +160,9 @@ void sub_802CA6C(void *selfArg)
         QueuePolarWumpa(gActorList, 4);
         self->animIndex = 0x12;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -184,9 +185,9 @@ void UpdatePolarBasicCrate(void *selfArg)
         QueuePolarWumpa(gActorList, 1);
         self->animIndex = 0x12;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -235,10 +236,10 @@ void *InitPolarCrate(void *selfArg, void *part, s32 b, s32 c, s32 lastArg)
 
     self->animIndex = idx;
     {
-        register u8 *table asm("r1") = (u8 *)self->anims;
+        MATCH_HOLD_REG(u8 *, table, r1) = (u8 *)self->anims;
         u16 anim = *(u16 *)(idx * 0xc + table);
-        register u8 zero1 asm("r1") = 0;
-        register s32 zero2 asm("r2") = 0;
+        MATCH_HOLD_REG(u8, zero1, r1) = 0;
+        MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
         *(u16 *)&self->animTimer = anim;
         *(u8 *)&self->animDone = zero1;

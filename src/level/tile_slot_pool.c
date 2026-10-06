@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gfx.h"
 #include "memory.h"
 #include "level.h"
@@ -133,7 +134,7 @@ struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
          * immediates; the ROM keeps the `& 0x7f` and derives `-0xd` from
          * the `0x80` register (`subs #0x8d`) - same class as
          * InitBgLayer's +0x34/+0x35 updates (bg_layer_init.c). */
-        register u8 *bits asm("r2") = (u8 *)self + 0x34;
+        MATCH_HOLD_REG(u8 *, bits, r2) = (u8 *)self + 0x34;
         asm volatile(
             "mov r1, #0x80\n\t"
             "mov r0, #0x7f\n\t"
@@ -176,8 +177,8 @@ u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile)
     ref.raw = tile;
     {
         s32 id = ref.bits.id;
-        register u32 cur asm("r0");
-        register s32 none asm("r1");
+        MATCH_HOLD_REG(u32, cur, r0);
+        MATCH_HOLD_REG(s32, none, r1);
 
         /* The ROM materializes 0x200 before loading the entry; gcc always
          * loads a compare's memory operand first. The "m" operand keeps
@@ -212,7 +213,7 @@ void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile)
 {
     s32 id = tile & 0x3FFF;
     u16 slot = pool->slotForTile[id];
-    register u16 count asm("r1");
+    MATCH_HOLD_REG(u16, count, r1);
 
     count = pool->refCount[slot] - 1;
     pool->refCount[slot] = count;

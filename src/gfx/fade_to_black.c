@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "system.h"
 #include "gfx.h"
 
@@ -36,13 +37,13 @@
  * recomputing. */
 void FadePaletteToBlack(void)
 {
-    register struct dma_regs *dma asm("r1");
-    register struct dma_regs *dma2 asm("r4");
-    register s32 factor asm("r5");
+    MATCH_HOLD_REG(struct dma_regs *, dma, r1);
+    MATCH_HOLD_REG(struct dma_regs *, dma2, r4);
+    MATCH_HOLD_REG(s32, factor, r5);
     u32 val;
-    register u32 *bufAddr asm("r6");
-    register u32 dstVal asm("r3");
-    register u32 cntVal asm("r2");
+    MATCH_HOLD_REG(u32 *, bufAddr, r6);
+    MATCH_HOLD_REG(u32, dstVal, r3);
+    MATCH_HOLD_REG(u32, cntVal, r2);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = PLTT;
@@ -93,7 +94,7 @@ void FadePaletteToBlack(void)
      * `REG_ADDR_BLDY + 0x80`) - a real, shorter instruction sequence
      * this compiler prefers, but not what the ROM does. */
     {
-        register struct dma_regs *dma3 asm("r0");
+        MATCH_HOLD_REG(struct dma_regs *, dma3, r0);
         asm volatile(
             "ldr %0, .L8\n\t"
             "ldr r1, .L8+0x4\n\t"

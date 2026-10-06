@@ -9,16 +9,16 @@ void UpdateHudLives(struct hud_counter *counter)
 {
     /* Register pins preserve the ROM allocation after plain struct C
      * reordered the clamp loads; see docs/workflow.md step 7. */
-    register struct hud_counter *self asm("r5") = counter;
-    register struct hud_digit_part *parts asm("r4");
+    MATCH_HOLD_REG(struct hud_counter *, self, r5) = counter;
+    MATCH_HOLD_REG(struct hud_digit_part *, parts, r4);
 
     if (self->livesSlide == 0) {
         return;
     }
 
     {
-        register struct level_state **state_slot asm("r4") = &gLevelState;
-        register s32 value asm("r0");
+        MATCH_HOLD_REG(struct level_state **, state_slot, r4) = &gLevelState;
+        MATCH_HOLD_REG(s32, value, r0);
 
         if (GetLives(*state_slot) > 0) {
             value = GetLives(*state_slot);
@@ -29,7 +29,7 @@ void UpdateHudLives(struct hud_counter *counter)
     }
 
     {
-        register s32 mode asm("r0") = self->livesSlide;
+        MATCH_HOLD_REG(s32, mode, r0) = self->livesSlide;
 
         if (mode == 1 || mode == 3) {
             gHudSlideOffset = self->livesSlideTimer * 2 - 0x28;
@@ -39,21 +39,21 @@ void UpdateHudLives(struct hud_counter *counter)
     }
 
     {
-        register s32 current asm("r1") = self->lives;
-        register s32 previous asm("r0") = self->shownLives;
+        MATCH_HOLD_REG(s32, current, r1) = self->lives;
+        MATCH_HOLD_REG(s32, previous, r0) = self->shownLives;
         parts = self->parts;
 
         if (current != previous) {
             if (current > 9) {
                 {
-                    register s32 frame asm("r3") = __divsi3(current, 10);
-                    register struct hud_anim_data *anim_data asm("r0");
-                    register u8 *index_addr asm("r2");
-                    register struct hud_anim_record *records asm("r1");
-                    register u32 index asm("r6");
-                    register u32 record_offset asm("r0");
-                    register struct hud_anim_record *record asm("r0");
-                    register s32 frame_count asm("r0");
+                    MATCH_HOLD_REG(s32, frame, r3) = __divsi3(current, 10);
+                    MATCH_HOLD_REG(struct hud_anim_data *, anim_data, r0);
+                    MATCH_HOLD_REG(u8 *, index_addr, r2);
+                    MATCH_HOLD_REG(struct hud_anim_record *, records, r1);
+                    MATCH_HOLD_REG(u32, index, r6);
+                    MATCH_HOLD_REG(u32, record_offset, r0);
+                    MATCH_HOLD_REG(struct hud_anim_record *, record, r0);
+                    MATCH_HOLD_REG(s32, frame_count, r0);
 
                     anim_data = parts[0].anim_data;
                     index_addr = &parts[0].anim_index;
@@ -71,16 +71,16 @@ void UpdateHudLives(struct hud_counter *counter)
                 }
 
                 {
-                    register s32 result asm("r0") = __modsi3(self->lives, 10);
-                    register struct hud_digit_part *part asm("r6") = &parts[1];
-                    register s32 frame asm("r3") = result;
-                    register struct hud_anim_data *anim_data asm("r0");
-                    register u8 *index_addr asm("r2");
-                    register struct hud_anim_record *records asm("r1");
+                    MATCH_HOLD_REG(s32, result, r0) = __modsi3(self->lives, 10);
+                    MATCH_HOLD_REG(struct hud_digit_part *, part, r6) = &parts[1];
+                    MATCH_HOLD_REG(s32, frame, r3) = result;
+                    MATCH_HOLD_REG(struct hud_anim_data *, anim_data, r0);
+                    MATCH_HOLD_REG(u8 *, index_addr, r2);
+                    MATCH_HOLD_REG(struct hud_anim_record *, records, r1);
                     u32 second_index;
-                    register u32 record_offset asm("r0");
-                    register struct hud_anim_record *record asm("r0");
-                    register s32 frame_count asm("r0");
+                    MATCH_HOLD_REG(u32, record_offset, r0);
+                    MATCH_HOLD_REG(struct hud_anim_record *, record, r0);
+                    MATCH_HOLD_REG(s32, frame_count, r0);
 
                     anim_data = part->anim_data;
                     index_addr = &parts[1].anim_index;
@@ -108,16 +108,16 @@ void UpdateHudLives(struct hud_counter *counter)
                     part->frame_index = frame;
                 }
             } else {
-                register s32 frame asm("r3") = current;
-                register struct hud_anim_data *anim_data asm("r0");
-                register u8 *index_addr asm("r2");
-                register struct hud_anim_record *records asm("r1");
-                register u32 index asm("r6");
-                register u32 record_offset asm("r0");
-                register struct hud_anim_record *record asm("r0");
-                register s32 frame_count asm("r0");
-                register struct hud_digit_part *part asm("r3");
-                register s32 hidden_frame asm("r1");
+                MATCH_HOLD_REG(s32, frame, r3) = current;
+                MATCH_HOLD_REG(struct hud_anim_data *, anim_data, r0);
+                MATCH_HOLD_REG(u8 *, index_addr, r2);
+                MATCH_HOLD_REG(struct hud_anim_record *, records, r1);
+                MATCH_HOLD_REG(u32, index, r6);
+                MATCH_HOLD_REG(u32, record_offset, r0);
+                MATCH_HOLD_REG(struct hud_anim_record *, record, r0);
+                MATCH_HOLD_REG(s32, frame_count, r0);
+                MATCH_HOLD_REG(struct hud_digit_part *, part, r3);
+                MATCH_HOLD_REG(s32, hidden_frame, r1);
 
                 anim_data = parts[0].anim_data;
                 index_addr = &parts[0].anim_index;

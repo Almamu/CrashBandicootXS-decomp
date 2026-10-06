@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* Resets a per-channel voice object to its default state (clears the
  * accumulator/instrument-pointer fields, arms the `0x8AD0` "no note"
@@ -12,7 +13,7 @@ void GaxFxChannelInit(void *self)
 {
     u8 *p = self;
     u32 zeroA = 0;
-    register u32 zeroB asm("r1");
+    MATCH_HOLD_REG(u32, zeroB, r1);
     u16 val;
     u8 b;
 

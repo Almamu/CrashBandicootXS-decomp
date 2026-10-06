@@ -160,7 +160,7 @@ void DrawPauseMenu(struct pause_menu *self)
     {
         u32 w = ICON_SLOT_CALL(gLargeFont, 0, self->field_70);
         u32 x, t;
-        register s32 hold asm("r2");
+        MATCH_HOLD_REG(s32, hold, r2);
 
         /* Hard-register hold (no code): r2 stays live across the x
          * computation, so y takes it afterwards. */
@@ -184,7 +184,7 @@ void DrawPauseMenu(struct pause_menu *self)
     width = ICON_SLOT_CALL(gLargeFont, 0, self->buf41);
     {
         u32 x, t;
-        register s32 hold asm("r2");
+        MATCH_HOLD_REG(s32, hold, r2);
 
         /* Hard-register hold (no code), as above. */
         MATCH_HOLD(hold);

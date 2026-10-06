@@ -19,7 +19,7 @@
  * sets bit 0 of `part+0xd` and clears `self+0x34`. */
 void sub_80151C8(struct act *selfArg)
 {
-    register u8 *self asm("r3") = (u8 *)selfArg;
+    MATCH_HOLD_REG(u8 *, self, r3) = (u8 *)selfArg;
     u8 *p23 = self + 0x23;
 
     if (*p23 != 0) {
@@ -43,8 +43,8 @@ void sub_80151C8(struct act *selfArg)
      * `r3` for the whole function so this block's hardcoded `r3` use
      * matches whatever the compiler already has it in. */
     {
-        register s32 val asm("r2");
-        register u8 *selfIn asm("r3") = self;
+        MATCH_HOLD_REG(s32, val, r2);
+        MATCH_HOLD_REG(u8 *, selfIn, r3) = self;
 
         asm volatile(
             "add r0, r3, #0\n\t"
@@ -92,16 +92,16 @@ void sub_80151C8(struct act *selfArg)
     }
 
     {
-        register u8 *part asm("r1") = *(u8 **)(self + 0x10);
-        register s32 one asm("r0") = 1;
-        register u8 old asm("r2") = part[0xd];
+        MATCH_HOLD_REG(u8 *, part, r1) = *(u8 **)(self + 0x10);
+        MATCH_HOLD_REG(s32, one, r0) = 1;
+        MATCH_HOLD_REG(u8, old, r2) = part[0xd];
 
         one |= old;
         part[0xd] = one;
     }
     {
-        register u8 *p34 asm("r1") = self + 0x34;
-        register s32 zero asm("r0") = 0;
+        MATCH_HOLD_REG(u8 *, p34, r1) = self + 0x34;
+        MATCH_HOLD_REG(s32, zero, r0) = 0;
 
         *p34 = zero;
     }
@@ -391,8 +391,8 @@ void StartActionCtrlRun(struct act *self)
  * (docs/workflow.md step 7). */
 void StartActionCtrlHighJump(struct act *self)
 {
-    register s32 zero asm("r5") = 0;
-    register u8 idx asm("r2");
+    MATCH_HOLD_REG(s32, zero, r5) = 0;
+    MATCH_HOLD_REG(u8, idx, r2);
     struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
     u8 *off;
     u8 *p28;
@@ -415,8 +415,8 @@ void StartActionCtrlHighJump(struct act *self)
 /* Same shape as `StartActionCtrlHighJump`, table-index `7` instead of `0xb`. */
 void sub_8015558(struct act *self)
 {
-    register s32 zero asm("r5") = 0;
-    register u8 idx asm("r2");
+    MATCH_HOLD_REG(s32, zero, r5) = 0;
+    MATCH_HOLD_REG(u8, idx, r2);
     struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
     u8 *off;
     u8 *p28;
@@ -454,7 +454,7 @@ void sub_80155B8(struct act *self)
 {
 
     if (((u8 *)*(struct actor **)((u8 *)self + 0x10))[0x38] != 0) {
-        register s32 zero asm("r4") = 0;
+        MATCH_HOLD_REG(s32, zero, r4) = 0;
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
         u8 *off;
 
@@ -476,7 +476,7 @@ void ActionCtrlStateHangSpin(struct act *self)
 {
     self->frame += 1;
     if (self->frame >= self->frames || self->part->animDone != 0) {
-        register s32 zero asm("r4");
+        MATCH_HOLD_REG(s32, zero, r4);
         u8 *p26 = &self->spinCooldown;
         struct act_method *m;
 
@@ -502,7 +502,7 @@ void ActionCtrlStateHangGrab(struct act *self)
 {
 
     if (((u8 *)*(struct actor **)((u8 *)self + 0x10) + 0x38)[0] != 0) {
-        register s32 zero asm("r4") = 0;
+        MATCH_HOLD_REG(s32, zero, r4) = 0;
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
         u8 *off;
 
@@ -522,9 +522,9 @@ void ActionCtrlStateWarpOut(struct act *self)
 {
 
     if (((u8 *)*(struct actor **)((u8 *)self + 0x10) + 0x38)[0] != 0) {
-        register struct player *player asm("r1") = gPlayer;
-        register s32 bit asm("r0") = 0x80;
-        register u8 old asm("r2") = player->flags.all;
+        MATCH_HOLD_REG(struct player *, player, r1) = gPlayer;
+        MATCH_HOLD_REG(s32, bit, r0) = 0x80;
+        MATCH_HOLD_REG(u8, old, r2) = player->flags.all;
 
         bit |= old;
         player->flags.all = bit;

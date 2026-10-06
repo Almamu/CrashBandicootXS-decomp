@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gba/dma_macros.h"
 #include "frontend.h"
 #include "util.h"
@@ -144,15 +145,15 @@ void *InitStarfield(void *selfArg)
     tileBase = self->tileVramBase;
     mapBase = self->mapVramBase;
     {
-        register u32 maskTmp asm("r1") = -0x1000;
-        register u32 maskReg asm("r5");
+        MATCH_HOLD_REG(u32, maskTmp, r1) = -0x1000;
+        MATCH_HOLD_REG(u32, maskReg, r5);
         asm volatile("add %0, %1, #0" : "=r"(maskReg) : "r"(maskTmp));
         mask = maskReg;
     }
     do {
         s32 nextRow = row + 1;
-        register u32 shifted asm("r0") = row << 6;
-        register u32 rowPtrVal asm("r1");
+        MATCH_HOLD_REG(u32, shifted, r0) = row << 6;
+        MATCH_HOLD_REG(u32, rowPtrVal, r1);
         u16 *rowPtr;
         s32 col;
 
@@ -268,8 +269,8 @@ void DrawStarfield(void *selfArg)
         /* Register-pinned to match the ROM's own choices - `trailVal`
          * (the first nibble value, always 1) lives in `sb` for the whole
          * loop, `sevenMask` (the `&7` pixel-within-tile mask) in `r8`. */
-        register s32 trailVal asm("sb") = 1;
-        register s32 sevenMask asm("r8") = 7;
+        MATCH_HOLD_REG(s32, trailVal, sb) = 1;
+        MATCH_HOLD_REG(s32, sevenMask, r8) = 7;
 
         do {
             s32 xRaw, yRaw, xPix, yPix;
@@ -332,7 +333,7 @@ void DrawStarfield(void *selfArg)
                  * hoisted above the loop, and it's assigned by a plain
                  * statement after the position reload (see point 5
                  * above), not as this declaration's own initializer. */
-                register s32 oldVal asm("ip");
+                MATCH_HOLD_REG(s32, oldVal, ip);
 
                 xRaw2 = slot->x;
                 xPix2 = xRaw2 >> 8;
@@ -432,7 +433,7 @@ void SpawnStar(void *mgrArg, s32 idx)
  * parameters into callee-saved registers at entry even though `val` is
  * never touched until the function's tail with no intervening call (a leaf
  * function, so the ROM's own build simply leaves it in `r3` the whole
- * time) - pinning `val` to `register s32 val asm("r3")` (assigned from a
+ * time) - pinning `val` to `MATCH_HOLD_REG(s32, val, r3)` (assigned from a
  * plain, unpinned `valArg` parameter; a pinned parameter itself doesn't
  * parse on this compiler) fixed that, dropping the `push`/`pop` back down
  * to the ROM's `{r4, r5, r6}`.
@@ -471,7 +472,7 @@ void SpawnStar(void *mgrArg, s32 idx)
 void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
 {
     u8 *mgr = mgrArg;
-    register s32 val asm("r3") = valArg;
+    MATCH_HOLD_REG(s32, val, r3) = valArg;
 
     if (x <= 0xef && y >= 0 && y <= 0x9f) {
         s32 addr = ((s32)x >> 3) << 6;
@@ -482,8 +483,8 @@ void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
         addr += (x & 7);
         addr += (y & 7) << 3;
         {
-            register s32 off asm("r0") = (addr >> 2) << 1;
-            register u16 *tileMapEntry asm("r2") = (u16 *)(*(u8 **)(mgr + 0x10) + off);
+            MATCH_HOLD_REG(s32, off, r0) = (addr >> 2) << 1;
+            MATCH_HOLD_REG(u16 *, tileMapEntry, r2) = (u16 *)(*(u8 **)(mgr + 0x10) + off);
 
             shift = (addr & 3) << 2;
             asm volatile(
@@ -530,8 +531,8 @@ void UpdateStarfield(void *mgrArg)
             s32 end = -1;
 
             do {
-                register s32 idxR0 asm("r0") = mgr->count;
-                register s32 idx asm("r1") = idxR0;
+                MATCH_HOLD_REG(s32, idxR0, r0) = mgr->count;
+                MATCH_HOLD_REG(s32, idx, r1) = idxR0;
 
                 mgr->count = idxR0 + 1;
                 SpawnStar(mgr, idx);
@@ -556,10 +557,10 @@ body:
 check:
     UpdateKeys(gInput);
     {
-        register u8 *addr asm("r1") = (u8 *)&gKeys;
-        register s32 nine asm("r0") = 9;
-        register s32 flag asm("r1");
-        register s32 r asm("r0");
+        MATCH_HOLD_REG(u8 *, addr, r1) = (u8 *)&gKeys;
+        MATCH_HOLD_REG(s32, nine, r0) = 9;
+        MATCH_HOLD_REG(s32, flag, r1);
+        MATCH_HOLD_REG(s32, r, r0);
 
         flag = *(u16 *)(addr + 2);
         r = nine & flag;

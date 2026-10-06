@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "vtable.h"
 #include "objects.h"
@@ -8,7 +9,7 @@
  * defined and used in `part_list.c` (capacity/count1/count2/
  * array1/array2), but is deliberately kept as raw offset casts here
  * instead of named struct field access: every function below pins
- * specific registers (`register ... asm("rN")`) to reproduce exact
+ * specific registers (`MATCH_HOLD_REG`) to reproduce exact
  * ROM instruction ordering, and this compiler's register allocation
  * for a struct-field access is sensitive to surrounding context in
  * ways that have already caused real regressions this session (see
@@ -31,8 +32,8 @@ void CullPartList(void *manager)
 {
     s32 i;
     s32 box[4];
-    register void *P asm("r0") = gLevelLayers;
-    register void *subObj asm("r0");
+    MATCH_HOLD_REG(void *, P, r0) = gLevelLayers;
+    MATCH_HOLD_REG(void *, subObj, r0);
     s32 v0, v1;
     s32 v2, v3;
 
@@ -49,19 +50,19 @@ void CullPartList(void *manager)
     *(s32 *)((u8 *)manager + 8) = 0;
 
     for (i = 0; i < *(s32 *)((u8 *)manager + 4); i++) {
-        register void **arrBase asm("r1") = *(void ***)((u8 *)manager + 0xc);
-        register s32 idx asm("r0") = i * 4;
-        register void **slot asm("r0");
+        MATCH_HOLD_REG(void **, arrBase, r1) = *(void ***)((u8 *)manager + 0xc);
+        MATCH_HOLD_REG(s32, idx, r0) = i * 4;
+        MATCH_HOLD_REG(void **, slot, r0);
         void *part;
 
         slot = (void **)((u8 *)idx + (s32)arrBase);
         part = *slot;
 
         {
-            register struct vtable_slot *tbl asm("r1") = ((struct actor *)part)->table;
-            register s32 offset asm("r0") = tbl[6].delta;
-            register void *addr asm("r0");
-            register void *fn asm("r2");
+            MATCH_HOLD_REG(struct vtable_slot *, tbl, r1) = ((struct actor *)part)->table;
+            MATCH_HOLD_REG(s32, offset, r0) = tbl[6].delta;
+            MATCH_HOLD_REG(void *, addr, r0);
+            MATCH_HOLD_REG(void *, fn, r2);
 
             addr = (u8 *)part + offset;
             fn = tbl[6].fn;
@@ -93,10 +94,10 @@ void ClearPartList(void *manager)
         void *part = arrBase[idx];
 
         if (part != 0) {
-            register u8 *rec asm("r1") = *(u8 **)((u8 *)part + 0x18) + 0x50;
-            register s32 offset asm("r0") = *(s16 *)rec;
-            register void *addr asm("r0");
-            register void *fn asm("r2");
+            MATCH_HOLD_REG(u8 *, rec, r1) = *(u8 **)((u8 *)part + 0x18) + 0x50;
+            MATCH_HOLD_REG(s32, offset, r0) = *(s16 *)rec;
+            MATCH_HOLD_REG(void *, addr, r0);
+            MATCH_HOLD_REG(void *, fn, r2);
 
             addr = (u8 *)part + offset;
             fn = *(void **)(rec + 4);
@@ -122,10 +123,10 @@ void CollidePartsOfClass(void *manager, s32 arg1)
     for (i = 0; i < *(s32 *)((u8 *)manager + 8); i++) {
         void **arr = *(void ***)((u8 *)manager + 0x10);
         void *part = arr[i];
-        register u8 *rec asm("r1") = *(u8 **)((u8 *)part + 0x18) + 0x48;
-        register s32 offset asm("r0") = *(s16 *)rec;
-        register void *addr asm("r0");
-        register void *fn asm("r1");
+        MATCH_HOLD_REG(u8 *, rec, r1) = *(u8 **)((u8 *)part + 0x18) + 0x48;
+        MATCH_HOLD_REG(s32, offset, r0) = *(s16 *)rec;
+        MATCH_HOLD_REG(void *, addr, r0);
+        MATCH_HOLD_REG(void *, fn, r1);
         s32 result;
 
         addr = (u8 *)part + offset;
@@ -136,10 +137,10 @@ void CollidePartsOfClass(void *manager, s32 arg1)
             continue;
         }
         {
-            register u8 byte asm("r1") = *((u8 *)part + 0xc);
-            register s32 shifted asm("r0") = byte >> 2;
-            register s32 mask asm("r1") = 1;
-            register s32 test asm("r0");
+            MATCH_HOLD_REG(u8, byte, r1) = *((u8 *)part + 0xc);
+            MATCH_HOLD_REG(s32, shifted, r0) = byte >> 2;
+            MATCH_HOLD_REG(s32, mask, r1) = 1;
+            MATCH_HOLD_REG(s32, test, r0);
 
             test = shifted & mask;
             if (!test) {
@@ -147,10 +148,10 @@ void CollidePartsOfClass(void *manager, s32 arg1)
             }
         }
         {
-            register u8 *tbl2 asm("r1") = *(u8 **)((u8 *)part + 0x18);
-            register s32 offset2 asm("r0") = *(s16 *)(tbl2 + 8);
-            register void *addr2 asm("r0");
-            register void *fn2 asm("r1");
+            MATCH_HOLD_REG(u8 *, tbl2, r1) = *(u8 **)((u8 *)part + 0x18);
+            MATCH_HOLD_REG(s32, offset2, r0) = *(s16 *)(tbl2 + 8);
+            MATCH_HOLD_REG(void *, addr2, r0);
+            MATCH_HOLD_REG(void *, fn2, r1);
 
             addr2 = (u8 *)part + offset2;
             fn2 = *(void **)(tbl2 + 0xc);

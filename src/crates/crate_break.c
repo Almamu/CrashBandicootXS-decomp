@@ -1299,8 +1299,8 @@ void BounceWumpaCrate(struct crate *self)
                 self->paramA = 1;
             }
             {
-                register u8 *p5 asm("r5");
-                register u8 one asm("r4");
+                MATCH_HOLD_REG(u8 *, p5, r5);
+                MATCH_HOLD_REG(u8, one, r4);
 
                 {
                     s32 x = self->x >> 8;
@@ -1356,7 +1356,7 @@ void LightTntCrate(struct crate *selfArg)
          * is kept as the live `&self[0x2d]` pointer (matching the ROM's
          * own r5) rather than recomputed, since the ROM's later tag
          * read reuses this same register. */
-        register u8 *addr2d asm("r5");
+        MATCH_HOLD_REG(u8 *, addr2d, r5);
 
         asm volatile(
             "mov r0, #0x14\n\t"
@@ -1376,7 +1376,7 @@ void LightTntCrate(struct crate *selfArg)
          * 0x10;` (in either operand order) always loads the field
          * first here. */
         {
-            register u32 flagsResult asm("r0");
+            MATCH_HOLD_REG(u32, flagsResult, r0);
 
             asm volatile(
                 "mov r0, #0x10\n\t"
@@ -1391,10 +1391,10 @@ void LightTntCrate(struct crate *selfArg)
         LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
 
         {
-            register u8 **p2 asm("r0") = *(u8 ***)(self + 0x20);
-            register u8 *table2 asm("r1") = *p2;
-            register u8 tag2 asm("r2") = *addr2d;
-            register u8 *entry2 asm("r1");
+            MATCH_HOLD_REG(u8 **, p2, r0) = *(u8 ***)(self + 0x20);
+            MATCH_HOLD_REG(u8 *, table2, r1) = *p2;
+            MATCH_HOLD_REG(u8, tag2, r2) = *addr2d;
+            MATCH_HOLD_REG(u8 *, entry2, r1);
 
         asm volatile(
             "lsl r0, %2, #3\n\t"
@@ -1428,7 +1428,7 @@ void LightTntCrate(struct crate *selfArg)
      * one block to pin the whole sequence's order and registers at
      * once. */
     {
-        register u8 rawLo asm("r0") = lo;
+        MATCH_HOLD_REG(u8, rawLo, r0) = lo;
 
         asm volatile(
             "add r2, %1, #0\n\t"
@@ -1744,8 +1744,8 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
             s32 y = self->y >> 8;
 
             SPAWN_CALL(gEntitySpawner, x, y, (*(volatile s32 *)&argP4 = 0xff, ({
-                register u8 *p asm("r4") = (u8 *)&argP5;
-                register u8 v asm("r3") = 0;
+                MATCH_HOLD_REG(u8 *, p, r4) = (u8 *)&argP5;
+                MATCH_HOLD_REG(u8, v, r3) = 0;
                 *p = v;
                 0;
             }), 0));

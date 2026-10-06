@@ -213,7 +213,7 @@ s32 GetCellAnimFreeTile(void)
 void FlipCellAnimPage(void)
 {
     if (gCellAnimUploaded != 0) {
-        register u8 toggled asm("r0");
+        MATCH_HOLD_REG(u8, toggled, r0);
 
         if (gCellAnimPage != 0) {
             REG_BG0CNT = 0x5C02;
@@ -253,12 +253,12 @@ s32 GetCellAnimDistance(void)
  * docs/workflow.md step 3 for this whole family of fixes). */
 void AdvanceCellAnim(void)
 {
-    register s32 *b0ptr asm("r4") = &gCellAnimTime;
-    register s32 prev asm("r1") = *b0ptr;
+    MATCH_HOLD_REG(s32 *, b0ptr, r4) = &gCellAnimTime;
+    MATCH_HOLD_REG(s32, prev, r1) = *b0ptr;
     s32 prevShifted = prev >> 8;
-    register s32 velocity asm("r0") = gCellAnimSpeed;
-    register s32 pos asm("r3") = prev + velocity;
-    register s32 *bcPtr asm("r1");
+    MATCH_HOLD_REG(s32, velocity, r0) = gCellAnimSpeed;
+    MATCH_HOLD_REG(s32, pos, r3) = prev + velocity;
+    MATCH_HOLD_REG(s32 *, bcPtr, r1);
     s32 delta;
 
     *b0ptr = pos;
@@ -267,7 +267,7 @@ void AdvanceCellAnim(void)
     *bcPtr = delta;
 
     if (pos >= gCellAnimLength) {
-        register s32 wrapped asm("r0") = pos - gCellAnimLength;
+        MATCH_HOLD_REG(s32, wrapped, r0) = pos - gCellAnimLength;
         *b0ptr = wrapped;
     }
 
@@ -302,7 +302,7 @@ s32 GetCellAnimSpeed(void)
  * return value's position afterward (see docs/workflow.md step 3). */
 void SetCellAnimSpeed(s32 arg0)
 {
-    register s32 *dest asm("r4") = &gCellAnimSpeed;
+    MATCH_HOLD_REG(s32 *, dest, r4) = &gCellAnimSpeed;
 
     *dest = __divsi3(arg0 << 8, 0x3c);
 }
@@ -348,7 +348,7 @@ void FillCellAnimTilemap(s32 arg0, s32 w, s32 h)
  * position/register state from them. */
 void InitActorBgScroll(s32 arg0)
 {
-    register s32 v asm("r1");
+    MATCH_HOLD_REG(s32, v, r1);
 
     gActorBgScrollType = arg0;
 
@@ -384,8 +384,8 @@ void InitActorBgScroll(s32 arg0)
      * `gActorBg0VOffset + (v >> 9)` - there's no addition in the ROM's
      * own instructions for this store. */
     {
-        register s32 *ecPtr asm("r0") = &gActorBgScrollMaxX;
-        register s32 delta asm("r2") = (s32)0xFFFF1000;
+        MATCH_HOLD_REG(s32 *, ecPtr, r0) = &gActorBgScrollMaxX;
+        MATCH_HOLD_REG(s32, delta, r2) = (s32)0xFFFF1000;
 
         v = gActorBgWidth + delta;
         *ecPtr = v;
@@ -393,7 +393,7 @@ void InitActorBgScroll(s32 arg0)
     gActorBgScrollMaxY = gActorBgHeight + (s32)0xFFFF6000;
 
     {
-        register s32 *d0Ptr asm("r2") = &gActorBgScrollX;
+        MATCH_HOLD_REG(s32 *, d0Ptr, r2) = &gActorBgScrollX;
 
         v = v + (s32)((u32)v >> 31);
         *d0Ptr = v >> 1;
@@ -401,7 +401,7 @@ void InitActorBgScroll(s32 arg0)
     gActorBgScrollY = 0;
 
     {
-        register vu16 *bg0hofsPtr asm("r0") = &REG_BG0HOFS;
+        MATCH_HOLD_REG(vu16 *, bg0hofsPtr, r0) = &REG_BG0HOFS;
 
         v >>= 9;
         *bg0hofsPtr = v;
@@ -421,7 +421,7 @@ void InitActorBgScroll(s32 arg0)
 void UpdateActorBgScroll(s32 arg0, s32 arg1)
 {
     s32 target;
-    register s32 delta asm("r0");
+    MATCH_HOLD_REG(s32, delta, r0);
     s32 cur;
     s32 shift;
 
@@ -438,7 +438,7 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
         cur = 0;
     }
     {
-        register s32 clamped asm("r1") = target;
+        MATCH_HOLD_REG(s32, clamped, r1) = target;
         if (clamped > cur) {
             clamped = cur;
         }
@@ -462,7 +462,7 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
         /* Same clamp idiom as the X-axis block above, but the ROM
          * happens to keep this second copy in `r0` instead of `r1` -
          * see docs/workflow.md step 3. */
-        register s32 clamped asm("r0") = target;
+        MATCH_HOLD_REG(s32, clamped, r0) = target;
         if (clamped > cur) {
             clamped = cur;
         }

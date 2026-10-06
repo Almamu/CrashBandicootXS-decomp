@@ -26,7 +26,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 void UpdateHovercraftCannonFlash(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 doAnim asm("r0");
+    MATCH_HOLD_REG(s32, doAnim, r0);
 
     *(s32 *)(self + 0x24) = GetHovercraftZ() - 0x200;
     *(s32 *)(self + 0x1c) = GetHovercraftX() + 0x2000;
@@ -67,20 +67,20 @@ asm(".align 2, 0");
 void *CreateHovercraftCannonFlash(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     u8 *self = selfArg;
-    register s32 one asm("r5") = 1;
+    MATCH_HOLD_REG(s32, one, r5) = 1;
 
     InitActorPart(self, part, b, c, d);
     *(s32 *)(self + 0x54) = one;
     *(void **)(self + 0x50) = (void *)gHovercraftCannonFlashVtable;
     {
-        register s32 zero asm("r1") = 0;
+        MATCH_HOLD_REG(s32, zero, r1) = 0;
 
         *(s32 *)(self + 0x28) = zero;
         *(s32 *)(self + 0x44) = zero;
         *(s32 *)(self + 0xc) = zero;
         {
-            register u16 anim asm("r0") = *(u16 *)*(void **)self;
-            register u8 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)*(void **)self;
+            MATCH_HOLD_REG(u8, zero2, r2) = 0;
 
             *(u16 *)(self + 0x10) = anim;
             self[0x12] = zero2;

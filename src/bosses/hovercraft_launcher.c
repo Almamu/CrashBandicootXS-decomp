@@ -131,21 +131,21 @@ void DamageHovercraftLauncher(struct spawner *self, s32 dmg)
 
         if (self->hp <= 0) {
             u8 *deadFlag = &self->dead;
-            register s32 zero asm("r4") = 0;
+            MATCH_HOLD_REG(s32, zero, r4) = 0;
 
             *deadFlag = state;
             LoseHovercraftPart();
             {
-                register s32 stateVal asm("r0") = 2;
-                register s32 three asm("r1") = 3;
+                MATCH_HOLD_REG(s32, stateVal, r0) = 2;
+                MATCH_HOLD_REG(s32, three, r1) = 3;
 
                 self->base.state = stateVal;
                 self->base.stateTime = zero;
                 self->base.animIndex = three;
             }
             {
-                register u16 anim asm("r0") = self->base.anims[3].duration;
-                register u8 zero2 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[3].duration;
+                MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                 *(u16 *)&self->base.animTimer = anim;
                 *(u8 *)&self->base.animDone = zero2;
@@ -206,10 +206,10 @@ void UpdateHovercraftLauncher(struct actor_self *self)
 void *CreateHovercraftLauncher(void *selfArg, void *part, s32 b, s32 cParam, s32 d)
 {
     struct spawner *self = selfArg;
-    register s32 bReg asm("r6") = b;
-    register s32 c asm("r8") = cParam;
-    register s32 dReg asm("r0") = d;
-    register s32 health asm("r5") = 0x19;
+    MATCH_HOLD_REG(s32, bReg, r6) = b;
+    MATCH_HOLD_REG(s32, c, r8) = cParam;
+    MATCH_HOLD_REG(s32, dReg, r0) = d;
+    MATCH_HOLD_REG(s32, health, r5) = 0x19;
 
     InitActorPart(self, part, b, cParam, dReg);
     self->hp = health;
@@ -217,14 +217,14 @@ void *CreateHovercraftLauncher(void *selfArg, void *part, s32 b, s32 cParam, s32
     self->spawnX = bReg;
     self->spawnY = c;
     {
-        register s32 zero asm("r1") = 0;
+        MATCH_HOLD_REG(s32, zero, r1) = 0;
 
         self->base.state = zero;
         self->base.stateTime = zero;
         self->base.animIndex = zero;
         {
-            register u16 anim asm("r0") = self->base.anims[0].duration;
-            register u8 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[0].duration;
+            MATCH_HOLD_REG(u8, zero2, r2) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero2;
@@ -249,12 +249,12 @@ void HovercraftLauncherStateDestroyed(void *selfArg)
     ShakeActorBg(0x400);
 
     if (self->animDone != 0 && self != NULL) {
-        register struct actor_vtable *table asm("r1") = self->vtable;
-        register u8 *addr asm("r0");
+        MATCH_HOLD_REG(struct actor_vtable *, table, r1) = self->vtable;
+        MATCH_HOLD_REG(u8 *, addr, r0);
         void *fn;
 
         {
-            register s32 eight asm("r2") = 8;
+            MATCH_HOLD_REG(s32, eight, r2) = 8;
 
             /* &table->destroy.thisOffset, with the 8 in its own register */
             addr = (u8 *)self + *(s16 *)((u8 *)table + eight);
@@ -275,7 +275,7 @@ void HovercraftLauncherStateDestroyed(void *selfArg)
  * accumulator/frame counter. */
 void HovercraftLauncherStateWait(void *selfArg)
 {
-    register struct spawner *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct spawner *, self, r4) = selfArg;
 
     self->base.x = GetHovercraftX() + 0x1E00;
     self->base.y = GetHovercraftY() - 0x3000;
@@ -284,8 +284,8 @@ void HovercraftLauncherStateWait(void *selfArg)
     if (GetHovercraftPartsLeft() <= 2
      && (GetHovercraftState() == 2
       || (GetHovercraftState() == 3 && self->base.depth <= 0x4AFF))) {
-        register s32 zero asm("r2") = 0;
-        register s32 one asm("r0");
+        MATCH_HOLD_REG(s32, zero, r2) = 0;
+        MATCH_HOLD_REG(s32, one, r0);
 
         self->cooldown = zero;
         self->count = zero;
@@ -294,8 +294,8 @@ void HovercraftLauncherStateWait(void *selfArg)
         self->base.stateTime = zero;
         self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = self->base.anims[1].duration;
-            register u8 zero2 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[1].duration;
+            MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero2;

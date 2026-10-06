@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "audio.h"
 #include "actor.h"
@@ -38,7 +39,7 @@
  * pair - see docs/rom_map.md. */
 void DispensePolarWumpa(void *selfArg)
 {
-    register struct actor_self *self asm("r1") = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r1) = selfArg;
     s32 acc = gPolarQueuedWumpa;
 
     if (acc == 0) {
@@ -92,21 +93,21 @@ s32 IsPolarPauseLocked(void *player)
  * own `LaunchPolarPlayer` (polar_player_actions.c) - then fires `SetCellAnimSpeed(0x24)`. */
 void sub_802BD24(void *selfArg)
 {
-    register struct actor_self *self asm("r3") = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r3) = selfArg;
 
     if (self->stateTime > 0x13) {
         gPolarSteerEnabled = 1;
         gPolarPlayerInactive = 0;
         {
-            register s32 state asm("r0") = 1;
-            register s32 zero asm("r2") = 0;
+            MATCH_HOLD_REG(s32, state, r0) = 1;
+            MATCH_HOLD_REG(s32, zero, r2) = 0;
 
             self->state = state;
             self->stateTime = zero;
             self->animIndex = zero;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->anims[0].duration;
-                register u8 zero2 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[0].duration;
+                MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero2;
@@ -196,7 +197,7 @@ void PolarPlayerStateKnockedOff(void *selfArg)
  * transitions to state 2 and fires `SetCellAnimSpeed(0x38)` instead. */
 void PolarPlayerStateBoost(void *selfArg)
 {
-    register struct actor_self *self asm("r2") = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r2) = selfArg;
 
     if (self->stateTime == 0x1e) {
         gPolarSteerEnabled = 1;
@@ -205,14 +206,14 @@ void PolarPlayerStateBoost(void *selfArg)
             u16 bit = gKeys.all & 2;
 
             if (bit == 0) {
-                register s32 state asm("r0") = 1;
+                MATCH_HOLD_REG(s32, state, r0) = 1;
 
                 self->state = state;
                 self->stateTime = bit;
                 self->animIndex = bit;
                 {
-                    register u16 anim asm("r0") = *(u16 *)&self->anims[0].duration;
-                    register u8 zero2 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[0].duration;
+                    MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                     *(u16 *)&self->animTimer = anim;
                     *(u8 *)&self->animDone = zero2;
@@ -220,7 +221,7 @@ void PolarPlayerStateBoost(void *selfArg)
                 self->animTime = bit;
                 SetCellAnimSpeed(0x24);
             } else {
-                register s32 state asm("r0") = 2;
+                MATCH_HOLD_REG(s32, state, r0) = 2;
 
                 self->state = state;
                 self->stateTime = 0;

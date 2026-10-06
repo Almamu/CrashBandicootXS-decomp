@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "hud.h"
 #include "objects.h"
@@ -22,7 +23,7 @@
  * two remaining digit counters (`UpdateHudCrates`, `UpdateHudWumpa`). */
 void UpdateHud(struct hud_counter *self)
 {
-    register struct hud_counter *sself asm("r5") = self;
+    MATCH_HOLD_REG(struct hud_counter *, sself, r5) = self;
 
     gHudSlideOffset = 0;
 

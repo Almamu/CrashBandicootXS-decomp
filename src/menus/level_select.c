@@ -88,7 +88,7 @@ extern struct xy_pair gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos"
 /* Base class and runtime. */
 extern void _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
-/* Calls the function in r4 with r0-r3 (see the `register ... asm("r4")`
+/* Calls the function in r4 with r0-r3 (see the `MATCH_HOLD_REG(..., r4)`
  * pin at the call site). */
 extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
 
@@ -129,7 +129,7 @@ static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
 
 static inline struct level_item *ItemAt(struct level_item **items, s32 index)
 {
-    register s32 off asm("r0") = index * 4;
+    MATCH_HOLD_REG(s32, off, r0) = index * 4;
 
     return *(struct level_item **)((u8 *)items + off);
 }
@@ -174,21 +174,21 @@ void sub_801B85C(struct follow_child *self)
 void ResetCameraLead(struct follow_child *self)
 {
     u32 v = *((u8 *)self + 0x0D) >> 2;
-    register u32 one asm("r1") = 1;
+    MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))
         self->visible = v ^ 1;
     gCamera->target = (struct camera_target *)self;
     {
         struct player *p = gPlayer;
-        register s32 x asm("r0") = p->x;
-        register s32 y asm("r2") = p->y;
-        register s32 off asm("r1") = 0x1E00;
+        MATCH_HOLD_REG(s32, x, r0) = p->x;
+        MATCH_HOLD_REG(s32, y, r2) = p->y;
+        MATCH_HOLD_REG(s32, off, r1) = 0x1E00;
 
         self->x = x + off;
         self->y = y;
         {
-            register s32 f asm("r0") = 0x10;
+            MATCH_HOLD_REG(s32, f, r0) = 0x10;
 
             f |= self->flags.all;
             self->flags.all = f;
@@ -344,7 +344,7 @@ void CheckLaunchPadContact(void *self)
             struct player *p = gPlayer;
             const struct actor_method *m = &p->vtable->handleEvent;
             void *addr = (u8 *)p + m->thisOffset;
-            register void *fn asm("r4") = *(void *const volatile *)&m->fn;
+            MATCH_HOLD_REG(void *, fn, r4) = *(void *const volatile *)&m->fn;
 
             _call_via_r4(addr, 0, 0x19, 0);
             (void)fn;
@@ -672,14 +672,14 @@ void UpdateLevelSelect(struct level_menu *self)
  * frame 0/1 by whether the previous/next page is open. */
 void UpdateLevelSelectPageArrows(struct level_menu *self)
 {
-    register s32 lowMask asm("r5");
-    register s32 highMask asm("r4");
+    MATCH_HOLD_REG(s32, lowMask, r5);
+    MATCH_HOLD_REG(s32, highMask, r4);
 
     {
-        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot((struct actor *)self->sprites[8]);
+        MATCH_HOLD_REG(s32, pal, r0) = GetSpriteAnimPaletteSlot((struct actor *)self->sprites[8]);
         u8 *p = (u8 *)self->sprites[8] + 0x29;
-        register s32 m asm("r1");
-        register s32 b asm("r3");
+        MATCH_HOLD_REG(s32, m, r1);
+        MATCH_HOLD_REG(s32, b, r3);
 
         lowMask = 0xF;
         pal &= lowMask;
@@ -692,9 +692,9 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
         *p = m;
     }
     {
-        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot((struct actor *)self->sprites[9]);
+        MATCH_HOLD_REG(s32, pal, r0) = GetSpriteAnimPaletteSlot((struct actor *)self->sprites[9]);
         u8 *p = (u8 *)self->sprites[9] + 0x29;
-        register s32 b asm("r5");
+        MATCH_HOLD_REG(s32, b, r5);
 
         pal &= lowMask;
         b = *p;
@@ -704,8 +704,8 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
     }
     if (self->world <= 2)
     {
-        register struct sprite *s asm("r1");
-        register s32 f asm("r4");
+        MATCH_HOLD_REG(struct sprite *, s, r1);
+        MATCH_HOLD_REG(s32, f, r4);
 
         if (LevelSelectIsNextWorldOpen(self))
         {
@@ -718,13 +718,13 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             f = 1;
         }
         {
-            register const struct sprite_bank *a asm("r0") = s->anim;
-            register u8 *pi asm("r3") = &s->animIndex;
-            register const struct sprite_anim *recs asm("r2") = a->anims;
-            register u32 idx asm("r5") = *pi;
-            register const struct sprite_anim *rec asm("r0") = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
-            register s32 n asm("r2") = rec->frameCount;
-            register struct sprite *t asm("r0") = s;
+            MATCH_HOLD_REG(const struct sprite_bank *, a, r0) = s->anim;
+            MATCH_HOLD_REG(u8 *, pi, r3) = &s->animIndex;
+            MATCH_HOLD_REG(const struct sprite_anim *, recs, r2) = a->anims;
+            MATCH_HOLD_REG(u32, idx, r5) = *pi;
+            MATCH_HOLD_REG(const struct sprite_anim *, rec, r0) = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
+            MATCH_HOLD_REG(s32, n, r2) = rec->frameCount;
+            MATCH_HOLD_REG(struct sprite *, t, r0) = s;
 
             if (f >= n)
                 f = n - 1;
@@ -734,14 +734,14 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
     }
     if (LevelSelectHasPrevWorld(self))
     {
-        register struct sprite *s asm("r3") = self->sprites[9];
-        register s32 f asm("r4") = 0;
-        register const struct sprite_bank *a asm("r0") = s->anim;
-        register u8 *pi asm("r2") = &s->animIndex;
-        register const struct sprite_anim *recs asm("r1") = a->anims;
-        register u32 idx asm("r5") = *pi;
-        register const struct sprite_anim *rec asm("r0") = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
-        register s32 n asm("r0") = rec->frameCount;
+        MATCH_HOLD_REG(struct sprite *, s, r3) = self->sprites[9];
+        MATCH_HOLD_REG(s32, f, r4) = 0;
+        MATCH_HOLD_REG(const struct sprite_bank *, a, r0) = s->anim;
+        MATCH_HOLD_REG(u8 *, pi, r2) = &s->animIndex;
+        MATCH_HOLD_REG(const struct sprite_anim *, recs, r1) = a->anims;
+        MATCH_HOLD_REG(u32, idx, r5) = *pi;
+        MATCH_HOLD_REG(const struct sprite_anim *, rec, r0) = (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
+        MATCH_HOLD_REG(s32, n, r0) = rec->frameCount;
 
         if (f >= n)
             f = n - 1;

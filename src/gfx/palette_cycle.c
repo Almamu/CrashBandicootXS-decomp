@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gfx.h"
 #include "actor.h"
 #include "hud.h"
@@ -13,7 +14,7 @@
  * `lists[i]` gives - see the struct's doc comment above. */
 void TickPaletteCycles(struct palette_cycler *self)
 {
-    register s32 i asm("r4");
+    MATCH_HOLD_REG(s32, i, r4);
     s32 count;
     /* `next_i` is computed right after the `__umodsi3` call below
      * (regardless of its result) and stashed in `ip` - a register with
@@ -24,7 +25,7 @@ void TickPaletteCycles(struct palette_cycler *self)
      * below so both the normal and `continue`d paths fall through the
      * same single bottom-of-loop test - matching the ROM's one shared
      * `SKIP` label - rather than each getting their own copy of it. */
-    register s32 next_i asm("ip");
+    MATCH_HOLD_REG(s32, next_i, ip);
 
     if (!self->active) {
         return;
@@ -42,7 +43,7 @@ void TickPaletteCycles(struct palette_cycler *self)
          * generated code, so the field accesses below stay raw pointer
          * arithmetic off this cached offset; see docs/workflow.md
          * step 7. */
-        register s32 offset asm("r5");
+        MATCH_HOLD_REG(s32, offset, r5);
         u16 *target;
         u16 *list;
         s32 mod_result;
@@ -85,7 +86,7 @@ void TickPaletteCycles(struct palette_cycler *self)
 
         if (self->direction) {
             u16 carry;
-            register s32 n asm("r1");
+            MATCH_HOLD_REG(s32, n, r1);
 
             {
                 u8 *p = (u8 *)self;
@@ -123,8 +124,8 @@ void TickPaletteCycles(struct palette_cycler *self)
                 /* Split so the index-read and the shifted address land in
                  * different registers, matching the ROM's `ldrh r1,.../
                  * lsls r0,r1,...` pair - see docs/workflow.md step 7. */
-                register u16 idx_val asm("r1") = list[0];
-                register u32 shifted asm("r0");
+                MATCH_HOLD_REG(u16, idx_val, r1) = list[0];
+                MATCH_HOLD_REG(u32, shifted, r0);
                 asm volatile("lsl %0, %1, #1" : "=r"(shifted) : "r"(idx_val));
                 asm volatile("add %0, %0, %1" : "+r"(shifted) : "r"(target));
                 carry = *(u16 *)shifted;
@@ -144,7 +145,7 @@ void TickPaletteCycles(struct palette_cycler *self)
                 /* Plain C reverses this commutative ADD's operands - see
                  * docs/workflow.md step 7. */
                 {
-                    register u32 byte_off asm("r0");
+                    MATCH_HOLD_REG(u32, byte_off, r0);
                     asm volatile("lsl %0, %1, #1" : "=r"(byte_off) : "r"(n));
                     asm volatile("add %0, %1, %0" : "+r"(list) : "r"(byte_off));
                 }
@@ -192,10 +193,10 @@ void AddPaletteCycle(struct palette_cycler *self, u16 *targets_arg, u16 *lists, 
      * picks a different register for the periods address - tried and
      * confirmed to change the generated code, so this stays a register
      * pin; see docs/workflow.md step 7. */
-    register u16 *targets asm("r4") = targets_arg;
+    MATCH_HOLD_REG(u16 *, targets, r4) = targets_arg;
 
     {
-        register u32 addr_scratch asm("r0");
+        MATCH_HOLD_REG(u32, addr_scratch, r0);
         asm volatile("add %1, sp, #0x18\n\tldrb %0, [%1]" : "=r"(direction), "=r"(addr_scratch));
     }
 
@@ -209,7 +210,7 @@ void AddPaletteCycle(struct palette_cycler *self, u16 *targets_arg, u16 *lists, 
          * uses it to place `targets`/`lists`, then lets r1 die (reused
          * for `rate` right before the call) once `&self->periods[idx]`
          * has been computed from it into r4. */
-        register s32 offset asm("r1") = self->count << 2;
+        MATCH_HOLD_REG(s32, offset, r1) = self->count << 2;
 
         {
             u8 *p = (u8 *)self;
@@ -224,7 +225,7 @@ void AddPaletteCycle(struct palette_cycler *self, u16 *targets_arg, u16 *lists, 
             *(u16 **)p = lists;
         }
         {
-            register s32 *periods_addr asm("r4");
+            MATCH_HOLD_REG(s32 *, periods_addr, r4);
             u8 *p = (u8 *)self;
             p += 0x28;
             p += offset;

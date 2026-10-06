@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "byte_arg.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -88,9 +89,9 @@ void YetiStateStop(void)
     if (self->animIndex != 3 && self->animDone != 0) {
         self->animIndex = 3;
         {
-            register u16 anim asm("r0") = self->anims[3].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[3].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -453,7 +454,7 @@ void DrawJetpackPlayer(struct actor_hp *self)
         }
         {
             /* the ROM computes the tile number in r0 */
-            register u32 tile asm("r0") = GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
+            MATCH_HOLD_REG(u32, tile, r0) = GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
 
             QueueSpriteFrameOam(attr1, tile | (self->base.palette << 12), scale);
         }
