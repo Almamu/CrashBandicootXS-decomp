@@ -18,7 +18,8 @@ one row per pre-move source file, in ROM (ldscript) order, with
 functions the file holds. It stays in the tree as the permanent old-to-new
 lookup for older docs, issues and PRs that use the old names.
 `tools/apply_file_layout.py` is the script that applied it, one batch of
-directories at a time.
+directories at a time. It was removed once the last batch landed (#578);
+commit `805d10a0` has its final version.
 
 The libraries (GAX2, AgbEeprom, libgcc and the BIOS SWI wrappers) already
 live in `lib/` since #573 (see [`docs/libraries.md`](./libraries.md)). This

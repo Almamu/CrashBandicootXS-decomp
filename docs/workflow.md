@@ -6,6 +6,18 @@ via this repo's GitHub issues, claim it, and open a PR when done - this
 document is the loop you run *within* that process for each function,
 not how to find one to work on.
 
+**Where this stands now:** the matching campaign is over. Every function
+except the three parked IWRAM ARM ones (#553) is byte-exact C, and no
+`asm/code_3_*.s` file is left. Steps 1 to 8 below are the full loop,
+still the one to follow for a parked function. For changes to matched
+code (renames, cleanup, warnings, formatting), the steps that apply are
+step 6's clean verification and step 7's rules: keep every match
+byte-identical, rebuild after each edit, and leave a load-bearing
+workaround alone unless the rebuild proves the cleaner version produces
+the same bytes. Write-ups of matching work go under `docs/matching/`
+(step 8); other changes only need their PR description and an update to
+whichever `docs/` page they make out of date.
+
 Every function that goes from `asm/code_3_*.s` into real C **must**
 follow this same loop, in order, end to end, every time - including the
 cleanup step (step 7), which in earlier sessions happened as an
@@ -129,8 +141,9 @@ incomplete pass and should be finished before moving on.
      type for a symbol, keep an asm-label alias with a comment, and add
      it to the plan's "Codegen exceptions" table:
      `/* codegen: ... docs/headers_plan.md */ extern s32 RandRange_s32(s32 max) asm("RandRange");`.
-     After editing a header, only a clean build is reliable: the
-     Makefile doesn't track header dependencies. agbcc's compile errors
+     The Makefile tracks header dependencies, so a plain `make` after a
+     header edit rebuilds the objects that include it; step 6's clean
+     build is still the check before a PR. agbcc's compile errors
      don't contain the word "error", so check `make`'s exit status, not
      the log. `python3 tools/extern_audit.py` (after a build) must
      still report "remaining: 0" and no struct name defined in two `.c`

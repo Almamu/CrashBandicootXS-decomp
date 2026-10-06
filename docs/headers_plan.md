@@ -127,6 +127,12 @@ against a copy saved from a clean build. Every file in the pilot was checked
 this way first. A batch is only done when both full clean checks pass (see
 "Verification").
 
+The batches below were done before the Makefile tracked header
+dependencies, so after every header edit they rebuilt from clean. Since
+#578 the preprocess step writes a `.d` file per object, and `make`
+rebuilds every object that includes an edited header; a clean build is
+still the check before a PR.
+
 ## Survey (origin/main at fc3bdec1, before the pilot)
 
 | | Count |

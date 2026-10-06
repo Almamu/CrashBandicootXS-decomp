@@ -132,9 +132,10 @@ rm -rf build && make NON_MATCHING=1 report
 rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare
 ```
 
-Only "La suma coincide" from `make compare` counts as a match. If it
-fails, diagnose via the map-file address-shift method in
-`docs/workflow.md` (byte offset → ROM address → cross-reference
+Only `crashbandicootxs.gba: OK` from `make compare` counts as a match
+(`sha1sum` translates the "OK", e.g. "La suma coincide" in a Spanish
+locale). If it fails, diagnose via the map-file address-shift method
+(byte offset → ROM address → cross-reference
 `crashbandicootxs.map` → isolate which function regressed → diff raw
 bytes directly with `objdump`) rather than guessing.
 
