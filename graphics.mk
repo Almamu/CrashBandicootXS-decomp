@@ -21,7 +21,7 @@ $(GRAPHICS_BUILDDIR)/%.gbapal: graphics/%.pal | $(GFX)
 # gbagfx always arranges pixel data into 8x8 tiles, which is the wrong
 # layout for these, so they go through tools/linear_gfx.py instead.
 # (to regenerate a PNG from a .bin, run tools/linear_gfx.py directly)
-$(GRAPHICS_BUILDDIR)/%_bitmap.bin: graphics/%_bitmap.png
+$(GRAPHICS_BUILDDIR)/%_bitmap.bin: graphics/%_bitmap.png tools/linear_gfx.py
 	@mkdir -p $(dir $@)
 	python3 tools/linear_gfx.py to-bin $< $@
 
@@ -41,7 +41,7 @@ $(GRAPHICS_BUILDDIR)/%.bin: graphics/%.bin
 # entity folder found under each sheet, so editing/adding/removing a
 # frame PNG is tracked like any other prerequisite.
 define FRAMED_ENTITY_RULE
-$(GRAPHICS_BUILDDIR)/unknown/$(1)/$(2).bin: $$(sort $$(wildcard graphics/unknown/$(1)/$(2)/*.png))
+$(GRAPHICS_BUILDDIR)/unknown/$(1)/$(2).bin: $$(sort $$(wildcard graphics/unknown/$(1)/$(2)/*.png)) tools/framed_gfx.py
 	@mkdir -p $$(dir $$@)
 	python3 tools/framed_gfx.py to-bin-folder graphics/unknown/$(1)/$(2) $$@
 endef
@@ -125,6 +125,11 @@ $(CATBG_DIR)/0ff1b0_cell_anim_frames.inc: $(CATBG_DIR)/0ff1b0_cell_anim.img.bin 
 # BG1 picture: the tile set is its own 8px-wide strip PNG (grit's external
 # tileset, -fx, so the map indices are the ROM's), the picture PNG gives
 # the palette and, reduced against that tile set, the map.
+# grit doesn't only read the -fx tile set, it also writes it back when it
+# exits. Pointing -fx at graphics/ rewrote a source PNG while the
+# %_picture_tiles.img.bin rule could be reading it, so a parallel clean
+# build sometimes failed with "grit: can't read '..._picture_tiles.png'".
+# The map rule therefore works on a private copy under build/.
 $(CATBG_DIR)/%_picture.pal.bin: graphics/category_bg/%_picture.png | $(GRIT)
 	@mkdir -p $(dir $@)
 	$(GRIT) $< -g! -p -pn256 -ftb -fh! -o $(CATBG_DIR)/$*_picture
@@ -133,7 +138,8 @@ $(CATBG_DIR)/%_picture_tiles.img.bin: graphics/category_bg/%_picture_tiles.png |
 	$(GRIT) $< -gt -gB4 -p! -ftb -fh! -o $(CATBG_DIR)/$*_picture_tiles
 $(CATBG_DIR)/%_picture_map.map.bin: graphics/category_bg/%_picture.png graphics/category_bg/%_picture_tiles.png | $(GRIT)
 	@mkdir -p $(dir $@)
-	$(GRIT) $< -gt -gB4 -p! -m -mRtp -mLf -fx $(word 2,$^) -ftb -fh! -o $(CATBG_DIR)/$*_picture_map
+	cp $(word 2,$^) $(CATBG_DIR)/$*_picture_map_fx.png
+	$(GRIT) $< -gt -gB4 -p! -m -mRtp -mLf -fx $(CATBG_DIR)/$*_picture_map_fx.png -ftb -fh! -o $(CATBG_DIR)/$*_picture_map
 $(CATBG_DIR)/%_picture_map.inc: $(CATBG_DIR)/%_picture_map.map.bin tools/grit_bg.py
 	python3 tools/grit_bg.py map $< $@
 $(CATBG_DIR)/%_picture_banks.inc: $(CATBG_DIR)/%_picture_map.map.bin tools/grit_bg.py
