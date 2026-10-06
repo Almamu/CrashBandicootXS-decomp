@@ -5,12 +5,12 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "level.h"
+#include "globals.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after the still-raw `DetonateNearbyPolarNitros` (see docs/matching.md) - same
  * `self` object and conventions documented there. */
 
-extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 

@@ -4,9 +4,7 @@
 #include "system.h"
 #include "frontend.h"
 #include "gfx.h"
-
-extern struct oam_shadow_buffer *gOamBuffer;
-extern struct palette_cache *gPaletteCache;
+#include "globals.h"
 
 
 /* Resets `self`'s two byte flags, requests a BG tile/map graphics

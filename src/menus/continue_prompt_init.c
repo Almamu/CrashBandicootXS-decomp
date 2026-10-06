@@ -7,8 +7,7 @@
 #include "menus.h"
 #include "gfx.h"
 #include "memory.h"
-
-extern struct AudioContext *gAudioContext;
+#include "globals.h"
 
 /* Allocates and initializes the continue prompt's three BG scratch buffers
  * (BG1 priority 3/bgcnt 0x1e, BG0 bgcnt 0x1f/slot 3, BG2 priority

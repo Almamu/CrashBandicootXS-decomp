@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "player.h"
 #include "objects.h"
+#include "globals.h"
 
 /* Continuation of action_ctrl_moves.c (issue #18's chunk, the last one) -
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
@@ -61,7 +62,6 @@ void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 
-extern void *gAudioContext;
 extern void *gPlayer;
 
 /* If the player's `+0x100` flag is set: picks a replacement `mode` for

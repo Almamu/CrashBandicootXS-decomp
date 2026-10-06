@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -17,14 +18,11 @@ struct oam_shadow_buffer;
 
 extern void *gPlayer;
 extern void *gCamera;
-extern void *gOamBuffer;
 extern u8 *gLevelLayers;
-extern void *gHud;
 extern void *gCollidableList;
 extern void *gUnknown_030012F4;
 extern void *gUnknown_030012EC;
 extern void *gCrateList;
-extern struct palette_cache *gPaletteCache;
 
 extern void *_call_via_r1(void *arg0, void *arg1);
 

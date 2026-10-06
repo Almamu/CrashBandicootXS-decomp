@@ -3,11 +3,11 @@
 #include "pickups.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
 extern struct level_state *gLevelState;
-extern void ***gSpriteBankSet;
 
 static inline void SetPartTag(struct orbit_part *part, s32 tag)
 {
@@ -32,7 +32,7 @@ struct orbit_part *DropExtraLife(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u3
         part->counter = p3;
         part->mode = p5;
         part->phase = state;
-        part->bank = (struct act_anim_bank *)((u8 *)**gSpriteBankSet + 0x8d * 4);
+        part->bank = (struct act_anim_bank *)(SPRITE_BANK_BASE + 0x8d * 4);
         SetPartTag(part, 0xa);
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);

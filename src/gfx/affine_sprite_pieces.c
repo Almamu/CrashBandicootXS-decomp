@@ -3,6 +3,7 @@
 #include "gfx.h"
 #include "vtable.h"
 #include "objects.h"
+#include "globals.h"
 
 /* GitHub issue #9: DrawAffineSpritePieces (0x08007634-0x08007A48), the affine
  * (rotation/scaling) sibling of `DrawSpritePieces` (graphics.c) - see
@@ -77,8 +78,6 @@ struct affine_part {
 #define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
 extern s32 _call_via_r1(void *self, void *fn);
-extern void *gObjVramCursor;
-extern struct oam_shadow_buffer *gOamBuffer;
 
 /* Shape/size index -> OBJ shape and size. As inline helpers the `& 3`
  * masks survive tree folding and share one `movs #3`, which is what

@@ -6,6 +6,7 @@
 #include "player.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): two
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -19,11 +20,8 @@
  * matches as plain C under it, and `ApplyActionCtrlMotion` followed in the
  * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
-extern u32 gKeys;
-extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gPlayer;
-extern void *gInput;
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
@@ -181,7 +179,7 @@ skip:
 void ActionCtrlStateIdle(struct act *self)
 {
     void *pad = gInput;
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     u8 dir = GetDpadDirection(pad);
     s32 frames;
     struct act_part *part;

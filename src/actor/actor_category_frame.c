@@ -5,6 +5,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "globals.h"
 
 /* This cluster (`PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `RunActorCategoryFrame`, `FindShotTarget`,
  * ROM 0x0802A018-0x0802A4D4) sits inside the "actor" chunk starting at
@@ -36,7 +37,6 @@
  * old_agbcc as well. */
 
 extern struct actor_self *gActorList;
-extern u8 gJetpackPlayerInactive;
 
 /* Method slot 0x28 of the actor method table (`self+0x50`), which
  * `struct actor_vtable` still lumps into padding. */

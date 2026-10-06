@@ -2,6 +2,7 @@
 #include "gfx.h"
 #include "system.h"
 #include "actor.h"
+#include "globals.h"
 
 /* A meta-node for a doubly-linked, address-ordered free-block list that
  * tracks allocations inside the OBJ tile VRAM pool (OBJ_VRAM0,
@@ -442,8 +443,6 @@ void FreeSpriteFrameOamQueue(void)
     mem_free((u8 *)gSpriteAffineQueue);
     mem_free((u8 *)gSpriteOamQueue);
 }
-
-extern struct oam_shadow_buffer *gOamBuffer;
 
 /* ROM 0x08028EA8 - commits this frame's overflow OAM queue into the
  * real hardware-shaped OAM shadow buffer: appends the queued entries

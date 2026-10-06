@@ -5,6 +5,7 @@
 #include "menus.h"
 #include "gfx.h"
 #include "objects.h"
+#include "globals.h"
 
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38, the whole of the former
  * asm/code_3_2_17_188d0_1cee0.s. The rest of the level-select screen
@@ -31,13 +32,6 @@
  * docs/matching/issue-27-level-select-pages.md): it builds the constant
  * operand of a byte read-modify-write before the load, as the ROM does,
  * so the bitfield stores here are plain C. */
-
-extern void *gPaletteCache;
-extern void *gAudioContext;
-extern void ***gSpriteBankSet;
-extern void *gOamBuffer;
-extern void *gInput;
-extern u32 gKeys;     // held keys (low half), newly pressed (high half)
 
 typedef void (*item_load_fn)(void *self, s32 world, s32 slot);
 typedef void (*item_place_fn)(void *self, const struct xy_pair *pos);
@@ -296,7 +290,7 @@ void LevelSelectPrevWorld(struct level_menu *self)
         TurnLevelSelectPageBgBack(self->bg1);
         LevelSelectTurnPage(self);
         UpdateKeys(gInput);
-        if (!(gKeys & DPAD_DOWN))
+        if (!(gKeys.all & DPAD_DOWN))
             goto done;
     check:
         if (LevelSelectHasPrevWorld(self))
@@ -324,7 +318,7 @@ void LevelSelectNextWorld(struct level_menu *self)
         TurnLevelSelectPageBgForward(self->bg1);
         LevelSelectTurnPage(self);
         UpdateKeys(gInput);
-        if (!(gKeys & DPAD_UP))
+        if (!(gKeys.all & DPAD_UP))
             goto done;
     check:
         if (LevelSelectIsNextWorldOpen(self))
@@ -514,7 +508,7 @@ struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
     for (i = 0; i <= 3; i++)
     {
         self->twinkles[i].part = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
-        self->twinkles[i].part->anim = (struct anim_table *)((u8 *)**gSpriteBankSet + 0x258);
+        self->twinkles[i].part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x258);
         SetMode(self->twinkles[i].part, 1);
         SetPos(self->twinkles[i].part, self->x + gZoomBgSlotOffsets[i].x, self->y + gZoomBgSlotOffsets[i].y);
         SetSpritePriority(self->twinkles[i].part, 1);

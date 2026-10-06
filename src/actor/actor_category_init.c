@@ -10,6 +10,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* codegen: SetCheckpointAtPlayer takes (state, flag) (level.h); this
  * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
@@ -50,11 +51,6 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  */
 
 extern u8 *gLevelState;
-extern void *gOamBuffer;
-extern void *gInput;
-extern void *gObjVramCursor;
-extern void *gHud;
-extern u32 gKeys;
 
 #define CUR_CATEGORY (gActorCategories[gActorCategory])
 #define PAUSED (gLevelState[0x8c])
@@ -154,7 +150,7 @@ s32 InitActorCategory(s32 category)
                 }
             } else {
                 open = 0;
-                if ((u8)IsBrightnessFadeActive() == 0 && ((gKeys >> 16) & 8))
+                if ((u8)IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & 8))
                     open = -(u8)CanPauseActorCategory() < 0;
                 if (open) {
                     buf = mem_alloc(0x200, 0x80000000);
@@ -190,7 +186,7 @@ s32 InitActorCategory(s32 category)
                         goto done;
                     }
                 }
-                if (gKeys & 4)
+                if (gKeys.all & 4)
                     ShowHudCounters(gHud);
                 continue;
             }

@@ -9,6 +9,7 @@
 #include "menus.h"
 #include "gfx.h"
 #include "objects.h"
+#include "globals.h"
 
 /* `ShowPowerDialog` (GitHub issue #8) - the higher-level dialog spawner:
  * resets palette color 0 and `REG_DISPCNT`, re-initializes the popup-
@@ -38,9 +39,6 @@
  * argument. See docs/matching/issue-4-6-8-naked-retry.md. */
 
 extern void _call_via_r1(void *addr, void *fn);
-
-extern struct palette_cache *gPaletteCache;
-extern struct vram_upload_cursor *gObjVramCursor;
 
 static inline void IconSetup(struct bitmap_font *m, u32 v)
 {
@@ -104,9 +102,6 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * `InitPowerDialog` to feed straight into `PowerDialogLoop`'s (the
  * fade/confirm driver) and `DestroyPowerDialog`'s (the on-hit
  * teardown/sound helper) existing signatures. */
-
-extern void ***gSpriteBankSet;
-extern void *gAudioContext;
 
 /* Builds the actual two-string dialog/message box object: a small
  * `struct sub_8006700_actor` (`self`, allocated by the caller) plus one
@@ -254,7 +249,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     self->field_18 = icon;
-    icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xe4 << 1));
+    icon->field_20 = (void **)(SPRITE_BANK_BASE + (0xe4 << 1));
     {
         register u8 *addr asm("r0");
         register u8 t3 asm("r3");

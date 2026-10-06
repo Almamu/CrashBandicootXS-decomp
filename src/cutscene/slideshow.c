@@ -4,6 +4,7 @@
 #include "system.h"
 #include "audio.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/issue-38-medal-results-tally.md
@@ -12,8 +13,6 @@
  * docs/matching/game-loop-old-agbcc.md. */
 
 struct AudioContext;
-
-extern struct AudioContext *gAudioContext;
 
 /* Starts sound cue `slides[idx]->cue` on the audio context. If the
  * channel already reports that cue, plays the item's secondary sfx

@@ -36,17 +36,19 @@ see "Batch 7" below. Batch 8a (gfx + objects + iwram) done:
 `include/gfx.h`, `include/objects.h`, `include/iwram.h`, the new/delete
 operators in `memory.h` and the crate list's pool structs in `crates.h`,
 see "Batch 8a" below. Batch 8b (level) done: `include/level.h`, see
-"Batch 8b" below. Next is `globals.h` (step 10).
+"Batch 8b" below. `globals.h` (step 10) is split in sub-batches: 9a (the
+input, display, palette/OAM/VRAM, audio and HUD singletons) done, see
+"Batch 9a" below. Next are the level globals (9b) and `gPlayer` (9c).
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 |
 
 ## Tools
 
@@ -223,7 +225,7 @@ The full list:
 | text | `text.h` (**done**, pilot) | |
 | util | `util.h` (**done**, batch 4) | includes `aabb.h` and `line_util.h` |
 | vehicle | `vehicle.h` (**done**, batch 7) | includes `actor.h` |
-| (shared globals) | `globals.h` (new) | see below |
+| (shared globals) | `globals.h` (9a done) | see below |
 | libgcc | `lib/libgcc/include/libgcc.h` (**done**, batch 4) | `__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3` and the three 64-bit routines; not `_call_via_rN` |
 | GAX2, AgbEeprom, SWI | `<gax.h>`, `<agb_eeprom.h>`, `<agb_syscall.h>` | already exist (docs/libraries.md) |
 
@@ -286,7 +288,7 @@ Where the remaining declarations would go (after the pilot):
 | bosses (**done**, batch 7) | 239 | 10 | 344 | 35 |
 | vehicle (**done**, batch 7) | 277 | 13 | 374 | 38 |
 | level (**done**, batch 8b) | 311 | 45 | 534 | 116 |
-| globals | 27 | 19 | 540 | 162 |
+| globals (9a: 14 symbols done) | 27 | 19 | 540 | 162 |
 | (data-only, stays) | 329 | 0 | 329 | 19 |
 
 ## Rules for every batch
@@ -422,7 +424,11 @@ before the files that every subsystem touches.
     struct merge it needs (`level_state` for `gLevelState`,
     `held_pressed_pair` for `gKeys`, the player/actor structs for
     `gPlayer`). With this done, most of `docs/file_layout_plan.md`'s
-    "Kept separate" pairs can become merges.
+    "Kept separate" pairs can become merges. Sub-batches: **9a, the
+    input/display/gfx/audio/HUD singletons (done)**, see "Batch 9a"
+    below; 9b, the level globals (`gLevelState`, `gLevelLayers`,
+    `gEntityFlags`, `gCamera`, the part lists, `gActorList`); 9c,
+    `gPlayer`; then the leftovers.
 
 The lib batches (GAX2 internals in `gax_internal.h`) can go anywhere. They
 don't interact with game code.
@@ -1414,6 +1420,68 @@ After a clean build every `.o` and `.s` file in src/ is identical to
 origin/main's. The build has the same 30 warnings as batch 8a and no new
 ones.
 
+## Batch 9a: globals.h, the input/display/gfx/audio/HUD singletons
+
+The first `globals.h` PR. 304 local declarations are gone
+(1,116 -> 812; 135 `.c` files touched), and 12 local struct
+definitions (298 -> 286). No codegen exception was needed.
+
+- **`include/globals.h`** (new) declares 14 of the shared globals:
+  - `gKeys` (iwram_data.c) as `union key_state { struct
+    held_pressed_pair half; u32 all; }`, level_select.c's union. The
+    definition was an anonymous struct; it is now that union.
+    `struct held_pressed_pair` had 8 copies (level_select.c, company_logos.c, credits.c,
+    title_screen.c, title_screen_init.c, save_menu_input.c,
+    power_dialog_loop.c, polar_player.c) and two more under other names
+    (jetpack_spawn.c's `keys_pair`, continue_prompt.c's `keys89`).
+    The users that declared it `u32` read `gKeys.all`, the struct users
+    `gKeys.half.held`/`.pressed`; the `u16` users (irq.c, input.c,
+    language_select.c) read `gKeys.half.held` or take `&gKeys.half.held`.
+    run_room.c's `union gl_input` (`held`, `half.lo`/`half.hi`) was the
+    same union. swim_ctrl.c keeps its `struct keys` (a zero-length array
+    makes it BLKmode, so the copy lives on the stack, see its comment)
+    and copies `*(struct keys *)&gKeys`.
+  - `gRoomFrameCount` (`u32`, the definition's type; game_frame.c and
+    run_room.c declared `s32` and only store or increment it).
+  - the sym_iwram.txt singletons: `gPaletteCache` (`struct palette_cache
+    *`), `gAudioContext` (`struct AudioContext *`; 65 files declared
+    `void *`), `gSpriteRenderer`, `gEntitySpawner` and `gInput` (`void *`:
+    there is no struct; the renderer is an empty 4-byte object and the
+    input object is only passed to UpdateKeys), `gObjVramCursor` (`struct
+    vram_upload_cursor *`), `gOamBuffer` (`struct oam_shadow_buffer *`),
+    `gHud` (`struct hud_counter *`) and `gJetpackPlayerInactive` (`u8`).
+  - `gDispcnt` as `u8 [2]`, the type 7 of its 8 users declared: every
+    user reads and writes it bytewise or through a cast. Declared `u16`,
+    credits.c's byte store folds the `+1` into the literal
+    (`.word gDispcnt+0x1`). level_cutscene.c (the `u16` user) casts.
+  - `gSpriteBankSet` as `struct sprite_bank_set *`, a new 4-byte struct
+    holding the `const struct sprite_bank_table *` that InitLevelState
+    stores in it. The users took the first bank's address as
+    `**gSpriteBankSet` (through `void ***`/`u8 ***`) and added a byte
+    offset (12 bytes per bank). That is now `SPRITE_BANK_BASE`, a macro
+    in globals.h that reads it through the table's first word, so that
+    globals.h doesn't need sprite_bank.h (its `struct sprite_frame`
+    clashes with actor_anim.h's). `*(void **)gSpriteBankSet` is
+    `(void *)gSpriteBankSet->table`.
+  - `gSineTable` (`const s16 [256]`, the definition's type); the locals
+    that hold it are `const s16 *`.
+- gobj_1a794.h, text_popup.h and level_select_parts.h lost their
+  declarations of these globals and include globals.h (`POPUP_ANIM` and
+  level_select_parts.h's anim helper use `SPRITE_BANK_BASE`).
+- **Callers**, all identical: `struct AudioContext **`/`struct
+  oam_shadow_buffer **` for the locals that hold a global's address;
+  `(u8 *)gPaletteCache` in font.c (its GetPaletteSlot alias takes the
+  cache as bytes); `gHud = (void *)InitHud(...)` in game_frame.c (see
+  "Codegen findings").
+- **Left for later:** the level globals (`gLevelState`, `gLevelLayers`,
+  `gEntityFlags`, `gCamera`, `gCollidableList`, `gCrateList`,
+  `gUnknown_030012EC`/`F4`, `gActorList`), `gPlayer`, and the leftovers
+  listed under batches 8a and 8b.
+
+After a clean build every `.o` and `.s` file in src/ and lib/ is
+identical to origin/main's. The build has the same 30 warnings and no new
+ones.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -1526,6 +1594,13 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | array extern of a struct type that is still incomplete where it is declared (the file completes it later) | `gTerrainTypes` in bg_layer_base.c, while level.h only had the `struct terrain_type` tag | **changes** (sub_8025228's `modeValue[n]` loads change); with the struct defined in level.h, identical |
 | `struct dual_array_manager` -> `struct part_list` (`void **` -> `struct box_part **` arrays, read through `(void **)` casts) | part_list.c | identical |
 | `union blend` global view / `struct unk_03001280` -> `struct blend_regs` | room_frame.c, util/aabb.c | identical |
+| `u32 gKeys` -> `union key_state`, `gKeys` -> `gKeys.all`; struct users -> `gKeys.half.pressed`; `u16` users -> `gKeys.half.held`/`&gKeys.half.held` | the action controller handlers, menus, frontend, irq.c, input.c (old_agbcc and agbcc) | identical; the `u16` users read `half.held`, since through `gKeys.all` their halfword tests would be word loads |
+| anonymous `struct { u16 held, pressed; } gKeys = { 0, 0 }` -> `union key_state gKeys = { { 0, 0 } }`, struct member first | iwram_data.c | identical; with the `u32` member first the `.s` has one `.word 0` for the two `.short 0` (same bytes) |
+| `void *`/`u8 *` global -> its struct pointer (`gAudioContext`, `gPaletteCache`, `gOamBuffer`, `gObjVramCursor`, `gHud`) | about 100 files | identical |
+| `gHud = InitHud(...)` with `gHud` typed `struct hud_counter *` | game_frame.c | **changes** (the global's address is loaded after the call); `gHud = (void *)InitHud(...)` is identical |
+| `u8 gDispcnt[2]` -> `u16`, byte users `((u8 *)&gDispcnt)[1]` | credits.c | **changes** (`.word gDispcnt+0x1`); the header keeps the users' `u8 [2]` |
+| `**gSpriteBankSet` (`void ***`) -> `*(u8 *const *)gSpriteBankSet->table` (`SPRITE_BANK_BASE`) | 25 files | identical |
+| `s16 []` extern -> `const s16 [256]`, locals `const s16 *` (also a pinned `register ... asm("r5")`) | gSineTable's 10 users | identical |
 
 Experiments for later batches:
 

@@ -8,6 +8,7 @@
 #include "menus.h"
 #include "gfx.h"
 #include "objects.h"
+#include "globals.h"
 
 /* The three functions below are companion "draw a label centered on an
  * icon widget" steps. Once NAKED transcriptions; they match as plain C
@@ -97,9 +98,6 @@ void DrawPauseMenuPageTitle(struct pause_menu *self)
  * which is the smaller per-widget object `src/menus/power_dialog_draw.c`'s
  * already-matched `CommitPowerDialogFrame` uses for the same job at different
  * offsets. */
-
-extern void *gPaletteCache;
-extern void *gOamBuffer;
 
 /* `self->field_d0`'s read+store is deliberately routed through an
  * inline-asm-computed address pinned to `r0` rather than a plain

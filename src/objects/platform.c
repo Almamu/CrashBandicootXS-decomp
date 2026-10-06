@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gobj_1a794.h"
 #include "objects.h"
+#include "globals.h"
 
 /* codegen: SetSpritePrevPos takes (part, x, y) (objects.h), but
  * MovePlayerWithPlatform passes only the part and leaves r1/r2 as they

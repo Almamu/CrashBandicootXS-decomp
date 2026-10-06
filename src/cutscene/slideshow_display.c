@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "gfx.h"
 #include "memory.h"
+#include "globals.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * level_query.c - see level_query.c's header comment and
@@ -27,8 +28,6 @@ void SetSlideshowDispcnt(u32 value)
  * follow-up pass. */
 
 struct AudioContext;
-
-extern struct AudioContext *gAudioContext;
 
 /* Tail half of RunSlideshow's per-item body (slideshow.c) - duck-out
  * (`duckMusic`), fade-start (`fadeAfter`), and re-arm (`rearmSfx`/

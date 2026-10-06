@@ -6,11 +6,9 @@
 #include "audio.h"
 #include "menus.h"
 #include "gfx.h"
+#include "globals.h"
 
-extern struct vram_upload_cursor *gObjVramCursor;
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern struct palette_cache *gPaletteCache;
-extern struct oam_shadow_buffer *gOamBuffer;
 
 /* The other half of the continue prompt's setup, called from
  * `InitContinuePrompt` (continue_prompt_init.c): flushes the shared VRAM upload cursor
@@ -108,28 +106,19 @@ void InitContinuePromptGraphics(struct continue_prompt *self)
  *    second test's shift a fresh value, so CSE doesn't share it with the
  *    first, and the first test keeps the ROM's `movs r0, #1; ands r0, r1`
  *    register choice. */
-struct keys89 {
-    u16 held;
-    u16 pressed;
-};
-
-extern void *gInput;
-extern u32 gKeys;
-extern void *gAudioContext;
-
 s32 ContinuePromptLoop(struct continue_prompt *self)
 {
     s32 dir = 1;
     s32 i = 0;
     s32 level = self->blend.bits.eva;
-    struct keys89 *input = (struct keys89 *)&gKeys;
-    void **audio = &gAudioContext;
+    struct held_pressed_pair *input = &gKeys.half;
+    struct AudioContext **audio = &gAudioContext;
 
     while (dir >= 0) {
         asm("" : : "r"(audio)); /* extra reference: audio outranks i for r7 */
         UpdateKeys(gInput);
         {
-            struct keys89 k = *input;
+            struct held_pressed_pair k = *input;
 
             /* The "+r" asm keeps the & 8 test's shift separate from the
              * & 1 test's. */

@@ -9,6 +9,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -186,9 +187,7 @@ struct gfx_level
 };
 
 extern void *gEntityFlags;
-extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 ***gSpriteBankSet;
 extern struct gfx_player *gPlayer;
 extern struct gfx_list *gCollidableList;
 extern void *gUnknown_030012F4;
@@ -551,7 +550,7 @@ void SpawnCortexCannon(struct gfx_pair_ctrl *self, struct gfx_part *part)
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct gfx_ctrl *ctrl;
 
-    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
+    c->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x27C);
     SetTag(c, 3);
     c->animating = 0;
     ctrl = (struct gfx_ctrl *)CreateCortexCannonCtrl(OperatorNew(0x10));
@@ -571,7 +570,7 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
     struct gfx_ctrl *ctrl;
     s32 x, y;
 
-    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
+    c->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x27C);
     {
         /* the ROM keeps 0xF in r5 across the calls and reuses it as the
          * frame-nibble mask below */
@@ -615,7 +614,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     struct gfx_part *c = CreateMovingSprite(a0, a1, a2, a3);
     struct gfx_ctrl *ctrl;
 
-    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+    c->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
     switch (kind)
     {
     case 0:
@@ -889,7 +888,7 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 fast; } *ctrl;
 
-    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
+    c->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x27C);
     switch (kind)
     {
     case 0:
@@ -1047,7 +1046,7 @@ void UpdateCortexBossGem(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
     case 0:
         if (part->kind == 1)
         {
-            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
+            part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x27C);
             switch (self->kind)
             {
             case 0:

@@ -16,6 +16,7 @@
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
+#include "globals.h"
 
 /* A keyframe record's `{s16 x, s16 y}` offset (see sprite.c). */
 struct part_offset {
@@ -28,9 +29,6 @@ struct follow_state {
     s32 unk_14;         // 0x14
 };
 
-extern u32 gKeys;
-extern void *gPaletteCache;
-extern void *gAudioContext;
 extern struct follow_state *gCamera;
 extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
@@ -212,7 +210,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 13:
         {
-            u32 in = gKeys;
+            u32 in = gKeys.all;
             u32 held = in;
             s32 fire;
             s32 one;
@@ -236,7 +234,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 14:
         {
-            u32 in = gKeys;
+            u32 in = gKeys.all;
             u32 held = in;
             s32 fire;
             s32 one;
@@ -260,7 +258,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 25:
         {
-            u32 in = gKeys;
+            u32 in = gKeys.all;
             s32 fire;
             s32 one;
 

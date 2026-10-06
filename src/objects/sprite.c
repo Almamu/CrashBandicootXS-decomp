@@ -6,6 +6,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* `part+0x25` selects whether (x, y) are already screen-relative
  * (nonzero - used as-is) or need the camera-relative conversion
@@ -312,7 +313,6 @@ void *GetSpriteBodyBox(void *dest, void *pt)
 
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gPlayer;
-extern void *gEntitySpawner;
 extern void *gEntityFlags;
 
 /* `part` (a `struct actor`, same layout used throughout this ROM

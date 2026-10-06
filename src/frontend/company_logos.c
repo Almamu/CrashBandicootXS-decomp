@@ -13,6 +13,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
@@ -24,14 +25,6 @@
  * declarations below are copied from the first file. See
  * docs/matching/sr65-naked-retry.md. */
 
-extern struct oam_shadow_buffer *gOamBuffer;
-extern struct AudioContext *gAudioContext;
-extern u8 gDispcnt[2];
-extern void *gInput;
-extern struct held_pressed_pair {
-    u16 held;
-    u16 pressed;
-} gKeys;
 
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);

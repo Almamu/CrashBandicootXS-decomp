@@ -3,6 +3,7 @@
 #include "crates.h"
 #include "bosses.h"
 #include "objects.h"
+#include "globals.h"
 
 /* UpdateMegaMix: the update of Mega-Mix, the boss that entity type 0x49
  * spawns (SpawnMegaMix, sprite bank 30). Only room 37 places one, at its
@@ -208,7 +209,6 @@ static inline s32 Abs(s32 v)
     return (v ^ sign) - sign;
 }
 
-extern u32 gRoomFrameCount;
 extern struct ab_player *gPlayer;
 extern void *gCollidableList;
 extern struct ab_list *gCrateList;

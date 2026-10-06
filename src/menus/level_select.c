@@ -11,6 +11,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -235,29 +236,12 @@ struct level_menu
 COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_menu) == 0xAC);
 
 /* Held keys in the low half, newly-pressed keys in the high half. */
-struct held_pressed_pair
-{
-    u16 held;
-    u16 pressed;
-};
 
-union key_state
-{
-    u32 all;
-    struct held_pressed_pair half;
-};
 
 extern struct player *gPlayer;
 extern struct follow_owner *gCamera;
-extern void ***gSpriteBankSet;
 extern void *gCollidableList;
-extern struct palette_cache *gPaletteCache;
-extern void *gAudioContext;
 extern void *gLevelState;
-extern struct vram_upload_cursor *gObjVramCursor;
-extern void *gOamBuffer;
-extern void *gInput;
-extern union key_state gKeys;
 
 /* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
  * (menus.h), but InitLevelSelect reads each one twice, across calls,
@@ -299,7 +283,7 @@ static inline void SetAnim(struct sprite *s, s32 idx)
 
 static inline struct anim_table *AnimTable(s32 offset)
 {
-    return (struct anim_table *)((u8 *)**gSpriteBankSet + offset);
+    return (struct anim_table *)(SPRITE_BANK_BASE + offset);
 }
 
 static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
@@ -480,7 +464,7 @@ struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused)
     obj->x = x << 8;
     obj->y = y << 8;
     AddToPartList(gCollidableList, obj);
-    obj->anim = (struct anim_table *)(**gSpriteBankSet + 0x150);
+    obj->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x150);
     obj->animIndex = 0;
     ResetSpriteFrameTimer(obj);
     ResetSpriteFrameIndex(obj);

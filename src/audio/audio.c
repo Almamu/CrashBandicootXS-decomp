@@ -2,6 +2,7 @@
 #include "audio.h"
 #include "system.h"
 #include "util.h"
+#include "globals.h"
 
 /* The first matched code in the Shin'en GAX2 wrapper layer (the engine
  * itself is still raw in asm/code_3.s - see docs/audio.md). These two
@@ -190,8 +191,6 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
         }
     }
 }
-
-extern u32 gRoomFrameCount;
 
 /* Per-tick update of the "ambient" (looping/crossfaded, as opposed to
  * `PlaySfx`'s one-shot) sound-effect channel: ramps `ambientSfxVolume` (the
@@ -564,8 +563,6 @@ void DisableMusicVCountIrq(struct AudioContext *self)
     IrqRestoreHandler(INTR_INDEX_VCOUNT);
 }
 asm(".align 2, 0");
-
-extern struct AudioContext *gAudioContext;
 
 /* Installs `MusicVCountIrqHandler` as the VCount-IRQ handler and arms VCount IRQs
  * with a fixed trigger line (`0x35`) - the music player's per-tick fade

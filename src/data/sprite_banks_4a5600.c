@@ -1,5 +1,6 @@
 #include "gba/types.h"
 #include "sprite_bank.h"
+#include "globals.h"
 
 /*
  * ROM 0x084a5600-0x084b0ae0: sprite banks 0-9 of the sprite-bank

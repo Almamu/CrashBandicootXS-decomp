@@ -1,5 +1,6 @@
 #include "core.h"
 #include "level.h"
+#include "globals.h"
 
 /*
  * ROM 0x0816C6A4-0x0816C814. Linked in ROM order between data/data.s

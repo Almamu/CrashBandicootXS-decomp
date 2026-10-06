@@ -10,6 +10,7 @@
 #include "player.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -261,11 +262,7 @@ struct ac2c_player {
 typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 
 extern struct orbit_game *gLevelState;
-extern void *gAudioContext;
 extern struct ac2c_player *gPlayer;
-extern void *gEntitySpawner;
-extern void *gHud;
-extern u32 gRoomFrameCount;
 
 #define NOTIFY(self, a, b, c)                                                  \
     if (1) {                                                                   \
@@ -465,8 +462,6 @@ struct orbit_self {
     struct orbit_pos maskTrail[8];   // 0xB8
 };
 
-extern void *gSpriteRenderer;
-extern s16 gSineTable[];
 extern s32 _call_via_r1(void *addr, void *fn);
 
 static inline s32 BlinkArmed(struct orbit_self *self)

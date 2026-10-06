@@ -12,6 +12,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
  * off `title_screen_init.c` at `TitleScreenCheatInput` in the issues #64/#65
@@ -26,14 +27,6 @@
  * docs/matching/issue-64-65-naked-retry-2.md and
  * docs/matching/sr65-naked-retry.md. */
 
-extern struct oam_shadow_buffer *gOamBuffer;
-extern struct AudioContext *gAudioContext;
-extern u8 gDispcnt[2];
-extern void *gInput;
-extern struct held_pressed_pair {
-    u16 held;
-    u16 pressed;
-} gKeys;
 
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -134,7 +127,7 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
 }
 
 /* A 7-branch "cheat code" style detector: gated on
- * `gKeys.held`'s bit 0x100 (R shoulder) - if not held,
+ * `gKeys.half.held`'s bit 0x100 (R shoulder) - if not held,
  * resets the rolling-hash slot at `self+0x210` to 0 and returns
  * `pressed` unmodified (so the caller can still act on ordinary button
  * presses). If held, folds one of 7 fixed "signature" constants
@@ -175,7 +168,7 @@ static inline void HashInput(u32 *self, u32 val)
 
 u32 TitleScreenCheatInput(u32 *self, u32 pressed)
 {
-    struct held_pressed_pair input = gKeys;
+    struct held_pressed_pair input = gKeys.half;
 
     if (!(input.held & 0x100))
     {
@@ -294,7 +287,7 @@ seedLoop:
         DrawTitleScreen(self);
         UpdateStarfield((void *)self[0x82]);
         UpdateKeys(gInput);
-        pressed = gKeys.pressed;
+        pressed = gKeys.half.pressed;
         pressed = TitleScreenCheatInput(self, pressed);
         if (pressed & 9)
         {
@@ -620,7 +613,7 @@ void RunCompanyLogos(u32 *self)
         s32 q;
 
         UpdateKeys(gInput);
-        if (gKeys.pressed & 9)
+        if (gKeys.half.pressed & 9)
         {
             if (SLOT_SYSTEM(self)->fade > 0x40)
                 SLOT_SYSTEM(self)->fade = 0x40;
@@ -680,7 +673,7 @@ void RunCompanyLogos(u32 *self)
         register s32 v asm("r1");
 
         UpdateKeys(gInput);
-        if (gKeys.pressed & 9)
+        if (gKeys.half.pressed & 9)
         {
             if (SLOT_SYSTEM(self)->timer > 0)
                 SLOT_SYSTEM(self)->timer = 1;

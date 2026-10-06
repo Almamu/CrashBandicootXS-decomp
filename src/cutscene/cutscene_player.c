@@ -6,6 +6,7 @@
 #include "system.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -126,11 +127,10 @@ struct cutscene_player *InitSlideshow(struct cutscene_player *self)
  * rematerializes it at each use and r4 stays free for `self`. The
  * prologue reads the box word and `font` into locals before the
  * store, and the page loop is a plain `for` with `j++`. */
-extern void *gOamBuffer;
 
 void RunCutscenePlayer(struct cutscene_player *self)
 {
-    void **oamp = &gOamBuffer;
+    struct oam_shadow_buffer **oamp = &gOamBuffer;
     s32 limit;
     s32 i;
 

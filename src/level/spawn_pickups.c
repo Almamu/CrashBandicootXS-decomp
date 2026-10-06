@@ -9,12 +9,11 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 extern void *gLevelState;
 extern void *gEntityFlags;
-extern void ***gSpriteBankSet;
 extern void *gUnknown_030012EC;
-extern void *gEntitySpawner;
 
 /* Sets `part->field_29`'s low nibble to `GetSpriteAnimPaletteSlot(part)`'s result,
  * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
@@ -57,7 +56,7 @@ void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x25;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -74,7 +73,7 @@ void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x24;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -91,7 +90,7 @@ void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x23;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -108,7 +107,7 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x26;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -129,7 +128,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     if ((u8)IsCrystalSaved(gLevelState)) {
         register struct actor *part asm("r4") = CreateStopwatch(arg0, arg1, arg2, arg3);
 
-        *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1b0;
+        *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1b0;
         {
             register u8 tag asm("r0") = 0;
             register u8 *addr asm("r1") = (u8 *)part + 0x2d;
@@ -173,7 +172,7 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     tag = 4;
     field0A = 0x21;
     part = CreateSpriteObj(arg0, arg1, arg2, arg3);
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x180;
+    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x180;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -227,7 +226,7 @@ void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 c
 {
     struct actor *part = CreateSpriteObj(cx, cy, cw, ch);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + index * 12;
+    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + index * 12;
     *((u8 *)part + 0x2d) = (u8)tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -321,14 +320,6 @@ void CreateEntitySpawner(void)
     SetEntitySpawnerTable(obj, gEntitySpawnFuncs, 0x5c);
 }
 
-extern void *gAudioContext;
-extern void *gSpriteRenderer;
-extern struct palette_cache *gPaletteCache;
-extern struct oam_shadow_buffer *gOamBuffer;
-extern struct vram_upload_cursor *gObjVramCursor;
-extern void *gInput;
-extern u8 gDispcnt[2];
-
 /* `InitLevelState` (docs/rom_map.md, "Found the origin point"): the
  * function `GetLevelState` calls once at the top of the game loop to
  * construct essentially every hot IWRAM global this whole ROM region
@@ -371,11 +362,11 @@ void *InitLevelState(void *self)
         *addr = tmp;
     }
     {
-        void ****addr = &gSpriteBankSet;
+        struct sprite_bank_set **addr = &gSpriteBankSet;
         register void *tmp asm("r0") = OperatorNew(4);
 
         asm volatile("bl nullsub_1" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
-        *addr = (void ***)tmp;
+        *addr = tmp;
         *(const void **)tmp = &gSpriteBankTable;
     }
     {

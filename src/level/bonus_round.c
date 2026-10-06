@@ -7,11 +7,10 @@
 #include "system.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 extern void *gPlayer;
 extern void *gEntityFlags;
-extern void *gHud;
-extern struct palette_cache *gPaletteCache;
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals

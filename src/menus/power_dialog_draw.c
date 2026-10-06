@@ -10,6 +10,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* gLevelTable's time-trial thresholds (`level_info.times`, level.h):
  * CountSapphireRelics/CountGoldRelics/CountPlatinumRelics each count how
@@ -23,10 +24,6 @@
  * decompilation"). */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern struct palette_cache *gPaletteCache;
-extern void *gOamBuffer;
-
-extern struct vram_upload_cursor *gObjVramCursor;
 
 /* Sets an icon manager's draw position. Both coordinates are inline
  * arguments, so gcc evaluates them (and re-reads the manager global)

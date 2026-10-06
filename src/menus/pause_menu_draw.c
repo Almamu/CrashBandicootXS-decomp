@@ -11,6 +11,7 @@
 #include "menus.h"
 #include "gfx.h"
 #include "objects.h"
+#include "globals.h"
 
 /* A slow reveal/cycle animation over the results screen's icon groups:
  * `field_24` (0-4) selects which group to hide this call (a plain
@@ -109,9 +110,7 @@ asm(".align 2, 0");
  * pause_menu_loop.c documents. See
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
-extern struct oam_shadow_buffer *gOamBuffer;
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct vram_upload_cursor *gObjVramCursor;
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {

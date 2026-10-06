@@ -8,6 +8,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -25,13 +26,9 @@
  * (`DrawWumpa`) is now matched. */
 
 extern void *gPlayer;
-extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gEntityFlags;
 extern void *gUnknown_030012EC;
-extern void *gHud;
-
-extern s16 gSineTable[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
  * NAKED retry: CreateExtraLife matches only under it, and the rest of the
@@ -442,8 +439,6 @@ void SendExtraLifeToHud(struct orbit_part *selfArg)
  * neighboring group, not read this pass - only extern'd here) with a
  * mode that differs per AABB path, and (primary-AABB path only) plays
  * a hit SFX. */
-
-extern void *gSpriteRenderer;
 
 extern void *_call_via_r1(void *arg0, void *fn);
 

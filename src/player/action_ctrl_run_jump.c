@@ -4,6 +4,7 @@
 #include "audio.h"
 #include "player.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
@@ -22,12 +23,8 @@ struct spawned
     u8 unk_28_2:6;
 };
 
-extern u32 gKeys;
-extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 *gPlayer;
-extern void *gEntitySpawner;
-extern void *gInput;
 
 /* Stores to the two "next action" trios. As inline parameters, old_agbcc
  * materializes the values before the stores; the `Set` forms store a
@@ -106,7 +103,7 @@ static inline void ActSetContact(struct act_part *p, s32 v)
 void ActionCtrlStateRun(struct act *self)
 {
     void **pad = &gInput;
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     u8 busy = CheckActionCtrlLeftGround(self);
 
     if (busy)
@@ -236,7 +233,7 @@ void ActionCtrlStateJump(struct act *self)
         return;
     }
     {
-        u32 in = gKeys;
+        u32 in = gKeys.all;
         u8 busy = self->spinCooldown;
 
         if (busy == 0 && (INPUT_PRESSED(in) & 2))
@@ -263,7 +260,7 @@ void ActionCtrlStateJump(struct act *self)
 
         if (part->animDone)
         {
-            u32 cur = gKeys;
+            u32 cur = gKeys.all;
 
             if ((cur & 1) && (cur & 0x30))
             {

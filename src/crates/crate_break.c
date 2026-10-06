@@ -10,6 +10,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -962,7 +963,6 @@ tail:
  * BreakCrateInStack in case 3. A one-byte struct argument goes in QImode, so
  * the spilled union's low byte is reloaded with `mov r5, sp; ldrb` in
  * argument order, as in the ROM. */
-extern void *gAudioContext;
 
 #define E08C_CALL68(a, b) \
     PhysCall3(PHYS_PLAYER, (struct method *)&PHYS_PLAYER->vtable->m68, 0, (a), (b))
@@ -1252,7 +1252,6 @@ asm(".align 2, 0");
  * NAKED-retry section. */
 
 extern struct crate_list *gCrateList;
-extern void *gEntitySpawner;
 
 /* The effect object SpawnEffectPart spawns (only the fields set here). */
 struct phys_puff
@@ -2006,8 +2005,6 @@ void DropCratesAbove(struct crate *self)
  * Compiled with old_agbcc (the Makefile's OLD_AGBCC_OBJS): all twelve
  * are real C (see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry sections). */
-
-extern void *gHud;
 
 /* Per-edge jump table's **case 4 handler**
  * (`QueueCratePlayerCollision(self+0x4d & 0x7f == 0) -> ExplodeCrate(self, 1)`, and

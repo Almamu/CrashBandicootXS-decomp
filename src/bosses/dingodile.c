@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "crates.h"
 #include "level.h"
+#include "globals.h"
 
 /* codegen: GetSpriteAttackBox/GetSpriteBodyBox take the destination as
  * their first argument (objects.h); this file was matched against the
@@ -248,9 +249,7 @@ struct entity_flags
 extern struct part_list *gUnknown_030012EC;
 extern struct part_list *gCollidableList;
 extern struct part *gPlayer;
-extern void ***gSpriteBankSet;
 extern struct entity_flags *gEntityFlags;
-extern void *gAudioContext;
 extern void *gLevelState;
 extern struct level_layers *gLevelLayers;
 
@@ -787,7 +786,7 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
     u8 *bits;
 
     p->fl.b.shown = 0;
-    p->table = (void *)((u8 *)**gSpriteBankSet + 0x288);
+    p->table = (void *)(SPRITE_BANK_BASE + 0x288);
     switch (mode)
     {
     case 0:
@@ -845,7 +844,7 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     struct part *p = CreateMovingSprite(0xFFFF, x, y, 0);
     struct vobj *ctl;
 
-    p->table = (void *)((u8 *)**gSpriteBankSet + 0x30);
+    p->table = (void *)(SPRITE_BANK_BASE + 0x30);
     SetTag(p, 1);
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);
@@ -1072,7 +1071,7 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     struct obj_48a4 *c;
 
     p->fl.b.shown = 0;
-    p->table = (void *)((u8 *)**gSpriteBankSet + 0x288);
+    p->table = (void *)(SPRITE_BANK_BASE + 0x288);
     SetTag(p, 8);
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);

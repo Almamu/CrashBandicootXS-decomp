@@ -5,6 +5,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
@@ -113,8 +114,6 @@ asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
-
-extern void *gAudioContext;
 
 /* `DamageHovercraftCannon`'s gated twin: only applies damage while `self` is in
  * state 1. On death, uses table-index 3 and the anim frame from

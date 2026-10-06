@@ -8,6 +8,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
  * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
@@ -161,17 +162,14 @@ asm(".align 2, 0");
  * instead of a folded `+ 0x100`.
  */
 
-extern s16 gSineTable[];
-extern u32 gRoomFrameCount;
-
-static inline s16 Wave(s16 *table, s32 t, s32 phase)
+static inline s16 Wave(const s16 *table, s32 t, s32 phase)
 {
     return table[(t - phase) & 0xff];
 }
 
 void UpdateEnemyOscillateX(struct part_ctrl *self)
 {
-    s16 *table = gSineTable;
+    const s16 *table = gSineTable;
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
     register s32 v asm("r2");
     s32 w;
@@ -196,7 +194,7 @@ void UpdateEnemyOscillateX(struct part_ctrl *self)
 void UpdateEnemyBob(struct part_ctrl *self)
 {
     register struct ctrl_target *target asm("r3") = self->target;
-    s16 *table = gSineTable;
+    const s16 *table = gSineTable;
     u32 t;
     s32 ph;
     register s32 k asm("r6");
@@ -213,7 +211,7 @@ void UpdateEnemyBob(struct part_ctrl *self)
 void UpdateEnemyOscillateY(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
-    register s16 *table asm("r6") = gSineTable;
+    register const s16 *table asm("r6") = gSineTable;
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
 
     /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
@@ -245,7 +243,6 @@ void UpdateEnemyOscillateY(struct part_ctrl *self)
  * callee (a dead argument at this call site), so this file declares
  * its own wider 6-parameter extern prototype purely to reproduce
  * that harmless extra stack store byte-for-byte. */
-extern void *gEntitySpawner;
 
 void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
 {

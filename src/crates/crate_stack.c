@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "crates.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -10,9 +11,7 @@
  * `GetBottomCrate`/`CollideCrateWithPlayer` right after this function are matched in
  * crate_stack.c. */
 
-extern void *gAudioContext;
 extern void *gEntityFlags;
-extern void *gEntitySpawner;
 /* DropExtraLife is parked (NON_MATCHING) as of entity_spawner.c. This call
  * site's own arguments are spelled out entirely in inline asm below -
  * see the comment right above that block for why. */

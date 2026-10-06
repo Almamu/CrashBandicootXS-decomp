@@ -3,13 +3,12 @@
 #include "audio.h"
 #include "actor.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md.
  * `gAirship` is the same small tracker object airship_fall.c
  * documents. */
-
-extern void *gAudioContext;
 
 /* Countdown timer (`gAirshipHp -= delta`) driving the boss-
  * weapon's "charge" bar: while it's still running, just plays a tick

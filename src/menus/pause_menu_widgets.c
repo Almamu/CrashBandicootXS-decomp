@@ -6,6 +6,7 @@
 #include <libgcc.h>
 #include "audio.h"
 #include "menus.h"
+#include "globals.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -78,8 +79,6 @@ void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2)
     }
     DRAW_ICON_SLOT(*pdc, 2, label2);
 }
-
-extern void *gAudioContext;
 
 #define ROW_TYPE(self) ((self)->field_14[(self)->field_18].type)
 

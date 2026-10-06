@@ -4,6 +4,7 @@
 #include "util.h"
 #include "system.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
@@ -48,8 +49,6 @@ struct particle_slot {
     s32 dx;
     s32 dy;
 };
-
-extern u8 gDispcnt[2];
 
 /* Constructs the particle-trail BG0 object. Fully matched as real C.
  *
@@ -386,8 +385,6 @@ asm(".align 2, 0");
  * `self+8` (16-byte stride: `{s32 x; s32 y; s32 dx; s32 dy;}`) and a
  * 4-bit-per-cell tilemap at `self+0x10`. */
 
-extern s16 gSineTable[];
-
 /* Seeds particle slot `idx` at a fixed starting position, then rolls two
  * random values (`RandRange`) to pick a direction out of the 256-entry
  * `gSineTable` sin-ish table and a speed, and applies the
@@ -544,9 +541,6 @@ void UpdateStarfield(void *mgrArg)
     }
 }
 
-extern void *gInput;
-extern u16 gKeys[];
-
 /* Busy-waits (yielding a frame via `WaitForVBlank`/`UpdateStarfield` each
  * time) until the input-poll result from `UpdateKeys(gInput)`
  * has either of bits 0/3 set in `gKeys`'s `+2` halfword. */
@@ -562,7 +556,7 @@ body:
 check:
     UpdateKeys(gInput);
     {
-        register u8 *addr asm("r1") = (u8 *)gKeys;
+        register u8 *addr asm("r1") = (u8 *)&gKeys;
         register s32 nine asm("r0") = 9;
         register s32 flag asm("r1");
         register s32 r asm("r0");

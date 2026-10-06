@@ -7,6 +7,7 @@
 #include "player.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
@@ -70,9 +71,6 @@
  * byte count needs the trailing `asm(".align 2, 0")` (the ROM
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 
-extern u32 gRoomFrameCount;
-extern void *gAudioContext;
-extern void *gEntitySpawner;
 extern struct ctrl_target *gPlayer;
 
 /* `LaunchHarmfulEffectPart` (enemy_ctrl.c), inlined. */

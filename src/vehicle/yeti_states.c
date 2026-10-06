@@ -4,6 +4,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "globals.h"
 
 /* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A
@@ -18,7 +19,6 @@
  * four vtable slots operating on this object (see
  * docs/matching/issue-54-actor-d3a8.md). */
 
-extern void *gAudioContext;
 /* codegen: PlayAmbientSfx takes a fifth argument, a one-byte struct on
  * the stack (audio.h). YetiStateChase stores the byte at sp itself
  * (`mov r4, sp; mov r1, #1; strb r1, [r4]`); passing a `struct byte_arg`

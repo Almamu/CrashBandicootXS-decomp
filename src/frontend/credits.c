@@ -10,6 +10,7 @@
 #include "system.h"
 #include "menus.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
@@ -25,8 +26,6 @@
 /* The credits screen (RunCredits; docs/rom_map.md read it as a
  * "between-level map/progress screen"), allocated `OperatorNew(0x98)` by
  * `RunCredits`: `struct credits_screen` is in frontend.h. */
-
-extern struct oam_shadow_buffer *gOamBuffer;
 
 /* Another instance of the by-now-familiar "refresh OAM + center text"
  * pattern (docs/rom_map.md's "DrawContinuePrompt is just another instance of
@@ -45,7 +44,6 @@ extern struct oam_shadow_buffer *gOamBuffer;
  * the same `ICON_TEXT_CALL` shape save_menu_draw.c already matches, and
  * with that the "many live values across calls" allocation falls out
  * of plain C. */
-extern struct vram_upload_cursor *gObjVramCursor;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* `record->slots[n]` on an icon manager, called with `label` (slot 0
@@ -195,9 +193,6 @@ asm(".align 2, 0");
  * the allocator into giving `&gPaletteCache`/`&gObjVramCursor`
  * r4 and `&gSmallFont` r6 as the ROM does. */
 extern void _call_via_r1(void *self, void *fn);
-extern struct palette_cache *gPaletteCache;
-extern u8 gDispcnt[2];
-extern struct AudioContext *gAudioContext;
 
 /* Sets the manager's glyph tile base and fires its slot-6 method. */
 static inline void IconSetBase(struct bitmap_font *m, u32 base)
@@ -255,14 +250,6 @@ struct credits_screen *InitCredits(struct credits_screen *self)
 
 asm(".align 2, 0");
 
-extern struct AudioContext *gAudioContext;
-extern void *gInput;
-
-struct held_pressed_pair {
-    u16 held;
-    u16 pressed;
-};
-extern struct held_pressed_pair gKeys;
 
 /* --------------------------------------------------------------------
  * CreditsLoop - the credits screen's per-frame driver: an input-gated busy
@@ -280,7 +267,7 @@ void CreditsLoop(struct credits_screen *self)
     while (1) {
         UpdateKeys(gInput);
         {
-            register struct held_pressed_pair *p asm("r1") = &gKeys;
+            register struct held_pressed_pair *p asm("r1") = &gKeys.half;
             register s32 mask asm("r0") = 9;
 
             mask &= p->pressed;
@@ -739,8 +726,6 @@ void LoadCreditsLogos(struct credits_screen *self)
 }
 
 asm(".align 2, 0");
-
-extern struct palette_cache *gPaletteCache;
 
 /* --------------------------------------------------------------------
  * CommitCreditsFrame - end-of-frame commit for the credits screen: resets BG0's

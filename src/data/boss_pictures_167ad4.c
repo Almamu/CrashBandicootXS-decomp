@@ -25,6 +25,7 @@
 #include "boss_pictures/167cd4.h"
 #include "boss_pictures/169ce8.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* N. Gin's airship: its palette, 16 colours that LoadAirshipGraphics
  * (airship_load_graphics.c) DMAs to BG palette 1 (the rest is zero). */

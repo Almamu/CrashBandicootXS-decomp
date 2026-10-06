@@ -6,6 +6,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
@@ -153,12 +154,9 @@ struct input_ctrl
     s32 timer;                   // 0x24
 };
 
-extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gPaletteCache;
 extern void *gEntityFlags;
 extern void *gCollidableList;
-extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
 
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
@@ -305,7 +303,7 @@ void UpdateInputCtrl(struct input_ctrl *self)
             RequestRoomExit();
         }
 
-        keys = gKeys;
+        keys = gKeys.all;
         if ((keys & DPAD_UP) && self->dirState != 1)
         {
             QueueMotionY(self, 3);

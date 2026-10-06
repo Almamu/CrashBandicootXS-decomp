@@ -7,6 +7,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
@@ -19,8 +20,6 @@ struct moving_actor {
     s32 velX;                   // 0x54
     s32 velY;                   // 0x58
 };
-
-extern void *gAudioContext;
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 

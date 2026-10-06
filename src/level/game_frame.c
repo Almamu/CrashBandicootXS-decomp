@@ -11,6 +11,7 @@
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -42,8 +43,9 @@
  * - `self->bonusPlatform = self->gemPlatform = 0` computes the 0x1b8 address
  *   first, and the `SetMaskLevel` argument starts at 2 and takes the
  *   tier only when it is <= 1.
- * - `InitHud` returns a typed pointer, so the store into
- *   `gHud` loads the global's address before the call.
+ * - `gHud = (void *)InitHud(...)`: through the `void *` conversion the
+ *   store loads the global's address before the call, as in the ROM;
+ *   storing the typed result directly loads it after.
  */
 /* The per-level state object (`gLevelState`) as UpdateGameFrame
  * uses it. The first 0x68 bytes are the per-attempt block that the
@@ -61,11 +63,7 @@ union level_best_time
 };
 
 extern void *gEntityFlags;
-extern void *gPaletteCache;
-extern void *gAudioContext;
 extern struct level_state *gLevelState;
-extern void *gHud;
-extern s32 gRoomFrameCount;
 
 void UpdateGameFrame(struct level_state *self)
 {
@@ -155,7 +153,7 @@ void UpdateGameFrame(struct level_state *self)
         self->unk_e0 = 0;
         status = 1;
         self->crateTotal = CountLevelCrates(self->level);
-        gHud = InitHud(OperatorNew(0x68));
+        gHud = (void *)InitHud(OperatorNew(0x68));
         SetHudCrateTotal(gHud, self->crateTotal);
         ClearBonusRoundDone(self);
         ClearInBonusRound(self);

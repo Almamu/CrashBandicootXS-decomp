@@ -5,6 +5,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
@@ -69,7 +70,6 @@ struct collision_map
     u32 seen[1];                // 0x108
 };
 
-extern void *gPaletteCache;
 extern struct entity_list *gUnknown_030012EC;
 extern struct collision_map *gEntityFlags;
 

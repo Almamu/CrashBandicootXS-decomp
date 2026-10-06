@@ -11,6 +11,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
@@ -222,11 +223,8 @@ struct spawn_rec
 
 extern struct gobj *gPlayer;
 extern void *gLevelState;
-extern void *gPaletteCache;
 extern void *gUnknown_030012EC;
 extern u8 *gEntityFlags;
-extern u8 ***gSpriteBankSet;
-extern u32 gRoomFrameCount;
 /* src/data/velocity_16c460.c defines it as `const s32 [3][3]`. */
 extern const struct vec3 gPlatformMoverMotionRecords[3];
 

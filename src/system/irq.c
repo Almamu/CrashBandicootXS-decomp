@@ -3,6 +3,7 @@
 #include "audio.h"
 #include <gax.h>
 #include <agb_syscall.h>
+#include "globals.h"
 
 /* Points an IRQ's handler at IrqEmptyHandler (its IE bit is left alone). */
 void IrqClearHandler(s32 interruptIndex) {
@@ -185,17 +186,15 @@ void VBlankHandler(void)
     gVBlankCounter++;
 }
 
-extern u16 gKeys;
-
 /* The held d-pad bits as a direction 0-8 (0 = none), through
  * gDpadDirectionTable. `input` (gInput at every call site) is unused. */
 u8 GetDpadDirection(void *input)
 {
     u8 idx = 0;
-    if (gKeys & 0x10) idx |= 8;
-    if (gKeys & 0x20) idx |= 4;
-    if (gKeys & 0x80) idx |= 2;
-    if (gKeys & 0x40) idx |= 1;
+    if (gKeys.half.held & 0x10) idx |= 8;
+    if (gKeys.half.held & 0x20) idx |= 4;
+    if (gKeys.half.held & 0x80) idx |= 2;
+    if (gKeys.half.held & 0x40) idx |= 1;
     return gDpadDirectionTable[idx];
 }
 
@@ -228,7 +227,7 @@ s32 UpdateKeys(void *input)
     register s32 mask asm("r0");
 
     keys = (u16)~REG_KEYINPUT;
-    addr = &gKeys;
+    addr = &gKeys.half.held;
     asm volatile("add %0, %1, #0" : "=r"(keysCopy) : "r"(keys));
     prevKeys = *addr;
     *(u16 *)((u8 *)addr + 2) = keysCopy & ~prevKeys;
@@ -248,7 +247,7 @@ void ClearKeys(void)
     register u16 *addr asm("r2");
     register u16 zero asm("r1");
 
-    addr = &gKeys;
+    addr = &gKeys.half.held;
     zero = 0;
     *addr = zero;
     *(u16 *)((u8 *)addr + 2) = zero;

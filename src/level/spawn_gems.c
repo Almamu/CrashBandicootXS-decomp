@@ -3,6 +3,7 @@
 #include "bosses.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six of the "trigger effect type N" spawners
@@ -28,8 +29,6 @@
  * "Tenth pass". */
 
 extern void *gLevelState;
-extern u8 ***gSpriteBankSet;
-extern void *gEntitySpawner;
 extern void *gUnknown_030012EC;
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
@@ -45,7 +44,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1B;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x1BC);
+        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x1BC);
         part->tag = bit;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -66,7 +65,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1D;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -91,7 +90,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1E;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -112,7 +111,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x1F;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+            part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
             part->tag = tag;
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);
@@ -138,7 +137,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x20;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+            part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
             part->tag = tag;
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);
@@ -165,7 +164,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x22;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+            part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
             part->tag = bit;
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);

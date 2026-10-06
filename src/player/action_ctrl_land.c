@@ -2,14 +2,13 @@
 #include "action_obj.h"
 #include "system.h"
 #include "player.h"
+#include "globals.h"
 
 /* Continuation of action_ctrl_states.c's `gActionCtrlStateTable` action-table
  * entries. See action_ctrl_states.c's own
  * top-of-file comment for the shared field-offset conventions
  * (`self+0xc`/`self+0x10`/`+0x27`.."+0x32" etc.) these functions use. */
 
-extern u32 gKeys;
-extern void *gInput;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
@@ -42,7 +41,7 @@ void ActionCtrlStateBodySlamLand(struct act *self)
 
     if (part->animDone != 0) {
         void *dummy = gInput;
-        u16 m = gKeys & 0x100;
+        u16 m = gKeys.all & 0x100;
         u8 v = m != 0;
         s32 st = GetDpadDirection(dummy);
 
@@ -104,7 +103,7 @@ void ActionCtrlStateLand(struct act *self)
     u16 flag;
 
     self->frame = 0;
-    if ((flag = gKeys & 0x100) != 0)
+    if ((flag = gKeys.all & 0x100) != 0)
     {
         ACT_CALL1(self, m20, 0x10);
         ACT_CALL2(self, m50, self->part, 3);

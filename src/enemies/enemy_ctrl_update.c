@@ -25,11 +25,10 @@
 #include "audio.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 extern void *gPlayer;
 extern void *gEntityFlags;
-extern void *gAudioContext;
-extern void *gEntitySpawner;
 extern struct level_layers *gLevelLayers;
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);

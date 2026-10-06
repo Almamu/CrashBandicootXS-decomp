@@ -6,6 +6,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Same large per-instance "self" object family as ctrl.c/
  * action_ctrl_states.c/polar_player_actions.c/airship_fireball.c (state at `self+0x28`,
@@ -18,9 +19,7 @@
  * `gHovercraft` one. See docs/matching/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
 
-extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 gJetpackPlayerInactive;
 
 /* Constructor/reset: while the singleton flag (`gJetpackPlayerInactive`) is
  * off, resets `self` to state 5/table-index 4 (idle-ish), plays a cue,

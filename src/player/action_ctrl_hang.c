@@ -8,6 +8,7 @@
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
+#include "globals.h"
 
 /* GitHub issue #17, ROM 0x08014674-0x08014F8C, formerly
  * asm/code_3_2_17_14674.s (details in
@@ -16,12 +17,8 @@
  * More gActionCtrlStateTable action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
 
-extern u32 gKeys;
 extern void *gEntityFlags;
-extern void *gPaletteCache;
-extern void *gAudioContext;
 extern struct act_part *gPlayer;
-extern void *gInput;
 extern u8 gEmptySpritePoint[];
 
 /* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
@@ -134,7 +131,7 @@ void ActionCtrlStateLeftGround(struct act *self)
         default:
             if (self->state == 0xE)
             {
-                if (gKeys & 0x30)
+                if (gKeys.all & 0x30)
                 {
                     ActQueue27(self, 0, 1);
                 }
@@ -161,7 +158,7 @@ void ActionCtrlStateLeftGround(struct act *self)
         return;
     }
     {
-        u32 in = gKeys;
+        u32 in = gKeys.all;
         s32 fire;
         s32 one;
         u16 p;
@@ -193,7 +190,7 @@ void ActionCtrlStateLeftGround(struct act *self)
             {
                 ActOrFlags0D(self->part, 1);
                 self->slamBlocked = fire;
-                if (gKeys & 0x30)
+                if (gKeys.all & 0x30)
                 {
                     self->motionXKeepSpeed = fire;
                     self->motionXPending = one;
@@ -293,7 +290,7 @@ void ActionCtrlStateWarpIn(struct act *self)
 void ActionCtrlStateHang(struct act *self)
 {
     u8 dir = GetDpadDirection(gInput);
-    u32 in = gKeys;
+    u32 in = gKeys.all;
 
     if (dir != 0)
         switch (dir)
@@ -323,7 +320,7 @@ void ActionCtrlStateHang(struct act *self)
 
 void sub_8014AEC(struct act *self)
 {
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     s32 fire = INPUT_PRESSED(in) & 1;
 
     if (fire)
@@ -382,7 +379,7 @@ void ActionCtrlReleaseHang(struct act *self)
 void ActionCtrlStateHangMoveStart(struct act *self)
 {
     void *pad = gInput;
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     s32 v = INPUT_PRESSED(in) & 1;
 
     if (v)
@@ -460,7 +457,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
 void ActionCtrlStateHangMove(struct act *self)
 {
     u8 dir = GetDpadDirection(gInput);
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     struct act_part *part = self->part;
     s32 fire;
     u16 alt;
@@ -576,7 +573,7 @@ void ActionCtrlStateHangMove(struct act *self)
 
 void ActionCtrlStateHangStop(struct act *self)
 {
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     s32 fire = INPUT_PRESSED(in) & 1;
     u16 alt;
 

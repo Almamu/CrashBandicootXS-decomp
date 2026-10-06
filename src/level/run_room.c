@@ -9,6 +9,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -255,19 +256,13 @@ extern struct gl_player *gPlayer;
 extern struct gl_scratch *gCamera;
 extern void *gLevelLayers;
 extern struct gl_level *gLevelState;
-extern void *gPaletteCache;
-extern void *gAudioContext;
-extern void *gHud;
 extern void *gUnknown_030012F4;
 extern void *gUnknown_030012EC;
 extern void *gCollidableList;
 /* Updated and cleared, but never culled or drawn: the invisible objects,
  * the entity type 0x55 room-exit zones (spawn_bosses.c) and
  * SpawnSealSpawner's spawner. */
-extern void *gInput;
 extern struct gl_entity_list *gCrateList;
-extern s32 gRoomFrameCount;
-extern union gl_input gKeys;
 
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
@@ -420,7 +415,7 @@ s32 RunRoom(struct gl_self *self)
         ResetObjBuffers();
         UpdateRoomFrame(self);
         UpdateKeys(gInput);
-        if (!gPlayer->dead && (gKeys.half.hi & 8))
+        if (!gPlayer->dead && (gKeys.half.pressed & 8))
         {
             s32 r = RunPauseMenu();
 
@@ -440,7 +435,7 @@ s32 RunRoom(struct gl_self *self)
                 goto fade;
             }
         }
-        if (gKeys.held & 4)
+        if (gKeys.all & 4)
             ShowHudCounters(gHud);
         UpdatePartList(gUnknown_030012F4);
         UpdatePartList(gUpdateOnlyPartList);

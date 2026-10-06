@@ -9,6 +9,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Same keyframe-record lookup as `GetSpriteAnimPaletteId`/`IsSpriteAnimLooping` above,
  * returning the record's `+0x16` byte (frame count, also read by
@@ -208,8 +209,6 @@ void SetSpriteAffine(struct box_part *part, u16 val)
 {
     part->affine = val;
 }
-
-extern void *gSpriteRenderer;
 
 /* Resolves `part`'s Q8 position plus a caller-supplied offset into a
  * stack `{x, y}` pair, then dispatches to `DrawAffineSpritePieces` or
@@ -422,7 +421,6 @@ struct game_state {
 };
 
 extern struct game_state *gLevelState;
-extern void *gAudioContext;
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \

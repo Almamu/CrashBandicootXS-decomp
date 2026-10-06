@@ -9,6 +9,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.c, which
@@ -28,14 +29,6 @@
  * Both match under either compiler; built with the current agbcc like
  * their neighbours. */
 
-extern u16 gDispcnt;
-extern void *gOamBuffer;
-extern void *gObjVramCursor;
-extern void *gInput;
-extern void *gAudioContext;
-extern void *gSpriteRenderer;
-extern void *gSpriteBankSet;
-extern void *gPaletteCache;
 extern void *gEntityFlags;
 
 typedef void (*destroy_fn)(void *self, s32 flags);
@@ -130,7 +123,7 @@ void PlayCutscene(void *self, s32 idx)
 
     f.box.pos = MakeVec(7, 0x7E);
     f.box.size = MakeVec(0xE4, 0x1E);
-    dispcnt = &gDispcnt;
+    dispcnt = (u16 *)gDispcnt;
     zero = 0;
     mode = 0x40;
     *dispcnt = mode;

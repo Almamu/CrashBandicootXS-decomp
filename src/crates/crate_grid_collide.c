@@ -7,6 +7,7 @@
 #include "crates.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 extern struct level_layers *gLevelLayers;
 extern struct box_part *gPlayer;
@@ -108,7 +109,6 @@ struct game_state {
 };
 
 extern struct game_state *gLevelState;
-extern void *gAudioContext;
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \

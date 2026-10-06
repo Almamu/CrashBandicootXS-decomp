@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "menus.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* GitHub issue #28: 0x0801DA38-0x0801DFEC, the whole of the former
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
@@ -91,9 +92,6 @@ struct zoom_bg
 };
 
 COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct zoom_bg) == 0x8C);
-
-extern void *gAudioContext;
-extern s16 gSineTable[];
 
 static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
 {
@@ -435,8 +433,6 @@ struct cursor_panel
 };
 
 COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct cursor_panel) == 0x54);
-
-extern struct oam_shadow_buffer *gOamBuffer;
 
 static inline void ResetIdleTimer(struct cursor_panel *self)
 {

@@ -7,11 +7,11 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
 
-extern void *gPaletteCache;
 extern u8 *gLevelState;
 
 /* Same shape as level_select_parts.h's anim_table/anim_record. */

@@ -4,8 +4,7 @@
 #include "player.h"
 #include "objects.h"
 #include "memory.h"
-
-extern void *gSpriteRenderer;
+#include "globals.h"
 
 /* Calls `DrawSprite` (already matched in `sprite.c`) with the
  * global `gSpriteRenderer` as `self` - same tail-call shape as

@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "level.h"
+#include "globals.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family documented in actor.c/polar_player_actions.c: a "part table"
@@ -23,7 +24,6 @@
  * sibling object (`ClearPolarAkuAkuMask`). See docs/matching/issue-54-actor-d3a8.md. */
 
 extern struct level_state *gLevelState;
-extern void *gAudioContext;
 extern void *gActorList;
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 

@@ -1,11 +1,9 @@
 #include "core.h"
 #include "system.h"
+#include "globals.h"
 
 /* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_format.c) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
-
-extern void *gInput;
-extern u16 gKeys;
 
 /* Polls input (via WaitForVBlank/UpdateKeys, the same VBlank-wait-then-
  * update-keys pair used elsewhere) until a button matching `mask`'s bit
@@ -76,7 +74,7 @@ checkCount:
     }
     WaitForVBlank();
     UpdateKeys(gInput);
-    addr = &gKeys;
+    addr = &gKeys.half.held;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);
     if (flagR == 0) {
@@ -95,7 +93,7 @@ noLimit:
 loopNoLimit:
     WaitForVBlank();
     UpdateKeys(gInput);
-    addr = &gKeys;
+    addr = &gKeys.half.held;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);
     if ((keys & 1) != 0) {

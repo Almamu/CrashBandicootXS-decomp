@@ -15,7 +15,7 @@
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md). `gHud` itself is a shared global and goes in
+ * (docs/headers_plan.md). `gHud` itself is a shared global, declared in
  * globals.h. */
 
 #include "core.h"

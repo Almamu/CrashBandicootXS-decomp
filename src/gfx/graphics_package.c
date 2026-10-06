@@ -3,6 +3,7 @@
 #include "gfx.h"
 #include "gba/gba.h"
 #include "system.h"
+#include "globals.h"
 
 /* GitHub issue #30. Loads one BG: the palette into bank `paletteBank`,
  * the tiles into char block `charBlock`, and the tilemap into screen
@@ -109,8 +110,6 @@ struct gfx_box_obj {
     s32 scaleX;             // 0x20 - Q8
     s32 scaleY;             // 0x24 - Q8
 };
-
-extern struct oam_shadow_buffer *gOamBuffer;
 
 /* Picks the smallest-area box preset (gObjSizeWidths/674) that a
  * width x height box fits in at 50% zoom or better, puts its shape/size
