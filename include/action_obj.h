@@ -64,12 +64,13 @@ struct act {
     // 0x25 - while nonzero (counting down), the idle and airborne states ignore
     //        the D-pad; releasing it clears the timer
     u8 dpadLockTimer;
-    u8 spinCooldown; // 0x26 - frames until the next spin is allowed (set to 12, counts down)
-    u8 motionX;      // 0x27 - queued X motion entry (anims->first)
-    u8 motionY;      // 0x28 - queued Y motion entry (anims->second)
-    u8 turboRun;     // 0x29 - set on entering the turbo run (L, state 4); landing resumes it
-                     //        instead of the plain run; the idle state clears it
-    u8 unk_2A;
+    u8 spinCooldown;  // 0x26 - frames until the next spin is allowed (set to 12, counts down)
+    u8 motionX;       // 0x27 - queued X motion entry (anims->first)
+    u8 motionY;       // 0x28 - queued Y motion entry (anims->second)
+    u8 turboRun;      // 0x29 - set on entering the turbo run (L, state 4); landing resumes it
+                      //        instead of the plain run; the idle state clears it
+    u8 unk_2A;        // 0x2A - only ever cleared (ResetActionCtrl, the flip body slam start
+                      //        in HandleActionCtrlAirInput); nothing reads it
     u8 bumpTimer;     // 0x2B - 3 after a crate's side stopped the X motion (event 12); counts down
                       //        while at most one crate is touched, then re-queues bumpedMotionX
     u8 bumpedMotionX; // 0x2C - the motionX that bump cancelled

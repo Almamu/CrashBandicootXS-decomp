@@ -207,7 +207,7 @@ void DestroyPolarLifeCrate(struct actor_self *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B25C(struct actor_self *self, u32 flags)
+void DestroyPolarFourWumpaCrate(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
     self->next->prev = self->prev;
@@ -599,15 +599,15 @@ asm(".align 2, 0");
 /* `actor_self` plus the first derived-class word at +0x54. */
 struct actor_self_54 {
     struct actor_self base;
-    s32 unk_54; // 0x54
+    s32 hp; // 0x54 - hit points, where the derived class has them (vehicle.h, bosses.h)
 };
 
 /* A fourth hidden function with no thumb_func_start of its own (see
  * IsJetpackCheckpointTextUnshootable above, including its "no direct reference found" caveat)
- * - a plain self->unk_54 getter. */
+ * - a plain self->hp getter. */
 s32 GetActorHp(struct actor_self_54 *self)
 {
-    return self->unk_54;
+    return self->hp;
 }
 
 asm(".align 2, 0");

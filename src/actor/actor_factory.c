@@ -15,7 +15,7 @@
  * - ConstructAnimTableState (category vtable slot 0, see docs/rom_map.md)
  *   installs the category's animation table (`struct anim_table_record`,
  *   include/actor_anim.h) as gActorAnimTable and builds the player with
- *   ConstructActorPart, which also resets the gPolarPauseLocked-030014A4
+ *   ConstructActorPart, which also resets the gPolarPauseLocked-gPolarPlayerVelY
  *   player-state globals.
  * - SpawnActor (vtable slot 1) turns a level spawn record into a
  *   CreateActor call, picking the record's alternate kind in the
@@ -129,7 +129,7 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
         }
         NEW_CB34_TRACKED_ACTOR(REC_AT(kind), gPolarLifeCrateVtable);
     case 10:
-        NEW_CB34_ACTOR(0x54, REC_AT(kind), gStaticData_087E4F54);
+        NEW_CB34_ACTOR(0x54, REC_AT(kind), gPolarFourWumpaCrateVtable);
     case 11:
         NEW_BASE_ACTOR(REC_AT(kind), gPolarWumpaVtable);
     case 23:

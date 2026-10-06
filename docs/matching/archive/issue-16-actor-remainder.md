@@ -43,7 +43,7 @@ already-matched `kill_player.c`, `action_ctrl_update.c` between
   `LoadPaletteSlot`-fed 28-byte-record lookup; case 11 resets a child
   object and pool-releases it via one of two dereference-chain-computed
   slots depending on the player's D-pad remap state; cases 9/10 gate
-  `sub_8015558` behind `gPlayer+0x68`/`PlayerHasRoomForAnim` checks.
+  `StartActionCtrlMaskHitJump` behind `gPlayer+0x68`/`PlayerHasRoomForAnim` checks.
 - **`UpdateActionCtrl`** (628 B, `action_ctrl_update.c`) - a `part`-visibility/OAM-
   priority housekeeping pass: re-runs `UpdateActionCtrlSkidAnim` on an activity-flag
   change, resets velocity/target fields past two `gLevelLayers`-

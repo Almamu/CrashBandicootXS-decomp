@@ -116,7 +116,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   constant right before its one use) compiled to a different
   instruction order/byte sequence even though the two are
   data-independent.
-- **`StartActionCtrlHighJump`**/**`sub_8015558`**: same shape (mgr trampoline pair
+- **`StartActionCtrlHighJump`**/**`StartActionCtrlMaskHitJump`**: same shape (mgr trampoline pair
   with actions 0xb/0xb, reset `self+0x18`/state trio, clear
   `part+0x68`) - differ only in the final table-index constant (0xb vs
   7). Same "materialize the table-index constant early" pattern as
@@ -246,7 +246,7 @@ byte-exact matches.
 ## Full-build address-shift lessons
 
 Several of the fixes above (`StartActionCtrlRun`'s early constant, both
-`StartActionCtrlHighJump`/`sub_8015558`'s table-index pin, `ActionCtrlStateHangSpin`'s
+`StartActionCtrlHighJump`/`StartActionCtrlMaskHitJump`'s table-index pin, `ActionCtrlStateHangSpin`'s
 statement reorder) were only caught by the full clean `make compare`
 cycle, not by isolated per-function compiles - the isolated compiles
 for these all looked instruction-for-instruction correct in ROM address

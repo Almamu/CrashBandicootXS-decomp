@@ -286,7 +286,7 @@ extern void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32
 extern void UpdatePolarAkuAkuCrate(struct actor_self *self);
 extern void UpdatePolarTimeCrate(void *self);
 extern void DetonatePolarNitroCrate(void *self);
-extern void sub_802CA6C(void *self);
+extern void UpdatePolarFourWumpaCrate(void *self);
 extern void UpdatePolarBasicCrate(void *self);
 extern void *InitPolarCrate(void *self, void *part, s32 b, s32 c, s32 last);
 extern void *CreatePolarTimeCrate(void *self, void *part, s32 b, s32 c, s32 last);
@@ -294,7 +294,7 @@ extern void *CreatePolarQuestionCrate(void *self, void *part, s32 b, s32 c, s32 
 extern void *CreatePolarAkuAkuCrate(void *self, void *part, s32 b, s32 c, s32 last);
 extern void *CreatePolarNitroCrate(void *self, void *part, s32 b, s32 c, s32 last);
 extern void *CreatePolarLifeCrate(void *self, void *part, s32 b, s32 c, s32 last, s32 arg6);
-extern void *sub_802CC54(void *self, void *part, s32 b, s32 c, s32 last);
+extern void *CreatePolarFourWumpaCrate(void *self, void *part, s32 b, s32 c, s32 last);
 extern void *CreatePolarBasicCrate(void *self, void *part, s32 b, s32 c, s32 last);
 
 /* src/vehicle/polar_nitro.c */

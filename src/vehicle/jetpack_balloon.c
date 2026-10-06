@@ -61,6 +61,9 @@ void DestroyAirship(void)
     mem_free(gAirship);
 }
 
+/* UNUSED - no caller anywhere in the ROM (checked every src/ .c file, the
+ * category vtables and every word-aligned Thumb pointer in baserom.gba).
+ * Empty; it has no table slot to name it after. */
 void nullsub_30(void)
 {
 }

@@ -2827,3 +2827,12 @@ rename gUnknown_030013E8 gActorBgScrollRangeY
 rename gUnknown_03001414 gActorSpawnUseBonus
 rename gStaticData_0816BF00 gAttackKindBreakLimited
 rename gStaticData_0816C090 gPlayerCtrlTurnSpeeds
+
+# Naming round 7: player, crates, actor, vehicle and bosses leftovers (#558).
+rename sub_8015558 StartActionCtrlMaskHitJump
+rename sub_801796C InputCtrlStateRide
+rename sub_801793C InputCtrlStateUnusedRide
+rename sub_802CA6C UpdatePolarFourWumpaCrate
+rename sub_802CC54 CreatePolarFourWumpaCrate
+rename sub_803B25C DestroyPolarFourWumpaCrate
+rename gStaticData_087E4F54 gPolarFourWumpaCrateVtable

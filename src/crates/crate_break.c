@@ -2765,7 +2765,7 @@ void UpdateSlotCrate(struct crate *self)
  * "get next" neighbor-list chain (the same list `ResetCrate`/
  * `ResolvePlayerCollisions`, crate_reset.c/crate.c, already establish). At
  * the end, `self+0x4`'s accumulated step is folded into `self`'s own
- * position (`self+0`/`self+4`), and `self+0x4c`'s "speed" byte is
+ * position (`self+0`/`self+4`), and `fallSpeed` (+0x4c) is
  * either cleared (when `remaining` ended up exactly 0) or incremented
  * toward a clamped max of 5 (saturating, never decremented back down
  * by this function).
@@ -2773,7 +2773,7 @@ void UpdateSlotCrate(struct crate *self)
  * Matches under old_agbcc (the NAKED note blamed the "two extra
  * high-register accumulators"; see
  * docs/matching/archive/issue-12-13-25-naked-retry.md). What mattered: the
- * speed byte is re-read through `self->unk_4C` each time (GCSE keeps
+ * speed byte is re-read through `self->fallSpeed` each time (GCSE keeps
  * its address in sb), `speed--` is written in both step arms, the
  * neighbour walk skips the first neighbour, and one temporary `t` both
  * carries `fallTargetY` into `y` and re-reads `x` at the bottom of the loop

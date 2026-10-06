@@ -93,7 +93,7 @@ extern s32 GetAnimFrameBaseOffset(struct actor_self *self);
 extern s32 GetAnimFrameAttr(struct actor_self *self);
 extern u8 *GetAnimFrameData(struct actor_self *self);
 extern void SetActorAnim(struct actor_self *self, s32 idx);
-extern void sub_803B25C(struct actor_self *self, u32 flags);
+extern void DestroyPolarFourWumpaCrate(struct actor_self *self, u32 flags);
 extern void DestroyPolarObstacle(struct actor_self *self, u32 flags);
 extern s32 GetActorHp(struct actor_self_54 *self);
 extern void DamageActor(void *self);
@@ -258,6 +258,6 @@ extern const s32 gActorPaletteCycleStartFrames[4];
 extern const s32 gActorPaletteCycleTargetFrames[4];
 
 /* src/data/entity_vtables_7e3bec.c */
-extern const struct vtable_slot gStaticData_087E4F54[4];
+extern const struct vtable_slot gPolarFourWumpaCrateVtable[4];
 
 #endif /* !__ACTOR_H__ */

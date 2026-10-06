@@ -27,7 +27,7 @@ All in `src/actor/actor_anim.c`, in ROM order:
   `+0x12` flag byte and the `field_08` playback accumulator to 0.
 - **20 byte-identical "kind" teardown handlers** (`DestroyRiderlessPolar`,
   `DestroyPolarCheckpointText`, `DestroyPolarWumpa`, `DestroyPolarTimeCrate`, `DestroyPolarQuestionCrate`,
-  `DestroyPolarAkuAkuCrate`, `DestroyPolarNitroCrate`, `DestroyPolarLifeCrate`, `sub_803B25C`,
+  `DestroyPolarAkuAkuCrate`, `DestroyPolarNitroCrate`, `DestroyPolarLifeCrate`, `DestroyPolarFourWumpaCrate`,
   `DestroyPolarBasicCrate`, `DestroyPolarCrate`, `DestroyPolarElectricFence`, `DestroyPolarObstacle`,
   `DestroyPolarLauncher`, `DestroyPolarPenguin`, `DestroyPolarIcicle`, `DestroyPolarAkuAku`,
   `DestroyPolarGoal`, `DestroyPolarBoostPad`, `DestroyPolarCheckpointCrate`) - every one of these

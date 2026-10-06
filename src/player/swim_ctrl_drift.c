@@ -4,20 +4,21 @@
 #include "player.h"
 
 /* GitHub issue #19: continuation of action_ctrl.c's chunk
- * (0x08015840-0x08016128), non-adjacent since the left-raw
- * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` (asm/code_3_2_17_159f8.s)
+ * (0x08015840-0x08016128), non-adjacent since
+ * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` (swim_ctrl_stroke.c)
  * sit between them - see docs/matching/archive/issue-19-0x08015840-actor.md.
  * This is the chunk's last matched function; `sub_8016046` right after
  * it in the ROM is disassembler-rendered padding (a zero halfword
  * between this function's 106-byte body and the next 4-byte-aligned
- * function, `CheckPlayerCtrlTurn`, itself left raw) - not real code, has no
+ * function, `CheckPlayerCtrlTurn` in swim_ctrl.c) - not real code, has no
  * caller or symbol reference anywhere in the tree, and is reproduced
  * automatically by this file's own trailing `asm(".align 2, 0")`
  * without needing its own C function (see docs/matching.md's
  * `GetEntityPixelY` entry for the established precedent: a disassembler-
  * rendered `movs r0, r0` at a function gap is usually just a zero-fill
- * halfword, not a literal instruction). `CheckPlayerCtrlTurn` continues in
- * asm/code_3_2_17_16048.s. */
+ * halfword, not a literal instruction). The name survives only as the
+ * frozen disassembly's label, dropped by expected/corrections.txt's
+ * `unlabel sub_8016046`. */
 
 
 /* Player-velocity-relative "record" writer: computes a Q14-ish rounded

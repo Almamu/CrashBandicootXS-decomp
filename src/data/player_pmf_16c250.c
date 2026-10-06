@@ -14,21 +14,17 @@
 /* Per-state handlers dispatched by UpdatePlayerCtrl (swim_ctrl.c,
  * its `struct pmf` view); PlayerCtrlKillPlayer sets state 7. */
 const struct actor_pmf gPlayerCtrlStateFuncs[8] = {
-    ACTOR_PMF(PlayerCtrlStateIdle),
-    ACTOR_PMF(PlayerCtrlStateSwim),
-    ACTOR_PMF(PlayerCtrlStateStroke),
-    ACTOR_PMF(PlayerCtrlStateSpin),
-    ACTOR_PMF(PlayerCtrlStateTurn),
-    ACTOR_PMF(PlayerCtrlStateStop),
-    ACTOR_PMF(PlayerCtrlStateSwimStart),
-    ACTOR_PMF(PlayerCtrlStateDead),
+    ACTOR_PMF(PlayerCtrlStateIdle),      ACTOR_PMF(PlayerCtrlStateSwim),
+    ACTOR_PMF(PlayerCtrlStateStroke),    ACTOR_PMF(PlayerCtrlStateSpin),
+    ACTOR_PMF(PlayerCtrlStateTurn),      ACTOR_PMF(PlayerCtrlStateStop),
+    ACTOR_PMF(PlayerCtrlStateSwimStart), ACTOR_PMF(PlayerCtrlStateDead),
 };
 
 /* Per-state handlers dispatched by UpdateInputCtrl (input_ctrl.c). */
 const struct actor_pmf gInputCtrlStateFuncs[4] = {
     ACTOR_PMF(InputCtrlStateStart),
-    ACTOR_PMF(sub_801796C),
-    ACTOR_PMF(sub_801793C),
+    ACTOR_PMF(InputCtrlStateRide),
+    ACTOR_PMF(InputCtrlStateUnusedRide),
     ACTOR_PMF(InputCtrlStateDead),
 };
 
@@ -41,5 +37,6 @@ const u32 gMegaMixMotionEntries[4][2] = {
 };
 
 const struct entry_set gMegaMixMotionSet = {
-    gMegaMixMotionEntries, 0x100,
+    gMegaMixMotionEntries,
+    0x100,
 };

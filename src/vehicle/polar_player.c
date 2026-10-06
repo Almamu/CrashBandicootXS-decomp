@@ -10,7 +10,7 @@
 #include "level.h"
 #include "globals.h"
 
-/* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
+/* Continues the `InitActorPart`/`gPolarPauseLocked`-`gPolarPlayerTiles`
  * cluster already established in `src/vehicle/polar_player_states.c`
  * (issue #50's leftover tail, `docs/matching/archive/issue-50-actor-bc68.md`) -
  * same `self` object and global family (a countdown-timer/respawn
@@ -193,7 +193,7 @@ void DrawPolarPlayer(struct actor_self *self)
 }
 
 /* Once-only spawn/reset trigger (proximity-hazard family, established
- * `gUnknown_0300148x`/`gUnknown_030014Bx` cluster): if the shared
+ * `gPolarPauseLocked`-`gPolarPlayerTiles` cluster): if the shared
  * "used" respawn timer (`gPolarInvulnTimer`) is already counting down,
  * reports "still used" (1) without doing anything. Otherwise, while
  * the current mask level (`maskLevel`) (`gLevelState->0x78`) is clear, plays
@@ -212,8 +212,8 @@ void DrawPolarPlayer(struct actor_self *self)
  * label (reached by `goto` from the early-return case) reproduces that,
  * per the `goto`-shared-tail idiom in
  * `docs/matching/archive/issue-52-gap-b364.md`. The three addresses this
- * function keeps alive throughout (`gPolarInvulnTimer`, `gUnknown_
- * 03001494`, `&gLevelState`) are each read once into their own
+ * function keeps alive throughout (`gPolarInvulnTimer`, `gPolarAkuAku`,
+ * `&gLevelState`) are each read once into their own
  * pointer local and reused from there, matching the ROM's own register
  * lifetime (never re-deriving an address it already has); `self`
  * itself is reused for the unrelated `1` constant once its own fields

@@ -26,9 +26,10 @@
  * unlink sequence below) rooted at the player-pointer global
  * `gActorList`. `self` is `struct actor_self` (actor_self.h);
  * the functions not yet converted still use raw offsets into it - see
- * docs/rom_map.md's "gUnknown_030014xx tier-threshold actor
- * family" and "type-byte event dispatch" sections for the semantics
- * behind the individual functions below. */
+ * docs/rom_map.md's notes on the polar player globals
+ * (`gPolarPauseLocked`-`gPolarPlayerTiles`, which it calls the
+ * "tier-threshold actor family") and its "type-byte event dispatch"
+ * section for the semantics behind the individual functions below. */
 
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -179,7 +180,7 @@ void FinishPolarRun(void *player)
     }
 }
 
-/* Resets the `gPolarSteerEnabled`/`030014A1`/`030014A0` latch trio, runs
+/* Resets the `gPolarSteerEnabled`/`gPolarPlayerHalted`/`gPolarPlayerInactive` latch trio, runs
  * `ClearPolarAkuAkuMask` on `gPolarAkuAku`, and fires the state-7/table-
  * index-6 transition (anim frame from `self`'s part-table pointer at
  * `+0x48`) plus a sound cue. */

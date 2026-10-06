@@ -37,7 +37,7 @@
  *    structurally parallel to the boss's own patrol/BG2-affine/tile
  *    machinery (issue #58) but on a completely separate global family
  *    (`0x030015A0`-`0x030015FF`, plus the P1/P2-mirror pair
- *    `gFlashBgPalette`/`030008B8` and the row-pointer array
+ *    `gFlashBgPalette`/`gFlashObjPalette` and the row-pointer array
  *    `gHovercraftMapFrames`). Every global in that family already has a
  *    real name from `hovercraft_parts.c`'s own extern block where this
  *    file's functions are the ones that *first* reference it in ROM
@@ -469,7 +469,7 @@ u8 IsHovercraftFireballUnshootable(void *selfArg)
 
 /* Palette blink/flash effect for the P2 VRAM fill-level meter, gated by
  * the one-shot latch `StartHovercraftHitFlash` (issue #62, `hovercraft_parts.c`) arms
- * (`gHovercraftHitFlashTimer`/`030015FE`): once armed, advances the counter
+ * (`gHovercraftHitFlashTimer`/`gHovercraftHitFlashOn`): once armed, advances the counter
  * every call, flips the toggle byte every 4th call, wraps the counter
  * past 0xb, then rewrites the meter's 16-halfword palette strip
  * (`0x05000020`) either solid white (`0x7fff`, while the toggle is set)
@@ -587,7 +587,7 @@ void RunHovercraftState(void)
 }
 
 /* Opens the singleton's own camera-follow/scroll-velocity smoothing
- * computation (`gHovercraftX`-`030015EC`) - the twin of the boss
+ * computation (`gHovercraftX`-`gHovercraftPhase`) - the twin of the boss
  * cluster's `SteerAirship` (airship.c). Ramps the Z velocity
  * toward a per-phase target, then by patrol phase: phase 0 steers the
  * X/Y velocities toward the player (`gActorList`) relative to a
@@ -765,7 +765,7 @@ void HovercraftStateFallBack(void)
  * cluster's own `AirshipStateFireballs` (issue #58) - a bounded oscillator on
  * `gHovercraftVelZ` (converging on 0x99) and `gHovercraftVelY`
  * (bouncing 0-0x100), applied to the singleton's own position
- * (`gHovercraftZ`/`030015B8`), with a reward trigger
+ * (`gHovercraftZ`/`gHovercraftY`), with a reward trigger
  * (`ResumeActorSpawns`/`FinishJetpackRun`) once `gHovercraftY` crosses
  * 0x4b00, and a DISPCNT window/mosaic-bit clear once
  * `gHovercraftDistance` drops below 0x1500 (setting the "dead" flag
@@ -1148,18 +1148,23 @@ void DestroyHovercraft(void)
     mem_free(gHovercraft);
 }
 
-/* No-op stub. */
+/* UNUSED - no caller anywhere in the ROM (checked every src/ .c file, the
+ * category vtables and every word-aligned Thumb pointer in baserom.gba).
+ * Empty. With sub_80337FC and nullsub_35 it trails DestroyHovercraft the
+ * way nullsub_30 trails DestroyAirship; no table slot names them. */
 void nullsub_34(void)
 {
 }
 
-/* Trivial constant getter - always "false"/0. */
+/* UNUSED - no caller anywhere in the ROM (same checks as nullsub_34).
+ * Returns 0. */
 s32 sub_80337FC(void)
 {
     return 0;
 }
 
-/* No-op stub. */
+/* UNUSED - no caller anywhere in the ROM (same checks as nullsub_34).
+ * Empty. */
 void nullsub_35(void)
 {
 }

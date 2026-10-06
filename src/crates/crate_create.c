@@ -22,8 +22,8 @@
  * stayed `NAKED`.
  *
  * Allocates a 0x64 (100)-byte object via `OperatorNew`, sets
- * `self+0x18` to `&gCrateVtable` (a real address inside the
- * documented 93-entry `gStaticData_087Exxx` vtable family, but at a
+ * `self+0x18` to `&gCrateVtable` (one of the method tables in
+ * src/data/entity_vtables_7e3bec.c, but at a
  * `+0x18` offset - every other constructor this project has matched so
  * far uses `+0xC` for this same table-pointer convention; this function
  * is the first confirmed `+0x18` outlier), then runs
