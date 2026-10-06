@@ -20,53 +20,33 @@
  * `graphics` -> `game_loop` here to match that caller, the same
  * recategorization issue #12 already applied to `BreakCrateTouchedByPlayer` itself.
  *
- * `sub_800CF70` is the function `docs/rom_map.md` (line 2137) already
+ * `ResolveStackCrateHit` is the function `docs/rom_map.md` (line 2137) already
  * partially flagged: "144 bytes before the physics/collision
  * subsystem's stated 0x0800D000 start, calls the same linked-list
  * walkers that subsystem uses and reaches the same 28-byte-record
  * chain - functionally part of it despite sitting just outside the
  * documented boundary". Reading the real bytes confirms that note
  * exactly (see its own doc comment below) and additionally reveals its
- * sibling `sub_800CEAC`, entirely unremarked anywhere until now. */
+ * sibling `PlayerHitboxOverlapsAt`, entirely unremarked anywhere until now. */
 
 /* `struct hitbox_quad` (gfx.h): the caller (`QueueCratePlayerCollision`)
  * passes a pointer directly to the quad itself (`playerRecordBase + 4`),
  * not the 28-byte record's own base - so this function only ever sees
  * the 4-byte-wide quad and never reads the record's own leading word. */
 
-/* Called once by `QueueCratePlayerCollision` (its only caller), passing the
- * player's (`gPlayer`) own hitbox quad (`player's +0x20`
- * table, indexed by the player's own `+0x2d` tag, at the record's
- * `+4` quad) together with `self`'s own cached `x>>8`/`y>>8` shift
- * values and `self`'s own already-built AABB (`box`, built by the
- * caller from `self`'s own `+0x20` table at the top of `QueueCratePlayerCollision`
- * - the same convention `BreakCrateTouchedByPlayer`'s "AABB1" documents).
+/* Called once by `QueueCratePlayerCollision` (its only caller), after it
+ * breaks a crate, passing the player's (`gPlayer`) own hitbox quad (the
+ * player's sprite-bank record for its current tag, at the record's `+4`
+ * quad), the player's own `x>>8`/`y>>8` position and `self`'s already-built
+ * AABB (`box`, built by the caller from `self`'s own anim record at the top
+ * of `QueueCratePlayerCollision` - the same convention
+ * `BreakCrateTouchedByPlayer`'s "AABB1" documents).
  *
- * Builds a *hybrid* AABB - the player's hitbox dimensions, positioned
- * at `self`'s location (`quad->offX + xOffset`, `quad->offY +
- * yOffset`) - i.e. "if a player-shaped box were standing where `self`
- * currently is". When `gPlayer+0x90` (an unconfirmed player
- * state/mode byte, not documented elsewhere under this exact offset -
- * `+0x92`/`+0x94` are separately documented state bytes right next to
- * it, see `docs/matching/archive/issue-18-0x08014f8c-actor.md`) is nonzero,
- * the box is widened by 4 (2 either side: position shifted left by 2,
- * width padded by 4) before the mirror step - a "wide mode" hitbox
- * variant.
- *
- * The hybrid box is then mirrored horizontally/vertically around
- * `(xOffset, yOffset)` according to the PLAYER's own `+0x28` mirror
- * flags (bits 4/5 - the same mirror-flag convention `BreakCrateTouchedByPlayer`
- * documents, just keyed off the player's flags instead of `self`'s,
- * since the box represents the player's shape, not `self`'s).
- *
- * Finally tests the hybrid box against `box` (`self`'s own real AABB)
- * via `AabbOverlaps` and returns the boolean overlap result: "would a
- * player-shaped hitbox at `self`'s position overlap `self`'s own
- * actual hitbox" - used by `QueueCratePlayerCollision` to decide whether to treat
- * `self` as blocking/pushing a player-sized object at that spot (its
- * caller follows a `1` result with a `GetCrateAbove`(self) "get next"
- * list-walk step, consistent with a "can something occupy this slot"
- * gate feeding further list traversal).
+ * Builds the player's hitbox at (`xOffset`, `yOffset`), widened by 2 px on
+ * each side while the player is `bumped` (a crate's side stopped it),
+ * mirrors it around that point per the player's own `+0x28` mirror bits,
+ * and returns whether it overlaps `box` (`AabbOverlaps`). On a 1, the
+ * caller also hits the crate stacked on top (`GetCrateAbove`).
  *
  * `self` itself (the first argument) is loaded into a callee-saved
  * register by the ROM's own prologue but never referenced again after
@@ -75,11 +55,11 @@
  * contents `self` was copied from).
  *
  * Real C (issue #9-#11 NAKED retry, matches under both compilers; the
- * file is built with old_agbcc for `sub_800CF70`): the wide-mode x is
+ * file is built with old_agbcc for `ResolveStackCrateHit`): the wide-mode x is
  * `x += xOffset; x -= 2;` as two statements (the ROM's `adds r1, r1, r7;
  * subs r1, #2`). */
-u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset,
-               s32 yOffset)
+u8 PlayerHitboxOverlapsAt(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
+                          s32 xOffset, s32 yOffset)
 {
     struct aabb b;
 
@@ -115,11 +95,11 @@ u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s
     return 0;
 }
 
-/* `QueueCratePlayerCollision`'s single-step neighbor probe, called while its own
- * 5-slot "recently touched" ring-buffer counter (`gPlayer
- * +0x94`-adjacent counter at the caller's own stack cache) is `<= 4`
- * (confirmed at the call site: `cmp r3,#4; bgt` skips the call
- * entirely and uses `self` directly instead).
+/* `QueueCratePlayerCollision`'s single-step neighbor probe: which crate of
+ * a stack the player's box (`box`) hits - `self`, or the crate it stands
+ * on. Called for attack kinds up to 4 (`cmp r3,#4; bgt` skips the call
+ * and uses `self` directly); `*foundFlag` tells the caller `self` is part
+ * of a stack.
  *
  * Reads `self`'s doubly-linked neighbor pointers both ways
  * (`GetCrateAbove` = "get next", `GetCrateBelow` = "get prev" - the
@@ -161,7 +141,7 @@ u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s
  * local copy of the parameter: that is what makes the ROM copy r0 last,
  * after `box`/`foundFlag`, right before the first call. The mirror bits
  * read are `self`'s, not `prev`'s. */
-struct crate *sub_800CF70(struct crate *selfArg, struct aabb *box, u8 *foundFlag)
+struct crate *ResolveStackCrateHit(struct crate *selfArg, struct aabb *box, u8 *foundFlag)
 {
     struct crate *self = selfArg;
     struct crate *next = GetCrateAbove(self);

@@ -127,7 +127,7 @@ void SetWumpaCounter(struct orbit_part *self, u8 value)
 /* Distance-gate: if the player (`gPlayer`) is within 0x180
  * (384 px) of `self` on both axes, calls `UpdateSpriteObj` (already
  * matched in `sprite_obj.c`) on `self`. Otherwise sets `self->flags`
- * bit 0 and, unless `self->field_08 == 0xFFFF`, marks its bit in the
+ * bit 0 and, unless `self->id == 0xFFFF`, marks its bit in the
  * same `gEntityFlags+0x108` bitmap `sprite.c` already
  * writes - identical idiom, reused verbatim including the
  * register-pinned `>> 5` (see that file's note on why a plain C shift
@@ -171,10 +171,10 @@ outOfRange:
     }
     {
         MATCH_HOLD_REG(s32, ffff, r0) = 0xFFFF;
-        MATCH_HOLD_REG(u16, field08a, r4) = *(volatile u16 *)&self->field_08;
+        MATCH_HOLD_REG(u16, field08a, r4) = *(volatile u16 *)&self->id;
 
         if (field08a != ffff) {
-            MATCH_HOLD_REG(u16, field08b, r3) = *(volatile u16 *)&self->field_08;
+            MATCH_HOLD_REG(u16, field08b, r3) = *(volatile u16 *)&self->id;
             void *base = gEntityFlags;
             MATCH_HOLD_REG(s32, word, r0);
             s32 wordOffset;
@@ -200,7 +200,7 @@ inRange:
  * same size as `CreateSpriteObj`'s constructor in `sprite_obj.c`),
  * re-initializes it via `InitSpriteObj`, overwrites its table with
  * `gStopwatchVtable`, and runs the empty `ResetStopwatch` on it before
- * setting `field_08`/`x`/`y` from the raw pixel arguments. `unused` is
+ * setting `id`/`x`/`y` from the raw pixel arguments. `unused` is
  * the fourth argument of the spawn-table slot (SpawnStopwatch passes it
  * in r3); the function never reads it. */
 struct actor *CreateStopwatch(u16 id, u16 x, u16 y, u16 unused)
@@ -210,7 +210,7 @@ struct actor *CreateStopwatch(u16 id, u16 x, u16 y, u16 unused)
     InitSpriteObj(self);
     self->table = (void *)gStopwatchVtable;
     ResetStopwatch(self);
-    self->field_08 = id;
+    self->id = id;
     self->x = (s32)x << 8;
     self->y = (s32)y << 8;
     return self;

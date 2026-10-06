@@ -281,7 +281,7 @@ precedent that this exact "`self`/`owner`-style multi-field object with
 many `bl` calls interspersed across branches" shape defeats gcc 2.9's
 register allocator: `GetCollisionChunk`, `GetSolidTerrainHeights`/`GetSolidTerrainModeValue`/
 `GetTerrainType` (`bg_layer_base.c`), `BreakCrateTouchedByPlayer` (`crate_hit.c`),
-`PlayerAnimWouldTouchCrate` (`crate_touch.c`), `sub_800CEAC`/`sub_800CF70`
+`PlayerAnimWouldTouchCrate` (`crate_touch.c`), `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit`
 (`crate_hit.c`) are all NAKED in this same ROM neighborhood for the
 same underlying reason. Given `UpdateEnemyCtrl`'s size (1132 B, 18 branches,
 several inline blocks juggling `self`+`owner`+3-5 more live
@@ -1227,7 +1227,7 @@ With this file done, every one of the 43 functions originally scoped
 into the `0x0800B8DC`-`0x0800D040` cluster (GitHub issue #9/#10) is now
 either matched (real C or NAKED) or - for the handful recategorized
 into the neighboring physics/collision subsystem along the way
-(`PlayerAnimWouldTouchCrate`'s own doc, `sub_800CEAC`/`sub_800CF70`) - closed under
+(`PlayerAnimWouldTouchCrate`'s own doc, `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit`) - closed under
 that subsystem's own issue #12/#13 tracking instead. No raw bytes
 remain anywhere in the original `0x0800B8DC`-`0x0800D040` span.
 ## `UpdateEnemyShooter`: the last raw function in `asm/code_3_2_17_bfa8.s`

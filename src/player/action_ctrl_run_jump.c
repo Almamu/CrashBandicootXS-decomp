@@ -222,11 +222,11 @@ void ActionCtrlStateJump(struct act *self)
             ACT_VCALL2(self, m50, self->part, 0x10);
             self->frame = busy;
             self->frames = frames;
-            self->unk_21 = busy;
+            self->tornadoVariant = busy;
             self->charge = busy;
-            self->unk_22 = busy;
-            self->unk_23 = busy;
-            self->unk_24[0] = busy;
+            self->tornadoTurn = busy;
+            self->tornadoFallQueued = busy;
+            self->tornadoUnwinding = busy;
             gPlayer->bounce = busy;
             return;
         }

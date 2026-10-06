@@ -951,7 +951,7 @@ into a much larger 18-field consecutive run
 (`gAirship`-`0300157C`); `PassJetpackRing` extends the
 `gUnknown_030014xx` family with a new `E4`-`FC` sub-cluster; `AimJetpackPlane`
 references a run of 5 unread sibling functions
-(`sub_802A504`/`51C`/`540`/`558`/`570`); `InitContinuePromptGraphics` is an asset/
+(`GetActorSpawnNextTarget`/`51C`/`540`/`558`/`570`); `InitContinuePromptGraphics` is an asset/
 screen refresh function touching known hot globals plus a new table
 cluster `gContinuePromptPalette0`/`532`/`552`/`572`.
 
@@ -967,12 +967,12 @@ from its own second parameter (`asm/code_3_2.s:73135`, inside
 same array) - pinning down the field's real record layout for the
 first time: `+0x0` a threshold word (`SelectActorCategory`'s selection
 loop reads this), `+0x8`/`+0x9`/`+0xa` three byte-sized variant values
-(`sub_802A570` mode-selects one via `gLevelState+0x8c` and
-`gUnknown_03001414`, another `SelectActorCategory`-set field, then
+(`GetActorSpawnKindIndex` mode-selects one via `gLevelState+0x8c` and
+`gActorSpawnUseBonus`, another `SelectActorCategory`-set field, then
 subtracts `0x20`), `+0xc`/`+0x10`/`+0x14` three Q8.8 fixed-point
-fields (`sub_802A558`/`540`/`51C`, each `<<8`; `+0x14`'s is further
+fields (`GetActorSpawnX`/`540`/`51C`, each `<<8`; `+0x14`'s is further
 offset by `*gActorSpawnOffset`), and `+0x18` a raw field
-(`sub_802A504`). Three Q8.8 fields plus a mode-selected variant byte
+(`GetActorSpawnNextTarget`). Three Q8.8 fields plus a mode-selected variant byte
 reads as a plausible spawn-offset vector (x/y/z) plus a type selector -
 consistent with the doc's original "threshold-triggered sub-effects/
 spawns" guess. **Resolved by a follow-up fork - no inconsistency
@@ -1283,7 +1283,7 @@ indexed into the documented stride-40 `gJetpackAnimTable` table
 (siblings `SpawnHovercraftSideGun`/`SpawnHovercraftLauncher` visible nearby, not read).
 **`UpdateHovercraft`** operates on this same `gHovercraft` singleton:
 advances animation, computes a projected/scaled position via
-**`sub_8029E34`** (the same screen-projection helper already seen in
+**`SetActorBgLayerDepth`** (the same screen-projection helper already seen in
 the boss cluster's `UpdateAirship`), and streams tile data via
 **`DrawHovercraftMap`** (a different tile-consumer than the boss's
 `DrawAirshipMap`) when the projected position changes. Reads as this
@@ -1374,9 +1374,9 @@ position committer (`UpdateYetiBg2`) using the documented screen-
 projection helpers. **`UpdatePolarCheckpointCrate`** (from the same round) is a
 two-stage proximity/AABB state machine whose first-stage helpers,
 **`SetActorCheckpoint`** and **`CreatePolarCheckpointText`**, were read in a follow-up:
-`SetActorCheckpoint` extends the actor-category active-count system
-(`gActorCategoryDeaths`, the counter `include/actor_anim.h`'s
-`category_descriptor.active_count_threshold` comment describes) and
+`SetActorCheckpoint` resets the actor category's death counters
+(`gActorCategoryDeaths`, which `include/actor_anim.h`'s
+`category_descriptor.maskAssistDeaths`/`bonusKindDeaths` are compared with) and
 also pokes the documented lap-counter function `SetCheckpointAtPlayer` - shared
 reset/teardown infrastructure, confirmed by a second, unrelated
 caller (`SetJetpackCheckpoint`), not specific to `UpdatePolarCheckpointCrate`'s object.
@@ -1850,7 +1850,7 @@ sites now confirming the same dereference shape.
 
 Two more cross-ties: **`UpdateActionCtrl`** (628 B) reads
 `gLevelLayers→+0x10→+0x14` (the documented lazy-singleton text
-box) for a pixel-position computation, and calls `sub_8012238` - the
+box) for a pixel-position computation, and calls `UpdateActionCtrlSkidAnim` - the
 same function tied to `overlay_ui`'s `ApplyActionCtrlMotion`/`ActionCtrlSetTargetAnim`
 callers - a new concrete `game_loop`<->`overlay_ui` call-graph link.
 **`UpdateDingodileProjectile`** (732 B) draws a two-part text label plus a
@@ -1864,7 +1864,7 @@ member of the BLX-trampoline family (`_call_via_r0`-`94`), so this call
 proves only "makes one indirect call," not real work there.
 **`StartPlayerCtrlStroke`** (628 B) and **`PlayerCtrlStateTurn`** (616 B) extend the
 directional-table/timed-state-machine shapes already found in this
-zone and in `actor` (`gStaticData_0816C090`, `gPlayerCtrlModeAnimRows` -
+zone and in `actor` (`gPlayerCtrlTurnSpeeds`, `gPlayerCtrlModeAnimRows` -
 two more unlabeled tables in the same family as `gPlatformMoverMotionRecords`).
 None of the eight showed vtable-dispatch patterns in this pass (spot
 pattern, not exhaustively re-checked against `baserom.gba`).
@@ -2160,7 +2160,7 @@ family (the latter with a new near-header offset, `+0x30`).
 **`UpdateDingodileShark`** is a 6th+ confirmed site of the directional-target
 field convention, sourcing from a new table `gDingodileMotionRecords`.
 **`UpdateEnemyShooter`** is a further instance of the `self+0x68`/`0x74`
-generic state-machine selector pattern. **`sub_800CF70`**, sitting
+generic state-machine selector pattern. **`ResolveStackCrateHit`**, sitting
 144 bytes before the physics/collision subsystem's stated
 `0x0800D000` start, calls the same linked-list walkers that subsystem
 uses and reaches the same 28-byte-record chain - functionally part of
@@ -3555,7 +3555,7 @@ dedicated look if anyone continues this specific thread.
 
 A fork checked whether the recurring `gStaticData_0816Cxxx` symbols
 found across this session's actor/game_loop reads
-(`gStaticData_0816C090`, `0816C070`, `0816C250`, `0816C308`/`35F`/
+(`gPlayerCtrlTurnSpeeds`, `0816C070`, `0816C250`, `0816C308`/`35F`/
 `5F0`, `0816C460`, `0816C86C`, ...) are scattered tables or one region.
 **They're one fully contiguous, byte-precise-labeled ROM span** -
 `data/data.s` already splits the entire range from the 42-slot action
@@ -3845,7 +3845,7 @@ layout `docs/audio.md` already documents) and sets a per-channel mute
 byte (`handler+0x24 = 1`), with a special-case for parameter `-1`
 suggesting "stop all channels" versus "stop one specific channel."
 Six callers total, spanning *both* the `overlay_ui` region
-(`sub_8012238`/`ApplyActionCtrlMotion`/`ActionCtrlSetTargetAnim`) and the `game_loop` region
+(`UpdateActionCtrlSkidAnim`/`ApplyActionCtrlMotion`/`ActionCtrlSetTargetAnim`) and the `game_loop` region
 (`PlayIntroCutscene`/`RunSlideshow`/`EndSlide`) - narrower than `PlaySfx`
 (a true hub), but still cross-cutting, used whenever some unrelated
 subsystem needs to "stop this sound if it's currently playing." Fits
@@ -4060,17 +4060,17 @@ register-write helper) is functionally accurate as described, but
 mechanically it's a raw BIOS `CpuSet` SWI wrapper, not a hand-written
 helper.
 
-## Follow-up: `sub_800CF70`'s partial note confirmed, `sub_800CEAC` found and both closed
+## Follow-up: `ResolveStackCrateHit`'s partial note confirmed, `PlayerHitboxOverlapsAt` found and both closed
 
 A dedicated deep-investigation pass (`docs/matching/archive/issue-9-10-0x0800ceac-graphics.md`)
-read the real disassembly for the `sub_800CF70` note above (line ~2137)
+read the real disassembly for the `ResolveStackCrateHit` note above (line ~2137)
 and its immediately-preceding, previously entirely-unremarked sibling
-`sub_800CEAC`. The existing note is confirmed correct and sharpened:
-`sub_800CF70` isn't just "functionally part of" the physics/collision
+`PlayerHitboxOverlapsAt`. The existing note is confirmed correct and sharpened:
+`ResolveStackCrateHit` isn't just "functionally part of" the physics/collision
 subsystem in a loose sense - its entire body is one AABB-build-and-
 overlap-test cycle using that subsystem's own `+0x20`-table convention
 and `self+0x4d&0x7f==1` exclusion gate, operating on the `GetCrateBelow`
-("get prev") neighbor. `sub_800CEAC` turned out to be a related but
+("get prev") neighbor. `PlayerHitboxOverlapsAt` turned out to be a related but
 distinct hybrid-AABB overlap test (player's hitbox quad positioned at
 `self`'s location, optionally widened via an unconfirmed player state
 byte `gPlayer+0x90`). Both are called only from
@@ -4106,7 +4106,7 @@ Both `ProbeGroundSpriteTerrain` and its sibling `ProbeGroundSpriteFloor` (a sing
 via a full clean `make compare`) - the same `r7`/`r8`/`sb` cross-block
 register-reuse resistance already established four times over in this
 immediate ROM neighborhood (`ProbeHitboxEdgeTerrain`, `PlayerAnimWouldTouchCrate`,
-`sub_800CEAC`, `sub_800CF70`), confirmed directly rather than assumed
+`PlayerHitboxOverlapsAt`, `ResolveStackCrateHit`), confirmed directly rather than assumed
 via one isolated-compile attempt. `CollideGroundSprite`, the two functions'
 only caller, stays raw - its own gate logic depends on the also-still-
 raw `ProbeHitboxEdgeTerrain`.

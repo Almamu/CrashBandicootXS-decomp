@@ -225,8 +225,8 @@ void UpdateExtraLife(struct orbit_part *self)
             PlaySfx(gAudioContext, 0xe, 0x100);
             AddLife(gLevelState);
             self->base.flags |= 1;
-            if (self->base.field_08 != 0xffff)
-                SET_ID_BIT(self->base.field_08, state);
+            if (self->base.id != 0xffff)
+                SET_ID_BIT(self->base.id, state);
         }
     } else if (state == 2) {
         s32 fire;
@@ -266,8 +266,8 @@ void UpdateExtraLife(struct orbit_part *self)
         }
         if (fire) {
             self->base.flags |= 1;
-            if (self->base.field_08 != 0xffff)
-                SET_ID_BIT(self->base.field_08, 1);
+            if (self->base.id != 0xffff)
+                SET_ID_BIT(self->base.id, 1);
         }
     } else {
         if (self->mode == 0)
@@ -319,7 +319,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
     self->base.table = (void *)gExtraLifeVtable;
     ResetExtraLifePickup(self);
     zero = 0;
-    self->base.field_08 = id;
+    self->base.id = id;
     self->base.x = x << 8;
     self->base.y = y << 8;
     self->anchor = ORBIT_POS(self);

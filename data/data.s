@@ -64,7 +64,7 @@ gSfxTable:
 
 @ gActionCtrlStateTable..gPlayerCtrlModeAnimRows: src/data/action_table_16bf20.c
 
-@ gStaticData_0816C090..gPlayerCtrlModeLevelAnims: src/data/speed_table_16c090.c
+@ gPlayerCtrlTurnSpeeds..gPlayerCtrlModeLevelAnims: src/data/speed_table_16c090.c
 
 @ gPlayerCtrlStateFuncs..gMegaMixMotionSet: src/data/player_pmf_16c250.c
 

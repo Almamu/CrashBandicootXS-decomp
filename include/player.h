@@ -33,8 +33,9 @@ struct input_ctrl;
 struct pctrl_motion_queue;
 struct player_ctrl;
 
-/* The swim stroke's speed per step, copied to the stack in one go by
- * StartPlayerCtrlStroke (gStaticData_0816C090). */
+/* The swim controller's turn: speedX at each frame of the turn animation
+ * (state 4), copied to the stack in one go by StartPlayerCtrlStroke
+ * (gPlayerCtrlTurnSpeeds). */
 struct speed_table {
     s32 v[8];
 };
@@ -66,7 +67,7 @@ struct act_anim_record {
 struct act_anim_bank {
     struct act_anim_record *records;
     u8 unk_04[6];
-    u16 unk_0A; // 0x0A
+    u16 animCount; // 0x0A - struct sprite_bank.animCount
 };
 
 /* A Q8 position (struct player.maskTrail). */
@@ -155,7 +156,7 @@ struct player {
     u8 flags2;                // 0x0D
     u8 unk_0E[0xA];
     const struct player_vtable *vtable; // 0x18 - gPlayerVtable
-    void *platform;                     // 0x1C - struct gobj.lastHitbox
+    void *lastHitbox;                   // 0x1C - struct gobj.lastHitbox
     // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
     struct act_anim_bank *anim;
     // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
@@ -201,14 +202,15 @@ struct player {
                   //        controller's bumpTimer runs out or its mode changes.
                   //        While set, crate_hit.c widens the player's box by 2 px
                   //        on each side
-    u8 countdown; // 0x91 - crate_break.c sets it while a crate handles the player
-    u8 bounce;    // 0x92 - a counter (sub_800B5C4/sub_800B5CC/sub_800B5D8; crate_break.c's
-                  //        name): crate_break.c tests and steps it on a bounce,
-                  //        ResolvePlayerCollisions steps it, the action controller clears it
+    u8 countdown; // 0x91 - crate-break limiter: BreakCrateInStack arms it (2) and skips the
+                  //        break while it runs; UpdatePlayer counts it down
+    u8 bounce;    // 0x92 - a counter (crate_break.c's name): crate_break.c tests and
+                  //        steps it on a bounce, ResolvePlayerCollisions steps it, the action
+                  //        controller clears it
     u8 unk_93;
     u8 listCount; // 0x94 - entries in `list`
     u8 unk_95[3];
-    struct crate *list[5];          // 0x98 - the recently touched crates (sub_800B678)
+    struct crate *list[5];          // 0x98 - the recently touched crates
     struct gobj *carried;           // 0xAC - the platform or crate the player stands on
     struct box_part *child;         // 0xB0 - a sprite object InitPlayer creates (sprite bank 0xCC),
                                     //        drawn with the player (DrawPlayer)
@@ -229,7 +231,7 @@ struct player {
     u8 unk_106[2];
     // 0x108 - the embedded collision queue (objects.h;
     //         ResetCollisionQueue/DestroyCollisionQueue; GetPlayerCollisionQueue
-    //         returns its address). Its `unk_04` (0x10C) is the "position
+    //         returns its address). Its `posCommitted` (0x10C) is the "position
     //         committed" byte
     struct collision_queue collisionQueue;
 };
@@ -322,7 +324,7 @@ extern const s32 gActionCtrlStateAttackKinds[42];
  * stroke speeds. */
 extern const struct level_anim gPlayerCtrlModeLevelAnims[8][13];
 extern const struct level_anim *const gPlayerCtrlModeAnimRows[8];
-extern const struct speed_table gStaticData_0816C090;
+extern const struct speed_table gPlayerCtrlTurnSpeeds;
 
 /* Aku Aku's orbit frame counters (DrawPlayer, src/iwram/iwram_data.c). */
 extern s32 gAkuAkuInvincibleFrame;
@@ -347,10 +349,10 @@ extern void *gPlayerCtrl;
 extern void ResetActionCtrl(struct act *self);
 
 /* src/player/action_ctrl.c */
-extern void nullsub_17(void);
+extern void ActionCtrlStateNop6(void);
 extern void ActionCtrlStateTurboRun(struct act *self);
-extern void nullsub_18(void);
-extern void sub_8015774(struct act *self);
+extern void ActionCtrlStateNop2(void);
+extern void ActionCtrlStateUnusedIdle(struct act *self);
 extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 ActionCtrlSetTargetAnim(struct act *self, struct player *part, s32 mode);
 extern void RestartActionCtrl(struct act *self);
@@ -369,7 +371,7 @@ extern void QueueActionCtrlMotionYKeepSpeed(struct act *self, s32 val);
 extern void QueueActionCtrlMotionXKeepSpeed(struct act *self, s32 val);
 extern void QueueActionCtrlMotionY(struct act *self, s32 val);
 extern void QueueActionCtrlMotionX(struct act *self, s32 val);
-extern u8 sub_8015950(struct act *self);
+extern u8 GetActionCtrlPrevState(struct act *self);
 extern void ResetPlayerCtrl(struct player_ctrl *self);
 extern void RestartPlayerCtrl(struct player_ctrl *self);
 
@@ -381,7 +383,7 @@ extern void ActionCtrlStateLeftGround(struct act *self);
 extern void ActionCtrlStateDying(struct act *self);
 extern void ActionCtrlStateWarpIn(struct act *self);
 extern void ActionCtrlStateHang(struct act *self);
-extern void sub_8014AEC(struct act *self);
+extern void ActionCtrlStateUnusedHang(struct act *self);
 extern void ActionCtrlReleaseHang(struct act *self);
 extern void ActionCtrlStateHangMoveStart(struct act *self);
 extern void ActionCtrlStateHangMove(struct act *self);
@@ -402,7 +404,7 @@ extern void ActionCtrlStateLand(struct act *self);
 extern u8 CheckActionCtrlLeftGround(struct act *self);
 
 /* src/player/action_ctrl_moves.c */
-extern void sub_80151C8(struct act *self);
+extern void StartActionCtrlTornadoFall(struct act *self);
 extern void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags);
 extern void SteerActionCtrlSpin(struct act *self, u8 mode);
 extern void SetActionCtrlMode(struct act *self, s32 arg1);
@@ -412,8 +414,8 @@ extern void StartActionCtrlRun(struct act *self);
 extern void StartActionCtrlHighJump(struct act *self);
 extern void sub_8015558(struct act *self);
 extern void AttachActionCtrl(struct act *self, struct player *player);
-extern void sub_80155AC(struct act *self);
-extern void sub_80155B8(struct act *self);
+extern void ActionCtrlStateUnusedHangRelease(struct act *self);
+extern void ActionCtrlStateUnusedHangGrab(struct act *self);
 extern void ActionCtrlStateHangSpin(struct act *self);
 extern void ActionCtrlStateHangGrab(struct act *self);
 extern void ActionCtrlStateWarpOut(struct act *self);
@@ -483,7 +485,7 @@ extern void *GetCtrlTarget(struct boss_ctrl *self);
 
 /* src/player/kill_player.c */
 extern void KillPlayer(struct act *self, s32 id);
-extern void sub_8012238(struct act *self);
+extern void UpdateActionCtrlSkidAnim(struct act *self);
 extern s32 UpdatePlayerFacing(struct act *self);
 
 /* src/player/player_anim_room.c */
@@ -504,10 +506,10 @@ extern void SetPlayerDead(struct player *self);
 extern u8 IsPlayerDead(struct player *self);
 extern void StartPlayerRampX(struct player *self, s32 a, s32 b, s32 c);
 extern void SetPlayerRampX(struct player *self, s32 a, s32 b, s32 c);
-extern void sub_800B4F8(struct player *self);
-extern void sub_800B508(struct player *self);
-extern void sub_800B510(struct player *self);
-extern u8 sub_800B51C(struct player *self);
+extern void DecrementPlayerCountdown(struct player *self);
+extern void ClearPlayerCountdown(struct player *self);
+extern void IncrementPlayerCountdown(struct player *self);
+extern u8 GetPlayerCountdown(struct player *self);
 extern u8 IsPlayerInvulnerable(struct player *self);
 extern void ClearPlayerInvulnerability(struct player *self);
 extern void SetPlayerInvulnerable(struct player *self, s32 arg1);
@@ -517,15 +519,15 @@ extern s32 GetPlayerStandingOn(struct player *self);
 extern void SetPlayerStandingOn(struct player *self, s32 arg1);
 extern void SetPlayerBusy(struct player *self, u8 arg1);
 extern u8 IsPlayerBusy(struct player *self);
-extern void sub_800B584(struct player *self);
-extern void sub_800B58C(struct player *self);
-extern u8 sub_800B5A0(struct player *self);
-extern void sub_800B5A8(struct player *self);
-extern void sub_800B5B0(struct player *self);
-extern u8 sub_800B5BC(struct player *self);
-extern void sub_800B5C4(struct player *self);
-extern void sub_800B5CC(struct player *self);
-extern u8 sub_800B5D8(struct player *self);
+extern void ClearPlayerListCount(struct player *self);
+extern void IncrementPlayerListCount(struct player *self);
+extern u8 GetPlayerListCount(struct player *self);
+extern void ClearPlayerListCountAlt(struct player *self);
+extern void IncrementPlayerListCountAlt(struct player *self);
+extern u8 GetPlayerListCountAlt(struct player *self);
+extern void ClearPlayerBounce(struct player *self);
+extern void IncrementPlayerBounce(struct player *self);
+extern u8 GetPlayerBounce(struct player *self);
 extern void SetPlayerBumped(struct player *self, u8 arg1);
 extern u8 IsPlayerBumped(struct player *self);
 extern u8 GetPlayerPushRight(struct player *self);
@@ -536,8 +538,8 @@ extern u8 IsPlayerHanging(struct player *self);
 extern void SetPlayerHanging(struct player *self, u8 arg1);
 extern u8 IsPlayerSlippery(struct player *self);
 extern void SetPlayerSlippery(struct player *self, u8 arg1);
-extern s32 sub_800B650(struct player *self, s32 idx);
-extern void sub_800B678(struct player *self, s32 val);
+extern s32 GetPlayerListEntry(struct player *self, s32 idx);
+extern void StorePlayerListEntry(struct player *self, s32 val);
 extern void SetCtrlMode(void *self, s32 val);
 extern void SetCtrlAnimSet(void *self, s32 val);
 extern void SetCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
@@ -578,7 +580,7 @@ extern void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct playe
 extern void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct player *target, s32 idx);
 extern void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
 extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
-extern s32 sub_8017330(s32 v);
+extern s32 GetPlayerSwimDriftStep(s32 v);
 extern void ApplyPlayerCtrlTilt(struct player_ctrl *self);
 extern void StartPlayerCtrlSwim(struct player_ctrl *self);
 extern void DestroyPlayerCtrl(struct player_ctrl *self, s32 flags);

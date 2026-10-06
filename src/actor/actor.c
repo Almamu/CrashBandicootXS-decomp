@@ -38,7 +38,7 @@
  * table's slot-3 trampoline instead of animating), a one-shot byte flag
  * at `self+0x2c`, and a 12-byte little vector block at `self+0x38`
  * (copied from `part+0x14..0x20`) whose first three `s16` slots are a
- * position `DrawActor`'s sibling `sub_802AA0C` integrates
+ * position `DrawActor`'s sibling `GetActorWorldBox` offsets by
  * a per-axis velocity into. The object is `struct actor_self`
  * (actor_self.h: `x`/`y`/`z` are the cached `b`/`c`/`d`, `depth` and
  * `sortKey` the threshold pair) and the constructor's `part` a `struct
@@ -152,7 +152,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
 
         self->sortKey = value;
 
-        if (self->depth > sub_8029E40()) {
+        if (self->depth > GetActorBgLayerDepth()) {
             self->sortKey |= 0x8000;
         }
     }
@@ -214,7 +214,7 @@ void UpdateActor(void *selfArg)
 
         self->sortKey = value;
 
-        if (self->depth > sub_8029E40()) {
+        if (self->depth > GetActorBgLayerDepth()) {
             self->sortKey |= 0x8000;
         }
     }
@@ -265,7 +265,7 @@ asm(".align 2, 0");
 
 /* Computes an OBJ scale factor from `self->depth` and its animation
  * record's `baseDepth` (via `__divsi3`), then a second
- * scale from `gUnknown_030013C8` (via the same helper) used to project
+ * scale from `gActorFocalLength` (via the same helper) used to project
  * `self`'s x/y position through `GetActorBgCenterY`/`GetActorBgCenterX`'s
  * screen-space offsets into on-screen X/Y. Fetches the current anim
  * frame (`GetAnimFrameData`), centers it (frame's own width/height
@@ -304,7 +304,7 @@ void DrawActor(void *selfArg)
     s32 delta1;
 
     scale = __divsi3(dist << 8, ACTOR_RECORD(self)->baseDepth);
-    scaleY = __divsi3(gUnknown_030013C8 << 0xc, dist);
+    scaleY = __divsi3(gActorFocalLength << 0xc, dist);
 
     {
         s32 off = GetActorBgCenterY();
@@ -464,7 +464,7 @@ void UpdateActorDepth(struct actor_self *self)
 
     self->sortKey = value;
 
-    if (self->depth > sub_8029E40()) {
+    if (self->depth > GetActorBgLayerDepth()) {
         self->sortKey |= 0x8000;
     }
 }
@@ -527,11 +527,12 @@ asm(".align 2, 0");
  * comment and
  * docs/matching/archive/issue-50-actor-2a69c.md. */
 
-/* A 12-byte little vector block: copies `self+0x38..0x44` into `*out`,
- * integrating a per-axis velocity (`self+0x1c`/`0x20`/`0x24`, each
- * `>>8`'d to a whole-unit delta) into the block's first three `s16`
- * slots along the way; the remaining three `s16` slots pass through
- * unchanged. See docs/matching/archive/issue-50-actor-2a69c.md for the small
+/* The actor's collision box in world space: copies `box` (`self+0x38`,
+ * the record's box InitActorPart copied) into `*out`, adding the actor's
+ * position (`x`/`y`/`z`, `self+0x1c`/`0x20`/`0x24`, each `>>8`'d to whole
+ * units) to its first three `s16` slots (the corner); the size slots pass
+ * through unchanged. UNUSED - no caller anywhere in the ROM (no `bl` in
+ * src/, no Thumb pointer to it in baserom.gba). See docs/matching/archive/issue-50-actor-2a69c.md for the small
  * inline-asm islands this needed (the compiler's own list scheduler
  * reorders the three per-axis load/shift pairs and the RMW halfword
  * updates' register reuse differently from the ROM's literal order no
@@ -545,7 +546,7 @@ asm(".align 2, 0");
  * for `GetCompletionPercent`/`DrawWrappedTextInBox` in docs/matching.md. No caller of
  * this function has been matched yet to say whether the return value is
  * actually used. */
-void *sub_802AA0C(void *outArg, void *selfArg)
+void *GetActorWorldBox(void *outArg, void *selfArg)
 {
     struct blob0xc {
         u32 w0, w1, w2;
@@ -639,7 +640,7 @@ asm(".align 2, 0");
 
 /* Same "self" object family as above - see this file's header
  * comment and docs/matching/archive/issue-50-actor-2a69c.md. (This was a
- * separate file while `sub_802AA0C`, above, was still raw.) */
+ * separate file while `GetActorWorldBox`, above, was still raw.) */
 
 /* Trivial getter: `self+0x2c` (the constructor's one-shot byte flag). */
 u8 IsActorVisible(void *selfArg)

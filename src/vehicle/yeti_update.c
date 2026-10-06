@@ -117,7 +117,7 @@ void UpdateYeti(void)
             gYetiBg2Page);
         gYetiBg2PageFlip = 1;
     }
-    sub_8029E34(gYetiDistance);
+    SetActorBgLayerDepth(gYetiDistance);
     UpdateYetiPalette();
     f.a = gYetiCatchBox;
     BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);

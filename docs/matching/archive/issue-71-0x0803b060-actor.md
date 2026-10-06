@@ -28,7 +28,7 @@ All in `src/actor/actor_anim.c`, in ROM order:
 - **20 byte-identical "kind" teardown handlers** (`DestroyRiderlessPolar`,
   `DestroyPolarCheckpointText`, `DestroyPolarWumpa`, `DestroyPolarTimeCrate`, `DestroyPolarQuestionCrate`,
   `DestroyPolarAkuAkuCrate`, `DestroyPolarNitroCrate`, `DestroyPolarLifeCrate`, `sub_803B25C`,
-  `DestroyPolarBasicCrate`, `DestroyPolarCrate`, `DestroyPolarElectricFence`, `sub_803B30C`,
+  `DestroyPolarBasicCrate`, `DestroyPolarCrate`, `DestroyPolarElectricFence`, `DestroyPolarObstacle`,
   `DestroyPolarLauncher`, `DestroyPolarPenguin`, `DestroyPolarIcicle`, `DestroyPolarAkuAku`,
   `DestroyPolarGoal`, `DestroyPolarBoostPad`, `DestroyPolarCheckpointCrate`) - every one of these
   compiles to byte-identical bytes in the ROM (confirmed: each

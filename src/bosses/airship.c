@@ -208,7 +208,7 @@ void CreateAirship(s32 level)
  * argument) and copies several of its fields into
  * `gAirshipFireTimer`/`gAirshipHp`, resets the DMA-refresh/
  * palette-strip counters, recomputes the BG2 zoom scale/offset via
- * `GetCellAnimDistance`/`__divsi3`/`sub_8029E34`, blits the tracker's
+ * `GetCellAnimDistance`/`__divsi3`/`SetActorBgLayerDepth`, blits the tracker's
  * current keyframe-table box via `DrawAirshipMap`, sets DISPCNT's bit10,
  * recomputes the BG2 affine matrix (`UpdateAirshipBg2`), and finally queues
  * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
@@ -244,7 +244,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     scale = __divsi3(0x1C00000, gAirshipDistance);
     gAirshipScreenX = (gAirshipX * scale) >> 12;
     gAirshipScreenY = (scale * gAirshipY) >> 12;
-    sub_8029E34(gAirshipDistance);
+    SetActorBgLayerDepth(gAirshipDistance);
     self = gAirship;
     {
         s32 t = self->animTime >> 8;
@@ -271,7 +271,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
  * accumulator against the *next* entry's own delta and sets the "loop"
  * flag (`+0x12`). Always recomputes the BG2 zoom scale/offset the same
  * way `SpawnAirship` (above) does (`GetCellAnimDistance`/
- * `__divsi3`/`sub_8029E34`), and - only when the tracker's
+ * `__divsi3`/`SetActorBgLayerDepth`), and - only when the tracker's
  * accumulator (`+8`, `>>8`) actually crossed to a new keyframe-table
  * index this frame - re-blits its box via `DrawAirshipMap` and re-arms
  * the "apply now" latch (`gAirshipBg2PageFlip`).
@@ -308,7 +308,7 @@ void UpdateAirship(void)
         scale = __divsi3(0x1C00000, gAirshipDistance);
         gAirshipScreenX = (gAirshipX * scale) >> 12;
         gAirshipScreenY = (scale * gAirshipY) >> 12;
-        sub_8029E34(gAirshipDistance);
+        SetActorBgLayerDepth(gAirshipDistance);
         {
             struct actor_self *cur = gAirship;
             s32 t = cur->animTime >> 8;

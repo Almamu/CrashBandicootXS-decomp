@@ -136,14 +136,16 @@ void KillPlayer(struct act *self, s32 id)
     }
 }
 
-/* If the player (`gPlayer`) is on slippery ground (`slippery`, +0x100):
+/* UpdateActionCtrl calls this when the player's `slippery` flag changes.
+ * If the player (`gPlayer`) is now on slippery ground (`slippery`, +0x100):
  * on tag `0x12` (only if `unk_60` is nonzero) or tag `0xd`/`0x18`,
  * re-tags the player as `0x25` (type `0x12`) or `0x26` (the other two,
  * re-reading the global fresh first) and fires the standard
  * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)` teardown trio.
- * Otherwise (flag clear), on player type `0x25`/`0x26`, plays a sound
- * and resets the state/flag/table-index trio via `SetActionCtrlModeAnim`. */
-void sub_8012238(struct act *selfArg)
+ * (0x25/0x26 are the skid anims, ActionCtrlSetTargetAnim's replacements).
+ * Otherwise (flag clear), on player type `0x25`/`0x26`, stops the skid
+ * sound (0x36) and goes back to the idle anim via `SetActionCtrlModeAnim`. */
+void UpdateActionCtrlSkidAnim(struct act *selfArg)
 {
     /* The copy emits nothing, but without it the `.s` label numbers of
      * UpdatePlayerFacing shift by one. */

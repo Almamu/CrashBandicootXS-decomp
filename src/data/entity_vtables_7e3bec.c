@@ -814,7 +814,7 @@ const struct vtable_slot gFontVtable[9] = {
  * Used by language_select.c (DestroyLogoActor), actor_anim.c (DestroyRiderlessPolar,
  * DestroyPolarCheckpointText, DestroyPolarWumpa, DestroyPolarTimeCrate, DestroyPolarQuestionCrate, DestroyPolarAkuAkuCrate,
  * DestroyPolarNitroCrate, DestroyPolarLifeCrate, sub_803B25C, DestroyPolarBasicCrate, DestroyPolarCrate,
- * DestroyPolarElectricFence, sub_803B30C, DestroyPolarLauncher, DestroyPolarPenguin, DestroyPolarIcicle,
+ * DestroyPolarElectricFence, DestroyPolarObstacle, DestroyPolarLauncher, DestroyPolarPenguin, DestroyPolarIcicle,
  * DestroyPolarAkuAku, DestroyPolarGoal, DestroyPolarBoostPad, DestroyPolarCheckpointCrate, DestroyJetpackCheckpointText,
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
@@ -944,7 +944,7 @@ const struct vtable_slot gPolarElectricFenceVtable[4] = {
 /* Used by polar_objects.c. */
 const struct vtable_slot gPolarObstacleVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B30C),
+    VTABLE_SLOT(DestroyPolarObstacle),
     VTABLE_SLOT(UpdatePolarObstacle),
     VTABLE_SLOT(DrawActor),
 };

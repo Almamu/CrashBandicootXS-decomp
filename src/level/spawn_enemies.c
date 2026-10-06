@@ -455,7 +455,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    part->base.field_0A = 6;
+    part->base.kind = 6;
     SetEnemyState(hdr, 2);
     SetEnemyRangeX(hdr, rec2->unk_04);
 }
@@ -487,7 +487,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetPartAnim(part, 2);
-    part->base.field_0A = 5;
+    part->base.kind = 5;
     SetEnemyAnimMap(hdr, gPufferfishAnimMap);
     SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
     SetEnemyWave(hdr, rec2->unk_14, rec2->unk_18, rec2->unk_10);
@@ -519,7 +519,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    part->base.field_0A = 6;
+    part->base.kind = 6;
     SetEnemyAnimMap(hdr, gSharkAnimMap);
     SetEnemyState(hdr, 15);
     SetEnemyRangeX(hdr, rec2->unk_04);
@@ -554,7 +554,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         s32 f = part->flipX;
         SetPartFlipX(part, !f);
     }
-    part->base.field_0A = 6;
+    part->base.kind = 6;
     SetEnemyState(hdr, 1);
 }
 
@@ -584,7 +584,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    part->base.field_0A = 3;
+    part->base.kind = 3;
     SetEnemyAnimMap(hdr, gElectricEelAnimMap);
     SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
     SetEnemyRangeX(hdr, rec2->unk_04);
@@ -1040,7 +1040,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
-    part->base.field_0A = 7;
+    part->base.kind = 7;
     hdr->anims = gPatrollingSewerEnemyAnimMap;
     SetEnemyState(hdr, 8);
 }
@@ -1071,7 +1071,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    part->base.field_0A = 4;
+    part->base.kind = 4;
     SetEnemyState(hdr, 0xb);
     SetEnemyRangeXSpeed(hdr, rec2->unk_10, rec2->unk_14, rec2->unk_18);
     SetEnemyRangeYSpeed(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
@@ -1104,7 +1104,7 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    part->base.field_0A = 0xa;
+    part->base.kind = 0xa;
     AndPartFlags(part, ~0x40);
     hdr->anims = gCrusherAnimMap;
     SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);

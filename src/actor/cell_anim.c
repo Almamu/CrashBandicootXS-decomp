@@ -21,22 +21,22 @@ void SetActorCheckpoint(s32 arg0)
 {
     gActorCheckpoint = arg0 - GetActorSpawnOffset();
     gActorCategoryDeaths = 0;
-    gUnknown_03001388 = 0;
+    gActorCategoryBossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);
     gActorCheckpointMissedNitros = gActorMissedNitros;
     SaveActorPaletteCycle();
 }
 
 /* True once the running active-instance count reaches the current
- * category's `unknown_20` threshold. The cast to `s32` matches the
- * ROM's own signed comparison (`blt`) - `unknown_20` is declared `u32`
+ * category's `maskAssistDeaths` threshold. The cast to `s32` matches the
+ * ROM's own signed comparison (`blt`) - `maskAssistDeaths` is declared `u32`
  * in actor_anim.h (its sign isn't otherwise pinned down), and the
  * unsigned usual-arithmetic-conversion comparison that produces
  * compiles to the unsigned `bcc` instead (see docs/workflow.md
  * step 3). */
 s32 IsActorMaskAssistDue(void)
 {
-    return gActorCategoryDeaths >= (s32)gActorCategories[gActorCategory].unknown_20;
+    return gActorCategoryDeaths >= (s32)gActorCategories[gActorCategory].maskAssistDeaths;
 }
 
 /* Kicks off a DMA copy of `gCellAnimTileBytes` bytes from the current
@@ -115,9 +115,9 @@ void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
     ResetCellAnimBg();
     gCellAnimSpeed = 0;
     if (gCellAnimHasBanks == 0)
-        gCellAnimDistance = (arg3 - gUnknown_030013C8) >> 8;
+        gCellAnimDistance = (arg3 - gActorFocalLength) >> 8;
     else
-        gCellAnimDistance = (arg3 + gUnknown_030013C8) >> 8;
+        gCellAnimDistance = (arg3 + gActorFocalLength) >> 8;
     gCellAnimFrameStep = 0;
 }
 
@@ -178,11 +178,10 @@ void ResetCellAnimBg(void)
     UploadCellAnimFrame();
 }
 
-/* Genuine no-op stub - part of this file's small tilemap/scroll-effect
- * accessor cluster (see actor_category_stats.c, the functions below and
- * actor_bg.c), left as-is per
- * docs/naming.md's `nullsub_N` convention. */
-void nullsub_5(void)
+/* Empty hook InitActorCategory calls at the end of each attempt (after
+ * DestroyAllActors), named after that call site. ActorCategoryEndStub
+ * (actor_bg.c) is its counterpart at the end of the whole category. */
+void ActorCategoryAttemptEndStub(void)
 {
 }
 
@@ -355,22 +354,22 @@ void InitActorBgScroll(s32 arg0)
     if (arg0 == 0) {
         gActorNearClipDepth = 0x88 << 5;
         gActorFarClipDepth = 0xa0 << 8;
-        gUnknown_030013C8 = 0xbc << 6;
+        gActorFocalLength = 0xbc << 6;
         gActorBgWidth = 0x98 << 9;
         gActorBgHeight = 0xd0 << 8;
         gActorBgScrollEaseShift = 2;
-        gUnknown_030013E4 = 0x64;
-        gUnknown_030013E8 = 0x51;
+        gActorBgScrollRangeX = 0x64;
+        gActorBgScrollRangeY = 0x51;
         gActorBg0VOffset = arg0;
     } else {
         gActorNearClipDepth = 0xd0 << 5;
         gActorFarClipDepth = 0xaa << 8;
-        gUnknown_030013C8 = 0xe0 << 5;
+        gActorFocalLength = 0xe0 << 5;
         gActorBgWidth = 0x98 << 9;
         gActorBgHeight = 0xce << 8;
         gActorBgScrollEaseShift = 3;
-        gUnknown_030013E4 = 3 + 0xfd;
-        gUnknown_030013E8 = 0x96;
+        gActorBgScrollRangeX = 3 + 0xfd;
+        gActorBgScrollRangeY = 0x96;
         gActorBg0VOffset = 2;
     }
 
@@ -411,7 +410,7 @@ void InitActorBgScroll(s32 arg0)
     REG_BG1VOFS = 0;
 
     gActorBgShake = 0;
-    gUnknown_030013D8 = gActorFarClipDepth;
+    gActorBgLayerDepth = gActorFarClipDepth;
 }
 
 /* Eases the BG0/BG1 scroll accumulators (gActorBgScrollX/gActorBgScrollY)
@@ -426,7 +425,7 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     s32 shift;
 
     target = gActorBgScrollMaxX;
-    delta = __divsi3(arg0 * (target >> 8), gUnknown_030013E4);
+    delta = __divsi3(arg0 * (target >> 8), gActorBgScrollRangeX);
     delta += target / 2;
     cur = gActorBgScrollX;
     delta -= cur;
@@ -447,7 +446,7 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     gActorBgScrollX = cur;
 
     target = gActorBgScrollMaxY;
-    delta = __divsi3(arg1 * (target >> 8), gUnknown_030013E8);
+    delta = __divsi3(arg1 * (target >> 8), gActorBgScrollRangeY);
     delta += target / 2;
     cur = gActorBgScrollY;
     delta -= cur;

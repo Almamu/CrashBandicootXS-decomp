@@ -169,8 +169,8 @@ typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
     if (1)                                                                     \
     {                                                                          \
         (self)->base.flags |= (one);                                           \
-        if ((self)->base.field_08 != 0xffff) {                                 \
-            ORBIT_SET_ID_BIT((self)->base.field_08, 1);                        \
+        if ((self)->base.id != 0xffff) {                                 \
+            ORBIT_SET_ID_BIT((self)->base.id, 1);                        \
         }                                                                      \
     } else (void)0
 
@@ -351,7 +351,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     InitSpriteObj(&self->base);
     self->base.table = (void *)gWumpaVtable;
     ResetWumpaPickup(self);
-    self->base.field_08 = id;
+    self->base.id = id;
     self->base.x = x << 8;
     self->base.y = y << 8;
     self->anchor = ORBIT_POS(self);

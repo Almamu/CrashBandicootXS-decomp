@@ -20,7 +20,7 @@
 /* The sprite part CreateMovingSprite returns. Same layout as cortex.c's
  * `struct gfx_part`. The +0x28 bits are declared on a 32-bit base type:
  * with `u8` bitfields the shared `1` constant is a QImode pseudo that CSE
- * merges with `field_0A = 1`, and the allocator no longer matches. */
+ * merges with `kind = 1`, and the allocator no longer matches. */
 struct popup_part {
     struct actor base; // 0x00
     u8 unk_1C[4];
@@ -71,7 +71,7 @@ extern s32 _call_via_r2(void *self, void *arg, void *fn);
  * helper's parameter; written in place, the order flips. */
 static inline void SetPartField0A(struct popup_part *part, s32 value)
 {
-    part->base.field_0A = value;
+    part->base.kind = value;
 }
 
 static inline void SetEnemyAnimMap(struct part_ctrl *hdr, const s32 *gfx)

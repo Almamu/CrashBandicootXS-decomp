@@ -160,7 +160,7 @@ mode0:
         const struct actor_method *rec = &player->vtable->handleEvent;
         s16 offset = rec->thisOffset;
         addr = (u8 *)player + offset;
-        arg2 = part->field_0A;
+        arg2 = part->kind;
         deadRead = *(void *const volatile *)&rec->fn;
         arg1 = 0;
         goto tail;
@@ -172,7 +172,7 @@ mode1or2:
         const struct actor_method *rec = &player->vtable->handleEvent;
         s16 offset = rec->thisOffset;
         void *addr0 = (u8 *)player + offset;
-        u8 someByte = part->field_0A;
+        u8 someByte = part->kind;
         MATCH_HOLD_REG(void *, deadRead0, r4) = *(void *const volatile *)&rec->fn;
         (void)deadRead0;
 

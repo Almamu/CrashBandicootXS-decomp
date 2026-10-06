@@ -115,13 +115,13 @@ All in `src/vehicle/polar_objects.c`.
   `target` index, arms a fixed slow downward drift (constants into
   `self+0x54/0x58/0x5c/0x60`); otherwise derives a per-frame speed
   factor (`__divsi3` of `target`'s own "speed" record,
-  `gPolarPenguinSpeeds[sub_802A570(target)]`, against the remaining Z
+  `gPolarPenguinSpeeds[GetActorSpawnKindIndex(target)]`, against the remaining Z
   distance) and scales the X/Y deltas toward `target`'s tracked
   position by that factor. Two gotchas: (1) `gPolarPenguinSpeeds[idx]`
   needed `idx` computed as its own statement (`s32 idx =
-  sub_802A570(target);`) *before* the array index expression, or this
+  GetActorSpawnKindIndex(target);`) *before* the array index expression, or this
   compiler hoists the array's base-address load ahead of the
-  `sub_802A570` call instead of after it, matching the ROM's own
+  `GetActorSpawnKindIndex` call instead of after it, matching the ROM's own
   call-then-load order; (2) the `__divsi3` distance argument needed
   to be re-read fresh from `self+0x5c` (`*(s32 *)(self + 0x5c)`) rather
   than reusing the `speed` local already holding the same value - the

@@ -22,7 +22,7 @@ the same result as the old note. The cause was not register pressure:
 - The copy is refused if the test contains block notes, so the test
   cannot call an inline function (the `NextThreshold` helper that
   `SelectActorCategory`'s draft uses). It is a macro instead.
-- The "next record" address is built in `sub_802A51C`'s order (`off =
+- The "next record" address is built in `GetActorSpawnZ`'s order (`off =
   idx * 0x14`, then `base + 0x14`, then the sum) through two locals in
   a comma expression.
 - A `do { } while` with the same test lays the `&&` halves out rotated,
@@ -47,11 +47,11 @@ most instructions already right. What closed it:
 4. **`(gKeys >> 16) & 8`** (u32 global) loads with
    `ldrh [rX, #2]` from the same literal as the later `& 4` word test.
    `((u16 *)&g)[1]` gets its own `g+2` literal.
-5. **Pointer locals for gActorCategoryDeaths/gUnknown_03001388** (19 -> 4
+5. **Pointer locals for gActorCategoryDeaths/gActorCategoryBossDeaths** (19 -> 4
    halfwords). They are spilled, so every use rematerializes the
    address through a reload register. That is where the ROM's odd
    choices come from (`r3`/`r7` in the prologue stores, `r5` in the
-   `unknown_28` test, `r0`/`r1`/`r3`/`r5` in the four spilled `ret`
+   `retryBossDeaths` test, `r0`/`r1`/`r3`/`r5` in the four spilled `ret`
    stores). With plain globals the reload rotation is one step behind,
    and jump2 then cross-jumps the two identical `ret = 1; goto done`
    blocks together. The pointers must be assigned at the top of the
