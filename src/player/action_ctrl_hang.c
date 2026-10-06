@@ -17,7 +17,6 @@
  * More gActionCtrlStateTable action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
 
-extern u8 gEmptySpritePoint[];
 
 /* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
  * in kill_player.c only matches that way), but ActionCtrlStateHangMove
@@ -537,25 +536,25 @@ void ActionCtrlStateHangMove(struct act *self)
             info += 0x24;
             break;
         case 1:
-            info = gEmptySpritePoint;
+            info = (u8 *)&gEmptySpritePoint;
             break;
         case 2:
-            info = gEmptySpritePoint;
+            info = (u8 *)&gEmptySpritePoint;
             break;
         case 3:
-            info = gEmptySpritePoint;
+            info = (u8 *)&gEmptySpritePoint;
             break;
         case 4:
-            info = gEmptySpritePoint;
+            info = (u8 *)&gEmptySpritePoint;
             break;
         case 5:
-            info = gEmptySpritePoint;
+            info = (u8 *)&gEmptySpritePoint;
             break;
         case 6:
             info += 0x14;
             break;
         default:
-            info = gEmptySpritePoint;
+            info = (u8 *)&gEmptySpritePoint;
             break;
         }
         x = self->part->x >> 8;

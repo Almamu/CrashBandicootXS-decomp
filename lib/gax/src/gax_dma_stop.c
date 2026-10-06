@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-
 /* Stops GAX2's Direct Sound A/Timer0 output - the exact counterpart to
  * GAX_irq's play-start follow-up in gax_playback_ticker.c: clears the
  * current channel's `chan->4`-embedded flag byte at `+0x1a` (an "active"/

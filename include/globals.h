@@ -13,6 +13,7 @@
  * `codegen:` comment (docs/headers_plan.md). */
 
 #include "core.h"
+#include "vtable.h"
 
 struct AudioContext;
 struct actor_self;
@@ -92,6 +93,14 @@ extern struct pool_manager *gCrateList;
 /* sym_iwram.txt: the player object (struct player, player.h), built by
  * PlayRoom. */
 extern struct player *gPlayer;
+
+/* src/data/entity_vtables_7e3bec.c: the two base-class method tables. The
+ * entity base (graphics.c's struct actor: check contact, bounds, update,
+ * draw, ...) and the actor base (DestroyActor/UpdateActor/DrawActor),
+ * which every actor-zone destructor stores back before it frees the
+ * object. */
+extern const struct vtable_slot gEntityVtable[11];
+extern const struct vtable_slot gActorVtable[4];
 
 /* src/data/boss_pictures_167ad4.c: a full turn in 256 steps, scaled by 0x100. */
 extern const s16 gSineTable[256];

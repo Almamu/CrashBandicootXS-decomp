@@ -43,7 +43,7 @@
  * the ROM has it rather than simplified to a plain `else`, since that
  * changes gcc's cross-jump merging of the three arithmetic branches'
  * shared `(u8)`-truncation tail. */
-void GaxDrawText(u32 col, u32 row, const u8 *str)
+void GaxDrawText(u32 col, u32 row, const char *str)
 {
     register u8 *dst asm("r3");
     register s32 colIdx asm("r1");
@@ -54,7 +54,7 @@ void GaxDrawText(u32 col, u32 row, const u8 *str)
     register s32 mask asm("ip");
     u32 base;
 
-    s = str;
+    s = (const u8 *)str;
     base = col + BG_SCREEN_ADDR(0);
     dst = (u8 *)(col + base + row * 64);
 

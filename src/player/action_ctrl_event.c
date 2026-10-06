@@ -25,7 +25,6 @@ struct part_offset {
     s16 y;
 };
 
-extern u8 gEmptySpritePoint[];
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -46,25 +45,25 @@ static inline void ActSetNext27(struct act *self, s32 next)
             (dst) = (struct part_offset *)(_info + 0x24);                      \
             break;                                                             \
         case 1:                                                                \
-            (dst) = (struct part_offset *)gEmptySpritePoint;                \
+            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
             break;                                                             \
         case 2:                                                                \
-            (dst) = (struct part_offset *)gEmptySpritePoint;                \
+            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
             break;                                                             \
         case 3:                                                                \
-            (dst) = (struct part_offset *)gEmptySpritePoint;                \
+            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
             break;                                                             \
         case 4:                                                                \
-            (dst) = (struct part_offset *)gEmptySpritePoint;                \
+            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
             break;                                                             \
         case 5:                                                                \
-            (dst) = (struct part_offset *)gEmptySpritePoint;                \
+            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
             break;                                                             \
         case 6:                                                                \
             (dst) = (struct part_offset *)(_info + 0x14);                      \
             break;                                                             \
         default:                                                               \
-            (dst) = (struct part_offset *)gEmptySpritePoint;                \
+            (dst) = (struct part_offset *)&gEmptySpritePoint;                \
             break;                                                             \
         }                                                                      \
     } else (void)0

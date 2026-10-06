@@ -1,9 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-extern void GaxZeroFill(void *dest, s32 count);
-extern void GaxMixFrame(struct GaxMixerHandler *mixer, u32 buf);
-
 /* SFX voice `i`: the mixer's children past the song's own channels. */
 #define GAX_SFX_VOICE(i) \
     ((struct GaxChannelState *)GAX_MIXER()->children[GAX_MIXER()->type->childCount + (i)])
@@ -33,8 +29,8 @@ void GAX_play(void)
     GAX_INFO()->volume = GAX_SONG()->volume;
     gGaxPlayerState->field_180 = GAX_SONG()->field_0a;
     GAX_INFO()->playing = 1;
-    GaxMixFrame(GAX_MIXER(), gGaxPlayerState->outBuf
-                                 + GAX_MIXER()->format->frames * gGaxPlayerState->outHalf);
+    GaxMixFrame(GAX_MIXER(), (u32 *)(gGaxPlayerState->outBuf
+                                 + GAX_MIXER()->format->frames * gGaxPlayerState->outHalf));
     gGaxPlayerState->outHalf ^= 1;
     GAX_SONG()->songEnded = GAX_INFO()->songEnded;
     if (gGaxPlayerState->curChannelIdx == 1 && GAX_SONG()->songEnded != 0) {

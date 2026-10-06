@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-
 /* Direct Sound A output "stop": clears the GAX2 player-state's `state`
  * once it's non-zero and disables the DMA1 sound-A output pair in
  * SOUNDCNT_H (bits 8/9). Mirror of GAX_resume below. */

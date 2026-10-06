@@ -14,7 +14,7 @@
  * situation as the neighboring GAX2 engine internals in
  * gax_note_param.c/gax_sound_handler_info.c), so every field stays a raw
  * offset rather than a guessed struct. */
-void GaxChannelSetNote(void *self, u32 cmd)
+void GaxChannelSetNote(struct GaxChannelState *self, u32 cmd)
 {
     register u32 v asm("r3") = cmd;
 

@@ -636,13 +636,12 @@ s32 GetSpriteObjClassId(void)
     return 1;
 }
 
-extern u8 gEntityVtable[];
 
 /* Same `gEntityVtable`/conditional-`OperatorDelete` shape as
  * `DestroyEntity` (already matched in `graphics.c`). */
 void DestroySpriteObj(struct actor *self, u32 arg1)
 {
-    self->table = gEntityVtable;
+    self->table = (void *)gEntityVtable;
     if (arg1 & 1) {
         OperatorDelete(self);
     }
@@ -659,7 +658,6 @@ struct actor *InitSpriteObj(struct actor *self)
     return self;
 }
 
-extern u8 gEmptySpritePoint[];
 
 /* Looks up `part`'s keyframe record via `GetSpriteFrame` (already parked
  * as `NON_MATCHING` in `sprite_obj.c`), then picks a pointer off it
@@ -685,20 +683,20 @@ void *GetSpriteFrameAnchor(void *part)
         break;
     case 3:
     case 4:
-        result = gEmptySpritePoint;
+        result = (void *)&gEmptySpritePoint;
         break;
     case 1:
     case 2:
-        result = gEmptySpritePoint;
+        result = (void *)&gEmptySpritePoint;
         break;
     case 5:
-        result = gEmptySpritePoint;
+        result = (void *)&gEmptySpritePoint;
         break;
     case 6:
         result = (u8 *)info + 0x14;
         break;
     default:
-        result = gEmptySpritePoint;
+        result = (void *)&gEmptySpritePoint;
         break;
     }
     return result;

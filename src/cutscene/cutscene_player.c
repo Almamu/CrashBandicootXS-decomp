@@ -553,8 +553,6 @@ void SetBgStreamerSource(void *self0, void *source0)
 }
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern u8 gBgStreamerVtable[];
-extern u8 gBgLayerBaseVtable[];
 
 /* Wires up `self+0x20`'s `_call_via_r2`-style interworking-trampoline
  * table (a fixed `gBgStreamerVtable`), then tears down `self+8`'s

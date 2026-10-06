@@ -6,7 +6,6 @@
  * engine code, called from GAX2_init/GaxChannelMix) uses the ordinary
  * interworking `pop {reg}; bx reg` return like the rest of the ROM. */
 
-
 /* Zero-fills `count` bytes at `dest` - a plain memset helper. Byte-fills up to 3 leading bytes one at a time to
  * reach 4-byte alignment, zero-fills the largest 32-byte-aligned chunk
  * of what's left via the BIOS `CpuFastSet` SWI (fixed
@@ -23,8 +22,9 @@
  * `r6`/`r1` (`matching_decomp_register_pinning`) to reproduce the ROM's
  * own register choices - left unpinned, this compiler picks the same
  * logic in `r5`/`r6` instead. */
-void GaxZeroFill(u8 *dest, s32 count)
+void GaxZeroFill(void *destArg, s32 count)
 {
+    u8 *dest = destArg;
     register s32 cnt asm("r6") = count;
     s32 aligned;
     u32 zero;

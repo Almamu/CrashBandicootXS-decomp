@@ -287,6 +287,96 @@ struct GaxChannelState {
     u8 index;                    /* 0x53 - channel number (GaxCreateHandlers) */
 };
 
+/* A mixing rate in Hz and the Timer0 reload for it (16.78 MHz / rate),
+ * one entry of gGaxMixRates. */
+struct RateEntry {
+    u32 rate;
+    u32 timer;
+};
+
+/* ---- The engine's functions shared between lib/gax's objects ---- */
+
+/* gax_channel_bind_instrument.c */
+extern void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 instrument,
+                                    struct GaxSongData *song);
+/* gax_channel_effect_table.c */
+extern void GaxChannelTickVibrato(struct GaxChannelState *self);
+/* gax_channel_envelope_tick.c */
+extern void GaxChannelTick(struct GaxChannelState *self, struct GaxInfoHandler *info);
+/* gax_channel_note_cut.c */
+extern void GaxChannelSetNote(struct GaxChannelState *self, u32 note);
+/* gax_channel_note_scheduler.c */
+extern void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHandler *info);
+/* gax_channel_pos_sweep.c */
+extern void GaxChannelTickSweep(struct GaxChannelState *self);
+/* gax_channel_table_alloc.c */
+extern u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
+                            u32 *sizep);
+/* gax_dma_stop.c */
+extern void GaxStopDma(u32 dmaIdx);
+/* gax_fatal_error.c: the halt screen, with the failing function's name
+ * and the error (gGaxErrName* / gGaxErr*). Never returns. */
+extern void GaxFatalError(const char *function, const char *message);
+/* gax_find_mix_rate.c */
+extern s32 GaxFindMixRate(u32 rate);
+/* gax_hw_reset.c */
+extern void GaxResetSoundHardware(void);
+/* gax_note_lookup.c */
+extern u8 GaxEnvelopeTick(struct GaxChannelState *self, struct GaxEnvelope *env, u16 *posp);
+/* gax_note_trigger.c */
+extern u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
+                         struct GaxSongData *song, u8 flag);
+/* gax_swi.c */
+extern void GaxHuffUnComp(void *src, void *dst);
+/* gax_text_render.c */
+extern void GaxDrawText(u32 col, u32 row, const char *str);
+/* gax_unknownc_play.c */
+extern void GaxMixFrame(struct GaxMixerHandler *mixer, u32 *buf);
+/* gax_zero_fill.c */
+extern void GaxZeroFill(void *dest, s32 count);
+
+/* ---- The engine's data ---- */
+
+/* lib/gax/data/gax_tables_5a6100.c */
+extern const char *const gGaxVersionStringPtr;      /* "GAX Sound Engine 2.01D ..." (GAX2_init checks "GAX") */
+extern const struct RateEntry gGaxMixRates[12];
+extern const char gGaxErrNameNew[];                 /* the function names and errors GaxFatalError shows */
+extern const char gGaxErrParamsNull[];
+extern const char gGaxErrNameInit[];
+extern const char gGaxErrOutOfMemory[];
+extern const char gGaxErrNameJingle[];
+extern const char gGaxErrNoJingle[];
+extern const char gGaxErrNameIrq[];
+extern const char gGaxErrPlayNotFinished[];
+extern const char *const gGaxHaltBannerPtr;
+extern const char gGaxHaltFunctionLabel[];
+extern const u32 gGaxPeriodTable[0xEF4];
+extern const s8 gGaxVibratoTable[64];
+
+/* The raw ARM routines at the end of gax_unknownc_play.c, which GAX2_init
+ * copies into the player state (dspCode48/dspCode9c/dspFn17c/mixCode),
+ * and the four instructions of the resampler that GaxChannelMix patches
+ * in the copy (by their offset from gGaxArmResample). */
+extern const u32 gGaxArmDownmix[];
+extern const u32 gStaticData_0803A67C[];
+extern const u32 gGaxArmEcho[];
+extern const u32 gGaxArmResample[];
+extern const u32 gStaticData_0803A874[];
+extern const u32 gStaticData_0803A884[];
+extern const u32 gStaticData_0803A8B4[];
+extern const u32 gStaticData_0803A8C4[];
+
+/* data/data.s: the handler layout GAX2_init and GAX2_estimate use when the
+ * song header names none. */
+extern struct GaxHandlerLayout gGaxDefaultSong;
+
+/* src/iwram/iwram_data.c: the halt screen's font, Huffman-compressed
+ * (GaxFatalError decompresses it with GaxHuffUnComp). */
+extern u32 gGaxHaltFont[70];
+
+/* sym_iwram.txt (gGaxPlayerState is declared above) */
+extern u64 gGaxMixRateReciprocal;                   /* 2^32 / mix rate (GaxChannelInit), scales gGaxPeriodTable */
+
 /* GAX2's own "call an ARM routine from Thumb" idiom (ARMv4T Thumb has
  * no `blx reg`): hand-computes a Thumb-tagged return address into lr
  * and `bx`es to `fn` with `*argp` in r0, returning to the trailing

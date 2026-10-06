@@ -47,18 +47,9 @@ struct GaxMixItem {
     s32 loopLen; /* Q11 sweep loop length, 0 = none */
 };
 
-extern u64 gGaxMixRateReciprocal;
-extern const u32 gGaxPeriodTable[];
-extern u8 gGaxArmResample[];
-extern u8 gStaticData_0803A874[];
-extern u8 gStaticData_0803A884[];
-extern u8 gStaticData_0803A8B4[];
-extern u8 gStaticData_0803A8C4[];
-extern void GaxZeroFill(void *dest, s32 count);
-
 /* Rewrites the halfword at `label` in the IWRAM copy of the ARM mixer. */
 #define GAX_PATCH_MIXER(label, value) \
-    (((u16 *)gGaxPlayerState->mixCode)[((label) - gGaxArmResample + 2) / 2] = (value))
+    (((u16 *)gGaxPlayerState->mixCode)[((const u8 *)(label) - (const u8 *)gGaxArmResample + 2) / 2] = (value))
 
 u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
                 struct GaxSongData *song, u8 flag)

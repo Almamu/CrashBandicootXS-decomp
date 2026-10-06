@@ -1,6 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
 extern void *_call_via_r1(void *arg0, void *fn);
 
 /* `nullsub_41` (ROM `0x0803A228`) sits immediately before the GAX2_

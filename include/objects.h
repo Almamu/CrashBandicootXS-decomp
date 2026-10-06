@@ -31,6 +31,7 @@ struct gobj;
 struct hitbox_quad;
 struct mover;
 struct sprite_box;
+struct sprite_point;
 
 /* A position pair: a collision candidate's (src/objects/collision_queue.c),
  * which ApplyCrateCollision takes by value. Copied as one 8-byte struct
@@ -332,6 +333,9 @@ extern const struct vtable_slot gUiSpriteObjVtable[13];
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
  * without one (src/data/obj_sizes_16b2e0.c). */
 extern const struct sprite_box gEmptySpriteBox;
+/* The anchor point GetSpriteFrameAnchor returns for a frame without one
+ * (same file): {0, 0}. */
+extern const struct sprite_point gEmptySpritePoint;
 
 /* sym_iwram.txt */
 extern s32 gLastSpriteVelY;

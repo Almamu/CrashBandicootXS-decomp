@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-
 /* This whole file re-derives `gGaxPlayerState->channels[gGaxPlayerState
  * ->curChannelIdx]` fresh at every single use, never through a cached local
  * pointer - that's not a style choice, it's load-bearing: the ROM's own

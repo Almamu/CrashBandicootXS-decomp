@@ -28,7 +28,6 @@ struct meter_actor {
     s32 meter;                  // 0x54
 };
 
-extern u8 gActorVtable[];
 
 /* Accumulator-drain/reward-dispenser for the `gJetpackQueuedWumpa`
  * accumulator `QueueJetpackWumpa` fills: while the singleton flag
@@ -331,7 +330,7 @@ void DestroyJetpackPlayer(void *selfArg, s32 flags)
     FreeVramTileBlock(gJetpackPlayerTiles[0]);
     FreeVramTileBlock(gJetpackPlayerTiles[1]);
 
-    *(void **)(self + 0x50) = gActorVtable;
+    *(void **)(self + 0x50) = (void *)gActorVtable;
 
     *(u8 **)(*(u8 **)(self + 0x4c) + 0x48) = *(u8 **)(self + 0x48);
     *(u8 **)(*(u8 **)(self + 0x48) + 0x4c) = *(u8 **)(self + 0x4c);

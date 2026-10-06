@@ -61,7 +61,6 @@ void DestroyCompanyLogos(void *self, u32 flags)
  * gActorVtable, unlinks the actor from the actor ring and frees it on
  * flags bit 0 - the same shape as DestroyActor. */
 
-extern u8 gActorVtable[];
 
 void DestroyLogoActor(struct actor_self *self, u32 flags)
 {

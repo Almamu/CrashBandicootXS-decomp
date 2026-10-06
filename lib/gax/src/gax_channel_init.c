@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-
 /* Resets a per-channel voice object to its default state (clears the
  * accumulator/instrument-pointer fields, arms the `0x8AD0` "no note"
  * sentinel envelope, sets a default "unmuted" priority (`0xff`) and

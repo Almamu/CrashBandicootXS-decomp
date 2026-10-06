@@ -147,7 +147,6 @@ dy_done:
  * before the heap flags), and the part-table setup is an inlined
  * constructor taking its values as arguments (all loaded before the
  * stores). */
-extern const s16 gAirshipPicture[];
 
 static inline void BossSetState(s32 st, s32 idx)
 {
@@ -183,8 +182,8 @@ void CreateAirship(s32 level)
     gAirshipLevel = level;
     if (GetActorCheckpoint() == 0)
         gAirshipCheckpointCount = 0;
-    gAirshipMapCols = gAirshipPicture[0];
-    gAirshipMapRows = gAirshipPicture[1];
+    gAirshipMapCols = BOSS_PICTURE_SIZE(gAirshipPicture)->cols;
+    gAirshipMapRows = BOSS_PICTURE_SIZE(gAirshipPicture)->rows;
     slot = &gAirship;
     t = AllocActor(0x1c);
     InitAnimPart(t, (struct anim_frame_record *)gAirshipKeyframes, (u32 *)gAirshipMapFrames, 1);

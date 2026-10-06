@@ -557,6 +557,8 @@ extern void StepBgLayerScroll(void *self, void *delta);
 /* The BG layer method tables (src/data/entity_vtables_7e3bec.c) */
 extern const struct vtable_slot gBgLayerVtable[10];
 extern const struct vtable_slot gPooledBgLayerVtable[10];
+extern const struct vtable_slot gBgStreamerVtable[2];   /* InitBgStreamer/DestroyBgStreamer (cutscene_player.c) */
+extern const struct vtable_slot gBgLayerBaseVtable[5];  /* InitBgLayerBase/DestroyBgLayerBase (cutscene_player.c) */
 
 /* sym_iwram.txt */
 extern struct part_list *gDecorationList;

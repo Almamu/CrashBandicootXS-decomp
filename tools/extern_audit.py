@@ -27,6 +27,12 @@ or a plain function prototype) it reports:
                      scalar    anything else (u8 vs s32, void vs value
                                return, extra parameters, struct by value)
 
+Each declaration is also sorted by why it is still in its .c file
+(docs/headers_plan.md, "Exceptions"): a codegen asm-label alias, a
+`_call_via_rN` thunk, a data table naming another data table, a library's
+own internal symbol, an entry of DOCUMENTED below, or "remaining" (it
+should move to a header; `--remaining` lists them).
+
 It also collects every struct/union definition (tagged or typedef'd) in a
 .c file and computes a best-effort layout signature (size, and the offset
 and size of each field) so duplicate copies of one struct can be spotted,
@@ -691,12 +697,50 @@ def scan_asm_defs():
     return out
 
 
+# Declarations kept in a .c file on purpose, by policy (docs/headers_plan.md,
+# "Exceptions"). Anything else is "remaining" work for a header.
+DOCUMENTED = {
+    # the one-argument SWI wrappers asset.c calls (docs/libraries.md)
+    ('src/system/asset.c', 'LZ77UnCompVram'),
+    ('src/system/asset.c', 'RLUnCompVram'),
+}
+
+
+def is_data_path(p):
+    return (p.startswith(('src/data/', 'build/', 'data/'))
+            or re.match(r'lib/[^/]+/data/', p) is not None)
+
+
+def keep_category(path, d, sym, dfiles):
+    """Why a declaration of a symbol defined elsewhere is still in `path`:
+    'alias' (an asm-label alias kept for codegen), 'call_via' (libgcc's
+    _call_via_rN thunks, declared per call shape), 'data' (a data table
+    naming another data or asm table, "Who owns a symbol" rule 4),
+    'library' (a library's own internal symbol, declared inside that
+    library), 'documented' (DOCUMENTED above) or 'remaining'."""
+    if d['asm'] and d['asm'] != d['name']:
+        return 'alias'
+    if re.match(r'_call_via_r\d$', sym):
+        return 'call_via'
+    if (path, sym) in DOCUMENTED:
+        return 'documented'
+    srcs = [f.split(' ')[0] for f in dfiles]
+    if is_data_path(path) and not d['is_func'] and srcs and all(is_data_path(f) for f in srcs):
+        return 'data'
+    m = re.match(r'(lib/[^/]+)/', path)
+    if m and srcs and all(f.startswith(m.group(1) + '/') for f in srcs):
+        return 'library'
+    return 'remaining'
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('-o', '--out-dir', default=os.path.join(ROOT, 'build', 'extern_audit'))
     ap.add_argument('--subsystem', help='only list conflicts for symbols owned by this subsystem')
     ap.add_argument('--conflicts', action='store_true', help='print every conflicting symbol and its variants')
     ap.add_argument('--symbol', action='append', default=[], help='print the full record for SYMBOL')
+    ap.add_argument('--remaining', action='store_true',
+                    help='list the declarations no exception covers (file: symbol)')
     args = ap.parse_args()
 
     os.chdir(ROOT)
@@ -726,6 +770,8 @@ def main():
     decls = collections.defaultdict(list)    # sym -> [(file, decl)]
     total_decls = 0
     self_forward = 0
+    kept = collections.Counter()             # category -> declarations
+    remaining = []                           # (file, symbol) not covered by a policy
     for p, fs in scans.items():
         seen = set()
         own = {n for n, _ in fs.defs} | fs.asm_defs
@@ -737,6 +783,10 @@ def main():
                 self_forward += 1
                 continue
             total_decls += 1
+            cat = keep_category(p, d, sym, defined.get(sym) or ([asm_defs[sym]] if sym in asm_defs else []))
+            kept[cat] += 1
+            if cat == 'remaining':
+                remaining.append((p, sym))
             if (sym, type_key(d)) in seen:
                 continue
             seen.add((sym, type_key(d)))
@@ -870,6 +920,10 @@ def main():
     # --- summary ----------------------------------------------------------
     print('Files: %d .c (src/ + lib/), %d headers' % (len(c_files), len(h_files)))
     print('Declarations in .c files: %d (externs + prototypes of functions defined elsewhere)' % total_decls)
+    print('  kept by policy: %d codegen aliases, %d _call_via_rN, %d data-to-data, %d library-internal, %d documented'
+          % (kept['alias'], kept['call_via'], kept['data'], kept['library'], kept['documented']))
+    print('  remaining (should move to a header): %d%s' % (
+        kept['remaining'], '' if args.remaining or not remaining else ' (--remaining lists them)'))
     print('Forward declarations of a symbol the same file defines (not counted): %d' % self_forward)
     print('Unique symbols: %d' % len(symbols))
     st = collections.Counter(s['status'] for s in symbols)
@@ -920,6 +974,10 @@ def main():
             print('%s (%s, owner %s, %d files):' % (s['symbol'], s['conflict'], s['owner'], s['declared_in']))
             for v in s['variants']:
                 print('    %-60s %s' % (v['type'], ' '.join(v['files'])))
+    if args.remaining:
+        print()
+        for p, sym in sorted(remaining):
+            print('%s: %s' % (p, sym))
     for name in args.symbol:
         for s in symbols:
             if s['symbol'] == name:

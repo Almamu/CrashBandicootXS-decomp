@@ -1,9 +1,6 @@
 #include "gax_internal.h"
 #include <libgcc.h>
 
-/* Q32 reciprocal of the current mix rate, read by GaxChannelMix. */
-extern u64 gGaxMixRateReciprocal;
-
 /* Stores `2^32 / self->format->mixRate`. An inline helper taking the
  * destination pointer first is what makes the ROM load
  * `&gGaxMixRateReciprocal` into a callee-saved register *before* reading

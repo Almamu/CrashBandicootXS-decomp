@@ -29,7 +29,6 @@
  * family" and "type-byte event dispatch" sections for the semantics
  * behind the individual functions below. */
 
-extern u8 gActorVtable[];
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
@@ -372,7 +371,7 @@ void DestroyPolarPlayer(void *selfArg, u32 arg1param)
     FreeVramTileBlock(gPolarPlayerTiles[0]);
     FreeVramTileBlock(gPolarPlayerTiles[1]);
 
-    *(u8 **)(self + 0x50) = gActorVtable;
+    *(u8 **)(self + 0x50) = (u8 *)gActorVtable;
 
     {
         u8 *next = *(u8 **)(self + 0x4c);

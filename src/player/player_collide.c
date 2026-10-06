@@ -9,7 +9,6 @@
 /* GitHub issue #9/#10: 0x0800A884 - the player object's (`struct
  * player`, player.h) collision method. */
 
-extern u8 gEmptySpritePoint[];
 
 /* A per-frame "reentrancy guard"-shaped wrapper (only runs if
  * `self+0xc` bit 7 is set): fires `self->table+0x70`'s trampoline via
@@ -95,20 +94,20 @@ static inline s16 *A884Offset(void *part)
         break;
     case 3:
     case 4:
-        result = (s16 *)gEmptySpritePoint;
+        result = (s16 *)&gEmptySpritePoint;
         break;
     case 1:
     case 2:
-        result = (s16 *)gEmptySpritePoint;
+        result = (s16 *)&gEmptySpritePoint;
         break;
     case 5:
-        result = (s16 *)gEmptySpritePoint;
+        result = (s16 *)&gEmptySpritePoint;
         break;
     case 6:
         result = (s16 *)((u8 *)info + 0x14);
         break;
     default:
-        result = (s16 *)gEmptySpritePoint;
+        result = (s16 *)&gEmptySpritePoint;
         break;
     }
     return result;

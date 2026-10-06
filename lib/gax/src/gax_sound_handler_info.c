@@ -48,8 +48,6 @@ void GaxInfoResetPosition(void *self)
     p->field_24 = zeroHalf;
 }
 
-extern void GaxInfoResetPosition(void *self);
-
 /* GAX2_SoundHandler "Info" type's init_fn (ROM 0x080393FD, see
  * docs/audio.md). */
 void GaxInfoInit(void *self)

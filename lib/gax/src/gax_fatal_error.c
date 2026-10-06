@@ -1,13 +1,5 @@
 #include "gax_internal.h"
 
-extern void GaxStopDma(u32 idx);
-extern void GaxZeroFill(void *arg0, s32 size);
-extern void GaxHuffUnComp(void *src, void *dst);
-extern void GaxDrawText(u32 col, u32 row, const u8 *str);
-extern u8 gGaxHaltFont[];
-extern u8 *gGaxHaltBannerPtr;
-extern u8 gGaxHaltFunctionLabel[];
-
 /* GAX2's fatal-error screen: disables Timer0/1/2/3 direct-sound-output
  * ticking (GaxStopDma, still raw, has the same hardware-register
  * NOP-delay compiler quirk documented for GaxResetSoundHardware), zeroes the
@@ -23,7 +15,7 @@ extern u8 gGaxHaltFunctionLabel[];
  * resets the BG0/backdrop palette to black-on-white, enables BG0 only,
  * and finally spins forever - this is the end of the road, nothing
  * ever returns from here. */
-void GaxFatalError(const u8 *msg1, const u8 *msg2)
+void GaxFatalError(const char *msg1, const char *msg2)
 {
     vu16 *dst;
     u16 zero;

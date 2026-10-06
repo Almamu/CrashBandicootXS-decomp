@@ -25,23 +25,7 @@
  * block-local read after the first types[] load, and three no-code
  * register nudges (commented at each use). */
 
-struct RateEntry { u32 rate; u32 timer; };
 struct GaxLayoutList { u32 count; struct GaxHandlerLayout *layouts[1]; };
-extern struct GaxHandlerLayout gGaxDefaultSong;
-extern struct RateEntry gGaxMixRates[];
-extern const u8 *gGaxVersionStringPtr;
-extern const u32 gGaxArmDownmix[];
-extern const u32 gStaticData_0803A67C[];
-extern const u32 gGaxArmEcho[];
-extern const u32 gGaxArmResample[];
-extern const char gGaxErrNameInit[];
-extern const char gGaxErrOutOfMemory[];
-extern void GaxFatalError(const char *a, const char *b);
-extern void GaxZeroFill(void *dest, s32 count);
-extern s32 GaxFindMixRate(u32 rate);
-extern void GaxResetSoundHardware(void);
-extern u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
-                      u32 *sizep);
 
 #define ALIGN4(buf, size)                                  \
     {                                                      \
