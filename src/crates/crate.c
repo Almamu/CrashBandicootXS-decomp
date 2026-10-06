@@ -7,17 +7,8 @@
 #include "memory.h"
 #include "globals.h"
 #include "player.h"
+#include "crate.h"
 
-/* The fields of a level object (`struct gobj`, gobj_1a794.h) that
- * `IsCrateInsideRect` reads. */
-struct gobj_view {
-    u8 unk_00[0xc];
-    u8 flags;                       // 0x0c
-    u8 unk_0d[0xb];
-    struct vtable_slot *vtable;     // 0x18
-    u8 unk_1c[0x28];
-    void *mover;                    // 0x44
-};
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -29,16 +20,15 @@ struct gobj_view {
  * docs/matching/issue-13-fc70-second-continuation.md for the
  * register-pinning/toolchain-bug notes this one needed. */
 
-extern void *_call_via_r1(void *arg0, void *arg1);
-
 /* AABB-overlap test between `self`'s own table-driven half-width/
  * half-height box (centered on `self`'s own position, via the same
  * `_call_via_r1` table-trampoline convention `CheckEntityPlayerContact`/
  * `UpdateEntity`, graphics.c, already establish - here at the table's
  * own `+0x10`/`+0x14` offset pair) and a caller-supplied `struct aabb
  * *`. Short-circuits true (skipping the real test) when `flags` bit 4
- * is set, or when the object has a `mover`. */
-u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
+ * is set, or while the crate is falling (`fallDistance`, where the base
+ * class's IsSpriteObjInsideRect tests a moving sprite's controller). */
+u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
 {
     /* self/box pinned to r5/r6: the ROM keeps both live across the
      * whole function (self is dead by the AABB-build block below and
@@ -52,19 +42,19 @@ u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
      * r0,r0,#24` a `u8`-typed register return always adds, that the
      * ROM never has - callers here still only read the low byte, so
      * the wider C return type changes nothing observable). */
-    register struct gobj_view *self asm("r5") = selfArg;
+    register struct crate *self asm("r5") = selfArg;
     register struct aabb *box asm("r6") = boxArg;
     u8 skip = (self->flags >> 4) & 1;
     register u32 result asm("r1");
 
-    if (self->mover != NULL) {
+    if (self->fallDistance != 0) {
         skip = 1;
     }
 
     if (!skip) {
-        register struct vtable_slot *table asm("r1") = self->vtable;
+        register struct vtable_slot *table asm("r1") = (struct vtable_slot *)self->vtable;
         register u8 *rec asm("r0") =
-            _call_via_r1((u8 *)self + table[2].delta, table[2].fn);
+            (u8 *)_call_via_r1((u8 *)self + table[2].delta, table[2].fn);
         register s32 left asm("r4");
         register s32 right asm("r1");
         register s32 top asm("r5");
@@ -182,31 +172,27 @@ void ResolvePlayerCollisions(void)
 
 /* Neighbor-list "get prev" accessor - reads `self+0x60`, the field
  * `ResetCrate` (crate_reset.c) zeroes on reset. */
-void *GetCrateBelow(void *selfArg)
+struct crate *GetCrateBelow(struct crate *self)
 {
-    u8 *self = selfArg;
-    return *(void **)(self + 0x60);
+    return self->below;
 }
 
 /* Neighbor-list "get next" accessor - reads `self+0x5c`. */
-void *GetCrateAbove(void *selfArg)
+struct crate *GetCrateAbove(struct crate *self)
 {
-    u8 *self = selfArg;
-    return *(void **)(self + 0x5c);
+    return self->above;
 }
 
 /* Neighbor-list "set prev" mutator - writes `self+0x60`. */
-void SetCrateBelow(void *selfArg, void *val)
+void SetCrateBelow(struct crate *self, struct crate *val)
 {
-    u8 *self = selfArg;
-    *(void **)(self + 0x60) = val;
+    self->below = val;
 }
 
 /* Neighbor-list "set next" mutator - writes `self+0x5c`. */
-void SetCrateAbove(void *selfArg, void *val)
+void SetCrateAbove(struct crate *self, struct crate *val)
 {
-    u8 *self = selfArg;
-    *(void **)(self + 0x5c) = val;
+    self->above = val;
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
@@ -252,7 +238,7 @@ struct actor *InitCrate(struct actor *self)
     InitSpriteObj(self);
     self->table = (void *)gCrateVtable;
     *((u8 *)self + 0x59) = 0;
-    ResetCrate(self);
+    ResetCrate((struct crate *)self);
     return self;
 }
 

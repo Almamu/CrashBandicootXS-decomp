@@ -112,12 +112,12 @@ extern void UpdateSlotCrate(struct crate *self);
 extern void UpdateCrateFall(struct crate *self);
 
 /* src/crates/crate.c */
-extern u32 IsCrateInsideRect(void *self, struct aabb *box);
+extern u32 IsCrateInsideRect(struct crate *self, struct aabb *box);
 extern void ResolvePlayerCollisions(void);
-extern void *GetCrateBelow(void *self);
-extern void *GetCrateAbove(void *self);
-extern void SetCrateBelow(void *self, void *val);
-extern void SetCrateAbove(void *self, void *val);
+extern struct crate *GetCrateBelow(struct crate *self);
+extern struct crate *GetCrateAbove(struct crate *self);
+extern void SetCrateBelow(struct crate *self, struct crate *val);
+extern void SetCrateAbove(struct crate *self, struct crate *val);
 extern u32 GetCrateClassId(void);
 extern void DestroyCrate(struct actor *self, u32 arg1);
 extern struct actor *InitCrate(struct actor *self);
@@ -128,7 +128,7 @@ extern s32 FindLineCrossingXMajor(s32 y, s32 count, s32 dx, s32 dy, s32 yStep, s
 extern void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type);
 
 /* src/crates/crate_draw.c */
-extern void DrawCrate(void *self);
+extern void DrawCrate(struct crate *self);
 
 /* src/crates/crate_grid_collide.c */
 extern void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struct box_part *other);
@@ -141,7 +141,7 @@ extern void LinkCrateToActiveBucket(struct pool_manager *manager, void *obj);
 extern void UnlinkCrateFromGrid(struct pool_manager *manager, struct pool_item *item);
 
 /* src/crates/crate_hit.c */
-extern u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset, s32 yOffset);
+extern u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset, s32 yOffset);
 extern struct box_part *sub_800CF70(struct box_part *self, struct aabb *box, u8 *foundFlag);
 extern void BreakCrateTouchedByPlayer(struct box_part *self);
 
@@ -155,7 +155,7 @@ extern void AddCrateToList(struct pool_manager *manager, void *obj);
 extern void DestroyCrateList(struct pool_manager *manager, s32 flags);
 
 /* src/crates/crate_list_draw.c */
-extern void DrawCrateList(void *manager);
+extern void DrawCrateList(struct pool_manager *manager);
 
 /* src/crates/crate_list_reset.c */
 extern void ResetCrateList(struct pool_manager *m);
@@ -171,14 +171,14 @@ extern void CollidePlayerWithCrates(struct pool_manager *m, s32 unused);
 
 /* src/crates/crate_reset.c */
 extern s32 FindLineCrossing(s32 pos, s32 count, s32 a, s32 b, s32 limit);
-extern void ResetCrate(void *self);
+extern void ResetCrate(struct crate *self);
 
 /* src/crates/crate_stack.c */
 extern void OpenLifeCrate(struct actor *self, u32 arg1);
 extern u8 IsCrateKindBreakable(void *arg0, u32 idx);
-extern void *GetTopCrate(void *self);
-extern void *GetBottomCrate(void *self);
-extern s32 CollideCrateWithPlayer(void *self, u32 idx, s32 testX, s32 testY);
+extern struct crate *GetTopCrate(struct crate *self);
+extern struct crate *GetBottomCrate(struct crate *self);
+extern s32 CollideCrateWithPlayer(struct crate *self, u32 idx, s32 testX, s32 testY);
 
 /* src/crates/crate_time_trial.c */
 extern void ConvertCratesForTimeTrial(void);
@@ -191,31 +191,31 @@ extern u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action);
 extern void UpdateCrate(struct crate *self);
 
 /* src/crates/slot_crate.c */
-extern u32 GetSlotCrateStage(void *self);
-extern void DecrementSlotCrateStage(void *self);
-extern void SetSlotCrateStage(void *self, u32 state);
-extern void ClearSlotCrateStage(void *self);
-extern u32 GetSlotCrateSpins(void *self);
-extern void DecrementSlotCrateSpins(void *self);
-extern void SetSlotCrateSpins(void *self, u32 state);
-extern void SetSlotCratePhase(void *self, u32 state);
-extern u32 GetSlotCratePhase(void *self);
-extern void SetCrateKind(void *self, u8 val);
-extern u8 GetCrateKind(void *self);
-extern void SetCrateFallDistance(void *self, s32 val);
-extern s32 GetCrateFallDistance(void *self);
-extern void SetCrateState(void *self, u32 val);
-extern u32 GetCrateState(void *self);
-extern void SetCrateFallSpeed(void *self, u8 val);
-extern s32 GetCrateFallSpeed(void *self);
-extern u32 IsCrateBusy(void *self);
-extern void SetCrateBusy(void *self);
-extern void ClearCrateBusy(void *self);
-extern void SetCrateTouched(void *self, u8 val);
-extern u8 GetCrateParamB(void *self);
-extern u8 GetCrateParamA(void *self);
-extern void SetCrateSolidKind(void *self, u32 val);
-extern void SetCrateTrialKind(void *self, s32 val);
-extern s32 GetCrateTrialKind(void *self);
+extern u32 GetSlotCrateStage(struct crate *self);
+extern void DecrementSlotCrateStage(struct crate *self);
+extern void SetSlotCrateStage(struct crate *self, u32 state);
+extern void ClearSlotCrateStage(struct crate *self);
+extern u32 GetSlotCrateSpins(struct crate *self);
+extern void DecrementSlotCrateSpins(struct crate *self);
+extern void SetSlotCrateSpins(struct crate *self, u32 state);
+extern void SetSlotCratePhase(struct crate *self, u32 state);
+extern u32 GetSlotCratePhase(struct crate *self);
+extern void SetCrateKind(struct crate *self, u8 val);
+extern u8 GetCrateKind(struct crate *self);
+extern void SetCrateFallDistance(struct crate *self, s32 val);
+extern s32 GetCrateFallDistance(struct crate *self);
+extern void SetCrateState(struct crate *self, u32 val);
+extern u32 GetCrateState(struct crate *self);
+extern void SetCrateFallSpeed(struct crate *self, u8 val);
+extern s32 GetCrateFallSpeed(struct crate *self);
+extern u32 IsCrateBusy(struct crate *self);
+extern void SetCrateBusy(struct crate *self);
+extern void ClearCrateBusy(struct crate *self);
+extern void SetCrateTouched(struct crate *self, u8 val);
+extern u8 GetCrateParamB(struct crate *self);
+extern u8 GetCrateParamA(struct crate *self);
+extern void SetCrateSolidKind(struct crate *self, u32 val);
+extern void SetCrateTrialKind(struct crate *self, s32 val);
+extern s32 GetCrateTrialKind(struct crate *self);
 
 #endif /* GUARD_CRATES_H */

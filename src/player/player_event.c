@@ -16,9 +16,9 @@
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
  * (Makefile OLD_AGBCC_OBJS).
  *
- * A two-flag-gated teardown/notification step on the still-unnamed "big
- * object" (at least 0x110 bytes) player_update.c/player_init.c work on,
- * guarded by its +0x105 "torn down already" latch. */
+ * The player object's (`struct player`, player.h) collision pass, event
+ * handler and draw method. CollidePlayerWithObjects is a two-flag-gated
+ * teardown/notification step guarded by the `cleared` (+0x105) latch. */
 
 /* GetSpriteAttackBox's result and the copy of it that goes to CollidePartList. As two
  * members of one frame object, the copy is addressed as a frame offset, so
@@ -30,22 +30,13 @@ struct aabb_copy
     struct aabb copy;
 };
 
+/* The head of the player's collision queue (struct player.collisionQueue,
+ * src/objects/collision_queue.c's `struct collision_queue`): the
+ * candidate count and the "position committed" byte. */
 struct ab9c_link
 {
     u32 unk_0;
     u8 unk_4;
-};
-
-struct ab9c_obj
-{
-    u8 unk_00[0xC];
-    u8 flags0C;            // 0x0C - bit 1: report the box, bit 7: tear down
-    u8 unk_0D[0x17];
-    u8 unk_24;             // 0x24
-    u8 unk_25[0xE0];
-    u8 cleared;            // 0x105
-    u8 unk_106[2];
-    struct ab9c_link link; // 0x108
 };
 
 /* Bit 1 of +0x0C: builds the object's AABB (GetSpriteAttackBox), copies it
@@ -55,14 +46,14 @@ struct ab9c_obj
  * clears +0x108/+0x10C with the latch's 0 and fires three teardown
  * notifications (CollidePlayerWithCrates never reads its second argument; the ROM
  * still loads it). */
-void CollidePlayerWithObjects(struct ab9c_obj *self)
+void CollidePlayerWithObjects(struct player *self)
 {
     u32 cleared = self->cleared;
 
     if (cleared != 0)
         return;
 
-    if ((self->flags0C >> 1) & 1)
+    if ((self->flags.all >> 1) & 1)
     {
         struct aabb_copy b;
         void *manager;
@@ -70,12 +61,12 @@ void CollidePlayerWithObjects(struct ab9c_obj *self)
         GetSpriteAttackBox(&b.src, self);
         manager = gCollidableList;
         MemCopy32(&b.copy, &b.src, sizeof(b.src));
-        CollidePartList(manager, b.copy, self->unk_24, (struct box_part *)self);
+        CollidePartList(manager, b.copy, self->dir, (struct box_part *)self);
     }
 
-    if (self->flags0C >> 7)
+    if (self->flags.all >> 7)
     {
-        struct ab9c_link *link = &self->link;
+        struct ab9c_link *link = (struct ab9c_link *)self->collisionQueue;
 
         link->unk_0 = cleared;
         link->unk_4 = cleared;
@@ -197,11 +188,6 @@ asm(".align 2, 0");
  * once linked). See docs/matching/issue-9-10-0x0800aff4-graphics.md
  * for the full write-up. */
 
-struct ac2c_pos {
-    s32 x;
-    s32 y;
-};
-
 struct ac2c_method {
     s16 thisOffset;
     u8 unk_02[2];
@@ -213,33 +199,6 @@ struct ac2c_listener {
     u8 *vtable;                 // 0x0C
 };
 
-struct ac2c_child {
-    s32 x;                      // 0x00
-    s32 y;                      // 0x04
-    u8 unk_08[0x20];
-    u32 unk_28_0:4;             // 0x28
-    u32 mirrorX:1;
-    u32 unk_28_5:3;
-};
-
-struct ac2c_self {
-    s32 x;                      // 0x00
-    s32 y;                      // 0x04
-    u8 unk_08[4];
-    u8 flags;                   // 0x0C - bit 6: can be hit
-    u8 unk_0D[0x37];
-    struct ac2c_listener *ctrl;     // 0x44 - the room kind's controller (PlayRoom)
-    u8 unk_48[0xc];
-    s32 rampYStart;                 // 0x54
-    s32 rampYStep;                 // 0x58
-    s32 rampYTarget;                 // 0x5C
-    u8 unk_60[0x2c];
-    u32 deadline;               // 0x8C
-    u8 unk_90[0x20];
-    struct ac2c_child *child;   // 0xB0
-    s32 maskTrailIdx;                // 0xB4
-    struct ac2c_pos maskTrail[8];    // 0xB8
-};
 
 typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 
@@ -250,7 +209,7 @@ typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
         ((ac2c_fn3)_m->fn)((u8 *)_l + _m->thisOffset, (a), (b), (c));          \
     } else (void)0
 
-static inline s32 Ac2cArmed(struct ac2c_self *self)
+static inline s32 Ac2cArmed(struct player *self)
 {
     s32 armed = 0;
 
@@ -273,7 +232,7 @@ static inline s32 Ac2cArmed(struct ac2c_self *self)
  * pointer is loaded after them. The ROM reloads the game mode after the
  * listener call and never uses it; only a volatile read reproduces that
  * load. */
-void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
+void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
 {
     switch (code) {
     case 27:
@@ -340,11 +299,11 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
         break;
     case 26:
         if (gLevelState->maskLevel == 0) {
-            struct ac2c_pos *h = self->maskTrail;
+            struct player_pos *h = self->maskTrail;
             s32 i;
 
             for (i = 7; i >= 0; i--)
-                *h++ = *(struct ac2c_pos *)self;
+                *h++ = *(struct player_pos *)self;
         }
         {
             s32 mode = gLevelState->maskLevel;
@@ -365,13 +324,13 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
     case 8:
     case 9:
     case 10:
-        if ((self->flags >> 6) & 1) {
+        if ((self->flags.all >> 6) & 1) {
             if (!Ac2cArmed(self)) {
                 struct level_state *game = gLevelState;
 
                 if (game->maskLevel != 0) {
                     if (game->maskLevel <= 2) {
-                        struct ac2c_child *child;
+                        struct box_part *child;
                         s32 x, y, m;
 
                         self->deadline = gRoomFrameCount + 90;
@@ -396,9 +355,9 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
         break;
     case 23:
     case 24:
-        self->rampYStart = 0;
-        self->rampYStep = 0;
-        self->rampYTarget = 0;
+        self->rampY.start = 0;
+        self->rampY.step = 0;
+        self->rampY.target = 0;
         NOTIFY(self, a, code, c);
         break;
     case 12:
@@ -407,47 +366,21 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
     case 13:
     case 14:
     case 25:
-        self->rampYStart = 0;
-        self->rampYStep = 0;
-        self->rampYTarget = 0;
+        self->rampY.start = 0;
+        self->rampY.step = 0;
+        self->rampY.target = 0;
         NOTIFY(self, a, code, c);
         break;
     }
 }
 
-struct orbit_pos {
-    s32 x;
-    s32 y;
-};
-
-struct orbit_self {
-    s32 x;                      // 0x00
-    s32 y;                      // 0x04
-    u8 unk_08[4];
-    u8 flags_0:3;               // 0x0C
-    u8 flag3:1;                 // bit 3 cleared once +0x38 is set
-    u8 flags_4:4;
-    u8 unk_0D[0x1b];
-    u32 unk_28_0:4;             // 0x28
-    u32 mirrorX:1;
-    u32 unk_28_5:3;
-    u8 unk_29[0xf];
-    u8 unk_38;                  // 0x38
-    u8 unk_39[0x53];
-    u32 blinkDeadline;          // 0x8C
-    u8 unk_90[0x20];
-    struct box_part *child;     // 0xB0
-    s32 maskTrailIdx;                // 0xB4
-    struct orbit_pos maskTrail[8];   // 0xB8
-};
-
 extern s32 _call_via_r1(void *addr, void *fn);
 
-static inline s32 BlinkArmed(struct orbit_self *self)
+static inline s32 BlinkArmed(struct player *self)
 {
     s32 armed = 0;
 
-    if (self->blinkDeadline > gRoomFrameCount)
+    if (self->deadline > gRoomFrameCount)
         armed = 1;
     return armed;
 }
@@ -494,7 +427,7 @@ static inline void RefreshChild(struct box_part *child)
     _call_via_r1((u8 *)child + m->thisOffset, m->fn);
 }
 
-void DrawPlayer(struct orbit_self *self)
+void DrawPlayer(struct player *self)
 {
     register s32 hold asm("r6");
 
@@ -506,13 +439,13 @@ void DrawPlayer(struct orbit_self *self)
              * mask, as in the ROM. */
             gAkuAkuInvincibleFrame = ({
                 s32 r = RandRange(2);
-                s32 m = self->mirrorX;
+                s32 m = self->mirror.bits.flipX;
                 s32 v = (u16)r + 2;
 
                 v - m * 2;
             });
         ClampTick(self->child, gAkuAkuInvincibleFrame);
-        if (self->mirrorX)
+        if (self->mirror.bits.flipX)
             SetPos(self->x, self->y, self->child, -0x600, -0x1300);
         else
             SetPos(self->x, self->y, self->child, 0x600, -0x1300);
@@ -580,6 +513,6 @@ void DrawPlayer(struct orbit_self *self)
             asm("" : : "r"(hold));
         }
     }
-    if (self->unk_38)
-        self->flag3 = 0;
+    if (self->animDone)
+        self->flags.bits.hit = 0;
 }

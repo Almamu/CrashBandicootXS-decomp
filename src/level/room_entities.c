@@ -161,8 +161,8 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
 
                             if (to == other->id)
                             {
-                                SetCrateAbove(actor, other);
-                                SetCrateBelow(other, actor);
+                                SetCrateAbove((struct crate *)actor, (struct crate *)other);
+                                SetCrateBelow((struct crate *)other, (struct crate *)actor);
                                 done = 1;
                                 break;
                             }
@@ -288,7 +288,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                     p.x = actor->pos.x;
                     pp->y = actor->pos.y + lift;
                     SetEntityPos((struct actor *)actor, p.x, pp->y);
-                    actor = GetCrateAbove(actor);
+                    actor = (struct lk_actor *)GetCrateAbove((struct crate *)actor);
                 } while (actor != NULL);
             }
         }

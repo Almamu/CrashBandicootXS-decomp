@@ -128,11 +128,11 @@ u8 IsCrateKindBreakable(void *arg0, u32 idx)
  * count), and an inline-asm-materialized mask check matching the
  * ROM's own instruction order (address-then-mask-then-load, not
  * load-then-mask). */
-void *GetTopCrate(void *selfArg)
+struct crate *GetTopCrate(struct crate *selfArg)
 {
-    void *self = selfArg;
-    void *cur;
-    void *next;
+    struct crate *self = selfArg;
+    struct crate *cur;
+    struct crate *next;
     register u32 masked asm("r0");
 
     cur = GetCrateAbove(self);
@@ -184,11 +184,11 @@ loop:
 /* Same walk as `GetTopCrate`, but over the "get next" chain
  * (`GetCrateBelow`) instead of "get prev". Same matching technique as
  * that function - see docs/matching/naked-GetTopCrate-matched.md. */
-void *GetBottomCrate(void *selfArg)
+struct crate *GetBottomCrate(struct crate *selfArg)
 {
-    void *self = selfArg;
-    void *cur;
-    void *next;
+    struct crate *self = selfArg;
+    struct crate *cur;
+    struct crate *next;
     register u32 masked asm("r0");
 
     cur = GetCrateBelow(self);
@@ -246,13 +246,13 @@ loop:
  * action, the gActionCtrlStateAttackKinds index) is passed on in r1
  * untouched. Always clears
  * `self`'s own `+0xc` flags bit 3 before returning, unconditionally. */
-s32 CollideCrateWithPlayer(void *selfArg, u32 idx, s32 testX, s32 testY)
+s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (only the transient mask-check scratch below uses r5/r6/ip), and
      * this compiler's own unforced allocator drifts it onto r6 instead
      * once the tail's `loaded asm("r6")` pin is in scope. */
-    register u8 *self asm("r4") = selfArg;
+    register u8 *self asm("r4") = (u8 *)selfArg;
     u32 masked;
 
     asm volatile(

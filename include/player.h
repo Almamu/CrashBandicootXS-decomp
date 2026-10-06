@@ -12,8 +12,9 @@
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * The player object is `struct player` below (gPlayer, globals.h). Most
- * of the player's own functions still take `void *`.
+ * The player object is `struct player` below (gPlayer, globals.h); the
+ * player's own functions take it. The action controller's functions
+ * still take `void *` or `struct act *` (action_obj.h).
  * ResetActionCtrl (src/pickups/wumpa.c) is here, with the rest of the
  * action controller. */
 
@@ -22,16 +23,11 @@
 #include "vtable.h"
 #include "objects.h"
 
-struct a884_part;
-struct ab9c_obj;
-struct ac2c_self;
 struct act;
 struct box_part;
 struct crate;
-struct ctrl_target;
 struct gobj;
 struct input_ctrl;
-struct orbit_self;
 struct pctrl_motion_queue;
 struct player_ctrl;
 struct vec3;
@@ -405,7 +401,7 @@ extern void sub_801796C(struct input_ctrl *self);
 extern void RestartInputCtrl(struct input_ctrl *self);
 extern void ResetInputCtrl(struct input_ctrl *self);
 extern void InputCtrlHandleEvent(struct input_ctrl *self, s32 arg1, s32 arg2);
-extern void AttachInputCtrl(struct input_ctrl *self, struct ctrl_target *target);
+extern void AttachInputCtrl(struct input_ctrl *self, struct player *target);
 extern void DestroyInputCtrl(struct input_ctrl *self, s32 flags);
 extern struct input_ctrl *CreateInputCtrl(struct input_ctrl *self);
 extern void SetInputCtrlMotionYPending(struct input_ctrl *self);
@@ -434,74 +430,74 @@ extern s32 UpdatePlayerFacing(void *self);
 extern u8 PlayerHasRoomForAnim(struct box_part *self, s32 x);
 
 /* src/player/player_collide.c */
-extern u8 CollidePlayer(struct a884_part *self);
+extern u8 CollidePlayer(struct player *self);
 
 /* src/player/player_event.c */
-extern void CollidePlayerWithObjects(struct ab9c_obj *self);
-extern void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c);
-extern void DrawPlayer(struct orbit_self *self);
+extern void CollidePlayerWithObjects(struct player *self);
+extern void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c);
+extern void DrawPlayer(struct player *self);
 
 /* src/player/player_flags.c */
-extern void *GetPlayerCollisionQueue(void *self);
-extern void ClearPlayerDead(void *self);
-extern void SetPlayerDead(void *self);
-extern u8 IsPlayerDead(void *self);
-extern void StartPlayerRampX(void *self, s32 a, s32 b, s32 c);
-extern void SetPlayerRampX(void *self, s32 a, s32 b, s32 c);
-extern void sub_800B4F8(void *self);
-extern void sub_800B508(void *self);
-extern void sub_800B510(void *self);
-extern u8 sub_800B51C(void *self);
-extern u8 IsPlayerInvulnerable(void *self);
-extern void ClearPlayerInvulnerability(void *self);
-extern void SetPlayerInvulnerable(void *self, s32 arg1);
-extern void SetPlayerControlMode(void *self, u8 arg1);
-extern u8 GetPlayerControlMode(void *self);
-extern s32 GetPlayerStandingOn(void *self);
-extern void SetPlayerStandingOn(void *self, s32 arg1);
-extern void SetPlayerBusy(void *self, u8 arg1);
-extern u8 IsPlayerBusy(void *self);
-extern void sub_800B584(void *self);
-extern void sub_800B58C(void *self);
-extern u8 sub_800B5A0(void *self);
-extern void sub_800B5A8(void *self);
-extern void sub_800B5B0(void *self);
-extern u8 sub_800B5BC(void *self);
-extern void sub_800B5C4(void *self);
-extern void sub_800B5CC(void *self);
-extern u8 sub_800B5D8(void *self);
-extern void SetPlayerBumped(void *self, u8 arg1);
-extern u8 IsPlayerBumped(void *self);
-extern u8 GetPlayerPushRight(void *self);
-extern void SetPlayerPushRight(void *self, u8 arg1);
-extern u8 GetPlayerPushLeft(void *self);
-extern void SetPlayerPushLeft(void *self, u8 arg1);
-extern u8 IsPlayerHanging(void *self);
-extern void SetPlayerHanging(void *self, u8 arg1);
-extern u8 IsPlayerSlippery(void *self);
-extern void SetPlayerSlippery(void *self, u8 arg1);
-extern s32 sub_800B650(void *self, s32 idx);
-extern void sub_800B678(void *self, s32 val);
+extern void *GetPlayerCollisionQueue(struct player *self);
+extern void ClearPlayerDead(struct player *self);
+extern void SetPlayerDead(struct player *self);
+extern u8 IsPlayerDead(struct player *self);
+extern void StartPlayerRampX(struct player *self, s32 a, s32 b, s32 c);
+extern void SetPlayerRampX(struct player *self, s32 a, s32 b, s32 c);
+extern void sub_800B4F8(struct player *self);
+extern void sub_800B508(struct player *self);
+extern void sub_800B510(struct player *self);
+extern u8 sub_800B51C(struct player *self);
+extern u8 IsPlayerInvulnerable(struct player *self);
+extern void ClearPlayerInvulnerability(struct player *self);
+extern void SetPlayerInvulnerable(struct player *self, s32 arg1);
+extern void SetPlayerControlMode(struct player *self, u8 arg1);
+extern u8 GetPlayerControlMode(struct player *self);
+extern s32 GetPlayerStandingOn(struct player *self);
+extern void SetPlayerStandingOn(struct player *self, s32 arg1);
+extern void SetPlayerBusy(struct player *self, u8 arg1);
+extern u8 IsPlayerBusy(struct player *self);
+extern void sub_800B584(struct player *self);
+extern void sub_800B58C(struct player *self);
+extern u8 sub_800B5A0(struct player *self);
+extern void sub_800B5A8(struct player *self);
+extern void sub_800B5B0(struct player *self);
+extern u8 sub_800B5BC(struct player *self);
+extern void sub_800B5C4(struct player *self);
+extern void sub_800B5CC(struct player *self);
+extern u8 sub_800B5D8(struct player *self);
+extern void SetPlayerBumped(struct player *self, u8 arg1);
+extern u8 IsPlayerBumped(struct player *self);
+extern u8 GetPlayerPushRight(struct player *self);
+extern void SetPlayerPushRight(struct player *self, u8 arg1);
+extern u8 GetPlayerPushLeft(struct player *self);
+extern void SetPlayerPushLeft(struct player *self, u8 arg1);
+extern u8 IsPlayerHanging(struct player *self);
+extern void SetPlayerHanging(struct player *self, u8 arg1);
+extern u8 IsPlayerSlippery(struct player *self);
+extern void SetPlayerSlippery(struct player *self, u8 arg1);
+extern s32 sub_800B650(struct player *self, s32 idx);
+extern void sub_800B678(struct player *self, s32 val);
 extern void SetCtrlMode(void *self, s32 val);
 extern void SetCtrlAnimSet(void *self, s32 val);
 extern void SetCtrlTargetMotionY(void *unused, void *self, struct vec3 *vec);
 extern void StartCtrlTargetMotionY(void *unused, void *self, struct vec3 *vec);
 
 /* src/player/player_init.c */
-extern void *InitPlayer(void *self, u16 arg1, u16 arg2, u16 arg3, u16 unused);
+extern struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused);
 
 /* src/player/player_reset.c */
-extern void ResetPlayer(void *self);
-extern void ResetPlayerForRoom(void *self);
+extern void ResetPlayer(struct player *self);
+extern void ResetPlayerForRoom(struct player *self);
 
 /* src/player/player_update.c */
-extern s32 ApplyPlayerVelocity(void *self);
-extern u8 HasPlayerRampYTarget(void *self);
-extern void ClearPlayerSpeedY(void *self);
-extern void StopPlayerFalling(void *self);
-extern void UpdatePlayer(void *self);
-extern u8 PlayerTouchesBox(void *self, void *buf);
-extern void DestroyPlayer(void *self, u32 arg1);
+extern s32 ApplyPlayerVelocity(struct player *self);
+extern u8 HasPlayerRampYTarget(struct player *self);
+extern void ClearPlayerSpeedY(struct player *self);
+extern void StopPlayerFalling(struct player *self);
+extern void UpdatePlayer(struct player *self);
+extern u8 PlayerTouchesBox(struct player *self, struct aabb *box);
+extern void DestroyPlayer(struct player *self, u32 arg1);
 
 /* src/player/swim_ctrl.c */
 extern void CheckPlayerCtrlTurn(struct player_ctrl *self);

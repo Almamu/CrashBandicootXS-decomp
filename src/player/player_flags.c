@@ -4,43 +4,37 @@
 #include "player.h"
 #include "globals.h"
 
-/* Continuation of the big unnamed object introduced in
- * player_update.c - see that file's header comment. */
-
-/* Base-class accessors of the level object/player (`struct gobj`,
- * gobj_1a794.h). */
+/* The player object's accessors (`struct player`, player.h), then the
+ * controllers' setters (SetCtrlMode/SetCtrlAnimSet) and the motion
+ * setters that act on a controller's target, a moving sprite (`struct
+ * gobj`, gobj_1a794.h: the player, a platform or a boss part). */
 
 /* `collisionQueue` (+0x108) address getter. */
-void *GetPlayerCollisionQueue(void *selfArg)
+void *GetPlayerCollisionQueue(struct player *self)
 {
-    return ((struct gobj *)selfArg)->collisionQueue;
+    return self->collisionQueue;
 }
 
 /* `dead` (+0x104) clear/set/get accessors. */
-void ClearPlayerDead(void *selfArg)
+void ClearPlayerDead(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->dead = 0;
 }
 
-void SetPlayerDead(void *selfArg)
+void SetPlayerDead(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->dead = 1;
 }
 
-u8 IsPlayerDead(void *selfArg)
+u8 IsPlayerDead(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->dead;
 }
 
 /* Sets `rampX` (+0x48) and starts speedX at its `start`, unless the
  * player is on slippery ground (`slippery`), where the speed is kept. */
-void StartPlayerRampX(void *selfArg, s32 a, s32 b, s32 c)
+void StartPlayerRampX(struct player *self, s32 a, s32 b, s32 c)
 {
-    struct gobj *self = selfArg;
-
     if (self->slippery == 0) {
         self->speedX = a;
     }
@@ -50,10 +44,8 @@ void StartPlayerRampX(void *selfArg, s32 a, s32 b, s32 c)
 }
 
 /* Sets `rampX` only, keeping the current speedX. */
-void SetPlayerRampX(void *selfArg, s32 a, s32 b, s32 c)
+void SetPlayerRampX(struct player *self, s32 a, s32 b, s32 c)
 {
-    struct gobj *self = selfArg;
-
     self->rampX.start = a;
     self->rampX.step = b;
     self->rampX.target = c;
@@ -61,30 +53,25 @@ void SetPlayerRampX(void *selfArg, s32 a, s32 b, s32 c)
 
 /* `self+0x91` countdown byte decrement/clear/increment/get
  * accessors. */
-void sub_800B4F8(void *selfArg)
+void sub_800B4F8(struct player *self)
 {
-    struct gobj *self = selfArg;
-
     if (self->countdown != 0) {
         self->countdown -= 1;
     }
 }
 
-void sub_800B508(void *selfArg)
+void sub_800B508(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->countdown = 0;
 }
 
-void sub_800B510(void *selfArg)
+void sub_800B510(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->countdown += 1;
 }
 
-u8 sub_800B51C(void *selfArg)
+u8 sub_800B51C(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->countdown;
 }
 
@@ -92,61 +79,53 @@ u8 sub_800B51C(void *selfArg)
  * (the same counter documented in `docs/rom_map.md`); this tests
  * whether it's still ahead of the counter (unsigned comparison - a
  * signed one here would be a real, previously-caught bug). */
-u8 IsPlayerInvulnerable(void *selfArg)
+u8 IsPlayerInvulnerable(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->deadline > gRoomFrameCount;
 }
 
-void ClearPlayerInvulnerability(void *selfArg)
+void ClearPlayerInvulnerability(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->deadline = 0;
 }
 
 /* Sets `self+0x8c` to `gRoomFrameCount + arg1` - arming the
  * "ahead of the counter" check `IsPlayerInvulnerable` performs. */
-void SetPlayerInvulnerable(void *selfArg, s32 arg1)
+void SetPlayerInvulnerable(struct player *self, s32 arg1)
 {
-    struct gobj *self = selfArg;
     self->deadline = gRoomFrameCount + arg1;
 }
 
 /* `self+0x88` byte set/get accessors. */
-void SetPlayerControlMode(void *selfArg, u8 arg1)
+void SetPlayerControlMode(struct player *self, u8 arg1)
 {
-    struct gobj *self = selfArg;
     self->ctrlMode = arg1;
 }
 
-u8 GetPlayerControlMode(void *selfArg)
+u8 GetPlayerControlMode(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->ctrlMode;
 }
 
 /* `self+0xac` pointer/word get/set accessors. */
-s32 GetPlayerStandingOn(void *selfArg)
+s32 GetPlayerStandingOn(struct player *self)
 {
-    return (s32)((struct gobj *)selfArg)->carried;
+    return (s32)self->carried;
 }
 
-void SetPlayerStandingOn(void *selfArg, s32 arg1)
+void SetPlayerStandingOn(struct player *self, s32 arg1)
 {
-    struct gobj *self = selfArg;
     self->carried = (struct gobj *)arg1;
 }
 
 /* `self+0x80` byte set/get accessors. */
-void SetPlayerBusy(void *selfArg, u8 arg1)
+void SetPlayerBusy(struct player *self, u8 arg1)
 {
-    struct gobj *self = selfArg;
     self->busy = arg1;
 }
 
-u8 IsPlayerBusy(void *selfArg)
+u8 IsPlayerBusy(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->busy;
 }
 
@@ -154,133 +133,112 @@ u8 IsPlayerBusy(void *selfArg)
  * accessors, plus a plain clear/increment/get triple reusing the
  * same field (identical code emitted twice by the ROM - reproduced
  * as-is rather than deduplicated). */
-void sub_800B584(void *selfArg)
+void sub_800B584(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->listCount = 0;
 }
 
-void sub_800B58C(void *selfArg)
+void sub_800B58C(struct player *self)
 {
-    struct gobj *self = selfArg;
-
     if (self->ctrlMode == 0) {
         self->listCount += 1;
     }
 }
 
-u8 sub_800B5A0(void *selfArg)
+u8 sub_800B5A0(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->listCount;
 }
 
-void sub_800B5A8(void *selfArg)
+void sub_800B5A8(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->listCount = 0;
 }
 
-void sub_800B5B0(void *selfArg)
+void sub_800B5B0(struct player *self)
 {
-    struct gobj *self = selfArg;
     self->listCount += 1;
 }
 
-u8 sub_800B5BC(void *selfArg)
+u8 sub_800B5BC(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->listCount;
 }
 
 /* `self+0x92` byte clear/increment/get accessors. */
-void sub_800B5C4(void *selfArg)
+void sub_800B5C4(struct player *self)
 {
-    struct gobj *self = selfArg;
-    self->unk_92 = 0;
+    self->bounce = 0;
 }
 
-void sub_800B5CC(void *selfArg)
+void sub_800B5CC(struct player *self)
 {
-    struct gobj *self = selfArg;
-    self->unk_92 += 1;
+    self->bounce += 1;
 }
 
-u8 sub_800B5D8(void *selfArg)
+u8 sub_800B5D8(struct player *self)
 {
-    struct gobj *self = selfArg;
-    return self->unk_92;
+    return self->bounce;
 }
 
 /* `bumped` (+0x90) set/get accessors. */
-void SetPlayerBumped(void *selfArg, u8 arg1)
+void SetPlayerBumped(struct player *self, u8 arg1)
 {
-    struct gobj *self = selfArg;
     self->bumped = arg1;
 }
 
-u8 IsPlayerBumped(void *selfArg)
+u8 IsPlayerBumped(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->bumped;
 }
 
 /* `self+0x103`/`self+0x102`/`self+0x101`/`self+0x100` byte get/set
  * accessor pairs (`pushRight`/`pushLeft`: the standing player is moved
  * 1px per frame that way), `hanging` (+0x101) and `slippery` (+0x100). */
-u8 GetPlayerPushRight(void *selfArg)
+u8 GetPlayerPushRight(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->pushRight;
 }
 
-void SetPlayerPushRight(void *selfArg, u8 arg1)
+void SetPlayerPushRight(struct player *self, u8 arg1)
 {
-    struct gobj *self = selfArg;
     self->pushRight = arg1;
 }
 
-u8 GetPlayerPushLeft(void *selfArg)
+u8 GetPlayerPushLeft(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->pushLeft;
 }
 
-void SetPlayerPushLeft(void *selfArg, u8 arg1)
+void SetPlayerPushLeft(struct player *self, u8 arg1)
 {
-    struct gobj *self = selfArg;
     self->pushLeft = arg1;
 }
 
-u8 IsPlayerHanging(void *selfArg)
+u8 IsPlayerHanging(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->hanging;
 }
 
-void SetPlayerHanging(void *selfArg, u8 arg1)
+void SetPlayerHanging(struct player *self, u8 arg1)
 {
-    struct gobj *self = selfArg;
     self->hanging = arg1;
 }
 
-u8 IsPlayerSlippery(void *selfArg)
+u8 IsPlayerSlippery(struct player *self)
 {
-    struct gobj *self = selfArg;
     return self->slippery;
 }
 
-void SetPlayerSlippery(void *selfArg, u8 arg1)
+void SetPlayerSlippery(struct player *self, u8 arg1)
 {
-    struct gobj *self = selfArg;
     self->slippery = arg1;
 }
 
 /* Indexed getter into the `self+0x98` 5-entry `s32` array, gated by
  * `self+0x88` and (for `idx > 4`) `self+0x94`'s own count. */
-s32 sub_800B650(void *selfArg, s32 idx)
+s32 sub_800B650(struct player *self, s32 idx)
 {
-    struct gobj *self = selfArg;
     s32 result;
 
     if (self->ctrlMode != 0) {
@@ -308,9 +266,9 @@ end:
 
 /* Appends `val` into the same `self+0x98` array at the index held in
  * `self+0x94`, gated by `self+0x88` and the index staying `<= 4`. */
-void sub_800B678(void *selfArg, s32 val)
+void sub_800B678(struct player *selfArg, s32 val)
 {
-    register struct gobj *self asm("r2") = selfArg;
+    register struct player *self asm("r2") = selfArg;
     register s32 val3 asm("r3") = val;
 
     if (self->ctrlMode == 0) {

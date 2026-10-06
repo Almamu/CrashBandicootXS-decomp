@@ -47,9 +47,9 @@
  * deliberately narrow scopes so this compiler's allocator doesn't pick
  * a different (but equally "free") register than the ROM's own choice.
  * See docs/matching/issue-9-0x08007634-actor.md for the full write-up. */
-void ResetPlayer(void *selfArg)
+void ResetPlayer(struct player *selfArg)
 {
-    u8 *self = selfArg;
+    u8 *self = (u8 *)selfArg;
     u8 flags;
     s32 ret;
     u8 *p1, *p0;
@@ -287,9 +287,9 @@ asm(".align 2, 0");
  * arm, always collapsed the branch polarity to `bne`-skip instead of
  * this `beq`-take shape and let the CSE pass drop the `state`/`state2`
  * copy entirely). See docs/matching/issue-9-0x08007634-actor.md. */
-void ResetPlayerForRoom(void *selfArg)
+void ResetPlayerForRoom(struct player *selfArg)
 {
-    register struct gobj *self asm("r3") = selfArg;
+    register struct player *self asm("r3") = selfArg;
     s32 state;
 
     {
@@ -315,14 +315,14 @@ void ResetPlayerForRoom(void *selfArg)
     }
     {
         register s32 mask asm("r0") = -9;
-        register s32 byte asm("r1") = self->flags;
+        register s32 byte asm("r1") = self->flags.all;
         register s32 result asm("r0");
         register s32 orMask asm("r1");
 
         result = mask & byte;
         orMask = 0x40;
         result = result | orMask;
-        self->flags = result;
+        self->flags.all = result;
     }
 
     state = self->ctrlMode;
@@ -338,13 +338,13 @@ void ResetPlayerForRoom(void *selfArg)
         if (state2 == 3) goto do3;
         goto endDispatch;
     do0:
-        RestartActionCtrl(self->mover);
+        RestartActionCtrl(self->ctrl);
         goto endDispatch;
     do1:
-        RestartPlayerCtrl(self->mover);
+        RestartPlayerCtrl(self->ctrl);
         goto endDispatch;
     do3:
-        RestartInputCtrl((struct input_ctrl *)self->mover);
+        RestartInputCtrl(self->ctrl);
     endDispatch:
         ;
     }
