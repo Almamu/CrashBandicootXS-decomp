@@ -6,9 +6,7 @@
  * src/bosses/cortex.c (CreateCortexBossPlatformMover, which base-constructs its
  * own mover subclass through it). */
 
-struct mover;
-
-struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 dirX, u8 dirY, s32 kind);
+#include "objects.h" /* CreatePlatformMover */
 
 /* CreatePlatformMover's 5th/6th arguments are passed on the stack, the 5th as a
  * genuine byte (`strb`); both agbcc and old_agbcc widen a stack-passed

@@ -235,8 +235,6 @@ u8 CollideGroundSprite(struct box_part *self)
     return self->hitAxes;
 }
 
-extern s32 _call_via_r1(void *addr, void *fn);
-
 /* See the file-level header comment above for this function's
  * semantics. `self`'s only argument; returns the accumulated result
  * bitmask (`self+0x24`'s per-axis mode bits, OR'd in as each

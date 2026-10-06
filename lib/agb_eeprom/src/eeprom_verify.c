@@ -39,7 +39,9 @@ s32 EEPROMCompare(u16 addr, u16 *data)
 s32 EEPROMWrite1_check(u16 addr, u16 *data)
 {
     u8 i;
-    u16 result;
+    /* Self-initialized to silence -Wuninitialized (the loop always runs,
+     * gcc can't tell): `= 0` adds a store to the SDK code (#577). */
+    u16 result = result;
 
     for (i = 0; i < 3; i++) {
         result = EEPROMWrite(addr, data);

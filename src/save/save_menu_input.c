@@ -838,7 +838,7 @@ void DrawSaveMenuMain(struct save_menu *self)
             "ldr r2, [r5, #4]\n"
             "add r0, %0, #0\n"
             "bl _call_via_r2\n"
-            : "+r" (mgr), "+r" (label)
+            : "+r" (mgr), "=r" (label)
             : "r" (y), "r" (i), "r" (mgrAddr)
             : "r0", "r1", "r2", "r3", "r5", "r12", "lr", "cc", "memory"
         );

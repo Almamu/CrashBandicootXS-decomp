@@ -341,8 +341,6 @@ struct popup_oam {
     u16 palette:4;
 };
 
-extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-
 void DrawCreditsText(struct credits_screen *self)
 {
     struct popup_node *node;

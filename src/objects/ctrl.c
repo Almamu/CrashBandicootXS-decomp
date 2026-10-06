@@ -49,17 +49,17 @@ void SetCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec)
     u8 *part = partArg;
 
     if ((s32)(part[0x28] << 27) < 0) {
-        s32 x = -FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = -FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = -FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 z = -FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
 
         *(s32 *)(part + 0x48) = x;
         *(s32 *)(part + 0x4c) = y;
         *(s32 *)(part + 0x50) = z;
     } else {
-        s32 x = FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 z = FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
 
         *(s32 *)(part + 0x48) = x;
         *(s32 *)(part + 0x4c) = y;
@@ -76,18 +76,18 @@ void StartCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec)
     u8 *part = partArg;
 
     if ((s32)(part[0x28] << 27) < 0) {
-        s32 x = -FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = -FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = -FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 z = -FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
 
         *(s32 *)(part + 0x60) = x;
         *(s32 *)(part + 0x48) = x;
         *(s32 *)(part + 0x4c) = y;
         *(s32 *)(part + 0x50) = z;
     } else {
-        s32 x = FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = FixedMul(vec[0], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(u8 **)(self + 4) + 4));
+        s32 z = FixedMul(vec[2], *(s32 *)(*(u8 **)(self + 4) + 4));
 
         *(s32 *)(part + 0x60) = x;
         *(s32 *)(part + 0x48) = x;

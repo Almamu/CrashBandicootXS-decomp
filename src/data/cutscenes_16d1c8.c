@@ -24,8 +24,6 @@
 
 extern const u16 gCutscenePicture00[], gCutscenePicture01[], gCutscenePicture02[], gCutscenePicture03[], gCutscenePicture04[], gCutscenePicture05[], gCutscenePicture06[], gCutscenePicture07[], gCutscenePicture08[], gCutscenePicture09[], gCutscenePicture10[], gCutscenePicture11[], gCutscenePicture12[], gCutscenePicture13[], gCutscenePicture14[], gCutscenePicture15[], gCutscenePicture16[], gCutscenePicture17[], gCutscenePicture18[], gCutscenePicture19[], gCutscenePicture20[], gCutscenePicture21[], gCutscenePicture22[], gCutscenePicture23[];
 
-extern const struct cutscene_page *const gCutsceneTextEnglish[11];
-extern const struct cutscene_slides gCutscenes[11];
 extern const struct cutscene_page gCutscene01English[4];
 extern const struct cutscene_page gCutscene02English[9];
 extern const struct cutscene_page gCutscene03English[1];
@@ -37,11 +35,6 @@ extern const struct cutscene_page gCutscene08English[4];
 extern const struct cutscene_page gCutscene09English[6];
 extern const struct cutscene_page gCutscene10English[6];
 extern const struct cutscene_page gCutscene00English[1];
-extern const struct cutscene_page *const gCutsceneTextFrench[11];
-extern const struct cutscene_page *const gCutsceneTextGerman[11];
-extern const struct cutscene_page *const gCutsceneTextSpanish[11];
-extern const struct cutscene_page *const gCutsceneTextItalian[11];
-extern const struct cutscene_page *const gCutsceneTextDutch[11];
 extern const struct cutscene_slide *const gCutscene00Slides[1];
 extern const struct cutscene_slide *const gCutscene01Slides[4];
 extern const struct cutscene_slide *const gCutscene02Slides[9];

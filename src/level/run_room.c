@@ -330,8 +330,6 @@ s32 RunRoom(struct level_progress *self)
 
     while (!IsRoomExitRequested() && !(gPlayer->flags.all & 1))
     {
-        struct player *p;
-
         ResetObjBuffers();
         UpdateRoomFrame(self);
         UpdateKeys(gInput);

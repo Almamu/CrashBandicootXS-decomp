@@ -3,6 +3,7 @@
 
 #include "menus.h"
 #include "graphics_package.h"
+#include "objects.h" /* GetSpriteAnimPaletteSlot */
 
 /* A small `struct actor`-derived on-screen icon: the first 0x1c bytes
  * are a plain `struct actor` (see actor.h), then a second keyframe-
@@ -100,8 +101,6 @@ struct pause_menu {
     u8 unused_d2[2];
 };
 COMPILE_TIME_ASSERT(pause_menu_h, sizeof(struct pause_menu) == 0xd4);
-
-extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 
 /* Sets `field_29`'s low nibble from GetSpriteAnimPaletteSlot's result, keeping the
  * high nibble - the recurring last step of every icon constructor that

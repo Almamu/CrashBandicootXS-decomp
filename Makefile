@@ -13,7 +13,13 @@ OBJCOPY  := $(PREFIX)objcopy
 GFX := tools/gbagfx/gbagfx
 GRIT := tools/grit/grit
 
-CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O2 -fhex-asm  -fprologue-bugfix
+# Warnings (#577). Every C object, whichever compiler builds it (agbcc,
+# old_agbcc, agbcc_arm), gets this set, and -Werror makes any warning
+# fail the build, locally and in CI. A fix must keep the ROM matching;
+# see "Compiler warnings" in CONTRIBUTING.md for how to handle a warning
+# byte-neutrally and the per-site escape hatches.
+WARNFLAGS := -Wall -Wmissing-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror
+CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fhex-asm  -fprologue-bugfix
 # The libraries' public headers (lib/*/include) are on the -I path, so
 # game code includes them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
 CPPFLAGS := -I tools/agbcc/include -iquote include $(patsubst %,-I %,$(wildcard lib/*/include)) -nostdinc -undef
@@ -355,7 +361,7 @@ CC1_ARM  := tools/agbcc/bin/agbcc_arm
 ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
             $(C_BUILDDIR)/iwram/sprite_arm.o
 $(ARM_OBJS): CC1 := $(CC1_ARM)
-$(ARM_OBJS): CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O2 -fomit-frame-pointer
+$(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer
 
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)

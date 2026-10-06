@@ -147,6 +147,57 @@ full rules and the history (#574). For new code:
   layout of a header struct (often a copy or a view of it; check the
   readers before merging).
 
+### Compiler warnings
+
+The build is warning-free and stays that way (#577). Every C object,
+whichever compiler builds it (agbcc, old_agbcc or agbcc_arm, including
+the per-object flag overrides), gets the Makefile's `WARNFLAGS`:
+
+```
+-Wall -Wmissing-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror
+```
+
+`-Wall` already includes `-Wimplicit`, `-Wparentheses`, `-Wunused`,
+`-Wreturn-type` and (at `-O1`/`-O2`) `-Wuninitialized`. `-Werror` makes
+any warning fail the build, locally and in CI. As with any compile error,
+agbcc's message doesn't contain the word "error": look for "warnings
+being treated as errors" and the `warning:` line under it.
+
+Fix a warning the way that leaves the bytes alone, and check it with the
+two clean builds above:
+
+- **Missing prototype** (`no previous prototype for X`): declare the
+  function in its owner's header (see "Declarations and headers"), even
+  when it's only reached through a table or a `UNUSED` function. A prior
+  prototype with the definition's exact types doesn't change the code.
+- **Redundant redeclaration:** delete the second declaration. If two
+  headers declare the same symbol, keep it in the owner's header and have
+  the other one include that header.
+- **Pointer arithmetic on `void *`:** use a `u8 *` (or, better, the
+  real struct type) for the arithmetic.
+- **Unused variable:** delete it, if the object stays identical.
+- **Might be used uninitialized:** many of these are deliberate, since
+  the ROM reads whatever the register held. A real initializer usually
+  adds or changes code, so check it before keeping it. An inline-asm
+  operand marked `"+r"` that the asm only writes should be `"=r"`.
+
+When the honest fix changes the bytes, keep the code and silence just
+that one site, with a comment saying why. agbcc 2.9 has no
+`#pragma GCC diagnostic`, so use one of these, in this order:
+
+1. **Self-initialization** for `-Wuninitialized`: `u32 bg0cnt = bg0cnt;`
+   gcc emits no code for it. Used in `starfield.c`,
+   `title_screen_init.c`, `fade.c`, `sprite_frame.c`, `eeprom_verify.c`
+   and `gax_voice_steal.c`.
+2. **`__attribute__((unused))`** on a variable or parameter that has to
+   stay for codegen, for `-Wunused`.
+3. **A per-object override** in the Makefile, as a last resort:
+   `$(C_BUILDDIR)/foo/bar.o: CC1FLAGS += -Wno-<warning>`, with a comment
+   saying which site needs it and why nothing narrower works. It
+   silences the warning for the whole file, so prefer 1 or 2.
+
+Never remove `-Werror` or a flag from `WARNFLAGS` to get a change in.
+
 ## Opening the PR
 
 Say what the PR changes and how you verified it (the two clean checks

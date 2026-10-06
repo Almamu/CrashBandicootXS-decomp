@@ -342,6 +342,35 @@ extern void GaxMixFrame(struct GaxMixerHandler *mixer, u32 *buf);
 /* gax_zero_fill.c */
 extern void GaxZeroFill(void *dest, s32 count);
 
+/* The SoundHandler types' methods (init_fn/unknown_fn/play_fn, see
+ * docs/audio.md) and the helpers next to them. The methods aren't called
+ * by name (the handler-type tables hold their addresses) and the helpers
+ * only from their own file, but each definition still needs a prototype
+ * (-Wmissing-prototypes). */
+struct UnknownC; /* gax_unknownc_play.c's view of the mixer handler */
+/* gax_channel_init.c, gax_channel_note_cut_driver.c: the FX channel type */
+extern void GaxFxChannelInit(void *self);
+extern u8 GaxFxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg);
+/* gax_sound_handler_channel.c, gax_sound_handler_channel_init.c,
+ * gax_sound_handler_channel_play.c: the Channel type */
+extern void nullsub_40(void);
+extern void GaxChannelInit(struct GaxChannelState *self);
+extern u8 GaxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg);
+/* gax_sound_handler_info.c: the Info type */
+extern void GaxInfoResetPosition(void *self);
+extern void GaxInfoInit(void *self);
+extern void sub_803941C(void *self);
+extern void nullsub_39(void);
+extern u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg);
+/* gax_sound_handler_unknownc.c, gax_unknownc_play.c: the mixer
+ * ("UnknownC") type */
+extern void nullsub_41(void);
+extern void GaxMixerInit(void *self);
+extern void nullsub_42(void);
+extern void GaxMixerApplyEcho(struct UnknownC *self, u32 *buf);
+extern void sub_803A2C8(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count);
+extern u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2);
+
 /* ---- The engine's data ---- */
 
 /* lib/gax/data/gax_tables_5a6100.c */
