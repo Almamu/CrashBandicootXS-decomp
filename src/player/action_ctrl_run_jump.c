@@ -23,8 +23,6 @@ struct spawned
     u8 unk_28_2:6;
 };
 
-extern u8 *gPlayer;
-
 /* Stores to the two "next action" trios. As inline parameters, old_agbcc
  * materializes the values before the stores; the `Set` forms store a
  * literal 0/1 for the first two bytes, and the `P` forms store the action
@@ -81,9 +79,9 @@ static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
 
 /* Like the header's ActAndFlags0D: as an inline parameter the value is
  * materialized before the part pointer's +0x68 address. */
-static inline void ActSetContact(struct act_part *p, s32 v)
+static inline void ActSetContact(struct player *p, s32 v)
 {
-    p->contact = v;
+    p->hitAxes = v;
 }
 
 /* Unless CheckActionCtrlLeftGround reports busy: fire (pressed bit 0) plays action 5's
@@ -136,8 +134,8 @@ void ActionCtrlStateRun(struct act *self)
             self->frame = alt;
             self->frames = frames;
             ActQueue27(self, alt, 0x1E);
-            gPlayer[0x94] = alt;
-            gPlayer[0x94] = alt;
+            gPlayer->listCount = alt;
+            gPlayer->listCount = alt;
             obj = LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xA, alt, (struct fx_part *)gPlayer);
             obj->unk_0C_2 = 0;
             obj->unk_28_0 = 1;
@@ -213,9 +211,9 @@ void ActionCtrlStateJump(struct act *self)
 {
     ActAndFlags0D(self->part, -2);
     ActAndFlags0D(self->part, -3);
-    if (self->part->contact & 4)
+    if (self->part->hitAxes & 4)
     {
-        struct act_part *part;
+        struct player *part;
         s32 frame;
         s32 count;
 
@@ -223,7 +221,7 @@ void ActionCtrlStateJump(struct act *self)
         ACT_VCALL2(self, m50, self->part, 0x15);
         part = self->part;
         frame = 2;
-        count = part->bank->records[part->tag].frameCount;
+        count = part->anim->records[part->tag].frameCount;
         if (frame >= count)
             frame = count - 1;
         part->frame = frame;
@@ -250,12 +248,12 @@ void ActionCtrlStateJump(struct act *self)
             self->unk_22 = busy;
             self->unk_23 = busy;
             self->unk_24[0] = busy;
-            gPlayer[0x92] = busy;
+            gPlayer->bounce = busy;
             return;
         }
     }
     {
-        struct act_part *part = self->part;
+        struct player *part = self->part;
 
         if (part->animDone)
         {
@@ -303,7 +301,7 @@ void ActionCtrlStateJump(struct act *self)
     }
     if (GetDpadDirection(gInput) <= 2)
     {
-        if (gPlayer[0x100] == 0)
+        if (gPlayer->slippery == 0)
         {
             self->motionXKeepSpeed = 0;
             self->motionXPending = 1;
@@ -323,7 +321,7 @@ void ActionCtrlStateJump(struct act *self)
             if (*slot != 0xD)
                 ActSetNext27P(self, slot, 0xD);
         }
-        else if (gPlayer[0x100] == 0)
+        else if (gPlayer->slippery == 0)
         {
             ActSetNext27P(self, slot, 7);
         }

@@ -72,8 +72,8 @@
 #include "box_part.h"
 #include "util.h"
 #include "crates.h"
-
-extern struct box_part *gPlayer;
+#include "globals.h"
+#include "player.h"
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
  * it hides the copy's value from cse, so each use of a stack box address
@@ -115,14 +115,14 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
             f.a.y = py * 2 - (f.a.y + f.a.h);
     }
     {
-        struct box_part *pl = gPlayer;
+        struct player *pl = gPlayer;
         struct hitbox_quad *q;
         s32 offX, offY;
         u8 w, h;
 
         px = pl->x >> 8;
         py = pl->y >> 8;
-        rec = (u8 *)&(*pl->keyframes)[pl->frame];
+        rec = (u8 *)&pl->anim->records[pl->tag];
         q = (struct hitbox_quad *)(rec + 4);
         offX = q->offX;
         offY = q->offY;
@@ -133,16 +133,16 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
             SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (gPlayer->mirrorX)
+        if (gPlayer->mirror.bits.flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayer->mirrorY)
+        if (gPlayer->mirror.bits.flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     pb = BOX_ADDR(&f.b);
     if (AabbOverlapsInclusiveX(&f.a, pb))
         return 0;
     {
-        u8 *rec = (u8 *)&(*gPlayer->keyframes)[action];
+        u8 *rec = (u8 *)&gPlayer->anim->records[action];
         struct hitbox_quad *q = (struct hitbox_quad *)(rec + 4);
         s32 offX, offY;
         u8 w, h;
@@ -153,9 +153,9 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
         h = q->h;
         SetAabbPos(pb, offX + px, offY + py);
         SetAabbSize(pb, w, h);
-        if (gPlayer->mirrorX)
+        if (gPlayer->mirror.bits.flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayer->mirrorY)
+        if (gPlayer->mirror.bits.flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     if (AabbOverlapsInclusiveX(&f.a, pb) != 1)

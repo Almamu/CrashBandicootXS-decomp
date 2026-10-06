@@ -17,7 +17,6 @@
  * More gActionCtrlStateTable action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
 
-extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
 
 /* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
@@ -42,7 +41,7 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
     self->motionX = next;
 }
 
-static inline void SetTag(struct act_part *part, s32 tag)
+static inline void SetTag(struct player *part, s32 tag)
 {
     part->tag = tag;
     ResetSpriteFrameTimer(part);
@@ -75,7 +74,7 @@ static inline void ActHold27(struct act *self, u8 *slot, s32 next)
  * docs/matching/mix-naked-retry-5.md). */
 void ActionCtrlStateLeftGround(struct act *self)
 {
-    u8 hit = self->part->contact & 8;
+    u8 hit = self->part->hitAxes & 8;
 
     if (hit)
     {
@@ -233,14 +232,14 @@ void ActionCtrlStateLeftGround(struct act *self)
 
 void ActionCtrlStateDying(struct act *self)
 {
-    struct act_part *part = self->part;
+    struct player *part = self->part;
 
     if (part->tag == 0x2F && part->frame == 3 && part->stepTimer == 0)
         PlaySfx(gAudioContext, 0x2E, 0x100);
     part = self->part;
     if (part->animDone)
     {
-        part->flags0C |= 1;
+        part->flags.all |= 1;
         {
             /* the "mark part gone" bitmap set of cortex.c's
              * MARK_GONE_BITMAP, with the same load-bearing registers */
@@ -281,8 +280,8 @@ void ActionCtrlStateWarpIn(struct act *self)
         self->motionYKeepSpeed = 0;
         self->motionYPending = 1;
         self->motionY = 0;
-        LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
-                    self->part->bank->records[self->part->tag].paletteId);
+        LoadPaletteSlot(gPaletteCache, self->part->slot,
+                    self->part->anim->records[self->part->tag].paletteId);
     }
 }
 
@@ -351,7 +350,7 @@ void sub_8014AEC(struct act *self)
  * (docs/matching/late-naked-retry-3.md). */
 void ActionCtrlReleaseHang(struct act *self)
 {
-    struct act_part *part;
+    struct player *part;
     s32 count;
     register s32 hold asm("r2");
 
@@ -362,7 +361,7 @@ void ActionCtrlReleaseHang(struct act *self)
     ACT_VCALL1(self, m20, 0x1A);
     ACT_VCALL2(self, m50, self->part, 0x1B);
     part = self->part;
-    count = part->bank->records[part->tag].frameCount;
+    count = part->anim->records[part->tag].frameCount;
     part->frame = count - 1;
     ActSetNext(self, 4);
 }
@@ -420,7 +419,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
         }
         if (self->part->animDone)
         {
-            struct act_part *part;
+            struct player *part;
             s32 zero = 0;
             s32 frame;
             s32 count;
@@ -430,7 +429,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
             self->frame = zero;
             part = self->part;
             frame = 5;
-            count = part->bank->records[part->tag].frameCount;
+            count = part->anim->records[part->tag].frameCount;
             if (frame >= count)
                 frame = count - 1;
             part->frame = frame;
@@ -457,7 +456,7 @@ void ActionCtrlStateHangMove(struct act *self)
 {
     u8 dir = GetDpadDirection(gInput);
     u32 in = gKeys.all;
-    struct act_part *part = self->part;
+    struct player *part = self->part;
     s32 fire;
     u16 alt;
 
@@ -561,7 +560,7 @@ void ActionCtrlStateHangMove(struct act *self)
         }
         x = self->part->x >> 8;
         y = self->part->y;
-        if ((s8)(self->part->flags28 << 3) < 0)
+        if ((s8)(self->part->mirror.all << 3) < 0)
             x += *(s16 *)info;
         else
             x -= *(s16 *)info;

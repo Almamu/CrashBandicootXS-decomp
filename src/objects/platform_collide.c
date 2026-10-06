@@ -37,10 +37,10 @@ extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbo
 
 typedef void (*ab98_fn3)(void *self, s32 a, s32 b, s32 c);
 
-/* The object's vtable method at +0x68, called with three arguments. */
-static inline void Call68(struct gobj *obj, s32 a, s32 b, s32 c)
+/* The player's hit handler (vtable +0x68), called with three arguments. */
+static inline void Call68(struct player *obj, s32 a, s32 b, s32 c)
 {
-    struct method *m = &obj->vtable->m68;
+    const struct actor_method *m = &obj->vtable->handleEvent;
 
     ((ab98_fn3)m->fn)((u8 *)obj + m->thisOffset, a, b, c);
 }
@@ -97,8 +97,8 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     asm("" : "+r"(pb));
     GetSpriteHitbox_p(pb, gPlayer);
     {
-        struct gobj *q = gPlayer;
-        struct anim_table *anim = q->anim;
+        struct player *q = gPlayer;
+        struct act_anim_bank *anim = q->anim;
         u32 tag = q->tag;
 
         box = (struct hitbox_quad *)&anim->records[tag].offX;
@@ -264,7 +264,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             break;
         case 4:
             {
-                struct gobj *q = gPlayer;
+                struct player *q = gPlayer;
 
                 if (!(q->hitAxes & 8))
                 {
@@ -287,7 +287,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         }
         if (result == 8 || oy <= 1)
         {
-            struct gobj *q = gPlayer;
+            struct player *q = gPlayer;
 
             if (!(q->dir & 4) && above)
             {
@@ -356,7 +356,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         case 7:
             if (AabbOverlaps(&a, pb))
             {
-                struct gobj *q = gPlayer;
+                struct player *q = gPlayer;
 
                 q->carried = self;
                 {

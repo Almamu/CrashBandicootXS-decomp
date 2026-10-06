@@ -11,8 +11,6 @@
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-extern void *gPlayer;
-
 /* PlayRoom's argument (game_frame.c passes `&self->level`; the same
  * record run_room.c's RunRoom reads as `struct gl_self`). */
 struct level_start_args {
@@ -66,7 +64,7 @@ s32 PlayRoom(void *selfArg)
      * such access below is its own small register-pinned block for
      * that reason. */
     register struct level_start_args *self asm("r8") = selfArg;
-    void **d8;
+    struct player **d8;
     s32 mode;
     s32 result;
 
@@ -158,15 +156,15 @@ s32 PlayRoom(void *selfArg)
 
         SetCtrlAnimSet(widget, (s32)&gActionCtrlMotionSet);
 
-        *((u8 *)*d8 + 0x88) = mode;
+        (*d8)->ctrlMode = mode;
         {
             void *val = SPRITE_BANK_BASE;
-            u8 *pl = *d8;
+            struct player *pl = *d8;
             struct widget_vtable *w1c;
             s32 off;
 
-            *(void **)(pl + 0x20) = val;
-            *(void **)(pl + 0x44) = widget;
+            pl->anim = val;
+            pl->ctrl = widget;
 
             w1c = ((struct widget *)widget)->vtable;
             off = w1c->attach.thisOffset;
@@ -184,26 +182,26 @@ s32 PlayRoom(void *selfArg)
         }
         SetCtrlAnimSet(gPlayerCtrl, (s32)&gPlayerCtrlMotionSet);
 
-        *((u8 *)*d8 + 0x88) = mode;
+        (*d8)->ctrlMode = mode;
         {
             void *val = SPRITE_BANK_BASE + 0xc;
-            u8 *pl = *d8;
-            *(void **)(pl + 0x20) = val;
+            struct player *pl = *d8;
+            pl->anim = val;
             {
                 u8 v = 0x1f;
-                pl[0x2d] = v;
+                pl->tag = v;
             }
             ResetSpriteFrameTimer(pl);
             ResetSpriteFrameIndex(pl);
             SetSpriteAnimDone(pl, 0);
         }
         {
-            u8 *pl = *d8;
+            struct player *pl = *d8;
             struct widget_vtable *w1c;
             s32 off;
 
             w = gPlayerCtrl;
-            *(void **)(pl + 0x44) = w;
+            pl->ctrl = w;
             w1c = ((struct widget *)w)->vtable;
             off = w1c->attach.thisOffset;
             w = (u8 *)w + off;
@@ -217,18 +215,18 @@ s32 PlayRoom(void *selfArg)
         SetCtrlAnimSet(widget, (s32)&gInputCtrlMotionSet);
 
         {
-            u8 *pl = *d8;
+            struct player *pl = *d8;
             u8 v = 3;
-            pl[0x88] = v;
+            pl->ctrlMode = v;
         }
         {
             void *val = SPRITE_BANK_BASE + 0x18;
-            u8 *pl = *d8;
+            struct player *pl = *d8;
             struct widget_vtable *w1c;
             s32 off;
 
-            *(void **)(pl + 0x20) = val;
-            *(void **)(pl + 0x44) = widget;
+            pl->anim = val;
+            pl->ctrl = widget;
 
             w1c = ((struct widget *)widget)->vtable;
             off = w1c->attach.thisOffset;
@@ -247,10 +245,10 @@ s32 PlayRoom(void *selfArg)
     OperatorDelete(gCamera);
 
     if (gPlayer != NULL) {
-        u8 *p = *(u8 **)((u8 *)gPlayer + 0x18) + 0x50;
-        s32 off = *(s16 *)p;
+        const struct actor_method *p = &gPlayer->vtable->destroy;
+        s32 off = p->thisOffset;
 
-        _call_via_r2((u8 *)gPlayer + off, (void *)3, *(void **)(p + 4));
+        _call_via_r2((u8 *)gPlayer + off, (void *)3, p->fn);
     }
 
     if (gUnknown_030012F4 != NULL) {

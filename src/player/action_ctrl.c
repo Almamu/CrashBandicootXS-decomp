@@ -62,8 +62,6 @@ void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 
-extern void *gPlayer;
-
 /* If the player's `+0x100` flag is set: picks a replacement `mode` for
  * a handful of special values (`0x12` when the player's `+0x60` is
  * nonzero -> `0x25`; `0xd`/`0x18` -> `0x26`, both playing a fixed cue
@@ -97,7 +95,7 @@ extern void *gPlayer;
  * 99.8%-matching pass). */
 s32 ActionCtrlSetTargetAnim(void *arg0, void *other, s32 mode)
 {
-    struct act_part *player = gPlayer;
+    struct player *player = gPlayer;
 
     if (player->slippery == 0) {
         goto tail;
@@ -342,12 +340,12 @@ void ResetPlayerCtrl(void *selfArg)
     }
     *(s32 *)(self + 0x18) = zero;
     *(s32 *)(self + 0x1c) = zero;
-    ((u8 *)gPlayer)[0x92] = zero;
+    gPlayer->bounce = zero;
 }
 
 /* Fires the mgr trampoline pair via `SetPlayerCtrlState(self, 0, 0, 0, 0)`,
  * then resets `self+0x27`/`self+0x20`/`self+0x21`(=6)/`self+0x22`, the
- * player's `+0x92`, and `self+0x2c`(=1)/`self+0x24`/`self+0x2d`(=1)/
+ * player's `bounce`, and `self+0x2c`(=1)/`self+0x24`/`self+0x2d`(=1)/
  * `self+0x25`. */
 void RestartPlayerCtrl(void *selfArg)
 {
@@ -359,7 +357,7 @@ void RestartPlayerCtrl(void *selfArg)
     self[0x20] = 0;
     self[0x21] = 6;
     self[0x22] = 0;
-    ((u8 *)gPlayer)[0x92] = 0;
+    gPlayer->bounce = 0;
     self[0x2c] = 1;
     self[0x24] = 0;
     self[0x2d] = 1;

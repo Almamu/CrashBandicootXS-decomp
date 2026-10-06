@@ -1,5 +1,7 @@
 #include "core.h"
 #include "crates.h"
+#include "globals.h"
+#include "player.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see `ResetCrate`'s header comment below and
@@ -233,11 +235,9 @@ returnNeg1:
  * behavior. `UpdateCrateFall`/`FindLineCrossing` immediately before this
  * function are left untouched raw - see the write-up doc. */
 
-extern void *gPlayer;
-
 /* Resets `self`'s collision-response bookkeeping: sets flags `+0xc`
  * bits 2/6, clears the low 7 bits of `+0x4d` (state byte) while also
- * clearing the global `gPlayer+0x80` "hit" latch, then
+ * clearing the global `gPlayer->busy` "hit" latch, then
  * zeroes the timer/list-link block `+0x44`-`+0x51`/`+0x58` and the two
  * neighbor-list pointers `+0x5c`/`+0x60`, and sets the `+0x54`
  * countdown to -1 (disabled). Matches the "get next"/"get prev" field
@@ -276,7 +276,7 @@ void ResetCrate(void *selfArg)
         zero = 0;
         *addr = result;
     }
-    *((u8 *)gPlayer + 0x80) = zero;
+    gPlayer->busy = zero;
 
     asm volatile(
         "mov r0, #0x80\n"

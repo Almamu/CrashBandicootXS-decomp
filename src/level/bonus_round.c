@@ -8,8 +8,7 @@
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
-
-extern void *gPlayer;
+#include "player.h"
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals
@@ -130,9 +129,9 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
             MemCopy32(p, self, 0x68);
         }
     } else {
-        void *player = gPlayer;
-        s32 x = *(s32 *)player;
-        s32 y = *(s32 *)((u8 *)player + 4);
+        struct player *player = gPlayer;
+        s32 x = player->x;
+        s32 y = player->y;
         void *base;
 
         self->unk_e0 = arg1;

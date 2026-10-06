@@ -27,14 +27,14 @@
 #define KEEP 0x7FFFFFFF
 
 /* `v`, mirrored when the target faces left */
-#define SIGNED_X(t, v) ((t)->f28.flipX ? -(v) : (v))
+#define SIGNED_X(t, v) ((t)->mirror.bits.flipX ? -(v) : (v))
 
 /* Sets the target's speed for the current `tilt` (state 4 instead reads
  * the frame-indexed stack copy of gStaticData_0816C090, negated unless
  * `mode` is 6) and steps `tilt` towards 0/3/6/9/12. */
 void StartPlayerCtrlStroke(struct player_ctrl *self)
 {
-    struct pctrl_target *t;
+    struct player *t;
 
     self->deadline = gRoomFrameCount + 16;
     if (self->state == 4)
@@ -133,7 +133,7 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
 {
     u16 speed;
     u8 flag;
-    struct pctrl_target *t;
+    struct player *t;
 
     if (self->spinCooldown != 0)
         return;
@@ -167,7 +167,7 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
         if (!flag)
         {
             s32 v;
-            if (self->target->f28.flipX) v = -speed; else v = speed;
+            if (self->target->mirror.bits.flipX) v = -speed; else v = speed;
             self->target->speedX = v;
         }
         else
@@ -258,10 +258,10 @@ void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self)
     dir = GetDpadDirection(gInput);
     if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0)
     {
-        struct pctrl_target *t = self->target;
+        struct player *t = self->target;
         s32 x = t->x >> 8;
         s32 y = (t->y >> 8) - 20;
-        s32 flip = t->f28.flipX;
+        s32 flip = t->mirror.bits.flipX;
         struct spawned *obj = SpawnEffectPart(gEntitySpawner, 40, 4, x, y, flip);
 
         if (obj != NULL)

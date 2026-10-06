@@ -11,9 +11,9 @@ s32 CheckPlatformContact(struct gobj *self)
 {
     if (self->type != 6 || self->frame <= 0x12)
     {
-        register struct gobj *p asm("r3") = gPlayer;
-        void *arg = *(void **)((u8 *)p->mover + 8);
-        register u32 f asm("r1") = p->flags;
+        register struct player *p asm("r3") = gPlayer;
+        void *arg = *(void **)((u8 *)p->ctrl + 8);
+        register u32 f asm("r1") = p->flags.all;
         register u32 top asm("r0") = f >> 7;
 
         if (top)

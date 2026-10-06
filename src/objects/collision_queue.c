@@ -2,6 +2,8 @@
 #include "crates.h"
 #include "objects.h"
 #include "memory.h"
+#include "globals.h"
+#include "player.h"
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
  * collision subsystem (crate_reset.c-slot_crate.c). `ResolveCollisionCandidates` is
@@ -37,8 +39,6 @@ struct candidate_list
     u8 unk_05[3];
     struct candidate records[1]; // 0x08
 };
-
-extern struct vec2 *gPlayer;
 
 /* Resolves the frame's queued collision candidates. `records[0]` seeds
  * the "nearest to the player" choice (by Y distance, X as tiebreak).

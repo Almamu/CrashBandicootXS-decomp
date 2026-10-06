@@ -26,8 +26,8 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
-extern void *gPlayer;
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
@@ -178,7 +178,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             struct ctrl_target *t = self->target;
             s32 x = t->x >> 8;
             s32 y = t->y >> 8;
-            struct ctrl_target *p = gPlayer;
+            struct player *p = gPlayer;
             s32 dx = Abs(x - (p->x >> 8));
             s32 d = Abs(y - (p->y >> 8));
             struct byte_arg zero;
@@ -332,11 +332,6 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
  *   is loaded before the `-4` mask and shared with the `gone` OR.
  *   `MarkGoneFreshBit` builds its bitmap `1` with the constant-init
  *   asm after the shift count, so it doesn't reuse `one`. */
-struct player_ring {
-    u8 unk_00[0x88];
-    u8 ctrlMode;        // 0x88 - struct gobj.ctrlMode
-};
-
 struct launch_obj {
     u8 unk_00[0xC];
     u8 *vtable;         // 0x0C
@@ -400,7 +395,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
 
 void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
 {
-    if (((struct player_ring *)gPlayer)->ctrlMode == 1) {
+    if (gPlayer->ctrlMode == 1) {
         MarkGoneHeld(self->target);
         SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
         PlaySfx(gAudioContext, 0x5a, 0x80);
@@ -422,7 +417,7 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
             ((bd48_method_fn)m->fn)((u8 *)obj + m->thisOffset, self->target);
             self->target->flag7 = 0;
             t = self->target;
-            if ((a = t->x) > ((struct ctrl_target *)gPlayer)->x)
+            if ((a = t->x) > gPlayer->x)
                 SetVelX(t, 0x1000, 0, 0x1800);
             else
                 SetVelX(t, -0x1000, 0, -0x1800);

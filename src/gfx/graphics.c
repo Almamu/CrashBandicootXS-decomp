@@ -634,7 +634,6 @@ u8 IsEntityNearCamera(struct actor *self)
 
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern struct actor *gPlayer;
 
 /* `self` uses the shared `struct actor` layout (see actor.h) - same
  * precedent as IsEntityNearCamera above.
@@ -656,7 +655,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
     s32 y, ry;
     u8 rw, rh;
     struct aabb buf;
-    void *table2;
+    const struct actor_method *table2;
     void *addr;
     u8 field0a;
     s32 flagTest;
@@ -698,11 +697,11 @@ s32 CheckEntityPlayerContact(struct actor *self)
                 : "r"(self)
                 : "r0", "r2", "memory");
 
-            table2 = (u8 *)gPlayer->table + 0x68;
-            addr = (u8 *)gPlayer + *(s16 *)table2;
+            table2 = &gPlayer->vtable->handleEvent;
+            addr = (u8 *)gPlayer + table2->thisOffset;
             field0a = self->field_0A;
             {
-                register void *deadRead asm("r4") = *(void *volatile *)((u8 *)table2 + 4);
+                register void *deadRead asm("r4") = *(void *const volatile *)&table2->fn;
                 (void)deadRead;
             }
             _call_via_r4(addr, 0, field0a, 0);

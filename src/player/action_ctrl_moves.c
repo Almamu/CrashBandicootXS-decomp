@@ -224,8 +224,6 @@ asm(".align 2, 0");
  * `SetActionCtrlMode` through `ActionCtrlStateBodySlamStart`. Same "self" object family
  * documented at the top of action_ctrl_states.c/hovercraft_parts.c. */
 
-extern void *gPlayer;
-
 /* Clears `self+0x33`, saves `self+8`'s previous value (truncated) into
  * `self+0x2d`, overwrites `self+8` with `arg1`, and clears
  * `self+0x2c`/`self+0x2b`. If `arg1` isn't `0xd`/`0xe`, also clears
@@ -250,6 +248,8 @@ void SetActionCtrlMode(void *selfArg, s32 arg1)
 
         ((u8 *)part)[0x90] = 0;
 
+        /* bounce (0x92) and listCount (0x94), as byte stores: as struct
+         * member stores the 0 is not kept in r4 */
         player = *(u8 * volatile *)&gPlayer;
         player[0x92] = 0;
         player = *(u8 * volatile *)&gPlayer;
@@ -530,12 +530,12 @@ void ActionCtrlStateWarpOut(void *selfArg)
     u8 *self = selfArg;
 
     if (((u8 *)*(struct actor **)(self + 0x10) + 0x38)[0] != 0) {
-        register u8 *player asm("r1") = gPlayer;
+        register struct player *player asm("r1") = gPlayer;
         register s32 bit asm("r0") = 0x80;
-        register u8 old asm("r2") = player[0xc];
+        register u8 old asm("r2") = player->flags.all;
 
         bit |= old;
-        player[0xc] = bit;
+        player->flags.all = bit;
         RequestRoomExit();
     }
 }

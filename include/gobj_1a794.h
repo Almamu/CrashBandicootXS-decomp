@@ -27,8 +27,10 @@
  *   +0x54 DestroyPlatform destructor). Its `type` (+0x78) comes from the
  *   level's spawn record or is forced by the spawn kind; types 1/5/6/7
  *   get a `struct mover` attached at +0x44. The player object
- *   (gPlayer) uses the same layout for the fields read here,
- *   and `carried` (+0xAC) is the object the player is standing on.
+ *   (gPlayer, player.h's `struct player`) is built on the same base:
+ *   the fields past 0x80 here are the player's, read by the accessors
+ *   in player_flags.c, and `carried` (+0xAC) is the object the player
+ *   is standing on.
  * - `struct mover`, a 0x38-byte helper (method table gPlatformMoverVtable:
  *   +0x0C UpdatePlatformMover per-frame move, +0x4C DestroyPlatformMover destructor,
  *   +0x5C StartPlatformMoverMotionXFromSet / +0x64 StartPlatformMoverMotionYFromSet velocity setters) that
@@ -41,18 +43,6 @@ struct vec3
     s32 x;
     s32 y;
     s32 z;
-};
-
-/* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, the
- * 12-byte motion records of gCtrlMotionRecords and the gStaticData_0816C*
- * entry sets): each frame ApplySpriteVelocity steps speedX/speedY by `step`
- * toward `target` without overshooting. The Start...MotionX/Y setters also
- * load `start` into the speed; the Set... ones keep the current speed. */
-struct speed_ramp
-{
-    s32 start;
-    s32 step;
-    s32 target;
 };
 
 struct vec_pair
@@ -221,7 +211,6 @@ struct spawn_rec
     s16 flag;           // 0x14
 };
 
-extern struct gobj *gPlayer;
 /* src/data/velocity_16c460.c defines it as `const s32 [3][3]`. */
 extern const struct vec3 gPlatformMoverMotionRecords[3];
 

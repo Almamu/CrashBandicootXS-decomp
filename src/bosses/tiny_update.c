@@ -7,6 +7,7 @@
 #include "level.h"
 #include "box_part.h"
 #include "globals.h"
+#include "player.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
@@ -78,18 +79,6 @@ struct hop_part
     s32 speedY;                   // 0x64
 };
 
-struct hop_player
-{
-    s32 x;                        // 0x00
-    s32 y;                        // 0x04
-    u8 unk_08[2];
-    u8 unk_0A;                    // 0x0A
-    u8 unk_0B[0xD];
-    struct hop_vtable *vt;        // 0x18
-    u8 unk_1C[0xE8];
-    u8 busy;                      // 0x104
-};
-
 /* gTinyVtable class */
 struct tiny_tiger
 {
@@ -146,8 +135,6 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
         struct actor_method *_m = &(obj)->vt->m;                                 \
         ((hop_fn3)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c));        \
     } while (0)
-
-extern struct hop_player *gPlayer;
 
 /* Byte read-modify-writes of the flags at +0x0C. old_agbcc materializes
  * the constant before loading the byte only when it arrives as an inline
@@ -207,10 +194,10 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         GetSpriteAttackBox(&a, gPlayer);
         GetSpriteBodyBox(&b, part);
         if (a.w != 0 && BOX_VALID(b) && AabbOverlaps(&b, &a)
-            && gPlayer->unk_0A == 0x13)
+            && gPlayer->kind == 0x13)
             SetTinyState(self, part, 9);
     }
-    else if (gPlayer->busy == 0)
+    else if (gPlayer->dead == 0)
     {
         GetSpriteBodyBox(&a, gPlayer);
         if (a.w == 0)
@@ -221,8 +208,8 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         GetSpriteAttackBox(&b, part);
         if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
         {
-            struct hop_player *pl = gPlayer;
-            struct actor_method *m = &pl->vt->m68;
+            struct player *pl = gPlayer;
+            const struct actor_method *m = &pl->vtable->handleEvent;
             void *t = (u8 *)pl + m->thisOffset;
             ((hop_fn3)m->fn)(t, 0, 1, 0);
         }

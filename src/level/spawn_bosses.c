@@ -6,11 +6,10 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
 /* Text-popup variants with their own header constructors, ROM
  * 0x08021280-0x08021668. Built with old_agbcc; see include/text_popup.h. */
-
-extern u8 *gPlayer;
 
 /* Entity type 0x55, the room's exit. Every room but room 16 and the boss
  * rooms places exactly one. The tag-0x12 zone is collision class 0x12,
@@ -40,7 +39,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         part->field_0A = 0x12;
         AddToPartList((struct part_list *)gUpdateOnlyPartList, part);
     }
-    else if (gPlayer[0x88] == 0)
+    else if (gPlayer->ctrlMode == 0)
     {
         s32 *pos = (s32 *)CreatePlatform(arg0, arg1, arg2, arg3, 4);
         register s32 px asm("r1") = pos[0] >> 8;

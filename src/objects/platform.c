@@ -376,9 +376,9 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
 {
     if (self->active && self->kind != 6)
     {
-        struct gobj **pp = &gPlayer;
-        struct gobj *p = *pp;
-        register u32 f asm("r1") = p->flags;
+        struct player **pp = &gPlayer;
+        struct player *p = *pp;
+        register u32 f asm("r1") = p->flags.all;
         register u32 top asm("r0") = f >> 7;
 
         if (top)
@@ -397,7 +397,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
                 }
             }
             {
-                struct gobj *q = *pp;
+                struct player *q = *pp;
                 register s32 px asm("r1") = q->x >> 8;
                 register s32 dx asm("r5") = (obj->x >> 8) - self->lastX;
                 register s32 py asm("r2") = q->y >> 8;
@@ -407,7 +407,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
                 py += dy;
                 q->x = px << 8;
                 q->y = py << 8;
-                SetSpritePrevPos_1(q);
+                SetSpritePrevPos_1((struct gobj *)q);
             }
             dir = (*pp)->dir;
             if (obj->speedX > 0)

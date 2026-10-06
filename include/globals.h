@@ -24,6 +24,7 @@ struct level_state;
 struct oam_shadow_buffer;
 struct palette_cache;
 struct part_list;
+struct player;
 struct pool_manager;
 struct sprite_bank_table;
 struct vram_upload_cursor;
@@ -87,6 +88,10 @@ extern struct part_list *gCollidableList;
 extern struct part_list *gUnknown_030012F4;
 extern struct level_layers *gLevelLayers;
 extern struct pool_manager *gCrateList;
+
+/* sym_iwram.txt: the player object (struct player, player.h), built by
+ * PlayRoom. */
+extern struct player *gPlayer;
 
 /* src/data/boss_pictures_167ad4.c: a full turn in 256 steps, scaled by 0x100. */
 extern const s16 gSineTable[256];

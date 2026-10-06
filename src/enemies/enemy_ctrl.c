@@ -9,6 +9,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
  * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
@@ -345,8 +346,6 @@ void AttachEnemyCtrl(struct part_ctrl *self, struct ctrl_target *target)
     self->target = target;
 }
 
-extern struct actor *gPlayer;
-
 /* The exact "distance-scaled ambient sound volume" calculation
  * `UpdateEnemyCtrl` state 18 (`enemy_ctrl_update.c`) already documents inline
  * - `max(|x - cameraX|, |y - cameraY|)` against `gPlayer`
@@ -372,7 +371,7 @@ s32 GetSfxVolumeAt(s32 x, s32 y)
 {
     register s32 dx asm("r0") = x;
     register s32 dy asm("r1") = y;
-    register struct actor *obj asm("r3") = gPlayer;
+    register struct player *obj asm("r3") = gPlayer;
     register s32 mask asm("r2");
     register s32 d asm("r1");
 

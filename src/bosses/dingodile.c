@@ -140,8 +140,6 @@ struct part
     s32 rampYTarget;            // 0x5C
     s32 speedX;            // 0x60
     s32 speedY;            // 0x64
-    u8 unk_68[0x9C];
-    u8 busy;               // 0x104
 };
 
 #define PART_OFFSET(f) ((u32)&((struct part *)0)->f)
@@ -150,7 +148,6 @@ COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(f28) == 0x28);
 COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(tag) == 0x2D);
 COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(frame) == 0x30);
 COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(ctl) == 0x44);
-COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(busy) == 0x104);
 
 /* Every class in this file keeps its method table at +0x0C. */
 struct vobj
@@ -231,8 +228,6 @@ struct obj_48a4
     u8 unk_10[0xC];
     struct part *target; // 0x1C
 };
-
-extern struct part *gPlayer;
 
 typedef void (*method1_fn)(void *self, s32 a);
 typedef void (*method2_fn)(void *self, void *a, s32 b);
@@ -843,8 +838,8 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
 
 /* gDingodileShieldVtable's per-frame update (this controller is created
  * by SpawnDingodileShieldOrRocket mode 0; `other` is the part it drives): while the
- * player isn't busy
- * (gPlayer+0x104) and `other` reports a hit (its own table
+ * player isn't dead
+ * (gPlayer->dead) and `other` reports a hit (its own table
  * slot +0x28), overlaps `other`'s box with the player's hurt box (falling
  * back to the player's plain box) and on contact fires the player's slot
  * +0x68 method with `other->kind`. Then: state 0 writes BLDCNT/
@@ -872,7 +867,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
         struct actor_method *m = &other->vt->m28;
         if (((query_fn)m->fn)((u8 *)other + m->thisOffset))
         {
-            if (!gPlayer->busy)
+            if (!gPlayer->dead)
             {
                 /* Hard-register hold (no code): r5 and r6 stay live
                  * across the box builders, so no long-lived pseudo gets
@@ -892,8 +887,8 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                 asm("" : : "r"(hr6));
                 if (AabbOverlaps(&b, &a))
                 {
-                    struct part *pl = gPlayer;
-                    struct actor_method *m2 = &pl->vt->m68;
+                    struct player *pl = gPlayer;
+                    const struct actor_method *m2 = &pl->vtable->handleEvent;
 
                     ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
                 }
@@ -972,7 +967,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
                 }
             }
         }
-        if (!gPlayer->busy)
+        if (!gPlayer->dead)
         {
             b = GetSpriteBodyBox_s(gPlayer);
             if (!BOX_VALID(b))
@@ -983,8 +978,8 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             }
             if (AabbOverlaps(&a, &b))
             {
-                struct part *pl = gPlayer;
-                struct actor_method *m2 = &pl->vt->m68;
+                struct player *pl = gPlayer;
+                const struct actor_method *m2 = &pl->vtable->handleEvent;
 
                 ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
                 if (self->state == 3)

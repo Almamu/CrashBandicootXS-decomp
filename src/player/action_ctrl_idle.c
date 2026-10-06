@@ -20,8 +20,6 @@
  * matches as plain C under it, and `ApplyActionCtrlMotion` followed in the
  * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
-extern struct act_part *gPlayer;
-
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
@@ -41,7 +39,7 @@ static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
 /* `part->slippery` (+0x100) read through an offset parameter: that keeps old_agbcc
  * from reusing an earlier 0x100 constant for the field address, which
  * the ROM rematerializes. */
-static inline u8 PartByte(struct act_part *part, s32 offset)
+static inline u8 PartByte(struct player *part, s32 offset)
 {
     return *((u8 *)part + offset);
 }
@@ -75,7 +73,7 @@ static inline u8 PartByte(struct act_part *part, s32 offset)
 void ApplyActionCtrlMotion(struct act *self)
 {
     struct motion_rec rec;
-    struct act_part *p;
+    struct player *p;
 
     p = gPlayer;
     if (p->pushLeft == 0) {
@@ -83,7 +81,7 @@ void ApplyActionCtrlMotion(struct act *self)
             goto skip;
     }
     {
-        if (self->part->contact == 8) {
+        if (self->part->hitAxes == 8) {
             if (p->pushLeft)
                 p->x -= 0x100;
             else if (p->pushRight)
@@ -93,14 +91,14 @@ void ApplyActionCtrlMotion(struct act *self)
     }
 skip:
     if (self->state == 0) {
-        struct act_part *p = gPlayer;
-        if (p->speedX == 0 && p->bank->unk_0A != 0x12 && self->idleFidget == 0) {
+        struct player *p = gPlayer;
+        if (p->speedX == 0 && p->anim->unk_0A != 0x12 && self->idleFidget == 0) {
             StopSfx(gAudioContext, 0x36);
             ACT_CALL2(self, m50, gPlayer, 0x12);
         }
     }
     if (self->state == 0 || self->state == 0x11) {
-        struct act_part *p = gPlayer;
+        struct player *p = gPlayer;
         if (p->speedX != 0 && p->slippery == 0) {
             self->motionXKeepSpeed = 0;
             self->motionXPending = 1;
@@ -111,11 +109,11 @@ skip:
         u8 f = self->motionXPending;
 
         if (f == 1) {
-            struct act_part *q;
+            struct player *q;
 
             rec = *(gCtrlMotionRecords + (*self->anims)[self->motionX].first);
             q = gPlayer;
-            if (q->slippery && self->part->contact == 8 && q->speedX != 0) {
+            if (q->slippery && self->part->hitAxes == 8 && q->speedX != 0) {
                 self->motionXKeepSpeed = f;
                 /* Three extra references to `self` (no code): they raise its
                  * allocation priority so the ROM's register choice for the
@@ -181,7 +179,7 @@ void ActionCtrlStateIdle(struct act *self)
     u32 in = gKeys.all;
     u8 dir = GetDpadDirection(pad);
     s32 frames;
-    struct act_part *part;
+    struct player *part;
 
     if (self->unk_24[1] != 0) {
         self->unk_24[1]--;
@@ -241,7 +239,7 @@ skip:
     other:
         self->turboRun = held;
         if (dir == 0) {
-            struct act_part *p = self->part;
+            struct player *p = self->part;
             u8 *slot;
 
             if (PartByte(p, 0x100) && *(slot = &self->motionX) != 0x1F && p->speedX != 0)

@@ -186,23 +186,22 @@ u32 IsCrateBusy(void *selfArg)
 }
 
 /* Sets `self+0x4d` bit 7 and the global "hit" latch
- * `gPlayer+0x80`. */
+ * `gPlayer->busy`. */
 void SetCrateBusy(void *selfArg)
 {
     u8 *p = &((struct crate *)selfArg)->state;
     u32 mask = 0x80;
     u8 v = mask | *p;
-    u8 *g;
+    struct player *g;
     u32 one;
     *p = v;
-    g = (u8 *)gPlayer;
+    g = gPlayer;
     one = 1;
-    g = g + 0x80;
-    *g = one;
+    g->busy = one;
 }
 
 /* Clears `self+0x4d` bit 7 and the global "hit" latch
- * `gPlayer+0x80`. */
+ * `gPlayer->busy`. */
 void ClearCrateBusy(void *selfArg)
 {
     u8 *p = &((struct crate *)selfArg)->state;
@@ -210,7 +209,7 @@ void ClearCrateBusy(void *selfArg)
     u8 v = mask & *p;
     u32 zero = 0;
     *p = v;
-    *((u8 *)gPlayer + 0x80) = zero;
+    gPlayer->busy = zero;
 }
 
 void SetCrateTouched(void *selfArg, u8 val)

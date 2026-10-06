@@ -146,7 +146,7 @@ struct gl_point
 
 struct gl_method
 {
-    s16 delta;
+    s16 thisOffset;
     u8 unk_02[2];
     void *fn;
 };
@@ -171,34 +171,6 @@ struct gl_attach
 {
     u8 unk_00[0xC];
     struct gl_attach_vtable *vtable; /* +0x0C */
-};
-
-struct gl_anim_record
-{
-    u8 unk_00[0x14];
-    u8 tileRecord;                  /* +0x14 */
-    u8 unk_15[7];
-};
-
-struct gl_player
-{
-    struct gl_point pos;            /* +0x00 */
-    u8 unk_08[4];
-    u8 flags;                       /* +0x0C */
-    u8 unk_0D[0xB];
-    struct gl_vtable *vtable;       /* +0x18 */
-    u8 unk_1C[4];
-    struct gl_anim_record **anim;   /* +0x20 */
-    u8 unk_24[5];
-    u8 frameNibble:4;               /* +0x29 */
-    u8 unk_29_4:4;
-    u8 unk_2A[3];
-    u8 animIndex;                   /* +0x2D */
-    u8 unk_2E[0x16];
-    struct gl_attach *ctrl;         /* +0x44 - the room kind's controller */
-    u8 unk_48[0x3C];
-    u8 unk_84[0x80];
-    u8 dead;                        /* +0x104 */
 };
 
 struct gl_entity
@@ -232,8 +204,6 @@ union gl_input
     } half;
 };
 
-extern struct gl_player *gPlayer;
-
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
  * makes the struct BLKmode, so the compound literal is stored straight
@@ -261,8 +231,8 @@ extern s32 _call_via_r1(void *self, void *fn);
 /* obj->vtable->slot(obj), through `_call_via_r1`. */
 #define PMF_CALL(obj, slot)                                                    \
     ({                                                                         \
-        struct gl_method *_m = &(obj)->vtable->slot;                           \
-        _call_via_r1((u8 *)(obj) + _m->delta, _m->fn);                          \
+        __typeof__(&(obj)->vtable->slot) _m = &(obj)->vtable->slot;            \
+        _call_via_r1((u8 *)(obj) + _m->thisOffset, _m->fn);                     \
     })
 
 static inline void SetPoint(struct gl_point *point, s32 x, s32 y)
@@ -282,9 +252,9 @@ static inline void SpawnNearPlayer(s32 x, s32 y)
     SetCheckpoint(level, sub_801B29C((struct gobj *)GetBonusPlatform(level)), &point.x);
 }
 
-static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
+static inline void RestartPlayerAnim(struct player *p, s32 anim)
 {
-    p->animIndex = anim;
+    p->tag = anim;
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);
     SetSpriteAnimDone(p, 0);
@@ -293,9 +263,9 @@ static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
 static inline void RefreshPlayerTiles(void)
 {
     void *cache = gPaletteCache;
-    struct gl_player *p = gPlayer;
+    struct player *p = gPlayer;
 
-    LoadPaletteSlot(cache, p->frameNibble, (*p->anim)[p->animIndex].tileRecord);
+    LoadPaletteSlot(cache, p->slot, p->anim->records[p->tag].paletteId);
 }
 
 s32 RunRoom(struct gl_self *self)
@@ -346,7 +316,7 @@ s32 RunRoom(struct gl_self *self)
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->mode = 2;
     }
-    gPlayer->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)gPlayer);
+    gPlayer->slot = GetSpriteAnimPaletteSlot((struct actor *)gPlayer);
     RefreshPlayerTiles();
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
@@ -358,11 +328,11 @@ s32 RunRoom(struct gl_self *self)
         {
             struct gl_attach *a;
 
-            gPlayer->flags &= 0x7F;
+            gPlayer->flags.all &= 0x7F;
             RestartPlayerAnim(gPlayer, 0x29);
             PlaySfx(gAudioContext, 0x2C, 0x100);
             a = gPlayer->ctrl;
-            _call_via_r2((u8 *)a + a->vtable->attach.delta, 0x29, a->vtable->attach.fn);
+            _call_via_r2((u8 *)a + a->vtable->attach.thisOffset, 0x29, a->vtable->attach.fn);
             RefreshPlayerTiles();
             ShowHudCounters(gHud);
         }
@@ -378,9 +348,9 @@ s32 RunRoom(struct gl_self *self)
     CommitDispcnt();
     CommitBlendRegs();
 
-    while (!IsRoomExitRequested() && !(gPlayer->flags & 1))
+    while (!IsRoomExitRequested() && !(gPlayer->flags.all & 1))
     {
-        struct gl_player *p;
+        struct player *p;
 
         ResetObjBuffers();
         UpdateRoomFrame(self);
@@ -409,8 +379,8 @@ s32 RunRoom(struct gl_self *self)
             ShowHudCounters(gHud);
         UpdatePartList(gUnknown_030012F4);
         UpdatePartList(gUpdateOnlyPartList);
-        if ((u8)PMF_CALL(gPlayer, m38))
-            PMF_CALL(gPlayer, m18);
+        if ((u8)PMF_CALL(gPlayer, isNearCamera))
+            PMF_CALL(gPlayer, update);
         UpdateCrateList(gCrateList);
         UpdatePartList(gUnknown_030012EC);
         UpdatePartList(gCollidableList);
@@ -431,7 +401,7 @@ fade:
             s32 x;
 
             x = *(s32 *)GetBonusPlatform(gLevelState) + -0x1E00;
-            i = gPlayer->pos.y + 0x1200;
+            i = gPlayer->y + 0x1200;
             point.x = x;
             point.y = i;
             x = (s32)gLevelState;
@@ -440,7 +410,7 @@ fade:
         else if (!(u8)IsInGemPathRoom((struct level_progress *)self) && IsInGemPath(gLevelState))
         {
             struct gl_point point;
-            struct gl_player *pl;
+            struct player *pl;
             register s32 hold asm("r0");
             register s32 hold1 asm("r1");
 
@@ -453,7 +423,8 @@ fade:
             /* End of the hold. */
             asm("" : : "r"(hold));
             asm("" : : "r"(hold1));
-            point = pl->pos;
+            /* copied as one 8-byte struct (ldr; ldr; str; str) */
+            point = *(struct gl_point *)&pl->x;
             SetCheckpoint(gLevelState, 0, &point.x);
         }
         else

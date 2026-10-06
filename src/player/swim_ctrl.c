@@ -57,10 +57,8 @@ struct keys
     u8 pad[0];
 };
 
-extern struct pctrl_target *gPlayer;
-
 typedef void (*pctrl_fn1)(void *self, s32 a);
-typedef void (*pctrl_fn2)(void *self, struct pctrl_target *t, s32 a);
+typedef void (*pctrl_fn2)(void *self, struct player *t, s32 a);
 typedef void (*pctrl_fn0)(void *self);
 
 /* Virtual calls. Plain-brace macros on purpose: a do/while(0) wrapper
@@ -105,12 +103,12 @@ static inline void ResetMode(struct player_ctrl *self)
 
 /* The value arrives as a (constant-propagated) inline parameter, so the
  * bitfield store is the generic clear-then-or, as in the ROM. */
-static inline void SetFlipX(struct pctrl_target *t, u32 value)
+static inline void SetFlipX(struct player *t, u32 value)
 {
-    t->f28.flipX = value;
+    t->mirror.bits.flipX = value;
 }
 
-static inline void SetHitAxes(struct pctrl_target *t, s32 value)
+static inline void SetHitAxes(struct player *t, s32 value)
 {
     t->hitAxes = value;
 }
@@ -135,10 +133,10 @@ void CheckPlayerCtrlTurn(struct player_ctrl *self)
     {
     case 0 ... 3:
     case 5 ... 6:
-        self->target->f28.flipY = 0;
-        if (self->target->f28.flipX && (dir == 4 || dir == 6 || dir == 8))
+        self->target->mirror.bits.flipY = 0;
+        if (self->target->mirror.bits.flipX && (dir == 4 || dir == 6 || dir == 8))
         {
-            self->target->f28.flipX = 0;
+            self->target->mirror.bits.flipX = 0;
             if (self->state != 3)
             {
                 SetPlayerCtrlState(self, 4, 4, KEEP, KEEP);
@@ -150,7 +148,7 @@ void CheckPlayerCtrlTurn(struct player_ctrl *self)
             }
             self->unk_26 = 0;
         }
-        else if (!(self->target->f28.flipX & 1) && (dir == 3 || dir == 5 || dir == 7))
+        else if (!(self->target->mirror.bits.flipX & 1) && (dir == 3 || dir == 5 || dir == 7))
         {
             if (self->state != 3)
             {
@@ -177,12 +175,12 @@ void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 ar
 
         if (side == 2)
         {
-            if (self->target->f28.flipX)
+            if (self->target->mirror.bits.flipX)
                 QueueMotionX(self, 0);
         }
         else if (side == 1)
         {
-            if (!self->target->f28.flipX)
+            if (!self->target->mirror.bits.flipX)
                 QueueMotionX(self, 0);
         }
         else
@@ -216,8 +214,8 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
     PlaySfx(gAudioContext, 0x1B, 0x100);
     SET_MODE(self, 7);
     SET_ANIM(self, self->target, anim);
-    self->target->flag7 = 0;
-    self->target->flag6 = 0;
+    self->target->flags.bits.flag7 = 0;
+    self->target->flags.bits.flag6 = 0;
     self->target->dead = 1;
     LoseLife(gLevelState);
     LoadPaletteSlot(gPaletteCache, self->target->slot,
@@ -253,7 +251,7 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
 /* the out-of-line copy is SetPlayerSwimDriftX */
 static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
 {
-    struct pctrl_target *p = gPlayer;
+    struct player *p = gPlayer;
     s32 v = p->speedX;
     s32 t = v * v / 0x4000 + 4;
     s32 signV;
@@ -267,22 +265,22 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     absC = (c ^ signC) - signC;
     if (absV > absC)
     {
-        p->rampXStart = a;
-        p->rampXStep = t;
+        p->rampX.start = a;
+        p->rampX.step = t;
     }
     else if (v * c < 0)
     {
         s32 sum = t + b;
 
-        p->rampXStart = a;
-        p->rampXStep = sum;
+        p->rampX.start = a;
+        p->rampX.step = sum;
     }
     else
     {
-        p->rampXStart = a;
-        p->rampXStep = b;
+        p->rampX.start = a;
+        p->rampX.step = b;
     }
-    p->rampXTarget = c;
+    p->rampX.target = c;
 }
 
 /* Sets bit `id` of the gEntityFlags+0x108 bitmap. Kept a
@@ -304,23 +302,23 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
 
 /* "Mark gone": MarkEntityGone's sequence (graphics.c), inlined - set flags
  * bit 0, then unless the id is 0xFFFF set its bit in the bitmap. */
-static inline void MarkGone(struct pctrl_target *t)
+static inline void MarkGone(struct player *t)
 {
-    t->gone = 1;
+    t->flags.bits.gone = 1;
     if (t->id != 0xFFFF)
         SET_ID_BIT(t->id);
 }
 
-static inline void ClampFrame(struct pctrl_target *t, s32 frame)
+static inline void ClampFrame(struct player *t, s32 frame)
 {
-    s32 n = t->anim->records[t->tag].frames;
+    s32 n = t->anim->records[t->tag].frameCount;
 
     if (frame >= n)
         frame = n - 1;
     t->frame = frame;
 }
 
-static inline void RestoreFrame(struct pctrl_target *t, s32 frame, s32 f34)
+static inline void RestoreFrame(struct player *t, s32 frame, s32 f34)
 {
     ClampFrame(t, frame);
     t->stepTimer = f34;
@@ -330,7 +328,7 @@ static inline void RestoreFrame(struct pctrl_target *t, s32 frame, s32 f34)
  * copy is ApplyPlayerCtrlTilt. */
 static inline void ApplyLevel(struct player_ctrl *self)
 {
-    struct pctrl_target *t = self->target;
+    struct player *t = self->target;
     u8 *tag = &t->tag;
 
     if (*tag != 0x20 && *tag != 0x1D && *tag != 0x1F)
@@ -599,7 +597,7 @@ void PlayerCtrlStateSpin(struct player_ctrl *self)
 
     if (++self->timer >= self->timerMax || self->target->animDone)
     {
-        gPlayer->unk_92 = 0;
+        gPlayer->bounce = 0;
         self->spinCooldown = 0xC;
         if (dir == 0)
         {
@@ -662,8 +660,8 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
     switch (self->mode)
     {
     case 4:
-        if (self->target->f28.flipX)
-            self->target->f28.flipX = 0;
+        if (self->target->mirror.bits.flipX)
+            self->target->mirror.bits.flipX = 0;
         ResetMode(self);
         break;
     case 6:
@@ -671,8 +669,8 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
         ResetMode(self);
         break;
     case 5:
-        if (self->target->f28.flipX)
-            self->target->f28.flipX = 0;
+        if (self->target->mirror.bits.flipX)
+            self->target->mirror.bits.flipX = 0;
         SetState(self, 3, 3, KEEP, KEEP);
         break;
     case 7:
@@ -741,19 +739,19 @@ void PlayerCtrlStateDead(struct player_ctrl *self)
         MarkGone(self->target);
 }
 
-void AttachPlayerCtrl(struct player_ctrl *self, struct pctrl_target *target)
+void AttachPlayerCtrl(struct player_ctrl *self, struct player *target)
 {
     self->target = target;
 }
 
 /* UNUSED */
-void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
+void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct player *target, s32 idx)
 {
     StartCtrlTargetMotionY(self, target, (struct vec3 *)&gPlayerCtrlMotionRecords[self->animSet->entries[idx].b]);
 }
 
 /* UNUSED */
-void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
+void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct player *target, s32 idx)
 {
     StartCtrlTargetMotionX(self, target, (s32 *)&gPlayerCtrlMotionRecords[self->animSet->entries[idx].a]);
 }

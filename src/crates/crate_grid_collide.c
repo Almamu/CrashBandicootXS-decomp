@@ -8,8 +8,8 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "player.h"
 
-extern struct box_part *gPlayer;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 
@@ -48,7 +48,7 @@ static inline void CheckPart(struct pool_manager *m, struct box_part *part, stru
         struct part_method *m2 = PART_METHOD(part, 0x48);
 
         if (_call_via_r1((u8 *)part + m2->thisOffset, m2->fn) > 4) {
-            if (other == gPlayer) {
+            if (other == (struct box_part *)gPlayer) {
                 MemCopy32(tmp, box, sizeof(*tmp));
                 CollideCrateGridPartWithPlayer((struct part_list *)m, *tmp, part);
             } else {
@@ -130,17 +130,17 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
         struct aabb a, b;
         s32 px;
 
-        a = GetSpriteHitbox(gPlayer);
+        a = GetSpriteHitbox((struct box_part *)gPlayer);
         GetSpriteBodyBox(&b, part);
         if (!AabbOverlaps(&a, &b))
             return;
         px = part->x;
         if (px < gPlayer->x) {
             gPlayer->x = px + ((b.w + a.w) << 7);
-            CALL_HIT(gPlayer, 0, 0xc, 2);
+            CALL_HIT((struct box_part *)gPlayer, 0, 0xc, 2);
         } else {
             gPlayer->x = px - ((b.w + a.w) << 7);
-            CALL_HIT(gPlayer, 0, 0xc, 1);
+            CALL_HIT((struct box_part *)gPlayer, 0, 0xc, 1);
         }
     } else {
         u8 kind;
@@ -150,14 +150,14 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
             break;
         case 1:
         {
-            u8 *flags = &gPlayer->flags;
+            u8 *flags = &gPlayer->flags.all;
             *flags |= 8;
         }
             kind = gPlayer->kind;
             if (kind == 1) {
                 if (gPlayer->speedY > 0) {
                     CALL_HIT(part, 1, 1, 0);
-                    CALL_HIT(gPlayer, 0, 0xd, 0);
+                    CALL_HIT((struct box_part *)gPlayer, 0, 0xd, 0);
                     PlaySfx(gAudioContext, 0x21, 0x100);
                 }
             } else {
@@ -169,7 +169,7 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
             if (gLevelState->maskLevel) {
                 CALL_HIT(part, 1, 1, 0);
             }
-            CALL_HIT(gPlayer, 1, part->kind, 0);
+            CALL_HIT((struct box_part *)gPlayer, 1, part->kind, 0);
             break;
         }
     }

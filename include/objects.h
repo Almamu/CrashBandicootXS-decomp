@@ -60,6 +60,18 @@ struct motion_rec {
     s32 c;
 };
 
+/* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, struct player's, the
+ * 12-byte motion records of gCtrlMotionRecords and the gStaticData_0816C*
+ * entry sets): each frame ApplySpriteVelocity steps speedX/speedY by `step`
+ * toward `target` without overshooting. The Start...MotionX/Y setters also
+ * load `start` into the speed; the Set... ones keep the current speed. */
+struct speed_ramp
+{
+    s32 start;
+    s32 step;
+    s32 target;
+};
+
 /* src/objects/collision_queue.c */
 extern void ResolveCollisionCandidates(struct candidate_list *self);
 extern void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kind, s32 field10, s32 field14, s32 field18,
