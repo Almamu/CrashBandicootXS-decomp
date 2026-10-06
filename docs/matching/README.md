@@ -18,9 +18,11 @@ is still open. They are kept up to date.
 - [eeprom-sdk-o1.md](./eeprom-sdk-o1.md): why the Nintendo EEPROM
   library (`lib/agb_eeprom/`) is built at `-O1` (`O1_OBJS`).
 
-A general reference for the matching techniques (old_agbcc, register
-pins, `asm` nudges and the like) is planned under #576. Until it lands,
-the archive below is where those techniques are explained.
+The general reference for the matching techniques (old_agbcc, per-file
+flags, register pins and holds, the `asm` nudges and their
+[include/match.h](../../include/match.h) macros, and the like) is
+[docs/matching_techniques.md](../matching_techniques.md). It links the
+archive cases below that each technique came from.
 
 ## archive/: the per-pass logs
 

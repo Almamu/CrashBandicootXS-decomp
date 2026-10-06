@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "system.h"
@@ -146,6 +147,7 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  *   hint - gcc still felt free to materialize `expr` into a different
  *   register than `rN` for a handful of these single-use copies
  *   (`field_10`/`field_14`/`frameIndex`). Routing the copy through an
+ *   `MATCH_CONST_VOLATILE(v, expr)`, i.e.
  *   `asm volatile("" : "=r"(v) : "0"(expr))` (an explicit "same
  *   register in and out" constraint) forces the actual `mov` into the
  *   requested register, matching the ROM's own reuse of whichever
@@ -238,9 +240,9 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         register s32 t1 asm("r3");
         register void *t2 asm("r0");
 
-        asm volatile("" : "=r"(t1) : "0"(label1));
+        MATCH_CONST_VOLATILE(t1, label1);
         self->field_10 = t1;
-        asm volatile("" : "=r"(t2) : "0"((void *)label2));
+        MATCH_CONST_VOLATILE(t2, (void *)label2);
         self->field_14 = t2;
     }
 
@@ -255,7 +257,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         register u8 t3 asm("r3");
 
         addr = (u8 *)icon + 0x2d;
-        asm volatile("" : "=r"(t3) : "0"((u8)type));
+        MATCH_CONST_VOLATILE(t3, (u8)type);
         *addr = t3;
     }
     ResetSpriteFrameTimer(&icon->base);

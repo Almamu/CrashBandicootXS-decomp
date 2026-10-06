@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "vram_pool.h"
 #include "crate.h"
 #include "hud.h"
@@ -194,11 +195,6 @@ static inline s32 D18C_TimerOver(void)
 {
     return gPlayer->deadline > gRoomFrameCount;
 }
-
-/* `a` through a copy that an empty asm claims to modify (emits nothing):
- * it hides the copy's value from cse, so each use of a stack box address
- * is its own pseudo instead of one held across calls. */
-#define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
 void QueueCratePlayerCollision(struct crate *self, s32 idx)
 {

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "actor.h"
 #include "vtable.h"
@@ -164,7 +165,7 @@ void ActionCtrlStateLeftGround(struct act *self)
         one = 1;
         /* a fresh 1 for `fire` (the ROM's `movs r3, #1; ands r3, r1`),
          * not a copy of `one` */
-        asm("" : "=r"(fire) : "0"(1));
+        MATCH_CONST(fire, 1);
         fire &= p;
         /* extra reference: keeps `one` in r6 and the input pointer in r7 */
         asm("" : : "r"(one));

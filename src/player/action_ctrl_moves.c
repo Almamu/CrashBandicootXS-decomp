@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "vtable.h"
 #include "actor.h"
@@ -139,7 +140,7 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
          * from m, and the volatile use of m and flags right after the
          * `and` stops combine from sinking it into the test and regmove
          * from retargeting it onto m2. */
-        asm("" : "=r"(m2) : "0"(m));
+        MATCH_CONST(m2, m);
         flags &= m2;
         asm volatile("" : "+r"(flags) : "r"(m));
         if (flags != 0 && (u8)HasTurboRun(gLevelState)) {

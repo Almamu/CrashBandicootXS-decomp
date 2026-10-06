@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "system.h"
 #include "link.h"
 
@@ -290,8 +291,8 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
              * constants use the constant-init form (no code beyond the
              * `movs`/`ldr`) so loop.c doesn't hoist them after `p`'s init. */
             f20 = &self->field_20;
-            asm("" : "=r"(kid) : "0"(0xF0B));
-            asm("" : "=r"(kfree) : "0"(0xffff));
+            MATCH_CONST(kid, 0xF0B);
+            MATCH_CONST(kfree, 0xffff);
             p = data;
             for (i = 0; i <= 3; i++) {
                 /* The test address is taken first, so its giv is found

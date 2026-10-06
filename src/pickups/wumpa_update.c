@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "orbit_part.h"
 #include "hud.h"
@@ -258,7 +259,7 @@ void UpdateWumpa(struct orbit_part *self)
                  * #1` (as an address reload of the store, it came after). */
                 ((OrbitSpawn4)DropWumpa)(gEntitySpawner, sx, sy,
                     (*(volatile s32 *)&argP4 = 0,
-                     ({ asm("" : "=r"(q) : "0"(&argP5)); 0; }),
+                     ({ MATCH_CONST(q, &argP5); 0; }),
                      *q = 1, 0));
             }
             {

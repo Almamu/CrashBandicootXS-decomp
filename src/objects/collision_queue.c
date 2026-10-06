@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "crate.h"
 #include "crates.h"
 #include "objects.h"
@@ -120,7 +121,7 @@ asm(".align 2, 0");
  * behind an empty asm so the two `add rX, sp, #N` stay ahead of the loads;
  * the `r4` pin puts the second address where the ROM keeps it. Everything
  * else is plain C (matches under both agbcc and old_agbcc). */
-#define STACK_ARG_U8_ADDR(ptr, arg) asm("" : "=r"(ptr) : "0"(&(arg)))
+#define STACK_ARG_U8_ADDR(ptr, arg) MATCH_CONST(ptr, &(arg))
 
 void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind,
                  s32 code, s32 edge, s32 depth, struct e08c_pos pos,

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -267,7 +268,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 u8 zero;
 
                 /* constant-init: the 0 is loaded before the tag address */
-                asm("" : "=r"(zero) : "0"(0));
+                MATCH_CONST(zero, 0);
                 PhysSetTag(self, zero);
             }
             self->paramB = rec[6];

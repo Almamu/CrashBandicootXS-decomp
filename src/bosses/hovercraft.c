@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include <libgcc.h>
@@ -1121,7 +1122,7 @@ void ConvertHovercraftTiles(void)
 
             /* the 0xf mask without a constant-set register: the mask is
              * the AND's first operand, as in the ROM */
-            asm("" : "=r"(m) : "0"(0xf));
+            MATCH_CONST(m, 0xf);
             b = *src;
             p0 = m & b;
             p0 = MeterPx(p0);
