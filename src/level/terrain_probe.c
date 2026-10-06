@@ -79,8 +79,7 @@
  * fields this function itself reads are confirmed (a right/lower
  * streamed-region edge pair, compared directly against the caller's
  * plain-int probe position, not Q8). */
-struct sub_8026628_bounds
-{
+struct sub_8026628_bounds {
     u8 unk0[0x10];
     s32 maxX; /* +0x10 */
     s32 maxY; /* +0x14 */
@@ -90,53 +89,42 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
 {
     s32 hit = 0;
 
-    switch (mode)
-    {
+    switch (mode) {
     case 2:
-        if (pos->x < 0)
-        {
+        if (pos->x < 0) {
             *outValue = 0;
             hit = 1;
-        }
-        else if ((u8)ProbeTerrainX(self, pos, span, outValue, 3) != 0)
-        {
+        } else if ((u8)ProbeTerrainX(self, pos, span, outValue, 3) != 0) {
             hit = 1;
         }
         break;
     case 1:
-    {
-        s32 bound = ((struct sub_8026628_bounds *)(*(void **)((u8 *)self + 0x10)))->maxX;
-        if (pos->x > bound)
         {
-            *outValue = bound << 8;
-            hit = 1;
+            s32 bound = ((struct sub_8026628_bounds *)(*(void **)((u8 *)self + 0x10)))->maxX;
+            if (pos->x > bound) {
+                *outValue = bound << 8;
+                hit = 1;
+            } else if ((u8)ProbeTerrainX(self, pos, span, outValue, mode) != 0) {
+                hit = 1;
+            }
+            break;
         }
-        else if ((u8)ProbeTerrainX(self, pos, span, outValue, mode) != 0)
-        {
-            hit = 1;
-        }
-        break;
-    }
     case 4:
-        if ((u8)ProbeTerrainY(self, pos, span, outValue, 2) != 0)
-        {
+        if ((u8)ProbeTerrainY(self, pos, span, outValue, 2) != 0) {
             hit = 1;
         }
         break;
     case 8:
-    {
-        s32 bound = ((struct sub_8026628_bounds *)(*(void **)((u8 *)self + 0x10)))->maxY;
-        if (pos->y > bound)
         {
-            *outValue = bound << 8;
-            hit = 1;
+            s32 bound = ((struct sub_8026628_bounds *)(*(void **)((u8 *)self + 0x10)))->maxY;
+            if (pos->y > bound) {
+                *outValue = bound << 8;
+                hit = 1;
+            } else if ((u8)ProbeTerrainY(self, pos, span, outValue, 0) != 0) {
+                hit = 1;
+            }
+            break;
         }
-        else if ((u8)ProbeTerrainY(self, pos, span, outValue, 0) != 0)
-        {
-            hit = 1;
-        }
-        break;
-    }
     default:
         break;
     }

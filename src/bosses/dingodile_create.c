@@ -16,14 +16,13 @@
 
 /* The CreateBossCtrl-family object (input_ctrl_queue.c): only the fields touched
  * here. */
-struct seq_obj
-{
+struct seq_obj {
     u8 unk_00[0xC];
-    void *vtable;       // 0x0C
+    void *vtable; // 0x0C
     u8 unk_10[0xC];
-    s32 unk_1C;         // 0x1C
+    s32 unk_1C; // 0x1C
     u8 unk_20[4];
-    s32 unk_24;         // 0x24
+    s32 unk_24; // 0x24
 };
 
 struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self)
@@ -42,8 +41,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
     MATCH_HOLD_REG(s32, index, r5) = indexArg;
     const struct speed_ramp *e = &gDingodileMotionRecords[gDingodileMotionEntries[index][0]];
 
-    if ((s32)(part->mirror << 27) < 0)
-    {
+    if ((s32)(part->mirror << 27) < 0) {
         s32 x = -e->start;
         s32 z = -e->target;
         s32 y = e->step;
@@ -52,9 +50,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         part->rampX.start = x;
         part->rampX.step = y;
         part->rampX.target = z;
-    }
-    else
-    {
+    } else {
         s32 x = e->start;
         s32 y = e->step;
         s32 z = e->target;

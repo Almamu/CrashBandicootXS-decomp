@@ -39,6 +39,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FORMATTED = [
     "src/actor",
     "src/audio",
+    "src/bosses",
     "src/crates",
     "src/cutscene",
     "src/enemies",
@@ -46,6 +47,7 @@ FORMATTED = [
     "src/gfx",
     "src/hud",
     "src/iwram",
+    "src/level",
     "src/link",
     "src/menus",
     "src/objects",

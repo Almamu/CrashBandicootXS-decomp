@@ -50,13 +50,11 @@
 /* The per-level state object (`gLevelState`) as UpdateGameFrame
  * uses it. The first 0x68 bytes are the per-attempt block that the
  * frame loop snapshots into `checkpointData`/`saveData` and restores from. */
-union level_best_time
-{
-    struct
-    {
+union level_best_time {
+    struct {
         u32 flag:1;
         u32 unk_1:2;
-        u32 time:13;    // tenths of a second, capped at 0x1fff
+        u32 time:13; // tenths of a second, capped at 0x1fff
         u32 unk_16:16;
     } f;
     u16 raw;
@@ -100,24 +98,19 @@ void UpdateGameFrame(struct level_state *self)
         result = RunTitleScreen(gfx);
         if (gfx != NULL)
             DestroyTitleScreen(gfx, 3);
-        if (result == 2)
-        {
+        if (result == 2) {
             RunCredits();
             goto load;
         }
-        if (result != 0)
-        {
+        if (result != 0) {
             OpenSaveMenu();
             RunSaveMenu(1, 0);
             CloseSaveMenu();
-        }
-        else
-        {
+        } else {
             PlayCutscene(gLevelState, 2);
         }
     }
-    for (;;)
-    {
+    for (;;) {
         {
             u8 quit;
 
@@ -132,8 +125,7 @@ void UpdateGameFrame(struct level_state *self)
             quit = RunLevelSelect(&self->level);
             MemCopy32(self, self->saveData, 0x68);
             MemCopy32(self->checkpointData, self, 0x68);
-            if (quit)
-            {
+            if (quit) {
                 OpenSaveMenu();
                 quit = RunSaveMenu(0, 0);
                 CloseSaveMenu();
@@ -164,15 +156,12 @@ void UpdateGameFrame(struct level_state *self)
         SetCheckpointAtPlayer(self, 0);
         ArmStartSpawn(self);
         bitmap = &gEntityFlags;
-        for (;;)
-        {
+        for (;;) {
             self->bonusPlatform = self->gemPlatform = 0;
-            if (IsInBonusRound(self) || IsInGemPath(self))
-            {
+            if (IsInBonusRound(self) || IsInGemPath(self)) {
                 self->savedBitmap = *bitmap;
                 *bitmap = InitEntityFlags(OperatorNew(0x408));
-                if (IsInBonusRound(self))
-                {
+                if (IsInBonusRound(self)) {
                     self->savedWumpa = GetWumpa(self);
                     self->savedLives = GetLives(self);
                     self->savedCrateCount = GetCrateCount(self);
@@ -181,18 +170,14 @@ void UpdateGameFrame(struct level_state *self)
                     ResetCrateCount(self);
                     EnterBonusRoom((struct level_progress *)&self->level);
                     SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
-                }
-                else
-                {
+                } else {
                     self->savedCrateCount = GetCrateCount(self);
                     ResetCrateCount(self);
                     EnterGemPathRoom((struct level_progress *)&self->level);
                     SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
                 }
                 ArmStartSpawn(self);
-            }
-            else if (!(u8)SelectRoom((struct level_progress *)&self->level))
-            {
+            } else if (!(u8)SelectRoom((struct level_progress *)&self->level)) {
                 break;
             }
             FreeUnlockedPaletteSlots(gPaletteCache);
@@ -201,8 +186,7 @@ void UpdateGameFrame(struct level_state *self)
             SetLevelBoss(self, 0);
             PlayRoomMusic((struct level_progress *)&self->level);
             mem_free_bytes(0xC0000000);
-            switch (self->cat->kind)
-            {
+            switch (self->cat->kind) {
             case 0:
             case 1:
             case 2:
@@ -210,8 +194,7 @@ void UpdateGameFrame(struct level_state *self)
                 break;
             case 3:
                 status = InitActorCategory(self->cat->catIndex);
-                if (status == 0)
-                {
+                if (status == 0) {
                     AddPendingSwitchCrates(self, GetActorMissedNitros());
                     SetCheckpointAtPlayer(self, 0);
                 }
@@ -227,15 +210,13 @@ void UpdateGameFrame(struct level_state *self)
                 SetMaskLevel(self, arg);
             }
             mem_free_bytes(0xC0000000);
-            if ((u8)IsInBonusRoom((struct level_progress *)&self->level) && IsInBonusRound(self))
-            {
+            if ((u8)IsInBonusRoom((struct level_progress *)&self->level) && IsInBonusRound(self)) {
                 if (gEntityFlags != NULL)
                     DestroyEntityFlags(gEntityFlags, 3);
                 gEntityFlags = self->savedBitmap;
                 EndBonusRound(self, status == 0);
             }
-            if ((u8)IsInGemPathRoom((struct level_progress *)&self->level) && IsInGemPath(self))
-            {
+            if ((u8)IsInGemPathRoom((struct level_progress *)&self->level) && IsInGemPath(self)) {
                 if (gEntityFlags != NULL)
                     DestroyEntityFlags(gEntityFlags, 3);
                 gEntityFlags = self->savedBitmap;
@@ -245,8 +226,7 @@ void UpdateGameFrame(struct level_state *self)
                 break;
             if (status == 1 && GetLives(self) < 0)
                 break;
-            if (self->timeTrial && status == 1)
-            {
+            if (self->timeTrial && status == 1) {
                 self->pendingSwitchCrates = 0;
                 self->checkpointSwitchPressed = 0;
                 self->unk_c8 = 0;
@@ -254,49 +234,42 @@ void UpdateGameFrame(struct level_state *self)
                 ArmStartSpawn(self);
                 ClearTimeTrial(self);
             }
-            if (status == 0)
-            {
+            if (status == 0) {
                 u8 done;
 
-                if (!(u8)IsInBonusRoom((struct level_progress *)&self->level) && !IsInBonusRound(self) && !(u8)IsInGemPathRoom((struct level_progress *)&self->level)
-                    && !(done = IsInGemPath(self)))
-                {
+                if (!(u8)IsInBonusRoom((struct level_progress *)&self->level) &&
+                    !IsInBonusRound(self) &&
+                    !(u8)IsInGemPathRoom((struct level_progress *)&self->level) &&
+                    !(done = IsInGemPath(self))) {
                     if (!(u8)NextRoom((struct level_progress *)&self->level))
                         break;
                     ArmStartSpawn(self);
                     *(s32 *)*bitmap = done;
                 }
-            }
-            else
-            {
+            } else {
                 RestoreCheckpoint(self);
             }
         }
         if (gHud != NULL)
             DestroyHud(gHud, 3);
-        if (GetLives(self) < 0)
-        {
+        if (GetLives(self) < 0) {
             if (RunContinuePrompt())
                 ResetLives(self);
             else
                 break;
         }
 
-        if (status == 2)
-        {
+        if (status == 2) {
             s32 tier = best;
 
             if (tier > self->maskLevel)
                 tier = self->maskLevel;
             self->maskLevel = tier;
         }
-        if (status == 0)
-        {
-            switch (self->level)
-            {
+        if (status == 0) {
+            switch (self->level) {
             case 20:
-                if (!(u8)HasSuperBodySlam(self))
-                {
+                if (!(u8)HasSuperBodySlam(self)) {
                     SetNewWorldOpened();
                     GiveSuperBodySlam(self);
                     ShowSuperBodySlamDialog();
@@ -304,8 +277,7 @@ void UpdateGameFrame(struct level_state *self)
                 }
                 break;
             case 21:
-                if (!(u8)HasDoubleJump(self))
-                {
+                if (!(u8)HasDoubleJump(self)) {
                     SetNewWorldOpened();
                     GiveDoubleJump(self);
                     ShowDoubleJumpDialog();
@@ -313,8 +285,7 @@ void UpdateGameFrame(struct level_state *self)
                 }
                 break;
             case 22:
-                if (!(u8)HasTornadoSpin(self))
-                {
+                if (!(u8)HasTornadoSpin(self)) {
                     SetNewWorldOpened();
                     GiveTornadoSpin(self);
                     ShowTornadoSpinDialog();
@@ -322,14 +293,12 @@ void UpdateGameFrame(struct level_state *self)
                 }
                 break;
             case 23:
-                if (!(u8)HasTurboRun(self))
-                {
+                if (!(u8)HasTurboRun(self)) {
                     SetNewWorldOpened();
                     GiveTurboRun(self);
                     ShowTurboRunDialog();
                 }
-                if (GetCompletionPercent(self) > 99)
-                {
+                if (GetCompletionPercent(self) > 99) {
                     PlayCutscene(self, 8);
                     self->level++;
                     self->unk_c8 = 0;
@@ -347,13 +316,13 @@ void UpdateGameFrame(struct level_state *self)
                     ((union level_best_time *)GetCurrentLevelFlags(self))->f.flag = 1;
                 break;
             }
-            if (self->timeTrial)
-            {
+            if (self->timeTrial) {
                 u32 t = self->tenths + self->seconds * 10 + self->minutes * 600;
 
                 if (t > 0x1fff)
                     t = 0x1fff;
-                if (t < ((union level_best_time *)GetCurrentLevelFlags(self))->f.time || (((union level_best_time *)GetCurrentLevelFlags(self))->raw & 0xfff8) == 0)
+                if (t < ((union level_best_time *)GetCurrentLevelFlags(self))->f.time ||
+                    (((union level_best_time *)GetCurrentLevelFlags(self))->raw & 0xfff8) == 0)
                     ((union level_best_time *)GetCurrentLevelFlags(self))->f.time = t;
             }
             MemCopy32(self->saveData, self, 0x68);

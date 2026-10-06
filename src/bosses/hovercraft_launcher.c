@@ -281,9 +281,8 @@ void HovercraftLauncherStateWait(void *selfArg)
     self->base.y = GetHovercraftY() - 0x3000;
     self->base.z = GetHovercraftZ() - 0x100;
 
-    if (GetHovercraftPartsLeft() <= 2
-     && (GetHovercraftState() == 2
-      || (GetHovercraftState() == 3 && self->base.depth <= 0x4AFF))) {
+    if (GetHovercraftPartsLeft() <= 2 &&
+        (GetHovercraftState() == 2 || (GetHovercraftState() == 3 && self->base.depth <= 0x4AFF))) {
         MATCH_HOLD_REG(s32, zero, r2) = 0;
         MATCH_HOLD_REG(s32, one, r0);
 

@@ -37,7 +37,10 @@ void UpdateRoomFrame(void *self)
         {
             struct player *p = gPlayer;
             const struct player_vtable *tbl = p->vtable;
-            if ((u8)(s32)_call_via_r1((u8 *)p + tbl->isOnScreen.thisOffset, tbl->isOnScreen.fn) != 0) {
+            // clang-format off
+            if ((u8)(s32)_call_via_r1((u8 *)p + tbl->isOnScreen.thisOffset,
+                                      tbl->isOnScreen.fn) != 0) {
+                // clang-format on
                 struct player *p2 = gPlayer;
                 const struct player_vtable *tbl2 = p2->vtable;
                 _call_via_r1((u8 *)p2 + tbl2->draw.thisOffset, tbl2->draw.fn);
@@ -58,18 +61,16 @@ void UpdateRoomFrame(void *self)
 }
 
 /* The level's raster/blend settings. */
-struct level_blend
-{
+struct level_blend {
     u8 unk_00[8];
-    s32 mode;           // 0x08
+    s32 mode; // 0x08
     u8 unk_0C[4];
-    u16 effect;         // 0x10 - 0: no blending
-    u8 eva;             // 0x12
-    u8 evb;             // 0x13
+    u16 effect; // 0x10 - 0: no blending
+    u8 eva;     // 0x12
+    u8 evb;     // 0x13
 };
 
-struct level_ctx
-{
+struct level_ctx {
     u8 unk_00[0x18];
     struct level_blend *blend; // 0x18
 };
@@ -83,8 +84,7 @@ void SetupRoomBlend(struct level_ctx *self)
 
     b->raw = 0;
     gLevelLayers->unk_2B = 0;
-    if (self->blend->effect != 0)
-    {
+    if (self->blend->effect != 0) {
         if (self->blend->mode == 1)
             gLevelLayers->unk_2B = 1;
         b->bits.effect = *(u8 *)&self->blend->effect;
@@ -95,9 +95,7 @@ void SetupRoomBlend(struct level_ctx *self)
         b->bits.bg1Second = 1;
         b->bits.bg2Second = 1;
         b->bits.objSecond = 1;
-    }
-    else
-    {
+    } else {
         b->bits.effect = 0;
         b->bits.eva = 0x10;
         b->bits.evb = 0x10;

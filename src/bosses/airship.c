@@ -166,7 +166,8 @@ static inline struct actor_self *AllocActor(u32 size)
     return (struct actor_self *)mem_alloc(size, MEM_HEAP_IWRAM);
 }
 
-static inline void InitAnimPart(struct actor_self *self, struct anim_frame_record *anims, u32 *offsets, s32 flag)
+static inline void InitAnimPart(struct actor_self *self, struct anim_frame_record *anims,
+                                u32 *offsets, s32 flag)
 {
     self->anims = anims;
     self->frameOffsets = offsets;
@@ -231,7 +232,8 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
-    gAirshipAttack = (const struct weapon_kind *)(gAirshipLevel * (s32)sizeof(struct weapon_kind) - -(s32)&gAirshipAttacks[kind]);
+    gAirshipAttack = (const struct weapon_kind *)(gAirshipLevel * (s32)sizeof(struct weapon_kind) -
+                                                  -(s32)&gAirshipAttacks[kind]);
     gAirshipFireTimer = gAirshipAttack->unk_0C;
     gAirshipHp = gAirshipAttack->unk_00;
     gAirshipVolleyCount = 0;
@@ -295,7 +297,10 @@ void UpdateAirship(void)
         self->animTime += (s16)self->animTimer;
         self->animDone = 0;
         if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-            self->animTime -= (self->anims[self->animIndex].loopThreshold - self->anims[self->animIndex].loopBase) << 8;
+            // clang-format off
+            self->animTime -= (self->anims[self->animIndex].loopThreshold -
+                               self->anims[self->animIndex].loopBase) << 8;
+            // clang-format on
             self->animDone = 1;
         }
         gAirshipDistance = gAirshipZ - (GetCellAnimDistance() << 8);

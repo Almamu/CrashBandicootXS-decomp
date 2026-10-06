@@ -43,8 +43,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->flags & 1;
 
-    if (bit)
-    {
+    if (bit) {
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
@@ -52,9 +51,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0xB);
         SetGemPlatform(gLevelState, (s32)snd);
-    }
-    else
-    {
+    } else {
         u8 tag = 7;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
@@ -74,8 +71,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->flags & 2;
 
-    if (bit)
-    {
+    if (bit) {
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
@@ -83,9 +79,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0x3);
         SetGemPlatform(gLevelState, (s32)snd);
-    }
-    else
-    {
+    } else {
         u8 tag = 5;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
@@ -105,8 +99,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->flags & 4;
 
-    if (bit)
-    {
+    if (bit) {
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
@@ -114,9 +107,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0xA);
         SetGemPlatform(gLevelState, (s32)snd);
-    }
-    else
-    {
+    } else {
         u8 tag = 6;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
@@ -138,8 +129,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->flags & 8;
 
-    if (bit)
-    {
+    if (bit) {
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
@@ -147,9 +137,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0x9);
         SetGemPlatform(gLevelState, (s32)snd);
-    }
-    else
-    {
+    } else {
         u8 tag = 8;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 

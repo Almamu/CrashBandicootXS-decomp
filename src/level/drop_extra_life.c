@@ -23,8 +23,7 @@ struct orbit_part *DropExtraLife(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u3
     struct orbit_part *part = NULL;
     u8 state = gLevelState->timeTrial;
 
-    if (state == 0)
-    {
+    if (state == 0) {
         part = CreateExtraLife(0xffff, x, y, 0);
         part->base.flags |= 0x10;
         part->counter = p3;

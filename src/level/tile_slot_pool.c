@@ -46,49 +46,43 @@
  * Real bytes formerly the tail of `asm/code_3_2_17_25fc8.s` (that file
  * now ends at `nullsub_26`). */
 
-struct tile_slot_pool
-{
-    u32 vramBase;               // 0x0000
-    u32 srcBase;                // 0x0004
-    u16 refCount[0x200];        // 0x0008
-    u16 slotForTile[0x2000];    // 0x0408 - TILE_SLOT_NONE when not resident
-    u16 freeSlots[0x200];       // 0x4408
-    s32 freeTop;                // 0x4808
+struct tile_slot_pool {
+    u32 vramBase;            // 0x0000
+    u32 srcBase;             // 0x0004
+    u16 refCount[0x200];     // 0x0008
+    u16 slotForTile[0x2000]; // 0x0408 - TILE_SLOT_NONE when not resident
+    u16 freeSlots[0x200];    // 0x4408
+    s32 freeTop;             // 0x4808
 };
 
 #define TILE_SLOT_NONE 0x200
 
-union tile_ref
-{
+union tile_ref {
     u16 raw;
-    struct
-    {
+    struct {
         u32 id:14;
         u32 flip:2;
     } bits;
 };
 
-union bg_entry
-{
+union bg_entry {
     u16 raw;
-    struct
-    {
+    struct {
         u32 tile:10;
         u32 flip:2;
         u32 palette:4;
     } bits;
 };
 
-struct pooled_layer
-{
-    u8 unk_00[0x30];              // 0x00 - BG-scroll-layer base (InitBgLayer)
-    void *vtable;                 // 0x30
-    u8 bits0_1:2;                 // 0x34
+struct pooled_layer {
+    u8 unk_00[0x30]; // 0x00 - BG-scroll-layer base (InitBgLayer)
+    void *vtable;    // 0x30
+    u8 bits0_1:2;    // 0x34
     u8 bits2_3:2;
     u8 bits4_6:3;
     u8 bit7:1;
-    u8 unk_35[0x27];              // 0x35
-    struct tile_slot_pool *pool;  // 0x5C
+    u8 unk_35[0x27];             // 0x35
+    struct tile_slot_pool *pool; // 0x5C
 };
 
 static inline void PushFreeSlot(struct tile_slot_pool *pool, s32 slot)
@@ -135,6 +129,7 @@ struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
          * the `0x80` register (`subs #0x8d`) - same class as
          * InitBgLayer's +0x34/+0x35 updates (bg_layer_init.c). */
         MATCH_HOLD_REG(u8 *, bits, r2) = (u8 *)self + 0x34;
+        // clang-format off
         asm volatile(
             "mov r1, #0x80\n\t"
             "mov r0, #0x7f\n\t"
@@ -145,6 +140,7 @@ struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
             "and r0, r0, r1\n\t"
             "strb r0, [%0]\n\t"
             : : "r"(bits) : "r0", "r1", "r3", "memory");
+        // clang-format on
     }
     self->pool = OperatorNew(sizeof(struct tile_slot_pool));
     return self;
@@ -184,13 +180,14 @@ u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile)
          * loads a compare's memory operand first. The "m" operand keeps
          * the address computation (and its ordering) in the compiler's
          * hands - only the constant and the load are fixed here. */
+        // clang-format off
         asm("mov %1, #0x80\n\tlsl %1, %1, #2\n\tldrh %0, %2"
             : "=r"(cur), "=&r"(none)
             : "m"(pool->slotForTile[id]));
+        // clang-format on
         if (cur != none)
             slot = GetTileSlot(pool, id);
-        else
-        {
+        else {
             slot = PopFreeSlot(pool);
             SetTileSlot(pool, id, slot);
             UploadTileSlot(pool, id, slot);
@@ -217,8 +214,7 @@ void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile)
 
     count = pool->refCount[slot] - 1;
     pool->refCount[slot] = count;
-    if (count == 0)
-    {
+    if (count == 0) {
         PushFreeSlot(pool, slot);
         ClearTileSlot(pool, id);
     }
@@ -226,7 +222,8 @@ void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile)
 
 void UploadTileSlot(struct tile_slot_pool *pool, s32 tileId, s32 slot)
 {
-    QueueVramDmaTransfer((void *)(pool->srcBase + tileId * 64), (void *)(pool->vramBase + slot * 64), 0x40, 0x10);
+    QueueVramDmaTransfer((void *)(pool->srcBase + tileId * 64),
+                         (void *)(pool->vramBase + slot * 64), 0x40, 0x10);
 }
 
 void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src)

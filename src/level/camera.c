@@ -57,8 +57,7 @@ void StepCameraDirectional(struct camera *cam)
     MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
     u8 dir = cam->target->dirFlags;
 
-    if (dir != 0)
-    {
+    if (dir != 0) {
         if ((dir & 4) && cam->vy > -0x1AAA)
             cam->vy -= 0x100;
         else if ((dir & 8) && cam->vy <= 0x1AA9)
@@ -69,16 +68,14 @@ void StepCameraDirectional(struct camera *cam)
         else if ((dir & 1) && cam->vx <= 0x27FF)
             cam->vx += 0x100;
 
-        if (!(dir & 3))
-        {
+        if (!(dir & 3)) {
             if (cam->vx > 0)
                 cam->vx -= 0x100;
             else if (cam->vx < 0)
                 cam->vx += 0x100;
         }
 
-        if (!(dir & 0xC))
-        {
+        if (!(dir & 0xC)) {
             if (cam->vy > 0)
                 cam->vy -= 0x100;
             else if (cam->vy < 0)
@@ -105,13 +102,10 @@ void StepCameraFacing(struct camera *cam)
     MATCH_HOLD_REG(s32, tx, r2) = cam->target->x;
     MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
 
-    if ((cam->target->flags << 27) < 0)
-    {
+    if ((cam->target->flags << 27) < 0) {
         if (cam->vx > -0x1276)
             cam->vx -= 0x100;
-    }
-    else
-    {
+    } else {
         if (cam->vx <= 0x1275)
             cam->vx += 0x100;
     }
@@ -130,16 +124,13 @@ void SnapCamera(struct camera *cam)
     cam->x = target->x;
     cam->y = target->y;
 
-    if (cam->mode == 1)
-    {
+    if (cam->mode == 1) {
         if ((target->flags << 27) < 0)
             cam->vx = -0x1276;
         else
             cam->vx = 0x1276;
         cam->vy = -0x1000;
-    }
-    else
-    {
+    } else {
         cam->vx = 0;
         cam->vy = 0;
     }
@@ -151,8 +142,7 @@ void SnapCamera(struct camera *cam)
 
 void UpdateCamera(struct camera *cam)
 {
-    switch (cam->mode)
-    {
+    switch (cam->mode) {
     case 1:
         StepCameraFacing(cam);
         break;

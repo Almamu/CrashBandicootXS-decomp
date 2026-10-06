@@ -139,47 +139,40 @@
  * cross-jumping. The one-byte `direction` stack argument is a BLKmode
  * struct (see `struct fx_direction`), and the post-fade player-position
  * copy holds r0/r1 while the player pointer is loaded. */
-struct gl_point
-{
+struct gl_point {
     s32 x;
     s32 y;
 };
 
-struct gl_vtable
-{
+struct gl_vtable {
     u8 unk_00[0x18];
-    struct actor_method m18;           /* +0x18 */
+    struct actor_method m18; /* +0x18 */
     u8 unk_20[0x18];
-    struct actor_method m38;           /* +0x38 */
+    struct actor_method m38; /* +0x38 */
     u8 unk_40[8];
-    struct actor_method m48;           /* +0x48 */
+    struct actor_method m48; /* +0x48 */
 };
 
-struct gl_attach_vtable
-{
+struct gl_attach_vtable {
     u8 unk_00[0x20];
-    struct actor_method attach;        /* +0x20 */
+    struct actor_method attach; /* +0x20 */
 };
 
-struct gl_attach
-{
+struct gl_attach {
     u8 unk_00[0xC];
     struct gl_attach_vtable *vtable; /* +0x0C */
 };
 
-struct gl_entity
-{
+struct gl_entity {
     u8 unk_00[0x18];
-    struct gl_vtable *vtable;       /* +0x18 */
+    struct gl_vtable *vtable; /* +0x18 */
     u8 unk_1C[0x32];
-    u8 tag;                         /* +0x4E */
+    u8 tag; /* +0x4E */
 };
 
-union gl_input
-{
+union gl_input {
     u32 held;
-    struct
-    {
+    struct {
         u16 lo;
         u16 hi;
     } half;
@@ -191,15 +184,16 @@ union gl_input
  * into the outgoing slot: the slot address (`add rN, sp, #4`) comes
  * before the constant, as in the ROM. As a QImode struct the value was
  * built in a register first. */
-struct fx_direction
-{
+struct fx_direction {
     u8 value;
     u8 pad[0];
 } __attribute__((packed));
 
 /* codegen: AddPaletteCycle takes a u8 `direction` (gfx.h); passed as a
  * u8 it is stored to the stack slot as a word. docs/headers_plan.md */
-extern void AddPaletteCycle_fx(struct palette_cycler *self, u16 *targets, const u16 *lists, s32 rate, s32 count, struct fx_direction direction) asm("AddPaletteCycle");
+extern void AddPaletteCycle_fx(struct palette_cycler *self, u16 *targets, const u16 *lists,
+                               s32 rate, s32 count,
+                               struct fx_direction direction) asm("AddPaletteCycle");
 
 #define FX_CYCLE(lists, rate, count, dir) \
     AddPaletteCycle_fx(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
@@ -265,8 +259,7 @@ s32 RunRoom(struct level_progress *self)
     SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].maskAssistDeaths);
     SetCrateAssistDeaths(gLevelState, gLevelTable[self->level].crateAssistDeaths);
 
-    switch (gLevelTable[self->level].theme)
-    {
+    switch (gLevelTable[self->level].theme) {
     case 2:
         ClearPaletteCycles(gPaletteCycles);
         FX_CYCLE(gThemePaletteCycle2, 6, 5, 1);
@@ -292,8 +285,7 @@ s32 RunRoom(struct level_progress *self)
 
     SetupRoomBlend((struct level_ctx *)self);
     ResetObjBuffers();
-    if (self->cat->kind == 1)
-    {
+    if (self->cat->kind == 1) {
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->mode = 2;
     }
@@ -302,11 +294,9 @@ s32 RunRoom(struct level_progress *self)
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
 
-    if (self->cat->kind == 0)
-    {
-        if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom(self))
-            || (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom(self)))
-        {
+    if (self->cat->kind == 0) {
+        if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom(self)) ||
+            (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom(self))) {
             struct gl_attach *a;
 
             gPlayer->flags.all &= 0x7F;
@@ -329,27 +319,22 @@ s32 RunRoom(struct level_progress *self)
     CommitDispcnt();
     CommitBlendRegs();
 
-    while (!IsRoomExitRequested() && !(gPlayer->flags.all & 1))
-    {
+    while (!IsRoomExitRequested() && !(gPlayer->flags.all & 1)) {
         ResetObjBuffers();
         UpdateRoomFrame(self);
         UpdateKeys(gInput);
-        if (!gPlayer->dead && (gKeys.half.pressed & 8))
-        {
+        if (!gPlayer->dead && (gKeys.half.pressed & 8)) {
             s32 r = RunPauseMenu();
 
-            if (r == 0)
-            {
+            if (r == 0) {
                 ResumeRoomAfterPause(self);
                 UpdateKeys(gInput);
             }
-            if (r == 1)
-            {
+            if (r == 1) {
                 ret = 1;
                 goto fade;
             }
-            if (r == 2)
-            {
+            if (r == 2) {
                 ret = 2;
                 goto fade;
             }
@@ -371,11 +356,9 @@ s32 RunRoom(struct level_progress *self)
     }
 fade:
     FadePaletteToBlack();
-    if (IsRoomExitRequested())
-    {
+    if (IsRoomExitRequested()) {
         ret = 0;
-        if (!(u8)IsInBonusRoom(self) && IsInBonusRound(gLevelState))
-        {
+        if (!(u8)IsInBonusRoom(self) && IsInBonusRound(gLevelState)) {
             struct gl_point point;
             s32 x;
 
@@ -384,10 +367,9 @@ fade:
             point.x = x;
             point.y = i;
             x = (s32)gLevelState;
-            SetCheckpoint((void *)x, sub_801B29C((struct gobj *)GetBonusPlatform((void *)x)), &point.x);
-        }
-        else if (!(u8)IsInGemPathRoom(self) && IsInGemPath(gLevelState))
-        {
+            SetCheckpoint((void *)x, sub_801B29C((struct gobj *)GetBonusPlatform((void *)x)),
+                          &point.x);
+        } else if (!(u8)IsInGemPathRoom(self) && IsInGemPath(gLevelState)) {
             struct gl_point point;
             struct player *pl;
             MATCH_HOLD_REG(s32, hold, r0);
@@ -405,18 +387,14 @@ fade:
             /* copied as one 8-byte struct (ldr; ldr; str; str) */
             point = *(struct gl_point *)&pl->x;
             SetCheckpoint(gLevelState, 0, &point.x);
-        }
-        else
-        {
+        } else {
             s32 count = 0;
             struct pool_manager **list;
 
             i = 0;
-            if (count < gCrateList->activeCount)
-            {
+            if (count < gCrateList->activeCount) {
                 list = &gCrateList;
-                do
-                {
+                do {
                     struct gl_entity *e = (struct gl_entity *)(*list)->slotArray[i];
 
                     if (PMF_CALL(e, m48) == 3 && e->tag == 0xA)

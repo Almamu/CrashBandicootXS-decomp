@@ -57,7 +57,8 @@ static inline struct actor_self *AllocActor(u32 size)
     return (struct actor_self *)mem_alloc(size, 0x80000000);
 }
 
-static inline void InitAnimPart(struct actor_self *self, struct anim_frame_record *anims, u32 *offsets, s32 flag)
+static inline void InitAnimPart(struct actor_self *self, struct anim_frame_record *anims,
+                                u32 *offsets, s32 flag)
 {
     self->anims = anims;
     self->frameOffsets = offsets;
@@ -81,31 +82,31 @@ static inline void SingletonSetKind(s32 kind, s32 idx)
 /* The homing spawn effect advanced by UpdateJetpackCollectedWumpa. */
 struct actor_2718 {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 velX;           // 0x58
-    s32 velY;           // 0x5C
+    s32 hp;   // 0x54
+    s32 velX; // 0x58
+    s32 velY; // 0x5C
 };
 
 /* The seek effect built by CreateJetpackCollectedWumpa (method table
  * gJetpackCollectedWumpaVtable; DestroyJetpackCollectedWumpa is its destructor). */
 struct actor_2890 {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 velX;           // 0x58
-    s32 velY;           // 0x5C
-    s32 reward;         // 0x60 - the spawn parameter, see DestroyJetpackCollectedWumpa
+    s32 hp;     // 0x54
+    s32 velX;   // 0x58
+    s32 velY;   // 0x5C
+    s32 reward; // 0x60 - the spawn parameter, see DestroyJetpackCollectedWumpa
 };
 
 /* The patrol object built by CreateHovercraftFireball (method table
  * gHovercraftFireballVtable). */
 struct actor_29d4 {
     struct actor_self base;
-    s32 hp;             // 0x54
-    s32 unk_58;         // 0x58 - the constructor's `b`
-    s32 unk_5C;         // 0x5C - the constructor's `c`
-    s32 speed;          // 0x60 - Z step, decays by 5 down to 0x14
-    s32 unk_64;         // 0x64
-    u8 unk_68;          // 0x68 - set by HovercraftFireballStateExplode
+    s32 hp;     // 0x54
+    s32 unk_58; // 0x58 - the constructor's `b`
+    s32 unk_5C; // 0x5C - the constructor's `c`
+    s32 speed;  // 0x60 - Z step, decays by 5 down to 0x14
+    s32 unk_64; // 0x64
+    u8 unk_68;  // 0x68 - set by HovercraftFireballStateExplode
 };
 
 /* An `InitActorPart`-based constructor: forwards its 4 real arguments
@@ -161,8 +162,10 @@ void UpdateJetpackCollectedWumpa(void *selfArg)
     self->base.animDone = 0;
     base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
-        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
-                                - self->base.anims[self->base.animIndex].loopBase) << 8;
+        // clang-format off
+        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold -
+                                self->base.anims[self->base.animIndex].loopBase) << 8;
+        // clang-format on
         self->base.animDone = one;
     }
 }
@@ -559,10 +562,8 @@ void RunHovercraftState(void)
     s32 counter = gHovercraftFrameCount + 1;
     gHovercraftFrameCount = counter;
 
-    if ((counter & 0xf) == 0)
-    {
-        if (gHovercraftFlashColorSaved == 0)
-        {
+    if ((counter & 0xf) == 0) {
+        if (gHovercraftFlashColorSaved == 0) {
             gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
             gHovercraftFlashColorSaved = 1;
         }
@@ -574,11 +575,8 @@ void RunHovercraftState(void)
             val = 0x7FFF;
             CommitSpeed(p, val);
         }
-    }
-    else if ((counter & 7) == 0)
-    {
-        if (gHovercraftFlashColorSaved == 0)
-        {
+    } else if ((counter & 7) == 0) {
+        if (gHovercraftFlashColorSaved == 0) {
             gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
             gHovercraftFlashColorSaved = 1;
         }
@@ -825,7 +823,9 @@ void HovercraftStateFall(void)
 void DrawHovercraftMap(void *tileRow)
 {
     u16 *src = tileRow;
-    u8 *row = (u8 *)((gHovercraftBg2Page + 0x18) << 11) + (VRAM + (0x20 - gHovercraftMapCols) / 4 * 2) + ((0x20 - gHovercraftMapRows) / 2 * 32 + 2);
+    u8 *row = (u8 *)((gHovercraftBg2Page + 0x18) << 11) +
+              (VRAM + (0x20 - gHovercraftMapCols) / 4 * 2) +
+              ((0x20 - gHovercraftMapRows) / 2 * 32 + 2);
     s32 i, j;
 
     for (i = 0; i < gHovercraftMapRows; i++) {
@@ -869,7 +869,8 @@ void CreateHovercraft(s32 level)
     gHovercraftMapRows = BOSS_PICTURE_SIZE(gHovercraftPicture)->rows;
     slot = &gHovercraft;
     t = AllocActor(0x1c);
-    InitAnimPart(t, (struct anim_frame_record *)gHovercraftKeyframes, (u32 *)gHovercraftMapFrames, 1);
+    InitAnimPart(t, (struct anim_frame_record *)gHovercraftKeyframes, (u32 *)gHovercraftMapFrames,
+                 1);
     *slot = t;
     SingletonSetKind(0, 0);
     LoadHovercraftGraphics();
@@ -904,7 +905,9 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
-    gHovercraftAttack = (const struct singleton_kind *)(gHovercraftLevel * (s32)sizeof(struct singleton_kind) - -(s32)&gHovercraftAttacks[kind]);
+    gHovercraftAttack =
+        (const struct singleton_kind *)(gHovercraftLevel * (s32)sizeof(struct singleton_kind) -
+                                        -(s32)&gHovercraftAttacks[kind]);
     gUnknown_030015E4 = gHovercraftAttack->timing[0].burstDelay;
     gUnknown_030015E0 = gHovercraftAttack->unk_00;
     gUnknown_030015E8 = 0;
@@ -962,7 +965,10 @@ void UpdateHovercraft(void)
         self->animTime += (s16)self->animTimer;
         self->animDone = 0;
         if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-            self->animTime -= (self->anims[self->animIndex].loopThreshold - self->anims[self->animIndex].loopBase) << 8;
+            // clang-format off
+            self->animTime -= (self->anims[self->animIndex].loopThreshold -
+                               self->anims[self->animIndex].loopBase) << 8;
+            // clang-format on
             self->animDone = 1;
         }
         gHovercraftDistance = gHovercraftZ - (GetCellAnimDistance() << 8);
@@ -975,7 +981,8 @@ void UpdateHovercraft(void)
             s32 t = cur->animTime >> 8;
 
             if (prev != t) {
-                DrawHovercraftMap((void *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
+                DrawHovercraftMap(
+                    (void *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
                 gHovercraftBg2PageFlip = 1;
             }
         }
@@ -1050,7 +1057,8 @@ void LoadHovercraftGraphics(void)
         {
             s32 t = self->animTime >> 8;
 
-            DrawHovercraftMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+            DrawHovercraftMap(
+                (void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         }
         REG_DISPCNT |= 0x400;
         UpdateHovercraftBg2();

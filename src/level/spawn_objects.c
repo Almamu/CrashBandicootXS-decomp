@@ -14,8 +14,7 @@
  * Built with old_agbcc; see include/text_popup.h. */
 
 /* Bit view of actor.flags (+0x0C). */
-struct part_flags_21668
-{
+struct part_flags_21668 {
     u8 unk_0:2;
     u8 bit2:1;
     u8 unk_3:1;
@@ -51,8 +50,9 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
-    SetFrameNibble(part, GetPaletteSlot(gPaletteCache,
-        ((const struct sprite_bank *)part->anim)->anims->paletteId));
+    SetFrameNibble(
+        part,
+        GetPaletteSlot(gPaletteCache, ((const struct sprite_bank *)part->anim)->anims->paletteId));
     part->flipX = 0;
     part->flipY = 0;
     hdr = CreateMegaMixCtrl(OperatorNew(0x24));

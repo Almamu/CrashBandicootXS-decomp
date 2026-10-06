@@ -33,27 +33,34 @@ void *InitBgLayer(void *self, s32 bgIndex)
 
     InitBgLayerBase(self, bgIndex);
 
-    { MATCH_HOLD_REG(void *, gsPtr, r0);
-      asm volatile("ldr %0, 90f" : "=r"(gsPtr));
-      s->vtable = gsPtr; }
+    {
+        MATCH_HOLD_REG(void *, gsPtr, r0);
+        asm volatile("ldr %0, 90f" : "=r"(gsPtr));
+        s->vtable = gsPtr;
+    }
 
     t = idx + 0x1c;
     s->screen = (u16 *)((t << 0xb) + (0xc0 << 0x13)); /* BG_SCREEN_ADDR(t) */
 
-    { MATCH_HOLD_REG(s32, shifted1, r0) = idx << 1;
-      MATCH_HOLD_REG(s32, bgnCntAddr, r3);
-      asm volatile("ldr %0, 90f+4" : "=r"(bgnCntAddr));
-      s->cntReg = (vu16 *)(shifted1 + bgnCntAddr); }
+    {
+        MATCH_HOLD_REG(s32, shifted1, r0) = idx << 1;
+        MATCH_HOLD_REG(s32, bgnCntAddr, r3);
+        asm volatile("ldr %0, 90f+4" : "=r"(bgnCntAddr));
+        s->cntReg = (vu16 *)(shifted1 + bgnCntAddr);
+    }
 
     idx = idx << 2;
-    { MATCH_HOLD_REG(s32, bgnHofsAddr, r0);
-      asm volatile("ldr %0, 90f+8" : "=r"(bgnHofsAddr));
-      idx = idx + bgnHofsAddr; }
+    {
+        MATCH_HOLD_REG(s32, bgnHofsAddr, r0);
+        asm volatile("ldr %0, 90f+8" : "=r"(bgnHofsAddr));
+        idx = idx + bgnHofsAddr;
+    }
     s->ofsReg = (vu32 *)idx;
 
     s->cnt.raw = 0;
 
     addr34 = (u8 *)&s->cnt;
+    // clang-format off
     asm volatile(
         "mov r0, #0x7f\n\t"
         "ldrb r3, [%0]\n\t"
@@ -61,9 +68,11 @@ void *InitBgLayer(void *self, s32 bgIndex)
         "strb r0, [%0]\n\t"
         : : "r"(addr34) : "r0", "r3", "memory"
     );
+    // clang-format on
 
     addr35 = (u8 *)&s->cnt + 1;
     t = t & 0x1f;
+    // clang-format off
     asm volatile(
         "mov r0, #0x20\n\t"
         "neg r0, r0\n\t"
@@ -73,7 +82,9 @@ void *InitBgLayer(void *self, s32 bgIndex)
         "strb r0, [%0]\n\t"
         : : "r"(addr35), "r"(t) : "r0", "r4", "memory"
     );
+    // clang-format on
 
+    // clang-format off
     asm volatile(
         "mov r0, #0xd\n\t"
         "neg r0, r0\n\t"
@@ -84,13 +95,16 @@ void *InitBgLayer(void *self, s32 bgIndex)
         "strb r0, [%0]\n\t"
         : : "r"(addr34) : "r0", "r1", "memory"
     );
+    // clang-format on
 
     return (void *)s;
 }
 #define ASM_STR2(x) #x
 #define ASM_STR(x) ASM_STR2(x)
+// clang-format off
 asm(".align 2, 0\n90: .word gBgLayerVtable\n.word " ASM_STR(REG_ADDR_BG0CNT)
     "\n.word " ASM_STR(REG_ADDR_BG0HOFS));
+// clang-format on
 
 extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
 

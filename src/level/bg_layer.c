@@ -70,8 +70,7 @@ void DrawBgLayerColumn(struct bg_scroll_layer *self, s32 col)
     s32 i = Mod32(self->rowLo) * 32 + Mod32(col);
     s32 r;
 
-    for (r = self->rowLo; r <= self->rowHi; r++)
-    {
+    for (r = self->rowLo; r <= self->rowHi; r++) {
         self->screen[i] = src[srcRow * 64];
         srcRow = (srcRow + 1) & 0x1f;
         i = (i + 32) % 0x400;
@@ -172,8 +171,7 @@ void LoadBgLayerTiles(struct bg_scroll_layer *self)
 void LoadBgLayer(struct bg_scroll_layer *self, const struct level_layer_desc *desc)
 {
     SetBgLayerSource(self, desc);
-    if (self->enabled)
-    {
+    if (self->enabled) {
         u16 cnt;
 
         self->tileData = (void *)desc->tileData;
@@ -270,8 +268,7 @@ void DrawPooledBgLayerColumn(struct pooled_bg_layer *self, s32 col)
     s32 idx = Mod32(self->base.rowLo) * 32 + Mod32(col);
     s32 r;
 
-    for (r = self->base.rowLo; r <= self->base.rowHi; r++)
-    {
+    for (r = self->base.rowLo; r <= self->base.rowHi; r++) {
         self->base.screen[idx] = AcquireTileSlot(self->pool, src[srcRow * 64]);
         srcRow = (srcRow + 1) & 0x1F;
         idx = (idx + 32) % 0x400;
@@ -296,8 +293,7 @@ void ReleasePooledBgLayerColumn(struct pooled_bg_layer *self, s32 col)
     u16 *src = GetBgStreamerColumn(self->base.streamer, col, self->base.rowLo, &srcRow);
     s32 r;
 
-    for (r = self->base.rowLo; r <= self->base.rowHi; r++)
-    {
+    for (r = self->base.rowLo; r <= self->base.rowHi; r++) {
         ReleaseTileSlot(self->pool, src[srcRow * 64]);
         srcRow = (srcRow + 1) & 0x1F;
     }
@@ -310,8 +306,7 @@ void ReleasePooledBgLayerRow(struct pooled_bg_layer *self, s32 row)
     u16 *src = GetBgStreamerRow(self->base.streamer, self->base.colLo, row, &srcCol);
     s32 c;
 
-    for (c = self->base.colLo; c <= self->base.colHi; c++)
-    {
+    for (c = self->base.colLo; c <= self->base.colHi; c++) {
         ReleaseTileSlot(self->pool, src[srcCol++]);
         srcCol &= 0x3F;
     }
@@ -321,13 +316,11 @@ void ReleasePooledBgLayerRow(struct pooled_bg_layer *self, s32 row)
  * range): releases the columns that leave [lo, hi] one at a time. */
 void ClipPooledBgLayerColumns(struct pooled_bg_layer *self, s32 lo, s32 hi)
 {
-    while (self->base.colLo < lo)
-    {
+    while (self->base.colLo < lo) {
         ReleasePooledBgLayerColumn(self, self->base.colLo);
         self->base.colLo++;
     }
-    while (self->base.colHi > hi)
-    {
+    while (self->base.colHi > hi) {
         ReleasePooledBgLayerColumn(self, self->base.colHi);
         self->base.colHi--;
     }
@@ -336,13 +329,11 @@ void ClipPooledBgLayerColumns(struct pooled_bg_layer *self, s32 lo, s32 hi)
 /* Layer-0 `clipRows` (table +0x48): same for rows. */
 void ClipPooledBgLayerRows(struct pooled_bg_layer *self, s32 lo, s32 hi)
 {
-    while (self->base.rowLo < lo)
-    {
+    while (self->base.rowLo < lo) {
         ReleasePooledBgLayerRow(self, self->base.rowLo);
         self->base.rowLo++;
     }
-    while (self->base.rowHi > hi)
-    {
+    while (self->base.rowHi > hi) {
         ReleasePooledBgLayerRow(self, self->base.rowHi);
         self->base.rowHi--;
     }
@@ -357,8 +348,7 @@ void DrawPooledBgLayerRow(struct pooled_bg_layer *self, s32 row)
     u16 *src = GetBgStreamerRow(self->base.streamer, self->base.colLo, row, &srcCol);
     s32 c;
 
-    for (c = self->base.colLo; c <= self->base.colHi; c++)
-    {
+    for (c = self->base.colLo; c <= self->base.colHi; c++) {
         s32 i = Mod32(c);
 
         dst[i] = AcquireTileSlot(self->pool, src[srcCol++]);

@@ -57,6 +57,7 @@ s32 CountCrateEntities(void *self, const struct level_entity_list *list)
                 MATCH_HOLD_REG(void *, itemReg, r1) = item;
                 MATCH_HOLD_REG(s32, result, r0);
 
+                // clang-format off
                 asm volatile (
                     "ldr r0, [%1, #8]\n\t"
                     "ldrh r1, [r1, #6]\n\t"
@@ -70,18 +71,21 @@ s32 CountCrateEntities(void *self, const struct level_entity_list *list)
                     : "=r" (result)
                     : "r" (l), "r" (itemReg)
                 );
+                // clang-format on
                 type = result;
             }
 
+            // clang-format off
             switch (type) {
-                case 0x18: case 0x1a: case 0x1b: case 0x1c: case 0x1d:
-                    break;
-                case 0x15: case 0x16: case 0x17: case 0x19:
-                case 0x1e: case 0x1f: case 0x20: case 0x21: case 0x22:
-                case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
-                    count++;
-                    break;
+            case 0x18: case 0x1a: case 0x1b: case 0x1c: case 0x1d:
+                break;
+            case 0x15: case 0x16: case 0x17: case 0x19:
+            case 0x1e: case 0x1f: case 0x20: case 0x21: case 0x22:
+            case 0x23: case 0x24: case 0x25: case 0x26: case 0x27:
+                count++;
+                break;
             }
+            // clang-format on
         }
     }
     return count;

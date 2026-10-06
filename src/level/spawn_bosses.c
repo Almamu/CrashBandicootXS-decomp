@@ -30,18 +30,14 @@
  * input before `y` is loaded - reproduces it. */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState)
-        && !sub_8023324(gLevelState)
-        && gLevelTable[GetCurrentLevel(gLevelState)].theme == 0)
-    {
+    if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState) && !sub_8023324(gLevelState) &&
+        gLevelTable[GetCurrentLevel(gLevelState)].theme == 0) {
         struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
         SetEntitySize(part, 0x64, 0x64);
         part->field_0A = 0x12;
         AddToPartList((struct part_list *)gUpdateOnlyPartList, part);
-    }
-    else if (gPlayer->ctrlMode == 0)
-    {
+    } else if (gPlayer->ctrlMode == 0) {
         s32 *pos = (s32 *)CreatePlatform(arg0, arg1, arg2, arg3, 4);
         MATCH_HOLD_REG(s32, px, r1) = pos[0] >> 8;
         MATCH_HOLD_REG(s32, x, r2) = px - 2;
@@ -55,9 +51,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         point[0] = x;
         point[1] = y;
         SetCrateGemPos(gLevelState, point);
-    }
-    else
-    {
+    } else {
         struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
         SetEntitySize(part, 0x28, 0x28);

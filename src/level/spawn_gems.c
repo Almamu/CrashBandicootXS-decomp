@@ -36,8 +36,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     s32 bit = *GetCurrentLevelFlags(gLevelState) & 1;
 
-    if (bit == 0)
-    {
+    if (bit == 0) {
         u8 type = 0x1B;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
@@ -56,8 +55,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = *GetCurrentLevelFlags(gLevelState) & 2;
 
-    if (bit == 0)
-    {
+    if (bit == 0) {
         u8 tag = 1;
         u8 type = 0x1D;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
@@ -81,8 +79,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if ((*GetCurrentLevelFlags(gLevelState) & 4) == 0)
-    {
+    if ((*GetCurrentLevelFlags(gLevelState) & 4) == 0) {
         u8 tag = 1;
         u8 type = 0x1E;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
@@ -100,10 +97,8 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (GetBossIndex(gLevelState) != 1)
-    {
-        if ((gLevelState->flags & 1) == 0)
-        {
+    if (GetBossIndex(gLevelState) != 1) {
+        if ((gLevelState->flags & 1) == 0) {
             u8 tag = 3;
             u8 type = 0x1F;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
@@ -117,19 +112,15 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
-    }
-    else
-    {
+    } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 0);
     }
 }
 
 void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (GetBossIndex(gLevelState) != 1)
-    {
-        if ((gLevelState->flags & 4) == 0)
-        {
+    if (GetBossIndex(gLevelState) != 1) {
+        if ((gLevelState->flags & 4) == 0) {
             u8 tag = 2;
             u8 type = 0x20;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
@@ -143,21 +134,17 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
-    }
-    else
-    {
+    } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 1);
     }
 }
 
 void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (GetBossIndex(gLevelState) != 1)
-    {
+    if (GetBossIndex(gLevelState) != 1) {
         u8 bit = gLevelState->flags & 2;
 
-        if (bit == 0)
-        {
+        if (bit == 0) {
             u8 type = 0x22;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
@@ -170,9 +157,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
-    }
-    else
-    {
+    } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 2);
     }
 }

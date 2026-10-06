@@ -54,13 +54,10 @@ void LoadRoom(struct level_layers *self, const struct level_room *args)
     u32 pltt;
     const struct level_desc *desc = args->desc;
 
-    if (desc->assetPacked == 0)
-    {
+    if (desc->assetPacked == 0) {
         self->asset = (void *)desc->asset;
         self->assetOwned = 0;
-    }
-    else
-    {
+    } else {
         self->asset = OperatorNewArray(*(const u32 *)desc->asset >> 8);
         LoadTaggedAsset(args->desc->asset, self->asset);
         self->assetOwned = 1;
@@ -163,8 +160,7 @@ void CommitLevelScroll(struct level_layers *self)
     s32 i;
 
     CommitBgLayerScroll(self->layer0);
-    for (i = 0; i < 3; i++)
-    {
+    for (i = 0; i < 3; i++) {
         struct bg_scroll_layer *layer = self->layers[i];
         if (layer->enabled)
             CommitBgLayerScroll(layer);
@@ -177,14 +173,14 @@ void ScrollLevelLayers(struct level_layers *self)
     s32 i;
 
     _call_via_r2((u8 *)self->layer0 + self->layer0->vtable->method_18.thisOffset, &self->scrollX,
-                self->layer0->vtable->method_18.fn);
+                 self->layer0->vtable->method_18.fn);
     pos[0] = self->layer0->x;
     pos[1] = self->layer0->y;
-    for (i = 0; i < 3; i++)
-    {
+    for (i = 0; i < 3; i++) {
         struct bg_scroll_layer *layer = self->layers[i];
         if (layer->enabled)
-            _call_via_r2((u8 *)layer + layer->vtable->method_18.thisOffset, pos, layer->vtable->method_18.fn);
+            _call_via_r2((u8 *)layer + layer->vtable->method_18.thisOffset, pos,
+                         layer->vtable->method_18.fn);
     }
 }
 
@@ -194,14 +190,14 @@ void ResetLevelLayers(struct level_layers *self)
     s32 i;
 
     _call_via_r2((u8 *)self->layer0 + self->layer0->vtable->reset.thisOffset, &self->scrollX,
-                self->layer0->vtable->reset.fn);
+                 self->layer0->vtable->reset.fn);
     pos[0] = self->layer0->x;
     pos[1] = self->layer0->y;
-    for (i = 0; i < 3; i++)
-    {
+    for (i = 0; i < 3; i++) {
         struct bg_scroll_layer *layer = self->layers[i];
         if (layer->enabled)
-            _call_via_r2((u8 *)layer + layer->vtable->reset.thisOffset, pos, layer->vtable->reset.fn);
+            _call_via_r2((u8 *)layer + layer->vtable->reset.thisOffset, pos,
+                         layer->vtable->reset.fn);
     }
 }
 

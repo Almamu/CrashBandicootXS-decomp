@@ -203,12 +203,14 @@ void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
     MATCH_HOLD_REG(s32, y, r4);
     s32 point[2];
 
+    // clang-format off
     asm volatile(
         "lsl %2, %2, #0x10\n\t"
         "lsl %3, %3, #0x10\n\t"
         "lsr %0, %2, #0x10\n\t"
         "lsr %1, %3, #0x10"
         : "=r" (x), "=r" (y), "+r" (rx), "+r" (ry));
+    // clang-format on
     point[0] = x;
     point[1] = y;
     SetCrateGemPos(gLevelState, point);
@@ -311,7 +313,7 @@ void CreateEntitySpawner(void)
     void **addr = &gEntitySpawner;
     MATCH_HOLD_REG(void *, obj, r0) = OperatorNew(8);
 
-    asm volatile("bl InitEntitySpawner" : "+r" (obj) :: "r1", "r2", "r3", "lr", "cc");
+    asm volatile("bl InitEntitySpawner" : "+r"(obj) : : "r1", "r2", "r3", "lr", "cc");
     *addr = obj;
     SetEntitySpawnerTable(obj, gEntitySpawnFuncs, 0x5c);
 }
@@ -343,7 +345,7 @@ void *InitLevelState(void *self)
         void **addr = (void **)&gAudioContext;
         MATCH_HOLD_REG(void *, audio, r0) = IwramAlloc(0x2094);
 
-        asm volatile("bl InitAudioContext" : "+r" (audio) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitAudioContext" : "+r"(audio) : : "r1", "r2", "r3", "lr", "cc");
         *addr = audio;
     }
     EnableMusicVCountIrq();
@@ -354,14 +356,14 @@ void *InitLevelState(void *self)
         void **addr = (void **)&gSpriteRenderer;
         MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
-        asm volatile("bl nullsub_2" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl nullsub_2" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {
         struct sprite_bank_set **addr = &gSpriteBankSet;
         MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
-        asm volatile("bl nullsub_1" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl nullsub_1" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
         *(const void **)tmp = &gSpriteBankTable;
     }
@@ -369,13 +371,11 @@ void *InitLevelState(void *self)
         struct palette_cache **addr = &gPaletteCache;
         MATCH_HOLD_REG(struct palette_cache *, cache, r0) = OperatorNew(0x8c << 2);
 
-        asm volatile("bl InitPaletteCache" : "+r" (cache) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitPaletteCache" : "+r"(cache) : : "r1", "r2", "r3", "lr", "cc");
         *addr = cache;
         {
-            MATCH_HOLD_REG(u16, count, r1) =
-                gSpriteBankTable.paletteCount;
-            MATCH_HOLD_REG(const u8 *, records, r2) =
-                gSpriteBankTable.palettes;
+            MATCH_HOLD_REG(u16, count, r1) = gSpriteBankTable.paletteCount;
+            MATCH_HOLD_REG(const u8 *, records, r2) = gSpriteBankTable.palettes;
 
             SetPaletteCacheSource(cache, count, records);
         }
@@ -403,14 +403,14 @@ void *InitLevelState(void *self)
         void **addr = (void **)&gInput;
         MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
-        asm volatile("bl ClearKeys" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl ClearKeys" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {
         struct entity_flags **addr = &gEntityFlags;
         MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(0x81 << 3);
 
-        asm volatile("bl InitEntityFlags" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitEntityFlags" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {
@@ -428,7 +428,7 @@ void *InitLevelState(void *self)
         {
             MATCH_HOLD_REG(u8 *, addr2, r0) = (u8 *)self + 0xc0;
 
-            asm volatile("str %1, [%0]" :: "r" (addr2), "r" (zero) : "memory");
+            asm volatile("str %1, [%0]" : : "r"(addr2), "r"(zero) : "memory");
         }
     }
     return self;

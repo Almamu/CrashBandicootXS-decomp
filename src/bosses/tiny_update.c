@@ -23,8 +23,7 @@
  * list's anchor objects, stomping them. PickTinyHopTarget picks the next anchor
  * from a per-round table, SpawnTinyFallingLeaves spawns a falling hazard. */
 
-struct hop_vtable
-{
+struct hop_vtable {
     u8 unk_00[0x18];
     struct actor_method m18; // 0x18
     struct actor_method m20; // 0x20
@@ -35,60 +34,57 @@ struct hop_vtable
     struct actor_method m68; // 0x68
 };
 
-struct hop_vobj
-{
+struct hop_vobj {
     u8 unk_00[0xC];
     struct hop_vtable *vt; // 0x0C
 };
 
-struct hop_part
-{
-    s32 x;                        // 0x00
-    s32 y;                        // 0x04
-    u16 id;                       // 0x08
-    u8 unk_0A;                    // 0x0A
+struct hop_part {
+    s32 x;     // 0x00
+    s32 y;     // 0x04
+    u16 id;    // 0x08
+    u8 unk_0A; // 0x0A
     u8 unk_0B;
-    u8 flags;                     // 0x0C
+    u8 flags; // 0x0C
     u8 unk_0D[0x13];
     const struct sprite_bank *bank; // 0x20
     u8 unk_24[5];
-    u8 slot;                      // 0x29 - low nibble: palette slot
+    u8 slot; // 0x29 - low nibble: palette slot
     u8 unk_2A[3];
-    u8 tag;                       // 0x2D
+    u8 tag; // 0x2D
     u8 unk_2E[2];
-    s32 frame;                    // 0x30
+    s32 frame; // 0x30
     u8 unk_34[4];
-    u8 animDone;                  // 0x38
+    u8 animDone; // 0x38
     u8 unk_39[0xB];
-    struct hop_vobj *ctrl;        // 0x44
+    struct hop_vobj *ctrl; // 0x44
     u8 unk_48[0xC];
-    s32 rampYStart;                   // 0x54
-    s32 rampYStep;                   // 0x58
-    s32 rampYTarget;                   // 0x5C
+    s32 rampYStart;  // 0x54
+    s32 rampYStep;   // 0x58
+    s32 rampYTarget; // 0x5C
     u8 unk_60[4];
-    s32 speedY;                   // 0x64
+    s32 speedY; // 0x64
 };
 
 /* gTinyVtable class */
-struct tiny_tiger
-{
+struct tiny_tiger {
     u8 unk_00[8];
-    s32 state;                    // 0x08
-    struct hop_vtable *vt;        // 0x0C
-    s32 round;                    // 0x10
+    s32 state;             // 0x08
+    struct hop_vtable *vt; // 0x0C
+    s32 round;             // 0x10
     u8 unk_14[8];
-    s32 nextState;                // 0x1C
-    s32 timer;                    // 0x20
-    s32 stomped;                  // 0x24 - anchor to reset, or -1
-    s32 target;                   // 0x28 - anchor index
-    s32 count;                    // 0x2C
-    s32 x;                        // 0x30 - hop start
-    s32 y;                        // 0x34
-    s32 steps;                    // 0x38
-    s32 total;                    // 0x3C
-    s32 dy;                       // 0x40
-    s32 dx;                       // 0x44
-    s16 *squares;                 // 0x48
+    s32 nextState; // 0x1C
+    s32 timer;     // 0x20
+    s32 stomped;   // 0x24 - anchor to reset, or -1
+    s32 target;    // 0x28 - anchor index
+    s32 count;     // 0x2C
+    s32 x;         // 0x30 - hop start
+    s32 y;         // 0x34
+    s32 steps;     // 0x38
+    s32 total;     // 0x3C
+    s32 dy;        // 0x40
+    s32 dx;        // 0x44
+    s16 *squares;  // 0x48
 };
 
 /* The ROM re-reads a just-filled box's `w` word from its stack slot rather
@@ -165,8 +161,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
     struct aabb b;
     s32 state;
 
-    if (self->stomped != -1)
-    {
+    if (self->stomped != -1) {
         struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[self->stomped];
         struct hop_vobj *ctrl;
 
@@ -179,25 +174,19 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         PlaySfx(gAudioContext, 0x39, 0x100);
     }
 
-    if (self->state == 8)
-    {
+    if (self->state == 8) {
         GetSpriteAttackBox(&a, gPlayer);
         GetSpriteBodyBox(&b, part);
-        if (a.w != 0 && BOX_VALID(b) && AabbOverlaps(&b, &a)
-            && gPlayer->kind == 0x13)
+        if (a.w != 0 && BOX_VALID(b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
             SetTinyState(self, part, 9);
-    }
-    else if (gPlayer->dead == 0)
-    {
+    } else if (gPlayer->dead == 0) {
         GetSpriteBodyBox(&a, gPlayer);
-        if (a.w == 0)
-        {
+        if (a.w == 0) {
             GetSpriteAttackBox(&b, gPlayer);
             a = b;
         }
         GetSpriteAttackBox(&b, part);
-        if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
-        {
+        if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a)) {
             struct player *pl = gPlayer;
             const struct actor_method *m = &pl->vtable->handleEvent;
             void *t = (u8 *)pl + m->thisOffset;
@@ -206,8 +195,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
     }
 
     state = self->state;
-    switch (state)
-    {
+    switch (state) {
     case 0:
         AndFlags(part, ~4);
         {
@@ -226,84 +214,73 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
     case 2:
     case 11:
     case 15:
-    {
-        s32 steps = --self->steps;
-        s32 x = self->dx * steps / self->total + self->x;
-        s32 t = (steps << 8) / self->total;
-        s32 y = ((0x100 - self->squares[0x100 - t]) * self->dy >> 8) + self->y;
+        {
+            s32 steps = --self->steps;
+            s32 x = self->dx * steps / self->total + self->x;
+            s32 t = (steps << 8) / self->total;
+            s32 y = ((0x100 - self->squares[0x100 - t]) * self->dy >> 8) + self->y;
 
-        part->x = x;
-        part->y = y;
-        if (steps != 0)
+            part->x = x;
+            part->y = y;
+            if (steps != 0)
+                break;
+            PlaySfx(gAudioContext, 0x2A, 0x100);
+            if (self->state == 15) {
+                if ((u8)HasTornadoSpin(gLevelState))
+                    RequestRoomExit();
+                SetTinyState(self, part, 16);
+            } else if (self->state == 1) {
+                SetTinyState(self, part, 6);
+            } else if (self->state == 11) {
+                self->count = steps;
+                VCALL2(self, m50, part, 3);
+                self->nextState = 12;
+                SetTinyState(self, part, 5);
+            } else {
+                PlaySfx(gAudioContext, 0x3D, 0x100);
+                SetTinyState(self, part, 8);
+            }
             break;
-        PlaySfx(gAudioContext, 0x2A, 0x100);
-        if (self->state == 15)
-        {
-            if ((u8)HasTornadoSpin(gLevelState))
-                RequestRoomExit();
-            SetTinyState(self, part, 16);
         }
-        else if (self->state == 1)
-        {
-            SetTinyState(self, part, 6);
-        }
-        else if (self->state == 11)
-        {
-            self->count = steps;
-            VCALL2(self, m50, part, 3);
-            self->nextState = 12;
-            SetTinyState(self, part, 5);
-        }
-        else
-        {
-            PlaySfx(gAudioContext, 0x3D, 0x100);
-            SetTinyState(self, part, 8);
-        }
-        break;
-    }
     case 3:
     case 7:
     case 10:
     case 14:
-    {
-        s32 steps = --self->steps;
-        s32 x = self->dx * steps / self->total + self->x;
-        s32 t = (steps << 8) / self->total;
-        s32 y = (self->squares[t] * self->dy >> 8) + self->y;
+        {
+            s32 steps = --self->steps;
+            s32 x = self->dx * steps / self->total + self->x;
+            s32 t = (steps << 8) / self->total;
+            s32 y = (self->squares[t] * self->dy >> 8) + self->y;
 
-        part->x = x;
-        part->y = y;
-        if (steps != 0)
+            part->x = x;
+            part->y = y;
+            if (steps != 0)
+                break;
+            {
+                /* The ROM tests 14 and 3 on a low-register copy of `state`
+                 * (sb), then re-copies it for 7; a plain if-chain reloads sb
+                 * into a new register for every test. */
+                s32 s = state;
+
+                MATCH_KEEP(s);
+                if (s == 14)
+                    SetTinyState(self, part, 15);
+                else if (s == 3)
+                    SetTinyState(self, part, 1);
+                else if (state == 7)
+                    SetTinyState(self, part, 2);
+                else
+                    SetTinyState(self, part, 13);
+            }
             break;
-        {
-            /* The ROM tests 14 and 3 on a low-register copy of `state`
-             * (sb), then re-copies it for 7; a plain if-chain reloads sb
-             * into a new register for every test. */
-            s32 s = state;
-
-            MATCH_KEEP(s);
-            if (s == 14)
-                SetTinyState(self, part, 15);
-            else if (s == 3)
-                SetTinyState(self, part, 1);
-            else if (state == 7)
-                SetTinyState(self, part, 2);
-            else
-                SetTinyState(self, part, 13);
         }
-        break;
-    }
     case 13:
-        if (self->nextState == 0)
-        {
+        if (self->nextState == 0) {
             s32 timer = --self->timer;
 
-            if (timer == 0)
-            {
+            if (timer == 0) {
                 SetTinyState(self, part, 11);
-            }
-            else
-            {
+            } else {
                 self->nextState = 0x46;
                 SpawnTinyFallingLeaves(self, part, timer);
             }
@@ -311,22 +288,17 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         self->nextState--;
         break;
     case 6:
-        if (part->animDone)
-        {
-            if (++self->count > 3)
-            {
+        if (part->animDone) {
+            if (++self->count > 3) {
                 self->count = 0;
                 SetTinyState(self, part, 7);
-            }
-            else
-            {
+            } else {
                 SetTinyState(self, part, 3);
             }
         }
         break;
     case 8:
-        if (self->timer != 0)
-        {
+        if (self->timer != 0) {
             self->timer--;
             break;
         }
@@ -349,8 +321,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
     case 9:
         if (self->round > 2)
             SetTinyState(self, part, 14);
-        if (part->animDone)
-        {
+        if (part->animDone) {
             SetTinyState(self, part, 10);
             PlaySfx(gAudioContext, 0xD, 0x100);
         }
@@ -372,8 +343,7 @@ static inline void SetFrame(struct hop_part *part, s32 frame)
 
 void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
 {
-    switch (next)
-    {
+    switch (next) {
     case 13:
         self->nextState = 0;
         self->timer = 4;
@@ -381,46 +351,46 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         self->target = gTinyRoundAnchors[self->round - 1];
     case 1:
     case 2:
-    {
-        /* pinned: unpinned, `anchor` lands in r0 and `x` in r1 */
-        MATCH_HOLD_REG(struct hop_part *, anchor, r2);
-        MATCH_HOLD_REG(s32, x, r1);
+        {
+            /* pinned: unpinned, `anchor` lands in r0 and `x` in r1 */
+            MATCH_HOLD_REG(struct hop_part *, anchor, r2);
+            MATCH_HOLD_REG(s32, x, r1);
 
-        if (next == 1)
-            VCALL2(self, m50, part, 2);
-        else
-            VCALL2(self, m50, part, 1);
-        SetFrame(part, 4);
-        anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
-        x = anchor->x;
-        self->x = x;
-        if (next == 11 || next == 13)
-            part->x = x;
-        self->y = anchor->y - 0x2400;
-        goto hop;
-    }
+            if (next == 1)
+                VCALL2(self, m50, part, 2);
+            else
+                VCALL2(self, m50, part, 1);
+            SetFrame(part, 4);
+            anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
+            x = anchor->x;
+            self->x = x;
+            if (next == 11 || next == 13)
+                part->x = x;
+            self->y = anchor->y - 0x2400;
+            goto hop;
+        }
     case 3:
     case 7:
-    {
-        struct hop_part *anchor;
-        s32 ax;
-        s32 ay;
-        s32 y;
+        {
+            struct hop_part *anchor;
+            s32 ax;
+            s32 ay;
+            s32 y;
 
-        self->target = PickTinyHopTarget(self);
-        VCALL2(self, m50, part, 4);
-        anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
-        ax = anchor->x;
-        ay = anchor->y;
-        y = ay - 0x2400;
-        self->x = (ax + part->x) >> 1;
-        if (y >= part->y)
-            y = part->y - 0x5900;
-        else
-            y = ay - 0x7D00;
-        self->y = y;
-        goto hop;
-    }
+            self->target = PickTinyHopTarget(self);
+            VCALL2(self, m50, part, 4);
+            anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
+            ax = anchor->x;
+            ay = anchor->y;
+            y = ay - 0x2400;
+            self->x = (ax + part->x) >> 1;
+            if (y >= part->y)
+                y = part->y - 0x5900;
+            else
+                y = ay - 0x7D00;
+            self->y = y;
+            goto hop;
+        }
     case 10:
         self->y = -0x3000;
         self->x = part->x;
@@ -433,8 +403,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         break;
     case 9:
         PlaySfx(gAudioContext, 0x15, 0x100);
-        if (++self->round > 2)
-        {
+        if (++self->round > 2) {
             s32 x = part->x;
 
             self->y = part->y - 0x6400;
@@ -445,25 +414,25 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         VCALL2(self, m50, part, 7);
         break;
     case 14:
-    {
-        struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[2];
-        s32 x = anchor->x;
-        s32 y = anchor->y - 0x1800;
+        {
+            struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[2];
+            s32 x = anchor->x;
+            s32 y = anchor->y - 0x1800;
 
-        if (!(u8)HasTornadoSpin(gLevelState))
-            SpawnTornadoSpinPower(0xFFFF, x >> 8, y >> 8, 0);
-        break;
-    }
+            if (!(u8)HasTornadoSpin(gLevelState))
+                SpawnTornadoSpinPower(0xFFFF, x >> 8, y >> 8, 0);
+            break;
+        }
     case 15:
-    {
-        s32 x = part->x;
+        {
+            s32 x = part->x;
 
-        self->x = x;
-        self->y = (gLevelLayers->layer0->heightPx << 8) + 0x4000;
-        self->x = x + 0x6400;
-        StartTinyHop((struct gfx_offset_ctrl *)self, (struct gfx_part *)part);
-        break;
-    }
+            self->x = x;
+            self->y = (gLevelLayers->layer0->heightPx << 8) + 0x4000;
+            self->x = x + 0x6400;
+            StartTinyHop((struct gfx_offset_ctrl *)self, (struct gfx_part *)part);
+            break;
+        }
     }
     VCALL1(self, m20, next);
 }
@@ -483,8 +452,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
     s32 best = 0xFFFFFF;
     s32 i;
 
-    for (i = 0; i < gUnknown_030012EC->count; i++)
-    {
+    for (i = 0; i < gUnknown_030012EC->count; i++) {
         struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[i];
         s32 px = gPlayer->x;
         s32 py = gPlayer->y;
@@ -492,8 +460,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
         s32 ay = anchor->y;
         s32 d = Abs(ax - px) + Abs(ay - py);
 
-        if (d < best)
-        {
+        if (d < best) {
             best = d;
             nearest = i;
         }
