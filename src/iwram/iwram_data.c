@@ -86,12 +86,8 @@ u8 gRoomExitRequested = 0;
 /* The cutscene text of each language, indexed by gLanguage
  * (src/data/cutscenes_16d1c8.c, level_cutscene.c). */
 const struct cutscene_page *const *gCutsceneTexts[6] = {
-    gCutsceneTextEnglish,
-    gCutsceneTextFrench,
-    gCutsceneTextGerman,
-    gCutsceneTextSpanish,
-    gCutsceneTextItalian,
-    gCutsceneTextDutch,
+    gCutsceneTextEnglish, gCutsceneTextFrench,  gCutsceneTextGerman,
+    gCutsceneTextSpanish, gCutsceneTextItalian, gCutsceneTextDutch,
 };
 
 struct level_layers *gLevelLayersSingleton = NULL;
@@ -99,12 +95,7 @@ struct level_layers *gLevelLayersSingleton = NULL;
 /* Per-language string tables (main_loop.c indexes them by
  * gLanguage), src/data/ui_text_172cd4.c. */
 const u8 *const *gUiTextTables[6] = {
-    gUiTextEnglish,
-    gUiTextFrench,
-    gUiTextGerman,
-    gUiTextSpanish,
-    gUiTextItalian,
-    gUiTextDutch,
+    gUiTextEnglish, gUiTextFrench, gUiTextGerman, gUiTextSpanish, gUiTextItalian, gUiTextDutch,
 };
 
 /* The language, 0-5 (English, French, German, Spanish, Italian, Dutch);
@@ -145,16 +136,13 @@ struct language_select *gLanguageSelect = NULL;
  * for the BIOS HuffUnComp: 8-bit symbols, 0x4A0 bytes (37 4bpp tiles)
  * once unpacked. */
 u32 gGaxHaltFont[70] = {
-    0x0004A028, 0x80008011, 0x01804010, 0x42804011, 0x804080FF, 0x00000002,
-    0x00000000, 0x00000000, 0xC0000000, 0x0000F600, 0x34D0D835, 0x0D66C01B,
-    0x0CE9262A, 0x5E48CE04, 0x30421086, 0x7033A422, 0xE7216601, 0x9D2119C4,
-    0x919C072E, 0x7E9D660E, 0x382CC421, 0x67124670, 0x2E721674, 0x923382CC,
-    0x10E438E3, 0x80CE9246, 0x74923381, 0x9D248CC1, 0x0E600CE9, 0x2492CC49,
-    0x2059D249, 0x6749259C, 0x0CE92108, 0x48CE0B3A, 0x4924924B, 0x382CC421,
-    0x67421660, 0x2CC42167, 0x42100674, 0x90AC4923, 0x30124925, 0x98924901,
-    0x9C842108, 0x67010842, 0x49233824, 0x9D45CA27, 0x48108421, 0x08598092,
-    0xF8A92492, 0x48125E54, 0x98924901, 0x9D249249, 0x23382CE9, 0x24B3A108,
-    0x033A4924, 0xA939902C, 0xE924B3A7, 0x492033A4, 0x83389233, 0x82CC2108,
-    0x42101249, 0x249248CE, 0x09249249, 0x1F901249, 0x52A54A8F, 0xC1248FC8,
-    0x7E924092, 0x491F9084, 0x059C721C, 0x842CE000,
+    0x0004A028, 0x80008011, 0x01804010, 0x42804011, 0x804080FF, 0x00000002, 0x00000000, 0x00000000,
+    0xC0000000, 0x0000F600, 0x34D0D835, 0x0D66C01B, 0x0CE9262A, 0x5E48CE04, 0x30421086, 0x7033A422,
+    0xE7216601, 0x9D2119C4, 0x919C072E, 0x7E9D660E, 0x382CC421, 0x67124670, 0x2E721674, 0x923382CC,
+    0x10E438E3, 0x80CE9246, 0x74923381, 0x9D248CC1, 0x0E600CE9, 0x2492CC49, 0x2059D249, 0x6749259C,
+    0x0CE92108, 0x48CE0B3A, 0x4924924B, 0x382CC421, 0x67421660, 0x2CC42167, 0x42100674, 0x90AC4923,
+    0x30124925, 0x98924901, 0x9C842108, 0x67010842, 0x49233824, 0x9D45CA27, 0x48108421, 0x08598092,
+    0xF8A92492, 0x48125E54, 0x98924901, 0x9D249249, 0x23382CE9, 0x24B3A108, 0x033A4924, 0xA939902C,
+    0xE924B3A7, 0x492033A4, 0x83389233, 0x82CC2108, 0x42101249, 0x249248CE, 0x09249249, 0x1F901249,
+    0x52A54A8F, 0xC1248FC8, 0x7E924092, 0x491F9084, 0x059C721C, 0x842CE000,
 };

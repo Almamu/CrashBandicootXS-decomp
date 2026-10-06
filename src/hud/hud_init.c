@@ -60,8 +60,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
     self->crateSlideTimer = 0;
     self->wumpaSlideTimer = 0;
 
-    for (i = 0; i <= 0x22; i++)
-    {
+    for (i = 0; i <= 0x22; i++) {
         struct hud_digit_part *slot;
 
         SetSpritePriority(&self->parts[i], 0);
@@ -71,16 +70,13 @@ struct hud_counter *InitHud(struct hud_counter *self)
             slot = (struct hud_digit_part *)(i * sizeof(struct hud_digit_part) + (u32)self->parts);
             slot->anim_data = anim;
         }
-        if (i == 0x16)
-        {
+        if (i == 0x16) {
             s32 life = GetBossIndex(gLevelState);
 
             slot = &self->parts[i];
             self->parts[0x16].anim_index = life + 6;
             RestartSlot(slot);
-        }
-        else
-        {
+        } else {
             slot->anim_index = gHudPartAnims[i];
             RestartSlot(slot);
         }
@@ -159,12 +155,10 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
     base = GetSpriteAnimPaletteSlot((struct actor *)&self->parts[13]);
     self->parts[13].palette = base;
 
-    for (i = 0; i <= 0x22; i++)
-    {
+    for (i = 0; i <= 0x22; i++) {
         s32 frame;
 
-        if (i == 0x16)
-        {
+        if (i == 0x16) {
             s32 life = GetBossIndex(gLevelState);
             struct hud_digit_part *slot = &self->parts[i];
 
@@ -172,8 +166,7 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
             RestartSlot(slot);
         }
         frame = 0;
-        switch (i)
-        {
+        switch (i) {
         case 0x16:
         case 0x17:
             if (GetBossIndex(gLevelState) == -1)
@@ -190,20 +183,18 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
             break;
         }
 
-        if (GetBossIndex(gLevelState) == -1 && self->icon_flag)
-        {
-            switch (i)
-            {
+        if (GetBossIndex(gLevelState) == -1 && self->icon_flag) {
+            switch (i) {
             case 0xE ... 0x15:
-            {
-                const struct hud_pos *tbl = gHudPartPositions;
-                const struct hud_pos *pos = tbl + i;
+                {
+                    const struct hud_pos *tbl = gHudPartPositions;
+                    const struct hud_pos *pos = tbl + i;
 
-                self->parts[i].x = pos->x << 8;
-                self->parts[i].y = 0x1400;
-                SetPal(&self->parts[i], frame);
-                break;
-            }
+                    self->parts[i].x = pos->x << 8;
+                    self->parts[i].y = 0x1400;
+                    SetPal(&self->parts[i], frame);
+                    break;
+                }
             default:
                 if (frame == base)
                     SetPal(&self->parts[i], 10);
@@ -211,8 +202,7 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
                     SetPal(&self->parts[i], frame);
                 break;
             }
-        }
-        else
+        } else
             self->parts[i].palette = frame;
     }
     DmaFill32(3, -1, &self->shownLives, 9 * 4);

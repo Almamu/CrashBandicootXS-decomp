@@ -335,7 +335,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
  *   asm after the shift count, so it doesn't reuse `one`. */
 struct launch_obj {
     u8 unk_00[0xC];
-    u8 *vtable;         // 0x0C
+    u8 *vtable; // 0x0C
 };
 
 typedef void (*bd48_method_fn)(void *self, void *arg);

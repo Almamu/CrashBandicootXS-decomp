@@ -96,7 +96,8 @@ void LoadBgPicture(u8 *pic)
     pic += 4;
     tileData = pic + ((cols * rows + 1) / 2) * 4;
     /* two extra references: cols outranks row+1 for r8 */
-    MATCH_USE(cols); MATCH_USE(cols);
+    MATCH_USE(cols);
+    MATCH_USE(cols);
     MapFill(tileData + tiles * 32, (u16 *)pic, cols, rows);
     REG_DISPCNT |= 0x200;
     REG_BG1CNT = 0x5A07;

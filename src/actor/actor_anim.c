@@ -603,7 +603,7 @@ asm(".align 2, 0");
 /* `actor_self` plus the first derived-class word at +0x54. */
 struct actor_self_54 {
     struct actor_self base;
-    s32 unk_54;         // 0x54
+    s32 unk_54; // 0x54
 };
 
 /* A fourth hidden function with no thumb_func_start of its own (see

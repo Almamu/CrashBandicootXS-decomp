@@ -37,7 +37,18 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # The paths kept formatted. Widened by each part of #572.
 FORMATTED = [
+    "src/actor",
+    "src/audio",
+    "src/cutscene",
+    "src/enemies",
+    "src/gfx",
+    "src/hud",
+    "src/iwram",
+    "src/link",
+    "src/pickups",
+    "src/save",
     "src/text",
+    "src/util",
 ]
 
 CLANG_FORMAT_MAJOR = 21

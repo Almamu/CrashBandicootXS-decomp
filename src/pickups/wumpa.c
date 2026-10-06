@@ -140,7 +140,7 @@ void UpdateStopwatch(struct actor *self)
     s32 dx;
     s32 dy;
 
-    asm volatile("asr %0, %1, #8" : "=r" (dxPart) : "r" (rawX));
+    asm volatile("asr %0, %1, #8" : "=r"(dxPart) : "r"(rawX));
     dx = dxPart - (self->x >> 8);
     if (dx < 0) {
         dx = -dx;
@@ -152,7 +152,7 @@ void UpdateStopwatch(struct actor *self)
         MATCH_HOLD_REG(s32, rawY, r0) = player->y;
         MATCH_HOLD_REG(s32, dyPart, r1);
 
-        asm volatile("asr %0, %1, #8" : "=r" (dyPart) : "r" (rawY));
+        asm volatile("asr %0, %1, #8" : "=r"(dyPart) : "r"(rawY));
         dy = dyPart - (self->y >> 8);
     }
     if (dy < 0) {
@@ -179,7 +179,7 @@ outOfRange:
             MATCH_HOLD_REG(s32, word, r0);
             s32 wordOffset;
 
-            asm volatile("add %0, %1, #0\n\tasr %0, %0, #5" : "=r" (word) : "r" ((s32)field08b));
+            asm volatile("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(word) : "r"((s32)field08b));
             wordOffset = word << 2;
             {
                 u8 *bitmapAddr = (u8 *)base + 0x108;

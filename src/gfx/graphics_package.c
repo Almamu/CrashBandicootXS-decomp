@@ -31,8 +31,7 @@ void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg)
     pal = self->paletteBank << 12;
     src = map;
     dest = (u16 *)(VRAM + (self->screenBlock << 11));
-    for (y = 0; y < (s32)pkg->height; y++)
-    {
+    for (y = 0; y < (s32)pkg->height; y++) {
         u16 *next = dest + 0x20;
         for (x = 0; x < (s32)pkg->width; x++)
             dest[x] = pal | src[x];
@@ -57,7 +56,8 @@ u16 GetBgSetupControl(struct bg_setup *self)
 /* Fills the BG setup buffer: char block, screen block and palette bank
  * verbatim, and a control value with priority `priority`, char base
  * `charBlock`, screen base `screenBlock` and size 0. */
-struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock, u32 paletteBank, u32 priority)
+struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock, u32 paletteBank,
+                             u32 priority)
 {
     self->ctrl.raw = 0;
     self->ctrl.bits.priority = priority;
@@ -81,35 +81,35 @@ asm(".align 2, 0");
  * parameter). matrixNum is split: in affine mode its bits 3-4 double as
  * the h/v-flip bits. */
 struct oam_attrs_u16 {
-    u16 y:8;            // 0x00
+    u16 y:8; // 0x00
     u16 affineMode:2;
     u16 objMode:2;
     u16 mosaic:1;
     u16 bpp:1;
     u16 shape:2;
-    u32 x:9;            // 0x02 - u32: with u16, DrawScaledSprite's stores schedule differently
+    u32 x:9; // 0x02 - u32: with u16, DrawScaledSprite's stores schedule differently
     u16 matrixNumLo:3;
     u16 hFlip:1;
     u16 vFlip:1;
     u16 size:2;
-    u16 tileNum:10;     // 0x04
+    u16 tileNum:10; // 0x04
     u16 priority:2;
     u16 paletteNum:4;
-    s16 affineParam;    // 0x06
+    s16 affineParam; // 0x06
 };
 
 /* A sprite box: position, requested size, its OAM template and the
  * preset box it was fitted to. */
 struct gfx_box_obj {
-    s32 x;                  // 0x00
-    s32 y;                  // 0x04
-    s32 width;              // 0x08
-    s32 height;             // 0x0C
+    s32 x;                    // 0x00
+    s32 y;                    // 0x04
+    s32 width;                // 0x08
+    s32 height;               // 0x0C
     struct oam_attrs_u16 oam; // 0x10
-    s32 sizeIndex;          // 0x18
+    s32 sizeIndex;            // 0x18
     u8 unk_1C[4];
-    s32 scaleX;             // 0x20 - Q8
-    s32 scaleY;             // 0x24 - Q8
+    s32 scaleX; // 0x20 - Q8
+    s32 scaleY; // 0x24 - Q8
 };
 
 /* Picks the smallest-area box preset (gObjSizeWidths/674) that a
@@ -129,10 +129,8 @@ void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height)
     self->width = width;
     self->height = height;
     best = 0x1000;
-    for (i = 0, widths = gObjSizeWidths, heights = gObjSizeHeights; i < 12; i++)
-    {
-        if (width <= widths[i] * 2 && height <= heights[i] * 2 && widths[i] * heights[i] < best)
-        {
+    for (i = 0, widths = gObjSizeWidths, heights = gObjSizeHeights; i < 12; i++) {
+        if (width <= widths[i] * 2 && height <= heights[i] * 2 && widths[i] * heights[i] < best) {
             best = widths[i] * heights[i];
             self->sizeIndex = i;
         }
@@ -162,8 +160,7 @@ void DrawScaledSprite(struct gfx_box_obj *self)
     struct oam_shadow_buffer *buf;
     s32 n;
 
-    switch ((u32)self->oam.affineMode)
-    {
+    switch ((u32)self->oam.affineMode) {
     case 0:
         self->oam.x = self->x;
         self->oam.y = self->y;
@@ -177,13 +174,10 @@ void DrawScaledSprite(struct gfx_box_obj *self)
         self->oam.y = self->y + self->height / 2 - gObjSizeHeights[self->sizeIndex];
         break;
     }
-    if (self->oam.affineMode == 0)
-    {
+    if (self->oam.affineMode == 0) {
         self->oam.hFlip = 0;
         self->oam.vFlip = 0;
-    }
-    else
-    {
+    } else {
         buf = gOamBuffer;
         n = buf->matrixCount++;
         self->oam.matrixNumLo = n;

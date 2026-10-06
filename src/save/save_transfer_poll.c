@@ -25,6 +25,7 @@ s32 PollSaveTransfer(struct settings_sync_pump *self)
 {
     MATCH_HOLD_REG(s32, result, r0);
 
+    // clang-format off
     asm volatile(
         "add r4, %1, #0\n"
         "ldr r0, =gLinkSession\n"
@@ -135,6 +136,7 @@ s32 PollSaveTransfer(struct settings_sync_pump *self)
         : "r" (self)
         : "r1", "r2", "r3", "r4", "r5", "r6", "cc", "memory"
     );
+    // clang-format on
 
     return result;
 }

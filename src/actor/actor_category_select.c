@@ -53,7 +53,8 @@ static inline s32 *NextThreshold(struct sub_effect_record *table, s32 idx)
     return (s32 *)(b + off);
 }
 
-void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable, u8 active, s32 variant, s32 checkpoint)
+void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable, u8 active,
+                         s32 variant, s32 checkpoint)
 {
     struct sub_effect_record *t;
     struct actor_self ***buf;
@@ -71,17 +72,18 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTa
     base = GetCellAnimDistance();
     MATCH_USE(idx); /* extra reference: `idx` outranks `base` */
     t = gActorSpawnTable;
-    while (gActorSpawnIndex < t->field_04
-           && *NextThreshold(t, gActorSpawnIndex) < (s32)gActorCategoryVtable->fn[8] + base)
+    while (gActorSpawnIndex < t->field_04 &&
+           *NextThreshold(t, gActorSpawnIndex) < (s32)gActorCategoryVtable->fn[8] + base)
         gActorSpawnIndex++;
     buf = &gActorDrawList;
     *buf = mem_alloc(0xc8, 0x80000000);
     if (gActorCategoryVtable->fn[2] != NULL)
         ((void (*)(s32))gActorCategoryVtable->fn[2])(variant);
-    while (gActorSpawnIndex < gActorSpawnTable->field_04
-           && *NextThreshold(gActorSpawnTable, gActorSpawnIndex) <= (s32)gActorCategoryVtable->fn[7] + base) {
-        ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])((u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8),
-                                                               gUnknown_03001414, 0);
+    while (gActorSpawnIndex < gActorSpawnTable->field_04 &&
+           *NextThreshold(gActorSpawnTable, gActorSpawnIndex) <=
+               (s32)gActorCategoryVtable->fn[7] + base) {
+        ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])(
+            (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8), gUnknown_03001414, 0);
         gActorSpawnIndex++;
     }
     gActorCategoryFrameCount = 0;

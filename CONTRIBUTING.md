@@ -263,6 +263,13 @@ past 100 columns makes clang-format split the declaration in front of
 it instead (`void *` on one line, the name on the next), so move a long
 comment onto its own line above the member before formatting.
 
+Two smaller quirks: in a one-line asm, write an empty operand list as
+`: :`, since clang-format reads `::` as C++'s scope operator and glues
+it to its neighbours (`"+r"(x)::"r0"`). And clang-format only knows
+the integer typedefs listed under `TypeNames` in `.clang-format`
+(`u8`...`vs32`); with any other type name, a pointer-to-array such as
+`T (*p)[16]` is taken for a call and loses its space.
+
 ## Opening the PR
 
 Say what the PR changes and how you verified it (the two clean checks

@@ -174,7 +174,8 @@ void TickPaletteCycles(struct palette_cycler *self)
 
 /* Producer: appends a new slot at `count` (no wraparound - see the
  * struct's doc comment), computing `periods[count]` as 60 / `rate` (`__divsi3`). */
-void AddPaletteCycle(struct palette_cycler *self, u16 *targets_arg, u16 *lists, s32 rate, s32 list_count, u8 direction_arg)
+void AddPaletteCycle(struct palette_cycler *self, u16 *targets_arg, u16 *lists, s32 rate,
+                     s32 list_count, u8 direction_arg)
 {
     /* ROM reads this 6th (stack-passed) `u8` argument as a genuine
      * `ldrb` off a computed stack address, right at function entry.

@@ -677,6 +677,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
 
     {
         MATCH_HOLD_REG(s32, flagTestR0, r0);
+        // clang-format off
         asm volatile(
             "ldrb r1, [%1, #0xc]\n\t"
             "lsr %0, r1, #2\n\t"
@@ -685,10 +686,12 @@ s32 CheckEntityPlayerContact(struct actor *self)
             : "=r"(flagTestR0)
             : "r"(self)
             : "r1");
+        // clang-format on
         flagTest = flagTestR0;
     }
     if (flagTest) {
         if (PlayerTouchesBox(gPlayer, &buf)) {
+            // clang-format off
             asm volatile(
                 "mov r0, #8\n\t"
                 "ldrb r2, [%0, #0xc]\n\t"
@@ -697,6 +700,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
                 :
                 : "r"(self)
                 : "r0", "r2", "memory");
+            // clang-format on
 
             table2 = &gPlayer->vtable->handleEvent;
             addr = (u8 *)gPlayer + table2->thisOffset;
@@ -795,6 +799,7 @@ s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
              * shifted result to a free register the way the ROM does
              * - tried several C-level rephrasings with no effect, see
              * docs/matching.md, "Matching decompilation". */
+            // clang-format off
             asm volatile(
                 "ldrb r1, [%4, #4]\n\t"
                 "lsl r2, r1, #7\n\t"
@@ -809,6 +814,7 @@ s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
                 : "=r"(minXR4), "=r"(maxXR1), "=r"(minYR5), "=r"(maxYR3)
                 : "r"(recR0), "r"(pSelf)
                 : "r0", "r1", "r2");
+            // clang-format on
             result = 0;
             boxX0 = pBox->x;
             if (minXR4 > boxX0) {

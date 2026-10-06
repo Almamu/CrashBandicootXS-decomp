@@ -88,6 +88,7 @@ void UpdateHudLives(struct hud_counter *counter)
                     second_index = *index_addr;
                     /* Keeping index_addr live here reproduces the ROM's r7/r2
                      * allocation; the equivalent expression otherwise uses r2. */
+                    // clang-format off
                     asm volatile(
                         "lsl r0, %1, #3\n\t"
                         "add %0, %1, #0\n\t"
@@ -96,6 +97,7 @@ void UpdateHudLives(struct hud_counter *counter)
                         : "+r"(index_addr)
                         : "l"(second_index)
                         : "r0");
+                    // clang-format on
                     /* Exposes the r0 result of the allocation anchor above. */
                     MATCH_HOLD_VOLATILE(record_offset);
                     /* Plain C reverses this commutative ADD's operands. */

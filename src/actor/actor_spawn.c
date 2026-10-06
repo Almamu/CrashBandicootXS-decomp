@@ -139,7 +139,7 @@ s32 sub_802A570(s32 idx)
 s32 CanPauseActorCategory(void)
 {
     s32 result = _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x30));
-    asm volatile("movs r1, #1\n\teor r0, r1" : "+r"(result) :: "r1");
+    asm volatile("movs r1, #1\n\teor r0, r1" : "+r"(result) : : "r1");
     return result;
 }
 
@@ -191,18 +191,22 @@ void DestroyAllActors(void)
          * right before the loop condition, not immediately after the
          * load. */
         MATCH_HOLD_REG(void *, addr, r0) = &gActorList;
+        // clang-format off
         asm volatile(
             "ldr %0, [%1]\n\t"
             : "=r"(head)
             : "r"(addr)
         );
+        // clang-format on
 
         cur = ACTOR_LINK_NEXT((struct actor_self *)head);
+        // clang-format off
         asm volatile(
             "add %0, %1, #0\n\t"
             : "=r"(headAddr)
             : "r"(addr)
         );
+        // clang-format on
     }
     if (cur != head) {
         do {

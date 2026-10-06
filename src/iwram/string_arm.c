@@ -161,6 +161,7 @@ s32 itoa_arm(s32 value, u8 *buf, s32 base)
 #else
 NAKED s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
+    // clang-format off
     asm(".syntax unified\n"
         "\tpush {r4, r5, r6}\n"
         "\tmov r5, #0\n"
@@ -212,5 +213,6 @@ NAKED s32 itoa_arm(s32 value, u8 *buf, s32 base)
         "\tpop {r4, r5, r6}\n"
         "\tbx lr\n"
         ".syntax divided\n");
+    // clang-format on
 }
 #endif

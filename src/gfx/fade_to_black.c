@@ -73,6 +73,7 @@ void FadePaletteToBlack(void)
         DarkenPalette(factor);
         WaitForVBlank();
         dma2->src = (u32)bufAddr;
+        // clang-format off
         asm volatile(
             "mov %0, #0xa0\n\t"
             "lsl %0, %0, #0x13\n\t"
@@ -81,6 +82,7 @@ void FadePaletteToBlack(void)
             "str %1, [%2, #8]\n\t"
             "ldr r0, [%2, #8]\n\t"
             : "=r"(dstVal), "=r"(cntVal) : "r"(dma2) : "r0", "memory");
+        // clang-format on
         factor += 2;
     } while (factor <= 0x10);
 
@@ -95,6 +97,7 @@ void FadePaletteToBlack(void)
      * this compiler prefers, but not what the ROM does. */
     {
         MATCH_HOLD_REG(struct dma_regs *, dma3, r0);
+        // clang-format off
         asm volatile(
             "ldr %0, .L8\n\t"
             "ldr r1, .L8+0x4\n\t"
@@ -103,6 +106,7 @@ void FadePaletteToBlack(void)
             "str %2, [%0, #8]\n\t"
             "ldr %0, [%0, #8]\n\t"
             : "=r"(dma3), "+r"(dstVal), "+r"(cntVal) :: "r1", "memory");
+        // clang-format on
     }
 }
 

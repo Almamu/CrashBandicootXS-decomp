@@ -219,8 +219,7 @@ void UpdateActor(void *selfArg)
         }
     }
 
-    if (self->depth > gActorFarClipDepth + 0x200 ||
-        self->depth < gActorNearClipDepth - 0x200) {
+    if (self->depth > gActorFarClipDepth + 0x200 || self->depth < gActorNearClipDepth - 0x200) {
         if (self != NULL) {
             struct actor_vtable *table = self->vtable;
             s32 offset = table->destroy.thisOffset;
@@ -334,7 +333,7 @@ void DrawActor(void *selfArg)
     {
         MATCH_HOLD_REG(s32, scaleCmp, r1);
 
-        asm("mov %0, r8" : "=r" (scaleCmp));
+        asm("mov %0, r8" : "=r"(scaleCmp));
         if (scaleCmp <= 0xff) {
             flag = 0x200;
         }
@@ -357,13 +356,17 @@ void DrawActor(void *selfArg)
     posY -= delta0;
     posX -= delta1;
 
-    if (posX > 0x9f) return;
-    if (posX + delta1 * 2 < 0) return;
-    if (posY > 0xef) return;
+    if (posX > 0x9f)
+        return;
+    if (posX + delta1 * 2 < 0)
+        return;
+    if (posY > 0xef)
+        return;
     {
         MATCH_HOLD_REG(s32, shifted, r0) = delta0 << 1;
 
-        if (posY + shifted < 0) return;
+        if (posY + shifted < 0)
+            return;
     }
 
     if (scale != 0x100) {
@@ -388,7 +391,7 @@ void DrawActor(void *selfArg)
         s32 attr;
         MATCH_HOLD_REG(void *, callArg, r0) = self;
 
-        asm volatile("str %1, %0" : "=m" (flagStack[0]) : "r" (flag));
+        asm volatile("str %1, %0" : "=m"(flagStack[0]) : "r"(flag));
         attr = GetAnimFrameAttr(callArg);
 
         {
@@ -405,7 +408,7 @@ void DrawActor(void *selfArg)
              * ROM's own late `ldr r2, [sp]` placement (immediately
              * before the final `orrs r3, r2`) rather than eagerly right
              * after the call. */
-            asm volatile("ldr %0, %1" : "=r" (flag) : "m" (flagStack[0]));
+            asm volatile("ldr %0, %1" : "=r"(flag) : "m"(flagStack[0]));
             packed |= flag;
 
             v = self->palette;
@@ -544,7 +547,9 @@ asm(".align 2, 0");
  * actually used. */
 void *sub_802AA0C(void *outArg, void *selfArg)
 {
-    struct blob0xc { u32 w0, w1, w2; };
+    struct blob0xc {
+        u32 w0, w1, w2;
+    };
 
     struct actor_self *self = selfArg;
     struct blob0xc buf = *(struct blob0xc *)self->box;
@@ -561,6 +566,7 @@ void *sub_802AA0C(void *outArg, void *selfArg)
      * different phrasings. A small inline-asm island, matching the
      * ROM's literal instruction order, sidesteps the scheduler for just
      * this one sequence while leaving the rest of the function real C. */
+    // clang-format off
     asm("ldr %0, [%3, #0x1c]\n"
         "asr %0, %0, #8\n"
         "ldr %1, [%3, #0x20]\n"
@@ -569,6 +575,7 @@ void *sub_802AA0C(void *outArg, void *selfArg)
         "asr %2, %2, #8"
         : "=r" (d0), "=r" (d1), "=r" (d2)
         : "r" (self));
+    // clang-format on
 
     {
         /* The ROM's three read-modify-write halfword updates reuse
@@ -587,6 +594,7 @@ void *sub_802AA0C(void *outArg, void *selfArg)
          * one. */
         MATCH_HOLD_REG(s16 *, sp2, r2) = (s16 *)&buf;
 
+        // clang-format off
         asm volatile(
             "ldrh r1, [r2]\n"
             "add r3, r1, r3\n"
@@ -600,6 +608,7 @@ void *sub_802AA0C(void *outArg, void *selfArg)
             :
             : "r" (sp2), "r" (d1), "r" (d0), "r" (d2)
             : "r1", "r3", "r4", "memory");
+        // clang-format on
     }
 
     {
@@ -611,12 +620,14 @@ void *sub_802AA0C(void *outArg, void *selfArg)
         MATCH_HOLD_REG(void *, dst, r2) = outArg;
         MATCH_HOLD_REG(s16 *, src, r1) = (s16 *)&buf;
 
+        // clang-format off
         asm volatile(
             "ldmia r1!, {r4, r5, r6}\n"
             "stmia r2!, {r4, r5, r6}"
             :
             : "r" (dst), "r" (src)
             : "r4", "r5", "r6", "memory");
+        // clang-format on
     }
 
     return outArg;
@@ -788,6 +799,7 @@ asm(".align 2, 0");
  *   are still fully compiler-generated. */
 void UpdateActorPaletteCycle(void)
 {
+    // clang-format off
     asm volatile(
         "ldr r0, =gActorPaletteCycleEnabled\n"
         "ldrb r0, [r0]\n"
@@ -835,6 +847,7 @@ void UpdateActorPaletteCycle(void)
         :
         :
         : "r0", "r1", "r2", "r3", "r4", "lr", "cc", "memory");
+    // clang-format on
 }
 /* Trailing zero-fill padding to the next 4-byte boundary, matching the
  * ROM's own (the assembler's default NOP pad - "mov r8, r8" - mismatches
