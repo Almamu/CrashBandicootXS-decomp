@@ -44,12 +44,12 @@ void SetMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
     MATCH_HOLD_REG(u8 *, base, r1);
     MATCH_HOLD_REG(u8 *, tableEntry, r2);
 
-    asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
+    asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 4);
     typeOffset = type * 12;
     base = (u8 *)gMegaMixMotionRecords;
-    asm("add %0, %1, %2" : "=r" (tableEntry) : "r" (typeOffset), "r" (base));
+    asm("add %0, %1, %2" : "=r"(tableEntry) : "r"(typeOffset), "r"(base));
 
     if ((s32)(part[0x28] << 26) < 0) {
         s32 x = -*(s32 *)(tableEntry + 0);
@@ -85,12 +85,12 @@ void SetMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
     MATCH_HOLD_REG(u8 *, base, r1);
     MATCH_HOLD_REG(u8 *, tableEntry, r2);
 
-    asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
+    asm("add %0, %0, %1" : "+r"(recOffset) : "r"(arr));
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 0);
     typeOffset = type * 12;
     base = (u8 *)gMegaMixMotionRecords;
-    asm("add %0, %1, %2" : "=r" (tableEntry) : "r" (typeOffset), "r" (base));
+    asm("add %0, %1, %2" : "=r"(tableEntry) : "r"(typeOffset), "r"(base));
 
     if ((s32)(part[0x28] << 27) < 0) {
         s32 x = -*(s32 *)(tableEntry + 0);
@@ -121,11 +121,11 @@ void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
     MATCH_HOLD_REG(s32, type, r3);
     MATCH_HOLD_REG(u8 *, base, r3);
 
-    asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
+    asm("add %0, %0, %1" : "+r"(acc) : "r"(arr));
     type = *(s32 *)((u8 *)acc + 4);
     acc = type * 12;
     base = (u8 *)gMegaMixMotionRecords;
-    asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
+    asm("add %0, %0, %1" : "+r"(acc) : "r"(base));
 
     StartCtrlTargetMotionY(selfArg, partArg, (const struct speed_ramp *)acc);
 }
@@ -139,11 +139,11 @@ void StartMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
     MATCH_HOLD_REG(s32, type, r3);
     MATCH_HOLD_REG(u8 *, base, r3);
 
-    asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
+    asm("add %0, %0, %1" : "+r"(acc) : "r"(arr));
     type = *(s32 *)((u8 *)acc + 0);
     acc = type * 12;
     base = (u8 *)gMegaMixMotionRecords;
-    asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
+    asm("add %0, %0, %1" : "+r"(acc) : "r"(base));
 
     StartCtrlTargetMotionX(selfArg, partArg, (s32 *)acc);
 }

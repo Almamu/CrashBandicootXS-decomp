@@ -13,29 +13,26 @@
  * Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 /* An OAM-backed part (same layout as cortex.c's gfx_part). */
-struct slot_part
-{
-    struct actor base;          // 0x00
+struct slot_part {
+    struct actor base; // 0x00
     u8 unk_1C[4];
     const struct sprite_bank *anim; // 0x20
     u8 unk_24[5];
-    u8 frameNibble:4;           // 0x29
+    u8 frameNibble:4; // 0x29
     u8 unk_29_4:4;
     u8 unk_2A[3];
-    u8 tag;                     // 0x2D
+    u8 tag; // 0x2D
 };
 
-struct entity_vtable
-{
+struct entity_vtable {
     u8 unk_00[0x28];
-    struct actor_method m28;         // 0x28
+    struct actor_method m28; // 0x28
     u8 unk_30[0x18];
-    struct actor_method m48;         // 0x48
+    struct actor_method m48; // 0x48
 };
 
-struct entity
-{
-    struct actor base;          // 0x00 (+0x08: id, +0x0C: flags)
+struct entity {
+    struct actor base; // 0x00 (+0x08: id, +0x0C: flags)
     u8 unk_1C[0];
 };
 
@@ -72,43 +69,39 @@ void StartTimeTrial(struct level_state *self)
         return;
 
     part = (struct slot_part *)self->bonusPlatform;
-    if (part != NULL)
-    {
+    if (part != NULL) {
         SetPartTag(part, 7);
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
     }
     part = (struct slot_part *)self->gemPlatform;
-    if (part != NULL)
-    {
+    if (part != NULL) {
         SetPartTag(part, 0xc);
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
+        // clang-format off
         LoadPaletteSlot(gPaletteCache, ((struct slot_part *)self->gemPlatform)->frameNibble,
-                    ((struct slot_part *)self->gemPlatform)->anim->anims[((struct slot_part *)self->gemPlatform)->tag].paletteId);
+                        ((struct slot_part *)self->gemPlatform)->anim->anims[
+                            ((struct slot_part *)self->gemPlatform)->tag].paletteId);
+        // clang-format on
     }
     ConvertCratesForTimeTrial();
 
     i = 0;
-    if (i < gUnknown_030012EC->count)
-    {
-        do
-        {
+    if (i < gUnknown_030012EC->count) {
+        do {
             struct actor *e = (struct actor *)gUnknown_030012EC->items[i];
             struct actor *a = e;
             struct actor_method *m = &((struct entity_vtable *)e->table)->m48;
 
-            if (_call_via_r1((u8 *)e + m->thisOffset, m->fn) == 2)
-            {
+            if (_call_via_r1((u8 *)e + m->thisOffset, m->fn) == 2) {
                 if ((u8)ACTOR_METHOD(e, m28))
                     PickUpWumpa((struct orbit_part *)e, 1);
-                else
-                {
+                else {
                     a->flags |= 1;
-                    if (a->field_08 != 0xffff)
-                    {
+                    if (a->field_08 != 0xffff) {
                         s32 id = a->field_08;
                         gEntityFlags->bits0Copy[id / 32] |= 1 << (id % 32);
                     }

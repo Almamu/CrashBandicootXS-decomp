@@ -18,36 +18,36 @@ extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbo
 
 /* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
-struct manager
-{
+struct manager {
     u8 unk_00[0xC];
-    struct { u8 unk_00[0x18]; struct actor_method attach; } *vtable; // 0x0C
+    struct {
+        u8 unk_00[0x18];
+        struct actor_method attach;
+    } *vtable; // 0x0C
 };
 
-struct fx_part
-{
-    struct actor base;          // 0x00
+struct fx_part {
+    struct actor base; // 0x00
     u8 unk_1C[4];
-    void *anim;                 // 0x20
+    void *anim; // 0x20
     u8 unk_24[4];
-    u32 unk_28_0:4;             // 0x28
+    u32 unk_28_0:4; // 0x28
     u32 flipX:1;
     u32 unk_28_5:3;
-    u8 frameNibble:4;           // 0x29
+    u8 frameNibble:4; // 0x29
     u8 unk_29_4:4;
     u8 unk_2A[3];
-    u8 tag;                     // 0x2D
+    u8 tag; // 0x2D
     u8 unk_2E[0x16];
-    struct manager *mgr;        // 0x44
-    s32 rampXStart;                 // 0x48 - velocity fields seeded by LaunchEffectPart
-    s32 rampXStep;                 // 0x4C
-    s32 rampXTarget;                 // 0x50
+    struct manager *mgr; // 0x44
+    s32 rampXStart;      // 0x48 - velocity fields seeded by LaunchEffectPart
+    s32 rampXStep;       // 0x4C
+    s32 rampXTarget;     // 0x50
     u8 unk_54[0xC];
-    s32 speedX;                 // 0x60
+    s32 speedX; // 0x60
 };
 
-struct actor_flag_bits
-{
+struct actor_flag_bits {
     u8 unk_0:1;
     u8 bit1:1;
     u8 bit2:1;
@@ -82,7 +82,8 @@ static inline void SetVel(struct fx_part *p, s32 v, s32 k)
     p->rampXTarget = v;
 }
 
-void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src)
+void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed,
+                       struct fx_part *src)
 {
     struct fx_part *part;
     s32 w1, w2, dist, x;
@@ -95,7 +96,9 @@ void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 sp
         part = SpawnEffectPart(pool, arg1, kind, x0, y0, m);
     }
     {
-        struct { struct aabb a, b; } f;
+        struct {
+            struct aabb a, b;
+        } f;
 
         GetSpriteHitbox_p(&f.a, part);
         w1 = f.a.w;
@@ -174,8 +177,7 @@ struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 fl
     u8 p5 = *(u8 *)&flag5;
     struct orbit_part *part = NULL;
 
-    if (gLevelState->timeTrial == 0)
-    {
+    if (gLevelState->timeTrial == 0) {
         if (p5 || p4 == 0xff)
             part = CreateWumpa(0xffff, x, y, 0xffff);
         else

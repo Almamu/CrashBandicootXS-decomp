@@ -120,131 +120,139 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     MATCH_HOLD_REG(struct part_ctrl *, hdr, r6);
     struct ctrl_anchor *table;
 
-  {
-    MATCH_HOLD_REG(s32, idx, r5);
-
-    asm volatile(
-        "add r5, r3, #0\n\t"
-        "lsl r1, r1, #0x10\n\t"
-        "lsr r1, r1, #0x10\n\t"
-        "lsl r2, r2, #0x10\n\t"
-        "lsr r2, r2, #0x10\n\t"
-        "lsl r5, r5, #0x10\n\t"
-        "lsr r5, r5, #0x10\n\t"
-        "lsl r0, r0, #0x10\n\t"
-        "lsr r0, r0, #0x10\n\t"
-        "add r3, r5, #0\n\t"
-        "bl CreateMovingSprite\n\t"
-        "add r4, r0, #0\n\t"
-        : "=r" (part), "=r" (idx)
-        : "r" (raw0), "r" (raw1), "r" (raw2), "r" (raw3)
-        : "r1", "r2", "r3", "lr", "memory");
-
-    p2 = (void *)gSpriteBankSet->table;
-    p3 = *(void **)p2;
-    *(void **)((u8 *)part + 0x20) = (u8 *)p3 + 0x78;
-
     {
-        MATCH_HOLD_REG(s32, result, r0) = GetSpriteAnimPaletteSlot((struct actor *)part);
-        MATCH_HOLD_REG(u8 *, addr, r2) = (u8 *)part + 0x29;
-        MATCH_HOLD_REG(s32, acc, r1);
-        result &= 0xf;
-        asm volatile("mov r1, #0x10\n\tneg r1, r1\n\t" : "=r" (acc));
-        acc &= *addr;
-        acc |= result;
-        *addr = acc;
-    }
+        MATCH_HOLD_REG(s32, idx, r5);
 
-    hdr = CreateEnemyCtrl(OperatorNew(0x8c));
-    table = hdr->anchor;
-    _call_via_r2((u8 *)hdr + table->attach.thisOffset, part, table->attach.fn);
-    {
-        MATCH_HOLD_REG(s32, tagVal, r0) = 0xa;
-        hdr->kind = tagVal;
-    }
-    part->hdr = hdr;
-    table = hdr->anchor;
-    {
-        /* A bare `MATCH_HOLD_REG(s32, off, r3) = 0x18;` pin is silently
-         * ignored by this compiler for a simple constant initializer
-         * (lands the two-step mov/lsl synthesis in whatever register it
-         * likes, not the ROM's r3) - the same gotcha
-         * docs/matching/archive/issue-31-graphics-loading.md documents for
-         * SpawnDingodile's own `+0x20` table-offset constant. Spelled out
-         * as a full hand-written trampoline call instead. */
-        MATCH_HOLD_REG(void *, tbl, r1) = table;
+        // clang-format off
         asm volatile(
-            "mov r3, #0x18\n\t"
-            "ldrsh r0, [r1, r3]\n\t"
-            "add r0, r6, r0\n\t"
-            "ldr r2, [r1, #0x1c]\n\t"
-            "add r1, r4, #0\n\t"
-            "bl _call_via_r2\n\t"
-            :
-            : "r" (tbl), "r" (hdr), "r" (part)
-            : "r0", "r1", "r2", "r3", "lr", "memory");
-    }
+            "add r5, r3, #0\n\t"
+            "lsl r1, r1, #0x10\n\t"
+            "lsr r1, r1, #0x10\n\t"
+            "lsl r2, r2, #0x10\n\t"
+            "lsr r2, r2, #0x10\n\t"
+            "lsl r5, r5, #0x10\n\t"
+            "lsr r5, r5, #0x10\n\t"
+            "lsl r0, r0, #0x10\n\t"
+            "lsr r0, r0, #0x10\n\t"
+            "add r3, r5, #0\n\t"
+            "bl CreateMovingSprite\n\t"
+            "add r4, r0, #0\n\t"
+            : "=r" (part), "=r" (idx)
+            : "r" (raw0), "r" (raw1), "r" (raw2), "r" (raw3)
+            : "r1", "r2", "r3", "lr", "memory");
+        // clang-format on
 
-    asm volatile(
-        "mov r0, #1\n\t"
-        "mov sb, r0\n\t"
-        "mov r1, #0\n\t"
-        "mov sl, r1\n\t"
-        "mov r2, #1\n\t"
-        "mov r8, r2\n\t"
-        "mov r3, sb\n\t"
-        "strb r3, [r4, #0xa]\n\t"
-        "mov r0, #0x7f\n\t"
-        "ldrb r1, [r4, #0xc]\n\t"
-        "and r0, r0, r1\n\t"
-        "strb r0, [r4, #0xc]\n\t"
-        : "=r" (oneSb), "=r" (zeroSl), "=r" (oneR8)
-        : "r" (part)
-        : "r0", "r1", "r2", "r3", "memory");
+        p2 = (void *)gSpriteBankSet->table;
+        p3 = *(void **)p2;
+        *(void **)((u8 *)part + 0x20) = (u8 *)p3 + 0x78;
 
-    {
-        MATCH_HOLD_REG(void *, gAddr, r0) = &gEntityFlags;
+        {
+            MATCH_HOLD_REG(s32, result, r0) = GetSpriteAnimPaletteSlot((struct actor *)part);
+            MATCH_HOLD_REG(u8 *, addr, r2) = (u8 *)part + 0x29;
+            MATCH_HOLD_REG(s32, acc, r1);
+            result &= 0xf;
+            asm volatile("mov r1, #0x10\n\tneg r1, r1\n\t" : "=r"(acc));
+            acc &= *addr;
+            acc |= result;
+            *addr = acc;
+        }
 
+        hdr = CreateEnemyCtrl(OperatorNew(0x8c));
+        table = hdr->anchor;
+        _call_via_r2((u8 *)hdr + table->attach.thisOffset, part, table->attach.fn);
+        {
+            MATCH_HOLD_REG(s32, tagVal, r0) = 0xa;
+            hdr->kind = tagVal;
+        }
+        part->hdr = hdr;
+        table = hdr->anchor;
+        {
+            /* A bare `MATCH_HOLD_REG(s32, off, r3) = 0x18;` pin is silently
+             * ignored by this compiler for a simple constant initializer
+             * (lands the two-step mov/lsl synthesis in whatever register it
+             * likes, not the ROM's r3) - the same gotcha
+             * docs/matching/archive/issue-31-graphics-loading.md documents for
+             * SpawnDingodile's own `+0x20` table-offset constant. Spelled out
+             * as a full hand-written trampoline call instead. */
+            MATCH_HOLD_REG(void *, tbl, r1) = table;
+            // clang-format off
+            asm volatile(
+                "mov r3, #0x18\n\t"
+                "ldrsh r0, [r1, r3]\n\t"
+                "add r0, r6, r0\n\t"
+                "ldr r2, [r1, #0x1c]\n\t"
+                "add r1, r4, #0\n\t"
+                "bl _call_via_r2\n\t"
+                :
+                : "r" (tbl), "r" (hdr), "r" (part)
+                : "r0", "r1", "r2", "r3", "lr", "memory");
+            // clang-format on
+        }
+
+        // clang-format off
         asm volatile(
-            "ldr r0, [r0]\n\t"
-            "ldr r1, [r0]\n\t"
-            "ldr r0, [r1, #8]\n\t"
-            "lsl r5, r5, #1\n\t"
-            "add r5, r5, r0\n\t"
-            "ldr r2, [r1, #0xc]\n\t"
-            "ldrh r5, [r5]\n\t"
-            "add r2, r5, r2\n\t"
-            "ldrb r3, [r2]\n\t"
-            "lsr r0, r3, #1\n\t"
-            "mov r5, r8\n\t"
-            "eor r0, r0, r5\n\t"
-            "and r0, r0, r5\n\t"
-            "add r3, r4, #0\n\t"
-            "add r3, r3, #0x28\n\t"
-            "and r0, r0, r5\n\t"
-            "lsl r0, r0, #4\n\t"
-            "mov r1, #0x11\n\t"
-            "neg r1, r1\n\t"
-            "ldrb r5, [r3]\n\t"
-            "and r1, r1, r5\n\t"
-            "orr r1, r1, r0\n\t"
-            "strb r1, [r3]\n\t"
-            "ldrb r2, [r2]\n\t"
-            "lsr r0, r2, #2\n\t"
-            "mov r2, r8\n\t"
-            "and r0, r0, r2\n\t"
-            "and r0, r0, r2\n\t"
-            "lsl r0, r0, #5\n\t"
-            "mov r2, #0x21\n\t"
-            "neg r2, r2\n\t"
-            "and r1, r1, r2\n\t"
-            "orr r1, r1, r0\n\t"
-            "strb r1, [r3]\n\t"
-            : "+r" (idx)
-            : "r" (part), "r" (gAddr), "r" (oneR8)
-            : "r0", "r1", "r2", "r3", "r5", "memory");
+            "mov r0, #1\n\t"
+            "mov sb, r0\n\t"
+            "mov r1, #0\n\t"
+            "mov sl, r1\n\t"
+            "mov r2, #1\n\t"
+            "mov r8, r2\n\t"
+            "mov r3, sb\n\t"
+            "strb r3, [r4, #0xa]\n\t"
+            "mov r0, #0x7f\n\t"
+            "ldrb r1, [r4, #0xc]\n\t"
+            "and r0, r0, r1\n\t"
+            "strb r0, [r4, #0xc]\n\t"
+            : "=r" (oneSb), "=r" (zeroSl), "=r" (oneR8)
+            : "r" (part)
+            : "r0", "r1", "r2", "r3", "memory");
+        // clang-format on
+
+        {
+            MATCH_HOLD_REG(void *, gAddr, r0) = &gEntityFlags;
+
+            // clang-format off
+            asm volatile(
+                "ldr r0, [r0]\n\t"
+                "ldr r1, [r0]\n\t"
+                "ldr r0, [r1, #8]\n\t"
+                "lsl r5, r5, #1\n\t"
+                "add r5, r5, r0\n\t"
+                "ldr r2, [r1, #0xc]\n\t"
+                "ldrh r5, [r5]\n\t"
+                "add r2, r5, r2\n\t"
+                "ldrb r3, [r2]\n\t"
+                "lsr r0, r3, #1\n\t"
+                "mov r5, r8\n\t"
+                "eor r0, r0, r5\n\t"
+                "and r0, r0, r5\n\t"
+                "add r3, r4, #0\n\t"
+                "add r3, r3, #0x28\n\t"
+                "and r0, r0, r5\n\t"
+                "lsl r0, r0, #4\n\t"
+                "mov r1, #0x11\n\t"
+                "neg r1, r1\n\t"
+                "ldrb r5, [r3]\n\t"
+                "and r1, r1, r5\n\t"
+                "orr r1, r1, r0\n\t"
+                "strb r1, [r3]\n\t"
+                "ldrb r2, [r2]\n\t"
+                "lsr r0, r2, #2\n\t"
+                "mov r2, r8\n\t"
+                "and r0, r0, r2\n\t"
+                "and r0, r0, r2\n\t"
+                "lsl r0, r0, #5\n\t"
+                "mov r2, #0x21\n\t"
+                "neg r2, r2\n\t"
+                "and r1, r1, r2\n\t"
+                "orr r1, r1, r0\n\t"
+                "strb r1, [r3]\n\t"
+                : "+r" (idx)
+                : "r" (part), "r" (gAddr), "r" (oneR8)
+                : "r0", "r1", "r2", "r3", "r5", "memory");
+            // clang-format on
+        }
     }
-  }
 
     AddToPartList(gCollidableList, part);
 
@@ -273,6 +281,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         *(const void **)statAddr = gVenusFlytrapAnimMap;
     }
 
+    // clang-format off
     asm volatile(
         "mov r2, #0x14\n\t"
         "neg r2, r2\n\t"
@@ -286,6 +295,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         :
         : "r" (hdr), "r" (zeroSl)
         : "r0", "r1", "r2", "r5", "memory");
+    // clang-format on
 }
 
 /* Entity type 0x2B: an enemy on sprite bank 14 that patrols (state 2,
@@ -829,8 +839,7 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* The part's +0x28 bitfield byte seen through its own pointer. Padded
  * past a word so the fields are read with `ldrb` (a 4-byte struct is
  * read as a whole word). */
-struct popup_bits
-{
+struct popup_bits {
     u32 unk_28_0:4;
     u32 flipX:1;
     u32 unk_28_5:1;
@@ -864,6 +873,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
      * copy is tied to r1, so the ROM's order comes out: `adds r1, r7, #0`,
      * then `str r3, [sp]`, then the call. With `(q2 = ..., part)` the
      * store comes before the r1 move. */
+    // clang-format off
     AddToPartList(gCollidableList, ({
         struct popup_part *t = part;
 
@@ -871,6 +881,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         q2 = (struct popup_bits *)((u8 *)part + 0x28);
         t;
     }));
+    // clang-format on
     /* No code: the "m" operand keeps `q2` in a stack slot, the ROM's
      * `str r3, [sp]` / `ldr r3, [sp]` pair around the call. */
     MATCH_USE_MEM(q2);

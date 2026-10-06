@@ -661,18 +661,21 @@ s32 GetBossHealth(struct level_state *self)
     switch (idx) {
     case 0x15:
         return GetHovercraftPartsLeft();
-    case 0x14: {
-        struct level_state_1c8 *p = self->boss;
-        return 3 - p->hits;
-    }
-    case 0x16: {
-        struct level_state_1c8 *p = self->boss;
-        return 3 - p->hits;
-    }
-    case 0x17: {
-        struct level_state_1c8 *p = self->boss;
-        return 3 - p->hits;
-    }
+    case 0x14:
+        {
+            struct level_state_1c8 *p = self->boss;
+            return 3 - p->hits;
+        }
+    case 0x16:
+        {
+            struct level_state_1c8 *p = self->boss;
+            return 3 - p->hits;
+        }
+    case 0x17:
+        {
+            struct level_state_1c8 *p = self->boss;
+            return 3 - p->hits;
+        }
     default:
         return 0;
     }
@@ -788,8 +791,7 @@ void CheckAllCratesBroken(void *selfArg)
 {
     MATCH_HOLD_REG(struct level_state *, self, r4) = selfArg;
 
-    if (self->crateCount == self->crateTotal
-        && !IsInBonusRound(self) && !IsInGemPath(self)) {
+    if (self->crateCount == self->crateTotal && !IsInBonusRound(self) && !IsInGemPath(self)) {
         const struct level_room *level = self->cat;
 
         if (level->kind == 3) {
@@ -973,7 +975,7 @@ void ShowCompanyLogos(void *unused)
     MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(0x44c);
     void *block;
 
-    asm volatile("bl nullsub_7" : "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc");
+    asm volatile("bl nullsub_7" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
     block = tmp;
     RunCompanyLogos(tmp);
     if (block != NULL) {
@@ -1071,7 +1073,7 @@ void *PackSaveData(void *selfArg)
         asm volatile("ldrb %0, [%1, %2]" : "=r"(raw) : "r"(off), "r"(self));
         one &= raw;
         one |= shifted;
-        asm volatile("strb %0, [%1, %2]" :: "r"(one), "r"(off), "r"(self));
+        asm volatile("strb %0, [%1, %2]" : : "r"(one), "r"(off), "r"(self));
     }
 
     {

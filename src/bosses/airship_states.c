@@ -60,7 +60,7 @@ void AirshipStateApproach(void)
             MATCH_HOLD_REG(s32, four, r2);
             MATCH_HOLD_REG(s32, val, r1);
 
-            asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
+            asm("add %0, %0, %1" : "+r"(entryPtr) : "r"(table));
             four = 4;
             val = *(s16 *)(entryPtr + four); /* anims[idx].loopThreshold */
 
@@ -197,7 +197,8 @@ void AirshipStateCannon(void)
             dx = ((pl->x - (gAirshipX - 0xCDB)) * speed) >> 12;
             dy = ((pl->y - (gAirshipY + 0x516D)) * speed) >> 12;
             if (Abs(dx) + Abs(dy) <= 0x7FF) {
-                SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx, dy);
+                SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx,
+                                       dy);
                 if (++gAirshipVolleyCount == gAirshipAttack->unk_14) {
                     gAirshipVolleyCount = phase;
                     gAirshipFireTimer = gAirshipAttack->unk_18;

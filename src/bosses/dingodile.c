@@ -59,8 +59,7 @@ extern struct aabb GetSpriteBodyBox_s(void *part) asm("GetSpriteBodyBox");
  * UpdateDingodileShield is a NAKED transcription (its C is kept under
  * NON_MATCHING); everything else is real C. */
 
-struct vtable
-{
+struct vtable {
     u8 unk_00[0x18];
     struct actor_method m18; // 0x18
     struct actor_method m20; // 0x20
@@ -77,8 +76,7 @@ struct vtable
 
 /* The bitfield byte at part+0x28. `facing` is a signed field: the ROM
  * tests it with `lsl #27` / sign branch. */
-struct part_f28
-{
+struct part_f28 {
     u8 mode:2;
     u8 unk_2:2;
     s32 facing:1;
@@ -86,18 +84,15 @@ struct part_f28
     u8 unk_6:2;
 } __attribute__((packed));
 
-struct part
-{
-    s32 x;                 // 0x00
-    s32 y;                 // 0x04
-    u16 id;                // 0x08
-    u8 kind;               // 0x0A - object kind passed to the hit handlers (0x13: attacking player)
+struct part {
+    s32 x;   // 0x00
+    s32 y;   // 0x04
+    u16 id;  // 0x08
+    u8 kind; // 0x0A - object kind passed to the hit handlers (0x13: attacking player)
     u8 unk_0B;
-    union
-    {
+    union {
         u8 raw;
-        struct
-        {
+        struct {
             u8 gone:1;
             u8 bit1:1;
             u8 shown:1;
@@ -108,33 +103,33 @@ struct part
             u8 bit7:1;
         } __attribute__((packed)) b;
     } __attribute__((packed)) fl; // 0x0C
-    u8 unk_0D_0:2;         // 0x0D
+    u8 unk_0D_0:2;                // 0x0D
     u8 blink:1;
     u8 unk_0D_3:5;
     u8 unk_0E[0xA];
-    struct vtable *vt;     // 0x18
+    struct vtable *vt; // 0x18
     u8 unk_1C[4];
     const struct sprite_bank *table; // 0x20
     u8 unk_24[4];
-    struct part_f28 f28;   // 0x28
-    u8 slot:4;             // 0x29
+    struct part_f28 f28; // 0x28
+    u8 slot:4;           // 0x29
     u8 unk_29_4:4;
     u8 unk_2A[3];
-    u8 tag;                // 0x2D
+    u8 tag; // 0x2D
     u8 unk_2E[2];
-    s32 frame;             // 0x30
-    s32 unk_34;            // 0x34
-    u8 animDone;           // 0x38
+    s32 frame;   // 0x30
+    s32 unk_34;  // 0x34
+    u8 animDone; // 0x38
     u8 unk_39[0xB];
-    void *ctl;             // 0x44
-    s32 rampXStart;            // 0x48
-    s32 rampXStep;            // 0x4C
-    s32 rampXTarget;            // 0x50
-    s32 rampYStart;            // 0x54
-    s32 rampYStep;            // 0x58
-    s32 rampYTarget;            // 0x5C
-    s32 speedX;            // 0x60
-    s32 speedY;            // 0x64
+    void *ctl;       // 0x44
+    s32 rampXStart;  // 0x48
+    s32 rampXStep;   // 0x4C
+    s32 rampXTarget; // 0x50
+    s32 rampYStart;  // 0x54
+    s32 rampYStep;   // 0x58
+    s32 rampYTarget; // 0x5C
+    s32 speedX;      // 0x60
+    s32 speedY;      // 0x64
 };
 
 #define PART_OFFSET(f) ((u32)&((struct part *)0)->f)
@@ -145,29 +140,29 @@ COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(frame) == 0x30);
 COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(ctl) == 0x44);
 
 /* Every class in this file keeps its method table at +0x0C. */
-struct vobj
-{
+struct vobj {
     u8 unk_00[0xC];
     struct vtable *vt; // 0x0C
 };
 
-struct obj_4704
-{
+struct obj_4704 {
     u8 unk_00[0xC];
     struct vtable *vt; // 0x0C
     u8 unk_10[4];
-    s32 x;             // 0x14
-    s32 y;             // 0x18
-    s32 dx;            // 0x1C
-    s32 dy;            // 0x20
-    s32 unk_24;        // 0x24
-    s32 unk_28;        // 0x28
+    s32 x;      // 0x14
+    s32 y;      // 0x18
+    s32 dx;     // 0x1C
+    s32 dy;     // 0x20
+    s32 unk_24; // 0x24
+    s32 unk_28; // 0x28
     u8 unk_2C[0x10];
-    struct { u8 unk_00[0x10]; s32 index; } *src; // 0x3C
+    struct {
+        u8 unk_00[0x10];
+        s32 index;
+    } *src; // 0x3C
 };
 
-struct obj_476c
-{
+struct obj_476c {
     u8 unk_00[8];
     s32 state;         // 0x08
     struct vtable *vt; // 0x0C
@@ -177,8 +172,7 @@ struct obj_476c
 
 /* gDingodileVtable's class (per-frame update UpdateDingodile, destructor
  * DestroyDingodile in the next asm file). */
-struct dingodile_boss
-{
+struct dingodile_boss {
     u8 unk_00[8];
     s32 state;         // 0x08
     struct vtable *vt; // 0x0C
@@ -193,11 +187,10 @@ struct dingodile_boss
 
 /* gDingodileShieldVtable's class (0x28 bytes; constructor CreateDingodileShieldCtrl in
  * the next asm file, destructor DestroyDingodileShieldCtrl, update UpdateDingodileShield). */
-struct obj_490c
-{
+struct obj_490c {
     u8 unk_00[8];
-    s32 state;           // 0x08
-    struct vtable *vt;   // 0x0C
+    s32 state;         // 0x08
+    struct vtable *vt; // 0x0C
     u8 unk_10[0xC];
     s32 blinkTimer;      // 0x1C
     s32 blinksLeft;      // 0x20
@@ -206,8 +199,7 @@ struct obj_490c
 
 /* gDingodileSharkVtable's class (constructor CreateDingodileSharkCtrl, destructor
  * DestroyDingodileSharkCtrl, update UpdateDingodileShark). */
-struct obj_483c
-{
+struct obj_483c {
     u8 unk_00[8];
     s32 state;         // 0x08
     struct vtable *vt; // 0x0C
@@ -215,11 +207,10 @@ struct obj_483c
 
 /* gDingodileProjectileVtable's class (constructor CreateDingodileProjectileCtrl, destructor
  * DestroyDingodileProjectileCtrl, update UpdateDingodileProjectile). */
-struct obj_48a4
-{
+struct obj_48a4 {
     u8 unk_00[8];
-    s32 state;           // 0x08
-    struct vtable *vt;   // 0x0C
+    s32 state;         // 0x08
+    struct vtable *vt; // 0x0C
     u8 unk_10[0xC];
     struct part *target; // 0x1C
 };
@@ -307,8 +298,7 @@ static inline void SetTag(struct part *p, u8 tag)
 static inline void MarkCollected(struct part *p)
 {
     p->fl.b.gone = 1;
-    if (p->id != 0xFFFF)
-    {
+    if (p->id != 0xFFFF) {
         s32 id = p->id;
         struct entity_flags *ls = gEntityFlags;
         s32 w = id;
@@ -323,8 +313,7 @@ void sub_801967C(void *self, u8 flag)
     s32 i;
     s32 n = gUnknown_030012EC->count;
 
-    for (i = 0; i < n; i++)
-    {
+    for (i = 0; i < n; i++) {
         struct part *p = (struct part *)gUnknown_030012EC->items[i];
 
         if (flag)
@@ -389,8 +378,7 @@ struct obj_476c *CreateCortexCannonCtrl(struct obj_476c *self)
 
 void SetCortexBossState(struct obj_476c *self, s32 unused, s32 arg)
 {
-    if (arg == 3)
-    {
+    if (arg == 3) {
         VCALL1(self->part->ctl, m20, 9);
         if (!(u8)HasTurboRun(gLevelState))
             SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
@@ -423,17 +411,14 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
     struct aabb box;
     u32 state;
 
-    if (other->f28.facing)
-    {
+    if (other->f28.facing) {
         s32 x = other->x;
         s32 y = other->y;
         struct part *p = self->part;
 
         p->x = x + 0x600;
         p->y = y;
-    }
-    else
-    {
+    } else {
         s32 x = other->x;
         s32 y = other->y;
         struct part *p = self->part;
@@ -442,19 +427,16 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         p->y = y;
     }
     hurt = GetSpriteBodyBox_s(other);
-    if (self->state == 8 && gPlayer->kind == 0x13)
-    {
+    if (self->state == 8 && gPlayer->kind == 0x13) {
         box = GetSpriteAttackBox_s(gPlayer);
-        if (BOX_VALID(box) && AabbOverlaps(&box, &hurt))
-        {
+        if (BOX_VALID(box) && AabbOverlaps(&box, &hurt)) {
             self->hits++;
             SetDingodileState(self, other, 11);
         }
     }
 
     state = self->state;
-    switch (state)
-    {
+    switch (state) {
     case 0:
         SetDingodileState(self, other, 1);
         self->step = 0;
@@ -465,71 +447,59 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         break;
     case 1:
     case 14:
-    {
-        struct part_f28 *f = &other->f28;
-        s32 x = other->x;
+        {
+            struct part_f28 *f = &other->f28;
+            s32 x = other->x;
 
-        if (state == 1)
-        {
-            if (f->facing)
-            {
-                const s32 *tbl = gDingodileStopXLeft;
-                if (self->hits > 0)
-                    tbl = gDingodileStopXLeftHurt;
-                if (x <= tbl[self->step])
-                {
-                    Approach(self, other, gPlayer->x - x);
-                    self->step++;
-                    break;
+            if (state == 1) {
+                if (f->facing) {
+                    const s32 *tbl = gDingodileStopXLeft;
+                    if (self->hits > 0)
+                        tbl = gDingodileStopXLeftHurt;
+                    if (x <= tbl[self->step]) {
+                        Approach(self, other, gPlayer->x - x);
+                        self->step++;
+                        break;
+                    }
+                } else {
+                    const s32 *tbl = gDingodileStopXRight;
+                    if (self->hits > 0)
+                        tbl = gDingodileStopXRightHurt;
+                    if (x >= tbl[self->step]) {
+                        Approach(self, other, x - gPlayer->x);
+                        self->step++;
+                        break;
+                    }
                 }
             }
-            else
-            {
-                const s32 *tbl = gDingodileStopXRight;
-                if (self->hits > 0)
-                    tbl = gDingodileStopXRightHurt;
-                if (x >= tbl[self->step])
-                {
-                    Approach(self, other, x - gPlayer->x);
-                    self->step++;
-                    break;
-                }
-            }
-        }
-        if (!AtLevelEdge(f, x))
-            break;
-        if (state == 1)
-        {
-            s32 lim = 1;
-            if (self->hits > 0)
-                lim = 2;
-            if (++self->passes >= lim)
-            {
-                SetDingodileState(self, other, 6);
+            if (!AtLevelEdge(f, x))
                 break;
+            if (state == 1) {
+                s32 lim = 1;
+                if (self->hits > 0)
+                    lim = 2;
+                if (++self->passes >= lim) {
+                    SetDingodileState(self, other, 6);
+                    break;
+                }
             }
+            goto turn;
         }
-        goto turn;
-    }
     case 3:
     case 13:
-        if (other->animDone)
-        {
+        if (other->animDone) {
             u32 prev = state;
             s32 n;
 
             SetDingodileState(self, other, 1);
-            if (other->f28.facing)
-            {
+            if (other->f28.facing) {
                 s32 x = other->x >> 8;
                 s32 y = other->y >> 8;
 
                 x += 6;
                 other->x = x << 8;
                 other->y = y << 8;
-            }
-            else
-            {
+            } else {
                 s32 x = other->x >> 8;
                 s32 y = other->y >> 8;
 
@@ -546,27 +516,21 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
 
                 other->f28.facing = v ? 0 : 1;
             }
-            if (prev == 3)
-            {
-                if (self->passes == 0)
-                {
+            if (prev == 3) {
+                if (self->passes == 0) {
                     self->timer = 0x73;
                     if (self->hits > 1)
                         self->nextState = 15;
                     else
                         self->nextState = 1;
                     SetDingodileState(self, other, 2);
-                }
-                else
-                {
+                } else {
                     self->timer = 0x64;
                     self->nextState = 1;
                     SetDingodileState(self, other, 2);
                 }
                 self->step = 0;
-            }
-            else
-            {
+            } else {
                 SetDingodileState(self, other, 14);
             }
         }
@@ -583,17 +547,17 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         goto idle;
     case 5:
     case 6:
-        if (other->frame == 0x14 && other->unk_34 == 0)
-        {
+        if (other->frame == 0x14 && other->unk_34 == 0) {
             if (other->f28.facing)
-                SpawnDingodileShieldOrRocket(self, 1, (other->x >> 8) + 6, (other->y >> 8) - 0x32, other);
+                SpawnDingodileShieldOrRocket(self, 1, (other->x >> 8) + 6, (other->y >> 8) - 0x32,
+                                             other);
             else
-                SpawnDingodileShieldOrRocket(self, 1, (other->x >> 8) - 6, (other->y >> 8) - 0x32, other);
+                SpawnDingodileShieldOrRocket(self, 1, (other->x >> 8) - 6, (other->y >> 8) - 0x32,
+                                             other);
         }
         if (!other->animDone)
             break;
-        if (self->state == 6)
-        {
+        if (self->state == 6) {
             other->fl.b.hit = 1;
         turn:
             SetDingodileState(self, other, 3);
@@ -624,8 +588,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
     case 10:
         if (!other->animDone)
             break;
-        if (state == 9)
-        {
+        if (state == 9) {
         idle:
             SetDingodileState(self, other, 1);
             break;
@@ -633,8 +596,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         SetDingodileState(self, other, 12);
         break;
     case 11:
-        if (self->timer != 0)
-        {
+        if (self->timer != 0) {
             self->timer--;
             break;
         }
@@ -644,38 +606,34 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
             SetDingodileState(self, other, 10);
         break;
     case 12:
-    {
-        s32 lim = 0x4000;
-        if (self->hits > 0)
-            lim = 0x2000;
-        if (other->f28.facing)
         {
-            if (other->x > lim)
-                break;
-        }
-        else
-        {
-            s32 x = other->x;
+            s32 lim = 0x4000;
+            if (self->hits > 0)
+                lim = 0x2000;
+            if (other->f28.facing) {
+                if (other->x > lim)
+                    break;
+            } else {
+                s32 x = other->x;
 
-            if (x < LevelRight() - lim)
-                break;
+                if (x < LevelRight() - lim)
+                    break;
+            }
+            SetDingodileState(self, other, 13);
+            break;
         }
-        SetDingodileState(self, other, 13);
-        break;
-    }
     case 16:
-    {
-        s32 y = other->y;
-
-        if (y >= LevelBottom() + 0x2000)
         {
-            StartDingodileMotion(self, (struct gobj *)other, 0);
-            if ((u8)HasSuperBodySlam(gLevelState))
-                RequestRoomExit();
-            SetDingodileState(self, other, 17);
+            s32 y = other->y;
+
+            if (y >= LevelBottom() + 0x2000) {
+                StartDingodileMotion(self, (struct gobj *)other, 0);
+                if ((u8)HasSuperBodySlam(gLevelState))
+                    RequestRoomExit();
+                SetDingodileState(self, other, 17);
+            }
+            break;
         }
-        break;
-    }
     case 17:
         break;
     }
@@ -694,8 +652,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
     MATCH_HOLD_REG(void *, fn, r3);
 
     VCALL1(self, m20, next);
-    switch (next)
-    {
+    switch (next) {
     case 16:
         if (!(u8)HasSuperBodySlam(gLevelState))
             SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
@@ -750,7 +707,8 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
     }
 }
 
-void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct part *arg)
+void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, u16 y,
+                                  struct part *arg)
 {
     struct part *p = CreateMovingSprite(0xFFFF, x, y, 0);
     struct vobj *ctl;
@@ -758,8 +716,7 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
 
     p->fl.b.shown = 0;
     p->table = (void *)(SPRITE_BANK_BASE + 0x288);
-    switch (mode)
-    {
+    switch (mode) {
     case 0:
         {
             s32 kind = 1;
@@ -860,10 +817,8 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
 
     {
         struct actor_method *m = &other->vt->m28;
-        if (((query_fn)m->fn)((u8 *)other + m->thisOffset))
-        {
-            if (!gPlayer->dead)
-            {
+        if (((query_fn)m->fn)((u8 *)other + m->thisOffset)) {
+            if (!gPlayer->dead) {
                 /* Hard-register hold (no code): r5 and r6 stay live
                  * across the box builders, so no long-lived pseudo gets
                  * them. */
@@ -871,8 +826,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                 MATCH_HOLD(hr6);
                 a = GetSpriteAttackBox_s(other);
                 b = GetSpriteBodyBox_s(gPlayer);
-                if (!BOX_VALID(b))
-                {
+                if (!BOX_VALID(b)) {
                     struct aabb *pb = &b;
 
                     *pb = GetSpriteAttackBox_s(gPlayer);
@@ -880,8 +834,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                 /* End of the hold. */
                 MATCH_USE(hr5);
                 MATCH_USE(hr6);
-                if (AabbOverlaps(&b, &a))
-                {
+                if (AabbOverlaps(&b, &a)) {
                     struct player *pl = gPlayer;
                     const struct actor_method *m2 = &pl->vtable->handleEvent;
 
@@ -891,8 +844,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
         }
     }
 
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
         {
             MATCH_HOLD_REG(u32, acc, r5);
@@ -924,8 +876,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
         break;
     case 3:
     case 4:
-        if (self->blinkTimer == 0)
-        {
+        if (self->blinkTimer == 0) {
             self->blinkTimer = 0x14;
             other->blink = !other->blink;
             if (self->blinksLeft == 0)
@@ -945,16 +896,12 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
     struct aabb b;
 
     a = GetSpriteAttackBox_s(other);
-    if (a.w)
-    {
-        if (self->state != 4 && self->state != 6)
-        {
+    if (a.w) {
+        if (self->state != 4 && self->state != 6) {
             struct part *t = self->target;
-            if ((t->fl.raw >> 6) & 1)
-            {
+            if ((t->fl.raw >> 6) & 1) {
                 b = GetSpriteHitbox((struct box_part *)t);
-                if (AabbOverlaps(&a, &b))
-                {
+                if (AabbOverlaps(&a, &b)) {
                     VCALL1(self->target->ctl, m20, 7);
                     VCALL1(self, m20, 6);
                     VCALL2(self, m50, other, 8);
@@ -962,23 +909,19 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
                 }
             }
         }
-        if (!gPlayer->dead)
-        {
+        if (!gPlayer->dead) {
             b = GetSpriteBodyBox_s(gPlayer);
-            if (!BOX_VALID(b))
-            {
+            if (!BOX_VALID(b)) {
                 struct aabb *pb = &b;
 
                 *pb = GetSpriteAttackBox_s(gPlayer);
             }
-            if (AabbOverlaps(&a, &b))
-            {
+            if (AabbOverlaps(&a, &b)) {
                 struct player *pl = gPlayer;
                 const struct actor_method *m2 = &pl->vtable->handleEvent;
 
                 ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
-                if (self->state == 3)
-                {
+                if (self->state == 3) {
                     VCALL1(self, m20, 6);
                     VCALL2(self, m50, other, 8);
                     PlaySfx(gAudioContext, 0x39, 0x100);
@@ -987,15 +930,13 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
         }
     }
 
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
         VCALL2(self, m30, other, gDingodileRocketRiseMotion);
         VCALL1(self, m20, 1);
         break;
     case 1:
-        if (other->y <= 0x800)
-        {
+        if (other->y <= 0x800) {
             other->speedY = 0;
             other->rampYStart = 0;
             other->rampYStep = 0;
@@ -1013,17 +954,16 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
         break;
     case 3:
     case 4:
-    {
-        s32 y = other->y;
-
-        if (y >= LevelBottom() - 0x2000)
         {
-            VCALL1(self, m20, 6);
-            VCALL2(self, m50, other, 8);
-            PlaySfx(gAudioContext, 0x39, 0x100);
+            s32 y = other->y;
+
+            if (y >= LevelBottom() - 0x2000) {
+                VCALL1(self, m20, 6);
+                VCALL2(self, m50, other, 8);
+                PlaySfx(gAudioContext, 0x39, 0x100);
+            }
+            break;
         }
-        break;
-    }
     case 6:
         other->speedY = 0;
         other->rampYStart = 0;
@@ -1062,11 +1002,9 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
 
 void UpdateDingodileShark(struct obj_483c *self, struct part *other)
 {
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
-        if (other->f28.facing)
-        {
+        if (other->f28.facing) {
             s32 a = -gDingodileMotionRecords[3].start;
             s32 c = -gDingodileMotionRecords[3].target;
             s32 b = gDingodileMotionRecords[3].step;
@@ -1074,9 +1012,7 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
             other->rampXStart = a;
             other->rampXStep = b;
             other->rampXTarget = c;
-        }
-        else
-        {
+        } else {
             s32 a = gDingodileMotionRecords[3].start;
             s32 b = gDingodileMotionRecords[3].step;
             s32 c = gDingodileMotionRecords[3].target;
@@ -1087,13 +1023,10 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
         }
         break;
     case 1:
-        if (other->f28.facing)
-        {
+        if (other->f28.facing) {
             if (other->x + 0x2800 <= 0)
                 MarkCollected(other);
-        }
-        else
-        {
+        } else {
             s32 x = other->x;
 
             if (x >= LevelRight() + 0x2800)

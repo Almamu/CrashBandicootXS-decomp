@@ -189,8 +189,7 @@ s32 sub_8026BF8(void *player, struct probe_pos *pos, s32 *outValue)
     s32 tileY = pos->y >> 3;
     s8 *row = (s8 *)GetTerrainHeights(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY);
 
-    if (row != NULL)
-    {
+    if (row != NULL) {
         s32 y = pos->y;
         MATCH_HOLD_REG(s8 *, addr, r0) = row + (pos->x & 7);
         MATCH_HOLD_REG(s32, height, r1) = 0;
@@ -208,10 +207,10 @@ s32 sub_8026C3C(void *player, struct probe_pos *pos, s32 *outValue)
     u8 scratch;
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 height = sub_8025228(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY, 0, &scratch);
+    s8 height =
+        sub_8025228(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY, 0, &scratch);
 
-    if (height >= 0)
-    {
+    if (height >= 0) {
         s32 y = pos->y;
 
         *outValue += ((tileY << 3) + height - y) << 8;

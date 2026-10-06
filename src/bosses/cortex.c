@@ -64,8 +64,7 @@
  * in baserom.gba): CreateUnusedOneShotAnimCtrl (the gUnusedOneShotAnimCtrlVtable class's
  * constructor). Matched anyway. */
 
-struct gfx_vtable
-{
+struct gfx_vtable {
     u8 unk_00[0x18];
     struct actor_method method_18; // 0x18 - "attach to part"
     struct actor_method method_20; // 0x20 - "set state"
@@ -74,39 +73,35 @@ struct gfx_vtable
 };
 
 
-struct gfx_ctrl
-{
+struct gfx_ctrl {
     u8 unk_00[8];
-    s32 state;                  // 0x08
-    struct gfx_vtable *vtable;  // 0x0C
+    s32 state;                 // 0x08
+    struct gfx_vtable *vtable; // 0x0C
 };
 
 /* CreateTiny/DestroyTiny (vtable gTinyVtable) */
-struct gfx_squares
-{
+struct gfx_squares {
     u8 unk_00[0xC];
-    struct gfx_vtable *vtable;  // 0x0C
+    struct gfx_vtable *vtable; // 0x0C
     u8 unk_10[0x14];
-    s32 unk_24;                 // 0x24
+    s32 unk_24; // 0x24
     u8 unk_28[0x20];
-    s16 *squares;               // 0x48
+    s16 *squares; // 0x48
 };
 
 /* UpdateCortexBoss */
-struct gfx_pair_ctrl
-{
+struct gfx_pair_ctrl {
     u8 unk_00[8];
-    s32 state;                  // 0x08
-    struct gfx_vtable *vtable;  // 0x0C
-    s32 counter;                // 0x10
+    s32 state;                 // 0x08
+    struct gfx_vtable *vtable; // 0x0C
+    s32 counter;               // 0x10
     u8 unk_14[8];
-    struct gfx_part *childA;    // 0x1C
-    struct gfx_part *childB;    // 0x20
+    struct gfx_part *childA; // 0x1C
+    struct gfx_part *childB; // 0x20
 };
 
 /* StartTinyHop */
-struct gfx_offset_ctrl
-{
+struct gfx_offset_ctrl {
     u8 unk_00[0x30];
     s32 x;      // 0x30
     s32 y;      // 0x34
@@ -116,52 +111,48 @@ struct gfx_offset_ctrl
     s32 dx;     // 0x44
 };
 
-struct gfx_level_cfg
-{
+struct gfx_level_cfg {
     u8 unk_00[0x10];
-    s32 index;  // 0x10
+    s32 index; // 0x10
 };
 
 /* UpdateCortexTarget/SetCortexTargetState/FireCortexShot */
-struct gfx_mover
-{
+struct gfx_mover {
     u8 unk_00[8];
-    s32 state;                  // 0x08
-    struct gfx_vtable *vtable;  // 0x0C
-    u8 dirLeft;                 // 0x10
-    u8 high;                    // 0x11
-    u8 top;                     // 0x12
+    s32 state;                 // 0x08
+    struct gfx_vtable *vtable; // 0x0C
+    u8 dirLeft;                // 0x10
+    u8 high;                   // 0x11
+    u8 top;                    // 0x12
     u8 unk_13;
-    s32 targetX;                // 0x14
-    s32 targetY;                // 0x18
-    s32 deltaX;                 // 0x1C
-    s32 deltaY;                 // 0x20
-    s32 stepsLeft;              // 0x24
-    s32 steps;                  // 0x28
-    s32 nextState;              // 0x2C
-    s32 timer;                  // 0x30
-    s32 blink;                  // 0x34
-    u8 blinking;                // 0x38
+    s32 targetX;   // 0x14
+    s32 targetY;   // 0x18
+    s32 deltaX;    // 0x1C
+    s32 deltaY;    // 0x20
+    s32 stepsLeft; // 0x24
+    s32 steps;     // 0x28
+    s32 nextState; // 0x2C
+    s32 timer;     // 0x30
+    s32 blink;     // 0x34
+    u8 blinking;   // 0x38
     u8 unk_39[3];
-    struct gfx_level_cfg *cfg;  // 0x3C
+    struct gfx_level_cfg *cfg; // 0x3C
 };
 
 /* UpdateCortexShot */
-struct gfx_hit_ctrl
-{
+struct gfx_hit_ctrl {
     u8 unk_00[0x10];
-    u8 enabled;                 // 0x10
+    u8 enabled; // 0x10
     u8 unk_11[3];
-    struct gfx_ctrl *owner;     // 0x14
+    struct gfx_ctrl *owner; // 0x14
 };
 
 /* UpdateCortexBossGem */
-struct gfx_kind_ctrl
-{
+struct gfx_kind_ctrl {
     u8 unk_00[8];
-    s32 state;                  // 0x08
-    struct gfx_vtable *vtable;  // 0x0C
-    s32 kind;                   // 0x10
+    s32 state;                 // 0x08
+    struct gfx_vtable *vtable; // 0x0C
+    s32 kind;                  // 0x10
 };
 
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
@@ -253,7 +244,6 @@ static inline void CopyFlipX(struct gfx_part *dst, struct gfx_part *src)
     m |= bit;
     *dp = m;
 }
-
 
 
 static inline s32 Abs(s32 v)
@@ -402,17 +392,14 @@ void StartTinyHop(struct gfx_offset_ctrl *self, struct gfx_part *part)
 {
     s32 px = part->pos.x;
 
-    if (self->x <= px)
-    {
+    if (self->x <= px) {
         u8 *p = (u8 *)part + 0x28;
         s32 m = -0x11;
 
         m &= *p;
         m |= 0x10;
         *p = m;
-    }
-    else
-    {
+    } else {
         u8 *p = (u8 *)part + 0x28;
         s32 m = -0x11;
 
@@ -458,43 +445,41 @@ void *CreateTiny(struct gfx_squares *self)
  * where the ROM uses r7 as scratch); matches unchanged under old_agbcc. */
 void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
         SpawnCortexCannon(self, part);
         SpawnCortexTarget(self, part);
         AndFlags(part, -5);
         goto mode1;
     case 1:
-    {
-        s32 y = self->childB->pos.y;
-        s32 n;
-
-        if (y <= 0x5000)
-            SetTag(self->childA, 5);
-        else if (y <= 0x7800)
-            SetTag(self->childA, 4);
-        else
-            SetTag(self->childA, 3);
-
-        n = self->childB->pos.x - part->pos.x;
-        part->flipX = n >= 0;
-        self->childA->flipX = n >= 0;
         {
-            s32 w = gLevelLayers->layer0->widthPx << 8;
+            s32 y = self->childB->pos.y;
+            s32 n;
 
-            n = __udivsi3(Abs(n) * 12, w);
+            if (y <= 0x5000)
+                SetTag(self->childA, 5);
+            else if (y <= 0x7800)
+                SetTag(self->childA, 4);
+            else
+                SetTag(self->childA, 3);
+
+            n = self->childB->pos.x - part->pos.x;
+            part->flipX = n >= 0;
+            self->childA->flipX = n >= 0;
+            {
+                s32 w = gLevelLayers->layer0->widthPx << 8;
+
+                n = __udivsi3(Abs(n) * 12, w);
+            }
+            if (n > 5)
+                n = 5;
+            n = 5 - n;
+            SetFrame(part, n);
+            SetFrame(self->childA, n);
+            break;
         }
-        if (n > 5)
-            n = 5;
-        n = 5 - n;
-        SetFrame(part, n);
-        SetFrame(self->childA, n);
-        break;
-    }
     case 2:
-        if (++self->counter > 2)
-        {
+        if (++self->counter > 2) {
             SetCortexBossState((struct obj_476c *)self, (s32)part, 3);
             break;
         }
@@ -506,8 +491,7 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
     case 3:
         self->childA->pos.y += 0x80;
         part->pos.y += 0x80;
-        if (part->pos.y >= (gLevelLayers->layer0->heightPx << 8) + 0x4000)
-        {
+        if (part->pos.y >= (gLevelLayers->layer0->heightPx << 8) + 0x4000) {
             if ((u8)HasTurboRun(gLevelState))
                 RequestRoomExit();
             SetCortexBossState((struct obj_476c *)self, (s32)part, 4);
@@ -527,7 +511,8 @@ void SpawnCortexCannon(struct gfx_pair_ctrl *self, struct gfx_part *part)
     ctrl = (struct gfx_ctrl *)CreateCortexCannonCtrl(OperatorNew(0x10));
     SetFrameNibble(c, GetSpriteAnimPaletteSlot((struct actor *)c));
     c->ctrl = ctrl;
-    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c,
+                 ctrl->vtable->method_18.fn);
     c->pos = part->pos;
     CopyFlipX(c, part);
     OrFlags(c, 0x10);
@@ -563,7 +548,8 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
     }
     ctrl = (struct gfx_ctrl *)CreateCortexTargetCtrl(OperatorNew(0x40), self);
     c->ctrl = ctrl;
-    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c,
+                 ctrl->vtable->method_18.fn);
     x = part->pos.x;
     y = part->pos.y;
     x += 0x2000;
@@ -586,8 +572,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     struct gfx_ctrl *ctrl;
 
     c->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
-    switch (kind)
-    {
+    switch (kind) {
     case 0:
         SetTag(c, 3);
         break;
@@ -601,7 +586,8 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     SetFrameNibble(c, GetSpriteAnimPaletteSlot((struct actor *)c));
     ctrl = CreateCortexBossGemCtrl(OperatorNew(0x14), kind);
     c->ctrl = ctrl;
-    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c,
+                 ctrl->vtable->method_18.fn);
     c->kind = 0;
     {
         s32 m = -5;
@@ -617,8 +603,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
     MATCH_HOLD_REG(struct gfx_part *, part, r6) = partArg;
     MATCH_HOLD_REG(s32, n, r5);
 
-    if ((n = self->stepsLeft) != 0)
-    {
+    if ((n = self->stepsLeft) != 0) {
         s32 steps;
         s32 t;
         s32 x, y;
@@ -632,18 +617,17 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
         part->pos.y = y;
     }
 
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
-    {
-        MATCH_HOLD_REG(s32, m, r0) = -5;
-        MATCH_HOLD_REG(s32, b, r2);
-        b = PART_FLAGS(part);
-        m &= b;
-        PART_FLAGS(part) = m;
-        SetCortexTargetState(self, part, 1);
-        break;
-    }
+        {
+            MATCH_HOLD_REG(s32, m, r0) = -5;
+            MATCH_HOLD_REG(s32, b, r2);
+            b = PART_FLAGS(part);
+            m &= b;
+            PART_FLAGS(part) = m;
+            SetCortexTargetState(self, part, 1);
+            break;
+        }
     case 1:
     case 2:
     case 6:
@@ -661,59 +645,55 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
         CALL3(self, method_50, part, 0xF);
         break;
     case 7:
-        if (part->animDone)
-        {
+        if (part->animDone) {
         next:
             SetCortexTargetState(self, part, self->nextState);
         }
         break;
     case 5:
-    {
-        MATCH_HOLD_REG(u8 *, blinking, r5);
-        s32 left;
-
         {
-            MATCH_HOLD_REG(u8 *, bp, r0) = &self->blinking;
-            MATCH_HOLD_REG(u32, on, r1) = *bp;
+            MATCH_HOLD_REG(u8 *, blinking, r5);
+            s32 left;
 
-            asm("mov %0, %1" : "=l"(blinking) : "l"(bp));
-            if (on && ++self->blink > 9)
             {
-                self->blink = 0;
-                SET_FRAME_R(part, part->frame ^ 1, "r3", "r4");
-            }
-        }
-        if ((left = self->stepsLeft) != 0)
-            break;
-        if (--self->timer == 0)
-        {
-            SetCortexTargetState(self, part, 1);
-            FireCortexShot(self, part, 1);
-            break;
-        }
-        if (self->timer == gCortexTargetBlinkStartTimes[self->cfg->index])
-        {
-            PlaySfx(gAudioContext, 0x5C, 0x100);
-            part->animating = left;
-            CALL3(self, method_50, part, 0x10);
-            *blinking = 1;
-            self->blink = left;
-        }
-        if (self->timer == gCortexTargetBlinkStopTimes[self->cfg->index])
-        {
-            part->animating = left;
-            CALL3(self, method_50, part, 0x10);
-            *blinking = left;
-            SET_FRAME_R(part, 1, "r3", "r4");
-        }
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, gPlayer->x, gPlayer->y - 0xA00);
-        {
-            s32 i = self->cfg->index;
+                MATCH_HOLD_REG(u8 *, bp, r0) = &self->blinking;
+                MATCH_HOLD_REG(u32, on, r1) = *bp;
 
-            self->stepsLeft = self->steps = gCortexTargetChaseSteps[i];
+                asm("mov %0, %1" : "=l"(blinking) : "l"(bp));
+                if (on && ++self->blink > 9) {
+                    self->blink = 0;
+                    SET_FRAME_R(part, part->frame ^ 1, "r3", "r4");
+                }
+            }
+            if ((left = self->stepsLeft) != 0)
+                break;
+            if (--self->timer == 0) {
+                SetCortexTargetState(self, part, 1);
+                FireCortexShot(self, part, 1);
+                break;
+            }
+            if (self->timer == gCortexTargetBlinkStartTimes[self->cfg->index]) {
+                PlaySfx(gAudioContext, 0x5C, 0x100);
+                part->animating = left;
+                CALL3(self, method_50, part, 0x10);
+                *blinking = 1;
+                self->blink = left;
+            }
+            if (self->timer == gCortexTargetBlinkStopTimes[self->cfg->index]) {
+                part->animating = left;
+                CALL3(self, method_50, part, 0x10);
+                *blinking = left;
+                SET_FRAME_R(part, 1, "r3", "r4");
+            }
+            SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, gPlayer->x,
+                                gPlayer->y - 0xA00);
+            {
+                s32 i = self->cfg->index;
+
+                self->stepsLeft = self->steps = gCortexTargetChaseSteps[i];
+            }
+            break;
         }
-        break;
-    }
     case 8:
         self->nextState = 10;
         SetCortexTargetState(self, part, 6);
@@ -782,66 +762,61 @@ toggleTop:
 
 void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mode)
 {
-    switch (mode)
-    {
+    switch (mode) {
     case 8:
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, (u32)(gLevelLayers->layer0->widthPx << 8) >> 1,
-                    (gLevelLayers->layer0->heightPx << 8) + 0x2000);
+        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part,
+                            (u32)(gLevelLayers->layer0->widthPx << 8) >> 1,
+                            (gLevelLayers->layer0->heightPx << 8) + 0x2000);
         break;
     case 1:
-    {
-        s32 zero;
-
-        sub_801967C(self, 0);
         {
-            u8 *p = &part->animating;
+            s32 zero;
 
-            zero = 0;
-            *p = mode;
+            sub_801967C(self, 0);
+            {
+                u8 *p = &part->animating;
+
+                zero = 0;
+                *p = mode;
+            }
+            CALL3(self, method_50, part, 0xF);
+            self->dirLeft = mode;
+            self->high = mode;
+            self->top = zero;
         }
-        CALL3(self, method_50, part, 0xF);
-        self->dirLeft = mode;
-        self->high = mode;
-        self->top = zero;
-    }
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, (gLevelLayers->layer0->widthPx << 8) - 0x400, 0x9800);
+        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part,
+                            (gLevelLayers->layer0->widthPx << 8) - 0x400, 0x9800);
         self->nextState = 2;
         break;
     case 2:
-    {
-        s32 x, y;
+        {
+            s32 x, y;
 
-        self->nextState = 3;
-        x = self->targetX;
-        if (self->dirLeft)
-        {
-            if (x - 0x1800 <= 0x400)
-                self->dirLeft = 0;
-        }
-        else if (x + 0x1C00 >= gLevelLayers->layer0->widthPx << 8)
-        {
-            self->nextState = 5;
-        }
-        StepHeight(self, self->cfg->index);
-        if (self->dirLeft)
-            x -= 0x1800;
-        else
-            x += 0x1800;
-        if (self->high)
-        {
-            u8 top = self->top;
+            self->nextState = 3;
+            x = self->targetX;
+            if (self->dirLeft) {
+                if (x - 0x1800 <= 0x400)
+                    self->dirLeft = 0;
+            } else if (x + 0x1C00 >= gLevelLayers->layer0->widthPx << 8) {
+                self->nextState = 5;
+            }
+            StepHeight(self, self->cfg->index);
+            if (self->dirLeft)
+                x -= 0x1800;
+            else
+                x += 0x1800;
+            if (self->high) {
+                u8 top = self->top;
 
-            y = 0x9800;
-            if (top)
-                y = 0x3E00;
+                y = 0x9800;
+                if (top)
+                    y = 0x3E00;
+            } else {
+                y = 0x8200;
+            }
+            SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, x, y);
+            break;
         }
-        else
-        {
-            y = 0x8200;
-        }
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, x, y);
-        break;
-    }
     case 5:
         self->blinking = 0;
         sub_801967C(self, 1);
@@ -857,11 +832,14 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
     MATCH_HOLD_REG(struct gfx_part *, part, r6) = partArg;
     MATCH_HOLD_REG(s32, kind, r5) = kindArg;
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
-    struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 fast; } *ctrl;
+    struct {
+        u8 unk_00[0xC];
+        struct gfx_vtable *vtable;
+        u8 fast;
+    } *ctrl;
 
     c->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x27C);
-    switch (kind)
-    {
+    switch (kind) {
     case 0:
         SetTag(c, 0xE);
         break;
@@ -873,7 +851,8 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
     ctrl = CreateCortexShotCtrl(OperatorNew(0x18), self->cfg);
     ctrl->fast = kind == 1;
     c->ctrl = ctrl;
-    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c,
+                 ctrl->vtable->method_18.fn);
     c->pos = part->pos;
     {
         MATCH_HOLD_REG(s32, m, r0) = -5;
@@ -900,21 +879,17 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
     struct aabb b;
     struct aabb c;
 
-    if (part->kind == 1)
-    {
+    if (part->kind == 1) {
         GetSpriteBodyBox(&a, gPlayer);
-        if (a.w == 0)
-        {
+        if (a.w == 0) {
             GetSpriteAttackBox(&b, gPlayer);
             a = b;
         }
         GetSpriteAttackBox(&b, part);
-        if (AabbOverlaps(&a, &b))
-        {
+        if (AabbOverlaps(&a, &b)) {
             struct player *p = gPlayer;
 
-            if (p->dead == 0)
-            {
+            if (p->dead == 0) {
                 /* _call_via_r4 calls through r4: the method's function
                  * pointer is loaded there but never passed in r0-r3 (same
                  * idiom as player_collide.c's _call_via_r4 calls) */
@@ -932,19 +907,15 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                 MATCH_KEEP(q);
                 q->kind = zero;
             }
-        }
-        else if (self->enabled)
-        {
+        } else if (self->enabled) {
             s32 n = gCollidableList->count;
             MATCH_HOLD_REG(s32, i, r5);
 
-            for (i = 0; i < n; i++)
-            {
+            for (i = 0; i < n; i++) {
                 struct gfx_part *e = (struct gfx_part *)gCollidableList->items[i];
 
                 c = GetSpriteHitbox((struct box_part *)e);
-                if (AabbOverlaps(&c, &b))
-                {
+                if (AabbOverlaps(&c, &b)) {
                     CALL2(self->owner, method_20, 2);
                     e->kind = 1;
                     {
@@ -958,8 +929,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
             }
         }
     }
-    if (part->animDone)
-    {
+    if (part->animDone) {
         /* MARK_GONE, but `part` lives in r8 here: the flags byte is read
          * through an r3 copy and everything after through an r4 copy */
         MATCH_HOLD_REG(s32, v, r0) = 1;
@@ -983,20 +953,16 @@ void UpdateCortexBossPlatformMover(struct gfx_ctrl *self, struct gfx_part *part)
 {
     s32 target;
 
-    if (self->state == 0)
-    {
+    if (self->state == 0) {
         SET_FRAME_R(part, 0x1A, "r4", "r6");
         self->state = 1;
     }
     target = 0x1A;
     if (part->kind == 1)
         target = 10;
-    if (part->frame == target)
-    {
+    if (part->frame == target) {
         part->animating = 0;
-    }
-    else
-    {
+    } else {
         MATCH_HOLD_REG(s32, one, r1) = 1;
         MATCH_HOLD_REG(u8 *, p, r0) = &part->animating;
 
@@ -1012,14 +978,11 @@ void UpdateCortexBossGem(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
 {
     struct gfx_part *part = partArg;
 
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
-        if (part->kind == 1)
-        {
+        if (part->kind == 1) {
             part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x27C);
-            switch (self->kind)
-            {
+            switch (self->kind) {
             case 0:
                 CALL3(self, method_50, part, 0xC);
                 break;
@@ -1090,7 +1053,12 @@ void DestroyCortexShotCtrl(struct gfx_ctrl *self, s32 flags)
 
 void *CreateCortexShotCtrl(void *selfArg, void *cfg)
 {
-    struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 unk_10[4]; void *cfg; } *self = selfArg;
+    struct {
+        u8 unk_00[0xC];
+        struct gfx_vtable *vtable;
+        u8 unk_10[4];
+        void *cfg;
+    } *self = selfArg;
 
     InitCtrl(self);
     self->vtable = (struct gfx_vtable *)gCortexShotVtable;

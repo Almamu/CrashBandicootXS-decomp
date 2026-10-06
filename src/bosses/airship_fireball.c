@@ -14,7 +14,7 @@
 
 struct actor_timed {
     struct actor_self base;
-    s32 timer;          // 0x54 - countdown until the transition fires
+    s32 timer; // 0x54 - countdown until the transition fires
 };
 
 /* Countdown `timer`: once it reaches zero, plays a sound, sets the

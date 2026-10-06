@@ -64,14 +64,14 @@ s32 CountLevelCrates(s32 idx)
         s32 type = item->kind;
 
         switch (type) {
-            case 0:
-            case 1:
-            case 2:
-                v = CountCrateEntities(gEntityFlags, item->desc->entities);
-                break;
-            case 3:
-                v = CountCategoryCrates(item->catIndex);
-                break;
+        case 0:
+        case 1:
+        case 2:
+            v = CountCrateEntities(gEntityFlags, item->desc->entities);
+            break;
+        case 3:
+            v = CountCategoryCrates(item->catIndex);
+            break;
         }
         total += v;
     }
@@ -82,14 +82,14 @@ s32 CountLevelCrates(s32 idx)
         s32 type = item->kind;
 
         switch (type) {
-            case 0:
-            case 1:
-            case 2:
-                v = CountCrateEntities(gEntityFlags, item->desc->entities);
-                break;
-            case 3:
-                v = CountCategoryCrates(item->catIndex);
-                break;
+        case 0:
+        case 1:
+        case 2:
+            v = CountCrateEntities(gEntityFlags, item->desc->entities);
+            break;
+        case 3:
+            v = CountCategoryCrates(item->catIndex);
+            break;
         }
         total += v;
     }
@@ -100,14 +100,14 @@ s32 CountLevelCrates(s32 idx)
         s32 type = item->kind;
 
         switch (type) {
-            case 0:
-            case 1:
-            case 2:
-                v = CountCrateEntities(gEntityFlags, item->desc->entities);
-                break;
-            case 3:
-                v = CountCategoryCrates(item->catIndex);
-                break;
+        case 0:
+        case 1:
+        case 2:
+            v = CountCrateEntities(gEntityFlags, item->desc->entities);
+            break;
+        case 3:
+            v = CountCategoryCrates(item->catIndex);
+            break;
         }
         total += v;
     }
@@ -268,14 +268,14 @@ s32 CountRoomCrates(const struct level_room *item)
     s32 type = item->kind;
 
     switch (type) {
-        case 0:
-        case 1:
-        case 2:
-            v = CountCrateEntities(gEntityFlags, item->desc->entities);
-            break;
-        case 3:
-            v = CountCategoryCrates(item->catIndex);
-            break;
+    case 0:
+    case 1:
+    case 2:
+        v = CountCrateEntities(gEntityFlags, item->desc->entities);
+        break;
+    case 3:
+        v = CountCategoryCrates(item->catIndex);
+        break;
     }
     return v;
 }

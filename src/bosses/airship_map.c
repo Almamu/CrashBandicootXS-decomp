@@ -23,7 +23,8 @@
 
 void DrawAirshipMap(u16 *src)
 {
-    u8 *row = (u8 *)((gAirshipBg2Page + 0x18) << 11) + (VRAM + (0x20 - gAirshipMapCols) / 4 * 2) + ((0x20 - gAirshipMapRows) / 2 * 32 + 2);
+    u8 *row = (u8 *)((gAirshipBg2Page + 0x18) << 11) + (VRAM + (0x20 - gAirshipMapCols) / 4 * 2) +
+              ((0x20 - gAirshipMapRows) / 2 * 32 + 2);
     s32 i, j;
 
     for (i = 0; i < gAirshipMapRows; i++) {

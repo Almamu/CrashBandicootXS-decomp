@@ -139,10 +139,10 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
             s32 m2;
 
             /* The ROM builds 0x200 in r1 and ANDs through a copy in r0, into
-         * flags' own r2: the MATCH_CONST escape keeps the copy (m2) apart
-         * from m, and the volatile use of m and flags right after the
-         * `and` stops combine from sinking it into the test and regmove
-         * from retargeting it onto m2. */
+             * flags' own r2: the MATCH_CONST escape keeps the copy (m2) apart
+             * from m, and the volatile use of m and flags right after the
+             * `and` stops combine from sinking it into the test and regmove
+             * from retargeting it onto m2. */
             MATCH_CONST(m2, m);
             flags &= m2;
             asm volatile("" : "+r"(flags) : "r"(m));

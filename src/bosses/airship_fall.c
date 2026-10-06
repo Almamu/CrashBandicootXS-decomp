@@ -60,7 +60,7 @@ void AirshipStateFall(void)
             MATCH_HOLD_REG(s32, four, r2);
             MATCH_HOLD_REG(s32, val, r1);
 
-            asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
+            asm("add %0, %0, %1" : "+r"(entryPtr) : "r"(table));
             four = 4;
             val = *(s16 *)(entryPtr + four);
 

@@ -49,9 +49,8 @@ u8 IsTouchingAirship(void *selfArg)
         pc = &f.c;
         MemCopy32(pc, pc, sizeof(*pc));
         pa = &f.a;
-        if (pa->z < pc->z + pc->d && pa->z + pa->d > pc->z
-         && pa->y < pc->y + pc->h && pa->y + pa->h > pc->y
-         && pa->x < pc->x + pc->w && pa->x + pa->w > pc->x)
+        if (pa->z < pc->z + pc->d && pa->z + pa->d > pc->z && pa->y < pc->y + pc->h &&
+            pa->y + pa->h > pc->y && pa->x < pc->x + pc->w && pa->x + pa->w > pc->x)
             goto hit;
     }
     return 0;

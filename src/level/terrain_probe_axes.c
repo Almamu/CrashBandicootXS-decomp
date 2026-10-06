@@ -50,7 +50,8 @@
  * pos->y's row until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (down for submode 2, up for submode 0).
  * Returns whether anything was hit. */
-s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
+                  s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -65,15 +66,12 @@ s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s3
         x = 0;
     if (end == self->tiles->unk010)
         end--;
-    for (; x <= end && !hit; x++)
-    {
+    for (; x <= end && !hit; x++) {
         if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))
             hit = 1;
     }
-    if (hit)
-    {
-        switch (submode)
-        {
+    if (hit) {
+        switch (submode) {
         case 2:
             *outValue += (8 - (pos->y & 7)) << 8;
             break;
@@ -91,7 +89,8 @@ s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s3
  * pos->x's column until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (right for submode 3, left for submode 1),
  * one unit past it. Returns whether anything was hit. */
-s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
+                  s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -106,26 +105,23 @@ s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s3
         y = 0;
     if (end == self->tiles->unk014)
         end--;
-    for (; y <= end && !hit; y++)
-    {
+    for (; y <= end && !hit; y++) {
         if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))
             hit = 1;
     }
-    if (hit)
-    {
-        switch (submode)
-        {
+    if (hit) {
+        switch (submode) {
         case 3:
-        {
-            s32 v = *outValue + 1;
-            *outValue = v + ((8 - (pos->x & 7)) << 8);
-        }
+            {
+                s32 v = *outValue + 1;
+                *outValue = v + ((8 - (pos->x & 7)) << 8);
+            }
             break;
         case 1:
-        {
-            s32 v = *outValue - 1;
-            *outValue = v - ((pos->x & 7) << 8);
-        }
+            {
+                s32 v = *outValue - 1;
+                *outValue = v - ((pos->x & 7) << 8);
+            }
             break;
         }
     }

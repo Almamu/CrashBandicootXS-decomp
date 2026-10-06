@@ -80,14 +80,12 @@ void DestroyLevelState(void *self, s32 flags)
         OperatorDelete(self);
 }
 
-struct text_vec
-{
+struct text_vec {
     s32 x;
     s32 y;
 };
 
-struct text_rect
-{
+struct text_rect {
     struct text_vec pos;
     struct text_vec size;
 };
@@ -100,7 +98,7 @@ typedef void (*method_fn)(void *self);
  * compile differently). */
 static inline struct text_vec MakeVec(s32 x, s32 y)
 {
-    struct text_vec v = {x, y};
+    struct text_vec v = { x, y };
 
     return v;
 }
@@ -132,7 +130,9 @@ void PlayCutscene(void *self, s32 idx)
         u16 *src = &f.fill;
 
         *src = zero;
-        DmaSet(3, src, PLTT, (DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_FIXED | DMA_DEST_INC) << 16 | (BG_PLTT_SIZE / 2));
+        DmaSet(3, src, PLTT,
+               (DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_FIXED | DMA_DEST_INC) << 16 |
+                   (BG_PLTT_SIZE / 2));
     }
     REG_BG2PA = 0x100;
     REG_BG2PB = zero;

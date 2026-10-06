@@ -70,29 +70,27 @@
  *   `u32 zero` for the DMA fills.
  * - The first search's id is pinned to r1 (see the comment there).
  */
-struct lk_point
-{
+struct lk_point {
     s32 x;
     s32 y;
 };
 
-struct lk_vtable
-{
+struct lk_vtable {
     u8 unk_00[0x10];
-    struct actor_method height;        /* +0x10 */
+    struct actor_method height; /* +0x10 */
 };
 
-struct lk_actor
-{
-    struct lk_point pos;            /* +0x00 */
-    u16 id;                         /* +0x08 */
+struct lk_actor {
+    struct lk_point pos; /* +0x00 */
+    u16 id;              /* +0x08 */
     u8 unk_0A[0xE];
-    struct lk_vtable *vtable;       /* +0x18 */
+    struct lk_vtable *vtable; /* +0x18 */
 };
 
 extern u8 *_call_via_r1(void *self, void *fn);
 
-void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list, const struct level_link_list *links, s32 posArg, s32 unused)
+void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
+                       const struct level_link_list *links, s32 posArg, s32 unused)
 {
     s32 i;
     s32 counter;
@@ -101,8 +99,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
     const struct level_link *lk;
     u32 zero = 0;
 
-    if (list != self->list)
-    {
+    if (list != self->list) {
         self->list = list;
         DmaFill32(3, zero, self->bits0, 64);
         DmaFill32(3, zero, self->bits1, 64);
@@ -112,13 +109,11 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
     self->pos = posArg >> 8;
 
     counter = 0;
-    for (g = self->list->groupCount - 1; g >= 0; g--)
-    {
+    for (g = self->list->groupCount - 1; g >= 0; g--) {
         const struct level_entity_group *group = &self->list->groups[g];
         s32 k;
 
-        for (k = 0; k < group->count; k++)
-        {
+        for (k = 0; k < group->count; k++) {
             if (!(u8)sub_8025968(self, counter))
                 SpawnEntity(gEntitySpawner, counter, (u16 *)&group->entities[k]);
             counter++;
@@ -131,44 +126,35 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
     lk = links->links;
 
     {
-        for (i = gCrateList->activeCount - 1; i >= 0; i--)
-        {
+        for (i = gCrateList->activeCount - 1; i >= 0; i--) {
             struct lk_actor *actor = (struct lk_actor *)gCrateList->slotArray[i];
             u16 id = actor->id;
             s32 j;
 
-            for (j = 0; j < n; j++)
-            {
-                if (id == lk[j].from)
-                {
+            for (j = 0; j < n; j++) {
+                if (id == lk[j].from) {
                     s32 done = 0;
                     s32 to = lk[j].to;
 
-                    do
-                    {
+                    do {
                         s32 k;
                         s32 missing;
                         s32 m;
 
-                        for (k = gCrateList->activeCount - 1; k >= 0; k--)
-                        {
+                        for (k = gCrateList->activeCount - 1; k >= 0; k--) {
                             struct lk_actor *other = (struct lk_actor *)gCrateList->slotArray[k];
 
-                            if (to == other->id)
-                            {
+                            if (to == other->id) {
                                 SetCrateAbove((struct crate *)actor, (struct crate *)other);
                                 SetCrateBelow((struct crate *)other, (struct crate *)actor);
                                 done = 1;
                                 break;
                             }
                         }
-                        if (!done)
-                        {
+                        if (!done) {
                             missing = 1;
-                            for (m = 0; m < n; m++)
-                            {
-                                if (to == lk[m].from)
-                                {
+                            for (m = 0; m < n; m++) {
+                                if (to == lk[m].from) {
                                     to = lk[m].to;
                                     missing = 0;
                                     break;
@@ -187,8 +173,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
     {
         s32 j;
 
-        for (j = 0; j < n; j++)
-        {
+        for (j = 0; j < n; j++) {
             u16 from = lk[j].from;
             s32 found = 0;
             s32 k;
@@ -201,10 +186,8 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
             s32 got;
             s32 m;
 
-            for (k = 0; k < gCrateList->activeCount; k++)
-            {
-                if (((struct lk_actor *)gCrateList->slotArray[k])->id == from)
-                {
+            for (k = 0; k < gCrateList->activeCount; k++) {
+                if (((struct lk_actor *)gCrateList->slotArray[k])->id == from) {
                     found = 1;
                     goto chk;
                 }
@@ -216,47 +199,39 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
             to = (u16)lk[j].to;
             actor = NULL;
             got = 0;
-            for (;;)
-            {
+            for (;;) {
                 missing = 1;
                 next = 0;
                 m = 0;
                 if (n > 0)
-                do
-                {
-                    if (to == lk[m].from)
-                    {
-                        missing = 0;
-                        next = (u16)lk[m].to;
-                        for (k2 = 0; k2 < gCrateList->activeCount; k2++)
-                        {
-                            /* Pinned: the ROM keeps the item pointer in
-                             * r0 and the id in r1. As a local temporary
-                             * the id is allocated first and takes r0. */
-                            MATCH_HOLD_REG(u16, aid, r1);
+                    do {
+                        if (to == lk[m].from) {
+                            missing = 0;
+                            next = (u16)lk[m].to;
+                            for (k2 = 0; k2 < gCrateList->activeCount; k2++) {
+                                /* Pinned: the ROM keeps the item pointer in
+                                 * r0 and the id in r1. As a local temporary
+                                 * the id is allocated first and takes r0. */
+                                MATCH_HOLD_REG(u16, aid, r1);
 
-                            actor = (struct lk_actor *)gCrateList->slotArray[k2];
-                            aid = actor->id;
-                            if (aid == to)
-                            {
-                                got = 1;
-                                goto t1;
+                                actor = (struct lk_actor *)gCrateList->slotArray[k2];
+                                aid = actor->id;
+                                if (aid == to) {
+                                    got = 1;
+                                    goto t1;
+                                }
                             }
+                            goto t1;
                         }
-                        goto t1;
-                    }
-                } while (++m < n);
+                    } while (++m < n);
             t1:
                 if (got)
                     goto move;
-                if (missing)
-                {
-                    for (k3 = 0; k3 < gCrateList->activeCount; k3++)
-                    {
+                if (missing) {
+                    for (k3 = 0; k3 < gCrateList->activeCount; k3++) {
                         struct lk_actor *a = (struct lk_actor *)gCrateList->slotArray[k3];
 
-                        if (a->id == to)
-                        {
+                        if (a->id == to) {
                             actor = a;
                             got = 1;
                             goto t2;
@@ -271,15 +246,13 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                 to = next;
             }
         move:
-            if (got && actor != NULL)
-            {
+            if (got && actor != NULL) {
                 struct actor_method *hm = &actor->vtable->height;
                 s32 lift = (_call_via_r1((u8 *)actor + hm->thisOffset, hm->fn)[5] + 1) << 8;
                 struct lk_point p;
                 struct lk_point *pp = &p;
 
-                do
-                {
+                do {
                     p.x = actor->pos.x;
                     pp->y = actor->pos.y + lift;
                     SetEntityPos((struct actor *)actor, p.x, pp->y);

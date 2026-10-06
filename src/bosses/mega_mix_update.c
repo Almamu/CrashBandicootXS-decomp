@@ -91,8 +91,7 @@
  * comes from passing the box by value. See
  * docs/matching/archive/issue-22-0x08018008-hopper.md. */
 
-struct ab_vtable
-{
+struct ab_vtable {
     u8 unk_00[0x20];
     struct actor_method m20; // 0x20
     struct actor_method m28; // 0x28
@@ -104,37 +103,34 @@ struct ab_vtable
     struct actor_method m68; // 0x68
 };
 
-struct ab_self
-{
+struct ab_self {
     u8 unk_00[8];
-    s32 state;              // 0x08
-    struct ab_vtable *vt;   // 0x0C
+    s32 state;            // 0x08
+    struct ab_vtable *vt; // 0x0C
     u8 unk_10[0xC];
-    s32 stamp;              // 0x1C
-    u8 latch;               // 0x20
+    s32 stamp; // 0x1C
+    u8 latch;  // 0x20
 };
 
-struct ab_ctrl
-{
+struct ab_ctrl {
     u8 unk_00[8];
-    s32 state;              // 0x08
+    s32 state; // 0x08
 };
 
-struct ab_part
-{
-    s32 x;                  // 0x00
-    s32 y;                  // 0x04
+struct ab_part {
+    s32 x; // 0x00
+    s32 y; // 0x04
     u8 unk_08[0x10];
-    struct ab_vtable *vt;   // 0x18
+    struct ab_vtable *vt; // 0x18
     u8 unk_1C[0xC];
-    u8 flags28;             // 0x28 - bit 4: X mirror
+    u8 flags28; // 0x28 - bit 4: X mirror
     u8 unk_29[7];
-    s32 frame;              // 0x30
-    s32 unk_34;             // 0x34
-    u8 animDone;            // 0x38
+    s32 frame;   // 0x30
+    s32 unk_34;  // 0x34
+    u8 animDone; // 0x38
     u8 unk_39[0x14];
-    u8 unk_4D;              // 0x4D
-    u8 kind;                // 0x4E
+    u8 unk_4D; // 0x4D
+    u8 kind;   // 0x4E
 };
 
 typedef void (*ab_fn1)(void *self, s32 a);
@@ -196,14 +192,12 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 {
     struct aabb box;
 
-    if (self->stamp == -1)
-    {
+    if (self->stamp == -1) {
         SetMegaMixMotionXFromSet(self, other, 1);
         self->stamp = 0;
     }
 
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
         if (gPlayer->dead != 0)
             return;
@@ -212,127 +206,108 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
             goto mirrored;
         goto plain;
     case 1:
-    {
-        s32 i;
-        s32 px;
+        {
+            s32 i;
+            s32 px;
 
-        if (IsDead(gPlayer) != 0 || ((struct ab_ctrl *)gPlayer->ctrl)->state == 0x1E)
-        {
-            VCALL2(self, m50, other, 2);
-            VCALL1(self, m20, 0);
-            VCALL2(self, m58, other, 0);
-        }
-        if (Probe28(other) && self->latch == 0)
-        {
-            self->stamp = gRoomFrameCount;
-            self->latch = 1;
-        }
-        else
-        {
-            u8 hit = Probe28(other);
-
-            if (hit == 0 && self->latch != 0)
-            {
+            if (IsDead(gPlayer) != 0 || ((struct ab_ctrl *)gPlayer->ctrl)->state == 0x1E) {
+                VCALL2(self, m50, other, 2);
+                VCALL1(self, m20, 0);
+                VCALL2(self, m58, other, 0);
+            }
+            if (Probe28(other) && self->latch == 0) {
                 self->stamp = gRoomFrameCount;
-                self->latch = hit;
-            }
-        }
-        if (self->stamp != 0 && gRoomFrameCount - self->stamp > 0x3C)
-        {
-            self->stamp = 0;
-            if ((s8)(other->flags28 << 3) >= 0)
-            {
-                if (self->latch != 0)
-                    SetMegaMixMotionXFromSet(self, other, 1);
-                else
-                    SetMegaMixMotionXFromSet(self, other, 2);
-            }
-            else
-                SetMegaMixMotionXFromSet(self, other, 3);
-        }
-        if (gPlayer->x < other->x)
-        {
-            u8 f = other->flags28;
+                self->latch = 1;
+            } else {
+                u8 hit = Probe28(other);
 
-            if ((s8)(f << 3) >= 0)
-            {
-                s32 m = -0x11;
-
-                m &= f;
-                m |= 0x10;
-                other->flags28 = m;
-                VCALL2(self, m58, other, 3);
-            }
-        }
-        /* read into a local first: in place, gcc loads it after the sum */
-        px = gPlayer->x;
-        if (px > other->x + 0xA00)
-        {
-            u8 f = other->flags28;
-
-            if ((s8)(f << 3) < 0)
-            {
-                s32 m = -0x11;
-
-                m &= f;
-                other->flags28 = m;
-                VCALL2(self, m58, other, 1);
-            }
-        }
-        {
-            struct player *pl = gPlayer;
-
-            if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF)
-            {
-                SetMegaMixMotionXFromSet(self, other, 0);
-                VCALL1(self, m20, 2);
-                VCALL2(self, m50, other, 1);
-                return;
-            }
-        }
-        /* The box goes to CollidePartList by value (three words in r1-r3, the
-         * fourth on the stack): that is what gives the ROM's stack-argument
-         * order (6th, 7th, then the box's last word). */
-        box = GetSpriteHitbox((struct box_part *)other);
-        CollidePartList(gCollidableList, box, 0, (struct box_part *)other);
-        /* a guarded do-while: a `for` shares the list pointer between the
-         * entry test and the body, where the ROM reloads it */
-        i = 0;
-        if (i < gCrateList->activeCount)
-        {
-            do
-            {
-                struct ab_part *e = (struct ab_part *)gCrateList->slotArray[i];
-
-                if (Probe48(e) == 3)
-                {
-                    /* the ROM passes ExplodeCrate a copy of `e` made here,
-                     * and loads `kind` straight into r1 (IsCrateKindBreakable's
-                     * second argument) */
-                    struct ab_part *t = e;
-
-                    MATCH_KEEP(t);
-                    if (Abs((e->x >> 8) - (other->x >> 8)) <= 0x27
-                        && Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B
-                        && (e->unk_4D & 0x7F) == 0)
-                    {
-                        MATCH_HOLD_REG(s32, kind, r1) = e->kind;
-
-                        if (kind == 0xE || kind == 0x13 || kind == 0x14
-                            || kind == 0x15 || kind == 0xA)
-                            ExplodeCrate((struct crate *)t, 0);
-                        else if (IsCrateKindBreakable(e, kind))
-                            BreakCrate((struct crate *)e, 1);
-                    }
+                if (hit == 0 && self->latch != 0) {
+                    self->stamp = gRoomFrameCount;
+                    self->latch = hit;
                 }
-                i++;
-            } while (i < gCrateList->activeCount);
+            }
+            if (self->stamp != 0 && gRoomFrameCount - self->stamp > 0x3C) {
+                self->stamp = 0;
+                if ((s8)(other->flags28 << 3) >= 0) {
+                    if (self->latch != 0)
+                        SetMegaMixMotionXFromSet(self, other, 1);
+                    else
+                        SetMegaMixMotionXFromSet(self, other, 2);
+                } else
+                    SetMegaMixMotionXFromSet(self, other, 3);
+            }
+            if (gPlayer->x < other->x) {
+                u8 f = other->flags28;
+
+                if ((s8)(f << 3) >= 0) {
+                    s32 m = -0x11;
+
+                    m &= f;
+                    m |= 0x10;
+                    other->flags28 = m;
+                    VCALL2(self, m58, other, 3);
+                }
+            }
+            /* read into a local first: in place, gcc loads it after the sum */
+            px = gPlayer->x;
+            if (px > other->x + 0xA00) {
+                u8 f = other->flags28;
+
+                if ((s8)(f << 3) < 0) {
+                    s32 m = -0x11;
+
+                    m &= f;
+                    other->flags28 = m;
+                    VCALL2(self, m58, other, 1);
+                }
+            }
+            {
+                struct player *pl = gPlayer;
+
+                if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF) {
+                    SetMegaMixMotionXFromSet(self, other, 0);
+                    VCALL1(self, m20, 2);
+                    VCALL2(self, m50, other, 1);
+                    return;
+                }
+            }
+            /* The box goes to CollidePartList by value (three words in r1-r3, the
+             * fourth on the stack): that is what gives the ROM's stack-argument
+             * order (6th, 7th, then the box's last word). */
+            box = GetSpriteHitbox((struct box_part *)other);
+            CollidePartList(gCollidableList, box, 0, (struct box_part *)other);
+            /* a guarded do-while: a `for` shares the list pointer between the
+             * entry test and the body, where the ROM reloads it */
+            i = 0;
+            if (i < gCrateList->activeCount) {
+                do {
+                    struct ab_part *e = (struct ab_part *)gCrateList->slotArray[i];
+
+                    if (Probe48(e) == 3) {
+                        /* the ROM passes ExplodeCrate a copy of `e` made here,
+                         * and loads `kind` straight into r1 (IsCrateKindBreakable's
+                         * second argument) */
+                        struct ab_part *t = e;
+
+                        MATCH_KEEP(t);
+                        if (Abs((e->x >> 8) - (other->x >> 8)) <= 0x27 &&
+                            Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B && (e->unk_4D & 0x7F) == 0) {
+                            MATCH_HOLD_REG(s32, kind, r1) = e->kind;
+
+                            if (kind == 0xE || kind == 0x13 || kind == 0x14 || kind == 0x15 ||
+                                kind == 0xA)
+                                ExplodeCrate((struct crate *)t, 0);
+                            else if (IsCrateKindBreakable(e, kind))
+                                BreakCrate((struct crate *)e, 1);
+                        }
+                    }
+                    i++;
+                } while (i < gCrateList->activeCount);
+            }
+            return;
         }
-        return;
-    }
     case 2:
-        if (other->frame == 8 && other->unk_34 == 0)
-        {
+        if (other->frame == 8 && other->unk_34 == 0) {
             struct player *pl = gPlayer;
 
             if (Abs(pl->x - other->x) > 0x27FF || Abs(pl->y - other->y) > 0x31FF)
@@ -347,23 +322,17 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
         }
         if (!other->animDone)
             return;
-        if (IsDead(gPlayer) == 0)
-        {
-            if ((s8)(other->flags28 << 3) < 0)
-            {
+        if (IsDead(gPlayer) == 0) {
+            if ((s8)(other->flags28 << 3) < 0) {
             mirrored:
                 VCALL2(self, m58, other, 3);
-            }
-            else
-            {
+            } else {
             plain:
                 SetMegaMixMotionXFromSet(self, other, 1);
             }
             VCALL2(self, m50, other, 0);
             VCALL1(self, m20, 1);
-        }
-        else
-        {
+        } else {
             VCALL2(self, m50, other, 2);
             VCALL1(self, m20, 0);
             VCALL2(self, m58, other, 0);

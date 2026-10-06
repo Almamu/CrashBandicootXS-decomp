@@ -215,8 +215,7 @@ void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8
 
     if (x < 0 || y < 0)
         type = 0;
-    else
-    {
+    else {
         u16 cell = GetCell(self, x, y);
         u8 nibble;
 
@@ -228,8 +227,7 @@ void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8
     }
     if (type <= 0x23)
         return NULL;
-    switch (mode)
-    {
+    switch (mode) {
     case 0:
         if (hi & 4)
             result = NULL;
@@ -269,8 +267,7 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
 
     if (x < 0 || y < 0)
         type = 0;
-    else
-    {
+    else {
         u16 cell = GetCell(self, x, y);
         u8 nibble;
 
@@ -282,8 +279,7 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
     }
     if (type <= 0x23)
         return -1;
-    switch (mode)
-    {
+    switch (mode) {
     case 0:
         if (hi & 4)
             result = 0;
@@ -345,26 +341,21 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
     budget = 0x7F;
     written = 0;
 
-    do
-    {
+    do {
         u16 token = *src;
         u16 n = *(u8 *)src;
 
         src++;
-        if (token & 0x8000)
-        {
+        if (token & 0x8000) {
             u16 value = *src++;
 
             budget -= n;
-            do
-            {
+            do {
                 out[written] = value;
                 written++;
                 n--;
             } while (n != 0);
-        }
-        else if (token & 0x4000)
-        {
+        } else if (token & 0x4000) {
             s16 acc;
 
             budget -= n;
@@ -372,8 +363,7 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
             out[written] = acc;
             n--;
             written++;
-            do
-            {
+            do {
                 u16 pair = *src++;
 
                 {
@@ -393,8 +383,7 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
                 n -= 2;
                 MATCH_USE(n);
             } while (n > 1);
-            if (n != 0)
-            {
+            if (n != 0) {
                 u16 last = *src++;
                 s32 lo = last << 24;
                 s32 a = acc;
@@ -402,12 +391,9 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
                 out[written] = a + (lo >> 24);
                 written++;
             }
-        }
-        else
-        {
+        } else {
             budget -= n;
-            do
-            {
+            do {
                 out[written] = *src++;
                 written++;
                 n--;

@@ -85,13 +85,14 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
     u32 t;
 
     self = selfArg;
-    asm volatile ("add %0, sp, #0x24\n\tldrb %0, [%0]" : "=l" (t));
+    asm volatile("add %0, sp, #0x24\n\tldrb %0, [%0]" : "=l"(t));
     eByteVal = t;
 
     health = (GetHovercraftLevel() == 0) ? 0x18 : 0x10;
 
     InitActorPart(self, part, b, cParam, d);
     *(s32 *)(self + 0x54) = health;
+    // clang-format off
     asm volatile (
         "ldr r0, =gHovercraftSideGunVtable\n\t"
         "str r0, [r5, #0x50]\n\t"
@@ -99,6 +100,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
         :
         : "r0", "memory"
     );
+    // clang-format on
     p59 = self + 0x59;
     zero = 0;
     *p59 = (u8)eByteVal;
@@ -120,6 +122,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
         *(s32 *)(self + 8) = zero;
         self[0x58] = zeroByte;
     }
+    // clang-format off
     asm volatile (
         "ldrb r0, [%0]\n\t"
         "cmp r0, #0\n\t"
@@ -136,6 +139,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
         : "r" (p59)
         : "r0", "memory"
     );
+    // clang-format on
     *(s32 *)(self + 0x60) = 0xa00;
     *(s32 *)(self + 0x64) = -1;
     {
@@ -168,15 +172,15 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
 /* The second object kind (vtable gHovercraftSideGunVtable). */
 struct actor_orbiter {
     struct actor_self base;
-    s32 hp;             // 0x54
-    u8 dead;            // 0x58
-    u8 gate;            // 0x59 - the constructor's cached gate byte
+    s32 hp;  // 0x54
+    u8 dead; // 0x58
+    u8 gate; // 0x59 - the constructor's cached gate byte
     u8 unk_5A[2];
-    s32 offX;           // 0x5C - added to the singleton's position
-    s32 offY;           // 0x60
-    s32 offZ;           // 0x64
-    s32 orbitTimer;     // 0x68 - frames until the next effect spawn
-    s32 lap;            // 0x6C
+    s32 offX;       // 0x5C - added to the singleton's position
+    s32 offY;       // 0x60
+    s32 offZ;       // 0x64
+    s32 orbitTimer; // 0x68 - frames until the next effect spawn
+    s32 lap;        // 0x6C
 };
 
 /* Applies `dmg` damage to `self+0x54` and once it drops to zero (or

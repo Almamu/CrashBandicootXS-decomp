@@ -78,8 +78,7 @@ case1:
             *(s32 *)(obj + 8) = 2;
         }
     }
-end:
-    ;
+end:;
 }
 
 /* Sets `self+0xc`'s table pointer to `gStompedHopPadVtable`, then
@@ -145,7 +144,7 @@ void UpdateOneShotAnimCtrl(void *unusedArg, void *otherArg)
                 s32 *bitmap;
                 MATCH_HOLD_REG(s32, bit, r0);
 
-                asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r" (idx) : "r" (val2));
+                asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(idx) : "r"(val2));
                 idxOffset = idx * 4;
                 bitmap = (s32 *)(base + 0x108);
                 bitmap = (s32 *)((u8 *)bitmap + idxOffset);
