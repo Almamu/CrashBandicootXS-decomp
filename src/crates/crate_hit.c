@@ -231,7 +231,7 @@ asm(".align 2, 0");
  * #16`) at each of its three uses; with plain `&f.b`, cse and gcse turn
  * them into one pseudo held in a callee-saved register across both
  * builder calls, which shifts px/py/&gPlayer up a register.
- * `BOX_ADDR` passes each use through an empty `asm("" : "+r")`, which
+ * `BOX_ADDR` passes each use through MATCH_KEEP, which
  * hides the value from cse, so each is its own single-use pseudo that
  * combine folds into the `add` right before the call. The first build's
  * x/y are computed first so that the `add r0, sp, #16` comes after them.

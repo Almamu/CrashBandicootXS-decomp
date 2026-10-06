@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "vram_pool.h"
 #include "level_state.h"
 #include "actor.h"
@@ -811,9 +812,9 @@ void CheckAllCratesBroken(void *selfArg)
             u16 b = *addr1;
             register u16 *addr2 asm("r2");
             u16 c;
-            asm volatile("" : "+r"(b));
+            MATCH_KEEP_VOLATILE(b);
             off += 4;
-            asm volatile("" : "+r"(off));
+            MATCH_KEEP_VOLATILE(off);
             addr2 = (u16 *)((u8 *)self + off); /* &self->crateGemY */
             c = *addr2;
             SpawnCrateGem(magic, b, c, 0);

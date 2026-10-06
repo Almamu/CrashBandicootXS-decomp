@@ -1,5 +1,6 @@
 #include "gax_internal.h"
 #include <libgcc.h>
+#include "match.h"
 
 /* GAX2's play-start/init entry point (per docs/audio.md): initializes the
  * runtime player-state object at gGaxPlayerState (magic, songPtr,
@@ -96,7 +97,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
     ALIGN4(buf, size);
     /* no code: an extra reference that lifts the aligned size over the
      * format pointer in global.c's priority order (ROM: r3/r4) */
-    asm("" : : "r"(size));
+    MATCH_USE(size);
     gGaxPlayerState->outHalf = 0;
     if (size < gGaxPlayerState->format->frames * 2)
         return 0;
@@ -115,7 +116,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
         i = 0;
         l = p->layout;
         t0 = l->types[0];
-        asm("" : "=r"(hold));
+        MATCH_HOLD(hold);
         layout = l;
         tap = t0->data.dsp->taps;
         for (; i <= 2; i++) {
@@ -123,11 +124,11 @@ u8 GAX2_init(struct GaxSongHeader *p)
                 maxRate = tap->rate;
             /* no code: an extra reference that lifts `maxRate` over
              * `fmt` in global.c's priority order (ROM: r8/r9) */
-            asm("" : : "r"(maxRate));
+            MATCH_USE(maxRate);
             tap++;
         }
     }
-    asm("" : : "r"(hold));
+    MATCH_USE(hold);
     if (!(p->flags & 0x10) && layout->types[2] != NULL) {
         struct GaxLayoutList *subs = (struct GaxLayoutList *)layout->types[2];
 
@@ -230,7 +231,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
         /* no code: an extra reference that puts the (PRE-hoisted)
          * `p->layout` argument first in global.c's order, so it takes r4
          * and the other arguments sb/r6 as in the ROM */
-        asm("" : : "r"(l));
+        MATCH_USE(l);
         if (!GaxCreateHandlers(l, p->sfxTypes, p->numSfx, &buf, &size))
             goto fail;
     }

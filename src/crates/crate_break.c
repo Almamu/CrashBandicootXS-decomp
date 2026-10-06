@@ -1414,7 +1414,7 @@ void LightTntCrate(struct crate *selfArg)
      * `lsls r0,r0,0x18; lsrs r0,r0,0x18`), rather than letting the
      * optimizer fuse it into the `& 0xf` mask below into a single
      * shift-mask-shift sequence. */
-    asm volatile("" : "+r"(lo));
+    MATCH_KEEP_VOLATILE(lo);
     /* Anchored: the ROM computes `&self[0x29]` *before* masking `lo`
      * down to its low nibble (a plain C `self[0x29] = (self[0x29] &
      * ~0xf) | (lo & 0xf);` here always computes the mask first
@@ -2750,7 +2750,7 @@ void UpdateSlotCrate(struct crate *self)
             nx = ((lw & 7) + 1) & 3;
             ph = nx;
             lw = (lw & 0xf8) | nx;
-            asm("" : : "r"(lw)); /* extra reference: lw wins r1 over nx */
+            MATCH_USE(lw); /* extra reference: lw wins r1 over nx */
             self->u48.slotState = lw;
             switch (ph)
             {

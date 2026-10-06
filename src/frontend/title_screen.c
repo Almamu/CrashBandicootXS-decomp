@@ -159,7 +159,7 @@ static inline void HashInput(u32 *self, u32 val)
 
     hi = v << 1;
     lo = v >> 31;
-    asm("" : "+r"(hi));
+    MATCH_KEEP(hi);
     rotated = hi | lo;
     out = (rotated << 6) + rotated;
 
@@ -263,8 +263,8 @@ seedLoop:
     slot += 0x34;
     stride += 0x34;
     i++;
-    asm("" : : "r"(i));
-    asm("" : : "r"(i));
+    MATCH_USE(i);
+    MATCH_USE(i);
     if (i <= 8)
         goto seedLoop;
     *(s32 *)((u8 *)self + 0x20c) = zero;
@@ -434,7 +434,7 @@ void HashTitleCheatInput(u32 *selfArg, u32 val)
 
     hi = v << 1;
     lo = v >> 31;
-    asm("" : "+r"(hi));
+    MATCH_KEEP(hi);
     rotated = hi | lo;
     out = (rotated << 6) + rotated;
     out = (out << 3) + rotated;
@@ -495,11 +495,11 @@ loop:
     slot += 0x34;
     stride += 0x34;
     i++;
-    asm("" : : "r"(self));
+    MATCH_USE(self);
     if (i <= 8)
         goto loop;
-    asm("" : : "r"(seedBase));
-    asm("" : : "r"(zero));
+    MATCH_USE(seedBase);
+    MATCH_USE(zero);
     *(s32 *)((u8 *)self + 0x20c) = zero;
 }
 

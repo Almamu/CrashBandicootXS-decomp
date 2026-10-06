@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "text.h"
 #include "system.h"
 #include "gfx.h"
@@ -68,7 +69,7 @@ s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 li
         /* Emits nothing; the extra reference raises `len`'s allocation
          * priority so it gets r7 ahead of `self` (r8) and `charWidth`
          * (r9), as in the ROM. */
-        asm("" : : "r"(len));
+        MATCH_USE(len);
         token = text;
         text = token + len;
         if (*token == '/') {
@@ -102,9 +103,9 @@ s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 li
                      * spilled lineCount's reload to r2 and the limit's
                      * to r0, as in the ROM (hard-register hold, #489). */
                     register s32 hold asm("r1");
-                    asm("" : "=r"(hold));
+                    MATCH_HOLD(hold);
                     lineCount++;
-                    asm("" : : "r"(hold));
+                    MATCH_USE(hold);
                 }
                 if (lineCount >= limit)
                     continue;

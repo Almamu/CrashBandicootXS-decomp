@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gba/io_reg.h"
 #include "bitmap_font.h"
 #include "actor_self.h"
@@ -161,7 +162,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             /* Extra-reference nudge (#468): one more use of `tile` raises
              * its allocation priority above `self`'s, so `tile` takes r8
              * and `self` sb, as in the ROM. Emits no code. */
-            asm("" : : "r"(tile));
+            MATCH_USE(tile);
             tile += 8;
             slot++;
         }
@@ -219,9 +220,9 @@ void DrawVvLogoPieces(struct logo_screen *self)
              * 0x80000050 count (ip), and pass 2 hoists 0x800 (sl) and the
              * 0x100 after the reduced pointer's init, as in the ROM.
              * They emit no code. */
-            asm("");
-            asm("");
-            asm("");
+            MATCH_BARRIER();
+            MATCH_BARRIER();
+            MATCH_BARRIER();
         }
         QueueVramDmaTransfer(self->scratch, (void *)self->tilesC, 0x1000, 0x10);
         ClearOam(&oamC);
@@ -231,7 +232,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
         /* Extra-reference nudge (#468): lifts `affine` above `matrix` in
          * global-alloc priority, which keeps sb (preferred by `matrix`)
          * out of its first-pass choice, so it lands in r7. No code. */
-        asm("" : : "r"(affine));
+        MATCH_USE(affine);
         if (affine)
         {
             SetAffineZ(gOamBuffer, matrix, pa, pd);

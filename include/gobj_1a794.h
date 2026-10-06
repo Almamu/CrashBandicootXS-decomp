@@ -12,6 +12,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "match.h"
 
 /* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
@@ -198,7 +199,7 @@ static inline struct gobj *GobjInit(struct gobj *self)
         void *_this = (u8 *)(obj) + _m->thisOffset;                            \
         register void *_fn asm("r4") = _m->fn;                                 \
                                                                                \
-        asm volatile("" : : "r"(_fn));                                         \
+        MATCH_USE_VOLATILE(_fn);                                               \
         _call_via_r4(_this, (a), (b), (c));                                     \
     } while (0)
 

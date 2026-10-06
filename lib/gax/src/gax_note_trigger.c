@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* GAX2 per-channel mixer (issue #68): renders channel `self` into
  * `buf` through the ARM resampling routine `gGaxPlayerState->mixCode`
@@ -98,7 +99,7 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
          * first arm, so both arms end in identical insns. */
         if (idx > m) {
             idx = m;
-            asm("" : "+r"(idx));
+            MATCH_KEEP(idx);
             period = tab[idx];
         } else
             period = tab[idx];

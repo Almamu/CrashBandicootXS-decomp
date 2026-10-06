@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "graphics_package.h"
 #include "gfx.h"
 #include "gba/gba.h"
@@ -233,7 +234,7 @@ void sub_801E8F8(u8 *selfArg, s32 arg1)
 
     mask = 0xf;
     acc = mask;
-    asm("" : "+r"(acc));
+    MATCH_KEEP(acc);
     acc &= self[0x15];
     acc |= aligned;
     self[0x15] = acc;
@@ -304,7 +305,7 @@ void sub_801E96C(u8 *self)
     register s32 b asm("r1");
 
     b = mask;
-    asm("" : "+r"(b));
+    MATCH_KEEP(b);
     b &= self[0x11];
     b &= -0x11;
     b &= -0x21;

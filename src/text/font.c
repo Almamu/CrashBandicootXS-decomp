@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "text.h"
 #include <agb_syscall.h>
 #include <libgcc.h>
@@ -38,7 +39,7 @@ void FontSetPalette(struct bitmap_font *self, u8 val)
 
     shifted = val << 4;
     mask = 0xF;
-    asm volatile("" : "+r"(mask));
+    MATCH_KEEP_VOLATILE(mask);
     field = self->oam_scratch[5];
     mask &= field;
     mask |= shifted;
@@ -61,7 +62,7 @@ void FontResetPalette(struct bitmap_font *self)
     register u8 b asm("r2");
 
     mask = 0xF;
-    asm volatile("" : "+r"(mask));
+    MATCH_KEEP_VOLATILE(mask);
     b = self->oam_scratch[5];
     mask &= b;
     mask |= shifted;

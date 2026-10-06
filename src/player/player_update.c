@@ -32,7 +32,7 @@
  * store) since that's what the ROM actually does. This compiler proves
  * that redundancy and folds the branch's condition down to just
  * `vy == 0` regardless of C-level phrasing (plain `if`, a `volatile`-
- * qualified pointee, an opaque `asm volatile("" : "+r"(gval))` barrier
+ * qualified pointee, an opaque `MATCH_KEEP_VOLATILE(gval)` barrier
  * on the loaded value - none stop it), so the whole 8-instruction
  * load/compare/branch/store sequence is instead emitted verbatim via
  * one opaque `asm volatile` block, matching the ROM's exact

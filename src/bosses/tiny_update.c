@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
 #include "audio.h"
@@ -280,7 +281,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
              * into a new register for every test. */
             s32 s = state;
 
-            asm("" : "+r"(s));
+            MATCH_KEEP(s);
             if (s == 14)
                 SetTinyState(self, part, 15);
             else if (s == 3)
@@ -520,10 +521,10 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
         register s32 t asm("r0") = 5;
         u8 *tp;
 
-        asm("" : "+r"(t));
+        MATCH_KEEP(t);
         tp = &p->tag;
         zero = 0;
-        asm("" : "+r"(zero));
+        MATCH_KEEP(zero);
         *tp = t;
     }
     ResetSpriteFrameTimer(p);

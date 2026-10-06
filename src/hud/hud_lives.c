@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "hud.h"
 #include "util.h"
 #include <libgcc.h>
@@ -96,7 +97,7 @@ void UpdateHudLives(struct hud_counter *counter)
                         : "l"(second_index)
                         : "r0");
                     /* Exposes the r0 result of the allocation anchor above. */
-                    asm volatile("" : "=r"(record_offset));
+                    MATCH_HOLD_VOLATILE(record_offset);
                     /* Plain C reverses this commutative ADD's operands. */
                     asm volatile("add %0, %0, %1" : "+r"(record_offset) : "r"(records));
                     record = (struct hud_anim_record *)record_offset;

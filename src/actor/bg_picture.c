@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
@@ -37,12 +38,12 @@
  * 7B0 also needs three empty asm statements, which emit no code but each
  * add one reference to a value and so raise its register-allocation
  * priority (docs/matching/archive/late-rom-naked-retry.md):
- *  - `asm("" : : "r"(dest))` after MapFill's loop: without it the nibble
+ *  - `MATCH_USE(dest)` after MapFill's loop: without it the nibble
  *    pointer (13 refs over 56 insns) narrowly outranks `dest` (9 over 40)
  *    and they trade r5/r6. The same reference in 8E8 breaks 8E8, which
  *    is why MapFill is a separate copy of the loop rather than 8E8
  *    itself declared `inline`.
- *  - two `asm("" : : "r"(cols))` before the call: `cols` and row+1 tie
+ *  - two `MATCH_USE(cols)` before the call: `cols` and row+1 tie
  *    for r8/sl otherwise. */
 
 static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
@@ -78,7 +79,7 @@ static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
         }
         dest += 0x20;
     }
-    asm("" : : "r"(dest)); /* extra reference: dest outranks nib for r5 */
+    MATCH_USE(dest); /* extra reference: dest outranks nib for r5 */
 }
 
 void LoadBgPicture(u8 *pic)
@@ -95,7 +96,7 @@ void LoadBgPicture(u8 *pic)
     pic += 4;
     tileData = pic + ((cols * rows + 1) / 2) * 4;
     /* two extra references: cols outranks row+1 for r8 */
-    asm("" : : "r"(cols)); asm("" : : "r"(cols));
+    MATCH_USE(cols); MATCH_USE(cols);
     MapFill(tileData + tiles * 32, (u16 *)pic, cols, rows);
     REG_DISPCNT |= 0x200;
     REG_BG1CNT = 0x5A07;

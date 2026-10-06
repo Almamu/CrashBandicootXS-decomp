@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "vram_pool.h"
 #include "gfx_part.h"
@@ -1138,7 +1139,7 @@ void *GetSpriteAnimTable(void *part)
  * #0x18; lsrs r0, r0, #0x18`, narrowing the AND result to the `u8`
  * return type) got optimized away by this compiler every time it
  * could prove the AND result (mask is the visible constant 2) already
- * fits in a byte. Closed with an empty `asm volatile("" : "+r"(test))`
+ * fits in a byte. Closed with a `MATCH_KEEP_VOLATILE(test)`
  * barrier right after the `and`, making `test`'s value opaque to the
  * optimizer so it can no longer prove the automatic `s32`-to-`u8`
  * return-value truncation is redundant - the barrier itself emits no
@@ -1168,7 +1169,7 @@ u8 IsSpriteAnimLooping(struct actor *part)
     mask = 2;
     flags = *((u8 *)rec + 0x17);
     test = mask & flags;
-    asm volatile("" : "+r" (test));
+    MATCH_KEEP_VOLATILE(test);
     return test;
 }
 asm(".align 2, 0");

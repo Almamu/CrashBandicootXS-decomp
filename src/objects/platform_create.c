@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
 #include "globals.h"
@@ -162,7 +163,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         p = &obj->slot;
         low = 0xF;
         /* hide 0xF from cse, which would build ~0xF as 0xF - 0x1F */
-        asm("" : "+r"(low));
+        MATCH_KEEP(low);
         id &= low;
         mask = ~0xF;
         *p = (mask & *p) | id;

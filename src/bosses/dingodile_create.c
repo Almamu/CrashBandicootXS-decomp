@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "bosses.h"
 
@@ -74,7 +75,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         part->rampY.step = y;
         part->rampY.target = z;
     }
-    asm("" : : "r"(index));
+    MATCH_USE(index);
 }
 
 void DestroyDingodile(struct seq_obj *self, s32 flags)

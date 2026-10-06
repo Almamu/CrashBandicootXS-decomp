@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "bosses.h"
 
@@ -15,7 +16,7 @@
  * `UpdateActor`, even though the value is a compile-time constant on
  * each path - this compiler's dead-store/dead-branch elimination
  * always collapses that redundant compute-then-recheck step for a
- * plain `s32 doAnim`. An empty `asm volatile("" : "+r"(doAnim))`
+ * plain `s32 doAnim`. A `MATCH_KEEP_VOLATILE(doAnim)`
  * right before the check makes the value opaque to the compiler,
  * forcing the recheck to materialize - the same class of gap already
  * closed for `DrawPolarCollectedWumpa` (issue #52) and the `| 0`-with-a-zero-
@@ -45,7 +46,7 @@ void UpdateHovercraftCannonFlash(void *selfArg)
         doAnim = 1;
     }
 
-    asm volatile("" : "+r"(doAnim));
+    MATCH_KEEP_VOLATILE(doAnim);
     if (doAnim != 0) {
         UpdateActor(self);
     }

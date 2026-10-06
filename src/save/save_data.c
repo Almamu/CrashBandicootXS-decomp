@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "audio.h"
 #include <agb_eeprom.h>
 #include "gba/dma_macros.h"
@@ -202,7 +203,7 @@ s32 LoadSaveData(struct save_data *self)
  * `&field_1fb` yet still gives `flags` r7 (global-alloc's first pick).
  * With `flags` computed first its live range is one insn longer, so it
  * ranked below `field_1fb` and the two swapped r7/r8. The empty
- * `asm("" : : "r"(flags))` below emits nothing; it adds one reference
+ * `MATCH_USE(flags)` below emits nothing; it adds one reference
  * to `flags`, which lifts its allocation priority (floor_log2(refs) *
  * refs / live length) above `field_1fb`'s. */
 /* An inlined copy of CheckSaveChecksum below. */
@@ -238,7 +239,7 @@ void ValidateSaveData(struct save_data *self)
         version = &self->versionNibble;
         flags = &self->flags;
         /* No code: one extra use of `flags` for global-alloc's ranking. */
-        asm("" : : "r"(flags));
+        MATCH_USE(flags);
         f1fb = &self->field_1fb;
         for (; i <= 3; i++) {
             EraseSaveSlot(self, i);

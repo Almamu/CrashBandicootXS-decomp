@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gba/io_reg.h"
 #include "graphics_package.h"
 #include "bitmap_font.h"
@@ -35,8 +36,8 @@
  *    mask` copy entirely and ANDs the freshly-loaded byte directly
  *    against `mask`'s own register instead (2 bytes shorter than the
  *    ROM's real "copy mask into tmp, then AND against a separately
- *    reloaded byte" sequence) - closed with an empty `asm("" :
- *    "+r"(tmp))` compiler barrier right after `tmp`'s initializer,
+ *    reloaded byte" sequence) - closed with a `MATCH_KEEP(tmp)`
+ *    compiler barrier right after `tmp`'s initializer,
  *    the same "stop the materialize-then-copy fold" technique
  *    documented for `sub_801E8F8`/`sub_801E96C`
  *    (docs/matching/archive/issue-30-graphics-loading.md). Both are ordinary
@@ -165,7 +166,7 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
                          * than the ROM's real "copy mask into tmp, then
                          * AND against a separately reloaded byte"
                          * sequence. */
-                        asm("" : "+r" (tmp));
+                        MATCH_KEEP(tmp);
                         tmp &= self->blend.b.bldalphaLo;
                         tmp |= 8;
                         self->blend.b.bldalphaLo = tmp;

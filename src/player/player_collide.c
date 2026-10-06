@@ -64,10 +64,10 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
         register s32 _h asm("r3");                                             \
         const struct actor_method *_m;                                         \
         void *_t;                                                              \
-        asm("" : "=r"(_h)); /* r3 hold starts: no code */                      \
+        MATCH_HOLD(_h); /* r3 hold starts: no code */                          \
         _m = &(obj)->vtable->collideWithObjects;                               \
         _t = (u8 *)(obj) + _m->thisOffset;                                     \
-        asm("" : : "r"(_h)); /* r3 hold ends: no code */                       \
+        MATCH_USE(_h); /* r3 hold ends: no code */                             \
         ((a884_fn0)_m->fn)(_t);                                                \
     } else (void)0
 
@@ -76,10 +76,10 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
         register s32 _h asm("r3");                                             \
         const struct actor_method *_m;                                         \
         void *_t;                                                              \
-        asm("" : "=r"(_h)); /* r3 hold starts: no code */                      \
+        MATCH_HOLD(_h); /* r3 hold starts: no code */                          \
         _m = &(obj)->vtable->handleEvent;                                      \
         _t = (u8 *)(obj) + _m->thisOffset;                                     \
-        asm("" : : "r"(_h)); /* r3 hold ends: no code */                       \
+        MATCH_USE(_h); /* r3 hold ends: no code */                             \
         ((a884_fn3)_m->fn)(_t, (a), (b), (c));                                 \
     } else (void)0
 
@@ -134,7 +134,7 @@ u8 CollidePlayer(struct player *self)
         /* r3 hold (no code) over the flag resets and the kind switch:
          * the ROM's reloads rotate through r0-r2 only, so the flag
          * offsets reuse one register (`adds r1, #3`, `subs r2, #3`). */
-        asm("" : "=r"(hold));
+        MATCH_HOLD(hold);
         gLevelLayers->probeFlag = zero;
         if (self->carried != 0) {
             self->hitAxes |= 8;
@@ -209,7 +209,7 @@ u8 CollidePlayer(struct player *self)
             self->slippery = 0;
         }
 
-        asm("" : : "r"(hold)); /* r3 hold ends: no code */
+        MATCH_USE(hold); /* r3 hold ends: no code */
         off = A884Offset(self);
         x = self->x >> 8;
         y = self->y >> 8;

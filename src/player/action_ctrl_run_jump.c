@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "gfx_part.h"
 #include "system.h"
@@ -278,7 +279,7 @@ void ActionCtrlStateJump(struct act *self)
                     {
                         s32 one = 1;
 
-                        asm("" : "+r"(one));
+                        MATCH_KEEP(one);
 
                         if (cur & 1)
                             ActNext28P(self, slot, one, 9);

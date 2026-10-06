@@ -145,7 +145,7 @@ static inline void SiftDown(struct sort_entry **a, s32 root, s32 n)
  * constants. A second pass also tried `one`/`zero` locals, which jump.c
  * turns into a conditional move with register arms. Only the arm that
  * stays a register is hoisted; jump.c's if-conversion folds the other
- * to an immediate. `asm("" : "=r"(one) : "0"(1))` constants (all
+ * to an immediate. `MATCH_CONST(one, 1)` constants (all
  * three tests materialized as `movls rX, zero; movhi rX, one`, but not
  * hoisted and in the wrong order) and sweeps of -O1/-O2/-O3 with ~50
  * single flags also failed. The same compiler built itoa_arm and

@@ -88,7 +88,7 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
         s32 state;
 
         /* The ROM materializes the 0 and then the 2 before the stores
-         * (`movs r2, #0; movs r0, #2`); the "=r"/"0" escapes keep both
+         * (`movs r2, #0; movs r0, #2`); the MATCH_CONST escapes keep both
          * as registers, and the volatile one stops the 2 from being
          * sunk to its store. */
         MATCH_CONST(zero32, 0);

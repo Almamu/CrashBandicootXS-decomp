@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "orbit_part.h"
 #include "hud.h"
 #include "pickups.h"
@@ -112,7 +113,7 @@ void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
     s32 outX, outY;
     s32 newX, newY;
 
-    asm volatile("" : "+r"(self));
+    MATCH_KEEP_VOLATILE(self);
 
     PlaySfx(gAudioContext, 7, 0x100);
     *(u16 *)(self + 0x3c) = 0xa0;
@@ -184,7 +185,7 @@ void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
  * (already matched, `sprite_obj.c`).
  *
  *
- * old_agbcc. The `"+r"` copy in mode 1 reproduces its recomputed
+ * old_agbcc. The MATCH_KEEP copy in mode 1 reproduces its recomputed
  * `x + velX`. In mode 2 the timer is re-read through `self` after the
  * store and the id compared without a local, so both become the ROM's
  * reloads from memory (`ldrh` at the compare); two extra references on
@@ -214,13 +215,13 @@ void UpdateExtraLife(struct orbit_part *self)
         /* Hides that `vx` is unchanged, so the bound check below
          * recomputes `x + vx` as the ROM does instead of reusing the
          * stored sum. */
-        asm("" : "+r"(vx));
+        MATCH_KEEP(vx);
         y = self->base.y + self->velY;
         self->base.y = y;
         if ((x + vx) >> 8 <= 0xb4 && y >> 8 <= 0xc) {
             /* Extra reference: puts velX in r3 and y in r2, as in the
              * ROM. */
-            asm("" : : "r"(vx));
+            MATCH_USE(vx);
             PlaySfx(gAudioContext, 0xe, 0x100);
             AddLife(gLevelState);
             self->base.flags |= 1;
@@ -236,16 +237,16 @@ void UpdateExtraLife(struct orbit_part *self)
             s32 x = self->base.x;
             s32 v = self->velX;
 
-            asm("" : : "r"(v));
-            asm("" : : "r"(v));
+            MATCH_USE(v);
+            MATCH_USE(v);
             self->base.x = x + v;
         }
         {
             s32 y = self->base.y;
             s32 v = self->velY;
 
-            asm("" : : "r"(v));
-            asm("" : : "r"(v));
+            MATCH_USE(v);
+            MATCH_USE(v);
             self->base.y = y + v;
         }
         fire = 0;

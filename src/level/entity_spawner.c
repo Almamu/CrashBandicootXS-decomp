@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "aabb.h"
 #include "actor.h"
 #include "orbit_part.h"
@@ -186,7 +187,7 @@ struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 fl
 
             /* opaque 0: keeps the +0x4B `movs r0,#0` after the +0x49
              * address rather than scheduled ahead of it */
-            asm("" : "+r"(zero));
+            MATCH_KEEP(zero);
             *t++ = p3;
             *t++ = p4;
             *t = zero;
@@ -222,7 +223,7 @@ void SpawnEntity(void **table, s32 id, u16 *rec)
     u16 p3 = rec[3];
     register void *fn asm("r5") = *(void **)entry;
 
-    asm("" :: "r"(fn));
+    MATCH_USE(fn);
     _call_via_r5(id, p1, p2, p3);
 }
 

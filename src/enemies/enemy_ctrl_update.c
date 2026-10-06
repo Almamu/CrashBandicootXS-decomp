@@ -352,7 +352,7 @@ static inline void MarkGoneHeld(struct ctrl_target *t)
     register s32 hold asm("r2");
 
     t->gone = 1;
-    asm("" : "=r"(hold)); /* no code: r2 live from here */
+    MATCH_HOLD(hold); /* no code: r2 live from here */
     if (t->id != 0xFFFF)
         do {
             s32 id;
@@ -361,7 +361,7 @@ static inline void MarkGoneHeld(struct ctrl_target *t)
             s32 off;
             u32 *slot;
 
-            asm("" : : "r"(hold)); /* no code: ...to here */
+            MATCH_USE(hold); /* no code: ...to here */
             id = t->id;
             base = (u8 *)gEntityFlags;
             word = id / 32;

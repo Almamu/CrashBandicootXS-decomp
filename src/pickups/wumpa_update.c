@@ -202,8 +202,8 @@ static inline s32 OrbitTimer(struct orbit_part *self)
         s32 _p = (pos);                                                        \
         s32 _v = (vel);                                                        \
                                                                                \
-        asm("" : : "r"(_v));                                                   \
-        asm("" : : "r"(_v));                                                   \
+        MATCH_USE(_v);                                                         \
+        MATCH_USE(_v);                                                         \
         (pos) = _p + _v;                                                       \
     }
 
@@ -366,7 +366,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
         phase = 0;
         /* opaque 0: keeps the clamp's `cmp r6,r0` and the +0x4B store
          * from being folded to constants */
-        asm("" : "+r"(phase));
+        MATCH_KEEP(phase);
         *t = one;
     }
     ResetSpriteFrameTimer(p);

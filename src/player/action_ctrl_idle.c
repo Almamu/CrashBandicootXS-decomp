@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "util.h"
 #include "system.h"
@@ -118,9 +119,9 @@ skip:
                 /* Three extra references to `self` (no code): they raise its
                  * allocation priority so the ROM's register choice for the
                  * tag-address copy and the rescale temporaries comes out. */
-                asm("" : : "r"(self));
-                asm("" : : "r"(self));
-                asm("" : : "r"(self));
+                MATCH_USE(self);
+                MATCH_USE(self);
+                MATCH_USE(self);
                 rec.target = FixedMul(rec.target, 0x180);
                 rec.step /= 2;
             }

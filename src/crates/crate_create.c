@@ -339,9 +339,9 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     /* three extra references to `type`: raise its allocation priority so
      * it gets r7 and slot*2 gets r8, as in the ROM (one or two are not
      * enough) */
-    asm("" : : "r"(type));
-    asm("" : : "r"(type));
-    asm("" : : "r"(type));
+    MATCH_USE(type);
+    MATCH_USE(type);
+    MATCH_USE(type);
     if (type == 5 && (u8)sub_802599C(gEntityFlags, id))
         SolidifyOutlineCrate(self);
     AddCrateToList(gCrateList, (struct box_part *)self);

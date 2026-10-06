@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "mover_new.h"
 #include "gfx_part.h"
 #include "util.h"
@@ -242,11 +243,11 @@ static inline void CopyFlipX(struct gfx_part *dst, struct gfx_part *src)
     register s32 m asm("r0");
     register s32 b asm("r3");
 
-    asm("" : "+r"(bit));
+    MATCH_KEEP(bit);
     sv = *(u8 *)sv;
     bit &= sv;
     m = -0x11;
-    asm("" : "+r"(m));
+    MATCH_KEEP(m);
     b = *dp;
     m &= b;
     m |= bit;
@@ -322,7 +323,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
     {                                                                          \
         register s32 _k asm("r4") = 0x108;                                     \
                                                                                \
-        asm("" : "+r"(_k));                                                    \
+        MATCH_KEEP(_k);                                                        \
         slot = (u32 *)((base) + _k);                                           \
     }
 
@@ -547,12 +548,12 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
         register s32 t asm("r0") = 0xF;
         register s32 k asm("r5");
 
-        asm("" : "+r"(t));
+        MATCH_KEEP(t);
         {
             u8 *p = &c->tag;
 
             k = 0xF;
-            asm("" : "+r"(k));
+            MATCH_KEEP(k);
             *p = t;
         }
         ResetSpriteFrameTimer(c);
@@ -574,7 +575,7 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
     {
         register struct gfx_pair_ctrl *s asm("r2") = self;
 
-        asm("" : "+r"(s));
+        MATCH_KEEP(s);
         s->childB = c;
     }
 }
@@ -760,7 +761,7 @@ toggle:
         register s32 one asm("r0") = 1;
         register s32 b asm("r1");
 
-        asm("" : "+r"(one));
+        MATCH_KEEP(one);
         b = self->high;
         one ^= b;
         self->high = one;
@@ -771,7 +772,7 @@ toggleTop:
         register s32 one asm("r3") = 1;
         s32 h;
 
-        asm("" : "+r"(one));
+        MATCH_KEEP(one);
         h = self->high ^ one;
         self->high = h;
         if (h == 0)
@@ -928,7 +929,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                 register s32 zero asm("r0") = 0;
                 register struct gfx_part *q asm("r4") = part;
 
-                asm("" : "+r"(q));
+                MATCH_KEEP(q);
                 q->kind = zero;
             }
         }
@@ -950,7 +951,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                         register s32 zero asm("r2") = 0;
                         register struct gfx_part *q asm("r1") = part;
 
-                        asm("" : "+r"(q));
+                        MATCH_KEEP(q);
                         q->kind = zero;
                     }
                 }
@@ -967,12 +968,12 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
         {
             register u32 q asm("r3") = (u32)part;
 
-            asm("" : "+r"(q));
+            MATCH_KEEP(q);
             q = PART_FLAGS((struct gfx_part *)q);
             v |= q;
         }
         t = part;
-        asm("" : "+r"(t));
+        MATCH_KEEP(t);
         PART_FLAGS(t) = v;
         MARK_GONE_BITMAP_R4(t, "r5", "r2");
     }
@@ -1001,7 +1002,7 @@ void UpdateCortexBossPlatformMover(struct gfx_ctrl *self, struct gfx_part *part)
 
         *p = one;
         p += 0x38 - 0x2C;
-        asm("" : "+r"(p));
+        MATCH_KEEP(p);
         if (*p)
             SET_FRAME_R(part, 0, "r4", "r5");
     }

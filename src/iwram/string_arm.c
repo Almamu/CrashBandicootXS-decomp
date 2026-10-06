@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "iwram.h"
 
 /*
@@ -74,7 +75,7 @@ void strncpy_arm(u8 *dst, u8 *src, s32 n)
         if (n != c)
             *dst = c;
     }
-    asm("");
+    MATCH_BARRIER();
 }
 
 /* strcat. UNUSED - see the file comment. */

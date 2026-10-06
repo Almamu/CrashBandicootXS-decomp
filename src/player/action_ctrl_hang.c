@@ -168,7 +168,7 @@ void ActionCtrlStateLeftGround(struct act *self)
         MATCH_CONST(fire, 1);
         fire &= p;
         /* extra reference: keeps `one` in r6 and the input pointer in r7 */
-        asm("" : : "r"(one));
+        MATCH_USE(one);
         if (fire)
         {
             ACT_VCALL1(self, m20, 5);
@@ -256,7 +256,7 @@ void ActionCtrlStateDying(struct act *self)
 
                 /* a signed shift: hidden from gcc's "a u16 is never
                  * negative" folding, which would make it lsr */
-                asm("" : "+r"(word));
+                MATCH_KEEP(word);
                 word >>= 5;
                 off = word * 4;
                 slot = (u32 *)(base + 0x108);
@@ -355,9 +355,9 @@ void ActionCtrlReleaseHang(struct act *self)
     register s32 hold asm("r2");
 
     self->part->hanging = 0;
-    asm("" : "=r"(hold)); /* r2 live from here: no code */
+    MATCH_HOLD(hold); /* r2 live from here: no code */
     self->part->y += 0x600;
-    asm("" : : "r"(hold)); /* ...to here, so the 0x600 reload takes r3 */
+    MATCH_USE(hold); /* ...to here, so the 0x600 reload takes r3 */
     ACT_VCALL1(self, m20, 0x1A);
     ACT_VCALL2(self, m50, self->part, 0x1B);
     part = self->part;
@@ -803,13 +803,13 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
 
         /* No code: keeps r1 live across the `self->unk_22` test so the
          * byte loads into r2 and `id` stays in ip, as in the ROM. */
-        asm("" : "=r"(hold1));
+        MATCH_HOLD(hold1);
         if (self->unk_22 > 0xf0) {
             s32 idx;
             s32 zero;
             s32 wait;
 
-            asm("" : : "r"(hold1)); /* end of the r1 hold (no code) */
+            MATCH_USE(hold1); /* end of the r1 hold (no code) */
             idx = 0x17;
             self->unk_21 = 0;
             if (self->unk_22 == 1) {

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "crates.h"
 
@@ -31,7 +32,7 @@
  *   out of the loop by this compiler (computed once before the loop,
  *   then just copied into place per bucket) - but the ROM instead
  *   recomputes it fresh every time a non-empty bucket is found. An
- *   `asm volatile("" : "+r"(manager))` barrier placed right before the
+ *   `MATCH_KEEP_VOLATILE(manager)` barrier placed right before the
  *   address computation, executed once per non-empty bucket (i.e.
  *   still inside the outer loop, same place the computation already
  *   sat), makes `manager`'s value opaque to the optimizer at that
@@ -70,7 +71,7 @@ void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *objA
              * `&manager->freeListHead` is loop-invariant and hoisting
              * it above the outer `for` loop - see the function-level
              * comment above. */
-            asm volatile("" : "+r"(manager));
+            MATCH_KEEP_VOLATILE(manager);
             headField = (void **)&manager->freeListHead;
 
             for (;;) {

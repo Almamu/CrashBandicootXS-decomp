@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
 #include "globals.h"
@@ -59,7 +60,7 @@ void sub_801B2A8(struct gobj *self, u8 value)
 
     /* hide the constant 1 from reload's cse, which would otherwise build
      * the mask below as `1 - 0x12` (docs/workflow.md step 7) */
-    asm("" : "+r"(one));
+    MATCH_KEEP(one);
     bit = (value & one) << 4;
     mask = ~0x10;
     self->flags2 = (mask & self->flags2) | bit;
@@ -305,7 +306,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
                 s32 y = obj->y;
                 register s32 k asm("r2") = 0x300;
 
-                asm("" : "+r"(k));
+                MATCH_KEEP(k);
                 obj->y = y + k;
             }
             goto done;

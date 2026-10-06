@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include "actor.h"
 #include "pause_menu.h"
@@ -399,9 +400,9 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
              * icon takes r3 as in the ROM. The ROM reloaded the 0 above,
              * which moved the round-robin on; the pinned store doesn't. */
             register s32 hold asm("r1");
-            asm("" : "=r"(hold));
+            MATCH_HOLD(hold);
             lo &= 15;
-            asm("" : : "r"(hold));
+            MATCH_USE(hold);
         } else
             lo &= 15;
         *p = (*p & m) | lo;
@@ -429,11 +430,11 @@ void InitSaveMenuIcons(struct save_menu *self)
 
     /* Instruction-count padding (no code): the hold's asm statements in
      * new_row_icon shift gcc's temporary numbering, which swaps the
-     * rowObj pointer stack slots; three bare asm("") restore the ROM's
+     * rowObj pointer stack slots; three MATCH_BARRIER()s restore the ROM's
      * slot order. */
-    asm("");
-    asm("");
-    asm("");
+    MATCH_BARRIER();
+    MATCH_BARRIER();
+    MATCH_BARRIER();
     ResetOamBuffer(gOamBuffer);
     HideUnusedOamEntries(gOamBuffer);
     WaitForVBlank();

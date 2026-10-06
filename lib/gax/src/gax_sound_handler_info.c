@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* All three fixed per-type function-pointer constants docs/audio.md
  * records for the GAX2_SoundHandler "Info" type (init_fn/unknown_fn/
@@ -34,9 +35,9 @@ void GaxInfoResetPosition(void *self)
     val = 0xFFFF;
     p->orderPos = val;
     zeroByte = 0;
-    asm("" : "+r"(zeroByte));
+    MATCH_KEEP(zeroByte);
     zeroHalf = 0;
-    asm("" : "+r"(zeroHalf));
+    MATCH_KEEP(zeroHalf);
     val = 0x4E20;
     p->row = val;
     p->tickCounter = zeroByte;

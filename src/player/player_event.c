@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "actor_self.h"
 #include "box_part.h"
@@ -442,11 +443,11 @@ void DrawPlayer(struct player *self)
     }
     /* Hard-register hold (emits no code): r6 live across the blink
      * call keeps `self` out of r6, so it gets r7 as in the ROM. */
-    asm("" : "=r"(hold));
+    MATCH_HOLD(hold);
     if (gLevelState->maskLevel == 3 || !BlinkArmed(self) || (gRoomFrameCount & 4))
         DrawSprite(gSpriteRenderer, self);
     /* End of the hold above (emits no code). */
-    asm("" : : "r"(hold));
+    MATCH_USE(hold);
     {
         struct level_state *game = gLevelState;
 
@@ -491,11 +492,11 @@ void DrawPlayer(struct player *self)
              * `&self->child` out of r6 (it goes to ip), which leaves r6
              * for `&maskTrailIdx` in global-alloc; reload then evicts it to
              * [sp], giving the ROM's single spill and sb/sl/r8 layout. */
-            asm("" : "=r"(hold));
+            MATCH_HOLD(hold);
             self->child->frame = mode - 1;
             RefreshChild(self->child);
             /* End of the hold above (emits no code). */
-            asm("" : : "r"(hold));
+            MATCH_USE(hold);
         }
     }
     if (self->animDone)
