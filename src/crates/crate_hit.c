@@ -3,6 +3,7 @@
 #include "box_part.h"
 #include "util.h"
 #include "crates.h"
+#include "crate.h"
 #include "globals.h"
 #include "player.h"
 
@@ -159,19 +160,19 @@ u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
  * local copy of the parameter: that is what makes the ROM copy r0 last,
  * after `box`/`foundFlag`, right before the first call. The mirror bits
  * read are `self`'s, not `prev`'s. */
-struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *foundFlag)
+struct crate *sub_800CF70(struct crate *selfArg, struct aabb *box, u8 *foundFlag)
 {
-    struct box_part *self = selfArg;
-    struct box_part *next = (struct box_part *)GetCrateAbove((struct crate *)self);
-    struct box_part *prev = (struct box_part *)GetCrateBelow((struct crate *)self);
+    struct crate *self = selfArg;
+    struct crate *next = GetCrateAbove(self);
+    struct crate *prev = GetCrateBelow(self);
 
     if (next == NULL && prev == NULL)
         return self;
     *foundFlag = 1;
-    if (prev == NULL || (prev->physMode & 0x7f) == 1)
+    if (prev == NULL || (prev->state & 0x7f) == 1)
         return self;
     {
-        u8 *rec = (u8 *)&(*prev->keyframes)[prev->frame];
+        u8 *rec = (u8 *)&prev->anim->records[prev->tag];
         struct hitbox_quad *q = (struct hitbox_quad *)(rec + 4);
         struct aabb b;
         s32 px = prev->x >> 8;
@@ -183,9 +184,9 @@ struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *fou
 
         SetAabbPos(&b, x + px, y + py);
         SetAabbSize(&b, w, h);
-        if (self->mirrorX)
+        if (self->flipX)
             b.x = px * 2 - (b.x + b.w);
-        if (self->mirrorY)
+        if (self->flipY)
             b.y = py * 2 - (b.y + b.h);
         if (AabbOverlaps(&b, box))
             self = prev;

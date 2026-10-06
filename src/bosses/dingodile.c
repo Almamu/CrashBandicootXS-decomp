@@ -400,12 +400,12 @@ void SetCortexBossState(struct obj_476c *self, s32 unused, s32 arg)
 void DestroyCortexBoss(struct vobj *self, s32 flags)
 {
     self->vt = (struct vtable *)gCortexBossVtable;
-    DestroyBossCtrl(self, flags);
+    DestroyBossCtrl((struct boss_ctrl *)self, flags);
 }
 
 struct vobj *CreateCortexBoss(struct vobj *self)
 {
-    CreateBossCtrl(self);
+    CreateBossCtrl((struct boss_ctrl *)self);
     self->vt = (struct vtable *)gCortexBossVtable;
     return self;
 }
@@ -1048,7 +1048,7 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     SetSpriteAnimDone(p, 0);
     p->kind = 1;
     c = OperatorNew(0x20);
-    CreateBossCtrl(c);
+    CreateBossCtrl((struct boss_ctrl *)c);
     c->vt = (struct vtable *)gDingodileProjectileVtable;
     c->target = self->target;
     VCALL1(c, m20, 5);
@@ -1121,14 +1121,14 @@ void DestroyDingodileProjectileCtrl(struct obj_48a4 *self, s32 flags)
 {
     self->vt = (struct vtable *)gDingodileProjectileVtable;
     self->target = NULL;
-    DestroyBossCtrl(self, flags);
+    DestroyBossCtrl((struct boss_ctrl *)self, flags);
 }
 
 struct obj_48a4 *CreateDingodileProjectileCtrl(void *mem)
 {
     struct obj_48a4 *self = mem;
 
-    CreateBossCtrl(self);
+    CreateBossCtrl((struct boss_ctrl *)self);
     self->vt = (struct vtable *)gDingodileProjectileVtable;
     return self;
 }
@@ -1136,5 +1136,5 @@ struct obj_48a4 *CreateDingodileProjectileCtrl(void *mem)
 void DestroyDingodileShieldCtrl(struct vobj *self, s32 flags)
 {
     self->vt = (struct vtable *)gDingodileShieldVtable;
-    DestroyBossCtrl(self, flags);
+    DestroyBossCtrl((struct boss_ctrl *)self, flags);
 }

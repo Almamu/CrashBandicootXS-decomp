@@ -27,7 +27,7 @@ struct seq_obj
 
 struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self)
 {
-    CreateBossCtrl(self);
+    CreateBossCtrl((struct boss_ctrl *)self);
     self->vtable = (void *)gDingodileShieldVtable;
     return self;
 }
@@ -80,12 +80,12 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 void DestroyDingodile(struct seq_obj *self, s32 flags)
 {
     self->vtable = (void *)gDingodileVtable;
-    DestroyBossCtrl(self, flags);
+    DestroyBossCtrl((struct boss_ctrl *)self, flags);
 }
 
 struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b)
 {
-    CreateBossCtrl(self);
+    CreateBossCtrl((struct boss_ctrl *)self);
     self->vtable = (void *)gDingodileVtable;
     SpawnDingodileShieldOrRocket((struct dingodile_boss *)self, 0, (u16)a, (u16)b, 0);
     return self;

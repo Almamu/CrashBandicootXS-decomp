@@ -512,11 +512,11 @@ void ActionCtrlStateSpin(struct act *self)
         if (++self->charge > 3)
             self->charge = 3;
     }
-    SteerActionCtrlSpin((u8 *)self, dir);
+    SteerActionCtrlSpin(self, dir);
     if (++self->frame >= self->frames || self->part->animDone)
     {
         if (self->charge)
-            StartActionCtrlTornadoSpin((u8 *)self, 0xF, 0xD);
+            StartActionCtrlTornadoSpin(self, 0xF, 0xD);
         else
             EndActionCtrlSpin(self, dir, in);
     }
@@ -561,7 +561,7 @@ void ActionCtrlStateAirSpin(struct act *self)
         charge = self->charge;
         if (charge)
         {
-            StartActionCtrlTornadoSpin((u8 *)self, 0xE, 0xE);
+            StartActionCtrlTornadoSpin(self, 0xE, 0xE);
         }
         else
         {
@@ -613,9 +613,9 @@ void ActionCtrlStateTornadoSpin(struct act *self)
         if (++self->charge > 3)
             self->charge = 3;
     }
-    SteerActionCtrlSpin((u8 *)self, dir);
+    SteerActionCtrlSpin(self, dir);
     if (++self->frame >= self->frames || self->part->animDone)
-        StartActionCtrlTornadoSpin((u8 *)self, 0xF, 0xD);
+        StartActionCtrlTornadoSpin(self, 0xF, 0xD);
 }
 
 void ActionCtrlStateCrouchDown(struct act *self)
@@ -777,9 +777,8 @@ asm(".align 2, 0");
  * base+offset+fn-pointer convention already named in ctrl.c's
  * doc comments. The `+0x27`/`+0x28`/`+0x29`/`+0x2f`/`+0x30`/`+0x31`/
  * `+0x32` bytes are a state/flag/table-index trio pair this whole
- * action-table family shares; none of the three objects' full shapes
- * are pinned down yet, so every access here stays a raw offset rather
- * than a guessed struct. */
+ * action-table family shares (`struct act`'s motionX/motionY queue,
+ * include/action_obj.h). */
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
@@ -788,19 +787,18 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * flag/counter/table-index trio (`+0x31`/`+0x2f`/`+0x27` and
  * `+0x32`/`+0x30`/`+0x28`) via `SetActionCtrlModeAnim`, but only while that flag
  * is actually set. */
-void ActionCtrlStateStandUp(void *selfArg)
+void ActionCtrlStateStandUp(struct act *self)
 {
-    u8 *self = selfArg;
-    u8 *part = *(u8 **)(self + 0x10);
+    struct player *part = self->part;
 
-    if (part[0x38] != 0) {
+    if (part->animDone != 0) {
         SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
-        self[0x31] = 0;
-        self[0x2f] = 1;
-        self[0x27] = 0;
-        self[0x32] = 0;
-        self[0x30] = 1;
-        self[0x28] = 0;
+        self->motionXKeepSpeed = 0;
+        self->motionXPending = 1;
+        self->motionX = 0;
+        self->motionYKeepSpeed = 0;
+        self->motionYPending = 1;
+        self->motionY = 0;
     }
 }
 
@@ -810,9 +808,8 @@ void ActionCtrlStateStandUp(void *selfArg)
  * off to `StartActionCtrlHighJump`. Otherwise, while `part+0x38` is set, fires the
  * usual base+offset+fn-pointer trampoline pair and tail-calls
  * `ActionCtrlStateCrawl` (below). */
-void ActionCtrlStateCrawlStart(void *selfArg)
+void ActionCtrlStateCrawlStart(struct act *self)
 {
-    struct act *self = selfArg;
     u32 snap = *(u32 *)&gKeys;
 
     if ((*(u16 *)((u8 *)&snap + 2) & 1) != 0

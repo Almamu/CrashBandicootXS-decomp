@@ -343,6 +343,6 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     asm("" : : "r"(type));
     if (type == 5 && (u8)sub_802599C(gEntityFlags, id))
         SolidifyOutlineCrate(self);
-    AddCrateToList(gCrateList, self);
+    AddCrateToList(gCrateList, (struct box_part *)self);
     return self;
 }

@@ -130,6 +130,56 @@ file's header for why), update the relevant `docs/status/<category>.md`
 applies - it's usually but not always the same as the issue's label),
 and commit.
 
+### Declarations and headers
+
+Every function and global is declared once, in a header, with the type
+of its definition. `.c` files include headers; they don't declare
+things themselves. [docs/headers_plan.md](docs/headers_plan.md) has the
+full rules and the history (#574). For new code:
+
+- **Which header:** a function or global goes in the header of the
+  subsystem that owns it - `include/<subsystem>.h`, named after its
+  `src/` directory (`player.h`, `crates.h`, `level.h`, ...). A global
+  that three or more subsystems use (`gPlayer`, `gLevelState`, `gKeys`,
+  ...) goes in `include/globals.h`. GAX engine internals (what one GAX
+  object calls in another) go in `lib/gax/src/gax_internal.h`. A struct
+  that several subsystems share gets its own small type header
+  (`aabb.h`, `hitbox_quad.h`, `camera_lead.h`).
+- **Don't redeclare externs in a `.c` file.** Include the header. If
+  the header's type doesn't fit, fix the header (or the definition) to
+  the real type, then fix the callers - don't add a local copy with
+  another type.
+- **Codegen exceptions:** if a file only matches with another type for
+  a symbol (a `u8` return where the definition has `s32`, a one-byte
+  struct argument, ...), keep a local declaration under another name
+  with an asm label, and say why in a comment:
+
+  ```c
+  /* codegen: RandRange is u16, but this file was matched against an s32
+   * return; the u16 prototype changes the stack slots in InitTitleScreen.
+   * docs/headers_plan.md */
+  extern s32 RandRange_s32(s32 max) asm("RandRange");
+  ```
+
+  The call still links to `RandRange`, and the file can include the
+  header. Add the alias to the "Codegen exceptions" table in
+  docs/headers_plan.md.
+- **What stays local:** `_call_via_r0`..`_call_via_r7` (each call site
+  declares the shape it calls through) and references from one
+  `src/data/` table to another.
+- **After editing a header, only a clean build is reliable.** The
+  Makefile doesn't track header dependencies, so `make` won't rebuild
+  the objects that include it. Use `rm -rf build && make compare`.
+- **agbcc's compile errors don't contain the word "error"** (for example
+  ``structure has no member named `x'``). Check `make`'s exit status
+  rather than grepping the log for "error".
+- **Check your work** with `python3 tools/extern_audit.py` after a build:
+  "remaining" must stay 0 and no struct name may be defined in more
+  than one `.c` file. `--remaining` lists the declarations that no
+  exception covers, and `--views` lists `.c`-file structs that have the
+  layout of a header struct (often a copy or a view of it; check the
+  readers before merging).
+
 ## Opening the PR
 
 Reference the issue (`Closes #N`) only if **every function in the chunk

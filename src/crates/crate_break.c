@@ -320,7 +320,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         goto tail;
     f.found = 0;
     if (kind <= 4)
-        obj = (struct crate *)sub_800CF70((struct box_part *)self, bb, &f.found);
+        obj = sub_800CF70(self, bb, &f.found);
     else
         obj = self;
     code = D18C_CodeIn(gCrateHitResponse, &obj->kind, kind);
@@ -1392,7 +1392,7 @@ void LightTntCrate(struct crate *selfArg)
                 : "r1", "cc", "memory"
             );
         }
-        LinkCrateToActiveBucket(gCrateList, (struct crate *)self);
+        LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
 
         {
             register u8 **p2 asm("r0") = *(u8 ***)(self + 0x20);
@@ -1616,7 +1616,7 @@ void BreakCrate(struct crate *self, u32 arg1)
     if (GetCrateAbove(self) != NULL && flag == 0)
         chained = 1;
     PHYS_FLAG4(self) = 1;
-    LinkCrateToActiveBucket(gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
     self->state &= 0x7f;
     gPlayer->busy = 0;
     one = 1;
@@ -1916,7 +1916,7 @@ void DropCratesAbove(struct crate *self)
             n->fallSpeed = t + d;
         }
         n->flags |= 0x10;
-        LinkCrateToActiveBucket(gCrateList, n);
+        LinkCrateToActiveBucket(gCrateList, (struct box_part *)n);
         if (tbl[n->kind] && self->u48.blastState == 0 && n->fallDistance > 0x1600)
         {
             struct crate *next = GetCrateAbove(n);
@@ -2023,7 +2023,7 @@ void ExplodeCrate(struct crate *self, u8 near)
     self->state &= 0x7f;
     gPlayer->busy = 0;
     self->flags |= 0x10;
-    LinkCrateToActiveBucket(gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
     one = 1;
     self->state = (self->state & 0x80) | one;
     if (self->kind == 0xa) {
@@ -2311,7 +2311,7 @@ void ActivateIronSwitchCrate(struct crate *self)
         return;
 
     self->flags |= 0x10;
-    LinkCrateToActiveBucket(gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
     self->state |= 0x80;
     {
         struct player *player = gPlayer;

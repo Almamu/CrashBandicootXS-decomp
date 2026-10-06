@@ -55,8 +55,8 @@ struct jetpack_balloon;
 struct jetpack_bomber;
 struct jetpack_cannonball;
 struct jetpack_plane;
+struct jetpack_spawn_rec;
 struct kind_entry;
-struct spawn_rec;
 
 /* src/actor/actor.c */
 extern void JetpackReloadPlayerTiles(void *arg0);
@@ -230,7 +230,7 @@ extern s32 IsJetpackShotUnshootable(void);
 
 /* src/vehicle/jetpack_spawn.c */
 extern void YetiStateStop(void);
-extern void *SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz);
+extern void *SpawnJetpackActor(struct jetpack_spawn_rec *rec, u8 alt, s32 dz);
 extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
 extern void CreateJetpackCheckpointText(void);
 extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);

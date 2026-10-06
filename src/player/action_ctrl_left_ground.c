@@ -19,9 +19,8 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * (id `0x1c`). Either way, sets the second half of the shared
  * state/flag/table-index trio (`self+0x32`=0/`+0x30`=1/`+0x28`=4) and
  * returns 1. */
-u8 CheckActionCtrlLeftGround(void *selfArg)
+u8 CheckActionCtrlLeftGround(struct act *self)
 {
-    struct act *self = selfArg;
     u8 *part = (u8 *)self->part;
     register u8 *p asm("r1") = part + 0x68;
     register s32 mask asm("r0") = 8;

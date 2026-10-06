@@ -36,7 +36,7 @@ asm(".align 2, 0");
  * compacts the array (bounded this time by `activeCount`) via the
  * same CpuSet-based shift used throughout this cluster, decrementing
  * `activeCount`. */
-void RemoveCrateFromList(struct pool_manager *manager, void *target)
+void RemoveCrateFromList(struct pool_manager *manager, struct box_part *target)
 {
     s32 i = 0;
     s32 searchCount = manager->capacity;
@@ -131,7 +131,7 @@ void RemoveCrateListAt(struct pool_manager *manager, s32 index)
  * pointer (always updated, chaining the previous tail's `+4` "next"
  * field to the new node). Returns the
  * node. */
-void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32 extra)
+void *AddCrateGridNode(struct pool_manager *manager, struct box_part *data, s32 bucket, s32 extra)
 {
     void **headField = (void **)&manager->freeListHead;
     void **entry = *headField;
@@ -176,7 +176,7 @@ void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32
  * The ROM never sets up a return value here (its only caller,
  * `AddCrateToList`, ignores it), so this is `void` despite `AddCrateGridNode`
  * itself returning the node. */
-void LinkCrateInGrid(struct pool_manager *manager, void *obj)
+void LinkCrateInGrid(struct pool_manager *manager, struct box_part *obj)
 {
     s16 bucket = *(s16 *)((u8 *)obj + 2);
     void *node1 = AddCrateGridNode(manager, obj, bucket, 0);
@@ -201,7 +201,7 @@ void LinkCrateInGrid(struct pool_manager *manager, void *obj)
 /* Appends `obj` to `manager->slotArray` if there's room below
  * `capacity`, inserting it into the collision grid via `LinkCrateInGrid`
  * first. */
-void AddCrateToList(struct pool_manager *manager, void *obj)
+void AddCrateToList(struct pool_manager *manager, struct box_part *obj)
 {
     if (manager->activeCount < manager->capacity) {
         s32 idx;

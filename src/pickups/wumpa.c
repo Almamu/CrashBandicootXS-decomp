@@ -240,19 +240,13 @@ struct actor *InitStopwatch(struct actor *self)
     return self;
 }
 
-/* Zeroes/initializes a run of fields from `self+0x25` through `+0x34`
- * (not otherwise characterized yet), plus `self+8`/`+0x10`/`+0x14`/
- * `+0x18`/`+0x1c`, and sets `+0x2f`/`+0x30` to 1. This is the
- * constructor sibling `InitActionCtrl` (still raw, `0x0801588C`) calls
- * right after wiring up `gActionCtrlVtable` - that caller stores
- * its own vtable pointer at `+0xc`, not `+0x18` the way `struct actor`
- * does, so `self` here is a *different*, still-unnamed "child object"
- * struct - the same one several large state machines in this ROM
- * region (`ActionCtrlHandleEvent` etc., left raw for now) read/write through
- * many more offsets not characterized here. Kept as a raw `void *`
- * rather than `struct actor *` to avoid implying it shares that
- * layout. */
-void ResetActionCtrl(void *selfArg)
+/* Zeroes/initializes the action controller's fields (`struct act`,
+ * action_obj.h) from `self+0x25` through `+0x34`, plus `state` (+8),
+ * `part` (+0x10), `+0x14` and `frame`/`frames` (+0x18/+0x1C), and sets
+ * `motionXPending`/`motionYPending` (+0x2F/+0x30) to 1. InitActionCtrl
+ * calls it right after wiring up `gActionCtrlVtable`. The stores go
+ * through the pinned byte cursor `q` the ROM steps. */
+void ResetActionCtrl(struct act *selfArg)
 {
     register u8 *p asm("r3") = (u8 *)selfArg;
     register u8 *q asm("r1") = p + 0x29;
