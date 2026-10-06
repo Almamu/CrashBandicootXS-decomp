@@ -1,0 +1,16 @@
+func_name = "LookupSpriteFrameCache"
+compiler_type = "gcc"
+
+[weight_overrides]
+# favour control-flow and type changes
+perm_condition = 10
+perm_reverse_cond = 10
+perm_ins_block = 15
+perm_var_cond_block = 10
+perm_randomize_internal_type = 20
+perm_randomize_external_type = 10
+perm_randomize_function_type = 15
+perm_cast_simple = 15
+perm_inline = 15
+perm_reorder_stmts = 15
+perm_remove_ast = 5
