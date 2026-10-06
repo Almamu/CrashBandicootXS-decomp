@@ -149,7 +149,114 @@ returns that pop into lr, and no conditional returns. Nothing in the
 repo can confirm that, so it's only a lead. The three parked functions
 aren't HANDWRITTEN: they carry compiler idioms (the shared-zero
 register in `itoa_arm`'s tail, ccfsm-conditionalized blocks, literal
-pool placement).
+pool placement). The third pass below tested this lead and ruled it out:
+no FSF gcc release from 2.95.3 to 3.4.6 fits.
+
+## Third pass: FSF gcc 2.95.3-3.4.6 built and ruled out
+
+This pass built the candidate compilers from official sources and
+compared their output with the ROM. None fits. The ROM's compiler is a
+later build of agbcc_arm's own lineage (Cygnus/Red Hat
+`2.9-arm-YYMMDD`), not FSF gcc. That build isn't public, so nothing could
+be vendored and the three functions stay parked.
+
+**What was built.** `cc1` for `--target=arm-elf` (`make all-gcc`, no
+libraries) from the `gcc-core` tarballs on sourceware.org's
+`pub/gcc/releases` (the gcc.gnu.org mirror; ftp.gnu.org didn't respond):
+
+| Version | sha256 of `gcc-core-<v>.tar.gz` | Host fixes needed |
+|---|---|---|
+| 2.95.3 | `56811ee6...` | `arm.c`: `arm_prog_mode =` is a cast lvalue, assign `arm_prgmode` |
+| 3.0.4 | `f60b23b2...` | `arm.c`: `DECL_RTL (sym) = new` becomes `SET_DECL_RTL (sym, new)` |
+| 3.1.1 | `29039c00...` | `include/obstack.h` from 3.3.6 (cast-as-lvalue `++`) |
+| 3.2.3 | `712df2ef...` | same as 3.1.1 |
+| 3.3.6 | `eb28f630...` | none |
+| 3.4.6 | `c6030bf0...` | none |
+
+Each was built as a 32-bit host binary: 2.95.3's `config.sub` doesn't
+know `x86_64`, and gcc of that age assumes a 32-bit `long`. The host
+compiler was `nixpkgs#pkgsi686Linux.gcc` (gcc 15) with
+`--host=--build=i686-pc-linux-gnu`, `CC='gcc -std=gnu89 -fcommon -w
+-fno-strict-aliasing'` and `MAKEINFO=true`. Every build stops at libgcc
+(no cross assembler), after `gcc/cc1` is linked. The modern
+`arm-none-eabi-gcc` 15 from the devshell was also tried as a trend check.
+
+**How it was compared.** The `NON_MATCHING=1` drafts of `string_arm.c` and
+`sprite_arm.c` were preprocessed and compiled by each `cc1` with
+`-mcpu=arm7tdmi -mthumb-interwork -fomit-frame-pointer` at -O1, -O2,
+-O2 `-fno-expensive-optimizations`, -O3 and -Os. The output was assembled
+and its words diffed against `baserom.gba`. Two caveats: the drafts were
+tuned for agbcc_arm, which biases the instruction-level scores towards
+it, and the decisive evidence below comes from the back-end source, not
+from the scores.
+
+**The ROM's distinguishing features, compiler by compiler:**
+
+| Feature (ROM) | agbcc_arm | 2.95.3 | 3.0.4 | 3.1.1-3.4.6 | gcc 15 |
+|---|---|---|---|---|---|
+| Push r4-r6 without lr when lr is unused (`itoa_arm`) | no, lr forced | no, lr forced | yes, but the allocator uses lr in itoa | yes, but lr used in itoa | yes, but lr used in itoa |
+| Single-register save as `stmfd sp!, {lr}` | yes | yes | no: `str lr, [sp, #-4]!` | no: `str lr, [sp, #-4]!` | n/a (saves nothing there) |
+| Mid-function return `ldmfd sp!, {lr}; bx lr` | no: `ldmfd sp!, {ip}; bx ip` | no: `{ip}` | **yes** | no: `ldr lr, [sp], #4` or a single epilogue | n/a |
+| `cmp #10` with `ge`/`lt` | no, `cmp #9` | no | no | no | no |
+| 1/0 in hoisted registers (`HeapSortActorsByKey`) | no | no | no | no | no |
+
+The FSF back-end history settles the first two rows. The gitweb
+history of `gcc/config/arm/arm.c` and `arm.md`, fetched at
+`d5b7b3ae3302` (2000-04-08, the arm/thumb back-end merge),
+`5895f7938440` (2000-10-09) and `6d3d91336c1a` (2000-12-08), shows:
+
+- **Single-register `str`.** `*push_multi` has emitted a single-register
+  push as `str rN, [sp, #-4]!` since 2000-01-09 ("use single STR/LDR
+  when..."). Every FSF revision after that prints the
+  `LookupSpriteFrameCache` prologue as `str lr, ...`, never as the ROM's
+  `stmfd sp!, {lr}`.
+- **lr forced into every push.** Until 2000-12-08,
+  `arm_expand_prologue` adds lr to every register push ("If we have to
+  push any regs, then we must push lr as well"), so `itoa_arm`'s
+  `push {r4, r5, r6}` can't come out. That date's
+  `arm_compute_save_reg_mask` stops forcing lr, but by then the `str`
+  change is eleven months old.
+
+So no FSF revision combines the ROM's `stmfd {lr}` single push with an
+lr-free push of r4-r6. agbcc_arm (`2.9-arm-000512`) has the first and
+not the second, so it predates the str patch. It is a Cygnus branch
+build, not mainline. The ROM's compiler has both, plus the
+`ldmfd sp!, {lr}; bx lr` return insn (3.0-style), so it must be a later
+build of that same Cygnus/Red Hat branch. Its code generation otherwise
+looks like agbcc_arm's. On `LookupSpriteFrameCache` with
+`-fno-expensive-optimizations`, agbcc_arm reproduces the ROM's second
+loop instruction for instruction: the same scheduling, `ldm ip, {r1, r3}`
+peephole and literal pool. Only the return sequence differs, plus the
+constant hoisted in the first loop. gcc 3.0.4 also gets the
+`ldmfd {lr}` returns right, but it moves the hit block out of line and
+schedules it differently. gcc 3.x is also clearly not the image's
+compiler. It doesn't reproduce the seven matched functions:
+`UnpackRleSpriteFrame` alone has ~70 differing lines under every 3.x
+version, against an exact match under agbcc_arm. 2.95.3 comes closest
+there (it shares agbcc_arm's middle end), but it has 2.9's prologue.
+
+**Closeness** (instruction-sequence similarity of the best flag set
+against the ROM; register names count, branch and pool offsets don't):
+
+| Compiler | itoa_arm | HeapSortActorsByKey | LookupSpriteFrameCache |
+|---|---|---|---|
+| agbcc_arm | 40% | 27% | 78% (`-fno-expensive-optimizations`) |
+| gcc 2.95.3 | 40% | 27% | 70% |
+| gcc 3.0.4 | 38% (-O1) | 24% (-O1) | 62% |
+| gcc 3.1.1-3.4.6 | 31-38% (-O1) | 8-21% | 18-42% |
+
+No version reproduced any parked function byte for byte.
+
+**What it would take.** The matching compiler would be a Red Hat GNUPro /
+Cygnus ARM toolchain from late 2000 or 2001, the line agbcc_arm's
+`2.9-arm-000512` comes from. Nintendo may have shipped one in a later
+AGB SDK. Neither has public sources, and patching agbcc_arm's back end
+to imitate it wouldn't be a real toolchain. ARM SDT/ADS (`armcc`) is
+unlikely: everything apart from frame handling is gcc output, and
+agbcc_arm's own gcc output at that. Until such a compiler turns up, the
+three stay `NAKED` with their drafts. `HeapSortActorsByKey` is still the
+only one that might be reachable from C under agbcc_arm, since its
+prologue and epilogue fit.
 
 ## Data
 
