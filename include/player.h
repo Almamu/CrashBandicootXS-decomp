@@ -239,22 +239,12 @@ struct player {
 
 COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
 
-/* The controllers share a base (InitCtrl/DestroyCtrl, ctrl.c): +0x04 the
- * motion entry set (SetCtrlAnimSet), +0x08 the state, +0x0C the method
- * table, +0x10 the controlled part (AttachCtrl). The action controller is
- * `struct act` (action_obj.h) and the swim controller `struct
- * player_ctrl` (player_ctrl.h); the input and boss controllers are
- * below. */
-
-/* That base on its own, as the accessors that take any controller
- * (SetCtrlMode, SetCtrlAnimSet) read it. */
-struct ctrl_base {
-    u8 unk_00[4];
-    const struct entry_set *animSet; // 0x04 - the motion entry set (SetCtrlAnimSet)
-    s32 state;                       // 0x08 - SetCtrlMode
-    const void *vtable;              // 0x0C
-    void *target;                    // 0x10 - the controlled part (AttachCtrl)
-};
+/* The controllers share a base, objects.h's `struct ctrl` (InitCtrl/
+ * DestroyCtrl, ctrl.c): +0x04 the motion entry set (SetCtrlAnimSet),
+ * +0x08 the state, +0x0C the method table. Most subclasses keep their
+ * controlled part at +0x10. The action controller is `struct act`
+ * (action_obj.h) and the swim controller `struct player_ctrl`
+ * (player_ctrl.h); the input and boss controllers are below. */
 
 /* The input controller's method table (gInputCtrlVtable), as its calls
  * read it. */

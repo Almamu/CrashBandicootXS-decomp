@@ -12,7 +12,7 @@
  * (docs/headers_plan.md).
  *
  * The knocked controller is a plain 0x10-byte controller (InitCtrl,
- * src/objects/ctrl.c; player.h's `struct ctrl_base`), so its functions
+ * src/objects/ctrl.c; objects.h's `struct ctrl`), so its functions
  * take `void *`. */
 
 #include "core.h"
