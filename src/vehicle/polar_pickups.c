@@ -1,6 +1,7 @@
 #include "core.h"
 #include "match.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "memory.h"
 #include <libgcc.h>
 #include "audio.h"
@@ -211,43 +212,44 @@ asm(".align 2, 0");
  * after `DrawPolarCollectedWumpa` (above) - same `self`
  * object and conventions documented there. */
 
-/* The derived-class field `DestroyPolarCollectedWumpa` reads: how many fruit the
- * object hands out (one `CollectWumpa` call each). */
-struct fruit_actor {
+/* The seek effect (method table gPolarCollectedWumpaVtable). */
+struct polar_collected_wumpa {
     struct actor_self base;
-    u8 unk_54[8];
-    s32 fruit; // 0x5c
+    s32 velX;  // 0x54
+    s32 velY;  // 0x58
+    s32 count; // 0x5C - the spawn parameter: how many fruit DestroyPolarCollectedWumpa
+               // hands out (one `CollectWumpa` call each)
 };
 
 
-/* Same "award `fruit` fruit via `CollectWumpa(gLevelState)`,
+/* Same "award `count` fruit via `CollectWumpa(gLevelState)`,
  * retarget the vtable to the 'dead' state, unlink from the circular
- * `+0x48`/`+0x4c` list, free on `arg1 & 1`" teardown shape as
+ * `prev`/`next` list, free on `arg1 & 1`" teardown shape as
  * `DestroyPolarPlayer` above, but with a plain iteration count instead of a
  * `gPolarQueuedWumpa` global drain. */
 void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
 {
-    MATCH_HOLD_REG(u8 *, self, r4) = selfArg;
+    MATCH_HOLD_REG(struct polar_collected_wumpa *, self, r4) = selfArg;
     u32 arg1r = arg1;
     s32 i;
 
-    *(u8 **)(self + 0x50) = (u8 *)gPolarCollectedWumpaVtable;
+    self->base.vtable = (struct actor_vtable *)gPolarCollectedWumpaVtable;
 
-    for (i = 0; i < ((struct fruit_actor *)self)->fruit; i++) {
+    for (i = 0; i < self->count; i++) {
         CollectWumpa(gLevelState);
     }
 
-    *(u8 **)(self + 0x50) = (u8 *)gActorVtable;
+    self->base.vtable = (struct actor_vtable *)gActorVtable;
 
     {
-        u8 *next = *(u8 **)(self + 0x4c);
-        u8 *prev = *(u8 **)(self + 0x48);
-        *(u8 **)(next + 0x48) = prev;
+        struct actor_self *next = self->base.next;
+        struct actor_self *prev = self->base.prev;
+        next->prev = prev;
     }
     {
-        u8 *prev = *(u8 **)(self + 0x48);
-        u8 *next = *(u8 **)(self + 0x4c);
-        *(u8 **)(prev + 0x4c) = next;
+        struct actor_self *prev = self->base.prev;
+        struct actor_self *next = self->base.next;
+        prev->next = next;
     }
 
     if (arg1r & 1) {
@@ -275,15 +277,6 @@ asm(".align 2, 0");
  * statements earlier, a genuine correctness bug caught by a direct
  * byte compare against the ROM, not just a register-choice cosmetic
  * mismatch. */
-
-/* The seek effect (method table gPolarCollectedWumpaVtable). */
-struct polar_collected_wumpa {
-    struct actor_self base;
-    s32 velX;  // 0x54
-    s32 velY;  // 0x58
-    s32 count; // 0x5C - the spawn parameter; DestroyPolarCollectedWumpa (below)
-               // repeats its teardown drain this many times
-};
 
 void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spawnParam)
 {
@@ -333,13 +326,6 @@ asm(".align 2, 0");
  * animation-reset blocks (the `anim`/`zero1`/`zero2` register trios)
  * store through `*(T *)&self->field` casts: plain member stores let
  * gcc move the zero loads (docs/workflow.md step 7). */
-
-/* `UpdatePolarLifeCrate`'s class adds one field after the common prefix: an
- * object it hands to `MarkSpawnCollected`'s 15-entry list. */
-struct listed_actor {
-    struct actor_self base;
-    void *spawn; // 0x54 - the level spawn record (CreatePolarLifeCrate's 6th argument)
-};
 
 /* On proximity (`IsTouchingPlayer`), accumulates `1` into the shared
  * `gActorList`-targeted accumulator via `QueuePolarWumpa` then fires
@@ -428,7 +414,7 @@ void UpdatePolarQuestionCrate(void *selfArg)
         s32 typeByte;
 
         AddBrokenCrate(gLevelState);
-        typeByte = **(u8 **)((u8 *)self + 0x30);
+        typeByte = *(u8 *)&self->record->index;
 
         if (typeByte == 0x1d) {
             goto case_1d;
@@ -500,7 +486,7 @@ void UpdatePolarLifeCrate(void *selfArg)
             PlaySfx(gAudioContext, 7, 0x100);
             AddBrokenCrate(gLevelState);
             GivePolarPlayerLife(gActorList);
-            MarkSpawnCollected(((struct listed_actor *)self)->spawn);
+            MarkSpawnCollected(((struct polar_life_crate *)self)->spawn);
             self->animIndex = 0x12;
             {
                 MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
@@ -604,7 +590,7 @@ void UpdatePolarNitroCrate(void *selfArg)
     goto tail;
 
 usedState:
-    *(struct vec3_words *)((u8 *)self + 0x38) = *(const struct vec3_words *)&gPolarNitroCrateBox;
+    *(struct vec3_words *)&self->box = *(const struct vec3_words *)&gPolarNitroCrateBox;
 
     if (self->stateTime == 0x14) {
         DetonateNearbyPolarNitros(self);

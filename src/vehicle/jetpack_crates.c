@@ -1,6 +1,7 @@
 #include "core.h"
 #include "match.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "util.h"
 #include <libgcc.h>
 #include "system.h"
@@ -25,7 +26,7 @@
  * are the "type-byte event dispatch" family already characterized by
  * `docs/rom_map.md`: a proximity check (`IsTouchingPlayer`) or a countdown
  * timer at `self+0x54` gates the transition, `PlaySfx(3, 0x100)` always
- * plays first, then a `self+0x30`-relative type byte selects between
+ * plays first, then the record's kind byte (`record->index`) selects between
  * `FreezeLevelClock`/`QueueJetpackWumpa` calls - written as `goto`-chained `if`
  * blocks (not a plain `switch`) to match this family's already-matched
  * sibling `UpdatePolarQuestionCrate` (`polar_pickups.c`), whose last case does
@@ -140,7 +141,7 @@ void UpdateJetpackQuestionCrate(void *selfArg)
         }
         self->base.animTime = kind;
 
-        typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
+        typeByte = *(u8 *)&self->base.record->index;
 
         if (typeByte == 0x15) {
             goto case_15;
@@ -229,7 +230,7 @@ void DamageJetpackQuestionCrate(void *selfArg, s32 delta)
         }
     }
 
-    typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
+    typeByte = *(u8 *)&self->base.record->index;
 
     if (typeByte == 0x15) {
         goto case_15;
@@ -346,7 +347,7 @@ void UpdateJetpackTimeCrate(void *selfArg)
         }
         self->base.animTime = kind;
 
-        typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
+        typeByte = *(u8 *)&self->base.record->index;
 
         if (typeByte == 0x19) {
             goto case_19;
@@ -389,7 +390,7 @@ void UpdateJetpackTimeCrate(void *selfArg)
 
     after_dispatch:
         if (self->child != NULL) {
-            if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
+            if (*(u8 *)&self->base.record->index != 0x1d) {
                 AddBrokenCrate(gLevelState);
             }
             ReleaseJetpackBalloon(self->child);
@@ -435,7 +436,7 @@ void DamageJetpackTimeCrate(void *selfArg, s32 delta)
         }
     }
 
-    typeByte = *(u8 *)(*(u8 **)((u8 *)self + 0x30));
+    typeByte = *(u8 *)&self->base.record->index;
 
     if (typeByte == 0x19) {
         goto case_19;
@@ -478,7 +479,7 @@ case_1d:
 
 after_dispatch:
     if (self->child != NULL) {
-        if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
+        if (*(u8 *)&self->base.record->index != 0x1d) {
             AddBrokenCrate(gLevelState);
         }
         ReleaseJetpackBalloon(self->child);
@@ -683,21 +684,21 @@ void DamageJetpackBalloonCrate(void *selfArg, s32 delta)
 void DestroyJetpackBalloonCrate(void *selfArg, s32 flags)
 {
     struct orbit_actor *self = selfArg;
-    u8 *next;
-    u8 *prev;
+    struct actor_self *next;
+    struct actor_self *prev;
 
     self->base.vtable = (struct actor_vtable *)gActorVtable;
 
     {
-        MATCH_HOLD_REG(u8 *, nextReg, r2) = *(u8 **)((u8 *)self + 0x4c);
-        MATCH_HOLD_REG(u8 *, prevReg, r0) = *(u8 **)((u8 *)self + 0x48);
+        MATCH_HOLD_REG(struct actor_self *, nextReg, r2) = self->base.next;
+        MATCH_HOLD_REG(struct actor_self *, prevReg, r0) = self->base.prev;
 
-        *(u8 **)(nextReg + 0x48) = prevReg;
+        nextReg->prev = prevReg;
     }
 
-    prev = *(u8 **)((u8 *)self + 0x48);
-    next = *(u8 **)((u8 *)self + 0x4c);
-    *(u8 **)(prev + 0x4c) = next;
+    prev = self->base.prev;
+    next = self->base.next;
+    prev->next = next;
 
     if ((flags & 1) != 0) {
         mem_free(self);
@@ -1010,8 +1011,7 @@ void UpdateJetpackRocket(void *selfArg)
         if (self->base.y > self->limitY) {
             self->base.y += self->stepY;
         } else {
-            *(struct vec3_words *)((u8 *)self + 0x38) =
-                *(const struct vec3_words *)&gJetpackRocketBox;
+            *(struct vec3_words *)&self->base.box = *(const struct vec3_words *)&gJetpackRocketBox;
             LaunchJetpackRocket(self);
         }
     }
@@ -1149,19 +1149,19 @@ u8 IsJetpackRocketUnshootable(void *selfArg)
     return self->triggered;
 }
 
-/* Type-byte-gated (`self+0x30`'s type byte `== 0x1f`) proximity check:
- * on trigger, feeds the offset between `x` and the type-byte
- * table's own `+0x20` field, plus `y`, into `PassJetpackRing`, then
+/* Kind-gated (the low byte of `record->index` `== 0x1f`) proximity check:
+ * on trigger, feeds the offset between `x` and the record's
+ * `spawnX`, plus `y`, into `PassJetpackRing`, then
  * latches the one-shot `cued`. Tail-calls `UpdateActor`
  * unconditionally. */
 void UpdateJetpackRing(void *selfArg)
 {
     struct jetpack_ring *self = selfArg;
 
-    if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && (u8)IsTouchingPlayer(self)) {
+    if (*(u8 *)&self->base.record->index == 0x1f && (u8)IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
-        s32 *params = *(s32 **)((u8 *)self + 0x30);
-        s32 x = self->base.x - params[8];
+        struct anim_table_record *record = self->base.record;
+        s32 x = self->base.x - record->spawnX;
         s32 y = self->base.y;
 
         PassJetpackRing(player, x, y);

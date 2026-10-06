@@ -38,7 +38,7 @@ struct anim_table_record {
     u32 index; // 0x00 - equals the record's own slot number in every valid record observed
     // 0x04 - the clip's keyframes (struct anim_frame_record, actor_self.h), no count stored
     struct anim_frame_record *table_A;
-    u32 *table_B; // 0x08 - frame address/offset array, see the comment above struct sprite_frame
+    u32 *table_B; // 0x08 - frame address/offset array, see the comment below
     // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which
     // DrawActor puts in OAM attr 2 (<< 12)
     u8 palette;
@@ -76,7 +76,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  *   - "pool_offset": each entry is a byte offset from the start of the
  *     category family's decompressed sprite sheet
  *     (gPolarSpriteSheet for categories 0-2, gJetpackSpriteSheet for
- *     3-6) to a struct sprite_frame. These frames *are* extracted - see
+ *     3-6) to a struct actor_frame_pixels. These frames *are* extracted - see
  *     graphics/unknown/<sheet>/<entity>/NN.png, one file per frame.
  *
  * entities.json's "addressing_mode" field records which mode each
@@ -90,7 +90,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  * transfer flush routine, FlushVramDmaQueue) - so this is also exactly what
  * graphics/unknown/<sheet>/<entity>/NN.png round-trips to/from (that
  * tool strips/reinserts this same 4-byte header - see tools/framed_gfx.py). */
-struct sprite_frame {
+struct actor_frame_pixels {
     u8 width_tiles;  // 0x00 - always 1, 2, 4, or 8 in every frame observed
     u8 height_tiles; // 0x01 - always 1, 2, 4, or 8 in every frame observed
     u8 pad2;         // 0x02 - always 0x10 in both category families' sheets

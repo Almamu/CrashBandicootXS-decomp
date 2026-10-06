@@ -33,7 +33,7 @@ void DestroyYeti(void)
  * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */
 void CreateYeti(void *arg0)
 {
-    u8 *obj;
+    struct actor_self *obj;
     MATCH_HOLD_REG(u32, size, r0);
     MATCH_HOLD_REG(s32, flags, r1);
     MATCH_HOLD_REG(void **, bcAddr, r5);
@@ -44,15 +44,15 @@ void CreateYeti(void *arg0)
     asm volatile("mov %0, #0x80\n\tlsl %0, %0, #0x18" : "=r"(flags));
     obj = mem_alloc(size, flags);
     {
-        u8 *v0 = (u8 *)gYetiKeyframes;
-        u8 *v1 = (u8 *)gYetiFrames;
+        struct anim_frame_record *v0 = (struct anim_frame_record *)gYetiKeyframes;
+        u32 *v1 = (u32 *)gYetiFrames;
         s32 v2 = 0xf;
 
-        *(u8 **)obj = v0;
-        *(u8 **)(obj + 4) = v1;
-        *(s32 *)(obj + 0x18) = v2;
+        obj->anims = v0;
+        obj->frameOffsets = v1;
+        obj->palette = v2;
     }
-    SetActorAnim((struct actor_self *)obj, 0);
+    SetActorAnim(obj, 0);
     *bcAddr = obj;
 
     gYetiX = 0;

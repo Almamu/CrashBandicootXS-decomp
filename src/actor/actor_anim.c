@@ -72,7 +72,7 @@ void SetActorAnim(struct actor_self *self, s32 idx)
     self->animTimer = duration;
     /* animDone: through the field, the pinned zero in r2 is dropped and
      * a fresh `mov r1, #0` is emitted. */
-    *((u8 *)self + 0x12) = zero1;
+    *(u8 *)&self->animDone = zero1;
     self->animTime = zero2;
 }
 
@@ -102,22 +102,19 @@ asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-/* Advances `self+0x20` (a Q8 fixed-point accumulator, likely a
- * fall/scroll speed) by a fixed `-0x180`/256 per call, then either
- * fires the `self+0x50` trampoline record (arg `3`) if `self+0x12` is
- * set, or tail-calls `UpdateActor(self)` otherwise - the same
- * `+0x50`-rooted `{s16 offset; void *fn}` trampoline convention
- * documented in polar_player_actions.c. */
+/* Moves `self->y` up by `0x180`/256 per call, then either calls the
+ * `destroy` method (arg `3`) once `animDone` is set, or tail-calls
+ * `UpdateActor(self)` otherwise. */
 void UpdatePolarCheckpointText(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
-    *(s32 *)(self + 0x20) += -0x180;
+    self->y += -0x180;
 
-    if (self[0x12] != 0) {
+    if (self->animDone != 0) {
         if (self != NULL) {
-            u8 *mgr = *(u8 **)(self + 0x50);
-            _call_via_r2(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
+            struct actor_vtable *mgr = self->vtable;
+            _call_via_r2((u8 *)self + mgr->destroy.thisOffset, (void *)3, mgr->destroy.fn);
         }
     } else {
         UpdateActor(self);
@@ -372,7 +369,7 @@ asm(".align 2, 0");
  * `DrawPolarCollectedWumpa`'s `0x140` - the two twins differ here. */
 void DrawJetpackCheckpointText(void *selfArg)
 {
-    MATCH_HOLD_REG(u8 *, self, r5) = selfArg;
+    MATCH_HOLD_REG(struct actor_self *, self, r5) = selfArg;
     MATCH_HOLD_REG(s32, x, r4) = 120;
     MATCH_HOLD_REG(s32, y, r6) = 106;
     u8 *frame;
@@ -382,7 +379,7 @@ void DrawJetpackCheckpointText(void *selfArg)
     MATCH_HOLD_REG(s32, h, r1);
     MATCH_HOLD_REG(s32, hShift, r0);
 
-    frame = GetAnimFrameData((struct actor_self *)self);
+    frame = GetAnimFrameData(self);
     w = frame[0];
     wShift = w << 2;
     h = frame[1];
@@ -409,7 +406,7 @@ void DrawJetpackCheckpointText(void *selfArg)
     }
 
     {
-        MATCH_HOLD_REG(s32, attrFlag, r0) = GetAnimFrameAttr((struct actor_self *)self);
+        MATCH_HOLD_REG(s32, attrFlag, r0) = GetAnimFrameAttr(self);
         MATCH_HOLD_REG(s32, a0, r3) = 0xff;
         MATCH_HOLD_REG(s32, xm, r4) = x;
 
@@ -431,19 +428,19 @@ void DrawJetpackCheckpointText(void *selfArg)
     }
 
     {
-        MATCH_HOLD_REG(s32, field24, r4) = *(s32 *)(self + 24);
-        s32 a2 = field24 << 12;
-        s32 field20 = *(s32 *)(self + 20);
+        MATCH_HOLD_REG(s32, palette, r4) = self->palette;
+        s32 a2 = palette << 12;
+        s32 sortKey = self->sortKey;
         MATCH_HOLD_REG(u32, attr2, r2);
 
-        if (field20 & 0x8000) {
+        if (sortKey & 0x8000) {
             a2 |= 0x800;
             {
                 MATCH_HOLD_REG(s32, shifted, r0) = a2 << 16;
                 attr2 = (u32)shifted >> 16;
             }
         } else {
-            MATCH_HOLD_REG(s32, shifted, r0) = field24 << 28;
+            MATCH_HOLD_REG(s32, shifted, r0) = palette << 28;
             attr2 = (u32)shifted >> 16;
         }
         {
@@ -555,20 +552,19 @@ void DestroyJetpackCheckpointText(struct actor_self *self, u32 flags)
 asm(".align 2, 0");
 
 /* A third hidden, unlabelled function (see `IsJetpackCheckpointTextUnshootable` above) -
- * `UpdatePolarCheckpointText`'s near-twin: advances `self+0x24` (a Q8 fixed-point
- * accumulator, `+170`/256 per call this time instead of `-0x180`/256)
- * and either fires the `+0x50` trampoline record if `self+0x12` is set,
- * or tail-calls `UpdateActor(self)` otherwise. */
+ * `UpdatePolarCheckpointText`'s near-twin: advances `self->z` by 170/256
+ * per call instead, and either calls the `destroy` method once `animDone`
+ * is set, or tail-calls `UpdateActor(self)` otherwise. */
 void UpdateJetpackExplosion(void *selfArg)
 {
-    u8 *self = selfArg;
+    struct actor_self *self = selfArg;
 
-    *(s32 *)(self + 0x24) += 170;
+    self->z += 170;
 
-    if (self[0x12] != 0) {
+    if (self->animDone != 0) {
         if (self != NULL) {
-            u8 *mgr = *(u8 **)(self + 0x50);
-            _call_via_r2(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
+            struct actor_vtable *mgr = self->vtable;
+            _call_via_r2((u8 *)self + mgr->destroy.thisOffset, (void *)3, mgr->destroy.fn);
         }
     } else {
         UpdateActor(self);

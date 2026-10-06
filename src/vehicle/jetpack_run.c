@@ -219,8 +219,8 @@ void AllocJetpackPlayerTiles(void *selfArg)
     {
         s32 accum = self->animTime >> 8;
         s32 idx = self->animIndex;
-        u8 *table = (u8 *)self->anims;
-        s16 off = *(s16 *)(table + idx * 3 * 4 + 2);
+        struct anim_frame_record *table = self->anims;
+        s16 off = table[idx].frameIndex;
         s32 pos = off + accum;
         u8 **table2 = (u8 **)self->frameOffsets;
         u8 *rec = table2[pos];

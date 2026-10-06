@@ -1077,7 +1077,7 @@ new mechanism.
 **Follow-up: `InitJetpackPlayer`'s object ties into the meter/gauge and
 icon-renderer infrastructure, not a plain crate/platform - and one
 mischaracterization corrected.** **`AllocJetpackPlayerTiles`** computes, twice,
-`width_tiles*height_tiles*32` (the exact `struct sprite_frame` byte-
+`width_tiles*height_tiles*32` (the exact `struct actor_frame_pixels` byte-
 size formula from `include/actor_anim.h`) via a 12-byte-stride table
 lookup, allocates two sprite-frame-sized tile buffers, and registers
 them into `gJetpackPlayerTiles`/`+4` - the same P1/P2-pair global set

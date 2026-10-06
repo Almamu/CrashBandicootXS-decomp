@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_anim.h"
 #include "vram_pool.h"
+#include "sprite_bank.h"
 #include "hud.h"
 #include "actor.h"
 #include "bosses.h"
@@ -10,9 +11,9 @@
 
 /* Pins the current category's tile-cache slots that every actor part
  * shares - the type-0 sprite family gets 2 slots (7/0xf), the type-1/2
- * family gets 5 (9/0xc/0xe/0xd/8) pulled from two ROM-side sub-tables
- * (entityTable/otherTable below) whose own shapes aren't reversed yet -
- * kept as raw offsets per docs/workflow.md step 7. Finishes by (re)
+ * family gets 5 (9/0xc/0xe/0xd/8): the palettes of a few animations of
+ * sprite banks 35 and 47 (sprite_bank.h). The OBJ tile free list it
+ * resets starts 0x1400 bytes into OBJ VRAM. Finishes by (re)
  * building the category's status-icon OAM row via ConfigureHudParts, gated on
  * whether the category's type is nonzero.
  *
@@ -29,17 +30,17 @@
  * docs/matching/archive/issue-48-0x080291a4-actor.md. */
 void SetupActorVramPool(void)
 {
-    u8 *entityTable;
-    u8 *otherTable;
+    const struct sprite_bank *entityBank;
+    const struct sprite_bank *otherBank;
     struct palette_cache *cache;
-    void *p;
+    const struct sprite_anim *anims;
 
-    InitObjTileFreeList((void *)0x06011400);
+    InitObjTileFreeList(OBJ_VRAM0 + 0x1400);
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
 
-    entityTable = SPRITE_BANK_BASE + 0x1a4;
-    otherTable = entityTable + 0x90;
+    entityBank = (const struct sprite_bank *)SPRITE_BANK_BASE + 35;
+    otherBank = entityBank + 12;
     cache = gPaletteCache;
     FreeUnlockedPaletteSlots(cache);
 
@@ -48,26 +49,21 @@ void SetupActorVramPool(void)
         s32 idx = gActorCategory;
 
         if (*(s32 *)(arr + idx * 0x34) == 0) {
-            p = *(void **)entityTable;
-            BindPaletteSlot(cache, 7, *((u8 *)p + 0x14));
-            p = *(void **)otherTable;
-            BindPaletteSlot(cache, 0xf, *((u8 *)p + 0x4c));
+            anims = entityBank->anims;
+            BindPaletteSlot(cache, 7, anims[0].paletteId);
+            anims = otherBank->anims;
+            BindPaletteSlot(cache, 0xf, anims[2].paletteId);
         } else {
-            u8 *sub;
-
-            p = *(void **)entityTable;
-            BindPaletteSlot(cache, 9, *((u8 *)p + 0x14));
-            p = *(void **)otherTable;
-            BindPaletteSlot(cache, 0xc, *((u8 *)p + 0x4c));
-            p = *(void **)otherTable;
-            sub = (u8 *)p + 0xe0;
-            BindPaletteSlot(cache, 0xe, sub[0x14]);
-            p = *(void **)otherTable;
-            sub = (u8 *)p + 0x8c;
-            BindPaletteSlot(cache, 0xd, sub[0x14]);
-            p = *(void **)otherTable;
-            sub = (u8 *)p + 0x150;
-            BindPaletteSlot(cache, 8, sub[0x14]);
+            anims = entityBank->anims;
+            BindPaletteSlot(cache, 9, anims[0].paletteId);
+            anims = otherBank->anims;
+            BindPaletteSlot(cache, 0xc, anims[2].paletteId);
+            anims = otherBank->anims;
+            BindPaletteSlot(cache, 0xe, anims[8].paletteId);
+            anims = otherBank->anims;
+            BindPaletteSlot(cache, 0xd, anims[5].paletteId);
+            anims = otherBank->anims;
+            BindPaletteSlot(cache, 8, anims[12].paletteId);
         }
     }
 
