@@ -86,13 +86,16 @@ struct bitmap_font *InitFont(struct bitmap_font *selfArg)
     s32 zero;
     struct icon_record **recordAddr;
 
+    // clang-format off
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(recordAddr) : "r"(self) : "r0");
+    // clang-format on
     *recordAddr = (struct icon_record *)gFontVtable;
 
     /* `zero`'s own store (`str r1, [sp]` right before the call) reuses
      * this same zeroed r1 too, instead of materializing a fresh 0 -
      * folded into this same asm block so the compiler can't tell them
      * apart and reload. */
+    // clang-format off
     asm volatile(
         "mov r1, #0x88\n\tlsl r1, r1, #1\n\tadd r2, %1, r1\n\t"
         "add r1, r1, #4\n\tadd r0, %1, r1\n\t"
@@ -106,6 +109,7 @@ struct bitmap_font *InitFont(struct bitmap_font *selfArg)
         : "r"(self)
         : "r0", "r1", "r2", "memory"
     );
+    // clang-format on
 
     CpuSet(&zero, self, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
     return self;

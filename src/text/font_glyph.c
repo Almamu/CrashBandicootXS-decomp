@@ -13,8 +13,7 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 /* `bitmap_font.oam_scratch` viewed as the OAM-shaped draw request
  * AddOamEntry consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X
  * and 2-bit size, attr2's 10-bit tile number. */
-struct glyph_oam
-{
+struct glyph_oam {
     u8 y;
     u8 unk_1:6;
     u8 shape:2;
@@ -83,13 +82,10 @@ struct bitmap_font *InitSmallFont(struct bitmap_font *self)
     self->tiles = (void *)gSmallFontTiles;
     self->glyphTileStride = 2;
     self->glyphRecords = (struct icon_glyph_metrics *)gSmallFontGlyphs;
-    for (i = 0; i <= 0xff; i++)
-    {
+    for (i = 0; i <= 0xff; i++) {
         self->charLookup[i] = 0;
-        for (j = 0; j <= 0x4f; j++)
-        {
-            if (gSmallFontChars[j] == i)
-            {
+        for (j = 0; j <= 0x4f; j++) {
+            if (gSmallFontChars[j] == i) {
                 self->charLookup[i] = j;
                 break;
             }
@@ -114,13 +110,10 @@ struct bitmap_font *InitLargeFont(struct bitmap_font *self)
     self->glyphRecords = (struct icon_glyph_metrics *)gLargeFontGlyphs;
     self->tiles = (void *)gLargeFontTiles;
     ((struct glyph_oam *)self->oam_scratch)->size = 1;
-    for (i = 0; i <= 0xff; i++)
-    {
+    for (i = 0; i <= 0xff; i++) {
         self->charLookup[i] = 0;
-        for (j = 0; j <= 0x4b; j++)
-        {
-            if (gLargeFontChars[j] == i)
-            {
+        for (j = 0; j <= 0x4b; j++) {
+            if (gLargeFontChars[j] == i) {
                 self->charLookup[i] = j;
                 break;
             }
@@ -163,6 +156,7 @@ void FontPutChar(struct bitmap_font *self, u32 charByte)
     MATCH_HOLD_REG(u32 *, destAddr, r2);
     MATCH_HOLD_REG(u32, offset, r0);
 
+    // clang-format off
     asm volatile(
         "add %0, %3, #0\n\t"
         "lsl %2, %2, #0x18\n\t"
@@ -170,6 +164,7 @@ void FontPutChar(struct bitmap_font *self, u32 charByte)
         : "=r"(s), "=r"(c), "+r"(raw)
         : "r"(self)
     );
+    // clang-format on
     if (c == '\n')
         goto newline;
     if (c != ' ')
@@ -185,6 +180,7 @@ newline:
         MATCH_HOLD_REG(u32 *, posXAddr, r1);
         MATCH_HOLD_REG(u32 *, field118Addr, r0);
 
+        // clang-format off
         asm volatile(
             "mov r2, #0x88\n\tlsl r2, r2, #1\n\tadd %0, %2, r2\n\t"
             "add r2, r2, #8\n\tadd %1, %2, r2"
@@ -192,14 +188,17 @@ newline:
             : "r"(s)
             : "r2"
         );
+        // clang-format on
         *posXAddr = *field118Addr;
     }
+    // clang-format off
     asm volatile(
         "mov r0, #0x8a\n\tlsl r0, r0, #1\n\tadd %0, %2, r0\n\t"
         "add r0, r0, #8"
         : "=r"(destAddr), "=r"(offset)
         : "r"(s)
     );
+    // clang-format on
 tail:
     {
         MATCH_HOLD_REG(u32 *, fieldAddr, r1) = (u32 *)((u8 *)s + offset);

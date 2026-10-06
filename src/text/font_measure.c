@@ -12,10 +12,8 @@ s32 FontMeasureText(struct bitmap_font *self, u8 *text)
     u32 cur = 0;
     u8 c;
 
-    for (; (c = *text) != 0; text++)
-    {
-        switch (c)
-        {
+    for (; (c = *text) != 0; text++) {
+        switch (c) {
         case ' ':
             cur += self->spaceWidth;
             break;

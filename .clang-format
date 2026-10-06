@@ -1,0 +1,56 @@
+# The C style (#572); CONTRIBUTING.md ("Code style") describes it. Run it
+# through tools/format.py, which also protects multi-line asm statements,
+# and use clang-format 21: other major versions format some constructs
+# differently from CI.
+#
+# The options were picked to match the style most of the tree already used
+# (Linux-style braces, 4-space indent, `type *name`, unindented case labels)
+# with the least churn. Formatting must never change the object code, so:
+# include order is left alone, macro bodies are left alone (the matching
+# macros in include/match.h, BOX_ADDR, ...), and comments and string
+# literals are never reflowed.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
+# Function braces on their own line, everything else (if/for/while/switch,
+# struct/enum/union, else) cuddled.
+BreakBeforeBraces: Linux
+IndentCaseLabels: false
+# A `case N:` with a block body puts the block on the next line, indented.
+IndentCaseBlocks: true
+
+PointerAlignment: Right
+DerivePointerAlignment: false
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: false
+# `{ 1, 2, 3 }`, with spaces inside the braces.
+Cpp11BracedListStyle: false
+# `u8 shape:2;`
+BitFieldColonSpacing: None
+
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+
+MaxEmptyLinesToKeep: 2
+IndentPPDirectives: None
+AlignEscapedNewlines: Right
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+
+# Never change what the compiler sees beyond whitespace.
+SortIncludes: Never
+IncludeBlocks: Preserve
+SkipMacroDefinitionBody: true
+ReflowComments: false
+BreakStringLiterals: false

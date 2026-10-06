@@ -216,6 +216,53 @@ that one site, with a comment saying why. agbcc 2.9 has no
 
 Never remove `-Werror` or a flag from `WARNFLAGS` to get a change in.
 
+### Code style
+
+The C style is set by `.clang-format` (#572), and `.editorconfig` gives
+editors the basics (4 spaces, LF, final newline, 100 columns):
+
+- 4-space indent, no tabs, 100 columns.
+- Linux-style braces: a function's `{` on its own line; `if`/`for`/
+  `while`/`switch`/`do`, `else` and `struct`/`enum`/`union` keep it on
+  the same line (`} else {`). No one-line functions or `if` bodies.
+- `case` labels at the `switch`'s indent. A case with a block body puts
+  the `{` on the next line, indented one level.
+- `type *name`, `(u8 *)p` casts with no space after them, `{ 1, 2 }`
+  initializers, `u8 shape:2` bitfields.
+- Include order, macro bodies (`#define`), comments and string literals
+  are left exactly as written.
+
+Format with the script rather than calling clang-format directly:
+
+```
+python3 tools/format.py               # format the formatted paths in place
+python3 tools/format.py src/foo       # format another file or directory
+python3 tools/format.py --check       # what CI runs; changes nothing
+```
+
+It needs **clang-format 21** (CI uses 21.1.8): another major version
+formats some constructs differently, and the script refuses to run with
+one. `pip install clang-format==21.1.8` (or `pipx install`) or
+`nix shell nixpkgs#clang-tools` gives you one; point `CLANG_FORMAT` at
+it if it isn't the `clang-format` on your PATH.
+
+Before formatting, the script wraps every multi-line `asm(...)`
+statement (and every one-line one longer than 100 columns) in
+`// clang-format off` / `// clang-format on`, so asm strings and their
+operand layout stay as written. Do the same by hand for anything else
+whose layout is the point, such as a table aligned in columns.
+
+The tree is being formatted a few directories at a time. `FORMATTED` in
+`tools/format.py` lists the paths done so far, and CI fails a PR that
+leaves a file there unformatted; run `tools/format.py` before
+committing changes to them. Formatting only moves whitespace and line
+breaks, so the objects stay identical (`__LINE__` only reaches
+`COMPILE_TIME_ASSERT`'s typedef names, which emit nothing); still run
+the two clean checks above. A trailing comment that would push its line
+past 100 columns makes clang-format split the declaration in front of
+it instead (`void *` on one line, the name on the next), so move a long
+comment onto its own line above the member before formatting.
+
 ## Opening the PR
 
 Say what the PR changes and how you verified it (the two clean checks
