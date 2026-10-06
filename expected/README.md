@@ -38,10 +38,16 @@ Thumb code, and one for the ARM code of the IWRAM image:
 `git hash-object` (for `legacy.s`, of the exact line range extracted -
 diffed directly against `git show 8b090ca:asm/code.s`, not just hashed).
 
-**Never edit either file.** They aren't meant to reflect current
-understanding of the code (that's what `src/*.c` and the remaining
+**Never edit any of the three `.s` files.** They aren't meant to reflect
+current understanding of the code (that's what `src/*.c` and the remaining
 `asm/*.s` files are for) - they exist solely as unchanging comparison
-baselines. If one turns out to be wrong or incomplete somehow, regenerate
-it from the same commit rather than hand-patching it; use
-`expected/corrections.txt` for the small, known, expected discrepancies
-instead (see `docs/decomp_dev.md`).
+baselines. Why it matters: the progress report scores the build against
+them, so a target edited to look like the current source would score
+anything as matched, and the report would stop proving the code is
+byte-exact. If one turns out to be wrong or incomplete somehow, regenerate
+it from the same commit (or, for `iwram.s`, the same ROM bytes) rather
+than hand-patching it; use `expected/corrections.txt` for the small,
+known, expected discrepancies instead (see `docs/decomp_dev.md`).
+`corrections.txt` is the one file here that changes: every rename of a
+symbol the targets mention adds or updates its `rename` line (see
+[`docs/naming.md`](../docs/naming.md), "What renaming touches").

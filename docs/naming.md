@@ -102,9 +102,10 @@ honest placeholder, since other code and docs will start depending on it.
 ## What renaming touches (checklist)
 
 1. The function's own definition and prototype.
-2. Every `extern` declaration and call site, across both `src/*.c` and any
-   remaining `asm/*.s` file that still calls it via `bl <name>`/
-   `.4byte <name>`.
+2. Its declaration in the owning header (see
+   [`docs/headers_plan.md`](./headers_plan.md)), any codegen alias's
+   `asm("<name>")` label, and every reference: `src/`, `lib/`, `asm/*.s`
+   (`bl <name>`/`.4byte <name>`), `ldscript.txt` and `sym_*.txt`.
 3. `docs/matching.md`'s per-function entry.
 4. `docs/status/<system>.md`'s matched-function list.
 5. If the function is covered by `expected/code_3.s` or `expected/legacy.s`

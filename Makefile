@@ -12,18 +12,19 @@ OBJCOPY  := $(PREFIX)objcopy
 
 GFX := tools/gbagfx/gbagfx
 GRIT := tools/grit/grit
-AIF := tools/aif2pcm/aif2pcm
-MID := $(abspath tools/mid2agb/mid2agb)
-SCANINC := tools/scaninc/scaninc
-PREPROC := tools/preproc/preproc
-RAMSCRGEN := tools/ramscrgen/ramscrgen
-FIX := tools/gbafix/gbafix
 
 CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O2 -fhex-asm  -fprologue-bugfix
 # The libraries' public headers (lib/*/include) are on the -I path, so
 # game code includes them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
 CPPFLAGS := -I tools/agbcc/include -iquote include $(patsubst %,-I %,$(wildcard lib/*/include)) -nostdinc -undef
 ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork -I asminclude
+
+# Header dependency tracking: the preprocess step of every C object also
+# writes a make fragment (foo.o -> foo.d) listing the headers it read, and
+# the .d files are included at the end of this Makefile, so editing a
+# header rebuilds exactly the objects that include it. -MP adds an empty
+# rule per header so deleting or renaming one doesn't break the build.
+DEPFLAGS = -MMD -MP -MF $(@:.o=.d) -MT $@
 
 #### Custom flags to alter compilation output ####
 ifeq ($(NON_MATCHING),1)
@@ -91,7 +92,9 @@ LIBAGBSYSCALL_OBJS := $(LIB_BUILDDIR)/libagbsyscall/libagbsyscall.o
 LIB_OBJS := $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS) $(LIBAGBSYSCALL_OBJS)
 
 OBJS := $(C_OBJS) $(LIB_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
-OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(OBJS))
+
+# The .d files the C objects' preprocess step writes (see DEPFLAGS).
+DEPS := $(C_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=.d)
 
 include graphics.mk
 include levels.mk
@@ -142,7 +145,7 @@ $(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
 	python3 tools/sfx_table.py $@
 
 clean:
-	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS) $(LIB_C_ASMS) $(LIBGCC2_ASMS)
+	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS) $(LIB_C_ASMS) $(LIBGCC2_ASMS) $(DEPS)
 
 tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
@@ -353,17 +356,17 @@ $(ARM_OBJS): CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O2 -fomit-f
 
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
+	$(CPP) $(CPPFLAGS) $(DEPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
 
 $(LIB_BUILDDIR)/%.o : $(LIB_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/$*.s
+	$(CPP) $(CPPFLAGS) $(DEPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(LIB_BUILDDIR)/$*.s
 
 $(LIBGCC2_OBJS): $(LIB_BUILDDIR)/libgcc/%.o: $(LIB_SUBDIR)/libgcc/libgcc2.c $(LIB_SUBDIR)/libgcc/libgcc2_udivmoddi4.h
 	@mkdir -p $(dir $@)
-	$(CPP) $(CPPFLAGS) -DL$* $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/libgcc/$*.s
+	$(CPP) $(CPPFLAGS) $(DEPFLAGS) -DL$* $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/libgcc/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(LIB_BUILDDIR)/libgcc/$*.s
 
 $(LIB1FUNCS_OBJS): $(LIB_BUILDDIR)/libgcc/%.o: $(LIB_SUBDIR)/libgcc/lib1funcs.s
@@ -385,3 +388,5 @@ $(GFX):
 
 $(GRIT):
 	$(MAKE) -C tools/grit
+
+-include $(DEPS)
