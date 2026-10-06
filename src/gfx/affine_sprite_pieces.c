@@ -30,24 +30,24 @@
 
 struct affine_part {
     u8 unk_00[0x18];
-    u8 *vtable;                 // 0x18
+    u8 *vtable; // 0x18
     u8 unk_1C[4];
     const struct sprite_bank *keyframes; // 0x20 - was a `struct kf_record **` view
     u8 unk_24[4];
-    u8 gfxMode:2;               // 0x28
+    u8 gfxMode:2; // 0x28
     u8 mosaic:1;
     u8 colorMode:1;
     u8 mirrorX:1;
     u8 mirrorY:1;
     u8 flagsHi:2;
-    u8 palette:4;               // 0x29
+    u8 palette:4; // 0x29
     u8 paletteHi:4;
     u8 unk_2A[3];
-    u8 frame;                   // 0x2D
+    u8 frame; // 0x2D
     u8 unk_2E[2];
-    s32 tick;                   // 0x30
+    s32 tick; // 0x30
     u8 unk_34[8];
-    u16 scale;                  // 0x3C
+    u16 scale; // 0x3C
 };
 
 /* The loop tests the 0x28 flag bits as sign tests (`lsl #26; cmp #0;
@@ -219,5 +219,6 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    UploadObjVram(gObjVramCursor, (void *)(GetSpriteTileBase(part) + (info->u.packed & 0xffffff)), total);
+    UploadObjVram(gObjVramCursor, (void *)(GetSpriteTileBase(part) + (info->u.packed & 0xffffff)),
+                  total);
 }

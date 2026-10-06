@@ -347,8 +347,8 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             continue;
         q = (u8 *)&p->rx[p->field_2c - 4];
         ok = 0;
-        if (LINK_NIB(&q[1]).lo == LINK_NIB(&q[0]).hi
-         || LINK_NIB(&q[1]).lo == ((LINK_NIB(&q[0]).hi - 1) & 0xf)) {
+        if (LINK_NIB(&q[1]).lo == LINK_NIB(&q[0]).hi ||
+            LINK_NIB(&q[1]).lo == ((LINK_NIB(&q[0]).hi - 1) & 0xf)) {
             if (LINK_NIB(&q[1]).hi <= 4) {
                 /* A u8 against a u16: the compare is done in HImode, so
                  * `lo`'s zero-extension is emitted at the compare (the

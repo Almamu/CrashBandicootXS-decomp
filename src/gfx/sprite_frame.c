@@ -17,11 +17,11 @@
  * MEMORY_STATUS_USED (1) from memory.h, so it gets its own constant
  * rather than reusing that one. */
 struct vram_tile_block {
-    void *addr;                    // 0x00
-    u16 size;                       // 0x04
-    u16 status;                      // 0x06
-    struct vram_tile_block *next;      // 0x08
-    struct vram_tile_block *prev;       // 0x0C
+    void *addr;                   // 0x00
+    u16 size;                     // 0x04
+    u16 status;                   // 0x06
+    struct vram_tile_block *next; // 0x08
+    struct vram_tile_block *prev; // 0x0C
 };
 
 #define VRAM_TILE_BLOCK_FREE 0
@@ -238,6 +238,7 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
     MATCH_HOLD_REG(struct vram_tile_block *, cur, r3);
     void *result;
 
+    // clang-format off
     asm volatile(
         "ldr r0, =gVramTileBlockRover\n"
         "ldr r1, [r0]\n"
@@ -293,6 +294,7 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
         : "r"(requestedSize)
         : "r0", "r1", "r2", "r5", "cc", "memory"
     );
+    // clang-format on
 
     cur->status = VRAM_TILE_BLOCK_USED;
     *roverSlot = cur->next;
@@ -416,7 +418,8 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
         combined = (combined & 0x0000FFFF) | y;
         attr01 &= 0xCFFFFFFF;
 
-        if (gSpriteAffineQueueCount == 0 || combined != gSpriteAffineQueue[gSpriteAffineQueueCount - 1]) {
+        if (gSpriteAffineQueueCount == 0 ||
+            combined != gSpriteAffineQueue[gSpriteAffineQueueCount - 1]) {
             gSpriteAffineQueue[gSpriteAffineQueueCount] = combined;
             gSpriteAffineQueueCount++;
         }

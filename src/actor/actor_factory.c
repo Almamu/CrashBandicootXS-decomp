@@ -82,10 +82,9 @@ static inline struct actor_self *AllocActor(u32 size)
 
 /* A spawner-linked actor (CreateActor kinds 8/35): remembers the spawn
  * record that created it. */
-struct actor_tracked
-{
+struct actor_tracked {
     struct actor_self base;
-    void *spawn;                // 0x54
+    void *spawn; // 0x54
 };
 
 struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
@@ -93,12 +92,12 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     x += gActorAnimTable[kind].spawnX;
     y += gActorAnimTable[kind].spawnY;
 
-    switch (kind)
-    {
+    switch (kind) {
     case 9:
         NEW_CB34_ACTOR(0x54, REC_AT(kind), gPolarAkuAkuCrateVtable);
     case 3:
-        return CreatePolarCheckpointCrate(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
+        return CreatePolarCheckpointCrate(AllocActor(0x54), gActorAnimTable + kind,
+                                          gActorAnimTable[kind].spawnX, y, z);
     case 5:
     case 6:
     case 7:
@@ -110,7 +109,8 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 22:
         return CreatePolarLauncher(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
     case 12:
-        return CreatePolarBoostPad((struct actor_once *)(AllocActor(0x58)), gActorAnimTable + kind, x, y, z);
+        return CreatePolarBoostPad((struct actor_once *)(AllocActor(0x58)), gActorAnimTable + kind,
+                                   x, y, z);
     case 24:
         return CreatePolarPenguin(AllocActor(0x68), gActorAnimTable + kind, x, y, z, spawn);
     case 28:
@@ -119,14 +119,12 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 31:
         NEW_CB34_ACTOR(0x54, REC_AT(kind), gPolarQuestionCrateVtable);
     case 35:
-        if ((u8)IsSpawnCollected(spawn))
-        {
+        if ((u8)IsSpawnCollected(spawn)) {
             NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gPolarQuestionCrateVtable);
         }
         NEW_CB34_TRACKED_ACTOR(REC_AT(kind), gPolarLifeCrateVtable);
     case 8:
-        if ((u8)IsSpawnCollected(spawn))
-        {
+        if ((u8)IsSpawnCollected(spawn)) {
             NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gPolarQuestionCrateVtable);
         }
         NEW_CB34_TRACKED_ACTOR(REC_AT(kind), gPolarLifeCrateVtable);
@@ -141,19 +139,23 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 20:
         return CreatePolarIcicle(AllocActor(0x54), (u8 *)(gActorAnimTable + kind), x, y, z);
     case 25:
-    {
-        struct actor_self *self = CreatePolarGoal(AllocActor(0x54), gActorAnimTable + 26, gActorAnimTable[26].spawnX, y, z);
+        {
+            struct actor_self *self = CreatePolarGoal(AllocActor(0x54), gActorAnimTable + 26,
+                                                      gActorAnimTable[26].spawnX, y, z);
 
-        SET_ANIM(self, 1);
-        return CreatePolarGoal(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
-    }
+            SET_ANIM(self, 1);
+            return CreatePolarGoal(AllocActor(0x54), gActorAnimTable + kind,
+                                   gActorAnimTable[kind].spawnX, y, z);
+        }
     case 13:
-    {
-        struct actor_self *self = sub_802CE38(AllocActor(0x54), gActorAnimTable + 14, gActorAnimTable[14].spawnX, y, z);
+        {
+            struct actor_self *self = sub_802CE38(AllocActor(0x54), gActorAnimTable + 14,
+                                                  gActorAnimTable[14].spawnX, y, z);
 
-        SET_ANIM(self, 1);
-        return sub_802CE38(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
-    }
+            SET_ANIM(self, 1);
+            return sub_802CE38(AllocActor(0x54), gActorAnimTable + kind,
+                               gActorAnimTable[kind].spawnX, y, z);
+        }
     case 2:
         NEW_BASE_ACTOR(REC_AT(kind), gRiderlessPolarVtable);
     case 36:
@@ -191,8 +193,7 @@ void ConstructAnimTableState(struct anim_table_record *table, s32 z)
     gActorList = ConstructActorPart(AllocActor(0x54), gActorAnimTable, z);
 }
 
-struct actor_spawn
-{
+struct actor_spawn {
     u8 kind;
     u8 altKind;
     u8 bonusKind;
@@ -206,16 +207,14 @@ struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffse
 {
     u8 kind = spawn->kind;
 
-    if (gLevelState->timeTrial != 0)
-    {
+    if (gLevelState->timeTrial != 0) {
         kind = spawn->altKind;
         if (kind == 11)
             return NULL;
-        if (kind == 3 || kind == 8 || kind == 28 || kind == 29 || kind == 30 || kind == 31 || kind == 35)
+        if (kind == 3 || kind == 8 || kind == 28 || kind == 29 || kind == 30 || kind == 31 ||
+            kind == 35)
             kind = 1;
-    }
-    else if (useBonus)
-    {
+    } else if (useBonus) {
         kind = spawn->bonusKind;
     }
     if (kind == 0 || kind == 32 || kind == 33 || kind == 34 || kind == 62)
@@ -228,12 +227,9 @@ struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table
     InitActorPart(self, rec, 0, z != 0 ? 0x2800 : -0x5000, z);
     self->vtable = (struct actor_vtable *)gPolarPlayerVtable;
     AllocPolarPlayerTiles(self);
-    if (self->z != 0)
-    {
+    if (self->z != 0) {
         ACTOR_SET_STATE(self, 0xD, 0xC);
-    }
-    else
-    {
+    } else {
         s32 idx = 8;
 
         self->animIndex = idx;

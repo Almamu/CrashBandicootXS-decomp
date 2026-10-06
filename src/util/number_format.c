@@ -83,7 +83,8 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
     buf[len] = 0;
 
     i = 0;
-    while (buf[i] != 0) i++;
+    while (buf[i] != 0)
+        i++;
     j = i - 1;
     k = 0;
     while (k < j) {
@@ -145,8 +146,7 @@ asm(".align 2, 0");
  * has sitting in a register from an unrelated preceding comparison,
  * rather than reusing it - plain C naturally reuses the already-live
  * value instead. */
-u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
-                s32 *charsConsumedPtr)
+u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsConsumedPtr)
 {
     u8 buf[0x20];
     u8 *fmtStart;
@@ -191,11 +191,10 @@ u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
         default:
             goto skipSub;
         }
-doCall:
+    doCall:
         digitCount = itoa(v, bufp, base);
         width -= digitCount;
-skipSub:
-        ;
+    skipSub:;
     }
     width -= 1;
 
@@ -219,7 +218,7 @@ skipSub:
         *dstp = ch;
         srcp++;
         dstp++;
-check:
+    check:
         ch = *srcp;
     } while (ch != 0);
     {

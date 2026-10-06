@@ -16,15 +16,15 @@
 
 struct oam_part {
     u8 unk_00[0x18];
-    u8 *vtable;                 // 0x18
+    u8 *vtable; // 0x18
     u8 unk_1C[0xC];
-    u8 gfxMode:2;               // 0x28
+    u8 gfxMode:2; // 0x28
     u8 mosaic:1;
     u8 colorMode:1;
     u8 mirrorX:1;
     u8 mirrorY:1;
     u8 flagsHi:2;
-    u8 palette:4;               // 0x29
+    u8 palette:4; // 0x29
     u8 paletteHi:4;
 };
 
@@ -102,5 +102,6 @@ void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    UploadObjVram(gObjVramCursor, (void *)(GetSpriteTileBase(part) + (info->u.packed & 0xffffff)), total);
+    UploadObjVram(gObjVramCursor, (void *)(GetSpriteTileBase(part) + (info->u.packed & 0xffffff)),
+                  total);
 }

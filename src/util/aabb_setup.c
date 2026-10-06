@@ -52,9 +52,13 @@ void DestroyLargeFont(void *self, u32 flags)
 {
     void **addr;
 
+    // clang-format off
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
+    // clang-format on
     *addr = (void *)gLargeFontVtable;
+    // clang-format off
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
+    // clang-format on
     *addr = (void *)gFontVtable;
     if (flags & 1) {
         OperatorDelete(self);
@@ -66,9 +70,13 @@ void DestroySmallFont(void *self, u32 flags)
 {
     void **addr;
 
+    // clang-format off
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
+    // clang-format on
     *addr = (void *)gSmallFontVtable;
+    // clang-format off
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
+    // clang-format on
     *addr = (void *)gFontVtable;
     if (flags & 1) {
         OperatorDelete(self);

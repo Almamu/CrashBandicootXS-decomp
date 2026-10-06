@@ -741,6 +741,7 @@ void DrawSaveMenuMain(struct save_menu *self)
     MATCH_HOLD_REG(s32, label, r6);
     MATCH_HOLD_REG(struct bitmap_font *, mgr, r4);
 
+    // clang-format off
     asm volatile(
         "ldr r1, =gSmallFont\n"
         "mov %0, r1\n"
@@ -748,6 +749,7 @@ void DrawSaveMenuMain(struct save_menu *self)
         :
         : "r1"
     );
+    // clang-format on
 
     /* `i`/`y` are kept as genuinely-used C locals (the `for` loop's own
      * compare/increment) rather than folded into the asm text below -
@@ -761,6 +763,7 @@ void DrawSaveMenuMain(struct save_menu *self)
      * positionally below. */
     for (; i <= 4; i++) {
         /* %0 = mgr, %1 = i, %2 = self, %3 = mgrAddr */
+        // clang-format off
         asm volatile(
             "mov r2, %2\n"
             "ldr r0, [r2, #0x10]\n"
@@ -787,8 +790,10 @@ void DrawSaveMenuMain(struct save_menu *self)
             : "r" (i), "r" (selfReg), "r" (mgrAddr)
             : "r0", "r1", "r2", "r3", "r12", "lr", "cc", "memory"
         );
+        // clang-format on
 
         /* %0 = mgr, %1 = label, %2 = y, %3 = i, %4 = mgrAddr */
+        // clang-format off
         asm volatile(
             "mov r2, %4\n"
             "ldr %0, [r2]\n"
@@ -843,6 +848,7 @@ void DrawSaveMenuMain(struct save_menu *self)
             : "r" (y), "r" (i), "r" (mgrAddr)
             : "r0", "r1", "r2", "r3", "r5", "r12", "lr", "cc", "memory"
         );
+        // clang-format on
 
         y += 0xa;
     }
@@ -858,6 +864,7 @@ void DrawSaveMenuMain(struct save_menu *self)
      * stack slot the ROM's own `sub sp, #4`/`add sp, #4` frame does. */
     {
         u8 flag;
+        // clang-format off
         asm volatile(
             "mov r1, sp\n"
             "movs r0, #0\n"
@@ -871,5 +878,6 @@ void DrawSaveMenuMain(struct save_menu *self)
             : "r" (selfReg), "r" (&flag)
             : "r0", "r1", "r2", "r3", "r12", "lr", "cc", "memory"
         );
+        // clang-format on
     }
 }

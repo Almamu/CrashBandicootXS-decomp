@@ -73,7 +73,8 @@
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 
 /* `LaunchHarmfulEffectPart` (enemy_ctrl.c), inlined. */
-static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, struct ctrl_target *f)
+static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e,
+                                            struct ctrl_target *f)
 {
     struct ctrl_target *obj = LaunchEffectPart(gEntitySpawner, a, b, c, d, e, (struct fx_part *)f);
     obj->visible = 1;
@@ -85,9 +86,10 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
 {
     switch (self->mode) {
     case 0:
-        if (self->attackTime > 0
-            && __modsi3(gRoomFrameCount + (self->idleTime + self->attackTime) * 2 - self->cycleOffset - self->idleTime,
-                           self->idleTime + self->attackTime) == 0) {
+        if (self->attackTime > 0 &&
+            __modsi3(gRoomFrameCount + (self->idleTime + self->attackTime) * 2 - self->cycleOffset -
+                         self->idleTime,
+                     self->idleTime + self->attackTime) == 0) {
             if (self->anims[3] != 8)
                 SetEnemyAnimMode(self, 3);
             else
@@ -100,9 +102,9 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
         }
         break;
     case 4:
-        if (self->idleTime > 0
-            && __modsi3(gRoomFrameCount + self->idleTime + self->attackTime - self->cycleOffset,
-                           self->idleTime + self->attackTime) == 0) {
+        if (self->idleTime > 0 &&
+            __modsi3(gRoomFrameCount + self->idleTime + self->attackTime - self->cycleOffset,
+                     self->idleTime + self->attackTime) == 0) {
             if (self->anims[5] != 8)
                 SetEnemyAnimMode(self, 5);
             else

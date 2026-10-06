@@ -45,8 +45,7 @@ void UpdateHudBoss(struct hud_counter *self)
     DrawHudPart(part, 0, 0);
 
     count = GetBossHealth(gLevelState);
-    if (count > 0)
-    {
+    if (count > 0) {
         struct hud_digit_part *second = &self->parts[23];
 
         SetPartPos(gHudPartPositions[23].x, gHudPartPositions[23].y, second);
@@ -72,8 +71,7 @@ void UpdateHudClock(struct hud_counter *self)
     struct hud_digit_part *parts;
 
     gHudSlideOffset = 0;
-    if (self->shownMinutes != GetClockMinutes(gLevelState))
-    {
+    if (self->shownMinutes != GetClockMinutes(gLevelState)) {
         s32 f;
 
         self->shownMinutes = GetClockMinutes(gLevelState);
@@ -83,8 +81,7 @@ void UpdateHudClock(struct hud_counter *self)
         f = __umodsi3(self->shownMinutes, 10);
         CLAMP_FRAME(&parts[15], parts[15].anim_index, f);
     }
-    if (self->shownSeconds != GetClockSeconds(gLevelState))
-    {
+    if (self->shownSeconds != GetClockSeconds(gLevelState)) {
         s32 f;
 
         self->shownSeconds = GetClockSeconds(gLevelState);
@@ -94,8 +91,7 @@ void UpdateHudClock(struct hud_counter *self)
         f = __umodsi3(self->shownSeconds, 10);
         CLAMP_FRAME(&parts[18], parts[18].anim_index, f);
     }
-    if (self->shownTenths != GetClockTenths(gLevelState))
-    {
+    if (self->shownTenths != GetClockTenths(gLevelState)) {
         s32 f;
 
         self->shownTenths = f = GetClockTenths(gLevelState);

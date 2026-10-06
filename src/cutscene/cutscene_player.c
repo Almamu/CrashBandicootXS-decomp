@@ -72,37 +72,34 @@
  * docs/matching/archive/game-loop-old-agbcc.md. */
 
 /* The room descriptor the streamer reads its tile map from. */
-struct stream_source
-{
-    u16 *map;                   // 0x00 - width x height tile ids
-    s32 assetOffset;            // 0x04 - this layer's section in the level asset
+struct stream_source {
+    u16 *map;        // 0x00 - width x height tile ids
+    s32 assetOffset; // 0x04 - this layer's section in the level asset
     u8 unk_08[0xE];
-    u16 width;                  // 0x16 - in tiles
-    u16 height;                 // 0x18
-    u16 widthTiles;             // 0x1A - 8px tiles, cached by SetBgStreamerSource
-    u16 heightTiles;            // 0x1C
+    u16 width;       // 0x16 - in tiles
+    u16 height;      // 0x18
+    u16 widthTiles;  // 0x1A - 8px tiles, cached by SetBgStreamerSource
+    u16 heightTiles; // 0x1C
 };
 
 /* The streamer's method table (gBgStreamerVtable). */
-struct streamer_vtable
-{
+struct streamer_vtable {
     u8 unk_00[8];
     struct bg_layer_method destroy; // 0x08 - called with 3 by DestroyBgLayerBase
 };
 
 /* The ring-buffer background streamer (see this file's header comment). */
-struct bg_streamer
-{
+struct bg_streamer {
     struct stream_source *source; // 0x00
-    u16 *records;               // 0x04 - decoder record table
-    u8 *ring;                   // 0x08 - 0x1000-byte 4x4-block ring buffer
-    s32 tileX;                  // 0x0C
-    s32 tileY;                  // 0x10
-    u8 subX;                    // 0x14 - mod-4 block of the left edge
-    u8 subY;                    // 0x15 - mod-4 block of the top edge
+    u16 *records;                 // 0x04 - decoder record table
+    u8 *ring;                     // 0x08 - 0x1000-byte 4x4-block ring buffer
+    s32 tileX;                    // 0x0C
+    s32 tileY;                    // 0x10
+    u8 subX;                      // 0x14 - mod-4 block of the left edge
+    u8 subY;                      // 0x15 - mod-4 block of the top edge
     u8 pad_16[2];
-    s32 widthTiles;             // 0x18 - the source's widthTiles
-    s32 heightTiles;            // 0x1C
+    s32 widthTiles;                 // 0x18 - the source's widthTiles
+    s32 heightTiles;                // 0x1C
     struct streamer_vtable *vtable; // 0x20
 };
 
@@ -141,8 +138,7 @@ void RunCutscenePlayer(struct cutscene_player *self)
         t->marginX = b;
         limit = __udivsi3(self->box.h, t->lineHeight);
     }
-    for (i = 0; i < self->count; i++)
-    {
+    for (i = 0; i < self->count; i++) {
         u8 res = 1;
 
         ShowSlidePicture(self, i);
@@ -151,21 +147,16 @@ void RunCutscenePlayer(struct cutscene_player *self)
         WaitForVBlank();
         CommitOamBuffer(*oamp);
         BeginSlide(self, i);
-        if (self->pages[i].count == 0)
-        {
+        if (self->pages[i].count == 0) {
             res = WaitForKeyPress(self->slides[i]->wait, self->slides[i]->buttons, 9);
-        }
-        else
-        {
+        } else {
             s32 j;
 
-            for (j = 0; j < self->pages[i].count && res == 1; j++)
-            {
+            for (j = 0; j < self->pages[i].count && res == 1; j++) {
                 u8 *str = (u8 *)self->pages[i].strings[j];
                 s32 pos = 0;
 
-                while (str[pos] != 0 && res == 1)
-                {
+                while (str[pos] != 0 && res == 1) {
                     pos += DrawWrappedText(str + pos, self->font, &self->box, limit, 1);
                     res = WaitForKeyPress(self->slides[i]->wait, self->slides[i]->buttons, 9);
                 }
@@ -226,26 +217,21 @@ void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
     budget = 0x7F;
     written = 0;
 
-    do
-    {
+    do {
         u16 token = *src;
         u16 n = *(u8 *)src;
 
         src++;
-        if (token & 0x8000)
-        {
+        if (token & 0x8000) {
             u16 value = *src++;
 
             budget -= n;
-            do
-            {
+            do {
                 RING_CELL(out, written) = value;
                 written++;
                 n--;
             } while (n != 0);
-        }
-        else if (token & 0x4000)
-        {
+        } else if (token & 0x4000) {
             s16 acc;
 
             budget -= n;
@@ -253,8 +239,7 @@ void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
             RING_CELL(out, written) = acc;
             n--;
             written++;
-            do
-            {
+            do {
                 u16 pair = *src++;
 
                 {
@@ -275,8 +260,7 @@ void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
                 written++;
                 n -= 2;
             } while (n > 1);
-            if (n != 0)
-            {
+            if (n != 0) {
                 u16 last = *src++;
                 s32 lo = last << 24;
                 s32 a = acc;
@@ -285,12 +269,9 @@ void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
                 RING_CELL(out, written) = acc;
                 written++;
             }
-        }
-        else
-        {
+        } else {
             budget -= n;
-            do
-            {
+            do {
                 s32 k = written >> 4;
 
                 k = k * 64 + (written & 0xf);
@@ -437,15 +418,12 @@ void StreamBgRow(struct bg_streamer *self, s32 row)
     s32 idx;
     s32 i;
 
-    if (row < self->source->height)
-    {
+    if (row < self->source->height) {
         idx = self->source->width;
         idx *= row;
         idx += self->tileX;
-        for (i = 0; i <= 3; i++)
-        {
-            if (i + self->tileX < self->source->width)
-            {
+        for (i = 0; i <= 3; i++) {
+            if (i + self->tileX < self->source->width) {
                 u8 *dest = self->ring;
                 dest += ((self->subY + 4) & 3) << 10;
                 dest += ((self->subX + i + 4) & 3) << 5;
@@ -466,16 +444,13 @@ void StreamBgColumn(struct bg_streamer *self, s32 col)
     s32 idx;
     s32 i;
 
-    if (col < self->source->width)
-    {
+    if (col < self->source->width) {
         idx = self->tileY * self->source->width;
         idx += col;
-        for (i = 0; i <= 3; i++)
-        {
+        for (i = 0; i <= 3; i++) {
             struct stream_source *src;
 
-            if (i + self->tileY < (src = self->source)->height)
-            {
+            if (i + self->tileY < (src = self->source)->height) {
                 u8 *dest = self->ring;
                 u16 id;
 
@@ -504,19 +479,15 @@ void FillBgStreamer(struct bg_streamer *self, s32 *pos)
     self->subY = 0;
     self->tileX = pos[0] >> 7;
     self->tileY = pos[1] >> 6;
-    for (j = 0; j <= 3; j++)
-    {
-        if (j + self->tileY < self->source->height)
-        {
+    for (j = 0; j <= 3; j++) {
+        if (j + self->tileY < self->source->height) {
             s32 rowBase;
 
-            for (i = 0, rowBase = rowLen * (j << 3); i <= 3; i++)
-            {
+            for (i = 0, rowBase = rowLen * (j << 3); i <= 3; i++) {
                 s32 x = i + self->tileX;
                 struct stream_source *src;
 
-                if (x < (src = self->source)->width)
-                {
+                if (x < (src = self->source)->width) {
                     u16 id = src->map[(self->tileY + j) * src->width + x];
                     u16 *ring = (u16 *)self->ring;
 
@@ -739,13 +710,11 @@ void StepBgLayerScroll(void *self0, void *delta0)
     s32 dx, dy;
 
     mgr = self->vtable;
-    dx = _call_via_r2((u8 *)self + mgr->method_20.thisOffset,
-                      (void *)(delta[0] - self->x),
+    dx = _call_via_r2((u8 *)self + mgr->method_20.thisOffset, (void *)(delta[0] - self->x),
                       mgr->method_20.fn);
 
     mgr = self->vtable;
-    dy = _call_via_r2((u8 *)self + mgr->method_20.thisOffset,
-                      (void *)(delta[1] - self->y),
+    dy = _call_via_r2((u8 *)self + mgr->method_20.thisOffset, (void *)(delta[1] - self->y),
                       mgr->method_20.fn);
 
     self->x += dx;

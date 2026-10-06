@@ -96,7 +96,7 @@ s32 InitActorCategory(s32 category)
         dma->cnt;
         FadeBrightness(0x80, 2, 1);
         InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
-                    gActorCheckpoint);
+                     gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
             LoadBgPicture(CUR_CATEGORY.bgPicture);
         RestoreActorPaletteCycle();

@@ -234,7 +234,8 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
  * stores it with `strb`. Each block keeps running `x`/`y` locals, and
  * the third block re-derives `y` the same way the second does, which
  * reproduces the ROM spilling it. See docs/matching/archive/issue-4-6-8-naked-retry.md. */
-void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx, struct byte_arg flagArg)
+void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx,
+                       struct byte_arg flagArg)
 {
     u8 flag = flagArg.v;
     u8 buf[8];

@@ -33,6 +33,10 @@ SpaceAfterCStyleCast: false
 Cpp11BracedListStyle: false
 # `u8 shape:2;`
 BitFieldColonSpacing: None
+# The typedef'd integer types (include/gba/types.h). Without them a
+# pointer-to-array declarator or cast, `u16 (*pal)[16]`, is taken for a
+# call and loses its space: `u16(*pal)[16]`.
+TypeNames: [u8, u16, u32, u64, s8, s16, s32, s64, vu8, vu16, vu32, vs8, vs16, vs32]
 
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never

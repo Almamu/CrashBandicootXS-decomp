@@ -57,13 +57,14 @@ void vsprintf(u8 *dest, u8 *fmt, u32 *args)
         c = *fmt;
         fmt++;
         switch (c) {
-        case '0': {
-            s32 charsConsumed;
-            dest = FormatPaddedNumber(dest, fmt, (s32 *)args, '0', &charsConsumed);
-            fmt += charsConsumed;
-            args++;
-            break;
-        }
+        case '0':
+            {
+                s32 charsConsumed;
+                dest = FormatPaddedNumber(dest, fmt, (s32 *)args, '0', &charsConsumed);
+                fmt += charsConsumed;
+                args++;
+                break;
+            }
         case '1':
         case '2':
         case '3':
@@ -72,23 +73,25 @@ void vsprintf(u8 *dest, u8 *fmt, u32 *args)
         case '6':
         case '7':
         case '8':
-        case '9': {
-            s32 charsConsumed;
-            dest = FormatPaddedNumber(dest, fmt - 1, (s32 *)args, ' ', &charsConsumed);
-            fmt += charsConsumed;
-            args++;
-            break;
-        }
-        case 's': {
-            u8 *s = (u8 *)*args;
-            args++;
-            while (*s != 0) {
-                *dest = *s;
-                s++;
-                dest++;
+        case '9':
+            {
+                s32 charsConsumed;
+                dest = FormatPaddedNumber(dest, fmt - 1, (s32 *)args, ' ', &charsConsumed);
+                fmt += charsConsumed;
+                args++;
+                break;
             }
-            break;
-        }
+        case 's':
+            {
+                u8 *s = (u8 *)*args;
+                args++;
+                while (*s != 0) {
+                    *dest = *s;
+                    s++;
+                    dest++;
+                }
+                break;
+            }
         case 'c':
             *dest = *(u8 *)args;
             dest++;
@@ -171,12 +174,13 @@ u8 *FindSubstring(u8 *haystack0, u8 *needle, s32 caseInsensitive)
     MATCH_HOLD_REG(u32, nc, r3);
     MATCH_HOLD_REG(u32, hc2, r1);
 
-    asm volatile("mov r0, #1\n\tadd %0, r0" : "+r"(needleRest) :: "r0");
+    asm volatile("mov r0, #1\n\tadd %0, r0" : "+r"(needleRest) : : "r0");
 
     if (c0 == 0) {
         return 0;
     }
     if (caseInsensitive != 0) {
+        // clang-format off
         asm volatile(
             "add r0, %0, #0\n\t"
             "sub r0, #0x41\n\t"
@@ -193,12 +197,14 @@ u8 *FindSubstring(u8 *haystack0, u8 *needle, s32 caseInsensitive)
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
             : "+r"(c0) :: "r0");
+        // clang-format on
     }
 
 scan:
     hc = *haystack;
     haystack++;
     if (caseInsensitive != 0) {
+        // clang-format off
         asm volatile(
             "add r0, %0, #0\n\t"
             "sub r0, #0x41\n\t"
@@ -215,6 +221,7 @@ scan:
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
             : "+r"(hc) :: "r0");
+        // clang-format on
     }
     if (hc == c0) {
         goto verify;
@@ -236,6 +243,7 @@ inner:
     hc2 = *matchHaystack;
     matchHaystack++;
     if (caseInsensitive != 0) {
+        // clang-format off
         asm volatile(
             "add r0, %0, #0\n\t"
             "sub r0, #0x41\n\t"
@@ -252,6 +260,8 @@ inner:
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
             : "+r"(nc) :: "r0");
+        // clang-format on
+        // clang-format off
         asm volatile(
             "add r0, %0, #0\n\t"
             "sub r0, #0x41\n\t"
@@ -268,6 +278,7 @@ inner:
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
             : "+r"(hc2) :: "r0");
+        // clang-format on
     }
     if (nc == hc2) {
         goto inner;

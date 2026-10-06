@@ -32,8 +32,8 @@ s32 CountCategoryCrates(s32 categoryIdx)
         if (count < total) {
             do {
                 u8 v = table[i].kind;
-                if (v == 1 || v == 3 || v == 4 || v == 8 || v == 9 || v == 0xa ||
-                    v == 0x1c || v == 0x1d || v == 0x1e || v == 0x1f || v == 0x23) {
+                if (v == 1 || v == 3 || v == 4 || v == 8 || v == 9 || v == 0xa || v == 0x1c ||
+                    v == 0x1d || v == 0x1e || v == 0x1f || v == 0x23) {
                     count++;
                 }
                 i++;

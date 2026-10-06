@@ -257,10 +257,12 @@ void UpdateWumpa(struct orbit_part *self)
                 /* The empty asm takes `&argP5` into a register as its own
                  * insn, so its `add r3, sp, #4` comes before the `movs r5,
                  * #1` (as an address reload of the store, it came after). */
+                // clang-format off
                 ((OrbitSpawn4)DropWumpa)(gEntitySpawner, sx, sy,
                     (*(volatile s32 *)&argP4 = 0,
                      ({ MATCH_CONST(q, &argP5); 0; }),
                      *q = 1, 0));
+                // clang-format on
             }
             {
                 u32 ph = self->phase + 1;

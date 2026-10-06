@@ -65,8 +65,7 @@ void UpdateHudSlides(struct hud_counter *self)
         self->wumpaSlideTimer = 0x14;
     set1:
         self->wumpaSlide = 3;
-    skip1:
-        ;
+    skip1:;
     }
 
     StepHudSlide(self, &self->crateSlide, &self->crateSlideTimer, 0x78);

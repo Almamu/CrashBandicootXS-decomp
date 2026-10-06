@@ -43,8 +43,8 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
 
     switch (self->mode) {
     case 0:
-        if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
-            || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
+        if ((self->target->mirror.u.x && self->target->x < self->rangeX[0]) ||
+            (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
             SetEnemyAnimMode(self, 1);
             SetEnemyMotionX(self, 0);
         }
@@ -66,8 +66,8 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
         }
         break;
     case 4:
-        if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
-            || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
+        if ((self->target->mirror.u.x && self->target->x < self->rangeX[0]) ||
+            (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
             SetEnemyAnimMode(self, 6);
             SetEnemyMotionX(self, 0);
         }

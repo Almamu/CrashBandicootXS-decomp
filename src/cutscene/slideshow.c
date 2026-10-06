@@ -25,17 +25,13 @@ void BeginSlide(struct cutscene_player *self, s32 idx)
     const struct cutscene_slide *item;
 
     PlaySong(gAudioContext, self->slides[idx]->cue);
-    if (GetCurrentSong(gAudioContext) == (item = self->slides[idx])->cue)
-    {
+    if (GetCurrentSong(gAudioContext) == (item = self->slides[idx])->cue) {
         if (item->sfx != 0x63)
             PlaySfx(gAudioContext, item->sfx, 0x100);
         FadeBrightness(self->slides[idx]->fade | -0x80, 1, 0);
-    }
-    else
-    {
+    } else {
         FadeBrightness(item->fade | -0x80, 1, 0);
-        if (self->slides[idx]->sfx != 0x63)
-        {
+        if (self->slides[idx]->sfx != 0x63) {
             while (GetCurrentSong(gAudioContext) != self->slides[idx]->cue)
                 ;
             PlaySfx(gAudioContext, self->slides[idx]->sfx, 0x100);
@@ -175,8 +171,10 @@ void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
     } else {
         MATCH_HOLD_REG(u8 *, addr, r0);
 
+        // clang-format off
         asm volatile("mov r2, #0x80\n\tlsl r2, r2, #2\n\tadd %0, %1, r2"
                      : "=r"(addr) : "r"(asset) : "r2");
+        // clang-format on
         LoadTaggedAsset(addr, (void *)(VRAM + 0xA000));
     }
 
@@ -202,6 +200,8 @@ void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
 
     WaitForVBlank();
 
-    DmaSet(3, asset, (void *)PLTT, (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
+    DmaSet(
+        3, asset, (void *)PLTT,
+        (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
     REG_DISPCNT = *(u16 *)&gSlideshowDispcnt;
 }

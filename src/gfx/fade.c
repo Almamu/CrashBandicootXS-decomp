@@ -148,7 +148,8 @@ void DarkenPalette(s32 factor)
     s32 i;
 
     for (i = 0; i <= 0x1FF; i++) {
-        s32 color = color; /* self-init: never zeroed (see above); silences -Wuninitialized (#577) */
+        /* self-init: never zeroed (see above); silences -Wuninitialized (#577) */
+        s32 color = color;
         MATCH_HOLD_REG(s32, ch, r1);
         s32 scaled;
         MATCH_HOLD_REG(s32, raw, r1);
@@ -165,7 +166,8 @@ void DarkenPalette(s32 factor)
             ch = (s32)((u32)tmp >> 27);
         }
         scaled = ch * factor;
-        if (scaled < 0) scaled += 15;
+        if (scaled < 0)
+            scaled += 15;
         scaled >>= 4;
         {
             MATCH_HOLD_REG(s32, diff, r0);
@@ -181,7 +183,8 @@ void DarkenPalette(s32 factor)
             ch = (s32)((u32)tmp >> 27);
         }
         scaled = ch * factor;
-        if (scaled < 0) scaled += 15;
+        if (scaled < 0)
+            scaled += 15;
         scaled >>= 4;
         {
             MATCH_HOLD_REG(s32, diff, r0);
@@ -198,7 +201,8 @@ void DarkenPalette(s32 factor)
             ch = (s32)((u32)tmp >> 27);
         }
         scaled = ch * factor;
-        if (scaled < 0) scaled += 15;
+        if (scaled < 0)
+            scaled += 15;
         scaled >>= 4;
         {
             MATCH_HOLD_REG(s32, diff, r0);

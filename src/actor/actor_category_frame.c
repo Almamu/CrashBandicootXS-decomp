@@ -58,9 +58,8 @@ static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 
 static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
 {
-    if (b->z < a->z + a->d && b->z + b->d > a->z
-        && b->y < a->y + a->h && b->y + b->h > a->y
-        && b->x < a->x + a->w && b->x + b->w > a->x)
+    if (b->z < a->z + a->d && b->z + b->d > a->z && b->y < a->y + a->h && b->y + b->h > a->y &&
+        b->x < a->x + a->w && b->x + b->w > a->x)
         goto hit;
     return 0;
 hit:
@@ -170,8 +169,8 @@ s32 RunActorCategoryFrame(void)
     } else {
         while (SUB_EFFECT_DUE()) {
             ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])(
-                (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8),
-                gUnknown_03001414, gActorSpawnOffset << 8);
+                (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8), gUnknown_03001414,
+                gActorSpawnOffset << 8);
             gActorSpawnIndex++;
         }
     }
@@ -219,8 +218,8 @@ void *FindShotTarget(struct actor_self *self)
         if (n != self) {
             struct actor_methods *vt = (struct actor_methods *)n->vtable;
 
-            if (((actor_query_fn)vt->m28.fn)((u8 *)n + vt->m28.thisOffset) == 0
-                && ActorsOverlap(self, n))
+            if (((actor_query_fn)vt->m28.fn)((u8 *)n + vt->m28.thisOffset) == 0 &&
+                ActorsOverlap(self, n))
                 return n;
         }
         n = ACTOR_NEXT(n);

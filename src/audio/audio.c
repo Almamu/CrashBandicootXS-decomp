@@ -309,7 +309,8 @@ asm(".align 2, 0");
  * `gSfxTable[id].baseVolume`, whose `base+8+offset` address
  * is simply what gcc emits for a non-zero field offset - the earlier
  * note blamed a CSE decision that is not there. */
-void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, struct byte_arg force)
+void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul,
+                    struct byte_arg force)
 {
     u8 forceFlag = force.v;
     u32 handle = gSfxTable[id].slotId;

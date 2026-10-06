@@ -29,13 +29,11 @@ asm(".align 2, 0");
  * fill loops instead of recomputing it as the ROM does. */
 void SendSaveTransferChunk(struct settings_sync_pump *self)
 {
-    if (self->remaining != 0)
-    {
+    if (self->remaining != 0) {
         struct link_session *s = gLinkSession;
         struct link_ring *ch = &s->ring;
 
-        if (ch->count == 0)
-        {
+        if (ch->count == 0) {
             s32 n = self->remaining;
             u8 *src;
             s32 i;
@@ -43,19 +41,14 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
             if (n > 0x60)
                 n = 0x60;
             src = self->cursor;
-            if (ch->writePos < 0x80 - n)
-            {
-                for (i = n - 1; i != -1; i--)
-                {
+            if (ch->writePos < 0x80 - n) {
+                for (i = n - 1; i != -1; i--) {
                     ch->writePos++;
                     ch->count++;
                     ch->buf[ch->writePos] = *src++;
                 }
-            }
-            else
-            {
-                for (i = n - 1; i != -1; i--)
-                {
+            } else {
+                for (i = n - 1; i != -1; i--) {
                     u8 b = *src++;
 
                     ch->writePos = ch->writePos == 0x7f ? 0 : ch->writePos + 1;
@@ -66,9 +59,7 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
             self->cursor += n;
             self->remaining -= n;
         }
-    }
-    else if (gLinkSession->ring.count == 0)
-    {
+    } else if (gLinkSession->ring.count == 0) {
         self->sendDone = 1;
     }
 }
@@ -99,8 +90,7 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
 
     /* players[pi].ring.count: the session's 0xd0 + 0x38 + 0x84 */
     n = *(s32 *)((u8 *)(pi * c + (s32)s) + 0x18c);
-    if (n != 0)
-    {
+    if (n != 0) {
         u8 *dst;
         struct link_ring *ch;
         s32 *rd;
@@ -117,26 +107,20 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
             dst = *wp;
         }
         rd = &ch->readPos;
-        if (*rd < 0x80 - n)
-        {
-            for (i = n - 1; i != -1; i--)
-            {
+        if (*rd < 0x80 - n) {
+            for (i = n - 1; i != -1; i--) {
                 *dst++ = ch->buf[ch->readPos];
                 ch->readPos++;
                 ch->count--;
             }
-        }
-        else
-        {
+        } else {
             i = n - 1;
-            if (i != -1)
-            {
+            if (i != -1) {
                 /* The ROM keeps the count pointer in r1, which leaves r2
                  * for `old`. */
                 MATCH_HOLD_REG(s32 *, cnt, r1) = &ch->count;
 
-                do
-                {
+                do {
                     s32 old = *rd;
                     s32 nw = 0;
 
@@ -150,9 +134,7 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
         }
         self->writePtr += n;
         self->totalReceived += n;
-    }
-    else if (self->totalReceived == 0x200)
-    {
+    } else if (self->totalReceived == 0x200) {
         self->receiveDone = 1;
     }
 }

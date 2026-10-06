@@ -169,6 +169,7 @@ void HeapSortActorsByKey(s32 n, struct actor_self **list)
 #else
 NAKED void HeapSortActorsByKey(s32 n, struct actor_self **list)
 {
+    // clang-format off
     asm(".syntax unified\n"
         "\tpush {r4, r5, r6, r7, r8, r9, r10, lr}\n"
         "\tmov r7, r0\n"
@@ -295,6 +296,7 @@ NAKED void HeapSortActorsByKey(s32 n, struct actor_self **list)
         "\tpop {r4, r5, r6, r7, r8, r9, r10, lr}\n"
         "\tbx lr\n"
         ".syntax divided\n");
+    // clang-format on
 }
 #endif
 
@@ -345,11 +347,13 @@ s32 LookupSpriteFrameCache(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
 
-    for (node = gSpriteFrameCacheCurrent.next; node != &gSpriteFrameCacheCurrent; node = node->next) {
+    for (node = gSpriteFrameCacheCurrent.next; node != &gSpriteFrameCacheCurrent;
+         node = node->next) {
         if (node->frame == frame)
             return OBJ_TILE_INDEX(node->vramAddr);
     }
-    for (node = gSpriteFrameCachePrevious.next; node != &gSpriteFrameCachePrevious; node = node->next) {
+    for (node = gSpriteFrameCachePrevious.next; node != &gSpriteFrameCachePrevious;
+         node = node->next) {
         if (node->frame == frame) {
             node->prev->next = node->next;
             node->next->prev = node->prev;
@@ -365,6 +369,7 @@ s32 LookupSpriteFrameCache(u8 *frame)
 #else
 NAKED s32 LookupSpriteFrameCache(u8 *frame)
 {
+    // clang-format off
     asm(".syntax unified\n"
         "\tstmfd sp!, {lr}\n"
         "\tldr r3, .L030007C4 @ =gSpriteFrameCacheCurrent\n"
@@ -425,5 +430,6 @@ NAKED s32 LookupSpriteFrameCache(u8 *frame)
         ".L030007C4: .4byte gSpriteFrameCacheCurrent\n"
         ".L030007C8: .4byte gSpriteFrameCachePrevious\n"
         ".syntax divided\n");
+    // clang-format on
 }
 #endif

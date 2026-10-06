@@ -613,7 +613,7 @@ extern void *_call_via_r1(void *addr, void *fn);
  * shift-setup pair into a single instruction. */
 struct probe_vtable {
     u8 unk_00[0x28];
-    struct actor_method m28;    // 0x28 - hit probe
+    struct actor_method m28; // 0x28 - hit probe
 };
 
 void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
@@ -645,7 +645,7 @@ void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
                 s32 *bitmap;
                 MATCH_HOLD_REG(s32, bit, r0);
 
-                asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r" (idx) : "r" (val2));
+                asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(idx) : "r"(val2));
                 idxOffset = idx * 4;
                 bitmap = (s32 *)(base + 0x108);
                 bitmap = (s32 *)((u8 *)bitmap + idxOffset);

@@ -70,10 +70,8 @@ void UpdateHudCrates(struct hud_counter *self)
         gHudSlideOffset = 0;
 
     v = self->crateCount;
-    if (v != self->shownCrateCount)
-    {
-        if (v > 99)
-        {
+    if (v != self->shownCrateCount) {
+        if (v > 99) {
             s32 f = __divsi3(v, 100);
 
             parts = self->parts;
@@ -82,9 +80,7 @@ void UpdateHudCrates(struct hud_counter *self)
             CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
             f = __modsi3(self->crateCount, 10);
             CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
-        }
-        else if (v > 9)
-        {
+        } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
@@ -92,9 +88,7 @@ void UpdateHudCrates(struct hud_counter *self)
             f = __modsi3(self->crateCount, 10);
             CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
             CLAMP_FRAME(&parts[5], parts[5].anim_index, -1);
-        }
-        else
-        {
+        } else {
             s32 f;
 
             parts = self->parts;
@@ -119,10 +113,8 @@ void UpdateHudCrates(struct hud_counter *self)
     v = self->crateTotal;
     w = self->shownCrateTotal;
     parts = self->parts;
-    if (v != w)
-    {
-        if (v > 99)
-        {
+    if (v != w) {
+        if (v > 99) {
             s32 f = __divsi3(v, 100);
 
             CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
@@ -130,18 +122,14 @@ void UpdateHudCrates(struct hud_counter *self)
             CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
             f = __modsi3(self->crateTotal, 10);
             CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
-        }
-        else if (v > 9)
-        {
+        } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
             f = __modsi3(self->crateTotal, 10);
             CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
             CLAMP_FRAME(&parts[8], parts[8].anim_index, -1);
-        }
-        else
-        {
+        } else {
             s32 f;
 
             CLAMP_FRAME(&parts[6], parts[6].anim_index, v);
@@ -157,7 +145,8 @@ void UpdateHudCrates(struct hud_counter *self)
     {
         struct hud_digit_part *part;
 
-        SetPartPos(gHudPartPositions[10].x + off, gHudPartPositions[10].y, (part = &self->parts[10]));
+        SetPartPos(gHudPartPositions[10].x + off, gHudPartPositions[10].y,
+                   (part = &self->parts[10]));
         CLAMP_FRAME(part, self->parts[10].anim_index, 0);
         DrawHudPart(part, 0, 0);
     }
@@ -189,19 +178,15 @@ void UpdateHudWumpa(struct hud_counter *self)
     DrawHudPart(&self->parts[13], 0, 0);
 
     v = self->wumpa;
-    if (v != self->shownWumpa)
-    {
-        if (v > 9)
-        {
+    if (v != self->shownWumpa) {
+        if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
             CLAMP_FRAME(&parts[11], parts[11].anim_index, f);
             f = __modsi3(self->wumpa, 10);
             CLAMP_FRAME(&parts[12], parts[12].anim_index, f);
-        }
-        else
-        {
+        } else {
             parts = self->parts;
             CLAMP_FRAME(&parts[11], parts[11].anim_index, v);
             CLAMP_FRAME(&parts[12], parts[12].anim_index, -1);
@@ -249,19 +234,15 @@ void UpdateHudPercentCounters(struct hud_counter *self)
         v = _call_via_r1((u8 *)src + vt->m30.thisOffset, vt->m30.fn);
     }
     self->value_d = v;
-    if (v != self->shown_d)
-    {
-        if (v == 100)
-        {
+    if (v != self->shown_d) {
+        if (v == 100) {
             struct hud_digit_part *p = self->parts;
 
             CLAMP_FRAME(&p[25], p[25].anim_index, 1);
             CLAMP_FRAME(&p[26], p[26].anim_index, 0);
             CLAMP_FRAME(&p[27], p[27].anim_index, 0);
             CLAMP_FRAME(&p[28], p[28].anim_index, 10);
-        }
-        else if (v > 9)
-        {
+        } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
@@ -270,9 +251,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
             CLAMP_FRAME(&parts[26], parts[26].anim_index, f);
             CLAMP_FRAME(&parts[27], parts[27].anim_index, 10);
             CLAMP_FRAME(&parts[28], parts[28].anim_index, -1);
-        }
-        else
-        {
+        } else {
             s32 f;
 
             parts = self->parts;
@@ -299,19 +278,15 @@ void UpdateHudPercentCounters(struct hud_counter *self)
     DrawHudPart(part, 0, 0);
 
     v = self->value_e;
-    if (v != self->shown_e)
-    {
-        if (v == 100)
-        {
+    if (v != self->shown_e) {
+        if (v == 100) {
             struct hud_digit_part *p = self->parts;
 
             CLAMP_FRAME(&p[30], p[30].anim_index, 1);
             CLAMP_FRAME(&p[31], p[31].anim_index, 0);
             CLAMP_FRAME(&p[32], p[32].anim_index, 0);
             CLAMP_FRAME(&p[33], p[33].anim_index, 10);
-        }
-        else if (v > 9)
-        {
+        } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
@@ -321,9 +296,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
             CLAMP_FRAME(&parts[32], parts[32].anim_index, 10);
             f = -1;
             CLAMP_FRAME(&parts[33], parts[33].anim_index, f);
-        }
-        else
-        {
+        } else {
             s32 f;
 
             parts = self->parts;
