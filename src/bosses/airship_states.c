@@ -122,18 +122,18 @@ void AirshipStateFireballs(void)
 
     if (gAirshipFireTimer == 0) {
         SpawnAirshipFireball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10);
-        if (++gAirshipVolleyCount == gAirshipAttack->unk_08) {
+        if (++gAirshipVolleyCount == gAirshipAttack->fireballBurst) {
             gAirshipVolleyCount = 0;
-            gAirshipFireTimer = gAirshipAttack->unk_0C;
+            gAirshipFireTimer = gAirshipAttack->fireballBurstDelay;
         } else {
-            gAirshipFireTimer = gAirshipAttack->unk_04;
+            gAirshipFireTimer = gAirshipAttack->fireballDelay;
         }
     } else {
         gAirshipFireTimer--;
     }
     SteerAirship();
     if (gAirshipDistance <= 0x31FF) {
-        gAirshipFireTimer = gAirshipAttack->unk_10;
+        gAirshipFireTimer = gAirshipAttack->cannonDelay;
         gAirshipVolleyCount = 0;
         BossSetState(3, 0);
     }
@@ -199,11 +199,11 @@ void AirshipStateCannon(void)
             if (Abs(dx) + Abs(dy) <= 0x7FF) {
                 SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx,
                                        dy);
-                if (++gAirshipVolleyCount == gAirshipAttack->unk_14) {
+                if (++gAirshipVolleyCount == gAirshipAttack->cannonBurst) {
                     gAirshipVolleyCount = phase;
-                    gAirshipFireTimer = gAirshipAttack->unk_18;
+                    gAirshipFireTimer = gAirshipAttack->cannonBurstDelay;
                 } else {
-                    gAirshipFireTimer = gAirshipAttack->unk_10;
+                    gAirshipFireTimer = gAirshipAttack->cannonDelay;
                 }
             }
         }
@@ -212,7 +212,7 @@ void AirshipStateCannon(void)
     }
     SteerAirship();
     if (gAirshipDistance > 0x4300) {
-        gAirshipFireTimer = gAirshipAttack->unk_04;
+        gAirshipFireTimer = gAirshipAttack->fireballDelay;
         gAirshipVolleyCount = 0;
         BossSetState(2, 0);
     }

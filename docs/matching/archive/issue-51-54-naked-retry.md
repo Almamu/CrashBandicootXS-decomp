@@ -56,7 +56,7 @@ A file-level `asm(".align 2, 0")` supplies the ROM's zero padding.
 `UpdateYeti` stays NAKED in the same file. The NAKED body assembles
 identically under either compiler.
 
-### `yeti.c`: `sub_802E058` (current agbcc)
+### `yeti.c`: `BuildYetiBg2Map` (current agbcc)
 
 A plain nested loop. The condition has to be written as the "store
 0xff" test so that branch comes first. The function is UNUSED (it has
@@ -82,7 +82,7 @@ no caller).
   Whoever fixes it for one of the three should get the other two.
 - **`LoadYetiGraphics`** (yeti_graphics.c): 5 halfwords off under either
   compiler. The two fill loops are a `static inline` copy of
-  `sub_802E058`'s body. The clear loop is written as an `s32` address
+  `BuildYetiBg2Map`'s body. The clear loop is written as an `s32` address
   walk (`p >= base`, signed, with a separate `zero` local). Only the
   high-register assignment is wrong: the three hoisted addresses
   (`&gYetiBg2Page`, `&gUnpackNibbleTilesFunc`, `&gYeti`)

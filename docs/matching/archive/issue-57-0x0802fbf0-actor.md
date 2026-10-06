@@ -32,7 +32,7 @@ header.
   integrates those accelerations and re-aims when the steps run out.
   `DamageJetpackPlane` is the damage handler, `CreateJetpackPlane` the constructor,
   `RunJetpackPlaneState` the per-state member-pointer dispatch, and
-  `JetpackPlaneStateFall`/`sub_802FE1C`/`sub_802FE58`/`IsJetpackPlaneUnshootable` small
+  `JetpackPlaneStateFall`/`JetpackPlaneStateKnockedOut`/`JetpackPlaneStateFollow`/`IsJetpackPlaneUnshootable` small
   helpers.
 - **`gJetpackBomberVtable`** (`struct jetpack_bomber`): the constructor
   `CreateJetpackBomber` switches on the spawn record's kind byte (4-9) to pick

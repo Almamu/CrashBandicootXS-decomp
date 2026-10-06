@@ -70,8 +70,13 @@ asm(".align 2, 0");
  * `YetiStateCaught` below - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_e058.s`. */
 
-/* A parameterized twin of `LoadYetiGraphics`'s (yeti_graphics.c) 16x16
- * triangular-fill dot-pattern loop, taking the destination buffer
+/* Builds one page of the yeti's BG2 map: the 16x16 one-byte entries of
+ * an affine screen, with a 10x10 block of consecutive tile numbers
+ * (from `seed`) in the middle and tile 0xFF (the blank tile
+ * LoadYetiGraphics clears at VRAM+0xBFC0) around it.
+ *
+ * A parameterized twin of `LoadYetiGraphics`'s (yeti_graphics.c) 16x16
+ * map-fill loop, taking the destination buffer
  * (`dst`) and seed byte (`seed`) as real parameters instead of the
  * fixed stack buffer/`0`-or-`0x80` seed constants `LoadYetiGraphics` uses for
  * its own two inline copies of this same loop. No known caller anywhere
@@ -82,7 +87,7 @@ asm(".align 2, 0");
  *
  * The condition is written as the "fill with 0xff" test so the 0xff
  * store comes first, as in the ROM. */
-void sub_802E058(u8 *dst, u8 seed)
+void BuildYetiBg2Map(u8 *dst, u8 seed)
 {
     s32 y, x;
 
@@ -98,8 +103,8 @@ void sub_802E058(u8 *dst, u8 seed)
 
 asm(".align 2, 0");
 
-/* Genuine no-op stub sitting between the still-raw `sub_802E058` (VRAM
- * pattern generator) and `YetiStateStop` - see
+/* Genuine no-op stub sitting between `BuildYetiBg2Map` (the BG2 map
+ * builder) and `YetiStateStop` - see
  * docs/matching/archive/issue-54-actor-d3a8.md. */
 void YetiStateCaught(void)
 {

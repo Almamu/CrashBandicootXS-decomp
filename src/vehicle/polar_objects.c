@@ -135,10 +135,12 @@ void *CreatePolarElectricFence(void *selfArg, void *part, s32 b, s32 c, s32 d)
     return self;
 }
 
-/* On the trampoline-fire edge (`IsTouchingPlayer`), forwards to
- * `HurtPolarPlayer(gActorList)` (the player object), discarding its
- * result; always tail-calls `UpdateActor`. */
-void sub_802CE10(void *selfArg)
+/* The update of a polar obstacle (CreateActor kinds 13 and 14, built in
+ * pairs like the goal's 25/26): on the trampoline-fire edge
+ * (`IsTouchingPlayer`), forwards to `HurtPolarPlayer(gActorList)` (the
+ * player object), discarding its result; always tail-calls `UpdateActor`.
+ * Nothing else - it never moves or breaks. */
+void UpdatePolarObstacle(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -149,13 +151,13 @@ void sub_802CE10(void *selfArg)
 }
 
 /* Same `InitActorPart`-based constructor shape as `CreatePolarElectricFence`, minus
- * the `self+0x2c` clear, `self+0x50 = gStaticData_087E4FD4`. */
-void *sub_802CE38(void *selfArg, void *part, s32 b, s32 c, s32 d)
+ * the `self+0x2c` clear, `self+0x50 = gPolarObstacleVtable`. */
+void *CreatePolarObstacle(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct actor_self *self = selfArg;
 
     InitActorPart(self, part, b, c, d);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4FD4;
+    self->vtable = (struct actor_vtable *)gPolarObstacleVtable;
     return self;
 }
 
@@ -231,7 +233,7 @@ done:
     UpdateActor(self);
 }
 
-/* Same `InitActorPart`-based constructor shape as `sub_802CE38`,
+/* Same `InitActorPart`-based constructor shape as `CreatePolarObstacle`,
  * `self+0x50 = gPolarLauncherVtable`. */
 void *CreatePolarLauncher(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
@@ -322,7 +324,7 @@ void UpdatePolarPenguin(void *selfArg)
  * arms a fixed slow downward drift (`self+0x54/0x58/0x5c/0x60` set to
  * constants). Otherwise derives a per-frame speed factor
  * (`__divsi3` of `target`'s own "speed" record,
- * `gUnknown_0300088C[sub_802A570(target)]`, against the remaining
+ * `gPolarPenguinSpeeds[sub_802A570(target)]`, against the remaining
  * distance in Z) and scales the X/Y deltas toward `target`'s own
  * tracked position (`sub_802A558`/`sub_802A540`) by that factor,
  * caching the new countdown in `self+0x60` (floored at 1) and
@@ -338,7 +340,7 @@ void AimPolarPenguin(void *selfArg, s32 target)
         self->countdown = 0x40000000;
     } else {
         s32 idx = sub_802A570(target);
-        s32 speed = gUnknown_0300088C[idx];
+        s32 speed = gPolarPenguinSpeeds[idx];
         s32 factor;
         s32 countdown;
 

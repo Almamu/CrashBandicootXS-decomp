@@ -197,9 +197,9 @@
 . = 0x000015D4; gHovercraftVelZ = .;
 . = 0x000015D8; gHovercraftLevel = .;
 . = 0x000015DC; gHovercraftAttack = .;
-. = 0x000015E0; gUnknown_030015E0 = .;
-. = 0x000015E4; gUnknown_030015E4 = .;
-. = 0x000015E8; gUnknown_030015E8 = .;
+. = 0x000015E0; gHovercraftHp = .;
+. = 0x000015E4; gHovercraftFireTimer = .;
+. = 0x000015E8; gHovercraftVolleyCount = .;
 . = 0x000015EC; gHovercraftPhase = .;
 . = 0x000015F0; gHovercraftOrbitRadius = .;
 . = 0x000015F4; gHovercraftFrameCount = .;

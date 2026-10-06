@@ -942,10 +942,10 @@ const struct vtable_slot gPolarElectricFenceVtable[4] = {
 };
 
 /* Used by polar_objects.c. */
-const struct vtable_slot gStaticData_087E4FD4[4] = {
+const struct vtable_slot gPolarObstacleVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B30C),
-    VTABLE_SLOT(sub_802CE10),
+    VTABLE_SLOT(UpdatePolarObstacle),
     VTABLE_SLOT(DrawActor),
 };
 

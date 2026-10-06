@@ -15,7 +15,7 @@ void (*const gHovercraftStateFuncs[6])(void) = {
     HovercraftStateApproach,
     HovercraftStateCloseIn,
     HovercraftStateFallBack,
-    nullsub_37,
+    HovercraftStateExplodeStub,
     HovercraftStateFall,
 };
 

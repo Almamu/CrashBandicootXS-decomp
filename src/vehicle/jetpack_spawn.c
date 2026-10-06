@@ -13,7 +13,7 @@
 #include "globals.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
- * (`yeti.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
+ * (`yeti.c`, ending at `YetiStateCaught`, 0x0802E0A0) and issue
  * #56's chunk (`jetpack_run.c`, starting at `FinishJetpackRun`). Two things
  * live here:
  *

@@ -13,8 +13,8 @@
  * (jetpack_plane.c). */
 const struct actor_pmf gJetpackPlaneStateFuncs[4] = {
     ACTOR_PMF(JetpackPlaneStateFly),
-    ACTOR_PMF(sub_802FE58),
-    ACTOR_PMF(sub_802FE1C),
+    ACTOR_PMF(JetpackPlaneStateFollow),
+    ACTOR_PMF(JetpackPlaneStateKnockedOut),
     ACTOR_PMF(JetpackPlaneStateFall),
 };
 

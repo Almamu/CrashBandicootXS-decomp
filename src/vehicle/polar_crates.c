@@ -121,8 +121,12 @@ void UpdatePolarTimeCrate(void *selfArg)
 /* Unconditional (no `IsTouchingPlayer` proximity guard) "used"-state
  * transition: plays a sound, ties the lap counter, clears `stateTime`,
  * then the usual state-0x12/anim-reset block. No tail call - the
- * caller drives whatever comes after directly. */
-void sub_802CA28(void *selfArg)
+ * caller drives whatever comes after directly. The same steps (sound 4,
+ * AddBrokenCrate, `stateTime` cleared, sequence 0x12) as the per-nitro
+ * body of DetonateNearbyPolarNitros (polar_nitro.c), which inlines them.
+ * UNUSED - no caller anywhere in the ROM (checked every src/ .c file and
+ * every word-aligned Thumb pointer in baserom.gba). */
+void DetonatePolarNitroCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 

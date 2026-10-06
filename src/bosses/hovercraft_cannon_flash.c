@@ -103,9 +103,13 @@ asm(".align 2, 0");
  * needs to reach the return register (no re-check against zero the
  * way `UpdateHovercraftCannonFlash`'s own call-vs-no-call decision needs), the
  * compute-then-recheck gap that function hit doesn't apply here:
- * plain C matches byte-for-byte immediately. */
+ * plain C matches byte-for-byte immediately. The same "update without
+ * its UpdateActor tail" as RunHovercraftCannonState (hovercraft_cannon.c),
+ * returning 0 once `self` has destroyed itself.
+ * UNUSED - no caller anywhere in the ROM (checked every src/ .c file and
+ * every word-aligned Thumb pointer in baserom.gba). */
 
-s32 sub_8034314(void *selfArg)
+s32 RunHovercraftCannonFlashState(void *selfArg)
 {
     u8 *self = selfArg;
     s32 doAnim;

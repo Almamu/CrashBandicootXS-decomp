@@ -84,7 +84,7 @@ struct gfx_squares {
     u8 unk_00[0xC];
     struct gfx_vtable *vtable; // 0x0C
     u8 unk_10[0x14];
-    s32 unk_24; // 0x24
+    s32 stomped; // 0x24 - struct tiny_tiger's `stomped`
     u8 unk_28[0x20];
     s16 *squares; // 0x48
 };
@@ -103,12 +103,12 @@ struct gfx_pair_ctrl {
 /* StartTinyHop */
 struct gfx_offset_ctrl {
     u8 unk_00[0x30];
-    s32 x;      // 0x30
-    s32 y;      // 0x34
-    s32 unk_38; // 0x38
-    s32 unk_3C; // 0x3C
-    s32 dy;     // 0x40
-    s32 dx;     // 0x44
+    s32 x;     // 0x30
+    s32 y;     // 0x34
+    s32 steps; // 0x38 - struct tiny_tiger's `steps`/`total`
+    s32 total; // 0x3C
+    s32 dy;    // 0x40
+    s32 dx;    // 0x44
 };
 
 struct gfx_level_cfg {
@@ -406,8 +406,8 @@ void StartTinyHop(struct gfx_offset_ctrl *self, struct gfx_part *part)
         m &= *p;
         *p = m;
     }
-    self->unk_38 = 0x1A;
-    self->unk_3C = 0x1A;
+    self->steps = 0x1A;
+    self->total = 0x1A;
     self->dy = part->pos.y - self->y;
     self->dx = part->pos.x - self->x;
 }
@@ -426,7 +426,7 @@ void *CreateTiny(struct gfx_squares *self)
 
     CreateBossCtrl((struct boss_ctrl *)self);
     self->vtable = (struct gfx_vtable *)gTinyVtable;
-    self->unk_24 = -1;
+    self->stomped = -1;
     self->squares = OperatorNewArray(0x202);
     for (i = 0; i <= 0x100; i++)
         self->squares[i] = (i * i) >> 8;
@@ -772,7 +772,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
         {
             s32 zero;
 
-            sub_801967C(self, 0);
+            SetCortexPlatformsKind(self, 0);
             {
                 u8 *p = &part->animating;
 
@@ -819,7 +819,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
         }
     case 5:
         self->blinking = 0;
-        sub_801967C(self, 1);
+        SetCortexPlatformsKind(self, 1);
         self->timer = 0x14;
         break;
     }

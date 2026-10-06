@@ -267,7 +267,7 @@ void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
  * directly between two already-matched neighbors from the same
  * session: `LaunchHarmfulEffectPart` (`enemy_ctrl.c`) just before it, and
  * `CreateKnockedEnemyCtrl` (`enemy_ctrl.c`) - which calls this file's own
- * `nullsub_14` - immediately after. Despite the address range's small
+ * `ResetKnockedEnemyCtrl` - immediately after. Despite the address range's small
  * size the whole file turned out to be nothing but tiny single-purpose
  * accessors on this cluster's already-well-characterized `self`/`owner`
  * object shape (field table in the Phase 1 section of the doc above),
@@ -308,16 +308,17 @@ void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
  *   their setter.
  * - `self+0x30`/`0x34`/`0x38`: the "blocking condition" pair plus
  *   "enabled" byte the Phase 1 doc's field table already names -
- *   `sub_800CAA4` is their setter.
+ *   `SetEnemyAttackTiming` is their setter.
  * - `self+0x20`/`0x24`/`0x28`/`0x2c`: the per-instance AABB trigger
  *   box `UpdateEnemyTriggerBox` (`enemy_ctrl.c`) already builds from -
  *   `SetEnemyTriggerBox` is its full 4-corner setter, `SetPeriodicSpawnerPeriod` a
  *   2-field (position-only) partial setter.
  * - `self+0x6c`: the "second, larger-range state/anim-id byte" the
- *   Phase 1 doc's field table already names - `sub_800CAC8` is its
- *   setter.
+ *   Phase 1 doc's field table already names (`kind`, the enemy kind) -
+ *   `SetEnemyKind` is its setter.
  * - `self+0x1c`: the Y-axis homing bound `SetEnemyRangeYSpeed`/`SetEnemyRangeX`
- *   (`enemy_attack.c`) already write - `sub_800CB60` is its setter,
+ *   (`enemy_attack.c`) already write - on the periodic spawner it is
+ *   `callback`, and `SetPeriodicSpawnerCallback` is its setter,
  *   and `UpdatePeriodicSpawner` reads it (into a value it never uses - see that
  *   function's own comment).
  * - `self+0x18`: reused here as the struct-actor-shaped "table"
@@ -466,8 +467,11 @@ void SetEnemyShotPeriod(struct part_ctrl *self, s32 period, s32 phase)
 
 /* Attack cycle setter (`idleTime`/`attackTime`/`cycleOffset`, read by
  * UpdateEnemyAttackCycle/SetEnemyState in enemy_attack.c) - the same
- * stores as text_popup.h's inline SetEnemyAttackCycle. */
-void sub_800CAA4(struct part_ctrl *self, s32 idleTime, s32 attackTime, s32 cycleOffset)
+ * stores as text_popup.h's inline SetEnemyAttackCycle, which the level
+ * spawners use instead.
+ * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
+ * file and every word-aligned Thumb pointer in baserom.gba). */
+void SetEnemyAttackTiming(struct part_ctrl *self, s32 idleTime, s32 attackTime, s32 cycleOffset)
 {
     self->idleTime = idleTime;
     self->attackTime = attackTime;
@@ -500,9 +504,11 @@ void SetEnemyModeTable(struct part_ctrl *self, const s32 *anims)
 }
 asm(".align 2, 0");
 
-/* `self+0x6c` setter - the "second, larger-range state/anim-id byte"
- * the Phase 1 doc's field table already names. */
-void sub_800CAC8(struct part_ctrl *self, s32 kind)
+/* `kind` (`self+0x6c`, the enemy kind) setter; the level spawners store
+ * `kind` directly.
+ * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
+ * file and every word-aligned Thumb pointer in baserom.gba). */
+void SetEnemyKind(struct part_ctrl *self, s32 kind)
 {
     self->kind = kind;
 }
@@ -582,8 +588,11 @@ void SetPeriodicSpawnerPeriod(struct periodic_spawner *self, s32 period, s32 pha
 }
 asm(".align 2, 0");
 
-/* `callback` setter (the function UpdatePeriodicSpawner calls). */
-void sub_800CB60(struct periodic_spawner *self, void (*callback)(void))
+/* `callback` setter (the function UpdatePeriodicSpawner calls);
+ * SpawnSealSpawner (spawn_objects.c) stores `callback` directly.
+ * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
+ * file and every word-aligned Thumb pointer in baserom.gba). */
+void SetPeriodicSpawnerCallback(struct periodic_spawner *self, void (*callback)(void))
 {
     self->callback = callback;
 }
@@ -656,9 +665,10 @@ void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
     }
 }
 
-/* Genuine empty stub (`bx lr`) - `CreateKnockedEnemyCtrl`'s (`enemy_ctrl.c`)
- * own tail-call hook, per that function's own doc comment. */
-void nullsub_14(void *self)
+/* Genuine empty stub (`bx lr`): the knocked enemy's "reset" step, called
+ * by `CreateKnockedEnemyCtrl` (`enemy_ctrl.c`) where `CreateEnemyCtrl`
+ * calls `ResetEnemyCtrl`. */
+void ResetKnockedEnemyCtrl(void *self)
 {
 }
 asm(".align 2, 0");
@@ -693,7 +703,7 @@ void DestroyKnockedEnemyCtrl(void *self, s32 flags)
  * "reset via `InitCtrl`, then re-point `self+0xc`'s table pointer,
  * return `self`" shape already matched for sibling constructors
  * `CreateStompedHopPadCtrl` (`src/player/player_flags.c`) and `DestroyStompedHopPadCtrl`
- * (`src/player/action_ctrl_states.c`), plus a `nullsub_14(self)` no-op
+ * (`src/player/action_ctrl_states.c`), plus a `ResetKnockedEnemyCtrl(self)` no-op
  * tail call specific to this object type. */
 void *CreateKnockedEnemyCtrl(void *selfArg)
 {
@@ -701,6 +711,6 @@ void *CreateKnockedEnemyCtrl(void *selfArg)
 
     InitCtrl(self);
     *(const void **)(self + 0xc) = gKnockedEnemyCtrlVtable;
-    nullsub_14(self);
+    ResetKnockedEnemyCtrl(self);
     return self;
 }

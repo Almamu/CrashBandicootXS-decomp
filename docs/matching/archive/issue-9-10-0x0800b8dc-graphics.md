@@ -1163,7 +1163,7 @@ this doc.
   `nullsub_3(self)`, returns `self` - the exact same "reset, re-point,
   return self" constructor shape as `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
   `CreateKnockedEnemyCtrl`, with `nullsub_3` playing the same tail-call-hook role
-  `nullsub_14` plays for `CreateKnockedEnemyCtrl`.
+  `ResetKnockedEnemyCtrl` plays for `CreateKnockedEnemyCtrl`.
 
 ### `InitEffectCtrl` confirmed to stay in this cluster, not the physics subsystem
 
@@ -1326,7 +1326,7 @@ sessions above (Phase 4, the `UpdateEnemyShooter` pass, and the final
 directly between two already-matched neighbors from this same overall
 cluster investigation - `LaunchHarmfulEffectPart` (`enemy_ctrl.c`) just before
 it, and `CreateKnockedEnemyCtrl` (`enemy_ctrl.c`) - which calls this file's own
-`nullsub_14` as its own tail-call hook - immediately after.
+`ResetKnockedEnemyCtrl` as its own tail-call hook - immediately after.
 `tools/report_units.py` still carried a `(0x0800CA04, None, "graphics")`
 placeholder for it ("remainder of the cluster past LaunchHarmfulEffectPart up to
 CreateKnockedEnemyCtrl - not yet examined").
@@ -1377,7 +1377,7 @@ idiom already matched elsewhere in this cluster:
 - **`SetEnemyShotPeriod(self, a, b)`**: `self->0x48/0x4c` setter - the exact
   fields `UpdateEnemyShooter`'s (`enemy_shooter.c`) own `__modsi3` "close
   enough" gate reads.
-- **`sub_800CAA4(self, a, b, c)`**: `self->0x30/0x34/0x38` setter - the
+- **`SetEnemyAttackTiming(self, a, b, c)`**: `self->0x30/0x34/0x38` setter - the
   "blocking condition" pair plus "enabled" byte the Phase 1 doc's field
   table already names.
 - **`SetEnemyTriggerBox(self, a, b, c, d)`**: full 4-corner
@@ -1386,7 +1386,7 @@ idiom already matched elsewhere in this cluster:
 - **`SetEnemyModeTable(self, a)`**: `self->0x84` setter - the per-instance
   mode-indexed pointer table `SetEnemyAnimMode`/`SetEnemyState`
   (`enemy_ctrl.c`/`enemy_attack.c`) both trigger through.
-- **`sub_800CAC8(self, a)`**: `self->0x6c` setter - the "second,
+- **`SetEnemyKind(self, a)`**: `self->0x6c` setter - the "second,
   larger-range state/anim-id byte" the Phase 1 doc's field table
   already names.
 - **`UpdatePeriodicSpawner(self)`**: if `self`'s own X position is within
@@ -1397,7 +1397,7 @@ idiom already matched elsewhere in this cluster:
   `_call_via_r4((void*)0xffff, (u16)selfX, (u16)(self->4>>8), 0)` - the
   same "directional-target table trigger" primitive `UpdateEnemyCtrl`
   state 11 and `HitEnemy` states 19-20 already call directly. Also
-  reads `self->0x1c` (the Y-axis homing bound `sub_800CB60` below
+  reads `self->0x1c` (the Y-axis homing bound `SetPeriodicSpawnerCallback` below
   sets) into a value that's never used for anything - a genuine dead
   read the ROM's own compiled output still performs.
 - **`DestroyPeriodicSpawner(self, flags)`**: sets `self->0x18`'s table pointer
@@ -1410,7 +1410,7 @@ idiom already matched elsewhere in this cluster:
 - **`SetPeriodicSpawnerPeriod(self, a, b)`**: `self->0x20/0x24` partial (position-
   only) setter - the same AABB fields `SetEnemyTriggerBox` sets all four
   corners of.
-- **`sub_800CB60(self, a)`**: `self->0x1c` setter - the Y-axis homing
+- **`SetPeriodicSpawnerCallback(self, a)`**: `self->0x1c` setter - the Y-axis homing
   bound `SetEnemyRangeYSpeed`/`SetEnemyRangeX` (`enemy_attack.c`) already write.
 - **`UpdateKnockedEnemyCtrl(self, other)`**: `self` (the first argument) is never
   read - only `other` matters. Reads `other+0x18`'s own table pointer,
@@ -1423,7 +1423,7 @@ idiom already matched elsewhere in this cluster:
   id sentinel-checks as `0xffff`, also sets its bit in the
   `gEntityFlags+0x108` bitmap) - the exact idiom
   `tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl` already matches as real C.
-- **`nullsub_14(self)`**: genuine empty stub (`bx lr`) - `CreateKnockedEnemyCtrl`'s
+- **`ResetKnockedEnemyCtrl(self)`**: genuine empty stub (`bx lr`) - `CreateKnockedEnemyCtrl`'s
   own tail-call hook, per that function's own doc comment.
 
 ### Matching
@@ -1468,7 +1468,7 @@ established `[[matching_decomp_register_pinning]]` toolbox:
 Three functions (`SetEnemyOscillator`, `SetEnemyTriggerBox`, `SetEnemyModeTable`) also
 needed the `[[matching_decomp_alignment_fix]]` trailing
 `asm(".align 2, 0")` idiom for their own non-4-aligned trailing byte
-counts, as did `nullsub_14` itself.
+counts, as did `ResetKnockedEnemyCtrl` itself.
 
 Confirmed byte-identical to `baserom.gba` at `0x0800CA04`-`0x0800CBD4`
 (464 bytes, all 19 functions) via the isolated cpp/agbcc/as +

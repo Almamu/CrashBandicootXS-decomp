@@ -284,9 +284,12 @@ void UpdateHovercraftSideGun(void *selfArg)
 }
 
 /* Near-twin of `UpdateHovercraftSideGun` (same position-sync/orbit-effect shape),
- * but does not call `UpdateActor(self)` first - this object's regular
- * per-frame update is driven elsewhere. */
-void sub_80341F8(void *selfArg)
+ * but does not call `UpdateActor(self)` first: the "update without
+ * UpdateActor" of this class, like RunHovercraftCannonState
+ * (hovercraft_cannon.c) and RunHovercraftFireballState (hovercraft.c).
+ * UNUSED - no caller anywhere in the ROM (checked every src/ .c file and
+ * every word-aligned Thumb pointer in baserom.gba). */
+void RunHovercraftSideGunState(void *selfArg)
 {
     MATCH_HOLD_REG(struct actor_orbiter *, self, r5) = selfArg;
 

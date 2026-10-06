@@ -232,10 +232,11 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
-    gAirshipAttack = (const struct weapon_kind *)(gAirshipLevel * (s32)sizeof(struct weapon_kind) -
-                                                  -(s32)&gAirshipAttacks[kind]);
-    gAirshipFireTimer = gAirshipAttack->unk_0C;
-    gAirshipHp = gAirshipAttack->unk_00;
+    gAirshipAttack =
+        (const struct airship_attack *)(gAirshipLevel * (s32)sizeof(struct airship_attack) -
+                                        -(s32)&gAirshipAttacks[kind]);
+    gAirshipFireTimer = gAirshipAttack->fireballBurstDelay;
+    gAirshipHp = gAirshipAttack->hp;
     gAirshipVolleyCount = 0;
     gAirshipBg2PageFlip = 1;
     gAirshipBg2Page = 0;

@@ -8,9 +8,9 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The hovercraft's attack parameters (struct singleton_kind, bosses.h).
+/* The hovercraft's attack parameters (struct hovercraft_attack, bosses.h).
  * SpawnHovercraft picks one by gHovercraftLevel. */
-const struct singleton_kind gHovercraftAttacks[2] = {
+const struct hovercraft_attack gHovercraftAttacks[2] = {
     { 60, { { 45, 6, 210 }, { 20, 5, 90 }, { 32, 3, 160 } } },
     { 60, { { 70, 4, 230 }, { 20, 3, 90 }, { 40, 2, 160 } } },
 };

@@ -65,7 +65,7 @@ All in `src/vehicle/polar_objects.c`.
 - **`CreatePolarElectricFence`** - `InitActorPart`-based constructor: forwards
   `a`/`b`/`c`/`d` straight through, installs `self+0x50 =
   gPolarElectricFenceVtable`, and clears the `self+0x2c` one-shot flag.
-- **`sub_802CE10`** - on the `IsTouchingPlayer` trampoline-fire edge,
+- **`UpdatePolarObstacle`** - on the `IsTouchingPlayer` trampoline-fire edge,
   forwards to `HurtPolarPlayer(gActorList)` (the player object),
   discarding its result; always tail-calls `UpdateActor`. Needed
   `HurtPolarPlayer`'s extern declared as returning `u8` (not `s32`) even
@@ -73,9 +73,9 @@ All in `src/vehicle/polar_objects.c`.
   at this call site (`lsls r0,r0,0x18; cmp r0,#0`, no accompanying
   `lsrs`) only appears when the callee's return type itself is
   byte-sized, matching `UpdatePolarPenguin`'s identical call site below.
-- **`sub_802CE38`** - same `InitActorPart`-based constructor shape as
+- **`CreatePolarObstacle`** - same `InitActorPart`-based constructor shape as
   `CreatePolarElectricFence`, minus the `self+0x2c` clear, `self+0x50 =
-  gStaticData_087E4FD4`.
+  gPolarObstacleVtable`.
 - **`UpdatePolarLauncher`** - 3-way `self+0x28` state dispatch, written with
   explicit `goto`s to a `case0`/`case1`/`done` label set matching the
   ROM's own three-way `beq`/`beq`/`b` dispatch at the top (an
@@ -95,7 +95,7 @@ All in `src/vehicle/polar_objects.c`.
   tail the ROM's own build never has (the ROM duplicates the whole
   sequence twice, once per branch, each with its own register).
 - **`CreatePolarLauncher`** - same `InitActorPart`-based constructor shape as
-  `sub_802CE38`, `self+0x50 = gPolarLauncherVtable`.
+  `CreatePolarObstacle`, `self+0x50 = gPolarLauncherVtable`.
 - **`UpdatePolarPenguin`** - applies `self`'s own velocity
   (`self+0x54`/`0x58`/`0x5c`) to its position; while idle (`self+0x28 ==
   0`), counts down `self+0x60`, re-deriving a fresh velocity/homing
@@ -115,9 +115,9 @@ All in `src/vehicle/polar_objects.c`.
   `target` index, arms a fixed slow downward drift (constants into
   `self+0x54/0x58/0x5c/0x60`); otherwise derives a per-frame speed
   factor (`__divsi3` of `target`'s own "speed" record,
-  `gUnknown_0300088C[sub_802A570(target)]`, against the remaining Z
+  `gPolarPenguinSpeeds[sub_802A570(target)]`, against the remaining Z
   distance) and scales the X/Y deltas toward `target`'s tracked
-  position by that factor. Two gotchas: (1) `gUnknown_0300088C[idx]`
+  position by that factor. Two gotchas: (1) `gPolarPenguinSpeeds[idx]`
   needed `idx` computed as its own statement (`s32 idx =
   sub_802A570(target);`) *before* the array index expression, or this
   compiler hoists the array's base-address load ahead of the

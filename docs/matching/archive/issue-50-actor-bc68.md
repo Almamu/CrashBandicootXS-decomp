@@ -54,7 +54,7 @@ real matched C.
   pair.
 - **`IsPolarPauseLocked`** - trivial byte getter (`gPolarPauseLocked`). Called
   by the NAKED `PolarIsPauseLocked` trampoline in `actor_spawn.c`.
-- **`sub_802BD24`** - frame-counter-threshold (`self+0x44 > 0x13`)
+- **`PolarPlayerStateRecover`** - frame-counter-threshold (`self+0x44 > 0x13`)
   state-transition: latches `gPolarSteerEnabled`, clears the hazard lock
   `gPolarPlayerInactive`, and resets `self` to state 1/table-index 0 via
   the same state/table-index/anim-frame reset idiom already documented
@@ -77,7 +77,7 @@ real matched C.
   decrement per call, no shared accumulator, no `self+0x24`/`self+0x34`
   derivation) and arming hazard direction 3.
 - **`PolarPlayerStateBoost`** - frame-counter-threshold (`self+0x44 == 0x1e`)
-  state-transition, structural twin of `sub_802BD24`: latches
+  state-transition, structural twin of `PolarPlayerStateRecover`: latches
   `gPolarSteerEnabled`, then either (input bit 1 of `gKeys`
   clear) resets `self` to state 1/table-index 0 via the same reset
   idiom and fires `SetCellAnimSpeed(0x24)`, or (bit set) transitions to

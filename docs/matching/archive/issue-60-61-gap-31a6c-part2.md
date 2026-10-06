@@ -49,7 +49,7 @@ have entries for this pass, cross-referencing this document).
    cluster's `gAirshipMapFrames`), `gHovercraftScreenX`/`030015C4`
    (BG2-space dy/dx offsets), `gHovercraftDistance` (projection-scale
    source, structurally identical to the boss cluster's
-   `gAirshipDistance`), `gUnknown_030015E0`/`030015E4`/`030015E8`/
+   `gAirshipDistance`), `gHovercraftHp`/`030015E4`/`030015E8`/
    `030015EC`/`030015F0`/`030015F4` (per-"kind" record cache fields and
    accumulators), `gHovercraftBg2PageFlip` (an "apply now" BG2 latch,
    `u8`, same role as the boss cluster's `gAirshipBg2PageFlip`), and

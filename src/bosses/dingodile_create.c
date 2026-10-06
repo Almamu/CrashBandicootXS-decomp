@@ -20,9 +20,9 @@ struct seq_obj {
     u8 unk_00[0xC];
     void *vtable; // 0x0C
     u8 unk_10[0xC];
-    s32 unk_1C; // 0x1C
+    s32 step; // 0x1C - struct dingodile_boss's approach-table index
     u8 unk_20[4];
-    s32 unk_24; // 0x24
+    s32 nextState; // 0x24
 };
 
 struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self)
@@ -90,10 +90,10 @@ struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b)
 
 void SetDingodileStep(struct seq_obj *self, s32 value)
 {
-    self->unk_1C = value;
+    self->step = value;
 }
 
 void SetDingodileNextState(struct seq_obj *self, s32 value)
 {
-    self->unk_24 = value;
+    self->nextState = value;
 }

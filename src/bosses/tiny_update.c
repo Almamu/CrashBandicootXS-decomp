@@ -40,10 +40,10 @@ struct hop_vobj {
 };
 
 struct hop_part {
-    s32 x;     // 0x00
-    s32 y;     // 0x04
-    u16 id;    // 0x08
-    u8 unk_0A; // 0x0A
+    s32 x;   // 0x00
+    s32 y;   // 0x04
+    u16 id;  // 0x08
+    u8 kind; // 0x0A - object kind (gfx_part.h `kind`)
     u8 unk_0B;
     u8 flags; // 0x0C
     u8 unk_0D[0x13];
@@ -204,7 +204,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
              * the byte store's expansion) */
             s32 one = 1;
 
-            part->unk_0A = one;
+            part->kind = one;
             self->target = one;
             self->count = 0;
         }
@@ -521,7 +521,7 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
         p->x = x;
         p->y = y;
     }
-    p->unk_0A = 1;
+    p->kind = 1;
     {
         /* two masks, not folded to -0x45; the -5 is derived from the 1 */
         s32 m = -5;
