@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "iwram.h"
 #include "gfx.h"
 #include "actor_self.h"
@@ -12,12 +13,11 @@
  * gUnpackRleSpriteFrameFunc and gLookupSpriteFrameCacheFunc).
  *
  * Built as ARM code with agbcc_arm (Makefile ARM_OBJS). UnpackNibbleTiles,
- * DrawMirroredTilemap and UnpackRleSpriteFrame match as plain C.
- * HeapSortActorsByKey and LookupSpriteFrameCache are parked. The ROM was
- * built by an ARM gcc whose output differs from agbcc_arm's. For
- * LookupSpriteFrameCache that difference is provably out of C's reach;
- * for HeapSortActorsByKey no C form found so far reaches it. See their
- * comments and docs/matching/iwram-image.md.
+ * DrawMirroredTilemap and UnpackRleSpriteFrame match as plain C, and
+ * HeapSortActorsByKey as C with two empty-asm barriers.
+ * LookupSpriteFrameCache is parked: the ROM was built by an ARM gcc whose
+ * output differs from agbcc_arm's, and for it that difference is provably
+ * out of C's reach. See its comment and docs/matching/iwram-image.md.
  */
 
 static inline u32 ExpandNibble(u32 nibble)
@@ -102,203 +102,74 @@ struct sort_entry {
     u32 key;
 };
 
-#if NON_MATCHING
-static inline u8 KeyGreater(struct sort_entry *a, struct sort_entry *b)
+/* a[i]->key > a[j]->key as a u8 1/0. The two results come in as
+ * arguments: the ROM keeps 1 and 0 in two registers loaded before each
+ * sift loop (`mov r3, one; movls r3, zero; cmp r3, #0`), and it only gets
+ * them there when the caller's u8 locals `one`/`zero` are copied into
+ * this function's u8 parameters; literal 0/1 returns fold to immediates.
+ * Indices rather than pointers: each inlined `child + 1` argument is its
+ * own pseudo, which is why the ROM reloads a[child + 1] for the second
+ * test instead of reusing it. */
+static inline u8 KeyGreater(struct sort_entry **a, s32 i, s32 j, u8 one, u8 zero)
 {
-    if (a->key <= b->key)
-        return 0;
-    return 1;
-}
-
-static inline void SiftDown(struct sort_entry **a, s32 root, s32 n)
-{
-    s32 child, right;
-    struct sort_entry *t;
-
-    child = root * 2 + 1;
-    while (child < n) {
-        right = child + 1;
-        if (right < n && KeyGreater(a[right], a[child]) && KeyGreater(a[right], a[root])) {
-            child = right;
-        } else if (!KeyGreater(a[child], a[root])) {
-            break;
-        }
-        t = a[root];
-        a[root] = a[child];
-        a[child] = t;
-        root = child;
-        child = root * 2 + 1;
-    }
+    if (a[i]->key <= a[j]->key)
+        return zero;
+    return one;
 }
 
 /* gHeapSortActorsByKeyFunc(n, list): heapsorts `n` actor pointers into
  * ascending order of the u32 at +0x14. Called by actor_category_frame.c.
- *
- * Parked. Same control flow and the same loads, but the ROM tests each
- * comparison as a materialized 1/0 held in two registers hoisted out of
- * the sift loop (`mov r3, r9; movls r3, sl; cmp r3, #0`, the constants
- * in r9/sl, or in phase two in registers CSE found already holding 1
- * and 0), and reloads a[root]/a[right] across the tests. agbcc_arm either
- * folds the flag into the branches (an int result) or keeps it but with
- * immediates (`mov r3, #1; movls r3, #0`, a u8 result, as here); no
- * return type, flag variable or cast tried reproduces the hoisted
- * constants. A second pass also tried `one`/`zero` locals, which jump.c
- * turns into a conditional move with register arms. Only the arm that
- * stays a register is hoisted; jump.c's if-conversion folds the other
- * to an immediate. `MATCH_CONST(one, 1)` constants (all
- * three tests materialized as `movls rX, zero; movhi rX, one`, but not
- * hoisted and in the wrong order) and sweeps of -O1/-O2/-O3 with ~50
- * single flags also failed. The same compiler built itoa_arm and
- * LookupSpriteFrameCache, which provably aren't agbcc_arm output. */
+ * Both phases spell out the sift-down loop on the shared `root`/`child`
+ * (an inline sift function allocates them to other registers). See
+ * docs/matching/iwram-image.md, "Fourth pass". */
 void HeapSortActorsByKey(s32 n, struct actor_self **list)
 {
     struct sort_entry **a = (struct sort_entry **)list;
-    s32 i;
+    s32 i, root, child;
     struct sort_entry *t;
 
-    for (i = n / 2; i > 0; i--)
-        SiftDown(a, i - 1, n);
+    for (i = n / 2; i > 0;) {
+        i--;
+        for (root = i; (child = root * 2 + 1) < n; root = child) {
+            /* Loop-scoped so loop.c hoists them to this loop's preheader. */
+            u8 one = 1, zero = 0;
+
+            if (child + 1 < n && KeyGreater(a, child + 1, child, one, zero) &&
+                KeyGreater(a, child + 1, root, one, zero)) {
+                child++;
+            } else if (!KeyGreater(a, child, root, one, zero)) {
+                break;
+            }
+            t = a[root];
+            a[root] = a[child];
+            a[child] = t;
+        }
+    }
+    /* This and the barrier at the end of the loop body keep jump2 from
+     * cross-jumping the second loop's entry test (`cmp r7, #1; ble`) and
+     * its bottom test into each other; the ROM keeps both. */
+    MATCH_BARRIER();
     while (n > 1) {
         n--;
         t = a[0];
         a[0] = a[n];
         a[n] = t;
-        SiftDown(a, 0, n);
+        for (root = 0; (child = root * 2 + 1) < n; root = child) {
+            u8 one = 1, zero = 0;
+
+            if (child + 1 < n && KeyGreater(a, child + 1, child, one, zero) &&
+                KeyGreater(a, child + 1, root, one, zero)) {
+                child++;
+            } else if (!KeyGreater(a, child, root, one, zero)) {
+                break;
+            }
+            t = a[root];
+            a[root] = a[child];
+            a[child] = t;
+        }
+        MATCH_BARRIER();
     }
 }
-#else
-NAKED void HeapSortActorsByKey(s32 n, struct actor_self **list)
-{
-    // clang-format off
-    asm(".syntax unified\n"
-        "\tpush {r4, r5, r6, r7, r8, r9, r10, lr}\n"
-        "\tmov r7, r0\n"
-        "\tadd r3, r7, r7, lsr #31\n"
-        "\tasr r8, r3, #1\n"
-        "\tcmp r8, #0\n"
-        "\tmov lr, r1\n"
-        "\tble .L03000554\n"
-        ".L03000490:\n"
-        "\tsub r4, r8, #1\n"
-        "\tmov r8, r4\n"
-        "\tlsl r3, r4, #1\n"
-        "\tadd r12, r3, #1\n"
-        "\tcmp r12, r7\n"
-        "\tbge .L0300054C\n"
-        "\tmov r9, #1\n"
-        "\tmov r10, #0\n"
-        ".L030004B0:\n"
-        "\tadd r3, r12, #1\n"
-        "\tldr r6, [lr, r12, lsl #2]\n"
-        "\tcmp r3, r7\n"
-        "\tldr r5, [lr, r4, lsl #2]\n"
-        "\tmov r0, r3\n"
-        "\tbge .L03000510\n"
-        "\tldr r3, [lr, r0, lsl #2]\n"
-        "\tldr r2, [r6, #20]\n"
-        "\tldr r1, [r3, #20]\n"
-        "\tcmp r1, r2\n"
-        "\tmov r3, r9\n"
-        "\tmovls r3, r10\n"
-        "\tldr r5, [lr, r4, lsl #2]\n"
-        "\tcmp r3, #0\n"
-        "\tbeq .L03000510\n"
-        "\tldr r3, [lr, r0, lsl #2]\n"
-        "\tldr r2, [r5, #20]\n"
-        "\tldr r1, [r3, #20]\n"
-        "\tcmp r1, r2\n"
-        "\tmov r3, r9\n"
-        "\tmovls r3, r10\n"
-        "\tcmp r3, #0\n"
-        "\tmovne r12, r0\n"
-        "\tbne .L0300052C\n"
-        ".L03000510:\n"
-        "\tldr r2, [r6, #20]\n"
-        "\tldr r3, [r5, #20]\n"
-        "\tcmp r2, r3\n"
-        "\tmov r3, r9\n"
-        "\tmovls r3, r10\n"
-        "\tcmp r3, #0\n"
-        "\tbeq .L0300054C\n"
-        ".L0300052C:\n"
-        "\tldr r3, [lr, r12, lsl #2]\n"
-        "\tstr r3, [lr, r4, lsl #2]\n"
-        "\tmov r4, r12\n"
-        "\tstr r5, [lr, r12, lsl #2]\n"
-        "\tlsl r3, r4, #1\n"
-        "\tadd r12, r3, #1\n"
-        "\tcmp r12, r7\n"
-        "\tblt .L030004B0\n"
-        ".L0300054C:\n"
-        "\tcmp r8, #0\n"
-        "\tbgt .L03000490\n"
-        ".L03000554:\n"
-        "\tcmp r7, #1\n"
-        "\tble .L0300062C\n"
-        ".L0300055C:\n"
-        "\tldr r2, [lr]\n"
-        "\tsub r7, r7, #1\n"
-        "\tldr r3, [lr, r7, lsl #2]\n"
-        "\tmov r4, #0\n"
-        "\tstr r3, [lr]\n"
-        "\tadd r12, r4, #1\n"
-        "\tstr r2, [lr, r7, lsl #2]\n"
-        "\tcmp r12, r7\n"
-        "\tbge .L03000624\n"
-        "\tmov r10, r12\n"
-        "\tmov r8, r4\n"
-        ".L03000588:\n"
-        "\tadd r3, r12, #1\n"
-        "\tldr r6, [lr, r12, lsl #2]\n"
-        "\tcmp r3, r7\n"
-        "\tldr r5, [lr, r4, lsl #2]\n"
-        "\tmov r0, r3\n"
-        "\tbge .L030005E8\n"
-        "\tldr r3, [lr, r0, lsl #2]\n"
-        "\tldr r2, [r6, #20]\n"
-        "\tldr r1, [r3, #20]\n"
-        "\tcmp r1, r2\n"
-        "\tmov r3, r10\n"
-        "\tmovls r3, r8\n"
-        "\tldr r5, [lr, r4, lsl #2]\n"
-        "\tcmp r3, #0\n"
-        "\tbeq .L030005E8\n"
-        "\tldr r3, [lr, r0, lsl #2]\n"
-        "\tldr r2, [r5, #20]\n"
-        "\tldr r1, [r3, #20]\n"
-        "\tcmp r1, r2\n"
-        "\tmov r3, r10\n"
-        "\tmovls r3, r8\n"
-        "\tcmp r3, #0\n"
-        "\tmovne r12, r0\n"
-        "\tbne .L03000604\n"
-        ".L030005E8:\n"
-        "\tldr r2, [r6, #20]\n"
-        "\tldr r3, [r5, #20]\n"
-        "\tcmp r2, r3\n"
-        "\tmov r3, r10\n"
-        "\tmovls r3, r8\n"
-        "\tcmp r3, #0\n"
-        "\tbeq .L03000624\n"
-        ".L03000604:\n"
-        "\tldr r3, [lr, r12, lsl #2]\n"
-        "\tstr r3, [lr, r4, lsl #2]\n"
-        "\tmov r4, r12\n"
-        "\tstr r5, [lr, r12, lsl #2]\n"
-        "\tlsl r3, r4, #1\n"
-        "\tadd r12, r3, #1\n"
-        "\tcmp r12, r7\n"
-        "\tblt .L03000588\n"
-        ".L03000624:\n"
-        "\tcmp r7, #1\n"
-        "\tbgt .L0300055C\n"
-        ".L0300062C:\n"
-        "\tpop {r4, r5, r6, r7, r8, r9, r10, lr}\n"
-        "\tbx lr\n"
-        ".syntax divided\n");
-    // clang-format on
-}
-#endif
 
 /* gUnpackRleSpriteFrameFunc(dst, frame): unpacks a frame's w*h tiles into `dst`,
  * zero runs with a DMA3 fill and literal runs with a DMA3 copy. Called

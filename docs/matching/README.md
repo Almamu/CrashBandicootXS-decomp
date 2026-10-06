@@ -2,7 +2,7 @@
 
 Write-ups from the matching campaign, the phase that turned the
 disassembly into byte-exact C. That phase is over: every function
-except the three parked IWRAM ARM ones (#553) is matched C.
+except the two parked IWRAM ARM ones (#553) is matched C.
 
 ## Top level: still-current references
 
@@ -10,7 +10,7 @@ These files describe something the build still depends on or work that
 is still open. They are kept up to date.
 
 - [iwram-image.md](./iwram-image.md): the IWRAM image (`IntrMain`, the
-  ARM routines, the IWRAM data), including the three parked ARM
+  ARM routines, the IWRAM data), including the two parked ARM
   functions (#553) and why they stay assembly.
 - [per-file-flags-investigation.md](./per-file-flags-investigation.md):
   whether the original build used per-file optimization flags, and the
