@@ -174,7 +174,7 @@ void YetiStateCharge(void)
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xb) {
                 PlaySfx(gAudioContext, 0x3f, 0x100);
-                asm volatile("" ::: "memory");
+                MATCH_MEMORY_BARRIER();
                 ShakeActorBg(0x200);
             } else if (tier == 0x1b) {
                 PlaySfx(gAudioContext, 0x40, 0x100);

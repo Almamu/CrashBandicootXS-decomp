@@ -58,7 +58,7 @@ void ConvertAirshipTiles(void)
         off += 4;
         rows[k] = (u8 *)gAirshipPalette + off;
         /* forces the height to be re-read (the ROM's `ldm r1!`) */
-        asm("" : "+m"(heights[k]));
+        MATCH_KEEP_MEM(heights[k]);
         off += stride;
         off += heights[k] << 5;
     }

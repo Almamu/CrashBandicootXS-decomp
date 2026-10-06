@@ -192,7 +192,7 @@ void DrawPauseMenu(struct pause_menu *self)
         x = t - width;
         /* Extra references (no code): neither the 0x8c (r1) nor
          * `width` (r0) is tied to `x` (r3). */
-        asm("" : : "r"(t), "r"(width));
+        MATCH_USE2(t, width);
         /* End of the hold. */
         MATCH_USE(hold);
         set_icon_mgr_pos(gLargeFont, x, 0x88);

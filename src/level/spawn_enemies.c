@@ -873,7 +873,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }));
     /* No code: the "m" operand keeps `q2` in a stack slot, the ROM's
      * `str r3, [sp]` / `ldr r3, [sp]` pair around the call. */
-    asm("" : : "m"(q2));
+    MATCH_USE_MEM(q2);
     /* No code: hold r3 over the gfx store and the rec2 lookup. The ROM
      * keeps r3 free there, so reloading &gEntityFlags out of sb
      * uses r1 (`mov r1, sb`), not r3. */

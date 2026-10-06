@@ -20,7 +20,9 @@
  * - docs/matching_techniques.md is the reference for when each idiom
  *   applies, and for the techniques that aren't macros (old_agbcc,
  *   per-object flags, loop shapes, struct-by-value arguments, ...).
- *   tools/match_idioms.py counts the sites of each idiom.
+ *   tools/match_idioms.py counts the sites of each idiom, and its
+ *   --check (run by CI) fails if one of them is spelled out by hand
+ *   instead of with its macro.
  *
  * On "volatile": gcc 2.9 treats an asm with no outputs as volatile
  * anyway. An asm with outputs is an ordinary insn: loop optimization
@@ -66,6 +68,14 @@
 #define MATCH_USE(x) asm("" : : "r"(x))
 #define MATCH_USE_VOLATILE(x) asm volatile("" : : "r"(x))
 
+/* MATCH_USE2(a, b): `asm("" : : "r"(a), "r"(b))`, MATCH_USE of two
+ * values in one asm. It isn't the same as two MATCH_USEs: those are two
+ * insns, which the scheduler, the insn-count heuristics and reload all
+ * see separately. Use it where the ROM needs both values live in
+ * registers at the same point. */
+#define MATCH_USE2(a, b) asm("" : : "r"(a), "r"(b))
+#define MATCH_USE2_VOLATILE(a, b) asm volatile("" : : "r"(a), "r"(b))
+
 /* MATCH_KEEP(x): `asm("" : "+r"(x))`. Emits nothing, but after it gcc
  * no longer knows what `x` holds: it can't fold `x` into an immediate
  * or an addressing mode, can't share it with an equal expression (CSE),
@@ -102,6 +112,37 @@
  * _VOLATILE form also can't be moved, merged or deleted. */
 #define MATCH_CONST(v, K) asm("" : "=r"(v) : "0"(K))
 #define MATCH_CONST_VOLATILE(v, K) asm volatile("" : "=r"(v) : "0"(K))
+
+/* MATCH_CLOBBER(reg): `asm("" : : : "reg")` (r0-r12, written without
+ * quotes). Emits nothing, but tells gcc the hard register `reg` is
+ * clobbered here. For a callee-saved register (r4-r11) that makes the
+ * function save and restore it, so use it when the ROM's prologue
+ * pushes a register the C otherwise never touches. It also ends any
+ * value gcc was keeping in that register, forcing a reload after it.
+ * The _VOLATILE form is token-for-token the `asm volatile` spelling; an
+ * asm without outputs is volatile anyway. */
+#define MATCH_CLOBBER(reg) asm("" : : : #reg)
+#define MATCH_CLOBBER_VOLATILE(reg) asm volatile("" : : : #reg)
+
+/* MATCH_MEMORY_BARRIER(): `asm volatile("" : : : "memory")`, the usual
+ * compiler memory barrier. Emits nothing; gcc must assume any memory
+ * changed here, so a value loaded from memory before it is loaded
+ * again after it, and no load or store is moved across it. Use it where
+ * the ROM reloads a global or a field that gcc would otherwise reuse
+ * from a register. Being a volatile insn it is also everything
+ * MATCH_BARRIER() is (e.g. it keeps two otherwise identical tails from
+ * being cross-jumped). */
+#define MATCH_MEMORY_BARRIER() asm volatile("" : : : "memory")
+
+/* MATCH_KEEP_MEM(x): `asm("" : "+m"(x))`. Emits nothing, but `x` must
+ * be in memory here (it's stored if it was only in a register), and gcc
+ * no longer knows what that memory holds, so a later read of `x` is a
+ * real load. Use it when the ROM stores a value and reads it back.
+ * MATCH_USE_MEM(x): `asm("" : : "m"(x))`, the same but read-only: `x`
+ * must be in memory here, without its value being forgotten, e.g. to
+ * keep a variable in a stack slot across a call. */
+#define MATCH_KEEP_MEM(x) asm("" : "+m"(x))
+#define MATCH_USE_MEM(x) asm("" : : "m"(x))
 
 /* MATCH_KEEP_EXPR(T, e): the value of `e`, converted to T, passed through
  * MATCH_KEEP: `({ T _p = (e); asm("" : "+r"(_p)); _p; })`. Each use is

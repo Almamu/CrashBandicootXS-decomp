@@ -49,7 +49,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * CONST + i*0x34` fresh for every single field access instead of
  * hoisting a shared `self+i*0x34` slot-base register the way any
  * plain-C phrasing (raw pointer casts included) naturally does; a bare
- * `asm volatile("" ::: "memory")` barrier didn't stop the fold either,
+ * `MATCH_MEMORY_BARRIER()` didn't stop the fold either,
  * since it invalidates memory contents, not an already-computed pure-
  * address register. What closed it (see also `tile_slot_pool.c`'s
  * `PushFreeSlot`/`GetTileSlot`/`SetTileSlot` for the same idea): give
