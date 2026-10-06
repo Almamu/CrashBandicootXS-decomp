@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "audio.h"
 #include "actor.h"
 #include "bitmap_font.h"
@@ -87,8 +88,8 @@ s32 PauseMenuLoop(struct pause_menu *self)
 
     for (;;) {
         u32 in;
-        register u32 key asm("r3");
-        register u32 pressed asm("r1");
+        MATCH_HOLD_REG(u32, key, r3);
+        MATCH_HOLD_REG(u32, pressed, r1);
 
         draw_frame(self);
         UpdateKeys(gInput);

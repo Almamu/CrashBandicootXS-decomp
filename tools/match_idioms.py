@@ -319,6 +319,7 @@ def makefile_flags():
 # (macro, the asm's operand constraints in order). The rewrite keeps each
 # operand expression's text as written.
 CONVERTERS = {
+    "pin": ("MATCH_HOLD_REG", None),  # declarator-aware: convert_pin
     "empty": ("MATCH_BARRIER", []),
     "use": ("MATCH_USE", ["r"]),
     "use_volatile": ("MATCH_USE_VOLATILE", ["r"]),
@@ -389,6 +390,66 @@ def add_include(raw):
     return raw[:m.end()] + '#include "match.h"\n' + raw[m.end():]
 
 
+PIN_REG = re.compile(r"r\d+|ip|sb|sl|fp")
+PIN_TYPE = re.compile(r"[A-Za-z_]\w*(?:\s+[A-Za-z_]\w*)*(?:\s*\*(?:\s*(?:const|volatile)\b)*)*")
+
+
+def convert_pin(raw, text, m, end):
+    """The (start, end, replacement) edit turning the register pin whose
+    asm(...) is text[m.start():end] into MATCH_HOLD_REG, or a reason it
+    can't be expressed. Only the `register T name asm("rN")` part is
+    replaced; an initialiser after it stays where it is."""
+    reg = re.fullmatch(r'\s*"([^"]*)"\s*', text[m.end():end - 1])
+    if not reg or not PIN_REG.fullmatch(reg.group(1)):
+        return "register name isn't a string literal r0-r12/ip/sb/sl/fp"
+    # The declaration starts at the last `register` of the statement.
+    stmt = max(text.rfind(c, 0, m.start()) for c in ";{}") + 1
+    regs = list(re.finditer(r"\bregister\b", text[stmt:m.start()]))
+    if len(regs) != 1:
+        return "no single `register` keyword before the asm"
+    start = stmt + regs[0].start()
+    lead = text[stmt:start]
+    # Only whitespace (or a #define's continuation backslash) may come
+    # before `register`: `static register`, `const register`, a for-init
+    # or a second declarator would change meaning.
+    if not re.fullmatch(r"(?:\s|\\\n)*", lead):
+        return "something other than whitespace before `register`"
+    decl = text[stmt + regs[0].end():m.start()]
+    if raw[start:m.start()] != text[start:m.start()]:
+        return "comment inside the declaration"
+    dm = re.fullmatch(r"\s+(.*?)\s*\b([A-Za-z_]\w*)\s*", decl, re.S)
+    if not dm or "\n" in decl:
+        return "declarator isn't `T name` on one line"
+    typ = dm.group(1).strip()
+    # Make `u8 *p` read `u8 *, p`; a bare `T*` or `T *` is kept as `T *`.
+    typ = re.sub(r"\s*\*", " *", typ).replace("* *", "**").strip()
+    while "* *" in typ:
+        typ = typ.replace("* *", "**")
+    if not PIN_TYPE.fullmatch(typ):
+        return "type %r isn't a plain type (array or function pointer?)" % typ
+    after = text[end:end + 40].lstrip()
+    if not re.match(r"[;=]", after):
+        return "the asm isn't followed by `;` or an initialiser"
+    return (start, end, "MATCH_HOLD_REG(%s, %s, %s)" % (typ, dm.group(2), reg.group(1)))
+
+
+def realign_continuations(raw, old_raw, edits):
+    """Keep #define continuation backslashes in their original column on
+    the lines an edit touched (one space before them if the line is now
+    too long)."""
+    old_lines = old_raw.split("\n")
+    touched = {old_raw.count("\n", 0, s) for s, _, _ in edits}
+    lines = raw.split("\n")
+    for ln in touched:
+        old, new = old_lines[ln], lines[ln]
+        if not old.endswith("\\") or not new.endswith("\\"):
+            continue
+        col = len(old) - 1
+        body = new[:-1].rstrip()
+        lines[ln] = body + " " * max(1, col - len(body)) + "\\"
+    return "\n".join(lines)
+
+
 def convert_file(path, kinds):
     """Rewrite the sites of the given kinds in one file; return the count."""
     with open(path, encoding="utf-8") as f:
@@ -401,6 +462,15 @@ def convert_file(path, kinds):
         end = balanced(text, m.end() - 1)
         k = classify_asm(text, m, end, depths[m.start()])
         if len(k) != 1 or k[0] not in kinds:
+            continue
+        if k[0] == "pin":
+            e = convert_pin(raw, text, m, end)
+            if isinstance(e, str):
+                print("%s:%d: pin skipped: %s"
+                      % (os.path.relpath(path, ROOT), line_of(text, m.start()), e),
+                      file=sys.stderr)
+            else:
+                edits.append(e)
             continue
         macro, want = CONVERTERS[k[0]]
         ops = asm_operands(text[m.end():end - 1])
@@ -415,8 +485,10 @@ def convert_file(path, kinds):
         edits.append((m.start(), end, "%s(%s)" % (macro, args)))
     if not edits:
         return 0
+    old_raw = raw
     for start, end, new in reversed(edits):
         raw = raw[:start] + new + raw[end:]
+    raw = realign_continuations(raw, old_raw, edits)
     raw = add_include(raw)
     with open(path, "w", encoding="utf-8") as f:
         f.write(raw)
@@ -428,6 +500,9 @@ def convert_file(path, kinds):
 MACRO_CHECKS = [
     ('MATCH_HOLD_REG(u8 *, p, r1) = q;', 'register u8 *p asm("r1") = q;'),
     ('MATCH_HOLD_REG(s32, h, ip);', 'register s32 h asm("ip");'),
+    ('MATCH_HOLD_REG(struct settings_icon_actor **, q, sb) = (void *)0;',
+     'register struct settings_icon_actor **q asm("sb") = (void *)0;'),
+    ('MATCH_HOLD_REG(const u8 *, r, r2) = t + 1;', 'register const u8 *r asm("r2") = t + 1;'),
     ('MATCH_BARRIER();', 'asm("");'),
     ('MATCH_USE(x);', 'asm("" : : "r"(x));'),
     ('MATCH_USE_VOLATILE(x);', 'asm volatile("" : : "r"(x));'),
@@ -471,7 +546,7 @@ def main():
                     help="with --kind, print each site's source line")
     ap.add_argument("--list-kinds", action="store_true")
     ap.add_argument("--convert", metavar="KIND[,KIND]",
-                    help="rewrite every site of these kinds in src/ and lib/ "
+                    help="rewrite every site of these kinds in src/, lib/ and include/ "
                          "to its match.h macro, adding the #include")
     ap.add_argument("--check-macros", action="store_true",
                     help="check that each match.h macro expands to the tokens "
@@ -489,11 +564,11 @@ def main():
                   file=sys.stderr)
             return 1
         total = 0
-        for d in ("src", "lib"):
+        for d in SCAN_DIRS:
             for dirpath, _, files in sorted(os.walk(os.path.join(ROOT, d))):
                 for fn in sorted(files):
-                    if fn.endswith((".c", ".h")):
-                        p = os.path.join(dirpath, fn)
+                    p = os.path.join(dirpath, fn)
+                    if fn.endswith((".c", ".h")) and os.path.relpath(p, ROOT) not in SKIP_FILES:
                         n = convert_file(p, kinds)
                         if n:
                             print("%3d  %s" % (n, os.path.relpath(p, ROOT)))

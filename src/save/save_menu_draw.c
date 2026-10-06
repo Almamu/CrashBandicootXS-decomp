@@ -147,7 +147,7 @@ void DrawSaveMenuCancel(struct save_menu *self, u8 highlight)
 void DrawYesNoPrompt(struct save_menu *self, s32 value)
 {
     s32 w;
-    register s32 y asm("r9");
+    MATCH_HOLD_REG(s32, y, r9);
 
     FontSetPalette(gSmallFont, 0);
     w = ICON_TEXT_CALL(gSmallFont, 0, GetUiText(value));
@@ -383,7 +383,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
     else {
         /* The ROM computes the address first, in r0, and reloads the 0
          * into r1 after it; this pin reproduces that for frame 0. */
-        register u8 *fp asm("r0") = &icon->frameIndex;
+        MATCH_HOLD_REG(u8 *, fp, r0) = &icon->frameIndex;
         *fp = 0;
     }
     ResetSpriteFrameTimer(&icon->base);
@@ -399,7 +399,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
              * reload skip it when it copies the 15 from sl, so the third
              * icon takes r3 as in the ROM. The ROM reloaded the 0 above,
              * which moved the round-robin on; the pinned store doesn't. */
-            register s32 hold asm("r1");
+            MATCH_HOLD_REG(s32, hold, r1);
             MATCH_HOLD(hold);
             lo &= 15;
             MATCH_USE(hold);

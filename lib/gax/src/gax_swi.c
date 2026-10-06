@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* HuffUnComp (SWI 0x13) wrapper, GAX2-internal - preserves r0/r1 across
  * the call via r7/r8 plus a dead `sub sp, #8`/stack-store of both args
@@ -14,14 +15,14 @@
  * the ROM's `add r0, r7, #0; mov r1, r8` restore after the SWI. */
 void GaxHuffUnComp(void *src, void *dst)
 {
-    register void *savedSrc asm("r7") = src;
-    register void *savedDst asm("r8") = dst;
+    MATCH_HOLD_REG(void *, savedSrc, r7) = src;
+    MATCH_HOLD_REG(void *, savedDst, r8) = dst;
 
     asm volatile("" : : "m"(src), "m"(dst));
     asm volatile("swi 0x13" : : : "r0", "r1");
     {
-        register void *r0 asm("r0") = savedSrc;
-        register void *r1 asm("r1") = savedDst;
+        MATCH_HOLD_REG(void *, r0, r0) = savedSrc;
+        MATCH_HOLD_REG(void *, r1, r1) = savedDst;
         asm volatile("" : : "r"(r0), "r"(r1));
     }
 }

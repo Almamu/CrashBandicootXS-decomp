@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "objects.h"
 #include "level.h"
@@ -47,7 +48,7 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
         s32 origY;
     } f;
     u8 span = quad->w;
-    register u8 *tries asm("r6");
+    MATCH_HOLD_REG(u8 *, tries, r6);
     u8 hit;
 
     f.origY = self->y;

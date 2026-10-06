@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
 #include "audio.h"
@@ -25,8 +26,8 @@
  * is set - fires an extra one-shot effect via `FreezeLevelClock`. */
 void FinishJetpackRun(void *selfArg)
 {
-    register struct actor_self *self asm("r4") = selfArg;
-    register s32 zero asm("r5") = gJetpackPlayerInactive;
+    MATCH_HOLD_REG(struct actor_self *, self, r4) = selfArg;
+    MATCH_HOLD_REG(s32, zero, r5) = gJetpackPlayerInactive;
 
     if (zero == 0) {
         gJetpackInputEnabled = zero;
@@ -36,16 +37,16 @@ void FinishJetpackRun(void *selfArg)
         gJetpackPlayerVelY = zero;
         gJetpackPlayerVelX = zero;
         {
-            register s32 five asm("r0") = 5;
-            register s32 four asm("r1") = 4;
+            MATCH_HOLD_REG(s32, five, r0) = 5;
+            MATCH_HOLD_REG(s32, four, r1) = 4;
 
             self->state = five;
             self->stateTime = zero;
             self->animIndex = four;
         }
         {
-            register u16 anim asm("r0") = self->anims[4].duration;
-            register u8 zero2 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[4].duration;
+            MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero2;
@@ -75,9 +76,9 @@ void FinishJetpackRun(void *selfArg)
  * frame timer and advances the round-robin index. */
 void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
 {
-    register struct actor_hp *self asm("r5") = selfArg;
-    register s32 x asm("r3") = xArg;
-    register s32 y asm("r4") = yArg;
+    MATCH_HOLD_REG(struct actor_hp *, self, r5) = selfArg;
+    MATCH_HOLD_REG(s32, x, r3) = xArg;
+    MATCH_HOLD_REG(s32, y, r4) = yArg;
     s32 state = self->base.state;
     u8 paused;
 
@@ -88,9 +89,9 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
     if (self->base.animIndex != 5) {
         self->base.animIndex = 5;
         {
-            register u16 anim asm("r0") = self->base.anims[5].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[5].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;
@@ -107,9 +108,9 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
     self->base.state = 6;
 
     {
-        register s32 *p1508 asm("r2") = &gJetpackPlayerVelY;
-        register s32 *p150c asm("r1") = &gJetpackPlayerVelX;
-        register s32 zero asm("r0") = 0;
+        MATCH_HOLD_REG(s32 *, p1508, r2) = &gJetpackPlayerVelY;
+        MATCH_HOLD_REG(s32 *, p150c, r1) = &gJetpackPlayerVelX;
+        MATCH_HOLD_REG(s32, zero, r0) = 0;
 
         *p150c = zero;
         *p1508 = zero;
@@ -156,14 +157,14 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
         break;
     case 3:
         if (gJetpackPlayerInactive == 0) {
-            register s32 *maxPtr asm("r4") = &gJetpackPlayerMaxHp;
-            register s32 max asm("r1") = *maxPtr;
-            register s32 mul asm("r0") = 0x14;
+            MATCH_HOLD_REG(s32 *, maxPtr, r4) = &gJetpackPlayerMaxHp;
+            MATCH_HOLD_REG(s32, max, r1) = *maxPtr;
+            MATCH_HOLD_REG(s32, mul, r0) = 0x14;
             s32 v = self->hp + __divsi3(max * mul, 0x64);
 
             self->hp = v;
             {
-                register s32 cap asm("r4") = *maxPtr;
+                MATCH_HOLD_REG(s32, cap, r4) = *maxPtr;
 
                 if (v > cap) {
                     self->hp = cap;
@@ -223,10 +224,10 @@ void AllocJetpackPlayerTiles(void *selfArg)
         s32 pos = off + accum;
         u8 **table2 = (u8 **)self->frameOffsets;
         u8 *rec = table2[pos];
-        register s32 b0 asm("r3") = rec[0];
-        register s32 b1 asm("r1") = rec[1];
-        register s32 temp asm("r2");
-        register s32 size asm("r0");
+        MATCH_HOLD_REG(s32, b0, r3) = rec[0];
+        MATCH_HOLD_REG(s32, b1, r1) = rec[1];
+        MATCH_HOLD_REG(s32, temp, r2);
+        MATCH_HOLD_REG(s32, size, r0);
 
         asm volatile(
             "add %0, %2, #0\n\t"
@@ -240,11 +241,11 @@ void AllocJetpackPlayerTiles(void *selfArg)
     {
         s32 accum = self->animTime >> 8;
         s32 idx = self->animIndex;
-        register u8 *table asm("r3") = (u8 *)self->anims;
-        register s32 shiftResult asm("r0") = idx * 3 * 4;
-        register u8 *addr2 asm("r0");
-        register s32 twoIdx asm("r3");
-        register s32 off asm("r0");
+        MATCH_HOLD_REG(u8 *, table, r3) = (u8 *)self->anims;
+        MATCH_HOLD_REG(s32, shiftResult, r0) = idx * 3 * 4;
+        MATCH_HOLD_REG(u8 *, addr2, r0);
+        MATCH_HOLD_REG(s32, twoIdx, r3);
+        MATCH_HOLD_REG(s32, off, r0);
         s32 pos;
         u8 **table2;
         u8 *rec;
@@ -256,10 +257,10 @@ void AllocJetpackPlayerTiles(void *selfArg)
         table2 = (u8 **)self->frameOffsets;
         rec = table2[pos];
         {
-            register s32 b0 asm("r2") = rec[0];
-            register s32 b1 asm("r3") = rec[1];
-            register s32 temp asm("r1");
-            register s32 size asm("r0");
+            MATCH_HOLD_REG(s32, b0, r2) = rec[0];
+            MATCH_HOLD_REG(s32, b1, r3) = rec[1];
+            MATCH_HOLD_REG(s32, temp, r1);
+            MATCH_HOLD_REG(s32, size, r0);
 
             asm volatile(
                 "add %0, %2, #0\n\t"

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "vtable.h"
 #include "action_obj.h"
 #include "system.h"
@@ -46,9 +47,9 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 void KillPlayer(struct act *self, s32 id)
 {
     {
-        register void *a0 asm("r0") = gAudioContext;
-        register s32 a2 asm("r2") = 0x100;
-        register s32 a1 asm("r1") = 0x1b;
+        MATCH_HOLD_REG(void *, a0, r0) = gAudioContext;
+        MATCH_HOLD_REG(s32, a2, r2) = 0x100;
+        MATCH_HOLD_REG(s32, a1, r1) = 0x1b;
         PlaySfx(a0, a1, a2);
     }
 
@@ -62,11 +63,11 @@ void KillPlayer(struct act *self, s32 id)
     }
 
     {
-        register s32 zero asm("r4") = 0;
-        register s32 one asm("r5");
+        MATCH_HOLD_REG(s32, zero, r4) = 0;
+        MATCH_HOLD_REG(s32, one, r5);
 
         {
-            register u8 *w asm("r0") = (u8 *)self + 0x31;
+            MATCH_HOLD_REG(u8 *, w, r0) = (u8 *)self + 0x31;
             *w = zero; w -= 2;
             one = 1;
             *w = one;  w -= 8;
@@ -83,14 +84,14 @@ void KillPlayer(struct act *self, s32 id)
         (*(u8 **)((u8 *)self + 0x10))[0x103] = zero;
 
         {
-            register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10);
-            register s32 mask asm("r0") = 0x7f;
+            MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10);
+            MATCH_HOLD_REG(s32, mask, r0) = 0x7f;
             mask &= p[0xc];
             p[0xc] = mask;
         }
         {
-            register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10);
-            register s32 mask asm("r0") = 0x41;
+            MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10);
+            MATCH_HOLD_REG(s32, mask, r0) = 0x41;
             mask = -mask;
             mask &= p[0xc];
             p[0xc] = mask;
@@ -103,8 +104,8 @@ void KillPlayer(struct act *self, s32 id)
              * inline-asm anchor (matching_decomp_register_pinning) is
              * the only way found to pin the folded constant's own
              * register. */
-            register u8 *addr asm("r0") = *(u8 **)((u8 *)self + 0x10);
-            register s32 v asm("r1");
+            MATCH_HOLD_REG(u8 *, addr, r0) = *(u8 **)((u8 *)self + 0x10);
+            MATCH_HOLD_REG(s32, v, r1);
             asm volatile("mov %0, #0x82\n\tlsl %0, %0, #1" : "=r"(v));
             addr += v;
             *addr = one;
@@ -114,16 +115,16 @@ void KillPlayer(struct act *self, s32 id)
     LoseLife(gLevelState);
 
     {
-        register struct palette_cache *cache asm("r0") = gPaletteCache;
-        register u8 *p asm("r3") = *(u8 **)((u8 *)self + 0x10);
-        register u32 nibble asm("r1") = (u32)(p[0x29] << 28) >> 28;
-        register u8 **xptr asm("r2") = *(u8 ***)(p + 0x20);
+        MATCH_HOLD_REG(struct palette_cache *, cache, r0) = gPaletteCache;
+        MATCH_HOLD_REG(u8 *, p, r3) = *(u8 **)((u8 *)self + 0x10);
+        MATCH_HOLD_REG(u32, nibble, r1) = (u32)(p[0x29] << 28) >> 28;
+        MATCH_HOLD_REG(u8 **, xptr, r2) = *(u8 ***)(p + 0x20);
 
         p = p + 0x2d;
         {
-            register u8 *base asm("r4") = *xptr;
-            register u8 tag asm("r5") = *p;
-            register s32 record asm("r2") = tag * 0x1c;
+            MATCH_HOLD_REG(u8 *, base, r4) = *xptr;
+            MATCH_HOLD_REG(u8, tag, r5) = *p;
+            MATCH_HOLD_REG(s32, record, r2) = tag * 0x1c;
             record += (s32)base;
             LoadPaletteSlot(cache, nibble, ((u8 *)record)[0x14]);
         }
@@ -143,15 +144,15 @@ void sub_8012238(struct act *selfArg)
      * UpdatePlayerFacing shift by one. */
     struct act *self = selfArg;
     struct player *player = gPlayer;
-    register s32 flag asm("r5") = player->slippery;
+    MATCH_HOLD_REG(s32, flag, r5) = player->slippery;
 
     if (flag == 0)
         goto flag_zero;
 
     {
-        register u8 *typeAddr asm("r3") = &player->tag;
+        MATCH_HOLD_REG(u8 *, typeAddr, r3) = &player->tag;
         s32 type = *typeAddr;
-        register s32 type2 asm("r2") = type;
+        MATCH_HOLD_REG(s32, type2, r2) = type;
 
         if (type == 0x12)
             goto case_12;
@@ -175,7 +176,7 @@ void sub_8012238(struct act *selfArg)
 case_set_26: {
     player = gPlayer;
     {
-        register s32 v asm("r0") = 0x26;
+        MATCH_HOLD_REG(s32, v, r0) = 0x26;
         player->tag = v;
     }
 }
@@ -212,8 +213,8 @@ end:
  * returning 1; every other value/path returns 0. */
 s32 UpdatePlayerFacing(struct act *self)
 {
-    register s32 dpad asm("r3") = GetDpadDirection(gInput);
-    register s32 result asm("r2") = 0;
+    MATCH_HOLD_REG(s32, dpad, r3) = GetDpadDirection(gInput);
+    MATCH_HOLD_REG(s32, result, r2) = 0;
     s32 type = self->state;
 
     if ((u32)type > 0x26)
@@ -229,9 +230,9 @@ s32 UpdatePlayerFacing(struct act *self)
 
 do_it:
     {
-        register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10) + 0x28;
-        register s32 mask asm("r0") = -0x21;
-        register s32 val asm("r5") = *p;
+        MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10) + 0x28;
+        MATCH_HOLD_REG(s32, mask, r0) = -0x21;
+        MATCH_HOLD_REG(s32, val, r5) = *p;
         mask &= val;
         *p = mask;
     }
@@ -244,21 +245,21 @@ do_it:
 
 branch1:
     {
-        register u8 *p asm("r1") = *(u8 **)((u8 *)self + 0x10);
-        register s32 zero asm("r2") = 0;
+        MATCH_HOLD_REG(u8 *, p, r1) = *(u8 **)((u8 *)self + 0x10);
+        MATCH_HOLD_REG(s32, zero, r2) = 0;
         p += 0x28;
         {
-            register s32 mask asm("r0") = -0x11;
+            MATCH_HOLD_REG(s32, mask, r0) = -0x11;
             mask &= *p;
             *p = mask;
         }
         {
-            register u8 *addr1 asm("r1") = (u8 *)self + 0x2f;
-            register s32 one asm("r0") = 1;
+            MATCH_HOLD_REG(u8 *, addr1, r1) = (u8 *)self + 0x2f;
+            MATCH_HOLD_REG(s32, one, r0) = 1;
             *addr1 = one;
         }
         {
-            register u8 *addr2 asm("r0") = (u8 *)self + 0x29;
+            MATCH_HOLD_REG(u8 *, addr2, r0) = (u8 *)self + 0x29;
             *addr2 = zero;
         }
     }
@@ -266,8 +267,8 @@ branch1:
 
 check_2nd:
     {
-        register u8 *part asm("r0") = *(u8 **)((u8 *)self + 0x10);
-        register u8 *addr asm("r1") = part + 0x28;
+        MATCH_HOLD_REG(u8 *, part, r0) = *(u8 **)((u8 *)self + 0x10);
+        MATCH_HOLD_REG(u8 *, addr, r1) = part + 0x28;
         if (*addr << 27 < 0)
             goto end;
         if (dpad == 3 || dpad == 5 || dpad == 7)
@@ -276,16 +277,16 @@ check_2nd:
 
     branch2:
         {
-            register s32 one asm("r3") = 1;
-            register u8 *p asm("r2") = part + 0x28;
-            register s32 mask asm("r0") = -0x11;
-            register s32 val asm("r5") = *p;
+            MATCH_HOLD_REG(s32, one, r3) = 1;
+            MATCH_HOLD_REG(u8 *, p, r2) = part + 0x28;
+            MATCH_HOLD_REG(s32, mask, r0) = -0x11;
+            MATCH_HOLD_REG(s32, val, r5) = *p;
             mask &= val;
             mask |= 0x10;
             *p = mask;
             {
-                register u8 *addr asm("r0") = (u8 *)self + 0x2f;
-                register s32 zero asm("r1") = 0;
+                MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)self + 0x2f;
+                MATCH_HOLD_REG(s32, zero, r1) = 0;
                 *addr = one;
                 addr -= 6;
                 *addr = zero;

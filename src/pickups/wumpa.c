@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "pickups.h"
 #include "player.h"
@@ -19,8 +20,8 @@ void DrawWumpa(struct orbit_part *self)
 {
     DrawSprite(gSpriteRenderer, self);
     if (self->animDone != 0) {
-        register s32 mask asm("r0") = -9;
-        register u8 flags asm("r1") = self->base.flags;
+        MATCH_HOLD_REG(s32, mask, r0) = -9;
+        MATCH_HOLD_REG(u8, flags, r1) = self->base.flags;
 
         mask &= flags;
         self->base.flags = mask;
@@ -49,7 +50,7 @@ void DestroyWumpa(struct orbit_part *self, u32 flags)
 /* Sets flag bit 6 and clears `state`. */
 void ResetWumpaPickup(struct orbit_part *self)
 {
-    register u8 mask asm("r1") = 0x40;
+    MATCH_HOLD_REG(u8, mask, r1) = 0x40;
 
     mask |= self->base.flags;
     *(volatile u8 *)&self->base.flags = mask;
@@ -134,8 +135,8 @@ void SetWumpaCounter(struct orbit_part *self, u8 value)
 void UpdateStopwatch(struct actor *self)
 {
     struct player *player = gPlayer;
-    register s32 rawX asm("r0") = player->x;
-    register s32 dxPart asm("r1");
+    MATCH_HOLD_REG(s32, rawX, r0) = player->x;
+    MATCH_HOLD_REG(s32, dxPart, r1);
     s32 dx;
     s32 dy;
 
@@ -148,8 +149,8 @@ void UpdateStopwatch(struct actor *self)
         goto outOfRange;
     }
     {
-        register s32 rawY asm("r0") = player->y;
-        register s32 dyPart asm("r1");
+        MATCH_HOLD_REG(s32, rawY, r0) = player->y;
+        MATCH_HOLD_REG(s32, dyPart, r1);
 
         asm volatile("asr %0, %1, #8" : "=r" (dyPart) : "r" (rawY));
         dy = dyPart - (self->y >> 8);
@@ -163,19 +164,19 @@ void UpdateStopwatch(struct actor *self)
 
 outOfRange:
     {
-        register s32 mask asm("r0") = 1;
+        MATCH_HOLD_REG(s32, mask, r0) = 1;
 
         mask |= self->flags;
         self->flags = mask;
     }
     {
-        register s32 ffff asm("r0") = 0xFFFF;
-        register u16 field08a asm("r4") = *(volatile u16 *)&self->field_08;
+        MATCH_HOLD_REG(s32, ffff, r0) = 0xFFFF;
+        MATCH_HOLD_REG(u16, field08a, r4) = *(volatile u16 *)&self->field_08;
 
         if (field08a != ffff) {
-            register u16 field08b asm("r3") = *(volatile u16 *)&self->field_08;
+            MATCH_HOLD_REG(u16, field08b, r3) = *(volatile u16 *)&self->field_08;
             void *base = gEntityFlags;
-            register s32 word asm("r0");
+            MATCH_HOLD_REG(s32, word, r0);
             s32 wordOffset;
 
             asm volatile("add %0, %1, #0\n\tasr %0, %0, #5" : "=r" (word) : "r" ((s32)field08b));
@@ -248,9 +249,9 @@ struct actor *InitStopwatch(struct actor *self)
  * through the pinned byte cursor `q` the ROM steps. */
 void ResetActionCtrl(struct act *selfArg)
 {
-    register u8 *p asm("r3") = (u8 *)selfArg;
-    register u8 *q asm("r1") = p + 0x29;
-    register s32 zero asm("r0") = 0;
+    MATCH_HOLD_REG(u8 *, p, r3) = (u8 *)selfArg;
+    MATCH_HOLD_REG(u8 *, q, r1) = p + 0x29;
+    MATCH_HOLD_REG(s32, zero, r0) = 0;
 
     *q = zero;
     *(s32 *)(p + 8) = zero;

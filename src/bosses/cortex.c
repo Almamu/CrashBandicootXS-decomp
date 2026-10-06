@@ -207,10 +207,10 @@ static inline void OrFlags(struct gfx_part *part, s32 bits)
 
 static inline void SetFrameNibbleM(struct gfx_part *part, s32 v, s32 mask)
 {
-    register s32 val asm("r0") = v;
-    register u8 *p asm("r2") = (u8 *)part + 0x29;
-    register s32 m asm("r1");
-    register s32 b asm("r3");
+    MATCH_HOLD_REG(s32, val, r0) = v;
+    MATCH_HOLD_REG(u8 *, p, r2) = (u8 *)part + 0x29;
+    MATCH_HOLD_REG(s32, m, r1);
+    MATCH_HOLD_REG(s32, b, r3);
 
     val &= mask;
     asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r"(m));
@@ -222,10 +222,10 @@ static inline void SetFrameNibbleM(struct gfx_part *part, s32 v, s32 mask)
 
 static inline void SetFrameNibble(struct gfx_part *part, s32 v)
 {
-    register s32 val asm("r0") = v;
-    register u8 *p asm("r2") = (u8 *)part + 0x29;
-    register s32 m asm("r1");
-    register s32 b asm("r3");
+    MATCH_HOLD_REG(s32, val, r0) = v;
+    MATCH_HOLD_REG(u8 *, p, r2) = (u8 *)part + 0x29;
+    MATCH_HOLD_REG(s32, m, r1);
+    MATCH_HOLD_REG(s32, b, r3);
 
     val &= 0xF;
     asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r"(m));
@@ -238,10 +238,10 @@ static inline void SetFrameNibble(struct gfx_part *part, s32 v)
 static inline void CopyFlipX(struct gfx_part *dst, struct gfx_part *src)
 {
     u32 sv = (u32)src + 0x28;
-    register u8 *dp asm("r2") = (u8 *)dst + 0x28;
-    register s32 bit asm("r1") = 0x10;
-    register s32 m asm("r0");
-    register s32 b asm("r3");
+    MATCH_HOLD_REG(u8 *, dp, r2) = (u8 *)dst + 0x28;
+    MATCH_HOLD_REG(s32, bit, r1) = 0x10;
+    MATCH_HOLD_REG(s32, m, r0);
+    MATCH_HOLD_REG(s32, b, r3);
 
     MATCH_KEEP(bit);
     sv = *(u8 *)sv;
@@ -284,8 +284,8 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
     {                                                                          \
         register s32 _frame asm(R_FRAME) = (frameExpr);                        \
         struct anim_bank *_bank = (part)->bank;                                \
-        register u8 *_tagp asm("r2") = &(part)->tag;                           \
-        register struct anim_record *_records asm("r1") = _bank->records;      \
+        MATCH_HOLD_REG(u8 *, _tagp, r2) = &(part)->tag;                        \
+        MATCH_HOLD_REG(struct anim_record *, _records, r1) = _bank->records;   \
         register u32 _tag asm(R_TAG) = *_tagp;                                 \
         s32 _count = _records[_tag].frameCount;                                \
                                                                                \
@@ -307,7 +307,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
     do                                                                         \
     {                                                                          \
         {                                                                      \
-            register s32 _v asm("r0") = 1;                                     \
+            MATCH_HOLD_REG(s32, _v, r0) = 1;                                   \
             register s32 _f asm(R_FLAGS) = PART_FLAGS(t);                      \
                                                                                \
             _v |= _f;                                                          \
@@ -321,7 +321,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
  * allocator would otherwise pick r5 */
 #define GONE_SLOT_R4(slot, base)                                               \
     {                                                                          \
-        register s32 _k asm("r4") = 0x108;                                     \
+        MATCH_HOLD_REG(s32, _k, r4) = 0x108;                                   \
                                                                                \
         MATCH_KEEP(_k);                                                        \
         slot = (u32 *)((base) + _k);                                           \
@@ -336,14 +336,14 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
     do                                                                         \
     {                                                                          \
         {                                                                      \
-            register s32 _none asm("r0") = 0xFFFF;                             \
+            MATCH_HOLD_REG(s32, _none, r0) = 0xFFFF;                           \
             register u32 _cur asm(R_CUR) = (t)->id;                            \
                                                                                \
             if (_cur != _none)                                                 \
             {                                                                  \
-                register s32 _id asm("r3") = *(vu16 *)&(t)->id;                \
+                MATCH_HOLD_REG(s32, _id, r3) = *(vu16 *)&(t)->id;              \
                 register u8 *_base asm(R_BASE) = (u8 *)gEntityFlags;     \
-                register s32 _word asm("r0") = _id;                            \
+                MATCH_HOLD_REG(s32, _word, r0) = _id;                          \
                 s32 _off;                                                      \
                 u32 *_slot;                                                    \
                                                                                \
@@ -545,8 +545,8 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
     {
         /* the ROM keeps 0xF in r5 across the calls and reuses it as the
          * frame-nibble mask below */
-        register s32 t asm("r0") = 0xF;
-        register s32 k asm("r5");
+        MATCH_HOLD_REG(s32, t, r0) = 0xF;
+        MATCH_HOLD_REG(s32, k, r5);
 
         MATCH_KEEP(t);
         {
@@ -573,7 +573,7 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
     OrFlags(c, 0x10);
     AddToPartList(gUnknown_030012F4, c);
     {
-        register struct gfx_pair_ctrl *s asm("r2") = self;
+        MATCH_HOLD_REG(struct gfx_pair_ctrl *, s, r2) = self;
 
         MATCH_KEEP(s);
         s->childB = c;
@@ -614,8 +614,8 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
 void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
 {
     /* pinned so `self` is left the ROM's r7 */
-    register struct gfx_part *part asm("r6") = partArg;
-    register s32 n asm("r5");
+    MATCH_HOLD_REG(struct gfx_part *, part, r6) = partArg;
+    MATCH_HOLD_REG(s32, n, r5);
 
     if ((n = self->stepsLeft) != 0)
     {
@@ -636,8 +636,8 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
     {
     case 0:
     {
-        register s32 m asm("r0") = -5;
-        register s32 b asm("r2");
+        MATCH_HOLD_REG(s32, m, r0) = -5;
+        MATCH_HOLD_REG(s32, b, r2);
         b = PART_FLAGS(part);
         m &= b;
         PART_FLAGS(part) = m;
@@ -669,12 +669,12 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
         break;
     case 5:
     {
-        register u8 *blinking asm("r5");
+        MATCH_HOLD_REG(u8 *, blinking, r5);
         s32 left;
 
         {
-            register u8 *bp asm("r0") = &self->blinking;
-            register u32 on asm("r1") = *bp;
+            MATCH_HOLD_REG(u8 *, bp, r0) = &self->blinking;
+            MATCH_HOLD_REG(u32, on, r1) = *bp;
 
             asm("mov %0, %1" : "=l"(blinking) : "l"(bp));
             if (on && ++self->blink > 9)
@@ -738,8 +738,8 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
  * in this file. */
 static inline void StepHeight(struct gfx_mover *self, s32 pattern)
 {
-    register s32 v asm("r0") = pattern;
-    register s32 p asm("r1");
+    MATCH_HOLD_REG(s32, v, r0) = pattern;
+    MATCH_HOLD_REG(s32, p, r1);
 
     asm("mov %0, %1" : "=l"(p) : "l"(v));
     if (v == 1)
@@ -758,8 +758,8 @@ mirror:
     return;
 toggle:
     {
-        register s32 one asm("r0") = 1;
-        register s32 b asm("r1");
+        MATCH_HOLD_REG(s32, one, r0) = 1;
+        MATCH_HOLD_REG(s32, b, r1);
 
         MATCH_KEEP(one);
         b = self->high;
@@ -769,7 +769,7 @@ toggle:
     return;
 toggleTop:
     {
-        register s32 one asm("r3") = 1;
+        MATCH_HOLD_REG(s32, one, r3) = 1;
         s32 h;
 
         MATCH_KEEP(one);
@@ -854,8 +854,8 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
 void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
 {
     /* pinned so `self` is left the ROM's r7 (see the file comment) */
-    register struct gfx_part *part asm("r6") = partArg;
-    register s32 kind asm("r5") = kindArg;
+    MATCH_HOLD_REG(struct gfx_part *, part, r6) = partArg;
+    MATCH_HOLD_REG(s32, kind, r5) = kindArg;
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 fast; } *ctrl;
 
@@ -876,8 +876,8 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->pos = part->pos;
     {
-        register s32 m asm("r0") = -5;
-        register s32 b asm("r1");
+        MATCH_HOLD_REG(s32, m, r0) = -5;
+        MATCH_HOLD_REG(s32, b, r1);
         b = PART_FLAGS(c);
         m &= b;
         b = 1;
@@ -920,14 +920,14 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                  * idiom as player_collide.c's _call_via_r4 calls) */
                 const struct actor_method *tbl = &p->vtable->handleEvent;
                 void *thisp = (u8 *)p + tbl->thisOffset;
-                register void *fn asm("r4") = *(void *const volatile *)&tbl->fn;
+                MATCH_HOLD_REG(void *, fn, r4) = *(void *const volatile *)&tbl->fn;
 
                 (void)fn;
                 _call_via_r4(thisp, 0, 9, 0);
             }
             {
-                register s32 zero asm("r0") = 0;
-                register struct gfx_part *q asm("r4") = part;
+                MATCH_HOLD_REG(s32, zero, r0) = 0;
+                MATCH_HOLD_REG(struct gfx_part *, q, r4) = part;
 
                 MATCH_KEEP(q);
                 q->kind = zero;
@@ -936,7 +936,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
         else if (self->enabled)
         {
             s32 n = gCollidableList->count;
-            register s32 i asm("r5");
+            MATCH_HOLD_REG(s32, i, r5);
 
             for (i = 0; i < n; i++)
             {
@@ -948,8 +948,8 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                     CALL2(self->owner, method_20, 2);
                     e->kind = 1;
                     {
-                        register s32 zero asm("r2") = 0;
-                        register struct gfx_part *q asm("r1") = part;
+                        MATCH_HOLD_REG(s32, zero, r2) = 0;
+                        MATCH_HOLD_REG(struct gfx_part *, q, r1) = part;
 
                         MATCH_KEEP(q);
                         q->kind = zero;
@@ -962,11 +962,11 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
     {
         /* MARK_GONE, but `part` lives in r8 here: the flags byte is read
          * through an r3 copy and everything after through an r4 copy */
-        register s32 v asm("r0") = 1;
-        register struct gfx_part *t asm("r4");
+        MATCH_HOLD_REG(s32, v, r0) = 1;
+        MATCH_HOLD_REG(struct gfx_part *, t, r4);
 
         {
-            register u32 q asm("r3") = (u32)part;
+            MATCH_HOLD_REG(u32, q, r3) = (u32)part;
 
             MATCH_KEEP(q);
             q = PART_FLAGS((struct gfx_part *)q);
@@ -997,8 +997,8 @@ void UpdateCortexBossPlatformMover(struct gfx_ctrl *self, struct gfx_part *part)
     }
     else
     {
-        register s32 one asm("r1") = 1;
-        register u8 *p asm("r0") = &part->animating;
+        MATCH_HOLD_REG(s32, one, r1) = 1;
+        MATCH_HOLD_REG(u8 *, p, r0) = &part->animating;
 
         *p = one;
         p += 0x38 - 0x2C;

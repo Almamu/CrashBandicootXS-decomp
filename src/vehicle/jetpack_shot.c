@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "actor.h"
 #include "bosses.h"
@@ -110,7 +111,7 @@ asm(".align 2, 0");
  * wants `self`/the constant `1`/`e`/`f` pinned to `r4`/`r5`/`r6`/`r7`
  * respectively, all kept live across the `InitActorPart` call, with a
  * matching 4-register `push`/`pop`. Explicitly pinning `e`/`f` to their
- * target registers (`register s32 x asm("r6"|"r7") = ...;`) either adds
+ * target registers (`MATCH_HOLD_REG(s32, x, r6 / r7) = ...;`) either adds
  * a spurious extra `r8` push/pop (when the pin forces a relay) or -
  * for `r7` specifically - drops that register from the compiler's own
  * push/pop list outright (a genuine agbcc/gcc 2.9 Thumb-prologue bug,
@@ -127,7 +128,7 @@ asm(".align 2, 0");
 void *CreateJetpackShot(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e, s32 f)
 {
     u8 *self = selfArg;
-    register s32 one asm("r5") = 1;
+    MATCH_HOLD_REG(s32, one, r5) = 1;
     register s32 eReg = e;
     register s32 fReg = f;
 

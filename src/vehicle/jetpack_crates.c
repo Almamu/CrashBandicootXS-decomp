@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "util.h"
 #include <libgcc.h>
@@ -128,16 +129,16 @@ void UpdateJetpackQuestionCrate(void *selfArg)
     s32 kind = self->base.animIndex;
 
     if (kind == 0 && (u8)IsTouchingPlayer(self)) {
-        register s32 state asm("r0") = 2;
-        register s32 one asm("r1") = 1;
+        MATCH_HOLD_REG(s32, state, r0) = 2;
+        MATCH_HOLD_REG(s32, one, r1) = 1;
         s32 typeByte;
 
         self->base.state = state;
         self->base.stateTime = kind;
         self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;
@@ -213,18 +214,18 @@ void DamageJetpackQuestionCrate(void *selfArg, s32 delta)
     }
 
     {
-        register s32 state asm("r0") = 2;
-        register s32 one asm("r1") = 1;
+        MATCH_HOLD_REG(s32, state, r0) = 2;
+        MATCH_HOLD_REG(s32, one, r1) = 1;
 
         self->base.state = state;
         {
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             self->base.stateTime = zero2;
             self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->base.animTimer = anim;
                 *(u8 *)&self->base.animDone = zero1;
@@ -293,15 +294,15 @@ void UpdateJetpackHealthCrate(void *selfArg)
     s32 kind = self->base.animIndex;
 
     if (kind == 0 && (u8)IsTouchingPlayer(self)) {
-        register s32 state asm("r0") = 2;
-        register s32 one asm("r6") = 1;
+        MATCH_HOLD_REG(s32, state, r0) = 2;
+        MATCH_HOLD_REG(s32, one, r6) = 1;
 
         self->base.state = state;
         self->base.stateTime = kind;
         self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;
@@ -334,16 +335,16 @@ void UpdateJetpackTimeCrate(void *selfArg)
     s32 kind = self->base.animIndex;
 
     if (kind == 0 && (u8)IsTouchingPlayer(self)) {
-        register s32 state asm("r0") = 2;
-        register s32 one asm("r1") = 1;
+        MATCH_HOLD_REG(s32, state, r0) = 2;
+        MATCH_HOLD_REG(s32, one, r1) = 1;
         s32 typeByte;
 
         self->base.state = state;
         self->base.stateTime = kind;
         self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;
@@ -419,18 +420,18 @@ void DamageJetpackTimeCrate(void *selfArg, s32 delta)
     }
 
     {
-        register s32 state asm("r0") = 2;
-        register s32 one asm("r1") = 1;
+        MATCH_HOLD_REG(s32, state, r0) = 2;
+        MATCH_HOLD_REG(s32, one, r1) = 1;
 
         self->base.state = state;
         {
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             self->base.stateTime = zero2;
             self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->base.animTimer = anim;
                 *(u8 *)&self->base.animDone = zero1;
@@ -499,7 +500,7 @@ after_dispatch:
 void *CreateJetpackTimeCrate(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct orbit_actor *self = selfArg;
-    register s32 health asm("r8") = 2;
+    MATCH_HOLD_REG(s32, health, r8) = 2;
 
     InitActorPart(self, part, b, c, d);
     self->health = health;
@@ -529,18 +530,18 @@ void DamageJetpackHealthCrate(void *selfArg, s32 delta)
     }
 
     {
-        register s32 state asm("r0") = 2;
-        register s32 one asm("r6") = 1;
+        MATCH_HOLD_REG(s32, state, r0) = 2;
+        MATCH_HOLD_REG(s32, one, r6) = 1;
 
         self->base.state = state;
         {
-            register s32 zero2 asm("r5") = 0;
+            MATCH_HOLD_REG(s32, zero2, r5) = 0;
 
             self->base.stateTime = zero2;
             self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->base.animTimer = anim;
                 *(u8 *)&self->base.animDone = zero1;
@@ -565,7 +566,7 @@ void DamageJetpackHealthCrate(void *selfArg, s32 delta)
 void *CreateJetpackHealthCrate(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct orbit_actor *self = selfArg;
-    register s32 health asm("r8") = 2;
+    MATCH_HOLD_REG(s32, health, r8) = 2;
 
     InitActorPart(self, part, b, c, d);
     self->health = health;
@@ -587,7 +588,7 @@ void *CreateJetpackHealthCrate(void *selfArg, void *part, s32 b, s32 c, s32 d)
 void *CreateJetpackQuestionCrate(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e)
 {
     struct orbit_actor *self = selfArg;
-    register s32 health asm("r8") = 2;
+    MATCH_HOLD_REG(s32, health, r8) = 2;
 
     InitActorPart(self, part, b, c, d);
     self->health = health;
@@ -618,15 +619,15 @@ void ClearJetpackCrateBalloon(void *selfArg)
 void BreakJetpackBalloonCrate(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
-    register s32 zero asm("r5") = 0;
+    MATCH_HOLD_REG(s32, zero, r5) = 0;
 
     self->fallSpeed = zero;
     self->base.state = 1;
     self->base.stateTime = zero;
     self->base.animIndex = zero;
     {
-        register u16 anim asm("r0") = *(u16 *)&self->base.anims[0].duration;
-        register u8 zero1 asm("r1") = 0;
+        MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[0].duration;
+        MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
         *(u16 *)&self->base.animTimer = anim;
         *(u8 *)&self->base.animDone = zero1;
@@ -650,18 +651,18 @@ void DamageJetpackBalloonCrate(void *selfArg, s32 delta)
     }
 
     {
-        register s32 state asm("r0") = 2;
-        register s32 one asm("r6") = 1;
+        MATCH_HOLD_REG(s32, state, r0) = 2;
+        MATCH_HOLD_REG(s32, one, r6) = 1;
 
         self->base.state = state;
         {
-            register s32 zero2 asm("r5") = 0;
+            MATCH_HOLD_REG(s32, zero2, r5) = 0;
 
             self->base.stateTime = zero2;
             self->base.animIndex = one;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-                register u8 zero1 asm("r1") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                 *(u16 *)&self->base.animTimer = anim;
                 *(u8 *)&self->base.animDone = zero1;
@@ -693,8 +694,8 @@ void DestroyJetpackBalloonCrate(void *selfArg, s32 flags)
     self->base.vtable = (struct actor_vtable *)gActorVtable;
 
     {
-        register u8 *nextReg asm("r2") = *(u8 **)((u8 *)self + 0x4c);
-        register u8 *prevReg asm("r0") = *(u8 **)((u8 *)self + 0x48);
+        MATCH_HOLD_REG(u8 *, nextReg, r2) = *(u8 **)((u8 *)self + 0x4c);
+        MATCH_HOLD_REG(u8 *, prevReg, r0) = *(u8 **)((u8 *)self + 0x48);
 
         *(u8 **)(nextReg + 0x48) = prevReg;
     }
@@ -835,9 +836,9 @@ void UpdateJetpackParachuteNitro(void *selfArg)
         PlaySfx(gAudioContext, 4, 0x100);
         self->base.animIndex = 1;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;
@@ -858,7 +859,7 @@ tail:
  * from `self`'s own part table at `+0xc`), then ties the lap counter. */
 void DamageJetpackParachuteNitro(void *selfArg, s32 delta)
 {
-    register struct rising_actor *self asm("r6") = selfArg;
+    MATCH_HOLD_REG(struct rising_actor *, self, r6) = selfArg;
     s32 health = self->health - delta;
 
     self->health = health;
@@ -868,15 +869,15 @@ void DamageJetpackParachuteNitro(void *selfArg, s32 delta)
 
     {
         u8 *deathPtr = &self->dead;
-        register s32 zero2 asm("r5") = 0;
-        register s32 one asm("r4") = 1;
+        MATCH_HOLD_REG(s32, zero2, r5) = 0;
+        MATCH_HOLD_REG(s32, one, r4) = 1;
 
         *deathPtr = one;
         PlaySfx(gAudioContext, 4, 0x100);
         self->base.animIndex = one;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;
@@ -914,10 +915,10 @@ void DamageJetpackParachuteNitro(void *selfArg, s32 delta)
 void *CreateJetpackParachuteNitro(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct rising_actor *self = selfArg;
-    register void *aReg asm("r1") = part;
-    register s32 bReg asm("r2") = b;
-    register s32 dReg asm("r0") = d;
-    register s32 health asm("r5") = 2;
+    MATCH_HOLD_REG(void *, aReg, r1) = part;
+    MATCH_HOLD_REG(s32, bReg, r2) = b;
+    MATCH_HOLD_REG(s32, dReg, r0) = d;
+    MATCH_HOLD_REG(s32, health, r5) = 2;
     s32 outSlot;
 
     /* A plain call `InitActorPart(self, a, b, (s32)0xFFFF0600, d)` (or
@@ -1044,16 +1045,16 @@ void LaunchJetpackRocket(void *selfArg)
 {
     struct swing_actor *self = selfArg;
     u8 *statePtr = &self->triggered;
-    register s32 zero asm("r6") = 0;
-    register s32 one asm("r5") = 1;
+    MATCH_HOLD_REG(s32, zero, r6) = 0;
+    MATCH_HOLD_REG(s32, one, r5) = 1;
 
     *statePtr = one;
     PlaySfx(gAudioContext, 4, 0x100);
     self->base.palette = 7;
     self->base.animIndex = one;
     {
-        register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
-        register u8 zero1 asm("r1") = 0;
+        MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
+        MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
         *(u16 *)&self->base.animTimer = anim;
         *(u8 *)&self->base.animDone = zero1;
@@ -1066,7 +1067,7 @@ void LaunchJetpackRocket(void *selfArg)
  * (not the usual `+0xc`). */
 void DamageJetpackRocket(void *selfArg, s32 delta)
 {
-    register struct swing_actor *self asm("r5") = selfArg;
+    MATCH_HOLD_REG(struct swing_actor *, self, r5) = selfArg;
     s32 health = self->health - delta;
 
     self->health = health;
@@ -1075,9 +1076,9 @@ void DamageJetpackRocket(void *selfArg, s32 delta)
     }
 
     {
-        register u8 *statePtr asm("r1") = &self->triggered;
-        register s32 zero asm("r4") = 0;
-        register s32 one asm("r0") = 1;
+        MATCH_HOLD_REG(u8 *, statePtr, r1) = &self->triggered;
+        MATCH_HOLD_REG(s32, zero, r4) = 0;
+        MATCH_HOLD_REG(s32, one, r0) = 1;
 
         *statePtr = one;
         asm volatile("add %0, %0, #1" : "+r"(statePtr));
@@ -1086,8 +1087,8 @@ void DamageJetpackRocket(void *selfArg, s32 delta)
         self->base.palette = 4;
         self->base.animIndex = 2;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->base.anims[2].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[2].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero1;

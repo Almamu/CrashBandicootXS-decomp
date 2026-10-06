@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include "util.h"
@@ -181,7 +182,7 @@ void DrawPolarPlayer(struct actor_self *self)
             gPolarPlayerLastFrame = frame;
         }
         {
-            register u32 tile asm("r0") = GET_TILE_NUM(gPolarPlayerTiles[gPolarPlayerTileBuffer]);
+            MATCH_HOLD_REG(u32, tile, r0) = GET_TILE_NUM(gPolarPlayerTiles[gPolarPlayerTileBuffer]);
 
             QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
         }
@@ -217,8 +218,8 @@ void DrawPolarPlayer(struct actor_self *self)
 s32 HurtPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
-    register s32 result asm("r0");
-    register s32 *usedTimer asm("r1") = &gPolarInvulnTimer;
+    MATCH_HOLD_REG(s32, result, r0);
+    MATCH_HOLD_REG(s32 *, usedTimer, r1) = &gPolarInvulnTimer;
 
     if (*usedTimer != 0) {
         result = 1;
@@ -226,7 +227,7 @@ s32 HurtPolarPlayer(void *selfArg)
     }
 
     {
-        register struct actor_self **effectAddr asm("r2") = &gPolarAkuAku;
+        MATCH_HOLD_REG(struct actor_self **, effectAddr, r2) = &gPolarAkuAku;
         struct level_state **playerAddr = &gLevelState;
         s32 tier = (*playerAddr)->maskLevel;
 
@@ -234,15 +235,15 @@ s32 HurtPolarPlayer(void *selfArg)
             PlaySfx(gAudioContext, 0x1b, 0x100);
             QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
             {
-                register s32 state asm("r0") = 6;
-                register s32 idx asm("r1") = 5;
+                MATCH_HOLD_REG(s32, state, r0) = 6;
+                MATCH_HOLD_REG(s32, idx, r1) = 5;
 
                 self->state = state;
                 self->stateTime = tier;
                 self->animIndex = idx;
                 {
-                    register u16 anim asm("r0") = self->anims[5].duration;
-                    register u8 zero asm("r6") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = self->anims[5].duration;
+                    MATCH_HOLD_REG(u8, zero, r6) = 0;
 
                     *(u16 *)&self->animTimer = anim;
                     *(u8 *)&self->animDone = zero;
@@ -250,7 +251,7 @@ s32 HurtPolarPlayer(void *selfArg)
 
                     {
                         u8 *reg1480 = &gPolarPauseLocked;
-                        register u8 one asm("r4") = 1;
+                        MATCH_HOLD_REG(u8, one, r4) = 1;
 
                         *reg1480 = one;
                         {
@@ -293,8 +294,8 @@ end:
 s32 ShockPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
-    register s32 result asm("r0");
-    register s32 *usedTimer asm("r1") = &gPolarInvulnTimer;
+    MATCH_HOLD_REG(s32, result, r0);
+    MATCH_HOLD_REG(s32 *, usedTimer, r1) = &gPolarInvulnTimer;
 
     if (*usedTimer != 0) {
         result = 1;
@@ -302,20 +303,20 @@ s32 ShockPolarPlayer(void *selfArg)
     }
 
     {
-        register struct actor_self **effectAddr asm("r4") = &gPolarAkuAku;
+        MATCH_HOLD_REG(struct actor_self **, effectAddr, r4) = &gPolarAkuAku;
         struct level_state **playerAddr = &gLevelState;
         s32 tier = (*playerAddr)->maskLevel;
 
         if (tier == 0) {
-            register s32 state asm("r0") = 0xc;
-            register s32 idx asm("r1") = 0xb;
+            MATCH_HOLD_REG(s32, state, r0) = 0xc;
+            MATCH_HOLD_REG(s32, idx, r1) = 0xb;
 
             self->state = state;
             self->stateTime = tier;
             self->animIndex = idx;
             {
-                register u16 anim asm("r0") = self->anims[11].duration;
-                register u8 zero asm("r4") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = self->anims[11].duration;
+                MATCH_HOLD_REG(u8, zero, r4) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero;
@@ -424,8 +425,8 @@ void PolarPlayerStateMount(struct actor_self *self)
 void PolarPlayerStateRun(void *selfArg)
 {
     struct actor_self *self = selfArg;
-    register s32 index asm("r5");
-    register u16 anim asm("r0");
+    MATCH_HOLD_REG(s32, index, r5);
+    MATCH_HOLD_REG(u16, anim, r0);
 
     if (self->animDone == 0)
         goto tail;
@@ -436,12 +437,12 @@ void PolarPlayerStateRun(void *selfArg)
         goto gated;
 
     {
-        register s32 zero asm("r2") = 0;
+        MATCH_HOLD_REG(s32, zero, r2) = 0;
 
         self->animIndex = zero;
         {
-            register u16 a asm("r0") = self->anims[0].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, a, r0) = self->anims[0].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->animTimer = a;
             *(u8 *)&self->animDone = zero1;
@@ -464,7 +465,7 @@ restore:
 
 join:
     {
-        register u8 zero1 asm("r1") = 0;
+        MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
         *(u16 *)&self->animTimer = anim;
         *(u8 *)&self->animDone = zero1;
@@ -473,24 +474,24 @@ join:
 
 tail:
     if (gPolarSteerEnabled != 0) {
-        register struct held_pressed_pair *addr asm("r5") = &gKeys.half;
-        register s32 bit1 asm("r0") = 1;
+        MATCH_HOLD_REG(struct held_pressed_pair *, addr, r5) = &gKeys.half;
+        MATCH_HOLD_REG(s32, bit1, r0) = 1;
         u16 pressed = addr->pressed;
 
         bit1 &= pressed;
         if (bit1 != 0) {
-            register s32 state asm("r0") = 4;
-            register s32 idx asm("r1") = 3;
+            MATCH_HOLD_REG(s32, state, r0) = 4;
+            MATCH_HOLD_REG(s32, idx, r1) = 3;
 
             self->state = state;
             {
-                register s32 zero asm("r2") = 0;
+                MATCH_HOLD_REG(s32, zero, r2) = 0;
 
                 self->stateTime = zero;
                 self->animIndex = idx;
                 {
-                    register u16 a asm("r0") = self->anims[3].duration;
-                    register u8 zero1 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, a, r0) = self->anims[3].duration;
+                    MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                     *(u16 *)&self->animTimer = a;
                     *(u8 *)&self->animDone = zero1;
@@ -501,17 +502,17 @@ tail:
             gPolarPlayerVelY = 0xFFFFF880;
         }
         if ((*(u32 *)addr & 2) != 0) {
-            register s32 state asm("r0") = 2;
+            MATCH_HOLD_REG(s32, state, r0) = 2;
 
             self->state = state;
             {
-                register s32 zero asm("r2") = 0;
+                MATCH_HOLD_REG(s32, zero, r2) = 0;
 
                 self->stateTime = zero;
                 self->animIndex = state;
                 {
-                    register u16 a asm("r0") = self->anims[2].duration;
-                    register u8 zero1 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, a, r0) = self->anims[2].duration;
+                    MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                     *(u16 *)&self->animTimer = a;
                     *(u8 *)&self->animDone = zero1;
@@ -587,18 +588,18 @@ void PolarPlayerStateShocked(void *selfArg)
         QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
         gPolarPauseLocked = 1;
         {
-            register s32 state asm("r0") = 6;
-            register s32 idx asm("r1") = 5;
+            MATCH_HOLD_REG(s32, state, r0) = 6;
+            MATCH_HOLD_REG(s32, idx, r1) = 5;
 
             self->state = state;
             {
-                register s32 zero asm("r2") = 0;
+                MATCH_HOLD_REG(s32, zero, r2) = 0;
 
                 self->stateTime = zero;
                 self->animIndex = idx;
                 {
-                    register u16 anim asm("r0") = self->anims[5].duration;
-                    register u8 zero1 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = self->anims[5].duration;
+                    MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                     *(u16 *)&self->animTimer = anim;
                     *(u8 *)&self->animDone = zero1;

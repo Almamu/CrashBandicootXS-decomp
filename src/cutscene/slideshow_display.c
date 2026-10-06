@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "cutscene.h"
 #include "audio.h"
 #include "gfx.h"
@@ -37,7 +38,7 @@ struct AudioContext;
  * own inlined copy of this same body. */
 void EndSlide(struct cutscene_player *self0, s32 idx)
 {
-    register struct cutscene_player *self asm("r5") = self0;
+    MATCH_HOLD_REG(struct cutscene_player *, self, r5) = self0;
 
     if (self->slides[idx]->duckMusic != 0) {
         FadeOutMusic(gAudioContext, 0);

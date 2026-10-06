@@ -117,8 +117,8 @@ struct actor_29d4 {
 void *CreateJetpackRing(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     u8 *self = selfArg;
-    register s32 dReg asm("r0") = d;
-    register s32 one asm("r5") = 1;
+    MATCH_HOLD_REG(s32, dReg, r0) = d;
+    MATCH_HOLD_REG(s32, one, r5) = 1;
 
     InitActorPart(self, part, b, c, dReg);
     *(s32 *)(self + 0x54) = one;
@@ -265,7 +265,7 @@ void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags)
 void *CreateJetpackCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spawnParam)
 {
     struct actor_2890 *self = selfArg;
-    register s32 dy asm("r3");
+    MATCH_HOLD_REG(s32, dy, r3);
     s32 sum;
     s32 q;
 
@@ -277,8 +277,8 @@ void *CreateJetpackCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 s
     self->base.y += GetActorBgCenterY();
 
     {
-        register s32 ebResult asm("r0") = GetActorBgCenterX();
-        register s32 old asm("r1") = self->base.x;
+        MATCH_HOLD_REG(s32, ebResult, r0) = GetActorBgCenterX();
+        MATCH_HOLD_REG(s32, old, r1) = self->base.x;
         dy = old + ebResult;
     }
     self->base.x = dy;
@@ -328,17 +328,17 @@ void DamageHovercraftFireball(void *selfArg, s32 delta)
     self->base.palette = 4;
     PlaySfx(gAudioContext, 4, 0x100);
     {
-        register s32 one asm("r0") = 1;
+        MATCH_HOLD_REG(s32, one, r0) = 1;
 
         self->base.state = one;
         {
-            register s32 zero asm("r2") = 0;
+            MATCH_HOLD_REG(s32, zero, r2) = 0;
 
             self->base.stateTime = zero;
             self->base.animIndex = one;
             {
                 u16 anim = self->base.anims[1].duration;
-                register u8 zero2 asm("r1") = 0;
+                MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                 *(u16 *)&self->base.animTimer = anim;
                 *(u8 *)&self->base.animDone = zero2;
@@ -380,10 +380,10 @@ void UpdateHovercraftFireball(void *selfArg)
 void *CreateHovercraftFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct actor_29d4 *self = selfArg;
-    register s32 bReg asm("r6") = b;
-    register s32 cReg asm("r8") = c;
-    register s32 dReg asm("r0") = d;
-    register s32 health asm("r5") = 2;
+    MATCH_HOLD_REG(s32, bReg, r6) = b;
+    MATCH_HOLD_REG(s32, cReg, r8) = c;
+    MATCH_HOLD_REG(s32, dReg, r0) = d;
+    MATCH_HOLD_REG(s32, health, r5) = 2;
 
     InitActorPart(self, part, b, c, dReg);
     self->hp = health;
@@ -414,7 +414,7 @@ void HovercraftFireballStateExplode(void *selfArg)
  * `DamageHovercraftFireball` above. */
 void HovercraftFireballStateFly(void *selfArg)
 {
-    register struct actor_29d4 *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct actor_29d4 *, self, r4) = selfArg;
     s32 sum = self->base.z;
     s32 delta = self->speed;
 
@@ -435,17 +435,17 @@ void HovercraftFireballStateFly(void *selfArg)
         self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         {
-            register s32 one asm("r0") = 1;
+            MATCH_HOLD_REG(s32, one, r0) = 1;
 
             self->base.state = one;
             {
-                register s32 zero asm("r2") = 0;
+                MATCH_HOLD_REG(s32, zero, r2) = 0;
 
                 self->base.stateTime = zero;
                 self->base.animIndex = one;
                 {
                     u16 anim = self->base.anims[1].duration;
-                    register u8 zero2 asm("r1") = 0;
+                    MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                     *(u16 *)&self->base.animTimer = anim;
                     *(u8 *)&self->base.animDone = zero2;
@@ -489,15 +489,15 @@ void UpdateHovercraftHitFlash(void)
 
     gHovercraftHitFlashTimer += 1;
     {
-        register s32 three asm("r0") = 3;
-        register s32 cur asm("r1") = *(vu16 *)&gHovercraftHitFlashTimer;
-        register s32 result asm("r0");
+        MATCH_HOLD_REG(s32, three, r0) = 3;
+        MATCH_HOLD_REG(s32, cur, r1) = *(vu16 *)&gHovercraftHitFlashTimer;
+        MATCH_HOLD_REG(s32, result, r0);
 
         result = three & cur;
         if (result == 0) {
-            register u8 *addr asm("r1") = &gHovercraftHitFlashOn;
-            register u8 one asm("r0") = 1;
-            register u8 old asm("r3") = *addr;
+            MATCH_HOLD_REG(u8 *, addr, r1) = &gHovercraftHitFlashOn;
+            MATCH_HOLD_REG(u8, one, r0) = 1;
+            MATCH_HOLD_REG(u8, old, r3) = *addr;
 
             one ^= old;
             *addr = one;
@@ -509,8 +509,8 @@ void UpdateHovercraftHitFlash(void)
     }
 
     {
-        register u8 *flagAddr asm("r5") = &gHovercraftHitFlashOn;
-        register u16 white asm("r4") = 0x7fff;
+        MATCH_HOLD_REG(u8 *, flagAddr, r5) = &gHovercraftHitFlashOn;
+        MATCH_HOLD_REG(u16, white, r4) = 0x7fff;
         const u16 *src = gHovercraftPalette;
         vu16 *dst = (vu16 *)(PLTT + 0x20);
         vu16 *end = (vu16 *)((u8 *)dst + 0x1e);
@@ -567,8 +567,8 @@ void RunHovercraftState(void)
             gHovercraftFlashColorSaved = 1;
         }
         {
-            register u8 *p asm("r0") = gFlashBgPalette;
-            register u16 val asm("r1");
+            MATCH_HOLD_REG(u8 *, p, r0) = gFlashBgPalette;
+            MATCH_HOLD_REG(u16, val, r1);
 
             MATCH_KEEP(p);
             val = 0x7FFF;
@@ -583,8 +583,8 @@ void RunHovercraftState(void)
             gHovercraftFlashColorSaved = 1;
         }
         {
-            register u8 *p asm("r0") = gFlashBgPalette;
-            register u16 val asm("r1");
+            MATCH_HOLD_REG(u8 *, p, r0) = gFlashBgPalette;
+            MATCH_HOLD_REG(u16, val, r1);
 
             MATCH_KEEP(p);
             val = gHovercraftFlashSavedColor;

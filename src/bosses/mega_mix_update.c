@@ -177,8 +177,8 @@ static inline s32 Probe48(struct ab_part *p)
  * out the ROM's registers (r3 for the offset, r0 for the address). */
 static inline u8 IsDead(struct player *pl)
 {
-    register s32 off asm("r3") = 0x104;
-    register u8 *p asm("r0");
+    MATCH_HOLD_REG(s32, off, r3) = 0x104;
+    MATCH_HOLD_REG(u8 *, p, r0);
 
     MATCH_KEEP(off);
     p = (u8 *)pl + off;
@@ -316,7 +316,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
                         && Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B
                         && (e->unk_4D & 0x7F) == 0)
                     {
-                        register s32 kind asm("r1") = e->kind;
+                        MATCH_HOLD_REG(s32, kind, r1) = e->kind;
 
                         if (kind == 0xE || kind == 0x13 || kind == 0x14
                             || kind == 0x15 || kind == 0xA)

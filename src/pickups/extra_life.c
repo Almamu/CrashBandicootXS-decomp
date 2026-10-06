@@ -85,7 +85,7 @@ void CheckExtraLifePickup(struct orbit_part *selfArg)
     playerBox = GetSpriteHitbox((struct box_part *)player);
 
     if (AabbOverlaps(&playerBox, &selfBox)) {
-        register s32 bit asm("r0") = 8;
+        MATCH_HOLD_REG(s32, bit, r0) = 8;
 
         bit |= self[0xc];
         self[0xc] = bit;
@@ -142,13 +142,13 @@ void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
     }
 
     {
-        register s32 mask asm("r0") = 0x10;
+        MATCH_HOLD_REG(s32, mask, r0) = 0x10;
 
         mask |= self[0xc];
         self[0xc] = mask;
     }
     {
-        register u8 one asm("r0") = 1;
+        MATCH_HOLD_REG(u8, one, r0) = 1;
 
         self[0x25] = one;
     }
@@ -354,8 +354,8 @@ void SendExtraLifeToHud(struct orbit_part *selfArg)
     PlaySfx(gAudioContext, 7, 0x100);
     self[0x48] = 1;
     {
-        register s32 off asm("r0") = self[0x4a];
-        register s32 shifted asm("r1") = off << 8;
+        MATCH_HOLD_REG(s32, off, r0) = self[0x4a];
+        MATCH_HOLD_REG(s32, shifted, r1) = off << 8;
 
         *(s32 *)self -= shifted;
     }
@@ -489,7 +489,7 @@ void DrawExtraLife(struct orbit_part *selfArg)
 
     DrawSprite(gSpriteRenderer, self);
     if (self[0x38] != 0) {
-        register s32 mask asm("r0") = 9;
+        MATCH_HOLD_REG(s32, mask, r0) = 9;
         mask = -mask;
         mask &= self[0xc];
         self[0xc] = mask;
@@ -641,7 +641,7 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
     if (player->kind == 0x13) {
         GetSpriteAttackBox(&playerBox, player);
         if (AabbOverlaps(&playerBox, &selfBox)) {
-            register s32 bit asm("r0") = 8;
+            MATCH_HOLD_REG(s32, bit, r0) = 8;
 
             bit |= self[0xc];
             self[0xc] = bit;
@@ -651,7 +651,7 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
     } else {
         playerBox = GetSpriteHitbox((struct box_part *)player);
         if (AabbOverlaps(&playerBox, &selfBox)) {
-            register s32 bit asm("r0") = 8;
+            MATCH_HOLD_REG(s32, bit, r0) = 8;
 
             bit |= self[0xc];
             self[0xc] = bit;

@@ -415,7 +415,7 @@ static inline void RefreshChild(struct box_part *child)
 
 void DrawPlayer(struct player *self)
 {
-    register s32 hold asm("r6");
+    MATCH_HOLD_REG(s32, hold, r6);
 
     if (gLevelState->maskLevel == 3) {
         if (!(gRoomFrameCount & 7))

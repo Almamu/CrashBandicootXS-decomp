@@ -151,10 +151,10 @@ struct level_scratch {
 static inline void HashInput(u32 *self, u32 val)
 {
     u32 *slot = &((struct level_scratch *)self)->cheatHash;
-    register u32 v asm("r0") = *slot ^ val;
-    register u32 hi asm("r1");
-    register u32 lo asm("r0");
-    register u32 rotated asm("r1");
+    MATCH_HOLD_REG(u32, v, r0) = *slot ^ val;
+    MATCH_HOLD_REG(u32, hi, r1);
+    MATCH_HOLD_REG(u32, lo, r0);
+    MATCH_HOLD_REG(u32, rotated, r1);
     u32 out;
 
     hi = v << 1;
@@ -426,10 +426,10 @@ void HashTitleCheatInput(u32 *selfArg, u32 val)
 {
     u8 *self = (u8 *)selfArg;
     u32 *slot = (u32 *)(self + 0x210);
-    register u32 v asm("r2") = *slot ^ val;
-    register u32 hi asm("r3");
-    register u32 lo asm("r2");
-    register u32 rotated asm("r3");
+    MATCH_HOLD_REG(u32, v, r2) = *slot ^ val;
+    MATCH_HOLD_REG(u32, hi, r3);
+    MATCH_HOLD_REG(u32, lo, r2);
+    MATCH_HOLD_REG(u32, rotated, r3);
     u32 out;
 
     hi = v << 1;
@@ -671,7 +671,7 @@ void RunCompanyLogos(u32 *self)
     while (SLOT_SYSTEM(self)->fade != 0)
     {
         s32 *fade;
-        register s32 v asm("r1");
+        MATCH_HOLD_REG(s32, v, r1);
 
         UpdateKeys(gInput);
         if (gKeys.half.pressed & 9)
@@ -880,7 +880,7 @@ void UpdateVvLogoPieces(u32 *self)
                 if (countdown == 0)
                 {
                     struct delta_record **recordPtrAddr = Rec20At(self, stride);
-                    register struct delta_record *recordLoaded asm("r0") = *recordPtrAddr;
+                    MATCH_HOLD_REG(struct delta_record *, recordLoaded, r0) = *recordPtrAddr;
                     struct delta_record *record = recordLoaded;
 
                     *recordPtrAddr = (struct delta_record *)((u8 *)recordLoaded + 0x20);

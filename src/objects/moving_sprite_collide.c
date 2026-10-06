@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
 
@@ -17,7 +18,7 @@ void HitMovingSprite(struct gobj *self, s32 arg1, s32 arg2, s32 arg3)
     if (rec != 0) {
         struct mover_vtable *tbl = rec->vtable;
         void *addr = (u8 *)rec + tbl->m10.thisOffset;
-        register void *deadRead asm("r4") = *(void *volatile *)&tbl->m10.fn;
+        MATCH_HOLD_REG(void *, deadRead, r4) = *(void *volatile *)&tbl->m10.fn;
         (void)deadRead;
 
         _call_via_r4(addr, arg1, arg2, arg3);
@@ -56,10 +57,10 @@ s32 ClassifySpriteContact(void *part, void *region)
             goto end;
         }
         {
-            register u32 flags asm("r5") = *((u8 *)part + 0xc);
-            register u32 shifted asm("r0") = flags >> 6;
-            register u32 test asm("r0");
-            register u32 mask asm("r1") = 1;
+            MATCH_HOLD_REG(u32, flags, r5) = *((u8 *)part + 0xc);
+            MATCH_HOLD_REG(u32, shifted, r0) = flags >> 6;
+            MATCH_HOLD_REG(u32, test, r0);
+            MATCH_HOLD_REG(u32, mask, r1) = 1;
 
             test = shifted & mask;
             if (test != 0) {
@@ -82,10 +83,10 @@ end:
  * fix established for `DestroyMovingSprite`/`UpdateMovingSprite` above. */
 s32 CollideMovingSprite(struct gobj *self)
 {
-    register u8 *tblAdj asm("r1") = (u8 *)self->vtable + 0x70;
-    register s32 offset asm("r2") = *(s16 *)tblAdj;
-    register void *addr asm("r0");
-    register void *fn asm("r1");
+    MATCH_HOLD_REG(u8 *, tblAdj, r1) = (u8 *)self->vtable + 0x70;
+    MATCH_HOLD_REG(s32, offset, r2) = *(s16 *)tblAdj;
+    MATCH_HOLD_REG(void *, addr, r0);
+    MATCH_HOLD_REG(void *, fn, r1);
 
     addr = (u8 *)self + offset;
     fn = *(void **)(tblAdj + 4);
@@ -165,10 +166,10 @@ void AttachSpriteCtrl(struct gobj *self, struct mover *rec)
     self->mover = rec;
 
     {
-        register struct mover_vtable *tbl asm("r2") = rec->vtable;
-        register s32 offset asm("r1") = tbl->m18.thisOffset;
-        register void *addr asm("r0");
-        register void *fn asm("r2");
+        MATCH_HOLD_REG(struct mover_vtable *, tbl, r2) = rec->vtable;
+        MATCH_HOLD_REG(s32, offset, r1) = tbl->m18.thisOffset;
+        MATCH_HOLD_REG(void *, addr, r0);
+        MATCH_HOLD_REG(void *, fn, r2);
 
         addr = (u8 *)rec + offset;
         fn = tbl->m18.fn;

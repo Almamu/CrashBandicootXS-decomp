@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "actor_self.h"
 #include "box_part.h"
@@ -182,10 +183,10 @@ void LinkCrateInGrid(struct pool_manager *manager, struct box_part *obj)
     void *node1 = AddCrateGridNode(manager, obj, bucket, 0);
 
     {
-        register u8 byte asm("r1") = *((u8 *)obj + 0xc);
-        register s32 shifted asm("r0") = byte >> 4;
-        register s32 mask asm("r1") = 1;
-        register s32 test asm("r0");
+        MATCH_HOLD_REG(u8, byte, r1) = *((u8 *)obj + 0xc);
+        MATCH_HOLD_REG(s32, shifted, r0) = byte >> 4;
+        MATCH_HOLD_REG(s32, mask, r1) = 1;
+        MATCH_HOLD_REG(s32, test, r0);
 
         test = shifted & mask;
         if (!test) {

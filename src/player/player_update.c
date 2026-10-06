@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "gobj_1a794.h"
 #include "player.h"
@@ -51,18 +52,18 @@
  * still lands in `r1` naturally - and pinning only `vx` to `r3`. */
 s32 ApplyPlayerVelocity(struct player *self)
 {
-    register s32 *w asm("r2") = (s32 *)self;
-    register u8 *flags asm("r1");
+    MATCH_HOLD_REG(s32 *, w, r2) = (s32 *)self;
+    MATCH_HOLD_REG(u8 *, flags, r1);
     s32 fx, fy;
 
     {
-        register s32 v asm("r1") = w[0x60 / 4];
-        register s32 target asm("r3") = w[0x50 / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w[0x60 / 4];
+        MATCH_HOLD_REG(s32, target, r3) = w[0x50 / 4];
 
         if (v >= target) goto case1_ge;
         {
             s32 step = w[0x4c / 4];
-            register s32 result asm("r0") = v + step;
+            MATCH_HOLD_REG(s32, result, r0) = v + step;
             w[0x60 / 4] = result;
             if (result <= target) goto case1_done;
             goto case1_clamp;
@@ -71,7 +72,7 @@ s32 ApplyPlayerVelocity(struct player *self)
         if (v <= target) goto case1_done;
         {
             s32 step = w[0x4c / 4];
-            register s32 result asm("r0") = v - step;
+            MATCH_HOLD_REG(s32, result, r0) = v - step;
             w[0x60 / 4] = result;
             if (result >= target) goto case1_done;
         }
@@ -82,13 +83,13 @@ s32 ApplyPlayerVelocity(struct player *self)
     }
 
     {
-        register s32 v asm("r1") = w[0x64 / 4];
-        register s32 target asm("r3") = w[0x5c / 4];
+        MATCH_HOLD_REG(s32, v, r1) = w[0x64 / 4];
+        MATCH_HOLD_REG(s32, target, r3) = w[0x5c / 4];
 
         if (v >= target) goto case2_ge;
         {
             s32 step = w[0x58 / 4];
-            register s32 result asm("r0") = v + step;
+            MATCH_HOLD_REG(s32, result, r0) = v + step;
             w[0x64 / 4] = result;
             if (result <= target) goto case2_done;
             goto case2_clamp;
@@ -97,7 +98,7 @@ s32 ApplyPlayerVelocity(struct player *self)
         if (v <= target) goto case2_done;
         {
             s32 step = w[0x58 / 4];
-            register s32 result asm("r0") = v - step;
+            MATCH_HOLD_REG(s32, result, r0) = v - step;
             w[0x64 / 4] = result;
             if (result >= target) goto case2_done;
         }
@@ -116,7 +117,7 @@ s32 ApplyPlayerVelocity(struct player *self)
 
     fy = w[0x64 / 4];
     {
-        register s32 mask asm("r0");
+        MATCH_HOLD_REG(s32, mask, r0);
         if (fy > 0) {
             mask = 8;
         } else if (fy < 0) {
@@ -137,7 +138,7 @@ skipY:
     }
     {
         s32 x = *(vs32 *)&w[0];
-        register s32 vx asm("r3") = w[0x60 / 4];
+        MATCH_HOLD_REG(s32, vx, r3) = w[0x60 / 4];
         x = x + vx;
         w[0] = x;
         {
@@ -146,7 +147,7 @@ skipY:
             y = y + vy;
             w[1] = y;
             {
-                register vs32 *g asm("r0") = (vs32 *)0x0300129c;
+                MATCH_HOLD_REG(vs32 *, g, r0) = (vs32 *)0x0300129c;
 
                 asm volatile(
                     "ldr r2, [%0, #0]\n\t"
@@ -191,7 +192,7 @@ void ClearPlayerSpeedY(struct player *self)
 /* Clamps `speedY`/`rampY.start`/`rampY.step` (+0x64/+0x54/+0x58) to `<= 0`. */
 void StopPlayerFalling(struct player *selfArg)
 {
-    register struct player *self asm("r1") = selfArg;
+    MATCH_HOLD_REG(struct player *, self, r1) = selfArg;
 
     if (self->speedY > 0) {
         self->speedY = 0;

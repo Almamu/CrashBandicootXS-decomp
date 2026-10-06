@@ -80,7 +80,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     s32 flags;
     struct aabb *pb;
     s32 r;
-    register s32 hold8 asm("r8");
+    MATCH_HOLD_REG(s32, hold8, r8);
 
     /* Emits nothing: keeps r8 live up to the first overlap test, so
      * `self` goes to sb and `result` gets r8, as in the ROM. */
@@ -202,7 +202,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         }
         else
         {
-            register s32 hold5 asm("r5");
+            MATCH_HOLD_REG(s32, hold5, r5);
 
             /* Emits nothing: r5 is live across the `result == 0` test,
              * so its reload of `result` takes r0 as in the ROM. */

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "audio.h"
 #include "actor.h"
@@ -31,7 +32,7 @@
  *   and `issue-45-hud-stat-widget-dispatcher.md`'s "6th-argument"
  *   entry). Materialized via a two-instruction `asm volatile` anchor
  *   into an `"=l"`-constrained (lo-register) temp, then copied into
- *   the `register u32 eByteVal asm("r9")` pin that mirrors the ROM's
+ *   the `MATCH_HOLD_REG(u32, eByteVal, r9)` pin that mirrors the ROM's
  *   own `sb`/r9 cache (needed since it survives the following
  *   `GetHovercraftLevel()` call).
  * - The `+0x5c` spawn-record ternary (`(self[0x59] != 0) ? 0xFFFFBF00
@@ -75,8 +76,8 @@
 void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
 {
     u8 *self;
-    register u32 eByteVal asm("r9");
-    register s32 health asm("r4");
+    MATCH_HOLD_REG(u32, eByteVal, r9);
+    MATCH_HOLD_REG(s32, health, r4);
     s32 idx;
     u8 byte59;
     s32 zero;
@@ -111,7 +112,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
     *(s32 *)(self + 0x44) = zero;
     *(s32 *)(self + 0xc) = idx;
     {
-        register u8 zeroByte asm("r1");
+        MATCH_HOLD_REG(u8, zeroByte, r1);
         u16 tmp16 = *(u16 *)(*(u8 **)self + idx * 12);
         zeroByte = 0;
         *(u16 *)(self + 0x10) = tmp16;
@@ -138,7 +139,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
     *(s32 *)(self + 0x60) = 0xa00;
     *(s32 *)(self + 0x64) = -1;
     {
-        register s32 zero2 asm("r4");
+        MATCH_HOLD_REG(s32, zero2, r4);
         u8 *p2c = self + 0x2c;
         zero2 = 0;
         *p2c = (u8)zero2;
@@ -194,8 +195,8 @@ void DamageHovercraftSideGun(void *selfArg, s32 dmg)
 
     if (self->hp <= 0) {
         u8 *flag;
-        register s32 zero asm("r3");
-        register s32 one asm("r1");
+        MATCH_HOLD_REG(s32, zero, r3);
+        MATCH_HOLD_REG(s32, one, r1);
         s32 idx;
 
         LoseHovercraftPart();
@@ -217,8 +218,8 @@ void DamageHovercraftSideGun(void *selfArg, s32 dmg)
         self->base.stateTime = zero;
         self->base.animIndex = idx;
         {
-            register u16 anim asm("r0") = self->base.anims[idx].duration;
-            register u8 zero2 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[idx].duration;
+            MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
             *(u16 *)&self->base.animTimer = anim;
             *(u8 *)&self->base.animDone = zero2;
@@ -241,24 +242,24 @@ void DamageHovercraftSideGun(void *selfArg, s32 dmg)
  * entry; otherwise just decrements the orbit counter. */
 void UpdateHovercraftSideGun(void *selfArg)
 {
-    register struct actor_orbiter *self asm("r5") = selfArg;
+    MATCH_HOLD_REG(struct actor_orbiter *, self, r5) = selfArg;
 
     UpdateActor(self);
     self->base.x = GetHovercraftX() + self->offX;
     self->base.y = GetHovercraftY() + self->offY;
     {
         s32 base = GetHovercraftZ();
-        register s32 field asm("r1") = self->offZ;
-        register s32 z asm("r2") = base + field;
+        MATCH_HOLD_REG(s32, field, r1) = self->offZ;
+        MATCH_HOLD_REG(s32, z, r2) = base + field;
         self->base.z = z;
     }
 
     if (self->base.state == 0 && self->base.depth > 0x2800) {
-        register s32 origCounter asm("r6") = self->orbitTimer;
-        register s32 result asm("r0");
+        MATCH_HOLD_REG(s32, origCounter, r6) = self->orbitTimer;
+        MATCH_HOLD_REG(s32, result, r0);
 
         if (origCounter == 0) {
-            register s32 lap asm("r4");
+            MATCH_HOLD_REG(s32, lap, r4);
 
             SpawnHovercraftFireball(self->base.x, self->base.y, self->base.z);
             lap = self->lap + 1;
@@ -283,23 +284,23 @@ void UpdateHovercraftSideGun(void *selfArg)
  * per-frame update is driven elsewhere. */
 void sub_80341F8(void *selfArg)
 {
-    register struct actor_orbiter *self asm("r5") = selfArg;
+    MATCH_HOLD_REG(struct actor_orbiter *, self, r5) = selfArg;
 
     self->base.x = GetHovercraftX() + self->offX;
     self->base.y = GetHovercraftY() + self->offY;
     {
         s32 base = GetHovercraftZ();
-        register s32 field asm("r1") = self->offZ;
-        register s32 z asm("r2") = base + field;
+        MATCH_HOLD_REG(s32, field, r1) = self->offZ;
+        MATCH_HOLD_REG(s32, z, r2) = base + field;
         self->base.z = z;
     }
 
     if (self->base.state == 0 && self->base.depth > 0x2800) {
-        register s32 origCounter asm("r6") = self->orbitTimer;
-        register s32 result asm("r0");
+        MATCH_HOLD_REG(s32, origCounter, r6) = self->orbitTimer;
+        MATCH_HOLD_REG(s32, result, r0);
 
         if (origCounter == 0) {
-            register s32 lap asm("r4");
+            MATCH_HOLD_REG(s32, lap, r4);
 
             SpawnHovercraftFireball(self->base.x, self->base.y, self->base.z);
             lap = self->lap + 1;

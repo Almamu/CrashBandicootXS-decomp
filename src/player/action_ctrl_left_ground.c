@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "player.h"
 
@@ -22,8 +23,8 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 u8 CheckActionCtrlLeftGround(struct act *self)
 {
     u8 *part = (u8 *)self->part;
-    register u8 *p asm("r1") = part + 0x68;
-    register s32 mask asm("r0") = 8;
+    MATCH_HOLD_REG(u8 *, p, r1) = part + 0x68;
+    MATCH_HOLD_REG(s32, mask, r0) = 8;
 
     mask &= *p;
     if (mask == 0) {
@@ -40,7 +41,7 @@ u8 CheckActionCtrlLeftGround(struct act *self)
         }
 
         {
-            register s32 four asm("r2") = 4;
+            MATCH_HOLD_REG(s32, four, r2) = 4;
             self->motionYKeepSpeed = 0;
             self->motionYPending = 1;
             self->motionY = four;

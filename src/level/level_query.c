@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "level_state.h"
 #include "audio.h"
 #include "actor.h"
@@ -137,7 +138,7 @@ struct AudioContext;
  * a constant `flagIdx`.
  *
  * `flagIdx` is kept in `ip`/r12 for the whole function (via the
- * `register ... asm("ip")` pin) rather than a normally-allocated
+ * `MATCH_HOLD_REG(..., ip)` pin) rather than a normally-allocated
  * register, matching the ROM's own register-pressure-driven choice -
  * without the pin, gcc allocates it to a plain low register instead and
  * the codegen diverges throughout. The `table`/`v` locals in each of
@@ -153,7 +154,7 @@ struct AudioContext;
  * and docs/matching.md for other instances of this class of fix. */
 s32 LevelHasEntityType(s32 idx, s32 flagIdx)
 {
-    register s32 fi asm("ip") = flagIdx;
+    MATCH_HOLD_REG(s32, fi, ip) = flagIdx;
     s32 result = 0;
     const struct level_room_list *list = gLevelTable[idx].rooms;
     s32 i = 0;
@@ -168,8 +169,8 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
 
             if (item->kind != 3) {
                 const struct level_entity_list *nested = item->desc->entities;
-                register u32 table asm("r1") = (u32)nested->typeCounts;
-                register u16 v asm("r3") = *(u16 *)(shift + table);
+                MATCH_HOLD_REG(u32, table, r1) = (u32)nested->typeCounts;
+                MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
 
                 result = (u32)(-(s32)v | v) >> 31;
             }
@@ -180,18 +181,18 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
 
     if (result == 0 && list->extra1 != 0 && list->extra1->kind != 3) {
         const struct level_entity_list *nested = list->extra1->desc->entities;
-        register u32 table asm("r0") = (u32)nested->typeCounts;
+        MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
         s32 shift = fi << 1;
-        register u16 v asm("r3") = *(u16 *)(shift + table);
+        MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
 
         result = (u32)(-(s32)v | v) >> 31;
     }
 
     if (result == 0 && list->extra2 != 0 && list->extra2->kind != 3) {
         const struct level_entity_list *nested = list->extra2->desc->entities;
-        register u32 table asm("r0") = (u32)nested->typeCounts;
+        MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
         s32 shift = fi << 1;
-        register u16 v asm("r3") = *(u16 *)(shift + table);
+        MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
 
         result = (u32)(-(s32)v | v) >> 31;
     }

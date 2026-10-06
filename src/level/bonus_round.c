@@ -121,7 +121,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
         MATCH_KEEP_VOLATILE(self);
 
         {
-            register u8 *p asm("r0") = (u8 *)self + 0xa9;
+            MATCH_HOLD_REG(u8 *, p, r0) = (u8 *)self + 0xa9;
             u8 value = *p;
 
             p += 0x27;
@@ -141,7 +141,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
         MATCH_KEEP_VOLATILE(self);
 
         {
-            register u8 *p asm("r0") = (u8 *)self + 0xa9;
+            MATCH_HOLD_REG(u8 *, p, r0) = (u8 *)self + 0xa9;
             u8 value = *p;
 
             p += 0x27;
@@ -177,14 +177,14 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
              * arguments are already computed. */
             void *a = (u8 *)base + 0x108;
             void *b = (u8 *)base + 8;
-            register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
+            MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
 
             CpuSet(a, b, ctrl);
         }
         {
             void *a = (u8 *)base + 0x308;
             void *b = (u8 *)base + 0x208;
-            register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
+            MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
 
             CpuSet(a, b, ctrl);
         }

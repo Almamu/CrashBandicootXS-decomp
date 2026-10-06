@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "audio.h"
 #include "player.h"
@@ -22,7 +23,7 @@ void nullsub_17(void)
  * tail-calls `ActionCtrlStateRun` afterward. */
 void ActionCtrlStateTurboRun(struct act *selfArg)
 {
-    register struct act *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct act *, self, r4) = selfArg;
 
     if (self->turboRun == 0) {
         StartActionCtrlRun(self);
@@ -293,10 +294,10 @@ u8 sub_8015950(struct act *self)
  * byte. */
 void ResetPlayerCtrl(struct player_ctrl *selfArg)
 {
-    register u8 *self asm("r3") = (u8 *)selfArg;
-    register u8 *p asm("r0") = self + 0x26;
-    register s32 zero asm("r1") = 0;
-    register s32 one asm("r2");
+    MATCH_HOLD_REG(u8 *, self, r3) = (u8 *)selfArg;
+    MATCH_HOLD_REG(u8 *, p, r0) = self + 0x26;
+    MATCH_HOLD_REG(s32, zero, r1) = 0;
+    MATCH_HOLD_REG(s32, one, r2);
 
     *p = zero;
     *(s32 *)(self + 8) = zero;
@@ -320,7 +321,7 @@ void ResetPlayerCtrl(struct player_ctrl *selfArg)
     p -= 7;
     *p = zero;
     {
-        register u8 *p21 asm("r2") = self + 0x21;
+        MATCH_HOLD_REG(u8 *, p21, r2) = self + 0x21;
         *p21 = 6;
     }
     *(s32 *)(self + 0x18) = zero;

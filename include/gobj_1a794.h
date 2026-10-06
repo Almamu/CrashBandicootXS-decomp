@@ -197,7 +197,7 @@ static inline struct gobj *GobjInit(struct gobj *self)
     {                                                                          \
         struct actor_method *_m = &(obj)->vtable->m68;                               \
         void *_this = (u8 *)(obj) + _m->thisOffset;                            \
-        register void *_fn asm("r4") = _m->fn;                                 \
+        MATCH_HOLD_REG(void *, _fn, r4) = _m->fn;                              \
                                                                                \
         MATCH_USE_VOLATILE(_fn);                                               \
         _call_via_r4(_this, (a), (b), (c));                                     \

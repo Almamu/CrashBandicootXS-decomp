@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "util.h"
 
 /* Sits right after FindSubstring (ROM 0x08000CBC), which is not yet
@@ -38,8 +39,8 @@ asm(".align 2, 0");
  * function, no calls). */
 void strcat(u8 *dst, u8 *src)
 {
-    register u8 *p asm("r3");
-    register s32 i asm("r2");
+    MATCH_HOLD_REG(u8 *, p, r3);
+    MATCH_HOLD_REG(s32, i, r2);
     i = 0;
     p = dst;
     if (p[i] != 0) {
@@ -48,7 +49,7 @@ void strcat(u8 *dst, u8 *src)
         } while (p[i] != 0);
     }
     {
-        register u8 *q asm("r2");
+        MATCH_HOLD_REG(u8 *, q, r2);
         q = p + i;
         while (*src != 0) {
             *q = *src;

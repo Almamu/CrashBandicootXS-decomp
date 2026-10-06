@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* Called with a small command value (`cmd`, 0-3 seen at the call site in
  * `GaxChannelDecodeRow`, gax_sound_handler_channel_play.c, a NAKED transcription)
@@ -16,7 +17,7 @@
  * offset rather than a guessed struct. */
 void GaxChannelSetNote(struct GaxChannelState *self, u32 cmd)
 {
-    register u32 v asm("r3") = cmd;
+    MATCH_HOLD_REG(u32, v, r3) = cmd;
 
     if (v == 1) {
         u8 *inst = *(u8 **)((u8 *)self + 0x3c);
@@ -34,7 +35,7 @@ void GaxChannelSetNote(struct GaxChannelState *self, u32 cmd)
         *((u8 *)self + 0x22) = 1;
     }
     if (v > 1) {
-        register u32 tmp asm("r0") = v - 2;
+        MATCH_HOLD_REG(u32, tmp, r0) = v - 2;
         u16 shifted = tmp << 5;
         u8 zero = 0;
 

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
 #include "actor.h"
@@ -31,12 +32,12 @@ void AirshipStateApproach(void)
         struct actor_self *self;
         s32 *p1558 = &gAirshipVelX;
         s32 *p155C = &gAirshipVelY;
-        register s32 zero asm("r5") = 0;
+        MATCH_HOLD_REG(s32, zero, r5) = 0;
 
         *p155C = zero;
         *p1558 = zero;
         {
-            register s32 two asm("r1") = 2;
+            MATCH_HOLD_REG(s32, two, r1) = 2;
             gAirshipState = two;
         }
         gAirshipStateTimer = zero;
@@ -44,8 +45,8 @@ void AirshipStateApproach(void)
         self = gAirship;
         self->animIndex = zero;
         {
-            register u16 anim asm("r0") = self->anims[0].duration;
-            register u8 zero1 asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[0].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -53,11 +54,11 @@ void AirshipStateApproach(void)
 
         {
             s32 frame = GetAnimFrameBaseOffset(self);
-            register s32 idx asm("r2") = self->animIndex;
-            register u8 *table asm("r3") = (u8 *)self->anims;
-            register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
-            register s32 four asm("r2");
-            register s32 val asm("r1");
+            MATCH_HOLD_REG(s32, idx, r2) = self->animIndex;
+            MATCH_HOLD_REG(u8 *, table, r3) = (u8 *)self->anims;
+            MATCH_HOLD_REG(u8 *, entryPtr, r1) = (u8 *)(idx * 0xc);
+            MATCH_HOLD_REG(s32, four, r2);
+            MATCH_HOLD_REG(s32, val, r1);
 
             asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
             four = 4;

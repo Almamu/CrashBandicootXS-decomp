@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "level_state.h"
 #include "level_data.h"
@@ -47,11 +48,11 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
 {
     if (GetSpawnAtStart(gLevelState)) {
-        register const struct level_entity_list *rec asm("r2");
-        register u16 *arrayBase asm("r0");
-        register s32 addr asm("r1");
-        register u8 *tmp asm("r0");
-        register struct player **d8ptr asm("r3");
+        MATCH_HOLD_REG(const struct level_entity_list *, rec, r2);
+        MATCH_HOLD_REG(u16 *, arrayBase, r0);
+        MATCH_HOLD_REG(s32, addr, r1);
+        MATCH_HOLD_REG(u8 *, tmp, r0);
+        MATCH_HOLD_REG(struct player **, d8ptr, r3);
 
         rec = gEntityFlags->list;
         arrayBase = (u16 *)rec->paramOffsets;
@@ -63,12 +64,12 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
         }
 
         {
-            register u8 byte asm("r0") = *tmp;
-            register s32 shiftedByte asm("r2");
-            register s32 one asm("r0");
-            register u8 *addr28 asm("r1");
-            register s32 mask asm("r0");
-            register u8 byte2 asm("r4");
+            MATCH_HOLD_REG(u8, byte, r0) = *tmp;
+            MATCH_HOLD_REG(s32, shiftedByte, r2);
+            MATCH_HOLD_REG(s32, one, r0);
+            MATCH_HOLD_REG(u8 *, addr28, r1);
+            MATCH_HOLD_REG(s32, mask, r0);
+            MATCH_HOLD_REG(u8, byte2, r4);
 
             shiftedByte = byte >> 1;
             one = 1;
@@ -85,7 +86,7 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
         }
 
         {
-            register u8 *obj2 asm("r1") = (u8 *)*d8ptr;
+            MATCH_HOLD_REG(u8 *, obj2, r1) = (u8 *)*d8ptr;
             *(u32 *)obj2 = x << 8;
             *(u32 *)(obj2 + 4) = y << 8;
         }
@@ -112,11 +113,11 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
     }
 fire:
     {
-        register u8 *d8obj asm("r0");
-        register u8 *entry asm("r1");
-        register s32 fnOffset asm("r2");
-        register void *fn asm("r0");
-        register u32 dead asm("r4");
+        MATCH_HOLD_REG(u8 *, d8obj, r0);
+        MATCH_HOLD_REG(u8 *, entry, r1);
+        MATCH_HOLD_REG(s32, fnOffset, r2);
+        MATCH_HOLD_REG(void *, fn, r0);
+        MATCH_HOLD_REG(u32, dead, r4);
 
         d8obj = (u8 *)gPlayer;
         entry = *(u8 **)(d8obj + 0x18);

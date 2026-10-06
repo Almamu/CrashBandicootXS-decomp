@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gfx.h"
 #include "memory.h"
 #include "vram_pool.h"
@@ -35,11 +36,11 @@ struct dma_queue {
  * for why plain C alone doesn't reproduce them. */
 s32 GetCompletionPercent(void *arg0)
 {
-    register void *self asm("r6");
-    register s32 total asm("r4");
-    register s32 b asm("r9");
-    register s32 c asm("r5");
-    register s32 d asm("r8");
+    MATCH_HOLD_REG(void *, self, r6);
+    MATCH_HOLD_REG(s32, total, r4);
+    MATCH_HOLD_REG(s32, b, r9);
+    MATCH_HOLD_REG(s32, c, r5);
+    MATCH_HOLD_REG(s32, d, r8);
     s32 e;
     u8 flags;
 
@@ -104,12 +105,12 @@ void AppendOamEntries(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
  * order. */
 void HideUnusedOamEntries(struct oam_shadow_buffer *arg0)
 {
-    register u8 *self asm("r1");
-    register s32 i asm("r2");
-    register s32 bit asm("r3");
-    register s32 mask asm("r4");
-    register u8 loaded asm("r5");
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, self, r1);
+    MATCH_HOLD_REG(s32, i, r2);
+    MATCH_HOLD_REG(s32, bit, r3);
+    MATCH_HOLD_REG(s32, mask, r4);
+    MATCH_HOLD_REG(u8, loaded, r5);
+    MATCH_HOLD_REG(s32, result, r0);
 
     self = (u8 *)arg0;
     i = *(s32 *)self;
@@ -164,10 +165,10 @@ void CommitOamBuffer(struct oam_shadow_buffer *arg0)
  * the tail of arg1[1] on real hardware (see docs/matching.md). */
 void AddOamEntry(struct oam_shadow_buffer *arg0, const void *entry)
 {
-    register s32 n1 asm("r2");
-    register u16 saved asm("r3");
-    register s32 n2 asm("r1");
-    register s32 addr2 asm("r0");
+    MATCH_HOLD_REG(s32, n1, r2);
+    MATCH_HOLD_REG(u16, saved, r3);
+    MATCH_HOLD_REG(s32, n2, r1);
+    MATCH_HOLD_REG(s32, addr2, r0);
     u32 v0;
     u32 v1;
 
@@ -210,8 +211,8 @@ void FlushVramDmaQueue(void)
             * definition above - and `raw`/`shifted` are pinned to match
             * the ROM's register choice for the size-field load+shift
             * (docs/matching.md, "Matching decompilation"). */
-    register u16 raw asm("r1");
-    register u32 shifted asm("r0");
+    MATCH_HOLD_REG(u16, raw, r1);
+    MATCH_HOLD_REG(u32, shifted, r0);
 
     for (i = 0; i < QUEUE_COUNT; i++) {
         entry = &gVramDmaQueue.entries[i];
@@ -441,16 +442,16 @@ void UploadPaletteCache(struct palette_cache *self)
  * decompilation"). */
 u8 GetPaletteSlot(struct palette_cache *self, s32 recordId)
 {
-    register struct palette_cache *pSelf asm("r2") = self;
-    register s32 pRecordId asm("r5") = recordId;
-    register u8 *remap asm("r0") = pSelf->slotOf;
-    register u8 *addr asm("r1");
+    MATCH_HOLD_REG(struct palette_cache *, pSelf, r2) = self;
+    MATCH_HOLD_REG(s32, pRecordId, r5) = recordId;
+    MATCH_HOLD_REG(u8 *, remap, r0) = pSelf->slotOf;
+    MATCH_HOLD_REG(u8 *, addr, r1);
     u8 slot;
     s32 i;
     const u8 *src;
     u8 *dst;
     u8 *reservedBase;
-    register s32 shiftedId asm("r0");
+    MATCH_HOLD_REG(s32, shiftedId, r0);
 
     asm volatile("add %0, %1, %2" : "=r"(addr) : "r"(remap), "r"(pRecordId));
     slot = *addr;
@@ -570,8 +571,8 @@ void DestroyPaletteCache(struct palette_cache *self, u32 flags)
  * "Matching decompilation". */
 struct palette_cache *InitPaletteCache(struct palette_cache *self)
 {
-    register s32 offset asm("r3");
-    register u8 *dirtyAddr asm("r1");
+    MATCH_HOLD_REG(s32, offset, r3);
+    MATCH_HOLD_REG(u8 *, dirtyAddr, r1);
 
     self->count = 0;
     self->slotOf = NULL;
@@ -606,7 +607,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * confirmed different - see docs/matching.md, "Matching decompilation"). */
 u8 IsEntityNearCamera(struct actor *self)
 {
-    register struct actor *pSelf asm("r2") = self;
+    MATCH_HOLD_REG(struct actor *, pSelf, r2) = self;
     s32 buf[4];
     void *table;
     void *subObj;
@@ -675,7 +676,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
     SetAabbSize(&buf, rw, rh);
 
     {
-        register s32 flagTestR0 asm("r0");
+        MATCH_HOLD_REG(s32, flagTestR0, r0);
         asm volatile(
             "ldrb r1, [%1, #0xc]\n\t"
             "lsr %0, r1, #2\n\t"
@@ -701,7 +702,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
             addr = (u8 *)gPlayer + table2->thisOffset;
             field0a = self->field_0A;
             {
-                register void *deadRead asm("r4") = *(void *const volatile *)&table2->fn;
+                MATCH_HOLD_REG(void *, deadRead, r4) = *(void *const volatile *)&table2->fn;
                 (void)deadRead;
             }
             _call_via_r4(addr, 0, field0a, 0);
@@ -764,8 +765,8 @@ s32 IsEntityOnScreen(void)
  * docs/matching.md, "A gotcha worth knowing". */
 s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
 {
-    register struct actor *pSelf asm("r5") = self;
-    register struct aabb *pBox asm("r6") = box;
+    MATCH_HOLD_REG(struct actor *, pSelf, r5) = self;
+    MATCH_HOLD_REG(struct aabb *, pBox, r6) = box;
     struct vtable_slot *table;
     void *rec;
     u8 flag;
@@ -776,11 +777,11 @@ s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
         table = pSelf->table;
         rec = _call_via_r1((u8 *)pSelf + table[2].delta, table[2].fn);
         {
-            register void *recR0 asm("r0") = rec;
-            register s32 minXR4 asm("r4");
-            register s32 maxXR1 asm("r1");
-            register s32 minYR5 asm("r5");
-            register s32 maxYR3 asm("r3");
+            MATCH_HOLD_REG(void *, recR0, r0) = rec;
+            MATCH_HOLD_REG(s32, minXR4, r4);
+            MATCH_HOLD_REG(s32, maxXR1, r1);
+            MATCH_HOLD_REG(s32, minYR5, r5);
+            MATCH_HOLD_REG(s32, maxYR3, r3);
             s32 boxX0;
             /* r7 is never usable for an explicit register-variable pin
              * in this toolchain (the compiler drops it from the
@@ -813,9 +814,9 @@ s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
             if (minXR4 > boxX0) {
                 s32 boxX1 = boxX0 + pBox->w;
                 if (maxXR1 < boxX1) {
-                    register s32 boxY0 asm("r2") = pBox->y;
+                    MATCH_HOLD_REG(s32, boxY0, r2) = pBox->y;
                     if (minYR5 > boxY0) {
-                        register s32 boxY1 asm("r0") = boxY0 + pBox->h;
+                        MATCH_HOLD_REG(s32, boxY1, r0) = boxY0 + pBox->h;
                         if (maxYR3 < boxY1) {
                             result = 1;
                         }
@@ -902,8 +903,8 @@ void ResetEntity(struct actor *self)
      * byte's (r2), matching the ROM's exact register dance - plain C
      * naturally accumulates into the loaded-byte's register instead
      * (see docs/matching.md, "Matching decompilation"). */
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = ~2;
     tmp = self->flags;
@@ -947,8 +948,8 @@ struct actor *InitEntity(struct actor *self)
  * decompilation"). */
 void ClearEntityAlwaysActive(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = -17;
     tmp = self->flags;
@@ -959,8 +960,8 @@ void ClearEntityAlwaysActive(struct actor *self)
 /* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive above. */
 void SetEntityAlwaysActive(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = 16;
     tmp = self->flags;
@@ -979,8 +980,8 @@ asm(".align 2, 0");
  * SetEntityAlwaysActive above. */
 void ClearEntityTouched(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = -9;
     tmp = self->flags;
@@ -992,8 +993,8 @@ void ClearEntityTouched(struct actor *self)
  * SetEntityAlwaysActive/ClearEntityTouched above. */
 void SetEntityTouched(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = 8;
     tmp = self->flags;
@@ -1014,9 +1015,9 @@ asm(".align 2, 0");
  * own r0 - see docs/matching.md, "Matching decompilation". */
 u8 IsEntityGone(struct actor *self)
 {
-    register struct actor *pSelf asm("r1") = self;
-    register u8 flags asm("r1");
-    register s32 result asm("r0") = 1;
+    MATCH_HOLD_REG(struct actor *, pSelf, r1) = self;
+    MATCH_HOLD_REG(u8, flags, r1);
+    MATCH_HOLD_REG(s32, result, r0) = 1;
 
     flags = pSelf->flags;
     result = result & flags;
@@ -1028,8 +1029,8 @@ asm(".align 2, 0");
  * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched above. */
 void ClearEntityGone(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = -2;
     tmp = self->flags;
@@ -1047,12 +1048,12 @@ void ClearEntityGone(struct actor *self)
  * "Matching decompilation" for the general techniques. */
 void MarkEntityGone(struct actor *self)
 {
-    register struct actor *pSelf asm("r1") = self;
-    register u16 id asm("r4");
+    MATCH_HOLD_REG(struct actor *, pSelf, r1) = self;
+    MATCH_HOLD_REG(u16, id, r4);
 
     {
-        register s32 result asm("r0");
-        register s32 tmp asm("r2");
+        MATCH_HOLD_REG(s32, result, r0);
+        MATCH_HOLD_REG(s32, tmp, r2);
 
         result = 1;
         tmp = pSelf->flags;
@@ -1073,7 +1074,7 @@ void MarkEntityGone(struct actor *self)
              * pair forces the ROM's extra `add`/`asr` instead of
              * gcc's one-instruction shift straight out of `rawId`'s
              * register. */
-            register s32 word asm("r0");
+            MATCH_HOLD_REG(s32, word, r0);
             s32 wordOffset;
 
             asm volatile("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(word) : "r"(rawId));
@@ -1098,8 +1099,8 @@ asm(".align 2, 0");
  * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone above. */
 void DisableEntityContact(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = -5;
     tmp = self->flags;
@@ -1111,8 +1112,8 @@ void DisableEntityContact(struct actor *self)
  * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone/DisableEntityContact above. */
 void EnableEntityContact(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = 4;
     tmp = self->flags;
@@ -1132,8 +1133,8 @@ asm(".align 2, 0");
  * EnableEntityContact above. */
 void ClearEntityFlag1(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = -3;
     tmp = self->flags;
@@ -1146,8 +1147,8 @@ void ClearEntityFlag1(struct actor *self)
  * EnableEntityContact/ClearEntityFlag1 above. */
 void SetEntityFlag1(struct actor *self)
 {
-    register s32 result asm("r1");
-    register s32 tmp asm("r2");
+    MATCH_HOLD_REG(s32, result, r1);
+    MATCH_HOLD_REG(s32, tmp, r2);
 
     result = 2;
     tmp = self->flags;

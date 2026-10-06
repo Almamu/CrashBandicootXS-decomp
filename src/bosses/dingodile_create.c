@@ -38,8 +38,8 @@ struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self)
  * second lookup doesn't clobber it in place (docs/workflow.md step 7). */
 void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 {
-    register struct gobj *part asm("r3") = partArg;
-    register s32 index asm("r5") = indexArg;
+    MATCH_HOLD_REG(struct gobj *, part, r3) = partArg;
+    MATCH_HOLD_REG(s32, index, r5) = indexArg;
     const struct speed_ramp *e = &gDingodileMotionRecords[gDingodileMotionEntries[index][0]];
 
     if ((s32)(part->mirror << 27) < 0)

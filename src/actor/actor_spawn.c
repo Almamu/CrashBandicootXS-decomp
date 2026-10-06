@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -168,8 +169,8 @@ void ReloadActorCategoryGraphics(void)
  * per docs/workflow.md step 3. */
 void DestroyAllActors(void)
 {
-    register void **headAddr asm("r5");
-    register void *head asm("r1");
+    MATCH_HOLD_REG(void **, headAddr, r5);
+    MATCH_HOLD_REG(void *, head, r1);
     struct actor_self *cur;
     struct actor_self *next;
 
@@ -189,7 +190,7 @@ void DestroyAllActors(void)
          * doesn't copy `addr` into its callee-saved register until
          * right before the loop condition, not immediately after the
          * load. */
-        register void *addr asm("r0") = &gActorList;
+        MATCH_HOLD_REG(void *, addr, r0) = &gActorList;
         asm volatile(
             "ldr %0, [%1]\n\t"
             : "=r"(head)

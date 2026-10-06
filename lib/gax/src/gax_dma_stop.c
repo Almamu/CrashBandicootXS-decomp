@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* Stops GAX2's Direct Sound A/Timer0 output - the exact counterpart to
  * GAX_irq's play-start follow-up in gax_playback_ticker.c: clears the
@@ -14,7 +15,7 @@
 void GAX_stop(void)
 {
     void *chan = gGaxPlayerState->channels[gGaxPlayerState->curChannelIdx];
-    register u8 *inner asm("r0") = *(u8 **)((u8 *)chan + 4);
+    MATCH_HOLD_REG(u8 *, inner, r0) = *(u8 **)((u8 *)chan + 4);
     u32 zero = 0;
 
     inner[0x1a] = zero;

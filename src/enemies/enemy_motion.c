@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "part_ctrl.h"
 #include "enemies.h"
 #include "audio.h"
@@ -126,7 +127,7 @@ void UpdateEnemyHop(struct part_ctrl *self)
     SetEnemyMotionY(self, 0);
     t = self->target;
     {
-        register s32 by asm("r1") = self->baseY;
+        MATCH_HOLD_REG(s32, by, r1) = self->baseY;
         t->y = by;
     }
     if (t->animDone) {

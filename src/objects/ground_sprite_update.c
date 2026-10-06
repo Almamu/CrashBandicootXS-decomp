@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
 
@@ -55,9 +56,9 @@ void UpdateGroundSprite(struct gobj *self)
     s16 off;
     void *addr;
     void *fn;
-    register void *rec asm("r3");
-    register void *prev asm("r1");
-    register s32 delta asm("r1");
+    MATCH_HOLD_REG(void *, rec, r3);
+    MATCH_HOLD_REG(void *, prev, r1);
+    MATCH_HOLD_REG(s32, delta, r1);
 
     UpdateMovingSprite((struct actor *)self);
 
@@ -72,8 +73,8 @@ void UpdateGroundSprite(struct gobj *self)
     if (prev == NULL) goto skip;
 
     if (self->hitAxes == 8) {
-        register s32 prevSum asm("r2");
-        register s32 newSum asm("r1");
+        MATCH_HOLD_REG(s32, prevSum, r2);
+        MATCH_HOLD_REG(s32, newSum, r1);
 
         /* record[5] + record[2] for `prev` (r1) then `rec` (r3), each
          * ldrsh forced onto its own r5-held #2 offset immediate to
@@ -94,8 +95,8 @@ void UpdateGroundSprite(struct gobj *self)
         if (prevSum == newSum) goto skip;
         delta = prevSum - newSum;
     } else if (self->hitAxes == 4) {
-        register s32 prevVal asm("r0");
-        register s32 newVal asm("r1");
+        MATCH_HOLD_REG(s32, prevVal, r0);
+        MATCH_HOLD_REG(s32, newVal, r1);
 
         /* Plain record[2] halfwords for `prev` (r1) then `rec` (r3);
          * same r5-held #2 offset idiom for the second load. */
@@ -130,16 +131,16 @@ void sub_800A590(struct gobj *self)
     s16 off = tbl->m10.thisOffset;
     void *addr = (u8 *)self + off;
     void *fn = tbl->m10.fn;
-    register void *rec asm("r3") = (void *)_call_via_r1(addr, fn);
-    register void *prev asm("r1") = self->platform;
-    register s32 delta asm("r1");
+    MATCH_HOLD_REG(void *, rec, r3) = (void *)_call_via_r1(addr, fn);
+    MATCH_HOLD_REG(void *, prev, r1) = self->platform;
+    MATCH_HOLD_REG(s32, delta, r1);
 
     if (prev == rec) goto skip;
     if (prev == NULL) goto skip;
 
     if (self->hitAxes == 8) {
-        register s32 prevSum asm("r2");
-        register s32 newSum asm("r1");
+        MATCH_HOLD_REG(s32, prevSum, r2);
+        MATCH_HOLD_REG(s32, newSum, r1);
 
         asm volatile(
             "movs r5, #2\n"
@@ -157,8 +158,8 @@ void sub_800A590(struct gobj *self)
         if (prevSum == newSum) goto skip;
         delta = prevSum - newSum;
     } else if (self->hitAxes == 4) {
-        register s32 prevVal asm("r0");
-        register s32 newVal asm("r1");
+        MATCH_HOLD_REG(s32, prevVal, r0);
+        MATCH_HOLD_REG(s32, newVal, r1);
 
         asm volatile(
             "movs r2, #2\n"

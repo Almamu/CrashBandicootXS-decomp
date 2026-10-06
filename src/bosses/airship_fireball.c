@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "audio.h"
 #include "actor.h"
@@ -31,18 +32,18 @@ void DamageAirshipFireball(void *selfArg, s32 delta)
         self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         {
-            register s32 stateVal asm("r0") = 2;
-            register s32 idxVal asm("r1") = 1;
+            MATCH_HOLD_REG(s32, stateVal, r0) = 2;
+            MATCH_HOLD_REG(s32, idxVal, r1) = 1;
 
             self->base.state = stateVal;
             {
-                register s32 zero asm("r2") = 0;
+                MATCH_HOLD_REG(s32, zero, r2) = 0;
 
                 self->base.stateTime = zero;
                 self->base.animIndex = idxVal;
                 {
-                    register u16 anim asm("r0") = self->base.anims[1].duration;
-                    register u8 zero2 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = self->base.anims[1].duration;
+                    MATCH_HOLD_REG(u8, zero2, r1) = 0;
 
                     *(u16 *)&self->base.animTimer = anim;
                     *(u8 *)&self->base.animDone = zero2;
@@ -97,10 +98,10 @@ asm(".align 2, 0");
 void *CreateAirshipFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     u8 *self = selfArg;
-    register s32 bReg asm("r6") = b;
-    register s32 cReg asm("r8") = c;
-    register s32 dReg asm("r0") = d;
-    register s32 health asm("r5") = 2;
+    MATCH_HOLD_REG(s32, bReg, r6) = b;
+    MATCH_HOLD_REG(s32, cReg, r8) = c;
+    MATCH_HOLD_REG(s32, dReg, r0) = d;
+    MATCH_HOLD_REG(s32, health, r5) = 2;
 
     InitActorPart(self, part, b, c, dReg);
     *(s32 *)(self + 0x54) = health;

@@ -93,8 +93,8 @@ asm(".align 2, 0");
 void StartSong(struct AudioContext *self, u32 songIndex)
 {
     {
-        register s32 wasStopped asm("r1");
-        register s32 zero asm("r4");
+        MATCH_HOLD_REG(s32, wasStopped, r1);
+        MATCH_HOLD_REG(s32, zero, r4);
 
         wasStopped = 0;
         if (self->state == 0) {
@@ -182,7 +182,7 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
             }
             if (voice != -1) {
                 u32 baseVolume = gSfxTable[id].baseVolume;
-                register struct AudioContext *p2 asm("r2") = pself;
+                MATCH_HOLD_REG(struct AudioContext *, p2, r2) = pself;
                 u32 volume = (baseVolume * p2->sfxVolume) * volumeParam >> 0x10;
 
                 GAX_set_fx_volume(voice, volume);
@@ -209,7 +209,7 @@ void TickAmbientSfx(struct AudioContext *self)
     }
     now = gRoomFrameCount;
     if (now >= self->activeSfx.deadline) {
-        register s32 v asm("r0");
+        MATCH_HOLD_REG(s32, v, r0);
 
         self->activeSfx.volume = 0;
         v = self->ambientSfxVolume;
@@ -502,8 +502,8 @@ void PauseSong(struct AudioContext *self)
  * stopped) and disarms the per-tick GAX2 IRQ update. */
 void StopSong(struct AudioContext *self)
 {
-    register s32 isStopped asm("r2");
-    register s32 zero asm("r4");
+    MATCH_HOLD_REG(s32, isStopped, r2);
+    MATCH_HOLD_REG(s32, zero, r4);
 
     isStopped = 0;
     if (self->state == 0) {
@@ -557,7 +557,7 @@ struct AudioContext *InitAudioContext(struct AudioContext *self)
  * DestroyLevelState passes gAudioContext in r0. */
 void DisableMusicVCountIrq(struct AudioContext *self)
 {
-    register vu8 *dispstat asm("r1") = (vu8 *)REG_ADDR_DISPSTAT;
+    MATCH_HOLD_REG(vu8 *, dispstat, r1) = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
     *dispstat &= ~tmp;
@@ -572,9 +572,9 @@ asm(".align 2, 0");
  * which already anticipated this function. */
 void EnableMusicVCountIrq(void)
 {
-    register vu8 *p asm("r1");
-    register u8 v asm("r0");
-    register u8 loaded asm("r2");
+    MATCH_HOLD_REG(vu8 *, p, r1);
+    MATCH_HOLD_REG(u8, v, r0);
+    MATCH_HOLD_REG(u8, loaded, r2);
 
     IrqSetHandler(INTR_INDEX_VCOUNT, MusicVCountIrqHandler);
     p = (vu8 *)REG_ADDR_DISPSTAT;

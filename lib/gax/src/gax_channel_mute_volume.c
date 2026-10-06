@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* This whole file re-derives `gGaxPlayerState->channels[gGaxPlayerState
  * ->curChannelIdx]` fresh at every single use, never through a cached local
@@ -63,9 +64,9 @@ void GAX_set_music_volume(s32 idx, u32 vol)
         s32 i;
 
         for (i = 0; i < GAX_MIXER()->type->childCount; i++) {
-            register u8 *chan asm("r1") = GAX_CHAN();
-            register u32 off asm("r0") = (u32)i << 2;
-            register u8 *entryAddr asm("r0");
+            MATCH_HOLD_REG(u8 *, chan, r1) = GAX_CHAN();
+            MATCH_HOLD_REG(u32, off, r0) = (u32)i << 2;
+            MATCH_HOLD_REG(u8 *, entryAddr, r0);
             struct GaxChannelState *entry;
 
             /* Forces the ROM's exact "adds r0, r0, r1" register-operand
@@ -82,12 +83,12 @@ void GAX_set_music_volume(s32 idx, u32 vol)
             entry->volume = vol;
         }
     } else if (idx > -2) {
-        register u8 *chan asm("r1") = GAX_CHAN();
+        MATCH_HOLD_REG(u8 *, chan, r1) = GAX_CHAN();
         struct GaxMixerHandler *obj = *(struct GaxMixerHandler **)chan;
 
         if (idx < obj->type->childCount) {
-            register u32 off asm("r0") = (u32)idx << 2;
-            register u8 *entryAddr asm("r0");
+            MATCH_HOLD_REG(u32, off, r0) = (u32)idx << 2;
+            MATCH_HOLD_REG(u8 *, entryAddr, r0);
             struct GaxChannelState *entry;
 
             /* Same "adds r0, r0, r1" operand-order gap as the loop body

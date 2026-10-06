@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gba/io_reg.h"
 #include "actor.h"
 #include "bosses.h"
@@ -43,8 +44,8 @@ asm(".align 2, 0");
  * to (see docs/workflow.md step 3). */
 void CommitActorBgScroll(void)
 {
-    register s32 x asm("r2");
-    register s32 yShift asm("r1");
+    MATCH_HOLD_REG(s32, x, r2);
+    MATCH_HOLD_REG(s32, yShift, r1);
     vu16 *dest = &REG_BG0HOFS;
     vu16 *vofsDest;
 

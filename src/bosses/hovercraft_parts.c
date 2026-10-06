@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "audio.h"
 #include "actor.h"
@@ -41,7 +42,7 @@ void StartHovercraftHitFlash(void)
  * (`0x7FFF`) and the cached color. */
 void SetHovercraftFlashColor(u8 flag)
 {
-    register u16 val asm("r1");
+    MATCH_HOLD_REG(u16, val, r1);
 
     if (gHovercraftFlashColorSaved == 0) {
         gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
@@ -49,12 +50,12 @@ void SetHovercraftFlashColor(u8 flag)
     }
 
     if (flag != 0) {
-        register u16 *p asm("r0") = gFlashBgPalette;
+        MATCH_HOLD_REG(u16 *, p, r0) = gFlashBgPalette;
 
         val = RGB_WHITE;
         p[15] = val;
     } else {
-        register u16 *p asm("r2") = gFlashBgPalette;
+        MATCH_HOLD_REG(u16 *, p, r2) = gFlashBgPalette;
 
         val = gHovercraftFlashSavedColor;
         p[15] = val;
@@ -146,8 +147,8 @@ void SetHovercraftState(s32 a0, s32 a1)
     self->animIndex = a1;
 
     {
-        register u16 anim asm("r0") = self->anims[a1].duration;
-        register u8 zero asm("r1") = 0;
+        MATCH_HOLD_REG(u16, anim, r0) = self->anims[a1].duration;
+        MATCH_HOLD_REG(u8, zero, r1) = 0;
 
         *(u16 *)&self->animTimer = anim;
         *(u8 *)&self->animDone = zero;
@@ -155,11 +156,11 @@ void SetHovercraftState(s32 a0, s32 a1)
 
     {
         s32 frame = GetAnimFrameBaseOffset(self);
-        register s32 idx asm("r2") = self->animIndex;
-        register u8 *table asm("r3") = (u8 *)self->anims;
-        register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
-        register s32 four asm("r2");
-        register s32 val asm("r1");
+        MATCH_HOLD_REG(s32, idx, r2) = self->animIndex;
+        MATCH_HOLD_REG(u8 *, table, r3) = (u8 *)self->anims;
+        MATCH_HOLD_REG(u8 *, entryPtr, r1) = (u8 *)(idx * 0xc);
+        MATCH_HOLD_REG(s32, four, r2);
+        MATCH_HOLD_REG(s32, val, r1);
 
         asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
         four = 4;
@@ -191,15 +192,15 @@ void HovercraftStateApproach(void)
     gHovercraftZ += gHovercraftVelZ;
 
     if (gHovercraftDistance <= 0x81FF) {
-        register s32 *pCC asm("r1") = &gHovercraftVelX;
-        register s32 *pD0 asm("r0") = &gHovercraftVelY;
-        register s32 zeroD0 asm("r5") = 0;
+        MATCH_HOLD_REG(s32 *, pCC, r1) = &gHovercraftVelX;
+        MATCH_HOLD_REG(s32 *, pD0, r0) = &gHovercraftVelY;
+        MATCH_HOLD_REG(s32, zeroD0, r5) = 0;
 
         *pD0 = zeroD0;
         *pCC = zeroD0;
         {
-            register s32 two asm("r1") = 2;
-            register s32 *pB0 asm("r0") = &gHovercraftState;
+            MATCH_HOLD_REG(s32, two, r1) = 2;
+            MATCH_HOLD_REG(s32 *, pB0, r0) = &gHovercraftState;
 
             *pB0 = two;
         }
@@ -208,8 +209,8 @@ void HovercraftStateApproach(void)
         self->animIndex = zeroD0;
 
         {
-            register u16 anim asm("r0") = self->anims[0].duration;
-            register u8 zero asm("r1") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = self->anims[0].duration;
+            MATCH_HOLD_REG(u8, zero, r1) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero;
@@ -217,11 +218,11 @@ void HovercraftStateApproach(void)
 
         {
             s32 frame = GetAnimFrameBaseOffset(self);
-            register s32 idx asm("r2") = self->animIndex;
-            register u8 *table asm("r3") = (u8 *)self->anims;
-            register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
-            register s32 four asm("r2");
-            register s32 val asm("r1");
+            MATCH_HOLD_REG(s32, idx, r2) = self->animIndex;
+            MATCH_HOLD_REG(u8 *, table, r3) = (u8 *)self->anims;
+            MATCH_HOLD_REG(u8 *, entryPtr, r1) = (u8 *)(idx * 0xc);
+            MATCH_HOLD_REG(s32, four, r2);
+            MATCH_HOLD_REG(s32, val, r1);
 
             asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
             four = 4;

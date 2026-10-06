@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include "system.h"
@@ -207,7 +208,7 @@ void UpdateYetiBg2(void)
 {
     s32 scale, base, t;
     u8 *p = &gYetiBg2PageFlip;
-    register s32 v asm("r1") = *p;
+    MATCH_HOLD_REG(s32, v, r1) = *p;
     u8 *changed = p;
 
     if (v != 0) {

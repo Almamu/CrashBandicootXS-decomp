@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bosses.h"
 #include "objects.h"
 #include "level.h"
@@ -37,8 +38,8 @@ extern s32 _call_via_r3(void *addr, void *arg1, void *arg2, void *fn);
  * or the C's meaning. */
 void UpdateStompedHopPad(void *objArg, void *otherArg)
 {
-    register u8 *obj asm("r3") = objArg;
-    register u8 *other asm("r2") = otherArg;
+    MATCH_HOLD_REG(u8 *, obj, r3) = objArg;
+    MATCH_HOLD_REG(u8 *, other, r2) = otherArg;
     s32 state = *(s32 *)(obj + 8);
 
     if (state == 1)
@@ -110,7 +111,7 @@ void *CreateStompedHopPadCtrl(void *selfArg)
  * `part->field_08`. The first argument is taken but never read
  * anywhere in this function's ROM body.
  *
- * Needs several `register ... asm("rN")` pins (matching the ROM's own
+ * Needs several `MATCH_HOLD_REG` pins (matching the ROM's own
  * register choices) plus a `volatile` reload of `other+8` and one raw
  * `asm` for the index shift - without them this compiler happily
  * proves `other+8`'s zero-extended value never has its top bit set and
@@ -121,28 +122,28 @@ void *CreateStompedHopPadCtrl(void *selfArg)
  * the branch). */
 void UpdateOneShotAnimCtrl(void *unusedArg, void *otherArg)
 {
-    register u8 *other asm("r1") = otherArg;
+    MATCH_HOLD_REG(u8 *, other, r1) = otherArg;
 
     (void)unusedArg;
 
     if (other[0x38] != 0) {
-        register s32 one asm("r0") = 1;
-        register u8 flags asm("r2") = other[0xc];
+        MATCH_HOLD_REG(s32, one, r0) = 1;
+        MATCH_HOLD_REG(u8, flags, r2) = other[0xc];
 
         one |= flags;
         other[0xc] = one;
 
         {
-            register s32 sentinel asm("r0") = 0xFFFF;
-            register u16 val asm("r4") = *(u16 *)(other + 8);
+            MATCH_HOLD_REG(s32, sentinel, r0) = 0xFFFF;
+            MATCH_HOLD_REG(u16, val, r4) = *(u16 *)(other + 8);
 
             if (val != sentinel) {
-                register u16 val2 asm("r3") = *(u16 volatile *)(other + 8);
-                register u8 *base asm("r2") = (u8 *)gEntityFlags;
-                register s32 idx asm("r0");
+                MATCH_HOLD_REG(u16, val2, r3) = *(u16 volatile *)(other + 8);
+                MATCH_HOLD_REG(u8 *, base, r2) = (u8 *)gEntityFlags;
+                MATCH_HOLD_REG(s32, idx, r0);
                 s32 idxOffset;
                 s32 *bitmap;
-                register s32 bit asm("r0");
+                MATCH_HOLD_REG(s32, bit, r0);
 
                 asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r" (idx) : "r" (val2));
                 idxOffset = idx * 4;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "memory.h"
 #include "actor.h"
 #include "vehicle.h"
@@ -33,9 +34,9 @@ void DestroyYeti(void)
 void CreateYeti(void *arg0)
 {
     u8 *obj;
-    register u32 size asm("r0");
-    register s32 flags asm("r1");
-    register void **bcAddr asm("r5");
+    MATCH_HOLD_REG(u32, size, r0);
+    MATCH_HOLD_REG(s32, flags, r1);
+    MATCH_HOLD_REG(void **, bcAddr, r5);
 
     gYetiParamsIndex = (s32)arg0;
     bcAddr = (void **)&gYeti;

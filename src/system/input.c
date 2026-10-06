@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "system.h"
 #include "globals.h"
 
@@ -46,9 +47,9 @@
 s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
 {
     s32 result;
-    register s32 i asm("r5");
-    register u8 flagR asm("r4");
-    register s32 keys asm("r1");
+    MATCH_HOLD_REG(s32, i, r5);
+    MATCH_HOLD_REG(u8, flagR, r4);
+    MATCH_HOLD_REG(s32, keys, r1);
     s32 confirm;
     u16 *addr;
 

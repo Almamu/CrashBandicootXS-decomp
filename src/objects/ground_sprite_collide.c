@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "box_part.h"
 #include "objects.h"
 #include "level.h"
@@ -404,9 +405,9 @@ u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *o
     hit = sub_8026BF8(gLevelLayers, &pos, &origY);
     if (hit) {
         s32 y;
-        register u8 f asm("r2");
+        MATCH_HOLD_REG(u8, f, r2);
         u32 t;
-        register s32 v asm("r1");
+        MATCH_HOLD_REG(s32, v, r1);
 
         self->y = y = origY & 0xFFFFFF00;
         f = self->flags2;

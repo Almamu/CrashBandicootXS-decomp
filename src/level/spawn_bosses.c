@@ -43,10 +43,10 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     else if (gPlayer->ctrlMode == 0)
     {
         s32 *pos = (s32 *)CreatePlatform(arg0, arg1, arg2, arg3, 4);
-        register s32 px asm("r1") = pos[0] >> 8;
-        register s32 x asm("r2") = px - 2;
-        register s32 py asm("r0");
-        register s32 y asm("r3");
+        MATCH_HOLD_REG(s32, px, r1) = pos[0] >> 8;
+        MATCH_HOLD_REG(s32, x, r2) = px - 2;
+        MATCH_HOLD_REG(s32, py, r0);
+        MATCH_HOLD_REG(s32, y, r3);
         s32 point[2];
 
         MATCH_KEEP(x);

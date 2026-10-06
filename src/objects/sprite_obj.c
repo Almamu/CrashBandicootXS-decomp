@@ -23,8 +23,8 @@ s32 SpriteHitboxOverlaps(struct actor *part, void *region)
 {
     struct aabb buf_;
     void **tablePtr;
-    register void *rec asm("r0");
-    register u8 idx asm("r3");
+    MATCH_HOLD_REG(void *, rec, r0);
+    MATCH_HOLD_REG(u8, idx, r3);
     void *rec4;
     s32 offset;
     s32 offX, offY;
@@ -77,8 +77,8 @@ s32 GetSpriteAnimPaletteSlot(struct actor *part)
     struct palette_cache *cache = gPaletteCache;
     void **tablePtr;
     void *table;
-    register u8 idx asm("r4");
-    register s32 rec asm("r1");
+    MATCH_HOLD_REG(u8, idx, r4);
+    MATCH_HOLD_REG(s32, rec, r1);
 
     tablePtr = *(void ***)((u8 *)part + 0x20);
     part = (struct actor *)((u8 *)part + 0x2d);
@@ -131,8 +131,8 @@ void sub_8008188(void *dest, s32 kind, void *rec)
     switch (idx) {
     case 1:
         {
-            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
-            register s32 shifted asm("r1");
+            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
             *(s32 *)dest += shifted;
@@ -140,8 +140,8 @@ void sub_8008188(void *dest, s32 kind, void *rec)
         goto end;
     case 0:
         {
-            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
-            register s32 shifted asm("r1");
+            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
             *(s32 *)dest -= shifted;
@@ -178,8 +178,8 @@ void sub_8008188(void *dest, s32 kind, void *rec)
 
 kind8_12:
     {
-        register void *recReg asm("r2") = rec;
-        register s32 result asm("r1");
+        MATCH_HOLD_REG(void *, recReg, r2) = rec;
+        MATCH_HOLD_REG(s32, result, r1);
 
         asm volatile(
             "mov r0, #2\n\t"
@@ -215,8 +215,8 @@ void sub_8008200(void *dest, s32 kind, void *rec)
     switch (idx) {
     case 1:
         {
-            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
-            register s32 shifted asm("r1");
+            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
             *(s32 *)dest -= shifted;
@@ -224,8 +224,8 @@ void sub_8008200(void *dest, s32 kind, void *rec)
         goto end;
     case 0:
         {
-            register s32 byteVal asm("r2") = *((u8 *)rec + 4);
-            register s32 shifted asm("r1");
+            MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+            MATCH_HOLD_REG(s32, shifted, r1);
 
             shifted = byteVal << 7;
             *(s32 *)dest += shifted;
@@ -262,8 +262,8 @@ void sub_8008200(void *dest, s32 kind, void *rec)
 
 kind8_12:
     {
-        register void *recReg asm("r2") = rec;
-        register s32 result asm("r1");
+        MATCH_HOLD_REG(void *, recReg, r2) = rec;
+        MATCH_HOLD_REG(s32, result, r1);
 
         asm volatile(
             "mov r0, #2\n\t"
@@ -290,7 +290,7 @@ end:
  *
  * Matched in a later session, same `goto`-unified atomic-asm-block
  * technique as `sub_8008188` above for the shared kind-8/12 gap.
- * `rec` itself also needs its own explicit `register ... asm("r2")`
+ * `rec` itself also needs its own explicit `MATCH_HOLD_REG(..., r2)`
  * pin (initialized from the incoming parameter right at function
  * entry) - without it, gcc decided `rec` needed to survive in a
  * callee-saved register (`r4`, behind a `push {r4, lr}`/`pop {r4}`
@@ -315,8 +315,8 @@ end:
  * about the kind-8/12 fix itself. */
 void sub_8008278(void *dest, s32 kind, void *rec_)
 {
-    register void *rec asm("r2") = rec_;
-    register s32 field0 asm("r0");
+    MATCH_HOLD_REG(void *, rec, r2) = rec_;
+    MATCH_HOLD_REG(s32, field0, r0);
     s32 idx = kind - 1;
     s32 v;
 
@@ -351,8 +351,8 @@ void sub_8008278(void *dest, s32 kind, void *rec_)
 
 subCase:
     {
-        register s32 byteVal asm("r0") = *((u8 *)rec + 4);
-        register s32 shifted asm("r1");
+        MATCH_HOLD_REG(s32, byteVal, r0) = *((u8 *)rec + 4);
+        MATCH_HOLD_REG(s32, shifted, r1);
 
         shifted = byteVal << 7;
         field0 = *(s32 *)dest - shifted;
@@ -361,8 +361,8 @@ subCase:
 
 addCase:
     {
-        register s32 byteVal asm("r0") = *((u8 *)rec + 4);
-        register s32 shifted asm("r1");
+        MATCH_HOLD_REG(s32, byteVal, r0) = *((u8 *)rec + 4);
+        MATCH_HOLD_REG(s32, shifted, r1);
 
         shifted = byteVal << 7;
         field0 = *(s32 *)dest + shifted;
@@ -383,7 +383,7 @@ kind4Case:
 
 kind8_12:
     {
-        register s32 result asm("r1");
+        MATCH_HOLD_REG(s32, result, r1);
 
         asm volatile(
             "mov r0, #2\n\t"
@@ -401,9 +401,9 @@ bigtail:
     v <<= 8;
     *(s32 *)((u8 *)dest + 4) += v;
     {
-        register s32 byteVal asm("r2") = *((u8 *)rec + 4);
-        register s32 shifted asm("r1");
-        register s32 field0b asm("r0");
+        MATCH_HOLD_REG(s32, byteVal, r2) = *((u8 *)rec + 4);
+        MATCH_HOLD_REG(s32, shifted, r1);
+        MATCH_HOLD_REG(s32, field0b, r0);
 
         shifted = byteVal << 7;
         field0b = *(s32 *)dest;
@@ -422,8 +422,8 @@ asm(".align 2, 0");
 s32 IsSpriteObjInsideRect(struct actor *part, void *box)
 {
     s32 result = 0;
-    register u8 *addr asm("r2") = (u8 *)part + 0x25;
-    register u8 byteVal asm("r2");
+    MATCH_HOLD_REG(u8 *, addr, r2) = (u8 *)part + 0x25;
+    MATCH_HOLD_REG(u8, byteVal, r2);
 
     byteVal = *addr;
     if (byteVal == 1) {
@@ -442,8 +442,8 @@ s32 IsSpriteObjInsideRect(struct actor *part, void *box)
 s32 IsSpriteObjNearCamera(struct actor *part)
 {
     s32 result = 0;
-    register u8 *addr asm("r1") = (u8 *)part + 0x25;
-    register u8 byteVal asm("r1");
+    MATCH_HOLD_REG(u8 *, addr, r1) = (u8 *)part + 0x25;
+    MATCH_HOLD_REG(u8, byteVal, r1);
 
     byteVal = *addr;
     if (byteVal == 1) {
@@ -500,8 +500,8 @@ void UpdateSpriteObj(struct actor *part)
  * the same keyframe-table lookup used throughout this ROM region. */
 void *GetSpriteObjHitbox(struct actor *part)
 {
-    register void **tablePtr asm("r2") = *(void ***)((u8 *)part + 0x20);
-    register u8 idx asm("r3") = *((u8 *)part + 0x2d);
+    MATCH_HOLD_REG(void **, tablePtr, r2) = *(void ***)((u8 *)part + 0x20);
+    MATCH_HOLD_REG(u8, idx, r3) = *((u8 *)part + 0x2d);
     s32 offset = idx * 0x1c;
     void *table = *tablePtr;
     void *rec = (u8 *)table + offset;
@@ -546,18 +546,18 @@ s32 GetSpriteTileBase(void *part)
  * `matching_decomp_alignment_fix` gotcha). */
 void *GetSpriteFrame(struct gfx_part *part)
 {
-    register void *rec asm("r1") = part->bank;
-    register u8 *idxAddr asm("r2") = &part->tag;
-    register u8 idx asm("r4") = *idxAddr;
+    MATCH_HOLD_REG(void *, rec, r1) = part->bank;
+    MATCH_HOLD_REG(u8 *, idxAddr, r2) = &part->tag;
+    MATCH_HOLD_REG(u8, idx, r4) = *idxAddr;
     s32 offset = idx * sizeof(struct sprite_anim);
 
     rec = (void *)((struct sprite_bank *)rec)->anims;
     rec = (u8 *)rec + offset; /* &bank->anims[part->tag] */
 
     if (part->animDone != 0) {
-        register s32 mask asm("r0") = SPRITE_ANIM_LOOP;
-        register s32 flags asm("r2") = ((struct sprite_anim *)rec)->flags;
-        register s32 test asm("r0");
+        MATCH_HOLD_REG(s32, mask, r0) = SPRITE_ANIM_LOOP;
+        MATCH_HOLD_REG(s32, flags, r2) = ((struct sprite_anim *)rec)->flags;
+        MATCH_HOLD_REG(s32, test, r0);
 
         test = mask & flags;
         if (!test) {
@@ -569,10 +569,10 @@ void *GetSpriteFrame(struct gfx_part *part)
     {
         struct sprite_bank *bank = (struct sprite_bank *)part->bank;
         s32 frameIdx = part->frame;
-        register void *recPtr asm("r1") = (void *)((struct sprite_anim *)rec)->seq;
-        register s32 byteOffset asm("r0") = frameIdx * 2;
-        register u16 *arr asm("r0");
-        register void **ptrArray asm("r1");
+        MATCH_HOLD_REG(void *, recPtr, r1) = (void *)((struct sprite_anim *)rec)->seq;
+        MATCH_HOLD_REG(s32, byteOffset, r0) = frameIdx * 2;
+        MATCH_HOLD_REG(u16 *, arr, r0);
+        MATCH_HOLD_REG(void **, ptrArray, r1);
         u16 idx2;
 
         /* The ROM's `adds r0, r0, r1` (byteOffset-then-recPtr operand
@@ -812,8 +812,8 @@ void *GetSpriteFrameBodyBox(void *part)
  * indexed by the `+0x2d` frame index, times the record size (0x1c). */
 void *GetSpriteAnimRecord(struct actor *part)
 {
-    register void **tablePtr asm("r2") = *(void ***)((u8 *)part + 0x20);
-    register u8 idx asm("r3") = *((u8 *)part + 0x2d);
+    MATCH_HOLD_REG(void **, tablePtr, r2) = *(void ***)((u8 *)part + 0x20);
+    MATCH_HOLD_REG(u8, idx, r3) = *((u8 *)part + 0x2d);
     s32 offset = idx * 0x1c;
     void *table = *tablePtr;
     return (u8 *)table + offset;
@@ -834,11 +834,11 @@ void *GetSpriteAnimRecord(struct actor *part)
  * `asm` anchor for just this add gets a fully byte-exact match. */
 void SetSpriteFrameIndex(struct actor *part, s32 frame)
 {
-    register void **tablePtr asm("r0") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r2") = (u8 *)part + 0x2d;
-    register void *table asm("r1") = *tablePtr;
-    register u8 idx asm("r5") = *idxAddr;
-    register s32 offset asm("r0") = idx * 0x1c;
+    MATCH_HOLD_REG(void **, tablePtr, r0) = *(void ***)((u8 *)part + 0x20);
+    MATCH_HOLD_REG(u8 *, idxAddr, r2) = (u8 *)part + 0x2d;
+    MATCH_HOLD_REG(void *, table, r1) = *tablePtr;
+    MATCH_HOLD_REG(u8, idx, r5) = *idxAddr;
+    MATCH_HOLD_REG(s32, offset, r0) = idx * 0x1c;
     void *rec;
 
     asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
@@ -883,13 +883,13 @@ s32 IsSpriteHidden(void *part)
  * mask, matching the ROM's own instruction order. */
 void ToggleSpriteHidden(void *part)
 {
-    register u32 byte asm("r3") = *((u8 *)part + 0xd);
-    register u32 shifted asm("r2") = byte >> 2;
-    register u32 one asm("r1") = 1;
-    register u32 bit asm("r2");
-    register u32 shiftedBit asm("r2");
-    register s32 mask asm("r1");
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(u32, byte, r3) = *((u8 *)part + 0xd);
+    MATCH_HOLD_REG(u32, shifted, r2) = byte >> 2;
+    MATCH_HOLD_REG(u32, one, r1) = 1;
+    MATCH_HOLD_REG(u32, bit, r2);
+    MATCH_HOLD_REG(u32, shiftedBit, r2);
+    MATCH_HOLD_REG(s32, mask, r1);
+    MATCH_HOLD_REG(s32, result, r1);
 
     asm("eor %0, %0, %2\n\tand %0, %0, %2" : "=r" (bit), "+r" (one) : "1" (one), "0" (shifted));
     shiftedBit = bit << 2;
@@ -914,9 +914,9 @@ s32 IsPartSolid(void *part)
  * immediate load. */
 void ClearPartSolid(void *part)
 {
-    register s32 mask asm("r1") = -9;
-    register s32 byte asm("r2") = *((u8 *)part + 0xd);
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = -9;
+    MATCH_HOLD_REG(s32, byte, r2) = *((u8 *)part + 0xd);
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
     *((u8 *)part + 0xd) = result;
@@ -928,9 +928,9 @@ void ClearPartSolid(void *part)
  * register pattern used for every AND/OR accessor below. */
 void SetPartSolid(void *part)
 {
-    register s32 mask asm("r1") = 8;
-    register s32 byte asm("r2") = *((u8 *)part + 0xd);
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = 8;
+    MATCH_HOLD_REG(s32, byte, r2) = *((u8 *)part + 0xd);
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
     *((u8 *)part + 0xd) = result;
@@ -945,9 +945,9 @@ s32 IsSpriteObjVulnerable(struct actor *part)
 /* Clears `part->flags` bit 6. */
 void ClearSpriteObjVulnerable(struct actor *part)
 {
-    register s32 mask asm("r1") = -0x41;
-    register s32 byte asm("r2") = part->flags;
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = -0x41;
+    MATCH_HOLD_REG(s32, byte, r2) = part->flags;
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
     part->flags = result;
@@ -956,9 +956,9 @@ void ClearSpriteObjVulnerable(struct actor *part)
 /* Sets `part->flags` bit 6. */
 void SetSpriteObjVulnerable(struct actor *part)
 {
-    register s32 mask asm("r1") = 0x40;
-    register s32 byte asm("r2") = part->flags;
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = 0x40;
+    MATCH_HOLD_REG(s32, byte, r2) = part->flags;
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
     part->flags = result;
@@ -980,9 +980,9 @@ s32 IsSpriteObjCollisionEnabled(struct actor *part)
 /* Clears `part->flags` bit 7. */
 void DisableSpriteObjCollision(struct actor *part)
 {
-    register s32 mask asm("r1") = 0x7f;
-    register s32 byte asm("r2") = part->flags;
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = 0x7f;
+    MATCH_HOLD_REG(s32, byte, r2) = part->flags;
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask & byte;
     part->flags = result;
@@ -991,9 +991,9 @@ void DisableSpriteObjCollision(struct actor *part)
 /* Sets `part->flags` bit 7. */
 void EnableSpriteObjCollision(struct actor *part)
 {
-    register s32 mask asm("r1") = 0x80;
-    register s32 byte asm("r2") = part->flags;
-    register s32 result asm("r1");
+    MATCH_HOLD_REG(s32, mask, r1) = 0x80;
+    MATCH_HOLD_REG(s32, byte, r2) = part->flags;
+    MATCH_HOLD_REG(s32, result, r1);
 
     result = mask | byte;
     part->flags = result;
@@ -1019,13 +1019,13 @@ void SetSpriteAnimating(void *part, u8 val)
  * relative to that leftover register value instead of freshly. */
 void SetSpriteFlipX(void *part, u8 value)
 {
-    register s32 truncVal asm("r1") = value;
-    register u8 *addr asm("r0") = (u8 *)part + 0x28;
-    register s32 one asm("r2") = 1;
-    register s32 shiftedBit asm("r1");
-    register s32 mask asm("r2");
-    register s32 byte asm("r3");
-    register s32 result asm("r2");
+    MATCH_HOLD_REG(s32, truncVal, r1) = value;
+    MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)part + 0x28;
+    MATCH_HOLD_REG(s32, one, r2) = 1;
+    MATCH_HOLD_REG(s32, shiftedBit, r1);
+    MATCH_HOLD_REG(s32, mask, r2);
+    MATCH_HOLD_REG(s32, byte, r3);
+    MATCH_HOLD_REG(s32, result, r2);
 
     asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
     shiftedBit = truncVal << 4;
@@ -1040,13 +1040,13 @@ void SetSpriteFlipX(void *part, u8 value)
  * 5 instead. */
 void SetSpriteFlipY(void *part, u8 value)
 {
-    register s32 truncVal asm("r1") = value;
-    register u8 *addr asm("r0") = (u8 *)part + 0x28;
-    register s32 one asm("r2") = 1;
-    register s32 shiftedBit asm("r1");
-    register s32 mask asm("r2");
-    register s32 byte asm("r3");
-    register s32 result asm("r2");
+    MATCH_HOLD_REG(s32, truncVal, r1) = value;
+    MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)part + 0x28;
+    MATCH_HOLD_REG(s32, one, r2) = 1;
+    MATCH_HOLD_REG(s32, shiftedBit, r1);
+    MATCH_HOLD_REG(s32, mask, r2);
+    MATCH_HOLD_REG(s32, byte, r3);
+    MATCH_HOLD_REG(s32, result, r2);
 
     asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
     shiftedBit = truncVal << 5;
@@ -1072,11 +1072,11 @@ void SetSpriteAnimDone(void *part, u8 val)
  * `asm` anchor. */
 u8 GetSpriteAnimPaletteId(struct actor *part)
 {
-    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
-    register void *table asm("r2") = *tablePtr;
-    register u8 idx asm("r3") = *idxAddr;
-    register s32 offset asm("r1") = idx * 0x1c;
+    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
+    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
     void *rec;
 
     asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
@@ -1100,13 +1100,13 @@ s32 GetSpritePalette(void *part)
  * computed relative to the leftover "0xf" register value. */
 void SetSpritePalette(void *part, s32 value)
 {
-    register u8 *addr asm("r0") = (u8 *)part + 0x29;
-    register s32 value_ asm("r1") = value;
-    register s32 fifteen asm("r2") = 0xf;
-    register s32 lowNibble asm("r1");
-    register s32 mask asm("r2");
-    register s32 byte asm("r3");
-    register s32 result asm("r2");
+    MATCH_HOLD_REG(u8 *, addr, r0) = (u8 *)part + 0x29;
+    MATCH_HOLD_REG(s32, value_, r1) = value;
+    MATCH_HOLD_REG(s32, fifteen, r2) = 0xf;
+    MATCH_HOLD_REG(s32, lowNibble, r1);
+    MATCH_HOLD_REG(s32, mask, r2);
+    MATCH_HOLD_REG(s32, byte, r3);
+    MATCH_HOLD_REG(s32, result, r2);
 
     asm("and %0, %0, %1" : "+r" (value_), "+r" (fifteen));
     lowNibble = value_;
@@ -1153,15 +1153,15 @@ void *GetSpriteAnimTable(void *part)
  * to the compiler's own return-conversion codegen. */
 u8 IsSpriteAnimLooping(struct actor *part)
 {
-    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
-    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
-    register void *table asm("r2") = *tablePtr;
-    register u8 idx asm("r3") = *idxAddr;
-    register s32 offset asm("r1") = idx * 0x1c;
+    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
+    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
     void *rec;
-    register s32 mask asm("r0");
-    register s32 flags asm("r1");
-    register s32 test asm("r0");
+    MATCH_HOLD_REG(s32, mask, r0);
+    MATCH_HOLD_REG(s32, flags, r1);
+    MATCH_HOLD_REG(s32, test, r0);
 
     asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
     rec = (void *)offset;

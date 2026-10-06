@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "player_ctrl.h"
 #include "system.h"
 #include "audio.h"
@@ -478,8 +479,8 @@ void ApplyPlayerCtrlMotion(struct player_ctrl *self)
 
         self->motionXPending = 0;
         {
-            register u32 i asm("r1") = self->animSet->entries[self->motionX].a;
-            register u32 off asm("r0") = i * sizeof(struct speed_ramp);
+            MATCH_HOLD_REG(u32, i, r1) = self->animSet->entries[self->motionX].a;
+            MATCH_HOLD_REG(u32, off, r0) = i * sizeof(struct speed_ramp);
 
             rec = (const struct speed_ramp *)(off + (u32)gPlayerCtrlMotionRecords);
         }
@@ -491,8 +492,8 @@ void ApplyPlayerCtrlMotion(struct player_ctrl *self)
 
         self->motionYPending = 0;
         {
-            register u32 i asm("r1") = self->animSet->entries[self->motionY].b;
-            register u32 off asm("r0") = i * sizeof(struct speed_ramp);
+            MATCH_HOLD_REG(u32, i, r1) = self->animSet->entries[self->motionY].b;
+            MATCH_HOLD_REG(u32, off, r0) = i * sizeof(struct speed_ramp);
 
             rec = (const struct speed_ramp *)(off + (u32)gPlayerCtrlMotionRecords);
         }

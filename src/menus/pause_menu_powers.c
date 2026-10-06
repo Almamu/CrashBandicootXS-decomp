@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "bitmap_font.h"
 #include "pause_menu.h"
@@ -20,9 +21,9 @@ void DrawPausePowersPage(struct pause_menu *self)
     s32 none = 1;
 
     {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x20;
-        register u8 byte asm("r1");
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(s32, mask, r0) = 0x20;
+        MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
         mask &= byte;
         if (mask) {
@@ -31,9 +32,9 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x80;
-        register u8 byte asm("r1");
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(s32, mask, r0) = 0x80;
+        MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
         mask &= byte;
         if (mask) {
@@ -42,9 +43,9 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x40;
-        register u8 byte asm("r1");
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(s32, mask, r0) = 0x40;
+        MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
         mask &= byte;
         if (mask) {
@@ -53,9 +54,9 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        register u8 *p asm("r1") = (u8 *)self->field_10 + 2;
-        register s32 mask asm("r0") = 0x10;
-        register u8 byte asm("r1");
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(s32, mask, r0) = 0x10;
+        MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
         mask &= byte;
         if (mask) {

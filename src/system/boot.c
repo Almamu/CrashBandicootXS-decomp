@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include <agb_syscall.h>
 #include "system.h"
 
@@ -17,9 +18,9 @@
  * shaped save. */
 s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
 {
-    register s32 quotient asm("r0") = number;
-    register s32 remainder asm("r1") = denom;
-    register s32 *outPtr asm("r2") = remainderOut;
+    MATCH_HOLD_REG(s32, quotient, r0) = number;
+    MATCH_HOLD_REG(s32, remainder, r1) = denom;
+    MATCH_HOLD_REG(s32 *, outPtr, r2) = remainderOut;
 
     asm volatile(
         "push {r2}\n\t"

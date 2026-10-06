@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
@@ -177,22 +178,22 @@ void LoadTitleScreenBg(u32 *self)
  * artifacts of comparing an unlinked, standalone isolated object). */
 void LoadTitleScreenObjTiles(u32 *self)
 {
-    register struct bg_package **pkgPtr asm("r7") = (struct bg_package **)gTitleObjPackages;
+    MATCH_HOLD_REG(struct bg_package **, pkgPtr, r7) = (struct bg_package **)gTitleObjPackages;
     void *tileDest = (void *)0x06010000;
     void *paletteDest = (void *)OBJ_PLTT;
     void *paletteBuf;
     void *tileBuf;
     u16 *mapBuf;
     s32 count;
-    register s32 pass asm("r9");
-    register struct bg_package **pkgPtrStash asm("r8");
-    register s32 loopCond asm("r0");
+    MATCH_HOLD_REG(s32, pass, r9);
+    MATCH_HOLD_REG(struct bg_package **, pkgPtrStash, r8);
+    MATCH_HOLD_REG(s32, loopCond, r0);
 
     asm volatile("mov r4, #0\n\tmov r9, r4" ::: "r4", "r9");
 
     do {
-        register struct dma_regs *dma asm("r0");
-        register u32 dmaCnt asm("r1");
+        MATCH_HOLD_REG(struct dma_regs *, dma, r0);
+        MATCH_HOLD_REG(u32, dmaCnt, r1);
 
         paletteBuf = OperatorNewArray(*(u32 *)(*pkgPtr)->paletteAsset >> 8);
         LoadTaggedAsset((*pkgPtr)->paletteAsset, paletteBuf);
@@ -215,7 +216,7 @@ void LoadTitleScreenObjTiles(u32 *self)
         {
             /* ROM emits a single `ldm r7!, {r0}` here - see doc comment
              * above. */
-            register struct bg_package *pkg asm("r0");
+            MATCH_HOLD_REG(struct bg_package *, pkg, r0);
             asm("ldm %1!, {%0}" : "=r"(pkg), "+r"(pkgPtr));
             LoadTaggedAsset(pkg->mapAsset, mapBuf);
         }
@@ -223,11 +224,11 @@ void LoadTitleScreenObjTiles(u32 *self)
         pass++;
 
         if (count > 0) {
-            register struct dma_regs *dma2 asm("r3") = (struct dma_regs *)REG_ADDR_DMA3SAD;
+            MATCH_HOLD_REG(struct dma_regs *, dma2, r3) = (struct dma_regs *)REG_ADDR_DMA3SAD;
             u32 mask = 0xff;
             u32 dmaCnt2 = 0x80000010;
-            register u8 *src asm("r2") = (u8 *)mapBuf;
-            register s32 i asm("r1") = count;
+            MATCH_HOLD_REG(u8 *, src, r2) = (u8 *)mapBuf;
+            MATCH_HOLD_REG(s32, i, r1) = count;
             do {
                 /* ROM: mov r0,ip / ldrh r4,[r2] / ands r0,r4 / lsls r0,#5 /
                  * adds r0,r6,r0 / str r0,[r3] - see doc comment above. */
@@ -397,7 +398,7 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
 
 void UpdateTitleLogoPieces(u32 *self_arg)
 {
-    register u32 *self asm("ip") = self_arg;
+    MATCH_HOLD_REG(u32 *, self, ip) = self_arg;
     s32 i;
 
     for (i = 0; i <= 8; i++)
@@ -417,7 +418,7 @@ void UpdateTitleLogoPieces(u32 *self_arg)
                  * the loaded pointer is kept in one temp (r0) purely to
                  * compute the advanced pointer stored back below, while
                  * `record` gets its own copy for every later dereference. */
-                register struct delta_record *recordLoaded asm("r0") = *recordPtrAddr;
+                MATCH_HOLD_REG(struct delta_record *, recordLoaded, r0) = *recordPtrAddr;
                 struct delta_record *record = recordLoaded;
 
                 *recordPtrAddr = (struct delta_record *)((u8 *)recordLoaded + 0x20);
@@ -430,8 +431,8 @@ void UpdateTitleLogoPieces(u32 *self_arg)
                     {
                         {
                             s32 *dst = PosCAt(self, stride);
-                            register u16 tmp asm("r4") = record->dPosC;
-                            register s32 shifted asm("r1") = (s32)tmp << 16;
+                            MATCH_HOLD_REG(u16, tmp, r4) = record->dPosC;
+                            MATCH_HOLD_REG(s32, shifted, r1) = (s32)tmp << 16;
                             *dst = shifted;
                         }
                         *DeltaCAt(self, stride) = record->deltaC;
@@ -441,15 +442,15 @@ void UpdateTitleLogoPieces(u32 *self_arg)
                         *DeltaEAt(self, stride) = record->deltaE;
                         {
                             s32 *dst = PosAAt(self, stride);
-                            register u16 tmp asm("r4") = record->dPosA;
-                            register s32 shifted asm("r1") = (s32)tmp << 16;
+                            MATCH_HOLD_REG(u16, tmp, r4) = record->dPosA;
+                            MATCH_HOLD_REG(s32, shifted, r1) = (s32)tmp << 16;
                             *dst = shifted;
                         }
                         *DeltaAAt(self, stride) = record->deltaA;
                         {
                             s32 *dst = PosBAt(self, stride);
-                            register u16 tmp asm("r4") = record->dPosB;
-                            register s32 shifted asm("r1") = (s32)tmp << 16;
+                            MATCH_HOLD_REG(u16, tmp, r4) = record->dPosB;
+                            MATCH_HOLD_REG(s32, shifted, r1) = (s32)tmp << 16;
                             *dst = shifted;
                         }
                         *DeltaBAt(self, stride) = record->deltaB;

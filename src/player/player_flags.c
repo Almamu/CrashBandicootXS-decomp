@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "gobj_1a794.h"
 #include "player.h"
@@ -250,9 +251,9 @@ s32 sub_800B650(struct player *self, s32 idx)
         }
     }
     {
-        register s32 offset asm("r0") = idx << 2;
-        register u8 *base asm("r1") = (u8 *)self->list;
-        register u8 *addr asm("r1");
+        MATCH_HOLD_REG(s32, offset, r0) = idx << 2;
+        MATCH_HOLD_REG(u8 *, base, r1) = (u8 *)self->list;
+        MATCH_HOLD_REG(u8 *, addr, r1);
 
         addr = base + offset;
         result = *(s32 *)addr;
@@ -268,16 +269,16 @@ end:
  * `self+0x94`, gated by `self+0x88` and the index staying `<= 4`. */
 void sub_800B678(struct player *selfArg, s32 val)
 {
-    register struct player *self asm("r2") = selfArg;
-    register s32 val3 asm("r3") = val;
+    MATCH_HOLD_REG(struct player *, self, r2) = selfArg;
+    MATCH_HOLD_REG(s32, val3, r3) = val;
 
     if (self->ctrlMode == 0) {
-        register u8 *p94 asm("r0") = &self->listCount;
-        register u32 idx asm("r1") = *p94;
+        MATCH_HOLD_REG(u8 *, p94, r0) = &self->listCount;
+        MATCH_HOLD_REG(u32, idx, r1) = *p94;
 
         if (idx <= 4) {
-            register u8 *arr asm("r0");
-            register s32 offset asm("r1");
+            MATCH_HOLD_REG(u8 *, arr, r0);
+            MATCH_HOLD_REG(s32, offset, r1);
 
             offset = idx << 2;
             arr = p94 + 4; /* &self->list[0] */
@@ -313,21 +314,21 @@ void SetCtrlAnimSet(void *selfArg, s32 val)
  * load, not before it, even though the source lists them X/Y/Z). */
 void SetCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp *ramp)
 {
-    register struct gobj *self asm("r3") = selfArg;
-    register const s32 *v asm("r2") = (const s32 *)ramp;
+    MATCH_HOLD_REG(struct gobj *, self, r3) = selfArg;
+    MATCH_HOLD_REG(const s32 *, v, r2) = (const s32 *)ramp;
 
     if ((s8)(self->mirror << 2) < 0) {
-        register s32 x asm("r0") = -v[0];
-        register s32 z asm("r1") = -v[2];
-        register s32 y asm("r2") = v[1];
+        MATCH_HOLD_REG(s32, x, r0) = -v[0];
+        MATCH_HOLD_REG(s32, z, r1) = -v[2];
+        MATCH_HOLD_REG(s32, y, r2) = v[1];
 
         self->rampY.start = x;
         self->rampY.step = y;
         self->rampY.target = z;
     } else {
-        register s32 x asm("r0") = v[0];
-        register s32 y asm("r1") = v[1];
-        register s32 z asm("r2") = v[2];
+        MATCH_HOLD_REG(s32, x, r0) = v[0];
+        MATCH_HOLD_REG(s32, y, r1) = v[1];
+        MATCH_HOLD_REG(s32, z, r2) = v[2];
 
         self->rampY.start = x;
         self->rampY.step = y;
@@ -340,22 +341,22 @@ void SetCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp *
  * way. */
 void StartCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp *ramp)
 {
-    register struct gobj *self asm("r3") = selfArg;
-    register const s32 *v asm("r2") = (const s32 *)ramp;
+    MATCH_HOLD_REG(struct gobj *, self, r3) = selfArg;
+    MATCH_HOLD_REG(const s32 *, v, r2) = (const s32 *)ramp;
 
     if ((s8)(self->mirror << 2) < 0) {
-        register s32 x asm("r0") = -v[0];
-        register s32 z asm("r1") = -v[2];
-        register s32 y asm("r2") = v[1];
+        MATCH_HOLD_REG(s32, x, r0) = -v[0];
+        MATCH_HOLD_REG(s32, z, r1) = -v[2];
+        MATCH_HOLD_REG(s32, y, r2) = v[1];
 
         self->speedY = x;
         self->rampY.start = x;
         self->rampY.step = y;
         self->rampY.target = z;
     } else {
-        register s32 x asm("r0") = v[0];
-        register s32 y asm("r1") = v[1];
-        register s32 z asm("r2") = v[2];
+        MATCH_HOLD_REG(s32, x, r0) = v[0];
+        MATCH_HOLD_REG(s32, y, r1) = v[1];
+        MATCH_HOLD_REG(s32, z, r2) = v[2];
 
         self->speedY = x;
         self->rampY.start = x;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "vtable.h"
 #include "player.h"
 #include "bosses.h"
@@ -33,15 +34,15 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 void SetMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
     u8 *self = selfArg;
-    register u8 *part asm("r3") = partArg;
+    MATCH_HOLD_REG(u8 *, part, r3) = partArg;
     void **mgr = *(void ***)(self + 4);
-    register u8 *arr asm("r0") = *(u8 **)mgr;
-    register s32 recOffset asm("r2") = index * 8;
+    MATCH_HOLD_REG(u8 *, arr, r0) = *(u8 **)mgr;
+    MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
     u8 *rec;
-    register s32 type asm("r1");
-    register s32 typeOffset asm("r0");
-    register u8 *base asm("r1");
-    register u8 *tableEntry asm("r2");
+    MATCH_HOLD_REG(s32, type, r1);
+    MATCH_HOLD_REG(s32, typeOffset, r0);
+    MATCH_HOLD_REG(u8 *, base, r1);
+    MATCH_HOLD_REG(u8 *, tableEntry, r2);
 
     asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
     rec = (u8 *)recOffset;
@@ -74,15 +75,15 @@ void SetMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 void SetMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
     u8 *self = selfArg;
-    register u8 *part asm("r3") = partArg;
+    MATCH_HOLD_REG(u8 *, part, r3) = partArg;
     void **mgr = *(void ***)(self + 4);
-    register u8 *arr asm("r0") = *(u8 **)mgr;
-    register s32 recOffset asm("r2") = index * 8;
+    MATCH_HOLD_REG(u8 *, arr, r0) = *(u8 **)mgr;
+    MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
     u8 *rec;
-    register s32 type asm("r1");
-    register s32 typeOffset asm("r0");
-    register u8 *base asm("r1");
-    register u8 *tableEntry asm("r2");
+    MATCH_HOLD_REG(s32, type, r1);
+    MATCH_HOLD_REG(s32, typeOffset, r0);
+    MATCH_HOLD_REG(u8 *, base, r1);
+    MATCH_HOLD_REG(u8 *, tableEntry, r2);
 
     asm("add %0, %0, %1" : "+r" (recOffset) : "r" (arr));
     rec = (u8 *)recOffset;
@@ -115,10 +116,10 @@ void SetMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
  * still parked) to do the mirror-gated copy itself. */
 void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
-    register u8 *arr asm("r3") = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
-    register s32 acc asm("r2") = index * 8;
-    register s32 type asm("r3");
-    register u8 *base asm("r3");
+    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
+    MATCH_HOLD_REG(s32, acc, r2) = index * 8;
+    MATCH_HOLD_REG(s32, type, r3);
+    MATCH_HOLD_REG(u8 *, base, r3);
 
     asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
     type = *(s32 *)((u8 *)acc + 4);
@@ -133,10 +134,10 @@ void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
  * tail-calls `StartCtrlTargetMotionX` (ctrl.c). */
 void StartMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
-    register u8 *arr asm("r3") = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
-    register s32 acc asm("r2") = index * 8;
-    register s32 type asm("r3");
-    register u8 *base asm("r3");
+    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
+    MATCH_HOLD_REG(s32, acc, r2) = index * 8;
+    MATCH_HOLD_REG(s32, type, r3);
+    MATCH_HOLD_REG(u8 *, base, r3);
 
     asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
     type = *(s32 *)((u8 *)acc + 0);
@@ -156,7 +157,7 @@ void ResetMegaMixCtrl(void *selfArg)
     u8 *self = selfArg;
     struct vtable_slot *table = *(struct vtable_slot **)(self + 0xc);
 
-    register s32 zero asm("r0");
+    MATCH_HOLD_REG(s32, zero, r0);
     u8 *p;
 
     _call_via_r2(self + table[4].delta, (void *)1, table[4].fn);

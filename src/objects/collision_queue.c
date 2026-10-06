@@ -128,7 +128,7 @@ void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor,
                  s32 hit, s32 p20, s32 p21)
 {
     u8 *a20;
-    register u8 *a21 asm("r4");
+    MATCH_HOLD_REG(u8 *, a21, r4);
     u8 f20, f21;
 
     STACK_ARG_U8_ADDR(a20, p20);

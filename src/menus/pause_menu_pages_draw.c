@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include "gba/defines.h"
 #include "actor.h"
@@ -118,7 +119,7 @@ void CommitPauseMenuFrame(struct pause_menu *self)
     *(vu32 *)REG_ADDR_BLDCNT = self->field_c8;
     *(vu16 *)REG_ADDR_BLDY = (u32)(self->field_cc << 27) >> 27;
     {
-        register u16 *p asm("r0");
+        MATCH_HOLD_REG(u16 *, p, r0);
         vu16 *dst = (vu16 *)REG_ADDR_DISPCNT;
         asm("add %0, %1, #0\n\tadd %0, %0, #0xd0" : "=r" (p) : "r" (self));
         *dst = *p;

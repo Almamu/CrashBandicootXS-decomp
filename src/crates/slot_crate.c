@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "crate.h"
 #include "crates.h"
 
@@ -130,9 +131,9 @@ u32 GetCrateState(struct crate *self)
      * it, keeping r0 free for the mask constant - a plain `self[0x4d] &
      * 0x7f` lets this compiler reuse r0 as the address register
      * instead, dropping the ROM's own `adds r1, r0, #0` copy. */
-    register u8 *p asm("r1") = &self->state;
-    register u32 mask asm("r0") = 0x7f;
-    register u8 v asm("r1") = *p;
+    MATCH_HOLD_REG(u8 *, p, r1) = &self->state;
+    MATCH_HOLD_REG(u32, mask, r0) = 0x7f;
+    MATCH_HOLD_REG(u8, v, r1) = *p;
     return mask & v;
 }
 
@@ -158,9 +159,9 @@ asm(".align 2, 0");
  * `self+0x4d` bit 7. */
 u32 IsCrateBusy(struct crate *self)
 {
-    register u8 *p asm("r0") = &self->state;
-    register u32 mask asm("r1") = 0x80;
-    register u8 v asm("r0") = *p;
+    MATCH_HOLD_REG(u8 *, p, r0) = &self->state;
+    MATCH_HOLD_REG(u32, mask, r1) = 0x80;
+    MATCH_HOLD_REG(u8, v, r0) = *p;
     mask &= v;
     if (mask != 0) {
         return 1;

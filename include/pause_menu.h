@@ -4,6 +4,7 @@
 #include "menus.h"
 #include "graphics_package.h"
 #include "objects.h" /* GetSpriteAnimPaletteSlot */
+#include "match.h"
 
 /* A small `struct actor`-derived on-screen icon: the first 0x1c bytes
  * are a plain `struct actor` (see actor.h), then a second keyframe-
@@ -113,10 +114,10 @@ COMPILE_TIME_ASSERT(pause_menu_h, sizeof(struct pause_menu) == 0xd4);
  * 0xf mask, which the ROM never does. */
 #define UPDATE_ICON_FRAME_NIBBLE(iconExpr) \
     do { \
-        register s32 _ret asm("r0") = GetSpriteAnimPaletteSlot(&(iconExpr)->base); \
-        register u8 *_addr asm("r2") = &(iconExpr)->field_29; \
-        register s32 _mask asm("r1"); \
-        register u8 _byte asm("r3"); \
+        MATCH_HOLD_REG(s32, _ret, r0) = GetSpriteAnimPaletteSlot(&(iconExpr)->base); \
+        MATCH_HOLD_REG(u8 *, _addr, r2) = &(iconExpr)->field_29; \
+        MATCH_HOLD_REG(s32, _mask, r1); \
+        MATCH_HOLD_REG(u8, _byte, r3); \
         _mask = 0xf; \
         _ret &= _mask; \
         asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r" (_mask)); \

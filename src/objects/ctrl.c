@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "vtable.h"
 #include "util.h"
@@ -17,8 +18,8 @@ void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index)
 {
     u8 *self = selfArg;
     void **mgr = *(void ***)(self + 4);
-    register u8 *arr asm("r3") = *(u8 **)mgr;
-    register s32 recOffset asm("r2") = index * 8;
+    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)mgr;
+    MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
     u8 *rec;
     s32 type;
     u8 *tableEntry;
@@ -103,8 +104,8 @@ void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index)
 {
     u8 *self = selfArg;
     void **mgr = *(void ***)(self + 4);
-    register u8 *arr asm("r3") = *(u8 **)mgr;
-    register s32 recOffset asm("r2") = index * 8;
+    MATCH_HOLD_REG(u8 *, arr, r3) = *(u8 **)mgr;
+    MATCH_HOLD_REG(s32, recOffset, r2) = index * 8;
     u8 *rec;
     s32 type;
     u8 *tableEntry;
@@ -148,9 +149,9 @@ u8 SetCtrlTargetAnim(void *unused, void *partArg, s32 newVal)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         {
-            register s32 mask asm("r0") = -9;
-            register s32 byte asm("r1") = part[0xc];
-            register s32 masked asm("r0");
+            MATCH_HOLD_REG(s32, mask, r0) = -9;
+            MATCH_HOLD_REG(s32, byte, r1) = part[0xc];
+            MATCH_HOLD_REG(s32, masked, r0);
 
             masked = mask & byte;
             part[0xc] = masked;

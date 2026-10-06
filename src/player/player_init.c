@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "player.h"
 #include "objects.h"
@@ -49,7 +50,7 @@ struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16
      * function. `SetSpriteAnimDone`'s own `0` argument is a separate, fresh
      * literal in the ROM too (`movs r1, #0`), not sourced from `sl`. */
     {
-        register s32 zero asm("sl") = 0;
+        MATCH_HOLD_REG(s32, zero, sl) = 0;
 
         *((u8 *)child + 0x2d) = zero;
         ResetSpriteFrameTimer(child);

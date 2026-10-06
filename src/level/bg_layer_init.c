@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bg_scroll_layer.h"
 #include "level.h"
 
@@ -24,28 +25,28 @@
  * owns outright. */
 void *InitBgLayer(void *self, s32 bgIndex)
 {
-    register struct bg_scroll_layer *s asm("r5") = self;
-    register s32 idx asm("r4") = bgIndex;
-    register s32 t asm("r1");
-    register u8 *addr34 asm("r2");
-    register u8 *addr35 asm("r3");
+    MATCH_HOLD_REG(struct bg_scroll_layer *, s, r5) = self;
+    MATCH_HOLD_REG(s32, idx, r4) = bgIndex;
+    MATCH_HOLD_REG(s32, t, r1);
+    MATCH_HOLD_REG(u8 *, addr34, r2);
+    MATCH_HOLD_REG(u8 *, addr35, r3);
 
     InitBgLayerBase(self, bgIndex);
 
-    { register void *gsPtr asm("r0");
+    { MATCH_HOLD_REG(void *, gsPtr, r0);
       asm volatile("ldr %0, 90f" : "=r"(gsPtr));
       s->vtable = gsPtr; }
 
     t = idx + 0x1c;
     s->screen = (u16 *)((t << 0xb) + (0xc0 << 0x13)); /* BG_SCREEN_ADDR(t) */
 
-    { register s32 shifted1 asm("r0") = idx << 1;
-      register s32 bgnCntAddr asm("r3");
+    { MATCH_HOLD_REG(s32, shifted1, r0) = idx << 1;
+      MATCH_HOLD_REG(s32, bgnCntAddr, r3);
       asm volatile("ldr %0, 90f+4" : "=r"(bgnCntAddr));
       s->cntReg = (vu16 *)(shifted1 + bgnCntAddr); }
 
     idx = idx << 2;
-    { register s32 bgnHofsAddr asm("r0");
+    { MATCH_HOLD_REG(s32, bgnHofsAddr, r0);
       asm volatile("ldr %0, 90f+8" : "=r"(bgnHofsAddr));
       idx = idx + bgnHofsAddr; }
     s->ofsReg = (vu32 *)idx;

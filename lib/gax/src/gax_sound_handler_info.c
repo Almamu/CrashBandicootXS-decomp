@@ -20,7 +20,7 @@ void GaxInfoResetPosition(void *self)
     struct GaxInfoHandler *p = self;
     u16 val;
     u8 zeroByte;
-    register u16 zeroHalf asm("r3");
+    MATCH_HOLD_REG(u16, zeroHalf, r3);
 
     /* 0xFFFF/0x4E20 need to go through a named temp before the store -
      * assigning the literal straight to the dereferenced address loads
@@ -129,10 +129,10 @@ asm(".align 2, 0");
 u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
 {
     struct GaxInfoHandler *p = self;
-    register u32 c asm("r6") = chanArg;
+    MATCH_HOLD_REG(u32, c, r6) = chanArg;
     u8 b18lo;
-    register u16 h18 asm("r4");
-    register u8 b1c asm("r1");
+    MATCH_HOLD_REG(u16, h18, r4);
+    MATCH_HOLD_REG(u8, b1c, r1);
 
     if (p->lastTick == c) {
         return 0;
@@ -161,8 +161,8 @@ u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
             u16 v18 = p->speed;
             u16 lo = v18 >> 8;
             if (lo != 0) {
-                register u16 mask asm("r0") = 0xff;
-                register u32 hi asm("r0");
+                MATCH_HOLD_REG(u16, mask, r0) = 0xff;
+                MATCH_HOLD_REG(u32, hi, r0);
                 hi = mask & v18;
                 hi <<= 8;
                 lo |= hi;
@@ -176,7 +176,7 @@ u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
             p->tickCounter = dec;
 
             {
-                register s32 cnt asm("r1");
+                MATCH_HOLD_REG(s32, cnt, r1);
                 struct GaxHandlerType *base0;
                 u16 thresh;
 
@@ -186,7 +186,7 @@ u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
 
                 if (!(cnt < thresh)) {
                     u8 one;
-                    register s32 cnt2 asm("r1");
+                    MATCH_HOLD_REG(s32, cnt2, r1);
                     u16 thresh2;
 
                     /* Stored through plain `u16 *` casts: a direct
@@ -219,7 +219,7 @@ u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
     }
     }
     {
-        register u8 dec asm("r0") = b1c - 1;
+        MATCH_HOLD_REG(u8, dec, r0) = b1c - 1;
         u8 zeroB = 0;
         p->tickCounter = dec;
         p->newRow = zeroB;

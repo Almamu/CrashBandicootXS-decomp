@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "player.h"
 #include "objects.h"
@@ -62,7 +63,7 @@ void ResetPlayer(struct player *selfArg)
      * a plain `flags |= 0x80` (flags already loaded into a register)
      * puts the byte load first instead. */
     {
-        register u8 result asm("r0");
+        MATCH_HOLD_REG(u8, result, r0);
 
         asm volatile(
             "mov r0, #0x80\n\t"
@@ -81,7 +82,7 @@ void ResetPlayer(struct player *selfArg)
              * the ORs above it so this compiler doesn't re-derive the
              * byte's live range through a plain `u8 flags` round-trip
              * and reinsert a redundant 32-bit mask/shift pair. */
-            register s32 clearMask asm("r1") = -5;
+            MATCH_HOLD_REG(s32, clearMask, r1) = -5;
             result &= clearMask;
         }
         flags = result;
@@ -89,8 +90,8 @@ void ResetPlayer(struct player *selfArg)
     self[0xc] = flags;
 
     {
-        register u32 m asm("r0") = 1;
-        register u8 b asm("r2") = self[0xd];
+        MATCH_HOLD_REG(u32, m, r0) = 1;
+        MATCH_HOLD_REG(u8, b, r2) = self[0xd];
         self[0xd] = m | b;
     }
 
@@ -109,10 +110,10 @@ void ResetPlayer(struct player *selfArg)
      * fresh each time - the same idiom `ResetPlayerForRoom` needed a single
      * `u8 *p` cursor for, just with two cursors interleaved here. */
     {
-        register u8 *pinnedP1 asm("r1") = self + 0x28;
-        register s32 clearMask asm("r0") = -0x11;
-        register u8 byte asm("r3") = *pinnedP1;
-        register s32 result asm("r0");
+        MATCH_HOLD_REG(u8 *, pinnedP1, r1) = self + 0x28;
+        MATCH_HOLD_REG(s32, clearMask, r0) = -0x11;
+        MATCH_HOLD_REG(u8, byte, r3) = *pinnedP1;
+        MATCH_HOLD_REG(s32, result, r0);
 
         result = clearMask & byte;
         *pinnedP1 = result;
@@ -141,7 +142,7 @@ void ResetPlayer(struct player *selfArg)
          * store's addressing mode (`str r0, [r1, #0x24]`) instead of
          * reproducing the ROM's separate `adds r1, #0x24` pointer
          * update followed by an offset-0 store. */
-        register u8 *pinnedP1 asm("r1") = p1;
+        MATCH_HOLD_REG(u8 *, pinnedP1, r1) = p1;
         asm volatile("add %0, %0, #0x24" : "+l"(pinnedP1)); /* self+0x8c */
         *(s32 *)pinnedP1 = gRoomFrameCount;
         p1 = pinnedP1;
@@ -159,7 +160,7 @@ void ResetPlayer(struct player *selfArg)
          * clobbered by the call's return value, so caching `child`
          * across the call (this compiler's natural choice) needs an
          * extra register/copy the ROM doesn't have. */
-        register void **childAddr asm("r5") = (void **)(self + 0xb0);
+        MATCH_HOLD_REG(void **, childAddr, r5) = (void **)(self + 0xb0);
 
         ret = GetSpriteAnimPaletteSlot(*childAddr);
 
@@ -169,9 +170,9 @@ void ResetPlayer(struct player *selfArg)
              * negative-constant `~0xf` mask (r1, re-used) ANDed
              * against the freshly reloaded field byte (r3), before
              * the two halves are OR'd together into r1 and stored. */
-            register u8 *fieldAddr asm("r2") = (u8 *)*childAddr + 0x29;
-            register u32 retMasked asm("r0") = ret & 0xf;
-            register s32 notMask asm("r1");
+            MATCH_HOLD_REG(u8 *, fieldAddr, r2) = (u8 *)*childAddr + 0x29;
+            MATCH_HOLD_REG(u32, retMasked, r0) = ret & 0xf;
+            MATCH_HOLD_REG(s32, notMask, r1);
 
             /* Forced via inline asm: r1 already holds the just-used
              * `0xf` mask here, and a plain `-0x10` constant lets this
@@ -180,8 +181,8 @@ void ResetPlayer(struct player *selfArg)
              * `movs r1, #0x10; negs r1, r1` pair. */
             asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=l"(notMask));
             {
-                register u8 byte asm("r3") = *fieldAddr;
-                register u32 result asm("r1");
+                MATCH_HOLD_REG(u8, byte, r3) = *fieldAddr;
+                MATCH_HOLD_REG(u32, result, r1);
 
                 result = notMask & byte;
                 result |= retMasked;
@@ -197,8 +198,8 @@ void ResetPlayer(struct player *selfArg)
      * and 0x100 each get reused a second time (+3) for 0x103/0x104,
      * and r1 a third time (+2 more) for 0x105. */
     {
-        register s32 off1 asm("r1");
-        register s32 off2 asm("r2");
+        MATCH_HOLD_REG(s32, off1, r1);
+        MATCH_HOLD_REG(s32, off2, r2);
         u8 *p;
 
         /* Each offset is initialized right where the ROM first
@@ -223,7 +224,7 @@ void ResetPlayer(struct player *selfArg)
              * it declared alongside off1/off2 would leave r3
              * unavailable for the clearMask block below, same as the
              * ROM's own re-use of it there. */
-            register s32 off3 asm("r3") = 0x81;
+            MATCH_HOLD_REG(s32, off3, r3) = 0x81;
             off3 = off3 << 1; /* 0x102 */
             p = self + off3;
             *p = 0;
@@ -243,7 +244,7 @@ void ResetPlayer(struct player *selfArg)
              * lowest free register) for the freshly-loaded byte here,
              * never r3 like the ROM, no matter how the surrounding
              * scopes are narrowed. */
-            register u8 result asm("r0");
+            MATCH_HOLD_REG(u8, result, r0);
             asm volatile(
                 "mov r0, #0x2\n\t"
                 "neg r0, r0\n\t"
@@ -272,8 +273,8 @@ asm(".align 2, 0");
  *
  * Needed `self` pinned to `r3` (kept live across the three `bl` calls),
  * the two AND-mask field writes (`self+0x28`, `self+0xc`) built via the
- * "negative-constant register-pinned mask" idiom (`register s32 mask
- * asm("r0") = -0x21`/`-9`, matching the ROM's own runtime `mov`+`neg`
+ * "negative-constant register-pinned mask" idiom (`MATCH_HOLD_REG(s32,
+ * mask, r0) = -0x21`/`-9`, matching the ROM's own runtime `mov`+`neg`
  * pair instead of a folded 8-bit AND immediate), the `self+0x68`-to-
  * `self+0x28` field-address chain expressed as a single decremented
  * `u8 *p` cursor (reproducing the ROM's own `subs r1, #0x40` reuse
@@ -289,11 +290,11 @@ asm(".align 2, 0");
  * copy entirely). See docs/matching/archive/issue-9-0x08007634-actor.md. */
 void ResetPlayerForRoom(struct player *selfArg)
 {
-    register struct player *self asm("r3") = selfArg;
+    MATCH_HOLD_REG(struct player *, self, r3) = selfArg;
     s32 state;
 
     {
-        register s32 zero asm("r2") = 0;
+        MATCH_HOLD_REG(s32, zero, r2) = 0;
 
         self->speedX = zero;
         self->speedY = zero;
@@ -303,9 +304,9 @@ void ResetPlayerForRoom(struct player *selfArg)
             self->dir = zero;
             p -= 0x40; /* &self->mirror */
             {
-                register s32 mask asm("r0") = -0x21;
-                register u8 byte asm("r4") = *p;
-                register s32 result asm("r0");
+                MATCH_HOLD_REG(s32, mask, r0) = -0x21;
+                MATCH_HOLD_REG(u8, byte, r4) = *p;
+                MATCH_HOLD_REG(s32, result, r0);
 
                 result = mask & byte;
                 *p = result;
@@ -314,10 +315,10 @@ void ResetPlayerForRoom(struct player *selfArg)
         self->tag = zero;
     }
     {
-        register s32 mask asm("r0") = -9;
-        register s32 byte asm("r1") = self->flags.all;
-        register s32 result asm("r0");
-        register s32 orMask asm("r1");
+        MATCH_HOLD_REG(s32, mask, r0) = -9;
+        MATCH_HOLD_REG(s32, byte, r1) = self->flags.all;
+        MATCH_HOLD_REG(s32, result, r0);
+        MATCH_HOLD_REG(s32, orMask, r1);
 
         result = mask & byte;
         orMask = 0x40;
@@ -327,7 +328,7 @@ void ResetPlayerForRoom(struct player *selfArg)
 
     state = self->ctrlMode;
     {
-        register s32 state2 asm("r1") = state;
+        MATCH_HOLD_REG(s32, state2, r1) = state;
 
         if (state == 1) goto do1;
         if (state > 1) goto gt1;

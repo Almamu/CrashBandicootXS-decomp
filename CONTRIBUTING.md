@@ -49,7 +49,7 @@ matched code - read it before starting.** In short:
   each edit, not just at the end, and compare the touched files' `.o`
   against a build of `origin/main` as you go.
 - **Don't touch a matching workaround just because it looks unclean.**
-  Raw offsets, inline `asm`, `register ... asm("rN")` pins and odd
+  Raw offsets, inline `asm`, `MATCH_HOLD_REG` register pins and odd
   statement orders are often load-bearing: they hold the ROM's exact
   register allocation or instruction order in place. Replace one only
   when the rebuild shows the cleaner version produces the same bytes;

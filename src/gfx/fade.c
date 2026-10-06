@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "system.h"
 #include "gfx.h"
 
@@ -25,8 +26,8 @@ void StepBrightnessFade(void)
     gBrightnessFadeTimer = counter;
     if (counter == gBrightnessFade.field_0) {
         s32 val;
-        register u8 flag8 asm("r1");
-        register s32 mask asm("r0");
+        MATCH_HOLD_REG(u8, flag8, r1);
+        MATCH_HOLD_REG(s32, mask, r0);
 
         gBrightnessFadeTimer = 0;
         mask = 0x80;
@@ -99,7 +100,7 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
         REG_IME = 1;
     } else {
         s32 i = 0;
-        register s32 dirBit8 asm("r8");
+        MATCH_HOLD_REG(s32, dirBit8, r8);
         dirBit8 = flags & 0x80;
         do {
             s32 next;
@@ -148,10 +149,10 @@ void DarkenPalette(s32 factor)
 
     for (i = 0; i <= 0x1FF; i++) {
         s32 color = color; /* self-init: never zeroed (see above); silences -Wuninitialized (#577) */
-        register s32 ch asm("r1");
+        MATCH_HOLD_REG(s32, ch, r1);
         s32 scaled;
-        register s32 raw asm("r1");
-        register u16 *addr asm("r1");
+        MATCH_HOLD_REG(s32, raw, r1);
+        MATCH_HOLD_REG(u16 *, addr, r1);
 
         addr = &gPaletteBackup[i];
         color &= ~0xFFFF;
@@ -159,7 +160,7 @@ void DarkenPalette(s32 factor)
         color |= raw;
 
         {
-            register s32 tmp asm("r0");
+            MATCH_HOLD_REG(s32, tmp, r0);
             tmp = color << 27;
             ch = (s32)((u32)tmp >> 27);
         }
@@ -167,7 +168,7 @@ void DarkenPalette(s32 factor)
         if (scaled < 0) scaled += 15;
         scaled >>= 4;
         {
-            register s32 diff asm("r0");
+            MATCH_HOLD_REG(s32, diff, r0);
             diff = ch - scaled;
             asm("lsl %0, %0, #0x10\n\tlsr %0, %0, #0x10" : "+r"(diff));
             diff &= 0x1F;
@@ -175,7 +176,7 @@ void DarkenPalette(s32 factor)
         }
 
         {
-            register s32 tmp asm("r0");
+            MATCH_HOLD_REG(s32, tmp, r0);
             tmp = color << 22;
             ch = (s32)((u32)tmp >> 27);
         }
@@ -183,7 +184,7 @@ void DarkenPalette(s32 factor)
         if (scaled < 0) scaled += 15;
         scaled >>= 4;
         {
-            register s32 diff asm("r0");
+            MATCH_HOLD_REG(s32, diff, r0);
             diff = ch - scaled;
             asm("lsl %0, %0, #0x10\n\tlsr %0, %0, #0x10" : "+r"(diff));
             diff &= 0x1F;
@@ -192,7 +193,7 @@ void DarkenPalette(s32 factor)
         }
 
         {
-            register s32 tmp asm("r0");
+            MATCH_HOLD_REG(s32, tmp, r0);
             tmp = color << 17;
             ch = (s32)((u32)tmp >> 27);
         }
@@ -200,7 +201,7 @@ void DarkenPalette(s32 factor)
         if (scaled < 0) scaled += 15;
         scaled >>= 4;
         {
-            register s32 diff asm("r0");
+            MATCH_HOLD_REG(s32, diff, r0);
             diff = ch - scaled;
             asm("lsl %0, %0, #0x10\n\tlsr %0, %0, #0x10" : "+r"(diff));
             diff &= 0x1F;

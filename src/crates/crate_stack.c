@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "audio.h"
 #include "crates.h"
@@ -133,7 +134,7 @@ struct crate *GetTopCrate(struct crate *selfArg)
     struct crate *self = selfArg;
     struct crate *cur;
     struct crate *next;
-    register u32 masked asm("r0");
+    MATCH_HOLD_REG(u32, masked, r0);
 
     cur = GetCrateAbove(self);
     if (cur == NULL) {
@@ -189,7 +190,7 @@ struct crate *GetBottomCrate(struct crate *selfArg)
     struct crate *self = selfArg;
     struct crate *cur;
     struct crate *next;
-    register u32 masked asm("r0");
+    MATCH_HOLD_REG(u32, masked, r0);
 
     cur = GetCrateBelow(self);
     if (cur == NULL) {
@@ -251,8 +252,8 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (only the transient mask-check scratch below uses r5/r6/ip), and
      * this compiler's own unforced allocator drifts it onto r6 instead
-     * once the tail's `loaded asm("r6")` pin is in scope. */
-    register u8 *self asm("r4") = (u8 *)selfArg;
+     * once the tail's `MATCH_HOLD_REG(u8, loaded, r6)` pin is in scope. */
+    MATCH_HOLD_REG(u8 *, self, r4) = (u8 *)selfArg;
     u32 masked;
 
     asm volatile(
@@ -282,7 +283,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
          * its whole lexical scope, forcing this compiler to relocate
          * `testX` out of r2 into r1 pre-emptively instead. */
         {
-            register s32 limit asm("r2") = 0x3FFF;
+            MATCH_HOLD_REG(s32, limit, r2) = 0x3FFF;
             if (dx <= limit) {
                 s32 dy = *(s32 *)(self + 4) - testY;
                 if (dy < 0) {
@@ -302,7 +303,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
      * register-pinned mask idiom - matching_decomp_register_pinning)
      * rather than folding it into an 8-bit AND immediate, and keeps
      * the loaded byte in r6, AND-ing into r0 (not r6). A plain
-     * `register u8 loaded asm("r6") = self[0xc];` gets optimized away
+     * `MATCH_HOLD_REG(u8, loaded, r6) = self[0xc];` gets optimized away
      * (its single use inlines straight into the AND, dropping the r6
      * pin entirely) - anchored as one literal block instead, since
      * `self` is already known to sit in r4 throughout this function. */

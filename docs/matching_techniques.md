@@ -255,10 +255,11 @@ the rules are in CONTRIBUTING.md's "Declarations and headers".
 
 ### Register pins
 
-`register T x asm("rN")` (`MATCH_HOLD_REG(T, x, rN)`) gives `x` the hard
+`MATCH_HOLD_REG(T, x, rN)` (`register T x asm("rN")`) gives `x` the hard
 register rN for its whole life: gcc replaces its pseudo with rN before
 allocation. Use one when the ROM keeps a value in another register than
-gcc picks. Limits:
+gcc picks. An initialiser follows the macro as it would the declarator:
+`MATCH_HOLD_REG(u8 *, p, r2) = &self->tag;`. Limits:
 
 - A pin decides where a *variable* lives. It can't steer the registers
   reload picks for temporaries; use a hold for that.
@@ -269,6 +270,13 @@ gcc picks. Limits:
   fix. Removing them is fine when the object stays identical.
 - Pinning the old and new value of `x = prev + d` separately keeps the
   result out of `prev`'s register.
+
+Five pins stay written out as `register T x asm(R)`: the ones in
+`src/bosses/cortex.c`'s `SET_FRAME_R`, `MARK_GONE` and
+`MARK_GONE_BITMAP_OFF` macros, where the register is a macro parameter
+holding a string (`R_FRAME`, `R_TAG`, `R_FLAGS`, `R_CUR`, `R_BASE`,
+passed as `"r5"` etc.). `MATCH_HOLD_REG` stringizes a bare register name,
+so it can't take those. `tools/match_idioms.py --kind pin` lists them.
 
 ### Holds and the reload round-robin
 
@@ -286,9 +294,7 @@ self->part->y += 0x600;      /* its reload now gets r3, as in the ROM */
 MATCH_USE(hold);             /* end of the hold */
 ```
 
-(In the source this is still spelled `register s32 hold asm("r2");`,
-`asm("" : "=r"(hold));`, `asm("" : : "r"(hold));` until those kinds are
-converted.) The insn to cover is the one listed under "Spilling for insn
+The insn to cover is the one listed under "Spilling for insn
 N" in a `-da` `.greg` dump. Holds of callee-saved registers across calls
 model registers the ROM leaves unused. See
 [late-naked-retry-3.md](./matching/archive/late-naked-retry-3.md)
@@ -486,11 +492,11 @@ fixes.
 
 ## Survey and conversion plan (#576)
 
-`tools/match_idioms.py` on main after part 2 (sites / files):
+`tools/match_idioms.py` on main before part 3 (sites / files):
 
 | Kind | Sites | Macro | Status |
 |---|---|---|---|
-| register pins | 2158 / 169 | `MATCH_HOLD_REG` | to convert |
+| register pins | 2158 / 169 | `MATCH_HOLD_REG` | **converted in part 3**; 5 pins with macro-parameter register names stay |
 | `asm("" : : "r"(x))` | 80 / 33 | `MATCH_USE` | **converted in part 2**; 3 multi-operand sites stay |
 | `asm("" : "+r"(x))` | 60 / 32 | `MATCH_KEEP` | **converted in part 2**; 1 multi-operand site stays, 1 statement expression became `MATCH_KEEP_EXPR` |
 | `asm("" : "=r"(x))` | 22 / 14 | `MATCH_HOLD` | **converted in part 2** |
@@ -512,10 +518,12 @@ build of main plus the two clean checks:
   `MATCH_HOLD` (with their `_VOLATILE` forms), 178 sites, plus the
   source comments that quoted the old spellings. The four multi-operand
   sites listed under "Other empty-asm forms" stay written out.
-- **Part 3:** register pins to `MATCH_HOLD_REG` (2158 sites). This needs
-  a declarator-aware converter (a `T`/name split), and leaves the dozen
-  pins it can't express (register names from macros in `cortex.c`,
-  initializers that continue on the next line) as they are.
+- **Part 3 (done):** register pins to `MATCH_HOLD_REG`, 2153 sites in
+  169 files, by `tools/match_idioms.py --convert pin` (which splits each
+  declarator into type and name and leaves any initialiser in place),
+  plus the source comments that quoted the old spelling. The five pins
+  in `cortex.c`'s macros stay written out (see
+  [Register pins](#register-pins)).
 - **Part 4:** the small kinds (`reg_clobber`, `mem_barrier`, `mem_ref`),
   if a macro helps them, and a final pass on this page.
 

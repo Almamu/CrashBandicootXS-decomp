@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "level.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `CollidePlayer`
@@ -191,8 +192,8 @@ s32 sub_8026BF8(void *player, struct probe_pos *pos, s32 *outValue)
     if (row != NULL)
     {
         s32 y = pos->y;
-        register s8 *addr asm("r0") = row + (pos->x & 7);
-        register s32 height asm("r1") = 0;
+        MATCH_HOLD_REG(s8 *, addr, r0) = row + (pos->x & 7);
+        MATCH_HOLD_REG(s32, height, r1) = 0;
 
         asm("ldrsb %0, [%1, %0]" : "+r"(height) : "r"(addr));
 

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "box_part.h"
 #include "util.h"
@@ -73,9 +74,9 @@ asm(".align 2, 0");
  * value reuse - see docs/matching.md, "Matching decompilation". */
 void ResetSpriteObj(void *arg0)
 {
-    register void *part asm("r3") = arg0;
-    register s32 result asm("r0");
-    register s32 tmp asm("r1");
+    MATCH_HOLD_REG(void *, part, r3) = arg0;
+    MATCH_HOLD_REG(s32, result, r0);
+    MATCH_HOLD_REG(s32, tmp, r1);
 
     result = 0x7f;
     tmp = *((u8 *)part + 0xc);
@@ -99,8 +100,8 @@ void ResetSpriteObj(void *arg0)
     }
 
     {
-        register s32 result2 asm("r0");
-        register s32 tmp2 asm("r4");
+        MATCH_HOLD_REG(s32, result2, r0);
+        MATCH_HOLD_REG(s32, tmp2, r4);
 
         result2 = -5;
         tmp2 = *((u8 *)part + 0xd);
@@ -111,7 +112,7 @@ void ResetSpriteObj(void *arg0)
     *((u8 *)part + 0x24) = 0;
     *(u16 *)((u8 *)part + 0x3c) = 0;
     {
-        register u8 *p2 asm("r1") = (u8 *)part + 0x2c;
+        MATCH_HOLD_REG(u8 *, p2, r1) = (u8 *)part + 0x2c;
         *p2 = 1;
     }
 }
@@ -178,7 +179,7 @@ asm(".align 2, 0");
  * fallback table `gEmptySpriteBox`. */
 void *GetSpriteAttackBox(void *dest, void *pt)
 {
-    register void *part asm("r6") = pt;
+    MATCH_HOLD_REG(void *, part, r6) = pt;
     struct aabb buf_;
     void *info;
     void *rec;
@@ -222,8 +223,8 @@ void *GetSpriteAttackBox(void *dest, void *pt)
 
     {
         u8 *flagsAddr = (u8 *)part + 0x28;
-        register s32 flags asm("r1");
-        register s32 shifted asm("r0");
+        MATCH_HOLD_REG(s32, flags, r1);
+        MATCH_HOLD_REG(s32, shifted, r0);
 
         flags = *flagsAddr;
         shifted = flags << 27;
@@ -231,7 +232,7 @@ void *GetSpriteAttackBox(void *dest, void *pt)
             buf_.x = (*(s32 *)part >> 8) * 2 - (buf_.x + buf_.w);
         }
         {
-            register s32 addr asm("r3") = (s32)flagsAddr;
+            MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
             asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r" (shifted), "+r" (addr));
         }
         if (shifted < 0) {
@@ -249,7 +250,7 @@ void *GetSpriteAttackBox(void *dest, void *pt)
  * default all to the fallback). */
 void *GetSpriteBodyBox(void *dest, void *pt)
 {
-    register void *part asm("r6") = pt;
+    MATCH_HOLD_REG(void *, part, r6) = pt;
     struct aabb buf_;
     void *info;
     void *rec;
@@ -291,8 +292,8 @@ void *GetSpriteBodyBox(void *dest, void *pt)
 
     {
         u8 *flagsAddr = (u8 *)part + 0x28;
-        register s32 flags asm("r1");
-        register s32 shifted asm("r0");
+        MATCH_HOLD_REG(s32, flags, r1);
+        MATCH_HOLD_REG(s32, shifted, r0);
 
         flags = *flagsAddr;
         shifted = flags << 27;
@@ -300,7 +301,7 @@ void *GetSpriteBodyBox(void *dest, void *pt)
             buf_.x = (*(s32 *)part >> 8) * 2 - (buf_.x + buf_.w);
         }
         {
-            register s32 addr asm("r3") = (s32)flagsAddr;
+            MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
             asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r" (shifted), "+r" (addr));
         }
         if (shifted < 0) {
@@ -368,7 +369,7 @@ s32 CheckSpritePickup(struct collect_part *part)
     struct player *player;
     struct collect_part *spawned;
     u32 flags = COLLECT_FLAGS(part) << 24;
-    register u32 one asm("r6");
+    MATCH_HOLD_REG(u32, one, r6);
 
     if (!((flags >> 27) & (one = 1)) && ((flags >> 26) & one)) {
         a = GetSpriteHitbox((struct box_part *)part);
@@ -439,21 +440,21 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * part's method-table entry, see PART_METHOD). */
 s32 IsSpriteObjOnScreen(struct box_part *part)
 {
-    register s32 result asm("r3") = 0;
+    MATCH_HOLD_REG(s32, result, r3) = 0;
 
     if (*((u8 *)part + 0x25) == 1) {
         return 1;
     }
 
     {
-        register u32 flags asm("r1");
-        register s32 bit2 asm("r0");
+        MATCH_HOLD_REG(u32, flags, r1);
+        MATCH_HOLD_REG(s32, bit2, r0);
 
         flags = *((u8 *)part + 0xd);
         bit2 = (flags >> 2) & 1;
         if (!bit2) {
             s32 buf[4];
-            register void *subObj asm("r0");
+            MATCH_HOLD_REG(void *, subObj, r0);
             struct part_method *table;
 
             subObj = gLevelLayers->layer0;
@@ -484,15 +485,15 @@ s32 IsSpriteObjOnScreen(struct box_part *part)
  * (via GetSpriteBounds) against `region`'s `{s32 x, y, w, h}`. */
 s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region)
 {
-    register s32 earlyResult asm("r3") = 0;
+    MATCH_HOLD_REG(s32, earlyResult, r3) = 0;
 
     if (*((u8 *)part + 0x25) == 1) {
         return 1;
     }
 
     {
-        register u32 flags asm("r1");
-        register s32 bit2 asm("r0");
+        MATCH_HOLD_REG(u32, flags, r1);
+        MATCH_HOLD_REG(s32, bit2, r0);
 
         flags = *((u8 *)part + 0xd);
         bit2 = (flags >> 2) & 1;

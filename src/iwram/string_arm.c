@@ -110,8 +110,8 @@ void strcat_arm(u8 *dst, u8 *src)
  * the `+ '0'` into `orr`. */
 s32 itoa_arm(s32 value, u8 *buf, s32 base)
 {
-    register s32 num asm("r0");
-    register s32 digit asm("r1");
+    MATCH_HOLD_REG(s32, num, r0);
+    MATCH_HOLD_REG(s32, digit, r1);
     s32 len = 0;
     s32 neg;
     s32 i, j;

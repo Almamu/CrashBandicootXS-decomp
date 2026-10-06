@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include <stdarg.h>
 #include "util.h"
 
@@ -161,14 +162,14 @@ asm(".align 2, 0");
  *    gcc to lay out the branch the same way the ROM's compiler did. */
 u8 *FindSubstring(u8 *haystack0, u8 *needle, s32 caseInsensitive)
 {
-    register u8 *needleRest asm("ip") = needle;
-    register u8 *haystack asm("r5") = haystack0;
-    register u32 c0 asm("r6") = *needle;
-    register u32 hc asm("r3");
-    register u8 *matchHaystack asm("r4");
-    register u8 *matchNeedle asm("r2");
-    register u32 nc asm("r3");
-    register u32 hc2 asm("r1");
+    MATCH_HOLD_REG(u8 *, needleRest, ip) = needle;
+    MATCH_HOLD_REG(u8 *, haystack, r5) = haystack0;
+    MATCH_HOLD_REG(u32, c0, r6) = *needle;
+    MATCH_HOLD_REG(u32, hc, r3);
+    MATCH_HOLD_REG(u8 *, matchHaystack, r4);
+    MATCH_HOLD_REG(u8 *, matchNeedle, r2);
+    MATCH_HOLD_REG(u32, nc, r3);
+    MATCH_HOLD_REG(u32, hc2, r1);
 
     asm volatile("mov r0, #1\n\tadd %0, r0" : "+r"(needleRest) :: "r0");
 

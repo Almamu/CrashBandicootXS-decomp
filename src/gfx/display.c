@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gfx.h"
 #include "globals.h"
 
@@ -22,8 +23,8 @@
  * outsmarting it. */
 void SetDispcntMode(s32 val)
 {
-    register u8 *addr asm("r2") = gDispcnt;
-    register s32 lowBits asm("r0") = val & 7;
+    MATCH_HOLD_REG(u8 *, addr, r2) = gDispcnt;
+    MATCH_HOLD_REG(s32, lowBits, r0) = val & 7;
     s32 mask;
 
     asm("mov %0, #8\n\tneg %0, %0" : "=r"(mask));
@@ -34,10 +35,10 @@ void SetDispcntMode(s32 val)
  * DISPCNT-mode shadow's second byte). */
 void HideBg3(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = -9;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = -9;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask & byte;
     addr[1] = result;
@@ -46,10 +47,10 @@ void HideBg3(void)
 /* `gDispcnt[1]` bit 2 clear. */
 void HideBg2(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = -5;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = -5;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask & byte;
     addr[1] = result;
@@ -58,10 +59,10 @@ void HideBg2(void)
 /* `gDispcnt[1]` bit 1 clear. */
 void HideBg1(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = -3;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = -3;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask & byte;
     addr[1] = result;
@@ -70,10 +71,10 @@ void HideBg1(void)
 /* `gDispcnt[1]` bit 0 clear. */
 void HideBg0(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = -2;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = -2;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask & byte;
     addr[1] = result;
@@ -82,10 +83,10 @@ void HideBg0(void)
 /* `gDispcnt[1]` bit 4 clear. */
 void HideObj(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = -0x11;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = -0x11;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask & byte;
     addr[1] = result;
@@ -94,10 +95,10 @@ void HideObj(void)
 /* `gDispcnt[1]` bit 3 set. */
 void ShowBg3(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = 8;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = 8;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask | byte;
     addr[1] = result;
@@ -106,10 +107,10 @@ void ShowBg3(void)
 /* `gDispcnt[1]` bit 2 set. */
 void ShowBg2(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = 4;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = 4;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask | byte;
     addr[1] = result;
@@ -118,10 +119,10 @@ void ShowBg2(void)
 /* `gDispcnt[1]` bit 1 set. */
 void ShowBg1(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = 2;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = 2;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask | byte;
     addr[1] = result;
@@ -130,10 +131,10 @@ void ShowBg1(void)
 /* `gDispcnt[1]` bit 0 set. */
 void ShowBg0(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = 1;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = 1;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask | byte;
     addr[1] = result;
@@ -142,10 +143,10 @@ void ShowBg0(void)
 /* `gDispcnt[1]` bit 4 set. */
 void ShowObj(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = 0x10;
-    register s32 byte asm("r2") = addr[1];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = 0x10;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[1];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask | byte;
     addr[1] = result;
@@ -156,10 +157,10 @@ void ShowObj(void)
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
 void SetObjMapping2D(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = -0x41;
-    register s32 byte asm("r2") = addr[0];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = -0x41;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[0];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask & byte;
     addr[0] = result;
@@ -168,10 +169,10 @@ void SetObjMapping2D(void)
 /* `gDispcnt[0]` bit 6 set. */
 void SetObjMapping1D(void)
 {
-    register u8 *addr asm("r1") = gDispcnt;
-    register s32 mask asm("r0") = 0x40;
-    register s32 byte asm("r2") = addr[0];
-    register s32 result asm("r0");
+    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
+    MATCH_HOLD_REG(s32, mask, r0) = 0x40;
+    MATCH_HOLD_REG(s32, byte, r2) = addr[0];
+    MATCH_HOLD_REG(s32, result, r0);
 
     result = mask | byte;
     addr[0] = result;

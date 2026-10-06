@@ -214,11 +214,11 @@ void DrawScaledSprite(struct gfx_box_obj *self)
  * two more fields. */
 void sub_801E8F8(u8 *selfArg, s32 arg1)
 {
-    register u8 *self asm("r4") = selfArg;
-    register s32 val asm("r3");
-    register s32 aligned asm("r2");
-    register u32 mask asm("r1");
-    register u32 acc asm("r0");
+    MATCH_HOLD_REG(u8 *, self, r4) = selfArg;
+    MATCH_HOLD_REG(s32, val, r3);
+    MATCH_HOLD_REG(s32, aligned, r2);
+    MATCH_HOLD_REG(u32, mask, r1);
+    MATCH_HOLD_REG(u32, acc, r0);
     u16 buf;
     u32 dadVal;
     vu32 *dma;
@@ -270,10 +270,10 @@ void sub_801E8F8(u8 *selfArg, s32 arg1)
  * a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
 void sub_801E950(u8 *self, u32 arg1)
 {
-    register s32 mask1 asm("r2");
-    register u32 shifted asm("r1");
-    register s32 mask2 asm("r2");
-    register u8 byte asm("r3");
+    MATCH_HOLD_REG(s32, mask1, r2);
+    MATCH_HOLD_REG(u32, shifted, r1);
+    MATCH_HOLD_REG(s32, mask2, r2);
+    MATCH_HOLD_REG(u8, byte, r3);
 
     mask1 = 3;
     shifted = arg1 & mask1;
@@ -301,8 +301,8 @@ void sub_801E964(u8 *self, u32 arg1, u32 arg2)
  * `sub_801E8F8`/`sub_801E950` write. */
 void sub_801E96C(u8 *self)
 {
-    register s32 mask asm("r3") = -0xd;
-    register s32 b asm("r1");
+    MATCH_HOLD_REG(s32, mask, r3) = -0xd;
+    MATCH_HOLD_REG(s32, b, r1);
 
     b = mask;
     MATCH_KEEP(b);

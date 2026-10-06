@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "text.h"
 
 /* GitHub issue #46: whole-string draw and fixed-count measure for the HUD
@@ -23,8 +24,8 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
  * FontPutChar's identical-shaped dispatcher. */
 void FontDrawText(struct bitmap_font *selfArg, u8 *strArg)
 {
-    register struct bitmap_font *self asm("r4") = selfArg;
-    register u8 *str asm("r5") = strArg;
+    MATCH_HOLD_REG(struct bitmap_font *, self, r4) = selfArg;
+    MATCH_HOLD_REG(u8 *, str, r5) = strArg;
     u8 c = *str;
 
     if (c == 0) {
@@ -32,7 +33,7 @@ void FontDrawText(struct bitmap_font *selfArg, u8 *strArg)
     }
 
     {
-        register u32 *posXAddr asm("r6") = &self->posX;
+        MATCH_HOLD_REG(u32 *, posXAddr, r6) = &self->posX;
         /* NOT pinned to r7 - see docs/matching.md's "Why not just pin
          * r7" (an explicit r7 pin silently drops it from push/pop,
          * corrupting the caller's r7). gcc's own unforced allocator

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "system.h"
 #include "link.h"
 #include "util.h"
@@ -97,13 +98,13 @@ void DestroyLinkSession(struct link_session *self, u32 flags)
  * `field_5`, and returns `self`. */
 struct link_session *InitLinkSession(struct link_session *arg0)
 {
-    register struct link_session *self asm("r4");
+    MATCH_HOLD_REG(struct link_session *, self, r4);
     u8 *p;
-    register s32 offset asm("r6");
-    register s32 i asm("r1");
-    register s32 zero asm("r2");
-    register s32 fill asm("r5");
-    register s32 sentinel asm("r3");
+    MATCH_HOLD_REG(s32, offset, r6);
+    MATCH_HOLD_REG(s32, i, r1);
+    MATCH_HOLD_REG(s32, zero, r2);
+    MATCH_HOLD_REG(s32, fill, r5);
+    MATCH_HOLD_REG(s32, sentinel, r3);
 
     self = arg0;
     self->ring.count = 0;

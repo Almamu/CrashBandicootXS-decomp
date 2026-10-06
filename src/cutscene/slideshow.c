@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gba/dma_macros.h"
 #include "cutscene.h"
 #include "system.h"
@@ -163,7 +164,7 @@ s32 SkipSlides(struct cutscene_player *self, s32 startIdx, u8 condFlag)
  * docs/matching/archive/issue-38-sound-channel-family.md. */
 void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
 {
-    register struct cutscene_player *self asm("r5") = self0;
+    MATCH_HOLD_REG(struct cutscene_player *, self, r5) = self0;
     const struct cutscene_slide *item = self->slides[idx];
     void *asset = (void *)item->picture;
     s32 toggle = self->toggle ^ 1;
@@ -173,7 +174,7 @@ void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
     if (toggle == 0) {
         LoadTaggedAsset((u8 *)asset + 0x200, (void *)VRAM);
     } else {
-        register u8 *addr asm("r0");
+        MATCH_HOLD_REG(u8 *, addr, r0);
 
         asm volatile("mov r2, #0x80\n\tlsl r2, r2, #2\n\tadd %0, %1, r2"
                      : "=r"(addr) : "r"(asset) : "r2");
@@ -183,11 +184,11 @@ void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
     {
         u8 *shadow = (u8 *)&gSlideshowDispcnt;
         {
-            register s32 bit4 asm("r1") = 1;
-            register s32 toggleByte asm("r5");
-            register s32 mask asm("r0");
-            register s32 byte asm("r2");
-            register s32 result asm("r0");
+            MATCH_HOLD_REG(s32, bit4, r1) = 1;
+            MATCH_HOLD_REG(s32, toggleByte, r5);
+            MATCH_HOLD_REG(s32, mask, r0);
+            MATCH_HOLD_REG(s32, byte, r2);
+            MATCH_HOLD_REG(s32, result, r0);
 
             toggleByte = *(u8 *)&self->toggle;
             bit4 = (bit4 & toggleByte) << 4;

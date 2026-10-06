@@ -31,7 +31,7 @@
  *  - `one |= self->blend.b.bldcntHi;`'s reload was left to this
  *    compiler's free register choice (it picked r0), where the ROM
  *    reuses r1 (the register `mask` occupies a few lines later) -
- *    closed with a `register u8 hi asm("r1")` pin on just that reload.
+ *    closed with a `MATCH_HOLD_REG(u8, hi, r1)` pin on just that reload.
  *  - The `mask`/`tmp` BLDALPHA pair: this compiler elides the `tmp =
  *    mask` copy entirely and ANDs the freshly-loaded byte directly
  *    against `mask`'s own register instead (2 bytes shorter than the
@@ -56,8 +56,8 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
      * `0x40`) that stay live across the `InitContinuePromptGraphics` call below, so the
      * ROM's own build pushes them into r8/sb instead - reproduced here
      * the same way. */
-    register struct continue_prompt *self asm("r5") = selfArg;
-    register struct bg_setup *buf asm("r0");
+    MATCH_HOLD_REG(struct continue_prompt *, self, r5) = selfArg;
+    MATCH_HOLD_REG(struct bg_setup *, buf, r0);
 
     buf = OperatorNew(0x10);
     InitBgSetup(buf, 0, 0x1f, 0, 3);
@@ -87,7 +87,7 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
          * call below and get reused for the BLDCNT bit-2/bit-0 sets
          * afterward instead of being re-materialized as fresh
          * immediates. */
-        register u32 zero asm("r8") = 0;
+        MATCH_HOLD_REG(u32, zero, r8) = 0;
 
         /* Inline-asm anchor (docs/workflow.md step 3): the ROM's own
          * build never takes the shortcut of reusing the low-register
@@ -102,7 +102,7 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
             /* ROM materializes 0x40 via r2 (not the just-freed r0) before
              * copying it up into sb - another instance of the same
              * "never take the free-register shortcut" pattern above. */
-            register u32 c0x40 asm("sb");
+            MATCH_HOLD_REG(u32, c0x40, sb);
             asm volatile("mov r2, #0x40\n\tmov sb, r2" : "=r" (c0x40) :: "r2");
 
             /* Same anchor reason as above, for the ROM's `mov r0, sb`
@@ -120,12 +120,12 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
                 ::: "r0", "r1"
             );
             {
-                register u32 one asm("r6") = 1;
+                MATCH_HOLD_REG(u32, one, r6) = 1;
 
                 ((u8 *)&self->dispcnt)[1] |= one;
                 ((u8 *)&self->dispcnt)[1] |= 2;
                 {
-                    register u32 four asm("r4") = 4;
+                    MATCH_HOLD_REG(u32, four, r4) = 4;
 
                     ((u8 *)&self->dispcnt)[1] |= four;
 
@@ -140,7 +140,7 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
                      * (BG2HOFS and the two field zeros at the very end,
                      * which really do share one copy in r2). */
                     {
-                        register u32 z2 asm("r2") = zero;
+                        MATCH_HOLD_REG(u32, z2, r2) = zero;
                         self->blend.word = z2;
                     }
                     four |= self->blend.b.bldcntLo;
@@ -150,13 +150,13 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
                          * picks) so it lands in the same register the
                          * ROM's own build reuses right below - see the
                          * doc comment above. */
-                        register u8 hi asm("r1") = self->blend.b.bldcntHi;
+                        MATCH_HOLD_REG(u8, hi, r1) = self->blend.b.bldcntHi;
                         one |= hi;
                     }
                     self->blend.b.bldcntHi = one;
                     {
-                        register s32 mask asm("r1") = -0x20;
-                        register s32 tmp asm("r0") = mask;
+                        MATCH_HOLD_REG(s32, mask, r1) = -0x20;
+                        MATCH_HOLD_REG(s32, tmp, r0) = mask;
 
                         /* Compiler barrier (matching_decomp_register_
                          * pinning memory): without it, this compiler
@@ -189,19 +189,19 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
                     REG_BG0CNT = GetBgSetupControl(self->bg0Buf);
                     {
                         vu32 *addr = (vu32 *)REG_ADDR_BG0HOFS;
-                        register u32 z2 asm("r2") = zero;
+                        MATCH_HOLD_REG(u32, z2, r2) = zero;
                         *addr = z2;
                     }
                     REG_BG1CNT = GetBgSetupControl(self->bg1Buf);
                     {
                         vu32 *addr = (vu32 *)REG_ADDR_BG1HOFS;
-                        register u32 z1 asm("r1") = zero;
+                        MATCH_HOLD_REG(u32, z1, r1) = zero;
                         *addr = z1;
                     }
                     REG_BG2CNT = GetBgSetupControl(self->bg2Buf);
                     {
                         vu32 *addr = (vu32 *)REG_ADDR_BG2HOFS;
-                        register u32 z2 asm("r2") = zero;
+                        MATCH_HOLD_REG(u32, z2, r2) = zero;
 
                         *addr = z2;
 

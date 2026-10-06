@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor_self.h"
 #include "memory.h"
 #include <libgcc.h>
@@ -63,28 +64,28 @@ frameBlock:
     {
         /* `animTimer` read as an s16 through a register offset, as the
          * ROM does. */
-        register s32 sixteenConst asm("r3") = 0x10;
-        register s32 delta asm("r1") = *(s16 *)((u8 *)self + sixteenConst);
+        MATCH_HOLD_REG(s32, sixteenConst, r3) = 0x10;
+        MATCH_HOLD_REG(s32, delta, r1) = *(s16 *)((u8 *)self + sixteenConst);
 
         self->base.animTime += delta;
         self->base.animDone = 0;
     }
     {
         s32 frame = GetAnimFrameBaseOffset((struct actor_self *)self);
-        register s32 idx asm("r2") = self->base.animIndex;
-        register u8 *table asm("r3") = (u8 *)self->base.anims;
-        register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
-        register s32 four asm("r3");
-        register s32 e4 asm("r2");
+        MATCH_HOLD_REG(s32, idx, r2) = self->base.animIndex;
+        MATCH_HOLD_REG(u8 *, table, r3) = (u8 *)self->base.anims;
+        MATCH_HOLD_REG(u8 *, entryPtr, r1) = (u8 *)(idx * 0xc);
+        MATCH_HOLD_REG(s32, four, r3);
+        MATCH_HOLD_REG(s32, e4, r2);
 
         asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
         four = 4;
         e4 = *(s16 *)(entryPtr + four);
 
         if (frame >= e4) {
-            register s32 six asm("r0") = 6;
-            register s32 e6 asm("r1") = *(s16 *)(entryPtr + six);
-            register s32 diff asm("r1") = e4 - e6;
+            MATCH_HOLD_REG(s32, six, r0) = 6;
+            MATCH_HOLD_REG(s32, e6, r1) = *(s16 *)(entryPtr + six);
+            MATCH_HOLD_REG(s32, diff, r1) = e4 - e6;
 
             diff <<= 8;
             self->base.animTime -= diff;
@@ -116,23 +117,23 @@ asm(".align 2, 0");
 
 void DrawPolarCollectedWumpa(void *selfArg)
 {
-    register struct actor_self *self asm("r6") = selfArg;
-    register s32 rawX asm("r0") = self->x;
-    register s32 rawY asm("r1") = self->y;
-    register s32 x asm("r4") = rawX >> 8;
-    register s32 y asm("r5") = rawY >> 8;
+    MATCH_HOLD_REG(struct actor_self *, self, r6) = selfArg;
+    MATCH_HOLD_REG(s32, rawX, r0) = self->x;
+    MATCH_HOLD_REG(s32, rawY, r1) = self->y;
+    MATCH_HOLD_REG(s32, x, r4) = rawX >> 8;
+    MATCH_HOLD_REG(s32, y, r5) = rawY >> 8;
     u8 *frame;
-    register u32 flag asm("r8");
-    register u32 packed asm("r3");
+    MATCH_HOLD_REG(u32, flag, r8);
+    MATCH_HOLD_REG(u32, packed, r3);
 
     frame = GetAnimFrameData(self);
     asm volatile("mov r0, #0\n\tmov %0, r0" : "=r"(flag) :: "r0");
 
     {
-        register s32 w asm("r0");
-        register s32 wShift asm("r2");
-        register s32 h asm("r1");
-        register s32 hShift asm("r0");
+        MATCH_HOLD_REG(s32, w, r0);
+        MATCH_HOLD_REG(s32, wShift, r2);
+        MATCH_HOLD_REG(s32, h, r1);
+        MATCH_HOLD_REG(s32, hShift, r0);
 
         w = frame[0];
         wShift = w << 2;
@@ -143,25 +144,25 @@ void DrawPolarCollectedWumpa(void *selfArg)
 
         if (y > 0x9f) return;
         {
-            register s32 hCheck asm("r0") = h << 3;
+            MATCH_HOLD_REG(s32, hCheck, r0) = h << 3;
             if (y + hCheck < 0) return;
         }
         if (x > 0xef) return;
         {
-            register s32 wCheck asm("r0") = wShift << 1;
+            MATCH_HOLD_REG(s32, wCheck, r0) = wShift << 1;
             if (x + wCheck < 0) return;
         }
 
         flag = 0x100;
         {
-            register s32 attrFlag asm("r0") = GetAnimFrameAttr(self);
-            register s32 a0 asm("r3") = 0xff;
-            register s32 xm asm("r4") = x;
+            MATCH_HOLD_REG(s32, attrFlag, r0) = GetAnimFrameAttr(self);
+            MATCH_HOLD_REG(s32, a0, r3) = 0xff;
+            MATCH_HOLD_REG(s32, xm, r4) = x;
 
             a0 &= y;
             {
-                register s32 mask asm("r1") = 0x1ff;
-                register s32 shifted asm("r1");
+                MATCH_HOLD_REG(s32, mask, r1) = 0x1ff;
+                MATCH_HOLD_REG(s32, shifted, r1);
 
                 xm &= mask;
                 shifted = xm << 16;
@@ -174,26 +175,26 @@ void DrawPolarCollectedWumpa(void *selfArg)
     }
 
     {
-        register s32 field24 asm("r4") = self->palette;
+        MATCH_HOLD_REG(s32, field24, r4) = self->palette;
         s32 a2 = field24 << 12;
         s32 field20 = self->sortKey;
-        register u32 attr2 asm("r2");
+        MATCH_HOLD_REG(u32, attr2, r2);
 
         if (field20 & 0x8000) {
             a2 |= 0x800;
             {
-                register s32 shifted asm("r0") = a2 << 16;
+                MATCH_HOLD_REG(s32, shifted, r0) = a2 << 16;
                 attr2 = (u32)shifted >> 16;
             }
         } else {
-            register s32 shifted asm("r0") = field24 << 28;
+            MATCH_HOLD_REG(s32, shifted, r0) = field24 << 28;
             attr2 = (u32)shifted >> 16;
         }
 
         {
-            register u8 *argFrame asm("r0") = frame;
-            register u32 argPacked asm("r1") = packed;
-            register s32 argPriority asm("r3") = 0x140;
+            MATCH_HOLD_REG(u8 *, argFrame, r0) = frame;
+            MATCH_HOLD_REG(u32, argPacked, r1) = packed;
+            MATCH_HOLD_REG(s32, argPriority, r3) = 0x140;
 
             SetupSpriteFrameOam(argFrame, argPacked, attr2, argPriority);
         }
@@ -222,7 +223,7 @@ struct fruit_actor {
  * `gPolarQueuedWumpa` global drain. */
 void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
 {
-    register u8 *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(u8 *, self, r4) = selfArg;
     u32 arg1r = arg1;
     s32 i;
 
@@ -283,7 +284,7 @@ struct polar_collected_wumpa {
 void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spawnParam)
 {
     struct polar_collected_wumpa *self = selfArg;
-    register s32 dy asm("r3");
+    MATCH_HOLD_REG(s32, dy, r3);
     s32 sum;
     s32 q;
 
@@ -294,8 +295,8 @@ void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spa
     self->base.y += GetActorBgCenterY();
 
     {
-        register s32 ebResult asm("r0") = GetActorBgCenterX();
-        register s32 old asm("r1") = self->base.x;
+        MATCH_HOLD_REG(s32, ebResult, r0) = GetActorBgCenterX();
+        MATCH_HOLD_REG(s32, old, r1) = self->base.x;
         dy = old + ebResult;
     }
     self->base.x = dy;
@@ -386,9 +387,9 @@ void UpdatePolarCrate(void *selfArg)
             AddBrokenCrate(gLevelState);
             self->animIndex = 0x12;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-                register u8 zero1 asm("r1") = 0;
-                register s32 zero2 asm("r2") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
+                MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
@@ -466,9 +467,9 @@ void UpdatePolarQuestionCrate(void *selfArg)
     state_block:
         self->animIndex = 0x12;
         {
-            register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-            register u8 zero1 asm("r1") = 0;
-            register s32 zero2 asm("r2") = 0;
+            MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+            MATCH_HOLD_REG(u8, zero1, r1) = 0;
+            MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
             *(u16 *)&self->animTimer = anim;
             *(u8 *)&self->animDone = zero1;
@@ -498,9 +499,9 @@ void UpdatePolarLifeCrate(void *selfArg)
             MarkSpawnCollected(((struct listed_actor *)self)->unk_54);
             self->animIndex = 0x12;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-                register u8 zero1 asm("r1") = 0;
-                register s32 zero2 asm("r2") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
+                MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
@@ -514,9 +515,9 @@ void UpdatePolarLifeCrate(void *selfArg)
             AddBrokenCrate(gLevelState);
             self->animIndex = 0x12;
             {
-                register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-                register u8 zero1 asm("r1") = 0;
-                register s32 zero2 asm("r2") = 0;
+                MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+                MATCH_HOLD_REG(u8, zero1, r1) = 0;
+                MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
                 *(u16 *)&self->animTimer = anim;
                 *(u8 *)&self->animDone = zero1;
@@ -553,8 +554,8 @@ void UpdatePolarNitroCrate(void *selfArg)
         }
         return;
     } else {
-        register u32 raw asm("r0") = (u8)IsTouchingPlayer(self);
-        register u32 found asm("r5");
+        MATCH_HOLD_REG(u32, raw, r0) = (u8)IsTouchingPlayer(self);
+        MATCH_HOLD_REG(u32, found, r5);
 
         raw = raw << 24;
         found = raw >> 24;
@@ -564,13 +565,13 @@ void UpdatePolarNitroCrate(void *selfArg)
             AddBrokenCrate(gLevelState);
             HurtPolarPlayer(gActorList);
             {
-                register s32 zero2 asm("r2") = 0;
+                MATCH_HOLD_REG(s32, zero2, r2) = 0;
 
                 self->stateTime = zero2;
                 self->animIndex = 0x12;
                 {
-                    register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-                    register u8 zero1 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+                    MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                     *(u16 *)&self->animTimer = anim;
                     *(u8 *)&self->animDone = zero1;
@@ -581,13 +582,13 @@ void UpdatePolarNitroCrate(void *selfArg)
             PlaySfx(gAudioContext, 4, 0x100);
             AddBrokenCrate(gLevelState);
             {
-                register s32 zero2 asm("r5") = found;
+                MATCH_HOLD_REG(s32, zero2, r5) = found;
 
                 self->stateTime = zero2;
                 self->animIndex = 0x12;
                 {
-                    register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
-                    register u8 zero1 asm("r1") = 0;
+                    MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;
+                    MATCH_HOLD_REG(u8, zero1, r1) = 0;
 
                     *(u16 *)&self->animTimer = anim;
                     *(u8 *)&self->animDone = zero1;

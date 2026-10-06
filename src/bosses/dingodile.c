@@ -688,10 +688,10 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
  * before jumping to it. */
 void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next)
 {
-    register void *t asm("r0");
-    register void *a asm("r1");
-    register s32 b asm("r2");
-    register void *fn asm("r3");
+    MATCH_HOLD_REG(void *, t, r0);
+    MATCH_HOLD_REG(void *, a, r1);
+    MATCH_HOLD_REG(s32, b, r2);
+    MATCH_HOLD_REG(void *, fn, r3);
 
     VCALL1(self, m20, next);
     switch (next)
@@ -855,8 +855,8 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
 {
     struct aabb a;
     struct aabb b;
-    register s32 hr5 asm("r5");
-    register s32 hr6 asm("r6");
+    MATCH_HOLD_REG(s32, hr5, r5);
+    MATCH_HOLD_REG(s32, hr6, r6);
 
     {
         struct actor_method *m = &other->vt->m28;
@@ -895,7 +895,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
     {
     case 0:
         {
-            register u32 acc asm("r5");
+            MATCH_HOLD_REG(u32, acc, r5);
             u32 w;
 
             /* Constant-init (emits the `movs r5, #0x10`): a plain

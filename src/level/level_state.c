@@ -29,7 +29,7 @@
  * `gPaletteCache`'s value *before* the first chase (not inline in
  * the call), so its evaluation lands in `r0` early exactly like the
  * ROM's `ldr r0,[r7]` and the chase is forced into `r1`; 2) a single
- * `register s32 off asm("r2")` pin for the `0x8d << 2` (`0x234`) field
+ * `MATCH_HOLD_REG(s32, off, r2)` pin for the `0x8d << 2` (`0x234`) field
  * offset in the *first* chase only, matching the ROM's `movs
  * r2,#0x8d; lsls r2,r2,#2` - this also stops gcc from caching that
  * constant in a register across the `GetPaletteSlot` call, which is what
@@ -45,7 +45,7 @@
  * exactly. */
 void FreezeLevelClock(struct level_state *self, s32 seconds)
 {
-    register s32 off asm("r2");
+    MATCH_HOLD_REG(s32, off, r2);
     struct palette_cache *base;
     void *p3, *header, *record;
     void *p3b, *headerb, *recordb;
@@ -111,15 +111,15 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
  * reusing the register the comparison already loaded. */
 void TickLevelClock(struct level_state *self)
 {
-    register s32 *addr asm("r1") = &self->countdown;
-    register s32 countdown asm("r3") = *addr;
+    MATCH_HOLD_REG(s32 *, addr, r1) = &self->countdown;
+    MATCH_HOLD_REG(s32, countdown, r3) = *addr;
 
     if (countdown != 0) {
-        register s32 newCountdown asm("r0") = countdown - 1;
+        MATCH_HOLD_REG(s32, newCountdown, r0) = countdown - 1;
         *addr = newCountdown;
 
         if (newCountdown == 0) {
-            register s32 off asm("r2");
+            MATCH_HOLD_REG(s32, off, r2);
             struct palette_cache *base;
             void *p3, *header, *record;
             void *p3b, *headerb, *recordb;
@@ -203,8 +203,8 @@ void AddBrokenCrate(struct level_state *self)
                  * mask before loading the byte" order - a plain
                  * `*flags |= 2;` loads the byte first regardless of
                  * statement order (see docs/workflow.md step 7). */
-                register s32 mask asm("r1") = 2;
-                register s32 value asm("r2") = *flags;
+                MATCH_HOLD_REG(s32, mask, r1) = 2;
+                MATCH_HOLD_REG(s32, value, r2) = *flags;
                 mask |= value;
                 *flags = mask;
             } else {
@@ -240,8 +240,8 @@ void PressSwitchCrate(struct level_state *self)
 
         if (level->kind == 3) {
             u8 *flags = GetCurrentLevelFlags(self);
-            register s32 mask asm("r1") = 2;
-            register s32 value asm("r2") = *flags;
+            MATCH_HOLD_REG(s32, mask, r1) = 2;
+            MATCH_HOLD_REG(s32, value, r2) = *flags;
             mask |= value;
             *flags = mask;
         } else {
@@ -313,8 +313,8 @@ void ClearPowers(struct level_state *self)
      * see docs/workflow.md step 7 - a plain local otherwise lets gcc
      * reuse the still-live -0x11 constant to derive -0x41 via a single
      * SUB instead of a fresh mov+neg pair. */
-    register s32 acc asm("r1") = -0x11;
-    register s32 tmp asm("r2") = self->flags;
+    MATCH_HOLD_REG(s32, acc, r1) = -0x11;
+    MATCH_HOLD_REG(s32, tmp, r2) = self->flags;
     acc &= tmp;
     tmp = -0x41;
     acc &= tmp;
@@ -333,32 +333,32 @@ void ClearPowers(struct level_state *self)
  * `PressSwitchCrate`'s `*flags |= 2;` above). */
 void GiveTornadoSpin(struct level_state *self)
 {
-    register s32 mask asm("r1") = 0x40;
-    register s32 value asm("r2") = self->flags;
+    MATCH_HOLD_REG(s32, mask, r1) = 0x40;
+    MATCH_HOLD_REG(s32, value, r2) = self->flags;
     mask |= value;
     self->flags = mask;
 }
 
 void GiveSuperBodySlam(struct level_state *self)
 {
-    register s32 mask asm("r1") = 0x20;
-    register s32 value asm("r2") = self->flags;
+    MATCH_HOLD_REG(s32, mask, r1) = 0x20;
+    MATCH_HOLD_REG(s32, value, r2) = self->flags;
     mask |= value;
     self->flags = mask;
 }
 
 void GiveTurboRun(struct level_state *self)
 {
-    register s32 mask asm("r1") = 0x10;
-    register s32 value asm("r2") = self->flags;
+    MATCH_HOLD_REG(s32, mask, r1) = 0x10;
+    MATCH_HOLD_REG(s32, value, r2) = self->flags;
     mask |= value;
     self->flags = mask;
 }
 
 void GiveDoubleJump(struct level_state *self)
 {
-    register s32 mask asm("r1") = 0x80;
-    register s32 value asm("r2") = self->flags;
+    MATCH_HOLD_REG(s32, mask, r1) = 0x80;
+    MATCH_HOLD_REG(s32, value, r2) = self->flags;
     mask |= value;
     self->flags = mask;
 }
@@ -426,8 +426,8 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
      * `adds r5,r1,#0` (state) copy order is reproduced - a plain pair
      * of locals lets this compiler swap the order since `state` is
      * referenced first, in the `if` condition below. */
-    register struct level_state *self asm("r4") = selfArg;
-    register s32 state asm("r5") = stateArg;
+    MATCH_HOLD_REG(struct level_state *, self, r4) = selfArg;
+    MATCH_HOLD_REG(s32, state, r5) = stateArg;
 
     if (state == 3) {
         StartSong(gAudioContext, 0x12);
@@ -786,7 +786,7 @@ void AddLife(struct level_state *self)
  * `*gLevelState` as `self`. */
 void CheckAllCratesBroken(void *selfArg)
 {
-    register struct level_state *self asm("r4") = selfArg;
+    MATCH_HOLD_REG(struct level_state *, self, r4) = selfArg;
 
     if (self->crateCount == self->crateTotal
         && !IsInBonusRound(self) && !IsInGemPath(self)) {
@@ -794,8 +794,8 @@ void CheckAllCratesBroken(void *selfArg)
 
         if (level->kind == 3) {
             u8 *flags = GetCurrentLevelFlags(self);
-            register s32 mask asm("r1") = 2;
-            register s32 value asm("r2") = *flags;
+            MATCH_HOLD_REG(s32, mask, r1) = 2;
+            MATCH_HOLD_REG(s32, value, r2) = *flags;
             mask |= value;
             *flags = mask;
         } else {
@@ -806,11 +806,11 @@ void CheckAllCratesBroken(void *selfArg)
              * recomputed from scratch for the second field - see
              * docs/workflow.md step 7 / matching_decomp_register_pinning
              * memory. */
-            register s32 magic asm("r0") = 0xffff;
-            register s32 off asm("r3") = 0xe0 << 1;
-            register u16 *addr1 asm("r1") = (u16 *)((u8 *)self + off); /* &self->crateGemX */
+            MATCH_HOLD_REG(s32, magic, r0) = 0xffff;
+            MATCH_HOLD_REG(s32, off, r3) = 0xe0 << 1;
+            MATCH_HOLD_REG(u16 *, addr1, r1) = (u16 *)((u8 *)self + off); /* &self->crateGemX */
             u16 b = *addr1;
-            register u16 *addr2 asm("r2");
+            MATCH_HOLD_REG(u16 *, addr2, r2);
             u16 c;
             MATCH_KEEP_VOLATILE(b);
             off += 4;
@@ -886,8 +886,8 @@ void RestoreCheckpoint(struct level_state *self)
  * `0xe4`-byte snapshot block (see `RestoreCheckpoint` above). */
 void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
 {
-    register struct level_state *self asm("r5") = selfArg;
-    register s32 *pair asm("r4") = pairArg;
+    MATCH_HOLD_REG(struct level_state *, self, r5) = selfArg;
+    MATCH_HOLD_REG(s32 *, pair, r4) = pairArg;
     u8 tmp;
 
     self->unk_e0 = flag;
@@ -897,9 +897,9 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
     ClearSpawnAtStart(self);
     ResetDeaths(self);
     {
-        register s32 *dst asm("r2") = &self->checkpointX;
-        register s32 px asm("r0") = pair[0];
-        register s32 py asm("r1") = pair[1];
+        MATCH_HOLD_REG(s32 *, dst, r2) = &self->checkpointX;
+        MATCH_HOLD_REG(s32, px, r0) = pair[0];
+        MATCH_HOLD_REG(s32, py, r1) = pair[1];
         dst[0] = px;
         dst[1] = py;
     }
@@ -908,13 +908,13 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
     {
         void *a = (u8 *)pair + 0x108;
         void *b = (u8 *)pair + 8;
-        register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
+        MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
         CpuSet(a, b, ctrl);
     }
     {
         void *a = (u8 *)pair + 0x308;
         void *b = (u8 *)pair + 0x208;
-        register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
+        MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
         CpuSet(a, b, ctrl);
     }
 
@@ -970,7 +970,7 @@ void ShowCompanyLogos(void *unused)
      * originally). Spelling the call as inline asm that doesn't clobber
      * r0 reproduces the ROM's exact (and, here, still safe) delayed
      * move. */
-    register void *tmp asm("r0") = OperatorNew(0x44c);
+    MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(0x44c);
     void *block;
 
     asm volatile("bl nullsub_7" : "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc");
@@ -997,13 +997,13 @@ void nullsub_24(void)
  * block. */
 void UnpackSaveData(struct level_state *self, void *src)
 {
-    register u8 *snap asm("r5") = self->saveData;
+    MATCH_HOLD_REG(u8 *, snap, r5) = self->saveData;
     /* Register pins reproduce the ROM's exact "freshly loaded value in
      * one register, shifted result in another" shape for both the byte
      * and halfword extracts below (see docs/workflow.md step 7). */
-    register u8 raw asm("r1");
-    register s32 val asm("r0");
-    register u16 packed asm("r5");
+    MATCH_HOLD_REG(u8, raw, r1);
+    MATCH_HOLD_REG(s32, val, r0);
+    MATCH_HOLD_REG(u16, packed, r5);
 
     MemCopy32(self, src, 0x68);
     MemCopy32(snap, self, 0x68);
@@ -1045,17 +1045,17 @@ void UnpackSaveData(struct level_state *self, void *src)
  *    `pop {r1}; bx r1` without any extra hint. */
 void *PackSaveData(void *selfArg)
 {
-    register struct level_state *self asm("r3") = selfArg;
-    register u8 *snap asm("r0");
+    MATCH_HOLD_REG(struct level_state *, self, r3) = selfArg;
+    MATCH_HOLD_REG(u8 *, snap, r0);
     u8 byte0;
     u16 packed;
-    register s32 t asm("r2");
+    MATCH_HOLD_REG(s32, t, r2);
 
     t = self->lives;
     snap = self->saveData;
     t &= 0x7f;
     {
-        register s32 mask asm("r1");
+        MATCH_HOLD_REG(s32, mask, r1);
         asm volatile("mov %0, #0x80\n\tneg %0, %0" : "=r"(mask));
         mask &= *snap;
         byte0 = mask | t;
@@ -1064,10 +1064,10 @@ void *PackSaveData(void *selfArg)
 
     {
         s32 field6c = self->wumpa;
-        register u32 off asm("r5") = offsetof(struct level_state, saveData[1]);
+        MATCH_HOLD_REG(u32, off, r5) = offsetof(struct level_state, saveData[1]);
         s32 shifted = field6c << 1;
-        register s32 one asm("r1") = 1;
-        register u32 raw asm("r4");
+        MATCH_HOLD_REG(s32, one, r1) = 1;
+        MATCH_HOLD_REG(u32, raw, r4);
         asm volatile("ldrb %0, [%1, %2]" : "=r"(raw) : "r"(off), "r"(self));
         one &= raw;
         one |= shifted;
@@ -1075,9 +1075,9 @@ void *PackSaveData(void *selfArg)
     }
 
     {
-        register s32 shifted asm("r2") = (self->maskLevel & 3) << 7;
-        register s32 mask asm("r1") = 0xFFFFFE7F;
-        register u16 loaded asm("r5") = *(u16 *)snap;
+        MATCH_HOLD_REG(s32, shifted, r2) = (self->maskLevel & 3) << 7;
+        MATCH_HOLD_REG(s32, mask, r1) = 0xFFFFFE7F;
+        MATCH_HOLD_REG(u16, loaded, r5) = *(u16 *)snap;
         mask &= loaded;
         packed = mask | shifted;
     }

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "crates.h"
 #include "globals.h"
 #include "player.h"
@@ -72,7 +73,7 @@
  * bug that silently drops it from the prologue's push/pop list). */
 s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
 {
-    register s32 count asm("r1") = countArg;
+    MATCH_HOLD_REG(s32, count, r1) = countArg;
     s32 dx, dy, absDx;
     s32 tmp;
 
@@ -88,8 +89,8 @@ s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
         if (dx > dy) {
             /* X major, increasing */
             s32 twoDy = dy * 2;
-            register s32 diff asm("r6");
-            register s32 err asm("r0");
+            MATCH_HOLD_REG(s32, diff, r6);
+            MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
             asm volatile(
@@ -119,15 +120,15 @@ s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
 
 returnSolo:
             {
-                register s32 retVal asm("r0");
+                MATCH_HOLD_REG(s32, retVal, r0);
                 asm volatile("add %0, %1, #0" : "=r"(retVal) : "r"(count));
                 return retVal;
             }
         } else {
             /* Y major, X advances conditionally, increasing */
             s32 twoDx = dx * 2;
-            register s32 diff asm("r6");
-            register s32 err asm("r0");
+            MATCH_HOLD_REG(s32, diff, r6);
+            MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
             asm volatile(
@@ -159,8 +160,8 @@ returnSolo:
         if (absDx > dy) {
             /* X major, decreasing */
             s32 twoDy = dy * 2;
-            register s32 diff asm("r6");
-            register s32 err asm("r0");
+            MATCH_HOLD_REG(s32, diff, r6);
+            MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
             asm volatile(
@@ -189,8 +190,8 @@ returnSolo:
         } else {
             /* Y major, X advances conditionally, decreasing */
             s32 twoAbsDx = absDx * 2;
-            register s32 diff asm("r6");
-            register s32 err asm("r0");
+            MATCH_HOLD_REG(s32, diff, r6);
+            MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
             asm volatile(
@@ -245,9 +246,9 @@ returnNeg1:
  * read/write. */
 void ResetCrate(struct crate *selfArg)
 {
-    register u8 *self asm("r2") = (u8 *)selfArg;
+    MATCH_HOLD_REG(u8 *, self, r2) = (u8 *)selfArg;
     u8 v = 4;
-    register u8 *addr asm("r3");
+    MATCH_HOLD_REG(u8 *, addr, r3);
     u8 zero;
 
     v |= self[0xc];
@@ -266,7 +267,7 @@ void ResetCrate(struct crate *selfArg)
      * more reliable than continuing to chase the scheduler. */
     addr = self + 0x4d;
     {
-        register u8 result asm("r0");
+        MATCH_HOLD_REG(u8, result, r0);
         asm volatile(
             "mov r0, #0x7f\n"
             "ldrb r4, [%1]\n"

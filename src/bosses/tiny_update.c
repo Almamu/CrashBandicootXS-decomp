@@ -146,10 +146,10 @@ static inline void AndFlags(struct hop_part *part, s32 mask)
  * old_agbcc). */
 static inline void SetSlot(struct hop_part *part, s32 v)
 {
-    register s32 val asm("r0") = v;
-    register u8 *p asm("r2") = &part->slot;
-    register s32 m asm("r1");
-    register s32 b asm("r3");
+    MATCH_HOLD_REG(s32, val, r0) = v;
+    MATCH_HOLD_REG(u8 *, p, r2) = &part->slot;
+    MATCH_HOLD_REG(s32, m, r1);
+    MATCH_HOLD_REG(s32, b, r3);
 
     val &= 0xF;
     asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r"(m));
@@ -383,8 +383,8 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
     case 2:
     {
         /* pinned: unpinned, `anchor` lands in r0 and `x` in r1 */
-        register struct hop_part *anchor asm("r2");
-        register s32 x asm("r1");
+        MATCH_HOLD_REG(struct hop_part *, anchor, r2);
+        MATCH_HOLD_REG(s32, x, r1);
 
         if (next == 1)
             VCALL2(self, m50, part, 2);
@@ -507,7 +507,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
 void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 n)
 {
     /* `p` pinned to r4: unpinned, it and `ctrl` swap r4/r5 */
-    register struct hop_part *p asm("r4") = CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MATCH_HOLD_REG(struct hop_part *, p, r4) = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct hop_vobj *ctrl;
     s32 x;
     s32 zero;
@@ -518,7 +518,7 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
          * materializes the 0 it later stores to +0x64/+0x54 here, keeping
          * it in r8 across the calls (like the 0xF of SpawnCortexTarget,
          * cortex.c); no plain-C placement of that 0 does this. */
-        register s32 t asm("r0") = 5;
+        MATCH_HOLD_REG(s32, t, r0) = 5;
         u8 *tp;
 
         MATCH_KEEP(t);

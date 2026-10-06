@@ -1,5 +1,6 @@
 #include "gax_internal.h"
 #include <agb_syscall.h>
+#include "match.h"
 
 /* Split out of lib/libgcc/libgcc2.c: that object is GAX2's bundled
  * libgcc code, built without -mthumb-interwork, while this helper (GAX2
@@ -25,7 +26,7 @@
 void GaxZeroFill(void *destArg, s32 count)
 {
     u8 *dest = destArg;
-    register s32 cnt asm("r6") = count;
+    MATCH_HOLD_REG(s32, cnt, r6) = count;
     s32 aligned;
     u32 zero;
 
@@ -46,7 +47,7 @@ void GaxZeroFill(void *destArg, s32 count)
 
     {
         u8 *tail = dest + aligned;
-        register s32 remaining asm("r1") = cnt - aligned;
+        MATCH_HOLD_REG(s32, remaining, r1) = cnt - aligned;
 
         if (remaining > 0) {
             do {

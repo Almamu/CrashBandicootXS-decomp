@@ -54,7 +54,7 @@
  * bytes, then confirmed again by a full clean `make compare`. */
 void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *objArg)
 {
-    register void *obj asm("r3") = objArg;
+    MATCH_HOLD_REG(void *, obj, r3) = objArg;
     s32 bucket;
 
     for (bucket = 0xFE; bucket >= 0; bucket--) {
@@ -65,7 +65,7 @@ void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *objA
         }
 
         {
-            register void **headField asm("r6");
+            MATCH_HOLD_REG(void **, headField, r6);
 
             /* Opaque barrier: prevents this compiler from proving
              * `&manager->freeListHead` is loop-invariant and hoisting
@@ -75,17 +75,17 @@ void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *objA
             headField = (void **)&manager->freeListHead;
 
             for (;;) {
-                register void *data asm("r5") = *(void **)node;
+                MATCH_HOLD_REG(void *, data, r5) = *(void **)node;
 
                 if (data == obj) {
                     void *fieldC;
                     /* Register-pinned to match the ROM's own
                      * scratch-register choice for this bit test - see
                      * the function-level comment above. */
-                    register u8 flags asm("r1") = *((u8 *)data + 0xc);
-                    register s32 shifted asm("r0") = flags >> 4;
-                    register s32 mask asm("r1") = 1;
-                    register s32 result asm("r0") = shifted & mask;
+                    MATCH_HOLD_REG(u8, flags, r1) = *((u8 *)data + 0xc);
+                    MATCH_HOLD_REG(s32, shifted, r0) = flags >> 4;
+                    MATCH_HOLD_REG(s32, mask, r1) = 1;
+                    MATCH_HOLD_REG(s32, result, r0) = shifted & mask;
 
                     if (!result) {
                         return;
@@ -96,7 +96,7 @@ void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *objA
                     }
                     {
                         void **entry = *headField;
-                        register void *newNode asm("r2") = *(void **)entry;
+                        MATCH_HOLD_REG(void *, newNode, r2) = *(void **)entry;
 
                         *headField = *(void **)((u8 *)entry + 4);
                         *(void **)((u8 *)entry + 4) = fieldC;

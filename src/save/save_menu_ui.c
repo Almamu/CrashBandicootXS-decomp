@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include "text.h"
 #include "link.h"
@@ -19,7 +20,7 @@ void LoadSaveMenuBg(struct save_menu *self)
     struct bg_setup buf;
     u32 zero = 0;
     s32 a;
-    register s32 b asm("r1");
+    MATCH_HOLD_REG(s32, b, r1);
 
     self->field_1c = zero;
     a = 0x40;

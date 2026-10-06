@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "level_data.h"
 #include "crates.h"
@@ -46,7 +47,7 @@ s32 PlayRoom(struct level_progress *selfArg)
      * `mov` through a low register before every field access - each
      * such access below is its own small register-pinned block for
      * that reason. */
-    register struct level_progress *self asm("r8") = selfArg;
+    MATCH_HOLD_REG(struct level_progress *, self, r8) = selfArg;
     struct player **d8;
     s32 mode;
     s32 result;
@@ -97,18 +98,18 @@ s32 PlayRoom(struct level_progress *selfArg)
      * ROM's own operand-evaluation order for this store - a plain
      * compound assignment here evaluates the load first instead. */
     {
-        register u8 *p asm("r1") = (u8 *)*d8;
-        register u8 val asm("r0") = 0x10;
-        register u8 cur asm("r3") = p[0xc];
-        register u8 result asm("r0") = val | cur;
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)*d8;
+        MATCH_HOLD_REG(u8, val, r0) = 0x10;
+        MATCH_HOLD_REG(u8, cur, r3) = p[0xc];
+        MATCH_HOLD_REG(u8, result, r0) = val | cur;
         p[0xc] = result;
     }
     {
-        register u8 *p asm("r2") = (u8 *)*d8 + 0x28;
-        register u32 one asm("r1") = 1;
-        register struct level_progress *sp asm("r4") = self;
-        register u8 rawbit asm("r4") = sp->flags;
-        register u32 bit asm("r1") = (one & rawbit) << 4;
+        MATCH_HOLD_REG(u8 *, p, r2) = (u8 *)*d8 + 0x28;
+        MATCH_HOLD_REG(u32, one, r1) = 1;
+        MATCH_HOLD_REG(struct level_progress *, sp, r4) = self;
+        MATCH_HOLD_REG(u8, rawbit, r4) = sp->flags;
+        MATCH_HOLD_REG(u32, bit, r1) = (one & rawbit) << 4;
         /* Register-pinned negative-constant mask (`-0x11`, not `~0x10`)
          * so this compiler emits the ROM's own `movs r0, #0x11 / rsbs
          * r0, r0, #0` runtime mask computation instead of
@@ -116,9 +117,9 @@ s32 PlayRoom(struct level_progress *selfArg)
          * "negative-constant bit-clear idiom" documented in
          * docs/matching.md (see `ClearSpriteObjFlag5` in ground_sprite.c for the
          * established `register ... = -N` shape this mirrors). */
-        register s32 mask asm("r0") = -0x11;
-        register u8 cur asm("r3") = *p;
-        register s32 result asm("r0") = (mask & cur) | bit;
+        MATCH_HOLD_REG(s32, mask, r0) = -0x11;
+        MATCH_HOLD_REG(u8, cur, r3) = *p;
+        MATCH_HOLD_REG(s32, result, r0) = (mask & cur) | bit;
         *p = result;
     }
 
@@ -129,7 +130,7 @@ s32 PlayRoom(struct level_progress *selfArg)
      * instruction count matching. */
     asm volatile("" ::: "r4");
     {
-        register struct level_progress *p asm("r4") = self;
+        MATCH_HOLD_REG(struct level_progress *, p, r4) = self;
         mode = p->cat->kind;
     }
 

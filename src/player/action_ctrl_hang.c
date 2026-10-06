@@ -243,14 +243,14 @@ void ActionCtrlStateDying(struct act *self)
         {
             /* the "mark part gone" bitmap set of cortex.c's
              * MARK_GONE_BITMAP, with the same load-bearing registers */
-            register s32 none asm("r0") = 0xFFFF;
-            register u32 cur asm("r4") = part->id;
+            MATCH_HOLD_REG(s32, none, r0) = 0xFFFF;
+            MATCH_HOLD_REG(u32, cur, r4) = part->id;
 
             if (cur != none)
             {
-                register s32 id asm("r3") = *(vu16 *)&part->id;
-                register u8 *base asm("r2") = (u8 *)gEntityFlags;
-                register s32 word asm("r0") = id;
+                MATCH_HOLD_REG(s32, id, r3) = *(vu16 *)&part->id;
+                MATCH_HOLD_REG(u8 *, base, r2) = (u8 *)gEntityFlags;
+                MATCH_HOLD_REG(s32, word, r0) = id;
                 s32 off;
                 u32 *slot;
 
@@ -352,7 +352,7 @@ void ActionCtrlReleaseHang(struct act *self)
 {
     struct player *part;
     s32 count;
-    register s32 hold asm("r2");
+    MATCH_HOLD_REG(s32, hold, r2);
 
     self->part->hanging = 0;
     MATCH_HOLD(hold); /* r2 live from here: no code */
@@ -631,7 +631,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 void DoSuperBodySlamShockwave(struct act *self)
 {
     struct actor *part;
-    register s32 threshold asm("r8");
+    MATCH_HOLD_REG(s32, threshold, r8);
     s32 px, py;
     s32 i;
 
@@ -654,8 +654,8 @@ loop_body:
         s16 offset;
         void *addr;
         void *fn;
-        register s32 dx asm("r1");
-        register s32 dy asm("r2");
+        MATCH_HOLD_REG(s32, dx, r1);
+        MATCH_HOLD_REG(s32, dy, r2);
 
         /* Anti-CSE: a plain re-read of `gCollidableList` here would
          * let gcc reuse the register value the loop condition below
@@ -686,7 +686,7 @@ loop_body:
         }
 
         {
-            register s32 sign asm("r0");
+            MATCH_HOLD_REG(s32, sign, r0);
 
             dx = (other->x >> 8) - px;
             sign = dx >> 31;
@@ -704,9 +704,9 @@ loop_body:
             goto loop_inc;
         }
         {
-            register u8 flagsVal asm("r1") = other->flags;
-            register s32 bit asm("r0") = flagsVal >> 6;
-            register s32 one asm("r1") = 1;
+            MATCH_HOLD_REG(u8, flagsVal, r1) = other->flags;
+            MATCH_HOLD_REG(s32, bit, r0) = flagsVal >> 6;
+            MATCH_HOLD_REG(s32, one, r1) = 1;
 
             bit &= one;
             if (bit == 0) {
@@ -721,7 +721,7 @@ loop_body:
             u8 *rec2 = (u8 *)other->table + 0x68;
             s16 offset2 = *(s16 *)rec2;
             void *addr2 = (u8 *)other + offset2;
-            register void *fn2 asm("r4") = *(void *volatile *)(rec2 + 4);
+            MATCH_HOLD_REG(void *, fn2, r4) = *(void *volatile *)(rec2 + 4);
 
             _call_via_r4(addr2, 0, 0x16, 0);
             (void)fn2;
@@ -799,7 +799,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
                 self->unk_22 = zero;
         }
     } else {
-        register s32 hold1 asm("r1");
+        MATCH_HOLD_REG(s32, hold1, r1);
 
         /* No code: keeps r1 live across the `self->unk_22` test so the
          * byte loads into r2 and `id` stays in ip, as in the ROM. */
