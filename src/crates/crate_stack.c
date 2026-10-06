@@ -2,6 +2,7 @@
 #include "match.h"
 #include "actor.h"
 #include "audio.h"
+#include "crate.h"
 #include "crates.h"
 #include "level.h"
 #include "globals.h"
@@ -248,22 +249,21 @@ loop:
     goto loop;
 }
 
-/* Unless `self`'s own `+0x4d & 0x7f` state is 1, and `testX`/`testY`
- * (both raw, same Q8 scale as `self`'s own `+0`/`+4` position pair)
- * are both within `0x3fff` of `self`'s position, and `self`'s `+0x4e`
- * byte isn't `5`, fires `QueueCratePlayerCollision(self, idx)` - the physics/collision
+/* Unless `self`'s state (`state & 0x7f`) is 1, and `testX`/`testY`
+ * (Q8, like `self->x`/`self->y`) are both within `0x3fff` of `self`'s
+ * position, and `self->kind` isn't 5 (outline), fires `QueueCratePlayerCollision(self, idx)` - the physics/collision
  * subsystem's own collision-response commit
  * (docs/matching/archive/issue-12-physics-collision.md); `idx` (the player's
  * action, the gActionCtrlStateAttackKinds index) is passed on in r1
  * untouched. Always clears
- * `self`'s own `+0xc` flags bit 3 before returning, unconditionally. */
+ * `self->flags` bit 3 before returning, unconditionally. */
 s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (only the transient mask-check scratch below uses r5/r6/ip), and
      * this compiler's own unforced allocator drifts it onto r6 instead
      * once the tail's `MATCH_HOLD_REG(u8, loaded, r6)` pin is in scope. */
-    MATCH_HOLD_REG(u8 *, self, r4) = (u8 *)selfArg;
+    MATCH_HOLD_REG(struct crate *, self, r4) = selfArg;
     u32 masked;
 
     // clang-format off
@@ -282,7 +282,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
     // clang-format on
 
     if (masked != 1) {
-        s32 dx = *(s32 *)self - testX;
+        s32 dx = self->x - testX;
         if (dx < 0) {
             dx = -dx;
         }
@@ -297,13 +297,13 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
         {
             MATCH_HOLD_REG(s32, limit, r2) = 0x3FFF;
             if (dx <= limit) {
-                s32 dy = *(s32 *)(self + 4) - testY;
+                s32 dy = self->y - testY;
                 if (dy < 0) {
                     dy = -dy;
                 }
                 if (dy <= limit) {
-                    if (self[0x4e] != 5) {
-                        QueueCratePlayerCollision((struct crate *)self, idx);
+                    if (self->kind != 5) {
+                        QueueCratePlayerCollision(self, idx);
                     }
                 }
             }

@@ -122,10 +122,11 @@
 
 /* The room's entity parameter records (struct level_entity_list). */
 #define PLACEMENT_LEVEL (gEntityFlags->list)
-#define PLACEMENT(i) ((u8 *)PLACEMENT_LEVEL->params + PLACEMENT_LEVEL->paramOffsets[i])
+#define PLACEMENT(i)                                                           \
+    ((struct crate_placement *)((u8 *)PLACEMENT_LEVEL->params + PLACEMENT_LEVEL->paramOffsets[i]))
 /* PLACEMENT as an inline: its return value is copied, which gives the
  * ROM's pointer copies (see the note above) */
-static inline u8 *Placement(u16 i)
+static inline struct crate_placement *Placement(u16 i)
 {
     return PLACEMENT(i);
 }
@@ -150,22 +151,22 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     if (gLevelState->timeTrial == 0 &&
         GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState)) {
         if (type == 0xb) {
-            u8 *rec = Placement(slot);
+            struct crate_placement *rec = Placement(slot);
 
-            if (rec[0] & 0x40)
+            if (rec->flags & 0x40)
                 type = 2;
-            else if (rec[0] & 0x80)
+            else if (rec->flags & 0x80)
                 type = 1;
-            else if (rec[1] & 1)
+            else if (rec->options & 1)
                 type = 9;
         } else if (type == 0xf) {
-            u8 *rec = PLACEMENT(slot);
+            struct crate_placement *rec = PLACEMENT(slot);
 
-            if (rec[0] & 0x40)
+            if (rec->flags & 0x40)
                 type = 2;
-            else if (rec[0] & 0x80)
+            else if (rec->flags & 0x80)
                 type = 1;
-            else if (rec[1] & 1)
+            else if (rec->options & 1)
                 type = 9;
         }
     }
@@ -186,14 +187,14 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     }
     flagged = 0;
     {
-        u8 *rec = Placement(slot);
+        struct crate_placement *rec = Placement(slot);
 
-        if (special || (rec[0] & 0x20)) {
+        if (special || (rec->flags & 0x20)) {
             flagged = 1;
-            if (*(u16 *)(rec + 4) == 0x1b)
+            if ((u16)rec->trialKind == 0x1b)
                 self->trialKind = 0x15;
             else
-                self->trialKind = *(s16 *)(rec + 4);
+                self->trialKind = rec->trialKind;
             if (gLevelState->timeTrial)
                 type = self->trialKind - 0x15;
         }
@@ -203,7 +204,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         PhysSetTag(self, 0x1f);
         break;
     case 1:
-        self->paramA = (u32)(PLACEMENT(slot)[0] << 25) >> 31;
+        self->paramA = (u32)(PLACEMENT(slot)->flags << 25) >> 31;
         PhysSetTag(self, 0x1a);
         break;
     case 2:
@@ -211,12 +212,12 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         break;
     case 3:
         {
-            u8 *rec = PLACEMENT(slot);
+            struct crate_placement *rec = PLACEMENT(slot);
 
             PhysSetTag(self, 3);
-            self->paramA = rec[6];
-            self->paramB = rec[7];
-            self->fallSpeed = rec[8];
+            self->paramA = rec->param6;
+            self->paramB = rec->param7;
+            self->fallSpeed = rec->u08.stepDelay;
         }
         break;
     case 4:
@@ -224,12 +225,12 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         break;
     case 5:
         {
-            u8 *rec = PLACEMENT(slot);
+            struct crate_placement *rec = PLACEMENT(slot);
 
             PhysSetTag(self, 0x15);
-            self->paramA = rec[6];
-            self->paramB = rec[7];
-            self->u48.solidKind = *(s16 *)(rec + 8);
+            self->paramA = rec->param6;
+            self->paramB = rec->param7;
+            self->u48.solidKind = rec->u08.solidKind;
         }
         break;
     case 6:
@@ -254,7 +255,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         break;
     case 11:
         {
-            u8 *rec = PLACEMENT(slot);
+            struct crate_placement *rec = PLACEMENT(slot);
 
             {
                 u8 zero;
@@ -263,7 +264,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 MATCH_CONST(zero, 0);
                 PhysSetTag(self, zero);
             }
-            self->paramB = rec[6];
+            self->paramB = rec->param6;
         }
         break;
     case 12:
@@ -278,7 +279,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         break;
     case 15:
         {
-            u8 *rec = Placement(slot);
+            struct crate_placement *rec = Placement(slot);
 
             {
                 struct anim_rec *ar = &self->anim->records[8];
@@ -293,13 +294,13 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
 
                 self->timer = gSlotCrateTimers[idx];
             }
-            self->paramB = rec[6];
+            self->paramB = rec->param6;
             self->paramA = 0;
-            if (rec[1] & 2)
+            if (rec->options & 2)
                 self->paramA = 1;
-            if (rec[1] & 4)
+            if (rec->options & 4)
                 self->paramA |= 2;
-            if (rec[1] & 8)
+            if (rec->options & 8)
                 self->paramA |= 4;
         }
         break;
@@ -319,7 +320,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->x = x << 8;
     self->y = y << 8;
     if ((u8)IsEntityIdActivated(gEntityFlags, id) && (type == 0xb || type == 0xf) &&
-        (PLACEMENT(slot)[0] & 0x80))
+        (PLACEMENT(slot)->flags & 0x80))
         type = 1;
     if (type == 1 && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id)) {
         PhysSetTag(self, 0x1b);
