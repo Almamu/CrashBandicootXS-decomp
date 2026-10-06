@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "aabb.h"
 #include "crates.h"
 #include "bosses.h"
@@ -179,7 +180,7 @@ static inline u8 IsDead(struct player *pl)
     register s32 off asm("r3") = 0x104;
     register u8 *p asm("r0");
 
-    asm("" : "+r"(off));
+    MATCH_KEEP(off);
     p = (u8 *)pl + off;
     return *p;
 }
@@ -310,7 +311,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
                      * second argument) */
                     struct ab_part *t = e;
 
-                    asm("" : "+r"(t));
+                    MATCH_KEEP(t);
                     if (Abs((e->x >> 8) - (other->x >> 8)) <= 0x27
                         && Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B
                         && (e->unk_4D & 0x7F) == 0)

@@ -136,7 +136,7 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
         s32 m2;
 
         /* The ROM builds 0x200 in r1 and ANDs through a copy in r0, into
-         * flags' own r2: the "=r"/"0" escape keeps the copy (m2) apart
+         * flags' own r2: the MATCH_CONST escape keeps the copy (m2) apart
          * from m, and the volatile use of m and flags right after the
          * `and` stops combine from sinking it into the test and regmove
          * from retargeting it onto m2. */
@@ -407,7 +407,7 @@ void StartActionCtrlHighJump(struct act *self)
     ((u8 *)self)[0x32] = zero;
     ((u8 *)self)[0x30] = 1;
     p28 = (u8 *)self + 0x28;
-    asm volatile("" : "+r"(p28));
+    MATCH_KEEP_VOLATILE(p28);
     *p28 = idx;
     (*(u8 **)((u8 *)self + 0x10))[0x68] = zero;
 }
@@ -431,7 +431,7 @@ void sub_8015558(struct act *self)
     ((u8 *)self)[0x32] = zero;
     ((u8 *)self)[0x30] = 1;
     p28 = (u8 *)self + 0x28;
-    asm volatile("" : "+r"(p28));
+    MATCH_KEEP_VOLATILE(p28);
     *p28 = idx;
     (*(u8 **)((u8 *)self + 0x10))[0x68] = zero;
 }

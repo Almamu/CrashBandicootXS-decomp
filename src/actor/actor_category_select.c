@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 
 /* Sets up the currently-selected category's runtime state:
  * `gActorCategoryVtable` = `&gActorCategoryVtables[type]` (the category's
@@ -27,7 +28,7 @@
  * Matched in the second near-miss sweep. The old draft had the ROM's
  * instruction sequence but swapped `&gActorSpawnIndex` (ROM: r7) and
  * `base` (ROM: r8): `base` had more references. The zeroing store now
- * goes through a local pointer `idx`, and `asm("" : : "r"(idx))` after
+ * goes through a local pointer `idx`, and `MATCH_USE(idx)` after
  * `GetCellAnimDistance` adds one reference to it. That extra-reference nudge
  * emits no code; it just makes the pointer outrank `base`. The scan
  * loops still use the global directly, which gives the ROM's loop-local
@@ -68,7 +69,7 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTa
     gActorSpawnOffset = 0;
     ((void (*)(void *, s32))gActorCategoryVtable->fn[0])(animTable, checkpoint);
     base = GetCellAnimDistance();
-    asm("" : : "r"(idx)); /* extra reference: `idx` outranks `base` */
+    MATCH_USE(idx); /* extra reference: `idx` outranks `base` */
     t = gActorSpawnTable;
     while (gActorSpawnIndex < t->field_04
            && *NextThreshold(t, gActorSpawnIndex) < (s32)gActorCategoryVtable->fn[8] + base)

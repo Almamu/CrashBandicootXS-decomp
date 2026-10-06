@@ -44,11 +44,11 @@
  * materializes two separate 1s after reading SIOCNT: r2 (copied to sb)
  * for `field_8`/IME and r1 for the arm3 flag. Three things reproduce
  * that:
- * - `asm("" : "+r"(one1))` keeps the flag's 1 from being merged into
+ * - `MATCH_KEEP(one1)` keeps the flag's 1 from being merged into
  *   `one`.
  * - The ready test uses a literal 1, so `one` is a copy of that
  *   constant's register.
- * - `asm("" : "+r"(arm3))` between the eor and the and stops combine
+ * - `MATCH_KEEP(arm3)` between the eor and the and stops combine
  *   from folding `(x ^ 1) & 1` into a `bic`, which the ROM doesn't have.
  * Both asm statements emit no code. Matches under both compilers. */
 s32 UpdateLinkSession(struct link_session *self)
@@ -70,7 +70,7 @@ s32 UpdateLinkSession(struct link_session *self)
         u32 v = REG_SIOCNT >> 3;
 
         one1 = 1;
-        asm("" : "+r"(one1)); /* keep the flag's own 1 (r1) */
+        MATCH_KEEP(one1); /* keep the flag's own 1 (r1) */
         one = 1;
         if (!(v & 1)) {
             LinkStop(self);
@@ -81,7 +81,7 @@ s32 UpdateLinkSession(struct link_session *self)
         }
         self->field_8 = one;
         arm3 = (REG_SIOCNT >> 2) ^ one1;
-        asm("" : "+r"(arm3)); /* keep eor/and, not bic */
+        MATCH_KEEP(arm3); /* keep eor/and, not bic */
         arm3 &= one1;
         REG_IME = 0;
         saved = REG_IME;
@@ -257,7 +257,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
 
     /* Instruction-count padding (no code): shifts gcc's temporary
      * numbering so two stack slots come out in the ROM's order. */
-    asm("");
+    MATCH_BARRIER();
     self->field_404 = 0;
     if (self->field_4) {
         u16 v = self->field_400;
@@ -388,12 +388,12 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 /* Extra reference (no code): raises `n`'s priority so it
                  * gets its own register (r7) instead of reusing the
                  * id-byte one. */
-                asm("" : : "r"(n));
+                MATCH_USE(n);
                 src = &p->id[2];
                 /* The bounds test reaches the ring through an escaped copy
                  * of `p` (no code), so CSE doesn't share its address with
                  * the loop pre-headers, which recompute it as the ROM does. */
-                if (({ struct link_player *_q = p; asm("" : "+r"(_q)); _q; })->ring.writePos < 0x80 - n) {
+                if (MATCH_KEEP_EXPR(struct link_player *, p)->ring.writePos < 0x80 - n) {
                     for (k = n - 1; k != -1; k--) {
                         p->ring.writePos++;
                         p->ring.count++;
@@ -457,7 +457,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             rf = ring;
             /* A distinct copy of the ring pointer (no code), taken here
              * like the ROM's `adds r4, r7, #0`. */
-            asm("" : "+r"(rf));
+            MATCH_KEEP(rf);
             n = *cnt;
             if (n > 4)
                 n = 4;

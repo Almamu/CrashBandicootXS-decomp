@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "text_popup.h"
 #include "audio.h"
 #include "objects.h"
@@ -866,7 +867,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, ({
         struct popup_part *t = part;
 
-        asm("" : "+r"(t));
+        MATCH_KEEP(t);
         q2 = (struct popup_bits *)((u8 *)part + 0x28);
         t;
     }));
@@ -876,17 +877,17 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     /* No code: hold r3 over the gfx store and the rec2 lookup. The ROM
      * keeps r3 free there, so reloading &gEntityFlags out of sb
      * uses r1 (`mov r1, sb`), not r3. */
-    asm("" : "=r"(h3));
+    MATCH_HOLD(h3);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     /* No code: end of the r3 hold. */
-    asm("" : : "r"(h3));
+    MATCH_USE(h3);
     /* No code: four extra references lift rec2's allocation priority
      * above the reloaded q2 pointer's, so rec2 keeps r2 and q2 gets r3. */
-    asm("" : : "r"(rec2));
-    asm("" : : "r"(rec2));
-    asm("" : : "r"(rec2));
-    asm("" : : "r"(rec2));
+    MATCH_USE(rec2);
+    MATCH_USE(rec2);
+    MATCH_USE(rec2);
+    MATCH_USE(rec2);
     {
         struct popup_bits *p = q2;
         s32 f;
@@ -894,7 +895,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         /* No code: one extra reference puts the reloaded q2 pointer
          * ahead of the flag byte, so the pointer gets r3 and the byte
          * r4. */
-        asm("" : : "r"(p));
+        MATCH_USE(p);
         f = p->flipX;
         p->flipX = f == 0;
     }

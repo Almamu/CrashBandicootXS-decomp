@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "link.h"
 
 /* Link-session reset/init - see docs/rom_map.md's SIO/link-cable
@@ -53,7 +54,7 @@ static inline void ring_reset(struct link_ring *r)
  * - 13 references on `id` lift its global-alloc priority (15 refs over
  *   41 insns) just above `self`'s (34 over 151), so `id` gets r4 and
  *   `self` r5 as in the ROM.
- * - The bare asm("") after the nibble decrement lengthens `self + i *
+ * - The MATCH_BARRIER() after the nibble decrement lengthens `self + i *
  *   0xc8`'s life by one insn; that breaks its priority tie with the
  *   nibble pointer, so the pointer gets r4 and the base ip, as in the
  *   ROM. */
@@ -75,19 +76,19 @@ s32 ResetLinkSessionState(struct link_session *self)
     id = self->id;
     MakeLinkHandshakeId(id);
     /* No code: 13 extra references on `id` (see above). */
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
-    asm("" : : "r"(id));
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
+    MATCH_USE(id);
     {
         u8 *p = self->field_28;
 
@@ -128,7 +129,7 @@ s32 ResetLinkSessionState(struct link_session *self)
             ((struct nibble_pair *)((u8 *)self + t + 0xd1))->lo--;
         }
         /* No code: one insn of padding (see above). */
-        asm("");
+        MATCH_BARRIER();
         self->players[i].field_34 = 0;
         self->players[i].field_2c = 0;
         self->players[i].field_8 = (self->players[i].field_6 = magic);

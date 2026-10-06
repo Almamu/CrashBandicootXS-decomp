@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "action_obj.h"
 #include "system.h"
 #include "audio.h"
@@ -470,7 +471,7 @@ static inline void ActSetNextB(struct act *self, s32 next)
     self->motionYKeepSpeed = 0;
     flag = &self->motionYPending;
     one = 1;
-    asm("" : "+r"(one));
+    MATCH_KEEP(one);
     *flag = one;
     self->motionY = next;
 }

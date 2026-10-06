@@ -867,8 +867,8 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                 /* Hard-register hold (no code): r5 and r6 stay live
                  * across the box builders, so no long-lived pseudo gets
                  * them. */
-                asm("" : "=r"(hr5));
-                asm("" : "=r"(hr6));
+                MATCH_HOLD(hr5);
+                MATCH_HOLD(hr6);
                 a = GetSpriteAttackBox_s(other);
                 b = GetSpriteBodyBox_s(gPlayer);
                 if (!BOX_VALID(b))
@@ -878,8 +878,8 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                     *pb = GetSpriteAttackBox_s(gPlayer);
                 }
                 /* End of the hold. */
-                asm("" : : "r"(hr5));
-                asm("" : : "r"(hr6));
+                MATCH_USE(hr5);
+                MATCH_USE(hr6);
                 if (AabbOverlaps(&b, &a))
                 {
                     struct player *pl = gPlayer;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "box_part.h"
 #include <agb_syscall.h>
@@ -56,7 +57,7 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
     /* Emits no code. It keeps gcse's copy of `capacity` from landing
      * right after the load; cse2 would otherwise swap the two and put
      * the loaded value in the pre/post tests instead of the loop test. */
-    asm("");
+    MATCH_BARRIER();
 
     if (i >= searchCount) {
         goto done;
@@ -82,14 +83,14 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
      * that span) can't take r2. It goes to r3 and `capacity` gets r2,
      * as in the ROM. The second loop's copy already matches without it. */
     if (holdR2)
-        asm("" : "=r"(hold));
+        MATCH_HOLD(hold);
     if (i < manager->capacity) {
         s32 off = i * 4;
         struct box_part *item = base[i];
 
         /* End of the hold above (emits no code). */
         if (holdR2)
-            asm("" : : "r"(hold));
+            MATCH_USE(hold);
         UnlinkCrateFromGrid(manager, (struct pool_item *)item);
 
         {

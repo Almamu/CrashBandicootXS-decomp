@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "audio.h"
 #include "system.h"
 #include "util.h"
@@ -153,7 +154,7 @@ void StartSong(struct AudioContext *self, u32 songIndex)
  * copies. Unpinned, the instruction stream is the ROM's, but global-alloc
  * ranks `self` > `id` > `&gSfxVoiceToggle` where the ROM has the
  * address first (r8, then r9, then sl). The empty
- * `asm("" : : "r"(&gSfxVoiceToggle))` emits nothing; it adds one
+ * `MATCH_USE(&gSfxVoiceToggle)` emits nothing; it adds one
  * reference to the address pseudo, lifting its priority to the top. */
 void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
 {
@@ -173,7 +174,7 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
             s32 voice = GAX_fx_ex(handle, toggle, chanArg, -1);
 
             /* No code: one extra use of the address for global-alloc. */
-            asm("" : : "r"(&gSfxVoiceToggle));
+            MATCH_USE(&gSfxVoiceToggle);
             if (voice == -1) {
                 toggle = gSfxVoiceToggle ^ 1;
                 gSfxVoiceToggle = toggle;

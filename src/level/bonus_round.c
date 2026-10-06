@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "vram_pool.h"
 #include "actor.h"
 #include "level_state.h"
@@ -117,7 +118,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
          * is `(self + 0xcc) - 0x23` and reuses the field-0xcc pointer
          * (`subs r1, #0x23`) instead of recomputing fresh from `self`
          * the way the ROM does (`adds r0, r6, #0; adds r0, #0xa9`). */
-        asm volatile("" : "+r"(self));
+        MATCH_KEEP_VOLATILE(self);
 
         {
             register u8 *p asm("r0") = (u8 *)self + 0xa9;
@@ -137,7 +138,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
         self->unk_e0 = arg1;
         self->checkpointCrateCount = GetCrateCount(self);
 
-        asm volatile("" : "+r"(self));
+        MATCH_KEEP_VOLATILE(self);
 
         {
             register u8 *p asm("r0") = (u8 *)self + 0xa9;

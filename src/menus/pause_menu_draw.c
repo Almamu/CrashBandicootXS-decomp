@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "actor.h"
 #include "bitmap_font.h"
 #include "pause_menu.h"
@@ -163,14 +164,14 @@ void DrawPauseMenu(struct pause_menu *self)
 
         /* Hard-register hold (no code): r2 stays live across the x
          * computation, so y takes it afterwards. */
-        asm("" : "=r"(hold));
+        MATCH_HOLD(hold);
         t = 0xf0 - w;
         x = t >> 1;
         /* Extra reference (no code): keeps `t` (r1) from being tied
          * to `x` (r3). */
-        asm("" : : "r"(t));
+        MATCH_USE(t);
         /* End of the hold. */
-        asm("" : : "r"(hold));
+        MATCH_USE(hold);
         set_icon_mgr_pos(gLargeFont, x, 0xe);
     }
     ICON_SLOT_CALL(gLargeFont, 2, self->field_70);
@@ -186,14 +187,14 @@ void DrawPauseMenu(struct pause_menu *self)
         register s32 hold asm("r2");
 
         /* Hard-register hold (no code), as above. */
-        asm("" : "=r"(hold));
+        MATCH_HOLD(hold);
         t = 0x8c;
         x = t - width;
         /* Extra references (no code): neither the 0x8c (r1) nor
          * `width` (r0) is tied to `x` (r3). */
         asm("" : : "r"(t), "r"(width));
         /* End of the hold. */
-        asm("" : : "r"(hold));
+        MATCH_USE(hold);
         set_icon_mgr_pos(gLargeFont, x, 0x88);
     }
     ICON_SLOT_CALL(gLargeFont, 2, self->buf41);

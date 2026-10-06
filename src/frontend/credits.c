@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gba/io_reg.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
@@ -188,7 +189,7 @@ asm(".align 2, 0");
  * value is read before E0 itself), and old_agbcc (the DISPCNT byte OR
  * loads the 0x10 constant before the `ldrb`; this whole object matches
  * under old_agbcc, so it moved to the Makefile's OLD_AGBCC_OBJS). The
- * empty `asm("")` after the E0 reset produces no code; it only
+ * empty MATCH_BARRIER() after the E0 reset produces no code; it only
  * lengthens the live ranges crossing it by one insn, which is what tips
  * the allocator into giving `&gPaletteCache`/`&gObjVramCursor`
  * r4 and `&gSmallFont` r6 as the ROM does. */
@@ -221,7 +222,7 @@ struct credits_screen *InitCredits(struct credits_screen *self)
     FreeUnlockedPaletteSlots(gPaletteCache);
     FontResetPalette(gSmallFont);
     FontSetPalette(gLargeFont, 0);
-    asm("");
+    MATCH_BARRIER();
     LoadCreditsLogos(self);
     UploadPaletteCache(gPaletteCache);
     gObjVramCursor->baseTile = 0;
@@ -622,14 +623,14 @@ asm(".align 2, 0");
  * asset into the shared tile cache (`ClaimPaletteSlot`).
  *
  * Built with old_agbcc. GCSE's PRE hoists any `slot << 5` (and even a
- * plain `asm("" : "+r")` copy, since a non-volatile asm with outputs is
+ * plain MATCH_KEEP copy, since a non-volatile asm with outputs is
  * an ordinary hashed expression) to the y loop's pre-test, next to the
  * `slot + 1` and `i + 1` it also hoists there, and spills it; the ROM
  * computes the palette address at the copy. The palette index is
- * therefore a copy `ps` passed through `asm volatile` (volatile asms are
+ * therefore a copy `ps` passed through MATCH_KEEP_VOLATILE (volatile asms are
  * never entered in GCSE's table), so `slot` itself and its `slot + 1`
  * hoist are untouched. `ps` is an r1 register variable (the ROM reloads
- * `slot` into r1) and gets one extra `asm("" : : "r")` reference after
+ * `slot` into r1) and gets one extra MATCH_USE reference after
  * the shift, so the shift result goes to r0 instead of reusing r1. */
 /* One `gCreditsLogos` record (0x14 bytes), read through its own view of
  * `struct bg_package`: a popup glyph's size in 8-px tiles (signed here;
@@ -707,9 +708,9 @@ void LoadCreditsLogos(struct credits_screen *self)
             u16 *d;
             s32 k;
 
-            asm volatile("" : "+r"(ps)); /* new pseudo GCSE can't hoist */
+            MATCH_KEEP_VOLATILE(ps); /* new pseudo GCSE can't hoist */
             sh = ps << 5;
-            asm("" : : "r"(ps)); /* keeps ps live so sh doesn't reuse r1 */
+            MATCH_USE(ps); /* keeps ps live so sh doesn't reuse r1 */
             d = (u16 *)(sh + (u32)palSlots);
 
             for (k = 15; k >= 0; k--)

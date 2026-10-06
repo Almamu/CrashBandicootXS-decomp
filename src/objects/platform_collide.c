@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "gobj_1a794.h"
 #include "gfx.h"
 #include "objects.h"
@@ -83,7 +84,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
 
     /* Emits nothing: keeps r8 live up to the first overlap test, so
      * `self` goes to sb and `result` gets r8, as in the ROM. */
-    asm("" : "=r"(hold8));
+    MATCH_HOLD(hold8);
     GetSpriteHitbox_p(&a, self);
     {
         s32 t = gPlayer->x;
@@ -94,7 +95,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     pb = &b;
     /* Emits nothing: hides `pb`'s value from cse, so `&b` stays in a
      * register (r4) instead of being re-added to sp at each use. */
-    asm("" : "+r"(pb));
+    MATCH_KEEP(pb);
     GetSpriteHitbox_p(pb, gPlayer);
     {
         struct player *q = gPlayer;
@@ -104,7 +105,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         box = (struct hitbox_quad *)&anim->records[tag].offX;
     }
     /* Emits nothing: end of the r8 hold. */
-    asm("" : : "r"(hold8));
+    MATCH_USE(hold8);
     if (AabbOverlaps(&a, pb))
     {
         result = 0;
@@ -205,10 +206,10 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
 
             /* Emits nothing: r5 is live across the `result == 0` test,
              * so its reload of `result` takes r0 as in the ROM. */
-            asm("" : "=r"(hold5));
+            MATCH_HOLD(hold5);
             if (result == 0)
             {
-                asm("" : : "r"(hold5));
+                MATCH_USE(hold5);
                 ty += box->offY;
                 if (ty >= a.y)
                 {

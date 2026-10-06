@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
@@ -99,10 +100,10 @@ void InitContinuePromptGraphics(struct continue_prompt *self)
  * `while (dir >= 0)` (with `while (1)` jump.c moves the return
  * computation to the `break`); and two empty asm statements, which emit
  * no code:
- *  - `asm("" : : "r"(audio))` at the top of the loop adds one reference
+ *  - `MATCH_USE(audio)` at the top of the loop adds one reference
  *    to `audio`, so it outranks the pair counter for r7 (the counter
  *    lands in r8 without a pin);
- *  - `asm("" : "+r"(k))` between the `& 1` and `& 8` tests makes the
+ *  - `MATCH_KEEP(k)` between the `& 1` and `& 8` tests makes the
  *    second test's shift a fresh value, so CSE doesn't share it with the
  *    first, and the first test keeps the ROM's `movs r0, #1; ands r0, r1`
  *    register choice. */
@@ -115,14 +116,14 @@ s32 ContinuePromptLoop(struct continue_prompt *self)
     struct AudioContext **audio = &gAudioContext;
 
     while (dir >= 0) {
-        asm("" : : "r"(audio)); /* extra reference: audio outranks i for r7 */
+        MATCH_USE(audio); /* extra reference: audio outranks i for r7 */
         UpdateKeys(gInput);
         {
             struct held_pressed_pair k = *input;
 
-            /* The "+r" asm keeps the & 8 test's shift separate from the
+            /* The MATCH_KEEP keeps the & 8 test's shift separate from the
              * & 1 test's. */
-            if ((k.pressed & 1) || ({ asm("" : "+r"(k)); (u16)(k.pressed & 8); })) {
+            if ((k.pressed & 1) || ({ MATCH_KEEP(k); (u16)(k.pressed & 8); })) {
                 PlaySfx(*audio, 0x49, 0x100);
                 break;
             }

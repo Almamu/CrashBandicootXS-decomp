@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "hud.h"
 #include "util.h"
 #include "system.h"
@@ -395,12 +396,12 @@ fade:
             /* Hard-register hold (no code): with r0 and r1 live, the
              * global's address and the player pointer both land in r2,
              * as in the ROM. */
-            asm("" : "=r"(hold));
-            asm("" : "=r"(hold1));
+            MATCH_HOLD(hold);
+            MATCH_HOLD(hold1);
             pl = gPlayer;
             /* End of the hold. */
-            asm("" : : "r"(hold));
-            asm("" : : "r"(hold1));
+            MATCH_USE(hold);
+            MATCH_USE(hold1);
             /* copied as one 8-byte struct (ldr; ldr; str; str) */
             point = *(struct gl_point *)&pl->x;
             SetCheckpoint(gLevelState, 0, &point.x);

@@ -373,6 +373,17 @@ them:
   stack slot; an asm that reads a field through `"m"` fixes the order of
   a load against a constant
   ([issue-59-60-m-operand-scheduling.md](./matching/archive/issue-59-60-m-operand-scheduling.md)).
+- Several operands in one asm (`use`/`use_volatile`/`keep_volatile` and
+  `empty_other` sites the converter skips): one insn that uses or
+  changes two values at once is not two `MATCH_USE`s, since splitting it
+  changes the insn stream. There are five, written out:
+  `asm("" : : "r"(ax), "r"(px))` in `src/crates/crate_break.c`,
+  `asm("" : : "r"(t), "r"(width))` in `src/menus/pause_menu_draw.c`,
+  `asm volatile("" : "+r"(flags) : "r"(m))` in
+  `src/player/action_ctrl_moves.c`,
+  `asm volatile("" : : "r"(r0), "r"(r1))` in `lib/gax/src/gax_swi.c`
+  and `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
+  `src/save/save_transfer.c`.
 
 ## Memory accesses
 
@@ -475,15 +486,15 @@ fixes.
 
 ## Survey and conversion plan (#576)
 
-`tools/match_idioms.py` on main after part 1 (sites / files):
+`tools/match_idioms.py` on main after part 2 (sites / files):
 
 | Kind | Sites | Macro | Status |
 |---|---|---|---|
 | register pins | 2158 / 169 | `MATCH_HOLD_REG` | to convert |
-| `asm("" : : "r"(x))` | 83 / 34 | `MATCH_USE` | to convert |
-| `asm("" : "+r"(x))` | 62 / 33 | `MATCH_KEEP` | to convert |
-| `asm("" : "=r"(x))` | 22 / 14 | `MATCH_HOLD` | to convert |
-| `asm("")` | 15 / 8 | `MATCH_BARRIER` | to convert |
+| `asm("" : : "r"(x))` | 80 / 33 | `MATCH_USE` | **converted in part 2**; 3 multi-operand sites stay |
+| `asm("" : "+r"(x))` | 60 / 32 | `MATCH_KEEP` | **converted in part 2**; 1 multi-operand site stays, 1 statement expression became `MATCH_KEEP_EXPR` |
+| `asm("" : "=r"(x))` | 22 / 14 | `MATCH_HOLD` | **converted in part 2** |
+| `asm("")` | 15 / 8 | `MATCH_BARRIER` | **converted in part 2** |
 | `asm("" : "=r"(v) : "0"(K))` | 29 / 19 | `MATCH_CONST` | **converted in part 1** |
 | `BOX_ADDR` | 12 / 3 | in match.h | **definition moved in part 1** |
 | file-scope `.align 2, 0` | 276 / 131 | none | stays (an assembler directive) |
@@ -497,9 +508,10 @@ Remaining parts, one idiom per PR, each off main, each converted by
 `tools/match_idioms.py --convert` and checked object by object against a
 build of main plus the two clean checks:
 
-- **Part 2:** `MATCH_BARRIER`, `MATCH_USE`, `MATCH_KEEP`, `MATCH_HOLD`
-  (with their `_VOLATILE` forms), about 180 sites, plus the source
-  comments that quote the old spellings.
+- **Part 2 (done):** `MATCH_BARRIER`, `MATCH_USE`, `MATCH_KEEP`,
+  `MATCH_HOLD` (with their `_VOLATILE` forms), 178 sites, plus the
+  source comments that quoted the old spellings. The four multi-operand
+  sites listed under "Other empty-asm forms" stay written out.
 - **Part 3:** register pins to `MATCH_HOLD_REG` (2158 sites). This needs
   a declarator-aware converter (a `T`/name split), and leaves the dozen
   pins it can't express (register names from macros in `cortex.c`,

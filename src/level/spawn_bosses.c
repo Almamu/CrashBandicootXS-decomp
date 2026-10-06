@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "text_popup.h"
 #include "bosses.h"
 #include "gfx.h"
@@ -25,7 +26,7 @@
  * (`subs r2, r1, #2`; `adds r3, r0, #0; subs r3, #30`) where plain C
  * reuses their inputs (9 halfwords off), the same gap as SpawnCrateGemMarker
  * (spawn_pickups.c). Pinning the four temporaries plus an empty
- * `asm("" : "+r" (x))` - which stops combine folding `x` back into its
+ * `MATCH_KEEP(x)` - which stops combine folding `x` back into its
  * input before `y` is loaded - reproduces it. */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
@@ -48,7 +49,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         register s32 y asm("r3");
         s32 point[2];
 
-        asm("" : "+r" (x));
+        MATCH_KEEP(x);
         py = pos[1] >> 8;
         y = py - 0x1E;
         point[0] = x;

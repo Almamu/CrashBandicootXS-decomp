@@ -405,8 +405,12 @@ def convert_file(path, kinds):
         macro, want = CONVERTERS[k[0]]
         ops = asm_operands(text[m.end():end - 1])
         if ops is None or [c for c, _ in ops] != want:
-            raise SystemExit("%s:%d: unexpected operands for %s"
-                             % (path, line_of(text, m.start()), k[0]))
+            # e.g. two "r" inputs in one asm: no one-operand macro says
+            # that, and splitting it in two would change the insn stream.
+            print("%s:%d: skipped, operands don't fit %s"
+                  % (os.path.relpath(path, ROOT), line_of(text, m.start()), macro),
+                  file=sys.stderr)
+            continue
         args = ", ".join(e for _, e in ops)
         edits.append((m.start(), end, "%s(%s)" % (macro, args)))
     if not edits:

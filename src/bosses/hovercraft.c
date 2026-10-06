@@ -540,7 +540,7 @@ void UpdateHovercraftHitFlash(void)
  * the exact register split this compiler otherwise collapses (loading
  * a >255 constant like `0x7FFF` straight into a pre-existing
  * register-pinned variable forces this compiler to materialize it in
- * a fresh register first, then copy - the `asm("" : "+r"(p))` barrier
+ * a fresh register first, then copy - the `MATCH_KEEP(p)` barrier
  * between the pointer reload and the value assignment keeps that
  * reload from being folded into the shared tail the two call sites
  * below happen to converge on). Tail: runs `UpdateHovercraftHitFlash` (the meter
@@ -570,7 +570,7 @@ void RunHovercraftState(void)
             register u8 *p asm("r0") = gFlashBgPalette;
             register u16 val asm("r1");
 
-            asm("" : "+r"(p));
+            MATCH_KEEP(p);
             val = 0x7FFF;
             CommitSpeed(p, val);
         }
@@ -586,7 +586,7 @@ void RunHovercraftState(void)
             register u8 *p asm("r0") = gFlashBgPalette;
             register u16 val asm("r1");
 
-            asm("" : "+r"(p));
+            MATCH_KEEP(p);
             val = gHovercraftFlashSavedColor;
             CommitSpeed(p, val);
         }

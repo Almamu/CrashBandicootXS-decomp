@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
 #include "gfx.h"
@@ -113,7 +114,7 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
     /* Extra reference, no code: keeps `pa` live past `pd`, so cse2 leaves
      * the call result in `pa` (r6) and `pd` as the copy (r7), as in the
      * ROM. Without it the two registers swap. */
-    asm("" : : "r"(pa));
+    MATCH_USE(pa);
     oam.objMode = part->gfxMode;
     oam.mosaic = part->mosaic;
     oam.bpp = part->colorMode;

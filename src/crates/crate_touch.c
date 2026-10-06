@@ -61,7 +61,7 @@
  * first overlap test on. With plain `&f.b` everywhere, cse and gcse
  * turn every `&f.b` into one pseudo that lives in r6 from the first
  * build on. `BOX_ADDR` below passes each of those three addresses
- * through an empty `asm("" : "+r")`: the asm "modifies" the copy, so cse
+ * through MATCH_KEEP: the asm "modifies" the copy, so cse
  * drops its equivalence with `sp + 16` and the next `&f.b` gets a new
  * pseudo. A pseudo used once as a call argument is folded into the
  * `add r0, sp, #16` right before the `bl`, and `pb` is born at the

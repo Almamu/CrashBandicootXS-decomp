@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include "match.h"
 
 /* GAX2's work-RAM size estimator (GitHub issue #66's range, formerly the
  * raw asm/code_3_2_20c.s): computes how many bytes `GAX2_init`
@@ -29,7 +30,7 @@
  *   loop and the tap scans (that's what puts it in r4 behind the inner
  *   loop's walking pointer in r3); the second alternative-layout scan
  *   tests `types[2]` in the condition and keeps `k + 1` in `next`;
- * - the empty `asm("")`s below: see the comment there. */
+ * - the MATCH_BARRIER()s below: see the comment there. */
 /* `layout->types[2]`'s slot holds a list of alternative layouts
  * (`struct GaxLayoutList`, gax_internal.h). */
 void GAX2_estimate(struct GaxSongHeader *p)
@@ -49,10 +50,10 @@ void GAX2_estimate(struct GaxSongHeader *p)
      * 0x10/0x14/0x18 and nothing else differs; any 4-11 extra insns give
      * the ROM's order. The original source evidently had a few more RTL
      * insns here that later passes removed - not identified. */
-    asm("");
-    asm("");
-    asm("");
-    asm("");
+    MATCH_BARRIER();
+    MATCH_BARRIER();
+    MATCH_BARRIER();
+    MATCH_BARRIER();
     if (p->layout == NULL)
         p->layout = &gGaxDefaultSong;
     if (p->mixRate == 0xffff)

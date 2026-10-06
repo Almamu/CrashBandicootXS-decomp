@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bg_scroll_layer.h"
 #include "level_data.h"
 #include "level.h"
@@ -329,7 +330,7 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
  *   before the `>> 24`. That makes gcc emit the pair's left shift, then
  *   `acc`'s own `lsl/asr #16`, then the pair's `asr #24`, which is the
  *   ROM's interleaving; `(s8)pair` emits the two shifts back to back.
- * - `asm("" : : "r"(n))` after `n -= 2` (an extra-reference nudge that
+ * - `MATCH_USE(n)` after `n -= 2` (an extra-reference nudge that
  *   emits no code, see #468) gives `n` one more reference, so the pair
  *   loop's run counter wins r3 and `acc` keeps r4. Without it the
  *   allocator swaps the two. */
@@ -390,7 +391,7 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
                 }
                 out[written++] = acc;
                 n -= 2;
-                asm("" : : "r"(n));
+                MATCH_USE(n);
             } while (n > 1);
             if (n != 0)
             {

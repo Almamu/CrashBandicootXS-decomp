@@ -1,4 +1,5 @@
 #include "core.h"
+#include "match.h"
 #include "bitmap_font.h"
 #include <agb_syscall.h>
 #include "text.h"
@@ -684,7 +685,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
         pal &= lowMask;
         highMask = -0x10;
         m = highMask;
-        asm("" : "+r"(m));
+        MATCH_KEEP(m);
         b = *p;
         m &= b;
         m |= pal;
@@ -1060,7 +1061,7 @@ loop:
                      u32 hit = keys.half.pressed & 0x80;
 
                      k = keys;
-                     asm("" : "+r"(k.all));
+                     MATCH_KEEP(k.all);
                      hit;
                  }))
             LevelSelectPrevWorld(self);
