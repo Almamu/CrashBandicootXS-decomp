@@ -36,10 +36,7 @@ void UpdateAudio(struct AudioContext *self)
             } else {
                 self->musicVolCurrent += 0x10;
             }
-            {
-                s32 v = self->musicVolCurrent;
-                *(vu16 *)((u8 *)self + 0x68) = v;
-            }
+            self->gax.volume = self->musicVolCurrent;
         }
         if (self->musicVolFadeDownArmed != 0) {
             if (self->musicVolCurrent <= self->musicVolTarget) {
@@ -48,10 +45,7 @@ void UpdateAudio(struct AudioContext *self)
             } else {
                 self->musicVolCurrent -= 0x10;
             }
-            {
-                s32 v = self->musicVolCurrent;
-                *(vu16 *)((u8 *)self + 0x68) = v;
-            }
+            self->gax.volume = self->musicVolCurrent;
         }
         TickAmbientSfx(self);
         if (self->duckVolFadeUpArmed != 0) {
@@ -84,10 +78,9 @@ asm(".align 2, 0");
 /* Starts playing song `songIndex` (index into the 19-entry
  * `gSongTable` song-pointer table). First-time-only resets
  * the player state if it wasn't already stopped, then (re)initializes
- * the embedded GAX2 parameter block at `self+0x58` (`struct
- * GaxSongHeader`: GAX2_new's defaults, then the work buffer at
- * `self+0x94`, 3 SFX voices, the SFX handler types and the song's
- * layout, written through raw offsets) and starts it with GAX2_init. On success, ducks the music back
+ * the embedded GAX2 parameter block `gax` (GAX2_new's defaults, then the
+ * work buffer `gaxWork`, 3 SFX voices, the SFX handler types and the
+ * song's layout) and starts it with GAX2_init. On success, ducks the music back
  * in (`FadeInMusic`) and arms the per-tick GAX2 IRQ update
  * (`gGaxIrqEnabled`). */
 void StartSong(struct AudioContext *self, u32 songIndex)
@@ -110,23 +103,16 @@ void StartSong(struct AudioContext *self, u32 songIndex)
         }
     }
     {
-        u8 *gaxState = (u8 *)self + 0x58;
-
-        GAX2_new(gaxState);
-        *(void **)((u8 *)self + 0x58) = (u8 *)self + 0x94;
-        *(u32 *)((u8 *)self + 0x5c) = 0x2000;
-        *(const void **)((u8 *)self + 0x88) = gSongTable[songIndex];
-        {
-            u16 *p = (u16 *)((u8 *)self + 0x66);
-            u8 zero2 = 0;
-
-            *p = 3;
-            *(const void **)((u8 *)self + 0x84) = gGaxMusicData;
-            *((u8 *)self + 0x90) = zero2;
-        }
-        if (GAX2_init((struct GaxSongHeader *)gaxState)) {
+        GAX2_new(&self->gax);
+        self->gax.workBuf = self->gaxWork;
+        self->gax.workSize = sizeof(self->gaxWork);
+        self->gax.layout = (struct GaxHandlerLayout *)gSongTable[songIndex];
+        self->gax.numSfx = 3;
+        self->gax.sfxTypes = (struct GaxHandlerType **)gGaxMusicData;
+        self->gax.showErrors = 0;
+        if (GAX2_init(&self->gax)) {
             self->currentSong = songIndex;
-            *((u8 *)self + 0x54) = 0;
+            self->field_54 = 0;
             FadeInMusic(self);
             gGaxIrqEnabled = 1;
             self->state = 1;
@@ -403,7 +389,7 @@ void FadeInMasterVolume(struct AudioContext *self, u32 value)
 /* UNUSED - no caller anywhere in the ROM (no `bl` in expected/*.s, no
  * pointer to it in baserom.gba). Sets the music's GAX2 low-pass filter
  * amount: `musicFilter`, and while a song is playing the parameter
- * block's `filter` (`self+0x62`, GaxSongHeader +0x0a), which GAX_play
+ * block's `filter` (`gax.filter`), which GAX_play
  * copies to the player each frame. It has no audible effect in this
  * game: StartSong never sets GaxSongHeader.flags bit 2, so GAX2_init
  * doesn't load the filter routine (gGaxArmFilter). */
@@ -417,7 +403,7 @@ void SetMusicFilter(struct AudioContext *self, u32 value)
         isPlaying = 1;
     }
     if (isPlaying) {
-        *(vu16 *)((u8 *)self + 0x62) = value;
+        self->gax.filter = value;
     }
 }
 

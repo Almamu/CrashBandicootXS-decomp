@@ -3,9 +3,7 @@
 
 /* Stops GAX2's Direct Sound A/Timer0 output - the exact counterpart to
  * GAX_irq's play-start follow-up in gax_playback_ticker.c: clears the
- * current channel's `chan->4`-embedded flag byte at `+0x1a` (an "active"/
- * "note on" flag, same object as gax_channel_note_cut.c's `self`), resets
- * `state` to 0, disables SOUNDCNT_X, then re-arms and disarms DMA1CNT_H
+ * current player's Info handler's `playing` flag, resets `state` to 0, disables SOUNDCNT_X, then re-arms and disarms DMA1CNT_H
  * back to its "off" value (`0x0640`, no bit 15) using the same real-
  * hardware settle-delay quirk as GaxResetSoundHardware (gax_hw_reset.c) - the
  * settle-delay `.byte` sequence can't be written as plain
@@ -14,11 +12,10 @@
  * both TM0CNT_L/H). */
 void GAX_stop(void)
 {
-    void *chan = gGaxPlayerState->channels[gGaxPlayerState->curChannelIdx];
-    MATCH_HOLD_REG(u8 *, inner, r0) = *(u8 **)((u8 *)chan + 4);
+    MATCH_HOLD_REG(struct GaxInfoHandler *, info, r0) = GAX_INFO();
     u32 zero = 0;
 
-    inner[0x1a] = zero;
+    info->playing = zero;
     gGaxPlayerState->state = zero;
     REG_SOUNDCNT_X = 0;
     REG_DMA1CNT_H = 0x8640;

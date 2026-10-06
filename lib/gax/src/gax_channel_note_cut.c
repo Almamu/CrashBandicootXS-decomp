@@ -2,44 +2,37 @@
 #include "match.h"
 
 /* Called with a small command value (`cmd`, 0-3 seen at the call site in
- * `GaxChannelDecodeRow`, gax_sound_handler_channel_play.c, a NAKED transcription)
- * against a per-channel voice object
- * (`self`). `cmd == 1` is the "note cut" case: if the voice's currently
- * bound instrument (`+0x3c`) has its second byte (`+0x7d`) set to the
- * sentinel `0xff`, arms a fixed-pitch/zero-volume note-off envelope
- * (`+0x2a`/`+0x2c`/`+0x4c`) before setting the "stopped" flag (`+0x22`);
- * otherwise the fixed note-off envelope is skipped but the flag still
- * gets set. `cmd > 1` additionally derives a pattern-note-looking value
- * from `cmd` into `+0x26` and clears the flag again - this project
- * hasn't nailed down the exact channel/voice object shape yet (same
- * situation as the neighboring GAX2 engine internals in
- * gax_note_param.c/gax_sound_handler_info.c), so every field stays a raw
- * offset rather than a guessed struct. */
+ * `GaxChannelDecodeRow`, gax_sound_handler_channel_play.c) against a
+ * channel. `cmd == 1` is note-off: if the bound instrument's envelope has
+ * no sustain point (`sustain == 0xff`), the note is cut outright (the
+ * `0x8AD0` "no note" sentinel, lowest voice-steal priority); either way
+ * the note is marked released. `cmd > 1` sets the pitch from `cmd` and
+ * clears `released` again. */
 void GaxChannelSetNote(struct GaxChannelState *self, u32 cmd)
 {
     MATCH_HOLD_REG(u32, v, r3) = cmd;
 
     if (v == 1) {
-        u8 *inst = *(u8 **)((u8 *)self + 0x3c);
+        struct GaxChannelInstrument *inst = self->instrument;
         if (inst != NULL) {
-            u8 *inner = *(u8 **)(inst + 0x7c);
-            if (inner[1] == 0xff) {
+            struct GaxEnvelope *env = inst->envelope;
+            if (env->sustain == 0xff) {
                 u16 zero = 0;
                 u16 val = 0x8AD0;
 
-                *(u16 *)((u8 *)self + 0x2a) = val;
-                *(u16 *)((u8 *)self + 0x2c) = zero;
-                *(u32 *)((u8 *)self + 0x4c) = 0x80000000;
+                self->note = val;
+                self->noteStep = zero;
+                self->priority = 0x80000000;
             }
         }
-        *((u8 *)self + 0x22) = 1;
+        self->released = 1;
     }
     if (v > 1) {
         MATCH_HOLD_REG(u32, tmp, r0) = v - 2;
         u16 shifted = tmp << 5;
         u8 zero = 0;
 
-        *(u16 *)((u8 *)self + 0x26) = shifted;
-        *((u8 *)self + 0x22) = zero;
+        self->pitch = shifted;
+        self->released = zero;
     }
 }
