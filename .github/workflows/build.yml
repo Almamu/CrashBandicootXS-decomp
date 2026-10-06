@@ -49,6 +49,13 @@ jobs:
       working-directory: agbcc
       run: ./build.sh && ./install.sh ../
 
+    # agbcc_arm plus tools/agbcc_patches/, for the two IWRAM ARM functions
+    # whose prologue/return code stock agbcc_arm can't produce
+    # (docs/matching/iwram-image.md, "Seventh pass"). The script builds a
+    # copy; the checkout and the stock compilers stay as they are.
+    - name: Build patched agbcc_arm
+      run: tools/build_patched_agbcc_arm.sh agbcc .
+
     - name: Fetch baserom
       if: env.HAS_ROM == 'true'
       run: curl -fsS -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}

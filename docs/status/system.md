@@ -19,9 +19,9 @@ category page - see [game_loop.md](./game_loop.md).
   a mixed file, see `docs/decomp_dev.md`)
 - The IWRAM image (`0x03000000`, stored at ROM `0x087E55E4`):
   `asm/intr_main.s` (`IntrMain`, hand-written), `src/iwram/string_arm.c`
-  and `src/iwram/sprite_arm.c` (ARM C, agbcc_arm: eight matched -
-  `strncpy_arm` in the second pass, `HeapSortActorsByKey` in the
-  fourth - and two parked: `itoa_arm`, `LookupSpriteFrameCache`) and `src/iwram/iwram_data.c` (the
+  and `src/iwram/sprite_arm.c` (ARM C, all ten matched - `strncpy_arm`
+  in the second pass, `HeapSortActorsByKey` in the fourth, `itoa_arm`
+  and `LookupSpriteFrameCache` in the seventh with agbcc_arm_patched) and `src/iwram/iwram_data.c` (the
   initialised IWRAM globals) - see
   [iwram-image.md](../matching/iwram-image.md).
 - `src/system/asset.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`

@@ -14,12 +14,12 @@ script and the report. Contents:
 | `030000FC` | `strcpy_arm` | same | matched, UNUSED |
 | `03000120` | `strncpy_arm` | same | matched (second pass), UNUSED |
 | `0300015C` | `strcat_arm` | same | matched, UNUSED |
-| `03000198` | `itoa_arm` | same | parked, UNUSED |
+| `03000198` | `itoa_arm` | same | matched (seventh pass, agbcc_arm_patched), UNUSED |
 | `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.c` | matched |
 | `0300036C` | `DrawMirroredTilemap` (`gDrawMirroredTilemapFunc`) | same | matched |
 | `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | matched (fourth pass) |
 | `03000634` | `UnpackRleSpriteFrame` (`gUnpackRleSpriteFrameFunc`) | same | matched |
-| `030006FC` | `LookupSpriteFrameCache` (`gLookupSpriteFrameCacheFunc`) | same | parked |
+| `030006FC` | `LookupSpriteFrameCache` (`gLookupSpriteFrameCacheFunc`) | same | matched (seventh pass, agbcc_arm_patched) |
 | `030007CC`-`030009E8` | initialised globals | `src/iwram/iwram_data.c` | typed C, data |
 
 The five string routines have no caller: none of their addresses occurs
@@ -38,6 +38,12 @@ sets up an APCS frame the ROM doesn't have). The Makefile builds
 `string_arm.o` and `sprite_arm.o` that way (`ARM_OBJS`). Adding
 `-fno-expensive-optimizations` breaks the string functions, so it isn't
 used.
+
+The last two, `itoa_arm` and `LookupSpriteFrameCache`, need prologue
+and return code that agbcc_arm can't produce. Since the seventh pass both
+objects are built with `agbcc_arm_patched`, agbcc_arm with two opt-in
+options added (`PATCHED_ARM_OBJS`; see "Seventh pass" below). Without
+the options its output is agbcc_arm's, byte for byte.
 
 ## Why three are parked
 
@@ -560,6 +566,116 @@ reasons. `LookupSpriteFrameCache`'s draft is already at the floor, and
 `itoa_arm`'s other differences are scheduling and register choices
 around the blocker.
 
+## Seventh pass: patched agbcc_arm
+
+Both functions now match, as real C, with a locally patched agbcc_arm.
+This is not the ROM's compiler. That compiler is a later build of
+agbcc_arm's own Cygnus/Red Hat line (third pass), and it has never been
+released. The fifth pass pinned its differences from agbcc_arm down to
+two fixed strings in `arm.c`'s prologue and return code, which no C
+reaches. With the owner's approval (#553), these two functions are built
+with agbcc_arm plus a patch that emulates exactly those two behaviours,
+each behind an opt-in option. Everything else in the compiler is stock.
+
+**The patch.** `tools/agbcc_patches/agbcc_arm_prologue_return.patch`,
+against SAT-R/agbcc's `gcc_arm/config/arm/arm.h` and `arm.c` (11 hunks;
+the patch's header lists them):
+
+- `-mleaf-no-lr-save`: when a function never uses or clobbers lr (no
+  calls, lr never allocated) and has no frame pointer, the push and the
+  restore leave lr out, and the function returns with `bx lr`. This is
+  `arm_expand_prologue`'s "we must push lr as well" (5757-5762) and the
+  epilogue's restore (5593), made conditional; the stack-argument offset
+  (`INITIAL_ELIMINATION_OFFSET`) drops lr's slot to match, and
+  `use_return_insn` leaves such a function to the text epilogue (a
+  return insn would pop the return address from the missing slot).
+- `-minterwork-return-lr`: an interworking return insn without a frame
+  pointer pops into lr and returns with `bx lr`, where
+  `output_return_instruction` uses ip (5213-5227).
+
+Both are bits in `target_flags` with `-mno-` forms in
+`TARGET_SWITCHES`. With neither given, every path is the stock one.
+Checked: agbcc_arm and agbcc_arm_patched without the options give
+identical assembly for all 333 C files in `src/` and `lib/` that
+agbcc_arm compiles (as ARM, `-O2 -fomit-frame-pointer
+-mthumb-interwork`, `NON_MATCHING=1`), and a full `make compare` of the
+tree before this pass, with agbcc_arm_patched as the ARM compiler,
+prints `crashbandicootxs.gba: OK`.
+
+**Building it.** `tools/build_patched_agbcc_arm.sh <agbcc-dir> [<repo>]`
+copies the agbcc checkout to a temporary directory, applies the patch,
+runs SAT-R's `build.sh` steps for `gcc_arm` (`configure
+--target=arm-elf --host=i386-linux-gnu`, then `make clean` - a built
+checkout's objects are stock and the Makefile doesn't track `arm.h` -
+and `make cc1`), and installs `cc1` as
+`tools/agbcc/bin/agbcc_arm_patched`. agbcc, old_agbcc and agbcc_arm
+stay as they are. CI runs it after "Install agbcc".
+
+**Which objects.** The Makefile's `PATCHED_ARM_OBJS` builds
+`string_arm.o` and `sprite_arm.o` with agbcc_arm_patched, each with only
+the option its function needs. Neither object had to be split: the other
+four functions in each come out the same with and without the options.
+
+- `sprite_arm.o`: `-minterwork-return-lr`. LookupSpriteFrameCache is the
+  fifth pass's draft unchanged. Its 44 matching instructions stay, and
+  its three returns become `ldmfd sp!, {lr}; bx lr`.
+- `string_arm.o`: `-mleaf-no-lr-save`, plus `-fno-schedule-insns
+  -fno-schedule-insns2` (next).
+
+**itoa_arm: scheduling.** With the push fixed, the sixth pass's draft
+was still off in five orderings: each loop's `add r5`/`cmp r0`, the
+terminator `strb` against `sub r1, r5, #1`, and the swap's `add r4`/`sub
+r1`. In the ROM all of them are in source order. sched.c moves them:
+an insn anti-dependent on a store (the `add` that follows `strb r1, [r6,
+r5]`) inherits the store's latency, gets a higher priority than the
+compare, and is scheduled last. Either scheduling pass alone does it, so
+only turning off both keeps the order. The four other string functions
+come out the same either way. The sprite functions need scheduling, and
+they're in another object. So the flags are per object, under the
+project's rule (every function in the object stays exact). Whether the
+original string file was built without scheduling or by a scheduler that
+leaves this function alone can't be told from the ROM. Tried and
+dropped: a third option making anti and output dependences free, as
+later ARM back ends' `arm_adjust_cost` does. It fixed the orderings but
+changed the four matched sprite functions, so the ROM's compiler doesn't
+have it.
+
+**itoa_arm: the C.** Without scheduling, the sixth pass's draft differs
+in three places. Each has a cause in agbcc_arm's source and a C fix:
+
+- **`movge r4, #0; movlt r4, #1; rsblt r0, r0, #0`.** The ROM has the
+  `ge` arm first. As one if/else with `neg = 0` first, jump.c's "`if
+  (...) { x = a; goto l; } x = b;` becomes `x = a; if (...) goto l; x =
+  b;`" hoists `neg = 0` above the branch (`mov r4, #0; addlt r4, r4,
+  #1`). With `num = -num` first in the other arm the transform doesn't
+  apply, but then `rsblt` comes before `movlt`. Two ifs on the same test,
+  `if (num >= 0) neg = 0; if (num < 0) { neg = 1; num = -num; }`, give
+  the ROM: jump.c turns the first into a conditional move (`movge`), cse
+  drops the second compare, and the ccfsm conditionalizes the second if.
+  gcc then warns that `neg` might be used uninitialized (`-Werror`), so a
+  `MATCH_HOLD(neg)` defines it first; it emits nothing.
+- **`movne r4, #0` after `movne r4, #45`.** The draft's `subne r4, r4,
+  #45` comes from `reload_cse_move2add` (reload1.c), which rewrites a
+  constant load as an add from the register's last known constant. It
+  only does that from a set of the same or a wider mode. The '-' is now
+  a `u8` pinned to r4 (`MATCH_HOLD_REG(u8, minus, r4) = '-'`), so the
+  later `neg = 0` (SImode) stays a `mov`.
+- **The swap's temporary in r0 and `j` in r1.** The swap loads both bytes
+  first (`lo = b[neg]; hi = b[j]; b[j] = lo; b[neg] = hi;`), with `hi`
+  pinned to r0 and `j` to r1, as in the ROM.
+
+Also needed, from the earlier drafts: the pins on `digit`, `b`, `len`
+and `neg`, `MATCH_CONST(len, 0)`, `(ten = 10)`, and a `MATCH_KEEP(base)`
+after `divisor = base` (without it the `!= 16` test uses ip, not r2).
+Not needed any more: the `do { } while (0)` around the sign test and
+the pin on `divisor`. (The match doesn't need `num`'s pin either, but
+the SWI takes it in r0, so it stays.)
+
+**Result.** `itoa_arm` (45 instructions) and `LookupSpriteFrameCache`
+(50 instructions) match byte for byte, as C, in the matching build. Their
+`NAKED` transcriptions and `#if NON_MATCHING` drafts are gone. Every
+function in the ROM is now matched.
+
 ## Data
 
 `iwram_data.c` defines every global from `0x030007CC` up to
@@ -601,3 +717,13 @@ defined by these objects.
   generate`: code 242,990 / 243,378, functions 2,057 / 2,059, data
   8,036,176 / 8,036,176 (unchanged). Draft scores: itoa_arm 72.8%,
   LookupSpriteFrameCache 99.4%.
+- Seventh pass (both matched with agbcc_arm_patched): agbcc_arm_patched
+  built from scratch with `tools/build_patched_agbcc_arm.sh` (from the
+  SAT-R checkout, and from a copy stripped of its build products). `rm
+  -rf build crashbandicootxs.elf crashbandicootxs.gba
+  crashbandicootxs.map && make compare`: `crashbandicootxs.gba: OK`. `rm
+  -rf build objdiff.json && make NON_MATCHING=1 report` and
+  `objdiff-cli report generate`: code 243,378 / 243,378 (100%),
+  functions 2,059 / 2,059, data 8,036,176 / 8,036,176 (100%).
+  Option-off identity: as above (333 files, and the pre-pass tree's
+  `make compare` with agbcc_arm_patched).

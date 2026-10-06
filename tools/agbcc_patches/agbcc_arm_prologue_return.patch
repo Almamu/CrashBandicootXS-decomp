@@ -1,0 +1,205 @@
+agbcc_arm_patched: two opt-in ARM back-end options for the IWRAM code
+=====================================================================
+
+Applies to SAT-R/agbcc's gcc_arm (2.9-arm-000512) with `patch -p1` from
+the agbcc checkout's root. tools/build_patched_agbcc_arm.sh does that on
+a copy and installs the result as tools/agbcc/bin/agbcc_arm_patched.
+
+Why: Crash Bandicoot XS's IWRAM ARM code was built by a later build of
+agbcc_arm's own Cygnus/Red Hat ARM gcc line. That build isn't public.
+Its code generation is agbcc_arm's, apart from two fixed strings in the
+prologue/return code (docs/matching/iwram-image.md, fifth to seventh
+passes). These options reproduce those two behaviours and nothing else:
+
+  -mleaf-no-lr-save     A function that never uses or clobbers lr (no
+                        calls, lr never allocated) and has no frame
+                        pointer saves only its call-saved registers:
+                        `stmfd sp!, {r4, r5, r6}' ... `ldmfd sp!, {r4,
+                        r5, r6}; bx lr'. Stock agbcc_arm always adds lr
+                        to the push (arm_expand_prologue, "If we have to
+                        push any regs, then we must push lr as well") and
+                        to the restore. Used by itoa_arm.
+
+  -minterwork-return-lr An interworking return insn without a frame
+                        pointer pops the return address into lr and
+                        returns with `bx lr' (`ldmfd sp!, {lr}; bx lr').
+                        Stock agbcc_arm pops into ip and returns with
+                        `bx ip' (output_return_instruction). Used by
+                        LookupSpriteFrameCache.
+
+Both are off by default. With neither given, every code path is the
+stock one, so the compiler's output is byte-identical to agbcc_arm's.
+
+Hunks:
+  arm.h  1. ARM_FLAG_LEAF_NO_LR_SAVE / ARM_FLAG_INTERWORK_RETURN_LR bits
+            (the next free target_flags bits after ARM_FLAG_LONG_CALLS).
+         2. TARGET_LEAF_NO_LR_SAVE / TARGET_INTERWORK_RETURN_LR.
+         3. The -m[no-]leaf-no-lr-save / -m[no-]interwork-return-lr
+            entries in TARGET_SWITCHES.
+         4. INITIAL_ELIMINATION_OFFSET: no lr slot between the saved
+            registers and the incoming stack arguments when lr isn't
+            pushed, so argument offsets stay right.
+         5. Prototype for arm_lr_save_skipped.
+  arm.c  6. use_return_insn: no return insn when registers are saved
+            but lr isn't (a return insn would pop the return address
+            from lr's missing slot); the text epilogue handles it. With
+            interworking this was already the case.
+         7. output_return_instruction: under -minterwork-return-lr, pop
+            into lr instead of ip ...
+         8. ... and `bx lr' instead of `bx ip'.
+         9. arm_lr_save_skipped: the one predicate for -mleaf-no-lr-save
+            (option on, no frame pointer, lr never live).
+        10. output_func_epilogue: leave lr out of the restore when the
+            prologue left it out of the push.
+        11. arm_expand_prologue: leave lr out of the push.
+
+--- a/gcc_arm/config/arm/arm.h
++++ b/gcc_arm/config/arm/arm.h
+@@ -339,6 +339,16 @@
+ /* Nonzero if all call instructions should be indirect.  */
+ #define ARM_FLAG_LONG_CALLS	(0x10000)
+ 
++/* LOCAL (agbcc_arm_patched): Nonzero if a function that never uses or
++   clobbers lr should save and restore only its call-saved registers,
++   without forcing lr into the push, and return with `bx lr'.  */
++#define ARM_FLAG_LEAF_NO_LR_SAVE	(0x20000)
++
++/* LOCAL (agbcc_arm_patched): Nonzero if an interworking return insn
++   (no frame pointer) should pop the saved return address into lr and
++   return with `bx lr', instead of popping it into ip and `bx ip'.  */
++#define ARM_FLAG_INTERWORK_RETURN_LR	(0x40000)
++
+ #define TARGET_APCS			(target_flags & ARM_FLAG_APCS_FRAME)
+ #define TARGET_POKE_FUNCTION_NAME	(target_flags & ARM_FLAG_POKE)
+ #define TARGET_FPE			(target_flags & ARM_FLAG_FPE)
+@@ -359,6 +369,8 @@
+ /* END CYGNUS LOCAL */
+ #define TARGET_ABORT_NORETURN           (target_flags & ARM_FLAG_ABORT_NORETURN)
+ #define TARGET_LONG_CALLS		(target_flags & ARM_FLAG_LONG_CALLS)
++#define TARGET_LEAF_NO_LR_SAVE		(target_flags & ARM_FLAG_LEAF_NO_LR_SAVE)
++#define TARGET_INTERWORK_RETURN_LR	(target_flags & ARM_FLAG_INTERWORK_RETURN_LR)
+ 
+ /* SUBTARGET_SWITCHES is used to add flags on a per-config basis.
+    Bit 31 is reserved.  See riscix.h.  */
+@@ -420,6 +432,14 @@
+   {"long-calls",		ARM_FLAG_LONG_CALLS,	\
+    "Generate all call instructions as indirect calls"},	\
+   {"no-long-calls",	       -ARM_FLAG_LONG_CALLS, ""}, \
++  /* LOCAL (agbcc_arm_patched) */			\
++  {"leaf-no-lr-save",		ARM_FLAG_LEAF_NO_LR_SAVE, \
++   "Do not save lr with other registers when lr is never used"}, \
++  {"no-leaf-no-lr-save",       -ARM_FLAG_LEAF_NO_LR_SAVE, ""}, \
++  {"interwork-return-lr",	ARM_FLAG_INTERWORK_RETURN_LR, \
++   "Interworking return insns pop into lr and use bx lr"}, \
++  {"no-interwork-return-lr",   -ARM_FLAG_INTERWORK_RETURN_LR, ""}, \
++  /* END LOCAL */					\
+   SUBTARGET_SWITCHES					\
+   {"",				TARGET_DEFAULT }	\
+ }
+@@ -1265,8 +1285,11 @@
+ 	{								\
+ 	   if (! frame_pointer_needed)					\
+ 	     offset -= 16;						\
++	   /* LOCAL (agbcc_arm_patched): no lr slot under		\
++	      -mleaf-no-lr-save, see arm_lr_save_skipped.  */		\
+ 	   if (! volatile_func						\
+-	       && (regs_ever_live[14] || saved_hard_reg)) 		\
++	       && (regs_ever_live[14]					\
++		   || (saved_hard_reg && ! arm_lr_save_skipped ())))	\
+ 	     offset += 4;						\
+ 	   offset += current_function_outgoing_args_size;		\
+ 	   (OFFSET) = (get_frame_size () + 3 & ~3) + offset;		\
+@@ -2196,6 +2219,7 @@
+ void output_ascii_pseudo_op (/* FILE *, unsigned char *, int */);
+ char *output_return_instruction (/* struct rtx_def *, int, int */);
+ int arm_volatile_func (/* void */);
++int arm_lr_save_skipped (/* void */); /* LOCAL (agbcc_arm_patched) */
+ void output_func_prologue (/* FILE *, int */);
+ void output_func_epilogue (/* FILE *, int */);
+ void arm_expand_prologue (/* void */);
+--- a/gcc_arm/config/arm/arm.c
++++ b/gcc_arm/config/arm/arm.c
+@@ -607,8 +607,13 @@
+      if they aren't taken and registers have been stacked.  */
+   if (iscond && arm_is_strong && frame_pointer_needed)
+     return 0;
++  /* LOCAL (agbcc_arm_patched): a return insn pops the saved return
++     address straight into pc (or ip), so it needs lr's slot.  Without it
++     (-mleaf-no-lr-save) leave saved registers to the text epilogue, as
++     interworking already does.  */
+   if ((iscond && arm_is_strong)
+-      || TARGET_THUMB_INTERWORK)
++      || TARGET_THUMB_INTERWORK
++      || arm_lr_save_skipped ())
+     for (regno = 0; regno < 16; regno++)
+       if (regs_ever_live[regno] && ! call_used_regs[regno])
+ 	return 0;
+@@ -5211,8 +5216,11 @@
+       else
+ 	{
+ 	  strcat (instr, "%|");
++	  /* LOCAL (agbcc_arm_patched): -minterwork-return-lr pops the
++	     return address back into lr and returns with `bx lr', as
++	     the (unreleased) later ARM gcc does, instead of into ip.  */
+ 	  if (TARGET_THUMB_INTERWORK && really_return)
+-	    strcat (instr, reg_names[12]);
++	    strcat (instr, reg_names[TARGET_INTERWORK_RETURN_LR ? 14 : 12]);
+ 	  else
+ 	    strcat (instr, really_return ? reg_names[15] : reg_names[14]);
+ 	}
+@@ -5224,7 +5232,8 @@
+ 	  strcpy (instr, "bx%?");
+ 	  strcat (instr, reverse ? "%D0" : "%d0");
+ 	  strcat (instr, "\t%|");
+-	  strcat (instr, frame_pointer_needed ? "lr" : "ip");
++	  strcat (instr, (frame_pointer_needed || TARGET_INTERWORK_RETURN_LR)
++			 ? "lr" : "ip");
+ 
+ 	  output_asm_insn (instr, & operand);
+ 	}
+@@ -5260,6 +5269,22 @@
+   return (optimize > 0 && TREE_THIS_VOLATILE (current_function_decl));
+ }
+ 
++/* LOCAL (agbcc_arm_patched): Return nonzero if -mleaf-no-lr-save drops
++   lr from the current function's register save.  Stock 2.9-arm-000512
++   pushes lr along with any other saved register ("If we have to push
++   any regs, then we must push lr as well"), because its returns pop the
++   return address into pc or ip.  When lr is never used or clobbered
++   (no calls, not allocated) and there is no frame, lr still holds the
++   return address at the end, so the push can leave it out and the
++   epilogue can return with `bx lr' (or `mov pc, lr').  */
++int
++arm_lr_save_skipped ()
++{
++  return (TARGET_LEAF_NO_LR_SAVE
++	  && ! frame_pointer_needed
++	  && ! regs_ever_live[14]);
++}
++
+ /* CYGNUS LOCAL unknown */
+ /* Return the size of the prologue.  It's not too bad if we slightly 
+    over-estimate.  */
+@@ -5590,7 +5615,9 @@
+ 	  if (live_regs_mask || regs_ever_live[14])
+ 	    {
+ 	      /* Restore the integer regs, and the return address into lr */
+-	      if (! lr_save_eliminated)
++	      /* LOCAL (agbcc_arm_patched): not when the prologue left lr
++		 out (-mleaf-no-lr-save); lr still holds it.  */
++	      if (! lr_save_eliminated && ! arm_lr_save_skipped ())
+ 		live_regs_mask |= 0x4000;
+ 
+ 	      if (live_regs_mask != 0)
+@@ -5758,7 +5785,10 @@
+     {
+       /* If we have to push any regs, then we must push lr as well, or
+ 	 we won't get a proper return.  */
+-      live_regs_mask |= 0x4000;
++      /* LOCAL (agbcc_arm_patched): unless -mleaf-no-lr-save applies
++	 (see arm_lr_save_skipped).  */
++      if (! arm_lr_save_skipped ())
++	live_regs_mask |= 0x4000;
+       emit_multi_reg_push (live_regs_mask);
+     }
+       

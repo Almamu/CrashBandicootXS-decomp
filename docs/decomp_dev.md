@@ -232,9 +232,11 @@ NOLOAD section). The image holds, in order:
 
 - `asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
 - `src/iwram/string_arm.c` and `src/iwram/sprite_arm.c`: compiled ARM C,
-  built with `tools/agbcc/bin/agbcc_arm` (the `ARM_OBJS` in the
-  Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork`; agbcc_arm is
-  part of SAT-R/agbcc's install). Their `.text` goes into `iwram`.
+  built with `tools/agbcc/bin/agbcc_arm_patched` (the `ARM_OBJS` and
+  `PATCHED_ARM_OBJS` in the Makefile: `-O2 -fomit-frame-pointer
+  -mthumb-interwork` plus one option each; agbcc_arm_patched is
+  SAT-R/agbcc's agbcc_arm with `tools/agbcc_patches/`, built by
+  `tools/build_patched_agbcc_arm.sh`). Their `.text` goes into `iwram`.
 - `src/iwram/iwram_data.c`: the initialised globals from `0x030007CC`,
   its `.data`.
 
@@ -301,14 +303,13 @@ where each is handled:
   (libgcc2.c's calls to `__udivsi3` were the one case, until the
   function got its libgcc name and the alias went away).
 
-After these fixes, every function in a matched unit scores 100%. Every
-compiled Thumb function in the ROM is matched. Code progress is below
-100% only because of two ARM functions in the IWRAM image
-(`itoa_arm`, `LookupSpriteFrameCache`), parked because agbcc_arm's
-output differs from the ROM's compiler there; agbcc_arm's source shows
-no C can match either (docs/matching/iwram-image.md). Any other
-function below 100% in a future report is either genuinely unmatched or
-a new case of one of the causes above.
+After these fixes, every function in a matched unit scores 100%, and
+code progress is 100%: every compiled function in the ROM is matched.
+The last two, ARM functions in the IWRAM image (`itoa_arm`,
+`LookupSpriteFrameCache`), match with a locally patched agbcc_arm
+(docs/matching/iwram-image.md, seventh pass). Any function below 100%
+in a future report is either a regression or a new case of one of the
+causes above.
 
 **When a new function scores below 100%** even though `make compare`
 passes, run `objdiff-cli diff -1 <target.o> -2 <base.o> <symbol>` (both
