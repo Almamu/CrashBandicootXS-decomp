@@ -8,7 +8,7 @@
   "ushort_0a": 0,
   "sample_rate": 0,
   "num_fx_channels": 0,
-  "byte_1d": 0
+  "half_rate_fx": 0
  },
  "voice_types": 9,
  "instruments": {

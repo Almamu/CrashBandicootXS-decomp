@@ -10,7 +10,7 @@ The whole engine (mixer, timer IRQ handler, replay logic) is matched C in
 [`lib/gax/`](../lib/gax), kept apart from the game as a library (see
 [`docs/libraries.md`](./libraries.md)): `lib/gax/src/*.c` (ROM
 `0x08037F3C`-`0x0803A944`, including the ARM mixer/DSP routines, which are
-inline in `gax_unknownc_play.c`), its strings and tables in
+inline in `gax_sound_handler_mixer_play.c`), its strings and tables in
 `lib/gax/data/gax_tables_5a6100.c`, the public API in `<gax.h>`
 (`lib/gax/include/gax.h`) and the internal structures in
 `lib/gax/src/gax_internal.h`. The libgcc 64-bit helpers linked in with it
@@ -53,9 +53,9 @@ per song (in ROM address order, NOT alphabetical - see gax_manifest.json "song_o
     [shared 1-entry "children" array -> points at the Info handler]
     [Channel SoundHandlers, one per channel, same physical order as the pattern-header tables;
      each has num_children=1 pointing at the shared children array above]
-    [UnknownC children array: channel handler addresses, in LOGICAL channel index order]
-    [unknownc_data_bytes, 28 bytes]
-    [UnknownC SoundHandler]
+    [Mixer children array: channel handler addresses, in LOGICAL channel index order]
+    [mixer_data_bytes, 28 bytes]
+    [Mixer SoundHandler]
     [GAX2_Song struct]
 the default song (manifest "default_song"), laid out the same way: one empty
     pattern, 7 title bytes, one pattern header, SongInfo (no instrument set,
@@ -70,17 +70,27 @@ struct sat right after it as a raw label.
 
 ### GAX2_Song / SoundHandler / SongInfo
 
-- `GAX2_Song`: `num_items` (u32), `unknownc_handler_ptr`, `info_handler_ptr`,
+- `GAX2_Song`: `num_items` (u32), `mixer_handler_ptr`, `info_handler_ptr`,
   `unk_ptr` (see below), then `num_items - 3` channel handler pointers.
-- `GAX2_SoundHandler` (28 bytes, one of three "types": Info / UnknownC /
+- `GAX2_SoundHandler` (28 bytes, one of three "types": Info / Mixer /
   Channel): each type has **three fixed function-pointer constants**
   (`init_fn`/`unknown_fn`/`play_fn`) that are always the same for that type,
   regardless of song:
   - Info: `0x080393FD`, `0x08039439`, `0x0803943D`
-  - UnknownC: `0x0803A22D`, `0x0803A275`, `0x0803A325`
+  - Mixer: `0x0803A22D`, `0x0803A275`, `0x0803A325`
   - Channel: `0x08039519`, `0x080395A1`, `0x080395A5`
 - `song.unk_ptr` is a fixed constant equal to the address right after the end
   of the shared sample table, for every song.
+- `SongInfo.half_rate_fx` (byte `0x1b`, `GaxSongData.halfRateFx`; the
+  manifest called it `byte_1d`) mixes the sound-effect voices at half the
+  mix rate. `GAX2_init` then loads the resampler's third loop (mode 2,
+  which adds each sample to two output samples and steps twice as far),
+  `GaxFxChannelInit` gives the voices that mode, and `GaxMixerPlay` clears
+  the buffer before them because mode 2 can only add. The parameter
+  block's `flags` bit 5 does the same. It is set in the 10 level and boss
+  songs (jungle, underwater, arctic, sewers, future, rocket crash and the
+  four bosses' themes) and clear in the other 9 (menus, cutscenes, intro,
+  warp room, credits, bonus round, drums).
 - Each channel's `SoundHandler` has `num_children = 1` and `children_ptr`
   pointing at **one shared** 4-byte array (per song) containing the Info
   handler's address — not a per-channel array.
@@ -176,7 +186,7 @@ behaviour:
 The handler types' callbacks are `GaxInfoInit`/`GaxInfoPlay` (the "Info"
 type, the song position), `GaxChannelInit`/`GaxChannelPlay` (a tracker
 channel), `GaxFxChannelInit`/`GaxFxChannelPlay` (a sound-effect voice) and
-`GaxMixerInit`/`GaxMixerPlay` (the "UnknownC" type: the mixer). Each type
+`GaxMixerInit`/`GaxMixerPlay` (the mixer type, which older notes and tools called "UnknownC"). Each type
 also has an `unknown_fn` slot (`GaxInfoUnknown`, `GaxChannelUnknown`,
 `GaxFxChannelUnknown`, `GaxMixerUnknown`): all four are empty, and
 nothing in the engine calls the slot. The four ARM routines are
@@ -245,16 +255,19 @@ picture):
   `__clz_tab_udivdi3` confirmed unrelated - so proximity to
   known-audio data doesn't settle the question either, only reading
   the consuming function does.
-- **`sub_803A608` isn't really a function to characterize - it's a
-  2-instruction stub (`nop; b _0803A61E`, plus a small fallback
-  zero-fill loop) sitting in front of **~788 bytes** (revised up from
+- **`sub_803A608` isn't really a function to characterize - it's the
+  disassembler's label on `GaxMixFrame`'s `GAX_CALL_ARM` return point
+  (`nop; b _0803A61E`, then the function's zero-fill fallback loop; it
+  has no label in the C, see `expected/corrections.txt`'s `unlabel`
+  lines, and the same goes for `sub_8039E50` in `GaxChannelMix` and
+  `sub_803A318` in `GaxMixerApplyFilter`), sitting in front of **~788 bytes** (revised up from
   an initial ~450-byte estimate; confirmed by tracing the raw ARM
   bytes continuously from `0x0803A630` to `0x0803A944`, where the
   BIOS `svc` wrapper stubs below begin) of genuine **ARM-mode (32-bit)
   machine code that the disassembler never actually disassembled as
   code**. The labels right after it
-  (`gGaxArmDownmix`, `gGaxArmFilter`, `gStaticData_
-  0803A73C`, `gGaxArmResample`) mark raw bytes that decode cleanly
+  (`gGaxArmDownmix`, `gGaxArmFilter`, `gGaxArmEcho`,
+  `gGaxArmResample`) mark raw bytes that decode cleanly
   as ARM instruction encodings (e.g. `60 00 2D E9` = ARM `STMFD
   sp!,{...}`, a classic ARM function prologue) - this codebase is
   otherwise entirely Thumb, so whatever raw-asm-extraction pass

@@ -4,7 +4,7 @@
 /* GAX2 per-channel mixer (issue #68): renders channel `self` into
  * `buf` through the ARM resampling routine `gGaxPlayerState->mixCode`
  * points at (an IWRAM copy of the raw ARM code at
- * `gGaxArmResample`, gax_unknownc_play.c). Called by the Channel
+ * `gGaxArmResample`, gax_sound_handler_mixer_play.c). Called by the Channel
  * play_fns `GaxChannelPlay`/`GaxFxChannelPlay` as `GaxChannelMix(self, info, buf,
  * arg, type data, flag)`.
  *
@@ -23,7 +23,7 @@
  *
  * `sub_8039E50` in the ROM disassembly is not a function: it's the
  * `nop` the ARM call returns to (see `GAX_CALL_ARM_R`, gax_internal.h),
- * never called from anywhere. Like gax_unknownc_play.c's return points,
+ * never called from anywhere. Like gax_sound_handler_mixer_play.c's return points,
  * it no longer has a label of its own.
  *
  * Matched (plain agbcc) in GAX retry 6 (docs/matching/archive/gax-naked-retry-6.md)

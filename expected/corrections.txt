@@ -135,7 +135,7 @@ unlabel sub_802613E
 # epilogue a hand-computed ARM-call return address lands on), which the
 # original disassembly took for function starts. Never called; the C
 # has no such functions - see lib/gax/src/gax_note_trigger.c and
-# lib/gax/src/gax_unknownc_play.c.
+# lib/gax/src/gax_sound_handler_mixer_play.c.
 unlabel sub_8039E50
 unlabel sub_803A318
 unlabel sub_803A608

@@ -126,9 +126,9 @@ for the full write-up, GitHub issue #68):
   vibrato/tremolo-style effect-table lookup)
 - `lib/gax/src/gax_channel_init.c` - `GaxFxChannelInit` (per-channel voice
   object constructor)
-- `lib/gax/src/gax_sound_handler_unknownc.c` - `GaxFxChannelUnknown` (the sound-effect
+- `lib/gax/src/gax_sound_handler_mixer.c` - `GaxFxChannelUnknown` (the sound-effect
   voice type's unknown_fn, referenced only from that type in the
-  sound-effect data set), `GaxMixerInit` (the "UnknownC" type's
+  sound-effect data set), `GaxMixerInit` (the mixer type's
   init_fn), `GaxMixerUnknown` (its unknown_fn)
 - `lib/gax/src/gax_channel_bind_instrument.c` - `GaxChannelSetInstrument` (binds a new
   instrument entry to a per-channel voice object and resets its
@@ -175,7 +175,7 @@ for the per-function notes.
 - `lib/gax/src/gax_note_lookup.c` - `GaxEnvelopeTick`
 - `lib/gax/src/gax_channel_pos_sweep.c` - `GaxChannelTickSweep`
 - `lib/gax/src/gax_channel_note_cut_driver.c` - `GaxFxChannelPlay`
-- `lib/gax/src/gax_unknownc_play.c` - `GaxMixerApplyEcho`, `GaxMixerApplyFilter`,
+- `lib/gax/src/gax_sound_handler_mixer_play.c` - `GaxMixerApplyEcho`, `GaxMixerApplyFilter`,
   `GaxMixerPlay`, `GaxMixFrame` (the Thumb-to-ARM call is GAX2's own
   inline-asm idiom, `GAX_CALL_ARM`; `sub_803A318`/`sub_803A608` were
   only its return points, not functions)
@@ -292,5 +292,5 @@ register allocation ceiling, or entangled with a neighbor via a manual
 return-address-trampoline idiom). The raw ARM-mode DSP/mixer code block past
 `0x0803A628` (docs/audio.md's `gGaxArmDownmix` onward) is no
 longer a separate raw span - it is now an untouched trailing byte
-transcription inside `gax_unknownc_play.c` (see above), still not
+transcription inside `gax_sound_handler_mixer_play.c` (see above), still not
 disassembled as real code.

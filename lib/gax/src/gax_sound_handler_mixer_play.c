@@ -5,8 +5,8 @@
 asm(".set memcpy, MemCopy32");
 
 /* This file's functions (issue #68's remainder past
- * `gax_sound_handler_unknownc.c`) finish out the GAX2_SoundHandler
- * "UnknownC" type's function-pointer table: `GaxMixerPlay` is its
+ * `gax_sound_handler_mixer.c`) finish out the GAX2_SoundHandler
+ * mixer type's function-pointer table: `GaxMixerPlay` is its
  * `play_fn`, and the other three hand a small work item to one of the
  * ARM DSP routines copied into `gGaxPlayerState` (see the raw block at
  * the end of this file) through `GAX_CALL_ARM` (gax_internal.h) - a
@@ -27,7 +27,7 @@ asm(".set memcpy, MemCopy32");
 /* Only the parts of the song/channel/handler objects this file touches. */
 struct GaxSongInfo3 {
     u8 pad_00[0x1b];
-    u8 field_1b; /* 0x1b */
+    u8 halfRateFx; /* 0x1b - GaxSongData.halfRateFx */
 };
 
 struct GaxSongInfo2 {
@@ -47,9 +47,9 @@ struct GaxSong {
     struct GaxSongInfo1 *layout; /* 0x30 - GaxSongHeader.layout */
 };
 
-struct GaxVoice {
+struct GaxChannelView {
     u8 pad_00[0x18];
-    u8 active; /* 0x18 */
+    u8 volume; /* 0x18 - GaxChannelState.volume (GAX_set_music_volume) */
 };
 
 struct GaxChanInfo {
@@ -57,53 +57,54 @@ struct GaxChanInfo {
     u8 volume; /* 0x1f - GaxInfoHandler.volume */
 };
 
-struct GaxChannel {
-    u32 field_00;
+/* The player's handler array (GAX_PLAYER()): the mixer, the Info
+ * handler, the handler of the layout's third slot, then the song's
+ * channels. */
+struct GaxPlayerHandlers {
+    u32 mixer;                /* 0x00 */
     struct GaxChanInfo *info; /* 0x04 */
     u32 field_08;
-    struct GaxVoice *voices[1]; /* 0x0c - really hdr->childCount long */
+    struct GaxChannelView *channels[1]; /* 0x0c - really hdr->childCount long */
 };
 
-struct UnknownCFormat {
-    u8 pad_00;
-    u8 channels; /* 0x01 */
-    u8 pad_02[2];
-    u16 frames; /* 0x04 */
-};
+/* The mixer handler (struct GaxMixerHandler, gax_internal.h) as this
+ * file's functions read it: its type as GaxMixerViewType, its children
+ * (the song's channels, then the SFX voices) as GaxMixerViewChild. */
+struct GaxMixerViewChild;
 
-struct UnknownCChild;
-
-struct UnknownCChildOps {
+struct GaxMixerViewChildType {
     u32 field_00[2];
-    u8 (*play)(struct UnknownCChild *child, u32 *buf, u32 arg); /* 0x08 */
+    u8 (*play)(struct GaxMixerViewChild *child, u32 *buf, u32 arg); /* 0x08 */
 };
 
-struct UnknownCChild {
-    struct UnknownCChildOps *ops;
+struct GaxMixerViewChild {
+    struct GaxMixerViewChildType *ops;
     u8 pad_04[9];
     u8 isFirst; /* 0x0d */
 };
 
-struct UnknownCCounts {
-    u32 primary; /* 0x00 */
+/* The mixer type's data (GaxHandlerType.data.dsp): the song's echo
+ * settings. */
+struct GaxMixerEchoParams {
+    u32 primary; /* 0x00 - channels played before the echo pass */
     u32 echo;    /* 0x04 - nonzero: run the echo pass (GAX2_init's fxEcho test too) */
 };
 
-struct UnknownCHdr {
+struct GaxMixerViewType {
     u8 pad_00[8];
     u8 (*step)(void *self, u32 a, u32 b); /* 0x08 */
     u32 childCount;                       /* 0x0c */
     u8 pad_10[8];
-    struct UnknownCCounts *counts; /* 0x18 */
+    struct GaxMixerEchoParams *counts; /* 0x18 */
 };
 
-struct UnknownC {
-    struct UnknownCHdr *hdr;         /* 0x00 */
-    struct UnknownCFormat *format;   /* 0x04 */
-    struct UnknownCChild **children; /* 0x08 */
-    u32 pos;                         /* 0x0c */
-    u32 mixBuf;                      /* 0x10 - GaxMixerHandler.mixBuf */
-    u32 extraChildren;               /* 0x14 */
+struct GaxMixerView {
+    struct GaxMixerViewType *hdr;        /* 0x00 */
+    struct GaxMixerFormat *format;       /* 0x04 */
+    struct GaxMixerViewChild **children; /* 0x08 */
+    u32 pos;                             /* 0x0c */
+    u32 mixBuf;                          /* 0x10 - GaxMixerHandler.mixBuf */
+    u32 extraChildren;                   /* 0x14 */
 };
 
 struct GaxWorkItem5 {
@@ -133,7 +134,7 @@ struct GaxWorkItem4 {
 
 /* Runs `echoCode` (the IWRAM copy of gGaxArmEcho) over a 5-word work item
  * built from the buffer size and three player-state fields. */
-void GaxMixerApplyEcho(struct UnknownC *self, u32 *buf)
+void GaxMixerApplyEcho(struct GaxMixerView *self, u32 *buf)
 {
     u32 bytes = self->format->frames * self->format->channels * 2;
     struct GaxPlayerState *st = gGaxPlayerState;
@@ -151,7 +152,7 @@ void GaxMixerApplyEcho(struct UnknownC *self, u32 *buf)
  * over the mixed buffer, with a coefficient of `0x334 * (0x55 - filter)
  * >> 8`, so a larger `filter` (at most 0x55) cuts more. The routine is
  * followed by its "FILT" tag. */
-void GaxMixerApplyFilter(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count)
+void GaxMixerApplyFilter(struct GaxMixerView *self, u32 *buf, u32 clampArg, u32 count)
 {
     u32 bytes = self->format->frames * self->format->channels * 2;
     struct GaxPlayerState *st = gGaxPlayerState;
@@ -167,7 +168,7 @@ void GaxMixerApplyFilter(struct UnknownC *self, u32 *buf, u32 clampArg, u32 coun
 
 /* Zero-fills `format->frames * format->channels` halfwords of `buf`,
  * a word at a time. */
-#define UNKNOWNC_CLEAR(self, buf)                                          \
+#define GAX_MIXER_CLEAR(self, buf)                                        \
     {                                                                      \
         s32 len_ = (self)->format->frames * (self)->format->channels * 2; \
         u32 *p_ = (buf);                                                   \
@@ -179,59 +180,67 @@ void GaxMixerApplyFilter(struct UnknownC *self, u32 *buf, u32 clampArg, u32 coun
     }
 
 /* Plays children `[first, end)`, ORing their "produced output" results. */
-#define UNKNOWNC_PLAY_CHILD(self, i, buf, arg2)                                  \
+#define GAX_MIXER_PLAY_CHILD(self, i, buf, arg2)                                  \
     {                                                                            \
         (self)->children[i]->isFirst = (result == 0);                            \
         result |= (self)->children[i]->ops->play((self)->children[i], buf, arg2); \
     }
 
-/* UnknownC type's `play_fn`: plays the primary children (unless
+/* The mixer type's `play_fn`: plays the primary children (unless
  * `skipSongChannels` is set), then the extra children either
  * before or after the `GaxMixerApplyEcho`/`GaxMixerApplyFilter` DSP passes depending
  * on `fxEcho`, zero-filling `buf` first whenever nothing
- * has produced output yet. Returns whether anything did. */
-u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2)
+ * has produced output yet. Returns whether anything did.
+ *
+ * Before the SFX voices it clears `buf` only for half-rate SFX
+ * (`GaxSongData.halfRateFx` or the parameter block's `flags` bit 5).
+ * A voice mixed first stores at full rate (resampler mode 0); after the
+ * clear every voice adds, in its `mixMode`, which is the half-rate mode 2
+ * there (GaxFxChannelInit). Mode 2 has no store form. */
+u8 GaxMixerPlay(struct GaxMixerView *self, u32 *buf, u32 arg2)
 {
     u8 result = 0;
     u32 i;
 
     if (gGaxPlayerState->skipSongChannels == 0) {
         for (i = 0; i < self->hdr->counts->primary; i++)
-            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+            GAX_MIXER_PLAY_CHILD(self, i, buf, arg2);
     }
     if (gGaxPlayerState->fxEcho != 0) {
         if (result == 0) {
             struct GaxSong *song = gGaxPlayerState->songPtr;
-            if (song->layout->infoType->song->field_1b != 0 || (song->flags & 0x20))
-                UNKNOWNC_CLEAR(self, buf);
+            if (song->layout->infoType->song->halfRateFx != 0 || (song->flags & 0x20))
+                GAX_MIXER_CLEAR(self, buf);
         }
         for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)
-            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+            GAX_MIXER_PLAY_CHILD(self, i, buf, arg2);
     }
+    /* The echo pass is skipped while the song's master volume or every
+     * channel's volume is 0. */
     if (self->hdr->counts->echo != 0) {
-        u8 allIdle;
-        struct GaxChannel *chan;
+        u8 allMuted;
+        struct GaxPlayerHandlers *chan;
 
         if (result == 0)
-            UNKNOWNC_CLEAR(self, buf);
-        allIdle = 1;
+            GAX_MIXER_CLEAR(self, buf);
+        allMuted = 1;
         chan = gGaxPlayerState->channels[gGaxPlayerState->curChannelIdx];
         if (chan->info->volume != 0) {
-            /* Walks `chan->voices[]` by advancing `chan` itself one
+            /* Walks `chan->channels[]` by advancing `chan` itself one
              * pointer at a time - this is what keeps the ROM's
              * `ldr rX, [chan, #0xc]` addressing inside the loop. */
-            for (i = 0; i < self->hdr->childCount && allIdle; i++) {
-                if (chan->voices[0]->active != 0)
-                    allIdle = 0;
-                chan = (struct GaxChannel *)((struct GaxVoice **)chan + 1);
+            for (i = 0; i < self->hdr->childCount && allMuted; i++) {
+                if (chan->channels[0]->volume != 0)
+                    allMuted = 0;
+                chan = (struct GaxPlayerHandlers *)((struct GaxChannelView **)chan + 1);
             }
         }
-        if (allIdle == 0)
+        if (allMuted == 0)
             GaxMixerApplyEcho(self, buf);
     }
     if (gGaxPlayerState->skipSongChannels == 0) {
         for (i = self->hdr->counts->primary; i < self->hdr->childCount; i++)
-            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+            GAX_MIXER_PLAY_CHILD(self, i, buf, arg2);
     }
     {
         u32 clamp = gGaxPlayerState->filter;
@@ -244,11 +253,11 @@ u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2)
     if (gGaxPlayerState->fxEcho == 0) {
         if (result == 0) {
             struct GaxSong *song = gGaxPlayerState->songPtr;
-            if (song->layout->infoType->song->field_1b != 0 || (song->flags & 0x20))
-                UNKNOWNC_CLEAR(self, buf);
+            if (song->layout->infoType->song->halfRateFx != 0 || (song->flags & 0x20))
+                GAX_MIXER_CLEAR(self, buf);
         }
         for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)
-            UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
+            GAX_MIXER_PLAY_CHILD(self, i, buf, arg2);
     }
     gGaxPlayerState->skipSongChannels = 0;
     return result;
@@ -259,7 +268,7 @@ u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2)
  * `downmixCode` (the IWRAM copy of gGaxArmDownmix), otherwise zero-fills `buf` for
  * the block's length. Called by GAX_play with the mixer as a `struct
  * GaxMixerHandler`; the rest of this file still reads it through its
- * own `struct UnknownC` view (`hdr` is `type`, `mixBuf` is
+ * own `struct GaxMixerView` view (`hdr` is `type`, `mixBuf` is
  * `mixBuf`). */
 void GaxMixFrame(struct GaxMixerHandler *self, u32 *buf)
 {

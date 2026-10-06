@@ -6555,10 +6555,10 @@
    "ushort_0a": 0,
    "sample_rate": 18158,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 7,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -6903,10 +6903,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 8,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -7382,10 +7382,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 2,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 7,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -7762,10 +7762,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 8,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -8263,10 +8263,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 8,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -8726,10 +8726,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 2,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 7,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -9144,10 +9144,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 9,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -9348,10 +9348,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 8,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -9923,10 +9923,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 8,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -10430,10 +10430,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 8,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -10939,10 +10939,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 1,
+   "half_rate_fx": 1,
    "num_items": 8,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -11374,10 +11374,10 @@
    "ushort_0a": 0,
    "sample_rate": 21025,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 10,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     6,
     0,
     0,
@@ -11839,10 +11839,10 @@
    "ushort_0a": 0,
    "sample_rate": 42049,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 4,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -11904,10 +11904,10 @@
    "ushort_0a": 0,
    "sample_rate": 21025,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 9,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     3,
     0,
     0,
@@ -12056,10 +12056,10 @@
    "ushort_0a": 0,
    "sample_rate": 26760,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 10,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     2,
     0,
     0,
@@ -12219,10 +12219,10 @@
    "ushort_0a": 0,
    "sample_rate": 21025,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 9,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -12503,10 +12503,10 @@
    "ushort_0a": 0,
    "sample_rate": 21025,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 10,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     3,
     0,
     0,
@@ -12904,10 +12904,10 @@
    "ushort_0a": 0,
    "sample_rate": 21025,
    "num_fx_channels": 1,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 10,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     2,
     0,
     0,
@@ -13355,10 +13355,10 @@
    "ushort_0a": 0,
    "sample_rate": 15769,
    "num_fx_channels": 3,
-   "byte_1d": 0,
+   "half_rate_fx": 0,
    "num_items": 6,
    "unk_ptr_is_null": false,
-   "unknownc_data_bytes": [
+   "mixer_data_bytes": [
     0,
     0,
     0,
@@ -13532,9 +13532,9 @@
   "ushort_0a": 0,
   "sample_rate": 15769,
   "num_fx_channels": 1,
-  "byte_1d": 0,
+  "half_rate_fx": 0,
   "num_items": 4,
-  "unknownc_data_bytes": [
+  "mixer_data_bytes": [
    0,
    0,
    0,

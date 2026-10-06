@@ -292,8 +292,8 @@ SECTIONS
         build/crashbandicootxs/lib/gax/src/gax_channel_pos_sweep.o(.text);
         build/crashbandicootxs/lib/gax/src/gax_channel_init.o(.text);
         build/crashbandicootxs/lib/gax/src/gax_channel_note_cut_driver.o(.text);
-        build/crashbandicootxs/lib/gax/src/gax_sound_handler_unknownc.o(.text);
-        build/crashbandicootxs/lib/gax/src/gax_unknownc_play.o(.text);
+        build/crashbandicootxs/lib/gax/src/gax_sound_handler_mixer.o(.text);
+        build/crashbandicootxs/lib/gax/src/gax_sound_handler_mixer_play.o(.text);
         build/crashbandicootxs/lib/libagbsyscall/libagbsyscall.o(.text);
         build/crashbandicootxs/lib/agb_eeprom/src/eeprom_timer.o(.text);
         build/crashbandicootxs/lib/agb_eeprom/src/eeprom_timer_stop.o(.text);

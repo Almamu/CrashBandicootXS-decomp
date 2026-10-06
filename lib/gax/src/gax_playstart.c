@@ -192,7 +192,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
         src = gGaxArmResample;
         {
             s32 words;
-            if (p->layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
+            if (p->layout->types[1]->data.song->halfRateFx != 0 || (u16)(p->flags & 0x20)) {
                 gGaxPlayerState->fullResampler = 1;
                 words = 76;
             } else {
