@@ -1893,7 +1893,7 @@ bitset, the directional-target field convention, the shared
 Genuine new coverage (~1.75 KB): **`SetTinyState`** (636 B) and
 `UpdateCortexTarget` are a linked pair driving large jump tables (15/11
 cases) that draw text at varying priorities and reference a new
-global-record-array `gUnknown_030012EC` plus a new table family
+global-record-array `gTouchableList` plus a new table family
 (`gTinyRoundAnchors`/`35F`/`5F0`, more members of the
 `0x0816Cxxx` directional/state-table family already seen this
 session) - reads as a floating combo-text/score-popup state machine,
@@ -1952,7 +1952,7 @@ wasn't cross-checked.
 Genuine new coverage (~1 KB): **`OpenMysteryCrate`** (524 B, not
 vtable-dispatched) is a **randomized-behavior state machine** - rolls
 a `rand()`-based state on entry, then dispatches a 10-case jump table;
-one case conditionally calls `sub_802599C(gEntityFlags)`, the
+one case conditionally calls `IsEntityIdActivated(gEntityFlags)`, the
 same helper already tied to that global in `CreateCrate`'s finding -
 reads as an AI/behavior pattern selector for some actor type.
 **`ResolveCollisionCandidates`** (488 B, partially read) is a proximity/nearest-
@@ -2333,11 +2333,11 @@ steps (**correction below**: a later pass found it's actually called
 sequence it touches `gPaletteCache`, `gCamera`,
 `gLevelLayers`, `gPaletteCycles`, conditionally
 `gHud`, four separate hot-IWRAM-global calls
-(`gUnknown_030012F4`/`F0`/`EC`/`F8`), `gCrateList`, and finally
+(`gForegroundList`/`F0`/`EC`/`F8`), `gCrateList`, and finally
 the full OAM-shadow commit trio (`HideUnusedOamEntries`→`WaitForVBlank`→
 `CommitOamBuffer` on `gOamBuffer`) plus `FlushVramDmaQueue` - nearly
 every hot IWRAM global this document has separately traced, in one
-place. **`sub_8025228(self, x, y, mode)`** (268 B) re-derives the same
+place. **`GetSolidTerrainModeValue(self, x, y, mode)`** (268 B) re-derives the same
 tile-grid lookup the terrain streamer uses (`x>>4`, `y>>3`, through the
 16-slot LRU cache), then branches on `mode` (0-3) to read one of 4
 adjacent bytes from **`gTerrainTypes[id]`** (36-byte stride,
@@ -2583,7 +2583,7 @@ counter-notification chain - the consumer/trigger side of the 15-slot
 table's `SpawnCrateGemMarker` writer, forwarding into `SpawnCrateGem` alongside
 `PressSwitchCrate`/`AddBrokenCrate`'s threshold-cross paths. **`RedrawBgLayer`**
 is a generalized multi-line sibling of `ScrollBgLayer`. **`GetTerrainType`**
-extends the `CheckTerrainFlag` characterization (`sub_8025228` above)
+extends the `CheckTerrainFlag` characterization (`GetSolidTerrainModeValue` above)
 - same lookup, but returns *three* simultaneous outputs from one
 decoded chunk instead of a single mode-selected byte, richer than
 first characterized. **`ReleaseTileSlot`** is the missing "release" half
@@ -2606,7 +2606,7 @@ the background streamer's initial-fill constructor
 (`FillBgStreamer`). `ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow` confirm both streamer
 "get source pointer" helpers (`GetBgStreamerColumn`/`GetBgStreamerRow`) feed the
 same cache-slot release mechanism (`ReleaseTileSlot`) in bulk-teardown
-paths. `sub_8026BF8`/`sub_8026C3C` are single-point collision-test
+paths. `ProbeFloorHeight`/`ProbeSolidFloorHeight` are single-point collision-test
 siblings of `ProbeTerrainY`/`ProbeTerrainX`, one via the raw terrain
 streamer and one via the `CheckTerrainFlag` API - confirming that
 API's use in collision response too. `UpdateCamera` ties the
@@ -2680,7 +2680,7 @@ The concrete payoff: found the exact call site of `FadePaletteToBlack` (the
 fade). It sits inside a **wait loop** (`bl IsRoomExitRequested` checked
 repeatedly, combined with a flag bit on `gPlayer`) - the code
 calls `UpdateCrateList` and three more `UpdatePartList` calls (on
-`gUnknown_030012EC`/`F0`/`F8`, more of the hot IWRAM globals already
+`gTouchableList`/`F0`/`F8`, more of the hot IWRAM globals already
 tied to this whole investigation) *before* looping back to check the
 exit condition again, and only calls the fade once that condition is
 finally satisfied. Reads as **"finish up outstanding per-frame work,
@@ -2945,7 +2945,7 @@ object (`InitPooledBgLayer`, tag `0`) - the one every caller reads the Q8.8
 pair out of, so the earlier finding stands for *that* sub-object, just
 not for the whole struct; `+0x14`/`+0x18`/`+0x1C` are three more
 92-byte tagged objects (tags `1`-`3`); `+0x20` is a raw **4196-byte**
-buffer pointer (passed through a genuine no-op, `nullsub_4`). Reads
+buffer pointer (passed through a genuine no-op, `InitTileCache`). Reads
 more like a **general-purpose UI/overlay manager** owning a large work
 buffer plus three or four tagged sub-panels, of which the text-box
 behavior already documented is only one piece.
@@ -3671,7 +3671,7 @@ a plain array, no `{0,ptr}` pairing):
 | 12 | `SpawnCrateGemMarker` (40 B) | New shape: a plain state-write slot, no sound/spawn - packs two args and calls `SetCrateGemPos`, which just stores them into `gLevelState+0x1c0`/`+0x1c4`. |
 | 13-14 | `SpawnFlame`/`SpawnSeaweed` (136 B each) | Full-OAM-trio spawners, header offsets **`+0x210`**/**`+0x21C`** - two more `gSpriteBankTable` offsets, extending that family to at least 8 confirmed values (`0xd8`, `0x18C`, `0x1C8`, `0x210`, `0x21C`, `0x228`, `0x234`, `0x240`, `0x27C`). |
 
-**Adjacent non-slot sibling**: `sub_80217D0`, sitting between slots 13
+**Adjacent non-slot sibling**: `SpawnSeaweedNoAnimReset`, sitting between slots 13
 and 14 in ROM, is byte-for-byte identical to slot 14 minus the tag
 write - a related but untagged variant, not itself one of the 15
 pointers. **Net characterization**: 5 trivial sound trampolines, 2
@@ -3739,8 +3739,8 @@ pointers** - a plain array, no `{0,ptr}` pairing. 30 of them (the
 previously-uncharacterized leading ~40-slot segment,
 `0x0816C6A4`-`0x0816C740`) were cross-checked against
 `asm/code_3_2.s`: 28/30 matched real function starts exactly, the
-other 2 matched genuine no-op stubs (`nullsub_21`/`nullsub_22`) -
-`nullsub_21`'s address recurs as a shared fallback slot **8 times**
+other 2 matched genuine no-op stubs (`SpawnNoEntity`/`SpawnHoverPlayerPosition`) -
+`SpawnNoEntity`'s address recurs as a shared fallback slot **8 times**
 across the table, the same "shared no-op fallback" convention already
 documented for the 42-slot action table. **One slot of this new
 leading segment was read: `SpawnStartMarker`** - takes 3 Q8.8-shifted x/y/z
@@ -3776,7 +3776,7 @@ settings/state bit - and two new record indices came out of it:
 feeding plain entity spawns, not just dialogs - and **record 32**
 (`0x180`). Only slot 0 (`SpawnStartMarker`) stands apart with the
 position/state-write shape on `gPlayer`; also confirmed:
-four `nullsub_21` shared-fallback slots in a row, the same convention
+four `SpawnNoEntity` shared-fallback slots in a row, the same convention
 seen elsewhere in this table and the 42-slot action table. Net effect:
 this ~40-slot segment isn't a fourth category, it's the same spawner/
 trampoline machinery already characterized, reused with different
@@ -4102,16 +4102,16 @@ purpose beyond that boolean wasn't traced further).
 
 Both `ProbeGroundSpriteTerrain` and its sibling `ProbeGroundSpriteFloor` (a single Y-axis
 "floor" probe `ProbeGroundSpriteTerrain` itself calls, built on the newly-read
-`sub_8026BF8`) are now NAKED-transcribed, byte-exact matched (confirmed
+`ProbeFloorHeight`) are now NAKED-transcribed, byte-exact matched (confirmed
 via a full clean `make compare`) - the same `r7`/`r8`/`sb` cross-block
 register-reuse resistance already established four times over in this
-immediate ROM neighborhood (`sub_8009BE0`, `PlayerAnimWouldTouchCrate`,
+immediate ROM neighborhood (`ProbeHitboxEdgeTerrain`, `PlayerAnimWouldTouchCrate`,
 `sub_800CEAC`, `sub_800CF70`), confirmed directly rather than assumed
 via one isolated-compile attempt. `CollideGroundSprite`, the two functions'
 only caller, stays raw - its own gate logic depends on the also-still-
-raw `sub_8009BE0`.
+raw `ProbeHitboxEdgeTerrain`.
 
-**Update (follow-up session)**: `sub_8009BE0` is now fully understood
+**Update (follow-up session)**: `ProbeHitboxEdgeTerrain` is now fully understood
 (a physics/collision step-probe, `docs/matching/archive/naked-spatial-grid-tail.md`),
 which unblocked `CollideGroundSprite` itself - now matched as real C (not
 NAKED), see `docs/matching/archive/issue-9-0x0800a178-graphics.md`'s "Follow-up"
@@ -4119,7 +4119,7 @@ section. `self+0x68`, the byte `CollideGroundSprite` reads/writes/returns, is a
 persistent per-object cumulative collision-axis mask (OR'd from
 `ProbeGroundSpriteTerrain`'s own per-call result), distinct from `self+0x74`'s
 per-call scratch mask documented above. `CollideGroundSprite` cross-checks its
-own Y-axis bit against a second, independent `sub_8009BE0` step-probe
+own Y-axis bit against a second, independent `ProbeHitboxEdgeTerrain` step-probe
 before trusting it. This closes the entire former `CollideGroundSprite`-
 `ProbeGroundSpriteFloor` raw/parked span at the real-C-or-NAKED level (only
 `CollideGroundSprite` itself is real C; `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` remain

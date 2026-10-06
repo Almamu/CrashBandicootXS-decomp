@@ -13,7 +13,7 @@
  * `+0x34` bit 7 and clears bits 2-3, allocates the pool), `DestroyPooledBgLayer`
  * destroys it (frees the pool, restores the base table
  * `gBgLayerVtable`, chains to the base destructor `DestroyBgLayerBase`).
- * `sub_8026480` reads `+0x34` bits 0-1.
+ * `GetPooledBgLayerPriority` reads `+0x34` bits 0-1 (the BG priority).
  *
  * The pool maps up to 0x2000 source tiles onto 0x200 reference-counted
  * VRAM tile slots:
@@ -77,10 +77,10 @@ union bg_entry {
 struct pooled_layer {
     u8 unk_00[0x30]; // 0x00 - BG-scroll-layer base (InitBgLayer)
     void *vtable;    // 0x30
-    u8 bits0_1:2;    // 0x34
-    u8 bits2_3:2;
+    u8 priority:2;   // 0x34 - the BGnCNT shadow (struct bg_scroll_layer.cnt)
+    u8 charBase:2;
     u8 bits4_6:3;
-    u8 bit7:1;
+    u8 colors256:1;
     u8 unk_35[0x27];             // 0x35
     struct tile_slot_pool *pool; // 0x5C
 };
@@ -124,7 +124,7 @@ struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
     InitBgLayer(self, bgIndex);
     self->vtable = (void *)gPooledBgLayerVtable;
     {
-        /* bit7 = 1, bits2_3 = 0. This compiler folds both masks to
+        /* colors256 = 1, charBase = 0. This compiler folds both masks to
          * immediates; the ROM keeps the `& 0x7f` and derives `-0xd` from
          * the `0x80` register (`subs #0x8d`) - same class as
          * InitBgLayer's +0x34/+0x35 updates (bg_layer_init.c). */
@@ -146,9 +146,11 @@ struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
     return self;
 }
 
-u32 sub_8026480(struct pooled_layer *self)
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+ * method tables). Layer 0's BG priority, BGnCNT bits 0-1. */
+u32 GetPooledBgLayerPriority(struct pooled_layer *self)
 {
-    return self->bits0_1;
+    return self->priority;
 }
 
 void ResetTileSlotPool(struct tile_slot_pool *pool)

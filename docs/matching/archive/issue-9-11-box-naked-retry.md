@@ -37,7 +37,7 @@ compilers and diffing each against the ROM:
 - **Register pins** (never r7/r8), where the allocator tie didn't
   move otherwise: `UpdateEnemyTriggerBox` (target r1), `UpdateEnemyHop` (`baseY`
   r1), `UpdateEnemyOscillateX` (product r2), `ProbeGroundSpriteFloor` (flags r2, its copy
-  r1), `sub_8009BE0` (tries pointer r6), `CheckSpritePickup` (constant r6).
+  r1), `ProbeHitboxEdgeTerrain` (tries pointer r6), `CheckSpritePickup` (constant r6).
 
 ## Closed (13)
 
@@ -47,7 +47,7 @@ compilers and diffing each against the ROM:
 | `UpdatePartList` | sprite_anim.c | old | near/screen boxes in one frame struct; the screen box's w/h stored through a `&screen` pointer taken after its x/y stores (that pointer is the loop's r8). |
 | `InitCrateList` | part_list.c | both | grid clear as a plain indexed `for` (gcc reverses it); free-list loop reads the array through `fl = freeList` taken inside the guard. |
 | `ResetCrateList` | crate_list_reset.c | both | same tail as `InitCrateList`; the teardown loop is plain C. |
-| `sub_8009BE0` | step_probe.c | both | pos + origY as one frame struct; loop increments through a `t2 = tries` copy and tests through `tries` (pinned r6); `pos.y` bumped through `&pos`; `u8` first-probe result in a local; the in-loop hit restores the flag and returns on its own (reloads the global from the pool; cross-jumping shares the `strb`). |
+| `ProbeHitboxEdgeTerrain` | step_probe.c | both | pos + origY as one frame struct; loop increments through a `t2 = tries` copy and tests through `tries` (pinned r6); `pos.y` bumped through `&pos`; `u8` first-probe result in a local; the in-loop hit restores the flag and returns on its own (reloads the global from the pool; cross-jumping shares the `strb`). |
 | `ProbeGroundSpriteTerrain` | ground_sprite_collide.c | old | `s32` result set by `? 8 : result` (expands to `-(x != 0)` into the result then `&= 8`); `self+0x24` pointer taken after its test value; the two out-bytes for `ProbeGroundSpriteFloor` are separate `u8` locals. File moved to old_agbcc. |
 | `ProbeGroundSpriteFloor` | ground_sprite_collide.c | old | first hit path: bit-1 test into its own local, then the copy `v = f`, with `f` pinned r2 and `v` r1. |
 | `UpdateEnemyHop` | enemy_motion.c | both | target held in a local after the two calls, `baseY` pinned to r1 for the store. |

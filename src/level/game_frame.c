@@ -75,7 +75,7 @@ void UpdateGameFrame(struct level_state *self)
     SetMaskAssistDeaths(self, 5);
     SetCrateAssistDeaths(self, 5);
     self->level = 0;
-    self->unk_e0 = 0;
+    self->checkpointFlags = 0;
     {
         struct dma_regs *dma;
 
@@ -87,7 +87,7 @@ void UpdateGameFrame(struct level_state *self)
         dma->cnt;
     }
     MemCopy32(self->saveData, self, 0x68);
-    gUnknown_030012C4 = self;
+    gGameFrameLevelState = self;
     self->maskLevel = 0;
     {
         void *gfx;
@@ -130,16 +130,16 @@ void UpdateGameFrame(struct level_state *self)
                 quit = RunSaveMenu(0, 0);
                 CloseSaveMenu();
                 if (quit)
-                    self->unk_e0 = 0;
+                    self->checkpointFlags = 0;
                 goto restore;
             }
         }
         ClearTimeTrial(self);
 
     start:
-        self->unk_c8 = 0;
+        self->roomIndex = 0;
         self->checkpointCrateCount = 0;
-        self->unk_e0 = 0;
+        self->checkpointFlags = 0;
         status = 1;
         self->crateTotal = CountLevelCrates(self->level);
         gHud = (void *)InitHud(OperatorNew(0x68));
@@ -229,7 +229,7 @@ void UpdateGameFrame(struct level_state *self)
             if (self->timeTrial && status == 1) {
                 self->pendingSwitchCrates = 0;
                 self->checkpointSwitchPressed = 0;
-                self->unk_c8 = 0;
+                self->roomIndex = 0;
                 self->checkpointCrateCount = 0;
                 ArmStartSpawn(self);
                 ClearTimeTrial(self);
@@ -301,7 +301,7 @@ void UpdateGameFrame(struct level_state *self)
                 if (GetCompletionPercent(self) > 99) {
                     PlayCutscene(self, 8);
                     self->level++;
-                    self->unk_c8 = 0;
+                    self->roomIndex = 0;
                     goto start;
                 }
                 PlayCutscene(self, 10);

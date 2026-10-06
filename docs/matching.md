@@ -2166,7 +2166,7 @@ fixed-point fields `struct actor` has at 0x00/0x04, integer-shifted by
 `part` embeds a struct-actor-shaped position at its own start. Matched
 on the first attempt, plus the usual alignment fix.
 
-**`DestroySpriteRenderer`/`nullsub_2`**: the same conditionally-free idiom as
+**`DestroySpriteRenderer`/`InitSpriteRenderer`**: the same conditionally-free idiom as
 `DestroyOamBuffer`/`DestroySpriteBankSet`/`DestroyEntity` and another empty stub, both
 matched on the first attempt.
 
@@ -2749,7 +2749,7 @@ literally one register end to end - while `idx` (`r4`) and `table`
 untouched role. Byte-exact on the first successful attempt, no
 parking needed.
 
-**Parked, not matched: `sub_8008188`** (ROM `0x08008188`, right after
+**Parked, not matched: `OffsetFromHitboxEdge`** (ROM `0x08008188`, right after
 `GetSpriteAnimPaletteSlot`, same file): adjusts `dest`'s `{s32 field_0, field_4}`
 (a position, working theory) per a `kind` selector (`kind-1` is the
 real switch value, 0-11; everything else - including the four
@@ -2812,51 +2812,51 @@ instruction anchor simply doesn't arise. Every other switch case is
 routed through a bare `goto` to its own label outside the switch
 (rather than holding real code directly in the switch) so the
 compiler's block *layout* also lands exactly where the ROM has it -
-`sub_8008278` below needed this same all-`goto` restructuring for
+`OffsetToHitboxEdgeStart` below needed this same all-`goto` restructuring for
 cases with real code too, see its own entry for why. Confirmed
 byte-identical via isolated compile plus `arm-none-eabi-as` assemble
 against the ROM's raw bytes at `0x08008188`, then via full clean
 `make compare`.
 
-**Parked, not matched: `sub_8008200`** (ROM `0x08008200`, right after
-`sub_8008188`, same file): the same shape as `sub_8008188` above, with
+**Parked, not matched: `OffsetToHitboxEdge`** (ROM `0x08008200`, right after
+`OffsetFromHitboxEdge`, same file): the same shape as `OffsetFromHitboxEdge` above, with
 every add/subtract direction mirrored (kind 1/2 do the opposite sign
 on `dest->field_0`; kinds 4/8/12 add to `dest->field_4` instead of
 subtracting). Same single resistant gap: the shared kind-8/12 block's
 `add` compiles as `adds r1, r1, r2` instead of the ROM's
-`adds r1, r2, r1` - see `sub_8008188`'s entry above for the full
+`adds r1, r2, r1` - see `OffsetFromHitboxEdge`'s entry above for the full
 account of what was tried (all of which applies identically here, not
 re-run a second time). Parked as `NON_MATCHING` alongside its sibling.
 
 **Update: matched in a later session.** Converted back from the
 `NAKED` transcription to real C using the identical `goto`-shared
-atomic-asm-block technique as `sub_8008188` above (just with the
+atomic-asm-block technique as `OffsetFromHitboxEdge` above (just with the
 add/subtract directions mirrored to match this function's own shape) -
 see its "Update" note for the full account. Confirmed byte-identical
 via isolated compile plus `arm-none-eabi-as` assemble against the
 ROM's raw bytes at `0x08008200`, then via full clean `make compare`.
 
-**Parked, not matched: `sub_8008278`** (ROM `0x08008278`, right after
-`sub_8008200`, same file): a third variant of the `sub_8008188` shape,
+**Parked, not matched: `OffsetToHitboxEdgeStart`** (ROM `0x08008278`, right after
+`OffsetToHitboxEdge`, same file): a third variant of the `OffsetFromHitboxEdge` shape,
 this time updating *both* fields on every handled `kind`: kind 1/2
 update `dest->field_0` (sub/add `rec+4`'s byte) and then
 unconditionally also add `rec+2`'s short (Q8) to `dest->field_4`;
-kinds 4/8/12 update `dest->field_4` (same as `sub_8008188`'s kinds)
+kinds 4/8/12 update `dest->field_4` (same as `OffsetFromHitboxEdge`'s kinds)
 and then unconditionally also subtract `rec+4`'s byte from
 `dest->field_0`. Needed the accumulator-register pin pattern
 (`byteVal`/`shifted`/`field0`, reusing `r0` for the byte-load-then-
 field0-reload chain in the kind-0/1 blocks, `r2` in the kind-3/7/11
 tail block, matching the ROM's own choice of which dead register gets
 reused each time) to get every other instruction matching. Same single
-resistant gap as `sub_8008188`/`sub_8008200`: the shared kind-8/12
+resistant gap as `OffsetFromHitboxEdge`/`OffsetToHitboxEdge`: the shared kind-8/12
 block's `add` compiles as `adds r1, r1, r0` instead of the ROM's
-`adds r1, r0, r1` - see `sub_8008188`'s entry above for the full
+`adds r1, r0, r1` - see `OffsetFromHitboxEdge`'s entry above for the full
 account of what was tried against this exact pattern. Parked alongside
 its two siblings.
 
 **Update: matched in a later session.** Converted back from the
 `NAKED` transcription to real C using the same `goto`-shared
-atomic-asm-block technique as `sub_8008188`/`sub_8008200` above for
+atomic-asm-block technique as `OffsetFromHitboxEdge`/`OffsetToHitboxEdge` above for
 the kind-8/12 gap (`byteVal` here lands in `r0` rather than `r2`, since
 `r2` stays live as `rec` across into the shared `field_0`-adjustment
 tail that follows - the atomic block reads it as an input without
@@ -2885,7 +2885,7 @@ register the whole time. Confirmed byte-identical via isolated compile
 plus `arm-none-eabi-as` assemble against the ROM's raw bytes at
 `0x08008278`, then via full clean `make compare`.
 
-**`IsSpriteObjInsideRect`** (ROM `0x08008304`, right after `sub_8008278`, new
+**`IsSpriteObjInsideRect`** (ROM `0x08008304`, right after `OffsetToHitboxEdgeStart`, new
 `src/objects/sprite_obj.c`): `part+0x25 == 1` is the same fast
 override seen in `IsSpriteObjOnScreen`/`SpriteObjOverlapsRect`; otherwise defers entirely
 to `IsEntityInsideRect` (already matched in `graphics.c`), forwarding a `box`
@@ -2944,7 +2944,7 @@ convention, not a distinguishable instruction). The one genuine
 remaining gap: the final index computation's `add` compiles as
 `adds r0, r1, r0` where the ROM has `adds r0, r0, r1` - the same
 "which operand goes first" canonicalization documented at length for
-`sub_8008188`/`sub_8008200`/`sub_8008278` above. Reordering the C
+`OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/`OffsetToHitboxEdgeStart` above. Reordering the C
 addition, pinning each operand to its own register, and using a
 genuinely separate destination variable (all three techniques,
 independently) made no difference here either. Parked rather than keep
@@ -2952,8 +2952,8 @@ chasing this one instruction - same call as the other parked functions
 above.
 
 **Update: matched in a later session.** Converted back from the
-`NAKED` transcription to real C. Unlike `sub_8008188`/`sub_8008200`/
-`sub_8008278`'s shared-switch-case gap, this function's resistant
+`NAKED` transcription to real C. Unlike `OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/
+`OffsetToHitboxEdgeStart`'s shared-switch-case gap, this function's resistant
 `add` sits in genuinely straight-line code - no switch, no case
 merging to protect - so a plain inline-asm anchor on just that one
 instruction (`asm volatile("add r0, r0, r1\n\t" : "=r"(arr) :
@@ -3113,7 +3113,7 @@ ROM's real extra callee-saved register (`r5` for `idx`, hence the
 naturally-allocated version reused fewer registers and only pushed
 `r4`. The final `rec = table + offset` add also hit the same resistant
 "which operand goes first" canonicalization documented at length for
-`sub_8008188`/`sub_8008200`/`sub_8008278`/`GetSpriteFrame` above - but
+`OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/`OffsetToHitboxEdgeStart`/`GetSpriteFrame` above - but
 since this function has no `switch` (and therefore no case-block-
 merging to protect), the usual fallback of parking wasn't necessary:
 a single-instruction inline `asm("add %0, %0, %1" : "+r"(offset) :
@@ -4114,10 +4114,10 @@ a clean tree and verified byte-exact - see `docs/workflow.md`'s
 verification step, now stated as a hard requirement rather than a
 recommendation.
 
-`sub_8009BE0` through `ResolvePlayerContact` (~3 functions) sits between this
-pocket and the already-matched `ApplySpriteVelocity` boundary; `sub_8009BE0`
+`ProbeHitboxEdgeTerrain` through `ResolvePlayerContact` (~3 functions) sits between this
+pocket and the already-matched `ApplySpriteVelocity` boundary; `ProbeHitboxEdgeTerrain`
 itself (a physics/collision step-probe calling still-unexamined
-`sub_8008278`/`ProbeTerrain`) was left raw rather than guessed at, so
+`OffsetToHitboxEdgeStart`/`ProbeTerrain`) was left raw rather than guessed at, so
 this remains a separate raw span for now.
 
 **Parked, not matched: `CollideCrateGridPartWithObject`** (ROM `0x080099F0`, right after
@@ -4146,15 +4146,15 @@ stays filed as parked (now "parked, NAKED" rather than "parked,
 NON_MATCHING"). `CollidePartWithObject` itself is untouched by this change and
 remains its own separate `NAKED` function in `part_collide.c`.
 
-`sub_8009BE0` (right after `DestroyCrateList`) is a physics/collision step-
-probe function calling still-unexamined `sub_8008278`/`ProbeTerrain`
+`ProbeHitboxEdgeTerrain` (right after `DestroyCrateList`) is a physics/collision step-
+probe function calling still-unexamined `OffsetToHitboxEdgeStart`/`ProbeTerrain`
 (a Q8->int conversion via `>>8`, an up-to-4-attempt probe loop, and
 mysterious `+0x2a` flag toggling on `gPlayer`) - left raw
 rather than guess at semantics.
 
 ## `CheckPlayerContact`: third tractable function, `player_contact.c`
 
-Right after the raw `sub_8009BE0`, `CheckPlayerContact` turned out to be
+Right after the raw `ProbeHitboxEdgeTerrain`, `CheckPlayerContact` turned out to be
 another self-contained, clearly-understood function: it tests `part`
 for a collision-grid hit against the player (`gPlayer`),
 gated by a mix of flag bits and a periodic "fast path" check against
@@ -4439,8 +4439,8 @@ first attempt.
 ## New tractable pocket after the AI/collision cluster: `ground_sprite.c`
 
 Past the whole AI/collision cluster resolved above, `CollideGroundSprite`
-through `sub_800A590` (part-object update/collision dispatchers
-calling still-unexamined `ProbeGroundSpriteTerrain`/`sub_8009BE0`) remain a raw
+through `AnchorGroundSpriteHitbox` (part-object update/collision dispatchers
+calling still-unexamined `ProbeGroundSpriteTerrain`/`ProbeHitboxEdgeTerrain`) remain a raw
 span in `code_3_2_11.s` - left raw rather than guess at semantics.
 
 Right after that span, `DrawGroundSprite` through `GetMovingSpriteCtrl` turned out
@@ -4542,7 +4542,7 @@ of the run:
 - **`StopPlayerFalling`**: clamps three fields to `<= 0`; needed `self`
   pinned to `r1` to avoid an extra register copy the ROM doesn't have.
 - **`UpdatePlayer`**: countdown-decrement then tail-call into
-  `UpdateGroundSprite` (itself still raw, in the `CollideGroundSprite`-`sub_800A590`
+  `UpdateGroundSprite` (itself still raw, in the `CollideGroundSprite`-`AnchorGroundSpriteHitbox`
   span).
 - **`PlayerTouchesBox`**: the `gPlayer` AABB-vs-buf collision
   check every earlier-matched pool/grid function in `part_list.c`
@@ -5328,7 +5328,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   `0x08022EA8`) - a level-start/reset routine: clears `self+0x8c`/
   `0x90`-`0xa0`, tears down two actor slots at `self+0x1bc`/`0x1c0` via
   `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` when non-null, then walks
-  `gUnknown_030012EC`'s array firing `_call_via_r1` table trampolines
+  `gTouchableList`'s array firing `_call_via_r1` table trampolines
   and setting bits in the `gEntityFlags` collision bitmap. Several
   callees (`SetMaskLevel`, `ConvertCratesForTimeTrial`, `_call_via_r1`, `PickUpWumpa`)
   aren't characterized precisely enough yet to commit a confident
@@ -6298,7 +6298,7 @@ same idiom `GetSpriteTileBase` in `sprite_obj.c` already uses, just one
 7/5/6/8), builds it via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
 `SetSpriteAnimDone` OAM trio, sets its `+0x29` bitfield from `GetSpriteAnimPaletteSlot`'s
 low nibble, sets `field_0A` to the (always-zero on this branch) tested
-bit, registers it into `gUnknown_030012EC`'s `dual_array_manager` via
+bit, registers it into `gTouchableList`'s `dual_array_manager` via
 `AddToPartList`, and clears `flags` bit 2 (`& -5`, the negative-constant
 bit-clear idiom - not `& ~5`, a different mask entirely, same
 distinction `LoadLanguageSelectBg` in `language_select_setup.c` already

@@ -22,7 +22,7 @@ No register pins, no asm in a function body and no NAKED.
 | `SetupRoomBlend` | `room_frame.c` |
 | `BeginSlide` | `slideshow.c` |
 | `StreamBgRow`, `StreamBgColumn`, `FillBgStreamer` | `cutscene_player.c` |
-| `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `sub_8025228` | `bg_layer_base.c` |
+| `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `GetSolidTerrainModeValue` | `bg_layer_base.c` |
 | `GetTerrainType` | `tile_cache.c` |
 | `DropExtraLife` | `drop_extra_life.c` |
 | `SpawnEffectPart` | `entity_spawner.c` |
@@ -58,7 +58,7 @@ Still NAKED, with the remaining gap under old_agbcc:
 - **The tile cache's `GetCell`.** A shared inline returning `u16` gives
   the ROM's extra `lsl`/`lsr 16`, with the index written as
   `(y & 7) * 16 + (x & 0xf)` (`<< 4` schedules differently).
-  `sub_8025228` reads 36-byte `struct terrain_type` rows.
+  `GetSolidTerrainModeValue` reads 36-byte `struct terrain_type` rows.
 - **Stepwise index arithmetic.** `StreamBgRow`/`StreamBgColumn` build the
   map index in separate statements; `FillBgStreamer` keeps the row stride
   and block height in `s32` locals so they stay in `sl`/`sb`.

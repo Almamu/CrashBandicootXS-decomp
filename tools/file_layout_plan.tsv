@@ -84,7 +84,7 @@ src/graphics/actor_part11e.c	src/crates/crate_grid_collide.c	src/crates/crate_gr
 src/graphics/actor_part11d.c	src/crates/crate_player_collide.c	-	CollidePlayerWithCrates [OLD_AGBCC]
 src/graphics/actor_part11i.c	src/crates/crate_list_reset.c	-	ResetCrateList
 src/graphics/actor_part12.c	src/crates/crate_list.c	-	CollideCrateGridPartWithObject, RemoveCrateFromList, RemoveCrateListAt, AddCrateGridNode, LinkCrateInGrid (+2 more) [OLD_AGBCC]
-src/graphics/actor_part12b.c	src/objects/step_probe.c	-	sub_8009BE0
+src/graphics/actor_part12b.c	src/objects/step_probe.c	-	ProbeHitboxEdgeTerrain
 src/graphics/actor_part13.c	src/objects/player_contact.c	-	CheckPlayerContact, ResolvePlayerContact
 src/graphics/actor_part8.c	src/objects/moving_sprite.c	-	ApplySpriteVelocity, SetSpritePrevPos, GetSpritePrevPos, GetSpritePrevY, GetSpritePrevX (+6 more)
 src/graphics/actor_part9.c	src/objects/moving_sprite_collide.c	-	HitMovingSprite, ClassifySpriteContact, CollideMovingSprite, GetGroundSpriteHitMask, HasGroundSpriteHitMask (+15 more)
@@ -228,7 +228,7 @@ src/system/game_loop43.c	src/level/terrain_probe.c	-	ProbeTerrain
 src/system/level_layers.c	src/level/level_layers.c	-	LoadRoom, InitLevelLayers, DestroyLevelLayers, GetLevelLayers, SetLevelScroll (+6 more)
 src/system/game_loop46.c	src/level/terrain_probe_axes.c	-	ProbeTerrainY, ProbeTerrainX [OLD_AGBCC]
 src/system/game_loop44.c	src/level/terrain.c	src/level/terrain.c	GetTerrainFlagsAt
-src/system/game_loop45.c	src/level/terrain.c	src/level/terrain.c	sub_8026BF8, sub_8026C3C, sub_8026C80, sub_8026C8C
+src/system/game_loop45.c	src/level/terrain.c	src/level/terrain.c	ProbeFloorHeight, ProbeSolidFloorHeight, sub_8026C80, sub_8026C8C
 src/system/camera_follow.c	src/level/camera.c	-	gCamera follow (UpdateCamera, SnapCamera) plus OperatorNew/OperatorDelete(Array); split candidate
 src/system/main_loop.c	src/system/main_loop.c	-	MainLoop, GetUiText
 src/graphics/hud_icon_slot.c	src/gfx/palette_cycle.c	-	palette cycles (TickPaletteCycles, AddPaletteCycle) plus DrawHudPart/InitHudPart

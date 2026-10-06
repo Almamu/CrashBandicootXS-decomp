@@ -48,7 +48,9 @@ void DestroySpriteRenderer(void *arg0, u32 arg1)
 }
 asm(".align 2, 0");
 
-void nullsub_2(void)
+/* gSpriteRenderer's empty constructor (InitLevelState), next to its
+ * destructor DestroySpriteRenderer. */
+void InitSpriteRenderer(void)
 {
 }
 asm(".align 2, 0");

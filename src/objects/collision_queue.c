@@ -81,7 +81,7 @@ void ResolveCollisionCandidates(struct collision_queue *self)
                             self->candidates[best].hit, self->candidates[best].p20,
                             self->candidates[best].p21, (struct byte_arg){ forced });
         self->count = 0;
-        self->unk_04 = 0;
+        self->posCommitted = 0;
     }
 }
 
@@ -163,14 +163,11 @@ void DestroyCollisionQueue(struct collision_queue *self, s32 flags)
     }
 }
 
-/* Sibling reset: clears just `count` (`+0x00`) and `unk_04`
- * (`+0x04`) - confirming (per `src/player/player_init.c`'s own doc
- * comment, already noting this exact function) that `unk_04` is read
- * back elsewhere as a real field, not unexamined padding, though its
- * own full meaning/width past this one byte remains open. Called as
+/* Sibling reset: clears just `count` (`+0x00`) and `posCommitted`
+ * (`+0x04`, see struct collision_queue). Called as
  * `ResetCollisionQueue(self + 0x108)` from `player_init.c`. */
 void ResetCollisionQueue(struct collision_queue *self)
 {
     self->count = 0;
-    self->unk_04 = 0;
+    self->posCommitted = 0;
 }

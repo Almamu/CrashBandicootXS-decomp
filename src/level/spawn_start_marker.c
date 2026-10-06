@@ -22,7 +22,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  *    its bit 1 into the player's `+0x28` bitfield's bit 4, then
  *    unconditionally writes the incoming `x`/`y` (Q8.8, shifted from
  *    the raw `u16` args) into the player's own `x`/`y` fields - the
- *    same unconditional write `sub_80221A4`/`sub_80221D4`
+ *    same unconditional write `SpawnUnderwaterPlayerPosition`/`SpawnPlayerPosition`
  *    (spawn_pickups.c) already do elsewhere in this cluster.
  *
  * 2. Unless the level state's `timeTrial` flag is set: fires the

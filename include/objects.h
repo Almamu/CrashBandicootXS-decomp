@@ -72,10 +72,10 @@ struct collision_candidate {
  */
 struct collision_queue {
     s32 count; // 0x00
-    u8 unk_04; // 0x04 - the "position committed" byte: ResetCollisionQueue
-               //        clears it, crate_break.c's D18C_COMMIT sets it, and
-               //        while it is set ApplyCrateCollision leaves the player's
-               //        position alone
+    // 0x04 - ResetCollisionQueue clears it, crate_break.c's D18C_COMMIT sets
+    // it, and while it is set ApplyCrateCollision leaves the player's
+    // position alone
+    u8 posCommitted;
     u8 unk_05[3];
     struct collision_candidate candidates[16]; // 0x08
 };
@@ -130,7 +130,7 @@ extern s32 GetCtrlMode(void *self);
 /* src/objects/effect_ctrl.c */
 extern void UpdateEffectCtrl(void *self, struct cbf4_other *other);
 extern void EffectCtrlHandleEvent(void *self);
-extern void nullsub_3(void *self);
+extern void ResetEffectCtrl(void *self);
 extern void DestroyEffectCtrl(void *self, s32 flags);
 extern void *InitEffectCtrl(void *self);
 
@@ -159,7 +159,7 @@ extern u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad
 
 /* src/objects/ground_sprite_update.c */
 extern void UpdateGroundSprite(struct gobj *self);
-extern void sub_800A590(struct gobj *self);
+extern void AnchorGroundSpriteHitbox(struct gobj *self);
 
 /* src/objects/moving_sprite.c */
 extern s32 ApplySpriteVelocity(void *self);
@@ -215,11 +215,11 @@ extern void CollidePartsOfClass(void *manager, s32 classId);
 
 /* src/objects/platform.c */
 extern void UpdatePlatform(struct gobj *self);
-extern s32 sub_801B29C(struct gobj *self);
-extern void sub_801B2A8(struct gobj *self, u8 value);
+extern s32 GetPlatformExitMirror(struct gobj *self);
+extern void SetPlatformExitMirror(struct gobj *self, u8 value);
 extern s32 GetPlatformClassId(void);
 extern void DestroyPlatform(struct gobj *self, s32 flags);
-extern void sub_801B2D8(struct gobj *self);
+extern void ClearPlatformVulnerable(struct gobj *self);
 extern struct gobj *InitPlatform(struct gobj *self);
 extern void UpdatePlatformMover(struct mover *self, struct gobj *obj);
 extern void MovePlayerWithPlatform(struct mover *self, struct gobj *obj);
@@ -249,7 +249,7 @@ extern void ResolvePlayerContact(void *part);
 extern void DrawSpriteAt(void *self, void *part, s32 x, s32 y);
 extern void DrawSprite(void *self, void *part);
 extern void DestroySpriteRenderer(void *self, u32 flags);
-extern void nullsub_2(void);
+extern void InitSpriteRenderer(void);
 extern void ResetSpriteObj(void *self);
 extern struct aabb GetSpriteBounds(struct box_part *part);
 extern struct aabb GetSpriteHitbox(struct box_part *part);
@@ -298,9 +298,9 @@ extern void CollidePartWithPlayer(struct part_list *list, struct aabb box, struc
 /* src/objects/sprite_obj.c */
 extern s32 SpriteHitboxOverlaps(struct actor *part, void *region);
 extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
-extern void sub_8008188(void *dest, s32 kind, void *rec);
-extern void sub_8008200(void *dest, s32 kind, void *rec);
-extern void sub_8008278(void *dest, s32 kind, void *rec);
+extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);
+extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
+extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
 extern s32 IsSpriteObjInsideRect(struct actor *part, void *box);
 extern s32 IsSpriteObjNearCamera(struct actor *part);
 extern s32 ApplySpriteObjVelocity(void);
@@ -347,7 +347,7 @@ extern void *GetSpriteAnimTable(void *part);
 extern u8 IsSpriteAnimLooping(struct actor *part);
 
 /* src/objects/step_probe.c */
-extern s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad);
+extern s32 ProbeHitboxEdgeTerrain(struct box_part *self, s32 mode, struct hitbox_quad *quad);
 
 /* The controllers' motion records (src/data/motion_records_16b304.c),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and

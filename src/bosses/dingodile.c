@@ -308,7 +308,7 @@ static inline void MarkCollected(struct part *p)
     }
 }
 
-/* Sets `kind` to `flag` (0 or 1) on every part in the gUnknown_030012EC
+/* Sets `kind` to `flag` (0 or 1) on every part in the gTouchableList
  * list, the list the level's platforms join (platform_create.c). In the
  * Cortex fight those include the Cortex platform movers, which
  * UpdateCortexBossPlatformMover animates to frame 10 for kind 1 and
@@ -317,10 +317,10 @@ static inline void MarkCollected(struct part *p)
 void SetCortexPlatformsKind(void *self, u8 flag)
 {
     s32 i;
-    s32 n = gUnknown_030012EC->count;
+    s32 n = gTouchableList->count;
 
     for (i = 0; i < n; i++) {
-        struct part *p = (struct part *)gUnknown_030012EC->items[i];
+        struct part *p = (struct part *)gTouchableList->items[i];
 
         if (flag)
             p->kind = 1;
@@ -765,7 +765,7 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
     p->f28.flag5 = (*bits >> 2) & 1;
     p->fl.b.active = 1;
     if (mode == 0)
-        AddToPartList(gUnknown_030012EC, p);
+        AddToPartList(gTouchableList, p);
     else
         AddToPartList(gCollidableList, p);
 }

@@ -56,7 +56,7 @@ overrides described below).
    object type, not a mistake in the established `+0xC` convention).
    Stores `arg0` at `self+8`.
 2. **`type == 9` early special-case**: if `arg0 != 0xFFFF` and
-   `sub_802599C(*gEntityFlags, arg0)` (the same "is this placement
+   `IsEntityIdActivated(*gEntityFlags, arg0)` (the same "is this placement
    record slot occupied/confirmed" check used throughout) is true,
    `type` is forced to `0`.
 3. **Resource-pressure demotion**: unless `gLevelState+0x8c` is
@@ -76,7 +76,7 @@ overrides described below).
    any other `type` skips straight to step 6): marks a "treat this
    placement record as pre-flagged" local flag (`special`) for `type`
    in `{1, 9, 11, 12, 15}`. For `type == 3`, if the placement record is
-   confirmed present (`sub_802599C`), escalates `type` to `7` outright
+   confirmed present (`IsEntityIdActivated`), escalates `type` to `7` outright
    - the rest of the function then runs exactly as if `type` had been
    `7` from the start. Every other in-range `type` is a no-op here.
 6. **Merge block**: looks up the placement record again. If `special`

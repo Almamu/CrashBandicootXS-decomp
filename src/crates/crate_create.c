@@ -30,7 +30,7 @@
  * `ResetCrate(self)` and stores `arg0` at `self+8`.
  *
  * `type == 9` gets one early special-case: if `arg0 != 0xFFFF` and
- * `sub_802599C(*gEntityFlags, arg0)` is true, `type` is forced to
+ * `IsEntityIdActivated(*gEntityFlags, arg0)` is true, `type` is forced to
  * `0`.
  *
  * Unless `gLevelState+0x8c` is set, or the level's "how many of
@@ -53,7 +53,7 @@
  * this placement record as pre-flagged" bit (a local flag, call it
  * `special`) for `type` in `{1, 9, 11, 12, 15}`; for `type == 3`, if
  * the same placement-record lookup shows the entity is already present
- * (`sub_802599C(*gEntityFlags, arg0)`), escalates `type` to `7`
+ * (`IsEntityIdActivated(*gEntityFlags, arg0)`), escalates `type` to `7`
  * outright, running the rest of the function as if `type` had been `7`
  * to begin with. Every other `type` in range is a no-op here.
  *
@@ -145,7 +145,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         self = obj;
     }
     self->id = id;
-    if (type == 9 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id))
+    if (type == 9 && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id))
         type = 0;
     if (gLevelState->timeTrial == 0 &&
         GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState)) {
@@ -180,7 +180,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         special = 1;
         break;
     case 3:
-        if ((u8)sub_802599C(gEntityFlags, id))
+        if ((u8)IsEntityIdActivated(gEntityFlags, id))
             type = 7;
         break;
     }
@@ -318,10 +318,10 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->slot = GetSpriteAnimPaletteSlot((struct actor *)self);
     self->x = x << 8;
     self->y = y << 8;
-    if ((u8)sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf) &&
+    if ((u8)IsEntityIdActivated(gEntityFlags, id) && (type == 0xb || type == 0xf) &&
         (PLACEMENT(slot)[0] & 0x80))
         type = 1;
-    if (type == 1 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id)) {
+    if (type == 1 && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id)) {
         PhysSetTag(self, 0x1b);
         self->frame = self->anim->records[self->tag].frames - 1;
         self->state = (self->state & 0x80) | type;
@@ -333,7 +333,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     MATCH_USE(type);
     MATCH_USE(type);
     MATCH_USE(type);
-    if (type == 5 && (u8)sub_802599C(gEntityFlags, id))
+    if (type == 5 && (u8)IsEntityIdActivated(gEntityFlags, id))
         SolidifyOutlineCrate(self);
     AddCrateToList(gCrateList, (struct box_part *)self);
     return self;

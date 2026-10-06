@@ -7,24 +7,21 @@
  * turned out to be part of the `actor` category's "part" object family
  * already tracked in part_list.c-ctrl.c (see
  * docs/matching/archive/issue-9-0x08007634-actor.md). `UpdateGroundSprite`/
- * `sub_800A590` sit between part_list.c's raw tail (still-raw
+ * `AnchorGroundSpriteHitbox` sit between part_list.c's raw tail (still-raw
  * CollideGroundSprite/ProbeGroundSpriteTerrain/ProbeGroundSpriteFloor) and the already-matched
  * ground_sprite.c (DrawGroundSprite onward). */
 
-/* Looks up `self`'s current "moving platform" record via the
- * virtual method `m10` (the same method-table convention as
- * `DrawPartList`'s `m20` slot in part_list.c) and, if the record
- * pointer changed since the last call (cached in `self->platform`,
- * non-NULL), nudges `self->y` by the delta between the old and new
- * record's position - interpreted as `record[5] + record[2]` (a Q8
- * byte+halfword sum) when `self->unk_68` reads state `8`, or just
- * `record[2]` (a plain halfword) when it reads state `4`. Reads as a
- * "ride along with a moving platform" hookup: when the platform record
- * moves, carry the rider by the same amount. This function
- * (`UpdateGroundSprite`) additionally makes one extra unconditional
- * `UpdateMovingSprite(self)` call first (return value discarded) - its own
- * purpose isn't examined further here, just reproduced. Its twin
- * `sub_800A590` right below is the same body without that extra call.
+/* Keeps the side of a ground sprite's hitbox it is resting on in place
+ * when the hitbox changes: calls `self`'s hitbox method (`m10`, slot 2,
+ * GetSpriteObjHitbox's `{s16 xOff, s16 yOff, u8 w, u8 h}` record of the
+ * current frame) and, if the record changed since the last call (cached
+ * in `self->lastHitbox`, non-NULL), moves `self->y` by the difference
+ * between the old and the new record's bottom edge (`yOff + h`) when
+ * `self->hitAxes` is 8 (standing on the floor), or their top edge
+ * (`yOff`) when it is 4 (against the ceiling). This function
+ * (`UpdateGroundSprite`) first runs `UpdateMovingSprite(self)` (return
+ * value discarded); its twin `AnchorGroundSpriteHitbox` right below is
+ * the same body without that call.
  *
  * Matched. `self` pins to r4 and the trampoline's returned record pins
  * to r3, reproducing most of the ROM's register choices directly.  The
@@ -46,7 +43,7 @@
  * docs/matching/archive/issue-9-0x08007634-actor.md.
  *
  * Function order in this file matches ROM address order
- * (`UpdateGroundSprite` < `sub_800A590`) rather than the two twins' logical
+ * (`UpdateGroundSprite` < `AnchorGroundSpriteHitbox`) rather than the two twins' logical
  * "base function then its +1-call variant" relationship, since the
  * linker places each object's functions in source order and this one
  * must land first. */
@@ -67,7 +64,7 @@ void UpdateGroundSprite(struct gobj *self)
     addr = (u8 *)self + off;
     fn = tbl->m10.fn;
     rec = (void *)_call_via_r1(addr, fn);
-    prev = self->platform;
+    prev = self->lastHitbox;
 
     if (prev == rec)
         goto skip;
@@ -127,20 +124,23 @@ void UpdateGroundSprite(struct gobj *self)
     self->y += delta;
 
 skip:
-    self->platform = rec;
+    self->lastHitbox = rec;
 }
 
-/* Same shape as `UpdateGroundSprite` above, minus its leading unconditional
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+ * method tables).
+ *
+ * Same shape as `UpdateGroundSprite` above, minus its leading unconditional
  * `UpdateMovingSprite(self)` call. See `UpdateGroundSprite`'s doc comment for the
  * shared logic and the closed register-allocation gap. */
-void sub_800A590(struct gobj *self)
+void AnchorGroundSpriteHitbox(struct gobj *self)
 {
     struct gobj_vtable *tbl = self->vtable;
     s16 off = tbl->m10.thisOffset;
     void *addr = (u8 *)self + off;
     void *fn = tbl->m10.fn;
     MATCH_HOLD_REG(void *, rec, r3) = (void *)_call_via_r1(addr, fn);
-    MATCH_HOLD_REG(void *, prev, r1) = self->platform;
+    MATCH_HOLD_REG(void *, prev, r1) = self->lastHitbox;
     MATCH_HOLD_REG(s32, delta, r1);
 
     if (prev == rec)
@@ -196,6 +196,6 @@ void sub_800A590(struct gobj *self)
     self->y += delta;
 
 skip:
-    self->platform = rec;
+    self->lastHitbox = rec;
 }
 asm(".align 2, 0");

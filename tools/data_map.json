@@ -3061,7 +3061,7 @@
    "size": 4,
    "name": "gTerrainTypes",
    "consumers": [
-    "sub_8025228"
+    "GetSolidTerrainModeValue"
    ],
    "consumer_files": [
     "level/bg_layer_base.c"

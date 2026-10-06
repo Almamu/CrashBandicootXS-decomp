@@ -91,8 +91,14 @@ s32 GetSpriteAnimPaletteSlot(struct actor *part)
     return (u8)GetPaletteSlot(cache, rec);
 }
 
-/* Adjusts `dest`'s `{s32 field_0, field_4}` (a position, working
- * theory) per `kind` (`kind-1` is the real switch selector, 0-11;
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
+ * data tables). The inverse of `OffsetToHitboxEdge`: moves the Q8
+ * position `dest` back from the edge of hitbox `rec` (`struct
+ * hitbox_quad`: `rec+2` yOff, `rec+4` w, `rec+5` h) that faces direction
+ * `kind` (ProbeTerrain's 1 right, 2 left, 4 up, 8 down) to the object's
+ * origin.
+ *
+ * Adjusts `dest`'s `{s32 field_0, field_4}` per `kind` (`kind-1` is the real switch selector, 0-11;
  * anything else - including the four explicit no-op cases 2/4/5/6/8/9/
  * 10 - does nothing): kind 1/2 add/subtract `rec+4`'s byte (Q8,
  * shifted by 7 not 8 - half-Q8?) from `dest->field_0`; kind 4
@@ -102,7 +108,7 @@ s32 GetSpriteAnimPaletteSlot(struct actor *part)
  * established yet.
  *
  * Matched in a later session than the original NAKED transcription
- * (see docs/matching.md's "Parked, not matched: sub_8008188" for the
+ * (see docs/matching.md's "Parked, not matched: OffsetFromHitboxEdge" for the
  * original account and the five techniques that failed against it).
  * The holdout was always the shared kind-8/12 block's register-register
  * `add` (ROM's `adds r1, r2, r1` versus this compiler's always-
@@ -121,10 +127,10 @@ s32 GetSpriteAnimPaletteSlot(struct actor *part)
  * through a bare `goto` to its own labeled block outside the switch
  * (rather than holding real code inside the switch itself) - this
  * turned out to matter for exact block *ordering* too (see
- * `sub_8008278` below, where a `case` body with real code physically
+ * `OffsetToHitboxEdgeStart` below, where a `case` body with real code physically
  * displaced a fallthrough block gcc would otherwise have placed
  * directly after its neighbor). */
-void sub_8008188(void *dest, s32 kind, void *rec)
+void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec)
 {
     s32 idx = kind - 1;
 
@@ -200,17 +206,23 @@ end:
     return;
 }
 
-/* Same shape as `sub_8008188` above (mirror-image add/subtract
+/* Moves the Q8 position `dest` (an object's origin) to the edge of its
+ * hitbox `rec` that faces direction `kind` (ProbeTerrain's 1 right, 2
+ * left, 4 up, 8 down): x +/- w/2, or y + yOff (top) / y + yOff + h
+ * (bottom). ProbeGroundSpriteFloor/ProbeGroundSpriteTerrain use it with 8 for the
+ * point under the object's feet.
+ *
+ * Same shape as `OffsetFromHitboxEdge` above (mirror-image add/subtract
  * directions: kind 1/2 do the opposite sign on `dest->field_0`, and
  * kinds 4/8/12 add to `dest->field_4` instead of subtracting).
  *
  * Matched in a later session, same `goto`-unified-block technique as
- * `sub_8008188` above - see its doc comment for the full account of
+ * `OffsetFromHitboxEdge` above - see its doc comment for the full account of
  * why the shared kind-8/12 block needs a single atomic `asm volatile`
  * reached via `goto` from both `case 8` and `case 12`, rather than an
  * asm anchor on just the `add` inside two ordinary switch-case
  * bodies. */
-void sub_8008200(void *dest, s32 kind, void *rec)
+void OffsetToHitboxEdge(void *dest, s32 kind, void *rec)
 {
     s32 idx = kind - 1;
 
@@ -286,14 +298,20 @@ end:
     return;
 }
 
-/* A third variant of `sub_8008188`'s shape: kind 1/2 update
+/* Moves the Q8 position `dest` to the start of the hitbox edge that
+ * faces direction `kind`, the point a ProbeTerrain scan along that edge
+ * starts from: for 1/2 (right/left) the top end of the side edge (x +/-
+ * w/2, y + yOff; the scan runs down over `h`), for 4/8 (up/down) the left
+ * end of the top or bottom edge (x - w/2; the scan runs right over `w`).
+ *
+ * A third variant of `OffsetFromHitboxEdge`'s shape: kind 1/2 update
  * `dest->field_0` (sub/add) AND unconditionally also add `rec+2`'s
  * short (Q8) to `dest->field_4`; kinds 4/8/12 add to `dest->field_4`
- * (same as `sub_8008188`'s kinds) AND additionally always subtract
+ * (same as `OffsetFromHitboxEdge`'s kinds) AND additionally always subtract
  * `rec+4`'s byte (Q8, `<<7`) from `dest->field_0` afterward.
  *
  * Matched in a later session, same `goto`-unified atomic-asm-block
- * technique as `sub_8008188` above for the shared kind-8/12 gap.
+ * technique as `OffsetFromHitboxEdge` above for the shared kind-8/12 gap.
  * `rec` itself also needs its own explicit `MATCH_HOLD_REG(..., r2)`
  * pin (initialized from the incoming parameter right at function
  * entry) - without it, gcc decided `rec` needed to survive in a
@@ -317,7 +335,7 @@ end:
  * code out to its own `goto` target, laid out in the exact order the
  * ROM's own blocks appear, fixed the layout without changing anything
  * about the kind-8/12 fix itself. */
-void sub_8008278(void *dest, s32 kind, void *rec_)
+void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec_)
 {
     MATCH_HOLD_REG(void *, rec, r2) = rec_;
     MATCH_HOLD_REG(s32, field0, r0);
@@ -538,7 +556,7 @@ s32 GetSpriteTileBase(void *part)
  *
  * Matched in a later session than the original NAKED transcription -
  * see docs/matching.md's "Parked, not matched: GetSpriteFrame" for the
- * original account. Unlike `sub_8008188`/`sub_8008200`/`sub_8008278`'s
+ * original account. Unlike `OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/`OffsetToHitboxEdgeStart`'s
  * shared-switch-case gap, this function's resistant
  * `adds r0, r1, r0`-vs-`adds r0, r0, r1` add sits in genuinely
  * straight-line code (no switch, no case merging to protect), so a
@@ -599,14 +617,13 @@ void *GetSpriteFrame(struct gfx_part *part)
 }
 asm(".align 2, 0");
 
-/* If `gLevelLayers+0x2b` is nonzero, returns
- * `(gLevelLayers's sub-object)+0x34`'s low 2 bits minus 1;
- * otherwise returns those same low 2 bits unmodified. Same
- * `gLevelLayers` sub-object convention used throughout this ROM
- * region (see `IsSpriteObjOnScreen`/`IsEntityNearCamera`). */
+/* A sprite's OBJ priority: layer 0's BG priority (`gLevelLayers->layer0`'s
+ * BGnCNT shadow at +0x34, bits 0-1), minus one when
+ * `gLevelLayers->raiseObjPriority` is set (SetupRoomBlend, blend mode 1),
+ * which lifts the sprites one priority level above layer 0. */
 s32 GetSpriteObjPriority(void)
 {
-    if (gLevelLayers->unk_2B == 0) {
+    if (gLevelLayers->raiseObjPriority == 0) {
         void *subObj = gLevelLayers->layer0;
         u8 byte2 = *((u8 *)subObj + 0x34);
         u32 result = ((u32)byte2 << 30) >> 30;
@@ -835,8 +852,8 @@ void *GetSpriteAnimRecord(struct actor *part)
  * a tighter, naturally-reused register) - `idx` genuinely outlives
  * `table`'s own register here. The final `rec = table + offset` add
  * also hit the resistant "which operand goes first" canonicalization
- * documented at length for `sub_8008188`/`sub_8008200`/
- * `sub_8008278`/`GetSpriteFrame` - but unlike those (which were inside a
+ * documented at length for `OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/
+ * `OffsetToHitboxEdgeStart`/`GetSpriteFrame` - but unlike those (which were inside a
  * `switch` and had to be parked to avoid breaking case-block merging),
  * this function has no such constraint, so a one-instruction inline
  * `asm` anchor for just this add gets a fully byte-exact match. */

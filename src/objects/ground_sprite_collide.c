@@ -11,7 +11,7 @@
  * `ProbeGroundSpriteFloor` still-raw span `tools/report_units.py` tracked as
  * parked. `CollideGroundSprite` itself (the caller of `ProbeGroundSpriteTerrain`, see
  * `asm/code_3_2_11.s`) stays raw/unexamined - its own gate logic still
- * depends on the also-still-raw `sub_8009BE0` (parked NAKED,
+ * depends on the also-still-raw `ProbeHitboxEdgeTerrain` (parked NAKED,
  * `step_probe.c`), so closing `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone
  * doesn't unblock it.
  *
@@ -28,11 +28,11 @@
  * i.e. `self+0x74` really is "which movement axes/directions collided
  * this call", zeroed up front and rebuilt bit by bit as each probe
  * fires. `docs/matching/archive/issue-9-0x08007634-actor.md` (line ~206) had
- * also already flagged both functions as built on `sub_8008200`/
- * `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
- * (`sub_8008200`, `ProbeTerrain`) are already matched this session
+ * also already flagged both functions as built on `OffsetToHitboxEdge`/
+ * `ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` - two of those four
+ * (`OffsetToHitboxEdge`, `ProbeTerrain`) are already matched this session
  * (`src/objects/sprite_obj.c`, `src/level/terrain_probe.c`); this
- * session additionally reads `sub_8026C3C`/`sub_8026BF8` (still raw,
+ * session additionally reads `ProbeSolidFloorHeight`/`ProbeFloorHeight` (still raw,
  * `asm/code_3_2_17_266bc.s`) far enough to place them precisely.
  *
  * ## What `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` actually do
@@ -48,13 +48,13 @@
  * - **`ProbeGroundSpriteFloor(self, quad, u8 *outFlag)`**: a single Y-axis
  *   ("floor") probe. Builds an int `{x, y}` position at the *bottom*
  *   of the quad (`self.x`/`self.y + (quad->yOff + quad->h) << 8`,
- *   via `sub_8008200(dest, 8, quad)`, nudged left/right by half the
+ *   via `OffsetToHitboxEdge(dest, 8, quad)`, nudged left/right by half the
  *   quad's width depending on `self+0x28` bit 4's mirror flag), then
- *   probes it via `sub_8026BF8` (see below). On a hit, snaps
+ *   probes it via `ProbeFloorHeight` (see below). On a hit, snaps
  *   `self->y` to the probed height (optionally one pixel higher, if
  *   `self+0xd` bit 1 is clear) and sets `self+0xd` bit 1. On a miss,
  *   if bit 1 was already clear it retries one pixel lower via a
- *   second `sub_8026BF8` call; if that also misses, `*outFlag` is set
+ *   second `ProbeFloorHeight` call; if that also misses, `*outFlag` is set
  *   only when bit 1 was set from the very start (skipping the retry
  *   entirely) - `self+0xd` bit 1 always ends up cleared on any
  *   all-miss path. Returns whichever probe's hit boolean was last
@@ -74,7 +74,7 @@
  *      it to `8`.
  *   3. If the `ProbeGroundSpriteFloor` out-flag came back `1`: builds an int
  *      position at the *bottom* of the quad (mirrored the same way),
- *      probes it via `sub_8026C3C(player, pos, &origY)` (see below,
+ *      probes it via `ProbeSolidFloorHeight(player, pos, &origY)` (see below,
  *      `player` = `gLevelLayers` dereferenced) - on a hit, snaps
  *      `self->y` to the probed value and nudges `self->x` by ±1 pixel
  *      depending on `self+0x24 & 3`; on a miss, nudges `self->y` down
@@ -83,7 +83,7 @@
  *   4. Three more blocks, each gated on `self+0x24`'s own 2-bit field
  *      (`& 3` for X-axis modes 1/2, `& 0xc` for Y-axis modes 4/8) and
  *      on the "found ground" flag still being `0`: build a plain int
- *      `{x, y}` position via `sub_8008278(dest, mode, quad)`, probe it
+ *      `{x, y}` position via `OffsetToHitboxEdgeStart(dest, mode, quad)`, probe it
  *      through the shared `ProbeTerrain(player, mode, pos, span,
  *      outValue)` API (already matched, `terrain_probe.c`) with a
  *      `span` derived from the quad's own `h`/`w` byte (`h - 16` for
@@ -98,14 +98,14 @@
  * *resolution* step - once some other function (still-raw
  * `CollideGroundSprite`) has decided a part object needs a physics update,
  * `ProbeGroundSpriteTerrain` runs a layered probe (fast quad-based floor/wall test
- * first via `ProbeGroundSpriteFloor`/`sub_8026C3C`, then falling back to the
+ * first via `ProbeGroundSpriteFloor`/`ProbeSolidFloorHeight`, then falling back to the
  * general tile-scan `ProbeTerrain` API per axis) and snaps the object's
  * position to whatever solid surface each probe finds, recording which
  * axes/directions actually resolved in `self+0x74` for whatever caller
  * reads it next (`UpdateGameFrame`'s own level-load branch is the only
  * other confirmed writer, per `rom_map.md`).
  *
- * ## `sub_8026C3C`/`sub_8026BF8` (still raw, understood only)
+ * ## `ProbeSolidFloorHeight`/`ProbeFloorHeight` (still raw, understood only)
  *
  * Both are single-point collision-test siblings of the already-matched
  * `ProbeTerrainY`/`ProbeTerrainX` pair (`terrain_probe.c`'s own "what's still
@@ -116,15 +116,15 @@
  * that and pins down the exact shape, both `s32 fn(void *player, struct
  * probe_pos *pos, s32 *outValue)`:
  *
- * - **`sub_8026BF8`**: `player->0x20`'s terrain-data pointer, `pos->x
+ * - **`ProbeFloorHeight`**: `player->0x20`'s terrain-data pointer, `pos->x
  *   >> 3`/`pos->y >> 3` tile coords, looked up via `GetTerrainHeights`
  *   ("the raw terrain streamer" - returns a row pointer or `NULL`).
  *   On a hit, reads a **signed byte** height sample at
  *   `row[pos->x & 7]`, computes `((pos->y >> 3) << 3) + heightByte -
  *   pos->y`, shifts to Q8, and accumulates it into `*outValue`.
  *   Returns `1` on a row hit, `0` if `GetTerrainHeights` returned `NULL`.
- * - **`sub_8026C3C`**: the exact same shape, but the height byte comes
- *   from `sub_8025228(terrainPtr, tileX, tileY, 0, &scratch)` instead
+ * - **`ProbeSolidFloorHeight`**: the exact same shape, but the height byte comes
+ *   from `GetSolidTerrainModeValue(terrainPtr, tileX, tileY, 0, &scratch)` instead
  *   of a direct row-pointer byte read - the "CheckTerrainFlag"-style
  *   API `ProbeTerrainY`/`ProbeTerrainX` already use via their own
  *   `GetSolidTerrainHeights` calls (same argument shape: base pointer, tile
@@ -137,7 +137,7 @@
  * exact matching for either wasn't attempted this session - see
  * docs/matching/archive/issue-9-0x0800a178-graphics.md for why (same
  * resistant multi-high-register shape this immediate ROM neighborhood
- * has already hit four times: `sub_8009BE0`, `PlayerAnimWouldTouchCrate`,
+ * has already hit four times: `ProbeHitboxEdgeTerrain`, `PlayerAnimWouldTouchCrate`,
  * `sub_800CEAC`, `sub_800CF70`).
  *
  * ## Matching
@@ -155,11 +155,11 @@
  * immediately before `ProbeGroundSpriteTerrain` in ROM and formerly the sole
  * remaining content of `asm/code_3_2_11.s`). It stayed raw the first
  * pass through this cluster because its own gate logic calls
- * `sub_8009BE0` (parked NAKED, `src/objects/step_probe.c`, see
+ * `ProbeHitboxEdgeTerrain` (parked NAKED, `src/objects/step_probe.c`, see
  * `docs/matching/archive/naked-spatial-grid-tail.md`) - at the time that
- * function's semantics were still unresolved. `sub_8009BE0` is now
+ * function's semantics were still unresolved. `ProbeHitboxEdgeTerrain` is now
  * fully understood (a physics/collision step-probe: converts `self`'s
- * position to plain ints via `sub_8008278`, probes it through
+ * position to plain ints via `OffsetToHitboxEdgeStart`, probes it through
  * `ProbeTerrain` with `mode` as the axis selector, retrying up to 3
  * more times on a miss by nudging Y down), which is enough to close
  * this function's own dispatch logic as real, byte-exact matched C:
@@ -179,9 +179,9 @@
  * snapped this call, `ProbeGroundSpriteFloor`'s own convention) - fires the same
  * `self->table+0x10/0x14` "hitbox quad" trampoline `ProbeGroundSpriteTerrain`
  * itself uses, and runs a `mode == 8` (Y-axis/floor) step-probe via
- * `sub_8009BE0(self, 8, quad)`. If that step-probe does *not* report
+ * `ProbeHitboxEdgeTerrain(self, 8, quad)`. If that step-probe does *not* report
  * immediate success (either a full miss, or only succeeding via one of
- * its internal retries - see `sub_8009BE0`'s own doc comment), sets
+ * its internal retries - see `ProbeHitboxEdgeTerrain`'s own doc comment), sets
  * `self+0xc` bit 5 and clears `self+0x68` bit 3 back out - rolling
  * back the "Y axis resolved" bit `ProbeGroundSpriteTerrain`'s cheaper probe had
  * just set, since the more thorough step-probe didn't confirm it
@@ -194,7 +194,7 @@
  * `docs/rom_map.md` line ~1835), `ProbeGroundSpriteTerrain` does the actual
  * layered collision resolution and reports which axes it resolved,
  * and `CollideGroundSprite`'s own tail cross-checks the Y-axis result against
- * a second, independent step-probe (`sub_8009BE0`) before trusting it
+ * a second, independent step-probe (`ProbeHitboxEdgeTerrain`) before trusting it
  * enough to leave the bit set in the persistent `self+0x68` mask.
  *
  * Real C, built with old_agbcc (issue #9-#11 NAKED retry: the file
@@ -226,7 +226,7 @@ u8 CollideGroundSprite(struct box_part *self)
                 struct part_method *m = PART_METHOD(self, 0x10);
                 void *quad = (void *)_call_via_r1((u8 *)self + m->thisOffset, m->fn);
 
-                if (!(u8)sub_8009BE0(self, 8, quad)) {
+                if (!(u8)ProbeHitboxEdgeTerrain(self, 8, quad)) {
                     self->flags |= 0x20;
                     *p &= 7;
                 }
@@ -290,14 +290,14 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
 
         origY = self->y;
         pos = *(struct probe_pos *)self;
-        sub_8008200(&pos, 8, quad);
+        OffsetToHitboxEdge(&pos, 8, quad);
         pos.x >>= 8;
         pos.y >>= 8;
         if (self->mirrorX)
             pos.x -= quad->w >> 1;
         else
             pos.x += quad->w >> 1;
-        c = sub_8026C3C(gLevelLayers, &pos, &origY);
+        c = ProbeSolidFloorHeight(gLevelLayers, &pos, &origY);
         unused = 0;
         if (c) {
             self->y = origY & 0xFFFFFF00;
@@ -324,7 +324,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
         pos = *(struct probe_pos *)self;
         span = quad->h - 0x10;
         origX = self->x;
-        sub_8008278(&pos, mode, quad);
+        OffsetToHitboxEdgeStart(&pos, mode, quad);
         pos.x >>= 8;
         pos.y = (pos.y >> 8) + 8;
         if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
@@ -342,7 +342,7 @@ y_probe:
         span = quad->w;
         origX = self->x;
         origY = self->y;
-        sub_8008278(&pos, mode, quad);
+        OffsetToHitboxEdgeStart(&pos, mode, quad);
         pos.x >>= 8;
         pos.y >>= 8;
         if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origY)) {
@@ -358,7 +358,7 @@ y_probe:
         pos = *(struct probe_pos *)self;
         span = quad->h;
         origX = self->x;
-        sub_8008278(&pos, mode, quad);
+        OffsetToHitboxEdgeStart(&pos, mode, quad);
         pos.x >>= 8;
         pos.y >>= 8;
         if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
@@ -393,7 +393,7 @@ u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *o
     s32 val;
 
     pos = *(struct probe_pos *)self;
-    sub_8008200(&pos, 8, quad);
+    OffsetToHitboxEdge(&pos, 8, quad);
     pos.x >>= 8;
     pos.y >>= 8;
     if (!((self->flags2 >> 1) & 1))
@@ -402,7 +402,7 @@ u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *o
         pos.x -= quad->w >> 1;
     else
         pos.x += quad->w >> 1;
-    hit = sub_8026BF8(gLevelLayers, &pos, &origY);
+    hit = ProbeFloorHeight(gLevelLayers, &pos, &origY);
     if (hit) {
         s32 y;
         MATCH_HOLD_REG(u8, f, r2);
@@ -420,7 +420,7 @@ u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *o
         u8 f = self->flags2;
         if (!((f >> 1) & 1)) {
             pos.y++;
-            hit = sub_8026BF8(gLevelLayers, &pos, &origY);
+            hit = ProbeFloorHeight(gLevelLayers, &pos, &origY);
             if (hit) {
                 self->y = origY & 0xFFFFFF00;
                 val = 2 | self->flags2;

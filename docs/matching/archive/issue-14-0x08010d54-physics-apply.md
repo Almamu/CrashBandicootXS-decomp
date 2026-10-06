@@ -459,7 +459,7 @@ coincide").
   `DropWumpa` (`entity_spawner.c`, NAKED, already matched):
   `CreateWumpa(id, x, y, special)` where `special` is `0xFFFF` or `0`
   selecting which of two `dual_array_manager` lists
-  (`gUnknown_030012F4` vs `gUnknown_030012EC`) the new part joins.
+  (`gForegroundList` vs `gTouchableList`) the new part joins.
   Allocates a `0x54`-byte object (`OperatorNew`), re-initializes it
   (`InitSpriteObj`), points its vtable at `gWumpaVtable`,
   re-initializes via `ResetWumpaPickup` (`wumpa.c`, already matched),
@@ -695,7 +695,7 @@ position).
   `gExtraLifeVtable`, clears the "spawned/active" gate
   (`ResetExtraLifePickup`), stores `arg0` at `self+8` and `arg1`/`arg2` (Q8) at
   `self+0`/`self+4` mirrored into the orbit anchor
-  `self+0x4c`/`self+0x50`, joins the `gUnknown_030012EC`
+  `self+0x4c`/`self+0x50`, joins the `gTouchableList`
   `dual_array_manager` list, derives `self+0x30` from the
   `table[self->0x2d]->+0x16` clamp idiom, clears bits 0/5 of
   `self+0x28`, and returns the new part.

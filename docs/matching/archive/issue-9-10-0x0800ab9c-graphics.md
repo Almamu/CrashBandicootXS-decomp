@@ -38,7 +38,7 @@ as of
   directly here) and fires three teardown/notification calls:
   `CollidePlayerWithCrates` (NAKED-parked, `crate_player_collide.c`) against
   `gCrateList`'s manager with selector `3`, `CollidePartsOfClass`
-  (`part_list_cull.c`) against `gUnknown_030012EC`'s manager with
+  (`part_list_cull.c`) against `gTouchableList`'s manager with
   selector `4`, and `ResolvePlayerCollisions` (`crate.c`) with no arguments.
   `CollidePlayerWithCrates` was previously declared with only one parameter
   (`manager`) since its only known call site at the time never

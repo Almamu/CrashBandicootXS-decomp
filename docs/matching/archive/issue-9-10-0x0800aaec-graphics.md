@@ -34,7 +34,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
    `ProbeTerrain(player, arg1, posInt, arg3, outY)` (prototype already
    established from its two other NAKED call sites,
    `step_probe.c`/`crate_hit.c`... actually `step_probe.c`'s
-   `sub_8009BE0`). If the low byte of the result is nonzero, returns
+   `ProbeHitboxEdgeTerrain`). If the low byte of the result is nonzero, returns
    `0` immediately.
 2. **Loop**: otherwise walks `gCrateList` (a `struct actor_list
    { s32 count; s32 unused_4; void **items; }`, the exact layout

@@ -4,27 +4,20 @@
 #include "objects.h"
 #include "level.h"
 
-/* A physics/collision "step probe": makes a working copy of `self`'s
- * position (`self->x`/`self->y`), runs it through `sub_8008278`
- * (still unexamined - some kind of movement/gravity step, taking the
- * position pointer and `arg1` alongside it), converts the result from
- * Q8 fixed-point to plain integers, resets `self+0x69` (an attempt
- * counter) to 0, then probes the position via `ProbeTerrain` (also
- * still unexamined - takes `gLevelLayers`, `arg1`, the working
- * integer position, `arg2` - `*(u8 *)(arg2+4)` - and a pointer to
- * `self`'s original Q8 `y`).
+/* Probes the terrain along the edge of `self`'s hitbox `quad` that faces
+ * direction `mode` (ProbeTerrain's 1 right, 2 left, 4 up, 8 down): moves
+ * a copy of `self`'s Q8 position to the start of that edge
+ * (`OffsetToHitboxEdgeStart`), converts it to pixels, resets
+ * `self->probeTries` and runs `ProbeTerrain` over the edge's length
+ * (`quad->w`), with `self`'s Q8 `y` as the value it snaps.
  *
- * If the first probe succeeds: restores `self->y` to its original
- * value (undoing whatever `sub_8008278` mutated) and returns `1`.
- *
- * Otherwise: clears `gLevelLayers`'s `+0x2a` flag byte (saving
- * its old value) and retries the probe up to 3 more times, nudging the
- * working Y position down by `8` (Q8, i.e. `1/32` of a pixel-ish unit)
- * each attempt and incrementing `self+0x69`'s attempt counter; whether
- * a retry succeeds or all 4 attempts are exhausted, restores
- * `gLevelLayers`'s `+0x2a` byte to its saved value and returns
- * `0` either way - only the very first, un-nudged probe returning
- * success is distinguished by this function's return value.
+ * If that first probe hits, `self->y` takes the snapped value and it
+ * returns 1. Otherwise it clears `gLevelLayers->probeFlag` (saving it)
+ * and retries up to 3 more times, 8 pixels lower each time, counting the
+ * attempts in `self->probeTries`; whether a retry hits or all of them
+ * miss it restores `probeFlag` and returns 0 - only a hit on the first,
+ * un-nudged probe counts. CollideGroundSprite runs it with 8 to confirm
+ * the floor its cheaper probes found.
  *
  * Real C (issue #9-#11 NAKED retry; matches under both compilers).
  * The "keeps `self+0x69`'s address in r6 for the whole retry loop and
@@ -40,7 +33,7 @@
 #include "box_part.h"
 #include "globals.h"
 
-s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
+s32 ProbeHitboxEdgeTerrain(struct box_part *self, s32 mode, struct hitbox_quad *quad)
 {
     struct {
         s32 x;
@@ -53,7 +46,7 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
 
     f.origY = self->y;
     *(struct probe_pos *)&f = *(struct probe_pos *)self;
-    sub_8008278(&f, mode, quad);
+    OffsetToHitboxEdgeStart(&f, mode, quad);
     f.x >>= 8;
     f.y >>= 8;
     tries = &self->probeTries;

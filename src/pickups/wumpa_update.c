@@ -304,7 +304,7 @@ void UpdateWumpa(struct orbit_part *self)
  * (src/level/spawn_pickups.c) with its spawn-table slot's arguments and by
  * DropWumpa (entity_spawner.c, NAKED, already matched): `CreateWumpa(id,
  * x, y, special)` where `special` is `0xFFFF` or `0` selecting which of
- * two dual_array_manager lists (`gUnknown_030012F4` vs `gUnknown_030012EC`)
+ * two dual_array_manager lists (`gForegroundList` vs `gTouchableList`)
  * the newly spawned part joins. Allocates a new 0x54-byte object
  * (`OperatorNew`), re-initializes it (`InitSpriteObj`), points its vtable
  * at `gWumpaVtable`, re-initializes via `ResetWumpaPickup` (wumpa.c,
@@ -356,9 +356,9 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     self->base.y = y << 8;
     self->anchor = ORBIT_POS(self);
     if (special == 0xffff)
-        AddToPartList(gUnknown_030012F4, self);
+        AddToPartList(gForegroundList, self);
     else
-        AddToPartList(gUnknown_030012EC, self);
+        AddToPartList(gTouchableList, self);
     p = self;
     p->bank = (struct act_anim_bank *)(SPRITE_BANK_BASE + 0xd2 * 2);
     {

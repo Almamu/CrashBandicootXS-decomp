@@ -19,7 +19,7 @@
  * UpdateTiny/SetTinyState are the per-frame update and "enter state"
  * methods of the gTinyVtable class (constructor CreateTiny,
  * cortex.c): a boss that hops its `part` along parabolic arcs
- * (the 257-entry i*i>>8 table at +0x48) between the gUnknown_030012EC
+ * (the 257-entry i*i>>8 table at +0x48) between the gTouchableList
  * list's anchor objects, stomping them. PickTinyHopTarget picks the next anchor
  * from a per-round table, SpawnTinyFallingLeaves spawns a falling hazard. */
 
@@ -162,7 +162,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
     s32 state;
 
     if (self->stomped != -1) {
-        struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[self->stomped];
+        struct hop_part *anchor = (struct hop_part *)gTouchableList->items[self->stomped];
         struct hop_vobj *ctrl;
 
         if (anchor->ctrl != NULL)
@@ -361,7 +361,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
             else
                 VCALL2(self, m50, part, 1);
             SetFrame(part, 4);
-            anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
+            anchor = (struct hop_part *)gTouchableList->items[self->target];
             x = anchor->x;
             self->x = x;
             if (next == 11 || next == 13)
@@ -379,7 +379,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
 
             self->target = PickTinyHopTarget(self);
             VCALL2(self, m50, part, 4);
-            anchor = (struct hop_part *)gUnknown_030012EC->items[self->target];
+            anchor = (struct hop_part *)gTouchableList->items[self->target];
             ax = anchor->x;
             ay = anchor->y;
             y = ay - 0x2400;
@@ -415,7 +415,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         break;
     case 14:
         {
-            struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[2];
+            struct hop_part *anchor = (struct hop_part *)gTouchableList->items[2];
             s32 x = anchor->x;
             s32 y = anchor->y - 0x1800;
 
@@ -452,8 +452,8 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
     s32 best = 0xFFFFFF;
     s32 i;
 
-    for (i = 0; i < gUnknown_030012EC->count; i++) {
-        struct hop_part *anchor = (struct hop_part *)gUnknown_030012EC->items[i];
+    for (i = 0; i < gTouchableList->count; i++) {
+        struct hop_part *anchor = (struct hop_part *)gTouchableList->items[i];
         s32 px = gPlayer->x;
         s32 py = gPlayer->y;
         s32 ax = anchor->x;

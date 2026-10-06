@@ -7,8 +7,8 @@ matched work in this neighborhood, so the real functions lived in
 
 This chunk turned out to be two interleaved families:
 
-1. A **bit-grid accessor family** (`sub_8025944`/`sub_8025968`/
-   `sub_802599C`/`sub_80259D4`/`sub_8025A0C`) - three overlapping
+1. A **bit-grid accessor family** (`SetEntityIdGone`/`IsEntityIdGone`/
+   `IsEntityIdActivated`/`SetEntityIdActivated`/`MarkEntityIdActivated`) - three overlapping
    32-bit-word-per-row bitmap arrays living at `self+8`/`self+0x208`/
    `self+0x308`, using the exact same "floor-divide-by-32, adjust for
    negative n by `+0x1f` before the shift" idiom already proven in
@@ -46,9 +46,9 @@ This chunk turned out to be two interleaved families:
 
 ## Matched (16 of 25)
 
-`sub_8025944`, `sub_8025968`, `sub_802599C` (entity_flags.c),
-`sub_8025A0C`, `sub_8025A3C`, `DestroyEntityFlags`, `InitEntityFlags`
-(entity_flags.c), `SpawnEntity`, `SetEntitySpawnerTable`, `sub_8025D54`,
+`SetEntityIdGone`, `IsEntityIdGone`, `IsEntityIdActivated` (entity_flags.c),
+`MarkEntityIdActivated`, `SetEntityFlagsPos`, `DestroyEntityFlags`, `InitEntityFlags`
+(entity_flags.c), `SpawnEntity`, `SetEntitySpawnerTable`, `DestroyEntitySpawnerObj`,
 `InitEntitySpawner` (entity_spawner.c), `GrowBgLayerRows`, `GrowBgLayerColumns`,
 `ClipBgLayerColumns`, `ClipBgLayerRows` (bg_layer_init.c), `CommitBgLayerScroll`
 (bg_layer.c). All confirmed via the full clean `make compare`
@@ -92,7 +92,7 @@ BYTE-MATCHING` doc comment at the definition explaining what was tried:
   each as soon as it's dead), while every C shape tried here needs a
   third register that collides with the outer loop's `i` counter and
   forces an extra `r7` push/pop.
-- **`sub_80259D4`** (entity_flags.c) - the dual bit-grid setter. The
+- **`SetEntityIdActivated`** (entity_flags.c) - the dual bit-grid setter. The
   ROM is a true leaf function (`self` pinned to `ip`/`r12` for the
   whole body, no `push`/`pop` at all); pinning `self` to `ip` here
   gets every operand right but this compiler still inserts an
@@ -130,7 +130,7 @@ five matched runs, per `docs/workflow.md`'s "everything before,
 everything after" rule:
 
 - `asm/code_3_2_17_255d4.s` (truncated) - `SpawnRoomEntities`, `CountCrateEntities`
-- `asm/code_3_2_17_259d4.s` (new) - `sub_80259D4`
+- `asm/code_3_2_17_259d4.s` (new) - `SetEntityIdActivated`
 - `asm/code_3_2_17_25a64.s` (new) - `DropExtraLife`-`DropWumpa`
 - `asm/code_3_2_17_25d74.s` (new) - `InitBgLayer`
 - `asm/code_3_2_17_25e98.s` (new) - `ScrollBgLayer`
@@ -144,11 +144,11 @@ in `tools/report_units.py`) rather than in a standalone file: under
 the real (`NON_MATCHING=0`) build each `.c` file only contributes its
 matched functions' bytes (the guarded parked block compiles to
 nothing), so `ldscript.txt` still places the untouched raw asm
-fragment immediately after it at the correct address. `sub_8025944`'s
+fragment immediately after it at the correct address. `SetEntityIdGone`'s
 own file (`entity_flags.c`) needed one addition beyond this: an
 explicit trailing `asm(".align 2, 0")` after its last matched
 function, reproducing the ROM's own 2-byte zero-fill between
-`sub_802599C`'s end and `sub_80259D4`'s start - without it, `ld`'s
+`IsEntityIdActivated`'s end and `SetEntityIdActivated`'s start - without it, `ld`'s
 default inter-object padding (a `mov r8, r8` NOP, not zero bytes) broke
 the checksum by exactly those 2 bytes. The other four matched-run/
 parked-run boundaries in this chunk didn't need this fix since the
@@ -158,13 +158,13 @@ padding at all.
 Full clean `make compare` passes: `crashbandicootxs.gba: La suma
 coincide`.
 
-## Update: narrowed (but not closed) gaps on `sub_80259D4`/`InitBgLayer`
+## Update: narrowed (but not closed) gaps on `SetEntityIdActivated`/`InitBgLayer`
 
 A later pass over this issue's remaining parked functions made real
 progress on two of them without reaching a byte-exact match on either
 - both stay `NON_MATCHING`, real bytes unchanged.
 
-- **`sub_80259D4`**: pinning `self` to `ip` (as before) plus explicitly
+- **`SetEntityIdActivated`**: pinning `self` to `ip` (as before) plus explicitly
   pinning the `shifted`/`addr` locals to `r3`/`r1` (the ROM's own
   choice for those two, not tried in the original pass) gets this all
   the way down to a true leaf function - every instruction's operation,
@@ -207,7 +207,7 @@ of the confirmed-correct ROM disassembly rather than a real C match -
 each hit a genuine, already-catalogued gcc-2.9 codegen limit that plain
 C has no way to work around on this toolchain:
 
-- **`sub_80259D4`** (entity_flags.c) - unchanged from the earlier
+- **`SetEntityIdActivated`** (entity_flags.c) - unchanged from the earlier
   finding above: the ROM's `mov ip, r0` / `adds r2, r1, #0` parameter-
   reload order can't be reproduced from C (tried again this pass with
   an inline-asm anchor forcing both moves in one instruction - see git
@@ -286,7 +286,7 @@ its `ldscript.txt` line dropped) or had just its now-`NAKED` prefix cut
 off (renamed to start at the next still-genuinely-raw function's
 address):
 
-- `asm/code_3_2_17_259d4.s` - deleted (`sub_80259D4` is now `NAKED` in
+- `asm/code_3_2_17_259d4.s` - deleted (`SetEntityIdActivated` is now `NAKED` in
   `entity_flags.c`)
 - `asm/code_3_2_17_25a64.s` - deleted; `DropExtraLife` is now `NAKED` in
   the new `drop_extra_life.c`, `LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa` are
@@ -369,7 +369,7 @@ load-then-decrement-in-place into the same register (`ldrh r2, [r5,
 *(u16 *)(l + 2); i -= 1;`) was enough on its own to get gcc to load
 directly into `i`'s register - no pinning needed, matching this
 project's established "statement order over register pins" idiom
-already documented for the `sub_8025944` family above.
+already documented for the `SetEntityIdGone` family above.
 
 With both fixed, the isolated-compile assembly is byte-identical to
 the ROM's raw fragment (previously `asm/code_3_2_17_255d4.s`), and full
@@ -377,7 +377,7 @@ clean `rm -rf build && make NON_MATCHING=1 report` +
 `objdiff-cli report generate` confirm 100.0% fuzzy match for
 `CountCrateEntities` and the whole `game_loop12` unit (now part of `entity_flags.c`). `CountCrateEntities` is folded
 into `src/level/entity_flags.o` in `tools/report_units.py` (it's the
-first function in that unit now, immediately ahead of `sub_8025944`).
+first function in that unit now, immediately ahead of `SetEntityIdGone`).
 `asm/code_3_2_17_255d4.s` - which held only `CountCrateEntities` by this
 point - is deleted, with its `ldscript.txt` line dropped (the linker
 now places `entity_flags.o` directly where the raw fragment used to
@@ -390,7 +390,7 @@ stayed genuinely `NON_MATCHING` (never even converted to `NAKED`) - it
 is now matched. GitHub issue #41 itself stays open: six of the
 NAKED-transcribed functions from the earlier pass (`DropExtraLife`,
 `LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa`, `ScrollBgLayer`/`DrawBgLayerColumn`)
-still owe a real C match; `sub_80259D4` and `InitBgLayer` have already
+still owe a real C match; `SetEntityIdActivated` and `InitBgLayer` have already
 been closed (see their own linked write-ups above).
 
 ## Later pass (strag1)

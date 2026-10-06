@@ -92,13 +92,19 @@ s32 CountCrateEntities(void *self, const struct level_entity_list *list)
 }
 asm(".align 2, 0");
 
-/* Sets bit `n` (floor-divided into a 32-bit-word row, same idiom as
- * `SetBitmapBit` in collision_map.c) of the bitmap array that starts 8
- * bytes into `self` - the first of a family of three overlapping
- * bitmap arrays this ROM region reads/writes at `self+8`/`self+0x208`/
- * `self+0x308` (see `sub_8025968`/`sub_802599C`/`sub_80259D4`/
- * `sub_8025A0C` alongside it, and the functions further down this file). */
-void sub_8025944(void *self, s32 n)
+/* The bit accessors of struct entity_flags (level.h), by entity id `n`:
+ * `bits0` is the committed "gone" set (collected, broken or killed;
+ * SpawnRoomEntities skips those) and `bits1` the committed "activated"
+ * set (a checkpoint, life, "?" or slot crate opened, an iron switch
+ * crate pressed and the outline crates it made solid; CreateCrate builds
+ * those in their used state). `bits0Copy`/`bits1Copy` are the live copies, committed back at a
+ * checkpoint: "Set" writes the committed set and "Mark" only the live
+ * copy (like MarkEntityGone's bits0Copy write).
+ *
+ * UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Sets
+ * bit `n` of `bits0` (floor-divided into a 32-bit-word row, same idiom as
+ * `SetBitmapBit` in collision_map.c). */
+void SetEntityIdGone(void *self, s32 n)
 {
     u8 *base = (u8 *)self;
     s32 t = n;
@@ -118,8 +124,9 @@ void sub_8025944(void *self, s32 n)
     *word |= mask;
 }
 
-/* Tests bit `n` of the same `self+8` bitmap array `sub_8025944` sets. */
-s32 sub_8025968(void *self, s32 n)
+/* Tests bit `n` of `bits0`, the committed "gone" set `SetEntityIdGone`
+ * sets. */
+s32 IsEntityIdGone(void *self, s32 n)
 {
     u8 *base = (u8 *)self;
     s32 result = 0;
@@ -143,8 +150,9 @@ s32 sub_8025968(void *self, s32 n)
     return result;
 }
 
-/* Tests bit `n` of the second bitmap array, at `self+0x208`. */
-s32 sub_802599C(void *self, s32 n)
+/* Tests bit `n` of `bits1` (`self+0x208`), the committed "activated"
+ * set. */
+s32 IsEntityIdActivated(void *self, s32 n)
 {
     u8 *base = (u8 *)self;
     s32 result = 0;
@@ -170,9 +178,10 @@ s32 sub_802599C(void *self, s32 n)
 
 asm(".align 2, 0");
 
-/* Sets bit `n` in *both* the second (`self+0x208`) and third
- * (`self+0x308`) bitmap arrays at once - see this file's header
- * comment on this bitmap-array family.
+/* Sets bit `n` in *both* `bits1` (`self+0x208`) and `bits1Copy`
+ * (`self+0x308`): the activation is committed at once, so it survives a
+ * death before the next checkpoint (the checkpoint, life, "?" and slot
+ * crates).
  *
  * Was NAKED asm, not plain C - see
  * docs/matching/archive/naked-sub_80259d4-matched.md for the derivation of how
@@ -187,7 +196,7 @@ asm(".align 2, 0");
  * a *separate* register, r0), reusing the untouched `t` again later
  * for `bitIndex` - a second local (`adjusted`) instead of adjusting
  * `t` in place reproduces that split. */
-void sub_80259D4(void *self, s32 n)
+void SetEntityIdActivated(void *self, s32 n)
 {
     MATCH_HOLD_REG(u8 *, base, ip);
     MATCH_HOLD_REG(s32, t, r2);
@@ -219,9 +228,10 @@ void sub_80259D4(void *self, s32 n)
     *(s32 *)addr |= mask;
 }
 
-/* Sets bit `n` of the third bitmap array, at `self+0x308` - see
- * this file's header comment on this bitmap-array family. */
-void sub_8025A0C(void *self, s32 n)
+/* Sets bit `n` of `bits1Copy` (`self+0x308`) only: the live "activated"
+ * set, committed at the next checkpoint (ActivateIronSwitchCrate: the
+ * switch itself and the outline crates it makes solid). */
+void MarkEntityIdActivated(void *self, s32 n)
 {
     u8 *base = (u8 *)self;
     s32 t = n;
@@ -241,15 +251,16 @@ void sub_8025A0C(void *self, s32 n)
     *word |= mask;
 }
 
-/* Stores `val >> 8` (a Q8-to-int truncation) into `self+4`. */
-void sub_8025A3C(void *self, s32 val)
+/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Stores
+ * the Q8 `val` as pixels in `pos` (`self+4`), as SpawnRoomEntities does. */
+void SetEntityFlagsPos(void *self, s32 val)
 {
     *(s32 *)((u8 *)self + 4) = val >> 8;
 }
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
  * conditional-destroy shape as entity_spawner.c's
- * near-identical `sub_8025D54`. */
+ * near-identical `DestroyEntitySpawnerObj`. */
 void DestroyEntityFlags(void *self, s32 flags)
 {
     if (flags & 1) {

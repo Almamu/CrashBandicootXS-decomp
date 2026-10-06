@@ -68,11 +68,11 @@ system from "core" system startup/init code.
   and `IsBgLayerEnabled`/`GetBgLayerY`/`GetBgLayerX`/`GetBgLayerHeightTiles`/
   `GetBgLayerWidthTiles`/`GetBgLayerHeight`/`GetBgLayerWidth` (its field accessors), and
   the terrain tile cache's `GetCollisionChunk`/`GetTerrainHeights`/`GetSolidTerrainHeights`/
-  `sub_8025228` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md)),
+  `GetSolidTerrainModeValue` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md)),
   and `DecodeCollisionChunk`, the RLE/delta decoder (real C since the second
   near-miss sweep - see [near-miss-polish-2.md](../matching/archive/near-miss-polish-2.md))
 - `src/level/tile_cache.c` (GitHub issue #40): `DestroyTileCache`,
-  `nullsub_4`, `GetTerrainType` (plain C, built with old_agbcc - see
+  `InitTileCache`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md))
 - `src/level/collision_map.c` (GitHub issue #40): `GetCollisionCell`,
   `SetCollisionSource`, `SetBitmapBit`, `ClearBitmapBit`, `ClearBitmap`,
@@ -118,24 +118,24 @@ system from "core" system startup/init code.
   `i` init into two statements so the count loads directly into `i`'s
   own register instead of a scratch register first - see
   [issue-41-game-loop-25894.md](../matching/archive/issue-41-game-loop-25894.md)'s
-  "closed" update), `sub_8025944`,
-  `sub_8025968`, `sub_802599C` - the first two of three overlapping
+  "closed" update), `SetEntityIdGone`,
+  `IsEntityIdGone`, `IsEntityIdActivated` - the first two of three overlapping
   bit-grid accessors at `self+8`/`self+0x208`/`self+0x308`
-- `src/level/entity_flags.c` (GitHub issue #41): `sub_80259D4`
+- `src/level/entity_flags.c` (GitHub issue #41): `SetEntityIdActivated`
   (sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
   once - previously NAKED, now matched as real C via an
   inline-asm-materialized self-stash/n-copy pair plus a second local
   keeping the ROM's own untouched `n`-copy register alive for later
   reuse - see
   [naked-sub_80259d4-matched.md](../matching/archive/naked-sub_80259d4-matched.md)),
-  `sub_8025A0C`
-  (third bit-grid setter), `sub_8025A3C` (Q8-to-int store),
+  `MarkEntityIdActivated`
+  (third bit-grid setter), `SetEntityFlagsPos` (Q8-to-int store),
   `DestroyEntityFlags` (conditional `OperatorDelete` forward), `InitEntityFlags`
   (zero two Q8 words)
 - `src/level/entity_spawner.c` (GitHub issue #41): `SpawnEntity`
   (table-indexed function-pointer dispatch via the interworking
   trampoline convention), `SetEntitySpawnerTable` (store two Q8 words),
-  `sub_8025D54` (conditional `OperatorDelete` forward, dup of
+  `DestroyEntitySpawnerObj` (conditional `OperatorDelete` forward, dup of
   `DestroyEntityFlags`), `InitEntitySpawner` (zero two Q8 words, dup of
   `InitEntityFlags`)
 - `src/level/bg_layer_init.c` (GitHub issue #41): `InitBgLayer`
@@ -298,7 +298,7 @@ system from "core" system startup/init code.
   removed, folded into `src/level/level_state.o`).
 - **`ProbeTerrain`** (`src/level/terrain_probe.c`, new file - dedicated
   deep investigation) - independently flagged "still unexamined" from
-  two other closed call sites this session (`sub_8009BE0`'s physics/
+  two other closed call sites this session (`ProbeHitboxEdgeTerrain`'s physics/
   collision step-probe and `PlayerHasRoomForAnim`'s input-action-check gate) and
   sketched in `docs/rom_map.md` as an umbrella dispatcher unifying
   `ProbeTerrainX`/`ProbeTerrainY` under one API. A small (148 B) 4-arm
@@ -322,7 +322,7 @@ system from "core" system startup/init code.
   mislabelled (it starts at `0x0802613C`). `asm/code_3_2_17_25fc8.s`
   removed. See
   [docs/matching/archive/issue-42-bg-scroll-layer.md](../matching/archive/issue-42-bg-scroll-layer.md).
-- **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`sub_8026480`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`UploadTileSlot`/`SetTileSlotPoolSource`**
+- **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`GetPooledBgLayerPriority`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`UploadTileSlot`/`SetTileSlotPoolSource`**
   (`src/level/tile_slot_pool.c`, new file - GitHub issue #43) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
   to the `InitBgLayer` BG-scroll-layer base) and its reference-counted
@@ -352,16 +352,16 @@ system from "core" system startup/init code.
   discarded, unread by either known caller). Matched on the first
   isolated-compile attempt with no register pins needed - see
   [docs/matching/archive/issue-9-10-0x0800a884-graphics.md](../matching/archive/issue-9-10-0x0800a884-graphics.md).
-- **`sub_8026BF8`/`sub_8026C3C`/`sub_8026C80`/`sub_8026C8C`**
+- **`ProbeFloorHeight`/`ProbeSolidFloorHeight`/`sub_8026C80`/`sub_8026C8C`**
   (`src/level/terrain.c`, new file - GitHub issue #9/#10, matching
   pass on functions already fully understood from
   `docs/matching/archive/issue-9-0x0800a178-graphics.md`) - the single-point
   terrain-height ("floor") probes `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
   (`src/objects/ground_sprite_collide.c`) call. Both `s32 fn(void *player,
-  struct probe_pos *pos, s32 *outValue)`: `sub_8026BF8` reads a signed
-  height byte via the raw terrain streamer `GetTerrainHeights`; `sub_8026C3C`
-  gets it via the CheckTerrainFlag-style `sub_8025228`. `sub_8026C3C`
-  matched on the first isolated-compile attempt; `sub_8026BF8` needed a
+  struct probe_pos *pos, s32 *outValue)`: `ProbeFloorHeight` reads a signed
+  height byte via the raw terrain streamer `GetTerrainHeights`; `ProbeSolidFloorHeight`
+  gets it via the CheckTerrainFlag-style `GetSolidTerrainModeValue`. `ProbeSolidFloorHeight`
+  matched on the first isolated-compile attempt; `ProbeFloorHeight` needed a
   narrow register-pinned inline-asm materialization of `ldrsb` (this
   agbcc build never emits Thumb `LDRSB` from any C-level signed-byte
   array read - confirmed categorically with a minimal standalone test -
@@ -727,14 +727,14 @@ plain C didn't converge.
   "load owner field, then shift the radius" instruction order. See
   [docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md](../matching/archive/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 4" section for the full writeup.
-- **`UpdateEffectCtrl` now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`UpdateEffectCtrl`/`EffectCtrlHandleEvent`/`nullsub_3`/`DestroyEffectCtrl`/`InitEffectCtrl`**
+- **`UpdateEffectCtrl` now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`UpdateEffectCtrl`/`EffectCtrlHandleEvent`/`ResetEffectCtrl`/`DestroyEffectCtrl`/`InitEffectCtrl`**
   (`src/objects/effect_ctrl.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
   the entire 43-function cluster). `UpdateEffectCtrl` (NAKED) inlines the
   "flag active + bitmap-set" idiom (`tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl`)
   three times over, each independently gated (a `_call_via_r1` hit-probe
   reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
-  `EffectCtrlHandleEvent`/`nullsub_3` are genuine empty stubs, matched as real C.
+  `EffectCtrlHandleEvent`/`ResetEffectCtrl` are genuine empty stubs, matched as real C.
   `DestroyEffectCtrl`/`InitEffectCtrl` (both real C) are two more constructors in
   the `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/`CreateKnockedEnemyCtrl` family, both re-pointing
   `self+0xc` at `gEffectCtrlVtable`. `InitEffectCtrl` sits right at the

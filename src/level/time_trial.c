@@ -50,7 +50,7 @@ static inline void SetPartTag(struct slot_part *part, s32 tag)
 /* Level restart: resets the level state's +0x8c/+0x90 fields, then
  * (unless the level object is already in state 3) retags and restarts
  * both slot parts, reloads slot B's tiles, runs ConvertCratesForTimeTrial, and
- * re-registers every entity in gUnknown_030012EC whose +0x48 method
+ * re-registers every entity in gTouchableList whose +0x48 method
  * returns 2: those whose +0x28 method fails are despawned, the rest are
  * flagged seen and marked in the collision map's seen bitmap. */
 void StartTimeTrial(struct level_state *self)
@@ -90,9 +90,9 @@ void StartTimeTrial(struct level_state *self)
     ConvertCratesForTimeTrial();
 
     i = 0;
-    if (i < gUnknown_030012EC->count) {
+    if (i < gTouchableList->count) {
         do {
-            struct actor *e = (struct actor *)gUnknown_030012EC->items[i];
+            struct actor *e = (struct actor *)gTouchableList->items[i];
             struct actor *a = e;
             struct actor_method *m = &((struct entity_vtable *)e->table)->m48;
 
@@ -107,6 +107,6 @@ void StartTimeTrial(struct level_state *self)
                     }
                 }
             }
-        } while (++i < gUnknown_030012EC->count);
+        } while (++i < gTouchableList->count);
     }
 }

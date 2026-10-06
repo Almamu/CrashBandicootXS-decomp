@@ -35,6 +35,8 @@
  *   `CommitBgLayerScroll` on layer 0 and each enabled layer.
  * - `sub_80269DC`/`sub_80269F8` - identical predicates: 0 if `arg1`,
  *   `*arg2` and `arg3` are all nonzero, else 1. `sub_8026A14` returns 0.
+ *   All three are UNUSED: no caller anywhere in the ROM (checked src/,
+ *   asm/ and the method tables).
  *
  * The method-table entries are a 16-bit `this` adjustment plus a function
  * pointer, called through `_call_via_r2`. Function names stay
@@ -93,14 +95,14 @@ void LoadRoom(struct level_layers *self, const struct level_room *args)
 struct level_layers *InitLevelLayers(struct level_layers *self)
 {
     self->layer0 = (struct bg_scroll_layer *)InitPooledBgLayer(OperatorNew(0x60), 0);
-    self->tiles = nullsub_4(OperatorNew(0x1064));
+    self->tiles = InitTileCache(OperatorNew(0x1064));
     self->layers[0] = InitBgLayer(OperatorNew(0x5C), 1);
     self->layers[1] = InitBgLayer(OperatorNew(0x5C), 2);
     self->layers[2] = InitBgLayer(OperatorNew(0x5C), 3);
     self->kind = 0;
     self->asset = NULL;
     self->assetOwned = 0;
-    self->unk_2B = 0;
+    self->raiseObjPriority = 0;
     self->probeFlag = 0;
     return self;
 }

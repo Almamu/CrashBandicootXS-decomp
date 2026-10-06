@@ -32,7 +32,7 @@ void UpdateRoomFrame(void *self)
 
     if (*(s32 *)self <= 0x1000) {
         UpdateHud(gHud);
-        DrawPartList(gUnknown_030012F4);
+        DrawPartList(gForegroundList);
 
         {
             struct player *p = gPlayer;
@@ -48,7 +48,7 @@ void UpdateRoomFrame(void *self)
         }
 
         DrawPartList(gCollidableList);
-        DrawPartList(gUnknown_030012EC);
+        DrawPartList(gTouchableList);
         DrawCrateList(gCrateList);
         DrawPartList((struct part_list *)gDecorationList);
 
@@ -76,17 +76,17 @@ struct level_ctx {
 };
 
 /* Rebuilds the gBlendRegs BLDCNT/BLDALPHA shadow from the level's
- * blend settings and sets gLevelLayers's `unk_2B` flag in mode 1. With
+ * blend settings and sets gLevelLayers->raiseObjPriority in mode 1. With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. */
 void SetupRoomBlend(struct level_ctx *self)
 {
     union blend *b = &gBlendRegs.blend;
 
     b->raw = 0;
-    gLevelLayers->unk_2B = 0;
+    gLevelLayers->raiseObjPriority = 0;
     if (self->blend->effect != 0) {
         if (self->blend->mode == 1)
-            gLevelLayers->unk_2B = 1;
+            gLevelLayers->raiseObjPriority = 1;
         b->bits.effect = *(u8 *)&self->blend->effect;
         b->bits.eva = self->blend->eva;
         b->bits.evb = self->blend->evb;

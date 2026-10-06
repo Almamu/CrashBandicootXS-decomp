@@ -85,8 +85,9 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList((struct part_list *)gDecorationList, part);
 }
 
-/* SpawnSeaweed without the animation reset. */
-void sub_80217D0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
+ * table). SpawnSeaweed without the animation reset. */
+void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
@@ -172,8 +173,9 @@ void SpawnLaunchPadEntity(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SpawnLaunchPad(arg0, arg1, arg2, arg3);
 }
 
-/* Empty stub. */
-void nullsub_21(void)
+/* The spawner of entity types 0x0D-0x0F, 0x11, 0x36, 0x3C, 0x3E and 0x46
+ * (gEntitySpawnFuncs): does nothing. No level places these types. */
+void SpawnNoEntity(void)
 {
 }
 

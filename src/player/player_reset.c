@@ -12,7 +12,7 @@
  * (`DrawGroundSprite`-`GetMovingSpriteCtrl`). */
 
 /* `part`-object constructor/reset: clears the velocity/accel fields
- * `sub_800A590`/`ApplySpriteVelocity` consume, resets state (`+0x68`) to 8,
+ * `AnchorGroundSpriteHitbox`/`ApplySpriteVelocity` consume, resets state (`+0x68`) to 8,
  * snapshots the current frame counter (`gRoomFrameCount`) into
  * `+0x8c` (the same "periodic check" field documented elsewhere in
  * this ROM), zeroes the `+0x100`-`+0x105` per-phase flag bytes

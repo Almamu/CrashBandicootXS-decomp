@@ -390,7 +390,7 @@ in the ROM, unlike `ProbeTerrain`'s own end-of-function padding quirk.
 own trailing `.align 2, 0` (685 lines, matching the same "everything
 before, everything after" split `ProbeTerrain` itself used to get
 carved out of this same file). `src/level/terrain.c` (new file)
-holds the matched `GetTerrainFlagsAt`. The remainder - `sub_8026BF8` onward,
+holds the matched `GetTerrainFlagsAt`. The remainder - `ProbeFloorHeight` onward,
 still raw/unexamined this session (including `StepCameraDirectional`,
 `StepCameraFacing`, `SnapCamera`, `UpdateCamera` and others referencing
 `gLevelLayers` and per-object velocity-style fields) - moved

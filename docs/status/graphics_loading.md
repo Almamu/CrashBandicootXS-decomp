@@ -67,7 +67,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   (`src/level/spawn_gems.c`) - issue #30: six "trigger
   effect type N" spawners (a `GetCurrentLevelFlags`/`gLevelState+2`
   collected-bit test, then a `CreateSpriteObj` part with a fixed bank
-  offset, tag and type byte registered with `gUnknown_030012EC`; the
+  offset, tag and type byte registered with `gTouchableList`; the
   last three hand over to `SpawnCortexBossGem` in level mode 1). All plain C
   once built with **old_agbcc** (`OLD_AGBCC_OBJS`), whose mask-before-
   `ldrb` order the ROM shows; the current agbcc misses all six, which is
@@ -110,9 +110,9 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   [naked-retry-mid45.md](../matching/archive/naked-retry-mid45.md)). See
   [issue-31-old-agbcc.md](../matching/archive/issue-31-old-agbcc.md).
 - **`SpawnBodySlamPower`**, **`SpawnTornadoSpinPower`**, **`SpawnDoubleJumpPower`**, **`SpawnTurboRunPower`**,
-  **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`sub_80220C4`**, **`SpawnCrateGemMarker`**,
-  **`SpawnWumpa`**, **`nullsub_22`**, **`SpawnHoverStartMarker`**, **`sub_80221A4`**,
-  **`SpawnUnderwaterStartMarker`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
+  **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`CreateTouchableSprite`**, **`SpawnCrateGemMarker`**,
+  **`SpawnWumpa`**, **`SpawnHoverPlayerPosition`**, **`SpawnHoverStartMarker`**, **`SpawnUnderwaterPlayerPosition`**,
+  **`SpawnUnderwaterStartMarker`**, **`SpawnPlayerPosition`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
   **`CreateEntitySpawner`**, **`InitLevelState`** (`src/level/spawn_pickups.c`)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
   `SpawnStartMarker` trampolines, the `gPlayer` position writers, the

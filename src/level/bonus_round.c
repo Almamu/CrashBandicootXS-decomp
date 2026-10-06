@@ -24,7 +24,7 @@
  * `wumpa`/`crateCount`/`lives` are accessed directly off `self` throughout
  * (no cached pointer) because those three offsets fit the Thumb
  * `ldr`/`str` immediate range (0-124); only the fields past that range
- * (`savedWumpa`-`crateTotal`, the checkpoint position, `unk_e0`) need an
+ * (`savedWumpa`-`crateTotal`, the checkpoint position, `checkpointFlags`) need an
  * explicit address computed into a local pointer - matching the ROM
  * exactly. Caching *all* of them in pointers (the earlier attempt here)
  * forced 3 extra always-live locals the natural allocator had to spill
@@ -49,7 +49,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
         {
             s32 *fieldb8 = &self->savedLives;
             s32 *fieldd4 = &self->checkpointX;
-            u8 *fielde0 = &self->unk_e0;
+            u8 *fielde0 = &self->checkpointFlags;
             s32 total;
 
             fieldbc = &self->crateTotal;
@@ -135,7 +135,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
         s32 y = player->y;
         void *base;
 
-        self->unk_e0 = arg1;
+        self->checkpointFlags = arg1;
         self->checkpointCrateCount = GetCrateCount(self);
 
         MATCH_KEEP_VOLATILE(self);

@@ -19,7 +19,7 @@
  * needed - always needed one extra callee-saved register that the ROM's
  * version doesn't spend. Closed this pass using the same "self lives in
  * ip for the whole leaf-ish function" idiom already established for
- * `sub_80259D4` (entity_flags.c, see
+ * `SetEntityIdActivated` (entity_flags.c, see
  * docs/matching/archive/naked-sub_80259d4-matched.md): `self` is pinned
  * to a `MATCH_HOLD_REG(void *, selfIP, ip)` local, materialized from the
  * incoming `r0`

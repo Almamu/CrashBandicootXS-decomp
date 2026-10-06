@@ -132,7 +132,7 @@ for the full write-up, GitHub issue #68):
 - `lib/gax/src/gax_channel_bind_instrument.c` - `GaxChannelSetInstrument` (binds a new
   instrument entry to a per-channel voice object and resets its
   envelope/state fields) - closed by pinning `self` to `ip` for the
-  whole function, the same idiom that closed `sub_80259D4`; see the
+  whole function, the same idiom that closed `SetEntityIdActivated`; see the
   "Update" section of
   [`docs/matching/archive/issue-68-channel-bind-envelope-note.md`](../matching/archive/issue-68-channel-bind-envelope-note.md)
 

@@ -6,7 +6,7 @@ still-raw span (`base_object=None`): `ProbeGroundSpriteTerrain` (ROM `0x0800A178
 680 bytes) and `ProbeGroundSpriteFloor` (ROM `0x0800A420`, 264 bytes).
 `CollideGroundSprite` itself, the only caller of `ProbeGroundSpriteTerrain` (both live in
 `asm/code_3_2_11.s`), stays raw - its own gate logic depends on
-`sub_8009BE0` (parked NAKED, `step_probe.c`,
+`ProbeHitboxEdgeTerrain` (parked NAKED, `step_probe.c`,
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)), so closing
 `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone doesn't unblock it.
 
@@ -18,23 +18,23 @@ same field `UpdateGameFrame`'s level-load branch sets once from
 `RunTitleScreen`'s return value ... consistent with 'total for this level'
 being cleared and presumably recomputed under some condition, not fully
 traced here." `docs/matching/archive/issue-9-0x08007634-actor.md` (line ~206)
-had also already flagged both functions as built on `sub_8008200`/
-`ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
-(`sub_8008200`, `ProbeTerrain`) are already matched this session
+had also already flagged both functions as built on `OffsetToHitboxEdge`/
+`ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` - two of those four
+(`OffsetToHitboxEdge`, `ProbeTerrain`) are already matched this session
 (`src/objects/sprite_obj.c`, `src/level/terrain_probe.c`), leaving
-only `sub_8026C3C`/`sub_8026BF8` genuinely unexamined.
+only `ProbeSolidFloorHeight`/`ProbeFloorHeight` genuinely unexamined.
 
 ## Reading the real bytes
 
 Both functions sit in `asm/code_3_2_11.s`, immediately after the
 still-raw `CollideGroundSprite` and immediately before the already-matched
-`UpdateGroundSprite`/`sub_800A590` (`src/objects/ground_sprite_update.c`, which
+`UpdateGroundSprite`/`AnchorGroundSpriteHitbox` (`src/objects/ground_sprite_update.c`, which
 itself already notes "still-raw `CollideGroundSprite`/`ProbeGroundSpriteTerrain`/
-`ProbeGroundSpriteFloor`" as its own neighbors). `sub_8026C3C`/`sub_8026BF8`
+`ProbeGroundSpriteFloor`" as its own neighbors). `ProbeSolidFloorHeight`/`ProbeFloorHeight`
 themselves live in `asm/code_3_2_17_266bc.s` (the file `ProbeTerrain`
 was split out of, right after it).
 
-### `sub_8026C3C`/`sub_8026BF8`: single-point terrain-height probes
+### `ProbeSolidFloorHeight`/`ProbeFloorHeight`: single-point terrain-height probes
 
 `docs/rom_map.md`'s "15 more reads" pass (line ~2581) had already
 placed these as "single-point collision-test siblings of
@@ -45,14 +45,14 @@ sharpens that: both are `s32 fn(void *player, struct probe_pos *pos,
 s32 *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
 `player->0x20`'s terrain-data pointer:
 
-- **`sub_8026BF8`** looks the tile row up via `GetTerrainHeights` ("the raw
+- **`ProbeFloorHeight`** looks the tile row up via `GetTerrainHeights` ("the raw
   terrain streamer" - returns a row pointer, or `NULL` on a miss).
   On a hit, reads a **signed byte** height sample at
   `row[pos->x & 7]`, computes `((pos->y >> 3) << 3) + heightByte -
   pos->y`, shifts to Q8, and accumulates it into `*outValue`. Returns
   `1` on a row hit, `0` if `GetTerrainHeights` returned `NULL`.
-- **`sub_8026C3C`** is the exact same shape, but the height byte comes
-  from `sub_8025228(terrainPtr, tileX, tileY, 0, &scratch)` instead of
+- **`ProbeSolidFloorHeight`** is the exact same shape, but the height byte comes
+  from `GetSolidTerrainModeValue(terrainPtr, tileX, tileY, 0, &scratch)` instead of
   a direct row-pointer byte read - the "CheckTerrainFlag"-style API
   `ProbeTerrainY`/`ProbeTerrainX` already use via their own `GetSolidTerrainHeights`
   calls (same argument shape: base pointer, tile coords, a submode, an
@@ -70,10 +70,10 @@ argument roles precisely.
 
 A single Y-axis "floor" probe. Builds an int `{x, y}` position at the
 *bottom* of `quad` (`self.x`/`self.y + (quad->yOff + quad->h) << 8`,
-via the already-matched `sub_8008200(dest, 8, quad)`, nudged left/right
+via the already-matched `OffsetToHitboxEdge(dest, 8, quad)`, nudged left/right
 by half the quad's width depending on `self+0x28` bit 4's mirror flag -
 the same established convention `terrain_probe.c`/`crate_touch.c`
-document), then probes it via `sub_8026BF8(*gLevelLayers, &pos,
+document), then probes it via `ProbeFloorHeight(*gLevelLayers, &pos,
 &origY)` where `origY` is `self.y`'s own original (unmodified) Q8
 value, kept aside as the probe's out-parameter target.
 
@@ -82,7 +82,7 @@ value, kept aside as the probe's out-parameter target.
   bit 1 was clear on entry, then sets `self+0xd` bit 1.
 - On a miss: if `self+0xd` bit 1 was already set, skips straight to the
   tail (no retry). Otherwise retries one integer pixel lower
-  (`pos.y += 1`) via a second `sub_8026BF8` call:
+  (`pos.y += 1`) via a second `ProbeFloorHeight` call:
   - if *that* hits, snaps `self->y` to its own `origY` and sets
     `self+0xd` bit 1 (same as the first-hit path);
   - if it also misses, `*outFlag` is set to `1` only on the path where
@@ -90,7 +90,7 @@ value, kept aside as the probe's out-parameter target.
     retry-then-miss path) - `self+0xd` bit 1 always ends up cleared on
     any all-miss outcome, regardless of which sub-path was taken.
 
-Returns whichever `sub_8026BF8` call's hit boolean was computed last.
+Returns whichever `ProbeFloorHeight` call's hit boolean was computed last.
 (The `outFlag`/bit-1 gating looks like a redundant double-test of the
 same bit at the disassembly level - `sub_800A4C4`'s own bit-1 check,
 then a second bit-1 check at `sub_800A500` that's always false whenever
@@ -121,7 +121,7 @@ other effect. Once past both:
 4. If the `ProbeGroundSpriteFloor` call's `outFlag` came back `1`: builds an int
    position at the bottom of the quad (same mirrored-half-width
    adjustment as `ProbeGroundSpriteFloor`'s own), probes it via
-   `sub_8026C3C(player, pos, &origY)`. On a hit: snaps `self->y` to the
+   `ProbeSolidFloorHeight(player, pos, &origY)`. On a hit: snaps `self->y` to the
    probed value and nudges `self->x` by ±1 pixel depending on
    `self+0x24 & 3` (`2` -> left, any other nonzero -> right, `0` -> no
    nudge). On a miss: nudges `self->y` down one pixel instead. Either
@@ -130,7 +130,7 @@ other effect. Once past both:
 5. Three more blocks, each gated on `self+0x24`'s own 2-bit sub-fields
    (`& 3` for the X-axis modes `1`/`2`, `& 0xc` for the Y-axis modes
    `4`/`8`) and on `sl` still being `0`: build a plain int `{x, y}`
-   position via the already-matched `sub_8008278(dest, mode, quad)`,
+   position via the already-matched `OffsetToHitboxEdgeStart(dest, mode, quad)`,
    probe it through the already-matched `ProbeTerrain(player, mode,
    pos, span, outValue)` tile-scan API, with `span` taken from the
    quad's own `h`/`w` byte - **three deliberately different probe
@@ -168,7 +168,7 @@ simultaneously across many `bl` calls, reused for genuinely different
 values block to block:
 
 - `ProbeGroundSpriteFloor`'s `r8` holds `&gLevelLayers` across two separate
-  `sub_8026BF8` calls (a conservative re-derive-via-cached-address
+  `ProbeFloorHeight` calls (a conservative re-derive-via-cached-address
   idiom, not a straight cached value) rather than re-fetching the
   literal pool address each time; `sb` holds `outFlag` for the whole
   function despite only being dereferenced once, right at the end.
@@ -180,7 +180,7 @@ values block to block:
 
 This is the exact `r7`/`r8`/`sb` cross-block register-reuse shape this
 immediate ROM neighborhood has already independently established as
-resistant to gcc 2.9 C reconstruction, four times over: `sub_8009BE0`
+resistant to gcc 2.9 C reconstruction, four times over: `ProbeHitboxEdgeTerrain`
 ([naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)),
 `PlayerAnimWouldTouchCrate`, `sub_800CEAC`, `sub_800CF70`
 ([issue-9-10-0x0800aaec-graphics.md](./issue-9-10-0x0800aaec-graphics.md),
@@ -207,8 +207,8 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
 `0x0800A178`-`0x0800A528` (944 bytes, both functions together): the
 only differing bytes fell into exactly the expected relocation-site
-set - 16 `bl` calls (`_call_via_r1` x2, `ProbeGroundSpriteFloor` x3, `sub_8008200`
-x2, `sub_8026C3C` x1, `ProbeTerrain` x3, `sub_8008278` x3, `sub_8026BF8`
+set - 16 `bl` calls (`_call_via_r1` x2, `ProbeGroundSpriteFloor` x3, `OffsetToHitboxEdge`
+x2, `ProbeSolidFloorHeight` x1, `ProbeTerrain` x3, `OffsetToHitboxEdgeStart` x3, `ProbeFloorHeight`
 x2) plus 3 `.4byte gLevelLayers` literal-pool words, all of which
 resolve correctly once linked.
 
@@ -237,7 +237,7 @@ coincide` (checksum matches).
   confirmed directly rather than assumed, via one isolated-compile
   attempt against the smaller of the two functions before committing
   to the NAKED path for both.
-- Reading `sub_8026C3C`/`sub_8026BF8`'s own raw bytes (not attempting
+- Reading `ProbeSolidFloorHeight`/`ProbeFloorHeight`'s own raw bytes (not attempting
   to match them) just far enough to pin down both callers' argument
   roles precisely, the same "read the callee enough to place the
   caller" approach `issue-9-10-41-0x08026628-game-loop.md` used for
@@ -265,11 +265,11 @@ A second dedicated session against the immediate follow-up: `CollideGroundSprite
 (ROM `0x0800A0FC`, 124 bytes), `ProbeGroundSpriteTerrain`'s only caller and, until
 now, the sole remaining content of `asm/code_3_2_11.s`. It stayed raw
 the first pass through this cluster because its own gate logic calls
-`sub_8009BE0` (parked NAKED, `src/objects/step_probe.c`, see
+`ProbeHitboxEdgeTerrain` (parked NAKED, `src/objects/step_probe.c`, see
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)) - at the
 time that function's own semantics were still unresolved, so closing
 `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone didn't unblock this one. Both facts
-changed since: `sub_8009BE0` is now fully understood (a physics/
+changed since: `ProbeHitboxEdgeTerrain` is now fully understood (a physics/
 collision step-probe, confirmed above and in its own doc), and
 `ProbeGroundSpriteTerrain` itself is now fully understood too - together, that's
 enough to close `CollideGroundSprite`'s own dispatch logic.
@@ -320,7 +320,7 @@ bl _call_via_r1
 adds r2, r0, #0
 adds r0, r4, #0
 movs r1, #8
-bl sub_8009BE0
+bl ProbeHitboxEdgeTerrain
 lsls r0, r0, #0x18
 cmp r0, #0
 bne _0800A16C
@@ -373,10 +373,10 @@ re-checks internally as its own second gate. Once past it:
    pointer read, signed-halfword offset at `+0x10`, function pointer at
    `+0x14`, `_call_via_r1(self+offset, fn)`), and runs a `mode == 8`
    (Y-axis/floor, confirmed by `terrain_probe.c`'s own `ProbeTerrain` mode
-   table) step-probe via `sub_8009BE0(self, 8, quad)`. If that
+   table) step-probe via `ProbeHitboxEdgeTerrain(self, 8, quad)`. If that
    step-probe does *not* report immediate success (either a full miss,
    or only succeeding via one of its own internal retries - see
-   `sub_8009BE0`'s doc comment), sets `self+0xc` bit 5 and clears
+   `ProbeHitboxEdgeTerrain`'s doc comment), sets `self+0xc` bit 5 and clears
    `self+0x68` bit 3 back out - **rolling back the "Y axis resolved"
    bit `ProbeGroundSpriteTerrain`'s own probes had just set**, since the more
    thorough, independent step-probe didn't confirm it cleanly.
@@ -392,7 +392,7 @@ aren't the same trampoline invocation despite sharing an offset
 convention). `ProbeGroundSpriteTerrain` does the actual layered collision
 resolution and reports which axes it resolved this call; `CollideGroundSprite`
 cross-checks the Y-axis result specifically against a second,
-independent step-probe (`sub_8009BE0`) before trusting it enough to
+independent step-probe (`ProbeHitboxEdgeTerrain`) before trusting it enough to
 leave the bit set in the persistent `self+0x68` mask - a "cheap probe,
 then confirm" two-stage design for the one axis (gravity/floor) that
 matters most for basing the object.
@@ -450,11 +450,11 @@ first, only fall back if it's a genuine structural gap" order:
   register-offset `ldrsh` regardless of source phrasing, which already
   matches the ROM's own `movs r2,#0x10`/`ldrsh r0,[r1,r2]` shape
   unpinned.
-- **`sub_8009BE0`'s return value truthy test**: the ROM narrows the
+- **`ProbeHitboxEdgeTerrain`'s return value truthy test**: the ROM narrows the
   return value via `lsls r0,r0,#0x18` before the zero test (Thumb has
   no `AND #0xff` immediate form, and a sub-word return value isn't
   guaranteed clean in the upper bits at the call site). This fell out
-  automatically once `sub_8009BE0` was locally declared returning `u8`
+  automatically once `ProbeHitboxEdgeTerrain` was locally declared returning `u8`
   (matching how `ProbeGroundSpriteFloor` is itself declared `u8` despite the same
   narrowing dance appearing at *its* own call sites in `ProbeGroundSpriteTerrain`) -
   declaring it `s32` instead skipped the narrowing entirely and
@@ -507,26 +507,26 @@ in link order, with no raw `.s` gap between `moving_sprite_collide.o` and
   in "Matched" for `CollideGroundSprite`; the stale "Left raw" entry for it
   removed; the `ground_sprite.c` bullet's "large raw span" note
   corrected (that span was never fully raw - `UpdateGroundSprite`/
-  `sub_800A590` were already matched in `ground_sprite_update.c`).
+  `AnchorGroundSpriteHitbox` were already matched in `ground_sprite_update.c`).
 - `tools/report_units.py` - the `0x0800A0FC` unit's `base_object`
   changed from `None` to `"src/objects/ground_sprite_collide.o"` (matched);
   the `0x0800A178` unit's comment updated to note it now shares that
   object with the matched `CollideGroundSprite`.
 - `ldscript.txt` - `asm/code_3_2_11.o` line removed.
 
-## Second follow-up: `sub_8026BF8`/`sub_8026C3C`, closing the last two
+## Second follow-up: `ProbeFloorHeight`/`ProbeSolidFloorHeight`, closing the last two
 ## flagged callees (issue #9/#10)
 
 A third dedicated pass, this time a matching-only session against the
-two callees this doc's own "`sub_8026C3C`/`sub_8026BF8`: single-point
+two callees this doc's own "`ProbeSolidFloorHeight`/`ProbeFloorHeight`: single-point
 terrain-height probes" section (above) had already fully worked out
 semantically but explicitly left unattempted as C reconstructions
 ("Neither was attempted as a byte-exact C match this session"). Nothing
 about their semantics changed from the account above - `s32 fn(void
 *player, struct probe_pos *pos, s32 *outValue)`, `player+0x20`'s
 terrain-data pointer, `pos->x>>3`/`pos->y>>3` tile coords, a signed
-height-byte lookup (`GetTerrainHeights` row read for `sub_8026BF8`,
-`sub_8025228` for `sub_8026C3C`), `((tileY<<3)+height-pos->y)<<8`
+height-byte lookup (`GetTerrainHeights` row read for `ProbeFloorHeight`,
+`GetSolidTerrainModeValue` for `ProbeSolidFloorHeight`), `((tileY<<3)+height-pos->y)<<8`
 accumulated into `*outValue` - this pass just closes them as real C.
 
 ### Matching
@@ -544,9 +544,9 @@ register choices directly once the right C shape was found:
   code; the ROM tests the hit case and skips forward over the `return
   0`). Rewriting as `if (row != NULL) { ... hit code ...; return 1; }
   return 0;` (and the equivalent `if (height >= 0) { ... } return 0;`
-  for `sub_8026C3C`) reproduces the ROM's own `bne`-to-hit-code shape
+  for `ProbeSolidFloorHeight`) reproduces the ROM's own `bne`-to-hit-code shape
   exactly.
-- Load-order: the ROM reloads `pos->y` (and, for `sub_8026BF8`,
+- Load-order: the ROM reloads `pos->y` (and, for `ProbeFloorHeight`,
   `pos->x`) from memory a second time inside the hit block, in a
   specific order (`y` before `x`), even though the pre-shifted `tileY`
   is still live in a callee-saved register from the top of the
@@ -554,17 +554,17 @@ register choices directly once the right C shape was found:
   right at the top of the hit block (mirroring the ROM's own early
   reload) and writing the final accumulation with the row-byte/height
   operand evaluated first - `height + (tileY << 3) - y` for
-  `sub_8026BF8` (whose height depends on the row lookup, so evaluating
+  `ProbeFloorHeight` (whose height depends on the row lookup, so evaluating
   it first also keeps the byte-load and its address computation
   contiguous, avoiding the compiler's scheduler hoisting the unrelated
   `tileY << 3` computation in between - the same "fold into a single
   expression / keep the two loads in the ROM's actual order" scheduler
   workaround `docs/matching/archive/issue-68-0x08039818-audio.md` already
   documented for an unrelated function), `(tileY << 3) + height - y` for
-  `sub_8026C3C` (whose `height` is already available before the branch,
+  `ProbeSolidFloorHeight` (whose `height` is already available before the branch,
   via the call's own return value, so no equivalent hoist risk exists
   there).
-- `sub_8026BF8`'s signed-byte row read: this specific agbcc build never
+- `ProbeFloorHeight`'s signed-byte row read: this specific agbcc build never
   emits a Thumb `LDRSB` (register-offset signed-byte load) from *any*
   C-level signed-byte array/pointer read, confirmed categorically with a
   minimal standalone `s32 f(s8 *arr, s32 i) { return arr[i]; }` test,
@@ -587,7 +587,7 @@ Confirmed byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
 `0x08026BF8`-`0x08026C80` (136 bytes, both functions) - the only
 differing bytes are the two expected `bl` relocation sites (`GetTerrainHeights`,
-`sub_8025228`), both resolving correctly once linked. Full clean `rm -rf
+`GetSolidTerrainModeValue`), both resolving correctly once linked. Full clean `rm -rf
 build && make NON_MATCHING=1 report` (no warnings) and `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`.
@@ -610,7 +610,7 @@ project-wide; spell it out in prose instead (e.g. "every `.c` file under
 
 ### Bonus: `sub_8026C80`/`sub_8026C8C`, two adjacent UNUSED stubs
 
-The same survey that originally flagged `sub_8026C3C`/`sub_8026BF8`
+The same survey that originally flagged `ProbeSolidFloorHeight`/`ProbeFloorHeight`
 ("15 more reads" pass, `docs/rom_map.md` line ~2581) also flagged the
 two tiny functions immediately following them in the same file as
 "possibly trampolines/stubs". Read directly and matched alongside the
@@ -645,7 +645,7 @@ is byte-identical with no exceptions.
 ### Build layout (second follow-up)
 
 New object `src/level/terrain.c` holds all four functions
-(`sub_8026BF8`, `sub_8026C3C`, `sub_8026C80`, `sub_8026C8C`), following
+(`ProbeFloorHeight`, `ProbeSolidFloorHeight`, `sub_8026C80`, `sub_8026C8C`), following
 the `terrain_probe.c`/`terrain.c` naming precedent already established
 for this exact ROM neighborhood (both matched in the same immediate
 area, both reusing `struct probe_pos`/`struct tile_cache` conventions
@@ -658,12 +658,12 @@ exactly where these four functions' real bytes already sat.
 ### Cross-references (second follow-up)
 
 - `docs/status/game_loop.md` - new bullet in "Matched" for
-  `sub_8026BF8`/`sub_8026C3C`/`sub_8026C80`/`sub_8026C8C`
+  `ProbeFloorHeight`/`ProbeSolidFloorHeight`/`sub_8026C80`/`sub_8026C8C`
   (`src/level/terrain.c`).
 - `tools/report_units.py` - new unit at `0x08026BF8`
   (`"src/level/terrain.o"`, category `game_loop`); the `0x0800A178`
-  unit's comment updated to note all four of `sub_8008200`/
-  `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` are now matched, not just
+  unit's comment updated to note all four of `OffsetToHitboxEdge`/
+  `ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` are now matched, not just
   the first two.
 - `ldscript.txt` - `build/crashbandicootxs/src/level/terrain.o(.text);`
   line added, between `terrain.o` and `code_3_2_17_26bf8.o`.

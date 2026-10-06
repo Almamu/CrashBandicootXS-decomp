@@ -450,7 +450,7 @@ functions, no more, no fewer, in this half.
   (`SpawnEffectPart`, kind `0x2a`) at `self`'s position (minus 10 pixels on
   X), initializes its trajectory fields, switches `self` itself into
   hitbox tag `0x1b`, rebuilds its hitbox record, plays SFX `0x17`,
-  notifies `sub_80259D4` unless `self+8` is the sentinel `0xffff`,
+  notifies `SetEntityIdActivated` unless `self+8` is the sentinel `0xffff`,
   conditionally reactivates the viewport, tells `SetCheckpointAtPlayer` whether
   `self+0x50` is nonzero, and resets `self+0x4d` to `1`.
 - **`BreakCrateInStack(self, edgeFlag, walkFlag, dir)`** - case-3 handler
@@ -489,7 +489,7 @@ functions, no more, no fewer, in this half.
 - **`OpenSlotCrate(self, walkFlag)`** - case-15 handler of
   `BreakCrate`'s table (dispatch id `0xf`). Plays SFX 3, then
   switches on `self+0x48 & 7`: `1` plays SFX 3 again, notifies
-  `sub_80259D4`, and spawns a `DropExtraLife` bonus object 3 pixels below
+  `SetEntityIdActivated`, and spawns a `DropExtraLife` bonus object 3 pixels below
   `self`; `2` forwards to `OpenMysteryCrate`; `3` clears `self+0x4d` bit
   `0x80` and calls `ExplodeCrate(self, 1)`; any other value does
   nothing further.
@@ -677,7 +677,7 @@ check is the full clean `make compare`, which passed outright.
   `gCrateList` list-scan passes: settles every nearby object via
   `gCrateKindExplosive`/`gCrateKindBreakable`-driven dispatch to
   `BreakCrateInStack`/`ActivateIronSwitchCrate`/`ActivateNitroSwitchCrate`/`ExplodeCrate`, then a second
-  pass over `gUnknown_030012EC` calling `PickUpWumpa`. Resets
+  pass over `gTouchableList` calling `PickUpWumpa`. Resets
   `self+0x48` to the `-1` sentinel at the end.
 - **`UpdateCrates(void)`** - no arguments. Calls `DetonateNitroCrates` first
   (flush pending case-`0xa` commits), then an up-to-twice
@@ -695,7 +695,7 @@ check is the full clean `make compare`, which passed outright.
   (`ShowHudCrates`), plays sound id 4, arms `self+0x48=1`.
 - **`ActivateIronSwitchCrate(self)`** - per-edge dispatch id-row-`3` target (sibling
   of `ActivateNitroSwitchCrate`, same case). Tags `self+0x2d=0x22`, same triplet +
-  nibble update, marks the collision bitmap (`sub_8025A0C`), then scans
+  nibble update, marks the collision bitmap (`MarkEntityIdActivated`), then scans
   `gCrateList` for up to 0x20 simultaneously-triggered
   same-`+0x50`-group neighbors, allocating (`OperatorNewArray`) a linked
   group list at `self+0x48` when any are found (`-1` sentinel

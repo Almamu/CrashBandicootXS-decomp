@@ -71,7 +71,7 @@ struct box_part {
     u8 unk_4F[0x15];
     s32 speedY;    // 0x64 - struct gobj.speedY (> 0: falling, so a touch stomps)
     u8 hitAxes;    // 0x68 - collision axes ProbeGroundSpriteTerrain resolved (bit 3: Y)
-    u8 probeTries; // 0x69 - sub_8009BE0's retry counter
+    u8 probeTries; // 0x69 - ProbeHitboxEdgeTerrain's retry counter
     u8 unk_6A[0xa];
     u32 hitMask; // 0x74 - probe axes ProbeGroundSpriteTerrain hit this call
 };

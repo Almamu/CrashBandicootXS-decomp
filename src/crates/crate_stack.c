@@ -18,7 +18,7 @@
 
 /* Plays cue-3 SFX, then - unless `self->field_08` is the sentinel
  * `0xffff` - consumes a slot from the per-record bit-grid
- * (`gEntityFlags`, the same `sub_802599C`/`sub_80259D4` accessor
+ * (`gEntityFlags`, the same `IsEntityIdActivated`/`SetEntityIdActivated` accessor
  * pair entity_flags.c already establish) keyed by
  * `self->field_08`, setting the bit only if it wasn't already set.
  * Finally spawns a part object (`DropExtraLife`) three tiles below
@@ -30,8 +30,8 @@ void OpenLifeCrate(struct actor *self, u32 arg1)
     PlaySfx(gAudioContext, 3, 0x100);
 
     if (self->field_08 != 0xFFFF) {
-        if ((u8)sub_802599C(gEntityFlags, self->field_08) == 0) {
-            sub_80259D4(gEntityFlags, self->field_08);
+        if ((u8)IsEntityIdActivated(gEntityFlags, self->field_08) == 0) {
+            SetEntityIdActivated(gEntityFlags, self->field_08);
         }
     }
 

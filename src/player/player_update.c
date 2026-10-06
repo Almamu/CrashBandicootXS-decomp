@@ -216,7 +216,7 @@ void StopPlayerFalling(struct player *selfArg)
 }
 
 /* Decrements the `countdown` byte (if nonzero), then tail-
- * calls `UpdateGroundSprite` (still raw, in the CollideGroundSprite-sub_800A590
+ * calls `UpdateGroundSprite` (still raw, in the CollideGroundSprite-AnchorGroundSpriteHitbox
  * span). */
 void UpdatePlayer(struct player *self)
 {
