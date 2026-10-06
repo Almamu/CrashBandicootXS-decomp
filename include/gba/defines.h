@@ -13,7 +13,7 @@
 #define IWRAM_DATA __attribute__((section("iwram_data")))
 #define EWRAM_DATA __attribute__((section("ewram_data")))
 #else
-#define IWRAM_DATA 
+#define IWRAM_DATA
 #define EWRAM_DATA
 #endif
 
@@ -68,7 +68,7 @@ extern void (*INTR_VECTOR)(void);
 
 extern uint8_t EWRAM_START[EWRAM_SIZE];
 extern uint8_t IWRAM_START[IWRAM_SIZE];
-extern uint16_t PLTT[PLTT_SIZE/sizeof(uint16_t)];
+extern uint16_t PLTT[PLTT_SIZE / sizeof(uint16_t)];
 #define BG_PLTT (u8*)&PLTT[0]
 #define OBJ_PLTT (u8*)&PLTT[BG_PLTT_SIZE/sizeof(uint16_t)]
 extern uint8_t OAM[OAM_SIZE];
@@ -141,7 +141,7 @@ typedef uint16_t winreg_t;
 // NOTE: This appears to not match when using pointers, but with integers it's fine.
 //       uintptr_t should always be defined to be as big as a pointer, so there should be no issues.
 #define GET_TILE_NUM_COMMON(vramPtr, tileSize) (((uintptr_t)(vramPtr) - (uintptr_t)OBJ_VRAM0) / (tileSize))
-#define GET_TILE_NUM(vramPtr) GET_TILE_NUM_COMMON((vramPtr), TILE_SIZE_4BPP) 
+#define GET_TILE_NUM(vramPtr) GET_TILE_NUM_COMMON((vramPtr), TILE_SIZE_4BPP)
 
 #define TOTAL_OBJ_TILE_COUNT 1024
 

@@ -34,8 +34,7 @@ struct sprite_point;
 /* A position pair: a collision candidate's (src/objects/collision_queue.c),
  * which ApplyCrateCollision takes by value. Copied as one 8-byte struct
  * (the ROM's paired `ldr; ldr; str; str`). */
-struct e08c_pos
-{
+struct e08c_pos {
     s32 x;
     s32 y;
 };
@@ -50,17 +49,16 @@ struct e08c_pos
  * `unk_20`/`field20` and `unk_21`/`field21` are `p20`/`p21`; #574,
  * batch 9e).
  */
-struct collision_candidate
-{
-    struct crate *neighbor;     // 0x00 - the crate; its position is its first two words
-    struct e08c_pos pos;        // 0x04
-    s32 kind;                   // 0x0C
-    s32 code;                   // 0x10
-    s32 edge;                   // 0x14
-    s32 depth;                  // 0x18
-    s32 hit;                    // 0x1C
-    struct byte_arg p20;        // 0x20 - passed on the stack as a byte (`strb`)
-    struct byte_arg p21;        // 0x21
+struct collision_candidate {
+    struct crate *neighbor; // 0x00 - the crate; its position is its first two words
+    struct e08c_pos pos;    // 0x04
+    s32 kind;               // 0x0C
+    s32 code;               // 0x10
+    s32 edge;               // 0x14
+    s32 depth;              // 0x18
+    s32 hit;                // 0x1C
+    struct byte_arg p20;    // 0x20 - passed on the stack as a byte (`strb`)
+    struct byte_arg p21;    // 0x21
     u8 unk_22[2];
 };
 
@@ -72,13 +70,12 @@ struct collision_candidate
  * `struct collision_queue` and player_event.c's `struct ab9c_link` (the
  * head) were views of it (#574, batch 9e).
  */
-struct collision_queue
-{
-    s32 count;                  // 0x00
-    u8 unk_04;                  // 0x04 - the "position committed" byte: ResetCollisionQueue
-                                //        clears it, crate_break.c's D18C_COMMIT sets it, and
-                                //        while it is set ApplyCrateCollision leaves the player's
-                                //        position alone
+struct collision_queue {
+    s32 count; // 0x00
+    u8 unk_04; // 0x04 - the "position committed" byte: ResetCollisionQueue
+               //        clears it, crate_break.c's D18C_COMMIT sets it, and
+               //        while it is set ApplyCrateCollision leaves the player's
+               //        position alone
     u8 unk_05[3];
     struct collision_candidate candidates[16]; // 0x08
 };
@@ -104,8 +101,7 @@ struct entry_set {
  * pick the X and the Y record of a state. objects.h's `struct motion_rec`
  * (`a`/`b`/`c`) and gobj_1a794.h's `struct vec3` (`x`/`y`/`z`) were
  * views of it (#574, batch 9e). */
-struct speed_ramp
-{
+struct speed_ramp {
     s32 start;
     s32 step;
     s32 target;
@@ -113,8 +109,9 @@ struct speed_ramp
 
 /* src/objects/collision_queue.c */
 extern void ResolveCollisionCandidates(struct collision_queue *self);
-extern void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth,
-                                  struct e08c_pos pos, s32 hit, s32 p20, s32 p21);
+extern void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind,
+                                  s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+                                  s32 p20, s32 p21);
 extern void DestroyCollisionQueue(struct collision_queue *self, s32 flags);
 extern void ResetCollisionQueue(struct collision_queue *self);
 
@@ -200,7 +197,8 @@ extern void SetSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c);
 extern u8 GetGroundSpriteProbeTries(struct gobj *self);
 
 /* src/objects/part_collide.c */
-extern void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other);
+extern void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part,
+                                  struct box_part *other);
 
 /* src/objects/part_list.c */
 extern void DrawPartList(struct part_list *manager);
@@ -230,7 +228,8 @@ extern void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part
 extern void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index);
 extern void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index);
 extern void DestroyPlatformMover(struct mover *self, s32 flags);
-extern struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 dirX, u8 dirY, s32 kind);
+extern struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 dirX,
+                                         u8 dirY, s32 kind);
 extern void ClearPlatformMoverActive(struct mover *self);
 
 /* src/objects/platform_collide.c */
@@ -292,7 +291,8 @@ extern s32 GetSpritePriority(void *part);
 extern void DestroyUiSpriteObj(struct actor *part, u32 flags);
 extern struct actor *InitUiSpriteObj(struct actor *part);
 extern void UpdatePartList(struct part_list *list);
-extern void CollidePartList(struct part_list *list, struct aabb box, s32 unused, struct box_part *other);
+extern void CollidePartList(struct part_list *list, struct aabb box, s32 unused,
+                            struct box_part *other);
 extern void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
 
 /* src/objects/sprite_obj.c */

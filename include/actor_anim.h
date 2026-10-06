@@ -35,15 +35,22 @@ struct anim_frame_record; /* actor_self.h */
  * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
  * in entities.json), and slots 32-34 of the first table are all zero. */
 struct anim_table_record {
-    u32 index;                 // 0x00 - equals the record's own slot number in every valid record observed
-    struct anim_frame_record *table_A; // 0x04 - the clip's keyframes (struct anim_frame_record, actor_self.h), no count stored
-    u32 *table_B;               // 0x08 - frame address/offset array, see the comment above struct sprite_frame
-    u8 palette;                  // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which DrawActor puts in OAM attr 2 (<< 12)
+    u32 index; // 0x00 - equals the record's own slot number in every valid record observed
+    // 0x04 - the clip's keyframes (struct anim_frame_record, actor_self.h), no count stored
+    struct anim_frame_record *table_A;
+    u32 *table_B; // 0x08 - frame address/offset array, see the comment above struct sprite_frame
+    // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which
+    // DrawActor puts in OAM attr 2 (<< 12)
+    u8 palette;
     u8 pad_0D[3];
-    s32 baseDepth;               // 0x10 - 0 or 0x260C-0x36D5: the depth at which the part draws unscaled (DrawActor divides by it)
-    struct anim_box box_14;      // 0x14 - copied into the runtime per-part instance at +0x38 by InitActorPart; zero in some records
-    s32 spawnX;                  // 0x20 - added to the spawn X by CreateActor (the per-kind actor factory)
-    s32 spawnY;                  // 0x24 - added to the spawn Y by CreateActor
+    // 0x10 - 0 or 0x260C-0x36D5: the depth at which the
+    // part draws unscaled (DrawActor divides by it)
+    s32 baseDepth;
+    // 0x14 - copied into the runtime per-part instance
+    // at +0x38 by InitActorPart; zero in some records
+    struct anim_box box_14;
+    s32 spawnX; // 0x20 - added to the spawn X by CreateActor (the per-kind actor factory)
+    s32 spawnY; // 0x24 - added to the spawn Y by CreateActor
 }; // 0x28
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
 
@@ -84,11 +91,11 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
  * graphics/unknown/<sheet>/<entity>/NN.png round-trips to/from (that
  * tool strips/reinserts this same 4-byte header - see tools/framed_gfx.py). */
 struct sprite_frame {
-    u8 width_tiles;   // 0x00 - always 1, 2, 4, or 8 in every frame observed
-    u8 height_tiles;  // 0x01 - always 1, 2, 4, or 8 in every frame observed
-    u8 pad2;          // 0x02 - always 0x10 in both category families' sheets
-    u8 pad3;          // 0x03 - always 0x00
-    u8 tile_data[0];  // 0x04 - width_tiles*height_tiles*32 bytes, standard swizzled 4bpp tile data
+    u8 width_tiles;  // 0x00 - always 1, 2, 4, or 8 in every frame observed
+    u8 height_tiles; // 0x01 - always 1, 2, 4, or 8 in every frame observed
+    u8 pad2;         // 0x02 - always 0x10 in both category families' sheets
+    u8 pad3;         // 0x03 - always 0x00
+    u8 tile_data[0]; // 0x04 - width_tiles*height_tiles*32 bytes, standard swizzled 4bpp tile data
 };
 
 /* gActorCategories - 7 entries (categories 0-2 use the family rooted
@@ -124,14 +131,17 @@ struct sprite_frame {
  * `sub_802A504` (`idx*0x14+0x14 == (idx+1)*0x14+0x0`, i.e. those two
  * accessors are reading one record ahead, not an oversized record). */
 struct sub_effect_record {
-    s32 field_00;   // 0x00 - selection threshold value (record 0: unused as a threshold, see above)
-    s32 field_04;   // 0x04 - record 0 only: the table's real entry count
-    u8 kind;        // 0x08 - the actor kind CreateActor builds; counted by CountCategoryCrates
-    u8 altKind;     // 0x09 - the kind used instead when gLevelState+0x8c is set (SpawnActor, sub_802A570)
-    u8 bonusKind;   // 0x0a - the kind used instead when gUnknown_03001414 is set (SpawnActor's useBonus, sub_802A570)
+    s32 field_00; // 0x00 - selection threshold value (record 0: unused as a threshold, see above)
+    s32 field_04; // 0x04 - record 0 only: the table's real entry count
+    u8 kind;      // 0x08 - the actor kind CreateActor builds; counted by CountCategoryCrates
+    // 0x09 - the kind used instead when gLevelState+0x8c is set (SpawnActor, sub_802A570)
+    u8 altKind;
+    // 0x0a - the kind used instead when gUnknown_03001414
+    // is set (SpawnActor's useBonus, sub_802A570)
+    u8 bonusKind;
     u8 pad_0b;
-    s32 offsetX;    // 0x0c - Q8.8 after sub_802A558's <<8
-    s32 offsetY;    // 0x10 - Q8.8 after sub_802A540's <<8
+    s32 offsetX; // 0x0c - Q8.8 after sub_802A558's <<8
+    s32 offsetY; // 0x10 - Q8.8 after sub_802A540's <<8
 }; // 0x14
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_record) == 0x14);
 
@@ -140,9 +150,10 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_record) == 0x14);
  * (`sub_802A51C`/`sub_802A504`) read for the last record. `field_04` is
  * -1 like every real record's but record 0's. */
 struct sub_effect_table_end {
-    s32 field_00;   // 0x00 - the final threshold
-    s32 field_04;   // 0x04 - always -1
-    u8 kind;    // 0x08 - no real record's bytes: zero in three of the seven tables, arbitrary in the rest
+    s32 field_00; // 0x00 - the final threshold
+    s32 field_04; // 0x04 - always -1
+    // 0x08 - no real record's bytes: zero in three of the seven tables, arbitrary in the rest
+    u8 kind;
     u8 altKind;
     u8 bonusKind;
     u8 pad_0b;
@@ -160,9 +171,9 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_table_end) == 0xC);
  * padded to a multiple of 4 bytes, handed to the gDrawMirroredTilemapFunc map
  * callback). cellAnimSize is the whole record's size. */
 struct cell_anim_header {
-    u16 palette[256];   // 0x000
-    s16 cols;           // 0x200
-    s16 rows;           // 0x202
+    u16 palette[256]; // 0x000
+    s16 cols;         // 0x200
+    s16 rows;         // 0x202
 }; // 0x204, the frames follow
 
 /* The start of a BG1 picture (category_descriptor.bgPicture,
@@ -171,26 +182,40 @@ struct cell_anim_header {
  * of 4 bytes), `tileCount` 4bpp tiles, and one 4-bit palette bank per map
  * entry, low nibble first. */
 struct bg_picture_header {
-    u16 palette[256];   // 0x000
-    s16 cols;           // 0x200
-    s16 rows;           // 0x202
-    u32 tileCount;      // 0x204
+    u16 palette[256]; // 0x000
+    s16 cols;         // 0x200
+    s16 rows;         // 0x202
+    u32 tileCount;    // 0x204
 }; // 0x208, the map follows
 
 struct category_descriptor {
-    u32 type;                       // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
-    void *cellAnim;                 // 0x04 - the BG0 cell animation (gCategoryFamily0CellAnim/gCategoryFamily1CellAnim), played by InitCellAnim
-    u32 cellAnimSize;               // 0x08 - its size in bytes
-    void *bgPicture;                // 0x0C - the BG1 picture LoadBgPicture shows (gCategoryNBgPicture); NULL for type-0 categories (0-2), 5 and 6 share one
-    const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
-    struct sub_effect_record *spawnTable; // 0x14 - the stage's actor spawn list (gCategoryNSpawnTable), see struct sub_effect_record above
-    struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
-    const u8 *sprite_sheet;         // 0x1C - this category family's LZ77-compressed sprite sheet
-    u32 unknown_20;                 // 0x20
-    u32 active_count_threshold;     // 0x24 - compared against a running "how many of this category are active" counter (gActorCategoryDeaths) to gate spawning an extra sub-effect instance
-    u32 unknown_28;                 // 0x28
-    u32 position_offset_flag;       // 0x2C - zero/nonzero selects between two fixed position-offset constants (0xFFFFB000 / 0x2800) applied to a spawned part's vertical anchor
-    u32 unknown_30;                 // 0x30
+    // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
+    u32 type;
+    // 0x04 - the BG0 cell animation
+    // (gCategoryFamily0CellAnim/gCategoryFamily1CellAnim), played by InitCellAnim
+    void *cellAnim;
+    u32 cellAnimSize; // 0x08 - its size in bytes
+    // 0x0C - the BG1 picture LoadBgPicture shows (gCategoryNBgPicture);
+    // NULL for type-0 categories (0-2), 5 and 6 share one
+    void *bgPicture;
+    // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
+    const u16 *palette;
+    // 0x14 - the stage's actor spawn list
+    // (gCategoryNSpawnTable), see struct sub_effect_record above
+    struct sub_effect_record *spawnTable;
+    // 0x18 - this category's animation table base
+    // (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
+    struct anim_table_record *anim_table;
+    const u8 *sprite_sheet; // 0x1C - this category family's LZ77-compressed sprite sheet
+    u32 unknown_20;         // 0x20
+    // 0x24 - compared against a running "how many of this category are active" counter
+    // (gActorCategoryDeaths) to gate spawning an extra sub-effect instance
+    u32 active_count_threshold;
+    u32 unknown_28; // 0x28
+    // 0x2C - zero/nonzero selects between two fixed position-offset constants (0xFFFFB000 / 0x2800)
+    // applied to a spawned part's vertical anchor
+    u32 position_offset_flag;
+    u32 unknown_30; // 0x30
 }; // 0x34
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
 

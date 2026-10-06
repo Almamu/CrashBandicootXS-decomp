@@ -29,8 +29,8 @@ void GAX_play(void)
     GAX_INFO()->volume = GAX_SONG()->volume;
     gGaxPlayerState->field_180 = GAX_SONG()->field_0a;
     GAX_INFO()->playing = 1;
-    GaxMixFrame(GAX_MIXER(), (u32 *)(gGaxPlayerState->outBuf
-                                 + GAX_MIXER()->format->frames * gGaxPlayerState->outHalf));
+    GaxMixFrame(GAX_MIXER(), (u32 *)(gGaxPlayerState->outBuf +
+                                     GAX_MIXER()->format->frames * gGaxPlayerState->outHalf));
     gGaxPlayerState->outHalf ^= 1;
     GAX_SONG()->songEnded = GAX_INFO()->songEnded;
     if (gGaxPlayerState->curChannelIdx == 1 && GAX_SONG()->songEnded != 0) {
@@ -38,10 +38,10 @@ void GAX_play(void)
         GAX_SONG()->jingleEnded = 1;
         if (GAX_SONG()->sfxTypes != NULL) {
             for (i = 0; i < GAX_SONG()->numSfx; i++) {
-                ((struct GaxChannelState *)GAX_PLAYER()[GAX_SONG()->layout->count + i])->children[0]
-                    = GAX_PLAYER()[1];
-                GAX_MIXER()->children[GAX_MIXER()->type->childCount + i]
-                    = GAX_PLAYER()[GAX_SONG()->layout->count + i];
+                ((struct GaxChannelState *)GAX_PLAYER()[GAX_SONG()->layout->count + i])
+                    ->children[0] = GAX_PLAYER()[1];
+                GAX_MIXER()->children[GAX_MIXER()->type->childCount + i] =
+                    GAX_PLAYER()[GAX_SONG()->layout->count + i];
             }
         }
     }

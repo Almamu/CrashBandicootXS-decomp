@@ -23,14 +23,14 @@ struct vram_upload_cursor {
  * from being reclaimed by FreeUnlockedPaletteSlots (LockPalette/
  * UnlockPalette). See src/gfx/graphics.c. */
 struct palette_cache {
-    u16 count;                    // 0x00
+    u16 count; // 0x00
     u8 pad_02[2];
-    const u8 *palettes;             // 0x04
-    u8 *slotOf;                      // 0x08
-    u8 isFree[16];                 // 0x0C
-    u8 locked[16];                   // 0x1C
-    u8 slots[16][TILE_SIZE_4BPP];      // 0x2C
-    u8 dirty;                           // 0x22C
+    const u8 *palettes;           // 0x04
+    u8 *slotOf;                   // 0x08
+    u8 isFree[16];                // 0x0C
+    u8 locked[16];                // 0x1C
+    u8 slots[16][TILE_SIZE_4BPP]; // 0x2C
+    u8 dirty;                     // 0x22C
     u8 pad_22d[3];
 };
 COMPILE_TIME_ASSERT(vram_pool_h, sizeof(struct palette_cache) == 0x230);

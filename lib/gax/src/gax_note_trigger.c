@@ -38,12 +38,12 @@ asm(".set memcpy, MemCopy32");
 struct GaxMixItem {
     u8 *src;
     void *buf;
-    s32 pos;     /* Q11 sample position */
-    s32 end;     /* Q11 end/turn-around position */
+    s32 pos; /* Q11 sample position */
+    s32 end; /* Q11 end/turn-around position */
     u32 frames;
-    u32 done;    /* samples written so far */
+    u32 done; /* samples written so far */
     u32 volume;
-    u32 step;    /* Q11 per output sample */
+    u32 step; /* Q11 per output sample */
     u32 mode;
     s32 loopLen; /* Q11 sweep loop length, 0 = none */
 };
@@ -53,7 +53,7 @@ struct GaxMixItem {
     (((u16 *)gGaxPlayerState->mixCode)[((const u8 *)(label) - (const u8 *)gGaxArmResample + 2) / 2] = (value))
 
 u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
-                struct GaxSongData *song, u8 flag)
+                  struct GaxSongData *song, u8 flag)
 {
     struct GaxChannelInstrument *inst;
     struct GaxWave *wave;
@@ -126,8 +126,8 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
     }
     len = wave->length;
     pingpong = 0;
-    if (inst->rows[self->row].field_00 == 0
-        && inst->rows[self->row].sweepMin < inst->rows[self->row].sweepMax)
+    if (inst->rows[self->row].field_00 == 0 &&
+        inst->rows[self->row].sweepMin < inst->rows[self->row].sweepMax)
         pingpong = 1;
     {
         /* the ROM loads these three before the first store to the item */
@@ -137,6 +137,7 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
         /* volatile: the ARM routine updates it behind gcc's back, and the
          * ROM re-reads `item.done` at every use. The sweep length re-reads
          * `self->instrument` (volatile read) where GCSE would reuse `inst`. */
+        // clang-format off
         volatile struct GaxMixItem item = {
             data, buf, pos, len << 11, frames, 0, vol, step, 0,
             self->sweepOn
@@ -144,6 +145,7 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
                           ->rows[self->row].sweepLen << 11
                 : 0,
         };
+        // clang-format on
 
         while (item.done < self->format->frames) {
             if (self->field_11 > 0) {
@@ -188,8 +190,10 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
                         item.pos += step * 2;
                     self->field_11 = ~self->field_11;
                 } else {
-                    item.pos -= (self->instrument->rows[self->row].sweepMax
-                                 - self->instrument->rows[self->row].sweepMin) << 11;
+                    // clang-format off
+                    item.pos -= (self->instrument->rows[self->row].sweepMax -
+                                 self->instrument->rows[self->row].sweepMin) << 11;
+                    // clang-format on
                 }
             } else if (self->sweepOn) {
                 item.pos -= self->instrument->rows[self->row].sweepLen << 11;

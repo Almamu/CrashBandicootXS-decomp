@@ -37,7 +37,8 @@ u8 GaxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
         self->cutTimer--;
     }
     GaxChannelTick(self, info);
-    return self->field_0c == 0 ? (u8)GaxChannelMix(self, info, buf, arg, info->type->data.song, 0) : 0;
+    return self->field_0c == 0 ? (u8)GaxChannelMix(self, info, buf, arg, info->type->data.song, 0)
+                               : 0;
 }
 
 /* Decodes one row of this channel's packed pattern stream and applies
@@ -60,8 +61,8 @@ void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *in
     self->retriggerDelay = 0;
     if (retrigger == 0) {
         if (info->newOrder != 0) {
-            self->patternPtr = info->type->data.song->patterns
-                + self->type->data.orders[info->orderPos].patternOffset;
+            self->patternPtr = info->type->data.song->patterns +
+                               self->type->data.orders[info->orderPos].patternOffset;
             self->rowSkip = 0;
             self->emptyPattern = *self->patternPtr++;
         }

@@ -19,20 +19,21 @@ struct GaxHandlerType;
  * GAX2_new, sized by GAX2_estimate and handed to GAX2_init, which keeps
  * a pointer to it as the player state's `songPtr`. */
 struct GaxSongHeader {
-    u8 *workBuf;                 /* 0x00 - caller-supplied work RAM */
-    u32 workSize;                /* 0x04 - its size (GAX2_estimate computes the requirement) */
-    u16 mixRate;                 /* 0x08 - 0xffff = the song's default */
-    u16 field_0a;              /* 0x0a - copied to GaxPlayerState.field_180 each tick */
-    u16 flags;                   /* 0x0c */
-    u16 numSfx;                  /* 0x0e - number of SFX voices, 0xffff = the song's default */
-    u16 volume;                  /* 0x10 - master volume, clamped to 0xff; 0xffff = 0xff */
+    u8 *workBuf;  /* 0x00 - caller-supplied work RAM */
+    u32 workSize; /* 0x04 - its size (GAX2_estimate computes the requirement) */
+    u16 mixRate;  /* 0x08 - 0xffff = the song's default */
+    u16 field_0a; /* 0x0a - copied to GaxPlayerState.field_180 each tick */
+    u16 flags;    /* 0x0c */
+    u16 numSfx;   /* 0x0e - number of SFX voices, 0xffff = the song's default */
+    u16 volume;   /* 0x10 - master volume, clamped to 0xff; 0xffff = 0xff */
     u8 pad_12[0x1a];
     struct GaxHandlerType **sfxTypes; /* 0x2c - handler types of the SFX voices, or NULL */
-    struct GaxHandlerLayout *layout; /* 0x30 - the music player's handler layout; SFX voices follow its `count` handlers */
-    void *scratch;               /* 0x34 - 0x40-byte buffer cleared every tick */
-    u8 showErrors;               /* 0x38 - show GAX2's fatal-error screen on failure */
-    u8 songEnded;                /* 0x39 - the current player's song has ended (GaxInfoHandler.songEnded) */
-    u8 jingleEnded;              /* 0x3a - set when a finished jingle hands back to the music player */
+    /* 0x30 - the music player's handler layout; SFX voices follow its `count` handlers */
+    struct GaxHandlerLayout *layout;
+    void *scratch;  /* 0x34 - 0x40-byte buffer cleared every tick */
+    u8 showErrors;  /* 0x38 - show GAX2's fatal-error screen on failure */
+    u8 songEnded;   /* 0x39 - the current player's song has ended (GaxInfoHandler.songEnded) */
+    u8 jingleEnded; /* 0x3a - set when a finished jingle hands back to the music player */
 };
 
 /* A player's handler layout: `count` handler types, instantiated in

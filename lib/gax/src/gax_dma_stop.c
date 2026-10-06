@@ -25,10 +25,12 @@ void GAX_stop(void)
     /* Real hardware settle delay, not padding - see GaxResetSoundHardware's doc
      * comment in gax_hw_reset.c for why this can't be written as plain
      * "adds r3, r3, #0" text. */
+    // clang-format off
     asm(".byte 0x1b, 0x1c\n\t"
         "mov r8, r8\n\t"
         "mov r8, r8\n\t"
         "mov r8, r8");
+    // clang-format on
     REG_DMA1CNT_H = 0xc8 << 3;
     REG_TM0CNT = 0;
 }
@@ -46,9 +48,11 @@ void GaxStopDma(u32 dmaIdx)
     vu16 *reg = (vu16 *)(REG_ADDR_DMA1CNT_H + dmaIdx * 12);
 
     *reg = 0x8640;
+    // clang-format off
     asm(".byte 0x1b, 0x1c\n\t"
         "mov r8, r8\n\t"
         "mov r8, r8\n\t"
         "mov r8, r8");
+    // clang-format on
     *reg = 0xc8 << 3;
 }

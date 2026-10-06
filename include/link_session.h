@@ -17,22 +17,22 @@ struct nibble_pair {
  * data through them). */
 struct link_ring {
     u8 unused_00[4];
-    u8 buf[0x80];       /* 0x04 - written at writePos, read at readPos */
-    s32 count;          /* 0x84 - bytes pending */
-    s32 readPos;        /* 0x88 */
-    s32 writePos;       /* 0x8c - reset to 0x7f */
+    u8 buf[0x80]; /* 0x04 - written at writePos, read at readPos */
+    s32 count;    /* 0x84 - bytes pending */
+    s32 readPos;  /* 0x88 */
+    s32 writePos; /* 0x8c - reset to 0x7f */
 };
 
 /* One per-player 0xc8-byte record of the link session. */
 struct link_player {
-    u8 id[6];           /* 0x00 - copy of the session handshake id */
-    u16 field_6;        /* 0x06 - overwrites the id's hash with 0x1234 */
-    u16 field_8;        /* 0x08 */
-    u16 rx[16];         /* 0x0a - last 16 received words, at field_2c */
+    u8 id[6];    /* 0x00 - copy of the session handshake id */
+    u16 field_6; /* 0x06 - overwrites the id's hash with 0x1234 */
+    u16 field_8; /* 0x08 */
+    u16 rx[16];  /* 0x0a - last 16 received words, at field_2c */
     u8 unused_2a[2];
-    s32 field_2c;       /* 0x2c */
-    s32 field_30;       /* 0x30 */
-    s32 field_34;       /* 0x34 */
+    s32 field_2c;          /* 0x2c */
+    s32 field_30;          /* 0x30 */
+    s32 field_34;          /* 0x34 */
     struct link_ring ring; /* 0x38 */
 };
 
@@ -60,7 +60,7 @@ struct link_session {
     u8 unused_22[2];
     s32 field_24;
     u8 field_28[8];
-    u8 id[8];           /* 0x30 - MakeLinkHandshakeId's handshake id */
+    u8 id[8]; /* 0x30 - MakeLinkHandshakeId's handshake id */
     s32 field_38;
     s32 field_3c;
     struct link_ring ring;         /* 0x40 */

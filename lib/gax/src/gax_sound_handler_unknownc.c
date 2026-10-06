@@ -30,7 +30,7 @@ void GaxMixerInit(void *self)
     MATCH_HOLD_REG(u32, limit, r0);
 
     p->pos = 1;
-    for (i = 0; ; i++) {
+    for (i = 0;; i++) {
         if (gGaxPlayerState->curChannelIdx == 0) {
             limit = p->type->childCount;
             limit = limit + p->extraChildren;

@@ -15,8 +15,7 @@
  * `box`, `ab_box`, `fx_box`, `hit_box` and eight `struct aabb`s with
  * `field_0`..`field_c` or x/y/w/h) were merged here (docs/headers_plan.md,
  * batch 4). */
-struct aabb
-{
+struct aabb {
     s32 x;
     s32 y;
     s32 w;

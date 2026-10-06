@@ -87,7 +87,8 @@ u8 GAX2_init(struct GaxSongHeader *p)
     fmt->frames = fmt->mixRate * 1000 / 0xe94f;
     gGaxPlayerState->timerReload = gGaxMixRates[idx].timer;
     gGaxPlayerState->fxEcho = 0;
-    if (gGaxVersionStringPtr[2] != 'X' || gGaxVersionStringPtr[1] != 'A' || gGaxVersionStringPtr[0] != 'G')
+    if (gGaxVersionStringPtr[2] != 'X' || gGaxVersionStringPtr[1] != 'A' ||
+        gGaxVersionStringPtr[0] != 'G')
         gGaxPlayerState->timerReload <<= 1;
     if (size < (gGaxPlayerState->format->frames + 4) * 2)
         goto fail;
@@ -177,35 +178,35 @@ u8 GAX2_init(struct GaxSongHeader *p)
         GaxZeroFill(echo, len);
     }
     {
-    /* Indexed copies of the constant tables: GCSE's PRE hoists the
-     * `&gGaxPlayerState`, `p->layout`, 0803A73C and 0803A818 loads to
-     * the end of this first block, in the ROM's order, and loop.c
-     * strength-reduces each index into the `ldmia` pointer. */
-    const u32 *src;
+        /* Indexed copies of the constant tables: GCSE's PRE hoists the
+         * `&gGaxPlayerState`, `p->layout`, 0803A73C and 0803A818 loads to
+         * the end of this first block, in the ROM's order, and loop.c
+         * strength-reduces each index into the `ldmia` pointer. */
+        const u32 *src;
 
-    for (k = 0; k <= 20; k++)
-        gGaxPlayerState->dspCode48[k] = gGaxArmDownmix[k];
-    src = gGaxArmEcho;
-    for (k = 0; k <= 55; k++)
-        gGaxPlayerState->dspCode9c[k] = src[k];
-    src = gGaxArmResample;
-    {
-        s32 words;
-        if (p->layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
-            gGaxPlayerState->field_42 = 1;
-            words = 76;
-        } else {
-            gGaxPlayerState->field_42 = 0;
-            words = 55;
+        for (k = 0; k <= 20; k++)
+            gGaxPlayerState->dspCode48[k] = gGaxArmDownmix[k];
+        src = gGaxArmEcho;
+        for (k = 0; k <= 55; k++)
+            gGaxPlayerState->dspCode9c[k] = src[k];
+        src = gGaxArmResample;
+        {
+            s32 words;
+            if (p->layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
+                gGaxPlayerState->field_42 = 1;
+                words = 76;
+            } else {
+                gGaxPlayerState->field_42 = 0;
+                words = 55;
+            }
+            if (size < words * 4)
+                goto fail;
+            gGaxPlayerState->mixCode = buf;
+            buf += words * 4;
+            size -= words * 4;
+            for (k = 0; (s32)k < words; k++)
+                ((u32 *)gGaxPlayerState->mixCode)[k] = src[k];
         }
-        if (size < words * 4)
-            goto fail;
-        gGaxPlayerState->mixCode = buf;
-        buf += words * 4;
-        size -= words * 4;
-        for (k = 0; (s32)k < words; k++)
-            ((u32 *)gGaxPlayerState->mixCode)[k] = src[k];
-    }
     }
     if ((u16)(p->flags & 4)) {
         if (size <= 239)

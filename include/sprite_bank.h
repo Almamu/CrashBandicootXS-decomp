@@ -138,29 +138,29 @@ struct sprite_frame {
 
 struct sprite_frame_1box {
     struct sprite_frame frame;
-    struct hitbox_quad box[1];           /* 0x0C */
+    struct hitbox_quad box[1]; /* 0x0C */
 };
 
 struct sprite_frame_1box_anchor {
     struct sprite_frame frame;
-    struct hitbox_quad box[1];           /* 0x0C */
-    struct sprite_point anchor;         /* 0x14 */
+    struct hitbox_quad box[1];  /* 0x0C */
+    struct sprite_point anchor; /* 0x14 */
 };
 
 struct sprite_frame_2box {
     struct sprite_frame frame;
-    struct hitbox_quad box[2];           /* 0x0C, 0x14 */
+    struct hitbox_quad box[2]; /* 0x0C, 0x14 */
 };
 
 struct sprite_frame_3box {
     struct sprite_frame frame;
-    struct hitbox_quad box[3];           /* 0x0C, 0x14, 0x1C */
+    struct hitbox_quad box[3]; /* 0x0C, 0x14, 0x1C */
 };
 
 struct sprite_frame_3box_anchor {
     struct sprite_frame frame;
-    struct hitbox_quad box[3];           /* 0x0C, 0x14, 0x1C */
-    struct sprite_point anchor;         /* 0x24 */
+    struct hitbox_quad box[3];  /* 0x0C, 0x14, 0x1C */
+    struct sprite_point anchor; /* 0x24 */
 };
 
 /* sprite_anim.flags */
@@ -168,31 +168,32 @@ struct sprite_frame_3box_anchor {
 
 /* One animation: a sequence of frame indices into the bank's `frames`. */
 struct sprite_anim {
-    const u16 *seq;                     /* 0x00 - [frameCount] frame indices */
-    struct hitbox_quad box[2];           /* 0x04, 0x0C */
-    u8 paletteId;                       /* 0x14 - index into the table's `palettes` (GetPaletteSlot/LockPalette) */
-    u8 duration;                        /* 0x15 - ticks per step */
-    u8 frameCount;                      /* 0x16 - steps in `seq` */
-    u8 flags;                           /* 0x17 - SPRITE_ANIM_LOOP */
-    u32 unk_18;                         /* always 0 */
+    const u16 *seq;            /* 0x00 - [frameCount] frame indices */
+    struct hitbox_quad box[2]; /* 0x04, 0x0C */
+    /* 0x14 - index into the table's `palettes` (GetPaletteSlot/LockPalette) */
+    u8 paletteId;
+    u8 duration;   /* 0x15 - ticks per step */
+    u8 frameCount; /* 0x16 - steps in `seq` */
+    u8 flags;      /* 0x17 - SPRITE_ANIM_LOOP */
+    u32 unk_18;    /* always 0 */
 };
 
 /* One sprite bank (an actor's whole animation set). */
 struct sprite_bank {
-    const struct sprite_anim *anims;            /* 0x00 */
-    const struct sprite_frame *const *frames;   /* 0x04 */
-    u16 unk_08;                                 /* always 0 */
-    u16 animCount;                              /* 0x0A */
+    const struct sprite_anim *anims;          /* 0x00 */
+    const struct sprite_frame *const *frames; /* 0x04 */
+    u16 unk_08;                               /* always 0 */
+    u16 animCount;                            /* 0x0A */
 };
 
 /* gSpriteBankTable, *gSpriteBankSet. */
 struct sprite_bank_table {
-    const struct sprite_bank *banks;    /* 0x00 - [bankCount] */
-    const u8 *tileBase;                 /* 0x04 - sprite tile pool, GetSpriteTileBase */
-    const u8 *palettes;                 /* 0x08 - the 16-colour OBJ palettes (32 bytes each) GetPaletteSlot
-                                         *        copies into the palette cache; InitLevelState/RunPauseMenu */
-    u16 bankCount;                      /* 0x0C */
-    u16 paletteCount;                   /* 0x0E - 125 */
+    const struct sprite_bank *banks; /* 0x00 - [bankCount] */
+    const u8 *tileBase;              /* 0x04 - sprite tile pool, GetSpriteTileBase */
+    const u8 *palettes; /* 0x08 - the 16-colour OBJ palettes (32 bytes each) GetPaletteSlot
+                         *        copies into the palette cache; InitLevelState/RunPauseMenu */
+    u16 bankCount;      /* 0x0C */
+    u16 paletteCount;   /* 0x0E - 125 */
 };
 
 #endif /* GUARD_SPRITE_BANK_H */

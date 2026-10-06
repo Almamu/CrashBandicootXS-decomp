@@ -21,30 +21,28 @@
  * `struct gfx_part`. The +0x28 bits are declared on a 32-bit base type:
  * with `u8` bitfields the shared `1` constant is a QImode pseudo that CSE
  * merges with `field_0A = 1`, and the allocator no longer matches. */
-struct popup_part
-{
-    struct actor base;          // 0x00
+struct popup_part {
+    struct actor base; // 0x00
     u8 unk_1C[4];
-    void *anim;                 // 0x20
+    void *anim; // 0x20
     u8 unk_24[4];
-    u32 unk_28_0:4;             // 0x28
+    u32 unk_28_0:4; // 0x28
     u32 flipX:1;
     u32 flipY:1;
     u32 unk_28_6:2;
-    u8 frameNibble:4;           // 0x29
+    u8 frameNibble:4; // 0x29
     u8 unk_29_4:4;
     u8 unk_2A[2];
-    u8 animating;               // 0x2C - nonzero while the keyframe timer runs
-    u8 tag;                     // 0x2D
+    u8 animating; // 0x2C - nonzero while the keyframe timer runs
+    u8 tag;       // 0x2D
     u8 unk_2E[0x16];
-    struct part_ctrl *hdr;      // 0x44
+    struct part_ctrl *hdr; // 0x44
 };
 
 /* One level record, at `params + paramOffsets[id]` (bytes) in the
  * room's entity list (gEntityFlags->list). */
-struct level_record
-{
-    u8 flags;                   // bit 1: clear = X-mirrored (popup_part.flipX), bit 2: Y-mirrored
+struct level_record {
+    u8 flags; // bit 1: clear = X-mirrored (popup_part.flipX), bit 2: Y-mirrored
     u8 unk_01[3];
     s32 unk_04;
     s32 unk_08;
@@ -112,7 +110,8 @@ static inline void SetEnemyHitBox(struct part_ctrl *hdr, s32 l, s32 t, s32 r, s3
     hdr->boxB = b;
 }
 
-static inline void SetEnemyAttackCycle(struct part_ctrl *hdr, s32 idleTime, s32 attackTime, s32 cycleOffset)
+static inline void SetEnemyAttackCycle(struct part_ctrl *hdr, s32 idleTime, s32 attackTime,
+                                       s32 cycleOffset)
 {
     hdr->idleTime = idleTime;
     hdr->attackTime = attackTime;

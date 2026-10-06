@@ -32,8 +32,8 @@ u8 GaxEnvelopeTick(struct GaxChannelState *self, struct GaxEnvelope *env, u16 *p
         *posp = pos;
     }
 
-    if (self->released == 0 && env->loopStart != 0xff && env->loopEnd != 0xff
-        && pos == env->points[env->loopEnd].pos)
+    if (self->released == 0 && env->loopStart != 0xff && env->loopEnd != 0xff &&
+        pos == env->points[env->loopEnd].pos)
         *posp = env->points[env->loopStart].pos;
 
     i = 0;

@@ -28,8 +28,8 @@ struct pool_item;
 
 /* One entry of the crate list's free list: a grid node not in use. */
 struct pool_link {
-    struct pool_node *node;     // 0x00
-    struct pool_link *next;     // 0x04
+    struct pool_node *node; // 0x00
+    struct pool_link *next; // 0x04
 };
 
 /* One node of the crate list's grid (0x14 bytes): a listed part, the
@@ -38,12 +38,12 @@ struct pool_link {
  * node (`link`), and DrawCrateList/UpdateCrateList mark the nodes they
  * have handled. */
 struct pool_node {
-    struct box_part *data;      // 0x00
-    struct pool_node *next;     // 0x04
-    struct pool_link *wrap;     // 0x08
-    struct pool_node *link;     // 0x0C
-    u8 mark;                    // 0x10
-    u8 mark2;                   // 0x11
+    struct box_part *data;  // 0x00
+    struct pool_node *next; // 0x04
+    struct pool_link *wrap; // 0x08
+    struct pool_node *link; // 0x0C
+    u8 mark;                // 0x10
+    u8 mark2;               // 0x11
 };
 
 /* codegen: `struct pool_node` with untyped fields, the view
@@ -70,14 +70,14 @@ struct pool_init_node {
  * singly-linked list, `freeListHead` pointing at its first still-free
  * entry. ResetCrateList and InitCrateList saw it as `struct pool_init`. */
 struct pool_manager {
-    s32 activeCount;                    // 0x000
-    s32 capacity;                       // 0x004
-    struct box_part **slotArray;        // 0x008
-    struct pool_node *nodeArray;        // 0x00C
-    struct pool_node *gridHead[256];    // 0x010
-    struct pool_node *gridTail[256];    // 0x410
-    struct pool_link *freeListArray;    // 0x810
-    struct pool_link *freeListHead;     // 0x814
+    s32 activeCount;                 // 0x000
+    s32 capacity;                    // 0x004
+    struct box_part **slotArray;     // 0x008
+    struct pool_node *nodeArray;     // 0x00C
+    struct pool_node *gridHead[256]; // 0x010
+    struct pool_node *gridTail[256]; // 0x410
+    struct pool_link *freeListArray; // 0x810
+    struct pool_link *freeListHead;  // 0x814
 };
 
 /* The method table (src/data/entity_vtables_7e3bec.c). */
@@ -144,8 +144,10 @@ extern void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type);
 extern void DrawCrate(struct crate *self);
 
 /* src/crates/crate_grid_collide.c */
-extern void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struct box_part *other);
-extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
+extern void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused,
+                             struct box_part *other);
+extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box,
+                                           struct box_part *part);
 
 /* src/crates/crate_grid_link.c */
 extern void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *obj);
@@ -154,15 +156,18 @@ extern void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_par
 extern void UnlinkCrateFromGrid(struct pool_manager *manager, struct pool_item *item);
 
 /* src/crates/crate_hit.c */
-extern u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset, s32 yOffset);
+extern u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset,
+                      s32 yOffset);
 extern struct crate *sub_800CF70(struct crate *self, struct aabb *box, u8 *foundFlag);
 extern void BreakCrateTouchedByPlayer(struct box_part *self);
 
 /* src/crates/crate_list.c */
-extern void CollideCrateGridPartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other);
+extern void CollideCrateGridPartWithObject(struct part_list *list, struct aabb box,
+                                           struct box_part *part, struct box_part *other);
 extern void RemoveCrateFromList(struct pool_manager *manager, struct box_part *target);
 extern void RemoveCrateListAt(struct pool_manager *manager, s32 index);
-extern void *AddCrateGridNode(struct pool_manager *manager, struct box_part *data, s32 bucket, s32 extra);
+extern void *AddCrateGridNode(struct pool_manager *manager, struct box_part *data, s32 bucket,
+                              s32 extra);
 extern void LinkCrateInGrid(struct pool_manager *manager, struct box_part *obj);
 extern void AddCrateToList(struct pool_manager *manager, struct box_part *obj);
 extern void DestroyCrateList(struct pool_manager *manager, s32 flags);

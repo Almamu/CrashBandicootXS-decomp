@@ -19,7 +19,8 @@ u8 GaxFxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
     if (info->field_1b != 0)
         self->instrument = NULL;
     if (info->playing != 0) {
-        if ((self->pendingNote == 1 || (self->pendingNote != 0 && self->pendingInstrument != 0)) && info->field_1b == 0) {
+        if ((self->pendingNote == 1 || (self->pendingNote != 0 && self->pendingInstrument != 0)) &&
+            info->field_1b == 0) {
             GaxChannelSetNote(self, self->pendingNote);
             GaxChannelSetInstrument(self, info, self->pendingInstrument, self->type->data.song);
             self->volStep15 = 0;
@@ -37,6 +38,7 @@ u8 GaxFxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
         self->cutTimer--;
     }
     GaxChannelTick(self, info);
-    return self->field_0c == 0 ? (u8)GaxChannelMix(self, info, buf, arg, self->type->data.song, 1) : 0;
+    return self->field_0c == 0 ? (u8)GaxChannelMix(self, info, buf, arg, self->type->data.song, 1)
+                               : 0;
 }
 asm(".align 2, 0");

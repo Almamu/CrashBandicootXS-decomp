@@ -13,37 +13,34 @@
 /* One layer (BG0-3 or the collision layer): `struct bg_layer_desc` in
  * bg_layer.c, `struct stream_source` in cutscene_player.c, and
  * the raw `source` of the terrain cache (bg_layer_base.c/collision_map.c). */
-struct level_layer_desc
-{
-    const u16 *chunkGrid;   // 0x00 - gridWidth x gridHeight chunk ids, row-major
-    u32 assetOffset;        // 0x04 - this layer's section in the level asset
-    const void *tileData;   // 0x08 - BG tile set (NULL for the collision layer)
-    s32 scaleX;             // 0x0C - Q8 parallax factor
-    s32 scaleY;             // 0x10
-    u16 cnt;                // 0x14 - BGnCNT bits (the priority is used)
-    u16 gridWidth;          // 0x16 - in 16x8-cell chunks
-    u16 gridHeight;         // 0x18
-    u16 widthTiles;         // 0x1A
-    u16 heightTiles;        // 0x1C
-    u16 unk_1E;             // 0x1E - 2 in every room
+struct level_layer_desc {
+    const u16 *chunkGrid; // 0x00 - gridWidth x gridHeight chunk ids, row-major
+    u32 assetOffset;      // 0x04 - this layer's section in the level asset
+    const void *tileData; // 0x08 - BG tile set (NULL for the collision layer)
+    s32 scaleX;           // 0x0C - Q8 parallax factor
+    s32 scaleY;           // 0x10
+    u16 cnt;              // 0x14 - BGnCNT bits (the priority is used)
+    u16 gridWidth;        // 0x16 - in 16x8-cell chunks
+    u16 gridHeight;       // 0x18
+    u16 widthTiles;       // 0x1A
+    u16 heightTiles;      // 0x1C
+    u16 unk_1E;           // 0x1E - 2 in every room
 };
 
 /* One entity spawn record: `type` indexes the spawn-function table
  * (gEntitySpawner, dispatched by SpawnEntity), which gets the entity's
  * id, x, y and param; `param` indexes the room's parameter records
  * (`struct level_entity_list.paramOffsets`). */
-struct level_entity
-{
+struct level_entity {
     u16 type;
-    u16 x;                  // pixels
+    u16 x; // pixels
     u16 y;
     u16 param;
 };
 
 /* The entities of one 256-px column (x >> 8). */
-struct level_entity_group
-{
-    u16 first;              // entities in the columns before this one
+struct level_entity_group {
+    u16 first; // entities in the columns before this one
     u16 count;
     const struct level_entity *entities;
 };
@@ -52,33 +49,30 @@ struct level_entity_group
  * were `struct lk_list` (room_entities.c), `struct collect_info`
  * (dingodile.c), `struct level_record_table` (text_popup.h), `struct
  * placement_level` (crate_create.c) and CreatePlatform's level header. */
-struct level_entity_list
-{
-    u16 count;              // 0x00 - all entities
-    u16 groupCount;         // 0x02
+struct level_entity_list {
+    u16 count;                               // 0x00 - all entities
+    u16 groupCount;                          // 0x02
     const struct level_entity_group *groups; // 0x04
-    const u16 *paramOffsets;  // 0x08 - byte offset of each parameter record
-    const u32 *params;      // 0x0C - the records: a flags word, then per-type words
-    const u16 *typeCounts;  // 0x10 - entities per type
+    const u16 *paramOffsets;                 // 0x08 - byte offset of each parameter record
+    // 0x0C - the records: a flags word, then per-type words
+    const u32 *params;
+    const u16 *typeCounts; // 0x10 - entities per type
 };
 
 /* Was `struct lk_link` in room_entities.c: chains entity `from` to entity
  * `to` (entity ids = spawn order). */
-struct level_link
-{
+struct level_link {
     s32 from;
     s32 to;
 };
 
-struct level_link_list
-{
+struct level_link_list {
     s32 count;
     struct level_link links[1]; // `count` of them
 };
 
 /* One room: `struct level_desc` in level_layers.c. */
-struct level_desc
-{
+struct level_desc {
     const struct level_layer_desc *layers[3]; // 0x00 - BG1-3
     const struct level_layer_desc *layer0;    // 0x0C - BG0 (tile-slot pooled)
     const struct level_layer_desc *collision; // 0x10 - the terrain cache's
@@ -98,26 +92,24 @@ struct level_desc
  * (`linkedObj`/`type` are `desc`/`kind`), level_state.h's `struct
  * level_category` and run_room.c's `gl_widget_kind` (#574, batch 9e).
  */
-struct level_room
-{
-    const u16 *palette;              // 0x00 - BG palette, 256 colours
-    const struct level_desc *desc;   // 0x04 - NULL for a category stage
-    s32 kind;                        // 0x08 - 0-2: a room; 3: a stage played
-                                     //        in actor category `catIndex`
-    s32 unk_0C;                      // 0x0C - 0 in every record
-    u16 catIndex;                    // 0x10 - kind 3: the actor category
-                                     //        (CountCategoryCrates)
-    u16 unk_12;                      // 0x12
+struct level_room {
+    const u16 *palette;            // 0x00 - BG palette, 256 colours
+    const struct level_desc *desc; // 0x04 - NULL for a category stage
+    s32 kind;                      // 0x08 - 0-2: a room; 3: a stage played
+                                   //        in actor category `catIndex`
+    s32 unk_0C;                    // 0x0C - 0 in every record
+    u16 catIndex;                  // 0x10 - kind 3: the actor category
+                                   //        (CountCategoryCrates)
+    u16 unk_12;                    // 0x12
 };
 
 /* A level's rooms (level_query.c's `MedalItemList` was a view: `items` is
  * `rooms`). */
-struct level_room_list
-{
+struct level_room_list {
     s32 count;
-    const struct level_room *const *rooms;  // `count` rooms, in play order
-    const struct level_room *extra1;        // or NULL
-    const struct level_room *extra2;        // or NULL
+    const struct level_room *const *rooms; // `count` rooms, in play order
+    const struct level_room *extra1;       // or NULL
+    const struct level_room *extra2;       // or NULL
 };
 
 /*
@@ -125,19 +117,18 @@ struct level_room_list
  * this struct; the local views `threshold_table_entry`, `MedalTableEntry`,
  * `level_guard` and `gl_level_entry` were merged into it (#574, batch 8b).
  */
-struct level_info
-{
-    s32 nameText;       // 0x00 - text id of the level's name (GetUiText)
-    u32 theme;          // 0x04 - picks the level-start colour cycle
-                        //        (RunRoom) and indexes the music cues
-                        //        gThemeMusicCues (PlayRoomMusic)
-    u32 times[3];       // 0x08 - time-trial thresholds, centiseconds,
-                        //        loosest first
+struct level_info {
+    s32 nameText;          // 0x00 - text id of the level's name (GetUiText)
+    u32 theme;             // 0x04 - picks the level-start colour cycle
+                           //        (RunRoom) and indexes the music cues
+                           //        gThemeMusicCues (PlayRoomMusic)
+    u32 times[3];          // 0x08 - time-trial thresholds, centiseconds,
+                           //        loosest first
     s32 maskAssistDeaths;  // 0x14 - level_state.maskAssistDeaths (SetMaskAssistDeaths)
     s32 crateAssistDeaths; // 0x18 - level_state.crateAssistDeaths (SetCrateAssistDeaths)
-    u8 isBoss;          // 0x1C - 1 for the five boss levels (tiny, dingodile,
-                        //        n. gin, neo cortex, mega-mix); RunRoom runs
-                        //        CheckAllCratesBroken at level start only if 0
+    u8 isBoss;             // 0x1C - 1 for the five boss levels (tiny, dingodile,
+                           //        n. gin, neo cortex, mega-mix); RunRoom runs
+                           //        CheckAllCratesBroken at level start only if 0
     const struct level_room_list *rooms; // 0x20
 };
 

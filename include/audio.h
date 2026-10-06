@@ -38,33 +38,39 @@
  * struct assignment (not 3 separate field copies) - that's what gets it
  * to reproduce the ROM's `ldm/stm {r2,r3,r5}` block-move codegen. */
 struct SfxRecord {
-    u32 id;              // 0x63 (99) = none
-    u32 deadline;          // gRoomFrameCount-relative
-    s32 volume;              // target the owning ambientSfxVolume fade ramps toward
+    u32 id;       // 0x63 (99) = none
+    u32 deadline; // gRoomFrameCount-relative
+    s32 volume;   // target the owning ambientSfxVolume fade ramps toward
 };
 
 struct AudioContext {
-    u32 field_00;         // 0x00 - not touched by this function cluster
-    u32 state;             // 0x04 - 0 = stopped, 1 = playing, 2 = paused
-    u32 currentSong;        // 0x08 - index into gSongTable (19 songs); 0x13 = none
-    u32 pendingSong;         // 0x0c - queued song index, started once the duck-out fade completes
-    u32 lastSfxId[2];         // 0x10/0x14 - round-robin record of the last 2 PlaySfx ids (StopSfx stop-if-playing scan)
-    s32 musicVolCurrent;       // 0x18 - signed: UpdateAudio compares it with blt/bgt, not an unsigned bcc/bcs
-    s32 musicVolTarget;         // 0x1c
-    s32 duckVolDefault;          // 0x20
-    s32 duckVolCurrent;           // 0x24
-    s32 duckVolTarget;             // 0x28
-    s32 sfxVolume;                  // 0x2c - PlaySfx's own volume multiplier
-    u32 field_30;                    // 0x30 - mirrored (truncated) into the embedded GAX object's +0xA (self+0x62) while playing
-    s32 ambientSfxVolume;             // 0x34 - the ambient-sfx channel's own current fade volume (ramps toward activeSfx.volume, TickAmbientSfx - signed, compared with bgt/bge/ble)
-    struct SfxRecord activeSfx;         // 0x38
-    struct SfxRecord pendingSfx;          // 0x44
-    u8 musicVolFadeUpArmed;                       // 0x50
-    u8 musicVolFadeDownArmed;                      // 0x51
-    u8 duckVolFadeUpArmed;                           // 0x52
-    u8 duckVolFadeDownArmed;                          // 0x53
-    u8 field_54;                                        // 0x54 - only ever cleared in this cluster (StartSong, on a successful song start)
-    u8 pad_55[3];                                         // 0x55-0x57
+    u32 field_00;    // 0x00 - not touched by this function cluster
+    u32 state;       // 0x04 - 0 = stopped, 1 = playing, 2 = paused
+    u32 currentSong; // 0x08 - index into gSongTable (19 songs); 0x13 = none
+    u32 pendingSong; // 0x0c - queued song index, started once the duck-out fade completes
+    // 0x10/0x14 - round-robin record of the last 2 PlaySfx ids (StopSfx stop-if-playing scan)
+    u32 lastSfxId[2];
+    // 0x18 - signed: UpdateAudio compares it with blt/bgt, not an unsigned bcc/bcs
+    s32 musicVolCurrent;
+    s32 musicVolTarget; // 0x1c
+    s32 duckVolDefault; // 0x20
+    s32 duckVolCurrent; // 0x24
+    s32 duckVolTarget;  // 0x28
+    s32 sfxVolume;      // 0x2c - PlaySfx's own volume multiplier
+    // 0x30 - mirrored (truncated) into the embedded GAX object's +0xA (self+0x62) while playing
+    u32 field_30;
+    // 0x34 - the ambient-sfx channel's own current fade volume (ramps toward activeSfx.volume,
+    // TickAmbientSfx - signed, compared with bgt/bge/ble)
+    s32 ambientSfxVolume;
+    struct SfxRecord activeSfx;  // 0x38
+    struct SfxRecord pendingSfx; // 0x44
+    u8 musicVolFadeUpArmed;      // 0x50
+    u8 musicVolFadeDownArmed;    // 0x51
+    u8 duckVolFadeUpArmed;       // 0x52
+    u8 duckVolFadeDownArmed;     // 0x53
+    // 0x54 - only ever cleared in this cluster (StartSong, on a successful song start)
+    u8 field_54;
+    u8 pad_55[3]; // 0x55-0x57
 };
 
 COMPILE_TIME_ASSERT(audio_h, sizeof(struct AudioContext) == 0x58);
@@ -73,9 +79,14 @@ COMPILE_TIME_ASSERT(audio_h, sizeof(struct AudioContext) == 0x58);
  * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound
  * effects" section. Indexed by the id `PlaySfx`/`PlayAmbientSfx` take. */
 struct SfxTableEntry {
-    u32 slotId;      /* instrument index into the sound-effect data set (gGaxSfxData, docs/audio.md) - 0 = unused slot */
-    u32 chanArg;       /* passed through as GAX_fx_ex's priority arg (only PlaySfx reads this; PlayAmbientSfx hardcodes 0) */
-    u32 baseVolume;      /* multiplied by the caller's volume param and AudioContext.sfxVolume, then >>16 */
+    /* instrument index into the sound-effect data set
+     * (gGaxSfxData, docs/audio.md) - 0 = unused slot */
+    u32 slotId;
+    /* passed through as GAX_fx_ex's priority arg (only
+     * PlaySfx reads this; PlayAmbientSfx hardcodes 0) */
+    u32 chanArg;
+    /* multiplied by the caller's volume param and AudioContext.sfxVolume, then >>16 */
+    u32 baseVolume;
 };
 
 extern struct SfxTableEntry gSfxTable[99];
@@ -99,8 +110,8 @@ extern void TickAmbientSfx(struct AudioContext *self);
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void ResetAmbientSfx(struct AudioContext *self);
 extern void StopAmbientSfx(struct AudioContext *self);
-extern void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset,
-                           s32 volumeMul, struct byte_arg force);
+extern void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul,
+                           struct byte_arg force);
 extern u32 GetCurrentSong(struct AudioContext *self);
 extern s32 GetSfxVolume(struct AudioContext *self);
 extern s32 GetMusicVolume(struct AudioContext *self);

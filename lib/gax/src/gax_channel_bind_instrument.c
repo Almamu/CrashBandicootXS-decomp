@@ -94,7 +94,7 @@ void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler
                         *(u16 *)(s3c + 0x30) = zero16;
 
                         if (*(u8 *)entry3 != 0) {
-                            asm volatile("str %1, [%0, #0x3c]" :: "r"(s3c), "r"(zero16));
+                            asm volatile("str %1, [%0, #0x3c]" : : "r"(s3c), "r"(zero16));
                         }
                     }
                 }

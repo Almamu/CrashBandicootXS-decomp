@@ -32,18 +32,19 @@ void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHan
             self->field_11 = 1;
             self->vol17 = 0xff;
             self->sweepOn = 0;
-            if (self->instrument->rows[self->row].field_00 != 0
-                && self->instrument->rows[self->row].sweepMin < self->instrument->rows[self->row].sweepMax
-                && self->instrument->rows[self->row].sweepLen > 0
-                && self->instrument->rows[self->row].sweepRate != 0
-                && self->instrument->rows[self->row].sweepStep > 0) {
+            if (self->instrument->rows[self->row].field_00 != 0 &&
+                self->instrument->rows[self->row].sweepMin <
+                    self->instrument->rows[self->row].sweepMax &&
+                self->instrument->rows[self->row].sweepLen > 0 &&
+                self->instrument->rows[self->row].sweepRate != 0 &&
+                self->instrument->rows[self->row].sweepStep > 0) {
                 self->sweepOn = 1;
                 self->sweepPos = self->instrument->rows[self->row].start;
                 self->samplePos = self->sweepPos << 11;
                 self->sweepTimer = self->instrument->rows[self->row].sweepRate;
                 self->sweepDir = 1;
-                if (self->sweepPos + self->instrument->rows[self->row].sweepLen
-                    > self->instrument->rows[self->row].sweepMax)
+                if (self->sweepPos + self->instrument->rows[self->row].sweepLen >
+                    self->instrument->rows[self->row].sweepMax)
                     self->sweepDir = -1;
             } else {
                 self->samplePos = self->instrument->rows[self->row].start << 11;

@@ -59,5 +59,6 @@ void GaxFatalError(const char *msg1, const char *msg2)
     REG_BLDALPHA = 0;
     REG_BLDY = 0;
 
-    while (1) {}
+    while (1) {
+    }
 }

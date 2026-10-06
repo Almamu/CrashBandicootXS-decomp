@@ -35,15 +35,13 @@ struct player_ctrl;
 
 /* The swim stroke's speed per step, copied to the stack in one go by
  * StartPlayerCtrlStroke (gStaticData_0816C090). */
-struct speed_table
-{
+struct speed_table {
     s32 v[8];
 };
 
 /* The animation of a swim controller mode at one tilt level
  * (gPlayerCtrlModeLevelAnims), and a second byte (0xFF in some rows). */
-struct level_anim
-{
+struct level_anim {
     u8 anim;
     u8 unk_1;
     u8 pad[2];
@@ -52,30 +50,27 @@ struct level_anim
 /* A sprite bank as the player code reads it (struct sprite_bank,
  * sprite_bank.h): its animation records, 0x1C bytes each (gobj_1a794.h's
  * `struct anim_rec`). */
-struct act_anim_record
-{
+struct act_anim_record {
     u8 unk_00[4];
-    s16 offX;              // 0x04 - a struct hitbox_quad (gfx.h)
-    s16 offY;              // 0x06
-    u8 padX;               // 0x08
-    u8 padY;               // 0x09
+    s16 offX; // 0x04 - a struct hitbox_quad (gfx.h)
+    s16 offY; // 0x06
+    u8 padX;  // 0x08
+    u8 padY;  // 0x09
     u8 unk_0A[0xA];
-    u8 paletteId;          // 0x14 - LoadPaletteSlot/GetPaletteSlot record id
+    u8 paletteId; // 0x14 - LoadPaletteSlot/GetPaletteSlot record id
     u8 unk_15;
-    u8 frameCount;         // 0x16
+    u8 frameCount; // 0x16
     u8 unk_17[5];
 };
 
-struct act_anim_bank
-{
+struct act_anim_bank {
     struct act_anim_record *records;
     u8 unk_04[6];
-    u16 unk_0A;            // 0x0A
+    u16 unk_0A; // 0x0A
 };
 
 /* A Q8 position (struct player.maskTrail). */
-struct player_pos
-{
+struct player_pos {
     s32 x;
     s32 y;
 };
@@ -85,11 +80,9 @@ struct player_pos
  * different code: clearing a bit through the bitfield is an `and` with a
  * negative constant, through the byte with a positive one. Packed, so
  * that the union is one byte (agbcc pads an unpacked one to 4). */
-union player_flags
-{
+union player_flags {
     u8 all;
-    struct
-    {
+    struct {
         u8 gone:1;
         u8 unk_1:1;
         u8 visible:1;
@@ -107,18 +100,15 @@ union player_flags
  * layout of `struct crate`). The bit views read the same, but the signed
  * one expands to more insns before optimization, which shifts the
  * `.LCB` label numbers in the `.s`. Packed, so that the union is one byte. */
-union player_mirror
-{
+union player_mirror {
     u8 all;
-    struct
-    {
+    struct {
         u8 unk_0:4;
         u32 flipX:1;
         u32 flipY:1;
         u8 unk_6:2;
     } __attribute__((packed)) bits;
-    struct
-    {
+    struct {
         u32 unk_0:4;
         s32 flipX:1;
         s32 flipY:1;
@@ -129,8 +119,7 @@ union player_mirror
 /* The player's method table (gPlayerVtable), as the callers read it: a
  * `this` adjustment and the function of each slot. The slot names are
  * the functions gPlayerVtable holds. */
-struct player_vtable
-{
+struct player_vtable {
     struct actor_method unk_00;             // 0x00 - empty (no RTTI)
     struct actor_method collide;            // 0x08 - CollidePlayer
     struct actor_method getHitbox;          // 0x10 - GetSpriteObjHitbox
@@ -154,91 +143,95 @@ struct player_vtable
  * 0x350-byte block (InitPlayer); its method table is gPlayerVtable. The
  * names past 0x80 come from the accessors in player_flags.c. Only the
  * fields the code reads are named. */
-struct player
-{
-    s32 x;              // 0x00 - Q8
-    s32 y;              // 0x04 - Q8
-    u16 id;             // 0x08 - bit index in the "gone" bitmap (InitPlayer: 0xFFFF)
-    u8 kind;            // 0x0A - object kind passed to the hit handlers: 0x13 while
-                        //        attacking, 0x14-0x16 during some attack actions, else 1
+struct player {
+    s32 x;   // 0x00 - Q8
+    s32 y;   // 0x04 - Q8
+    u16 id;  // 0x08 - bit index in the "gone" bitmap (InitPlayer: 0xFFFF)
+    u8 kind; // 0x0A - object kind passed to the hit handlers: 0x13 while
+             //        attacking, 0x14-0x16 during some attack actions, else 1
     u8 unk_0B;
     union player_flags flags; // 0x0C - struct actor.flags: bit 0 gone, 4 always active
-                        //        (set by PlayRoom), 6 vulnerable, 7 collision enabled
-    u8 flags2;          // 0x0D
+                              //        (set by PlayRoom), 6 vulnerable, 7 collision enabled
+    u8 flags2;                // 0x0D
     u8 unk_0E[0xA];
     const struct player_vtable *vtable; // 0x18 - gPlayerVtable
-    void *platform;     // 0x1C - struct gobj.platform
-    struct act_anim_bank *anim; // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
-    u8 dir;             // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
-                        //        2 left, 4 up, 8 down
-    u8 screenSpace;     // 0x25
+    void *platform;                     // 0x1C - struct gobj.platform
+    // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
+    struct act_anim_bank *anim;
+    // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
+    //        2 left, 4 up, 8 down
+    u8 dir;
+    u8 screenSpace; // 0x25
     u8 unk_26[2];
     union player_mirror mirror; // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
-    u8 slot:4;          // 0x29 - palette slot (GetSpriteAnimPaletteSlot)
+    u8 slot:4;                  // 0x29 - palette slot (GetSpriteAnimPaletteSlot)
     u8 unk_29_4:4;
     u8 unk_2A[2];
-    u8 animating;       // 0x2C - nonzero while the keyframe timer runs
-    u8 tag;             // 0x2D - animation index into `anim`
+    u8 animating; // 0x2C - nonzero while the keyframe timer runs
+    u8 tag;       // 0x2D - animation index into `anim`
     u8 unk_2E[2];
-    s32 frame;          // 0x30 - step within the animation
-    s32 stepTimer;      // 0x34 - ticks spent on the current step
-    u8 animDone;        // 0x38 - set once a non-looping animation ends
+    s32 frame;     // 0x30 - step within the animation
+    s32 stepTimer; // 0x34 - ticks spent on the current step
+    u8 animDone;   // 0x38 - set once a non-looping animation ends
     u8 unk_39[0xB];
-    void *ctrl;         // 0x44 - the room kind's controller (the action, swim, input or
-                        //        boss controller; struct gobj.mover)
+    void *ctrl;              // 0x44 - the room kind's controller (the action, swim, input or
+                             //        boss controller; struct gobj.mover)
     struct speed_ramp rampX; // 0x48 - speedX's ramp (StartPlayerRampX)
     struct speed_ramp rampY; // 0x54 - speedY's ramp
-    s32 speedX;         // 0x60
-    s32 speedY;         // 0x64 - > 0: falling
-    u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
-    u8 probeTries;      // 0x69
+    s32 speedX;              // 0x60
+    s32 speedY;              // 0x64 - > 0: falling
+    // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
+    u8 hitAxes;
+    u8 probeTries; // 0x69
     u8 unk_6A[2];
-    s32 prevX;          // 0x6C - previous position (Q8), cached by ApplyPlayerVelocity
-    s32 prevY;          // 0x70
-    u32 hitMask;        // 0x74 - probe axes hit this frame (bits 0-1: X, 2-3: Y)
+    s32 prevX;   // 0x6C - previous position (Q8), cached by ApplyPlayerVelocity
+    s32 prevY;   // 0x70
+    u32 hitMask; // 0x74 - probe axes hit this frame (bits 0-1: X, 2-3: Y)
     u8 unk_78[8];
-    u8 busy;            // 0x80 - set while a triggered crate animation runs (the crate's state
-                        //        bit 7), cleared when it ends; enemies skip the player meanwhile
+    u8 busy; // 0x80 - set while a triggered crate animation runs (the crate's state
+             //        bit 7), cleared when it ends; enemies skip the player meanwhile
     u8 unk_81[7];
-    u8 ctrlMode;        // 0x88 - control mode 0-3, picks the controller (player_reset.c);
-                        //        1: crates fall at quarter speed and touched enemies just
-                        //        vanish; nonzero stops `list` recording
+    u8 ctrlMode; // 0x88 - control mode 0-3, picks the controller (player_reset.c);
+                 //        1: crates fall at quarter speed and touched enemies just
+                 //        vanish; nonzero stops `list` recording
     u8 unk_89[3];
-    u32 deadline;       // 0x8C - gRoomFrameCount frame IsPlayerInvulnerable tests against
-    u8 bumped;          // 0x90 - set when a crate's side stopped the X motion
-                        //        (ActionCtrlHandleEvent event 12); cleared when the
-                        //        controller's bumpTimer runs out or its mode changes.
-                        //        While set, crate_hit.c widens the player's box by 2 px
-                        //        on each side
-    u8 countdown;       // 0x91 - crate_break.c sets it while a crate handles the player
-    u8 bounce;          // 0x92 - a counter (sub_800B5C4/sub_800B5CC/sub_800B5D8; crate_break.c's
-                        //        name): crate_break.c tests and steps it on a bounce,
-                        //        ResolvePlayerCollisions steps it, the action controller clears it
+    u32 deadline; // 0x8C - gRoomFrameCount frame IsPlayerInvulnerable tests against
+    u8 bumped;    // 0x90 - set when a crate's side stopped the X motion
+                  //        (ActionCtrlHandleEvent event 12); cleared when the
+                  //        controller's bumpTimer runs out or its mode changes.
+                  //        While set, crate_hit.c widens the player's box by 2 px
+                  //        on each side
+    u8 countdown; // 0x91 - crate_break.c sets it while a crate handles the player
+    u8 bounce;    // 0x92 - a counter (sub_800B5C4/sub_800B5CC/sub_800B5D8; crate_break.c's
+                  //        name): crate_break.c tests and steps it on a bounce,
+                  //        ResolvePlayerCollisions steps it, the action controller clears it
     u8 unk_93;
-    u8 listCount;       // 0x94 - entries in `list`
+    u8 listCount; // 0x94 - entries in `list`
     u8 unk_95[3];
-    struct crate *list[5]; // 0x98 - the recently touched crates (sub_800B678)
-    struct gobj *carried; // 0xAC - the platform or crate the player stands on
-    struct box_part *child; // 0xB0 - a sprite object InitPlayer creates (sprite bank 0xCC),
-                        //        drawn with the player (DrawPlayer)
-    s32 maskTrailIdx;   // 0xB4 - the newest entry of `maskTrail`
+    struct crate *list[5];          // 0x98 - the recently touched crates (sub_800B678)
+    struct gobj *carried;           // 0xAC - the platform or crate the player stands on
+    struct box_part *child;         // 0xB0 - a sprite object InitPlayer creates (sprite bank 0xCC),
+                                    //        drawn with the player (DrawPlayer)
+    s32 maskTrailIdx;               // 0xB4 - the newest entry of `maskTrail`
     struct player_pos maskTrail[8]; // 0xB8 - the player's recent positions, which Aku Aku follows
     u8 unk_F8[8];
-    u8 slippery;        // 0x100 - standing on terrain kind 5 (CollidePlayer): the player keeps
-                        //         sliding (speedX isn't zeroed, motion keeps its speed, steps halve)
-                        //         and skids (anims 0x25/0x26, sfx 0x36; ActionCtrlSetTargetAnim)
-    u8 hanging;         // 0x101 - hanging from hang terrain (code 6): CollidePlayer sends event
-                        //         0x17 to grab and 0x18 when it's gone; ActionCtrlHandleEvent sets/clears it
-    u8 pushLeft;        // 0x102 - nonzero: moves the standing player 1px left per frame
-    u8 pushRight;       // 0x103 - nonzero: moves the standing player 1px right per frame
-    u8 dead;            // 0x104 - the player died (KillPlayer and the other controllers'
-                        //         kill handlers); blocks pause and further hits
-    u8 cleared;         // 0x105 - CollidePlayerWithObjects
+    u8 slippery; // 0x100 - standing on terrain kind 5 (CollidePlayer): the player keeps
+                 //         sliding (speedX isn't zeroed, motion keeps its speed, steps halve)
+                 //         and skids (anims 0x25/0x26, sfx 0x36; ActionCtrlSetTargetAnim)
+    // 0x101 - hanging from hang terrain (code 6): CollidePlayer sends event
+    //         0x17 to grab and 0x18 when it's gone; ActionCtrlHandleEvent sets/clears it
+    u8 hanging;
+    u8 pushLeft;  // 0x102 - nonzero: moves the standing player 1px left per frame
+    u8 pushRight; // 0x103 - nonzero: moves the standing player 1px right per frame
+    u8 dead;      // 0x104 - the player died (KillPlayer and the other controllers'
+                  //         kill handlers); blocks pause and further hits
+    u8 cleared;   // 0x105 - CollidePlayerWithObjects
     u8 unk_106[2];
-    struct collision_queue collisionQueue; // 0x108 - the embedded collision queue (objects.h;
-                        //         ResetCollisionQueue/DestroyCollisionQueue; GetPlayerCollisionQueue
-                        //         returns its address). Its `unk_04` (0x10C) is the "position
-                        //         committed" byte
+    // 0x108 - the embedded collision queue (objects.h;
+    //         ResetCollisionQueue/DestroyCollisionQueue; GetPlayerCollisionQueue
+    //         returns its address). Its `unk_04` (0x10C) is the "position
+    //         committed" byte
+    struct collision_queue collisionQueue;
 };
 
 COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
@@ -252,8 +245,7 @@ COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
 
 /* The input controller's method table (gInputCtrlVtable), as its calls
  * read it. */
-struct ctrl_vtable
-{
+struct ctrl_vtable {
     u8 unk_00[0x20];
     struct actor_method setMode;      // 0x20 - SetCtrlMode
     struct actor_method startMotionX; // 0x28 - StartCtrlTargetMotionX
@@ -261,11 +253,10 @@ struct ctrl_vtable
     struct actor_method setMotionX;   // 0x38 - SetCtrlTargetMotionX
     struct actor_method setMotionY;   // 0x40 - SetCtrlTargetMotionY
     u8 unk_48[8];
-    struct actor_method setAnim;      // 0x50 - SetCtrlTargetAnim
+    struct actor_method setAnim; // 0x50 - SetCtrlTargetAnim
 };
 
-struct anim_pair
-{
+struct anim_pair {
     u32 a;
     u32 b;
 };
@@ -273,40 +264,40 @@ struct anim_pair
 /* The input controller (gInputCtrlVtable, src/player/input_ctrl.c and
  * input_ctrl_queue.c): the player's controller in the rooms where the
  * player is moved by the input alone. */
-struct input_ctrl
-{
+struct input_ctrl {
     u8 unk_00[4];
-    struct { struct anim_pair *entries; } *animSet; // 0x04
-    s32 state;                   // 0x08
-    struct ctrl_vtable *vtable;  // 0x0C
-    struct player *target;       // 0x10
-    u8 motionX;                  // 0x14 - queued X motion entry (animSet->entries[].a)
-    u8 motionY;                  // 0x15 - queued Y motion entry (animSet->entries[].b)
-    u8 dirState;                 // 0x16
-    u8 motionXPending;           // 0x17 - ApplyInputCtrlMotion applies motionX
-    u8 motionYPending;           // 0x18 - ApplyInputCtrlMotion applies motionY
-    u8 motionXKeepSpeed;         // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed;         // 0x1A - the same for Y
+    struct {
+        struct anim_pair *entries;
+    } *animSet;                 // 0x04
+    s32 state;                  // 0x08
+    struct ctrl_vtable *vtable; // 0x0C
+    struct player *target;      // 0x10
+    u8 motionX;                 // 0x14 - queued X motion entry (animSet->entries[].a)
+    u8 motionY;                 // 0x15 - queued Y motion entry (animSet->entries[].b)
+    u8 dirState;                // 0x16
+    u8 motionXPending;          // 0x17 - ApplyInputCtrlMotion applies motionX
+    u8 motionYPending;          // 0x18 - ApplyInputCtrlMotion applies motionY
+    u8 motionXKeepSpeed;        // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
+    u8 motionYKeepSpeed;        // 0x1A - the same for Y
     u8 unk_1B;
     struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
-    u8 flag20;                   // 0x20
+    u8 flag20;                       // 0x20
     u8 unk_21[3];
-    s32 timer;                   // 0x24
+    s32 timer; // 0x24
 };
 
 /* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.c):
  * the base class of the bosses' controllers (Mega Mix, Tiny, Neo Cortex's
  * fight, Dingodile and his shield and rocket/stalactite), each of which
  * extends it. Its event slot keeps the event's msg and arg. */
-struct boss_ctrl
-{
+struct boss_ctrl {
     u8 unk_00[4];
-    const void *animSet;         // 0x04
-    s32 state;                   // 0x08
+    const void *animSet;              // 0x04
+    s32 state;                        // 0x08
     const struct vtable_slot *vtable; // 0x0C - gBossCtrlVtable or a subclass's
-    void *target;                // 0x10 - the controlled part
-    s32 msg;                     // 0x14 - BossCtrlHandleEvent's msg; nothing reads it back
-    s32 arg;                     // 0x18 - and its arg
+    void *target;                     // 0x10 - the controlled part
+    s32 msg;                          // 0x14 - BossCtrlHandleEvent's msg; nothing reads it back
+    s32 arg;                          // 0x18 - and its arg
 };
 
 /* The method tables (src/data/entity_vtables_7e3bec.c). */
@@ -462,7 +453,8 @@ extern void InputCtrlKillPlayer(struct input_ctrl *self, void *arg);
 extern void InputCtrlStateStart(struct input_ctrl *self);
 extern void UpdateInputCtrl(struct input_ctrl *self);
 extern void ApplyInputCtrlMotion(struct input_ctrl *self);
-extern void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 unused4);
+extern void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unused3,
+                                 s32 unused4);
 extern void InputCtrlStateDead(struct input_ctrl *self);
 extern void sub_801793C(struct input_ctrl *self);
 extern void sub_801796C(struct input_ctrl *self);

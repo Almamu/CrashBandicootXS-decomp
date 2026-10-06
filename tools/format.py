@@ -2,9 +2,10 @@
 """Format the C sources with clang-format (#572).
 
 The style lives in .clang-format; CONTRIBUTING.md ("Code style") describes
-it. The tree is being formatted a few directories at a time, so only the
-paths in FORMATTED are kept formatted (and checked by CI). A later part of
-#572 formats more directories and adds them to the list.
+it. The paths in FORMATTED (the whole tree) are kept formatted and checked
+by CI, except the UNFORMATTED data directories: their tool-emitted
+ROM-order tables are laid out one entry per line on purpose, which
+clang-format would bin-pack into columns.
 
 Before running clang-format, this wraps every multi-line `asm(...)`
 statement, and every one-line statement longer than the column limit, in
@@ -15,18 +16,28 @@ literals (BreakStringLiterals), and never reorders #includes (SortIncludes).
 
 Usage:
   tools/format.py                format the FORMATTED paths in place
-  tools/format.py PATH...        format these files/directories instead
-                                 (to format a new directory before adding
-                                 it to FORMATTED)
+  tools/format.py PATH...        format just these files/directories
+                                 (UNFORMATTED ones are still skipped
+                                 inside a directory)
   tools/format.py --check [PATH...]
                                  change nothing; fail if any file isn't
-                                 formatted (what CI runs)
+                                 formatted or has a misaligned block
+                                 comment, see below (what CI runs)
+
+--check also flags multi-line /* */ comments whose continuation lines
+don't line up with the opening line: a ` * ` line must have its `*` one
+column right of the `/*`, any other line must start three columns right
+of it. clang-format moves only the first line of a comment it re-indents
+(ReflowComments is off), so a comment whose first line moved (a trailing
+comment realigned, a case block indented) leaves the rest behind; fix
+those by hand.
 
 clang-format comes from $CLANG_FORMAT, else `clang-format` on PATH. It must
 be major version CLANG_FORMAT_MAJOR: other versions format some constructs
 differently, and CI would disagree. `pip install clang-format==21.1.8` or
 `nix shell nixpkgs#clang-tools` gives a matching one.
 """
+import fnmatch
 import os
 import re
 import shutil
@@ -35,29 +46,19 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# The paths kept formatted. Widened by each part of #572.
+# The paths kept formatted: all the C (#572).
 FORMATTED = [
-    "src/actor",
-    "src/audio",
-    "src/bosses",
-    "src/crates",
-    "src/cutscene",
-    "src/enemies",
-    "src/frontend",
-    "src/gfx",
-    "src/hud",
-    "src/iwram",
-    "src/level",
-    "src/link",
-    "src/menus",
-    "src/objects",
-    "src/pickups",
-    "src/player",
-    "src/save",
-    "src/system",
-    "src/text",
-    "src/util",
-    "src/vehicle",
+    "include",
+    "lib",
+    "src",
+]
+
+# ...except the data: tool-emitted ROM-order tables whose one-entry-per-line
+# layout is their documentation. clang-format would pack them into columns
+# (fnmatch patterns, skipped while walking a directory).
+UNFORMATTED = [
+    "src/data",
+    "lib/*/data",
 ]
 
 CLANG_FORMAT_MAJOR = 21
@@ -89,7 +90,10 @@ def c_files(paths):
         if not os.path.isdir(full):
             sys.exit(f"format.py: no such file or directory: {p}")
         for dirpath, dirnames, names in os.walk(full):
-            dirnames.sort()
+            rel = os.path.relpath(dirpath, ROOT)
+            dirnames[:] = sorted(
+                d for d in dirnames
+                if not any(fnmatch.fnmatch(os.path.join(rel, d), pat) for pat in UNFORMATTED))
             for n in sorted(names):
                 if n.endswith((".c", ".h")):
                     files.append(os.path.relpath(os.path.join(dirpath, n), ROOT))
@@ -160,6 +164,63 @@ def protect_asm(text):
     return "\n".join(out)
 
 
+def block_comments(text):
+    """Yield (line, column) of the opening of every /* */ comment that spans
+    several lines, and the index of its last line. Skips string and
+    character literals and // comments."""
+    i, n = 0, len(text)
+    line, col = 0, 0
+    while i < n:
+        ch = text[i]
+        if ch == "\n":
+            line, col = line + 1, 0
+            i += 1
+        elif ch in "\"'":
+            j = i + 1
+            while j < n and text[j] not in (ch, "\n"):
+                j += 2 if text[j] == "\\" else 1
+            col += j + 1 - i
+            i = j + 1
+        elif text.startswith("//", i):
+            j = text.find("\n", i)
+            j = n if j == -1 else j
+            col += j - i
+            i = j
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            j = n if j == -1 else j + 2
+            body = text[i:j]
+            newlines = body.count("\n")
+            if newlines:
+                yield line, col, line + newlines
+                line += newlines
+                col = len(body) - body.rfind("\n") - 1
+            else:
+                col += len(body)
+            i = j
+        else:
+            col += 1
+            i += 1
+
+
+def misaligned_comments(path):
+    """The continuation lines of path's block comments that don't line up
+    with their opening `/*`."""
+    with open(os.path.join(ROOT, path)) as fp:
+        text = fp.read()
+    lines = text.split("\n")
+    bad = []
+    for start, col, end in block_comments(text):
+        for k in range(start + 1, end + 1):
+            body = lines[k].lstrip()
+            if not body:
+                continue
+            want = col + 1 if body.startswith("*") else col + 3
+            if len(lines[k]) - len(body) != want:
+                bad.append((k + 1, start + 1, want))
+    return bad
+
+
 def main():
     args = sys.argv[1:]
     check = "--check" in args
@@ -170,7 +231,15 @@ def main():
         r = subprocess.run([exe, "--dry-run", "--Werror", "--style=file"] + files, cwd=ROOT)
         if r.returncode:
             print("format.py: run tools/format.py to format these files", file=sys.stderr)
-        return r.returncode
+        misaligned = 0
+        for f in files:
+            for line, start, want in misaligned_comments(f):
+                print(f"{f}:{line}: block comment line not lined up with the /* on line "
+                      f"{start} (should start at column {want + 1})", file=sys.stderr)
+                misaligned += 1
+        if misaligned:
+            print("format.py: re-indent these comment lines by hand", file=sys.stderr)
+        return 1 if r.returncode or misaligned else 0
     for f in files:
         full = os.path.join(ROOT, f)
         with open(full) as fp:

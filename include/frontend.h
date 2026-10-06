@@ -28,14 +28,14 @@
  * MainLoop stores the result in gLanguage. (Formerly `struct
  * counter_widget`.) */
 struct language_select {
-    s32 frame;          /* 0x00 - frame counter, wraps at 0x100; bit 2 blinks the selection */
-    u8 done;            /* 0x04 */
+    s32 frame; /* 0x00 - frame counter, wraps at 0x100; bit 2 blinks the selection */
+    u8 done;   /* 0x04 */
     u8 pad_5[3];
-    s32 language;       /* 0x08 - the selected entry, 0-5 */
-    u8 field_c;         /* 0x0c - DISPCNT shadow, low byte */
-    u8 field_d;         /* 0x0d - DISPCNT shadow, high byte */
+    s32 language; /* 0x08 - the selected entry, 0-5 */
+    u8 field_c;   /* 0x0c - DISPCNT shadow, low byte */
+    u8 field_d;   /* 0x0d - DISPCNT shadow, high byte */
     u8 pad_e[2];
-    void *starfield;    /* 0x10 - InitStarfield */
+    void *starfield; /* 0x10 - InitStarfield */
 };
 
 /* One step of a logo piece's motion (the gTitleLogoPieceMotionN and
@@ -44,17 +44,17 @@ struct language_select {
  * Q16.16 positions, two Q24.8 velocities and the five per-frame deltas
  * added to them while the hold lasts. */
 struct delta_record {
-    s16 hold;      /* 0x00 - countdown reload value */
-    u16 dPosA;     /* 0x02 - Q16.16 position (<<16) */
-    u16 dPosB;     /* 0x04 - Q16.16 position (<<16) */
-    u16 dPosC;     /* 0x06 - Q16.16 position (<<16) */
-    s16 dVelA;     /* 0x08 - Q24.8 velocity (<<8) */
-    s16 dVelB;     /* 0x0a - Q24.8 velocity (<<8) */
-    s32 deltaA;    /* 0x0c - raw delta for dPosA's live field */
-    s32 deltaB;    /* 0x10 - raw delta for dPosB's live field */
-    s32 deltaC;    /* 0x14 - raw delta for dPosC's live field */
-    s32 deltaD;    /* 0x18 - raw delta for dVelA's live field */
-    s32 deltaE;    /* 0x1c - raw delta for dVelB's live field */
+    s16 hold;   /* 0x00 - countdown reload value */
+    u16 dPosA;  /* 0x02 - Q16.16 position (<<16) */
+    u16 dPosB;  /* 0x04 - Q16.16 position (<<16) */
+    u16 dPosC;  /* 0x06 - Q16.16 position (<<16) */
+    s16 dVelA;  /* 0x08 - Q24.8 velocity (<<8) */
+    s16 dVelB;  /* 0x0a - Q24.8 velocity (<<8) */
+    s32 deltaA; /* 0x0c - raw delta for dPosA's live field */
+    s32 deltaB; /* 0x10 - raw delta for dPosB's live field */
+    s32 deltaC; /* 0x14 - raw delta for dPosC's live field */
+    s32 deltaD; /* 0x18 - raw delta for dVelA's live field */
+    s32 deltaE; /* 0x1c - raw delta for dVelB's live field */
 };
 
 /* One entry of the {motion, initial hold} seed tables
@@ -92,14 +92,14 @@ struct popup_glyph {
 
 struct credits_screen {
     struct popup_node *popupListHead; /* 0x00 - timed text-popup node list, see UpdateCreditsText */
-    const void *streamBase;   /* 0x04 - popup byte-opcode stream base */
-    const void *streamCursor; /* 0x08 - popup byte-opcode stream cursor */
-    void *starfield;          /* 0x0c - the starfield, InitStarfield */
-    s32 drawMode;             /* 0x10 */
-    s32 suppressCounter;      /* 0x14 */
+    const void *streamBase;           /* 0x04 - popup byte-opcode stream base */
+    const void *streamCursor;         /* 0x08 - popup byte-opcode stream cursor */
+    void *starfield;                  /* 0x0c - the starfield, InitStarfield */
+    s32 drawMode;                     /* 0x10 */
+    s32 suppressCounter;              /* 0x14 */
     u8 unused_18[4];
     struct popup_glyph glyphs[5]; /* 0x1c */
-    u32 frameParity;          /* 0x94 */
+    u32 frameParity;              /* 0x94 */
 };
 COMPILE_TIME_ASSERT(frontend_h, sizeof(struct credits_screen) == 0x98);
 
@@ -123,8 +123,8 @@ extern const u16 gLanguageSelectPalette3[16];
 extern const struct anim_table_record gLogoActorAnim; /* actor_anim.h */
 extern const struct vtable_slot gLogoActorVtable[4];
 extern void *gLogoActorTiles[2];
-extern s32 gLogoActorTileBuffer;    /* the block on screen, 0 or 1 */
-extern void *gLogoActorLastFrame;   /* the frame last unpacked */
+extern s32 gLogoActorTileBuffer;  /* the block on screen, 0 or 1 */
+extern void *gLogoActorLastFrame; /* the frame last unpacked */
 
 /* The animation family RunCompanyLogos loads the logo actor's palette
  * from, and gLogoActorAnim its frames (src/data/anim_family_178f80.c). */

@@ -36,8 +36,7 @@ struct twinkle;
 struct zoom_bg;
 
 /* A screen position, as the level-select tables store them. */
-struct xy_pair
-{
+struct xy_pair {
     s32 x;
     s32 y;
 };
@@ -59,8 +58,7 @@ struct pause_row {
 
 /* One level-select picture (gLevelSelectPictures): the tagged-asset
  * palette and tiles UpdateZoomBg loads with LoadTaggedAsset. */
-struct image_pair
-{
+struct image_pair {
     const u8 *palette;
     const u8 *tiles;
 };
@@ -73,11 +71,11 @@ struct continue_prompt {
     struct bg_setup *bg1Buf; /* 0x00 - BG1 */
     struct bg_setup *bg0Buf; /* 0x04 - BG0 */
     struct bg_setup *bg2Buf; /* 0x08 - BG2 */
-    u16 dispcnt;  /* 0x0c - written as one halfword to REG_DISPCNT; bytes
-                   * accessed individually via ((u8 *)&dispcnt)[n] */
+    u16 dispcnt;             /* 0x0c - written as one halfword to REG_DISPCNT; bytes
+                              * accessed individually via ((u8 *)&dispcnt)[n] */
     u8 unused_0e[2];
     union {
-        u32 word;    /* 0x10 - written as one word to REG_BLDCNT/BLDALPHA */
+        u32 word; /* 0x10 - written as one word to REG_BLDCNT/BLDALPHA */
         struct {
             u8 bldcntLo;
             u8 bldcntHi;
@@ -87,15 +85,16 @@ struct continue_prompt {
         struct {
             u8 bldcntLo;
             u8 bldcntHi;
-            u8 eva : 5;  /* 0x12 - ContinuePromptLoop's pulsing blend level */
-            u8 evaHi : 3;
+            u8 eva:5; /* 0x12 - ContinuePromptLoop's pulsing blend level */
+            u8 evaHi:3;
             u8 bldalphaHi;
         } bits;
     } blend;
     u8 unused_14[4];
     struct bitmap_font *icons; /* 0x18 - gSmallFont */
-    s32 blinkCounter; /* 0x1c - the selected option's blink counter (GetContinuePromptBlink) */
-    s32 selection;    /* 0x20 - the Yes/No cursor, 0/1 */
+    /* 0x1c - the selected option's blink counter (GetContinuePromptBlink) */
+    s32 blinkCounter;
+    s32 selection; /* 0x20 - the Yes/No cursor, 0/1 */
 };
 
 COMPILE_TIME_ASSERT(menus_h, sizeof(struct continue_prompt) == 0x24);
@@ -104,12 +103,12 @@ COMPILE_TIME_ASSERT(menus_h, sizeof(struct continue_prompt) == 0x24);
  * description over a scrolling background, faded in and out through
  * BLDY. */
 struct sub_8006700_actor {
-    struct bg_setup bg; /* 0x00 - BG0 (InitBgSetup) */
-    s32 field_10;       /* 0x10 - the title's text */
-    void *field_14;     /* 0x14 - the description's text */
+    struct bg_setup bg;                   /* 0x00 - BG0 (InitBgSetup) */
+    s32 field_10;                         /* 0x10 - the title's text */
+    void *field_14;                       /* 0x14 - the description's text */
     struct settings_icon_actor *field_18; /* 0x18 - the power's icon */
-    u32 field_1c;       /* 0x1c - frame counter, BG0HOFS = field_1c >> 3 */
-    u32 field_20;       /* 0x20 - REG_BLDCNT */
+    u32 field_1c;                         /* 0x1c - frame counter, BG0HOFS = field_1c >> 3 */
+    u32 field_20;                         /* 0x20 - REG_BLDCNT */
     union {
         u8 raw;
         struct {
@@ -256,7 +255,8 @@ extern void ScrollLevelSelectPageBg(struct page_bg *p);
 extern u32 GetLevelSelectPageBgOffsets(struct page_bg *p);
 extern void SetLevelSelectPageBgOffsets(struct page_bg *p);
 extern void DestroyLevelSelectPageBg(struct page_bg *p, s32 flags);
-extern struct page_bg *CreateLevelSelectPageBg(struct page_bg *self, s32 charBlock, s32 screenBlock);
+extern struct page_bg *CreateLevelSelectPageBg(struct page_bg *self, s32 charBlock,
+                                               s32 screenBlock);
 extern struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock);
 
 /* src/menus/level_select_widgets.c */
@@ -349,7 +349,8 @@ extern void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out);
 
 /* src/menus/power_dialog.c */
 extern void ShowPowerDialog(s32 label1, s32 label2, s32 type);
-extern struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *self, s32 label1, s32 label2, s32 type);
+extern struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *self, s32 label1,
+                                                 s32 label2, s32 type);
 
 /* src/menus/power_dialog_draw.c */
 extern void DrawPowerDialog(struct sub_8006700_actor *arg0);

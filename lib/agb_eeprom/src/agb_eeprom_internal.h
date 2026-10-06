@@ -19,11 +19,11 @@ extern const struct EepromConfig gEepromConfig8k;  /* 8-KB (64 Kbit) chip */
  * {countdown, TMxCNT_L reload, TMxCNT_H control}. */
 extern const u16 gEepromMaxTime[3];
 
-extern u8 gEepromTimerNum;      /* claimed timer number */
-extern u16 gEepromTimerCount;   /* timeout countdown */
-extern u8 gEepromTimeoutFlag;   /* timeout flag, set by EepromTimerIntr */
-extern vu16 *gEepromTimerReg;   /* claimed timer's TMxCNT_L */
-extern u16 gEepromSavedIme;     /* IME saved by StartEepromTimer */
+extern u8 gEepromTimerNum;    /* claimed timer number */
+extern u16 gEepromTimerCount; /* timeout countdown */
+extern u8 gEepromTimeoutFlag; /* timeout flag, set by EepromTimerIntr */
+extern vu16 *gEepromTimerReg; /* claimed timer's TMxCNT_L */
+extern u16 gEepromSavedIme;   /* IME saved by StartEepromTimer */
 
 void EepromTimerIntr(void);
 void StartEepromTimer(const u16 *maxTime);

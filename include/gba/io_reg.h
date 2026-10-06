@@ -698,7 +698,7 @@
 #define SIO_PARITY_EVEN         0x0000      // Even parity
 #define SIO_PARITY_ODD          0x0008      // Odd parity
 #define SIO_TRANS_ENABLE        0x0400      // Enable transmitter
-#define SIO_TRANS_DATA_FULL     0x0010      // Transmitted data full 
+#define SIO_TRANS_DATA_FULL     0x0010      // Transmitted data full
 #define SIO_RECV_ENABLE         0x0800      // Enable receiver
 #define SIO_RECV_DATA_EMPTY     0x0020      // No data received
 #define SIO_INTR_ENABLE         0x4000      // Enable interrupt request

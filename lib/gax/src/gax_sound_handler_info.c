@@ -146,77 +146,77 @@ u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
     b1c = p->tickCounter;
 
     if (b18lo != 0) {
-    u32 zero = b1c;
-    if (zero == 0) {
-        u8 *flag = &p->patternBreak;
+        u32 zero = b1c;
+        if (zero == 0) {
+            u8 *flag = &p->patternBreak;
 
-        if (*flag != 0) {
-            *flag = zero;
-            p->row = p->type->data.song->patternRows;
-        } else {
-            p->row = p->row + 1;
-        }
-
-        {
-            u16 v18 = p->speed;
-            u16 lo = v18 >> 8;
-            if (lo != 0) {
-                MATCH_HOLD_REG(u16, mask, r0) = 0xff;
-                MATCH_HOLD_REG(u32, hi, r0);
-                hi = mask & v18;
-                hi <<= 8;
-                lo |= hi;
-                p->speed = lo;
+            if (*flag != 0) {
+                *flag = zero;
+                p->row = p->type->data.song->patternRows;
+            } else {
+                p->row = p->row + 1;
             }
-        }
-
-        {
-            u8 dec = *(u8 *)&p->speed - 1;
-            h18 = 0;
-            p->tickCounter = dec;
 
             {
-                MATCH_HOLD_REG(s32, cnt, r1);
-                struct GaxHandlerType *base0;
-                u16 thresh;
-
-                asm("movs r0, #0x16\n\tldrsh r1, [%1, r0]" : "=r"(cnt) : "r"(p) : "r0");
-                base0 = p->type;
-                thresh = base0->data.song->patternRows;
-
-                if (!(cnt < thresh)) {
-                    u8 one;
-                    MATCH_HOLD_REG(s32, cnt2, r1);
-                    u16 thresh2;
-
-                    /* Stored through plain `u16 *` casts: a direct
-                     * field store copies `h18` into r0 first. */
-                    *(u16 *)&p->row = h18;
-                    *(u16 *)&p->field_24 = h18;
-                    one = 1;
-                    p->newOrder = one;
-                    p->orderPos = p->orderPos + 1;
-
-                    asm("movs r0, #0x14\n\tldrsh r1, [%1, r0]" : "=r"(cnt2) : "r"(p) : "r0");
-                    thresh2 = base0->data.song->orderCount;
-
-                    if (!(cnt2 < thresh2)) {
-                        if (p->stopAtEnd != 0) {
-                            p->playing = 0;
-                            p->speed = h18;
-                        }
-                        p->songEnded = one;
-                        p->orderPos = p->type->data.song->loopOrder;
-                    }
-                } else {
-                    p->newOrder = h18;
+                u16 v18 = p->speed;
+                u16 lo = v18 >> 8;
+                if (lo != 0) {
+                    MATCH_HOLD_REG(u16, mask, r0) = 0xff;
+                    MATCH_HOLD_REG(u32, hi, r0);
+                    hi = mask & v18;
+                    hi <<= 8;
+                    lo |= hi;
+                    p->speed = lo;
                 }
             }
+
+            {
+                u8 dec = *(u8 *)&p->speed - 1;
+                h18 = 0;
+                p->tickCounter = dec;
+
+                {
+                    MATCH_HOLD_REG(s32, cnt, r1);
+                    struct GaxHandlerType *base0;
+                    u16 thresh;
+
+                    asm("movs r0, #0x16\n\tldrsh r1, [%1, r0]" : "=r"(cnt) : "r"(p) : "r0");
+                    base0 = p->type;
+                    thresh = base0->data.song->patternRows;
+
+                    if (!(cnt < thresh)) {
+                        u8 one;
+                        MATCH_HOLD_REG(s32, cnt2, r1);
+                        u16 thresh2;
+
+                        /* Stored through plain `u16 *` casts: a direct
+                         * field store copies `h18` into r0 first. */
+                        *(u16 *)&p->row = h18;
+                        *(u16 *)&p->field_24 = h18;
+                        one = 1;
+                        p->newOrder = one;
+                        p->orderPos = p->orderPos + 1;
+
+                        asm("movs r0, #0x14\n\tldrsh r1, [%1, r0]" : "=r"(cnt2) : "r"(p) : "r0");
+                        thresh2 = base0->data.song->orderCount;
+
+                        if (!(cnt2 < thresh2)) {
+                            if (p->stopAtEnd != 0) {
+                                p->playing = 0;
+                                p->speed = h18;
+                            }
+                            p->songEnded = one;
+                            p->orderPos = p->type->data.song->loopOrder;
+                        }
+                    } else {
+                        p->newOrder = h18;
+                    }
+                }
+            }
+            p->newRow = 1;
+            h18 = p->speed;
+            goto after_retrigger;
         }
-        p->newRow = 1;
-        h18 = p->speed;
-        goto after_retrigger;
-    }
     }
     {
         MATCH_HOLD_REG(u8, dec, r0) = b1c - 1;

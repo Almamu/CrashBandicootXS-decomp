@@ -99,7 +99,7 @@ void GaxDrawText(u32 col, u32 row, const char *str)
                     break;
                 }
                 peek = s[len];
-term_check:
+            term_check:
                 if (peek == 0 || peek == ' ' || peek == '\n') {
                     break;
                 }
@@ -110,12 +110,14 @@ term_check:
                      * (`mov r0,ip; ands r0,r3; adds r3,r0,#0`); `dst`
                      * is genuinely modified by this, so it's an output
                      * operand rather than just a clobber. */
+                    // clang-format off
                     asm volatile("mov r0, %1\n\t"
                                  "and r0, %0\n\t"
                                  "add %0, r0, #0"
                                  : "+r"(dst)
                                  : "r"(mask)
                                  : "r0");
+                    // clang-format on
                     dst += 0x40;
                     break;
                 }
@@ -137,12 +139,14 @@ term_check:
         if (colIdx == '\n') {
             /* Same "route the AND through r0 first" quirk as the
              * word-wrap case above. */
+            // clang-format off
             asm volatile("mov r0, %1\n\t"
                          "and r0, %0\n\t"
                          "add %0, r0, #0"
                          : "+r"(dst)
                          : "r"(mask)
                          : "r0");
+            // clang-format on
             dst += 0x3f;
         }
 

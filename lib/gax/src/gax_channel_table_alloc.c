@@ -32,8 +32,8 @@ struct GaxDspRate {
 /* Player 0's mixer handler (the SFX voices' owner). */
 #define GAX_PLAYER0_MIXER() (((struct GaxMixerHandler **)gGaxPlayerState->channels[0])[0])
 
-u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
-               u32 *sizep)
+u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx,
+                     u8 **bufp, u32 *sizep)
 {
     u32 total = layout->count;
     s32 i;
@@ -62,7 +62,8 @@ u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sf
             GAX_PLAYER()[i] = h;
             h->type = t;
             h->format = gGaxPlayerState->format;
-            h->children = (struct GaxHandler **)(*bufp + sizeof(struct GaxHandler) + t->instanceSize);
+            h->children =
+                (struct GaxHandler **)(*bufp + sizeof(struct GaxHandler) + t->instanceSize);
             *bufp = (u8 *)h->children + n;
             *sizep = size - need;
         }
@@ -99,13 +100,17 @@ u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sf
     if (gGaxPlayerState->curChannelIdx == 1) {
         if (sfx == NULL)
             goto done;
+        // clang-format off
         for (i = 0; i < (s32)numSfx; i++)
-            GAX_PLAYER()[layout->count + i] = GAX_PLAYER0_MIXER()->children[GAX_PLAYER0_MIXER()->type->childCount + i];
+            GAX_PLAYER()[layout->count + i] =
+                GAX_PLAYER0_MIXER()->children[GAX_PLAYER0_MIXER()->type->childCount + i];
+        // clang-format on
     }
     if (sfx != NULL) {
         for (i = 0; i < (s32)numSfx; i++) {
             GAX_PLAYER()[layout->count + i]->children[0] = GAX_PLAYER()[1];
-            GAX_MIXER()->children[GAX_MIXER()->type->childCount + i] = GAX_PLAYER()[layout->count + i];
+            GAX_MIXER()->children[GAX_MIXER()->type->childCount + i] =
+                GAX_PLAYER()[layout->count + i];
         }
     }
 done:

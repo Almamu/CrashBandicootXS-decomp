@@ -29,21 +29,24 @@
  * rather than guessed. `struct sub_8006700_actor.field_18` (in
  * power_dialog_draw.c) points at one of these. */
 struct actor {
-    s32 x;             // 0x00 - Q8 fixed-point screen position
-    s32 y;              // 0x04 - Q8 fixed-point screen position
-    u16 field_08;         // 0x08 - an object/record id used as a 32-bit-word bitmap index (see MarkEntityGone)
-    u8 field_0A;            // 0x0A - the object kind sent to the player's hit method on contact (CheckEntityPlayerContact, Get/SetEntityKind)
-    u8 unused_0B;             // 0x0B
-    u8 flags;                  // 0x0C - bit 0 gone (MarkEntityGone), 1 unknown, 2 player contact enabled,
-                               //        3 touched by the player, 4 always active (skips the camera tests);
-                               //        sprite objects add 5 unknown, 6 vulnerable, 7 collision enabled
-    u8 unused_0D[3];             // 0x0D-0x0F
-    s16 halfW;                     // 0x10 - -rawW/2, set by SetEntitySize/ResetEntity
-    s16 halfH;                       // 0x12 - -rawH/2, set by SetEntitySize/ResetEntity
-    u8 rawW;                           // 0x14
-    u8 rawH;                            // 0x15
-    u8 unused_16[2];                      // 0x16-0x17
-    void *table;                            // 0x18 - per-category data table, shape not yet known
+    s32 x; // 0x00 - Q8 fixed-point screen position
+    s32 y; // 0x04 - Q8 fixed-point screen position
+    // 0x08 - an object/record id used as a 32-bit-word bitmap index (see MarkEntityGone)
+    u16 field_08;
+    // 0x0A - the object kind sent to the player's hit method
+    // on contact (CheckEntityPlayerContact, Get/SetEntityKind)
+    u8 field_0A;
+    u8 unused_0B;    // 0x0B
+    u8 flags;        // 0x0C - bit 0 gone (MarkEntityGone), 1 unknown, 2 player contact enabled,
+                     //        3 touched by the player, 4 always active (skips the camera tests);
+                     //        sprite objects add 5 unknown, 6 vulnerable, 7 collision enabled
+    u8 unused_0D[3]; // 0x0D-0x0F
+    s16 halfW;       // 0x10 - -rawW/2, set by SetEntitySize/ResetEntity
+    s16 halfH;       // 0x12 - -rawH/2, set by SetEntitySize/ResetEntity
+    u8 rawW;         // 0x14
+    u8 rawH;         // 0x15
+    u8 unused_16[2]; // 0x16-0x17
+    void *table;     // 0x18 - per-category data table, shape not yet known
 };
 
 COMPILE_TIME_ASSERT(actor_h, sizeof(struct actor) == 0x1c);
@@ -111,7 +114,8 @@ extern void *FindShotTarget(struct actor_self *self);
 extern s32 InitActorCategory(s32 category);
 
 /* src/actor/actor_category_select.c */
-extern void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable, u8 active, s32 variant, s32 checkpoint);
+extern void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable,
+                                u8 active, s32 variant, s32 checkpoint);
 
 /* src/actor/actor_category_stats.c */
 extern s32 CountCategoryCrates(s32 categoryIdx);
@@ -123,7 +127,8 @@ extern s32 GetActorCheckpoint(void);
 extern struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
 extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
 extern struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
-extern struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec, s32 z);
+extern struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec,
+                                             s32 z);
 
 /* src/actor/actor_spawn.c */
 extern s32 GetActorCategoryFrameCount(void);
@@ -202,7 +207,7 @@ extern s32 gActorSpawnIndex;
 extern s32 gActorSpawnOffset;
 extern struct sub_effect_record *gActorSpawnTable;
 extern u8 gActorSpawnsPaused;
-extern void *gCategorySpriteSheet;     /* the decompressed category sprite sheet */
+extern void *gCategorySpriteSheet; /* the decompressed category sprite sheet */
 extern void *gCellAnim;
 extern s32 gCellAnimCols;
 extern s32 gCellAnimDistance;
