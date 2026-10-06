@@ -26,9 +26,6 @@
  * (`DrawWumpa`) is now matched. */
 
 extern void *gPlayer;
-extern void *gLevelState;
-extern void *gEntityFlags;
-extern void *gUnknown_030012EC;
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
  * NAKED retry: CreateExtraLife matches only under it, and the rest of the
@@ -199,7 +196,7 @@ void PickUpExtraLife(struct orbit_part *selfArg, u8 randomize)
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gEntityFlags;                                         \
+        u8 *_base = (u8 *)gEntityFlags;                                  \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \

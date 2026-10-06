@@ -22,18 +22,9 @@
  * described as "a larger, IsTouchingYeti/IsTouchingPlayer/ShockPolarPlayer-calling
  * state machine ... not attempted this pass". */
 
-extern void *gActorList;
-
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 /* The gLevelState fields read here. */
-struct game_state {
-    u8 unk_00[0x78];
-    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
-};
-
-extern struct game_state *gLevelState;
-
 /* The homing projectile (method table gPolarPenguinVtable). */
 struct polar_penguin {
     struct actor_self base;

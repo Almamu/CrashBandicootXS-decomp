@@ -10,7 +10,6 @@
  * `InitCrate`/the two Bresenham-line helpers `FindLineCrossingYMajor`/
  * `FindLineCrossingXMajor` right before `ConvertCratesForTimeTrial` are left untouched raw. */
 
-extern struct crate_list *gCrateList;
 extern s32 _call_via_r1(void *addr, void *fn);
 
 /* Walks the `gCrateList` object list (the same list/table
@@ -23,10 +22,10 @@ void ConvertCratesForTimeTrial(void)
 {
     s32 i = 0;
 
-    if (i < gCrateList->count) {
-        struct crate_list **listAddr = &gCrateList;
+    if (i < gCrateList->activeCount) {
+        struct pool_manager **listAddr = &gCrateList;
         do {
-            struct crate *e = (*listAddr)->items[i];
+            struct crate *e = (struct crate *)(*listAddr)->slotArray[i];
             struct method *rec = &e->vtable->m48;
             s16 offset = rec->thisOffset;
             void *addr = (u8 *)e + offset;
@@ -40,7 +39,7 @@ void ConvertCratesForTimeTrial(void)
                 }
             }
             i++;
-        } while (i < (*listAddr)->count);
+        } while (i < (*listAddr)->activeCount);
     }
 }
 

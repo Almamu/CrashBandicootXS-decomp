@@ -10,7 +10,6 @@
 #include "globals.h"
 
 extern void *gPlayer;
-extern void *gEntityFlags;
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals

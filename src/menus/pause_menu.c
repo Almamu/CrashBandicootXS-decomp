@@ -124,8 +124,6 @@ s32 RunPauseMenu(void)
     return result;
 }
 
-extern void *gLevelState;
-
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
  * (allocated by the caller, `RunPauseMenu`, as a fresh 0xd4-byte
@@ -249,7 +247,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
     self->field_18 = zero;
     {
         s32 v;
-        if (*((u8 *)gLevelState + 0x8c) != 0) {
+        if (gLevelState->timeTrial != 0) {
             v = 5;
             asm volatile(".pool");
         } else {

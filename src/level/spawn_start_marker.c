@@ -7,8 +7,6 @@
 #include "level.h"
 #include "globals.h"
 
-extern struct level_state *gLevelState;
-extern void *gEntityFlags;
 extern struct actor *gPlayer;
 
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
@@ -51,13 +49,13 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
 {
     if (GetSpawnAtStart(gLevelState)) {
-        register struct level_entity_list *rec asm("r2");
+        register const struct level_entity_list *rec asm("r2");
         register u16 *arrayBase asm("r0");
         register s32 addr asm("r1");
         register u8 *tmp asm("r0");
         register struct actor **d8ptr asm("r3");
 
-        rec = *(struct level_entity_list **)gEntityFlags;
+        rec = gEntityFlags->list;
         arrayBase = (u16 *)rec->paramOffsets;
         addr = (z << 1) + (s32)arrayBase;
         {

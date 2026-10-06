@@ -133,8 +133,6 @@ void InitPauseRelicsPage(struct pause_menu *self)
     FormatDecimal(0x14, self->buf4c);
 }
 
-extern void *gLevelState;
-
 /* Tags `icon` with medal frame `frame` and restarts its animation. The
  * frame is a word parameter (not u8) so the table word is loaded after
  * the icon pointer, as in the ROM. */

@@ -50,9 +50,6 @@
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void _call_via_r0(void *fn);
 
-extern void *gLevelState;
-extern void *gActorList;
-
 extern u8 gActorVtable[];
 extern u8 gHovercraftPicture[];
 

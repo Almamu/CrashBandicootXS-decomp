@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "crates.h"
 #include "level.h"
+#include "globals.h"
 
 struct ctrl {
     u8 unk_00[8];
@@ -19,7 +20,6 @@ struct player {
     u8 state;           // 0x88
 };
 
-extern struct level_layers *gLevelLayers;
 extern struct player *gPlayer;
 
 /* Another per-frame spatial-hash-grid pass over `manager`, scoped to

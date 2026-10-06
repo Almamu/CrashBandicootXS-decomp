@@ -11,12 +11,6 @@
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-extern struct part_list *gUnknown_030012EC;
-extern struct pool_manager *gCrateList;
-extern struct part_list *gCollidableList;
-extern struct part_list *gUnknown_030012F4;
-extern void *gCamera;
-extern struct level_layers *gLevelLayers;
 extern void *gPlayer;
 
 /* PlayRoom's argument (game_frame.c passes `&self->level`; the same
@@ -104,7 +98,7 @@ s32 PlayRoom(void *selfArg)
         *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
-        void **slot = &gCamera;
+        struct camera **slot = &gCamera;
         *slot = OperatorNew(0x18);
     }
 

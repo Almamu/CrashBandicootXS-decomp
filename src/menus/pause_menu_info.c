@@ -9,8 +9,6 @@
 #include "level.h"
 #include "globals.h"
 
-extern void *gLevelState;
-
 /* The composite pause/options screen's "results" sub-region
  * constructor: resolves the current level's name/index label
  * (`field_70`/`field_74`/`buf78` - " N" for levels 0-0x13, blank for

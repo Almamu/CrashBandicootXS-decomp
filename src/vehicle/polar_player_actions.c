@@ -29,9 +29,6 @@
  * family" and "type-byte event dispatch" sections for the semantics
  * behind the individual functions below. */
 
-extern void *gLevelState;
-extern void *gActorList;
-
 extern u8 gActorVtable[];
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -227,7 +224,7 @@ void CatchPolarPlayer(void *selfArg)
  * this function. */
 void QueuePolarWumpa(void *arg0, s32 delta)
 {
-    if (*((u8 *)gLevelState + 0x8c) == 0) {
+    if (gLevelState->timeTrial == 0) {
         if (gPolarQueuedWumpa == 0) {
             gPolarWumpaDispenseTimer = 0xf;
         }

@@ -11,8 +11,6 @@
  * file's header comment, docs/matching/issue-56-0x0802f0dc-actor.md and
  * docs/matching/pmf-dispatch-retry.md. */
 
-extern struct actor_self *gActorList;
-
 struct actor_fa38 {
     struct actor_self base;
     s32 hp;             // 0x54

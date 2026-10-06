@@ -214,8 +214,6 @@ struct fruit_actor {
     s32 fruit;                  // 0x5c
 };
 
-extern void *gLevelState;
-
 extern u8 gActorVtable[];
 
 /* Same "award `fruit` fruit via `CollectWumpa(gLevelState)`,
@@ -338,8 +336,6 @@ struct listed_actor {
     struct actor_self base;
     void *unk_54;               // 0x54
 };
-
-extern void *gActorList;
 
 /* On proximity (`IsTouchingPlayer`), accumulates `1` into the shared
  * `gActorList`-targeted accumulator via `QueuePolarWumpa` then fires

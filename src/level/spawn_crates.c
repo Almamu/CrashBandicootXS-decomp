@@ -3,8 +3,7 @@
 #include "text_popup.h"
 #include "crates.h"
 #include "level.h"
-
-extern void *gLevelState;
+#include "globals.h"
 
 /* Dispatches to the `CreateCrate` entity-constructor trampoline family
  * (docs/rom_map.md, "already-documented `CreateCrate` entity-constructor
@@ -69,7 +68,7 @@ void SpawnCheckpointCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register void *obj asm("r5");
-    register struct level_record_table *rec asm("r1");
+    register const struct level_entity_list *rec asm("r1");
     register u16 *arrayBase asm("r0");
     register s32 loaded asm("r4");
     register u8 *tmp asm("r0");
@@ -77,11 +76,11 @@ void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     obj = CreateCrate(arg0, arg1, arg2, arg3, 0);
 
-    rec = *gEntityFlags;
-    arrayBase = rec->offsets;
+    rec = gEntityFlags->list;
+    arrayBase = (u16 *)rec->paramOffsets;
     loaded = (arg3 << 1) + (s32)arrayBase;
     {
-        s32 base = (s32)rec->bytes;
+        s32 base = (s32)rec->params;
         loaded = *(u16 *)loaded;
         tmp = (u8 *)(loaded + base);
     }

@@ -29,8 +29,6 @@
  * Both match under either compiler; built with the current agbcc like
  * their neighbours. */
 
-extern void *gEntityFlags;
-
 typedef void (*destroy_fn)(void *self, s32 flags);
 
 /* Destroys an icon manager through its method table (a gcc 2.x virtual

@@ -40,8 +40,6 @@ struct MedalItemList {
     struct MedalListItem *extra2;    /* +0x0c: single extra item, may be NULL */
 };
 
-extern void *gEntityFlags;
-
 /* Wrapper: if bit 0 of `flags` is set, tears down `self` via
  * `OperatorDelete` (the documented UI-overlay-manager-family destroy
  * call). */
@@ -306,8 +304,6 @@ s32 CountRoomCrates(struct MedalListItem *item)
     }
     return v;
 }
-
-extern struct level_state *gLevelState;
 
 /* Resolves which sound cue to play for a medal-results screen event:
  * `0x12` while `gLevelState`'s mode field (`+0x78`, see

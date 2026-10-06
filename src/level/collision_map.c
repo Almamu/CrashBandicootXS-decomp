@@ -2,8 +2,7 @@
 #include "level_data.h"
 #include <agb_syscall.h>
 #include "level.h"
-
-extern void *gLevelLayers;
+#include "globals.h"
 
 /* Same lookup as `GetTerrainHeights`/`GetTerrainType`, but returns the raw
  * decoded halfword unfiltered - no bounds check, no output params. */
@@ -37,7 +36,7 @@ void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source
     }
 
     self->source = source;
-    self->decodeBase = (u8 *)*(void **)((u8 *)gLevelLayers + 0x24) + (s32)source->assetOffset;
+    self->decodeBase = (u8 *)gLevelLayers->asset + (s32)source->assetOffset;
     self->unk010 = source->widthTiles;
     self->unk014 = source->heightTiles;
     self->unk008 = self->unk010 << 3;

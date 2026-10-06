@@ -3,8 +3,6 @@
 #include "objects.h"
 #include "level.h"
 
-extern void *gLevelLayers;
-
 /* A physics/collision "step probe": makes a working copy of `self`'s
  * position (`self->x`/`self->y`), runs it through `sub_8008278`
  * (still unexamined - some kind of movement/gravity step, taking the
@@ -39,11 +37,7 @@ extern void *gLevelLayers;
  * `gLevelLayers` from the literal pool, the loop-exit copy uses
  * the cached address, and cross-jumping shares their `strb`. */
 #include "box_part.h"
-
-struct probe_world {
-    u8 unk_00[0x2a];
-    u8 probeFlag;       // 0x2A
-};
+#include "globals.h"
 
 s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
 {
@@ -69,22 +63,22 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
         return 1;
     }
     {
-        u8 saved = ((struct probe_world *)gLevelLayers)->probeFlag;
+        u8 saved = gLevelLayers->probeFlag;
         u8 *t2;
         struct probe_pos *pp;
 
-        ((struct probe_world *)gLevelLayers)->probeFlag = 0;
+        gLevelLayers->probeFlag = 0;
         t2 = tries;
         pp = (struct probe_pos *)&f;
         do {
             (*t2)++;
             pp->y += 8;
             if ((u8)ProbeTerrain(gLevelLayers, mode, (struct probe_pos *)&f, span, &f.origY)) {
-                ((struct probe_world *)gLevelLayers)->probeFlag = saved;
+                gLevelLayers->probeFlag = saved;
                 return 0;
             }
         } while (*tries <= 2);
-        ((struct probe_world *)gLevelLayers)->probeFlag = saved;
+        gLevelLayers->probeFlag = saved;
     }
     return 0;
 }

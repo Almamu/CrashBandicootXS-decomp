@@ -3,8 +3,7 @@
 #include "hud.h"
 #include "objects.h"
 #include "level.h"
-
-extern void *gLevelState;
+#include "globals.h"
 
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
  * HUD stat-widget family" section. `self` is the same `struct
@@ -44,7 +43,7 @@ void UpdateHud(struct hud_counter *self)
         DrawHudPart(&sself->parts[34], 0, 0);
     }
 
-    if (*((u8 *)gLevelState + 0x8c) != 0 && sself->livesSlide == 0 && sself->wumpaSlide == 0) {
+    if (gLevelState->timeTrial != 0 && sself->livesSlide == 0 && sself->wumpaSlide == 0) {
         UpdateHudClock(sself);
     }
 

@@ -17,9 +17,6 @@
  * idiom (`+0xc = 0x12`, `+0x10`/`+0x12` anim reset, `+8` accumulator
  * reset). */
 
-extern struct actor_self *gActorList;
-extern void *gLevelState;
-
 /* The actor_category_frame.c AABB helpers: the three scratch boxes live in
  * one frame struct so each box address is rematerialized from `sp`
  * (see that file and yeti_update.c). */

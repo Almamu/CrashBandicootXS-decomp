@@ -4,26 +4,11 @@
 #include "bosses.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* The object `UpdateHudPercentCounters` reads its percentage from, called through a
  * gcc 2.x pointer-to-member (delta + function) slot in its vtable. */
-struct pct_vtable
-{
-    u8 unk_00[0x30];
-    s16 delta;                      /* +0x30 */
-    u16 unk_32;
-    void *fn;                       /* +0x34 */
-};
-
-struct pct_source
-{
-    u8 unk_00[0x50];
-    struct pct_vtable *vtable;      /* +0x50 */
-};
-
-extern struct pct_source *gActorList;
 extern s32 _call_via_r1(void *self, void *fn);
-extern void *gLevelState;
 
 static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
 {
@@ -258,10 +243,10 @@ void UpdateHudPercentCounters(struct hud_counter *self)
     DrawHudPart(part, 0, 0);
 
     {
-        struct pct_source *src = gActorList;
-        struct pct_vtable *vt = src->vtable;
+        struct actor_self *src = gActorList;
+        struct actor_vtable *vt = src->vtable;
 
-        v = _call_via_r1((u8 *)src + vt->delta, vt->fn);
+        v = _call_via_r1((u8 *)src + vt->m30.thisOffset, vt->m30.fn);
     }
     self->value_d = v;
     if (v != self->shown_d)

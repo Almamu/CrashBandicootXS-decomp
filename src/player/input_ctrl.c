@@ -154,11 +154,6 @@ struct input_ctrl
     s32 timer;                   // 0x24
 };
 
-extern void *gLevelState;
-extern void *gEntityFlags;
-extern void *gCollidableList;
-extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
-
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 
@@ -184,7 +179,7 @@ extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gEntityFlags;                                         \
+        u8 *_base = (u8 *)gEntityFlags;                                  \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \
@@ -292,7 +287,7 @@ void UpdateInputCtrl(struct input_ctrl *self)
         u32 keys;
         s32 x = self->target->x;
 
-        if (x > (gLevelLayers->layer0->width << 8) - 0xA00)
+        if (x > (gLevelLayers->layer0->widthPx << 8) - 0xA00)
         {
             {
                 struct ctrl_child *c = self->cameraLead;

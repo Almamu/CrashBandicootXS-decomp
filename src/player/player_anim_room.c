@@ -3,6 +3,7 @@
 #include "crates.h"
 #include "player.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #9/#10: 0x0800AAEC, the input-action-check function the
  * 42-slot `gActionCtrlStateTable` action-dispatch table's own entries
@@ -32,19 +33,11 @@
  * is a separate `rec += 4` step (the ROM's `adds r1, #4; adds r4, r1, #0`
  * pair). Compiles identically under agbcc and old_agbcc. */
 
-struct actor_list {
-    s32 count;
-    s32 unused_4;
-    void **items;
-};
-
 struct pos {
     s32 x;
     s32 y;
 };
 
-extern struct actor_list *gCrateList;
-extern void *gLevelLayers;
 extern s32 _call_via_r1(void *addr, void *fn);
 
 u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
@@ -74,8 +67,8 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
         return 0;
 
     i = 0;
-    if (i < gCrateList->count) do {
-        u8 *entry = gCrateList->items[i];
+    if (i < gCrateList->activeCount) do {
+        u8 *entry = (u8 *)gCrateList->slotArray[i];
         u8 *method = *(u8 **)(entry + 0x18) + 0x48;
 
         if (_call_via_r1(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
@@ -83,6 +76,6 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
                 return 0;
         }
         i++;
-    } while (i < gCrateList->count);
+    } while (i < gCrateList->activeCount);
     return 1;
 }

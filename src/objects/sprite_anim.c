@@ -280,10 +280,6 @@ typedef s32 (*part_method0_fn)(void *self);
 typedef s32 (*part_method1_fn)(void *self, void *arg);
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
-/* gLevelLayers's view here (level_layers.c's `struct level_layers`):
- * BG layer 0's scroll position (include/bg_scroll_layer.h), which is the
- * camera position in pixels. */
-extern struct level_layers *gLevelLayers;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 
@@ -414,13 +410,6 @@ void CollidePartList(struct part_list *list, struct aabb box, s32 unused, struct
         }
     }
 }
-
-struct game_state {
-    u8 unk_00[0x78];
-    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
-};
-
-extern struct game_state *gLevelState;
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \

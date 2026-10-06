@@ -531,8 +531,6 @@ void FillBgStreamer(struct bg_streamer *self, s32 *pos)
  * `matching_decomp_alignment_fix` precedent. */
 asm(".align 2, 0");
 
-extern void *gLevelLayers;
-
 /* Stores `source` (the room/level descriptor - see this file's header
  * comment) into `self+0`, caches its `+0x1a`/`+0x1c` 8px-tile dimensions at
  * `self+0x18`/`self+0x1c`, and derives `self+4` from
@@ -551,7 +549,7 @@ void SetBgStreamerSource(void *self0, void *source0)
     h = source->heightTiles;
     self->widthTiles = w;
     self->heightTiles = h;
-    self->records = (u16 *)(*(u8 **)((u8 *)gLevelLayers + 0x24) + source->assetOffset);
+    self->records = (u16 *)((u8 *)gLevelLayers->asset + source->assetOffset);
 }
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);

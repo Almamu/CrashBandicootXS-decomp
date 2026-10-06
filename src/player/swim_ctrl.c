@@ -57,8 +57,6 @@ struct keys
     u8 pad[0];
 };
 
-extern void *gLevelState;
-extern u8 *gEntityFlags;
 extern struct pctrl_target *gPlayer;
 
 typedef void (*pctrl_fn1)(void *self, s32 a);
@@ -295,7 +293,7 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gEntityFlags;                                         \
+        u8 *_base = (u8 *)gEntityFlags;                                  \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \

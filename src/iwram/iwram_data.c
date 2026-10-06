@@ -118,7 +118,7 @@ void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame) = UnpackRle
 s32 gActorCheckpoint = 0;
 void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
 void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list) = HeapSortActorsByKey;
-void *gActorList = NULL;
+struct actor_self *gActorList = NULL;
 s32 gCollectedSpawnCount = 0;
 /* Speeds, indexed by sub_802A570 (polar_objects.c). */
 s32 gUnknown_0300088C[3] = { 0x40, 0x62, 0x95 };

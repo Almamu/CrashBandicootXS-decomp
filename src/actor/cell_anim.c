@@ -6,12 +6,11 @@
 #include "bosses.h"
 #include "vehicle.h"
 #include "level.h"
+#include "globals.h"
 
 /* codegen: SetCheckpointAtPlayer takes (state, flag) (level.h); this
  * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
-
-extern void *gLevelState;
 
 /* Re-bases the category's secondary tick counter from `arg0` (net of
  * `GetActorSpawnOffset`'s current Q8.8 offset), resets the active-instance

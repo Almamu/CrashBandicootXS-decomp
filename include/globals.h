@@ -15,9 +15,16 @@
 #include "core.h"
 
 struct AudioContext;
+struct actor_self;
+struct camera;
+struct entity_flags;
 struct hud_counter;
+struct level_layers;
+struct level_state;
 struct oam_shadow_buffer;
 struct palette_cache;
+struct part_list;
+struct pool_manager;
 struct sprite_bank_table;
 struct vram_upload_cursor;
 
@@ -52,6 +59,7 @@ struct sprite_bank_set {
 /* src/iwram/iwram_data.c */
 extern union key_state gKeys;
 extern u32 gRoomFrameCount;
+extern struct actor_self *gActorList;               /* the circular actor list's root (actor_self.prev/next) */
 
 /* sym_iwram.txt */
 extern u8 gDispcnt[2];                              /* the REG_DISPCNT shadow (CommitDispcnt), read and written bytewise */
@@ -65,6 +73,20 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern void *gInput;                                /* UpdateKeys's object; it only reads gKeys */
 extern struct hud_counter *gHud;
 extern u8 gJetpackPlayerInactive;
+
+/* sym_iwram.txt: the level's objects. game_frame.c builds the level
+ * state and the entity flags; PlayRoom (play_room.c) builds the rest per
+ * room. The structs are in level_state.h (struct level_state), level.h
+ * (struct level_layers, entity_flags, camera), box_part.h (struct
+ * part_list) and crates.h (struct pool_manager, the crate list). */
+extern struct entity_flags *gEntityFlags;
+extern struct level_state *gLevelState;
+extern struct camera *gCamera;
+extern struct part_list *gUnknown_030012EC;
+extern struct part_list *gCollidableList;
+extern struct part_list *gUnknown_030012F4;
+extern struct level_layers *gLevelLayers;
+extern struct pool_manager *gCrateList;
 
 /* src/data/boss_pictures_167ad4.c: a full turn in 256 steps, scaled by 0x100. */
 extern const s16 gSineTable[256];

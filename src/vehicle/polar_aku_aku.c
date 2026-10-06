@@ -23,8 +23,6 @@
  * pair, `RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask`) and a `gPolarAkuAku`-rooted
  * sibling object (`ClearPolarAkuAkuMask`). See docs/matching/issue-54-actor-d3a8.md. */
 
-extern struct level_state *gLevelState;
-extern void *gActorList;
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 
 /* `actor_self` plus the one-shot byte flag UpdatePolarBoostPad/CreatePolarBoostPad use.

@@ -16,8 +16,6 @@
  * `crateCount` advances (`AddBrokenCrate`). `crateTotal` receives the
  * level state's `crateTotal` (`EndBonusRound`). */
 
-extern struct level_state *gLevelState;
-
 /* Per-frame tick, gated on the level state's `timeTrial` flag:
  * force-advances the lives and wumpa counters out of a stuck 1/2 state
  * (state 1 -> 3 directly; state 2 -> 3, refreshing its timer to 0x14

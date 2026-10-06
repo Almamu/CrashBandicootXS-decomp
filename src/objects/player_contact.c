@@ -14,7 +14,6 @@ struct player_view
     u32 unk_8C;                     // 0x8c - a gRoomFrameCount deadline
 };
 
-extern struct level_state *gLevelState;
 extern void *gPlayer;
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 

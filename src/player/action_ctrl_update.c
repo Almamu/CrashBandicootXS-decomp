@@ -18,23 +18,9 @@
  * (docs/matching/issue-15-16-17-naked-retry-2.md), and `UpdateActionCtrl` in a
  * later pass. */
 
-struct cam_target
-{
-    u8 unk_00[0x14];
-    s32 y;                 // 0x14 (Q0)
-};
-
-struct cam
-{
-    u8 unk_00[0x10];
-    struct cam_target *target; // 0x10
-};
-
 typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
 
-extern void *gLevelState;
 extern struct act_part *gPlayer;
-extern struct cam *gLevelLayers;
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
@@ -103,8 +89,8 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
 /* Clears `slamBlocked` (+0x34) once R (`gKeys` bit `0x100`) is
  * released. If `part->slippery` (+0x100) changed since last frame
  * (`prevSlippery`), re-runs `sub_8012238`. Then, using
- * `gLevelLayers`'s sub-object's `+0x14` Q8 field as a screen-space
- * anchor, checks `part->field_04` against two thresholds: past the near
+ * the height of `gLevelLayers`'s layer 0 (pixels, `<< 8` to Q8) as
+ * the anchor, checks `part->field_04` against two thresholds: past the near
  * one, resets `part`'s `+0x48`/`+0x4c`/`+0x50` velocity-target fields
  * (and `+0x60` unless slippery); past the far one, additionally
  * clears `part+0x8c` and fires a state-close call (`SetMaskLevel`) plus
@@ -164,7 +150,7 @@ void UpdateActionCtrl(struct act *self)
         struct act_part *part = self->part;
         s32 py = part->y;
 
-        if (py > (gLevelLayers->target->y << 8) - 0x1400) {
+        if (py > (gLevelLayers->layer0->heightPx << 8) - 0x1400) {
             part->flags0C &= 0x7F;
             {
                 struct act_part *q = self->part;
@@ -179,7 +165,7 @@ void UpdateActionCtrl(struct act *self)
                 struct act_part *r = self->part;
                 s32 py2 = r->y;
 
-                if (py2 > (gLevelLayers->target->y << 8) + 0x1400) {
+                if (py2 > (gLevelLayers->layer0->heightPx << 8) + 0x1400) {
                     r->deadline = 0;
                     SetMaskLevel(gLevelState, 0);
                     {

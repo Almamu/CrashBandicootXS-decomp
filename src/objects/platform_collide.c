@@ -334,11 +334,11 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                         Call68(gPlayer, 0, 0x11, 0);
                         break;
                     case 3:
-                        if (!IsBonusRoundDone(gLevelState) && !((u8 *)gLevelState)[0x8C])
+                        if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial)
                             Call68(gPlayer, 0, 0xF, 0);
                         break;
                     case 4:
-                        if (!IsGemPathDone(gLevelState) && !((u8 *)gLevelState)[0x8C])
+                        if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial)
                             Call68(gPlayer, 0, 0x10, 0);
                         break;
                     }
@@ -380,7 +380,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             }
             break;
         case 3:
-            if (!IsBonusRoundDone(gLevelState) && !((u8 *)gLevelState)[0x8C]
+            if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial
                 && AabbOverlaps(&a, pb))
             {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
@@ -394,7 +394,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             }
             break;
         case 4:
-            if (!IsGemPathDone(gLevelState) && !((u8 *)gLevelState)[0x8C]
+            if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial
                 && AabbOverlaps(&a, pb))
             {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);

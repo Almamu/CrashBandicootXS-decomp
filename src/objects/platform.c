@@ -330,7 +330,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
                 if (cur != none)
                 {
                     register s32 id asm("r3") = *(vu16 *)&obj->id;
-                    u8 *base = gEntityFlags;
+                    u8 *base = (u8 *)gEntityFlags;
                     register s32 word asm("r0") = id;
                     s32 off;
                     u32 *slot;

@@ -78,8 +78,6 @@ u8 RunSaveMenu(u32 state, u32 field10)
     return ((struct save_menu *)gSaveMenu)->field_20;
 }
 
-extern void *gLevelState;
-
 /* The composite pause/options screen's (and the spinner dialog's, via
  * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
  * initialises both save_data instances (ResetSaveData), does
@@ -473,7 +471,7 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
     void **handleAddr = &self->field_8c;
     void **handleAddr2;
     u32 wasSelected;
-    void **c0Addr;
+    struct level_state **c0Addr;
     struct AudioContext **bcAddr;
 
     if (!IsSaveSlotEmpty(*handleAddr, rowIndex)) {

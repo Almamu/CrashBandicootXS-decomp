@@ -5,12 +5,10 @@
 #include "actor.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Text-popup variants with their own header constructors, ROM
  * 0x08021280-0x08021668. Built with old_agbcc; see include/text_popup.h. */
-
-extern void *gLevelState;
-extern void *gUnknown_030012F4;
 
 extern u8 *gPlayer;
 

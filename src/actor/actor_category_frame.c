@@ -36,8 +36,6 @@
  * differently, 24-26 halfwords off). `RunActorCategoryFrame` matches under
  * old_agbcc as well. */
 
-extern struct actor_self *gActorList;
-
 /* Method slot 0x28 of the actor method table (`self+0x50`), which
  * `struct actor_vtable` still lumps into padding. */
 struct actor_methods {

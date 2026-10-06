@@ -11,9 +11,6 @@
  * after the still-raw `DetonateNearbyPolarNitros` (see docs/matching.md) - same
  * `self` object and conventions documented there. */
 
-extern void *gLevelState;
-extern void *gActorList;
-
 /* On proximity (`IsTouchingPlayer`), ties the lap counter and the lock-timer
  * setter `GivePolarPlayerMask`, then transitions to the shared "used"
  * animation sequence 0x12. Whether or

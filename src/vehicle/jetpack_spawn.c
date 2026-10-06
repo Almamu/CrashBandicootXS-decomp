@@ -50,9 +50,6 @@ struct spawn_rec {
     s32 z;          // 0x0C
 };
 
-extern struct actor_self *gActorList;
-extern u8 *gLevelState;
-
 /* `operator new`: the ROM materializes the size before the heap flags. */
 static inline void *AllocActor(u32 size)
 {
@@ -111,14 +108,14 @@ void *SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz)
     u8 kind = rec->kind[0];
     s32 x, y, z;
 
-    if (gLevelState[0x8c] != 0) {
+    if (gLevelState->timeTrial != 0) {
         kind = rec->kind[1];
         if (kind == 0x17)
             kind = 0x14;
     } else if (alt != 0) {
         kind = rec->kind[2];
     }
-    if (kind == 0x1d && !(u8)IsCrystalSaved((struct level_state *)gLevelState))
+    if (kind == 0x1d && !(u8)IsCrystalSaved(gLevelState))
         return 0;
     if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
         return 0;
@@ -476,8 +473,8 @@ void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
         self->hp = 0;
         PlaySfx(gAudioContext, 0x3a, 0x100);
         ACTOR_SET_STATE(&self->base, 4, 3);
-        if (gLevelState[0x8c] == 0)
-            LoseLife((struct level_state *)gLevelState);
+        if (gLevelState->timeTrial == 0)
+            LoseLife(gLevelState);
         gJetpackInputEnabled = 0;
         gJetpackPauseLocked = 1;
         gJetpackPlayerInactive = 1;

@@ -5,6 +5,8 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "level_state.h"
+#include "globals.h"
 
 /* 0x0802AC28-0x0802B364 (GitHub issue #51), formerly
  * asm/code_3_2_20_8b7c_ac28.s: the actor factory on top of the shared
@@ -29,9 +31,6 @@
  * Matches under either compiler (nothing here tells them apart); built
  * with the current agbcc like the rest of this zone. See
  * docs/matching/issue-51-actor-2ac28.md. */
-
-extern struct actor_self *gActorList;
-extern void *gLevelState;
 
 /* An inline wrapper rather than a macro: the ROM materializes the size
  * before the heap flags, i.e. evaluates it as an argument of its own. */
@@ -207,7 +206,7 @@ struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffse
 {
     u8 kind = spawn->kind;
 
-    if (((u8 *)gLevelState)[0x8C] != 0)
+    if (gLevelState->timeTrial != 0)
     {
         kind = spawn->altKind;
         if (kind == 11)

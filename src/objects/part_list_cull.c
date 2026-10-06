@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "vtable.h"
 #include "objects.h"
+#include "globals.h"
 
 /* This file's `manager` is the same `dual_array_manager` struct
  * defined and used in `part_list.c` (capacity/count1/count2/
@@ -16,7 +17,6 @@
  * arithmetic). Converting these would need the same rebuild-verify
  * rigor as any other change here - not attempted opportunistically. */
 
-extern void *gLevelLayers;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *_call_via_r1(void *arg0, void *fn);
 

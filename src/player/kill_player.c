@@ -32,7 +32,6 @@ struct palette_cache;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
-extern void *gLevelState;
 extern void *gPlayer;
 
 /* Plays a sound, fires the `+0x50`/`+0x54` trampoline pair with `id`

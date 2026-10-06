@@ -147,13 +147,6 @@ struct ab_part
     u8 kind;                // 0x4E
 };
 
-struct ab_list
-{
-    s32 count;              // 0x00
-    u8 unk_04[4];
-    struct ab_part **items; // 0x08
-};
-
 typedef void (*ab_fn1)(void *self, s32 a);
 typedef void (*ab_fn2)(void *self, void *a, s32 b);
 typedef void (*ab_fn3)(void *self, s32 a, s32 b, s32 c);
@@ -210,8 +203,6 @@ static inline s32 Abs(s32 v)
 }
 
 extern struct ab_player *gPlayer;
-extern void *gCollidableList;
-extern struct ab_list *gCrateList;
 
 void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 {
@@ -319,11 +310,11 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
         /* a guarded do-while: a `for` shares the list pointer between the
          * entry test and the body, where the ROM reloads it */
         i = 0;
-        if (i < gCrateList->count)
+        if (i < gCrateList->activeCount)
         {
             do
             {
-                struct ab_part *e = gCrateList->items[i];
+                struct ab_part *e = (struct ab_part *)gCrateList->slotArray[i];
 
                 if (Probe48(e) == 3)
                 {
@@ -347,7 +338,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
                     }
                 }
                 i++;
-            } while (i < gCrateList->count);
+            } while (i < gCrateList->activeCount);
         }
         return;
     }

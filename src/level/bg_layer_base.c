@@ -2,10 +2,9 @@
 #include "bg_scroll_layer.h"
 #include "level_data.h"
 #include "level.h"
+#include "globals.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
-
-extern void *gLevelLayers;
 
 /* A viewport/parallax-scroll-layer object: `struct bg_scroll_layer`
  * (include/bg_scroll_layer.h; docs/rom_map.md's "Visual scrolling

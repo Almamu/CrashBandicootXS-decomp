@@ -16,6 +16,7 @@
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 #include "globals.h"
 
 /* A keyframe record's `{s16 x, s16 y}` offset (see sprite.c). */
@@ -24,12 +25,6 @@ struct part_offset {
     s16 y;
 };
 
-struct follow_state {
-    u8 unk_00[0x14];
-    s32 unk_14;         // 0x14
-};
-
-extern struct follow_state *gCamera;
 extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
 
@@ -106,7 +101,7 @@ static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
  * state 0x1D; otherwise dispatches on `arg2` (1-25):
  * - 2/3/7/8/9/10 call `KillPlayer` with a fixed id; 1/4/6 do the same
  *   with 0x1C and also reset the part's velocities and
- *   `gCamera->unk_14`;
+ *   `gCamera->mode`;
  * - 11 calls `sub_8015558` once the player is in contact and
  *   `PlayerHasRoomForAnim(part, 0xB)` reports 1;
  * - 12 applies the contact bits `arg3` (and, for `arg3 & 3` == 1/2,
@@ -335,7 +330,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             p->rampXStep = z;
             p->rampXTarget = z;
             PartSetVelY(self->part, -0x100, 0, -0x100);
-            gCamera->unk_14 = 3;
+            gCamera->mode = 3;
         }
         break;
     case 10:

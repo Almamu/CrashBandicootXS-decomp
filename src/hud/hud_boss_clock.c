@@ -3,6 +3,7 @@
 #include "hud.h"
 #include <libgcc.h>
 #include "level.h"
+#include "globals.h"
 
 /* Icon-indicator widget (lives display) - see
  * docs/matching/issue-45-hud-stat-widget-dispatcher.md for the full
@@ -15,8 +16,6 @@
  * under old_agbcc plain C reproduces the ROM's `ldrb r7; ...; adds rN,
  * r7, #0` clamp sequence exactly. The position helper takes the part
  * pointer last so the table symbol is loaded before `self->parts`. */
-
-extern void *gLevelState;
 
 static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
 {

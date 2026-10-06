@@ -7,8 +7,6 @@
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-extern struct level_state *gLevelState;
-
 static inline void SetPartTag(struct orbit_part *part, s32 tag)
 {
     part->tag = tag;

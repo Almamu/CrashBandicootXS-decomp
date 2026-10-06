@@ -1,6 +1,7 @@
 #include "core.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #44: the `gCamera` camera-follow block (the
  * "generic 0x18-byte block" docs/matching/issue-37-game-loop-2375c.md
@@ -47,28 +48,6 @@
  * docs/matching/issue-44-camera-follow.md.
  *
  * Real bytes formerly the whole of `asm/code_3_2_17_26bf8.s`. */
-
-struct camera_target
-{
-    s32 x;           // 0x00 - Q8
-    s32 y;           // 0x04 - Q8
-    u8 unk_08[0x1C]; // 0x08-0x23
-    u8 dirFlags;     // 0x24 - bit 0/1 = +x/-x, bit 2/3 = -y/+y (mode 2 look-ahead)
-    u8 unk_25[3];    // 0x25-0x27
-    u8 flags;        // 0x28 - bit 4 is the mirror flag
-};
-
-struct camera
-{
-    s32 x;                        // 0x00 - Q8
-    s32 y;                        // 0x04 - Q8
-    s32 vx;                       // 0x08 - Q8 look-ahead
-    s32 vy;                       // 0x0C - Q8 look-ahead
-    struct camera_target *target; // 0x10
-    s32 mode;                     // 0x14 - 1/2 select StepCameraFacing/StepCameraDirectional
-};
-
-extern void *gLevelLayers;
 
 void StepCameraDirectional(struct camera *cam)
 {

@@ -2,6 +2,7 @@
 #include "box_part.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Dedicated deep investigation (GitHub issue #9/#10,
  * docs/matching/issue-9-0x0800a178-graphics.md): `ProbeGroundSpriteTerrain`/
@@ -235,7 +236,6 @@ u8 CollideGroundSprite(struct box_part *self)
 }
 
 extern s32 _call_via_r1(void *addr, void *fn);
-extern void *gLevelLayers;
 
 /* See the file-level header comment above for this function's
  * semantics. `self`'s only argument; returns the accumulated result

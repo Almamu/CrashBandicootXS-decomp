@@ -17,12 +17,6 @@ struct part_list;
 struct oam_shadow_buffer;
 
 extern void *gPlayer;
-extern void *gCamera;
-extern u8 *gLevelLayers;
-extern void *gCollidableList;
-extern void *gUnknown_030012F4;
-extern void *gUnknown_030012EC;
-extern void *gCrateList;
 
 extern void *_call_via_r1(void *arg0, void *arg1);
 
@@ -34,7 +28,7 @@ void UpdateRoomFrame(void *self)
 {
     UploadPaletteCache(gPaletteCache);
     UpdateCamera(gCamera);
-    ScrollLevelLayers((struct level_layers *)gLevelLayers);
+    ScrollLevelLayers(gLevelLayers);
     TickPaletteCycles(gPaletteCycles);
 
     if (*(s32 *)self <= 0x1000) {
@@ -59,7 +53,7 @@ void UpdateRoomFrame(void *self)
         HideUnusedOamEntries(gOamBuffer);
         WaitForVBlank();
         CommitOamBuffer(gOamBuffer);
-        CommitLevelScroll((struct level_layers *)gLevelLayers);
+        CommitLevelScroll(gLevelLayers);
         FlushVramDmaQueue();
     }
 }
@@ -82,18 +76,18 @@ struct level_ctx
 };
 
 /* Rebuilds the gBlendRegs BLDCNT/BLDALPHA shadow from the level's
- * blend settings and sets gLevelLayers's +0x2b flag in mode 1. With
+ * blend settings and sets gLevelLayers's `unk_2B` flag in mode 1. With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. */
 void SetupRoomBlend(struct level_ctx *self)
 {
     union blend *b = &gBlendRegs.blend;
 
     b->raw = 0;
-    gLevelLayers[0x2b] = 0;
+    gLevelLayers->unk_2B = 0;
     if (self->blend->effect != 0)
     {
         if (self->blend->mode == 1)
-            gLevelLayers[0x2b] = 1;
+            gLevelLayers->unk_2B = 1;
         b->bits.effect = *(u8 *)&self->blend->effect;
         b->bits.eva = self->blend->eva;
         b->bits.evb = self->blend->evb;
