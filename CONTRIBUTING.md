@@ -154,7 +154,7 @@ whichever compiler builds it (agbcc, old_agbcc or agbcc_arm, including
 the per-object flag overrides), gets the Makefile's `WARNFLAGS`:
 
 ```
--Wall -Wmissing-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror
+-Wall -Wmissing-prototypes -Wstrict-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror
 ```
 
 `-Wall` already includes `-Wimplicit`, `-Wparentheses`, `-Wunused`,
@@ -170,6 +170,16 @@ two clean builds above:
   function in its owner's header (see "Declarations and headers"), even
   when it's only reached through a table or a `UNUSED` function. A prior
   prototype with the definition's exact types doesn't change the code.
+- **Not a prototype** (`function declaration isn't a prototype`): an
+  empty `()` parameter list. agbcc reports it on declarations and
+  definitions, and also on function-pointer types: struct fields,
+  casts, typedefs and tables such as `void (*const gFooFuncs[4])()`.
+  Write `(void)` for a function or pointer that takes nothing, and the
+  real parameter list when it's called with arguments. If one pointer
+  really is called with different signatures, don't fall back to `()`:
+  give it the signature most callers use and cast to the other one at
+  the odd call site (or use a union of typed slots). Check the objects,
+  since a prototype can change how arguments are promoted.
 - **Redundant redeclaration:** delete the second declaration. If two
   headers declare the same symbol, keep it in the owner's header and have
   the other one include that header.

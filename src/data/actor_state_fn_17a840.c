@@ -9,7 +9,7 @@
 /* Per-state update functions of the gYeti gauge object,
  * called as `gYetiStateFuncs[gYetiState]()` by
  * UpdateYeti (yeti_update.c). */
-void (*const gYetiStateFuncs[4])() = {
+void (*const gYetiStateFuncs[4])(void) = {
     YetiStateChase,
     YetiStateCharge,
     YetiStateCaught,

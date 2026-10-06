@@ -294,7 +294,7 @@ void mem_free(void *address) {
  * memory than right after mem_heap_init (mem_initial_free_bytes), some
  * allocations are still live, so collect them. The second
  * mem_free_bytes result is unused. */
-void mem_heap_shutdown() {
+void mem_heap_shutdown(void) {
     s32 currentFreeBytes = mem_free_bytes(MEM_HEAP_BOTH);
     
     if (mem_initial_free_bytes != currentFreeBytes) {

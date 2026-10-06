@@ -6,7 +6,7 @@
 
 #include "core.h"
 
-typedef void (*irq_handler_t)();
+typedef void (*irq_handler_t)(void);
 
 /* The VBlank callback slots: AddVBlankCallback() fills a free one,
  * VBlankHandler() calls every non-zero one each VBlank. */

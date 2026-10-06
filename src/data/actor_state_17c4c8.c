@@ -10,7 +10,7 @@
 /* Per-kind animation step functions of the singleton object, called
  * through _call_via_r0 as `gHovercraftStateFuncs[gHovercraftState]` by
  * RunHovercraftState (hovercraft.c). */
-void (*const gHovercraftStateFuncs[6])() = {
+void (*const gHovercraftStateFuncs[6])(void) = {
     HovercraftStateInactive,
     HovercraftStateApproach,
     HovercraftStateCloseIn,
