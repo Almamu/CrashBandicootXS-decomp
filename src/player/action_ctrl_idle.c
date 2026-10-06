@@ -93,7 +93,7 @@ void ApplyActionCtrlMotion(struct act *self)
 skip:
     if (self->state == 0) {
         struct player *p = gPlayer;
-        if (p->speedX == 0 && p->anim->unk_0A != 0x12 && self->idleFidget == 0) {
+        if (p->speedX == 0 && p->anim->animCount != 0x12 && self->idleFidget == 0) {
             StopSfx(gAudioContext, 0x36);
             ACT_CALL2(self, m50, gPlayer, 0x12);
         }
@@ -182,10 +182,10 @@ void ActionCtrlStateIdle(struct act *self)
     s32 frames;
     struct player *part;
 
-    if (self->unk_24[1] != 0) {
-        self->unk_24[1]--;
+    if (self->dpadLockTimer != 0) {
+        self->dpadLockTimer--;
         if (dir == 0)
-            self->unk_24[1] = dir;
+            self->dpadLockTimer = dir;
     }
     part = self->part;
     if (part->animDone) {
@@ -246,7 +246,7 @@ skip:
             if (PartByte(p, 0x100) && *(slot = &self->motionX) != 0x1F && p->speedX != 0)
                 ActHold27P(self, slot, 0x1F);
         } else {
-            u8 wait = self->unk_24[1];
+            u8 wait = self->dpadLockTimer;
 
             if (wait == 0) {
                 switch (dir) {

@@ -35,7 +35,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
         SetEntitySize(part, 0x64, 0x64);
-        part->field_0A = 0x12;
+        part->kind = 0x12;
         AddToPartList((struct part_list *)gUpdateOnlyPartList, part);
     } else if (gPlayer->ctrlMode == 0) {
         s32 *pos = (s32 *)CreatePlatform(arg0, arg1, arg2, arg3, 4);
@@ -55,7 +55,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
         SetEntitySize(part, 0x28, 0x28);
-        part->field_0A = 0x12;
+        part->kind = 0x12;
         AddToPartList((struct part_list *)gUpdateOnlyPartList, part);
     }
 }

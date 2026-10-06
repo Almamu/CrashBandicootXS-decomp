@@ -108,7 +108,7 @@ struct crate {
                   //        instead keeps its step delay here (placement byte 8, reloaded
                   //        into `timer` after each step)
     u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy
-    u8 kind;      // 0x4E - index into the gStaticData_0816BB** tables
+    u8 kind;      // 0x4E - index into the gCrateKind* tables and gCrateHitResponse
     u8 timer;     // 0x4F
     u8 paramA;    // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
                   //        1 (checkpoint): placement flag bit 6, handed to SetCheckpointAtPlayer;

@@ -4,7 +4,7 @@
 (the category (re)selection/loading-screen entry point), the
 `sub_effect_table` entry-counting helper `CountCategoryCrates`, and an unrelated-
 but-address-adjacent BG-tilemap double-buffer scroll-effect subsystem
-(`AddActorMissedNitro`-`sub_8029E40`) that turns out to sit interleaved in the
+(`AddActorMissedNitro`-`GetActorBgLayerDepth`) that turns out to sit interleaved in the
 same ROM region rather than being part of the category system itself.
 
 ## Matched (real C)
@@ -21,11 +21,11 @@ same ROM region rather than being part of the category system itself.
   frame-tick counter accessors.
 - `SetActorCheckpoint`/`IsActorMaskAssistDue` (`cell_anim.c`) - category tick
   re-basing and an active-instance-count threshold test.
-- `nullsub_5`/`GetCellAnimFreeTile`, `FlipCellAnimPage`,
+- `ActorCategoryAttemptEndStub`/`GetCellAnimFreeTile`, `FlipCellAnimPage`,
   `GetCellAnimDistance`, `AdvanceCellAnim`,
   `GetCellAnimFrameStep`/`GetCellAnimSpeed` and
   `SetCellAnimSpeed`/`InitActorBgScroll`/`UpdateActorBgScroll` (all `cell_anim.c`),
-  `ShakeActorBg`/`sub_8029E34`/`sub_8029E40` (`actor_bg.c`) - the
+  `ShakeActorBg`/`SetActorBgLayerDepth`/`GetActorBgLayerDepth` (`actor_bg.c`) - the
   rest of the BG-tilemap scroll-effect subsystem's small accessors,
   accumulator-advance, and BG2-affine scroll/zoom setup functions.
 

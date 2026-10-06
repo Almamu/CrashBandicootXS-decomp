@@ -287,7 +287,7 @@ three):
      **`BreakCrateInStack(self, 0, 0, 0)`**, then (unless
      `gPlayer+0x94 != 0`) rebuilds `self`'s hitbox pointer,
      and if the dispatch id (`sp+0x78`) isn't 3, calls
-     **`sub_800CEAC`** (already matched, `crate_hit.c`) to test a
+     **`PlayerHitboxOverlapsAt`** (already matched, `crate_hit.c`) to test a
      player-sized box at that spot; on overlap, walks to the "prev"
      neighbor (`GetCrateAbove`) and, if that neighbor's own `+0x4d&0x7f`
      isn't 1, looks up *its* dispatch id in `gCrateHitResponse` and

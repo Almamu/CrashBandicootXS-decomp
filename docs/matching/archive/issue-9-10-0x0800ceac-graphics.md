@@ -1,4 +1,4 @@
-# Issues #9/#10 follow-up: `sub_800CEAC`/`sub_800CF70` (graphics -> game_loop)
+# Issues #9/#10 follow-up: `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit` (graphics -> game_loop)
 
 Dedicated deep-investigation session against the two functions
 `tools/report_units.py` tracked as parked (`base_object=None`) at
@@ -13,11 +13,11 @@ consumed by this session's work).
 ## Starting point
 
 `docs/rom_map.md` (line ~2137) already had a partial note on one of the
-two: **`sub_800CF70`**, sitting 144 bytes before the physics/collision
+two: **`ResolveStackCrateHit`**, sitting 144 bytes before the physics/collision
 subsystem's *stated* `0x0800D000` start, "calls the same linked-list
 walkers that subsystem uses and reaches the same 28-byte-record chain -
 functionally part of it despite sitting just outside the documented
-boundary." Its sibling, **`sub_800CEAC`** (the first 196 of the 404
+boundary." Its sibling, **`PlayerHitboxOverlapsAt`** (the first 196 of the 404
 bytes), had no note anywhere. Both are called *only* from
 `QueueCratePlayerCollision` (`asm/code_3_2_17_d18c.s`), the physics/collision
 subsystem's ~1960-byte collision-response commit function documented
@@ -26,14 +26,14 @@ at length in `issue-12-physics-collision.md`.
 ## Reading the real bytes
 
 `asm/code_3_2_17_ceac.s` held exactly these two functions, nothing
-else (`thumb_func_start sub_800CEAC` at line 6, `thumb_func_start
-sub_800CF70` at line 107, 212 lines total). Both call sites in
+else (`thumb_func_start PlayerHitboxOverlapsAt` at line 6, `thumb_func_start
+ResolveStackCrateHit` at line 107, 212 lines total). Both call sites in
 `QueueCratePlayerCollision` were also read in context (`asm/code_3_2_17_d18c.s`
 around its own AABB-build blocks) to recover the caller's argument
 setup, since neither function's own body makes its argument roles
 obvious in isolation.
 
-### `sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset, s32 yOffset)`
+### `PlayerHitboxOverlapsAt(void *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset, s32 yOffset)`
 
 Called once, from `QueueCratePlayerCollision`, with:
 - `self` = `sl` (the collision-response commit's own subject) - loaded
@@ -84,7 +84,7 @@ a further `GetCrateAbove` ("get next") list-walk step - consistent with a
 traversal, e.g. deciding whether `self` currently blocks the space a
 player-sized object would need there.
 
-### `sub_800CF70(void *self, struct aabb *box, u8 *foundFlag)`
+### `ResolveStackCrateHit(void *self, struct aabb *box, u8 *foundFlag)`
 
 Called from `QueueCratePlayerCollision` only while its own 5-slot ring-buffer index
 counter is `<= 4` (confirmed at the call site: `cmp r3,#4; bgt` skips
@@ -144,12 +144,12 @@ inlined copies, `PlayerAnimWouldTouchCrate`'s three inlined copies). Both of thi
 session's functions compound that established-resistant core further
 rather than simplifying it:
 
-- `sub_800CEAC` adds an extra branch (the player `+0x90` test) selecting
+- `PlayerHitboxOverlapsAt` adds an extra branch (the player `+0x90` test) selecting
   between two slightly different operand sequences before the shared
   mirror/overlap tail - a genuinely different C-level shape (an `if`)
   layered on top of a build primitive already known not to survive gcc
   2.9 register allocation in its plain form.
-- `sub_800CF70` stacks the AABB-build primitive on top of a
+- `ResolveStackCrateHit` stacks the AABB-build primitive on top of a
   `GetCrateAbove`/`GetCrateBelow` neighbor-list read - and that *simpler*
   shape (list read with no AABB build at all) is itself independently
   documented as resistant for `ClearCrateStackTouched`/`MarkCrateStackTouched`
@@ -173,8 +173,8 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
 `0x0800CEAC`-`0x0800D040`: the only differing bytes fell into exactly 12
 four-byte clusters, matching the expected relocation-site count exactly
-(7 for `sub_800CEAC` - 5 `bl` calls + 2 `.word gPlayer`
-literals; 5 for `sub_800CF70` - 5 `bl` calls, no literal pool needed
+(7 for `PlayerHitboxOverlapsAt` - 5 `bl` calls + 2 `.word gPlayer`
+literals; 5 for `ResolveStackCrateHit` - 5 `bl` calls, no literal pool needed
 since it never touches the player global). These resolve correctly once
 linked, the same pattern every prior NAKED closure in this neighborhood
 has shown.
@@ -204,7 +204,7 @@ coincide` (checksum matches).
   project's own stated convention for this exact neighborhood.
 - Cross-referencing the caller (`QueueCratePlayerCollision`)'s own argument-setup
   code to recover each function's parameter roles, since neither
-  function's own body makes them obvious in isolation (`sub_800CEAC`'s
+  function's own body makes them obvious in isolation (`PlayerHitboxOverlapsAt`'s
   first argument in particular is a dead parameter with no in-body
   read at all).
 - Relocation-site-count cross-check (`cmp -l` byte-diff clustering) as a
@@ -214,13 +214,13 @@ coincide` (checksum matches).
 
 ## Cross-references
 
-- `docs/status/game_loop.md` - `sub_800CEAC`/`sub_800CF70` added to the
+- `docs/status/game_loop.md` - `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit` added to the
   "Parked - NAKED transcription" list.
 - `tools/report_units.py` - the `0x0800CEAC` unit now points at
   `src/crates/crate_hit.o`, category `game_loop` (was `None`/
   `graphics`).
-- `docs/rom_map.md` - new "Follow-up: `sub_800CF70`'s partial note
-  confirmed, `sub_800CEAC` found and both closed" section, appended
+- `docs/rom_map.md` - new "Follow-up: `ResolveStackCrateHit`'s partial note
+  confirmed, `PlayerHitboxOverlapsAt` found and both closed" section, appended
   after the original partial note (append-only convention - the
   original note is left untouched).
 - `docs/matching/archive/issue-12-physics-collision.md` - the
@@ -229,4 +229,4 @@ coincide` (checksum matches).
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`sub_800CEAC` and `sub_800CF70` are real C now (`crate_hit.o` builds with old_agbcc). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`PlayerHitboxOverlapsAt` and `ResolveStackCrateHit` are real C now (`crate_hit.o` builds with old_agbcc). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

@@ -262,17 +262,17 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             fire = in & 1;
             if (fire) {
                 SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
-                self->unk_22 = 0;
-                self->unk_23 = 0;
-                self->unk_24[0] = 0;
+                self->tornadoTurn = 0;
+                self->tornadoFallQueued = 0;
+                self->tornadoUnwinding = 0;
                 self->charge = 3;
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x14);
             } else {
                 SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
-                self->unk_22 = fire;
-                self->unk_23 = fire;
-                self->unk_24[0] = fire;
+                self->tornadoTurn = fire;
+                self->tornadoFallQueued = fire;
+                self->tornadoUnwinding = fire;
                 self->charge = 3;
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0x13);

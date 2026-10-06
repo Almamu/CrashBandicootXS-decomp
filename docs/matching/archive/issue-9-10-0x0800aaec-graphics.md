@@ -190,7 +190,7 @@ relocation sites - eight `bl` calls and one `.word` literal).
 
 Real bytes formerly in `asm/code_3_2_17.s`'s middle (that fragment is
 now trimmed to end right before `PlayerAnimWouldTouchCrate`); the remainder from
-`sub_800CEAC` onward (still raw, unexamined this session) moved to the
+`PlayerHitboxOverlapsAt` onward (still raw, unexamined this session) moved to the
 new `asm/code_3_2_17_ceac.s`. `crate_touch.o` sits between the two
 in link order.
 

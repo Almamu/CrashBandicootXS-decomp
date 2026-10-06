@@ -693,12 +693,12 @@ vtable shapes).
 | `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `QueueCratePlayerCollision`, `BreakCrateInStack` | medium | done |
 | `0816BBF0` | 0xA8 | table of s32 (`s32` x 42). **Converted** (`src/data/object_tables_16bb6c.c`) | `QueueCratePlayerCollision` | high | done |
 | `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22). **Converted** (`src/data/object_tables_16bb6c.c`) | `QueueCratePlayerCollision`, `ApplyCrateCollision` | high | done |
-| `0816BF00` | 0x8 | small constant (0000010000000000). **Converted** (`src/data/object_tables_16bb6c.c`) | `QueueCratePlayerCollision` | medium | done |
+| `0816BF00` | 0x8 | `gAttackKindBreakLimited`: a flag per attack kind (only kind 2), whether its crate breaks go through the player's `countdown` limiter. **Converted** (`src/data/object_tables_16bb6c.c`) | `QueueCratePlayerCollision` | medium | done |
 | `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateExtraLifeHop` | high | done |
 | `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateWumpaHop` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `UpdateActionCtrl` | high | easy |
 | `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdatePlayerCtrl`, `PlayerCtrlStateTurn`, `PlayerCtrlStateStop` +2 | high | easy |
-| `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartPlayerCtrlStroke` | high | done |
+| `0816C090` | 0x1C0 | `struct speed_table` (8 s32, `gPlayerCtrlTurnSpeeds`: speedX per frame of the swim turn) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartPlayerCtrlStroke` | high | done |
 | `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdatePlayerCtrl` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `UpdateInputCtrl` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `ResetMegaMixCtrl` | high | easy |

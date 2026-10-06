@@ -30,11 +30,11 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  * Matches under old_agbcc (current agbcc is 3 halfwords off in the
  * option-screen block). What the old NAKED note called "four high-register
  * pins" is loop.c's own invariant hoisting; the shape that reproduces it:
- *  - `activeCount`/`variantCount` point at gActorCategoryDeaths/03001388
+ *  - `activeCount`/`variantCount` point at gActorCategoryDeaths/gActorCategoryBossDeaths
  *    and are (re)assigned at the top of the outer loop. They end up
  *    spilled, and every use rematerializes the address, which is what
  *    puts the ROM's reload registers (r3/r7 in the prologue, r5 in the
- *    `unknown_28` test, r0/r1/r3/r5 in the exit stores) where they are.
+ *    `retryBossDeaths` test, r0/r1/r3/r5 in the exit stores) where they are.
  *    With plain globals the reload rotation shifts by one and jump2
  *    cross-jumps the two `ret = 1` exits together.
  *  - `state` (&gLevelState) is assigned right before the inner
@@ -71,7 +71,7 @@ s32 InitActorCategory(s32 category)
     gActorCategory = category;
     gActorCheckpoint = 0;
     gActorCategoryDeaths = 0;
-    gUnknown_03001388 = 0;
+    gActorCategoryBossDeaths = 0;
     SetCheckpointAtPlayer_1(gLevelState);
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
@@ -81,13 +81,13 @@ s32 InitActorCategory(s32 category)
 
     do {
         activeCount = &gActorCategoryDeaths;
-        variantCount = &gUnknown_03001388;
+        variantCount = &gActorCategoryBossDeaths;
         gActorMissedNitros = gActorCheckpointMissedNitros;
         RestoreCheckpoint(gLevelState);
-        if (*variantCount >= (s32)CUR_CATEGORY.unknown_28)
-            variant = CUR_CATEGORY.unknown_30;
+        if (*variantCount >= (s32)CUR_CATEGORY.retryBossDeaths)
+            variant = CUR_CATEGORY.retryBossLevel;
         else
-            variant = CUR_CATEGORY.position_offset_flag;
+            variant = CUR_CATEGORY.bossLevel;
         zero = 0;
         dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)&zero;
@@ -101,7 +101,7 @@ s32 InitActorCategory(s32 category)
             LoadBgPicture(CUR_CATEGORY.bgPicture);
         RestoreActorPaletteCycle();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
-                            *activeCount >= (s32)CUR_CATEGORY.active_count_threshold, variant,
+                            *activeCount >= (s32)CUR_CATEGORY.bonusKindDeaths, variant,
                             gActorCheckpoint);
         dma->src = (u32)CUR_CATEGORY.palette;
         dma->dst = OBJ_PLTT;
@@ -192,10 +192,10 @@ s32 InitActorCategory(s32 category)
         }
     done:
         DestroyAllActors();
-        nullsub_5();
+        ActorCategoryAttemptEndStub();
     } while (ret == 1 && GetLives(gLevelState) >= 0 && PAUSED == 0);
 
-    nullsub_6();
+    ActorCategoryEndStub();
     FreeSpriteFrameCache();
     FreeSpriteFrameOamQueue();
     FreeObjTileFreeList();

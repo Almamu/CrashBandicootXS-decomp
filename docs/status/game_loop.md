@@ -11,7 +11,7 @@ system from "core" system startup/init code.
 - **Issue #9-#11 box/collision NAKED retry** ([docs/matching/archive/issue-9-11-box-naked-retry.md](../matching/archive/issue-9-11-box-naked-retry.md)):
   `UpdateEnemyHop` (`enemy_motion.c`), `UpdateEnemyTriggerBox` (`enemy_attack.c`),
   `UpdateEnemyOscillateX` (`enemy_ctrl.c`), `UpdateEffectCtrl` (`effect_ctrl.c`)
-  and `sub_800CEAC`/`sub_800CF70` (`crate_hit.c`) are real C now; they
+  and `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit` (`crate_hit.c`) are real C now; they
   were NAKED. `effect_ctrl.o` and `crate_hit.o` moved to old_agbcc
   (whole-file matches).
 
@@ -627,17 +627,17 @@ plain C didn't converge.
   consumed. See
   [docs/matching/archive/issue-12-physics-collision.md](../matching/archive/issue-12-physics-collision.md)'s
   Phase 2 appendix for the confirmed per-function roles.
-- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800CEAC`/`sub_800CF70`** (`src/crates/crate_hit.c`, new
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`PlayerHitboxOverlapsAt`/`ResolveStackCrateHit`** (`src/crates/crate_hit.c`, new
   file - dedicated deep investigation) - the two functions formerly
   tracked as unexamined raw bytes between `PlayerAnimWouldTouchCrate` (issue #9/#10)
   and `BreakCrateTouchedByPlayer` (issue #12); recategorized `graphics` -> `game_loop`
-  since both are called only from `QueueCratePlayerCollision`. `sub_800CF70` walks
+  since both are called only from `QueueCratePlayerCollision`. `ResolveStackCrateHit` walks
   `self`'s `GetCrateAbove`/`GetCrateBelow` neighbor list, sets a caller
   out-param when either exists, and - for the "prev" neighbor, gated by
   the subsystem's own `self+0x4d&0x7f==1` exclusion - builds its AABB
   via the shared `+0x20`-table convention and tests it against a
   caller-supplied box, confirming and sharpening `docs/rom_map.md`'s
-  existing partial note on this function. `sub_800CEAC` builds a hybrid
+  existing partial note on this function. `PlayerHitboxOverlapsAt` builds a hybrid
   AABB (the player's hitbox quad positioned at `self`'s location,
   optionally widened when player state byte `+0x90` is set) and tests
   it the same way. Both NAKED: the same single-inlined-AABB-build shape

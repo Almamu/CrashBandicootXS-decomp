@@ -30,16 +30,16 @@
 /* `v`, mirrored when the target faces left */
 #define SIGNED_X(t, v) ((t)->mirror.bits.flipX ? -(v) : (v))
 
-/* Sets the target's speed for the current `tilt` (state 4 instead reads
- * the frame-indexed stack copy of gStaticData_0816C090, negated unless
- * `mode` is 6) and steps `tilt` towards 0/3/6/9/12. */
+/* Sets the target's speed for the current `tilt` (state 4, the turn,
+ * instead reads the frame-indexed stack copy of gPlayerCtrlTurnSpeeds,
+ * negated unless `mode` is 6) and steps `tilt` towards 0/3/6/9/12. */
 void StartPlayerCtrlStroke(struct player_ctrl *self)
 {
     struct player *t;
 
     self->deadline = gRoomFrameCount + 16;
     if (self->state == 4) {
-        struct speed_table tbl = gStaticData_0816C090;
+        struct speed_table tbl = gPlayerCtrlTurnSpeeds;
 
         if (self->mode == 6)
             self->target->speedX = tbl.v[self->target->frame];

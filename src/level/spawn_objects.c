@@ -58,7 +58,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = CreateMegaMixCtrl(OperatorNew(0x24));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    part->base.field_0A = 1;
+    part->base.kind = 1;
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     PART_FLAGS(part)->bit6 = 0;
@@ -81,7 +81,7 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
-    part->base.field_0A = 0;
+    part->base.kind = 0;
     AddToPartList((struct part_list *)gDecorationList, part);
 }
 
@@ -95,7 +95,7 @@ void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
-    part->base.field_0A = 0;
+    part->base.kind = 0;
     AddToPartList((struct part_list *)gDecorationList, part);
 }
 
@@ -114,7 +114,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
-    part->base.field_0A = 0;
+    part->base.kind = 0;
     AddToPartList((struct part_list *)gDecorationList, part);
 }
 

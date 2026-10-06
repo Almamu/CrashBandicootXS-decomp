@@ -271,15 +271,15 @@ from "core" graphics.
   `HasPlayerRampYTarget`, `ClearPlayerSpeedY`, `StopPlayerFalling`, `UpdatePlayer`,
   `PlayerTouchesBox`, `DestroyPlayer`, `GetPlayerCollisionQueue`, `ClearPlayerDead`,
   `SetPlayerDead`, `IsPlayerDead`, `StartPlayerRampX`, `SetPlayerRampX`,
-  `sub_800B4F8`, `sub_800B508`, `sub_800B510`, `sub_800B51C`,
+  `DecrementPlayerCountdown`, `ClearPlayerCountdown`, `IncrementPlayerCountdown`, `GetPlayerCountdown`,
   `IsPlayerInvulnerable`, `ClearPlayerInvulnerability`, `SetPlayerInvulnerable`, `SetPlayerControlMode`,
   `GetPlayerControlMode`, `GetPlayerStandingOn`, `SetPlayerStandingOn`, `SetPlayerBusy`,
-  `IsPlayerBusy`, `sub_800B584`, `sub_800B58C`, `sub_800B5A0`,
-  `sub_800B5A8`, `sub_800B5B0`, `sub_800B5BC`, `sub_800B5C4`,
-  `sub_800B5CC`, `sub_800B5D8`, `SetPlayerBumped`, `IsPlayerBumped`,
+  `IsPlayerBusy`, `ClearPlayerListCount`, `IncrementPlayerListCount`, `GetPlayerListCount`,
+  `ClearPlayerListCountAlt`, `IncrementPlayerListCountAlt`, `GetPlayerListCountAlt`, `ClearPlayerBounce`,
+  `IncrementPlayerBounce`, `GetPlayerBounce`, `SetPlayerBumped`, `IsPlayerBumped`,
   `GetPlayerPushRight`, `SetPlayerPushRight`, `GetPlayerPushLeft`, `SetPlayerPushLeft`,
   `IsPlayerHanging`, `SetPlayerHanging`, `IsPlayerSlippery`, `SetPlayerSlippery`,
-  `sub_800B650`, `sub_800B678`, `SetCtrlMode`, `SetCtrlAnimSet`,
+  `GetPlayerListEntry`, `StorePlayerListEntry`, `SetCtrlMode`, `SetCtrlAnimSet`,
   `SetCtrlTargetMotionY`, `StartCtrlTargetMotionY` (issues #84/#85 - see
   [docs/matching/archive/issue-84-85-sub_800B6A0.md](../matching/archive/issue-84-85-sub_800B6A0.md);
   matched with `self`/`vec` pinned to `r3`/`r2` and each branch's X/Y/Z
@@ -412,7 +412,7 @@ from "core" graphics.
 - `src/player/action_ctrl_hang.c` (new file, GitHub issue #17, ROM
   0x08014674-0x08014F8C, built with old_agbcc): `ActionCtrlStateLeftGround` (since
   the mix NAKED retry 5, `docs/matching/archive/mix-naked-retry-5.md`),
-  `ActionCtrlStateDying`, `ActionCtrlStateWarpIn`, `ActionCtrlStateHang`, `sub_8014AEC`,
+  `ActionCtrlStateDying`, `ActionCtrlStateWarpIn`, `ActionCtrlStateHang`, `ActionCtrlStateUnusedHang`,
   `ActionCtrlReleaseHang` (since the late NAKED retry 3,
   `docs/matching/archive/late-naked-retry-3.md`), `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove`,
   `ActionCtrlStateHangStop`; see `docs/matching/archive/issue-17-0x08012fbc-actor.md`, "Second
@@ -454,15 +454,15 @@ from "core" graphics.
   `docs/matching/archive/issue-18-0x08014f8c-actor.md`.
 - `src/player/action_ctrl_moves.c` (new file, GitHub issue #18, ROM
   0x080151C8, non-adjacent to `action_ctrl_hang.c` since `StartActionCtrlTornadoSpin`
-  sits between them): `sub_80151C8`, `EndActionCtrlSpin`, `SteerActionCtrlSpin`
+  sits between them): `StartActionCtrlTornadoFall`, `EndActionCtrlSpin`, `SteerActionCtrlSpin`
   (the last two matched in the strag2 retry); see
   `docs/matching/archive/issue-18-0x08014f8c-actor.md`.
 - `src/player/action_ctrl_moves.c` (new file, GitHub issue #18, ROM
   0x08015350-0x080156B4, non-adjacent to `action_ctrl_moves.c` since
   `EndActionCtrlSpin`/`SteerActionCtrlSpin` sit between them):
   `SetActionCtrlMode`, `StartActionCtrlSpin`, `StartActionCtrlHangSpin`, `StartActionCtrlRun`,
-  `StartActionCtrlHighJump`, `sub_8015558`, `AttachActionCtrl`, `sub_80155AC`,
-  `sub_80155B8`, `ActionCtrlStateHangSpin`, `ActionCtrlStateHangGrab`, `ActionCtrlStateWarpOut`,
+  `StartActionCtrlHighJump`, `sub_8015558`, `AttachActionCtrl`, `ActionCtrlStateUnusedHangRelease`,
+  `ActionCtrlStateUnusedHangGrab`, `ActionCtrlStateHangSpin`, `ActionCtrlStateHangGrab`, `ActionCtrlStateWarpOut`,
   `ActionCtrlStateCrawlStop` - more of the same self+0xc/self+0x10 trampoline-pair
   family, including two near-identical self+0x29-keyed mgr-trampoline
   arms (`StartActionCtrlRun`) and several part+0x38-gated trampoline firers
@@ -470,8 +470,8 @@ from "core" graphics.
   `docs/matching/archive/issue-18-0x08014f8c-actor.md`.
 - `src/player/action_ctrl.c` (new file, GitHub issue #18, ROM
   0x0801574C-0x08015840, non-adjacent to `action_ctrl_moves.c` since
-  `ActionCtrlStateBodySlamStart` sits between them): `nullsub_17`,
-  `ActionCtrlStateTurboRun`, `nullsub_18`, `sub_8015774`, `SetActionCtrlModeAnim`,
+  `ActionCtrlStateBodySlamStart` sits between them): `ActionCtrlStateNop6`,
+  `ActionCtrlStateTurboRun`, `ActionCtrlStateNop2`, `ActionCtrlStateUnusedIdle`, `SetActionCtrlModeAnim`,
   `ActionCtrlSetTargetAnim` - two nullsubs, two tail-call wrappers, the shared
   trampoline-pair-plus-sentinel-store helper called by
   `action_ctrl_states.c`'s `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`, and `ActionCtrlSetTargetAnim`
@@ -495,7 +495,7 @@ from "core" graphics.
   teardown handlers (`DestroyRiderlessPolar`, `DestroyPolarCheckpointText`, `DestroyPolarWumpa`,
   `DestroyPolarTimeCrate`, `DestroyPolarQuestionCrate`, `DestroyPolarAkuAkuCrate`, `DestroyPolarNitroCrate`,
   `DestroyPolarLifeCrate`, `sub_803B25C`, `DestroyPolarBasicCrate`, `DestroyPolarCrate`,
-  `DestroyPolarElectricFence`, `sub_803B30C`, `DestroyPolarLauncher`, `DestroyPolarPenguin`,
+  `DestroyPolarElectricFence`, `DestroyPolarObstacle`, `DestroyPolarLauncher`, `DestroyPolarPenguin`,
   `DestroyPolarIcicle`, `DestroyPolarAkuAku`, `DestroyPolarGoal`, `DestroyPolarBoostPad`,
   `DestroyPolarCheckpointCrate` - unlink `self` from its `+0x48`/`+0x4c` circular list,
   set `+0x50` to the shared "dead" vtable, and conditionally free), and
@@ -519,7 +519,7 @@ from "core" graphics.
   functions. See
   [docs/matching/archive/issue-16-actor-11b0c.md](../matching/archive/issue-16-actor-11b0c.md).
 - `src/player/kill_player.c` (new file, GitHub issue #16, ROM
-  0x08012160-0x08012420): `KillPlayer`, `sub_8012238`, `UpdatePlayerFacing` -
+  0x08012160-0x08012420): `KillPlayer`, `UpdateActionCtrlSkidAnim`, `UpdatePlayerFacing` -
   three more members of the 42-slot action-dispatch-table family
   (`gActionCtrlStateTable`), operating on the same still-unnamed "child
   object" struct (`self+0xc`/`self+0x10` sub-record pointers, the
@@ -585,7 +585,7 @@ from "core" graphics.
   file), its movement-threshold recompute pair, the fixed 15-slot
   object registry (`gCollectedSpawns`/`gCollectedSpawnCount`), and the
   `gActorPaletteCycleEnabled`-gated palette-cycle DMA cluster's members - plus
-  `DrawActor`, `sub_802AA0C`, and `UpdateActorPaletteCycle`, all three
+  `DrawActor`, `GetActorWorldBox`, and `UpdateActorPaletteCycle`, all three
   matched in a later pass that closed the register-pinning/pool-split
   gaps documented in that same writeup (all 25 of this chunk's functions
   are now real C, none NAKED).
@@ -632,7 +632,7 @@ from "core" graphics.
   `InitActionCtrl`, `sub_80158AC`, `SetActionCtrlMotionYKeepSpeed`, `SetActionCtrlMotionXKeepSpeed`,
   `SetActionCtrlMotionYPending`, `SetActionCtrlMotionXPending`, `ClearActionCtrlMotionYPending`, `ClearActionCtrlMotionXPending`,
   `IsActionCtrlMotionYPending`, `IsActionCtrlMotionXPending`, `QueueActionCtrlMotionYKeepSpeed`, `QueueActionCtrlMotionXKeepSpeed`,
-  `QueueActionCtrlMotionY`, `QueueActionCtrlMotionX`, `sub_8015950`, `ResetPlayerCtrl`,
+  `QueueActionCtrlMotionY`, `QueueActionCtrlMotionX`, `GetActionCtrlPrevState`, `ResetPlayerCtrl`,
   `RestartPlayerCtrl` - a run of small accessors/resetters on the state-trio
   bytes, the `gActionCtrlVtable` double-table-set idiom already seen
   in `input_ctrl_queue.c`, and a larger field-reset pair; see
@@ -771,11 +771,11 @@ from "core" graphics.
   `sub_effect_table` entries matching a type-dependent "kind" byte
   set), and the rest of a BG-tilemap double-buffer scroll-effect
   subsystem interleaved in this same ROM region (`AddActorMissedNitro`-
-  `sub_8029E40`, minus the NAKED functions below) - see
+  `GetActorBgLayerDepth`, minus the NAKED functions below) - see
   [docs/matching/archive/issue-48-0x080291a4-actor.md](../matching/archive/issue-48-0x080291a4-actor.md).
 - `src/actor/actor_bg.c`/
   `actor_spawn.c` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C):
-  `nullsub_6`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX` (the
+  `ActorCategoryEndStub`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX` (the
   BG2-affine scroll subsystem's tail), the `gActorSpawnTable`
   `sub_effect_table` record accessor family (`GetActorCategoryFrameCount`-
   `UpdateActorCategoryBg2`/`SetActorCategoryExitStatus`), and a circular-list marker-drawing pass
@@ -1219,7 +1219,7 @@ plain C didn't converge.
   `bl` calls, reused for different values block to block - the same
   `r7`/`r8`/`sb` cross-block register-reuse shape this exact ROM
   neighborhood already established as gcc-2.9-resistant (`ProbeHitboxEdgeTerrain`,
-  `PlayerAnimWouldTouchCrate` above, `sub_800CEAC`/`sub_800CF70` below); confirmed
+  `PlayerAnimWouldTouchCrate` above, `PlayerHitboxOverlapsAt`/`ResolveStackCrateHit` below); confirmed
   directly via one isolated-compile attempt against `ProbeGroundSpriteFloor`
   (this compiler's natural register allocation used no high registers
   at all, a structurally different solution rather than a near-miss).

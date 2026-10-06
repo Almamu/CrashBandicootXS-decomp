@@ -44,7 +44,7 @@
  * at some call sites and also emitted out of line.
  *
  * UNUSED - no reference in asm/, src/ or data/ and no Thumb pointer in the
- * ROM: ApplyPlayerCtrlMotion, StartPlayerCtrlMotionYFromSet, StartPlayerCtrlMotionXFromSet, sub_8017330, ApplyPlayerCtrlTilt,
+ * ROM: ApplyPlayerCtrlMotion, StartPlayerCtrlMotionYFromSet, StartPlayerCtrlMotionXFromSet, GetPlayerSwimDriftStep, ApplyPlayerCtrlTilt,
  * StartPlayerCtrlSwim, sub_801750C, SetPlayerCtrlMotionYPending, SetPlayerCtrlMotionXPending. Matched anyway. */
 
 /* The held/pressed key words of gKeys. The zero-length array
@@ -689,8 +689,9 @@ void SetPlayerSwimDriftX(s32 a, s32 b, s32 c)
     SetPlayerRecord(a, b, c);
 }
 
-/* UNUSED */
-s32 sub_8017330(s32 v)
+/* UNUSED. The ramp step SetPlayerSwimDriftX (SetPlayerRecord) computes
+ * from the player's speed: v^2 / 0x4000 + 4. */
+s32 GetPlayerSwimDriftStep(s32 v)
 {
     return v * v / 0x4000 + 4;
 }

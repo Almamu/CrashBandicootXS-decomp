@@ -6,7 +6,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-const struct speed_table gStaticData_0816C090 = { { 528, 352, 176, -176, -352, -528, -704, -704 } };
+const struct speed_table gPlayerCtrlTurnSpeeds = { { 528, 352, 176, -176, -352, -528, -704, -704 } };
 
 /* 8 modes x 13 levels; action_table_16bf20.c's gPlayerCtrlModeAnimRows
  * points at each row. */

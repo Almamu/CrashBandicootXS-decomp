@@ -324,9 +324,9 @@ void UpdatePolarPenguin(void *selfArg)
  * arms a fixed slow downward drift (`self+0x54/0x58/0x5c/0x60` set to
  * constants). Otherwise derives a per-frame speed factor
  * (`__divsi3` of `target`'s own "speed" record,
- * `gPolarPenguinSpeeds[sub_802A570(target)]`, against the remaining
+ * `gPolarPenguinSpeeds[GetActorSpawnKindIndex(target)]`, against the remaining
  * distance in Z) and scales the X/Y deltas toward `target`'s own
- * tracked position (`sub_802A558`/`sub_802A540`) by that factor,
+ * tracked position (`GetActorSpawnX`/`GetActorSpawnY`) by that factor,
  * caching the new countdown in `self+0x60` (floored at 1) and
  * `target`'s own Z record in `self+0x64`. */
 void AimPolarPenguin(void *selfArg, s32 target)
@@ -339,13 +339,13 @@ void AimPolarPenguin(void *selfArg, s32 target)
         self->velZ = 0x62;
         self->countdown = 0x40000000;
     } else {
-        s32 idx = sub_802A570(target);
+        s32 idx = GetActorSpawnKindIndex(target);
         s32 speed = gPolarPenguinSpeeds[idx];
         s32 factor;
         s32 countdown;
 
         self->velZ = speed;
-        countdown = __divsi3(sub_802A51C(target) - self->base.z, self->velZ);
+        countdown = __divsi3(GetActorSpawnZ(target) - self->base.z, self->velZ);
         self->countdown = countdown;
         if (countdown == 0) {
             self->countdown = 1;
@@ -357,9 +357,9 @@ void AimPolarPenguin(void *selfArg, s32 target)
 
             factor = __divsi3(lit, countdown2);
         }
-        self->velX = factor * (sub_802A558(target) - self->base.x) >> 0xc;
-        self->velY = factor * (sub_802A540(target) - self->base.y) >> 0xc;
-        self->targetZ = sub_802A504(target);
+        self->velX = factor * (GetActorSpawnX(target) - self->base.x) >> 0xc;
+        self->velY = factor * (GetActorSpawnY(target) - self->base.y) >> 0xc;
+        self->targetZ = GetActorSpawnNextTarget(target);
     }
 }
 

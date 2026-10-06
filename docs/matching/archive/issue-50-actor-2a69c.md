@@ -30,7 +30,7 @@ distance metric compared against `gActorNearClipDepth`/`gActorFarClipDepth`,
 gating whether the object fires its `+0x50` table's slot-3 trampoline
 instead of animating), a one-shot byte flag at `self+0x2c`, and a
 12-byte little vector block at `self+0x38` (copied from `part+0x14..20`)
-whose first three `s16` slots are a position `sub_802AA0C` integrates a
+whose first three `s16` slots are a position `GetActorWorldBox` integrates a
 per-axis velocity into. A separate, unrelated `gActorPaletteCycleEnabled`-gated
 palette-cycle DMA cluster (`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`/`UpdateActorPaletteCycle`/
 `SetActorPaletteCycle`/`EnableActorPaletteCycle`) and a fixed 15-slot object registry
@@ -138,7 +138,7 @@ only the tail continuation `..._ac28.s` remains.
   writing out by hand (same technique as `DivMod`'s r2-across-SWI
   save/restore, see docs/matching.md), reloading right before its one
   remaining use to match the ROM's late `ldr r2, [sp]` placement.
-- **`sub_802AA0C`** (`src/actor/actor.c`) - a 12-byte
+- **`GetActorWorldBox`** (`src/actor/actor.c`) - a 12-byte
   little-vector velocity integrator (the position block `InitActorPart`
   copies from `part+0x14..0x20`, see above). The residual gap was
   instruction *scheduling*: this compiler's own list scheduler always

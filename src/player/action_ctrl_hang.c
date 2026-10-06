@@ -284,7 +284,9 @@ void ActionCtrlStateHang(struct act *self)
     }
 }
 
-void sub_8014AEC(struct act *self)
+/* gActionCtrlStateTable's slot 0x22, a state nothing sets: ActionCtrlStateHang
+ * without the D-pad move (A drops, B starts the hang spin). */
+void ActionCtrlStateUnusedHang(struct act *self)
 {
     u32 in = gKeys.all;
     s32 fire = INPUT_PRESSED(in) & 1;
@@ -709,18 +711,18 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
     struct vtable_slot *mgr;
     u8 *off;
 
-    if (self->unk_24[0] == 0) {
+    if (self->tornadoUnwinding == 0) {
         s32 idx = 0x17;
         s32 zero;
         s32 wait;
 
-        self->unk_21 = 0;
-        if (self->unk_22 == 1) {
+        self->tornadoVariant = 0;
+        if (self->tornadoTurn == 1) {
             idx = 0x28;
-            self->unk_21 = 1;
-        } else if (self->unk_22 == 2) {
+            self->tornadoVariant = 1;
+        } else if (self->tornadoTurn == 2) {
             idx = 0x27;
-            self->unk_21 = 2;
+            self->tornadoVariant = 2;
         }
         zero = 0;
         wait = 0x14;
@@ -731,34 +733,34 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
         _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx, *(void **)(off + 4));
         self->frame = zero;
         self->frames = wait;
-        PlaySfx(gAudioContext, self->unk_21 + 0x57, 0x100);
-        if (++self->unk_22 >= self->charge) {
-            self->unk_24[0] = 1;
-            if (self->unk_22 > 1)
-                self->unk_22 = 1;
+        PlaySfx(gAudioContext, self->tornadoVariant + 0x57, 0x100);
+        if (++self->tornadoTurn >= self->charge) {
+            self->tornadoUnwinding = 1;
+            if (self->tornadoTurn > 1)
+                self->tornadoTurn = 1;
             else
-                self->unk_22 = zero;
+                self->tornadoTurn = zero;
         }
     } else {
         MATCH_HOLD_REG(s32, hold1, r1);
 
-        /* No code: keeps r1 live across the `self->unk_22` test so the
+        /* No code: keeps r1 live across the `self->tornadoTurn` test so the
          * byte loads into r2 and `id` stays in ip, as in the ROM. */
         MATCH_HOLD(hold1);
-        if (self->unk_22 > 0xf0) {
+        if (self->tornadoTurn > 0xf0) {
             s32 idx;
             s32 zero;
             s32 wait;
 
             MATCH_USE(hold1); /* end of the r1 hold (no code) */
             idx = 0x17;
-            self->unk_21 = 0;
-            if (self->unk_22 == 1) {
+            self->tornadoVariant = 0;
+            if (self->tornadoTurn == 1) {
                 idx = 0x28;
-                self->unk_21 = 1;
-            } else if (self->unk_22 == 2) {
+                self->tornadoVariant = 1;
+            } else if (self->tornadoTurn == 2) {
                 idx = 0x27;
-                self->unk_21 = 2;
+                self->tornadoVariant = 2;
             }
             zero = 0;
             wait = 0x14;
@@ -769,7 +771,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx, *(void **)(off + 4));
             self->frame = zero;
             self->frames = wait;
-            PlaySfx(gAudioContext, self->unk_21 + 0x57, 0x100);
+            PlaySfx(gAudioContext, self->tornadoVariant + 0x57, 0x100);
         } else {
             u8 *p21 = (u8 *)self + 0x21;
             s32 zero = 0;
@@ -788,7 +790,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             PlaySfx(gAudioContext, 0xa, 0x100);
             self->spinCooldown = 0x63;
         }
-        self->unk_22--;
+        self->tornadoTurn--;
     }
-    self->unk_23 = 0;
+    self->tornadoFallQueued = 0;
 }

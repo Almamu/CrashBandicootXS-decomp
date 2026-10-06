@@ -704,7 +704,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
 
             table2 = &gPlayer->vtable->handleEvent;
             addr = (u8 *)gPlayer + table2->thisOffset;
-            field0a = self->field_0A;
+            field0a = self->kind;
             {
                 MATCH_HOLD_REG(void *, deadRead, r4) = *(void *const volatile *)&table2->fn;
                 (void)deadRead;
@@ -887,7 +887,7 @@ struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2, u16 unused)
     obj = OperatorNew(sizeof(struct actor));
     obj->table = (void *)gEntityVtable;
     ResetEntity(obj);
-    obj->field_08 = arg0;
+    obj->id = arg0;
     obj->x = (s32)arg1 << 8;
     obj->y = (s32)arg2 << 8;
     return obj;
@@ -1068,9 +1068,9 @@ void MarkEntityGone(struct actor *self)
     }
     {
         s32 cmpVal = 0xFFFF;
-        id = pSelf->field_08;
+        id = pSelf->id;
         if (id != cmpVal) {
-            s32 rawId = pSelf->field_08;
+            s32 rawId = pSelf->id;
             void *base = gEntityFlags;
             /* `word` is pinned to r0 and reused as the running
              * accumulator for the rest of the block (word<<5, then
@@ -1209,17 +1209,17 @@ void SetEntityPosVec(struct actor *self, s32 *arg1)
 
 void SetEntityKind(struct actor *self, u8 arg1)
 {
-    self->field_0A = arg1;
+    self->kind = arg1;
 }
 
 u8 GetEntityKind(struct actor *self)
 {
-    return self->field_0A;
+    return self->kind;
 }
 
 u16 GetEntityId(struct actor *self)
 {
-    return self->field_08;
+    return self->id;
 }
 
 void DestroyEntity(struct actor *self, u32 arg1)

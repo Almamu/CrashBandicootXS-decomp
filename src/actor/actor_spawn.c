@@ -14,19 +14,23 @@
  * 0x14), stride 0x14 bytes - see docs/rom_map.md's "sub_802A5xx
  * siblings pin down spawnTable's runtime shape" finding (a real
  * ROM data dump confirmed record 0 doubles as a combined header+entry,
- * its own field_04 holding the entry count). Set up by
- * SelectActorCategory (still raw).
+ * its own `link` holding the entry count). Set up by
+ * SelectActorCategory.
  *
- * sub_802A504/sub_802A51C both read one record *past* the index they're
+ * GetActorSpawnNextTarget/GetActorSpawnZ both read one record *past* the index they're
  * given (their address math works out to base+idx*0x14+0x18 and
- * +0x14 respectively, i.e. `&record[idx+1].field_04`/`&record[idx+1].
- * field_00` - not a distinct field of record[idx] itself, confirmed by
+ * +0x14 respectively, i.e. `&record[idx+1].link`/`&record[idx+1].depth`
+ * - not a distinct field of record[idx] itself, confirmed by
  * matching the exact ROM instruction order: this compiler computes the
  * base+constant step before the base+idx*stride step for these two
  * specifically, unlike every plain record[idx].field access elsewhere
  * in this file, which folds its constant straight into the load).
  * The record is actor_anim.h's `struct sub_effect_record` (this file had
- * a copy). */
+ * a copy).
+ *
+ * The per-spawn accessors below are what the homing actors (AimJetpackPlane,
+ * AimPolarPenguin) use to fly to a target spawn: its X/Y/Z, its kind (which
+ * picks their speed) and its next target. */
 
 /* The category vtable object (include/actor_anim.h's 13-fn-pointer
  * `struct category_vtable`) only has slots 0-6 confirmed as real
@@ -65,12 +69,14 @@ void PauseActorSpawns(void)
     gActorSpawnsPaused = 1;
 }
 
-/* Reads the *next* record's field_04 (see struct comment above). Written
+/* Spawn `idx`'s next target (the *next* record's `link`, see the struct
+ * comment above): the spawn index a homing actor goes to after this one,
+ * -1 at the end of the chain. Written
  * as "cache base pointer, then compute idx*stride, then add the
  * constant record-boundary offset to the base before combining" to
  * match this compiler's exact instruction order for this specific
  * shape - see struct comment. */
-s32 sub_802A504(s32 idx)
+s32 GetActorSpawnNextTarget(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
     s32 off = idx * 0x14;
@@ -79,9 +85,10 @@ s32 sub_802A504(s32 idx)
     return *(s32 *)(base + off);
 }
 
-/* Reads the *next* record's field_00, offset by gActorSpawnOffset,
- * Q8.8-converted. Same instruction-order shape as sub_802A504. */
-s32 sub_802A51C(s32 idx)
+/* Spawn `idx`'s Z: the *next* record's `depth`, offset by
+ * gActorSpawnOffset, Q8.8-converted. Same instruction-order shape as
+ * GetActorSpawnNextTarget. */
+s32 GetActorSpawnZ(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
     s32 off = idx * 0x14;
@@ -90,7 +97,8 @@ s32 sub_802A51C(s32 idx)
     return (*(s32 *)(base + off) + gActorSpawnOffset) << 8;
 }
 
-s32 sub_802A540(s32 idx)
+/* Spawn `idx`'s Y and X (`offsetY`/`offsetX`), Q8.8-converted. */
+s32 GetActorSpawnY(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
     s32 off = idx * 0x14;
@@ -99,7 +107,7 @@ s32 sub_802A540(s32 idx)
     return *(s32 *)(base + off) << 8;
 }
 
-s32 sub_802A558(s32 idx)
+s32 GetActorSpawnX(s32 idx)
 {
     u8 *base = (u8 *)gActorSpawnTable;
     s32 off = idx * 0x14;
@@ -108,12 +116,13 @@ s32 sub_802A558(s32 idx)
     return *(s32 *)(base + off) << 8;
 }
 
-/* Mode-selects one of the record's three variant bytes (normal /
- * "paused" via gLevelState+0x8c / gUnknown_03001414), then
- * subtracts 0x20 - see docs/rom_map.md's "sub_802A5xx siblings" entry.
+/* Spawn `idx`'s kind as SpawnActor picks it (`kind`, `altKind` in a time
+ * trial (gLevelState+0x8c), `bonusKind` while gActorSpawnUseBonus is set),
+ * less 0x20: the index into the homing actors' speed tables
+ * (iwram_data.c) - see docs/rom_map.md's "sub_802A5xx siblings" entry.
  * This one *is* record[idx] itself (not idx+1) and its fields all fold
  * straight into the load/ldrb offsets, matching the ROM exactly. */
-s32 sub_802A570(s32 idx)
+s32 GetActorSpawnKindIndex(s32 idx)
 {
     struct sub_effect_record *base = gActorSpawnTable;
     s32 off = idx * 0x14;
@@ -123,7 +132,7 @@ s32 sub_802A570(s32 idx)
     v = record->kind;
     if (gLevelState->timeTrial != 0) {
         v = record->altKind;
-    } else if (gUnknown_03001414 != 0) {
+    } else if (gActorSpawnUseBonus != 0) {
         v = record->bonusKind;
     }
     return v - 0x20;

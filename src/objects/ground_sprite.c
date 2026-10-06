@@ -29,7 +29,7 @@ void *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2, u16 unused)
     InitMovingSprite(part);
     part->table = (void *)gGroundSpriteVtable;
     ResetGroundSprite(part);
-    part->field_08 = arg0;
+    part->id = arg0;
     part->x = (s32)arg1 << 8;
     part->y = (s32)arg2 << 8;
     return part;

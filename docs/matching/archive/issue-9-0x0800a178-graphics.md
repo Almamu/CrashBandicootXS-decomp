@@ -182,7 +182,7 @@ This is the exact `r7`/`r8`/`sb` cross-block register-reuse shape this
 immediate ROM neighborhood has already independently established as
 resistant to gcc 2.9 C reconstruction, four times over: `ProbeHitboxEdgeTerrain`
 ([naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)),
-`PlayerAnimWouldTouchCrate`, `sub_800CEAC`, `sub_800CF70`
+`PlayerAnimWouldTouchCrate`, `PlayerHitboxOverlapsAt`, `ResolveStackCrateHit`
 ([issue-9-10-0x0800aaec-graphics.md](./issue-9-10-0x0800aaec-graphics.md),
 [issue-9-10-0x0800ceac-graphics.md](./issue-9-10-0x0800ceac-graphics.md)).
 Rather than re-litigating that from scratch across two more, larger

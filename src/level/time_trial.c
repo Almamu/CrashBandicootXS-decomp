@@ -101,8 +101,8 @@ void StartTimeTrial(struct level_state *self)
                     PickUpWumpa((struct orbit_part *)e, 1);
                 else {
                     a->flags |= 1;
-                    if (a->field_08 != 0xffff) {
-                        s32 id = a->field_08;
+                    if (a->id != 0xffff) {
+                        s32 id = a->id;
                         gEntityFlags->bits0Copy[id / 32] |= 1 << (id % 32);
                     }
                 }

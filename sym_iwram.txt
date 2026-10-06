@@ -57,7 +57,7 @@
 . = 0x0000137C; gCategorySpriteSheet = .;
 . = 0x00001380; gActorCategory = .;
 . = 0x00001384; gActorCategoryDeaths = .;
-. = 0x00001388; gUnknown_03001388 = .;
+. = 0x00001388; gActorCategoryBossDeaths = .;
 . = 0x0000138C; gActorMissedNitros = .;
 . = 0x00001390; gActorCheckpointMissedNitros = .;
 . = 0x00001394; gCellAnim = .;
@@ -75,15 +75,15 @@
 . = 0x000013BC; gCellAnimFrameStep = .;
 . = 0x000013C0; gActorNearClipDepth = .;
 . = 0x000013C4; gActorFarClipDepth = .;
-. = 0x000013C8; gUnknown_030013C8 = .;
+. = 0x000013C8; gActorFocalLength = .;
 . = 0x000013CC; gActorBgScrollY = .;
 . = 0x000013D0; gActorBgScrollX = .;
 . = 0x000013D4; gActorBgShake = .;
-. = 0x000013D8; gUnknown_030013D8 = .;
+. = 0x000013D8; gActorBgLayerDepth = .;
 . = 0x000013DC; gActorBgScrollType = .;
 . = 0x000013E0; gActorBgScrollEaseShift = .;
-. = 0x000013E4; gUnknown_030013E4 = .;
-. = 0x000013E8; gUnknown_030013E8 = .;
+. = 0x000013E4; gActorBgScrollRangeX = .;
+. = 0x000013E8; gActorBgScrollRangeY = .;
 . = 0x000013EC; gActorBgScrollMaxX = .;
 . = 0x000013F0; gActorBgScrollMaxY = .;
 . = 0x000013F4; gActorBg0VOffset = .;
@@ -94,7 +94,7 @@
 . = 0x00001408; gActorDrawList = .;
 . = 0x0000140C; gActorDrawCount = .;
 . = 0x00001410; gActorCategoryExitStatus = .;
-. = 0x00001414; gUnknown_03001414 = .;
+. = 0x00001414; gActorSpawnUseBonus = .;
 . = 0x00001418; gActorCategoryVtable = .;
 . = 0x0000141C; gActorSpawnsPaused = .;
 . = 0x00001420; gActorSpawnOffset = .;

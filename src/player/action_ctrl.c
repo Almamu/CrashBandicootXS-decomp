@@ -7,7 +7,7 @@
 #include "globals.h"
 
 /* Continuation of action_ctrl_moves.c (issue #18's chunk, the last one) -
- * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
+ * covers `ActionCtrlStateNop6` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
  * to action_ctrl_moves.c since the parked `ActionCtrlStateBodySlamStart` sits raw between
  * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
  * at the top of action_ctrl_states.c/hovercraft_parts.c. */
@@ -15,7 +15,9 @@
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
-void nullsub_17(void)
+/* gActionCtrlStateTable's slot 6 (and ActionCtrlStateNop2 slot 2): empty
+ * handlers of states nothing sets. */
+void ActionCtrlStateNop6(void)
 {
 }
 
@@ -31,12 +33,13 @@ void ActionCtrlStateTurboRun(struct act *selfArg)
     ActionCtrlStateRun(self);
 }
 
-void nullsub_18(void)
+void ActionCtrlStateNop2(void)
 {
 }
 
-/* Trivial tail-call. */
-void sub_8015774(struct act *self)
+/* gActionCtrlStateTable's slot 1, a state nothing sets: runs the idle
+ * state's handler. */
+void ActionCtrlStateUnusedIdle(struct act *self)
 {
     ActionCtrlStateIdle(self);
 }
@@ -195,7 +198,8 @@ struct act *InitActionCtrl(struct act *self)
  * "keep speed" flags (apply with SetCtrlTargetMotionX/Y instead of
  * StartCtrlTargetMotionX/Y). */
 
-/* `self+0x14` word setter, always zero. */
+/* `self+0x14` word setter, always zero. UNUSED, and nothing reads the
+ * word (ResetActionCtrl also clears it), so it stays unnamed. */
 void sub_80158AC(struct act *self)
 {
     *(s32 *)self->unk_14 = 0;
@@ -281,8 +285,9 @@ void QueueActionCtrlMotionX(struct act *self, s32 val)
     self->motionX = (u8)val;
 }
 
-/* `self+0x2d` byte getter. */
-u8 sub_8015950(struct act *self)
+/* `prevState` (+0x2D) getter. UNUSED - no caller anywhere in the ROM (no
+ * `bl` in src/, no Thumb pointer to it in baserom.gba). */
+u8 GetActionCtrlPrevState(struct act *self)
 {
     return self->prevState;
 }

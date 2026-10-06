@@ -16,11 +16,11 @@
  * site's own arguments are spelled out entirely in inline asm below -
  * see the comment right above that block for why. */
 
-/* Plays cue-3 SFX, then - unless `self->field_08` is the sentinel
+/* Plays cue-3 SFX, then - unless `self->id` is the sentinel
  * `0xffff` - consumes a slot from the per-record bit-grid
  * (`gEntityFlags`, the same `IsEntityIdActivated`/`SetEntityIdActivated` accessor
  * pair entity_flags.c already establish) keyed by
- * `self->field_08`, setting the bit only if it wasn't already set.
+ * `self->id`, setting the bit only if it wasn't already set.
  * Finally spawns a part object (`DropExtraLife`) three tiles below
  * `self`'s own position, tagged with the caller's own byte argument. */
 void OpenLifeCrate(struct actor *self, u32 arg1)
@@ -29,9 +29,9 @@ void OpenLifeCrate(struct actor *self, u32 arg1)
 
     PlaySfx(gAudioContext, 3, 0x100);
 
-    if (self->field_08 != 0xFFFF) {
-        if ((u8)IsEntityIdActivated(gEntityFlags, self->field_08) == 0) {
-            SetEntityIdActivated(gEntityFlags, self->field_08);
+    if (self->id != 0xFFFF) {
+        if ((u8)IsEntityIdActivated(gEntityFlags, self->id) == 0) {
+            SetEntityIdActivated(gEntityFlags, self->id);
         }
     }
 

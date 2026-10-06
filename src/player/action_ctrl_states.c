@@ -108,11 +108,11 @@ void ActionCtrlStateAirborne(struct act *self)
             ACT_VCALL2(self, m50, self->part, 0x10);
             self->frame = busy;
             self->frames = frames;
-            self->unk_21 = busy;
+            self->tornadoVariant = busy;
             self->charge = busy;
-            self->unk_22 = busy;
-            self->unk_23 = busy;
-            self->unk_24[0] = busy;
+            self->tornadoTurn = busy;
+            self->tornadoFallQueued = busy;
+            self->tornadoUnwinding = busy;
             gPlayer->bounce = busy;
         }
     }
@@ -120,7 +120,7 @@ void ActionCtrlStateAirborne(struct act *self)
         u8 *timer;
 
         UpdatePlayerFacing(self);
-        timer = &self->unk_24[1];
+        timer = &self->dpadLockTimer;
         if (*timer != 0) {
             (*timer)--;
             if (dir == 0)
@@ -239,7 +239,7 @@ void ActionCtrlStateAirborne(struct act *self)
                     self->motionX = held;
                 }
                 ActSetNext(self, 0);
-                if (self->unk_22)
+                if (self->tornadoTurn)
                     ACT_VCALL1(self, m20, 0xF);
                 else
                     ACT_VCALL1(self, m20, 0xD);
@@ -461,8 +461,8 @@ void ActionCtrlStateSpin(struct act *self)
         ActAndFlags0D(self->part, -3);
         ACT_VCALL1(self, m20, 0xE);
         ActSetNextB(self, 7);
-        self->unk_22 = 0;
-        self->unk_23 = 0;
+        self->tornadoTurn = 0;
+        self->tornadoFallQueued = 0;
         self->part->hitAxes = 0;
         return;
     }
@@ -540,8 +540,8 @@ void ActionCtrlStateTornadoSpin(struct act *self)
         dir = GetDpadDirection(pad);
     }
     if (self->part->hitAxes == 0) {
-        if (self->unk_22) {
-            sub_80151C8(self);
+        if (self->tornadoTurn) {
+            StartActionCtrlTornadoFall(self);
         } else {
             ActSetNext(self, 5);
         }
@@ -551,7 +551,7 @@ void ActionCtrlStateTornadoSpin(struct act *self)
         ActAndFlags0D(self->part, -3);
         ACT_VCALL1(self, m20, 0xE);
         ActSetNextB(self, 7);
-        self->unk_23 = 0;
+        self->tornadoFallQueued = 0;
         self->part->hitAxes = 0;
         return;
     }

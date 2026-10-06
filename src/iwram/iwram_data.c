@@ -112,11 +112,11 @@ void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list) = HeapSortActo
 struct actor_self *gActorList = NULL;
 s32 gCollectedSpawnCount = 0;
 /* The polar penguin's Z speed toward a path point, indexed by the
- * point's spawn kind minus 0x20 (sub_802A570; AimPolarPenguin). */
+ * point's spawn kind minus 0x20 (GetActorSpawnKindIndex; AimPolarPenguin). */
 s32 gPolarPenguinSpeeds[3] = { 0x40, 0x62, 0x95 };
 void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock) = UnpackNibbleTiles;
 /* The jetpack plane's hop speed toward a path point, indexed by the
- * point's spawn kind minus 0x20 (sub_802A570; AimJetpackPlane). */
+ * point's spawn kind minus 0x20 (GetActorSpawnKindIndex; AimJetpackPlane). */
 s32 gJetpackPlaneHopSpeeds[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 
 /* Palette RAM addresses (hovercraft.c, hovercraft_parts.c). */

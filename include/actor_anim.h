@@ -114,44 +114,50 @@ struct sprite_frame {
  * how it's sliced (verified directly against the raw bytes), so
  * there's no "categories 3-6 vtable" to go looking for. */
 /* category_descriptor.spawnTable's record layout: the stage's actor spawn
- * list, ordered by `field_00` (the depth at which the next record is due).
- * RunActorCategoryFrame hands `&record.kind` of each due record to the
+ * list, ordered by `depth`. A spawn's data straddles two records:
+ * RunActorCategoryFrame hands `&record[i].kind` of each due record to the
  * category vtable's slot 1 (SpawnActor for type 0), which reads it as
- * `{kind, altKind, bonusKind, pad, x, y, z}` - so a spawn's own depth is
- * the following record's `field_00`. Resolved from
+ * `{kind, altKind, bonusKind, pad, x, y, depth, link}` - so a spawn's own
+ * depth (the course distance at which it is due) and link are the
+ * *following* record's `depth`/`link`. GetActorSpawnZ and
+ * GetActorSpawnNextTarget read them that way (`idx*0x14+0x14 ==
+ * (idx+1)*0x14+0x0`: one record ahead, not an oversized record), and
+ * SelectActorCategory/RunActorCategoryFrame's due tests do the same.
+ * Record 0 doubles as the table header: its `depth` is the course length
+ * (past it RunActorCategoryFrame calls the vtable's slot 10, the "reach
+ * course end" function) and its `link` the entry count
+ * (CountCategoryCrates/SelectActorCategory). Resolved from
  * `CountCategoryCrates` (counts matching `kind` entries), `SelectActorCategory`
  * (which stores this pointer directly into `gActorSpawnTable`, indexing
- * with `idx*0x14`), and the `sub_802A504`/`51C`/`540`/`558`/`570`
+ * with `idx*0x14`), and the GetActorSpawnX/Y/Z/KindIndex/NextTarget
  * per-index accessor family (see docs/rom_map.md's "The sub_802A5xx
- * siblings pin down spawnTable's runtime shape"). Record 0 doubles
- * as a combined header+entry: `field_04` there is the table's real entry
- * count (read by `CountCategoryCrates`/`SelectActorCategory`), while every
- * record's own `field_00`/`field_04` otherwise serve as the *next*
- * record's threshold/opaque-accessor fields for `sub_802A51C`/
- * `sub_802A504` (`idx*0x14+0x14 == (idx+1)*0x14+0x0`, i.e. those two
- * accessors are reading one record ahead, not an oversized record). */
+ * siblings pin down spawnTable's runtime shape"). */
 struct sub_effect_record {
-    s32 field_00; // 0x00 - selection threshold value (record 0: unused as a threshold, see above)
-    s32 field_04; // 0x04 - record 0 only: the table's real entry count
-    u8 kind;      // 0x08 - the actor kind CreateActor builds; counted by CountCategoryCrates
-    // 0x09 - the kind used instead when gLevelState+0x8c is set (SpawnActor, sub_802A570)
+    // 0x00 - the previous record's spawn depth, in course distance units
+    // (GetActorSpawnZ: Q8 after <<8); record 0: the course length
+    s32 depth;
+    // 0x04 - the previous record's next target: the spawn index a jetpack plane or
+    // polar penguin homes in on after this one (GetActorSpawnNextTarget), -1: none;
+    // record 0: the table's entry count
+    s32 link;
+    u8 kind; // 0x08 - the actor kind CreateActor builds; counted by CountCategoryCrates
+    // 0x09 - the kind used instead when gLevelState+0x8c is set (SpawnActor, GetActorSpawnKindIndex)
     u8 altKind;
-    // 0x0a - the kind used instead when gUnknown_03001414
-    // is set (SpawnActor's useBonus, sub_802A570)
+    // 0x0a - the kind used instead when gActorSpawnUseBonus
+    // is set (SpawnActor's useBonus, GetActorSpawnKindIndex)
     u8 bonusKind;
     u8 pad_0b;
-    s32 offsetX; // 0x0c - Q8.8 after sub_802A558's <<8
-    s32 offsetY; // 0x10 - Q8.8 after sub_802A540's <<8
+    s32 offsetX; // 0x0c - Q8.8 after GetActorSpawnX's <<8
+    s32 offsetY; // 0x10 - Q8.8 after GetActorSpawnY's <<8
 }; // 0x14
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_record) == 0x14);
 
 /* The 12 bytes after a table's last record: the first three words of a
  * record that isn't there, which the one-record-ahead accessors
- * (`sub_802A51C`/`sub_802A504`) read for the last record. `field_04` is
- * -1 like every real record's but record 0's. */
+ * (`GetActorSpawnZ`/`GetActorSpawnNextTarget`) read for the last record. */
 struct sub_effect_table_end {
-    s32 field_00; // 0x00 - the final threshold
-    s32 field_04; // 0x04 - always -1
+    s32 depth; // 0x00 - the last spawn's depth
+    s32 link;  // 0x04 - the last spawn's next target (always -1)
     // 0x08 - no real record's bytes: zero in three of the seven tables, arbitrary in the rest
     u8 kind;
     u8 altKind;
@@ -207,15 +213,20 @@ struct category_descriptor {
     // (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
     struct anim_table_record *anim_table;
     const u8 *sprite_sheet; // 0x1C - this category family's LZ77-compressed sprite sheet
-    u32 unknown_20;         // 0x20
-    // 0x24 - compared against a running "how many of this category are active" counter
-    // (gActorCategoryDeaths) to gate spawning an extra sub-effect instance
-    u32 active_count_threshold;
-    u32 unknown_28; // 0x28
-    // 0x2C - zero/nonzero selects between two fixed position-offset constants (0xFFFFB000 / 0x2800)
-    // applied to a spawned part's vertical anchor
-    u32 position_offset_flag;
-    u32 unknown_30; // 0x30
+    // 0x20 - deaths since the checkpoint (gActorCategoryDeaths) after which
+    // IsActorMaskAssistDue reports true
+    u32 maskAssistDeaths;
+    // 0x24 - deaths since the checkpoint (gActorCategoryDeaths) after which the
+    // spawns use their `bonusKind` (InitActorCategory -> gActorSpawnUseBonus)
+    u32 bonusKindDeaths;
+    // 0x28 - boss deaths (gActorCategoryBossDeaths) after which the boss is
+    // created with `retryBossLevel` instead of `bossLevel`
+    u32 retryBossDeaths;
+    // 0x2C - the argument InitActorCategory passes to the boss's constructor
+    // (category vtable slot 2: CreateYeti's gYetiParamsIndex,
+    // CreateAirship's gAirshipLevel, CreateHovercraft's gHovercraftLevel)
+    u32 bossLevel;
+    u32 retryBossLevel; // 0x30 - the same, once retryBossDeaths is reached
 }; // 0x34
 COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
 
@@ -224,7 +235,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
  * of these. Exact signatures unknown (none of these functions have been
  * reversed to C yet); slot 0 is confirmed to be the constructor,
  * ConstructAnimTableState (receives the animation table base and the
- * descriptor's position_offset_flag) for type 0, but a different,
+ * checkpoint) for type 0, but a different,
  * still-unnamed function for types 1/2 (which share it - constructor
  * logic splits by sprite-sheet family, not by type individually; see
  * docs/rom_map.md's "confirmed: mostly actor per-type behavior" section

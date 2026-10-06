@@ -9,7 +9,7 @@
  * (see `struct sub_effect_record`/`category_descriptor.spawnTable`
  * in actor_anim.h) match one of two fixed sets of `kind` byte
  * values - a different set depending on the category's own `type`
- * field. Record 0 (the table's own header, `field_04` holding the real
+ * field. Record 0 (the table's own header, `link` holding the real
  * entry count) doubles as entry 0 for this scan too. */
 s32 CountCategoryCrates(s32 categoryIdx)
 {
@@ -22,7 +22,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
     table = gActorCategories[categoryIdx].spawnTable;
     if (gActorCategories[categoryIdx].type == 0) {
         i = 0;
-        total = table[0].field_04;
+        total = table[0].link;
         /* Manual pre-rotated `if (count<total) do {...} while (++i<total)`
          * instead of a plain `for` - gcc 2.9's own loop rotation of a
          * `for` here strength-reduces the ascending index into a
@@ -51,7 +51,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
          * `cmp r4,r2` compares the (zero) accumulator against the
          * count, not the count against a literal 0 (see
          * docs/workflow.md step 3). */
-        s32 total2 = table[0].field_04;
+        s32 total2 = table[0].link;
 
         if (count < total2) {
             do {

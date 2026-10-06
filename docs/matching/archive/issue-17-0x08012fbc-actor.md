@@ -292,7 +292,7 @@ NAKED transcriptions, each with its C kept under `#if NON_MATCHING`.
 | `ActionCtrlStateSpin`, `ActionCtrlStateAirSpin`, `ActionCtrlStateTornadoSpin`, `ActionCtrlStateCrouchDown` | matched |
 | `ActionCtrlStateCrouch` | NAKED |
 | `ActionCtrlStateLeftGround` | NAKED |
-| `ActionCtrlStateDying`, `ActionCtrlStateWarpIn`, `ActionCtrlStateHang`, `sub_8014AEC` | matched |
+| `ActionCtrlStateDying`, `ActionCtrlStateWarpIn`, `ActionCtrlStateHang`, `ActionCtrlStateUnusedHang` | matched |
 | `ActionCtrlReleaseHang`, `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove` | NAKED |
 | `ActionCtrlStateHangStop` | matched |
 

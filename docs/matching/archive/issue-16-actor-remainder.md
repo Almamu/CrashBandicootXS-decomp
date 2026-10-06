@@ -45,7 +45,7 @@ already-matched `kill_player.c`, `action_ctrl_update.c` between
   slots depending on the player's D-pad remap state; cases 9/10 gate
   `sub_8015558` behind `gPlayer+0x68`/`PlayerHasRoomForAnim` checks.
 - **`UpdateActionCtrl`** (628 B, `action_ctrl_update.c`) - a `part`-visibility/OAM-
-  priority housekeeping pass: re-runs `sub_8012238` on an activity-flag
+  priority housekeeping pass: re-runs `UpdateActionCtrlSkidAnim` on an activity-flag
   change, resets velocity/target fields past two `gLevelLayers`-
   anchored screen-space thresholds (the far one also firing
   `SetMaskLevel`/`_call_via_r4`), ticks a couple of counters, looks up
@@ -65,7 +65,7 @@ already-matched `kill_player.c`, `action_ctrl_update.c` between
   per-type distance thresholds on `part->field_0x64` (falling back to
   `TryActionCtrlDoubleJump` first when within a `0x27f` threshold), setting
   `part+0xd` bit 0 and firing the `+0x20`/`+0x24` trampoline (id
-  `0x1a`), or tail-calling `sub_80151C8` for type `0xe`. Then, unless
+  `0x1a`), or tail-calling `StartActionCtrlTornadoFall` for type `0xe`. Then, unless
   the type is one of the five gate values, reads the D-pad and remaps
   `self+0x27`'s table-index byte through a further small dispatch
   before a shared tail arming `self+0x31` when the player's `+0x100`
@@ -146,7 +146,7 @@ All six of this remainder's functions are now byte-exact, but as NAKED
 transcriptions - parked, not matched, per project policy. Every
 function GitHub issue #16 originally scoped (this remainder plus the
 four matched in `issue-16-actor-12160.md` and the earlier
-`KillPlayer`/`sub_8012238`/`UpdatePlayerFacing`/`CheckActionCtrlLeftGround` matches) is now
+`KillPlayer`/`UpdateActionCtrlSkidAnim`/`UpdatePlayerFacing`/`CheckActionCtrlLeftGround` matches) is now
 either real C or a verified NAKED transcription - nothing from this
 issue's original scope is left raw - but since six functions are NAKED
 rather than real decompiled C, the issue itself stays open per this
