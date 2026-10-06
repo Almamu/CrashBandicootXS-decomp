@@ -295,16 +295,16 @@ void StorePlayerListEntry(struct player *selfArg, s32 val)
     }
 }
 
-/* The controller base's `state`/`animSet` setters (struct ctrl_base). */
+/* The controller base's `state`/`animSet` setters (struct ctrl). */
 void SetCtrlMode(void *selfArg, s32 val)
 {
-    struct ctrl_base *self = selfArg;
+    struct ctrl *self = selfArg;
     self->state = val;
 }
 
 void SetCtrlAnimSet(void *selfArg, s32 val)
 {
-    struct ctrl_base *self = selfArg;
+    struct ctrl *self = selfArg;
     self->animSet = (const struct entry_set *)val;
 }
 

@@ -158,10 +158,13 @@ u8 SetCtrlTargetAnim(void *unused, void *partArg, s32 newVal)
     return result;
 }
 
-/* `self+0` word setter. */
+/* gCtrlVtable slot 3: attaches the controller to sprite object `val`
+ * (`owner`). AttachSpriteCtrl calls it through the method table. */
 void AttachCtrl(void *selfArg, s32 val)
 {
-    *(s32 *)selfArg = val;
+    struct ctrl *self = selfArg;
+
+    self->owner = (void *)val;
 }
 
 /* Resets the method table to `gCtrlVtable`, then (if bit 0 of `flags`

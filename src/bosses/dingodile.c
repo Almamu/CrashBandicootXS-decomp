@@ -197,14 +197,6 @@ struct obj_490c {
     struct part *target; // 0x24
 };
 
-/* gDingodileSharkVtable's class (constructor CreateDingodileSharkCtrl, destructor
- * DestroyDingodileSharkCtrl, update UpdateDingodileShark). */
-struct obj_483c {
-    u8 unk_00[8];
-    s32 state;         // 0x08
-    struct vtable *vt; // 0x0C
-};
-
 /* gDingodileProjectileVtable's class (constructor CreateDingodileProjectileCtrl, destructor
  * DestroyDingodileProjectileCtrl, update UpdateDingodileProjectile). */
 struct obj_48a4 {
@@ -1011,7 +1003,7 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     AddToPartList(gCollidableList, p);
 }
 
-void UpdateDingodileShark(struct obj_483c *self, struct part *other)
+void UpdateDingodileShark(struct ctrl *self, struct part *other)
 {
     switch (self->state) {
     case 0:

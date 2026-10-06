@@ -70,8 +70,8 @@ struct gfx_vtable {
     struct actor_method method_50; // 0x50 - SetCtrlTargetAnim
 };
 
-/* Those controllers' base (InitCtrl/DestroyCtrl; see player.h's
- * description of the controller base). */
+/* Those controllers' base: objects.h's `struct ctrl` (InitCtrl/
+ * DestroyCtrl), with the method table typed as their calls read it. */
 struct gfx_ctrl {
     u8 unk_00[8];
     s32 state;                 // 0x08
@@ -140,7 +140,6 @@ struct gobj;
 struct hop_part;
 struct obj_4704;
 struct obj_476c;
-struct obj_483c;
 struct obj_48a4;
 struct obj_490c;
 struct part;
@@ -247,7 +246,7 @@ extern void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 fa
 extern void UpdateDingodileShield(struct obj_490c *self, struct part *other);
 extern void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other);
 extern void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y);
-extern void UpdateDingodileShark(struct obj_483c *self, struct part *other);
+extern void UpdateDingodileShark(struct ctrl *self, struct part *other);
 extern struct vobj *CreateDingodileSharkCtrl(void *mem);
 extern void DestroyDingodileSharkCtrl(struct vobj *self, s32 flags);
 extern void DestroyDingodileProjectileCtrl(struct obj_48a4 *self, s32 flags);

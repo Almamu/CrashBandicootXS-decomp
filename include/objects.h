@@ -96,14 +96,22 @@ struct entry_set {
  * action controller (action_obj.h's `struct act`), the swim and input
  * controllers (player_ctrl.h, player.h), the boss controllers (player.h's
  * `struct boss_ctrl`), the enemy controller (part_ctrl.h) and the effect
- * controller (effect_ctrl.c). The subclasses add the controlled part at
- * +0x10. */
+ * controller (effect_ctrl.c). The knocked enemy controller
+ * (CreateKnockedEnemyCtrl), the stomped hop pad and the one-shot
+ * animation controllers are this base alone (OperatorNew(0x10)).
+ *
+ * The base's attach method (AttachCtrl, slot 3) stores the sprite object
+ * it's attached to at +0x00; AttachSpriteCtrl passes the object. The
+ * subclasses that override it keep their controlled part at +0x10
+ * instead, which isn't part of the base. */
 struct ctrl {
-    s32 unk_00;                       // 0x00 - set by AttachCtrl
+    void *owner;                      // 0x00 - the attached sprite object (AttachCtrl)
     const struct entry_set *animSet;  // 0x04 - SetCtrlAnimSet
     s32 state;                        // 0x08 - GetCtrlMode/SetCtrlMode
     const struct vtable_slot *vtable; // 0x0C - gCtrlVtable or a subclass's
 };
+
+COMPILE_TIME_ASSERT(objects_h, sizeof(struct ctrl) == 0x10);
 
 /* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, struct
  * player's): each frame ApplySpriteVelocity steps speedX/speedY by `step`

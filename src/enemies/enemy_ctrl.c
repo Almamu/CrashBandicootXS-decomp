@@ -672,7 +672,7 @@ asm(".align 2, 0");
  * store as `DestroyEnemyCtrl`). */
 void DestroyKnockedEnemyCtrl(void *self, s32 flags)
 {
-    ((struct ctrl_base *)self)->vtable = gKnockedEnemyCtrlVtable;
+    ((struct ctrl *)self)->vtable = gKnockedEnemyCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -698,7 +698,7 @@ void DestroyKnockedEnemyCtrl(void *self, s32 flags)
  * tail call specific to this object type. */
 void *CreateKnockedEnemyCtrl(void *selfArg)
 {
-    struct ctrl_base *self = selfArg;
+    struct ctrl *self = selfArg;
 
     InitCtrl(self);
     self->vtable = gKnockedEnemyCtrlVtable;
