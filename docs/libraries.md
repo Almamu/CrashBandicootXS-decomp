@@ -89,9 +89,10 @@ The per-object flags moved with the files, unchanged:
 | `lib/libgcc/_divdi3.o`, `_udivdi3.o`, `_muldi3.o` | agbcc | no `-mthumb-interwork` (`NO_INTERWORK_OBJS`, [gax-toolchain-retry.md](./matching/archive/gax-toolchain-retry.md)) |
 | `lib/libgcc/_*.o` from lib1funcs.s, `lib/libagbsyscall/*.o` | as | `ASFLAGS` |
 
-No library object uses old_agbcc, agbcc_arm, `-fno-strength-reduce` or
-`-fno-rerun-loop-opt` (`OLD_AGBCC_OBJS`, `ARM_OBJS`,
-`NO_STRENGTH_REDUCE_OBJS`, `NO_RERUN_LOOP_OPT_OBJS` are all game code).
+No library object uses old_agbcc, agbcc_arm(_patched),
+`-fno-strength-reduce` or `-fno-rerun-loop-opt` (`OLD_AGBCC_OBJS`,
+`ARM_OBJS`, `PATCHED_ARM_OBJS`, `NO_STRENGTH_REDUCE_OBJS`,
+`NO_RERUN_LOOP_OPT_OBJS` are all game code).
 
 ## What stayed in the game
 

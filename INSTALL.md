@@ -32,8 +32,14 @@ Once those packages are installed you'll need to provide agbcc, which is the com
 2. Build agbcc using the `./build.sh` script.
 3. Install the compiler under the project's directory using the install script `./install.sh path/to/decomp/project`.
    This installs `tools/agbcc/bin/agbcc` plus the two other builds the ROM needs: `old_agbcc` and the ARM-targeting `agbcc_arm`.
-4. Build the ROM with `make compare`
-5. A crashbandicootxs.gba file should be created and the message `crashbandicootxs.gba: OK` should appear
+4. Build the patched ARM compiler from the same agbcc checkout. From the decomp project's directory:
+   ```
+   tools/build_patched_agbcc_arm.sh path/to/agbcc
+   ```
+   This copies the checkout to a temporary directory, applies `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, builds `gcc_arm` the way agbcc's `build.sh` does, and installs it as `tools/agbcc/bin/agbcc_arm_patched` (the stock compilers are left as they are).
+   Two IWRAM ARM functions need it: the ROM's ARM compiler was a later build than agbcc_arm, and the patch adds two opt-in options that reproduce its prologue and return code (see [docs/matching/iwram-image.md](docs/matching/iwram-image.md), "Seventh pass").
+5. Build the ROM with `make compare`
+6. A crashbandicootxs.gba file should be created and the message `crashbandicootxs.gba: OK` should appear
 
 `tools/gbagfx` and `tools/grit`, the graphics converters, are built by the Makefile on first use.
 

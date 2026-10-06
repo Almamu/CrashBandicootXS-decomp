@@ -1,8 +1,8 @@
 # Contributing
 
-The decompilation itself is done: 2057 of the ROM's 2059 functions are
-byte-exact C (the other two are parked, #553), and all of its data is
-source. What's left is making the code better to read without changing a
+The decompilation itself is done: all 2059 of the ROM's functions are
+byte-exact C (two of them through a locally patched agbcc_arm, #553),
+and all of its data is source. What's left is making the code better to read without changing a
 byte of the ROM: real names for the remaining placeholders, compiler
 warnings, formatting, and documenting the matching workarounds. That
 work is tracked as GitHub issues. Anyone - human or AI agent - can pick
@@ -19,7 +19,7 @@ real detail.
   the most consistent names, so a PR scoped like "name the level loader"
   is preferred over a long flat list of renames.
 - The `parked-function` label marks a function that is understood but
-  not byte-exact. Only #553 is left.
+  not byte-exact. None is left (#553 was the last).
 - Category labels (`game_loop`, `actor`, `graphics`, `overlay_ui`,
   `graphics_loading`, `audio`, `hud`, `system`, `util`) tell you roughly
   what part of the game an issue is about; [docs/status/](docs/status/)
@@ -83,7 +83,8 @@ matched code - read it before starting.** In short:
   the old matching logs ([docs/matching.md](docs/matching.md) and
   [docs/matching/archive/](docs/matching/archive/)) are never edited,
   except to fix a reference that no longer resolves. A symbol rename goes into `expected/corrections.txt` instead.
-- **The parked functions** (#553) follow the full matching loop in
+- **Matching changes** (a function that stops matching, a new compiler
+  workaround) follow the full matching loop in
   [docs/workflow.md](docs/workflow.md), steps 1 to 8.
 
 ### Verification
@@ -97,8 +98,8 @@ rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report ge
 
 `make compare` must print `crashbandicootxs.gba: OK`. If it doesn't,
 `cmp` each touched object against the same object built from
-`origin/main` to find the one that changed, rather than guessing. The report must still show 2057/2059 functions and 100%
-data (2059 means the build wasn't clean). The Makefile tracks header
+`origin/main` to find the one that changed, rather than guessing. The report must still show 2059/2059 functions and 100%
+data. The Makefile tracks header
 dependencies, so a plain `make` is fine while you work, but the PR check
 is always from clean.
 
@@ -160,8 +161,8 @@ full rules and the history (#574). For new code:
 ### Compiler warnings
 
 The build is warning-free and stays that way (#577). Every C object,
-whichever compiler builds it (agbcc, old_agbcc or agbcc_arm, including
-the per-object flag overrides), gets the Makefile's `WARNFLAGS`:
+whichever compiler builds it (agbcc, old_agbcc, agbcc_arm or
+agbcc_arm_patched, including the per-object flag overrides), gets the Makefile's `WARNFLAGS`:
 
 ```
 -Wall -Wmissing-prototypes -Wstrict-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror

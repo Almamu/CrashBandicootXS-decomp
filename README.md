@@ -13,11 +13,12 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 
 ## Current state
 
-- **Code: 2057 of 2059 functions are byte-exact C.** The other two are
-  ARM functions in the IWRAM image (`src/iwram/`), parked under
-  `#if NON_MATCHING` with C drafts. The ARM build of agbcc can't produce
-  their prologues and epilogues, so they likely come from another
-  compiler (#553). The matching build uses their assembly.
+- **Code: all 2059 functions are byte-exact C.** Two of them, ARM
+  functions in the IWRAM image (`src/iwram/`), are built with a locally
+  patched agbcc_arm (`agbcc_arm_patched`, see INSTALL.md): the ROM's ARM
+  compiler is a later, unreleased build whose prologue and return code
+  stock agbcc_arm can't produce (#553,
+  [docs/matching/iwram-image.md](./docs/matching/iwram-image.md)).
 - **Data: 100%.** Every ROM table is a typed C `const` array in
   `src/data/` (a library's own tables are in `lib/<name>/data/`), and
   every asset is rebuilt from a source file (see "Data and assets"
@@ -65,7 +66,7 @@ rm -rf build objdiff.json && make NON_MATCHING=1 report && objdiff-cli report ge
 
 The second line builds the [decomp.dev](https://decomp.dev) progress
 report (see [docs/decomp_dev.md](./docs/decomp_dev.md)). It must show
-2057/2059 functions and 100% data; 2059 means the build wasn't clean.
+2059/2059 functions and 100% data.
 
 ## Data and assets
 

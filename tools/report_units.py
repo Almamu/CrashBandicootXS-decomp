@@ -581,8 +581,8 @@ UNITS = [
 IWRAM_CODE = ROOT / "expected" / "iwram.s"
 IWRAM_UNITS = [
     (0x03000000, HANDWRITTEN, None),  # IntrMain (asm/intr_main.s), the interrupt dispatcher - hand-written ARM, excluded from progress
-    (0x030000D4, "src/iwram/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strncpy_arm/strcat_arm (real C, ARM, agbcc_arm) plus itoa_arm (parked: NON_MATCHING C, NAKED in the matching build) - docs/matching/iwram-image.md
-    (0x0300024C, "src/iwram/sprite_arm.o", "graphics"),  # UnpackNibbleTiles/DrawMirroredTilemap/UnpackRleSpriteFrame (real C, ARM, agbcc_arm) plus HeapSortActorsByKey/LookupSpriteFrameCache (parked) - docs/matching/iwram-image.md
+    (0x030000D4, "src/iwram/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strncpy_arm/strcat_arm/itoa_arm (real C, ARM, agbcc_arm_patched -mleaf-no-lr-save, no scheduling) - docs/matching/iwram-image.md
+    (0x0300024C, "src/iwram/sprite_arm.o", "graphics"),  # UnpackNibbleTiles/DrawMirroredTilemap/HeapSortActorsByKey/UnpackRleSpriteFrame/LookupSpriteFrameCache (real C, ARM, agbcc_arm_patched -minterwork-return-lr) - docs/matching/iwram-image.md
     (0x030007CC, None, None),  # sentinel: the image's initialised data starts here
 ]
 

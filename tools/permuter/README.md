@@ -3,8 +3,13 @@
 A reusable [decomp-permuter](https://github.com/simonlindholm/decomp-permuter)
 setup for the two `NAKED` functions in the agbcc_arm objects (#553):
 `itoa_arm` (`src/iwram/string_arm.c`) and `LookupSpriteFrameCache`
-(`src/iwram/sprite_arm.c`). The results so far are in
+(`src/iwram/sprite_arm.c`). The results are in
 `docs/matching/iwram-image.md` ("Sixth pass").
+
+**Both functions match now** (seventh pass, with agbcc_arm_patched), so
+their `NAKED` asm is gone and `setup.sh` can't build their targets from
+the current source. Use `src/iwram/*.c` from before that change to rerun
+them, or this directory as a template for another ARM function.
 
 ## Files
 
@@ -44,9 +49,9 @@ Improvements are written to `<dir>/output-<score>-<n>/` (`source.c`,
 summarise the log rather than printing it, for example
 `grep -o 'best score! ([0-9]* vs [0-9]*)' itoa.log`.
 
-## What score 0 means here
+## What score 0 meant here
 
-Neither function can reach 0 with agbcc_arm. `itoa_arm`'s ROM pushes
+(Before the seventh pass.) Neither function could reach 0 with agbcc_arm. `itoa_arm`'s ROM pushes
 r4-r6 without lr, and `LookupSpriteFrameCache`'s three returns pop into
 lr. agbcc_arm always adds lr to a register push, and every return insn
 pops into ip (docs/matching/iwram-image.md, fifth pass). The floor is

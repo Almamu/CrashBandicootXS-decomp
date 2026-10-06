@@ -48,7 +48,7 @@ plainer version doesn't.
 ## Contents
 
 1. [Compilers and flags](#compilers-and-flags): old_agbcc vs agbcc,
-   -O1 SDK code, per-object flags, agbcc_arm
+   -O1 SDK code, per-object flags, agbcc_arm and agbcc_arm_patched
 2. [Source shape](#source-shape): loops, early returns, switches,
    signedness, statement blocks
 3. [Calls](#calls): PMF dispatch, struct-by-value and one-byte-struct
@@ -126,10 +126,28 @@ comment with its evidence.
 | `-O1` | `lib/agb_eeprom` (4 objects) | SDK code, above. |
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
 | agbcc_arm, `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)). |
+| **agbcc_arm_patched** (instead of agbcc_arm), `-mleaf-no-lr-save`, `-fno-schedule-insns -fno-schedule-insns2` | `string_arm.o` | `itoa_arm` pushes r4-r6 without lr, which stock agbcc_arm can't; and the ROM keeps its loop increments, terminator store and swap in source order, which either scheduling pass reorders. The four other functions come out the same either way. |
+| **agbcc_arm_patched** (instead of agbcc_arm), `-minterwork-return-lr` | `sprite_arm.o` | `LookupSpriteFrameCache`'s three returns pop into lr (`ldmfd sp!, {lr}; bx lr`); stock agbcc_arm pops into ip. The four other functions come out the same either way (and need scheduling). |
+
+**agbcc_arm_patched is a locally patched compiler, not a real
+toolchain.** The ROM's ARM code was built by a later build of
+agbcc_arm's own Cygnus/Red Hat line that has never been released; its
+code generation is agbcc_arm's except for two fixed strings in the
+prologue and return code, which no C reaches (fifth pass of
+[iwram-image.md](./matching/iwram-image.md)). So `itoa_arm` and
+`LookupSpriteFrameCache` are built with SAT-R/agbcc's agbcc_arm plus
+[tools/agbcc_patches/agbcc_arm_prologue_return.patch](../tools/agbcc_patches/agbcc_arm_prologue_return.patch),
+which adds one opt-in option for each behaviour. Without the options
+its output is byte-identical to agbcc_arm's (checked on every C file in
+the repo). `tools/build_patched_agbcc_arm.sh` builds it (INSTALL.md); the
+Makefile uses it only for `PATCHED_ARM_OBJS`. Don't use it, or add
+options to the patch, for anything else without the same kind of
+evidence: a back-end path in agbcc_arm's source that no C can reach.
 
 No flag turns gcc 2.9's loop optimizer off wholesale
-(`-fno-loop-optimize`, `-fno-schedule-insns` and `-fno-crossjumping`
-don't exist in it). See
+(`-fno-loop-optimize` and `-fno-crossjumping` don't exist in it, and the
+Thumb agbcc and old_agbcc have no `-fno-schedule-insns`; agbcc_arm
+has). See
 [matching/per-file-flags-investigation.md](./matching/per-file-flags-investigation.md),
 [last-ten-naked-retry.md](./matching/archive/last-ten-naked-retry.md)
 and [gax-toolchain-retry.md](./matching/archive/gax-toolchain-retry.md).
@@ -224,14 +242,27 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   immediate (`a -= 0x07000000; a += 0xFF0000;`). As one expression the
   addsi3 expander builds the constant in a register, which loop.c
   hoists. As two, combine merges them into one `plus` that is split
-  back in place after reload (`LookupSpriteFrameCache`'s draft,
+  back in place after reload (`LookupSpriteFrameCache`,
   [iwram-image.md](./matching/iwram-image.md), fifth pass).
 - **`cmp #10` with `ge`/`lt`, not `cmp #9` with `gt`/`le`.**
   fold-const.c rewrites `x >= 10` to `x > 9` and `x < 10` to `x <= 9`.
   Assigning the constant inside the compare, `x >= (ten = 10)` with a
   local `ten`, isn't folded and still compares with the immediate
-  (`itoa_arm`'s draft, found by decomp-permuter;
+  (`itoa_arm`, found by decomp-permuter;
   [iwram-image.md](./matching/iwram-image.md), sixth pass).
+- **agbcc_arm: `movge rN, #0; movlt rN, #1` then a `lt` block** (the
+  sign of a value): two `if`s on the same test, `if (x >= 0) f = 0; if
+  (x < 0) { f = 1; x = -x; }`. As one if/else, jump.c hoists `f = 0`
+  above the branch (`mov rN, #0; addlt rN, rN, #1`); as two ifs the
+  first becomes a conditional move and cse drops the second compare
+  (`itoa_arm`, [iwram-image.md](./matching/iwram-image.md), seventh
+  pass).
+- **agbcc_arm: `mov rN, #0` after `mov rN, #45` in the same block, not
+  `sub rN, rN, #45`.** reload_cse_move2add rewrites a constant load
+  into an add from the register's last known constant, but only from a
+  wider or equal mode. Loading the first constant through a `u8`
+  variable pinned to the same register (`MATCH_HOLD_REG(u8, minus, r4)
+  = '-';`) keeps the later `= 0` a `mov` (`itoa_arm`, seventh pass).
 
 ## Calls
 
@@ -519,21 +550,20 @@ The order of escape hatches (self-init, `UNUSED`, a per-object
 defines it for C (`-D`) and assembly (`--defsym`). A function that
 can't be matched yet keeps its C draft under `#if NON_MATCHING` and the
 checked-in `NAKED` transcription under `#else`; the progress report
-scores the C draft. Both builds have to work. Two functions remain,
-both ARM code of the IWRAM image (`itoa_arm`, `LookupSpriteFrameCache`,
-#553), whose returns and prologues point to another ARM compiler build
-than agbcc_arm (the fifth pass traced both blockers to agbcc_arm's
-`arm.c`; `LookupSpriteFrameCache`'s draft is now off only in its three
-return sequences). See
-[matching/iwram-image.md](./matching/iwram-image.md) and
-[naked-transcription-parked-functions.md](./matching/archive/naked-transcription-parked-functions.md).
+scores the C draft. Both builds have to work. No function uses this any
+more: the last two, `itoa_arm` and `LookupSpriteFrameCache` (#553), are
+real C built with agbcc_arm_patched ([per-object flags](#per-object-flags),
+[matching/iwram-image.md](./matching/iwram-image.md), seventh pass). See
+[naked-transcription-parked-functions.md](./matching/archive/naked-transcription-parked-functions.md)
+for the history.
 
 To search a draft with
 [decomp-permuter](https://github.com/simonlindholm/decomp-permuter),
 use [tools/permuter/](../tools/permuter/README.md): a compile script with
-the agbcc_arm objects' exact flags, `setup.sh` to build a permuter
-directory (the target `.o` comes from the function's `NAKED` asm), and
-the two functions' `base.c`/`settings.toml`. For a Thumb function, copy
+the agbcc_arm objects' flags, `setup.sh` to build a permuter directory
+(the target `.o` comes from a function's `NAKED` asm), and the
+`base.c`/`settings.toml` used for the two IWRAM functions before they
+matched. For a Thumb function, copy
 `compile.sh` and swap in `agbcc` or `old_agbcc` and the object's flags.
 Treat its output as hints: it often reaches a lower score with C that
 changes what the function does (an uninitialized local, a load hoisted

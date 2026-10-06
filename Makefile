@@ -363,6 +363,30 @@ ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
 $(ARM_OBJS): CC1 := $(CC1_ARM)
 $(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer
 
+# The two ARM objects whose last function needs agbcc_arm_patched:
+# agbcc_arm plus tools/agbcc_patches/agbcc_arm_prologue_return.patch,
+# built by tools/build_patched_agbcc_arm.sh. The ROM's ARM compiler is a
+# later, unreleased build of agbcc_arm's line whose prologue and return
+# code differ in two fixed strings; the patch adds an opt-in option for
+# each. Without the options the patched compiler's output is identical
+# to agbcc_arm's, so the objects' other functions are unaffected (checked
+# with and without the options). See docs/matching/iwram-image.md,
+# "Seventh pass".
+# - string_arm.o: itoa_arm pushes r4-r6 without lr (-mleaf-no-lr-save).
+#   It also needs both scheduling passes off: its loop increments,
+#   terminator store and swap stay in source order in the ROM, where
+#   either pass moves them. The four other string functions come out
+#   the same with or without them.
+# - sprite_arm.o: LookupSpriteFrameCache's three returns pop into lr
+#   (-minterwork-return-lr). Its other four functions need scheduling,
+#   so it keeps it.
+CC1_ARM_PATCHED  := tools/agbcc/bin/agbcc_arm_patched
+PATCHED_ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
+                    $(C_BUILDDIR)/iwram/sprite_arm.o
+$(PATCHED_ARM_OBJS): CC1 := $(CC1_ARM_PATCHED)
+$(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -fno-schedule-insns -fno-schedule-insns2
+$(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr
+
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $(DEPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s

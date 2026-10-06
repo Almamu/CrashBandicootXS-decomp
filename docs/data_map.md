@@ -453,7 +453,7 @@ image is now built from source and linked to run at `0x03000000`
 (ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
 `IntrMain`, the hand-written interrupt dispatcher (`asm/intr_main.s`),
 ten ARM C routines (`src/iwram/string_arm.c`, `src/iwram/sprite_arm.c`,
-built with agbcc_arm) and the initialised IWRAM globals
+built with agbcc_arm_patched) and the initialised IWRAM globals
 (`src/iwram/iwram_data.c`, 540 bytes from `0x030007CC`). The code counts
 toward code progress, the globals toward data. The `0xFF` fill from
 `0x087E5FCC` is the linker's `rom_fill` section, excluded from data as

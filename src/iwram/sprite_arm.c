@@ -12,12 +12,13 @@
  * gDrawMirroredTilemapFunc, gHeapSortActorsByKeyFunc,
  * gUnpackRleSpriteFrameFunc and gLookupSpriteFrameCacheFunc).
  *
- * Built as ARM code with agbcc_arm (Makefile ARM_OBJS). UnpackNibbleTiles,
+ * Built as ARM code (Makefile ARM_OBJS) with agbcc_arm_patched and
+ * -minterwork-return-lr (PATCHED_ARM_OBJS). UnpackNibbleTiles,
  * DrawMirroredTilemap and UnpackRleSpriteFrame match as plain C, and
- * HeapSortActorsByKey as C with two empty-asm barriers.
- * LookupSpriteFrameCache is parked: the ROM was built by an ARM gcc whose
- * output differs from agbcc_arm's, and for it that difference is provably
- * out of C's reach. See its comment and docs/matching/iwram-image.md.
+ * HeapSortActorsByKey as C with two empty-asm barriers; their output is
+ * the same as stock agbcc_arm's. LookupSpriteFrameCache needs the option:
+ * the ROM's ARM gcc pops its returns into lr, where agbcc_arm pops into
+ * ip. See its comment and docs/matching/iwram-image.md.
  */
 
 static inline u32 ExpandNibble(u32 nibble)
@@ -192,7 +193,6 @@ void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
     }
 }
 
-#if NON_MATCHING
 /* (vramAddr - OBJ_VRAM0) >> 5, the OBJ tile index of a VRAM address.
  * OBJ_VRAM0 (0x06010000) is subtracted in two statements, each a valid
  * ARM immediate. Written as one expression, fold-const keeps the
@@ -215,17 +215,13 @@ static inline s32 ObjTileIndex(u32 vramAddr)
  * are; a hit in last frame's list is moved to the head of this frame's
  * list first.
  *
- * Parked, six instructions short (fifth pass). Everything but the
- * returns matches under the object's flags: 44 of the 50 instructions,
- * same registers, schedule and literal pool. The ROM returns with
- * `ldmfd sp!, {lr}; bx lr` three times; agbcc_arm prints
- * `ldmfd sp!, {ip}; bx ip` at each. Three copies of the exit sequence
- * mean three `return` insns (the text epilogue, which does print
- * `ldmfd sp!, {lr}; bx lr`, is printed once per function), and
- * agbcc_arm's output_return_instruction pops an interworking return
- * without a frame pointer into ip (arm.c: `if (TARGET_THUMB_INTERWORK
- * && really_return) strcat (instr, reg_names[12])`, then
- * `bx ... ip`). See docs/matching/iwram-image.md. */
+ * Its three returns are `ldmfd sp!, {lr}; bx lr`. Three copies of the
+ * exit sequence mean three `return` insns (the text epilogue is printed
+ * once per function), and stock agbcc_arm pops an interworking return
+ * without a frame pointer into ip (`ldmfd sp!, {ip}; bx ip`). So
+ * sprite_arm.o is built with agbcc_arm_patched's -minterwork-return-lr,
+ * which pops into lr instead (Makefile PATCHED_ARM_OBJS; see
+ * docs/matching/iwram-image.md, fifth and seventh passes). */
 s32 LookupSpriteFrameCache(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
@@ -249,70 +245,3 @@ s32 LookupSpriteFrameCache(u8 *frame)
     }
     return -1;
 }
-#else
-NAKED s32 LookupSpriteFrameCache(u8 *frame)
-{
-    // clang-format off
-    asm(".syntax unified\n"
-        "\tstmfd sp!, {lr}\n"
-        "\tldr r3, .L030007C4 @ =gSpriteFrameCacheCurrent\n"
-        "\tldr r12, [r3]\n"
-        "\tcmp r12, r3\n"
-        "\tbeq .L03000744\n"
-        "\tmov r2, r3\n"
-        ".L03000714:\n"
-        "\tldr r3, [r12, #8]\n"
-        "\tcmp r3, r0\n"
-        "\tbne .L03000738\n"
-        "\tldr r0, [r12, #12]\n"
-        "\tadd r0, r0, #-117440512\n"
-        "\tadd r0, r0, #16711680\n"
-        "\tlsr r0, r0, #5\n"
-        "\tldmfd sp!, {lr}\n"
-        "\tbx lr\n"
-        ".L03000738:\n"
-        "\tldr r12, [r12]\n"
-        "\tcmp r12, r2\n"
-        "\tbne .L03000714\n"
-        ".L03000744:\n"
-        "\tldr r3, .L030007C8 @ =gSpriteFrameCachePrevious\n"
-        "\tldr r12, [r3]\n"
-        "\tcmp r12, r3\n"
-        "\tbeq .L030007B8\n"
-        "\tmov r2, r3\n"
-        "\tldr lr, .L030007C4 @ =gSpriteFrameCacheCurrent\n"
-        ".L0300075C:\n"
-        "\tldr r3, [r12, #8]\n"
-        "\tcmp r3, r0\n"
-        "\tbne .L030007AC\n"
-        "\tldr r2, [r12, #4]\n"
-        "\tldr r3, [r12]\n"
-        "\tldr r0, [r12, #12]\n"
-        "\tstr r3, [r2]\n"
-        "\tldm r12, {r1, r3}\n"
-        "\tstr r3, [r1, #4]\n"
-        "\tstr lr, [r12, #4]\n"
-        "\tldr r3, [lr]\n"
-        "\tstr r3, [r12]\n"
-        "\tldr r3, [lr]\n"
-        "\tadd r0, r0, #-117440512\n"
-        "\tstr r12, [r3, #4]\n"
-        "\tadd r0, r0, #16711680\n"
-        "\tstr r12, [lr]\n"
-        "\tlsr r0, r0, #5\n"
-        "\tldmfd sp!, {lr}\n"
-        "\tbx lr\n"
-        ".L030007AC:\n"
-        "\tldr r12, [r12]\n"
-        "\tcmp r12, r2\n"
-        "\tbne .L0300075C\n"
-        ".L030007B8:\n"
-        "\tmvn r0, #0\n"
-        "\tldmfd sp!, {lr}\n"
-        "\tbx lr\n"
-        ".L030007C4: .4byte gSpriteFrameCacheCurrent\n"
-        ".L030007C8: .4byte gSpriteFrameCachePrevious\n"
-        ".syntax divided\n");
-    // clang-format on
-}
-#endif
