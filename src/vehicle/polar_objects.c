@@ -29,11 +29,12 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 /* The homing projectile (method table gPolarPenguinVtable). */
 struct polar_penguin {
     struct actor_self base;
-    s32 velX;      // 0x54
-    s32 velY;      // 0x58
-    s32 velZ;      // 0x5C
-    s32 countdown; // 0x60 - frames until the next retarget
-    s32 targetZ;   // 0x64 - passed back to AimPolarPenguin on retarget
+    s32 velX;       // 0x54
+    s32 velY;       // 0x58
+    s32 velZ;       // 0x5C
+    s32 countdown;  // 0x60 - frames until the next retarget
+    s32 nextTarget; // 0x64 - spawn index (GetActorSpawnNextTarget) handed
+                    // back to AimPolarPenguin on retarget
 };
 
 struct hazard_part {
@@ -269,7 +270,7 @@ void UpdatePolarPenguin(void *selfArg)
         s32 remain = self->countdown - 1;
         self->countdown = remain;
         if (remain <= 0) {
-            AimPolarPenguin(self, self->targetZ);
+            AimPolarPenguin(self, self->nextTarget);
         }
 
         {
@@ -359,7 +360,7 @@ void AimPolarPenguin(void *selfArg, s32 target)
         }
         self->velX = factor * (GetActorSpawnX(target) - self->base.x) >> 0xc;
         self->velY = factor * (GetActorSpawnY(target) - self->base.y) >> 0xc;
-        self->targetZ = GetActorSpawnNextTarget(target);
+        self->nextTarget = GetActorSpawnNextTarget(target);
     }
 }
 

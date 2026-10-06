@@ -2803,7 +2803,7 @@ state machine using `self+0x74`** - structurally identical to
 `UpdateEnemyCtrl`'s own 18-state player-physics machine found earlier
 (same comparison shape, same state-count, same field role). But its 26
 callers are **every one of the confirmed 31 `menu_ui` dispatch-table
-functions** (`gStaticData_0816C744`'s entries, `SpawnLizard` through
+functions** (`gEntitySpawnFuncs[0x28]`-`[0x4D]`, `SpawnLizard` through
 `SpawnWoodenCrusher`). That means **`menu_ui`'s text/dialog entries aren't 31
 independent one-off constructors** - they're all instances of *one*
 18-state dialog-widget object type, each entry just supplying its own
@@ -3656,7 +3656,7 @@ box/tile-size presets**, used both for best-fit *selection*
 (`DrawScaledSprite`). Same data, two different consumers.
 
 **Follow-up fully mapped all 15 slots of the trigger-effect dispatch
-table** (`gStaticData_0816C7D8`-`0816C814`, confirmed by direct dump -
+table** (`gEntitySpawnFuncs[0x4D]`-`[0x5B]`, confirmed by direct dump -
 a plain array, no `{0,ptr}` pairing):
 
 | Slot | Function | Behavior |
@@ -3702,8 +3702,9 @@ a **family of many near-identical popup spawners**, not one instance.
 
 **Bigger finding: 4 of 4 sampled functions in this remainder are
 entity-vtable-dispatched**, at ROM addresses `0x0816C6C0`-`0x0816C7A8`
+(`gEntitySpawnFuncs[0x07]`-`[0x41]`)
 - sitting **immediately before** the already-fully-mapped 15-slot
-dispatch table at `gStaticData_0816C7D8`. A quick scan of that
+dispatch table at `gEntitySpawnFuncs[0x4D]`. A quick scan of that
 preceding 968-byte range (`0x0816C400`-`0x0816C7D8`) for thumb-bit-set
 pointer-shaped words found **77 candidates** - strongly suggesting a
 second, considerably larger dispatch table sits right next to the

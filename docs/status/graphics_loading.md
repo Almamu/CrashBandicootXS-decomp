@@ -78,8 +78,8 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   "Tenth pass".
 - **`SpawnRedGemPlatform`**, **`SpawnYellowGemPlatform`**, **`SpawnGreenGemPlatform`**,
   **`SpawnBlueGemPlatform`** (`src/level/spawn_gem_platforms.c`) - issue #31: the
-  "trigger effect type N" spawners (4 of the 15-slot
-  `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
+  "trigger effect type N" spawners (`gEntitySpawnFuncs[0x51]`-`[0x54]`,
+  entity types 0x51-0x54): sound-only-or-
   full-spawn effect triggers gated by a `gLevelState+2` flag bit.
   Parked as NAKED for a long time; all four are plain C with no pins
   once built with **old_agbcc** (`OLD_AGBCC_OBJS`). See

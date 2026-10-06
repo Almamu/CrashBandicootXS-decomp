@@ -54,7 +54,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0xd;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -87,7 +87,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0xb;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -320,7 +320,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0xe;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -351,7 +351,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0xc;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -383,7 +383,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0xf;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -418,7 +418,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetPartAnim(part, 0);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -447,7 +447,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x10;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -478,7 +478,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 5;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -511,7 +511,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 4;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -542,7 +542,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 3;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -576,7 +576,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 8;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -610,7 +610,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 7;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -642,7 +642,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 9;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -669,7 +669,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x19;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -680,7 +680,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         s32 f = part->flipX;
         part->flipX = f == 0;
     }
-    SetPartField0A(part, 2);
+    SetPartKind(part, 2);
     AndPartFlags(part, ~0x40);
     SetEnemyState(hdr, 1);
 }
@@ -708,7 +708,7 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x1b;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -743,7 +743,7 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x18;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -777,7 +777,7 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x1d;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -809,7 +809,7 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x1a;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -817,7 +817,7 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetPartField0A(part, 0xa);
+    SetPartKind(part, 0xa);
     AndPartFlags(part, ~0x40);
     SetEnemyAnimMap(hdr, gCrusherAnimMap);
     SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
@@ -863,7 +863,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x17;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -910,7 +910,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         f = p->flipX;
         p->flipX = f == 0;
     }
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     SetEnemyAnimMap(hdr, gFlamethrowerLabAssistantAnimMap);
     SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
     SetEnemyState(hdr, 4);
@@ -937,7 +937,7 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x16;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -971,7 +971,7 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x14;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -1003,7 +1003,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x15;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -1033,7 +1033,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x13;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -1063,7 +1063,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 6;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
@@ -1096,7 +1096,7 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr->kind = 0x12;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
-    SetPartField0A(part, 1);
+    SetPartKind(part, 1);
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;

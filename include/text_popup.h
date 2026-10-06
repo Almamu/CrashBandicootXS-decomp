@@ -69,7 +69,7 @@ extern s32 _call_via_r2(void *self, void *arg, void *fn);
 /* The setters below are inline because old_agbcc schedules a store's
  * value before its address only when the value arrives as an inline
  * helper's parameter; written in place, the order flips. */
-static inline void SetPartField0A(struct popup_part *part, s32 value)
+static inline void SetPartKind(struct popup_part *part, s32 value)
 {
     part->base.kind = value;
 }
