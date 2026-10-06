@@ -1,14 +1,6 @@
 #include "gax_internal.h"
 
 /* GAX2's fatal-error screen messages. */
-extern const char gGaxErrNameJingle[];
-extern const char gGaxErrNoJingle[];
-extern const char gGaxErrNameInit[];
-extern const char gGaxErrOutOfMemory[];
-extern void GaxFatalError(const char *a, const char *b);
-extern void GaxZeroFill(void *dest, s32 count);
-extern u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
-                      u32 *sizep);
 
 /* GAX2's `GAX2_jingle(song)` (named by its "GAX2_JINGLE" / "GAX_NO_JINGLE
  * FLAG IS SET" error report): plays `layout` as a jingle over the music.

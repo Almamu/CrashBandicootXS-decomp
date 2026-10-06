@@ -13,7 +13,7 @@
  * matches outright, see docs/matching/gax-toolchain-retry.md. (Caching
  * `self->instrument` in a local drops the ROM's one `mov` between the
  * load and its callee-saved copy.) */
-void GaxChannelStepInstrumentSeq(struct GaxChannelState *self)
+void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHandler *info)
 {
     struct GaxInstrumentSeqEntry *e = &self->instrument->seq[self->seqPos];
     u32 i;

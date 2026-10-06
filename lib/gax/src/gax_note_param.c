@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-
 /* Sets the pitch of sound-effect voice `channel` of the current player,
  * if that voice has an instrument loaded. The SFX voices are the mixer's
  * children after the song's own channels (`type->childCount` of them),

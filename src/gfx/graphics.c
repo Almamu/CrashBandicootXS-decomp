@@ -872,14 +872,13 @@ void nullsub_12(void)
 }
 asm(".align 2, 0");
 
-extern u8 gEntityVtable[];
 
 struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2, u16 unused)
 {
     struct actor *obj;
 
     obj = OperatorNew(sizeof(struct actor));
-    obj->table = gEntityVtable;
+    obj->table = (void *)gEntityVtable;
     ResetEntity(obj);
     obj->field_08 = arg0;
     obj->x = (s32)arg1 << 8;
@@ -937,7 +936,7 @@ asm(".align 2, 0");
 
 struct actor *InitEntity(struct actor *self)
 {
-    self->table = gEntityVtable;
+    self->table = (void *)gEntityVtable;
     ResetEntity(self);
     return self;
 }
@@ -1218,7 +1217,7 @@ u16 GetEntityId(struct actor *self)
 
 void DestroyEntity(struct actor *self, u32 arg1)
 {
-    self->table = gEntityVtable;
+    self->table = (void *)gEntityVtable;
     if (arg1 & 1) {
         OperatorDelete(self);
     }

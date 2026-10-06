@@ -1,9 +1,5 @@
 #include "gax_internal.h"
 
-extern u8 GaxEnvelopeTick(struct GaxChannelState *self, struct GaxEnvelope *env, u16 *pos);
-extern void GaxChannelTickVibrato(struct GaxChannelState *self);
-extern void GaxChannelTickSweep(struct GaxChannelState *self);
-
 /* Per-tick per-channel envelope/portamento update: if an instrument is
  * bound, advances the envelope (`GaxEnvelopeTick`, result into `envOut`),
  * then the effect-table tick (`GaxChannelTickVibrato`) and the position sweep
@@ -16,7 +12,7 @@ extern void GaxChannelTickSweep(struct GaxChannelState *self);
  * Was NAKED behind a heavily register-pinned 99.7% draft; written
  * plainly against a struct (fields accessed directly, no cached
  * locals) it matches outright - see docs/matching/gax-toolchain-retry.md. */
-void GaxChannelTick(struct GaxChannelState *self)
+void GaxChannelTick(struct GaxChannelState *self, struct GaxInfoHandler *info)
 {
     s32 v;
 

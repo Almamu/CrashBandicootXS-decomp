@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern u8 gGaxMixRates[];
-
 /* Looks up the first of 12 (8-byte-stride, first field a u32 threshold)
  * table entries whose threshold is >= `value`, returning its index, or
  * 0xb (the last entry) if none qualify. Table contents/meaning not
@@ -10,10 +8,10 @@ extern u8 gGaxMixRates[];
 s32 GaxFindMixRate(u32 value)
 {
     u32 i = 0;
-    u8 *p = gGaxMixRates;
+    const u8 *p = (const u8 *)gGaxMixRates;
 
     for (; i <= 0xb; i++) {
-        if (*(u32 *)p >= value) {
+        if (*(const u32 *)p >= value) {
             return i;
         }
         p += 8;

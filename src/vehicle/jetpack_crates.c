@@ -43,7 +43,6 @@
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-extern u8 gActorVtable[];
 
 /* The derived classes in this file, each the common `actor_self` prefix
  * plus its own fields. The animation-reset blocks store through

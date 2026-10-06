@@ -5,6 +5,7 @@
 #include "bosses.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "globals.h"
 
 s32 GetAnimFrameBaseOffset(struct actor_self *self)
 {
@@ -76,7 +77,6 @@ void SetActorAnim(struct actor_self *self, s32 idx)
 
 asm(".align 2, 0");
 
-extern u8 gActorVtable[];
 
 /* Twenty near-identical "kind" teardown handlers: set `self+0x50`'s
  * state/vtable pointer to the shared "dead" table `gActorVtable`,

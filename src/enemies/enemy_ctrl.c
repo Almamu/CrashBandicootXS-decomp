@@ -549,7 +549,6 @@ void UpdatePeriodicSpawner(struct periodic_spawner *self)
     }
 }
 
-extern u8 gEntityVtable[];
 
 /* Sets `self+0x18`'s table pointer (the struct-actor-shaped "table"
  * field role, per this file's own banner comment) to

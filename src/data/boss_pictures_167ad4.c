@@ -39,14 +39,14 @@ const u16 gAirshipPalette[256] = {
 /* The airship, 4 frames (the propellers turn). CreateAirship
  * (airship.c) reads cols and rows, ConvertAirshipTiles (airship_graphics.c)
  * uploads the tiles. */
-const struct {
-    s16 cols, rows;
+const struct airship_picture {
+    struct boss_picture_size size;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME0_TILES) frame0;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME1_TILES) frame1;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME2_TILES) frame2;
     BOSS_FRAME(AIRSHIP_CELLS, BOSS_PICTURE_167CD4_FRAME3_TILES) frame3;
 } gAirshipPicture = {
-    BOSS_PICTURE_167CD4_COLS, BOSS_PICTURE_167CD4_ROWS,
+    { BOSS_PICTURE_167CD4_COLS, BOSS_PICTURE_167CD4_ROWS },
 #include "boss_pictures/167cd4.inc"
 };
 
@@ -90,11 +90,11 @@ const u16 gHovercraftPalette[256] = {
 
 /* The hovercraft, 1 frame. CreateHovercraft (hovercraft.c) reads cols and
  * rows, ConvertHovercraftTiles uploads the tiles. */
-const struct {
-    s16 cols, rows;
+const struct hovercraft_picture {
+    struct boss_picture_size size;
     BOSS_FRAME(BOSS_PICTURE_169CE8_COLS * BOSS_PICTURE_169CE8_ROWS, BOSS_PICTURE_169CE8_FRAME0_TILES) frame0;
 } gHovercraftPicture = {
-    BOSS_PICTURE_169CE8_COLS, BOSS_PICTURE_169CE8_ROWS,
+    { BOSS_PICTURE_169CE8_COLS, BOSS_PICTURE_169CE8_ROWS },
 #include "boss_pictures/169ce8.inc"
 };
 

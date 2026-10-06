@@ -1,13 +1,5 @@
 #include "gax_internal.h"
 
-extern void GaxChannelSetNote(struct GaxChannelState *self, u32 note);
-extern void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 instrument,
-                        struct GaxSongData *song);
-extern void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHandler *info);
-extern void GaxChannelTick(struct GaxChannelState *self, struct GaxInfoHandler *info);
-extern u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
-                       struct GaxSongData *song, u32 flag);
-
 void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *info, u8 retrigger);
 
 /* GAX2_SoundHandler "Channel" type's play_fn (ROM 0x080395A5, see

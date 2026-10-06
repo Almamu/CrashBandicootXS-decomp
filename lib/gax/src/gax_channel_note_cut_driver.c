@@ -1,13 +1,5 @@
 #include "gax_internal.h"
 
-extern void GaxChannelSetNote(struct GaxChannelState *self, u32 note);
-extern void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 instrument,
-                        struct GaxSongData *song);
-extern void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHandler *info);
-extern void GaxChannelTick(struct GaxChannelState *self, struct GaxInfoHandler *info);
-extern u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
-                       struct GaxSongData *song, u32 flag);
-
 /* GAX2 per-channel play routine for directly-triggered notes (issue
  * #68) - the sibling of the Channel type's play_fn `GaxChannelPlay`
  * (gax_sound_handler_channel_play.c) for a channel that isn't fed by a

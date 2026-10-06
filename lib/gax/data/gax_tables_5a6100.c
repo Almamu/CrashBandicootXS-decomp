@@ -1,4 +1,5 @@
 #include "gba/types.h"
+#include "../src/gax_internal.h"
 
 /*
  * ROM 0x085A6100-0x085A9EEC: the GAX2 sound engine's constant data. Linked
@@ -12,16 +13,11 @@ const char gGaxVersionString[] = "GAX Sound Engine 2.01D (Sep 28 2001) \xa9 Shin
 
 const char *const gGaxVersionStringPtr = gGaxVersionString;
 
-/* gax_playstart.c's `struct RateEntry`: a mixing rate in Hz and the
- * timer reload for it (16.78 MHz / rate). GaxFindMixRate
+/* The mixing rates (`struct RateEntry`, gax_internal.h: a rate in Hz and
+ * the timer reload for it, 16.78 MHz / rate). GaxFindMixRate
  * (gax_find_mix_rate.c) picks the first entry whose rate is >= the
  * requested one; GAX2_init (gax_playstart.c) and GAX2_estimate
  * (gax_work_size.c) read the chosen entry. */
-struct RateEntry {
-    u32 rate;
-    u32 timer;
-};
-
 const struct RateEntry gGaxMixRates[12] = {
     { 5735, 2926 },
     { 10513, 1596 },

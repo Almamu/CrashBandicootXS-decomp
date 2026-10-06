@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-
 /* Binds a new instrument/entry to a per-channel voice object (`self`) from
  * `table->0x10[cmd]` and resets most of the voice's envelope/state fields
  * to their defaults, then (if the freshly-bound entry's own first byte is
@@ -37,7 +35,8 @@ extern struct GaxPlayerState *gGaxPlayerState;
  * opaque `asm volatile("str %1, [%0, #0x3c]" ...)` anchor, spelling out
  * the exact instruction with both already-pinned operands, was needed to
  * stop that. */
-void GaxChannelSetInstrument(void *self, void *unused, s32 cmd, void *table)
+void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 cmd,
+                             struct GaxSongData *table)
 {
     register void *selfIP asm("ip");
     register s32 n asm("r4");

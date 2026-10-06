@@ -50,9 +50,6 @@
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void _call_via_r0(void *fn);
 
-extern u8 gActorVtable[];
-extern u8 gHovercraftPicture[];
-
 /* Shared inlines of the singleton system (see CreateHovercraft). */
 static inline struct actor_self *AllocActor(u32 size)
 {
@@ -248,7 +245,7 @@ void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags)
     for (i = 0; i < self->reward; i++) {
         CollectWumpa(gLevelState);
     }
-    self->vtable = gActorVtable;
+    self->vtable = (void *)gActorVtable;
     self->l4c->l48 = self->l48;
     self->l48->l4c = self->l4c;
     if (flags & 1) {
@@ -867,8 +864,8 @@ void CreateHovercraft(s32 level)
     struct actor_self **slot;
 
     gHovercraftLevel = level;
-    gHovercraftMapCols = ((s16 *)gHovercraftPicture)[0];
-    gHovercraftMapRows = ((s16 *)gHovercraftPicture)[1];
+    gHovercraftMapCols = BOSS_PICTURE_SIZE(gHovercraftPicture)->cols;
+    gHovercraftMapRows = BOSS_PICTURE_SIZE(gHovercraftPicture)->rows;
     slot = &gHovercraft;
     t = AllocActor(0x1c);
     InitAnimPart(t, (struct anim_frame_record *)gHovercraftKeyframes, (u32 *)gHovercraftMapFrames, 1);

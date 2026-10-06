@@ -1,10 +1,5 @@
 #include "gax_internal.h"
 
-extern void GaxFatalError(void *arg0, void *arg1);
-extern void GaxZeroFill(void *arg0, s32 size);
-extern u8 gGaxErrNameNew[];
-extern u8 gGaxErrParamsNull[];
-
 /* GAX2's `GAX2_new(params)` (named by its own "GAX2_NEW" / "PARAMS ARG
  * IS NULL" error report): fills a `struct GaxSongHeader` (the GAX2
  * params block GAX2_estimate/GAX2_init take) with defaults - zeroes it

@@ -1,10 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-extern void GaxFatalError(const u8 *msg1, const u8 *msg2);
-extern u8 gGaxErrNameIrq[];
-extern u8 gGaxErrPlayNotFinished[];
-
 /* GAX2's per-frame DMA1/Timer0 direct-sound-output follow-up to
  * GAX2_init's play-start: once a song is loaded (magic == "GAX2") and
  * `state` is non-zero, a fresh `state == 1` (just-started) primes

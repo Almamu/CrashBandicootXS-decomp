@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern struct GaxPlayerState *gGaxPlayerState;
-
 /* MemCopy32 is this ROM's memcpy (reached from the non-constant
  * aggregate initializers below). */
 asm(".set memcpy, MemCopy32");
@@ -251,12 +249,16 @@ u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2)
     return result;
 }
 
-/* Advances `self`'s position through `hdr->step`; if that produced a
- * block, hands a 4-word work item to `gGaxPlayerState+0x48`'s ARM
- * routine, otherwise zero-fills `buf` for the block's length. */
-void GaxMixFrame(struct UnknownC *self, u32 *buf)
+/* Advances the mixer's position through its type's `play` (GaxMixerPlay,
+ * into `mixBuf`); if that produced a block, hands a 4-word work item to
+ * `gGaxPlayerState+0x48`'s ARM routine, otherwise zero-fills `buf` for
+ * the block's length. Called by GAX_play with the mixer as a `struct
+ * GaxMixerHandler`; the rest of this file still reads it through its
+ * own `struct UnknownC` view (`hdr` is `type`, `field_10` is
+ * `mixBuf`). */
+void GaxMixFrame(struct GaxMixerHandler *self, u32 *buf)
 {
-    u32 n = self->hdr->childCount + self->extraChildren;
+    u32 n = self->type->childCount + self->extraChildren;
     u32 step;
     s32 samples;
     struct GaxWorkItem4 item;
@@ -266,14 +268,14 @@ void GaxMixFrame(struct UnknownC *self, u32 *buf)
     else
         step = 0x400;
     {
-        u32 f10 = self->field_10;
+        u32 f10 = self->mixBuf;
         samples = self->format->frames * self->format->channels;
         item.field_10 = f10;
     }
     item.buf = buf;
     item.samples = samples;
     item.step = step;
-    if (self->hdr->step(self, self->field_10, self->pos++)) {
+    if (self->type->play(self, (void *)self->mixBuf, self->pos++)) {
         void *arg = &item;
         GAX_CALL_ARM(gGaxPlayerState->dspCode48, arg);
     } else {

@@ -214,7 +214,6 @@ struct fruit_actor {
     s32 fruit;                  // 0x5c
 };
 
-extern u8 gActorVtable[];
 
 /* Same "award `fruit` fruit via `CollectWumpa(gLevelState)`,
  * retarget the vtable to the 'dead' state, unlink from the circular
@@ -233,7 +232,7 @@ void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
         CollectWumpa(gLevelState);
     }
 
-    *(u8 **)(self + 0x50) = gActorVtable;
+    *(u8 **)(self + 0x50) = (u8 *)gActorVtable;
 
     {
         u8 *next = *(u8 **)(self + 0x4c);

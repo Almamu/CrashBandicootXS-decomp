@@ -41,17 +41,21 @@ input, display, palette/OAM/VRAM, audio and HUD singletons) done, see
 "Batch 9a" below; 9b (the level globals) done, see "Batch 9b" below;
 9c (`gPlayer` and `struct player`) done, see "Batch 9c" below; 9c2 (the
 player and crate functions' `void *self`) done, see "Batch 9c2" below.
-Next are the leftovers (9d).
+The leftovers are split in three PRs off main: 9d (the last externs: the
+base vtables, `gEmptySpritePoint`, the boss pictures and the GAX
+internals) done, see "Batch 9d" below; 9e (the struct views and the
+duplicate struct names) and 9f (the action controller's `struct act`,
+the crate list functions, and the final status) are next.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b | After batch 9c | After batch 9c2 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 | 589 | 587 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 | 405 | 405 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 | 7 | 7 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 | 233 | 223 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 | 10 | 10 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 | After batch 8a | After batch 8b | After batch 9a | After batch 9b | After batch 9c | After batch 9c2 | After batch 9d |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 | 1,559 | 1,116 | 812 | 631 | 589 | 587 | 494 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 | 740 | 429 | 415 | 406 | 405 | 405 | 355 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 | 70 | 26 | 17 | 8 | 7 | 7 | 4 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 | 347 | 298 | 286 | 245 | 233 | 223 | 220 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 | 23 | 13 | 12 | 11 | 10 | 10 | 8 |
 
 ## Tools
 
@@ -64,6 +68,12 @@ Audit totals (`tools/extern_audit.py`) as the batches land:
   - `--conflicts` lists every conflicting symbol.
   - `--symbol NAME` prints one symbol's full record: the definition, every
     variant, the files that declare it and its users by subsystem.
+
+  Since batch 9d it also sorts the declarations that are still in `.c`
+  files by the exception that keeps them there (see "Exceptions" below):
+  codegen aliases, `_call_via_rN`, data-to-data references,
+  library-internal symbols and the `DOCUMENTED` list in the tool. The
+  rest is printed as "remaining", and `--remaining` lists them by file.
 
   The parser is regex-based and only looks at file scope. It reads both arms
   of `#if NON_MATCHING` and doesn't run the preprocessor. It ignores
@@ -279,7 +289,7 @@ Where the remaining declarations would go (after the pilot):
 | util (**done**, batch 4) | 17 | 9 | 69 | 49 |
 | audio (**done**, batch 5) | 22 | 8 | 117 | 80 |
 | libgcc (without `_call_via_rN`) (**done**, batch 4) | 8 | 2 | 53 | 39 |
-| lib/gax (internal) | 43 | 3 | 74 | 22 |
+| lib/gax (internal, `gax_internal.h`) (**done**, batch 9d) | 43 | 3 | 74 | 22 |
 | save (**done**, batch 3) | 50 | 2 | 62 | 9 |
 | frontend (**done**, batch 3) | 60 | 2 | 109 | 15 |
 | crates (**done**, batch 6) | 57 | 9 | 74 | 24 |
@@ -434,7 +444,8 @@ before the files that every subsystem touches.
     `gActorList`) (done)**, see "Batch 9b" below; **9c, `gPlayer`
     (done)**, see "Batch 9c" below; **9c2, the player and crate
     functions' `void *self` (done)**, see "Batch 9c2" below; then the
-    leftovers (9d).
+    leftovers: **9d, the last externs (done)**, see "Batch 9d" below,
+    then 9e (struct views) and 9f (`struct act`, final status).
 
 The lib batches (GAX2 internals in `gax_internal.h`) can go anywhere. They
 don't interact with game code.
@@ -1725,6 +1736,79 @@ whose local label numbers shift (it now includes crate.h, see "Codegen
 findings"). The build has the same warnings as origin/main and no new
 ones.
 
+## Batch 9d: the last externs
+
+The first leftovers PR: every declaration in a `.c` file of a symbol
+defined elsewhere is now either in a header or covered by one of the
+exceptions below (`tools/extern_audit.py` prints "remaining: 0"). 93
+local declarations are gone (587 -> 494; 46 `.c` files touched), and 3 local
+struct definitions (223 -> 220). No codegen exception was needed.
+
+- **The base vtables** (`globals.h`, which now includes `vtable.h`):
+  `gActorVtable` (`const struct vtable_slot [4]`, 8 files declared it
+  `u8 []`) and `gEntityVtable` (`[11]`, 3 files). The destructors that
+  store it back cast it to their slot type (`(struct actor_vtable *)`,
+  `(void *)`, `(u8 *)`). `gBgStreamerVtable`/`gBgLayerBaseVtable` (`[2]`,
+  `[5]`) are in `level.h` with the BG layer functions cutscene_player.c
+  holds. entity_vtables_7e3bec.c includes `globals.h`, so the definitions
+  are checked.
+- **`gEmptySpritePoint`** (`objects.h`, `const struct sprite_point`, next
+  to `gEmptySpriteBox`); its 4 users take `&gEmptySpritePoint` with their
+  pointer type.
+- **The boss pictures** (`bosses.h`): their types are sized by the
+  generated picture headers in build/, so they are only complete in the
+  data file. The data file now names them (`struct airship_picture`,
+  `struct hovercraft_picture`, both starting with a `struct
+  boss_picture_size` head), bosses.h declares the objects with the
+  incomplete types, and CreateAirship/CreateHovercraft read the head
+  through `BOSS_PICTURE_SIZE(picture)->cols`/`rows`.
+- **`gAirship`** was already in `bosses.h` as `struct actor_self *`, with
+  no local declaration left. Only its 0x1C-byte animation head
+  (`anims`..`palette`) is allocated (CreateAirship), and only those fields
+  are used; a struct of its own is a later naming question, not a header
+  one.
+- **GAX internals** (`lib/gax/src/gax_internal.h`): the 17 engine
+  functions one GAX object calls in another, the engine's tables
+  (`gGaxMixRates`, the error and banner strings, `gGaxPeriodTable`,
+  `gGaxVibratoTable`), the raw ARM routines and patch points at the end of
+  gax_unknownc_play.c (`const u32 []`), `gGaxDefaultSong` (data.s),
+  `gGaxHaltFont` (iwram_data.c) and `gGaxMixRateReciprocal`. 59 local
+  declarations are gone from 22 GAX files. `struct RateEntry` (3 copies)
+  moved there, and gax_tables_5a6100.c includes the header.
+  - Definition fixes, all identical: `GaxChannelTick` and
+    `GaxChannelStepInstrumentSeq` take the unused `struct GaxInfoHandler
+    *info` both callers pass; `GaxChannelSetInstrument` (was `void *self,
+    void *unused, s32 cmd, void *table`), `GaxChannelSetNote` (was `void
+    *self`) and `GaxMixFrame` (was `struct UnknownC *`) take the handler
+    structs (`GaxMixFrame` reads `type->play`/`mixBuf` for the file-local
+    view's `hdr->step`/`field_10`); `GaxFatalError` and `GaxDrawText`
+    take `const char *` (the strings are `const char []`); `GaxZeroFill`
+    takes `void *dest`.
+  - Callers: `GaxChannelMix`'s last parameter is the definition's `u8`
+    (the callers declared `u32`, and pass 0 or 1); GAX_play casts the
+    output buffer address to `u32 *`; GaxFindMixRate and GaxChannelMix's
+    patch macro read the tables through `const u8 *` casts.
+- **Exceptions** are now listed in one place ("Exceptions" below), and
+  `tools/extern_audit.py` checks them.
+
+After a clean build every `.o` and `.s` file in src/ and lib/ is
+identical to origin/main's. The build has the same warnings as origin/main
+and no new ones.
+
+## Exceptions
+
+The declarations that stay in `.c` files on purpose. `tools/extern_audit.py`
+counts each kind; after batch 9d it finds no other declaration of a
+symbol defined elsewhere.
+
+| Kind | Declarations (after 9d) | Why |
+|---|---:|---|
+| Codegen aliases (`extern T Foo_x(...) asm("Foo");`) | 17 | the file needs another type for byte-identical code; each one is listed under "Codegen exceptions" below |
+| `_call_via_r0`..`_call_via_r5` | 143 | libgcc's register-call thunks: each call site declares the shape it calls with, which decides how the call is set up ("Who owns a symbol", rule 5) |
+| Data-to-data references | 329 | a `src/data/` table naming another data table or a `data/data.s` label (graphics, palettes, maps). Address-only, many generated ("Who owns a symbol", rule 4) |
+| Library-internal | 3 | libgcc2.c's `__div0` and the two per-object `__clz_tab` copies, declared where gcc's own libgcc2.c declares them |
+| Documented | 2 | asset.c's one-argument `LZ77UnCompVram`/`RLUnCompVram` (docs/libraries.md) |
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -1863,6 +1947,12 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `void *self` -> `struct player *`/`struct crate *` parameters, `selfArg` copies dropped or cast to `u8 *` (pinned registers kept) | player_flags.c, player_update.c, player_reset.c, player_init.c, slot_crate.c, crate_stack.c, crate_draw.c, crate_reset.c | identical |
 | method `self` views (`a884_part`, `ab9c_obj`, `ac2c_self`, `orbit_self`, `ctrl_target`) -> `struct player`; u32 mirror bit of a 4-byte container -> packed `mirror.bits.flipX`; `u8` bitfields -> `flags.bits`; `vtable + 0x70` -> `&vtable->collideWithObjects` | player_collide.c, player_event.c, input_ctrl.c (old_agbcc) | identical |
 | `#include "crate.h"` (with gobj_1a794.h; 6 static inlines) in a file that didn't include it | crate.c | `.o` identical, `.s` label numbers shift (+7); kept, since crate.c needs `struct crate` |
+| `u8 []` vtable extern -> `const struct vtable_slot [N]`, stores through `(void *)`/`(u8 *)`/`(struct actor_vtable *)` casts | gActorVtable/gEntityVtable users (actor_anim.c, graphics.c, ...) | identical |
+| `s16 []`/`u8 []` picture extern -> incomplete struct object, head read through a `struct boss_picture_size *` cast | CreateAirship, CreateHovercraft | identical |
+| a `struct UnknownC *` parameter copied from a `struct GaxMixerHandler *` (`self = (struct UnknownC *)mixer`) | GaxMixFrame | **changes** (`add r4, r0, #0` moves down one insn); the body reads the header struct's `type->play`/`mixBuf` instead, which is identical |
+| unused `struct GaxInfoHandler *` parameter added; `void *`/`s32` parameters -> the handler structs and `u32` | GaxChannelTick, GaxChannelStepInstrumentSeq, GaxChannelSetInstrument (pinned registers), GaxChannelSetNote | identical |
+| `const u8 *` -> `const char *` parameters (char is unsigned here), `u8 *dest` -> `void *` with a local `u8 *` | GaxFatalError, GaxDrawText (pinned), GaxZeroFill (pinned) | identical |
+| `u8 []` ARM-code labels -> `const u32 []`, byte offsets through `(const u8 *)` casts | GaxChannelMix's patch macro | identical |
 | `void *` accessor return -> `struct crate *`, callers cast | GetCrateAbove/GetCrateBelow in crate_hit.c (old_agbcc), room_entities.c (old_agbcc) | identical |
 
 Experiments for later batches:

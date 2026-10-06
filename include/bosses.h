@@ -414,9 +414,20 @@ extern const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13];
 /* src/data/boss_pictures_167ad4.c */
 extern const u16 gAirshipPalette[256];
 extern const u16 gHovercraftPalette[256];
-/* gAirshipPicture and gHovercraftPicture are defined here with anonymous
- * struct types sized by the picture data, so their users declare them
- * (as `const s16 []`/`u8 []`) locally. */
+/* The two boss pictures: a {cols, rows} head, then the frames (docs/data.md
+ * "Boss pictures"). Each picture's struct is sized by its generated picture
+ * header (build/.../boss_pictures/<addr>.h), so it is only complete in the
+ * data file; the code reads the head through BOSS_PICTURE_SIZE, and finds
+ * the frames from the palette (gAirshipPalette + 0x204). */
+struct boss_picture_size {
+    s16 cols;
+    s16 rows;
+};
+struct airship_picture;     /* 4 frames */
+struct hovercraft_picture;  /* 1 frame */
+extern const struct airship_picture gAirshipPicture;
+extern const struct hovercraft_picture gHovercraftPicture;
+#define BOSS_PICTURE_SIZE(picture) ((const struct boss_picture_size *)&(picture))
 
 /* src/data/actor_state_17c3fc.c */
 extern void (*const gAirshipStateFuncs[6])();

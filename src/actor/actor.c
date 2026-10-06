@@ -84,7 +84,6 @@ s32 IsTouchingPlayer(void *self)
     return _call_via_r1(self, *(void **)((u8 *)tab + 0x24));
 }
 
-extern u8 gActorVtable[];
 
 /* The constructor every other actor file already forward-
  * declares: seeds `self`'s part-table pointer (`+0`/`+4`, copied from
@@ -644,7 +643,7 @@ void DestroyActor(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(u8 **)(self + 0x50) = gActorVtable;
+    *(u8 **)(self + 0x50) = (u8 *)gActorVtable;
 
     {
         u8 *next = *(u8 **)(self + 0x4c);

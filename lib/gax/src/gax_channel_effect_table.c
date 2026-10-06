@@ -1,7 +1,5 @@
 #include "gax_internal.h"
 
-extern s8 gGaxVibratoTable[];
-
 /* Per-tick vibrato update of a channel's `field_2e` (the pitch offset
  * added to the note when mixing) from a signed waveform table
  * (`gGaxVibratoTable`), gated on the bound instrument's `vibratoDepth`
