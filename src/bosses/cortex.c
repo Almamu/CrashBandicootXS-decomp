@@ -371,6 +371,10 @@ void DestroyUnusedOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags)
     DestroyCtrl(self, flags);
 }
 
+/* Empty. SetTinyState's case 9 (tiny_update.c) calls it directly, between
+ * the hop set-up and the anim-7 call, with the same (self, part) arguments
+ * as StartTinyHop below; it is in no method table, so nothing shows what
+ * it was for. */
 void nullsub_19(void *self, void *part)
 {
 }

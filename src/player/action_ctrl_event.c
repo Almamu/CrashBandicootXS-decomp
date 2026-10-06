@@ -95,7 +95,8 @@ static inline void PartSetVelY(struct player *p, s32 a, s32 b, s32 c)
  * - 2/3/7/8/9/10 call `KillPlayer` with a fixed id; 1/4/6 do the same
  *   with 0x1C and also reset the part's velocities and
  *   `gCamera->mode`;
- * - 11 calls `sub_8015558` once the player is in contact and
+ * - 11 (PlayerHandleEvent: the Aku Aku mask absorbed a hit) calls
+ *   `StartActionCtrlMaskHitJump` once the player stands on the ground and
  *   `PlayerHasRoomForAnim(part, 0xB)` reports 1;
  * - 12 applies the contact bits `arg3` (and, for `arg3 & 3` == 1/2,
  *   the player's X mirror decides whether the queued action moves to
@@ -334,7 +335,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);
             ActAndFlags0D(self->part, -3);
-            sub_8015558(self);
+            StartActionCtrlMaskHitJump(self);
         }
         break;
     }

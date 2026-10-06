@@ -48,7 +48,7 @@ extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
  * (axes compared Z, then Y, then X - matching the ROM's own instruction
  * order, not storage order) built the same way both times: a
  * `gYetiCatchBox`-rooted static record with `gYetiX`/
- * `030014C8` (both `>>8`) added into its `x`/`z` fields only (this
+ * `gYetiPosition` (both `>>8`) added into its `x`/`z` fields only (this
  * object tracks no Y), against the player's own `+0x38` 12-byte vector
  * with the player's `+0x1c`/`0x20`/`0x24` position (all `>>8`) added
  * into all three of `x`/`y`/`z`. The second record is then run through

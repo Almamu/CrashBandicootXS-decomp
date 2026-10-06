@@ -16,9 +16,9 @@
  * the literal tail of that raw `.s` file, a self-contained run of
  * accumulator-drain/hazard-threshold helpers on the same `self` object
  * family documented in polar_player_actions.c/jetpack_player.c, operating on the
- * `gUnknown_0300148x`/`gUnknown_030014Ax` global cluster those files
+ * polar player globals (`gPolarPauseLocked`-`gPolarPlayerVelY`) those files
  * already established (`gPolarQueuedWumpa`'s "reward" accumulator,
- * `gPolarPlayerInactive`-`030014A4`'s lock/hazard-latch quintet). See
+ * the `gPolarPlayerInactive`-`gPolarPlayerVelY` quintet). See
  * docs/rom_map.md's "boss's BG2 spin/zoom effect..." section, which
  * already reads `DispensePolarWumpa` as one of a matched pair of accumulator-
  * drain/reward-dispenser functions (the other being `DispenseJetpackWumpa` in

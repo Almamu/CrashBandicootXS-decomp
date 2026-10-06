@@ -19,7 +19,7 @@
  * - see that function's doc comment for the full record-layout writeup.
  * Box A: `gYetiBox` (a record adjacent to `UpdateYeti`'s
  * own `gYetiCatchBox` - literal-pool-verified 0xC bytes apart)
- * with `gYetiX`/`030014C8` (both `>>8`) added into its `x`/
+ * with `gYetiX`/`gYetiPosition` (both `>>8`) added into its `x`/
  * `z` fields only. Box B: `self+0x38`'s own 12-byte vector, with
  * `self`'s own `+0x1c`/`0x20`/`0x24` position (all `>>8`) added into
  * all three of `x`/`y`/`z` - this is the "self+0x38's own vector"

@@ -328,11 +328,11 @@ from "core" graphics.
 
 - `src/graphics/actor_part19i.c` (new file, now part of `src/vehicle/polar_crates.c`,
   directly adjacent to `actor_part19d.c`'s matched functions - GitHub issue #53):
-  `UpdatePolarTimeCrate`, `DetonatePolarNitroCrate`, `sub_802CA6C`, `UpdatePolarBasicCrate` - the
+  `UpdatePolarTimeCrate`, `DetonatePolarNitroCrate`, `UpdatePolarFourWumpaCrate`, `UpdatePolarBasicCrate` - the
   type-byte-dispatch/proximity "used"-state transition family (same
   shape as `UpdatePolarQuestionCrate`/`UpdatePolarLifeCrate`, `polar_pickups.c`); `InitPolarCrate`
   and its seven thin forwarding wrappers (`CreatePolarTimeCrate`, `CreatePolarQuestionCrate`,
-  `CreatePolarAkuAkuCrate`, `CreatePolarNitroCrate`, `CreatePolarLifeCrate`, `sub_802CC54`,
+  `CreatePolarAkuAkuCrate`, `CreatePolarNitroCrate`, `CreatePolarLifeCrate`, `CreatePolarFourWumpaCrate`,
   `CreatePolarBasicCrate`) - an `InitActorPart`-based constructor family
   classifying a "kind" from a `__divsi3`-scaled/clamped value plus a
   range-keyed offset. See
@@ -461,7 +461,7 @@ from "core" graphics.
   0x08015350-0x080156B4, non-adjacent to `action_ctrl_moves.c` since
   `EndActionCtrlSpin`/`SteerActionCtrlSpin` sit between them):
   `SetActionCtrlMode`, `StartActionCtrlSpin`, `StartActionCtrlHangSpin`, `StartActionCtrlRun`,
-  `StartActionCtrlHighJump`, `sub_8015558`, `AttachActionCtrl`, `ActionCtrlStateUnusedHangRelease`,
+  `StartActionCtrlHighJump`, `StartActionCtrlMaskHitJump`, `AttachActionCtrl`, `ActionCtrlStateUnusedHangRelease`,
   `ActionCtrlStateUnusedHangGrab`, `ActionCtrlStateHangSpin`, `ActionCtrlStateHangGrab`, `ActionCtrlStateWarpOut`,
   `ActionCtrlStateCrawlStop` - more of the same self+0xc/self+0x10 trampoline-pair
   family, including two near-identical self+0x29-keyed mgr-trampoline
@@ -494,7 +494,7 @@ from "core" graphics.
   `UpdateActor`), and 20 byte-identical `gActorVtable` "kind"
   teardown handlers (`DestroyRiderlessPolar`, `DestroyPolarCheckpointText`, `DestroyPolarWumpa`,
   `DestroyPolarTimeCrate`, `DestroyPolarQuestionCrate`, `DestroyPolarAkuAkuCrate`, `DestroyPolarNitroCrate`,
-  `DestroyPolarLifeCrate`, `sub_803B25C`, `DestroyPolarBasicCrate`, `DestroyPolarCrate`,
+  `DestroyPolarLifeCrate`, `DestroyPolarFourWumpaCrate`, `DestroyPolarBasicCrate`, `DestroyPolarCrate`,
   `DestroyPolarElectricFence`, `DestroyPolarObstacle`, `DestroyPolarLauncher`, `DestroyPolarPenguin`,
   `DestroyPolarIcicle`, `DestroyPolarAkuAku`, `DestroyPolarGoal`, `DestroyPolarBoostPad`,
   `DestroyPolarCheckpointCrate` - unlink `self` from its `+0x48`/`+0x4c` circular list,

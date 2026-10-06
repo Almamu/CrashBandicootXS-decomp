@@ -1007,7 +1007,7 @@ vtable shapes).
 | `087E4EF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarAkuAkuCrate` | high | easy |
 | `087E4F14` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarNitroCrate` | high | easy |
 | `087E4F34` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarLifeCrate` | high | easy |
-| `087E4F54` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CC54` | high | easy |
+| `087E4F54` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarFourWumpaCrate` | high | easy |
 | `087E4F74` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarBasicCrate` | high | easy |
 | `087E4F94` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitPolarCrate` | high | easy |
 | `087E4FB4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarElectricFence` | high | easy |

@@ -47,8 +47,8 @@ records.
 The state dispatch at the end of `UpdateInputCtrl` goes through
 `gInputCtrlStateFuncs`, a table of gcc 2.x pointer-to-member-functions
 (`{s16 delta; s16 index; union {fn, s16 vtable offset}}`): state 0
-`InputCtrlStateStart` (reset the pairs, spawn the child), 1 `sub_801796C`,
-2 `sub_801793C`, 3 `InputCtrlStateDead` (mark the target gone). That call
+`InputCtrlStateStart` (reset the pairs, spawn the child), 1 `InputCtrlStateRide`,
+2 `InputCtrlStateUnusedRide`, 3 `InputCtrlStateDead` (mark the target gone). That call
 sequence, and the `_call_via_r1`/`AD80`/`AD84` trampolines every virtual
 call goes through (`bx r1`/`r2`/`r3` - gcc's `_call_via_rN` interworking
 thunks), are what gcc's C++ front end emits, so this object was very
@@ -131,7 +131,7 @@ All 25 functions still match. What became unnecessary:
 Still needed under old_agbcc: `InputCtrlHandleEvent`'s `s32 lo = 1` lower bound
 (with a literal `1`, gcc folds `>= 1` into `> 0`), and the
 `SetAnimA`/`SetAnimB`/`SetChildSpeed` inline helpers (written inline,
-`UpdateInputCtrl` and `sub_801793C` stop matching).
+`UpdateInputCtrl` and `InputCtrlStateUnusedRide` stop matching).
 
 `tools/patch_expected_target.py`/`expected/corrections.txt` need nothing
 here: the frozen disassembly labels all 25 correctly.

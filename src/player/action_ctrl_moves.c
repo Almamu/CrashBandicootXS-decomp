@@ -416,8 +416,13 @@ void StartActionCtrlHighJump(struct act *self)
     self->part->hitAxes = zero;
 }
 
-/* Same shape as `StartActionCtrlHighJump`, table-index `7` instead of `0xb`. */
-void sub_8015558(struct act *self)
+/* Same shape as `StartActionCtrlHighJump`, but with Y motion entry 7 (the
+ * plain jump the A button queues in ActionCtrlStateRun) instead of 0xb. The
+ * hop Crash makes when the Aku Aku mask absorbs a hit:
+ * ActionCtrlHandleEvent's event 11 calls it, and the only sender of
+ * event 11 is PlayerHandleEvent's hit cases (1-10), right after they drop
+ * the mask level by one (mask level 1 or 2). */
+void StartActionCtrlMaskHitJump(struct act *self)
 {
     MATCH_HOLD_REG(s32, zero, r5) = 0;
     MATCH_HOLD_REG(u8, idx, r2);

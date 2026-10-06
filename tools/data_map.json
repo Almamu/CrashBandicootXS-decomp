@@ -8354,7 +8354,7 @@
     "DestroyPolarAkuAkuCrate",
     "DestroyPolarNitroCrate",
     "DestroyPolarLifeCrate",
-    "sub_803B25C",
+    "DestroyPolarFourWumpaCrate",
     "DestroyPolarBasicCrate",
     "DestroyPolarCrate",
     "DestroyPolarElectricFence",
@@ -8665,10 +8665,10 @@
   {
    "address": "0x087E4F54",
    "size": 32,
-   "name": "gStaticData_087E4F54",
+   "name": "gPolarFourWumpaCrateVtable",
    "consumers": [
     "CreateActor",
-    "sub_802CC54"
+    "CreatePolarFourWumpaCrate"
    ],
    "consumer_files": [
     "vehicle/polar_crates.c",

@@ -1983,7 +1983,7 @@ name a header also used is renamed. No codegen exception was needed.
     `KillPlayer`;
   - keep the byte offsets through `(u8 *)self` casts of the parameter
     where the code is register-pinned or a field store changes it
-    (`StartActionCtrlHighJump`/`sub_8015558`'s two queue stores,
+    (`StartActionCtrlHighJump`/`StartActionCtrlMaskHitJump`'s two queue stores,
     `KillPlayer`'s walked pointer, `UpdatePlayerFacing`'s pinned part
     bytes), and `StartActionCtrlTornadoFall` and `ActionCtrlStateTurboRun` keep their
     pinned `register` copies.
@@ -2254,7 +2254,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `const struct anim_record_view` data object -> `const struct anim_table_record` with cast initializers | gLogoActorAnim | identical data |
 | `void *selfArg` + `u8 *self = selfArg` copy -> `struct act *self` parameter, bytes read as `((u8 *)self)[n]` or fields | action_ctrl.c, action_ctrl_moves.c, action_ctrl_hang.c (old_agbcc), action_ctrl_states.c (old_agbcc), action_ctrl_left_ground.c, kill_player.c, wumpa.c | identical |
 | `u8 *self` parameter -> `struct act *selfArg` with a `u8 *self = (u8 *)selfArg` copy | StartActionCtrlTornadoSpin (old_agbcc) | **changes** (the ROM saves r8 and r9 and keeps `self` in r6; with the copy only r8 is saved and the registers shift); the parameter itself, read through casts or fields, is identical |
-| `self[0x32] = zero; self[0x30] = 1` with `zero` pinned to r5 -> `self->motionYKeepSpeed`/`motionYPending` | StartActionCtrlHighJump, sub_8015558 | **changes**; kept as byte stores through `(u8 *)self` (the `vt`/`part`/`frame` reads and store are fields, identical) |
+| `self[0x32] = zero; self[0x30] = 1` with `zero` pinned to r5 -> `self->motionYKeepSpeed`/`motionYPending` | StartActionCtrlHighJump, StartActionCtrlMaskHitJump | **changes**; kept as byte stores through `(u8 *)self` (the `vt`/`part`/`frame` reads and store are fields, identical) |
 | `u8 *self = selfArg` copies removed from KillPlayer and UpdateActionCtrlSkidAnim | kill_player.c | `.o` identical, but UpdatePlayerFacing's `.LCB` label numbers shift by one; UpdateActionCtrlSkidAnim keeps a `struct act *self = selfArg` copy, which keeps the `.s` identical |
 | raw `self + 0x14`/`0x18`/`0xc`/`0x10` and `self[0x14..0x1a]` -> `struct boss_ctrl`/`struct input_ctrl` fields | input_ctrl_queue.c | identical |
 | `struct box_part *` crate view (`physMode`, `(*keyframes)[frame]`, `u32 mirrorX:1`) -> `struct crate *` (`state`, `anim->records[tag]`, `s32 flipX:1`) | ResolveStackCrateHit (old_agbcc) | `.o` identical; including crate.h shifts crate_hit.s's label numbers |

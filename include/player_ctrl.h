@@ -39,7 +39,7 @@ struct player_ctrl {
     s32 state;                   // 0x08 - index into gPlayerCtrlStateFuncs
     struct pctrl_vtable *vtable; // 0x0C
     struct player *target;       // 0x10 - the player (gPlayer)
-    s32 unk_14;                  // 0x14
+    s32 unk_14;                  // 0x14 - only ever cleared (ResetPlayerCtrl, sub_801750C)
     s32 timer;                   // 0x18
     s32 timerMax;                // 0x1C
     u8 repeat;                   // 0x20 - D-pad auto-repeat countdown
@@ -50,8 +50,10 @@ struct player_ctrl {
     u8 spinCooldown; // 0x23 - frames until StartPlayerCtrlSpin is allowed again (set to 12)
     u8 motionX;      // 0x24 - queued X motion entry (animSet->entries[].a)
     u8 motionY;      // 0x25 - queued Y motion entry (animSet->entries[].b)
-    u8 unk_26;       // 0x26
-    u8 idleTimer;    // 0x27 - PlayerCtrlStateIdle's bob timer (Y motion 1 at 30, 2 at 60)
+    // 0x26 - only ever cleared (ResetPlayerCtrl, PlayerCtrlStateIdle, CheckPlayerCtrlTurn);
+    // nothing reads it
+    u8 unk_26;
+    u8 idleTimer; // 0x27 - PlayerCtrlStateIdle's bob timer (Y motion 1 at 30, 2 at 60)
     // 0x28 - gRoomFrameCount + 16 (StartPlayerCtrlStroke);
     // the state waits until it passes or the anim ends
     u32 deadline;

@@ -12,9 +12,9 @@ into `ldscript.txt` at its real ROM address in place of the removed
 With that done, this pass also picked up the first 12 functions of
 issue #53's own chunk (`0x0802C99C`-`0x0802CC9C`, directly adjacent to
 `DetonateNearbyPolarNitros`/`UpdatePolarAkuAkuCrate`) - `UpdatePolarTimeCrate`, `DetonatePolarNitroCrate`,
-`sub_802CA6C`, `UpdatePolarBasicCrate`, `InitPolarCrate`, `CreatePolarTimeCrate`,
+`UpdatePolarFourWumpaCrate`, `UpdatePolarBasicCrate`, `InitPolarCrate`, `CreatePolarTimeCrate`,
 `CreatePolarQuestionCrate`, `CreatePolarAkuAkuCrate`, `CreatePolarNitroCrate`, `CreatePolarLifeCrate`,
-`sub_802CC54`, `CreatePolarBasicCrate` - all genuinely **matched as real C**, in
+`CreatePolarFourWumpaCrate`, `CreatePolarBasicCrate` - all genuinely **matched as real C**, in
 a new file `src/vehicle/polar_crates.c`. The raw
 `asm/code_3_2_20_28568_c99c.s` fragment (which spanned far beyond this
 chunk) was cut at that boundary and its remainder renamed
@@ -132,7 +132,7 @@ matched as plain C, in `src/vehicle/polar_crates.c`:
   transition; tail-calls `UpdatePolarCrate`.
 - **`DetonatePolarNitroCrate`** - the same used-state transition, unconditional
   (no `IsTouchingPlayer` guard), also clearing `self+0x44`; no tail call.
-- **`sub_802CA6C`**/**`UpdatePolarBasicCrate`** - the proximity-gated shape again,
+- **`UpdatePolarFourWumpaCrate`**/**`UpdatePolarBasicCrate`** - the proximity-gated shape again,
   forwarding a fixed accumulator delta (`4`/`1`) to
   `QueuePolarWumpa(gActorList, ...)`; each tail-calls `UpdatePolarCrate`.
 - **`InitPolarCrate`** - an `InitActorPart`-based constructor: installs
@@ -144,7 +144,7 @@ matched as plain C, in `src/vehicle/polar_crates.c`:
   `0xc`) to seed `self+0x10`/`self+0x12`/`self+8`, the same idiom as
   `CreatePolarBoostPad` (`src/vehicle/polar_aku_aku.c`).
 - **`CreatePolarTimeCrate`**, **`CreatePolarQuestionCrate`**, **`CreatePolarAkuAkuCrate`**,
-  **`CreatePolarNitroCrate`**, **`sub_802CC54`**, **`CreatePolarBasicCrate`** - thin
+  **`CreatePolarNitroCrate`**, **`CreatePolarFourWumpaCrate`**, **`CreatePolarBasicCrate`** - thin
   `InitPolarCrate`-forwarding constructors, each installing a different
   `self+0x50` event table
   (`gPolarTimeCrateVtable`/`ED4`/`EF4`/`F14`/`F54`/`F74`).

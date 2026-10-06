@@ -156,7 +156,7 @@ tail:
 
 /* Fires the mgr trampoline pair (actions `0`/`0x12`), then resets the
  * `0x27`/`0x2f`/`0x31` and `0x28`/`0x30`/`0x32` state/counter/table-index
- * pairs (same trio shape as `StartActionCtrlHighJump`/`sub_8015558` in
+ * pairs (same trio shape as `StartActionCtrlHighJump`/`StartActionCtrlMaskHitJump` in
  * action_ctrl_moves.c). */
 void RestartActionCtrl(struct act *self)
 {

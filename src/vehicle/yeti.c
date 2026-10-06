@@ -26,8 +26,8 @@ void DestroyYeti(void)
  * allocates and wires up a fresh instance (part table
  * `gYetiKeyframes`/`0817A880`, header byte `0xf`, reset via
  * `SetActorAnim`) into `gYeti`, resets the position-tracking
- * pair (`gYetiX` to 0, `030014CC` to `0xA000`,
- * `030014C8` derived the same way `YetiStateChase`/`YetiStateCharge` do),
+ * pair (`gYetiX` to 0, `gYetiDistance` to `0xA000`,
+ * `gYetiPosition` derived the same way `YetiStateChase`/`YetiStateCharge` do),
  * primes `SetActorBgLayerDepth`, clears `gYetiState`, and finally calls
  * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
  * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */

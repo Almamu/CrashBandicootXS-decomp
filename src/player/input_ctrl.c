@@ -34,8 +34,8 @@
  * (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked
  * gone and `RequestRoomExit` is signalled. It then dispatches the current
  * `state` through `gInputCtrlStateFuncs`, a table of gcc 2.x
- * pointer-to-member-functions: state 0 `InputCtrlStateStart`, 1 `sub_801796C`,
- * 2 `sub_801793C`, 3 `InputCtrlStateDead`. That call sequence - and the
+ * pointer-to-member-functions: state 0 `InputCtrlStateStart`, 1 `InputCtrlStateRide`,
+ * 2 `InputCtrlStateUnusedRide`, 3 `InputCtrlStateDead`. That call sequence - and the
  * `_call_via_r1`/`AD80`/`AD84` "call via r1/r2/r3" trampolines used for
  * every virtual call - is what gcc's C++ front end emits, so this object
  * was very likely written in C++.
@@ -315,7 +315,12 @@ void InputCtrlStateDead(struct input_ctrl *self)
         MARK_GONE(t->flags.bits.gone, t->id);
 }
 
-void sub_801793C(struct input_ctrl *self)
+/* gInputCtrlStateFuncs[2]: once the target's animation ends, goes back to
+ * state 1 on animation 0 and queues X motion entry 2 (the same cruise
+ * record as entry 1, restarted). Only InputCtrlStateRide sets state 2, and
+ * only when animation 0 ends, which never happens (see there), so this
+ * state is never reached. */
+void InputCtrlStateUnusedRide(struct input_ctrl *self)
 {
     if (self->target->animDone) {
         SetInputCtrlModeAnim(self, 1, NULL, 0, 0);
@@ -323,7 +328,12 @@ void sub_801793C(struct input_ctrl *self)
     }
 }
 
-void sub_801796C(struct input_ctrl *self)
+/* gInputCtrlStateFuncs[1], the state the controller stays in for the whole
+ * hover ride (ResetInputCtrl and InputCtrlStateStart select it; the D-pad
+ * steering is in UpdateInputCtrl). It would switch to state 2 once the
+ * target's animation ends, but the animation is 0, sprite bank 2's riding
+ * loop (SPRITE_ANIM_LOOP), which never sets animDone. */
+void InputCtrlStateRide(struct input_ctrl *self)
 {
     if (self->target->animDone)
         SetInputCtrlModeAnim(self, 2, NULL, 0, 0);

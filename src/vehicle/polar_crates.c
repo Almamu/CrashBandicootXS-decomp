@@ -151,11 +151,19 @@ void DetonatePolarNitroCrate(void *selfArg)
     }
 }
 
-/* Same proximity-gated "used" transition shape as `UpdatePolarQuestionCrate`/
+/* The CreateActor kind-10 crate: a plain wooden crate worth 4 wumpa
+ * (UpdatePolarBasicCrate's kind 1 gives 1). Its animation record,
+ * gCategoryFamily0AnimTable[10], is kind 1's with only the index changed
+ * (gPolarBasicCrateKeyframes/Frames, palette 1), so in game it looks just
+ * like a basic crate. Only the first polar stage (gCategory0SpawnTable)
+ * places it: four times, in two side-by-side pairs; in time trials one
+ * pair becomes time crates (kind 7).
+ *
+ * Same proximity-gated "used" transition shape as `UpdatePolarQuestionCrate`/
  * `UpdatePolarLifeCrate` (polar_pickups.c), forwarding a fixed accumulator
  * delta of `4` to `QueuePolarWumpa(gActorList, ...)`; tail-calls
  * `UpdatePolarCrate`. */
-void sub_802CA6C(void *selfArg)
+void UpdatePolarFourWumpaCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -178,8 +186,8 @@ void sub_802CA6C(void *selfArg)
     UpdatePolarCrate(self);
 }
 
-/* Same shape as `sub_802CA6C` above, accumulator delta `1` instead of
- * `4`. */
+/* Same shape as `UpdatePolarFourWumpaCrate` above, accumulator delta `1`
+ * instead of `4`. */
 void UpdatePolarBasicCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
@@ -307,13 +315,14 @@ void *CreatePolarLifeCrate(void *selfArg, void *part, s32 b, s32 c, s32 lastArg,
     return self;
 }
 
-/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gStaticData_087E4F54`. */
-void *sub_802CC54(void *selfArg, void *part, s32 b, s32 c, s32 lastArg)
+/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gPolarFourWumpaCrateVtable`.
+ * CreateActor's kind 10 inlines it; this out-of-line copy has no caller. */
+void *CreatePolarFourWumpaCrate(void *selfArg, void *part, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
     InitPolarCrate(self, part, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4F54;
+    self->vtable = (struct actor_vtable *)gPolarFourWumpaCrateVtable;
     return self;
 }
 
