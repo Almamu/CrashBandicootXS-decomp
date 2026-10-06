@@ -88,7 +88,7 @@ void LoseHovercraftPart(void)
 
 /* Constant getter - returns `gHovercraftAttack` (a pointer to a small
  * per-state lookup table used by several functions in this cluster). */
-const struct singleton_kind *GetHovercraftAttack(void)
+const struct hovercraft_attack *GetHovercraftAttack(void)
 {
     return gHovercraftAttack;
 }
@@ -235,8 +235,10 @@ void HovercraftStateApproach(void)
     }
 }
 
-/* No-op stub. */
-void nullsub_37(void)
+/* gHovercraftStateFuncs[4], the slot of gAirshipStateFuncs[4]'s
+ * AirshipStateExplode. Empty and never entered: LoseHovercraftPart goes
+ * straight to state 5 (HovercraftStateFall). */
+void HovercraftStateExplodeStub(void)
 {
 }
 

@@ -90,8 +90,11 @@ s32 IsPolarPauseLocked(void *player)
  * (`gPolarPlayerInactive`), and resets `self` to state 1/table-index 0 -
  * the same state/table-index/anim-frame reset idiom already documented
  * for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` and this family's
- * own `LaunchPolarPlayer` (polar_player_actions.c) - then fires `SetCellAnimSpeed(0x24)`. */
-void sub_802BD24(void *selfArg)
+ * own `LaunchPolarPlayer` (polar_player_actions.c) - then fires `SetCellAnimSpeed(0x24)`.
+ * gPolarPlayerStateFuncs[13]: undoes what HurtPolarPlayer sets (steering
+ * off, `gPolarPlayerInactive`) and goes back to PolarPlayerStateRun
+ * after 20 frames. No code found that enters state 13. */
+void PolarPlayerStateRecover(void *selfArg)
 {
     MATCH_HOLD_REG(struct actor_self *, self, r3) = selfArg;
 
@@ -190,7 +193,7 @@ void PolarPlayerStateKnockedOff(void *selfArg)
 }
 
 /* Frame-counter-threshold state-transition idiom, structural twin of
- * `sub_802BD24` above: once `stateTime` reaches 0x1e, latches
+ * `PolarPlayerStateRecover` above: once `stateTime` reaches 0x1e, latches
  * `gPolarSteerEnabled`, then either (if input bit 1 of
  * `gKeys` is clear) resets `self` to state 1/table-index 0
  * via the same reset idiom and fires `SetCellAnimSpeed(0x24)`, or (bit set)

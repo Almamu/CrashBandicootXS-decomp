@@ -11,7 +11,7 @@ given these files descriptive names; see `tools/file_layout_plan.tsv`
 for the mapping.)
 
 25-function `decomp-chunk` covering `asm/code_3_2_20_28568_c99c.s`'s
-`MovePolarAkuAku`-`sub_802E058`/`YetiStateCaught` range. Two distinct object
+`MovePolarAkuAku`-`BuildYetiBg2Map`/`YetiStateCaught` range. Two distinct object
 families live in this chunk:
 
 - The `InitActorPart`/`gActorList`-rooted "self" object family
@@ -31,7 +31,7 @@ families live in this chunk:
   `gYetiChargeParams` (a `{s32,s32,s32}` table, stride `0xc`, indexed
   by `gYetiParamsIndex`), branching to tier-keyed `PlaySfx`/
   `PlayAmbientSfx` sound cues, and a VRAM gauge-tile bitmap generator/DMA
-  setup (`LoadYetiGraphics`/`sub_802E058`) plus a palette-gradient cursor
+  setup (`LoadYetiGraphics`/`BuildYetiBg2Map`) plus a palette-gradient cursor
   (`UpdateYetiPalette`/`UpdateYetiBg2`). `YetiStateChase`/`YetiStateCharge` are two of
   `gYetiStateFuncs`'s four vtable slots operating on this object
   (the other two, `RestoreActorPaletteCycle`-family, were already matched in issue
@@ -191,10 +191,10 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   slots (`0x0600D000`/`0x0600D800`), clears a third tile
   (`0x0600BFC0`-`0x0600BFFC`), then arms the object and fires a
   `_call_via_r2` trampoline call. Semantics are legible (this is the
-  same shape `sub_802E058` below implements half of, parameterized) but
+  same shape `BuildYetiBg2Map` below implements half of, parameterized) but
   the full function's register pressure and DMA-timing interplay wasn't
   attempted for a byte-exact reconstruction here - left raw.
-- **`sub_802E058`** (`asm/code_3_2_20_28568_c99c_e058.s`) - a
+- **`BuildYetiBg2Map`** (`asm/code_3_2_20_28568_c99c_e058.s`) - a
   parameterized twin of `LoadYetiGraphics`'s triangular-fill loop, taking
   the destination buffer (`arg0`) and seed value (`arg1`) as real
   parameters instead of the fixed stack buffer/globals - left raw for
@@ -254,7 +254,7 @@ confirmed by a full clean `make compare` ("La suma coincide").
 
 Closed out the 6 functions the first two passes left completely
 untouched (`UpdateYeti`, `UpdateYetiPalette`, `UpdateYetiBg2`, `IsTouchingYeti`,
-`LoadYetiGraphics`, `sub_802E058`) - all now byte-exact matched, confirmed by
+`LoadYetiGraphics`, `BuildYetiBg2Map`) - all now byte-exact matched, confirmed by
 a full clean `make compare` ("La suma coincide"). All 25 functions in
 this issue's original range are now matched; see "Closing this issue"
 below.
@@ -332,7 +332,7 @@ batch was then confirmed together with the required full clean
 `UpdateYeti`/`UpdateYetiPalette`/`UpdateYetiBg2` (ROM 0x0802D7B0-0x0802DA84,
 between `actor_part58.c` and `actor_part59.c`), `IsTouchingYeti`/
 `LoadYetiGraphics` (ROM 0x0802DD9C-0x0802E058, between `actor_part59.c` and
-`actor_part60.c`), and `sub_802E058` (ROM 0x0802E058, between
+`actor_part60.c`), and `BuildYetiBg2Map` (ROM 0x0802E058, between
 `actor_part60.c` and `actor_part61.c`) each got their own new file -
 `src/graphics/actor_part74.c`/`75.c`/`76.c` (now `src/vehicle/yeti_update.c`,
 `yeti_graphics.c` and part of `yeti.c`) - per `docs/workflow.md`
@@ -355,7 +355,7 @@ matched/parked/left-raw list this entry feeds into.
 
 ## Later pass: issue #51/#54 NAKED retry
 
-`MovePolarAkuAku`, `UpdateYetiPalette`, `UpdateYetiBg2` and `sub_802E058` are now
+`MovePolarAkuAku`, `UpdateYetiPalette`, `UpdateYetiBg2` and `BuildYetiBg2Map` are now
 real C; `UpdateYeti`, `IsTouchingYeti` and `LoadYetiGraphics` stay NAKED with
 near-miss drafts under `#if NON_MATCHING`. The r7 story above was not
 the blocker for `MovePolarAkuAku`: with the table offsets in their own

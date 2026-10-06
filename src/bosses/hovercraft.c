@@ -98,15 +98,17 @@ struct actor_2890 {
 };
 
 /* The patrol object built by CreateHovercraftFireball (method table
- * gHovercraftFireballVtable). */
+ * gHovercraftFireballVtable). Same layout as the airship fireball
+ * (`struct actor_orbit`, jetpack_plane.c): it sets up that one's orbit
+ * fields but never reads them. */
 struct actor_29d4 {
     struct actor_self base;
-    s32 hp;     // 0x54
-    s32 unk_58; // 0x58 - the constructor's `b`
-    s32 unk_5C; // 0x5C - the constructor's `c`
-    s32 speed;  // 0x60 - Z step, decays by 5 down to 0x14
-    s32 unk_64; // 0x64
-    u8 unk_68;  // 0x68 - set by HovercraftFireballStateExplode
+    s32 hp;       // 0x54
+    s32 centerX;  // 0x58 - the constructor's `b` (unused here)
+    s32 centerY;  // 0x5C - the constructor's `c` (unused here)
+    s32 speed;    // 0x60 - Z step, decays by 5 down to 0x14
+    s32 radius;   // 0x64 - unused here
+    u8 exploding; // 0x68 - set by HovercraftFireballStateExplode
 };
 
 /* An `InitActorPart`-based constructor: forwards its 4 real arguments
@@ -391,20 +393,20 @@ void *CreateHovercraftFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
     InitActorPart(self, part, b, c, dReg);
     self->hp = health;
     self->base.vtable = (struct actor_vtable *)gHovercraftFireballVtable;
-    self->unk_58 = bReg;
-    self->unk_5C = cReg;
-    self->unk_64 = 0;
+    self->centerX = bReg;
+    self->centerY = cReg;
+    self->radius = 0;
     self->speed = 0x95;
-    self->unk_68 = 0;
+    self->exploding = 0;
 
     return self;
 }
 
-/* Trivial `self+0x68` byte setter. */
+/* Trivial `exploding` setter. */
 void HovercraftFireballStateExplode(void *selfArg)
 {
     struct actor_29d4 *self = selfArg;
-    self->unk_68 = 1;
+    self->exploding = 1;
 }
 
 /* Patrol-speed decay plus a death transition: advances `self+0x24` by
@@ -468,11 +470,11 @@ void RunHovercraftFireballState(void *selfArg)
     ACTOR_PMF_CALL(self, gHovercraftFireballStateFuncs);
 }
 
-/* Trivial `self+0x68` byte getter. */
+/* Trivial `exploding` getter. */
 u8 IsHovercraftFireballUnshootable(void *selfArg)
 {
-    u8 *self = selfArg;
-    return self[0x68];
+    struct actor_29d4 *self = selfArg;
+    return self->exploding;
 }
 
 /* Palette blink/flash effect for the P2 VRAM fill-level meter, gated by
@@ -687,8 +689,8 @@ void HovercraftStateCloseIn(void)
     }
 
     if (gHovercraftDistance <= 0x27ff) {
-        gUnknown_030015E4 = gHovercraftAttack->timing[1].delay;
-        gUnknown_030015E8 = 0;
+        gHovercraftFireTimer = gHovercraftAttack->timing[1].delay;
+        gHovercraftVolleyCount = 0;
         SingletonSetKind(3, 0);
         gHovercraftPhase = 0;
         gHovercraftVelZ = 0xae;
@@ -703,7 +705,7 @@ void HovercraftStateCloseIn(void)
  * 0xae and bounces the X velocity at +-0x8000, counting legs; later
  * legs ramp Z toward 0x1d4 and steer X back to 0. Once past leg 3 and
  * far enough away (`gHovercraftDistance > 0x8000`), resets the timers,
- * reloads `gUnknown_030015E4` from the owner, switches the singleton to
+ * reloads `gHovercraftFireTimer` from the owner, switches the singleton to
  * kind 2 and re-arms the next patrol phase from the lifetime counter.
  * Plain C (the documented "register gap" was never real). */
 void HovercraftStateFallBack(void)
@@ -755,8 +757,8 @@ void HovercraftStateFallBack(void)
     if (gHovercraftPhase > 3 && gHovercraftDistance > 0x8000) {
         gHovercraftFrameCount = 0;
         gHovercraftOrbitRadius = 0;
-        gUnknown_030015E4 = gHovercraftAttack->timing[1].delay;
-        gUnknown_030015E8 = 0;
+        gHovercraftFireTimer = gHovercraftAttack->timing[1].delay;
+        gHovercraftVolleyCount = 0;
         SingletonSetKind(2, 0);
         if (gHovercraftPartsLeft > 2) {
             gHovercraftPhase = 1;
@@ -906,11 +908,12 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
     gHovercraftAttack =
-        (const struct singleton_kind *)(gHovercraftLevel * (s32)sizeof(struct singleton_kind) -
-                                        -(s32)&gHovercraftAttacks[kind]);
-    gUnknown_030015E4 = gHovercraftAttack->timing[0].burstDelay;
-    gUnknown_030015E0 = gHovercraftAttack->unk_00;
-    gUnknown_030015E8 = 0;
+        (const struct hovercraft_attack *)(gHovercraftLevel *
+                                               (s32)sizeof(struct hovercraft_attack) -
+                                           -(s32)&gHovercraftAttacks[kind]);
+    gHovercraftFireTimer = gHovercraftAttack->timing[0].burstDelay;
+    gHovercraftHp = gHovercraftAttack->hp;
+    gHovercraftVolleyCount = 0;
     REG_DISPCNT |= 0x400;
     gHovercraftBg2PageFlip = 1;
     gHovercraftBg2Page = 0;

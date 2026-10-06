@@ -66,17 +66,18 @@ extern void DestroyEnemyCtrl(struct part_ctrl *self, s32 flags);
 extern struct part_ctrl *CreateEnemyCtrl(struct part_ctrl *self);
 extern void SetEnemyOscillator(struct part_ctrl *self, s32 period, s32 phase, s32 amplitude);
 extern void SetEnemyShotPeriod(struct part_ctrl *self, s32 period, s32 phase);
-extern void sub_800CAA4(struct part_ctrl *self, s32 idleTime, s32 attackTime, s32 cycleOffset);
+extern void SetEnemyAttackTiming(struct part_ctrl *self, s32 idleTime, s32 attackTime,
+                                 s32 cycleOffset);
 extern void SetEnemyTriggerBox(struct part_ctrl *self, s32 l, s32 t, s32 r, s32 b);
 extern void SetEnemyModeTable(struct part_ctrl *self, const s32 *anims);
-extern void sub_800CAC8(struct part_ctrl *self, s32 kind);
+extern void SetEnemyKind(struct part_ctrl *self, s32 kind);
 extern void UpdatePeriodicSpawner(struct periodic_spawner *self);
 extern void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags);
 extern struct periodic_spawner *CreatePeriodicSpawner(struct periodic_spawner *self);
 extern void SetPeriodicSpawnerPeriod(struct periodic_spawner *self, s32 period, s32 phase);
-extern void sub_800CB60(struct periodic_spawner *self, void (*callback)(void));
+extern void SetPeriodicSpawnerCallback(struct periodic_spawner *self, void (*callback)(void));
 extern void UpdateKnockedEnemyCtrl(void *self, struct actor *other);
-extern void nullsub_14(void *self);
+extern void ResetKnockedEnemyCtrl(void *self);
 extern void DestroyKnockedEnemyCtrl(void *self, s32 flags);
 extern void *CreateKnockedEnemyCtrl(void *self);
 

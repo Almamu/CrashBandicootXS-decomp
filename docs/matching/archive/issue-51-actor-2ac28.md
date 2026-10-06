@@ -39,7 +39,7 @@ case body is an inlined C++ `new Foo(...)`. It allocates with
 `mem_alloc(size, MEM_HEAP_IWRAM)`, runs a base constructor
 (`InitActorPart`, `InitPolarCrate`, or one of the class constructors
 `CreatePolarCheckpointCrate`/`CreatePolarLauncher`/`CreatePolarBoostPad`/`CreatePolarPenguin`/`CreatePolarElectricFence`/
-`CreatePolarIcicle`/`CreatePolarGoal`/`sub_802CE38`), and, where the base constructor
+`CreatePolarIcicle`/`CreatePolarGoal`/`CreatePolarObstacle`), and, where the base constructor
 is a shared one, stores the class's method table at +0x50. Points of
 note:
 

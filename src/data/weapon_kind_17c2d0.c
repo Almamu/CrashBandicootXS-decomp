@@ -8,9 +8,9 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The airship's attack parameters (struct weapon_kind, bosses.h).
+/* The airship's attack parameters (struct airship_attack, bosses.h).
  * SpawnAirship picks one by gAirshipLevel. */
-const struct weapon_kind gAirshipAttacks[6] = {
+const struct airship_attack gAirshipAttacks[6] = {
     { 30, 120, 1, 120, 15, 7, 90 },
     { 45, 90, 3, 120, 15, 8, 80 },
     { 60, 60, 5, 120, 15, 9, 70 },

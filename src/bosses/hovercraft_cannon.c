@@ -50,7 +50,7 @@ void HovercraftCannonStateFire(struct spawner *self)
             s32 absDy = (dy ^ signDy) - signDy;
 
             if (absDx + absDy <= 0xFFF) {
-                const struct singleton_kind *table;
+                const struct hovercraft_attack *table;
                 s32 count;
 
                 SpawnJetpackCannonball(self->base.x, self->base.y, self->base.z, dx, dy);
@@ -234,7 +234,7 @@ void HovercraftCannonStateWait(void *selfArg)
     self->base.z = GetHovercraftZ() - 0x100;
 
     if (self->base.depth <= 0x4AFF) {
-        const struct singleton_kind *table = GetHovercraftAttack();
+        const struct hovercraft_attack *table = GetHovercraftAttack();
 
         self->cooldown = table->timing[1].delay;
         {

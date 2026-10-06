@@ -56,7 +56,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   ROM's own build does, rather than up front with the others.
 - **`IsHovercraftLauncherUnshootable`** (`src/bosses/hovercraft_launcher.c`) - trivial Kind 1
   death-flag getter (`self+0x6c`).
-- **`DamageHovercraftSideGun`/`UpdateHovercraftSideGun`/`sub_80341F8`/`IsHovercraftSideGunUnshootable`/`DamageHovercraftCannonFlash`**
+- **`DamageHovercraftSideGun`/`UpdateHovercraftSideGun`/`RunHovercraftSideGunState`/`IsHovercraftSideGunUnshootable`/`DamageHovercraftCannonFlash`**
   (`src/bosses/hovercraft_side_gun.c`) - Kind 2's damage/death handler (same
   `DamageHovercraftCannon` shape, register-pinned `zero`/`one` reused across the
   `self+0x58`/`+0x2c`/`+0x28`/`+0x44`/`+8` stores and the gate-byte read
@@ -67,7 +67,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   register-pinned locals - `field`/`z` for the Z-axis sum, `origCounter`/
   `result` for the orbit-counter decision - matching the ROM's exact
   `r6`-stays-immutable/`r0`-carries-the-final-value split), a near-twin
-  (`sub_80341F8`) that turns out *not* to call `UpdateActor` first
+  (`RunHovercraftSideGunState`) that turns out *not* to call `UpdateActor` first
   (initially miscopied as a byte-identical twin - the map-file address-
   shift diagnostic caught the missing 4-byte call), a trivial death-flag
   getter, and a no-op stub.
@@ -122,7 +122,7 @@ diffed byte-for-byte against `baserom.gba`:
    in the wrong position relative to `b`/`c` - same total instruction
    count and mnemonics, just reordered, so it produced a real 6-byte
    content mismatch without shifting any function's address at all.
-3. `sub_80341F8` being copied as a "byte-identical twin" of `UpdateHovercraftSideGun`
+3. `RunHovercraftSideGunState` being copied as a "byte-identical twin" of `UpdateHovercraftSideGun`
    when it's actually missing the leading `UpdateActor(self)` call - a
    genuine 4-byte size difference that happened to exactly cancel the
    4-byte deficit inherited from the upstream `CreateHovercraftLauncher` bug, so the
@@ -340,7 +340,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   elimination always collapses that redundant compute-then-recheck
   step, the same class of gap already documented for `DrawPolarCollectedWumpa`
   (issue #52) and the dead `| 0` term in `DrawJetpackCheckpointText` (issue #71).
-- **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
+- **`RunHovercraftCannonFlashState`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
   in `src/bosses/hovercraft_cannon_flash.c`) - `UpdateHovercraftCannonFlash`'s boolean-returning
   twin, parked on the identical gap.
 

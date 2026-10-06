@@ -52,7 +52,7 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
 
             if (absDx + absDy <= 0xFFF) {
                 s32 kind = (u16)RandRange(3);
-                const struct singleton_kind *table;
+                const struct hovercraft_attack *table;
                 s32 count;
 
                 if (kind == 0) {

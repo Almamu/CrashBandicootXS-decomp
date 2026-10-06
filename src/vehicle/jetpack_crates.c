@@ -62,7 +62,7 @@ struct orbit_actor {
     s32 centerY;   // 0x64
     s32 phase;     // 0x68 - random, added to stateTime
     s32 fallSpeed; // 0x6c - JetpackBalloonCrateStateFall, capped at 0x4c0
-    void *unk_70;  // 0x70 - handed to MarkSpawnCollected
+    void *spawn;   // 0x70 - the level spawn record, handed to MarkSpawnCollected
 };
 
 /* `UpdateJetpackParachuteNitro`-`IsJetpackParachuteNitroUnshootable`: climbs until it reaches `limitY`. */
@@ -184,7 +184,7 @@ void UpdateJetpackQuestionCrate(void *selfArg)
 
     case_17:
         PlaySfx(gAudioContext, 7, 0x100);
-        MarkSpawnCollected(self->unk_70);
+        MarkSpawnCollected(self->spawn);
         AddLife(gLevelState);
 
     after_dispatch:
@@ -273,7 +273,7 @@ case_16:
 
 case_17:
     PlaySfx(gAudioContext, 7, 0x100);
-    MarkSpawnCollected(self->unk_70);
+    MarkSpawnCollected(self->spawn);
     AddLife(gLevelState);
 
 after_dispatch:
@@ -600,7 +600,7 @@ void *CreateJetpackQuestionCrate(void *selfArg, void *part, s32 b, s32 c, s32 d,
 
     self->child = (void *)SpawnJetpackBalloon(0x29, b, c + (s32)0xFFFFC24A, d, (s32)self);
     self->base.vtable = (struct actor_vtable *)gJetpackQuestionCrateVtable;
-    self->unk_70 = (void *)e;
+    self->spawn = (void *)e;
 
     return self;
 }
@@ -738,7 +738,10 @@ void *InitJetpackBalloonCrate(void *selfArg, void *part, s32 b, s32 c, s32 d, u8
     return self;
 }
 
-void nullsub_33(void *selfArg)
+/* gJetpackBalloonCrateStateFuncs[2]: the crate was shot
+ * (DamageJetpackBalloonCrate); UpdateJetpackBalloonCrate destroys it
+ * once the state's animation has played through. Empty. */
+void JetpackBalloonCrateStateDestroyed(void *selfArg)
 {
 }
 

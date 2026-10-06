@@ -53,7 +53,7 @@ extern struct aabb GetSpriteBodyBox_s(void *part) asm("GetSpriteBodyBox");
  * (lib/libgcc/lib1funcs.s), and the AABB builders return their box by value.
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
- * Thumb pointer anywhere in the ROM: sub_8019718, GetDingodileHits. Matched
+ * Thumb pointer anywhere in the ROM: SetCortexCannonState, GetDingodileHits. Matched
  * anyway.
  *
  * UpdateDingodileShield is a NAKED transcription (its C is kept under
@@ -117,9 +117,9 @@ struct part {
     u8 unk_2A[3];
     u8 tag; // 0x2D
     u8 unk_2E[2];
-    s32 frame;   // 0x30
-    s32 unk_34;  // 0x34
-    u8 animDone; // 0x38
+    s32 frame;     // 0x30
+    s32 stepTimer; // 0x34 - ticks spent on the current step
+    u8 animDone;   // 0x38
     u8 unk_39[0xB];
     void *ctl;       // 0x44
     s32 rampXStart;  // 0x48
@@ -149,12 +149,12 @@ struct obj_4704 {
     u8 unk_00[0xC];
     struct vtable *vt; // 0x0C
     u8 unk_10[4];
-    s32 x;      // 0x14
-    s32 y;      // 0x18
-    s32 dx;     // 0x1C
-    s32 dy;     // 0x20
-    s32 unk_24; // 0x24
-    s32 unk_28; // 0x28
+    s32 x;         // 0x14
+    s32 y;         // 0x18
+    s32 dx;        // 0x1C
+    s32 dy;        // 0x20
+    s32 stepsLeft; // 0x24
+    s32 steps;     // 0x28 - gCortexTargetHopSteps[src->index]
     u8 unk_2C[0x10];
     struct {
         u8 unk_00[0x10];
@@ -308,7 +308,13 @@ static inline void MarkCollected(struct part *p)
     }
 }
 
-void sub_801967C(void *self, u8 flag)
+/* Sets `kind` to `flag` (0 or 1) on every part in the gTouchableList
+ * list, the list the level's platforms join (platform_create.c). In the
+ * Cortex fight those include the Cortex platform movers, which
+ * UpdateCortexBossPlatformMover animates to frame 10 for kind 1 and
+ * 0x1A otherwise; SetCortexTargetState clears it (state 1) and sets it
+ * (state 5). */
+void SetCortexPlatformsKind(void *self, u8 flag)
 {
     s32 i;
     s32 n = gTouchableList->count;
@@ -332,8 +338,8 @@ void SetCortexTargetDest(struct obj_4704 *self, s32 *origin, s32 x, s32 y)
     self->dx = x - origin[0];
     self->dy = y - origin[1];
     v = *(self->src->index + gCortexTargetHopSteps);
-    self->unk_28 = v;
-    self->unk_24 = v;
+    self->steps = v;
+    self->stepsLeft = v;
 }
 
 void DestroyCortexTargetCtrl(struct obj_4704 *self, s32 flags)
@@ -346,13 +352,18 @@ struct obj_4704 *CreateCortexTargetCtrl(struct obj_4704 *self, void *src)
 {
     InitCtrl(self);
     self->vt = (struct vtable *)gCortexTargetVtable;
-    self->unk_24 = 0;
+    self->stepsLeft = 0;
     self->src = src;
     return self;
 }
 
-/* UNUSED - no caller or pointer anywhere in the ROM. */
-void sub_8019718(struct vobj *self, s32 unused, s32 arg)
+/* The Cortex cannon's "set state": the same shape as SetCortexBossState
+ * below (and SetCortexTargetState, cortex.c) without any state of its
+ * own, just the forward to method m20. It sits where the cannon's
+ * methods start, before UpdateCortexCannon, as SetCortexBossState does
+ * before the boss's.
+ * UNUSED - no caller or pointer anywhere in the ROM. */
+void SetCortexCannonState(struct vobj *self, s32 unused, s32 arg)
 {
     VCALL1(self, m20, arg);
 }
@@ -547,7 +558,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         goto idle;
     case 5:
     case 6:
-        if (other->frame == 0x14 && other->unk_34 == 0) {
+        if (other->frame == 0x14 && other->stepTimer == 0) {
             if (other->f28.facing)
                 SpawnDingodileShieldOrRocket(self, 1, (other->x >> 8) + 6, (other->y >> 8) - 0x32,
                                              other);

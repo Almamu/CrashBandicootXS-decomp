@@ -338,7 +338,7 @@ asm(".align 2, 0");
  * object it hands to `MarkSpawnCollected`'s 15-entry list. */
 struct listed_actor {
     struct actor_self base;
-    void *unk_54; // 0x54
+    void *spawn; // 0x54 - the level spawn record (CreatePolarLifeCrate's 6th argument)
 };
 
 /* On proximity (`IsTouchingPlayer`), accumulates `1` into the shared
@@ -486,7 +486,7 @@ void UpdatePolarQuestionCrate(void *selfArg)
 
 /* Extends the lap-counter/proximity-dispatch family: on proximity
  * (`IsTouchingPlayer`), plays a sound, ties the lap counter, forwards the
- * global player pointer to `GivePolarPlayerLife` and `unk_54` to
+ * global player pointer to `GivePolarPlayerLife` and `spawn` to
  * `MarkSpawnCollected`, then (whether or not that first branch fired) on
  * `IsTouchingYeti`'s overlap test transitions to the shared "used" state
  * a second time with its own sound cue - both branches finish with the
@@ -500,7 +500,7 @@ void UpdatePolarLifeCrate(void *selfArg)
             PlaySfx(gAudioContext, 7, 0x100);
             AddBrokenCrate(gLevelState);
             GivePolarPlayerLife(gActorList);
-            MarkSpawnCollected(((struct listed_actor *)self)->unk_54);
+            MarkSpawnCollected(((struct listed_actor *)self)->spawn);
             self->animIndex = 0x12;
             {
                 MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->anims[18].duration;

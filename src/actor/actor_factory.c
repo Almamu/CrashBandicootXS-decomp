@@ -149,12 +149,12 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
         }
     case 13:
         {
-            struct actor_self *self = sub_802CE38(AllocActor(0x54), gActorAnimTable + 14,
-                                                  gActorAnimTable[14].spawnX, y, z);
+            struct actor_self *self = CreatePolarObstacle(AllocActor(0x54), gActorAnimTable + 14,
+                                                          gActorAnimTable[14].spawnX, y, z);
 
             SET_ANIM(self, 1);
-            return sub_802CE38(AllocActor(0x54), gActorAnimTable + kind,
-                               gActorAnimTable[kind].spawnX, y, z);
+            return CreatePolarObstacle(AllocActor(0x54), gActorAnimTable + kind,
+                                       gActorAnimTable[kind].spawnX, y, z);
         }
     case 2:
         NEW_BASE_ACTOR(REC_AT(kind), gRiderlessPolarVtable);

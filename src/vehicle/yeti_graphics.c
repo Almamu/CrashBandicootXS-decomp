@@ -68,8 +68,8 @@ u8 IsTouchingYeti(struct actor_self *self)
 /* The `gYeti` object's own initial VRAM-pattern/DMA setup
  * (called once from `CreateYeti`'s constructor, yeti.c): sets
  * `REG_DISPCNT`'s OBJ-window-enable bit (`DISPCNT_OBJWIN_ON`, bit 15),
- * then runs the same 16x16 triangular-fill dot-pattern loop twice into a
- * 0x100-byte stack buffer (`sub_802E058`'s own loop body, parameterized
+ * then runs the same 16x16 BG2 map-fill loop twice into a
+ * 0x100-byte stack buffer (`BuildYetiBg2Map`'s own loop body, parameterized
  * there by seed/destination but fixed here to a `0`/`0x80` seed pair) -
  * DMA3-transferring the first fill to VRAM tile `0x0600D000` and the
  * second to `0x0600D800` (`REG_DMA3SAD`/`DAD`/`CNT` at `0x040000D4`,

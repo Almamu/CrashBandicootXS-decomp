@@ -676,7 +676,7 @@ No file needed an asm-label alias, so batch 1 adds no codegen exceptions.
   - spawn_objects.c's `struct periodic_spawner` showed that +0x1C is the
     spawner's `callback` (`UpdatePeriodicSpawner`'s pinned "dead read"
     into r4 is the `_call_via_r4` target), so the shared struct names it
-    and `sub_800CB60` takes a function pointer.
+    and `SetPeriodicSpawnerCallback` takes a function pointer.
   - The knocked controller is a 0x10-byte base `Ctrl`, not a `struct
     part_ctrl`: its functions keep `void *` (see enemies.h).
   - dingodile.c can't include `enemies.h` yet (its local `struct
@@ -1135,18 +1135,18 @@ in jetpack_spawn.c, see "Codegen exceptions").
     yeti_update.c) and airship_touch.c's `struct box3` are `struct
     anim_box`; `gAirshipBox`/`gHovercraftBox` reads use its `x`/`y`/`w`/`h`
     in place of `[0]`/`[1]`/`[3]`/`[4]`.
-  - `struct weapon_kind` (airship.c, the data file) is in bosses.h;
+  - `struct airship_attack` (airship.c, the data file) is in bosses.h;
     airship_states.c read `gAirshipAttack` as an `s32 *` (`[2]` is
-    `unk_08`, ...).
-  - `struct singleton_kind` (hovercraft.c's and the data file's ten-word
+    `fireballBurst`, ...).
+  - `struct hovercraft_attack` (hovercraft.c's and the data file's ten-word
     view), the cannon's and launcher's `struct spawn_timing`/`struct
     spawn_timing_table` and the side gun's `struct orbit_table` are one
-    `struct singleton_kind { unk_00; struct spawn_timing timing[3]; }` in
+    `struct hovercraft_attack { hp; struct spawn_timing timing[3]; }` in
     bosses.h. The side gun's `period`/`laps`/`cyclePeriod` are
     `timing[0].delay`/`burst`/`burstDelay`, and hovercraft.c's `unk_0C`/
     `unk_10` are `timing[0].burstDelay`/`timing[1].delay` (for #552: the
     hovercraft reads them as its first fire timers). `GetHovercraftAttack`
-    returns `const struct singleton_kind *`.
+    returns `const struct hovercraft_attack *`.
   - `struct spawner` (cannon, launcher) and hovercraft_cannon.c's `struct
     health_actor` (`health`/`unk_58`/`unk_5c`/`unk_64`/`unk_68` are
     `hp`/`spawnX`/`spawnY`/`cooldown`/`count`) are in bosses.h.
@@ -2161,8 +2161,8 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | local `struct anim_part_instance`/`linked_node` -> `struct actor_self` fields | actor_anim.c | identical, except `SetActorAnim`'s `animDone = zero1` store: through the field the pinned zero in r2 is dropped (`mov r1, #0`), so it stays `*((u8 *)self + 0x12)` |
 | `(*(struct cam_ref **)&self->record)->depth` -> `self->record->baseDepth` | company_logos.c (old_agbcc), jetpack_spawn.c, polar_player.c | identical |
 | `s16 []`/`u8 []` box extern -> `const struct anim_box`, `[0]`/`[3]` -> `.x`/`.w`; local `box16`/`box3` -> `struct anim_box` | airship.c, airship_explode.c, airship_touch.c, hovercraft.c, actor_category_frame.c, polar_nitro.c, yeti_*.c | identical |
-| `s32 *` view of a const record table -> `const struct weapon_kind *` fields | airship_states.c | identical |
-| ten-word / `orbit_table` / `spawn_timing_table` views -> `struct singleton_kind` with `timing[3]` | hovercraft*.c, singleton_kind_17c460.c | identical |
+| `s32 *` view of a const record table -> `const struct airship_attack *` fields | airship_states.c | identical |
+| ten-word / `orbit_table` / `spawn_timing_table` views -> `struct hovercraft_attack` with `timing[3]` | hovercraft*.c, singleton_kind_17c460.c | identical |
 | caller's `u8` return -> definition's `s32`, call written `(u8)F(...)` | `IsTouchingPlayer` (8 files), `IsSpawnCollected`, `IsActorMaskAssistDue`, `HurtPolarPlayer`, `ShockPolarPlayer`, `CanPauseActorCategory` | identical |
 | definition return `u8` -> `s32` for a getter whose caller returns `s32` | `IsJetpackPauseLocked`, `IsPolarPauseLocked` | identical; with `u8` the callers add `lsl`/`lsr #0x18` |
 | `u32` global read as `s32` (header type), compares cast `(u32)` | `gAirshipStateTimer` in airship_load_graphics.c | identical; without the casts `bls` becomes `ble` |

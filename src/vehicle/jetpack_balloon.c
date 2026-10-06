@@ -46,7 +46,7 @@ s32 GetAirshipHpPercent(void)
     }
 
     countdown = gAirshipHp;
-    result = __divsi3(countdown * 100, gAirshipAttack->unk_00);
+    result = __divsi3(countdown * 100, gAirshipAttack->hp);
     if (result == 0 && countdown > 0) {
         result = 1;
     }
@@ -245,7 +245,10 @@ void JetpackBalloonStateFloatAway(struct jetpack_balloon *self)
     }
 }
 
-void nullsub_32(void)
+/* gJetpackBalloonStateFuncs[0]: the balloon is still tied to its crate,
+ * which moves it (MoveJetpackBalloon) until ReleaseJetpackBalloon starts
+ * state 1. Empty. */
+void JetpackBalloonStateAttached(void)
 {
 }
 

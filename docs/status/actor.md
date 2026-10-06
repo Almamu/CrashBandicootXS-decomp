@@ -328,7 +328,7 @@ from "core" graphics.
 
 - `src/graphics/actor_part19i.c` (new file, now part of `src/vehicle/polar_crates.c`,
   directly adjacent to `actor_part19d.c`'s matched functions - GitHub issue #53):
-  `UpdatePolarTimeCrate`, `sub_802CA28`, `sub_802CA6C`, `UpdatePolarBasicCrate` - the
+  `UpdatePolarTimeCrate`, `DetonatePolarNitroCrate`, `sub_802CA6C`, `UpdatePolarBasicCrate` - the
   type-byte-dispatch/proximity "used"-state transition family (same
   shape as `UpdatePolarQuestionCrate`/`UpdatePolarLifeCrate`, `polar_pickups.c`); `InitPolarCrate`
   and its seven thin forwarding wrappers (`CreatePolarTimeCrate`, `CreatePolarQuestionCrate`,
@@ -340,11 +340,11 @@ from "core" graphics.
 
 - `src/vehicle/polar_objects.c` (new file, `0x0802CDE4`-`0x0802D2DC`,
   the remainder of the `0x0802CC9C`-`0x0802D3A8` gap between issues #53
-  and #54): `CreatePolarElectricFence`/`sub_802CE38`/`CreatePolarLauncher`/`CreatePolarPenguin`/
+  and #54): `CreatePolarElectricFence`/`CreatePolarObstacle`/`CreatePolarLauncher`/`CreatePolarPenguin`/
   `CreatePolarIcicle` - `InitActorPart`-based constructors on the same `self`
   object family; `UpdatePolarLauncher` - a 3-way `self+0x28` state dispatch;
   `UpdatePolarPenguin` plus its `AimPolarPenguin` homing-velocity helper - a
-  velocity/proximity state machine; `sub_802CE10`/`UpdatePolarIcicle` - small
+  velocity/proximity state machine; `UpdatePolarObstacle`/`UpdatePolarIcicle` - small
   proximity-gated state advances; `RefreshPolarAkuAku`/`UpdatePolarAkuAku` - a
   VRAM-gauge/state-transition pair for a `gPolarAkuAkuInvincibleTimer`-counted
   effect. 12 functions, all matched. See
@@ -437,7 +437,7 @@ from "core" graphics.
   `StartHovercraftHitFlash`, `SetHovercraftFlashColor`, `GetHovercraftPartsLeft`, `LoseHovercraftPart`,
   `GetHovercraftAttack`, `GetHovercraftState`, `GetHovercraftLevel`, `GetHovercraftZ`,
   `GetHovercraftY`, `GetHovercraftX`, `SetHovercraftState`, `HovercraftStateInactive`,
-  `HovercraftStateApproach`, `nullsub_37`, `DamageHovercraftCannon`,
+  `HovercraftStateApproach`, `HovercraftStateExplodeStub`, `DamageHovercraftCannon`,
   `CreateHovercraftCannon`, `HovercraftCannonStateDestroyed`, `HovercraftCannonStateWait`,
   `IsHovercraftCannonUnshootable`, `DamageHovercraftLauncher` - the
   singleton's one-shot latches, field getters, state-transition/
@@ -560,7 +560,7 @@ from "core" graphics.
   `asm/code_3_2_20_28568_c99c_2fbf0.s`): three small C++ actor classes
   (method tables `gJetpackPlaneVtable`/`087E51EC`/`087E5224`) and the
   orbiting-companion updaters - `AimJetpackPlane`, `DamageJetpackPlane`,
-  `CreateJetpackPlane`, `JetpackPlaneStateFall`, `sub_802FE1C`, `sub_802FE58`,
+  `CreateJetpackPlane`, `JetpackPlaneStateFall`, `JetpackPlaneStateKnockedOut`, `JetpackPlaneStateFollow`,
   `JetpackPlaneStateFly`, `RunJetpackPlaneState`, `IsJetpackPlaneUnshootable`, `CreateJetpackBomber`,
   `UpdateJetpackBomber`, `HomeJetpackBomber`, `JetpackBomberStateDying`, `JetpackBomberStateDrop`,
   `JetpackBomberStateCircle`, `JetpackBomberStateSwingHorizontal`, `JetpackBomberStateBobVertical`, `JetpackBomberStateHome`,
@@ -613,7 +613,7 @@ from "core" graphics.
   part-factory/animation-table-state functions between it and here -
   stayed raw then, since matched in `actor_factory.c` (below); see
   [docs/matching/archive/issue-50-actor-bc68.md](../matching/archive/issue-50-actor-bc68.md)):
-  `DispensePolarWumpa`, `IsPolarPauseLocked`, `sub_802BD24`, `PolarPlayerStateFinishLeap`,
+  `DispensePolarWumpa`, `IsPolarPauseLocked`, `PolarPlayerStateRecover`, `PolarPlayerStateFinishLeap`,
   `PolarPlayerStateCarriedOff`, `PolarPlayerStateKnockedOff`, `PolarPlayerStateBoost` - an accumulator-drain/
   reward-dispenser (docs/rom_map.md already reads it as a structural
   twin of `jetpack_player.c`'s `DispenseJetpackWumpa`), a trivial byte getter, two
@@ -686,7 +686,7 @@ from "core" graphics.
   [docs/matching/archive/issue-51-54-naked-retry.md](../matching/archive/issue-51-54-naked-retry.md)):
   `MovePolarAkuAku` (per-state position easing), `UpdateYetiPalette`/`UpdateYetiBg2`
   (the `gYeti` gauge's palette ramp and affine BG2 setup;
-  `yeti_update.c` now builds with old_agbcc) and `sub_802E058` (an
+  `yeti_update.c` now builds with old_agbcc) and `BuildYetiBg2Map` (an
   unused copy of the gauge's dot-pattern fill).
 - `src/vehicle/jetpack_spawn.c` (new file, ROM `0x0802E0A4`-
   `0x0802F0DC`, the gap between issue #54's chunk and issue #56's
@@ -705,7 +705,7 @@ from "core" graphics.
   (new files, GitHub issue #63, ROM 0x08033EF4-0x08034AA4 - three
   `InitActorPart`-rooted "self" object kinds immediately following
   issue #62's cluster, non-adjacent since 2 remain parked
-  (`UpdateHovercraftCannonFlash`/`sub_8034314`, in `hovercraft_cannon_flash.c` -
+  (`UpdateHovercraftCannonFlash`/`RunHovercraftCannonFlashState`, in `hovercraft_cannon_flash.c` -
   `CreateHovercraftSideGun`/`InitStarfield`/`DrawStarfield`/`SpawnStar`/`PlotStarfieldPixel`
   are now matched too, closing `starfield.c` entirely, see below),
   `RunHovercraftLauncherState`
@@ -715,7 +715,7 @@ from "core" graphics.
   `actor_part57.c`-`62.c` first - see
   [docs/matching/archive/issue-63-0x08033ef4-actor.md](../matching/archive/issue-63-0x08033ef4-actor.md)):
   `CreateHovercraftLauncher`, `HovercraftLauncherStateDestroyed`, `HovercraftLauncherStateWait`, `IsHovercraftLauncherUnshootable`,
-  `DamageHovercraftSideGun`, `UpdateHovercraftSideGun`, `sub_80341F8`, `IsHovercraftSideGunUnshootable`,
+  `DamageHovercraftSideGun`, `UpdateHovercraftSideGun`, `RunHovercraftSideGunState`, `IsHovercraftSideGunUnshootable`,
   `DamageHovercraftCannonFlash`, `CreateHovercraftCannonFlash`, `IsHovercraftCannonFlashUnshootable`, `SpawnStar`,
   `PlotStarfieldPixel`, `UpdateStarfield`, `StarfieldWaitForButton`, `DestroyStarfield` - two
   constructors, a trampoline-fire helper, a position-sync/state-transition
@@ -808,7 +808,7 @@ from "core" graphics.
   Phase 1 of the boss-weapon/singleton cluster's gap between issue #58
   and issue #62): `GetAirshipHpPercent` (tracker "ready" check scaling the
   countdown via `__divsi3`), `DestroyAirship` (tracker destructor,
-  `CreateAirship`'s counterpart), `nullsub_30`/`AirshipStateInactive`/`nullsub_32`
+  `CreateAirship`'s counterpart), `nullsub_30`/`AirshipStateInactive`/`JetpackBalloonStateAttached`
   (no-op stubs), `ClearJetpackBalloonCrate` (trivial `self+0x58` setter),
   `ReleaseJetpackBalloon` (full state/accumulator/anim-frame reset idiom),
   `CreateJetpackBalloon` (`InitActorPart`-based constructor), and `IsJetpackBalloonUnshootable`
@@ -826,7 +826,7 @@ from "core" graphics.
   `IsJetpackBalloonCrateUnshootable`/`IsJetpackRocketUnshootable`), a full reset idiom (`BreakJetpackBalloonCrate`), a
   countdown-gated trampoline-flush transition (`DamageJetpackBalloonCrate`), a
   doubly-linked-list unlink/`mem_free` destructor (`DestroyJetpackBalloonCrate`), a
-  no-op stub (`nullsub_33`), a trivial accumulator (`JetpackBalloonCrateStateFall`), a
+  no-op stub (`JetpackBalloonCrateStateDestroyed`), a trivial accumulator (`JetpackBalloonCrateStateFall`), a
   second independent orbital-motion consumer of the shared trig table
   `gSineTable` (`JetpackBalloonCrateStateHang`, alongside the already-flagged
   `UpdateJetpackRocket`), a state-1 trampoline-flush/proximity transition
@@ -1309,7 +1309,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   right before the check. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s` is retired. GitHub
   issue #63, see `docs/matching/archive/issue-63-0x08033ef4-actor.md`.
-- **`sub_8034314`** (`src/bosses/hovercraft_cannon_flash.c`) - `UpdateHovercraftCannonFlash`'s
+- **`RunHovercraftCannonFlashState`** (`src/bosses/hovercraft_cannon_flash.c`) - `UpdateHovercraftCannonFlash`'s
   boolean-returning twin; matched as real C immediately, no opaque-asm
   fix needed - returning the value directly (rather than branching on
   it to decide whether to call `UpdateActor`) means there's no

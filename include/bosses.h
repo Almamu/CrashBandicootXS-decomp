@@ -34,16 +34,19 @@ struct spawner {
 };
 
 /* The airship's attack parameters, one per kind and level
- * (gAirshipAttacks, src/data/weapon_kind_17c2d0.c): seven words, none
- * named yet. SpawnAirship points gAirshipAttack at one. */
-struct weapon_kind {
-    s32 unk_00; // 0x00 - the airship's hit points
-    s32 unk_04; // 0x04
-    s32 unk_08; // 0x08
-    s32 unk_0C; // 0x0C - the first fire timer
-    s32 unk_10; // 0x10
-    s32 unk_14; // 0x14
-    s32 unk_18; // 0x18
+ * (gAirshipAttacks, src/data/weapon_kind_17c2d0.c). SpawnAirship points
+ * gAirshipAttack at one. AirshipStateFireballs fires a fireball every
+ * `fireballDelay` frames, resting `fireballBurstDelay` frames after each
+ * `fireballBurst`-th; AirshipStateCannon does the same with cannonballs
+ * (the same delay/burst/burstDelay scheme as `struct spawn_timing`). */
+struct airship_attack {
+    s32 hp;                 // 0x00
+    s32 fireballDelay;      // 0x04
+    s32 fireballBurst;      // 0x08
+    s32 fireballBurstDelay; // 0x0C - also the first fire timer (SpawnAirship)
+    s32 cannonDelay;        // 0x10 - also the first one on entering AirshipStateCannon
+    s32 cannonBurst;        // 0x14
+    s32 cannonBurstDelay;   // 0x18
 };
 
 /* One spawner's timing: after each spawn it waits `delay` frames, except
@@ -59,8 +62,8 @@ struct spawn_timing {
 /* The hovercraft's attack parameters, one per kind and level
  * (gHovercraftAttacks, src/data/singleton_kind_17c460.c). SpawnHovercraft
  * points gHovercraftAttack at one, and GetHovercraftAttack returns it. */
-struct singleton_kind {
-    s32 unk_00;                    // 0x00
+struct hovercraft_attack {
+    s32 hp;                        // 0x00 - copied to gHovercraftHp, which nothing reads
     struct spawn_timing timing[3]; // 0x04 - per spawner kind: [0] the side
                                    //        gun, [1] the cannon, [2] the launcher
 };
@@ -172,11 +175,11 @@ extern void DestroyCortexShotCtrl(struct gfx_ctrl *self, s32 flags);
 extern void *CreateCortexShotCtrl(void *self, void *cfg);
 
 /* src/bosses/dingodile.c */
-extern void sub_801967C(void *self, u8 flag);
+extern void SetCortexPlatformsKind(void *self, u8 flag);
 extern void SetCortexTargetDest(struct obj_4704 *self, s32 *origin, s32 x, s32 y);
 extern void DestroyCortexTargetCtrl(struct obj_4704 *self, s32 flags);
 extern struct obj_4704 *CreateCortexTargetCtrl(struct obj_4704 *self, void *src);
-extern void sub_8019718(struct vobj *self, s32 unused, s32 arg);
+extern void SetCortexCannonState(struct vobj *self, s32 unused, s32 arg);
 extern void UpdateCortexCannon(struct obj_476c *self, struct part *other);
 extern void DestroyCortexCannonCtrl(struct obj_476c *self, s32 flags);
 extern struct obj_476c *CreateCortexCannonCtrl(struct obj_476c *self);
@@ -245,7 +248,7 @@ extern u8 IsHovercraftCannonUnshootable(void *self);
 /* src/bosses/hovercraft_cannon_flash.c */
 extern void UpdateHovercraftCannonFlash(void *self);
 extern void *CreateHovercraftCannonFlash(void *self, void *part, s32 b, s32 c, s32 d);
-extern s32 sub_8034314(void *self);
+extern s32 RunHovercraftCannonFlashState(void *self);
 extern u8 IsHovercraftCannonFlashUnshootable(void *self);
 
 /* src/bosses/hovercraft_launcher.c */
@@ -263,7 +266,7 @@ extern void StartHovercraftHitFlash(void);
 extern void SetHovercraftFlashColor(u8 flag);
 extern s32 GetHovercraftPartsLeft(void);
 extern void LoseHovercraftPart(void);
-extern const struct singleton_kind *GetHovercraftAttack(void);
+extern const struct hovercraft_attack *GetHovercraftAttack(void);
 extern s32 GetHovercraftState(void);
 extern s32 GetHovercraftLevel(void);
 extern s32 GetHovercraftZ(void);
@@ -272,13 +275,13 @@ extern s32 GetHovercraftX(void);
 extern void SetHovercraftState(s32 a0, s32 a1);
 extern void HovercraftStateInactive(void);
 extern void HovercraftStateApproach(void);
-extern void nullsub_37(void);
+extern void HovercraftStateExplodeStub(void);
 
 /* src/bosses/hovercraft_side_gun.c */
 extern void *CreateHovercraftSideGun(void *self, void *part, s32 b, s32 c, s32 d, u8 eByte);
 extern void DamageHovercraftSideGun(void *self, s32 dmg);
 extern void UpdateHovercraftSideGun(void *self);
-extern void sub_80341F8(void *self);
+extern void RunHovercraftSideGunState(void *self);
 extern u8 IsHovercraftSideGunUnshootable(void *self);
 extern void DamageHovercraftCannonFlash(void);
 
@@ -325,7 +328,7 @@ extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
 /* The bosses' globals (sym_iwram.txt). */
 extern struct actor_self *gAirship;
-extern const struct weapon_kind *gAirshipAttack;
+extern const struct airship_attack *gAirshipAttack;
 extern s32 gAirshipBg2Page;
 extern u8 gAirshipBg2PageFlip;
 extern s32 gAirshipCheckpointCount;
@@ -350,7 +353,7 @@ extern s32 gAirshipX;
 extern s32 gAirshipY;
 extern s32 gAirshipZ;
 extern struct actor_self *gHovercraft;
-extern const struct singleton_kind *gHovercraftAttack;
+extern const struct hovercraft_attack *gHovercraftAttack;
 extern s32 gHovercraftBg2Page;
 extern u8 gHovercraftBg2PageFlip;
 extern s32 gHovercraftDistance;
@@ -377,12 +380,16 @@ extern s32 gHovercraftVelZ;
 extern s32 gHovercraftX;
 extern s32 gHovercraftY;
 extern s32 gHovercraftZ;
-extern s32 gUnknown_030015E0;
-extern s32 gUnknown_030015E4;
-extern s32 gUnknown_030015E8;
+/* The twins of gAirshipHp/gAirshipFireTimer/gAirshipVolleyCount (same
+ * place in the same IWRAM layout, set the same way by SpawnHovercraft
+ * and the state functions), but nothing reads them: the hovercraft's
+ * parts keep their own hit points and spawn timers. */
+extern s32 gHovercraftHp;
+extern s32 gHovercraftFireTimer;
+extern s32 gHovercraftVolleyCount;
 
 /* src/data/weapon_kind_17c2d0.c */
-extern const struct weapon_kind gAirshipAttacks[6];
+extern const struct airship_attack gAirshipAttacks[6];
 extern const struct anim_box gAirshipBox;
 extern const u16 gAirshipHitFlashPalettes[3][16];
 extern const struct anim_frame_record gAirshipKeyframes[2];
@@ -455,7 +462,7 @@ extern void *gFlashBgPalette;
 extern void *gFlashObjPalette;
 
 /* src/data/singleton_kind_17c460.c */
-extern const struct singleton_kind gHovercraftAttacks[2];
+extern const struct hovercraft_attack gHovercraftAttacks[2];
 extern const struct anim_box gHovercraftBox;
 extern const struct anim_frame_record gHovercraftKeyframes[1];
 
