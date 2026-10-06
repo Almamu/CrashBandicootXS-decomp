@@ -71,24 +71,24 @@
 /* codegen: AddCollisionCandidate's two trailing byte arguments are s32
  * in its definition (objects.h), which reads them back with `ldrb`; the
  * ROM stores them here with `strb`, as one-byte structs. docs/headers_plan.md */
-extern void AddCollisionCandidate_b(void *queue, struct crate *obj, s32 kind, s32 code,
+extern void AddCollisionCandidate_b(struct collision_queue *queue, struct crate *obj, s32 kind, s32 code,
                                     s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
                                     struct byte_arg f20, struct byte_arg f21) asm("AddCollisionCandidate");
 
-/* AddCollisionCandidate's queue, at player+0x108 (+4: "position committed"). */
-#define D18C_QUEUE(p) ((u8 *)(p) + 0x108)
+/* AddCollisionCandidate's queue (+4: "position committed"). */
+#define D18C_QUEUE(p) (&(p)->collisionQueue)
 #define D18C_COMMIT()                                                          \
     if (1)                                                                     \
     {                                                                          \
-        u8 *_q = D18C_QUEUE(gPlayer);                                           \
+        struct collision_queue *_q = D18C_QUEUE(gPlayer);                      \
                                                                                \
-        _q[4] = 1;                                                             \
+        _q->unk_04 = 1;                                                        \
     }                                                                          \
     else                                                                       \
         (void)0
 
 #define D18C_CALL68(a, b, c) \
-    PhysCall3(gPlayer, (struct method *)&gPlayer->vtable->handleEvent, (a), (b), (c))
+    PhysCall3(gPlayer, (struct actor_method *)&gPlayer->vtable->handleEvent, (a), (b), (c))
 
 /* GetSpriteFrameThirdBox inlined: the player's current hitbox quad. */
 #define D18C_HITBOX(dst, part)                                                 \
@@ -916,7 +916,7 @@ tail:
  * argument order, as in the ROM. */
 
 #define E08C_CALL68(a, b) \
-    PhysCall3(gPlayer, (struct method *)&gPlayer->vtable->handleEvent, 0, (a), (b))
+    PhysCall3(gPlayer, (struct actor_method *)&gPlayer->vtable->handleEvent, 0, (a), (b))
 
 /* BreakCrateInStack as this caller sees it: the flag argument is a one-byte
  * struct, passed in QImode. */
@@ -1093,9 +1093,9 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
 commit:
     {
         struct player *p = gPlayer;
-        u8 *q = (u8 *)p + 0x108;
+        struct collision_queue *q = &p->collisionQueue;
 
-        if (q[4] == 0)
+        if (q->unk_04 == 0)
             SetEntityPos((struct actor *)p, pos.x, pos.y);
     }
     if (hit != 0)
@@ -1772,7 +1772,7 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
             struct player *p = gPlayer;
 
             if (p->flags.all >> 7) {
-                PhysCall3(p, (struct method *)&p->vtable->handleEvent, 0, 0x1a, 0);
+                PhysCall3(p, (struct actor_method *)&p->vtable->handleEvent, 0, 0x1a, 0);
                 PhysSfx(1);
             }
         }
@@ -2054,7 +2054,7 @@ void ExplodeCrate(struct crate *self, u8 near)
         if (near) {
         call:
             p = gPlayer;
-            PhysCall3(p, (struct method *)&p->vtable->handleEvent, 0, 4, 0);
+            PhysCall3(p, (struct actor_method *)&p->vtable->handleEvent, 0, 4, 0);
         }
     }
     if (self->kind != 0xa)

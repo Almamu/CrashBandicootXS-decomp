@@ -474,29 +474,29 @@ void ApplyPlayerCtrlMotion(struct player_ctrl *self)
 {
     if (self->motionXPending == 1)
     {
-        struct motion_rec *rec;
+        const struct speed_ramp *rec;
 
         self->motionXPending = 0;
         {
             register u32 i asm("r1") = self->animSet->entries[self->motionX].a;
-            register u32 off asm("r0") = i * sizeof(struct motion_rec);
+            register u32 off asm("r0") = i * sizeof(struct speed_ramp);
 
-            rec = (struct motion_rec *)(off + (u32)gPlayerCtrlMotionRecords);
+            rec = (const struct speed_ramp *)(off + (u32)gPlayerCtrlMotionRecords);
         }
         StartCtrlTargetMotionX(self, self->target, (s32 *)rec);
     }
     if (self->motionYPending == 1)
     {
-        struct motion_rec *rec;
+        const struct speed_ramp *rec;
 
         self->motionYPending = 0;
         {
             register u32 i asm("r1") = self->animSet->entries[self->motionY].b;
-            register u32 off asm("r0") = i * sizeof(struct motion_rec);
+            register u32 off asm("r0") = i * sizeof(struct speed_ramp);
 
-            rec = (struct motion_rec *)(off + (u32)gPlayerCtrlMotionRecords);
+            rec = (const struct speed_ramp *)(off + (u32)gPlayerCtrlMotionRecords);
         }
-        StartCtrlTargetMotionY(self, self->target, (struct vec3 *)rec);
+        StartCtrlTargetMotionY(self, self->target, rec);
     }
 }
 
@@ -747,7 +747,7 @@ void AttachPlayerCtrl(struct player_ctrl *self, struct player *target)
 /* UNUSED */
 void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct player *target, s32 idx)
 {
-    StartCtrlTargetMotionY(self, target, (struct vec3 *)&gPlayerCtrlMotionRecords[self->animSet->entries[idx].b]);
+    StartCtrlTargetMotionY(self, target, &gPlayerCtrlMotionRecords[self->animSet->entries[idx].b]);
 }
 
 /* UNUSED */

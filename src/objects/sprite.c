@@ -336,12 +336,6 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * part's `mode = 1` goes through a `u32` local, which materializes the
  * 1 before the `-4` mask as the ROM does. */
 
-struct collect_method {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void (*fn)(void *self, s32 a, s32 b, s32 c);
-};
-
 struct collect_part {
     s32 x;
     s32 y;
@@ -384,8 +378,8 @@ s32 CheckSpritePickup(struct collect_part *part)
                 COLLECT_FLAGS(part) |= 8;
                 player = gPlayer;
                 {
-                    const struct collect_method *m = (const struct collect_method *)&player->vtable->handleEvent;
-                    m->fn((u8 *)player + m->thisOffset, 0, part->kind, 0);
+                    const struct actor_method *m = (const struct actor_method *)&player->vtable->handleEvent;
+                    ((void (*)(void *, s32, s32, s32))m->fn)((u8 *)player + m->thisOffset, 0, part->kind, 0);
                 }
                 COLLECT_FLAGS(part) |= one;
                 if (part->id != 0xFFFF) do {

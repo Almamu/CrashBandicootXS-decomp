@@ -1,6 +1,7 @@
 #include "core.h"
 #include "audio.h"
 #include "player.h"
+#include "camera_lead.h"
 #include "menus.h"
 #include "gfx.h"
 #include "objects.h"
@@ -71,37 +72,16 @@ struct pctrl_motion_queue
     u8 motionYPending;  // 0x2D
 };
 
-struct ctrl_method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
 struct ctrl_vtable
 {
     u8 unk_00[0x20];
-    struct ctrl_method setMode;      // 0x20 - SetCtrlMode
-    struct ctrl_method startMotionX; // 0x28 - StartCtrlTargetMotionX
-    struct ctrl_method startMotionY; // 0x30 - StartCtrlTargetMotionY
-    struct ctrl_method setMotionX;   // 0x38 - SetCtrlTargetMotionX
-    struct ctrl_method setMotionY;   // 0x40 - SetCtrlTargetMotionY
+    struct actor_method setMode;      // 0x20 - SetCtrlMode
+    struct actor_method startMotionX; // 0x28 - StartCtrlTargetMotionX
+    struct actor_method startMotionY; // 0x30 - StartCtrlTargetMotionY
+    struct actor_method setMotionX;   // 0x38 - SetCtrlTargetMotionX
+    struct actor_method setMotionY;   // 0x40 - SetCtrlTargetMotionY
     u8 unk_48[8];
-    struct ctrl_method setAnim;      // 0x50 - SetCtrlTargetAnim
-};
-
-/* The camera lead (CreateCameraLead), as far as this file reads it:
- * level_select.c's `struct follow_child` sees the byte at 0x0C whole. */
-struct ctrl_child
-{
-    s32 x;            // 0x00
-    s32 y;            // 0x04
-    u16 field_08;     // 0x08 - bitmap id
-    u8 unk_0A[2];
-    u8 gone:1;        // 0x0C - bit 0: removed
-    u8 unk_0C_1:7;
-    u8 unk_0D[0x6B];
-    s32 unk_78;       // 0x78
+    struct actor_method setAnim;      // 0x50 - SetCtrlTargetAnim
 };
 
 struct anim_pair
@@ -125,7 +105,7 @@ struct input_ctrl
     u8 motionXKeepSpeed;         // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
     u8 motionYKeepSpeed;         // 0x1A - the same for Y
     u8 unk_1B;
-    struct ctrl_child *cameraLead; // 0x1C - CreateCameraLead's object
+    struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
     u8 flag20;                   // 0x20
     u8 unk_21[3];
     s32 timer;                   // 0x24
@@ -140,12 +120,12 @@ extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
  * notes are not neutral under this compiler (include/actor_self.h). */
 #define CTRL_CALL2(obj, m, a)                                                  \
     if (1) {                                                                   \
-        struct ctrl_method *_m = &(obj)->vtable->m;                            \
+        struct actor_method *_m = &(obj)->vtable->m;                            \
         _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } else (void)0
 #define CTRL_CALL3(obj, m, a, b)                                               \
     if (1) {                                                                   \
-        struct ctrl_method *_m = &(obj)->vtable->m;                            \
+        struct actor_method *_m = &(obj)->vtable->m;                            \
         _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } else (void)0
 
@@ -176,7 +156,7 @@ extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 
 static inline void SetCameraLeadSpeed(struct input_ctrl *self, s32 speed)
 {
-    self->cameraLead->unk_78 = speed;
+    self->cameraLead->targetOffset = speed;
 }
 
 static inline void QueueMotionX(struct input_ctrl *self, u8 anim)
@@ -251,10 +231,10 @@ void InputCtrlStateStart(struct input_ctrl *self)
     self->dirState = 0;
     if (self->cameraLead == NULL)
     {
-        self->cameraLead = (struct ctrl_child *)CreateCameraLead(OperatorNew(0x80));
+        self->cameraLead = CreateCameraLead(OperatorNew(0x80));
         AddToPartList(gCollidableList, self->cameraLead);
     }
-    ResetCameraLead((struct follow_child *)self->cameraLead);
+    ResetCameraLead(self->cameraLead);
 }
 
 
@@ -268,9 +248,9 @@ void UpdateInputCtrl(struct input_ctrl *self)
         if (x > (gLevelLayers->layer0->widthPx << 8) - 0xA00)
         {
             {
-                struct ctrl_child *c = self->cameraLead;
+                struct follow_child *c = self->cameraLead;
 
-                MARK_GONE(c->gone, c->field_08);
+                MARK_GONE(c->flags.bits.gone, c->field_08);
             }
             self->cameraLead = NULL;
             RequestRoomExit();

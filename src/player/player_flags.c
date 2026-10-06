@@ -10,9 +10,9 @@
  * gobj`, gobj_1a794.h: the player, a platform or a boss part). */
 
 /* `collisionQueue` (+0x108) address getter. */
-void *GetPlayerCollisionQueue(struct player *self)
+struct collision_queue *GetPlayerCollisionQueue(struct player *self)
 {
-    return self->collisionQueue;
+    return &self->collisionQueue;
 }
 
 /* `dead` (+0x104) clear/set/get accessors. */
@@ -300,7 +300,7 @@ void SetCtrlAnimSet(void *selfArg, s32 val)
     *(s32 *)(self + 4) = val;
 }
 
-/* Copies `vec` into `self+0x54`/`self+0x58`/`self+0x5c`, negating the
+/* Copies `ramp` into `self+0x54`/`self+0x58`/`self+0x5c`, negating the
  * X and Z components when `self+0x28` bit 5 is set (a mirror-flag
  * bit, matching the same encoding convention used throughout this
  * ROM for X/Z axis flips). Matched with `self`/`vec` pinned to
@@ -311,10 +311,10 @@ void SetCtrlAnimSet(void *selfArg, s32 val)
  * X, then Z, then Y last in the negated branch (`v[1]`'s load is what
  * finally overwrites `v`'s own register, so it has to come after `Z`'s
  * load, not before it, even though the source lists them X/Y/Z). */
-void SetCtrlTargetMotionY(void *unused, void *selfArg, struct vec3 *vec)
+void SetCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp *ramp)
 {
     register struct gobj *self asm("r3") = selfArg;
-    register s32 *v asm("r2") = (s32 *)vec;
+    register const s32 *v asm("r2") = (const s32 *)ramp;
 
     if ((s8)(self->mirror << 2) < 0) {
         register s32 x asm("r0") = -v[0];
@@ -338,10 +338,10 @@ void SetCtrlTargetMotionY(void *unused, void *selfArg, struct vec3 *vec)
 /* Same mirror-flag-gated copy as `SetCtrlTargetMotionY`, also duplicating the
  * (possibly negated) X component into `self+0x64`. Matched the same
  * way. */
-void StartCtrlTargetMotionY(void *unused, void *selfArg, struct vec3 *vec)
+void StartCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp *ramp)
 {
     register struct gobj *self asm("r3") = selfArg;
-    register s32 *v asm("r2") = (s32 *)vec;
+    register const s32 *v asm("r2") = (const s32 *)ramp;
 
     if ((s8)(self->mirror << 2) < 0) {
         register s32 x asm("r0") = -v[0];

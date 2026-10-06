@@ -21,11 +21,9 @@
 #include "bg_scroll_layer.h"
 #include "vtable.h"
 
-struct MedalListItem;
 struct bg_streamer;
 struct camera;
 struct fx_part;
-struct gl_self;
 struct level_ctx;
 struct level_progress;
 struct orbit_part;
@@ -224,7 +222,7 @@ extern void *InitBitmap(void *self);
 extern struct orbit_part *DropExtraLife(void *unused, u32 x, u32 y, u32 p3, u32 p5, u32 flag6);
 
 /* src/level/entity_flags.c */
-extern s32 CountCrateEntities(void *self, void *list);
+extern s32 CountCrateEntities(void *self, const struct level_entity_list *list);
 extern void sub_8025944(void *self, s32 n);
 extern s32 sub_8025968(void *self, s32 n);
 extern s32 sub_802599C(void *self, s32 n);
@@ -275,7 +273,7 @@ extern s32 LevelHasBlueGemEntity(s32 idx);
 extern s32 LevelHasGreenGemEntity(s32 idx);
 extern s32 LevelHasRedGemEntity(s32 idx);
 extern s32 LevelHasGemPathGemEntity(s32 idx);
-extern s32 CountRoomCrates(struct MedalListItem *item);
+extern s32 CountRoomCrates(const struct level_room *item);
 extern void PlayRoomMusic(struct level_progress *self);
 extern s32 NextRoom(struct level_progress *self);
 extern void EnterGemPathRoom(struct level_progress *self);
@@ -372,7 +370,7 @@ extern void *PackSaveData(void *self);
 extern struct level_state *GetLevelState(void);
 
 /* src/level/play_room.c */
-extern s32 PlayRoom(void *self);
+extern s32 PlayRoom(struct level_progress *self);
 
 /* src/level/room.c */
 extern void ClearRoomExit(void);
@@ -389,7 +387,7 @@ extern void UpdateRoomFrame(void *self);
 extern void SetupRoomBlend(struct level_ctx *self);
 
 /* src/level/run_room.c */
-extern s32 RunRoom(struct gl_self *self);
+extern s32 RunRoom(struct level_progress *self);
 
 /* src/level/spawn_bosses.c */
 extern void SpawnRoomExit(u32 arg, u16 arg1, u16 arg2, u16 arg3);

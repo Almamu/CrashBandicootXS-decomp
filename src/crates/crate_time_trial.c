@@ -26,7 +26,7 @@ void ConvertCratesForTimeTrial(void)
         struct pool_manager **listAddr = &gCrateList;
         do {
             struct crate *e = (struct crate *)(*listAddr)->slotArray[i];
-            struct method *rec = &e->vtable->m48;
+            struct actor_method *rec = &e->vtable->m48;
             s16 offset = rec->thisOffset;
             void *addr = (u8 *)e + offset;
             void *fn = rec->fn;

@@ -13,6 +13,7 @@
 #include "core.h"
 #include "graphics_package.h"
 #include "vram_pool.h"
+#include "hitbox_quad.h"
 
 struct aabb;
 struct actor;
@@ -50,22 +51,6 @@ struct oam_shadow_buffer {
 };
 COMPILE_TIME_ASSERT(gfx_h, sizeof(struct oam_shadow_buffer) == 0x40C);
 
-/* A keyframe record's hitbox quad, `{s16 offX, s16 offY, u8 w, u8 h}`:
- * an offset from the object's position and a size. It sits at +0x4 of the
- * 28-byte record for the table GetSpriteHitbox/PlayerHasRoomForAnim/
- * BreakCrateTouchedByPlayer read (gobj_1a794.h's `struct anim_rec`) and
- * at +0xc for the one GetSpriteBounds reads, and an entity's vtable slot
- * 2 returns a pointer to one (CheckEntityPlayerContact). Reached through
- * a pointer, never embedded: agbcc pads every struct to a word multiple.
- * box_part.h's `struct part_box` and the `struct anim_box` of graphics.c
- * and gobj_1a794.h were copies. */
-struct hitbox_quad {
-    s16 offX;
-    s16 offY;
-    u8 w;
-    u8 h;
-};
-
 /* A sprite frame (GetSpriteFrame) as DrawSpritePieces and
  * DrawAffineSpritePieces read it: one offset and one shape/size id per
  * OBJ piece, the frame's VRAM source and its piece count. */
@@ -84,16 +69,6 @@ struct piece_info {
             u8 count;           // 0x0B - piece count
         } b;
     } u;
-};
-
-/* OAM attribute 2 as bitfields, padded to a word. u16 fields: the tile
- * store then masks with lsl/lsr #22 as in the ROM (a u32 field loads a
- * 0x3ff constant instead). */
-struct oam_attr2 {
-    u16 tile:10;
-    u16 priority:2;
-    u16 palette:4;
-    u16 unused:16;
 };
 
 /* `gDispcnt`, the REG_DISPCNT shadow `CommitDispcnt` commits, viewed as
@@ -119,8 +94,13 @@ struct dispcnt_bits {
 /* One hardware OAM entry as bitfields, as AddOamEntry copies it into the
  * shadow buffer: attributes 0-2, then the affine parameter. The u32
  * storage units of attributes 0-1 give the ROM's word-wide and/or
- * sequences. In affine mode `matrixBit3`/`matrixBit4` are the top bits
- * of the matrix number; otherwise they are the h/v flip. */
+ * sequences, and the u16 units of attribute 2 mask the tile store with
+ * lsl/lsr #22 as in the ROM (a u32 field loads a 0x3ff constant
+ * instead). In affine mode `matrixBit3`/`matrixBit4` are the top bits
+ * of the matrix number; otherwise they are the h/v flip. DrawSpritePieces
+ * and DrawAffineSpritePieces build one on the stack (their local `struct
+ * oam_pair`/`oam_attr01` and gfx.h's `oam_attr2` were copies, #574
+ * batch 9e). */
 struct oam_attrs {
     u32 y:8;            // 0x00
     u32 affineMode:2;   // 0x01

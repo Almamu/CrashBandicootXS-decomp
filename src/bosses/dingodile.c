@@ -1,4 +1,5 @@
 #include "core.h"
+#include "sprite_bank.h"
 #include "util.h"
 #include "audio.h"
 #include "player.h"
@@ -73,13 +74,6 @@ struct vtable
     struct actor_method m68; // 0x68
 };
 
-struct anim_rec
-{
-    u8 unk_00[0x16];
-    u8 frameCount; // 0x16
-    u8 unk_17[5];
-};
-
 /* The bitfield byte at part+0x28. `facing` is a signed field: the ROM
  * tests it with `lsl #27` / sign branch. */
 struct part_f28
@@ -119,7 +113,7 @@ struct part
     u8 unk_0E[0xA];
     struct vtable *vt;     // 0x18
     u8 unk_1C[4];
-    struct { struct anim_rec *recs; } *table; // 0x20
+    const struct sprite_bank *table; // 0x20
     u8 unk_24[4];
     struct part_f28 f28;   // 0x28
     u8 slot:4;             // 0x29
@@ -543,8 +537,8 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
                 other->y = y << 8;
             }
             n = 8;
-            if (n >= other->table->recs[other->tag].frameCount)
-                n = other->table->recs[other->tag].frameCount - 1;
+            if (n >= other->table->anims[other->tag].frameCount)
+                n = other->table->anims[other->tag].frameCount - 1;
             other->frame = n;
             {
                 s32 v = other->f28.facing;
@@ -607,8 +601,8 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         SetDingodileState(self, other, 1);
         {
             s32 n = 8;
-            if (n >= other->table->recs[other->tag].frameCount)
-                n = other->table->recs[other->tag].frameCount - 1;
+            if (n >= other->table->anims[other->tag].frameCount)
+                n = other->table->anims[other->tag].frameCount - 1;
             other->frame = n;
         }
         break;
@@ -1072,9 +1066,9 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
     case 0:
         if (other->f28.facing)
         {
-            s32 a = -gDingodileMotionRecords[3][0];
-            s32 c = -gDingodileMotionRecords[3][2];
-            s32 b = gDingodileMotionRecords[3][1];
+            s32 a = -gDingodileMotionRecords[3].start;
+            s32 c = -gDingodileMotionRecords[3].target;
+            s32 b = gDingodileMotionRecords[3].step;
             other->speedX = a;
             other->rampXStart = a;
             other->rampXStep = b;
@@ -1082,9 +1076,9 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
         }
         else
         {
-            s32 a = gDingodileMotionRecords[3][0];
-            s32 b = gDingodileMotionRecords[3][1];
-            s32 c = gDingodileMotionRecords[3][2];
+            s32 a = gDingodileMotionRecords[3].start;
+            s32 b = gDingodileMotionRecords[3].step;
+            s32 c = gDingodileMotionRecords[3].target;
             other->speedX = a;
             other->rampXStart = a;
             other->rampXStep = b;

@@ -2,6 +2,7 @@
 #define GUARD_SPRITE_BANK_H
 
 #include "gba/types.h"
+#include "hitbox_quad.h"
 
 /*
  * The sprite-bank animation system: gSpriteBankTable and the tables it
@@ -13,10 +14,13 @@
  * DrawAffineSpritePieces/DrawSpritePieces (the pieces), GetSpriteAttackBox/GetSpriteBodyBox and
  * GetSpriteFrameAnchor-GetSpriteFrameBodyBox (the frame's boxes and anchor, picked by the
  * layout type), GetPaletteSlot (the OBJ palettes). Older files read the
- * same records through local views with only the fields they use
- * (struct anim_record in gfx_part.h/level_menu.h/level_select_parts.h,
- * struct act_anim_record in action_obj.h, struct anim_rec in
- * gobj_1a794.h, struct kf_record/piece_info in affine_sprite_pieces.c).
+ * same records through views with only the fields they use (struct
+ * anim_record/anim_bank in gfx_part.h, struct act_anim_record in
+ * player.h, struct anim_rec/anim_table in gobj_1a794.h, struct
+ * piece_info in gfx.h). The menus' copies (level_menu.h,
+ * level_select_parts.h, level_select.c) and the file-local ones
+ * (time_trial.c, dingodile.c, tiny_update.c, spawn_objects.c,
+ * affine_sprite_pieces.c's kf_record) use these types since #574 batch 9e.
  */
 
 #ifndef ARRAY_COUNT
@@ -27,17 +31,6 @@
 struct sprite_piece_pos {
     s16 x;
     s16 y;
-};
-
-/* A box relative to the part, in pixels: GetSpriteAttackBox adds {x, y} to the
- * part's position and hands that and {w, h} to SetAabbPos/SetAabbSize
- * as an AABB. */
-struct sprite_box {
-    s16 x;
-    s16 y;
-    u8 w;
-    u8 h;
-    u16 unk_06; /* always 0 */
 };
 
 /* A point relative to the part (GetSpriteFrameAnchor; the fallback when a frame has
@@ -145,28 +138,28 @@ struct sprite_frame {
 
 struct sprite_frame_1box {
     struct sprite_frame frame;
-    struct sprite_box box[1];           /* 0x0C */
+    struct hitbox_quad box[1];           /* 0x0C */
 };
 
 struct sprite_frame_1box_anchor {
     struct sprite_frame frame;
-    struct sprite_box box[1];           /* 0x0C */
+    struct hitbox_quad box[1];           /* 0x0C */
     struct sprite_point anchor;         /* 0x14 */
 };
 
 struct sprite_frame_2box {
     struct sprite_frame frame;
-    struct sprite_box box[2];           /* 0x0C, 0x14 */
+    struct hitbox_quad box[2];           /* 0x0C, 0x14 */
 };
 
 struct sprite_frame_3box {
     struct sprite_frame frame;
-    struct sprite_box box[3];           /* 0x0C, 0x14, 0x1C */
+    struct hitbox_quad box[3];           /* 0x0C, 0x14, 0x1C */
 };
 
 struct sprite_frame_3box_anchor {
     struct sprite_frame frame;
-    struct sprite_box box[3];           /* 0x0C, 0x14, 0x1C */
+    struct hitbox_quad box[3];           /* 0x0C, 0x14, 0x1C */
     struct sprite_point anchor;         /* 0x24 */
 };
 
@@ -176,7 +169,7 @@ struct sprite_frame_3box_anchor {
 /* One animation: a sequence of frame indices into the bank's `frames`. */
 struct sprite_anim {
     const u16 *seq;                     /* 0x00 - [frameCount] frame indices */
-    struct sprite_box box[2];           /* 0x04, 0x0C */
+    struct hitbox_quad box[2];           /* 0x04, 0x0C */
     u8 paletteId;                       /* 0x14 - index into the table's `palettes` (GetPaletteSlot/LockPalette) */
     u8 duration;                        /* 0x15 - ticks per step */
     u8 frameCount;                      /* 0x16 - steps in `seq` */

@@ -70,7 +70,7 @@
  *
  * **Shared tail**: calls `SetupRoomBlend(self)`/`ResetObjBuffers()` (the
  * latter already matched in `room.c`), then re-reads the
- * level-state record's (`self->0x18`) own `+8` "widget kind" field
+ * current room's (`self->cat`) `kind`
  * (the same field `PlayRoom` dispatched its own widget-construction
  * switch on) - if it's `1`, re-stamps the player's `+0x2d` byte to
  * `0x1f`, refreshes its OAM entry (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
@@ -144,27 +144,20 @@ struct gl_point
     s32 y;
 };
 
-struct gl_method
-{
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
-};
-
 struct gl_vtable
 {
     u8 unk_00[0x18];
-    struct gl_method m18;           /* +0x18 */
+    struct actor_method m18;           /* +0x18 */
     u8 unk_20[0x18];
-    struct gl_method m38;           /* +0x38 */
+    struct actor_method m38;           /* +0x38 */
     u8 unk_40[8];
-    struct gl_method m48;           /* +0x48 */
+    struct actor_method m48;           /* +0x48 */
 };
 
 struct gl_attach_vtable
 {
     u8 unk_00[0x20];
-    struct gl_method attach;        /* +0x20 */
+    struct actor_method attach;        /* +0x20 */
 };
 
 struct gl_attach
@@ -179,19 +172,6 @@ struct gl_entity
     struct gl_vtable *vtable;       /* +0x18 */
     u8 unk_1C[0x32];
     u8 tag;                         /* +0x4E */
-};
-
-struct gl_widget_kind
-{
-    u8 unk_00[8];
-    s32 kind;                       /* +0x08 */
-};
-
-struct gl_self
-{
-    s32 level;                      /* +0x00 */
-    u8 unk_04[0x14];
-    struct gl_widget_kind *widget;  /* +0x18 */
 };
 
 union gl_input
@@ -268,7 +248,7 @@ static inline void RefreshPlayerTiles(void)
     LoadPaletteSlot(cache, p->slot, p->anim->records[p->tag].paletteId);
 }
 
-s32 RunRoom(struct gl_self *self)
+s32 RunRoom(struct level_progress *self)
 {
     s32 ret = 1;
     s32 i;
@@ -276,7 +256,7 @@ s32 RunRoom(struct gl_self *self)
     ResetPlayerForRoom(gPlayer);
     gCamera->target = (struct camera_target *)gPlayer;
     gCamera->mode = ret;
-    LoadRoom(gLevelLayers, (const struct level_room *)self->widget);
+    LoadRoom(gLevelLayers, self->cat);
     if (!gLevelTable[self->level].isBoss)
         CheckAllCratesBroken(gLevelState);
     if (IsSwitchPressed(gLevelState))
@@ -311,7 +291,7 @@ s32 RunRoom(struct gl_self *self)
 
     SetupRoomBlend((struct level_ctx *)self);
     ResetObjBuffers();
-    if (self->widget->kind == 1)
+    if (self->cat->kind == 1)
     {
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->mode = 2;
@@ -321,10 +301,10 @@ s32 RunRoom(struct gl_self *self)
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
 
-    if (self->widget->kind == 0)
+    if (self->cat->kind == 0)
     {
-        if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom((struct level_progress *)self))
-            || (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom((struct level_progress *)self)))
+        if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom(self))
+            || (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom(self)))
         {
             struct gl_attach *a;
 
@@ -395,7 +375,7 @@ fade:
     if (IsRoomExitRequested())
     {
         ret = 0;
-        if (!(u8)IsInBonusRoom((struct level_progress *)self) && IsInBonusRound(gLevelState))
+        if (!(u8)IsInBonusRoom(self) && IsInBonusRound(gLevelState))
         {
             struct gl_point point;
             s32 x;
@@ -407,7 +387,7 @@ fade:
             x = (s32)gLevelState;
             SetCheckpoint((void *)x, sub_801B29C((struct gobj *)GetBonusPlatform((void *)x)), &point.x);
         }
-        else if (!(u8)IsInGemPathRoom((struct level_progress *)self) && IsInGemPath(gLevelState))
+        else if (!(u8)IsInGemPathRoom(self) && IsInGemPath(gLevelState))
         {
             struct gl_point point;
             struct player *pl;

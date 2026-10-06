@@ -67,10 +67,10 @@ const s32 gDingodileStopXRightHurt[6] = {
     0x4B00, 0x6E00, 0xA000, 0xD200, 0xFA00, 0x40000,
 };
 
-/* {x, y, z} vectors (gobj_1a794.h's `struct vec3`): UpdateDingodileShark
+/* Motion records (`struct speed_ramp`, objects.h): UpdateDingodileShark
  * (dingodile.c), and StartDingodileMotion (dingodile_create.c) through the
  * entries of entry_set_16c418.c. */
-const s32 gDingodileMotionRecords[4][3] = {
+const struct speed_ramp gDingodileMotionRecords[4] = {
     { 0, 0, 0 },
     { 0, 180, 300 },
     { -400, 30, 0 },

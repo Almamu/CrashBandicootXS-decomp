@@ -217,17 +217,8 @@ struct part_list *InitPartList(struct part_list *manager, s32 count)
  * `mov ip, sb` at the loop head. With `m->freeListArray` read directly
  * instead, the loop optimizer hoists `m + 0x810` above the grid clear,
  * which ties up r1 there and pushes the cached count out of r3. */
-/* codegen: `struct pool_node` (crates.h) with untyped fields. Through
- * the real `struct pool_node *` fields, gcc takes the zeroing stores below
- * as possible writes to `m->nodeArray` and reloads it. */
-struct pool_init_node {
-    void *data;
-    void *next;
-    struct pool_link *wrap;
-    void *link;
-    u8 mark;
-};
-
+/* The zeroing stores go through `struct pool_init_node` (crates.h), the
+ * untyped view of the node. */
 static inline void PoolResetFreeList(struct pool_manager *m)
 {
     s32 i;

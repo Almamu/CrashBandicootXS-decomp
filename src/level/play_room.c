@@ -11,28 +11,11 @@
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-/* PlayRoom's argument (game_frame.c passes `&self->level`; the same
- * record run_room.c's RunRoom reads as `struct gl_self`). */
-struct level_start_args {
-    s32 level;                      // 0x00
-    u8 unk_04[0xC];
-    s32 spawnX;                     // 0x10 - the player's start position
-    s32 spawnY;                     // 0x14
-    const struct level_room *room;  // 0x18
-    u8 flags;                       // 0x1C - bit 0: start X-mirrored
-};
-
 /* The HUD widget's method table: a gcc 2.x {this-adjust, fn} record at
  * +0x18, called with the player as its argument. */
-struct widget_method {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
-};
-
 struct widget_vtable {
     u8 unk_00[0x18];
-    struct widget_method attach;    // 0x18
+    struct actor_method attach;    // 0x18
 };
 
 struct widget {
@@ -49,13 +32,13 @@ struct widget {
  * `dual_array_manager`s, `gCrateList` a `pool_manager`), the
  * player actor itself (`gPlayer`, `InitPlayer`), and the
  * text-box singleton (`gLevelLayers`, `GetLevelLayers`). Dispatches on
- * the level-state record's (`self->0x18`) own `+8` "widget kind" field
+ * the current room's (`self->cat`) `kind`
  * to construct one of three HUD counter/ring-buffer widgets
  * (`gActionCtrlMotionSet`/`0816B934`/`0816B93C`, still-uncharacterized
  * per-widget action tables), then unconditionally hands off to
  * `RunRoom` and tears the per-frame update queues back down before
  * returning its status code. */
-s32 PlayRoom(void *selfArg)
+s32 PlayRoom(struct level_progress *selfArg)
 {
     /* `self` is pinned to r8 for the whole function, matching the ROM:
      * it has to survive dozens of `bl`s while r4-r7 are already busy
@@ -63,7 +46,7 @@ s32 PlayRoom(void *selfArg)
      * `mov` through a low register before every field access - each
      * such access below is its own small register-pinned block for
      * that reason. */
-    register struct level_start_args *self asm("r8") = selfArg;
+    register struct level_progress *self asm("r8") = selfArg;
     struct player **d8;
     s32 mode;
     s32 result;
@@ -105,8 +88,8 @@ s32 PlayRoom(void *selfArg)
     d8 = &gPlayer;
     *d8 = InitPlayer(OperatorNew(0x350), 0xffff, 0, 0, 0);
     {
-        struct level_start_args *p = self;
-        SetEntityPos((struct actor *)*d8, p->spawnX, p->spawnY);
+        struct level_progress *p = self;
+        SetEntityPos((struct actor *)*d8, p->checkpointX, p->checkpointY);
     }
 
     /* Register-pinned (rather than a plain `*p |= 0x10`) so the mask
@@ -123,7 +106,7 @@ s32 PlayRoom(void *selfArg)
     {
         register u8 *p asm("r2") = (u8 *)*d8 + 0x28;
         register u32 one asm("r1") = 1;
-        register struct level_start_args *sp asm("r4") = self;
+        register struct level_progress *sp asm("r4") = self;
         register u8 rawbit asm("r4") = sp->flags;
         register u32 bit asm("r1") = (one & rawbit) << 4;
         /* Register-pinned negative-constant mask (`-0x11`, not `~0x10`)
@@ -146,8 +129,8 @@ s32 PlayRoom(void *selfArg)
      * instruction count matching. */
     asm volatile("" ::: "r4");
     {
-        register struct level_start_args *p asm("r4") = self;
-        mode = p->room->kind;
+        register struct level_progress *p asm("r4") = self;
+        mode = p->cat->kind;
     }
 
     switch (mode) {
@@ -237,7 +220,7 @@ s32 PlayRoom(void *selfArg)
     }
     }
 
-    result = RunRoom((struct gl_self *)self);
+    result = RunRoom(self);
 
     if (gLevelLayers != NULL) {
         DestroyLevelLayers(gLevelLayers, 3);

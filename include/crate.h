@@ -15,14 +15,14 @@
 struct crate_vtable
 {
     u8 unk_00[0x10];
-    struct method m10; // 0x10 - slot 2, the hitbox record (GetSpriteObjHitbox; IsCrateInsideRect)
-    struct method m18; // 0x18 - slot 3, the per-frame update (UpdateCrate)
+    struct actor_method m10; // 0x10 - slot 2, the hitbox record (GetSpriteObjHitbox; IsCrateInsideRect)
+    struct actor_method m18; // 0x18 - slot 3, the per-frame update (UpdateCrate)
     u8 unk_20[0x28];
-    struct method m48; // 0x48 - returns the object's class id (3: box)
-    struct method m50; // 0x50
+    struct actor_method m48; // 0x48 - returns the object's class id (3: box)
+    struct actor_method m50; // 0x50
     u8 unk_58[8];
-    struct method m60; // 0x60
-    struct method m68; // 0x68
+    struct actor_method m60; // 0x60
+    struct actor_method m68; // 0x68
 };
 
 struct crate;
@@ -135,7 +135,7 @@ struct crate
 typedef s32 (*phys_method_fn)(void *self);
 
 /* Calls method `m` (a gcc 2.x {s16 thisOffset; fn} vtable slot) on `obj`. */
-static inline s32 PhysCall(void *obj, struct method *m)
+static inline s32 PhysCall(void *obj, struct actor_method *m)
 {
     return ((phys_method_fn)m->fn)((u8 *)obj + m->thisOffset);
 }
@@ -143,7 +143,7 @@ static inline s32 PhysCall(void *obj, struct method *m)
 
 typedef void (*phys_method1_fn)(void *self, s32 arg);
 
-static inline void PhysCall1(void *obj, struct method *m, s32 arg)
+static inline void PhysCall1(void *obj, struct actor_method *m, s32 arg)
 {
     ((phys_method1_fn)m->fn)((u8 *)obj + m->thisOffset, arg);
 }
@@ -151,7 +151,7 @@ static inline void PhysCall1(void *obj, struct method *m, s32 arg)
 
 typedef void (*phys_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
-static inline void PhysCall3(void *obj, struct method *m, s32 a, s32 b, s32 c)
+static inline void PhysCall3(void *obj, struct actor_method *m, s32 a, s32 b, s32 c)
 {
     ((phys_method3_fn)m->fn)((u8 *)obj + m->thisOffset, a, b, c);
 }

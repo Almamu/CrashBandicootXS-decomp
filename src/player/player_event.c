@@ -30,15 +30,6 @@ struct aabb_copy
     struct aabb copy;
 };
 
-/* The head of the player's collision queue (struct player.collisionQueue,
- * src/objects/collision_queue.c's `struct collision_queue`): the
- * candidate count and the "position committed" byte. */
-struct ab9c_link
-{
-    u32 unk_0;
-    u8 unk_4;
-};
-
 /* Bit 1 of +0x0C: builds the object's AABB (GetSpriteAttackBox), copies it
  * (MemCopy32, a CpuSet memcpy) and hands the copy to CollidePartList by value
  * - three words in r1-r3, the fourth on the stack, which is what gives the
@@ -66,10 +57,10 @@ void CollidePlayerWithObjects(struct player *self)
 
     if (self->flags.all >> 7)
     {
-        struct ab9c_link *link = (struct ab9c_link *)self->collisionQueue;
+        struct collision_queue *link = &self->collisionQueue;
 
-        link->unk_0 = cleared;
-        link->unk_4 = cleared;
+        link->count = cleared;
+        link->unk_04 = cleared;
         CollidePlayerWithCrates(gCrateList, 3);
         CollidePartsOfClass(gUnknown_030012EC, 4);
         ResolvePlayerCollisions();
@@ -188,12 +179,6 @@ asm(".align 2, 0");
  * once linked). See docs/matching/issue-9-10-0x0800aff4-graphics.md
  * for the full write-up. */
 
-struct ac2c_method {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
-};
-
 struct ac2c_listener {
     u8 unk_00[0xc];
     u8 *vtable;                 // 0x0C
@@ -205,7 +190,7 @@ typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 #define NOTIFY(self, a, b, c)                                                  \
     if (1) {                                                                   \
         struct ac2c_listener *_l = (self)->ctrl;                               \
-        struct ac2c_method *_m = (struct ac2c_method *)(_l->vtable + 0x10);    \
+        struct actor_method *_m = (struct actor_method *)(_l->vtable + 0x10);    \
         ((ac2c_fn3)_m->fn)((u8 *)_l + _m->thisOffset, (a), (b), (c));          \
     } else (void)0
 

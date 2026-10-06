@@ -30,12 +30,8 @@
  *   loop's walking pointer in r3); the second alternative-layout scan
  *   tests `types[2]` in the condition and keeps `k + 1` in `next`;
  * - the empty `asm("")`s below: see the comment there. */
-/* `layout->types[2]`'s slot holds a list of alternative layouts. */
-struct GaxLayoutList {
-    u32 count;
-    struct GaxHandlerLayout *layouts[1];
-};
-
+/* `layout->types[2]`'s slot holds a list of alternative layouts
+ * (`struct GaxLayoutList`, gax_internal.h). */
 void GAX2_estimate(struct GaxSongHeader *p)
 {
     u32 size = 0;

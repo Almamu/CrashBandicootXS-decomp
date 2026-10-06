@@ -6,6 +6,7 @@
  */
 
 #include "frontend.h"
+#include "actor_anim.h"
 
 extern const u8 gTitleBandicootObjPalette[];
 extern const u8 gTitleCrashObjPalette[];
@@ -138,25 +139,12 @@ const struct delta_record gTitleLogoPieceMotion8[6] = {
 };
 
 /* The animation record RunCompanyLogos (title_screen.c) builds its
- * part from: actor_anim.h's `struct anim_table_record` (0x28 bytes),
- * written with its own view here - index, keyframes, frames, header
- * byte, a word, a {x, y, z, w, h, d} box and the spawn offsets. The
- * keyframes and frames are record 0's of the categories 0-2 family
- * (Crash riding the polar bear), inside gPolarCategoryPalette. */
-struct anim_record_view
-{
-    u32 index;
-    const void *keyframes;
-    const void *frames;
-    u8 headerByte;
-    u8 pad[3];
-    u32 unknown_10;
-    s16 box[6];
-    s32 spawnX;
-    s32 spawnY;
-};
-
-const struct anim_record_view gLogoActorAnim = {
-    0, (const u8 *)gPolarCategoryPalette + 0x400, (const u8 *)gPolarCategoryPalette + 0x49C,
+ * part from (actor_anim.h's `struct anim_table_record`; this file had its
+ * own view, `struct anim_record_view`). The keyframes and frames are
+ * record 0's of the categories 0-2 family (Crash riding the polar bear),
+ * inside gPolarCategoryPalette. */
+const struct anim_table_record gLogoActorAnim = {
+    0, (struct anim_frame_record *)((const u8 *)gPolarCategoryPalette + 0x400),
+    (u32 *)((const u8 *)gPolarCategoryPalette + 0x49C),
     0, { 0 }, 0x100, { -10, -20, -1, 20, 44, 3 }, 0, 0,
 };

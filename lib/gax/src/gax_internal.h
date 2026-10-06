@@ -160,6 +160,13 @@ struct GaxHandlerType {
     } data;                                              /* 0x18 */
 };
 
+/* A song layout's `types[2]` slot holds a list of alternative layouts
+ * (GAX2_estimate, GAX2_init; both files had a copy). */
+struct GaxLayoutList {
+    u32 count;
+    struct GaxHandlerLayout *layouts[1];
+};
+
 /* Every handler starts with this 12-byte header (GaxCreateHandlers carves
  * `instanceSize` more bytes, then the children array, after it). */
 struct GaxHandler {

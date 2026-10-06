@@ -1,4 +1,5 @@
 #include "core.h"
+#include "crate.h"
 #include "crates.h"
 #include "objects.h"
 #include "memory.h"
@@ -11,43 +12,17 @@
  * candidate scan/resolve helper `ResolvePlayerCollisions` (crate.c) already
  * calls once a frame as `ResolveCollisionCandidates(gPlayer + 0x108)`. */
 
-struct vec2
-{
-    s32 x;
-    s32 y;
-};
+/* The queue and its candidates are objects.h's `struct collision_queue`
+ * and `struct collision_candidate`. */
 
-/* One queued collision candidate, 0x24 bytes. */
-struct candidate
-{
-    struct vec2 *neighbor;  // 0x00
-    struct e08c_pos pos;    // 0x04
-    s32 kind;               // 0x0C
-    s32 unk_10;
-    s32 unk_14;
-    s32 unk_18;
-    s32 unk_1C;
-    struct byte_arg unk_20; // 0x20 - passed on the stack as a byte (`strb`)
-    struct byte_arg unk_21; // 0x21
-    u8 unk_22[2];
-};
-
-struct candidate_list
-{
-    s32 count;              // 0x00
-    u8 unk_04;              // 0x04
-    u8 unk_05[3];
-    struct candidate records[1]; // 0x08
-};
-
-/* Resolves the frame's queued collision candidates. `records[0]` seeds
+/* Resolves the frame's queued collision candidates. `candidates[0]` seeds
  * the "nearest to the player" choice (by Y distance, X as tiebreak).
  * Any later candidate whose Y distance is more than 8 off the current
  * best, or whose kind is 4, is resolved on the spot with ApplyCrateCollision.
  * The rest only compete for nearest. The nearest one is then resolved
  * too, told whether any forced resolve happened, and the list is
  * emptied. */
-void ResolveCollisionCandidates(struct candidate_list *self)
+void ResolveCollisionCandidates(struct collision_queue *self)
 {
     if (self->count != 0)
     {
@@ -62,8 +37,8 @@ void ResolveCollisionCandidates(struct candidate_list *self)
         px = gPlayer->x;
         py = gPlayer->y;
         best = 0;
-        bestDx = self->records[0].neighbor->x;
-        bestDy = self->records[0].neighbor->y;
+        bestDx = self->candidates[0].neighbor->x;
+        bestDy = self->candidates[0].neighbor->y;
         bestDx -= px;
         if (bestDx < 0)
             bestDx = -bestDx;
@@ -74,7 +49,7 @@ void ResolveCollisionCandidates(struct candidate_list *self)
 
         for (i = 1; i < self->count; i++)
         {
-            struct vec2 *n = self->records[i].neighbor;
+            struct crate *n = self->candidates[i].neighbor;
             s32 dx = n->x;
             s32 dy = n->y;
             s32 d;
@@ -88,12 +63,12 @@ void ResolveCollisionCandidates(struct candidate_list *self)
             d = dy - bestDy;
             if (d < 0)
                 d = -d;
-            if (d > 8 || self->records[i].kind == 4)
+            if (d > 8 || self->candidates[i].kind == 4)
             {
-                ApplyCrateCollision((struct crate *)n, self->records[i].kind, self->records[i].unk_10,
-                            self->records[i].unk_14, self->records[i].unk_18,
-                            self->records[i].pos, self->records[i].unk_1C,
-                            self->records[i].unk_20, self->records[i].unk_21,
+                ApplyCrateCollision(n, self->candidates[i].kind, self->candidates[i].code,
+                            self->candidates[i].edge, self->candidates[i].depth,
+                            self->candidates[i].pos, self->candidates[i].hit,
+                            self->candidates[i].p20, self->candidates[i].p21,
                             (struct byte_arg){0});
                 forced = 1;
             }
@@ -105,11 +80,11 @@ void ResolveCollisionCandidates(struct candidate_list *self)
             }
         }
 
-        ApplyCrateCollision((struct crate *)self->records[best].neighbor, self->records[best].kind,
-                    self->records[best].unk_10, self->records[best].unk_14,
-                    self->records[best].unk_18, (self->records + best)->pos,
-                    self->records[best].unk_1C, self->records[best].unk_20,
-                    self->records[best].unk_21, (struct byte_arg){forced});
+        ApplyCrateCollision(self->candidates[best].neighbor, self->candidates[best].kind,
+                    self->candidates[best].code, self->candidates[best].edge,
+                    self->candidates[best].depth, (self->candidates + best)->pos,
+                    self->candidates[best].hit, self->candidates[best].p20,
+                    self->candidates[best].p21, (struct byte_arg){forced});
         self->count = 0;
         self->unk_04 = 0;
     }
@@ -124,57 +99,6 @@ asm(".align 2, 0");
  * examination: just the entry point, `AddCollisionCandidate` itself - see
  * docs/matching/issue-14-0x08010d54-physics-apply.md for the full
  * semantic map and Phase 2 planning notes on the other 24 functions. */
-
-/* One queued "commit this collision" candidate - the record
- * `AddCollisionCandidate` appends here and `ResolveCollisionCandidates` (collision_queue.c, already
- * matched) later scans/resolves via `ApplyCrateCollision` (slot_crate.c's own
- * extern declaration for it). Field names/types mirror
- * `ApplyCrateCollision`'s own already-established extern signature exactly,
- * confirmed field-for-field against this function's own stores - both
- * functions operate on the same record shape (`ResolveCollisionCandidates`'s doc
- * comment already calls `AddCollisionCandidate` its "mirror image" for exactly
- * this reason). 0x24 bytes (0x22 bytes of real fields, naturally
- * padded to a 4-byte multiple by the trailing `s32` alignment). */
-/* A position pair, copied into the record as one 8-byte struct (the
- * ROM's paired `ldr; ldr; str; str` at +0x04/+0x08 is a by-value struct
- * copy, not two independent field stores). */
-struct pos_pair {
-    s32 x;
-    s32 y;
-};
-
-struct collision_candidate {
-    void *neighbor; // 0x00 - the other entity involved in the collision
-    struct e08c_pos pos; // 0x04 - position pair (one 8-byte struct copy)
-    s32 kind;          // 0x0c - a collision-state/dispatch id
-    s32 field10;         // 0x10
-    s32 field14;           // 0x14
-    s32 field18;             // 0x18
-    s32 field1c;               // 0x1c
-    u8 field20;                  // 0x20 - one of two flag bytes
-    u8 field21;                   // 0x21 - the other flag byte
-};
-
-COMPILE_TIME_ASSERT(collision_queue_c, sizeof(struct collision_candidate) == 0x24);
-
-/* The player's own small append-only queue of pending collision
- * candidates, embedded inside the same per-entity collision-state
- * record at `gPlayer + 0x108` that `DecrementSlotCrateStage`-`GetCrateTrialKind`
- * (slot_crate.c) and `ResolveCollisionCandidates` (collision_queue.c) already operate on
- * - confirmed by this function's own caller
- * (`QueueCratePlayerCollision` in crate_break.c) passing exactly that address as `self`.
- * `self+0x44`-`self+0x58` (per slot_crate.c) are further fields of the
- * *same* record past this queue - true capacity of `candidates` beyond
- * one confirmed slot isn't established here (see this file's own issue
- * doc); declared with a single element and indexed dynamically past it
- * via `self->count`, which is legal C and produces identical codegen to
- * an unbounded pointer-arithmetic cast, per this project's standing
- * preference for named struct fields over raw offset casts. */
-struct collision_queue {
-    s32 count;                                 // 0x00
-    u8 unk4[4];                                   // 0x04 - unexamined
-    struct collision_candidate candidates[1];        // 0x08+
-};
 
 /* Physics/collision subsystem's **apply/commit step** - the final call
  * `QueueCratePlayerCollision` (crate_break.c) makes at the end of its own per-edge
@@ -198,35 +122,35 @@ struct collision_queue {
  * else is plain C (matches under both agbcc and old_agbcc). */
 #define STACK_ARG_U8_ADDR(ptr, arg) asm("" : "=r"(ptr) : "0"(&(arg)))
 
-void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kind,
-                 s32 field10, s32 field14, s32 field18, struct e08c_pos pos,
-                 s32 field1c, s32 field20, s32 field21)
+void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind,
+                 s32 code, s32 edge, s32 depth, struct e08c_pos pos,
+                 s32 hit, s32 p20, s32 p21)
 {
-    u8 *p20;
-    register u8 *p21 asm("r4");
+    u8 *a20;
+    register u8 *a21 asm("r4");
     u8 f20, f21;
 
-    STACK_ARG_U8_ADDR(p20, field20);
-    STACK_ARG_U8_ADDR(p21, field21);
-    f20 = *p20;
-    f21 = *p21;
+    STACK_ARG_U8_ADDR(a20, p20);
+    STACK_ARG_U8_ADDR(a21, p21);
+    f20 = *a20;
+    f21 = *a21;
 
     self->candidates[self->count].neighbor = neighbor;
     self->candidates[self->count].kind = kind;
-    self->candidates[self->count].field10 = field10;
-    self->candidates[self->count].field21 = f21;
-    self->candidates[self->count].field1c = field1c;
-    self->candidates[self->count].field14 = field14;
-    self->candidates[self->count].field20 = f20;
+    self->candidates[self->count].code = code;
+    self->candidates[self->count].p21.v = f21;
+    self->candidates[self->count].hit = hit;
+    self->candidates[self->count].edge = edge;
+    self->candidates[self->count].p20.v = f20;
     self->candidates[self->count].pos = pos;
-    self->candidates[self->count].field18 = field18;
+    self->candidates[self->count].depth = depth;
     self->count++;
 }
 
 /* Already matched/documented elsewhere in the codebase (graphics.c's
  * `DestroyOamBuffer`, `src/gfx/graphics.c`) as the exact same
  * one-line "conditional call on bit 0" shape: `OperatorDelete` (VRAM
- * upload manager, matched in graphics.c) only fires when `arg1`'s low
+ * upload manager, matched in graphics.c) only fires when `flags`'s low
  * bit is set. `src/player/player_update.c` already externs this
  * function and calls it as `DestroyCollisionQueue(self + 0x108, 2)` - i.e. bit 0
  * clear, so that call site is itself a no-op (the manager call never
@@ -235,26 +159,24 @@ void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kin
  * docs/matching/issue-14-0x08010d54-physics-apply.md's own planning:
  * this was already flagged there as a "mode-parameterized insert"
  * sibling before being read branch-by-branch - turns out to be this
- * simpler shape instead, `arg1` gates a VRAM-manager refresh rather
+ * simpler shape instead, `flags` gates a VRAM-manager refresh rather
  * than selecting an insert mode). */
 
-void DestroyCollisionQueue(void *arg0, s32 arg1)
+void DestroyCollisionQueue(struct collision_queue *self, s32 flags)
 {
-    if (arg1 & 1) {
-        OperatorDelete(arg0);
+    if (flags & 1) {
+        OperatorDelete(self);
     }
 }
 
-/* Sibling reset: clears just `count` (`+0x00`) and `unk4`'s first byte
+/* Sibling reset: clears just `count` (`+0x00`) and `unk_04`
  * (`+0x04`) - confirming (per `src/player/player_init.c`'s own doc
- * comment, already noting this exact function) that `unk4` is read
+ * comment, already noting this exact function) that `unk_04` is read
  * back elsewhere as a real field, not unexamined padding, though its
  * own full meaning/width past this one byte remains open. Called as
  * `ResetCollisionQueue(self + 0x108)` from `player_init.c`. */
-void ResetCollisionQueue(void *arg0)
+void ResetCollisionQueue(struct collision_queue *self)
 {
-    struct collision_queue *self = arg0;
-
     self->count = 0;
-    self->unk4[0] = 0;
+    self->unk_04 = 0;
 }

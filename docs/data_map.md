@@ -265,11 +265,11 @@ is reached through two pointer graphs.
 `gLevelTable`) point at 48 room records of 0x14 bytes, 41 of
 them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
 ...; u16 catIndex @0x10}` (now `struct level_room` in
-`src/data/level_table_16c814.c`). The same record is `struct level_load_args` in
-`level_layers.c` (first two fields), `gl_widget_kind` in `run_room.c`
-(`kind`), and `MedalListItem` in `level_query.c` (`linkedObj` is the
-`desc`, and `linkedObj->0x1C` is the descriptor's object list). A room
-record is the `self->widget` that `RunRoom` hands to `LoadRoom`.
+`src/data/level_table_16c814.c`). Every reader uses that struct
+(`level_layers.c`'s `struct level_load_args`, `run_room.c`'s
+`gl_widget_kind` and `level_query.c`'s `MedalListItem` were views of
+it; `desc->entities` is the descriptor's object list). A room record is
+the `cat` that `RunRoom` hands to `LoadRoom`.
 Walking them:
 
 - `struct level_desc` (0x24): `layerData[3]`, `layer0Data`, `tileData`
@@ -718,7 +718,7 @@ vtable shapes).
 | `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodileProjectile` | medium | done |
 | `0816C418` | 0x40 | table of struct vec_pair | `StartDingodileMotion` | high | easy |
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `CreatePlatformMover` | high | easy |
-| `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `UpdatePlatformMover`, `SetPlatformMoverMotionYFromSet`, `SetPlatformMoverMotionXFromSet` +2 | high | done |
+| `0816C460` | 0x24 | table of struct speed_ramp (was `struct vec3`). **Converted** (`src/data/velocity_16c460.c`) | `UpdatePlatformMover`, `SetPlatformMoverMotionYFromSet`, `SetPlatformMoverMotionXFromSet` +2 | high | done |
 | `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `LoadSaveMenuBg`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
 | `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |

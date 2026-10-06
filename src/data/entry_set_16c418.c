@@ -8,7 +8,7 @@
  * ldscript.txt - see docs/data.md.
  */
 
-/* {a, b} vec3-table index pairs (`struct vec_pair`, gobj_1a794.h):
+/* {a, b} motion-record index pairs (`struct vec_pair`, gobj_1a794.h):
  * dingodile_create.c indexes gDingodileMotionRecords with entries 0-3;
  * entries 4-7 are gPlatformMoverMotionSet's, indexing gPlatformMoverMotionRecords
  * (platform.c). */

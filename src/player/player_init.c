@@ -33,7 +33,7 @@ struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16
 
     InitGroundSprite((struct actor *)self);
     self->vtable = (const struct player_vtable *)gPlayerVtable;
-    ResetCollisionQueue(self->collisionQueue);
+    ResetCollisionQueue(&self->collisionQueue);
 
     child = CreateSpriteObj(0, 0, 0, 0);
     self->child = (struct box_part *)child;

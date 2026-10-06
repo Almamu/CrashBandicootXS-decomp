@@ -180,14 +180,14 @@ void UpdateGameFrame(struct level_state *self)
                     self->lives = 0;
                     ResetCrateCount(self);
                     EnterBonusRoom((struct level_progress *)&self->level);
-                    SetHudCrateTotal(gHud, CountRoomCrates((struct MedalListItem *)self->cat));
+                    SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
                 }
                 else
                 {
                     self->savedCrateCount = GetCrateCount(self);
                     ResetCrateCount(self);
                     EnterGemPathRoom((struct level_progress *)&self->level);
-                    SetHudCrateTotal(gHud, CountRoomCrates((struct MedalListItem *)self->cat));
+                    SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
                 }
                 ArmStartSpawn(self);
             }
@@ -206,10 +206,10 @@ void UpdateGameFrame(struct level_state *self)
             case 0:
             case 1:
             case 2:
-                status = PlayRoom(&self->level);
+                status = PlayRoom((struct level_progress *)&self->level);
                 break;
             case 3:
-                status = InitActorCategory(self->cat->category);
+                status = InitActorCategory(self->cat->catIndex);
                 if (status == 0)
                 {
                     AddPendingSwitchCrates(self, GetActorMissedNitros());

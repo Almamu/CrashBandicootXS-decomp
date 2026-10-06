@@ -1,5 +1,6 @@
 #include "core.h"
 #include "action_obj.h"
+#include "gfx_part.h"
 #include "system.h"
 #include "audio.h"
 #include "player.h"
@@ -12,17 +13,6 @@
  * (include/action_obj.h). Built with old_agbcc. */
 
 /* The object LaunchEffectPart spawns for the 0x100 path, as far as it is used. */
-struct spawned
-{
-    u8 unk_00[0xC];
-    u8 unk_0C_0:2;
-    u8 unk_0C_2:1;
-    u8 unk_0C_3:5;
-    u8 unk_0D[0x1B];
-    u8 unk_28_0:2;
-    u8 unk_28_2:6;
-};
-
 /* Stores to the two "next action" trios. As inline parameters, old_agbcc
  * materializes the values before the stores; the `Set` forms store a
  * literal 0/1 for the first two bytes, and the `P` forms store the action
@@ -125,7 +115,7 @@ void ActionCtrlStateRun(struct act *self)
         if (INPUT_PRESSED(in) & 0x100)
         {
             s32 frames;
-            struct spawned *obj;
+            struct gfx_part *obj; /* the effect part (gfx_part.h) */
 
             PlaySfx(gAudioContext, 0x1A, 0x100);
             frames = 0x10;
@@ -137,7 +127,7 @@ void ActionCtrlStateRun(struct act *self)
             gPlayer->listCount = alt;
             gPlayer->listCount = alt;
             obj = LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xA, alt, (struct fx_part *)gPlayer);
-            obj->unk_0C_2 = 0;
+            obj->hidden = 0;
             obj->unk_28_0 = 1;
         }
     }

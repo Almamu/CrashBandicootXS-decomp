@@ -69,8 +69,8 @@ static inline void LoadItems(struct level_menu *self)
 
     for (i = 0; i <= 5; i++)
     {
-        struct item *it = self->items[i];
-        struct method *m = &it->vtable->m10;
+        struct level_item *it = self->items[i];
+        struct actor_method *m = &it->vtable->m10;
 
         ((item_load_fn)m->fn)((u8 *)it + m->thisOffset, self->world, i);
     }
@@ -108,8 +108,8 @@ static inline void PlaceItems(struct level_menu *self)
     }
     for (i = 0; i <= 5; i++)
     {
-        struct item *it = self->items[i];
-        struct method *m = &it->vtable->m18;
+        struct level_item *it = self->items[i];
+        struct actor_method *m = &it->vtable->m18;
 
         ((item_place_fn)m->fn)((u8 *)it + m->thisOffset, &self->positions[i]);
     }
@@ -508,14 +508,14 @@ struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
     for (i = 0; i <= 3; i++)
     {
         self->twinkles[i].part = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
-        self->twinkles[i].part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x258);
+        self->twinkles[i].part->anim = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x258);
         SetMode(self->twinkles[i].part, 1);
         SetPos(self->twinkles[i].part, self->x + gZoomBgSlotOffsets[i].x, self->y + gZoomBgSlotOffsets[i].y);
         SetSpritePriority(self->twinkles[i].part, 1);
         SetPalette(self->twinkles[i].part, GetSpriteAnimPaletteSlot((struct actor *)self->twinkles[0].part));
         RandomizeZoomBgTwinkle(self, &self->twinkles[i]);
     }
-    LockPalette(gPaletteCache, self->twinkles[0].part->anim->records[self->twinkles[0].part->animIndex].tileRecord);
+    LockPalette(gPaletteCache, self->twinkles[0].part->anim->anims[self->twinkles[0].part->animIndex].paletteId);
     SetFlipX(self->twinkles[1].part, 1);
     SetFlipY(self->twinkles[2].part, 1);
     SetFlipX(self->twinkles[3].part, 1);

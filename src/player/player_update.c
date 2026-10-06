@@ -254,6 +254,6 @@ void DestroyPlayer(struct player *self, u32 arg1)
             _call_via_r2(addr, (void *)3, fn);
         }
     }
-    DestroyCollisionQueue(self->collisionQueue, 2);
+    DestroyCollisionQueue(&self->collisionQueue, 2);
     DestroyGroundSprite((struct actor *)self, arg1);
 }

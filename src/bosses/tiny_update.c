@@ -1,4 +1,5 @@
 #include "core.h"
+#include "sprite_bank.h"
 #include "util.h"
 #include "audio.h"
 #include "bosses.h"
@@ -39,18 +40,6 @@ struct hop_vobj
     struct hop_vtable *vt; // 0x0C
 };
 
-struct hop_anim_record
-{
-    u8 unk_00[0x16];
-    u8 frameCount; // 0x16
-    u8 unk_17[5];
-};
-
-struct hop_anim_bank
-{
-    struct hop_anim_record *records;
-};
-
 struct hop_part
 {
     s32 x;                        // 0x00
@@ -60,7 +49,7 @@ struct hop_part
     u8 unk_0B;
     u8 flags;                     // 0x0C
     u8 unk_0D[0x13];
-    struct hop_anim_bank *bank;   // 0x20
+    const struct sprite_bank *bank; // 0x20
     u8 unk_24[5];
     u8 slot;                      // 0x29 - low nibble: palette slot
     u8 unk_2A[3];
@@ -370,9 +359,9 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 
 static inline void SetFrame(struct hop_part *part, s32 frame)
 {
-    struct hop_anim_bank *bank = part->bank;
+    const struct sprite_bank *bank = part->bank;
     u8 *tag = &part->tag;
-    struct hop_anim_record *records = bank->records;
+    const struct sprite_anim *records = bank->anims;
     s32 count = records[*tag].frameCount;
 
     if (frame >= count)

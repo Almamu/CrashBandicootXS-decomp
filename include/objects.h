@@ -20,17 +20,15 @@
 
 struct actor;
 struct box_part;
-struct candidate_list;
 struct cbf4_other;
 struct collect_part;
-struct collision_queue;
+struct crate;
 struct part_list;
 struct gfx_part;
 struct gfx_vec;
 struct gobj;
 struct hitbox_quad;
 struct mover;
-struct sprite_box;
 struct sprite_point;
 
 /* A position pair: a collision candidate's (src/objects/collision_queue.c),
@@ -40,6 +38,49 @@ struct e08c_pos
 {
     s32 x;
     s32 y;
+};
+
+/*
+ * One queued collision of the player with a crate, 0x24 bytes:
+ * AddCollisionCandidate (QueueCratePlayerCollision) appends it, and
+ * ResolveCollisionCandidates hands it to ApplyCrateCollision, whose
+ * parameter names the fields take. The two views of collision_queue.c,
+ * `struct candidate` and `struct collision_candidate`, were merged here
+ * (`unk_10`..`unk_1C`/`field10`..`field1c` are `code`/`edge`/`depth`/`hit`,
+ * `unk_20`/`field20` and `unk_21`/`field21` are `p20`/`p21`; #574,
+ * batch 9e).
+ */
+struct collision_candidate
+{
+    struct crate *neighbor;     // 0x00 - the crate; its position is its first two words
+    struct e08c_pos pos;        // 0x04
+    s32 kind;                   // 0x0C
+    s32 code;                   // 0x10
+    s32 edge;                   // 0x14
+    s32 depth;                  // 0x18
+    s32 hit;                    // 0x1C
+    struct byte_arg p20;        // 0x20 - passed on the stack as a byte (`strb`)
+    struct byte_arg p21;        // 0x21
+    u8 unk_22[2];
+};
+
+/*
+ * The player's collision queue (`struct player.collisionQueue`, +0x108):
+ * the crate collisions found during the frame, resolved once a frame by
+ * ResolvePlayerCollisions. The player object is 0x350 bytes, so the queue
+ * holds 16 candidates. collision_queue.c's `struct candidate_list` and
+ * `struct collision_queue` and player_event.c's `struct ab9c_link` (the
+ * head) were views of it (#574, batch 9e).
+ */
+struct collision_queue
+{
+    s32 count;                  // 0x00
+    u8 unk_04;                  // 0x04 - the "position committed" byte: ResetCollisionQueue
+                                //        clears it, crate_break.c's D18C_COMMIT sets it, and
+                                //        while it is set ApplyCrateCollision leaves the player's
+                                //        position alone
+    u8 unk_05[3];
+    struct collision_candidate candidates[16]; // 0x08
 };
 
 /* An entry set: the {a, b} index pairs into a motion record table (two
@@ -52,20 +93,17 @@ struct entry_set {
     u32 unk_04;
 };
 
-/* One 12-byte motion record: the parameters StartCtrlTargetMotionX and
- * the other motion starters read for one axis. The `{a, b}` index pairs
- * of the entry sets (src/data/entry_set_16b92c.c) pick two per state. */
-struct motion_rec {
-    s32 a;
-    s32 b;
-    s32 c;
-};
-
-/* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, struct player's, the
- * 12-byte motion records of gCtrlMotionRecords and the gStaticData_0816C*
- * entry sets): each frame ApplySpriteVelocity steps speedX/speedY by `step`
+/* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, struct
+ * player's): each frame ApplySpriteVelocity steps speedX/speedY by `step`
  * toward `target` without overshooting. The Start...MotionX/Y setters also
- * load `start` into the speed; the Set... ones keep the current speed. */
+ * load `start` into the speed; the Set... ones keep the current speed.
+ *
+ * It is also the 12-byte motion record those setters copy one axis from
+ * (gCtrlMotionRecords, the player's and the bosses' motion records,
+ * gPlatformMoverMotionRecords): the `{a, b}` index pairs of an entry set
+ * pick the X and the Y record of a state. objects.h's `struct motion_rec`
+ * (`a`/`b`/`c`) and gobj_1a794.h's `struct vec3` (`x`/`y`/`z`) were
+ * views of it (#574, batch 9e). */
 struct speed_ramp
 {
     s32 start;
@@ -74,11 +112,11 @@ struct speed_ramp
 };
 
 /* src/objects/collision_queue.c */
-extern void ResolveCollisionCandidates(struct candidate_list *self);
-extern void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kind, s32 field10, s32 field14, s32 field18,
-                                  struct e08c_pos pos, s32 field1c, s32 field20, s32 field21);
-extern void DestroyCollisionQueue(void *self, s32 flags);
-extern void ResetCollisionQueue(void *self);
+extern void ResolveCollisionCandidates(struct collision_queue *self);
+extern void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth,
+                                  struct e08c_pos pos, s32 hit, s32 p20, s32 p21);
+extern void DestroyCollisionQueue(struct collision_queue *self, s32 flags);
+extern void ResetCollisionQueue(struct collision_queue *self);
 
 /* src/objects/ctrl.c */
 extern void StartCtrlTargetMotionYFromSet(void *self, void *part, s32 index);
@@ -314,11 +352,13 @@ extern s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad
 /* The controllers' motion records (src/data/motion_records_16b304.c),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and
  * ApplyActionCtrlMotion. player.h has the player's two tables. */
-extern const struct motion_rec gCtrlMotionRecords[44];
+extern const struct speed_ramp gCtrlMotionRecords[44];
 
 /* The platform mover's entry set (src/data/entry_set_16c418.c), whose
- * entries are gDingodileMotionEntries[4..7] (bosses.h). */
+ * entries are gDingodileMotionEntries[4..7] (bosses.h), and its motion
+ * records (src/data/velocity_16c460.c). */
 extern const struct entry_set gPlatformMoverMotionSet;
+extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 
 /* The method tables (src/data/entity_vtables_7e3bec.c) */
 extern const struct vtable_slot gCtrlVtable[13];
@@ -332,7 +372,7 @@ extern const struct vtable_slot gUiSpriteObjVtable[13];
 
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
  * without one (src/data/obj_sizes_16b2e0.c). */
-extern const struct sprite_box gEmptySpriteBox;
+extern const struct hitbox_quad gEmptySpriteBox;
 /* The anchor point GetSpriteFrameAnchor returns for a frame without one
  * (same file): {0, 0}. */
 extern const struct sprite_point gEmptySpritePoint;

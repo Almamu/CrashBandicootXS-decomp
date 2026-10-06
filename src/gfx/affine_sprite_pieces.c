@@ -1,4 +1,5 @@
 #include "core.h"
+#include "sprite_bank.h"
 #include "util.h"
 #include "gfx.h"
 #include "vtable.h"
@@ -26,36 +27,11 @@
  * the source shapes below are what reproduce them. See
  * docs/matching/graphics-7634-retry.md. */
 
-struct oam_attr01 {
-    u32 y:8;
-    u32 objMode:2;
-    u32 gfxMode:2;
-    u32 mosaic:1;
-    u32 colorMode:1;
-    u32 shape:2;
-    u32 x:9;
-    u32 matrix:3;
-    u32 matrixHi:1;
-    u32 matrixTop:1;
-    u32 size:2;
-};
-
-struct oam_pair {
-    struct oam_attr01 a;
-    struct oam_attr2 b;
-};
-
-struct kf_record {
-    u8 unk_00[0x16];
-    u8 steps;                   // 0x16
-    u8 unk_17[5];
-};
-
 struct affine_part {
     u8 unk_00[0x18];
     u8 *vtable;                 // 0x18
     u8 unk_1C[4];
-    struct kf_record **keyframes; // 0x20
+    const struct sprite_bank *keyframes; // 0x20 - was a `struct kf_record **` view
     u8 unk_24[4];
     u8 gfxMode:2;               // 0x28
     u8 mosaic:1;
@@ -94,7 +70,7 @@ static inline s32 PieceShape7634(s32 id)
 
 static inline void ClampTick7634(struct affine_part *part, s32 t)
 {
-    s32 n = (*part->keyframes)[part->frame].steps;
+    s32 n = part->keyframes->anims[part->frame].frameCount;
 
     if (t >= n)
         t = n - 1;
@@ -103,7 +79,7 @@ static inline void ClampTick7634(struct affine_part *part, s32 t)
 
 void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
 {
-    struct oam_pair oam;
+    struct oam_attrs oam;
     s32 total = 0;
     struct piece_info *info = GetSpriteFrame((struct gfx_part *)part);
     s32 tile = GetObjVramTile(gObjVramCursor);
@@ -121,14 +97,14 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
     pa = FixedInverse16((s16)scale);
     pd = pa;
     if (scale <= 0x100)
-        oam.a.objMode = 1;
+        oam.affineMode = 1;
     else
-        oam.a.objMode = 3;
+        oam.affineMode = 3;
     buf = gOamBuffer;
     idx = buf->matrixCount++;
-    oam.a.matrix = idx;
-    oam.a.matrixHi = idx >> 3;
-    oam.a.matrixTop = idx >> 4;
+    oam.matrixLo = idx;
+    oam.matrixBit3 = idx >> 3;
+    oam.matrixBit4 = idx >> 4;
     k = idx * 4;
     buf->table[k].attr[3] = pa;
     buf->table[k + 1].attr[3] = 0;
@@ -138,15 +114,15 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
      * the call result in `pa` (r6) and `pd` as the copy (r7), as in the
      * ROM. Without it the two registers swap. */
     asm("" : : "r"(pa));
-    oam.a.gfxMode = part->gfxMode;
-    oam.a.mosaic = part->mosaic;
-    oam.a.colorMode = part->colorMode;
+    oam.objMode = part->gfxMode;
+    oam.mosaic = part->mosaic;
+    oam.bpp = part->colorMode;
     {
         struct vtable_slot *m = (struct vtable_slot *)(part->vtable + 0x58);
 
-        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->delta, m->fn);
+        oam.priority = (u16)_call_via_r1((u8 *)part + m->delta, m->fn);
     }
-    oam.b.palette = part->palette;
+    oam.palette = part->palette;
 
     baseX = 0;
     baseY = 0;
@@ -229,11 +205,11 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
                     x = baseX + dx;
                     y = baseY + dy;
                 }
-                oam.a.y = y;
-                oam.a.shape = PieceShape7634(id);
-                oam.a.x = x;
-                oam.a.size = PieceSize7634(id);
-                oam.b.tile = tile;
+                oam.y = y;
+                oam.shape = PieceShape7634(id);
+                oam.x = x;
+                oam.size = PieceSize7634(id);
+                oam.tileNum = tile;
                 AddOamEntry(gOamBuffer, &oam);
             }
         }
