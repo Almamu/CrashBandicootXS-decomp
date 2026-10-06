@@ -201,7 +201,10 @@ void UpdateActionCtrl(struct act *self)
         s32 off;
 
         if (index > 0) {
-            m = (*(struct act_method **)((u8 *)self + gActionCtrlStateTable[self->state].u.vtableOffset))[index - 1];
+            // clang-format off
+            m = (*(struct act_method **)((u8 *)self +
+                    gActionCtrlStateTable[self->state].u.vtableOffset))[index - 1];
+            // clang-format on
             fn = m.fn;
         } else {
             fn = gActionCtrlStateTable[self->state].u.fn;
@@ -416,7 +419,8 @@ done:
             }
         }
     }
-    if (self->state == 7 || self->state == 9 || self->state == 0xB || self->state == 0xE || self->state == 0x1A) {
+    if (self->state == 7 || self->state == 9 || self->state == 0xB || self->state == 0xE ||
+        self->state == 0x1A) {
         if (GetDpadDirection(gInput) <= 2) {
             ActQueue27(self, 0, 0);
         } else {

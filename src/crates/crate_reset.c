@@ -78,8 +78,12 @@ s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
     s32 tmp;
 
     if (count > b) {
-        tmp = count; count = b; b = tmp;
-        tmp = pos; pos = a; a = tmp;
+        tmp = count;
+        count = b;
+        b = tmp;
+        tmp = pos;
+        pos = a;
+        a = tmp;
     }
 
     dx = a - pos;
@@ -93,6 +97,7 @@ s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
             MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
+            // clang-format off
             asm volatile(
                 "lsl r0, %1, #1\n\t"
                 "sub %0, %2, r0\n\t"
@@ -100,6 +105,7 @@ s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
                 : "r"(dx), "r"(twoDy)
                 : "r0"
             );
+            // clang-format on
             err = twoDy - dx;
             n = dx - 1;
             if (n != -1) {
@@ -118,7 +124,7 @@ s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
             }
             goto returnNeg1;
 
-returnSolo:
+        returnSolo:
             {
                 MATCH_HOLD_REG(s32, retVal, r0);
                 asm volatile("add %0, %1, #0" : "=r"(retVal) : "r"(count));
@@ -131,6 +137,7 @@ returnSolo:
             MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
+            // clang-format off
             asm volatile(
                 "lsl r0, %1, #1\n\t"
                 "sub %0, %2, r0\n\t"
@@ -138,6 +145,7 @@ returnSolo:
                 : "r"(dy), "r"(twoDx)
                 : "r0"
             );
+            // clang-format on
             err = twoDx - dy;
             n = dy - 1;
             if (n != -1) {
@@ -164,6 +172,7 @@ returnSolo:
             MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
+            // clang-format off
             asm volatile(
                 "lsl r0, %1, #1\n\t"
                 "sub %0, %2, r0\n\t"
@@ -171,6 +180,7 @@ returnSolo:
                 : "r"(absDx), "r"(twoDy)
                 : "r0"
             );
+            // clang-format on
             err = twoDy - absDx;
             n = absDx - 1;
             if (n != -1) {
@@ -194,6 +204,7 @@ returnSolo:
             MATCH_HOLD_REG(s32, err, r0);
             s32 n;
 
+            // clang-format off
             asm volatile(
                 "lsl r0, %1, #1\n\t"
                 "sub %0, %2, r0\n\t"
@@ -201,6 +212,7 @@ returnSolo:
                 : "r"(dy), "r"(twoAbsDx)
                 : "r0"
             );
+            // clang-format on
             err = twoAbsDx - dy;
             n = dy - 1;
             if (n != -1) {
@@ -268,17 +280,20 @@ void ResetCrate(struct crate *selfArg)
     addr = self + 0x4d;
     {
         MATCH_HOLD_REG(u8, result, r0);
+        // clang-format off
         asm volatile(
             "mov r0, #0x7f\n"
             "ldrb r4, [%1]\n"
             "and r0, r0, r4\n"
             : "=r"(result) : "l"(addr) : "r4"
         );
+        // clang-format on
         zero = 0;
         *addr = result;
     }
     gPlayer->busy = zero;
 
+    // clang-format off
     asm volatile(
         "mov r0, #0x80\n"
         "ldrb r4, [%0]\n"
@@ -286,6 +301,7 @@ void ResetCrate(struct crate *selfArg)
         "strb r0, [%0]\n"
         :: "l"(addr) : "r0", "r4", "memory"
     );
+    // clang-format on
 
     *(u32 *)(self + 0x44) = zero;
     self[0x4c] = zero;

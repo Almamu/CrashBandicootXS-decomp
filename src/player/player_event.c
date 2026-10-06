@@ -25,8 +25,7 @@
  * members of one frame object, the copy is addressed as a frame offset, so
  * its by-value words load straight from sp (a separate `struct aabb`
  * local's address is kept in a callee-saved register instead). */
-struct aabb_copy
-{
+struct aabb_copy {
     struct aabb src;
     struct aabb copy;
 };
@@ -45,8 +44,7 @@ void CollidePlayerWithObjects(struct player *self)
     if (cleared != 0)
         return;
 
-    if ((self->flags.all >> 1) & 1)
-    {
+    if ((self->flags.all >> 1) & 1) {
         struct aabb_copy b;
         void *manager;
 
@@ -56,8 +54,7 @@ void CollidePlayerWithObjects(struct player *self)
         CollidePartList(manager, b.copy, self->dir, (struct box_part *)self);
     }
 
-    if (self->flags.all >> 7)
-    {
+    if (self->flags.all >> 7) {
         struct collision_queue *link = &self->collisionQueue;
 
         link->count = cleared;
@@ -182,7 +179,7 @@ asm(".align 2, 0");
 
 struct ac2c_listener {
     u8 unk_00[0xc];
-    u8 *vtable;                 // 0x0C
+    u8 *vtable; // 0x0C
 };
 
 
@@ -484,9 +481,12 @@ void DrawPlayer(struct player *self)
             {
                 s32 idx = self->maskTrailIdx;
 
+                // clang-format off
                 SetChildPos(self->child,
                             self->maskTrail[idx].x + gSineTable[gRoomFrameCount & 0xff] * 16,
-                            self->maskTrail[idx].y + gSineTable[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
+                            self->maskTrail[idx].y +
+                                gSineTable[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
+                // clang-format on
             }
             /* Hard-register hold (emits no code): r6 live here keeps
              * `&self->child` out of r6 (it goes to ip), which leaves r6

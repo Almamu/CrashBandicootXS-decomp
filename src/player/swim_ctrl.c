@@ -51,8 +51,7 @@
  * makes the struct BLKmode, so a local copy lives on the stack (the ROM
  * reads `pressed` back with `ldrh [sp, #2]`); without it gcc keeps the
  * copy in a register. */
-struct keys
-{
+struct keys {
     u16 held;
     u16 pressed;
     u8 pad[0];
@@ -130,34 +129,24 @@ void CheckPlayerCtrlTurn(struct player_ctrl *self)
 {
     u8 dir = GetDpadDirection(gInput);
 
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0 ... 3:
     case 5 ... 6:
         self->target->mirror.bits.flipY = 0;
-        if (self->target->mirror.bits.flipX && (dir == 4 || dir == 6 || dir == 8))
-        {
+        if (self->target->mirror.bits.flipX && (dir == 4 || dir == 6 || dir == 8)) {
             self->target->mirror.bits.flipX = 0;
-            if (self->state != 3)
-            {
+            if (self->state != 3) {
                 SetPlayerCtrlState(self, 4, 4, KEEP, KEEP);
                 self->timerMax = 0;
-            }
-            else
-            {
+            } else {
                 SetPlayerCtrlState(self, 4, 5, KEEP, KEEP);
             }
             self->unk_26 = 0;
-        }
-        else if (!(self->target->mirror.bits.flipX & 1) && (dir == 3 || dir == 5 || dir == 7))
-        {
-            if (self->state != 3)
-            {
+        } else if (!(self->target->mirror.bits.flipX & 1) && (dir == 3 || dir == 5 || dir == 7)) {
+            if (self->state != 3) {
                 SetPlayerCtrlState(self, 4, 6, KEEP, KEEP);
                 self->timerMax = 0;
-            }
-            else
-            {
+            } else {
                 SetPlayerCtrlState(self, 4, 7, KEEP, KEEP);
             }
             self->unk_26 = 0;
@@ -168,29 +157,23 @@ void CheckPlayerCtrlTurn(struct player_ctrl *self)
 
 void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 arg)
 {
-    switch (msg)
-    {
+    switch (msg) {
     case 12:
-    {
-        s32 side = arg & 3;
+        {
+            s32 side = arg & 3;
 
-        if (side == 2)
-        {
-            if (self->target->mirror.bits.flipX)
-                QueueMotionX(self, 0);
-        }
-        else if (side == 1)
-        {
-            if (!self->target->mirror.bits.flipX)
-                QueueMotionX(self, 0);
-        }
-        else
-        {
+            if (side == 2) {
+                if (self->target->mirror.bits.flipX)
+                    QueueMotionX(self, 0);
+            } else if (side == 1) {
+                if (!self->target->mirror.bits.flipX)
+                    QueueMotionX(self, 0);
+            } else {
+                break;
+            }
+            self->target->speedX = 0;
             break;
         }
-        self->target->speedX = 0;
-        break;
-    }
     case 5:
         PlayerCtrlKillPlayer(self, 0x2D);
         break;
@@ -220,7 +203,7 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
     self->target->dead = 1;
     LoseLife(gLevelState);
     LoadPaletteSlot(gPaletteCache, self->target->slot,
-                self->target->anim->records[self->target->tag].paletteId);
+                    self->target->anim->records[self->target->tag].paletteId);
 }
 
 /* Runs the pointer-to-member handler for the current state. */
@@ -264,20 +247,15 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     absV = (v ^ signV) - signV;
     signC = c >> 31;
     absC = (c ^ signC) - signC;
-    if (absV > absC)
-    {
+    if (absV > absC) {
         p->rampX.start = a;
         p->rampX.step = t;
-    }
-    else if (v * c < 0)
-    {
+    } else if (v * c < 0) {
         s32 sum = t + b;
 
         p->rampX.start = a;
         p->rampX.step = sum;
-    }
-    else
-    {
+    } else {
         p->rampX.start = a;
         p->rampX.step = b;
     }
@@ -332,8 +310,7 @@ static inline void ApplyLevel(struct player_ctrl *self)
     struct player *t = self->target;
     u8 *tag = &t->tag;
 
-    if (*tag != 0x20 && *tag != 0x1D && *tag != 0x1F)
-    {
+    if (*tag != 0x20 && *tag != 0x1D && *tag != 0x1F) {
         s32 frame = t->frame;
         s32 f34 = t->stepTimer;
 
@@ -342,24 +319,21 @@ static inline void ApplyLevel(struct player_ctrl *self)
         ResetSpriteFrameIndex(t);
         SetSpriteAnimDone(t, 0);
         RestoreFrame(self->target, frame, f34);
-    }
-    else
-    {
-        switch (self->mode)
-        {
+    } else {
+        switch (self->mode) {
         case 7:
         case 14 ... 18:
         case 23:
         case 33 ... 37:
         case 41:
-        {
-            s32 frame = self->target->frame;
-            s32 f34 = self->target->stepTimer;
+            {
+                s32 frame = self->target->frame;
+                s32 f34 = self->target->stepTimer;
 
-            ResetMode(self);
-            RestoreFrame(self->target, frame, f34);
-            break;
-        }
+                ResetMode(self);
+                RestoreFrame(self->target, frame, f34);
+                break;
+            }
         default:
             ResetMode(self);
             break;
@@ -369,12 +343,9 @@ static inline void ApplyLevel(struct player_ctrl *self)
 
 void UpdatePlayerCtrl(struct player_ctrl *self)
 {
-    if (self->state == 7)
-    {
+    if (self->state == 7) {
         PMF_DISPATCH(self);
-    }
-    else
-    {
+    } else {
         u32 keys;
         u8 dir;
         void *inp;
@@ -385,14 +356,12 @@ void UpdatePlayerCtrl(struct player_ctrl *self)
         keys = gKeys.all; /* the whole word, held keys low */
         dir = GetDpadDirection(inp);
 
-        if (!(keys & (DPAD_UP | DPAD_DOWN)) && self->state != 2)
-        {
+        if (!(keys & (DPAD_UP | DPAD_DOWN)) && self->state != 2) {
             if (self->repeat && self->tilt != 6)
                 self->repeat = self->repeat - 1;
             else
                 self->repeat = 3;
-            if (self->repeat == 0 && self->tilt != 6)
-            {
+            if (self->repeat == 0 && self->tilt != 6) {
                 if (self->tilt <= 5)
                     self->tilt++;
                 if (self->tilt > 6)
@@ -401,50 +370,32 @@ void UpdatePlayerCtrl(struct player_ctrl *self)
                     self->repeat = 3;
                 ApplyLevel(self);
             }
-        }
-        else if (self->state != 2 || dir != 0)
-        {
-            if (self->repeat == 0 || --self->repeat == 0)
-            {
+        } else if (self->state != 2 || dir != 0) {
+            if (self->repeat == 0 || --self->repeat == 0) {
                 self->repeat = 3;
-                if (keys & DPAD_UP)
-                {
-                    if (keys & DPAD_SIDEWAYS)
-                    {
-                        if (self->tilt > 3)
-                        {
+                if (keys & DPAD_UP) {
+                    if (keys & DPAD_SIDEWAYS) {
+                        if (self->tilt > 3) {
                             self->tilt--;
                             ApplyLevel(self);
-                        }
-                        else if (self->tilt <= 2)
-                        {
+                        } else if (self->tilt <= 2) {
                             self->tilt++;
                             ApplyLevel(self);
                         }
-                    }
-                    else if (self->tilt != 0)
-                    {
+                    } else if (self->tilt != 0) {
                         self->tilt--;
                         ApplyLevel(self);
                     }
-                }
-                else if (keys & DPAD_DOWN)
-                {
-                    if (keys & DPAD_SIDEWAYS)
-                    {
-                        if (self->tilt <= 8)
-                        {
+                } else if (keys & DPAD_DOWN) {
+                    if (keys & DPAD_SIDEWAYS) {
+                        if (self->tilt <= 8) {
                             self->tilt++;
                             ApplyLevel(self);
-                        }
-                        else if (self->tilt > 9)
-                        {
+                        } else if (self->tilt > 9) {
                             self->tilt--;
                             ApplyLevel(self);
                         }
-                    }
-                    else if (self->tilt <= 11)
-                    {
+                    } else if (self->tilt <= 11) {
                         self->tilt++;
                         ApplyLevel(self);
                     }
@@ -473,8 +424,7 @@ void UpdatePlayerCtrl(struct player_ctrl *self)
 /* UNUSED */
 void ApplyPlayerCtrlMotion(struct player_ctrl *self)
 {
-    if (self->motionXPending == 1)
-    {
+    if (self->motionXPending == 1) {
         const struct speed_ramp *rec;
 
         self->motionXPending = 0;
@@ -486,8 +436,7 @@ void ApplyPlayerCtrlMotion(struct player_ctrl *self)
         }
         StartCtrlTargetMotionX(self, self->target, (s32 *)rec);
     }
-    if (self->motionYPending == 1)
-    {
+    if (self->motionYPending == 1) {
         const struct speed_ramp *rec;
 
         self->motionYPending = 0;
@@ -511,27 +460,19 @@ void PlayerCtrlStateIdle(struct player_ctrl *self)
     k = *(struct keys *)&gKeys;
     dir = GetDpadDirection(inp);
     count = ++self->idleTimer;
-    if (count == 30)
-    {
+    if (count == 30) {
         QueueMotionY(self, 1);
-    }
-    else if (count > 59)
-    {
+    } else if (count > 59) {
         QueueMotionY(self, 2);
         self->idleTimer = 0;
     }
     if (self->target->animDone)
         SET_ANIM(self, self->target, 0x1F);
-    if (k.pressed & A_BUTTON)
-    {
+    if (k.pressed & A_BUTTON) {
         StartPlayerCtrlStroke(self);
-    }
-    else if (k.pressed & (B_BUTTON | R_BUTTON))
-    {
+    } else if (k.pressed & (B_BUTTON | R_BUTTON)) {
         StartPlayerCtrlSpin(self);
-    }
-    else if (dir)
-    {
+    } else if (dir) {
         SET_MODE(self, 6);
         SET_ANIM(self, self->target, 0x1D);
         QueueMotionX(self, 0xC);
@@ -546,15 +487,13 @@ void PlayerCtrlStateSwim(struct player_ctrl *self)
     u8 dir = GetDpadDirection(gInput);
 
     k = *(struct keys *)&gKeys;
-    if (k.pressed & A_BUTTON)
-    {
+    if (k.pressed & A_BUTTON) {
         StartPlayerCtrlStroke(self);
         return;
     }
     if (k.pressed & (B_BUTTON | R_BUTTON))
         StartPlayerCtrlSpin(self);
-    if (dir == 0 && self->tilt == 6)
-    {
+    if (dir == 0 && self->tilt == 6) {
         SET_MODE(self, 5);
         SET_ANIM(self, self->target, 0x20);
         self->mode = dir;
@@ -568,25 +507,21 @@ void PlayerCtrlStateStroke(struct player_ctrl *self)
     struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
 
-    if (kp->pressed & B_BUTTON)
-    {
+    if (kp->pressed & B_BUTTON) {
         StartPlayerCtrlSpin(self);
         return;
     }
-    if (self->target->animDone || gRoomFrameCount > self->deadline)
-    {
+    if (self->target->animDone || gRoomFrameCount > self->deadline) {
         u8 dir = GetDpadDirection(inp);
 
         if (kp->pressed & A_BUTTON)
             StartPlayerCtrlStroke(self);
         else if (dir)
             ResetMode(self);
-        else if (self->tilt == 6)
-        {
+        else if (self->tilt == 6) {
             SET_MODE(self, 5);
             SET_ANIM(self, self->target, 0x20);
-        }
-        else
+        } else
             ResetMode(self);
     }
     CheckPlayerCtrlTurn(self);
@@ -596,17 +531,13 @@ void PlayerCtrlStateSpin(struct player_ctrl *self)
 {
     u8 dir = GetDpadDirection(gInput);
 
-    if (++self->timer >= self->timerMax || self->target->animDone)
-    {
+    if (++self->timer >= self->timerMax || self->target->animDone) {
         gPlayer->bounce = 0;
         self->spinCooldown = 0xC;
-        if (dir == 0)
-        {
+        if (dir == 0) {
             ResetMode(self);
             self->timerMax = 1;
-        }
-        else
-        {
+        } else {
             ResetMode(self);
         }
     }
@@ -618,12 +549,10 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
     struct keys k = *(struct keys *)&gKeys;
     s32 frame;
 
-    if (self->timerMax != 0 && ++self->timer >= self->timerMax)
-    {
+    if (self->timerMax != 0 && ++self->timer >= self->timerMax) {
         self->spinCooldown = 0xC;
         self->timerMax = 0;
-        switch (self->mode)
-        {
+        switch (self->mode) {
         case 7:
             frame = self->target->frame;
             self->mode = 6;
@@ -638,8 +567,7 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
             break;
         }
     }
-    if (k.pressed & (B_BUTTON | R_BUTTON))
-    {
+    if (k.pressed & (B_BUTTON | R_BUTTON)) {
         if (self->spinCooldown != 0 || self->timerMax != 0)
             return;
         self->timer = 0;
@@ -658,8 +586,7 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
         StartPlayerCtrlStroke(self);
     if (self->target->animDone == 0)
         return;
-    switch (self->mode)
-    {
+    switch (self->mode) {
     case 4:
         if (self->target->mirror.bits.flipX)
             self->target->mirror.bits.flipX = 0;
@@ -688,21 +615,18 @@ void PlayerCtrlStateSwimStart(struct player_ctrl *self)
     struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
 
-    if (kp->pressed & B_BUTTON)
-    {
+    if (kp->pressed & B_BUTTON) {
         StartPlayerCtrlSpin(self);
         return;
     }
-    if (self->target->animDone)
-    {
+    if (self->target->animDone) {
         u8 dir = GetDpadDirection(inp);
 
         if (kp->pressed & A_BUTTON)
             StartPlayerCtrlStroke(self);
         else if (dir)
             ResetMode(self);
-        else if (self->tilt == 6)
-        {
+        else if (self->tilt == 6) {
             SET_MODE(self, 5);
             SET_ANIM(self, self->target, 0x20);
         }
@@ -714,18 +638,15 @@ void PlayerCtrlStateStop(struct player_ctrl *self)
 {
     struct keys k = *(struct keys *)&gKeys;
 
-    if (k.pressed & A_BUTTON)
-    {
+    if (k.pressed & A_BUTTON) {
         StartPlayerCtrlStroke(self);
         return;
     }
-    if (k.pressed & (B_BUTTON | R_BUTTON))
-    {
+    if (k.pressed & (B_BUTTON | R_BUTTON)) {
         StartPlayerCtrlSpin(self);
         return;
     }
-    if (self->target->animDone)
-    {
+    if (self->target->animDone) {
         self->mode = 0;
         SetState(self, 0, 0, 0, 0);
     }
@@ -754,7 +675,8 @@ void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct player *targ
 /* UNUSED */
 void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct player *target, s32 idx)
 {
-    StartCtrlTargetMotionX(self, target, (s32 *)&gPlayerCtrlMotionRecords[self->animSet->entries[idx].a]);
+    StartCtrlTargetMotionX(self, target,
+                           (s32 *)&gPlayerCtrlMotionRecords[self->animSet->entries[idx].a]);
 }
 
 void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax)

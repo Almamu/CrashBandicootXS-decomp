@@ -294,7 +294,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         }
         SetActionCtrlModeAnim(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
         LoadPaletteSlot(gPaletteCache, self->part->slot,
-                    self->part->anim->records[self->part->tag].paletteId);
+                        self->part->anim->records[self->part->tag].paletteId);
         ActSetNext27(self, 0);
         ActSetNext(self, 0);
         break;
@@ -336,7 +336,8 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         KillPlayer(self, 0x2a);
         break;
     case 11:
-        if ((gPlayer->hitAxes & 8) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
+        if ((gPlayer->hitAxes & 8) &&
+            PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);
             ActAndFlags0D(self->part, -3);
             sub_8015558(self);

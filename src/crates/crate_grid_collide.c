@@ -43,8 +43,7 @@ static inline void CheckPart(struct pool_manager *m, struct box_part *part, stru
 {
     struct part_method *m1 = PART_METHOD(part, 0x30);
 
-    if ((u8)_call_via_r2((u8 *)part + m1->thisOffset, screen, m1->fn)
-        && ((part->flags >> 2) & 1)) {
+    if ((u8)_call_via_r2((u8 *)part + m1->thisOffset, screen, m1->fn) && ((part->flags >> 2) & 1)) {
         struct part_method *m2 = PART_METHOD(part, 0x48);
 
         if (_call_via_r1((u8 *)part + m2->thisOffset, m2->fn) > 4) {
@@ -149,10 +148,10 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
         case 0:
             break;
         case 1:
-        {
-            u8 *flags = &gPlayer->flags.all;
-            *flags |= 8;
-        }
+            {
+                u8 *flags = &gPlayer->flags.all;
+                *flags |= 8;
+            }
             kind = gPlayer->kind;
             if (kind == 1) {
                 if (gPlayer->speedY > 0) {

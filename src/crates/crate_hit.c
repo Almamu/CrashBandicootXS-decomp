@@ -78,8 +78,8 @@
  * file is built with old_agbcc for `sub_800CF70`): the wide-mode x is
  * `x += xOffset; x -= 2;` as two statements (the ROM's `adds r1, r1, r7;
  * subs r1, #2`). */
-u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
-               s32 xOffset, s32 yOffset)
+u8 sub_800CEAC(struct crate *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset,
+               s32 yOffset)
 {
     struct aabb b;
 
@@ -298,8 +298,7 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
         if (gPlayer->mirror.bits.flipY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
-    if (AabbOverlaps(&f.a, BOX_ADDR(&f.b)))
-    {
+    if (AabbOverlaps(&f.a, BOX_ADDR(&f.b))) {
         if (gCrateKindExplosive[self->state] == 1)
             ExplodeCrate((struct crate *)self, 1);
         else

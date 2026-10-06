@@ -74,6 +74,7 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
          * matching `self`'s own register (r5, reused here for `top`
          * once `self` is dead) and `rec`'s (r0, reused for the
          * `self->y` load once `rec` is dead). */
+        // clang-format off
         asm volatile(
             "ldrb r1, [r0, #4]\n\t"
             "lsl r2, r1, #7\n\t"
@@ -89,6 +90,7 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
             : "r"(rec), "r"(self)
             : "r0", "r2", "cc", "memory"
         );
+        // clang-format on
 
         /* `box->x`/`box->y` are each read once, into r2,
          * and reused for both their own edge compare and the
@@ -118,6 +120,7 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
             MATCH_HOLD_REG(s32, boxX, r2) = box->x;
             if (left > boxX) {
                 MATCH_HOLD_REG(s32, boxRight, r0);
+                // clang-format off
                 asm volatile(
                     "ldr r0, [r6, #8]\n\t"
                     "add r0, r2, r0\n\t"
@@ -125,10 +128,12 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
                     : "r"(box), "r"(boxX)
                     : "cc"
                 );
+                // clang-format on
                 if (right < boxRight) {
                     MATCH_HOLD_REG(s32, boxY, r2) = box->y;
                     if (top > boxY) {
                         MATCH_HOLD_REG(s32, boxBottom, r0);
+                        // clang-format off
                         asm volatile(
                             "ldr r0, [r6, #0xc]\n\t"
                             "add r0, r2, r0\n\t"
@@ -136,6 +141,7 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
                             : "r"(box), "r"(boxY)
                             : "cc"
                         );
+                        // clang-format on
                         if (bottom < boxBottom) {
                             success = 1;
                         }
