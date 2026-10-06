@@ -21,10 +21,10 @@ system from "core" graphics.
   `docs/matching/archive/issue-45-hud-stat-widget-dispatcher.md`'s "Third pass"
   section for the register-pinning/instruction-ordering gotchas this
   pair needed), `ClearPaletteCycles`, `DestroyPaletteCycles`, `InitPaletteCycles`,
-  `DrawHudPart`, `sub_802710C` (UNUSED - no caller anywhere in the
-  ROM), `InitHudPart` - a fixed 3-entry particle/effect queue's reset/
-  constructor/teardown trio, a HUD digit-slot draw helper, and two
-  `struct actor`-table-swap slot constructors; see `docs/matching.md`.
+  `DrawHudPart`, `DestroyHudPart` (the destructor slot of
+  gHudPartVtable, reached only through it), `InitHudPart` - a fixed 3-entry particle/effect queue's reset/
+  constructor/teardown trio, a HUD digit-slot draw helper, and the slot's
+  `struct actor`-table-swap destructor and constructor; see `docs/matching.md`.
   Also added `include/hud.h`, moving `hud_lives.c`'s
   `hud_anim_record`/`hud_anim_data`/`hud_digit_part`/`hud_counter`
   structs there so this file could reuse them.

@@ -95,7 +95,7 @@ void DestroyLinkSession(struct link_session *self, u32 flags)
  * for all 4 per-player rings (`players[i].ring`, at self+0x18c +
  * playerIndex*0xc8; the loop keeps the raw offset, which the ROM builds
  * as `0xc6 << 1` in r6), resets the session (`ResetLinkSession`), clears
- * `field_5`, and returns `self`. */
+ * `enabled`, and returns `self`. */
 struct link_session *InitLinkSession(struct link_session *arg0)
 {
     MATCH_HOLD_REG(struct link_session *, self, r4);
@@ -126,7 +126,7 @@ struct link_session *InitLinkSession(struct link_session *arg0)
     } while (i != sentinel);
 
     ResetLinkSession(self);
-    self->field_5 = 0;
+    self->enabled = 0;
 
     return self;
 }

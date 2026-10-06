@@ -1,7 +1,7 @@
 #include "gax_internal.h"
 #include "match.h"
 
-/* Per-tick vibrato update of a channel's `field_2e` (the pitch offset
+/* Per-tick vibrato update of a channel's `vibratoOffset` (the pitch offset
  * added to the note when mixing) from a signed waveform table
  * (`gGaxVibratoTable`), gated on the bound instrument's `vibratoDepth`
  * being non-zero: `vibratoDelay` is a delay counter that ticks down once
@@ -32,5 +32,5 @@ void GaxChannelTickVibrato(struct GaxChannelState *self)
             result = (tableVal * p->instrument->vibratoDepth) >> 8;
         }
     }
-    p->field_2e = result;
+    p->vibratoOffset = result;
 }

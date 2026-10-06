@@ -89,8 +89,8 @@ address entries), and then again via this pass's full clean
   (a `sp+0x28`-based, 0x28-byte argument block) passed to `MemCopy32`
   and calls into `__muldi3` (both callees still raw/unnamed
   elsewhere), and reads several parallel per-song-slot tables
-  (`gStaticData_0803A874`/`gGaxArmResample`/`gStaticData_0803A884`/
-  `gStaticData_0803A8B4`/`gStaticData_0803A8C4`) whose shapes aren't
+  (`gGaxArmResampleStoreStep`/`gGaxArmResample`/`gGaxArmResampleStoreEndTest`/
+  `gGaxArmResampleMixStep`/`gGaxArmResampleMixEndTest`) whose shapes aren't
   modeled. Not attempted this pass given its size (over 250 combined
   lines of disassembly) and the established precedent that this manual-
   trampoline shape doesn't factor cleanly into two independent C

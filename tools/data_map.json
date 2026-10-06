@@ -2309,7 +2309,7 @@
   {
    "address": "0x0816C4A0",
    "size": 8,
-   "name": "gStaticData_0816C4A0",
+   "name": "gLevelSelectCrashIconPos",
    "consumers": [
     "InitLevelSelect"
    ],
@@ -2430,7 +2430,7 @@
   {
    "address": "0x0816C4C8",
    "size": 8,
-   "name": "gStaticData_0816C4C8",
+   "name": "gLevelSelectNextWorldArrowPos",
    "consumers": [
     "InitLevelSelect"
    ],
@@ -2454,7 +2454,7 @@
   {
    "address": "0x0816C4D0",
    "size": 8,
-   "name": "gStaticData_0816C4D0",
+   "name": "gLevelSelectPrevWorldArrowPos",
    "consumers": [
     "InitLevelSelect"
    ],
@@ -5161,7 +5161,7 @@
     {
      "address": "0x0855BC78",
      "size": 60,
-     "format": "GAX2 SFX song header (0x1C), a 1-entry NULL child-type array, and the SFX voice handler type (GaxFxChannelInit/sub_803A228/GaxFxChannelPlay, 0x48-byte instances); GaxSongHeader.sfxTypes (gGaxMusicData, the start of the music block) points at the type 9 times",
+     "format": "GAX2 SFX song header (0x1C), a 1-entry NULL child-type array, and the SFX voice handler type (GaxFxChannelInit/GaxFxChannelUnknown/GaxFxChannelPlay, 0x48-byte instances); GaxSongHeader.sfxTypes (gGaxMusicData, the start of the music block) points at the type 9 times",
      "effort": "easy",
      "status": "converted: tools/gax_audio.py --sfx"
     }
@@ -8230,7 +8230,7 @@
    "size": 104,
    "name": "gHudPartVtable",
    "consumers": [
-    "sub_802710C",
+    "DestroyHudPart",
     "InitHudPart"
    ],
    "consumer_files": [

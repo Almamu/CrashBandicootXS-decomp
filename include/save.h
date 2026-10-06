@@ -84,7 +84,7 @@ extern void InitSaveMenuIcons(struct save_menu *self);
 extern void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl);
 extern void *GetSaveTransferData(struct settings_sync_pump *self);
 extern void ResetSaveTransfer(struct settings_sync_pump *self);
-extern u8 RunSaveMenu(u32 state, u32 field10);
+extern u8 RunSaveMenu(u32 state, u32 cursor);
 extern struct save_menu *InitSaveMenu(struct save_menu *self);
 extern void DestroySaveMenu(struct save_menu *self, u32 flags);
 extern void SaveMenuInput(struct save_menu *self, u32 keys);

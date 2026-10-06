@@ -187,7 +187,7 @@ is the per-object list membership; `default` means none.
 | M6 | 1 | `src/menus/pause_menu_draw.c` | `graphics/settings_menu17.c`, `graphics/settings_menu21.c` | default | none: concatenate verbatim |
 | M7 | 2 | `src/menus/pause_menu_widgets.c` | `graphics/settings_menu16.c`, `graphics/settings_menu7.c`, `graphics/settings_menu5.c`, `graphics/settings_menu9.c` | default | prototype FormatDecimal differs only in pointer types |
 | M8 | 2 | `src/menus/pause_menu_pages_draw.c` | `graphics/settings_menu11.c`, `graphics/settings_menu12.c` | default | tag struct icon_pos duplicated (identical: delete one copy); tag struct pause_menu clashes (different body: rename one) |
-| M9 | 2 | `src/menus/power_dialog.c` | `graphics/settings_menu14.c`, `graphics/settings_menu13.c` | default | tag struct sub_8006700_actor clashes (different body: rename one) |
+| M9 | 2 | `src/menus/power_dialog.c` | `graphics/settings_menu14.c`, `graphics/settings_menu13.c` | default | tag struct power_dialog clashes (different body: rename one) |
 | M10 | 2 | `src/objects/sprite.c` | `graphics/actor_part.c`, `graphics/actor_part2.c`, `graphics/actor_part3.c` | old_agbcc | prototype SetAabbPos differs only in pointer types; prototype SetAabbSize differs only in pointer types; tag struct aabb clashes (different body: rename one) |
 | M11 | 2 | `src/objects/sprite_obj.c` | `graphics/actor_part4.c`, `graphics/actor_part5.c`, `graphics/actor_part6.c` | default | prototype GetSpriteFrame differs only in pointer types |
 | M12 | 2 | `src/crates/crate_grid_collide.c` | `graphics/actor_part11f.c`, `graphics/actor_part11e.c` | old_agbcc | prototype CollideCrateGridPartWithPlayer differs only in pointer types |

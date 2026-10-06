@@ -17,7 +17,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   [issue-47-graphics-loading.md](../matching/archive/issue-47-graphics-loading.md)
   for the full writeup of the gcc-2.9 cross-jump/tail-merging gap this
   closed and the technique used.
-- **`sub_8028D6C`**, **`GetFreeVramTileBytes`** (`src/gfx/sprite_frame.c`) -
+- **`WalkVramTileBlocks`**, **`GetFreeVramTileBytes`** (`src/gfx/sprite_frame.c`) -
   matched, both `UNUSED` (no caller anywhere in the ROM). `GetFreeVramTileBytes`
   never had its own `thumb_func_start` in the original disassembly - see
   `expected/corrections.txt`'s `split 0x08028D94` entry.
@@ -32,7 +32,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   [issue-47-graphics-loading.md](../matching/archive/issue-47-graphics-loading.md)
   for the full write-up (issue #47).
 
-- **`LoadGraphicsPackage`**-**`sub_801E96C`** (`src/gfx/graphics_package.c`) -
+- **`LoadGraphicsPackage`**-**`ResetScaledSpriteAttrs`** (`src/gfx/graphics_package.c`) -
   issue #30's BG
   loader and its `struct bg_setup` accessors (`include/graphics_package.h`)
   and the sprite-box fitter `FitScaledSprite`/`DrawScaledSprite`. All built with
@@ -40,7 +40,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   under agbcc (the dropped-`r7` gap) are now plain C. See
   [issue-30-old-agbcc.md](../matching/archive/issue-30-old-agbcc.md), and
   [issue-30-graphics-loading.md](../matching/archive/issue-30-graphics-loading.md)
-  for the earlier accessor passes (`sub_801E8F8`'s DMA-register load
+  for the earlier accessor passes (`SetScaledSpriteColor`'s DMA-register load
   order, the trailing `asm(".align 2, 0")` zero-padding fix).
 
 - **`InitTitleScreen`** (`src/frontend/title_screen_init.c`) - the

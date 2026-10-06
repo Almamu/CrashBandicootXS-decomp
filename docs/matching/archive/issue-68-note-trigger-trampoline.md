@@ -5,7 +5,7 @@ The last raw pair from issue #68's `0x08039818`-`0x0803A944` chunk
 one logical GAX2 per-channel note-trigger routine that the ROM's own
 compiler split across two disassembly labels, glued together by the
 same manual return-address-trampoline idiom already documented for
-`GaxMixerApplyEcho`/`sub_803A2C8`/`GaxMixerPlay`/`GaxMixFrame`
+`GaxMixerApplyEcho`/`GaxMixerApplyFilter`/`GaxMixerPlay`/`GaxMixFrame`
 (`lib/gax/src/gax_unknownc_play.c`, see
 `docs/matching/archive/issue-68-0x08039818-audio.md`).
 
@@ -53,19 +53,19 @@ of this cluster's other parked entries): the ROM's own compiler split
 this single logical function into two disassembly labels,
 `GaxChannelMix`/`sub_8039E50`, using the same manual
 return-address-trampoline idiom already documented for
-`GaxMixerApplyEcho`/`sub_803A2C8`/`GaxMixerPlay`/`GaxMixFrame` - `mov r2, pc;
+`GaxMixerApplyEcho`/`GaxMixerApplyFilter`/`GaxMixerPlay`/`GaxMixFrame` - `mov r2, pc;
 adds r2, #5; mov lr, r2; bx r1` computes a Thumb-tagged return address
 by hand and jumps through `r1` (`gGaxPlayerState`'s own `+0x44`
 function-pointer slot, an interworked callback) instead of a normal
 `bl`, since ARMv4T Thumb has no `blx reg`. That trampoline's return
 address lands exactly at `sub_8039E50`'s first instruction - a `nop`
 (`mov r8, r8`) alignment pad, the same tell already seen at
-`sub_803A2C8`'s landing into `sub_803A318` - so the two ROM labels are
+`GaxMixerApplyFilter`'s landing into `sub_803A318` - so the two ROM labels are
 one physical function, not two independently callable ones. This idiom
 itself is not expressible in portable C at all, regardless of register
 pressure, so no real-C attempt was made for the trampoline sequence
 specifically - and since the trampoline sits in the *middle* of the
-function (not at entry/exit like the `sub_803A2C8` family), splitting
+function (not at entry/exit like the `GaxMixerApplyFilter` family), splitting
 the surrounding logic into "the part before" and "the part after" as
 separate real-C functions isn't possible either without breaking the
 one-`bx`-lands-here-via-hand-computed-PC-offset relationship between

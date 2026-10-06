@@ -590,7 +590,11 @@ void DestroySpriteBankSet(void *arg0, u32 arg1)
     }
 }
 
-void nullsub_1(void)
+/* The sprite-bank set's constructor (`gSpriteBankSet`, a 4-byte object
+ * InitLevelState allocates, then points at gSpriteBankTable): empty, the
+ * `this` pointer passes through in r0. DestroySpriteBankSet above is its
+ * destructor. */
+void InitSpriteBankSet(void)
 {
 }
 asm(".align 2, 0");

@@ -33,14 +33,14 @@ REG_BG0CNT = GetBgSetupControl(buf);
 - **`InitBgSetup`**: a five-argument constructor - `buf+0x00`/`+0x04`/
   `+0x08` get `arg1`/`arg2`/`arg3` verbatim, `buf+0xc`'s low nibble
   packs `(arg5 & 3) | ((arg1 & 3) << 2)`, `buf+0xd` gets `arg2 & 0x1f`.
-- **`sub_801E8F8`**: fills one 4bpp VRAM tile (`0x06017800`) with a
+- **`SetScaledSpriteColor`**: fills one 4bpp VRAM tile (`0x06017800`) with a
   solid color via DMA3, replicating `arg1`'s low nibble into all four
   nibbles of the transferred halfword, and also packs the same rounded-
   down nibble into `buf+0x15`'s low bits plus `buf+0x1c` verbatim.
-- **`sub_801E950`**: packs `arg1 & 3` into bits 2-3 of `buf+0x15`.
-- **`sub_801E964`**: a second, narrower constructor - `buf+0x00`/
+- **`SetScaledSpritePriority`**: packs `arg1 & 3` into bits 2-3 of `buf+0x15`.
+- **`SetScaledSpritePos`**: a second, narrower constructor - `buf+0x00`/
   `+0x04` verbatim.
-- **`sub_801E96C`**: clears `buf+0x11`'s bits 4-9 and `buf+0x15`'s
+- **`ResetScaledSpriteAttrs`**: clears `buf+0x11`'s bits 4-9 and `buf+0x15`'s
   bit 2 - a "reset before rebuild" pair.
 
 `FitScaledSprite`/`DrawScaledSprite` (the tile-cell-selection and viewport-
@@ -54,7 +54,7 @@ not attempted this pass; see "Left raw" below.
 ## Matched (4 functions, full clean `make compare` passing)
 
 - **`GetBgSetupControl`** (`src/gfx/graphics_package.c`)
-- **`sub_801E8F8`** (`src/gfx/graphics_package.c`) - the DMA3
+- **`SetScaledSpriteColor`** (`src/gfx/graphics_package.c`) - the DMA3
   tile-fill. Getting this one byte-exact needed two real fixes beyond
   the arithmetic itself: the DAD constant (`0x06017800`) has to be
   loaded into its own local *before* the stack scratch halfword's
@@ -68,7 +68,7 @@ not attempted this pass; see "Left raw" below.
   actually reordered/CSE'd these away; only the full linked `make
   compare` caught it - see `docs/workflow.md`'s standing warning about
   isolated compiles not being proof.
-- **`sub_801E964`**, **`sub_801E96C`**
+- **`SetScaledSpritePos`**, **`ResetScaledSpriteAttrs`**
   (`src/gfx/graphics_package.c`) - the last function in this
   object needed an explicit trailing `asm(".align 2, 0")` to zero-pad
   the 2-byte gap up to `SpawnStartMarker`'s 4-aligned start, instead of this
@@ -87,7 +87,7 @@ register choices exactly; (2) an empty `asm("" : "+r"(x))` compiler
 barrier immediately after the constant is materialized, which stops
 this compiler from folding the "materialize, then copy" pair into a
 single "materialize directly into the destination" instruction. Both
-are visible in `sub_801E8F8`/`sub_801E96C`'s final C.
+are visible in `SetScaledSpriteColor`/`ResetScaledSpriteAttrs`'s final C.
 
 ## Parked (`NON_MATCHING`) - 2 functions
 
@@ -99,7 +99,7 @@ are visible in `sub_801E8F8`/`sub_801E96C`'s final C.
   register copies away, and pushes/pops one extra callee-saved register
   (`r7`) in every phrasing tried that got the copies back. Parked rather
   than keep guessing.
-- **`sub_801E950`** (`src/gfx/graphics_package.c`, real bytes
+- **`SetScaledSpritePriority`** (`src/gfx/graphics_package.c`, real bytes
   in `asm/code_3_2_17_1e950.s` under `.if NON_MATCHING == 0`): matches
   in full shape except one instruction - the ROM reloads the `-0xd` mask
   constant fresh (`movs r2,#0xd; rsbs r2,r2,#0`), while this compiler
@@ -131,13 +131,13 @@ shape (`CreateMovingSprite` allocation, `CreateEnemyCtrl` style lookup, two
 Verified via a full clean `rm -rf build && make compare` (`La suma
 coincide`) and `make NON_MATCHING=1 report`.
 
-## Second pass: `InitBgSetup`/`sub_801E950` matched via NAKED transcription
+## Second pass: `InitBgSetup`/`SetScaledSpritePriority` matched via NAKED transcription
 
 Both functions parked above are now byte-exact matched, confirmed by a
 full clean `make compare` ("La suma coincide"). Every instruction's
 operation was already confirmed correct against the ROM; the residual
 register-allocation gaps (an extra callee-saved `r7` for `InitBgSetup`,
-a one-instruction-shorter mask rematerialization for `sub_801E950`)
+a one-instruction-shorter mask rematerialization for `SetScaledSpritePriority`)
 never responded to further plain-C restructuring, so both were
 converted to `NAKED` and their ROM disassembly transcribed
 instruction-for-instruction - the same escape hatch this project
@@ -187,7 +187,7 @@ the row stride->`sb`, the per-row dest pointer->r0, the inner-loop
 src/dest/count triple->r2/r1/r3) plus several `asm("":"+r"(...))` barriers
 (to force this compiler's "skip an apparently-redundant copy" habit back
 into the ROM's own instruction order - the same techniques documented for
-`InitBgSetup`/`sub_801E8F8` above) closed every gap but one: this function
+`InitBgSetup`/`SetScaledSpriteColor` above) closed every gap but one: this function
 needs r6 free for one more scratch temp (the loaded tilemap halfword,
 right before it's ORed with the palette-bank mask) *inside* the same
 window `pkg`'s own r6 binding is technically still in scope for. Pinning
@@ -431,9 +431,9 @@ Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`La suma coincide`).
 
-## Sixth pass: `sub_801E950` matched as real C
+## Sixth pass: `SetScaledSpritePriority` matched as real C
 
-The second pass above (`## Second pass`) had converted `sub_801E950`
+The second pass above (`## Second pass`) had converted `SetScaledSpritePriority`
 to a `NAKED` transcription on the theory that the ROM rematerializes
 its `-0xd` mask via `sub r2,r2,#0x10` reusing the register that still
 held the earlier `#3` constant - checking the real target object

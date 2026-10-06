@@ -211,6 +211,6 @@ If you're starting cold (no prior conversation in this repo): read
 specific chunk's category notes in `docs/rom_map.md`, `docs/matching.md`,
 and `docs/matching/` for context already established about that address
 range - a lot of struct layouts and calling conventions are already
-pinned down and referenced by name (`gUnknown_030012D8`,
-`sub_803AD80`-family trampolines, `struct aabb`, etc.); don't re-derive
+pinned down and referenced by name (`gPlayer`,
+the `_call_via_rN` trampolines, `struct aabb`, etc.); don't re-derive
 what's already written down.

@@ -128,7 +128,7 @@ void mem_collect(s32 arg0)
  * reproduced for a byte-exact build. Two near-identical halves, one
  * per heap (IWRAM if MEM_HEAP_IWRAM is set, then EWRAM if
  * MEM_HEAP_EWRAM is set): take &mem_i/ewram_heap_pointer, deref it for
- * the heap struct, then loop `p = p->field_8` until `p->field_8` loops
+ * the heap struct, then loop `p = p->next` until `p->next` loops
  * back to the heap struct itself - the same circular-list-walk idiom
  * mem_collect_heap uses, but here the result is never stored anywhere,
  * consistent with this being an optimizer-emitted leftover (e.g. a

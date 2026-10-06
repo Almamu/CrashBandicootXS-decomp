@@ -63,7 +63,7 @@ struct sprite {
     u8 unk_34[4];
     u8 animDone; // 0x38
     u8 unk_39[3];
-    u16 unk_3C; // 0x3C
+    u16 scale; // 0x3C - Q8 affine scale, 0 = not affine (DrawAffineSpritePieces)
     u8 unk_3E[2];
 };
 

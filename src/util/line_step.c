@@ -10,8 +10,8 @@
 /* Advances a Bresenham line (set up by InitBresenhamLine) by one step: the
  * "driving" axis (x if `flag` is set, y otherwise) always advances by
  * its sign; the other axis advances only when the accumulated error
- * term is positive, in which case the error term is corrected by
- * `field_18` instead of `field_14`. The error term is re-read from
+ * term (`err`) is positive, in which case it is corrected by
+ * `errDiagonal` instead of `errStraight`. The error term is re-read from
  * `line` fresh inside each of the two `flag` branches (not hoisted
  * above the branch), matching the ROM's own two separate reloads. */
 void StepBresenhamLine(struct bresenham_line *line)
@@ -19,20 +19,20 @@ void StepBresenhamLine(struct bresenham_line *line)
     s32 err;
 
     if (line->flag != 0) {
-        err = line->field_10;
+        err = line->err;
         if (err <= 0) {
-            line->field_10 = err + line->field_14;
+            line->err = err + line->errStraight;
         } else {
-            line->field_10 = err + line->field_18;
+            line->err = err + line->errDiagonal;
             line->y0 += line->sy;
         }
         line->x0 += line->sx;
     } else {
-        err = line->field_10;
+        err = line->err;
         if (err <= 0) {
-            line->field_10 = err + line->field_14;
+            line->err = err + line->errStraight;
         } else {
-            line->field_10 = err + line->field_18;
+            line->err = err + line->errDiagonal;
             line->x0 += line->sx;
         }
         line->y0 += line->sy;

@@ -110,9 +110,9 @@ void FadePaletteToBlack(void)
     }
 }
 
-/* `gBrightnessFade.field_0 != -1`: the "idle" sentinel (gfx.h). */
+/* `gBrightnessFade.period != -1`: the "idle" sentinel (gfx.h). */
 
 s32 IsBrightnessFadeActive(void)
 {
-    return gBrightnessFade.field_0 != -1;
+    return gBrightnessFade.period != -1;
 }

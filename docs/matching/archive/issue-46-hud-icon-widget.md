@@ -142,7 +142,7 @@ difficulty in this codebase:
    zero-padding. Fixed with a trailing `asm(".align 2, 0");` statement
    right after each function, per the existing
    `matching_decomp_alignment_fix` convention (see `graphics.c`'s
-   `nullsub_1` for the same pattern already in this codebase). Caught
+   `InitSpriteBankSet` for the same pattern already in this codebase). Caught
    via the map-file address-shift method from `docs/workflow.md`: `cmp`
    the built ROM against `baserom.gba`, convert the first differing
    byte offset to a ROM address, and look it up in

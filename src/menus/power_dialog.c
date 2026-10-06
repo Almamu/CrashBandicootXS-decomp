@@ -23,7 +23,7 @@
  * `gLargeFont`'s `tileBase` in between - meaning not otherwise
  * established), then allocates the dialog object (`OperatorNew(0x2c)`,
  * exactly `src/menus/power_dialog.c`'s `struct
- * sub_8006700_actor`'s own size) and builds it via `InitPowerDialog`
+ * power_dialog`'s own size) and builds it via `InitPowerDialog`
  * (matched, same file) before running its fade-in/wait-for-confirm/
  * fade-out lifecycle via `PowerDialogLoop` and, if the confirm button was
  * pressed (a non-NULL result), `DestroyPowerDialog(dialog, 3)`.
@@ -59,7 +59,7 @@ static inline void IconReserve(struct bitmap_font **m)
 
 void ShowPowerDialog(s32 label1, s32 label2, s32 type)
 {
-    struct sub_8006700_actor *dialog;
+    struct power_dialog *dialog;
 
     mem_free_bytes(0xC0000000);
     WaitForVBlank();
@@ -98,28 +98,28 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * as `NON_MATCHING` in `src/menus/power_dialog.c` - see that
  * file's header comment. */
 
-/* `struct sub_8006700_actor` (above) is allocated here via
+/* `struct power_dialog` (above) is allocated here via
  * `OperatorNew(0x2c)`, exactly the struct's own size, and returned by
  * `InitPowerDialog` to feed straight into `PowerDialogLoop`'s (the
  * fade/confirm driver) and `DestroyPowerDialog`'s (the on-hit
  * teardown/sound helper) existing signatures. */
 
 /* Builds the actual two-string dialog/message box object: a small
- * `struct sub_8006700_actor` (`self`, allocated by the caller) plus one
+ * `struct power_dialog` (`self`, allocated by the caller) plus one
  * `struct settings_icon_actor`-shaped background icon it owns via
- * `field_18`. Sets `field_20`/`field_24` (the `CommitPowerDialogFrame`-shape
+ * `icon`. Sets `bldcnt`/`bldy` (the `CommitPowerDialogFrame`-shape
  * BLDCNT+BLDALPHA/BLDY blend-register pair, forced to a fixed "fully
  * blended" value here rather than read from a caller-supplied source)
- * and `field_28` (a fixed priority/flags pair), stashes the two label
- * pointers at `field_10`/`field_14`, loads `gMenuSkyBg`'s
+ * and `dispcnt` (a fixed priority/flags pair), stashes the two label
+ * pointers at `titleText`/`descText`, loads `gMenuSkyBg`'s
  * background package, and builds the background icon the same way
  * `pause_menu_pages_init.c`'s icon-constructor family does (allocate via
- * `InitUiSpriteObj(OperatorNew(0x40))`, point `field_20` at the shared
+ * `InitUiSpriteObj(OperatorNew(0x40))`, point the icon's `field_20` at the shared
  * `gSpriteBankSet` header table at a new `0xe4<<1` offset - see
  * docs/rom_map.md's "five confirmed header-relative offsets" note,
  * frame index from `type`, the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
  * `SetSpriteAnimDone` OAM trio, positioned at a fixed (0xf0<<7, 0xa0<<7)
- * point, `field_29`'s low nibble from `GetSpriteAnimPaletteSlot`). Finally sets
+ * point, the icon's `palette`'s low nibble from `GetSpriteAnimPaletteSlot`). Finally sets
  * `REG_BG0CNT` from `GetBgSetupControl(self)`, clears `REG_BG0HOFS`/
  * `REG_BG0VOFS` (one 32-bit write), and restores the last-played song
  * via `PlaySong(gAudioContext, 0xf)`.
@@ -146,17 +146,17 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * - A plain `MATCH_HOLD_REG(T, v, rN) = expr;` initializer is only a
  *   hint - gcc still felt free to materialize `expr` into a different
  *   register than `rN` for a handful of these single-use copies
- *   (`field_10`/`field_14`/`frameIndex`). Routing the copy through an
+ *   (`titleText`/`descText`/`frameIndex`). Routing the copy through an
  *   `MATCH_CONST_VOLATILE(v, expr)`, i.e.
  *   `asm volatile("" : "=r"(v) : "0"(expr))` (an explicit "same
  *   register in and out" constraint) forces the actual `mov` into the
  *   requested register, matching the ROM's own reuse of whichever
  *   register happened to be free at that point in its own allocation
  *   (typically `r3`, left over from an unrelated adjacent OR-chain). */
-struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32 label1Arg,
-                                          s32 label2Arg, s32 typeArg)
+struct power_dialog *InitPowerDialog(struct power_dialog *selfArg, s32 label1Arg, s32 label2Arg,
+                                     s32 typeArg)
 {
-    MATCH_HOLD_REG(struct sub_8006700_actor *, self, r5) = selfArg;
+    MATCH_HOLD_REG(struct power_dialog *, self, r5) = selfArg;
     MATCH_HOLD_REG(s32, label1, r8) = label1Arg;
     MATCH_HOLD_REG(s32, label2, r9) = label2Arg;
     MATCH_HOLD_REG(s32, type, sl) = typeArg;
@@ -166,7 +166,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
 
     InitBgSetup(&self->bg, 0, 0x1f, 0, 3);
 
-    self->field_20 = 0;
+    self->bldcnt = 0;
     {
         MATCH_HOLD_REG(u8 *, addr, r2);
         MATCH_HOLD_REG(s32, v, r0);
@@ -202,7 +202,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
             MATCH_HOLD_REG(vu32 *, bldp, r1);
 
             bldp = (vu32 *)REG_ADDR_BLDCNT;
-            v = self->field_20;
+            v = self->bldcnt;
             *bldp = v;
             asm volatile("add %0, %0, #4" : "+r"(bldp));
             addr = (u8 *)(u32)*addr;
@@ -211,7 +211,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         }
     }
 
-    self->field_28.all = 0;
+    self->dispcnt.all = 0;
     {
         MATCH_HOLD_REG(u8 *, addr, r2);
         MATCH_HOLD_REG(s32, v, r0);
@@ -242,17 +242,17 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         MATCH_HOLD_REG(void *, t2, r0);
 
         MATCH_CONST_VOLATILE(t1, label1);
-        self->field_10 = t1;
+        self->titleText = t1;
         MATCH_CONST_VOLATILE(t2, (void *)label2);
-        self->field_14 = t2;
+        self->descText = t2;
     }
 
     LoadGraphicsPackage(&self->bg, &gMenuSkyBg);
-    self->field_1c = 0;
+    self->frame = 0;
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
-    self->field_18 = icon;
-    icon->field_20 = (void **)(SPRITE_BANK_BASE + (0xe4 << 1));
+    self->icon = icon;
+    icon->anim = (void **)(SPRITE_BANK_BASE + (0xe4 << 1));
     {
         MATCH_HOLD_REG(u8 *, addr, r0);
         MATCH_HOLD_REG(u8, t3, r3);
@@ -269,7 +269,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         MATCH_HOLD_REG(struct actor *, iconAddr, r0);
         MATCH_HOLD_REG(s32, v, r1);
 
-        iconAddr = &self->field_18->base;
+        iconAddr = &self->icon->base;
         v = 0xf0 << 7;
         iconAddr->x = v;
         v = 0xa0 << 7;
@@ -277,7 +277,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
 
         {
             MATCH_HOLD_REG(s32, ret, r0) = GetSpriteAnimPaletteSlot(iconAddr);
-            MATCH_HOLD_REG(u8 *, addr, r2) = &self->field_18->field_29;
+            MATCH_HOLD_REG(u8 *, addr, r2) = &self->icon->palette;
             MATCH_HOLD_REG(s32, mask, r1);
             MATCH_HOLD_REG(u8, byte, r3);
 

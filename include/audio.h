@@ -9,14 +9,13 @@
  * as their first argument - `*gAudioContext` in the ROM, an
  * 8340-byte allocation made by `InitLevelState` (see docs/rom_map.md's
  * "Found the origin point" section). Only the leading 0x58 bytes this
- * cluster of functions models by field are covered here; starting at
- * +0x58 sits an embedded GAX2 runtime player-state object (initialized by
- * `GAX2_new`/`GAX2_init`, both still raw engine internals) that
- * `StartSong` pokes directly - genuinely nested, not-yet-reverse-
- * engineered state, so those writes stay raw offset casts (see
- * docs/audio.md) rather than guessed struct fields. `sub_8001B14` also
- * pokes one more field (+0x62) inside that same embedded region for the
- * same reason.
+ * cluster of functions models by field are covered here. At +0x58 sits
+ * the music player's GAX2 parameter block (`struct GaxSongHeader`,
+ * <gax.h>: GAX2_new fills it, StartSong sets its work buffer (+0x94,
+ * 0x2000 bytes), `numSfx`, `sfxTypes` and `layout`, and hands it to
+ * GAX2_init), followed by GAX2's work RAM. StartSong and SetMusicFilter
+ * (its `filter`, +0x62) still write it through raw offsets: the
+ * AudioContext isn't extended over it yet.
  *
  * Two independent fade-envelope pairs are tracked, each ramping by a
  * fixed +-0x10 (Q8.8, ~0.06) per `UpdateAudio` tick once its direction
@@ -57,8 +56,9 @@ struct AudioContext {
     s32 duckVolCurrent; // 0x24
     s32 duckVolTarget;  // 0x28
     s32 sfxVolume;      // 0x2c - PlaySfx's own volume multiplier
-    // 0x30 - mirrored (truncated) into the embedded GAX object's +0xA (self+0x62) while playing
-    u32 field_30;
+    // 0x30 - GAX2 low-pass filter amount, mirrored into the parameter block's `filter`
+    // (self+0x62) while playing (SetMusicFilter)
+    u32 musicFilter;
     // 0x34 - the ambient-sfx channel's own current fade volume (ramps toward activeSfx.volume,
     // TickAmbientSfx - signed, compared with bgt/bge/ble)
     s32 ambientSfxVolume;
@@ -119,7 +119,7 @@ extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern void FadeInMusic(struct AudioContext *self);
 extern void FadeOutMasterVolume(struct AudioContext *self, u32 value);
 extern void FadeInMasterVolume(struct AudioContext *self, u32 value);
-extern void sub_8001B14(struct AudioContext *self, u32 value);
+extern void SetMusicFilter(struct AudioContext *self, u32 value);
 extern void SetMusicVolume(struct AudioContext *self, u32 value);
 extern void SetSfxVolume(struct AudioContext *self, u32 value);
 extern void PlaySong(struct AudioContext *self, u32 id);

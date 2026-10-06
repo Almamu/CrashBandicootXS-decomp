@@ -304,15 +304,15 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
     return result;
 }
 
-/* ROM 0x08028D6C - dead code, no caller anywhere in the ROM (checked
+/* UNUSED - ROM 0x08028D6C, no caller anywhere in the ROM (checked
  * every asm file, expected disassembly and src tree for this address
- * and for a `bl sub_8028D6C`/`.4byte sub_8028D6C` reference). Walks the
+ * and for a `bl`/`.4byte` reference to it). Walks the
  * `gVramTileBlockSpares` spare-node stack to its end, then the
  * `gVramTileBlockList` free-block list all the way around, discarding
  * both results - the same "list-walk with the result never stored"
  * optimizer-leftover shape already documented for `mem_walk_heaps` in
  * src/system/memory.c (see that function's comment). */
-void sub_8028D6C(void)
+void WalkVramTileBlocks(void)
 {
     struct vram_tile_block *p;
     struct vram_tile_block *q;
@@ -325,7 +325,7 @@ void sub_8028D6C(void)
 }
 
 /* ROM 0x08028D94 - the original disassembly never gave this address its
- * own function label; it's a separate function from `sub_8028D6C`
+ * own function label; it's a separate function from `WalkVramTileBlocks`
  * above (see `expected/corrections.txt`'s `split` entry), also with no
  * caller anywhere in the ROM. Sums the `size` of every FREE block
  * currently in the `gVramTileBlockList` list - a "how many free VRAM

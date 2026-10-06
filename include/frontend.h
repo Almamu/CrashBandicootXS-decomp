@@ -32,8 +32,8 @@ struct language_select {
     u8 done;   /* 0x04 */
     u8 pad_5[3];
     s32 language; /* 0x08 - the selected entry, 0-5 */
-    u8 field_c;   /* 0x0c - DISPCNT shadow, low byte */
-    u8 field_d;   /* 0x0d - DISPCNT shadow, high byte */
+    u8 dispcntLo; /* 0x0c - DISPCNT shadow, low byte */
+    u8 dispcntHi; /* 0x0d - DISPCNT shadow, high byte */
     u8 pad_e[2];
     void *starfield; /* 0x10 - InitStarfield */
 };
@@ -184,7 +184,7 @@ extern void DestroyCredits(struct credits_screen *self, s32 mode);
 extern void RunCredits(void);
 
 /* src/frontend/language_select.c */
-extern void nullsub_7(void);
+extern void InitCompanyLogos(void);
 extern void DestroyCompanyLogos(void *self, u32 flags);
 extern void DestroyLogoActor(struct actor_self *self, u32 flags);
 extern s32 RunLanguageSelect(void);

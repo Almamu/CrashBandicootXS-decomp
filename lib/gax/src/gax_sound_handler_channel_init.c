@@ -28,12 +28,12 @@ void GaxChannelInit(struct GaxChannelState *self)
     self->row = 0;
     self->instrument = NULL;
     self->note = 0x8ad0;
-    self->field_11 = 1;
+    self->direction = 1;
     self->vol15 = 0xff;
     self->volume = -1;
-    self->field_0c = 0;
+    self->muted = 0;
     self->sweepOn = 0;
-    self->field_0d = 0;
+    self->isFirst = 0;
     self->rowSkip = 0;
     self->emptyPattern = 0;
     self->pendingNote = 0;
@@ -41,7 +41,7 @@ void GaxChannelInit(struct GaxChannelState *self)
     self->retriggerDelay = 0;
     self->slideRate = 0;
     self->slideTarget = 0;
-    self->field_52 = 1;
+    self->mixMode = 1;
     SetMixRateReciprocal(&gGaxMixRateReciprocal, self);
     for (i = 0; i < self->type->childCount; i++)
         self->children[i]->type->init(self->children[i]);

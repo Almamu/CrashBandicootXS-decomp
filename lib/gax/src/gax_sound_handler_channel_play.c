@@ -9,7 +9,7 @@ void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *in
  * `retrigger` once an E-Dx note delay runs out), ticks the note-cut
  * countdown (`GaxChannelStepInstrumentSeq`), the envelope/portamento
  * (`GaxChannelTick`), and finally mixes the channel (`GaxChannelMix`)
- * unless it's disabled (`field_0c`).
+ * unless it's `muted`.
  *
  * Both functions in this file were NAKED ("parameter-homing order",
  * "r8/sb allocation ceiling"); written plainly against the handler
@@ -20,7 +20,7 @@ u8 GaxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
     struct GaxInfoHandler *info = (struct GaxInfoHandler *)self->children[0];
 
     info->type->play(info, buf, arg);
-    if (info->field_1b != 0)
+    if (info->muteTicks != 0)
         self->instrument = NULL;
     if (info->playing != 0) {
         if (self->retriggerDelay != 0 && --self->retriggerDelay == 0)
@@ -37,8 +37,7 @@ u8 GaxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
         self->cutTimer--;
     }
     GaxChannelTick(self, info);
-    return self->field_0c == 0 ? (u8)GaxChannelMix(self, info, buf, arg, info->type->data.song, 0)
-                               : 0;
+    return self->muted == 0 ? (u8)GaxChannelMix(self, info, buf, arg, info->type->data.song, 0) : 0;
 }
 
 /* Decodes one row of this channel's packed pattern stream and applies
@@ -150,7 +149,7 @@ void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *in
         break;
     case 13:
         info->patternBreak = 1;
-        info->field_24 = param;
+        info->breakRow = param;
         break;
     case 15:
         info->speed = param;

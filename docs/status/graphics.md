@@ -18,7 +18,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `ReserveObjVram`, `UploadObjVram`, `DestroyObjVramCursor`, `InitObjVramCursor`, `LoadPaletteSlot`,
   `BindPaletteSlot`, `ClaimPaletteSlot`, `UnlockPalette`, `LockPalette`, `UploadPaletteSlot`,
   `UploadPaletteCache`, `GetPaletteSlot`, `FreePaletteSlot`, `FreeUnlockedPaletteSlots`, `SetPaletteCacheSource`,
-  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `DestroySpriteBankSet`, `nullsub_1`,
+  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `DestroySpriteBankSet`, `InitSpriteBankSet`,
   `IsEntityNearCamera`, `CheckEntityPlayerContact`, `DrawEntity`, `UpdateEntity`, `GetEntityBounds`,
   `SetEntitySize`, `EntityOverlapsRect`, `IsEntityOnScreen`, `IsEntityInsideRect`,
   `WorldToScreen`, `WorldPosToScreen`, `nullsub_12`, `CreateEntity`,

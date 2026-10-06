@@ -107,9 +107,9 @@ struct gfx_box_obj {
     s32 height;               // 0x0C
     struct oam_attrs_u16 oam; // 0x10
     s32 sizeIndex;            // 0x18
-    u8 unk_1C[4];
-    s32 scaleX; // 0x20 - Q8
-    s32 scaleY; // 0x24 - Q8
+    s32 color;                // 0x1C - SetScaledSpriteColor (written through a raw offset)
+    s32 scaleX;               // 0x20 - Q8
+    s32 scaleY;               // 0x24 - Q8
 };
 
 /* Picks the smallest-area box preset (gObjSizeWidths/674) that a
@@ -198,15 +198,15 @@ void DrawScaledSprite(struct gfx_box_obj *self)
     AddOamEntry(gOamBuffer, &self->oam);
 }
 
-/* Fills one 4bpp VRAM tile (`0x06017800`) with a solid color index via a
- * word-sized DMA3 transfer from a stack scratch halfword: `arg1`'s low
- * nibble is replicated into all four nibbles of a 16-bit pattern, and
- * also (rounded down to a multiple of 0x10) packed into the low 4 bits
- * of the "self" scratch buffer's byte +0x15 (alongside its own +0x1c
- * 32-bit field, set verbatim to `arg1`) - the same graphics-package
- * scratch buffer `GetBgSetupControl`/`InitBgSetup` write, extended here with
- * two more fields. */
-void sub_801E8F8(u8 *selfArg, s32 arg1)
+/* UNUSED - no caller anywhere in the ROM (no `bl` in expected/*.s, no
+ * pointer to it in baserom.gba), like the other three setters below and
+ * FitScaledSprite/DrawScaledSprite above, whose `struct gfx_box_obj` they
+ * all take (as a byte pointer). Sets the sprite box's solid color `arg1`
+ * (a 256-color index): stores it in `color` (+0x1c), puts its palette
+ * bank (`arg1 >> 4`) in the OAM template's palette bits (+0x15, attr2
+ * bits 12-15), and fills OBJ tile 0x3C0 (`0x06017800`) with the color's
+ * low nibble through a 16-bit fixed-source DMA3 transfer. */
+void SetScaledSpriteColor(u8 *selfArg, s32 arg1)
 {
     MATCH_HOLD_REG(u8 *, self, r4) = selfArg;
     MATCH_HOLD_REG(s32, val, r3);
@@ -250,11 +250,9 @@ void sub_801E8F8(u8 *selfArg, s32 arg1)
     dma[2];
 }
 
-/* Packs `arg1`'s low 2 bits into bits 2-3 of the same "self" scratch
- * buffer's byte +0x15 that `sub_801E8F8` writes bits 0-3 of (a second,
- * narrower bitfield update on the same byte - callers of this family
- * build up the same 0x10-byte scratch buffer field by field before
- * `LoadGraphicsPackage`).
+/* UNUSED (see SetScaledSpriteColor). Sets the sprite box's OAM priority:
+ * `arg1`'s low 2 bits into bits 2-3 of the template's byte +0x15 (attr2
+ * bits 10-11).
  *
  * The two `& 3`/`neg`-mask constants land in the ROM's own registers
  * (both in r2, one right after the other - a fresh `mov r2,#0xd`
@@ -262,7 +260,7 @@ void sub_801E8F8(u8 *selfArg, s32 arg1)
  * is materialized via the same `mov #N; neg` opaque-asm idiom as
  * `UPDATE_ICON_FRAME_NIBBLE` (src/menus/pause_menu_pages_init.c) instead of
  * a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
-void sub_801E950(u8 *self, u32 arg1)
+void SetScaledSpritePriority(u8 *self, u32 arg1)
 {
     MATCH_HOLD_REG(s32, mask1, r2);
     MATCH_HOLD_REG(u32, shifted, r1);
@@ -279,21 +277,20 @@ void sub_801E950(u8 *self, u32 arg1)
     self[0x15] = mask2;
 }
 
-/* Writes the graphics-package "self" scratch buffer's +0x00/+0x04 pair
- * verbatim (a second, narrower constructor alongside `InitBgSetup`'s
- * five-argument one - same buffer, different subset of fields). */
-void sub_801E964(u8 *self, u32 arg1, u32 arg2)
+/* UNUSED (see SetScaledSpriteColor). Sets the sprite box's position
+ * (`x`/`y`, +0x00/+0x04). */
+void SetScaledSpritePos(u8 *self, u32 arg1, u32 arg2)
 {
     *(u32 *)(self + 0) = arg1;
     *(u32 *)(self + 4) = arg2;
 }
 
-/* Clears bits 4-9 (masked via -0x11/-0x21/0x3f, i.e. a combined
- * ~0x10 & ~0x20 & 0x3f = 0xf) of the same scratch buffer's byte +0x11,
- * and clears bit 2 (mask -0xd, i.e. ~4) of byte +0x15 - two independent
- * "reset before rebuild" bitfield clears on the same buffer
- * `sub_801E8F8`/`sub_801E950` write. */
-void sub_801E96C(u8 *self)
+/* UNUSED (see SetScaledSpriteColor). Resets the OAM template's
+ * attributes FitScaledSprite doesn't own: the object mode, mosaic, color
+ * mode and shape bits of attr0 (byte +0x11 masked with ~0xc, ~0x10,
+ * ~0x20 and 0x3f, i.e. bits 10-15 cleared) and the priority (byte +0x15
+ * masked with ~0xc). */
+void ResetScaledSpriteAttrs(u8 *self)
 {
     MATCH_HOLD_REG(s32, mask, r3) = -0xd;
     MATCH_HOLD_REG(s32, b, r1);
@@ -310,7 +307,7 @@ void sub_801E96C(u8 *self)
 }
 /* This object is the last thing linked before the still-raw
  * asm/code_3_2_17_1e990.s continuation, which starts at a 4-byte-aligned
- * ROM address (0x0801E990) two bytes past sub_801E96C's own end
+ * ROM address (0x0801E990) two bytes past ResetScaledSpriteAttrs's own end
  * (0x0801E98E) - the ROM pads that gap with zero bytes (a real
  * `.align 2, 0` in the original assembly), not this compiler's default
  * Thumb NOP-fill (`0x46C0`) for an implicit end-of-object alignment. See

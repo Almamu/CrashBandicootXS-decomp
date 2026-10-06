@@ -392,7 +392,7 @@ formats docs/audio.md describes for music:
 | `084C3B28` | 0x160 | instrument pointer table (88 entries) |
 | `084C3C88` | 0x97D30 | 87 signed 8-bit PCM samples, byte-aligned (+3 B pad) |
 | `0855B9B8` | 0x2C0 | sample table: 88 x `{u8 *data, u32 length}`, entry 0 empty |
-| `0855BC78` | 0x3C | song header (0x1C: volume 0x100, the instrument and sample tables), a 1-entry NULL child-type array, and the handler type (`init`/`unknown`/`play` = `GaxFxChannelInit`/`sub_803A228`/`GaxFxChannelPlay`, 0x48-byte instances) |
+| `0855BC78` | 0x3C | song header (0x1C: volume 0x100, the instrument and sample tables), a 1-entry NULL child-type array, and the handler type (`init`/`unknown`/`play` = `GaxFxChannelInit`/`GaxFxChannelUnknown`/`GaxFxChannelPlay`, 0x48-byte instances) |
 
 The first reading (the "2 B pad + 0x20 B not yet modelled" and the
 "8-byte header" after the instruments) was off by one record: the 0x20
@@ -992,7 +992,7 @@ vtable shapes).
 | `087E4BEC` (`gBgLayerBaseVtable`) | 0x28 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBgLayerBase`, `InitBgLayerBase` | high | easy |
 | `087E4C14` (`gBgLayerVtable`) | 0x50 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitBgLayer`, `DestroyBgLayer`, `DestroyPooledBgLayer` | high | easy |
 | `087E4C64` (`gPooledBgLayerVtable`) | 0x50 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPooledBgLayer`, `InitPooledBgLayer` | high | easy |
-| `087E4CB4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802710C`, `InitHudPart` | high | easy |
+| `087E4CB4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyHudPart`, `InitHudPart` | high | easy |
 | `087E4D1C` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLargeFont`, `DestroyLargeFont` | high | easy |
 | `087E4D64` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitSmallFont`, `DestroySmallFont` | high | easy |
 | `087E4DAC` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitSmallFont`, `InitLargeFont`, `DestroyFont` +3 | high | easy |

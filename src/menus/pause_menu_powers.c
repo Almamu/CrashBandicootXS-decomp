@@ -11,7 +11,7 @@
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Shows (`DrawSpriteWithOffset(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
- * matching bit set in `self->field_10`'s byte at offset 2 (a flag byte
+ * matching bit set in `self->progress`'s byte at offset 2 (a flag byte
  * on the row-stats handle RefreshSaveSlotSummaries/SummarizeProgress - src/save/
  * save_menu_ui.c - already fill; bits 0x20/0x80/0x40/0x10, one per
  * slot). If *none* of the four bits were set, draws a fallback
@@ -21,7 +21,7 @@ void DrawPausePowersPage(struct pause_menu *self)
     s32 none = 1;
 
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
         MATCH_HOLD_REG(s32, mask, r0) = 0x20;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
@@ -32,7 +32,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
         MATCH_HOLD_REG(s32, mask, r0) = 0x80;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
@@ -43,7 +43,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
         MATCH_HOLD_REG(s32, mask, r0) = 0x40;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
@@ -54,7 +54,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->field_10 + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
         MATCH_HOLD_REG(s32, mask, r0) = 0x10;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;

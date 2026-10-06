@@ -22,10 +22,10 @@ struct GaxSongHeader {
     u8 *workBuf;  /* 0x00 - caller-supplied work RAM */
     u32 workSize; /* 0x04 - its size (GAX2_estimate computes the requirement) */
     u16 mixRate;  /* 0x08 - 0xffff = the song's default */
-    u16 field_0a; /* 0x0a - copied to GaxPlayerState.field_180 each tick */
-    u16 flags;    /* 0x0c */
-    u16 numSfx;   /* 0x0e - number of SFX voices, 0xffff = the song's default */
-    u16 volume;   /* 0x10 - master volume, clamped to 0xff; 0xffff = 0xff */
+    u16 filter; /* 0x0a - low-pass filter amount (0-0x55, 0 = off), copied to GaxPlayerState.filter each GAX_play */
+    u16 flags;  /* 0x0c */
+    u16 numSfx; /* 0x0e - number of SFX voices, 0xffff = the song's default */
+    u16 volume; /* 0x10 - master volume, clamped to 0xff; 0xffff = 0xff */
     u8 pad_12[0x1a];
     struct GaxHandlerType **sfxTypes; /* 0x2c - handler types of the SFX voices, or NULL */
     /* 0x30 - the music player's handler layout; SFX voices follow its `count` handlers */

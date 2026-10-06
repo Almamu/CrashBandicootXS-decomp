@@ -49,7 +49,7 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
   flushes VRAM DMA, clears `PLTT`, and writes `field_c8`/`field_cc`/
   `field_d0` to `REG_BLDCNT`/`REG_BLDY`/`REG_DISPCNT` - the same shape
   `src/menus/power_dialog_draw.c`'s already-matched `CommitPowerDialogFrame` uses for a
-  *different*, smaller per-widget object (`struct sub_8006700_actor`),
+  *different*, smaller per-widget object (`struct power_dialog`),
   confirming this is a second, larger "self" object still not fully
   reconciled (built by the still-raw `RunPauseMenu`/`InitPauseMenu`,
   GitHub issue #7). The final `field_d0` read+store needed an
@@ -114,7 +114,7 @@ of it.
 - **`PowerDialogLoop`** (`src/menus/power_dialog_loop.c`, real bytes
   wrapped `.if NON_MATCHING == 0` in `asm/code_3_1_10_13.s`) - the
   settings-row confirm-cursor stepper on the small per-widget object
-  `src/menus/power_dialog_draw.c` already names `struct sub_8006700_actor`
+  `src/menus/power_dialog_draw.c` already names `struct power_dialog`
   (redeclared locally here per this project's minimal-local-type
   convention for a type already anchored in another translation unit).
   Steps `field_24`'s low 5 bits down to 0 one at a time (redrawing/
@@ -202,7 +202,7 @@ untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
 
 - **`InitPowerDialog`** (`src/menus/power_dialog.c`) - the two-string
   dialog/message-box object constructor docs/rom_map.md's "Correction"
-  section already traced: builds a small `struct sub_8006700_actor`
+  section already traced: builds a small `struct power_dialog`
   (the same object `src/menus/power_dialog_draw.c`/`power_dialog_loop.c`
   already name, allocated by the caller at exactly its own `0x2c`-byte
   size) plus one `struct settings_icon_actor`-shaped background icon

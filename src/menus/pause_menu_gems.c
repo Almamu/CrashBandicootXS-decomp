@@ -39,7 +39,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
     }
 
 /* Shows whichever of `icons9c[1..4]` has a matching bit set in
- * `self->field_10`'s flag byte (bits 1/4/8/2 - a different bit set
+ * `self->progress`'s flag byte (bits 1/4/8/2 - a different bit set
  * than DrawPausePowersPage's, same handle), always shows `icons9c[0]`
  * unconditionally, then draws a fixed "x/28"-shaped fraction readout:
  * first `gPauseGemIconPos[0]`'s position (offset by -0x14/-4) with
@@ -49,13 +49,13 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * for this same icon row). */
 void DrawPauseGemsPage(struct pause_menu *self)
 {
-    if (((u8 *)self->field_10)[2] & 1)
+    if (((u8 *)self->progress)[2] & 1)
         DrawSpriteWithOffset((struct actor *)self->icons9c[1], 0, 0);
-    if (((u8 *)self->field_10)[2] & 4)
+    if (((u8 *)self->progress)[2] & 4)
         DrawSpriteWithOffset((struct actor *)self->icons9c[2], 0, 0);
-    if (((u8 *)self->field_10)[2] & 8)
+    if (((u8 *)self->progress)[2] & 8)
         DrawSpriteWithOffset((struct actor *)self->icons9c[3], 0, 0);
-    if (((u8 *)self->field_10)[2] & 2)
+    if (((u8 *)self->progress)[2] & 2)
         DrawSpriteWithOffset((struct actor *)self->icons9c[4], 0, 0);
     DrawSpriteWithOffset((struct actor *)self->icons9c[0], 0, 0);
 

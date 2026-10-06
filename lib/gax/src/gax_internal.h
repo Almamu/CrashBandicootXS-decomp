@@ -39,20 +39,26 @@ struct GaxPlayerState {
     /* 0x40 - mix the SFX voices before the echo pass, so they get echo too */
     u8 fxEcho;
     /* 0x41 - set by GAX2_jingle; skips the song's channels for one mixer tick */
-    u8 field_41;
-    u8 field_42; /* 0x42 */
+    u8 skipSongChannels;
+    /* 0x42 - mixCode holds the whole resampler (76 words, with its third,
+     * paired-sample loop) rather than the first 55: set when the song's
+     * GaxSongData.field_1b or GaxSongHeader.flags bit 5 is (GAX2_init) */
+    u8 fullResampler;
     /* 0x43 - GAX_play ran since the last GAX_irq ("GAX_PLAY HAS NOT FINISHED" check) */
     u8 playDone;
     void *mixCode; /* 0x44 - IWRAM copy of the ARM resampler gGaxArmResample (GaxChannelMix) */
-    /* 0x48/0x9c - IWRAM copies of the ARM routines gGaxArmDownmix and
-     * gGaxArmEcho (see gax_unknownc_play.c), entered in place via
+    /* 0x48/0x9c/0x17c - IWRAM copies of the ARM routines gGaxArmDownmix,
+     * gGaxArmEcho and (only with GaxSongHeader.flags bit 2, else NULL)
+     * gGaxArmFilter (see gax_unknownc_play.c), entered in place via
      * GAX_CALL_ARM. */
-    u32 dspCode48[21]; /* 0x48 */
-    u32 dspCode9c[56]; /* 0x9c */
-    void *dspFn17c;    /* 0x17c - optional ARM routine, entered via GAX_CALL_ARM */
-    u32 field_180;     /* 0x180 - clamped to <= 0x55 each tick */
-    u8 *workBuf;       /* 0x184 - the caller-supplied work buffer channel tables are carved from */
-    u32 workSize;      /* 0x188 */
+    u32 downmixCode[21]; /* 0x48 */
+    u32 echoCode[56];    /* 0x9c */
+    void *filterCode;
+    /* 0x180 - low-pass filter amount, GaxSongHeader.filter clamped to 0x55
+     * (GaxMixerPlay); 0 = off */
+    u32 filter;
+    u8 *workBuf;  /* 0x184 - the caller-supplied work buffer channel tables are carved from */
+    u32 workSize; /* 0x188 */
 };
 
 /* ---- GAX2 sound handlers (docs/audio.md's GAX2_SoundHandler types) ----
@@ -77,7 +83,7 @@ struct GaxEnvelope {
 
 /* One of an instrument's 4 wave rows (28 bytes). */
 struct GaxInstrumentRow {
-    u8 field_00; /* 0x00 - nonzero = sweep enabled */
+    u8 sweep;    /* 0x00 - nonzero = sweep mode; 0 = loop between sweepMin and sweepMax */
     u8 pingPong; /* 0x01 - sweep bounces instead of wrapping */
     u8 pad_02[2];
     s32 start;     /* 0x04 - sample start position */
@@ -92,9 +98,10 @@ struct GaxInstrumentRow {
 /* One step of an instrument's sequence (GaxChannelStepInstrumentSeq): an optional note
  * and wave-row change plus two effect commands (`cmd << 8 | param`). */
 struct GaxInstrumentSeqEntry {
-    u8 note; /* 0 = none */
-    u8 field_01;
-    u8 wave; /* 1-based rows[] index, 0 = none */
+    u8 note;       /* 0 = none */
+    u8 fixedPitch; /* the note ignores pitch slides and the order's transpose
+                    * (tools/gax_audio.py's `dont_use_note_pitch`) */
+    u8 wave;       /* 1-based rows[] index, 0 = none */
     u8 pad_03;
     u16 fx[2];
 };
@@ -197,10 +204,12 @@ struct GaxInfoHandler {
     u16 speed;                       /* 0x18 - ticks per row; a nonzero high byte
                                       * alternates with the low byte every row */
     u8 playing;                      /* 0x1a - 0 = the song is stopped (no rows advance) */
-    u8 field_1b;                     /* 0x1b */
-    u8 tickCounter;                  /* 0x1c */
-    u8 newRow;                       /* 0x1d - set on the tick a new row starts */
-    u8 newOrder;                     /* 0x1e - set when the order position changed */
+    /* 0x1b - while nonzero (counted down each tick) every channel drops
+     * its instrument: GaxInfoRestart's 2 silent ticks */
+    u8 muteTicks;
+    u8 tickCounter; /* 0x1c */
+    u8 newRow;      /* 0x1d - set on the tick a new row starts */
+    u8 newOrder;    /* 0x1e - set when the order position changed */
     /* 0x1f - master volume, from GaxSongHeader.volume each GAX_play (0xff = full) */
     u8 volume;
     /* 0x20 - stop instead of looping after the last order (jingles; GAX2_init flag bit 3) */
@@ -209,7 +218,7 @@ struct GaxInfoHandler {
     /* 0x22 - pattern-break effect (cmd 13): jump to the pattern's end on the next row */
     u8 patternBreak;
     u8 pad_23;
-    u16 field_24; /* 0x24 */
+    u16 breakRow; /* 0x24 - the pattern-break effect's (cmd 13) parameter; stored, never read */
 };
 
 /* The top-level mixer handler, `handlers[0]` of a GAX2 player (the
@@ -249,7 +258,7 @@ extern struct GaxPlayerState *gGaxPlayerState;
 /* The output format every handler's `format` points at (built by
  * GAX2_init right after the player's handler array). */
 struct GaxChannelFormat {
-    u8 field_00; /* 0x00 - 8 */
+    u8 bits;     /* 0x00 - bits per output sample, 8 */
     u8 channels; /* 0x01 - 1 */
     u16 mixRate; /* 0x02 - Hz */
     u16 frames;  /* 0x04 - samples per video frame (mixRate * 1000 / 59727) */
@@ -262,13 +271,15 @@ struct GaxChannelState {
     struct GaxHandlerType *type;     /* 0x00 */
     struct GaxChannelFormat *format; /* 0x04 */
     struct GaxHandler **children;    /* 0x08 - [0] is the GaxInfoHandler */
-    u8 field_0c;                     /* 0x0c */
-    u8 field_0d;                     /* 0x0d */
+    u8 muted;                        /* 0x0c - nonzero: not mixed (GaxChannelPlay) */
+    /* 0x0d - set by GaxMixerPlay when no channel before this one produced
+     * output: GaxChannelMix then stores into the buffer instead of adding */
+    u8 isFirst;
     /* 0x0e - first byte of the pattern: nonzero = nothing to decode */
     u8 emptyPattern;
     u8 rowSkip;    /* 0x0f - rows left to skip in the pattern stream */
     u8 row;        /* 0x10 - instrument->rows[] index, 0-3 */
-    s8 field_11;   /* 0x11 */
+    s8 direction;  /* 0x11 - > 0 forward, else backward (ping-pong loops flip it) */
     u8 sweepOn;    /* 0x12 */
     s8 sweepDir;   /* 0x13 - +1/-1 */
     u8 sweepTimer; /* 0x14 */
@@ -283,7 +294,7 @@ struct GaxChannelState {
     u8 cutDelay;     /* 0x1e */
     u8 cutTimer;     /* 0x1f */
     u8 seqLoopCount; /* 0x20 - sequence loop counter (cmds 5/6) */
-    u8 field_21;     /* 0x21 */
+    u8 fixedPitch;   /* 0x21 - from the instrument sequence entry */
     /* 0x22 - nonzero once the note is released (envelope leaves sustain/loop) */
     u8 released;
     u8 vibratoDelay; /* 0x23 - ticks left before the vibrato phase starts advancing */
@@ -295,7 +306,7 @@ struct GaxChannelState {
     s16 note;             /* 0x2a - 0x8AD0 = no note */
     s16 noteStep;         /* 0x2c */
     /* 0x2e - added to the note when mixing (GaxChannelTickVibrato's vibrato offset) */
-    s16 field_2e;
+    s16 vibratoOffset;
     s16 slideTarget;                         /* 0x30 */
     s16 slideRate;                           /* 0x32 - 0 = no portamento */
     s16 retriggerDelay;                      /* 0x34 - E-Dx note delay countdown */
@@ -311,7 +322,7 @@ struct GaxChannelState {
     /* 0x50 - note/instrument held for a delayed retrigger */
     u8 delayedNote;
     u8 delayedInstrument; /* 0x51 */
-    u8 field_52;          /* 0x52 */
+    u8 mixMode;           /* 0x52 - the resampler mode used to add a forward sample, always 1 */
     u8 index;             /* 0x53 - channel number (GaxCreateHandlers) */
 };
 
@@ -374,22 +385,22 @@ extern void GaxFxChannelInit(void *self);
 extern u8 GaxFxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg);
 /* gax_sound_handler_channel.c, gax_sound_handler_channel_init.c,
  * gax_sound_handler_channel_play.c: the Channel type */
-extern void nullsub_40(void);
+extern void GaxChannelUnknown(void);
 extern void GaxChannelInit(struct GaxChannelState *self);
 extern u8 GaxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg);
 /* gax_sound_handler_info.c: the Info type */
 extern void GaxInfoResetPosition(void *self);
 extern void GaxInfoInit(void *self);
-extern void sub_803941C(void *self);
-extern void nullsub_39(void);
+extern void GaxInfoRestart(void *self);
+extern void GaxInfoUnknown(void);
 extern u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg);
 /* gax_sound_handler_unknownc.c, gax_unknownc_play.c: the mixer
  * ("UnknownC") type */
-extern void nullsub_41(void);
+extern void GaxFxChannelUnknown(void);
 extern void GaxMixerInit(void *self);
-extern void nullsub_42(void);
+extern void GaxMixerUnknown(void);
 extern void GaxMixerApplyEcho(struct UnknownC *self, u32 *buf);
-extern void sub_803A2C8(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count);
+extern void GaxMixerApplyFilter(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count);
 extern u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2);
 
 /* ---- The engine's data ---- */
@@ -412,17 +423,17 @@ extern const u32 gGaxPeriodTable[0xEF4];
 extern const s8 gGaxVibratoTable[64];
 
 /* The raw ARM routines at the end of gax_unknownc_play.c, which GAX2_init
- * copies into the player state (dspCode48/dspCode9c/dspFn17c/mixCode),
+ * copies into the player state (downmixCode/echoCode/filterCode/mixCode),
  * and the four instructions of the resampler that GaxChannelMix patches
  * in the copy (by their offset from gGaxArmResample). */
 extern const u32 gGaxArmDownmix[];
-extern const u32 gStaticData_0803A67C[];
+extern const u32 gGaxArmFilter[];
 extern const u32 gGaxArmEcho[];
 extern const u32 gGaxArmResample[];
-extern const u32 gStaticData_0803A874[];
-extern const u32 gStaticData_0803A884[];
-extern const u32 gStaticData_0803A8B4[];
-extern const u32 gStaticData_0803A8C4[];
+extern const u32 gGaxArmResampleStoreStep[];
+extern const u32 gGaxArmResampleStoreEndTest[];
+extern const u32 gGaxArmResampleMixStep[];
+extern const u32 gGaxArmResampleMixEndTest[];
 
 /* data/data.s: the handler layout GAX2_init and GAX2_estimate use when the
  * song header names none. */

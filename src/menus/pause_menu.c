@@ -129,13 +129,13 @@ s32 RunPauseMenu(void)
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
  * (allocated by the caller, `RunPauseMenu`, as a fresh 0xd4-byte
  * `struct pause_menu`) gets `InitBgSetup` init, a local
- * BLDCNT/BLDY/DISPCNT setup (`field_c8`/`field_cc`/`field_d0`, the same
+ * BLDCNT/BLDY/DISPCNT setup (`bldcnt`/`bldy`/`dispcnt`, the same
  * fields `CommitPauseMenuFrame` applies), `LoadGraphicsPackage`, a row-stats
  * handle from `gLevelState`, then hands off to `InitPauseMenuInfo` to
  * build the results sub-widgets. Afterwards builds one more icon (the
- * row-cursor/highlight icon at `field_c0`) directly, seeds the settings-
- * row bookkeeping fields (`field_14`/`field_18`/`field_1c`/`field_20`/
- * `field_24`/`field_28`), and applies BG0CNT/BG0HOFS before returning
+ * blinking eyelids at `blinkEyes`) directly, seeds the settings-
+ * row bookkeeping fields (`rows`/`cursor`/`rowCount`/`rowSpacing`/
+ * `page`/`pageTimer`), and applies BG0CNT/BG0HOFS before returning
  * `self` unchanged. */
 struct pause_menu *InitPauseMenu(struct pause_menu *self)
 {
@@ -144,15 +144,15 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
     InitBgSetup(&self->bg, 0, 0x1f, 0, 3);
 
     {
-        MATCH_HOLD_REG(u32 *, c8Addr, r4) = &self->field_c8;
+        MATCH_HOLD_REG(u32 *, bldcntShadow, r4) = &self->bldcnt;
         MATCH_HOLD_REG(s32, orTen, r5);
         MATCH_HOLD_REG(s32, one, r3);
         u8 v;
 
         zero = 0;
-        *c8Addr = zero;
+        *bldcntShadow = zero;
         v = 0xc0;
-        v |= *(u8 *)c8Addr;
+        v |= *(u8 *)bldcntShadow;
         v |= 0x20;
         one = 1;
         v |= one;
@@ -161,10 +161,10 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         v |= 8;
         orTen = 0x10;
         v |= orTen;
-        *(u8 *)c8Addr = v;
+        *(u8 *)bldcntShadow = v;
 
         {
-            MATCH_HOLD_REG(u8 *, addr, r2) = &self->field_cc;
+            MATCH_HOLD_REG(u8 *, addr, r2) = &self->bldy;
             MATCH_HOLD_REG(s32, mask, r0) = -0x20;
             MATCH_HOLD_REG(u8, byte, r1) = *addr;
             mask &= byte;
@@ -173,7 +173,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
 
             {
                 MATCH_HOLD_REG(u32, bldcntAddr, r1) = REG_ADDR_BLDCNT;
-                MATCH_HOLD_REG(u32, bldcntVal, r0) = *c8Addr;
+                MATCH_HOLD_REG(u32, bldcntVal, r0) = *bldcntShadow;
                 MATCH_HOLD_REG(u32, bldyVal, r0);
 
                 // clang-format off
@@ -188,7 +188,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         }
 
         {
-            MATCH_HOLD_REG(void *, addr, r2) = &self->field_d0;
+            MATCH_HOLD_REG(void *, addr, r2) = &self->dispcnt;
             MATCH_HOLD_REG(s32, v2, r0);
             MATCH_HOLD_REG(s32, r1v, r1);
 
@@ -210,26 +210,26 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         }
 
         LoadGraphicsPackage(&self->bg, (void *)&gPauseMenuBg);
-        self->field_10 = PackSaveData(gLevelState);
+        self->progress = PackSaveData(gLevelState);
         InitPauseMenuInfo(self);
 
         {
-            MATCH_HOLD_REG(struct settings_icon_actor **, field_c0_addr, r4) =
-                (struct settings_icon_actor **)((u8 *)c8Addr - 8);
+            MATCH_HOLD_REG(struct settings_icon_actor **, blinkEyesAddr, r4) =
+                (struct settings_icon_actor **)((u8 *)bldcntShadow - 8);
             struct settings_icon_actor *icon =
                 (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
 
-            *field_c0_addr = icon;
+            *blinkEyesAddr = icon;
             {
                 MATCH_HOLD_REG(u8 *, base, r1) = SPRITE_BANK_BASE;
                 // clang-format off
                 asm volatile("mov r3, #0x8a\n\tlsl r3, r3, #2\n\tadd %0, %0, r3" : "+r" (base) :: "r3");
                 // clang-format on
-                icon->field_20 = (void **)base;
+                icon->anim = (void **)base;
             }
             {
                 MATCH_HOLD_REG(s32, _ret, r0) = GetSpriteAnimPaletteSlot((struct actor *)icon);
-                MATCH_HOLD_REG(u8 *, _addr, r2) = &(*field_c0_addr)->field_29;
+                MATCH_HOLD_REG(u8 *, _addr, r2) = &(*blinkEyesAddr)->palette;
                 MATCH_HOLD_REG(s32, _mask, r1);
                 MATCH_HOLD_REG(u8, _byte, r3);
                 _mask = 0xf;
@@ -241,17 +241,17 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
                 *_addr = _mask;
             }
             {
-                struct actor *base = &(*field_c0_addr)->base;
+                struct actor *base = &(*blinkEyesAddr)->base;
                 base->x = 0xee << 7;
                 base->y = 0xbc << 7;
             }
         }
     }
 
-    self->field_c4 = (u16)RandRange(0x78) + 0x78;
+    self->blinkTimer = (u16)RandRange(0x78) + 0x78;
 
-    self->field_14 = gPauseMenuRows;
-    self->field_18 = zero;
+    self->rows = gPauseMenuRows;
+    self->cursor = zero;
     {
         s32 v;
         if (gLevelState->timeTrial != 0) {
@@ -260,11 +260,11 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
         } else {
             v = 4;
         }
-        self->field_1c = v;
+        self->rowCount = v;
     }
-    self->field_20 = 0x10;
-    self->field_24 = 0;
-    self->field_28 = 0xb4;
+    self->rowSpacing = 0x10;
+    self->page = 0;
+    self->pageTimer = 0xb4;
 
     REG_BG0CNT = GetBgSetupControl(&self->bg);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
@@ -290,8 +290,8 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
         } \
     } while (0)
 
-/* Refreshes every icon field/array the results screen owns (field_c0,
- * field_bc, iconsB0[3], icons9c[5], icons8c[4], field_88 - in that
+/* Refreshes every icon field/array the results screen owns (blinkEyes,
+ * trialIcon, iconsB0[3], icons9c[5], icons8c[4], crystalIcon - in that
  * order) via `REFRESH_ICON_WIDGET` above, then frees `self` if bit 0 of
  * `flags` is set - the same trailing shape DestroyPowerDialog uses for its
  * own single-icon `arg0`. */
@@ -301,16 +301,16 @@ void DestroyPauseMenu(struct pause_menu *selfArg, u32 flagsArg)
     MATCH_HOLD_REG(u32, flags, sl) = flagsArg;
     struct settings_icon_actor **icons9cBase;
     MATCH_HOLD_REG(struct settings_icon_actor **, icons8cBase, r8) = NULL;
-    MATCH_HOLD_REG(struct settings_icon_actor **, field88Addr, r9) = NULL;
+    MATCH_HOLD_REG(struct settings_icon_actor **, crystalIconAddr, r9) = NULL;
     struct settings_icon_actor **p;
     s32 i;
 
-    REFRESH_ICON_WIDGET(self->field_c0);
-    REFRESH_ICON_WIDGET(self->field_bc);
+    REFRESH_ICON_WIDGET(self->blinkEyes);
+    REFRESH_ICON_WIDGET(self->trialIcon);
 
     icons9cBase = self->icons9c;
     icons8cBase = self->icons8c;
-    field88Addr = &self->field_88;
+    crystalIconAddr = &self->crystalIcon;
     p = self->iconsB0;
 
     for (i = 2; i >= 0; i--) {
@@ -328,7 +328,7 @@ void DestroyPauseMenu(struct pause_menu *selfArg, u32 flagsArg)
         p++;
     }
 
-    REFRESH_ICON_WIDGET(*field88Addr);
+    REFRESH_ICON_WIDGET(*crystalIconAddr);
 
     if (flags & 1) {
         OperatorDelete(self);

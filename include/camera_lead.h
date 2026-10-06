@@ -36,13 +36,13 @@ struct follow_child {
     u8 unk_0E[0x0A];
     const struct vtable_slot *vtable; // 0x18 - gCameraLeadVtable
     u8 unk_1C[8];
-    u8 unk_24; // 0x24
+    u8 moveAxes; // 0x24
     u8 unk_25[0x0D];
     u8 unk_32; // 0x32
     u8 unk_33[0x2D];
-    s32 unk_60; // 0x60 - copied from the player every frame
+    s32 speedX; // 0x60 - copied from the player every frame
     u8 unk_64[4];
-    u8 unk_68; // 0x68
+    u8 hitAxes; // 0x68
     u8 unk_69[0x0F];
     s32 targetOffset; // 0x78 - Q8 x offset from the player, 0xA00-0x3200
     s32 offset;       // 0x7C - eases toward targetOffset

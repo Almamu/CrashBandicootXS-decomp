@@ -15,7 +15,7 @@ asm(".set memcpy, MemCopy32");
  *
  * The ROM disassembly shows two extra labels, `sub_803A318` and
  * `sub_803A608`, sitting right at `GAX_CALL_ARM`'s return point inside
- * `sub_803A2C8`/`GaxMixFrame` (the trailing `nop` and the shared
+ * `GaxMixerApplyFilter`/`GaxMixFrame` (the trailing `nop` and the shared
  * epilogue). Neither is ever called from anywhere in the ROM - they're
  * disassembler artifacts of the hand-computed return address, not real
  * functions, and disappear now that both are plain C.
@@ -32,19 +32,19 @@ struct GaxSongInfo3 {
 
 struct GaxSongInfo2 {
     u8 pad_00[0x18];
-    struct GaxSongInfo3 *field_18; /* 0x18 */
+    struct GaxSongInfo3 *song; /* 0x18 - GaxHandlerType.data.song */
 };
 
 struct GaxSongInfo1 {
     u8 pad_00[8];
-    struct GaxSongInfo2 *field_08; /* 0x08 */
+    struct GaxSongInfo2 *infoType; /* 0x08 - GaxHandlerLayout.types[1], the Info type */
 };
 
 struct GaxSong {
     u8 pad_00[0xc];
     u16 flags; /* 0x0c */
     u8 pad_0e[0x30 - 0xe];
-    struct GaxSongInfo1 *field_30; /* 0x30 */
+    struct GaxSongInfo1 *layout; /* 0x30 - GaxSongHeader.layout */
 };
 
 struct GaxVoice {
@@ -54,7 +54,7 @@ struct GaxVoice {
 
 struct GaxChanInfo {
     u8 pad_00[0x1f];
-    u8 field_1f; /* 0x1f */
+    u8 volume; /* 0x1f - GaxInfoHandler.volume */
 };
 
 struct GaxChannel {
@@ -85,8 +85,8 @@ struct UnknownCChild {
 };
 
 struct UnknownCCounts {
-    u32 primary;  /* 0x00 */
-    u32 field_04; /* 0x04 */
+    u32 primary; /* 0x00 */
+    u32 echo;    /* 0x04 - nonzero: run the echo pass (GAX2_init's fxEcho test too) */
 };
 
 struct UnknownCHdr {
@@ -102,16 +102,16 @@ struct UnknownC {
     struct UnknownCFormat *format;   /* 0x04 */
     struct UnknownCChild **children; /* 0x08 */
     u32 pos;                         /* 0x0c */
-    u32 field_10;                    /* 0x10 */
+    u32 mixBuf;                      /* 0x10 - GaxMixerHandler.mixBuf */
     u32 extraChildren;               /* 0x14 */
 };
 
 struct GaxWorkItem5 {
     u32 bytes;
     u32 *buf;
-    u32 field_20;
-    u32 field_28;
-    u32 field_24;
+    u32 echoBuf;
+    u32 echoLen;
+    u32 echoTaps;
 };
 
 struct GaxWorkItem7 {
@@ -119,19 +119,19 @@ struct GaxWorkItem7 {
     u32 bytes;
     u32 clamp;
     u32 count;
-    u32 field_20;
-    u32 field_28;
-    u32 field_24;
+    u32 echoBuf;
+    u32 echoLen;
+    u32 echoTaps;
 };
 
 struct GaxWorkItem4 {
-    u32 field_10;
+    u32 mixBuf;
     u32 *buf;
     u32 samples;
     u32 step;
 };
 
-/* Runs `gGaxPlayerState+0x9c`'s ARM routine over a 5-word work item
+/* Runs `echoCode` (the IWRAM copy of gGaxArmEcho) over a 5-word work item
  * built from the buffer size and three player-state fields. */
 void GaxMixerApplyEcho(struct UnknownC *self, u32 *buf)
 {
@@ -142,13 +142,16 @@ void GaxMixerApplyEcho(struct UnknownC *self, u32 *buf)
     void *arg;
 
     arg = &item;
-    GAX_CALL_ARM(gGaxPlayerState->dspCode9c, arg);
+    GAX_CALL_ARM(gGaxPlayerState->echoCode, arg);
 }
 
 /* Same shape as `GaxMixerApplyEcho` (a 7-word work item this time, with an
- * extra `0x55 - clampArg` word) through `gGaxPlayerState+0x17c`'s
- * optional ARM routine. */
-void sub_803A2C8(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count)
+ * extra `0x55 - clampArg` word) through `filterCode`, the IWRAM copy of
+ * the ARM low-pass filter `gGaxArmFilter`: two cascaded one-pole stages
+ * over the mixed buffer, with a coefficient of `0x334 * (0x55 - filter)
+ * >> 8`, so a larger `filter` (at most 0x55) cuts more. The routine is
+ * followed by its "FILT" tag. */
+void GaxMixerApplyFilter(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count)
 {
     u32 bytes = self->format->frames * self->format->channels * 2;
     struct GaxPlayerState *st = gGaxPlayerState;
@@ -159,7 +162,7 @@ void sub_803A2C8(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count)
     void *arg;
 
     arg = &item;
-    GAX_CALL_ARM(gGaxPlayerState->dspFn17c, arg);
+    GAX_CALL_ARM(gGaxPlayerState->filterCode, arg);
 }
 
 /* Zero-fills `format->frames * format->channels` halfwords of `buf`,
@@ -183,29 +186,29 @@ void sub_803A2C8(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count)
     }
 
 /* UnknownC type's `play_fn`: plays the primary children (unless
- * `gGaxPlayerState+0x41` is set), then the extra children either
- * before or after the `GaxMixerApplyEcho`/`sub_803A2C8` DSP passes depending
- * on `gGaxPlayerState+0x40`, zero-filling `buf` first whenever nothing
+ * `skipSongChannels` is set), then the extra children either
+ * before or after the `GaxMixerApplyEcho`/`GaxMixerApplyFilter` DSP passes depending
+ * on `fxEcho`, zero-filling `buf` first whenever nothing
  * has produced output yet. Returns whether anything did. */
 u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2)
 {
     u8 result = 0;
     u32 i;
 
-    if (gGaxPlayerState->field_41 == 0) {
+    if (gGaxPlayerState->skipSongChannels == 0) {
         for (i = 0; i < self->hdr->counts->primary; i++)
             UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
     }
     if (gGaxPlayerState->fxEcho != 0) {
         if (result == 0) {
             struct GaxSong *song = gGaxPlayerState->songPtr;
-            if (song->field_30->field_08->field_18->field_1b != 0 || (song->flags & 0x20))
+            if (song->layout->infoType->song->field_1b != 0 || (song->flags & 0x20))
                 UNKNOWNC_CLEAR(self, buf);
         }
         for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)
             UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
     }
-    if (self->hdr->counts->field_04 != 0) {
+    if (self->hdr->counts->echo != 0) {
         u8 allIdle;
         struct GaxChannel *chan;
 
@@ -213,7 +216,7 @@ u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2)
             UNKNOWNC_CLEAR(self, buf);
         allIdle = 1;
         chan = gGaxPlayerState->channels[gGaxPlayerState->curChannelIdx];
-        if (chan->info->field_1f != 0) {
+        if (chan->info->volume != 0) {
             /* Walks `chan->voices[]` by advancing `chan` itself one
              * pointer at a time - this is what keeps the ROM's
              * `ldr rX, [chan, #0xc]` addressing inside the loop. */
@@ -226,37 +229,37 @@ u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2)
         if (allIdle == 0)
             GaxMixerApplyEcho(self, buf);
     }
-    if (gGaxPlayerState->field_41 == 0) {
+    if (gGaxPlayerState->skipSongChannels == 0) {
         for (i = self->hdr->counts->primary; i < self->hdr->childCount; i++)
             UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
     }
     {
-        u32 clamp = gGaxPlayerState->field_180;
+        u32 clamp = gGaxPlayerState->filter;
         if (clamp > 0x55)
             clamp = 0x55;
-        gGaxPlayerState->field_180 = clamp;
-        if (gGaxPlayerState->dspFn17c != NULL && clamp != 0)
-            sub_803A2C8(self, buf, clamp, self->hdr->childCount);
+        gGaxPlayerState->filter = clamp;
+        if (gGaxPlayerState->filterCode != NULL && clamp != 0)
+            GaxMixerApplyFilter(self, buf, clamp, self->hdr->childCount);
     }
     if (gGaxPlayerState->fxEcho == 0) {
         if (result == 0) {
             struct GaxSong *song = gGaxPlayerState->songPtr;
-            if (song->field_30->field_08->field_18->field_1b != 0 || (song->flags & 0x20))
+            if (song->layout->infoType->song->field_1b != 0 || (song->flags & 0x20))
                 UNKNOWNC_CLEAR(self, buf);
         }
         for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)
             UNKNOWNC_PLAY_CHILD(self, i, buf, arg2);
     }
-    gGaxPlayerState->field_41 = 0;
+    gGaxPlayerState->skipSongChannels = 0;
     return result;
 }
 
 /* Advances the mixer's position through its type's `play` (GaxMixerPlay,
  * into `mixBuf`); if that produced a block, hands a 4-word work item to
- * `gGaxPlayerState+0x48`'s ARM routine, otherwise zero-fills `buf` for
+ * `downmixCode` (the IWRAM copy of gGaxArmDownmix), otherwise zero-fills `buf` for
  * the block's length. Called by GAX_play with the mixer as a `struct
  * GaxMixerHandler`; the rest of this file still reads it through its
- * own `struct UnknownC` view (`hdr` is `type`, `field_10` is
+ * own `struct UnknownC` view (`hdr` is `type`, `mixBuf` is
  * `mixBuf`). */
 void GaxMixFrame(struct GaxMixerHandler *self, u32 *buf)
 {
@@ -272,14 +275,14 @@ void GaxMixFrame(struct GaxMixerHandler *self, u32 *buf)
     {
         u32 f10 = self->mixBuf;
         samples = self->format->frames * self->format->channels;
-        item.field_10 = f10;
+        item.mixBuf = f10;
     }
     item.buf = buf;
     item.samples = samples;
     item.step = step;
     if (self->type->play(self, (void *)self->mixBuf, self->pos++)) {
         void *arg = &item;
-        GAX_CALL_ARM(gGaxPlayerState->dspCode48, arg);
+        GAX_CALL_ARM(gGaxPlayerState->downmixCode, arg);
     } else {
         while (samples > 0) {
             *buf++ = 0;
@@ -300,7 +303,17 @@ void GaxMixFrame(struct GaxMixerHandler *self, u32 *buf)
  * report_units.py boundary lands on an address the frozen
  * expected/code_3.s disassembly actually labels (this raw span's own
  * start has no such label). The code copies of these at
- * `gGaxPlayerState+0x48`/`+0x9c` are what `GAX_CALL_ARM` enters. */
+ * `downmixCode`/`echoCode`/`filterCode` are what `GAX_CALL_ARM` enters.
+ *
+ * In ROM order: `gGaxArmDownmix` (16-bit mix to 8-bit output),
+ * `gGaxArmFilter` (the optional low-pass filter, see
+ * GaxMixerApplyFilter; two state words, then "FILT"), `gGaxArmEcho` (two
+ * state words, then "BART") and `gGaxArmResample`. GaxChannelMix patches
+ * four instructions of the resampler's copy: the sample-position step
+ * (`add`/`sub r2, r2, r8`, forward or backward playback) and the loop's
+ * end test (`blt`/`bgt`) of its store loop (the first channel to mix,
+ * `gGaxArmResampleStoreStep`/`StoreEndTest`) and of its add loop (the
+ * channels after it, `gGaxArmResampleMixStep`/`MixEndTest`). */
 // clang-format off
 asm(
         ".align 2, 0\n\t"
@@ -313,8 +326,8 @@ asm(
         ".byte 0x46, 0x65, 0xA0, 0xE1, 0x80, 0x00, 0x76, 0xE3, 0x7F, 0x60, 0xE0, 0xB3, 0x7F, 0x00, 0x56, 0xE3\n\t"
         ".byte 0x7F, 0x60, 0xA0, 0xC3, 0x01, 0x60, 0xC1, 0xE4, 0x02, 0x00, 0x51, 0xE1, 0xF5, 0xFF, 0xFF, 0xBA\n\t"
         ".byte 0x60, 0x00, 0xBD, 0xE8, 0x0E, 0x00, 0xA0, 0xE1, 0x10, 0xFF, 0x2F, 0xE1\n\t"
-        ".global gStaticData_0803A67C\n\t"
-        "gStaticData_0803A67C:\n\t"
+        ".global gGaxArmFilter\n\t"
+        "gGaxArmFilter:\n\t"
         ".byte 0xF0, 0x0F, 0x2D, 0xE9, 0x0C, 0x10, 0x90, 0xE5, 0x08, 0x70, 0x90, 0xE5, 0x04, 0x20, 0x90, 0xE5\n\t"
         ".byte 0x00, 0x00, 0x90, 0xE5, 0x98, 0x40, 0x8F, 0xE2, 0x04, 0x50, 0x94, 0xE5, 0x00, 0x40, 0x94, 0xE5\n\t"
         ".byte 0xCD, 0x8F, 0xA0, 0xE3, 0x98, 0x07, 0x07, 0xE0, 0x47, 0x74, 0xA0, 0xE1, 0x7F, 0x90, 0xA0, 0xE3\n\t"
@@ -353,19 +366,19 @@ asm(
         ".byte 0x0A, 0xF0, 0x8F, 0xE0, 0x20, 0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0xC4, 0x00, 0x00, 0x00\n\t"
         ".byte 0xC2, 0x65, 0xA0, 0xE1, 0xD6, 0x60, 0x90, 0xE1, 0x97, 0x06, 0x06, 0xE0, 0x46, 0x64, 0xA0, 0xE1\n\t"
         ".byte 0xB2, 0x60, 0xC1, 0xE0\n\t"
-        ".global gStaticData_0803A874\n\t"
-        "gStaticData_0803A874:\n\t"
+        ".global gGaxArmResampleStoreStep\n\t"
+        "gGaxArmResampleStoreStep:\n\t"
         ".byte 0x08, 0x20, 0x82, 0xE0, 0x04, 0x00, 0x51, 0xE1, 0x14, 0x00, 0x00, 0xAA, 0x03, 0x00, 0x52, 0xE1\n\t"
-        ".global gStaticData_0803A884\n\t"
-        "gStaticData_0803A884:\n\t"
+        ".global gGaxArmResampleStoreEndTest\n\t"
+        "gGaxArmResampleStoreEndTest:\n\t"
         ".byte 0xF5, 0xFF, 0xFF, 0xBA, 0x00, 0x00, 0x5B, 0xE3, 0x10, 0x00, 0x00, 0x0A, 0x0B, 0x20, 0x42, 0xE0\n\t"
         ".byte 0xF1, 0xFF, 0xFF, 0xEA, 0xC2, 0x65, 0xA0, 0xE1, 0xD6, 0x60, 0x90, 0xE1, 0x97, 0x06, 0x06, 0xE0\n\t"
         ".byte 0x46, 0x64, 0xA0, 0xE1, 0xF0, 0x90, 0xD1, 0xE1, 0x09, 0x60, 0x86, 0xE0, 0xB2, 0x60, 0xC1, 0xE0\n\t"
-        ".global gStaticData_0803A8B4\n\t"
-        "gStaticData_0803A8B4:\n\t"
+        ".global gGaxArmResampleMixStep\n\t"
+        "gGaxArmResampleMixStep:\n\t"
         ".byte 0x08, 0x20, 0x82, 0xE0, 0x04, 0x00, 0x51, 0xE1, 0x04, 0x00, 0x00, 0xAA, 0x03, 0x00, 0x52, 0xE1\n\t"
-        ".global gStaticData_0803A8C4\n\t"
-        "gStaticData_0803A8C4:\n\t"
+        ".global gGaxArmResampleMixEndTest\n\t"
+        "gGaxArmResampleMixEndTest:\n\t"
         ".byte 0xF3, 0xFF, 0xFF, 0xBA, 0x00, 0x00, 0x5B, 0xE3, 0x0B, 0x20, 0x42, 0x10, 0xF0, 0xFF, 0xFF, 0x1A\n\t"
         ".byte 0xF1, 0x0F, 0xBD, 0xE8, 0x04, 0x30, 0x90, 0xE5, 0x03, 0x30, 0x41, 0xE0, 0xA3, 0x30, 0xA0, 0xE1\n\t"
         ".byte 0x08, 0x20, 0x80, 0xE5, 0x14, 0x30, 0x80, 0xE5, 0x0E, 0x00, 0xA0, 0xE1\n\t"

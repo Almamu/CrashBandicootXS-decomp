@@ -27,14 +27,14 @@ void InitBresenhamLine(struct bresenham_line *l)
         dy = -dy;
     }
     if (dy <= dx) {
-        l->field_10 = (dy << 1) - dx;
-        l->field_14 = dy << 1;
-        l->field_18 = (dy - dx) << 1;
+        l->err = (dy << 1) - dx;
+        l->errStraight = dy << 1;
+        l->errDiagonal = (dy - dx) << 1;
         l->flag = 1;
     } else {
-        l->field_10 = (dx << 1) - dy;
-        l->field_14 = dx << 1;
-        l->field_18 = (dx - dy) << 1;
+        l->err = (dx << 1) - dy;
+        l->errStraight = dx << 1;
+        l->errDiagonal = (dx - dy) << 1;
         l->flag = 0;
     }
 }

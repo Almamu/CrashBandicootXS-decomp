@@ -44,24 +44,24 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * `src/save/save_menu_ui.c`. */
 
 /* A "connecting..." SIO-handshake spinner dialog: allocates a small
- * icon object from self->field_8c's template, then loops VBlank-
+ * icon object from self->cartSave's template, then loops VBlank-
  * waiting while polling input (cancel -> state 3), the link-active
  * flag gLinkSessionReset, and UpdateLinkSession (the link-connection/
  * handshake driver documented in docs/rom_map.md's SIO/link-cable
  * section) until the spinner object's own state (PollSaveTransfer) settles.
  * Returns that state; when it settles at 0, also feeds a result value
- * through self->field_90 via MemCopy32.
+ * through self->linkSave via MemCopy32.
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
  * value the ROM reuses to clear `gLinkSessionReset`, and the
- * `GetSaveTransferData` result is taken before `self->field_90` is loaded. */
+ * `GetSaveTransferData` result is taken before `self->linkSave` is loaded. */
 s32 LinkExchangeSaveData(struct save_menu *self)
 {
     void *spinner = OperatorNew(0x220);
     s32 state;
 
-    SetSaveTransferRecord(spinner, self->field_8c);
+    SetSaveTransferRecord(spinner, self->cartSave);
     ResetSaveTransfer(spinner);
     do {
         WaitForVBlank();
@@ -80,7 +80,7 @@ s32 LinkExchangeSaveData(struct save_menu *self)
     if (state == 0) {
         s32 result = (s32)GetSaveTransferData(spinner);
 
-        MemCopy32(self->field_90, (void *)result, 0x200);
+        MemCopy32(self->linkSave, (void *)result, 0x200);
     }
     OperatorDelete(spinner);
     return state;
@@ -133,7 +133,7 @@ void DrawSaveMenuCancel(struct save_menu *self, u8 highlight)
 
 /* Draws `value`'s label centered at Y=0x87, then draws a
  * highlighted/plain pair of fixed labels (0x29/0x2a, purpose
- * unconfirmed) swapping Y=0x87 vs Y=0x91 depending on `self->field_10`
+ * unconfirmed) swapping Y=0x87 vs Y=0x91 depending on `self->cursor`
  * - each pair member's slot gets a `gMenuCursorText` draw at its
  * *previous* position right before the real label, which reads as a
  * clear/overwrite step rather than a width probe (the return value is
@@ -159,7 +159,7 @@ void DrawYesNoPrompt(struct save_menu *self, s32 value)
     }
     ICON_TEXT_CALL(gSmallFont, 2, GetUiText(value));
     FontSetPalette(gSmallFont, ((self->flags >> 2) & 1) ? 1 : 2);
-    if (!self->field_10) {
+    if (!self->cursor) {
         set_icon_mgr_pos(gSmallFont, 0xa8, y);
         ICON_TEXT_CALL(gSmallFont, 2, gMenuCursorText);
         set_icon_mgr_pos(gSmallFont, 0xb0, y);
@@ -171,7 +171,7 @@ void DrawYesNoPrompt(struct save_menu *self, s32 value)
         ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x2a));
     }
     FontSetPalette(gSmallFont, 0);
-    if (!self->field_10) {
+    if (!self->cursor) {
         set_icon_mgr_pos(gSmallFont, 0xb0, 0x91);
         ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x2a));
     } else {
@@ -207,7 +207,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
         FontSetPalette((mgrExpr), 0)
 
 /* Draws this settings row's three numeric stat values -
- * `statPtr->gems`/`field_10`/`field_8` of the row's own `struct
+ * `statPtr->gems`/`crystals`/`relics` of the row's own `struct
  * settings_row_stats` (`statPtr` is `(&self->currentStats)[rowIdx]`,
  * i.e. `currentStats` and `rowStats[0..3]` read as one contiguous
  * 5-element array - `RefreshSaveSlotSummaries`/`SummarizeProgress`,
@@ -375,7 +375,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     *slot = icon;
-    icon->field_20 = (void **)(SPRITE_BANK_BASE + tblOff);
+    icon->anim = (void **)(SPRITE_BANK_BASE + tblOff);
     /* Plain `u8 *` store: old_agbcc's read-modify-write struct store
      * leaves a dead zero mask that the loop pass counts as a movable,
      * which kept 0x80 out of the loop pre-header. */
@@ -392,7 +392,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
     SetSpriteAnimDone(&icon->base, 0);
     {
         s32 lo = GetSpriteAnimPaletteSlot(&(*slot)->base);
-        u8 *p = &(*slot)->field_29;
+        u8 *p = &(*slot)->palette;
         s32 m = -16;
 
         if (frame == 0) {
@@ -408,7 +408,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
             lo &= 15;
         *p = (*p & m) | lo;
     }
-    *(u16 *)&(*slot)->field_3c = 0x80;
+    *(u16 *)&(*slot)->scale = 0x80;
 }
 
 /* InitSaveMenuIcons, the screen's init routine: resets the OAM shadow buffer

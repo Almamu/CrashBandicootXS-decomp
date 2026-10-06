@@ -159,13 +159,11 @@ struct blend_regs {
     u8 bldy;           // 0x04
 };
 
-/* The brightness fade state (fade.c). `field_0` is the frame period of
- * StepBrightnessFade (-1 when idle, IsBrightnessFadeActive), and
- * `field_8`'s top bit picks fading up or down. */
+/* The brightness fade state (fade.c), set up by FadeBrightness. */
 struct brightness_fade {
-    s32 field_0;
-    s32 field_4;
-    u8 field_8;
+    s32 period; /* frames per step of StepBrightnessFade; -1 when idle (IsBrightnessFadeActive) */
+    s32 callbackId; /* StepBrightnessFade's VBlank callback (AddVBlankCallback) */
+    u8 flags;       /* FadeBrightness's flags: bit 7 fades from 0x10 down */
 };
 
 /* One node of the sprite frame cache (sprite_frame.c, sprite_arm.c): the
@@ -298,7 +296,7 @@ extern void ClearPaletteCache(struct palette_cache *self);
 extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
 extern struct palette_cache *InitPaletteCache(struct palette_cache *self);
 extern void DestroySpriteBankSet(void *self, u32 flags);
-extern void nullsub_1(void);
+extern void InitSpriteBankSet(void);
 
 /* src/gfx/graphics.c: the entity (`struct actor`, actor.h) */
 extern u8 IsEntityNearCamera(struct actor *self);
@@ -352,10 +350,10 @@ extern struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 sc
                                     u32 paletteBank, u32 priority);
 extern void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height);
 extern void DrawScaledSprite(struct gfx_box_obj *self);
-extern void sub_801E8F8(u8 *self, s32 arg1);
-extern void sub_801E950(u8 *self, u32 arg1);
-extern void sub_801E964(u8 *self, u32 arg1, u32 arg2);
-extern void sub_801E96C(u8 *self);
+extern void SetScaledSpriteColor(u8 *self, s32 arg1);
+extern void SetScaledSpritePriority(u8 *self, u32 arg1);
+extern void SetScaledSpritePos(u8 *self, u32 arg1, u32 arg2);
+extern void ResetScaledSpriteAttrs(u8 *self);
 
 /* src/gfx/palette_cycle.c */
 extern void TickPaletteCycles(struct palette_cycler *self);
@@ -364,13 +362,13 @@ extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *list
 extern void ClearPaletteCycles(struct palette_cycler *self);
 extern void DestroyPaletteCycles(struct palette_cycler *self, s32 flags);
 extern struct palette_cycler *InitPaletteCycles(struct palette_cycler *self);
-extern void sub_802710C(struct actor *part, u32 flags);
+extern void DestroyHudPart(struct actor *part, u32 flags);
 
 /* src/gfx/sprite_frame.c */
 extern void InitObjTileFreeList(void *base);
 extern void FreeVramTileBlock(void *addr);
 extern void *AllocVramTileBlock(s32 requestedSize);
-extern void sub_8028D6C(void);
+extern void WalkVramTileBlocks(void);
 extern s32 GetFreeVramTileBytes(void);
 extern void FreeObjTileFreeList(void);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);

@@ -970,7 +970,7 @@ action_ctrl_hang.c, see "Codegen exceptions").
   `level_select_parts.h` include menus.h.
   - Struct merges: `struct continue_prompt` (3 copies, three views of
     +0x10: a word, four bytes, and an `eva:5` bitfield, now one union;
-    `unused_1c` is `blinkCounter`), `struct sub_8006700_actor` (the power
+    `unused_1c` is `blinkCounter`), `struct power_dialog` (the power
     dialog, 3 copies; `field_24`/`field_28` are unions of the byte/
     halfword and the bitfield views, `field_18` is the icon's `struct
     settings_icon_actor *`), `struct pause_row` (pause_menu_loop.c,
@@ -1273,7 +1273,7 @@ exceptions").
   level_select_widgets.c's packed 2-byte copy inside `struct zoom_bg` is a
   different type and is now `union bgcnt_packed`.
 - **`struct bg_setup`** is now the first field of `struct pause_menu`
-  (`unused_00[0x10]`), `struct sub_8006700_actor` (`unused_00[0x10]`) and
+  (`unused_00[0x10]`), `struct power_dialog` (`unused_00[0x10]`) and
   `struct page_bg` (`desc[0x10]`), named `bg`; `struct continue_prompt`'s
   three BG buffers are `struct bg_setup *`. The callers pass `&self->bg`,
   and language_select_setup.c, save_menu_ui.c and level_select.c keep

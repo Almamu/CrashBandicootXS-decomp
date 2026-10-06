@@ -224,7 +224,7 @@ real evidence behind it this time instead of ROM proximity:
   indices the same way as above. Reads as a **percentage counter**
   (a "XX% complete" style display, cmp-100 handling the 3-digit special
   case) - not fx at all.
-- **The `sub_802710C`/`InitHudPart`/`InitHud`/`ConfigureHudParts` cluster**
+- **The `DestroyHudPart`/`InitHudPart`/`InitHud`/`ConfigureHudParts` cluster**
   (992 B): sets up a fixed 34-slot OAM array, pulling its per-slot
   constructor pointer from `gHudPartVtable` - a member of the
   *same* 93-entry entity-descriptor family this document already tied
@@ -758,8 +758,8 @@ the raw-pointer search specifically).
 
 A further fork read four more previously-flagged targets, confirming
 three as vtable-dispatched and surfacing two genuinely new leads.
-**`DrawPolarPlayer`**/**`DrawJetpackPlayer`** (entity-vtable slots at
-`gStaticData_087E4E70`/`gStaticData_087E5160`) are near-identical twins
+**`DrawPolarPlayer`**/**`DrawJetpackPlayer`** (slots of
+`gPolarPlayerVtable`/`gJetpackPlayerVtable`) are near-identical twins
 - byte-for-byte matching opening sequences that index a tile/grid
 structure via Q8.8 coordinates into a per-tile record, then branch on a
 stored-value match to compute screen-space output. Reads as
@@ -872,7 +872,7 @@ new mechanisms not previously catalogued in this zone:
   `030014A8`/`AC`/`B0` - plausibly a per-player pair). Both project a
   record's position to screen space (new helpers `GetActorBgCenterY`/
   `GetActorBgCenterX`), pack an OAM attribute word via a new call
-  `sub_8028DD8`, and only re-measure/redraw text (`_call_via_r2`) when
+  `QueueSpriteFrameOam`, and only re-measure/redraw text (`_call_via_r2`) when
   the referenced source object has changed since last frame - a
   caching optimization on top of the already-documented text-drawing
   helpers.
@@ -1108,7 +1108,7 @@ movable, animated object that also drives its own VRAM tile graphics
 (a meter/gauge/readout), tied together with the icon-renderer and
 meter-twin systems rather than being a plain crate/platform.
 
-**A third generic allocator found: `sub_8028CD4`** (`AllocJetpackPlayerTiles`'s
+**A third generic allocator found: `AllocVramTileBlock`** (`AllocJetpackPlayerTiles`'s
 callee), distinct from the already-documented `OperatorNew` and
 `CreateMovingSprite`. A first-fit free-list pool allocator: walks a doubly-
 linked free-list rooted at `gVramTileBlockRover` (size/used-flag/prev/
@@ -2262,7 +2262,7 @@ already-documented infrastructure instead.
 
 **`DecodeLayerChunk`** (ROM `0x08024960`-`0x08024AA0`, 320 B) and
 **`DecodeCollisionChunk`** (same shape, called from the neighboring
-`sub_8025058`/`sub_802505C` block) are **twin implementations of a
+`GetCollisionChunk`) are **twin implementations of a
 custom RLE/delta token-stream decoder** - not the already-documented
 LZ77/RL wrappers in `graphics_loading`. Both look up a base pointer
 via `[self+4]` indexed by a halfword table (`table[idx]*4 + base` -
@@ -2273,7 +2273,7 @@ counter starting at `0x7F` and three run modes per token byte
 (literal-fill run, signed-delta-accumulate run, raw-copy run).
 `DecodeLayerChunk` writes into a 2D buffer (row = `idx>>4`, 64-halfword row
 stride); `DecodeCollisionChunk` writes the same decode into a flat linear
-buffer, and its caller `sub_802505C` uses it to populate one of **16
+buffer, and its caller `GetCollisionChunk` uses it to populate one of **16
 rotating cache slots** (ring buffer at `self+0x1020`/`self+0x1060`,
 index masked `&0xf`) keyed by a record index - reads as a small
 LRU-style decode cache, presumably to avoid re-decoding the same
@@ -3796,14 +3796,14 @@ already-documented `EC`/`F0`/`F4`/`F8`), a setter extending
 `CreateCrate` type-selector, and a spawn call tying into the
 achievement/unlock-icon family (`CreateWumpa`).
 
-**4 are genuinely standalone.** `sub_801E8F8` is a **DMA3 tilemap-row-
+**4 are genuinely standalone.** `SetScaledSpriteColor` is a **DMA3 tilemap-row-
 fill helper** - packs a repeated 4-bit pattern across a 16-bit tile-
 index word and DMAs it to VRAM address `0x06017800` - a graphics
 primitive ("fill one BG tilemap row with a single tile/palette value")
 not seen elsewhere in this document. More interesting-looking:
 **`CreateEntitySpawner`/`DestroyEntitySpawner`**, a constructor/consumer pair, calls
 `SetEntitySpawnerTable(gEntitySpawnFuncs, 0x5c, ...)` - passing the 92-slot
-table's own base address plus a size `0x5c` (92 bytes). `sub_801E96C`
+table's own base address plus a size `0x5c` (92 bytes). `ResetScaledSpriteAttrs`
 is a flags-clear utility, same shape family as the already-documented
 trivial bit-helpers.
 

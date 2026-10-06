@@ -5,9 +5,9 @@
 /* Link-session reset/init - see docs/rom_map.md's SIO/link-cable
  * section. Sets the link-active flag (`gLinkSessionReset`), resets a
  * handful of session-header fields, seeds a per-session 8-byte
- * handshake id via `MakeLinkHandshakeId` (self+0x30), mirrors that id into two
- * more session-header slots and every one of the 4 per-player 0xc8-byte
- * sub-records (self+playerIndex*0xc8), resets each per-player
+ * handshake id via `MakeLinkHandshakeId` (`id`, self+0x30), mirrors that id into
+ * `prevPacket` and every one of the 4 per-player 0xc8-byte
+ * records (self+0xd0+playerIndex*0xc8), resets each per-player
  * sub-record's own RX-ring bookkeeping, writes the literal `0x1234`
  * link sync/ready magic into each player's data-exchange field
  * (self+playerIndex*0xc8+0xd6/0xd8), and finally programs
@@ -34,7 +34,7 @@ static inline void ring_reset(struct link_ring *r)
  * - `id` is a local passed to MakeLinkHandshakeId and copied into `src` inside
  *   the outer loop; loop motion moves that copy out, which is the ROM's
  *   `str r4, [sp, #4]`.
- * - field_30 goes through a `f30` base plus an `s32 t` offset, so the
+ * - rxSeq goes through a `f30` base plus an `s32 t` offset, so the
  *   base is hoisted and the add is `f30 + t`.
  * - The inner destination is `((struct link_player *)(self + 8))[i + 1]`,
  *   which gives the ROM's `i + 1` precompute and per-pass `self + 0xd0`.
@@ -48,7 +48,7 @@ static inline void ring_reset(struct link_ring *r)
  *   second reload that reload_cse turns into `adds r2, r1, #0`. That
  *   extra reload also moves the reload-register rotation to the ROM's
  *   in the tail.
- * - The tail stores field_20 into field_400 and reads it back through a
+ * - The tail stores handshakeWord into sendWord and reads it back through a
  *   plain `u16 *` into `v`.
  * The asm statements emit no code:
  * - 13 references on `id` lift its global-alloc priority (15 refs over
@@ -65,13 +65,13 @@ s32 ResetLinkSessionState(struct link_session *self)
     u32 magic = 0x1234;
     u8 *id;
 
-    self->field_6 = 0;
-    self->field_8 = 0;
-    self->field_7 = 0;
+    self->sioConfigured = 0;
+    self->started = 0;
+    self->connected = 0;
     gLinkSessionReset = 1;
-    self->field_4 = 0;
-    self->field_1c = -1;
-    self->field_3fc = -1;
+    self->inSerialIrq = 0;
+    self->playerCount = -1;
+    self->playerId = -1;
     ring_reset(&self->ring);
     id = self->id;
     MakeLinkHandshakeId(id);
@@ -90,7 +90,7 @@ s32 ResetLinkSessionState(struct link_session *self)
     MATCH_USE(id);
     MATCH_USE(id);
     {
-        u8 *p = self->field_28;
+        u8 *p = self->prevPacket;
 
         for (k = 0; k <= 3; k++) {
             u32 v = (p[9] << 8) | p[8];
@@ -101,12 +101,12 @@ s32 ResetLinkSessionState(struct link_session *self)
             p += 2;
         }
     }
-    self->field_c = 0;
-    self->field_24 = 0;
+    self->connectCounter = 0;
+    self->totalSent = 0;
     for (i = 0; i <= 3; i++) {
         ring_reset(&self->players[i].ring);
         {
-            s32 *f30 = &self->players[0].field_30;
+            s32 *f30 = &self->players[0].rxSeq;
             s32 t = i * 0xc8;
 
             *(s32 *)((u8 *)f30 + t) = 0;
@@ -130,22 +130,22 @@ s32 ResetLinkSessionState(struct link_session *self)
         }
         /* No code: one insn of padding (see above). */
         MATCH_BARRIER();
-        self->players[i].field_34 = 0;
-        self->players[i].field_2c = 0;
-        self->players[i].field_8 = (self->players[i].field_6 = magic);
+        self->players[i].totalReceived = 0;
+        self->players[i].rxCount = 0;
+        self->players[i].prevHash = (self->players[i].hash = magic);
     }
-    self->field_3f0 = 0;
-    self->field_3f4 = 0;
-    self->field_3f8 = 0;
-    self->field_38 = 0;
-    self->field_3c = 0;
-    self->field_20.hi = 0xF0B;
-    self->field_20.lo = 0;
+    self->ackedMask = 0;
+    self->receivedMask = 0;
+    self->peerMask = 0;
+    self->sendWordIndex = 0;
+    self->sendRound = 0;
+    self->handshakeWord.hi = 0xF0B;
+    self->handshakeWord.lo = 0;
     {
-        u16 *p400 = &self->field_400;
+        u16 *p400 = &self->sendWord;
         u16 v;
 
-        *p400 = *(u16 *)&self->field_20;
+        *p400 = *(u16 *)&self->handshakeWord;
         v = *p400;
         REG_SIOMLT_SEND = v;
     }

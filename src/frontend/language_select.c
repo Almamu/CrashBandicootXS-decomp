@@ -43,7 +43,10 @@ void LoadTaggedAssetBuffered(void *unused, const void *asset, void *dest)
     }
 }
 
-void nullsub_7(void)
+/* The company-logo screen's constructor: empty (ShowCompanyLogos
+ * allocates the 0x44c-byte object, calls this with it in r0, runs
+ * RunCompanyLogos and frees it with DestroyCompanyLogos below). */
+void InitCompanyLogos(void)
 {
 }
 
@@ -77,7 +80,7 @@ void DestroyLogoActor(struct actor_self *self, u32 flags)
 
 /* Runs the widget: resets it, draws/flushes once, then polls input each
  * frame (dispatching newly-pressed keys to LanguageSelectInput) until it signals
- * done via `field_4`, returning the final selected value in `field_8`. */
+ * `done`, returning the selected `language`. */
 s32 RunLanguageSelect(void)
 {
     gLanguageSelect->language = 0;
@@ -105,9 +108,9 @@ s32 RunLanguageSelect(void)
 }
 
 /* Dispatches one frame's newly-pressed `flags` for the widget above:
- * bit 3 or bit 0 confirms/cancels (sets `field_4` to end the loop, sfx
- * 0x49); bit 6/bit 7 decrement/increment the 0-5 `field_8` value
- * (wrapping around, sfx 0x46). `field_0` is a free-running frame
+ * bit 3 or bit 0 confirms/cancels (sets `done` to end the loop, sfx
+ * 0x49); bit 6/bit 7 decrement/increment the 0-5 `language` value
+ * (wrapping around, sfx 0x46). `frame` is a free-running frame
  * counter, incremented every call regardless. */
 void LanguageSelectInput(struct language_select *self, u32 flags)
 {
@@ -194,7 +197,7 @@ void DrawLanguageSelect(struct language_select *self)
  * `InitCredits`: the two icon-manager steps as `static inline` helpers
  * taking the manager as a parameter (each expansion recomputes its own
  * offsets; the E0 base is read from DC before E0 itself), plus one
- * `zero` local shared by the `field_8`/`tileBase` stores - the 0 the
+ * `zero` local shared by the `gObjVramCursor` word 2/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
 extern void _call_via_r1(void *self, void *fn);
 

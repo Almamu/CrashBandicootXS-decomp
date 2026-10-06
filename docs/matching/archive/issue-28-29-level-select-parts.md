@@ -47,7 +47,7 @@ screen in `level_select.c` (issue #26):
   - +0x10 `SetLevelSelectEntryLevel`: set world/index (indices 0-4 are levels; later
     indices are the world's extra entry)
   - +0x18 `SetLevelSelectEntryPos`: position
-  - +0x20 `nullsub_20`
+  - +0x20 `DrawLevelSelectEntry`
   - +0x28 `DestroyLevelSelectEntry`: destructor
 
   It also has plain accessors (`IsLevelSelectEntrySelected`, `GetLevelSelectEntryLevel`,

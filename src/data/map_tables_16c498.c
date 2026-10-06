@@ -11,35 +11,31 @@
  * InitLaunchPad) and level_select_pages.c (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
 const struct xy_pair gLevelSelectWorldPos = { 16, 32 };
-const struct xy_pair gStaticData_0816C4A0 = { 16, 60 };
+const struct xy_pair gLevelSelectCrashIconPos = { 16, 60 };
 const struct xy_pair gLevelSelectCrystalPos = { 40, 33 };
 const struct xy_pair gLevelSelectGemPos = { 50, 32 };
 const struct xy_pair gLevelSelectTrialIconPos = { 66, 34 };
 const struct xy_pair gLevelSelectTimePos = { 166, 34 };
-const struct xy_pair gStaticData_0816C4C8 = { 201, 70 };
-const struct xy_pair gStaticData_0816C4D0 = { 201, 87 };
+const struct xy_pair gLevelSelectNextWorldArrowPos = { 201, 70 };
+const struct xy_pair gLevelSelectPrevWorldArrowPos = { 201, 87 };
 
 const struct xy_pair gLevelSelectEntryPositions[6] = {
-    { 30, 120 },
-    { 70, 132 },
-    { 120, 136 },
-    { 170, 132 },
-    { 210, 120 },
-    { 0, 0 },
+    { 30, 120 }, { 70, 132 }, { 120, 136 }, { 170, 132 }, { 210, 120 }, { 0, 0 },
 };
 const struct xy_pair gLevelSelectEntryPositionsAllCleared[6] = {
-    { 26, 118 },
-    { 58, 130 },
-    { 99, 136 },
-    { 141, 136 },
-    { 182, 130 },
-    { 214, 118 },
+    { 26, 118 }, { 58, 130 }, { 99, 136 }, { 141, 136 }, { 182, 130 }, { 214, 118 },
 };
 const u32 gLevelSelectWorldEntryBoxAnims[4] = {
-    0, 1, 2, 3,
+    0,
+    1,
+    2,
+    3,
 };
 const u32 gLevelSelectWorldAnims[4] = {
-    9, 8, 6, 7,
+    9,
+    8,
+    6,
+    7,
 };
 const u32 gLevelSelectRankAnims[5] = {
     1, 3, 2, 4, 0,
