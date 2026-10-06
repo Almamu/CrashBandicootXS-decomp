@@ -48,7 +48,7 @@ const entity_spawn_fn gEntitySpawnFuncs[92] = {
     SpawnNitroCrate,
     SpawnMysteryCrate,
     SpawnBouncyWumpaCrate,
-    sub_8021B00,
+    SpawnReinforcedCrate,
     SpawnTntCrate,
     SpawnSlotCrate,
     SpawnTimeCrate1,

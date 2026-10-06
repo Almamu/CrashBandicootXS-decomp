@@ -230,8 +230,13 @@ void SpawnTntCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CreateCrate(arg0, arg1, arg2, arg3, 0xe);
 }
 
-/* Plain `CreateCrate` trampoline, type `0xd`. */
-void sub_8021B00(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Plain `CreateCrate` trampoline, type `0xd`: the reinforced crate (bank
+ * 31 animation 6, a wooden crate with metal-banded edges). Only a body
+ * slam (attack kind 5, gActionCtrlStateAttackKinds) or the invincibility
+ * mask breaks it: gCrateHitResponse row 13 bounces every other attack,
+ * and QueueCratePlayerCollision turns a body slam moving up into a bounce
+ * too. */
+void SpawnReinforcedCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0xd);
 }

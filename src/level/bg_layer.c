@@ -180,22 +180,26 @@ s32 GetBgLayerScreenIndex(void *self, s32 col, s32 row)
     return Mod32(row) * 32 + Mod32(col);
 }
 
-/* Column wrap `col % 32`. Not a named symbol in the old disassembly (it was
- * folded into `GetBgLayerScreenIndex`'s listing after its padding halfword).
+/* Column wrap `col % 32`: the column half of GetBgLayerScreenIndex's
+ * (col, row) screen-block index. Not a named symbol in the old disassembly
+ * (it was folded into `GetBgLayerScreenIndex`'s listing after its padding
+ * halfword). It and WrapBgLayerRow are byte-identical; which one was the
+ * column helper is assumed from that (col, row) order.
  * UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
  * src/). */
-s32 sub_802612C(void *self, s32 col)
+s32 WrapBgLayerColumn(void *self, s32 col)
 {
     return col % 32;
 }
 
-/* Byte-identical twin of `sub_802612C`. The old disassembly labelled it
- * `sub_802613E`, two bytes into its first instruction.
+/* Row wrap `row % 32`, the byte-identical twin of `WrapBgLayerColumn`. The
+ * old disassembly labelled it `sub_802613E`, two bytes into its first
+ * instruction.
  * UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
  * src/). */
-s32 sub_802613C(void *self, s32 col)
+s32 WrapBgLayerRow(void *self, s32 row)
 {
-    return col % 32;
+    return row % 32;
 }
 
 /* BGnCNT shadow setters/getter, this one and the next four.

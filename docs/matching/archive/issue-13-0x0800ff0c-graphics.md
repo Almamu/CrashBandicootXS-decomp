@@ -120,7 +120,7 @@ overrides described below).
 | `0xa` | `SpawnNitroCrate` | `5` | |
 | `0xb` | `SpawnMysteryCrate` | `0` | `self+0x51` = record `[6]`; table-1 `special`; also a demotion source (step 3) |
 | `0xc` | `SpawnBouncyWumpaCrate` | `0x19` (25) | `self+0x48 = -42`; table-1 `special` |
-| `0xd` | `sub_8021B00` | `6` | |
+| `0xd` | `SpawnReinforcedCrate` | `6` | |
 | `0xe` | `SpawnTntCrate` | `0x11` (17) | |
 | `0xf` | `SpawnSlotCrate` | `7` | largest single case - see below; table-1 `special`; also a demotion source (step 3) |
 | `0x10` | `SpawnTimeCrate1` | `0xe` (14) | |

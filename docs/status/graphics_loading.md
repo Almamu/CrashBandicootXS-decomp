@@ -112,7 +112,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
 - **`SpawnBodySlamPower`**, **`SpawnTornadoSpinPower`**, **`SpawnDoubleJumpPower`**, **`SpawnTurboRunPower`**,
   **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`CreateTouchableSprite`**, **`SpawnCrateGemMarker`**,
   **`SpawnWumpa`**, **`SpawnHoverPlayerPosition`**, **`SpawnHoverStartMarker`**, **`SpawnUnderwaterPlayerPosition`**,
-  **`SpawnUnderwaterStartMarker`**, **`SpawnPlayerPosition`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
+  **`SpawnUnderwaterStartMarker`**, **`SpawnPlayerPosition`**, **`SpawnStartMarkerStub`**, **`DestroyEntitySpawner`**,
   **`CreateEntitySpawner`**, **`InitLevelState`** (`src/level/spawn_pickups.c`)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
   `SpawnStartMarker` trampolines, the `gPlayer` position writers, the

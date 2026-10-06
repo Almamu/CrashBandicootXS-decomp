@@ -272,12 +272,15 @@ void SetMaskAssistDeaths(struct level_state *self, s32 value)
     self->maskAssistDeaths = value;
 }
 
-/* Setter of `unk_80`, the word before maskAssistDeaths: UpdateGameFrame
- * sets it to 5 alongside SetMaskAssistDeaths/SetCrateAssistDeaths, but only
- * the unused sub_8023138 reads it, so what it counts is unknown. */
-void sub_8023120(struct level_state *self, s32 value)
+/* Setter of `unusedAssistDeaths`, a third assist-deaths threshold: the
+ * field sits next to the other two (in the reverse of this accessor
+ * order, as theirs do), and UpdateGameFrame sets all three to the same
+ * default 5 together. The level table has no value for it and only the
+ * unused GetUnusedAssistDeaths reads it, so which assist it was meant
+ * for is unknown. */
+void SetUnusedAssistDeaths(struct level_state *self, s32 value)
 {
-    self->unk_80 = value;
+    self->unusedAssistDeaths = value;
 }
 
 s32 GetCrateAssistDeaths(struct level_state *self)
@@ -291,10 +294,10 @@ s32 GetMaskAssistDeaths(struct level_state *self)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Getter
- * of `unk_80` (sub_8023120). */
-s32 sub_8023138(struct level_state *self)
+ * of `unusedAssistDeaths` (SetUnusedAssistDeaths). */
+s32 GetUnusedAssistDeaths(struct level_state *self)
 {
-    return self->unk_80;
+    return self->unusedAssistDeaths;
 }
 
 void AddPendingSwitchCrates(struct level_state *self, s32 delta)
@@ -303,18 +306,18 @@ void AddPendingSwitchCrates(struct level_state *self, s32 delta)
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/ and asm/), nor is
- * sub_8023158: ORs `mask` into `unk_c0`, which InitLevelState zeroes and
+ * TestUnusedFlags: ORs `mask` into `unusedFlags`, which InitLevelState zeroes and
  * nothing else touches. */
-void sub_802314C(struct level_state *self, s32 mask)
+void SetUnusedFlags(struct level_state *self, s32 mask)
 {
-    self->unk_c0 |= mask;
+    self->unusedFlags |= mask;
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Whether
- * any bit of `mask` is set in `unk_c0`. */
-s32 sub_8023158(struct level_state *self, s32 mask)
+ * any bit of `mask` is set in `unusedFlags`. */
+s32 TestUnusedFlags(struct level_state *self, s32 mask)
 {
-    s32 x = self->unk_c0 & mask;
+    s32 x = self->unusedFlags & mask;
     return (u32)(-x | x) >> 31;
 }
 
@@ -382,7 +385,7 @@ void GiveDoubleJump(struct level_state *self)
  * 0/1 value. Writing them as `(x >> n) & 1` compiles an extra `and`
  * this compiler doesn't need - the ROM instead isolates the bit by
  * shifting it up into the sign bit and shifting back down unsigned,
- * the same branchless idiom already used for `sub_8023158`'s
+ * the same branchless idiom already used for `TestUnusedFlags`'s
  * `!= 0` test (see docs/workflow.md step 7 / matching.md). */
 s32 HasTornadoSpin(struct level_state *self)
 {
