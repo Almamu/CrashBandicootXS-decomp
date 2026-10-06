@@ -6,6 +6,7 @@
 #include "player.h"
 #include "objects.h"
 #include "globals.h"
+#include "box_part.h"
 
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
@@ -15,7 +16,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * counter documented in docs/rom_map.md): if `part->flags` bit 2 is
  * set and the player's `deadline` is ahead of the frame counter
  * and `gLevelState`'s mode (`maskLevel`) is 3, or independently if
- * `part`'s `+0xd` byte bit 3 is set and the mode is 3, builds `part`'s
+ * `part->flags2` bit 3 (solid) is set and the mode is 3, builds `part`'s
  * primary AABB via `GetSpriteAttackBox` and tests it against the player via
  * `PlayerTouchesBox`; on a hit, calls `ResolvePlayerContact` and returns. If the
  * primary AABB has no region (`w` zero) or the hit test missed,
@@ -23,7 +24,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * same hit test. */
 void CheckPlayerContact(void *partArg)
 {
-    MATCH_HOLD_REG(struct actor *, part, r4) = partArg;
+    MATCH_HOLD_REG(struct box_part *, part, r4) = partArg;
     MATCH_HOLD_REG(u8, flagsByte, r1) = part->flags;
     MATCH_HOLD_REG(s32, flagsShifted, r0) = flagsByte >> 2;
     MATCH_HOLD_REG(s32, mask, r5) = 1;
@@ -44,8 +45,8 @@ void CheckPlayerContact(void *partArg)
             }
         }
         {
-            MATCH_HOLD_REG(u8, fieldD, r1) = *((u8 *)part + 0xd);
-            MATCH_HOLD_REG(s32, shifted, r0) = fieldD >> 3;
+            MATCH_HOLD_REG(u8, flags2, r1) = part->flags2;
+            MATCH_HOLD_REG(s32, shifted, r0) = flags2 >> 3;
             MATCH_HOLD_REG(s32, bit, r0);
 
             bit = shifted & mask;
@@ -56,8 +57,8 @@ void CheckPlayerContact(void *partArg)
     }
 gate2:
     {
-        MATCH_HOLD_REG(u8, fieldD, r1) = *((u8 *)part + 0xd);
-        MATCH_HOLD_REG(s32, shifted, r0) = fieldD >> 3;
+        MATCH_HOLD_REG(u8, flags2, r1) = part->flags2;
+        MATCH_HOLD_REG(s32, shifted, r0) = flags2 >> 3;
         MATCH_HOLD_REG(s32, one, r1) = 1;
         MATCH_HOLD_REG(s32, bit, r0);
 
@@ -91,11 +92,11 @@ doCheck:
     }
 }
 
-/* ROM 0x08009D5C - fires a `part->table+0x68`-driven trampoline (the
+/* ROM 0x08009D5C - fires the method table +0x68 hit method (the
  * "dead read" idiom already established for
  * `CollidePartWithPlayer`/`CollidePartWithObject`/`CollideCrateGridPartWithObject`) based on
- * `gLevelState`'s mode (`+0x78`): mode 0 fires it on the player
- * with arguments `(0, part->field_0A, 0)`; modes 1-2 fire it on the
+ * `gLevelState->maskLevel`: mode 0 fires it on the player
+ * with arguments `(0, part->kind, 0)`; modes 1-2 fire it on the
  * player with the same arguments, then again on `part` itself with
  * `(1, 1, 0)`; mode 3 fires it on `part` alone with `(1, 1, 0)`; any
  * other mode does nothing. Always sets `part->flags` bit 3 first.
@@ -125,7 +126,7 @@ doCheck:
  * Matched. */
 void ResolvePlayerContact(void *partArg)
 {
-    MATCH_HOLD_REG(struct actor *, part, r5) = partArg;
+    MATCH_HOLD_REG(struct box_part *, part, r5) = partArg;
     s32 mode;
     MATCH_HOLD_REG(void *, addr, r0);
     MATCH_HOLD_REG(s32, arg1, r1);
@@ -179,10 +180,10 @@ mode1or2:
         _call_via_r4(addr0, 0, someByte, 0);
 
         {
-            u8 *rec2 = (u8 *)part->table + 0x68;
-            s16 offset2 = *(s16 *)rec2;
+            struct part_method *rec2 = PART_METHOD(part, 0x68);
+            s16 offset2 = rec2->thisOffset;
             addr = (u8 *)part + offset2;
-            deadRead = *(void *volatile *)(rec2 + 4);
+            deadRead = *(void *volatile *)&rec2->fn;
             arg1 = 1;
             arg2 = 1;
         }
@@ -198,10 +199,10 @@ tail:
 
 checkMode3:
     if (mode == 3) {
-        u8 *rec = (u8 *)part->table + 0x68;
-        s16 offset = *(s16 *)rec;
+        struct part_method *rec = PART_METHOD(part, 0x68);
+        s16 offset = rec->thisOffset;
         void *addr3 = (u8 *)part + offset;
-        MATCH_HOLD_REG(void *, deadRead3, r4) = *(void *volatile *)(rec + 4);
+        MATCH_HOLD_REG(void *, deadRead3, r4) = *(void *volatile *)&rec->fn;
         (void)deadRead3;
         _call_via_r4(addr3, 1, 1, 0);
     }

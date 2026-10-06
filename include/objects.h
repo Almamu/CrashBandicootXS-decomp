@@ -81,13 +81,28 @@ struct collision_queue {
 };
 
 /* An entry set: the {a, b} index pairs into a motion record table (two
- * records per state; `entries` is an array of pairs) and a word the code
- * doesn't read, 0x100 in every set in the ROM. A controller or mover
- * keeps one at +0x04 (SetCtrlAnimSet, gobj_1a794.h's `struct mover`
+ * records per state; `entries` is an array of pairs) and a Q8 scale,
+ * 0x100 (1.0) in every set in the ROM, that SetCtrlTargetMotionX and
+ * StartCtrlTargetMotionX multiply the motion vector by. A controller or
+ * mover keeps one at +0x04 (SetCtrlAnimSet, gobj_1a794.h's `struct mover`
  * `set`). */
 struct entry_set {
     const u32 (*entries)[2];
-    u32 unk_04;
+    s32 scale; // 0x04 - Q8
+};
+
+/* The controllers' base class (src/objects/ctrl.c, method table
+ * gCtrlVtable; InitCtrl/DestroyCtrl). Every controller extends it: the
+ * action controller (action_obj.h's `struct act`), the swim and input
+ * controllers (player_ctrl.h, player.h), the boss controllers (player.h's
+ * `struct boss_ctrl`), the enemy controller (part_ctrl.h) and the effect
+ * controller (effect_ctrl.c). The subclasses add the controlled part at
+ * +0x10. */
+struct ctrl {
+    s32 unk_00;                       // 0x00 - set by AttachCtrl
+    const struct entry_set *animSet;  // 0x04 - SetCtrlAnimSet
+    s32 state;                        // 0x08 - GetCtrlMode/SetCtrlMode
+    const struct vtable_slot *vtable; // 0x0C - gCtrlVtable or a subclass's
 };
 
 /* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, struct
@@ -209,9 +224,9 @@ extern void DestroyPartList(struct part_list *manager, s32 flags);
 extern struct part_list *InitPartList(struct part_list *manager, s32 count);
 
 /* src/objects/part_list_cull.c */
-extern void CullPartList(void *manager);
-extern void ClearPartList(void *manager);
-extern void CollidePartsOfClass(void *manager, s32 classId);
+extern void CullPartList(struct part_list *manager);
+extern void ClearPartList(struct part_list *manager);
+extern void CollidePartsOfClass(struct part_list *manager, s32 classId);
 
 /* src/objects/platform.c */
 extern void UpdatePlatform(struct gobj *self);
