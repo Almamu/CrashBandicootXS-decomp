@@ -29,13 +29,13 @@ for the full write-up.
 - `src/audio/audio.c`: `PlaySfx` (`sub_8001854`, one-shot sfx
   play; real C since the near-miss polish pass, its raw
   `asm/code_3_1_10.s` retired - see
-  [near-miss-polish.md](../matching/near-miss-polish.md)),
+  [near-miss-polish.md](../matching/archive/near-miss-polish.md)),
   `TickAmbientSfx` (ambient/looping-sfx-channel
   tick update), `StopSfx` (stop-if-playing scan), `ResetAmbientSfx`
   (reset), `StopAmbientSfx` (force-expire).
 - `src/audio/audio.c`: `PlayAmbientSfx` (ambient-sfx play request;
   plain C since the early-ROM NAKED retry, see
-  [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)), `GetCurrentSong`,
+  [early-rom-naked-retry.md](../matching/archive/early-rom-naked-retry.md)), `GetCurrentSong`,
   `GetSfxVolume`, `GetMusicVolume`, `FadeOutMusic`, `FadeInMusic`,
   `FadeOutMasterVolume`, `FadeInMasterVolume`, `sub_8001B14`, `SetMusicVolume`,
   `SetSfxVolume`, `PlaySong`, `ResumeSong`, `PauseSong`,
@@ -45,7 +45,7 @@ for the full write-up.
   0x08001C80): installs the VCount-IRQ handler that forwards into
   `UpdateAudio`'s per-tick fade update above - `audio.c`'s
   header comment already anticipated this pair. Matched - GitHub
-  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`.
+  issue #4, see `docs/matching/archive/issue-4-sio-settings-sync.md`.
 
 `src/audio/` (further in, at `0x08037110`-`0x08038538` - see
 `docs/matching.md`'s "`0x08037110`-`0x08038538`" entry for the full
@@ -68,7 +68,7 @@ language menu (`RunLanguageSelect`).
 `src/audio/` (further in, at `0x08038538`-`0x08039658` - see
 `docs/matching.md`'s "`0x08038538`-`0x08039658`" entry (PR #198, first
 pass) and
-[`docs/matching/issue-67-0x08038538-audio.md`](../matching/issue-67-0x08038538-audio.md)
+[`docs/matching/archive/issue-67-0x08038538-audio.md`](../matching/archive/issue-67-0x08038538-audio.md)
 (second pass) for the full write-up, GitHub issue #67):
 
 - `lib/gax/src/gax_dma_control.c` - `GAX_pause`/`GAX_resume` (Direct
@@ -80,7 +80,7 @@ pass) and
   documented as a "confirmed many-register loop-allocation ceiling";
   matched by never caching the `gGaxPlayerState->channels[curChannelIdx]`
   chase into a local, reproducing the ROM's own r0-r3-only allocation -
-  see [`docs/matching/issue-67-channel-mute-volume-dma-stop.md`](../matching/issue-67-channel-mute-volume-dma-stop.md))
+  see [`docs/matching/archive/issue-67-channel-mute-volume-dma-stop.md`](../matching/archive/issue-67-channel-mute-volume-dma-stop.md))
 - `lib/gax/src/gax_dma_stop.c` - `GAX_stop`/`GaxStopDma` (Direct Sound A/
   Timer0 stop, the counterpart to `GAX_irq`'s start, plus a generic
   single-DMA-channel "off" helper; same writeup as above)
@@ -96,7 +96,7 @@ pass) and
   type's unknown_fn)
 - `lib/gax/src/gax_text_render.c` - `GaxDrawText` (word-wrap text/
   console-tile renderer, called by `GaxFatalError`) - see
-  [docs/matching/issue-67-word-wrap-text-renderer.md](../matching/issue-67-word-wrap-text-renderer.md)
+  [docs/matching/archive/issue-67-word-wrap-text-renderer.md](../matching/archive/issue-67-word-wrap-text-renderer.md)
 
 These read as genuine GAX2 mixer/SoundHandler internals (not
 game/HUD-side callers), the first real dive past `GAX2_new`'s single
@@ -104,11 +104,11 @@ constructor.
 
 `src/audio/` (issues #66/#67's leftover `0x08038240`-`0x08038B68`
 cluster - see
-[`docs/matching/issue-66-67-gax-playstart-cluster.md`](../matching/issue-66-67-gax-playstart-cluster.md)):
+[`docs/matching/archive/issue-66-67-gax-playstart-cluster.md`](../matching/archive/issue-66-67-gax-playstart-cluster.md)):
 
 - `lib/gax/src/gax_work_size.c` - `GAX2_estimate` (the GAX2 work-RAM size
   estimator; matched in the GAX NAKED retry 2, see
-  [docs/matching/gax-naked-retry-2.md](../matching/gax-naked-retry-2.md))
+  [docs/matching/archive/gax-naked-retry-2.md](../matching/archive/gax-naked-retry-2.md))
 - `lib/gax/src/gax_channel_table_alloc.c` - `GaxCreateHandlers` (instantiates
   and links a player's handlers; matched in the GAX NAKED retry 2)
 - `lib/gax/src/gax_hw_reset.c` - `GaxResetSoundHardware` (hardware sound-register
@@ -117,7 +117,7 @@ cluster - see
   Timer0 direct-sound-output follow-up to play-start)
 
 `src/audio/` (further in, at `0x08039818`-`0x0803A944` - see
-[`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)
+[`docs/matching/archive/issue-68-0x08039818-audio.md`](../matching/archive/issue-68-0x08039818-audio.md)
 for the full write-up, GitHub issue #68):
 
 - `lib/gax/src/gax_channel_note_cut.c` - `GaxChannelSetNote` (per-channel note-
@@ -134,12 +134,12 @@ for the full write-up, GitHub issue #68):
   envelope/state fields) - closed by pinning `self` to `ip` for the
   whole function, the same idiom that closed `sub_80259D4`; see the
   "Update" section of
-  [`docs/matching/issue-68-channel-bind-envelope-note.md`](../matching/issue-68-channel-bind-envelope-note.md)
+  [`docs/matching/archive/issue-68-channel-bind-envelope-note.md`](../matching/archive/issue-68-channel-bind-envelope-note.md)
 
 7 of this chunk's 21 functions were matched as real C in the first
 passes; the rest were parked as NAKED transcriptions (see the history
 below). A later toolchain retry
-([`docs/matching/gax-toolchain-retry.md`](../matching/gax-toolchain-retry.md))
+([`docs/matching/archive/gax-toolchain-retry.md`](../matching/archive/gax-toolchain-retry.md))
 matched most of them as real C - see the next section.
 
 ### Matched in the GAX toolchain retry (issues #66-#68)
@@ -148,7 +148,7 @@ GAX2 turned out to be ordinary current-agbcc output (not old_agbcc, not
 ARM); what had parked these functions was mostly heavily register-pinned
 drafts. Written plainly against the handler/channel structs now in
 `lib/gax/src/gax_internal.h` they match outright. See
-[`docs/matching/gax-toolchain-retry.md`](../matching/gax-toolchain-retry.md)
+[`docs/matching/archive/gax-toolchain-retry.md`](../matching/archive/gax-toolchain-retry.md)
 for the per-function notes.
 
 - `src/frontend/language_select.c` - `DrawLanguageSelect` (counter widget
@@ -156,7 +156,7 @@ for the per-function notes.
   icon-manager init) followed in the late-ROM NAKED retry - the two
   icon-manager steps as `static inline` helpers plus a shared `zero`
   local, see
-  [`docs/matching/late-rom-naked-retry.md`](../matching/late-rom-naked-retry.md)
+  [`docs/matching/archive/late-rom-naked-retry.md`](../matching/archive/late-rom-naked-retry.md)
 - `lib/gax/src/gax_zero_fill.c` - `GaxZeroFill` (split out of
   `lib/libgcc/libgcc2.c`, unchanged C)
 - `lib/gax/src/gax_channel_pool_alloc.c` - `GAX2_jingle` (builds the SFX
@@ -183,11 +183,11 @@ for the per-function notes.
   see [docs/status/util.md](./util.md))
 - `lib/gax/src/gax_playstart.c` - `GAX2_init` (the play-start/init
   entry point; was parked NAKED, matched in GAX retry 5 - see
-  [docs/matching/gax-naked-retry-5.md](../matching/gax-naked-retry-5.md))
+  [docs/matching/archive/gax-naked-retry-5.md](../matching/archive/gax-naked-retry-5.md))
 - `lib/gax/src/gax_note_trigger.c` - `GaxChannelMix` (the per-channel mixer;
   `sub_8039E50` is only the ARM call's return point inside it). Was
   parked NAKED through five passes, matched in GAX retry 6 - see
-  [docs/matching/gax-naked-retry-6.md](../matching/gax-naked-retry-6.md)
+  [docs/matching/archive/gax-naked-retry-6.md](../matching/archive/gax-naked-retry-6.md)
 
 ## Parked - NAKED asm transcription (byte-correct, not decompiled C)
 
@@ -198,14 +198,14 @@ NAKED - it's lib1funcs.asm's hand-written routine, not compiler output
 (see [docs/status/util.md](./util.md)).
 
 History of the earlier parking notes for the functions matched above:
-[issue-67-counter-selector-icons.md](../matching/issue-67-counter-selector-icons.md),
-[issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md),
-[issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md),
-[issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md),
-[issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md),
-[naked-sub_803a03c-matched.md](../matching/naked-sub_803a03c-matched.md),
-[issue-68-0x08039818-audio.md](../matching/issue-68-0x08039818-audio.md),
-[issue-68-note-trigger-trampoline.md](../matching/issue-68-note-trigger-trampoline.md).
+[issue-67-counter-selector-icons.md](../matching/archive/issue-67-counter-selector-icons.md),
+[issue-67-68-channel-init-play.md](../matching/archive/issue-67-68-channel-init-play.md),
+[issue-66-67-gax-playstart-cluster.md](../matching/archive/issue-66-67-gax-playstart-cluster.md),
+[issue-67-gax-voice-steal.md](../matching/archive/issue-67-gax-voice-steal.md),
+[issue-68-channel-bind-envelope-note.md](../matching/archive/issue-68-channel-bind-envelope-note.md),
+[naked-sub_803a03c-matched.md](../matching/archive/naked-sub_803a03c-matched.md),
+[issue-68-0x08039818-audio.md](../matching/archive/issue-68-0x08039818-audio.md),
+[issue-68-note-trigger-trampoline.md](../matching/archive/issue-68-note-trigger-trampoline.md).
 
 ## Left raw (not attempted, or attempted and set aside)
 
@@ -226,29 +226,29 @@ from the `0x08037110`-`0x08038538` pass specifically:
   `lib/gax/src/gax_work_size.c`.
   `GaxCreateHandlers`/
   `GaxResetSoundHardware` (the rest of issue #66) are now matched/parked - see
-  [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md).
+  [docs/matching/archive/issue-66-67-gax-playstart-cluster.md](../matching/archive/issue-66-67-gax-playstart-cluster.md).
 
 From the `0x08038538`-`0x08039658` pass (issue #67, PR #198 - still
 raw after the second pass, see
-[`docs/matching/issue-67-0x08038538-audio.md`](../matching/issue-67-0x08038538-audio.md)):
+[`docs/matching/archive/issue-67-0x08038538-audio.md`](../matching/archive/issue-67-0x08038538-audio.md)):
 
 `GAX2_init`/`GAX2_jingle`/`GAX_irq` (the play-start/init entry
 point and its DMA1/Timer0 direct-sound-output follow-ups, listed raw
 above as of the second pass) are now matched/parked - see
-[docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md)
+[docs/matching/archive/issue-66-67-gax-playstart-cluster.md](../matching/archive/issue-66-67-gax-playstart-cluster.md)
 and the "Matched"/"Parked - NAKED asm transcription" sections above.
 
 `GAX_play`/`GAX_fx`/`GAX_fx_ex` (more mixer-tick/voice-
 stealing internals, `GAX_fx_ex` is the voice-stealing allocator,
 listed raw above) are now matched/parked - see
-[docs/matching/issue-67-gax-voice-steal.md](../matching/issue-67-gax-voice-steal.md)
+[docs/matching/archive/issue-67-gax-voice-steal.md](../matching/archive/issue-67-gax-voice-steal.md)
 and the "Parked - NAKED asm transcription" section above.
 
 `GAX_stop_fx`/`GAX_set_music_volume`/`GAX_set_fx_volume` (per-channel mute/volume-set
 family) and `GAX_stop`/`GaxStopDma` (Direct Sound A/Timer0 stop pair,
 using the same hardware-register NOP-delay compiler quirk already flagged
 in-source at `GaxResetSoundHardware` above) - listed raw above - are now matched,
-see [`docs/matching/issue-67-channel-mute-volume-dma-stop.md`](../matching/issue-67-channel-mute-volume-dma-stop.md)
+see [`docs/matching/archive/issue-67-channel-mute-volume-dma-stop.md`](../matching/archive/issue-67-channel-mute-volume-dma-stop.md)
 and the "Matched" section above. The earlier "confirmed many-register
 loop-allocation ceiling" verdict for the mute/volume family turned out to
 be an artifact of caching the channel chase into a local rather than a
@@ -256,36 +256,36 @@ genuine gcc-2.9 gap - see that writeup for the technique that closed it.
 
 `GaxDrawText` (word-wrap text/console-tile renderer, called by the
 matched `GaxFatalError`) is now matched, real C - see
-[docs/matching/issue-67-word-wrap-text-renderer.md](../matching/issue-67-word-wrap-text-renderer.md)
+[docs/matching/archive/issue-67-word-wrap-text-renderer.md](../matching/archive/issue-67-word-wrap-text-renderer.md)
 and the "Matched" section above.
 
 `DrawLanguageSelect`/`InitLanguageSelectGraphics` (icon-manager draw loop / tile-cache init for
 the counter widget, from the `0x08037110`-`0x08038538` pass) were
 parked as byte-verified NAKED transcriptions (both since matched - see
 "Matched in the GAX toolchain retry") - see
-[docs/matching/issue-67-counter-selector-icons.md](../matching/issue-67-counter-selector-icons.md)
+[docs/matching/archive/issue-67-counter-selector-icons.md](../matching/archive/issue-67-counter-selector-icons.md)
 and the "Parked - NAKED asm transcription(s)" section below.
 
 `GaxChannelInit`/`GaxChannelPlay`/`GaxChannelDecodeRow` (the "Channel" SoundHandler
 type's init_fn/play_fn and the latter's direct callee) - listed raw
 above as of the second `0x08038538`-`0x08039658` pass - are now Parked
 NAKED transcriptions, see the "Parked" section above and
-[docs/matching/issue-67-68-channel-init-play.md](../matching/issue-67-68-channel-init-play.md).
+[docs/matching/archive/issue-67-68-channel-init-play.md](../matching/archive/issue-67-68-channel-init-play.md).
 
 From the `0x08039818`-`0x0803A944` pass specifically (issue #68): three
 independent passes together parked all 15 of the chunk's still-raw
 functions as byte-verified NAKED transcriptions - `GaxChannelStepInstrumentSeq`,
 `GaxChannelSetInstrument`, `GaxChannelTick`, `GaxEnvelopeTick` (see
-[docs/matching/issue-68-channel-bind-envelope-note.md](../matching/issue-68-channel-bind-envelope-note.md))
+[docs/matching/archive/issue-68-channel-bind-envelope-note.md](../matching/archive/issue-68-channel-bind-envelope-note.md))
 plus `GaxChannelTickSweep`, `GaxFxChannelPlay`, `GaxMixerApplyEcho`, `sub_803A2C8`/
 `sub_803A318` (fused), `GaxMixerPlay`, `GaxMixFrame`/`sub_803A608`
 (fused) (see "Parked - NAKED asm transcription(s)" above), plus
 `GaxChannelMix`/`sub_8039E50` - one logical note-trigger routine split by
 a manual return-address trampoline, `lib/gax/src/gax_note_trigger.c` -
 see
-[docs/matching/issue-68-note-trigger-trampoline.md](../matching/issue-68-note-trigger-trampoline.md).
+[docs/matching/archive/issue-68-note-trigger-trampoline.md](../matching/archive/issue-68-note-trigger-trampoline.md).
 Nothing in this chunk is left raw any more; see
-[`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)'s
+[`docs/matching/archive/issue-68-0x08039818-audio.md`](../matching/archive/issue-68-0x08039818-audio.md)'s
 "Left raw" section for the historical per-function reasoning (many-
 register allocation ceiling, or entangled with a neighbor via a manual
 return-address-trampoline idiom). The raw ARM-mode DSP/mixer code block past

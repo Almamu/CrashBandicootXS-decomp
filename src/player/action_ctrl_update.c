@@ -10,12 +10,12 @@
  * gActionCtrlStateTable action-table helpers for the player/action object
  * (include/action_obj.h). Not ROM-adjacent to kill_player.c/
  * action_ctrl_left_ground.c (the still-NAKED `ActionCtrlHandleEvent` sits before it,
- * `ApplyActionCtrlMotion` after) - see docs/matching/issue-16-actor-12420.md.
+ * `ApplyActionCtrlMotion` after) - see docs/matching/archive/issue-16-actor-remainder.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
- * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `HandleActionCtrlAirInput`
+ * NAKED retry (docs/matching/archive/issue-15-16-naked-retry.md): `HandleActionCtrlAirInput`
  * matches as plain C under it, and `TryActionCtrlDoubleJump` since the second retry
- * (docs/matching/issue-15-16-17-naked-retry-2.md), and `UpdateActionCtrl` in a
+ * (docs/matching/archive/issue-15-16-17-naked-retry-2.md), and `UpdateActionCtrl` in a
  * later pass. */
 
 typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
@@ -118,7 +118,7 @@ static inline s32 K100(void)
 }
 
 /*
- * Formerly NAKED. What it took (docs/matching/issue-15-16-naked-retry.md,
+ * Formerly NAKED. What it took (docs/matching/archive/issue-15-16-naked-retry.md,
  * later pass):
  * - each `self->part` re-read gets its own local, and both camera tests
  *   read `y` into a local first (the ROM loads it before the camera
@@ -269,7 +269,7 @@ void UpdateActionCtrl(struct act *self)
  * ids, resets the state/flag/table-index trio to a type-keyed value,
  * plays a fixed sound, and returns 1; otherwise returns 0.
  *
- * Formerly NAKED (docs/matching/issue-15-16-17-naked-retry-2.md): the
+ * Formerly NAKED (docs/matching/archive/issue-15-16-17-naked-retry-2.md): the
  * tag tests read `self->part` each time instead of through a local - GCSE
  * turns the reloads into the ROM's copy of the pointer in r2 - and the
  * `pressed & 1` test is folded into `pressed`'s assignment, which puts

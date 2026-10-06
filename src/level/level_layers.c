@@ -40,7 +40,7 @@
  * pointer, called through `_call_via_r2`. Function names stay
  * `sub_XXXXXXXX` (docs/naming.md). Only `SetLevelScroll` needed a matching
  * tweak (separate temps per axis). See
- * docs/matching/issue-43-level-layers.md.
+ * docs/matching/archive/issue-43-level-layers.md.
  *
  * Real bytes formerly the whole of `asm/code_3_2_17_266bc.s`. */
 

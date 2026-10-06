@@ -8,7 +8,7 @@
 #include "globals.h"
 
 /* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
- * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
+ * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
  * gActionCtrlStateTable action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 

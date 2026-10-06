@@ -121,7 +121,7 @@ void ResetSpriteObj(void *arg0)
  * at record+0xc, and mirrors it horizontally/vertically around `part`'s
  * own position per the 0x28 mirror bits. Returned by value (the hidden
  * return pointer is the `dest` the ROM keeps in r8 and hands back in r0).
- * Matches under old_agbcc - see docs/matching/issue-9-naked-retry.md. */
+ * Matches under old_agbcc - see docs/matching/archive/issue-9-naked-retry.md. */
 struct aabb GetSpriteBounds(struct box_part *part)
 {
     struct aabb box;
@@ -536,7 +536,7 @@ asm(".align 2, 0");
  * `steps`, both counters reset and - unless the keyframe's loop flag
  * (bit 1) is set - `animDone` is set.
  *
- * Matches under old_agbcc (see docs/matching/issue-9-naked-retry.md).
+ * Matches under old_agbcc (see docs/matching/archive/issue-9-naked-retry.md).
  * The ROM keeps `part` in `ip` for the whole function; that falls out
  * naturally from this plain shape under the old compiler. The two
  * details the shape pins down: the second half reads `tick` into a

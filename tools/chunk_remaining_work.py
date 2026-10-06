@@ -426,7 +426,7 @@ general process; this specific case is narrower than a normal "match
 this function" task - **the C is already correct, it just doesn't
 compile to the same bytes as the ROM**. This is usually a specific gcc
 2.9 register-allocation, instruction-scheduling, or peephole-optimization
-quirk. See `docs/matching.md` and `docs/matching/` for a large catalog
+quirk. See `docs/matching.md` and `docs/matching/archive/` for a large catalog
 of techniques that have worked on similar cases elsewhere in this
 codebase (register `asm("rN")` pins, forcing block order with `goto`,
 the negative-constant bit-clear idiom, etc.) before assuming something

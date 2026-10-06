@@ -3,11 +3,11 @@
 
 /* GitHub issues #9/#10/#41's remaining piece of `ProbeTerrain`'s own
  * "umbrella 5-mode dispatcher" cluster (`terrain_probe.c`,
- * docs/matching/issue-9-10-41-0x08026628-game-loop.md): that pass fully
+ * docs/matching/archive/issue-9-10-41-0x08026628-game-loop.md): that pass fully
  * derived both of these axis resolvers' semantics from their own raw
  * bytes (see that doc's "`ProbeTerrainX`/`ProbeTerrainY`: which axis each
  * one actually resolves" section). Both are plain C, built with
- * old_agbcc - see docs/matching/game-loop-old-agbcc.md.
+ * old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md.
  *
  * `s32 fn(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
  * s32 submode)`:
@@ -39,7 +39,7 @@
  *     value again leaves `*outValue` untouched - `ProbeTerrain` only
  *     ever passes `1`/`3` here).
  *   - Both finish with the same tail: if `self+0x2a` (the "flag held
- *     set" byte `docs/matching/issue-9-10-0x0800a884-graphics.md`
+ *     set" byte `docs/matching/archive/issue-9-10-0x0800a884-graphics.md`
  *     already named for this same `self`/`gLevelLayers`-shaped
  *     object) is nonzero *and* the scan's own scratch out-flag from
  *     its last `GetSolidTerrainHeights` call is nonzero, writes that scratch byte

@@ -6,7 +6,7 @@
 #include "globals.h"
 
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
+ * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Constructor: health defaults to `0x10`, or `0x18` if the
  * `gHovercraft` singleton hasn't been constructed yet
@@ -27,7 +27,7 @@
  *   with two shifts, where the ROM computes the stack slot's address
  *   (`add r0, sp, #0x24`) and does a genuine `ldrb` - the same
  *   pattern already closed for other stack-passed byte arguments (see
- *   `docs/matching/issue-5-overlay-ui-sync.md`'s `DrawSaveMenuMain` entry
+ *   `docs/matching/archive/issue-5-overlay-ui-sync.md`'s `DrawSaveMenuMain` entry
  *   and `issue-45-hud-stat-widget-dispatcher.md`'s "6th-argument"
  *   entry). Materialized via a two-instruction `asm volatile` anchor
  *   into an `"=l"`-constrained (lo-register) temp, then copied into
@@ -162,7 +162,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
  * gate byte at `self+0x59`, and a little "spawn/orbit" record at
  * `self+0x5c`/`self+0x60`/`self+0x64`/`self+0x68`/`self+0x6c` driving
  * `UpdateHovercraftSideGun`'s position-plus-effect-spawn step. See
- * docs/matching/issue-63-0x08033ef4-actor.md. */
+ * docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* The second object kind (vtable gHovercraftSideGunVtable). */
 struct actor_orbiter {

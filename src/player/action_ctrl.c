@@ -89,7 +89,7 @@ void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d)
  * always widens a `char`-returning call's result before propagating
  * it further; the raw-`s32` reinterpretation sidesteps that widening
  * entirely since the value is never treated as narrower than a full
- * register. See docs/matching/naked-sub_80157c4-matched.md for the
+ * register. See docs/matching/archive/naked-sub_80157c4-matched.md for the
  * full derivation (this was the sole remaining residual after a
  * 99.8%-matching pass). */
 s32 ActionCtrlSetTargetAnim(struct act *self, struct player *part, s32 mode)

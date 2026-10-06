@@ -6,7 +6,7 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `DestroyCrate`/
+ * docs/matching/archive/issue-13-graphics-fc70.md). `DestroyCrate`/
  * `InitCrate`/the two Bresenham-line helpers `FindLineCrossingYMajor`/
  * `FindLineCrossingXMajor` right before `ConvertCratesForTimeTrial` are left untouched raw. */
 

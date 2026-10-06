@@ -24,8 +24,8 @@
  * strength reduction reverses it). The shared declarations below are
  * copied from the first half. Everything from `DrawVvLogoPieces` on lives in
  * `company_logos.c`, which needs strength reduction on. See
- * docs/matching/issue-64-65-naked-retry-2.md and
- * docs/matching/sr65-naked-retry.md. */
+ * docs/matching/archive/issue-64-65-naked-retry-2.md and
+ * docs/matching/archive/sr65-naked-retry.md. */
 
 
 extern void *_call_via_r1(void *arg0, void *fn);

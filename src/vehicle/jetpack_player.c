@@ -11,7 +11,7 @@
 #include "globals.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md.
  * This file covers the whole contiguous run of accessors/accumulator-
  * drivers/state-transition helpers for the singleton and its `self`
  * object between the parked `AllocJetpackPlayerTiles` and `RunJetpackPlayerState`.
@@ -341,7 +341,7 @@ void DestroyJetpackPlayer(void *selfArg, s32 flags)
 }
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gJetpackPlayerStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`). */
@@ -354,7 +354,7 @@ void RunJetpackPlayerState(struct actor_self *self)
 asm(".align 2, 0");
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* Trivial byte getter for the singleton's own flag, `JetpackPlayerStateResume`/
  * `JetpackPlayerStateEnter`'s read counterpart. */

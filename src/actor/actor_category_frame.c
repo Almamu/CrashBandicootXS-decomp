@@ -18,7 +18,7 @@
  * definition/doc comment), then run the same 3-axis (Z,Y,X order) overlap
  * test already established throughout this ROM
  * (UpdateYeti/IsTouchingYeti/DetonateNearbyPolarNitros/IsTouchingAirship etc - see
- * docs/matching/issue-53-actor-c7a8.md, issue-54-actor-d3a8.md,
+ * docs/matching/archive/issue-53-actor-c7a8.md, issue-54-actor-d3a8.md,
  * issue-58-0x08030574-actor.md). `FindShotTarget` is the same test wrapped in
  * an outer walk of the whole `gActorList`-rooted circular list
  * (`self+0x4c`), gated by a `_call_via_r1` per-node visibility check first

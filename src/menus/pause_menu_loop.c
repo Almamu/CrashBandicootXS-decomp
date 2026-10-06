@@ -13,7 +13,7 @@
  * (pause_menu_draw.c) on the other, so it needs its own object file
  * to keep both neighbors' link-order positions intact (docs/workflow.md
  * step 4's "one .c file per contiguous ROM region" rule) - see
- * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
+ * docs/matching/archive/issue-7-0x08004d74-overlay-ui.md. */
 
 /* The composite pause/options screen's blocking cursor/confirm/cancel
  * driver (docs/rom_map.md's overlay_ui section) - runs until the user
@@ -45,7 +45,7 @@
  * the fade-in loop is inserted at the end of the block after the
  * fade-out loop, so `disp` is only taken after the fade-in loop; taken
  * before the input loop it lands ahead of that insertion
- * (docs/matching/early-rom-naked-retry-2.md). */
+ * (docs/matching/archive/early-rom-naked-retry-2.md). */
 
 /* gKeys as the {held, newly pressed} key-state pair. */
 struct pause_keys {

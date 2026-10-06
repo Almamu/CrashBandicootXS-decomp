@@ -23,7 +23,7 @@
  *
  * Once a NAKED transcription; it matches as plain C under old_agbcc
  * (link_handshake.o is on the Makefile's OLD_AGBCC_OBJS) with no pins
- * (docs/matching/early-rom-naked-retry-2.md). The fill loop is written
+ * (docs/matching/archive/early-rom-naked-retry-2.md). The fill loop is written
  * over an integer address so the compare is the ROM's signed
  * `cmp; bge` (the ROM got it from strength-reducing `self[i]`, which
  * gcc here declines: "giv not worth while"); `c` ahead of it puts the

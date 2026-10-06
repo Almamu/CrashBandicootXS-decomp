@@ -25,7 +25,7 @@
  * each bit mask before loading the byte it is ANDed with, old_agbcc's
  * tell. Under it all six are plain C with no pins (the current agbcc
  * misses all six - likely also what parked the spawn_gem_platforms.c
- * siblings, issue #31). See docs/matching/issue-30-graphics-loading.md,
+ * siblings, issue #31). See docs/matching/archive/issue-30-graphics-loading.md,
  * "Tenth pass". */
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both

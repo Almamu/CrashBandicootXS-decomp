@@ -77,7 +77,7 @@ void InitContinuePromptGraphics(struct continue_prompt *self)
 /* The continue prompt's (`InitContinuePrompt`/`InitContinuePromptGraphics`, continue_prompt_init.c/
  * continue_prompt.c) per-frame driver, called once per frame while the
  * effect is running (caller not yet identified in this pass - out of
- * scope, see docs/matching/issue-63-0x08033ef4-actor.md). Busy-loops
+ * scope, see docs/matching/archive/issue-63-0x08033ef4-actor.md). Busy-loops
  * (yielding via `DrawContinuePrompt`/`CommitContinuePromptFrame` each iteration - graphics-
  * loading/particle-update helpers just past this file's own raw-asm
  * boundary, `asm/..._34aa4.s`) polling input twice per outer iteration:
@@ -93,7 +93,7 @@ void InitContinuePromptGraphics(struct continue_prompt *self)
  * clear when the loop exits via the confirm branch, else 0.
  *
  * Matched (old_agbcc) in the late-ROM retry passes
- * (docs/matching/late-rom-naked-retry.md). It takes: `k` as a struct
+ * (docs/matching/archive/late-rom-naked-retry.md). It takes: `k` as a struct
  * copy of the input word (the ROM's word load + `lsrs #16` per test,
  * then a fresh `ldrh` for the 0x80 test after the calls); the loop as
  * `while (dir >= 0)` (with `while (1)` jump.c moves the return

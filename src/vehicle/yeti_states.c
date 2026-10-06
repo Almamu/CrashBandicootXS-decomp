@@ -17,7 +17,7 @@
  * kind/anim-reset "transition" tail gated on the object's `+0x12` done
  * flag. `YetiStateChase` and `YetiStateCharge` are two of `gYetiStateFuncs`'s
  * four vtable slots operating on this object (see
- * docs/matching/issue-54-actor-d3a8.md). */
+ * docs/matching/archive/issue-54-actor-d3a8.md). */
 
 /* codegen: PlayAmbientSfx takes a fifth argument, a one-byte struct on
  * the stack (audio.h). YetiStateChase stores the byte at sp itself

@@ -11,10 +11,10 @@ extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbo
 
 /* GitHub issue #25, ROM 0x0801AB98-0x0801B208: ResolvePlatformCollision, the
  * player-vs-object collision resolver (see include/gobj_1a794.h and
- * docs/matching/issue-25-level-objects.md for what it computes).
+ * docs/matching/archive/issue-25-level-objects.md for what it computes).
  *
  * Built with old_agbcc (OLD_AGBCC_OBJS). Closed in the last-five NAKED
- * retry (docs/matching/last5-naked-retry.md); what it took, beyond the
+ * retry (docs/matching/archive/last5-naked-retry.md); what it took, beyond the
  * gap4 structure (empty `case 0`, the `Span` inline, the shared
  * `set_hdir` arm):
  * - A hard-register hold on r8 up to the first overlap test, so `self`

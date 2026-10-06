@@ -8,7 +8,7 @@
 
 /* GitHub issue #9: DrawAffineSpritePieces (0x08007634-0x08007A48), the affine
  * (rotation/scaling) sibling of `DrawSpritePieces` (graphics.c) - see
- * docs/matching/issue-9-0x08007634-actor.md. Moved here from
+ * docs/matching/archive/issue-9-0x08007634-actor.md. Moved here from
  * asm/code_3_2.s in the issue #9 raw-asm pass.
  *
  * Queues one affine OAM entry per visible sub-piece of an animated
@@ -25,7 +25,7 @@
  * mask before the `ldrb` it is combined with. The ROM keeps nearly every
  * local in a 0x48-byte frame; those are register-allocator spills, and
  * the source shapes below are what reproduce them. See
- * docs/matching/graphics-7634-retry.md. */
+ * docs/matching/archive/graphics-7634-retry.md. */
 
 struct affine_part {
     u8 unk_00[0x18];

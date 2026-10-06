@@ -1,0 +1,229 @@
+# Issue #33: 0x08021BFC-0x08022354 - dispatch trampolines and the game-loop "origin point"
+
+GitHub issue #33 (`decomp-chunk`, category `graphics_loading`) listed 25 raw
+functions in `asm/code_3_2_17_1e990.s`, immediately following the
+still-raw remainder of the `LoadGraphicsPackage` cluster (issue #30) and
+the "trigger effect type N" family (issue #31). This is the write-up for
+the work done against that list.
+
+## What this cluster turned out to be
+
+More slots of the unified ~92-slot function-pointer dispatch array
+docs/rom_map.md documents (`gEntitySpawnFuncs`), plus one landmark
+function at the very end:
+
+- **`SpawnNitroSwitchCrate`/`SpawnOutlineCrate`-`SpawnCheckpointCrate`/`SpawnBasicCrate`**: more
+  instances of the already-documented `CreateCrate` entity-constructor
+  trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
+  with type constants `1`-`7`. `SpawnBasicCrate` additionally indexes a
+  small per-record flags byte via `gEntityFlags`'s own table (same
+  shape as `UpdateStompedHopPad`'s table read in `tiny_hop_pad.c`) and folds
+  two of its bits into the constructed object's `+0x28` bitfield.
+- **`SpawnBodySlamPower`/`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`/
+  `SpawnBlueGem`/`SpawnStopwatch`/`sub_80220C4`**: the `gSpriteBankTable`
+  record-indexed OAM-trio spawner shape (docs/rom_map.md's "master
+  12-byte record array") - allocate via `CreateSpriteObj` (or `CreateStopwatch`
+  for `SpawnStopwatch`), point `+0x20` at `table_base + record*12`, tag
+  `+0x2d`, build via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+  `SetSpriteAnimDone` OAM trio, update the `+0x29` bitfield via
+  `GetSpriteAnimPaletteSlot`, set `+0xa`, and register into `gUnknown_030012EC`'s
+  manager via `AddToPartList`. `SpawnBlueGem` and `SpawnStopwatch` are gated
+  (only spawn under a flag-bit/accessor test); `sub_80220C4` takes its
+  record index, tag, and `+0xa` value as runtime parameters instead of
+  fixed constants (matches `SpawnEffectPart`'s already-documented
+  `param1*12` runtime-indexed access to the same array).
+- **`SpawnCrateGemMarker`**: a plain state-write slot - packs two args into a
+  stack `{x, y}` pair and calls `SetCrateGemPos` (already matched in
+  `level_state.c`), storing them into `gLevelState->0x1c0`/
+  `->0x1c4`.
+- **`SpawnWumpa`**: conditionally calls `CreateWumpa` (the
+  achievement/unlock-icon family spawner) when `gLevelState+0x8c`
+  is clear.
+- **`nullsub_22`/`nullsub_23`**: empty stubs, the same "shared no-op
+  fallback" convention already documented for the 42-slot action table
+  and this same 92-slot array.
+- **`SpawnHoverStartMarker`/`SpawnUnderwaterStartMarker`**: plain tail-call trampolines to
+  `SpawnStartMarker` - still raw, at the top of this same `asm/*.s` file,
+  out of this chunk's scope.
+- **`sub_80221A4`/`sub_80221D4`**: write a Q8.8 `{x, y}` position
+  straight into `gPlayer` (the hot camera/viewport struct) -
+  leaf functions, no `push`/`pop` at all.
+- **`DestroyEntitySpawner`/`CreateEntitySpawner`**: the `{table_base, count}` descriptor
+  constructor/consumer pair docs/rom_map.md's "local vtable copy"
+  investigation resolved as generic (nothing table-specific) - allocate
+  an 8-byte object, zero it via `InitEntitySpawner`, and hand it
+  `{&gEntitySpawnFuncs, 0x5c}` via `SetEntitySpawnerTable`.
+- **`InitLevelState`** (292 B, the "origin point" - docs/rom_map.md,
+  "Found the origin point"): the function `GetLevelState` calls once at
+  the top of the game loop to construct essentially every hot IWRAM
+  global this whole ROM region references - `gAudioContext` (an
+  8340-byte `AudioContext` allocation, `IwramAlloc`+`InitAudioContext`),
+  `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/`03001304`/`030012B4`/
+  `C8`, clears `gDispcnt`'s mode byte, and zeroes `self+0xc0`
+  before returning `self` unchanged. `gSpriteBankSet` gets pointed
+  at a freshly-allocated 4-byte pointer cell which itself is set to
+  `&gSpriteBankTable` (the 729 KB master asset index).
+
+## Matched (24 functions, full clean `make compare` passing)
+
+`src/level/spawn_crates.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
+fns): the `CreateCrate` trampoline family, types `1`-`7`.
+
+`src/level/spawn_pickups.c` (`SpawnBodySlamPower`-`InitLevelState`,
+18 fns): the `gSpriteBankTable` spawner family, `SpawnCrateGemMarker`,
+`SpawnWumpa`, both `nullsub`s, the `SpawnStartMarker` trampolines, the
+`gPlayer` position writers, the descriptor pair, and
+`InitLevelState` itself.
+
+### Gotchas worth recording
+
+- **Returning a value vs. discarding it changes which register the
+  epilogue pops the return address into.** Every function in this
+  chunk that genuinely returns a value to its caller ends with
+  `pop {..., r1}; bx r1` (the return-address pop targets `r1` since
+  `r0` still holds the live return value) - but *most* of this chunk's
+  functions are called only for their side effects and the ROM's
+  epilogue instead does `pop {..., r0}; bx r0`, clobbering whatever was
+  in `r0` (the constructed object's address, in every case) and
+  discarding it entirely. Declaring these `void` (not `void *`) is
+  what makes gcc choose `r0` for the epilogue pop, matching the ROM -
+  the opposite choice (a `void *` return with the value silently
+  unused) makes gcc reach for `r1` instead to protect the "live"
+  return value, a 2-byte-per-function mismatch that's easy to miss on
+  a quick visual diff since both forms *look* like `pop {reg}; bx reg`.
+  Only `sub_80220C4` and `InitLevelState` actually return their value (both
+  have real callers that use the result) and keep `void *`/`void *`
+  return types with an explicit `return`.
+- **The `CreateCrate` trampolines' cross-jump merge.** A naive
+  `if (cond) return f(...,A); return f(...,B);` (or the `void`
+  equivalent, `if (cond) { f(...,A); return; } f(...,B);`) gets
+  cross-jump-merged by this compiler into one shared call site with the
+  constant hoisted before the branch - the ROM instead has two fully
+  duplicated call sites (`SpawnNitroSwitchCrate`'s two `bl CreateCrate`s, one per
+  branch). Assigning each branch's result to a `void *result;` local
+  (even though the value is never read afterward) is what defeats the
+  merge - the same "assign-then-fall-through" shape used elsewhere in
+  this project to force duplication instead of sharing.
+- **`CreateCrate`'s own first parameter must be declared `u16`, not
+  `u32`, in the caller-side prototype**, even though the *callee*
+  function truncates it again internally - the ROM's callers defer
+  `arg0`'s truncation to inside each branch (`u32 arg0` on the caller's
+  own parameter, deferred to point of use), but the call *itself* still
+  truncates before passing, which only happens if `CreateCrate`'s
+  extern prototype types that parameter `u16`.
+- **The negative-mask idiom, again**: `SpawnBasicCrate`'s (parked) and
+  every OAM-trio spawner's `+0x29` bitfield update need the explicit
+  `asm("mov %0, #0x10\n\tneg %0, %0")` register-pin trick (see
+  `UPDATE_ICON_FRAME_NIBBLE` in `pause_menu_pages_init.c`) - a bare `& -0x10`
+  in C gets constant-folded into a single-instruction bitwise-complement
+  immediate, one off from the ROM's actual two's-complement value.
+- **`InitLevelState`'s five "void helper leaves the pointer in r0" calls**
+  (`nullsub_2`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
+  `InitEntityFlags`, and `CreateEntitySpawner`'s own `InitEntitySpawner`): each is called
+  immediately after an allocation, and the ROM leaves the fresh
+  pointer in `r0` across the call (valid only because each real callee
+  never writes r0) instead of reloading/saving it - reproduced with the
+  pointer pinned to `r0` across an inline-asm `bl`, the same technique
+  `ShowCompanyLogos`'s `nullsub_7` call already established (see
+  `docs/matching/archive/issue-37-game-loop-234e8.md`).
+- **`gSpriteBankSet`'s triple pointer-to-pointer-to-pointer
+  dereference**: declaring it `void ***gSpriteBankSet;` (matching
+  `pause_menu_pages_init.c`'s already-confirmed-matching `InitPauseCrystalsPage`) and
+  writing `**gSpriteBankSet` reproduces the ROM's exact 4-load
+  chain (address load, then three register-indirect dereferences) in
+  one expression, cleaner than the two-step `void *`-typed alias used
+  in the still-parked `spawn_gem_platforms.c`.
+- **Pre-computing a global's address into a local *before* a call it's
+  used after** (`InitLevelState`'s dozen `{addr = &global; ...; *addr =
+  result;}` blocks): writing the assignment as `global = f(...);`
+  directly lets gcc defer the address computation to right before the
+  store (after the call), while the ROM computes it once, early, and
+  keeps it live in a callee-saved register across the call - matched
+  by declaring the address as its own local *before* the call
+  expression that uses it.
+- **A single-use two-operand computation's operand-evaluation order is
+  a genuine source-order dependency, not just an expression-tree
+  question**: `InitLevelState`'s tail (`gDispcnt` halfword store,
+  then the `self+0xc0` word store, both writing the same zero constant)
+  needed the *address* local declared before the *constant* local (not
+  the reverse) to match the ROM's `ldr r0,=addr` / `movs r4,#0` order -
+  swapping the declaration order alone changed which one gcc computed
+  first, with no other source change needed.
+
+## Parked (`NON_MATCHING`) - 1 function
+
+- **`SpawnBasicCrate`** (`src/level/spawn_crates.c`, real bytes
+  in `asm/code_3_2_17_21d04.s`) - every field/mask/branch is confirmed
+  correct and the bit-test/mask-write tail matches the ROM
+  byte-for-byte, but the middle "resolve the per-record flags byte"
+  section doesn't: the ROM keeps the record's base object
+  (`S = *(void **)gEntityFlags`) live in `r1` across both of its
+  field reads and only copies the final resolved address into a third
+  register (`adds r3, r0, #0`) right at the end, whereas this compiler
+  resolves the same value one register (and 4 bytes) short no matter
+  how the reads/locals are ordered. A 4-byte gap in an otherwise fully
+  understood 120-byte function - parked rather than keep fighting gcc's
+  CSE for it. Splitting this function out of the otherwise-contiguous
+  `SpawnBodySlamPower`+ block required a second `.c` file
+  (`spawn_pickups.c`) plus the small raw
+  `asm/code_3_2_17_21d04.s`, following the established "matched
+  functions on both sides of a parked one need to live in different
+  translation units" pattern.
+
+## Second pass: `SpawnBasicCrate` matched via NAKED transcription
+
+Now byte-exact matched, confirmed by a full clean `make compare` ("La
+suma coincide"). Every field, mask and branch was already confirmed
+correct against the ROM; the residual 4-byte CSE gap documented above
+never responded to further plain-C restructuring, so it was converted
+to `NAKED` and its ROM disassembly transcribed instruction-for-
+instruction - the same escape hatch this project already established
+for `MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/link/link_handshake.c`, see
+`docs/matching/archive/issue-4-sio-settings-sync.md`'s "The general strategy
+for the rest" section).
+
+**Pre-existing bug found and fixed along the way**: `asm/code_3_2_17_21d04.s`
+was missing the `.if NON_MATCHING == 0` / `.endif` guard this project's
+other parked functions' raw `.s` fragments use - it assembled
+`SpawnBasicCrate`'s real bytes unconditionally, regardless of the
+`NON_MATCHING` flag. This didn't affect the normal `make compare` build
+(which never compiles the `#if NON_MATCHING`-guarded C version and so
+never conflicted with it), but would have produced a duplicate-symbol
+link error the moment someone ran `make NON_MATCHING=1 report` with
+this function still parked - never actually hit only because nobody had
+run that combination against this exact function before it got matched
+here. Moot now that the whole file is deleted and the function is real,
+always-compiled `NAKED` C.
+
+See [docs/status/graphics_loading.md](../../status/graphics_loading.md)
+for the running matched/parked list this updates.
+
+## Third pass: `SpawnBasicCrate` closed as real C
+
+The 4-byte gap above (the ROM's `adds r3,r0,#0` copy at the very end
+of the table-resolution chain, which a plain C statement always got
+optimized away) closes with the same technique used elsewhere in this
+project: an opaque `asm volatile("add %0, %1, #0" : "=r"(flagsAddr) :
+"r"(tmp))` forces the copy as a real, un-eliminable instruction instead
+of a redundant SSA value. Register-pinning the rest of the chain to the
+ROM's own choices (`rec` in r1, the array-base/loaded-value pair
+reusing r0/r4 in the ROM's own load order, splitting the `+0xc` base
+load into its own block so it lands between the address computation and
+the `ldrh` exactly where the ROM has it) and reordering both bitfield
+checks' constant-vs-reload evaluation order (pinning the mask constant
+to r0 and the reloaded flags byte to r1/r3 respectively, matching which
+one the ROM computes first) closed the remaining two 2-byte ordering
+diffs. Now genuine matched C, not `NAKED` - `tools/report_units.py`'s
+entry for `0x08021D04` now points at
+`src/level/spawn_crates.o` instead of `base_object=None`.
+Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
+crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
+coincide`.
+
+This doesn't yet extend to `SpawnStartMarker`'s own copy of this same
+`gEntityFlags -> *rec -> {+8, +0xc}` resolution shape
+(`src/level/spawn_start_marker.c`, issue #30) - that function's
+residual is a different register-choice/mask-derivation gap (`byte` in
+r0, a `movs r0,#1`/`subs r0,#0x12` mask derivation rather than a
+negative-immediate one), not the copy-elimination gap closed here -
+left for a future pass.

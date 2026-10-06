@@ -71,8 +71,9 @@ matched code - read it before starting.** In short:
   the table in `src/data/`, never anything under `build/`.
 - **Frozen files:** `expected/` (the progress report's targets, see
   [expected/README.md](expected/README.md)) and
-  [docs/matching.md](docs/matching.md) (the old matching log) are never
-  edited. A symbol rename goes into `expected/corrections.txt` instead.
+  the old matching logs ([docs/matching.md](docs/matching.md) and
+  [docs/matching/archive/](docs/matching/archive/)) are never edited,
+  except to fix a reference that no longer resolves. A symbol rename goes into `expected/corrections.txt` instead.
 - **The parked functions** (#553) follow the full matching loop in
   [docs/workflow.md](docs/workflow.md), steps 1 to 8.
 

@@ -68,7 +68,7 @@
  * the call so that the `add r0, sp, #16` comes after them. `rec` is
  * shared by the first two blocks: a function-scope `rec` is not
  * block-local, so local-alloc can't tie it to the record base and it
- * lands in r1 as in the ROM. See docs/matching/sp-box-retry.md. */
+ * lands in r1 as in the ROM. See docs/matching/archive/sp-box-retry.md. */
 #include "box_part.h"
 #include "util.h"
 #include "crates.h"

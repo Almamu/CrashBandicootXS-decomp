@@ -7,10 +7,10 @@
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * level_query.c - see level_query.c's header comment and
- * docs/matching/issue-38-medal-results-tally.md for the full write-up.
+ * docs/matching/archive/issue-38-medal-results-tally.md for the full write-up.
  * This single function sits between the BeginSlide..ShowSlidePicture run
  * (slideshow.c - BeginSlide NAKED-parked, the rest matched - see
- * docs/matching/issue-38-sound-channel-family.md) and EndSlide
+ * docs/matching/archive/issue-38-sound-channel-family.md) and EndSlide
  * (matched, slideshow_display.c). */
 
 /* Trivial setter: `gSlideshowDispcnt = value` - see slideshow.c's
@@ -23,8 +23,8 @@ void SetSlideshowDispcnt(u32 value)
 
 /* GitHub issue #38: 0x08024790-0x080247EB (game_loop) - continuation of
  * the sound-channel-handle helper family (slideshow.c). See
- * docs/matching/issue-38-medal-results-tally.md for the original chunk
- * write-up and docs/matching/issue-38-sound-channel-family.md for this
+ * docs/matching/archive/issue-38-medal-results-tally.md for the original chunk
+ * write-up and docs/matching/archive/issue-38-sound-channel-family.md for this
  * follow-up pass. */
 
 struct AudioContext;
@@ -62,7 +62,7 @@ void EndSlide(struct cutscene_player *self0, s32 idx)
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * slideshow_display.c - see level_query.c's header comment and
- * docs/matching/issue-38-medal-results-tally.md for the full write-up.
+ * docs/matching/archive/issue-38-medal-results-tally.md for the full write-up.
  * This is the tail of the chunk, right after EndSlide (parked/left
  * in asm/code_3_2_17_24790.s). */
 

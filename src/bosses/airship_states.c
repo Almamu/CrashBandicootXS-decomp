@@ -8,7 +8,7 @@
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c/airship_damage.c - see airship_fireball.c's header comment
- * and docs/matching/issue-58-0x08030334-actor.md. */
+ * and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* Boss-weapon camera-relative position accumulator: advances
  * `gAirshipZ` by its per-frame delta (`gAirshipVelZ`),
@@ -74,7 +74,7 @@ void AirshipStateApproach(void)
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c
  * and the code above - see airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * `AirshipStateApproach`'s (above) companion: advances
  * `gAirshipZ` by its per-frame delta the same way, but also
@@ -141,7 +141,7 @@ void AirshipStateFireballs(void)
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c
  * and the code above - see airship_fireball.c's header
- * comment and docs/matching/issue-58-0x08030334-actor.md.
+ * comment and docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * `AirshipStateApproach`/`AirshipStateFireballs`'s third sibling: advances
  * `gAirshipZ` by its per-frame delta and ramps

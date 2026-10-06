@@ -25,7 +25,7 @@
  * a pointer to `self`'s original (untruncated) Q8 `y` for the callee to
  * restore/report through.
  *
- * Matching notes (see docs/matching/issue-9-naked-retry.md): the list
+ * Matching notes (see docs/matching/archive/issue-9-naked-retry.md): the list
  * walk is the guarded do-while shape (not a `for`), which is what gives
  * the ROM's per-iteration `&gCrateList` literal reload; the
  * position is read as one struct copy (both words loaded, then both

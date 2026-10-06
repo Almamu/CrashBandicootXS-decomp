@@ -7,7 +7,7 @@
 #include "globals.h"
 
 /* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
- * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
+ * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
  * old_agbcc. */
 
 /* The spark object SpawnEffectPart spawns, as far as it is used. */
@@ -279,7 +279,7 @@ void ActionCtrlStateAirborne(struct act *self)
 asm(".align 2, 0");
 
 /* GitHub issue #17, ROM 0x080138E8-0x08013C60 (details in
- * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
+ * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
  * gActionCtrlStateTable action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 
@@ -446,7 +446,7 @@ void ActionCtrlStateSlide(struct act *self)
 
 /* GitHub issue #17, ROM 0x08013C60-0x0801426C, formerly
  * asm/code_3_2_17_12af4.s (details in
- * docs/matching/issue-17-0x08012fbc-actor.md, "Second pass").
+ * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Second pass").
  *
  * Five more entries of the gActionCtrlStateTable 42-slot action table
  * (docs/rom_map.md), the same player/action object as
@@ -659,7 +659,7 @@ void ActionCtrlStateCrouchDown(struct act *self)
  * differently so gcc doesn't thread the second into the first. The
  * second branch writes through a scoped `volatile u8 *` so its `adds r2,
  * #40` stays in place ahead of the -0x11 mask - see
- * docs/matching/issue-15-16-17-naked-retry-2.md. */
+ * docs/matching/archive/issue-15-16-17-naked-retry-2.md. */
 void ActionCtrlStateCrouch(struct act *self)
 {
     u32 in;
@@ -858,7 +858,7 @@ void ActionCtrlStateCrawlStart(struct act *self)
  * `UpdatePlayerFacing`.
  *
  * Formerly NAKED; matches under old_agbcc (this whole file is built with
- * it, see docs/matching/issue-15-16-17-naked-retry-2.md): the case 0/2
+ * it, see docs/matching/archive/issue-15-16-17-naked-retry-2.md): the case 0/2
  * trio goes through ActQueue27 so its 0 is materialized before the
  * stores, and the case 1 trio is written out in both branches, with the
  * calls in the do/while ACT_VCALL form, so gcc cross-jumps the shared

@@ -19,7 +19,7 @@
  * 6 swim start (D-pad from idle), 7 dead.
  *
  * Built with the older compiler, tools/agbcc/bin/old_agbcc (the Makefile's
- * OLD_AGBCC_OBJS) - see docs/matching/issue-20-player-ctrl.md.
+ * OLD_AGBCC_OBJS) - see docs/matching/archive/issue-20-player-ctrl.md.
  *
  * - UpdatePlayerCtrl (table slot +0x0C) is the per-frame update: D-pad
  *   up/down with auto-repeat (`repeat`) steps `tilt` (0..12) and
@@ -64,7 +64,7 @@ typedef void (*pctrl_fn0)(void *self);
 /* Virtual calls. Plain-brace macros on purpose: a do/while(0) wrapper
  * emits loop notes that change what CSE and cross-jumping do, and a
  * ({ }) statement expression leaves a USE insn that blocks cross-jumping
- * (see docs/matching/issue-20-player-ctrl.md). */
+ * (see docs/matching/archive/issue-20-player-ctrl.md). */
 #define SET_MODE(obj, a)                                                        \
     {                                                                          \
         struct pctrl_method *_m = &(obj)->vtable->setMode;                     \

@@ -4,7 +4,7 @@
 #include "globals.h"
 
 /* GitHub issue #44: the `gCamera` camera-follow block (the
- * "generic 0x18-byte block" docs/matching/issue-37-game-loop-2375c.md
+ * "generic 0x18-byte block" docs/matching/archive/issue-37-game-loop-2375c.md
  * saw `PlayRoom`'s tail flush via `SnapCamera`), plus two identical
  * EWRAM `mem_free`/`mem_alloc` wrapper pairs that follow it in ROM.
  *
@@ -45,7 +45,7 @@
  * `case 3` in `UpdateCamera` has no behavior; it reproduces the ROM's
  * switch decision tree (`cmp #2 / beq`, `bgt`, `cmp #1 / bne`), which
  * a two-case switch compiles to a flat compare chain instead. See
- * docs/matching/issue-44-camera-follow.md.
+ * docs/matching/archive/issue-44-camera-follow.md.
  *
  * Real bytes formerly the whole of `asm/code_3_2_17_26bf8.s`. */
 

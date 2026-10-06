@@ -1,26 +1,47 @@
 # docs/matching/
 
-One file per matching chunk/issue, written after `docs/matching.md`
-(the old single-file log) was frozen because every PR appending to that
-one shared file was the biggest source of merge conflicts between
-parallel matching work - two PRs in this directory never touch the same
-file, since each PR only ever *creates* a new one here, never edits an
-existing entry.
+Write-ups from the matching campaign, the phase that turned the
+disassembly into byte-exact C. That phase is over: every function
+except the three parked IWRAM ARM ones (#553) is matched C.
 
-**Naming:** `issue-<N>-<short-slug>.md`, where `<N>` is the GitHub
-`decomp-chunk` (or `parked-function`/`cleanup`) issue number and
-`<short-slug>` is a few words of the address range or subject (e.g.
-`issue-73-0802fbf0-actor.md`). If there's no issue (a function matched
-outside the chunk-issue workflow), use `<short-slug>-<address>.md`
-instead.
+## Top level: still-current references
 
-**Content:** same style `docs/matching.md`'s entries always used - what
-the function(s) do, the ROM addresses/files involved, any real
-compiler-codegen gotcha found and how it was fixed, and (for parked
-functions) exactly what was tried and why it didn't close. Cross-link
-to the relevant `docs/status/<category>.md` page and back.
+These files describe something the build still depends on or work that
+is still open. They are kept up to date.
 
-**Don't edit another PR's file here** unless you're specifically
-correcting something you found wrong in it - this directory's whole
-point is that each PR's file is its own, so nobody else's PR conflicts
-with yours.
+- [iwram-image.md](./iwram-image.md): the IWRAM image (`IntrMain`, the
+  ARM routines, the IWRAM data), including the three parked ARM
+  functions (#553) and why they stay assembly.
+- [per-file-flags-investigation.md](./per-file-flags-investigation.md):
+  whether the original build used per-file optimization flags, and the
+  evidence for the Makefile's `NO_STRENGTH_REDUCE_OBJS`.
+- [eeprom-sdk-o1.md](./eeprom-sdk-o1.md): why the Nintendo EEPROM
+  library (`lib/agb_eeprom/`) is built at `-O1` (`O1_OBJS`).
+
+A general reference for the matching techniques (old_agbcc, register
+pins, `asm` nudges and the like) is planned under #576. Until it lands,
+the archive below is where those techniques are explained.
+
+## archive/: the per-pass logs
+
+[archive/](./archive/) holds the per-pass logs: one file per chunk
+issue, parked function or retry pass, written while that work was done.
+They record what each pass tried, what closed and what didn't. They are
+a frozen historical record:
+
+- don't edit them, except to fix a reference that no longer resolves;
+- don't add new ones. A new write-up, for example when #553 closes, goes
+  next to the files above, or in the PR description if it is short.
+
+Source comments, `docs/status/` and the Makefile still cite archive
+files by path (`docs/matching/archive/<name>.md`) as the evidence for
+a particular workaround or build flag. The file names follow the old
+convention: `issue-<N>-<slug>.md` for a GitHub chunk or parked-function
+issue `<N>`, and `<slug>.md` for passes that weren't tied to one issue.
+Function and file names inside the older files may be the pre-rename
+ones (`sub_XXXX` labels, old `src/` paths);
+[tools/file_layout_plan.tsv](../../tools/file_layout_plan.tsv) maps the
+old file names to the current ones.
+
+The older single-file log, [docs/matching.md](../matching.md), was
+frozen when this directory was created. It is a historical record too.

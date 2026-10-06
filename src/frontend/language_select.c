@@ -149,7 +149,7 @@ extern s32 _call_via_r2(void *self, void *arg, void *fn);
  * trampoline `_call_via_r2` directly with the glyph assigned inside the
  * first call's argument list (so it's loaded between `this` and the
  * method pointer, as the ROM does) matches outright - see
- * docs/matching/gax-toolchain-retry.md. */
+ * docs/matching/archive/gax-toolchain-retry.md. */
 void DrawLanguageSelect(struct language_select *self)
 {
     s32 y;

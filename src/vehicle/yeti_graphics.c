@@ -23,14 +23,14 @@
  * `z` fields only. Box B: `self+0x38`'s own 12-byte vector, with
  * `self`'s own `+0x1c`/`0x20`/`0x24` position (all `>>8`) added into
  * all three of `x`/`y`/`z` - this is the "self+0x38's own vector"
- * referenced from docs/matching/issue-54-actor-d3a8.md's original
+ * referenced from docs/matching/archive/issue-54-actor-d3a8.md's original
  * parked writeup.
  *
  * Same frame-struct shape as `UpdateYeti`: A, B and the self box are
  * members of one stack struct so their addresses are rematerialized
  * from sp instead of being kept in callee-saved registers, and only
  * `&f.b` goes through a pointer local across the `MemCopy32` call.
- * Needs old_agbcc (docs/matching/issue-51-54-naked-retry.md). */
+ * Needs old_agbcc (docs/matching/archive/issue-51-54-naked-retry.md). */
 static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 {
     b->x += x;
@@ -85,7 +85,7 @@ u8 IsTouchingYeti(struct actor_self *self)
  * The frame pointer goes through the usual `CurFrame()` inline with the
  * global passed straight in: a `struct actor_self *obj` local puts
  * `&gYeti` last in the r8/sb/sl assignment, where the ROM
- * gives it r8 (docs/matching/issue-51-54-naked-retry.md). */
+ * gives it r8 (docs/matching/archive/issue-51-54-naked-retry.md). */
 static inline void FillDotPattern(u8 *dst, u8 seed)
 {
     s32 y, x;

@@ -5,7 +5,7 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). This function sits
+ * docs/matching/archive/issue-13-graphics-fc70.md). This function sits
  * between the still-raw `CreateCrate` (real bytes in
  * asm/code_3_2_17_e560_ff0c.s) and `UpdateCrate` (real bytes in the
  * new asm/code_3_2_17_e560_104e4.s), so it needs its own file rather
@@ -15,7 +15,7 @@
  * operates on - offsets kept raw rather than a named struct, matching
  * every already-matched sibling in this file family
  * (crate_reset.c-crate_stack.c). See
- * docs/matching/issue-13-fc70-second-continuation.md for the
+ * docs/matching/archive/issue-13-fc70-second-continuation.md for the
  * register-pinning technique this needed. */
 
 /* Unless `self`'s own `+0x4d` state byte has bit 7 set or its low 7

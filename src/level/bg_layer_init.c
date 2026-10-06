@@ -10,7 +10,7 @@
  * `(bgIndex + 0x1c) & 0x1f`, char base 2, priority 0).
  *
  * Was NAKED asm, not plain C - see
- * docs/matching/naked-sub_8025d74-matched.md for the derivation. The
+ * docs/matching/archive/naked-sub_8025d74-matched.md for the derivation. The
  * `& -0x20`/`& -0xd` masks always fold to their positive
  * byte-immediate equivalent instead of the ROM's runtime `movs`+`rsbs`
  * negation, closed the same way as `SetDispcntMode`/`CollideCrateWithPlayer`:

@@ -2,9 +2,9 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). This is the last still-raw
+ * docs/matching/archive/issue-13-graphics-fc70.md). This is the last still-raw
  * function from that pass's leftover cluster - see
- * docs/matching/issue-13-fc70-second-continuation.md's "Still left raw"
+ * docs/matching/archive/issue-13-fc70-second-continuation.md's "Still left raw"
  * section - now closed. Real bytes formerly the entirety of
  * asm/code_3_2_17_e560_ff0c.s (now deleted).
  *
@@ -65,7 +65,7 @@
  *
  * **Second jump table** (index `type`, 0-0x12/18 - the one the
  * trampoline family's caller-side `type` constants directly select).
- * See docs/matching/issue-13-0x0800ff0c-graphics.md for the full case
+ * See docs/matching/archive/issue-13-0x0800ff0c-graphics.md for the full case
  * table (which tag each case writes to `self+0x2d`, and what extra
  * fields each initializes); a couple of cases worth calling out here:
  * - `type == 5`: sets `self+0x50`/`+0x51`/`+0x48` from the placement
@@ -97,8 +97,8 @@
  *
  * Built with old_agbcc (the file is on the Makefile's OLD_AGBCC_OBJS;
  * under agbcc it is 8 bytes long and ~400 halfwords off). Was NAKED; the
- * later passes' notes are in docs/matching/issue-13-0x0800ff0c-graphics.md
- * and docs/matching/size2-naked-retry.md. The pieces that matter:
+ * later passes' notes are in docs/matching/archive/issue-13-0x0800ff0c-graphics.md
+ * and docs/matching/archive/size2-naked-retry.md. The pieces that matter:
  * - The ROM copies the placement-record pointer in the 0xb pre-check,
  *   the `flagged` block and case 15 (`add r2,r0,#0` / `add r3,r1,#0` /
  *   `mov sl,r6`). Those are the copy from an inline function's return

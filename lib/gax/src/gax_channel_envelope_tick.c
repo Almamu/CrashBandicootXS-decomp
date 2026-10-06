@@ -11,7 +11,7 @@
  *
  * Was NAKED behind a heavily register-pinned 99.7% draft; written
  * plainly against a struct (fields accessed directly, no cached
- * locals) it matches outright - see docs/matching/gax-toolchain-retry.md. */
+ * locals) it matches outright - see docs/matching/archive/gax-toolchain-retry.md. */
 void GaxChannelTick(struct GaxChannelState *self, struct GaxInfoHandler *info)
 {
     s32 v;

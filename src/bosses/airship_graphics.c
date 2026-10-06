@@ -5,7 +5,7 @@
 
 /* Same boss-weapon subsystem as airship_fireball.c/airship_load_graphics.c - see
  * airship_fireball.c's header comment and
- * docs/matching/issue-58-0x08030334-actor.md.
+ * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Per docs/rom_map.md ("A new mechanism: a procedurally-generated VRAM
  * fill-level meter"): a near-identical twin of
@@ -22,7 +22,7 @@
  *
  * Matched as plain C with the fixes that closed the one-row twin
  * `ConvertHovercraftTiles` (hovercraft.c, see
- * docs/matching/near-miss-polish-3.md). */
+ * docs/matching/archive/near-miss-polish-3.md). */
 
 /* The height is re-read after the row-pointer store (the ROM's `ldm
  * r1!`), the second loop has its own counter, its header is written in
@@ -102,7 +102,7 @@ void ConvertAirshipTiles(void)
 }
 
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
- * comment and docs/matching/issue-58-0x08030334-actor.md. */
+ * comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* Sets BG palette bank 1's last color (index 15) to either a near-white
  * flash color or a dim default, gated by bit 3 of `gAirshipStateTimer`

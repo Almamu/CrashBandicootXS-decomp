@@ -11,7 +11,7 @@
 #include "globals.h"
 #include "player.h"
 
-/* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
+/* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 struct palette_cache;
 struct part_list;

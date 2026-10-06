@@ -24,8 +24,8 @@
  *   DestroyLevelSelectEntry destructor; the constructor CreateLevelSelectEntry starts issue #29).
  *
  * This file is compiled with tools/agbcc/bin/old_agbcc (see Makefile and
- * docs/matching/issue-24-boss-actor.md). Every function is real C; see
- * docs/matching/issue-28-29-level-select-parts.md. */
+ * docs/matching/archive/issue-24-boss-actor.md). Every function is real C; see
+ * docs/matching/archive/issue-28-29-level-select-parts.md. */
 
 /* `struct twinkle`, `struct zoom_bg` (with its BG2CNT views) and `struct
  * level_item` are level_menu.h's. */
@@ -342,8 +342,8 @@ void DestroyLevelSelectEntry(struct level_item *self, s32 flags)
  *   buffer.
  *
  * This file is compiled with tools/agbcc/bin/old_agbcc (see Makefile and
- * docs/matching/issue-24-boss-actor.md). Every function is real C; see
- * docs/matching/issue-28-29-level-select-parts.md.
+ * docs/matching/archive/issue-24-boss-actor.md). Every function is real C; see
+ * docs/matching/archive/issue-28-29-level-select-parts.md.
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
  * Thumb pointer anywhere in the ROM: IsLevelSelectCursorHidden, IsLevelSelectCursorGrowing,

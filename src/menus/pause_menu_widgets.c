@@ -21,7 +21,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * `label2` there (slot 2). `self` is unused - the ROM never reads it
  * either.
  *
- * Matched in the last-ten pass (docs/matching/last-ten-naked-retry.md).
+ * Matched in the last-ten pass (docs/matching/archive/last-ten-naked-retry.md).
  * The ROM's r7 is never a pseudo's register here (the function is one
  * basic block, and local-alloc never uses the frame pointer): it is
  * reload's register for the 0x110 posX offset. Every posX/posY access is

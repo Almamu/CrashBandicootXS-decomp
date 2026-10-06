@@ -13,7 +13,7 @@
  * the already-matched DrawPausePowersPage (pause_menu_powers.c) before and
  * InitPauseMenuInfo (pause_menu_info.c) after - own object file for the
  * same reason pause_menu_loop.c documents. See
- * docs/matching/issue-7-0x08004d74-overlay-ui.md.
+ * docs/matching/archive/issue-7-0x08004d74-overlay-ui.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): its mask-before-ldrb
  * order shows in DrawPauseGemsPage's flag tests. */

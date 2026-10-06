@@ -175,7 +175,7 @@ s32 UpdateLinkSession(struct link_session *self)
  *
  * Once a NAKED transcription (1488 bytes, this project's biggest); it
  * now matches as plain C under old_agbcc (link_handshake.o is on the
- * Makefile's OLD_AGBCC_OBJS). History: docs/matching/big-naked-retry-3.md,
+ * Makefile's OLD_AGBCC_OBJS). History: docs/matching/archive/big-naked-retry-3.md,
  * early-rom-naked-retry-2.md, last-four-naked-retry.md,
  * last-six-naked-retry.md and last-seven-naked-retry.md (the first
  * receive loop, closed last: the load goes through a pointer biv and

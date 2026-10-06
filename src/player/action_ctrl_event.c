@@ -5,7 +5,7 @@
  * conventions (`self+0xc`/`self+0x10`/`+0x27`..`+0x32`) this "child
  * object" family uses. Not ROM-adjacent to wumpa.c's matched
  * span before it or kill_player.c's after it (see
- * docs/matching/issue-16-actor-11b0c.md/issue-16-actor-12160.md), so a
+ * docs/matching/archive/issue-16-actor-11b0c.md/issue-16-actor-12160.md), so a
  * new file.
  *
  * Built with old_agbcc (the file is on `OLD_AGBCC_OBJS`): under the
@@ -112,7 +112,7 @@ static inline void PartSetVelY(struct player *p, s32 a, s32 b, s32 c)
  *   part by the change in its keyframe Y offset (`PART_OFFSET`).
  * 5 and 18-22 do nothing.
  *
- * What the match needed (docs/matching/big-naked-retry-2.md):
+ * What the match needed (docs/matching/archive/big-naked-retry-2.md):
  * - the case bodies in the ROM's block order;
  * - `PART_OFFSET` as a macro that assigns the destination in each case
  *   (an inline's return value was copied into it);

@@ -335,7 +335,7 @@ void CreateEntitySpawner(void)
  * A plain C call can't assume that (any call conservatively clobbers
  * r0-r3), so each is spelled with the pointer pinned to r0 across an
  * inline-asm `bl`, the same technique used for `ShowCompanyLogos`'s
- * `nullsub_7` call (docs/matching/issue-37-game-loop-234e8.md). */
+ * `nullsub_7` call (docs/matching/archive/issue-37-game-loop-234e8.md). */
 void *InitLevelState(void *self)
 {
     {

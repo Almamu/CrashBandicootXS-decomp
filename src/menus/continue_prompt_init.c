@@ -22,8 +22,8 @@
  *
  * Matched, byte-exact real C. The remaining BLDCNT/BLDALPHA byte-packing
  * gap this function was previously parked over (see
- * docs/matching/issue-63-final-raw-actor.md and
- * docs/matching/issue-30-graphics-loading.md's LoadGraphicsPackage entry
+ * docs/matching/archive/issue-63-final-raw-actor.md and
+ * docs/matching/archive/issue-30-graphics-loading.md's LoadGraphicsPackage entry
  * for the established "handful of register choices" pattern this hit
  * too) turned out to be two narrow, closable spots, not a genuine
  * compiler limitation:
@@ -39,7 +39,7 @@
  *    "+r"(tmp))` compiler barrier right after `tmp`'s initializer,
  *    the same "stop the materialize-then-copy fold" technique
  *    documented for `sub_801E8F8`/`sub_801E96C`
- *    (docs/matching/issue-30-graphics-loading.md). Both are ordinary
+ *    (docs/matching/archive/issue-30-graphics-loading.md). Both are ordinary
  *    register-pin/barrier fixes, not opaque `asm volatile` islands -
  *    the "handful of accumulator/temp-register choices" this function
  *    was previously parked over. The real bytes used to live in

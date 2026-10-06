@@ -5,7 +5,7 @@
 
 /* The link-cable session layouts (src/link/*.c), as the
  * NON_MATCHING drafts of MakeLinkHandshakeId/ResetLinkSessionState/UpdateLinkSession establish
- * (docs/matching/issue-4-6-8-naked-retry.md). */
+ * (docs/matching/archive/issue-4-6-8-naked-retry.md). */
 struct nibble_pair {
     u8 lo:4;
     u8 hi:4;

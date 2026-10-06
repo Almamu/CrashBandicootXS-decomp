@@ -178,7 +178,7 @@ Searched for, and nothing else found:
   inside binary data. The only other library ID strings are GAX's
   ("GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia"), a
   third-party library whose flags are covered by
-  `docs/matching/gax-toolchain-retry.md`.
+  `docs/matching/archive/gax-toolchain-retry.md`.
 - **Nintendo library code that isn't compiled C.** The BIOS SWI
   wrappers (`lib/libagbsyscall/libagbsyscall.s`, `BgAffineSet`-`VBlankIntrWait`), the libgcc
   `_call_via_rN` table (`lib1funcs.s`), `__divsi3`/`__modsi3`/

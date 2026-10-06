@@ -11,7 +11,7 @@
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md - `UpdateEnemyAttackCycle` is
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md - `UpdateEnemyAttackCycle` is
  * the specific function that doc's own Phase 1 pass already flagged as
  * "the exact function docs/rom_map.md ties to sharing UpdateEnemyCtrl's own
  * self+0x68 field" (called from UpdateEnemyCtrl's states 4, 13, 14, 16);
@@ -59,7 +59,7 @@
  * `owner->0x38` is set.
  *
  * `UpdateEnemyAttackCycle` is real C under old_agbcc (issue #10 NAKED retry,
- * docs/matching/issue-10-naked-retry.md). Its spawn call is an inline
+ * docs/matching/archive/issue-10-naked-retry.md). Its spawn call is an inline
  * copy of `LaunchHarmfulEffectPart` (enemy_ctrl.c): passing the arguments
  * through inline parameters is what materializes them in the ROM's
  * order, and the `+0xC` flag writes are bitfield stores (QImode `-0x41`/
@@ -187,7 +187,7 @@ void UpdateEnemyTriggerBox(struct part_ctrl *self)
 asm(".align 2, 0");
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the last four
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): the last four
  * functions of `asm/code_3_2_17_c6a8.s` - `SetEnemyState`, the
  * `menu_ui` dialog-widget system's own 18-state `self+0x74` update
  * (called from all 31 confirmed `menu_ui` dispatch-table entries,
@@ -219,7 +219,7 @@ asm(".align 2, 0");
  * themselves) - so the C below inlines them (SetModeA/SetModeB/SetMode).
  *
  * The whole file is built with old_agbcc (issue #10 NAKED retry,
- * docs/matching/issue-10-naked-retry.md). Under it `SetEnemyState` is
+ * docs/matching/archive/issue-10-naked-retry.md). Under it `SetEnemyState` is
  * plain C, and the three bounds setters below match without the
  * register pins and `asm volatile` barriers the current compiler
  * needed. In `SetEnemyState`:

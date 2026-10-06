@@ -17,7 +17,7 @@
  * player/handler structs in gax_internal.h it matches outright - the
  * one subtlety is writing the "0" stores as constants (the ROM reuses
  * the register holding the known-zero flag test for them) - see
- * docs/matching/gax-toolchain-retry.md. */
+ * docs/matching/archive/gax-toolchain-retry.md. */
 u32 GAX2_jingle(struct GaxHandlerLayout *layout)
 {
     u8 *buf = gGaxPlayerState->workBuf;

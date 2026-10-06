@@ -69,7 +69,7 @@
  * The streamer functions use `struct bg_streamer` below, the layer
  * functions `struct bg_scroll_layer` (include/bg_scroll_layer.h). Built
  * with old_agbcc - see
- * docs/matching/game-loop-old-agbcc.md. */
+ * docs/matching/archive/game-loop-old-agbcc.md. */
 
 /* The room descriptor the streamer reads its tile map from. */
 struct stream_source

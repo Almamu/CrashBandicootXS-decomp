@@ -6,7 +6,7 @@
  * tile-slot-pooled subclass used for BG layer 0 (0x60 bytes, constructor
  * `InitPooledBgLayer` in tile_slot_pool.c, method table `gPooledBgLayerVtable`).
  * The level-layers singleton (level_layers.c) owns one of each kind per
- * hardware BG. See docs/matching/issue-42-bg-scroll-layer.md.
+ * hardware BG. See docs/matching/archive/issue-42-bg-scroll-layer.md.
  *
  * The layer keeps a 32x32-entry window of the level's tile map (a
  * `DecodeLayerChunk`-family ring-buffer streamer at `+0x2C`, cutscene_player.c)

@@ -50,10 +50,10 @@
  *
  * Everything is plain C. Details, and the two techniques that
  * closed most of the rest (`Opaque` constants, inline member helpers),
- * are in docs/matching/issue-26-level-select-menu.md.
+ * are in docs/matching/archive/issue-26-level-select-menu.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS), the compiler this
- * region was originally built with; see docs/matching/old-agbcc-retry.md.
+ * region was originally built with; see docs/matching/archive/old-agbcc-retry.md.
  * Under it the shadow-register blocks are plain bitfield stores; the
  * `Opaque`/register-pinned forms were current-agbcc workarounds. */
 
@@ -985,7 +985,7 @@ void LoadLevelSelectRecord(struct level_menu *self)
  * moves (LevelSelectCursorLeft/LevelSelectCursorRight); returns the selected entry's level.
  *
  * Matched under old_agbcc in the near-miss polish pass
- * (docs/matching/near-miss-polish.md): the key-word copy the ROM makes
+ * (docs/matching/archive/near-miss-polish.md): the key-word copy the ROM makes
  * inside the 0x80 test comes from a statement expression holding the
  * copy plus an empty `asm` that keeps gcc from merging it. */
 s32 LevelSelectLoop(struct level_menu *self)

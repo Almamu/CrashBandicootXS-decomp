@@ -6,13 +6,13 @@
 
 /* The enemy controller of the 0x0800B8DC-0x0800CA60 cluster
  * (src/enemies/, UpdateEnemyCtrl's own `self`,
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md) and the part it steers
+ * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md) and the part it steers
  * (`self->target`, "owner" in the older docs). CreateEnemyCtrl constructs
  * the controller in a 0x8C-byte block, and the level spawners
  * (include/text_popup.h) attach it to the sprite part they create. Only
  * the fields the code touches are named.
  *
- * Built with old_agbcc: see docs/matching/issue-10-naked-retry.md. */
+ * Built with old_agbcc: see docs/matching/archive/issue-10-naked-retry.md. */
 
 /* The steered part. Same object as include/box_part.h's
  * `struct box_part`, with the fields past 0x38 this cluster uses. */

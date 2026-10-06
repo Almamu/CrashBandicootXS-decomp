@@ -1,0 +1,241 @@
+# Issue #63's final raw span: 0x0803472C-0x08034AA4 (actor)
+
+> **Update:** `InitContinuePromptGraphics` is now plain C in `continue_prompt.c` under old_agbcc, and
+> the raw asm file below is gone - see [old-agbcc-round5.md](old-agbcc-round5.md).
+
+This closes out the last three raw functions from issue #63's original
+25-function chunk (`InitContinuePrompt`/`InitContinuePromptGraphics`/`ContinuePromptLoop`, previously
+left raw as "out of scope for this pass" - see
+[issue-63-0x08033ef4-actor.md](issue-63-0x08033ef4-actor.md)'s "Left
+raw" section). All three are now understood and parked/matched, leaving
+issue #63 with zero fully-raw functions - though the issue itself still
+has 8 parked (7 NON_MATCHING + 1 NAKED) functions from the earlier pass
+plus these two newly-parked ones, so it stays open (see "Tally" below).
+
+## A new, unrelated "self" object: `struct continue_prompt`
+
+Unlike every other function in this chunk (all members of the
+`InitActorPart`-rooted per-instance object family), these three
+functions operate on a completely different, standalone object - no
+`InitActorPart` call, and a field layout that doesn't match that
+family's `self+0xc` table-index/`self+0x28` state/`self+0x44` frame
+counter conventions at all:
+
+```c
+struct continue_prompt {
+    u8 *bg1Buf;   // 0x00 - LoadGraphicsPackage "self" scratch for BG1
+    u8 *bg0Buf;   // 0x04 - ditto for BG0
+    u8 *bg2Buf;   // 0x08 - ditto for BG2
+    u16 dispcnt;  // 0x0c - written as one halfword to REG_DISPCNT
+    u8 unused_0e[2];
+    union { u32 word; struct { u8 bldcntLo, bldcntHi, bldalphaLo, bldalphaHi; } b; } blend; // 0x10
+    u8 unused_14[4];
+    struct bitmap_font *icons; // 0x18
+    u32 unused_1c;
+    u32 selection; // 0x20 - the Yes/No cursor (was `flag_20`)
+};
+```
+
+It's a full-screen alpha-blend overlay controller: three small BG
+scratch buffers feeding `LoadGraphicsPackage`, a combined
+BLDCNT/BLDALPHA mirror re-applied every frame to drive a flicker/pulse
+effect, and a hookup to the shared text icon manager
+(`gSmallFont`) and tile cache (`gPaletteCache`).
+
+## `InitContinuePrompt` (`src/menus/continue_prompt_init.c`) - matched, real C
+
+The constructor half: allocates and initializes the three BG scratch
+buffers (`OperatorNew`/`InitBgSetup`), loads their graphics packages,
+clears palette entry 0, builds the DISPCNT value (mode 0, 1D OBJ
+mapping, BG0/BG1/BG2 enabled), calls `InitContinuePromptGraphics` for the other setup
+half, then builds the BLDCNT/BLDALPHA alpha-blend value (BG2 -> BG0,
+mode 1, EVA=8/16 EVB=16/16), applies every register, zeroes two more
+fields, and ducks the audio context out via `FadeOutMusic`.
+
+This one came *extremely* close to a real match on the first pass -
+every field, struct offset, and the overwhelming majority of individual
+register choices were reproduced exactly through heavy register pinning
+(`self`->r5, a `buf` pin->r0 relying on `InitBgSetup` not clobbering
+r0 across the call, `zero`->r8, `c0x40`->sb, `one`->r6, `four`->r4) plus
+several inline-asm anchors for spots where this compiler's own optimizer
+takes a shortcut the ROM's build didn't (reusing a still-valid
+low-register copy of a pinned high-register constant instead of
+re-deriving it fresh, and CSE-folding a store-then-reload of a
+known-zero value across a width-mismatched halfword/byte access
+boundary). The `& -8`/`& -0x20` negative-constant bit-clear idiom, the
+"materialize a constant right before first use, not up front" ordering,
+and the "keep a constant's own register as the running accumulator
+instead of the freshly-loaded byte" idiom (needed differently at
+*different* points within the same function - one spot accumulates into
+the freshly-loaded value, a different structurally-identical-looking
+spot accumulates into the pre-existing constant) all had to be
+reproduced by hand.
+
+A final handful of individual accumulator/temp-register choices in the
+tail of the BLDCNT/BLDALPHA byte-packing sequence didn't converge on
+that first pass, confirmed only by the real linked ROM diff (not the
+isolated compile, which "looked right" at each step - the exact class
+of trap `docs/workflow.md` warns about), and the function was parked
+(`NON_MATCHING`) rather than pushed further at the time.
+
+A follow-up pass closed both remaining gaps - narrow register-pin/
+barrier fixes, not a genuine compiler limitation:
+
+- `one |= self->blend.b.bldcntHi;`'s reload was left to this compiler's
+  free register choice (it picked r0), where the ROM reuses r1 (the
+  register `mask` occupies a few statements later) - closed with a
+  `register u8 hi asm("r1") = self->blend.b.bldcntHi;` pin on just that
+  one reload, matching `matching_decomp_register_pinning` memory's
+  established technique.
+- The `mask`/`tmp` BLDALPHA pair (`tmp = mask; tmp &= bldalphaLo; ...`):
+  this compiler elides the `tmp = mask` copy entirely and ANDs the
+  freshly-loaded byte directly against `mask`'s own register instead (2
+  bytes shorter than the ROM's real "copy mask into tmp via a plain
+  `adds`, then AND against a separately reloaded byte" sequence) -
+  closed with an empty `asm("" : "+r" (tmp));` compiler barrier
+  immediately after `tmp`'s register-pinned initializer, the same
+  "stop the materialize-then-copy fold" technique already documented
+  for `sub_801E8F8`/`sub_801E96C`
+  (`docs/matching/archive/issue-30-graphics-loading.md`). Writing the two
+  trailing `... | 8`/`... | 0x10` stores as `tmp |= 8; blend.b.x = tmp;`
+  (rather than `blend.b.x = tmp | 8;`) was also needed so the OR's result
+  lands back in the accumulator's own register instead of the freshly-
+  loaded-constant's register - the same "which register holds the
+  result of `accumulator | fresh-immediate`" gap the `hi`/`one` fix
+  above hit too.
+
+Confirmed byte-identical against the real ROM disassembly both in an
+isolated compile (`cmp` against a standalone `arm-none-eabi-as` of the
+guarded raw block - identical) and via a full clean `rm -rf build &&
+make NON_MATCHING=1 report` (`objdiff-cli report generate` shows
+100.0% for `menus/continue_prompt_init`) plus `rm -rf build crashbandicootxs.elf
+crashbandicootxs.gba crashbandicootxs.map && make compare` (`La suma
+coincide`). The raw bytes that used to live in
+`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s` under a
+`.if NON_MATCHING == 0` guard are gone now - that file held nothing but
+this one function, so it was deleted outright, with its `ldscript.txt`
+line dropped (the still-matched `src/menus/continue_prompt_init.o` now
+supplies the real bytes at that link position on its own).
+
+## `InitContinuePromptGraphics` (`src/menus/continue_prompt.c`) - parked, NON_MATCHING
+
+The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
+the shared VRAM upload cursor (`gObjVramCursor`, `struct
+vram_upload_cursor`), hooks `self->icons` up to the global text icon
+manager (`gSmallFont`, `struct bitmap_font` - already fully
+described in `include/bitmap_font.h`), fires its 7th (index 6) OAM
+trampoline slot via `_call_via_r1` (the same `icon_slot` shape
+`CollideWumpa`/`wumpa.c` already established), clears
+`icons->field_118` and re-derives the cursor's limit from
+`icons->field_12c << 5` (`ReserveObjVram`), resets the shared tile cache
+(`gPaletteCache`, `struct palette_cache`) and pins its first four
+slots (`ClaimPaletteSlot`), hand-seeds those same four slots with four fixed
+32-byte tile patterns straight from ROM data
+(`gContinuePromptPalette0`/`532`/`552`/`572`) via a 16-iteration loop with
+six independent running pointers, flushes the cache, sets the fade
+overlay's `dispcnt`'s OBJ-enable bit, and finally flushes/double-syncs
+the OAM shadow buffer (`gOamBuffer`).
+
+Two structural findings worth recording since they recur throughout
+this codebase but were freshly re-confirmed here:
+
+- `gObjVramCursor`/`gPaletteCache` are re-read fresh from their
+  global pointer at every single use, never cached in a local across a
+  call - the ROM's own build only ever caches the *address of the
+  global* in a register (one `ldr rX, =gUnknown_...`), re-dereferencing
+  through it after every `bl`. A plain `struct vram_upload_cursor
+  *cursor = gObjVramCursor;` local compiles noticeably shorter/wrong
+  here.
+- `self->icons` is likewise re-read from `self` (not kept in a
+  register, and not re-fetched from `gSmallFont` again) after the
+  `_call_via_r1` call, even though the exact same pointer was already
+  live in a register right before that call.
+
+Matched real C for everything except the tile-cache seeding loop's trip
+counter, which the ROM keeps live in r7 for the whole loop - this
+project's **confirmed categorical gcc-2.9 r7-pin bug** (see
+`graphics_package.c`/`power_dialog_draw.c`/`sprite_anim.c` and the several
+`docs/matching/naked-*.md` entries): an explicit
+`register s32 counter asm("r7")` pin compiles the exact right
+instructions but this compiler's own push/pop-list computation never
+includes r7 for it, regardless of how the source is phrased. Tried and
+failed here: a barrier extending the pin's live range across the
+`UploadPaletteCache` call immediately after the loop, hoisting the declaration
+to function scope (matching how `self`'s own r8 pin *does* get
+protected), and narrowing every other pinned local's scope so r7 isn't
+"crowded". All six of the loop's *other* running-pointer registers
+(`destA`/`destB`->r1/r2, `srcA`-`srcD`->r5/r6/r3/r4) needed explicit
+pins too, matching this compiler's unforced allocator reaching a
+different (merely equivalent) permutation of the same seven registers
+otherwise. Parked (`NON_MATCHING`); raw bytes live in
+`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s` under the same
+`.if NON_MATCHING == 0` guard pattern.
+
+## `ContinuePromptLoop` (`src/menus/continue_prompt.c`) - NAKED, parked
+
+The fade overlay's per-frame driver (caller not yet identified in this
+pass - a per-frame "run this overlay" hook somewhere in `game_loop`,
+out of scope here). Busy-loops, yielding via `DrawContinuePrompt`/
+`CommitContinuePromptFrame` each iteration (both still-raw functions just past this
+file's own raw-asm boundary, `asm/..._34aa4.s`), polling input twice per
+outer iteration: a confirm press (bit 0) or D-pad-down-with-L (bit 3) of
+`gKeys.pressed` immediately exits with a "confirm" SFX cue
+(`PlaySfx(gAudioContext, 0x49, 0x100)`); otherwise L alone (bit 6,
+gated on `self+0x20`'s one-shot flag already being set) or R alone (bit
+7, gated on it being clear) plays a "step" cue
+(`PlaySfx(..., 0x46, 0x100)`) and flips that flag - the same
+`gKeys`/`PlaySfx` input-dispatch shape already established
+in `src/frontend/language_select.c`'s `LanguageSelectInput`. Every two inner
+iterations, a 0-15 ping-pong counter (the low 5 bits of `self+0x12`,
+which is the same byte as `self->blend.b.bldalphaLo`'s partner within
+the `dispcnt`/`blend` layout above) gets folded back into `self+0x10`'s
+combined BLDCNT/BLDALPHA word and re-applied to `REG_BLDCNT`, driving
+the overlay's flicker/pulse animation frame by frame. Returns 1 if
+`self+0x20`'s flag is still clear when the loop exits via the confirm
+branch, else 0.
+
+Six live values across four different `bl` sites with no register left
+over (`sb`, `sl`, `r8`, and three of `r4`-`r7`, holding the "already
+confirmed" one-shot flag, the packed pressed/held bitmask pointer, the
+audio context pointer, `self`, a scratch "player pressed either
+qualifying button" flag, and the 0-15 ping-pong counter, respectively)
+is the same "many high registers held live across calls inside a loop"
+shape already NAKED throughout this codebase for this exact reason
+(`AirshipStateExplode`/`SpawnAirship`/`UpdateAirship`,
+`airship_explode.c`/`airship.c`) - and was already flagged as this
+class of difficulty for this specific function in the original issue-63
+writeup before this pass even started. Transcribed instruction-for-
+instruction from the ROM's own disassembly rather than attempted as
+plain C.
+
+## Tally
+
+Issue #63's original 25-function chunk, plus these 3:
+
+- **Real C, matched:** 15 (14 from before this pass + `InitContinuePrompt`,
+  matched in a later follow-up pass - see above)
+- **Parked, NON_MATCHING (real C, not byte-exact):** 8 (7 from before +
+  `InitContinuePromptGraphics`)
+- **NAKED (byte-exact, not real C):** 2 (`RunHovercraftLauncherState` from before +
+  `ContinuePromptLoop`)
+- **Left raw:** 0
+
+Issue #63 stays open - only 15/28 functions in its now-expanded scope
+are genuinely real-C-matched, and NAKED/NON_MATCHING parking doesn't
+count toward closing per this project's convention (see
+`CONTRIBUTING.md`'s "Opening the PR" section).
+
+See [docs/status/actor.md](../../status/actor.md) for the running
+matched/parked list this entry feeds into.
+
+## Later pass: late-ROM NAKED retry
+
+`ContinuePromptLoop` got a C draft under `#if NON_MATCHING` that is 2 halfwords
+off under old_agbcc (a single r0/r1 swap in the first input test); it
+stays NAKED. See [late-rom-naked-retry.md](./late-rom-naked-retry.md).
+
+A second late-ROM pass closed it (old_agbcc; `continue_prompt.o` joined
+`OLD_AGBCC_OBJS`). `asm("" : "+r"(k))` on the input copy between the
+`& 1` and `& 8` tests gives the first test the ROM's registers, and an
+extra reference to `audio` at the top of the loop gives it r7, which
+puts the pair counter in r8 without the old pin.

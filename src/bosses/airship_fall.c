@@ -4,7 +4,7 @@
 #include "bosses.h"
 
 /* Same boss-weapon "self" object family as airship_fireball.c - see that
- * file's header comment and docs/matching/issue-58-0x08030334-actor.md.
+ * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md.
  * `gAirship` here is a *separate*, smaller (0x1c-byte) tracker
  * object of the same shape, allocated by `CreateAirship` (left raw in
  * this chunk). */

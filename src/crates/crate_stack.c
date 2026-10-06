@@ -7,7 +7,7 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
+ * docs/matching/archive/issue-13-graphics-fc70.md). `GetTopCrate`/
  * `GetBottomCrate`/`CollideCrateWithPlayer` right after this function are matched in
  * crate_stack.c. */
 
@@ -41,7 +41,7 @@ void OpenLifeCrate(struct actor *self, u32 arg1)
      * always emits a direct word-sized `str` for a stack argument
      * regardless of the parameter's declared width (same gap already
      * closed for `DrawSaveMenuMain`'s own `DrawSaveSlotStats` call in
-     * save_menu_input.c - see docs/matching/issue-5-overlay-ui-sync.md).
+     * save_menu_input.c - see docs/matching/archive/issue-5-overlay-ui-sync.md).
      * The whole call is spelled out in asm to match; a dummy 2-word
      * local's address is taken as an unused input operand purely to
      * make this compiler reserve the same 8-byte outgoing-argument
@@ -74,7 +74,7 @@ asm(".pool");
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `OpenLifeCrate` right
+ * docs/matching/archive/issue-13-graphics-fc70.md). `OpenLifeCrate` right
  * before this function is left untouched raw. */
 
 /* Trivial byte-table lookup: `gCrateKindBreakable[idx]`. The first
@@ -86,7 +86,7 @@ u8 IsCrateKindBreakable(void *arg0, u32 idx)
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `GetSlotCrateStage` right after
+ * docs/matching/archive/issue-13-graphics-fc70.md). `GetSlotCrateStage` right after
  * this file is already matched in slot_crate.c. `self` throughout
  * this file is the same actor/"collision box" object every other
  * function in this subsystem operates on - offsets `0`/`4`/`0xc` here
@@ -115,7 +115,7 @@ u8 IsCrateKindBreakable(void *arg0, u32 idx)
  *   }
  *
  * Was NAKED asm, not plain C - see
- * docs/matching/naked-GetTopCrate-matched.md for the derivation. Two
+ * docs/matching/archive/naked-sub_8010914-matched.md for the derivation. Two
  * gaps: this compiler's cross-jump pass merges the loop's two
  * `return cur;` sites into a single shared tail positioned right
  * before the epilogue (saving a branch the ROM's own, separately-kept
@@ -183,7 +183,7 @@ loop:
 
 /* Same walk as `GetTopCrate`, but over the "get next" chain
  * (`GetCrateBelow`) instead of "get prev". Same matching technique as
- * that function - see docs/matching/naked-GetTopCrate-matched.md. */
+ * that function - see docs/matching/archive/naked-sub_8010914-matched.md. */
 struct crate *GetBottomCrate(struct crate *selfArg)
 {
     struct crate *self = selfArg;
@@ -242,7 +242,7 @@ loop:
  * are both within `0x3fff` of `self`'s position, and `self`'s `+0x4e`
  * byte isn't `5`, fires `QueueCratePlayerCollision(self, idx)` - the physics/collision
  * subsystem's own collision-response commit
- * (docs/matching/issue-12-physics-collision.md); `idx` (the player's
+ * (docs/matching/archive/issue-12-physics-collision.md); `idx` (the player's
  * action, the gActionCtrlStateAttackKinds index) is passed on in r1
  * untouched. Always clears
  * `self`'s own `+0xc` flags bit 3 before returning, unconditionally. */

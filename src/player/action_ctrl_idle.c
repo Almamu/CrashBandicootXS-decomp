@@ -16,9 +16,9 @@
  * 0x08012AF4).
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
- * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `ActionCtrlStateIdle`
+ * NAKED retry (docs/matching/archive/issue-15-16-naked-retry.md): `ActionCtrlStateIdle`
  * matches as plain C under it, and `ApplyActionCtrlMotion` followed in the
- * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
+ * issue #15/#16 NAKED retry 2 (docs/matching/archive/issue-15-16-naked-retry.md). */
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */

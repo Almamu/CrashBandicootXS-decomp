@@ -6,7 +6,7 @@
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
- * (see docs/matching/issue-9-0x08007634-actor.md). `ResetPlayer`/
+ * (see docs/matching/archive/issue-9-0x08007634-actor.md). `ResetPlayer`/
  * `ResetPlayerForRoom` sit right after already-matched ground_sprite.c
  * (`DrawGroundSprite`-`GetMovingSpriteCtrl`). */
 
@@ -22,7 +22,7 @@
  * ground_sprite.c already touch at a different bit.
  *
  * Matched after a second pass closed the gap an earlier session parked
- * on (see docs/matching/issue-9-0x08007634-actor.md's original entry
+ * on (see docs/matching/archive/issue-9-0x08007634-actor.md's original entry
  * for that history). The ROM builds most of these field addresses via
  * two running-pointer cursors (`p1`/`p0` here, matching its own r1/r0)
  * incremented/decremented by the literal relative offset between each
@@ -46,7 +46,7 @@
  * one-shot/reused offset registers (not one shared cursor) with
  * deliberately narrow scopes so this compiler's allocator doesn't pick
  * a different (but equally "free") register than the ROM's own choice.
- * See docs/matching/issue-9-0x08007634-actor.md for the full write-up. */
+ * See docs/matching/archive/issue-9-0x08007634-actor.md for the full write-up. */
 void ResetPlayer(struct player *selfArg)
 {
     u8 *self = (u8 *)selfArg;
@@ -219,7 +219,7 @@ void ResetPlayer(struct player *selfArg)
              * its one use - a pinned register variable claims its
              * register for its whole *lexical* scope even past its
              * last real use (see the "Real gotchas" note in
-             * docs/matching/issue-9-0x08007634-actor.md), so keeping
+             * docs/matching/archive/issue-9-0x08007634-actor.md), so keeping
              * it declared alongside off1/off2 would leave r3
              * unavailable for the clearMask block below, same as the
              * ROM's own re-use of it there. */
@@ -286,7 +286,7 @@ asm(".align 2, 0");
  * (an `if`/`else if` chain, even restructured with an empty `case 2`
  * arm, always collapsed the branch polarity to `bne`-skip instead of
  * this `beq`-take shape and let the CSE pass drop the `state`/`state2`
- * copy entirely). See docs/matching/issue-9-0x08007634-actor.md. */
+ * copy entirely). See docs/matching/archive/issue-9-0x08007634-actor.md. */
 void ResetPlayerForRoom(struct player *selfArg)
 {
     register struct player *self asm("r3") = selfArg;

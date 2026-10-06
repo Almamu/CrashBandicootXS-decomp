@@ -11,7 +11,7 @@
  *
  * Was NAKED ("r8/sb/sl allocation ceiling"); written plainly against
  * the handler structs in gax_internal.h it matches outright - see
- * docs/matching/gax-toolchain-retry.md. */
+ * docs/matching/archive/gax-toolchain-retry.md. */
 u8 GaxFxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
 {
     struct GaxInfoHandler *info = (struct GaxInfoHandler *)self->children[0];

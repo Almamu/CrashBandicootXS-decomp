@@ -23,7 +23,7 @@
  * `__udivmoddi4`) and match byte-for-byte under agbcc. Each of the two
  * division objects carried its own static `__clz_tab`, as old
  * libgcc2.c did (data/clz_tab_5a4c70.c). See
- * docs/matching/gax-toolchain-retry.md.
+ * docs/matching/archive/gax-toolchain-retry.md.
  *
  * `__divdi3` is UNUSED - nothing in the ROM calls it; it rode along
  * with the GAX2 library. `__udivdi3` is called from `GaxChannelInit`. */

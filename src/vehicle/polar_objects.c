@@ -18,7 +18,7 @@
  * `polar_aku_aku.c`. Sits between `polar_crates.c` (issue #53, ending
  * at `CreatePolarBasicCrate`) and issue #54's code (starting at
  * `MovePolarAkuAku`, at the end of this file) - the whole `0x0802CC9C`-`0x0802D3A8` gap
- * docs/matching/issue-53-actor-c7a8.md's "What's left" section
+ * docs/matching/archive/issue-53-actor-c7a8.md's "What's left" section
  * described as "a larger, IsTouchingYeti/IsTouchingPlayer/ShockPolarPlayer-calling
  * state machine ... not attempted this pass". */
 

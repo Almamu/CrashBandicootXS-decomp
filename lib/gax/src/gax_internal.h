@@ -428,7 +428,7 @@ extern u64 gGaxMixRateReciprocal;                   /* 2^32 / mix rate (GaxChann
 /* The same call with the argument already in a register (`mov r0, rX`
  * instead of a stack reload) - GaxChannelMix's form, taking the player
  * state whose `mixCode` holds the routine. What reproduces the ROM
- * (docs/matching/gax-naked-retry-3.md):
+ * (docs/matching/archive/gax-naked-retry-3.md):
  * - the "memory" clobber: the ARM routine writes the work item `arg`
  *   points at, and without it GCSE carries loads across the call;
  * - `arg` goes into a register before the routine is loaded (the ROM's

@@ -8,8 +8,8 @@
 #include "globals.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment, docs/matching/issue-56-0x0802f0dc-actor.md and
- * docs/matching/pmf-dispatch-retry.md. */
+ * file's header comment, docs/matching/archive/issue-56-0x0802f0dc-actor.md and
+ * docs/matching/archive/pmf-dispatch-retry.md. */
 
 struct actor_fa38 {
     struct actor_self base;

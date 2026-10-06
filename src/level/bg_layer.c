@@ -3,7 +3,7 @@
 #include "system.h"
 #include "level.h"
 
-/* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
+/* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 extern void _call_via_r3(void *self, s32 lo, s32 hi, void *fn);
 
@@ -99,7 +99,7 @@ void DrawBgLayerColumn(struct bg_scroll_layer *self, s32 col)
  * Compiled with old_agbcc (Makefile OLD_AGBCC_OBJS): the BGnCNT bitfield
  * setters (`SetBgLayerScreenBase`, `SetBgLayerPriority`, `SetBgLayerColors256`, `SetBgLayerCharBase`)
  * schedule the mask constant before the `ldrb`, which the current agbcc
- * never does. See docs/matching/issue-42-bg-scroll-layer.md.
+ * never does. See docs/matching/archive/issue-42-bg-scroll-layer.md.
  *
  * Real bytes formerly the whole of `asm/code_3_2_17_25fc8.s`. */
 
@@ -121,7 +121,7 @@ void DrawBgLayerRow(struct bg_scroll_layer *self, s32 row)
      * keeps `srcCol` in a register across the loop and stores it once
      * after it; the ROM reloads/stores it through the stack every
      * iteration. Explicit `end`/`mask` locals give the ROM's hoisted
-     * r4/r7. See docs/matching/issue-42-bg-scroll-layer.md. */
+     * r4/r7. See docs/matching/archive/issue-42-bg-scroll-layer.md. */
     if (c > self->colHi)
         return;
     mask = 0x3F;

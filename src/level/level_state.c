@@ -387,7 +387,7 @@ s32 HasTurboRun(struct level_state *self)
  * UpdateGameFrame-MainLoop cluster's "level" object accessor family
  * (`gLevelState`) - fully contiguous with the functions above (no
  * ldscript.txt change needed, this is still the same self type and
- * still the same object file). See docs/matching/issue-35-36-0x080231cc-game-loop.md
+ * still the same object file). See docs/matching/archive/issue-35-36-0x080231cc-game-loop.md
  * for the full write-up. Bit-7 getter for the `self+2` flags byte this
  * file's own family already covers bits 4-6 of. */
 s32 HasDoubleJump(struct level_state *self)

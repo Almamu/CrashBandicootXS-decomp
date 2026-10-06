@@ -10,7 +10,7 @@ extern void SetSpritePrevPos_1(struct gobj *self) asm("SetSpritePrevPos");
 
 /* GitHub issue #25, ROM 0x0801B208-0x0801B85C: the rest of struct gobj's
  * methods and all of struct mover's (see include/gobj_1a794.h and
- * docs/matching/issue-25-level-objects.md).
+ * docs/matching/archive/issue-25-level-objects.md).
  *
  * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files
  * and the ROM for Thumb pointers): InitPlatform (the gobj constructor -

@@ -3,7 +3,7 @@
 #include "bosses.h"
 
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see include/gobj_1a794.h
- * and docs/matching/issue-25-level-objects.md). CreateDingodileShieldCtrl/DestroyDingodile/
+ * and docs/matching/archive/issue-25-level-objects.md). CreateDingodileShieldCtrl/DestroyDingodile/
  * CreateDingodile are constructor/destructor bodies of a subclass of the
  * CreateBossCtrl object family (input_ctrl_queue.c), method tables
  * gDingodileShieldVtable / gDingodileVtable; StartDingodileMotion is the same

@@ -6,7 +6,7 @@
 #include "globals.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
- * comment and docs/matching/issue-58-0x08030334-actor.md.
+ * comment and docs/matching/archive/issue-58-0x08030334-actor.md.
  * `gAirship` is the same small tracker object airship_fall.c
  * documents. */
 

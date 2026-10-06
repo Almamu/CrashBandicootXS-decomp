@@ -42,7 +42,7 @@
  * (actor_self.h: `x`/`y`/`z` are the cached `b`/`c`/`d`, `depth` and
  * `sortKey` the threshold pair) and the constructor's `part` a `struct
  * anim_table_record` (actor_anim.h). See
- * docs/matching/issue-50-actor-2a69c.md. */
+ * docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* Trivial forwarder - ignores its own argument and calls
  * `AllocJetpackPlayerTiles(gActorList)` (the player object), discarding its
@@ -261,7 +261,7 @@ void UpdateActor(void *selfArg)
 asm(".align 2, 0");
 
 /* Same "self" object family as above - see this file's header
- * comment and docs/matching/issue-50-actor-2a69c.md. */
+ * comment and docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* Computes an OBJ scale factor from `self->depth` and its animation
  * record's `baseDepth` (via `__divsi3`), then a second
@@ -274,7 +274,7 @@ asm(".align 2, 0");
  * (position, `GetAnimFrameAttr`'s flag byte, an oversize-scale bit, and a
  * priority/palette nibble from `self->palette`/`self->sortKey`) and calls
  * `SetupSpriteFrameOam` with the first scale factor as its OBJ-affine
- * "priority" argument. See docs/matching/issue-50-actor-2a69c.md for
+ * "priority" argument. See docs/matching/archive/issue-50-actor-2a69c.md for
  * the two register-pinning gaps this needed to close (the `frame[1]`
  * read reusing GetAnimFrameData's still-live `r0` return instead of the
  * `r7` copy used for `frame[0]`, and the `flag` spill-across-call
@@ -429,7 +429,7 @@ asm(".align 2, 0");
 /* Branchless absolute value: `ABS32`, defined at the top of this file. */
 
 /* Same "self" object family as above - see this file's header
- * comment and docs/matching/issue-50-actor-2a69c.md. (This was a
+ * comment and docs/matching/archive/issue-50-actor-2a69c.md. (This was a
  * separate file while `DrawActor`, above, was still raw.) */
 
 /* Same movement-threshold computation as `InitActorPart`/`UpdateActor`
@@ -474,7 +474,7 @@ u8 GetActorRecordIndex(struct actor_self *self)
 
 /* State/table-index/anim-frame reset, the same idiom already documented
  * for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` (see
- * docs/matching/issue-58-0x08030334-actor.md): sets `self+0x28`/
+ * docs/matching/archive/issue-58-0x08030334-actor.md): sets `self+0x28`/
  * `self+0xc` from its own arguments, resets the frame counter
  * (`+0x44`)/accumulator (`+8`), and seeds the anim-frame halfword/byte
  * pair (`+0x10`/`+0x12`) from `self`'s part-table's `kind`th record. The
@@ -521,13 +521,13 @@ asm(".align 2, 0");
 
 /* Same "self" object family as above - see this file's header
  * comment and
- * docs/matching/issue-50-actor-2a69c.md. */
+ * docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* A 12-byte little vector block: copies `self+0x38..0x44` into `*out`,
  * integrating a per-axis velocity (`self+0x1c`/`0x20`/`0x24`, each
  * `>>8`'d to a whole-unit delta) into the block's first three `s16`
  * slots along the way; the remaining three `s16` slots pass through
- * unchanged. See docs/matching/issue-50-actor-2a69c.md for the small
+ * unchanged. See docs/matching/archive/issue-50-actor-2a69c.md for the small
  * inline-asm islands this needed (the compiler's own list scheduler
  * reorders the three per-axis load/shift pairs and the RMW halfword
  * updates' register reuse differently from the ROM's literal order no
@@ -626,7 +626,7 @@ void *sub_802AA0C(void *outArg, void *selfArg)
 asm(".align 2, 0");
 
 /* Same "self" object family as above - see this file's header
- * comment and docs/matching/issue-50-actor-2a69c.md. (This was a
+ * comment and docs/matching/archive/issue-50-actor-2a69c.md. (This was a
  * separate file while `sub_802AA0C`, above, was still raw.) */
 
 /* Trivial getter: `self+0x2c` (the constructor's one-shot byte flag). */
@@ -748,7 +748,7 @@ void SaveActorPaletteCycle(void)
 asm(".align 2, 0");
 
 /* Same palette-cycle cluster as the functions around it - see
- * docs/matching/issue-50-actor-2a69c.md. */
+ * docs/matching/archive/issue-50-actor-2a69c.md. */
 
 /* Per-frame palette-cycle DMA: while `gActorPaletteCycleEnabled` is set, DMAs one
  * `0x1c0`-byte palette-animation "frame" (`gActorPaletteCycleFrames +
@@ -759,7 +759,7 @@ asm(".align 2, 0");
  * `SaveActorPaletteCycle`/`SetActorPaletteCycle` flip which end is "the bound" to make this
  * ping-pong.
  *
- * Two gaps this needed, see docs/matching/issue-50-actor-2a69c.md:
+ * Two gaps this needed, see docs/matching/archive/issue-50-actor-2a69c.md:
  * - The cursor-advance tail: plain if/else-if/else (and every other
  *   C-level phrasing tried - goto-linearized with an explicit `result`
  *   copy, cached-address locals, register-pinned address locals) lets
@@ -841,7 +841,7 @@ void UpdateActorPaletteCycle(void)
 asm(".align 2, 0");
 
 /* Same palette-cycle cluster as `RestoreActorPaletteCycle`/
- * `SaveActorPaletteCycle` above - see docs/matching/issue-50-actor-2a69c.md.
+ * `SaveActorPaletteCycle` above - see docs/matching/archive/issue-50-actor-2a69c.md.
  * (This was a separate file while `UpdateActorPaletteCycle`, above, was
  * still raw.) */
 

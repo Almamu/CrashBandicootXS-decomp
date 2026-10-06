@@ -26,7 +26,7 @@ struct ctrl {
  * *and* the player's `+0xa` byte is `0x13`), then for every windowed
  * node calls `CollideCrateWithPlayer(part, dispatchValue, player->x, player->y)`.
  *
- * Matches under old_agbcc (see docs/matching/issue-9-naked-retry.md):
+ * Matches under old_agbcc (see docs/matching/archive/issue-9-naked-retry.md):
  * the "cross-branch register-role gap" this was parked for was the
  * newer compiler; the only shaping detail is reading the camera x
  * before the `>> 8`. */

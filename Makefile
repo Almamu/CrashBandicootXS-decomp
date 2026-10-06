@@ -189,7 +189,7 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # (tools/agbcc/bin/old_agbcc). Its scheduler loads a constant *before*
 # the byte it is combined with (`movs rA, #K; ldrb rB, [..]; ands rA, rB`)
 # where the current agbcc loads the byte first - see
-# docs/matching/issue-24-boss-actor.md. old_agbcc has no
+# docs/matching/archive/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/sprite_pieces.o \
@@ -297,11 +297,11 @@ $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 # DrawTitleLogoPieces (title_screen_init.o, split off for this reason) needs
 # strength reduction ON: its up-counting inner loop must be reversed. See
 # docs/matching/per-file-flags-investigation.md and
-# docs/matching/issue-64-65-naked-retry-2.md. company_logos.o
+# docs/matching/archive/issue-64-65-naked-retry-2.md. company_logos.o
 # (DrawVvLogoPieces onward) was split off it for the same reason and is NOT
 # listed: DrawVvLogoPieces's reversed header loop and reduced row pointer need
 # strength reduction on; the rest of that file also matches with it on
-# (docs/matching/sr65-naked-retry.md).
+# (docs/matching/archive/sr65-naked-retry.md).
 NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/frontend/title_screen.o
 $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 
@@ -311,8 +311,8 @@ $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 # reverses it; without the flag the matching C is 147 halfwords off and
 # 16 bytes long). The flag changes the matching HandleLinkSerial, which is
 # why ResetLinkSessionState was split out of link_handshake.c. See
-# docs/matching/last-ten-naked-retry.md and
-# docs/matching/last-eleven-naked-retry.md.
+# docs/matching/archive/last-ten-naked-retry.md and
+# docs/matching/archive/last-eleven-naked-retry.md.
 NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/link/link_session_reset.o
 $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
@@ -347,7 +347,7 @@ $(O1_OBJS): CC1FLAGS := $(filter-out -O2,$(CC1FLAGS)) -O1
 # the only ones in the ROM that return via a combined `pop {r4-r7, pc}`,
 # and with the flag dropped they compile from libgcc2.c's own source
 # byte-for-byte - see lib/libgcc/libgcc2.c and
-# docs/matching/gax-toolchain-retry.md.
+# docs/matching/archive/gax-toolchain-retry.md.
 NO_INTERWORK_OBJS := $(LIBGCC2_OBJS)
 $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 

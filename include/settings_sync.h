@@ -12,7 +12,7 @@
  * CheckSaveChecksum). The save menu (gSaveMenu, save_menu.h)
  * holds two copies: the cartridge's (`field_8c`) and the one received
  * over the link cable (`field_90`). Formerly
- * `struct settings_sync_record`. See docs/matching/issue-5-overlay-ui-sync.md.
+ * `struct settings_sync_record`. See docs/matching/archive/issue-5-overlay-ui-sync.md.
  * Shared (via this header) between src/save/save_data.c and
  * save_menu_input.c, split apart so the two parked
  * functions between them (SendSaveTransferChunk/ReceiveSaveTransferChunk/PollSaveTransfer,
@@ -35,7 +35,7 @@ COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_data) == 0x200);
  * the SIO session's per-player ring buffer (SendSaveTransferChunk); `data`
  * receives the remote side's copy of the same shape from its own ring
  * buffer (ReceiveSaveTransferChunk), with `writePtr` as the fill cursor. See
- * docs/matching/issue-5-overlay-ui-sync.md for the full protocol
+ * docs/matching/archive/issue-5-overlay-ui-sync.md for the full protocol
  * write-up. */
 struct settings_sync_pump {
     u32 remaining;      /* 0x000 - bytes left to send out of `tmpl`, reset to sizeof(data) */

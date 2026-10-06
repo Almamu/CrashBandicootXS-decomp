@@ -9,7 +9,7 @@
  * the tiles into char block `charBlock`, and the tilemap into screen
  * block `screenBlock`, ORing the palette bank into every entry. Palettes
  * of more than 0x20 colors switch the BG to 256-color mode. Built with
- * old_agbcc - see docs/matching/issue-30-old-agbcc.md. */
+ * old_agbcc - see docs/matching/archive/issue-30-old-agbcc.md. */
 void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg)
 {
     u16 *map;
@@ -45,7 +45,7 @@ void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg)
 asm(".align 2, 0");
 
 /* GitHub issue #30. Both built with old_agbcc - see
- * docs/matching/issue-30-old-agbcc.md. */
+ * docs/matching/archive/issue-30-old-agbcc.md. */
 
 /* The BG control value InitBgSetup built, for REG_BGnCNT. */
 u16 GetBgSetupControl(struct bg_setup *self)
@@ -72,7 +72,7 @@ struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlo
 asm(".align 2, 0");
 
 /* GitHub issue #30: the sprite-box fitter and its OAM writer. Built with
- * old_agbcc - see docs/matching/issue-30-old-agbcc.md. */
+ * old_agbcc - see docs/matching/archive/issue-30-old-agbcc.md. */
 
 /* gfx.h's `struct oam_attrs` with u16 storage units for attributes 0-1
  * (with gfx.h's u32 units, a DrawScaledSprite store changes).

@@ -5,7 +5,7 @@
 #include "vehicle.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
- * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
+ * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md.
  *
  * Two BG1 picture loaders (issue #56) sharing one repack loop: for each
  * of `rows` rows of `cols` map entries, add the tile base
@@ -36,7 +36,7 @@
  *
  * 7B0 also needs three empty asm statements, which emit no code but each
  * add one reference to a value and so raise its register-allocation
- * priority (docs/matching/late-rom-naked-retry.md):
+ * priority (docs/matching/archive/late-rom-naked-retry.md):
  *  - `asm("" : : "r"(dest))` after MapFill's loop: without it the nibble
  *    pointer (13 refs over 56 insns) narrowly outranks `dest` (9 over 40)
  *    and they trade r5/r6. The same reference in 8E8 breaks 8E8, which

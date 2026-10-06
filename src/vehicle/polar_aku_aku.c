@@ -21,7 +21,7 @@
  * helpers operating on the unrelated `gLevelState`-rooted "player"
  * object's `+0x78` counter field (an Aku-Aku-mask-style add/remove
  * pair, `RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask`) and a `gPolarAkuAku`-rooted
- * sibling object (`ClearPolarAkuAkuMask`). See docs/matching/issue-54-actor-d3a8.md. */
+ * sibling object (`ClearPolarAkuAkuMask`). See docs/matching/archive/issue-54-actor-d3a8.md. */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 

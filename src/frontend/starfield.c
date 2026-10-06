@@ -6,7 +6,7 @@
 #include "gfx.h"
 #include "globals.h"
 
-/* Same "self" object family as hovercraft_side_gun.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
+/* Same "self" object family as hovercraft_side_gun.c - see docs/matching/archive/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
  * `InitStarfield(OperatorNew(0x14))`, see `src/frontend/title_screen_init.c`) and
  * its companion per-frame updater (`DrawStarfield`, called by
@@ -70,7 +70,7 @@ struct particle_slot {
  * gcc otherwise schedules ahead of the pinned-register asm block,
  * unlike the ROM's own ordering, since the source's original textual
  * placement determines scheduling once a hard asm barrier is
- * introduced nearby). See docs/matching/issue-63-0x08033ef4-actor.md. */
+ * introduced nearby). See docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 void *InitStarfield(void *selfArg)
 {
     struct particle_bg *self = selfArg;
@@ -380,7 +380,7 @@ void DrawStarfield(void *selfArg)
 asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_side_gun.c - see that file's header
- * comment and docs/matching/issue-63-0x08033ef4-actor.md. These two
+ * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. These two
  * functions drive a small 128-slot particle-like effect array at
  * `self+8` (16-byte stride: `{s32 x; s32 y; s32 dx; s32 dy;}`) and a
  * 4-bit-per-cell tilemap at `self+0x10`. */
@@ -506,7 +506,7 @@ void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
 asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_side_gun.c - see
- * docs/matching/issue-63-0x08033ef4-actor.md. */
+ * docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
 /* Calls `DrawStarfield(mgr)` (the OAM/tile-scan update this object's part
  * table drives), then - while the particle `count` is still under

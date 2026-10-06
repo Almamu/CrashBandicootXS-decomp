@@ -7,10 +7,10 @@
 #include "globals.h"
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
- * handle helper family - see docs/matching/issue-38-medal-results-tally.md
- * and docs/matching/issue-38-sound-channel-family.md. All four functions
+ * handle helper family - see docs/matching/archive/issue-38-medal-results-tally.md
+ * and docs/matching/archive/issue-38-sound-channel-family.md. All four functions
  * are real C, built with old_agbcc - see
- * docs/matching/game-loop-old-agbcc.md. */
+ * docs/matching/archive/game-loop-old-agbcc.md. */
 
 struct AudioContext;
 
@@ -160,7 +160,7 @@ s32 SkipSlides(struct cutscene_player *self, s32 startIdx, u8 condFlag)
  *   writing the AND as `bit4 & toggleByte` (not `toggleByte & bit4`),
  *   which happens to pick the same destination register (r1, not r5) the
  *   ROM's own `ands r1, r5` uses. See
- * docs/matching/issue-38-sound-channel-family.md. */
+ * docs/matching/archive/issue-38-sound-channel-family.md. */
 void ShowSlidePicture(struct cutscene_player *self0, s32 idx)
 {
     register struct cutscene_player *self asm("r5") = self0;

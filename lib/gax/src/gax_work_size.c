@@ -15,7 +15,7 @@
  * mixer code (0x130 or 0xdc bytes) and two frame-sized mix buffers
  * (`mixRate * 1000 / 59727` samples each).
  *
- * Matched in the GAX NAKED retry (docs/matching/gax-naked-retry-2.md).
+ * Matched in the GAX NAKED retry (docs/matching/archive/gax-naked-retry-2.md).
  * What it took:
  * - `p->layout` and `p->flags` are re-read at every use, never cached:
  *   GCSE turns them into the ROM's spilled copies (`[sp, #0x10]`, and

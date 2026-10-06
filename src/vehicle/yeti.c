@@ -29,7 +29,7 @@ void DestroyYeti(void)
  * `030014C8` derived the same way `YetiStateChase`/`YetiStateCharge` do),
  * primes `sub_8029E34`, clears `gYetiState`, and finally calls
  * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
- * parked separately - see docs/matching/issue-54-actor-d3a8.md). */
+ * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */
 void CreateYeti(void *arg0)
 {
     u8 *obj;
@@ -99,7 +99,7 @@ asm(".align 2, 0");
 
 /* Genuine no-op stub sitting between the still-raw `sub_802E058` (VRAM
  * pattern generator) and `YetiStateStop` - see
- * docs/matching/issue-54-actor-d3a8.md. */
+ * docs/matching/archive/issue-54-actor-d3a8.md. */
 void YetiStateCaught(void)
 {
 }

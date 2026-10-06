@@ -19,7 +19,7 @@
  * version doesn't spend. Closed this pass using the same "self lives in
  * ip for the whole leaf-ish function" idiom already established for
  * `sub_80259D4` (entity_flags.c, see
- * docs/matching/naked-sub_80259d4-matched.md): `self` is pinned to a
+ * docs/matching/archive/naked-sub_80259d4-matched.md): `self` is pinned to a
  * `register void *asm("ip")` local, materialized from the incoming `r0`
  * together with `cmd`'s own copy (`r4`) via one opaque `asm volatile`
  * instruction pair (this compiler always schedules a lone `n`-copy ahead

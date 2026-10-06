@@ -109,7 +109,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * before the settings-row flag-test/wrapper cluster
  * (`src/save/save_menu_ui.c`, ROM `0x08004A50` onward). Both
  * functions were NAKED transcriptions until the issue #4/#6/#8 retry
- * (docs/matching/issue-4-6-8-naked-retry.md); they match as plain C
+ * (docs/matching/archive/issue-4-6-8-naked-retry.md); they match as plain C
  * under both compilers. */
 
 /* `arg1`/`arg2` are plain coordinate values here (not pointers - the
@@ -119,7 +119,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers, the draws written as `record->slots[n]` virtual calls
- * (`ICON_TEXT_CALL`). See docs/matching/issue-4-6-8-naked-retry.md. */
+ * (`ICON_TEXT_CALL`). See docs/matching/archive/issue-4-6-8-naked-retry.md. */
 void DrawEmptySlotLabel(struct save_menu *self, s32 arg1, s32 arg2, u8 arg3)
 {
     s32 x = arg1 + 0x1d;
@@ -142,7 +142,7 @@ void DrawEmptySlotLabel(struct save_menu *self, s32 arg1, s32 arg2, u8 arg3)
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers with the same `ICON_TEXT_CALL` virtual-call macro and no
- * pins. See docs/matching/issue-4-6-8-naked-retry.md. */
+ * pins. See docs/matching/archive/issue-4-6-8-naked-retry.md. */
 void DrawSaveMenuTitle(struct save_menu *self, s32 labelIndex)
 {
     s32 w;

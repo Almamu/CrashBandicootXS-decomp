@@ -198,7 +198,7 @@ s32 LoadSaveData(struct save_data *self)
  * `flags`/`field_1fb`, and refreshes the checksum (`UpdateSaveChecksum`).
  *
  * Parked as NAKED until the near-miss polish pass
- * (docs/matching/near-miss-polish.md): the ROM computes `&flags` before
+ * (docs/matching/archive/near-miss-polish.md): the ROM computes `&flags` before
  * `&field_1fb` yet still gives `flags` r7 (global-alloc's first pick).
  * With `flags` computed first its live range is one insn longer, so it
  * ranked below `field_1fb` and the two swapped r7/r8. The empty

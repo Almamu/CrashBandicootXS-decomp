@@ -17,7 +17,7 @@
  * mask before the byte it tests, the old compiler's tell. `field_24`
  * is a packed `level:5` bitfield, which gives the ROM's read-modify-
  * write steps without pins. See
- * docs/matching/issue-4-6-8-naked-retry.md. */
+ * docs/matching/archive/issue-4-6-8-naked-retry.md. */
 void PowerDialogLoop(struct sub_8006700_actor *self)
 {
     while (self->field_24.bits.level != 0) {

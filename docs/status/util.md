@@ -14,7 +14,7 @@ helpers.
   deferring the inner loop's match-found computation to a label placed
   after the whole scan/verify loop so gcc's block linearizer places it
   right before the shared epilogue, matching the ROM's own layout - see
-  [naked-sub_8000cbc-matched.md](../matching/naked-sub_8000cbc-matched.md))
+  [naked-sub_8000cbc-matched.md](../matching/archive/naked-sub_8000cbc-matched.md))
 - `src/util/string.c`: `CountNonSpaceChars`, `strcat`, `strncpy`,
   `strcpy`, `strlen`
 - `src/util/rand.c`: `srand`, `RandRange`, `rand`
@@ -32,7 +32,7 @@ helpers.
   combined `pop {r4-r7, pc}` returns are just agbcc's non-interworking
   epilogue, and with the flag dropped these are libgcc2.c's own source,
   verbatim (`lib/libgcc/libgcc2_udivmoddi4.h` holds `__udivmoddi4`). See
-  `docs/matching/gax-toolchain-retry.md`. (`GaxZeroFill`, the zero-fill
+  `docs/matching/archive/gax-toolchain-retry.md`. (`GaxZeroFill`, the zero-fill
   helper that used to share this file, is `lib/gax/src/gax_zero_fill.c` -
   it's GAX2 engine code with a normal interworking return.)
 - `lib/libgcc/lib1funcs.s`: lib1funcs.asm's hand-written routines,
@@ -43,7 +43,7 @@ helpers.
   `mov pc, lr` returns), so they are byte-verified transcriptions,
   excluded from progress (`HANDWRITTEN`). They were NAKED functions in C
   files before (GitHub issues #66/#69/#70, see
-  `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass").
+  `docs/matching/archive/issue-69-eeprom-timer.md`'s "NAKED transcription pass").
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.

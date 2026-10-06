@@ -11,7 +11,7 @@
  * mixer's DSP rate table (`step = rate * mixRate / 1000 * 2`). Returns 0
  * if the buffer runs out.
  *
- * Matched in the GAX NAKED retry (docs/matching/gax-naked-retry-2.md).
+ * Matched in the GAX NAKED retry (docs/matching/archive/gax-naked-retry-2.md).
  * What it took:
  * - the division is a plain `/`, which calls lib1funcs' `__udivsi3`
  *   (see gax-toolchain-retry.md), so the call is a libcall, not an

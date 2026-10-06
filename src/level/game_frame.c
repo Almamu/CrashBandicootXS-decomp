@@ -30,7 +30,7 @@
  * attempt dispatches on the level number (20-24 are the special
  * levels) and records a time-trial best time.
  *
- * Real C under old_agbcc (docs/matching/big-naked-retry.md):
+ * Real C under old_agbcc (docs/matching/archive/big-naked-retry.md):
  * - The level loop and the attempt loop are real `for (;;)` loops.
  *   gcc rolls each one's first exit test to the end, which gives the
  *   ROM's `b` into the middle of the loop. The restore step is a `goto`

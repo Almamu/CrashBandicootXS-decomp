@@ -29,7 +29,7 @@
  * pointer anywhere in the ROM: CommitLevelSelectFrame. Matched anyway.
  *
  * Compiled with old_agbcc (see OLD_AGBCC_OBJS in the Makefile and
- * docs/matching/issue-27-level-select-pages.md): it builds the constant
+ * docs/matching/archive/issue-27-level-select-pages.md): it builds the constant
  * operand of a byte read-modify-write before the load, as the ROM does,
  * so the bitfield stores here are plain C. */
 

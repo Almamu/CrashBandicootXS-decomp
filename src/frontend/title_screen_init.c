@@ -106,7 +106,7 @@ void *InitTitleScreen(u32 *self)
  * `mapBuf[i + 1]` reads are strength-reduced by the loop optimizer into
  * the ROM's separate `r2` walk pointer while `mapBuf` itself stays in
  * `r8` for the final free (r7 is the loop's second halfword temp). See
- * docs/matching/issue-65-graphics-loading.md. */
+ * docs/matching/archive/issue-65-graphics-loading.md. */
 void LoadTitleScreenBg(u32 *self)
 {
     const struct bg_package *pkg = &gTitleScreenBg;
@@ -145,7 +145,7 @@ void LoadTitleScreenBg(u32 *self)
  * buffer, tile-index byte selecting which 0x20-byte 4bpp tile).
  *
  * Matched via a register-pinning pass on top of the previously-parked
- * reconstruction (docs/matching/issue-65-graphics-loading.md's earlier
+ * reconstruction (docs/matching/archive/issue-65-graphics-loading.md's earlier
  * pass) - the array-walk pointer/pass-counter/per-pass VRAM cursors now
  * pin to the ROM's own `r7`/`sb`(r9)/`r8`/`sl` allocation
  * (`matching_decomp_register_pinning`), and three small spots resisted
@@ -273,7 +273,7 @@ void LoadTitleScreenObjTiles(u32 *self)
 /* GitHub issue #65's chunk (0x080354E0-0x08037110): the remaining 19
  * functions after `InitTitleScreen`/`LoadTitleScreenBg`/
  * `LoadTitleScreenObjTiles` (src/frontend/title_screen_init.c - see
- * docs/matching/issue-65-graphics-loading.md). Most of them operate on
+ * docs/matching/archive/issue-65-graphics-loading.md). Most of them operate on
  * the title-screen object `InitTitleScreen` builds (still a
  * raw `u32 *` here - stride-0x34 slot records at `self+0x10` holding
  * Q16.16 position / velocity fields fed by a per-slot "delta record"
@@ -289,8 +289,8 @@ void LoadTitleScreenObjTiles(u32 *self)
  * `TitleScreenCheatInput`) was split into title_screen.c in the issues
  * #64/#65 second NAKED retry, because that half needs
  * -fno-strength-reduce for `InitVvLogoPieces` while `DrawTitleLogoPieces` needs
- * strength reduction on. See docs/matching/issue-64-65-naked-retry-2.md,
- * docs/matching/issue-65-0x08035780-graphics-loading.md and
+ * strength reduction on. See docs/matching/archive/issue-64-65-naked-retry-2.md,
+ * docs/matching/archive/issue-65-0x08035780-graphics-loading.md and
  * docs/matching/per-file-flags-investigation.md. */
 
 

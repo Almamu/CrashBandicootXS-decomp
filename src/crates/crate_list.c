@@ -18,7 +18,7 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
  *
  * The box arrives by value (three words in r1-r3, one on the stack) -
  * the old "leave one scalar in its incoming stack slot" blocker was
- * just that. See docs/matching/issue-9-naked-retry.md. */
+ * just that. See docs/matching/archive/issue-9-naked-retry.md. */
 void CollideCrateGridPartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other)
 {
     if (ClassifySpriteContact(part, &box)) {

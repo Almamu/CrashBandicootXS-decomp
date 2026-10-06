@@ -6,7 +6,7 @@
  * this as "still raw, only its return code's meaning as an opaque
  * 'hit' test against the constant 6 is used" from its own camera-
  * probe tail; `DrawAffineSpritePieces`'s original write-up
- * (`docs/matching/issue-9-0x08007634-actor.md`, line ~214) separately
+ * (`docs/matching/archive/issue-9-0x08007634-actor.md`, line ~214) separately
  * flags it as "the unexamined `GetTerrainFlagsAt`" from a jump-table
  * dispatch context. Neither caller needed anything more than the
  * return value, so it was never examined on its own until now.
@@ -54,7 +54,7 @@
  * 4-byte boundary (56 bytes total) - no trailing `.align 2, 0` gap,
  * unlike `ProbeTerrain`'s own end-of-function padding quirk.
  *
- * See docs/matching/issue-9-10-0x0800a884-graphics.md for the full
+ * See docs/matching/archive/issue-9-10-0x0800a884-graphics.md for the full
  * write-up of this closure, appended to the section that originally
  * flagged this function raw. */
 
@@ -76,7 +76,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
 }
 
 /* GitHub issue #9/#10: single-point terrain-height ("floor") probes,
- * split out of `docs/matching/issue-9-0x0800a178-graphics.md`'s existing
+ * split out of `docs/matching/archive/issue-9-0x0800a178-graphics.md`'s existing
  * write-up - both callers (`ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`, GitHub issue
  * #9/#10, `src/objects/ground_sprite_collide.c`) already fully placed their
  * argument roles: `s32 fn(void *player, struct probe_pos *pos, s32

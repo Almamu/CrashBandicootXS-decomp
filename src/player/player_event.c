@@ -13,7 +13,7 @@
 #include "globals.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
- * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
+ * docs/matching/archive/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
  * (Makefile OLD_AGBCC_OBJS).
  *
  * The player object's (`struct player`, player.h) collision pass, event
@@ -176,7 +176,7 @@ asm(".align 2, 0");
  * `cpp`/`agbcc`/`as` + `objcopy`/`cmp` pipeline against `baserom.gba`
  * at `0x0800AFF4`-`0x0800B270` (the only differences at relocation
  * sites - `bl` calls and `.4byte` literals - which resolve correctly
- * once linked). See docs/matching/issue-9-10-0x0800aff4-graphics.md
+ * once linked). See docs/matching/archive/issue-9-10-0x0800aff4-graphics.md
  * for the full write-up. */
 
 struct ac2c_listener {

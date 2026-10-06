@@ -14,7 +14,7 @@ void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *in
  * Both functions in this file were NAKED ("parameter-homing order",
  * "r8/sb allocation ceiling"); written plainly against the handler
  * structs in gax_internal.h they match outright - see
- * docs/matching/gax-toolchain-retry.md. */
+ * docs/matching/archive/gax-toolchain-retry.md. */
 u8 GaxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
 {
     struct GaxInfoHandler *info = (struct GaxInfoHandler *)self->children[0];

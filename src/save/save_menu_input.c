@@ -719,7 +719,7 @@ void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
  * transcription of the ROM's own instruction sequence, operating on the
  * same pinned C locals (`self`/`mgrAddr`/`y`/`i`/`label`/`mgr`) the rest
  * of this file's register-pinned functions use - see
- * docs/matching/issue-5-overlay-ui-sync.md for the write-up. */
+ * docs/matching/archive/issue-5-overlay-ui-sync.md for the write-up. */
 void DrawSaveMenuMain(struct save_menu *self)
 {
     register struct save_menu *selfReg asm("r9") = self;

@@ -15,7 +15,7 @@
  * functions between issue #33's chunk (spawn_pickups.c, which
  * ends with the game-context constructor InitLevelState) and
  * UpdateGameFrame (game_frame.c). See
- * docs/matching/gap-22354-game-context.md.
+ * docs/matching/archive/gap-22354-game-context.md.
  *
  * - DestroyLevelState (UNUSED): the destructor matching InitLevelState - frees every
  *   subsystem singleton that constructor built and clears the context
@@ -157,7 +157,7 @@ void PlayCutscene(void *self, s32 idx)
     {
         /* f.pager.box = f.box, spelled out: the ROM stores the two x
          * words sp-relative and the two y words through one pointer
-         * register - see docs/matching/gap-22354-game-context.md. */
+         * register - see docs/matching/archive/gap-22354-game-context.md. */
         s32 x0 = f.box.pos.x;
         s32 y0 = f.box.pos.y;
         s32 *d = &f.pager.box.x;

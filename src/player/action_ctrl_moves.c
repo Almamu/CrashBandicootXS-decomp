@@ -121,7 +121,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * both state/counter/table-index trios (`0x31`/`0x2f`/`0x27` and
  * `0x32`/`0x30`/`0x28`).
  *
- * Matched in a later pass (docs/matching/issue-18-0x08014f8c-actor.md,
+ * Matched in a later pass (docs/matching/archive/issue-18-0x08014f8c-actor.md,
  * "Later pass: strag2 retry"): `self`/`mode` as real `u8 *`/`u8` parameters fixed the
  * entry home-copy order the old draft got backwards; the `flags` test
  * needs the constant-copy escape below. */
@@ -187,7 +187,7 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
  * `0`/`1`/`0x17`. Independently, for `mode <= 2`: resets the same trio
  * to `0`/`1`/`0`. Always tail-calls `UpdatePlayerFacing`.
  *
- * Matched in a later pass (docs/matching/issue-18-0x08014f8c-actor.md,
+ * Matched in a later pass (docs/matching/archive/issue-18-0x08014f8c-actor.md,
  * "Later pass: strag2 retry"): the `0x17`/`0` table indices go through `u8` locals
  * so they're materialized before the stores, which also moves `mode`
  * into `r4` as in the ROM. */
@@ -554,7 +554,7 @@ void ActionCtrlStateCrawlStop(struct act *self)
  * Reads `self` through the parameter itself, with no local copy: an old
  * `u8 *self = selfArg;` copy survived GCSE's copy propagation into the
  * `else` arm, which is what forced the extra `push {r5}`/`adds r5, r4, #0`
- * - see docs/matching/issue-18-0x08014f8c-actor.md, "Later pass: strag2
+ * - see docs/matching/archive/issue-18-0x08014f8c-actor.md, "Later pass: strag2
  * retry". */
 void ActionCtrlStateBodySlamStart(struct act *self)
 {

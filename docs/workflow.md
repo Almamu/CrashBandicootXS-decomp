@@ -15,7 +15,8 @@ step 6's clean verification and step 7's rules: keep every match
 byte-identical, rebuild after each edit, and leave a load-bearing
 workaround alone unless the rebuild proves the cleaner version produces
 the same bytes. Write-ups of matching work go under `docs/matching/`
-(step 8); other changes only need their PR description and an update to
+(step 8; the per-pass logs of the campaign are archived in
+`docs/matching/archive/`, see `docs/matching/README.md`); other changes only need their PR description and an update to
 whichever `docs/` page they make out of date.
 
 Every function that goes from `asm/code_3_*.s` into real C **must**

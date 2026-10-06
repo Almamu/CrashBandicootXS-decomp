@@ -9,7 +9,7 @@
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
  * completion-time cascade, and a medal-table tally chain") - see
- * docs/matching/issue-38-medal-results-tally.md for the full write-up
+ * docs/matching/archive/issue-38-medal-results-tally.md for the full write-up
  * of this chunk (this first part covers the front slice, up to but not
  * including LevelHasEntityType, which follows further down this file - it's
  * contiguous with both halves in ROM, and ended up grouped with the
@@ -116,7 +116,7 @@ s32 CountLevelCrates(s32 idx)
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
  * the code above - see this file's header comment and
- * docs/matching/issue-38-medal-results-tally.md for the full write-up.
+ * docs/matching/archive/issue-38-medal-results-tally.md for the full write-up.
  * This slice picks up with LevelHasEntityType (contiguous with the
  * trailing CountLevelCrates above in ROM, so it lives here instead of getting its
  * own file - see docs/workflow.md's "one .c file per contiguous ROM

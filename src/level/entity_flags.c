@@ -34,7 +34,7 @@
  * as one combined expression this compiler loads the count into a
  * scratch register before subtracting into `i`'s register, instead of
  * the ROM's direct load-then-decrement-in-place into the same
- * register - see docs/matching/issue-41-game-loop-25894.md. */
+ * register - see docs/matching/archive/issue-41-game-loop-25894.md. */
 s32 CountCrateEntities(void *self, const struct level_entity_list *list)
 {
     u8 *l = (u8 *)list;
@@ -170,7 +170,7 @@ asm(".align 2, 0");
  * comment on this bitmap-array family.
  *
  * Was NAKED asm, not plain C - see
- * docs/matching/naked-sub_80259d4-matched.md for the derivation of how
+ * docs/matching/archive/naked-sub_80259d4-matched.md for the derivation of how
  * this was finally matched. This is a true leaf function in the ROM
  * (no `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
  * function). The gap: the ROM does `mov ip, r0` (stash `self`) before

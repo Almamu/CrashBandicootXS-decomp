@@ -29,7 +29,7 @@ extern s32 _call_via_r1(void *self, void *fn);
  * writeup (`sprite_anim.c`) for the full branch-by-branch semantics,
  * identical here.
  *
- * Matches under old_agbcc (see docs/matching/issue-9-naked-retry.md).
+ * Matches under old_agbcc (see docs/matching/archive/issue-9-naked-retry.md).
  * The size gap the old draft had was the newer compiler plus the box
  * copy: the box arrives by value and is copied into one shared
  * temporary with MemCopy32 (memcpy) before each dispatch, exactly as
@@ -117,7 +117,7 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
  * semantics, identical here. `list` itself is never read.
  *
  * Matches under old_agbcc with the box passed by value, the same C as
- * CollidePartWithPlayer (see docs/matching/issue-9-naked-retry.md). Its
+ * CollidePartWithPlayer (see docs/matching/archive/issue-9-naked-retry.md). Its
  * ROM address, 0x080096C0, sits between `CollideCrateGrid` (above) and
  * `CollidePlayerWithCrates` (`crate_player_collide.c`) in ROM order. */
 void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part)

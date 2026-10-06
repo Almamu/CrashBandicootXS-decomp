@@ -2795,7 +2795,7 @@ instruction. Parked rather than keep chasing this one instruction -
 same call as the other parked functions above.
 
 **Update: matched in a later session.** Converted back from the
-`NAKED` transcription (`docs/matching/naked-oam-actor-part-batch.md`)
+`NAKED` transcription (`docs/matching/archive/naked-oam-actor-part-batch.md`)
 to real C. The angle that finally worked: instead of anchoring just
 the `add` instruction inside two ordinary switch-case bodies (which
 the compiler's own case-body merging pass no longer recognized as
@@ -3297,7 +3297,7 @@ with its initializer in the same statement as the later shift).
 Parked rather than keep chasing two trailing no-op instructions.
 
 **Update: matched in a later session.** Converted back from the
-`NAKED` transcription (`docs/matching/naked-oam-actor-part-batch.md`)
+`NAKED` transcription (`docs/matching/archive/naked-oam-actor-part-batch.md`)
 to real C by taking this same C reconstruction and adding an empty
 `asm volatile("" : "+r"(test))` barrier immediately after the `and`
 that computes `test`. This makes `test`'s value opaque to the
@@ -4978,8 +4978,8 @@ register for that one dereference.
 
 ### Parked: `PlaySfx` and `PlayAmbientSfx`
 
-> Later: `PlaySfx` is matched as real C (docs/matching/near-miss-polish.md),
-> and `PlayAmbientSfx` too (docs/matching/early-rom-naked-retry.md).
+> Later: `PlaySfx` is matched as real C (docs/matching/archive/near-miss-polish.md),
+> and `PlayAmbientSfx` too (docs/matching/archive/early-rom-naked-retry.md).
 
 Both fully understood, both extensively iterated on (many register-
 pinning permutations tried, verified against the real ROM
@@ -5323,7 +5323,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   chunk for whoever picks this up.
   *Later pass (big NAKED retry):* now real C under old_agbcc in
   `src/level/game_frame.c`. See
-  [docs/matching/big-naked-retry.md](matching/big-naked-retry.md).
+  [docs/matching/archive/big-naked-retry.md](matching/archive/big-naked-retry.md).
 - **`StartTimeTrial`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`-
   `0x08022EA8`) - a level-start/reset routine: clears `self+0x8c`/
   `0x90`-`0xa0`, tears down two actor slots at `self+0x1bc`/`0x1c0` via
@@ -5690,7 +5690,7 @@ Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
 `asm/code_3_2_17_145e4.s`, `#if NON_MATCHING` C reconstruction in
 `action_ctrl_states.c`/`action_ctrl_land.c`):
 
-*Later pass: both are now real C (docs/matching/issue-15-16-17-naked-retry-2.md).
+*Later pass: both are now real C (docs/matching/archive/issue-15-16-17-naked-retry-2.md).
 `ActionCtrlStateCrawl` matches under old_agbcc (`action_ctrl_states.o` moved to it) with
 no pins; `ActionCtrlStateLand` matches under either compiler once the bit test is
 written `if ((flag = ...) != 0)`.*

@@ -6,7 +6,7 @@
 #include "level.h"
 #include "globals.h"
 
-/* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
+/* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 #define HUD_ANIM(offset) ((struct hud_anim_data *)(SPRITE_BANK_BASE + (offset)))
 #define SLOT_RECORD(s) ((s)->anim_data->records[(s)->anim_index])

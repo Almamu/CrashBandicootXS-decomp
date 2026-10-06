@@ -17,7 +17,7 @@
  * (GaxFatalError) on any sanity-check failure along the way instead of
  * returning normally.
  *
- * Matched in GAX retry 5 (docs/matching/gax-naked-retry-5.md) after four
+ * Matched in GAX retry 5 (docs/matching/archive/gax-naked-retry-5.md) after four
  * earlier passes (gax-toolchain-retry.md, gax-naked-retry-2/3/4.md). The
  * last pieces were: indexed copies of the constant ARM-code tables (GCSE
  * hoists their addresses to the first block in the ROM's order), a

@@ -52,7 +52,7 @@
  * `asm` barriers (those were needed to imitate old_agbcc's output with the
  * current agbcc).
  *
- * Matching notes (details in docs/matching/issue-21-input-ctrl.md): the
+ * Matching notes (details in docs/matching/archive/issue-21-input-ctrl.md): the
  * virtual-call macros take the method-table entry's address once; the
  * `QueueMotionX`/`QueueMotionY`/`SetCameraLeadSpeed` inline helpers reproduce the ROM
  * evaluating the stored constant before the store's own loads; the

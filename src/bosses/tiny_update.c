@@ -12,7 +12,7 @@
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
- * docs/matching/issue-22-0x08018008-hopper.md). Built with old_agbcc
+ * docs/matching/archive/issue-22-0x08018008-hopper.md). Built with old_agbcc
  * (Makefile OLD_AGBCC_OBJS), like cortex.c right after it.
  *
  * UpdateTiny/SetTinyState are the per-frame update and "enter state"
@@ -127,7 +127,7 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
 
 /* Byte read-modify-writes of the flags at +0x0C. old_agbcc materializes
  * the constant before loading the byte only when it arrives as an inline
- * helper's `s32` parameter (docs/matching/old-agbcc-retry.md). */
+ * helper's `s32` parameter (docs/matching/archive/old-agbcc-retry.md). */
 #define PART_FLAGS(p) (*((u8 *)(p) + 0xC))
 
 static inline void OrFlags(struct hop_part *part, s32 bits)
