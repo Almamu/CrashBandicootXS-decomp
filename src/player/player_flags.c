@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "gobj_1a794.h"
 #include "player.h"
+#include "globals.h"
 
 /* Continuation of the big unnamed object introduced in
  * player_update.c - see that file's header comment. */

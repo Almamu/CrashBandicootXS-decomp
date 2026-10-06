@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
@@ -162,8 +163,6 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
  * `self+0x5c`/`self+0x60`/`self+0x64`/`self+0x68`/`self+0x6c` driving
  * `UpdateHovercraftSideGun`'s position-plus-effect-spawn step. See
  * docs/matching/issue-63-0x08033ef4-actor.md. */
-
-extern void *gAudioContext;
 
 /* The second object kind (vtable gHovercraftSideGunVtable). */
 struct actor_orbiter {

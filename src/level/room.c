@@ -2,12 +2,10 @@
 #include "util.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
-extern void *gObjVramCursor;
-extern void *gOamBuffer;
 extern void *gCamera;
 extern void *gLevelLayers;
-extern struct palette_cache *gPaletteCache;
 
 void ClearRoomExit(void)
 {

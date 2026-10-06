@@ -7,12 +7,11 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the four icon-group
  * constructors below only match under it, and InitPauseCrystalsPage compiles
  * identically under both compilers. */
-
-extern void ***gSpriteBankSet;
 
 /* Constructs the single icon at `field_88`: positions it from the fixed
  * `gPauseCrystalIconPos` pair, picks its starting keyframe-table entry
@@ -25,7 +24,7 @@ void InitPauseCrystalsPage(struct pause_menu *self)
     struct settings_icon_actor **dest = &self->field_88;
 
     *dest = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
-    (*dest)->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xde << 1));
+    (*dest)->field_20 = (void **)(SPRITE_BANK_BASE + (0xde << 1));
     SetEntityPixelPos(&(*dest)->base, gPauseCrystalIconPos.x, gPauseCrystalIconPos.y);
     UPDATE_ICON_FRAME_NIBBLE(*dest);
 
@@ -59,7 +58,7 @@ void InitPausePowersPage(struct pause_menu *self)
         struct settings_icon_actor *icon;
 
         self->icons8c[i] = NEW_ICON(icon);
-        icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xe4 << 1));
+        icon->field_20 = (void **)(SPRITE_BANK_BASE + (0xe4 << 1));
         icon->frameIndex = gPausePowerIconFrames[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
@@ -84,7 +83,7 @@ void InitPauseGemsPage(struct pause_menu *self)
         struct settings_icon_actor *icon;
 
         self->icons9c[i] = NEW_ICON(icon);
-        icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc0 << 1));
+        icon->field_20 = (void **)(SPRITE_BANK_BASE + (0xc0 << 1));
         icon->frameIndex = gPauseGemIconFrames[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
@@ -117,7 +116,7 @@ void InitPauseRelicsPage(struct pause_menu *self)
         struct settings_icon_actor *icon;
 
         self->iconsB0[i] = NEW_ICON(icon);
-        icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc6 << 1));
+        icon->field_20 = (void **)(SPRITE_BANK_BASE + (0xc6 << 1));
         icon->frameIndex = gPauseRelicIconFrames[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
@@ -181,7 +180,7 @@ void InitPauseTimeTrialPage(struct pause_menu *self)
 
     slot = &self->field_bc;
     *slot = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
-    (*slot)->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc6 << 1));
+    (*slot)->field_20 = (void **)(SPRITE_BANK_BASE + (0xc6 << 1));
     set_icon_pos(&(*slot)->base, &gPauseTimeTrialIconPos);
 
     if (time != 0) {

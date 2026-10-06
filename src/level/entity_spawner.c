@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "crates.h"
 #include "level.h"
+#include "globals.h"
 
 /* codegen: GetSpriteHitbox returns the box by value (objects.h); this
  * file was matched against the same call written with the destination
@@ -62,7 +63,6 @@ struct actor_flag_bits
 #define ACTOR_FLAG_BITS(a) ((struct actor_flag_bits *)&(a)->flags)
 
 extern struct level_layers *gLevelLayers;
-extern void ***gSpriteBankSet;
 extern void *gCollidableList;
 
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
@@ -150,7 +150,7 @@ void *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror
         y = ((u32)layer->heightPx << 8 >> 8) - 1;
     part = CreateMovingSprite(0xffff, x, y, 0);
     part->flipX = mirror != 0;
-    part->anim = (u8 *)**gSpriteBankSet + anim * 12;
+    part->anim = SPRITE_BANK_BASE + anim * 12;
     part->tag = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);

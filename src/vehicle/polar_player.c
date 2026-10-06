@@ -7,6 +7,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/vehicle/polar_player_states.c`
@@ -35,13 +36,7 @@ struct game_state {
 };
 
 extern struct game_state *gLevelState;
-extern void *gAudioContext;
 
-struct held_pressed_pair {
-    u16 held;
-    u16 pressed;
-};
-extern struct held_pressed_pair gKeys;
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
@@ -94,7 +89,7 @@ void UpdatePolarPlayer(struct actor_self *self)
     UpdateActorBgScroll(self->x, self->y);
     ACTOR_PMF_CALL(self, gPolarPlayerStateFuncs);
     if (gPolarSteerEnabled != 0) {
-        struct held_pressed_pair keys = gKeys;
+        struct held_pressed_pair keys = gKeys.half;
 
         if (keys.held & 0x20) {
             if (gPolarSteerTime++ > 12)
@@ -488,7 +483,7 @@ join:
 
 tail:
     if (gPolarSteerEnabled != 0) {
-        register struct held_pressed_pair *addr asm("r5") = &gKeys;
+        register struct held_pressed_pair *addr asm("r5") = &gKeys.half;
         register s32 bit1 asm("r0") = 1;
         u16 pressed = addr->pressed;
 
@@ -552,7 +547,7 @@ void PolarPlayerStateJump(struct actor_self *self)
     *budget += 0x60;
     if (*budget > 0x780)
         *budget = 0x780;
-    if (self->stateTime <= 10 && !(*(u32 *)&gKeys & 1) && *budget < (s32)0xFFFFFC00)
+    if (self->stateTime <= 10 && !(gKeys.all & 1) && *budget < (s32)0xFFFFFC00)
         *budget = 0xFFFFFC00;
     if (self->y > 0x2800) {
         self->y = 0x2800;
@@ -568,7 +563,7 @@ void PolarPlayerStateJump(struct actor_self *self)
  * `gPolarPlayerVelY` stall reset - same pair `PolarPlayerStateRun` fires. */
 void PolarPlayerStateDash(struct actor_self *self)
 {
-    struct held_pressed_pair *input = &gKeys;
+    struct held_pressed_pair *input = &gKeys.half;
     u16 bit = *(u32 *)input & 2;
 
     if (bit == 0) {

@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "globals.h"
 
 /* Start of the boss-weapon/singleton-object cluster's next raw range
  * (issue #58/#62's shared "self" object family continues here - state
@@ -15,8 +16,6 @@
  * table pointer at `self+0x50`). See docs/matching/issue-58-0x08030334-actor.md,
  * docs/matching/issue-62-0x08033804-actor.md and this range's own
  * write-up in docs/matching/. */
-
-extern void *gAudioContext;
 
 /* The gJetpackBalloonVtable class built by CreateJetpackBalloon. */
 struct jetpack_balloon {

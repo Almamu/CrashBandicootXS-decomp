@@ -12,10 +12,8 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
-extern struct palette_cache *gPaletteCache;
-extern struct AudioContext *gAudioContext;
-extern struct vram_upload_cursor *gObjVramCursor;
 extern void *_call_via_r1(void *arg0, void *fn);
 
 /* The composite pause/options screen's own constructor/driver
@@ -127,7 +125,6 @@ s32 RunPauseMenu(void)
 }
 
 extern void *gLevelState;
-extern void ***gSpriteBankSet;
 
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
@@ -221,7 +218,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
 
             *field_c0_addr = icon;
             {
-                register u8 *base asm("r1") = (u8 *)(**gSpriteBankSet);
+                register u8 *base asm("r1") = SPRITE_BANK_BASE;
                 asm volatile("mov r3, #0x8a\n\tlsl r3, r3, #2\n\tadd %0, %0, r3" : "+r" (base) :: "r3");
                 icon->field_20 = (void **)base;
             }

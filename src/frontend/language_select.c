@@ -7,6 +7,7 @@
 #include "frontend.h"
 #include "audio.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
  * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
@@ -17,10 +18,6 @@
  * Sits at the very start of the address range docs/audio.md calls the
  * GAX2 engine, but is game-side code that merely uses PlaySfx.
  * `struct language_select` is in frontend.h. */
-
-extern void *gInput;
-extern u16 gKeys;
-extern void *gAudioContext;
 
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.c)
  * into a freshly allocated buffer, then queues a DMA3 transfer from that
@@ -96,7 +93,7 @@ s32 RunLanguageSelect(void)
         u16 *addr;
 
         UpdateKeys(gInput);
-        addr = &gKeys;
+        addr = &gKeys.half.held;
         keys = *(u16 *)((u8 *)addr + 2);
         LanguageSelectInput(gLanguageSelect, keys);
         DrawLanguageSelect(gLanguageSelect);
@@ -138,8 +135,6 @@ void LanguageSelectInput(struct language_select *self, u32 flags)
     self->frame = (self->frame + 1) & 0xff;
 }
 
-extern void *gOamBuffer;
-extern void *gObjVramCursor;
 /* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
@@ -200,7 +195,6 @@ void DrawLanguageSelect(struct language_select *self)
  * offsets; the E0 base is read from DC before E0 itself), plus one
  * `zero` local shared by the `field_8`/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
-extern struct palette_cache *gPaletteCache;
 extern void _call_via_r1(void *self, void *fn);
 
 static inline void IconSetBase(struct bitmap_font *m, u32 base)

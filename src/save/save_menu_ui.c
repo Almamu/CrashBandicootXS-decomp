@@ -6,6 +6,7 @@
 #include "system.h"
 #include "menus.h"
 #include "gfx.h"
+#include "globals.h"
 
 
 /* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.c) - reset
@@ -226,9 +227,6 @@ void DrawSaveMenuLoad(struct save_menu *self)
     DrawSaveSlots(self, self->field_8c, self->field_10);
     DrawSaveMenuCancel(self, self->field_10 == 4);
 }
-
-extern void *gOamBuffer;
-extern void *gObjVramCursor;
 
 void DrawSaveMenu(struct save_menu *self)
 {

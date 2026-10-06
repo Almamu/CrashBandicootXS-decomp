@@ -3,6 +3,7 @@
 #include "hud.h"
 #include "vtable.h"
 #include "memory.h"
+#include "globals.h"
 
 /* The lives, wumpa and crate counters' slide-in timers (`struct
  * hud_counter`, include/hud.h), shared with `SetHudCrateTotal`/

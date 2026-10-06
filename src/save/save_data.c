@@ -4,6 +4,7 @@
 #include "gba/dma_macros.h"
 #include "save.h"
 #include "system.h"
+#include "globals.h"
 
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
@@ -132,8 +133,6 @@ fail_restore:
     }
     return -1;
 }
-
-extern struct AudioContext *gAudioContext;
 
 /* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,

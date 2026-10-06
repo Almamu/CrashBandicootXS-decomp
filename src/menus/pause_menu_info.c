@@ -7,9 +7,9 @@
 #include "menus.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 extern void *gLevelState;
-extern struct AudioContext *gAudioContext;
 
 /* The composite pause/options screen's "results" sub-region
  * constructor: resolves the current level's name/index label

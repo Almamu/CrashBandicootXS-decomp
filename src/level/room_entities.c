@@ -3,6 +3,7 @@
 #include "crates.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
@@ -145,7 +146,6 @@ struct lk_actor_list
     struct lk_actor **items;        /* +0x08 */
 };
 
-extern void *gEntitySpawner;
 extern struct lk_actor_list *gCrateList;
 extern u8 *_call_via_r1(void *self, void *fn);
 

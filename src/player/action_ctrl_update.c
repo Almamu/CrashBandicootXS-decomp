@@ -4,6 +4,7 @@
 #include "audio.h"
 #include "player.h"
 #include "level.h"
+#include "globals.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): three
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -31,11 +32,8 @@ struct cam
 
 typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
 
-extern u32 gKeys;
-extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gPlayer;
-extern void *gInput;
 extern struct cam *gLevelLayers;
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
@@ -151,7 +149,7 @@ static inline s32 K100(void)
  */
 void UpdateActionCtrl(struct act *self)
 {
-    u32 in = gKeys;
+    u32 in = gKeys.all;
 
     if (self->slamBlocked != 0) {
         u16 held = in & K100();
@@ -294,7 +292,7 @@ void UpdateActionCtrl(struct act *self)
  * the constant after `one` as in the ROM. */
 u8 TryActionCtrlDoubleJump(struct act *self)
 {
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     u16 pressed;
     s32 one;
 
@@ -364,7 +362,7 @@ void HandleActionCtrlAirInput(struct act *self)
         if (TryActionCtrlDoubleJump(self))
             return;
     }
-    in = gKeys;
+    in = gKeys.all;
     {
         struct act_part *part;
 

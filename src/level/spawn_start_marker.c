@@ -5,11 +5,11 @@
 #include "util.h"
 #include "audio.h"
 #include "level.h"
+#include "globals.h"
 
 extern struct level_state *gLevelState;
 extern void *gEntityFlags;
 extern struct actor *gPlayer;
-extern void *gAudioContext;
 
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 

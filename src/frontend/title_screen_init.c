@@ -12,6 +12,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110) starts here, right at
  * the 40.4 KB actor-per-type-behavior zone's own end (docs/rom_map.md's
@@ -19,9 +20,6 @@
  * `LoadTitleScreenBg`/`LoadTitleScreenObjTiles` are already named and were
  * already high-confidence `graphics_loading` per docs/rom_map.md's own
  * table before this chunk (`0x080354E0`-`0x08035780`ish). */
-
-extern struct oam_shadow_buffer *gOamBuffer;
-extern struct AudioContext *gAudioContext;
 
 extern void *_call_via_r1(void *arg0, void *fn);
 
@@ -295,12 +293,6 @@ void LoadTitleScreenObjTiles(u32 *self)
  * docs/matching/issue-65-0x08035780-graphics-loading.md and
  * docs/matching/per-file-flags-investigation.md. */
 
-extern u8 gDispcnt[2];
-extern void *gInput;
-extern struct held_pressed_pair {
-    u16 held;
-    u16 pressed;
-} gKeys;
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 /* codegen: RandRange returns u16 (util.h), but InitTitleScreen was matched

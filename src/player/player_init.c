@@ -2,14 +2,13 @@
 #include "actor.h"
 #include "player.h"
 #include "objects.h"
+#include "globals.h"
 
 /* GitHub issue #9/#10: 0x0800B3F0 - a part-object constructor on the
  * same big, still-unnamed "part" object (at least 0x108 bytes)
  * documented in `player_update.c`'s file header - raw offset casts are
  * used throughout for the same reason that file gives: most individual
  * fields' meaning isn't confirmed beyond "a byte/word at this offset". */
-
-extern void ***gSpriteBankSet;
 
 /* Re-initializes `self` (via `InitGroundSprite`, already matched in
  * `ground_sprite.c`), then overwrites its table with
@@ -42,7 +41,7 @@ void *InitPlayer(void *selfArg, u16 arg1, u16 arg2, u16 arg3, u16 unused)
 
     child = CreateSpriteObj(0, 0, 0, 0);
     *(struct actor **)(self + 0xb0) = child;
-    *(void **)((u8 *)child + 0x20) = (u8 *)(**gSpriteBankSet) + (0xcc << 1);
+    *(void **)((u8 *)child + 0x20) = SPRITE_BANK_BASE + (0xcc << 1);
 
     /* Register-pinned: the ROM keeps this `0` constant alive in `sl`
      * across all three `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` calls

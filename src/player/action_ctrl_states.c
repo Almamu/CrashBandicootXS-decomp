@@ -4,6 +4,7 @@
 #include "audio.h"
 #include "player.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
@@ -27,11 +28,7 @@ struct spark
     s32 frame;             // 0x30
 };
 
-extern u32 gKeys;
-extern void *gAudioContext;
 extern struct act_part *gPlayer;
-extern void *gEntitySpawner;
-extern void *gInput;
 
 /* Byte masks with the mask as an `s32` parameter: the AND stays in SImode
  * (a plain `*p & -0x11` is narrowed to 0xEF), so the -0x11 the ROM derives
@@ -96,7 +93,7 @@ static inline void ActSetContact(struct act_part *p, s32 v)
 void ActionCtrlStateAirborne(struct act *self)
 {
     void *pad = gInput;
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     u8 contact = self->part->contact;
     u8 dir = GetDpadDirection(pad);
     s32 state = self->state;
@@ -334,7 +331,7 @@ void ActionCtrlStateFlipBodySlamStart(struct act *self)
  * from the method call on. */
 void ActionCtrlStateSlide(struct act *self)
 {
-    u32 in = gKeys;
+    u32 in = gKeys.all;
 
     {
         struct act_part *part = self->part;
@@ -496,7 +493,7 @@ void ActionCtrlStateSpin(struct act *self)
     {
         void *pad = gInput;
 
-        in = gKeys;
+        in = gKeys.all;
         dir = GetDpadDirection(pad);
     }
     if (self->part->contact == 0)
@@ -534,7 +531,7 @@ void ActionCtrlStateAirSpin(struct act *self)
     u32 in;
     struct act_part *part;
 
-    in = gKeys;
+    in = gKeys.all;
     part = self->part;
 
     if ((part->contact & 8) && part->speedY > 0)
@@ -591,7 +588,7 @@ void ActionCtrlStateTornadoSpin(struct act *self)
     {
         void *pad = gInput;
 
-        in = gKeys;
+        in = gKeys.all;
         dir = GetDpadDirection(pad);
     }
     if (self->part->contact == 0)
@@ -630,7 +627,7 @@ void ActionCtrlStateCrouchDown(struct act *self)
     u32 in;
     s32 fire;
 
-    in = gKeys;
+    in = gKeys.all;
     fire = INPUT_PRESSED(in) & 1;
 
     if (fire)
@@ -677,7 +674,7 @@ void ActionCtrlStateCrouch(struct act *self)
     {
         void *pad = gInput;
 
-        in = gKeys;
+        in = gKeys.all;
         dir = GetDpadDirection(pad);
     }
     if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xB) == 1)
@@ -877,7 +874,7 @@ void ActionCtrlStateCrawlStart(void *selfArg)
 void ActionCtrlStateCrawl(struct act *selfArg)
 {
     struct act *self = selfArg;
-    u32 in = gKeys;
+    u32 in = gKeys.all;
     u8 busy;
     u8 dir;
     u8 hit;

@@ -3,14 +3,13 @@
 #include "audio.h"
 #include "actor.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* Same large per-instance "self" object as polar_player_actions.c/polar_pickups.c
  * (`struct actor_self`: state, anim index/timer/done flag, state timer,
  * anim accumulator, anim table pointer and method table), part of a
  * boss-weapon effect state machine - see
  * docs/matching/issue-58-0x08030334-actor.md and docs/status/actor.md. */
-
-extern void *gAudioContext;
 
 struct actor_timed {
     struct actor_self base;

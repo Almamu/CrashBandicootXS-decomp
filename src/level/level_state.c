@@ -10,11 +10,7 @@
 #include "bosses.h"
 #include "gfx.h"
 #include "level.h"
-
-extern void *gHud;
-extern void *gAudioContext;
-extern void *gSpriteBankSet;
-extern struct palette_cache *gPaletteCache;
+#include "globals.h"
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
@@ -59,14 +55,14 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     self->countdown += seconds * 60;
 
     base = gPaletteCache;
-    p3 = *(void **)gSpriteBankSet;
+    p3 = (void *)gSpriteBankSet->table;
     header = *(void **)p3;
     off = 0x8d << 2;
     record = *(void **)((u8 *)header + off);
     recordId = *((u8 *)record + 0x30);
     slot = GetPaletteSlot(base, recordId);
 
-    p3b = *(void **)gSpriteBankSet;
+    p3b = (void *)gSpriteBankSet->table;
     headerb = *(void **)p3b;
     recordb = *(void **)((u8 *)headerb + 0x234);
     recordId = *((u8 *)recordb + 0x84);
@@ -129,14 +125,14 @@ void TickLevelClock(struct level_state *self)
             struct level_category *level;
 
             base = gPaletteCache;
-            p3 = *(void **)gSpriteBankSet;
+            p3 = (void *)gSpriteBankSet->table;
             header = *(void **)p3;
             off = 0x8d << 2;
             record = *(void **)((u8 *)header + off);
             recordId = *((u8 *)record + 0x30);
             slot = GetPaletteSlot(base, recordId);
 
-            p3b = *(void **)gSpriteBankSet;
+            p3b = (void *)gSpriteBankSet->table;
             headerb = *(void **)p3b;
             recordb = *(void **)((u8 *)headerb + 0x234);
             recordId = *((u8 *)recordb + 0x30);

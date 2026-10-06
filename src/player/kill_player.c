@@ -7,6 +7,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - the
  * "child object" family docs/rom_map.md's "Undifferentiated core"
@@ -31,11 +32,8 @@ struct palette_cache;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
-extern struct AudioContext *gAudioContext;
 extern void *gLevelState;
-extern struct palette_cache *gPaletteCache;
 extern void *gPlayer;
-extern void *gInput;
 
 /* Plays a sound, fires the `+0x50`/`+0x54` trampoline pair with `id`
  * (the death animation, 0x1c/0x2a-0x2f from ActionCtrlHandleEvent) as

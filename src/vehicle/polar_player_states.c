@@ -5,6 +5,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Tail continuation of GitHub issue #50's chunk
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
@@ -27,7 +28,6 @@
  * through `*(T *)&self->field` casts, as in polar_player_actions.c. */
 
 extern void *gLevelState;
-extern void *gAudioContext;
 
 /* Accumulator-drain/reward-dispenser for the `gPolarQueuedWumpa`
  * accumulator (filled by `QueuePolarWumpa`, still raw): while the "locked"
@@ -190,8 +190,6 @@ void PolarPlayerStateKnockedOff(void *selfArg)
     }
 }
 
-extern u32 gKeys;
-
 /* Frame-counter-threshold state-transition idiom, structural twin of
  * `sub_802BD24` above: once `stateTime` reaches 0x1e, latches
  * `gPolarSteerEnabled`, then either (if input bit 1 of
@@ -206,7 +204,7 @@ void PolarPlayerStateBoost(void *selfArg)
         gPolarSteerEnabled = 1;
 
         {
-            u16 bit = gKeys & 2;
+            u16 bit = gKeys.all & 2;
 
             if (bit == 0) {
                 register s32 state asm("r0") = 1;

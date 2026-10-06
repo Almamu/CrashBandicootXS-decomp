@@ -4,14 +4,13 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-extern void ***gSpriteBankSet;
 extern void *gLevelState;
-extern u8 *gPaletteCache;
 
-#define HUD_ANIM(offset) ((struct hud_anim_data *)((u8 *)**gSpriteBankSet + (offset)))
+#define HUD_ANIM(offset) ((struct hud_anim_data *)(SPRITE_BANK_BASE + (offset)))
 #define SLOT_RECORD(s) ((s)->anim_data->records[(s)->anim_index])
 
 static inline void RestartSlot(struct hud_digit_part *slot)

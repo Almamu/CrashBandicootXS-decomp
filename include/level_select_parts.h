@@ -11,6 +11,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "globals.h"
 
 struct vmethod
 {
@@ -79,8 +80,6 @@ struct level_item
     const struct vtable_slot *vtable; // 0x10 - gLevelSelectEntryVtable
 };
 
-extern void ***gSpriteBankSet;
-extern void *gPaletteCache;
 
 extern void LoadTaggedAsset(const void *asset, void *dest);
 
@@ -104,7 +103,7 @@ typedef void (*dtor_fn)(void *self, s32 flags);
 
 static inline struct anim_table *AnimTable(s32 offset)
 {
-    return (struct anim_table *)((u8 *)**gSpriteBankSet + offset);
+    return (struct anim_table *)(SPRITE_BANK_BASE + offset);
 }
 
 /* Shows animation frame `frame`, clamped to the animation's last one. */

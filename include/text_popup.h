@@ -14,6 +14,7 @@
 #include "enemies.h"
 #include "objects.h"
 #include "memory.h"
+#include "globals.h"
 
 /* The sprite part CreateMovingSprite returns. Same layout as cortex.c's
  * `struct gfx_part`. The +0x28 bits are declared on a 32-bit base type:
@@ -59,13 +60,12 @@ struct level_record_table
     u8 *bytes;
 };
 
-extern void ***gSpriteBankSet;
 extern struct level_record_table **gEntityFlags;
 extern void *gCollidableList;
 
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
-#define POPUP_ANIM(offset) ((void *)((u8 *)**gSpriteBankSet + (offset)))
+#define POPUP_ANIM(offset) ((void *)(SPRITE_BANK_BASE + (offset)))
 
 /* hdr->attach(part) (AttachEnemyCtrl), through _call_via_r2. */
 #define POPUP_ATTACH(hdr, part)                                                \

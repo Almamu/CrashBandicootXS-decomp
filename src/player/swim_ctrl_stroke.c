@@ -6,6 +6,7 @@
 #include "player.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
@@ -24,10 +25,6 @@
  * tails are gcc's cross-jumping, not gotos. */
 
 #define KEEP 0x7FFFFFFF
-
-extern u32 gRoomFrameCount;
-extern void *gAudioContext;
-extern void *gInput;
 
 /* `v`, mirrored when the target faces left */
 #define SIGNED_X(t, v) ((t)->f28.flipX ? -(v) : (v))
@@ -224,8 +221,6 @@ struct spawned
     u8 unk_0C_2:1;
     u8 unk_0C_3:5;
 };
-
-extern void *gEntitySpawner;
 
 /* Picks three tuning values by `state` - `mag` (always 300), `valB` and
  * `valA` - reads the D-pad direction (GetDpadDirection), on a 1-in-128 frame

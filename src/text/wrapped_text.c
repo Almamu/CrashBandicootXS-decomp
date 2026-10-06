@@ -2,6 +2,7 @@
 #include "text.h"
 #include "system.h"
 #include "gfx.h"
+#include "globals.h"
 
 /* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line.c) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s).
@@ -28,7 +29,6 @@
  * consumed. */
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, u8 *arg1, s32 arg2, void *arg3);
-extern void *gOamBuffer;
 
 static inline void set_pos(struct bitmap_font *m, u32 x, u32 y)
 {

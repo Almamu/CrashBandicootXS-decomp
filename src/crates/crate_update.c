@@ -1,8 +1,7 @@
 #include "core.h"
 #include "crate.h"
 #include "crates.h"
-
-extern void *gPaletteCache;
+#include "globals.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and

@@ -9,6 +9,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Second half of issue #59's Phase 2 gap (`CreateJetpackRing`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
@@ -49,14 +50,11 @@
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void _call_via_r0(void *fn);
 
-extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 
 extern u8 gActorVtable[];
 extern u8 gHovercraftPicture[];
-
-extern s16 gSineTable[];
 
 /* Shared inlines of the singleton system (see CreateHovercraft). */
 static inline struct actor_self *AllocActor(u32 size)
@@ -687,7 +685,7 @@ void HovercraftStateCloseIn(void)
             gHovercraftOrbitRadius = 0x8000;
         {
             s32 *px = &gHovercraftX;
-            s16 *tbl = gSineTable;
+            const s16 *tbl = gSineTable;
 
             a = ((gHovercraftFrameCount * 30) >> 4) & 0xff;
             *px = (tbl[(a + 0x40) & 0xff] * gHovercraftOrbitRadius) >> 8;

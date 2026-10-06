@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_states.c - see
@@ -36,10 +37,8 @@
  * the RNG `RandRange` is read back as a `u16` here (the ROM zero-
  * extends its result), and the seek spawn takes `&gActorList`
  * before the last lock check, as the ROM loads that address early. */
-extern void *gAudioContext;
 extern u8 *gLevelState;
 extern void *gActorList;
-extern u8 gJetpackPlayerInactive;
 
 static inline void BossSetState(s32 st, s32 idx)
 {

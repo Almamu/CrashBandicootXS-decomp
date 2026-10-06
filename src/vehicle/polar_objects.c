@@ -7,6 +7,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family (state at `self+0x28`, table-index/"kind" at `self+0xc`, an
@@ -22,7 +23,6 @@
  * state machine ... not attempted this pass". */
 
 extern void *gActorList;
-extern void *gAudioContext;
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
@@ -668,8 +668,6 @@ void UpdatePolarAkuAku(void *selfArg)
 }
 
 asm(".align 2, 0");
-
-extern s16 gSineTable[];
 
 /* Eases `self`'s cached position (`self+0x1c`/`0x20`/`0x24`, the same
  * fields `InitActorPart` caches its `b`/`c`/`d` constructor arguments

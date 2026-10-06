@@ -6,10 +6,7 @@
 #include "bosses.h"
 #include "vehicle.h"
 #include "gfx.h"
-
-extern void ***gSpriteBankSet;
-extern struct palette_cache *gPaletteCache;
-extern void *gHud;
+#include "globals.h"
 
 /* Pins the current category's tile-cache slots that every actor part
  * shares - the type-0 sprite family gets 2 slots (7/0xf), the type-1/2
@@ -41,7 +38,7 @@ void SetupActorVramPool(void)
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
 
-    entityTable = (u8 *)**gSpriteBankSet + 0x1a4;
+    entityTable = SPRITE_BANK_BASE + 0x1a4;
     otherTable = entityTable + 0x90;
     cache = gPaletteCache;
     FreeUnlockedPaletteSlots(cache);

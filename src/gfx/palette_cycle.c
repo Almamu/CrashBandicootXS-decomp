@@ -5,9 +5,8 @@
 #include <libgcc.h>
 #include "objects.h"
 #include "memory.h"
+#include "globals.h"
 
-
-extern u32 gRoomFrameCount;
 
 /* Per-frame consumer: for each active slot whose period has elapsed
  * this frame, rotates `targets[i]` by one position along the order

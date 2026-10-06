@@ -2,13 +2,12 @@
 #include "text.h"
 #include <agb_syscall.h>
 #include "gfx.h"
+#include "globals.h"
 
 /* GitHub issue #46: the HUD icon/text widget's glyph drawer and its two
  * constructors. Built with old_agbcc: under agbcc, FontDrawGlyph derives
  * its bitfield masks differently. */
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-
-extern struct oam_shadow_buffer *gOamBuffer;
 
 /* `bitmap_font.oam_scratch` viewed as the OAM-shaped draw request
  * AddOamEntry consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X

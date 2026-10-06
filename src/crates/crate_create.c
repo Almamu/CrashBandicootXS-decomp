@@ -117,6 +117,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 extern void *gCrateList;
 
 struct placement_level
@@ -179,7 +180,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         }
     }
     special = 0;
-    self->anim = (struct anim_table *)(**gSpriteBankSet + 0x174);
+    self->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x174);
     switch (type)
     {
     case 1:

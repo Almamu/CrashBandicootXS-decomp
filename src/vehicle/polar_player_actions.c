@@ -7,6 +7,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Continues the same player/action-object action-table family already
  * documented in ctrl.c/action_ctrl_states.c/action_ctrl_land.c - `self`
@@ -28,7 +29,6 @@
  * family" and "type-byte event dispatch" sections for the semantics
  * behind the individual functions below. */
 
-extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 

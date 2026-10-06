@@ -6,6 +6,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
  * (0x08016128-0x08017524): the player-input controller class of
@@ -56,12 +57,7 @@ struct keys
     u8 pad[0];
 };
 
-extern void *gInput;
-extern struct keys gKeys;
-extern u32 gRoomFrameCount;
-extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gPaletteCache;
 extern u8 *gEntityFlags;
 extern struct pctrl_target *gPlayer;
 
@@ -389,7 +385,7 @@ void UpdatePlayerCtrl(struct player_ctrl *self)
         if (self->spinCooldown)
             self->spinCooldown--;
         inp = gInput;
-        keys = *(u32 *)&gKeys; /* the whole word, held keys low */
+        keys = gKeys.all; /* the whole word, held keys low */
         dir = GetDpadDirection(inp);
 
         if (!(keys & (DPAD_UP | DPAD_DOWN)) && self->state != 2)
@@ -515,7 +511,7 @@ void PlayerCtrlStateIdle(struct player_ctrl *self)
     u8 count;
     void *inp = gInput;
 
-    k = gKeys;
+    k = *(struct keys *)&gKeys;
     dir = GetDpadDirection(inp);
     count = ++self->idleTimer;
     if (count == 30)
@@ -552,7 +548,7 @@ void PlayerCtrlStateSwim(struct player_ctrl *self)
     struct keys k;
     u8 dir = GetDpadDirection(gInput);
 
-    k = gKeys;
+    k = *(struct keys *)&gKeys;
     if (k.pressed & A_BUTTON)
     {
         StartPlayerCtrlStroke(self);
@@ -572,7 +568,7 @@ void PlayerCtrlStateSwim(struct player_ctrl *self)
 void PlayerCtrlStateStroke(struct player_ctrl *self)
 {
     void *inp = gInput;
-    struct keys k = gKeys;
+    struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
 
     if (kp->pressed & B_BUTTON)
@@ -622,7 +618,7 @@ void PlayerCtrlStateSpin(struct player_ctrl *self)
 
 void PlayerCtrlStateTurn(struct player_ctrl *self)
 {
-    struct keys k = gKeys;
+    struct keys k = *(struct keys *)&gKeys;
     s32 frame;
 
     if (self->timerMax != 0 && ++self->timer >= self->timerMax)
@@ -692,7 +688,7 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
 void PlayerCtrlStateSwimStart(struct player_ctrl *self)
 {
     void *inp = gInput;
-    struct keys k = gKeys;
+    struct keys k = *(struct keys *)&gKeys;
     struct keys *kp = &k;
 
     if (kp->pressed & B_BUTTON)
@@ -719,7 +715,7 @@ void PlayerCtrlStateSwimStart(struct player_ctrl *self)
 
 void PlayerCtrlStateStop(struct player_ctrl *self)
 {
-    struct keys k = gKeys;
+    struct keys k = *(struct keys *)&gKeys;
 
     if (k.pressed & A_BUTTON)
     {

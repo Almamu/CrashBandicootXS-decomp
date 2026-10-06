@@ -10,6 +10,7 @@
 #include "system.h"
 #include "gfx.h"
 #include "objects.h"
+#include "globals.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -41,9 +42,6 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * siblings `DrawEmptySlotLabel`/`DrawSaveMenuTitle` live in
  * `src/save/save_menu_ui.c`. */
 
-extern void *gInput;
-extern u32 gKeys;
-
 /* A "connecting..." SIO-handshake spinner dialog: allocates a small
  * icon object from self->field_8c's template, then loops VBlank-
  * waiting while polling input (cancel -> state 3), the link-active
@@ -67,7 +65,7 @@ s32 LinkExchangeSaveData(struct save_menu *self)
     do {
         WaitForVBlank();
         UpdateKeys(gInput);
-        if ((u16)(gKeys & 2)) {
+        if ((u16)(gKeys.all & 2)) {
             state = 3;
         } else {
             if (gLinkSessionReset) {
@@ -339,11 +337,7 @@ void DrawSaveSlots(struct save_menu *self, void *handle, s32 selectedIndex)
 }
 asm(".align 2, 0");
 
-extern struct oam_shadow_buffer *gOamBuffer;
-extern struct palette_cache *gPaletteCache;
-extern struct vram_upload_cursor *gObjVramCursor;
 extern void _call_via_r1(void *addr, void *fn);
-extern void ***gSpriteBankSet;
 
 static inline void IconSetup(struct bitmap_font *m, u32 v)
 {
@@ -379,7 +373,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     *slot = icon;
-    icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + tblOff);
+    icon->field_20 = (void **)(SPRITE_BANK_BASE + tblOff);
     /* Plain `u8 *` store: old_agbcc's read-modify-write struct store
      * leaves a dead zero mask that the loop pass counts as a movable,
      * which kept 0x80 out of the loop pre-header. */

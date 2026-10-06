@@ -9,6 +9,7 @@
 #include "audio.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
 {
@@ -32,7 +33,6 @@ void ResetSaveTransfer(struct settings_sync_pump *self)
     self->settleTimer = 0;
 }
 
-extern void *gInput;
 /* gKeys is a plain u32 elsewhere (e.g.
  * src/save/save_menu_draw.c's LinkExchangeSaveData) but this call site reads
  * only its upper 16 bits (the "newly pressed" half of a held/pressed
@@ -40,11 +40,6 @@ extern void *gInput;
  * +2 byte offset on the reloaded base address) requires a real field
  * access here rather than `(u8*)&gKeys + 2`, which the
  * compiler folds into the linker-relocated constant instead. */
-struct held_pressed_pair {
-    u16 held;
-    u16 pressed;
-};
-extern struct held_pressed_pair gKeys;
 
 /* The "connecting..." spinner dialog's blocking modal loop: sets up
  * `gSaveMenu`'s `state`/`field_10`/`flags`/`field_8`/`field_20`,
@@ -70,7 +65,7 @@ u8 RunSaveMenu(u32 state, u32 field10)
         u16 keys;
 
         UpdateKeys(gInput);
-        keys = gKeys.pressed;
+        keys = gKeys.half.pressed;
         SaveMenuInput(*selfAddr, keys);
     dispatch:
         DrawSaveMenu(*selfAddr);
@@ -83,8 +78,6 @@ u8 RunSaveMenu(u32 state, u32 field10)
     return ((struct save_menu *)gSaveMenu)->field_20;
 }
 
-extern void *gAudioContext;
-extern struct palette_cache *gPaletteCache;
 extern void *gLevelState;
 
 /* The composite pause/options screen's (and the spinner dialog's, via
@@ -481,7 +474,7 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
     void **handleAddr2;
     u32 wasSelected;
     void **c0Addr;
-    void **bcAddr;
+    struct AudioContext **bcAddr;
 
     if (!IsSaveSlotEmpty(*handleAddr, rowIndex)) {
         ReadSaveSlot(*handleAddr, rowIndex, buf);

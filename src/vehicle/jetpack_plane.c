@@ -5,6 +5,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment, docs/matching/issue-56-0x0802f0dc-actor.md and
@@ -116,9 +117,6 @@ asm(".align 2, 0");
  * Method-table and member-pointer calls are real indirect calls
  * (ACTOR_VCALL/ACTOR_PMF_CALL), which Thumb gcc emits as
  * `bl _call_via_rN` (lib/libgcc/lib1funcs.s). */
-
-extern void *gAudioContext;
-extern s16 gSineTable[];
 
 struct jetpack_plane {
     struct actor_self base;
@@ -421,7 +419,7 @@ void JetpackBomberStateDrop(struct jetpack_bomber *self)
 void JetpackBomberStateCircle(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
-        s16 *sine = gSineTable;
+        const s16 *sine = gSineTable;
         s32 angle = ((self->base.stateTime << 4) >> 4) & 0xff;
 
         self->base.x = self->homeX + sine[(angle + 0x40) & 0xff] * 60;
@@ -556,7 +554,7 @@ void AirshipFireballStateOrbit(struct actor_orbit *self)
         s32 px, py, tx, ty;
         register s32 cx asm("r3");
         register s32 cy asm("r4");
-        register s16 *sine asm("r5");
+        register const s16 *sine asm("r5");
 
         px = player->x;
         cx = self->centerX;
@@ -605,7 +603,7 @@ void AirshipFireballStateSpiralIn(struct actor_orbit *self)
         s32 px, py, tx, ty;
         register s32 cx asm("r3");
         register s32 cy asm("r4");
-        register s16 *sine asm("r5");
+        register const s16 *sine asm("r5");
 
         px = player->x;
         cx = self->centerX;

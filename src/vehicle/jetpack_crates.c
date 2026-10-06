@@ -7,6 +7,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "level.h"
+#include "globals.h"
 
 /* First half of the `0x08031A6C`-`0x08032858` remainder issue #59's
  * foundational pass (docs/matching/issue-59-0x08031784-actor.md) left
@@ -40,13 +41,11 @@
  * include/actor_self.h) - once parked NAKED as an "r7 table-base-pin"
  * hazard, see docs/matching/pmf-dispatch-retry.md. */
 
-extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-extern u8 gSineTable[];
 extern u8 gActorVtable[];
 
 /* The derived classes in this file, each the common `actor_self` prefix
@@ -774,7 +773,7 @@ void JetpackBalloonCrateStateFall(void *selfArg)
 void JetpackBalloonCrateStateHang(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
-    s16 *trig = (s16 *)gSineTable;
+    const s16 *trig = gSineTable;
     s32 phase = self->phase + self->base.stateTime;
     s32 idx1 = ((phase * 5) >> 4) & 0xff;
     s32 v1 = trig[idx1];
@@ -1001,7 +1000,7 @@ void UpdateJetpackRocket(void *selfArg)
     }
 
     {
-        s16 *trig = (s16 *)gSineTable;
+        const s16 *trig = gSineTable;
         s32 idx = (self->base.stateTime) << 6;
         s32 v;
 

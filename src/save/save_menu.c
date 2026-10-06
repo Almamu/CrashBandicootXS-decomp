@@ -4,8 +4,7 @@
 #include "audio.h"
 #include "gfx.h"
 #include "memory.h"
-
-extern void *gAudioContext;
+#include "globals.h"
 
 /* Confirm/cancel handler for the composite pause/options screen: on
  * either flags bit 0 or bit 3, plays the standard "confirm" cue and
@@ -21,9 +20,6 @@ void SaveMenuMessageInput(struct save_menu *self, u32 flags)
         self->field_10 = 1;
     }
 }
-
-extern struct palette_cache *gPaletteCache;
-extern struct oam_shadow_buffer *gOamBuffer;
 
 /* Restores the saved BG0HOFS/DISPCNT pair (see field_0/field_1c's doc
  * comments in save_menu.h) and flushes the VRAM/OAM commit

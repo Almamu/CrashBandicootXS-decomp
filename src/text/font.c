@@ -5,14 +5,13 @@
 #include "system.h"
 #include "gfx.h"
 #include "crates.h"
+#include "globals.h"
 
 /* Sits between FontMeasureText (src/text/font_measure.c) and
  * InitFont (src/text/font.c) - FontUploadTiles/
  * FontSetPalette/FontResetPalette, GitHub issue #46. Same `struct bitmap_font`
  * as hud_slide.c and the other src/text/font*.c files. */
 
-extern u8 *gPaletteCache;
-extern void ***gSpriteBankSet;
 /* codegen: GetPaletteSlot returns u8 (gfx.h); with the u8 return
  * FontUploadTiles adds `lsl #0x18; lsr #0x14` where the ROM has one
  * `lsl #4`. docs/headers_plan.md */
@@ -53,8 +52,8 @@ void FontSetPalette(struct bitmap_font *self, u8 val)
  * nibble FontSetPalette sets above. */
 void FontResetPalette(struct bitmap_font *self)
 {
-    u8 *cache = gPaletteCache;
-    void *rec = *(void **)((u8 *)(**gSpriteBankSet) + (0xD2 << 1));
+    u8 *cache = (u8 *)gPaletteCache;
+    void *rec = *(void **)(SPRITE_BANK_BASE + (0xD2 << 1));
     u8 field = ((u8 *)rec)[0x14];
     s32 slot = GetPaletteSlot_s32(cache, field);
     u32 shifted = slot << 4;

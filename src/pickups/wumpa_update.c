@@ -9,6 +9,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -29,10 +30,7 @@
  * parallel-agent convention reserves collision-avoidance for a single
  * name (wumpa_update.c) - see the issue doc's own follow-up note. */
 
-extern void *gAudioContext;
-extern void *gHud;
 extern void *gLevelState;
-extern s16 gSineTable[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
  * NAKED retry: PickUpWumpa and UpdateWumpaHop match only under it, and the
@@ -165,7 +163,6 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * (ORBIT_STEP), the spawn argument's address and the state-3 tail's
  * locals settle the last register and order differences. */
 extern void *gEntityFlags;
-extern void *gEntitySpawner;
 extern struct orbit_part *gPlayer;
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
@@ -345,8 +342,6 @@ void UpdateWumpa(struct orbit_part *self)
  *   tag address and its `strb`. */
 extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
-extern void ***gSpriteBankSet;
-extern void *gPaletteCache;
 
 struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
 {
@@ -368,7 +363,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     else
         AddToPartList(gUnknown_030012EC, self);
     p = self;
-    p->bank = (struct act_anim_bank *)((u8 *)**gSpriteBankSet + 0xd2 * 2);
+    p->bank = (struct act_anim_bank *)(SPRITE_BANK_BASE + 0xd2 * 2);
     {
         u8 one = 1;
         u8 *t = &p->tag;

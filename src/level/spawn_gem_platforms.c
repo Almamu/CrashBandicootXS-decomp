@@ -2,6 +2,7 @@
 #include "gfx_part.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* 0x08020E84-0x08021280 (GitHub issue #31): four of the "trigger effect
  * type N" spawners reached through the 15-slot dispatch table at
@@ -36,7 +37,6 @@
  * truncates a0 once, after the join). */
 
 extern struct level_state *gLevelState;
-extern u8 ***gSpriteBankSet;
 extern void *gUnknown_030012EC;
 
 /* The `tag` locals are set before the CreateSpriteObj call on purpose: the
@@ -61,7 +61,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 7;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -92,7 +92,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 5;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -123,7 +123,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 6;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -156,7 +156,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 8;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
+        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);

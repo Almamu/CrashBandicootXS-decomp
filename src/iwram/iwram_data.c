@@ -15,6 +15,7 @@
 #include "gfx.h"
 #include "iwram.h"
 #include "level.h"
+#include "globals.h"
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
@@ -46,12 +47,8 @@ u8 gFrameLimitEnabled = 0;
  * (audio.c). */
 u8 gGaxIrqEnabled = 0;
 
-/* Held keys and newly pressed keys (irq.c's UpdateKeys; the users
- * declare it as a pair of u16s or a struct of two). */
-struct {
-    u16 held;
-    u16 pressed;
-} gKeys = { 0, 0 };
+/* Held keys and newly pressed keys (irq.c's UpdateKeys). */
+union key_state gKeys = { { 0, 0 } };
 
 /* rand.c's seed. */
 u32 gRandSeed = 1;

@@ -2,6 +2,7 @@
 #include "gfx.h"
 #include "vtable.h"
 #include "objects.h"
+#include "globals.h"
 
 /* DrawSpritePieces (0x080073DC-0x08007634), the plain (non-affine) sibling of
  * `DrawAffineSpritePieces` (affine_sprite_pieces.c). Split out of graphics.c: it is the
@@ -50,8 +51,6 @@ struct oam_part {
 #define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
 extern s32 _call_via_r1(void *self, void *fn);
-extern void *gObjVramCursor;
-extern void *gOamBuffer;
 
 static inline s32 PieceSize73DC(s32 id)
 {

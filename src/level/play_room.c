@@ -7,6 +7,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
+#include "globals.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -17,7 +18,6 @@ extern struct part_list *gUnknown_030012F4;
 extern void *gCamera;
 extern struct level_layers *gLevelLayers;
 extern void *gPlayer;
-extern void ***gSpriteBankSet;
 
 /* PlayRoom's argument (game_frame.c passes `&self->level`; the same
  * record run_room.c's RunRoom reads as `struct gl_self`). */
@@ -166,7 +166,7 @@ s32 PlayRoom(void *selfArg)
 
         *((u8 *)*d8 + 0x88) = mode;
         {
-            void *val = **gSpriteBankSet;
+            void *val = SPRITE_BANK_BASE;
             u8 *pl = *d8;
             struct widget_vtable *w1c;
             s32 off;
@@ -192,7 +192,7 @@ s32 PlayRoom(void *selfArg)
 
         *((u8 *)*d8 + 0x88) = mode;
         {
-            void *val = (u8 *)**gSpriteBankSet + 0xc;
+            void *val = SPRITE_BANK_BASE + 0xc;
             u8 *pl = *d8;
             *(void **)(pl + 0x20) = val;
             {
@@ -228,7 +228,7 @@ s32 PlayRoom(void *selfArg)
             pl[0x88] = v;
         }
         {
-            void *val = (u8 *)**gSpriteBankSet + 0x18;
+            void *val = SPRITE_BANK_BASE + 0x18;
             u8 *pl = *d8;
             struct widget_vtable *w1c;
             s32 off;

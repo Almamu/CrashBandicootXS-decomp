@@ -2,6 +2,7 @@
 #include "gobj_1a794.h"
 #include "enemies.h"
 #include <libgcc.h>
+#include "globals.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyShooter`, the last raw function in the
  * `0x0800B8DC`-`0x0800D040` cluster's own `asm/code_3_2_17_bfa8.s`

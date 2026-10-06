@@ -2,6 +2,7 @@
 #include "gobj_1a794.h"
 #include "player.h"
 #include "objects.h"
+#include "globals.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family

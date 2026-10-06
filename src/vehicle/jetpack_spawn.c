@@ -9,6 +9,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "level.h"
+#include "globals.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
  * (`yeti.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
@@ -49,16 +50,8 @@ struct spawn_rec {
     s32 z;          // 0x0C
 };
 
-struct keys_pair {
-    u16 held;
-    u16 pressed;
-};
-
 extern struct actor_self *gActorList;
-extern struct keys_pair gKeys;
-extern void *gAudioContext;
 extern u8 *gLevelState;
-extern u8 gJetpackPlayerInactive;
 
 /* `operator new`: the ROM materializes the size before the heap flags. */
 static inline void *AllocActor(u32 size)
@@ -498,9 +491,9 @@ void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
 }
 
 /* The key word read as a whole (the ROM does a 32-bit load). */
-static inline struct keys_pair ReadKeys(void)
+static inline struct held_pressed_pair ReadKeys(void)
 {
-    return gKeys;
+    return gKeys.half;
 }
 
 /* Moves a steering speed 0x40 toward zero. */
@@ -557,7 +550,7 @@ void JetpackPlayerStateFly(struct actor_hp *self)
     SteerJetpackPlayerY(self);
     SteerJetpackPlayerX(self);
     if (gJetpackInputEnabled) {
-        struct keys_pair keys = gKeys;
+        struct held_pressed_pair keys = gKeys.half;
 
         if (keys.held & 0x200) {
             gJetpackFlashTimer = 0x12;
@@ -597,10 +590,10 @@ void JetpackPlayerStateRollLeft(struct actor_hp *self)
             gJetpackPlayerVelX = 0;
     }
     if (self->base.stateTime > 0x21) {
-        struct keys_pair keys;
+        struct held_pressed_pair keys;
 
         SteerJetpackPlayerX(self);
-        keys = gKeys;
+        keys = gKeys.half;
         if (keys.held & 0x200) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);
@@ -630,10 +623,10 @@ void JetpackPlayerStateRollRight(struct actor_hp *self)
             gJetpackPlayerVelX = 0;
     }
     if (self->base.stateTime > 0x21) {
-        struct keys_pair keys;
+        struct held_pressed_pair keys;
 
         SteerJetpackPlayerX(self);
-        keys = gKeys;
+        keys = gKeys.half;
         if (keys.held & 0x200) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);

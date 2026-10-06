@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "player.h"
 #include "level.h"
+#include "globals.h"
 
 /* Continuation of action_ctrl_hang.c (issue #18's chunk) - covers
  * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
@@ -224,7 +225,6 @@ asm(".align 2, 0");
  * `SetActionCtrlMode` through `ActionCtrlStateBodySlamStart`. Same "self" object family
  * documented at the top of action_ctrl_states.c/hovercraft_parts.c. */
 
-extern void *gAudioContext;
 extern void *gPlayer;
 
 /* Clears `self+0x33`, saves `self+8`'s previous value (truncated) into

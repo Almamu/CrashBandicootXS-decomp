@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gobj_1a794.h"
 #include "objects.h"
+#include "globals.h"
 
 /* GitHub issue #25, ROM 0x0801A878-0x0801AB34: CreatePlatform, the level
  * object spawner (`new` + inlined constructor InitPlatform, spawn-record
@@ -135,7 +136,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     }
     AddToPartList(gUnknown_030012EC, obj);
-    obj->anim = (void *)(**gSpriteBankSet + 0x1D4);
+    obj->anim = (void *)(SPRITE_BANK_BASE + 0x1D4);
     obj->tag = kind;
     ResetSpriteFrameTimer(obj);
     ResetSpriteFrameIndex(obj);

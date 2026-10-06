@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "objects.h"
 #include "level.h"
+#include "globals.h"
 
 /* codegen: CreateEnemyCtrl takes the 0x8C-byte block OperatorNew
  * returns (enemies.h). In 11 of the 26 spawners below the registers only
@@ -15,8 +16,6 @@ extern struct part_ctrl *CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl");
  * a CreateMovingSprite part, attaches a CreateEnemyCtrl popup header and fills the
  * part's collected bits from its level record; the tails differ. Built
  * with old_agbcc; see include/text_popup.h. */
-
-extern void *gAudioContext;
 
 /* Inline so the lookup's result gets its own register copy, as the ROM
  * does. */
@@ -140,7 +139,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         : "r" (raw0), "r" (raw1), "r" (raw2), "r" (raw3)
         : "r1", "r2", "r3", "lr", "memory");
 
-    p2 = *(void **)gSpriteBankSet;
+    p2 = (void *)gSpriteBankSet->table;
     p3 = *(void **)p2;
     *(void **)((u8 *)part + 0x20) = (u8 *)p3 + 0x78;
 

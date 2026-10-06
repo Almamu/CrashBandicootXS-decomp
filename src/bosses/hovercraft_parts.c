@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "bosses.h"
+#include "globals.h"
 
 /* A second per-instance "self" object family sharing the exact same
  * layout convention already documented for the boss-weapon cluster
@@ -22,8 +23,6 @@
  * sequence already documented for the boss cluster's
  * `DamageAirshipFireball`/`AirshipStateFall`/`DamageAirship`. See
  * docs/matching/issue-62-0x08033804-actor.md. */
-
-extern void *gAudioContext;
 
 /* One-shot latch: if neither `gHovercraftHitFlashOn` nor `gHovercraftHitFlashTimer`
  * has been set yet, arms both. */

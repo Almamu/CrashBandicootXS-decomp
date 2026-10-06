@@ -6,6 +6,7 @@
 #include "pause_menu.h"
 #include "system.h"
 #include "menus.h"
+#include "globals.h"
 
 /* PauseMenuLoop alone: ROM-address-adjacent to pause_menu.c's
  * DestroyPauseMenu on one side and the already-matched AnimatePauseMenu
@@ -13,9 +14,6 @@
  * to keep both neighbors' link-order positions intact (docs/workflow.md
  * step 4's "one .c file per contiguous ROM region" rule) - see
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
-
-extern void *gInput;
-extern u32 gKeys;
 
 /* The composite pause/options screen's blocking cursor/confirm/cancel
  * driver (docs/rom_map.md's overlay_ui section) - runs until the user
@@ -48,7 +46,6 @@ extern u32 gKeys;
  * fade-out loop, so `disp` is only taken after the fade-in loop; taken
  * before the input loop it lands ahead of that insertion
  * (docs/matching/early-rom-naked-retry-2.md). */
-extern struct AudioContext *gAudioContext;
 
 /* gKeys as the {held, newly pressed} key-state pair. */
 struct pause_keys {
@@ -105,7 +102,7 @@ s32 PauseMenuLoop(struct pause_menu *self)
             self->field_68 = 0x1e;
             PlaySfx(gAudioContext, 0x46, 0x100);
         }
-        in = gKeys;
+        in = gKeys.all;
         pressed = in >> 16;
         key = 0x20;
         if (pressed & 0x20) {
@@ -119,7 +116,7 @@ s32 PauseMenuLoop(struct pause_menu *self)
                 self->field_68--;
             }
         }
-        in = gKeys;
+        in = gKeys.all;
         pressed = in >> 16;
         key = 0x10;
         if (pressed & 0x10) {
