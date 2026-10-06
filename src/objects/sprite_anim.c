@@ -25,7 +25,7 @@ u8 GetSpriteAnimFrameCount(struct actor *part)
     MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
     void *rec;
 
-    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
     rec = (void *)offset;
     return *((u8 *)rec + 0x16);
 }
@@ -42,7 +42,7 @@ u8 GetSpriteAnimDuration(struct actor *part)
     MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
     void *rec;
 
-    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
     rec = (void *)offset;
     return *((u8 *)rec + 0x15);
 }
@@ -146,7 +146,7 @@ void SetSpriteGfxMode(void *part, s32 value)
     MATCH_HOLD_REG(s32, byte, r3);
     MATCH_HOLD_REG(s32, result, r2);
 
-    asm("and %0, %0, %1" : "+r" (val), "+r" (three));
+    asm("and %0, %0, %1" : "+r"(val), "+r"(three));
     masked = val;
 
     mask = -4;
@@ -307,7 +307,10 @@ extern s32 _call_via_r1(void *self, void *fn);
  * after them - that pointer is the one the loop keeps in r8. */
 void UpdatePartList(struct part_list *list)
 {
-    struct { struct aabb near; struct aabb screen; } f;
+    struct {
+        struct aabb near;
+        struct aabb screen;
+    } f;
     struct bg_scroll_layer *cam;
     s32 i;
     s32 zero;
@@ -466,10 +469,10 @@ void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_p
         case 0:
             break;
         case 1:
-        {
-            u8 *flags = &gPlayer->flags.all;
-            *flags |= 8;
-        }
+            {
+                u8 *flags = &gPlayer->flags.all;
+                *flags |= 8;
+            }
             kind = gPlayer->kind;
             if (kind == 1) {
                 if (gPlayer->speedY > 0) {

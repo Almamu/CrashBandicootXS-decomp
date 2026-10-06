@@ -229,6 +229,7 @@ void AllocJetpackPlayerTiles(void *selfArg)
         MATCH_HOLD_REG(s32, temp, r2);
         MATCH_HOLD_REG(s32, size, r0);
 
+        // clang-format off
         asm volatile(
             "add %0, %2, #0\n\t"
             "mul %0, %1, %0\n\t"
@@ -236,6 +237,7 @@ void AllocJetpackPlayerTiles(void *selfArg)
             "lsl %3, %3, #5\n\t"
             : "=r"(temp), "+r"(b1), "+r"(b0), "=r"(size)
         );
+        // clang-format on
         gJetpackPlayerTiles[0] = AllocVramTileBlock(size);
     }
     {
@@ -262,6 +264,7 @@ void AllocJetpackPlayerTiles(void *selfArg)
             MATCH_HOLD_REG(s32, temp, r1);
             MATCH_HOLD_REG(s32, size, r0);
 
+            // clang-format off
             asm volatile(
                 "add %0, %2, #0\n\t"
                 "mul %0, %1, %0\n\t"
@@ -269,6 +272,7 @@ void AllocJetpackPlayerTiles(void *selfArg)
                 "lsl %3, %3, #5\n\t"
                 : "=r"(temp), "+r"(b1), "+r"(b0), "=r"(size)
             );
+            // clang-format on
             gJetpackPlayerTiles[1] = AllocVramTileBlock(size);
         }
     }

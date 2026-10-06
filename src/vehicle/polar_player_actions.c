@@ -118,8 +118,7 @@ void PolarPlayerStateFinish(void *selfArg)
                 self->animTime = zero;
 
                 if (self->y > 0x2000) {
-                    gRiderlessPolar = CreateActor(2, self->x, 0x2800,
-                                                     self->z, (void *)zero);
+                    gRiderlessPolar = CreateActor(2, self->x, 0x2800, self->z, (void *)zero);
                 }
             }
         }
@@ -274,7 +273,7 @@ void BoostPolarPlayer(void *selfArg, s32 arg1param)
             MATCH_HOLD_REG(s32, four, r2);
             MATCH_HOLD_REG(s32, val, r1);
 
-            asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
+            asm("add %0, %0, %1" : "+r"(entryPtr) : "r"(table));
             four = 4;
             val = *(s16 *)(entryPtr + four);
 

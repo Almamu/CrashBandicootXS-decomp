@@ -29,9 +29,8 @@ static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 
 static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
 {
-    if (b->z < a->z + a->d && b->z + b->d > a->z
-        && b->y < a->y + a->h && b->y + b->h > a->y
-        && b->x < a->x + a->w && b->x + b->w > a->x)
+    if (b->z < a->z + a->d && b->z + b->d > a->z && b->y < a->y + a->h && b->y + b->h > a->y &&
+        b->x < a->x + a->w && b->x + b->w > a->x)
         goto hit;
     return 0;
 hit:
@@ -96,8 +95,7 @@ void DetonateNearbyPolarNitros(struct actor_self *self)
     struct actor_self *n = ACTOR_NEXT(gActorList);
 
     do {
-        if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n)
-            && n->animIndex != 0x12) {
+        if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n) && n->animIndex != 0x12) {
             PlaySfx(gAudioContext, 4, 0x100);
             AddBrokenCrate(gLevelState);
             n->stateTime = 0;

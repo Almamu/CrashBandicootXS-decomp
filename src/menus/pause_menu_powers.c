@@ -68,7 +68,8 @@ void DrawPausePowersPage(struct pause_menu *self)
     if (none) {
         s32 label = GetUiText(0x3a);
         struct icon_record *rec = gSmallFont->record;
-        u32 width = _call_via_r2((u8 *)gSmallFont + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
+        u32 width =
+            _call_via_r2((u8 *)gSmallFont + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
         s32 halfX = 0xc2 - (width >> 1);
         struct bitmap_font *mgr = gSmallFont;
         s32 y = 0x64;

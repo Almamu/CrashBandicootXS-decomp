@@ -25,7 +25,8 @@
  * (`mov r4, sp; mov r1, #1; strb r1, [r4]`); passing a `struct byte_arg`
  * schedules the `mov r1, #1` before the `mov r4, sp`.
  * docs/headers_plan.md */
-extern void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx");
+extern void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset,
+                             s32 volumeMul) asm("PlayAmbientSfx");
 
 /* Re-derives `gYetiPosition`/`030014CC` (a small per-frame ease
  * toward a `GetCellAnimDistance()`-driven target, with a `+0x99` nudge on the
@@ -139,8 +140,7 @@ void YetiStateChase(void)
             if (gYetiDistance <= 0x7800) {
                 PlaySfx(gAudioContext, 0x20, 0x100);
             }
-        end_transition:
-            ;
+        end_transition:;
         }
     }
 }

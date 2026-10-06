@@ -25,12 +25,10 @@ void UpdatePlatform(struct gobj *self)
 {
     struct actor_method *m = &self->vtable->m38;
 
-    if ((u8)_call_via_r1((u8 *)self + m->thisOffset, m->fn))
-    {
+    if ((u8)_call_via_r1((u8 *)self + m->thisOffset, m->fn)) {
         AdvanceSpriteAnim((struct box_part *)self);
         OBJ_CALL1(self, m60);
-        if (self->type == 6 && self->frame > 0x12)
-        {
+        if (self->type == 6 && self->frame > 0x12) {
             struct gobj **c = &gPlayer->carried;
 
             if (*c == self)
@@ -38,9 +36,7 @@ void UpdatePlatform(struct gobj *self)
         }
         if (self->mover)
             MOVER_CALL2(self->mover, m08, self);
-    }
-    else
-    {
+    } else {
         OBJ_CALL1(self, m60);
         if (self->mover)
             MOVER_CALL2(self->mover, m08, self);
@@ -118,14 +114,12 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
     MATCH_HOLD_REG(struct gobj *, obj, r4) = objArg;
     s32 kind;
 
-    if (self->lastX == 0 && self->rangeX > 0)
-    {
+    if (self->lastX == 0 && self->rangeX > 0) {
         MATCH_HOLD_REG(struct speed_ramp *, e, r3);
 
         self->lastX = obj->x >> 8;
         e = MoverVec(self);
-        if (self->dirX)
-        {
+        if (self->dirX) {
             s32 x = e->start;
             s32 y = e->step;
             s32 z = e->target;
@@ -134,9 +128,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             obj->rampX.start = x;
             obj->rampX.step = y;
             obj->rampX.target = z;
-        }
-        else
-        {
+        } else {
             s32 x = -e->start;
             s32 z = -e->target;
             s32 y = e->step;
@@ -147,14 +139,12 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             obj->rampX.target = z;
         }
     }
-    if (self->lastY == 0 && self->rangeY > 0)
-    {
+    if (self->lastY == 0 && self->rangeY > 0) {
         MATCH_HOLD_REG(struct speed_ramp *, e, r3);
 
         self->lastY = obj->y >> 8;
         e = MoverVec(self);
-        if (self->dirY)
-        {
+        if (self->dirY) {
             s32 x = e->start;
             s32 y = e->step;
             s32 z = e->target;
@@ -163,9 +153,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             obj->rampY.start = x;
             obj->rampY.step = y;
             obj->rampY.target = z;
-        }
-        else
-        {
+        } else {
             s32 x = -e->start;
             s32 z = -e->target;
             s32 y = e->step;
@@ -180,16 +168,13 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
     {
         s32 d = self->distX;
 
-        if (d != -1)
-        {
+        if (d != -1) {
             s32 v = (obj->x >> 8) - self->lastX;
             s32 sign;
 
             ABS32(v, sign);
             self->distX = d + v;
-        }
-        else
-        {
+        } else {
             MATCH_HOLD_REG(s32, v, r2) = obj->speedX;
             s32 sign;
 
@@ -201,16 +186,13 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
     {
         s32 d = self->distY;
 
-        if (d != -1)
-        {
+        if (d != -1) {
             s32 v = (obj->y >> 8) - self->lastY;
             s32 sign;
 
             ABS32(v, sign);
             self->distY = d + v;
-        }
-        else
-        {
+        } else {
             MATCH_HOLD_REG(s32, v, r2) = obj->speedY;
             s32 sign;
 
@@ -220,8 +202,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         }
     }
 
-    if (self->distX > self->rangeX && self->rangeX != 0)
-    {
+    if (self->distX > self->rangeX && self->rangeX != 0) {
         MATCH_HOLD_REG(struct speed_ramp *, e, r3);
         MATCH_HOLD_REG(u8 *, dp, r0) = &self->dirX;
         u8 one = 1;
@@ -231,8 +212,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         *dp = d;
 
         e = MoverVec(self);
-        if (d)
-        {
+        if (d) {
             s32 x = e->start;
             s32 y = e->step;
             s32 z = e->target;
@@ -240,9 +220,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             obj->rampX.start = x;
             obj->rampX.step = y;
             obj->rampX.target = z;
-        }
-        else
-        {
+        } else {
             s32 x = -e->start;
             s32 z = -e->target;
             s32 y = e->step;
@@ -253,8 +231,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         }
         self->distX = -1;
     }
-    if (self->distY > self->rangeY && self->rangeY != 0)
-    {
+    if (self->distY > self->rangeY && self->rangeY != 0) {
         MATCH_HOLD_REG(struct speed_ramp *, e, r3);
         MATCH_HOLD_REG(u8 *, dp, r0) = &self->dirY;
         u8 one = 1;
@@ -264,8 +241,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         *dp = d;
 
         e = MoverVec(self);
-        if (d)
-        {
+        if (d) {
             s32 x = e->start;
             s32 y = e->step;
             s32 z = e->target;
@@ -273,9 +249,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             obj->rampY.start = x;
             obj->rampY.step = y;
             obj->rampY.target = z;
-        }
-        else
-        {
+        } else {
             s32 x = -e->start;
             s32 z = -e->target;
             s32 y = e->step;
@@ -288,21 +262,16 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
     }
 
     kind = self->kind;
-    if (kind == 5 && self->timer > 0 && gRoomFrameCount - self->timer == 60)
-    {
+    if (kind == 5 && self->timer > 0 && gRoomFrameCount - self->timer == 60) {
         MOVER_CALL3(self, m60, obj, 3);
         self->timer = -1;
-    }
-    else if (kind == 5 && self->timer > 0)
-    {
+    } else if (kind == 5 && self->timer > 0) {
         u32 now = gRoomFrameCount;
 
-        if (__umodsi3(now - self->timer, 30) <= 4)
-        {
+        if (__umodsi3(now - self->timer, 30) <= 4) {
             if (!(now & 1))
                 obj->y += -0x300;
-            else
-            {
+            else {
                 s32 y = obj->y;
                 MATCH_HOLD_REG(s32, k, r2) = 0x300;
 
@@ -312,15 +281,12 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             goto done;
         }
         goto check_rest;
-    }
-    else
-    {
+    } else {
     check_rest:
-        if ((kind == 7 && obj->frame <= 1 && !self->active)
-         || (kind == 6 && obj->frame <= 1 && gRoomFrameCount < self->time))
+        if ((kind == 7 && obj->frame <= 1 && !self->active) ||
+            (kind == 6 && obj->frame <= 1 && gRoomFrameCount < self->time))
             goto clamp;
-        if (kind == 7 && obj->animDone)
-        {
+        if (kind == 7 && obj->animDone) {
             MATCH_HOLD_REG(u32, bit, r0) = 1;
 
             obj->flags = bit | obj->flags;
@@ -328,8 +294,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
                 MATCH_HOLD_REG(s32, none, r0) = 0xFFFF;
                 MATCH_HOLD_REG(u32, cur, r2) = obj->id;
 
-                if (cur != none)
-                {
+                if (cur != none) {
                     MATCH_HOLD_REG(s32, id, r3) = *(vu16 *)&obj->id;
                     u8 *base = (u8 *)gEntityFlags;
                     MATCH_HOLD_REG(s32, word, r0) = id;
@@ -344,9 +309,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
                     *slot |= 1 << word;
                 }
             }
-        }
-        else if (kind == 6 && obj->animDone)
-        {
+        } else if (kind == 6 && obj->animDone) {
             self->time = gRoomFrameCount + 120;
         clamp:
             {
@@ -375,15 +338,13 @@ done:
  * into the player's +0x24 direction bits. Pins as in UpdatePlatformMover. */
 void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
 {
-    if (self->active && self->kind != 6)
-    {
+    if (self->active && self->kind != 6) {
         struct player **pp = &gPlayer;
         struct player *p = *pp;
         MATCH_HOLD_REG(u32, f, r1) = p->flags.all;
         MATCH_HOLD_REG(u32, top, r0) = f >> 7;
 
-        if (top)
-        {
+        if (top) {
             u8 dir;
 
             {
@@ -430,8 +391,7 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
 {
     const struct speed_ramp *e = &gPlatformMoverMotionRecords[self->set->entries[index].b];
 
-    if ((s32)(part->mirror << 26) < 0)
-    {
+    if ((s32)(part->mirror << 26) < 0) {
         s32 x = -e->start;
         s32 z = -e->target;
         s32 y = e->step;
@@ -439,9 +399,7 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
         part->rampY.start = x;
         part->rampY.step = y;
         part->rampY.target = z;
-    }
-    else
-    {
+    } else {
         s32 x = e->start;
         s32 y = e->step;
         s32 z = e->target;
@@ -456,8 +414,7 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
 {
     const struct speed_ramp *e = &gPlatformMoverMotionRecords[self->set->entries[index].a];
 
-    if ((s32)(part->mirror << 27) < 0)
-    {
+    if ((s32)(part->mirror << 27) < 0) {
         s32 x = -e->start;
         s32 z = -e->target;
         s32 y = e->step;
@@ -465,9 +422,7 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
         part->rampX.start = x;
         part->rampX.step = y;
         part->rampX.target = z;
-    }
-    else
-    {
+    } else {
         s32 x = e->start;
         s32 y = e->step;
         s32 z = e->target;
@@ -485,7 +440,8 @@ void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32
 
 void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    StartCtrlTargetMotionX(self, part, (s32 *)&gPlatformMoverMotionRecords[self->set->entries[index].a]);
+    StartCtrlTargetMotionX(self, part,
+                           (s32 *)&gPlatformMoverMotionRecords[self->set->entries[index].a]);
 }
 
 void DestroyPlatformMover(struct mover *self, s32 flags)
@@ -498,7 +454,8 @@ void DestroyPlatformMover(struct mover *self, s32 flags)
  * genuine byte, which the ROM reads with `add r0, sp, #0x18; ldrb` - this
  * compiler would load the whole word and mask it, so only the address is
  * computed in asm and the byte load itself is plain C. */
-struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 dirXArg, u8 dirY, s32 kind)
+struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 dirXArg, u8 dirY,
+                                  s32 kind)
 {
     MATCH_HOLD_REG(u8 *, dyp, r0);
     u8 dy;
@@ -510,8 +467,7 @@ struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 
 
     InitCtrl(self);
     self->vtable = (struct mover_vtable *)gPlatformMoverVtable;
-    if ((u32)(kind - 6) <= 1)
-    {
+    if ((u32)(kind - 6) <= 1) {
         distY = 0;
         distX = 0;
     }

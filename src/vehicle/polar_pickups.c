@@ -18,8 +18,8 @@
  * prefix. */
 struct moving_actor {
     struct actor_self base;
-    s32 velX;                   // 0x54
-    s32 velY;                   // 0x58
+    s32 velX; // 0x54
+    s32 velY; // 0x58
 };
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -78,7 +78,7 @@ frameBlock:
         MATCH_HOLD_REG(s32, four, r3);
         MATCH_HOLD_REG(s32, e4, r2);
 
-        asm("add %0, %0, %1" : "+r" (entryPtr) : "r" (table));
+        asm("add %0, %0, %1" : "+r"(entryPtr) : "r"(table));
         four = 4;
         e4 = *(s16 *)(entryPtr + four);
 
@@ -127,7 +127,7 @@ void DrawPolarCollectedWumpa(void *selfArg)
     MATCH_HOLD_REG(u32, packed, r3);
 
     frame = GetAnimFrameData(self);
-    asm volatile("mov r0, #0\n\tmov %0, r0" : "=r"(flag) :: "r0");
+    asm volatile("mov r0, #0\n\tmov %0, r0" : "=r"(flag) : : "r0");
 
     {
         MATCH_HOLD_REG(s32, w, r0);
@@ -142,15 +142,19 @@ void DrawPolarCollectedWumpa(void *selfArg)
         x -= wShift;
         y -= hShift;
 
-        if (y > 0x9f) return;
+        if (y > 0x9f)
+            return;
         {
             MATCH_HOLD_REG(s32, hCheck, r0) = h << 3;
-            if (y + hCheck < 0) return;
+            if (y + hCheck < 0)
+                return;
         }
-        if (x > 0xef) return;
+        if (x > 0xef)
+            return;
         {
             MATCH_HOLD_REG(s32, wCheck, r0) = wShift << 1;
-            if (x + wCheck < 0) return;
+            if (x + wCheck < 0)
+                return;
         }
 
         flag = 0x100;
@@ -212,7 +216,7 @@ asm(".align 2, 0");
 struct fruit_actor {
     struct actor_self base;
     u8 unk_54[8];
-    s32 fruit;                  // 0x5c
+    s32 fruit; // 0x5c
 };
 
 
@@ -275,10 +279,10 @@ asm(".align 2, 0");
 /* The seek effect (method table gPolarCollectedWumpaVtable). */
 struct polar_collected_wumpa {
     struct actor_self base;
-    s32 velX;           // 0x54
-    s32 velY;           // 0x58
-    s32 count;          // 0x5C - the spawn parameter; DestroyPolarCollectedWumpa (below)
-                        // repeats its teardown drain this many times
+    s32 velX;  // 0x54
+    s32 velY;  // 0x58
+    s32 count; // 0x5C - the spawn parameter; DestroyPolarCollectedWumpa (below)
+               // repeats its teardown drain this many times
 };
 
 void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spawnParam)
@@ -334,7 +338,7 @@ asm(".align 2, 0");
  * object it hands to `MarkSpawnCollected`'s 15-entry list. */
 struct listed_actor {
     struct actor_self base;
-    void *unk_54;               // 0x54
+    void *unk_54; // 0x54
 };
 
 /* On proximity (`IsTouchingPlayer`), accumulates `1` into the shared

@@ -10,22 +10,19 @@
 
 s32 CheckPlatformContact(struct gobj *self)
 {
-    if (self->type != 6 || self->frame <= 0x12)
-    {
+    if (self->type != 6 || self->frame <= 0x12) {
         MATCH_HOLD_REG(struct player *, p, r3) = gPlayer;
         void *arg = *(void **)((u8 *)p->ctrl + 8);
         MATCH_HOLD_REG(u32, f, r1) = p->flags.all;
         MATCH_HOLD_REG(u32, top, r0) = f >> 7;
 
-        if (top)
-        {
+        if (top) {
             MATCH_HOLD_REG(s32, d, r2) = self->x;
 
             d -= p->x;
             if (d < 0)
                 d = -d;
-            if (d <= 0x7FFF)
-            {
+            if (d <= 0x7FFF) {
                 d = self->y;
                 d -= p->y;
                 if (d < 0)

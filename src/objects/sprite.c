@@ -233,7 +233,7 @@ void *GetSpriteAttackBox(void *dest, void *pt)
         }
         {
             MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
-            asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r" (shifted), "+r" (addr));
+            asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r"(shifted), "+r"(addr));
         }
         if (shifted < 0) {
             buf_.y = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf_.y + buf_.h);
@@ -302,7 +302,7 @@ void *GetSpriteBodyBox(void *dest, void *pt)
         }
         {
             MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
-            asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r" (shifted), "+r" (addr));
+            asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r"(shifted), "+r"(addr));
         }
         if (shifted < 0) {
             buf_.y = (*(s32 *)((u8 *)part + 4) >> 8) * 2 - (buf_.y + buf_.h);
@@ -340,19 +340,19 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 struct collect_part {
     s32 x;
     s32 y;
-    u16 id;             // 0x08
-    u8 kind;            // 0x0A
+    u16 id;  // 0x08
+    u8 kind; // 0x0A
     u8 unk_0B;
-    u8 gone:1;          // 0x0C
+    u8 gone:1; // 0x0C
     u8 unk_0C_1:1;
     u8 visible:1;
     u8 hit:1;
     u8 unk_0C_4:3;
     u8 solid:1;
     u8 unk_0D[0xb];
-    u8 *vtable;         // 0x18
+    u8 *vtable; // 0x18
     u8 unk_1C[0xc];
-    u8 mode:2;          // 0x28
+    u8 mode:2; // 0x28
     u8 unk_28_2:6;
 };
 
@@ -379,20 +379,23 @@ s32 CheckSpritePickup(struct collect_part *part)
                 COLLECT_FLAGS(part) |= 8;
                 player = gPlayer;
                 {
-                    const struct actor_method *m = (const struct actor_method *)&player->vtable->handleEvent;
-                    ((void (*)(void *, s32, s32, s32))m->fn)((u8 *)player + m->thisOffset, 0, part->kind, 0);
+                    const struct actor_method *m =
+                        (const struct actor_method *)&player->vtable->handleEvent;
+                    ((void (*)(void *, s32, s32, s32))m->fn)((u8 *)player + m->thisOffset, 0,
+                                                             part->kind, 0);
                 }
                 COLLECT_FLAGS(part) |= one;
-                if (part->id != 0xFFFF) do {
-                    s32 id = part->id;
-                    u8 *base = (u8 *)gEntityFlags;
-                    s32 word = id / 32;
-                    s32 off = word * 4;
-                    u32 *slot = (u32 *)(base + 0x108);
+                if (part->id != 0xFFFF)
+                    do {
+                        s32 id = part->id;
+                        u8 *base = (u8 *)gEntityFlags;
+                        s32 word = id / 32;
+                        s32 off = word * 4;
+                        u32 *slot = (u32 *)(base + 0x108);
 
-                    slot = (u32 *)((u8 *)slot + off);
-                    *slot |= 1 << (id - word * 32);
-                } while (0);
+                        slot = (u32 *)((u8 *)slot + off);
+                        *slot |= 1 << (id - word * 32);
+                    } while (0);
 
                 spawned = NULL;
                 switch (part->kind) {

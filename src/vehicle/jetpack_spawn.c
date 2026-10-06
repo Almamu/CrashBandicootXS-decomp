@@ -38,17 +38,17 @@
 /* One record of the `gJetpackAnimTable` per-kind table (stride 40). */
 struct kind_entry {
     u8 unk_00[0x20];
-    s32 dx;         // 0x20 - added to the spawn X
-    s32 dy;         // 0x24 - added to the spawn Y
+    s32 dx; // 0x20 - added to the spawn X
+    s32 dy; // 0x24 - added to the spawn Y
 };
 
 /* A level spawn record, as passed to `SpawnJetpackActor`. */
 struct jetpack_spawn_rec {
-    u8 kind[3];     // 0x00 - normal / alternate-mode / `alt`-gated kind
+    u8 kind[3]; // 0x00 - normal / alternate-mode / `alt`-gated kind
     u8 pad;
-    s32 x;          // 0x04 - tile units (<< 8 to Q8)
-    s32 y;          // 0x08
-    s32 z;          // 0x0C
+    s32 x; // 0x04 - tile units (<< 8 to Q8)
+    s32 y; // 0x08
+    s32 z; // 0x0C
 };
 
 /* `operator new`: the ROM materializes the size before the heap flags. */
@@ -59,7 +59,8 @@ static inline void *AllocActor(u32 size)
 
 /* The inlined base constructor of the hit-point classes: the hit-point
  * value is an argument, so it's materialized before the call. */
-static inline void InitHpActor(struct actor_hp *obj, struct kind_entry *rec, s32 x, s32 y, s32 z, s32 hp)
+static inline void InitHpActor(struct actor_hp *obj, struct kind_entry *rec, s32 x, s32 y, s32 z,
+                               s32 hp)
 {
     InitActorPart(obj, rec, x, y, z);
     obj->hp = hp;
@@ -154,12 +155,14 @@ void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
         return CreateJetpackHealthCrate(AllocActor(0x70), &gJetpackAnimTable[kind], x, y, z);
     case 23:
         if ((u8)IsSpawnCollected(spawn))
-            return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[20], x, y, z, (s32)spawn);
+            return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[20], x, y, z,
+                                              (s32)spawn);
         /* fallthrough */
     case 20:
     case 21:
     case 22:
-        return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[kind], x, y, z, (s32)spawn);
+        return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[kind], x, y, z,
+                                          (s32)spawn);
     case 24:
     case 25:
     case 26:
@@ -171,7 +174,7 @@ void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
         return CreateJetpackRocket(AllocActor(0x68), &gJetpackAnimTable[kind], x, y, z);
     case 31:
         CreateJetpackRing(AllocActor(0x5c), &gJetpackAnimTable[43],
-                    x - gJetpackAnimTable[kind].dx + gJetpackAnimTable[43].dx, y, z);
+                          x - gJetpackAnimTable[kind].dx + gJetpackAnimTable[43].dx, y, z);
         return CreateJetpackRing(AllocActor(0x5c), &gJetpackAnimTable[kind], x, y, z);
     }
     return 0;
@@ -221,8 +224,8 @@ void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c)
  * matched passing a one-byte struct: through the u8 prototype the stack
  * argument is stored with `str` in place of `add r2, sp, #4; strb`.
  * docs/headers_plan.md */
-extern void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d, struct byte_arg e)
-    asm("CreateHovercraftSideGun");
+extern void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d,
+                                       struct byte_arg e) asm("CreateHovercraftSideGun");
 
 /* Kind-13 constructor; the last argument is passed as a single byte. */
 void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 d)
@@ -368,9 +371,12 @@ void UpdateJetpackPlayer(struct actor_hp *self)
     self->base.stateTime++;
     self->base.animTime += *(s16 *)&self->base.animTimer;
     self->base.animDone = 0;
-    if (GetAnimFrameBaseOffset((struct actor_self *)self) >= self->base.anims[self->base.animIndex].loopThreshold) {
-        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
-                                - self->base.anims[self->base.animIndex].loopBase) << 8;
+    if (GetAnimFrameBaseOffset((struct actor_self *)self) >=
+        self->base.anims[self->base.animIndex].loopThreshold) {
+        // clang-format off
+        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold -
+                                self->base.anims[self->base.animIndex].loopBase) << 8;
+        // clang-format on
         self->base.animDone = 1;
     }
     UpdateActorBgScroll(self->base.x, self->base.y);
@@ -449,12 +455,14 @@ void DrawJetpackPlayer(struct actor_hp *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gJetpackPlayerLastFrame) {
             gJetpackPlayerTileBuffer ^= 1;
-            gUnpackRleSpriteFrameFunc(gJetpackPlayerTiles[gJetpackPlayerTileBuffer], (struct rle_frame *)frame);
+            gUnpackRleSpriteFrameFunc(gJetpackPlayerTiles[gJetpackPlayerTileBuffer],
+                                      (struct rle_frame *)frame);
             gJetpackPlayerLastFrame = frame;
         }
         {
             /* the ROM computes the tile number in r0 */
-            MATCH_HOLD_REG(u32, tile, r0) = GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
+            MATCH_HOLD_REG(u32, tile, r0) =
+                GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
 
             QueueSpriteFrameOam(attr1, tile | (self->base.palette << 12), scale);
         }

@@ -56,11 +56,9 @@ void UpdateZoomBg(struct zoom_bg *self)
 {
     u8 buf[0x200];
 
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
-        if (self->scale <= 0xFF)
-        {
+        if (self->scale <= 0xFF) {
             self->scale += 8;
             break;
         }
@@ -68,8 +66,7 @@ void UpdateZoomBg(struct zoom_bg *self)
         self->state = 3;
         break;
     case 1:
-        if (self->scale > 8)
-        {
+        if (self->scale > 8) {
             self->scale -= 8;
             break;
         }
@@ -94,8 +91,7 @@ void UpdateZoomBg(struct zoom_bg *self)
         self->state = 0;
         break;
     case 4:
-        if (self->scale > 8)
-        {
+        if (self->scale > 8) {
             self->scale -= 8;
             self->alpha += 0x100;
             break;
@@ -114,26 +110,24 @@ void UpdateZoomBg(struct zoom_bg *self)
  * affine matrix from the current zoom (rotation only in states 4-5). */
 void DrawZoomBg(struct zoom_bg *self)
 {
-    if (IsZoomBgShown(self))
-    {
+    if (IsZoomBgShown(self)) {
         MoveZoomBgTwinkle(self, &self->twinkles[0]);
         MoveZoomBgTwinkle(self, &self->twinkles[1]);
         MoveZoomBgTwinkle(self, &self->twinkles[2]);
         MoveZoomBgTwinkle(self, &self->twinkles[3]);
     }
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0 ... 3:
-    {
-        u16 s;
+        {
+            u16 s;
 
-        self->x16 = self->x + self->dx;
-        self->y16 = self->y + self->dy;
-        s = 0x10000 / self->scale;
-        self->sx = s;
-        self->sy = s;
-        break;
-    }
+            self->x16 = self->x + self->dx;
+            self->y16 = self->y + self->dy;
+            s = 0x10000 / self->scale;
+            self->sx = s;
+            self->sy = s;
+            break;
+        }
     case 4 ... 5:
         self->sx = self->scale;
         self->sy = self->scale;
@@ -201,8 +195,7 @@ void ClearZoomBgPicture(struct zoom_bg *self)
 /* Requests picture `image`, taken once the zoom-out finishes. */
 void SetZoomBgPicture(struct zoom_bg *self, s32 image)
 {
-    switch (self->state)
-    {
+    switch (self->state) {
     case 1 ... 2:
         self->image = image;
         break;
@@ -227,13 +220,10 @@ void RandomizeZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t)
 
 void TickZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t)
 {
-    if (t->timer != 0)
-    {
+    if (t->timer != 0) {
         t->timer--;
         t->blink--;
-    }
-    else
-    {
+    } else {
         RandomizeZoomBgTwinkle(self, t);
     }
 }
@@ -286,13 +276,10 @@ void SetLevelSelectEntrySelected(struct level_item *self, u8 selected)
  * (level id 0x14 + world, its own icon animation). */
 void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index)
 {
-    if (index <= 4)
-    {
+    if (index <= 4) {
         self->id = world * 5 + index;
         SetFrame(self->icon, self->id);
-    }
-    else
-    {
+    } else {
         self->id = world + 0x14;
         SetAnim(self->icon, gLevelSelectEntryWorldAnims[world]);
     }
@@ -352,8 +339,7 @@ void DestroyLevelSelectEntry(struct level_item *self, s32 flags)
 /* One hardware OAM entry. The matrix number is split in three because
  * the ROM writes it three bits + one + one (DrawLevelSelectCursor). */
 /* The level-select cursor (CreateLevelSelectCursor, 0x54 bytes). */
-struct cursor_panel
-{
+struct cursor_panel {
     struct bresenham_line line; // 0x00 - (x0, y0) is the position
     struct sprite *part;        // 0x28
     s32 timer;                  // 0x2C - frames to the next idle cycle
@@ -362,11 +348,11 @@ struct cursor_panel
     s32 speed;                  // 0x3C - zoom step (MoveLevelSelectCursor)
     s32 scale;                  // 0x40 - 0x100 = 1:1
     /* ObjAffineSet source */
-    s16 sx;                     // 0x44
-    s16 sy;                     // 0x46
-    u16 angle;                  // 0x48
+    s16 sx;    // 0x44
+    s16 sy;    // 0x46
+    u16 angle; // 0x48
     u8 unk_4A[2];
-    s16 matrix[4];              // 0x4C - pa, pb, pc, pd
+    s16 matrix[4]; // 0x4C - pa, pb, pc, pd
 };
 
 COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct cursor_panel) == 0x54);
@@ -438,53 +424,44 @@ struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self)
 void UpdateLevelSelectCursor(struct cursor_panel *self)
 {
     GlideLevelSelectCursor(self);
-    switch (self->state)
-    {
+    switch (self->state) {
     case 0:
         AdvanceSpriteAnim((struct box_part *)self->part);
-        if (self->timer != 0)
-        {
+        if (self->timer != 0) {
             self->timer--;
             break;
         }
-        if (self->part->frame == 0)
-        {
+        if (self->part->frame == 0) {
             self->state = 1;
             SetAnim(self->part, gLevelSelectCursorAnims[1]);
         }
         break;
     case 1:
         AdvanceSpriteAnim((struct box_part *)self->part);
-        if (self->part->animDone)
-        {
+        if (self->part->animDone) {
             self->state = 2;
             SetAnim(self->part, gLevelSelectCursorAnims[2]);
         }
         break;
     case 2:
         AdvanceSpriteAnim((struct box_part *)self->part);
-        if (self->part->animDone)
-        {
+        if (self->part->animDone) {
             self->state = 3;
             SetAnim(self->part, gLevelSelectCursorAnims[3]);
         }
         break;
     case 3:
         AdvanceSpriteAnim((struct box_part *)self->part);
-        if (self->part->animDone)
-        {
+        if (self->part->animDone) {
             self->state = 0;
             SetAnim(self->part, gLevelSelectCursorAnims[0]);
             ResetLevelSelectCursorIdleTimer(self);
         }
         break;
     case 4:
-        if (self->scale <= 0xFF)
-        {
+        if (self->scale <= 0xFF) {
             self->scale += self->speed;
-        }
-        else
-        {
+        } else {
             self->scale = 0x100;
             self->state = 0;
             ResetLevelSelectCursorIdleTimer(self);
@@ -504,11 +481,9 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
 void DrawLevelSelectCursor(struct cursor_panel *self)
 {
     SetEntityPixelPos((struct actor *)self->part, self->line.x0, self->line.y0);
-    switch (self->state)
-    {
+    switch (self->state) {
     case 4 ... 5:
-        if (self->scale > 8)
-        {
+        if (self->scale > 8) {
             s32 idx;
 
             self->oam.x = self->line.x0 - 0x20;
@@ -581,8 +556,7 @@ void GlideLevelSelectCursor(struct cursor_panel *self)
 {
     s32 i;
 
-    for (i = 1; i >= 0; i--)
-    {
+    for (i = 1; i >= 0; i--) {
         if (self->line.x0 != self->line.x1 || self->line.y0 != self->line.y1)
             StepBresenhamLine(&self->line);
     }
@@ -604,8 +578,7 @@ void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y)
 {
     self->line.x1 = x;
     self->line.y1 = y;
-    if (self->line.x0 != x || self->line.y0 != y)
-    {
+    if (self->line.x0 != x || self->line.y0 != y) {
         s32 d;
 
         InitBresenhamLine(&self->line);

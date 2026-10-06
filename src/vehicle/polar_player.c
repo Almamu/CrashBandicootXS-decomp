@@ -55,8 +55,8 @@ void UpdatePolarPlayer(struct actor_self *self)
         SetCellAnimSpeed(0);
         ACTOR_SET_STATE(self, 10, 10);
     }
-    if (gPolarInvulnTimer != 0 && --gPolarInvulnTimer != 0 && gPolarPlayerInactive == 0
-        && gLevelState->maskLevel != 3)
+    if (gPolarInvulnTimer != 0 && --gPolarInvulnTimer != 0 && gPolarPlayerInactive == 0 &&
+        gLevelState->maskLevel != 3)
         self->visible = ((u32)gPolarInvulnTimer >> 2) & 1;
     else
         self->visible = 1;
@@ -73,8 +73,10 @@ void UpdatePolarPlayer(struct actor_self *self)
     self->animTime += *(s16 *)&self->animTimer;
     self->animDone = 0;
     if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-        self->animTime -= (self->anims[self->animIndex].loopThreshold
-                           - self->anims[self->animIndex].loopBase) << 8;
+        // clang-format off
+        self->animTime -= (self->anims[self->animIndex].loopThreshold -
+                           self->anims[self->animIndex].loopBase) << 8;
+        // clang-format on
         self->animDone = 1;
     }
     UpdateActorBgScroll(self->x, self->y);
@@ -178,7 +180,8 @@ void DrawPolarPlayer(struct actor_self *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gPolarPlayerLastFrame) {
             gPolarPlayerTileBuffer ^= 1;
-            gUnpackRleSpriteFrameFunc(gPolarPlayerTiles[gPolarPlayerTileBuffer], (struct rle_frame *)frame);
+            gUnpackRleSpriteFrameFunc(gPolarPlayerTiles[gPolarPlayerTileBuffer],
+                                      (struct rle_frame *)frame);
             gPolarPlayerLastFrame = frame;
         }
         {

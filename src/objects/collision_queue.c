@@ -25,8 +25,7 @@
  * emptied. */
 void ResolveCollisionCandidates(struct collision_queue *self)
 {
-    if (self->count != 0)
-    {
+    if (self->count != 0) {
         s32 best;
         s32 bestDx;
         s32 px;
@@ -48,8 +47,7 @@ void ResolveCollisionCandidates(struct collision_queue *self)
             bestDy = -bestDy;
         forced = 0;
 
-        for (i = 1; i < self->count; i++)
-        {
+        for (i = 1; i < self->count; i++) {
             struct crate *n = self->candidates[i].neighbor;
             s32 dx = n->x;
             s32 dy = n->y;
@@ -64,17 +62,13 @@ void ResolveCollisionCandidates(struct collision_queue *self)
             d = dy - bestDy;
             if (d < 0)
                 d = -d;
-            if (d > 8 || self->candidates[i].kind == 4)
-            {
-                ApplyCrateCollision(n, self->candidates[i].kind, self->candidates[i].code,
-                            self->candidates[i].edge, self->candidates[i].depth,
-                            self->candidates[i].pos, self->candidates[i].hit,
-                            self->candidates[i].p20, self->candidates[i].p21,
-                            (struct byte_arg){0});
+            if (d > 8 || self->candidates[i].kind == 4) {
+                ApplyCrateCollision(
+                    n, self->candidates[i].kind, self->candidates[i].code, self->candidates[i].edge,
+                    self->candidates[i].depth, self->candidates[i].pos, self->candidates[i].hit,
+                    self->candidates[i].p20, self->candidates[i].p21, (struct byte_arg){ 0 });
                 forced = 1;
-            }
-            else if (dy < bestDy || (dy == bestDy && dx < bestDx))
-            {
+            } else if (dy < bestDy || (dy == bestDy && dx < bestDx)) {
                 bestDx = dx;
                 bestDy = dy;
                 best = i;
@@ -82,10 +76,10 @@ void ResolveCollisionCandidates(struct collision_queue *self)
         }
 
         ApplyCrateCollision(self->candidates[best].neighbor, self->candidates[best].kind,
-                    self->candidates[best].code, self->candidates[best].edge,
-                    self->candidates[best].depth, (self->candidates + best)->pos,
-                    self->candidates[best].hit, self->candidates[best].p20,
-                    self->candidates[best].p21, (struct byte_arg){forced});
+                            self->candidates[best].code, self->candidates[best].edge,
+                            self->candidates[best].depth, (self->candidates + best)->pos,
+                            self->candidates[best].hit, self->candidates[best].p20,
+                            self->candidates[best].p21, (struct byte_arg){ forced });
         self->count = 0;
         self->unk_04 = 0;
     }
@@ -123,9 +117,8 @@ asm(".align 2, 0");
  * else is plain C (matches under both agbcc and old_agbcc). */
 #define STACK_ARG_U8_ADDR(ptr, arg) MATCH_CONST(ptr, &(arg))
 
-void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind,
-                 s32 code, s32 edge, s32 depth, struct e08c_pos pos,
-                 s32 hit, s32 p20, s32 p21)
+void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind, s32 code,
+                           s32 edge, s32 depth, struct e08c_pos pos, s32 hit, s32 p20, s32 p21)
 {
     u8 *a20;
     MATCH_HOLD_REG(u8 *, a21, r4);

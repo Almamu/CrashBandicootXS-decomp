@@ -29,39 +29,39 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 /* The homing projectile (method table gPolarPenguinVtable). */
 struct polar_penguin {
     struct actor_self base;
-    s32 velX;           // 0x54
-    s32 velY;           // 0x58
-    s32 velZ;           // 0x5C
-    s32 countdown;      // 0x60 - frames until the next retarget
-    s32 targetZ;        // 0x64 - passed back to AimPolarPenguin on retarget
+    s32 velX;      // 0x54
+    s32 velY;      // 0x58
+    s32 velZ;      // 0x5C
+    s32 countdown; // 0x60 - frames until the next retarget
+    s32 targetZ;   // 0x64 - passed back to AimPolarPenguin on retarget
 };
 
 struct hazard_part {
     u8 unk_00[0x14];
-    struct vec3_words box;           // 0x14
+    struct vec3_words box; // 0x14
 };
 
 /* actor_self with this class's own fields over its unk_ areas. */
 struct hazard {
     struct anim_frame_record *anims; // 0x00
-    u32 *frameOffsets;          // 0x04
-    s32 animTime;               // 0x08
-    s32 animIndex;              // 0x0C
-    u16 animTimer;              // 0x10
-    u8 animDone;                // 0x12
+    u32 *frameOffsets;               // 0x04
+    s32 animTime;                    // 0x08
+    s32 animIndex;                   // 0x0C
+    u16 animTimer;                   // 0x10
+    u8 animDone;                     // 0x12
     u8 unk_13;
-    s32 sortKey;                // 0x14
-    s32 palette;                // 0x18
-    s32 x;                      // 0x1C
-    s32 y;                      // 0x20
-    s32 z;                      // 0x24
-    s32 state;                  // 0x28
-    u8 deep;                    // 0x2C
+    s32 sortKey; // 0x14
+    s32 palette; // 0x18
+    s32 x;       // 0x1C
+    s32 y;       // 0x20
+    s32 z;       // 0x24
+    s32 state;   // 0x28
+    u8 deep;     // 0x2C
     u8 unk_2D[3];
-    struct hazard_part *part;   // 0x30
-    s32 depth;                  // 0x34
-    struct vec3_words box;           // 0x38
-    s32 stateTime;              // 0x44
+    struct hazard_part *part; // 0x30
+    s32 depth;                // 0x34
+    struct vec3_words box;    // 0x38
+    s32 stateTime;            // 0x44
     u8 unk_48[8];
     struct actor_vtable *vtable; // 0x50
 };
@@ -396,8 +396,7 @@ void UpdatePolarIcicle(void *selfArg)
     threshold1 = 0x6400;
     depth = self->depth;
 
-    if ((depth > threshold1 && self->state == 2)
-        || (depth > 0x5A00 && self->state == 1)) {
+    if ((depth > threshold1 && self->state == 2) || (depth > 0x5A00 && self->state == 1)) {
         s32 frame;
         MATCH_HOLD_REG(s32, idx, r1) = self->animIndex + 1;
 
@@ -512,7 +511,8 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
     } else {
         MATCH_HOLD_REG(s32, zero, r6);
 
-        QueueVramDmaTransfer((u8 *)gPolarAkuAkuPalette1 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+        QueueVramDmaTransfer((u8 *)gPolarAkuAkuPalette1 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0),
+                             0x20, 0x10);
         {
             u8 *addr = &self->visible;
 
@@ -645,7 +645,7 @@ void UpdatePolarAkuAku(void *selfArg)
         MATCH_HOLD_REG(u8 *, table2, r3) = (u8 *)self->anims;
         MATCH_HOLD_REG(u8 *, record, r1) = (u8 *)(idx2 * 0xc);
 
-        asm("add %0, %0, %1" : "+r" (record) : "r" (table2));
+        asm("add %0, %0, %1" : "+r"(record) : "r"(table2));
         {
             MATCH_HOLD_REG(s32, threshold, r2) = *(s16 *)(record + 4);
 

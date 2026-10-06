@@ -145,7 +145,7 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
  * title_screen_init.c for the rest of that raw `u32 *` object). */
 struct level_scratch {
     u8 unk_000[0x210];
-    u32 cheatHash;      // 0x210
+    u32 cheatHash; // 0x210
 };
 
 static inline void HashInput(u32 *self, u32 val)
@@ -171,8 +171,7 @@ u32 TitleScreenCheatInput(u32 *self, u32 pressed)
 {
     struct held_pressed_pair input = gKeys.half;
 
-    if (!(input.held & 0x100))
-    {
+    if (!(input.held & 0x100)) {
         ((struct level_scratch *)self)->cheatHash = 0;
         return pressed;
     }
@@ -190,8 +189,7 @@ u32 TitleScreenCheatInput(u32 *self, u32 pressed)
         HashInput(self, 0x71839406);
     else if (pressed & 8)
         HashInput(self, 0x828A048B);
-    if (((struct level_scratch *)self)->cheatHash == 0x3034AF3B)
-    {
+    if (((struct level_scratch *)self)->cheatHash == 0x3034AF3B) {
         PlaySong(gAudioContext, 0xc);
         ((struct level_scratch *)self)->cheatHash = 0;
     }
@@ -269,8 +267,7 @@ seedLoop:
         goto seedLoop;
     *(s32 *)((u8 *)self + 0x20c) = zero;
     ((u8 *)self)[8] = zero;
-    while (self[5] != 0)
-    {
+    while (self[5] != 0) {
         UpdateTitleLogoPieces(self);
         DrawTitleScreen(self);
         UpdateStarfield((void *)self[0x82]);
@@ -283,29 +280,25 @@ seedLoop:
         ((u8 *)self)[8] = 1;
         *(u32 *)((u8 *)self + 0x210) = z;
     }
-    for (;;)
-    {
+    for (;;) {
         DrawTitleScreen(self);
         UpdateStarfield((void *)self[0x82]);
         UpdateKeys(gInput);
         pressed = gKeys.half.pressed;
         pressed = TitleScreenCheatInput(self, pressed);
-        if (pressed & 9)
-        {
+        if (pressed & 9) {
             PlaySfx(gAudioContext, 0x49, 0x100);
             fade = 0;
             goto fadeLoop;
         }
-        if (pressed & 0x40)
-        {
+        if (pressed & 0x40) {
             PlaySfx(gAudioContext, 0x46, 0x100);
             if (self[0] != 0)
                 self[0]--;
             else
                 self[0] = 2;
         }
-        if (pressed & 0x80)
-        {
+        if (pressed & 0x80) {
             PlaySfx(gAudioContext, 0x46, 0x100);
             self[0]++;
             self[0] = (s32)self[0] % 3;
@@ -372,14 +365,11 @@ void DrawTitleMenuItem(u32 *self, s32 text, s32 variant)
     struct icon_slot *slot;
     s32 x;
 
-    if (variant == self[0])
-    {
+    if (variant == self[0]) {
         s32 count = self[1] + 1;
         self[1] = count;
         FontSetPalette((struct bitmap_font *)self[3], ((count >> 2) & 1) + 0xe);
-    }
-    else
-    {
+    } else {
         FontSetPalette((struct bitmap_font *)self[3], 0xd);
     }
     slot = &((struct bitmap_font *)self[3])->record->slots[0];
@@ -400,8 +390,7 @@ void DrawTitleScreen(u32 *self)
 {
     ResetOamBuffer(gOamBuffer);
     DrawTitleLogoPieces(self);
-    if (((u8 *)self)[8] != 0)
-    {
+    if (((u8 *)self)[8] != 0) {
         DrawTitleMenuItem(self, GetUiText(0x1a), 0);
         DrawTitleMenuItem(self, GetUiText(0x1b), 1);
         DrawTitleMenuItem(self, GetUiText(0x3b), 2);
@@ -533,12 +522,11 @@ void DestroyTitleScreen(u32 *self, u32 flag)
 
 /* The part's method table as `RunCompanyLogos` uses it (gcc 2.x C++
  * {this-adjust, fn} records). */
-struct part_vtable
-{
+struct part_vtable {
     u8 unk_00[8];
-    struct actor_method m08;    // 0x08 - destroy (arg 3)
-    struct actor_method m10;    // 0x10
-    struct actor_method m18;    // 0x18
+    struct actor_method m08; // 0x08 - destroy (arg 3)
+    struct actor_method m10; // 0x10
+    struct actor_method m18; // 0x18
 };
 
 /* This subsystem's `self` (a raw `u32 *` throughout, as the matched
@@ -590,15 +578,11 @@ void RunCompanyLogos(u32 *self)
     InitVvLogoPieces(self);
     bgObj = InitStarfield(OperatorNew(0x14));
     LoadUniversalLogoBg(self);
-    for (i = 0; i <= 0x3b; i++)
-    {
-        if (i <= 0x10)
-        {
+    for (i = 0; i <= 0x3b; i++) {
+        if (i <= 0x10) {
             REG_BLDCNT = 0xff;
             REG_BLDY = 0x10 - i;
-        }
-        else
-        {
+        } else {
             *(vu32 *)REG_ADDR_BLDCNT = 0;
         }
         WaitForVBlank();
@@ -607,45 +591,37 @@ void RunCompanyLogos(u32 *self)
     PlaySfx(gAudioContext, 0x4b, 0x100);
     scale = 0x2000;
     SLOT_SYSTEM(self)->fade = -1;
-    do
-    {
+    do {
         s32 *fade;
         s32 v;
         s32 q;
 
         UpdateKeys(gInput);
-        if (gKeys.half.pressed & 9)
-        {
+        if (gKeys.half.pressed & 9) {
             if (SLOT_SYSTEM(self)->fade > 0x40)
                 SLOT_SYSTEM(self)->fade = 0x40;
         }
         WaitForVBlank();
         CommitDispcnt();
         fade = &SLOT_SYSTEM(self)->fade;
-        if (*fade != -1)
-        {
+        if (*fade != -1) {
             if (*fade == 0x40)
                 PlaySfx(gAudioContext, 0x4c, 0x100);
             v = *fade;
-            if (v <= 0x40)
-            {
+            if (v <= 0x40) {
                 s32 a = v >> 2;
                 REG_BLDCNT = 0x3f7f;
                 REG_BLDALPHA = a | ((0x10 - a) << 8);
             }
             *fade = v - 1;
         }
-        if (*fade == -1)
-        {
-            if (scale > 0xffff || (scale += 0x600) > 0xffff)
-            {
+        if (*fade == -1) {
+            if (scale > 0xffff || (scale += 0x600) > 0xffff) {
                 scale = 0x10000;
                 if (SLOT_SYSTEM(self)->fade == -1)
                     SLOT_SYSTEM(self)->fade = 0xf4;
             }
-        }
-        else if (*fade <= 0x40)
-        {
+        } else if (*fade <= 0x40) {
             scale = (scale * 0x118) >> 8;
         }
         q = 0x1000000 / scale;
@@ -668,14 +644,12 @@ void RunCompanyLogos(u32 *self)
     *(vu32 *)REG_ADDR_BLDCNT = 0;
     SLOT_SYSTEM(self)->fade = -1;
     SLOT_SYSTEM(self)->timer = -1;
-    while (SLOT_SYSTEM(self)->fade != 0)
-    {
+    while (SLOT_SYSTEM(self)->fade != 0) {
         s32 *fade;
         MATCH_HOLD_REG(s32, v, r1);
 
         UpdateKeys(gInput);
-        if (gKeys.half.pressed & 9)
-        {
+        if (gKeys.half.pressed & 9) {
             if (SLOT_SYSTEM(self)->timer > 0)
                 SLOT_SYSTEM(self)->timer = 1;
         }
@@ -695,8 +669,7 @@ void RunCompanyLogos(u32 *self)
         WaitForVBlank();
         fade = &SLOT_SYSTEM(self)->fade;
         v = *fade;
-        if (v > 0x10)
-        {
+        if (v > 0x10) {
             s32 n = v - 1;
             s32 a;
 
@@ -704,14 +677,11 @@ void RunCompanyLogos(u32 *self)
             a = v - 0x12;
             REG_BLDCNT = 0x3f7f;
             REG_BLDALPHA = (0x10 - a) | (a << 8);
-            if (n == 0x11)
-            {
+            if (n == 0x11) {
                 *fade = -1;
                 *(vu32 *)REG_ADDR_BLDCNT = 0;
             }
-        }
-        else if (v >= 0)
-        {
+        } else if (v >= 0) {
             v--;
             *fade = v;
             REG_BLDY = 0x10 - v;
@@ -721,8 +691,7 @@ void RunCompanyLogos(u32 *self)
         FlushVramDmaQueue();
         AgeSpriteFrameCache();
     }
-    if (part != NULL)
-    {
+    if (part != NULL) {
         struct part_vtable *vt = (struct part_vtable *)part->vtable;
         ((void (*)(void *, s32))vt->m08.fn)((u8 *)part + vt->m08.thisOffset, 3);
     }
@@ -805,8 +774,7 @@ void InitVvLogoPieces(u32 *self)
     active = (u8 *)self;
     hold = &seed->hold;
     countdown = (s32 *)((u8 *)self + 4);
-    for (; i <= 0x13; i++)
-    {
+    for (; i <= 0x13; i++) {
         *active = zero;
         *countdown = *hold + 1;
         *(struct delta_record **)((u8 *)countdown + 0x2c) = (struct delta_record *)seed->record;
@@ -865,20 +833,16 @@ void UpdateVvLogoPieces(u32 *self)
     s32 i;
     s32 *timer;
 
-    if (SLOT_SYSTEM(self)->timer == -1)
-    {
-        for (i = 0; i <= 0x13; i++)
-        {
+    if (SLOT_SYSTEM(self)->timer == -1) {
+        for (i = 0; i <= 0x13; i++) {
             s32 stride = i * 0x34;
             u8 *countdownBase = (u8 *)self + 4;
             s32 *countdownPtr = (s32 *)(countdownBase + stride);
 
-            if (*countdownPtr != 0)
-            {
+            if (*countdownPtr != 0) {
                 s32 countdown = *countdownPtr - 1;
                 *countdownPtr = countdown;
-                if (countdown == 0)
-                {
+                if (countdown == 0) {
                     struct delta_record **recordPtrAddr = Rec20At(self, stride);
                     MATCH_HOLD_REG(struct delta_record *, recordLoaded, r0) = *recordPtrAddr;
                     struct delta_record *record = recordLoaded;
@@ -888,8 +852,7 @@ void UpdateVvLogoPieces(u32 *self)
                     {
                         s32 hold = record->hold;
                         *countdownPtr = hold;
-                        if (hold != 0)
-                        {
+                        if (hold != 0) {
                             *PosC20At(self, stride) = record->dPosC << 16;
                             *DeltaC20At(self, stride) = record->deltaC;
                             *VelA20At(self, stride) = record->dVelA << 8;
@@ -902,32 +865,25 @@ void UpdateVvLogoPieces(u32 *self)
                             *DeltaB20At(self, stride) = record->deltaB;
                         }
                     }
-                }
-                else
-                {
+                } else {
                     *PosC20At(self, stride) += *DeltaC20At(self, stride);
                     *VelA20At(self, stride) += *DeltaD20At(self, stride);
                     *VelB20At(self, stride) += *DeltaE20At(self, stride);
                     *PosA20At(self, stride) += *DeltaA20At(self, stride);
                     *PosB20At(self, stride) += *DeltaB20At(self, stride);
                 }
-            }
-            else
-            {
+            } else {
                 SLOT_SYSTEM(self)->timer = -2;
             }
         }
         {
             s32 *stage = &SLOT_SYSTEM(self)->loops;
-            if (*stage <= 1)
-            {
+            if (*stage <= 1) {
                 s32 *sub = &SLOT_SYSTEM(self)->frameTick;
-                if (++*sub > 3)
-                {
+                if (++*sub > 3) {
                     *sub = 0;
                     sub = &SLOT_SYSTEM(self)->frame;
-                    if (++*sub > 9)
-                    {
+                    if (++*sub > 9) {
                         *sub = 0;
                         ++*stage;
                     }
@@ -938,24 +894,20 @@ void UpdateVvLogoPieces(u32 *self)
     timer = &SLOT_SYSTEM(self)->timer;
     if (*timer == -2)
         *timer = 0xf0;
-    if (*timer > 0)
-    {
+    if (*timer > 0) {
         if (--*timer != 0)
             return;
         PlaySfx(gAudioContext, 0x50, 0x100);
     }
-    if (*timer == 0)
-    {
+    if (*timer == 0) {
         s32 allDone = 1;
         u8 *slot;
         u8 *end;
 
         slot = (u8 *)self;
         end = (u8 *)self + 0x3dc;
-        do
-        {
-            if (*slot != 0)
-            {
+        do {
+            if (*slot != 0) {
                 s32 y;
 
                 allDone = 0;
@@ -966,8 +918,7 @@ void UpdateVvLogoPieces(u32 *self)
             }
             slot += 0x34;
         } while ((s32)slot <= (s32)end);
-        if (allDone)
-        {
+        if (allDone) {
             SLOT_SYSTEM(self)->fade = 0x10;
             SLOT_SYSTEM(self)->timer = -3;
         }

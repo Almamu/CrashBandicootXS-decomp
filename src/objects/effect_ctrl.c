@@ -47,19 +47,19 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * tested byte and its `1` for the OR, in the ROM's registers. */
 struct cbf4_other {
     u8 unk_00[8];
-    u16 id;             // 0x08
+    u16 id; // 0x08
     u8 unk_0A[2];
     union {
-        u8 flags;       // 0x0C
+        u8 flags; // 0x0C
         struct {
             u8 gone:1;
             u8 unk_1:7;
-        } b;            // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
+        } b; // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
     } f;
     u8 unk_10[8];
     struct vtable_slot *table; // 0x18
     u8 unk_1C[0x1C];
-    u8 unk_38;          // 0x38
+    u8 unk_38; // 0x38
 };
 
 #define SET_ID_BIT(idExpr)                                                     \

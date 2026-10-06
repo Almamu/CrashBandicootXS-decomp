@@ -22,12 +22,14 @@ s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
     MATCH_HOLD_REG(s32, remainder, r1) = denom;
     MATCH_HOLD_REG(s32 *, outPtr, r2) = remainderOut;
 
+    // clang-format off
     asm volatile(
         "push {r2}\n\t"
         "svc #6\n\t"
         "pop {r2}"
         : "+r"(quotient), "+r"(remainder), "+r"(outPtr)
     );
+    // clang-format on
     *outPtr = remainder;
     return quotient;
 }

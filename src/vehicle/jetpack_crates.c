@@ -54,43 +54,43 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
  * object (`SpawnJetpackBalloon`, released with `ReleaseJetpackBalloon`). */
 struct orbit_actor {
     struct actor_self base;
-    s32 health;                 // 0x54
-    void *child;                // 0x58
-    u8 done;                    // 0x5c
+    s32 health;  // 0x54
+    void *child; // 0x58
+    u8 done;     // 0x5c
     u8 unk_5d[3];
-    s32 centerX;                // 0x60
-    s32 centerY;                // 0x64
-    s32 phase;                  // 0x68 - random, added to stateTime
-    s32 fallSpeed;              // 0x6c - JetpackBalloonCrateStateFall, capped at 0x4c0
-    void *unk_70;               // 0x70 - handed to MarkSpawnCollected
+    s32 centerX;   // 0x60
+    s32 centerY;   // 0x64
+    s32 phase;     // 0x68 - random, added to stateTime
+    s32 fallSpeed; // 0x6c - JetpackBalloonCrateStateFall, capped at 0x4c0
+    void *unk_70;  // 0x70 - handed to MarkSpawnCollected
 };
 
 /* `UpdateJetpackParachuteNitro`-`IsJetpackParachuteNitroUnshootable`: climbs until it reaches `limitY`. */
 struct rising_actor {
     struct actor_self base;
-    s32 health;                 // 0x54
-    u8 dead;                    // 0x58
+    s32 health; // 0x54
+    u8 dead;    // 0x58
     u8 unk_59[3];
-    s32 limitY;                 // 0x5c
+    s32 limitY; // 0x5c
 };
 
 /* `UpdateJetpackRocket`-`IsJetpackRocketUnshootable`: swings around `originX` while moving
  * down by `stepY` until `limitY`. */
 struct swing_actor {
     struct actor_self base;
-    s32 health;                 // 0x54
-    s32 originX;                // 0x58
-    s32 limitY;                 // 0x5c
-    s32 stepY;                  // 0x60
-    u8 triggered;               // 0x64 - set by the LaunchJetpackRocket transition
-    u8 hit;                     // 0x65
+    s32 health;   // 0x54
+    s32 originX;  // 0x58
+    s32 limitY;   // 0x5c
+    s32 stepY;    // 0x60
+    u8 triggered; // 0x64 - set by the LaunchJetpackRocket transition
+    u8 hit;       // 0x65
 };
 
 /* `UpdateJetpackRing`: plays its cue once. */
 struct trigger_actor {
     struct actor_self base;
     u8 unk_54[4];
-    u8 cued;                    // 0x58
+    u8 cued; // 0x58
 };
 
 /* Per-state member-pointer dispatch, `(this->*gJetpackBalloonCrateStateFuncs
@@ -936,6 +936,7 @@ void *CreateJetpackParachuteNitro(void *selfArg, void *part, s32 b, s32 c, s32 d
      * is a plain local ("m" operand) so the compiler still owns its own
      * single stack-frame reservation instead of a hand-managed sp
      * adjustment local to this block. */
+    // clang-format off
     asm volatile(
         "str %1, %0\n\t"
         "add r0, %2, #0\n\t"
@@ -944,6 +945,7 @@ void *CreateJetpackParachuteNitro(void *selfArg, void *part, s32 b, s32 c, s32 d
         : "=m"(outSlot)
         : "r"(dReg), "l"(self), "r"(aReg), "r"(bReg)
         : "r0", "r3", "r12", "lr", "memory", "cc");
+    // clang-format on
 
     self->health = health;
     asm("ldr r0, 2f\n\tstr r0, [%0, #0x50]" : : "l"(self) : "r0", "memory");
@@ -1010,7 +1012,8 @@ void UpdateJetpackRocket(void *selfArg)
         if (self->base.y > self->limitY) {
             self->base.y += self->stepY;
         } else {
-            *(struct vec3_words *)((u8 *)self + 0x38) = *(const struct vec3_words *)&gJetpackRocketBox;
+            *(struct vec3_words *)((u8 *)self + 0x38) =
+                *(const struct vec3_words *)&gJetpackRocketBox;
             LaunchJetpackRocket(self);
         }
     }

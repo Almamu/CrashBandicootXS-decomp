@@ -41,14 +41,19 @@ FORMATTED = [
     "src/audio",
     "src/cutscene",
     "src/enemies",
+    "src/frontend",
     "src/gfx",
     "src/hud",
     "src/iwram",
     "src/link",
+    "src/menus",
+    "src/objects",
     "src/pickups",
     "src/save",
+    "src/system",
     "src/text",
     "src/util",
+    "src/vehicle",
 ]
 
 CLANG_FORMAT_MAJOR = 21

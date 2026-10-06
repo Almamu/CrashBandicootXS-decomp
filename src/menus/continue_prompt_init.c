@@ -103,12 +103,13 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
              * copying it up into sb - another instance of the same
              * "never take the free-register shortcut" pattern above. */
             MATCH_HOLD_REG(u32, c0x40, sb);
-            asm volatile("mov r2, #0x40\n\tmov sb, r2" : "=r" (c0x40) :: "r2");
+            asm volatile("mov r2, #0x40\n\tmov sb, r2" : "=r"(c0x40) : : "r2");
 
             /* Same anchor reason as above, for the ROM's `mov r0, sb`
              * hop plus the negative-constant bit-clear idiom
              * (matching_decomp_register_pinning memory) clearing
              * DISPCNT's low 3 (mode) bits. */
+            // clang-format off
             asm volatile(
                 "mov r0, sb\n\t"
                 "ldrb r1, [r5, #0xc]\n\t"
@@ -119,6 +120,7 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
                 "strb r0, [r5, #0xc]"
                 ::: "r0", "r1"
             );
+            // clang-format on
             {
                 MATCH_HOLD_REG(u32, one, r6) = 1;
 
@@ -179,12 +181,14 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
                      * plain `four |= c0x40;` picks r0 for the low-reg
                      * copy-down of `c0x40` here, where the ROM's own
                      * build picks r1. */
+                    // clang-format off
                     asm volatile(
                         "mov r1, sb\n\t"
                         "orr r4, r1\n\t"
                         "strb r4, [r5, #0x10]"
                         :: "r" (c0x40), "r" (four) : "r1"
                     );
+                    // clang-format on
 
                     REG_BG0CNT = GetBgSetupControl(self->bg0Buf);
                     {

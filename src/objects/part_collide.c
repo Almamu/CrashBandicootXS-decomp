@@ -19,7 +19,8 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
  * 0x08008D80, isn't adjacent to sprite_anim.c's functions
  * (part_list_cull.c's CullPartList/ClearPartList/CollidePartsOfClass sit between).
  * See docs/matching/archive/issue-9-naked-retry.md. */
-void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other)
+void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part,
+                           struct box_part *other)
 {
     if (ClassifySpriteContact(part, &box)) {
         struct part_method *m = PART_METHOD(part, 0x68);

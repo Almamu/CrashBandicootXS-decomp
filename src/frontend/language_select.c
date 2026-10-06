@@ -166,13 +166,15 @@ void DrawLanguageSelect(struct language_select *self)
             FontSetPalette(gSmallFont, LanguageSelectBlink(self));
         else
             FontSetPalette(gSmallFont, 0);
+        // clang-format off
         x = (240 - _call_via_r2((u8 *)gSmallFont + gSmallFont->record->slots[0].offset,
-                               (void *)(glyph = gLanguageNames[i]),
-                               gSmallFont->record->slots[0].ptr)) >> 1;
+                                (void *)(glyph = gLanguageNames[i]),
+                                gSmallFont->record->slots[0].ptr)) >> 1;
+        // clang-format on
         gSmallFont->posX = x;
         gSmallFont->posY = y;
         _call_via_r2((u8 *)gSmallFont + gSmallFont->record->slots[2].offset, (void *)glyph,
-                    gSmallFont->record->slots[2].ptr);
+                     gSmallFont->record->slots[2].ptr);
         y += 10;
     }
     HideUnusedOamEntries(gOamBuffer);

@@ -69,8 +69,10 @@ void UpdateGroundSprite(struct gobj *self)
     rec = (void *)_call_via_r1(addr, fn);
     prev = self->platform;
 
-    if (prev == rec) goto skip;
-    if (prev == NULL) goto skip;
+    if (prev == rec)
+        goto skip;
+    if (prev == NULL)
+        goto skip;
 
     if (self->hitAxes == 8) {
         MATCH_HOLD_REG(s32, prevSum, r2);
@@ -79,6 +81,7 @@ void UpdateGroundSprite(struct gobj *self)
         /* record[5] + record[2] for `prev` (r1) then `rec` (r3), each
          * ldrsh forced onto its own r5-held #2 offset immediate to
          * match the ROM's register footprint exactly. */
+        // clang-format off
         asm volatile(
             "movs r5, #2\n"
             "ldrsh r0, [r1, r5]\n"
@@ -92,7 +95,9 @@ void UpdateGroundSprite(struct gobj *self)
             : "r"(prev), "r"(rec)
             : "r0", "r5"
         );
-        if (prevSum == newSum) goto skip;
+        // clang-format on
+        if (prevSum == newSum)
+            goto skip;
         delta = prevSum - newSum;
     } else if (self->hitAxes == 4) {
         MATCH_HOLD_REG(s32, prevVal, r0);
@@ -100,6 +105,7 @@ void UpdateGroundSprite(struct gobj *self)
 
         /* Plain record[2] halfwords for `prev` (r1) then `rec` (r3);
          * same r5-held #2 offset idiom for the second load. */
+        // clang-format off
         asm volatile(
             "movs r2, #2\n"
             "ldrsh r0, [r1, r2]\n"
@@ -109,7 +115,9 @@ void UpdateGroundSprite(struct gobj *self)
             : "r"(prev), "r"(rec)
             : "r2", "r5"
         );
-        if (prevVal == newVal) goto skip;
+        // clang-format on
+        if (prevVal == newVal)
+            goto skip;
         delta = prevVal - newVal;
     } else {
         goto skip;
@@ -135,13 +143,16 @@ void sub_800A590(struct gobj *self)
     MATCH_HOLD_REG(void *, prev, r1) = self->platform;
     MATCH_HOLD_REG(s32, delta, r1);
 
-    if (prev == rec) goto skip;
-    if (prev == NULL) goto skip;
+    if (prev == rec)
+        goto skip;
+    if (prev == NULL)
+        goto skip;
 
     if (self->hitAxes == 8) {
         MATCH_HOLD_REG(s32, prevSum, r2);
         MATCH_HOLD_REG(s32, newSum, r1);
 
+        // clang-format off
         asm volatile(
             "movs r5, #2\n"
             "ldrsh r0, [r1, r5]\n"
@@ -155,12 +166,15 @@ void sub_800A590(struct gobj *self)
             : "r"(prev), "r"(rec)
             : "r0", "r5"
         );
-        if (prevSum == newSum) goto skip;
+        // clang-format on
+        if (prevSum == newSum)
+            goto skip;
         delta = prevSum - newSum;
     } else if (self->hitAxes == 4) {
         MATCH_HOLD_REG(s32, prevVal, r0);
         MATCH_HOLD_REG(s32, newVal, r1);
 
+        // clang-format off
         asm volatile(
             "movs r2, #2\n"
             "ldrsh r0, [r1, r2]\n"
@@ -170,7 +184,9 @@ void sub_800A590(struct gobj *self)
             : "r"(prev), "r"(rec)
             : "r2", "r5"
         );
-        if (prevVal == newVal) goto skip;
+        // clang-format on
+        if (prevVal == newVal)
+            goto skip;
         delta = prevVal - newVal;
     } else {
         goto skip;

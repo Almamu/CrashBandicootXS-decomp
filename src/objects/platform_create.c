@@ -37,8 +37,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         rec = (struct spawn_rec *)((const u8 *)lvl->params + offsets[index]);
         type = rec->type;
     }
-    switch (kind)
-    {
+    switch (kind) {
     case 4:
         type = 2;
         break;
@@ -59,8 +58,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         type = 6;
         break;
     }
-    switch (type)
-    {
+    switch (type) {
     case 0:
         obj->type = 0;
         break;
@@ -110,15 +108,13 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case 6:
         obj->type = 6;
-        if (GetBossIndex(gLevelState) != 1)
-        {
+        if (GetBossIndex(gLevelState) != 1) {
             void *mem = OperatorNew(0x38);
 
             *(volatile u8 *)&args.dirY = 0;
             *(volatile s32 *)&args.kind = 6;
             m = MOVER_NEW(mem, 0, 0, 0);
-        }
-        else
+        } else
             m = CreateCortexBossPlatformMover(OperatorNew(0x38));
         obj->mover = m;
         MOVER_CALL2(m, m18, obj);
