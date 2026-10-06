@@ -267,6 +267,9 @@ void SetMaskAssistDeaths(struct level_state *self, s32 value)
     self->maskAssistDeaths = value;
 }
 
+/* Setter of `unk_80`, the word before maskAssistDeaths: UpdateGameFrame
+ * sets it to 5 alongside SetMaskAssistDeaths/SetCrateAssistDeaths, but only
+ * the unused sub_8023138 reads it, so what it counts is unknown. */
 void sub_8023120(struct level_state *self, s32 value)
 {
     self->unk_80 = value;
@@ -282,6 +285,8 @@ s32 GetMaskAssistDeaths(struct level_state *self)
     return self->maskAssistDeaths;
 }
 
+/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Getter
+ * of `unk_80` (sub_8023120). */
 s32 sub_8023138(struct level_state *self)
 {
     return self->unk_80;
@@ -292,11 +297,16 @@ void AddPendingSwitchCrates(struct level_state *self, s32 delta)
     self->pendingSwitchCrates += delta;
 }
 
+/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/), nor is
+ * sub_8023158: ORs `mask` into `unk_c0`, which InitLevelState zeroes and
+ * nothing else touches. */
 void sub_802314C(struct level_state *self, s32 mask)
 {
     self->unk_c0 |= mask;
 }
 
+/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Whether
+ * any bit of `mask` is set in `unk_c0`. */
 s32 sub_8023158(struct level_state *self, s32 mask)
 {
     s32 x = self->unk_c0 & mask;
@@ -602,12 +612,14 @@ void SetLevelBoss(struct level_state *self, struct level_state_1c8 *value)
     self->boss = value;
 }
 
-/* Plain getter/getter/setter trio for `self+0xc8`/`self+0xc4` - the
+/* Plain getter/getter/setter trio for `roomIndex` (`self+0xc8`, the
+ * current room's index in the level's room list; SpawnRoomExit tests it
+ * for the first room) and `level` (`self+0xc4`) - the
  * latter is the "current index" field `GetBossHealth`/`GetBossIndex`/
  * `GetCurrentLevelFlags`/`IsCrystalSaved` below all read. */
-s32 sub_8023324(struct level_state *self)
+s32 GetRoomIndex(struct level_state *self)
 {
-    return self->unk_c8;
+    return self->roomIndex;
 }
 
 s32 GetCurrentLevel(struct level_state *self)
@@ -892,7 +904,7 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
     MATCH_HOLD_REG(s32 *, pair, r4) = pairArg;
     u8 tmp;
 
-    self->unk_e0 = flag;
+    self->checkpointFlags = flag;
     self->checkpointCrateCount = GetCrateCount(self);
     tmp = self->switchPressed;
     self->checkpointSwitchPressed = tmp;
@@ -941,7 +953,7 @@ void EndGemPath(struct level_state *self, u8 flag)
             s32 *p = &self->checkpointX;
             SetEntityPos((struct actor *)player, p[0], p[1]);
         }
-        SetCheckpointAtPlayer(self, self->unk_e0);
+        SetCheckpointAtPlayer(self, self->checkpointFlags);
     } else {
         ResetCrateCount(self);
     }
@@ -988,6 +1000,7 @@ void PlayBootCutscene(void *self)
     PlayCutscene(self, 0);
 }
 
+/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). */
 void nullsub_24(void)
 {
 }

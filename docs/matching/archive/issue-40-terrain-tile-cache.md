@@ -23,7 +23,7 @@ issue is where they got turned into (attempted) byte-exact C.
   `DecodeCollisionChunk` decode); `DecodeCollisionChunk` is the actual RLE/delta
   token-stream decoder (literal-fill run, signed-delta-accumulate run,
   raw-copy run, budget-limited to 0x7f halfwords per record).
-- **`GetTerrainHeights`/`GetSolidTerrainHeights`/`sub_8025228`/`GetCollisionCell`/
+- **`GetTerrainHeights`/`GetSolidTerrainHeights`/`GetSolidTerrainModeValue`/`GetCollisionCell`/
   `GetTerrainType`** are five siblings of the same `(x>>4, y>>3)` tile
   lookup through that cache, differing only in what they do with the
   decoded cell (bounds-check + `gTerrainHeights0` terrain-property
@@ -52,7 +52,7 @@ issue is where they got turned into (attempted) byte-exact C.
 `src/level/bg_layer_base.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
 `IsBgLayerEnabled`, `GetBgLayerY`, `GetBgLayerX`, `GetBgLayerHeightTiles`,
 `GetBgLayerWidthTiles`, `GetBgLayerHeight`, `GetBgLayerWidth`.
-`src/level/tile_cache.c`: `DestroyTileCache`, `nullsub_4`.
+`src/level/tile_cache.c`: `DestroyTileCache`, `InitTileCache`.
 `src/level/collision_map.c`: `GetCollisionCell`, `SetCollisionSource`, `SetBitmapBit`,
 `ClearBitmapBit`, `ClearBitmap`, `InitBitmap`.
 
@@ -87,7 +87,7 @@ issue is where they got turned into (attempted) byte-exact C.
   an unlinked object), and a full clean `make compare`. Its raw bytes
   no longer live in `asm/code_3_2_17_24f24.s` - that file now starts
   directly at `GetTerrainHeights`.
-- **`GetTerrainHeights`/`GetSolidTerrainHeights`/`sub_8025228`** (`GetCollisionChunk`'s three
+- **`GetTerrainHeights`/`GetSolidTerrainHeights`/`GetSolidTerrainModeValue`** (`GetCollisionChunk`'s three
   `(x, y)`-tile-lookup consumers - a terrain-property-table pointer
   lookup, its `mode`-selected/`flagsOut`-writing sibling with 4 table
   variants, and a `mode`-dispatched single-flag-byte variant reading
@@ -97,10 +97,10 @@ issue is where they got turned into (attempted) byte-exact C.
   matter the C phrasing tried. Closed the same way as `GetCollisionChunk`:
   hand-transcribed instruction-for-instruction from the ROM
   disassembly, including every one of the ROM's own mid-function
-  `.pool` splits (`GetSolidTerrainHeights`/`sub_8025228` each have three inline
+  `.pool` splits (`GetSolidTerrainHeights`/`GetSolidTerrainModeValue` each have three inline
   literal-pool flushes, one after each of the first three dispatch
   cases, plus a fourth literal shared with the function's own trailing
-  pool - `sub_8025228` in particular re-flushes the *same*
+  pool - `GetSolidTerrainModeValue` in particular re-flushes the *same*
   `gTerrainTypes` symbol four separate times rather than reusing
   one pool slot, since each `ldr` is in its own already-flushed pool
   region). Verified the same way as `GetCollisionChunk`: isolated
@@ -145,14 +145,14 @@ issue is where they got turned into (attempted) byte-exact C.
   comparison against `baserom.gba` at `0x08025334`, and a full clean
   `make compare`. `asm/code_3_2_17_24f24.s` is now gone entirely - it
   held only this function after `GetCollisionChunk`/`GetTerrainHeights`/
-  `GetSolidTerrainHeights`/`sub_8025228` were closed, so once this one closed too
+  `GetSolidTerrainHeights`/`GetSolidTerrainModeValue` were closed, so once this one closed too
   the file's contents were empty and it (plus its `ldscript.txt` entry)
   were removed rather than kept as a zero-function husk.
 - **`GetTerrainType`** (`src/level/tile_cache.c`) - the last of
   `GetCollisionChunk`'s `(x, y)`-tile-lookup consumers: returns the raw
   decoded halfword directly (no bounds check, no terrain-table lookup),
   while also writing the cell's top nibble out through `hiOut`. Same
-  register-allocation-permutation gap as `GetSolidTerrainHeights`/`sub_8025228`
+  register-allocation-permutation gap as `GetSolidTerrainHeights`/`GetSolidTerrainModeValue`
   above (this compiler never reproduces the ROM's own `self`/`x`/`y`/
   `flagsOut` <-> `r5`/`r4`/`r6`/`r7` register packing, no matter how the
   C is phrased). Closed the same way: hand-transcribed
@@ -179,7 +179,7 @@ issue is where they got turned into (attempted) byte-exact C.
   as a "per-frame visible-object/window list processor": DMA-writes to
   OBJ palette RAM and a BG window register, then walks a small
   count-prefixed array touching `gEntitySpawner`/`gCrateList`,
-  calling several still-unread functions (`sub_8025968`, `SpawnEntity`,
+  calling several still-unread functions (`IsEntityIdGone`, `SpawnEntity`,
   `SetCrateAbove`, `SetCrateBelow`, `SetEntityPos`, `GetCrateAbove`). Not
   understood precisely enough (which fields of the visited records mean
   what, why two lookups happen per entry) to commit a byte-exact-attempt

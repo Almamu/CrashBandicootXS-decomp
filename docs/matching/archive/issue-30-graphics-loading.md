@@ -351,7 +351,7 @@ With every operand pinned down, the function's full semantics are:
    bit 1 of that byte into the player's `+0x28` bitfield's bit 4, then
    unconditionally writes the incoming `x`/`y` args (shifted to Q8.8)
    into the player's own `x`/`y` fields, the same unconditional write
-   `sub_80221A4`/`sub_80221D4` (`spawn_pickups.c`) already do
+   `SpawnUnderwaterPlayerPosition`/`SpawnPlayerPosition` (`spawn_pickups.c`) already do
    elsewhere in this cluster.
 2. Unless the player's `+0x8c` "paused" flag is set: fires the
    player's `table+0x68` trampoline (`_call_via_r4`, action `0x1a`) and
@@ -690,7 +690,7 @@ spawners reached through the trigger dispatch table at
   `**gSpriteBankSet + 0x1BC` (`SpawnCrystal`) or `+ 0x180`, set its
   tag (+0x2D) and type byte (+0x0A: 0x1B/0x1D/0x1E), run the
   `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` trio, store `GetSpriteAnimPaletteSlot`'s
-  frame nibble and register the part with the `gUnknown_030012EC`
+  frame nibble and register the part with the `gTouchableList`
   manager. `SpawnCrateGem` additionally spawns effect 0x2B through
   `SpawnEffectPart(gEntitySpawner, ...)` and sets bits 0-1 of its +0x28
   to 1 and clears its "hidden" flag bit.

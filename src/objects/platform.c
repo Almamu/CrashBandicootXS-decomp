@@ -43,12 +43,19 @@ void UpdatePlatform(struct gobj *self)
     }
 }
 
-s32 sub_801B29C(struct gobj *self)
+/* The bonus platform's exit facing (flags2 bit 4), set by CreatePlatform
+ * from bit 0 of its entity's parameter flags (SetPlatformExitMirror).
+ * RunRoom passes it to SetCheckpoint as the checkpoint flags, so the player
+ * comes back from the bonus round on the platform X-mirrored when it is
+ * set. */
+s32 GetPlatformExitMirror(struct gobj *self)
 {
     return (self->flags2 >> 4) & 1;
 }
 
-void sub_801B2A8(struct gobj *self, u8 value)
+/* Sets the exit facing GetPlatformExitMirror reads (CreatePlatform, type
+ * 3: the active bonus platform). */
+void SetPlatformExitMirror(struct gobj *self, u8 value)
 {
     u32 one = 1;
     u32 bit;
@@ -73,7 +80,9 @@ void DestroyPlatform(struct gobj *self, s32 flags)
     DestroyMovingSprite((struct actor *)self, flags);
 }
 
-void sub_801B2D8(struct gobj *self)
+/* Clears flags bit 6, "vulnerable" (ClearSpriteObjVulnerable's bit), as
+ * InitPlatform does. */
+void ClearPlatformVulnerable(struct gobj *self)
 {
     s32 mask = ~0x40;
 
@@ -354,7 +363,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
                 {
                     MATCH_HOLD_REG(u32, v, r1) = 8;
 
-                    /* p->unk_68, addressed off &p->carried as the ROM does */
+                    /* p->hitAxes, addressed off &p->carried as the ROM does */
                     *((u8 *)c - (0xAC - 0x68)) = v;
                 }
             }

@@ -6,7 +6,7 @@ generator) listed 18 raw functions across `asm/code_3_2.s`,
 `asm/code_3_2_16.s`. This is the write-up for the work done against
 that list.
 
-**Update**: `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`sub_8009BE0`,
+**Update**: `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`ProbeHitboxEdgeTerrain`,
 left raw below, were later NAKED-transcribed (byte-exact, tracked as
 parked, not matched) - see
 `docs/matching/archive/naked-spatial-grid-tail.md`. The "left raw" entries for
@@ -40,14 +40,14 @@ name, from earlier sessions working the surrounding `part_list.c`-
   untouched - real GBA hardware affine (rotation/scaling) sprite-matrix
   setup, judged too large and unexamined to reconstruct with confidence
   in a single pass (`docs/matching.md`'s `DrawAffineSpritePieces` entry).
-- `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`sub_8009BE0`: each
+- `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`ProbeHitboxEdgeTerrain`: each
   previously read and explicitly left raw - "complex spatial-hash-grid
   removal logic ... higher-level why isn't recoverable without more
   context" (`UnlinkCrateFromGrid`), "complex list-management logic" 
   (`UpdateCrateList`), "calls still-unexamined helpers" (`CollidePlayerWithCrates`), "a
   physics/collision step-probe ... left raw rather than guess"
-  (`sub_8009BE0`).
-- `CollideGroundSprite`-`sub_800A590`: flagged as "a raw span ... left raw
+  (`ProbeHitboxEdgeTerrain`).
+- `CollideGroundSprite`-`AnchorGroundSpriteHitbox`: flagged as "a raw span ... left raw
   rather than guess at semantics" when `ground_sprite.c` was matched.
 - `ResetPlayer` onward: flagged as "the start of a still-raw 94 KB
   span" in the same pass.
@@ -115,7 +115,7 @@ already gave - see "Left untouched" below.
   fold to an unconditional `mov r0, #1` - fixed by pinning only `vx`
   and leaving `vy` an unpinned local, which lands in `r1` naturally
   anyway. Retires the raw `asm/code_3_2_16_b270.s`.
-- **`UpdateGroundSprite`/`sub_800A590`** (`src/objects/ground_sprite_update.c`) - a
+- **`UpdateGroundSprite`/`AnchorGroundSpriteHitbox`** (`src/objects/ground_sprite_update.c`) - a
   moving-platform "ride along" hookup: looks up a position record via a
   `self->table+0x10/0x14` trampoline and, if it changed since the last
   call, nudges `self->y` by the delta between the old and new record's
@@ -196,19 +196,19 @@ this file's original writing - see the update note on the entry below.
   (`QueueCratePlayerCollision` and friends) that issue explicitly left raw as "not
   understood branch-by-branch with the precision a byte-exact
   reconstruction needs".
-- **`sub_8009BE0`** (`asm/code_3_2_14.s`, ROM `0x08009BE0`) - a
+- **`ProbeHitboxEdgeTerrain`** (`asm/code_3_2_14.s`, ROM `0x08009BE0`) - a
   physics/collision step-probe calling still-unexamined
-  `sub_8008278`/`ProbeTerrain`.
+  `OffsetToHitboxEdgeStart`/`ProbeTerrain`.
 - **`CollideGroundSprite`** (`asm/code_3_2_11.s`, ROM `0x0800A0FC`) - calls the
-  raw `ProbeGroundSpriteTerrain` and the parked `sub_8009BE0`; left raw since its
+  raw `ProbeGroundSpriteTerrain` and the parked `ProbeHitboxEdgeTerrain`; left raw since its
   own correctness depends on functions whose exact behavior isn't
   pinned down.
 - **`ProbeGroundSpriteTerrain`** (`asm/code_3_2_11.s`, ROM `0x0800A178`, ~680 B) - a
-  movement-resolution function built on `sub_8008200`/`ProbeTerrain`/
-  `sub_8026C3C`/`sub_8026BF8`, none of which are matched or precisely
+  movement-resolution function built on `OffsetToHitboxEdge`/`ProbeTerrain`/
+  `ProbeSolidFloorHeight`/`ProbeFloorHeight`, none of which are matched or precisely
   understood yet.
 - **`ProbeGroundSpriteFloor`** (`asm/code_3_2_11.s`, ROM `0x0800A420`, ~264 B) -
-  the same `sub_8008200`/`sub_8026BF8` dependency as `ProbeGroundSpriteTerrain`.
+  the same `OffsetToHitboxEdge`/`ProbeFloorHeight` dependency as `ProbeGroundSpriteTerrain`.
 - **`CollidePlayer`** (`asm/code_3_2_16.s`, ROM `0x0800A884`, ~616 B) - a
   reentrancy-guard-shaped wrapper around `CollideGroundSprite` with a two-level
   jump-table dispatch; calls the unexamined `GetTerrainFlagsAt`.

@@ -20,15 +20,15 @@ function at the very end:
   shape as `UpdateStompedHopPad`'s table read in `tiny_hop_pad.c`) and folds
   two of its bits into the constructed object's `+0x28` bitfield.
 - **`SpawnBodySlamPower`/`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`/
-  `SpawnBlueGem`/`SpawnStopwatch`/`sub_80220C4`**: the `gSpriteBankTable`
+  `SpawnBlueGem`/`SpawnStopwatch`/`CreateTouchableSprite`**: the `gSpriteBankTable`
   record-indexed OAM-trio spawner shape (docs/rom_map.md's "master
   12-byte record array") - allocate via `CreateSpriteObj` (or `CreateStopwatch`
   for `SpawnStopwatch`), point `+0x20` at `table_base + record*12`, tag
   `+0x2d`, build via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
   `SetSpriteAnimDone` OAM trio, update the `+0x29` bitfield via
-  `GetSpriteAnimPaletteSlot`, set `+0xa`, and register into `gUnknown_030012EC`'s
+  `GetSpriteAnimPaletteSlot`, set `+0xa`, and register into `gTouchableList`'s
   manager via `AddToPartList`. `SpawnBlueGem` and `SpawnStopwatch` are gated
-  (only spawn under a flag-bit/accessor test); `sub_80220C4` takes its
+  (only spawn under a flag-bit/accessor test); `CreateTouchableSprite` takes its
   record index, tag, and `+0xa` value as runtime parameters instead of
   fixed constants (matches `SpawnEffectPart`'s already-documented
   `param1*12` runtime-indexed access to the same array).
@@ -39,13 +39,13 @@ function at the very end:
 - **`SpawnWumpa`**: conditionally calls `CreateWumpa` (the
   achievement/unlock-icon family spawner) when `gLevelState+0x8c`
   is clear.
-- **`nullsub_22`/`nullsub_23`**: empty stubs, the same "shared no-op
+- **`SpawnHoverPlayerPosition`/`nullsub_23`**: empty stubs, the same "shared no-op
   fallback" convention already documented for the 42-slot action table
   and this same 92-slot array.
 - **`SpawnHoverStartMarker`/`SpawnUnderwaterStartMarker`**: plain tail-call trampolines to
   `SpawnStartMarker` - still raw, at the top of this same `asm/*.s` file,
   out of this chunk's scope.
-- **`sub_80221A4`/`sub_80221D4`**: write a Q8.8 `{x, y}` position
+- **`SpawnUnderwaterPlayerPosition`/`SpawnPlayerPosition`**: write a Q8.8 `{x, y}` position
   straight into `gPlayer` (the hot camera/viewport struct) -
   leaf functions, no `push`/`pop` at all.
 - **`DestroyEntitySpawner`/`CreateEntitySpawner`**: the `{table_base, count}` descriptor
@@ -91,7 +91,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   unused) makes gcc reach for `r1` instead to protect the "live"
   return value, a 2-byte-per-function mismatch that's easy to miss on
   a quick visual diff since both forms *look* like `pop {reg}; bx reg`.
-  Only `sub_80220C4` and `InitLevelState` actually return their value (both
+  Only `CreateTouchableSprite` and `InitLevelState` actually return their value (both
   have real callers that use the result) and keep `void *`/`void *`
   return types with an explicit `return`.
 - **The `CreateCrate` trampolines' cross-jump merge.** A naive
@@ -118,7 +118,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   in C gets constant-folded into a single-instruction bitwise-complement
   immediate, one off from the ROM's actual two's-complement value.
 - **`InitLevelState`'s five "void helper leaves the pointer in r0" calls**
-  (`nullsub_2`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
+  (`InitSpriteRenderer`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
   `InitEntityFlags`, and `CreateEntitySpawner`'s own `InitEntitySpawner`): each is called
   immediately after an allocation, and the ROM leaves the fresh
   pointer in `r0` across the call (valid only because each real callee

@@ -23,7 +23,7 @@ matches - every function that was previously parked under
 `sprite.c`, `sprite_obj.c`
 and `sprite_anim.c`/the new `part_collide.c`:
 `DrawPowerDialog`, `DrawSpritePieces`, `GetSpriteBounds`, `GetSpriteHitbox`,
-`AdvanceSpriteAnim`, `sub_8008188`, `sub_8008200`, `sub_8008278`,
+`AdvanceSpriteAnim`, `OffsetFromHitboxEdge`, `OffsetToHitboxEdge`, `OffsetToHitboxEdgeStart`,
 `GetSpriteFrame`, `IsSpriteAnimLooping`, `UpdatePartList`, `CollidePartList`,
 `CollidePartWithPlayer`, and `CollidePartWithObject`. Every one of these had already been
 fully semantically understood (see their doc comments, now preserved
@@ -36,8 +36,8 @@ sessions: the categorical `r7`-pin hazard (`DrawPowerDialog`,
 `matching_decomp_register_pinning` memory point 10 and
 `naked-sub_8007dbc.md`'s account of the same wall), a register-register
 `add`'s stubborn destination-operand canonicalization that this
-compiler never reorders no matter the C source shape (`sub_8008188`,
-`sub_8008200`, `sub_8008278`, `GetSpriteFrame`), a redundant
+compiler never reorders no matter the C source shape (`OffsetFromHitboxEdge`,
+`OffsetToHitboxEdge`, `OffsetToHitboxEdgeStart`, `GetSpriteFrame`), a redundant
 byte-truncation the compiler always optimizes away once it can prove
 an `AND`'s range (`IsSpriteAnimLooping`), a genuine stack-frame/local-variable
 shape this reconstruction couldn't reverse-engineer (`DrawSpritePieces`,
@@ -104,7 +104,7 @@ real ROM address isn't contiguous with that file's other functions
 This batch retires six now-empty raw-assembly splits entirely -
 `asm/code_3_1_10_11.s` (`DrawPowerDialog`), `asm/code_3_2_2.s`
 (`GetSpriteBounds`/`GetSpriteHitbox`), `asm/code_3_2_4.s` (`AdvanceSpriteAnim`),
-`asm/code_3_2_5.s` (`sub_8008188`/`sub_8008200`/`sub_8008278`),
+`asm/code_3_2_5.s` (`OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/`OffsetToHitboxEdgeStart`),
 `asm/code_3_2_6.s` (`GetSpriteFrame`), `asm/code_3_2_7.s`
 (`IsSpriteAnimLooping`), `asm/code_3_2_8.s` (`UpdatePartList`/`CollidePartList`/
 `CollidePartWithPlayer`), and `asm/code_3_2_12.s` (`CollidePartWithObject`) - each deleted
@@ -129,16 +129,16 @@ this compiler otherwise proves redundant) to actually materialize.
 See `docs/matching.md`'s "Parked, not matched: IsSpriteAnimLooping" entry for
 the full account.
 
-**Update: `sub_8008188`/`sub_8008200`/`sub_8008278`/`GetSpriteFrame`
+**Update: `OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/`OffsetToHitboxEdgeStart`/`GetSpriteFrame`
 matched in a later session.** Converted back from this NAKED
-transcription to real C. `sub_8008188`/`sub_8008200`/`sub_8008278`'s
+transcription to real C. `OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/`OffsetToHitboxEdgeStart`'s
 shared holdout - the kind-8/12 switch block's register-register `add`
 canonicalizing the "wrong" way around - was closed by routing both
 `case 8` and `case 12` to one `goto`-shared label holding the entire
 load+load+add sequence as a single atomic `asm volatile` block, rather
 than an asm anchor on just the `add` inside two ordinary switch-case
 bodies (which an earlier attempt found broke the compiler's own
-case-body identical-code merging). `sub_8008278` additionally needed
+case-body identical-code merging). `OffsetToHitboxEdgeStart` additionally needed
 every other switch case rewritten the same `goto`-to-an-outside-label
 way (not just the kind-8/12 one) to get the compiler's block *layout*
 matching, and an explicit `register void *rec asm("r2")` pin on the
@@ -149,7 +149,7 @@ callee-saved register once its live range was forced to span every
 case merging to protect, so a plain inline-asm anchor on just that one
 instruction - the same technique that had backfired for the other
 three - worked here directly. See `docs/matching.md`'s "Parked, not
-matched: sub_8008188" entry (and its `sub_8008200`/`sub_8008278`/
+matched: OffsetFromHitboxEdge" entry (and its `OffsetToHitboxEdge`/`OffsetToHitboxEdgeStart`/
 `GetSpriteFrame` siblings just below it) for the original account of what
 had been tried and failed before this session. The remaining nine
 functions in this batch are unaffected and remain NAKED, tracked as

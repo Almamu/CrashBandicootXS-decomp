@@ -99,7 +99,7 @@ Thumb pointers:
 | `gDingodileShieldVtable` | `CreateDingodileShieldCtrl` (issue #25) | `DestroyDingodileShieldCtrl` | `UpdateDingodileShield` (update) |
 | `gDingodileVtable` | (issue #25 range) | `DestroyDingodile` (issue #25) | `UpdateDingodile` (update) |
 
-`sub_801967C` sets `kind` (+0x0A) on every part in `gUnknown_030012EC`'s list.
+`sub_801967C` sets `kind` (+0x0A) on every part in `gTouchableList`'s list.
 `sub_8019718`/`GetDingodileHits` are **UNUSED**: no `bl`, no `.4byte` and no
 Thumb pointer anywhere in the ROM. They are matched anyway.
 

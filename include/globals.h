@@ -84,9 +84,18 @@ extern u8 gJetpackPlayerInactive;
 extern struct entity_flags *gEntityFlags;
 extern struct level_state *gLevelState;
 extern struct camera *gCamera;
-extern struct part_list *gUnknown_030012EC;
+/* What the player's body touches (CollidePlayerWithObjects runs
+ * CollidePartsOfClass on it): the pickups, gems, crystals, platforms and
+ * Tiny's hop pads. */
+extern struct part_list *gTouchableList;
+/* What the player's attack box hits (CollidePartList), such as the
+ * enemies and bosses. */
 extern struct part_list *gCollidableList;
-extern struct part_list *gUnknown_030012F4;
+/* Updated before the player and drawn first, so in front of everything
+ * (the lowest OAM entries); the player never collides with it: the Cortex
+ * boss and its cannon and shots, and wumpa flying to the HUD (CreateWumpa
+ * with `special`). */
+extern struct part_list *gForegroundList;
 extern struct level_layers *gLevelLayers;
 extern struct pool_manager *gCrateList;
 

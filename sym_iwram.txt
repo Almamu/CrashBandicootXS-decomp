@@ -19,7 +19,7 @@
 . = 0x000012B8; gPaletteCache = .;
 . = 0x000012BC; gAudioContext = .;
 . = 0x000012C0; gLevelState = .;
-. = 0x000012C4; gUnknown_030012C4 = .;
+. = 0x000012C4; gGameFrameLevelState = .;
 . = 0x000012C8; gPaletteCycles = .;
 . = 0x000012CC; gSpriteRenderer = .;
 . = 0x000012D0; gSpriteBankSet = .;
@@ -29,9 +29,9 @@
 . = 0x000012E0; gLargeFont = .;
 . = 0x000012E4; gEntitySpawner = .;
 . = 0x000012E8; gUpdateOnlyPartList = .;
-. = 0x000012EC; gUnknown_030012EC = .;
+. = 0x000012EC; gTouchableList = .;
 . = 0x000012F0; gCollidableList = .;
-. = 0x000012F4; gUnknown_030012F4 = .;
+. = 0x000012F4; gForegroundList = .;
 . = 0x000012F8; gDecorationList = .;
 . = 0x000012FC; gObjVramCursor = .;
 . = 0x00001300; gOamBuffer = .;

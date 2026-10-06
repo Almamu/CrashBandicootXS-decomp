@@ -29,7 +29,7 @@ gains nothing without also dropping their pins.
 `UpdateTiny`/`SetTinyState` are the per-frame update and "enter state"
 methods of the `gTinyVtable` class (constructor `CreateTiny`,
 `cortex.c`). The class is a boss that hops its part along
-parabolic arcs between the anchor objects of the `gUnknown_030012EC`
+parabolic arcs between the anchor objects of the `gTouchableList`
 list:
 
 - A hop runs over `steps` of `total` frames. X is linear from the start

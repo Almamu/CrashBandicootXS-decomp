@@ -44,7 +44,7 @@
  * 1`), builds it via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
  * `SetSpriteAnimDone` OAM trio, sets its `+0x29` bitfield via
  * `GetSpriteAnimPaletteSlot`/`UPDATE_PART_FRAME_NIBBLE`, sets `+0xa` to the fixed
- * `0x25`, then registers it into `gUnknown_030012EC`'s manager via
+ * `0x25`, then registers it into `gTouchableList`'s manager via
  * `AddToPartList`. One of four near-identical siblings in this chunk
  * (`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`), differing only in the
  * `+0x2d`/`+0xa` constants. */
@@ -61,7 +61,7 @@ void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    AddToPartList(gUnknown_030012EC, part);
+    AddToPartList(gTouchableList, part);
 }
 
 /* Same shape as `SpawnBodySlamPower` above, tag `0`, `+0xa = 0x24`. */
@@ -78,7 +78,7 @@ void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    AddToPartList(gUnknown_030012EC, part);
+    AddToPartList(gTouchableList, part);
 }
 
 /* Same shape as `SpawnBodySlamPower` above, tag `2`, `+0xa = 0x23`. */
@@ -95,7 +95,7 @@ void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    AddToPartList(gUnknown_030012EC, part);
+    AddToPartList(gTouchableList, part);
 }
 
 /* Same shape as `SpawnBodySlamPower` above, tag `3`, `+0xa = 0x26`. */
@@ -112,7 +112,7 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    AddToPartList(gUnknown_030012EC, part);
+    AddToPartList(gTouchableList, part);
 }
 
 /* Gated spawn (see `SpawnBlueGem` below for the sibling shape), but
@@ -144,7 +144,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
             mask |= old;
             part->flags = mask;
         }
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
     }
 }
 
@@ -177,7 +177,7 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    AddToPartList(gUnknown_030012EC, part);
+    AddToPartList(gTouchableList, part);
 }
 
 /* New shape (docs/rom_map.md's 15-slot dispatch table, slot 12): a
@@ -216,13 +216,17 @@ void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
     SetCrateGemPos(gLevelState, point);
 }
 
-/* Same overall spawn shape as `SpawnBodySlamPower`'s family above, but with
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
+ * table). Builds a CreateSpriteObj part and adds it to gTouchableList,
+ * like the pickup spawners above.
+ *
+ * Same overall spawn shape as `SpawnBodySlamPower`'s family above, but with
  * the master-table record index (`index`), tag (`+0x2d`) and `+0xa`
  * field all taken as *runtime* parameters instead of fixed constants
  * (matches `SpawnEffectPart`'s already-documented `param1*12` runtime-
  * indexed access to `gSpriteBankTable`'s record array, docs/
  * rom_map.md). */
-void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch)
+void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch)
 {
     struct actor *part = CreateSpriteObj(cx, cy, cw, ch);
 
@@ -233,7 +237,7 @@ void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 c
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = (u8)field0A;
-    AddToPartList(gUnknown_030012EC, part);
+    AddToPartList(gTouchableList, part);
     return part;
 }
 
@@ -246,8 +250,13 @@ void SpawnWumpa(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
 }
 
-/* Empty stub. */
-void nullsub_22(void)
+/* Entity type 0x05: does nothing. Types 0x01/0x03 (SpawnPlayerPosition,
+ * SpawnUnderwaterPlayerPosition) only move the player to the entity, and
+ * the three pair up with the start markers of the room kinds by slot (0x00
+ * normal, 0x02 underwater, 0x04 hover; the ROM holds these five functions
+ * in descending type order); for the hover room this one is empty. No
+ * level places types 0x01, 0x03 or 0x05 (docs/levels.md). */
+void SpawnHoverPlayerPosition(void)
 {
 }
 
@@ -259,11 +268,11 @@ void SpawnHoverStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SpawnStartMarker(arg0, arg1, arg2, arg3);
 }
 
-/* Writes a Q8.8 `{x, y}` position straight into `gPlayer`
- * (the hot camera/viewport struct's own `x`/`y` fields) - ignores
- * `arg0`/`arg3` entirely, matching the ROM (a leaf function, no
- * `push`/`pop` at all). */
-void sub_80221A4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Entity type 0x03: moves the player to the entity's position (Q8),
+ * without a start marker; the underwater counterpart of type 0x01 (see
+ * SpawnHoverPlayerPosition). Ignores `arg0`/`arg3` entirely, matching the
+ * ROM (a leaf function, no `push`/`pop` at all). */
+void SpawnUnderwaterPlayerPosition(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     gPlayer->x = (s32)arg1 << 8;
     gPlayer->y = (s32)arg2 << 8;
@@ -277,25 +286,28 @@ void SpawnUnderwaterStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SpawnStartMarker(arg0, arg1, arg2, arg3);
 }
 
-/* Same shape as `sub_80221A4` above. */
-void sub_80221D4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Entity type 0x01: the same as `SpawnUnderwaterPlayerPosition` above, for
+ * the normal rooms (see SpawnHoverPlayerPosition). */
+void SpawnPlayerPosition(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     gPlayer->x = (s32)arg1 << 8;
     gPlayer->y = (s32)arg2 << 8;
 }
 
-/* Empty stub. */
+/* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn
+ * table). An empty stub after SpawnPlayerPosition, in the slot type 0x00's
+ * pair would take; type 0x00 is SpawnStartMarker. */
 void nullsub_23(void)
 {
 }
 
 /* Constructor/consumer pair (docs/rom_map.md): frees `gEntitySpawner`
- * (via `sub_8025D54`'s conditional `OperatorDelete`, gated bit 0) if
+ * (via `DestroyEntitySpawnerObj`'s conditional `OperatorDelete`, gated bit 0) if
  * already allocated. */
 void DestroyEntitySpawner(void)
 {
     if (gEntitySpawner != 0) {
-        sub_8025D54(gEntitySpawner, 3);
+        DestroyEntitySpawnerObj(gEntitySpawner, 3);
     }
 }
 
@@ -305,7 +317,7 @@ void DestroyEntitySpawner(void)
  * at the unified 92-slot dispatch array this whole chunk lives
  * inside. Ignores all its own parameters (matches the ROM, a
  * `push {r4, lr}` prologue with no truncation at all). Like
- * `InitLevelState`'s `nullsub_2`/`nullsub_1` calls, `InitEntitySpawner` is
+ * `InitLevelState`'s `InitSpriteRenderer`/`nullsub_1` calls, `InitEntitySpawner` is
  * void and the ROM leaves the freshly-allocated pointer in `r0`
  * across the call rather than saving it - same inline-asm technique. */
 void CreateEntitySpawner(void)
@@ -324,13 +336,13 @@ void CreateEntitySpawner(void)
  * references - `gAudioContext` (an 8340-byte `AudioContext`
  * allocation), `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/
  * `03001304`/`030012B4`/`C8`, clears `gDispcnt`'s mode byte,
- * and zeroes `self+0xc0` before returning `self` unchanged. `gUnknown_
- * 030012D0` gets pointed at a freshly-allocated 4-byte pointer cell
+ * and zeroes `self+0xc0` before returning `self` unchanged.
+ * `gSpriteBankSet` gets pointed at a freshly-allocated 4-byte pointer cell
  * which itself is set to `&gSpriteBankTable` (the 729 KB master
  * asset index, resolved separately in docs/rom_map.md).
  *
  * Several of these constructions call a *void*-returning helper
- * (`nullsub_2`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
+ * (`InitSpriteRenderer`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
  * `InitEntityFlags`) immediately after allocating the block, then store
  * *that same allocation* without reloading it - relying on the real
  * ROM function leaving the allocated pointer in `r0` untouched (true
@@ -356,7 +368,7 @@ void *InitLevelState(void *self)
         void **addr = (void **)&gSpriteRenderer;
         MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
-        asm volatile("bl nullsub_2" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitSpriteRenderer" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {

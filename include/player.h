@@ -155,7 +155,7 @@ struct player {
     u8 flags2;                // 0x0D
     u8 unk_0E[0xA];
     const struct player_vtable *vtable; // 0x18 - gPlayerVtable
-    void *platform;                     // 0x1C - struct gobj.platform
+    void *platform;                     // 0x1C - struct gobj.lastHitbox
     // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
     struct act_anim_bank *anim;
     // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,

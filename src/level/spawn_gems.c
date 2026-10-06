@@ -6,11 +6,11 @@
 #include "globals.h"
 
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
- * asm/code_3_2_17_1e990.s: six of the "trigger effect type N" spawners
- * reached through the trigger dispatch table at gStaticData_0816C6C0
- * (SpawnCrateGem is also called directly by level_state.c). Each one
+ * asm/code_3_2_17_1e990.s: six spawners, five of them entity spawners of
+ * gEntitySpawnFuncs (types 0x07, 0x08, 0x0A-0x0C) and SpawnCrateGem, which
+ * level_state.c calls directly. Each one
  * spawns a CreateSpriteObj part with a fixed bank offset, tag and type byte
- * (+0x0A) and registers it with the gUnknown_030012EC manager, unless
+ * (+0x0A) and registers it with the gTouchableList manager, unless
  * the level's "already collected" bit for it is set:
  *
  * - SpawnCrystal/SpawnCrateGem/SpawnGemPathGem test bits 0/1/2 of the byte
@@ -47,7 +47,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = type;
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
     }
 }
 
@@ -67,7 +67,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = type;
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
 
         {
             struct gfx_part *p = SpawnEffectPart(gEntitySpawner, 0x2B, 2, a1, a2, bit);
@@ -91,7 +91,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = type;
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
     }
 }
 
@@ -110,7 +110,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             SetSpriteAnimDone(part, 0);
             part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
             part->kind = type;
-            AddToPartList(gUnknown_030012EC, part);
+            AddToPartList(gTouchableList, part);
         }
     } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 0);
@@ -132,7 +132,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             SetSpriteAnimDone(part, 0);
             part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
             part->kind = type;
-            AddToPartList(gUnknown_030012EC, part);
+            AddToPartList(gTouchableList, part);
         }
     } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 1);
@@ -155,7 +155,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             SetSpriteAnimDone(part, 0);
             part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
             part->kind = type;
-            AddToPartList(gUnknown_030012EC, part);
+            AddToPartList(gTouchableList, part);
         }
     } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 2);

@@ -25,9 +25,10 @@
  * descriptor's `entities` list, whose `typeCounts` LevelHasEntityType
  * reads. */
 
-/* Wrapper: if bit 0 of `flags` is set, tears down `self` via
- * `OperatorDelete` (the documented UI-overlay-manager-family destroy
- * call). */
+/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/), nor is
+ * nullsub_25: a destructor (if bit 0 of `flags` is set, frees `self` via
+ * `OperatorDelete`) and an empty constructor, of an object nothing
+ * creates. */
 void sub_802425C(void *self, s32 flags)
 {
     if (flags & 1) {
@@ -309,7 +310,7 @@ void PlayRoomMusic(struct level_progress *self)
     PlaySong(gAudioContext, id);
 }
 
-/* Advances `self->itemIndex` (a cursor into `gLevelTable[self->level]`'s
+/* Advances `self->roomIndex` (a cursor into `gLevelTable[self->level]`'s
  * item list) by one if it's still below `count - 1`; returns whether
  * it advanced. */
 s32 NextRoom(struct level_progress *self)
@@ -317,10 +318,10 @@ s32 NextRoom(struct level_progress *self)
     s32 advanced = 0;
     const struct level_room_list *list = gLevelTable[self->level].rooms;
     s32 threshold = list->count - 1;
-    s32 cur = self->itemIndex;
+    s32 cur = self->roomIndex;
 
     if (cur < threshold) {
-        self->itemIndex = cur + 1;
+        self->roomIndex = cur + 1;
         advanced = 1;
     }
     return advanced;
@@ -345,7 +346,7 @@ void EnterBonusRoom(struct level_progress *self)
 }
 
 /* If `gLevelTable[self->level]`'s item list is nonempty, caches
- * `list->rooms[self->itemIndex]` into `self->cat`. Returns whether the list
+ * `list->rooms[self->roomIndex]` into `self->cat`. Returns whether the list
  * was nonempty either way - the trailing `-x|x` bit-trick reproduces
  * the ROM's own idiom for a bare `return expr != 0;` (as opposed to the
  * `if (expr != 0)` earlier in the same function, which compiles as a
@@ -356,7 +357,7 @@ s32 SelectRoom(struct level_progress *self)
     const struct level_room_list *list = gLevelTable[self->level].rooms;
 
     if (list->count != 0) {
-        s32 cur = self->itemIndex;
+        s32 cur = self->roomIndex;
 
         self->cat = list->rooms[cur];
     }

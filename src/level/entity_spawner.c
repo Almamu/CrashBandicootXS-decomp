@@ -239,7 +239,7 @@ void SetEntitySpawnerTable(void *self, const void *table, s32 count)
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
  * body to `DestroyEntityFlags` above (a second copy at a different ROM
  * address, same as `InitEntityFlags`/`InitEntitySpawner` below). */
-void sub_8025D54(void *self, s32 flags)
+void DestroyEntitySpawnerObj(void *self, s32 flags)
 {
     if (flags & 1) {
         OperatorDelete(self);

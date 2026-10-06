@@ -86,7 +86,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * field `GetTerrainFlagsAt` (above) already established that offset
  * for on the same `player`/`arg0` global, `gLevelLayers`).
  *
- * `sub_8026BF8` looks the tile row up via the already-matched
+ * `ProbeFloorHeight` looks the tile row up via the already-matched
  * `GetTerrainHeights` ("the raw terrain streamer" - `bg_layer_base.c`, GitHub
  * issue #40), returning a row pointer or `NULL` on a miss. On a hit,
  * reads a **signed byte** height sample at `row[pos->x & 7]`, computes
@@ -94,8 +94,8 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * accumulates it into `*outValue`. Returns `1` on a row hit, `0` if
  * `GetTerrainHeights` returned `NULL`.
  *
- * `sub_8026C3C` is the exact same shape, but the height byte comes from
- * the already-matched `sub_8025228(terrainPtr, tileX, tileY, 0,
+ * `ProbeSolidFloorHeight` is the exact same shape, but the height byte comes from
+ * the already-matched `GetSolidTerrainModeValue(terrainPtr, tileX, tileY, 0,
  * &scratch)` instead - the "CheckTerrainFlag"-style API
  * `ProbeTerrainY`/`ProbeTerrainX` already use via their own `GetSolidTerrainHeights`
  * calls (`bg_layer_base.c`, same issue #40). `scratch` is a caller-local
@@ -120,13 +120,13 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * this falls out naturally once `y` is hoisted into its own local
  * (matching the ROM's own early reload) and the accumulation is written
  * with the row-byte/height operand first (`height + (tileY << 3) - y`
- * for `sub_8026BF8`, whose value depends on the row lookup; `(tileY <<
- * 3) + height - y` for `sub_8026C3C`, whose height is already available
+ * for `ProbeFloorHeight`, whose value depends on the row lookup; `(tileY <<
+ * 3) + height - y` for `ProbeSolidFloorHeight`, whose height is already available
  * before the branch, forcing the same left-to-right emission order
  * either way) rather than however the multiplication naturally reads.
  *
- * `sub_8026C3C` matched on the first isolated-compile attempt, no
- * register pins needed. `sub_8026BF8` needed one targeted fix: this
+ * `ProbeSolidFloorHeight` matched on the first isolated-compile attempt, no
+ * register pins needed. `ProbeFloorHeight` needed one targeted fix: this
  * agbcc build never emits a Thumb `LDRSB` (register-offset signed-byte
  * load) from *any* C-level signed-byte array/pointer read - confirmed
  * categorically with a minimal standalone `s32 f(s8 *arr, s32 i) {
@@ -183,7 +183,11 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
 
 struct tile_cache;
 
-s32 sub_8026BF8(void *player, struct probe_pos *pos, s32 *outValue)
+/* The floor under pixel `pos` from the sloped terrain types (1-0x23,
+ * GetTerrainHeights): adds the distance from `pos->y` to that column's
+ * surface, Q8, to `*outValue` and returns 1, or returns 0 when the cell has
+ * none (ProbeGroundSpriteFloor). */
+s32 ProbeFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
 {
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
@@ -202,13 +206,16 @@ s32 sub_8026BF8(void *player, struct probe_pos *pos, s32 *outValue)
     return 0;
 }
 
-s32 sub_8026C3C(void *player, struct probe_pos *pos, s32 *outValue)
+/* The same for the solid terrain types (0x24 and above), whose surface is
+ * the type's mode-0 value (GetSolidTerrainModeValue) rather than a height
+ * per column (ProbeGroundSpriteTerrain). */
+s32 ProbeSolidFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
 {
     u8 scratch;
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 height =
-        sub_8025228(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY, 0, &scratch);
+    s8 height = GetSolidTerrainModeValue(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY,
+                                         0, &scratch);
 
     if (height >= 0) {
         s32 y = pos->y;

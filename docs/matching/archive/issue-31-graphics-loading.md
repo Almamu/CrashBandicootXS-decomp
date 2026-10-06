@@ -285,13 +285,13 @@ bit-4/5 clear, final 3-step flags mask) needed the same
 folds two sequential AND-immediates into one, or reorders a call-result
 reload, in ways the ROM's own codegen never does.
 
-### The `gSpriteBankTable`-record family: `SpawnSeaweed`/`sub_80217D0`/`SpawnFlame`
+### The `gSpriteBankTable`-record family: `SpawnSeaweed`/`SpawnSeaweedNoAnimReset`/`SpawnFlame`
 
 Same overall shape as `spawn_pickups.c`'s `SpawnBodySlamPower` family
 (`CreateSpriteObj` constructor, `+0x20` table offset, `GetSpriteAnimPaletteSlot`
 frame-nibble update), but two differences: they register into
 `gDecorationList`'s manager instead of `EC`, and (except
-`sub_80217D0`, which skips the OAM trio and the `+0x2d`/`+0xa` writes
+`SpawnSeaweedNoAnimReset`, which skips the OAM trio and the `+0x2d`/`+0xa` writes
 entirely) they add a `part->flags = (flags & 0x7f) & -5;` step this
 family didn't need before. That mask needed the same
 two-`asm-volatile`-step treatment as everywhere else in this cluster -
@@ -317,7 +317,7 @@ down to `7`) continuing the entity-constructor trampoline family
 of these matched from the very first isolated compile - the 5-argument
 call shape (4 register args plus a stack-passed 5th) reliably puts the
 constant on the stack before the register args regardless of source
-order, so there was nothing to fight here. `nullsub_21` (an empty
+order, so there was nothing to fight here. `SpawnNoEntity` (an empty
 `bx lr` stub sitting between `SpawnLaunchPadEntity` and `SpawnSealSpawner`) is also
 in this file for the same reason - it has to be, to keep the file's ROM
 range contiguous.
@@ -382,7 +382,7 @@ pass's writeup carried forward:
 
 - **`SpawnRoomExit`** is a *different* function entirely - not part of
   the popup family. It dispatches on `IsInGemPath`/`IsInBonusRound`/
-  `sub_8023324`/`GetCurrentLevel` (a `gLevelTable`-indexed guard
+  `GetRoomIndex`/`GetCurrentLevel` (a `gLevelTable`-indexed guard
   check) into one of three arms: two calls to `CreateEntity` +
   `SetEntitySize` (a differently-sized spawn, tag `0x12`, registering into
   `gUpdateOnlyPartList`), or a `CreatePlatform` position-probe feeding
@@ -520,7 +520,7 @@ that responds to more C-level effort. Transcribed instruction-for-instruction
 from the ROM disassembly instead:
 
 - **`SpawnRoomExit`** - a three-way dispatcher (not part of the "two-line
-  text popup" family): if `IsInGemPath`/`IsInBonusRound`/`sub_8023324`
+  text popup" family): if `IsInGemPath`/`IsInBonusRound`/`GetRoomIndex`
   (`gLevelState`) all say "no" and the current level's
   `gLevelTable`-indexed threshold-table entry's guard field
   (offset `+4`, meaning not otherwise understood) is zero, spawns a

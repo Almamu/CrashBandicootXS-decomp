@@ -516,7 +516,7 @@ void SpawnCortexCannon(struct gfx_pair_ctrl *self, struct gfx_part *part)
     c->pos = part->pos;
     CopyFlipX(c, part);
     OrFlags(c, 0x10);
-    AddToPartList(gUnknown_030012F4, c);
+    AddToPartList(gForegroundList, c);
     self->childA = c;
 }
 
@@ -557,7 +557,7 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
     c->pos.x = x;
     c->pos.y = y;
     OrFlags(c, 0x10);
-    AddToPartList(gUnknown_030012F4, c);
+    AddToPartList(gForegroundList, c);
     {
         MATCH_HOLD_REG(struct gfx_pair_ctrl *, s, r2) = self;
 
@@ -865,7 +865,7 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
         m |= b;
         PART_FLAGS(c) = m;
     }
-    AddToPartList(gUnknown_030012F4, c);
+    AddToPartList(gForegroundList, c);
     if (kind == 1)
         PlaySfx(gAudioContext, 0x31, 0x100);
     else

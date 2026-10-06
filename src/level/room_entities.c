@@ -13,8 +13,8 @@
  * `StartTimeTrial`, is `time_trial.c`, now plain C).
  *
  * `self` is `*gEntityFlags` (the same collision-bitmap base
- * `sub_8025944`/`sub_8025968`/`sub_802599C`, entity_flags.c, and
- * `sub_8025A0C`, entity_flags.c, already operate on).
+ * `SetEntityIdGone`/`IsEntityIdGone`/`IsEntityIdActivated`, entity_flags.c, and
+ * `MarkEntityIdActivated`, entity_flags.c, already operate on).
  *
  * First half (fully understood, matches the ROM's own idiom one for
  * one): if `list` differs from `self`'s cached copy at `self+0`,
@@ -31,7 +31,7 @@
  * `{count:u16 @2, items:ptr @4}` 8-byte group records, each holding
  * `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
  * each item not already flagged in the `self+8` bit-grid
- * (`sub_8025968`), `SpawnEntity` (the table-indexed interworking-
+ * (`IsEntityIdGone`), `SpawnEntity` (the table-indexed interworking-
  * trampoline dispatcher, entity_spawner.c) fires with a running,
  * never-reset-per-group counter as its own `self` argument, indexing
  * `gEntitySpawner`'s table.
@@ -114,7 +114,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
         s32 k;
 
         for (k = 0; k < group->count; k++) {
-            if (!(u8)sub_8025968(self, counter))
+            if (!(u8)IsEntityIdGone(self, counter))
                 SpawnEntity(gEntitySpawner, counter, (u16 *)&group->entities[k]);
             counter++;
         }

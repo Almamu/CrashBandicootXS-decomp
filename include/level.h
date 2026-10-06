@@ -33,7 +33,7 @@ struct part_list;
 /* The terrain types of the level collision maps (bg_layer_base.c): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
  * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
- * (sub_8025228) and `heights` the surface height of each of the cell's
+ * (GetSolidTerrainModeValue) and `heights` the surface height of each of the cell's
  * 8 pixel columns per mode, 0-7, 0xFF where there is none (GetTerrainHeights,
  * GetSolidTerrainHeights). */
 struct terrain_type {
@@ -96,13 +96,15 @@ struct level_layers {
     // 0x2A - CollidePlayer sets it around its ground probe (player_collide.c's `busy`,
     // terrain_probe_axes.c's `flagHeld`)
     u8 probeFlag;
-    u8 unk_2B; // 0x2B
+    // 0x2B - set when the room's blend mode is 1 (SetupRoomBlend): sprites then
+    // take layer 0's priority minus one (GetSpriteObjPriority)
+    u8 raiseObjPriority;
 };
 
 /* The entity flags (`gEntityFlags`, 0x408 bytes, InitEntityFlags; built
  * by UpdateGameFrame): the room's entity list and two pairs of bitmaps,
- * one bit per entity id (entity_flags.c's bit accessors, sub_8025944
- * through sub_8025A0C). SpawnRoomEntities skips the entities set in
+ * one bit per entity id (entity_flags.c's bit accessors, SetEntityIdGone
+ * through MarkEntityIdActivated). SpawnRoomEntities skips the entities set in
  * `bits0` and copies `bits0`/`bits1` to `bits0Copy`/`bits1Copy` when the
  * room loads; MarkEntityGone and its inline copies set an entity's bit
  * in `bits0Copy` when it is collected, broken or killed, and
@@ -189,7 +191,7 @@ extern s32 GetBgLayerWidth(struct bg_scroll_layer *self);
 extern void *GetCollisionChunk(struct tile_cache *self, s32 recordId);
 extern void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y);
 extern void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
-extern s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
+extern s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 extern void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest);
 
 /* src/level/bg_layer_init.c */
@@ -222,12 +224,12 @@ extern struct orbit_part *DropExtraLife(void *unused, u32 x, u32 y, u32 p3, u32 
 
 /* src/level/entity_flags.c */
 extern s32 CountCrateEntities(void *self, const struct level_entity_list *list);
-extern void sub_8025944(void *self, s32 n);
-extern s32 sub_8025968(void *self, s32 n);
-extern s32 sub_802599C(void *self, s32 n);
-extern void sub_80259D4(void *self, s32 n);
-extern void sub_8025A0C(void *self, s32 n);
-extern void sub_8025A3C(void *self, s32 val);
+extern void SetEntityIdGone(void *self, s32 n);
+extern s32 IsEntityIdGone(void *self, s32 n);
+extern s32 IsEntityIdActivated(void *self, s32 n);
+extern void SetEntityIdActivated(void *self, s32 n);
+extern void MarkEntityIdActivated(void *self, s32 n);
+extern void SetEntityFlagsPos(void *self, s32 val);
 extern void DestroyEntityFlags(void *self, s32 flags);
 extern void *InitEntityFlags(void *self);
 
@@ -238,7 +240,7 @@ extern void *SpawnEffectPart(void *unused, s32 anim, s32 tag, s32 x, s32 y, s32 
 extern struct orbit_part *DropWumpa(void *unused, u32 x, u32 y, u32 p3, u32 p4, u32 flag5);
 extern void SpawnEntity(void **table, s32 id, u16 *rec);
 extern void SetEntitySpawnerTable(void *self, const void *table, s32 count);
-extern void sub_8025D54(void *self, s32 flags);
+extern void DestroyEntitySpawnerObj(void *self, s32 flags);
 extern void InitEntitySpawner(void *self);
 
 /* src/level/game_frame.c */
@@ -335,7 +337,7 @@ extern u8 GetSpawnAtStart(struct level_state *self);
 extern void ClearSpawnAtStart(struct level_state *self);
 extern void ArmStartSpawn(struct level_state *self);
 extern void SetLevelBoss(struct level_state *self, struct level_state_1c8 *value);
-extern s32 sub_8023324(struct level_state *self);
+extern s32 GetRoomIndex(struct level_state *self);
 extern s32 GetCurrentLevel(struct level_state *self);
 extern void SetCurrentLevel(struct level_state *self, s32 value);
 extern s32 LevelHasYellowGem(void *self, s32 idx);
@@ -450,7 +452,7 @@ extern void SpawnYellowGem(u32 a, u16 a1, u16 a2, u16 a3);
 /* src/level/spawn_objects.c */
 extern void SpawnMegaMix(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSeaweed(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void sub_80217D0(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnSeaweedNoAnimReset(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnFlame(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnRockPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnFlipPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -459,7 +461,7 @@ extern void SpawnMediumPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSmallPlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnLargePlatform(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnLaunchPadEntity(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void nullsub_21(void);
+extern void SpawnNoEntity(void);
 extern void SpawnSealSpawner(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnTimeCrate3(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnTimeCrate2(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -482,13 +484,13 @@ extern void SpawnTurboRunPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnStopwatch(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnBlueGem(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnCrateGemMarker(u32 arg, u32 arg1, u32 arg2, u16 arg3);
-extern void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
+extern void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch);
 extern void SpawnWumpa(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void nullsub_22(void);
+extern void SpawnHoverPlayerPosition(void);
 extern void SpawnHoverStartMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void sub_80221A4(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnUnderwaterPlayerPosition(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnUnderwaterStartMarker(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void sub_80221D4(u32 arg, u16 arg1, u16 arg2, u16 arg3);
+extern void SpawnPlayerPosition(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void nullsub_23(void);
 extern void DestroyEntitySpawner(void);
 extern void CreateEntitySpawner(void);
@@ -499,8 +501,8 @@ extern void SpawnStartMarker(u32 arg, u16 x, u16 y, u16 z);
 
 /* src/level/terrain.c */
 extern s32 GetTerrainFlagsAt(void *arg, s32 x, s32 y);
-extern s32 sub_8026BF8(void *player, struct probe_pos *pos, s32 *outValue);
-extern s32 sub_8026C3C(void *player, struct probe_pos *pos, s32 *outValue);
+extern s32 ProbeFloorHeight(void *player, struct probe_pos *pos, s32 *outValue);
+extern s32 ProbeSolidFloorHeight(void *player, struct probe_pos *pos, s32 *outValue);
 extern s32 sub_8026C80(void *arg, s32 arg1, s32 *arg2);
 extern s32 sub_8026C8C(void);
 
@@ -515,13 +517,13 @@ extern s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 s
 
 /* src/level/tile_cache.c */
 extern void DestroyTileCache(void *self, u32 flags);
-extern struct tile_cache *nullsub_4(struct tile_cache *self);
+extern struct tile_cache *InitTileCache(struct tile_cache *self);
 extern u16 GetTerrainType(struct tile_cache *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
 
 /* src/level/tile_slot_pool.c */
 extern void DestroyPooledBgLayer(struct pooled_layer *self, u32 flags);
 extern struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex);
-extern u32 sub_8026480(struct pooled_layer *self);
+extern u32 GetPooledBgLayerPriority(struct pooled_layer *self);
 extern void ResetTileSlotPool(struct tile_slot_pool *pool);
 extern u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile);
 extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
@@ -565,7 +567,9 @@ extern const struct vtable_slot gBgLayerBaseVtable[5];
 
 /* sym_iwram.txt */
 extern struct part_list *gDecorationList;
-extern struct level_state *gUnknown_030012C4;
+/* UpdateGameFrame's level state, stored once when the game starts and never
+ * read. */
+extern struct level_state *gGameFrameLevelState;
 /* Updated and cleared, but never culled or drawn: the invisible objects,
  * the entity type 0x55 room-exit zones (spawn_bosses.c) and
  * SpawnSealSpawner's spawner. */

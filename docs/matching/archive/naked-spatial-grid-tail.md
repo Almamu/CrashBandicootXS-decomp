@@ -1,4 +1,4 @@
-# `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`sub_8009BE0`: NAKED asm transcription (byte-exact, tracked as parked)
+# `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`ProbeHitboxEdgeTerrain`: NAKED asm transcription (byte-exact, tracked as parked)
 
 **Tracking note**: same convention as `naked-oam-actor-part-batch.md` -
 these four are byte-exact (confirmed by a full clean `make compare`)
@@ -16,7 +16,7 @@ already-parked `InitCrateList`/`LinkCrateToActiveBucket`/`DrawCrateList`/`Collid
 reconstructions in `part_list.c`/`crate_list.c`) and the already-
 matched functions around them. GitHub issue #9 tracked
 `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates` (part of the `0x08009008`-
-`0x08009914` range) and `sub_8009BE0` separately; none of it closes
+`0x08009914` range) and `ProbeHitboxEdgeTerrain` separately; none of it closes
 that issue, since none of these four is a real decompiled-C match -
 see `docs/matching/archive/issue-9-0x08007634-actor.md` for the rest of that
 issue's still-open scope.
@@ -58,8 +58,8 @@ issue's still-open scope.
   windowed object; otherwise computes a dispatch value from the
   player's state and calls `CollideCrateWithPlayer(part, dispatchValue,
   player->x, player->y)` for each.
-- **`sub_8009BE0`** - a physics/collision step-probe: copies `self`'s
-  position, runs it through `sub_8008278` (still unexamined), converts
+- **`ProbeHitboxEdgeTerrain`** - a physics/collision step-probe: copies `self`'s
+  position, runs it through `OffsetToHitboxEdgeStart` (still unexamined), converts
   to plain integers, then probes it via `ProbeTerrain` (also still
   unexamined). If the first probe succeeds, restores `self->y` to its
   original value and returns `1`; otherwise clears
@@ -93,7 +93,7 @@ catalogued for this exact cluster's siblings:
   addresses (`gridHead[0]` in one branch, a different player-derived
   address in the other) across the same loop shape; no C-level
   reconstruction attempted kept both uses pinned to the ROM's register.
-- `sub_8009BE0` - keeps `self+0x69`'s address in `r6` for the whole
+- `ProbeHitboxEdgeTerrain` - keeps `self+0x69`'s address in `r6` for the whole
   retry loop while also reusing that same value as the loop's own
   termination-test operand; gcc consistently reloaded the address a
   second time instead of reusing the pinned one.
@@ -129,7 +129,7 @@ these three raw bodies required splitting that one file into four:
 - `asm/code_3_2_13_9914.s` (`ResetCrateList`/`CollideCrateGridPartWithObject`'s guards)
 
 `ldscript.txt` places each new object exactly where its raw block used
-to sit in link order. `asm/code_3_2_14.s` held only `sub_8009BE0` and
+to sit in link order. `asm/code_3_2_14.s` held only `ProbeHitboxEdgeTerrain` and
 nothing else, so it's retired entirely (same "retire an emptied split"
 convention as earlier batches) in favor of a new
 `src/objects/step_probe.c`, inserted between `crate_list.o` and
@@ -141,9 +141,9 @@ after this batch, alongside `make NON_MATCHING=1 report`.
 
 ## Later pass (issue #9 NAKED retry)
 
-`CollidePlayerWithCrates` is now real C under old_agbcc. `sub_8009BE0`,
+`CollidePlayerWithCrates` is now real C under old_agbcc. `ProbeHitboxEdgeTerrain`,
 `UnlinkCrateFromGrid` and `UpdateCrateList` are still NAKED. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`sub_8009BE0` is real C now (matches under both compilers). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`ProbeHitboxEdgeTerrain` is real C now (matches under both compilers). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

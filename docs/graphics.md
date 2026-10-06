@@ -377,7 +377,7 @@ string length/copy/concat, vector negation-and-store pairs, simple
 getters) sitting between two named functions with no `push {...,lr}`
 prologue - which is exactly why the original disassembly's "does it start
 with a push" heuristic skipped them. Two were more involved: a 12-case
-switch/jump-table dispatcher (`sub_8008188`, using the classic agbcc
+switch/jump-table dispatcher (`OffsetFromHitboxEdge`, using the classic agbcc
 `mov pc, r0` indexed-jump pattern) and a pair of near-identical
 vector-transform functions (`SetPlatformMoverMotionYFromSet`/`SetPlatformMoverMotionXFromSet`). One
 (`_08039E9C`) turned out to be a **false function boundary** - it's

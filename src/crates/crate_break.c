@@ -84,7 +84,7 @@ extern void AddCollisionCandidate_b(struct collision_queue *queue, struct crate 
     {                                                                          \
         struct collision_queue *_q = D18C_QUEUE(gPlayer);                      \
                                                                                \
-        _q->unk_04 = 1;                                                        \
+        _q->posCommitted = 1;                                                  \
     }                                                                          \
     else                                                                       \
         (void)0
@@ -981,7 +981,7 @@ commit:
         struct player *p = gPlayer;
         struct collision_queue *q = &p->collisionQueue;
 
-        if (q->unk_04 == 0)
+        if (q->posCommitted == 0)
             SetEntityPos((struct actor *)p, pos.x, pos.y);
     }
     if (hit != 0) {
@@ -1359,7 +1359,7 @@ void LightTntCrate(struct crate *selfArg)
  * `+0xc`/`+0x28`, arming `+0x64`/`+0x54`/`+0x58`/`+0x5c` with a fixed
  * "settle" trajectory), then switches `self` itself into sub-state
  * `+0x2d = 0x1b`, rebuilds its own hitbox record, plays SFX `0x17`,
- * notifies `sub_80259D4` unless `self`'s `+8` id field is the
+ * notifies `SetEntityIdActivated` unless `self`'s `+8` id field is the
  * sentinel `0xffff`, conditionally reactivates the viewport
  * (`AddBrokenCrate`, gated on `gCrateKindCounted[self+0x4e]`), and
  * ends by telling `SetCheckpointAtPlayer` whether `self`'s `+0x50` byte is
@@ -1392,7 +1392,7 @@ void OpenCheckpointCrate(struct crate *self)
         u16 id = self->id;
 
         if (id != 0xffff)
-            sub_80259D4(gEntityFlags, id);
+            SetEntityIdActivated(gEntityFlags, id);
     }
     if (gCrateKindCounted[self->kind])
         AddBrokenCrate(gLevelState);
@@ -1605,7 +1605,7 @@ void BreakCrate(struct crate *self, u32 arg1)
  * offsets around `self` the further the level counted down (a
  * escalating "more debris" burst); case 6 fires a screen-shake
  * (`_call_via_r4`, effect `0x1a`) plus SFX; case 7 spawns a
- * `DropExtraLife` bonus object and notifies `sub_80259D4`; case 9 spawns
+ * `DropExtraLife` bonus object and notifies `SetEntityIdActivated`; case 9 spawns
  * one final small `DropWumpa` puff. All paths converge on a shared
  * epilogue.
  *
@@ -1658,8 +1658,8 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
             u16 id = self->id;
 
             if (id != 0xffff) {
-                if ((u8)sub_802599C(gEntityFlags, id) == 0)
-                    sub_80259D4(gEntityFlags, self->id);
+                if ((u8)IsEntityIdActivated(gEntityFlags, id) == 0)
+                    SetEntityIdActivated(gEntityFlags, self->id);
             }
         }
         PHYS_BONUS(self->x >> 8, (self->y >> 8) + 3, 0, 3, flag);
@@ -1694,9 +1694,9 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
 /* Case-15 handler of `BreakCrate`'s own 23-case jump table (dispatch
  * id `0xf`) - see docs/matching/archive/issue-12-physics-collision.md's
  * dispatch map. Plays SFX 3, then switches on `self+0x48 & 7`: `1`
- * plays SFX 3 again, notifies `sub_80259D4` unless `self`'s `+8` id
+ * plays SFX 3 again, notifies `SetEntityIdActivated` unless `self`'s `+8` id
  * is the sentinel `0xffff` (or is already scheduled per
- * `sub_802599C`), and spawns a `DropExtraLife` bonus object 3 pixels
+ * `IsEntityIdActivated`), and spawns a `DropExtraLife` bonus object 3 pixels
  * below `self`; `2` forwards to `OpenMysteryCrate` (the escalating-debris
  * handler above); `3` clears `self+0x4d` bit `0x7f` and calls
  * `ExplodeCrate(self, 1)`; any other value (including `0`) does
@@ -1725,8 +1725,8 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
             u16 id = self->id;
 
             if (id != 0xffff) {
-                if ((u8)sub_802599C(gEntityFlags, id) == 0)
-                    sub_80259D4(gEntityFlags, self->id);
+                if ((u8)IsEntityIdActivated(gEntityFlags, id) == 0)
+                    SetEntityIdActivated(gEntityFlags, self->id);
             }
         }
         PhysBonus(&argP4, (u8 *)&argP5, self->x >> 8, (self->y >> 8) + 3, flag);
@@ -1966,11 +1966,11 @@ void ExplodeCrate(struct crate *self, u8 near)
  *   calls `BreakCrateInStack(other, 1, 0, 0)`; else dispatches on that byte's
  *   value (`3` -> `ActivateIronSwitchCrate(other)`, `6` -> `ActivateNitroSwitchCrate(other)`) -
  *   but only when `other+0x4d & 0x7f == 0` and it's not already flagged
- *   via `gUnknown_030012EC`. (Every object that passes the overlap
+ *   via `gTouchableList`. (Every object that passes the overlap
  *   check but isn't otherwise routed still gets `ExplodeCrate(other, 0)`
- *   when `gUnknown_030012EC[other+0x4e]` is nonzero, before falling
+ *   when `gTouchableList[other+0x4e]` is nonzero, before falling
  *   into that dispatch.)
- * - Second pass over `gUnknown_030012EC`'s smaller secondary list:
+ * - Second pass over `gTouchableList`'s smaller secondary list:
  *   objects with `_call_via_r1 == 2` and the same distance gate get
  *   `PickUpWumpa(other, 1)` (already matched elsewhere) and an
  *   `other+0xc` bit-`0x10` set (same render/update flag `ExplodeCrate`
@@ -2013,8 +2013,8 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
     }
 
     i = 0;
-    if (i < gUnknown_030012EC->count) {
-        struct part_list **list = &gUnknown_030012EC;
+    if (i < gTouchableList->count) {
+        struct part_list **list = &gTouchableList;
 
         do {
             struct crate *o = (struct crate *)(*list)->items[i];
@@ -2170,7 +2170,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
  * tags `self+0x2d = 0x22` (this case's own state constant), and runs
  * the same `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet plus the
  * `GetPaletteSlot`-driven `self+0x29` nibble update `ActivateNitroSwitchCrate` uses.
- * Calls `sub_8025A0C(gEntityFlags, self+8)` (marks `self`'s
+ * Calls `MarkEntityIdActivated(gEntityFlags, self+8)` (marks `self`'s
  * position in the same 32x32 collision-cell bitmap `ExplodeCrate`
  * touches).
  *
@@ -2178,7 +2178,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
  * from the `_call_via_r1`-classification passes above): collects up to
  * 0x20 other objects whose `_call_via_r1` result is `3`, `+0x4d & 0x7f
  * == 0`, `+0x4e == 5`, and `+0x50` matches `self+0x50`, into a local
- * stack array, calling `sub_8025A0C` on each of *their* positions too.
+ * stack array, calling `MarkEntityIdActivated` on each of *their* positions too.
  * If any were collected, allocates a heap block sized for the count
  * (`OperatorNewArray`), sets `self+0x59 = 1`, and copies the collected
  * pointer array into it before storing the block at `self+0x48` -
@@ -2214,7 +2214,7 @@ void ActivateIronSwitchCrate(struct crate *self)
 
         self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
     }
-    sub_8025A0C(gEntityFlags, self->id);
+    MarkEntityIdActivated(gEntityFlags, self->id);
 
     i = 0;
     if (i < gCrateList->activeCount) {
@@ -2226,7 +2226,7 @@ void ActivateIronSwitchCrate(struct crate *self)
                     found[n] = o;
                     n++;
                     n &= 0x1f;
-                    sub_8025A0C(gEntityFlags, o->id);
+                    MarkEntityIdActivated(gEntityFlags, o->id);
                 }
             }
             i++;

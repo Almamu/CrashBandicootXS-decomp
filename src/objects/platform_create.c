@@ -89,7 +89,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case 3:
         obj->type = 3;
-        sub_801B2A8(obj, rec->flags & 1);
+        SetPlatformExitMirror(obj, rec->flags & 1);
         break;
     case 4:
         obj->type = 4;
@@ -132,7 +132,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         MOVER_CALL2(m, m18, obj);
         break;
     }
-    AddToPartList(gUnknown_030012EC, obj);
+    AddToPartList(gTouchableList, obj);
     obj->anim = (void *)(SPRITE_BANK_BASE + 0x1D4);
     obj->tag = kind;
     ResetSpriteFrameTimer(obj);

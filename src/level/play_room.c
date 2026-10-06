@@ -28,8 +28,8 @@ struct widget {
  * level object's own `+0xdc->+8` state field is `2` (see
  * `asm/code_3_2_17_225a0.s`). Allocates the whole per-level widget set
  * (ring-buffer/pool object families already matched in
- * `part_list.c`/`crate_list.c`: `gUpdateOnlyPartList`, `gUnknown_030012EC`, `gCollidableList`,
- * `gDecorationList` and `gUnknown_030012F4` are
+ * `part_list.c`/`crate_list.c`: `gUpdateOnlyPartList`, `gTouchableList`, `gCollidableList`,
+ * `gDecorationList` and `gForegroundList` are
  * `dual_array_manager`s, `gCrateList` a `pool_manager`), the
  * player actor itself (`gPlayer`, `InitPlayer`), and the
  * text-box singleton (`gLevelLayers`, `GetLevelLayers`). Dispatches on
@@ -60,7 +60,7 @@ s32 PlayRoom(struct level_progress *selfArg)
         *slot = InitPartList(OperatorNew(0x14), 0x20);
     }
     {
-        struct part_list **slot = &gUnknown_030012EC;
+        struct part_list **slot = &gTouchableList;
         *slot = InitPartList(OperatorNew(0x14), 0xc0);
     }
     {
@@ -76,7 +76,7 @@ s32 PlayRoom(struct level_progress *selfArg)
         *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
-        struct part_list **slot = &gUnknown_030012F4;
+        struct part_list **slot = &gForegroundList;
         *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
@@ -238,8 +238,8 @@ s32 PlayRoom(struct level_progress *selfArg)
         _call_via_r2((u8 *)gPlayer + off, (void *)3, p->fn);
     }
 
-    if (gUnknown_030012F4 != NULL) {
-        DestroyPartList(gUnknown_030012F4, 3);
+    if (gForegroundList != NULL) {
+        DestroyPartList(gForegroundList, 3);
     }
     if (gDecorationList != NULL) {
         DestroyPartList((struct part_list *)gDecorationList, 3);
@@ -250,8 +250,8 @@ s32 PlayRoom(struct level_progress *selfArg)
     if (gCrateList != NULL) {
         DestroyCrateList(gCrateList, 3);
     }
-    if (gUnknown_030012EC != NULL) {
-        DestroyPartList(gUnknown_030012EC, 3);
+    if (gTouchableList != NULL) {
+        DestroyPartList(gTouchableList, 3);
     }
     if (gUpdateOnlyPartList != NULL) {
         DestroyPartList((struct part_list *)gUpdateOnlyPartList, 3);

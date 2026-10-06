@@ -61,8 +61,8 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     `IsBonusRoundDone`/`IsGemPathDone` and `gLevelState+0x8C`). Without
     overlap it only refreshes `carried` or clears the mover's `active`.
   - `UpdatePlatform` (+0x1C) steps or destroys the object and forwards to its
-    mover; `sub_801B29C`/`sub_801B2A8` read/write bit 4 of +0x0D
-    (`sub_801B29C` is called from `run_room.c`); `sub_801B2D8` clears
+    mover; `GetPlatformExitMirror`/`SetPlatformExitMirror` read/write bit 4 of +0x0D
+    (`GetPlatformExitMirror` is called from `run_room.c`); `ClearPlatformVulnerable` clears
     bit 6 of +0x0C; `DestroyPlatform` is the destructor.
 - **`struct mover`** (0x38 bytes, method table `gPlatformMoverVtable`,
   constructor `CreatePlatformMover`, destructor `DestroyPlatformMover`): an oscillating
@@ -101,7 +101,7 @@ ROM): `SetDingodileStep`, `SetDingodileNextState`, `InitPlatform` (inlined inste
   idiom. The rest is register pins (commented in the source).
 - **`StartDingodileMotion`**: `index` pinned to r5 and kept live with an empty
   `asm("" : : "r"(index))` so the second lookup doesn't shift it in place.
-- **`sub_801B29C`**: `(flags2 >> 4) & 1` (a bitfield read gives
+- **`GetPlatformExitMirror`**: `(flags2 >> 4) & 1` (a bitfield read gives
   `lsl #27; lsr #31`).
 
 ## Parked: `ResolvePlatformCollision` (and, until the old_agbcc retry, `CreatePlatform`)

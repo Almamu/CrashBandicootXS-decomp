@@ -4,11 +4,10 @@
 #include "level.h"
 #include "globals.h"
 
-/* 0x08020E84-0x08021280 (GitHub issue #31): four of the "trigger effect
- * type N" spawners reached through the 15-slot dispatch table at
- * gStaticData_0816C7D8 (docs/rom_map.md, "A family of 'trigger effect
- * type N' functions") - the same family as SpawnCrystal-SpawnYellowGem
- * (src/level/spawn_gems.c).
+/* 0x08020E84-0x08021280 (GitHub issue #31): four of the entity spawners
+ * of gEntitySpawnFuncs (entity types 0x51-0x54; docs/rom_map.md called
+ * them "trigger effect type N" functions) - the same family as
+ * SpawnCrystal-SpawnYellowGem (src/level/spawn_gems.c).
  *
  * Each one tests one "collected" bit of the level progress record
  * (gLevelState + 2). If it is set, the effect only plays a sound:
@@ -17,7 +16,7 @@
  * SetGemPlatform. Otherwise it spawns the full visual effect: a
  * CreateSpriteObj part on anim bank offset 0x180, with a per-slot tag,
  * built through the ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone OAM trio, and
- * registered with the gUnknown_030012EC manager.
+ * registered with the gTouchableList manager.
  *
  *   function     bit  sound  tag
  *   SpawnRedGemPlatform   1    0xB    7
@@ -62,7 +61,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
         part->hidden = 0;
     }
 }
@@ -90,7 +89,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
         part->hidden = 0;
     }
 }
@@ -118,7 +117,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
         part->hidden = 0;
     }
 }
@@ -148,7 +147,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
-        AddToPartList(gUnknown_030012EC, part);
+        AddToPartList(gTouchableList, part);
         part->hidden = 0;
     }
 }

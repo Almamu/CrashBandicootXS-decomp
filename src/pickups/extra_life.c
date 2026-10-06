@@ -299,7 +299,7 @@ void UpdateExtraLife(struct orbit_part *self)
  * `ResetExtraLifePickup` (`extra_life.c`), stores `arg0` at `self+8` and
  * `arg1`/`arg2` (Q8-scaled) at `self+0`/`self+4`, mirrored into
  * `self+0x4c`/`self+0x50` (the orbit anchor `SetExtraLifePos`/
- * `UpdateExtraLifeHop` also use), joins the `gUnknown_030012EC`
+ * `UpdateExtraLifeHop` also use), joins the `gTouchableList`
  * `dual_array_manager` list (`AddToPartList`), derives `self+0x30` from
  * the same `table[self->0x2d]->+0x16` clamp idiom `PickUpWumpa`/
  * `SendWumpaToHud` (`wumpa_update.c`) use, clears bits 0/5 of `self+0x28`,
@@ -323,7 +323,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
     self->base.x = x << 8;
     self->base.y = y << 8;
     self->anchor = ORBIT_POS(self);
-    AddToPartList(gUnknown_030012EC, self);
+    AddToPartList(gTouchableList, self);
     OrbitClampFrame(self);
     self->flipX = 0;
     self->flipY = 0;

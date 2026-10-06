@@ -12,7 +12,7 @@ second pass against those five.
 - **`OpenLifeCrate`** (`src/crates/crate_stack.c`, new file) - plays
   cue-3 SFX, then - unless `self->field_08` is the sentinel `0xffff` -
   consumes a slot from the per-record bit-grid (`gEntityFlags`,
-  the same `sub_802599C`/`sub_80259D4` accessor pair entity_flags.c already establish) keyed by `self->field_08`, setting
+  the same `IsEntityIdActivated`/`SetEntityIdActivated` accessor pair entity_flags.c already establish) keyed by `self->field_08`, setting
   the bit only if it wasn't already set. Finally spawns a part object
   (`DropExtraLife`, itself still parked as of entity_spawner.c) three tiles
   below `self`'s own position, tagged with the caller's own byte
@@ -20,7 +20,7 @@ second pass against those five.
   `self->field_08` (include/actor.h) match the record's `+0`/`+4`/`+8`
   fields exactly, and `field_08`'s own doc comment already calls out
   its use "as a 32-bit-word bitmap index", confirmed here by the
-  `sub_802599C`/`sub_80259D4` calls. Two gotchas:
+  `IsEntityIdActivated`/`SetEntityIdActivated` calls. Two gotchas:
   - `DropExtraLife`'s `x`/`y` arguments need wider `s32` types in this
     call site's own local extern declaration than the `u16 x, u16 y`
     prototype entity_spawner.c's (still-parked) definition uses - this

@@ -92,8 +92,9 @@
  * (`_call_via_r2`, mode `0x29`), repeats the same `LoadPaletteSlot` tile-
  * cache call, and pings `gHud` (`ShowHudCounters`).
  *
- * Either way, this converges on flushing the four HUD ring-buffer
- * managers (`CullPartList` on `030012F4`/`EC`/`F0`/`F8`), a
+ * Either way, this converges on culling the four object lists
+ * (`CullPartList` on `gForegroundList`, `gTouchableList`,
+ * `gCollidableList` and `gDecorationList`), a
  * `UpdateRoomFrame(self)` VRAM/OAM refresh, and the fade-cluster
  * `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
@@ -224,7 +225,7 @@ static inline void SpawnNearPlayer(s32 x, s32 y)
     point.x = x;
     point.y = y;
     level = gLevelState;
-    SetCheckpoint(level, sub_801B29C((struct gobj *)GetBonusPlatform(level)), &point.x);
+    SetCheckpoint(level, GetPlatformExitMirror((struct gobj *)GetBonusPlatform(level)), &point.x);
 }
 
 static inline void RestartPlayerAnim(struct player *p, s32 anim)
@@ -308,8 +309,8 @@ s32 RunRoom(struct level_progress *self)
             ShowHudCounters(gHud);
         }
     }
-    CullPartList(gUnknown_030012F4);
-    CullPartList(gUnknown_030012EC);
+    CullPartList(gForegroundList);
+    CullPartList(gTouchableList);
     CullPartList(gCollidableList);
     CullPartList(gDecorationList);
     UpdateRoomFrame(self);
@@ -341,12 +342,12 @@ s32 RunRoom(struct level_progress *self)
         }
         if (gKeys.all & 4)
             ShowHudCounters(gHud);
-        UpdatePartList(gUnknown_030012F4);
+        UpdatePartList(gForegroundList);
         UpdatePartList(gUpdateOnlyPartList);
         if ((u8)PMF_CALL(gPlayer, isNearCamera))
             PMF_CALL(gPlayer, update);
         UpdateCrateList(gCrateList);
-        UpdatePartList(gUnknown_030012EC);
+        UpdatePartList(gTouchableList);
         UpdatePartList(gCollidableList);
         UpdatePartList(gDecorationList);
         UpdateHudSlides(gHud);
@@ -367,7 +368,8 @@ fade:
             point.x = x;
             point.y = i;
             x = (s32)gLevelState;
-            SetCheckpoint((void *)x, sub_801B29C((struct gobj *)GetBonusPlatform((void *)x)),
+            SetCheckpoint((void *)x,
+                          GetPlatformExitMirror((struct gobj *)GetBonusPlatform((void *)x)),
                           &point.x);
         } else if (!(u8)IsInGemPathRoom(self) && IsInGemPath(gLevelState)) {
             struct gl_point point;
@@ -407,10 +409,10 @@ fade:
     }
     ClearPartList(gUpdateOnlyPartList);
     ResetCrateList(gCrateList);
-    ClearPartList(gUnknown_030012EC);
+    ClearPartList(gTouchableList);
     ClearPartList(gCollidableList);
     ClearPartList(gDecorationList);
-    ClearPartList(gUnknown_030012F4);
+    ClearPartList(gForegroundList);
     HideBg0();
     HideBg1();
     HideBg2();

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "level.h"
 
-/* GitHub issues #9/#10/#41's shared cross-reference: `sub_8009BE0`'s
+/* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
  * physics/collision step-probe (`src/objects/step_probe.c`, see
  * `docs/matching/archive/naked-spatial-grid-tail.md`) and `PlayerHasRoomForAnim`'s
  * input-action-check gate (`src/player/player_anim_room.c`, see
@@ -22,7 +22,7 @@
  *     edge of the loaded region - nothing to scan). Otherwise calls
  *     `ProbeTerrainX(self, pos, span, outValue, 3)`.
  *   - `mode == 1`: reads `self+0x10`'s pointed-to record's own `+0x10`
- *     field (`bounds->maxX` below - a right/loaded-region edge, plain
+ *     field (`bounds->widthPx` below - a right/loaded-region edge, plain
  *     ints, not Q8, matching `pos`'s own units). If `pos->x` is past
  *     it, clamps `*outValue = bound << 8` and reports a hit without
  *     scanning. Otherwise calls `ProbeTerrainX(self, pos, span,
@@ -30,7 +30,7 @@
  *   - `mode == 4`: always calls `ProbeTerrainY(self, pos, span,
  *     outValue, 2)` - no short-circuit for this arm.
  *   - `mode == 8`: same shape as `mode == 1` but on the Y axis
- *     (`bounds->maxY`, `pos->y`), calling `ProbeTerrainY(self, pos,
+ *     (`bounds->heightPx`, `pos->y`), calling `ProbeTerrainY(self, pos,
  *     span, outValue, 0)` when not already past the bound.
  *   - any other `mode` (in practice just `0`): returns `0` with no
  *     side effects.
@@ -59,9 +59,9 @@
  * function's own dispatch just hard-codes per arm rather than deriving
  * arithmetically.
  *
- * Confirmed against both flagged call sites: `sub_8009BE0` passes a
+ * Confirmed against both flagged call sites: `ProbeHitboxEdgeTerrain` passes a
  * plain-int (not Q8) `{x, y}` position it just computed via
- * `sub_8008278`, matching `pos`'s units here; `PlayerHasRoomForAnim` passes
+ * `OffsetToHitboxEdgeStart`, matching `pos`'s units here; `PlayerHasRoomForAnim` passes
  * `self+0x28` bit 4 (mirror flag) as a `1`/`2` selector - exactly this
  * function's `mode` values `1`/`2` (the X-axis/`ProbeTerrainX` arms) -
  * confirming `mode` really is a small enumerated selector, not a
@@ -75,14 +75,14 @@
  * session, including `ProbeTerrainX`/`ProbeTerrainY` themselves) moved to
  * the new `asm/code_3_2_17_266bc.s`. */
 
-/* `self+0x10` points at a per-object bounds record; only the two
- * fields this function itself reads are confirmed (a right/lower
- * streamed-region edge pair, compared directly against the caller's
- * plain-int probe position, not Q8). */
-struct sub_8026628_bounds {
+/* `self+0x10` is the level layers' layer 0 (struct level_layers.layer0);
+ * the two fields read here are its `widthPx`/`heightPx`
+ * (struct bg_scroll_layer), the right/lower edge of the level, compared
+ * directly against the caller's plain-int probe position, not Q8. */
+struct terrain_probe_bounds {
     u8 unk0[0x10];
-    s32 maxX; /* +0x10 */
-    s32 maxY; /* +0x14 */
+    s32 widthPx;  /* +0x10 */
+    s32 heightPx; /* +0x14 */
 };
 
 s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *outValue)
@@ -100,7 +100,7 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
         break;
     case 1:
         {
-            s32 bound = ((struct sub_8026628_bounds *)(*(void **)((u8 *)self + 0x10)))->maxX;
+            s32 bound = ((struct terrain_probe_bounds *)(*(void **)((u8 *)self + 0x10)))->widthPx;
             if (pos->x > bound) {
                 *outValue = bound << 8;
                 hit = 1;
@@ -116,7 +116,7 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
         break;
     case 8:
         {
-            s32 bound = ((struct sub_8026628_bounds *)(*(void **)((u8 *)self + 0x10)))->maxY;
+            s32 bound = ((struct terrain_probe_bounds *)(*(void **)((u8 *)self + 0x10)))->heightPx;
             if (pos->y > bound) {
                 *outValue = bound << 8;
                 hit = 1;

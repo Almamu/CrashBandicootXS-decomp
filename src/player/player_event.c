@@ -58,9 +58,9 @@ void CollidePlayerWithObjects(struct player *self)
         struct collision_queue *link = &self->collisionQueue;
 
         link->count = cleared;
-        link->unk_04 = cleared;
+        link->posCommitted = cleared;
         CollidePlayerWithCrates(gCrateList, 3);
-        CollidePartsOfClass(gUnknown_030012EC, 4);
+        CollidePartsOfClass(gTouchableList, 4);
         ResolvePlayerCollisions();
     }
 }

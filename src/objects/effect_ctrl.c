@@ -6,7 +6,7 @@
 /* GitHub issue #9/#10, tail of the 0x0800B8DC-0x0800D040 cluster (see
  * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): the last raw file
  * in the cluster, `asm/code_3_2_17_cbf4.s` - `UpdateEffectCtrl`,
- * `EffectCtrlHandleEvent`, `nullsub_3`, `DestroyEffectCtrl`, `InitEffectCtrl`, ROM
+ * `EffectCtrlHandleEvent`, `ResetEffectCtrl`, `DestroyEffectCtrl`, `InitEffectCtrl`, ROM
  * 0x0800CBF4-0x0800CD00 (contiguous, no gap on either side -
  * `enemy_ctrl.o`'s `CreateKnockedEnemyCtrl` ends exactly where this file
  * starts, and `crate_touch.o`'s already-matched `PlayerAnimWouldTouchCrate`
@@ -30,7 +30,8 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * `gEntityFlags+0x108` bitmap) up to three times, independently
  * gated: once when the `_call_via_r1` hit-probe against `other->table`'s
  * own +0x28/+0x2c pair reports *no* hit, once when `other->0xc` bit 3
- * is already set, and once when `other->0x38` is nonzero. This is the
+ * is already set, and once when `other->0x38` (its animation has ended)
+ * is nonzero. This is the
  * exact idiom `tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl` already matches as
  * real C (its own doc comment: "needs several `register asm` pins ...
  * without them this compiler ... folds the ROM's shift-setup pair ...
@@ -59,7 +60,7 @@ struct cbf4_other {
     u8 unk_10[8];
     struct vtable_slot *table; // 0x18
     u8 unk_1C[0x1C];
-    u8 unk_38; // 0x38
+    u8 animDone; // 0x38 - struct gobj.animDone
 };
 
 #define SET_ID_BIT(idExpr)                                                     \
@@ -88,7 +89,7 @@ void UpdateEffectCtrl(void *self, struct cbf4_other *other)
         MarkGone(other);
     if ((other->f.flags >> 3) & 1)
         MarkGone(other);
-    if (other->unk_38)
+    if (other->animDone)
         MarkGone(other);
 }
 
@@ -97,7 +98,9 @@ void EffectCtrlHandleEvent(void *self)
 {
 }
 
-void nullsub_3(void *self)
+/* The effect controller's reset hook, empty: InitEffectCtrl calls it where
+ * CreateEnemyCtrl calls ResetEnemyCtrl. */
+void ResetEffectCtrl(void *self)
 {
 }
 
@@ -113,7 +116,7 @@ void DestroyEffectCtrl(void *selfArg, s32 flags)
 }
 
 /* Resets via `InitCtrl`, re-points `self+0xc`'s table pointer at
- * `gEffectCtrlVtable`, and runs `nullsub_3(self)` - the same
+ * `gEffectCtrlVtable`, and runs `ResetEffectCtrl(self)` - the same
  * "reset via `InitCtrl`, re-point `self+0xc`, return `self`"
  * constructor shape already matched for `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
  * `CreateKnockedEnemyCtrl`. */
@@ -123,6 +126,6 @@ void *InitEffectCtrl(void *selfArg)
 
     InitCtrl(self);
     *(void **)(self + 0xc) = (void *)gEffectCtrlVtable;
-    nullsub_3(self);
+    ResetEffectCtrl(self);
     return self;
 }

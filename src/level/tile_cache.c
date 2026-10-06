@@ -13,7 +13,8 @@ void DestroyTileCache(void *self, u32 flags)
     }
 }
 
-struct tile_cache *nullsub_4(struct tile_cache *self)
+/* The tile cache's empty constructor (InitLevelLayers). */
+struct tile_cache *InitTileCache(struct tile_cache *self)
 {
     return self;
 }

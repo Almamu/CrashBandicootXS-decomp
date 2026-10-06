@@ -1,7 +1,7 @@
 # Issue #43: 0x08026418-0x08026A18, game_loop - the level-layers singleton
 
-`ProbeTerrain`, `ProbeTerrainY`, `ProbeTerrainX`, `GetTerrainFlagsAt`, `sub_8026BF8`
-and `sub_8026C3C` were already matched before this pass. Of the remaining
+`ProbeTerrain`, `ProbeTerrainY`, `ProbeTerrainX`, `GetTerrainFlagsAt`, `ProbeFloorHeight`
+and `ProbeSolidFloorHeight` were already matched before this pass. Of the remaining
 19 functions, all 19 are byte-exact matched as C (three of them with
 narrow inline-asm anchors, described below). Nothing parked, nothing left
 raw.
@@ -18,7 +18,7 @@ raw.
 `GetLevelLayers` (`OperatorNew(0x2C)` then the constructor `InitLevelLayers`).
 It's the same object `gLevelLayers` points at: the camera
 (`gCamera`, issue #44) clamps into its scroll fields via
-`SetLevelScroll(gLevelLayers, ...)`, and `sub_8026BF8`/`sub_8026C3C`
+`SetLevelScroll(gLevelLayers, ...)`, and `ProbeFloorHeight`/`ProbeSolidFloorHeight`
 already reach its terrain tile cache at `+0x20`.
 
 | offset | field |
@@ -27,7 +27,7 @@ already reach its terrain tile cache at `+0x20`.
 | 0x08/0x0C | scroll x/y (pixels) |
 | 0x10 | BG layer 0 (0x60 bytes, `InitPooledBgLayer`, see below) |
 | 0x14/0x18/0x1C | BG1-3 scroll layers (0x5C bytes, `InitBgLayer(.., 1..3)`) |
-| 0x20 | terrain tile cache (0x1064 bytes; `nullsub_4` is its do-nothing constructor, returning the pointer it was given) |
+| 0x20 | terrain tile cache (0x1064 bytes; `InitTileCache` is its do-nothing constructor, returning the pointer it was given) |
 | 0x24 | level asset (either the ROM pointer or a heap copy) |
 | 0x28 | set when `+0x24` is a heap copy |
 | 0x29-0x2B | cleared by the constructor, not otherwise used here |
@@ -72,7 +72,7 @@ Layer 0 extends a BG-scroll layer with a pool pointer at `+0x5C`.
 (`gPooledBgLayerVtable`), sets `+0x34` bit 7, clears bits 2-3, and
 allocates the pool; `DestroyPooledBgLayer` frees the pool, restores the base table
 (`gBgLayerVtable`) and chains to `DestroyBgLayerBase` - a C++-style
-destructor chain. `sub_8026480` reads `+0x34` bits 0-1.
+destructor chain. `GetPooledBgLayerPriority` reads `+0x34` bits 0-1.
 
 The pool (0x480C bytes) maps up to 0x2000 source tiles onto 0x200
 reference-counted VRAM tile slots: VRAM base and source base, `u16

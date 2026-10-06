@@ -137,7 +137,7 @@ these, exactly as `docs/workflow.md` step 2/3 warns.
   (`UpdateTiny`, 16-case dispatch on `self+8`) together with its
   companion sub-state handler (`SetTinyState`, 15-case dispatch) and two
   high-register-pressure helpers it calls (`PickTinyHopTarget`, a
-  nearest-target scan over `gUnknown_030012EC`'s array using `r8`/
+  nearest-target scan over `gTouchableList`'s array using `r8`/
   `sl`/`sb`; `SpawnTinyFallingLeaves`, a spawn-effect constructor also using
   `r8`/`sb`). Same reasoning as `UpdateMegaMix` - left raw rather than
   force a low-confidence reconstruction of this much control flow in

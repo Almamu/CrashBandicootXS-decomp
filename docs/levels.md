@@ -98,7 +98,7 @@ Every layer's cells are `u16`:
 - **Collision**: terrain type in bits 0-7 (types 1-0x23 are the
   non-solid ones `GetTerrainHeights` returns, above that the solid shapes of the
   `gTerrainTypes` table), a flag nibble in bits 8-11, and in bits
-  12-15 the per-collision-mode "not solid" bits `GetSolidTerrainHeights`/`sub_8025228`
+  12-15 the per-collision-mode "not solid" bits `GetSolidTerrainHeights`/`GetSolidTerrainModeValue`
   test (mode 0: 4, 1: 1, 2: 8, 3: 2). One cell is one 8x8 tile.
 
 ## The level asset
@@ -199,7 +199,7 @@ code it gives the object and where the levels place it:
 | Type | Spawner | What |
 |---|---|---|
 | 0x00, 0x02, 0x04 | `SpawnStartMarker`, `SpawnUnderwaterStartMarker`, `SpawnHoverStartMarker` | the player's start; every room places exactly one: 0x02 in the kind-1 (underwater) rooms, 0x04 in the kind-2 (hover vehicle) room 16, 0x00 in the others. 0x02 and 0x04 forward to `SpawnStartMarker` |
-| 0x01, 0x03 | `sub_80221D4`, `sub_80221A4` | set the player's position to the entity's; no level places them |
+| 0x01, 0x03, 0x05 | `SpawnPlayerPosition`, `SpawnUnderwaterPlayerPosition`, `SpawnHoverPlayerPosition` | set the player's position to the entity's (0x05 is empty); they pair with the start markers by slot (normal, underwater, hover). No level places them |
 | 0x06 | `SpawnWumpa` | a wumpa fruit (bank 35) |
 | 0x07 | `SpawnCrystal` | the level's crystal (bank 37) |
 | 0x08 | `SpawnGemPathGem` | the gem-path clear gem (bank 32, kind 0x1E, level flag bit 2); placed only in the gem-path rooms |

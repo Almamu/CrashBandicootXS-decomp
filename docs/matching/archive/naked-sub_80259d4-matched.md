@@ -1,6 +1,6 @@
-# `sub_80259D4` converted from NAKED transcription to real matched C
+# `SetEntityIdActivated` converted from NAKED transcription to real matched C
 
-`sub_80259D4` (`src/level/entity_flags.c`, sets a bit in both the
+`SetEntityIdActivated` (`src/level/entity_flags.c`, sets a bit in both the
 `self+0x208` and `self+0x308` bit-grids at once) had been parked as a
 byte-correct NAKED asm transcription - see
 [issue-41-game-loop-25894.md](./issue-41-game-loop-25894.md) for the
@@ -52,7 +52,7 @@ doesn't reproduce this - once adjusted, the original value is gone.
 ## The fix
 
 ```c
-void sub_80259D4(void *self, s32 n)
+void SetEntityIdActivated(void *self, s32 n)
 {
     register u8 *base asm("ip");
     register s32 t asm("r2");
@@ -112,10 +112,10 @@ without these pins, this compiler picks its own registers for both
 
 Full clean `rm -rf build && make NON_MATCHING=1 report`, `objdiff-cli
 diff` against `build/expected/units/game_loop13_target.o` for
-`sub_80259D4`: 100% match. `objdiff-cli report generate` succeeds (no
+`SetEntityIdActivated`: 100% match. `objdiff-cli report generate` succeeds (no
 symbol-pairing errors). Full clean `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` -
-`crashbandicootxs.gba: La suma coincide`. `sub_80259D4` is folded into
+`crashbandicootxs.gba: La suma coincide`. `SetEntityIdActivated` is folded into
 the same `src/level/entity_flags.o` unit as the already-matched
-`sub_8025A0C`/`sub_8025A3C`/`DestroyEntityFlags`/`InitEntityFlags` in
+`MarkEntityIdActivated`/`SetEntityFlagsPos`/`DestroyEntityFlags`/`InitEntityFlags` in
 `tools/report_units.py`, since it's the same object file.

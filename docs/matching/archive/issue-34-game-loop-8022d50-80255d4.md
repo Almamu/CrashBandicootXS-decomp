@@ -22,7 +22,7 @@ actor additionally feeds its own `+0x20`-table/`+0x2d`-tag hitbox record
 (the same convention `DrawCrate`, crate_draw.c, and `IsCrateInsideRect`,
 crate.c, already document) into `LoadPaletteSlot` (the tile-asset-cache
 slot loader) - `self+0x29`'s low nibble is the cache slot, and the
-record's own `+0x14` byte is the asset id. Finally `gUnknown_030012EC`
+record's own `+0x14` byte is the asset id. Finally `gTouchableList`
 (a `dual_array_manager`, per `part_list.c`'s canonical definition) is
 walked: each entry fires its own `+0x18`-table's `+0x48`/`0x4c`
 `_call_via_r1` trampoline, and a result of `2` fires the `+0x28`/`0x2c`
@@ -61,7 +61,7 @@ gets tracked correctly, but only in isolation - once every other quirk
 above is also anchored (needed to get the rest of the loop byte-exact),
 register pressure shifts enough that the natural allocator stops landing
 `sentinel` on r7 at all (it moves to r8, or gets displaced entirely by a
-newly-hoisted `&gUnknown_030012EC` cache landing on r7 instead - a
+newly-hoisted `&gTouchableList` cache landing on r7 instead - a
 correctness bug, not just a mismatch, since the sentinel compare would
 then silently compare against the wrong value). No source phrasing
 tried here reproduces the ROM's simultaneous "sentinel pinned to r7,
@@ -78,8 +78,8 @@ trace was finished this time (every field, offset, branch and call
 argument pinned down against the ROM), so this is now understood with
 byte-exact-reconstruction confidence rather than left raw. `self` here
 is `*gEntityFlags` (the same collision-bitmap base
-`sub_8025944`/`sub_8025968`/`sub_802599C`, entity_flags.c, and
-`sub_8025A0C`, entity_flags.c, already operate on).
+`SetEntityIdGone`/`IsEntityIdGone`/`IsEntityIdActivated`, entity_flags.c, and
+`MarkEntityIdActivated`, entity_flags.c, already operate on).
 
 **First half** (DMA/`CpuSet` refresh + group/item walk): if `list` (a
 new "list" pointer) differs from `self`'s own cached copy at `+0`,
@@ -95,7 +95,7 @@ groups:ptr@4}` header (the same shape `CountCrateEntities`'s own matched
 reconstruction, entity_flags.c, documents for a sibling
 list) over `{count:u16@2, items:ptr@4}` 8-byte group records, each
 holding `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
-each item not already flagged in the `self+8` bit-grid (`sub_8025968`),
+each item not already flagged in the `self+8` bit-grid (`IsEntityIdGone`),
 `SpawnEntity` (the table-indexed interworking-trampoline dispatcher,
 entity_spawner.c) fires with a running, never-reset-per-group counter as
 its own `self` argument, indexing `gEntitySpawner`'s table.

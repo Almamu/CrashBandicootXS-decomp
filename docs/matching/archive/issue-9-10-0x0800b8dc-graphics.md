@@ -279,7 +279,7 @@ Both functions closed as **hand-transcribed NAKED asm**, not real C -
 an explicit, deliberate choice given this project's extensive, repeated
 precedent that this exact "`self`/`owner`-style multi-field object with
 many `bl` calls interspersed across branches" shape defeats gcc 2.9's
-register allocator: `GetCollisionChunk`, `GetSolidTerrainHeights`/`sub_8025228`/
+register allocator: `GetCollisionChunk`, `GetSolidTerrainHeights`/`GetSolidTerrainModeValue`/
 `GetTerrainType` (`bg_layer_base.c`), `BreakCrateTouchedByPlayer` (`crate_hit.c`),
 `PlayerAnimWouldTouchCrate` (`crate_touch.c`), `sub_800CEAC`/`sub_800CF70`
 (`crate_hit.c`) are all NAKED in this same ROM neighborhood for the
@@ -1123,7 +1123,7 @@ parallel session closed all three of these remaining raw ranges
 (`UpdateEnemyShooter`, and `UpdateEffectCtrl` onward) around the same time as this
 Phase 4 pass, closing out the entire 43-function cluster.
 
-## Final pass: `UpdateEffectCtrl`/`EffectCtrlHandleEvent`/`nullsub_3`/`DestroyEffectCtrl`/`InitEffectCtrl` closed - the whole 43-function cluster is done
+## Final pass: `UpdateEffectCtrl`/`EffectCtrlHandleEvent`/`ResetEffectCtrl`/`DestroyEffectCtrl`/`InitEffectCtrl` closed - the whole 43-function cluster is done
 
 Follow-up session, closing the last raw file in the cluster,
 `asm/code_3_2_17_cbf4.s` (ROM `0x0800CBF4`-`0x0800CD00`, 268 bytes,
@@ -1152,7 +1152,7 @@ this doc.
   `+0x38` too, past `struct actor`'s own 0x1c-byte size, so kept as raw
   offsets rather than that struct - same reasoning `tiny_hop_pad.c`
   already documents for its own `other`/`part`.
-- **`EffectCtrlHandleEvent`/`nullsub_3`** (4 B each) - genuine empty stubs
+- **`EffectCtrlHandleEvent`/`ResetEffectCtrl`** (4 B each) - genuine empty stubs
   (`bx lr`), no different from any other `nullsub_N` in this project.
 - **`DestroyEffectCtrl(void *self, s32 flags)`** (20 B) - sets `self+0xc`'s
   table pointer to `gEffectCtrlVtable`, then tail-calls
@@ -1160,9 +1160,9 @@ this doc.
   shape as `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`.
 - **`InitEffectCtrl(void *self)`** (32 B) - resets via `InitCtrl`,
   re-points `self+0xc` at the same `gEffectCtrlVtable` table, calls
-  `nullsub_3(self)`, returns `self` - the exact same "reset, re-point,
+  `ResetEffectCtrl(self)`, returns `self` - the exact same "reset, re-point,
   return self" constructor shape as `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
-  `CreateKnockedEnemyCtrl`, with `nullsub_3` playing the same tail-call-hook role
+  `CreateKnockedEnemyCtrl`, with `ResetEffectCtrl` playing the same tail-call-hook role
   `nullsub_14` plays for `CreateKnockedEnemyCtrl`.
 
 ### `InitEffectCtrl` confirmed to stay in this cluster, not the physics subsystem
@@ -1172,7 +1172,7 @@ given how close it sits to `BreakCrateTouchedByPlayer`'s already-documented
 physics/collision boundary
 ([docs/matching/archive/issue-12-physics-collision.md](./issue-12-physics-collision.md)).
 Reading its body settles this: it is a plain entity-object constructor
-(reset + table re-point + `nullsub_3` hook + return `self`), structurally
+(reset + table re-point + `ResetEffectCtrl` hook + return `self`), structurally
 identical to three other constructors already confirmed part of this
 same 93-vtable entity-object family (`CreateStompedHopPadCtrl`, `DestroyStompedHopPadCtrl`,
 `CreateKnockedEnemyCtrl`) and with none of the physics subsystem's own
@@ -1195,7 +1195,7 @@ CSE and shift-instruction folding otherwise); `UpdateEffectCtrl` inlines the
 same idiom three times over with no shared-helper `bl` in the ROM to
 call instead, compounding that already-documented resistant shape
 rather than presenting a new one worth re-litigating. `EffectCtrlHandleEvent`,
-`nullsub_3`, `DestroyEffectCtrl`, and `InitEffectCtrl` all matched as **real C**
+`ResetEffectCtrl`, `DestroyEffectCtrl`, and `InitEffectCtrl` all matched as **real C**
 on the first attempt, following the established empty-stub and
 constructor templates named above exactly.
 
@@ -1203,7 +1203,7 @@ Confirmed byte-identical to `baserom.gba` at `0x0800CBF4`-`0x0800CD00`
 (268 bytes, all five) via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline (the only differences from a direct ROM slice
 were the `bl _call_via_r1`/`bl DestroyCtrl`/`bl InitCtrl`/
-`bl nullsub_3` relocation sites and the `gEntityFlags`/
+`bl ResetEffectCtrl` relocation sites and the `gEntityFlags`/
 `gEffectCtrlVtable` literal-pool addresses - both expected, resolving
 correctly once linked), plus a full clean `rm -rf build && make
 NON_MATCHING=1 report` (no warnings) and `rm -rf build

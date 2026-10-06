@@ -15,7 +15,7 @@ from "core" graphics.
 - **Issue #9-#11 box/collision NAKED retry** ([docs/matching/archive/issue-9-11-box-naked-retry.md](../matching/archive/issue-9-11-box-naked-retry.md)):
   `CheckSpritePickup` (`sprite.c`), `UpdatePartList` (`sprite_anim.c`),
   `InitCrateList` (`part_list.c`), `ResetCrateList` (`crate_list_reset.c`),
-  `sub_8009BE0` (`step_probe.c`) and `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
+  `ProbeHitboxEdgeTerrain` (`step_probe.c`) and `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
   (`ground_sprite_collide.c`) are real C now; they were NAKED. `sprite.o`
   and `ground_sprite_collide.o` moved to old_agbcc (whole-file matches).
 
@@ -87,7 +87,7 @@ from "core" graphics.
   address isn't adjacent to `graphics.c`'s matched functions, since
   `DrawAffineSpritePieces` sits unclaimed between them; see
   `docs/matching.md`): `DrawSpriteAt`, `DrawSprite`, `DestroySpriteRenderer`,
-  `nullsub_2`, `ResetSpriteObj`
+  `InitSpriteRenderer`, `ResetSpriteObj`
 - `src/objects/sprite.c` (new file - `GetSpriteAttackBox`'s real ROM
   address isn't adjacent to `sprite.c`'s matched functions either,
   since the parked `GetSpriteBounds`/`GetSpriteHitbox` sit raw between them;
@@ -100,9 +100,9 @@ from "core" graphics.
   `IsSpriteObjOnScreen`, `SpriteObjOverlapsRect`
 - `src/objects/sprite_obj.c` (new file, now directly adjacent to
   `sprite.c`'s matched functions): `SpriteHitboxOverlaps`, `GetSpriteAnimPaletteSlot`,
-  `sub_8008188`, `sub_8008200`, `sub_8008278` (the latter three
+  `OffsetFromHitboxEdge`, `OffsetToHitboxEdge`, `OffsetToHitboxEdgeStart` (the latter three
   originally a NAKED transcription, matched to real C in a later
-  session - see `docs/matching.md`'s "Parked, not matched: sub_8008188"
+  session - see `docs/matching.md`'s "Parked, not matched: OffsetFromHitboxEdge"
   entry and its "Update" note)
 - `src/objects/sprite_obj.c` (new file, now directly adjacent to
   `sprite_obj.c`'s matched functions): `IsSpriteObjInsideRect`,
@@ -183,16 +183,16 @@ from "core" graphics.
   `AddCrateToList`, `DestroyCrateList`
 
 - `src/objects/step_probe.c` (new file, NAKED-transcription-only -
-  `sub_8009BE0`, see "Parked - NAKED transcription" below)
+  `ProbeHitboxEdgeTerrain`, see "Parked - NAKED transcription" below)
 
 - `src/objects/player_contact.c` (new file - `CheckPlayerContact`'s real ROM
   address isn't adjacent to `crate_list.c`'s matched functions
-  either, since NAKED `sub_8009BE0` (`step_probe.c`) sits between
+  either, since NAKED `ProbeHitboxEdgeTerrain` (`step_probe.c`) sits between
   them; see `docs/matching.md`): `CheckPlayerContact`
 
 - `src/objects/moving_sprite.c` (new file - `ApplySpriteVelocity`'s real ROM
   address isn't adjacent to `code_3_2_15.o`'s raw content either, since
-  NAKED `sub_8009BE0` (before that) was already handled separately; see
+  NAKED `ProbeHitboxEdgeTerrain` (before that) was already handled separately; see
   `docs/matching.md`):
   `ApplySpriteVelocity`, `SetSpritePrevPos`, `GetSpritePrevPos`, `GetSpritePrevY`,
   `GetSpritePrevX`, `GetMovingSpriteClassId`, `CreateMovingSprite`, `DestroyMovingSprite`,
@@ -210,8 +210,8 @@ from "core" graphics.
   [docs/matching/archive/issue-9-0x0800a178-graphics.md](../matching/archive/issue-9-0x0800a178-graphics.md)):
   `CollideGroundSprite` - the part-object physics dispatcher, the sole caller
   of `ProbeGroundSpriteTerrain` (both now share this file). Was left raw the first
-  pass since its own gate logic calls `sub_8009BE0`, then still-
-  unresolved; `sub_8009BE0` is now fully understood (see "Parked -
+  pass since its own gate logic calls `ProbeHitboxEdgeTerrain`, then still-
+  unresolved; `ProbeHitboxEdgeTerrain` is now fully understood (see "Parked -
   NAKED transcription" below), which was enough to close this one as
   real, byte-exact matched C. Returns `self+0x68` (a persistent,
   cumulative per-object collision-axis mask, distinct from
@@ -221,7 +221,7 @@ from "core" graphics.
   trampoline, then - if `self+0x68` bit 3 (the Y-axis bit) is now set -
   clears `self+0xc` bits 0/5 and, unless `self+0xd` bit 1 is already
   set, cross-checks the Y-axis hit via a second, independent
-  `sub_8009BE0(self, 8, quad)` step-probe, rolling `self+0xc` bit 5 in
+  `ProbeHitboxEdgeTerrain(self, 8, quad)` step-probe, rolling `self+0xc` bit 5 in
   and `self+0x68` bit 3 back out if that probe doesn't also confirm it.
   Needed direct register pinning at several points to reproduce the
   ROM's exact register choices (a `flags`/`bit7` pair for the leading
@@ -234,9 +234,9 @@ from "core" graphics.
 
 - `src/objects/ground_sprite.c` (new file - `DrawGroundSprite`'s real ROM
   address isn't adjacent to `moving_sprite_collide.c`'s matched functions
-  either, since a raw/parked span (`ProbeGroundSpriteTerrain`-`sub_800A590`,
+  either, since a raw/parked span (`ProbeGroundSpriteTerrain`-`AnchorGroundSpriteHitbox`,
   `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` NAKED-parked but `UpdateGroundSprite`/
-  `sub_800A590` matched in `ground_sprite_update.c`) sits between them; see
+  `AnchorGroundSpriteHitbox` matched in `ground_sprite_update.c`) sits between them; see
   `docs/matching.md`): `DrawGroundSprite`, `GetGroundSpriteClassId`,
   `CreateGroundSprite`, `DestroyGroundSprite`, `ResetGroundSprite`, `InitGroundSprite`,
   `IsGroundSpriteGrounded`, `ClearGroundSpriteGrounded`, `SetGroundSpriteGrounded`, `IsGroundSpriteFloorProbeEnabled`,
@@ -244,8 +244,9 @@ from "core" graphics.
   `GetSpriteObjFlag5`, `GetMovingSpriteCtrl`
 
 - `src/objects/ground_sprite_update.c` (new file, GitHub issue #9): `UpdateGroundSprite`/
-  `sub_800A590` - a moving-platform "ride along" hookup, nudging `self->y`
-  by the delta between a cached and current position-record lookup.
+  `AnchorGroundSpriteHitbox` - keep the hitbox edge a ground sprite rests on in place
+  when its hitbox record changes, nudging `self->y` by the delta between
+  the cached and the current record.
   Matches the ROM's register roles for `self`/the record pointer
   directly (`r4`/`r3`); the remaining gap (a genuine fifth scratch
   register, `r5`, just to hold an offset immediate for the record's
@@ -1183,8 +1184,8 @@ plain C didn't converge.
   parked on a cross-branch register-role gap (`r8` reused for two
   different base addresses). See
   `docs/matching/archive/naked-spatial-grid-tail.md`.
-- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8009BE0`** (`src/objects/step_probe.c`) - a physics/
-  collision step-probe: runs `self`'s position through `sub_8008278`,
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`ProbeHitboxEdgeTerrain`** (`src/objects/step_probe.c`) - a physics/
+  collision step-probe: runs `self`'s position through `OffsetToHitboxEdgeStart`,
   then probes it via `ProbeTerrain` up to 4 times (nudging Y each
   retry) before giving up. Fully understood; parked on a register-
   reload quirk in the retry loop. See
@@ -1205,19 +1206,19 @@ plain C didn't converge.
 - **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`** (`src/objects/ground_sprite_collide.c`,
   GitHub issue #9/#10) - the part-object movement-resolution pair
   `docs/matching/archive/issue-9-0x08007634-actor.md` flagged as built on
-  `sub_8008200`/`ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` (the first
+  `OffsetToHitboxEdge`/`ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` (the first
   two now matched, see `sprite_obj.c`/`terrain_probe.c`). `ProbeGroundSpriteFloor`
-  is a single Y-axis "floor" probe via `sub_8026BF8`; `ProbeGroundSpriteTerrain` is
+  is a single Y-axis "floor" probe via `ProbeFloorHeight`; `ProbeGroundSpriteTerrain` is
   the larger orchestrator - two gate checks, an unconditional
   `self+0x74` zero (confirming and completing `docs/rom_map.md`'s own
   partial note: `self+0x74` accumulates which movement axes/directions
   collided this call), a fast quad-based floor/wall probe via
-  `ProbeGroundSpriteFloor`/`sub_8026C3C`, then a per-axis fallback through the
+  `ProbeGroundSpriteFloor`/`ProbeSolidFloorHeight`, then a per-axis fallback through the
   already-matched `ProbeTerrain` tile-scan API. Both keep `sb`/`sl`/`r8`
   (and, for `ProbeGroundSpriteTerrain`, `r7` too) live simultaneously across many
   `bl` calls, reused for different values block to block - the same
   `r7`/`r8`/`sb` cross-block register-reuse shape this exact ROM
-  neighborhood already established as gcc-2.9-resistant (`sub_8009BE0`,
+  neighborhood already established as gcc-2.9-resistant (`ProbeHitboxEdgeTerrain`,
   `PlayerAnimWouldTouchCrate` above, `sub_800CEAC`/`sub_800CF70` below); confirmed
   directly via one isolated-compile attempt against `ProbeGroundSpriteFloor`
   (this compiler's natural register allocation used no high registers
@@ -1569,11 +1570,11 @@ embedded as asm instead. They're tracked as parked, not matched.
   real decompiled C does, so all seven stay filed here rather than in
   "Matched" above, and `tools/report_units.py` tracks their address
   ranges as unmatched (`base_object: None`). `IsSpriteAnimLooping`
-  (`src/objects/sprite_obj.c`) and `sub_8008188`/`sub_8008200`/
-  `sub_8008278`/`GetSpriteFrame` (`src/objects/sprite_obj.c`), which shared this list in earlier versions of this
+  (`src/objects/sprite_obj.c`) and `OffsetFromHitboxEdge`/`OffsetToHitboxEdge`/
+  `OffsetToHitboxEdgeStart`/`GetSpriteFrame` (`src/objects/sprite_obj.c`), which shared this list in earlier versions of this
   page, were converted back to real C and matched in later sessions -
   see "Matched" above and `docs/matching.md`'s "Parked, not matched:
-  IsSpriteAnimLooping"/"Parked, not matched: sub_8008188" entries (and the
+  IsSpriteAnimLooping"/"Parked, not matched: OffsetFromHitboxEdge" entries (and the
   latter's siblings) for those accounts.
 - **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/archive/issue-9-11-box-naked-retry.md); entry kept for history.** **`InitCrateList`** (`src/objects/part_list.c`) - initializes a
   fixed-slot object-pool manager struct: two big 256-word zeroed

@@ -61,7 +61,8 @@ struct anim_table {
 
 struct gobj_vtable {
     u8 unk_00[0x10];
-    // 0x10 - returns the platform record the object stands on (UpdateGroundSprite)
+    // 0x10 - slot 2, returns the current frame's hitbox record
+    // (GetSpriteObjHitbox; UpdateGroundSprite, ProbeGroundSpriteTerrain)
     struct actor_method m10;
     u8 unk_18[0x20];
     struct actor_method m38; // 0x38
@@ -81,7 +82,7 @@ struct gobj {
     u8 flags2; // 0x0D
     u8 unk_0E[0xA];
     struct gobj_vtable *vtable; // 0x18
-    void *platform;             // 0x1C - the last m10 record (UpdateGroundSprite/sub_800A590)
+    void *lastHitbox;           // 0x1C - the last m10 record (AnchorGroundSpriteHitbox)
     struct anim_table *anim;    // 0x20
     u8 dir;                     // 0x24
     // 0x25 - 1: x/y are screen coordinates (DrawSpriteAt skips WorldToScreen;
@@ -172,7 +173,7 @@ static inline struct gobj *GobjInit(struct gobj *self)
 {
     InitMovingSprite((struct actor *)self);
     self->vtable = (struct gobj_vtable *)gPlatformVtable;
-    sub_801B2D8(self);
+    ClearPlatformVulnerable(self);
     return self;
 }
 

@@ -259,7 +259,7 @@ void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8
 /* The mode byte (0-3) of the cell's terrain type at pixel (x, y): -1
  * when out of bounds or the type is 0x23 or below, 0 when the mode's
  * "not solid" bit is set in the cell's top nibble. */
-s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
+s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
 {
     s8 result = 0;
     s32 hi = 0;

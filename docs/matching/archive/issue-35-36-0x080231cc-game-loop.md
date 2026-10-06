@@ -59,7 +59,7 @@ Building on `level_state.c`'s existing `self+2` flags byte and
   (`level_query.c`) when `SetMaskLevel` forwards `self+0xc4`'s address
   into it.
 - **`self+0xc8`/`self+0x1c8`**: two more plain word fields
-  (`sub_8023324` getter, `SetLevelBoss` setter) - `self+0x1c8` sits right
+  (`GetRoomIndex` getter, `SetLevelBoss` setter) - `self+0x1c8` sits right
   after the `self+0x1c0`/`0x1c4` pair `CheckAllCratesBroken` reads.
 
 ## The two `self+0xc4` dispatchers

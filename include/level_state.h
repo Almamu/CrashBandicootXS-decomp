@@ -64,9 +64,9 @@ struct level_state {
     s32 crateTotal; // 0x0BC - the level's crate count (CountLevelCrates), crateCount's target
     s32 unk_c0;     // 0x0C0 - bit mask (sub_802314C/sub_8023158)
     s32 level;      // 0x0C4 - also the head of the room block (struct level_progress, below)
-    // 0x0C8 - level_progress.itemIndex, the current
-    // room's index in the level's room list (SelectRoom)
-    s32 unk_c8;
+    // 0x0C8 - the current room's index in the level's room list (SelectRoom,
+    // NextRoom, GetRoomIndex)
+    s32 roomIndex;
     // 0x0CC - checkpoint copy of crateCount (SetCheckpoint/RestoreCheckpoint)
     s32 checkpointCrateCount;
     u8 checkpointSwitchPressed; // 0x0D0 - checkpoint copy of switchPressed
@@ -75,9 +75,9 @@ struct level_state {
     s32 checkpointY; // 0x0D8
     // 0x0DC - the current room (SelectRoom); kind 3 is a stage played in an actor category
     const struct level_room *cat;
-    // 0x0E0 - checkpoint flag (SetCheckpoint); bit 0: PlayRoom
-    // starts the player X-mirrored (level_progress.flags)
-    u8 unk_e0;
+    // 0x0E0 - checkpoint flags (SetCheckpoint, SetCheckpointAtPlayer); bit 0:
+    // PlayRoom starts the player X-mirrored (level_progress.flags)
+    u8 checkpointFlags;
     u8 unk_e1[3];
     // 0x0E4 - the first 0x68 bytes at the last checkpoint (SetCheckpoint/RestoreCheckpoint)
     u8 checkpointData[0x68];
@@ -107,7 +107,7 @@ COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_state) == 0x1CC);
  */
 struct level_progress {
     s32 level;                  // 0x00 (0x0C4) - index into gLevelTable
-    s32 itemIndex;              // 0x04 (0x0C8) - the current room's index in the room list
+    s32 roomIndex;              // 0x04 (0x0C8) - the current room's index in the room list
     s32 checkpointCrateCount;   // 0x08 (0x0CC)
     u8 checkpointSwitchPressed; // 0x0C (0x0D0)
     u8 unk_0d[3];

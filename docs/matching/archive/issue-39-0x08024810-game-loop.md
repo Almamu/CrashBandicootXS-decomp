@@ -177,7 +177,7 @@ trailing-pad cases.
 `StreamBgColumn`, `FillBgStreamer` - all hit the same gcc-2.9
 register-allocation-permutation/redundant-shadow-register class of gap
 already exhaustively documented for the neighboring terrain-tile-cache
-cluster (`GetCollisionChunk`/`GetTerrainHeights`/`GetSolidTerrainHeights`/`sub_8025228`/
+cluster (`GetCollisionChunk`/`GetTerrainHeights`/`GetSolidTerrainHeights`/`GetSolidTerrainModeValue`/
 `DecodeCollisionChunk`, `bg_layer_base.c`, GitHub issue #40): each packs several
 persistent values (a running linear tile/byte index, a loop counter, a
 budget counter, fixed mask constants) into a specific fixed register

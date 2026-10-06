@@ -30,7 +30,7 @@
  * input before `y` is loaded - reproduces it. */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState) && !sub_8023324(gLevelState) &&
+    if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState) && !GetRoomIndex(gLevelState) &&
         gLevelTable[GetCurrentLevel(gLevelState)].theme == 0) {
         struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
@@ -110,7 +110,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* "Two-line text popup" variant with the OAM-trio setup: animation 1 at
  * +0x27c, header from CreateCortexBoss (after a 0x24-byte OperatorNew
  * reservation), collected bits and flag bit 4, then registration with
- * gUnknown_030012F4's manager and the level controller. */
+ * gForegroundList's manager and the level controller. */
 void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
@@ -130,7 +130,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->flipY = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
-    AddToPartList(gUnknown_030012F4, part);
+    AddToPartList(gForegroundList, part);
     part->animating = 0;
     SetLevelBoss(gLevelState, (struct level_state_1c8 *)hdr);
 }

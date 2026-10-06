@@ -48,7 +48,7 @@ The shared layout of these objects is in the new `include/box_part.h`:
 | `ResetCrateList` (crate_list_reset.c) | not retried separately: its tail is `InitCrateList`'s and has the same gap. |
 | `ProbeGroundSpriteFloor` (ground_sprite_collide.c) | old_agbcc draft, 15 hw off. All of it is register choice in the first probe's hit path (masked y in r3 and the flags copy made after the bit test in the ROM). |
 | `ProbeGroundSpriteTerrain` (ground_sprite_collide.c) | not retried (0x2a8 bytes, calls `ProbeGroundSpriteFloor`). |
-| `sub_8009BE0` (step_probe.c) | old_agbcc attempt 61 hw off and 8 bytes short. The ROM recomputes `&origY` in the loop and keeps two copies of the tries pointer and `&pos`. Inline helpers and pointer locals didn't reproduce this. No draft kept. |
+| `ProbeHitboxEdgeTerrain` (step_probe.c) | old_agbcc attempt 61 hw off and 8 bytes short. The ROM recomputes `&origY` in the loop and keeps two copies of the tries pointer and `&pos`. Inline helpers and pointer locals didn't reproduce this. No draft kept. |
 | `UpdateCrateList` (crate_list_update.c) | tried inline versions of `LinkCrateToActiveBucket`'s link and `RemoveCrateFromList`'s remove. The shape is close, but the frame and spill slots differ (~200 hw). No draft kept. |
 | `UnlinkCrateFromGrid` (crate_grid_unlink.c) | not retried (two-phase unlink with an odd `0x100` reload). |
 | `DrawPlayer` (player_event.c) | first C attempt, ~170 hw: `self` in r6 instead of r7, and the orbit tail's address caching differs. No draft kept. |
@@ -57,7 +57,7 @@ The shared layout of these objects is in the new `include/box_part.h`:
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`CheckSpritePickup`, `UpdatePartList`, `InitCrateList`, `ResetCrateList`, `sub_8009BE0`, `ProbeGroundSpriteTerrain` and `ProbeGroundSpriteFloor` are real C now. `UnlinkCrateFromGrid`, `UpdateCrateList` and `DrawPlayer` are still NAKED (`DrawPlayer` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`CheckSpritePickup`, `UpdatePartList`, `InitCrateList`, `ResetCrateList`, `ProbeHitboxEdgeTerrain`, `ProbeGroundSpriteTerrain` and `ProbeGroundSpriteFloor` are real C now. `UnlinkCrateFromGrid`, `UpdateCrateList` and `DrawPlayer` are still NAKED (`DrawPlayer` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
 
 ## Later pass (fresh NAKED retry)
 
