@@ -14,94 +14,93 @@
 #include "player.h"
 
 /* Same keyframe-record lookup as `GetSpriteAnimPaletteId`/`IsSpriteAnimLooping` above,
- * returning the record's `+0x16` byte (frame count, also read by
+ * returning the record's `steps` (frame count, also read by
  * `GetSpriteFrame`). */
 u8 GetSpriteAnimFrameCount(struct actor *part)
 {
-    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
-    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
-    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(struct keyframe **, tablePtr, r1) = ((struct box_part *)part)->keyframes;
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = &((struct box_part *)part)->frame;
+    MATCH_HOLD_REG(struct keyframe *, table, r2) = *tablePtr;
     MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
-    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
-    void *rec;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * KEYFRAME_SIZE;
+    struct keyframe *rec;
 
     asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
-    rec = (void *)offset;
-    return *((u8 *)rec + 0x16);
+    rec = (struct keyframe *)offset;
+    return rec->steps;
 }
 
 /* Same shape as `GetSpriteAnimFrameCount` immediately above, returning the
- * record's `+0x15` byte (duration, also read by `GetSpriteFrame`)
- * instead. */
+ * record's `duration` (also read by `GetSpriteFrame`) instead. */
 u8 GetSpriteAnimDuration(struct actor *part)
 {
-    MATCH_HOLD_REG(void **, tablePtr, r1) = *(void ***)((u8 *)part + 0x20);
-    MATCH_HOLD_REG(u8 *, idxAddr, r0) = (u8 *)part + 0x2d;
-    MATCH_HOLD_REG(void *, table, r2) = *tablePtr;
+    MATCH_HOLD_REG(struct keyframe **, tablePtr, r1) = ((struct box_part *)part)->keyframes;
+    MATCH_HOLD_REG(u8 *, idxAddr, r0) = &((struct box_part *)part)->frame;
+    MATCH_HOLD_REG(struct keyframe *, table, r2) = *tablePtr;
     MATCH_HOLD_REG(u8, idx, r3) = *idxAddr;
-    MATCH_HOLD_REG(s32, offset, r1) = idx * 0x1c;
-    void *rec;
+    MATCH_HOLD_REG(s32, offset, r1) = idx * KEYFRAME_SIZE;
+    struct keyframe *rec;
 
     asm("add %0, %0, %1" : "+r"(offset) : "r"(table));
-    rec = (void *)offset;
-    return *((u8 *)rec + 0x15);
+    rec = (struct keyframe *)offset;
+    return rec->duration;
 }
 
-/* Resets `part`'s frame index (`+0x30`) to 0. */
+/* Resets `part`'s step counter (`tick`) to 0. */
 void ResetSpriteFrameIndex(void *part)
 {
-    *(s32 *)((u8 *)part + 0x30) = 0;
+    ((struct box_part *)part)->tick = 0;
 }
 
-/* `part+0x34` (sub-counter) get/set pair. */
+/* `timer` (ticks on the current step) set/reset pair. */
 void SetSpriteFrameTimer(void *part, s32 val)
 {
-    *(s32 *)((u8 *)part + 0x34) = val;
+    ((struct box_part *)part)->timer = val;
 }
 
 void ResetSpriteFrameTimer(void *part)
 {
-    *(s32 *)((u8 *)part + 0x34) = 0;
+    ((struct box_part *)part)->timer = 0;
 }
 
-/* `part+0x2d` (frame index within the keyframe table) setter. */
+/* `frame` (the animation index into the keyframe table) setter. */
 void SetSpriteAnimIndex(void *part, u8 val)
 {
-    *((u8 *)part + 0x2d) = val;
+    ((struct box_part *)part)->frame = val;
 }
 
-/* Sets `part`'s frame index (`+0x2d`), then resets the sub-counter,
- * frame counter, and "done" flag (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+/* Sets `part`'s animation index (`frame`), then resets the step timer,
+ * step counter, and "done" flag (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
  * `SetSpriteAnimDone`). */
 void SetSpriteAnim(void *part, u8 idx)
 {
-    *((u8 *)part + 0x2d) = idx;
+    ((struct box_part *)part)->frame = idx;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
 }
 
-/* Increments `part`'s frame index (`+0x30`). */
+/* Increments `part`'s step counter (`tick`). */
 void IncSpriteFrameIndex(void *part)
 {
-    *(s32 *)((u8 *)part + 0x30) += 1;
+    ((struct box_part *)part)->tick += 1;
 }
 
-/* Increments `part`'s sub-counter (`+0x34`). */
+/* Increments `part`'s step timer (`timer`). */
 void IncSpriteFrameTimer(void *part)
 {
-    *(s32 *)((u8 *)part + 0x34) += 1;
+    ((struct box_part *)part)->timer += 1;
 }
 
-/* `part+0x24` byte get/set pair. */
+/* `moveAxes` get/set pair. */
 void SetSpriteMoveAxes(void *part, u8 val)
 {
-    *((u8 *)part + 0x24) = val;
+    ((struct box_part *)part)->moveAxes = val;
 }
 
 u8 GetSpriteMoveAxes(void *part)
 {
-    return *((u8 *)part + 0x24);
+    return ((struct box_part *)part)->moveAxes;
 }
 
 /* `tick` (per-keyframe step counter) getter. */
@@ -116,21 +115,22 @@ s32 GetSpriteFrameTimer(struct box_part *part)
     return part->timer;
 }
 
-/* `part+0x2d` (frame index within the keyframe table) getter. */
+/* `frame` (the animation index into the keyframe table) getter. */
 u8 GetSpriteAnim(void *part)
 {
-    return *((u8 *)part + 0x2d);
+    return ((struct box_part *)part)->frame;
 }
 
-/* `part+0x28` low-2-bit getter - same `(u32 << 30) >> 30` idiom used
- * by `GetSpriteObjPriority`'s 2-bit field extraction. */
+/* `gfxMode` (bits 0-1 of +0x28) getter - the `u32` bitfield gives the
+ * same `(u32 << 30) >> 30` idiom as `GetSpriteObjPriority`'s 2-bit field
+ * extraction. */
 s32 GetSpriteGfxMode(void *part)
 {
-    u32 byte = *((u8 *)part + 0x28);
-    return (byte << 0x1e) >> 0x1e;
+    return ((struct box_part *)part)->gfxMode;
 }
 
-/* Sets `part+0x28`'s low 2 bits to `value & 3`. Same accumulator-
+/* Sets `gfxMode` (the low 2 bits of the byte at +0x28) to `value & 3`,
+ * as a byte read-modify-write through the byte's address. Same accumulator-
  * register pattern (mask/byte/result chain) used throughout this ROM
  * region for AND/OR accessors, plus the same `+r`-on-the-other-
  * operand fix as `SetSpritePalette`/`SetSpriteFlipX` to stop the mask
@@ -156,49 +156,44 @@ void SetSpriteGfxMode(void *part, s32 value)
     *addr = result;
 }
 
-/* `part+0x28` bit-4 getter, via the `(u32 << N) >> 31` logical-shift
- * idiom (see `GetSpriteBounds`'s mirror flags) rather than a plain
- * `(byte >> 4) & 1`. */
+/* `mirrorX` getter. The `u32` bitfield gives the `(u32 << N) >> 31`
+ * logical-shift idiom (see `GetSpriteBounds`'s mirror flags) rather than
+ * a plain `(byte >> 4) & 1`. */
 s32 GetSpriteFlipX(void *part)
 {
-    u32 byte = *((u8 *)part + 0x28);
-    return (byte << 0x1b) >> 0x1f;
+    return ((struct box_part *)part)->mirrorX;
 }
 
-/* `part+0x28` bit-5 getter, same idiom as `GetSpriteFlipX` above. */
+/* `mirrorY` getter, same idiom as `GetSpriteFlipX` above. */
 s32 GetSpriteFlipY(void *part)
 {
-    u32 byte = *((u8 *)part + 0x28);
-    return (byte << 0x1a) >> 0x1f;
+    return ((struct box_part *)part)->mirrorY;
 }
 
-/* `part+0x38` ("done" flag, also written by `SetSpriteAnimDone`) getter. */
+/* `animDone` (also written by `SetSpriteAnimDone`) getter. */
 u8 GetSpriteAnimDone(void *part)
 {
-    return *((u8 *)part + 0x38);
+    return ((struct box_part *)part)->animDone;
 }
 
-/* `part+0x28` bit-2 getter, same idiom as `GetSpriteFlipX`/`GetSpriteFlipY`
- * above. */
+/* `mosaic` (bit 2 of +0x28) getter, same idiom as
+ * `GetSpriteFlipX`/`GetSpriteFlipY` above. */
 s32 GetSpriteMosaic(void *part)
 {
-    u32 byte = *((u8 *)part + 0x28);
-    return (byte << 0x1d) >> 0x1f;
+    return ((struct box_part *)part)->mosaic;
 }
 
-/* `part+0x29` low-nibble getter, same shape as `GetSpritePalette`. */
+/* `palette` (the low nibble of +0x29) getter, same shape as `GetSpritePalette`. */
 s32 GetSpriteOamPalette(void *part)
 {
-    u32 byte = *((u8 *)part + 0x29);
-    return (byte << 0x1c) >> 0x1c;
+    return ((struct box_part *)part)->palette;
 }
 
-/* `part+0x28` bit-3 getter, same idiom as the other single-bit getters
- * above. */
+/* `colorMode` (bit 3 of +0x28) getter, same idiom as the other
+ * single-bit getters above. */
 s32 GetSpriteColorMode(void *part)
 {
-    u32 byte = *((u8 *)part + 0x28);
-    return (byte << 0x1c) >> 0x1f;
+    return ((struct box_part *)part)->colorMode;
 }
 
 /* `affine` get/set pair. */
@@ -215,7 +210,7 @@ void SetSpriteAffine(struct box_part *part, u16 val)
 /* Resolves `part`'s Q8 position plus a caller-supplied offset into a
  * stack `{x, y}` pair, then dispatches to `DrawAffineSpritePieces` or
  * `DrawSpritePieces` (both already matched/parked elsewhere in this ROM
- * region) depending on whether `unk_3C` is set. */
+ * region) depending on whether `affine` is set. */
 void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2)
 {
     s32 pos[2];
@@ -230,7 +225,7 @@ void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2)
     }
 }
 
-/* Sets `part+0x28`'s top 2 bits to `value << 6`. Needed the parameter
+/* Sets `priority` (the top 2 bits of the byte at +0x28) to `value << 6`. Needed the parameter
  * typed `s32` (not `u8`) for the same reason as `SetSpritePalette` - a
  * `u8`-typed parameter's mandatory entry truncation combines with the
  * later `<< 6` into a single, ROM-mismatching shift pair. */
@@ -248,11 +243,11 @@ void SetSpritePriority(void *part, s32 value)
     *addr = result;
 }
 
-/* `part+0x28` top-2-bit getter - no mask needed since the shift
- * already isolates those bits. */
+/* `priority` (the top 2 bits of +0x28) getter - no mask needed since
+ * the shift already isolates those bits. */
 s32 GetSpritePriority(void *part)
 {
-    return *((u8 *)part + 0x28) >> 6;
+    return ((struct box_part *)part)->priority;
 }
 
 /* Overwrites `part->table` with `gUiSpriteObjVtable`, then tail-
