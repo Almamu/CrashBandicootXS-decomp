@@ -129,11 +129,11 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
 
 /* A 7-branch "cheat code" style detector: gated on
  * `gKeys.half.held`'s bit 0x100 (R shoulder) - if not held,
- * resets the rolling-hash slot at `self+0x210` to 0 and returns
+ * resets the rolling hash (`cheatHash`) to 0 and returns
  * `pressed` unmodified (so the caller can still act on ordinary button
  * presses). If held, folds one of 7 fixed "signature" constants
  * (selected by a bit of `pressed`: Left/Right/Up/Down/B/A/Start) into
- * `self+0x210` via the same rotate-then-multiply-by-521 hash
+ * `cheatHash` via the same rotate-then-multiply-by-521 hash
  * `HashTitleCheatInput` implements standalone, then always checks whether that
  * slot now equals the fixed target `0x3034AF3B` - if so, plays song
  * `0xc` and resets the slot, consuming the input (returns 0) either
@@ -141,16 +141,9 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
 /* Closed in the issue #64/#65 NAKED retry: copying the whole
  * held/pressed pair into a local struct first is what makes the ROM
  * build the 0x100 mask in r4 and copy it to r1. */
-/* The title-screen object's cheat-code hash word (see
- * title_screen_init.c for the rest of that raw `u32 *` object). */
-struct level_scratch {
-    u8 unk_000[0x210];
-    u32 cheatHash; // 0x210
-};
-
 static inline void HashInput(u32 *self, u32 val)
 {
-    u32 *slot = &((struct level_scratch *)self)->cheatHash;
+    u32 *slot = &TITLE_SCREEN(self)->cheatHash;
     MATCH_HOLD_REG(u32, v, r0) = *slot ^ val;
     MATCH_HOLD_REG(u32, hi, r1);
     MATCH_HOLD_REG(u32, lo, r0);
@@ -172,7 +165,7 @@ u32 TitleScreenCheatInput(u32 *self, u32 pressed)
     struct held_pressed_pair input = gKeys.half;
 
     if (!(input.held & 0x100)) {
-        ((struct level_scratch *)self)->cheatHash = 0;
+        TITLE_SCREEN(self)->cheatHash = 0;
         return pressed;
     }
     if (pressed & 0x20)
@@ -189,9 +182,9 @@ u32 TitleScreenCheatInput(u32 *self, u32 pressed)
         HashInput(self, 0x71839406);
     else if (pressed & 8)
         HashInput(self, 0x828A048B);
-    if (((struct level_scratch *)self)->cheatHash == 0x3034AF3B) {
+    if (TITLE_SCREEN(self)->cheatHash == 0x3034AF3B) {
         PlaySong(gAudioContext, 0xc);
-        ((struct level_scratch *)self)->cheatHash = 0;
+        TITLE_SCREEN(self)->cheatHash = 0;
     }
     return 0;
 }
@@ -221,7 +214,7 @@ u32 TitleScreenCheatInput(u32 *self, u32 pressed)
  *   reloaded each pass) with its own counter, so the seed loop's `i`
  *   does not cross calls.
  * `pressed` is loaded into its own variable first (the ROM's
- * `ldrh r5` / `add r1, r5, #0`). The `0x210` zero is a local, so it is
+ * `ldrh r5` / `add r1, r5, #0`). The `cheatHash` zero is a local, so it is
  * materialized before the `1`. */
 s32 RunTitleScreen(u32 *self)
 {
@@ -265,8 +258,8 @@ seedLoop:
     MATCH_USE(i);
     if (i <= 8)
         goto seedLoop;
-    *(s32 *)((u8 *)self + 0x20c) = zero;
-    ((u8 *)self)[8] = zero;
+    TITLE_SCREEN(self)->shake = zero;
+    TITLE_SCREEN(self)->menuShown = zero;
     while (self[5] != 0) {
         UpdateTitleLogoPieces(self);
         DrawTitleScreen(self);
@@ -277,8 +270,8 @@ seedLoop:
     }
     {
         u32 z = 0;
-        ((u8 *)self)[8] = 1;
-        *(u32 *)((u8 *)self + 0x210) = z;
+        TITLE_SCREEN(self)->menuShown = 1;
+        TITLE_SCREEN(self)->cheatHash = z;
     }
     for (;;) {
         DrawTitleScreen(self);
@@ -326,7 +319,7 @@ static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
 }
 
 /* Flushes the scratch object's BG2 affine-scroll fields
- * (`self+0x214`/`self+0x218` position, `self+0x21c` scale) to
+ * (`bgX`/`bgY` position, `bgScale` scale) to
  * `REG_BG2X`/`REG_BG2Y`/`REG_BG2PA`/`REG_BG2PD` (identity-shaped:
  * `PB`/`PC` cleared, `PA` == `PD`), then flushes the pending shadow-OAM
  * buffer (`CommitDispcnt` + `CommitOamBuffer`). The ROM derives
@@ -382,7 +375,7 @@ void DrawTitleMenuItem(u32 *self, s32 text, s32 variant)
 
 /* Per-frame flush helper: resets the shadow-OAM buffer
  * (`ResetOamBuffer`), runs `DrawTitleLogoPieces` (the header/slot OAM builder),
- * and - only while the scratch object's `self+8` hold flag is set -
+ * and - only while the title screen's `menuShown` flag is set -
  * positions three icon-manager slots (ids 0x1a/0x1b/0x3b, one call
  * each via `DrawTitleMenuItem`) before releasing the shadow-OAM buffer
  * (`HideUnusedOamEntries`). */
@@ -390,7 +383,7 @@ void DrawTitleScreen(u32 *self)
 {
     ResetOamBuffer(gOamBuffer);
     DrawTitleLogoPieces(self);
-    if (((u8 *)self)[8] != 0) {
+    if (TITLE_SCREEN(self)->menuShown != 0) {
         DrawTitleMenuItem(self, GetUiText(0x1a), 0);
         DrawTitleMenuItem(self, GetUiText(0x1b), 1);
         DrawTitleMenuItem(self, GetUiText(0x3b), 2);
@@ -399,7 +392,7 @@ void DrawTitleScreen(u32 *self)
 }
 
 /* Standalone one-shot rolling-hash update: XORs `val` into the same
- * `self+0x210` "cheat code" slot `TitleScreenCheatInput` inlines, rotates the
+ * `cheatHash` "cheat code" slot `TitleScreenCheatInput` inlines, rotates the
  * result left by 1 bit, then multiplies by 521 (`(x<<6)+x`, `<<3`,
  * `+x` - `x*65*8+x`) and stores it back. Matched as real C: the
  * rotate has to be split into an explicit shift-left/shift-right pair
@@ -411,10 +404,9 @@ void DrawTitleScreen(u32 *self)
  * shift-shift-or sequence, at least in this ROM's own build). */
 /* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
-void HashTitleCheatInput(u32 *selfArg, u32 val)
+void HashTitleCheatInput(u32 *self, u32 val)
 {
-    u8 *self = (u8 *)selfArg;
-    u32 *slot = (u32 *)(self + 0x210);
+    u32 *slot = &TITLE_SCREEN(self)->cheatHash;
     MATCH_HOLD_REG(u32, v, r2) = *slot ^ val;
     MATCH_HOLD_REG(u32, hi, r3);
     MATCH_HOLD_REG(u32, lo, r2);
@@ -437,7 +429,7 @@ void HashTitleCheatInput(u32 *selfArg, u32 val)
  * -1 into each slot's `self+0xf2*2+i*4` play-counter word (matching
  * `UpdateTitleLogoPieces`'s own countdown-reset shape, just via `stm` instead of
  * a plain store - the same operation, a different ROM-side register
- * allocation). Clears the header hold flag (`self+0x20c`). */
+ * allocation). Clears `shake`. */
 /* Closed in the issues #64/#65 second NAKED retry. The loop is a
  * hand-written `goto` loop (no loop notes), so nothing is hoisted, as in
  * the ROM. The rest is global-alloc priority:
@@ -489,7 +481,7 @@ loop:
         goto loop;
     MATCH_USE(seedBase);
     MATCH_USE(zero);
-    *(s32 *)((u8 *)self + 0x20c) = zero;
+    TITLE_SCREEN(self)->shake = zero;
 }
 
 /* Teardown/reset helper: if the object at `self+0x208` exists, destroys
@@ -532,6 +524,9 @@ struct part_vtable {
 /* This subsystem's `self` (a raw `u32 *` throughout, as the matched
  * code indexes it) is a `struct logo_screen`. */
 #define SLOT_SYSTEM(self) ((struct logo_screen *)(self))
+/* The piece whose `countdown` `p` points at (InitVvLogoPieces walks the
+ * countdowns, the ROM's `self + 4` pointer). */
+#define PIECE_OF_COUNTDOWN(p) ((struct logo_piece *)((u8 *)(p) - offsetof(struct logo_piece, countdown)))
 
 /* `operator new`: an inline wrapper puts the size constant after the
  * heap flag, as the ROM loads them. */
@@ -747,7 +742,7 @@ void LoadVvLogoGraphics(u32 *self)
 /* Slot-array field initializer: for all 20 (`0x13`+1) slots, clears
  * the active-flag byte (`self+i*0x34`), sets the play-counter word
  * (`self+4+i*0x34`) from `gVvLogoPieceSeeds`'s own `+4+i*8` field
- * `+1`, and the delta-record pointer (`self+0x2c+i*0x34`) from that
+ * `+1`, and the delta-record pointer (`record`) from that
  * same table's `+i*8` head. Also clears 3 header fields
  * (`self+0x438`/`self+0x43c`/`self+0x440`). */
 /* Matches only because this object is built with -fno-strength-reduce
@@ -777,7 +772,7 @@ void InitVvLogoPieces(u32 *self)
     for (; i <= 0x13; i++) {
         *active = zero;
         *countdown = *hold + 1;
-        *(struct delta_record **)((u8 *)countdown + 0x2c) = (struct delta_record *)seed->record;
+        PIECE_OF_COUNTDOWN(countdown)->record = seed->record;
         seed++;
         active += 0x34;
         countdown = (s32 *)((u8 *)countdown + 0x34);
@@ -901,22 +896,22 @@ void UpdateVvLogoPieces(u32 *self)
     }
     if (*timer == 0) {
         s32 allDone = 1;
-        u8 *slot;
-        u8 *end;
+        struct logo_piece *slot;
+        struct logo_piece *end;
 
-        slot = (u8 *)self;
-        end = (u8 *)self + 0x3dc;
+        slot = SLOT_SYSTEM(self)->slots;
+        end = &SLOT_SYSTEM(self)->slots[19];
         do {
-            if (*slot != 0) {
+            if (slot->active != 0) {
                 s32 y;
 
                 allDone = 0;
-                y = *(s32 *)(slot + 8) - 0x80000;
-                *(s32 *)(slot + 8) = y;
+                y = slot->posA.q - 0x80000;
+                slot->posA.q = y;
                 if (y < -0x7f0000)
-                    *slot = allDone;
+                    slot->active = allDone;
             }
-            slot += 0x34;
+            slot++;
         } while ((s32)slot <= (s32)end);
         if (allDone) {
             SLOT_SYSTEM(self)->fade = 0x10;

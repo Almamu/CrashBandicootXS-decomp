@@ -122,6 +122,13 @@ struct entity_flags {
     u32 bits1Copy[64];                    // 0x308
 };
 
+/* The entity spawner (`gEntitySpawner`, CreateEntitySpawner): the table
+ * of spawn functions SpawnEntity calls by entity type. */
+struct entity_spawner {
+    const void *funcs; // 0x00 - gEntitySpawnFuncs
+    s32 count;         // 0x04 - its length
+};
+
 /* The camera's followed object (gPlayer, or level_select.c's follow
  * child). */
 struct camera_target {
@@ -378,7 +385,7 @@ extern s32 PlayRoom(struct level_progress *self);
 extern void ClearRoomExit(void);
 extern void RequestRoomExit(void);
 extern u8 IsRoomExitRequested(void);
-extern void ResumeRoomAfterPause(void *self);
+extern void ResumeRoomAfterPause(struct level_progress *self);
 extern void ResetObjBuffers(void);
 
 /* src/level/room_entities.c */

@@ -88,8 +88,9 @@ void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
     MATCH_HOLD_REG(s32, c, r2) = 0xc8;
     s32 n;
 
-    /* players[pi].ring.count: the session's 0xd0 + 0x38 + 0x84 */
-    n = *(s32 *)((u8 *)(pi * c + (s32)s) + 0x18c);
+    /* players[pi].ring.count, with `players[pi]` as `s` moved on by
+     * pi * 0xc8 (the product lands in `c`). */
+    n = ((struct link_session *)(pi * c + (s32)s))->players[0].ring.count;
     if (n != 0) {
         u8 *dst;
         struct link_ring *ch;

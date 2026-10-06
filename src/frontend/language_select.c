@@ -92,11 +92,11 @@ s32 RunLanguageSelect(void)
 
     while (gLanguageSelect->done == 0) {
         u16 keys;
-        u16 *addr;
+        struct held_pressed_pair *addr;
 
         UpdateKeys(gInput);
-        addr = &gKeys.half.held;
-        keys = *(u16 *)((u8 *)addr + 2);
+        addr = &gKeys.half;
+        keys = addr->pressed;
         LanguageSelectInput(gLanguageSelect, keys);
         DrawLanguageSelect(gLanguageSelect);
         WaitForVBlank();
@@ -245,7 +245,7 @@ void InitLanguageSelectGraphics(void *unused)
 
         FontSetPalette(gSmallFont, 0);
         FontSetPalette(gLargeFont, 0);
-        ((u32 *)gObjVramCursor)[2] = zero;
+        gObjVramCursor->baseTile = zero;
         ResetObjVram(gObjVramCursor);
         ResetObjVram(gObjVramCursor);
         IconSetBase(gSmallFont, zero);

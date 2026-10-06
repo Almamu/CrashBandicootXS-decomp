@@ -173,11 +173,11 @@ void sub_801B85C(struct follow_child *self)
  * allocation (see the doc for issue 26). */
 void ResetCameraLead(struct follow_child *self)
 {
-    u32 v = *((u8 *)self + 0x0D) >> 2;
+    u32 v = self->state.all >> 2;
     MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))
-        self->visible = v ^ 1;
+        self->state.bits.visible = v ^ 1;
     gCamera->target = (struct camera_target *)self;
     {
         struct player *p = gPlayer;
@@ -898,19 +898,19 @@ void LoadLevelSelectRecord(struct level_menu *self)
             self->gemIconY = 0x1C;
         break;
     case 1:
-        if (self->save->open & 1)
+        if (self->save->flags & 1)
             self->gemIconY = 0x1C;
         break;
     case 2:
-        if (self->save->open & 4)
+        if (self->save->flags & 4)
             self->gemIconY = 0x1C;
         break;
     case 3:
-        if (self->save->open & 8)
+        if (self->save->flags & 8)
             self->gemIconY = 0x1C;
         break;
     case 4:
-        if (self->save->open & 2)
+        if (self->save->flags & 2)
             self->gemIconY = 0x1C;
         break;
     case 5:

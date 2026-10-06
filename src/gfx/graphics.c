@@ -9,6 +9,7 @@
 #include "util.h"
 #include <libgcc.h>
 #include "menus.h"
+#include "level_menu.h"
 #include "player.h"
 #include "level.h"
 #include "globals.h"
@@ -36,7 +37,7 @@ struct dma_queue {
  * for why plain C alone doesn't reproduce them. */
 s32 GetCompletionPercent(void *arg0)
 {
-    MATCH_HOLD_REG(void *, self, r6);
+    MATCH_HOLD_REG(struct menu_save *, self, r6);
     MATCH_HOLD_REG(s32, total, r4);
     MATCH_HOLD_REG(s32, b, r9);
     MATCH_HOLD_REG(s32, c, r5);
@@ -55,7 +56,7 @@ s32 GetCompletionPercent(void *arg0)
     total += c;
     total += d;
     total += e;
-    flags = *((u8 *)self + 2);
+    flags = self->flags;
     total += flags >> 7;
     total += ((u32)flags << 26) >> 31;
     total += ((u32)flags << 25) >> 31;
@@ -63,25 +64,34 @@ s32 GetCompletionPercent(void *arg0)
     return __divsi3(total * 100, 0x48);
 }
 
+/* Moves an OAM buffer view on by one shadow entry, so its `table[0]` is
+ * the next entry. */
+#define NEXT_OAM_ENTRY(buf) ((struct oam_shadow_buffer *)((union oam_shadow_entry *)(buf) + 1))
+
+/* Writes `arg2` affine matrices' scales into the shadow OAM: each
+ * matrix's pa/pd from the next two of `arg1`, its pb/pc 0. The ROM keeps
+ * the buffer pointer and slides it one entry per store, always writing
+ * through `table[0]` (the fixed #0x12 offset), so `view` does the same:
+ * a plain entry pointer starts 0xC further on. */
 void SetOamAffineScales(void *arg0, u16 *arg1, s32 arg2)
 {
-    u8 *entry;
+    struct oam_shadow_buffer *view;
     u16 zero;
 
     if (arg2 <= 0) {
         return;
     }
     zero = 0;
-    entry = (u8 *)arg0;
+    view = arg0;
     do {
-        *(u16 *)(entry + 0x12) = arg1[0];
-        entry += 8;
-        *(u16 *)(entry + 0x12) = zero;
-        entry += 8;
-        *(u16 *)(entry + 0x12) = zero;
-        entry += 8;
-        *(u16 *)(entry + 0x12) = arg1[1];
-        entry += 8;
+        view->table[0].attr[3] = arg1[0];
+        view = NEXT_OAM_ENTRY(view);
+        view->table[0].attr[3] = zero;
+        view = NEXT_OAM_ENTRY(view);
+        view->table[0].attr[3] = zero;
+        view = NEXT_OAM_ENTRY(view);
+        view->table[0].attr[3] = arg1[1];
+        view = NEXT_OAM_ENTRY(view);
         arg1 += 2;
         arg2--;
     } while (arg2 != 0);
@@ -180,8 +190,8 @@ void AddOamEntry(struct oam_shadow_buffer *arg0, const void *entry)
      * `table[0]` is entry `count`. */
     n1 = (s32)arg0 + (n1 << 3);
     saved = ((struct oam_shadow_buffer *)n1)->table[0].attr[3];
-    v0 = ((const u32 *)entry)[0];
-    v1 = ((const u32 *)entry)[1];
+    v0 = ((const union oam_shadow_entry *)entry)->words[0];
+    v1 = ((const union oam_shadow_entry *)entry)->words[1];
     ((struct oam_shadow_buffer *)n1)->table[0].words[0] = v0;
     ((struct oam_shadow_buffer *)n1)->table[0].words[1] = v1;
     n2 = *(vs32 *)arg0;
@@ -601,10 +611,10 @@ asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-/* `self` uses the shared `struct actor` layout (see actor.h) - the
- * "field_18 -> {s16 offset; ...; void *text}" convention docs/rom_map.md
- * documents is `table` (the per-category table's own internal shape
- * isn't known yet, so a dynamic offset into it stays raw pointer math).
+/* `self` uses the shared `struct actor` layout (see actor.h); `table`
+ * is its method table, called through slot 8 with a box around the
+ * camera (`buf`, Q8: layer 0's scroll moved back 100/60 px, then
+ * 440x280 px).
  *
  * `pSelf` is pinned to r2: this function makes a call, and plain C
  * phrasing left `self` in r3 instead of the ROM's r2 (tried, rebuilt,
@@ -613,8 +623,8 @@ u8 IsEntityNearCamera(struct actor *self)
 {
     MATCH_HOLD_REG(struct actor *, pSelf, r2) = self;
     s32 buf[4];
-    void *table;
-    void *subObj;
+    struct actor_method *method;
+    struct bg_scroll_layer *layer;
     s32 a, b, c, d;
     u8 flag;
 
@@ -625,14 +635,14 @@ u8 IsEntityNearCamera(struct actor *self)
         buf[2] = a;
         buf[3] = b;
 
-        subObj = gLevelLayers->layer0;
-        c = (*(s32 *)subObj << 8) + (s32)0xFFFF9C00;
-        d = (*(s32 *)((u8 *)subObj + 4) << 8) + (s32)0xFFFFC400;
+        layer = gLevelLayers->layer0;
+        c = (layer->x << 8) + (s32)0xFFFF9C00;
+        d = (layer->y << 8) + (s32)0xFFFFC400;
         buf[0] = c;
         buf[1] = d;
 
-        table = (u8 *)pSelf->table + 0x40;
-        flag = (u8)_call_via_r2((u8 *)pSelf + *(s16 *)table, buf, *(void **)((u8 *)table + 4));
+        method = (struct actor_method *)pSelf->table + 8; /* slot 8 */
+        flag = (u8)_call_via_r2((u8 *)pSelf + method->thisOffset, buf, method->fn);
     }
     return flag;
 }
@@ -728,8 +738,8 @@ asm(".align 2, 0");
 
 void UpdateEntity(struct actor *self)
 {
-    void *table = self->table;
-    _call_via_r1((u8 *)self + *(s16 *)((u8 *)table + 8), *(void **)((u8 *)table + 0xc));
+    struct actor_method *method = (struct actor_method *)self->table + 1; /* slot 1 */
+    _call_via_r1((u8 *)self + method->thisOffset, method->fn);
 }
 
 void *GetEntityBounds(struct actor *self)
@@ -841,39 +851,37 @@ s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
 asm(".align 2, 0");
 
 /* `arg0` is unused by the ROM - overwritten as scratch before its
- * incoming value is ever read. `gLevelLayers`'s sub-object here
- * is the same one IsEntityNearCamera reads, but as two raw s32 fields
- * (dx/dy) sign-extended from their low 24 bits, not the record table
- * IsEntityNearCamera uses - a different part of the same object. */
+ * incoming value is ever read. The camera position is layer 0's scroll
+ * (x/y), sign-extended from its low 24 bits. */
 void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
 {
-    void *subObj;
+    struct bg_scroll_layer *layer;
     s32 dx, dy;
 
-    subObj = gLevelLayers->layer0;
-    dx = (*(s32 *)subObj << 8) >> 8;
-    dy = (*(s32 *)((u8 *)subObj + 4) << 8) >> 8;
+    layer = gLevelLayers->layer0;
+    dx = (layer->x << 8) >> 8;
+    dy = (layer->y << 8) >> 8;
     *arg3 = arg1 - dx;
     *arg4 = arg2 - dy;
 }
 
 void WorldPosToScreen(s32 *arg0, s32 *arg1, s32 *arg2)
 {
-    void *subObj;
+    struct bg_scroll_layer *layer;
     s32 x, y;
     s32 subX, subY;
 
-    x = *(s32 *)arg0;
-    y = *(s32 *)((u8 *)arg0 + 4);
+    x = arg0[0];
+    y = arg0[1];
     if (x & 0x80) {
         x += 0x80;
     }
     if (y & 0x80) {
         y += 0x80;
     }
-    subObj = gLevelLayers->layer0;
-    subX = *(s32 *)subObj << 8;
-    subY = *(s32 *)((u8 *)subObj + 4) << 8;
+    layer = gLevelLayers->layer0;
+    subX = layer->x << 8;
+    subY = layer->y << 8;
     *arg1 = (x - subX) >> 8;
     *arg2 = (y - subY) >> 8;
 }

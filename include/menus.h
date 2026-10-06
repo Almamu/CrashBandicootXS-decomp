@@ -28,6 +28,7 @@ struct cursor_panel;
 struct follow_child;
 struct level_item;
 struct level_menu;
+struct menu_save;
 struct page_bg;
 struct pause_menu;
 struct settings_icon_actor;

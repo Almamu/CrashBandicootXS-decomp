@@ -6,22 +6,21 @@
 #include "text.h"
 #include "system.h"
 #include "menus.h"
+#include "level_menu.h"
 #include "objects.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Shows (`DrawSpriteWithOffset(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
- * matching bit set in `self->progress`'s byte at offset 2 (a flag byte
- * on the row-stats handle RefreshSaveSlotSummaries/SummarizeProgress - src/save/
- * save_menu_ui.c - already fill; bits 0x20/0x80/0x40/0x10, one per
- * slot). If *none* of the four bits were set, draws a fallback
+ * matching power bit set in `self->progress->flags` (bits
+ * 0x20/0x80/0x40/0x10, one per slot). If *none* of the four bits were set, draws a fallback
  * centered label (text id 0x3a) at a fixed position instead. */
 void DrawPausePowersPage(struct pause_menu *self)
 {
     s32 none = 1;
 
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = &self->progress->flags;
         MATCH_HOLD_REG(s32, mask, r0) = 0x20;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
@@ -32,7 +31,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = &self->progress->flags;
         MATCH_HOLD_REG(s32, mask, r0) = 0x80;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
@@ -43,7 +42,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = &self->progress->flags;
         MATCH_HOLD_REG(s32, mask, r0) = 0x40;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;
@@ -54,7 +53,7 @@ void DrawPausePowersPage(struct pause_menu *self)
         }
     }
     {
-        MATCH_HOLD_REG(u8 *, p, r1) = (u8 *)self->progress + 2;
+        MATCH_HOLD_REG(u8 *, p, r1) = &self->progress->flags;
         MATCH_HOLD_REG(s32, mask, r0) = 0x10;
         MATCH_HOLD_REG(u8, byte, r1);
         byte = *p;

@@ -285,8 +285,8 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
     do { \
         struct settings_icon_actor *_icon = (iconExpr); \
         if (_icon != NULL) { \
-            u8 *_p = (u8 *)_icon->base.table + 0x50; \
-            _call_via_r2((u8 *)_icon + *(s16 *)_p, (void *)3, *(void **)(_p + 4)); \
+            struct actor_method *_m = (struct actor_method *)_icon->base.table + 10; \
+            _call_via_r2((u8 *)_icon + _m->thisOffset, (void *)3, _m->fn); \
         } \
     } while (0)
 

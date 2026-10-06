@@ -228,13 +228,13 @@ u8 LevelSelectIsNextWorldOpen(struct level_menu *self)
 
     switch (self->world) {
     case 0:
-        r = (self->save->open >> 5) & 1;
+        r = (self->save->flags >> 5) & 1;
         break;
     case 1:
-        r = (self->save->open >> 7) & 1;
+        r = (self->save->flags >> 7) & 1;
         break;
     case 2:
-        r = (self->save->open >> 6) & 1;
+        r = (self->save->flags >> 6) & 1;
         break;
     }
     return r;

@@ -64,7 +64,7 @@ struct pause_menu {
     /* 0x10 - the packed progress (PackSaveData(gLevelState)): passed to
      * CountClearGems/CountGems/CountRelics/etc, its per-level times read by
      * InitPauseTimeTrialPage */
-    void *progress;
+    struct menu_save *progress;
     /* 0x14 - the rows (gPauseMenuRows), see DrawPauseMenuRows/PauseMenuVolumeDown */
     const struct pause_row *rows;
     s32 cursor;     /* 0x18 - currently selected/highlighted row index */

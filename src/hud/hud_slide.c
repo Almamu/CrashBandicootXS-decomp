@@ -198,7 +198,7 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
  * `hud_digit_part`'s own per-type descriptor's slot-10 (`table+0x50`)
  * teardown trampoline via `_call_via_r2`, frees the array itself
  * (`self->parts`, allocated with a leading element-count word per the
- * `[-4]` read below - see the same convention in src/gfx/
+ * NEW_ARRAY_COUNT read below - see the same convention in src/gfx/
  * palette_cycle.c/actor files), then optionally frees `self` when
  * `flags` bit 0 is set (same "free-self" convention as
  * DestroyPaletteCycles/DestroyLanguageSelect elsewhere in this codebase). The
@@ -211,7 +211,7 @@ void DestroyHud(struct hud_counter *self, s32 flags)
 
     parts = self->parts;
     if (parts != NULL) {
-        s32 count = *(s32 *)((u8 *)parts - 4);
+        s32 count = NEW_ARRAY_COUNT(parts);
 
         end = (struct hud_digit_part *)((u8 *)parts + (count << 6));
         if (parts != end) {
@@ -219,11 +219,11 @@ void DestroyHud(struct hud_counter *self, s32 flags)
                 struct vtable_slot *slot;
 
                 end--;
-                slot = (struct vtable_slot *)((u8 *)end->table + 0x50);
+                slot = (struct vtable_slot *)end->table + 10; /* slot 10 */
                 _call_via_r2((u8 *)end + slot->delta, 0, slot->fn);
             } while (self->parts != end);
         }
-        OperatorDeleteArray((u8 *)self->parts - 4);
+        OperatorDeleteArray(NEW_ARRAY_BLOCK(self->parts));
     }
     if (flags & 1) {
         OperatorDelete(self);

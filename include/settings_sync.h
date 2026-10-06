@@ -28,6 +28,20 @@ struct save_data {
 };
 COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_data) == 0x200);
 
+/* One 0x70-byte save slot, as ReadSaveSlot/WriteSaveSlot copy it:
+ * the level state's packed progress block (PackSaveData/UnpackSaveData),
+ * then the current level and the sound and music volumes
+ * (SaveGameToSlot builds one, SaveMenuLoadInput restores one). */
+struct save_slot {
+    u8 progress[0x68]; /* 0x00 */
+    u8 level;          /* 0x68 */
+    u8 unused_69;
+    u16 sfxVolume;   /* 0x6a */
+    u16 musicVolume; /* 0x6c */
+    u8 unused_6e[2];
+};
+COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_slot) == 0x70);
+
 /* A transient SIO send/receive envelope wrapping a save_data
  * copy - allocated per "connecting..." spinner-dialog session
  * (LinkExchangeSaveData, src/save/save_menu_draw.c, parked) and torn down

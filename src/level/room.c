@@ -2,6 +2,7 @@
 #include "util.h"
 #include "gfx.h"
 #include "level.h"
+#include "level_state.h"
 #include "globals.h"
 
 void ClearRoomExit(void)
@@ -19,11 +20,11 @@ u8 IsRoomExitRequested(void)
     return gRoomExitRequested;
 }
 
-/* Level-end teardown: DMA-copies the level object's first palette word
- * into BG palette RAM entry 0, clears its first color, then re-runs the
+/* Level-end teardown: DMA-copies the room's BG palette into BG palette
+ * RAM, clears its first color, then re-runs the
  * same VRAM/OAM/DMA refresh pass as `UpdateRoomFrame` and the four
  * `display.c` state resets. */
-void ResumeRoomAfterPause(void *self)
+void ResumeRoomAfterPause(struct level_progress *self)
 {
     struct dma_regs *dma;
     u32 pltt;
@@ -31,7 +32,7 @@ void ResumeRoomAfterPause(void *self)
     UploadPaletteCache(gPaletteCache);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = *(u32 *)(*(void **)((u8 *)self + 0x18));
+    dma->src = (u32)self->cat->palette;
     pltt = PLTT;
     dma->dst = pltt;
     dma->cnt = 0x80000100;

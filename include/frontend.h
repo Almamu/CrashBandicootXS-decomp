@@ -64,6 +64,30 @@ struct slot_seed {
     s32 hold;
 };
 
+/* The 0x220-byte title-screen object (UpdateGameFrame's
+ * `OperatorNew(0x220)`, InitTitleScreen/RunTitleScreen): nine logo pieces,
+ * the starfield behind them and the BG2 affine scroll. The title-screen
+ * functions still take it as a `u32 *` and reach most of it by word
+ * index (`self[N]`); TITLE_SCREEN() names the rest. */
+struct title_screen {
+    s32 selection; // 0x000 - the menu choice RunTitleScreen returns
+    u8 unk_004[4];
+    u8 menuShown; // 0x008 - DrawTitleScreen draws the menu items
+    u8 unk_009[3];
+    struct bitmap_font *font;    // 0x00C - gSmallFont
+    struct logo_piece pieces[9]; // 0x010
+    s32 landTimer[9];            // 0x1E4 - -1 until the piece lands, then frames to `shake`
+    void *starfield;             // 0x208 - InitStarfield
+    s32 shake;                   // 0x20C - frames the BG2 logo keeps shaking
+    u32 cheatHash;               // 0x210 - TitleScreenCheatInput's rolling hash
+    s32 bgX;                     // 0x214 - REG_BG2X
+    s32 bgY;                     // 0x218 - REG_BG2Y
+    s32 bgScale;                 // 0x21C - REG_BG2PA/PD
+};
+COMPILE_TIME_ASSERT(frontend_h, sizeof(struct title_screen) == 0x220);
+
+#define TITLE_SCREEN(self) ((struct title_screen *)(self))
+
 /* The credits screen (RunCredits, 0x98 bytes): a starfield plus the
  * credits text (gCreditsText) as floating lines and logos, run from the
  * title menu and after the ending (game_frame.c). */

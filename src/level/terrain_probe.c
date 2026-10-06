@@ -75,16 +75,9 @@
  * session, including `ProbeTerrainX`/`ProbeTerrainY` themselves) moved to
  * the new `asm/code_3_2_17_266bc.s`. */
 
-/* `self+0x10` is the level layers' layer 0 (struct level_layers.layer0);
- * the two fields read here are its `widthPx`/`heightPx`
+/* `self` is gLevelLayers; the bounds are layer 0's `widthPx`/`heightPx`
  * (struct bg_scroll_layer), the right/lower edge of the level, compared
  * directly against the caller's plain-int probe position, not Q8. */
-struct terrain_probe_bounds {
-    u8 unk0[0x10];
-    s32 widthPx;  /* +0x10 */
-    s32 heightPx; /* +0x14 */
-};
-
 s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *outValue)
 {
     s32 hit = 0;
@@ -100,7 +93,7 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
         break;
     case 1:
         {
-            s32 bound = ((struct terrain_probe_bounds *)(*(void **)((u8 *)self + 0x10)))->widthPx;
+            s32 bound = ((struct level_layers *)self)->layer0->widthPx;
             if (pos->x > bound) {
                 *outValue = bound << 8;
                 hit = 1;
@@ -116,7 +109,7 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
         break;
     case 8:
         {
-            s32 bound = ((struct terrain_probe_bounds *)(*(void **)((u8 *)self + 0x10)))->heightPx;
+            s32 bound = ((struct level_layers *)self)->layer0->heightPx;
             if (pos->y > bound) {
                 *outValue = bound << 8;
                 hit = 1;

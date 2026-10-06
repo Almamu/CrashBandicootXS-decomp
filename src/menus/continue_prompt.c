@@ -40,8 +40,8 @@ void InitContinuePromptGraphics(struct continue_prompt *self)
     self->icons = icons;
     icons->tileBase = 0;
     {
-        u8 *rec = (u8 *)icons->record + 0x40;
-        _call_via_r1((u8 *)icons + *(s16 *)rec, *(void **)(rec + 4));
+        struct icon_slot *rec = &icons->record->slots[6];
+        _call_via_r1((u8 *)icons + rec->offset, rec->ptr);
     }
     self->icons->marginX = 0;
     ReserveObjVram(gObjVramCursor, self->icons->tileCount << 5);
@@ -150,7 +150,7 @@ s32 ContinuePromptLoop(struct continue_prompt *self)
                     dir = 1;
             }
             self->blend.bits.eva = level;
-            *(vu32 *)0x04000050 = self->blend.word;
+            *(vu32 *)REG_ADDR_BLDCNT = self->blend.word;
         }
     }
     return self->selection == 0;

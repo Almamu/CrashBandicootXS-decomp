@@ -8,22 +8,22 @@
 #include "audio.h"
 #include "gfx.h"
 #include "objects.h"
+#include "gfx_part.h"
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
 #include "player.h"
 
-/* Sets `part->field_29`'s low nibble to `GetSpriteAnimPaletteSlot(part)`'s result,
- * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
- * (src/menus/pause_menu_pages_init.c, confirmed matching for `InitPauseCrystalsPage`),
- * adapted for a raw-offset `struct actor *` instead of a named
- * `field_29`, since this object's tail past `struct actor`'s 0x1c
- * bytes isn't its own named struct here (see `spawn_gem_platforms.c`'s same
- * caveat). Same macro as src/level/spawn_crates.c - not
- * shared via a header since both files only need it locally. */
+/* Sets the part's `frameNibble` (struct gfx_part, the low nibble of
+ * +0x29) to `GetSpriteAnimPaletteSlot(part)`'s result, keeping the high
+ * nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
+ * (src/menus/pause_menu_pages_init.c, confirmed matching for
+ * `InitPauseCrystalsPage`). A bitfield has no address, so the byte is
+ * reached by offset. Same macro as src/level/spawn_crates.c - not shared
+ * via a header since both files only need it locally. */
 #define UPDATE_PART_FRAME_NIBBLE(partPtr) \
     do { \
-        MATCH_HOLD_REG(s32, _ret, r0) = GetSpriteAnimPaletteSlot(partPtr); \
+        MATCH_HOLD_REG(s32, _ret, r0) = GetSpriteAnimPaletteSlot((struct actor *)(partPtr)); \
         MATCH_HOLD_REG(u8 *, _addr, r2) = (u8 *)(partPtr) + 0x29; \
         MATCH_HOLD_REG(s32, _mask, r1); \
         MATCH_HOLD_REG(u8, _byte, r3); \
@@ -36,89 +36,90 @@
         *_addr = _mask; \
     } while (0)
 
-/* Spawns a full visual effect via `CreateSpriteObj`: points its `+0x20`
- * table pointer at `gSpriteBankTable`'s master 12-byte record 38
- * (`table_base + 0x1c8` - the same record `overlay_ui`'s
- * `InitPowerDialog` dialog-box spawner uses, see docs/rom_map.md's
- * "`gSpriteBankTable` record-indexed" writeup), tags it (`+0x2d =
- * 1`), builds it via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
- * `SetSpriteAnimDone` OAM trio, sets its `+0x29` bitfield via
- * `GetSpriteAnimPaletteSlot`/`UPDATE_PART_FRAME_NIBBLE`, sets `+0xa` to the fixed
- * `0x25`, then registers it into `gTouchableList`'s manager via
- * `AddToPartList`. One of four near-identical siblings in this chunk
- * (`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`), differing only in the
- * `+0x2d`/`+0xa` constants. */
+/* Spawns a full visual effect via `CreateSpriteObj`: points its `bank`
+ * at `gSpriteBankTable`'s master 12-byte record 38 (`table_base + 0x1c8`
+ * - the same record `overlay_ui`'s `InitPowerDialog` dialog-box spawner
+ * uses, see docs/rom_map.md's "`gSpriteBankTable` record-indexed"
+ * writeup), sets its `tag` to 1, builds it via the standard
+ * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM
+ * trio, sets its `frameNibble` via `UPDATE_PART_FRAME_NIBBLE`, sets
+ * `kind` to the fixed `0x25`, then registers it into `gTouchableList`'s
+ * manager via `AddToPartList`. One of four near-identical siblings in
+ * this chunk (`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/
+ * `SpawnTurboRunPower`), differing only in the `tag`/`kind` constants.
+ * The `tag` store is retyped (`*(u8 *)&part->tag`): as a plain member
+ * store gcc uses the constant instead of the pinned `tag` register. */
 void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MATCH_HOLD_REG(u8, tag, r5) = 1;
     MATCH_HOLD_REG(u8, field0A, r6) = 0x25;
-    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
+    struct gfx_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
-    *((u8 *)part + 0x2d) = tag;
+    part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x1c8);
+    *(u8 *)&part->tag = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
-    *((u8 *)part + 0xa) = field0A;
+    part->kind = field0A;
     AddToPartList(gTouchableList, part);
 }
 
-/* Same shape as `SpawnBodySlamPower` above, tag `0`, `+0xa = 0x24`. */
+/* Same shape as `SpawnBodySlamPower` above, tag `0`, kind `0x24`. */
 void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MATCH_HOLD_REG(u8, tag, r5) = 0;
     MATCH_HOLD_REG(u8, field0A, r6) = 0x24;
-    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
+    struct gfx_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
-    *((u8 *)part + 0x2d) = tag;
+    part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x1c8);
+    *(u8 *)&part->tag = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
-    *((u8 *)part + 0xa) = field0A;
+    part->kind = field0A;
     AddToPartList(gTouchableList, part);
 }
 
-/* Same shape as `SpawnBodySlamPower` above, tag `2`, `+0xa = 0x23`. */
+/* Same shape as `SpawnBodySlamPower` above, tag `2`, kind `0x23`. */
 void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MATCH_HOLD_REG(u8, tag, r5) = 2;
     MATCH_HOLD_REG(u8, field0A, r6) = 0x23;
-    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
+    struct gfx_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
-    *((u8 *)part + 0x2d) = tag;
+    part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x1c8);
+    *(u8 *)&part->tag = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
-    *((u8 *)part + 0xa) = field0A;
+    part->kind = field0A;
     AddToPartList(gTouchableList, part);
 }
 
-/* Same shape as `SpawnBodySlamPower` above, tag `3`, `+0xa = 0x26`. */
+/* Same shape as `SpawnBodySlamPower` above, tag `3`, kind `0x26`. */
 void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MATCH_HOLD_REG(u8, tag, r5) = 3;
     MATCH_HOLD_REG(u8, field0A, r6) = 0x26;
-    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
+    struct gfx_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1c8;
-    *((u8 *)part + 0x2d) = tag;
+    part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x1c8);
+    *(u8 *)&part->tag = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
-    *((u8 *)part + 0xa) = field0A;
+    part->kind = field0A;
     AddToPartList(gTouchableList, part);
 }
 
 /* Gated spawn (see `SpawnBlueGem` below for the sibling shape), but
  * built via `CreateStopwatch` instead of `CreateSpriteObj`, gated by
  * `IsCrystalSaved(gLevelState)` being true instead of a flag-bit
- * test, table offset `table_base + 0x1b0`, tag `0`, `+0xa = 0x1c`, and
+ * test, table offset `table_base + 0x1b0`, tag `0`, kind `0x1c`, and
  * an extra `flags |= 0x10` on the constructed object before
  * registering it. */
 void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -126,17 +127,17 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     if ((u8)IsCrystalSaved(gLevelState)) {
         MATCH_HOLD_REG(struct actor *, part, r4) = CreateStopwatch(arg0, arg1, arg2, arg3);
 
-        *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x1b0;
+        ((struct gfx_part *)part)->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x1b0);
         {
             MATCH_HOLD_REG(u8, tag, r0) = 0;
-            MATCH_HOLD_REG(u8 *, addr, r1) = (u8 *)part + 0x2d;
+            MATCH_HOLD_REG(u8 *, addr, r1) = &((struct gfx_part *)part)->tag;
             *addr = tag;
         }
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         UPDATE_PART_FRAME_NIBBLE(part);
-        *((u8 *)part + 0xa) = 0x1c;
+        part->kind = 0x1c;
         {
             MATCH_HOLD_REG(u8, mask, r0) = 0x10;
             MATCH_HOLD_REG(u8, old, r1) = part->flags;
@@ -149,7 +150,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Same spawn shape as `SpawnBodySlamPower`'s family above (record 32 -
- * `table_base + 0x180`, tag `4`, `+0xa = 0x21`), but gated: does
+ * `table_base + 0x180`, tag `4`, kind `0x21`), but gated: does
  * nothing at all unless bit 3 of `gLevelState+2` is clear. Does
  * not return the spawned object (the ROM's shared exit pops straight
  * into `r0` from the stack, discarding whatever was last computed
@@ -158,7 +159,7 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     MATCH_HOLD_REG(u8, tag, r5);
     MATCH_HOLD_REG(u8, field0A, r6);
-    struct actor *part;
+    struct gfx_part *part;
     MATCH_HOLD_REG(struct level_state *, gv, r1) = gLevelState;
     MATCH_HOLD_REG(s32, mask, r0) = 8;
     MATCH_HOLD_REG(u8, byte, r1);
@@ -170,13 +171,13 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     tag = 4;
     field0A = 0x21;
     part = CreateSpriteObj(arg0, arg1, arg2, arg3);
-    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + 0x180;
-    *((u8 *)part + 0x2d) = tag;
+    part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
+    *(u8 *)&part->tag = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
-    *((u8 *)part + 0xa) = field0A;
+    part->kind = field0A;
     AddToPartList(gTouchableList, part);
 }
 
@@ -221,22 +222,22 @@ void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
  * like the pickup spawners above.
  *
  * Same overall spawn shape as `SpawnBodySlamPower`'s family above, but with
- * the master-table record index (`index`), tag (`+0x2d`) and `+0xa`
+ * the master-table record index (`index`), `tag` and `kind`
  * field all taken as *runtime* parameters instead of fixed constants
  * (matches `SpawnEffectPart`'s already-documented `param1*12` runtime-
  * indexed access to `gSpriteBankTable`'s record array, docs/
  * rom_map.md). */
 void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch)
 {
-    struct actor *part = CreateSpriteObj(cx, cy, cw, ch);
+    struct gfx_part *part = CreateSpriteObj(cx, cy, cw, ch);
 
-    *(void **)((u8 *)part + 0x20) = SPRITE_BANK_BASE + index * 12;
-    *((u8 *)part + 0x2d) = (u8)tag;
+    part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + index * 12);
+    part->tag = (u8)tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
-    *((u8 *)part + 0xa) = (u8)field0A;
+    part->kind = (u8)field0A;
     AddToPartList(gTouchableList, part);
     return part;
 }

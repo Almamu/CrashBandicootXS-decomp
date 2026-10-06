@@ -8,6 +8,7 @@
 #include "system.h"
 #include "pause_menu.h"
 #include "menus.h"
+#include "level_menu.h"
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
@@ -96,12 +97,12 @@ void CommitPowerDialogFrame(struct power_dialog *arg0)
 void DestroyPowerDialog(struct power_dialog *arg0, u32 arg1)
 {
     struct actor *iconBase;
-    u8 *p;
+    struct actor_method *m;
 
     iconBase = &arg0->icon->base;
     if (iconBase != NULL) {
-        p = (u8 *)iconBase->table + 0x50;
-        _call_via_r2((u8 *)iconBase + *(s16 *)p, 3, *(void **)(p + 4));
+        m = (struct actor_method *)iconBase->table + 10; /* slot 10 */
+        _call_via_r2((u8 *)iconBase + m->thisOffset, 3, m->fn);
     }
     if (arg1 & 1) {
         OperatorDelete(arg0);
@@ -138,31 +139,20 @@ s32 GetProgressLives(void *arg0)
  * threshold checks. */
 s32 CountPlatinumRelics(void *arg0)
 {
+    struct menu_save *save = arg0;
     s32 count;
-    u8 *p;
-    u8 *bound;
-    u8 *base;
     s32 i;
-    u16 raw;
     s32 val;
 
     count = 0;
-    base = (u8 *)gLevelTable;
-    bound = base + 0x10; /* &gLevelTable[0].times[2] */
-    p = (u8 *)arg0;
-    i = 0x13;
-    do {
-        raw = *(u16 *)(p + 4);
-        val = raw >> 3;
+    for (i = 0; i < 20; i++) {
+        val = save->levels[i].h.time;
         if (val != 0) {
-            if (val <= *(u32 *)bound) {
+            if (val <= gLevelTable[i].times[2]) {
                 count++;
             }
         }
-        bound += 0x24;
-        p += 4;
-        i--;
-    } while (i >= 0);
+    }
     return count;
 }
 
@@ -172,8 +162,8 @@ s32 CountPlatinumRelics(void *arg0)
  * entry->times[1]/entry->times[2]. */
 s32 CountGoldRelics(void *arg0)
 {
-    MATCH_HOLD_REG(u8 *, p, r3);
-    MATCH_HOLD_REG(s32, i, r5);
+    struct menu_save *save = arg0;
+    s32 i;
     MATCH_HOLD_REG(s32, count, r6);
     MATCH_HOLD_REG(s32, offset, r4);
     MATCH_HOLD_REG(s32, val, r1);
@@ -182,10 +172,8 @@ s32 CountGoldRelics(void *arg0)
 
     count = 0;
     offset = 0;
-    p = (u8 *)arg0;
-    i = 0x13;
-    do {
-        raw = *(u16 *)(p + 4);
+    for (i = 0; i < 20; i++) {
+        raw = *(u16 *)&save->levels[i];
         val = raw >> 3;
         if (val != 0) {
             // clang-format off
@@ -201,9 +189,7 @@ s32 CountGoldRelics(void *arg0)
             }
         }
         offset += 0x24;
-        p += 4;
-        i--;
-    } while (i >= 0);
+    }
     return count;
 }
 
@@ -211,8 +197,8 @@ s32 CountGoldRelics(void *arg0)
  * (times[1], times[0]]. */
 s32 CountSapphireRelics(void *arg0)
 {
-    MATCH_HOLD_REG(u8 *, p, r3);
-    MATCH_HOLD_REG(s32, i, r5);
+    struct menu_save *save = arg0;
+    s32 i;
     MATCH_HOLD_REG(s32, count, r6);
     MATCH_HOLD_REG(s32, offset, r4);
     MATCH_HOLD_REG(s32, val, r1);
@@ -221,10 +207,8 @@ s32 CountSapphireRelics(void *arg0)
 
     count = 0;
     offset = 0;
-    p = (u8 *)arg0;
-    i = 0x13;
-    do {
-        raw = *(u16 *)(p + 4);
+    for (i = 0; i < 20; i++) {
+        raw = *(u16 *)&save->levels[i];
         val = raw >> 3;
         if (val != 0) {
             // clang-format off
@@ -240,9 +224,7 @@ s32 CountSapphireRelics(void *arg0)
             }
         }
         offset += 0x24;
-        p += 4;
-        i--;
-    } while (i >= 0);
+    }
     return count;
 }
 
@@ -262,6 +244,7 @@ s32 CountRelics(void *arg0)
 
 s32 CountGems(void *arg0)
 {
+    struct menu_save *save = arg0;
     MATCH_HOLD_REG(u8 *, p, r2);
     MATCH_HOLD_REG(s32, total, r4);
     MATCH_HOLD_REG(s32, i, r3);
@@ -278,8 +261,9 @@ s32 CountGems(void *arg0)
         p += 4;
         i--;
     } while (i >= 0);
-    total += (((u32)*((u8 *)arg0 + 0x64) << 30) >> 31) + (((u32)*((u8 *)arg0 + 0x64) << 29) >> 31);
-    flags = *((u8 *)arg0 + 2);
+    total += (((u32)*(u8 *)&save->levels[24] << 30) >> 31) +
+             (((u32)*(u8 *)&save->levels[24] << 29) >> 31);
+    flags = save->flags;
     result = total + (((u32)flags << 31) >> 31);
     result += ((u32)flags << 29) >> 31;
     result += ((u32)flags << 28) >> 31;
@@ -289,21 +273,17 @@ s32 CountGems(void *arg0)
 
 s32 CountClearGems(void *arg0)
 {
-    u8 *p;
+    struct menu_save *save = arg0;
     s32 total;
     s32 i;
     u8 byte;
 
     total = 0;
-    p = (u8 *)arg0;
-    i = 0x13;
-    do {
-        byte = p[4];
+    for (i = 0; i < 20; i++) {
+        byte = *(u8 *)&save->levels[i];
         total += (((u32)byte << 30) >> 31) + (((u32)byte << 29) >> 31);
-        p += 4;
-        i--;
-    } while (i >= 0);
-    byte = *((u8 *)arg0 + 0x64);
+    }
+    byte = *(u8 *)&save->levels[24];
     total += (((u32)byte << 30) >> 31) + (((u32)byte << 29) >> 31);
     return total;
 }

@@ -144,7 +144,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 
         p2 = (void *)gSpriteBankSet->table;
         p3 = *(void **)p2;
-        *(void **)((u8 *)part + 0x20) = (u8 *)p3 + 0x78;
+        part->anim = (u8 *)p3 + 0x78; /* sprite bank 10 */
 
         {
             MATCH_HOLD_REG(s32, result, r0) = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -258,11 +258,11 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 
     {
         MATCH_HOLD_REG(const void *, val, r0) = gEnemyDefaultAnimMap;
-        MATCH_HOLD_REG(void *, statAddr, r5) = (u8 *)hdr + 0x84;
-        *(const void **)statAddr = val;
+        MATCH_HOLD_REG(const s32 **, statAddr, r5) = &hdr->anims;
+        *statAddr = val;
 
         {
-            MATCH_HOLD_REG(u8 *, addr2d, r0) = (u8 *)part + 0x2d;
+            MATCH_HOLD_REG(u8 *, addr2d, r0) = &part->tag;
             MATCH_HOLD_REG(s32, tagVal2, r3) = oneSb;
             *addr2d = tagVal2;
         }
@@ -273,7 +273,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 
         {
             MATCH_HOLD_REG(s32, six, r0) = 6;
-            *(u8 *)((u8 *)part + 0xa) = six;
+            part->base.kind = six;
         }
 
         SetEnemyState(hdr, 3);

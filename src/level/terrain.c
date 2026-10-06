@@ -71,7 +71,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
     if (tileY < 0)
         tileY = 0;
 
-    GetTerrainType(*(void **)((u8 *)arg0 + 0x20), tileX, tileY, &flagsOut, &hiOut);
+    GetTerrainType(((struct level_layers *)arg0)->tiles, tileX, tileY, &flagsOut, &hiOut);
 
     return flagsOut;
 }
@@ -191,7 +191,7 @@ s32 ProbeFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
 {
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 *row = (s8 *)GetTerrainHeights(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY);
+    s8 *row = (s8 *)GetTerrainHeights(((struct level_layers *)player)->tiles, tileX, tileY);
 
     if (row != NULL) {
         s32 y = pos->y;
@@ -214,8 +214,8 @@ s32 ProbeSolidFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
     u8 scratch;
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 height = GetSolidTerrainModeValue(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY,
-                                         0, &scratch);
+    s8 height =
+        GetSolidTerrainModeValue(((struct level_layers *)player)->tiles, tileX, tileY, 0, &scratch);
 
     if (height >= 0) {
         s32 y = pos->y;
