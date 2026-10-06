@@ -89,8 +89,15 @@ void strncpy(u8 *dst, u8 *src, s32 n)
     }
 }
 
+/* strcpy and strlen below keep their ROM symbol names through asm
+ * labels. Defined under those C names, their `u8 *` signatures conflict
+ * with gcc's built-in strcpy/strlen and warn. The C names differ, the
+ * symbols and code don't. */
+void CopyString(u8 *dst, u8 *src) asm("strcpy");
+s32 StringLength(u8 *s) asm("strlen");
+
 /* strcpy. */
-void strcpy(u8 *dst, u8 *src)
+void CopyString(u8 *dst, u8 *src)
 {
     u8 *p = dst;
     u8 c;
@@ -112,7 +119,7 @@ asm(".align 2, 0");
  * not data or padding; likely just never called via `bl` from anything
  * disassembled yet, so whatever tool originally split this file didn't
  * detect a boundary here. */
-s32 strlen(u8 *s)
+s32 StringLength(u8 *s)
 {
     u8 *p = s;
     s32 i = 0;

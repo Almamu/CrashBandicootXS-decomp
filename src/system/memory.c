@@ -19,8 +19,8 @@ static inline void mem_heap_init_section (struct mem_heap_header* first, struct 
 }
 
 s32 mem_heap_init (u32 arg0) {
-    u32 start = &mem_iwram_heap;
-    u32 end = &iwram_end;
+    u32 start = (u32)&mem_iwram_heap;
+    u32 end = (u32)&iwram_end;
     u32 iwram_size_left = end - start - arg0;
 
     // zero-out the regions we're going to use
@@ -30,7 +30,7 @@ s32 mem_heap_init (u32 arg0) {
     // and initialize them with some defaults
     mem_iwram_heap_pointer = &mem_iwram_heap;
     mem_heap_init_section (&mem_iwram_heap_pointer->base, &mem_iwram_heap_pointer->mainblock, iwram_size_left);
-    mem_ewram_heap_pointer = EWRAM_START;
+    mem_ewram_heap_pointer = (struct mem_heap *)EWRAM_START;
     mem_heap_init_section (&mem_ewram_heap_pointer->base, &mem_ewram_heap_pointer->mainblock, EWRAM_SIZE);
     mem_free_bytes_update(MEM_HEAP_BOTH);
     
@@ -170,7 +170,7 @@ static inline u32 mem_free_bytes_for_heap (struct mem_heap* heap) {
     u32 result = 0;
     struct mem_block* current = heap->base.header.next;
 
-    while (current != heap) {
+    while (current != &heap->base.header) {
         if (current->status == MEMORY_STATUS_FREE) {
             result += current->size - sizeof (struct mem_block);
         }
@@ -256,14 +256,14 @@ void mem_free(void *address) {
         return;
     }
 
-    if (address >= (u32) mem_iwram_heap_pointer) {
+    if (address >= (void *)mem_iwram_heap_pointer) {
         heap = mem_iwram_heap_pointer;
     } else {
         heap = mem_ewram_heap_pointer;
     }
 
     // get the memory pointer's block header
-    current = (u8*) address - sizeof(struct mem_block);
+    current = (struct mem_block *)((u8 *)address - sizeof(struct mem_block));
     current->status = MEMORY_STATUS_FREE;
     adjacent = current->tail;
     

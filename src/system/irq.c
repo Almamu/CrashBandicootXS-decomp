@@ -77,7 +77,7 @@ void EnableVBlankHandler(void) {
     
     IrqSetHandler(INTR_INDEX_VBLANK, fn);
 
-    value = (vu8* )REG_ADDR_DISPSTAT;
+    value = (u8 *)REG_ADDR_DISPSTAT;
     tmp = DISPSTAT_VBLANK_INTR;
     *value = tmp | *value;
 }
@@ -85,7 +85,7 @@ void EnableVBlankHandler(void) {
 /* The inverse of EnableVBlankHandler: disables the VBlank IRQ in
  * DISPSTAT and reinstalls the previous VBlank handler. */
 void DisableVBlankHandler(void) {
-    register vu8* dispstat asm("r1") = REG_ADDR_DISPSTAT;
+    register vu8* dispstat asm("r1") = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VBLANK_INTR;
     
     *dispstat &= ~tmp;

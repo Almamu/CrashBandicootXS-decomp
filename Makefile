@@ -18,6 +18,9 @@ CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O2 -fhex-asm  -fprologue
 # game code includes them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
 CPPFLAGS := -I tools/agbcc/include -iquote include $(patsubst %,-I %,$(wildcard lib/*/include)) -nostdinc -undef
 ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork -I asminclude
+# The GBA has no memory protection, so the ELF's RWX LOAD segment is
+# expected; binutils >= 2.39 warns about it unless told not to.
+LDFLAGS  := $(shell $(LD) --help 2>/dev/null | grep -q -- --no-warn-rwx-segments && echo --no-warn-rwx-segments)
 
 # Header dependency tracking: the preprocess step of every C object also
 # writes a make fragment (foo.o -> foo.d) listing the headers it read, and
@@ -171,7 +174,7 @@ report: $(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(GRAPHICS_BUILT) $(LEVELS_BUILT
 #### Recipes ####
 	
 $(ELF): $(OBJS) $(LDSCRIPT)
-	$(LD) -T $(LDSCRIPT) -Map $(MAP) $(OBJS) tools/agbcc/lib/libgcc.a tools/agbcc/lib/libc.a -o $@
+	$(LD) $(LDFLAGS) -T $(LDSCRIPT) -Map $(MAP) $(OBJS) tools/agbcc/lib/libgcc.a tools/agbcc/lib/libc.a -o $@
 
 %.gba: %.elf
 	$(OBJCOPY) -O binary $< $@
