@@ -41,8 +41,14 @@ static inline void set_pos(struct bitmap_font *m, u32 x, u32 y)
  * returned pointer makes the reads use the same loop-hoisted
  * `&self->posX`/`&self->posY` as the stores (the ROM's two spill
  * slots), where a plain `self->posX` read recomputes the address. */
-static inline u32 *pos_x(struct bitmap_font *m) { return &m->posX; }
-static inline u32 *pos_y(struct bitmap_font *m) { return &m->posY; }
+static inline u32 *pos_x(struct bitmap_font *m)
+{
+    return &m->posX;
+}
+static inline u32 *pos_y(struct bitmap_font *m)
+{
+    return &m->posY;
+}
 
 s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 limit, s32 mode)
 {

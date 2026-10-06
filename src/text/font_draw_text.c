@@ -81,12 +81,10 @@ s32 FontMeasureChars(struct bitmap_font *self, u8 *str, s32 count)
     s32 total = 0;
     s32 i;
 
-    for (i = 0; i < count; i++)
-    {
+    for (i = 0; i < count; i++) {
         u32 c = str[i];
 
-        switch (c)
-        {
+        switch (c) {
         case ' ':
             total += self->spaceWidth;
             break;
