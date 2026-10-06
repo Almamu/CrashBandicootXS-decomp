@@ -76,8 +76,7 @@ void ActionCtrlStateLeftGround(struct act *self)
 {
     u8 hit = self->part->hitAxes & 8;
 
-    if (hit)
-    {
+    if (hit) {
         u8 tag;
         /* the ROM's r5 zero, reused by the state-0xE else trio; without
          * it that trio stores the `& 0x30` result register */
@@ -90,21 +89,16 @@ void ActionCtrlStateLeftGround(struct act *self)
             z = 0;
             *p34 = z;
         }
-        switch (tag = self->part->tag)
-        {
+        switch (tag = self->part->tag) {
         case 0xD:
         case 0x18:
-            if (tag == 0xD)
-            {
-                if (self->turboRun)
-                {
+            if (tag == 0xD) {
+                if (self->turboRun) {
                     self->frame = 0;
                     ACT_VCALL2(self, m50, self->part, 0x18);
                     ACT_VCALL1(self, m20, 4);
                     ActQueue27(self, 0, 0x1B);
-                }
-                else
-                {
+                } else {
                     self->frame = 0;
                     ACT_VCALL1(self, m20, 3);
                     {
@@ -115,9 +109,7 @@ void ActionCtrlStateLeftGround(struct act *self)
                     }
                 }
                 ActSetNext(self, 0);
-            }
-            else if (tag == 0x18)
-            {
+            } else if (tag == 0x18) {
                 ACT_VCALL1(self, m20, 4);
                 self->motionYKeepSpeed = 0;
                 self->motionYPending = 1;
@@ -127,23 +119,17 @@ void ActionCtrlStateLeftGround(struct act *self)
             }
             break;
         default:
-            if (self->state == 0xE)
-            {
-                if (gKeys.all & 0x30)
-                {
+            if (self->state == 0xE) {
+                if (gKeys.all & 0x30) {
                     ActQueue27(self, 0, 1);
-                }
-                else
-                {
+                } else {
                     self->motionXKeepSpeed = z;
                     self->motionXPending = 1;
                     self->motionX = z;
                 }
                 ActSetNext(self, 0);
                 ACT_VCALL1(self, m20, 0xD);
-            }
-            else
-            {
+            } else {
                 ACT_VCALL1(self, m20, 0);
                 self->motionYKeepSpeed = z;
                 self->motionYPending = 1;
@@ -169,33 +155,26 @@ void ActionCtrlStateLeftGround(struct act *self)
         fire &= p;
         /* extra reference: keeps `one` in r6 and the input pointer in r7 */
         MATCH_USE(one);
-        if (fire)
-        {
+        if (fire) {
             ACT_VCALL1(self, m20, 5);
             ACT_VCALL2(self, m50, self->part, 0x13);
             self->frame = hit;
             ActTrio28(self, hit, one, 7);
-        }
-        else
-        {
+        } else {
             u16 alt;
             s32 t = 2;
 
             t &= p;
             alt = t;
 
-            if (alt)
-            {
+            if (alt) {
                 ActOrFlags0D(self->part, 1);
                 self->slamBlocked = fire;
-                if (gKeys.all & 0x30)
-                {
+                if (gKeys.all & 0x30) {
                     self->motionXKeepSpeed = fire;
                     self->motionXPending = one;
                     self->motionX = one;
-                }
-                else
-                {
+                } else {
                     self->motionXKeepSpeed = 0;
                     self->motionXPending = one;
                     self->motionX = 0;
@@ -204,9 +183,7 @@ void ActionCtrlStateLeftGround(struct act *self)
                     StartActionCtrlSpin(self);
                 else
                     ACT_VCALL1(self, m20, 0xD);
-            }
-            else if (INPUT_HELD(in) & 0x100)
-            {
+            } else if (INPUT_HELD(in) & 0x100) {
                 ActOrFlags0D(self->part, 1);
                 self->slamBlocked = alt;
                 ACT_VCALL1(self, m20, 0x10);
@@ -221,8 +198,7 @@ void ActionCtrlStateLeftGround(struct act *self)
     {
         u8 dir = GetDpadDirection(gInput);
 
-        if (dir == 0)
-        {
+        if (dir == 0) {
             self->motionXKeepSpeed = dir;
             self->motionXPending = 1;
             self->motionX = dir;
@@ -237,8 +213,7 @@ void ActionCtrlStateDying(struct act *self)
     if (part->tag == 0x2F && part->frame == 3 && part->stepTimer == 0)
         PlaySfx(gAudioContext, 0x2E, 0x100);
     part = self->part;
-    if (part->animDone)
-    {
+    if (part->animDone) {
         part->flags.all |= 1;
         {
             /* the "mark part gone" bitmap set of cortex.c's
@@ -246,8 +221,7 @@ void ActionCtrlStateDying(struct act *self)
             MATCH_HOLD_REG(s32, none, r0) = 0xFFFF;
             MATCH_HOLD_REG(u32, cur, r4) = part->id;
 
-            if (cur != none)
-            {
+            if (cur != none) {
                 MATCH_HOLD_REG(s32, id, r3) = *(vu16 *)&part->id;
                 MATCH_HOLD_REG(u8 *, base, r2) = (u8 *)gEntityFlags;
                 MATCH_HOLD_REG(s32, word, r0) = id;
@@ -270,8 +244,7 @@ void ActionCtrlStateDying(struct act *self)
 
 void ActionCtrlStateWarpIn(struct act *self)
 {
-    if (self->part->animDone)
-    {
+    if (self->part->animDone) {
         *((u8 *)gPlayer + 0xC) |= 0x80;
         SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
         self->motionXKeepSpeed = 0;
@@ -281,7 +254,7 @@ void ActionCtrlStateWarpIn(struct act *self)
         self->motionYPending = 1;
         self->motionY = 0;
         LoadPaletteSlot(gPaletteCache, self->part->slot,
-                    self->part->anim->records[self->part->tag].paletteId);
+                        self->part->anim->records[self->part->tag].paletteId);
     }
 }
 
@@ -291,27 +264,22 @@ void ActionCtrlStateHang(struct act *self)
     u32 in = gKeys.all;
 
     if (dir != 0)
-        switch (dir)
-    {
-    case 3 ... 8:
-        ActSetNext27(self, 0x20);
-        ACT_VCALL1(self, m20, 0x25);
-        ACT_VCALL2(self, m50, self->part, 0x20);
-        break;
-    }
-    if (INPUT_PRESSED(in) & 1)
-    {
+        switch (dir) {
+        case 3 ... 8:
+            ActSetNext27(self, 0x20);
+            ACT_VCALL1(self, m20, 0x25);
+            ACT_VCALL2(self, m50, self->part, 0x20);
+            break;
+        }
+    if (INPUT_PRESSED(in) & 1) {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActionCtrlReleaseHang(self);
         return;
     }
-    if (INPUT_PRESSED(in) & 2)
-    {
+    if (INPUT_PRESSED(in) & 2) {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
-    }
-    else
-    {
+    } else {
         UpdatePlayerFacing(self);
     }
 }
@@ -321,14 +289,12 @@ void sub_8014AEC(struct act *self)
     u32 in = gKeys.all;
     s32 fire = INPUT_PRESSED(in) & 1;
 
-    if (fire)
-    {
+    if (fire) {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActionCtrlReleaseHang(self);
         return;
     }
-    if (INPUT_PRESSED(in) & 2)
-    {
+    if (INPUT_PRESSED(in) & 2) {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->motionXKeepSpeed = fire;
@@ -380,15 +346,13 @@ void ActionCtrlStateHangMoveStart(struct act *self)
     u32 in = gKeys.all;
     s32 v = INPUT_PRESSED(in) & 1;
 
-    if (v)
-    {
+    if (v) {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActQueue27(self, 0, 0);
         ActionCtrlReleaseHang(self);
         return;
     }
-    if (INPUT_PRESSED(in) & 2)
-    {
+    if (INPUT_PRESSED(in) & 2) {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->motionXKeepSpeed = 0;
@@ -397,8 +361,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
         return;
     }
     v = GetDpadDirection(pad);
-    if (v == 0)
-    {
+    if (v == 0) {
         ACT_CALL1(self, m20, 0x28);
         ACT_CALL2(self, m50, self->part, 0x22);
         self->motionXKeepSpeed = 0;
@@ -409,16 +372,13 @@ void ActionCtrlStateHangMoveStart(struct act *self)
     {
         u8 cur = self->motionX;
 
-        if (cur == 0)
-        {
-            switch (v)
-            {
+        if (cur == 0) {
+            switch (v) {
             case 3 ... 8:
                 ActQueue27(self, cur, 0x20);
             }
         }
-        if (self->part->animDone)
-        {
+        if (self->part->animDone) {
             struct player *part;
             s32 zero = 0;
             s32 frame;
@@ -463,16 +423,14 @@ void ActionCtrlStateHangMove(struct act *self)
     if (part->animDone)
         SetTag(part, 0x21);
     fire = INPUT_PRESSED(in) & 1;
-    if (fire)
-    {
+    if (fire) {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActQueue27(self, 0, 0);
         ActionCtrlReleaseHang(self);
         return;
     }
     alt = INPUT_PRESSED(in) & 2;
-    if (alt)
-    {
+    if (alt) {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->motionXKeepSpeed = fire;
@@ -480,59 +438,46 @@ void ActionCtrlStateHangMove(struct act *self)
         self->motionX = fire;
         return;
     }
-    if (dir == 0)
-    {
-        if (++self->frame > 3)
-        {
+    if (dir == 0) {
+        if (++self->frame > 3) {
             s32 f;
 
             self->frame = alt;
             f = self->part->frame;
-            if (f == 0)
-            {
+            if (f == 0) {
                 ACT_CALL1(self, m20, 0x28);
                 ACT_CALL2(self, m50, self->part, 0x22);
                 self->motionXKeepSpeed = alt;
                 self->motionXPending = 1;
                 self->motionX = alt;
-            }
-            else if (f <= 4)
-            {
+            } else if (f <= 4) {
                 ACT_CALL1(self, m20, 0x28);
                 ACT_CALL2(self, m50, self->part, 0x23);
                 self->motionXKeepSpeed = alt;
                 self->motionXPending = 1;
                 self->motionX = alt;
-            }
-            else if (f > 9)
-            {
+            } else if (f > 9) {
                 ACT_CALL1(self, m20, 0x28);
                 ACT_CALL2(self, m50, self->part, 0x22);
                 self->motionXKeepSpeed = alt;
                 self->motionXPending = 1;
                 self->motionX = alt;
-            }
-            else
-            {
+            } else {
                 self->motionXKeepSpeed = alt;
                 self->motionXPending = 1;
                 self->motionX = alt;
             }
         }
-    }
-    else
-    {
+    } else {
         self->frame = alt;
         ActQueue27(self, alt, 0x20);
     }
-    if (UpdatePlayerFacing_u8(self))
-    {
+    if (UpdatePlayerFacing_u8(self)) {
         u8 *info = GetSpriteFrame((struct gfx_part *)self->part);
         s32 x;
         s32 y;
 
-        switch (**(u8 **)(info + 4) >> 4)
-        {
+        switch (**(u8 **)(info + 4) >> 4) {
         case 0:
             info += 0x24;
             break;
@@ -575,16 +520,14 @@ void ActionCtrlStateHangStop(struct act *self)
     s32 fire = INPUT_PRESSED(in) & 1;
     u16 alt;
 
-    if (fire)
-    {
+    if (fire) {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ActSetNext27(self, 0);
         ActionCtrlReleaseHang(self);
         return;
     }
     alt = INPUT_PRESSED(in) & 2;
-    if (alt)
-    {
+    if (alt) {
         StartActionCtrlHangSpin(self);
         UpdatePlayerFacing(self);
         self->motionXKeepSpeed = fire;
@@ -592,8 +535,7 @@ void ActionCtrlStateHangStop(struct act *self)
         self->motionX = fire;
         return;
     }
-    if (self->part->animDone)
-    {
+    if (self->part->animDone) {
         ACT_VCALL1(self, m20, 0x20);
         ACT_VCALL2(self, m50, self->part, 0x1F);
         self->frame = alt;
@@ -786,8 +728,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)id, mgr[4].fn);
         off = (u8 *)self->vt;
         off += 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx, *(void **)(off + 4));
         self->frame = zero;
         self->frames = wait;
         PlaySfx(gAudioContext, self->unk_21 + 0x57, 0x100);
@@ -825,8 +766,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             _call_via_r2((u8 *)self + mgr[4].delta, (void *)id, mgr[4].fn);
             off = (u8 *)self->vt;
             off += 0x50;
-            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx,
-                        *(void **)(off + 4));
+            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)idx, *(void **)(off + 4));
             self->frame = zero;
             self->frames = wait;
             PlaySfx(gAudioContext, self->unk_21 + 0x57, 0x100);
@@ -842,8 +782,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             _call_via_r2((u8 *)self + mgr[4].delta, (void *)param2, mgr[4].fn);
             off = (u8 *)self->vt;
             off += 0x50;
-            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x10,
-                        *(void **)(off + 4));
+            _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x10, *(void **)(off + 4));
             self->frame = zero;
             self->frames = wait;
             PlaySfx(gAudioContext, 0xa, 0x100);

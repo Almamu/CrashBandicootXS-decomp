@@ -46,6 +46,7 @@ void sub_80151C8(struct act *selfArg)
         MATCH_HOLD_REG(s32, val, r2);
         MATCH_HOLD_REG(u8 *, selfIn, r3) = self;
 
+        // clang-format off
         asm volatile(
             "add r0, r3, #0\n\t"
             "add r0, r0, #0x22\n\t"
@@ -89,6 +90,7 @@ void sub_80151C8(struct act *selfArg)
             : "r"(selfIn)
             : "r0", "r1", "cc"
         );
+        // clang-format on
     }
 
     {
@@ -131,55 +133,56 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
     self->spinCooldown = 0xc;
     switch (mode) {
     case 3:
-    case 4: {
-        s32 m = 0x200;
-        s32 m2;
+    case 4:
+        {
+            s32 m = 0x200;
+            s32 m2;
 
-        /* The ROM builds 0x200 in r1 and ANDs through a copy in r0, into
+            /* The ROM builds 0x200 in r1 and ANDs through a copy in r0, into
          * flags' own r2: the MATCH_CONST escape keeps the copy (m2) apart
          * from m, and the volatile use of m and flags right after the
          * `and` stops combine from sinking it into the test and regmove
          * from retargeting it onto m2. */
-        MATCH_CONST(m2, m);
-        flags &= m2;
-        asm volatile("" : "+r"(flags) : "r"(m));
-        if (flags != 0 && (u8)HasTurboRun(gLevelState)) {
-            struct act_vtable *mgr;
-            struct act_method *off;
-            u8 one;
-            u8 *p = &self->turboRun;
+            MATCH_CONST(m2, m);
+            flags &= m2;
+            asm volatile("" : "+r"(flags) : "r"(m));
+            if (flags != 0 && (u8)HasTurboRun(gLevelState)) {
+                struct act_vtable *mgr;
+                struct act_method *off;
+                u8 one;
+                u8 *p = &self->turboRun;
 
-            one = 1;
-            *p = one;
-            mgr = self->vt;
-            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)4, mgr->m20.fn);
-            off = &self->vt->m50;
-            _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x18,
-                        off->fn);
-            {
-                u8 idx = 0x1b;
+                one = 1;
+                *p = one;
+                mgr = self->vt;
+                _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)4, mgr->m20.fn);
+                off = &self->vt->m50;
+                _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x18, off->fn);
+                {
+                    u8 idx = 0x1b;
 
-                self->motionXKeepSpeed = 0;
-                self->motionXPending = one;
-                self->motionX = idx;
+                    self->motionXKeepSpeed = 0;
+                    self->motionXPending = one;
+                    self->motionX = idx;
+                }
+            } else {
+                StartActionCtrlRun(self);
             }
-        } else {
-            StartActionCtrlRun(self);
+            break;
         }
-        break;
-    }
-    default: {
-        u8 zero = 0;
+    default:
+        {
+            u8 zero = 0;
 
-        SetActionCtrlModeAnim(self, 0, 0x12, 0, zero);
-        self->motionXKeepSpeed = zero;
-        self->motionXPending = 1;
-        self->motionX = zero;
-        self->motionYKeepSpeed = zero;
-        self->motionYPending = 1;
-        self->motionY = zero;
-        break;
-    }
+            SetActionCtrlModeAnim(self, 0, 0x12, 0, zero);
+            self->motionXKeepSpeed = zero;
+            self->motionXPending = 1;
+            self->motionX = zero;
+            self->motionYKeepSpeed = zero;
+            self->motionYPending = 1;
+            self->motionY = zero;
+            break;
+        }
     }
 }
 
@@ -197,14 +200,15 @@ void SteerActionCtrlSpin(struct act *self, u8 mode)
     if (self->motionX == 0 && self->bumpTimer == 0) {
         switch (mode) {
         case 3:
-        case 4: {
-            u8 idx = 0x17;
+        case 4:
+            {
+                u8 idx = 0x17;
 
-            self->motionXKeepSpeed = 0;
-            self->motionXPending = 1;
-            self->motionX = idx;
-            break;
-        }
+                self->motionXKeepSpeed = 0;
+                self->motionXPending = 1;
+                self->motionX = idx;
+                break;
+            }
         }
     }
     if (mode <= 2) {
@@ -250,11 +254,11 @@ void SetActionCtrlMode(struct act *self, s32 arg1)
 
         /* bounce (0x92) and listCount (0x94), as byte stores: as struct
          * member stores the 0 is not kept in r4 */
-        player = *(u8 * volatile *)&gPlayer;
+        player = *(u8 *volatile *)&gPlayer;
         player[0x92] = 0;
-        player = *(u8 * volatile *)&gPlayer;
+        player = *(u8 *volatile *)&gPlayer;
         player[0x94] = 0;
-        player = *(u8 * volatile *)&gPlayer;
+        player = *(u8 *volatile *)&gPlayer;
         player[0x94] = 0;
     }
 }
@@ -274,8 +278,7 @@ void StartActionCtrlSpin(struct act *self)
         self->frames = 0x18;
 
         off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x10,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x10, *(void **)(off + 4));
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xd, mgr[4].fn);
 
@@ -308,8 +311,7 @@ void StartActionCtrlHangSpin(struct act *self)
         self->unk_24[0] = 0;
 
         off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1e,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1e, *(void **)(off + 4));
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x21, mgr[4].fn);
     }
@@ -331,8 +333,7 @@ void StartActionCtrlRun(struct act *self)
         self->frame = 0;
 
         off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x18,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x18, *(void **)(off + 4));
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)4, mgr[4].fn);
 
@@ -360,8 +361,7 @@ void StartActionCtrlRun(struct act *self)
         u8 *p31;
 
         off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xd,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xd, *(void **)(off + 4));
         self->frame = 0;
         mgr = (struct vtable_slot *)self->vt;
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)3, mgr[4].fn);
@@ -399,8 +399,7 @@ void StartActionCtrlHighJump(struct act *self)
 
     _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xb, mgr[4].fn);
     off = (u8 *)self->vt + 0x50;
-    _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xb,
-                *(void **)(off + 4));
+    _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xb, *(void **)(off + 4));
 
     self->frame = zero;
     idx = 0xb;
@@ -423,8 +422,7 @@ void sub_8015558(struct act *self)
 
     _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xb, mgr[4].fn);
     off = (u8 *)self->vt + 0x50;
-    _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xb,
-                *(void **)(off + 4));
+    _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0xb, *(void **)(off + 4));
 
     self->frame = zero;
     idx = 7;
@@ -460,8 +458,7 @@ void sub_80155B8(struct act *self)
 
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x20, mgr[4].fn);
         off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1f,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1f, *(void **)(off + 4));
 
         self->frame = zero;
         self->frames = zero;
@@ -508,8 +505,7 @@ void ActionCtrlStateHangGrab(struct act *self)
 
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x20, mgr[4].fn);
         off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1f,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)0x1f, *(void **)(off + 4));
 
         self->frame = zero;
         self->frames = zero;
@@ -543,8 +539,7 @@ void ActionCtrlStateCrawlStop(struct act *self)
 
         _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x11, mgr[4].fn);
         off = (u8 *)self->vt + 0x50;
-        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)4,
-                    *(void **)(off + 4));
+        _call_via_r3((u8 *)self + *(s16 *)off, self->part, (void *)4, *(void **)(off + 4));
     }
 }
 

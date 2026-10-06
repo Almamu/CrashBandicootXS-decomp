@@ -67,15 +67,16 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
         return 0;
 
     i = 0;
-    if (i < gCrateList->activeCount) do {
-        u8 *entry = (u8 *)gCrateList->slotArray[i];
-        u8 *method = *(u8 **)(entry + 0x18) + 0x48;
+    if (i < gCrateList->activeCount)
+        do {
+            u8 *entry = (u8 *)gCrateList->slotArray[i];
+            u8 *method = *(u8 **)(entry + 0x18) + 0x48;
 
-        if (_call_via_r1(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
-            if (PlayerAnimWouldTouchCrate((struct box_part *)entry, x) == 1)
-                return 0;
-        }
-        i++;
-    } while (i < gCrateList->activeCount);
+            if (_call_via_r1(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
+                if (PlayerAnimWouldTouchCrate((struct box_part *)entry, x) == 1)
+                    return 0;
+            }
+            i++;
+        } while (i < gCrateList->activeCount);
     return 1;
 }

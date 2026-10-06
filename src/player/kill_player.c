@@ -68,12 +68,17 @@ void KillPlayer(struct act *self, s32 id)
 
         {
             MATCH_HOLD_REG(u8 *, w, r0) = (u8 *)self + 0x31;
-            *w = zero; w -= 2;
+            *w = zero;
+            w -= 2;
             one = 1;
-            *w = one;  w -= 8;
-            *w = zero; w += 0xb;
-            *w = zero; w -= 2;
-            *w = one;  w -= 8;
+            *w = one;
+            w -= 8;
+            *w = zero;
+            w += 0xb;
+            *w = zero;
+            w -= 2;
+            *w = one;
+            w -= 8;
             *w = zero;
         }
 
@@ -173,13 +178,14 @@ void sub_8012238(struct act *selfArg)
         goto common;
     }
 
-case_set_26: {
-    player = gPlayer;
+case_set_26:
     {
-        MATCH_HOLD_REG(s32, v, r0) = 0x26;
-        player->tag = v;
+        player = gPlayer;
+        {
+            MATCH_HOLD_REG(s32, v, r0) = 0x26;
+            player->tag = v;
+        }
     }
-}
 
 common:
     ResetSpriteFrameTimer(player);
@@ -220,6 +226,7 @@ s32 UpdatePlayerFacing(struct act *self)
     if ((u32)type > 0x26)
         goto end;
 
+    // clang-format off
     switch (type) {
     case 0: case 3: case 4: case 5: case 7: case 9: case 11: case 13:
     case 14: case 15: case 20: case 26: case 32: case 33: case 37: case 38:
@@ -227,6 +234,7 @@ s32 UpdatePlayerFacing(struct act *self)
     default:
         goto end;
     }
+    // clang-format on
 
 do_it:
     {

@@ -59,8 +59,7 @@ void DrawCrate(struct crate *selfArg)
                          * this compiler pick the same destination
                          * register (r0, the offset's own register)
                          * instead of reusing `table`'s (r1). */
-                        MATCH_HOLD_REG(u8 *, record, r0) =
-                            (u8 *)(tag * 0x1c + (s32)table);
+                        MATCH_HOLD_REG(u8 *, record, r0) = (u8 *)(tag * 0x1c + (s32)table);
                         u8 limit = record[0x16];
 
                         if (idx >= limit) {
@@ -86,6 +85,7 @@ void DrawCrate(struct crate *selfArg)
          * compiler knows the asm still depends on it - without that,
          * it reused r4 in place for the `self[0x38] != 0` check just
          * above, corrupting the address this block reads/writes. */
+        // clang-format off
         asm volatile(
             "mov r0, #0x9\n\t"
             "neg r0, r0\n\t"
@@ -96,5 +96,6 @@ void DrawCrate(struct crate *selfArg)
             : "r"(self)
             : "r0", "r1", "cc", "memory"
         );
+        // clang-format on
     }
 }

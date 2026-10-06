@@ -60,60 +60,68 @@ s32 ApplyPlayerVelocity(struct player *self)
         MATCH_HOLD_REG(s32, v, r1) = w[0x60 / 4];
         MATCH_HOLD_REG(s32, target, r3) = w[0x50 / 4];
 
-        if (v >= target) goto case1_ge;
+        if (v >= target)
+            goto case1_ge;
         {
             s32 step = w[0x4c / 4];
             MATCH_HOLD_REG(s32, result, r0) = v + step;
             w[0x60 / 4] = result;
-            if (result <= target) goto case1_done;
+            if (result <= target)
+                goto case1_done;
             goto case1_clamp;
         }
     case1_ge:
-        if (v <= target) goto case1_done;
+        if (v <= target)
+            goto case1_done;
         {
             s32 step = w[0x4c / 4];
             MATCH_HOLD_REG(s32, result, r0) = v - step;
             w[0x60 / 4] = result;
-            if (result >= target) goto case1_done;
+            if (result >= target)
+                goto case1_done;
         }
     case1_clamp:
         w[0x60 / 4] = target;
-    case1_done:
-        ;
+    case1_done:;
     }
 
     {
         MATCH_HOLD_REG(s32, v, r1) = w[0x64 / 4];
         MATCH_HOLD_REG(s32, target, r3) = w[0x5c / 4];
 
-        if (v >= target) goto case2_ge;
+        if (v >= target)
+            goto case2_ge;
         {
             s32 step = w[0x58 / 4];
             MATCH_HOLD_REG(s32, result, r0) = v + step;
             w[0x64 / 4] = result;
-            if (result <= target) goto case2_done;
+            if (result <= target)
+                goto case2_done;
             goto case2_clamp;
         }
     case2_ge:
-        if (v <= target) goto case2_done;
+        if (v <= target)
+            goto case2_done;
         {
             s32 step = w[0x58 / 4];
             MATCH_HOLD_REG(s32, result, r0) = v - step;
             w[0x64 / 4] = result;
-            if (result >= target) goto case2_done;
+            if (result >= target)
+                goto case2_done;
         }
     case2_clamp:
         w[0x64 / 4] = target;
-    case2_done:
-        ;
+    case2_done:;
     }
 
     flags = (u8 *)w + 0x24;
     *flags = 0;
 
     fx = w[0x60 / 4];
-    if (fx > 0) *flags = 1;
-    else if (fx < 0) *flags = 2;
+    if (fx > 0)
+        *flags = 1;
+    else if (fx < 0)
+        *flags = 2;
 
     fy = w[0x64 / 4];
     {
@@ -149,6 +157,7 @@ skipY:
             {
                 MATCH_HOLD_REG(vs32 *, g, r0) = (vs32 *)0x0300129c;
 
+                // clang-format off
                 asm volatile(
                     "ldr r2, [%0, #0]\n\t"
                     "cmp r2, #0\n\t"
@@ -162,6 +171,7 @@ skipY:
                     : "r"(g), "r"(vy)
                     : "r2", "cc", "memory"
                 );
+                // clang-format on
 
                 return (vx != 0 || vy != 0);
             }

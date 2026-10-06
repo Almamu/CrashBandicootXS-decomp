@@ -96,8 +96,7 @@ void ActionCtrlStateRun(struct act *self)
 
     if (busy)
         return;
-    if (INPUT_PRESSED(in) & 1)
-    {
+    if (INPUT_PRESSED(in) & 1) {
         PlaySfx(gAudioContext, 0xD, 0x100);
         ACT_CALL1(self, m20, 5);
         ACT_CALL2(self, m50, self->part, 0x13);
@@ -108,13 +107,11 @@ void ActionCtrlStateRun(struct act *self)
     {
         u16 alt = INPUT_PRESSED(in) & 2;
 
-        if (alt)
-        {
+        if (alt) {
             StartActionCtrlSpin(self);
             return;
         }
-        if (INPUT_PRESSED(in) & 0x100)
-        {
+        if (INPUT_PRESSED(in) & 0x100) {
             s32 frames;
             struct gfx_part *obj; /* the effect part (gfx_part.h) */
 
@@ -135,8 +132,7 @@ void ActionCtrlStateRun(struct act *self)
     {
         u8 dir = GetDpadDirection(*pad);
 
-        switch (dir)
-        {
+        switch (dir) {
         case 0:
             SetActionCtrlModeAnim(self, 0, 0x12, 0, dir);
             ActTrio27(self, dir, 1, dir);
@@ -146,24 +142,22 @@ void ActionCtrlStateRun(struct act *self)
         case 2:
         case 7:
         case 8:
-        {
-            s32 zero = 0;
+            {
+                s32 zero = 0;
 
-            ACT_CALL1(self, m20, 0x10);
-            ACT_CALL2(self, m50, self->part, 3);
-            self->frames = zero;
-            ActQueue27(self, zero, 0x1D);
-            break;
-        }
+                ACT_CALL1(self, m20, 0x10);
+                ACT_CALL2(self, m50, self->part, 3);
+                self->frames = zero;
+                ActQueue27(self, zero, 0x1D);
+                break;
+            }
         }
     }
     {
         s32 held = (u16)(INPUT_HELD(in) & 0x200);
 
-        if (held)
-        {
-            if (self->state == 3 && (u8)HasTurboRun(gLevelState))
-            {
+        if (held) {
+            if (self->state == 3 && (u8)HasTurboRun(gLevelState)) {
                 s32 zero;
 
                 self->turboRun = 1;
@@ -172,14 +166,10 @@ void ActionCtrlStateRun(struct act *self)
                 ACT_CALL2(self, m50, self->part, 0x18);
                 ActTrio27(self, zero, 1, 0x1B);
             }
-        }
-        else if (self->state == 4)
-        {
+        } else if (self->state == 4) {
             self->turboRun = held;
             StartActionCtrlRun(self);
-        }
-        else if (self->frame != 0)
-        {
+        } else if (self->frame != 0) {
             self->frame = held;
         }
     }
@@ -202,8 +192,7 @@ void ActionCtrlStateJump(struct act *self)
 {
     ActAndFlags0D(self->part, -2);
     ActAndFlags0D(self->part, -3);
-    if (self->part->hitAxes & 4)
-    {
+    if (self->part->hitAxes & 4) {
         struct player *part;
         s32 frame;
         s32 count;
@@ -224,8 +213,7 @@ void ActionCtrlStateJump(struct act *self)
         u32 in = gKeys.all;
         u8 busy = self->spinCooldown;
 
-        if (busy == 0 && (INPUT_PRESSED(in) & 2))
-        {
+        if (busy == 0 && (INPUT_PRESSED(in) & 2)) {
             s32 frames;
 
             PlaySfx(gAudioContext, 0xA, 0x100);
@@ -246,18 +234,13 @@ void ActionCtrlStateJump(struct act *self)
     {
         struct player *part = self->part;
 
-        if (part->animDone)
-        {
+        if (part->animDone) {
             u32 cur = gKeys.all;
 
-            if ((cur & 1) && (cur & 0x30))
-            {
-                if (part->tag == 6)
-                {
+            if ((cur & 1) && (cur & 0x30)) {
+                if (part->tag == 6) {
                     ACT_VCALL1(self, m20, 9);
-                }
-                else
-                {
+                } else {
                     ACT_VCALL1(self, m20, 9);
                     ACT_VCALL2(self, m50, self->part, 6);
                 }
@@ -267,16 +250,13 @@ void ActionCtrlStateJump(struct act *self)
                     if (*slot == 7)
                         ActSetNextP(self, slot, 0xA);
                 }
-            }
-            else
-            {
+            } else {
                 ACT_VCALL1(self, m20, 7);
                 ACT_VCALL2(self, m50, self->part, 0xC);
                 {
                     u8 *slot = &self->motionY;
 
-                    if (*slot == 7)
-                    {
+                    if (*slot == 7) {
                         s32 one = 1;
 
                         MATCH_KEEP(one);
@@ -290,30 +270,21 @@ void ActionCtrlStateJump(struct act *self)
             }
         }
     }
-    if (GetDpadDirection(gInput) <= 2)
-    {
-        if (gPlayer->slippery == 0)
-        {
+    if (GetDpadDirection(gInput) <= 2) {
+        if (gPlayer->slippery == 0) {
             self->motionXKeepSpeed = 0;
             self->motionXPending = 1;
             self->motionX = 0;
         }
-    }
-    else
-    {
+    } else {
         u8 *slot = &self->motionX;
 
-        if (*slot == 0x1B || *slot == 0x1C)
-        {
+        if (*slot == 0x1B || *slot == 0x1C) {
             ActHold27P(self, slot, 0x1C);
-        }
-        else if (self->frame != 0)
-        {
+        } else if (self->frame != 0) {
             if (*slot != 0xD)
                 ActSetNext27P(self, slot, 0xD);
-        }
-        else if (gPlayer->slippery == 0)
-        {
+        } else if (gPlayer->slippery == 0) {
             ActSetNext27P(self, slot, 7);
         }
     }

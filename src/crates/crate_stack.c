@@ -50,6 +50,7 @@ void OpenLifeCrate(struct actor *self, u32 arg1)
      * the ROM's own `sub sp, #8`/`add sp, #8` frame does. */
     {
         u32 dummy[2];
+        // clang-format off
         asm volatile(
             "ldr r1, [%0]\n"
             "asr r1, r1, #8\n"
@@ -68,6 +69,7 @@ void OpenLifeCrate(struct actor *self, u32 arg1)
             : "r" (self), "r" (flag6), "r" (dummy)
             : "r0", "r1", "r2", "r3", "r12", "lr", "cc", "memory"
         );
+        // clang-format on
     }
 }
 
@@ -140,6 +142,7 @@ struct crate *GetTopCrate(struct crate *selfArg)
     if (cur == NULL) {
         goto returnSelf;
     }
+    // clang-format off
     asm volatile(
         "add r1, %1, #0\n\t"
         "add r1, r1, #0x4d\n\t"
@@ -150,6 +153,7 @@ struct crate *GetTopCrate(struct crate *selfArg)
         : "r"(cur)
         : "r1", "cc"
     );
+    // clang-format on
     if (masked != 1) {
         goto loop;
     }
@@ -165,6 +169,7 @@ loop:
     if (next == NULL) {
         goto returnCur;
     }
+    // clang-format off
     asm volatile(
         "add r1, %1, #0\n\t"
         "add r1, r1, #0x4d\n\t"
@@ -175,6 +180,7 @@ loop:
         : "r"(next)
         : "r1", "cc"
     );
+    // clang-format on
     if (masked == 1) {
         goto returnCur;
     }
@@ -196,6 +202,7 @@ struct crate *GetBottomCrate(struct crate *selfArg)
     if (cur == NULL) {
         goto returnSelf;
     }
+    // clang-format off
     asm volatile(
         "add r1, %1, #0\n\t"
         "add r1, r1, #0x4d\n\t"
@@ -206,6 +213,7 @@ struct crate *GetBottomCrate(struct crate *selfArg)
         : "r"(cur)
         : "r1", "cc"
     );
+    // clang-format on
     if (masked != 1) {
         goto loop;
     }
@@ -221,6 +229,7 @@ loop:
     if (next == NULL) {
         goto returnCur;
     }
+    // clang-format off
     asm volatile(
         "add r1, %1, #0\n\t"
         "add r1, r1, #0x4d\n\t"
@@ -231,6 +240,7 @@ loop:
         : "r"(next)
         : "r1", "cc"
     );
+    // clang-format on
     if (masked == 1) {
         goto returnCur;
     }
@@ -256,6 +266,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
     MATCH_HOLD_REG(u8 *, self, r4) = (u8 *)selfArg;
     u32 masked;
 
+    // clang-format off
     asm volatile(
         "mov r0, #0x4d\n\t"
         "add r0, r0, %1\n\t"
@@ -268,6 +279,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
         : "r"(self)
         : "r5", "ip", "cc"
     );
+    // clang-format on
 
     if (masked != 1) {
         s32 dx = *(s32 *)self - testX;
@@ -307,6 +319,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
      * (its single use inlines straight into the AND, dropping the r6
      * pin entirely) - anchored as one literal block instead, since
      * `self` is already known to sit in r4 throughout this function. */
+    // clang-format off
     asm volatile(
         "mov r0, #0x9\n\t"
         "neg r0, r0\n\t"
@@ -317,5 +330,6 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
         :
         : "r0", "r6", "cc", "memory"
     );
+    // clang-format on
     return 0;
 }

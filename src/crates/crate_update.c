@@ -59,52 +59,42 @@
  *   records pointer, which loads the table before the tag. */
 void UpdateCrate(struct crate *self)
 {
-    if (self->timer != 0)
-    {
+    if (self->timer != 0) {
         self->timer--;
         {
             s32 kind = self->kind;
 
-            if (kind > 0x12)
-            {
-                if (kind <= 0x15)
-                {
+            if (kind > 0x12) {
+                if (kind <= 0x15) {
                     UpdateTntCountdown(self);
                     gCrateListChanged = 1;
                     goto done;
                 }
             }
         }
-        if (self->kind == 0xf)
-        {
-            if ((self->state & 0x7f) == 0)
-            {
+        if (self->kind == 0xf) {
+            if ((self->state & 0x7f) == 0) {
                 UpdateSlotCrate(self);
                 goto done;
             }
         }
-        if (self->kind == 0xc)
-        {
+        if (self->kind == 0xc) {
             if (self->timer == 0)
                 self->paramA = 0;
-        }
-        else if (self->kind == 3)
+        } else if (self->kind == 3)
             SolidifyOutlineCrates(self);
     done:;
     }
     if (self->kind == 0xc && self->u48.bounceTimer > 0)
         self->u48.bounceTimer--;
     UpdateCrateFall(self);
-    if (self->state & 0x80)
-    {
-        if (self->animDone != 0)
-        {
+    if (self->state & 0x80) {
+        if (self->animDone != 0) {
             PhysSetFrame(self, 0);
             self->animDone = 0;
             self->state &= 0x7f;
             gPlayer->busy = 0;
-            if (self->kind == 6)
-            {
+            if (self->kind == 6) {
                 struct anim_rec *recs;
                 struct anim_rec *rec;
 
@@ -116,17 +106,14 @@ void UpdateCrate(struct crate *self)
                 recs = self->anim->records;
                 rec = &recs[self->tag];
                 self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
-            }
-            else if (self->kind == 3)
-            {
+            } else if (self->kind == 3) {
                 self->tag = 0x20;
                 ResetSpriteFrameTimer(self);
                 ResetSpriteFrameIndex(self);
                 SetSpriteAnimDone(self, 0);
             }
         }
-    }
-    else if ((self->state & 0x7f) == 1)
+    } else if ((self->state & 0x7f) == 1)
         FinishBrokenCrate(self);
     AdvanceSpriteAnim((struct box_part *)(struct gobj *)self);
     PHYS_CALL(self, m60);

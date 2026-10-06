@@ -65,12 +65,14 @@ void ResetPlayer(struct player *selfArg)
     {
         MATCH_HOLD_REG(u8, result, r0);
 
+        // clang-format off
         asm volatile(
             "mov r0, #0x80\n\t"
             "ldrb r1, [%1, #0xc]\n\t"
             "orr r0, r0, r1\n\t"
             : "=r"(result) : "l"(self) : "r1"
         );
+        // clang-format on
         result |= 0x40;
         result |= 2;
         {
@@ -245,6 +247,7 @@ void ResetPlayer(struct player *selfArg)
              * never r3 like the ROM, no matter how the surrounding
              * scopes are narrowed. */
             MATCH_HOLD_REG(u8, result, r0);
+            // clang-format off
             asm volatile(
                 "mov r0, #0x2\n\t"
                 "neg r0, r0\n\t"
@@ -252,6 +255,7 @@ void ResetPlayer(struct player *selfArg)
                 "and r0, r0, r3\n\t"
                 : "=r"(result) : "l"(self) : "r3"
             );
+            // clang-format on
             self[0xc] = result;
         }
 
@@ -330,13 +334,18 @@ void ResetPlayerForRoom(struct player *selfArg)
     {
         MATCH_HOLD_REG(s32, state2, r1) = state;
 
-        if (state == 1) goto do1;
-        if (state > 1) goto gt1;
-        if (state == 0) goto do0;
+        if (state == 1)
+            goto do1;
+        if (state > 1)
+            goto gt1;
+        if (state == 0)
+            goto do0;
         goto endDispatch;
     gt1:
-        if (state2 == 2) goto endDispatch;
-        if (state2 == 3) goto do3;
+        if (state2 == 2)
+            goto endDispatch;
+        if (state2 == 3)
+            goto do3;
         goto endDispatch;
     do0:
         RestartActionCtrl(self->ctrl);
@@ -346,8 +355,7 @@ void ResetPlayerForRoom(struct player *selfArg)
         goto endDispatch;
     do3:
         RestartInputCtrl(self->ctrl);
-    endDispatch:
-        ;
+    endDispatch:;
     }
 }
 asm(".align 2, 0");

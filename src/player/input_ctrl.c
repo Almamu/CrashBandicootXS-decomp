@@ -62,14 +62,13 @@
 
 /* include/player_ctrl.h's `struct player_ctrl`, as far as these
  * accessors see it */
-struct pctrl_motion_queue
-{
+struct pctrl_motion_queue {
     u8 unk_00[0x24];
-    u8 motionX;         // 0x24
-    u8 motionY;         // 0x25
+    u8 motionX; // 0x24
+    u8 motionY; // 0x25
     u8 unk_26[6];
-    u8 motionXPending;  // 0x2C
-    u8 motionYPending;  // 0x2D
+    u8 motionXPending; // 0x2C
+    u8 motionYPending; // 0x2D
 };
 
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
@@ -190,8 +189,7 @@ void InputCtrlStateStart(struct input_ctrl *self)
     self->motionYPending = 1;
     self->motionY = 0;
     self->dirState = 0;
-    if (self->cameraLead == NULL)
-    {
+    if (self->cameraLead == NULL) {
         self->cameraLead = CreateCameraLead(OperatorNew(0x80));
         AddToPartList(gCollidableList, self->cameraLead);
     }
@@ -201,13 +199,11 @@ void InputCtrlStateStart(struct input_ctrl *self)
 
 void UpdateInputCtrl(struct input_ctrl *self)
 {
-    if (self->state != 3)
-    {
+    if (self->state != 3) {
         u32 keys;
         s32 x = self->target->x;
 
-        if (x > (gLevelLayers->layer0->widthPx << 8) - 0xA00)
-        {
+        if (x > (gLevelLayers->layer0->widthPx << 8) - 0xA00) {
             {
                 struct follow_child *c = self->cameraLead;
 
@@ -218,48 +214,35 @@ void UpdateInputCtrl(struct input_ctrl *self)
         }
 
         keys = gKeys.all;
-        if ((keys & DPAD_UP) && self->dirState != 1)
-        {
+        if ((keys & DPAD_UP) && self->dirState != 1) {
             QueueMotionY(self, 3);
             self->dirState = 1;
-        }
-        else
-        {
-            if ((keys & DPAD_DOWN) && self->dirState != 2)
-            {
+        } else {
+            if ((keys & DPAD_DOWN) && self->dirState != 2) {
                 QueueMotionY(self, 5);
                 self->dirState = 2;
-            }
-            else if (!(keys & (DPAD_UP | DPAD_DOWN)))
-            {
+            } else if (!(keys & (DPAD_UP | DPAD_DOWN))) {
                 QueueMotionY(self, 0);
                 self->dirState = 0;
             }
         }
 
-        if ((keys & DPAD_LEFT) && self->flag20)
-        {
+        if ((keys & DPAD_LEFT) && self->flag20) {
             QueueMotionX(self, 7);
             SetCameraLeadSpeed(self, 0x3200);
-            if (++self->timer > 30)
-            {
+            if (++self->timer > 30) {
                 self->flag20 = 0;
                 self->timer = 10;
             }
-        }
-        else if (keys & DPAD_RIGHT)
-        {
+        } else if (keys & DPAD_RIGHT) {
             QueueMotionX(self, 8);
             SetCameraLeadSpeed(self, 0xA00);
-        }
-        else if (!(keys & DPAD_SIDEWAYS) || ((keys & DPAD_LEFT) && !self->flag20))
-        {
+        } else if (!(keys & DPAD_SIDEWAYS) || ((keys & DPAD_LEFT) && !self->flag20)) {
             SetCameraLeadSpeed(self, 0x1E00);
             QueueMotionX(self, 1);
         }
 
-        if (!self->flag20 && --self->timer < 0)
-        {
+        if (!self->flag20 && --self->timer < 0) {
             self->timer = 0;
             if (!(keys & DPAD_LEFT))
                 self->flag20 = 1;
@@ -271,13 +254,13 @@ void UpdateInputCtrl(struct input_ctrl *self)
         struct vtable_slot e;
         void *fn;
 
-        if (idx > 0)
-        {
-            e = (*(struct vtable_slot **)((u8 *)self + gInputCtrlStateFuncs[self->state].u.vtableOffset))[idx - 1];
+        if (idx > 0) {
+            // clang-format off
+            e = (*(struct vtable_slot **)((u8 *)self +
+                    gInputCtrlStateFuncs[self->state].u.vtableOffset))[idx - 1];
+            // clang-format on
             fn = e.fn;
-        }
-        else
-        {
+        } else {
             fn = gInputCtrlStateFuncs[self->state].u.fn;
         }
         {
@@ -296,8 +279,7 @@ void UpdateInputCtrl(struct input_ctrl *self)
 
 void ApplyInputCtrlMotion(struct input_ctrl *self)
 {
-    if (self->motionXPending == 1)
-    {
+    if (self->motionXPending == 1) {
         u8 *rec = (u8 *)gInputCtrlMotionRecords + self->animSet->entries[self->motionX].a * 12;
 
         if (self->motionXKeepSpeed)
@@ -307,8 +289,7 @@ void ApplyInputCtrlMotion(struct input_ctrl *self)
         self->motionXPending = 0;
         self->motionXKeepSpeed = 0;
     }
-    if (self->motionYPending == 1)
-    {
+    if (self->motionYPending == 1) {
         u8 *rec = (u8 *)gInputCtrlMotionRecords + self->animSet->entries[self->motionY].b * 12;
 
         if (self->motionYKeepSpeed)
@@ -336,8 +317,7 @@ void InputCtrlStateDead(struct input_ctrl *self)
 
 void sub_801793C(struct input_ctrl *self)
 {
-    if (self->target->animDone)
-    {
+    if (self->target->animDone) {
         SetInputCtrlModeAnim(self, 1, NULL, 0, 0);
         QueueMotionX(self, 2);
     }

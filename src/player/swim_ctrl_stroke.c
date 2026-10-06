@@ -38,8 +38,7 @@ void StartPlayerCtrlStroke(struct player_ctrl *self)
     struct player *t;
 
     self->deadline = gRoomFrameCount + 16;
-    if (self->state == 4)
-    {
+    if (self->state == 4) {
         struct speed_table tbl = gStaticData_0816C090;
 
         if (self->mode == 6)
@@ -58,8 +57,7 @@ void StartPlayerCtrlStroke(struct player_ctrl *self)
     SetSpriteAnimDone(t, 0);
     SetPlayerCtrlState(self, 2, 2, KEEP, KEEP);
 
-    switch (self->tilt)
-    {
+    switch (self->tilt) {
     case 1:
         self->target->speedX = SIGNED_X(self->target, 176);
         self->target->speedY = -704;
@@ -144,14 +142,10 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
     if ((self->target->hitAxes & 3) && GetDpadDirection(gInput) <= 2)
         flag = 1;
 
-    if (self->state == 4)
-    {
-        if (flag)
-        {
+    if (self->state == 4) {
+        if (flag) {
             self->target->speedX = 0;
-        }
-        else
-        {
+        } else {
             s32 v = speed;
             if (self->mode == 7)
                 v = -speed;
@@ -161,25 +155,23 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
     }
 
     SetPlayerCtrlState(self, 3, 3, 0, 24);
-    switch (self->tilt)
-    {
+    switch (self->tilt) {
     case 6:
-        if (!flag)
-        {
+        if (!flag) {
             s32 v;
-            if (self->target->mirror.bits.flipX) v = -speed; else v = speed;
+            if (self->target->mirror.bits.flipX)
+                v = -speed;
+            else
+                v = speed;
             self->target->speedX = v;
-        }
-        else
+        } else
             self->target->speedX = 0;
         break;
     case 3:
-        if (!flag)
-        {
+        if (!flag) {
             s32 v = SIGNED_X(self->target, speed) * 3 / 4;
             self->target->speedX = v;
-        }
-        else
+        } else
             self->target->speedX = 0;
         self->target->speedY = -speed * 3 / 4;
         break;
@@ -190,12 +182,10 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
         }
         break;
     case 9:
-        if (!flag)
-        {
+        if (!flag) {
             s32 v = SIGNED_X(self->target, speed) * 3 / 4;
             self->target->speedX = v;
-        }
-        else
+        } else
             self->target->speedX = 0;
         self->target->speedY = speed * 3 / 4;
         break;
@@ -228,28 +218,22 @@ void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self)
     u8 valA;
     u8 dir;
 
-    if (self->state == 2)
-    {
+    if (self->state == 2) {
         mag = 300;
         valB = 20;
         valA = 30;
-    }
-    else if (self->state == 3)
-    {
+    } else if (self->state == 3) {
         mag = 300;
         valB = 20;
         valA = 32;
-    }
-    else
-    {
+    } else {
         mag = 300;
         valB = 15;
         valA = 5;
     }
 
     dir = GetDpadDirection(gInput);
-    if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0)
-    {
+    if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0) {
         struct player *t = self->target;
         s32 x = t->x >> 8;
         s32 y = (t->y >> 8) - 20;
@@ -260,8 +244,7 @@ void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self)
             obj->hidden = 0;
     }
 
-    switch (dir)
-    {
+    switch (dir) {
     case 5:
         SetPlayerSwimDriftX(0, valB * 3 / 4, -mag * 3 / 4);
         SetPlayerSwimDriftY(0, valB * 3 / 4, -mag * 3 / 4);

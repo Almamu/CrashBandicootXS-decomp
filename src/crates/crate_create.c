@@ -147,11 +147,9 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->id = id;
     if (type == 9 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id))
         type = 0;
-    if (gLevelState->timeTrial == 0
-        && GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState))
-    {
-        if (type == 0xb)
-        {
+    if (gLevelState->timeTrial == 0 &&
+        GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState)) {
+        if (type == 0xb) {
             u8 *rec = Placement(slot);
 
             if (rec[0] & 0x40)
@@ -160,9 +158,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 type = 1;
             else if (rec[1] & 1)
                 type = 9;
-        }
-        else if (type == 0xf)
-        {
+        } else if (type == 0xf) {
             u8 *rec = PLACEMENT(slot);
 
             if (rec[0] & 0x40)
@@ -175,8 +171,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     }
     special = 0;
     self->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x174);
-    switch (type)
-    {
+    switch (type) {
     case 1:
     case 9:
     case 11:
@@ -193,8 +188,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     {
         u8 *rec = Placement(slot);
 
-        if (special || (rec[0] & 0x20))
-        {
+        if (special || (rec[0] & 0x20)) {
             flagged = 1;
             if (*(u16 *)(rec + 4) == 0x1b)
                 self->trialKind = 0x15;
@@ -204,8 +198,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 type = self->trialKind - 0x15;
         }
     }
-    switch (type)
-    {
+    switch (type) {
     case 0:
         PhysSetTag(self, 0x1f);
         break;
@@ -250,8 +243,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         break;
     case 9:
         PhysSetTag(self, 0x1c);
-        if (!flagged)
-        {
+        if (!flagged) {
             self->trialKind = 0x15;
             if (gLevelState->timeTrial)
                 type = 0;
@@ -326,11 +318,10 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->slot = GetSpriteAnimPaletteSlot((struct actor *)self);
     self->x = x << 8;
     self->y = y << 8;
-    if ((u8)sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf)
-        && (PLACEMENT(slot)[0] & 0x80))
+    if ((u8)sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf) &&
+        (PLACEMENT(slot)[0] & 0x80))
         type = 1;
-    if (type == 1 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id))
-    {
+    if (type == 1 && id != 0xffff && (u8)sub_802599C(gEntityFlags, id)) {
         PhysSetTag(self, 0x1b);
         self->frame = self->anim->records[self->tag].frames - 1;
         self->state = (self->state & 0x80) | type;
