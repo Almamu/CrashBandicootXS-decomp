@@ -19,18 +19,18 @@ void LoadLanguageSelectBg(struct language_select *self)
     MATCH_HOLD_REG(s32, b, r2);
     MATCH_HOLD_REG(s32, mask, r1);
 
-    *(u16 *)&self->field_c = zero;
+    *(u16 *)&self->dispcntLo = zero;
     a = 0x40;
-    a |= self->field_c;
+    a |= self->dispcntLo;
     a &= -8;
     a |= 1;
-    self->field_c = a;
+    self->dispcntLo = a;
     b = 1;
-    b |= self->field_d;
+    b |= self->dispcntHi;
     mask = -3;
     b &= mask;
     b |= 0x10;
-    self->field_d = b;
+    self->dispcntHi = b;
 
     InitBgSetup(&buf, 2, 0x1e, 1, 3);
     LoadGraphicsPackage(&buf, &gMenuSkyBg);
@@ -48,7 +48,7 @@ s32 LanguageSelectBlink(struct language_select *self)
 
 void CommitLanguageSelectFrame(struct language_select *self)
 {
-    REG_DISPCNT = *(u16 *)&self->field_c;
+    REG_DISPCNT = *(u16 *)&self->dispcntLo;
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     UploadPaletteCache(gPaletteCache);
     CommitOamBuffer(gOamBuffer);

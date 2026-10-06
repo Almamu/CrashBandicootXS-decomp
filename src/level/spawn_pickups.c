@@ -317,7 +317,7 @@ void DestroyEntitySpawner(void)
  * at the unified 92-slot dispatch array this whole chunk lives
  * inside. Ignores all its own parameters (matches the ROM, a
  * `push {r4, lr}` prologue with no truncation at all). Like
- * `InitLevelState`'s `InitSpriteRenderer`/`nullsub_1` calls, `InitEntitySpawner` is
+ * `InitLevelState`'s `InitSpriteRenderer`/`InitSpriteBankSet` calls, `InitEntitySpawner` is
  * void and the ROM leaves the freshly-allocated pointer in `r0`
  * across the call rather than saving it - same inline-asm technique. */
 void CreateEntitySpawner(void)
@@ -342,7 +342,7 @@ void CreateEntitySpawner(void)
  * asset index, resolved separately in docs/rom_map.md).
  *
  * Several of these constructions call a *void*-returning helper
- * (`InitSpriteRenderer`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
+ * (`InitSpriteRenderer`, `InitSpriteBankSet`, `InitPaletteCache`, `ClearKeys`,
  * `InitEntityFlags`) immediately after allocating the block, then store
  * *that same allocation* without reloading it - relying on the real
  * ROM function leaving the allocated pointer in `r0` untouched (true
@@ -350,7 +350,7 @@ void CreateEntitySpawner(void)
  * A plain C call can't assume that (any call conservatively clobbers
  * r0-r3), so each is spelled with the pointer pinned to r0 across an
  * inline-asm `bl`, the same technique used for `ShowCompanyLogos`'s
- * `nullsub_7` call (docs/matching/archive/issue-37-game-loop-234e8.md). */
+ * `InitCompanyLogos` call (docs/matching/archive/issue-37-game-loop-234e8.md). */
 void *InitLevelState(void *self)
 {
     {
@@ -375,7 +375,7 @@ void *InitLevelState(void *self)
         struct sprite_bank_set **addr = &gSpriteBankSet;
         MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(4);
 
-        asm volatile("bl nullsub_1" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitSpriteBankSet" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
         *(const void **)tmp = &gSpriteBankTable;
     }

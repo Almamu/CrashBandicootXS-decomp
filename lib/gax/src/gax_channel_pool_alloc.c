@@ -55,7 +55,7 @@ u32 GAX2_jingle(struct GaxHandlerLayout *layout)
             GAX_INFO()->stopAtEnd = 1;
             GAX_SONG()->songEnded = 0;
             GAX_SONG()->jingleEnded = 0;
-            gGaxPlayerState->field_41 = 1;
+            gGaxPlayerState->skipSongChannels = 1;
             gGaxPlayerState->state = 1;
             return 1;
         }

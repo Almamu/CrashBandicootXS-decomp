@@ -11,7 +11,7 @@
 
 /* The composite pause/options screen's "results" sub-region
  * constructor: resolves the current level's name/index label
- * (`field_70`/`field_74`/`buf78` - " N" for levels 0-0x13, blank for
+ * (`levelName`/`levelLabel`/`buf78` - " N" for levels 0-0x13, blank for
  * anything past that), formats the row-stats completion percentage
  * (`buf41`), formats the two BG scroll-speed settings (`GetMusicVolume`/
  * `GetSfxVolume` on the shared AudioContext, each scaled `(v+0xc)*20/
@@ -24,18 +24,18 @@ void InitPauseMenuInfo(struct pause_menu *self)
     s32 levelIdx = GetCurrentLevel(gLevelState);
     u32 labelId = *(u32 *)((u8 *)gLevelTable + levelIdx * 0x24);
 
-    self->field_70 = (void *)GetUiText(labelId);
+    self->levelName = (void *)GetUiText(labelId);
 
     if (levelIdx <= 0x13) {
-        self->field_74 = (void *)GetUiText(0);
+        self->levelLabel = (void *)GetUiText(0);
         self->buf78[0] = ' ';
         FormatDecimal(levelIdx + 1, &self->buf78[1]);
     } else {
-        self->field_74 = 0;
+        self->levelLabel = 0;
     }
 
     {
-        s32 count = FormatDecimal(GetCompletionPercent(self->field_10), self->buf41);
+        s32 count = FormatDecimal(GetCompletionPercent(self->progress), self->buf41);
         self->buf41[count] = '%';
         self->buf41[count + 1] = 0;
     }

@@ -574,7 +574,7 @@ slots. None of `RewindObjVram`, `DrawSpriteWithOffset`, `_call_via_r2`,
 even confidently typed beyond the argument shapes this call site
 implies. Uses `struct icon_record`/`struct bitmap_font` for the two
 OAM-slot-record pairs it reads, and extends the existing `struct
-sub_8006700_actor` (shared with `AnimatePowerDialog`/`CommitPowerDialogFrame`/
+power_dialog` (shared with `AnimatePowerDialog`/`CommitPowerDialogFrame`/
 `DestroyPowerDialog`) with `field_10`/`field_14` for `self`'s shape rather than
 defining a second struct for the same object.
 
@@ -799,7 +799,7 @@ Next four matched functions, all in `src/system/irq.c` immediately after
 Fifth matched function in this run: `UpdateKeys` (ROM `0x080007AC`,
 immediately after `GetDpadDirection`). Reads `REG_KEYINPUT` (active-low),
 inverts it active-high, records newly-pressed bits into
-`gUnknown_030007E2` (`gKeys & ~previousValue`, written
+`gKeys.half.pressed` (`gKeys & ~previousValue`, written
 through pointer arithmetic off `gKeys` - a second `extern`
 for the adjacent global made agbcc treat the two addresses as
 unrelated and emit a non-matching second literal-pool load/store pair),
@@ -822,7 +822,7 @@ ordering was fixed.
 
 Sixth: `ClearKeys` (ROM `0x080007DC`, immediately after
 `UpdateKeys`) - trivial, zeroes both `gKeys` and the
-adjacent `gUnknown_030007E2` (accessed the same way as `UpdateKeys`
+adjacent `gKeys.half.pressed` (accessed the same way as `UpdateKeys`
 above, through pointer arithmetic off `gKeys`). Needed only
 `r1`/`r2` pins (both plain scratch) to match the ROM's register choice
 for the address/zero-constant pair - matched on the second try.
@@ -1551,7 +1551,7 @@ edit below):
     (`power_dialog_draw.c`) turned out to be the same object at compatible
     offsets - `DestroyPowerDialog` independently confirmed `field_18` at the
     same address via raw pointer arithmetic. Folded into one
-    `struct sub_8006700_actor` used by all three functions.
+    `struct power_dialog` used by all three functions.
   - The standalone `struct sub_8006A78_struct` (`graphics.c`) is exactly
     the 12-byte header of the OAM-shadow-buffer object every other
     function in that cluster (`AppendOamEntries`/`AAC`/`AC8`/`A48`/`B0C`) was
@@ -1710,9 +1710,9 @@ the ROM's `lsls r1,r1,#0x10; lsrs r7,r1,#0x10` is the truncation a
 16-bit parameter forces on its incoming (possibly dirty-upper-bits)
 register, absent entirely once the parameter was declared `u16`.
 
-**`DestroySpriteBankSet`/`nullsub_1`**: `DestroySpriteBankSet` is a small mirror of the
+**`DestroySpriteBankSet`/`InitSpriteBankSet`**: `DestroySpriteBankSet` is a small mirror of the
 already-matched `DestroyOamBuffer` (conditionally frees `arg0` based on an
-odd/even flag in `arg1`), matched on the first attempt.  `nullsub_1` is
+odd/even flag in `arg1`), matched on the first attempt.  `InitSpriteBankSet` is
 an empty stub whose 2-byte body isn't 4-aligned - the same
 NOP-vs-zero-fill padding gotcha documented at the top of this file -
 fixed with `asm(".align 2, 0");` right after the function.
@@ -1898,7 +1898,7 @@ width/height pair stored two ways, a per-category table pointer) to
 be worth a real struct instead of another round of "raw offsets,
 matching the many similar actor-zone functions" comments - and
 `power_dialog_draw.c`'s `DestroyPowerDialog` (already-matched, `struct
-sub_8006700_actor.field_18`) turned out to be a pointer to exactly
+power_dialog.field_18`) turned out to be a pointer to exactly
 the same object, confirming it independently. New `struct actor` in
 `include/actor.h`, sized `0x1c` bytes (confirmed by `CreateEntity`'s
 `OperatorNew(sizeof(struct actor))` allocation) with named fields for
@@ -1908,7 +1908,7 @@ understood beyond their offset), `flags`, `halfW`/`halfH`/`rawW`/
 `rawH`, and `table` (the per-category data table pointer - its own
 internal shape still isn't known, so dynamic offsets into *it* stay
 raw pointer math, not a nested struct). `struct
-sub_8006700_actor.field_18` retyped from `void *` to `struct actor *`
+power_dialog.field_18` retyped from `void *` to `struct actor *`
 to match.
 
 One real regression caught by rebuilding after the edit (not assumed
@@ -5047,7 +5047,7 @@ four new small files (non-contiguous, since several functions in
 between resist matching or aren't understood well enough yet, per the
 project's "one `.c` file per contiguous ROM region" rule):
 
-- **`src/frontend/language_select.c`** (`LoadTaggedAssetBuffered`, `nullsub_7`,
+- **`src/frontend/language_select.c`** (`LoadTaggedAssetBuffered`, `InitCompanyLogos`,
   `DestroyCompanyLogos`, `DestroyLogoActor`, `RunLanguageSelect`, `LanguageSelectInput`) - reads
   like game/HUD-side code that merely *calls into* audio (`PlaySfx`)
   rather than GAX2 engine internals: a small on-screen 0-5 "counter"
@@ -5405,9 +5405,9 @@ pins or reordering needed.
   Y by the shared HUD layout value (`gHudSlideOffset`). Already
   referenced as an `extern` from `hud_lives.c`; this is its real
   definition.
-- **`sub_802710C`** (UNUSED - no caller anywhere in the ROM, checked
-  `asm/*.s`, `expected/*.s`, every `src/*.c` file) and **`InitHudPart`**:
-  two `struct actor`-table-swap constructors for one HUD digit/icon
+- **`DestroyHudPart`** (no direct caller: it is the destructor slot,
+  +0x50, of gHudPartVtable) and **`InitHudPart`**: the `struct
+  actor`-table-swap destructor and constructor for one HUD digit/icon
   slot, confirming `struct hud_digit_part`'s first 0x18 bytes plus
   `table` at `+0x18` are byte-identical to `struct actor`
   (`include/actor.h`) - both call the same generic `DestroyUiSpriteObj`/
@@ -5795,10 +5795,10 @@ enough yet):
   `asm/*.s` file - had to drop the `s` suffix (`add r7, r0, #0`) to get
   through `as`, same encoded bytes either way.
 - **`lib/gax/src/gax_sound_handler_info.c`** (`GaxInfoResetPosition`, `GaxInfoInit`,
-  `sub_803941C`, `nullsub_39`) - the GAX2_SoundHandler "Info" type's
+  `GaxInfoRestart`, `GaxInfoUnknown`) - the GAX2_SoundHandler "Info" type's
   init_fn/unknown_fn, resolving two more entries in docs/audio.md's
   per-type function-pointer table (`GaxInfoInit` = `0x080393FD`,
-  `nullsub_39` = `0x08039439`; play_fn `GaxInfoPlay` stays raw).
+  `GaxInfoUnknown` = `0x08039439`; play_fn `GaxInfoPlay` stays raw).
   `GaxInfoResetPosition` is the shared field-reset core both init variants fall
   through to after their own field subsets - its two 16-bit constants
   (`0xFFFF`/`0x4E20`, too big for a `movs` immediate) each needed a named
@@ -5808,13 +5808,13 @@ enough yet):
   one (`zeroHalf`) pinned to `register ... asm("r3")` - otherwise gcc's
   CSE reuses the first temp's already-known-zero register for the
   second and drops the ROM's separate `movs r3,#0` entirely, 2 bytes
-  short. `sub_803941C` needed the same "zero into its own named temp,
+  short. `GaxInfoRestart` needed the same "zero into its own named temp,
   set before the other stores" treatment (a plain `= 0;` inline compiles
   it into the same register as the adjacent `movs r0,#2`, not the ROM's
   separately pre-staged r1).
-- **`lib/gax/src/gax_sound_handler_channel.c`** (`nullsub_40`) - the
+- **`lib/gax/src/gax_sound_handler_channel.c`** (`GaxChannelUnknown`) - the
   "Channel" type's unknown_fn (`0x080395A1`), a no-op stub like
-  `nullsub_39` above; init_fn (`GaxChannelInit`) and play_fn
+  `GaxInfoUnknown` above; init_fn (`GaxChannelInit`) and play_fn
   (`GaxChannelPlay`) stay raw.
 
 **Left raw, not matched this pass** (all described in

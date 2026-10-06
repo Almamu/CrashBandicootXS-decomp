@@ -22,7 +22,7 @@
  * earlier passes (gax-toolchain-retry.md, gax-naked-retry-2/3/4.md). The
  * last pieces were: indexed copies of the constant ARM-code tables (GCSE
  * hoists their addresses to the first block in the ROM's order), a
- * separate counter for the dspFn17c copy, `layout` copied from a
+ * separate counter for the filterCode copy, `layout` copied from a
  * block-local read after the first types[] load, and three no-code
  * register nudges (commented at each use). */
 
@@ -69,7 +69,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
     gGaxPlayerState->state = 0;
     gGaxPlayerState->curChannelIdx = 0;
     gGaxPlayerState->echoTaps = 0;
-    gGaxPlayerState->field_41 = 0;
+    gGaxPlayerState->skipSongChannels = 0;
     gGaxPlayerState->playDone = 1;
     n = p->layout->count;
     if (p->sfxTypes != NULL)
@@ -81,7 +81,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
     size -= 8;
     gGaxPlayerState->format = fmt;
     idx = GaxFindMixRate(p->mixRate);
-    fmt->field_00 = 8;
+    fmt->bits = 8;
     fmt->channels = 1;
     fmt->mixRate = gGaxMixRates[idx].rate;
     fmt->frames = fmt->mixRate * 1000 / 0xe94f;
@@ -185,18 +185,18 @@ u8 GAX2_init(struct GaxSongHeader *p)
         const u32 *src;
 
         for (k = 0; k <= 20; k++)
-            gGaxPlayerState->dspCode48[k] = gGaxArmDownmix[k];
+            gGaxPlayerState->downmixCode[k] = gGaxArmDownmix[k];
         src = gGaxArmEcho;
         for (k = 0; k <= 55; k++)
-            gGaxPlayerState->dspCode9c[k] = src[k];
+            gGaxPlayerState->echoCode[k] = src[k];
         src = gGaxArmResample;
         {
             s32 words;
             if (p->layout->types[1]->data.song->field_1b != 0 || (u16)(p->flags & 0x20)) {
-                gGaxPlayerState->field_42 = 1;
+                gGaxPlayerState->fullResampler = 1;
                 words = 76;
             } else {
-                gGaxPlayerState->field_42 = 0;
+                gGaxPlayerState->fullResampler = 0;
                 words = 55;
             }
             if (size < words * 4)
@@ -211,7 +211,7 @@ u8 GAX2_init(struct GaxSongHeader *p)
     if ((u16)(p->flags & 4)) {
         if (size <= 239)
             goto fail;
-        gGaxPlayerState->dspFn17c = buf;
+        gGaxPlayerState->filterCode = buf;
         buf += 240;
         size -= 240;
         {
@@ -220,15 +220,15 @@ u8 GAX2_init(struct GaxSongHeader *p)
             s32 m;
 
             for (m = 0; m <= 59; m++)
-                ((u32 *)gGaxPlayerState->dspFn17c)[m] = gStaticData_0803A67C[m];
+                ((u32 *)gGaxPlayerState->filterCode)[m] = gGaxArmFilter[m];
         }
     } else {
-        gGaxPlayerState->dspFn17c = NULL;
+        gGaxPlayerState->filterCode = NULL;
     }
     {
         struct GaxHandlerLayout *l = p->layout;
 
-        gGaxPlayerState->field_180 = 0;
+        gGaxPlayerState->filter = 0;
         /* no code: an extra reference that puts the (PRE-hoisted)
          * `p->layout` argument first in global.c's order, so it takes r4
          * and the other arguments sb/r6 as in the ROM */

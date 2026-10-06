@@ -95,7 +95,7 @@ barrier fixes, not a genuine compiler limitation:
   closed with an empty `asm("" : "+r" (tmp));` compiler barrier
   immediately after `tmp`'s register-pinned initializer, the same
   "stop the materialize-then-copy fold" technique already documented
-  for `sub_801E8F8`/`sub_801E96C`
+  for `SetScaledSpriteColor`/`ResetScaledSpriteAttrs`
   (`docs/matching/archive/issue-30-graphics-loading.md`). Writing the two
   trailing `... | 8`/`... | 0x10` stores as `tmp |= 8; blend.b.x = tmp;`
   (rather than `blend.b.x = tmp | 8;`) was also needed so the OR's result

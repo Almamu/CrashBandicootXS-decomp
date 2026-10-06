@@ -118,13 +118,13 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   in C gets constant-folded into a single-instruction bitwise-complement
   immediate, one off from the ROM's actual two's-complement value.
 - **`InitLevelState`'s five "void helper leaves the pointer in r0" calls**
-  (`InitSpriteRenderer`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
+  (`InitSpriteRenderer`, `InitSpriteBankSet`, `InitPaletteCache`, `ClearKeys`,
   `InitEntityFlags`, and `CreateEntitySpawner`'s own `InitEntitySpawner`): each is called
   immediately after an allocation, and the ROM leaves the fresh
   pointer in `r0` across the call (valid only because each real callee
   never writes r0) instead of reloading/saving it - reproduced with the
   pointer pinned to `r0` across an inline-asm `bl`, the same technique
-  `ShowCompanyLogos`'s `nullsub_7` call already established (see
+  `ShowCompanyLogos`'s `InitCompanyLogos` call already established (see
   `docs/matching/archive/issue-37-game-loop-234e8.md`).
 - **`gSpriteBankSet`'s triple pointer-to-pointer-to-pointer
   dereference**: declaring it `void ***gSpriteBankSet;` (matching

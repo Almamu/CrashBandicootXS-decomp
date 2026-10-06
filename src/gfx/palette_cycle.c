@@ -295,13 +295,13 @@ void DrawHudPart(struct hud_digit_part *part, s32 arg1, s32 arg2)
     }
 }
 
-/* UNUSED - no caller anywhere in the ROM (checked asm/*.s,
- * expected/*.s, every src/*.c file). A `struct actor`-table-swap constructor
- * variant of `InitHudPart` below: sets `table` directly instead of
- * going through `InitUiSpriteObj`, then forwards to `DestroyUiSpriteObj` (which
- * immediately overwrites `table` again as part of its own two-step
- * table swap - see sprite_anim.c). */
-void sub_802710C(struct actor *part, u32 arg1)
+/* The HUD part's destructor: the destructor slot (+0x50) of
+ * gHudPartVtable, the method table InitHudPart installs, so it is only
+ * reached through that table (no `bl`; an earlier note called it
+ * unused). Like every gcc 2.x destructor here it restores its own class's
+ * table, then chains to the base destructor `DestroyUiSpriteObj` (which
+ * swaps `table` again, see sprite_anim.c). */
+void DestroyHudPart(struct actor *part, u32 arg1)
 {
     part->table = (void *)gHudPartVtable;
     DestroyUiSpriteObj(part, arg1);

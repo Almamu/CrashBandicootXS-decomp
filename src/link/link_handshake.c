@@ -4,9 +4,8 @@
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
  * SIO/link-cable section. `ResetLinkSessionState` resets a per-session object at
- * `gLinkSession` (still uncharacterized beyond the offsets touched
- * here and in src/save/save_transfer.c/save_menu_draw.c); 4
- * per-player 0xc8-byte sub-records live at session+playerIndex*0xc8. */
+ * `gLinkSession` (`struct link_session`, link_session.h); its 4
+ * per-player 0xc8-byte records are at session+0xd0+playerIndex*0xc8. */
 
 /* Fills `self`'s first 8 bytes with a fixed 0xEC pattern (byte 0 masked
  * to its low nibble, byte 1 zeroed), then hashes bytes 1-5 with a
@@ -17,9 +16,8 @@
  * this point from the earlier mask, which is why the ROM's own
  * `(self[0]>>4) + hash` tail - reconstructing `hash` from the just-
  * stored bytes 6/7 rather than reusing the register - reduces to plain
- * `hash & 0xF`). Called by `ResetLinkSessionState` on each per-player 8-byte
- * sub-record - reads as generating a deterministic per-slot
- * handshake/session id.
+ * `hash & 0xF`). Called once by `ResetLinkSessionState`, on the
+ * session's own `id`, which it then copies into every player record.
  *
  * Once a NAKED transcription; it matches as plain C under old_agbcc
  * (link_handshake.o is on the Makefile's OLD_AGBCC_OBJS) with no pins

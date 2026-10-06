@@ -22,17 +22,17 @@
  * CommitPauseMenuFrame/AnimatePauseMenu (the same per-row draw/apply-registers/
  * icon-cycle trio every settings row already uses).
  *
- * `field_cc`'s low 5 bits are a blend/fade level (see InitPauseMenu and
+ * `bldy`'s low 5 bits are a blend/fade level (see InitPauseMenu and
  * CommitPauseMenuFrame): first ramps it down to 0 one frame at a time (the
  * screen's fade-in), then the main input loop - L/R adjust the
  * currently-selected row's slider (PauseMenuCursorUp/PauseMenuCursorDown, playing a
- * confirm-ish SFX and arming a short flash via field_68), the D-pad
+ * confirm-ish SFX and arming a short flash via flashTimer), the D-pad
  * bumps the selected row's value up/down with an initial-press vs
  * held-repeat distinction (PauseMenuVolumeDown/PauseMenuVolumeUp), and A confirms the
  * selected row unless its type tag is 4 or 5 (the editable-percentage
  * rows just play SFX 0x48 and keep looping); B cancels (result 0).
  * Either way, ramps the fade level back up to 0x10, resets the DISPCNT
- * shadow `field_d0` to just bit 6 and applies it once more, and returns
+ * shadow `dispcnt` to just bit 6 and applies it once more, and returns
  * the confirmed row's type tag (or 0).
  *
  * Matches under old_agbcc only (this object is on the Makefile's
@@ -55,14 +55,14 @@ struct pause_keys {
 };
 #define KEYS (*(struct pause_keys *)&gKeys)
 
-/* field_cc: REG_BLDY fade level in the low 5 bits. */
+/* bldy: REG_BLDY fade level in the low 5 bits. */
 struct pause_fade {
     u8 level:5;
     u8 rest:3;
 } __attribute__((packed));
-#define FADE(self) ((struct pause_fade *)&(self)->field_cc)
+#define FADE(self) ((struct pause_fade *)&(self)->bldy)
 
-/* field_d0: REG_DISPCNT shadow; bit 6 is set on exit. */
+/* dispcnt: REG_DISPCNT shadow; bit 6 is set on exit. */
 struct pause_dispcnt {
     u16 lo:6;
     u16 bit6:1;
@@ -95,12 +95,12 @@ s32 PauseMenuLoop(struct pause_menu *self)
         UpdateKeys(gInput);
         if (KEYS.pressed & 0x40) {
             PauseMenuCursorUp(self);
-            self->field_68 = 0x1e;
+            self->flashTimer = 0x1e;
             PlaySfx(gAudioContext, 0x46, 0x100);
         }
         if (KEYS.pressed & 0x80) {
             PauseMenuCursorDown(self);
-            self->field_68 = 0x1e;
+            self->flashTimer = 0x1e;
             PlaySfx(gAudioContext, 0x46, 0x100);
         }
         in = gKeys.all;
@@ -108,13 +108,13 @@ s32 PauseMenuLoop(struct pause_menu *self)
         key = 0x20;
         if (pressed & 0x20) {
             PauseMenuVolumeDown(self);
-            self->field_68 = 0x1e;
+            self->flashTimer = 0x1e;
         } else if (in & key) {
-            if (self->field_68 == 0) {
+            if (self->flashTimer == 0) {
                 PauseMenuVolumeDown(self);
-                self->field_68 = 5;
+                self->flashTimer = 5;
             } else {
-                self->field_68--;
+                self->flashTimer--;
             }
         }
         in = gKeys.all;
@@ -122,17 +122,17 @@ s32 PauseMenuLoop(struct pause_menu *self)
         key = 0x10;
         if (pressed & 0x10) {
             PauseMenuVolumeUp(self);
-            self->field_68 = 0x1e;
+            self->flashTimer = 0x1e;
         } else if (in & key) {
-            if (self->field_68 == 0) {
+            if (self->flashTimer == 0) {
                 PauseMenuVolumeUp(self);
-                self->field_68 = 5;
+                self->flashTimer = 5;
             } else {
-                self->field_68--;
+                self->flashTimer--;
             }
         }
         if (KEYS.pressed & 1) {
-            result = self->field_14[self->field_18].type;
+            result = self->rows[self->cursor].type;
             if ((u32)(result - 4) <= 1) {
                 PlaySfx(gAudioContext, 0x48, 0x100);
             } else {
@@ -150,7 +150,7 @@ s32 PauseMenuLoop(struct pause_menu *self)
         FADE(self)->level++;
         draw_frame(self);
     }
-    disp = &self->field_d0;
+    disp = &self->dispcnt;
     *disp = 0;
     ((struct pause_dispcnt *)disp)->bit6 = 1;
     CommitPauseMenuFrame(self);

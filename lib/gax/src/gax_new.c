@@ -4,7 +4,7 @@
  * IS NULL" error report): fills a `struct GaxSongHeader` (the GAX2
  * params block GAX2_estimate/GAX2_init take) with defaults - zeroes it
  * (GaxZeroFill), then mix rate and SFX-voice count 0xffff ("the song's
- * default"), `field_0a` 0, volume 0xffff and `showErrors` 1. A NULL
+ * default"), `filter` 0, volume 0xffff and `showErrors` 1. A NULL
  * `self` shows the fatal-error screen instead. Kept on raw offsets
  * here (byte-exact as written). */
 void GAX2_new(void *self)

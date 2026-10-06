@@ -37,7 +37,7 @@ for the full write-up.
   plain C since the early-ROM NAKED retry, see
   [early-rom-naked-retry.md](../matching/archive/early-rom-naked-retry.md)), `GetCurrentSong`,
   `GetSfxVolume`, `GetMusicVolume`, `FadeOutMusic`, `FadeInMusic`,
-  `FadeOutMasterVolume`, `FadeInMasterVolume`, `sub_8001B14`, `SetMusicVolume`,
+  `FadeOutMasterVolume`, `FadeInMasterVolume`, `SetMusicFilter`, `SetMusicVolume`,
   `SetSfxVolume`, `PlaySong`, `ResumeSong`, `PauseSong`,
   `StopSong`, `DestroyAudioContext`, `InitAudioContext` (constructor),
   `DisableMusicVCountIrq`.
@@ -51,7 +51,7 @@ for the full write-up.
 `docs/matching.md`'s "`0x08037110`-`0x08038538`" entry for the full
 write-up):
 
-- `src/frontend/language_select.c` - `LoadTaggedAssetBuffered`, `nullsub_7`,
+- `src/frontend/language_select.c` - `LoadTaggedAssetBuffered`, `InitCompanyLogos`,
   `DestroyCompanyLogos`, `DestroyLogoActor` (reached only through
   gLogoActorVtable's slot 1), `RunLanguageSelect`, `LanguageSelectInput`
 - `src/frontend/language_select_setup.c` - `LoadLanguageSelectBg`, `LanguageSelectBlink`,
@@ -89,10 +89,10 @@ pass) and
 - `lib/gax/src/gax_fatal_error.c` - `GaxFatalError` (the fatal-error
   display screen)
 - `lib/gax/src/gax_sound_handler_info.c` - `GaxInfoResetPosition`/`GaxInfoInit`/
-  `sub_803941C`/`nullsub_39`/`GaxInfoPlay` (the GAX2_SoundHandler
+  `GaxInfoRestart`/`GaxInfoUnknown`/`GaxInfoPlay` (the GAX2_SoundHandler
   "Info" type's init_fn/unknown_fn/play_fn, per `docs/audio.md`'s
   per-type function-pointer table)
-- `lib/gax/src/gax_sound_handler_channel.c` - `nullsub_40` (the "Channel"
+- `lib/gax/src/gax_sound_handler_channel.c` - `GaxChannelUnknown` (the "Channel"
   type's unknown_fn)
 - `lib/gax/src/gax_text_render.c` - `GaxDrawText` (word-wrap text/
   console-tile renderer, called by `GaxFatalError`) - see
@@ -126,9 +126,10 @@ for the full write-up, GitHub issue #68):
   vibrato/tremolo-style effect-table lookup)
 - `lib/gax/src/gax_channel_init.c` - `GaxFxChannelInit` (per-channel voice
   object constructor)
-- `lib/gax/src/gax_sound_handler_unknownc.c` - `nullsub_41` (UNUSED - no
-  caller anywhere in the ROM), `GaxMixerInit` (the "UnknownC" type's
-  init_fn), `nullsub_42` (its unknown_fn)
+- `lib/gax/src/gax_sound_handler_unknownc.c` - `GaxFxChannelUnknown` (the sound-effect
+  voice type's unknown_fn, referenced only from that type in the
+  sound-effect data set), `GaxMixerInit` (the "UnknownC" type's
+  init_fn), `GaxMixerUnknown` (its unknown_fn)
 - `lib/gax/src/gax_channel_bind_instrument.c` - `GaxChannelSetInstrument` (binds a new
   instrument entry to a per-channel voice object and resets its
   envelope/state fields) - closed by pinning `self` to `ip` for the
@@ -174,7 +175,7 @@ for the per-function notes.
 - `lib/gax/src/gax_note_lookup.c` - `GaxEnvelopeTick`
 - `lib/gax/src/gax_channel_pos_sweep.c` - `GaxChannelTickSweep`
 - `lib/gax/src/gax_channel_note_cut_driver.c` - `GaxFxChannelPlay`
-- `lib/gax/src/gax_unknownc_play.c` - `GaxMixerApplyEcho`, `sub_803A2C8`,
+- `lib/gax/src/gax_unknownc_play.c` - `GaxMixerApplyEcho`, `GaxMixerApplyFilter`,
   `GaxMixerPlay`, `GaxMixFrame` (the Thumb-to-ARM call is GAX2's own
   inline-asm idiom, `GAX_CALL_ARM`; `sub_803A318`/`sub_803A608` were
   only its return points, not functions)
@@ -277,7 +278,7 @@ independent passes together parked all 15 of the chunk's still-raw
 functions as byte-verified NAKED transcriptions - `GaxChannelStepInstrumentSeq`,
 `GaxChannelSetInstrument`, `GaxChannelTick`, `GaxEnvelopeTick` (see
 [docs/matching/archive/issue-68-channel-bind-envelope-note.md](../matching/archive/issue-68-channel-bind-envelope-note.md))
-plus `GaxChannelTickSweep`, `GaxFxChannelPlay`, `GaxMixerApplyEcho`, `sub_803A2C8`/
+plus `GaxChannelTickSweep`, `GaxFxChannelPlay`, `GaxMixerApplyEcho`, `GaxMixerApplyFilter`/
 `sub_803A318` (fused), `GaxMixerPlay`, `GaxMixFrame`/`sub_803A608`
 (fused) (see "Parked - NAKED asm transcription(s)" above), plus
 `GaxChannelMix`/`sub_8039E50` - one logical note-trigger routine split by

@@ -63,7 +63,7 @@ owning record's pool index for `FreeVramTileBlock`.
   couldn't be steered around either. See that function's own comment in
   `src/gfx/sprite_frame.c` for the full instruction-by-
   instruction breakdown.
-- **`sub_8028D6C`** - matched, **UNUSED** (no caller anywhere in the ROM,
+- **`WalkVramTileBlocks`** - matched, **UNUSED** (no caller anywhere in the ROM,
   checked every `asm/*.s`, `expected/*.s` and `src/**/*.c` for the address
   and a `bl`/`.4byte` reference). Walks the spare-record stack to its end,
   then the free-block list all the way around, discarding both results -
@@ -71,7 +71,7 @@ owning record's pool index for `FreeVramTileBlock`.
   shape already documented for `mem_walk_heaps` in `src/system/memory.c`.
 - **`GetFreeVramTileBytes`** - matched, **UNUSED**. The original disassembly never
   gave this address its own `thumb_func_start`; it's a genuinely separate
-  function starting right where `sub_8028D6C`'s real body ends (confirmed
+  function starting right where `WalkVramTileBlocks`'s real body ends (confirmed
   by there being no caller for the combined "one function" reading and by
   this half being a clean, self-contained "sum every free block's size"
   routine). Added a `split 0x08028D94 GetFreeVramTileBytes` correction, the same

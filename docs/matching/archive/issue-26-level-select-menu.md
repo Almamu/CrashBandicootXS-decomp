@@ -76,7 +76,7 @@ their method tables.
   front end, which doesn't). Wrapping the constant in a trivial
   `static inline s32 Opaque(s32 v) { return v; }` hides it from the
   folder - inlining only happens at RTL level - so `x &= Opaque(~0x40)`
-  expands with the constant first. Used for `sub_801BAC4` (now one
+  expands with the constant first. Used for `ClearLaunchPadVulnerable` (now one
   line) and for the key/flag tests in the NON_MATCHING reconstructions;
   it closes the ordering in isolation but doesn't by itself fix register
   choice (`SpawnLaunchPad`'s masks still need the pinned/`mov`+`neg` form,

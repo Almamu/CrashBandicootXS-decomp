@@ -970,12 +970,12 @@ void PlayIntroCutscene(void *self)
     StopSfx(gAudioContext, 0x5d);
 }
 
-/* Allocates a `0x44c`-byte block, fires an (empty) `nullsub_7` hook and
+/* Allocates a `0x44c`-byte block, fires an (empty) `InitCompanyLogos` hook and
  * `RunCompanyLogos`, then hands the block to `DestroyCompanyLogos` with flags `3`
  * if the allocation succeeded. */
 void ShowCompanyLogos(void *unused)
 {
-    /* `nullsub_7` is a real no-op (`bx lr`) but, split into its own
+    /* `InitCompanyLogos` is a real no-op (`bx lr`) but, split into its own
      * translation unit (src/frontend/language_select.c), an ordinary call
      * forces the allocated block's pointer into a callee-saved register
      * *before* the call, one instruction earlier than the ROM (which
@@ -987,7 +987,7 @@ void ShowCompanyLogos(void *unused)
     MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(0x44c);
     void *block;
 
-    asm volatile("bl nullsub_7" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
+    asm volatile("bl InitCompanyLogos" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
     block = tmp;
     RunCompanyLogos(tmp);
     if (block != NULL) {

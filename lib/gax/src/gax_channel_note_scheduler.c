@@ -25,14 +25,14 @@ void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHan
     self->seqPos++;
     if (e->note != 0) {
         self->note = (e->note - 2) << 5;
-        self->field_21 = e->field_01;
+        self->fixedPitch = e->fixedPitch;
         if (e->wave != 0) {
             self->row = e->wave - 1;
             self->samplePos = 0;
-            self->field_11 = 1;
+            self->direction = 1;
             self->vol17 = 0xff;
             self->sweepOn = 0;
-            if (self->instrument->rows[self->row].field_00 != 0 &&
+            if (self->instrument->rows[self->row].sweep != 0 &&
                 self->instrument->rows[self->row].sweepMin <
                     self->instrument->rows[self->row].sweepMax &&
                 self->instrument->rows[self->row].sweepLen > 0 &&

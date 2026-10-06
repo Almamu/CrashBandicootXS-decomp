@@ -8,12 +8,11 @@
 
 
 /* A per-frame screen-brightness fade tick: every `gBrightnessFade`.
- * `field_0` frames, writes the next brightness step to `REG_BLDY`,
- * counting either up or down depending on `field_8`'s top bit (fading
+ * `period` frames, writes the next brightness step to `REG_BLDY`,
+ * counting either up or down depending on `flags`' top bit (fading
  * in vs. out). After 17 steps (a full fade), resets both counters,
- * briefly disables interrupts (`REG_IME`) while resetting `field_0` to
- * `-1` and calling `RemoveVBlankCallback` with `field_4` (presumably to kick off
- * whatever comes after the fade), then re-enables interrupts.
+ * briefly disables interrupts (`REG_IME`) while resetting `period` to
+ * `-1` and removing its own VBlank callback (`callbackId`), then re-enables interrupts.
  * `mask`/`flag8` are pinned to r0/r1 to match the ROM's exact register
  * choice for the `& 0x80` check - the natural (unpinned) allocation
  * puts the loaded byte in r0 and the constant in r1 instead, one
@@ -24,14 +23,14 @@ void StepBrightnessFade(void)
 
     counter = gBrightnessFadeTimer + 1;
     gBrightnessFadeTimer = counter;
-    if (counter == gBrightnessFade.field_0) {
+    if (counter == gBrightnessFade.period) {
         s32 val;
         MATCH_HOLD_REG(u8, flag8, r1);
         MATCH_HOLD_REG(s32, mask, r0);
 
         gBrightnessFadeTimer = 0;
         mask = 0x80;
-        flag8 = gBrightnessFade.field_8;
+        flag8 = gBrightnessFade.flags;
         if (mask & flag8) {
             REG_BLDY = 16 - gBrightnessFadeStep;
         } else {
@@ -43,8 +42,8 @@ void StepBrightnessFade(void)
             gBrightnessFadeStep = 0;
             gBrightnessFadeTimer = 0;
             REG_IME = 0;
-            gBrightnessFade.field_0 = -1;
-            RemoveVBlankCallback(gBrightnessFade.field_4);
+            gBrightnessFade.period = -1;
+            RemoveVBlankCallback(gBrightnessFade.callbackId);
             REG_IME = 1;
         }
     }
@@ -55,7 +54,7 @@ void StepBrightnessFade(void)
  * direction (fade in from `0x10` vs fade out from `0`); `frameDelay`
  * (clamped to at least 1) is how many frames each of the 17 steps
  * takes. Refuses to start (silently) if a fade is already running -
- * `gBrightnessFade.field_0` is the sentinel `-1` only when idle,
+ * `gBrightnessFade.period` is the sentinel `-1` only when idle,
  * checked via the classic `(~x + 1) | ~x < 0` "x != -1" bit-trick
  * rather than a plain comparison (matching the ROM's exact `mvn; neg;
  * orr; cmp` sequence - a direct `!= -1` compiles to a shorter
@@ -67,7 +66,7 @@ void StepBrightnessFade(void)
 void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
 {
     {
-        s32 f = gBrightnessFade.field_0;
+        s32 f = gBrightnessFade.period;
         s32 notf = ~f;
         s32 t = -notf;
         t |= notf;
@@ -94,9 +93,9 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
             REG_BLDY = dirBit;
         }
         REG_IME = 0;
-        gBrightnessFade.field_8 = flags;
-        gBrightnessFade.field_0 = frameDelay;
-        gBrightnessFade.field_4 = AddVBlankCallback(StepBrightnessFade);
+        gBrightnessFade.flags = flags;
+        gBrightnessFade.period = frameDelay;
+        gBrightnessFade.callbackId = AddVBlankCallback(StepBrightnessFade);
         REG_IME = 1;
     } else {
         s32 i = 0;

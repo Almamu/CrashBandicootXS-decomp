@@ -35,7 +35,7 @@ struct hud_anim_data {
 
 /* A single HUD digit/icon slot. Its first 0x18 bytes plus the `table`
  * field at +0x18 match `struct actor` (include/actor.h) byte for byte -
- * sub_802710C/InitHudPart (src/gfx/palette_cycle.c) construct each
+ * InitHudPart/DestroyHudPart (src/gfx/palette_cycle.c) construct and destroy each
  * slot by calling the same generic `struct actor`-based table-swap
  * helpers (DestroyUiSpriteObj/InitUiSpriteObj) already used by the actor/part
  * system, treating this object as one. The rest of the fields
@@ -85,14 +85,14 @@ struct hud_counter {
     s32 shownSeconds;             /* +0x30 - same, for `GetClockSeconds`. */
     s32 shownTenths;              /* +0x34 - same, for `GetClockTenths`. */
     s32 value_d;                  /* +0x38 - UpdateHudPercentCounters' first percentage */
-    s32 value_e;                  /* +0x3c - its second one (GetAirshipHpPercent) */
+    s32 airshipHpPercent;         /* +0x3c - its second one (GetAirshipHpPercent) */
     s32 shownLives;               /* +0x40 - ConfigureHudParts fills +0x40..+0x63 with -1 */
     s32 shownWumpa;               /* +0x44 */
     s32 shownCrateCount;          /* +0x48 */
     s32 shownCrateTotal;          /* +0x4c */
     u8 unknown_50[0xC];           /* +0x50 */
     s32 shown_d;                  /* +0x5c - cache for `value_d` */
-    s32 shown_e;                  /* +0x60 - cache for `value_e` */
+    s32 shownAirshipHpPercent;    /* +0x60 - cache for `airshipHpPercent` */
     struct hud_digit_part *parts; /* +0x64 - the 35 slots InitHud builds */
 };
 

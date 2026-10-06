@@ -44,7 +44,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * local before passing it to the inline setter (passing the expression
  * straight in swapped the X/Y and 0x130/240 registers) - see
  * docs/matching/archive/strag3-naked-retry.md. */
-void DrawPowerDialog(struct sub_8006700_actor *arg0)
+void DrawPowerDialog(struct power_dialog *arg0)
 {
     struct aabb box;
     s32 w;
@@ -54,16 +54,16 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
 
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
-    DrawSpriteWithOffset((struct actor *)arg0->field_18, 0, 0);
+    DrawSpriteWithOffset((struct actor *)arg0->icon, 0, 0);
     r = gLargeFont->record;
-    w = _call_via_r2((u8 *)gLargeFont + r->slots[0].offset, arg0->field_10, r->slots[0].ptr);
+    w = _call_via_r2((u8 *)gLargeFont + r->slots[0].offset, arg0->titleText, r->slots[0].ptr);
     x = (u32)(240 - w) >> 1;
     set_icon_mgr_pos(gLargeFont, x, 0x2d);
     r = gLargeFont->record;
-    _call_via_r2((u8 *)gLargeFont + r->slots[2].offset, arg0->field_10, r->slots[2].ptr);
+    _call_via_r2((u8 *)gLargeFont + r->slots[2].offset, arg0->titleText, r->slots[2].ptr);
     SetAabbPos(&box, 0x10, 0x6a);
     SetAabbSize(&box, 0xd0, 0x35);
-    DrawWrappedTextInBox(arg0->field_14, gSmallFont, &box, 0);
+    DrawWrappedTextInBox(arg0->descText, gSmallFont, &box, 0);
     n = GetUiText(0x2e);
     r = gSmallFont->record;
     w = _call_via_r2((u8 *)gSmallFont + r->slots[0].offset, n, r->slots[0].ptr);
@@ -74,34 +74,34 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
     HideUnusedOamEntries(gOamBuffer);
 }
 
-void AnimatePowerDialog(struct sub_8006700_actor *arg0)
+void AnimatePowerDialog(struct power_dialog *arg0)
 {
-    arg0->field_1c++;
-    AdvanceSpriteAnim((struct box_part *)arg0->field_18);
+    arg0->frame++;
+    AdvanceSpriteAnim((struct box_part *)arg0->icon);
 }
 
-void CommitPowerDialogFrame(struct sub_8006700_actor *arg0)
+void CommitPowerDialogFrame(struct power_dialog *arg0)
 {
     WaitForVBlank();
     UploadPaletteCache(gPaletteCache);
     CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
-    *(vu16 *)REG_ADDR_BG0HOFS = arg0->field_1c >> 3;
+    *(vu16 *)REG_ADDR_BG0HOFS = arg0->frame >> 3;
     *(vu16 *)PLTT = 0;
-    *(vu32 *)REG_ADDR_BLDCNT = arg0->field_20;
-    *(vu16 *)REG_ADDR_BLDY = (u32)(arg0->field_24.raw << 27) >> 27;
-    *(vu16 *)REG_ADDR_DISPCNT = arg0->field_28.all;
+    *(vu32 *)REG_ADDR_BLDCNT = arg0->bldcnt;
+    *(vu16 *)REG_ADDR_BLDY = (u32)(arg0->bldy.raw << 27) >> 27;
+    *(vu16 *)REG_ADDR_DISPCNT = arg0->dispcnt.all;
 }
 
-void DestroyPowerDialog(struct sub_8006700_actor *arg0, u32 arg1)
+void DestroyPowerDialog(struct power_dialog *arg0, u32 arg1)
 {
-    struct actor *field18;
+    struct actor *iconBase;
     u8 *p;
 
-    field18 = &arg0->field_18->base;
-    if (field18 != NULL) {
-        p = (u8 *)field18->table + 0x50;
-        _call_via_r2((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));
+    iconBase = &arg0->icon->base;
+    if (iconBase != NULL) {
+        p = (u8 *)iconBase->table + 0x50;
+        _call_via_r2((u8 *)iconBase + *(s16 *)p, 3, *(void **)(p + 4));
     }
     if (arg1 & 1) {
         OperatorDelete(arg0);

@@ -43,23 +43,23 @@ void ResetSaveTransfer(struct settings_sync_pump *self)
  * compiler folds into the linker-relocated constant instead. */
 
 /* The "connecting..." spinner dialog's blocking modal loop: sets up
- * `gSaveMenu`'s `state`/`field_10`/`flags`/`field_8`/`field_20`,
+ * `gSaveMenu`'s `state`/`cursor`/`flags`/`done`/`gameLoaded`,
  * then repeatedly dispatches input (SaveMenuInput) through
  * DrawSaveMenu's state machine, VBlank-waits, and restores display
- * registers (CommitSaveMenuFrame) until `field_8` (set by one of the state
- * handlers below) requests an exit. Returns `field_20`, the handlers'
- * "result ready" flag. */
-u8 RunSaveMenu(u32 state, u32 field10)
+ * registers (CommitSaveMenuFrame) until `done` (set by one of the state
+ * handlers below) requests an exit. Returns `gameLoaded` (a game was
+ * loaded). */
+u8 RunSaveMenu(u32 state, u32 cursor)
 {
     struct save_menu **selfAddr = (struct save_menu **)&gSaveMenu;
     struct save_menu *self;
 
     self = *selfAddr;
     self->state = state;
-    self->field_10 = field10;
+    self->cursor = cursor;
     self->flags = 0;
-    self->field_8 = 0;
-    (*selfAddr)->field_20 = 0;
+    self->done = 0;
+    (*selfAddr)->gameLoaded = 0;
 
     goto dispatch;
     for (;;) {
@@ -72,15 +72,15 @@ u8 RunSaveMenu(u32 state, u32 field10)
         DrawSaveMenu(*selfAddr);
         WaitForVBlank();
         CommitSaveMenuFrame(*selfAddr);
-        if ((*selfAddr)->field_8 != 0) {
+        if ((*selfAddr)->done != 0) {
             break;
         }
     }
-    return ((struct save_menu *)gSaveMenu)->field_20;
+    return ((struct save_menu *)gSaveMenu)->gameLoaded;
 }
 
 /* The composite pause/options screen's (and the spinner dialog's, via
- * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
+ * InitSaveMenu above) `cartSave`/`linkSave` constructor: allocates and
  * initialises both save_data instances (ResetSaveData), does
  * the screen's tile/BG/list setup (InitSaveMenuIcons/LoadSaveMenuBg/
  * LoadSaveMenuData, still raw), fills `currentStats` and the first
@@ -91,19 +91,19 @@ u8 RunSaveMenu(u32 state, u32 field10)
 struct save_menu *InitSaveMenu(struct save_menu *arg0)
 {
     MATCH_HOLD_REG(struct save_menu *, self, r5) = arg0;
-    MATCH_HOLD_REG(void **, field8cAddr, r9) = &self->field_8c;
-    MATCH_HOLD_REG(void **, field90Addr, r8);
+    MATCH_HOLD_REG(void **, cartSaveAddr, r9) = &self->cartSave;
+    MATCH_HOLD_REG(void **, linkSaveAddr, r8);
     MATCH_HOLD_REG(s32, size, r6) = 0x200;
     MATCH_HOLD_REG(void *, obj, r4);
 
     obj = OperatorNew(size);
     ResetSaveData(obj);
-    *field8cAddr = obj;
+    *cartSaveAddr = obj;
 
-    field90Addr = &self->field_90;
+    linkSaveAddr = &self->linkSave;
     obj = OperatorNew(size);
     ResetSaveData(obj);
-    *field90Addr = obj;
+    *linkSaveAddr = obj;
 
     FreeUnlockedPaletteSlots(gPaletteCache);
     InitSaveMenuIcons(self);
@@ -111,21 +111,21 @@ struct save_menu *InitSaveMenu(struct save_menu *arg0)
     PlaySong(gAudioContext, 0x10);
     LoadSaveMenuData(self);
     SummarizeProgress(self, &self->currentStats, PackSaveData(gLevelState));
-    RefreshSaveSlotSummaries(self, *field8cAddr);
+    RefreshSaveSlotSummaries(self, *cartSaveAddr);
 
     {
         MATCH_HOLD_REG(struct link_session **, sessionAddr, r4) = &gLinkSession;
         *sessionAddr = InitLinkSession(IwramAlloc(0x408));
     }
     FadeBrightness(0x80, 1, 0);
-    self->field_20 = 0;
+    self->gameLoaded = 0;
     return self;
 }
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-/* Tears down the composite screen's (or spinner dialog's) field_8c/
- * field_90 pair, cancels the global SIO session object if one's still
+/* Tears down the composite screen's (or spinner dialog's) cartSave/
+ * linkSave pair, cancels the global SIO session object if one's still
  * active, erases each of the five settings-row icon widgets
  * (rowObjA/B/C, drawing a "blank" glyph via _call_via_r2's arg1=3), and
  * - only when `flags` bit 0 is set - destroys `self` itself. */
@@ -191,7 +191,7 @@ extern void _call_via_r1(void *arg0, void *fn);
  * still-uncharacterized descriptor shape as DestroySaveMenu above), then
  * dispatches `keys` to whichever per-`state` handler is active, and
  * finally advances `flags` (as a wrapping 0-0xff per-frame counter) and
- * `field_0` (as a plain per-frame tick). */
+ * `frame` (as a plain per-frame tick). */
 void SaveMenuInput(struct save_menu *self, u32 keys)
 {
     s32 i;
@@ -219,10 +219,10 @@ void SaveMenuInput(struct save_menu *self, u32 keys)
             SaveMenuMainInput(self, keys);
             break;
         case 1:
-            SaveMenuLoadInput(self, keys, self->field_8c);
+            SaveMenuLoadInput(self, keys, self->cartSave);
             break;
         case 2:
-            SaveMenuLoadInput(self, keys, self->field_90);
+            SaveMenuLoadInput(self, keys, self->linkSave);
             break;
         case 3:
             SaveMenuLinkInput(self);
@@ -250,62 +250,62 @@ void SaveMenuInput(struct save_menu *self, u32 keys)
     }
 
     self->flags = (self->flags + 1) & 0xff;
-    self->field_0 += 1;
+    self->frame += 1;
 }
 
 /* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
  * exit; confirm (bit 0) advances through this state's own little
- * sub-menu (`field_10` 0-4, mirroring the DrawSaveMenu states each
- * selects); L/R (bits 6/7) move the `field_10` cursor with wraparound. */
+ * sub-menu (`cursor` 0-4, mirroring the DrawSaveMenu states each
+ * selects); L/R (bits 6/7) move the `cursor` cursor with wraparound. */
 void SaveMenuMainInput(struct save_menu *self, u32 flags)
 {
     if (flags & 0xa) {
         PlaySfx(gAudioContext, 0x47, 0x100);
-        self->field_8 = 1;
+        self->done = 1;
         return;
     }
     if (flags & 1) {
         PlaySfx(gAudioContext, 0x49, 0x100);
-        switch (self->field_10) {
+        switch (self->cursor) {
         case 0:
             self->state = 1;
-            self->field_10 = 0;
-            RefreshSaveSlotSummaries(self, self->field_8c);
+            self->cursor = 0;
+            RefreshSaveSlotSummaries(self, self->cartSave);
             break;
         case 1:
             self->state = 3;
-            self->field_10 = 0;
-            self->field_14 = GetUiText(0x2b);
-            self->field_18 = GetUiText(0x2d);
+            self->cursor = 0;
+            self->messageLine1 = GetUiText(0x2b);
+            self->messageLine2 = GetUiText(0x2d);
             BeginLinkSaveTransfer(self);
             break;
         case 2:
             self->state = 5;
-            self->field_10 = 0;
-            RefreshSaveSlotSummaries(self, self->field_8c);
+            self->cursor = 0;
+            RefreshSaveSlotSummaries(self, self->cartSave);
             break;
         case 3:
             self->state = 6;
-            self->field_10 = 0;
-            RefreshSaveSlotSummaries(self, self->field_8c);
+            self->cursor = 0;
+            RefreshSaveSlotSummaries(self, self->cartSave);
             break;
         case 4:
-            self->field_8 = 1;
+            self->done = 1;
             break;
         }
         return;
     }
     if (flags & 0x40) {
         PlaySfx(gAudioContext, 0x46, 0x100);
-        self->field_10 -= 1;
-        if (self->field_10 < 0) {
-            self->field_10 = 4;
+        self->cursor -= 1;
+        if (self->cursor < 0) {
+            self->cursor = 4;
         }
     } else if (flags & 0x80) {
         PlaySfx(gAudioContext, 0x46, 0x100);
-        self->field_10 += 1;
-        if (self->field_10 > 4) {
-            self->field_10 = 0;
+        self->cursor += 1;
+        if (self->cursor > 4) {
+            self->cursor = 0;
         }
     }
 }
@@ -317,18 +317,18 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
 {
     if (flags & 0x40) {
         PlaySfx(gAudioContext, 0x46, 0x100);
-        if ((u32)self->field_10 <= 4) {
-            switch (self->field_10) {
+        if ((u32)self->cursor <= 4) {
+            switch (self->cursor) {
             case 0:
             case 2:
-                self->field_10 = 4;
+                self->cursor = 4;
                 break;
             case 1:
             case 3:
-                self->field_10 = self->field_10 - 1;
+                self->cursor = self->cursor - 1;
                 break;
             case 4:
-                self->field_10 = 1;
+                self->cursor = 1;
                 break;
             }
         }
@@ -336,37 +336,38 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
     }
     if (flags & 0x80) {
         PlaySfx(gAudioContext, 0x46, 0x100);
-        if ((u32)self->field_10 <= 4) {
-            switch (self->field_10) {
+        if ((u32)self->cursor <= 4) {
+            switch (self->cursor) {
             case 0:
             case 2:
-                self->field_10 = self->field_10 + 1;
+                self->cursor = self->cursor + 1;
                 break;
             case 1:
             case 3:
-                self->field_10 = 4;
+                self->cursor = 4;
                 break;
             case 4:
-                self->field_10 = 0;
+                self->cursor = 0;
                 break;
             }
         }
         return;
     }
     if (flags & 0x30) {
-        if (self->field_10 != 4) {
+        if (self->cursor != 4) {
             PlaySfx(gAudioContext, 0x46, 0x100);
-            self->field_10 ^= 2;
+            self->cursor ^= 2;
         }
     }
 }
 
-/* States 1/2's input handler (the two icon slider rows, `handle` =
- * field_8c/field_90 respectively): confirm/cancel-combo either resets
- * to state 0 (if maxed out) or, if the currently-highlighted row isn't
- * already selected (IsSaveSlotEmpty), toggles it on and pulls its stats
- * into the current-selection scratch fields; cancel (bit 1) resets to
- * state 0; otherwise falls through to the shared L/R cursor mover. */
+/* States 1/2's input handler ("load game" from `handle` = cartSave or
+ * linkSave): confirm on "cancel" (cursor 4) goes back to state 0; on an
+ * empty slot (IsSaveSlotEmpty) it only plays an error sound; otherwise it
+ * reads the slot (ReadSaveSlot), unpacks it into gLevelState with its
+ * level and volumes, summarizes it into `currentStats` and exits with
+ * `gameLoaded` set. Cancel (bit 1) goes back to state 0; otherwise falls
+ * through to the shared cursor mover. */
 void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
 {
     u8 buf[0x70];
@@ -376,31 +377,31 @@ void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
     }
     if (flags & 8) {
     confirm:
-        if (self->field_10 == 4) {
+        if (self->cursor == 4) {
             PlaySfx(gAudioContext, 0x49, 0x100);
             self->state = 0;
-            self->field_10 = 0;
+            self->cursor = 0;
             return;
         }
-        if (IsSaveSlotEmpty(handle, self->field_10)) {
+        if (IsSaveSlotEmpty(handle, self->cursor)) {
             PlaySfx(gAudioContext, 0x48, 0x100);
             return;
         }
         PlaySfx(gAudioContext, 0x49, 0x100);
-        ReadSaveSlot(handle, self->field_10, buf);
+        ReadSaveSlot(handle, self->cursor, buf);
         UnpackSaveData(gLevelState, buf);
         SetCurrentLevel(gLevelState, buf[0x68]);
         SetSfxVolume(gAudioContext, *(u16 *)&buf[0x6a]);
         SetMusicVolume(gAudioContext, *(u16 *)&buf[0x6c]);
         SummarizeProgress(self, &self->currentStats, PackSaveData(gLevelState));
-        self->field_20 = 1;
-        self->field_8 = 1;
+        self->gameLoaded = 1;
+        self->done = 1;
         return;
     }
     if (flags & 2) {
         PlaySfx(gAudioContext, 0x47, 0x100);
         self->state = 0;
-        self->field_10 = 0;
+        self->cursor = 0;
         return;
     }
     SaveMenuMoveCursor(self, flags);
@@ -421,55 +422,55 @@ void SaveMenuLinkInput(struct save_menu *self)
 
     if (state == 3) {
         self->state = 0;
-        self->field_10 = 1;
+        self->cursor = 1;
         PlaySfx(gAudioContext, 0x47, 0x100);
         return;
     }
 
-    if (state == 2 || !(u8)CheckSaveChecksum(self->field_90)) {
+    if (state == 2 || !(u8)CheckSaveChecksum(self->linkSave)) {
         self->state = 4;
-        self->field_14 = GetUiText(0x2c);
-        self->field_18 = GetUiText(0x2e);
+        self->messageLine1 = GetUiText(0x2c);
+        self->messageLine2 = GetUiText(0x2e);
         return;
     }
 
-    if (GetSaveGameId(self->field_8c) == GetSaveGameId(self->field_90)) {
+    if (GetSaveGameId(self->cartSave) == GetSaveGameId(self->linkSave)) {
         self->state = 2;
-        self->field_10 = 0;
-        RefreshSaveSlotSummaries(self, self->field_90);
+        self->cursor = 0;
+        RefreshSaveSlotSummaries(self, self->linkSave);
         return;
     }
 
-    switch (GetSaveGameId(self->field_90)) {
+    switch (GetSaveGameId(self->linkSave)) {
     case 2:
-        SetSaveFlags(self->field_8c, 2);
-        StoreSaveData(self->field_8c);
+        SetSaveFlags(self->cartSave, 2);
+        StoreSaveData(self->cartSave);
         self->state = 4;
-        self->field_14 = (u32)gCrash2LinkTextPtr;
+        self->messageLine1 = (u32)gCrash2LinkTextPtr;
         break;
     case 3:
-        SetSaveFlags(self->field_8c, 4);
-        StoreSaveData(self->field_8c);
+        SetSaveFlags(self->cartSave, 4);
+        StoreSaveData(self->cartSave);
         self->state = 4;
-        self->field_14 = (u32)gCrash3LinkTextPtr;
+        self->messageLine1 = (u32)gCrash3LinkTextPtr;
         break;
     default:
         self->state = 0;
-        self->field_10 = 1;
+        self->cursor = 1;
         return;
     }
-    self->field_18 = GetUiText(0x2e);
+    self->messageLine2 = GetUiText(0x2e);
 }
 
 /* Shared "commit or refresh row `rowIndex`" step used by states 5-9
  * below: pulls the row's stats/name/icon scratch data, feeds it through
- * `field_8c`'s pending-edit slot, and either finalises the edit
+ * `cartSave`'s pending-edit slot, and either finalises the edit
  * (EraseSaveSlot, when it wasn't already selected) or just refreshes the
  * row's aggregate stats. */
 void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
 {
     u8 buf[0xe0];
-    void **handleAddr = &self->field_8c;
+    void **handleAddr = &self->cartSave;
     void **handleAddr2;
     u32 wasSelected;
     struct level_state **c0Addr;
@@ -498,13 +499,13 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
     *(u16 *)(buf + 0xda) = (u16)GetSfxVolume(*bcAddr);
     *(u16 *)(buf + 0xdc) = (u16)GetMusicVolume(*bcAddr);
 
-    /* The ROM recomputes `self->field_8c`'s address a second time here
+    /* The ROM recomputes `self->cartSave`'s address a second time here
      * (a fresh `adds r4, r7, #0` / `adds r4, #0x8c` pair) rather than
      * reusing the register the first computation above left live -
      * mirror that with a second local instead of reusing `handleAddr`,
      * matching the technique noted in docs/matching.md for this class
      * of gap. */
-    handleAddr2 = &self->field_8c;
+    handleAddr2 = &self->cartSave;
     WriteSaveSlot(*handleAddr2, rowIndex, buf + 0x70);
     if (StoreSaveData(*handleAddr2)) {
         if (wasSelected) {
@@ -523,11 +524,11 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
  * matching_decomp_alignment_fix convention). */
 asm(".align 2, 0");
 
-/* State 7's input handler: confirm/cancel-combo commits row `field_24`
+/* State 7's input handler: confirm/cancel-combo commits row `pendingSlot`
  * (SaveGameToSlot, src/save/save_menu_input.c) and returns to state 0
- * if it was already the "current" row (`field_10==0`), else re-enters
+ * if it was already the "current" row (`cursor==0`), else re-enters
  * state 5 to reselect; cancel (bit 1) re-enters state 5 too; L/R toggle
- * `field_10` between 0/1. */
+ * `cursor` between 0/1. */
 void SaveMenuOverwriteInput(struct save_menu *self, u32 flags)
 {
     if (flags & 1) {
@@ -535,40 +536,40 @@ void SaveMenuOverwriteInput(struct save_menu *self, u32 flags)
     }
     if (flags & 8) {
     confirm:
-        if (self->field_10 == 0) {
-            SaveGameToSlot(self, self->field_24);
+        if (self->cursor == 0) {
+            SaveGameToSlot(self, self->pendingSlot);
             self->state = 0;
-            self->field_10 = 4;
+            self->cursor = 4;
         } else {
             self->state = 5;
-            self->field_10 = self->field_24;
+            self->cursor = self->pendingSlot;
             PlaySfx(gAudioContext, 0x49, 0x100);
         }
         return;
     }
     if (flags & 2) {
         self->state = 5;
-        self->field_10 = self->field_24;
+        self->cursor = self->pendingSlot;
         PlaySfx(gAudioContext, 0x47, 0x100);
         return;
     }
     if (flags & 0x40) {
-        if (self->field_10 == 1) {
-            self->field_10 = 0;
+        if (self->cursor == 1) {
+            self->cursor = 0;
             PlaySfx(gAudioContext, 0x46, 0x100);
         }
         return;
     }
     if (flags & 0x80) {
-        if (self->field_10 == 0) {
-            self->field_10 = 1;
+        if (self->cursor == 0) {
+            self->cursor = 1;
             PlaySfx(gAudioContext, 0x46, 0x100);
         }
     }
 }
 
 /* State 5's input handler: confirm/cancel-combo either resets to state
- * 0 (maxed out) or, if row `field_10` isn't already selected
+ * 0 (maxed out) or, if row `cursor` isn't already selected
  * (IsSaveSlotEmpty), enters state 9 to edit it, else commits it directly
  * (SaveGameToSlot) and returns to state 0; cancel (bit 1) resets to state
  * 0; otherwise falls through to the shared L/R cursor mover. */
@@ -579,28 +580,28 @@ void SaveMenuSaveInput(struct save_menu *self, u32 flags)
     }
     if (flags & 8) {
     confirm:
-        if (self->field_10 == 4) {
+        if (self->cursor == 4) {
             PlaySfx(gAudioContext, 0x49, 0x100);
             self->state = 0;
-            self->field_10 = 2;
+            self->cursor = 2;
             return;
         }
         PlaySfx(gAudioContext, 0x49, 0x100);
-        if (!IsSaveSlotEmpty(self->field_8c, self->field_10)) {
+        if (!IsSaveSlotEmpty(self->cartSave, self->cursor)) {
             self->state = 9;
-            self->field_24 = self->field_10;
-            self->field_10 = 0;
+            self->pendingSlot = self->cursor;
+            self->cursor = 0;
         } else {
-            SaveGameToSlot(self, self->field_10);
+            SaveGameToSlot(self, self->cursor);
             self->state = 0;
-            self->field_10 = 4;
+            self->cursor = 4;
         }
         return;
     }
     if (flags & 2) {
         PlaySfx(gAudioContext, 0x47, 0x100);
         self->state = 0;
-        self->field_10 = 2;
+        self->cursor = 2;
         return;
     }
     SaveMenuMoveCursor(self, flags);
@@ -608,7 +609,7 @@ void SaveMenuSaveInput(struct save_menu *self, u32 flags)
 
 /* State 6's input handler - same shape as SaveMenuSaveInput above, a
  * different row-selection sub-menu (state 7 on confirm-when-unselected,
- * field_10 target value 3 rather than 2). */
+ * cursor target value 3 rather than 2). */
 void SaveMenuDeleteInput(struct save_menu *self, u32 flags)
 {
     if (flags & 1) {
@@ -616,35 +617,35 @@ void SaveMenuDeleteInput(struct save_menu *self, u32 flags)
     }
     if (flags & 8) {
     confirm:
-        if (self->field_10 == 4) {
+        if (self->cursor == 4) {
             PlaySfx(gAudioContext, 0x49, 0x100);
             self->state = 0;
-            self->field_10 = 3;
+            self->cursor = 3;
             return;
         }
-        if (IsSaveSlotEmpty(self->field_8c, self->field_10)) {
+        if (IsSaveSlotEmpty(self->cartSave, self->cursor)) {
             PlaySfx(gAudioContext, 0x48, 0x100);
             return;
         }
         PlaySfx(gAudioContext, 0x49, 0x100);
         self->state = 7;
-        self->field_24 = self->field_10;
-        self->field_10 = 0;
+        self->pendingSlot = self->cursor;
+        self->cursor = 0;
         return;
     }
     if (flags & 2) {
         PlaySfx(gAudioContext, 0x47, 0x100);
         self->state = 0;
-        self->field_10 = 3;
+        self->cursor = 3;
         return;
     }
     SaveMenuMoveCursor(self, flags);
 }
 
-/* State 9's input handler: confirm/cancel-combo commits row `field_24`
+/* State 9's input handler: confirm/cancel-combo commits row `pendingSlot`
  * unconditionally (ReadSaveSlot+EraseSaveSlot+optional WriteSaveSlot) then
  * settles at state 0; cancel (bit 1) re-enters state 6; L/R toggle
- * `field_10` between 0/1. */
+ * `cursor` between 0/1. */
 void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
 {
     u8 buf[0x70];
@@ -654,51 +655,51 @@ void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
     }
     if (flags & 8) {
     confirm:
-        if (self->field_10 == 0) {
-            s32 rowIndex = self->field_24;
-            void *handle = self->field_8c;
+        if (self->cursor == 0) {
+            s32 rowIndex = self->pendingSlot;
+            void *handle = self->cartSave;
 
             ReadSaveSlot(handle, rowIndex, buf);
-            handle = self->field_8c;
+            handle = self->cartSave;
             EraseSaveSlot(handle, rowIndex);
-            handle = self->field_8c;
+            handle = self->cartSave;
             if (StoreSaveData(handle)) {
-                handle = self->field_8c;
+                handle = self->cartSave;
                 WriteSaveSlot(handle, rowIndex, buf);
             }
             self->state = 0;
-            self->field_10 = 4;
+            self->cursor = 4;
         } else {
             self->state = 6;
-            self->field_10 = self->field_24;
+            self->cursor = self->pendingSlot;
             PlaySfx(gAudioContext, 0x49, 0x100);
         }
         return;
     }
     if (flags & 2) {
         self->state = 6;
-        self->field_10 = self->field_24;
+        self->cursor = self->pendingSlot;
         PlaySfx(gAudioContext, 0x47, 0x100);
         return;
     }
     if (flags & 0x40) {
-        if (self->field_10 == 1) {
-            self->field_10 = 0;
+        if (self->cursor == 1) {
+            self->cursor = 0;
             PlaySfx(gAudioContext, 0x46, 0x100);
         }
         return;
     }
     if (flags & 0x80) {
-        if (self->field_10 == 0) {
-            self->field_10 = 1;
+        if (self->cursor == 0) {
+            self->cursor = 1;
             PlaySfx(gAudioContext, 0x46, 0x100);
         }
     }
 }
 
 /* Draws the 5-entry state-select sub-menu label list (SaveMenuMainInput's
- * `field_10` states, gSaveMenuOptions's label table) into
- * gSmallFont, highlighting whichever row matches `field_10`,
+ * `cursor` states, gSaveMenuOptions's label table) into
+ * gSmallFont, highlighting whichever row matches `cursor`,
  * then draws a final fixed label via the still-raw DrawSaveSlotStats. Same
  * measure-then-draw icon shape as DrawSaveMenuTitle
  * (src/save/save_menu_draw.c, parked) - see that function's doc

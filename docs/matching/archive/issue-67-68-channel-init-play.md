@@ -3,7 +3,7 @@
 Closes the two remaining raw gaps `docs/matching/archive/issue-67-0x08038538-audio.md`
 left open for the GAX2_SoundHandler "Channel" type's function-pointer trio
 (`docs/audio.md`'s per-type table: init_fn/unknown_fn/play_fn =
-`0x08039519`/`0x080395A1`/`0x080395A5` - the unknown_fn, `nullsub_40`, was
+`0x08039519`/`0x080395A1`/`0x080395A5` - the unknown_fn, `GaxChannelUnknown`, was
 already matched in `gax_sound_handler_channel.c`). Both are NAKED asm
 transcriptions - byte-correct but not real decompiled C, tracked as parked,
 not matched - so issue #67/#68 stay open regardless of this pass.

@@ -102,20 +102,20 @@ COMPILE_TIME_ASSERT(menus_h, sizeof(struct continue_prompt) == 0x24);
 /* The power dialog (ShowPowerDialog, 0x2c bytes): a power's name and
  * description over a scrolling background, faded in and out through
  * BLDY. */
-struct sub_8006700_actor {
-    struct bg_setup bg;                   /* 0x00 - BG0 (InitBgSetup) */
-    s32 field_10;                         /* 0x10 - the title's text */
-    void *field_14;                       /* 0x14 - the description's text */
-    struct settings_icon_actor *field_18; /* 0x18 - the power's icon */
-    u32 field_1c;                         /* 0x1c - frame counter, BG0HOFS = field_1c >> 3 */
-    u32 field_20;                         /* 0x20 - REG_BLDCNT */
+struct power_dialog {
+    struct bg_setup bg;               /* 0x00 - BG0 (InitBgSetup) */
+    s32 titleText;                    /* 0x10 - the title's text */
+    void *descText;                   /* 0x14 - the description's text */
+    struct settings_icon_actor *icon; /* 0x18 - the power's icon */
+    u32 frame;                        /* 0x1c - frame counter, BG0HOFS = frame >> 3 */
+    u32 bldcnt;                       /* 0x20 - REG_BLDCNT */
     union {
         u8 raw;
         struct {
             u8 level:5; /* REG_BLDY, faded 0x10 -> 0 -> 0x10 by PowerDialogLoop */
             u8 rest:3;
         } __attribute__((packed)) bits;
-    } __attribute__((packed)) field_24;
+    } __attribute__((packed)) bldy;
     u8 unused_25[3];
     /* REG_DISPCNT: cleared as a halfword, then bit 6 of its low byte
      * set (PowerDialogLoop). */
@@ -125,10 +125,10 @@ struct sub_8006700_actor {
             u8 flags;
             u8 hi;
         } b;
-    } field_28;
+    } dispcnt;
 };
 
-COMPILE_TIME_ASSERT(menus_h, sizeof(struct sub_8006700_actor) == 0x2c);
+COMPILE_TIME_ASSERT(menus_h, sizeof(struct power_dialog) == 0x2c);
 
 /* The method tables (src/data/entity_vtables_7e3bec.c). */
 extern const struct vtable_slot gCameraLeadVtable[15];
@@ -143,13 +143,13 @@ extern u8 gNewWorldOpened;
  * map_tables_16c5f0.c, image_table_16c5a0.c, bg_package_16c58c.c,
  * data/data.s). */
 extern const struct xy_pair gLevelSelectWorldPos;
-extern const struct xy_pair gStaticData_0816C4A0;
+extern const struct xy_pair gLevelSelectCrashIconPos;
 extern const struct xy_pair gLevelSelectCrystalPos;
 extern const struct xy_pair gLevelSelectGemPos;
 extern const struct xy_pair gLevelSelectTrialIconPos;
 extern const struct xy_pair gLevelSelectTimePos;
-extern const struct xy_pair gStaticData_0816C4C8;
-extern const struct xy_pair gStaticData_0816C4D0;
+extern const struct xy_pair gLevelSelectNextWorldArrowPos;
+extern const struct xy_pair gLevelSelectPrevWorldArrowPos;
 extern const struct xy_pair gLevelSelectEntryPositions[6];
 extern const struct xy_pair gLevelSelectEntryPositionsAllCleared[6];
 extern const u32 gLevelSelectWorldEntryBoxAnims[4];
@@ -215,7 +215,7 @@ extern s32 GetCameraLeadOffset(struct follow_child *self);
 extern struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused);
 extern void CheckLaunchPadContact(void *self);
 extern void DestroyLaunchPad(struct sprite *self, s32 flags);
-extern void sub_801BAC4(struct sprite *self);
+extern void ClearLaunchPadVulnerable(struct sprite *self);
 extern struct sprite *InitLaunchPad(struct sprite *self);
 extern s32 RunLevelSelect(s32 *arg);
 extern struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg);
@@ -283,7 +283,7 @@ extern void SetLevelSelectEntrySelected(struct level_item *self, u8 selected);
 extern void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index);
 extern void SetLevelSelectEntryBox(struct level_item *self, s32 kind);
 extern void SetLevelSelectEntryPos(struct level_item *self, s32 *pos);
-extern void nullsub_20(void);
+extern void DrawLevelSelectEntry(void);
 extern void DestroyLevelSelectEntry(struct level_item *self, s32 flags);
 extern struct level_item *CreateLevelSelectEntry(struct level_item *self);
 extern struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self);
@@ -349,14 +349,14 @@ extern void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out);
 
 /* src/menus/power_dialog.c */
 extern void ShowPowerDialog(s32 label1, s32 label2, s32 type);
-extern struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *self, s32 label1,
-                                                 s32 label2, s32 type);
+extern struct power_dialog *InitPowerDialog(struct power_dialog *self, s32 label1, s32 label2,
+                                            s32 type);
 
 /* src/menus/power_dialog_draw.c */
-extern void DrawPowerDialog(struct sub_8006700_actor *arg0);
-extern void AnimatePowerDialog(struct sub_8006700_actor *arg0);
-extern void CommitPowerDialogFrame(struct sub_8006700_actor *arg0);
-extern void DestroyPowerDialog(struct sub_8006700_actor *arg0, u32 arg1);
+extern void DrawPowerDialog(struct power_dialog *arg0);
+extern void AnimatePowerDialog(struct power_dialog *arg0);
+extern void CommitPowerDialogFrame(struct power_dialog *arg0);
+extern void DestroyPowerDialog(struct power_dialog *arg0, u32 arg1);
 extern void ShowTurboRunDialog(void);
 extern void ShowTornadoSpinDialog(void);
 extern void ShowDoubleJumpDialog(void);
@@ -371,6 +371,6 @@ extern s32 CountClearGems(void *arg0);
 extern s32 CountCrystals(void *arg0);
 
 /* src/menus/power_dialog_loop.c */
-extern void PowerDialogLoop(struct sub_8006700_actor *self);
+extern void PowerDialogLoop(struct power_dialog *self);
 
 #endif /* GUARD_MENUS_H */

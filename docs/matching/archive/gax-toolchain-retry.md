@@ -52,7 +52,7 @@ Not the compiler. Two things:
 1. **The "manual return-address trampoline" is GAX2's own inline asm.**
    `mov r2, pc; adds r2, #5; mov lr, r2; bx r1` (calling an ARM routine
    from Thumb on ARMv4T) was the documented reason `GaxMixerApplyEcho`/
-   `sub_803A2C8`/`GaxMixerPlay`/`GaxMixFrame`/`GaxChannelMix` "couldn't be
+   `GaxMixerApplyFilter`/`GaxMixerPlay`/`GaxMixFrame`/`GaxChannelMix` "couldn't be
    C". The shape around it - the argument stored to a stack slot and
    reloaded *after* `mov r1, rX` - pins down the operands: it's
    ```c
@@ -138,7 +138,7 @@ Recurring details that mattered:
 | `GaxChannelTickSweep` | gax_channel_pos_sweep.c | **C** |
 | `GaxFxChannelPlay` | gax_channel_note_cut_driver.c | **C** |
 | `GaxMixerApplyEcho` | gax_unknownc_play.c | **C** (`GAX_CALL_ARM`) |
-| `sub_803A2C8` | gax_unknownc_play.c | **C** (`GAX_CALL_ARM`) |
+| `GaxMixerApplyFilter` | gax_unknownc_play.c | **C** (`GAX_CALL_ARM`) |
 | `GaxMixerPlay` | gax_unknownc_play.c | **C** |
 | `GaxMixFrame` | gax_unknownc_play.c | **C** (`GAX_CALL_ARM`) |
 
@@ -182,7 +182,7 @@ All current agbcc, normal flags, except the three libgcc2 functions
 
 `expected/code_3.s` still labels `sub_803A318`/`sub_803A608` (and
 `sub_8039E50`) as functions. They're gone from the matched objects (they
-were only return points), so objdiff will pair `sub_803A2C8`/
+were only return points), so objdiff will pair `GaxMixerApplyFilter`/
 `GaxMixFrame` against a shorter target symbol. The ROM is unaffected;
 `expected/corrections.txt` has no "merge" directive for this yet.
 

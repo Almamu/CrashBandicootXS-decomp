@@ -113,7 +113,7 @@ rename sub_8029090 AgeSpriteFrameCache
 rename sub_80290BC InitSpriteFrameCache
 rename sub_8029108 GetSpriteShapeSizeBits
 rename sub_8029168 FreeCategorySpriteSheet
-# sub_8028D6C's real body runs to 0x08028D94, then a second, separate
+# sub_8028D6C's (WalkVramTileBlocks') real body runs to 0x08028D94, then a second, separate
 # function starts there with no thumb_func_start of its own in the
 # original disassembly (same pattern as sub_800039C above) - see
 # src/gfx/sprite_frame.c's comment on GetFreeVramTileBytes.
@@ -2750,3 +2750,29 @@ rename gUnknown_030015E8 gHovercraftVolleyCount
 rename gUnknown_0300088C gPolarPenguinSpeeds
 rename gUnknown_0300089C gJetpackPlaneHopSpeeds
 rename gStaticData_087E4FD4 gPolarObstacleVtable
+# Naming round 6: the GAX2 engine, UI and system (#558).
+rename sub_803941C GaxInfoRestart
+rename sub_803A2C8 GaxMixerApplyFilter
+rename nullsub_39 GaxInfoUnknown
+rename nullsub_40 GaxChannelUnknown
+rename nullsub_41 GaxFxChannelUnknown
+rename nullsub_42 GaxMixerUnknown
+rename gStaticData_0803A67C gGaxArmFilter
+rename gStaticData_0803A874 gGaxArmResampleStoreStep
+rename gStaticData_0803A884 gGaxArmResampleStoreEndTest
+rename gStaticData_0803A8B4 gGaxArmResampleMixStep
+rename gStaticData_0803A8C4 gGaxArmResampleMixEndTest
+rename sub_8001B14 SetMusicFilter
+rename sub_801BAC4 ClearLaunchPadVulnerable
+rename sub_801E8F8 SetScaledSpriteColor
+rename sub_801E950 SetScaledSpritePriority
+rename sub_801E964 SetScaledSpritePos
+rename sub_801E96C ResetScaledSpriteAttrs
+rename sub_802710C DestroyHudPart
+rename sub_8028D6C WalkVramTileBlocks
+rename nullsub_1 InitSpriteBankSet
+rename nullsub_20 DrawLevelSelectEntry
+rename nullsub_7 InitCompanyLogos
+rename gStaticData_0816C4A0 gLevelSelectCrashIconPos
+rename gStaticData_0816C4C8 gLevelSelectNextWorldArrowPos
+rename gStaticData_0816C4D0 gLevelSelectPrevWorldArrowPos

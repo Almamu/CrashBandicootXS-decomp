@@ -8,41 +8,29 @@
  * see link_session_reset.c). */
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
- * cable section. Called repeatedly (once per frame) until the link is
- * established or times out. `self+5` gates a one-time SIOCNT setup
- * (multiplayer mode, `0x4003`); `self+6` gates a second one-time
- * SIOCNT poke once `self+8` (the "IRQs installed" flag) is still
- * clear. Once `self+8` is clear, checks `REG_SIOCNT` bit 3 (the
- * multi-player "ready" bit): if not ready yet, resets the session
- * (`LinkStop`) and re-primes SIOCNT/SIODATA32_H, returning 0
- * ("still connecting"). If ready, flips `self+8`, derives an "is
- * player 0 / arm3" flag from `REG_SIOCNT` bits, resets `REG_SIODATA32`
- * (via `REG_TM3CNT`/`0x04000208` toggling, matching
- * `LinkStart`-family's RCNT/SIOCNT reset shape in
- * src/link/link_sio.c), installs the Serial IRQ handler
- * (`LinkSerialIntr`) always and the Timer3 IRQ handler (`LinkTimer3Intr`)
- * only when the "arm3" flag is set, programs Timer3 as a running
- * countdown timeout (`0x00C0BBBC`) in that case, and resets several
- * per-session timeout/retry fields (`self+0x1c`=-1, `self+0x14`,
- * `self+0x404`=0, `self+0x18`=0). From there (and on every call once
- * `self+8` is already set), it advances a handshake-timeout counter at
- * `self+0x404`: past 15 it forces `self+0xc`=-15 and rearms
- * `self+0x14` to a large timeout constant (0x708); once `self+7`
- * (retry-exhausted flag) is still clear, it walks a retry-backoff
- * counter at `self+0xc` (incrementing or decrementing depending on
- * whether `self+0xfc`'s stored `s32` is negative), clamping it into
- * `self+7`/giving up (return 0, via the same early-exit path as the
- * top-of-function "still initializing" case) once it exceeds -15, or
- * resetting the session (`LinkStop`+`ResetLinkSessionState`) and retrying
- * once it exceeds 14; either way it refreshes `self+0x10`/`self+0x14`
- * from each other (keeping the larger, with `self+0x18` forcing a
- * reset to 0) and, past a 0x1d threshold, resets the session again.
- * Finally increments `self+0xc` and returns 1 ("handshake in
- * progress/succeeded").
+ * cable section. Called once per frame. Does nothing until the session
+ * is `enabled` (BeginLinkSaveTransfer). The first call puts the SIO in
+ * multiplayer mode (RCNT 0, SIOCNT 0x2000 | 0x4003; `sioConfigured`).
+ * Until `started`, it waits for `REG_SIOCNT` bit 3 (every terminal
+ * ready), re-priming SIOCNT and returning 0 while it is clear; once set,
+ * it marks the session `started`, installs the Serial IRQ handler
+ * (`LinkSerialIntr`) and, on the parent (SIOCNT bit 2 clear), the Timer3
+ * handler (`LinkTimer3Intr`) with Timer3 running at `0x00C0BBBC`, and
+ * resets `playerId` (-1), `idleFrames`, `framesSinceIrq` and `progressed`.
+ * After that, every call: more than 15 frames without a serial IRQ
+ * (`framesSinceIrq`) forces `connectCounter` to -15 and `idleFrames` to
+ * 0x708. Until `connected`, `connectCounter` steps down while there is
+ * no `playerId` and up once there is: above 14 the link is `connected`
+ * (`idleFrames`/`peakIdleFrames` cleared), at -15 the session is reset
+ * (`LinkStop` + `ResetLinkSessionState`), in between it returns 0.
+ * Then `peakIdleFrames` keeps the larger of itself and `idleFrames`,
+ * `idleFrames` restarts at 0 if the serial IRQ made `progressed` and
+ * counts up otherwise, and past 0x1d idle frames the session is reset.
+ * Finally increments `connectCounter` and returns 1.
  *
  * Matched in the second near-miss sweep (37 halfwords before). The ROM
  * materializes two separate 1s after reading SIOCNT: r2 (copied to sb)
- * for `field_8`/IME and r1 for the arm3 flag. Three things reproduce
+ * for `started`/IME and r1 for the arm3 flag. Three things reproduce
  * that:
  * - `MATCH_KEEP(one1)` keeps the flag's 1 from being merged into
  *   `one`.
@@ -57,15 +45,15 @@ s32 UpdateLinkSession(struct link_session *self)
     u16 saved;
     s32 one;
 
-    if (!self->field_5)
+    if (!self->enabled)
         return 0;
-    if (!self->field_6) {
+    if (!self->sioConfigured) {
         REG_RCNT = 0;
         REG_SIOCNT = 0x2000;
         REG_SIOCNT |= 0x4003;
-        self->field_6 = 1;
+        self->sioConfigured = 1;
     }
-    if (!self->field_8) {
+    if (!self->started) {
         s32 one1;
         u32 v = REG_SIOCNT >> 3;
 
@@ -79,7 +67,7 @@ s32 UpdateLinkSession(struct link_session *self)
             REG_SIOCNT |= 0x4003;
             return 0;
         }
-        self->field_8 = one;
+        self->started = one;
         arm3 = (REG_SIOCNT >> 2) ^ one1;
         MATCH_KEEP(arm3); /* keep eor/and, not bic */
         arm3 &= one1;
@@ -101,26 +89,26 @@ s32 UpdateLinkSession(struct link_session *self)
             REG_TM3CNT = 0x00C0BBBC;
         }
         REG_IME = one;
-        self->field_3fc = -1;
-        self->field_14 = 0;
-        self->field_404 = 0;
-        self->field_18 = 0;
+        self->playerId = -1;
+        self->idleFrames = 0;
+        self->framesSinceIrq = 0;
+        self->progressed = 0;
     }
-    if (self->field_404 > 15) {
-        self->field_c = -15;
-        self->field_14 = 0x708;
+    if (self->framesSinceIrq > 15) {
+        self->connectCounter = -15;
+        self->idleFrames = 0x708;
     }
-    self->field_404++;
-    if (!self->field_7) {
-        if (self->field_3fc < 0)
-            self->field_c = self->field_c - 1;
+    self->framesSinceIrq++;
+    if (!self->connected) {
+        if (self->playerId < 0)
+            self->connectCounter = self->connectCounter - 1;
         else
-            self->field_c = self->field_c + 1;
-        if (self->field_c > 14) {
-            self->field_7 = 1;
-            self->field_14 = 0;
-            self->field_10 = 0;
-        } else if (self->field_c > -15) {
+            self->connectCounter = self->connectCounter + 1;
+        if (self->connectCounter > 14) {
+            self->connected = 1;
+            self->idleFrames = 0;
+            self->peakIdleFrames = 0;
+        } else if (self->connectCounter > -15) {
             return 0;
         } else {
             LinkStop(self);
@@ -128,51 +116,45 @@ s32 UpdateLinkSession(struct link_session *self)
         }
     }
     {
-        s32 a = self->field_10;
-        s32 b = self->field_14;
+        s32 a = self->peakIdleFrames;
+        s32 b = self->idleFrames;
 
         if (a < b)
             a = b;
-        self->field_10 = a;
-        b = self->field_18 ? 0 : b + 1;
-        self->field_14 = b;
-        self->field_18 = 0;
+        self->peakIdleFrames = a;
+        b = self->progressed ? 0 : b + 1;
+        self->idleFrames = b;
+        self->progressed = 0;
         if (b > 0x1d) {
             LinkStop(self);
             ResetLinkSessionState(self);
         }
     }
-    self->field_c++;
+    self->connectCounter++;
     return 1;
 }
 
-/* Per-frame SIO data-exchange pump - see docs/rom_map.md's SIO/link-
- * cable section (called from the Serial IRQ handler `LinkSerialIntr` in
- * src/link/link_sio.c, with the session object and SIODATA32's
- * low half as the two arguments). `docs/rom_map.md` confirms the
- * high-level shape: manipulates `REG_SIOCNT`/`SIODATA8`
- * (`0x04000128`/`0x0400012A`), checking specific control bits before
- * touching per-object state - it was "not read to completion" there.
- * This pass read it further without reaching full per-branch
- * confidence, so it's recorded here as a best-effort guide for whoever
- * attempts a real C reconstruction next, not as a verified spec: if
- * `self+4` (a "connected" flag also touched by `UpdateLinkSession` above) is
- * already set, it just mirrors the outgoing word into SIOMLT_SEND and
- * returns; otherwise, on the first call it seeds SIOMLT_SEND from
- * `self+0x20` and sets that flag, and on every call after that it
- * inspects `REG_SIOCNT`'s per-slot bits against the incoming word to
- * work out which of the 4 multiplayer slots are actually present,
- * latching player-count-derived fields once that stabilizes across a
- * few frames (`self+0x1c`) and marking the link "ready" (`self+7`).
- * Past that point each call walks the 4 player sub-records
- * (`self+i*0xc8`, i=0..3, same region as `ResetLinkSessionState`'s struct above)
- * and, once every 4 samples, runs the exact same CRC-16 table walk
- * `MakeLinkHandshakeId` uses (`gCrc16Table`) over each slot's 8-byte
- * handshake-id mirror - this part is a confident read, since the loop
- * body is textually identical to `MakeLinkHandshakeId`'s - feeding the result
- * into per-slot bookkeeping this pass did not fully trace (fields
- * around `self+0x30`/`self+0xc4`/`self+0xbc`/`self+0x36`/`self+0x38`/
- * `self+0x3c`), before deciding what to send out next over SIOMLT_SEND.
+/* The Serial IRQ's half of the link (called from `LinkSerialIntr` in
+ * src/link/link_sio.c with the SIOMULTI0-3 words). `inSerialIrq` guards
+ * against re-entry: a nested call only re-sends `sendWord`. Before the
+ * session is `connected` it runs the handshake: it counts the consoles
+ * answering with `handshakeWord` (0xF0B), takes `playerCount` (more than
+ * one), `playerId` (SIOCNT bits 4-5) and `peerMask` (every other
+ * player's bit) from that. Once connected, every exchange moves one
+ * 8-byte packet per console, four SIOMULTI halfwords at a time
+ * (`sendWordIndex`, `sendRound`). The outgoing packet is `id`: byte 0
+ * holds a check nibble and an ack counter, byte 1 a sequence number and
+ * the payload length (0-4 bytes popped from the outgoing `ring`, counted
+ * in `totalSent`), bytes 2-5 the payload and bytes 6-7 a CRC-16
+ * (`gCrc16Table`, as in MakeLinkHandshakeId) chained from the previous
+ * packet. Each player record keeps the peer's last packet (`id`, `hash`,
+ * `prevHash`), its incoming words (`rx`, `rxCount`), the expected
+ * sequence (`rxSeq`) and its incoming `ring` (`totalReceived`). A new
+ * packet is built once every peer has acknowledged ours (`ackedMask` ==
+ * `peerMask`), our ack counter is bumped once every peer's new data has
+ * arrived (`receivedMask`), and every fourth round re-sends the previous
+ * packet (`prevPacket`). `progressed` tells UpdateLinkSession the link
+ * moved.
  *
  * Once a NAKED transcription (1488 bytes, this project's biggest); it
  * now matches as plain C under old_agbcc (link_handshake.o is on the
@@ -258,22 +240,22 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
     /* Instruction-count padding (no code): shifts gcc's temporary
      * numbering so two stack slots come out in the ROM's order. */
     MATCH_BARRIER();
-    self->field_404 = 0;
-    if (self->field_4) {
-        u16 v = self->field_400;
+    self->framesSinceIrq = 0;
+    if (self->inSerialIrq) {
+        u16 v = self->sendWord;
 
         REG_SIOMLT_SEND = v;
         return;
     }
     one = 1;
-    self->field_4 = one;
+    self->inSerialIrq = one;
     siocnt = REG_SIOCNT;
     changed = 0;
     nib = LINK_NIB(&self->id[1]).lo + 1;
     nib &= 0xf;
     if ((siocnt >> 6) & one)
         goto send;
-    if (!self->field_7) {
+    if (!self->connected) {
         s32 nId, nFree, same;
         struct link_id_word *f20;
 
@@ -286,11 +268,11 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             u16 *p;
             u32 kid, kfree;
 
-            /* Set before the loop, in the ROM's order: `&self->field_20`,
+            /* Set before the loop, in the ROM's order: `&self->handshakeWord`,
              * then the two compare constants, then the load pointer. The
              * constants use the constant-init form (no code beyond the
              * `movs`/`ldr`) so loop.c doesn't hoist them after `p`'s init. */
-            f20 = &self->field_20;
+            f20 = &self->handshakeWord;
             MATCH_CONST(kid, 0xF0B);
             MATCH_CONST(kfree, 0xffff);
             p = data;
@@ -315,37 +297,37 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 same = 0;
         }
         if (nFree + nId == 4 && same && nId > 1) {
-            self->field_1c = nId;
+            self->playerCount = nId;
             {
                 s32 me = (REG_SIOCNT & 0x30) >> 4;
 
-                self->field_3fc = me;
+                self->playerId = me;
             }
-            self->field_3f8 = ~(-1 << nId);
-            self->field_3f8 &= ~(1 << self->field_3fc);
+            self->peerMask = ~(-1 << nId);
+            self->peerMask &= ~(1 << self->playerId);
         }
         f20->lo = nId;
         {
-            u16 *dst = &self->field_400;
+            u16 *dst = &self->sendWord;
 
-            *dst = *(u16 *)&self->field_20;
+            *dst = *(u16 *)&self->handshakeWord;
         }
         goto send;
     }
 
-    for (i = 0; i < self->field_1c; i++) {
+    for (i = 0; i < self->playerCount; i++) {
         struct link_player *p;
         u8 *q;
         s32 ok;
 
-        if (i == self->field_3fc)
+        if (i == self->playerId)
             continue;
         p = &self->players[i];
-        p->rx[p->field_2c] = data[i];
-        p->field_2c = (p->field_2c + 1) & 0xf;
-        if (p->field_2c <= 3)
+        p->rx[p->rxCount] = data[i];
+        p->rxCount = (p->rxCount + 1) & 0xf;
+        if (p->rxCount <= 3)
             continue;
-        q = (u8 *)&p->rx[p->field_2c - 4];
+        q = (u8 *)&p->rx[p->rxCount - 4];
         ok = 0;
         if (LINK_NIB(&q[1]).lo == LINK_NIB(&q[0]).hi ||
             LINK_NIB(&q[1]).lo == ((LINK_NIB(&q[0]).hi - 1) & 0xf)) {
@@ -365,7 +347,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
         {
             if ((q[1] & 0xf) == (p->id[1] & 0xf)) {
                 u16 want = (q[7] << 8) | q[6];
-                u16 hash = p->field_8;
+                u16 hash = p->prevHash;
 
                 LINK_HASH(hash, &q[1]);
                 if (want == hash)
@@ -377,10 +359,10 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 s32 n, k;
                 u8 *src;
 
-                if (LINK_NIB(&q[1]).lo != p->field_30)
+                if (LINK_NIB(&q[1]).lo != p->rxSeq)
                     continue;
                 want = (q[7] << 8) | q[6];
-                hash = p->field_6;
+                hash = p->hash;
                 LINK_HASH(hash, &q[1]);
                 if (want != hash)
                     continue;
@@ -408,23 +390,23 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                         p->ring.buf[p->ring.writePos] = b;
                     }
                 }
-                p->field_34 += n;
-                p->field_8 = p->field_6;
-                p->field_30 = (p->field_30 + 1) & 0xf;
-                self->field_3f4 |= 1 << i;
+                p->totalReceived += n;
+                p->prevHash = p->hash;
+                p->rxSeq = (p->rxSeq + 1) & 0xf;
+                self->receivedMask |= 1 << i;
             }
         }
     copy:
         LINK_COPY_ID(p->id, q);
         if (LINK_NIB(&p->id[0]).hi == nib)
-            self->field_3f0 |= 1 << i;
-        p->field_2c = 0;
+            self->ackedMask |= 1 << i;
+        p->rxCount = 0;
         changed = 1;
     }
 
     if (changed) {
         changed = 0;
-        if (self->field_3f0 == self->field_3f8) {
+        if (self->ackedMask == self->peerMask) {
             s32 n, k;
             u8 *dst;
             u16 hash;
@@ -434,14 +416,14 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             s32 *rd;
             struct link_ring *rf;
 
-            self->field_3f0 = 0;
+            self->ackedMask = 0;
             id = self->id;
             ring = &self->ring;
             cnt = &self->ring.count;
             dst = &self->id[2];
             rd = &self->ring.readPos;
             {
-                u8 *d = self->field_28;
+                u8 *d = self->prevPacket;
                 u8 *s = id;
 
                 for (k = 0; k <= 3; k++) {
@@ -463,7 +445,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 n = 4;
             LINK_NIB(&id[1]).hi = n;
             LinkRingPop(ring, rf, dst, n, rd);
-            self->field_24 += n;
+            self->totalSent += n;
             {
                 /* A signed QImode read-modify-write: the ROM's mask is
                  * -16 and `nib` (already masked) is not masked again. */
@@ -478,18 +460,18 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 MATCH_HOLD_REG(s32, z, r0) = 0;
 
                 *(u16 *)&self->id[6] = hash;
-                self->field_3c = z;
+                self->sendRound = z;
             }
             changed = 1;
         }
-        if (self->field_3f4 == self->field_3f8) {
-            self->field_3f4 = 0;
+        if (self->receivedMask == self->peerMask) {
+            self->receivedMask = 0;
             LINK_NIB(&self->id[0]).hi = (LINK_NIB(&self->id[0]).hi + 1) & 0xf;
             changed = 1;
         }
         if (changed) {
-            self->field_38 = 0;
-            self->field_18 = 1;
+            self->sendWordIndex = 0;
+            self->progressed = 1;
             {
                 u8 *id = self->id;
                 u32 n = LINK_NIB(&id[0]).hi;
@@ -503,28 +485,28 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
     {
         u8 *lo, *hi;
 
-        if ((self->field_3c & 3) == 3) {
-            u8 *b = (u8 *)self + self->field_38 * 2;
+        if ((self->sendRound & 3) == 3) {
+            u8 *b = (u8 *)self + self->sendWordIndex * 2;
 
             lo = b + 0x28;
             hi = b + 0x29;
         } else {
-            u8 *b = (u8 *)self + self->field_38 * 2;
+            u8 *b = (u8 *)self + self->sendWordIndex * 2;
 
             lo = b + 0x30;
             hi = b + 0x31;
         }
-        self->field_400 = (*hi << 8) | *lo;
+        self->sendWord = (*hi << 8) | *lo;
     }
-    if (++self->field_38 == 4) {
-        self->field_38 = 0;
-        self->field_3c++;
+    if (++self->sendWordIndex == 4) {
+        self->sendWordIndex = 0;
+        self->sendRound++;
     }
 send:
     {
-        u16 v = self->field_400;
+        u16 v = self->sendWord;
 
         REG_SIOMLT_SEND = v;
     }
-    self->field_4 = 0;
+    self->inSerialIrq = 0;
 }

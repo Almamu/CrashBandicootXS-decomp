@@ -20,7 +20,7 @@
  *   random time and blinking along with the wobble.
  * - GetZoomBgControl-DestroyLevelSelectEntry: `struct level_item`'s methods (method table
  *   gLevelSelectEntryVtable: +0x08 AnimateLevelSelectEntry bob, +0x10 SetLevelSelectEntryLevel
- *   set level, +0x18 SetLevelSelectEntryPos set position, +0x20 nullsub_20, +0x28
+ *   set level, +0x18 SetLevelSelectEntryPos set position, +0x20 DrawLevelSelectEntry, +0x28
  *   DestroyLevelSelectEntry destructor; the constructor CreateLevelSelectEntry starts issue #29).
  *
  * This file is compiled with tools/agbcc/bin/old_agbcc (see Makefile and
@@ -301,8 +301,9 @@ void SetLevelSelectEntryPos(struct level_item *self, s32 *pos)
     SetEntityPixelPos((struct actor *)self->frame, pos[0], pos[1]);
 }
 
-/* Method +0x20. */
-void nullsub_20(void)
+/* Method +0x20: the per-frame draw LevelSelectLoop calls on every entry
+ * (`item_vtable.m20`). Empty for this class. */
+void DrawLevelSelectEntry(void)
 {
 }
 

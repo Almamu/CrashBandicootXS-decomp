@@ -10,7 +10,7 @@
  *
  * Bails out (returns 0) when no instrument is bound, no note is playing
  * (`0x8AD0`), `row` is out of range or the row's wave is empty.
- * Otherwise it looks up the sample step for `note + field_2e` (+ pitch
+ * Otherwise it looks up the sample step for `note + vibratoOffset` (+ pitch
  * slide and, for pattern channels, the order's transpose) + the row's
  * tune in the period table `gGaxPeriodTable` (capped at 0xEF3),
  * scaled by the mix-rate reciprocal `gGaxMixRateReciprocal` (`__muldi3`),
@@ -71,8 +71,8 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
     if (wave->data == NULL)
         return 0;
 
-    pitch = self->note + self->field_2e;
-    if (self->field_21 == 0) {
+    pitch = self->note + self->vibratoOffset;
+    if (self->fixedPitch == 0) {
         pitch += self->pitch;
         if (flag == 0)
             pitch += self->type->data.orders[info->orderPos].transpose << 5;
@@ -126,7 +126,7 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
     }
     len = wave->length;
     pingpong = 0;
-    if (inst->rows[self->row].field_00 == 0 &&
+    if (inst->rows[self->row].sweep == 0 &&
         inst->rows[self->row].sweepMin < inst->rows[self->row].sweepMax)
         pingpong = 1;
     {
@@ -148,35 +148,35 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
         // clang-format on
 
         while (item.done < self->format->frames) {
-            if (self->field_11 > 0) {
+            if (self->direction > 0) {
                 if (pingpong)
                     item.end = self->instrument->rows[self->row].sweepMax << 11;
                 else if (self->sweepOn)
                     item.end = (self->sweepPos + self->instrument->rows[self->row].sweepLen) << 11;
                 else
                     item.end = wave->length << 11;
-                if (self->field_0d) {
+                if (self->isFirst) {
                     item.mode = 0;
-                    GAX_PATCH_MIXER(gStaticData_0803A874, 0xe082);
-                    GAX_PATCH_MIXER(gStaticData_0803A884, 0xbaff);
+                    GAX_PATCH_MIXER(gGaxArmResampleStoreStep, 0xe082);
+                    GAX_PATCH_MIXER(gGaxArmResampleStoreEndTest, 0xbaff);
                 } else {
-                    item.mode = self->field_52;
-                    GAX_PATCH_MIXER(gStaticData_0803A8B4, 0xe082);
-                    GAX_PATCH_MIXER(gStaticData_0803A8C4, 0xbaff);
+                    item.mode = self->mixMode;
+                    GAX_PATCH_MIXER(gGaxArmResampleMixStep, 0xe082);
+                    GAX_PATCH_MIXER(gGaxArmResampleMixEndTest, 0xbaff);
                 }
             } else {
                 /* Reuses `len`: as one pseudo with the wave length above, it
                  * gets r3 from global-alloc (the ROM's `ldr r3; lsl r0, r3`). */
                 len = self->instrument->rows[self->row].sweepMin;
                 item.end = len << 11;
-                if (self->field_0d) {
+                if (self->isFirst) {
                     item.mode = 0;
-                    GAX_PATCH_MIXER(gStaticData_0803A874, 0xe042);
-                    GAX_PATCH_MIXER(gStaticData_0803A884, 0xcaff);
+                    GAX_PATCH_MIXER(gGaxArmResampleStoreStep, 0xe042);
+                    GAX_PATCH_MIXER(gGaxArmResampleStoreEndTest, 0xcaff);
                 } else {
                     item.mode = 1;
-                    GAX_PATCH_MIXER(gStaticData_0803A8B4, 0xe042);
-                    GAX_PATCH_MIXER(gStaticData_0803A8C4, 0xcaff);
+                    GAX_PATCH_MIXER(gGaxArmResampleMixStep, 0xe042);
+                    GAX_PATCH_MIXER(gGaxArmResampleMixEndTest, 0xcaff);
                 }
             }
             GAX_CALL_ARM_R(gGaxPlayerState, &item);
@@ -184,11 +184,11 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
                 break;
             if (pingpong) {
                 if (self->instrument->rows[self->row].pingPong != 0) {
-                    if (self->field_11 > 0)
+                    if (self->direction > 0)
                         item.pos -= step * 2;
                     else
                         item.pos += step * 2;
-                    self->field_11 = ~self->field_11;
+                    self->direction = ~self->direction;
                 } else {
                     // clang-format off
                     item.pos -= (self->instrument->rows[self->row].sweepMax -
@@ -198,7 +198,7 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
             } else if (self->sweepOn) {
                 item.pos -= self->instrument->rows[self->row].sweepLen << 11;
             } else {
-                if (self->field_0d)
+                if (self->isFirst)
                     GaxZeroFill((u16 *)buf + item.done, (self->format->frames - item.done + 1) * 2);
                 self->note = 0x8ad0;
                 self->noteStep = 0;

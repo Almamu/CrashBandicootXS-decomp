@@ -176,10 +176,22 @@ behaviour:
 The handler types' callbacks are `GaxInfoInit`/`GaxInfoPlay` (the "Info"
 type, the song position), `GaxChannelInit`/`GaxChannelPlay` (a tracker
 channel), `GaxFxChannelInit`/`GaxFxChannelPlay` (a sound-effect voice) and
-`GaxMixerInit`/`GaxMixerPlay` (the "UnknownC" type: the mixer). The three
-named ARM routines are `gGaxArmDownmix` (16-bit mix to 8-bit output),
-`gGaxArmEcho` (the echo/delay pass) and `gGaxArmResample` (a channel's
-sample resampler, patched in place by `GaxChannelMix`).
+`GaxMixerInit`/`GaxMixerPlay` (the "UnknownC" type: the mixer). Each type
+also has an `unknown_fn` slot (`GaxInfoUnknown`, `GaxChannelUnknown`,
+`GaxFxChannelUnknown`, `GaxMixerUnknown`): all four are empty, and
+nothing in the engine calls the slot. The four ARM routines are
+`gGaxArmDownmix` (16-bit mix to 8-bit output), `gGaxArmFilter` (an
+optional two-pole low-pass filter over the mix, `GaxMixerApplyFilter`,
+loaded only when the parameter block's `flags` bit 2 is set, which this
+game never does; its amount is `GaxSongHeader.filter`), `gGaxArmEcho`
+(the echo/delay pass) and `gGaxArmResample` (a channel's sample
+resampler). `GaxChannelMix` patches the resampler's copy in place:
+`gGaxArmResampleStoreStep`/`StoreEndTest` and
+`gGaxArmResampleMixStep`/`MixEndTest` are the step and end-test
+instructions of its store loop (the first channel mixed) and its add
+loop (the channels after it), switched between forward and backward
+playback. The "FILT" and "BART" tags in the ROM follow the filter and
+echo routines.
 
 ## A few engine internals read directly (not part of the build pipeline)
 
@@ -241,7 +253,7 @@ picture):
   BIOS `svc` wrapper stubs below begin) of genuine **ARM-mode (32-bit)
   machine code that the disassembler never actually disassembled as
   code**. The labels right after it
-  (`gGaxArmDownmix`, `gStaticData_0803A67C`, `gStaticData_
+  (`gGaxArmDownmix`, `gGaxArmFilter`, `gStaticData_
   0803A73C`, `gGaxArmResample`) mark raw bytes that decode cleanly
   as ARM instruction encodings (e.g. `60 00 2D E9` = ARM `STMFD
   sp!,{...}`, a classic ARM function prologue) - this codebase is
@@ -279,7 +291,7 @@ picture):
 
 ## Sound effects
 
-Distinct from music: `sub_8001854`, now matched as `PlaySfx` (see
+Distinct from music: `PlaySfx` (ROM `0x08001854`, see
 [docs/status/audio.md](./status/audio.md) - called ~264 times across
 gameplay code), is the sound-effect trigger:
 `PlaySfx(context, sfx_id, volume_param)`. It looks up `sfx_id` in a
@@ -332,7 +344,7 @@ sample pool with a one-type tail instead of songs:
 [sample table: {data, length} x 88, entry 0 empty]
 [song header (GAX_SongInfo, 0x1C): no channels or patterns, volume 0x100, the two tables]
 [the handler type's 1-entry child-type array: NULL]
-[the sound-effect voice handler type: GaxFxChannelInit/sub_803A228/GaxFxChannelPlay, 1 child, 0x48-byte instances, data = the song header]
+[the sound-effect voice handler type: GaxFxChannelInit/GaxFxChannelUnknown/GaxFxChannelPlay, 1 child, 0x48-byte instances, data = the song header]
 ```
 
 All 87 instruments (0 is an empty placeholder) have one row with a

@@ -159,7 +159,8 @@ static inline void CommitDisplay(struct level_menu *self)
     } while (0)
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
- * whole-ROM Thumb-pointer scan). Sets `unk_32`. */
+ * whole-ROM Thumb-pointer scan). Sets `unk_32`, a byte nothing else
+ * reads or writes, so its meaning (and this function's name) is open. */
 void sub_801B85C(struct follow_child *self)
 {
     self->unk_32 = 1;
@@ -207,7 +208,7 @@ void UpdateCameraLead(struct follow_child *self)
     {
         s32 one = 1;
         s32 zero;
-        u8 *p = &self->unk_24;
+        u8 *p = &self->moveAxes;
 
         zero = 0;
         p[0] = one;
@@ -236,7 +237,7 @@ void UpdateCameraLead(struct follow_child *self)
         self->x = x + self->offset;
         self->y = y;
     }
-    self->unk_60 = gPlayer->speedX;
+    self->speedX = gPlayer->speedX;
 }
 
 /* Destructor (method table +0x50): hands gCamera's follow
@@ -290,7 +291,7 @@ struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused)
 
     InitMovingSprite((struct actor *)obj);
     obj->vtable = (struct sprite_vtable *)gLaunchPadVtable;
-    sub_801BAC4(obj);
+    ClearLaunchPadVulnerable(obj);
     obj->id = id;
     obj->x = x << 8;
     obj->y = y << 8;
@@ -353,8 +354,10 @@ void DestroyLaunchPad(struct sprite *self, s32 flags)
     DestroyMovingSprite((struct actor *)self, flags);
 }
 
-/* Clears flags bit 6. */
-void sub_801BAC4(struct sprite *self)
+/* Clears flags bit 6, the sprite objects' "vulnerable" bit (the launch
+ * pad's own out-of-line copy of sprite_obj.c's ClearSpriteObjVulnerable;
+ * the constructor calls it). */
+void ClearLaunchPadVulnerable(struct sprite *self)
 {
     self->flags &= Opaque(~0x40);
 }
@@ -366,7 +369,7 @@ struct sprite *InitLaunchPad(struct sprite *self)
 {
     InitMovingSprite((struct actor *)self);
     self->vtable = (struct sprite_vtable *)gLaunchPadVtable;
-    sub_801BAC4(self);
+    ClearLaunchPadVulnerable(self);
     return self;
 }
 
@@ -506,7 +509,7 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
             self->sprites[i] = s;
             SetSpritePriority(s, 1);
             if (i > 1)
-                self->sprites[i]->unk_3C = v;
+                self->sprites[i]->scale = v;
         }
     }
     self->sprites[0]->anim = AnimTable(0x234);
@@ -515,8 +518,8 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
                       gLevelSelectWorldPos.y);
     self->sprites[1]->anim = AnimTable(0x234);
     SetAnim(self->sprites[1], 10);
-    SetEntityPixelPos((struct actor *)self->sprites[1], gStaticData_0816C4A0.x,
-                      gStaticData_0816C4A0.y);
+    SetEntityPixelPos((struct actor *)self->sprites[1], gLevelSelectCrashIconPos.x,
+                      gLevelSelectCrashIconPos.y);
     self->sprites[2]->anim = AnimTable(0x1BC);
     SetEntityPixelPos((struct actor *)self->sprites[2], gLevelSelectCrystalPos.x,
                       gLevelSelectCrystalPos.y);
@@ -542,15 +545,15 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     SetSpritePriority(s, 1);
     self->sprites[8]->anim = AnimTable(0x270);
     SetAnim(self->sprites[8], 1);
-    SetEntityPixelPos((struct actor *)self->sprites[8], gStaticData_0816C4C8.x,
-                      gStaticData_0816C4C8.y);
+    SetEntityPixelPos((struct actor *)self->sprites[8], gLevelSelectNextWorldArrowPos.x,
+                      gLevelSelectNextWorldArrowPos.y);
     s = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[9] = s;
     SetSpritePriority(s, 1);
     self->sprites[9]->anim = AnimTable(0x270);
     SetAnim(self->sprites[9], 0);
-    SetEntityPixelPos((struct actor *)self->sprites[9], gStaticData_0816C4D0.x,
-                      gStaticData_0816C4D0.y);
+    SetEntityPixelPos((struct actor *)self->sprites[9], gLevelSelectPrevWorldArrowPos.x,
+                      gLevelSelectPrevWorldArrowPos.y);
     if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self)) {
         ParkLevelSelectCursor(self->panel);
     } else {

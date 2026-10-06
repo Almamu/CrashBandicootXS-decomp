@@ -10,8 +10,8 @@
  * marker bytes ('C' and 0x12), a flag byte and an additive word-sum
  * checksum over the first 0x1fc bytes (UpdateSaveChecksum/
  * CheckSaveChecksum). The save menu (gSaveMenu, save_menu.h)
- * holds two copies: the cartridge's (`field_8c`) and the one received
- * over the link cable (`field_90`). Formerly
+ * holds two copies: the cartridge's (`cartSave`) and the one received
+ * over the link cable (`linkSave`). Formerly
  * `struct settings_sync_record`. See docs/matching/archive/issue-5-overlay-ui-sync.md.
  * Shared (via this header) between src/save/save_data.c and
  * save_menu_input.c, split apart so the two parked

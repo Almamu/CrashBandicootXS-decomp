@@ -64,7 +64,7 @@ HANDLER_FUNCS = {
     'info': (0x080393FD, 0x08039439, 0x0803943D),
     'unknownc': (0x0803A22D, 0x0803A275, 0x0803A325),
     'channel': (0x08039519, 0x080395A1, 0x080395A5),
-    # the sound-effect voices (GaxFxChannelInit/sub_803A228/GaxFxChannelPlay)
+    # the sound-effect voices (GaxFxChannelInit/GaxFxChannelUnknown/GaxFxChannelPlay)
     'sfx': (0x0803A105, 0x0803A229, 0x0803A159),
 }
 

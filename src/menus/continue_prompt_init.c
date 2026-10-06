@@ -39,7 +39,7 @@
  *    reloaded byte" sequence) - closed with a `MATCH_KEEP(tmp)`
  *    compiler barrier right after `tmp`'s initializer,
  *    the same "stop the materialize-then-copy fold" technique
- *    documented for `sub_801E8F8`/`sub_801E96C`
+ *    documented for `SetScaledSpriteColor`/`ResetScaledSpriteAttrs`
  *    (docs/matching/archive/issue-30-graphics-loading.md). Both are ordinary
  *    register-pin/barrier fixes, not opaque `asm volatile` islands -
  *    the "handful of accumulator/temp-register choices" this function

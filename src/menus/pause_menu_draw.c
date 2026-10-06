@@ -15,18 +15,19 @@
 #include "globals.h"
 
 /* A slow reveal/cycle animation over the results screen's icon groups:
- * `field_24` (0-4) selects which group to hide this call (a plain
+ * `page` (0-4) selects which group to hide this call (a plain
  * `AdvanceSpriteAnim` per icon, no fade), advancing to the next group every
- * `field_28` (180) calls, wrapping mod 5. Independently, `field_c0`
- * (the row-cursor icon) blinks on its own countdown (`field_c4`):
- * while it's ticking down, just decrement it; once it hits 0, either
- * re-show the icon with a fresh random countdown (0x78-0xef) if it's
- * currently "armed" (`field_38`), or hide it otherwise. */
+ * `pageTimer` (180) calls, wrapping mod 5. Independently, `blinkEyes`
+ * (a pair of eyelids, sprite bank 46, drawn over the background's
+ * eyes) blinks on its own countdown (`blinkTimer`): while it's ticking
+ * down, just decrement it; at 0 the blink animation plays, and once it
+ * is done (`animDone`) it is rewound and a fresh random countdown
+ * (0x78-0xef) starts. */
 void AnimatePauseMenu(struct pause_menu *self)
 {
-    switch (self->field_24) {
+    switch (self->page) {
     case 0:
-        AdvanceSpriteAnim((struct box_part *)(struct actor *)self->field_88);
+        AdvanceSpriteAnim((struct box_part *)(struct actor *)self->crystalIcon);
         break;
     case 1:
         {
@@ -59,28 +60,28 @@ void AnimatePauseMenu(struct pause_menu *self)
             break;
         }
     case 4:
-        AdvanceSpriteAnim((struct box_part *)(struct actor *)self->field_bc);
+        AdvanceSpriteAnim((struct box_part *)(struct actor *)self->trialIcon);
         break;
     }
 
-    self->field_28--;
-    if (self->field_28 == 0) {
-        self->field_24++;
-        self->field_24 = __modsi3(self->field_24, 5);
-        self->field_28 = 0xb4;
+    self->pageTimer--;
+    if (self->pageTimer == 0) {
+        self->page++;
+        self->page = __modsi3(self->page, 5);
+        self->pageTimer = 0xb4;
     }
 
     {
-        s32 *countAddr = &self->field_c4;
+        s32 *countAddr = &self->blinkTimer;
         s32 result;
 
         if (*countAddr != 0) {
             goto decrement;
         }
         {
-            struct settings_icon_actor *icon = self->field_c0;
+            struct settings_icon_actor *icon = self->blinkEyes;
 
-            if (icon->field_38 != 0) {
+            if (icon->animDone != 0) {
                 icon->frameIndex = 0;
                 ResetSpriteFrameTimer((struct actor *)icon);
                 ResetSpriteFrameIndex((struct actor *)icon);
@@ -131,19 +132,19 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
     })
 
 /* The composite pause/options screen's per-frame "draw the current
- * settings row" step: draws `self->field_70` (the current level's name
+ * settings row" step: draws `self->levelName` (the current level's name
  * label) centered into `gLargeFont`'s slot pair, then - only
- * when `self->field_74` is set (levels 0-0x13, see InitPauseMenuInfo) -
- * draws `field_74` followed immediately by `self->buf78` (" N") at a
+ * when `self->levelLabel` is set (levels 0-0x13, see InitPauseMenuInfo) -
+ * draws `levelLabel` followed immediately by `self->buf78` (" N") at a
  * fixed position, forming a "LEVEL N"-shaped composite label.
  * Unconditionally right-aligns `self->buf41` (the completion
  * percentage string) at a fixed row. Calls the per-row list renderer
  * (`DrawPauseMenuRows`) and an unread sibling (`DrawPauseMenuPageTitle`), then
- * dispatches on `self->field_24` (the same state AnimatePauseMenu cycles -
+ * dispatches on `self->page` (the same state AnimatePauseMenu cycles -
  * cases 0-4 map to `DrawPauseCrystalsPage`/`DrawPausePowersPage`/`DrawPauseGemsPage`/
  * `DrawPauseRelicsPage`/`DrawPauseTimeTrialPage`, one per icon-row group), and finally
- * hides `self->field_c0` (the row-cursor icon) if its blink countdown
- * (`field_c4`) has reached 0.
+ * draws `self->blinkEyes` (the blinking eyelids) while its blink
+ * countdown (`blinkTimer`) is at 0.
  *
  * Was NAKED; matches as plain C under both compilers since the
  * hard-register hold pass (docs/matching/archive/hard-register-hold-retry.md).
@@ -161,7 +162,7 @@ void DrawPauseMenu(struct pause_menu *self)
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
     {
-        u32 w = ICON_SLOT_CALL(gLargeFont, 0, self->field_70);
+        u32 w = ICON_SLOT_CALL(gLargeFont, 0, self->levelName);
         u32 x, t;
         MATCH_HOLD_REG(s32, hold, r2);
 
@@ -177,8 +178,8 @@ void DrawPauseMenu(struct pause_menu *self)
         MATCH_USE(hold);
         set_icon_mgr_pos(gLargeFont, x, 0xe);
     }
-    ICON_SLOT_CALL(gLargeFont, 2, self->field_70);
-    label = self->field_74;
+    ICON_SLOT_CALL(gLargeFont, 2, self->levelName);
+    label = self->levelLabel;
     if (label != NULL) {
         set_icon_mgr_pos(gLargeFont, 0x20, 0x26);
         ICON_SLOT_CALL(gLargeFont, 2, label);
@@ -203,7 +204,7 @@ void DrawPauseMenu(struct pause_menu *self)
     ICON_SLOT_CALL(gLargeFont, 2, self->buf41);
     DrawPauseMenuRows(self);
     DrawPauseMenuPageTitle(self);
-    switch (self->field_24) {
+    switch (self->page) {
     case 0:
         DrawPauseCrystalsPage(self);
         break;
@@ -220,16 +221,16 @@ void DrawPauseMenu(struct pause_menu *self)
         DrawPauseTimeTrialPage(self);
         break;
     }
-    if (self->field_c4 == 0)
-        DrawSpriteWithOffset((struct actor *)self->field_c0, 0, 0);
+    if (self->blinkTimer == 0)
+        DrawSpriteWithOffset((struct actor *)self->blinkEyes, 0, 0);
     HideUnusedOamEntries(gOamBuffer);
 }
 
 /* The composite pause/options screen's per-row list renderer - draws
- * `self->field_1c` rows (from `self->field_14`'s record array),
- * highlighting whichever matches `self->field_18` (the selected
+ * `self->rowCount` rows (from `self->rows`'s record array),
+ * highlighting whichever matches `self->cursor` (the selected
  * index), each centered horizontally and stacked vertically by
- * `self->field_20` pixels starting at y=0x4a. Three layout variants
+ * `self->rowSpacing` pixels starting at y=0x4a. Three layout variants
  * per row, keyed by the record's type tag (docs/rom_map.md's
  * overlay_ui section, "DrawPauseMenuRows branches on a per-row type tag"):
  * a plain centered label (any other tag), or - for tags 4/5 - the
@@ -244,17 +245,17 @@ void DrawPauseMenuRows(struct pause_menu *self)
     s32 y = 0x4a;
     s32 i;
 
-    for (i = 0; i < self->field_1c; i++) {
+    for (i = 0; i < self->rowCount; i++) {
         void *label;
         s32 x;
 
-        if (i == self->field_18)
+        if (i == self->cursor)
             FontSetPalette(gSmallFont, 0xf);
         else
             FontResetPalette(gSmallFont);
-        label = (void *)GetUiText(self->field_14[i].labelId);
+        label = (void *)GetUiText(self->rows[i].labelId);
         x = 0x32 - (ICON_SLOT_CALL(gSmallFont, 0, label) >> 1);
-        switch (self->field_14[i].type) {
+        switch (self->rows[i].type) {
         case 4:
             x -= ICON_SLOT_CALL(gSmallFont, 0, self->musicVolumeText) >> 1;
             set_icon_mgr_pos(gSmallFont, x, y);
@@ -272,7 +273,7 @@ void DrawPauseMenuRows(struct pause_menu *self)
             ICON_SLOT_CALL(gSmallFont, 2, label);
             break;
         }
-        y += self->field_20;
+        y += self->rowSpacing;
     }
     FontResetPalette(gSmallFont);
 }

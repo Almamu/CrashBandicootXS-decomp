@@ -81,7 +81,7 @@ void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2)
     DRAW_ICON_SLOT(*pdc, 2, label2);
 }
 
-#define ROW_TYPE(self) ((self)->field_14[(self)->field_18].type)
+#define ROW_TYPE(self) ((self)->rows[(self)->cursor].type)
 
 /* Writes " <NN%>" into `buf`: the digits of `value` land at `buf + 2`
  * via FormatDecimal, which returns how many it wrote. */
@@ -161,24 +161,24 @@ void PauseMenuVolumeUp(struct pause_menu *self)
     }
 }
 
-/* Moves the row cursor (`field_18`) down one row, wrapping at the row
- * count (`field_1c`) via __modsi3. */
+/* Moves the row cursor (`cursor`) down one row, wrapping at the row
+ * count (`rowCount`) via __modsi3. */
 void PauseMenuCursorDown(struct pause_menu *self)
 {
-    self->field_18 = self->field_18 + 1;
-    self->field_18 = __modsi3(self->field_18, self->field_1c);
+    self->cursor = self->cursor + 1;
+    self->cursor = __modsi3(self->cursor, self->rowCount);
 }
 
-/* Counterpart to PauseMenuCursorDown above: decrements `field_18`, wrapping
- * around to `field_1c` first when it's already at zero. */
+/* Counterpart to PauseMenuCursorDown above: decrements `cursor`, wrapping
+ * around to `rowCount` first when it's already at zero. */
 s32 PauseMenuCursorUp(struct pause_menu *self)
 {
-    s32 v = self->field_18;
+    s32 v = self->cursor;
     if (v == 0) {
-        v = self->field_1c;
+        v = self->rowCount;
     }
     v -= 1;
-    self->field_18 = v;
+    self->cursor = v;
     return v;
 }
 

@@ -470,7 +470,7 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   - **Correction (fixed):** rendering all 10 with the single shared
     `gLevelSelectPicture0Palette` palette was wrong for 9 of them. An array at
     `gLevelSelectPictures` (10 `{palette_ptr, tile_ptr}` 8-byte pairs, read
-    by `sub_801DB6C`) gives each icon its own dedicated 256-color palette -
+    by `UpdateZoomBg`) gives each icon its own dedicated 256-color palette -
     only icon `01_637a70`'s pairing with `0863CF98` was actually correct;
     icons `02`-`10` each pair with one of the `tileset1/12`-`20` blocks
     below instead (`02`->`12`, `03`->`13`, `04`->`14`, `05`->`15`,

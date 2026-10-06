@@ -11,9 +11,9 @@
 
 
 /* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.c) - reset
- * the DISPCNT shadow (`field_1c`) and set its two bytes one at a time,
+ * the DISPCNT shadow (`dispcnt`) and set its two bytes one at a time,
  * request a BG tile/map graphics package, set BG0's
- * control register from it - plus zeroing `field_0`, which LoadLanguageSelectBg's
+ * control register from it - plus zeroing `frame`, which LoadLanguageSelectBg's
  * language_select doesn't have. */
 void LoadSaveMenuBg(struct save_menu *self)
 {
@@ -22,21 +22,21 @@ void LoadSaveMenuBg(struct save_menu *self)
     s32 a;
     MATCH_HOLD_REG(s32, b, r1);
 
-    self->field_1c = zero;
+    self->dispcnt = zero;
     a = 0x40;
-    a |= ((u8 *)&self->field_1c)[0];
+    a |= ((u8 *)&self->dispcnt)[0];
     a &= -8;
     a |= 1;
-    ((u8 *)&self->field_1c)[0] = a;
+    ((u8 *)&self->dispcnt)[0] = a;
     b = 1;
-    b |= ((u8 *)&self->field_1c)[1];
+    b |= ((u8 *)&self->dispcnt)[1];
     b &= -3;
     b |= 0x10;
-    ((u8 *)&self->field_1c)[1] = b;
+    ((u8 *)&self->dispcnt)[1] = b;
 
     InitBgSetup(&buf, 2, 0x1e, 1, 3);
     LoadGraphicsPackage(&buf, &gMenuSkyBg);
-    self->field_0 = 0;
+    self->frame = 0;
     REG_BG0CNT = GetBgSetupControl(&buf);
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
@@ -67,10 +67,10 @@ void RefreshSaveSlotSummaries(struct save_menu *self, void *handle)
 
 void LoadSaveMenuData(struct save_menu *self)
 {
-    s32 v = LoadSaveData(self->field_8c);
+    s32 v = LoadSaveData(self->cartSave);
     if ((u32)(v - 1) <= 3) {
-        ResetSaveData(self->field_8c);
-        StoreSaveData(self->field_8c);
+        ResetSaveData(self->cartSave);
+        StoreSaveData(self->cartSave);
     }
 }
 
@@ -171,62 +171,62 @@ void EndLinkSaveTransfer(struct save_menu *self)
 {
     struct link_session *p = gLinkSession;
     ResetLinkSession(p);
-    p->field_5 = 0;
+    p->enabled = 0;
 }
 
 void BeginLinkSaveTransfer(struct save_menu *self)
 {
     ResetLinkSession(gLinkSession);
-    gLinkSession->field_5 = 1;
-    ResetSaveData(self->field_90);
+    gLinkSession->enabled = 1;
+    ResetSaveData(self->linkSave);
 }
 
 void DrawSaveMenuConfirmDelete(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1d);
-    DrawSaveSlots(self, self->field_8c, self->field_24);
+    DrawSaveSlots(self, self->cartSave, self->pendingSlot);
     DrawYesNoPrompt(self, 0x26);
 }
 
 void DrawSaveMenuDelete(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1d);
-    DrawSaveSlots(self, self->field_8c, self->field_10);
-    DrawSaveMenuCancel(self, self->field_10 == 4);
+    DrawSaveSlots(self, self->cartSave, self->cursor);
+    DrawSaveMenuCancel(self, self->cursor == 4);
 }
 
 void DrawSaveMenuOverwrite(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1e);
-    DrawSaveSlots(self, self->field_8c, self->field_24);
+    DrawSaveSlots(self, self->cartSave, self->pendingSlot);
     DrawYesNoPrompt(self, 0x27);
 }
 
 void DrawSaveMenuSave(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1e);
-    DrawSaveSlots(self, self->field_8c, self->field_10);
-    DrawSaveMenuCancel(self, self->field_10 == 4);
+    DrawSaveSlots(self, self->cartSave, self->cursor);
+    DrawSaveMenuCancel(self, self->cursor == 4);
 }
 
 void DrawSaveMenuMessage(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1c);
-    DrawSaveMenuMessageLines(self, self->field_14, self->field_18);
+    DrawSaveMenuMessageLines(self, self->messageLine1, self->messageLine2);
 }
 
 void DrawSaveMenuLoadLink(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1c);
-    DrawSaveSlots(self, self->field_90, self->field_10);
-    DrawSaveMenuCancel(self, self->field_10 == 4);
+    DrawSaveSlots(self, self->linkSave, self->cursor);
+    DrawSaveMenuCancel(self, self->cursor == 4);
 }
 
 void DrawSaveMenuLoad(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1b);
-    DrawSaveSlots(self, self->field_8c, self->field_10);
-    DrawSaveMenuCancel(self, self->field_10 == 4);
+    DrawSaveSlots(self, self->cartSave, self->cursor);
+    DrawSaveMenuCancel(self, self->cursor == 4);
 }
 
 void DrawSaveMenu(struct save_menu *self)
@@ -275,10 +275,10 @@ void DeleteSaveSlot(struct save_menu *self, s32 arg1)
 {
     u8 buf[0x70];
 
-    ReadSaveSlot(self->field_8c, arg1, buf);
-    EraseSaveSlot(self->field_8c, arg1);
-    if (StoreSaveData(self->field_8c)) {
-        WriteSaveSlot(self->field_8c, arg1, buf);
+    ReadSaveSlot(self->cartSave, arg1, buf);
+    EraseSaveSlot(self->cartSave, arg1);
+    if (StoreSaveData(self->cartSave)) {
+        WriteSaveSlot(self->cartSave, arg1, buf);
     }
 }
 asm(".align 2, 0");

@@ -104,16 +104,16 @@ vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
   with an explicit `u8 tmp = *src; *dst = tmp;` two-step, forcing the
   read to happen (and the value to be captured) before the destination
   address is computed.
-- **`ShowCompanyLogos`'s `nullsub_7` call**: the ROM keeps the freshly
-  allocated block's pointer in r0 *across* the `bl nullsub_7` call and
+- **`ShowCompanyLogos`'s `InitCompanyLogos` call**: the ROM keeps the freshly
+  allocated block's pointer in r0 *across* the `bl InitCompanyLogos` call and
   only moves it to a callee-saved register afterward - only possible
-  because `nullsub_7` (now matched separately, in
+  because `InitCompanyLogos` (now matched separately, in
   `src/frontend/language_select.c`) was compiled in the same translation
   unit as this function originally, so the compiler could prove it
   doesn't touch r0. Split across files, an ordinary C call must
   conservatively assume r0-r3 are clobbered and moves the pointer to
   r4 *before* the call - one instruction too early. Reproduced by
-  spelling that one call as inline asm (`asm volatile("bl nullsub_7" :
+  spelling that one call as inline asm (`asm volatile("bl InitCompanyLogos" :
   "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc")`) that tells the compiler
   the pointer register survives, which is true here and lets the
   delayed move happen exactly where the ROM has it - the *next* call

@@ -26,7 +26,7 @@
  * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. Several
  * fields (0x0A, 0x0B, 0x0D-0x0F, 0x16-0x17) are read/written but not
  * understood beyond their offset yet - named `unusedNN`/`fieldNN`
- * rather than guessed. `struct sub_8006700_actor.field_18` (in
+ * rather than guessed. `struct power_dialog.icon` (in
  * power_dialog_draw.c) points at one of these. */
 struct actor {
     s32 x; // 0x00 - Q8 fixed-point screen position

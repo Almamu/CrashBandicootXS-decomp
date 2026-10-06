@@ -45,8 +45,8 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
  * `self->parts`, in that order. */
 
 /* The two-digit score-style counter: two independent 3-digit displays
- * (`self->field_24`/`self->field_48` change-detection pair at slots
- * 0xc0/0x80/0xa0, `self->field_28`/`self->field_4c` pair at slots
+ * (`self->crateCount`/`self->shownCrateCount` change-detection pair at slots
+ * 0xc0/0x80/0xa0, `self->crateTotal`/`self->shownCrateTotal` pair at slots
  * 0xc0*2/0xe0/0x80*4), each branching 3-digit vs. 2-digit vs. 1-digit
  * (hiding the unused leading slot(s) via a desired frame of -1, exactly
  * like `UpdateHudLives`'s own single-digit case), plus one more icon
@@ -156,7 +156,7 @@ void UpdateHudCrates(struct hud_counter *self)
 }
 
 /* A smaller sibling of `UpdateHudCrates` above: one 2-digit display
- * (`self->field_20`/`self->field_44` change-detection pair, slots
+ * (`self->wumpa`/`self->shownWumpa` change-detection pair, slots
  * `0xb0*4`/`0xc0*4`), sourced from `GetWumpa` (`UpdateHudCrates` used
  * `GetCrateCount` for its own primary counter) rather than a mode/layout
  * pair like the dispatcher's other callees - always refreshes one more
@@ -212,7 +212,7 @@ void UpdateHudWumpa(struct hud_counter *self)
  * 2-digit-vs-1-digit split runs (slots `0xc8*8`/`0xd0*8`/`0xd8*8`,
  * hiding the leading digit via `-1` past `0xe0*8` when unused). Runs a
  * second, independent instance of the same shape right after (guarded
- * by its own `GetAirshipHpPercent`/`self->field_3c`/`self->field_60`
+ * by its own `GetAirshipHpPercent`/`self->airshipHpPercent`/`self->shownAirshipHpPercent`
  * change-detection triple, slots `0xe8*8` fixed-icon plus
  * `0xf0*8`/`0xf8*8`/`0x80<<4`/`0x84<<4` digit slots) - two independent
  * percent-style readouts sharing one function body. */
@@ -270,15 +270,15 @@ void UpdateHudPercentCounters(struct hud_counter *self)
 
     if (GetBossIndex(gLevelState) != -1)
         return;
-    if ((self->value_e = GetAirshipHpPercent()) == -1)
+    if ((self->airshipHpPercent = GetAirshipHpPercent()) == -1)
         return;
 
     SetPartPos(gHudPartPositions[29].x, gHudPartPositions[29].y, (part = &self->parts[29]));
     CLAMP_FRAME(part, self->parts[29].anim_index, 0);
     DrawHudPart(part, 0, 0);
 
-    v = self->value_e;
-    if (v != self->shown_e) {
+    v = self->airshipHpPercent;
+    if (v != self->shownAirshipHpPercent) {
         if (v == 100) {
             struct hud_digit_part *p = self->parts;
 
@@ -291,7 +291,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
 
             parts = self->parts;
             CLAMP_FRAME(&parts[30], parts[30].anim_index, f);
-            f = __modsi3(self->value_e, 10);
+            f = __modsi3(self->airshipHpPercent, 10);
             CLAMP_FRAME(&parts[31], parts[31].anim_index, f);
             CLAMP_FRAME(&parts[32], parts[32].anim_index, 10);
             f = -1;
@@ -311,5 +311,5 @@ void UpdateHudPercentCounters(struct hud_counter *self)
     DrawHudPart(&self->parts[31], 0, 0);
     DrawHudPart(&self->parts[32], 0, 0);
     DrawHudPart(&self->parts[33], 0, 0);
-    self->shown_e = self->value_e;
+    self->shownAirshipHpPercent = self->airshipHpPercent;
 }

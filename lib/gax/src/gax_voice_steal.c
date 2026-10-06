@@ -27,7 +27,7 @@ void GAX_play(void)
     if (GAX_SONG()->volume > 0xff)
         GAX_SONG()->volume = 0xff;
     GAX_INFO()->volume = GAX_SONG()->volume;
-    gGaxPlayerState->field_180 = GAX_SONG()->field_0a;
+    gGaxPlayerState->filter = GAX_SONG()->filter;
     GAX_INFO()->playing = 1;
     GaxMixFrame(GAX_MIXER(), (u32 *)(gGaxPlayerState->outBuf +
                                      GAX_MIXER()->format->frames * gGaxPlayerState->outHalf));

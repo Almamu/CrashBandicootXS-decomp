@@ -674,7 +674,7 @@ const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by level_select.c (GetCameraLeadOffset, DestroyLaunchPad, sub_801BAC4). */
+/* Used by level_select.c (GetCameraLeadOffset, DestroyLaunchPad, ClearLaunchPadVulnerable). */
 const struct vtable_slot gLaunchPadVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideMovingSprite),
@@ -700,7 +700,7 @@ const struct vtable_slot gLevelSelectEntryVtable[6] = {
     VTABLE_SLOT(AnimateLevelSelectEntry),
     VTABLE_SLOT(SetLevelSelectEntryLevel),
     VTABLE_SLOT(SetLevelSelectEntryPos),
-    VTABLE_SLOT(nullsub_20),
+    VTABLE_SLOT(DrawLevelSelectEntry),
     VTABLE_SLOT(DestroyLevelSelectEntry),
 };
 
@@ -749,7 +749,7 @@ const struct vtable_slot gPooledBgLayerVtable[10] = {
     VTABLE_SLOT(ClipPooledBgLayerRows),
 };
 
-/* Used by palette_cycle.c (sub_802710C). */
+/* Used by palette_cycle.c (InitHudPart, DestroyHudPart). */
 const struct vtable_slot gHudPartVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -761,7 +761,7 @@ const struct vtable_slot gHudPartVtable[13] = {
     VTABLE_SLOT(IsSpriteObjNearCamera),
     VTABLE_SLOT(IsSpriteObjInsideRect),
     VTABLE_SLOT(GetSpriteObjClassId),
-    VTABLE_SLOT(sub_802710C),
+    VTABLE_SLOT(DestroyHudPart),
     VTABLE_SLOT(GetSpritePriority),
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
@@ -1040,12 +1040,8 @@ const struct vtable_slot gJetpackPlayerVtable[7] = {
 
 /* Used by jetpack_shot.c. */
 const struct vtable_slot gJetpackShotVtable[7] = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(DestroyJetpackShot),
-    VTABLE_SLOT(UpdateJetpackShot),
-    VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(DamageActor),
-    VTABLE_SLOT(IsJetpackShotUnshootable),
+    VTABLE_SLOT(NULL),       VTABLE_SLOT(DestroyJetpackShot), VTABLE_SLOT(UpdateJetpackShot),
+    VTABLE_SLOT(DrawActor),  VTABLE_SLOT(DamageActor),        VTABLE_SLOT(IsJetpackShotUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1176,12 +1172,8 @@ const struct vtable_slot gJetpackRocketVtable[7] = {
 
 /* Used by hovercraft.c. */
 const struct vtable_slot gJetpackRingVtable[7] = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(DestroyJetpackRing),
-    VTABLE_SLOT(UpdateJetpackRing),
-    VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(DamageActor),
-    VTABLE_SLOT(IsJetpackRingUnshootable),
+    VTABLE_SLOT(NULL),       VTABLE_SLOT(DestroyJetpackRing), VTABLE_SLOT(UpdateJetpackRing),
+    VTABLE_SLOT(DrawActor),  VTABLE_SLOT(DamageActor),        VTABLE_SLOT(IsJetpackRingUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 

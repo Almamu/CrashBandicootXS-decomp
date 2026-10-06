@@ -3,16 +3,17 @@
 
 extern void *_call_via_r1(void *arg0, void *fn);
 
-/* `nullsub_41` (ROM `0x0803A228`) sits immediately before the GAX2_
- * SoundHandler "UnknownC" type's function-pointer trio (see
- * docs/audio.md's per-type table: `init_fn`/`unknown_fn`/`play_fn` =
- * `0x0803A22D`/`0x0803A275`/`0x0803A325`, i.e. `GaxMixerInit`+1/
- * `nullsub_42`+1/`GaxMixerPlay`+1, the Thumb bit). Unlike its two
- * neighbors it isn't one of that trio itself - no caller found for it
- * anywhere in the ROM (checked every `asm/*.s`, `expected/*.s`, and every
- * `src/` source file for a `bl nullsub_41`/raw `0x0803A229` reference) - kept
- * unnamed/undescribed beyond that since nothing calls it. */
-void nullsub_41(void)
+/* The sound-effect voice type's `unknown_fn` (ROM `0x0803A228`): a no-op
+ * stub like the other types' `unknown_fn`s. It isn't called by name; its
+ * only reference is the voice handler type at the end of the sound-effect
+ * data set (`0x0855BC98`: `GaxFxChannelInit`/`GaxFxChannelUnknown`/
+ * `GaxFxChannelPlay`, built by tools/gax_audio.py's `HANDLER_FUNCS['sfx']`
+ * as `0x0803A229`; see docs/audio.md's "Sound effects"). It sits right
+ * before the mixer ("UnknownC") type's trio (`init_fn`/`unknown_fn`/
+ * `play_fn` = `0x0803A22D`/`0x0803A275`/`0x0803A325`, i.e.
+ * `GaxMixerInit`+1/`GaxMixerUnknown`+1/`GaxMixerPlay`+1, the Thumb bit).
+ * Nothing in the engine calls a type's `unknown_fn` slot. */
+void GaxFxChannelUnknown(void)
 {
 }
 asm(".align 2, 0");
@@ -49,10 +50,11 @@ void GaxMixerInit(void *self)
 }
 
 /* GAX2_SoundHandler "UnknownC" type's `unknown_fn` (ROM `0x0803A275`,
- * see docs/audio.md) - a no-op stub, same as the "Info"/"Channel" types'
- * `unknown_fn`s (`nullsub_39`/`nullsub_40`). `play_fn` (`GaxMixerPlay`)
- * is still raw. */
-void nullsub_42(void)
+ * see docs/audio.md) - a no-op stub, same as the "Info"/"Channel"/FX
+ * voice types' `unknown_fn`s (`GaxInfoUnknown`/`GaxChannelUnknown`/
+ * `GaxFxChannelUnknown`). `play_fn` is `GaxMixerPlay`
+ * (gax_unknownc_play.c). */
+void GaxMixerUnknown(void)
 {
 }
 asm(".align 2, 0");
