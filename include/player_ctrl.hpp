@@ -19,7 +19,7 @@ extern "C" {
  * player_ctrl.h): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.c creates it (`new PlayerCtrl`,
  * InitPlayerCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
- * states. Reset and Restart are still C, in src/player/action_ctrl.c
+ * states. Reset and Restart are in src/player/action_ctrl.cpp
  * (ResetPlayerCtrl, RestartPlayerCtrl), which the ROM puts with the action
  * controller's code. */
 class PlayerCtrl : public Ctrl
@@ -80,8 +80,8 @@ public:
     void StartStroke();
     void StartSpin();
     void ApplySwimDrift();
-    void Reset();   // ResetPlayerCtrl, action_ctrl.c
-    void Restart(); // RestartPlayerCtrl, action_ctrl.c
+    void Reset();   // ResetPlayerCtrl, action_ctrl.cpp
+    void Restart(); // RestartPlayerCtrl, action_ctrl.cpp
     void ClearMotionYPending();
     void ClearMotionXPending();
     u8 IsMotionYPending();

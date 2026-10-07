@@ -23,7 +23,7 @@
  * object (include/action_obj.h). Built with old_agbcc. */
 
 /* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
- * in kill_player.c only matches that way), but ActionCtrlStateHangMove
+ * in kill_player.cpp only matches that way), but ActionCtrlStateHangMove
  * tests the result as a u8 (`lsl #0x18`). docs/headers_plan.md */
 extern u8 UpdatePlayerFacing_u8(struct act *self) asm("UpdatePlayerFacing");
 
@@ -563,7 +563,7 @@ void ActionCtrlStateHangStop(struct act *self)
  * by `DoSuperBodySlamShockwave` here) is a small list object - `+4` a count, `+0xc`
  * a `struct actor **` array - not referenced by any already-matched
  * code yet, so it stays raw-offset rather than a guessed struct. This
- * file covers `DoSuperBodySlamShockwave` and `StartActionCtrlTornadoSpin` (both matched); the chunk continues in action_ctrl_moves.c and action_ctrl.c, split
+ * file covers `DoSuperBodySlamShockwave` and `StartActionCtrlTornadoSpin` (both matched); the chunk continues in action_ctrl_moves.cpp and action_ctrl.cpp, split
  * at each parked function's raw-asm gap - see docs/matching/
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 

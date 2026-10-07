@@ -83,12 +83,12 @@ void CollidePlayerWithObjects(struct player *self)
  *
  * `self` is the same wide, still-unnamed "big object" struct
  * (0x108+ bytes) referenced by raw offset throughout this ROM
- * neighborhood (`player_flags.cpp`/`kill_player.c`/`player_anim_room.c`
+ * neighborhood (`player_flags.cpp`/`kill_player.cpp`/`player_anim_room.c`
  * etc.) - `self+0xc` (flags byte), `self+0x18` (per-category
  * `{s16 offset; void *fn}` trampoline table pointer, the
  * `_call_via_r1` convention `player_anim_room.c` already established),
  * `self+0x20` (per-tag 28-byte-record table pointer,
- * `*(self+0x20) + tag*0x1c`, the exact convention `kill_player.c`
+ * `*(self+0x20) + tag*0x1c`, the exact convention `kill_player.cpp`
  * documents from a sibling call site), `self+0x28` bit 4 (the
  * mirror-flag bit `player_flags.cpp`/`ctrl.cpp`/`player_anim_room.c`
  * already read), `self+0x2d` (per-tag selector byte), and `self+0x8c`
@@ -129,7 +129,7 @@ void CollidePlayerWithObjects(struct player *self)
  *   4-frame parity - a standard hit-invincibility blink. Once that
  *   deadline is no longer armed while mode == 3, calls
  *   `SetMaskLevel(gLevelState, 2)` (matched pattern,
- *   `action_ctrl_update.c`/`polar_aku_aku.c` - a mode-transition/"state
+ *   `action_ctrl_update.cpp`/`polar_aku_aku.c` - a mode-transition/"state
  *   close" call) - ends the stun state, transitioning mode 3 -> 2.
  *
  * - Unconditionally (any mode): pushes `self`'s own current `{x, y}`

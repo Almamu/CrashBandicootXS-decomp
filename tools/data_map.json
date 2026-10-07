@@ -984,7 +984,7 @@
    ],
    "consumer_files": [
     "objects/ctrl.cpp",
-    "player/action_ctrl_idle.c"
+    "player/action_ctrl_idle.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1735,7 +1735,7 @@
     "UpdateActionCtrl"
    ],
    "consumer_files": [
-    "player/action_ctrl_update.c"
+    "player/action_ctrl_update.cpp"
    ],
    "ptr_words_code": 42,
    "ptr_words_data": 0,
@@ -7526,7 +7526,7 @@
     "InitActionCtrl"
    ],
    "consumer_files": [
-    "player/action_ctrl.c"
+    "player/action_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

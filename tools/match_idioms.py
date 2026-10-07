@@ -567,7 +567,7 @@ SPELLED_KINDS = ("pin", "empty", "empty_volatile", "use", "use_volatile", "keep"
 ALLOWED_SPELLED = {
     ("lib/gax/src/gax_swi.c", "mem_ref"):
         (1, 'two "m" inputs in one volatile asm; no macro has that shape'),
-    ("src/player/action_ctrl_moves.c", "keep_volatile"):
+    ("src/player/action_ctrl_moves.cpp", "keep_volatile"):
         (1, 'a "+r" output plus an "r" input in one asm; no macro has that shape'),
     ("src/save/save_transfer.c", "empty_other"):
         (1, 'an "=r" output from an untied "r" input (not MATCH_CONST\'s "0"); '

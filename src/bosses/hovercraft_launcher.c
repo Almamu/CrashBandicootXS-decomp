@@ -319,7 +319,7 @@ s32 RunHovercraftLauncherState(struct actor_self *self)
 }
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
- * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. A second
+ * documented in action_ctrl.cpp/hovercraft_parts.c/hovercraft_cannon.c. A second
  * object kind (constructed by the parked `CreateHovercraftSideGun`, vtable
  * `gHovercraftSideGunVtable`) reuses a death/"dead" byte flag at
  * `self+0x6c`. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */

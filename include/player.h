@@ -346,7 +346,7 @@ extern void *gPlayerCtrl;
 /* src/pickups/wumpa.c */
 extern void ResetActionCtrl(struct act *self);
 
-/* src/player/action_ctrl.c */
+/* src/player/action_ctrl.cpp */
 extern void ActionCtrlStateNop6(void);
 extern void ActionCtrlStateTurboRun(struct act *self);
 extern void ActionCtrlStateNop2(void);
@@ -389,19 +389,19 @@ extern void ActionCtrlStateHangStop(struct act *self);
 extern void DoSuperBodySlamShockwave(struct act *self);
 extern void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2);
 
-/* src/player/action_ctrl_idle.c */
+/* src/player/action_ctrl_idle.cpp */
 extern void ApplyActionCtrlMotion(struct act *self);
 extern void ActionCtrlStateIdle(struct act *self);
 
-/* src/player/action_ctrl_land.c */
+/* src/player/action_ctrl_land.cpp */
 extern void ActionCtrlStateCrawlStandUp(struct act *self);
 extern void ActionCtrlStateBodySlamLand(struct act *self);
 extern void ActionCtrlStateLand(struct act *self);
 
-/* src/player/action_ctrl_left_ground.c */
+/* src/player/action_ctrl_left_ground.cpp */
 extern u8 CheckActionCtrlLeftGround(struct act *self);
 
-/* src/player/action_ctrl_moves.c */
+/* src/player/action_ctrl_moves.cpp */
 extern void StartActionCtrlTornadoFall(struct act *self);
 extern void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags);
 extern void SteerActionCtrlSpin(struct act *self, u8 mode);
@@ -437,7 +437,7 @@ extern void ActionCtrlStateStandUp(struct act *self);
 extern void ActionCtrlStateCrawlStart(struct act *self);
 extern void ActionCtrlStateCrawl(struct act *self);
 
-/* src/player/action_ctrl_update.c */
+/* src/player/action_ctrl_update.cpp */
 extern void UpdateActionCtrl(struct act *self);
 extern u8 TryActionCtrlDoubleJump(struct act *self);
 extern void HandleActionCtrlAirInput(struct act *self);
@@ -487,7 +487,7 @@ extern void DestroyBossCtrl(struct boss_ctrl *self, s32 flags);
 extern struct boss_ctrl *CreateBossCtrl(struct boss_ctrl *self);
 extern void *GetCtrlTarget(struct boss_ctrl *self);
 
-/* src/player/kill_player.c */
+/* src/player/kill_player.cpp */
 extern void KillPlayer(struct act *self, s32 id);
 extern void UpdateActionCtrlSkidAnim(struct act *self);
 extern s32 UpdatePlayerFacing(struct act *self);

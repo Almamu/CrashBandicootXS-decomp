@@ -642,8 +642,8 @@ PlayerCtrl::~PlayerCtrl()
 {
 }
 
-/* Ctrl(), the vtable pointer, then Reset (action_ctrl.c's
- * ResetPlayerCtrl). */
+/* Ctrl(), the vtable pointer, then Reset (ResetPlayerCtrl, in
+ * action_ctrl.cpp). */
 PlayerCtrl::PlayerCtrl()
 {
     Reset();

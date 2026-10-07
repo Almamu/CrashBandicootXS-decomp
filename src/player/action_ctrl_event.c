@@ -2,10 +2,10 @@
 #include "match.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - see
- * kill_player.c's top-of-file comment for the shared field-offset
+ * kill_player.cpp's top-of-file comment for the shared field-offset
  * conventions (`self+0xc`/`self+0x10`/`+0x27`..`+0x32`) this "child
  * object" family uses. Not ROM-adjacent to wumpa.c's matched
- * span before it or kill_player.c's after it (see
+ * span before it or kill_player.cpp's after it (see
  * docs/matching/archive/issue-16-actor-11b0c.md/issue-16-actor-12160.md), so a
  * new file.
  *

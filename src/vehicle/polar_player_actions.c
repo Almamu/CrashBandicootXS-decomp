@@ -12,7 +12,7 @@
 #include "globals.h"
 
 /* Continues the same player/action-object action-table family already
- * documented in ctrl.cpp/action_ctrl_states.c/action_ctrl_land.c - `self`
+ * documented in ctrl.cpp/action_ctrl_states.c/action_ctrl_land.cpp - `self`
  * is the same large per-instance object those files use (state at
  * `+0x28`, a table-index field at `+0xc`, an anim-frame halfword/byte
  * pair at `+0x10`/`+0x12`, a counter at `+0x44`, an accumulator at `+8`
