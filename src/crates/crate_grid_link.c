@@ -5,7 +5,7 @@
 #include "crates.h"
 
 /* Same fixed-slot object-pool/spatial-hash-grid struct `InitCrateList`
- * initializes (`part_list.c`) and `crate_list.c` operates on - see
+ * initializes (`part_list.cpp`) and `crate_list.c` operates on - see
  * that file for the full field writeup. */
 /* Searches every bucket (254 down to 0, i.e. every bucket except the
  * special "large object" bucket 255) of `manager`'s spatial hash grid

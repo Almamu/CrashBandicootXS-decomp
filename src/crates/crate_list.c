@@ -9,7 +9,7 @@
 #include "memory.h"
 
 
-/* `CollidePartWithObject`'s twin (part_collide.c): the same collision-hit
+/* `CollidePartWithObject`'s twin (part_collide.cpp): the same collision-hit
  * resolver, called from elsewhere in this AI/collision cluster (`list`
  * is never read). Tests `part` against the incoming box via
  * `ClassifySpriteContact`; on a hit, calls `part`'s method-table +0x68 method

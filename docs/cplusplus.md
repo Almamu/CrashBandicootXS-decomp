@@ -448,6 +448,11 @@ counts them by kind) and what the C++ still needs.
 | `src/objects/sprite.cpp` | `SpriteRenderer`, `Sprite`'s `Reset`, boxes, `CheckPlayerContact` (the pickups'), `IsOnScreen`, `OverlapsRect`, `AdvanceAnim` | 13 | old_agbcp | 22 pins, 2 asm, 2 retyped stores -> 1 pin, 1 retyped store | 7a |
 | `src/objects/sprite_obj.cpp` | `Sprite`: constructor, destructor, the other virtual methods, the frame and animation accessors, with the 3 C-linkage hitbox edge helpers | 46 + 3 | **old_agbcp** (was agbcc) | 108 pins, 1 keep, 11 asm, 2 retyped reads -> 0 | 7a |
 | `src/objects/sprite_anim.cpp` | the rest of `Sprite`'s accessors, `UiSprite`, `PartList`'s `Update`, `Collide`, `CollideWithPlayer` | 32 | old_agbcp | 22 pins, 3 asm -> 0 | 7a |
+| `src/objects/part_list.cpp` | `PartList`'s constructor, destructor, `Draw`, `Remove`, `RemoveAt`, `Add` (include/part_list.hpp; the class is in sprite_obj.hpp), with `InitCrateList` (C linkage) | 6 + 1 | agbcp | 0 -> 0 | 7c |
+| `src/objects/part_list_cull.cpp` | `PartList::Cull`, `Clear`, `CollideClass` | 3 | **old_agbcp** (was agbcc) | 25 pins -> 0 | 7c |
+| `src/objects/part_collide.cpp` | `PartList::CollideWithObject` | 1 | old_agbcp | 0 -> 0 | 7c |
+| `src/objects/collision_queue.cpp` | `CollisionQueue` (include/part_list.hpp) | 4 | agbcp | 1 pin, 1 const (`STACK_ARG_U8_ADDR`) -> 0 | 7c |
+| `src/gfx/palette_cycle.cpp` | `PaletteCycles`, `HudPart` (include/part_list.hpp) | 8 | **old_agbcp** (was agbcc) | 11 pins, 9 asm -> 0 | 7c |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -811,6 +816,41 @@ ctrl_target` (its fields) or as a `SpriteObj` (what the `Ctrl` methods and
 the part's virtual methods take). The player is still C: C++ code reaches
 it as a `GroundSprite` through `PlayerSprite()`.
 
+Part 7c in numbers: the rest of the part list, the player's collision
+queue, the palette cycles and the HUD part, 5 objects and 23 functions
+(include/part_list.hpp). Project-wide: `MATCH_HOLD_REG` 1744 -> 1707,
+instruction-emitting `asm` 206 -> 197 and `MATCH_CONST` 28 -> 27. Nothing
+is kept: all five objects are plain C++. `part_list_cull.o` and
+`palette_cycle.o` move to `OLD_AGBCC_OBJS` (`CollideClass`'s `ldrb r1;
+lsrs r0, r1, #2` and `Tick`'s index loads are old_agbcp's registers; their
+36 pins reproduced them under agbcc); `part_list.o` and `collision_queue.o`
+match under both and stay on agbcc.
+
+- **The classes.** `PartList`'s other methods are declared in its class
+  in sprite_obj.hpp (a class can't be reopened). `CollisionQueue` (the
+  player's +0x108), `PaletteCycles` (`gPaletteCycles`) and `HudPart`
+  (`gHudPartVtable`: a `UiSprite` with only its own destructor, so its
+  constructor and destructor are empty bodies) are in part_list.hpp, each
+  checked against its C view (`struct collision_queue`, `struct
+  palette_cycler`, `struct hud_digit_part`). `DrawPartList`'s, `Cull`'s,
+  `Clear`'s and `CollideClass`'s slot calls are `Draw()`,
+  `OverlapsRect()`, `delete` and `GetClassId()`/`CheckPlayerContact()`;
+  the arrays are `new MovingSprite *[n]` and `delete[]`.
+- **One-byte stack arguments.** `AddCollisionCandidate`'s two trailing
+  bytes and `AddPaletteCycle`'s `direction` are read with `ldrb` from
+  their stack words, the address formed first: that is a one-byte struct
+  parameter (`struct byte_arg`), read into a local at the top. A `u8`
+  parameter loads the word and narrows it. The C needed an `asm` `add
+  rX, sp, #N; ldrb` block or `MATCH_CONST` and a pin for it.
+- **Indexed loops.** 8 of `TickPaletteCycles`' `asm` statements kept the
+  operand order of `add rN, rOff, rList`; as indexed loops over
+  `list[j]` (`for (j = counts[i] - 1; j >= 0; j--)`), loop strength
+  reduction gives the ROM's pointer walks, operand order included.
+- **`RemoveFromPartList`'s search** (`while (items[i] != part) if (++i
+  >= n) return;`, `n` a copy of `capacity`) gives the ROM's rotated loop
+  and its exit straight to the return; a `for` with a `break` makes gcc
+  reuse the bound for the `if (i < capacity)` after it.
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -855,7 +895,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7a~~ | ~~graphics.c, sprite.c, sprite_obj.c, sprite_anim.c~~ | `Entity`, `Sprite`, `UiSprite`, `PartList` (update, collide), the sprite graphics managers | done | |
 | 7b | objects/moving_sprite.c, moving_sprite_collide.c, player_contact.c, step_probe.c, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | 55 functions, 1700 lines, 118 pins, 5 asm | 7a |
 | 7b' | the controller headers and cxx_symbols.txt | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes | a rename, no code change | 7b; no other part of #664 in flight |
-| 7c | objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`-like class) and the palette cycles | 20 functions, 970 lines, 37 pins, 9 asm | 7a |
+| ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
 | 7d | objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old) | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) | 18 functions, 1050 lines, 34 pins, 3 asm | 7b |
 | 7e | crates/crate.c, crate_create.c (old), crate_draw.c, crate_update.c (old), crate_hit.c (old), crate_touch.c (old), crate_player_collide.c (old), crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c | `Crate` (struct crate: a 0x64-byte `Sprite`) and its accessors (slot_crate.c) | 53 functions, 2320 lines, 48 pins, 20 asm | 7a |
 | 7f | crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old) | `CrateList`, the crate grid | 13 functions, 1120 lines, 21 pins, 1 asm | 7e |

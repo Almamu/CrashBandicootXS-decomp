@@ -34,13 +34,11 @@ struct hud_anim_data {
     struct hud_anim_record *records;
 };
 
-/* A single HUD digit/icon slot. Its first 0x18 bytes plus the `table`
- * field at +0x18 match `struct actor` (include/actor.h) byte for byte -
- * InitHudPart/DestroyHudPart (src/gfx/palette_cycle.c) construct and destroy each
- * slot by calling the same generic `struct actor`-based table-swap
- * helpers (DestroyUiSpriteObj/InitUiSpriteObj) already used by the actor/part
- * system, treating this object as one. The rest of the fields
- * (animation state) are specific to this widget family. */
+/* A single HUD digit/icon slot: the C view of HudPart
+ * (include/part_list.hpp), a UiSprite with its own vtable
+ * (gHudPartVtable), whose constructor and destructor are InitHudPart and
+ * DestroyHudPart (src/gfx/palette_cycle.cpp). The class checks the
+ * size. */
 struct hud_digit_part {
     s32 x; /* +0x00 - position, 24.8 fixed point */
     s32 y; /* +0x04 */
@@ -151,7 +149,7 @@ extern void IncHudCrateTotal(struct hud_counter *self);
 extern void DestroyHud(struct hud_counter *self, s32 flags);
 
 /* The HUD parts' draw and constructor. They are defined in
- * src/gfx/palette_cycle.c, which holds the ROM range they sit in. */
+ * src/gfx/palette_cycle.cpp, which holds the ROM range they sit in. */
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern struct hud_digit_part *InitHudPart(struct hud_digit_part *part);
 
