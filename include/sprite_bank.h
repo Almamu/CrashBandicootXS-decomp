@@ -1,7 +1,7 @@
 #ifndef GUARD_SPRITE_BANK_H
 #define GUARD_SPRITE_BANK_H
 
-#include "gba/types.h"
+#include "core.h"
 #include "hitbox_quad.h"
 
 /*
@@ -22,10 +22,6 @@
  * (time_trial.c, dingodile.c, tiny_update.c, spawn_objects.c,
  * affine_sprite_pieces.c's kf_record) use these types since #574 batch 9e.
  */
-
-#ifndef ARRAY_COUNT
-#define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
-#endif
 
 /* One OBJ piece's position relative to the part, in pixels. */
 struct sprite_piece_pos {

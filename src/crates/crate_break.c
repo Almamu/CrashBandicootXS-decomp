@@ -13,6 +13,7 @@
 #include "level.h"
 #include "box_part.h"
 #include "globals.h"
+#include "entity_bits.h"
 #include "sprite_bank.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
@@ -1524,12 +1525,14 @@ void BreakCrate(struct crate *self, u32 arg1)
     PhysSetFrame(self, 3);
     if (gCrateKindCounted[self->kind])
         AddBrokenCrate(gLevelState);
+    /* ENTITY_SET_GONE_BIT_OF(self->id, one) (entity_bits.h) in a plain
+     * block: the macro's do/while(0) changes this object. */
     {
         s32 id = self->id;
-        u8 *base = (u8 *)gEntityFlags;
+        struct entity_flags *base = gEntityFlags;
         s32 word = id / 32;
         s32 off = word * 4;
-        u32 *slot = (u32 *)(base + 0x108);
+        u32 *slot = base->bits0Copy;
 
         slot = (u32 *)((u8 *)slot + off);
         *slot |= one << (id - word * 32);
@@ -1922,7 +1925,7 @@ void ExplodeCrate(struct crate *self, u8 near)
         PhysSetTag(self, 0x21);
     if (gCrateKindCounted[self->kind])
         AddBrokenCrate(gLevelState);
-    PHYS_SET_ID_BIT(self->id);
+    ENTITY_SET_GONE_BIT(self->id);
     PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
     DropCratesAbove(self);
 
@@ -2485,7 +2488,7 @@ void FinishBrokenCrate(struct crate *self)
         gCrateListChanged = 1;
         PHYS_GONE(self) = 1;
         if (self->id != 0xffff)
-            PHYS_SET_ID_BIT(self->id);
+            ENTITY_SET_GONE_BIT(self->id);
         i = 0;
         if (i < gPlayer->listCount) {
             struct player **pp = &gPlayer;

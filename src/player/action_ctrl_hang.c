@@ -218,8 +218,11 @@ void ActionCtrlStateDying(struct act *self)
     if (part->animDone) {
         part->flags.all |= 1;
         {
-            /* the "mark part gone" bitmap set of cortex.c's
-             * MARK_GONE_BITMAP, with the same load-bearing registers */
+            /* the "mark part gone" bitmap set, with the registers of
+             * entity_bits.h's ENTITY_SET_GONE_BIT_PINNED(part, r4,
+             * r2). Kept spelled out: it divides with the MATCH_KEEP'd
+             * shift below, not the macro's `/= 32`, and the macro
+             * changes this object. */
             MATCH_HOLD_REG(s32, none, r0) = 0xFFFF;
             MATCH_HOLD_REG(u32, cur, r4) = part->id;
 

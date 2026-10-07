@@ -133,7 +133,9 @@ void SetWumpaCounter(struct orbit_part *self, u8 value)
  * same `gEntityFlags+0x108` bitmap `sprite.c` already
  * writes - identical idiom, reused verbatim including the
  * register-pinned `>> 5` (see that file's note on why a plain C shift
- * doesn't reproduce the ROM's exact instruction here). */
+ * doesn't reproduce the ROM's exact instruction here). Its pins and
+ * `asm volatile` aren't those of entity_bits.h's ENTITY_SET_GONE_BIT_ASR,
+ * so the sequence stays spelled out. */
 void UpdateStopwatch(struct actor *self)
 {
     struct player *player = gPlayer;

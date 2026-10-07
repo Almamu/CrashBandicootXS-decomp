@@ -19,7 +19,7 @@
 struct follow_child {
     s32 x;        // 0x00
     s32 y;        // 0x04
-    u16 field_08; // 0x08 - bitmap id (MARK_GONE in input_ctrl.c)
+    u16 field_08; // 0x08 - bitmap id (ENTITY_MARK_GONE in input_ctrl.c)
     u8 unk_0A[2];
     /* The flags byte: level_select.c ORs it whole, input_ctrl.c sets
      * `gone`. `packed` keeps the union one byte. */

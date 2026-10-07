@@ -27,6 +27,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 #include "player.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -38,18 +39,7 @@ typedef void (*ctrl_bounce_fn)(void *self, s32 a, s32 b, s32 c);
  * bitmap at gEntityFlags+0x108. */
 static inline void MarkGone(struct ctrl_target *t)
 {
-    t->gone = 1;
-    if (t->id != 0xFFFF)
-        do {
-            s32 id = t->id;
-            u8 *base = (u8 *)gEntityFlags;
-            s32 word = id / 32;
-            s32 off = word * 4;
-            u32 *slot = (u32 *)(base + 0x108);
-
-            slot = (u32 *)((u8 *)slot + off);
-            *slot |= 1 << (id - word * 32);
-        } while (0);
+    ENTITY_MARK_GONE(t->gone, t->id);
 }
 
 static inline void SetVelX(struct ctrl_target *t, s32 a, s32 b, s32 c)
@@ -346,7 +336,9 @@ static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
     return SpawnEffectPart(gEntitySpawner, kind, 2, x, y, 0);
 }
 
-/* MarkGone with r2 held live across the id compare (see above). */
+/* MarkGone with r2 held live across the id compare (see above). The
+ * MATCH_USE inside the bitmap set keeps it from being entity_bits.h's
+ * ENTITY_MARK_GONE, as the MATCH_CONST does in MarkGoneFreshBit. */
 static inline void MarkGoneHeld(struct ctrl_target *t)
 {
     MATCH_HOLD_REG(s32, hold, r2);

@@ -565,9 +565,6 @@ SPELLED_KINDS = ("pin", "empty", "empty_volatile", "use", "use_volatile", "keep"
 # docs/matching_techniques.md lists them too. Keep the counts exact: a
 # new site fails the check, and so does a stale entry.
 ALLOWED_SPELLED = {
-    ("src/bosses/cortex.c", "pin"):
-        (5, "the register is a macro parameter holding a string (asm(R_FRAME)); "
-            "MATCH_HOLD_REG stringizes a bare name"),
     ("lib/gax/src/gax_swi.c", "mem_ref"):
         (1, 'two "m" inputs in one volatile asm; no macro has that shape'),
     ("src/player/action_ctrl_moves.c", "keep_volatile"):

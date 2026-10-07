@@ -64,9 +64,7 @@ void UpdateHudLives(struct hud_counter *counter)
                     asm volatile("add %0, %0, %1" : "+r"(record_offset) : "r"(records));
                     record = (struct hud_anim_record *)record_offset;
                     frame_count = record->frame_count;
-                    if (frame >= frame_count) {
-                        frame = frame_count - 1;
-                    }
+                    CLAMP_INDEX(frame, frame_count);
                     parts[0].frame_index = frame;
                 }
 
@@ -104,9 +102,7 @@ void UpdateHudLives(struct hud_counter *counter)
                     asm volatile("add %0, %0, %1" : "+r"(record_offset) : "r"(records));
                     record = (struct hud_anim_record *)record_offset;
                     frame_count = record->frame_count;
-                    if (frame >= frame_count) {
-                        frame = frame_count - 1;
-                    }
+                    CLAMP_INDEX(frame, frame_count);
                     part->frame_index = frame;
                 }
             } else {
@@ -130,9 +126,7 @@ void UpdateHudLives(struct hud_counter *counter)
                 asm volatile("add %0, %0, %1" : "+r"(record_offset) : "r"(records));
                 record = (struct hud_anim_record *)record_offset;
                 frame_count = record->frame_count;
-                if (frame >= frame_count) {
-                    frame = frame_count - 1;
-                }
+                CLAMP_INDEX(frame, frame_count);
                 parts[0].frame_index = frame;
 
                 part = &parts[1];

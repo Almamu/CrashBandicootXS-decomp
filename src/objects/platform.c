@@ -3,6 +3,7 @@
 #include "gobj_1a794.h"
 #include "objects.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* codegen: SetSpritePrevPos takes (part, x, y) (objects.h), but
  * MovePlayerWithPlatform passes only the part and leaves r1/r2 as they
@@ -299,25 +300,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             MATCH_HOLD_REG(u32, bit, r0) = 1;
 
             obj->flags = bit | obj->flags;
-            {
-                MATCH_HOLD_REG(s32, none, r0) = 0xFFFF;
-                MATCH_HOLD_REG(u32, cur, r2) = obj->id;
-
-                if (cur != none) {
-                    MATCH_HOLD_REG(s32, id, r3) = *(vu16 *)&obj->id;
-                    u8 *base = (u8 *)gEntityFlags;
-                    MATCH_HOLD_REG(s32, word, r0) = id;
-                    s32 off;
-                    u32 *slot;
-
-                    word /= 32;
-                    off = word * 4;
-                    slot = (u32 *)(base + 0x108);
-                    slot = (u32 *)((u8 *)slot + off);
-                    word = id - word * 32;
-                    *slot |= 1 << word;
-                }
-            }
+            ENTITY_SET_GONE_BIT_PINNED(obj, r2, r2);
         } else if (kind == 6 && obj->animDone) {
             self->time = gRoomFrameCount + 120;
         clamp:

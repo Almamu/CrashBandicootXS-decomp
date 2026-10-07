@@ -8,6 +8,7 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
  * (0x08016128-0x08017524): the player-input controller class of
@@ -262,30 +263,13 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     p->rampX.target = c;
 }
 
-/* Sets bit `id` of gEntityFlags->bits0Copy. Kept a
- * do/while(0) macro: its loop notes stop CSE from reusing the id already
- * loaded for the caller's 0xFFFF test, so the ROM's reload comes out
- * naturally, and the word index is gcc's signed division of it. */
-#define SET_ID_BIT(idExpr)                                                     \
-    do                                                                         \
-    {                                                                          \
-        s32 _id = (idExpr);                                                    \
-        struct entity_flags *_base = gEntityFlags;                             \
-        s32 _word = _id / 32;                                                  \
-        s32 _off = _word * 4;                                                  \
-        u32 *_slot = _base->bits0Copy;                                         \
-                                                                               \
-        _slot = (u32 *)((u8 *)_slot + _off);                                   \
-        *_slot |= 1 << (_id - _word * 32);                                     \
-    } while (0)
-
 /* "Mark gone": MarkEntityGone's sequence (graphics.c), inlined - set flags
- * bit 0, then unless the id is 0xFFFF set its bit in the bitmap. */
+ * bit 0, then unless the id is 0xFFFF set its bit in the bitmap. The
+ * do/while(0) of entity_bits.h's ENTITY_SET_GONE_BIT is what gives the
+ * ROM's reload of the id after the 0xFFFF test. */
 static inline void MarkGone(struct player *t)
 {
-    t->flags.bits.gone = 1;
-    if (t->id != 0xFFFF)
-        SET_ID_BIT(t->id);
+    ENTITY_MARK_GONE(t->flags.bits.gone, t->id);
 }
 
 static inline void ClampFrame(struct player *t, s32 frame)

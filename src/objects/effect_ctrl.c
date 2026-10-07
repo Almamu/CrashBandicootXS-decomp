@@ -2,6 +2,7 @@
 #include "vtable.h"
 #include "objects.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* GitHub issue #9/#10, tail of the 0x0800B8DC-0x0800D040 cluster (see
  * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): the last raw file
@@ -41,8 +42,8 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * Real C under old_agbcc (issue #9-#11 NAKED retry; the whole file
  * matches under it, so effect_ctrl.o is in OLD_AGBCC_OBJS - the
  * constant-before-`ldrb` flag ORs are old_agbcc's tell). `MarkGone` is
- * an inline with the do/while(0) `SET_ID_BIT` that
- * swim_ctrl.c uses (its loop notes give the id reload). The
+ * an inline around entity_bits.h's ENTITY_MARK_GONE (its do/while(0)
+ * loop notes give the id reload). The
  * gone bit is set through a bitfield view of +0x0C and bit 3 is tested
  * through the byte view: that is what makes the second copy reuse the
  * tested byte and its `1` for the OR, in the ROM's registers. */
@@ -63,24 +64,9 @@ struct cbf4_other {
     u8 animDone; // 0x38 - struct gobj.animDone
 };
 
-#define SET_ID_BIT(idExpr)                                                     \
-    do                                                                         \
-    {                                                                          \
-        s32 _id = (idExpr);                                                    \
-        u8 *_base = (u8 *)gEntityFlags;                                  \
-        s32 _word = _id / 32;                                                  \
-        s32 _off = _word * 4;                                                  \
-        u32 *_slot = (u32 *)(_base + 0x108);                                   \
-                                                                               \
-        _slot = (u32 *)((u8 *)_slot + _off);                                   \
-        *_slot |= 1 << (_id - _word * 32);                                     \
-    } while (0)
-
 static inline void MarkGone(struct cbf4_other *t)
 {
-    t->f.b.gone = 1;
-    if (t->id != 0xFFFF)
-        SET_ID_BIT(t->id);
+    ENTITY_MARK_GONE(t->f.b.gone, t->id);
 }
 
 void UpdateEffectCtrl(void *self, struct cbf4_other *other)

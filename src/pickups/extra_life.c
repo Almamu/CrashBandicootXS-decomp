@@ -10,6 +10,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -189,19 +190,6 @@ void PickUpExtraLife(struct orbit_part *self, u8 randomize)
  * reloads from memory (`ldrh` at the compare); two extra references on
  * each velocity give it r0 and the position r1 (third near-miss sweep;
  * the draft was 22 halfwords off). */
-#define SET_ID_BIT(idExpr, one)                                                \
-    do                                                                         \
-    {                                                                          \
-        s32 _id = (idExpr);                                                    \
-        u8 *_base = (u8 *)gEntityFlags;                                  \
-        s32 _word = _id / 32;                                                  \
-        s32 _off = _word * 4;                                                  \
-        u32 *_slot = (u32 *)(_base + 0x108);                                   \
-                                                                               \
-        _slot = (u32 *)((u8 *)_slot + _off);                                   \
-        *_slot |= one << (_id - _word * 32);                                     \
-    } while (0)
-
 void UpdateExtraLife(struct orbit_part *self)
 {
     u8 state = self->state;
@@ -223,8 +211,8 @@ void UpdateExtraLife(struct orbit_part *self)
             PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
             AddLife(gLevelState);
             self->base.flags |= 1;
-            if (self->base.id != 0xffff)
-                SET_ID_BIT(self->base.id, state);
+            if (self->base.id != ENTITY_ID_NONE)
+                ENTITY_SET_GONE_BIT_OF(self->base.id, state);
         }
     } else if (state == 2) {
         s32 fire;
@@ -264,8 +252,8 @@ void UpdateExtraLife(struct orbit_part *self)
         }
         if (fire) {
             self->base.flags |= 1;
-            if (self->base.id != 0xffff)
-                SET_ID_BIT(self->base.id, 1);
+            if (self->base.id != ENTITY_ID_NONE)
+                ENTITY_SET_GONE_BIT(self->base.id);
         }
     } else {
         if (self->mode == 0)
