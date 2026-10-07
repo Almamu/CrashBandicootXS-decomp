@@ -18,7 +18,7 @@ extern "C" {
  * wumpa counter (`randomize` 0: state 1, and shows the counter) or to a
  * random point off the screen (state 2; `counter` says which way). The
  * position becomes a screen position, and the step covers the distance
- * to the target in 20 frames. Called by crate_break.c and time_trial.c
+ * to the target in 20 frames. Called by crate_break.cpp and time_trial.c
  * with `randomize` 1, by CheckPickup with either. */
 void Wumpa::PickUp(u8 randomize)
 {

@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "crate_list.hpp"
 #include "part_list.hpp"
 #include "pickups.hpp"
 
@@ -1026,7 +1027,7 @@ void Crate::LightTnt()
     kind = CRATE_KIND_TNT_LIT_3;
     SetTag(0x14);
     f.b.active = 1;
-    LinkCrateToActiveBucket(gCrateList, (struct box_part *)this);
+    Crates()->LinkActive(this);
     anims = bank->anims;
     a = &anims[tag];
     slot = GetPaletteSlot(gPaletteCache, a->paletteId);
@@ -1154,7 +1155,7 @@ void Crate::Break(u32 arg1)
     if (GetAbove() != 0 && flag == 0)
         chained = 1;
     f.b.active = 1;
-    LinkCrateToActiveBucket(gCrateList, (struct box_part *)this);
+    Crates()->LinkActive(this);
     state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     one = 1;
@@ -1443,7 +1444,7 @@ void Crate::DropAbove()
             n->fallSpeed = t + d;
         }
         n->f.flags |= 0x10;
-        LinkCrateToActiveBucket(gCrateList, (struct box_part *)n);
+        Crates()->LinkActive(n);
         if (tbl[n->kind] && blastState == 0 && n->fallDistance > 0x1600) {
             Crate *next = n->GetAbove();
             Crate *prev = n->GetBelow();
@@ -1481,7 +1482,7 @@ void Crate::Explode(u8 near)
     state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     f.flags |= 0x10;
-    LinkCrateToActiveBucket(gCrateList, (struct box_part *)this);
+    Crates()->LinkActive(this);
     one = 1;
     state = (state & CRATE_STATE_BUSY) | one;
     if (kind == CRATE_KIND_NITRO) {
@@ -1523,7 +1524,12 @@ void Crate::Explode(u8 near)
  * of the explosion): every idle crate within `dist` pixels (|dx| + |dy|)
  * explodes, if it is explosive, breaks, if it is breakable, or is
  * activated, if it is a switch; every wumpa fruit within `dist` is picked
- * up. The crate is then marked as having blasted. */
+ * up. The crate is then marked as having blasted.
+ *
+ * The crate list is read through gCrateList's C view here, in
+ * UpdateCrates and in BreakCratesInArea: the loop tests through
+ * Crates() (an inline call) aren't copied in front of the loops, which
+ * changes their layout. */
 void Crate::BlastNearby(s32 dist)
 {
     s32 i = 0;
@@ -1582,10 +1588,9 @@ void Crate::BlastNearby(s32 dist)
     blastState = 0xff;
 }
 
-/* The crate list's per-frame update: idle nitro crates that were set off
- * explode first, then each crate of the list is updated, and a crate that
- * is gone is removed and deleted; all of it again while the list keeps
- * changing. */
+/* The crate list's update pass (run_room.c): DetonateNitroCrates, then
+ * each crate of the list is updated, and a crate that is gone is removed
+ * and deleted; all of it again while the list keeps changing. */
 void UpdateCrates(void)
 {
     s32 i;
@@ -1598,7 +1603,7 @@ void UpdateCrates(void)
 
             if (o->GetClassId() == 3) {
                 if (o->f.flags & 1) {
-                    RemoveCrateListAt(gCrateList, i);
+                    Crates()->RemoveAt(i);
                     delete o;
                     i--;
                 } else {
@@ -1614,16 +1619,16 @@ void DetonateNitroCrates(void)
 {
     s32 i = 0;
 
-    if (i < gCrateList->activeCount) {
+    if (i < Crates()->count) {
         do {
-            Crate *o = (Crate *)gCrateList->slotArray[i];
+            Crate *o = (Crate *)Crates()->slots[i];
 
             if (o->GetClassId() == 3 && o->kind == CRATE_KIND_NITRO) {
                 if ((o->state & CRATE_STATE_MASK) == 0)
                     o->Explode(0);
             }
             i++;
-        } while (i < gCrateList->activeCount);
+        } while (i < Crates()->count);
     }
 }
 
@@ -1674,7 +1679,7 @@ void Crate::ActivateIronSwitch()
         return;
 
     f.flags |= 0x10;
-    LinkCrateToActiveBucket(gCrateList, (struct box_part *)this);
+    Crates()->LinkActive(this);
     state |= CRATE_STATE_BUSY;
     SetPlayerBusy();
     SetTag(0x22);
@@ -1688,9 +1693,9 @@ void Crate::ActivateIronSwitch()
     MarkEntityIdActivated(gEntityFlags, id);
 
     i = 0;
-    if (i < gCrateList->activeCount) {
+    if (i < Crates()->count) {
         do {
-            Crate *o = (Crate *)gCrateList->slotArray[i];
+            Crate *o = (Crate *)Crates()->slots[i];
 
             if (o->GetClassId() == 3 && (o->state & CRATE_STATE_MASK) == 0) {
                 if (o->kind == CRATE_KIND_OUTLINE && o->paramA == paramA) {
@@ -1701,7 +1706,7 @@ void Crate::ActivateIronSwitch()
                 }
             }
             i++;
-        } while (i < gCrateList->activeCount);
+        } while (i < Crates()->count);
     }
 
     if (n != 0) {

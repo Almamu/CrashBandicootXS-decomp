@@ -3,8 +3,8 @@
 
 /* The crate as C++ (#664, docs/cplusplus.md, parts 7e and 7g): the class
  * behind gCrateVtable (src/crates/). crate.h's `struct crate` is its C
- * view, for the files that are still C (the crate list and grid,
- * room_entities.c) and the C prototypes (crates.h).
+ * view, for the files that are still C (room_entities.c) and the C
+ * prototypes (crates.h).
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp); cxx_symbols.txt
  * maps the mangled names onto the C names. */

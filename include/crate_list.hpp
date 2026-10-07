@@ -10,8 +10,8 @@
  *
  * crates.h's `struct pool_manager`, `struct pool_node` and `struct
  * pool_link` are the C views, for the files that are still C (play_room.c,
- * run_room.c, crate_break.c, ...); each class checks its size against its
- * view below. The C prototypes (crates.h) keep the C names; cxx_symbols.txt
+ * run_room.c, ...) and three of crate_break.cpp's loops; each class checks
+ * its size against its view below. The C prototypes (crates.h) keep the C names; cxx_symbols.txt
  * maps the methods to them.
  *
  * `#pragma interface`: nothing here is virtual, but the header follows the

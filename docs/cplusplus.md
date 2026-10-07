@@ -1126,9 +1126,9 @@ register).
 Part 7g in numbers: crate_break.c, the rest of `Crate` (include/crate.hpp):
 25 functions, 22 of them methods and 3 free functions with C linkage
 (`UpdateCrates`, `DetonateNitroCrates`, `BreakCratesInArea`, which take no
-crate). Project-wide: `MATCH_HOLD_REG` 1544 -> 1533, instruction-emitting
-`asm` 173 -> 169, `MATCH_USE` 73 -> 71, `MATCH_KEEP` 52 -> 51, scoped
-volatiles 38 -> 30 and asm labels 19 -> 18. It was an old_agbcc object
+crate). Project-wide: `MATCH_HOLD_REG` 1500 -> 1489, instruction-emitting
+`asm` 169 -> 165, `MATCH_USE` 65 -> 63, `MATCH_KEEP` 49 -> 48, scoped
+volatiles 29 -> 21 and asm labels 19 -> 18. It was an old_agbcc object
 already and matches only under old_agbcp. Every function matched as soon
 as the C became methods, except five (below); none of the C's pins was
 needed.
@@ -1137,8 +1137,10 @@ needed.
   `o->GetClassId()`, `o->Update()`, `delete o` (`UpdateCrates`' slot-10
   call with 3, after its own null test) and `PlayerSprite()->HandleEvent(...)`;
   `PhysSetTag`/`PhysSetFrame` are `SetTag`/`ClampFrame`, `PHYS_GONE` with
-  its bit is `MarkGone()`, and `AddCollisionCandidate` is
-  `CollisionQueue::Add`. With crate_break.c gone, crate.h's `struct
+  its bit is `MarkGone()`, `AddCollisionCandidate` is
+  `CollisionQueue::Add`, `LinkCrateToActiveBucket` and `RemoveCrateListAt`
+  are `Crates()->LinkActive(this)` and `Crates()->RemoveAt(i)` (part 7f),
+  and `PickUpWumpa` is `Wumpa::PickUp` (part 7h). With crate_break.c gone, crate.h's `struct
   crate_vtable`, the `PHYS_*` call macros, `PhysSetTag`/`PhysSetFrame`
   and the bit and slot-state views (`struct phys_flag_bits`, `struct
   phys_b48`) have no users and are removed; `struct crate` stays the C
@@ -1188,7 +1190,12 @@ small inline helpers and local copies (`PosPtr`, `HitResponseAt`, `Span`,
 written in place, and each placed a load or a register as the ROM has it.
 `BreakCrate` keeps its spelled-out gone bit (entity_bits.h) and
 `BlastNearbyCrates`/`BreakCratesInArea` their `kind + table` integer
-sums (indexing adds the other way round).
+sums (indexing adds the other way round). Those two and `UpdateCrates`
+walk the crate list through `gCrateList`'s C view (`activeCount`,
+`slotArray`): through `Crates()`, an inline call, their loop tests aren't
+copied in front of the loops (see the gotchas), which changes the
+layout. `DetonateNitroCrates` and `ActivateIronSwitchCrate` use
+`Crates()->count` and `slots`.
 
 ### Next batches
 

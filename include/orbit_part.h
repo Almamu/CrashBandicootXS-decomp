@@ -7,7 +7,7 @@
 /* The C view of the extra life and the wumpa, include/pickups.hpp's
  * classes ExtraLife and Wumpa (0x54-byte sprites; src/pickups/*.cpp), for
  * the C files that spawn them or pick them up (drop_extra_life.c,
- * entity_spawner.c, crate_break.c, time_trial.c). pickups.hpp checks both
+ * entity_spawner.c, time_trial.c). pickups.hpp checks both
  * classes' sizes against it. It starts with the shared `struct actor`
  * header; `bank` is the sprite bank (records are 0x1C bytes, `frameCount`
  * at +0x16), `timer` the sprite's `affine` halfword. */
