@@ -23,6 +23,8 @@
 #include "actor_self.h"
 #include "vtable.h"
 #include "objects.h"
+#include "constants/action_states.h"
+#include "constants/attack_kinds.h"
 
 struct act;
 struct box_part;
@@ -312,13 +314,13 @@ extern const struct vtable_slot gBossCtrlVtable[13];
 
 /* The controllers' state functions, indexed by state
  * (src/data/action_table_16bf20.c, player_pmf_16c250.c). */
-extern const struct actor_pmf gActionCtrlStateTable[42];
+extern const struct actor_pmf gActionCtrlStateTable[ACTION_STATE_COUNT];
 extern const struct actor_pmf gPlayerCtrlStateFuncs[8];
 extern const struct actor_pmf gInputCtrlStateFuncs[4];
 
 /* The attack kind of each action controller state (QueueCratePlayerCollision,
  * src/data/object_tables_16bb6c.c). */
-extern const s32 gActionCtrlStateAttackKinds[42];
+extern const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT];
 
 /* The swim controller's animations: one row of 13 tilt levels per mode
  * (src/data/speed_table_16c090.c, action_table_16bf20.c), and the

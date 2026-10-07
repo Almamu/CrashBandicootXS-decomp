@@ -99,11 +99,11 @@ void ActionCtrlStateLeftGround(struct act *self)
                 if (self->turboRun) {
                     self->frame = 0;
                     ACT_VCALL2(self, m50, self->part, 0x18);
-                    ACT_VCALL1(self, m20, 4);
+                    ACT_VCALL1(self, m20, ACTION_STATE_TURBO_RUN);
                     ActQueue27(self, 0, 0x1B);
                 } else {
                     self->frame = 0;
-                    ACT_VCALL1(self, m20, 3);
+                    ACT_VCALL1(self, m20, ACTION_STATE_RUN);
                     {
                         u8 *slot = &self->motionX;
 
@@ -113,7 +113,7 @@ void ActionCtrlStateLeftGround(struct act *self)
                 }
                 ActSetNext(self, 0);
             } else if (tag == 0x18) {
-                ACT_VCALL1(self, m20, 4);
+                ACT_VCALL1(self, m20, ACTION_STATE_TURBO_RUN);
                 self->motionYKeepSpeed = 0;
                 self->motionYPending = 1;
                 self->motionY = 0;
@@ -122,7 +122,7 @@ void ActionCtrlStateLeftGround(struct act *self)
             }
             break;
         default:
-            if (self->state == 0xE) {
+            if (self->state == ACTION_STATE_AIR_SPIN) {
                 if (gKeys.all & 0x30) {
                     ActQueue27(self, 0, 1);
                 } else {
@@ -131,9 +131,9 @@ void ActionCtrlStateLeftGround(struct act *self)
                     self->motionX = z;
                 }
                 ActSetNext(self, 0);
-                ACT_VCALL1(self, m20, 0xD);
+                ACT_VCALL1(self, m20, ACTION_STATE_SPIN);
             } else {
-                ACT_VCALL1(self, m20, 0);
+                ACT_VCALL1(self, m20, ACTION_STATE_IDLE);
                 self->motionYKeepSpeed = z;
                 self->motionYPending = 1;
                 self->motionY = 0;
@@ -159,7 +159,7 @@ void ActionCtrlStateLeftGround(struct act *self)
         /* extra reference: keeps `one` in r6 and the input pointer in r7 */
         MATCH_USE(one);
         if (fire) {
-            ACT_VCALL1(self, m20, 5);
+            ACT_VCALL1(self, m20, ACTION_STATE_JUMP);
             ACT_VCALL2(self, m50, self->part, 0x13);
             self->frame = hit;
             ActTrio28(self, hit, one, 7);
@@ -182,14 +182,14 @@ void ActionCtrlStateLeftGround(struct act *self)
                     self->motionXPending = one;
                     self->motionX = 0;
                 }
-                if ((u32)(self->state - 0xD) > 1)
+                if ((u32)(self->state - ACTION_STATE_SPIN) > 1)
                     StartActionCtrlSpin(self);
                 else
-                    ACT_VCALL1(self, m20, 0xD);
+                    ACT_VCALL1(self, m20, ACTION_STATE_SPIN);
             } else if (INPUT_HELD(in) & 0x100) {
                 ActOrFlags0D(self->part, 1);
                 self->slamBlocked = alt;
-                ACT_VCALL1(self, m20, 0x10);
+                ACT_VCALL1(self, m20, ACTION_STATE_CROUCH_DOWN);
                 ACT_VCALL2(self, m50, self->part, 3);
                 self->frames = alt;
                 self->motionXKeepSpeed = alt;
@@ -251,7 +251,7 @@ void ActionCtrlStateWarpIn(struct act *self)
         /* a retyped store: through the member, gcc builds the zero of the
          * later stores before the read-modify-write */
         *(u8 *)&gPlayer->flags |= 0x80;
-        SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
+        SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, 0);
         self->motionXKeepSpeed = 0;
         self->motionXPending = 1;
         self->motionX = 0;
@@ -272,7 +272,7 @@ void ActionCtrlStateHang(struct act *self)
         switch (dir) {
         case 3 ... 8:
             ActSetNext27(self, 0x20);
-            ACT_VCALL1(self, m20, 0x25);
+            ACT_VCALL1(self, m20, ACTION_STATE_HANG_MOVE_START);
             ACT_VCALL2(self, m50, self->part, 0x20);
             break;
         }
@@ -331,7 +331,7 @@ void ActionCtrlReleaseHang(struct act *self)
     MATCH_HOLD(hold); /* r2 live from here: no code */
     self->part->y += 0x600;
     MATCH_USE(hold); /* ...to here, so the 0x600 reload takes r3 */
-    ACT_VCALL1(self, m20, 0x1A);
+    ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FALL);
     ACT_VCALL2(self, m50, self->part, 0x1B);
     part = self->part;
     count = part->anim->records[part->tag].frameCount;
@@ -369,7 +369,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
     }
     v = GetDpadDirection(pad);
     if (v == 0) {
-        ACT_CALL1(self, m20, 0x28);
+        ACT_CALL1(self, m20, ACTION_STATE_HANG_STOP);
         ACT_CALL2(self, m50, self->part, 0x22);
         self->motionXKeepSpeed = 0;
         self->motionXPending = 1;
@@ -391,7 +391,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
             s32 frame;
             s32 count;
 
-            ACT_CALL1(self, m20, 0x26);
+            ACT_CALL1(self, m20, ACTION_STATE_HANG_MOVE);
             ACT_CALL2(self, m50, self->part, 0x21);
             self->frame = zero;
             part = self->part;
@@ -452,19 +452,19 @@ void ActionCtrlStateHangMove(struct act *self)
             self->frame = alt;
             f = self->part->frame;
             if (f == 0) {
-                ACT_CALL1(self, m20, 0x28);
+                ACT_CALL1(self, m20, ACTION_STATE_HANG_STOP);
                 ACT_CALL2(self, m50, self->part, 0x22);
                 self->motionXKeepSpeed = alt;
                 self->motionXPending = 1;
                 self->motionX = alt;
             } else if (f <= 4) {
-                ACT_CALL1(self, m20, 0x28);
+                ACT_CALL1(self, m20, ACTION_STATE_HANG_STOP);
                 ACT_CALL2(self, m50, self->part, 0x23);
                 self->motionXKeepSpeed = alt;
                 self->motionXPending = 1;
                 self->motionX = alt;
             } else if (f > 9) {
-                ACT_CALL1(self, m20, 0x28);
+                ACT_CALL1(self, m20, ACTION_STATE_HANG_STOP);
                 ACT_CALL2(self, m50, self->part, 0x22);
                 self->motionXKeepSpeed = alt;
                 self->motionXPending = 1;
@@ -544,7 +544,7 @@ void ActionCtrlStateHangStop(struct act *self)
         return;
     }
     if (self->part->animDone) {
-        ACT_VCALL1(self, m20, 0x20);
+        ACT_VCALL1(self, m20, ACTION_STATE_HANG);
         ACT_VCALL2(self, m50, self->part, 0x1F);
         self->frame = alt;
         self->frames = alt;

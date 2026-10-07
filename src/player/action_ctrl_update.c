@@ -244,19 +244,19 @@ void UpdateActionCtrl(struct act *self)
         }
     }
     switch (self->state) {
-    case 0xD:
-    case 0xE:
-    case 0xF:
-    case 0x21:
+    case ACTION_STATE_SPIN:
+    case ACTION_STATE_AIR_SPIN:
+    case ACTION_STATE_TORNADO_SPIN:
+    case ACTION_STATE_HANG_SPIN:
         self->part->kind = 0x13;
         break;
-    case 0xC:
+    case ACTION_STATE_SLIDE:
         self->part->kind = 0x14;
         break;
-    case 0x18:
+    case ACTION_STATE_AIRBORNE_BODY_SLAM:
         self->part->kind = 0x15;
         break;
-    case 0x19:
+    case ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM:
         self->part->kind = 0x16;
         break;
     default:
@@ -284,7 +284,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
     u16 pressed;
     s32 one;
 
-    if (self->state == 0xE)
+    if (self->state == ACTION_STATE_AIR_SPIN)
         return 0;
     pressed = INPUT_PRESSED(in) & 1;
     one = 1;
@@ -296,7 +296,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
                 self->frame++;
                 *PartBytePtr(gPlayer, 0x100) = frame;
                 ACT_CALL2(self, m50, self->part, 0x12);
-                ACT_CALL1(self, m20, 9);
+                ACT_CALL1(self, m20, ACTION_STATE_AIRBORNE_FLIP_JUMP);
                 ACT_CALL2(self, m50, self->part, 6);
                 ActTrio27(self, frame, one, 0xD);
                 ActTrio28(self, frame, one, 0xD);
@@ -304,7 +304,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
                 return 1;
             } else if (self->part->tag == 0xB && self->part->frame >= 0) {
                 self->frame++;
-                ACT_CALL1(self, m20, 0xB);
+                ACT_CALL1(self, m20, ACTION_STATE_AIRBORNE_HIGH_JUMP);
                 ACT_CALL2(self, m50, self->part, 0xA);
                 ActSet27(self, 0xE);
                 ActSet28(self, 0xE);
@@ -312,7 +312,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
                 return 1;
             } else if (self->part->tag == 0xC) {
                 self->frame++;
-                ACT_CALL1(self, m20, 0xB);
+                ACT_CALL1(self, m20, ACTION_STATE_AIRBORNE_HIGH_JUMP);
                 ACT_CALL2(self, m50, self->part, 0xA);
                 ActSet27(self, 0xC);
                 ActSet28(self, 0xC);
@@ -354,21 +354,21 @@ void HandleActionCtrlAirInput(struct act *self)
     {
         struct player *part;
 
-        if (self->state == 7) {
+        if (self->state == ACTION_STATE_AIRBORNE_JUMP) {
             part = self->part;
             if (-part->speedY > 0x1BF)
                 goto done;
             if (-part->speedY > 0x17F)
                 goto done;
             goto hit;
-        } else if (self->state == 9) {
+        } else if (self->state == ACTION_STATE_AIRBORNE_FLIP_JUMP) {
             part = self->part;
             if (-part->speedY > 0x1BF)
                 goto done;
             if (-part->speedY > 0x7F)
                 goto done;
             goto hit;
-        } else if (self->state == 0xB) {
+        } else if (self->state == ACTION_STATE_AIRBORNE_HIGH_JUMP) {
             part = self->part;
             if (-part->speedY > 0xFF)
                 goto done;
@@ -376,8 +376,8 @@ void HandleActionCtrlAirInput(struct act *self)
                 goto done;
         hit:
             ActOrFlags0D(part, 1);
-            ACT_CALL1(self, m20, 0x1A);
-        } else if (self->state == 0xE) {
+            ACT_CALL1(self, m20, ACTION_STATE_AIRBORNE_FALL);
+        } else if (self->state == ACTION_STATE_AIR_SPIN) {
             if (self->tornadoTurn) {
                 s32 x;
 
@@ -391,7 +391,8 @@ void HandleActionCtrlAirInput(struct act *self)
         }
     }
 done:
-    if (self->state != 0xE && self->state != 0xB && near && (in & 0x100)) {
+    if (self->state != ACTION_STATE_AIR_SPIN && self->state != ACTION_STATE_AIRBORNE_HIGH_JUMP &&
+        near && (in & 0x100)) {
         u8 busy = self->slamBlocked;
 
         if (busy == 0) {
@@ -399,8 +400,9 @@ done:
 
             ACT_PART_FLAGS0D(self->part) |= 1;
             tag = self->prevState;
-            if (tag == 9 || self->state == 9) {
-                ACT_CALL1(self, m20, 0xA);
+            if (tag == ACTION_STATE_AIRBORNE_FLIP_JUMP ||
+                self->state == ACTION_STATE_AIRBORNE_FLIP_JUMP) {
+                ACT_CALL1(self, m20, ACTION_STATE_FLIP_BODY_SLAM_START);
                 self->motionXKeepSpeed = busy;
                 self->motionXPending = 1;
                 self->motionX = busy;
@@ -409,8 +411,8 @@ done:
                 self->unk_2A = busy;
                 return;
             }
-            if (tag == 7) {
-                ACT_CALL1(self, m20, 8);
+            if (tag == ACTION_STATE_AIRBORNE_JUMP) {
+                ACT_CALL1(self, m20, ACTION_STATE_BODY_SLAM_START);
                 ACT_CALL2(self, m50, self->part, 0x19);
                 self->motionXKeepSpeed = busy;
                 self->motionXPending = 1;
@@ -419,8 +421,10 @@ done:
             }
         }
     }
-    if (self->state == 7 || self->state == 9 || self->state == 0xB || self->state == 0xE ||
-        self->state == 0x1A) {
+    if (self->state == ACTION_STATE_AIRBORNE_JUMP ||
+        self->state == ACTION_STATE_AIRBORNE_FLIP_JUMP ||
+        self->state == ACTION_STATE_AIRBORNE_HIGH_JUMP || self->state == ACTION_STATE_AIR_SPIN ||
+        self->state == ACTION_STATE_AIRBORNE_FALL) {
         if (GetDpadDirection(gInput) <= 2) {
             ActQueue27(self, 0, 0);
         } else {
@@ -428,7 +432,7 @@ done:
 
             if (*slot == 0x1B || *slot == 0x1C)
                 ActHold27P(self, slot, 0x1C);
-            else if (self->state == 0xE)
+            else if (self->state == ACTION_STATE_AIR_SPIN)
                 ActSetNext27P(self, slot, 7);
             else if (self->frame != 0) {
                 if (*slot != 0xD)

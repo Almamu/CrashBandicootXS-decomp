@@ -261,11 +261,11 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     px = gPlayer->x >> 8;
     py = gPlayer->y >> 8;
     if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
-        kind = 6;
+        kind = ATTACK_KIND_INVINCIBLE;
     else {
         kind = gActionCtrlStateAttackKinds[idx];
-        if (self->kind == 0xd && kind == 5 && gPlayer->dir == 4)
-            kind = 2;
+        if (self->kind == 0xd && kind == ATTACK_KIND_BODY_SLAM && gPlayer->dir == 4)
+            kind = ATTACK_KIND_JUMP;
     }
     {
         /* The state is loaded and masked before `st` is set, so `st` is a
@@ -315,7 +315,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     if (!AabbOverlaps(&f.a, bb))
         goto tail;
     f.found = 0;
-    if (kind <= 4)
+    if (kind <= ATTACK_KIND_SPIN)
         obj = ResolveStackCrateHit(self, bb, &f.found);
     else
         obj = self;
@@ -371,7 +371,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         if (gPlayer->listCount == 0) {
             u8 *rec = (u8 *)&gPlayer->anim->records[gPlayer->tag];
 
-            if (kind != 3 &&
+            if (kind != ATTACK_KIND_SLIDE &&
                 PlayerHitboxOverlapsAt(self, (struct hitbox_quad *)(rec + 4), &f.a, px, py)) {
                 struct crate *e = GetCrateAbove(obj);
 
@@ -392,11 +392,11 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         if (f.found == 0)
             return;
         if ((gPlayer->x >> 8) < (self->x >> 8)) {
-            if (kind != 3 || GetCrateAbove(obj) != NULL) {
+            if (kind != ATTACK_KIND_SLIDE || GetCrateAbove(obj) != NULL) {
                 D18C_CALL68(0, 0xc, 1);
                 D18C_Hit(gPlayer, 1);
             }
-        } else if (kind != 3 || GetCrateAbove(obj) != NULL) {
+        } else if (kind != ATTACK_KIND_SLIDE || GetCrateAbove(obj) != NULL) {
             D18C_CALL68(0, 0xc, 2);
             D18C_Hit(gPlayer, 2);
         }
@@ -415,11 +415,11 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         return;
     }
 tail:
-    if (kind == 5) {
+    if (kind == ATTACK_KIND_BODY_SLAM) {
         if (gPlayer->dir == 4)
-            kind = 2;
-    } else if (kind == 3)
-        kind = 1;
+            kind = ATTACK_KIND_JUMP;
+    } else if (kind == ATTACK_KIND_SLIDE)
+        kind = ATTACK_KIND_TOUCH;
     if (self->touched != 0) {
         self->touched = 0;
         if (self->fallDistance == 0)
@@ -432,7 +432,7 @@ tail:
 
         *pc = f.a;
     }
-    if (kind != 6)
+    if (kind != ATTACK_KIND_INVINCIBLE)
         MarkCrateStackTouched(self, &f.a);
     {
         u8 *rec = (u8 *)&gPlayer->anim->records[gPlayer->tag];
@@ -714,9 +714,10 @@ tail:
     case 4:
         tgt = GetBottomCrate(self);
         code = gCrateHitResponse[tgt->kind][kind];
-        if (tgt->kind == 4 && kind == 2)
+        if (tgt->kind == 4 && kind == ATTACK_KIND_JUMP)
             code = 3;
-        if (kind <= 3 || kind == 6 || (kind == 4 && code <= 2)) {
+        if (kind <= ATTACK_KIND_SLIDE || kind == ATTACK_KIND_INVINCIBLE ||
+            (kind == ATTACK_KIND_SPIN && code <= 2)) {
             D18C_CALL68(0, 0xc, 4);
             D18C_Hit(gPlayer, 4);
             if (gPlayer->hitAxes != 8)
@@ -726,7 +727,7 @@ tail:
     case 8:
         tgt = GetTopCrate(self);
         code = D18C_Code(tgt->kind, kind);
-        if (kind == 4 && tgt->kind != 0xa && gPlayer->listCount != 0) {
+        if (kind == ATTACK_KIND_SPIN && tgt->kind != 0xa && gPlayer->listCount != 0) {
             gPlayer->speedY = 0;
             gPlayer->rampY.start = 0;
             gPlayer->rampY.step = 0;
@@ -756,11 +757,11 @@ tail:
                 else if (hit == 1)
                     f.pos.x -= dx << 8;
             }
-            if (kind > 2) {
+            if (kind > ATTACK_KIND_JUMP) {
                 code = gCrateHitResponse[self->kind][kind];
-                if (kind == 4 && code == 2)
+                if (kind == ATTACK_KIND_SPIN && code == 2)
                     code = 0;
-                if (kind == 5 && code == 3)
+                if (kind == ATTACK_KIND_BODY_SLAM && code == 3)
                     f.pos.x = gPlayer->x;
             } else if (dy <= 4 && dx > 3 && f21 != 0) {
                 code = gCrateHitResponse[self->kind][kind];
@@ -854,7 +855,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
 
         if (d4 == 0) {
             if (k != 0xd) {
-                if (kind == 2) {
+                if (kind == ATTACK_KIND_JUMP) {
                     if (k == 4 || k == 8) {
                         PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
                         E08C_CALL68(0xe, 8);
@@ -864,7 +865,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                     gPlayer->rampY.start = 0;
                     gPlayer->rampY.step = 0;
                     gPlayer->rampY.target = 0;
-                } else if ((u32)(kind - 5) <= 1 && k == 8) {
+                } else if ((u32)(kind - ATTACK_KIND_BODY_SLAM) <= 1 && k == 8) {
                     PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
                     E08C_CALL68(0xe, 8);
                     gPlayer->speedY = 0;
@@ -893,7 +894,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         code = gCrateHitResponse[self->kind][kind];
     }
     forced = forcedIn;
-    if (code == 1 && kind == 4 && gPlayer->bounce == 1 && !(gPlayer->dir & 0xc)) {
+    if (code == 1 && kind == ATTACK_KIND_SPIN && gPlayer->bounce == 1 && !(gPlayer->dir & 0xc)) {
         code = gCrateHitResponse[self->kind][kind];
         gPlayer->bounce = 2;
         gPlayer->bounce++;
@@ -925,7 +926,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         }
         if (code != 1)
             goto commit;
-        if ((u32)(edge - 1) <= 1 && kind <= 1) {
+        if ((u32)(edge - 1) <= 1 && kind <= ATTACK_KIND_TOUCH) {
             hit = 0;
             pos.x = gPlayer->x;
         }
@@ -950,11 +951,11 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         }
         goto commit;
     case 3:
-        if ((u32)(kind - 5) <= 1)
+        if ((u32)(kind - ATTACK_KIND_BODY_SLAM) <= 1)
             BreakCrateInStack(self, 0, 0, 0);
         else if (self->fallDistance != 0)
             BreakCrateInStack(self, 0, 0, 4);
-        else if (kind == 2)
+        else if (kind == ATTACK_KIND_JUMP)
             sub_800E7A8_flag(self, 0, f20.s, edge);
         else {
             struct player **pp = &gPlayer;

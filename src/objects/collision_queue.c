@@ -19,7 +19,8 @@
 /* Resolves the frame's queued collision candidates. `candidates[0]` seeds
  * the "nearest to the player" choice (by Y distance, X as tiebreak).
  * Any later candidate whose Y distance is more than 8 off the current
- * best, or whose kind is 4, is resolved on the spot with ApplyCrateCollision.
+ * best, or whose attack kind is ATTACK_KIND_SPIN, is resolved on the spot with
+ * ApplyCrateCollision.
  * The rest only compete for nearest. The nearest one is then resolved
  * too, told whether any forced resolve happened, and the list is
  * emptied. */
@@ -62,7 +63,7 @@ void ResolveCollisionCandidates(struct collision_queue *self)
             d = dy - bestDy;
             if (d < 0)
                 d = -d;
-            if (d > 8 || self->candidates[i].kind == 4) {
+            if (d > 8 || self->candidates[i].kind == ATTACK_KIND_SPIN) {
                 ApplyCrateCollision(
                     n, self->candidates[i].kind, self->candidates[i].code, self->candidates[i].edge,
                     self->candidates[i].depth, self->candidates[i].pos, self->candidates[i].hit,

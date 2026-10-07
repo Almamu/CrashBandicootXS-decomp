@@ -24,7 +24,7 @@
  * the ground, 0x1D dying, 0x1E warp out, 0x1F-0x28 hanging (grab, hang,
  * hang spin, move, stop), 0x29 warp in. Nothing sets states 1, 2, 6,
  * 0x22, 0x23, 0x24 or 0x27. */
-const struct actor_pmf gActionCtrlStateTable[42] = {
+const struct actor_pmf gActionCtrlStateTable[ACTION_STATE_COUNT] = {
     ACTOR_PMF(ActionCtrlStateIdle),
     ACTOR_PMF(ActionCtrlStateUnusedIdle),
     ACTOR_PMF(ActionCtrlStateNop2),
@@ -73,12 +73,7 @@ const struct actor_pmf gActionCtrlStateTable[42] = {
  * gPlayerCtrlModeLevelAnims in speed_table_16c090.c), one pointer per mode:
  * swim_ctrl.c reads `gPlayerCtrlModeAnimRows[mode][level]`. */
 const struct level_anim *const gPlayerCtrlModeAnimRows[8] = {
-    gPlayerCtrlModeLevelAnims[0],
-    gPlayerCtrlModeLevelAnims[1],
-    gPlayerCtrlModeLevelAnims[2],
-    gPlayerCtrlModeLevelAnims[3],
-    gPlayerCtrlModeLevelAnims[4],
-    gPlayerCtrlModeLevelAnims[5],
-    gPlayerCtrlModeLevelAnims[6],
-    gPlayerCtrlModeLevelAnims[7],
+    gPlayerCtrlModeLevelAnims[0], gPlayerCtrlModeLevelAnims[1], gPlayerCtrlModeLevelAnims[2],
+    gPlayerCtrlModeLevelAnims[3], gPlayerCtrlModeLevelAnims[4], gPlayerCtrlModeLevelAnims[5],
+    gPlayerCtrlModeLevelAnims[6], gPlayerCtrlModeLevelAnims[7],
 };
