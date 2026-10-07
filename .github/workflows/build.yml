@@ -19,7 +19,7 @@ jobs:
     - uses: actions/checkout@v5
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng-dev zlib1g-dev python3-pil
 
     # The matching workarounds are spelled with include/match.h's macros
     # (docs/matching_techniques.md). This fails if one is written out by
