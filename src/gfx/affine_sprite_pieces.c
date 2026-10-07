@@ -4,6 +4,7 @@
 #include "sprite_bank.h"
 #include "util.h"
 #include "gfx.h"
+#include "gfx_part.h"
 #include "vtable.h"
 #include "objects.h"
 #include "globals.h"
@@ -50,10 +51,6 @@ struct affine_part {
     u8 unk_34[8];
     u16 scale; // 0x3C
 };
-
-/* The loop tests the 0x28 flag bits as sign tests (`lsl #26; cmp #0;
- * bge`); a 1-bit field test compiles to `movs #0x20; ands` instead. */
-#define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
 extern s32 _call_via_r1(void *self, void *fn);
 

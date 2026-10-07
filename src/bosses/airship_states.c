@@ -171,13 +171,6 @@ void AirshipStateFireballs(void)
  * `/` goes through the ROM's own `__divsi3` and the
  * absolute values are the branchless `asrs`/`eors`/`subs` form. */
 
-static inline s32 Abs(s32 x)
-{
-    s32 s = x >> 31;
-
-    return (x ^ s) - s;
-}
-
 void AirshipStateCannon(void)
 {
     s32 v;
@@ -195,9 +188,9 @@ void AirshipStateCannon(void)
         if (speed > 0) {
             s32 dx, dy;
             speed = 0x1000 / speed;
-            dx = Q12_TO_INT((pl->x - (gAirshipX - 0xCDB)) * speed);
-            dy = Q12_TO_INT((pl->y - (gAirshipY + 0x516D)) * speed);
-            if (Abs(dx) + Abs(dy) <= 0x7FF) {
+            dx = Q12_MUL(pl->x - (gAirshipX - 0xCDB), speed);
+            dy = Q12_MUL(pl->y - (gAirshipY + 0x516D), speed);
+            if (ABS_BRANCHLESS(dx) + ABS_BRANCHLESS(dy) <= 0x7FF) {
                 SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx,
                                        dy);
                 if (++gAirshipVolleyCount == gAirshipAttack->cannonBurst) {

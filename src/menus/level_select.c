@@ -150,15 +150,6 @@ static inline void CommitDisplay(struct level_menu *self)
     *(vu16 *)REG_ADDR_DISPCNT = self->dispcnt.raw;
 }
 
-/* A virtual call through a sprite's method table (gcc 2.x lowering: take
- * the entry's address once, then read `this` adjustment and function). */
-#define SPRITE_CALL(obj, idx, a)                                               \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->idx;                         \
-        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
-    } while (0)
-
 /* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
  * whole-ROM Thumb-pointer scan). Sets `unk_32`, a byte nothing else
  * reads or writes, so its meaning (and this function's name) is open. */
@@ -578,12 +569,12 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
     s32 i;
 
     if ((s = self->sprites[9]) != NULL)
-        SPRITE_CALL(s, m50, 3);
+        VTABLE_CALL2(s, m50, 3);
     if ((s = self->sprites[8]) != NULL)
-        SPRITE_CALL(s, m50, 3);
+        VTABLE_CALL2(s, m50, 3);
     for (i = 0; i < 8; i++) {
         if ((s = self->sprites[i]) != NULL)
-            SPRITE_CALL(s, m50, 3);
+            VTABLE_CALL2(s, m50, 3);
     }
     if (self->panel != NULL)
         DestroyLevelSelectCursor(self->panel, 3);

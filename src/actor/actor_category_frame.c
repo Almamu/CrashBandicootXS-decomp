@@ -46,10 +46,6 @@ struct actor_methods {
 
 typedef u8 (*actor_query_fn)(void *self);
 
-/* `+0x4c`: next node of the circular actor list rooted at
- * `gActorList`. */
-#define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->next)
-
 static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 {
     b->x += x;
@@ -178,7 +174,7 @@ s32 RunActorCategoryFrame(void)
 
     n = gActorList;
     do {
-        struct actor_self *next = ACTOR_NEXT(n);
+        struct actor_self *next = ACTOR_LINK_NEXT(n);
         struct actor_draw_methods *vt = (struct actor_draw_methods *)n->vtable;
 
         ((actor_draw_fn)vt->m10.fn)((u8 *)n + vt->m10.thisOffset);
@@ -190,7 +186,7 @@ s32 RunActorCategoryFrame(void)
     do {
         if (n->visible != 0)
             gActorDrawList[gActorDrawCount++] = n;
-        n = ACTOR_NEXT(n);
+        n = ACTOR_LINK_NEXT(n);
     } while (n != gActorList);
     gHeapSortActorsByKeyFunc(gActorDrawCount, gActorDrawList);
 
@@ -213,7 +209,7 @@ s32 RunActorCategoryFrame(void)
  * the third box's `sp+0x18` address into `r7` by itself. */
 void *FindShotTarget(struct actor_self *self)
 {
-    struct actor_self *n = ACTOR_NEXT(gActorList);
+    struct actor_self *n = ACTOR_LINK_NEXT(gActorList);
 
     do {
         if (n != self) {
@@ -223,7 +219,7 @@ void *FindShotTarget(struct actor_self *self)
                 ActorsOverlap(self, n))
                 return n;
         }
-        n = ACTOR_NEXT(n);
+        n = ACTOR_LINK_NEXT(n);
     } while (n != gActorList);
     return 0;
 }

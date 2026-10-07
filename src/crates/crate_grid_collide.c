@@ -97,14 +97,6 @@ void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struc
         CheckPart(m, node->data, &screen, &box, &tmp, other);
 }
 
-typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
-
-/* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
-#define CALL_HIT(obj, a, b, c)                                                 \
-    if (1) {                                                                   \
-        struct part_method *_m = PART_METHOD(obj, 0x68);                       \
-        ((part_method3_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c)); \
-    } else (void)0
 
 /* `CollidePartWithPlayer`'s twin, operating in this spatial-hash-grid cluster:
  * byte-identical collision-hit resolution logic (mode dispatch via

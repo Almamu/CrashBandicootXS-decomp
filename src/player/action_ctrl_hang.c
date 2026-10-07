@@ -640,9 +640,7 @@ loop_body:
             MATCH_HOLD_REG(s32, sign, r0);
 
             dx = Q8_TO_INT(other->x) - px;
-            sign = dx >> 31;
-            dx ^= sign;
-            dx -= sign;
+            MAKE_ABS_BRANCHLESS(dx, sign);
 
             sign = Q8_TO_INT(other->y) - py;
             dy = sign >> 31;

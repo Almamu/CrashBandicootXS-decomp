@@ -35,8 +35,6 @@ struct vram_tile_block {
  * block, spanning the whole range. */
 #define VRAM_TILE_BLOCK_POOL_COUNT 128
 
-#define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
-
 /* ROM 0x08028BA0 - sets up the dynamic OBJ-tile VRAM allocator: two
  * EWRAM buffers (the 128-record node pool above, and the tile-index
  * lookup table), a DMA3 zero-fill of the whole `base`..OBJ_VRAM0+

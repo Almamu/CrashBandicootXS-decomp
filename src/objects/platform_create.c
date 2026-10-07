@@ -81,7 +81,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
             }
         }
         obj->mover = m;
-        MOVER_CALL2(m, m18, obj);
+        VTABLE_CALL2(m, m18, obj);
         if (rec->flag)
             obj->flags |= 0x10;
         break;
@@ -105,7 +105,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
             m = MOVER_NEW(mem, 0, 0, 0);
         }
         obj->mover = m;
-        MOVER_CALL2(m, m18, obj);
+        VTABLE_CALL2(m, m18, obj);
         break;
     case 6:
         obj->type = 6;
@@ -118,7 +118,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         } else
             m = CreateCortexBossPlatformMover(OperatorNew(0x38));
         obj->mover = m;
-        MOVER_CALL2(m, m18, obj);
+        VTABLE_CALL2(m, m18, obj);
         break;
     case 7:
         obj->type = 7;
@@ -130,7 +130,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
             m = MOVER_NEW(mem, 0, 0, 0);
         }
         obj->mover = m;
-        MOVER_CALL2(m, m18, obj);
+        VTABLE_CALL2(m, m18, obj);
         break;
     }
     AddToPartList(gTouchableList, obj);

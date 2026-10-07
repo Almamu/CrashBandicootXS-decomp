@@ -22,4 +22,11 @@ struct aabb {
     s32 h;
 };
 
+/* A box's `w`, read through a volatile: some code re-reads a just-filled
+ * box's width (a box with no width is empty) straight from its stack
+ * slot rather than through the register already holding the box's
+ * address, and the volatile read is what stops gcc's CSE from rewriting
+ * the address (dingodile.c, tiny_update.c). */
+#define AABB_VALID(box) (*(vs32 *)&(box).w)
+
 #endif /* GUARD_AABB_H */

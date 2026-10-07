@@ -61,9 +61,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     return BoxOverlap(&f.a, t);
 }
 
-/* `+0x4c`: next node of the circular actor list rooted at
- * `gActorList`; `+0x30`: pointer whose first byte is the type. */
-#define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->next)
+/* `+0x30`: pointer whose first byte is the type. */
 #define ACTOR_TYPE(a) (**(u8 **)&(a)->record)
 
 /* Called from `UpdatePolarNitroCrate` (polar_pickups.c) once `self` (a "used"
@@ -93,7 +91,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * scheduling in the box translation). */
 void DetonateNearbyPolarNitros(struct actor_self *self)
 {
-    struct actor_self *n = ACTOR_NEXT(gActorList);
+    struct actor_self *n = ACTOR_LINK_NEXT(gActorList);
 
     do {
         if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n) && n->animIndex != 0x12) {
@@ -105,6 +103,6 @@ void DetonateNearbyPolarNitros(struct actor_self *self)
             n->animDone = 0;
             n->animTime = 0;
         }
-        n = ACTOR_NEXT(n);
+        n = ACTOR_LINK_NEXT(n);
     } while (n != gActorList);
 }

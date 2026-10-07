@@ -11,11 +11,13 @@ preprocessor, so a site that is already a helper isn't counted: the
 counts go down as the sites are converted.
 
 Shapes (--list-shapes): the fixed-point shifts (Q8 `>> 8`/`<< 8`, Q12,
-Q16), the Q8 product `(a * b) >> 8`, sine/cosine lookups into
-gSineTable (also through a local alias of the table), min/max/abs
-ternaries and the clamp `if`s, RGB555 packing, OBJ tile index
-arithmetic, the bit-of-a-byte-array tests and the inline copies of
-MarkEntityGone's bitmap set.
+Q16), the Q8 product `(a * b) >> 8`, the Q8 quotient `(a << 8) / b`, the
+Q12 product `(a * b) >> 12`, sine/cosine lookups into gSineTable (also
+through a local alias of the table), min/max/abs ternaries and the
+clamp `if`s, the branchless abs (`x >> 31` sign mask), the animation
+loop rewind, RGB555 packing, OBJ tile index arithmetic, the
+bit-of-a-byte-array tests and the inline copies of MarkEntityGone's
+bitmap set.
 
 A shape is a candidate, not a verdict: before replacing a site, check
 that the helper expands to exactly the same expression (operand order,
@@ -53,17 +55,21 @@ SHAPES = collections.OrderedDict(
     [
         ("q8_mul", ("Q8 product `(a * b) >> 8`", "Q8_MUL",
                     re.compile(r"\((?:[^()]|\([^()]*\))*[^*/]\*[^*/](?:[^()]|\([^()]*\))*\)\s*>>\s*8\b(?!\s*[0-9xX])"))),
-        ("q8_shr", ("Q8 to integer `>> 8`, `>>= 8` (not counting q8_mul)", "Q8_TO_INT",
+        ("q8_div", ("Q8 quotient `(a << 8) / b`, `__divsi3(a << 8, b)`", "Q8_DIV",
+                    re.compile(r"<<\s*(?:8|0x8)\s*\)\s*/(?![/*=])|__u?divsi3\s*\((?:[^(),]|\((?:[^()]|\([^()]*\))*\))*<<\s*(?:8|0x8)\b"))),
+        ("q8_shr", ("Q8 to integer `>> 8`, `>>= 8` (not counting q8_mul)", "Q8_TO_INT, Q8_TO_INT_INPLACE",
                     re.compile(r">>=?\s*(?:8|0x8)\b"))),
-        ("q8_shl", ("integer to Q8 `<< 8`, `<<= 8`", "INT_TO_Q8",
+        ("q8_shl", ("integer to Q8 `<< 8`, `<<= 8` (not counting q8_div)", "INT_TO_Q8",
                     re.compile(r"<<=?\s*(?:8|0x8)\b"))),
-        ("q12_shr", ("`>> 12`, `>>= 12`", "Q12_TO_INT", re.compile(r">>=?\s*(?:12|0xc|0xC)\b"))),
+        ("q12_mul", ("Q12 product `(a * b) >> 12`", "Q12_MUL",
+                     re.compile(r"\((?:[^()]|\([^()]*\))*[^*/]\*[^*/](?:[^()]|\([^()]*\))*\)\s*>>\s*(?:12|0xc|0xC)\b"))),
+        ("q12_shr", ("`>> 12`, `>>= 12` (not counting q12_mul)", "Q12_TO_INT", re.compile(r">>=?\s*(?:12|0xc|0xC)\b"))),
         ("q12_shl", ("`<< 12`, `<<= 12`", "INT_TO_Q12", re.compile(r"<<=?\s*(?:12|0xc|0xC)\b"))),
         ("q16_shr", ("`>> 16`, `>>= 16`", "Q16_TO_INT", re.compile(r">>=?\s*(?:16|0x10)\b"))),
         ("q16_shl", ("`<< 16`, `<<= 16`", "INT_TO_Q16", re.compile(r"<<=?\s*(?:16|0x10)\b"))),
         ("sine", ("sine lookup `gSineTable[i & 0xFF]` (or a local alias)", "SIN_Q8", None)),
         ("cosine", ("cosine lookup, the quarter-turn `+ 0x40` offset", "COS_Q8", None)),
-        ("min_max_ternary", ("`a < b ? a : b` and friends", "MIN/MAX",
+        ("min_max_ternary", ("`a < b ? a : b` and friends", "MIN/MAX/CLAMP_MIN/CLAMP_MAX",
                              re.compile(r"(" + OPND + r")\s*([<>]=?)\s*(" + OPND + r")\s*\?\s*(" + OPND + r")\s*:\s*(" + OPND + r")"))),
         ("clamp_if", ("`if (x > hi) x = hi;` (and `<`, `>=`, `<=`)", "LIMIT_MAX/LIMIT_MIN",
                       re.compile(r"\bif\s*\(\s*(" + OPND + r")\s*([<>]=?)\s*(" + OPND + r")\s*\)\s*\{?\s*\1\s*=\s*([^;=][^;]*);"))),
@@ -71,6 +77,9 @@ SHAPES = collections.OrderedDict(
                          re.compile(r"\bif\s*\(\s*(" + OPND + r")\s*>=\s*(" + OPND + r")\s*\)\s*\{?\s*\1\s*=\s*\2\s*-\s*1\s*;"))),
         ("abs", ("`x < 0 ? -x : x`, `if (x < 0) x = -x;`", "ABS/MAKE_ABS",
                  re.compile(r"(" + OPND + r")\s*<\s*0\s*\?\s*-\s*\1\s*:\s*\1|\bif\s*\(\s*(" + OPND + r")\s*<\s*0\s*\)\s*\{?\s*\2\s*=\s*-\s*\2\s*;"))),
+        ("abs_branchless", ("branchless abs, the `x >> 31` sign mask `(x ^ s) - s`", "ABS_BRANCHLESS/MAKE_ABS_BRANCHLESS", None)),
+        ("anim_rewind", ("animation loop rewind `animTime -= (loopThreshold - loopBase) << 8`", "ANIM_REWIND",
+                         re.compile(r"animTime\s*-=[^;]*loopThreshold"))),
         ("rgb555", ("RGB555 packing `r | g << 5 | b << 10`", "RGB16 (gba/defines.h)",
                     re.compile(r"<<\s*5\b[^;]*<<\s*10\b|<<\s*10\b[^;]*<<\s*5\b"))),
         ("obj_tile", ("OBJ tile index `(addr - OBJ_VRAM0) >> 5`, `tileNum` arithmetic", "",
@@ -82,12 +91,22 @@ SHAPES = collections.OrderedDict(
     ]
 )
 
+# The branchless abs: a sign mask `s = x >> 31` (or the shift itself)
+# xor-ed into a value, then subtracted.
+ABS_MASK = re.compile(r"(?:MATCH_HOLD_REG\(\s*\w+\s*,\s*(\w+)\s*,\s*\w+\s*\)|\b(\w+))\s*=\s*" + OPND + r"\s*>>\s*(?:31|0x1[fF])\s*;")
+ABS_EXPR = re.compile(r"\^\s*\(\s*" + OPND + r"\s*>>\s*(?:31|0x1[fF])\s*\)")
 SINE_ALIAS = re.compile(r"\b(\w+)\s*=\s*gSineTable\b")
 GONE_BASE = re.compile(r"bits0Copy|\+\s*0x108\b")
 GONE_WORD = re.compile(r"/=?\s*32\b|>>=?\s*5\b|<<\s*5\b")
 DEFINE_RE = re.compile(r"^[ \t]*#[ \t]*define[ \t]+(\w+)(\([^)]*\))?[ \t]*(.*)$")
 # Names that are expected in several files (header guards, tables).
 MACRO_SKIP = re.compile(r"^(GUARD_|__|_[A-Z])|_H_?$|^NON_MATCHING$")
+# Same-name file-local macros whose copies expand differently, kept local
+# on purpose (each copy has a comment saying so).
+MACRO_KEPT_LOCAL = {
+    "DRAW_ICON_TEXT": "only one copy casts `label` to `s32`",
+    "SLOT_AT": "the logo pieces start at `self` in one file, at +0x10 in the other",
+}
 
 
 def scan_dirs():
@@ -122,7 +141,12 @@ def scan_file(path, rel):
             if shape == "q8_mul":
                 # the `>> 8` of this product isn't also a q8_shr
                 taken.add(("q8_shr", text.rfind(">>", m.start(), m.end())))
-            elif shape == "q8_shr" and ("q8_shr", m.start()) in taken:
+            elif shape == "q12_mul":
+                taken.add(("q12_shr", text.rfind(">>", m.start(), m.end())))
+            elif shape == "q8_div":
+                # nor is the `<< 8` of this quotient a q8_shl
+                taken.add(("q8_shl", text.rfind("<<", m.start(), m.end())))
+            elif shape in ("q8_shr", "q8_shl", "q12_shr") and (shape, m.start()) in taken:
                 continue
             elif shape == "min_max_ternary":
                 a, b, t, f = m.group(1), m.group(3), m.group(4), m.group(5)
@@ -134,6 +158,14 @@ def scan_file(path, rel):
                 if m.group(4).strip() != m.group(3).strip():
                     continue
             add(shape, m.start())
+
+    # branchless abs: a `s = x >> 31;` mask used as `^ s` soon after, and
+    # the one-expression `(x ^ (x >> 31)) - (x >> 31)`
+    for m in ABS_MASK.finditer(text):
+        if re.search(r"\^=?\s*" + re.escape(m.group(1) or m.group(2)) + r"\b", text[m.end():m.end() + 200]):
+            add("abs_branchless", m.start())
+    for m in ABS_EXPR.finditer(text):
+        add("abs_branchless", m.start())
 
     # sine/cosine: gSineTable and any local alias of it
     names = {"gSineTable"} | set(SINE_ALIAS.findall(text))
@@ -263,7 +295,8 @@ def report(hits, out):
     w("## File-local macros defined in more than one file\n\n")
     w("| Macro | Files |\n|---|---|\n")
     for name, d in sorted(by_name.items(), key=lambda x: (-len(x[1]), x[0])):
-        w(f"| `{name}` | " + ", ".join(f"{rel}:{line}" for rel, line, _, _ in d) + " |\n")
+        note = f" (differ, kept local: {MACRO_KEPT_LOCAL[name]})" if name in MACRO_KEPT_LOCAL else ""
+        w(f"| `{name}` | " + ", ".join(f"{rel}:{line}" for rel, line, _, _ in d) + note + " |\n")
     w("\n## Macro bodies defined in more than one file (any name)\n\n")
     w("| Macros | Body |\n|---|---|\n")
     for (n, body), d in sorted(by_body.items(), key=lambda x: (-len(x[1]), x[0][1])):
@@ -289,7 +322,8 @@ def main():
     if args.macros:
         by_name, by_body = duplicated_macros(scan_macros())
         for name, d in sorted(by_name.items()):
-            print(f"{name}: " + ", ".join(f"{rel}:{line}" for rel, line, _, _ in d))
+            note = f"  [differ, kept local: {MACRO_KEPT_LOCAL[name]}]" if name in MACRO_KEPT_LOCAL else ""
+            print(f"{name}: " + ", ".join(f"{rel}:{line}" for rel, line, _, _ in d) + note)
         for (_, body), d in sorted(by_body.items(), key=lambda x: x[0][1]):
             print("same body: " + ", ".join(f"{name} ({rel}:{line})" for name, rel, line in d))
         return 0

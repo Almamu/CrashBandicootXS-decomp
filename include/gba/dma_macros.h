@@ -9,6 +9,9 @@ struct dma_regs {
     vu32 cnt;
 };
 
+/* Channel 3's registers as a `struct dma_regs`. */
+#define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
+
 #define DmaSet(dmaNum, src, dest, control)        \
 {                                                 \
     vu32 *dmaRegs = (vu32 *)REG_ADDR_DMA##dmaNum##SAD; \

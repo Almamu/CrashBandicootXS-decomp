@@ -281,9 +281,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
-                sign = d >> 31;
-                d ^= sign;
-                d -= sign;
+                MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7) {
                     switch (type) {
                     case 2:
@@ -323,9 +321,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
-                sign = d >> 31;
-                d ^= sign;
-                d -= sign;
+                MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
                     Call68(gPlayer, 0, EVENT_WARP_EXIT, 0);
             }
@@ -335,9 +331,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
-                sign = d >> 31;
-                d ^= sign;
-                d -= sign;
+                MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
                     Call68(gPlayer, 0, EVENT_WARP_BONUS_ROUND, 0);
             }
@@ -347,9 +341,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
-                sign = d >> 31;
-                d ^= sign;
-                d -= sign;
+                MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
                     Call68(gPlayer, 0, EVENT_WARP_GEM_PATH, 0);
             }

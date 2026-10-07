@@ -239,9 +239,7 @@ void JetpackPlayerStateFall(void *selfArg)
     s32 sign;
 
     gJetpackPlayerVelY = v;
-    sign = v >> 31;
-    v ^= sign;
-    v -= sign;
+    MAKE_ABS_BRANCHLESS(v, sign);
     if (v > 0x140) {
         gJetpackPlayerVelY = 0x140;
     }

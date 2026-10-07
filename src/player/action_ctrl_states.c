@@ -169,10 +169,10 @@ void ActionCtrlStateAirborne(struct act *self)
                 s32 count;
 
                 x = gPlayer->x;
-                x >>= 8;
+                Q8_TO_INT_INPLACE(x);
                 x += 0x14;
                 y = gPlayer->y;
-                y >>= 8;
+                Q8_TO_INT_INPLACE(y);
                 y += 0xC;
                 obj = SpawnSpark(x, y, 1);
                 obj->gfxMode = 1;
@@ -185,10 +185,10 @@ void ActionCtrlStateAirborne(struct act *self)
                 obj->frame = frame;
 
                 x = gPlayer->x;
-                x >>= 8;
+                Q8_TO_INT_INPLACE(x);
                 x -= 0x14;
                 y = gPlayer->y;
-                y >>= 8;
+                Q8_TO_INT_INPLACE(y);
                 y += 0xC;
                 obj = SpawnSpark(x, y, bit4);
                 obj->gfxMode = 1;

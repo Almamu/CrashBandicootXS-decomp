@@ -176,10 +176,7 @@ void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
     self->animDone = 0;
     base = GetAnimFrameBaseOffset(self);
     if (base >= self->anims[self->animIndex].loopThreshold) {
-        // clang-format off
-        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
-                                    self->anims[self->animIndex].loopBase);
-        // clang-format on
+        ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
         self->animDone = 1;
     }
 }
@@ -217,10 +214,7 @@ void JetpackBalloonStatePop(struct actor_self *self)
     self->animDone = 0;
     base = GetAnimFrameBaseOffset(self);
     if (base >= self->anims[self->animIndex].loopThreshold) {
-        // clang-format off
-        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
-                                    self->anims[self->animIndex].loopBase);
-        // clang-format on
+        ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
         self->animDone = 1;
     }
 }
@@ -240,10 +234,7 @@ void JetpackBalloonStateFloatAway(struct jetpack_balloon *self)
     self->base.animDone = 0;
     base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
-        // clang-format off
-        self->base.animTime -= INT_TO_Q8(self->base.anims[self->base.animIndex].loopThreshold -
-                                         self->base.anims[self->base.animIndex].loopBase);
-        // clang-format on
+        ANIM_REWIND(self->base.animTime, self->base.anims[self->base.animIndex]);
         self->base.animDone = 1;
     }
 }

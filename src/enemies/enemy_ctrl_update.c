@@ -74,14 +74,6 @@ static inline u8 AnimQuery(struct ctrl_target *t)
     return (u32)_call_via_r1((u8 *)t + m->thisOffset, m->fn);
 }
 
-/* Branchless `abs()` (`asrs`/`eors`/`subs`), as the ROM computes it. */
-static inline s32 Abs(s32 x)
-{
-    s32 s = x >> 31;
-
-    return (x ^ s) - s;
-}
-
 /* The target's `hit` bit, read the way the ROM does (`lsrs #3; ands
  * #1` on the flags byte; the bitfield would be tested with `movs #8;
  * ands`). */
@@ -171,14 +163,14 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             s32 x = Q8_TO_INT(t->x);
             s32 y = Q8_TO_INT(t->y);
             struct player *p = gPlayer;
-            s32 dx = Abs(x - Q8_TO_INT(p->x));
-            s32 d = Abs(y - Q8_TO_INT(p->y));
+            s32 dx = ABS_BRANCHLESS(x - Q8_TO_INT(p->x));
+            s32 d = ABS_BRANCHLESS(y - Q8_TO_INT(p->y));
             struct byte_arg zero;
             s32 vol;
 
             zero.v = 0;
             LIMIT_MIN(d, dx);
-            d = d < 0x20 ? 0x20 : d;
+            d = CLAMP_MIN(d, 0x20);
             LIMIT_MAX(d, 0xa0);
             vol = 0x100 - (d - 0x20) * 2;
             PlayAmbientSfx(gAudioContext, SFX_SAUCER_HUM, 8, vol, zero);

@@ -62,8 +62,8 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
     else
         dir = 1;
     pos.y = pos.y + INT_TO_Q8(box->offY);
-    pos.x >>= 8;
-    pos.y >>= 8;
+    Q8_TO_INT_INPLACE(pos.x);
+    Q8_TO_INT_INPLACE(pos.y);
     if ((u8)ProbeTerrain(gLevelLayers, dir, (struct probe_pos *)&pos, h, &origY))
         return 0;
 

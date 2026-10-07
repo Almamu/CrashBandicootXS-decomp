@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "level.h"
 #include "box_part.h"
+#include "gfx_part.h"
 #include "globals.h"
 #include "player.h"
 #include "math_util.h"
@@ -88,33 +89,14 @@ struct tiny_tiger {
     s16 *squares;  // 0x48
 };
 
-/* The ROM re-reads a just-filled box's `w` word from its stack slot rather
- * than through the register holding the box's address (see
- * dingodile.c). */
-#define BOX_VALID(bx) (*(vs32 *)&(bx).w)
-
-typedef void (*hop_fn1)(void *self, s32 a);
 typedef void (*hop_fn1p)(void *self, void *a);
-typedef void (*hop_fn2)(void *self, void *a, s32 b);
 typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
 
-#define VCALL1(obj, m, a)                                                      \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vt->m;                                 \
-        ((hop_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));             \
-    } while (0)
 #define VCALL1P(obj, m, a)                                                     \
     do                                                                         \
     {                                                                          \
         struct actor_method *_m = &(obj)->vt->m;                                 \
         ((hop_fn1p)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a));         \
-    } while (0)
-#define VCALL2(obj, m, a, b)                                                   \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vt->m;                                 \
-        ((hop_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
 #define VCALL3(obj, m, a, b, c)                                                \
     do                                                                         \
@@ -122,11 +104,6 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
         struct actor_method *_m = &(obj)->vt->m;                                 \
         ((hop_fn3)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c));        \
     } while (0)
-
-/* Byte read-modify-writes of the flags at +0x0C. old_agbcc materializes
- * the constant before loading the byte only when it arrives as an inline
- * helper's `s32` parameter (docs/matching/archive/old-agbcc-retry.md). */
-#define PART_FLAGS(p) (*((u8 *)(p) + 0xC))
 
 static inline void OrFlags(struct hop_part *part, s32 bits)
 {
@@ -178,7 +155,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
     if (self->state == 8) {
         GetSpriteAttackBox(&a, gPlayer);
         GetSpriteBodyBox(&b, part);
-        if (a.w != 0 && BOX_VALID(b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
+        if (a.w != 0 && AABB_VALID(b) && AabbOverlaps(&b, &a) && gPlayer->kind == 0x13)
             SetTinyState(self, part, 9);
     } else if (gPlayer->dead == 0) {
         GetSpriteBodyBox(&a, gPlayer);
@@ -187,7 +164,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
             a = b;
         }
         GetSpriteAttackBox(&b, part);
-        if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a)) {
+        if (AABB_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a)) {
             struct player *pl = gPlayer;
             const struct actor_method *m = &pl->vtable->handleEvent;
             void *t = (u8 *)pl + m->thisOffset;
@@ -218,7 +195,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         {
             s32 steps = --self->steps;
             s32 x = self->dx * steps / self->total + self->x;
-            s32 t = INT_TO_Q8(steps) / self->total;
+            s32 t = Q8_DIV(steps, self->total);
             s32 y = Q8_MUL(0x100 - self->squares[0x100 - t], self->dy) + self->y;
 
             part->x = x;
@@ -250,7 +227,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         {
             s32 steps = --self->steps;
             s32 x = self->dx * steps / self->total + self->x;
-            s32 t = INT_TO_Q8(steps) / self->total;
+            s32 t = Q8_DIV(steps, self->total);
             s32 y = Q8_MUL(self->squares[t], self->dy) + self->y;
 
             part->x = x;
@@ -437,13 +414,6 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
     VCALL1(self, m20, next);
 }
 
-static inline s32 Abs(s32 v)
-{
-    s32 sign = v >> 31;
-
-    return (v ^ sign) - sign;
-}
-
 /* Picks the hop target: the anchor nearest the player selects a column
  * of this round's/current anchor's gTinyHopTargets row. */
 s32 PickTinyHopTarget(struct tiny_tiger *self)
@@ -458,7 +428,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
         s32 py = gPlayer->y;
         s32 ax = anchor->x;
         s32 ay = anchor->y;
-        s32 d = Abs(ax - px) + Abs(ay - py);
+        s32 d = ABS_BRANCHLESS(ax - px) + ABS_BRANCHLESS(ay - py);
 
         if (d < best) {
             best = d;
