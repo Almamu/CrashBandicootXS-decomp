@@ -282,7 +282,7 @@ struct input_ctrl {
     u8 motionXKeepSpeed; // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
     u8 motionYKeepSpeed; // 0x1A - the same for Y
     u8 unk_1B;
-    struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
+    struct follow_child *cameraLead; // 0x1C - the camera lead (class CameraLead, level_select.hpp)
     u8 flag20;                       // 0x20
     u8 unk_21[3];
     s32 timer; // 0x24

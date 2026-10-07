@@ -36,7 +36,7 @@
  * Once a NAKED transcription. It matches as plain C under both
  * compilers: the icon-manager set-up is the same `IconSetup`/
  * `IconReserve` inline-helper sequence `RunLevelSelect`
- * (src/menus/level_select.c) uses, and `FontResetPalette` takes one
+ * (src/menus/level_select.cpp) uses, and `FontResetPalette` takes one
  * argument. See docs/matching/archive/issue-4-6-8-naked-retry.md. */
 
 extern void _call_via_r1(void *addr, void *fn);

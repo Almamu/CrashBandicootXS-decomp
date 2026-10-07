@@ -10,10 +10,7 @@
 
 #include "ctrl.hpp"
 #include "player.hpp"
-
-extern "C" {
-#include "camera_lead.h"
-}
+#include "level_select.hpp"
 
 /* The input controller (gInputCtrlVtable, struct input_ctrl in player.h):
  * the player's controller in room kind 2 (play_room.c creates it), where
@@ -34,8 +31,8 @@ public:
     u8 motionXKeepSpeed; // 0x19 - apply with SetTargetMotionX (speed kept), not Start...
     u8 motionYKeepSpeed; // 0x1A - the same for Y
     u8 unk_1B;
-    struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
-    u8 flag20;                       // 0x20 - left can still slow the ride down
+    CameraLead *cameraLead; // 0x1C - spawned by StateStart (level_select.hpp)
+    u8 flag20;              // 0x20 - left can still slow the ride down
     u8 unk_21[3];
     s32 timer; // 0x24 - how long left has been held, and the cooldown after
 

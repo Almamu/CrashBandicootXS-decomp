@@ -351,7 +351,7 @@ void CommitTitleScreenFrame(u32 *self)
  * `0xf0` px to its right), positioning them from the icon-manager's own
  * anchor record. The two `_call_via_r2` calls are
  * virtual calls through the icon manager's `record->slots[0]`/`[2]`
- * entries (same shape as `level_select.c`). */
+ * entries (same shape as `level_select.cpp`). */
 
 void DrawTitleMenuItem(u32 *self, s32 text, s32 variant)
 {

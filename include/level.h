@@ -132,8 +132,8 @@ struct entity_spawner {
     s32 count;         // 0x04 - its length
 };
 
-/* The camera's followed object (gPlayer, or level_select.c's follow
- * child). */
+/* The camera's followed object (gPlayer, or the camera lead, class
+ * CameraLead in level_select.hpp). */
 struct camera_target {
     s32 x;           // 0x00 - Q8
     s32 y;           // 0x04 - Q8

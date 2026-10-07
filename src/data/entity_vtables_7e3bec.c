@@ -656,7 +656,7 @@ const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(StartPlatformMoverMotionYFromSet),
 };
 
-/* Used by level_select.c (DestroyCameraLead). */
+/* Used by level_select.cpp (DestroyCameraLead). */
 const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideMovingSprite),
@@ -675,7 +675,7 @@ const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by level_select.c (GetCameraLeadOffset, DestroyLaunchPad, ClearLaunchPadVulnerable). */
+/* Used by level_select.cpp (GetCameraLeadOffset, DestroyLaunchPad, ClearLaunchPadVulnerable). */
 const struct vtable_slot gLaunchPadVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideMovingSprite),
@@ -694,8 +694,7 @@ const struct vtable_slot gLaunchPadVtable[15] = {
     VTABLE_SLOT(CheckLaunchPadContact),
 };
 
-/* Used by level_select_widgets.c (DestroyLevelSelectEntry), level_select_widgets.c,
- * level_select_parts.h. */
+/* Used by level_select_widgets.cpp (DestroyLevelSelectEntry). */
 const struct vtable_slot gLevelSelectEntryVtable[6] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(AnimateLevelSelectEntry),

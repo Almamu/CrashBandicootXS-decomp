@@ -19,7 +19,7 @@ struct bg_package {
 };
 
 /* REG_BGnCNT as bitfields. As a stack variable it is 4 bytes (agbcc pads
- * every union to a word); level_select_widgets.c's `struct zoom_bg` holds
+ * every union to a word); level_select.hpp's `ZoomBg` holds
  * a packed 2-byte copy. */
 union bgcnt {
     u16 raw;

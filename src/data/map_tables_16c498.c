@@ -7,8 +7,8 @@
  */
 
 /* `struct xy_pair` (menus.h) positions and animation ids of the level-select
- * screens: level_select.c (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
- * InitLaunchPad) and level_select_pages.c (its level menu's item positions
+ * screens: level_select.cpp (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
+ * InitLaunchPad) and level_select_pages.cpp (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
 const struct xy_pair gLevelSelectWorldPos = { 16, 32 };
 const struct xy_pair gLevelSelectCrashIconPos = { 16, 60 };

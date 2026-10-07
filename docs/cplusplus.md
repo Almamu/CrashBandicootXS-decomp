@@ -504,6 +504,10 @@ counts them by kind) and what the C++ still needs.
 | `src/player/player_flags.cpp` (again) | the 40 player accessors are `Player` methods (C linkage before) | 40 | agbcp | 3 pins, gotos -> 0 | 8 |
 | `src/objects/collision_queue.cpp` (again) | `CollisionQueue`'s constructor (`ResetCollisionQueue`; `Reset` before) | 0 | agbcp | 0 -> 0 | 8 |
 | globals.h, action_obj.h, the controller headers (action_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp), sprite_obj.hpp, and 43 `.cpp` files | `gPlayer` and the controllers' player pointers are `Player *`s; `PlayerSprite()`, `ActionCtrl::Sprite()` and the `(GroundSprite *)` casts go | 0 | (unchanged) | 4 hand-written vcalls, the flags2 offset macro -> 0 | 8 |
+| `src/menus/level_select.cpp` | `CameraLead`, `LaunchPad`, and `LevelSelect`'s constructor, destructor, update, draw, record and loop (include/level_select.hpp), with `RunLevelSelect` (C linkage) | 24 + 1 | old_agbcp | 31 pins, 2 keeps, 2 asm, 2 asm labels, 1 volatile read, the byte views of DISPCNT, BLDY and the save record, the `Opaque` and `ItemAt` helpers, gotos, 7 hand-written vcalls -> 3 pins, 1 keep, 2 asm labels | 10 |
+| `src/menus/level_select_pages.cpp` | `LevelSelect`'s page turns, exits and entry refresh; `LevelSelectPageBg`; `ZoomBg`'s constructor; with `SetNewWorldOpened` (C linkage) | 24 + 1 | old_agbcp | 0 -> 0; the entries' 2 function-pointer vcalls go | 10 |
+| `src/menus/level_select_widgets.cpp` | `ZoomBg`, `LevelSelectEntry`, `LevelSelectCursor` | 41 | old_agbcp | 0 -> 0; `DELETE_PART` (the parts' slot-10 calls) goes | 10 |
+| `src/player/input_ctrl.cpp` (again) | `InputCtrl::StateStart`: `new CameraLead`, `CollidableList()->Add`, `cameraLead->Reset()`; `Update` and `StateDead`: `MarkGone()` | 0 | old_agbcp | 2 `ENTITY_MARK_GONE`s -> 0 | 10 |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1383,8 +1387,8 @@ too: only mangled names changed, each mapped to the same C name.
   `Crates()`) replace the `((PartList *)gTouchableList)` casts and the C
   `AddToPartList(gCollidableList, p)` calls of cortex.cpp, dingodile.cpp,
   tiny_update.cpp, platform_create.cpp and the pickups. `InputCtrl::StateStart`
-  keeps `AddToPartList` for the camera lead, a C struct (`struct
-  follow_child`, level_select.c).
+  kept `AddToPartList` for the camera lead, then a C struct, until part 10
+  (`CollidableList()->Add(cameraLead)`).
 
 ### The player (part 8)
 
@@ -1487,6 +1491,91 @@ What made the C++ match:
 Kept: `HandleEvent`'s volatile read of the mask level after the
 controller call (the ROM loads it and never uses it).
 
+### The level select (part 10)
+
+Part 10 in numbers: the level select's three files (src/menus/level_select*.c,
+ROM 0x0801B85C-0x0801E578), 91 functions and seven classes in the new
+include/level_select.hpp, and the camera lead's C++ caller, input_ctrl.cpp.
+Project-wide: `MATCH_HOLD_REG` 1351 -> 1323, `MATCH_KEEP` 34 -> 33,
+instruction-emitting `asm` 155 -> 153 and scoped volatiles 10 -> 9. All
+three objects were old_agbcc C already and match under old_agbcp.
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `CameraLead` | 0x80 | gCameraLeadVtable (a `MovingSprite`) | level_select.cpp |
+| `LaunchPad` | 0x78 | gLaunchPadVtable (a `MovingSprite`) | level_select.cpp |
+| `LevelSelect` | 0xAC | none | level_select.cpp, level_select_pages.cpp |
+| `LevelSelectPageBg` | 0x28 | none | level_select_pages.cpp |
+| `ZoomBg` | 0x8C | none | level_select_widgets.cpp (constructor: _pages.cpp) |
+| `LevelSelectEntry` | 0x14 | gLevelSelectEntryVtable (a root class: the vtable pointer at +0x10) | level_select_widgets.cpp |
+| `LevelSelectCursor` | 0x54 | none | level_select_widgets.cpp |
+
+- **The classes.** The camera lead and the launch pad are `MovingSprite`s:
+  the camera lead overrides `Update` and the destructor, the launch pad the
+  destructor and `TouchPlayer` (slot 14, `CheckLaunchPadContact`, which
+  sends the player `EVENT_LAUNCH_PAD`: `gPlayer->HandleEvent(0,
+  EVENT_LAUNCH_PAD, 0)`, where the C pinned `_call_via_r4`'s function).
+  The screen's other objects have no vtable but a constructor and a
+  destructor, so `DestroyX(p, 3)` after a null test is `delete p` and
+  `CreateX(OperatorNew(n), ...)` is `new X(...)`. The screen's sprites are
+  `UiSprite`s; `delete` on one is its slot-10 call (`DELETE_PART` went).
+- **The C views go.** No C file reads these objects' fields: the camera
+  lead's `struct follow_child` (camera_lead.h) and level_menu.h's `struct
+  level_menu`, `level_item`, `zoom_bg`, `page_bg`, `twinkle` and their
+  vtable views are gone, and so is level_select_parts.h. menus.h keeps the
+  C prototypes (the C names) with opaque tags, for the vtables
+  (src/data/entity_vtables_7e3bec.c) and the C callers (game_frame.c,
+  spawn_objects.c); `gLevelSelect` is a `LevelSelect *` to C++ (menus.h's
+  `__cplusplus` declaration, as `gPlayer`'s). level_menu.h keeps `struct
+  sprite` and the save block, which the pause menu and the power dialog use.
+- **`InputCtrl`** holds a `CameraLead *`: `new CameraLead`,
+  `CollidableList()->Add(cameraLead)`, `cameraLead->Reset()`, and
+  `MarkGone()` for its two `ENTITY_MARK_GONE`s.
+- **The fonts are still C** (src/text/, `struct bitmap_font`): their
+  virtual calls stay spelled out through the record's slots.
+
+What made the C++ match:
+
+- **A store to a union member clobbers everything** (gcc gives every access
+  to a union member alias set 0). `Sprite::bank` is in an anonymous union
+  with `anim`, so `s->bank = ...` made g++ reload `sprites[i]` (or `frame`,
+  or `twinkles[i].part`) after it, where the ROM's class had a plain
+  member. Through a pointer to the member (`SetBankNow`, level_select.hpp)
+  the store has the pointer type's alias set, and the constructors match as
+  written.
+- **`SpawnLaunchPad`** is `new LaunchPad(id, x, y)`, an inline constructor
+  (as `MovingSprite(id, x, y)`), with the out-of-line default one,
+  `InitLaunchPad`, at the end of the class's code. Its two `mov/neg` mask
+  `asm` statements are the two mirror bitfield stores, and the palette
+  nibble a store through a `u32` local.
+- **`UpdateCameraLead`'s `dir`/`hitAxes` stores** come out with the second
+  address formed from the first (`adds r0, #0x24; strb; adds r0, #0x44;
+  strb`) through an inline taking both values (`SetAxes`).
+- **`LevelSelectLoop`'s key copy:** declaring `k` before `union key_state
+  keys = gKeys` keeps `keys` in a register (declared first, g++ puts the
+  union on the stack); the C's statement expression and `MATCH_KEEP` stay
+  for the copy's place. The A-button test is a local (`u32 a = ...; if
+  (!a)`), or g++ narrows it to an `ldrb` and an `eor`.
+- `UpdateLevelSelect`'s DISPCNT BG2 bit is a bitfield store (the C wrote
+  the byte through a `u8 *`), the fade-in a plain `bldy.evy--` (the C's
+  byte view goes), `DrawLevelSelect` needs neither the `ItemAt` pin nor the
+  `goto` (the sprite array's address taken before the entries' loop gives
+  the ROM's order), and `InitLevelSelect` needs none of the C's `Opaque`
+  helpers.
+
+Kept, each with a comment: `ResetCameraLead`'s one pin (the ROM tests
+`blink` with its own 1 in r1; unpinned, gcc shares the constant with
+`ToggleHidden`'s; the C had five pins), `UpdatePageArrows`'s two (the arrow
+in r1 and `&tag` in r3; the C had 24 and a keep), the `MATCH_KEEP` of
+`LevelSelectLoop` and the two `_rw` asm-label aliases of the const position
+tables (`InitLevelSelect` reloads them across calls). C idioms kept:
+`LevelSelectLoop`'s and `LoadLevelSelectRecord`'s gotos, the page turns'
+goto loops (a `while` gets its test copied in front), and
+`GetLevelSelectPageBgOffsets`'s `u32` read of `hofs`/`vofs` (g++ 2.9 has
+no anonymous structs for a union view). `sub_801B85C` stores the byte at
+0x32, inside `Sprite::frame`, through a byte pointer: nothing else
+touches it.
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -1524,9 +1613,9 @@ object is listed, with its reason, in its part's notes above.
 7b'; 77 of them have C++ traits, `tools/cpp_survey.py --objects`; the
 player, then the first item here, is C++ since part 8):
 
-- **The level select's sprites**: the camera lead (`struct follow_child`)
-  and launch pad, `MovingSprite`s, in menus/level_select.c, with
-  level_select_widgets.c and level_select_pages.c.
+- ~~**The level select's sprites**~~: the camera lead and launch pad, with
+  the rest of the level select (level_select_widgets.c,
+  level_select_pages.c), are C++ since part 10.
 - **The effect parts' spawner** (level/entity_spawner.c: `SpawnEffectPart`'s
   `InitEffectCtrl(OperatorNew(0x10))` and its `attach` slot call, `new
   EffectCtrl` and `mgr->Attach(part)` in C++), and the level spawners that
@@ -1586,9 +1675,15 @@ PR, as before):
    the C views (`struct box_part`, `struct gobj`, `struct orbit_part`,
    `struct crate`, `struct part_list`, `struct pool_manager`) lose most of
    their users.
-8. **The level select's sprites** (part 10): the camera lead and launch pad
-   as `MovingSprite` subclasses (`InputCtrl::StateStart`'s `AddToPartList` then
-   becomes `CollidableList()->Add`).
+8. ~~**The level select's sprites**~~: done in part 10 (the camera lead and
+   launch pad as `MovingSprite` subclasses, and the whole level select,
+   include/level_select.hpp; `InputCtrl::StateStart`'s `AddToPartList` is
+   `CollidableList()->Add`). The other C++-trait objects of the frontend and
+   the menus are next, a few files per part: frontend/company_logos.c and
+   language_select.c (the two with vtables), then credits.c,
+   title_screen*.c, language_select_setup.c and starfield.c, then the pause
+   menu and the power dialog (menus/pause_menu*.c, power_dialog*.c,
+   continue_prompt_init.c).
 9. **The 3D actors** (part 11 onwards): `ActorSelf` (vtable pointer at
    +0x50), actor*.c first, then the vehicles and the 3D bosses; the PMF
    tables become `const StateFunc t[] = { &X::f, ... }` (experiment 3) and
@@ -1907,3 +2002,13 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **A `#ifdef __cplusplus` declaration** gives a C global its class type in
   C++ with the same symbol (`extern class Player *gPlayer;` inside `extern
   "C"`), so the C++ files need no accessor or cast for it (part 8).
+- **A store to a union member clobbers every other memory value** for CSE:
+  gcc gives union member accesses alias set 0. A store to `Sprite::bank`
+  (in an anonymous union with `anim`) makes g++ reload the pointer it
+  stored through; store through a pointer to the member instead
+  (`SetBankNow`, part 10).
+- **Declaration order can put a union local in memory:** `union key_state
+  keys = gKeys;` declared before another union local went to the stack;
+  declared after it, it stays in a register (`LevelSelectLoop`, part 10).
+- **g++ 2.9 has no anonymous structs:** `union { struct { u16 a, b; }; u32
+  ab; }` is "anonymous class type not used to declare any objects".

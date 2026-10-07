@@ -9,7 +9,6 @@ extern "C" {
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
-#include "entity_bits.h"
 #include "math_util.h"
 }
 
@@ -46,7 +45,7 @@ extern "C" {
  * `_call_via_r2`/`_call_via_r3`) and the pointer-to-member dispatch (16
  * lines of slot arithmetic); here they are `SetMode(3)` and
  * `(this->*stateFuncs[state])()`. The "mark gone" bitmap sequence
- * (MarkEntityGone's, inlined twice) is entity_bits.h's ENTITY_MARK_GONE. */
+ * (MarkEntityGone's, inlined twice) is Entity::MarkGone. */
 
 void PlayerCtrl::ClearMotionYPending()
 {
@@ -107,10 +106,10 @@ void InputCtrl::StateStart()
     motionY = 0;
     dirState = 0;
     if (cameraLead == 0) {
-        cameraLead = CreateCameraLead((struct follow_child *)OperatorNew(0x80));
-        AddToPartList(gCollidableList, cameraLead);
+        cameraLead = new CameraLead;
+        CollidableList()->Add(cameraLead);
     }
-    ResetCameraLead(cameraLead);
+    cameraLead->Reset();
 }
 
 /* Each frame, unless dead (state 3): ends the room once the target is past
@@ -125,9 +124,9 @@ void InputCtrl::Update(MovingSprite *)
         s32 x = target->x;
 
         if (x > INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0xA00) {
-            struct follow_child *lead = cameraLead;
+            CameraLead *lead = cameraLead;
 
-            ENTITY_MARK_GONE(lead->flags.bits.gone, lead->field_08);
+            lead->MarkGone();
             cameraLead = 0;
             RequestRoomExit();
         }
@@ -214,7 +213,7 @@ void InputCtrl::StateDead()
     Player *t = target;
 
     if (t->animDone)
-        ENTITY_MARK_GONE(t->f.b.gone, t->id);
+        t->MarkGone();
 }
 
 /* gInputCtrlStateFuncs[2]: once the target's animation ends, goes back to
