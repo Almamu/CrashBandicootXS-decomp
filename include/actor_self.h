@@ -71,6 +71,13 @@ struct actor_pmf {
 
 struct anim_table_record;
 
+/* actor_self.sortKey bits. The low 15 bits are the draw-order key
+ * ((depth >> 1) & 0x7f80 | ((|x| + |y|) >> 11) & 0x7f); InitActorPart,
+ * UpdateActor and UpdateActorDepth set bit 15 when the actor's depth is past
+ * GetActorBgLayerDepth(), and the draw functions then give its sprite OAM
+ * priority 2 (attr 2 | 0x800) so it goes behind the BG layer. */
+#define SORT_KEY_FLAG_BEHIND_BG 0x8000
+
 struct actor_self {
     struct anim_frame_record *anims; // 0x00
     u32 *frameOffsets;               // 0x04
@@ -81,6 +88,7 @@ struct actor_self {
     u8 unk_13;
     s32 sortKey; // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list
                  //        by it (HeapSortActorsByKey); bit 15 also sets OAM priority
+                 //        (SORT_KEY_FLAG_BEHIND_BG)
     s32 palette; // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
     s32 x;       // 0x1C
     s32 y;       // 0x20

@@ -110,7 +110,7 @@ void LoadYetiGraphics(void)
 {
     u8 buf[0x100];
 
-    REG_DISPCNT |= 0x400;
+    REG_DISPCNT |= DISPCNT_BG2_ON;
     FillDotPattern(buf, 0);
     DmaCopy16(3, buf, (void *)(VRAM + 0xD000), 0x100);
     FillDotPattern(buf, 0x80);

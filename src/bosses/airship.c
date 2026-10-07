@@ -250,7 +250,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
         s32 t = self->animTime >> 8;
         DrawAirshipMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
     }
-    REG_DISPCNT |= 0x400;
+    REG_DISPCNT |= DISPCNT_BG2_ON;
     UpdateAirshipBg2();
     gAirshipHitFlashTimer = 0;
     QueueVramDmaTransfer(gAirshipHitFlashPalettes, (void *)(BG_PLTT + 0x20), 0x20, 0x10);

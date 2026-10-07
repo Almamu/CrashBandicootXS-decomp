@@ -183,7 +183,7 @@ void DrawPolarCollectedWumpa(void *selfArg)
         s32 field20 = self->sortKey;
         MATCH_HOLD_REG(u32, attr2, r2);
 
-        if (field20 & 0x8000) {
+        if (field20 & SORT_KEY_FLAG_BEHIND_BG) {
             a2 |= 0x800;
             {
                 MATCH_HOLD_REG(s32, shifted, r0) = a2 << 16;
