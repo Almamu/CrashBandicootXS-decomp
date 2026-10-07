@@ -272,7 +272,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         /* The state is loaded and masked before `st` is set, so `st` is a
          * copy of the load's address register, stored before the compare
          * (`ldrb; ands; str r1, [sp, #0x94]; cmp`). */
-        s32 s = self->state & 0x7f;
+        s32 s = self->state & CRATE_STATE_MASK;
 
         st = &self->state;
         if (s == 1)
@@ -364,7 +364,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
             ActivateIronSwitchCrate(obj);
         break;
     case 2:
-        obj->state |= 0x80;
+        obj->state |= CRATE_STATE_BUSY;
         D18C_SetBusy(gPlayer, 1);
         break;
     case 3:
@@ -376,13 +376,13 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
                 PlayerHitboxOverlapsAt(self, (struct hitbox_quad *)(rec + 4), &f.a, px, py)) {
                 struct crate *e = GetCrateAbove(obj);
 
-                if (e != NULL && (e->state & 0x7f) != 1) {
+                if (e != NULL && (e->state & CRATE_STATE_MASK) != 1) {
                     s32 c2 = gCrateHitResponse[e->kind][kind];
 
                     if (c2 == 3)
                         BreakCrateInStack(e, 0, 0, 0);
                     else if (c2 == 2) {
-                        e->state |= 0x80;
+                        e->state |= CRATE_STATE_BUSY;
                         D18C_SetBusy(gPlayer, 1);
                     } else if (c2 == 4)
                         ExplodeCrate(e, 1);
@@ -408,7 +408,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
             D18C_RING_PUSH(NULL);
         return;
     case 4:
-        if ((obj->state & 0x7f) == 0)
+        if ((obj->state & CRATE_STATE_MASK) == 0)
             ExplodeCrate(obj, 1);
         return;
     case 5:
@@ -556,7 +556,7 @@ tail:
              * cross-jumped into the loop's call, so the ROM enters with
              * `mov r0, sl`. */
             for (e = GetCrateBelow(self); e != NULL; e = GetCrateBelow(e)) {
-                if (gCrateKindUnbreakable[e->kind] != 0 && (e->state & 0x7f) == 0)
+                if (gCrateKindUnbreakable[e->kind] != 0 && (e->state & CRATE_STATE_MASK) == 0)
                     return;
             }
             code = gCrateHitResponse[self->kind][5];
@@ -752,7 +752,7 @@ tail:
             ClearCrateStackTouched(self);
             hit = 0;
         } else {
-            if ((*st & 0x7f) == 0) {
+            if ((*st & CRATE_STATE_MASK) == 0) {
                 if (hit == 2)
                     f.pos.x += dx << 8;
                 else if (hit == 1)
@@ -843,7 +843,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
     f20.w = p20.v;
     f21 = p21.v;
     forcedIn = pforced.v;
-    if ((self->state & 0x7f) != 0)
+    if ((self->state & CRATE_STATE_MASK) != 0)
         goto commit;
     if (gPlayer->ctrlMode == 1 && code > 2) {
         pos.x = gPlayer->x;
@@ -875,7 +875,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                     gPlayer->rampY.target = 0;
                 }
             } else if (code == 2) {
-                self->state |= 0x80;
+                self->state |= CRATE_STATE_BUSY;
                 {
                     u8 one = 1;
 
@@ -885,7 +885,8 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
             }
         }
     }
-    if (code == 3 && self->kind == CRATE_KIND_SLOT && (self->u48.slotState & 7) == 3) {
+    if (code == 3 && self->kind == CRATE_KIND_SLOT &&
+        (self->u48.slotState & CRATE_SLOT_PHASE_MASK) == 3) {
         {
             u8 e = CRATE_KIND_TNT;
 
@@ -895,7 +896,8 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         code = gCrateHitResponse[self->kind][kind];
     }
     forced = forcedIn;
-    if (code == 1 && kind == ATTACK_KIND_SPIN && gPlayer->bounce == 1 && !(gPlayer->dir & 0xc)) {
+    if (code == 1 && kind == ATTACK_KIND_SPIN && gPlayer->bounce == 1 &&
+        !(gPlayer->dir & PART_DIR_Y_MASK)) {
         code = gCrateHitResponse[self->kind][kind];
         gPlayer->bounce = 2;
         gPlayer->bounce++;
@@ -942,7 +944,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         else if (self->kind == CRATE_KIND_BOUNCY_WUMPA)
             BounceWumpaCrate(self);
         else {
-            self->state |= 0x80;
+            self->state |= CRATE_STATE_BUSY;
             {
                 struct player *p = gPlayer;
                 u8 one = 1;
@@ -973,7 +975,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         }
         return;
     case 4:
-        if ((self->state & 0x7f) == 0)
+        if ((self->state & CRATE_STATE_MASK) == 0)
             ExplodeCrate(self, 1);
         return;
     case 5:
@@ -1015,7 +1017,7 @@ void ClearCrateStackTouched(struct crate *obj)
     arg = obj;
     goto next;
     do {
-        if ((cur[0x4d] & 0x7f) == 0)
+        if ((cur[0x4d] & CRATE_STATE_MASK) == 0)
             cur[0x58] = 0;
         arg = cur;
     next:
@@ -1024,7 +1026,7 @@ void ClearCrateStackTouched(struct crate *obj)
     arg = obj;
     goto prev;
     do {
-        if ((cur[0x4d] & 0x7f) == 0)
+        if ((cur[0x4d] & CRATE_STATE_MASK) == 0)
             cur[0x58] = 0;
         arg = cur;
     prev:
@@ -1050,7 +1052,7 @@ void MarkCrateStackTouched(struct crate *obj, struct aabb *ctxArg)
     if (cur != NULL) {
         u8 one = 1;
         do {
-            if ((cur[0x4d] & 0x7f) == 0) {
+            if ((cur[0x4d] & CRATE_STATE_MASK) == 0) {
                 cur[0x58] = one;
                 ctx[1] -= step;
                 ctx[3] += step;
@@ -1062,7 +1064,7 @@ void MarkCrateStackTouched(struct crate *obj, struct aabb *ctxArg)
     if (cur != NULL) {
         u8 one = 1;
         do {
-            if ((cur[0x4d] & 0x7f) == 0) {
+            if ((cur[0x4d] & CRATE_STATE_MASK) == 0) {
                 cur[0x58] = one;
                 ctx[3] += step;
             }
@@ -1171,7 +1173,7 @@ void BounceWumpaCrate(struct crate *self)
             if (++self->paramB > 4) {
                 BreakCrateInStack(self, 0, 0, 0);
             } else {
-                self->state |= 0x80;
+                self->state |= CRATE_STATE_BUSY;
                 {
                     struct player *p = gPlayer;
                     u8 one = 1;
@@ -1392,10 +1394,10 @@ void OpenCheckpointCrate(struct crate *self)
     if (gCrateKindCounted[self->kind])
         AddBrokenCrate(gLevelState);
     SetCheckpointAtPlayer(gLevelState, self->paramA != 0);
-    self->state &= 0x7f;
+    self->state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     one = 1;
-    self->state = (self->state & 0x80) | one;
+    self->state = (self->state & CRATE_STATE_BUSY) | one;
 }
 
 /* Case-3 handler both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
@@ -1428,11 +1430,11 @@ void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 dir)
     }
     if (dir == 4) {
         p = GetCrateBelow(self);
-        if (p == NULL || (p->state & 0x7f) == 1)
+        if (p == NULL || (p->state & CRATE_STATE_MASK) == 1)
             goto none;
     prev:
         q = GetCrateBelow(p);
-        if (q == NULL || (q->state & 0x7f) == 1)
+        if (q == NULL || (q->state & CRATE_STATE_MASK) == 1)
             goto last;
         p = q;
         goto prev;
@@ -1440,7 +1442,7 @@ void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 dir)
     if (dir != 8)
         goto other;
     p = GetCrateAbove(self);
-    if (p != NULL && (p->state & 0x7f) != 1)
+    if (p != NULL && (p->state & CRATE_STATE_MASK) != 1)
         goto next;
 none:
     q = self;
@@ -1450,7 +1452,7 @@ last:
     goto found;
 next:
     q = GetCrateAbove(p);
-    if (q == NULL || (q->state & 0x7f) == 1)
+    if (q == NULL || (q->state & CRATE_STATE_MASK) == 1)
         goto last;
     p = q;
     goto next;
@@ -1501,17 +1503,17 @@ void BreakCrate(struct crate *self, u32 arg1)
     u8 chained;
     u8 one;
 
-    if ((self->state & 0x7f) == 1)
+    if ((self->state & CRATE_STATE_MASK) == 1)
         return;
     chained = 0;
     if (GetCrateAbove(self) != NULL && flag == 0)
         chained = 1;
     PHYS_FLAG4(self) = 1;
     LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
-    self->state &= 0x7f;
+    self->state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     one = 1;
-    self->state = (self->state & 0x80) | one;
+    self->state = (self->state & CRATE_STATE_BUSY) | one;
     PhysSetTag(self, 0x1d);
     {
         struct anim_rec *recs = self->anim->records;
@@ -1711,7 +1713,7 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
     u8 flag = arg1;
 
     PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
-    switch (self->u48.slotState & 7) {
+    switch (self->u48.slotState & CRATE_SLOT_PHASE_MASK) {
     case 0:
         break;
     case 1:
@@ -1730,7 +1732,7 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
         OpenMysteryCrate(self, flag);
         break;
     case 3:
-        self->state &= 0x80;
+        self->state &= CRATE_STATE_BUSY;
         ExplodeCrate(self, 1);
         break;
     }
@@ -1811,7 +1813,7 @@ void DropCratesAbove(struct crate *self)
             if (next == NULL && prev != NULL) {
                 if (n->kind != CRATE_KIND_NITRO)
                     goto advance;
-                if (n->state & 0x7f)
+                if (n->state & CRATE_STATE_MASK)
                     goto advance;
             }
             n->timer = 0;
@@ -1901,16 +1903,16 @@ void ExplodeCrate(struct crate *self, u8 near)
 {
     u8 one;
 
-    if ((self->state & 0x7f) == 1)
+    if ((self->state & CRATE_STATE_MASK) == 1)
         return;
 
     self->timer = 0;
-    self->state &= 0x7f;
+    self->state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     self->flags |= 0x10;
     LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
     one = 1;
-    self->state = (self->state & 0x80) | one;
+    self->state = (self->state & CRATE_STATE_BUSY) | one;
     if (self->kind == CRATE_KIND_NITRO) {
         self->tag = one;
         ResetSpriteFrameTimer(self);
@@ -1990,7 +1992,7 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
                 s32 t2 = (o->y >> 8) - (self->y >> 8);
                 s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
-                if (dx + dy <= dist && (o->state & 0x7f) == 0) {
+                if (dx + dy <= dist && (o->state & CRATE_STATE_MASK) == 0) {
                     u32 kind = o->kind;
 
                     if (*(u8 *)(kind + commit))
@@ -2094,7 +2096,7 @@ void DetonateNitroCrates(void)
             struct crate *o = (struct crate *)(*list)->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3 && o->kind == CRATE_KIND_NITRO) {
-                if ((o->state & 0x7f) == 0)
+                if ((o->state & CRATE_STATE_MASK) == 0)
                     ExplodeCrate(o, 0);
             }
             i++;
@@ -2133,7 +2135,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
         struct anim_rec *recs;
         struct anim_rec *rec;
 
-        self->state |= 0x80;
+        self->state |= CRATE_STATE_BUSY;
         {
             struct player *player = gPlayer;
             one = 1;
@@ -2196,7 +2198,7 @@ void ActivateIronSwitchCrate(struct crate *self)
 
     self->flags |= 0x10;
     LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
-    self->state |= 0x80;
+    self->state |= CRATE_STATE_BUSY;
     {
         struct player *player = gPlayer;
         u8 one = 1;
@@ -2216,7 +2218,7 @@ void ActivateIronSwitchCrate(struct crate *self)
         do {
             struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
-            if (PHYS_CALL(o, m48) == 3 && (o->state & 0x7f) == 0) {
+            if (PHYS_CALL(o, m48) == 3 && (o->state & CRATE_STATE_MASK) == 0) {
                 if (o->kind == CRATE_KIND_OUTLINE && o->paramA == self->paramA) {
                     found[n] = o;
                     n++;
@@ -2409,7 +2411,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
                 s32 t2 = (o->y >> 8) - y;
                 s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
-                if (dx + dy <= dist && dy < height && (o->state & 0x7f) == 0) {
+                if (dx + dy <= dist && dy < height && (o->state & CRATE_STATE_MASK) == 0) {
                     if (*(u8 *)(o->kind + (u32)commit))
                         ExplodeCrate(o, 0);
                     else if (gCrateKindBreakable[o->kind]) {
@@ -2542,7 +2544,7 @@ void UpdateTntCountdown(struct crate *self)
         self->timer = 0x3c;
         break;
     case CRATE_KIND_TNT_LIT_1:
-        if ((self->state & 0x7f) == 0)
+        if ((self->state & CRATE_STATE_MASK) == 0)
             ExplodeCrate(self, 0);
         break;
     }
@@ -2594,7 +2596,7 @@ void UpdateSlotCrate(struct crate *self)
     s32 w1;
 
     w = self->u48.slotState;
-    if (!(w & 0xc0)) {
+    if (!(w & CRATE_SLOT_STAGE_MASK)) {
         struct player *pl = gPlayer;
         s32 d;
 
@@ -2608,9 +2610,9 @@ void UpdateSlotCrate(struct crate *self)
             if (d < 0)
                 d = -d;
             if (d <= 0x3f) {
-                w &= 0x3f;
+                w &= CRATE_SLOT_CLEAR_STAGE;
                 w |= 0x40;
-                w &= 0xc7;
+                w &= CRATE_SLOT_CLEAR_SPINS;
                 w |= 0x10;
                 self->u48.slotState = w;
             }
@@ -2618,8 +2620,8 @@ void UpdateSlotCrate(struct crate *self)
     }
     if (self->timer != 0)
         return;
-    ph0 = self->u48.slotState & 7;
-    ph0 &= 4;
+    ph0 = self->u48.slotState & CRATE_SLOT_PHASE_MASK;
+    ph0 &= CRATE_SLOT_PHASE_STARTED;
     w1 = self->u48.slotState;
     if (ph0 && self->tag == 8) {
         s32 done = 0;
@@ -2630,37 +2632,38 @@ void UpdateSlotCrate(struct crate *self)
             s32 lw;
 
             lw = self->u48.slotState;
-            nx = ((lw & 7) + 1) & 3;
+            nx = ((lw & CRATE_SLOT_PHASE_MASK) + 1) & 3;
             ph = nx;
-            lw = (lw & 0xf8) | nx;
+            lw = (lw & CRATE_SLOT_CLEAR_PHASE) | nx;
             MATCH_USE(lw); /* extra reference: lw wins r1 over nx */
             self->u48.slotState = lw;
             switch (ph) {
             case 0:
                 PhysSetTag(self, 7);
-                if (self->u48.slotState & 0xc0) {
+                if (self->u48.slotState & CRATE_SLOT_STAGE_MASK) {
                     u8 r = GetSlotCrateSpins(self);
 
                     if (r != 0) {
                         u32 t = (r - 1) << 24;
                         s32 cw = self->u48.slotState;
 
-                        cw &= 0xc7;
+                        cw &= CRATE_SLOT_CLEAR_SPINS;
                         t >>= 21;
                         cw |= t;
                         self->u48.slotState = cw;
                     }
                     w = self->u48.slotState;
-                    if (!(w & 0x38)) {
-                        s32 w2 = (w & 0xc7) | 0x10;
+                    if (!(w & CRATE_SLOT_SPINS_MASK)) {
+                        s32 w2 = (w & CRATE_SLOT_CLEAR_SPINS) | 0x10;
 
                         self->u48.slotState = w2;
-                        switch ((s32)((u32)(w2 & 0xc0) >> 6)) {
+                        switch (
+                            (s32)((u32)(w2 & CRATE_SLOT_STAGE_MASK) >> CRATE_SLOT_STAGE_SHIFT)) {
                         case 1:
-                            self->u48.slotState = (w2 & 0x3f) | 0x80;
+                            self->u48.slotState = (w2 & CRATE_SLOT_CLEAR_STAGE) | 0x80;
                             break;
                         case 2:
-                            self->u48.slotState = (w2 & 0x3f) | 0xc0;
+                            self->u48.slotState = (w2 & CRATE_SLOT_CLEAR_STAGE) | 0xc0;
                             break;
                         case 3:
                             PhysSetTag(self, 0x20);
@@ -2698,15 +2701,16 @@ void UpdateSlotCrate(struct crate *self)
             self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         }
         {
-            s32 d = (s32)((u32)(self->u48.slotState & 0xc0) >> 6);
+            s32 d =
+                (s32)((u32)(self->u48.slotState & CRATE_SLOT_STAGE_MASK) >> CRATE_SLOT_STAGE_SHIFT);
 
             self->timer = gSlotCrateTimers[d];
         }
     } else {
         {
-            s32 p = (w1 & 7) | 4;
+            s32 p = (w1 & CRATE_SLOT_PHASE_MASK) | CRATE_SLOT_PHASE_STARTED;
 
-            w1 = p | (w1 & 0xf8);
+            w1 = p | (w1 & CRATE_SLOT_CLEAR_PHASE);
         }
         self->u48.slotState = w1;
         self->timer = 1;
@@ -2715,7 +2719,8 @@ void UpdateSlotCrate(struct crate *self)
         else if (self->tag == 0xa)
             PhysSetTag(self, 8);
         else {
-            switch ((s32)((u32)(self->u48.slotState & 0xc0) >> 6)) {
+            switch ((s32)((u32)(self->u48.slotState & CRATE_SLOT_STAGE_MASK) >>
+                          CRATE_SLOT_STAGE_SHIFT)) {
             case 0:
             case 1:
                 PhysSetTag(self, 0xc);
@@ -2734,7 +2739,7 @@ void UpdateSlotCrate(struct crate *self)
 
             self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         }
-        if (self->u48.slotState & 0xc0)
+        if (self->u48.slotState & CRATE_SLOT_STAGE_MASK)
             PlaySfx(gAudioContext, SFX_SLOT_CRATE_SPIN, 0x100);
     }
 }
@@ -2815,7 +2820,7 @@ void UpdateCrateFall(struct crate *self)
                 self->fallDistance = remaining;
                 if (gCrateKindExplosive[kind = self->kind]) {
                     if (self->u48.blastState != 0 || kind == CRATE_KIND_NITRO) {
-                        if ((self->state & 0x7f) == 0)
+                        if ((self->state & CRATE_STATE_MASK) == 0)
                             ExplodeCrate(self, 0);
                     } else if (kind == CRATE_KIND_TNT) {
                         struct crate *next = GetCrateAbove(self);

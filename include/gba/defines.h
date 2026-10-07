@@ -164,5 +164,6 @@ typedef uint16_t winreg_t;
 #define CPU_SET_SRC_FIXED 0x01000000
 #define CPU_SET_16BIT     0x00000000
 #define CPU_SET_32BIT     0x04000000
+#define CPU_SET_COUNT_MASK 0x1FFFFF // the unit count (bits 0-20)
 
 #endif // GUARD_GBA_DEFINES

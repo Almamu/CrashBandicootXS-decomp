@@ -96,7 +96,7 @@ struct crate {
                          //   counted down by UpdateCrate (BounceWumpaCrate)
         s32 slotState;   // 15 (slot): bits 0-2 phase (face 0-3, bit 2 started), 3-5 spins
                          //   left at this stage, 6-7 stage (gSlotCrateTimers index; 0 idle);
-                         //   see struct phys_b48 and UpdateSlotCrate
+                         //   see struct phys_b48, UpdateSlotCrate and CRATE_SLOT_*
         s32 pressed;     // 6 (nitro switch): set once ActivateNitroSwitchCrate has fired
         s32 blastState;  // explosive kinds: 1 once it has fallen far enough to explode on
                          //   landing (DropCratesAbove/UpdateCrateFall), 0xFF once it has
@@ -106,7 +106,7 @@ struct crate {
     s8 fallSpeed; // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron switch
                   //        instead keeps its step delay here (placement byte 8, reloaded
                   //        into `timer` after each step)
-    u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy
+    u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy (CRATE_STATE_*)
     u8 kind;      // 0x4E - index into the gCrateKind* tables and gCrateHitResponse
     u8 timer;     // 0x4F
     u8 paramA;    // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
@@ -131,13 +131,35 @@ struct crate {
     struct crate *below; // 0x60 - the crate this one stands on (GetCrateBelow/SetCrateBelow)
 };
 
+/* crate.state (box_part.h's `physMode`, the same byte): the low 7 bits
+ * are the state (0: idle; 1: committed - the physics AABB tests skip it
+ * and UpdateCrate runs FinishBrokenCrate), bit 7 is busy (set when a hit
+ * starts an animation; UpdateCrate clears it, with gPlayer->busy, once
+ * `animDone` is set). */
+#define CRATE_STATE_MASK 0x7f
+#define CRATE_STATE_BUSY 0x80
+
+/* crate.u48.slotState (slot crates), as UpdateSlotCrate and the slot_crate.c
+ * accessors read the raw word. The fields mirror struct phys_b48's
+ * bitfields: `phase` (bits 0-2), `spins` (3-5) and `stage` (6-7). The
+ * CLEAR_ masks keep the other two fields. */
+#define CRATE_SLOT_PHASE_MASK    7
+#define CRATE_SLOT_PHASE_STARTED 4 // phase bit 2: the spin has started
+#define CRATE_SLOT_SPINS_MASK    0x38
+#define CRATE_SLOT_SPINS_SHIFT   3
+#define CRATE_SLOT_STAGE_MASK    0xc0
+#define CRATE_SLOT_STAGE_SHIFT   6
+#define CRATE_SLOT_CLEAR_PHASE   0xf8
+#define CRATE_SLOT_CLEAR_SPINS   0xc7
+#define CRATE_SLOT_CLEAR_STAGE   0x3f
+
 /* A crate's placement record: entry `slot` of the room's parameter
  * records (`gEntityFlags->list`, level_data.h), as CreateCrate reads it.
  * Bytes 6-8 are per-kind (see `struct crate` paramA/paramB/fallSpeed/u48). */
 struct crate_placement {
     u8 flags;   // 0x00 - bit 5: has a time-trial kind; bit 6: Aku Aku when assisted
                 //        (checkpoint: SetCheckpointAtPlayer's flag); bit 7: checkpoint
-                //        when assisted
+                //        when assisted (CRATE_PLACEMENT_FLAG_*)
     u8 options; // 0x01 - bit 0: life crate when assisted; bits 1-3 (slot): its faces
     u8 unk_02[2];
     s16 trialKind;     // 0x04 - kind + 0x15 in a time trial, 0x1B read as 0x15
@@ -148,6 +170,17 @@ struct crate_placement {
         s16 solidKind; // 5 (outline): u48.solidKind
     } u08;
 };
+
+/* crate_placement.flags. When the player has died often enough to get
+ * crate assistance (CreateCrate: GetDeaths >= GetCrateAssistDeaths), a
+ * "?" or slot crate turns into an Aku Aku or a checkpoint crate. */
+#define CRATE_PLACEMENT_FLAG_TRIAL_KIND        0x20 // `trialKind` is used (the special kinds always)
+#define CRATE_PLACEMENT_FLAG_ASSIST_AKU_AKU    0x40
+#define CRATE_PLACEMENT_FLAG_ASSIST_CHECKPOINT 0x80 // also: an activated "?"/slot crate is a checkpoint
+
+/* crate_placement.options bit 0: an assisted "?" or slot crate becomes a
+ * life crate (after the two flags above). */
+#define CRATE_PLACEMENT_OPTION_ASSIST_LIFE 1
 
 typedef s32 (*phys_method_fn)(void *self);
 

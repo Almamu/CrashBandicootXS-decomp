@@ -150,7 +150,7 @@ struct crate *ResolveStackCrateHit(struct crate *selfArg, struct aabb *box, u8 *
     if (next == NULL && prev == NULL)
         return self;
     *foundFlag = 1;
-    if (prev == NULL || (prev->state & 0x7f) == 1)
+    if (prev == NULL || (prev->state & CRATE_STATE_MASK) == 1)
         return self;
     {
         u8 *rec = (u8 *)&prev->anim->records[prev->tag];
@@ -223,7 +223,7 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
     s32 px;
     s32 py;
 
-    if ((self->physMode & 0x7f) == 1)
+    if ((self->physMode & CRATE_STATE_MASK) == 1)
         return;
     {
         u8 *rec;

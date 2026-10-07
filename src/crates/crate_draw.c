@@ -29,8 +29,8 @@ void DrawCrate(struct crate *selfArg)
     MATCH_HOLD_REG(struct crate *, self, r4) = selfArg;
     u8 state = self->state;
 
-    if ((state & 0x80) == 0) {
-        u8 masked7f = state & 0x7f;
+    if ((state & CRATE_STATE_BUSY) == 0) {
+        u8 masked7f = state & CRATE_STATE_MASK;
 
         if (masked7f == 0) {
             /* Reuses the already-zero `masked7f` register for this

@@ -272,7 +272,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
     if (!(self->flags >> 7))
         goto done;
     {
-        u32 t = self->moveAxes & 0xc;
+        u32 t = self->moveAxes & PART_DIR_Y_MASK;
 
         axes = &self->moveAxes;
         if (!t)
@@ -303,7 +303,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
             self->y = origY & 0xFFFFFF00;
             hit = ProbeGroundSpriteFloor(self, quad, &unused);
             {
-                u32 xm = *axes & 3;
+                u32 xm = *axes & PART_DIR_X_MASK;
 
                 if (xm == 0)
                     goto y_probe;
@@ -317,7 +317,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
             hit = ProbeGroundSpriteFloor(self, quad, &unused);
         }
     }
-    mode = *axes & 3;
+    mode = *axes & PART_DIR_X_MASK;
     if (mode && !hit) {
         s32 span;
 
@@ -334,7 +334,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
         }
     }
 y_probe:
-    mode = *axes & 0xc;
+    mode = *axes & PART_DIR_Y_MASK;
     if (mode && !hit) {
         s32 span;
 
@@ -351,7 +351,7 @@ y_probe:
             self->y = origY;
         }
     }
-    mode = *axes & 3;
+    mode = *axes & PART_DIR_X_MASK;
     if (mode && !hit) {
         s32 span;
 

@@ -27,7 +27,7 @@ void CollideCrateGridPartWithObject(struct part_list *list, struct aabb box, str
         struct part_method *m = PART_METHOD(part, 0x68);
 
         ((part_method3_fn)m->fn)((u8 *)part + m->thisOffset, 1, other->kind, 0);
-        other->flags |= 8;
+        other->flags |= PART_FLAG_TOUCHED;
     }
 }
 
@@ -73,11 +73,11 @@ void RemoveCrateFromList(struct pool_manager *manager, struct box_part *target)
             void **base2 = (void **)manager->slotArray;
             void *src = (u8 *)base2 + srcOff;
             void *dst = (u8 *)base2 + off;
-            s32 control = (manager->activeCount - i) & 0x1FFFFF;
+            s32 control = (manager->activeCount - i) & CPU_SET_COUNT_MASK;
             s32 cnt;
             void **base3;
 
-            control |= 0x4000000;
+            control |= CPU_SET_32BIT;
             CpuSet(src, dst, control);
 
             cnt = manager->activeCount;
@@ -108,11 +108,11 @@ void RemoveCrateListAt(struct pool_manager *manager, s32 index)
             void **base2 = (void **)manager->slotArray;
             void *src = (u8 *)base2 + srcOff;
             void *dst = (u8 *)base2 + off;
-            s32 control = (manager->activeCount - index) & 0x1FFFFF;
+            s32 control = (manager->activeCount - index) & CPU_SET_COUNT_MASK;
             s32 cnt;
             void **base3;
 
-            control |= 0x4000000;
+            control |= CPU_SET_32BIT;
             CpuSet(src, dst, control);
 
             cnt = manager->activeCount;

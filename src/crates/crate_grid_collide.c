@@ -163,7 +163,7 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
             }
             break;
         case 2:
-            part->flags |= 8;
+            part->flags |= PART_FLAG_TOUCHED;
             if (gLevelState->maskLevel) {
                 CALL_HIT(part, 1, EVENT_HIT, 0);
             }
