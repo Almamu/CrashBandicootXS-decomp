@@ -185,3 +185,18 @@ IsMotionYPending__10PlayerCtrl IsPlayerCtrlMotionYPending
 IsMotionXPending__10PlayerCtrl IsPlayerCtrlMotionXPending
 QueueMotionY__10PlayerCtrlUc QueuePlayerCtrlMotionY
 QueueMotionX__10PlayerCtrlUc QueuePlayerCtrlMotionX
+#
+# part 6: the boss controllers (include/boss_ctrl.hpp): MegaMixCtrl's
+# Update (src/bosses/mega_mix_update.cpp) and TinyCtrl
+# (src/bosses/tiny_update.cpp; its constructor, destructor and StartHop
+# are still C, in cortex.c)
+Update__11MegaMixCtrlP9SpriteObj UpdateMegaMix
+_vt.8TinyCtrl gTinyVtable
+__8TinyCtrl CreateTiny
+_._8TinyCtrl DestroyTiny
+Update__8TinyCtrlP9SpriteObj UpdateTiny
+SetState__8TinyCtrlP9SpriteObji SetTinyState
+PickHopTarget__8TinyCtrl PickTinyHopTarget
+SpawnFallingLeaves__8TinyCtrlP9SpriteObji SpawnTinyFallingLeaves
+StartHop__8TinyCtrlP9SpriteObj StartTinyHop
+__15OneShotAnimCtrl CreateOneShotAnimCtrl

@@ -88,8 +88,9 @@ public:
     u8 dir;                  // 0x24
     u8 screenSpace;          // 0x25
     u8 unk_26[2];
-    u8 mirror; // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
-    u8 slot;   // 0x29
+    u8 mirror;    // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
+    u8 palette:4; // 0x29 - low nibble: the OBJ palette slot
+    u8 unk_29_4:4;
     u8 unk_2A[2];
     u8 animating; // 0x2C
     u8 tag;       // 0x2D - the animation (SetTargetAnim)

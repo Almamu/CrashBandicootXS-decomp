@@ -341,7 +341,7 @@ const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by input_ctrl_queue.cpp (BossCtrl, include/ctrl.hpp). The bosses' controller base class: Mega-Mix,
+/* Used by input_ctrl_queue.cpp (BossCtrl, include/boss_ctrl.hpp). The bosses' controller base class: Mega-Mix,
  * Tiny, the Neo Cortex fight's controller, Dingodile and his shield and
  * rocket/stalactite derive from it and keep its event slot
  * (BossCtrlHandleEvent). */
@@ -361,7 +361,8 @@ const struct vtable_slot gBossCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by mega_mix.cpp (MegaMixCtrl, include/ctrl.hpp). */
+/* Used by mega_mix.cpp and mega_mix_update.cpp (MegaMixCtrl,
+ * include/boss_ctrl.hpp). */
 const struct vtable_slot gMegaMixCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateMegaMix),
@@ -429,8 +430,8 @@ const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by tiny_update.c, cortex.c (DestroyTiny,
- * CreateTiny). */
+/* Used by tiny_update.cpp (TinyCtrl, include/boss_ctrl.hpp), cortex.c
+ * (DestroyTiny, CreateTiny). */
 const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateTiny),

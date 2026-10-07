@@ -79,8 +79,8 @@ struct gfx_ctrl {
 };
 
 /* The Mega Mix controller (CreateMegaMixCtrl, vtable gMegaMixCtrlVtable):
- * a boss controller plus a frame stamp and a latch byte (UpdateMegaMix's
- * `struct ab_self` view, mega_mix_update.c). */
+ * a boss controller plus a frame stamp and a latch byte. The C view of
+ * include/boss_ctrl.hpp's class MegaMixCtrl, same layout. */
 struct mega_mix_ctrl {
     struct boss_ctrl base;
     s32 stamp; // 0x1C - reset to -1 by ResetMegaMixCtrl
@@ -125,8 +125,6 @@ struct hovercraft_attack {
 /* actor_anim.h, and the file-local views of the objects (defined in the
  * .c files that use them). */
 struct anim_box;
-struct ab_part;
-struct ab_self;
 struct dingodile_boss;
 struct entry_set;
 struct gfx_hit_ctrl;
@@ -137,14 +135,12 @@ struct gfx_pair_ctrl;
 struct gfx_part;
 struct gfx_squares;
 struct gobj;
-struct hop_part;
 struct obj_4704;
 struct obj_476c;
 struct obj_48a4;
 struct obj_490c;
 struct part;
 struct seq_obj;
-struct tiny_tiger;
 struct vobj;
 
 /* src/actor/actor_anim.c */
@@ -336,9 +332,9 @@ extern void RunHovercraftSideGunState(void *self);
 extern u8 IsHovercraftSideGunUnshootable(void *self);
 extern void DamageHovercraftCannonFlash(void);
 
-/* src/bosses/mega_mix.cpp: MegaMixCtrl's methods (include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtables and the C
- * callers. */
+/* src/bosses/mega_mix.cpp and mega_mix_update.cpp: MegaMixCtrl's methods
+ * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
+ * vtables and the C callers. */
 extern void SetMegaMixMotionYFromSet(void *self, void *part, s32 index);
 extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern void StartMegaMixMotionYFromSet(void *self, void *part, s32 index);
@@ -346,9 +342,7 @@ extern void StartMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern void ResetMegaMixCtrl(void *self);
 extern void DestroyMegaMixCtrl(void *self, s32 flags);
 extern void *CreateMegaMixCtrl(void *self);
-
-/* src/bosses/mega_mix_update.c */
-extern void UpdateMegaMix(struct ab_self *self, struct ab_part *other);
+extern void UpdateMegaMix(void *self, void *part);
 
 /* src/bosses/tiny_hop_pad.cpp: StompedHopPadCtrl's methods and
  * OneShotAnimCtrl's Update (include/ctrl.hpp)
@@ -359,11 +353,12 @@ extern void DestroyStompedHopPadCtrl(void *self, s32 flags);
 extern void *CreateStompedHopPadCtrl(void *self);
 extern void UpdateOneShotAnimCtrl(void *unused, void *other);
 
-/* src/bosses/tiny_update.c */
-extern void UpdateTiny(struct tiny_tiger *self, struct hop_part *part);
-extern void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next);
-extern s32 PickTinyHopTarget(struct tiny_tiger *self);
-extern void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 n);
+/* src/bosses/tiny_update.cpp: TinyCtrl's methods (include/boss_ctrl.hpp)
+ * under their C names (cxx_symbols.txt), for the vtable. */
+extern void UpdateTiny(void *self, void *part);
+extern void SetTinyState(void *self, void *part, s32 next);
+extern s32 PickTinyHopTarget(void *self);
+extern void SpawnTinyFallingLeaves(void *self, void *part, s32 n);
 
 /* src/vehicle/jetpack_balloon.c */
 extern s32 GetAirshipHpPercent(void);

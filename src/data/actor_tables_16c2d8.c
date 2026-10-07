@@ -15,12 +15,12 @@ const struct speed_ramp gMegaMixMotionRecords[4] = {
     { 450, 32, 750 },
 };
 
-/* UpdateTiny / SetTinyState (tiny_update.c): a value per round. */
+/* UpdateTiny / SetTinyState (tiny_update.cpp): a value per round. */
 const u8 gTinyRoundAnchors[3] = {
     4, 1, 0,
 };
 
-/* PickTinyHopTarget (tiny_update.c): a sequence of 0-4 values. */
+/* PickTinyHopTarget (tiny_update.cpp): a sequence of 0-4 values. */
 const u8 gTinyHopTargets[77] = {
     1, 1, 2, 1, 1, 0, 2, 0, 3, 3, 0, 0, 0, 3, 3, 1,
     1, 2, 4, 4, 3, 3, 3, 3, 3, 1, 1, 2, 1, 1, 0, 2,

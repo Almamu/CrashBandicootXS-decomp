@@ -19,7 +19,7 @@
  * player.h, struct anim_rec/anim_table in gobj_1a794.h, struct
  * piece_info in gfx.h). The menus' copies (level_menu.h,
  * level_select_parts.h, level_select.c) and the file-local ones
- * (time_trial.c, dingodile.c, tiny_update.c, spawn_objects.c,
+ * (time_trial.c, dingodile.c, tiny_update.cpp, spawn_objects.c,
  * affine_sprite_pieces.c's kf_record) use these types since #574 batch 9e.
  */
 

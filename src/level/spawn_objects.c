@@ -34,7 +34,7 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
     part->frameNibble = frame;
 }
 
-/* Entity type 0x49, Mega-Mix (see mega_mix_update.c). Popup-family variant:
+/* Entity type 0x49, Mega-Mix (see mega_mix_update.cpp). Popup-family variant:
  * builds a CreateMovingSprite part on animation table +0x168 at (arg1, arg2) in Q8, takes its frame from the tile cache
  * record of the first animation, clears the collected bits, attaches a
  * newly allocated CreateMegaMixCtrl header, then shows it (flags: clear bits 7/2/6, set
