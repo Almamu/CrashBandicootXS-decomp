@@ -1,5 +1,6 @@
 #include "core.h"
 #include "match.h"
+#include "math_util.h"
 #include "audio.h"
 #include "system.h"
 #include "util.h"
@@ -168,7 +169,7 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
             if (voice != -1) {
                 u32 baseVolume = gSfxTable[id].baseVolume;
                 MATCH_HOLD_REG(struct AudioContext *, p2, r2) = pself;
-                u32 volume = (baseVolume * p2->sfxVolume) * volumeParam >> 0x10;
+                u32 volume = Q16_TO_INT((baseVolume * p2->sfxVolume) * volumeParam);
 
                 GAX_set_fx_volume(voice, volume);
                 pself->lastSfxId[gSfxVoiceToggle] = id;
@@ -219,9 +220,7 @@ void TickAmbientSfx(struct AudioContext *self)
     }
     if (self->ambientSfxVolume < self->activeSfx.volume) {
         self->ambientSfxVolume += 0x10;
-        if (self->ambientSfxVolume > self->activeSfx.volume) {
-            self->ambientSfxVolume = self->activeSfx.volume;
-        }
+        LIMIT_MAX(self->ambientSfxVolume, self->activeSfx.volume);
         GAX_set_fx_volume(2, self->ambientSfxVolume);
         return;
     }
@@ -229,9 +228,7 @@ void TickAmbientSfx(struct AudioContext *self)
         return;
     }
     self->ambientSfxVolume -= 0x10;
-    if (self->ambientSfxVolume < self->activeSfx.volume) {
-        self->ambientSfxVolume = self->activeSfx.volume;
-    }
+    LIMIT_MIN(self->ambientSfxVolume, self->activeSfx.volume);
     GAX_set_fx_volume(2, self->ambientSfxVolume);
 }
 
@@ -300,7 +297,7 @@ void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volu
     u32 handle = gSfxTable[id].slotId;
 
     if (handle != 0 && volumeMul > 0) {
-        s32 volume = (gSfxTable[id].baseVolume * volumeMul) * self->sfxVolume >> 16;
+        s32 volume = Q16_TO_INT((gSfxTable[id].baseVolume * volumeMul) * self->sfxVolume);
         u32 cur = self->activeSfx.id;
 
         if (cur == 0x63) {

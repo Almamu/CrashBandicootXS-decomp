@@ -2,6 +2,7 @@
 #include "match.h"
 #include "system.h"
 #include "link.h"
+#include "math_util.h"
 
 /* The link-cable session's per-frame handshake driver and SIO data pump
  * (split from link_handshake.c so ResetLinkSessionState can sit in its own object;
@@ -119,8 +120,7 @@ s32 UpdateLinkSession(struct link_session *self)
         s32 a = self->peakIdleFrames;
         s32 b = self->idleFrames;
 
-        if (a < b)
-            a = b;
+        LIMIT_MIN(a, b);
         self->peakIdleFrames = a;
         b = self->progressed ? 0 : b + 1;
         self->idleFrames = b;
@@ -441,8 +441,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
              * like the ROM's `adds r4, r7, #0`. */
             MATCH_KEEP(rf);
             n = *cnt;
-            if (n > 4)
-                n = 4;
+            LIMIT_MAX(n, 4);
             LINK_NIB(&id[1]).hi = n;
             LinkRingPop(ring, rf, dst, n, rd);
             self->totalSent += n;
