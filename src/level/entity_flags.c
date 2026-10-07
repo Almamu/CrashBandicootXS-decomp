@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "level.h"
@@ -251,7 +252,7 @@ void MarkEntityIdActivated(void *self, s32 n)
  * the Q8 `val` as pixels in `pos` (`self+4`), as SpawnRoomEntities does. */
 void SetEntityFlagsPos(void *self, s32 val)
 {
-    ((struct entity_flags *)self)->pos = val >> 8;
+    ((struct entity_flags *)self)->pos = Q8_TO_INT(val);
 }
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same

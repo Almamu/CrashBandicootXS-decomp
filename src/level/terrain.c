@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "level.h"
 
@@ -64,10 +65,8 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
     s32 tileX = x >> 3;
     s32 tileY = y >> 3;
 
-    if (tileX < 0)
-        tileX = 0;
-    if (tileY < 0)
-        tileY = 0;
+    LIMIT_MIN(tileX, 0);
+    LIMIT_MIN(tileY, 0);
 
     GetTerrainType(((struct level_layers *)arg0)->tiles, tileX, tileY, &flagsOut, &hiOut);
 
@@ -198,7 +197,7 @@ s32 ProbeFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
 
         asm("ldrsb %0, [%1, %0]" : "+r"(height) : "r"(addr));
 
-        *outValue += ((tileY << 3) + height - y) << 8;
+        *outValue += INT_TO_Q8((tileY << 3) + height - y);
         return 1;
     }
     return 0;
@@ -218,7 +217,7 @@ s32 ProbeSolidFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
     if (height >= 0) {
         s32 y = pos->y;
 
-        *outValue += ((tileY << 3) + height - y) << 8;
+        *outValue += INT_TO_Q8((tileY << 3) + height - y);
         return 1;
     }
     return 0;

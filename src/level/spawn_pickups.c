@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "sprite_bank.h"
@@ -275,8 +276,8 @@ void SpawnHoverStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * ROM (a leaf function, no `push`/`pop` at all). */
 void SpawnUnderwaterPlayerPosition(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    gPlayer->x = (s32)arg1 << 8;
-    gPlayer->y = (s32)arg2 << 8;
+    gPlayer->x = INT_TO_Q8((s32)arg1);
+    gPlayer->y = INT_TO_Q8((s32)arg2);
 }
 
 /* Entity type 0x02: the player start of the kind-1 (underwater) rooms;
@@ -291,8 +292,8 @@ void SpawnUnderwaterStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * the normal rooms (see SpawnHoverPlayerPosition). */
 void SpawnPlayerPosition(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    gPlayer->x = (s32)arg1 << 8;
-    gPlayer->y = (s32)arg2 << 8;
+    gPlayer->x = INT_TO_Q8((s32)arg1);
+    gPlayer->y = INT_TO_Q8((s32)arg2);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn

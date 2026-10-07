@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "level.h"
 
 /* GitHub issues #9/#10/#41's remaining piece of `ProbeTerrain`'s own
@@ -73,10 +74,10 @@ s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s3
     if (hit) {
         switch (submode) {
         case 2:
-            *outValue += (8 - (pos->y & 7)) << 8;
+            *outValue += INT_TO_Q8(8 - (pos->y & 7));
             break;
         case 0:
-            *outValue -= (pos->y & 7) << 8;
+            *outValue -= INT_TO_Q8(pos->y & 7);
             break;
         }
     }
@@ -114,13 +115,13 @@ s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s3
         case 3:
             {
                 s32 v = *outValue + 1;
-                *outValue = v + ((8 - (pos->x & 7)) << 8);
+                *outValue = v + INT_TO_Q8(8 - (pos->x & 7));
             }
             break;
         case 1:
             {
                 s32 v = *outValue - 1;
-                *outValue = v - ((pos->x & 7) << 8);
+                *outValue = v - INT_TO_Q8(pos->x & 7);
             }
             break;
         }

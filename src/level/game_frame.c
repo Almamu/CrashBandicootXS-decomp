@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
 #include "hud.h"
@@ -118,8 +119,7 @@ void UpdateGameFrame(struct level_state *self)
             {
                 s32 level = self->level;
 
-                if (level > LEVEL_NEO_CORTEX)
-                    level = LEVEL_NEO_CORTEX;
+                LIMIT_MAX(level, LEVEL_NEO_CORTEX);
                 self->level = level;
             }
             quit = RunLevelSelect(&self->level);
@@ -262,8 +262,7 @@ void UpdateGameFrame(struct level_state *self)
         if (status == 2) {
             s32 tier = best;
 
-            if (tier > self->maskLevel)
-                tier = self->maskLevel;
+            LIMIT_MAX(tier, self->maskLevel);
             self->maskLevel = tier;
         }
         if (status == 0) {
@@ -319,8 +318,7 @@ void UpdateGameFrame(struct level_state *self)
             if (self->timeTrial) {
                 u32 t = self->tenths + self->seconds * 10 + self->minutes * 600;
 
-                if (t > LEVEL_FLAG_TIME_MAX)
-                    t = LEVEL_FLAG_TIME_MAX;
+                LIMIT_MAX(t, LEVEL_FLAG_TIME_MAX);
                 if (t < ((union level_best_time *)GetCurrentLevelFlags(self))->f.time ||
                     (((union level_best_time *)GetCurrentLevelFlags(self))->raw &
                      LEVEL_FLAG_TIME_MASK) == 0)

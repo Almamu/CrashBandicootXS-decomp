@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "level.h"
@@ -138,7 +139,7 @@ void SnapCamera(struct camera *cam)
 
     cam->x += cam->vx;
     cam->y += cam->vy;
-    SetLevelScroll(gLevelLayers, cam->x - (120 << 8), cam->y - (80 << 8));
+    SetLevelScroll(gLevelLayers, cam->x - INT_TO_Q8(120), cam->y - INT_TO_Q8(80));
 }
 
 void UpdateCamera(struct camera *cam)
@@ -154,7 +155,7 @@ void UpdateCamera(struct camera *cam)
         break;
     }
 
-    SetLevelScroll(gLevelLayers, cam->x - (120 << 8), cam->y - (80 << 8));
+    SetLevelScroll(gLevelLayers, cam->x - INT_TO_Q8(120), cam->y - INT_TO_Q8(80));
 }
 
 void OperatorDeleteArray(void *ptr)

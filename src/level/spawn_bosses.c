@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "text_popup.h"
 #include "bosses.h"
@@ -39,14 +40,14 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         AddToPartList((struct part_list *)gUpdateOnlyPartList, part);
     } else if (gPlayer->ctrlMode == 0) {
         s32 *pos = (s32 *)CreatePlatform(arg0, arg1, arg2, arg3, 4);
-        MATCH_HOLD_REG(s32, px, r1) = pos[0] >> 8;
+        MATCH_HOLD_REG(s32, px, r1) = Q8_TO_INT(pos[0]);
         MATCH_HOLD_REG(s32, x, r2) = px - 2;
         MATCH_HOLD_REG(s32, py, r0);
         MATCH_HOLD_REG(s32, y, r3);
         s32 point[2];
 
         MATCH_KEEP(x);
-        py = pos[1] >> 8;
+        py = Q8_TO_INT(pos[1]);
         y = py - 0x1E;
         point[0] = x;
         point[1] = y;
