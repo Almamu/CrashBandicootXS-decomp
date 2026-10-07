@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "level.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
@@ -95,7 +96,7 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
         {
             s32 bound = ((struct level_layers *)self)->layer0->widthPx;
             if (pos->x > bound) {
-                *outValue = bound << 8;
+                *outValue = INT_TO_Q8(bound);
                 hit = 1;
             } else if ((u8)ProbeTerrainX(self, pos, span, outValue, mode) != 0) {
                 hit = 1;
@@ -111,7 +112,7 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
         {
             s32 bound = ((struct level_layers *)self)->layer0->heightPx;
             if (pos->y > bound) {
-                *outValue = bound << 8;
+                *outValue = INT_TO_Q8(bound);
                 hit = 1;
             } else if ((u8)ProbeTerrainY(self, pos, span, outValue, 0) != 0) {
                 hit = 1;

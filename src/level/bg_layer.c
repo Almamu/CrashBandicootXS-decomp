@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "bg_scroll_layer.h"
 #include "system.h"
 #include "level.h"
@@ -275,10 +276,8 @@ void DrawPooledBgLayerColumn(struct pooled_bg_layer *self, s32 col)
  * step to [-8, 8]. */
 s32 ClampPooledBgLayerScrollStep(struct pooled_bg_layer *self, s32 v)
 {
-    if (v < -8)
-        v = -8;
-    if (v > 8)
-        v = 8;
+    LIMIT_MIN(v, -8);
+    LIMIT_MAX(v, 8);
     return v;
 }
 

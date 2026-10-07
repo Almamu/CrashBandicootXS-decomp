@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "aabb.h"
 #include "actor.h"
@@ -89,8 +90,8 @@ void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 sp
     s32 w1, w2, dist, x;
 
     {
-        s32 x0 = src->base.x >> 8;
-        s32 y0 = src->base.y >> 8;
+        s32 x0 = Q8_TO_INT(src->base.x);
+        s32 y0 = Q8_TO_INT(src->base.y);
         s32 m = src->flipX;
 
         part = SpawnEffectPart(pool, arg1, kind, x0, y0, m);
@@ -107,13 +108,13 @@ void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 sp
     }
     dist = w1 / 2 + w2 / 2 + margin;
     {
-        s32 ox = part->base.x >> 8;
+        s32 ox = Q8_TO_INT(part->base.x);
         s32 y;
 
         x = part->flipX ? ox - dist : ox + dist;
-        y = (part->base.y >> 8) + z;
-        part->base.x = x << 8;
-        part->base.y = y << 8;
+        y = Q8_TO_INT(part->base.y) + z;
+        part->base.x = INT_TO_Q8(x);
+        part->base.y = INT_TO_Q8(y);
     }
     if (part->flipX)
         SetVel(part, -speed, 0x40);
@@ -132,14 +133,12 @@ void *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror
     struct bg_scroll_layer *layer;
     struct manager *mgr;
 
-    if (x < 0)
-        x = 0;
+    LIMIT_MIN(x, 0);
     layer = gLevelLayers->layer0;
     /* Compared sign-extended from 24 bits, clamped zero-extended. */
     if (x >= (s32)((u32)layer->widthPx << 8) >> 8)
         x = ((u32)layer->widthPx << 8 >> 8) - 1;
-    if (y < 0)
-        y = 0;
+    LIMIT_MIN(y, 0);
     if (y >= (s32)((u32)layer->heightPx << 8) >> 8)
         y = ((u32)layer->heightPx << 8 >> 8) - 1;
     part = CreateMovingSprite(0xffff, x, y, 0);

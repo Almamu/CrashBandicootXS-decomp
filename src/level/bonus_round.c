@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "vram_pool.h"
 #include "actor.h"
@@ -68,9 +69,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
             }
 
             total = self->lives + *fieldb8;
-            if (total > 0x63) {
-                total = 0x63;
-            }
+            LIMIT_MAX(total, 0x63);
             self->lives = total;
 
             SetBonusRoundDone(self);

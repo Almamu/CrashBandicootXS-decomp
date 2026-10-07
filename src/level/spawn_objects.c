@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "sprite_bank.h"
 #include "text_popup.h"
 #include "enemies.h"
@@ -44,8 +45,8 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     struct part_ctrl *hdr;
 
     part->anim = POPUP_ANIM(0x168);
-    part->base.x = arg1 << 8;
-    part->base.y = arg2 << 8;
+    part->base.x = INT_TO_Q8(arg1);
+    part->base.y = INT_TO_Q8(arg2);
     SetPartTag(part, 0);
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -192,8 +193,8 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     obj->callback = (void (*)(void))SpawnSeal;
     obj->period = 0x78;
     obj->phase = zero;
-    obj->base.x = arg1 << 8;
-    obj->base.y = arg2 << 8;
+    obj->base.x = INT_TO_Q8(arg1);
+    obj->base.y = INT_TO_Q8(arg2);
     obj->base.flags |= 0x10;
     AddToPartList((struct part_list *)gUpdateOnlyPartList, obj);
 }

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include <agb_syscall.h>
@@ -106,7 +107,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
     }
     CpuSet(self->bits0, self->bits0Copy, CPU_SET_32BIT | 0x40);
     CpuSet(self->bits1, self->bits1Copy, CPU_SET_32BIT | 0x40);
-    self->pos = posArg >> 8;
+    self->pos = Q8_TO_INT(posArg);
 
     counter = 0;
     for (g = self->list->groupCount - 1; g >= 0; g--) {
@@ -248,7 +249,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
         move:
             if (got && actor != NULL) {
                 struct actor_method *hm = &actor->vtable->height;
-                s32 lift = (_call_via_r1((u8 *)actor + hm->thisOffset, hm->fn)[5] + 1) << 8;
+                s32 lift = INT_TO_Q8(_call_via_r1((u8 *)actor + hm->thisOffset, hm->fn)[5] + 1);
                 struct lk_point p;
                 struct lk_point *pp = &p;
 

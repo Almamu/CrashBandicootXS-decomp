@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "bg_scroll_layer.h"
 #include "text.h"
 #include "cutscene.h"
@@ -626,12 +627,8 @@ void *InitBgLayerBase(void *self0, s32 unused)
  * unused. */
 s32 ClampBgLayerScrollStep(void *self0, s32 value)
 {
-    if (value < -0x10) {
-        value = -0x10;
-    }
-    if (value > 0x10) {
-        value = 0x10;
-    }
+    LIMIT_MIN(value, -0x10);
+    LIMIT_MAX(value, 0x10);
     return value;
 }
 
@@ -642,26 +639,22 @@ void ClampBgLayerScrollMax(void *self0, s32 *out)
     struct bg_scroll_layer *self = self0;
     s32 a = self->maxX;
 
-    if (a > out[0]) {
-        a = out[0];
-    }
+    LIMIT_MAX(a, out[0]);
     out[0] = a;
 
     {
         s32 b = self->maxY;
 
-        if (b > out[1]) {
-            b = out[1];
-        }
+        LIMIT_MAX(b, out[1]);
         out[1] = b;
     }
 }
 
 /* Applies the layer's per-axis scale (`self+0x20`/`self+0x24`) to
- * `vec2`, floor-dividing the Q8 product by 256 (the `+0xff` bias before
- * the arithmetic shift rounds negative products toward negative
- * infinity, matching a true floor division rather than C's
- * truncate-toward-zero `>>`). Called by bg_layer_base.c's `ScrollBgLayerBase`/
+ * `vec2`, dividing the Q8 product by 256 rounded toward zero (an
+ * arithmetic `>> 8` alone rounds negative products toward negative
+ * infinity; the `+0xff` bias before it makes it truncate, as `/ 256`
+ * would). Called by bg_layer_base.c's `ScrollBgLayerBase`/
  * `ResetBgLayerBase`. */
 void ScaleBgLayerScroll(void *self0, void *vec20)
 {
@@ -671,17 +664,17 @@ void ScaleBgLayerScroll(void *self0, void *vec20)
 
     v = vec2[0] * self->scaleX;
     if (v >= 0) {
-        v = v >> 8;
+        v = Q8_TO_INT(v);
     } else {
-        v = (v + 0xff) >> 8;
+        v = Q8_TO_INT(v + 0xff);
     }
     vec2[0] = v;
 
     v = vec2[1] * self->scaleY;
     if (v >= 0) {
-        v = v >> 8;
+        v = Q8_TO_INT(v);
     } else {
-        v = (v + 0xff) >> 8;
+        v = Q8_TO_INT(v + 0xff);
     }
     vec2[1] = v;
 }

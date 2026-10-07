@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "level_state.h"
@@ -88,8 +89,8 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
 
         {
             MATCH_HOLD_REG(struct player *, obj2, r1) = *d8ptr;
-            obj2->x = x << 8;
-            obj2->y = y << 8;
+            obj2->x = INT_TO_Q8(x);
+            obj2->y = INT_TO_Q8(y);
         }
     }
 

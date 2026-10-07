@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "bg_scroll_layer.h"
 #include "level.h"
@@ -192,21 +193,13 @@ void GrowBgLayerColumns(struct bg_scroll_layer *self, s32 lo, s32 hi)
  * trampoline). */
 void ClipBgLayerColumns(struct bg_scroll_layer *self, s32 a, s32 b)
 {
-    if (self->colLo < a) {
-        self->colLo = a;
-    }
-    if (self->colHi > b) {
-        self->colHi = b;
-    }
+    LIMIT_MIN(self->colLo, a);
+    LIMIT_MAX(self->colHi, b);
 }
 
 /* Same shape as `ClipBgLayerColumns` above, on `self+0x3c`/`self+0x40`. */
 void ClipBgLayerRows(struct bg_scroll_layer *self, s32 a, s32 b)
 {
-    if (self->rowLo < a) {
-        self->rowLo = a;
-    }
-    if (self->rowHi > b) {
-        self->rowHi = b;
-    }
+    LIMIT_MIN(self->rowLo, a);
+    LIMIT_MAX(self->rowHi, b);
 }

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "gba/dma_macros.h"
 #include "system.h"
 #include "gfx.h"
@@ -139,21 +140,17 @@ void SetLevelScroll(struct level_layers *self, s32 x, s32 y)
 {
     s32 sx, sy;
 
-    if (x < 0)
-        x = 0;
-    if (y < 0)
-        y = 0;
-    x >>= 8;
-    y >>= 8;
+    LIMIT_MIN(x, 0);
+    LIMIT_MIN(y, 0);
+    x = Q8_TO_INT(x);
+    y = Q8_TO_INT(y);
 
     sx = self->maxScrollX;
-    if (sx > x)
-        sx = x;
+    LIMIT_MAX(sx, x);
     self->scrollX = sx;
 
     sy = self->maxScrollY;
-    if (sy > y)
-        sy = y;
+    LIMIT_MAX(sy, y);
     self->scrollY = sy;
 }
 
