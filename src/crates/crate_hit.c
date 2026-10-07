@@ -187,13 +187,13 @@ struct crate *ResolveStackCrateHit(struct crate *selfArg, struct aabb *box, u8 *
 /* Builds two AABBs - one for `self`, one for the player
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
  * table convention already established by `GetSpriteBounds`/`GetSpriteHitbox`
- * in sprite.c (`self+0x20` -> a pointer-to-table, indexed by
+ * in sprite.cpp (`self+0x20` -> a pointer-to-table, indexed by
  * `self+0x2d` at 0x1c/28-byte stride; here the {s16 offX, s16 offY, u8
  * w, u8 h} quad sits at the record's `+4`/`+6`/`+8`/`+9` instead of
  * `+0xc`/`+0xe`/`+0x10`/`+0x11`, the same "differently laid out"
  * variance `GetSpriteHitbox`'s doc comment already flags). `self+0x28`
  * bits 4/5 mirror each box horizontally/vertically around its own
- * object's position, exactly like the `sprite.c` pair. If the two
+ * object's position, exactly like the `sprite.cpp` pair. If the two
  * boxes overlap (`AabbOverlaps`), dispatches to `ExplodeCrate` or
  * `BreakCrateInStack` depending on a per-state-id lookup in
  * `gCrateKindExplosive`.

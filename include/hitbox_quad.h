@@ -14,7 +14,7 @@
  * (CheckEntityPlayerContact), and gEmptySpriteBox is the all-zero
  * fallback.
  *
- * box_part.h's `struct part_box`, the `struct anim_box` of graphics.c and
+ * box_part.h's `struct part_box`, the `struct anim_box` of graphics.cpp and
  * gobj_1a794.h (batch 8a) and sprite_bank.h's `struct sprite_box` (`x`/`y`
  * were `offX`/`offY`; #574, batch 9e) were copies. */
 struct hitbox_quad {

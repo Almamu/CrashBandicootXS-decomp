@@ -347,7 +347,7 @@ void DestroyLaunchPad(struct sprite *self, s32 flags)
 }
 
 /* Clears flags bit 6, the sprite objects' "vulnerable" bit (the launch
- * pad's own out-of-line copy of sprite_obj.c's ClearSpriteObjVulnerable;
+ * pad's own out-of-line copy of sprite_obj.cpp's ClearSpriteObjVulnerable;
  * the constructor calls it). */
 void ClearLaunchPadVulnerable(struct sprite *self)
 {

@@ -4,20 +4,20 @@
 #include "aabb.h"
 #include "gfx.h"
 
-/* The collision/animation view of a `part` object (the same object as
- * include/gfx_part.h's `struct gfx_part` / include/gobj_1a794.h's
- * `struct gobj` / include/actor.h's `struct actor`), as read by the
- * early actor/collision core in src/objects/sprite.c, sprite_anim.c,
- * sprite_obj.c, part_collide.c and player_anim_room.c. Only the fields
- * those functions touch are named.
+/* The C view of a sprite object, as the C files that collide and animate
+ * one read it: include/sprite_obj.hpp's MovingSprite (a Sprite with its
+ * speeds and terrain probe; the classes are the definitions, and
+ * sprite_obj.hpp checks this struct's size against MovingSprite's), with
+ * a few fields of the subclasses (`physMode`, `state`). The same object
+ * as include/gfx_part.h's `struct gfx_part`, include/gobj_1a794.h's
+ * `struct gobj` and include/actor.h's `struct actor`; read by the C files
+ * of the part lists, the crates and the player. Only the fields
+ * those functions touch are named; this view's `frame` is the classes'
+ * `tag` (the animation), its `tick`/`timer` their `frame`/`stepTimer`.
  *
  * The mirror bits at 0x28 are `u32` bitfields on purpose: that is what
  * makes the compiler test them with `lsl #27`/`lsl #26` + a sign test,
- * as the ROM does (a `u8` container gives `movs #0x10; ands`). Being
- * bitfields, the bytes at 0x28/0x29 have no address: the setters that
- * update them as a whole byte (SetSpriteFlipX, SetSpritePalette, ...)
- * go through `(u8 *)part + 0x28`, and ResetSpriteObj clears both through
- * gobj_1a794.h's byte-wide `mirror`/`slot`. */
+ * as the ROM does (a `u8` container gives `movs #0x10; ands`). */
 
 /* One KEYFRAME_SIZE-byte keyframe record: an animation of the part's
  * sprite bank (the same record as sprite_bank.h's `struct sprite_anim`).

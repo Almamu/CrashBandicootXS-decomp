@@ -135,10 +135,10 @@ void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor,
     self->count++;
 }
 
-/* Already matched/documented elsewhere in the codebase (graphics.c's
- * `DestroyOamBuffer`, `src/gfx/graphics.c`) as the exact same
+/* Already matched/documented elsewhere in the codebase (graphics.cpp's
+ * `DestroyOamBuffer`, `src/gfx/graphics.cpp`) as the exact same
  * one-line "conditional call on bit 0" shape: `OperatorDelete` (VRAM
- * upload manager, matched in graphics.c) only fires when `flags`'s low
+ * upload manager, matched in graphics.cpp) only fires when `flags`'s low
  * bit is set. `src/player/player_update.c` already externs this
  * function and calls it as `DestroyCollisionQueue(self + 0x108, 2)` - i.e. bit 0
  * clear, so that call site is itself a no-op (the manager call never

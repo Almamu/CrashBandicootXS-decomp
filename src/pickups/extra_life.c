@@ -181,7 +181,7 @@ void PickUpExtraLife(struct orbit_part *self, u8 randomize)
  * into `self->0x50`, storing to `self->y` (when `self->0x4a` is clear),
  * or calls `UpdateExtraLifeHop` (`extra_life.c`'s own orbit-position updater)
  * when `self->0x4a` is set - then always tail-calls `UpdateSpriteObj`
- * (already matched, `sprite_obj.c`).
+ * (already matched, `sprite_obj.cpp`).
  *
  *
  * old_agbcc. The MATCH_KEEP copy in mode 1 reproduces its recomputed
@@ -438,7 +438,7 @@ void UpdateExtraLifeHop(struct orbit_part *self)
 }
 
 /* Re-derives visibility via `DrawSprite(gSpriteRenderer, self)`
- * (already matched, `sprite.c`), then clears `flags` bit 3 when
+ * (already matched, `sprite.cpp`), then clears `flags` bit 3 when
  * `animDone` is set - the same "consumed/hit"
  * flag bit `CheckWumpaPickup` below sets. */
 void DrawExtraLife(struct orbit_part *self)
@@ -492,7 +492,7 @@ struct orbit_part *InitExtraLife(struct orbit_part *self)
  * (`gPlayer`) flags have bit 7 set, fires method table slot 13
  * (`table+0x68/0x6c`)'s trampoline (`_call_via_r1`) - the usual
  * "offset + fn pointer" pair convention already established throughout
- * this codebase (e.g. `graphics.c`'s own `+0x10`/`+0x14` pair). Always
+ * this codebase (e.g. `graphics.cpp`'s own `+0x10`/`+0x14` pair). Always
  * returns 0. */
 s32 CollideExtraLife(struct orbit_part *self)
 {

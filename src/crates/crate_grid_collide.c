@@ -26,7 +26,7 @@ extern s32 _call_via_r1(void *self, void *fn);
  * (when `compareViewport` is the player, `gPlayer`) or
  * `CollideCrateGridPartWithObject` (otherwise) - the exact same dispatch `CollidePartList`
  * makes to `CollidePartWithPlayer`/`CollidePartWithObject`. See `CollidePartList`'s own
- * writeup (`sprite_anim.c`) for the full branch-by-branch semantics,
+ * writeup (`sprite_anim.cpp`) for the full branch-by-branch semantics,
  * identical here.
  *
  * Matches under old_agbcc (see docs/matching/archive/issue-9-naked-retry.md).
@@ -102,7 +102,7 @@ void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struc
  * byte-identical collision-hit resolution logic (mode dispatch via
  * `gLevelState`, the AABB push-out via `GetSpriteHitbox`/
  * `GetSpriteBodyBox`/`AabbOverlaps`, and the "hit" method calls) - see
- * `CollidePartWithPlayer`'s own writeup in `sprite_anim.c` for the branch-by-branch
+ * `CollidePartWithPlayer`'s own writeup in `sprite_anim.cpp` for the branch-by-branch
  * semantics, identical here. `list` itself is never read.
  *
  * Matches under old_agbcc with the box passed by value, the same C as

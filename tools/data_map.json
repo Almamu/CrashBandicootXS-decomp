@@ -931,8 +931,8 @@
     "GetSpriteFrameBodyBox"
    ],
    "consumer_files": [
-    "objects/sprite.c",
-    "objects/sprite_obj.c",
+    "objects/sprite.cpp",
+    "objects/sprite_obj.cpp",
     "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
@@ -957,7 +957,7 @@
     "ActionCtrlStateHangMove"
    ],
    "consumer_files": [
-    "objects/sprite_obj.c",
+    "objects/sprite_obj.cpp",
     "player/player_collide.c",
     "player/action_ctrl_event.cpp",
     "player/action_ctrl_hang.cpp"
@@ -7141,8 +7141,8 @@
    ],
    "consumer_files": [
     "enemies/enemy_ctrl.cpp",
-    "objects/sprite_obj.c",
-    "gfx/graphics.c"
+    "objects/sprite_obj.cpp",
+    "gfx/graphics.cpp"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -7167,7 +7167,7 @@
     "InitSpriteObj"
    ],
    "consumer_files": [
-    "objects/sprite_obj.c"
+    "objects/sprite_obj.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7192,7 +7192,7 @@
     "InitUiSpriteObj"
    ],
    "consumer_files": [
-    "objects/sprite_anim.c"
+    "objects/sprite_anim.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

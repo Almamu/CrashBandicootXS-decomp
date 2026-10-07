@@ -5,7 +5,7 @@
 #include "memory.h"
 
 /* Set-size primitive - already referenced by name from several other
- * files (sprite.c/power_dialog_draw.c's DrawPowerDialog) as the
+ * files (sprite.cpp/power_dialog_draw.c's DrawPowerDialog) as the
  * shared `SetAabbPos`(set-position)/`SetAabbSize`(set-size) pair. */
 void SetAabbSize(struct aabb *dest, s32 w, s32 h)
 {

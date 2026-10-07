@@ -29,7 +29,10 @@
  *   level's spawn record or is forced by the spawn kind; types 1/5/6/7
  *   get a `struct mover` attached at +0x44. The player object
  *   (gPlayer, player.h's `struct player`) is built on the same 0x80-byte
- *   base and adds its own fields after it.
+ *   base and adds its own fields after it. It is the C view of
+ *   include/sprite_obj.hpp's GroundSprite (the classes are the
+ *   definitions: Entity, Sprite, MovingSprite, GroundSprite; sprite_obj.hpp
+ *   checks this struct's size against GroundSprite's).
  * - `struct mover`, a 0x38-byte helper (method table gPlatformMoverVtable:
  *   +0x0C UpdatePlatformMover per-frame move, +0x4C DestroyPlatformMover destructor,
  *   +0x5C StartPlatformMoverMotionXFromSet / +0x64 StartPlatformMoverMotionYFromSet velocity setters) that

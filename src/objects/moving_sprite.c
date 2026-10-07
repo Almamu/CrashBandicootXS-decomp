@@ -219,7 +219,7 @@ void *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 unused)
  * mover's destructor (`destroy`) with a constant argument `3` via
  * `_call_via_r2` (same convention as
  * `UpdatePartList`/`IsEntityNearCamera`), and finally tail-calls `DestroySpriteObj`
- * (already matched in `sprite_obj.c`). The trampoline's `addr =
+ * (already matched in `sprite_obj.cpp`). The trampoline's `addr =
  * rec + offset` needed computing before the `fn` load (reusing
  * `rec`'s own dying register), matching the accumulator-register
  * pattern used throughout this ROM region - computing them in the
@@ -302,7 +302,7 @@ struct actor *InitMovingSprite(struct actor *part)
     return part;
 }
 
-/* Calls `UpdateSpriteObj` (already matched in `sprite_obj.c`), then (if
+/* Calls `UpdateSpriteObj` (already matched in `sprite_obj.cpp`), then (if
  * `self`'s mover is set) calls the mover's `m08` method (its per-frame
  * update) via `_call_via_r2` with `self` itself as the second
  * argument. Same `addr`-before-`fn` ordering fix as `DestroyMovingSprite`

@@ -14,7 +14,7 @@
  *
  * Otherwise builds THREE AABBs via the shared `SetAabbPos`(set-pos)/
  * `SetAabbSize`(set-size) primitive (`struct aabb` from
- * `sprite.c`/`src/crates/crate_hit.c`), all from the same
+ * `sprite.cpp`/`src/crates/crate_hit.c`), all from the same
  * "keyframe/hitbox record" table convention documented at length in
  * `crate_hit.c`'s own `BreakCrateTouchedByPlayer` header comment: `+0x20` is a
  * pointer-to-table, indexed by a `+0x2d` tag byte at 28-byte stride
@@ -25,7 +25,7 @@
  * a plain `gCrateList` list entry, not the physics subsystem's
  * own object type), with the record's own `{s16 offX, s16 offY, u8 w,
  * u8 h}` quad at `+4`/`+6`/`+8`/`+9` this time (yet another layout
- * variant of the same convention, alongside `sprite.c`'s
+ * variant of the same convention, alongside `sprite.cpp`'s
  * `+0xc`/`+0xe`/`+0x10`/`+0x11` and `crate_hit.c`'s own `+4`/`+6`/
  * `+8`/`+9`, which this function's first two AABBs match exactly).
  * Each AABB is mirrored horizontally/vertically around its own

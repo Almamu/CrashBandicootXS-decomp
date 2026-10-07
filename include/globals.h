@@ -104,7 +104,7 @@ extern struct pool_manager *gCrateList;
 extern struct player *gPlayer;
 
 /* src/data/entity_vtables_7e3bec.c: the two base-class method tables. The
- * entity base (graphics.c's struct actor: check contact, bounds, update,
+ * entity base (graphics.cpp's struct actor: check contact, bounds, update,
  * draw, ...) and the actor base (DestroyActor/UpdateActor/DrawActor),
  * which every actor-zone destructor stores back before it frees the
  * object. */

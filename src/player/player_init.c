@@ -15,7 +15,7 @@
  * `gPlayerVtable` and clears its trailing `+0x108`/`+0x10c`
  * fields via `ResetCollisionQueue` (still raw - a two-field, 4-byte-plus-byte
  * clear). Allocates a fresh `struct actor`-shaped child object
- * (`CreateSpriteObj(0, 0, 0, 0)`, the same allocator `sprite_obj.c`'s
+ * (`CreateSpriteObj(0, 0, 0, 0)`, the same allocator `sprite_obj.cpp`'s
  * `CreateSpriteObj` is - called here with an extra, unused 4th zero
  * argument, the same calling convention already used by
  * `spawn_pickups.c`'s own callers of it) and hooks it up at
