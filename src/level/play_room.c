@@ -28,7 +28,7 @@ struct widget {
  * level object's own `+0xdc->+8` state field is `2` (see
  * `asm/code_3_2_17_225a0.s`). Allocates the whole per-level widget set
  * (ring-buffer/pool object families already matched in
- * `part_list.cpp`/`crate_list.c`: `gUpdateOnlyPartList`, `gTouchableList`, `gCollidableList`,
+ * `part_list.cpp`/`crate_list.cpp`: `gUpdateOnlyPartList`, `gTouchableList`, `gCollidableList`,
  * `gDecorationList` and `gForegroundList` are
  * `dual_array_manager`s, `gCrateList` a `pool_manager`), the
  * player actor itself (`gPlayer`, `InitPlayer`), and the

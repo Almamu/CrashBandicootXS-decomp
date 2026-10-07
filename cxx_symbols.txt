@@ -687,3 +687,23 @@ Create__9StopwatchUsUsUsUs CreateStopwatch
 Reset__9Stopwatch ResetStopwatch
 _._9Stopwatch DestroyStopwatch
 __9Stopwatch InitStopwatch
+#
+# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp,
+# crate_grid_*.cpp, crate_player_collide.cpp; the constructor in
+# src/objects/part_list.cpp)
+__9CrateListi InitCrateList
+_._9CrateList DestroyCrateList
+Reset__9CrateList ResetCrateList
+Update__9CrateList UpdateCrateList
+Draw__9CrateList DrawCrateList
+Collide__9CrateListG4aabbiP12MovingSprite CollideCrateGrid
+CollideWithPlayer__9CrateListG4aabbP12MovingSprite CollideCrateGridPartWithPlayer
+CollideWithObject__9CrateListG4aabbP12MovingSpriteT2 CollideCrateGridPartWithObject
+CollidePlayer__9CrateListi CollidePlayerWithCrates
+Remove__9CrateListP6Sprite RemoveCrateFromList
+RemoveAt__9CrateListi RemoveCrateListAt
+Add__9CrateListP6Sprite AddCrateToList
+AddNode__9CrateListP6SpriteiP13CrateGridNode AddCrateGridNode
+Link__9CrateListP6Sprite LinkCrateInGrid
+LinkActive__9CrateListP6Sprite LinkCrateToActiveBucket
+Unlink__9CrateListP6Sprite UnlinkCrateFromGrid

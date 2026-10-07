@@ -474,6 +474,15 @@ counts them by kind) and what the C++ still needs.
 | `src/pickups/extra_life.cpp` | `ExtraLife` (include/pickups.hpp), `Wumpa::CheckPickup` | 16 | old_agbcp | 8 pins, 5 uses, 2 keeps, 1 retyped store, 2 volatile reads -> 0 | 7h |
 | `src/pickups/wumpa_update.cpp` | `Wumpa`'s `PickUp`, `Update`, `Create`, `SendToHud`, `StartPayout`, `UpdateHop` | 6 | old_agbcp | 1 pin, 2 uses, 1 keep, 1 const, a volatile store and pointer -> 1 keep | 7h |
 | `src/pickups/wumpa.cpp` | `Wumpa`'s small methods, `Stopwatch`, `ActionCtrl::Reset` | 15 | **old_agbcp** (was agbcc) | 15 pins, 3 asm, 5 volatile accesses -> 0 | 7h |
+| `src/objects/part_list.cpp` (again) | `CrateList`'s constructor (`InitCrateList`, include/crate_list.hpp; C linkage before) | 1 | agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_grid_unlink.cpp` | `CrateList::Unlink` | 1 | old_agbcp | 1 pin -> 1 pin | 7f |
+| `src/crates/crate_grid_link.cpp` | `CrateList::LinkActive` | 1 | **old_agbcp** (was agbcc) | 8 pins, 1 keep -> 0 | 7f |
+| `src/crates/crate_list_update.cpp` | `CrateList::Update` | 1 | old_agbcp | 1 pin, 1 hold, 1 use, 1 barrier, statement-expression copies -> the barrier (in `Detach`), inline copies | 7f |
+| `src/crates/crate_list_draw.cpp` | `CrateList::Draw` | 1 | agbcp | 7 pins, 1 asm -> 0 | 7f |
+| `src/crates/crate_grid_collide.cpp` | `CrateList::Collide` (UNUSED), `CollideWithPlayer` | 2 | old_agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_player_collide.cpp` (again) | `CrateList::CollidePlayer` (C linkage before) | 1 | old_agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_list_reset.cpp` | `CrateList::Reset` | 1 | agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_list.cpp` | `CrateList::CollideWithObject`, `Remove`, `RemoveAt`, `AddNode`, `Link`, `Add`, destructor | 7 | old_agbcp | 4 pins -> 0 | 7f |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -953,7 +962,8 @@ palette_cache` (sprite_obj.hpp), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
 `PeriodicSpawner`/`struct periodic_spawner` (enemies.h),
 `ActionCtrl` (whose C view, `struct act`, went in part 7h with its last
 C user), `Crate`/`struct crate` (crate.h; crate.hpp), `ExtraLife` and
-`Wumpa`/`struct orbit_part` (orbit_part.h; pickups.hpp). Each class has
+`Wumpa`/`struct orbit_part` (orbit_part.h; pickups.hpp), `CrateList`/`struct
+pool_manager` (crates.h; crate_list.hpp). Each class has
 a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
@@ -1054,6 +1064,64 @@ entity_spawner.c, crate_break.c and time_trial.c still use it).
   palette slot through an `s32` for the `u8` return's zero-extension, and
   `SendToHud`'s `Offset` inline (the pool constant reloaded per axis).
 
+Part 7f in numbers: the crate list, `CrateList` (new `include/crate_list.hpp`,
+`gCrateList`), 7 objects converted and 16 methods: the 14 functions of the
+7 files, plus the constructor (`InitCrateList`, in part_list.cpp for ROM
+order) and `CollidePlayer` (`CollidePlayerWithCrates`, crate_player_collide.cpp),
+which parts 7c and 7e left with C linkage. Project-wide: `MATCH_HOLD_REG`
+1520 -> 1500, instruction-emitting `asm` 170 -> 169, `MATCH_USE` 66 -> 65,
+`MATCH_KEEP` 50 -> 49, `MATCH_HOLD` 21 -> 20; `MATCH_BARRIER` stays 17 (the
+C's moved into the header). Of the C's 21 pins, 1 `asm`, 1 keep, 1 hold and
+1 use, one pin is left (below). `crate_grid_link.o` moves to
+`OLD_AGBCC_OBJS` (`LinkActive`'s flag test is old_agbcp's `ldrb r1; lsrs r0,
+r1, #4`, which the C pinned); `crate_list_draw.o`, `crate_list_reset.o` and
+`part_list.o` match under both and stay on agbcc; the other four were old
+already.
+
+The class: crates.h's `struct pool_manager` is its C view (play_room.c,
+run_room.c, crate_break.c, ... still use it), and `CrateGridNode`/`CrateGridLink`
+are `struct pool_node`/`struct pool_link`'s. The slots and nodes hold
+`Sprite *`s (crates in practice; `CollidePlayer` casts to `Crate *`, and the
+unused `Collide` and its two helpers take `MovingSprite`s, as PartList's do).
+The slot calls are virtual calls: `OverlapsRect`/`Draw` (Draw),
+`IsInsideRect`/`Update`/`delete` (Update, Reset), `GetClassId` (Collide). The
+grid's column is `ColumnOf(sprite)`, the high halfword of `x` (one `ldrsh`).
+`Crates()` is `gCrateList` as the class (crate_create.cpp's `Crates()->Add(this)`).
+
+What made the C++ match:
+
+- **Inline bodies with an out-of-line copy.** The ROM inlines
+  `AddCrateGridNode` into `LinkCrateToActiveBucket` (and `UpdateCrateList`)
+  and `RemoveCrateFromList` into `UpdateCrateList`, and has both out of line
+  too. The bodies are inline methods, `Append` and `Detach`, and the
+  out-of-line `AddNode` and `Remove` call them. With `Append` inlined,
+  `LinkActive` needs none of the C's 8 pins or its `MATCH_KEEP_VOLATILE`:
+  the free-list head's address is recomputed in each column, and the
+  registers come out as the ROM's.
+- **Column 255's head computed in the loop.** Draw and Update keep `&heads[255]`
+  in a register across the loop, computed after the column array's address
+  and with the operands of an `add` the other way round from what a local
+  computed before the loop gives. Assigned at the top of the loop body, the
+  loop optimizer hoists it after the `heads[i]` base, as in the ROM, and
+  `heads[i]` keeps its base-first `add`: the C's `asm` `add`, its 7 pins
+  (Draw) and its byte-arithmetic indexing (Update) go.
+- **`lo = cam->x; lo >>= 8;`** in two statements loads into the shift's
+  register, as Collide's C already had.
+- `Unlink`'s "always active" test through a local (`s32 active = (f.flags >>
+  4) & 1; if (!active)`) gives old_agbcp's `ldrb r1; lsrs r0, r1`.
+
+Kept, each with a comment: `Unlink`'s free-list push keeps its r1 pin (the
+ROM loads the head before the entry; unpinned, the registers or the order
+swap, with every spelling tried). `Detach` has the C's `MATCH_BARRIER` (no
+code): without it, cse swaps `n` and its copy in Update's two inlined
+copies (`Remove` is the same either way); declaring `n` first gives the
+registers but loads it before the 0. Update keeps the C's register copies
+of the sprite for `Destroy`'s two calls, as an inline identity function
+(`Copy`) where the C had statement expressions, its `next = i - 1` before
+the walk, its double read of `node->data`, and `Append`'s body written out
+through `last` (Append recomputes the address, which takes `last` out of its
+register).
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -1101,7 +1169,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
 | 7d | objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old) | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) | 18 functions, 1050 lines, 34 pins, 3 asm | 7b |
 | ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_player_collide.c, crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c~~ | `Crate` (include/crate.hpp) and its accessors | done | |
-| 7f | crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old) | `CrateList`, the crate grid | 13 functions, 1120 lines, 21 pins, 1 asm | 7e |
+| ~~7f~~ | ~~crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old)~~ | `CrateList` (include/crate_list.hpp), the crate grid | done | |
 | 7g | crates/crate_break.c (old) | the crates' break and bounce paths | 24 functions, 2860 lines, 11 pins, 6 asm | 7e, 7f |
 | ~~7h~~ | ~~pickups/extra_life.c, wumpa.c, wumpa_update.c~~ | `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl::Reset`; `struct act` went | done | |
 | 7i | bosses/cortex.c (old) | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | 25 functions, 1000 lines, 49 pins, 4 asm | 7d |
@@ -1314,6 +1382,15 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   first in its `.text`; a header fragment with no include guard
   (crate_line_step.hpp), `inline` through crate.hpp and plain at the end
   of crate.cpp, gives both from one source (part 7e).
+- **An inline body the ROM also has out of line:** where one function
+  is inlined into another and also exists on its own, make the body an
+  inline method and have the out-of-line method call it
+  (`CrateList::Append`/`AddNode`, `Detach`/`Remove`; part 7f). The header
+  fragment of part 7e is for copies emitted at the end of the file.
+- **A loop invariant the ROM computes after the loop's own:** an address
+  computed before a loop comes before the ones loop.c hoists out of it, and
+  as a different `add`. Assigned inside the loop, it is hoisted with them,
+  after them (`CrateList::Draw`'s `last`; part 7f).
 - **Reloads after a two-word copy:** where the ROM copies the position
   (`ldr; ldr; str; str`) and then loads `x` and `y` again, the copy is a
   block copy (`PrevPos() = Pos()`, part 7b): gcc reloads after it, where

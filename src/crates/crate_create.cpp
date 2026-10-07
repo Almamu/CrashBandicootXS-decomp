@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "crate_list.hpp"
 
 extern "C" {
 #include "match.h"
@@ -234,6 +235,6 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->kind = type;
     if (type == CRATE_KIND_OUTLINE && (u8)IsEntityIdActivated(gEntityFlags, id))
         self->SolidifyOutline();
-    AddCrateToList(gCrateList, (struct box_part *)self);
+    Crates()->Add(self);
     return self;
 }
