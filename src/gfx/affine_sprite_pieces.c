@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
@@ -73,8 +74,7 @@ static inline void ClampTick7634(struct affine_part *part, s32 t)
 {
     s32 n = part->keyframes->anims[part->frame].frameCount;
 
-    if (t >= n)
-        t = n - 1;
+    CLAMP_INDEX(t, n);
     part->tick = t;
 }
 
@@ -93,8 +93,7 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
     s32 baseX, baseY, halfW, halfH, pullX, pullY;
     s32 i;
 
-    if (scale < 0x40)
-        scale = 0x40;
+    LIMIT_MIN(scale, 0x40);
     pa = FixedInverse16((s16)scale);
     pd = pa;
     if (scale <= 0x100)
@@ -141,8 +140,8 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
         s32 x, y;
 
         /* Rescaled in place, so w/h and their scaled sizes share r8/sb. */
-        w = ((w << 8) * scale) >> 16;
-        h = ((h << 8) * scale) >> 16;
+        w = Q16_TO_INT(INT_TO_Q8(w) * scale);
+        h = Q16_TO_INT(INT_TO_Q8(h) * scale);
         if (PART_FLAG_SET(part, 26)) // mirror Y
             y = pos[1] - h - oy;
         else
@@ -180,8 +179,8 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
                     pullY = y + (gObjPieceHeights[id] >> 1);
                     pullX -= cx;
                     pullY -= cy;
-                    pullX = ((pullX << 8) * scale) >> 16;
-                    pullY = ((pullY << 8) * scale) >> 16;
+                    pullX = Q16_TO_INT(INT_TO_Q8(pullX) * scale);
+                    pullY = Q16_TO_INT(INT_TO_Q8(pullY) * scale);
                     pullX = -pullX;
                     pullY = -pullY;
                     x += pullX;
@@ -197,8 +196,8 @@ void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos)
                     y += pullY;
                     dx = x - baseX;
                     dy = y - baseY;
-                    dx = ((dx << 8) * scale) >> 16;
-                    dy = ((dy << 8) * scale) >> 16;
+                    dx = Q16_TO_INT(INT_TO_Q8(dx) * scale);
+                    dy = Q16_TO_INT(INT_TO_Q8(dy) * scale);
                     dx += halfW;
                     dy += halfH;
                     dx -= w >> 1;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "actor_self.h"
@@ -51,7 +52,7 @@ s32 GetActorCategoryFrameCount(void)
 /* Trivial getter, Q8.8-converted. */
 s32 GetActorSpawnOffset(void)
 {
-    return gActorSpawnOffset << 8;
+    return INT_TO_Q8(gActorSpawnOffset);
 }
 
 void ResumeActorSpawns(void)
@@ -89,7 +90,7 @@ s32 GetActorSpawnZ(s32 idx)
     s32 off = idx * 0x14;
 
     base = base + 0x14;
-    return (*(s32 *)(base + off) + gActorSpawnOffset) << 8;
+    return INT_TO_Q8(*(s32 *)(base + off) + gActorSpawnOffset);
 }
 
 /* Spawn `idx`'s Y and X (`offsetY`/`offsetX`), Q8.8-converted. */
@@ -99,7 +100,7 @@ s32 GetActorSpawnY(s32 idx)
     s32 off = idx * 0x14;
 
     base = base + 0x10;
-    return *(s32 *)(base + off) << 8;
+    return INT_TO_Q8(*(s32 *)(base + off));
 }
 
 s32 GetActorSpawnX(s32 idx)
@@ -108,7 +109,7 @@ s32 GetActorSpawnX(s32 idx)
     s32 off = idx * 0x14;
 
     base = base + 0xc;
-    return *(s32 *)(base + off) << 8;
+    return INT_TO_Q8(*(s32 *)(base + off));
 }
 
 /* Spawn `idx`'s kind as SpawnActor picks it (`kind`, `altKind` in a time

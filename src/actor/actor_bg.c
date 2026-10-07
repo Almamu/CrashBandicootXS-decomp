@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "gba/io_reg.h"
 #include "actor.h"
@@ -48,10 +49,10 @@ void CommitActorBgScroll(void)
     vu16 *dest = &REG_BG0HOFS;
     vu16 *vofsDest;
 
-    x = gActorBgScrollX >> 8;
+    x = Q8_TO_INT(gActorBgScrollX);
     *dest = x;
     vofsDest = &REG_BG0VOFS;
-    yShift = gActorBgScrollY >> 8;
+    yShift = Q8_TO_INT(gActorBgScrollY);
     *vofsDest = gActorBg0VOffset + yShift;
     REG_BG1HOFS = x;
     REG_BG1VOFS = yShift;

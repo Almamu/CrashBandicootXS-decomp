@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "actor_self.h" /* struct anim_frame_record */
@@ -10,7 +11,7 @@
 
 s32 GetAnimFrameBaseOffset(struct actor_self *self)
 {
-    return self->animTime >> 8;
+    return Q8_TO_INT(self->animTime);
 }
 
 /* Reads the current keyframe record's `attr` halfword and returns it
@@ -452,7 +453,7 @@ void UpdateJetpackCheckpointText(void *selfArg)
             rec = (struct anim_frame_record *)off;
         }
         if (base >= rec->loopThreshold) {
-            self->animTime -= (rec->loopThreshold - rec->loopBase) << 8;
+            self->animTime -= INT_TO_Q8(rec->loopThreshold - rec->loopBase);
             self->animDone = 1;
         }
     }

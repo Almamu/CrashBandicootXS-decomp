@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_anim.h"
 #include "gba/io_reg.h"
@@ -52,7 +53,7 @@ s32 IsActorMaskAssistDue(void)
  * the ROM's instruction order. Matches under both compilers. */
 void UploadCellAnimFrame(void)
 {
-    u8 *src = (u8 *)gCellAnim + ((gCellAnimTime >> 8) * gCellAnimFrameSize + 0x204);
+    u8 *src = (u8 *)gCellAnim + (Q8_TO_INT(gCellAnimTime) * gCellAnimFrameSize + 0x204);
     u32 dst;
 
     if (gCellAnimHasBanks != 0) {
@@ -109,15 +110,15 @@ void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
         if (flag)
             size += (area + 7) / 8 * 4;
         *a4 = size;
-        gCellAnimLength = __divsi3(animSize - 0x204, *reload) << 8;
+        gCellAnimLength = INT_TO_Q8(__divsi3(animSize - 0x204, *reload));
     }
     gCellAnimTime = 0;
     ResetCellAnimBg();
     gCellAnimSpeed = 0;
     if (gCellAnimHasBanks == 0)
-        gCellAnimDistance = (arg3 - gActorFocalLength) >> 8;
+        gCellAnimDistance = Q8_TO_INT(arg3 - gActorFocalLength);
     else
-        gCellAnimDistance = (arg3 + gActorFocalLength) >> 8;
+        gCellAnimDistance = Q8_TO_INT(arg3 + gActorFocalLength);
     gCellAnimFrameStep = 0;
 }
 
@@ -254,7 +255,7 @@ void AdvanceCellAnim(void)
 {
     MATCH_HOLD_REG(s32 *, b0ptr, r4) = &gCellAnimTime;
     MATCH_HOLD_REG(s32, prev, r1) = *b0ptr;
-    s32 prevShifted = prev >> 8;
+    s32 prevShifted = Q8_TO_INT(prev);
     MATCH_HOLD_REG(s32, velocity, r0) = gCellAnimSpeed;
     MATCH_HOLD_REG(s32, pos, r3) = prev + velocity;
     MATCH_HOLD_REG(s32 *, bcPtr, r1);
@@ -262,7 +263,7 @@ void AdvanceCellAnim(void)
 
     *b0ptr = pos;
     bcPtr = &gCellAnimFrameStep;
-    delta = (pos >> 8) - prevShifted;
+    delta = Q8_TO_INT(pos) - prevShifted;
     *bcPtr = delta;
 
     if (pos >= gCellAnimLength) {
@@ -291,7 +292,7 @@ s32 GetCellAnimFrameStep(void)
 s32 GetCellAnimSpeed(void)
 {
     s32 v = gCellAnimSpeed;
-    return ((v << 4) - v) << 2 >> 8;
+    return Q8_TO_INT(((v << 4) - v) << 2);
 }
 
 /* `dest` is materialized (and pinned to the callee-saved `r4`) before
@@ -303,7 +304,7 @@ void SetCellAnimSpeed(s32 arg0)
 {
     MATCH_HOLD_REG(s32 *, dest, r4) = &gCellAnimSpeed;
 
-    *dest = __divsi3(arg0 << 8, 0x3c);
+    *dest = __divsi3(INT_TO_Q8(arg0), 0x3c);
 }
 
 /* Fills screen block 28 from row 16 on (block 30 when `arg0` is set,
@@ -425,7 +426,7 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     s32 shift;
 
     target = gActorBgScrollMaxX;
-    delta = __divsi3(arg0 * (target >> 8), gActorBgScrollRangeX);
+    delta = __divsi3(arg0 * Q8_TO_INT(target), gActorBgScrollRangeX);
     delta += target / 2;
     cur = gActorBgScrollX;
     delta -= cur;
@@ -433,20 +434,16 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     delta >>= shift;
     cur += delta;
     gActorBgScrollX = cur;
-    if (cur < 0) {
-        cur = 0;
-    }
+    LIMIT_MIN(cur, 0);
     {
         MATCH_HOLD_REG(s32, clamped, r1) = target;
-        if (clamped > cur) {
-            clamped = cur;
-        }
+        LIMIT_MAX(clamped, cur);
         cur = clamped;
     }
     gActorBgScrollX = cur;
 
     target = gActorBgScrollMaxY;
-    delta = __divsi3(arg1 * (target >> 8), gActorBgScrollRangeY);
+    delta = __divsi3(arg1 * Q8_TO_INT(target), gActorBgScrollRangeY);
     delta += target / 2;
     cur = gActorBgScrollY;
     delta -= cur;
@@ -454,17 +451,13 @@ void UpdateActorBgScroll(s32 arg0, s32 arg1)
     delta -= gActorBgShake;
     cur += delta;
     gActorBgScrollY = cur;
-    if (cur < 0) {
-        cur = 0;
-    }
+    LIMIT_MIN(cur, 0);
     {
         /* Same clamp idiom as the X-axis block above, but the ROM
          * happens to keep this second copy in `r0` instead of `r1` -
          * see docs/workflow.md step 3. */
         MATCH_HOLD_REG(s32, clamped, r0) = target;
-        if (clamped > cur) {
-            clamped = cur;
-        }
+        LIMIT_MAX(clamped, cur);
         cur = clamped;
     }
     gActorBgScrollY = cur;
