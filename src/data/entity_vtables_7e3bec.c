@@ -136,7 +136,7 @@ const struct vtable_slot gPlayerVtable[15] = {
     VTABLE_SLOT(CollidePlayerWithObjects),
 };
 
-/* Used by enemy_ctrl.cpp, ctrl.cpp (Ctrl, include/ctrl.hpp), input_ctrl_queue.cpp, action_ctrl.c. */
+/* Used by enemy_ctrl.cpp, ctrl.cpp (Ctrl, include/ctrl.hpp), input_ctrl_queue.cpp, action_ctrl.cpp. */
 const struct vtable_slot gCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCtrl),
@@ -290,7 +290,7 @@ const struct vtable_slot gStopwatchVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by wumpa.c, action_ctrl.c. */
+/* Used by wumpa.c, action_ctrl.cpp. */
 const struct vtable_slot gActionCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateActionCtrl),

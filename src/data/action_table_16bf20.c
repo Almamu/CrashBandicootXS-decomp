@@ -9,7 +9,7 @@
  */
 
 /* 42-slot action dispatch table: one member-function pointer per player
- * action, indexed by the action id (action_ctrl_update.c's `struct act_pmf`
+ * action, indexed by the action id (action_ctrl_update.cpp's `struct act_pmf`
  * view; docs/rom_map.md "gActionCtrlStateTable is a 42-slot,
  * fully-populated action dispatch table"). ActionCtrlStateAirborne is the shared
  * handler of the six airborne states (7 jump, 9 flip jump, 0xB high jump,

@@ -8,7 +8,7 @@
  */
 
 /* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (ctrl.cpp) and ApplyActionCtrlMotion
- * (action_ctrl_idle.c). */
+ * (action_ctrl_idle.cpp). */
 const struct speed_ramp gCtrlMotionRecords[44] = {
     { 0, 32, 0 },
     { 128, 32, 128 },

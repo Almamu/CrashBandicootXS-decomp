@@ -91,10 +91,12 @@ void Ctrl::HandleEvent(SpriteObj *, s32, s32)
 /* Sets `part`'s animation (`tag`) to `anim`, but only if it actually
  * changed - otherwise a no-op returning 0. On a real change, resets the
  * frame timer, the frame and the "done" flag like SetSpriteAnim (inlined
- * here, not called), clears `flags` bit 3, and returns 1. */
-u8 Ctrl::SetTargetAnim(SpriteObj *part, s32 anim)
+ * here, not called), clears `flags` bit 3, and returns 1. The result is
+ * a full int: ActionCtrl's override passes it through without the
+ * zero-extension a `u8` return would add (the code here is the same). */
+s32 Ctrl::SetTargetAnim(SpriteObj *part, s32 anim)
 {
-    u8 result = 0;
+    s32 result = 0;
 
     if (part->tag != anim) {
         part->tag = anim;

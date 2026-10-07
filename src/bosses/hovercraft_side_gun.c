@@ -168,7 +168,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
 }
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
- * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c: a "part
+ * documented in action_ctrl.cpp/hovercraft_parts.c/hovercraft_cannon.c: a "part
  * table" pointer at `self+0`, a table-index/"kind" field at `self+0xc`,
  * an anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at

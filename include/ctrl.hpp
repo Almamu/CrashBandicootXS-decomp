@@ -47,7 +47,7 @@ public:
     virtual void SetTargetMotionX(SpriteObj *part, const s32 *vec);           // 7
     virtual void SetTargetMotionY(SpriteObj *part, const speed_ramp *ramp);   // 8
     virtual ~Ctrl();                                                          // 9 DestroyCtrl
-    virtual u8 SetTargetAnim(SpriteObj *part, s32 anim);                      // 10
+    virtual s32 SetTargetAnim(SpriteObj *part, s32 anim);                     // 10
     virtual void StartTargetMotionXFromSet(SpriteObj *part, s32 index);       // 11
     virtual void StartTargetMotionYFromSet(SpriteObj *part, s32 index);       // 12
     s32 GetMode();                                                            // GetCtrlMode

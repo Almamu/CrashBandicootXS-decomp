@@ -6,9 +6,7 @@
  * swim_ctrl_stroke.cpp, method table gPlayerCtrlVtable; #664,
  * docs/cplusplus.md), same layout. It drives the diving Crash of the
  * room-kind-1 (underwater) rooms, with sprite bank 1 (Crash in an air
- * tank and flippers). Its C users are play_room.c (InitPlayerCtrl) and
- * action_ctrl.c (ResetPlayerCtrl, RestartPlayerCtrl: PlayerCtrl's Reset
- * and Restart, still C). */
+ * tank and flippers). Its C user is play_room.c (InitPlayerCtrl). */
 
 struct entry_set;
 struct vtable_slot;

@@ -2,10 +2,10 @@
 #define GUARD_ACTION_OBJ_H
 
 /* The player/action object behind the gActionCtrlStateTable 42-slot action
- * table (docs/rom_map.md), as far as src/player/action_ctrl_states.c and
- * action_ctrl_hang.c (GitHub issue #17, both built with old_agbcc) use it.
- * action_ctrl_states.c and friends reach the same fields
- * through raw offsets.
+ * table (docs/rom_map.md): the C view of include/action_ctrl.hpp's class
+ * ActionCtrl (#664, same layout), for the action controller's files that
+ * are still C (action_ctrl_event.c, _hang.c, _run_jump.c, _states.c) and
+ * wumpa.c's ResetActionCtrl.
  *
  * `vt` is a gcc 2.x method table ({s16 this-adjust; fn} entries, called
  * through libgcc's _call_via_r2/_call_via_r3 trampolines), `part` the on-screen object it animates, and the

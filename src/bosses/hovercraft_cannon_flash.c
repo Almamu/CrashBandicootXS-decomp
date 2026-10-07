@@ -53,7 +53,7 @@ void UpdateHovercraftCannonFlash(void *selfArg)
 }
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
- * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. This is a
+ * documented in action_ctrl.cpp/hovercraft_parts.c/hovercraft_cannon.c. This is a
  * third, much smaller object kind (`struct cannon_flash`, vtable
  * `gHovercraftCannonFlashVtable`) whose only own fields are `hp` and the
  * `unshootable` flag. See docs/matching/archive/issue-63-0x08033ef4-actor.md. */

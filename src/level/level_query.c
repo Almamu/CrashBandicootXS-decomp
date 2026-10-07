@@ -291,7 +291,7 @@ s32 CountRoomCrates(const struct level_room *item)
  * `PlaySong`. The `IsInBonusRoom` call's result is truncated to `u8`
  * before the nonzero test, matching this codebase's established
  * `(u8)funcCall(...) != 0` idiom for a callee whose real return value
- * is only byte-wide (see e.g. src/player/action_ctrl_moves.c). */
+ * is only byte-wide (see e.g. src/player/action_ctrl_moves.cpp). */
 void PlayRoomMusic(struct level_progress *self)
 {
     s32 mode = gLevelState->maskLevel;
