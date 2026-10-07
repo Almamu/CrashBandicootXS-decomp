@@ -75,7 +75,7 @@ struct pool_init_node {
  * singly-linked list, `freeListHead` pointing at its first still-free
  * entry. ResetCrateList and InitCrateList saw it as `struct pool_init`.
  * The C view of crate_list.hpp's CrateList, for the C files (play_room.c,
- * run_room.c, crate_break.c, ...). */
+ * run_room.c, ...) and three of crate_break.cpp's loops. */
 struct pool_manager {
     s32 activeCount;                 // 0x000
     s32 capacity;                    // 0x004
@@ -102,7 +102,7 @@ extern const u8 gAttackKindBreakLimited[8];
 /* Set when the crate list changes (sym_iwram.txt). */
 extern u8 gCrateListChanged;
 
-/* src/crates/crate_break.c */
+/* src/crates/crate_break.cpp */
 extern void QueueCratePlayerCollision(struct crate *self, s32 idx);
 extern void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
                                 struct e08c_pos pos, s32 hit, struct byte_arg p20,

@@ -14,7 +14,7 @@
  * each constructor calls InitSpriteObj (Sprite's) directly, and each
  * destructor DestroySpriteObj.
  *
- * The C files (the spawners, crate_break.c, time_trial.c) keep the C view,
+ * The C files (the spawners, time_trial.c) keep the C view,
  * orbit_part.h's `struct orbit_part`, checked against both classes below,
  * and the C prototypes in pickups.h; cxx_symbols.txt maps the methods to
  * those names.

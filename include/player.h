@@ -99,7 +99,7 @@ union player_flags {
 
 /* The mirror byte at +0x28 (bit 4: X mirrored, bit 5: Y mirrored), as a
  * byte (the action controller), as `u32` bits (the swim controller,
- * crate_hit.cpp, crate_touch.cpp) or as `s32` bits (crate_break.c, the
+ * crate_hit.cpp, crate_touch.cpp) or as `s32` bits (crate_break.cpp, the
  * layout of `struct crate`). The bit views read the same, but the signed
  * one expands to more insns before optimization, which shifts the
  * `.LCB` label numbers in the `.s`. Packed, so that the union is one byte. */
@@ -219,7 +219,7 @@ struct player {
                   //        on each side
     u8 countdown; // 0x91 - crate-break limiter: BreakCrateInStack arms it (2) and skips the
                   //        break while it runs; UpdatePlayer counts it down
-    u8 bounce;    // 0x92 - a counter (crate_break.c's name): crate_break.c tests and
+    u8 bounce;    // 0x92 - a counter (crate_break.cpp's name): crate_break.cpp tests and
                   //        steps it on a bounce, ResolvePlayerCollisions steps it, the action
                   //        controller clears it
     u8 unk_93;

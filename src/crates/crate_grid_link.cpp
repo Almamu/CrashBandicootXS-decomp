@@ -11,7 +11,7 @@
  * finds its node in the columns from 254 down, and unless the sprite
  * isn't always active or the node already has a column-255 node, takes a
  * node off the free list for it (AddNode's body), appends it to column
- * 255, and links the two. crate_break.c calls it when a crate starts to
+ * 255, and links the two. crate_break.cpp calls it when a crate starts to
  * move. */
 void CrateList::LinkActive(Sprite *sprite)
 {
