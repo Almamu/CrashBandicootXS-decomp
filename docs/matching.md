@@ -26,6 +26,11 @@ the real per-actor animation-frame system" above). Both compile with
 `tools/agbcc` to output that's byte-identical to the original ROM at
 those addresses, verified via a full clean `make compare`.
 
+*(Superseded by #663: the Makefile now appends a zero-fill `.align 2, 0`
+to every compiled `.s`, and the 276 `asm(".align 2, 0");` statements
+this log mentions are gone. See
+[matching_techniques.md](./matching_techniques.md#align-2-0).)*
+
 **A gotcha worth knowing before doing more of this:** a C function whose
 compiled body isn't a multiple of 4 bytes gets padded up to one by
 `arm-none-eabi-as` when it's the last thing in its translation unit's

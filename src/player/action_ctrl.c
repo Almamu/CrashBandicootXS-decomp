@@ -65,7 +65,6 @@ void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d)
     }
 }
 
-
 /* If the player's `+0x100` flag is set: picks a replacement `mode` for
  * a handful of special values (`0x12` when the player's `+0x60` is
  * nonzero -> `0x25`; `0xd`/`0x18` -> `0x26`, both playing a fixed cue
@@ -355,4 +354,3 @@ void RestartPlayerCtrl(struct player_ctrl *selfArg)
     self->motionYPending = 1;
     self->motionY = 0;
 }
-asm(".align 2, 0");

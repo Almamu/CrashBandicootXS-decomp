@@ -279,7 +279,6 @@ struct pool_manager *InitCrateList(struct pool_manager *m, s32 count)
     PoolResetFreeList(m);
     return m;
 }
-asm(".align 2, 0");
 
 /* Same pool-manager struct InitCrateList initializes and crate_list.c
  * operates on - see that file for the full field writeup. Also used by
@@ -304,4 +303,3 @@ asm(".align 2, 0");
  * come right after `LinkCrateToActiveBucket` above and right before `CollidePlayerWithCrates`,
  * `crate_player_collide.c`), per docs/workflow.md step 4's "needs its own new
  * .c file" case. */
-asm(".align 2, 0");

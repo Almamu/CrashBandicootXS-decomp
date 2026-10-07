@@ -100,4 +100,3 @@ void *IwramAlloc(u32 size)
 {
     return mem_alloc(size, 0x80000000);
 }
-asm(".align 2, 0");

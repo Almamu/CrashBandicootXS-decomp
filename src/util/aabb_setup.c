@@ -12,7 +12,6 @@ void SetAabbSize(struct aabb *dest, s32 w, s32 h)
     dest->w = w;
     dest->h = h;
 }
-asm(".align 2, 0");
 
 /* Set-position primitive, see SetAabbSize above. */
 void SetAabbPos(struct aabb *dest, s32 x, s32 y)
@@ -20,7 +19,6 @@ void SetAabbPos(struct aabb *dest, s32 x, s32 y)
     dest->x = x;
     dest->y = y;
 }
-asm(".align 2, 0");
 
 /* Lives getter of the level state (`gLevelState`; read by
  * game_frame.c, hud_lives.c, actor_category_init.c and

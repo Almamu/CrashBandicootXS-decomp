@@ -73,4 +73,3 @@ void ResetCrateList(struct pool_manager *m)
     m->activeCount = 0;
     PoolResetFreeList(m);
 }
-asm(".align 2, 0");

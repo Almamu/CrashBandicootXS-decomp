@@ -41,8 +41,6 @@ void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg)
     if (map != NULL)
         OperatorDeleteArray(map);
 }
-/* Zero-fill the trailing halfword, as the ROM does. */
-asm(".align 2, 0");
 
 /* GitHub issue #30. Both built with old_agbcc - see
  * docs/matching/archive/issue-30-old-agbcc.md. */
@@ -69,8 +67,6 @@ struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlo
     self->paletteBank = paletteBank;
     return self;
 }
-/* Zero-fill the trailing halfword, as the ROM does. */
-asm(".align 2, 0");
 
 /* GitHub issue #30: the sprite-box fitter and its OAM writer. Built with
  * old_agbcc - see docs/matching/archive/issue-30-old-agbcc.md. */
@@ -305,11 +301,3 @@ void ResetScaledSpriteAttrs(u8 *self)
     mask &= self[0x15];
     self[0x15] = mask;
 }
-/* This object is the last thing linked before the still-raw
- * asm/code_3_2_17_1e990.s continuation, which starts at a 4-byte-aligned
- * ROM address (0x0801E990) two bytes past ResetScaledSpriteAttrs's own end
- * (0x0801E98E) - the ROM pads that gap with zero bytes (a real
- * `.align 2, 0` in the original assembly), not this compiler's default
- * Thumb NOP-fill (`0x46C0`) for an implicit end-of-object alignment. See
- * the matching_decomp_alignment_fix technique. */
-asm(".align 2, 0");

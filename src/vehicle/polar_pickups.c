@@ -95,8 +95,6 @@ frameBlock:
     }
 }
 
-asm(".align 2, 0");
-
 /* Screen-space visibility test and OAM setup for one sprite frame:
  * derives the top-left corner from `self->x`/`self->y` minus half
  * the frame's tile size, culls if fully off-screen, then builds the
@@ -206,8 +204,6 @@ void DrawPolarCollectedWumpa(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `DrawPolarCollectedWumpa` (above) - same `self`
  * object and conventions documented there. */
@@ -220,7 +216,6 @@ struct polar_collected_wumpa {
     s32 count; // 0x5C - the spawn parameter: how many fruit DestroyPolarCollectedWumpa
                // hands out (one `CollectWumpa` call each)
 };
-
 
 /* Same "award `count` fruit via `CollectWumpa(gLevelState)`,
  * retarget the vtable to the 'dead' state, unlink from the circular
@@ -256,8 +251,6 @@ void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
         mem_free(self);
     }
 }
-
-asm(".align 2, 0");
 
 /* Thin `InitActorPart`-based constructor (constant last-arg `1`,
  * unlike `CreatePolarWumpa`'s forwarded one), then computes a velocity
@@ -317,8 +310,6 @@ void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spa
 
     return self;
 }
-
-asm(".align 2, 0");
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `CreatePolarCollectedWumpa` (above) - same `self`
@@ -599,5 +590,3 @@ usedState:
 tail:
     UpdatePolarCrate(self);
 }
-
-asm(".align 2, 0");

@@ -122,7 +122,6 @@ void UpdatePolarElectricFence(void *selfArg)
     UpdateActor(self);
 }
 
-
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`d` straight
  * through, installs `self+0x50 = gPolarElectricFenceVtable`, and clears the
  * `self+0x2c` one-shot flag. */
@@ -663,8 +662,6 @@ void UpdatePolarAkuAku(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Eases `self`'s cached position (`self+0x1c`/`0x20`/`0x24`, the same
  * fields `InitActorPart` caches its `b`/`c`/`d` constructor arguments
  * into, per actor.c) toward a caller-supplied target, with the
@@ -721,5 +718,3 @@ ease_y:
     self->y = cur + d / 16;
     self->z += (tz - self->z) / 4;
 }
-
-asm(".align 2, 0");

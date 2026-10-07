@@ -9,7 +9,6 @@
 #include "gfx.h"
 #include "globals.h"
 
-
 /* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.c) - reset
  * the DISPCNT shadow (`dispcnt`) and set its two bytes one at a time,
  * request a BG tile/map graphics package, set BG0's
@@ -281,4 +280,3 @@ void DeleteSaveSlot(struct save_menu *self, s32 arg1)
         WriteSaveSlot(self->cartSave, arg1, buf);
     }
 }
-asm(".align 2, 0");

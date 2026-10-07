@@ -17,11 +17,6 @@ u32 GetSlotCrateStage(struct crate *self)
 {
     return ((u32)self->u48.slotState & 0xc0) >> 6;
 }
-/* Trailing byte-padding mismatch fix: the function body is 10 bytes
- * (not a multiple of 4), and the ROM pads the gap before the next
- * function with a zero halfword, not the assembler's default `nop`
- * (`mov r8, r8`) - see matching_decomp_alignment_fix memory. */
-asm(".align 2, 0");
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
  * collision subsystem (`crate_reset.c`-`slot_crate.c`, see
@@ -147,11 +142,6 @@ s32 GetCrateFallSpeed(struct crate *self)
 {
     return self->fallSpeed;
 }
-/* Trailing byte-padding mismatch fix: the function body isn't a
- * multiple of 4 bytes, and the ROM immediately continues with the
- * unlabeled `IsCrateBusy` right below - see matching_decomp_alignment_fix
- * memory. */
-asm(".align 2, 0");
 
 /* The original disassembly never gave this one its own label/symbol -
  * it sits directly after `GetCrateFallSpeed`'s padding, at the address the

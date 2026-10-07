@@ -150,6 +150,3 @@ void UpdateHudLives(struct hud_counter *counter)
     DrawHudPart(&self->parts[1], 0, 0);
     self->shownLives = self->lives;
 }
-
-/* Match the ROM's zero halfword padding rather than Thumb NOP padding. */
-asm(".align 2, 0");

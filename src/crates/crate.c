@@ -10,7 +10,6 @@
 #include "player.h"
 #include "crate.h"
 
-
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/archive/issue-13-graphics-fc70.md). `IsCrateInsideRect` prepended
@@ -156,10 +155,6 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
 
     return result;
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");
 
 /* Refreshes the viewport's own collision box (`ResolveCollisionCandidates` on
  * `gPlayer->collisionQueue`), then increments its `bounce` counter by

@@ -92,9 +92,6 @@ void UpdateJetpackPlane(struct actor_fa38 *self)
     }
 }
 
-/* Pad to the next word with zeros, as the ROM does. */
-asm(".align 2, 0");
-
 /* 0x0802FBF0-0x08030530 (issue #57, plus issue #58's AirshipFireballStateOrbit/
  * AirshipFireballStateSpiralIn): the methods of three small C++ actor classes built on
  * the shared `struct actor_self` object (include/actor_self.h), plus the
@@ -634,5 +631,3 @@ void AirshipFireballStateSpiralIn(struct actor_orbit *self)
         ACTOR_SET_STATE(&self->base, 2, 1);
     }
 }
-
-asm(".align 2, 0");

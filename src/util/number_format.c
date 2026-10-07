@@ -100,11 +100,6 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
     return len;
 }
 
-/* Trailing padding: the assembler's default NOP-encoding pad doesn't
- * match the ROM's zero-fill here (see matching_decomp_alignment_fix
- * memory). */
-asm(".align 2, 0");
-
 /* Formats a single printf-style `%<width><specifier>` conversion
  * (specifier is 'd', 'x' or 'X' - anything else pads but writes no
  * digits) at `*fmt` into `dest`, left-padding with `padChar` to reach

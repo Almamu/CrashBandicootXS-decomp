@@ -444,5 +444,3 @@ done:
             self->motionXKeepSpeed = 1;
     }
 }
-/* Trailing byte count isn't a multiple of 4 - pad with zeros, not a nop. */
-asm(".align 2, 0");

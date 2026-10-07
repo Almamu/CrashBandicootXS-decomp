@@ -5,7 +5,6 @@
 /* Sits between the still-parked DrawWrappedText (asm/code_3_1_3.s) and
  * WaitForKeyPress (asm/code_3_1_4.s). */
 
-
 /* Formats `value` (in centiseconds) as "MM:SS.X0" into `buf` (9 bytes,
  * NUL-terminated) - only one fractional digit is actually computed
  * (`value % 10`); the other is always '0'. */
@@ -26,6 +25,3 @@ void FormatCentiseconds(s32 value, u8 *buf)
     buf[1] = __umodsi3(q2, 10) + '0';
     buf[0] = __udivsi3(q2, 10) + '0';
 }
-
-/* Trailing padding (see matching_decomp_alignment_fix memory). */
-asm(".align 2, 0");

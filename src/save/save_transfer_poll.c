@@ -140,9 +140,3 @@ s32 PollSaveTransfer(struct settings_sync_pump *self)
 
     return result;
 }
-/* Trailing byte-padding mismatch fix: GAS's default Thumb code
- * alignment filler is the `mov r8, r8` NOP (0x46c0), but the ROM pads
- * this function's tail with a zero halfword instead (see
- * docs/matching.md's alignment-padding gotcha / the
- * matching_decomp_alignment_fix convention). */
-asm(".align 2, 0");

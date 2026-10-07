@@ -73,7 +73,6 @@ void UpdateAudio(struct AudioContext *self)
         GAX_play();
     }
 }
-asm(".align 2, 0");
 
 /* Starts playing song `songIndex` (index into the 19-entry
  * `gSongTable` song-pointer table). First-time-only resets
@@ -271,7 +270,6 @@ void StopAmbientSfx(struct AudioContext *self)
     self->pendingSfx.id = 0x63;
     self->activeSfx.deadline = gRoomFrameCount;
 }
-asm(".align 2, 0");
 
 /* `PlayAmbientSfx` sits right after the matched `StopAmbientSfx`
  * (src/audio/audio.c) and before the matched functions this
@@ -554,7 +552,6 @@ void DisableMusicVCountIrq(struct AudioContext *self)
     *dispstat &= ~tmp;
     IrqRestoreHandler(INTR_INDEX_VCOUNT);
 }
-asm(".align 2, 0");
 
 /* Installs `MusicVCountIrqHandler` as the VCount-IRQ handler and arms VCount IRQs
  * with a fixed trigger line (`0x35`) - the music player's per-tick fade

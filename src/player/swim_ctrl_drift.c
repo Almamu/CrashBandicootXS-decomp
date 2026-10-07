@@ -12,14 +12,13 @@
  * between this function's 106-byte body and the next 4-byte-aligned
  * function, `CheckPlayerCtrlTurn` in swim_ctrl.c) - not real code, has no
  * caller or symbol reference anywhere in the tree, and is reproduced
- * automatically by this file's own trailing `asm(".align 2, 0")`
+ * by the build's end-of-object zero fill (the Makefile's ZERO_PAD_TEXT)
  * without needing its own C function (see docs/matching.md's
  * `GetEntityPixelY` entry for the established precedent: a disassembler-
  * rendered `movs r0, r0` at a function gap is usually just a zero-fill
  * halfword, not a literal instruction). The name survives only as the
  * frozen disassembly's label, dropped by expected/corrections.txt's
  * `unlabel sub_8016046`. */
-
 
 /* Player-velocity-relative "record" writer: computes a Q14-ish rounded
  * `((player->speedY^2 / 0x4000) + 4) * 3 / 2` timing value, then compares
@@ -86,4 +85,3 @@ void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
 
     player->rampY.target = arg2;
 }
-asm(".align 2, 0");

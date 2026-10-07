@@ -374,5 +374,3 @@ void LoadPooledBgLayerTiles(struct pooled_bg_layer *self)
 void nullsub_26(void)
 {
 }
-
-asm(".align 2, 0");

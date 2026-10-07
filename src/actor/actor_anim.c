@@ -13,8 +13,6 @@ s32 GetAnimFrameBaseOffset(struct actor_self *self)
     return self->animTime >> 8;
 }
 
-asm(".align 2, 0");
-
 /* Reads the current keyframe record's `attr` halfword and returns it
  * pre-shifted into the high 16 bits - `DrawJetpackCheckpointText` ORs this straight
  * into an OAM attribute word it builds itself. */
@@ -25,8 +23,6 @@ s32 GetAnimFrameAttr(struct actor_self *self)
 
     return (s32)table[idx].attr << 16;
 }
-
-asm(".align 2, 0");
 
 /* Resolves the current keyframe's tile-graphics pointer: looks up
  * `anims[animIndex].frameIndex`, adds `GetAnimFrameBaseOffset()`'s
@@ -52,8 +48,6 @@ u8 *GetAnimFrameData(struct actor_self *self)
     return (u8 *)*g + offsets[val];
 }
 
-asm(".align 2, 0");
-
 /* Selects a new keyframe: sets `animIndex` to `idx`, copies that
  * record's `duration` into `animTimer`, and resets the `animDone` flag
  * byte and the `animTime` playback accumulator. */
@@ -76,9 +70,6 @@ void SetActorAnim(struct actor_self *self, s32 idx)
     self->animTime = zero2;
 }
 
-asm(".align 2, 0");
-
-
 /* Twenty near-identical "kind" teardown handlers: set `self+0x50`'s
  * state/vtable pointer to the shared "dead" table `gActorVtable`,
  * unlink `self` from its `+0x48`(prev)/`+0x4c`(next) circular list, and
@@ -97,8 +88,6 @@ void DestroyRiderlessPolar(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -121,8 +110,6 @@ void UpdatePolarCheckpointText(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarCheckpointText(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -132,8 +119,6 @@ void DestroyPolarCheckpointText(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarWumpa(struct actor_self *self, u32 flags)
 {
@@ -145,8 +130,6 @@ void DestroyPolarWumpa(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarTimeCrate(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -156,8 +139,6 @@ void DestroyPolarTimeCrate(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarQuestionCrate(struct actor_self *self, u32 flags)
 {
@@ -169,8 +150,6 @@ void DestroyPolarQuestionCrate(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarAkuAkuCrate(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -180,8 +159,6 @@ void DestroyPolarAkuAkuCrate(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarNitroCrate(struct actor_self *self, u32 flags)
 {
@@ -193,8 +170,6 @@ void DestroyPolarNitroCrate(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarLifeCrate(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -204,8 +179,6 @@ void DestroyPolarLifeCrate(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarFourWumpaCrate(struct actor_self *self, u32 flags)
 {
@@ -217,8 +190,6 @@ void DestroyPolarFourWumpaCrate(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarBasicCrate(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -228,8 +199,6 @@ void DestroyPolarBasicCrate(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarCrate(struct actor_self *self, u32 flags)
 {
@@ -241,8 +210,6 @@ void DestroyPolarCrate(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarElectricFence(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -252,8 +219,6 @@ void DestroyPolarElectricFence(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarObstacle(struct actor_self *self, u32 flags)
 {
@@ -265,8 +230,6 @@ void DestroyPolarObstacle(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarLauncher(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -276,8 +239,6 @@ void DestroyPolarLauncher(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarPenguin(struct actor_self *self, u32 flags)
 {
@@ -289,8 +250,6 @@ void DestroyPolarPenguin(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarIcicle(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -300,8 +259,6 @@ void DestroyPolarIcicle(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarAkuAku(struct actor_self *self, u32 flags)
 {
@@ -313,8 +270,6 @@ void DestroyPolarAkuAku(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarGoal(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -324,8 +279,6 @@ void DestroyPolarGoal(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyPolarBoostPad(struct actor_self *self, u32 flags)
 {
@@ -337,8 +290,6 @@ void DestroyPolarBoostPad(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyPolarCheckpointCrate(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -348,8 +299,6 @@ void DestroyPolarCheckpointCrate(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 /* Screen-space visibility test and OAM setup for one sprite frame drawn
  * at the fixed screen position (120, 106): builds the OAM attribute
@@ -453,8 +402,6 @@ void DrawJetpackCheckpointText(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Advances the animation frame accumulator, or fires the `+0x50`
  * trampoline record instead when the "held" flag (`+0x12`) is set - the
  * `+0x14` flag written unconditionally at the top looks like a per-call
@@ -511,8 +458,6 @@ void UpdateJetpackCheckpointText(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* No direct `bl`/`.4byte` reference found in any asm/*.s, expected/*.s
  * or src/*.c file, but - like the 20 "kind" teardown handlers already
  * matched in this file (DestroyRiderlessPolar onward) - that doesn't mean
@@ -531,8 +476,6 @@ s32 IsJetpackCheckpointTextUnshootable(void)
     return 1;
 }
 
-asm(".align 2, 0");
-
 /* Another hidden function with no `thumb_func_start` label of its own
  * (see `IsJetpackCheckpointTextUnshootable` above) - the standard "kind" teardown handler
  * shape already matched 20 times over in this file (`DestroyRiderlessPolar`
@@ -548,8 +491,6 @@ void DestroyJetpackCheckpointText(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 /* A third hidden, unlabelled function (see `IsJetpackCheckpointTextUnshootable` above) -
  * `UpdatePolarCheckpointText`'s near-twin: advances `self->z` by 170/256
@@ -571,8 +512,6 @@ void UpdateJetpackExplosion(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Byte-identical to IsJetpackCheckpointTextUnshootable above (see its doc comment for the
  * "no direct reference found, but grep-invisible callers are normal for
  * this vtable-dispatched family" caveat), and hidden the same way - see
@@ -581,8 +520,6 @@ s32 IsJetpackExplosionUnshootable(void)
 {
     return 1;
 }
-
-asm(".align 2, 0");
 
 void DestroyJetpackExplosion(struct actor_self *self, u32 flags)
 {
@@ -593,8 +530,6 @@ void DestroyJetpackExplosion(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 /* `actor_self` plus the first derived-class word at +0x54. */
 struct actor_self_54 {
@@ -610,8 +545,6 @@ s32 GetActorHp(struct actor_self_54 *self)
     return self->hp;
 }
 
-asm(".align 2, 0");
-
 /* A fifth hidden function (see IsJetpackCheckpointTextUnshootable above).
  * The jetpack actors' damage slot (vtable slot 4, beside
  * DrawActor and GetActorHp) for the classes that take no damage; the
@@ -621,16 +554,12 @@ void DamageActor(void *self)
 {
 }
 
-asm(".align 2, 0");
-
 /* A sixth hidden function (see IsJetpackCheckpointTextUnshootable above) - a trivial "return
  * 0" stub. */
 s32 IsJetpackPlayerUnshootable(void)
 {
     return 0;
 }
-
-asm(".align 2, 0");
 
 void DestroyJetpackShot(struct actor_self *self, u32 flags)
 {
@@ -642,8 +571,6 @@ void DestroyJetpackShot(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyJetpackPlane(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -653,8 +580,6 @@ void DestroyJetpackPlane(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyJetpackBomber(struct actor_self *self, u32 flags)
 {
@@ -666,8 +591,6 @@ void DestroyJetpackBomber(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyJetpackCannonball(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -677,8 +600,6 @@ void DestroyJetpackCannonball(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyAirshipFireball(struct actor_self *self, u32 flags)
 {
@@ -690,8 +611,6 @@ void DestroyAirshipFireball(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyJetpackBalloon(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -701,8 +620,6 @@ void DestroyJetpackBalloon(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 /* A different teardown shape from the list-unlinking handlers above -
  * tears down via `DestroyJetpackBalloonCrate(self, 0)` (still unmatched itself)
@@ -716,8 +633,6 @@ void DestroyJetpackHealthCrate(void *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyJetpackTimeCrate(void *self, u32 flags)
 {
     DestroyJetpackBalloonCrate(self, 0);
@@ -726,8 +641,6 @@ void DestroyJetpackTimeCrate(void *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyJetpackQuestionCrate(void *self, u32 flags)
 {
     DestroyJetpackBalloonCrate(self, 0);
@@ -735,8 +648,6 @@ void DestroyJetpackQuestionCrate(void *self, u32 flags)
         mem_free(self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyJetpackParachuteNitro(struct actor_self *self, u32 flags)
 {
@@ -748,8 +659,6 @@ void DestroyJetpackParachuteNitro(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyJetpackRocket(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -759,8 +668,6 @@ void DestroyJetpackRocket(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyJetpackRing(struct actor_self *self, u32 flags)
 {
@@ -772,8 +679,6 @@ void DestroyJetpackRing(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyHovercraftFireball(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -783,8 +688,6 @@ void DestroyHovercraftFireball(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyHovercraftCannon(struct actor_self *self, u32 flags)
 {
@@ -796,8 +699,6 @@ void DestroyHovercraftCannon(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyHovercraftLauncher(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -807,8 +708,6 @@ void DestroyHovercraftLauncher(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");
 
 void DestroyHovercraftSideGun(struct actor_self *self, u32 flags)
 {
@@ -820,8 +719,6 @@ void DestroyHovercraftSideGun(struct actor_self *self, u32 flags)
     }
 }
 
-asm(".align 2, 0");
-
 void DestroyHovercraftCannonFlash(struct actor_self *self, u32 flags)
 {
     self->vtable = (struct actor_vtable *)gActorVtable;
@@ -831,5 +728,3 @@ void DestroyHovercraftCannonFlash(struct actor_self *self, u32 flags)
         mem_free((u8 *)self);
     }
 }
-
-asm(".align 2, 0");

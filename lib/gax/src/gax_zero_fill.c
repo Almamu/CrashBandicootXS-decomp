@@ -57,4 +57,3 @@ void GaxZeroFill(void *destArg, s32 count)
         }
     }
 }
-asm(".align 2, 0");

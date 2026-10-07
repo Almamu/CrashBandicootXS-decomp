@@ -64,6 +64,3 @@ void LoadBackgroundTileAndPalette(const void *asset)
     dma->cnt = 0x80000100;
     val = dma->cnt;
 }
-
-/* Trailing padding (see matching_decomp_alignment_fix memory). */
-asm(".align 2, 0");

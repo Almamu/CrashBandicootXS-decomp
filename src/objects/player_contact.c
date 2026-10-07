@@ -207,4 +207,3 @@ checkMode3:
         _call_via_r4(addr3, 1, EVENT_HIT, 0);
     }
 }
-asm(".align 2, 0");

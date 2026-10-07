@@ -128,7 +128,6 @@ void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index)
 void CtrlHandleEvent(void)
 {
 }
-asm(".align 2, 0");
 
 /* Sets `part`'s animation (`tag`) to `newVal`, but only if it actually
  * changed - otherwise a no-op returning 0. On a real change, resets the

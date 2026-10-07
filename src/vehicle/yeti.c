@@ -64,8 +64,6 @@ void CreateYeti(void *arg0)
     LoadYetiGraphics();
 }
 
-asm(".align 2, 0");
-
 /* Sits right after `CreateYeti` above and before
  * `YetiStateCaught` below - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_e058.s`. */
@@ -101,13 +99,9 @@ void BuildYetiBg2Map(u8 *dst, u8 seed)
     }
 }
 
-asm(".align 2, 0");
-
 /* Genuine no-op stub sitting between `BuildYetiBg2Map` (the BG2 map
  * builder) and `YetiStateStop` - see
  * docs/matching/archive/issue-54-actor-d3a8.md. */
 void YetiStateCaught(void)
 {
 }
-
-asm(".align 2, 0");

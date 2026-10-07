@@ -233,5 +233,3 @@ void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src)
     pool->vramBase = VRAM + (charBase << 14);
     pool->srcBase = src;
 }
-
-asm(".align 2, 0");

@@ -157,4 +157,3 @@ void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *in
         break;
     }
 }
-asm(".align 2, 0");

@@ -241,5 +241,3 @@ void HovercraftStateApproach(void)
 void HovercraftStateExplodeStub(void)
 {
 }
-
-asm(".align 2, 0");

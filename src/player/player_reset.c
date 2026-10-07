@@ -264,7 +264,6 @@ void ResetPlayer(struct player *selfArg)
         *p = 0;
     }
 }
-asm(".align 2, 0");
 
 /* Resets `part`'s velocity/state fields (`+0x60`/`+0x64` cleared,
  * `+0x68` state set to 8, `+0x24` cleared, `+0x28` bit 5 cleared,
@@ -358,4 +357,3 @@ void ResetPlayerForRoom(struct player *selfArg)
     endDispatch:;
     }
 }
-asm(".align 2, 0");

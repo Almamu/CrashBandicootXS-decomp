@@ -57,5 +57,3 @@ u8 IsTouchingAirship(void *selfArg)
 hit:
     return 1;
 }
-
-asm(".align 2, 0");

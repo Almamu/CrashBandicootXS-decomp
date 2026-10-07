@@ -64,7 +64,6 @@ void CollidePlayerWithObjects(struct player *self)
         ResolvePlayerCollisions();
     }
 }
-asm(".align 2, 0");
 
 /* GitHub issue #9/#10, dedicated deep-investigation session:
  * `DrawPlayer` (0x0800AFF4-0x0800B270), the second function in the
@@ -181,7 +180,6 @@ struct ac2c_listener {
     u8 unk_00[0xc];
     u8 *vtable; // 0x0C
 };
-
 
 typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 

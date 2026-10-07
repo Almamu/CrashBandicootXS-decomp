@@ -82,7 +82,6 @@ s32 IsTouchingPlayer(void *self)
     return _call_via_r1(self, gActorCategoryVtable->fn[9]);
 }
 
-
 /* The constructor every other actor file already forward-
  * declares: seeds `self`'s part-table pointer (`+0`/`+4`, copied from
  * `part+4`/`part+8`) and header byte (`+0x18`, from `part+0xc`), resets
@@ -255,8 +254,6 @@ void UpdateActor(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Same "self" object family as above - see this file's header
  * comment and docs/matching/archive/issue-50-actor-2a69c.md. */
 
@@ -422,10 +419,6 @@ void DrawActor(void *selfArg)
         }
     }
 }
-/* Trailing zero-fill padding to the next 4-byte boundary, matching the
- * ROM's own (the assembler's default NOP pad - "mov r8, r8" - mismatches
- * here; see the matching_decomp_alignment_fix precedent). */
-asm(".align 2, 0");
 
 /* Branchless absolute value: `ABS32`, defined at the top of this file. */
 
@@ -517,8 +510,6 @@ s32 GetActorX(struct actor_self *self)
 {
     return self->x;
 }
-
-asm(".align 2, 0");
 
 /* Same "self" object family as above - see this file's header
  * comment and
@@ -630,10 +621,6 @@ void *GetActorWorldBox(void *outArg, void *selfArg)
 
     return outArg;
 }
-/* Trailing zero-fill padding to the next 4-byte boundary, matching the
- * ROM's own (the assembler's default NOP pad - "mov r8, r8" - mismatches
- * here; see the matching_decomp_alignment_fix precedent). */
-asm(".align 2, 0");
 
 /* Same "self" object family as above - see this file's header
  * comment and docs/matching/archive/issue-50-actor-2a69c.md. (This was a
@@ -755,8 +742,6 @@ void SaveActorPaletteCycle(void)
     gSavedActorPaletteCycleTarget = gActorPaletteCycleTarget;
 }
 
-asm(".align 2, 0");
-
 /* Same palette-cycle cluster as the functions around it - see
  * docs/matching/archive/issue-50-actor-2a69c.md. */
 
@@ -847,10 +832,6 @@ void UpdateActorPaletteCycle(void)
         : "r0", "r1", "r2", "r3", "r4", "lr", "cc", "memory");
     // clang-format on
 }
-/* Trailing zero-fill padding to the next 4-byte boundary, matching the
- * ROM's own (the assembler's default NOP pad - "mov r8, r8" - mismatches
- * here; see the matching_decomp_alignment_fix precedent). */
-asm(".align 2, 0");
 
 /* Same palette-cycle cluster as `RestoreActorPaletteCycle`/
  * `SaveActorPaletteCycle` above - see docs/matching/archive/issue-50-actor-2a69c.md.
@@ -878,5 +859,3 @@ void EnableActorPaletteCycle(u8 flag)
     gActorPaletteCycleTimer = 0;
     SaveActorPaletteCycle();
 }
-
-asm(".align 2, 0");

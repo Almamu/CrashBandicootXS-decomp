@@ -62,5 +62,3 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
         } while (i >= lo);
     }
 }
-
-asm(".align 2, 0");

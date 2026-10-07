@@ -155,5 +155,3 @@ s32 ContinuePromptLoop(struct continue_prompt *self)
     }
     return self->selection == 0;
 }
-
-asm(".align 2, 0");

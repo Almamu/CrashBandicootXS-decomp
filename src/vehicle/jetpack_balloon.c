@@ -263,13 +263,9 @@ void RunJetpackBalloonState(struct actor_self *self)
     ACTOR_PMF_CALL(self, gJetpackBalloonStateFuncs);
 }
 
-/* Trivial `self+0x5c` byte getter. Needs a trailing `asm(".align 2, 0")`
- * - the lone-function-at-end-of-translation-unit padding gap already
- * documented for `IsAirshipFireballUnshootable`/`IsHovercraftCannonUnshootable` (issues #58/#62). */
+/* Trivial `self+0x5c` byte getter. */
 u8 IsJetpackBalloonUnshootable(void *selfArg)
 {
     u8 *self = selfArg;
     return self[0x5c];
 }
-
-asm(".align 2, 0");

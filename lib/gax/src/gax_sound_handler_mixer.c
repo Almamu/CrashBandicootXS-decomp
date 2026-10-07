@@ -16,7 +16,6 @@ extern void *_call_via_r1(void *arg0, void *fn);
 void GaxFxChannelUnknown(void)
 {
 }
-asm(".align 2, 0");
 
 /* The GAX2_SoundHandler mixer type's `init_fn` (ROM `0x0803A22D`, see
  * docs/audio.md) - `self` is the mixer handler. Sets `pos` to 1, then
@@ -57,4 +56,3 @@ void GaxMixerInit(void *self)
 void GaxMixerUnknown(void)
 {
 }
-asm(".align 2, 0");

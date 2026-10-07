@@ -38,6 +38,3 @@ void StepBresenhamLine(struct bresenham_line *line)
         line->y0 += line->sy;
     }
 }
-
-/* Trailing padding (see matching_decomp_alignment_fix memory). */
-asm(".align 2, 0");

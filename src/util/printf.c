@@ -3,7 +3,6 @@
 #include <stdarg.h>
 #include "util.h"
 
-
 /* Custom sprintf: writes the formatted result of `fmt`/`args` into
  * `dest` (NUL-terminated) and returns a pointer to the end of it.
  * `args` is a raw array of 4-byte argument slots (not real varargs) -
@@ -126,9 +125,6 @@ void sprintf(u8 *dest, u8 *fmt, ...)
     vsprintf(dest, fmt, (u32 *)args);
     va_end(args);
 }
-
-/* Trailing padding (see matching_decomp_alignment_fix memory). */
-asm(".align 2, 0");
 
 /* strstr, with optional case-insensitive matching (`caseInsensitive`
  * nonzero lowercases both sides before comparing): scans `haystack0`
@@ -288,4 +284,3 @@ inner:
 matchFound:
     return haystack - 1;
 }
-asm(".align 2, 0");

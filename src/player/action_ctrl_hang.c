@@ -21,7 +21,6 @@
  * More gActionCtrlStateTable action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
 
-
 /* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
  * in kill_player.c only matches that way), but ActionCtrlStateHangMove
  * tests the result as a u8 (`lsl #0x18`). docs/headers_plan.md */
@@ -550,7 +549,6 @@ void ActionCtrlStateHangStop(struct act *self)
         self->frames = alt;
     }
 }
-asm(".align 2, 0");
 
 /* GitHub issue #18's chunk, ROM 0x08014F8C-0x080157C0 - continues the
  * same "self" action-table object family documented at the top of

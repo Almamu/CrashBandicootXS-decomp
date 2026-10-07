@@ -35,8 +35,9 @@ plainer version doesn't.
   saying what it fixes.
 - **Check with the tool.** `tools/match_idioms.py --check` fails on a
   hand-spelled idiom outside the few documented exceptions (its
-  `ALLOWED_SPELLED` list, also [below](#other-empty-asm-forms)); CI runs
-  it with `--check-macros`. If a new shape really has no macro, add one
+  `ALLOWED_SPELLED` list, also [below](#other-empty-asm-forms)), and on
+  any file-scope `asm(".align 2, 0")`, which the build makes redundant
+  ([below](#align-2-0)); CI runs it with `--check-macros`. If a new shape really has no macro, add one
   to match.h with a `--check-macros` case, rather than a new exception.
 - **Per-object flags** (old_agbcc, `-O1`, `-fno-strength-reduce`, ...)
   are set in the Makefile, each list with a comment giving its evidence,
@@ -505,12 +506,36 @@ pins ([Register pins](#register-pins)):
 
 ### `.align 2, 0`
 
-When a function is the last in its object and its size isn't a multiple
-of 4, `as` pads it with Thumb NOPs (`0xC046`); the ROM has zeros. A
-file-scope `asm(".align 2, 0");` after the function fixes it. A match
-that differs only in its last 1-2 bytes is this, not the C. It recurs at
-every file split (276 sites). See the gotcha at the top of the old log,
-[matching.md](./matching.md).
+The build handles this; C files need no padding statement.
+
+When an object's `.text` ends on a halfword boundary, `as` pads the
+section to its 4-byte alignment inside the object. For code that fill is
+a Thumb NOP (`mov r8, r8`, `0xC046`), and the ROM has zeros there. The
+linker isn't involved: the pad is already part of the `.o`'s `.text`
+size, and the ROM output section's own gap fill (`} = 0` in
+`ldscript.txt`) is zero anyway. agbcc starts every function with
+`.align 2, 0`, so a gap *between* two functions of one object is already
+zero; only the end of the last function was affected.
+
+The Makefile's C rules append `ZERO_PAD_TEXT` (`.text` then
+`.align 2, 0`) to every compiled `.s` before assembling it, so the end of
+`.text` is zero-filled too (#663). This adds nothing to a section that
+already ends aligned. Its only side effect is that a data-only object's
+empty `.text` becomes 4-byte aligned, which places nothing.
+
+Until #663 this was done by hand: 276 file-scope `asm(".align 2, 0");`
+statements in 131 files, one after each function that ended an original
+object. `tools/match_idioms.py --check` now rejects a new one. Those sat mid-file after the file-layout merges (#575) and were
+redundant there. The archive notes and the old log,
+[matching.md](./matching.md), still describe that statement. A match
+that differs only in its last 1-2 bytes, `c046` against `0000`, now means
+the object wasn't built by these rules. Hand-written `.s` (lib1funcs,
+libagbsyscall, `asm/`) still spells its own `.align 2, 0`.
+
+A forced 4-byte alignment for every input section (`SUBALIGN(4)` on the
+ROM output section) doesn't work instead: it can't change bytes already
+inside an object, and some input sections are only 2-byte aligned in
+the ROM, so the layout shifts.
 
 ### `.pool`
 
@@ -621,7 +646,7 @@ These have no macro, by design:
 
 | Kind | Sites | Why it stays |
 |---|---|---|
-| file-scope `.align 2, 0` | 276 / 131 | an assembler directive |
+| file-scope `.align 2, 0` | 276 / 131 | an assembler directive; all removed in #663, the build pads instead ([above](#align-2-0)) |
 | instruction asm | 253 / 90 | each is a specific instruction sequence; each needs a comment |
 | retyped field stores/reads | 191 / 31, 71 / 34 | part of the struct cleanup |
 | asm-label aliases | 20 / 16 | headers_plan's codegen exceptions |

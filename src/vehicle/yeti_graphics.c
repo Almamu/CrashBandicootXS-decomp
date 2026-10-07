@@ -129,5 +129,3 @@ void LoadYetiGraphics(void)
     UpdateYetiBg2();
     UpdateYetiPalette();
 }
-
-asm(".align 2, 0");

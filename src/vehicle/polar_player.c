@@ -642,5 +642,3 @@ void PolarPlayerStateCaught(struct actor_self *self)
         }
     }
 }
-
-asm(".align 2, 0");

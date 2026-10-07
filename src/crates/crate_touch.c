@@ -158,6 +158,3 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
         return 0;
     return 1;
 }
-
-/* The object ends word-aligned with zero fill, as the ROM does. */
-asm(".align 2, 0");

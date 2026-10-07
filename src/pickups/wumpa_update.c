@@ -480,6 +480,3 @@ void UpdateWumpaHop(struct orbit_part *self)
     else
         self->base.x = self->anchor.x;
 }
-
-/* The ROM pads this function to the next word with zeros, not a nop. */
-asm(".align 2, 0");

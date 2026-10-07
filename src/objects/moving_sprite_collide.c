@@ -74,7 +74,6 @@ end:
     return result;
 }
 
-
 /* Calls the object's `checkContact` method (CheckPlayerContact) via
  * `_call_via_r1` and always returns 0. Needed the trampoline's `addr = self
  * + offset` computed before the `fn` load (reusing the adjusted table
@@ -218,4 +217,3 @@ u8 GetGroundSpriteProbeTries(struct gobj *self)
 {
     return self->probeTries;
 }
-asm(".align 2, 0");

@@ -205,5 +205,3 @@ void YetiStateCharge(void)
         }
     }
 }
-
-asm(".align 2, 0");

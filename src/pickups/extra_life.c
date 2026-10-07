@@ -623,9 +623,3 @@ void CheckWumpaPickup(struct orbit_part *self)
         }
     }
 }
-/* Trailing byte-padding mismatch fix: the function body isn't a
- * multiple of 4 bytes, and gcc's own default alignment padding (a
- * `nop`/`mov r8, r8` instruction) differs from the ROM's own
- * zero-byte alignment padding at this address - see
- * matching_decomp_alignment_fix memory. */
-asm(".align 2, 0");

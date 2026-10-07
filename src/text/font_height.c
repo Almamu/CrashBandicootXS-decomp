@@ -20,4 +20,3 @@ s32 FontTextHeight(struct bitmap_font *self, u8 *str)
     }
     return total;
 }
-asm(".align 2, 0");

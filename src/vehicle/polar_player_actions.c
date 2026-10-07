@@ -31,7 +31,6 @@
  * "tier-threshold actor family") and its "type-byte event dispatch"
  * section for the semantics behind the individual functions below. */
 
-
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 
@@ -389,5 +388,3 @@ void DestroyPolarPlayer(void *selfArg, u32 arg1param)
         mem_free(self);
     }
 }
-
-asm(".align 2, 0");

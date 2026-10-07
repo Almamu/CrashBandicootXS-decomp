@@ -198,4 +198,3 @@ void AnchorGroundSpriteHitbox(struct gobj *self)
 skip:
     self->lastHitbox = rec;
 }
-asm(".align 2, 0");

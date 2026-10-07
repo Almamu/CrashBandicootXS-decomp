@@ -34,7 +34,6 @@ s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
     return quotient;
 }
 
-
 /* `CpuSet` (the BIOS SWI wrapper) with swapped src/dst
  * argument order and `byteCount` converted to CpuSet's 32-bit-word
  * count field: masked to the low 23 bits, then divided by 4 (the
@@ -52,4 +51,3 @@ void *MemCopy32(void *dst, const void *src, u32 byteCount)
 void UpdateCtrl(void)
 {
 }
-asm(".align 2, 0");

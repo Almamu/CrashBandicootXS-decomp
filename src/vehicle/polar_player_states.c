@@ -233,5 +233,3 @@ void PolarPlayerStateBoost(void *selfArg)
         }
     }
 }
-
-asm(".align 2, 0");

@@ -247,10 +247,3 @@ void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out)
     out[count + 3] = '>';
     out[count + 4] = 0;
 }
-/* Trailing byte-padding gotcha (see docs/matching.md/
- * matching_decomp_alignment_fix memory): the ROM pads the gap before
- * the next function (DrawPauseTimeTrialPage, still-raw at this point) with zero
- * bytes (an explicit `.align 2, 0` in the original assembly), but this
- * compiler's own default inter-function padding is a `mov r8, r8`
- * NOP-equivalent instead. */
-asm(".align 2, 0");

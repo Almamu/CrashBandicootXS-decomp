@@ -226,5 +226,3 @@ void *FindShotTarget(struct actor_self *self)
     } while (n != gActorList);
     return 0;
 }
-
-asm(".align 2, 0");

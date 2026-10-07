@@ -229,4 +229,3 @@ void DestroyHud(struct hud_counter *self, s32 flags)
         OperatorDelete(self);
     }
 }
-asm(".align 2, 0");

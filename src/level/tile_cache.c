@@ -18,7 +18,6 @@ struct tile_cache *InitTileCache(struct tile_cache *self)
 {
     return self;
 }
-asm(".align 2, 0");
 
 /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
  * slot per tile record. */

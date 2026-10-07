@@ -22,7 +22,9 @@ Usage:
                                      macro (see CONVERTERS)
   tools/match_idioms.py --check      fail if a spelled-out idiom that has a
                                      match.h macro appears outside
-                                     ALLOWED_SPELLED (run by CI)
+                                     ALLOWED_SPELLED, or a kind the build
+                                     made redundant (REDUNDANT_KINDS)
+                                     appears at all (run by CI)
 """
 
 import argparse
@@ -65,7 +67,7 @@ KINDS = collections.OrderedDict([
     ("mem_ref_macro", "MATCH_KEEP_MEM(x) / MATCH_USE_MEM(x)"),
     ("empty_other", "other empty-template asm with operands"),
     ("insn", "inline asm that emits instructions (`add`, `lsl`, `mov`, ...)"),
-    ("file_align", 'file-scope `asm(".align 2, 0")` padding'),
+    ("file_align", 'file-scope `asm(".align 2, 0")` padding (redundant since #663; --check rejects it)'),
     ("pool", '`.pool` (literal-pool placement) in an asm statement'),
     ("set_alias", '`.set` symbol alias in an asm statement'),
     ("file_asm_other", "other file-scope asm block (hand-written routine, data)"),
@@ -213,7 +215,7 @@ def classify_asm(text, m, end, depth):
             kinds.append("pool")
         if ".set " in template:
             kinds.append("set_alias")
-        if re.fullmatch(r"\s*\.align\s+2\s*,\s*0\s*", template):
+        if re.fullmatch(r"\s*\.(?:align\s+2|balign\s+4|p2align\s+2)\s*(?:,\s*0\s*)?", template):
             kinds.append("file_align")
         elif not kinds:
             kinds.append("file_asm_other")
@@ -576,8 +578,20 @@ ALLOWED_SPELLED = {
 }
 
 
+# Kinds the build makes unnecessary, so --check rejects every site:
+# kind -> what to do instead.
+REDUNDANT_KINDS = {
+    "file_align": "drop it; the Makefile's ZERO_PAD_TEXT zero-fills the end of "
+                  "every compiled object's .text (#663, docs/matching_techniques.md)",
+}
+
+
 def check_spelled(hits):
     bad = 0
+    for kind, why in REDUNDANT_KINDS.items():
+        for r, ln in sorted(hits.get(kind, [])):
+            bad += 1
+            print("%s:%d: redundant %s; %s" % (r, ln, kind, why))
     counts = collections.Counter()
     for kind in SPELLED_KINDS:
         for rel, _ in hits.get(kind, []):
@@ -615,7 +629,7 @@ def main():
                          "of the spelling it replaces")
     ap.add_argument("--check", action="store_true",
                     help="fail if an idiom that has a match.h macro is spelled out "
-                         "outside ALLOWED_SPELLED")
+                         "outside ALLOWED_SPELLED, or a REDUNDANT_KINDS site appears")
     args = ap.parse_args()
 
     if args.check_macros:

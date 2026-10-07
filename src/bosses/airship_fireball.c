@@ -71,9 +71,6 @@ void UpdateAirshipFireball(struct actor_self *self)
     }
 }
 
-/* Pad to the next word with zeros, as the ROM does. */
-asm(".align 2, 0");
-
 /* Same large per-instance "self" object family as above - see this file's header comment and
  * docs/matching/archive/issue-58-0x08030334-actor.md. */
 
@@ -112,8 +109,6 @@ void *CreateAirshipFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
     return self;
 }
 
-asm(".align 2, 0");
-
 /* Same boss-weapon "self" object family as above - see this
  * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
@@ -135,9 +130,6 @@ void RunAirshipFireballState(struct actor_self *self)
     ACTOR_PMF_CALL(self, gAirshipFireballStateFuncs);
 }
 
-/* Pad to the next word with zeros, as the ROM does. */
-asm(".align 2, 0");
-
 /* Same boss-weapon "self" object family as above - see this
  * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
@@ -148,5 +140,3 @@ u8 IsAirshipFireballUnshootable(void *selfArg)
     struct actor_orbit *self = selfArg;
     return self->exploding;
 }
-
-asm(".align 2, 0");

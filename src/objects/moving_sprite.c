@@ -325,4 +325,3 @@ void UpdateMovingSprite(struct actor *self)
         _call_via_r2(addr, arg1, fn);
     }
 }
-asm(".align 2, 0");

@@ -130,4 +130,3 @@ void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *objA
         }
     }
 }
-asm(".align 2, 0");

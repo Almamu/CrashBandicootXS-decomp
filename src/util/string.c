@@ -26,9 +26,6 @@ s32 CountNonSpaceChars(u8 *s)
     return count;
 }
 
-/* Trailing padding (see matching_decomp_alignment_fix memory). */
-asm(".align 2, 0");
-
 /* strcat: appends src to the end of dst (in place), NUL-terminating
  * the result. `p`/`i` are pinned to r3/r2 to match the ROM, which
  * finds the end of dst via an index (`p[i]`) rather than walking a
@@ -59,9 +56,6 @@ void strcat(u8 *dst, u8 *src)
         *q = 0;
     }
 }
-
-/* Trailing padding (see matching_decomp_alignment_fix memory). */
-asm(".align 2, 0");
 
 /* strncpy: copies at most n bytes from src into dst, stopping early at
  * src's NUL terminator; NUL-terminates dst only if fewer than n bytes
@@ -109,9 +103,6 @@ void CopyString(u8 *dst, u8 *src)
     }
     *p = 0;
 }
-
-/* Trailing padding (see matching_decomp_alignment_fix memory). */
-asm(".align 2, 0");
 
 /* strlen. Had no thumb_func_start label of its own in the original raw
  * asm/code_3_1_3.s (unlike every other function extracted so far) -

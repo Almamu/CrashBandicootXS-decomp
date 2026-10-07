@@ -87,7 +87,6 @@ void GaxInfoRestart(void *self)
 void GaxInfoUnknown(void)
 {
 }
-asm(".align 2, 0");
 
 /* GAX2_SoundHandler "Info" type's play_fn (ROM 0x0803943D, see
  * docs/audio.md's per-type function-pointer table): advances the song

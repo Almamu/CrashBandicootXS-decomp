@@ -87,7 +87,6 @@ void UpdateEnemyHomingY(struct part_ctrl *self)
         SET_VEL(target->rampY, 0, self->accel)
     }
 }
-asm(".align 2, 0");
 
 /* GitHub issue #9/#10: `UpdateEnemyHop`, another of the four
  * `self+0x68`-dispatching siblings (docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md)

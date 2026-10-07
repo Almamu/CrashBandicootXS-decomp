@@ -174,4 +174,3 @@ void GaxDrawText(u32 col, u32 row, const char *str)
         peekSeed = *s;
     } while (peekSeed != 0);
 }
-asm(".align 2, 0");

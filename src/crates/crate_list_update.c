@@ -224,4 +224,3 @@ void UpdateCrateList(struct pool_manager *manager)
         }
     }
 }
-asm(".align 2, 0");

@@ -30,7 +30,6 @@ void CollideCrateGridPartWithObject(struct part_list *list, struct aabb box, str
         other->flags |= 8;
     }
 }
-asm(".align 2, 0");
 
 /* Searches `manager->slotArray` (bounded by `capacity`, for the
  * search) for `target`; if found, removes it from the collision grid
@@ -240,4 +239,3 @@ void DestroyCrateList(struct pool_manager *manager, s32 flags)
         OperatorDelete(manager);
     }
 }
-asm(".align 2, 0");

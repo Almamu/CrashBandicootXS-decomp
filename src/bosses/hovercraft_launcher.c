@@ -109,8 +109,6 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
     }
 }
 
-asm(".align 2, 0");
-
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
 
@@ -333,5 +331,3 @@ u8 IsHovercraftLauncherUnshootable(void *selfArg)
 
     return self[0x6c];
 }
-
-asm(".align 2, 0");

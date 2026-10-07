@@ -238,5 +238,3 @@ void UpdateYetiBg2(void)
         *pa = scale;
     }
 }
-
-asm(".align 2, 0");

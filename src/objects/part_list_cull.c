@@ -146,4 +146,3 @@ void CollidePartsOfClass(struct part_list *manager, s32 arg1)
         }
     }
 }
-asm(".align 2, 0");

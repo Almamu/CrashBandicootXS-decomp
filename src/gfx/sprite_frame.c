@@ -756,7 +756,6 @@ u32 GetSpriteShapeSizeBits(u8 *frame)
 done:
     return result;
 }
-asm(".align 2, 0");
 
 /* ROM 0x08029168 - frees the buffer `DecompressCategorySpriteSheet`
  * allocated. */

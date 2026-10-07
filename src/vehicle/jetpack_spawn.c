@@ -383,8 +383,6 @@ void UpdateJetpackPlayer(struct actor_hp *self)
     ACTOR_PMF_CALL(&self->base, gJetpackPlayerStateFuncs);
 }
 
-asm(".align 2, 0");
-
 /* The anim_part_instance accessors (actor_anim.c), inlined. */
 static inline s32 AnimBase(struct actor_self *self)
 {
@@ -647,5 +645,3 @@ void JetpackPlayerStateRollRight(struct actor_hp *self)
         ACTOR_SET_STATE(&self->base, 1, 0);
     }
 }
-
-asm(".align 2, 0");

@@ -124,4 +124,3 @@ s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *out
 
     return hit;
 }
-asm(".align 2, 0");

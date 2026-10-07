@@ -130,7 +130,6 @@ void DrawSaveMenuCancel(struct save_menu *self, u8 highlight)
     ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x23));
 }
 
-
 /* Draws `value`'s label centered at Y=0x87, then draws a
  * highlighted/plain pair of fixed labels (0x29/0x2a, purpose
  * unconfirmed) swapping Y=0x87 vs Y=0x91 depending on `self->cursor`
@@ -337,7 +336,6 @@ void DrawSaveSlots(struct save_menu *self, void *handle, s32 selectedIndex)
     DRAW_ROW(2, 0x86, 0x21);
     DRAW_ROW(3, 0x86, 0x53);
 }
-asm(".align 2, 0");
 
 extern void _call_via_r1(void *addr, void *fn);
 
