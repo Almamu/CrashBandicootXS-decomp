@@ -164,6 +164,14 @@ struct player {
     // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
     //        2 left, 4 up, 8 down
     u8 dir;
+/* `dir`'s bits; also struct camera_target.dirFlags (level.h), the same
+ * byte (PlayRoom points gCamera->target at gPlayer). */
+#define PLAYER_DIR_RIGHT 1
+#define PLAYER_DIR_LEFT 2
+#define PLAYER_DIR_UP 4
+#define PLAYER_DIR_DOWN 8
+#define PLAYER_DIR_X 3   // PLAYER_DIR_RIGHT | PLAYER_DIR_LEFT
+#define PLAYER_DIR_Y 0xC // PLAYER_DIR_UP | PLAYER_DIR_DOWN
     u8 screenSpace; // 0x25
     u8 unk_26[2];
     union player_mirror mirror; // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
@@ -190,7 +198,11 @@ struct player {
     s32 prevX;   // 0x6C - previous position (Q8), cached by ApplyPlayerVelocity
     s32 prevY;   // 0x70
     u32 hitMask; // 0x74 - probe axes hit this frame (bits 0-1: X, 2-3: Y)
-    s32 type;    // 0x78 - struct gobj.type; ResetPlayer clears it
+/* hitMask's axes: the swim controller zeroes speedX on an X hit and
+ * speedY on a Y hit (UpdatePlayerCtrl, swim_ctrl.c). */
+#define PLAYER_HIT_X 3
+#define PLAYER_HIT_Y 0xC
+    s32 type; // 0x78 - struct gobj.type; ResetPlayer clears it
     u8 unk_7C[4];
     u8 busy; // 0x80 - set while a triggered crate animation runs (the crate's state
              //        bit 7), cleared when it ends; enemies skip the player meanwhile

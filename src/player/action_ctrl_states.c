@@ -214,7 +214,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 return;
             }
             if (st == 0xE) {
-                u16 held = INPUT_HELD(in) & 0x30;
+                u16 held = INPUT_HELD(in) & DPAD_SIDEWAYS;
 
                 if (held)
                     ActTrio27(self, bit4, 1, 1);
@@ -340,7 +340,7 @@ void ActionCtrlStateSlide(struct act *self)
         }
     }
     {
-        u16 held = INPUT_HELD(in) & 0x100;
+        u16 held = INPUT_HELD(in) & R_BUTTON;
 
         if (held) {
             s32 zero = 0;
@@ -358,7 +358,7 @@ void ActionCtrlStateSlide(struct act *self)
             if (dir != 0 && PlayerHasRoomForAnim((struct box_part *)self->part, 2)) {
                 switch (dir) {
                 case 3 ... 4:
-                    if ((INPUT_HELD(in) & 0x200) && (u8)HasTurboRun(gLevelState)) {
+                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)HasTurboRun(gLevelState)) {
                         self->turboRun = 1;
                         ACT_VCALL1(self, m20, ACTION_STATE_TURBO_RUN);
                         ACT_VCALL2(self, m50, self->part, 0x18);
@@ -656,7 +656,7 @@ turn_done:
     }
 
     {
-        s32 held = INPUT_HELD(in) & 0x180;
+        s32 held = INPUT_HELD(in) & (DPAD_DOWN | R_BUTTON);
 
         if (held == 0) {
             u8 hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2);
@@ -822,7 +822,7 @@ void ActionCtrlStateCrawl(struct act *selfArg)
         self->motionX = busy;
         break;
     }
-    held = INPUT_HELD(in) & 0x180;
+    held = INPUT_HELD(in) & (DPAD_DOWN | R_BUTTON);
     if (held == 0 && (hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2)) == 1) {
         ACT_CALL1(self, m20, ACTION_STATE_STAND_UP);
         ACT_CALL2(self, m50, self->part, 2);

@@ -204,7 +204,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             s32 fire;
             s32 one;
 
-            if (held & 0x100)
+            if (held & R_BUTTON)
                 self->slamBlocked = 1;
             /* one = 1, kept apart from the fire test's 1 (see above). */
             MATCH_CONST(one, 1);
@@ -228,7 +228,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             s32 fire;
             s32 one;
 
-            if (held & 0x100)
+            if (held & R_BUTTON)
                 self->slamBlocked = 1;
             /* one = 1, kept apart from the fire test's 1 (see above). */
             MATCH_CONST(one, 1);

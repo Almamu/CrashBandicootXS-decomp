@@ -392,7 +392,7 @@ void HandleActionCtrlAirInput(struct act *self)
     }
 done:
     if (self->state != ACTION_STATE_AIR_SPIN && self->state != ACTION_STATE_AIRBORNE_HIGH_JUMP &&
-        near && (in & 0x100)) {
+        near && (in & R_BUTTON)) {
         u8 busy = self->slamBlocked;
 
         if (busy == 0) {

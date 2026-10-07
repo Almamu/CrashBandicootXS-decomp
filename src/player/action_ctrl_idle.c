@@ -228,7 +228,7 @@ skip:
             if (alt) {
                 StartActionCtrlSpin(self);
             } else {
-                if ((held = INPUT_HELD(in) & 0x100) == 0)
+                if ((held = INPUT_HELD(in) & R_BUTTON) == 0)
                     goto other;
                 ACT_CALL1(self, m20, ACTION_STATE_CROUCH_DOWN);
                 ACT_CALL2(self, m50, self->part, 3);
@@ -251,7 +251,7 @@ skip:
             if (wait == 0) {
                 switch (dir) {
                 case 3 ... 8:
-                    if ((INPUT_HELD(in) & 0x200) && (u8)HasTurboRun(gLevelState)) {
+                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)HasTurboRun(gLevelState)) {
                         self->turboRun = 1;
                         ACT_CALL1(self, m20, ACTION_STATE_TURBO_RUN);
                         ACT_CALL2(self, m50, self->part, 0x18);

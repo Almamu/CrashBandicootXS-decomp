@@ -2,6 +2,7 @@
 #include "match.h"
 #include "memory.h"
 #include "level.h"
+#include "player.h"
 #include "globals.h"
 
 /* GitHub issue #44: the `gCamera` camera-follow block (the
@@ -24,8 +25,8 @@
  * - `StepCameraDirectional` (mode 2): `target+0x24` direction bits steer the
  *   look-ahead in 0x100 steps (bit 0/1 = +x/-x up to +0x27FF/-0x2800,
  *   bit 2/3 = -y/+y up to -0x1AAA/+0x1AA9); an axis with neither of its
- *   bits set decays back toward 0 by the same step. What writes
- *   `target+0x24` is not traced here.
+ *   bits set decays back toward 0 by the same step. `target+0x24` is
+ *   gPlayer's `dir` (PLAYER_DIR_*, player.h; the target is gPlayer).
  * - `StepCameraFacing` (mode 1): horizontal look-ahead grows toward -0x1276
  *   or +0x1276 depending on `target+0x28` bit 4 (the mirror flag several
  *   actor-side functions already document at that offset), vertical
@@ -58,24 +59,24 @@ void StepCameraDirectional(struct camera *cam)
     u8 dir = cam->target->dirFlags;
 
     if (dir != 0) {
-        if ((dir & 4) && cam->vy > -0x1AAA)
+        if ((dir & PLAYER_DIR_UP) && cam->vy > -0x1AAA)
             cam->vy -= 0x100;
-        else if ((dir & 8) && cam->vy <= 0x1AA9)
+        else if ((dir & PLAYER_DIR_DOWN) && cam->vy <= 0x1AA9)
             cam->vy += 0x100;
 
-        if ((dir & 2) && cam->vx > -0x2800)
+        if ((dir & PLAYER_DIR_LEFT) && cam->vx > -0x2800)
             cam->vx -= 0x100;
-        else if ((dir & 1) && cam->vx <= 0x27FF)
+        else if ((dir & PLAYER_DIR_RIGHT) && cam->vx <= 0x27FF)
             cam->vx += 0x100;
 
-        if (!(dir & 3)) {
+        if (!(dir & PLAYER_DIR_X)) {
             if (cam->vx > 0)
                 cam->vx -= 0x100;
             else if (cam->vx < 0)
                 cam->vx += 0x100;
         }
 
-        if (!(dir & 0xC)) {
+        if (!(dir & PLAYER_DIR_Y)) {
             if (cam->vy > 0)
                 cam->vy -= 0x100;
             else if (cam->vy < 0)

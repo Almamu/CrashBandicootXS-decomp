@@ -41,7 +41,7 @@ void ActionCtrlStateBodySlamLand(struct act *self)
 
     if (part->animDone != 0) {
         void *dummy = gInput;
-        u16 m = gKeys.all & 0x100;
+        u16 m = gKeys.all & R_BUTTON;
         u8 v = m != 0;
         s32 st = GetDpadDirection(dummy);
 
@@ -98,7 +98,7 @@ void ActionCtrlStateLand(struct act *self)
     u16 flag;
 
     self->frame = 0;
-    if ((flag = gKeys.all & 0x100) != 0) {
+    if ((flag = gKeys.all & R_BUTTON) != 0) {
         ACT_CALL1(self, m20, ACTION_STATE_CROUCH_DOWN);
         ACT_CALL2(self, m50, self->part, 3);
         self->frames = 0;

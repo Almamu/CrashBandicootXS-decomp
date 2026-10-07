@@ -342,7 +342,7 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
         u16 n = *(u8 *)src;
 
         src++;
-        if (token & 0x8000) {
+        if (token & CHUNK_TOKEN_FILL) {
             u16 value = *src++;
 
             budget -= n;
@@ -351,7 +351,7 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
                 written++;
                 n--;
             } while (n != 0);
-        } else if (token & 0x4000) {
+        } else if (token & CHUNK_TOKEN_DELTA) {
             s16 acc;
 
             budget -= n;
