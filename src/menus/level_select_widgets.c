@@ -277,10 +277,10 @@ void SetLevelSelectEntrySelected(struct level_item *self, u8 selected)
 void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index)
 {
     if (index <= 4) {
-        self->id = world * 5 + index;
+        self->id = world * LEVELS_PER_WORLD + index;
         SetFrame(self->icon, self->id);
     } else {
-        self->id = world + 0x14;
+        self->id = world + LEVEL_FIRST_BOSS;
         SetAnim(self->icon, gLevelSelectEntryWorldAnims[world]);
     }
 }

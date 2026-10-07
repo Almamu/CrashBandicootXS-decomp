@@ -32,9 +32,9 @@ extern const u16 gHovercraftCategoryPalette[];
 /* One descriptor per actor category 0-6 (type 0: categories 0-2,
  * type 1: 3-5, type 2: 6). data.s used to split this table at
  * 0x08175564 and 0x08175584; nothing referenced those labels. */
-const struct category_descriptor gActorCategories[7] = {
-    /* 0 */ {
-        0,
+const struct category_descriptor gActorCategories[CATEGORY_COUNT] = {
+    [CATEGORY_FROSTBITE_CAVERN] = {
+        CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
@@ -48,8 +48,8 @@ const struct category_descriptor gActorCategories[7] = {
         1,
         0,
     },
-    /* 1 */ {
-        0,
+    [CATEGORY_SNOW_CRASH] = {
+        CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
@@ -63,8 +63,8 @@ const struct category_descriptor gActorCategories[7] = {
         3,
         2,
     },
-    /* 2 */ {
-        0,
+    [CATEGORY_SNOW_JOB] = {
+        CATEGORY_TYPE_POLAR,
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
@@ -78,8 +78,8 @@ const struct category_descriptor gActorCategories[7] = {
         5,
         4,
     },
-    /* 3 */ {
-        1,
+    [CATEGORY_ROCKET_RACKET] = {
+        CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory3BgPicture,
@@ -93,8 +93,8 @@ const struct category_descriptor gActorCategories[7] = {
         0,
         3,
     },
-    /* 4 */ {
-        1,
+    [CATEGORY_BLIMP_BONANZA] = {
+        CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory4BgPicture,
@@ -108,8 +108,8 @@ const struct category_descriptor gActorCategories[7] = {
         0,
         3,
     },
-    /* 5 */ {
-        1,
+    [CATEGORY_NO_FLY_ZONE] = {
+        CATEGORY_TYPE_JETPACK,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory5BgPicture,
@@ -123,8 +123,8 @@ const struct category_descriptor gActorCategories[7] = {
         0,
         3,
     },
-    /* 6 */ {
-        2,
+    [CATEGORY_N_GIN] = {
+        CATEGORY_TYPE_HOVERCRAFT,
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory5BgPicture,
@@ -143,8 +143,8 @@ const struct category_descriptor gActorCategories[7] = {
 /* The three per-type category vtables, `gActorCategoryVtable =
  * &gActorCategoryVtables[type]` in SelectActorCategory
  * (actor_category_select.c). Slots 7 and 8 are not code addresses. */
-const struct category_vtable gActorCategoryVtables[3] = {
-    /* 0 */ { {
+const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT] = {
+    [CATEGORY_TYPE_POLAR] = { {
         (void (*)(void))ConstructAnimTableState,
         (void (*)(void))SpawnActor,
         (void (*)(void))CreateYeti,
@@ -159,7 +159,7 @@ const struct category_vtable gActorCategoryVtables[3] = {
         (void (*)(void))PolarReloadPlayerTiles,
         (void (*)(void))PolarIsPauseLocked,
     } },
-    /* 1 */ { {
+    [CATEGORY_TYPE_JETPACK] = { {
         (void (*)(void))CreateJetpackPlayer,
         (void (*)(void))SpawnJetpackActor,
         (void (*)(void))CreateAirship,
@@ -174,7 +174,7 @@ const struct category_vtable gActorCategoryVtables[3] = {
         (void (*)(void))JetpackReloadPlayerTiles,
         (void (*)(void))JetpackIsPauseLocked,
     } },
-    /* 2 */ { {
+    [CATEGORY_TYPE_HOVERCRAFT] = { {
         (void (*)(void))CreateJetpackPlayer,
         (void (*)(void))SpawnJetpackActor,
         (void (*)(void))CreateHovercraft,

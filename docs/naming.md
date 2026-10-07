@@ -137,6 +137,16 @@ the names with the header it already includes. A data table in
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `levelFlags[]` word |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
+| `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `data/levels/levels.json` |
+| `rooms.h` | `ROOM_KIND_` | `struct level_room.kind` (on foot, underwater, hover, category stage) |
+| `bosses.h` | `BOSS_` | `GetBossIndex` results |
+| `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
+
+A value set that a data source already lists is generated from it, not
+written by hand: `tools/levels.py constants` writes `constants/levels.h`
+from `levels.json`'s `"levels"` list into `build/crashbandicootxs/include/`,
+which is on the quote include path after `include/` (levels.mk). Every C
+object depends on it (order-only), so it exists before anything compiles.
 
 Planned topics use the same scheme (`entities.h`/`ENTITY_`,
 `crates.h`/`CRATE_KIND_`, `events.h`/`EVENT_`, ...).

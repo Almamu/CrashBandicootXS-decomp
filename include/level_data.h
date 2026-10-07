@@ -2,6 +2,9 @@
 #define GUARD_LEVEL_DATA_H
 
 #include "gba/types.h"
+#include "constants/levels.h"
+#include "constants/rooms.h"
+#include "constants/categories.h"
 
 /*
  * The rooms' level data (docs/levels.md), as src/data/level_rooms_*.c

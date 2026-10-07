@@ -74,7 +74,7 @@ void UpdateGameFrame(struct level_state *self)
     SetUnusedAssistDeaths(self, 5);
     SetMaskAssistDeaths(self, 5);
     SetCrateAssistDeaths(self, 5);
-    self->level = 0;
+    self->level = LEVEL_JUNGLE_JAM;
     self->checkpointFlags = 0;
     {
         struct dma_regs *dma;
@@ -118,8 +118,8 @@ void UpdateGameFrame(struct level_state *self)
             {
                 s32 level = self->level;
 
-                if (level > 23)
-                    level = 23;
+                if (level > LEVEL_NEO_CORTEX)
+                    level = LEVEL_NEO_CORTEX;
                 self->level = level;
             }
             quit = RunLevelSelect(&self->level);
@@ -187,12 +187,12 @@ void UpdateGameFrame(struct level_state *self)
             PlayRoomMusic((struct level_progress *)&self->level);
             mem_free_bytes(0xC0000000);
             switch (self->cat->kind) {
-            case 0:
-            case 1:
-            case 2:
+            case ROOM_KIND_ON_FOOT:
+            case ROOM_KIND_UNDERWATER:
+            case ROOM_KIND_HOVER:
                 status = PlayRoom((struct level_progress *)&self->level);
                 break;
-            case 3:
+            case ROOM_KIND_CATEGORY:
                 status = InitActorCategory(self->cat->catIndex);
                 if (status == 0) {
                     AddPendingSwitchCrates(self, GetActorMissedNitros());
@@ -268,7 +268,7 @@ void UpdateGameFrame(struct level_state *self)
         }
         if (status == 0) {
             switch (self->level) {
-            case 20:
+            case LEVEL_DINGODILE:
                 if (!(u8)HasSuperBodySlam(self)) {
                     SetNewWorldOpened();
                     GiveSuperBodySlam(self);
@@ -276,7 +276,7 @@ void UpdateGameFrame(struct level_state *self)
                     PlayCutscene(self, 4);
                 }
                 break;
-            case 21:
+            case LEVEL_N_GIN:
                 if (!(u8)HasDoubleJump(self)) {
                     SetNewWorldOpened();
                     GiveDoubleJump(self);
@@ -284,7 +284,7 @@ void UpdateGameFrame(struct level_state *self)
                     PlayCutscene(self, 5);
                 }
                 break;
-            case 22:
+            case LEVEL_TINY:
                 if (!(u8)HasTornadoSpin(self)) {
                     SetNewWorldOpened();
                     GiveTornadoSpin(self);
@@ -292,7 +292,7 @@ void UpdateGameFrame(struct level_state *self)
                     PlayCutscene(self, 6);
                 }
                 break;
-            case 23:
+            case LEVEL_NEO_CORTEX:
                 if (!(u8)HasTurboRun(self)) {
                     SetNewWorldOpened();
                     GiveTurboRun(self);
@@ -307,12 +307,12 @@ void UpdateGameFrame(struct level_state *self)
                 PlayCutscene(self, 10);
                 RunCredits();
                 break;
-            case 24:
+            case LEVEL_MEGA_MIX:
                 PlayCutscene(self, 9);
                 RunCredits();
                 break;
             default:
-                if (self->cat->kind == 3)
+                if (self->cat->kind == ROOM_KIND_CATEGORY)
                     ((union level_best_time *)GetCurrentLevelFlags(self))->f.flag = 1;
                 break;
             }

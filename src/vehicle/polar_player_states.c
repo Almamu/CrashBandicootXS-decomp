@@ -146,7 +146,7 @@ void PolarPlayerStateFinishLeap(void *selfArg)
     }
 
     if (self->depth <= 0x3FF) {
-        SetActorCategoryExitStatus(1);
+        SetActorCategoryExitStatus(CATEGORY_EXIT_CLEARED);
     }
 }
 
@@ -168,7 +168,7 @@ void PolarPlayerStateCarriedOff(void *selfArg)
     }
 
     if (self->depth <= 0x3FF) {
-        SetActorCategoryExitStatus(2);
+        SetActorCategoryExitStatus(CATEGORY_EXIT_BOSS_DEATH);
     }
 }
 
@@ -188,7 +188,7 @@ void PolarPlayerStateKnockedOff(void *selfArg)
     }
 
     if (self->y < (s32)0xFFFF8E00) {
-        SetActorCategoryExitStatus(3);
+        SetActorCategoryExitStatus(CATEGORY_EXIT_DEATH);
     }
 }
 

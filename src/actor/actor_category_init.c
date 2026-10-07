@@ -76,7 +76,7 @@ s32 InitActorCategory(s32 category)
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
     ClearCollectedSpawns();
-    EnableActorPaletteCycle(CUR_CATEGORY.type == 0);
+    EnableActorPaletteCycle(CUR_CATEGORY.type == CATEGORY_TYPE_POLAR);
     InitActorBgScroll(CUR_CATEGORY.type);
 
     do {
@@ -128,17 +128,17 @@ s32 InitActorCategory(s32 category)
             UpdateActorCategoryBg2();
             AgeSpriteFrameCache();
 
-            if (status != 0) {
-                if (status == 1) {
+            if (status != CATEGORY_EXIT_NONE) {
+                if (status == CATEGORY_EXIT_CLEARED) {
                     ret = 0;
-                } else if (status == 2) {
+                } else if (status == CATEGORY_EXIT_BOSS_DEATH) {
                     if ((*state)->timeTrial != 0)
                         goto again;
                     goto both;
-                } else if (status == 3) {
+                } else if (status == CATEGORY_EXIT_DEATH) {
                     if ((*state)->timeTrial != 0)
                         goto again;
-                    if (CUR_CATEGORY.type != 0) {
+                    if (CUR_CATEGORY.type != CATEGORY_TYPE_POLAR) {
                     both:
                         (*variantCount)++;
                     }

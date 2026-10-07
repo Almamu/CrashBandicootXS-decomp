@@ -33,7 +33,7 @@ void UpdateHud(struct hud_counter *self)
 
     UpdateHudLives(sself);
 
-    if (GetBossIndex(gLevelState) != -1) {
+    if (GetBossIndex(gLevelState) != BOSS_NONE) {
         UpdateHudBoss(sself);
         return;
     }

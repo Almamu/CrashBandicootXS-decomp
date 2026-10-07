@@ -65,7 +65,7 @@ void StartTimeTrial(struct level_state *self)
     self->tenths = 0;
     self->frames = 0;
     self->countdown = 0;
-    if (self->cat->kind == 3)
+    if (self->cat->kind == ROOM_KIND_CATEGORY)
         return;
 
     part = (struct slot_part *)self->bonusPlatform;

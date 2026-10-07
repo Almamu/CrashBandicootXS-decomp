@@ -21,6 +21,7 @@
 #include "core.h"
 #include "vtable.h"
 #include "graphics_package.h"
+#include "constants/levels.h"
 
 struct bg_package;
 struct bitmap_font;

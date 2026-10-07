@@ -31,3 +31,16 @@ LEVELS_BUILT := $(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.b
 
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR)/$(r).inc))
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+
+# constants/levels.h (the LEVEL_* ids) is generated from levels.json's
+# "levels" list into build/.../include, which is on the quote include path
+# after include/. Any C file may include it, so it's built before every C
+# object (order-only; the .d files track who includes it).
+LEVELS_CONSTANTS := $(OBJ_DIR)/include/constants/levels.h
+CPPFLAGS += -iquote $(OBJ_DIR)/include
+
+$(LEVELS_CONSTANTS): data/levels/levels.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants $@
+
+$(C_OBJS): | $(LEVELS_CONSTANTS)

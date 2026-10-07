@@ -268,7 +268,10 @@ each region in ROM order.
 `data/levels/`:
 
 - `levels.json`: the rooms, and per region its C file name and its rooms
-  in ROM order.
+  in ROM order; and the levels in id order (`"levels"`: each one's
+  `LEVEL_*` name, name text and world), from which
+  `tools/levels.py constants` generates `constants/levels.h`. `extract`
+  keeps this list, which doesn't come from the ROM's room data.
 - `roomNN_xxxxxx/room.json`: the palette (BGR555), the asset's symbol and
   whether it is packed, per layer its tile set, scale, `cnt`, size in
   chunks and tiles and map file, the parameter records (lists of words),

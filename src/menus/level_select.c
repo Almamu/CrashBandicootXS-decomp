@@ -476,11 +476,11 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     self->dispcnt.bits.bg0 = 1;
     self->dispcnt.bits.bg1 = 1;
     self->dispcnt.bits.obj = 1;
-    if (arg <= 0x13) {
-        self->world = __divsi3(arg, 5);
-        self->index = __modsi3(arg, 5);
+    if (arg <= LEVEL_LAST_NUMBERED) {
+        self->world = __divsi3(arg, LEVELS_PER_WORLD);
+        self->index = __modsi3(arg, LEVELS_PER_WORLD);
     } else {
-        self->world = arg - 0x14;
+        self->world = arg - LEVEL_FIRST_BOSS;
         self->index = 5;
     }
     self->nameText = 0;

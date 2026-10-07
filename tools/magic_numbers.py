@@ -4,7 +4,8 @@
 Scans the C sources under src/ and include/ for integer literals in
 places where the game has named values: sound and song IDs, level-flag
 bits, mask levels, event IDs, action-controller states, entity and crate
-kinds, actor-category exit statuses and `& 0xNN` flag tests. Each hit is
+kinds, actor-category exit statuses, level ids, room kinds, boss ids,
+actor categories and `& 0xNN` flag tests. Each hit is
 put under one topic. A value that is already a name (`SFX_CRATE_BREAK`,
 `LEVEL_FLAG_CRATE_GEM`, ...) isn't a literal, so it isn't listed: the
 counts go down as literals are replaced.
@@ -38,6 +39,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCAN_DIRS = ("src", "include")
 CONSTANTS_DIR = os.path.join(ROOT, "include", "constants")
+# Generated constants headers (levels.h from data/levels/levels.json; run make).
+BUILT_CONSTANTS_DIR = os.path.join(ROOT, "build", "crashbandicootxs", "include", "constants")
 
 LIT = r"(?:0[xX][0-9a-fA-F]+|[0-9]+)[uUlL]*"
 LIT_RE = re.compile(r"^-?\s*" + LIT + r"$")
@@ -53,6 +56,10 @@ TOPICS = collections.OrderedDict(
         ("action_state", ("action-controller states (SetActionCtrlMode, ->state)", ("ACTION_",))),
         ("kind", ("entity / crate kinds (->kind comparisons, CreateCrate)", ("ENTITY_", "CRATE_KIND_"))),
         ("category_exit", ("SetActorCategoryExitStatus values", ("CATEGORY_EXIT_",))),
+        (
+            "level",
+            ("level ids, room kinds, boss ids, actor categories", ("LEVEL_", "ROOM_KIND_", "BOSS_", "CATEGORY_")),
+        ),
         ("flag_test", ("`& 0xNN` flag tests (not counted above)", ())),
     ]
 )
@@ -87,6 +94,13 @@ FIELDS = [
         r"(?:->|\.)(?:state|prevState)\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b",
         os.path.join("src", "player", ""),
     ),
+    # level topic: room kinds (src/level/'s only ->kind tests), the level
+    # id, GetBossIndex's result and the category type. Before "kind".
+    ("level", r"->kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", os.path.join("src", "level", "")),
+    ("level", r"\bself->level\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None),
+    ("level", r"GetBossIndex\s*\([\w*>-]*\)\s*(?:==|!=)\s*(?P<v>-?" + LIT + r")(?![\w])", None),
+    ("level", r"(?:CUR_CATEGORY|gActorCategories\[\w+\])\.type\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", None),
+    ("category_exit", r"\bgActorCategoryExitStatus\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None),
     ("kind", r"(?:->|\.)kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", None),
     (
         "level_flags",
@@ -241,16 +255,20 @@ def scan_file(path, rel):
 
 
 def load_constants():
-    """value -> [names] per prefix, from include/constants/*.h."""
+    """value -> [names] per prefix, from include/constants/*.h and the
+    generated headers."""
     by_prefix = collections.defaultdict(lambda: collections.defaultdict(list))
-    if not os.path.isdir(CONSTANTS_DIR):
-        return by_prefix
     define = re.compile(r"^\s*#\s*define\s+([A-Z][A-Z0-9_]*)\s+\(?\s*(" + LIT + r")\s*\)?\s*(?:/[/*].*)?$")
     shift = re.compile(r"^\s*#\s*define\s+([A-Z][A-Z0-9_]*)\s+\(\s*1\s*<<\s*(\d+)\s*\)")
-    for name in sorted(os.listdir(CONSTANTS_DIR)):
-        if not name.endswith(".h"):
-            continue
-        for line in open(os.path.join(CONSTANTS_DIR, name)):
+    paths = [
+        os.path.join(d, name)
+        for d in (CONSTANTS_DIR, BUILT_CONSTANTS_DIR)
+        if os.path.isdir(d)
+        for name in sorted(os.listdir(d))
+        if name.endswith(".h")
+    ]
+    for path in paths:
+        for line in open(path):
             m = define.match(line)
             value = None
             if m:
@@ -261,10 +279,14 @@ def load_constants():
                     value = 1 << int(m.group(2))
             if value is None:
                 continue
-            for topic, (_, prefixes) in TOPICS.items():
-                for p in prefixes:
-                    if m.group(1).startswith(p):
-                        by_prefix[topic][value].append(m.group(1))
+            # The longest matching prefix wins (LEVEL_FLAG_ over LEVEL_).
+            best = max(
+                ((p, t) for t, (_, ps) in TOPICS.items() for p in ps if m.group(1).startswith(p)),
+                key=lambda pt: len(pt[0]),
+                default=None,
+            )
+            if best:
+                by_prefix[best[1]][value].append(m.group(1))
     return by_prefix
 
 

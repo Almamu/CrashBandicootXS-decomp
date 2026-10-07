@@ -135,7 +135,7 @@ s32 PlayRoom(struct level_progress *selfArg)
     }
 
     switch (mode) {
-    case 0:
+    case ROOM_KIND_ON_FOOT:
         {
             u8 *widget = (u8 *)InitActionCtrl(OperatorNew(0x38));
 
@@ -158,7 +158,7 @@ s32 PlayRoom(struct level_progress *selfArg)
             }
             break;
         }
-    case 1:
+    case ROOM_KIND_UNDERWATER:
         {
             void *w;
 
@@ -195,7 +195,7 @@ s32 PlayRoom(struct level_progress *selfArg)
             }
             break;
         }
-    case 2:
+    case ROOM_KIND_HOVER:
         {
             u8 *widget = (u8 *)CreateInputCtrl(OperatorNew(0x28));
 

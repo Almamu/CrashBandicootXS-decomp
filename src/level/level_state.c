@@ -75,7 +75,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     LoadPaletteSlot(gPaletteCache, slot, recordId);
 
     level = self->cat;
-    if (level->kind == 3) {
+    if (level->kind == ROOM_KIND_CATEGORY) {
         UploadPaletteSlot(gPaletteCache, slot);
     }
 }
@@ -146,7 +146,7 @@ void TickLevelClock(struct level_state *self)
             LoadPaletteSlot(gPaletteCache, slot, recordId);
 
             level = self->cat;
-            if (level->kind == 3) {
+            if (level->kind == ROOM_KIND_CATEGORY) {
                 UploadPaletteSlot(gPaletteCache, slot);
             }
         }
@@ -202,7 +202,7 @@ void AddBrokenCrate(struct level_state *self)
         if (!IsInBonusRound(self) && !IsInGemPath(self)) {
             const struct level_room *level = self->cat;
 
-            if (level->kind == 3) {
+            if (level->kind == ROOM_KIND_CATEGORY) {
                 u8 *flags = GetCurrentLevelFlags(self);
                 /* Register pins reproduce the ROM's "build the OR
                  * mask before loading the byte" order - a plain
@@ -243,7 +243,7 @@ void PressSwitchCrate(struct level_state *self)
     if (!IsInBonusRound(self) && !IsInGemPath(self)) {
         const struct level_room *level = self->cat;
 
-        if (level->kind == 3) {
+        if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
             MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
             MATCH_HOLD_REG(s32, value, r2) = *flags;
@@ -679,19 +679,19 @@ s32 GetBossHealth(struct level_state *self)
     s32 idx = self->level;
 
     switch (idx) {
-    case 0x15:
+    case LEVEL_N_GIN:
         return GetHovercraftPartsLeft();
-    case 0x14:
+    case LEVEL_DINGODILE:
         {
             struct level_state_1c8 *p = self->boss;
             return 3 - p->hits;
         }
-    case 0x16:
+    case LEVEL_TINY:
         {
             struct level_state_1c8 *p = self->boss;
             return 3 - p->hits;
         }
-    case 0x17:
+    case LEVEL_NEO_CORTEX:
         {
             struct level_state_1c8 *p = self->boss;
             return 3 - p->hits;
@@ -701,10 +701,11 @@ s32 GetBossHealth(struct level_state *self)
     }
 }
 
-/* Same `self+0xc4` "current index" field, mapped through a 5-entry
- * table (`0x14`-`0x18`) to `{9, 8, 6, 7}` minus a shared `6` - index
- * `0x18` and anything outside `[0x14, 0x18]` both skip the shared
- * subtraction and return `-1` directly (the ROM's own `_080233F0`
+/* Same `self+0xc4` "current index" field, the level, mapped through a
+ * 5-entry table (the boss levels) to the boss's HUD icon animation
+ * (`{9, 8, 6, 7}`) minus a shared `BOSS_HUD_ANIM_BASE`, giving BOSS_* -
+ * LEVEL_MEGA_MIX and any other level both skip the shared
+ * subtraction and return BOSS_NONE directly (the ROM's own `_080233F0`
  * case-4 slot points straight at `_080233F8`'s `bx lr`, bypassing
  * `_080233F6`'s `subs r0,#6` cases 0-3 share - a plain
  * `return 9 - 6;`-style fold collapses that shared instruction away,
@@ -714,24 +715,24 @@ s32 GetBossIndex(struct level_state *self)
     s32 idx = self->level;
     s32 result;
 
-    switch (idx - 0x14) {
-    case 0:
-        result = 9;
+    switch (idx) {
+    case LEVEL_DINGODILE:
+        result = BOSS_HUD_ANIM_BASE + BOSS_DINGODILE;
         break;
-    case 1:
-        result = 8;
+    case LEVEL_N_GIN:
+        result = BOSS_HUD_ANIM_BASE + BOSS_N_GIN;
         break;
-    case 2:
-        result = 6;
+    case LEVEL_TINY:
+        result = BOSS_HUD_ANIM_BASE + BOSS_TINY;
         break;
-    case 3:
-        result = 7;
+    case LEVEL_NEO_CORTEX:
+        result = BOSS_HUD_ANIM_BASE + BOSS_NEO_CORTEX;
         break;
-    case 4:
+    case LEVEL_MEGA_MIX:
     default:
-        return -1;
+        return BOSS_NONE;
     }
-    return result - 6;
+    return result - BOSS_HUD_ANIM_BASE;
 }
 
 /* Address-of-slot helper: level `idx`'s word in `levelFlags`. */
@@ -814,7 +815,7 @@ void CheckAllCratesBroken(void *selfArg)
     if (self->crateCount == self->crateTotal && !IsInBonusRound(self) && !IsInGemPath(self)) {
         const struct level_room *level = self->cat;
 
-        if (level->kind == 3) {
+        if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
             MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
             MATCH_HOLD_REG(s32, value, r2) = *flags;

@@ -65,12 +65,12 @@ s32 CountLevelCrates(s32 idx)
         s32 type = item->kind;
 
         switch (type) {
-        case 0:
-        case 1:
-        case 2:
+        case ROOM_KIND_ON_FOOT:
+        case ROOM_KIND_UNDERWATER:
+        case ROOM_KIND_HOVER:
             v = CountCrateEntities(gEntityFlags, item->desc->entities);
             break;
-        case 3:
+        case ROOM_KIND_CATEGORY:
             v = CountCategoryCrates(item->catIndex);
             break;
         }
@@ -83,12 +83,12 @@ s32 CountLevelCrates(s32 idx)
         s32 type = item->kind;
 
         switch (type) {
-        case 0:
-        case 1:
-        case 2:
+        case ROOM_KIND_ON_FOOT:
+        case ROOM_KIND_UNDERWATER:
+        case ROOM_KIND_HOVER:
             v = CountCrateEntities(gEntityFlags, item->desc->entities);
             break;
-        case 3:
+        case ROOM_KIND_CATEGORY:
             v = CountCategoryCrates(item->catIndex);
             break;
         }
@@ -101,12 +101,12 @@ s32 CountLevelCrates(s32 idx)
         s32 type = item->kind;
 
         switch (type) {
-        case 0:
-        case 1:
-        case 2:
+        case ROOM_KIND_ON_FOOT:
+        case ROOM_KIND_UNDERWATER:
+        case ROOM_KIND_HOVER:
             v = CountCrateEntities(gEntityFlags, item->desc->entities);
             break;
-        case 3:
+        case ROOM_KIND_CATEGORY:
             v = CountCategoryCrates(item->catIndex);
             break;
         }
@@ -168,7 +168,7 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
         do {
             const struct level_room *item = *itemPtr;
 
-            if (item->kind != 3) {
+            if (item->kind != ROOM_KIND_CATEGORY) {
                 const struct level_entity_list *nested = item->desc->entities;
                 MATCH_HOLD_REG(u32, table, r1) = (u32)nested->typeCounts;
                 MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
@@ -180,7 +180,7 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
         } while (i < n && result == 0);
     }
 
-    if (result == 0 && list->extra1 != 0 && list->extra1->kind != 3) {
+    if (result == 0 && list->extra1 != 0 && list->extra1->kind != ROOM_KIND_CATEGORY) {
         const struct level_entity_list *nested = list->extra1->desc->entities;
         MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
         s32 shift = fi << 1;
@@ -189,7 +189,7 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
         result = (u32)(-(s32)v | v) >> 31;
     }
 
-    if (result == 0 && list->extra2 != 0 && list->extra2->kind != 3) {
+    if (result == 0 && list->extra2 != 0 && list->extra2->kind != ROOM_KIND_CATEGORY) {
         const struct level_entity_list *nested = list->extra2->desc->entities;
         MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
         s32 shift = fi << 1;
@@ -269,12 +269,12 @@ s32 CountRoomCrates(const struct level_room *item)
     s32 type = item->kind;
 
     switch (type) {
-    case 0:
-    case 1:
-    case 2:
+    case ROOM_KIND_ON_FOOT:
+    case ROOM_KIND_UNDERWATER:
+    case ROOM_KIND_HOVER:
         v = CountCrateEntities(gEntityFlags, item->desc->entities);
         break;
-    case 3:
+    case ROOM_KIND_CATEGORY:
         v = CountCategoryCrates(item->catIndex);
         break;
     }
