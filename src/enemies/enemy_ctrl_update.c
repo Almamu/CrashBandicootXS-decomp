@@ -282,7 +282,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
     case 11:
         UpdateEnemyHomingX(self);
         UpdateEnemyHomingY(self);
-        if (TargetHit(self->target) && self->kind == 6) {
+        if (TargetHit(self->target) && self->kind == ENEMY_KIND_SEA_MINE) {
             struct part_method *m = &self->anchor->bounce;
 
             ((ctrl_bounce_fn)m->fn)((u8 *)self + m->thisOffset, 0, 1, 0);

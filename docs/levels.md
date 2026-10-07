@@ -194,7 +194,11 @@ top of it (`SetCrateAbove`/`SetCrateBelow`).
 
 The spawn functions in `gEntitySpawnFuncs`, identified from the sprite
 bank and animation each one sets up (`graphics/sprites/`), the pickup
-code it gives the object and where the levels place it:
+code it gives the object and where the levels place it. Their names are
+in `data/levels/entity_types.json` (one record per type: `name`,
+`spawner`, and for an enemy its `enemy_kind`), which the build turns into
+the `ENTITY_*` and `ENEMY_KIND_*` defines of `constants/entities.h` (see
+"Sources and build"):
 
 | Type | Spawner | What |
 |---|---|---|
@@ -206,7 +210,7 @@ code it gives the object and where the levels place it:
 | 0x09, 0x0A, 0x0B, 0x0C | `SpawnBlueGem`, `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem` | the coloured gems (bank 32) |
 | 0x10 | `SpawnStopwatch` | the time-trial stopwatch (bank 36) |
 | 0x12, 0x13, 0x14, 0x4A | `SpawnTurboRunPower`, `SpawnDoubleJumpPower`, `SpawnBodySlamPower`, `SpawnTornadoSpinPower` | the four power pictures (bank 38); no level places them |
-| 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` types 0-18 (bank 31), see `include/crate.h` |
+| 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` kinds 0-18 (bank 31), `CRATE_KIND_*` (`data/levels/crate_kinds.json`) |
 | 0x51-0x54 | `SpawnRedGemPlatform`, `SpawnYellowGemPlatform`, `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform` | a gem outline over a platform (bank 32) |
 | 0x28 | `SpawnLizard` | enemy, bank 13 |
 | 0x29 | `SpawnVulture` | enemy, bank 11 |
@@ -269,10 +273,14 @@ each region in ROM order.
 
 - `levels.json`: the rooms, and per region its C file name and its rooms
   in ROM order.
+- `entity_types.json`: the name of each entity type (see "Entity
+  types"); `crate_kinds.json`: the name of each crate kind (`crate.kind`).
 - `roomNN_xxxxxx/room.json`: the palette (BGR555), the asset's symbol and
   whether it is packed, per layer its tile set, scale, `cnt`, size in
   chunks and tiles and map file, the parameter records (lists of words),
-  the links and the entities (in id order), and the symbol names of the
+  the links and the entities (in id order; an entity's `type` is its
+  name from `entity_types.json`, or a number for an unnamed type), and
+  the symbol names of the
   room's objects: `gRoomNN` and what the object is (`gRoom17Desc`,
   `gRoom17Palette`, `gRoom17Bg1Grid`, `gRoom17Asset`, ...; the tile sets
   keep their own names).
@@ -292,7 +300,13 @@ room's generated parameter struct).
   per room; gbagfx compresses the 34 packed ones, and `data/data.s`
   incbins the results;
 - `tools/levels.py c <region> build/.../data/levels/<region>.inc` per
-  region, `#include`d by the two `src/data/level_rooms_*.c` files.
+  region, `#include`d by the two `src/data/level_rooms_*.c` files;
+- `tools/levels.py constants entities|crates build/include/constants/<name>.h`:
+  the constants headers named in this data, `constants/entities.h`
+  (`ENTITY_*`, `ENEMY_KIND_*`) and `constants/crates.h` (`CRATE_KIND_*`).
+  `build/include` is on the include path and every C object waits for
+  them, so code includes them like the hand-written ones. To rename a
+  type or a kind, edit the JSON, not the header.
 
 `tools/levels.py extract` writes `data/levels/` from `baserom.gba` (and
 checks that every asset re-encodes exactly). `tools/levels.py render

@@ -225,7 +225,7 @@ void DestroyCrate(struct actor *self, u32 arg1)
 
     self->table = (void *)gCrateVtable;
 
-    if (crate->kind == 3) {
+    if (crate->kind == CRATE_KIND_IRON_SWITCH) {
         struct crate_group *group = crate->u48.group;
         if (PHYS_HAS_GROUP(group)) {
             if (group != NULL) {

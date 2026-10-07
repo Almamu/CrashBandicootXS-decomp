@@ -32,8 +32,8 @@
   ],
   "links": null,
   "entities": [
-    {"type": 69, "x": 270, "y": 155, "param": 1},
-    {"type": 91, "x": 99, "y": 139, "param": 0},
-    {"type": 2, "x": 45, "y": 48, "param": 1}
+    {"type": "DINGODILE", "x": 270, "y": 155, "param": 1},
+    {"type": "SEAWEED", "x": 99, "y": 139, "param": 0},
+    {"type": "UNDERWATER_START_MARKER", "x": 45, "y": 48, "param": 1}
   ]
 }

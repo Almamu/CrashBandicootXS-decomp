@@ -36,13 +36,13 @@
   ],
   "links": null,
   "entities": [
-    {"type": 87, "x": 253, "y": 72, "param": 4},
-    {"type": 12, "x": 252, "y": 51, "param": 1},
-    {"type": 72, "x": 151, "y": 192, "param": 1},
-    {"type": 87, "x": 141, "y": 84, "param": 3},
-    {"type": 11, "x": 140, "y": 51, "param": 1},
-    {"type": 87, "x": 29, "y": 72, "param": 2},
-    {"type": 0, "x": 31, "y": 155, "param": 1},
-    {"type": 10, "x": 28, "y": 51, "param": 1}
+    {"type": "FLIP_PLATFORM", "x": 253, "y": 72, "param": 4},
+    {"type": "YELLOW_GEM", "x": 252, "y": 51, "param": 1},
+    {"type": "CORTEX_BOSS", "x": 151, "y": 192, "param": 1},
+    {"type": "FLIP_PLATFORM", "x": 141, "y": 84, "param": 3},
+    {"type": "GREEN_GEM", "x": 140, "y": 51, "param": 1},
+    {"type": "FLIP_PLATFORM", "x": 29, "y": 72, "param": 2},
+    {"type": "START_MARKER", "x": 31, "y": 155, "param": 1},
+    {"type": "RED_GEM", "x": 28, "y": 51, "param": 1}
   ]
 }

@@ -36,16 +36,16 @@ const u8 gSlotCrateTimers[4] = {
 
 /* Per-object-kind flags of the collision system (22 kinds), read by
  * crate_hit.c, crate_stack.c and crate_break.c. */
-const u8 gCrateKindCounted[22] = {
+const u8 gCrateKindCounted[CRATE_KIND_COUNT] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
-const u8 gCrateKindBreakable[22] = {
+const u8 gCrateKindBreakable[CRATE_KIND_COUNT] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
-const u8 gCrateKindExplosive[22] = {
+const u8 gCrateKindExplosive[CRATE_KIND_COUNT] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1,
 };
-const u8 gCrateKindUnbreakable[22] = {
+const u8 gCrateKindUnbreakable[CRATE_KIND_COUNT] = {
     0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
@@ -97,16 +97,31 @@ const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT] = {
 };
 
 /* QueueCratePlayerCollision and ApplyCrateCollision (crate_break.c): the collision response
- * code of each pair of kinds, [22][7]. */
-const s32 gCrateHitResponse[22][7] = {
-    { 0, 1, 3, 3, 3, 3, 3 }, { 0, 0, 5, 5, 5, 5, 5 }, { 0, 1, 3, 3, 3, 3, 3 },
-    { 1, 1, 1, 1, 1, 1, 1 }, { 0, 1, 2, 3, 3, 3, 3 }, { 0, 0, 0, 0, 0, 0, 3 },
-    { 1, 1, 1, 1, 1, 1, 1 }, { 1, 1, 1, 1, 1, 1, 1 }, { 1, 1, 2, 2, 1, 2, 2 },
-    { 0, 1, 3, 3, 3, 3, 3 }, { 4, 4, 4, 4, 4, 4, 4 }, { 0, 1, 3, 3, 3, 3, 3 },
-    { 0, 1, 2, 3, 3, 3, 3 }, { 1, 1, 2, 2, 2, 3, 3 }, { 0, 1, 2, 4, 4, 4, 4 },
-    { 0, 1, 3, 3, 3, 3, 3 }, { 0, 1, 3, 3, 3, 3, 3 }, { 0, 1, 3, 3, 3, 3, 3 },
-    { 0, 1, 3, 3, 3, 3, 3 }, { 1, 1, 1, 4, 4, 4, 4 }, { 1, 1, 1, 4, 4, 4, 4 },
-    { 1, 1, 1, 4, 4, 4, 4 },
+ * code of each crate kind (row) against each attack kind (column,
+ * ATTACK_KIND_*). */
+const s32 gCrateHitResponse[CRATE_KIND_COUNT][7] = {
+    [CRATE_KIND_BASIC] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_CHECKPOINT] = { 0, 0, 5, 5, 5, 5, 5 },
+    [CRATE_KIND_AKU_AKU] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_IRON_SWITCH] = { 1, 1, 1, 1, 1, 1, 1 },
+    [CRATE_KIND_ARROW] = { 0, 1, 2, 3, 3, 3, 3 },
+    [CRATE_KIND_OUTLINE] = { 0, 0, 0, 0, 0, 0, 3 },
+    [CRATE_KIND_NITRO_SWITCH] = { 1, 1, 1, 1, 1, 1, 1 },
+    [CRATE_KIND_IRON] = { 1, 1, 1, 1, 1, 1, 1 },
+    [CRATE_KIND_IRON_ARROW] = { 1, 1, 2, 2, 1, 2, 2 },
+    [CRATE_KIND_LIFE] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_NITRO] = { 4, 4, 4, 4, 4, 4, 4 },
+    [CRATE_KIND_MYSTERY] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_BOUNCY_WUMPA] = { 0, 1, 2, 3, 3, 3, 3 },
+    [CRATE_KIND_REINFORCED] = { 1, 1, 2, 2, 2, 3, 3 },
+    [CRATE_KIND_TNT] = { 0, 1, 2, 4, 4, 4, 4 },
+    [CRATE_KIND_SLOT] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_TIME_1] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_TIME_2] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_TIME_3] = { 0, 1, 3, 3, 3, 3, 3 },
+    [CRATE_KIND_TNT_LIT_1] = { 1, 1, 1, 4, 4, 4, 4 },
+    [CRATE_KIND_TNT_LIT_2] = { 1, 1, 1, 4, 4, 4, 4 },
+    [CRATE_KIND_TNT_LIT_3] = { 1, 1, 1, 4, 4, 4, 4 },
 };
 
 /* QueueCratePlayerCollision: per attack kind (gActionCtrlStateAttackKinds),

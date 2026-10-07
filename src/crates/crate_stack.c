@@ -302,7 +302,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
                     dy = -dy;
                 }
                 if (dy <= limit) {
-                    if (self->kind != 5) {
+                    if (self->kind != CRATE_KIND_OUTLINE) {
                         QueueCratePlayerCollision(self, idx);
                     }
                 }

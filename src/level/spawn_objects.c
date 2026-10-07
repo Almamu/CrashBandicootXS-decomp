@@ -203,31 +203,31 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * types 1-7), type `0x12`. */
 void SpawnTimeCrate3(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0x12);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_TIME_3);
 }
 
 /* Plain `CreateCrate` trampoline, type `0x11`. */
 void SpawnTimeCrate2(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0x11);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_TIME_2);
 }
 
 /* Plain `CreateCrate` trampoline, type `0x10`. */
 void SpawnTimeCrate1(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0x10);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_TIME_1);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xf`. */
 void SpawnSlotCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0xf);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_SLOT);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xe`. */
 void SpawnTntCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0xe);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_TNT);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xd`: the reinforced crate (bank
@@ -238,37 +238,37 @@ void SpawnTntCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * too. */
 void SpawnReinforcedCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0xd);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_REINFORCED);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xc`. */
 void SpawnBouncyWumpaCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0xc);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_BOUNCY_WUMPA);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xb`. */
 void SpawnMysteryCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0xb);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_MYSTERY);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xa`. */
 void SpawnNitroCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 0xa);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_NITRO);
 }
 
 /* Plain `CreateCrate` trampoline, type `9`. */
 void SpawnLifeCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 9);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_LIFE);
 }
 
 /* Plain `CreateCrate` trampoline, type `8`. */
 void SpawnIronArrowCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 8);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_IRON_ARROW);
 }
 
 /* Plain `CreateCrate` trampoline, type `7`. Last function in this ROM
@@ -277,5 +277,5 @@ void SpawnIronArrowCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * `SpawnCortexBoss`'s literal pool. */
 void SpawnIronCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 7);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_IRON);
 }

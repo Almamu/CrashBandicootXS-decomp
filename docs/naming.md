@@ -139,9 +139,21 @@ the names with the header it already includes. A data table in
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
 | `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |
 | `attack_kinds.h` | `ATTACK_KIND_` | how the player hits a crate, the `gCrateHitResponse` column |
+| `entities.h` (generated) | `ENTITY_`, `ENEMY_KIND_` | entity types (the `gEntitySpawnFuncs` index), enemy-controller kinds |
+| `crates.h` (generated) | `CRATE_KIND_` | `crate.kind` (`CreateCrate`, the `gCrateKind*` tables) |
 
-Planned topics use the same scheme (`entities.h`/`ENTITY_`,
-`crates.h`/`CRATE_KIND_`, `events.h`/`EVENT_`, ...).
+**Constants that describe data the repository has as source files are
+generated from those files**, not written by hand: the names live in the
+data, and the build writes the header into `build/include/constants/`,
+which is on the include path (after `include/`), so code includes it as
+`"constants/<topic>.h"` all the same. Every C object waits for the
+generated headers (an order-only prerequisite), and `-MMD` rebuilds the
+objects that include one when it changes. The entity types come from
+`data/levels/entity_types.json` and the crate kinds from
+`data/levels/crate_kinds.json` (`tools/levels.py constants`, see
+docs/levels.md). To rename one, edit the JSON.
+
+Planned topics use the same scheme (`events.h`/`EVENT_`, ...).
 `tools/magic_numbers.py` lists the literals that are left, by topic
 (`--report` for the counts), and `--topic T --fix` replaces the ones that
 have exactly one name.
