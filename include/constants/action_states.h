@@ -2,7 +2,7 @@
 #define GUARD_CONSTANTS_ACTION_STATES_H
 
 /*
- * The player's action-controller states: `struct act.state` (and
+ * The player's action-controller states: ActionCtrl's `state` (and
  * `prevState`), the index into gActionCtrlStateTable
  * (src/data/action_table_16bf20.c) and gActionCtrlStateAttackKinds. A
  * state is entered through the controller's set-mode method

@@ -97,7 +97,7 @@ struct entry_set {
  * InitCtrl/DestroyCtrl), for the C files. The two must keep the same
  * layout: ctrl.hpp checks the class's size against this struct's. Every
  * controller extends it: the
- * action controller (action_obj.h's `struct act`), the swim and input
+ * action controller (action_ctrl.hpp's class ActionCtrl), the swim and input
  * controllers (player_ctrl.h, player.h), the boss controllers (player.h's
  * `struct boss_ctrl`), the enemy controller (part_ctrl.h) and the effect
  * controller (effect_ctrl.cpp, which uses

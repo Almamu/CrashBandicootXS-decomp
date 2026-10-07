@@ -131,8 +131,8 @@ const u8 gAttackKindBreakLimited[8] = {
     [ATTACK_KIND_JUMP] = 1,
 };
 
-/* The {x, y, z} scale triples of UpdateExtraLifeHop (extra_life.c) and
- * UpdateWumpaHop (wumpa_update.c). */
+/* The {x, y, z} scale triples of UpdateExtraLifeHop (extra_life.cpp) and
+ * UpdateWumpaHop (wumpa_update.cpp). */
 const s32 gExtraLifeHopWidths[3] = {
     0x300,
     0x0,
