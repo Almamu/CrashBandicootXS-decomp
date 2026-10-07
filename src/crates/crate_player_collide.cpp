@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "crate_list.hpp"
 
 extern "C" {
 #include "objects.h"
@@ -7,7 +8,8 @@ extern "C" {
 #include "player.h"
 }
 
-/* The player's pass over the crate grid (#664, include/crate.hpp). */
+/* The player's pass over the crate grid (#664, part 7f;
+ * include/crate_list.hpp). */
 
 /* For the crates in the three grid buckets from the camera's column on
  * (as UpdateCrateList's window): a player in control mode 3 breaks the
@@ -16,7 +18,7 @@ extern "C" {
  * controller's state; 0 in control mode 1, or 0xD for a kind 0x13
  * player). Old_agbcc C (see docs/matching/archive/issue-9-naked-retry.md):
  * the camera x is read before the `>> 8`. */
-void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
+void CrateList::CollidePlayer(s32 unused)
 {
     s32 lo = gLevelLayers->layer0->x;
     s32 i;
@@ -30,9 +32,9 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
     mode = p->ctrlMode;
     if (mode == 3) {
         do {
-            struct pool_node *node;
+            CrateGridNode *node;
 
-            for (node = m->gridHead[i]; node != 0; node = node->next)
+            for (node = heads[i]; node != 0; node = node->next)
                 ((Crate *)node->data)->BreakIfTouchedByPlayer();
             i--;
         } while (i >= lo);
@@ -47,9 +49,9 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
                 action = 0xd;
         }
         do {
-            struct pool_node *node;
+            CrateGridNode *node;
 
-            for (node = m->gridHead[i]; node != 0; node = node->next)
+            for (node = heads[i]; node != 0; node = node->next)
                 ((Crate *)node->data)->CollideWithPlayer(action, px, py);
             i--;
         } while (i >= lo);
