@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"

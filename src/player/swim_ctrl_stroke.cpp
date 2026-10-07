@@ -1,4 +1,5 @@
 #include "player_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "gfx_part.h"
@@ -25,19 +26,19 @@ extern "C" {
  * index). The case bodies appear in the ROM in the order below (the
  * source order); the shared tails are gcc's cross-jumping, not gotos.
  *
- * The facing tests read `mirror.sbits.flipX < 0`, the signed view: as C++
- * the unsigned `bits.flipX` test compiles to an `ands #16`, where the ROM
- * (and the C front end) has `lsls #27` and a sign test. */
+ * The facing tests read `mirrorBits.flipX < 0`, the signed view: as C++
+ * the unsigned `mirrorFlags.mirrorX` test compiles to an `ands #16`, where
+ * the ROM (and the C front end) has `lsls #27` and a sign test. */
 
 /* `v`, mirrored when the target faces left */
-#define SIGNED_X(t, v) ((t)->mirror.sbits.flipX < 0 ? -(v) : (v))
+#define SIGNED_X(t, v) ((t)->mirrorBits.flipX < 0 ? -(v) : (v))
 
 /* Sets the target's speed for the current `tilt` (state 4, the turn,
  * instead reads the frame-indexed stack copy of gPlayerCtrlTurnSpeeds,
  * negated unless `mode` is 6) and steps `tilt` towards 0/3/6/9/12. */
 void PlayerCtrl::StartStroke()
 {
-    struct player *t;
+    Player *t;
 
     deadline = gRoomFrameCount + 16;
     if (state == 4) {
@@ -161,7 +162,7 @@ void PlayerCtrl::StartSpin()
     case 6:
         if (!flag) {
             s32 v;
-            if (target->mirror.sbits.flipX < 0)
+            if (target->mirrorBits.flipX < 0)
                 v = -speed;
             else
                 v = speed;
@@ -234,10 +235,10 @@ void PlayerCtrl::ApplySwimDrift()
 
     dir = GetDpadDirection(gInput);
     if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0) {
-        struct player *t = target;
+        Player *t = target;
         s32 x = Q8_TO_INT(t->x);
         s32 y = Q8_TO_INT(t->y) - 20;
-        s32 flip = t->mirror.bits.flipX;
+        s32 flip = t->mirrorFlags.mirrorX;
         struct gfx_part *obj =
             (struct gfx_part *)SpawnEffectPart(gEntitySpawner, 40, 4, x, y, flip);
 

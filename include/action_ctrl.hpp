@@ -13,6 +13,7 @@
 #pragma interface
 
 #include "ctrl.hpp"
+#include "player.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {
@@ -28,10 +29,10 @@ extern "C" {
 class ActionCtrl : public Ctrl
 {
 public:
-    struct player *part; // 0x10 - the player (Attach)
-    s32 unk_14;          // 0x14 - only ever cleared (Reset, ClearUnk14)
-    s32 frame;           // 0x18
-    s32 frames;          // 0x1C
+    Player *part; // 0x10 - the player (Attach)
+    s32 unk_14;   // 0x14 - only ever cleared (Reset, ClearUnk14)
+    s32 frame;    // 0x18
+    s32 frames;   // 0x1C
     // 0x20 - extra tornado-spin turns queued by pressing B again during a spin
     //        (max 3; needs HasTornadoSpin)
     u8 charge;
@@ -84,12 +85,6 @@ public:
     virtual void SetMode(s32 mode);                                     // 4
     virtual ~ActionCtrl();                                              // 9 DestroyActionCtrl
     virtual s32 SetTargetAnim(MovingSprite *part, s32 anim);            // 10
-
-    /* The player as the sprite object Ctrl's methods take. */
-    GroundSprite *Sprite()
-    {
-        return (GroundSprite *)part;
-    }
 
     /* The motion queue stores as the methods have them inlined: the
      * values are computed before the three stores. QueueX/QueueY set all
@@ -165,13 +160,13 @@ public:
     void SetModeAnimNow(s32 mode, s32 anim, s32 frame)
     {
         SetMode(mode);
-        SetTargetAnim(Sprite(), anim);
+        SetTargetAnim(part, anim);
         this->frame = frame;
     }
     void SetModeAnimNow(s32 mode, s32 anim, s32 frame, s32 frames)
     {
         SetMode(mode);
-        SetTargetAnim(Sprite(), anim);
+        SetTargetAnim(part, anim);
         this->frame = frame;
         this->frames = frames;
     }
@@ -272,25 +267,32 @@ public:
 
 COMPILE_TIME_ASSERT(action_ctrl_hpp, sizeof(ActionCtrl) == 0x38);
 
-/* The player's `slippery` (+0x100), read and written through inline
- * functions: the 0x100 offset is then materialized at each access, as in
- * the ROM, instead of shared with an earlier 0x100 (an R_BUTTON test, a
- * PlaySfx volume) through a register. */
-static inline u8 IsSlippery(struct player *p)
+/* The player's `slippery` (+0x100), read through an inline function (and
+ * written through Player::StoreSlippery): the 0x100 offset is then
+ * materialized at each access, as in the ROM, instead of shared with an
+ * earlier 0x100 (an R_BUTTON test, a PlaySfx volume) through a register. */
+static inline u8 IsSlippery(Player *p)
 {
     return p->slippery;
 }
 
-static inline void SetSlippery(struct player *p, s32 slippery)
+/* Byte read-modify-writes of the player's flags2 (+0x0D), through a
+ * pointer to it: as a member store, gcc's expansion leaves a dead `& 0`
+ * whose 0 CSE then reuses for later zero stores, moving them (see
+ * tiny_update.cpp). The mask arrives as an `s32` parameter so old_agbcp
+ * materializes it before the load. */
+static inline void ActAndFlags0D(Player *part, s32 mask)
 {
-    p->slippery = slippery;
+    u8 *flags2 = &part->f.bytes.flags2;
+
+    *flags2 &= mask;
 }
 
-/* A store to the player's `hitAxes` (+0x68) whose value, as an inline
- * parameter, is materialized before the field's address. */
-static inline void SetHitAxes(struct player *p, s32 axes)
+static inline void ActOrFlags0D(Player *part, s32 bits)
 {
-    p->hitAxes = axes;
+    u8 *flags2 = &part->f.bytes.flags2;
+
+    *flags2 |= bits;
 }
 
 #endif /* !GUARD_ACTION_CTRL_HPP */

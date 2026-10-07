@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -143,7 +144,7 @@ void EnemyCtrl::Attach(MovingSprite *part)
  * old_agbcc's code, and old_agbcp gives it as written. */
 s32 GetSfxVolumeAt(s32 x, s32 y)
 {
-    struct player *p = gPlayer;
+    Player *p = gPlayer;
     s32 dx = ABS_BRANCHLESS(x - Q8_TO_INT(p->x));
     s32 d = ABS_BRANCHLESS(y - Q8_TO_INT(p->y));
 

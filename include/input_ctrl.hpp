@@ -9,6 +9,7 @@
 #pragma interface
 
 #include "ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "camera_lead.h"
@@ -24,14 +25,14 @@ extern "C" {
 class InputCtrl : public Ctrl
 {
 public:
-    struct player *target; // 0x10
-    u8 motionX;            // 0x14 - queued X motion entry (animSet->entries[][0])
-    u8 motionY;            // 0x15 - queued Y motion entry (animSet->entries[][1])
-    u8 dirState;           // 0x16 - the D-pad's last vertical direction: 0 none, 1 up, 2 down
-    u8 motionXPending;     // 0x17 - ApplyMotion applies motionX
-    u8 motionYPending;     // 0x18 - ApplyMotion applies motionY
-    u8 motionXKeepSpeed;   // 0x19 - apply with SetTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed;   // 0x1A - the same for Y
+    Player *target;      // 0x10
+    u8 motionX;          // 0x14 - queued X motion entry (animSet->entries[][0])
+    u8 motionY;          // 0x15 - queued Y motion entry (animSet->entries[][1])
+    u8 dirState;         // 0x16 - the D-pad's last vertical direction: 0 none, 1 up, 2 down
+    u8 motionXPending;   // 0x17 - ApplyMotion applies motionX
+    u8 motionYPending;   // 0x18 - ApplyMotion applies motionY
+    u8 motionXKeepSpeed; // 0x19 - apply with SetTargetMotionX (speed kept), not Start...
+    u8 motionYKeepSpeed; // 0x1A - the same for Y
     u8 unk_1B;
     struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
     u8 flag20;                       // 0x20 - left can still slow the ride down

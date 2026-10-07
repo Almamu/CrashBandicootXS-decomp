@@ -1,4 +1,5 @@
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "level_state.h"
@@ -10,7 +11,7 @@ extern "C" {
 
 /* IsPlayerInvulnerable, inlined: the player's invulnerability deadline is
  * still ahead of the frame counter. */
-static inline u8 PlayerStillInvulnerable(struct player *player)
+static inline u8 PlayerStillInvulnerable(Player *player)
 {
     return player->deadline > gRoomFrameCount;
 }
@@ -37,7 +38,7 @@ void MovingSprite::TouchPlayer()
     }
     struct aabb box = GetAttackBox();
 
-    if (box.w != 0 && PlayerTouchesBox(gPlayer, &box)) {
+    if (box.w != 0 && gPlayer->TouchesBox(&box)) {
         ResolvePlayerContact();
         return;
     }
@@ -46,7 +47,7 @@ void MovingSprite::TouchPlayer()
     /* Kept from the C: a volatile read, so that `w` is read at sp+24
      * rather than through the register holding box2's address (which
      * also gives `this` r5 instead of r4). */
-    if (*(volatile s32 *)&box2.w != 0 && PlayerTouchesBox(gPlayer, &box2))
+    if (*(volatile s32 *)&box2.w != 0 && gPlayer->TouchesBox(&box2))
         ResolvePlayerContact();
 }
 
@@ -58,11 +59,11 @@ void MovingSprite::ResolvePlayerContact()
     f.b.bit3 = 1;
     switch (gLevelState->maskLevel) {
     case MASK_LEVEL_NONE:
-        PlayerSprite()->HandleEvent(0, kind, 0);
+        gPlayer->HandleEvent(0, kind, 0);
         break;
     case MASK_LEVEL_ONE:
     case MASK_LEVEL_TWO:
-        PlayerSprite()->HandleEvent(0, kind, 0);
+        gPlayer->HandleEvent(0, kind, 0);
         HandleEvent(1, EVENT_HIT, 0);
         break;
     case MASK_LEVEL_INVINCIBLE:

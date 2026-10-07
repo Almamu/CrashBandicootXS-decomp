@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -41,9 +42,9 @@ u8 Crate::PlayerHitboxOverlapsAt(struct hitbox_quad *quad, struct aabb *box, s32
         SetAabbPos(&b, x + xOffset, y + yOffset);
         SetAabbSize(&b, w, h);
     }
-    if (gPlayer->mirror.sbits.flipX < 0)
+    if (gPlayer->mirrorBits.flipX < 0)
         b.x = xOffset * 2 - (b.x + b.w);
-    if (gPlayer->mirror.sbits.flipY < 0)
+    if (gPlayer->mirrorBits.flipY < 0)
         b.y = yOffset * 2 - (b.y + b.h);
     if (AabbOverlaps(box, &b))
         return 1;
@@ -125,7 +126,7 @@ void Crate::BreakIfTouchedByPlayer()
             f.a.y = py * 2 - (f.a.y + f.a.h);
     }
     {
-        GroundSprite *p = PlayerSprite();
+        Player *p = gPlayer;
         const struct hitbox_quad *q;
         s32 offX;
         s32 offY;
@@ -146,9 +147,9 @@ void Crate::BreakIfTouchedByPlayer()
             SetAabbPos(BOX_ADDR(&f.b), bx, by);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (gPlayer->mirror.sbits.flipX < 0)
+        if (gPlayer->mirrorBits.flipX < 0)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayer->mirror.sbits.flipY < 0)
+        if (gPlayer->mirrorBits.flipY < 0)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     if (AabbOverlaps(&f.a, BOX_ADDR(&f.b))) {

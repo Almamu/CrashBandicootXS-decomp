@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "globals.h"
@@ -127,7 +128,7 @@ u32 Crate::IsBusy()
  * between the two. */
 void Crate::SetBusy()
 {
-    struct player *p;
+    Player *p;
     u32 one;
 
     state |= CRATE_STATE_BUSY;

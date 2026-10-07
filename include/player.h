@@ -12,8 +12,10 @@
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * The player object is `struct player` below (gPlayer, globals.h); the
- * player's own functions take it. Each controller's functions take its
+ * The player object is class Player (include/player.hpp; all of its code
+ * is C++), and `struct player` below is its C view (gPlayer, globals.h) for
+ * the C files; the prototypes of its methods keep their C names
+ * (cxx_symbols.txt) and take it. Each controller's functions take its
  * struct: `struct act` (the action controller; an incomplete type, as all
  * of its code is C++), `struct player_ctrl` (player_ctrl.h), and `struct
  * input_ctrl`/`struct boss_ctrl` below. ResetActionCtrl
@@ -119,9 +121,9 @@ union player_mirror {
     } __attribute__((packed)) sbits;
 } __attribute__((packed));
 
-/* The player's method table (gPlayerVtable), as the callers read it: a
- * `this` adjustment and the function of each slot. The slot names are
- * the functions gPlayerVtable holds. */
+/* The player's method table (gPlayerVtable), as the C callers read it
+ * (room_frame.c): a `this` adjustment and the function of each slot. The
+ * slot names are the functions gPlayerVtable holds. */
 struct player_vtable {
     struct actor_method unk_00;             // 0x00 - empty (no RTTI)
     struct actor_method collide;            // 0x08 - CollidePlayer
@@ -140,12 +142,12 @@ struct player_vtable {
     struct actor_method collideWithObjects; // 0x70 - CollidePlayerWithObjects
 };
 
-/* The player object (gPlayer): a ground sprite (InitGroundSprite, the
- * same 0x80-byte base as gobj_1a794.h's `struct gobj`, whose names it
- * keeps) with the player's own fields after it. PlayRoom builds it in a
- * 0x350-byte block (InitPlayer); its method table is gPlayerVtable. The
- * names past 0x80 come from the accessors in player_flags.cpp. Only the
- * fields the code reads are named. */
+/* The player object (gPlayer) as the C files see it: the C view of class
+ * Player (include/player.hpp, which checks the size), a ground sprite
+ * (InitGroundSprite, the same 0x80-byte base as gobj_1a794.h's `struct
+ * gobj`, whose names it keeps) with the player's own fields after it.
+ * PlayRoom builds it in a 0x350-byte block (InitPlayer); its method table
+ * is gPlayerVtable. Only the fields the code reads are named. */
 struct player {
     s32 x;   // 0x00 - Q8
     s32 y;   // 0x04 - Q8
@@ -325,6 +327,10 @@ extern const struct level_anim gPlayerCtrlModeLevelAnims[8][13];
 extern const struct level_anim *const gPlayerCtrlModeAnimRows[8];
 extern const struct speed_table gPlayerCtrlTurnSpeeds;
 
+/* The player's speedY after its last ApplyPlayerVelocity (sym_iwram.txt;
+ * gLastSpriteVelY is the moving sprites'). Nothing reads it. */
+extern s32 gLastPlayerVelY;
+
 /* Aku Aku's orbit frame counters (DrawPlayer, src/iwram/iwram_data.c). */
 extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
@@ -493,18 +499,21 @@ extern void KillPlayer(struct act *self, s32 id);
 extern void UpdateActionCtrlSkidAnim(struct act *self);
 extern s32 UpdatePlayerFacing(struct act *self);
 
-/* src/player/player_anim_room.c */
-extern u8 PlayerHasRoomForAnim(struct box_part *self, s32 x);
+/* src/player/player_*.cpp: Player's methods (include/player.hpp) under
+ * their C names (cxx_symbols.txt), for the vtable and the C callers. */
 
-/* src/player/player_collide.c */
+/* src/player/player_anim_room.cpp */
+extern u8 PlayerHasRoomForAnim(struct player *self, s32 anim);
+
+/* src/player/player_collide.cpp */
 extern u8 CollidePlayer(struct player *self);
 
-/* src/player/player_event.c */
+/* src/player/player_event.cpp */
 extern void CollidePlayerWithObjects(struct player *self);
 extern void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c);
 extern void DrawPlayer(struct player *self);
 
-/* src/player/player_flags.cpp */
+/* src/player/player_flags.cpp: Player's accessors (include/player.hpp). */
 extern struct collision_queue *GetPlayerCollisionQueue(struct player *self);
 extern void ClearPlayerDead(struct player *self);
 extern void SetPlayerDead(struct player *self);
@@ -520,8 +529,8 @@ extern void ClearPlayerInvulnerability(struct player *self);
 extern void SetPlayerInvulnerable(struct player *self, s32 arg1);
 extern void SetPlayerControlMode(struct player *self, u8 arg1);
 extern u8 GetPlayerControlMode(struct player *self);
-extern s32 GetPlayerStandingOn(struct player *self);
-extern void SetPlayerStandingOn(struct player *self, s32 arg1);
+extern struct gobj *GetPlayerStandingOn(struct player *self);
+extern void SetPlayerStandingOn(struct player *self, struct gobj *part);
 extern void SetPlayerBusy(struct player *self, u8 arg1);
 extern u8 IsPlayerBusy(struct player *self);
 extern void ClearPlayerListCount(struct player *self);
@@ -543,8 +552,8 @@ extern u8 IsPlayerHanging(struct player *self);
 extern void SetPlayerHanging(struct player *self, u8 arg1);
 extern u8 IsPlayerSlippery(struct player *self);
 extern void SetPlayerSlippery(struct player *self, u8 arg1);
-extern s32 GetPlayerListEntry(struct player *self, s32 idx);
-extern void StorePlayerListEntry(struct player *self, s32 val);
+extern struct crate *GetPlayerListEntry(struct player *self, s32 idx);
+extern void StorePlayerListEntry(struct player *self, struct crate *crate);
 /* Ctrl's methods (include/ctrl.hpp) under their C names
  * (cxx_symbols.txt), for the vtables and the C callers. */
 extern void SetCtrlMode(void *self, s32 val);
@@ -552,14 +561,14 @@ extern void SetCtrlAnimSet(void *self, s32 val);
 extern void SetCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
 extern void StartCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
 
-/* src/player/player_init.c */
+/* src/player/player_init.cpp */
 extern struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused);
 
-/* src/player/player_reset.c */
+/* src/player/player_reset.cpp */
 extern void ResetPlayer(struct player *self);
 extern void ResetPlayerForRoom(struct player *self);
 
-/* src/player/player_update.c */
+/* src/player/player_update.cpp */
 extern s32 ApplyPlayerVelocity(struct player *self);
 extern u8 HasPlayerRampYTarget(struct player *self);
 extern void ClearPlayerSpeedY(struct player *self);

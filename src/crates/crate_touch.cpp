@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -56,7 +57,7 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
             f.a.y = py * 2 - (f.a.y + f.a.h);
     }
     {
-        GroundSprite *p = PlayerSprite();
+        Player *p = gPlayer;
         const struct hitbox_quad *q;
         s32 offX, offY;
         u8 w, h;
@@ -76,16 +77,16 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
             SetAabbPos(BOX_ADDR(&f.b), bx, by);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (gPlayer->mirror.sbits.flipX < 0)
+        if (gPlayer->mirrorBits.flipX < 0)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayer->mirror.sbits.flipY < 0)
+        if (gPlayer->mirrorBits.flipY < 0)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     pb = BOX_ADDR(&f.b);
     if (AabbOverlapsInclusiveX(&f.a, pb))
         return 0;
     {
-        const struct hitbox_quad *q = &PlayerSprite()->bank->anims[action].box[0];
+        const struct hitbox_quad *q = &gPlayer->bank->anims[action].box[0];
         s32 offX, offY;
         u8 w, h;
 
@@ -95,9 +96,9 @@ u8 Crate::PlayerAnimWouldTouch(s32 action)
         h = q->h;
         SetAabbPos(pb, offX + px, offY + py);
         SetAabbSize(pb, w, h);
-        if (gPlayer->mirror.sbits.flipX < 0)
+        if (gPlayer->mirrorBits.flipX < 0)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayer->mirror.sbits.flipY < 0)
+        if (gPlayer->mirrorBits.flipY < 0)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     if (AabbOverlapsInclusiveX(&f.a, pb) != 1)

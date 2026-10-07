@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -54,7 +55,7 @@ void ActionCtrl::StartTornadoFall()
         motionY = entry;
     }
 queued:
-    part->flags2 |= 1;
+    part->f.bytes.flags2 |= 1;
     {
         u8 *p = &slamBlocked;
         MATCH_HOLD_REG(s32, zero, r0) = 0;
@@ -91,7 +92,7 @@ void ActionCtrl::EndSpin(u8 mode, s32 flags)
         if (flags != 0 && (u8)HasTurboRun(gLevelState)) {
             turboRun = 1;
             SetMode(ACTION_STATE_TURBO_RUN);
-            SetTargetAnim(Sprite(), 0x18);
+            SetTargetAnim(part, 0x18);
             QueueNowX(0x1B);
         } else {
             StartRun();
@@ -153,7 +154,7 @@ void ActionCtrl::StartSpin()
         PlaySfx(gAudioContext, SFX_SPIN, 0x100);
         frame = 0;
         frames = 0x18;
-        SetTargetAnim(Sprite(), 0x10);
+        SetTargetAnim(part, 0x10);
         SetMode(ACTION_STATE_SPIN);
         tornadoVariant = 0;
         charge = 0;
@@ -175,7 +176,7 @@ void ActionCtrl::StartHangSpin()
         tornadoTurn = 0;
         tornadoFallQueued = 0;
         tornadoUnwinding = 0;
-        SetTargetAnim(Sprite(), 0x1E);
+        SetTargetAnim(part, 0x1E);
         SetMode(ACTION_STATE_HANG_SPIN);
     }
 }
@@ -187,13 +188,13 @@ void ActionCtrl::StartRun()
 {
     if (turboRun != 0) {
         frame = 0;
-        SetTargetAnim(Sprite(), 0x18);
+        SetTargetAnim(part, 0x18);
         SetMode(ACTION_STATE_TURBO_RUN);
         QueueNowX(0x1B);
         if (part->slippery != 0)
             motionXKeepSpeed = 1;
     } else {
-        SetTargetAnim(Sprite(), 0xD);
+        SetTargetAnim(part, 0xD);
         frame = 0;
         SetMode(ACTION_STATE_RUN);
         QueueNowX(1);
@@ -224,7 +225,7 @@ void ActionCtrl::StartMaskHitJump()
 
 void ActionCtrl::Attach(MovingSprite *owner)
 {
-    part = (struct player *)owner;
+    part = (Player *)owner;
 }
 
 /* gActionCtrlStateTable's slot 0x27, a state nothing sets: runs
@@ -252,7 +253,7 @@ void ActionCtrl::StateHangSpin()
     if (frame >= frames || part->animDone != 0) {
         spinCooldown = 0xC;
         SetMode(ACTION_STATE_HANG);
-        SetTargetAnim(Sprite(), 0x1F);
+        SetTargetAnim(part, 0x1F);
         frame = 0;
         frames = 0;
     }
@@ -273,7 +274,7 @@ void ActionCtrl::StateHangGrab()
 void ActionCtrl::StateWarpOut()
 {
     if (part->animDone != 0) {
-        gPlayer->flags.all |= 0x80;
+        gPlayer->f.flags |= 0x80;
         RequestRoomExit();
     }
 }
@@ -283,7 +284,7 @@ void ActionCtrl::StateCrawlStop()
 {
     if (part->animDone != 0) {
         SetMode(ACTION_STATE_CROUCH);
-        SetTargetAnim(Sprite(), 4);
+        SetTargetAnim(part, 4);
     }
 }
 
@@ -294,7 +295,7 @@ void ActionCtrl::StateBodySlamStart()
     if (part->animDone != 0) {
         if ((u8)HasSuperBodySlam(gLevelState)) {
             SetMode(ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);
-            SetTargetAnim(Sprite(), 7);
+            SetTargetAnim(part, 7);
         } else {
             SetMode(ACTION_STATE_AIRBORNE_BODY_SLAM);
         }

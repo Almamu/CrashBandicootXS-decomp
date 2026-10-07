@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -31,7 +32,7 @@ void ActionCtrl::StateRun()
     if (INPUT_PRESSED(in) & 1) {
         PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         SetMode(ACTION_STATE_JUMP);
-        SetTargetAnim(Sprite(), 0x13);
+        SetTargetAnim(part, 0x13);
         frame = busy;
         QueueNowY(7);
         return;
@@ -50,7 +51,7 @@ void ActionCtrl::StateRun()
             PlaySfx(gAudioContext, SFX_SLIDE, 0x100);
             frames = 0x10;
             SetMode(ACTION_STATE_SLIDE);
-            SetTargetAnim(Sprite(), 0xF);
+            SetTargetAnim(part, 0xF);
             frame = alt;
             this->frames = frames;
             QueueX(alt, 1, 0x1E);
@@ -79,7 +80,7 @@ void ActionCtrl::StateRun()
                 s32 zero = 0;
 
                 SetMode(ACTION_STATE_CROUCH_DOWN);
-                SetTargetAnim(Sprite(), 3);
+                SetTargetAnim(part, 3);
                 frames = zero;
                 QueuePendingX(zero, 0x1D);
             }
@@ -93,7 +94,7 @@ void ActionCtrl::StateRun()
             if (state == ACTION_STATE_RUN && (u8)HasTurboRun(gLevelState)) {
                 turboRun = 1;
                 SetMode(ACTION_STATE_TURBO_RUN);
-                SetTargetAnim(Sprite(), 0x18);
+                SetTargetAnim(part, 0x18);
                 QueueX(0, 1, 0x1B);
             }
         } else if (state == ACTION_STATE_TURBO_RUN) {
@@ -119,19 +120,19 @@ void ActionCtrl::StateJump()
     ActAndFlags0D(part, -2);
     ActAndFlags0D(part, -3);
     if (part->hitAxes & 4) {
-        struct player *p;
+        Player *p;
         s32 frame;
         s32 count;
 
         SetMode(ACTION_STATE_AIRBORNE_FALL);
-        SetTargetAnim(Sprite(), 0x15);
+        SetTargetAnim(part, 0x15);
         p = part;
         frame = 2;
-        count = p->anim->records[p->tag].frameCount;
+        count = p->bank->anims[p->tag].frameCount;
         CLAMP_INDEX(frame, count);
         p->frame = frame;
-        ClearPlayerSpeedY(p);
-        SetHitAxes(part, 0);
+        p->ClearSpeedY();
+        part->StoreHitAxes(0);
         return;
     }
     {
@@ -144,7 +145,7 @@ void ActionCtrl::StateJump()
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             frames = 0x18;
             SetMode(ACTION_STATE_AIR_SPIN);
-            SetTargetAnim(Sprite(), 0x10);
+            SetTargetAnim(part, 0x10);
             frame = busy;
             this->frames = frames;
             tornadoVariant = busy;
@@ -157,7 +158,7 @@ void ActionCtrl::StateJump()
         }
     }
     {
-        struct player *p = part;
+        Player *p = part;
 
         if (p->animDone) {
             u32 cur = gKeys.all;
@@ -167,13 +168,13 @@ void ActionCtrl::StateJump()
                     SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
                 } else {
                     SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
-                    SetTargetAnim(Sprite(), 6);
+                    SetTargetAnim(part, 6);
                 }
                 if (motionY == 7)
                     QueueNowY(0xA);
             } else {
                 SetMode(ACTION_STATE_AIRBORNE_JUMP);
-                SetTargetAnim(Sprite(), 0xC);
+                SetTargetAnim(part, 0xC);
                 {
                     u8 *slot = &motionY;
 

@@ -1,6 +1,7 @@
 #include "action_ctrl.hpp"
 #include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "audio.h"
@@ -49,7 +50,7 @@ void ActionCtrl::StateUnusedIdle()
 void ActionCtrl::SetModeAnim(s32 mode, s32 anim, s32 frame, s32 frames)
 {
     SetMode(mode);
-    SetTargetAnim(Sprite(), anim);
+    SetTargetAnim(part, anim);
     if (frame != 0x7FFFFFFF)
         this->frame = frame;
     if (frames != 0x7FFFFFFF)
@@ -66,7 +67,7 @@ void ActionCtrl::SetModeAnim(s32 mode, s32 anim, s32 frame, s32 frames)
  * switch's layout). */
 s32 ActionCtrl::SetTargetAnim(MovingSprite *part, s32 anim)
 {
-    struct player *player = gPlayer;
+    Player *player = gPlayer;
 
     if (player->slippery) {
         switch (anim) {

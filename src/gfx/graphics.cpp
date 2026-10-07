@@ -1,5 +1,6 @@
 #include "entity.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -514,9 +515,9 @@ s32 Entity::CheckPlayerContact()
     s32 inContact = (f.flags >> 2) & 1;
 
     if (inContact) {
-        if (PlayerTouchesBox(gPlayer, &box)) {
+        if (gPlayer->TouchesBox(&box)) {
             f.b.bit3 = 1;
-            PlayerSprite()->HandleEvent(0, kind, 0);
+            gPlayer->HandleEvent(0, kind, 0);
         }
     }
     return 0;

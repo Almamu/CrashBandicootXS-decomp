@@ -135,13 +135,16 @@ struct speed_ramp {
     s32 target;
 };
 
-/* src/objects/collision_queue.cpp */
+/* src/objects/collision_queue.cpp: CollisionQueue's methods
+ * (include/part_list.hpp) under their C names (cxx_symbols.txt).
+ * ResetCollisionQueue is its constructor, which Player's constructor
+ * calls. */
 extern void ResolveCollisionCandidates(struct collision_queue *self);
 extern void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind,
                                   s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
                                   s32 p20, s32 p21);
 extern void DestroyCollisionQueue(struct collision_queue *self, s32 flags);
-extern void ResetCollisionQueue(struct collision_queue *self);
+extern struct collision_queue *ResetCollisionQueue(struct collision_queue *self);
 
 /* src/objects/ctrl.cpp: Ctrl's methods (include/ctrl.hpp)
  * under their C names (cxx_symbols.txt), for the vtables and the C

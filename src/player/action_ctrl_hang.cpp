@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -21,7 +22,7 @@ extern "C" {
  * replaces. */
 
 /* The player's animation set to `tag`, restarted. */
-static inline void SetTag(struct player *part, s32 tag)
+static inline void SetTag(Player *part, s32 tag)
 {
     part->tag = tag;
     ResetSpriteFrameTimer(part);
@@ -47,11 +48,15 @@ void ActionCtrl::StateLeftGround()
         /* the ROM's r5 zero, reused by the air spin's trio below */
         u8 z;
 
-        /* flags2 through action_obj.h's byte view, as in HandleAirInput:
+        /* flags2 through a pointer to it, as in HandleAirInput:
          * `part->flags2 |= 1` and ActOrFlags0D allocate differently. The
          * 0 is stored through a pointer so it is loaded after the
          * address. */
-        ACT_PART_FLAGS0D(part) |= 1;
+        {
+            u8 *flags2 = &part->f.bytes.flags2;
+
+            *flags2 |= 1;
+        }
         {
             u8 *blocked = &slamBlocked;
 
@@ -64,7 +69,7 @@ void ActionCtrl::StateLeftGround()
             if (tag == 0xD) {
                 if (turboRun) {
                     frame = 0;
-                    SetTargetAnim(Sprite(), 0x18);
+                    SetTargetAnim(part, 0x18);
                     SetMode(ACTION_STATE_TURBO_RUN);
                     QueuePendingX(0, 0x1B);
                 } else {
@@ -113,7 +118,7 @@ void ActionCtrl::StateLeftGround()
 
         if (fire) {
             SetMode(ACTION_STATE_JUMP);
-            SetTargetAnim(Sprite(), 0x13);
+            SetTargetAnim(part, 0x13);
             frame = hit;
             QueueY(hit, 1, 7);
         } else {
@@ -138,7 +143,7 @@ void ActionCtrl::StateLeftGround()
                 ActOrFlags0D(part, 1);
                 slamBlocked = alt;
                 SetMode(ACTION_STATE_CROUCH_DOWN);
-                SetTargetAnim(Sprite(), 3);
+                SetTargetAnim(part, 3);
                 frames = alt;
                 QueueX(alt, 1, alt);
             }
@@ -159,13 +164,13 @@ void ActionCtrl::StateLeftGround()
  * animation is done, the player is marked gone. */
 void ActionCtrl::StateDying()
 {
-    struct player *p = part;
+    Player *p = part;
 
     if (p->tag == 0x2F && p->frame == 3 && p->stepTimer == 0)
         PlaySfx(gAudioContext, SFX_UNKNOWN_2E, 0x100);
     p = part;
     if (p->animDone)
-        ((GroundSprite *)p)->MarkGone();
+        p->MarkGone();
 }
 
 /* Warping in: once the animation is done, the player's collision is
@@ -173,7 +178,7 @@ void ActionCtrl::StateDying()
 void ActionCtrl::StateWarpIn()
 {
     if (part->animDone) {
-        gPlayer->flags.bits.flag7 = 1;
+        gPlayer->f.b.collides = 1;
         SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, 0);
         motionXKeepSpeed = 0;
         motionXPending = 1;
@@ -181,7 +186,7 @@ void ActionCtrl::StateWarpIn()
         motionYKeepSpeed = 0;
         motionYPending = 1;
         motionY = 0;
-        LoadPaletteSlot(gPaletteCache, part->slot, part->anim->records[part->tag].paletteId);
+        LoadPaletteSlot(gPaletteCache, part->palette, part->anim->records[part->tag].paletteId);
     }
 }
 
@@ -198,7 +203,7 @@ void ActionCtrl::StateHang()
         case 3 ... 8:
             QueueNowX(0x20);
             SetMode(ACTION_STATE_HANG_MOVE_START);
-            SetTargetAnim(Sprite(), 0x20);
+            SetTargetAnim(part, 0x20);
             break;
         }
     if (INPUT_PRESSED(in) & 1) {
@@ -244,7 +249,7 @@ void ActionCtrl::StateUnusedHang()
  * `hold` keeps r2 live across the add, with empty asms only (no code). */
 void ActionCtrl::ReleaseHang()
 {
-    struct player *p;
+    Player *p;
     s32 count;
     MATCH_HOLD_REG(s32, hold, r2);
 
@@ -253,9 +258,9 @@ void ActionCtrl::ReleaseHang()
     part->y += 0x600;
     MATCH_USE(hold); /* ...to here, so the 0x600 reload takes r3 */
     SetMode(ACTION_STATE_AIRBORNE_FALL);
-    SetTargetAnim(Sprite(), 0x1B);
+    SetTargetAnim(part, 0x1B);
     p = part;
-    count = p->anim->records[p->tag].frameCount;
+    count = p->bank->anims[p->tag].frameCount;
     p->frame = count - 1;
     QueueNowY(4);
 }
@@ -287,7 +292,7 @@ void ActionCtrl::StateHangMoveStart()
     v = GetDpadDirection(pad);
     if (v == 0) {
         SetMode(ACTION_STATE_HANG_STOP);
-        SetTargetAnim(Sprite(), 0x22);
+        SetTargetAnim(part, 0x22);
         motionXKeepSpeed = 0;
         motionXPending = 1;
         motionX = 0;
@@ -303,17 +308,17 @@ void ActionCtrl::StateHangMoveStart()
             }
         }
         if (part->animDone) {
-            struct player *p;
+            Player *p;
             s32 zero = 0;
             s32 frame;
             s32 count;
 
             SetMode(ACTION_STATE_HANG_MOVE);
-            SetTargetAnim(Sprite(), 0x21);
+            SetTargetAnim(part, 0x21);
             this->frame = zero;
             p = part;
             frame = 5;
-            count = p->anim->records[p->tag].frameCount;
+            count = p->bank->anims[p->tag].frameCount;
             CLAMP_INDEX(frame, count);
             p->frame = frame;
             QueuePendingX(zero, 0x20);
@@ -331,7 +336,7 @@ void ActionCtrl::StateHangMove()
 {
     u8 dir = GetDpadDirection(gInput);
     u32 in = gKeys.all;
-    struct player *p = part;
+    Player *p = part;
     s32 fire;
     u16 alt;
 
@@ -361,19 +366,19 @@ void ActionCtrl::StateHangMove()
             f = part->frame;
             if (f == 0) {
                 SetMode(ACTION_STATE_HANG_STOP);
-                SetTargetAnim(Sprite(), 0x22);
+                SetTargetAnim(part, 0x22);
                 motionXKeepSpeed = alt;
                 motionXPending = 1;
                 motionX = alt;
             } else if (f <= 4) {
                 SetMode(ACTION_STATE_HANG_STOP);
-                SetTargetAnim(Sprite(), 0x23);
+                SetTargetAnim(part, 0x23);
                 motionXKeepSpeed = alt;
                 motionXPending = 1;
                 motionX = alt;
             } else if (f > 9) {
                 SetMode(ACTION_STATE_HANG_STOP);
-                SetTargetAnim(Sprite(), 0x22);
+                SetTargetAnim(part, 0x22);
                 motionXKeepSpeed = alt;
                 motionXPending = 1;
                 motionX = alt;
@@ -388,8 +393,7 @@ void ActionCtrl::StateHangMove()
         QueuePendingX(alt, 0x20);
     }
     if ((u8)UpdateFacing()) {
-        const struct sprite_frame *sf =
-            (const struct sprite_frame *)GetSpriteFrame((struct gfx_part *)part);
+        const struct sprite_frame *sf = part->GetFrame();
         const struct sprite_point *info;
         s32 x;
         s32 y;
@@ -422,7 +426,7 @@ void ActionCtrl::StateHangMove()
         }
         x = Q8_TO_INT(part->x);
         y = part->y;
-        if ((s8)(part->mirror.all << 3) < 0)
+        if ((s8)(part->mirror << 3) < 0)
             x += info->x;
         else
             x -= info->x;
@@ -456,7 +460,7 @@ void ActionCtrl::StateHangStop()
     }
     if (part->animDone) {
         SetMode(ACTION_STATE_HANG);
-        SetTargetAnim(Sprite(), 0x1F);
+        SetTargetAnim(part, 0x1F);
         frame = alt;
         frames = alt;
     }
@@ -477,7 +481,7 @@ static inline s32 CollidableCount()
  * (`flags` bit 6). */
 void ActionCtrl::DoSuperBodySlamShockwave()
 {
-    struct player *p = part;
+    Player *p = part;
     s32 range;
     s32 px;
     s32 py;
@@ -529,7 +533,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
         zero = 0;
         wait = 0x14;
         SetMode(id);
-        SetTargetAnim(Sprite(), idx);
+        SetTargetAnim(part, idx);
         frame = zero;
         frames = wait;
         PlaySfx(gAudioContext, tornadoVariant + SFX_TORNADO_SPIN, 0x100);
@@ -558,7 +562,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
             zero = 0;
             wait = 0x14;
             SetMode(id);
-            SetTargetAnim(Sprite(), idx);
+            SetTargetAnim(part, idx);
             frame = zero;
             frames = wait;
             PlaySfx(gAudioContext, tornadoVariant + SFX_TORNADO_SPIN, 0x100);
@@ -571,7 +575,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
             charge = zero;
             wait = 0x18;
             SetMode(param2);
-            SetTargetAnim(Sprite(), 0x10);
+            SetTargetAnim(part, 0x10);
             frame = zero;
             frames = wait;
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);

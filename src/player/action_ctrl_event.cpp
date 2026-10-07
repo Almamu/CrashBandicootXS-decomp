@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -16,48 +17,20 @@ extern "C" {
  * like the old_agbcc C it replaces: under agbcc the same C was 36
  * halfwords off. */
 
-/* GetSpriteFrameAnchor inlined: the player's current frame's anchor
- * point (the 3-box and 1-box frame layouts have one; the others use
- * gEmptySpritePoint). */
-static inline const struct sprite_point *FrameAnchor(struct player *p)
-{
-    const struct sprite_frame *info =
-        (const struct sprite_frame *)GetSpriteFrame((struct gfx_part *)p);
-
-    switch (info->pieces[0] >> 4) {
-    case 0:
-        return &((const struct sprite_frame_3box_anchor *)info)->anchor;
-    case 1:
-        return &gEmptySpritePoint;
-    case 2:
-        return &gEmptySpritePoint;
-    case 3:
-        return &gEmptySpritePoint;
-    case 4:
-        return &gEmptySpritePoint;
-    case 5:
-        return &gEmptySpritePoint;
-    case 6:
-        return &((const struct sprite_frame_1box_anchor *)info)->anchor;
-    default:
-        return &gEmptySpritePoint;
-    }
-}
-
 /* Stores to the player's `hanging` and `bumped`: as inline parameters,
  * the values are materialized before the fields' addresses. */
-static inline void SetHanging(struct player *p, s32 hanging)
+static inline void SetHanging(Player *p, s32 hanging)
 {
     p->hanging = hanging;
 }
 
-static inline void SetBumped(struct player *p, s32 bumped)
+static inline void SetBumped(Player *p, s32 bumped)
 {
     p->bumped = bumped;
 }
 
 /* The player's Y speed and its ramp (start, step, target). */
-static inline void SetSpeedY(struct player *p, s32 speed, s32 step, s32 target)
+static inline void SetSpeedY(Player *p, s32 speed, s32 step, s32 target)
 {
     p->speedY = speed;
     p->rampY.start = speed;
@@ -89,14 +62,14 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     switch (event) {
     case EVENT_HANG_GRAB:
         {
-            const struct sprite_point *from = FrameAnchor(part);
+            const struct sprite_point *from = part->FrameAnchor();
             const struct sprite_point *to;
 
             SetHanging(part, 1);
             SetModeAnim(ACTION_STATE_HANG_GRAB, 0x1d, 0, 0);
             QueueNowX(0);
             QueueNowY(0);
-            to = FrameAnchor(part);
+            to = part->FrameAnchor();
             {
                 s32 d = to->y - from->y;
                 s32 y = part->y;
@@ -122,13 +95,13 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
             s32 m = arg & 3;
 
             if (m == 2) {
-                if (motionX != 0 && (s8)(gPlayer->mirror.all << 3) < 0) {
+                if (motionX != 0 && (s8)(gPlayer->mirror << 3) < 0) {
                     bumpedMotionX = motionX;
                     QueueNowX(0);
                     part->speedX = 0;
                 }
             } else if (m == 1) {
-                if (motionX != 0 && !((u32)(gPlayer->mirror.all << 27) >> 31)) {
+                if (motionX != 0 && !((u32)(gPlayer->mirror << 27) >> 31)) {
                     bumpedMotionX = motionX;
                     QueueX(0, m, 0);
                     part->speedX = 0;
@@ -143,11 +116,11 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         }
     check_slide:
         if (state == ACTION_STATE_SLIDE && gPlayer->frame != 0) {
-            struct player *pl = gPlayer;
+            Player *pl = gPlayer;
 
             frame = frames;
             bumpTimer = 0;
-            pl->frame = pl->anim->records[pl->tag].frameCount - 1;
+            pl->frame = pl->bank->anims[pl->tag].frameCount - 1;
             break;
         }
         part->hitAxes |= arg;
@@ -236,12 +209,12 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case EVENT_WARP_EXIT:
         PlaySfx(gAudioContext, SFX_WARP, 0x100);
         {
-            u8 *f = &gPlayer->flags.all;
+            u8 *f = &gPlayer->f.flags;
 
             *f &= 0x7f;
         }
         SetModeAnim(ACTION_STATE_WARP_OUT, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
-        LoadPaletteSlot(gPaletteCache, part->slot, part->anim->records[part->tag].paletteId);
+        LoadPaletteSlot(gPaletteCache, part->palette, part->anim->records[part->tag].paletteId);
         QueueNowX(0);
         QueueNowY(0);
         break;
@@ -264,7 +237,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case EVENT_HIT_EXPLOSION:
     case EVENT_HIT_BITE:
         {
-            struct player *p;
+            Player *p;
             s32 z;
 
             KillPlayer(0x1c);
@@ -283,7 +256,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
         KillPlayer(0x2a);
         break;
     case EVENT_MASK_HIT:
-        if ((gPlayer->hitAxes & 8) && PlayerHasRoomForAnim((struct box_part *)part, 0xb) == 1) {
+        if ((gPlayer->hitAxes & 8) && part->HasRoomForAnim(0xb) == 1) {
             ActAndFlags0D(part, -2);
             ActAndFlags0D(part, -3);
             StartMaskHitJump();

@@ -1,5 +1,6 @@
 #include "crate.hpp"
 #include "crate_list.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "objects.h"
@@ -22,7 +23,7 @@ void CrateList::CollidePlayer(s32 unused)
 {
     s32 lo = gLevelLayers->layer0->x;
     s32 i;
-    struct player *p;
+    Player *p;
     u8 mode;
 
     lo >>= 8;
@@ -39,7 +40,7 @@ void CrateList::CollidePlayer(s32 unused)
             i--;
         } while (i >= lo);
     } else {
-        s32 action = ((struct ctrl *)p->ctrl)->state;
+        s32 action = p->mover->state;
         s32 px = p->x;
         s32 py = p->y;
 

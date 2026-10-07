@@ -1,4 +1,5 @@
 #include "crate_list.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -24,7 +25,7 @@ static inline void CollidePart(CrateList *list, MovingSprite *part, struct aabb 
 {
     if ((u8)part->OverlapsRect(screen) && ((part->f.flags >> 2) & 1)) {
         if (part->GetClassId() > 4) {
-            if (other == (MovingSprite *)gPlayer)
+            if (other == gPlayer)
                 list->CollideWithPlayer(box, part);
             else
                 list->CollideWithObject(box, part, other);
@@ -84,21 +85,21 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
     if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE) {
         if (!part->ClassifyContact(&box))
             return;
-        part->HandleEvent(1, PlayerSprite()->kind, 0);
+        part->HandleEvent(1, gPlayer->kind, 0);
     } else if ((part->f.bytes.flags2 >> 3) & 1) {
-        struct aabb a = PlayerSprite()->GetAnimHitbox();
+        struct aabb a = gPlayer->GetAnimHitbox();
         struct aabb b = part->GetBodyBox();
         s32 px;
 
         if (!AabbOverlaps(&a, &b))
             return;
         px = part->x;
-        if (px < PlayerSprite()->x) {
-            PlayerSprite()->x = px + ((b.w + a.w) << 7);
-            PlayerSprite()->HandleEvent(0, EVENT_BUMP, 2);
+        if (px < gPlayer->x) {
+            gPlayer->x = px + ((b.w + a.w) << 7);
+            gPlayer->HandleEvent(0, EVENT_BUMP, 2);
         } else {
-            PlayerSprite()->x = px - ((b.w + a.w) << 7);
-            PlayerSprite()->HandleEvent(0, EVENT_BUMP, 1);
+            gPlayer->x = px - ((b.w + a.w) << 7);
+            gPlayer->HandleEvent(0, EVENT_BUMP, 1);
         }
     } else {
         u8 kind;
@@ -107,12 +108,12 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
         case 0:
             break;
         case 1:
-            PlayerSprite()->f.b.bit3 = 1;
-            kind = PlayerSprite()->kind;
+            gPlayer->f.b.bit3 = 1;
+            kind = gPlayer->kind;
             if (kind == 1) {
-                if (PlayerSprite()->speedY > 0) {
+                if (gPlayer->speedY > 0) {
                     part->HandleEvent(1, EVENT_HIT, 0);
-                    PlayerSprite()->HandleEvent(0, EVENT_BOUNCE, 0);
+                    gPlayer->HandleEvent(0, EVENT_BOUNCE, 0);
                     PlaySfx(gAudioContext, SFX_BOUNCE, 0x100);
                 }
             } else {
@@ -123,7 +124,7 @@ void CrateList::CollideWithPlayer(struct aabb box, MovingSprite *part)
             part->f.flags |= PART_FLAG_TOUCHED;
             if (gLevelState->maskLevel)
                 part->HandleEvent(1, EVENT_HIT, 0);
-            PlayerSprite()->HandleEvent(1, part->kind, 0);
+            gPlayer->HandleEvent(1, part->kind, 0);
             break;
         }
     }

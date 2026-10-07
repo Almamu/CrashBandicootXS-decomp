@@ -44,7 +44,7 @@ Wumpa::Wumpa()
 s32 Wumpa::CheckPlayerContact()
 {
     if (state == 0) {
-        if (PlayerSprite()->f.flags >> 7)
+        if (gPlayer->f.flags >> 7)
             CheckPickup();
     }
     return 0;
@@ -75,14 +75,14 @@ void Wumpa::SetCounter(u8 value)
  * axes; otherwise the stopwatch is gone. */
 void Stopwatch::Update()
 {
-    s32 d = Q8_TO_INT(PlayerSprite()->x);
+    s32 d = Q8_TO_INT(gPlayer->x);
 
     d -= Q8_TO_INT(x);
     MAKE_ABS(d);
     if (d > 0x180) {
         MarkGone();
     } else {
-        d = Q8_TO_INT(PlayerSprite()->y);
+        d = Q8_TO_INT(gPlayer->y);
         d -= Q8_TO_INT(y);
         MAKE_ABS(d);
         if (d > 0x180)

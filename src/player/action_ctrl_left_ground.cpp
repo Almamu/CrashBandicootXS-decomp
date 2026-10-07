@@ -14,7 +14,7 @@ u8 ActionCtrl::CheckLeftGround()
     if ((part->hitAxes & 8) == 0) {
         if (part->probeTries > 2) {
             SetMode(ACTION_STATE_AIRBORNE_FALL);
-            SetTargetAnim(Sprite(), 0x1B);
+            SetTargetAnim(part, 0x1B);
         } else {
             SetMode(ACTION_STATE_LEFT_GROUND);
         }

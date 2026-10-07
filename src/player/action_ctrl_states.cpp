@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "system.h"
@@ -64,7 +65,7 @@ void ActionCtrl::StateAirborne()
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             frames = 0x18;
             SetMode(ACTION_STATE_AIR_SPIN);
-            SetTargetAnim(Sprite(), 0x10);
+            SetTargetAnim(part, 0x10);
             frame = busy;
             this->frames = frames;
             tornadoVariant = busy;
@@ -103,23 +104,23 @@ void ActionCtrl::StateAirborne()
                 ActOrFlags0D(part, 1);
                 slamBlocked = 0;
                 if (this->state != ACTION_STATE_AIR_SPIN) {
-                    struct player *p;
+                    Player *p;
                     s32 frame;
                     s32 count;
 
                     SetMode(ACTION_STATE_AIRBORNE_FALL);
-                    SetTargetAnim(Sprite(), 0x15);
+                    SetTargetAnim(part, 0x15);
                     p = part;
                     frame = 2;
-                    count = p->anim->records[p->tag].frameCount;
+                    count = p->bank->anims[p->tag].frameCount;
                     CLAMP_INDEX(frame, count);
                     p->frame = frame;
                 }
-                ClearPlayerSpeedY(part);
+                part->ClearSpeedY();
             }
             UpdateFacing();
             HandleAirInput();
-            SetHitAxes(part, 0);
+            part->StoreHitAxes(0);
             return;
         }
         if (contact == 1 || contact == 2) {
@@ -131,7 +132,7 @@ void ActionCtrl::StateAirborne()
         if ((contact & 8) && part->speedY >= 0) {
             s32 st;
 
-            part->flags2 |= 1;
+            part->f.bytes.flags2 |= 1;
             slamBlocked = bit4;
             st = this->state;
             if ((u32)(st - ACTION_STATE_AIRBORNE_BODY_SLAM) <= 1) {
@@ -177,7 +178,7 @@ void ActionCtrl::StateAirborne()
                 if (this->state != ACTION_STATE_DYING) {
                     PlaySfx(gAudioContext, SFX_BODY_SLAM_LAND, 0x100);
                     SetMode(ACTION_STATE_BODY_SLAM_LAND);
-                    SetTargetAnim(Sprite(), 0x11);
+                    SetTargetAnim(part, 0x11);
                     motionYKeepSpeed = bit4;
                     motionYPending = 1;
                     motionY = bit4;
@@ -203,10 +204,10 @@ void ActionCtrl::StateAirborne()
             }
             if (gPlayer->slippery) {
                 SetMode(ACTION_STATE_LAND);
-                SetTargetAnim(Sprite(), 0x16);
+                SetTargetAnim(part, 0x16);
             } else {
                 SetMode(ACTION_STATE_LAND);
-                SetTargetAnim(Sprite(), 0x16);
+                SetTargetAnim(part, 0x16);
             }
             QueuePendingX(0, 0);
             QueueNowY(0);
@@ -222,19 +223,19 @@ void ActionCtrl::StateAirborne()
  * else the body slam. */
 void ActionCtrl::StateFlipBodySlamStart()
 {
-    struct player *p = part;
+    Player *p = part;
 
     if (p->tag == 6) {
         s32 frame = p->frame;
 
         if (frame == 3)
-            SetTargetAnim((GroundSprite *)p, 9);
+            SetTargetAnim(p, 9);
         else if (frame > 3 || p->animDone)
-            SetTargetAnim((GroundSprite *)p, 8);
+            SetTargetAnim(p, 8);
     } else if (p->animDone) {
         if ((u8)HasSuperBodySlam(gLevelState)) {
             SetMode(ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);
-            SetTargetAnim(Sprite(), 7);
+            SetTargetAnim(part, 7);
         } else {
             SetMode(ACTION_STATE_AIRBORNE_BODY_SLAM);
         }
@@ -253,12 +254,12 @@ void ActionCtrl::StateSlide()
     u32 in = gKeys.all;
 
     {
-        struct player *p = part;
+        Player *p = part;
 
         if (p->hitAxes == 0) {
             QueueNowY(5);
         } else if (INPUT_HELD(in) & 1) {
-            if (PlayerHasRoomForAnim((struct box_part *)p, 0xB) == 1) {
+            if (p->HasRoomForAnim(0xB) == 1) {
                 PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
                 ActAndFlags0D(part, -2);
                 ActAndFlags0D(part, -3);
@@ -266,7 +267,7 @@ void ActionCtrl::StateSlide()
                 return;
             }
         } else if (INPUT_PRESSED(in) & 2) {
-            if (PlayerHasRoomForAnim((struct box_part *)p, 0x10) == 1) {
+            if (p->HasRoomForAnim(0x10) == 1) {
                 StartSpin();
                 QueueX(0, 1, 1);
                 return;
@@ -275,19 +276,19 @@ void ActionCtrl::StateSlide()
     }
 
     if (++frame < frames) {
-        struct player *p = part;
+        Player *p = part;
         s32 frame;
         s32 count;
 
         p->stepTimer = 0;
         frame = 3;
-        count = p->anim->records[p->tag].frameCount;
+        count = p->bank->anims[p->tag].frameCount;
         CLAMP_INDEX(frame, count);
         p->frame = frame;
         return;
     }
     {
-        struct player *p = part;
+        Player *p = part;
         u8 contact;
 
         if (!p->animDone)
@@ -295,7 +296,7 @@ void ActionCtrl::StateSlide()
         contact = p->hitAxes;
         if (contact == 0) {
             SetMode(ACTION_STATE_AIRBORNE_FALL);
-            SetTargetAnim(Sprite(), 0x1B);
+            SetTargetAnim(part, 0x1B);
             QueueNowY(4);
             return;
         }
@@ -307,7 +308,7 @@ void ActionCtrl::StateSlide()
             s32 zero = 0;
 
             SetMode(ACTION_STATE_CRAWL);
-            SetTargetAnim(Sprite(), 0);
+            SetTargetAnim(part, 0);
             frames = zero;
             QueuePendingX(zero, 3);
             StateCrawl();
@@ -316,13 +317,13 @@ void ActionCtrl::StateSlide()
         {
             u8 dir = GetDpadDirection(gInput);
 
-            if (dir != 0 && PlayerHasRoomForAnim((struct box_part *)part, 2)) {
+            if (dir != 0 && part->HasRoomForAnim(2)) {
                 switch (dir) {
                 case 3 ... 4:
                     if ((INPUT_HELD(in) & L_BUTTON) && (u8)HasTurboRun(gLevelState)) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
-                        SetTargetAnim(Sprite(), 0x18);
+                        SetTargetAnim(part, 0x18);
                         QueueX(held, 1, 0x1B);
                         return;
                     }
@@ -330,20 +331,20 @@ void ActionCtrl::StateSlide()
                     return;
                 }
                 SetMode(ACTION_STATE_STAND_UP);
-                SetTargetAnim(Sprite(), 2);
+                SetTargetAnim(part, 2);
                 QueuePendingX(0, 0);
                 return;
             } else {
-                u8 hit = PlayerHasRoomForAnim((struct box_part *)part, 2);
+                u8 hit = part->HasRoomForAnim(2);
 
                 if (hit == 1) {
                     SetMode(ACTION_STATE_STAND_UP);
-                    SetTargetAnim(Sprite(), 2);
+                    SetTargetAnim(part, 2);
                     QueueX(0, hit, 0);
                     return;
                 }
                 SetMode(ACTION_STATE_CROUCH);
-                SetTargetAnim(Sprite(), 4);
+                SetTargetAnim(part, 4);
                 QueuePendingX(0, 0);
             }
         }
@@ -398,16 +399,20 @@ void ActionCtrl::StateSpin()
 void ActionCtrl::StateAirSpin()
 {
     u32 in;
-    struct player *p;
+    Player *p;
 
     in = gKeys.all;
     p = part;
 
     if ((p->hitAxes & 8) && p->speedY > 0) {
-        /* flags2 through action_obj.h's byte view: ActOrFlags0D's 1 is
+        /* flags2 through a pointer to it: ActOrFlags0D's 1 is
          * reused for motionYPending after the call, and `p->flags2 |= 1`
          * schedules slamBlocked's 0 into the `ldrb`'s slot. */
-        ACT_PART_FLAGS0D(p) |= 1;
+        {
+            u8 *flags2 = &p->f.bytes.flags2;
+
+            *flags2 |= 1;
+        }
         slamBlocked = 0;
         SetMode(ACTION_STATE_SPIN);
         motionYKeepSpeed = 0;
@@ -435,7 +440,7 @@ void ActionCtrl::StateAirSpin()
             } else {
                 spinCooldown = 0xC;
                 SetMode(ACTION_STATE_AIRBORNE_FALL);
-                SetTargetAnim(Sprite(), 0x15);
+                SetTargetAnim(part, 0x15);
                 this->frame = charge;
                 this->frames = charge;
             }
@@ -506,7 +511,7 @@ void ActionCtrl::StateCrouchDown()
     }
     if (part->animDone) {
         SetMode(ACTION_STATE_CROUCH);
-        SetTargetAnim(Sprite(), 4);
+        SetTargetAnim(part, 4);
     }
 }
 
@@ -528,7 +533,7 @@ void ActionCtrl::StateCrouch()
         in = gKeys.all;
         dir = GetDpadDirection(pad);
     }
-    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim((struct box_part *)part, 0xB) == 1) {
+    if ((INPUT_PRESSED(in) & 1) && part->HasRoomForAnim(0xB) == 1) {
         PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
@@ -539,8 +544,8 @@ void ActionCtrl::StateCrouch()
         return;
 
     turned = 0;
-    if ((s32)(part->mirror.all << 27) < 0 && (dir == 4 || dir == 6 || dir == 8)) {
-        u8 *p = &part->mirror.all;
+    if ((s32)(part->mirror << 27) < 0 && (dir == 4 || dir == 6 || dir == 8)) {
+        u8 *p = &part->mirror;
         s32 m = -0x11;
 
         m &= *p;
@@ -549,7 +554,7 @@ void ActionCtrl::StateCrouch()
         turned = 1;
         goto turn_done;
     }
-    if ((s8)(part->mirror.all << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7)) {
+    if ((s8)(part->mirror << 3) >= 0 && (dir == 3 || dir == 5 || dir == 7)) {
         s32 m;
 
         turned = 1;
@@ -557,7 +562,7 @@ void ActionCtrl::StateCrouch()
             /* volatile: keeps the `+0x28` address in the part copy's
              * register and computed ahead of the -0x11 mask, as in the
              * ROM (a plain pointer lands in a fresh register) */
-            volatile u8 *p = &part->mirror.all;
+            volatile u8 *p = &part->mirror;
 
             m = -0x11;
             m &= *p;
@@ -576,7 +581,7 @@ turn_done:
         case 7:
         case 8:
             SetMode(ACTION_STATE_CRAWL_START);
-            SetTargetAnim(Sprite(), 0x14);
+            SetTargetAnim(part, 0x14);
             QueuePendingX(moved, 3);
             moved = 1;
             break;
@@ -587,17 +592,17 @@ turn_done:
         s32 held = INPUT_HELD(in) & (DPAD_DOWN | R_BUTTON);
 
         if (held == 0) {
-            u8 hit = PlayerHasRoomForAnim((struct box_part *)part, 2);
+            u8 hit = part->HasRoomForAnim(2);
 
             if (hit == 1) {
                 SetMode(ACTION_STATE_STAND_UP);
-                SetTargetAnim(Sprite(), 2);
+                SetTargetAnim(part, 2);
                 motionXKeepSpeed = held;
                 motionXPending = hit;
                 motionX = held;
             } else if (!moved) {
                 SetMode(ACTION_STATE_CROUCH);
-                SetTargetAnim(Sprite(), 4);
+                SetTargetAnim(part, 4);
                 motionXKeepSpeed = moved;
                 motionXPending = 1;
                 motionX = moved;
@@ -612,7 +617,7 @@ turn_done:
 /* Standing up: once the animation is done, idle. */
 void ActionCtrl::StateStandUp()
 {
-    struct player *p = part;
+    Player *p = part;
 
     if (p->animDone != 0) {
         SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, 0);
@@ -631,7 +636,7 @@ void ActionCtrl::StateCrawlStart()
 {
     u32 in = gKeys.all;
 
-    if ((INPUT_PRESSED(in) & 1) != 0 && PlayerHasRoomForAnim((struct box_part *)part, 0xB) == 1) {
+    if ((INPUT_PRESSED(in) & 1) != 0 && part->HasRoomForAnim(0xB) == 1) {
         PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
@@ -640,7 +645,7 @@ void ActionCtrl::StateCrawlStart()
     }
     if (part->animDone != 0) {
         SetMode(ACTION_STATE_CRAWL);
-        SetTargetAnim(Sprite(), 0);
+        SetTargetAnim(part, 0);
         StateCrawl();
     }
 }
@@ -657,7 +662,7 @@ void ActionCtrl::StateCrawl()
     u8 hit;
     u32 held;
 
-    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim((struct box_part *)part, 0xB) == 1) {
+    if ((INPUT_PRESSED(in) & 1) && part->HasRoomForAnim(0xB) == 1) {
         PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
@@ -672,13 +677,13 @@ void ActionCtrl::StateCrawl()
     case 0:
     case 2:
         SetMode(ACTION_STATE_CRAWL_STOP);
-        SetTargetAnim(Sprite(), 1);
+        SetTargetAnim(part, 1);
         QueuePendingX(0, 0);
         break;
     case 1:
-        if (PlayerHasRoomForAnim((struct box_part *)part, 2) == 1) {
+        if (part->HasRoomForAnim(2) == 1) {
             SetMode(ACTION_STATE_CRAWL_STAND_UP);
-            SetTargetAnim(Sprite(), 2);
+            SetTargetAnim(part, 2);
             QueueX(busy, dir, busy);
             break;
         }
@@ -690,14 +695,14 @@ void ActionCtrl::StateCrawl()
         do {
             SetMode(ACTION_STATE_CROUCH);
         } while (0);
-        SetTargetAnim(Sprite(), 4);
+        SetTargetAnim(part, 4);
         QueueX(busy, dir, busy);
         break;
     }
     held = INPUT_HELD(in) & (DPAD_DOWN | R_BUTTON);
-    if (held == 0 && (hit = PlayerHasRoomForAnim((struct box_part *)part, 2)) == 1) {
+    if (held == 0 && (hit = part->HasRoomForAnim(2)) == 1) {
         SetMode(ACTION_STATE_STAND_UP);
-        SetTargetAnim(Sprite(), 2);
+        SetTargetAnim(part, 2);
         QueueX(held, hit, held);
     }
     UpdateFacing();

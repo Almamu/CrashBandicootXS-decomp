@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -134,7 +135,7 @@ void EnemyCtrl::Update(MovingSprite *)
             struct ctrl_target *t = target;
             s32 x = Q8_TO_INT(t->x);
             s32 y = Q8_TO_INT(t->y);
-            struct player *p = gPlayer;
+            Player *p = gPlayer;
             s32 dx = ABS_BRANCHLESS(x - Q8_TO_INT(p->x));
             s32 d = ABS_BRANCHLESS(y - Q8_TO_INT(p->y));
             struct byte_arg zero;

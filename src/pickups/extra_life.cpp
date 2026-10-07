@@ -1,4 +1,5 @@
 #include "pickups.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -35,7 +36,7 @@ void ExtraLife::CheckPickup()
             return;
     }
     struct aabb box = GetAnimHitbox();
-    GroundSprite *player = PlayerSprite();
+    Player *player = gPlayer;
     struct aabb playerBox = player->GetAnimHitbox();
 
     if (AabbOverlaps(&playerBox, &box)) {
@@ -246,7 +247,7 @@ ExtraLife::ExtraLife()
 s32 ExtraLife::CheckPlayerContact()
 {
     if (state == 0) {
-        if (PlayerSprite()->f.flags >> 7)
+        if (gPlayer->f.flags >> 7)
             CheckPickup();
     }
     return 0;
@@ -291,7 +292,7 @@ void Wumpa::CheckPickup()
             return;
     }
     struct aabb box = GetAnimHitbox();
-    GroundSprite *player = PlayerSprite();
+    Player *player = gPlayer;
 
     if (player->kind == 0x13) {
         struct aabb playerBox = player->GetAttackBox();

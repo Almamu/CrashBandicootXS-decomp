@@ -1,64 +1,62 @@
-#include "ctrl.hpp"
-#include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
-#include "match.h"
 #include "actor.h"
 #include "globals.h"
 }
 
-/* The player object's accessors (`struct player`, player.h), then four
+/* The player's accessors (Player, include/player.hpp; part 8), then four
  * of the controller base class's methods (Ctrl, include/ctrl.hpp; the
  * rest are in src/objects/ctrl.cpp): the SetMode/SetAnimSet setters and
  * the Y motion setters, which act on a controller's target, a moving
  * sprite object (the player, a platform or a boss part).
  *
- * The file is C++ for the Ctrl methods (#664, docs/cplusplus.md); the
- * player's accessors are plain functions with C linkage (their
- * prototypes, in player.h, are C declarations). As C, the two motion
- * setters needed 8 register pins each to load the ramp in the ROM's
- * order; as C++, with the values in locals, they need none. */
+ * The accessors were plain functions with C linkage on `struct player`
+ * (part 3) until the player became a class; cxx_symbols.txt maps them to
+ * the C names their prototypes in player.h keep for the C callers. As C,
+ * the two motion setters needed 8 register pins each to load the ramp in
+ * the ROM's order; as C++, with the values in locals, they need none. */
 
 /* `collisionQueue` (+0x108) address getter. */
-struct collision_queue *GetPlayerCollisionQueue(struct player *self)
+CollisionQueue *Player::GetCollisionQueue()
 {
-    return &self->collisionQueue;
+    return &collisionQueue;
 }
 
 /* `dead` (+0x104) clear/set/get accessors. */
-void ClearPlayerDead(struct player *self)
+void Player::ClearDead()
 {
-    self->dead = 0;
+    dead = 0;
 }
 
-void SetPlayerDead(struct player *self)
+void Player::SetDead()
 {
-    self->dead = 1;
+    dead = 1;
 }
 
-u8 IsPlayerDead(struct player *self)
+u8 Player::IsDead()
 {
-    return self->dead;
+    return dead;
 }
 
 /* Sets `rampX` (+0x48) and starts speedX at its `start`, unless the
  * player is on slippery ground (`slippery`), where the speed is kept. */
-void StartPlayerRampX(struct player *self, s32 a, s32 b, s32 c)
+void Player::StartRampX(s32 a, s32 b, s32 c)
 {
-    if (self->slippery == 0) {
-        self->speedX = a;
+    if (slippery == 0) {
+        speedX = a;
     }
-    self->rampX.start = a;
-    self->rampX.step = b;
-    self->rampX.target = c;
+    rampX.start = a;
+    rampX.step = b;
+    rampX.target = c;
 }
 
 /* Sets `rampX` only, keeping the current speedX. */
-void SetPlayerRampX(struct player *self, s32 a, s32 b, s32 c)
+void Player::SetRampX(s32 a, s32 b, s32 c)
 {
-    self->rampX.start = a;
-    self->rampX.step = b;
-    self->rampX.target = c;
+    rampX.start = a;
+    rampX.step = b;
+    rampX.target = c;
 }
 
 /* `countdown` (+0x91) decrement/clear/increment/get accessors: the
@@ -68,231 +66,210 @@ void SetPlayerRampX(struct player *self, s32 a, s32 b, s32 c)
  * UNUSED - DecrementPlayerCountdown through StorePlayerListEntry below have
  * no caller anywhere in the ROM (no `bl` in src/, no Thumb pointer to them
  * in baserom.gba); the code that needs these fields reads them directly. */
-void DecrementPlayerCountdown(struct player *self)
+void Player::DecrementCountdown()
 {
-    if (self->countdown != 0) {
-        self->countdown -= 1;
+    if (countdown != 0) {
+        countdown -= 1;
     }
 }
 
-void ClearPlayerCountdown(struct player *self)
+void Player::ClearCountdown()
 {
-    self->countdown = 0;
+    countdown = 0;
 }
 
-void IncrementPlayerCountdown(struct player *self)
+void Player::IncrementCountdown()
 {
-    self->countdown += 1;
+    countdown += 1;
 }
 
-u8 GetPlayerCountdown(struct player *self)
+u8 Player::GetCountdown()
 {
-    return self->countdown;
+    return countdown;
 }
 
-/* `self+0x8c` is a snapshot of the `gRoomFrameCount` frame counter
+/* `deadline` (+0x8C) is a snapshot of the `gRoomFrameCount` frame counter
  * (the same counter documented in `docs/rom_map.md`); this tests
  * whether it's still ahead of the counter (unsigned comparison - a
  * signed one here would be a real, previously-caught bug). */
-u8 IsPlayerInvulnerable(struct player *self)
+u8 Player::IsInvulnerable()
 {
-    return self->deadline > gRoomFrameCount;
+    return deadline > gRoomFrameCount;
 }
 
-void ClearPlayerInvulnerability(struct player *self)
+void Player::ClearInvulnerability()
 {
-    self->deadline = 0;
+    deadline = 0;
 }
 
-/* Sets `self+0x8c` to `gRoomFrameCount + arg1` - arming the
+/* Sets `deadline` to `gRoomFrameCount + value` - arming the
  * "ahead of the counter" check `IsPlayerInvulnerable` performs. */
-void SetPlayerInvulnerable(struct player *self, s32 arg1)
+void Player::SetInvulnerable(s32 value)
 {
-    self->deadline = gRoomFrameCount + arg1;
+    deadline = gRoomFrameCount + value;
 }
 
-/* `self+0x88` byte set/get accessors. */
-void SetPlayerControlMode(struct player *self, u8 arg1)
+/* `ctrlMode` (+0x88) set/get accessors. */
+void Player::SetControlMode(u8 value)
 {
-    self->ctrlMode = arg1;
+    ctrlMode = value;
 }
 
-u8 GetPlayerControlMode(struct player *self)
+u8 Player::GetControlMode()
 {
-    return self->ctrlMode;
+    return ctrlMode;
 }
 
-/* `self+0xac` pointer/word get/set accessors. */
-s32 GetPlayerStandingOn(struct player *self)
+/* `carried` (+0xAC) get/set accessors. */
+Sprite *Player::GetStandingOn()
 {
-    return (s32)self->carried;
+    return carried;
 }
 
-void SetPlayerStandingOn(struct player *self, s32 arg1)
+void Player::SetStandingOn(Sprite *part)
 {
-    self->carried = (struct gobj *)arg1;
+    carried = part;
 }
 
-/* `self+0x80` byte set/get accessors. */
-void SetPlayerBusy(struct player *self, u8 arg1)
+/* `busy` (+0x80) set/get accessors. */
+void Player::SetBusy(u8 value)
 {
-    self->busy = arg1;
+    busy = value;
 }
 
-u8 IsPlayerBusy(struct player *self)
+u8 Player::IsBusy()
 {
-    return self->busy;
+    return busy;
 }
 
 /* `listCount` (+0x94) clear/increment (only in control mode 0, like the
  * crate list recording itself)/get accessors, then a plain
  * clear/increment/get triple on the same field (the `Alt` copies; the ROM
  * has both - reproduced as-is rather than deduplicated). UNUSED. */
-void ClearPlayerListCount(struct player *self)
+void Player::ClearListCount()
 {
-    self->listCount = 0;
+    listCount = 0;
 }
 
-void IncrementPlayerListCount(struct player *self)
+void Player::IncrementListCount()
 {
-    if (self->ctrlMode == 0) {
-        self->listCount += 1;
+    if (ctrlMode == 0) {
+        listCount += 1;
     }
 }
 
-u8 GetPlayerListCount(struct player *self)
+u8 Player::GetListCount()
 {
-    return self->listCount;
+    return listCount;
 }
 
-void ClearPlayerListCountAlt(struct player *self)
+void Player::ClearListCountAlt()
 {
-    self->listCount = 0;
+    listCount = 0;
 }
 
-void IncrementPlayerListCountAlt(struct player *self)
+void Player::IncrementListCountAlt()
 {
-    self->listCount += 1;
+    listCount += 1;
 }
 
-u8 GetPlayerListCountAlt(struct player *self)
+u8 Player::GetListCountAlt()
 {
-    return self->listCount;
+    return listCount;
 }
 
 /* `bounce` (+0x92) clear/increment/get accessors. UNUSED. */
-void ClearPlayerBounce(struct player *self)
+void Player::ClearBounce()
 {
-    self->bounce = 0;
+    bounce = 0;
 }
 
-void IncrementPlayerBounce(struct player *self)
+void Player::IncrementBounce()
 {
-    self->bounce += 1;
+    bounce += 1;
 }
 
-u8 GetPlayerBounce(struct player *self)
+u8 Player::GetBounce()
 {
-    return self->bounce;
+    return bounce;
 }
 
 /* `bumped` (+0x90) set/get accessors. */
-void SetPlayerBumped(struct player *self, u8 arg1)
+void Player::SetBumped(u8 value)
 {
-    self->bumped = arg1;
+    bumped = value;
 }
 
-u8 IsPlayerBumped(struct player *self)
+u8 Player::IsBumped()
 {
-    return self->bumped;
+    return bumped;
 }
 
-/* `self+0x103`/`self+0x102`/`self+0x101`/`self+0x100` byte get/set
- * accessor pairs (`pushRight`/`pushLeft`: the standing player is moved
- * 1px per frame that way), `hanging` (+0x101) and `slippery` (+0x100). */
-u8 GetPlayerPushRight(struct player *self)
+/* `pushRight` (+0x103), `pushLeft` (+0x102), `hanging` (+0x101) and
+ * `slippery` (+0x100) get/set pairs. */
+u8 Player::GetPushRight()
 {
-    return self->pushRight;
+    return pushRight;
 }
 
-void SetPlayerPushRight(struct player *self, u8 arg1)
+void Player::SetPushRight(u8 value)
 {
-    self->pushRight = arg1;
+    pushRight = value;
 }
 
-u8 GetPlayerPushLeft(struct player *self)
+u8 Player::GetPushLeft()
 {
-    return self->pushLeft;
+    return pushLeft;
 }
 
-void SetPlayerPushLeft(struct player *self, u8 arg1)
+void Player::SetPushLeft(u8 value)
 {
-    self->pushLeft = arg1;
+    pushLeft = value;
 }
 
-u8 IsPlayerHanging(struct player *self)
+u8 Player::IsHanging()
 {
-    return self->hanging;
+    return hanging;
 }
 
-void SetPlayerHanging(struct player *self, u8 arg1)
+void Player::SetHanging(u8 value)
 {
-    self->hanging = arg1;
+    hanging = value;
 }
 
-u8 IsPlayerSlippery(struct player *self)
+u8 Player::IsSlippery()
 {
-    return self->slippery;
+    return slippery;
 }
 
-void SetPlayerSlippery(struct player *self, u8 arg1)
+void Player::SetSlippery(u8 value)
 {
-    self->slippery = arg1;
+    slippery = value;
 }
 
 /* Indexed getter into `list` (+0x98, the recently touched crates), gated by
  * `ctrlMode` and (for `idx > 4`) `listCount`; the same test
- * QueueCratePlayerCollision makes inline. UNUSED. Still pinned: unpinned
- * (`if (ctrlMode == 0 && (idx <= 4 || idx < listCount))`), agbcp swaps
- * the address computation's r0 and r1. */
-s32 GetPlayerListEntry(struct player *self, s32 idx)
+ * QueueCratePlayerCollision makes inline. UNUSED. The C needed 3 pins
+ * and gotos (agbcp swapped the address computation's r0 and r1); as a
+ * method, the plain test matches. */
+Crate *Player::GetListEntry(s32 idx)
 {
-    s32 result;
-
-    if (self->ctrlMode != 0) {
-        goto ret0;
-    }
-    if (idx > 4) {
-        if (idx >= self->listCount) {
-            goto ret0;
-        }
-    }
-    {
-        MATCH_HOLD_REG(s32, offset, r0) = idx << 2;
-        MATCH_HOLD_REG(u8 *, base, r1) = (u8 *)self->list;
-        MATCH_HOLD_REG(u8 *, addr, r1);
-
-        addr = base + offset;
-        result = *(s32 *)addr;
-    }
-    goto end;
-ret0:
-    result = 0;
-end:
-    return result;
+    if (ctrlMode == 0 && (idx <= 4 || idx < listCount))
+        return list[idx];
+    return 0;
 }
 
 /* Stores `val` into `list` at index `listCount` (the next free slot,
  * without counting it), gated by `ctrlMode` and the index staying `<= 4`.
  * UNUSED. The C needed 6 register pins; built by agbcp, the plain code
  * matches. */
-void StorePlayerListEntry(struct player *self, s32 val)
+void Player::StoreListEntry(Crate *crate)
 {
-    if (self->ctrlMode == 0) {
-        u32 idx = self->listCount;
+    if (ctrlMode == 0) {
+        u32 idx = listCount;
 
         if (idx <= 4)
-            self->list[idx] = (struct crate *)val;
+            list[idx] = crate;
     }
 }
 

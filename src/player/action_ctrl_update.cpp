@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "system.h"
@@ -48,13 +49,13 @@ void ActionCtrl::Update(MovingSprite *)
         UpdateSkidAnim();
     prevSlippery = IsSlippery(part);
     {
-        struct player *p = part;
+        Player *p = part;
         s32 y = p->y;
 
         if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1400) {
-            p->flags.all &= 0x7F;
+            p->f.flags &= 0x7F;
             {
-                struct player *q = part;
+                Player *q = part;
 
                 if (IsSlippery(q) == 0)
                     q->speedX = 0;
@@ -63,7 +64,7 @@ void ActionCtrl::Update(MovingSprite *)
                 q->rampX.target = 0;
             }
             {
-                struct player *r = part;
+                Player *r = part;
                 s32 y2 = r->y;
 
                 if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
@@ -106,8 +107,8 @@ void ActionCtrl::Update(MovingSprite *)
     }
     ApplyMotion();
     {
-        struct player *p = part;
-        u32 top = p->flags.all >> 7;
+        Player *p = part;
+        u32 top = p->f.flags >> 7;
 
         if (top == 0) {
             if (IsSlippery(p) == 0)
@@ -159,10 +160,10 @@ u8 ActionCtrl::TryDoubleJump()
         if (jumps == 0 && (u8)HasDoubleJump(gLevelState)) {
             if (part->tag == 6 && part->frame >= 0) {
                 frame++;
-                SetSlippery(gPlayer, jumps);
-                SetTargetAnim(Sprite(), 0x12);
+                gPlayer->StoreSlippery(jumps);
+                SetTargetAnim(part, 0x12);
                 SetMode(ACTION_STATE_AIRBORNE_FLIP_JUMP);
-                SetTargetAnim(Sprite(), 6);
+                SetTargetAnim(part, 6);
                 QueueX(jumps, one, 0xD);
                 QueueY(jumps, one, 0xD);
                 PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
@@ -170,7 +171,7 @@ u8 ActionCtrl::TryDoubleJump()
             } else if (part->tag == 0xB && part->frame >= 0) {
                 frame++;
                 SetMode(ACTION_STATE_AIRBORNE_HIGH_JUMP);
-                SetTargetAnim(Sprite(), 0xA);
+                SetTargetAnim(part, 0xA);
                 QueueNowX(0xE);
                 QueueNowY(0xE);
                 PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
@@ -178,7 +179,7 @@ u8 ActionCtrl::TryDoubleJump()
             } else if (part->tag == 0xC) {
                 frame++;
                 SetMode(ACTION_STATE_AIRBORNE_HIGH_JUMP);
-                SetTargetAnim(Sprite(), 0xA);
+                SetTargetAnim(part, 0xA);
                 QueueNowX(0xC);
                 QueueNowY(0xC);
                 PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
@@ -207,7 +208,7 @@ void ActionCtrl::HandleAirInput()
     }
     in = gKeys.all;
     {
-        struct player *p;
+        Player *p;
 
         if (state == ACTION_STATE_AIRBORNE_JUMP) {
             p = part;
@@ -253,11 +254,15 @@ done:
         if (blocked == 0) {
             u8 prev;
 
-            /* flags2 through action_obj.h's byte view: `part->flags2 |= 1`
+            /* flags2 through a pointer to it: `part->flags2 |= 1`
              * puts the part in r0 and the 1 in r1 (the ROM has them the
              * other way round), and ActOrFlags0D's 1 is reused for the
              * motion queue's stores. */
-            ACT_PART_FLAGS0D(part) |= 1;
+            {
+                u8 *flags2 = &part->f.bytes.flags2;
+
+                *flags2 |= 1;
+            }
             prev = prevState;
             if (prev == ACTION_STATE_AIRBORNE_FLIP_JUMP ||
                 state == ACTION_STATE_AIRBORNE_FLIP_JUMP) {
@@ -272,7 +277,7 @@ done:
             }
             if (prev == ACTION_STATE_AIRBORNE_JUMP) {
                 SetMode(ACTION_STATE_BODY_SLAM_START);
-                SetTargetAnim(Sprite(), 0x19);
+                SetTargetAnim(part, 0x19);
                 motionXKeepSpeed = blocked;
                 motionXPending = 1;
                 motionX = blocked;

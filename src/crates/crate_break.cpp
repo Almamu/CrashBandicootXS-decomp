@@ -2,6 +2,7 @@
 #include "crate_list.hpp"
 #include "part_list.hpp"
 #include "pickups.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -92,7 +93,7 @@ static inline s32 Span(s32 a, s32 b, s32 c)
 
 /* Adds `bit` to the player's hit mask. As an inline, a constant bit is
  * loaded before the player. */
-static inline void AddPlayerHit(struct player *p, u32 bit)
+static inline void AddPlayerHit(Player *p, u32 bit)
 {
     p->hitMask |= bit;
 }
@@ -108,7 +109,7 @@ static inline s32 PlayerInvulnerable(void)
 static inline void RingPush(Crate *obj)
 {
     if (PlayerCtrlMode() == 0 && gPlayer->listCount <= 4)
-        gPlayer->list[gPlayer->listCount] = (struct crate *)obj;
+        gPlayer->list[gPlayer->listCount] = (Crate *)obj;
     if (gPlayer->ctrlMode == 0)
         gPlayer->listCount++;
 }
@@ -116,8 +117,7 @@ static inline void RingPush(Crate *obj)
 /* GetSpriteFrameThirdBox inlined: the player's current hitbox quad. */
 static inline const struct hitbox_quad *PlayerThirdBox(void)
 {
-    const struct sprite_frame_3box *info =
-        (const struct sprite_frame_3box *)PlayerSprite()->GetFrame();
+    const struct sprite_frame_3box *info = (const struct sprite_frame_3box *)gPlayer->GetFrame();
 
     switch (info->frame.pieces[0] >> 4) {
     case 0:
@@ -140,7 +140,7 @@ static inline const struct hitbox_quad *PlayerThirdBox(void)
  * in SetCrateBusy. */
 static inline void SetPlayerBusy(void)
 {
-    struct player *p = gPlayer;
+    Player *p = gPlayer;
     u8 one = 1;
 
     p->busy = one;
@@ -277,9 +277,9 @@ void Crate::QueuePlayerCollision(s32 idx)
             SetAabbPos(BOX_ADDR(&f.b), bx, by);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (gPlayer->mirror.sbits.flipX < 0)
+        if (gPlayer->mirrorBits.flipX < 0)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayer->mirror.sbits.flipY < 0)
+        if (gPlayer->mirrorBits.flipY < 0)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     bb = BOX_ADDR(&f.b);
@@ -304,7 +304,7 @@ void Crate::QueuePlayerCollision(s32 idx)
             Crate *e;
 
             if (gPlayer->ctrlMode == 0 && (i <= 4 || i < gPlayer->listCount))
-                e = (Crate *)gPlayer->list[i];
+                e = gPlayer->list[i];
             else
                 e = 0;
             if (e != 0) {
@@ -340,7 +340,7 @@ void Crate::QueuePlayerCollision(s32 idx)
     case 3:
         obj->BreakInStack(0, 0, 0);
         if (gPlayer->listCount == 0) {
-            const struct sprite_anim *a = &PlayerSprite()->bank->anims[gPlayer->tag];
+            const struct sprite_anim *a = &gPlayer->bank->anims[gPlayer->tag];
 
             if (attack != ATTACK_KIND_SLIDE &&
                 PlayerHitboxOverlapsAt((struct hitbox_quad *)&a->box[0], &f.a, px, py)) {
@@ -364,11 +364,11 @@ void Crate::QueuePlayerCollision(s32 idx)
             return;
         if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
             if (attack != ATTACK_KIND_SLIDE || obj->GetAbove() != 0) {
-                PlayerSprite()->HandleEvent(0, EVENT_BUMP, 1);
+                gPlayer->HandleEvent(0, EVENT_BUMP, 1);
                 AddPlayerHit(gPlayer, 1);
             }
         } else if (attack != ATTACK_KIND_SLIDE || obj->GetAbove() != 0) {
-            PlayerSprite()->HandleEvent(0, EVENT_BUMP, 2);
+            gPlayer->HandleEvent(0, EVENT_BUMP, 2);
             AddPlayerHit(gPlayer, 2);
         }
         RingPush(obj);
@@ -411,7 +411,7 @@ tail:
         u8 w;
         u8 h;
 
-        q = &PlayerSprite()->bank->anims[gPlayer->tag].box[0];
+        q = &gPlayer->bank->anims[gPlayer->tag].box[0];
         offX = q->offX;
         offY = q->offY;
         w = q->w;
@@ -422,9 +422,9 @@ tail:
             SetAabbPos(BOX_ADDR(&f.b), bx, by);
         }
         SetAabbSize(BOX_ADDR(&f.b), w, h);
-        if (gPlayer->mirror.sbits.flipX < 0)
+        if (gPlayer->mirrorBits.flipX < 0)
             f.b.x = px * 2 - (f.b.x + f.b.w);
-        if (gPlayer->mirror.sbits.flipY < 0)
+        if (gPlayer->mirrorBits.flipY < 0)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     bb = BOX_ADDR(&f.b);
@@ -443,7 +443,7 @@ tail:
              * of its compare, deleted after reload. `side` being the
              * function's (the other path uses it) keeps the compare that
              * long; a block-local one is deleted before reload. */
-            s32 prevX = PlayerSprite()->GetPrevX();
+            s32 prevX = gPlayer->GetPrevX();
 
             side = 2;
             if (px > prevX)
@@ -463,15 +463,15 @@ tail:
                 dy = Span(f.b.y, f.b.h, f.c.y);
             }
             if (dx > 5 && f21 == 0) {
-                if ((gLevelState->maskLevel == MASK_LEVEL_NONE && ((gPlayer->flags.all >> 6) & 1) &&
+                if ((gLevelState->maskLevel == MASK_LEVEL_NONE && ((gPlayer->f.flags >> 6) & 1) &&
                      !PlayerInvulnerable()) ||
                     kind != CRATE_KIND_REINFORCED) {
-                    gPlayer->flags.all |= 0x40;
+                    gPlayer->f.flags |= 0x40;
                     SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
-                    PlayerSprite()->HandleEvent(0, EVENT_HIT_CRUSH, 0);
+                    gPlayer->HandleEvent(0, EVENT_HIT_CRUSH, 0);
                 } else {
                     BreakInStack(0, 0, 0);
-                    PlayerSprite()->HandleEvent(0, EVENT_HIT, 0);
+                    gPlayer->HandleEvent(0, EVENT_HIT, 0);
                 }
                 return;
             } else if (dx > 6 && dy > 1 && f21 != 0) {
@@ -498,7 +498,7 @@ tail:
                     f.p2.x -= INT_TO_Q8(dx);
                 SetEntityPos((struct actor *)gPlayer, f.p2.x, PosPtr(&f.p2)->y);
                 PlayerQueue()->posCommitted = 1;
-                PlayerSprite()->HandleEvent(0, EVENT_BUMP, dirX);
+                gPlayer->HandleEvent(0, EVENT_BUMP, dirX);
                 gPlayer->hitMask |= dirX;
                 return;
             } else {
@@ -516,7 +516,7 @@ tail:
                     pp->y -= INT_TO_Q8(dy);
                 SetEntityPos((struct actor *)gPlayer, f.p3.x, pp->y);
                 PlayerQueue()->posCommitted = 1;
-                PlayerSprite()->HandleEvent(0, EVENT_BUMP, dirY);
+                gPlayer->HandleEvent(0, EVENT_BUMP, dirY);
                 gPlayer->hitMask |= dirY;
                 return;
             }
@@ -540,8 +540,8 @@ tail:
         s32 ax;
         s32 ay;
 
-        ax = PlayerSprite()->GetPrevX();
-        ay = PlayerSprite()->GetPrevY();
+        ax = gPlayer->GetPrevX();
+        ay = gPlayer->GetPrevY();
         side = 2;
         if (px > ax)
             side = 1;
@@ -577,7 +577,7 @@ tail:
              * gets r6, so cross-jumping sends this arm to the r6 copy of
              * `edge = dirX` (the one the first slope check ends in), as the
              * ROM's branch does. */
-            else if (dy <= 2 && (dx > 3 || !HasPlayerRampYTarget(gPlayer))) {
+            else if (dy <= 2 && (dx > 3 || !gPlayer->HasRampYTarget())) {
                 edge = 4;
                 if (f21 != 0)
                     edge = 8;
@@ -690,7 +690,7 @@ tail:
             code = 3;
         if (attack <= ATTACK_KIND_SLIDE || attack == ATTACK_KIND_INVINCIBLE ||
             (attack == ATTACK_KIND_SPIN && code <= 2)) {
-            PlayerSprite()->HandleEvent(0, EVENT_BUMP, 4);
+            gPlayer->HandleEvent(0, EVENT_BUMP, 4);
             AddPlayerHit(gPlayer, 4);
             if (gPlayer->hitAxes != 8)
                 PosPtr(&f.pos)->y = INT_TO_Q8(dy) + PosPtr(&f.pos)->y;
@@ -803,9 +803,9 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08
                 if (attack == ATTACK_KIND_JUMP) {
                     if (k == CRATE_KIND_ARROW || k == CRATE_KIND_IRON_ARROW) {
                         PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
-                        PlayerSprite()->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
+                        gPlayer->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
                     } else
-                        PlayerSprite()->HandleEvent(0, EVENT_BOUNCE, 8);
+                        gPlayer->HandleEvent(0, EVENT_BOUNCE, 8);
                     gPlayer->speedY = 0;
                     gPlayer->rampY.start = 0;
                     gPlayer->rampY.step = 0;
@@ -813,7 +813,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08
                 } else if ((u32)(attack - ATTACK_KIND_BODY_SLAM) <= 1 &&
                            k == CRATE_KIND_IRON_ARROW) {
                     PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
-                    PlayerSprite()->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
+                    gPlayer->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
                     gPlayer->speedY = 0;
                     gPlayer->rampY.start = 0;
                     gPlayer->rampY.step = 0;
@@ -851,7 +851,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08
         if (!(gPlayer->dir & 4) && above) {
             if ((edge == 8 && depth <= 1) || (depth <= 1 && code == 1) ||
                 (depth <= 7 && code == 1 && edge == 8)) {
-                gPlayer->carried = (struct gobj *)this;
+                gPlayer->carried = this;
                 {
                     u8 m = 8;
 
@@ -896,14 +896,14 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08
         else if (attack == ATTACK_KIND_JUMP)
             BreakInStack(0, limited, edge);
         else {
-            struct player **pp = &gPlayer;
+            Player **pp = &gPlayer;
 
             if ((*pp)->listCount != 0 && !forced)
                 return;
             if (edge == 8 || edge == 4) {
                 BreakInStack(0, 0, edge);
                 if ((*pp)->ctrlMode == 0 && (*pp)->listCount <= 4)
-                    (*pp)->list[(*pp)->listCount] = (struct crate *)this;
+                    (*pp)->list[(*pp)->listCount] = this;
                 if (gPlayer->ctrlMode == 0)
                     gPlayer->listCount++;
             }
@@ -919,14 +919,14 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08
     }
 commit:
     {
-        struct player *p = gPlayer;
-        struct collision_queue *q = &p->collisionQueue;
+        Player *p = gPlayer;
+        CollisionQueue *q = &p->collisionQueue;
 
         if (q->posCommitted == 0)
             SetEntityPos((struct actor *)p, pos.x, pos.y);
     }
     if (hit != 0) {
-        PlayerSprite()->HandleEvent(0, EVENT_BUMP, hit);
+        gPlayer->HandleEvent(0, EVENT_BUMP, hit);
         gPlayer->hitMask |= hit;
     }
 }
@@ -1297,7 +1297,7 @@ void Crate::OpenMystery(bool flag)
         break;
     case 7:
         {
-            GroundSprite *p = PlayerSprite();
+            Player *p = gPlayer;
 
             if (p->f.flags >> 7) {
                 p->HandleEvent(0, EVENT_MASK_GAIN, 0);
@@ -1498,7 +1498,7 @@ void Crate::Explode(u8 near)
     PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
     DropAbove();
 
-    if ((gPlayer->flags.all >> 6) & 1 && !PlayerInvulnerable()) {
+    if ((gPlayer->f.flags >> 6) & 1 && !PlayerInvulnerable()) {
         GroundSprite *p;
         s32 t1 = Q8_TO_INT(gPlayer->x) - Q8_TO_INT(x);
         s32 dx = ABS_BRANCHLESS(t1);
@@ -1512,7 +1512,7 @@ void Crate::Explode(u8 near)
         }
         if (near) {
         call:
-            p = PlayerSprite();
+            p = gPlayer;
             p->HandleEvent(0, EVENT_HIT_EXPLOSION, 0);
         }
     }
@@ -1645,7 +1645,7 @@ void Crate::ActivateNitroSwitch()
 
         state |= CRATE_STATE_BUSY;
         {
-            struct player *player = gPlayer;
+            Player *player = gPlayer;
             one = 1;
             player->busy = one;
         }
@@ -1863,7 +1863,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
 
 /* Entry `i` of the player's ring of touched crates (GetPlayerListEntry
  * inlined): none while the ring is locked (`ctrlMode`). */
-static inline Crate *RingAt(struct player *p, s32 i)
+static inline Crate *RingAt(Player *p, s32 i)
 {
     if (p->ctrlMode == 0 && (i <= 4 || i < p->listCount))
         return (Crate *)p->list[i];
@@ -1968,7 +1968,7 @@ void Crate::UpdateSlot()
 
     w = slotState;
     if (!(w & CRATE_SLOT_STAGE_MASK)) {
-        struct player *pl = gPlayer;
+        Player *pl = gPlayer;
         s32 d;
 
         d = Q8_TO_INT(pl->x);

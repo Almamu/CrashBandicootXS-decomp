@@ -1,5 +1,6 @@
 #include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "system.h"
@@ -67,7 +68,7 @@ static inline void SetStateNow(PlayerCtrl *self, s32 newState, s32 newMode, s32 
 {
     self->SetMode(newState);
     self->mode = newMode;
-    self->SetTargetAnim((GroundSprite *)self->target, LevelAnim(self));
+    self->SetTargetAnim(self->target, LevelAnim(self));
     if (newTimer != CTRL_KEEP)
         self->timer = newTimer;
     if (newTimerMax != CTRL_KEEP)
@@ -82,24 +83,20 @@ static inline void ResetMode(PlayerCtrl *self)
 
 /* The value arrives as a (constant-propagated) inline parameter, so the
  * bitfield store is the generic clear-then-or, as in the ROM. */
-static inline void SetFlipX(struct player *t, u32 value)
+static inline void SetFlipX(Player *t, u32 value)
 {
-    t->mirror.bits.flipX = value;
+    t->mirrorFlags.mirrorX = value;
 }
 
-/* The facing tests: as C++, a test of the unsigned `bits.flipX` compiles
- * to `ands #16`, where the ROM (and the C front end) has `lsls #27` and a
- * sign test, which `mirror.sbits.flipX < 0` (the signed view) gives. The
+/* The facing tests: as C++, a test of the unsigned `mirrorFlags.mirrorX`
+ * compiles to `ands #16`, where the ROM (and the C front end) has `lsls
+ * #27` and a sign test, which `mirrorBits.flipX < 0` (the signed view)
+ * gives. The
  * one "faces right" test (HandleEvent's side 1) extracts the bit
  * (`lsls #27; lsrs #31`): a u8 copy of it, through this helper. */
-static inline u8 FlipX(struct player *t)
+static inline u8 FlipX(Player *t)
 {
-    return t->mirror.bits.flipX;
-}
-
-static inline void SetHitAxes(struct player *t, s32 value)
-{
-    t->hitAxes = value;
+    return t->mirrorFlags.mirrorX;
 }
 
 /* QueueMotionX/QueueMotionY (input_ctrl.cpp) as this file has them
@@ -123,9 +120,9 @@ void PlayerCtrl::CheckTurn()
     switch (state) {
     case 0 ... 3:
     case 5 ... 6:
-        target->mirror.bits.flipY = 0;
-        if (target->mirror.sbits.flipX < 0 && (dir == 4 || dir == 6 || dir == 8)) {
-            target->mirror.bits.flipX = 0;
+        target->mirrorFlags.mirrorY = 0;
+        if (target->mirrorBits.flipX < 0 && (dir == 4 || dir == 6 || dir == 8)) {
+            target->mirrorFlags.mirrorX = 0;
             if (state != 3) {
                 SetState(4, 4, CTRL_KEEP, CTRL_KEEP);
                 timerMax = 0;
@@ -133,7 +130,7 @@ void PlayerCtrl::CheckTurn()
                 SetState(4, 5, CTRL_KEEP, CTRL_KEEP);
             }
             unk_26 = 0;
-        } else if (!(target->mirror.bits.flipX & 1) && (dir == 3 || dir == 5 || dir == 7)) {
+        } else if (!(target->mirrorFlags.mirrorX & 1) && (dir == 3 || dir == 5 || dir == 7)) {
             if (state != 3) {
                 SetState(4, 6, CTRL_KEEP, CTRL_KEEP);
                 timerMax = 0;
@@ -154,7 +151,7 @@ void PlayerCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case EVENT_BUMP:
         side = arg & 3;
         if (side == 2) {
-            if (target->mirror.sbits.flipX < 0)
+            if (target->mirrorBits.flipX < 0)
                 QueueNowX(this, 0);
         } else if (side == 1) {
             if (!FlipX(target))
@@ -187,18 +184,18 @@ void PlayerCtrl::KillPlayer(s32 anim)
 {
     PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
     SetMode(7);
-    SetTargetAnim((GroundSprite *)target, anim);
-    target->flags.bits.flag7 = 0;
-    target->flags.bits.flag6 = 0;
+    SetTargetAnim(target, anim);
+    target->f.b.collides = 0;
+    target->f.b.vulnerable = 0;
     target->dead = 1;
     LoseLife(gLevelState);
-    LoadPaletteSlot(gPaletteCache, target->slot, target->anim->records[target->tag].paletteId);
+    LoadPaletteSlot(gPaletteCache, target->palette, target->anim->records[target->tag].paletteId);
 }
 
 /* the out-of-line copy is SetDriftX */
 static inline void SetDriftNowX(s32 start, s32 step, s32 target)
 {
-    struct player *p = gPlayer;
+    Player *p = gPlayer;
     s32 v = p->speedX;
     s32 t = v * v / 0x4000 + 4;
     s32 signV;
@@ -227,20 +224,20 @@ static inline void SetDriftNowX(s32 start, s32 step, s32 target)
 
 /* "Mark gone": MarkEntityGone's sequence (graphics.cpp), inlined - set flags
  * bit 0, then unless the id is 0xFFFF set its bit in the bitmap. */
-static inline void MarkGone(struct player *t)
+static inline void MarkGone(Player *t)
 {
-    ENTITY_MARK_GONE(t->flags.bits.gone, t->id);
+    ENTITY_MARK_GONE(t->f.b.gone, t->id);
 }
 
-static inline void ClampFrame(struct player *t, s32 frame)
+static inline void ClampFrame(Player *t, s32 frame)
 {
-    s32 n = t->anim->records[t->tag].frameCount;
+    s32 n = t->bank->anims[t->tag].frameCount;
 
     CLAMP_INDEX(frame, n);
     t->frame = frame;
 }
 
-static inline void RestoreFrame(struct player *t, s32 frame, s32 f34)
+static inline void RestoreFrame(Player *t, s32 frame, s32 f34)
 {
     ClampFrame(t, frame);
     t->stepTimer = f34;
@@ -250,7 +247,7 @@ static inline void RestoreFrame(struct player *t, s32 frame, s32 f34)
  * copy is ApplyTilt. */
 static inline void ApplyLevel(PlayerCtrl *self)
 {
-    struct player *t = self->target;
+    Player *t = self->target;
     u8 *tag = &t->tag;
 
     if (*tag != 0x20 && *tag != 0x1D && *tag != 0x1F) {
@@ -351,7 +348,7 @@ void PlayerCtrl::Update(MovingSprite *)
             target->speedX = 0;
         if (target->hitMask & PLAYER_HIT_Y)
             target->speedY = 0;
-        SetHitAxes(target, 0);
+        target->StoreHitAxes(0);
         ApplySwimDrift();
     }
 
@@ -369,12 +366,12 @@ void PlayerCtrl::ApplyMotion()
     if (motionXPending == 1) {
         motionXPending = 0;
         rec = &gPlayerCtrlMotionRecords[animSet->entries[motionX][0]];
-        Ctrl::StartTargetMotionX((GroundSprite *)target, &rec->start);
+        Ctrl::StartTargetMotionX(target, &rec->start);
     }
     if (motionYPending == 1) {
         motionYPending = 0;
         rec = &gPlayerCtrlMotionRecords[animSet->entries[motionY][1]];
-        Ctrl::StartTargetMotionY((GroundSprite *)target, rec);
+        Ctrl::StartTargetMotionY(target, rec);
     }
 }
 
@@ -395,14 +392,14 @@ void PlayerCtrl::StateIdle()
         idleTimer = 0;
     }
     if (target->animDone)
-        SetTargetAnim((GroundSprite *)target, 0x1F);
+        SetTargetAnim(target, 0x1F);
     if (k.pressed & A_BUTTON) {
         StartStroke();
     } else if (k.pressed & (B_BUTTON | R_BUTTON)) {
         StartSpin();
     } else if (dir) {
         SetMode(6);
-        SetTargetAnim((GroundSprite *)target, 0x1D);
+        SetTargetAnim(target, 0x1D);
         QueueNowX(this, 0xC);
     }
     unk_26 = 0;
@@ -423,7 +420,7 @@ void PlayerCtrl::StateSwim()
         StartSpin();
     if (dir == 0 && tilt == 6) {
         SetMode(5);
-        SetTargetAnim((GroundSprite *)target, 0x20);
+        SetTargetAnim(target, 0x20);
         mode = dir;
     }
     CheckTurn();
@@ -448,7 +445,7 @@ void PlayerCtrl::StateStroke()
             ResetMode(this);
         else if (tilt == 6) {
             SetMode(5);
-            SetTargetAnim((GroundSprite *)target, 0x20);
+            SetTargetAnim(target, 0x20);
         } else
             ResetMode(this);
     }
@@ -484,13 +481,13 @@ void PlayerCtrl::StateTurn()
         case 7:
             frame = target->frame;
             mode = 6;
-            SetTargetAnim((GroundSprite *)target, gPlayerCtrlModeAnimRows[6][tilt].anim);
+            SetTargetAnim(target, gPlayerCtrlModeAnimRows[6][tilt].anim);
             ClampFrame(target, frame);
             break;
         case 5:
             frame = target->frame;
             mode = 4;
-            SetTargetAnim((GroundSprite *)target, gPlayerCtrlModeAnimRows[4][tilt].anim);
+            SetTargetAnim(target, gPlayerCtrlModeAnimRows[4][tilt].anim);
             ClampFrame(target, frame);
             break;
         }
@@ -505,7 +502,7 @@ void PlayerCtrl::StateTurn()
             mode = 5;
         else
             mode = 7;
-        SetTargetAnim((GroundSprite *)target, gPlayerCtrlModeAnimRows[mode][tilt].anim);
+        SetTargetAnim(target, gPlayerCtrlModeAnimRows[mode][tilt].anim);
         StartSpin();
         ClampFrame(target, frame);
         return;
@@ -516,8 +513,8 @@ void PlayerCtrl::StateTurn()
         return;
     switch (mode) {
     case 4:
-        if (target->mirror.sbits.flipX < 0)
-            target->mirror.bits.flipX = 0;
+        if (target->mirrorBits.flipX < 0)
+            target->mirrorFlags.mirrorX = 0;
         ResetMode(this);
         break;
     case 6:
@@ -525,8 +522,8 @@ void PlayerCtrl::StateTurn()
         ResetMode(this);
         break;
     case 5:
-        if (target->mirror.sbits.flipX < 0)
-            target->mirror.bits.flipX = 0;
+        if (target->mirrorBits.flipX < 0)
+            target->mirrorFlags.mirrorX = 0;
         SetStateNow(this, 3, 3, CTRL_KEEP, CTRL_KEEP);
         break;
     case 7:
@@ -556,7 +553,7 @@ void PlayerCtrl::StateSwimStart()
             ResetMode(this);
         else if (tilt == 6) {
             SetMode(5);
-            SetTargetAnim((GroundSprite *)target, 0x20);
+            SetTargetAnim(target, 0x20);
         }
     }
     CheckTurn();
@@ -591,21 +588,19 @@ void PlayerCtrl::StateDead()
 
 void PlayerCtrl::Attach(MovingSprite *owner)
 {
-    target = (struct player *)owner;
+    target = (Player *)owner;
 }
 
 /* UNUSED */
-void PlayerCtrl::StartMotionYFromSet(struct player *part, s32 idx)
+void PlayerCtrl::StartMotionYFromSet(Player *part, s32 idx)
 {
-    Ctrl::StartTargetMotionY((GroundSprite *)part,
-                             &gPlayerCtrlMotionRecords[animSet->entries[idx][1]]);
+    Ctrl::StartTargetMotionY(part, &gPlayerCtrlMotionRecords[animSet->entries[idx][1]]);
 }
 
 /* UNUSED */
-void PlayerCtrl::StartMotionXFromSet(struct player *part, s32 idx)
+void PlayerCtrl::StartMotionXFromSet(Player *part, s32 idx)
 {
-    Ctrl::StartTargetMotionX((GroundSprite *)part,
-                             &gPlayerCtrlMotionRecords[animSet->entries[idx][0]].start);
+    Ctrl::StartTargetMotionX(part, &gPlayerCtrlMotionRecords[animSet->entries[idx][0]].start);
 }
 
 void PlayerCtrl::SetState(s32 newState, s32 newMode, s32 newTimer, s32 newTimerMax)

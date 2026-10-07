@@ -1,4 +1,5 @@
 #include "platform.hpp"
+#include "player.hpp"
 
 /* Platform's and PlatformMover's methods (#664, include/platform.hpp), ROM
  * 0x0801B208-0x0801B85C.
@@ -16,9 +17,9 @@ void Platform::Update()
         AdvanceAnim();
         ApplyVelocity();
         if (type == 6 && frame > 0x12) {
-            struct gobj **c = &gPlayer->carried;
+            Sprite **c = &gPlayer->carried;
 
-            if (*c == (struct gobj *)this)
+            if (*c == this)
                 *c = 0;
         }
         if (mover)
@@ -279,13 +280,13 @@ void PlatformMover::Update(MovingSprite *part)
 void PlatformMover::MovePlayer(MovingSprite *part)
 {
     if (active && kind != 6) {
-        struct player *p = gPlayer;
-        u32 f = p->flags.all;
+        Player *p = gPlayer;
+        u32 f = p->f.flags;
 
         if (f >> 7) {
             u8 dir;
 
-            p->carried = (struct gobj *)part;
+            p->carried = part;
             /* the 8 as a variable set here: the ROM forms hitAxes'
              * address from carried's (`subs r0, #0x44`) */
             {
@@ -294,7 +295,7 @@ void PlatformMover::MovePlayer(MovingSprite *part)
                 p->hitAxes = m;
             }
             {
-                struct player *q = gPlayer;
+                Player *q = gPlayer;
                 s32 px = Q8_TO_INT(q->x);
                 s32 dx = Q8_TO_INT(part->x) - lastX;
                 s32 py = Q8_TO_INT(q->y);
@@ -302,7 +303,7 @@ void PlatformMover::MovePlayer(MovingSprite *part)
 
                 px += dx;
                 py += dy;
-                ((GroundSprite *)q)->SetPrevPos(q->x = INT_TO_Q8(px), q->y = INT_TO_Q8(py));
+                q->SetPrevPos(q->x = INT_TO_Q8(px), q->y = INT_TO_Q8(py));
             }
             dir = gPlayer->dir;
             if (part->speedX > 0)

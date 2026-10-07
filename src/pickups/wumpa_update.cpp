@@ -1,4 +1,5 @@
 #include "pickups.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -144,7 +145,7 @@ void Wumpa::Update()
     } else if (state == 3) {
         /* Both coordinates loaded and offset before the stores, as in the
          * ROM. */
-        GroundSprite *player = PlayerSprite();
+        Player *player = gPlayer;
         s32 px = player->x;
         s32 py = player->y;
         s32 nx = px - 0x400;
