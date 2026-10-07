@@ -20,8 +20,8 @@
 #include "actor_self.h"
 #include "sprite_bank.h"
 
-/* Bits of a sprite's `+0x28` byte (see struct part_f28 in
- * dingodile.c). */
+/* Bits of a sprite's `+0x28` byte (see SpriteObj::MirrorBits in
+ * include/sprite_obj.hpp). */
 struct sprite_f28 {
     u8 mode:2;
     u8 unk_2:2;

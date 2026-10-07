@@ -499,7 +499,7 @@ const struct vtable_slot gCortexShotVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.c (DestroyCortexTargetCtrl). */
+/* Used by dingodile.cpp (DestroyCortexTargetCtrl). */
 const struct vtable_slot gCortexTargetVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexTarget),
@@ -516,7 +516,7 @@ const struct vtable_slot gCortexTargetVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.c (DestroyCortexCannonCtrl). */
+/* Used by dingodile.cpp (DestroyCortexCannonCtrl). */
 const struct vtable_slot gCortexCannonVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexCannon),
@@ -533,7 +533,7 @@ const struct vtable_slot gCortexCannonVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.c (DestroyCortexBoss). */
+/* Used by dingodile.cpp (DestroyCortexBoss). */
 const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBoss),
@@ -550,7 +550,7 @@ const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.c (UpdateDingodileShark, DestroyDingodileSharkCtrl). */
+/* Used by dingodile.cpp (UpdateDingodileShark, DestroyDingodileSharkCtrl). */
 const struct vtable_slot gDingodileSharkVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateDingodileShark),
@@ -567,7 +567,7 @@ const struct vtable_slot gDingodileSharkVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.c (SpawnDingodileStalactite, DestroyDingodileProjectileCtrl). */
+/* Used by dingodile.cpp (SpawnDingodileStalactite, DestroyDingodileProjectileCtrl). */
 const struct vtable_slot gDingodileProjectileVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateDingodileProjectile),
@@ -584,7 +584,7 @@ const struct vtable_slot gDingodileProjectileVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.c (DestroyDingodileShieldCtrl), dingodile_create.c,
+/* Used by dingodile.cpp (DestroyDingodileShieldCtrl), dingodile_create.cpp,
  * gobj_1a794.h. */
 const struct vtable_slot gDingodileShieldVtable[13] = {
     VTABLE_SLOT(NULL),
@@ -602,7 +602,7 @@ const struct vtable_slot gDingodileShieldVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.c, dingodile_create.c (DestroyDingodile),
+/* Used by dingodile.cpp, dingodile_create.cpp (DestroyDingodile),
  * gobj_1a794.h. */
 const struct vtable_slot gDingodileVtable[13] = {
     VTABLE_SLOT(NULL),

@@ -11,7 +11,7 @@
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. Many take a file-local view of their object (`struct
- * gfx_mover`, `struct obj_4704`, ...), declared here only by tag. A .c
+ * gfx_mover`, `struct gfx_pair_ctrl`, ...), declared here only by tag. A .c
  * file that needs a different local declaration for codegen keeps it as
  * an asm-label alias with a `codegen:` comment (docs/headers_plan.md). */
 
@@ -125,7 +125,6 @@ struct hovercraft_attack {
 /* actor_anim.h, and the file-local views of the objects (defined in the
  * .c files that use them). */
 struct anim_box;
-struct dingodile_boss;
 struct entry_set;
 struct gfx_hit_ctrl;
 struct gfx_kind_ctrl;
@@ -135,13 +134,6 @@ struct gfx_pair_ctrl;
 struct gfx_part;
 struct gfx_squares;
 struct gobj;
-struct obj_4704;
-struct obj_476c;
-struct obj_48a4;
-struct obj_490c;
-struct part;
-struct seq_obj;
-struct vobj;
 
 /* src/actor/actor_anim.c */
 extern void DestroyAirshipFireball(struct actor_self *self, u32 flags);
@@ -221,41 +213,42 @@ extern void *CreateCortexBossPlatformMover(struct gfx_ctrl *self);
 extern void DestroyCortexShotCtrl(struct gfx_ctrl *self, s32 flags);
 extern void *CreateCortexShotCtrl(void *self, void *cfg);
 
-/* src/bosses/dingodile.c */
+/* src/bosses/dingodile.cpp and dingodile_create.cpp: the methods of
+ * CortexTargetCtrl, CortexCannonCtrl, CortexBossCtrl, DingodileCtrl,
+ * DingodileShieldCtrl, DingodileProjectileCtrl and DingodileSharkCtrl
+ * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
+ * vtables and the C callers (cortex.c, spawn_bosses.c). */
 extern void SetCortexPlatformsKind(void *self, u8 flag);
-extern void SetCortexTargetDest(struct obj_4704 *self, s32 *origin, s32 x, s32 y);
-extern void DestroyCortexTargetCtrl(struct obj_4704 *self, s32 flags);
-extern struct obj_4704 *CreateCortexTargetCtrl(struct obj_4704 *self, void *src);
-extern void SetCortexCannonState(struct vobj *self, s32 unused, s32 arg);
-extern void UpdateCortexCannon(struct obj_476c *self, struct part *other);
-extern void DestroyCortexCannonCtrl(struct obj_476c *self, s32 flags);
-extern struct obj_476c *CreateCortexCannonCtrl(struct obj_476c *self);
-extern void SetCortexBossState(struct obj_476c *self, s32 unused, s32 arg);
-extern void DestroyCortexBoss(struct vobj *self, s32 flags);
-extern struct vobj *CreateCortexBoss(struct vobj *self);
-extern s32 GetDingodileHits(struct dingodile_boss *self);
-extern void UpdateDingodile(struct dingodile_boss *self, struct part *other);
-extern void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next);
-extern void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, u16 y,
-                                         struct part *arg);
-extern void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing);
-extern void UpdateDingodileShield(struct obj_490c *self, struct part *other);
-extern void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other);
-extern void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y);
-extern void UpdateDingodileShark(struct ctrl *self, struct part *other);
-extern struct vobj *CreateDingodileSharkCtrl(void *mem);
-extern void DestroyDingodileSharkCtrl(struct vobj *self, s32 flags);
-extern void DestroyDingodileProjectileCtrl(struct obj_48a4 *self, s32 flags);
-extern struct obj_48a4 *CreateDingodileProjectileCtrl(void *mem);
-extern void DestroyDingodileShieldCtrl(struct vobj *self, s32 flags);
-
-/* src/bosses/dingodile_create.c */
-extern struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self);
-extern void StartDingodileMotion(void *self, struct gobj *part, s32 index);
-extern void DestroyDingodile(struct seq_obj *self, s32 flags);
-extern struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b);
-extern void SetDingodileStep(struct seq_obj *self, s32 value);
-extern void SetDingodileNextState(struct seq_obj *self, s32 value);
+extern void SetCortexTargetDest(void *self, void *part, s32 x, s32 y);
+extern void DestroyCortexTargetCtrl(void *self, s32 flags);
+extern void *CreateCortexTargetCtrl(void *self, void *boss);
+extern void SetCortexCannonState(void *self, void *part, s32 next);
+extern void UpdateCortexCannon(void *self, void *part);
+extern void DestroyCortexCannonCtrl(void *self, s32 flags);
+extern void *CreateCortexCannonCtrl(void *self);
+extern void SetCortexBossState(void *self, void *part, s32 next);
+extern void DestroyCortexBoss(void *self, s32 flags);
+extern void *CreateCortexBoss(void *self);
+extern s32 GetDingodileHits(void *self);
+extern void UpdateDingodile(void *self, void *part);
+extern void SetDingodileState(void *self, void *part, s32 next);
+extern void SpawnDingodileShieldOrRocket(void *self, s32 mode, u16 x, u16 y, void *owner);
+extern void SpawnDingodileShark(void *self, u16 x, u16 y, u8 facing);
+extern void UpdateDingodileShield(void *self, void *part);
+extern void UpdateDingodileProjectile(void *self, void *part);
+extern void SpawnDingodileStalactite(void *self, u16 x, u16 y);
+extern void UpdateDingodileShark(void *self, void *part);
+extern void *CreateDingodileSharkCtrl(void *self);
+extern void DestroyDingodileSharkCtrl(void *self, s32 flags);
+extern void DestroyDingodileProjectileCtrl(void *self, s32 flags);
+extern void *CreateDingodileProjectileCtrl(void *self);
+extern void DestroyDingodileShieldCtrl(void *self, s32 flags);
+extern void *CreateDingodileShieldCtrl(void *self);
+extern void StartDingodileMotion(void *self, void *part, s32 index);
+extern void DestroyDingodile(void *self, s32 flags);
+extern void *CreateDingodile(void *self, u32 x, u32 y);
+extern void SetDingodileStep(void *self, s32 value);
+extern void SetDingodileNextState(void *self, s32 value);
 
 /* src/bosses/hovercraft.c */
 extern void DamageHovercraftFireball(void *self, s32 delta);

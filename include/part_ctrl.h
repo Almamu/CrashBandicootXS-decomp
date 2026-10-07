@@ -15,7 +15,7 @@
  *
  * `struct part_ctrl` is the C view of the C++ class EnemyCtrl
  * (include/enemy_ctrl.hpp), for the C files that still use it (the level
- * spawners, dingodile.c); the class reads the part through
+ * spawners); the class reads the part through
  * `struct ctrl_target` too. */
 
 /* The steered part. Same object as include/box_part.h's

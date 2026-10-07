@@ -30,7 +30,7 @@ const u8 gTinyHopTargets[77] = {
 };
 
 /* The Neo Cortex fight's crosshair (gCortexTargetVtable). SetCortexTargetDest
- * (dingodile.c) glides it to a new point in this many steps,
+ * (dingodile.cpp) glides it to a new point in this many steps,
  * indexed by the level config's index. */
 const u8 gCortexTargetHopSteps[4] = {
     0x10, 0xE, 0xA, 0x20,
@@ -50,7 +50,7 @@ const u8 gCortexTargetBlinkStopTimes[3] = {
     2, 2, 2,
 };
 
-/* UpdateDingodile (dingodile.c): the X positions (Q8) at which
+/* UpdateDingodile (dingodile.cpp): the X positions (Q8) at which
  * Dingodile, walking left (`facing`) or right, stops (state 5, motion 0)
  * if the player is within 0x1FFF ahead; the Hurt tables replace the
  * others once he has been hit. */
@@ -68,7 +68,7 @@ const s32 gDingodileStopXRightHurt[6] = {
 };
 
 /* Motion records (`struct speed_ramp`, objects.h): UpdateDingodileShark
- * (dingodile.c), and StartDingodileMotion (dingodile_create.c) through the
+ * (dingodile.cpp), and StartDingodileMotion (dingodile_create.cpp) through the
  * entries of entry_set_16c418.c. */
 const struct speed_ramp gDingodileMotionRecords[4] = {
     { 0, 0, 0 },
@@ -78,7 +78,7 @@ const struct speed_ramp gDingodileMotionRecords[4] = {
 };
 
 /* The Y motion records (StartCtrlTargetMotionY, {speed, accel, limit})
- * UpdateDingodileProjectile (dingodile.c) starts: the rocket's rise
+ * UpdateDingodileProjectile (dingodile.cpp) starts: the rocket's rise
  * (state 0, until it reaches the top and drops the stalactite) and the
  * stalactite's fall (state 5). Only the first three words of the second
  * table are read. */
