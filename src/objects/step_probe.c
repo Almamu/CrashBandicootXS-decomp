@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "objects.h"
@@ -47,8 +48,8 @@ s32 ProbeHitboxEdgeTerrain(struct box_part *self, s32 mode, struct hitbox_quad *
     f.origY = self->y;
     *(struct probe_pos *)&f = *(struct probe_pos *)self;
     OffsetToHitboxEdgeStart(&f, mode, quad);
-    f.x >>= 8;
-    f.y >>= 8;
+    f.x = Q8_TO_INT(f.x);
+    f.y = Q8_TO_INT(f.y);
     tries = &self->probeTries;
     *tries = 0;
     hit = (u8)ProbeTerrain(gLevelLayers, mode, (struct probe_pos *)&f, span, &f.origY);

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "gobj_1a794.h"
 #include "gfx.h"
@@ -89,9 +90,9 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     {
         s32 t = gPlayer->x;
 
-        px = t >> 8;
+        px = Q8_TO_INT(t);
     }
-    py = gPlayer->y >> 8;
+    py = Q8_TO_INT(gPlayer->y);
     pb = &b;
     /* Emits nothing: hides `pb`'s value from cse, so `&b` stays in a
      * register (r4) instead of being re-added to sp at each use. */
@@ -116,14 +117,14 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         side = 2;
         if (px > tx)
             side = 1;
-        if ((gPlayer->x >> 8) < (self->x >> 8)) {
+        if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(self->x)) {
             hdir = 1;
             ox = Span(b.x, b.w, a.x) + 1;
         } else {
             hdir = 2;
             ox = Span(a.x, a.w, b.x) + 1;
         }
-        if ((gPlayer->y >> 8) > (self->y >> 8)) {
+        if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(self->y)) {
             vdir = 4;
             oy = Span(a.y, a.h, b.y);
         } else {
@@ -138,12 +139,12 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                         result = 8;
                     goto classified;
                 }
-                if (GetSpritePrevY((struct gfx_part *)self) == (self->y >> 8) && oy > 2) {
+                if (GetSpritePrevY((struct gfx_part *)self) == Q8_TO_INT(self->y) && oy > 2) {
                     result = hdir;
                     goto classified;
                 }
             }
-            if (tx == px && GetSpritePrevX((struct gfx_part *)self) == (self->x >> 8))
+            if (tx == px && GetSpritePrevX((struct gfx_part *)self) == Q8_TO_INT(self->x))
                 result = vdir;
         }
     classified:
@@ -219,10 +220,8 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
 
         pos.x = gPlayer->x;
         pos.y = gPlayer->y;
-        if (ox < 0)
-            ox = 0;
-        if (oy < 0)
-            oy = 0;
+        LIMIT_MIN(ox, 0);
+        LIMIT_MIN(oy, 0);
         flags = 0;
         switch (result) {
         case 0: /* empty case: makes gcc use the ROM's jump table */
@@ -233,20 +232,20 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
 
                 if (!(q->hitAxes & 8)) {
                     Call68(q, 0, EVENT_BUMP, 4);
-                    PosPtr(&pos)->y = (oy << 8) + PosPtr(&pos)->y;
+                    PosPtr(&pos)->y = INT_TO_Q8(oy) + PosPtr(&pos)->y;
                 }
             }
             break;
         case 8:
-            PosPtr(&pos)->y = (PosPtr(&pos)->y - ((oy - 1) << 8)) & ~0xFF;
+            PosPtr(&pos)->y = (PosPtr(&pos)->y - INT_TO_Q8(oy - 1)) & ~0xFF;
             break;
         case 1:
         case 2:
             flags = hdir;
             if (flags == 2)
-                pos.x = (ox << 8) + pos.x;
+                pos.x = INT_TO_Q8(ox) + pos.x;
             else if (flags == 1)
-                pos.x -= ox << 8;
+                pos.x -= INT_TO_Q8(ox);
             break;
         }
         if (result == 8 || oy <= 1) {
@@ -262,7 +261,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 {
                     s32 y = gPlayer->y;
 
-                    PosPtr(&pos)->y = y - ((oy - 1) << 8);
+                    PosPtr(&pos)->y = y - INT_TO_Q8(oy - 1);
                 }
                 flags = 0;
                 pos.x = gPlayer->x;
@@ -279,7 +278,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             if (type == 1 || type == 5 || type == 6)
                 self->mover->active = 1;
             else {
-                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
+                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 sign = d >> 31;
@@ -321,7 +320,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             break;
         case 2:
             if (AabbOverlaps(&a, pb)) {
-                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
+                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 sign = d >> 31;
@@ -333,7 +332,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             break;
         case 3:
             if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
-                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
+                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 sign = d >> 31;
@@ -345,7 +344,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             break;
         case 4:
             if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
-                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
+                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 sign = d >> 31;

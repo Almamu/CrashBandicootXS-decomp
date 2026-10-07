@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "vram_pool.h"
@@ -38,8 +39,8 @@ s32 SpriteHitboxOverlaps(struct actor *self, void *region)
     mirrorX = part->mirrorX;
     mirrorY = part->mirrorY;
 
-    xpos = part->x >> 8;
-    ypos = part->y >> 8;
+    xpos = Q8_TO_INT(part->x);
+    ypos = Q8_TO_INT(part->y);
 
     tablePtr = part->keyframes;
     idx = part->frame;
@@ -159,7 +160,7 @@ void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
     case 3:
         {
             s32 v = rec->offY;
-            v <<= 8;
+            v = INT_TO_Q8(v);
             dest->y -= v;
         }
         goto end;
@@ -200,7 +201,7 @@ kind8_12:
         );
         // clang-format on
 
-        result <<= 8;
+        result = INT_TO_Q8(result);
         dest->y -= result;
     }
 end:
@@ -253,7 +254,7 @@ void OffsetToHitboxEdge(void *destArg, s32 kind, void *recArg)
     case 3:
         {
             s32 v = rec->offY;
-            v <<= 8;
+            v = INT_TO_Q8(v);
             dest->y += v;
         }
         goto end;
@@ -294,7 +295,7 @@ kind8_12:
         );
         // clang-format on
 
-        result <<= 8;
+        result = INT_TO_Q8(result);
         dest->y += result;
     }
 end:
@@ -398,7 +399,7 @@ field4tail:
     dest->x = field0;
     {
         s32 v2 = rec->offY;
-        v2 <<= 8;
+        v2 = INT_TO_Q8(v2);
         dest->y += v2;
     }
     goto end;
@@ -426,7 +427,7 @@ kind8_12:
     }
 
 bigtail:
-    v <<= 8;
+    v = INT_TO_Q8(v);
     dest->y += v;
     {
         MATCH_HOLD_REG(s32, byteVal, r2) = rec->w;
@@ -644,8 +645,8 @@ void *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 unused)
     part->table = (void *)gSpriteObjVtable;
     ResetSpriteObj(part);
     part->id = arg0;
-    part->x = (s32)arg1 << 8;
-    part->y = (s32)arg2 << 8;
+    part->x = INT_TO_Q8((s32)arg1);
+    part->y = INT_TO_Q8((s32)arg2);
     return part;
 }
 
@@ -863,9 +864,7 @@ void SetSpriteFrameIndex(struct actor *part, s32 frame)
     {
         u8 steps = rec->steps;
 
-        if (frame >= steps) {
-            frame = steps - 1;
-        }
+        CLAMP_INDEX(frame, steps);
         ((struct box_part *)part)->tick = frame;
     }
 }

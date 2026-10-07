@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "gfx_part.h"
@@ -181,12 +182,12 @@ void GetSpritePrevPos(struct gfx_vec *dest, struct gfx_part *self)
 /* Q8-to-integer converters for the same previous-position fields. */
 s32 GetSpritePrevY(struct gfx_part *self)
 {
-    return self->prevY >> 8;
+    return Q8_TO_INT(self->prevY);
 }
 
 s32 GetSpritePrevX(struct gfx_part *self)
 {
-    return self->prevX >> 8;
+    return Q8_TO_INT(self->prevX);
 }
 
 /* Constant-5 stub. */
@@ -209,8 +210,8 @@ void *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 unused)
     part->table = (void *)gMovingSpriteVtable;
     ResetMovingSprite(part);
     part->id = arg0;
-    part->x = (s32)arg1 << 8;
-    part->y = (s32)arg2 << 8;
+    part->x = INT_TO_Q8((s32)arg1);
+    part->y = INT_TO_Q8((s32)arg2);
     return part;
 }
 

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "box_part.h"
 #include "objects.h"
@@ -291,8 +292,8 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
         origY = self->y;
         pos = *(struct probe_pos *)self;
         OffsetToHitboxEdge(&pos, 8, quad);
-        pos.x >>= 8;
-        pos.y >>= 8;
+        pos.x = Q8_TO_INT(pos.x);
+        pos.y = Q8_TO_INT(pos.y);
         if (self->mirrorX)
             pos.x -= quad->w >> 1;
         else
@@ -325,8 +326,8 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
         span = quad->h - 0x10;
         origX = self->x;
         OffsetToHitboxEdgeStart(&pos, mode, quad);
-        pos.x >>= 8;
-        pos.y = (pos.y >> 8) + 8;
+        pos.x = Q8_TO_INT(pos.x);
+        pos.y = Q8_TO_INT(pos.y) + 8;
         if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
             self->hitMask |= mode;
             result |= mode;
@@ -343,8 +344,8 @@ y_probe:
         origX = self->x;
         origY = self->y;
         OffsetToHitboxEdgeStart(&pos, mode, quad);
-        pos.x >>= 8;
-        pos.y >>= 8;
+        pos.x = Q8_TO_INT(pos.x);
+        pos.y = Q8_TO_INT(pos.y);
         if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origY)) {
             result |= mode;
             self->hitMask |= mode;
@@ -359,8 +360,8 @@ y_probe:
         span = quad->h;
         origX = self->x;
         OffsetToHitboxEdgeStart(&pos, mode, quad);
-        pos.x >>= 8;
-        pos.y >>= 8;
+        pos.x = Q8_TO_INT(pos.x);
+        pos.y = Q8_TO_INT(pos.y);
         if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
             self->hitMask |= mode;
             result |= mode;
@@ -394,8 +395,8 @@ u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *o
 
     pos = *(struct probe_pos *)self;
     OffsetToHitboxEdge(&pos, 8, quad);
-    pos.x >>= 8;
-    pos.y >>= 8;
+    pos.x = Q8_TO_INT(pos.x);
+    pos.y = Q8_TO_INT(pos.y);
     if (!((self->flags2 >> 1) & 1))
         pos.y--;
     if (self->mirrorX)

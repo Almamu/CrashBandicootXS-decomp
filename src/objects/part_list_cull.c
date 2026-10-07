@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "vtable.h"
@@ -26,12 +27,12 @@ void CullPartList(struct part_list *manager)
     s32 v2, v3;
 
     subObj = P->layer0;
-    v0 = subObj->x << 8;
-    v1 = subObj->y << 8;
+    v0 = INT_TO_Q8(subObj->x);
+    v1 = INT_TO_Q8(subObj->y);
     box[0] = v0;
     box[1] = v1;
-    v2 = 0xf0 << 8;
-    v3 = 0xa0 << 8;
+    v2 = INT_TO_Q8(0xf0);
+    v3 = INT_TO_Q8(0xa0);
     box[2] = v2;
     box[3] = v3;
 

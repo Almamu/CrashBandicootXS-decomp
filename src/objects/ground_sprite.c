@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "gfx_part.h"
@@ -31,8 +32,8 @@ void *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2, u16 unused)
     part->table = (void *)gGroundSpriteVtable;
     ResetGroundSprite(part);
     part->id = arg0;
-    part->x = (s32)arg1 << 8;
-    part->y = (s32)arg2 << 8;
+    part->x = INT_TO_Q8((s32)arg1);
+    part->y = INT_TO_Q8((s32)arg2);
     return part;
 }
 

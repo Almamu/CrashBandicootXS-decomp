@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "box_part.h"
@@ -38,7 +39,8 @@ void DrawSpriteAt(void *self, void *part, s32 x, s32 y)
  * position at its own start. */
 void DrawSprite(void *self, void *part)
 {
-    DrawSpriteAt(self, part, ((struct box_part *)part)->x >> 8, ((struct box_part *)part)->y >> 8);
+    DrawSpriteAt(self, part, Q8_TO_INT(((struct box_part *)part)->x),
+                 Q8_TO_INT(((struct box_part *)part)->y));
 }
 
 void DestroySpriteRenderer(void *arg0, u32 arg1)
@@ -132,9 +134,9 @@ struct aabb GetSpriteBounds(struct box_part *part)
 {
     struct aabb box;
     struct hitbox_quad *pb = &(*part->keyframes)[part->frame].box[1];
-    s32 px = part->x >> 8;
+    s32 px = Q8_TO_INT(part->x);
     s32 offX = pb->offX;
-    s32 py = part->y >> 8;
+    s32 py = Q8_TO_INT(part->y);
     s32 offY = pb->offY;
     u8 w = pb->w;
     u8 h = pb->h;
@@ -142,9 +144,9 @@ struct aabb GetSpriteBounds(struct box_part *part)
     SetAabbPos(&box, offX + px, offY + py);
     SetAabbSize(&box, w, h);
     if (part->mirrorX)
-        box.x = (part->x >> 8) * 2 - (box.x + box.w);
+        box.x = Q8_TO_INT(part->x) * 2 - (box.x + box.w);
     if (part->mirrorY)
-        box.y = (part->y >> 8) * 2 - (box.y + box.h);
+        box.y = Q8_TO_INT(part->y) * 2 - (box.y + box.h);
     return box;
 }
 
@@ -154,9 +156,9 @@ struct aabb GetSpriteHitbox(struct box_part *part)
 {
     struct aabb box;
     struct hitbox_quad *pb = &(*part->keyframes)[part->frame].box[0];
-    s32 px = part->x >> 8;
+    s32 px = Q8_TO_INT(part->x);
     s32 offX = pb->offX;
-    s32 py = part->y >> 8;
+    s32 py = Q8_TO_INT(part->y);
     s32 offY = pb->offY;
     u8 w = pb->w;
     u8 h = pb->h;
@@ -164,9 +166,9 @@ struct aabb GetSpriteHitbox(struct box_part *part)
     SetAabbPos(&box, offX + px, offY + py);
     SetAabbSize(&box, w, h);
     if (part->mirrorX)
-        box.x = (part->x >> 8) * 2 - (box.x + box.w);
+        box.x = Q8_TO_INT(part->x) * 2 - (box.x + box.w);
     if (part->mirrorY)
-        box.y = (part->y >> 8) * 2 - (box.y + box.h);
+        box.y = Q8_TO_INT(part->y) * 2 - (box.y + box.h);
     return box;
 }
 
@@ -210,9 +212,9 @@ void *GetSpriteAttackBox(void *dest, void *pt)
         break;
     }
 
-    x = part->x >> 8;
+    x = Q8_TO_INT(part->x);
     offX = rec->offX;
-    y = part->y >> 8;
+    y = Q8_TO_INT(part->y);
     offY = rec->offY;
     w = rec->w;
     h = rec->h;
@@ -230,14 +232,14 @@ void *GetSpriteAttackBox(void *dest, void *pt)
         flags = *flagsAddr;
         shifted = flags << 27;
         if (shifted < 0) {
-            buf_.x = (part->x >> 8) * 2 - (buf_.x + buf_.w);
+            buf_.x = Q8_TO_INT(part->x) * 2 - (buf_.x + buf_.w);
         }
         {
             MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
             asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r"(shifted), "+r"(addr));
         }
         if (shifted < 0) {
-            buf_.y = (part->y >> 8) * 2 - (buf_.y + buf_.h);
+            buf_.y = Q8_TO_INT(part->y) * 2 - (buf_.y + buf_.h);
         }
     }
 
@@ -279,9 +281,9 @@ void *GetSpriteBodyBox(void *dest, void *pt)
         break;
     }
 
-    x = part->x >> 8;
+    x = Q8_TO_INT(part->x);
     offX = rec->offX;
-    y = part->y >> 8;
+    y = Q8_TO_INT(part->y);
     offY = rec->offY;
     w = rec->w;
     h = rec->h;
@@ -299,14 +301,14 @@ void *GetSpriteBodyBox(void *dest, void *pt)
         flags = *flagsAddr;
         shifted = flags << 27;
         if (shifted < 0) {
-            buf_.x = (part->x >> 8) * 2 - (buf_.x + buf_.w);
+            buf_.x = Q8_TO_INT(part->x) * 2 - (buf_.x + buf_.w);
         }
         {
             MATCH_HOLD_REG(s32, addr, r3) = (s32)flagsAddr;
             asm("ldrb %1, [%1]\n\tlsl %0, %1, #0x1a" : "=r"(shifted), "+r"(addr));
         }
         if (shifted < 0) {
-            buf_.y = (part->y >> 8) * 2 - (buf_.y + buf_.h);
+            buf_.y = Q8_TO_INT(part->y) * 2 - (buf_.y + buf_.h);
         }
     }
 
@@ -390,22 +392,22 @@ s32 CheckSpritePickup(struct collect_part *part)
                 switch (part->kind) {
                 case 0x1d:
                 case 0x1e:
-                    spawned = SpawnPickup(1, part->x >> 8, part->y >> 8);
+                    spawned = SpawnPickup(1, Q8_TO_INT(part->x), Q8_TO_INT(part->y));
                     break;
                 case 0x21:
-                    spawned = SpawnPickup(6, part->x >> 8, part->y >> 8);
+                    spawned = SpawnPickup(6, Q8_TO_INT(part->x), Q8_TO_INT(part->y));
                     break;
                 case 0x1f:
-                    spawned = SpawnPickup(5, part->x >> 8, part->y >> 8);
+                    spawned = SpawnPickup(5, Q8_TO_INT(part->x), Q8_TO_INT(part->y));
                     break;
                 case 0x22:
-                    spawned = SpawnPickup(0, part->x >> 8, part->y >> 8);
+                    spawned = SpawnPickup(0, Q8_TO_INT(part->x), Q8_TO_INT(part->y));
                     break;
                 case 0x20:
-                    spawned = SpawnPickup(3, part->x >> 8, part->y >> 8);
+                    spawned = SpawnPickup(3, Q8_TO_INT(part->x), Q8_TO_INT(part->y));
                     break;
                 case 0x1b:
-                    spawned = SpawnPickup(4, part->x >> 8, part->y >> 8);
+                    spawned = SpawnPickup(4, Q8_TO_INT(part->x), Q8_TO_INT(part->y));
                     break;
                 }
                 if (spawned) {
@@ -449,15 +451,15 @@ s32 IsSpriteObjOnScreen(struct box_part *part)
 
             cam = gLevelLayers->layer0;
             {
-                s32 x = cam->x << 8;
-                s32 y = cam->y << 8;
+                s32 x = INT_TO_Q8(cam->x);
+                s32 y = INT_TO_Q8(cam->y);
 
                 buf[0] = x;
                 buf[1] = y;
             }
             {
-                s32 width = 0xf0 << 8;
-                s32 height = 0xa0 << 8;
+                s32 width = INT_TO_Q8(0xf0);
+                s32 height = INT_TO_Q8(0xa0);
 
                 buf[2] = width;
                 buf[3] = height;
@@ -499,10 +501,10 @@ s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region)
 
         box = GetSpriteBounds((struct box_part *)part);
 
-        x1 = box.x << 8;
-        y1 = box.y << 8;
-        x2 = x1 + (box.w << 8);
-        y2 = y1 + (box.h << 8);
+        x1 = INT_TO_Q8(box.x);
+        y1 = INT_TO_Q8(box.y);
+        x2 = x1 + INT_TO_Q8(box.w);
+        y2 = y1 + INT_TO_Q8(box.h);
 
         result = 0;
         if (x2 > region->x) {

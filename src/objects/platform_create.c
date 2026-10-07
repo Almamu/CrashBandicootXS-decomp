@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
@@ -28,8 +29,8 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
 
     obj = GobjInit(OperatorNew(0x80));
     obj->id = id;
-    obj->x = x << 8;
-    obj->y = y << 8;
+    obj->x = INT_TO_Q8(x);
+    obj->y = INT_TO_Q8(y);
     {
         const struct level_entity_list *lvl = gEntityFlags->list;
         const u16 *offsets = lvl->paramOffsets;
