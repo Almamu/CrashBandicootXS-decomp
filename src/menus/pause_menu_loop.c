@@ -93,20 +93,20 @@ s32 PauseMenuLoop(struct pause_menu *self)
 
         draw_frame(self);
         UpdateKeys(gInput);
-        if (KEYS.pressed & 0x40) {
+        if (KEYS.pressed & DPAD_UP) {
             PauseMenuCursorUp(self);
             self->flashTimer = 0x1e;
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
-        if (KEYS.pressed & 0x80) {
+        if (KEYS.pressed & DPAD_DOWN) {
             PauseMenuCursorDown(self);
             self->flashTimer = 0x1e;
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
         in = gKeys.all;
         pressed = in >> 16;
-        key = 0x20;
-        if (pressed & 0x20) {
+        key = DPAD_LEFT;
+        if (pressed & DPAD_LEFT) {
             PauseMenuVolumeDown(self);
             self->flashTimer = 0x1e;
         } else if (in & key) {
@@ -119,8 +119,8 @@ s32 PauseMenuLoop(struct pause_menu *self)
         }
         in = gKeys.all;
         pressed = in >> 16;
-        key = 0x10;
-        if (pressed & 0x10) {
+        key = DPAD_RIGHT;
+        if (pressed & DPAD_RIGHT) {
             PauseMenuVolumeUp(self);
             self->flashTimer = 0x1e;
         } else if (in & key) {
@@ -131,7 +131,7 @@ s32 PauseMenuLoop(struct pause_menu *self)
                 self->flashTimer--;
             }
         }
-        if (KEYS.pressed & 1) {
+        if (KEYS.pressed & A_BUTTON) {
             result = self->rows[self->cursor].type;
             if ((u32)(result - 4) <= 1) {
                 PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
@@ -140,7 +140,7 @@ s32 PauseMenuLoop(struct pause_menu *self)
                 break;
             }
         }
-        if (KEYS.pressed & 8) {
+        if (KEYS.pressed & START_BUTTON) {
             PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
             result = 0;
             break;

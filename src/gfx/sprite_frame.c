@@ -372,6 +372,12 @@ struct queued_oam_entry {
     u8 pad_06[2];
 };
 
+/* attr01 bits QueueSpriteFrameOam tests. The two negate flags sit in
+ * ATTR1's affine-index field until it is written. */
+#define QUEUED_OAM_AFFINE   0x100      // ATTR0 bit 8: rotation/scaling
+#define QUEUED_OAM_NEGATE_X 0x10000000 // negate the affine x scale
+#define QUEUED_OAM_NEGATE_Y 0x20000000 // negate the affine y scale
+
 /* ROM 0x08028DD8 - appends one OAM entry (`attr01`/`attr2`, hardware
  * ATTR0|ATTR1<<16 and ATTR2) to the `gSpriteOamQueue` overflow queue
  * `FlushSpriteFrameOamQueue` later commits. When ATTR0 bit 8 (the
@@ -394,7 +400,7 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
 {
     struct queued_oam_entry *entry;
 
-    if (attr01 & 0x100) {
+    if (attr01 & QUEUED_OAM_AFFINE) {
         MATCH_HOLD_REG(s32, x, r0);
         MATCH_HOLD_REG(s32, y, r1);
         /* Self-initialized: the ROM merges both halves into whatever the
@@ -402,21 +408,21 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
          * -Wuninitialized without adding code (#577). */
         s32 combined = combined;
 
-        if (attr01 & 0x10000000) {
+        if (attr01 & QUEUED_OAM_NEGATE_X) {
             x = -priority;
         } else {
             x = priority;
         }
         x = (u16)x;
         combined = (combined & 0xFFFF0000) | x;
-        if (attr01 & 0x20000000) {
+        if (attr01 & QUEUED_OAM_NEGATE_Y) {
             y = -priority;
         } else {
             y = priority;
         }
         y = y << 16;
         combined = (combined & 0x0000FFFF) | y;
-        attr01 &= 0xCFFFFFFF;
+        attr01 &= ~(QUEUED_OAM_NEGATE_X | QUEUED_OAM_NEGATE_Y);
 
         if (gSpriteAffineQueueCount == 0 ||
             combined != gSpriteAffineQueue[gSpriteAffineQueueCount - 1]) {

@@ -164,23 +164,23 @@ u32 TitleScreenCheatInput(u32 *self, u32 pressed)
 {
     struct held_pressed_pair input = gKeys.half;
 
-    if (!(input.held & 0x100)) {
+    if (!(input.held & R_BUTTON)) {
         TITLE_SCREEN(self)->cheatHash = 0;
         return pressed;
     }
-    if (pressed & 0x20)
+    if (pressed & DPAD_LEFT)
         HashInput(self, 0x12345678);
-    else if (pressed & 0x10)
+    else if (pressed & DPAD_RIGHT)
         HashInput(self, 0x31415926);
-    else if (pressed & 0x40)
+    else if (pressed & DPAD_UP)
         HashInput(self, 0xC0DEBA1D);
-    else if (pressed & 0x80)
+    else if (pressed & DPAD_DOWN)
         HashInput(self, 0xDEADBEEF);
-    else if (pressed & 2)
+    else if (pressed & B_BUTTON)
         HashInput(self, 0xB1E4B1E4);
-    else if (pressed & 1)
+    else if (pressed & A_BUTTON)
         HashInput(self, 0x71839406);
-    else if (pressed & 8)
+    else if (pressed & START_BUTTON)
         HashInput(self, 0x828A048B);
     if (TITLE_SCREEN(self)->cheatHash == 0x3034AF3B) {
         PlaySong(gAudioContext, SONG_MAIN_MENU_JAPAN);
@@ -279,19 +279,19 @@ seedLoop:
         UpdateKeys(gInput);
         pressed = gKeys.half.pressed;
         pressed = TitleScreenCheatInput(self, pressed);
-        if (pressed & 9) {
+        if (pressed & (A_BUTTON | START_BUTTON)) {
             PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
             fade = 0;
             goto fadeLoop;
         }
-        if (pressed & 0x40) {
+        if (pressed & DPAD_UP) {
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
             if (self[0] != 0)
                 self[0]--;
             else
                 self[0] = 2;
         }
-        if (pressed & 0x80) {
+        if (pressed & DPAD_DOWN) {
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
             self[0]++;
             self[0] = (s32)self[0] % 3;
@@ -592,7 +592,7 @@ void RunCompanyLogos(u32 *self)
         s32 q;
 
         UpdateKeys(gInput);
-        if (gKeys.half.pressed & 9) {
+        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
             if (SLOT_SYSTEM(self)->fade > 0x40)
                 SLOT_SYSTEM(self)->fade = 0x40;
         }
@@ -644,7 +644,7 @@ void RunCompanyLogos(u32 *self)
         MATCH_HOLD_REG(s32, v, r1);
 
         UpdateKeys(gInput);
-        if (gKeys.half.pressed & 9) {
+        if (gKeys.half.pressed & (A_BUTTON | START_BUTTON)) {
             if (SLOT_SYSTEM(self)->timer > 0)
                 SLOT_SYSTEM(self)->timer = 1;
         }

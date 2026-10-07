@@ -114,20 +114,20 @@ s32 RunLanguageSelect(void)
  * counter, incremented every call regardless. */
 void LanguageSelectInput(struct language_select *self, u32 flags)
 {
-    if (flags & 8) {
+    if (flags & START_BUTTON) {
         self->done = 1;
         goto confirm;
-    } else if (flags & 1) {
+    } else if (flags & A_BUTTON) {
         self->done = 1;
     confirm:
         PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
-    } else if (flags & 0x40) {
+    } else if (flags & DPAD_UP) {
         self->language--;
         if (self->language < 0) {
             self->language = 5;
         }
         PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
-    } else if (flags & 0x80) {
+    } else if (flags & DPAD_DOWN) {
         self->language++;
         if (self->language > 5) {
             self->language = 0;

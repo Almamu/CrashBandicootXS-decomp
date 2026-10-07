@@ -75,7 +75,7 @@ void *InitLanguageSelect(struct language_select *self)
     InitLanguageSelectGraphics(self);
     LoadLanguageSelectBg(self);
     self->starfield = InitStarfield(OperatorNew(0x14));
-    FadeBrightness(0x80, 1, 0);
+    FadeBrightness(FADE_FLAG_IN, 1, 0);
     SetObjMapping1D();
     ShowObj();
     SetDispcntMode(1);

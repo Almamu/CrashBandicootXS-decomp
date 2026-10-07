@@ -124,17 +124,17 @@ s32 ContinuePromptLoop(struct continue_prompt *self)
             /* The MATCH_KEEP keeps the & 8 test's shift separate from the
              * & 1 test's. */
             // clang-format off
-            if ((k.pressed & 1) || ({ MATCH_KEEP(k); (u16)(k.pressed & 8); })) {
+            if ((k.pressed & A_BUTTON) || ({ MATCH_KEEP(k); (u16)(k.pressed & START_BUTTON); })) {
                 // clang-format on
                 PlaySfx(*audio, SFX_MENU_SELECT, 0x100);
                 break;
             }
-            if ((k.pressed & 0x40) && self->selection == 1) {
+            if ((k.pressed & DPAD_UP) && self->selection == 1) {
                 PlaySfx(*audio, SFX_MENU_MOVE, 0x100);
                 self->selection = 0;
             }
         }
-        if ((input->pressed & 0x80) && self->selection == 0) {
+        if ((input->pressed & DPAD_DOWN) && self->selection == 0) {
             PlaySfx(*audio, SFX_MENU_MOVE, 0x100);
             self->selection = 1;
         }
