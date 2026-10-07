@@ -80,7 +80,7 @@
 #define EVENT_LAUNCH_PAD 25
 // An Aku Aku mask (OpenAkuAkuCrate, OpenMysteryCrate, the start marker): RaiseMaskLevel
 #define EVENT_MASK_GAIN 26
-// The pickups (their kinds, spawn_gems.c, spawn_pickups.c), each setting its
+// The pickups (their kinds, spawn_gems.cpp, spawn_pickups.cpp), each setting its
 // flag in PlayerHandleEvent
 #define EVENT_CRYSTAL 27
 #define EVENT_STOPWATCH 28 // StartTimeTrial
@@ -90,7 +90,7 @@
 #define EVENT_GREEN_GEM 32
 #define EVENT_BLUE_GEM 33
 #define EVENT_YELLOW_GEM 34
-// The four powers (spawn_pickups.c): each ends the room (RequestRoomExit)
+// The four powers (spawn_pickups.cpp): each ends the room (RequestRoomExit)
 #define EVENT_POWER_DOUBLE_JUMP 35
 #define EVENT_POWER_TORNADO_SPIN 36
 #define EVENT_POWER_BODY_SLAM 37

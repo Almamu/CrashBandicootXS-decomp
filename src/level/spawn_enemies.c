@@ -20,7 +20,7 @@ extern struct part_ctrl *CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl");
 
 /* Inline so the lookup's result gets its own register copy, as the ROM
  * does. */
-static inline struct level_record *GetLevelRecord(u16 id)
+static inline struct entity_params *GetLevelRecord(u16 id)
 {
     return LEVEL_RECORD(id);
 }
@@ -44,8 +44,8 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x9c);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -77,7 +77,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
+    struct entity_params *rec;
 
     part->anim = POPUP_ANIM(0x84);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -309,8 +309,8 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0xa8);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -339,8 +339,8 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
     s32 mid;
 
     part->anim = POPUP_ANIM(0x90);
@@ -374,8 +374,8 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0xb4);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -410,7 +410,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateGroundSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
+    struct entity_params *rec;
 
     part->anim = POPUP_ANIM(0xcc);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -439,8 +439,8 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0xc0);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -470,8 +470,8 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x3c);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -505,8 +505,8 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x30);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -538,7 +538,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
+    struct entity_params *rec;
 
     part->anim = POPUP_ANIM(0x24);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -571,8 +571,8 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x60);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -606,7 +606,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
+    struct entity_params *rec;
 
     part->anim = POPUP_ANIM(0x54);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -637,8 +637,8 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x6c);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -666,7 +666,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
+    struct entity_params *rec;
 
     part->anim = POPUP_ANIM(0x12c);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -703,8 +703,8 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x144);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -739,8 +739,8 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x120);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -774,8 +774,8 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     u16 y = arg2 - 0x28;
     struct popup_part *part = CreateMovingSprite(arg0, arg1, y, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x15c);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -807,8 +807,8 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x138);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -860,8 +860,8 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
     struct popup_bits *q2;
     MATCH_HOLD_REG(s32, h3, r3);
 
@@ -937,8 +937,8 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x108);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -971,8 +971,8 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0xf0);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -1003,8 +1003,8 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0xfc);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -1034,7 +1034,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
+    struct entity_params *rec;
 
     part->anim = POPUP_ANIM(0xe4);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -1064,8 +1064,8 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0x48);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
@@ -1099,8 +1099,8 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct part_ctrl *hdr;
-    struct level_record *rec;
-    struct level_record *rec2;
+    struct entity_params *rec;
+    struct entity_params *rec2;
 
     part->anim = POPUP_ANIM(0xd8);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);

@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "spawners.hpp"
 #include "player.hpp"
 
 extern "C" {
@@ -150,7 +151,7 @@ void EnemyCtrl::Update(MovingSprite *)
         }
         if (target->animDone && mode == 3) {
             struct ctrl_target *pop =
-                (struct ctrl_target *)LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, target);
+                (struct ctrl_target *)LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, sprite);
 
             popup = pop;
             pop->kind = 3;
@@ -276,7 +277,7 @@ void EnemyCtrl::Update(MovingSprite *)
  * ROM's reload registers; g++ gives them without it. */
 static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
 {
-    return (struct ctrl_target *)SpawnEffectPart(gEntitySpawner, kind, 2, x, y, 0);
+    return (struct ctrl_target *)gEntitySpawner->SpawnEffectPart(kind, 2, x, y, 0);
 }
 
 /* MarkGone whose bitmap `1` is loaded after the shift count and isn't

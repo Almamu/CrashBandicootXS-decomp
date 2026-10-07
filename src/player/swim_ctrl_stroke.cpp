@@ -1,8 +1,8 @@
 #include "player_ctrl.hpp"
+#include "spawners.hpp"
 #include "player.hpp"
 
 extern "C" {
-#include "gfx_part.h"
 #include "util.h"
 #include "system.h"
 #include "audio.h"
@@ -239,11 +239,10 @@ void PlayerCtrl::ApplySwimDrift()
         s32 x = Q8_TO_INT(t->x);
         s32 y = Q8_TO_INT(t->y) - 20;
         s32 flip = t->mirrorFlags.mirrorX;
-        struct gfx_part *obj =
-            (struct gfx_part *)SpawnEffectPart(gEntitySpawner, 40, 4, x, y, flip);
+        MovingSprite *obj = gEntitySpawner->SpawnEffectPart(40, 4, x, y, flip);
 
         if (obj != NULL)
-            obj->hidden = 0;
+            obj->f.b.visible = 0;
     }
 
     switch (dir) {

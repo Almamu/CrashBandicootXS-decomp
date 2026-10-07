@@ -40,7 +40,7 @@ struct level_state {
     // 0x080 - 5 at game start (UpdateGameFrame); SetUnusedAssistDeaths/
     // GetUnusedAssistDeaths, but nothing reads it
     s32 unusedAssistDeaths;
-    // 0x084 - deaths after which the start marker hands out a mask (spawn_start_marker.c)
+    // 0x084 - deaths after which the start marker hands out a mask (spawn_start_marker.cpp)
     s32 maskAssistDeaths;
     // 0x088 - from the level table (SetCrateAssistDeaths, 5 by default); once
     // `deaths` reaches it outside a time trial, CreateCrate turns placement-flagged
@@ -91,9 +91,9 @@ struct level_state {
     // 0x14C - the committed progress: restored before each level,
     // updated when one is won, packed for the save menus (PackSaveData)
     u8 saveData[0x68];
-    void *savedBitmap; // 0x1B4
-    s32 bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
-    s32 gemPlatform;   // 0x1BC - the gem-path platform object (SetGemPlatform)
+    void *savedBitmap;   // 0x1B4
+    void *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
+    void *gemPlatform;   // 0x1BC - the gem-path platform object (SetGemPlatform)
     // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to SpawnCrateGem
     s32 crateGemX;
     s32 crateGemY;                // 0x1C4

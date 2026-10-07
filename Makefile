@@ -332,6 +332,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
                   $(C_BUILDDIR)/level/room_frame.o \
+                  $(C_BUILDDIR)/level/spawn_crates.o \
+                  $(C_BUILDDIR)/level/spawn_pickups.o \
                   $(C_BUILDDIR)/link/link_handshake.o \
                   $(C_BUILDDIR)/link/link_session_reset.o \
                   $(C_BUILDDIR)/link/link_session.o

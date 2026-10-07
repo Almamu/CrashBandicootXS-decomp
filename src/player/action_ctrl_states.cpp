@@ -1,4 +1,5 @@
 #include "action_ctrl.hpp"
+#include "spawners.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
 
@@ -6,7 +7,6 @@ extern "C" {
 #include "system.h"
 #include "audio.h"
 #include "level.h"
-#include "gfx_part.h"
 #include "globals.h"
 #include "math_util.h"
 }
@@ -30,11 +30,11 @@ static inline void OrMaskByte(u8 *p, s32 clear, s32 set)
     *p = (*p & clear) | set;
 }
 
-/* A spark (a gfx_part). The coordinates are inline parameters, so they
+/* A spark (an effect part). The coordinates are inline parameters, so they
  * are computed before the pool pointer is loaded, as in the ROM. */
-static inline struct gfx_part *SpawnSpark(s32 x, s32 y, s32 mirror)
+static inline MovingSprite *SpawnSpark(s32 x, s32 y, s32 mirror)
 {
-    return (struct gfx_part *)SpawnEffectPart(gEntitySpawner, 0x29, 1, x, y, mirror);
+    return gEntitySpawner->SpawnEffectPart(0x29, 1, x, y, mirror);
 }
 
 /* The airborne states (7, 9, 0xB, 0x18, 0x19 and 0x1A share it). B
@@ -136,7 +136,7 @@ void ActionCtrl::StateAirborne()
             slamBlocked = bit4;
             st = this->state;
             if ((u32)(st - ACTION_STATE_AIRBORNE_BODY_SLAM) <= 1) {
-                struct gfx_part *obj;
+                MovingSprite *obj;
                 s32 x;
                 s32 y;
                 s32 frame;
@@ -149,12 +149,12 @@ void ActionCtrl::StateAirborne()
                 Q8_TO_INT_INPLACE(y);
                 y += 0xC;
                 obj = SpawnSpark(x, y, 1);
-                obj->gfxMode = 1;
-                obj->hidden = 0;
-                obj->hidden = 0;
-                OrMaskByte((u8 *)obj + 0x28, -0x11, 0x10);
+                obj->mirrorBits.gfxMode = 1;
+                obj->f.b.visible = 0;
+                obj->f.b.visible = 0;
+                OrMaskByte(&obj->mirror, -0x11, 0x10);
                 frame = 3;
-                count = obj->bank->records[obj->tag].frameCount;
+                count = obj->bank->anims[obj->tag].frameCount;
                 CLAMP_INDEX(frame, count);
                 obj->frame = frame;
 
@@ -165,11 +165,11 @@ void ActionCtrl::StateAirborne()
                 Q8_TO_INT_INPLACE(y);
                 y += 0xC;
                 obj = SpawnSpark(x, y, bit4);
-                obj->gfxMode = 1;
-                obj->hidden = 0;
-                AndByte((u8 *)obj + 0x28, -0x11);
+                obj->mirrorBits.gfxMode = 1;
+                obj->f.b.visible = 0;
+                AndByte(&obj->mirror, -0x11);
                 frame = 3;
-                count = obj->bank->records[obj->tag].frameCount;
+                count = obj->bank->anims[obj->tag].frameCount;
                 CLAMP_INDEX(frame, count);
                 obj->frame = frame;
 

@@ -22,7 +22,7 @@ void SetAabbPos(struct aabb *dest, s32 x, s32 y)
 
 /* Lives getter of the level state (`gLevelState`; read by
  * game_frame.c, hud_lives.c, actor_category_init.c and
- * spawn_start_marker.c). */
+ * spawn_start_marker.cpp). */
 s32 GetLives(struct level_state *self)
 {
     return self->lives;

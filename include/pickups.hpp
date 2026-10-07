@@ -14,10 +14,10 @@
  * each constructor calls InitSpriteObj (Sprite's) directly, and each
  * destructor DestroySpriteObj.
  *
- * The C files (the spawners, time_trial.c) keep the C view,
- * orbit_part.h's `struct orbit_part`, checked against both classes below,
- * and the C prototypes in pickups.h; cxx_symbols.txt maps the methods to
- * those names.
+ * The C prototypes in pickups.h keep the C view, orbit_part.h's `struct
+ * orbit_part`, checked against both classes below; cxx_symbols.txt maps
+ * the methods to those names. Their spawners (src/level/, include/spawners.hpp)
+ * are C++ since part 9.
  *
  * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp). */
 #pragma interface

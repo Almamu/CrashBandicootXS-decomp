@@ -1,15 +1,16 @@
-#include "core.h"
-#include "gfx_part.h"
+#include "spawners.hpp"
+
+extern "C" {
 #include "bosses.h"
-#include "objects.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six spawners, five of them entity spawners of
  * gEntitySpawnFuncs (types 0x07, 0x08, 0x0A-0x0C) and SpawnCrateGem, which
  * level_state.c calls directly. Each one
- * spawns a CreateSpriteObj part with a fixed bank offset, tag and type byte
+ * spawns a sprite (Sprite::Create, CreateSpriteObj) with a fixed bank offset, tag and type byte
  * (+0x0A) and registers it with the gTouchableList manager, unless
  * the level's "already collected" bit for it is set:
  *
@@ -21,15 +22,16 @@
  *   (cortex.cpp) with kind 0/1/2 instead; otherwise they test
  *   bits 0/2/1 of gLevelState+2.
  *
- * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the ROM materializes
- * each bit mask before loading the byte it is ANDed with, old_agbcc's
- * tell. Under it all six are plain C with no pins (the current agbcc
- * misses all six - likely also what parked the spawn_gem_platforms.c
+ * C++ since #664 part 9 (include/spawners.hpp), built with old_agbcp
+ * (Makefile OLD_AGBCC_OBJS): the ROM materializes each bit mask before
+ * loading the byte it is ANDed with, old_agbcc's tell. Under it all six
+ * were plain C with no pins, and are plain C++ now (the current agbcc
+ * misses all six - likely also what parked the spawn_gem_platforms.cpp
  * siblings, issue #31). See docs/matching/archive/issue-30-graphics-loading.md,
  * "Tenth pass". */
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
- * constants into callee-saved registers before the CreateSpriteObj call and
+ * constants into callee-saved registers before the Sprite::Create call and
  * stores them from there afterwards, which is how this compiler treats a
  * variable set before the call (a literal would be loaded at the store). */
 void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
@@ -38,16 +40,16 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 
     if (bit == 0) {
         u8 type = 0x1B;
-        struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x1BC);
+        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x1BC);
         part->tag = bit;
-        ResetSpriteFrameTimer(part);
-        ResetSpriteFrameIndex(part);
-        SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
+        part->ResetFrameTimer();
+        part->ResetFrameIndex();
+        part->SetAnimDone(0);
+        part->palette = part->GetAnimPaletteSlot();
         part->kind = type;
-        AddToPartList(gTouchableList, part);
+        TouchableList()->Add(part);
     }
 }
 
@@ -58,21 +60,21 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
     if (bit == 0) {
         u8 tag = 1;
         u8 type = 0x1D;
-        struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
-        ResetSpriteFrameTimer(part);
-        ResetSpriteFrameIndex(part);
-        SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
+        part->ResetFrameTimer();
+        part->ResetFrameIndex();
+        part->SetAnimDone(0);
+        part->palette = part->GetAnimPaletteSlot();
         part->kind = type;
-        AddToPartList(gTouchableList, part);
+        TouchableList()->Add(part);
 
         {
-            struct gfx_part *p = SpawnEffectPart(gEntitySpawner, 0x2B, 2, a1, a2, bit);
-            p->gfxMode = 1;
-            p->hidden = 0;
+            MovingSprite *p = gEntitySpawner->SpawnEffectPart(0x2B, 2, a1, a2, bit);
+            p->mirrorBits.gfxMode = 1;
+            p->f.b.visible = 0;
         }
     }
 }
@@ -82,16 +84,16 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
     if ((*GetCurrentLevelFlags(gLevelState) & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
         u8 tag = 1;
         u8 type = 0x1E;
-        struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
+        Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
+        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
-        ResetSpriteFrameTimer(part);
-        ResetSpriteFrameIndex(part);
-        SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
+        part->ResetFrameTimer();
+        part->ResetFrameIndex();
+        part->SetAnimDone(0);
+        part->palette = part->GetAnimPaletteSlot();
         part->kind = type;
-        AddToPartList(gTouchableList, part);
+        TouchableList()->Add(part);
     }
 }
 
@@ -101,16 +103,16 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
         if ((gLevelState->flags & 1) == 0) {
             u8 tag = 3;
             u8 type = 0x1F;
-            struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
+            Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
+            part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
             part->tag = tag;
-            ResetSpriteFrameTimer(part);
-            ResetSpriteFrameIndex(part);
-            SetSpriteAnimDone(part, 0);
-            part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
+            part->ResetFrameTimer();
+            part->ResetFrameIndex();
+            part->SetAnimDone(0);
+            part->palette = part->GetAnimPaletteSlot();
             part->kind = type;
-            AddToPartList(gTouchableList, part);
+            TouchableList()->Add(part);
         }
     } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 0);
@@ -123,16 +125,16 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
         if ((gLevelState->flags & 4) == 0) {
             u8 tag = 2;
             u8 type = 0x20;
-            struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
+            Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
+            part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
             part->tag = tag;
-            ResetSpriteFrameTimer(part);
-            ResetSpriteFrameIndex(part);
-            SetSpriteAnimDone(part, 0);
-            part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
+            part->ResetFrameTimer();
+            part->ResetFrameIndex();
+            part->SetAnimDone(0);
+            part->palette = part->GetAnimPaletteSlot();
             part->kind = type;
-            AddToPartList(gTouchableList, part);
+            TouchableList()->Add(part);
         }
     } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 1);
@@ -146,16 +148,16 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
         if (bit == 0) {
             u8 type = 0x22;
-            struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
+            Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x180);
+            part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
             part->tag = bit;
-            ResetSpriteFrameTimer(part);
-            ResetSpriteFrameIndex(part);
-            SetSpriteAnimDone(part, 0);
-            part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
+            part->ResetFrameTimer();
+            part->ResetFrameIndex();
+            part->SetAnimDone(0);
+            part->palette = part->GetAnimPaletteSlot();
             part->kind = type;
-            AddToPartList(gTouchableList, part);
+            TouchableList()->Add(part);
         }
     } else {
         SpawnCortexBossGem(a0, a1, a2, a3, 2);

@@ -22,7 +22,7 @@ extern "C" {
 void EnemyCtrl::UpdateShooter()
 {
     MovingSprite *part;
-    struct ctrl_target *shot;
+    MovingSprite *shot;
 
     if (__modsi3(gRoomFrameCount + shotPeriod - shotPhase, shotPeriod) == 0) {
         switch (mode) {
@@ -53,11 +53,11 @@ void EnemyCtrl::UpdateShooter()
     switch (mode) {
     case 2:
         if (part->frame == 0xa && part->stepTimer == 0)
-            shot = (struct ctrl_target *)LaunchHarmfulEffectPart(0xc, 6, 0, -0xa, 0x400, part);
+            shot = LaunchHarmfulEffectPart(0xc, 6, 0, -0xa, 0x400, part);
         break;
     case 7:
         if (part->frame == 8 && part->stepTimer == 0)
-            shot = (struct ctrl_target *)LaunchHarmfulEffectPart(0xc, 6, 0, 8, 0x400, part);
+            shot = LaunchHarmfulEffectPart(0xc, 6, 0, 8, 0x400, part);
         break;
     }
     if (shot != 0)

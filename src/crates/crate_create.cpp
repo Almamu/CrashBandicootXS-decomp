@@ -10,8 +10,8 @@ extern "C" {
 }
 
 /* Crate::Create (#664, include/crate.hpp): CreateCrate, the constructor
- * the level spawners call with each crate kind (src/level/spawn_crates.c,
- * spawn_objects.c). */
+ * the level spawners call with each crate kind (src/level/spawn_crates.cpp,
+ * spawn_objects.cpp). */
 
 /* The room's entity parameter records (struct level_entity_list). */
 #define PLACEMENT_LEVEL (gEntityFlags->list)

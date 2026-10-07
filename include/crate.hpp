@@ -149,14 +149,6 @@ public:
     }
 };
 
-/* codegen: DropWumpa and DropExtraLife (level.h) with their flag a bool,
- * as the crates pass it: a byte store into its stack slot (a u32 or u8
- * argument is stored as a word). */
-extern struct orbit_part *DropWumpaFlag(void *spawner, u32 x, u32 y, u32 p3, u32 p4,
-                                        bool flag5) asm("DropWumpa");
-extern struct orbit_part *DropExtraLifeFlag(void *spawner, u32 x, u32 y, u32 p3, u32 p5,
-                                            bool flag6) asm("DropExtraLife");
-
 /* The line steppers (crate_line_step.hpp), inline: FindLineCrossing
  * (crate_reset.cpp) inlines them. crate.cpp, which has their out-of-line
  * copies, defines CRATE_LINE_STEP itself and includes them at its end. */

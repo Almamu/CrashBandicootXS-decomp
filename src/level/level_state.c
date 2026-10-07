@@ -259,7 +259,7 @@ void PressSwitchCrate(struct level_state *self)
 
 void *GetBonusPlatform(struct level_state *self)
 {
-    return (void *)self->bonusPlatform;
+    return self->bonusPlatform;
 }
 
 void SetCrateAssistDeaths(struct level_state *self, s32 value)
@@ -613,9 +613,10 @@ void ArmStartSpawn(struct level_state *self)
     self->spawnAtStart = 1;
 }
 
-/* Plain setter for a fourth word-sized field at `self+0x1c8`, right
- * after the `self+0x1c0`/`0x1c4` pair `CheckAllCratesBroken` below reads. */
-void SetLevelBoss(struct level_state *self, struct level_state_1c8 *value)
+/* Sets the boss's controller (`self->boss`; the spawners' BossCtrl,
+ * spawn_bosses.cpp), right after the `self+0x1c0`/`0x1c4` pair
+ * `CheckAllCratesBroken` below reads. */
+void SetLevelBoss(struct level_state *self, void *value)
 {
     self->boss = value;
 }
@@ -849,13 +850,13 @@ struct AudioContext;
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
  * `SetCrateGemPos` two-word setter below). */
-void SetGemPlatform(struct level_state *self, s32 value)
+void SetGemPlatform(struct level_state *self, void *value)
 {
     self->gemPlatform = value;
 }
 
 /* Sets `self->0x1b8`, the companion field to `SetGemPlatform` above. */
-void SetBonusPlatform(struct level_state *self, s32 value)
+void SetBonusPlatform(struct level_state *self, void *value)
 {
     self->bonusPlatform = value;
 }

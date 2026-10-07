@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "spawners.hpp"
 
 extern "C" {
 #include "audio.h"
@@ -22,7 +23,7 @@ void Crate::OpenLife(bool flag6)
     }
     s32 px = Q8_TO_INT(x);
     s32 py = Q8_TO_INT(y) + 3;
-    DropExtraLifeFlag(gEntitySpawner, px, py, 0, 3, flag6);
+    gEntitySpawner->DropExtraLife(px, py, 0, 3, flag6);
 }
 
 /* gCrateKindBreakable[kind]. */

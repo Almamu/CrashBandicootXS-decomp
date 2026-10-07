@@ -344,7 +344,7 @@ s32 TinyCtrl::PickHopTarget()
  * the player. */
 void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
 {
-    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *p = MovingSprite::Create(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
     s32 x;
 

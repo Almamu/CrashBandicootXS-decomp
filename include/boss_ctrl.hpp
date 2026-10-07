@@ -64,7 +64,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == sizeof(struct mega_mix
  * Tiny hops his part along parabolic arcs between gTouchableList's
  * anchors (the hop pads), stomping them: Update steps the hop and the
  * state machine, SetState enters a state. `counter` is the round (1-3,
- * the hits taken). spawn_bosses.c creates it in a 0x4C-byte block. */
+ * the hits taken). spawn_bosses.cpp creates it in a 0x4C-byte block. */
 class TinyCtrl : public BossCtrl
 {
 public:
@@ -95,7 +95,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 /* The Neo Cortex fight's controller (gCortexBossVtable; Update and the
  * two spawners are in src/bosses/cortex.cpp, the rest is in
  * src/bosses/dingodile.cpp). `counter` is the round. It spawns the
- * cannon and the target (crosshair) parts. spawn_bosses.c creates it in
+ * cannon and the target (crosshair) parts. spawn_bosses.cpp creates it in
  * a 0x24-byte block. */
 class CortexBossCtrl : public BossCtrl
 {
@@ -209,7 +209,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == sizeof(struc
  * dingodile_create.cpp): he walks the level, stopping at the approach
  * tables' x positions to fire a rocket, turns round at the level's ends
  * and hides behind his shield (`shield`). `counter` is the hits he has
- * taken. spawn_bosses.c creates him in a 0x30-byte block. */
+ * taken. spawn_bosses.cpp creates him in a 0x30-byte block. */
 class DingodileCtrl : public BossCtrl
 {
 public:

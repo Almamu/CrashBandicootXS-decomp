@@ -57,7 +57,7 @@ public:
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(Ctrl) == sizeof(struct ctrl));
 
 /* The effect controller (src/objects/effect_ctrl.cpp, gEffectCtrlVtable):
- * a spawned effect part's controller. SpawnEffectPart (entity_spawner.c)
+ * a spawned effect part's controller. SpawnEffectPart (entity_spawner.cpp)
  * creates one per part, `new EffectCtrl` (InitEffectCtrl(OperatorNew(0x10))
  * in its C). */
 class EffectCtrl : public Ctrl

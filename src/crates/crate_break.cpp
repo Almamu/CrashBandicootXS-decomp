@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "spawners.hpp"
 #include "crate_list.hpp"
 #include "part_list.hpp"
 #include "pickups.hpp"
@@ -1002,13 +1003,13 @@ void Crate::BounceWumpa()
                 s32 px = Q8_TO_INT(x);
                 s32 py = Q8_TO_INT(y) - 6;
 
-                DropWumpaFlag(gEntitySpawner, px, py, 0, 0xe, true);
+                gEntitySpawner->DropWumpa(px, py, 0, 0xe, true);
             }
             {
                 s32 px = Q8_TO_INT(x) + 3;
                 s32 py = Q8_TO_INT(y);
 
-                DropWumpaFlag(gEntitySpawner, px, py, 0, 0, true);
+                gEntitySpawner->DropWumpa(px, py, 0, 0, true);
             }
         }
     } else {
@@ -1059,7 +1060,7 @@ void Crate::OpenCheckpoint()
         s32 px = Q8_TO_INT(x) - 10;
         s32 py = Q8_TO_INT(y);
 
-        puff = (MovingSprite *)SpawnEffectPart(gEntitySpawner, 0x2a, 0, px, py, 0);
+        puff = gEntitySpawner->SpawnEffectPart(0x2a, 0, px, py, 0);
     }
     puff->f.b.visible = 0;
     puff->mirrorBits.flipX = 0;
@@ -1233,7 +1234,7 @@ void Crate::Break(u32 arg1)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            DropWumpaFlag(gEntitySpawner, px, py, 0, 3, chained);
+            gEntitySpawner->DropWumpa(px, py, 0, 3, chained);
         }
         if (flag == 0)
             PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
@@ -1275,7 +1276,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y);
 
-            DropWumpaFlag(gEntitySpawner, px, py, 0, 0xff, false);
+            gEntitySpawner->DropWumpa(px, py, 0, 0xff, false);
         }
         break;
     case 8:
@@ -1292,7 +1293,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            DropExtraLifeFlag(gEntitySpawner, px, py, 0, 3, flag);
+            gEntitySpawner->DropExtraLife(px, py, 0, 3, flag);
         }
         break;
     case 7:
@@ -1310,35 +1311,35 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x) - 1;
             s32 py = Q8_TO_INT(y) + 3;
 
-            DropWumpaFlag(gEntitySpawner, px, py, 1, 3, flag);
+            gEntitySpawner->DropWumpa(px, py, 1, 3, flag);
         }
     case 5:
         {
             s32 px = Q8_TO_INT(x) + 1;
             s32 py = Q8_TO_INT(y) + 1;
 
-            DropWumpaFlag(gEntitySpawner, px, py, 0, 3, flag);
+            gEntitySpawner->DropWumpa(px, py, 0, 3, flag);
         }
     case 4:
         {
             s32 px = Q8_TO_INT(x) - 3;
             s32 py = Q8_TO_INT(y) + 3;
 
-            DropWumpaFlag(gEntitySpawner, px, py, 1, 1, flag);
+            gEntitySpawner->DropWumpa(px, py, 1, 1, flag);
         }
     case 3:
         {
             s32 px = Q8_TO_INT(x) + 3;
             s32 py = Q8_TO_INT(y) + 2;
 
-            DropWumpaFlag(gEntitySpawner, px, py, 0, 1, flag);
+            gEntitySpawner->DropWumpa(px, py, 0, 1, flag);
         }
     case 2:
         {
             s32 px = Q8_TO_INT(x) + 5;
             s32 py = Q8_TO_INT(y) + 2;
 
-            DropWumpaFlag(gEntitySpawner, px, py, 0, 2, flag);
+            gEntitySpawner->DropWumpa(px, py, 0, 2, flag);
         }
     case 1:
     default:
@@ -1346,7 +1347,7 @@ void Crate::OpenMystery(bool flag)
             s32 px = Q8_TO_INT(x) - 5;
             s32 py = Q8_TO_INT(y) + 3;
 
-            DropWumpaFlag(gEntitySpawner, px, py, 1, 2, flag);
+            gEntitySpawner->DropWumpa(px, py, 1, 2, flag);
         }
         break;
     }
@@ -1377,7 +1378,7 @@ void Crate::OpenSlot(bool flag)
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y) + 3;
 
-            DropExtraLifeFlag(gEntitySpawner, px, py, 0, 3, flag);
+            gEntitySpawner->DropExtraLife(px, py, 0, 3, flag);
         }
         break;
     case 2:

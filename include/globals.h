@@ -69,7 +69,14 @@ extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
 extern void *gSpriteRenderer; /* an empty 4-byte object (DrawSprite ignores it) */
 extern struct sprite_bank_set *gSpriteBankSet;
-extern void *gEntitySpawner;
+/* The entity spawner (CreateEntitySpawner): the C++ files see it as its
+ * class, EntitySpawner (spawners.hpp), the C files as level.h's struct
+ * entity_spawner. */
+#ifdef __cplusplus
+extern class EntitySpawner *gEntitySpawner;
+#else
+extern struct entity_spawner *gEntitySpawner;
+#endif
 extern struct vram_upload_cursor *gObjVramCursor;
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void *gInput; /* UpdateKeys's object; it only reads gKeys */
