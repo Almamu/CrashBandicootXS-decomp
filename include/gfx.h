@@ -163,8 +163,12 @@ struct blend_regs {
 struct brightness_fade {
     s32 period; /* frames per step of StepBrightnessFade; -1 when idle (IsBrightnessFadeActive) */
     s32 callbackId; /* StepBrightnessFade's VBlank callback (AddVBlankCallback) */
-    u8 flags;       /* FadeBrightness's flags: bit 7 fades from 0x10 down */
+    u8 flags;       /* FadeBrightness's flags (FADE_FLAG_*) */
 };
+
+/* FadeBrightness's flags. */
+#define FADE_FLAG_WHITE 1    /* fade through white (BLDCNT lighten), not black (darken) */
+#define FADE_FLAG_IN    0x80 /* count BLDY down from 0x10 (fade in), not up from 0 */
 
 /* One node of the sprite frame cache (sprite_frame.c, sprite_arm.c): the
  * frame record and the OBJ VRAM its pixel data was DMA'd into. Nodes live

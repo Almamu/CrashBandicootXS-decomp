@@ -1007,7 +1007,7 @@ s32 LevelSelectLoop(struct level_menu *self)
     goto loop;
 
 check_exit:
-    if (gKeys.half.pressed & 8) {
+    if (gKeys.half.pressed & START_BUTTON) {
         LevelSelectExit(self);
         goto end;
     }
@@ -1027,13 +1027,13 @@ loop:
         union key_state keys = gKeys;
         union key_state k;
 
-        if (keys.half.pressed & 0x40)
+        if (keys.half.pressed & DPAD_UP)
             LevelSelectNextWorld(self);
         /* The ROM copies the key word between the 0x80 test's `ands`
          * and its `cmp`, and tests 0x20 on the copy; gcc merges a plain
          * copy, so the (code-free) asm keeps `k` a separate value. */
         else if (({
-                     u32 hit = keys.half.pressed & 0x80;
+                     u32 hit = keys.half.pressed & DPAD_DOWN;
 
                      k = keys;
                      MATCH_KEEP(k.all);
@@ -1041,13 +1041,13 @@ loop:
                  }))
             LevelSelectPrevWorld(self);
         else {
-            if (k.half.pressed & 0x20)
+            if (k.half.pressed & DPAD_LEFT)
                 LevelSelectCursorLeft(self);
-            else if (keys.half.pressed & 0x10)
+            else if (keys.half.pressed & DPAD_RIGHT)
                 LevelSelectCursorRight(self);
         }
     }
-    if (!(gKeys.half.pressed & 1))
+    if (!(gKeys.half.pressed & A_BUTTON))
         goto check_exit;
     if (!IsLevelSelectEntrySelected(self->items[self->index]))
         goto check_exit;
@@ -1101,7 +1101,7 @@ void LevelSelectCursorLeft(struct level_menu *self)
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
         WaitLevelSelectCursor(self);
         UpdateKeys(gInput);
-        if (!(gKeys.all & 0x20))
+        if (!(gKeys.all & DPAD_LEFT))
             return;
     }
 }
@@ -1124,7 +1124,7 @@ void LevelSelectCursorRight(struct level_menu *self)
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
         WaitLevelSelectCursor(self);
         UpdateKeys(gInput);
-        if (!(gKeys.all & 0x10))
+        if (!(gKeys.all & DPAD_RIGHT))
             return;
     }
 }

@@ -31,7 +31,7 @@ void PowerDialogLoop(struct power_dialog *self)
         CommitPowerDialogFrame(self);
         AnimatePowerDialog(self);
         UpdateKeys(gInput);
-    } while (!(gKeys.half.pressed & 8));
+    } while (!(gKeys.half.pressed & START_BUTTON));
     while (self->bldy.bits.level != 0x10) {
         self->bldy.bits.level++;
         DrawPowerDialog(self);

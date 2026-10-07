@@ -29,7 +29,7 @@ void StepBrightnessFade(void)
         MATCH_HOLD_REG(s32, mask, r0);
 
         gBrightnessFadeTimer = 0;
-        mask = 0x80;
+        mask = FADE_FLAG_IN;
         flag8 = gBrightnessFade.flags;
         if (mask & flag8) {
             REG_BLDY = 16 - gBrightnessFadeStep;
@@ -79,14 +79,14 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
         frameDelay = 1;
     }
 
-    if (flags & 1) {
-        REG_BLDCNT = 0xBF;
+    if (flags & FADE_FLAG_WHITE) {
+        REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_LIGHTEN;
     } else {
-        REG_BLDCNT = 0xFF;
+        REG_BLDCNT = BLDCNT_TGT1_ALL | BLDCNT_EFFECT_DARKEN;
     }
 
     if (sync != 0) {
-        u8 dirBit = flags & 0x80;
+        u8 dirBit = flags & FADE_FLAG_IN;
         if (dirBit != 0) {
             REG_BLDY = 0x10;
         } else {
@@ -100,7 +100,7 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
     } else {
         s32 i = 0;
         MATCH_HOLD_REG(s32, dirBit8, r8);
-        dirBit8 = flags & 0x80;
+        dirBit8 = flags & FADE_FLAG_IN;
         do {
             s32 next;
             if (dirBit8 != 0) {
