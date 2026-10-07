@@ -1,5 +1,6 @@
 #include "crate.hpp"
 #include "part_list.hpp"
+#include "pickups.hpp"
 
 extern "C" {
 #include "match.h"
@@ -1562,7 +1563,7 @@ void Crate::BlastNearby(s32 dist)
     i = 0;
     if (i < gTouchableList->count) {
         do {
-            Sprite *o = (Sprite *)gTouchableList->items[i];
+            Wumpa *o = (Wumpa *)gTouchableList->items[i];
 
             if (o->GetClassId() == 2) {
                 s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(x);
@@ -1571,7 +1572,7 @@ void Crate::BlastNearby(s32 dist)
                 s32 dy = ABS_BRANCHLESS(t2);
 
                 if (dx + dy <= dist) {
-                    PickUpWumpa((struct orbit_part *)o, 1);
+                    o->PickUp(1);
                     o->f.flags |= 0x10;
                 }
             }
