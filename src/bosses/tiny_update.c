@@ -171,7 +171,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         anchor->ctrl = ctrl;
         VCALL1P(ctrl, m18, anchor);
         self->stomped = -1;
-        PlaySfx(gAudioContext, 0x39, 0x100);
+        PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
     }
 
     if (self->state == 8) {
@@ -224,7 +224,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
             part->y = y;
             if (steps != 0)
                 break;
-            PlaySfx(gAudioContext, 0x2A, 0x100);
+            PlaySfx(gAudioContext, SFX_TINY_LAND, 0x100);
             if (self->state == 15) {
                 if ((u8)HasTornadoSpin(gLevelState))
                     RequestRoomExit();
@@ -237,7 +237,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
                 self->nextState = 12;
                 SetTinyState(self, part, 5);
             } else {
-                PlaySfx(gAudioContext, 0x3D, 0x100);
+                PlaySfx(gAudioContext, SFX_UNKNOWN_3D, 0x100);
                 SetTinyState(self, part, 8);
             }
             break;
@@ -402,7 +402,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         self->timer = 0xB4;
         break;
     case 9:
-        PlaySfx(gAudioContext, 0x15, 0x100);
+        PlaySfx(gAudioContext, SFX_BOSS_HIT, 0x100);
         if (++self->round > 2) {
             s32 x = part->x;
 
@@ -530,5 +530,5 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
         m &= -0x41;
         p->flags = m;
     }
-    PlaySfx(gAudioContext, 0x13, 0x100);
+    PlaySfx(gAudioContext, SFX_UNKNOWN_13, 0x100);
 }

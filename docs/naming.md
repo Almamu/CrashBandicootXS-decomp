@@ -184,4 +184,12 @@ have exactly one name.
   the code that uses the value, existing comments. A comment on each
   define says where it comes from. A value whose meaning isn't clear
   keeps its number (as the naming rounds did); `<PREFIX>_<n>`-style
-  names are not used.
+  names are not used, with one exception below.
+- **`SFX_UNKNOWN_<ID>` placeholders.** Every sound-effect ID the code
+  plays has a name. One whose sound can't be identified from where it
+  plays is `SFX_UNKNOWN_<ID>`, the ID in two upper-case hex digits
+  (`SFX_UNKNOWN_2E` for 0x2E), and its `comment` in
+  `sound/sfx_table.json` says where it plays. The name doesn't depend on
+  any other entry, so it stays the same as other sounds get named. When
+  you identify one (by ear in an emulator, say), rename it in the JSON
+  and update its call sites; nothing else uses the placeholder.

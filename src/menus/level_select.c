@@ -990,7 +990,7 @@ s32 LevelSelectLoop(struct level_menu *self)
         CommitDisplay(self);
         UpdateZoomBg(self->bg2);
     }
-    PlaySfx(gAudioContext, 0x51, 0x100);
+    PlaySfx(gAudioContext, SFX_ZOOM_BG_SHOWN, 0x100);
     self->blend.raw = 0;
     self->blend.bits.bg0Second = 1;
     self->blend.bits.bg1Second = 1;

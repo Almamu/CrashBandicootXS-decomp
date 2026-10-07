@@ -67,6 +67,6 @@ void DamageAirship(s32 delta)
             }
         }
     } else {
-        PlaySfx(gAudioContext, 0x43, 0x100);
+        PlaySfx(gAudioContext, SFX_AIRSHIP_HIT, 0x100);
     }
 }

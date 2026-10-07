@@ -138,7 +138,7 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
 
     speed = 960;
     flag = 0;
-    PlaySfx(gAudioContext, 9, 256);
+    PlaySfx(gAudioContext, SFX_UNKNOWN_09, 256);
     if ((self->target->hitAxes & 3) && GetDpadDirection(gInput) <= 2)
         flag = 1;
 

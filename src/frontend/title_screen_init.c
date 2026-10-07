@@ -604,7 +604,7 @@ void DrawTitleLogoPieces(u32 *self)
                 if (*cnt == -1)
                     *cnt = 10;
                 if (--*cnt == 0)
-                    PlaySfx(gAudioContext, 0x4a, 0x100);
+                    PlaySfx(gAudioContext, SFX_UNKNOWN_4A, 0x100);
             }
             d = 0x1000000 / slot->velA;
             scale = d;
@@ -653,7 +653,7 @@ void DrawTitleLogoPieces(u32 *self)
                 if (*cnt != 0) {
                     if (*cnt == -1) {
                         *cnt = 8;
-                        PlaySfx(gAudioContext, 0x3d, 0x100);
+                        PlaySfx(gAudioContext, SFX_UNKNOWN_3D, 0x100);
                     } else if (--*cnt == 0) {
                         TITLE_SCREEN(self)->shake = 30;
                     }

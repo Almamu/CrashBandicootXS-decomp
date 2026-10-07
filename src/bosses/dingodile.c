@@ -41,7 +41,7 @@ extern struct aabb GetSpriteBodyBox_s(void *part) asm("GetSpriteBodyBox");
  * Its helpers use sprite bank 54: the purple energy ring of anim 3
  * (SpawnDingodileShieldOrRocket mode 0, kept 6 px in front of him,
  * alpha-blended and hurting the player on contact), the rocket of anim 7
- * (mode 1, sfx 0x29) that flies up and, at the top, drops the stalactite
+ * (mode 1, SFX_DINGODILE_ROCKET) that flies up and, at the top, drops the stalactite
  * of anims 8/9 (SpawnDingodileStalactite) that hurts him if it lands on
  * him, and a bank-4 shark (SpawnDingodileShark) that crosses the level.
  *
@@ -702,7 +702,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
         self->timer = 0x64;
         if (self->hits > 2)
             self->timer = 1;
-        PlaySfx(gAudioContext, 0x15, 0x100);
+        PlaySfx(gAudioContext, SFX_BOSS_HIT, 0x100);
         other->fl.b.shown = 0;
         StartDingodileMotion(self, (struct gobj *)other, 2);
         VCALL2(self, m50, other, 1);
@@ -736,7 +736,7 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
         self->part = p;
         break;
     case 1:
-        PlaySfx(gAudioContext, 0x29, 0x100);
+        PlaySfx(gAudioContext, SFX_DINGODILE_ROCKET, 0x100);
         SetTag(p, 7);
         ResetSpriteFrameTimer(p);
         ResetSpriteFrameIndex(p);
@@ -908,7 +908,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
                     VCALL1(self->target->ctl, m20, 7);
                     VCALL1(self, m20, 6);
                     VCALL2(self, m50, other, 8);
-                    PlaySfx(gAudioContext, 0x39, 0x100);
+                    PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
                 }
             }
         }
@@ -927,7 +927,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
                 if (self->state == 3) {
                     VCALL1(self, m20, 6);
                     VCALL2(self, m50, other, 8);
-                    PlaySfx(gAudioContext, 0x39, 0x100);
+                    PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
                 }
             }
         }
@@ -963,7 +963,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             if (y >= LevelBottom() - 0x2000) {
                 VCALL1(self, m20, 6);
                 VCALL2(self, m50, other, 8);
-                PlaySfx(gAudioContext, 0x39, 0x100);
+                PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
             }
             break;
         }

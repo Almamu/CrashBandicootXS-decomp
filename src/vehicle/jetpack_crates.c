@@ -1137,7 +1137,7 @@ void *CreateJetpackRocket(void *selfArg, void *part, s32 b, s32 c, s32 d)
     self->stepY = __divsi3(self->limitY - 0xfa00, 0xc6);
     self->hit = 0;
     self->triggered = 0;
-    PlaySfx(gAudioContext, 0x2d, 0x100);
+    PlaySfx(gAudioContext, SFX_JETPACK_ROCKET, 0x100);
 
     return self;
 }
@@ -1168,7 +1168,7 @@ void UpdateJetpackRing(void *selfArg)
 
         if (self->cued == 0) {
             self->cued = 1;
-            PlaySfx(gAudioContext, 0x3e, 0x100);
+            PlaySfx(gAudioContext, SFX_JETPACK_RING, 0x100);
         }
     }
 

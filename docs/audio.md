@@ -318,11 +318,13 @@ below), and the ambient-sfx sibling `PlayAmbientSfx` never reads it at all
 (always passes a hardcoded `0` there instead) - and uses it to steal a
 mixing voice (`GAX_fx_ex`) and play a note.
 
-The IDs whose sound is clear from where the game plays them are named in
-`sound/sfx_table.json`: such an entry has a `name` and a `comment`, and
-`tools/sfx_table.py --constants` writes them as the `SFX_<name>` defines
-of the generated `constants/sfx.h` (`SFX_CRATE_BREAK`, `SFX_MENU_SELECT`,
-...; `none_comment` documents `SFX_NONE`, ID 99). The song IDs (the
+Every ID the game plays is named in `sound/sfx_table.json`: such an
+entry has a `name` and a `comment`, and `tools/sfx_table.py --constants`
+writes them as the `SFX_<name>` defines of the generated
+`constants/sfx.h` (`SFX_CRATE_BREAK`, `SFX_MENU_SELECT`, ...;
+`none_comment` documents `SFX_NONE`, ID 99). An ID whose sound isn't
+clear from where it plays is an `SFX_UNKNOWN_<ID>` placeholder until
+someone identifies it (docs/naming.md, "Constants"). The song IDs (the
 `gSongTable` index) are the order of `gax_manifest.json`'s `song_table`
 list (a song key and a comment per ID; `no_song_comment` documents
 `SONG_NONE`), and `tools/gax_audio.py --constants` writes them as the

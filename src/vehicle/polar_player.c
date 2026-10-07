@@ -325,7 +325,7 @@ s32 ShockPolarPlayer(void *selfArg)
                 *(u8 *)&self->animDone = zero;
                 self->animTime = tier;
 
-                PlaySfx(gAudioContext, 0x33, 0x100);
+                PlaySfx(gAudioContext, SFX_ELECTRIC_SHOCK, 0x100);
                 gPolarSteerEnabled = zero;
             }
             gPolarPlayerInactive = 1;
@@ -392,7 +392,7 @@ void PolarPlayerStateMount(struct actor_self *self)
     self->y = y;
     *budget += 0x2d;
     if (y > 0x2800) {
-        PlaySfx(gAudioContext, 0x35, 0x100);
+        PlaySfx(gAudioContext, SFX_POLAR_MOUNT, 0x100);
         self->y = 0x2800;
         ACTOR_SET_STATE(self, 9, 9);
         gPolarPlayerInactive = 0;

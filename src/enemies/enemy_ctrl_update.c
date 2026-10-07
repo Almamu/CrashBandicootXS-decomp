@@ -150,7 +150,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             struct ctrl_target *t = self->target;
 
             if (t->tick == 0 && t->timer == 0 && AnimQuery(t))
-                PlaySfx(gAudioContext, 0x13, 0x100);
+                PlaySfx(gAudioContext, SFX_UNKNOWN_13, 0x100);
         }
         break;
     case 5:
@@ -192,14 +192,14 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             if (d > 0xa0)
                 d = 0xa0;
             vol = 0x100 - (d - 0x20) * 2;
-            PlayAmbientSfx(gAudioContext, 0x2b, 8, vol, zero);
+            PlayAmbientSfx(gAudioContext, SFX_SAUCER_HUM, 8, vol, zero);
         }
         if (self->target->animDone && self->mode == 3) {
             struct ctrl_target *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, self->target);
 
             self->popup = pop;
             pop->kind = 3;
-            PlaySfx(gAudioContext, 0x12, 0x100);
+            PlaySfx(gAudioContext, SFX_SAUCER_ATTACK, 0x100);
         } else if (*(vu8 *)&self->target->animDone && self->mode == 5) {
             MarkGone(self->popup);
             self->popup = 0;
@@ -399,7 +399,7 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
     if (gPlayer->ctrlMode == 1) {
         MarkGoneHeld(self->target);
         SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
-        PlaySfx(gAudioContext, 0x5a, 0x80);
+        PlaySfx(gAudioContext, SFX_UNKNOWN_5A, 0x80);
         return;
     }
     if (self->popup)

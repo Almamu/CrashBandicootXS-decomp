@@ -138,7 +138,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
                         u8 z = 0;
 
                         *flag = z;
-                        PlaySfx(gAudioContext, 0x4e, 0x100);
+                        PlaySfx(gAudioContext, SFX_UNKNOWN_4E, 0x100);
                     }
                     SetAffine(gOamBuffer, matrix, pa, 0, 0, pd);
                     oamB.affineMode = 1;
@@ -176,7 +176,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
         MATCH_HOLD_REG(struct dma_regs *, dma, r2);
 
         if (*flag) {
-            PlaySfx(gAudioContext, 0x4d, 0x100);
+            PlaySfx(gAudioContext, SFX_UNKNOWN_4D, 0x100);
             *flag = 0;
         }
         slot = SLOT_AT(self, 0);
@@ -361,8 +361,8 @@ struct actor_self *InitLogoActor(struct actor_self *self, const void *anim)
  * jumps to state 1 (resets the frame accumulator and reloads the
  * initial frame's duration from the part table's own header);
  * state 1 waits for frame id 0x12 then jumps to state 2 (loads a
- * different frame, plays SFX 0x4f); state 2 waits for frame id 7 then
- * jumps to state 3 (plays SFX 0x1b); state 3 decays a position field
+ * different frame, plays SFX_UNKNOWN_4F); state 2 waits for frame id 7 then
+ * jumps to state 3 (plays SFX_PLAYER_HURT); state 3 decays a position field
  * (`self+0x24`/`self+0x20`) for 16 frames then jumps to state 4 (a
  * terminal/idle state, tested by `DrawLogoActor`). Every state's tail
  * advances the frame accumulator by the current frame's duration
@@ -383,7 +383,7 @@ void UpdateLogoActor(struct actor_self *self)
     case 1:
         if ((self->animTime >> 8) == 0x12) {
             ACTOR_SET_STATE(self, 2, 7);
-            PlaySfx(gAudioContext, 0x4f, 0x100);
+            PlaySfx(gAudioContext, SFX_UNKNOWN_4F, 0x100);
         }
         break;
     case 2:

@@ -610,7 +610,7 @@ void CheckWumpaPickup(struct orbit_part *self)
             bit |= self->base.flags;
             self->base.flags = bit;
             PickUpWumpa(self, 1);
-            PlaySfx(gAudioContext, 6, 0x80);
+            PlaySfx(gAudioContext, SFX_WUMPA_HIT, 0x80);
         }
     } else {
         playerBox = GetSpriteHitbox((struct box_part *)player);

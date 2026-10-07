@@ -213,7 +213,7 @@ void ActionCtrlStateDying(struct act *self)
     struct player *part = self->part;
 
     if (part->tag == 0x2F && part->frame == 3 && part->stepTimer == 0)
-        PlaySfx(gAudioContext, 0x2E, 0x100);
+        PlaySfx(gAudioContext, SFX_UNKNOWN_2E, 0x100);
     part = self->part;
     if (part->animDone) {
         part->flags.all |= 1;

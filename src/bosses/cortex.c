@@ -664,7 +664,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
                 break;
             }
             if (self->timer == gCortexTargetBlinkStartTimes[self->cfg->index]) {
-                PlaySfx(gAudioContext, 0x5C, 0x100);
+                PlaySfx(gAudioContext, SFX_CORTEX_TARGET_BLINK, 0x100);
                 part->animating = left;
                 CALL3(self, method_50, part, 0x10);
                 *blinking = 1;
@@ -858,9 +858,9 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
     }
     AddToPartList(gForegroundList, c);
     if (kind == 1)
-        PlaySfx(gAudioContext, 0x31, 0x100);
+        PlaySfx(gAudioContext, SFX_CORTEX_SHOT_FAST, 0x100);
     else
-        PlaySfx(gAudioContext, 0x32, 0x100);
+        PlaySfx(gAudioContext, SFX_CORTEX_SHOT, 0x100);
 }
 
 void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
