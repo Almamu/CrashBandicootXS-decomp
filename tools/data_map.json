@@ -2216,7 +2216,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "objects/platform.c"
+    "objects/platform.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -2240,7 +2240,7 @@
     "StartPlatformMoverMotionXFromSet"
    ],
    "consumer_files": [
-    "objects/platform.c"
+    "objects/platform.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -8004,8 +8004,8 @@
     "InitPlatform"
    ],
    "consumer_files": [
-    "objects/platform_create.c",
-    "objects/platform.c"
+    "objects/platform_create.cpp",
+    "objects/platform.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -8030,7 +8030,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "objects/platform.c"
+    "objects/platform.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

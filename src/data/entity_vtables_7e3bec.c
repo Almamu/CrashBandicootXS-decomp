@@ -620,7 +620,7 @@ const struct vtable_slot gDingodileVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by platform.c (DestroyPlatform), gobj_1a794.h. */
+/* Used by platform.cpp (DestroyPlatform, InitPlatform, CreatePlatform). */
 const struct vtable_slot gPlatformVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckPlatformContact),
@@ -639,7 +639,7 @@ const struct vtable_slot gPlatformVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by platform.c (DestroyPlatformMover), gobj_1a794.h. */
+/* Used by platform.cpp (DestroyPlatformMover, CreatePlatformMover). */
 const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdatePlatformMover),

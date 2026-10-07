@@ -14,31 +14,28 @@
 #include "globals.h"
 #include "match.h"
 
-/* Shared by src/bosses/dingodile_create.cpp and src/objects/platform_create.c/
- * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
- * ROM 0x0801A794-0x0801B85C).
+/* The C views of the platforms (GitHub issue #25, ROM
+ * 0x0801A794-0x0801B85C), shared by the C files that still use them (the
+ * player, the crates, cortex.c, the vtable data) and by
+ * src/bosses/dingodile_create.cpp. The platforms are C++ now:
+ * include/platform.hpp's `Platform` and `PlatformMover`
+ * (src/objects/platform*.cpp) are the definitions, and check their sizes
+ * against these two structs.
  *
- * Two C++-style classes (gcc 2.x method tables of {s16 this-adjust; fn}
- * pairs, called through the _call_via_r1/AD80/AD84/AD88 "call via
- * r1/r2/r3/r4" thunks):
- *
- * - `struct gobj`, a 0x80-byte level object built by CreatePlatform (method
- *   table gPlatformVtable: +0x0C CheckPlatformContact player-contact test,
- *   +0x1C UpdatePlatform per-frame/destroy step, +0x4C GetPlatformClassId,
- *   +0x54 DestroyPlatform destructor). Its `type` (+0x78) comes from the
- *   level's spawn record or is forced by the spawn kind; types 1/5/6/7
- *   get a `struct mover` attached at +0x44. The player object
- *   (gPlayer, player.h's `struct player`) is built on the same 0x80-byte
- *   base and adds its own fields after it. It is the C view of
+ * - `struct gobj`, a 0x80-byte level object: CreatePlatform's
+ *   (gPlatformVtable) and, with the player's fields after it, the player
+ *   (gPlayer, player.h's `struct player`). It is the C view of
  *   include/sprite_obj.hpp's GroundSprite (the classes are the
  *   definitions: Entity, Sprite, MovingSprite, GroundSprite; sprite_obj.hpp
- *   checks this struct's size against GroundSprite's).
- * - `struct mover`, a 0x38-byte helper (method table gPlatformMoverVtable:
- *   +0x0C UpdatePlatformMover per-frame move, +0x4C DestroyPlatformMover destructor,
- *   +0x5C StartPlatformMoverMotionXFromSet / +0x64 StartPlatformMoverMotionYFromSet velocity setters) that
- *   oscillates its owner back and forth over `rangeX`/`rangeY` pixels
- *   using the 12-byte velocity records of gPlatformMoverMotionRecords, and drags
- *   the player along while it is `active` (MovePlayerWithPlatform). */
+ *   checks this struct's size against GroundSprite's) and of
+ *   platform.hpp's Platform. Its `type` (+0x78) is the platform type;
+ *   types 1/5/6/7 get a `struct mover` attached at +0x44.
+ * - `struct mover`, a 0x38-byte controller (gPlatformMoverVtable; the C
+ *   view of PlatformMover) that oscillates its owner back and forth over
+ *   `rangeX`/`rangeY` pixels using the 12-byte velocity records of
+ *   gPlatformMoverMotionRecords, and drags the player along while it is
+ *   `active` (MovePlayerWithPlatform). cortex.c's Neo Cortex platform mover
+ *   is built on it. */
 
 struct vec_pair {
     u32 a;
@@ -175,34 +172,5 @@ extern s32 _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
-
-/* The object's constructor body (InitPlatform), which CreatePlatform inlines
- * into its `new`. */
-static inline struct gobj *GobjInit(struct gobj *self)
-{
-    InitMovingSprite((struct actor *)self);
-    self->vtable = (struct gobj_vtable *)gPlatformVtable;
-    ClearPlatformVulnerable(self);
-    return self;
-}
-
-/* _call_via_r4 calls the function in r4 */
-#define OBJ_CALL68(obj, a, b, c)                                               \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m68;                               \
-        void *_this = (u8 *)(obj) + _m->thisOffset;                            \
-        MATCH_HOLD_REG(void *, _fn, r4) = _m->fn;                              \
-                                                                               \
-        MATCH_USE_VOLATILE(_fn);                                               \
-        _call_via_r4(_this, (a), (b), (c));                                     \
-    } while (0)
-
-#define OBJ_CALL1(obj, m)                                                      \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m;                                 \
-        _call_via_r1((u8 *)(obj) + _m->thisOffset, _m->fn);                     \
-    } while (0)
 
 #endif /* GUARD_GOBJ_1A794_H */

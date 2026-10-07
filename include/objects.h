@@ -245,7 +245,7 @@ extern void CullPartList(struct part_list *manager);
 extern void ClearPartList(struct part_list *manager);
 extern void CollidePartsOfClass(struct part_list *manager, s32 classId);
 
-/* src/objects/platform.c */
+/* src/objects/platform.cpp */
 extern void UpdatePlatform(struct gobj *self);
 extern s32 GetPlatformExitMirror(struct gobj *self);
 extern void SetPlatformExitMirror(struct gobj *self, u8 value);
@@ -264,13 +264,13 @@ extern struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 dist
                                          u8 dirY, s32 kind);
 extern void ClearPlatformMoverActive(struct mover *self);
 
-/* src/objects/platform_collide.c */
+/* src/objects/platform_collide.cpp */
 extern void ResolvePlatformCollision(struct gobj *self, void *unused);
 
-/* src/objects/platform_contact.c */
+/* src/objects/platform_contact.cpp */
 extern s32 CheckPlatformContact(struct gobj *self);
 
-/* src/objects/platform_create.c */
+/* src/objects/platform_create.cpp */
 extern struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind);
 
 /* src/objects/player_contact.cpp */

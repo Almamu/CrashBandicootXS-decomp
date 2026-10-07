@@ -277,6 +277,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/bosses/dingodile.o \
                   $(C_BUILDDIR)/objects/platform_create.o \
                   $(C_BUILDDIR)/objects/platform_collide.o \
+                  $(C_BUILDDIR)/objects/platform_contact.o \
+                  $(C_BUILDDIR)/objects/platform.o \
                   $(C_BUILDDIR)/menus/level_select.o \
                   $(C_BUILDDIR)/menus/level_select_pages.o \
                   $(C_BUILDDIR)/menus/level_select_widgets.o \

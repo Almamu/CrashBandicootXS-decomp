@@ -78,7 +78,7 @@ static inline void SetTag(SpriteObj *p, u8 tag)
 }
 
 /* Sets `kind` to `flag` (0 or 1) on every part in the gTouchableList
- * list, the list the level's platforms join (platform_create.c). In the
+ * list, the list the level's platforms join (platform_create.cpp). In the
  * Cortex fight those include the Cortex platform movers, which
  * UpdateCortexBossPlatformMover animates to frame 10 for kind 1 and
  * 0x1A otherwise; SetCortexTargetState clears it (state 1) and sets it
