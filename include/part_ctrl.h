@@ -13,7 +13,10 @@
  * (include/text_popup.h) attach it to the sprite part they create. Only
  * the fields the code touches are named.
  *
- * Built with old_agbcc: see docs/matching/archive/issue-10-naked-retry.md. */
+ * `struct part_ctrl` is the C view of the C++ class EnemyCtrl
+ * (include/enemy_ctrl.hpp), for the C files that still use it (the level
+ * spawners, dingodile.c); the class reads the part through
+ * `struct ctrl_target` too. */
 
 /* The steered part. Same object as include/box_part.h's
  * `struct box_part`, with the fields past 0x38 this cluster uses. */
@@ -39,24 +42,12 @@ struct ctrl_target {
     u8 unk_1C[4];
     struct keyframe **keyframes; // 0x20
     u8 unk_24[4];
-    /* The mirror bits. `u` is the usual view; UpdateEnemyPatrol's position
-     * gate reads bit 4 once through each view, which is what keeps the
-     * ROM's two sign tests of one `lsl #27` (see that function). */
-    union {
-        struct {
-            u32 layer:2;
-            u32 unk_2:2;
-            u32 x:1;
-            u32 y:1;
-            u32 unk_6:2;
-        } u;
-        struct {
-            s32 layer:2;
-            s32 unk_2:2;
-            s32 x:1;
-            s32 y:1;
-            s32 unk_6:2;
-        } s;
+    struct {
+        u32 layer:2;
+        u32 unk_2:2;
+        u32 x:1; // X mirrored
+        u32 y:1; // Y mirrored
+        u32 unk_6:2;
     } mirror;     // 0x28
     u8 animating; // 0x2C - nonzero while the keyframe timer runs
     u8 frame;     // 0x2D - current keyframe index

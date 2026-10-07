@@ -31,8 +31,8 @@
  * Copies that are still spelled out, each with a comment saying why:
  * graphics.c's MarkEntityGone itself, wumpa.c's UpdateStopwatch and
  * crate_break.c (other asm/pins or wrapper), action_ctrl_hang.c (a
- * MATCH_KEEP'd shift), and enemy_ctrl_update.c's MarkGoneHeld and
- * MarkGoneFreshBit (a MATCH_USE or MATCH_CONST inside the sequence). */
+ * MATCH_KEEP'd shift), and enemy_ctrl_update.cpp's MarkGoneFreshBit (a
+ * MATCH_CONST inside the sequence). */
 
 /* An entity id that has no bit in the bitmaps (actor.h's `id`). */
 #define ENTITY_ID_NONE 0xFFFF
@@ -104,34 +104,5 @@
             }                                                                  \
         }                                                                      \
     } while (0)
-
-/* The pinned copy with a hand-written `adds`/`asr #5` word index
- * (tiny_hop_pad.c's UpdateOneShotAnimCtrl, enemy_ctrl.c's knocked-enemy
- * update): unless `t->id` is ENTITY_ID_NONE, sets its bit in the bitmap.
- * The asm forces the ROM's copy-then-shift pair, which gcc would fold
- * into one shift straight out of the id's register. R_CUR is the
- * register of the first id read (a bare name, r4), which differs per
- * site; the rest is the same in both. */
-#define ENTITY_SET_GONE_BIT_ASR(t, R_CUR)                                      \
-    {                                                                          \
-        MATCH_HOLD_REG(s32, _sentinel, r0) = ENTITY_ID_NONE;                   \
-        MATCH_HOLD_REG(u16, _val, R_CUR) = (t)->id;                            \
-                                                                               \
-        if (_val != _sentinel) {                                               \
-            MATCH_HOLD_REG(u16, _val2, r3) = *(u16 volatile *)&(t)->id;        \
-            MATCH_HOLD_REG(struct entity_flags *, _base, r2) = gEntityFlags;   \
-            MATCH_HOLD_REG(s32, _idx, r0);                                     \
-            s32 _idxOffset;                                                    \
-            s32 *_bitmap;                                                      \
-            MATCH_HOLD_REG(s32, _bit, r0);                                     \
-                                                                               \
-            asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(_idx) : "r"(_val2)); \
-            _idxOffset = _idx * 4;                                             \
-            _bitmap = (s32 *)_base->bits0Copy;                                 \
-            _bitmap = (s32 *)((u8 *)_bitmap + _idxOffset);                     \
-            _bit = _val2 - (_idx << 5);                                        \
-            *_bitmap |= 1 << _bit;                                             \
-        }                                                                      \
-    }
 
 #endif // GUARD_ENTITY_BITS_H
