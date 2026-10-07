@@ -19,6 +19,7 @@
 #include "objects.h"
 #include "byte_arg.h"
 #include "vtable.h"
+#include "constants/attack_kinds.h"
 
 struct actor;
 struct box_part;

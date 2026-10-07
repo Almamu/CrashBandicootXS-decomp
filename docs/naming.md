@@ -137,6 +137,8 @@ the names with the header it already includes. A data table in
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `levelFlags[]` word |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
+| `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |
+| `attack_kinds.h` | `ATTACK_KIND_` | how the player hits a crate, the `gCrateHitResponse` column |
 
 Planned topics use the same scheme (`entities.h`/`ENTITY_`,
 `crates.h`/`CRATE_KIND_`, `events.h`/`EVENT_`, ...).

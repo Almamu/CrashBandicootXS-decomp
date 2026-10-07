@@ -124,7 +124,7 @@ static inline void PartSetVelY(struct player *p, s32 a, s32 b, s32 c)
  *   before the `slippery` test. */
 void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
 {
-    if (self->state == 0x1d)
+    if (self->state == ACTION_STATE_DYING)
         return;
     switch (arg2) {
     case 23:
@@ -135,7 +135,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             PART_OFFSET(from, self->part);
 
             PartSetHanging(self->part, 1);
-            SetActionCtrlModeAnim(self, 0x1f, 0x1d, 0, 0);
+            SetActionCtrlModeAnim(self, ACTION_STATE_HANG_GRAB, 0x1d, 0, 0);
             ActSetNext27(self, 0);
             ActSetNext(self, 0);
             PART_OFFSET(to, self->part);
@@ -149,11 +149,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 24:
         self->part->hanging = 0;
-        SetActionCtrlModeAnim(self, 0x1a, 0x1b, 0x7FFFFFFF, 0x7FFFFFFF);
+        SetActionCtrlModeAnim(self, ACTION_STATE_AIRBORNE_FALL, 0x1b, 0x7FFFFFFF, 0x7FFFFFFF);
         ActSetNext(self, 4);
         break;
     case 12:
-        if (self->state == 0) {
+        if (self->state == ACTION_STATE_IDLE) {
             ActSetNext27(self, 0);
             self->bumpedMotionX = 0;
             self->part->hitAxes |= arg3;
@@ -186,7 +186,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             PartSetBumped(self->part, 1);
         }
     check_c:
-        if (self->state == 0xc && gPlayer->frame != 0) {
+        if (self->state == ACTION_STATE_SLIDE && gPlayer->frame != 0) {
             struct player *pl = gPlayer;
 
             self->frame = self->frames;
@@ -210,11 +210,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x10);
             } else {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0xf);
             }
@@ -234,11 +234,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x12);
             } else {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0x11);
             }
@@ -256,7 +256,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             MATCH_CONST(one, 1);
             fire = in & 1;
             if (fire) {
-                SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
+                SetActionCtrlModeAnim(self, ACTION_STATE_AIR_SPIN, 0x10, 0, 0x18);
                 self->tornadoTurn = 0;
                 self->tornadoFallQueued = 0;
                 self->tornadoUnwinding = 0;
@@ -264,7 +264,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x14);
             } else {
-                SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
+                SetActionCtrlModeAnim(self, ACTION_STATE_AIR_SPIN, 0x10, 0, 0x18);
                 self->tornadoTurn = fire;
                 self->tornadoFallQueued = fire;
                 self->tornadoUnwinding = fire;
@@ -287,7 +287,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
 
             *f &= 0x7f;
         }
-        SetActionCtrlModeAnim(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
+        SetActionCtrlModeAnim(self, ACTION_STATE_WARP_OUT, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
         LoadPaletteSlot(gPaletteCache, self->part->slot,
                         self->part->anim->records[self->part->tag].paletteId);
         ActSetNext27(self, 0);

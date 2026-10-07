@@ -71,13 +71,18 @@ CALLS = [
     ("event", r"PhysCall3", 3),
     ("action_state", r"SetActionCtrlMode", 1),
     ("action_state", r"SetCtrlMode", 1),
+    ("action_state", r"SetActionCtrlModeAnim", 1),
+    ("action_state", r"StartActionCtrlTornadoSpin", 1),
+    ("action_state", r"StartActionCtrlTornadoSpin", 2),
     ("kind", r"CreateCrate", 1),
     ("category_exit", r"SetActorCategoryExitStatus", 0),
 ]
 
 # Field patterns: (topic, regex with a `v` group for the literal, path
 # prefix the rule is limited to or None). `->state` is a common field
-# name, so only the player's action controller's is counted.
+# name, so only the player's action controller's is counted (the swim
+# and input controllers in src/player/ have their own states). Its
+# set-mode method is vtable slot 0x20 (`m20`, `mgr[4]`).
 CMP = r"(?:==|!=|<=|>=|<|>|=(?!=))"
 FIELDS = [
     ("song", r"\b(?:currentSong|pendingSong)\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None),
@@ -85,6 +90,12 @@ FIELDS = [
     (
         "action_state",
         r"(?:->|\.)(?:state|prevState)\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b",
+        os.path.join("src", "player", "action_ctrl"),
+    ),
+    (
+        "action_state",
+        r"(?:\bACT_V?CALL1\s*\(\s*\w+\s*,\s*m20\s*,|\bm20\.thisOffset\s*,|\bmgr\[4\]\.delta\s*,)"
+        r"\s*(?:\(void \*\))?(?P<v>" + LIT + r")\b",
         os.path.join("src", "player", ""),
     ),
     ("kind", r"(?:->|\.)kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", None),

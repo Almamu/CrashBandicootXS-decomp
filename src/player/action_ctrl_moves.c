@@ -125,7 +125,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
  * `self+0x29`, fires the mgr trampoline pair with actions `4`/`0x18`,
  * and sets the state/counter/table-index trio (`0x31`/`0x2f`/`0x27`) to
  * `0`/`1`/`0x1b` - otherwise falls back to `StartActionCtrlRun`. For every
- * other `mode`: resets via `SetActionCtrlModeAnim(self, 0, 0x12, 0, 0)` and clears
+ * other `mode`: resets via `SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, 0)` and clears
  * both state/counter/table-index trios (`0x31`/`0x2f`/`0x27` and
  * `0x32`/`0x30`/`0x28`).
  *
@@ -160,7 +160,8 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
                 one = 1;
                 *p = one;
                 mgr = self->vt;
-                _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)4, mgr->m20.fn);
+                _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)ACTION_STATE_TURBO_RUN,
+                             mgr->m20.fn);
                 off = &self->vt->m50;
                 _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x18, off->fn);
                 {
@@ -179,7 +180,7 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
         {
             u8 zero = 0;
 
-            SetActionCtrlModeAnim(self, 0, 0x12, 0, zero);
+            SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, zero);
             self->motionXKeepSpeed = zero;
             self->motionXPending = 1;
             self->motionX = zero;
@@ -251,7 +252,7 @@ void SetActionCtrlMode(struct act *self, s32 arg1)
     self->bumpedMotionX = 0;
     self->bumpTimer = 0;
 
-    if ((u32)(arg1 - 0xd) > 1) {
+    if ((u32)(arg1 - ACTION_STATE_SPIN) > 1) {
         struct player *part = self->part;
         u8 *player;
 
@@ -285,7 +286,7 @@ void StartActionCtrlSpin(struct act *self)
         off = &self->vt->m50;
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x10, off->fn);
         mgr = (struct vtable_slot *)self->vt;
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xd, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_SPIN, mgr[4].fn);
 
         self->tornadoVariant = 0;
         self->charge = 0;
@@ -318,7 +319,7 @@ void StartActionCtrlHangSpin(struct act *self)
         off = &self->vt->m50;
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1e, off->fn);
         mgr = (struct vtable_slot *)self->vt;
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x21, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_HANG_SPIN, mgr[4].fn);
     }
 }
 
@@ -340,7 +341,7 @@ void StartActionCtrlRun(struct act *self)
         off = &self->vt->m50;
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x18, off->fn);
         mgr = (struct vtable_slot *)self->vt;
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)4, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_TURBO_RUN, mgr[4].fn);
 
         {
             u8 val = 0x1b;
@@ -369,7 +370,7 @@ void StartActionCtrlRun(struct act *self)
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0xd, off->fn);
         self->frame = 0;
         mgr = (struct vtable_slot *)self->vt;
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)3, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_RUN, mgr[4].fn);
 
         {
             u8 one = 1;
@@ -402,7 +403,7 @@ void StartActionCtrlHighJump(struct act *self)
     struct act_method *off;
     u8 *p28;
 
-    _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xb, mgr[4].fn);
+    _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_AIRBORNE_HIGH_JUMP, mgr[4].fn);
     off = &self->vt->m50;
     _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0xb, off->fn);
 
@@ -430,7 +431,7 @@ void StartActionCtrlMaskHitJump(struct act *self)
     struct act_method *off;
     u8 *p28;
 
-    _call_via_r2((u8 *)self + mgr[4].delta, (void *)0xb, mgr[4].fn);
+    _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_AIRBORNE_HIGH_JUMP, mgr[4].fn);
     off = &self->vt->m50;
     _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0xb, off->fn);
 
@@ -468,7 +469,7 @@ void ActionCtrlStateUnusedHangGrab(struct act *self)
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
         struct act_method *off;
 
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x20, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_HANG, mgr[4].fn);
         off = &self->vt->m50;
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1f, off->fn);
 
@@ -493,7 +494,7 @@ void ActionCtrlStateHangSpin(struct act *self)
         *p26 = 0xc;
 
         m = &self->vt->m20;
-        _call_via_r2((u8 *)self + m->thisOffset, (void *)0x20, m->fn);
+        _call_via_r2((u8 *)self + m->thisOffset, (void *)ACTION_STATE_HANG, m->fn);
         m = &self->vt->m50;
         _call_via_r3((u8 *)self + m->thisOffset, self->part, (void *)0x1f, m->fn);
 
@@ -515,7 +516,7 @@ void ActionCtrlStateHangGrab(struct act *self)
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
         struct act_method *off;
 
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x20, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_HANG, mgr[4].fn);
         off = &self->vt->m50;
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1f, off->fn);
 
@@ -549,7 +550,7 @@ void ActionCtrlStateCrawlStop(struct act *self)
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
         struct act_method *off;
 
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x11, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_CROUCH, mgr[4].fn);
         off = &self->vt->m50;
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)4, off->fn);
     }
@@ -570,13 +571,15 @@ void ActionCtrlStateBodySlamStart(struct act *self)
         if ((u8)HasSuperBodySlam(gLevelState)) {
             struct act_method *m = &self->vt->m20;
 
-            _call_via_r2((u8 *)self + m->thisOffset, (void *)0x19, m->fn);
+            _call_via_r2((u8 *)self + m->thisOffset, (void *)ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM,
+                         m->fn);
             m = &self->vt->m50;
             _call_via_r3((u8 *)self + m->thisOffset, self->part, (void *)7, m->fn);
         } else {
             struct act_method *m = &self->vt->m20;
 
-            _call_via_r2((u8 *)self + m->thisOffset, (void *)0x18, m->fn);
+            _call_via_r2((u8 *)self + m->thisOffset, (void *)ACTION_STATE_AIRBORNE_BODY_SLAM,
+                         m->fn);
         }
     }
 }

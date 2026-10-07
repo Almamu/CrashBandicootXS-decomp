@@ -91,14 +91,14 @@ void ApplyActionCtrlMotion(struct act *self)
         }
     }
 skip:
-    if (self->state == 0) {
+    if (self->state == ACTION_STATE_IDLE) {
         struct player *p = gPlayer;
         if (p->speedX == 0 && p->anim->animCount != 0x12 && self->idleFidget == 0) {
             StopSfx(gAudioContext, SFX_SKID);
             ACT_CALL2(self, m50, gPlayer, 0x12);
         }
     }
-    if (self->state == 0 || self->state == 0x11) {
+    if (self->state == ACTION_STATE_IDLE || self->state == ACTION_STATE_CROUCH) {
         struct player *p = gPlayer;
         if (p->speedX != 0 && p->slippery == 0) {
             self->motionXKeepSpeed = 0;
@@ -218,7 +218,7 @@ skip:
             return;
         if (INPUT_PRESSED(in) & 1) {
             PlaySfx(gAudioContext, SFX_JUMP, 0x100);
-            ACT_CALL1(self, m20, 5);
+            ACT_CALL1(self, m20, ACTION_STATE_JUMP);
             ACT_CALL2(self, m50, self->part, 0x13);
             self->frame = busy;
             ActSetNext(self, 7);
@@ -230,7 +230,7 @@ skip:
             } else {
                 if ((held = INPUT_HELD(in) & 0x100) == 0)
                     goto other;
-                ACT_CALL1(self, m20, 0x10);
+                ACT_CALL1(self, m20, ACTION_STATE_CROUCH_DOWN);
                 ACT_CALL2(self, m50, self->part, 3);
                 self->frames = alt;
             }
@@ -253,7 +253,7 @@ skip:
                 case 3 ... 8:
                     if ((INPUT_HELD(in) & 0x200) && (u8)HasTurboRun(gLevelState)) {
                         self->turboRun = 1;
-                        ACT_CALL1(self, m20, 4);
+                        ACT_CALL1(self, m20, ACTION_STATE_TURBO_RUN);
                         ACT_CALL2(self, m50, self->part, 0x18);
                         ActTrio27(self, wait, 1, 0x1B);
                     } else {
@@ -261,7 +261,7 @@ skip:
                     }
                     break;
                 case 2:
-                    ACT_CALL1(self, m20, 0x10);
+                    ACT_CALL1(self, m20, ACTION_STATE_CROUCH_DOWN);
                     ACT_CALL2(self, m50, self->part, 3);
                     self->frames = wait;
                     break;

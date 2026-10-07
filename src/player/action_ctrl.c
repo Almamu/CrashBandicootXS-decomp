@@ -160,7 +160,7 @@ tail:
  * action_ctrl_moves.c). */
 void RestartActionCtrl(struct act *self)
 {
-    SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
+    SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, 0);
 
     self->motionXKeepSpeed = 0;
     self->motionXPending = 1;

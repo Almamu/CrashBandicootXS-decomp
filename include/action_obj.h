@@ -24,7 +24,7 @@ struct act_vtable {
     u8 unk_00[0x10];
     struct act_method m10; // 0x10
     u8 unk_18[8];
-    struct act_method m20; // 0x20 - "set animation"
+    struct act_method m20; // 0x20 - SetActionCtrlMode: enter an ACTION_STATE_*
     struct act_method m28; // 0x28
     struct act_method m30; // 0x30
     struct act_method m38; // 0x38
