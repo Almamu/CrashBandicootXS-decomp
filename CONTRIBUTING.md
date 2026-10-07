@@ -124,7 +124,7 @@ full rules and the history (#574). For new code:
   ...) goes in `include/globals.h`. GAX engine internals (what one GAX
   object calls in another) go in `lib/gax/src/gax_internal.h`. A struct
   that several subsystems share gets its own small type header
-  (`aabb.h`, `hitbox_quad.h`, `camera_lead.h`).
+  (`aabb.h`, `hitbox_quad.h`, `line_util.h`).
 - **Don't redeclare externs in a `.c` file.** Include the header. If
   the header's type doesn't fit, fix the header (or the definition) to
   the real type, then fix the callers - don't add a local copy with

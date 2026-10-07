@@ -11,10 +11,11 @@
  * (docs/headers_plan.md).
  *
  * The objects' own structs live in the type headers: `struct
- * pause_menu` in pause_menu.h, `struct level_menu`/`page_bg`/`zoom_bg`
- * in level_menu.h, `struct level_item` in level_select_parts.h. Those two
- * level-select headers each define their own `struct sprite`, so this
- * header only declares the tags and includes neither. The continue
+ * pause_menu` in pause_menu.h, `struct sprite` and the save block in
+ * level_menu.h, which this header doesn't include (it only declares the
+ * tags). The level select's objects are C++ classes (level_select.hpp):
+ * the prototypes below are their C names (cxx_symbols.txt), for the C
+ * callers and the vtables, with opaque struct tags. The continue
  * prompt's functions at the start of src/frontend/credits.c
  * (DrawContinuePrompt..RunContinuePrompt) are here too. */
 
@@ -137,8 +138,14 @@ extern const struct vtable_slot gCameraLeadVtable[15];
 extern const struct vtable_slot gLaunchPadVtable[15];
 extern const struct vtable_slot gLevelSelectEntryVtable[6];
 
-/* The level select (src/iwram/iwram_data.c). */
+/* The level select (src/iwram/iwram_data.c): the screen while
+ * RunLevelSelect runs. The C++ files see it as its class, LevelSelect
+ * (level_select.hpp); for C it is an opaque `struct level_menu`. */
+#ifdef __cplusplus
+extern class LevelSelect *gLevelSelect;
+#else
 extern struct level_menu *gLevelSelect;
+#endif
 extern u8 gNewWorldOpened;
 
 /* The level-select tables (src/data/map_tables_16c498.c,
@@ -206,7 +213,7 @@ extern void CommitContinuePromptFrame(struct continue_prompt *self);
 extern void DestroyContinuePrompt(struct continue_prompt *self, s32 mode);
 extern u8 RunContinuePrompt(void);
 
-/* src/menus/level_select.c */
+/* src/menus/level_select.cpp */
 extern void sub_801B85C(struct follow_child *self);
 extern void ResetCameraLead(struct follow_child *self);
 extern void UpdateCameraLead(struct follow_child *self);
@@ -233,7 +240,7 @@ extern void SettleLevelSelectPage(struct level_menu *self);
 extern void LevelSelectCursorLeft(struct level_menu *self);
 extern void LevelSelectCursorRight(struct level_menu *self);
 
-/* src/menus/level_select_pages.c */
+/* src/menus/level_select_pages.cpp */
 extern void LevelSelectTurnPage(struct level_menu *self);
 extern void WaitLevelSelectCursor(struct level_menu *self);
 extern void LevelSelectConfirm(struct level_menu *self);
@@ -261,7 +268,7 @@ extern struct page_bg *CreateLevelSelectPageBg(struct page_bg *self, s32 charBlo
                                                s32 screenBlock);
 extern struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock);
 
-/* src/menus/level_select_widgets.c */
+/* src/menus/level_select_widgets.cpp */
 extern void DestroyZoomBg(struct zoom_bg *self, s32 flags);
 extern void UpdateZoomBg(struct zoom_bg *self);
 extern void DrawZoomBg(struct zoom_bg *self);
