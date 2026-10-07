@@ -199,7 +199,7 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
  * teardown trampoline via `_call_via_r2`, frees the array itself
  * (`self->parts`, allocated with a leading element-count word per the
  * NEW_ARRAY_COUNT read below - see the same convention in src/gfx/
- * palette_cycle.c/actor files), then optionally frees `self` when
+ * palette_cycle.cpp/actor files), then optionally frees `self` when
  * `flags` bit 0 is set (same "free-self" convention as
  * DestroyPaletteCycles/DestroyLanguageSelect elsewhere in this codebase). The
  * descriptor is a vtable (gHudPartVtable, include/vtable.h), and

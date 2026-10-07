@@ -6,7 +6,7 @@
  * DISPCNT helpers, BG packages and the sprite frame cache. Every function
  * src/gfx/ defines, with the prototype of its definition, and the globals
  * and tables its files use (docs/headers_plan.md). `DrawHudPart`/
- * `InitHudPart` (palette_cycle.c) are in hud.h. A .c file that needs a
+ * `InitHudPart` (palette_cycle.cpp) are in hud.h. A .c file that needs a
  * different local declaration for codegen keeps it as an asm-label alias
  * with a `codegen:` comment. */
 
@@ -209,7 +209,8 @@ struct sprite_frame_cache_node {
  * backwards depending on `direction`. `AddPaletteCycle` (the producer) only
  * ever appends at `count` (no wraparound seen in either function - the
  * caller resets the queue via `ClearPaletteCycles`/`InitPaletteCycles` between
- * bursts rather than this pair enforcing the 3-slot cap itself). */
+ * bursts rather than this pair enforcing the 3-slot cap itself). The C
+ * view of PaletteCycles (include/part_list.hpp), which checks the size. */
 struct palette_cycler {
     u8 active;        /* +0x00 */
     u8 unknown_01[3]; /* +0x01 */
@@ -365,7 +366,7 @@ extern void SetScaledSpritePriority(u8 *self, u32 arg1);
 extern void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2);
 extern void ResetScaledSpriteAttrs(u8 *self);
 
-/* src/gfx/palette_cycle.c */
+/* src/gfx/palette_cycle.cpp */
 extern void TickPaletteCycles(struct palette_cycler *self);
 extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate,
                             s32 listCount, u8 direction);

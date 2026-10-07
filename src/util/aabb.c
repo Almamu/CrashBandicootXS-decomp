@@ -68,7 +68,7 @@ u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b)
  * X-axis edges exclusive too (touching does not count) - this is the
  * variant already referenced by name from `player_update.c`'s
  * `PlayerTouchesBox` and the pool/grid collision functions in
- * `part_list.c`. */
+ * `part_list.cpp`. */
 u8 AabbOverlaps(struct aabb *a, struct aabb *b)
 {
     u8 result = 0;

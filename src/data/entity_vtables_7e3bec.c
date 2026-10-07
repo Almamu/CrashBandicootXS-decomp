@@ -750,7 +750,7 @@ const struct vtable_slot gPooledBgLayerVtable[10] = {
     VTABLE_SLOT(ClipPooledBgLayerRows),
 };
 
-/* Used by palette_cycle.c (InitHudPart, DestroyHudPart). */
+/* Used by palette_cycle.cpp (InitHudPart, DestroyHudPart). */
 const struct vtable_slot gHudPartVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),

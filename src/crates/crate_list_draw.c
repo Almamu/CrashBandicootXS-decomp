@@ -11,7 +11,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
 /* The spatial-hash-grid pool manager struct `InitCrateList` initializes
  * and `crate_list.c` operates on - see that file (and
- * `part_list.c`) for the full field writeup. */
+ * `part_list.cpp`) for the full field writeup. */
 /* Same "extended screen box" filter shape as `CullPartList` (the plain
  * 240x160 GBA screen region, in Q8, at `gLevelLayers->layer0`'s
  * scroll position), but instead of filtering into a second

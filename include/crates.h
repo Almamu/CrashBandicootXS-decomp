@@ -11,7 +11,7 @@
  * (docs/headers_plan.md).
  *
  * The crate list (`struct pool_manager`, below) is set up by InitCrateList,
- * which src/objects/part_list.c holds for ROM order. */
+ * which src/objects/part_list.cpp holds for ROM order. */
 
 #include "core.h"
 #include "math_util.h"
@@ -51,7 +51,7 @@ struct pool_node {
 };
 
 /* codegen: `struct pool_node` with untyped fields, the view
- * PoolResetFreeList (crate_list_reset.c, part_list.c) zeroes the nodes
+ * PoolResetFreeList (crate_list_reset.c, part_list.cpp) zeroes the nodes
  * through. Through the real `struct pool_node *` fields, gcc takes the
  * zeroing stores as possible writes to `m->nodeArray` and reloads it
  * (docs/headers_plan.md, "Codegen findings"). Both files had a copy. */
@@ -182,7 +182,7 @@ extern void DrawCrateList(struct pool_manager *manager);
 /* src/crates/crate_list_reset.c */
 extern void ResetCrateList(struct pool_manager *m);
 
-/* src/objects/part_list.c (for ROM order) */
+/* src/objects/part_list.cpp (for ROM order) */
 extern struct pool_manager *InitCrateList(struct pool_manager *m, s32 count);
 
 /* src/crates/crate_list_update.c */

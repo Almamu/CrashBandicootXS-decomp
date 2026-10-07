@@ -297,6 +297,17 @@ public:
     void CollideWithPlayer(struct aabb box, MovingSprite *part);    // CollidePartWithPlayer
     void CollideWithObject(struct aabb box, MovingSprite *part,
                            MovingSprite *other); // CollidePartWithObject
+    /* part 7c (include/part_list.hpp; src/objects/part_list.cpp,
+     * part_list_cull.cpp) */
+    PartList(s32 capacity);          // InitPartList
+    ~PartList();                     // DestroyPartList
+    void Draw();                     // DrawPartList
+    void Remove(MovingSprite *part); // RemoveFromPartList
+    void RemoveAt(s32 index);        // RemovePartListAt
+    void Add(MovingSprite *part);    // AddToPartList
+    void Cull();                     // CullPartList
+    void Clear();                    // ClearPartList
+    void CollideClass(s32 classId);  // CollidePartsOfClass
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PartList) == sizeof(struct part_list));

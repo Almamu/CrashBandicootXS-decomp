@@ -499,6 +499,31 @@ Collide__8PartListG4aabbiP12MovingSprite CollidePartList
 CollideWithPlayer__8PartListG4aabbP12MovingSprite CollidePartWithPlayer
 CollideWithObject__8PartListG4aabbP12MovingSpriteT2 CollidePartWithObject
 #
+# part 7c: the rest of PartList, CollisionQueue, PaletteCycles, HudPart
+# (include/part_list.hpp; src/objects/part_list.cpp, part_list_cull.cpp,
+# part_collide.cpp, collision_queue.cpp, src/gfx/palette_cycle.cpp)
+Draw__8PartList DrawPartList
+Remove__8PartListP12MovingSprite RemoveFromPartList
+RemoveAt__8PartListi RemovePartListAt
+Add__8PartListP12MovingSprite AddToPartList
+_._8PartList DestroyPartList
+__8PartListi InitPartList
+Cull__8PartList CullPartList
+Clear__8PartList ClearPartList
+CollideClass__8PartListi CollidePartsOfClass
+Resolve__14CollisionQueue ResolveCollisionCandidates
+Add__14CollisionQueueP5crateiiiiG8e08c_posiG8byte_argT8 AddCollisionCandidate
+_._14CollisionQueue DestroyCollisionQueue
+Reset__14CollisionQueue ResetCollisionQueue
+Tick__13PaletteCycles TickPaletteCycles
+Add__13PaletteCyclesPUsT1iiG8byte_arg AddPaletteCycle
+Clear__13PaletteCycles ClearPaletteCycles
+_._13PaletteCycles DestroyPaletteCycles
+__13PaletteCycles InitPaletteCycles
+_vt.7HudPart gHudPartVtable
+Draw__7HudPartii DrawHudPart
+_._7HudPart DestroyHudPart
+__7HudPart InitHudPart
 # part 7e: the crate (include/crate.hpp, src/crates/)
 _vt.5Crate gCrateVtable
 GetSlotStage__5Crate GetSlotCrateStage
