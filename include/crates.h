@@ -19,6 +19,9 @@
 #include "objects.h"
 #include "byte_arg.h"
 #include "vtable.h"
+#include "constants/attack_kinds.h"
+#include "constants/crates.h"
+#include "constants/entities.h"
 
 struct actor;
 struct box_part;
@@ -85,11 +88,11 @@ extern const struct vtable_slot gCrateVtable[13];
 
 /* The crate tables, indexed by crate kind (src/data/object_tables_16bb6c.c). */
 extern const u8 gSlotCrateTimers[4];
-extern const u8 gCrateKindCounted[22];
-extern const u8 gCrateKindBreakable[22];
-extern const u8 gCrateKindExplosive[22];
-extern const u8 gCrateKindUnbreakable[22];
-extern const s32 gCrateHitResponse[22][7];
+extern const u8 gCrateKindCounted[CRATE_KIND_COUNT];
+extern const u8 gCrateKindBreakable[CRATE_KIND_COUNT];
+extern const u8 gCrateKindExplosive[CRATE_KIND_COUNT];
+extern const u8 gCrateKindUnbreakable[CRATE_KIND_COUNT];
+extern const s32 gCrateHitResponse[CRATE_KIND_COUNT][7];
 extern const u8 gAttackKindBreakLimited[8];
 
 /* Set when the crate list changes (sym_iwram.txt). */

@@ -889,7 +889,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                 MATCH_HOLD_REG(void *, fn, r4) = *(void *const volatile *)&tbl->fn;
 
                 (void)fn;
-                _call_via_r4(thisp, 0, 9, 0);
+                _call_via_r4(thisp, 0, EVENT_HIT_CORTEX_SHOT, 0);
             }
             {
                 MATCH_HOLD_REG(s32, zero, r0) = 0;

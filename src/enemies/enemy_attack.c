@@ -94,9 +94,10 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
                 SetEnemyAnimMode(self, 3);
             else
                 SetEnemyAnimMode(self, 4);
-            if (self->kind == 0xf) {
+            if (self->kind == ENEMY_KIND_PENGUIN) {
                 SetEnemyMotionX(self, 0);
-            } else if (self->kind == 0x12 || self->kind == 0x1a) {
+            } else if (self->kind == ENEMY_KIND_WOODEN_CRUSHER ||
+                       self->kind == ENEMY_KIND_PISTON_CRUSHER) {
                 self->target->solid = 0;
             }
         }
@@ -114,14 +115,16 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
     case 3:
         if (self->target->animDone) {
             SetEnemyAnimMode(self, 4);
-            if (self->kind == 0x12 || self->kind == 0x1a) {
+            if (self->kind == ENEMY_KIND_WOODEN_CRUSHER ||
+                self->kind == ENEMY_KIND_PISTON_CRUSHER) {
                 self->target->solid = 1;
                 PlaySfx(gAudioContext, 0x26, 0x100);
-            } else if (self->kind == 0xf) {
+            } else if (self->kind == ENEMY_KIND_PENGUIN) {
                 PlaySfx(gAudioContext, 9, 0x100);
             }
         }
-        if (self->kind == 0x17 && self->target->tick == 9 && self->target->timer == 0) {
+        if (self->kind == ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT && self->target->tick == 9 &&
+            self->target->timer == 0) {
             SpawnPart(0x17, 4, -0x2d, 2, 0, self->target)->kind = 2;
             PlaySfx(gAudioContext, 0x1e, 0x100);
         }
@@ -129,11 +132,11 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
     case 5:
         if (self->target->animDone) {
             SetEnemyAnimMode(self, 0);
-            if (self->kind != 0xf)
+            if (self->kind != ENEMY_KIND_PENGUIN)
                 break;
             SetEnemyMotionX(self, 1);
         }
-        if (self->kind == 0xf && self->target->tick == 8 && self->target->timer == 0)
+        if (self->kind == ENEMY_KIND_PENGUIN && self->target->tick == 8 && self->target->timer == 0)
             PlaySfx(gAudioContext, 0x23, 0x100);
         break;
     }
@@ -145,7 +148,7 @@ void UpdateEnemyTriggerBox(struct part_ctrl *self)
     struct aabb box;
     s32 x, y, w, h;
 
-    if (self->kind == 0xb) {
+    if (self->kind == ENEMY_KIND_VULTURE) {
         /* r1 pin: the allocator otherwise swaps target/baseY (r2/r1). */
         MATCH_HOLD_REG(struct ctrl_target *, t, r1) = self->target;
         if (t->y < self->baseY) {
@@ -165,7 +168,7 @@ void UpdateEnemyTriggerBox(struct part_ctrl *self)
             box.x = (self->target->x >> 8) * 2 - (box.x + box.w);
         if (PlayerTouchesBox(gPlayer, &box)) {
             SetEnemyAnimMode(self, 2);
-            if (self->kind == 0xb) {
+            if (self->kind == ENEMY_KIND_VULTURE) {
                 struct ctrl_target *target = self->target;
                 s32 a = 0x300, b = 0x20, c;
 
@@ -315,7 +318,7 @@ void SetEnemyState(struct part_ctrl *self, s32 state)
             }
         } else {
             SetMode(self, 0);
-            if (self->kind == 0x1b) {
+            if (self->kind == ENEMY_KIND_STATIONARY_SPACE_ENEMY) {
                 struct ctrl_target *target = self->target;
                 target->tick = (*target->keyframes)[target->frame].steps - 1;
             }

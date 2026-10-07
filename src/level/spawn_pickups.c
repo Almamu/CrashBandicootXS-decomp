@@ -331,7 +331,7 @@ void CreateEntitySpawner(void)
 
     asm volatile("bl InitEntitySpawner" : "+r"(obj) : : "r1", "r2", "r3", "lr", "cc");
     *addr = obj;
-    SetEntitySpawnerTable(obj, gEntitySpawnFuncs, 0x5c);
+    SetEntitySpawnerTable(obj, gEntitySpawnFuncs, ENTITY_COUNT);
 }
 
 /* `InitLevelState` (docs/rom_map.md, "Found the origin point"): the

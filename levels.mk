@@ -22,7 +22,7 @@ $(foreach room,$(LEVEL_ROOMS),$(eval $(call LEVEL_ASSET_RULE,$(room))))
 $(LEVELS_BUILDDIR)/%.lz: $(LEVELS_BUILDDIR)/% | $(GFX)
 	$(GFX) $< $@
 
-$(LEVELS_BUILDDIR)/level_rooms_%.inc: $(LEVEL_SOURCES) tools/levels.py
+$(LEVELS_BUILDDIR)/level_rooms_%.inc: $(LEVEL_SOURCES) data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py c level_rooms_$* $@
 
@@ -32,15 +32,27 @@ LEVELS_BUILT := $(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.b
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR)/$(r).inc))
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
-# constants/levels.h (the LEVEL_* ids) is generated from levels.json's
-# "levels" list into build/.../include, which is on the quote include path
-# after include/. Any C file may include it, so it's built before every C
-# object (order-only; the .d files track who includes it).
-LEVELS_CONSTANTS := $(OBJ_DIR)/include/constants/levels.h
-CPPFLAGS += -iquote $(OBJ_DIR)/include
+# The constants headers named in the level data (#655): the entity types
+# (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
+# the level ids (levels.json's "levels" list).
+# They are generated into build/include, which is on every object's
+# include path; the C objects wait for them (order-only, so a regenerated
+# header rebuilds only the objects whose .d lists it).
+GENERATED_INCLUDE_DIR := build/include
+GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
+	$(GENERATED_INCLUDE_DIR)/constants/levels.h
+CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 
-$(LEVELS_CONSTANTS): data/levels/levels.json tools/levels.py
+$(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)
-	python3 tools/levels.py constants $@
+	python3 tools/levels.py constants entities $@
 
-$(C_OBJS): | $(LEVELS_CONSTANTS)
+$(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants crates $@
+
+$(GENERATED_INCLUDE_DIR)/constants/levels.h: data/levels/levels.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants levels $@
+
+$(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS): | $(GENERATED_HEADERS)

@@ -25,7 +25,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 HITS="${PERMUTER_HITS:-$HERE/../hits}"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
-arm-none-eabi-cpp -I "$R/tools/agbcc/include" -iquote "$R/include" -nostdinc -undef -D NON_MATCHING=1 "$IN" >"$TMP/a.i"
+arm-none-eabi-cpp -I "$R/tools/agbcc/include" -iquote "$R/include" -iquote "$R/build/include" -nostdinc -undef -D NON_MATCHING=1 "$IN" >"$TMP/a.i"
 "$R/tools/agbcc/bin/agbcc_arm" -mthumb-interwork -O2 -fomit-frame-pointer -o "$TMP/a.s" "$TMP/a.i" 2>/dev/null
 arm-none-eabi-as -mcpu=arm7tdmi -mthumb-interwork -o "$OUT" "$TMP/a.s"
 if grep -E 'stmfd' "$TMP/a.s" | grep -qv 'lr'; then

@@ -137,19 +137,29 @@ the names with the header it already includes. A data table in
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `levelFlags[]` word |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
+| `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |
+| `attack_kinds.h` | `ATTACK_KIND_` | how the player hits a crate, the `gCrateHitResponse` column |
+| `entities.h` (generated) | `ENTITY_`, `ENEMY_KIND_` | entity types (the `gEntitySpawnFuncs` index), enemy-controller kinds |
+| `crates.h` (generated) | `CRATE_KIND_` | `crate.kind` (`CreateCrate`, the `gCrateKind*` tables) |
+| `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
 | `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `data/levels/levels.json` |
 | `rooms.h` | `ROOM_KIND_` | `struct level_room.kind` (on foot, underwater, hover, category stage) |
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |
 | `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
 
-A value set that a data source already lists is generated from it, not
-written by hand: `tools/levels.py constants` writes `constants/levels.h`
-from `levels.json`'s `"levels"` list into `build/crashbandicootxs/include/`,
-which is on the quote include path after `include/` (levels.mk). Every C
-object depends on it (order-only), so it exists before anything compiles.
+**Constants that describe data the repository has as source files are
+generated from those files**, not written by hand: the names live in the
+data, and the build writes the header into `build/include/constants/`,
+which is on the include path (after `include/`), so code includes it as
+`"constants/<topic>.h"` all the same. Every C object waits for the
+generated headers (an order-only prerequisite), and `-MMD` rebuilds the
+objects that include one when it changes. The entity types come from
+`data/levels/entity_types.json`, the crate kinds from
+`data/levels/crate_kinds.json` and the level ids from
+`data/levels/levels.json`'s `"levels"` list (`tools/levels.py constants`,
+see docs/levels.md). To rename one, edit the JSON.
 
-Planned topics use the same scheme (`entities.h`/`ENTITY_`,
-`crates.h`/`CRATE_KIND_`, `events.h`/`EVENT_`, ...).
+
 `tools/magic_numbers.py` lists the literals that are left, by topic
 (`--report` for the counts), and `--topic T --fix` replaces the ones that
 have exactly one name.

@@ -98,7 +98,7 @@ void ActionCtrlStateRun(struct act *self)
         return;
     if (INPUT_PRESSED(in) & 1) {
         PlaySfx(gAudioContext, SFX_JUMP, 0x100);
-        ACT_CALL1(self, m20, 5);
+        ACT_CALL1(self, m20, ACTION_STATE_JUMP);
         ACT_CALL2(self, m50, self->part, 0x13);
         self->frame = busy;
         ActSetNext(self, 7);
@@ -117,7 +117,7 @@ void ActionCtrlStateRun(struct act *self)
 
             PlaySfx(gAudioContext, SFX_SLIDE, 0x100);
             frames = 0x10;
-            ACT_CALL1(self, m20, 0xC);
+            ACT_CALL1(self, m20, ACTION_STATE_SLIDE);
             ACT_CALL2(self, m50, self->part, 0xF);
             self->frame = alt;
             self->frames = frames;
@@ -134,7 +134,7 @@ void ActionCtrlStateRun(struct act *self)
 
         switch (dir) {
         case 0:
-            SetActionCtrlModeAnim(self, 0, 0x12, 0, dir);
+            SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, dir);
             ActTrio27(self, dir, 1, dir);
             ActTrio28(self, dir, 1, dir);
             ActTrio27(self, dir, 1, 0x1D);
@@ -145,7 +145,7 @@ void ActionCtrlStateRun(struct act *self)
             {
                 s32 zero = 0;
 
-                ACT_CALL1(self, m20, 0x10);
+                ACT_CALL1(self, m20, ACTION_STATE_CROUCH_DOWN);
                 ACT_CALL2(self, m50, self->part, 3);
                 self->frames = zero;
                 ActQueue27(self, zero, 0x1D);
@@ -157,16 +157,16 @@ void ActionCtrlStateRun(struct act *self)
         s32 held = (u16)(INPUT_HELD(in) & 0x200);
 
         if (held) {
-            if (self->state == 3 && (u8)HasTurboRun(gLevelState)) {
+            if (self->state == ACTION_STATE_RUN && (u8)HasTurboRun(gLevelState)) {
                 s32 zero;
 
                 self->turboRun = 1;
                 zero = 0;
-                ACT_CALL1(self, m20, 4);
+                ACT_CALL1(self, m20, ACTION_STATE_TURBO_RUN);
                 ACT_CALL2(self, m50, self->part, 0x18);
                 ActTrio27(self, zero, 1, 0x1B);
             }
-        } else if (self->state == 4) {
+        } else if (self->state == ACTION_STATE_TURBO_RUN) {
             self->turboRun = held;
             StartActionCtrlRun(self);
         } else if (self->frame != 0) {
@@ -197,7 +197,7 @@ void ActionCtrlStateJump(struct act *self)
         s32 frame;
         s32 count;
 
-        ACT_VCALL1(self, m20, 0x1A);
+        ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FALL);
         ACT_VCALL2(self, m50, self->part, 0x15);
         part = self->part;
         frame = 2;
@@ -218,7 +218,7 @@ void ActionCtrlStateJump(struct act *self)
 
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             frames = 0x18;
-            ACT_VCALL1(self, m20, 0xE);
+            ACT_VCALL1(self, m20, ACTION_STATE_AIR_SPIN);
             ACT_VCALL2(self, m50, self->part, 0x10);
             self->frame = busy;
             self->frames = frames;
@@ -239,9 +239,9 @@ void ActionCtrlStateJump(struct act *self)
 
             if ((cur & 1) && (cur & 0x30)) {
                 if (part->tag == 6) {
-                    ACT_VCALL1(self, m20, 9);
+                    ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FLIP_JUMP);
                 } else {
-                    ACT_VCALL1(self, m20, 9);
+                    ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FLIP_JUMP);
                     ACT_VCALL2(self, m50, self->part, 6);
                 }
                 {
@@ -251,7 +251,7 @@ void ActionCtrlStateJump(struct act *self)
                         ActSetNextP(self, slot, 0xA);
                 }
             } else {
-                ACT_VCALL1(self, m20, 7);
+                ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_JUMP);
                 ACT_VCALL2(self, m50, self->part, 0xC);
                 {
                     u8 *slot = &self->motionY;

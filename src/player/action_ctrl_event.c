@@ -124,10 +124,10 @@ static inline void PartSetVelY(struct player *p, s32 a, s32 b, s32 c)
  *   before the `slippery` test. */
 void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
 {
-    if (self->state == 0x1d)
+    if (self->state == ACTION_STATE_DYING)
         return;
     switch (arg2) {
-    case 23:
+    case EVENT_HANG_GRAB:
         {
             struct sprite_point *from;
             struct sprite_point *to;
@@ -135,7 +135,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             PART_OFFSET(from, self->part);
 
             PartSetHanging(self->part, 1);
-            SetActionCtrlModeAnim(self, 0x1f, 0x1d, 0, 0);
+            SetActionCtrlModeAnim(self, ACTION_STATE_HANG_GRAB, 0x1d, 0, 0);
             ActSetNext27(self, 0);
             ActSetNext(self, 0);
             PART_OFFSET(to, self->part);
@@ -147,13 +147,13 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             }
         }
         break;
-    case 24:
+    case EVENT_HANG_RELEASE:
         self->part->hanging = 0;
-        SetActionCtrlModeAnim(self, 0x1a, 0x1b, 0x7FFFFFFF, 0x7FFFFFFF);
+        SetActionCtrlModeAnim(self, ACTION_STATE_AIRBORNE_FALL, 0x1b, 0x7FFFFFFF, 0x7FFFFFFF);
         ActSetNext(self, 4);
         break;
-    case 12:
-        if (self->state == 0) {
+    case EVENT_BUMP:
+        if (self->state == ACTION_STATE_IDLE) {
             ActSetNext27(self, 0);
             self->bumpedMotionX = 0;
             self->part->hitAxes |= arg3;
@@ -186,7 +186,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             PartSetBumped(self->part, 1);
         }
     check_c:
-        if (self->state == 0xc && gPlayer->frame != 0) {
+        if (self->state == ACTION_STATE_SLIDE && gPlayer->frame != 0) {
             struct player *pl = gPlayer;
 
             self->frame = self->frames;
@@ -197,7 +197,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         self->part->hitAxes |= arg3;
         self->part->speedX = 0;
         break;
-    case 13:
+    case EVENT_BOUNCE:
         {
             u32 in = gKeys.all;
             u32 held = in;
@@ -210,18 +210,18 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x10);
             } else {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0xf);
             }
         }
         self->frame = 0;
         break;
-    case 14:
+    case EVENT_BOUNCE_HIGH:
         {
             u32 in = gKeys.all;
             u32 held = in;
@@ -234,18 +234,18 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x12);
             } else {
-                SetActionCtrlModeAnim(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
+                SetActionCtrlModeAnim(self, ACTION_STATE_JUMP, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
                 self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0x11);
             }
         }
         self->frame = 0;
         break;
-    case 25:
+    case EVENT_LAUNCH_PAD:
         {
             u32 in = gKeys.all;
             s32 fire;
@@ -256,7 +256,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             MATCH_CONST(one, 1);
             fire = in & 1;
             if (fire) {
-                SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
+                SetActionCtrlModeAnim(self, ACTION_STATE_AIR_SPIN, 0x10, 0, 0x18);
                 self->tornadoTurn = 0;
                 self->tornadoFallQueued = 0;
                 self->tornadoUnwinding = 0;
@@ -264,7 +264,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x14);
             } else {
-                SetActionCtrlModeAnim(self, 0xe, 0x10, 0, 0x18);
+                SetActionCtrlModeAnim(self, ACTION_STATE_AIR_SPIN, 0x10, 0, 0x18);
                 self->tornadoTurn = fire;
                 self->tornadoFallQueued = fire;
                 self->tornadoUnwinding = fire;
@@ -276,27 +276,27 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         }
         self->frame = 0;
         break;
-    case 15:
+    case EVENT_WARP_BONUS_ROUND:
         FadeOutMusic(gAudioContext, 0);
         /* fallthrough */
-    case 16:
-    case 17:
+    case EVENT_WARP_GEM_PATH:
+    case EVENT_WARP_EXIT:
         PlaySfx(gAudioContext, SFX_WARP, 0x100);
         {
             u8 *f = &gPlayer->flags.all;
 
             *f &= 0x7f;
         }
-        SetActionCtrlModeAnim(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
+        SetActionCtrlModeAnim(self, ACTION_STATE_WARP_OUT, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
         LoadPaletteSlot(gPaletteCache, self->part->slot,
                         self->part->anim->records[self->part->tag].paletteId);
         ActSetNext27(self, 0);
         ActSetNext(self, 0);
         break;
-    case 2:
+    case EVENT_HIT_FIRE:
         KillPlayer(self, 0x2e);
         break;
-    case 3:
+    case EVENT_HIT_ELECTRIC:
         KillPlayer(self, 0x2c);
         break;
     case 7:
@@ -305,12 +305,12 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
     case 8:
         KillPlayer(self, 0x2f);
         break;
-    case 9:
+    case EVENT_HIT_CORTEX_SHOT:
         KillPlayer(self, 0x2d);
         break;
-    case 1:
-    case 4:
-    case 6:
+    case EVENT_HIT:
+    case EVENT_HIT_EXPLOSION:
+    case EVENT_HIT_BITE:
         {
             struct player *p;
             s32 z;
@@ -327,10 +327,10 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             gCamera->mode = 3;
         }
         break;
-    case 10:
+    case EVENT_HIT_CRUSH:
         KillPlayer(self, 0x2a);
         break;
-    case 11:
+    case EVENT_MASK_HIT:
         if ((gPlayer->hitAxes & 8) &&
             PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);

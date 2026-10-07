@@ -59,7 +59,7 @@ void KillPlayer(struct act *self, s32 id)
     }
     {
         struct vtable_slot *mgr = (struct vtable_slot *)self->vt;
-        _call_via_r2((u8 *)self + mgr[4].delta, (void *)0x1d, mgr[4].fn);
+        _call_via_r2((u8 *)self + mgr[4].delta, (void *)ACTION_STATE_DYING, mgr[4].fn);
     }
 
     {
@@ -204,7 +204,7 @@ flag_zero:
             goto end;
     do_call:
         StopSfx(gAudioContext, SFX_SKID);
-        SetActionCtrlModeAnim(self, 0, 0x12, 0, flag);
+        SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, flag);
     }
 end:
     return;
@@ -225,18 +225,30 @@ s32 UpdatePlayerFacing(struct act *self)
     MATCH_HOLD_REG(s32, result, r2) = 0;
     s32 type = self->state;
 
-    if ((u32)type > 0x26)
+    if ((u32)type > ACTION_STATE_HANG_MOVE)
         goto end;
 
-    // clang-format off
     switch (type) {
-    case 0: case 3: case 4: case 5: case 7: case 9: case 11: case 13:
-    case 14: case 15: case 20: case 26: case 32: case 33: case 37: case 38:
+    case ACTION_STATE_IDLE:
+    case ACTION_STATE_RUN:
+    case ACTION_STATE_TURBO_RUN:
+    case ACTION_STATE_JUMP:
+    case ACTION_STATE_AIRBORNE_JUMP:
+    case ACTION_STATE_AIRBORNE_FLIP_JUMP:
+    case ACTION_STATE_AIRBORNE_HIGH_JUMP:
+    case ACTION_STATE_SPIN:
+    case ACTION_STATE_AIR_SPIN:
+    case ACTION_STATE_TORNADO_SPIN:
+    case ACTION_STATE_CRAWL:
+    case ACTION_STATE_AIRBORNE_FALL:
+    case ACTION_STATE_HANG:
+    case ACTION_STATE_HANG_SPIN:
+    case ACTION_STATE_HANG_MOVE_START:
+    case ACTION_STATE_HANG_MOVE:
         goto do_it;
     default:
         goto end;
     }
-    // clang-format on
 
 do_it:
     {

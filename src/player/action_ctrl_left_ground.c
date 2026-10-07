@@ -30,14 +30,16 @@ u8 CheckActionCtrlLeftGround(struct act *self)
     if (mask == 0) {
         if (part[0x69] > 2) {
             struct act_vtable *mgr = self->vt;
-            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x1a, mgr->m20.fn);
+            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)ACTION_STATE_AIRBORNE_FALL,
+                         mgr->m20.fn);
             {
                 struct act_method *off = &self->vt->m50;
                 _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1b, off->fn);
             }
         } else {
             struct act_vtable *mgr = self->vt;
-            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x1c, mgr->m20.fn);
+            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)ACTION_STATE_LEFT_GROUND,
+                         mgr->m20.fn);
         }
 
         {

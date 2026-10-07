@@ -21,6 +21,7 @@
 #include "constants/bosses.h"
 #include "bg_scroll_layer.h"
 #include "vtable.h"
+#include "constants/entities.h"
 
 struct bg_streamer;
 struct camera;
@@ -607,7 +608,7 @@ typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 index);
 
 /* The entity spawners, indexed by entity type (src/data/dispatch_table_16c6a4.c);
  * the few with other parameters are cast. */
-extern const entity_spawn_fn gEntitySpawnFuncs[92];
+extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 
 /* src/iwram/iwram_data.c */
 extern struct level_layers *gLevelLayersSingleton;

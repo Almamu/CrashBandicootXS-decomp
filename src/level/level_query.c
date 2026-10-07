@@ -236,27 +236,27 @@ s32 IsInBonusRoom(struct level_progress *self)
  * LevelHasEntityType reads). */
 s32 LevelHasYellowGemEntity(s32 idx)
 {
-    return LevelHasEntityType(idx, 0xc);
+    return LevelHasEntityType(idx, ENTITY_YELLOW_GEM);
 }
 
 s32 LevelHasBlueGemEntity(s32 idx)
 {
-    return LevelHasEntityType(idx, 9);
+    return LevelHasEntityType(idx, ENTITY_BLUE_GEM);
 }
 
 s32 LevelHasGreenGemEntity(s32 idx)
 {
-    return LevelHasEntityType(idx, 0xb);
+    return LevelHasEntityType(idx, ENTITY_GREEN_GEM);
 }
 
 s32 LevelHasRedGemEntity(s32 idx)
 {
-    return LevelHasEntityType(idx, 0xa);
+    return LevelHasEntityType(idx, ENTITY_RED_GEM);
 }
 
 s32 LevelHasGemPathGemEntity(s32 idx)
 {
-    return LevelHasEntityType(idx, 8);
+    return LevelHasEntityType(idx, ENTITY_GEM_PATH_GEM);
 }
 
 /* Standalone instance of CountLevelCrates's (above) per-item

@@ -80,15 +80,16 @@ void ActionCtrlStateAirborne(struct act *self)
     u8 dir = GetDpadDirection(pad);
     s32 state = self->state;
 
-    if (state != 0xE) {
+    if (state != ACTION_STATE_AIR_SPIN) {
         u8 busy = self->spinCooldown;
 
-        if (busy == 0 && (INPUT_PRESSED(in) & 2) && (u32)(state - 0x18) > 1) {
+        if (busy == 0 && (INPUT_PRESSED(in) & 2) &&
+            (u32)(state - ACTION_STATE_AIRBORNE_BODY_SLAM) > 1) {
             s32 frames;
 
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             frames = 0x18;
-            ACT_VCALL1(self, m20, 0xE);
+            ACT_VCALL1(self, m20, ACTION_STATE_AIR_SPIN);
             ACT_VCALL2(self, m50, self->part, 0x10);
             self->frame = busy;
             self->frames = frames;
@@ -112,7 +113,7 @@ void ActionCtrlStateAirborne(struct act *self)
             return;
         }
         HandleActionCtrlAirInput(self);
-        if (self->state == 0x1A) {
+        if (self->state == ACTION_STATE_AIRBORNE_FALL) {
             u8 *slot = &self->motionY;
 
             if (*slot == 0)
@@ -124,15 +125,15 @@ void ActionCtrlStateAirborne(struct act *self)
         u8 bit4 = contact & 4;
 
         if (bit4) {
-            if (self->state != 0x1A) {
+            if (self->state != ACTION_STATE_AIRBORNE_FALL) {
                 ActOrFlags0D(self->part, 1);
                 self->slamBlocked = 0;
-                if (self->state != 0xE) {
+                if (self->state != ACTION_STATE_AIR_SPIN) {
                     struct player *part;
                     s32 frame;
                     s32 count;
 
-                    ACT_VCALL1(self, m20, 0x1A);
+                    ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FALL);
                     ACT_VCALL2(self, m50, self->part, 0x15);
                     part = self->part;
                     frame = 2;
@@ -160,7 +161,7 @@ void ActionCtrlStateAirborne(struct act *self)
             ACT_PART_FLAGS0D(self->part) |= 1;
             self->slamBlocked = bit4;
             st = self->state;
-            if ((u32)(st - 0x18) <= 1) {
+            if ((u32)(st - ACTION_STATE_AIRBORNE_BODY_SLAM) <= 1) {
                 struct gfx_part *obj;
                 s32 x;
                 s32 y;
@@ -200,11 +201,11 @@ void ActionCtrlStateAirborne(struct act *self)
                     frame = count - 1;
                 obj->frame = frame;
 
-                if (self->state == 0x19)
+                if (self->state == ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM)
                     DoSuperBodySlamShockwave(self);
-                if (self->state != 0x1D) {
+                if (self->state != ACTION_STATE_DYING) {
                     PlaySfx(gAudioContext, SFX_BODY_SLAM_LAND, 0x100);
-                    ACT_VCALL1(self, m20, 0x16);
+                    ACT_VCALL1(self, m20, ACTION_STATE_BODY_SLAM_LAND);
                     ACT_VCALL2(self, m50, self->part, 0x11);
                     self->motionYKeepSpeed = bit4;
                     self->motionYPending = 1;
@@ -224,16 +225,16 @@ void ActionCtrlStateAirborne(struct act *self)
                 }
                 ActSetNext(self, 0);
                 if (self->tornadoTurn)
-                    ACT_VCALL1(self, m20, 0xF);
+                    ACT_VCALL1(self, m20, ACTION_STATE_TORNADO_SPIN);
                 else
-                    ACT_VCALL1(self, m20, 0xD);
+                    ACT_VCALL1(self, m20, ACTION_STATE_SPIN);
                 return;
             }
             if (gPlayer->slippery) {
-                ACT_VCALL1(self, m20, 0x17);
+                ACT_VCALL1(self, m20, ACTION_STATE_LAND);
                 ACT_VCALL2(self, m50, self->part, 0x16);
             } else {
-                ACT_VCALL1(self, m20, 0x17);
+                ACT_VCALL1(self, m20, ACTION_STATE_LAND);
                 ACT_VCALL2(self, m50, self->part, 0x16);
             }
             ActQueue27(self, 0, 0);
@@ -266,10 +267,10 @@ void ActionCtrlStateFlipBodySlamStart(struct act *self)
             ACT_VCALL2(self, m50, part, 8);
     } else if (part->animDone) {
         if ((u8)HasSuperBodySlam(gLevelState)) {
-            ACT_VCALL1(self, m20, 0x19);
+            ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);
             ACT_VCALL2(self, m50, self->part, 7);
         } else {
-            ACT_VCALL1(self, m20, 0x18);
+            ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_BODY_SLAM);
         }
     }
 }
@@ -333,7 +334,7 @@ void ActionCtrlStateSlide(struct act *self)
             return;
         contact = part->hitAxes;
         if (contact == 0) {
-            ACT_VCALL1(self, m20, 0x1A);
+            ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FALL);
             ACT_VCALL2(self, m50, self->part, 0x1B);
             ActSetNext(self, 4);
             return;
@@ -345,7 +346,7 @@ void ActionCtrlStateSlide(struct act *self)
         if (held) {
             s32 zero = 0;
 
-            ACT_VCALL1(self, m20, 0x14);
+            ACT_VCALL1(self, m20, ACTION_STATE_CRAWL);
             ACT_VCALL2(self, m50, self->part, 0);
             self->frames = zero;
             ActQueue27(self, zero, 3);
@@ -360,7 +361,7 @@ void ActionCtrlStateSlide(struct act *self)
                 case 3 ... 4:
                     if ((INPUT_HELD(in) & 0x200) && (u8)HasTurboRun(gLevelState)) {
                         self->turboRun = 1;
-                        ACT_VCALL1(self, m20, 4);
+                        ACT_VCALL1(self, m20, ACTION_STATE_TURBO_RUN);
                         ACT_VCALL2(self, m50, self->part, 0x18);
                         ActTrio27(self, held, 1, 0x1B);
                         return;
@@ -368,7 +369,7 @@ void ActionCtrlStateSlide(struct act *self)
                     StartActionCtrlRun(self);
                     return;
                 }
-                ACT_VCALL1(self, m20, 0x12);
+                ACT_VCALL1(self, m20, ACTION_STATE_STAND_UP);
                 ACT_VCALL2(self, m50, self->part, 2);
                 ActQueue27(self, 0, 0);
                 return;
@@ -376,12 +377,12 @@ void ActionCtrlStateSlide(struct act *self)
                 u8 hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2);
 
                 if (hit == 1) {
-                    ACT_VCALL1(self, m20, 0x12);
+                    ACT_VCALL1(self, m20, ACTION_STATE_STAND_UP);
                     ACT_VCALL2(self, m50, self->part, 2);
                     ActTrio27(self, 0, hit, 0);
                     return;
                 }
-                ACT_VCALL1(self, m20, 0x11);
+                ACT_VCALL1(self, m20, ACTION_STATE_CROUCH);
                 ACT_VCALL2(self, m50, self->part, 4);
                 ActQueue27(self, 0, 0);
             }
@@ -443,7 +444,7 @@ void ActionCtrlStateSpin(struct act *self)
     if ((INPUT_PRESSED(in) & 1) && (self->part->hitAxes & 8)) {
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
-        ACT_VCALL1(self, m20, 0xE);
+        ACT_VCALL1(self, m20, ACTION_STATE_AIR_SPIN);
         ActSetNextB(self, 7);
         self->tornadoTurn = 0;
         self->tornadoFallQueued = 0;
@@ -457,7 +458,7 @@ void ActionCtrlStateSpin(struct act *self)
     SteerActionCtrlSpin(self, dir);
     if (++self->frame >= self->frames || self->part->animDone) {
         if (self->charge)
-            StartActionCtrlTornadoSpin(self, 0xF, 0xD);
+            StartActionCtrlTornadoSpin(self, ACTION_STATE_TORNADO_SPIN, ACTION_STATE_SPIN);
         else
             EndActionCtrlSpin(self, dir, in);
     }
@@ -474,7 +475,7 @@ void ActionCtrlStateAirSpin(struct act *self)
     if ((part->hitAxes & 8) && part->speedY > 0) {
         ActOrFlags0D(part, 1);
         self->slamBlocked = 0;
-        ACT_VCALL1(self, m20, 0xD);
+        ACT_VCALL1(self, m20, ACTION_STATE_SPIN);
         self->motionYKeepSpeed = 0;
         self->motionYPending = 1;
         self->motionY = 0;
@@ -499,10 +500,10 @@ void ActionCtrlStateAirSpin(struct act *self)
         ActOrFlags0D(part, 1);
         charge = self->charge;
         if (charge) {
-            StartActionCtrlTornadoSpin(self, 0xE, 0xE);
+            StartActionCtrlTornadoSpin(self, ACTION_STATE_AIR_SPIN, ACTION_STATE_AIR_SPIN);
         } else {
             self->spinCooldown = 0xC;
-            ACT_VCALL1(self, m20, 0x1A);
+            ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FALL);
             ACT_VCALL2(self, m50, self->part, 0x15);
             self->frame = charge;
             self->frames = charge;
@@ -533,7 +534,7 @@ void ActionCtrlStateTornadoSpin(struct act *self)
     if ((INPUT_PRESSED(in) & 1) && (self->part->hitAxes & 8)) {
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
-        ACT_VCALL1(self, m20, 0xE);
+        ACT_VCALL1(self, m20, ACTION_STATE_AIR_SPIN);
         ActSetNextB(self, 7);
         self->tornadoFallQueued = 0;
         self->part->hitAxes = 0;
@@ -545,7 +546,7 @@ void ActionCtrlStateTornadoSpin(struct act *self)
     }
     SteerActionCtrlSpin(self, dir);
     if (++self->frame >= self->frames || self->part->animDone)
-        StartActionCtrlTornadoSpin(self, 0xF, 0xD);
+        StartActionCtrlTornadoSpin(self, ACTION_STATE_TORNADO_SPIN, ACTION_STATE_SPIN);
 }
 
 void ActionCtrlStateCrouchDown(struct act *self)
@@ -569,7 +570,7 @@ void ActionCtrlStateCrouchDown(struct act *self)
         self->motionY = fire;
     }
     if (self->part->animDone) {
-        ACT_VCALL1(self, m20, 0x11);
+        ACT_VCALL1(self, m20, ACTION_STATE_CROUCH);
         ACT_VCALL2(self, m50, self->part, 4);
     }
 }
@@ -647,7 +648,7 @@ turn_done:
         case 4:
         case 7:
         case 8:
-            ACT_VCALL1(self, m20, 0x13);
+            ACT_VCALL1(self, m20, ACTION_STATE_CRAWL_START);
             ACT_VCALL2(self, m50, self->part, 0x14);
             ActQueue27(self, moved, 3);
             moved = 1;
@@ -662,13 +663,13 @@ turn_done:
             u8 hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2);
 
             if (hit == 1) {
-                ACT_VCALL1(self, m20, 0x12);
+                ACT_VCALL1(self, m20, ACTION_STATE_STAND_UP);
                 ACT_VCALL2(self, m50, self->part, 2);
                 self->motionXKeepSpeed = held;
                 self->motionXPending = hit;
                 self->motionX = held;
             } else if (!moved) {
-                ACT_VCALL1(self, m20, 0x11);
+                ACT_VCALL1(self, m20, ACTION_STATE_CROUCH);
                 ACT_VCALL2(self, m50, self->part, 4);
                 self->motionXKeepSpeed = moved;
                 self->motionXPending = 1;
@@ -710,7 +711,7 @@ void ActionCtrlStateStandUp(struct act *self)
     struct player *part = self->part;
 
     if (part->animDone != 0) {
-        SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
+        SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, 0);
         self->motionXKeepSpeed = 0;
         self->motionXPending = 1;
         self->motionX = 0;
@@ -755,7 +756,7 @@ void ActionCtrlStateCrawlStart(struct act *self)
 
     if (self->part->animDone != 0) {
         struct act_vtable *mgr = self->vt;
-        _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x14, mgr->m20.fn);
+        _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)ACTION_STATE_CRAWL, mgr->m20.fn);
         {
             struct act_method *off = &self->vt->m50;
             _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0, off->fn);
@@ -803,20 +804,20 @@ void ActionCtrlStateCrawl(struct act *selfArg)
     switch (dir) {
     case 0:
     case 2:
-        ACT_CALL1(self, m20, 0x1B);
+        ACT_CALL1(self, m20, ACTION_STATE_CRAWL_STOP);
         ACT_CALL2(self, m50, self->part, 1);
         ActQueue27(self, 0, 0);
         break;
     case 1:
         if (PlayerHasRoomForAnim((struct box_part *)self->part, 2) == 1) {
-            ACT_VCALL1(self, m20, 0x15);
+            ACT_VCALL1(self, m20, ACTION_STATE_CRAWL_STAND_UP);
             ACT_VCALL2(self, m50, self->part, 2);
             self->motionXKeepSpeed = busy;
             self->motionXPending = dir;
             self->motionX = busy;
             break;
         }
-        ACT_VCALL1(self, m20, 0x11);
+        ACT_VCALL1(self, m20, ACTION_STATE_CROUCH);
         ACT_VCALL2(self, m50, self->part, 4);
         self->motionXKeepSpeed = busy;
         self->motionXPending = dir;
@@ -825,7 +826,7 @@ void ActionCtrlStateCrawl(struct act *selfArg)
     }
     held = INPUT_HELD(in) & 0x180;
     if (held == 0 && (hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2)) == 1) {
-        ACT_CALL1(self, m20, 0x12);
+        ACT_CALL1(self, m20, ACTION_STATE_STAND_UP);
         ACT_CALL2(self, m50, self->part, 2);
         self->motionXKeepSpeed = held;
         self->motionXPending = hit;

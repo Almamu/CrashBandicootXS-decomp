@@ -17,6 +17,7 @@
 #include "aabb.h"
 #include "byte_arg.h"
 #include "vtable.h"
+#include "constants/events.h"
 
 struct actor;
 struct box_part;
@@ -52,7 +53,7 @@ struct e08c_pos {
 struct collision_candidate {
     struct crate *neighbor; // 0x00 - the crate; its position is its first two words
     struct e08c_pos pos;    // 0x04
-    s32 kind;               // 0x0C
+    s32 kind;               // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
     s32 code;               // 0x10
     s32 edge;               // 0x14
     s32 depth;              // 0x18

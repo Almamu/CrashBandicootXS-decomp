@@ -65,7 +65,7 @@ void OpenAkuAkuCrate(struct crate *crate)
         void *addr = (u8 *)self + offset;
         MATCH_HOLD_REG(void *, fn, r4) = *(void *const volatile *)&rec->fn;
 
-        _call_via_r4(addr, 0, 0x1a, 0);
+        _call_via_r4(addr, 0, EVENT_MASK_GAIN, 0);
         (void)fn;
         PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
     }

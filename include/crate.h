@@ -2,15 +2,13 @@
 #define GUARD_CRATE_H
 
 #include "gobj_1a794.h"
+#include "constants/crates.h"
 
 /* The crate (CreateCrate, gCrateVtable): the object the issue #12
  * "physics/collision" cluster (ROM 0x0800D040-0x0800FC70,
  * src/crates/crate_hit.c/crate_break.c) turned out to be. `kind`
- * is the crate type CreateCrate picks (0 plain, 1 checkpoint, 2 Aku Aku,
- * 3 iron "!", 4 arrow, 5 outline, 6 nitro switch, 7 iron, 8 iron arrow,
- * 9 life, 10 nitro, 11 "?", 12 bouncy wumpa, 13 reinforced (body slam only),
- * 14 TNT, 15 slot, 16-18 time crates,
- * 19-21 lit TNT). Only the fields those functions touch are named;
+ * is the crate type CreateCrate picks (CRATE_KIND_*, constants/crates.h,
+ * generated from data/levels/crate_kinds.json). Only the fields those functions touch are named;
  * the head (position, flags, anim table/tag, mirror bits) has the same
  * layout as `struct gobj`. See docs/matching/archive/issue-12-physics-collision.md. */
 struct crate_vtable {
@@ -86,11 +84,11 @@ struct crate {
     u8 animDone; // 0x38 - set once the animation ends; UpdateCrate then resets `frame`
                  //        and clears the busy bit
     u8 unk_39[7];
-    s32 fallTargetY;   // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it; UpdateCrateFall
-                       //        snaps `y` to it when the fall ends)
-    s32 fallDistance;  // 0x44 - Q8 distance still to fall, 0: resting
-    union {            // 0x48 - one word, read per kind (placement halfword +8 for outlines):
-        s32 solidKind; //   5 (outline): kind + 0x15 it turns into (SolidifyOutlineCrate); also
+    s32 fallTargetY;  // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it; UpdateCrateFall
+                      //        snaps `y` to it when the fall ends)
+    s32 fallDistance; // 0x44 - Q8 distance still to fall, 0: resting
+    union {           // 0x48 - one word, read per kind (placement halfword +8 for outlines):
+        s32 solidKind; //   5 (outline): the entity type (ENTITY_*) it turns into (SolidifyOutlineCrate); also
                        //   loaded from `trialKind` by ConvertCratesForTimeTrial
         // 3 (iron switch): its outline crates; NULL or PHYS_NO_GROUP: none
         struct crate_group *group;
@@ -123,8 +121,8 @@ struct crate {
     //        12 (bouncy wumpa): bounces so far (breaks after 5); 15 (slot): placement byte 6
     u8 paramB;
     u8 unk_52[2];
-    // 0x54 - kind + 0x15 the crate becomes in a time trial (placement halfword +4,
-    //        0x1B read as 0x15); -1: none (ResetCrate). See ConvertCratesForTimeTrial
+    // 0x54 - the entity type (ENTITY_*) the crate becomes in a time trial (placement
+    //        halfword +4, ENTITY_NITRO_SWITCH_CRATE read as ENTITY_BASIC_CRATE); -1: none (ResetCrate). See ConvertCratesForTimeTrial
     s32 trialKind;
     u8 touched;        // 0x58
     u8 groupAllocated; // 0x59 - ActivateIronSwitchCrate allocated `u48.group` (freed when it fires)

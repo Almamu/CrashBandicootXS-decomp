@@ -38,9 +38,10 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCAN_DIRS = ("src", "include")
-CONSTANTS_DIR = os.path.join(ROOT, "include", "constants")
-# Generated constants headers (levels.h from data/levels/levels.json; run make).
-BUILT_CONSTANTS_DIR = os.path.join(ROOT, "build", "crashbandicootxs", "include", "constants")
+# The constants headers: hand-written ones, and the ones make generates
+# from the data (build/include, e.g. the entity types and crate kinds).
+CONSTANTS_DIRS = (os.path.join(ROOT, "include", "constants"),
+                  os.path.join(ROOT, "build", "include", "constants"))
 
 LIT = r"(?:0[xX][0-9a-fA-F]+|[0-9]+)[uUlL]*"
 LIT_RE = re.compile(r"^-?\s*" + LIT + r"$")
@@ -52,9 +53,9 @@ TOPICS = collections.OrderedDict(
         ("song", ("PlaySong song IDs", ("SONG_",))),
         ("level_flags", ("levelFlags bits (GetCurrentLevelFlags, level_state.c)", ("LEVEL_FLAG_",))),
         ("mask_level", ("maskLevel values (SetMaskLevel, comparisons)", ("MASK_LEVEL_",))),
-        ("event", ("NOTIFY / *HandleEvent event IDs", ("EVENT_",))),
+        ("event", ("event IDs (handler case labels, NOTIFY, event-slot calls)", ("EVENT_",))),
         ("action_state", ("action-controller states (SetActionCtrlMode, ->state)", ("ACTION_",))),
-        ("kind", ("entity / crate kinds (->kind comparisons, CreateCrate)", ("ENTITY_", "CRATE_KIND_"))),
+        ("kind", ("entity / crate kinds (->kind comparisons, CreateCrate)", ("ENTITY_", "CRATE_KIND_", "ENEMY_KIND_"))),
         ("category_exit", ("SetActorCategoryExitStatus values", ("CATEGORY_EXIT_",))),
         (
             "level",
@@ -76,15 +77,27 @@ CALLS = [
     ("event", r"\w*HandleEvent", 1),
     ("event", r"\w*HandleEvent", 2),
     ("event", r"PhysCall3", 3),
+    # Wrappers around the event slot (vtable +0x68).
+    ("event", r"CALL_M68H?", 2),
+    ("event", r"CALL_HIT", 2),
+    ("event", r"Call68", 2),
+    ("event", r"OBJ_CALL68", 2),
+    ("event", r"D18C_CALL68", 1),
+    ("event", r"E08C_CALL68", 0),
     ("action_state", r"SetActionCtrlMode", 1),
     ("action_state", r"SetCtrlMode", 1),
-    ("kind", r"CreateCrate", 1),
+    ("action_state", r"SetActionCtrlModeAnim", 1),
+    ("action_state", r"StartActionCtrlTornadoSpin", 1),
+    ("action_state", r"StartActionCtrlTornadoSpin", 2),
+    ("kind", r"CreateCrate", 4),
     ("category_exit", r"SetActorCategoryExitStatus", 0),
 ]
 
 # Field patterns: (topic, regex with a `v` group for the literal, path
 # prefix the rule is limited to or None). `->state` is a common field
-# name, so only the player's action controller's is counted.
+# name, so only the player's action controller's is counted (the swim
+# and input controllers in src/player/ have their own states). Its
+# set-mode method is vtable slot 0x20 (`m20`, `mgr[4]`).
 CMP = r"(?:==|!=|<=|>=|<|>|=(?!=))"
 FIELDS = [
     ("song", r"\b(?:currentSong|pendingSong)\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None),
@@ -92,6 +105,12 @@ FIELDS = [
     (
         "action_state",
         r"(?:->|\.)(?:state|prevState)\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b",
+        os.path.join("src", "player", "action_ctrl"),
+    ),
+    (
+        "action_state",
+        r"(?:\bACT_V?CALL1\s*\(\s*\w+\s*,\s*m20\s*,|\bm20\.thisOffset\s*,|\bmgr\[4\]\.delta\s*,)"
+        r"\s*(?:\(void \*\))?(?P<v>" + LIT + r")\b",
         os.path.join("src", "player", ""),
     ),
     # level topic: room kinds (src/level/'s only ->kind tests), the level
@@ -114,6 +133,39 @@ FIELDS = [
 # this many lines of it is the bit.
 LEVEL_FLAGS_WINDOW = 3
 LEVEL_FLAGS_ASSIGN = re.compile(r"\bmask\b[^;=]*=\s*(?P<v>" + LIT + r")\s*;")
+
+# Event IDs: the `case` labels of the event handlers, and the inline calls
+# through the event slot (`&obj->vtable->handleEvent`,
+# `PART_METHOD(obj, 0x68)`), whose event is the third argument (this,
+# sender, event, arg) of the first call within EVENT_SLOT_REACH
+# characters of the slot lookup.
+EVENT_HANDLER_RE = re.compile(r"\b(?:\w*HandleEvent|HitEnemy)\s*\([^;{}]*\)\s*\{")
+EVENT_CASE_RE = re.compile(r"\bcase\s+(?P<v>" + LIT + r")(?:\s*\.\.\.\s*(?P<w>" + LIT + r"))?\s*:")
+EVENT_SLOT_RE = re.compile(r"->handleEvent\b|\bPART_METHOD\s*\(\s*\w+\s*,\s*0x68\s*\)")
+EVENT_SLOT_CALL_RE = re.compile(r"\b_call_via_r4\s*\(|->fn\s*\)\s*\(")
+EVENT_SLOT_REACH = 400
+
+
+def scan_events(text, add):
+    for m in EVENT_HANDLER_RE.finditer(text):
+        depth, end = 0, len(text)
+        for i in range(m.end() - 1, len(text)):
+            depth += {"{": 1, "}": -1}.get(text[i], 0)
+            if depth == 0:
+                end = i
+                break
+        for c in EVENT_CASE_RE.finditer(text, m.end(), end):
+            for g in ("v", "w"):
+                if c.group(g):
+                    add("event", c.start(g), c.group(g))
+    for m in EVENT_SLOT_RE.finditer(text):
+        if "PhysCall3" in text[text.rfind("\n", 0, m.start()) + 1 : m.start()]:
+            continue  # counted by CALLS
+        c = EVENT_SLOT_CALL_RE.search(text, m.end(), m.end() + EVENT_SLOT_REACH)
+        args = c and split_args(text, c.end() - 1)
+        if args and len(args) == 4 and LIT_RE.match(args[2][1].strip()):
+            add("event", args[2][0], args[2][1])
+
 
 FLAG_TEST = re.compile(r"(?<![&])&\s*(?P<v>0[xX][0-9a-fA-F]+)[uUlL]*\b")
 CALL_RE_CACHE = {}
@@ -234,6 +286,8 @@ def scan_file(path, rel):
         for m in re.finditer(pattern, text):
             add(topic, m.start("v"), m.group("v"))
 
+    scan_events(text, add)
+
     flag_lines = [line_of(text, m.start()) for m in re.finditer(r"\bGet(?:Current)?LevelFlags\s*\(", text)]
     if flag_lines:
         lines = text.split("\n")
@@ -255,19 +309,14 @@ def scan_file(path, rel):
 
 
 def load_constants():
-    """value -> [names] per prefix, from include/constants/*.h and the
-    generated headers."""
+    """value -> [names] per prefix, from the constants headers (CONSTANTS_DIRS)."""
     by_prefix = collections.defaultdict(lambda: collections.defaultdict(list))
     define = re.compile(r"^\s*#\s*define\s+([A-Z][A-Z0-9_]*)\s+\(?\s*(" + LIT + r")\s*\)?\s*(?:/[/*].*)?$")
     shift = re.compile(r"^\s*#\s*define\s+([A-Z][A-Z0-9_]*)\s+\(\s*1\s*<<\s*(\d+)\s*\)")
-    paths = [
-        os.path.join(d, name)
-        for d in (CONSTANTS_DIR, BUILT_CONSTANTS_DIR)
-        if os.path.isdir(d)
-        for name in sorted(os.listdir(d))
-        if name.endswith(".h")
-    ]
+    paths = [os.path.join(d, n) for d in CONSTANTS_DIRS if os.path.isdir(d) for n in sorted(os.listdir(d))]
     for path in paths:
+        if not path.endswith(".h"):
+            continue
         for line in open(path):
             m = define.match(line)
             value = None

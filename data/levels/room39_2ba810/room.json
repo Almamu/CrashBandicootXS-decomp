@@ -32,12 +32,12 @@
   ],
   "links": null,
   "entities": [
-    {"type": 88, "x": 283, "y": 193, "param": 2},
-    {"type": 71, "x": 277, "y": 153, "param": 1},
-    {"type": 88, "x": 199, "y": 129, "param": 2},
-    {"type": 88, "x": 195, "y": 249, "param": 2},
-    {"type": 0, "x": 123, "y": 191, "param": 1},
-    {"type": 88, "x": 111, "y": 205, "param": 2},
-    {"type": 88, "x": 31, "y": 165, "param": 2}
+    {"type": "ROCK_PLATFORM", "x": 283, "y": 193, "param": 2},
+    {"type": "TINY", "x": 277, "y": 153, "param": 1},
+    {"type": "ROCK_PLATFORM", "x": 199, "y": 129, "param": 2},
+    {"type": "ROCK_PLATFORM", "x": 195, "y": 249, "param": 2},
+    {"type": "START_MARKER", "x": 123, "y": 191, "param": 1},
+    {"type": "ROCK_PLATFORM", "x": 111, "y": 205, "param": 2},
+    {"type": "ROCK_PLATFORM", "x": 31, "y": 165, "param": 2}
   ]
 }

@@ -20,7 +20,7 @@ void ActionCtrlStateCrawlStandUp(struct act *self)
     struct player *part = self->part;
 
     if (part->animDone != 0) {
-        SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
+        SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, 0);
         self->motionXKeepSpeed = 0;
         self->motionXPending = 1;
         self->motionX = 0;
@@ -54,7 +54,7 @@ void ActionCtrlStateBodySlamLand(struct act *self)
         }
 
         if (v == 0) {
-            SetActionCtrlModeAnim(self, 0, 0x12, 0, v);
+            SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, v);
             self->motionXKeepSpeed = v;
             self->motionXPending = 1;
             self->motionX = v;
@@ -64,7 +64,8 @@ void ActionCtrlStateBodySlamLand(struct act *self)
         } else {
             struct act_vtable *mgr = self->vt;
             struct act_method *off;
-            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x10, mgr->m20.fn);
+            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)ACTION_STATE_CROUCH_DOWN,
+                         mgr->m20.fn);
             off = &self->vt->m50;
             _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)3, off->fn);
             {
@@ -102,13 +103,13 @@ void ActionCtrlStateLand(struct act *self)
 
     self->frame = 0;
     if ((flag = gKeys.all & 0x100) != 0) {
-        ACT_CALL1(self, m20, 0x10);
+        ACT_CALL1(self, m20, ACTION_STATE_CROUCH_DOWN);
         ACT_CALL2(self, m50, self->part, 3);
         self->frames = 0;
         return;
     }
     if (self->part->animDone) {
-        SetActionCtrlModeAnim(self, 0, 0x12, 0, flag);
+        SetActionCtrlModeAnim(self, ACTION_STATE_IDLE, 0x12, 0, flag);
         self->motionXKeepSpeed = flag;
         self->motionXPending = 1;
         self->motionX = flag;
