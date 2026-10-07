@@ -14,6 +14,7 @@
 #include "actor.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
  * off `title_screen_init.c` at `TitleScreenCheatInput` in the issues #64/#65
@@ -617,7 +618,7 @@ void RunCompanyLogos(u32 *self)
                     SLOT_SYSTEM(self)->fade = 0xf4;
             }
         } else if (*fade <= 0x40) {
-            scale = (scale * 0x118) >> 8;
+            scale = Q8_MUL(scale, 0x118);
         }
         q = 0x1000000 / scale;
         {
@@ -848,15 +849,15 @@ void UpdateVvLogoPieces(u32 *self)
                         s32 hold = record->hold;
                         *countdownPtr = hold;
                         if (hold != 0) {
-                            *PosC20At(self, stride) = record->dPosC << 16;
+                            *PosC20At(self, stride) = INT_TO_Q16(record->dPosC);
                             *DeltaC20At(self, stride) = record->deltaC;
-                            *VelA20At(self, stride) = record->dVelA << 8;
+                            *VelA20At(self, stride) = INT_TO_Q8(record->dVelA);
                             *DeltaD20At(self, stride) = record->deltaD;
-                            *VelB20At(self, stride) = record->dVelB << 8;
+                            *VelB20At(self, stride) = INT_TO_Q8(record->dVelB);
                             *DeltaE20At(self, stride) = record->deltaE;
-                            *PosA20At(self, stride) = record->dPosA << 16;
+                            *PosA20At(self, stride) = INT_TO_Q16(record->dPosA);
                             *DeltaA20At(self, stride) = record->deltaA;
-                            *PosB20At(self, stride) = record->dPosB << 16;
+                            *PosB20At(self, stride) = INT_TO_Q16(record->dPosB);
                             *DeltaB20At(self, stride) = record->deltaB;
                         }
                     }

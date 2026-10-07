@@ -15,6 +15,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "globals.h"
+#include "math_util.h"
 
 extern void LoadTaggedAsset(const void *asset, void *dest);
 
@@ -45,8 +46,7 @@ static inline const struct sprite_bank *AnimTable(s32 offset)
 static inline void SetFrame(struct sprite *p, s32 frame)
 {
     s32 n = PART_RECORD(p).frameCount;
-    if (frame >= n)
-        frame = n - 1;
+    CLAMP_INDEX(frame, n);
     p->frame = frame;
 }
 

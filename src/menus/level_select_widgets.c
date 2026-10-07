@@ -6,6 +6,7 @@
 #include "menus.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #28: 0x0801DA38-0x0801DFEC, the whole of the former
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
@@ -32,8 +33,8 @@
 
 static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
 {
-    p->x = x << 8;
-    p->y = y << 8;
+    p->x = INT_TO_Q8(x);
+    p->y = INT_TO_Q8(y);
 }
 
 /* Destructor (`level_menu.bg2`, called from DestroyLevelSelect). */
@@ -77,8 +78,8 @@ void UpdateZoomBg(struct zoom_bg *self)
         self->phase = (self->phase + 1) & 0xFF;
         /* `* 4 >> 8`, not `>> 6`: gcc's combiner turns the latter into
          * ldrh+lsl+asr instead of the ROM's ldrsh+asr. */
-        self->dx = (gSineTable[self->phase & 0xFF] * 4) >> 8;
-        self->dy = (gSineTable[(self->phase << 1) & 0xFF] * 4) >> 8;
+        self->dx = Q8_MUL(SIN_Q8(self->phase), 4);
+        self->dy = Q8_MUL(SIN_Q8(self->phase << 1), 4);
         break;
     case 2:
         if (self->image == 11)
@@ -543,7 +544,7 @@ void ParkLevelSelectCursor(struct cursor_panel *self)
 {
     struct xy_pair pos;
 
-    if (self->part->x >> 8 <= 0x78)
+    if (Q8_TO_INT(self->part->x) <= 0x78)
         pos.x = 0x14;
     else
         pos.x = 0xDC;
@@ -587,8 +588,7 @@ void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y)
             d = (self->line.x1 - self->line.x0) / 2;
         else
             d = (self->line.y1 - self->line.y0) / 2;
-        if (d < 0)
-            d = -d;
+        MAKE_ABS(d);
         self->speed = 0xF8 / d;
     }
     if (self->state == 0)

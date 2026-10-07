@@ -15,6 +15,7 @@
 #include "actor.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
  * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
@@ -105,7 +106,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             oamA.palette = 0xd;
             oamA.size = 2;
             oamA.shape = 1;
-            oamA.y = hdr->posB.q >> 16;
+            oamA.y = Q16_TO_INT(hdr->posB.q);
             oamA.x = hdr->posA.h.i;
             oamA.tileNum = tiles >> 5;
             for (j = 0; j < 4; j++) {
@@ -148,7 +149,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
                 oamB.palette = 0xe;
                 oamB.size = 2;
                 oamB.shape = 2;
-                oamB.y = (slot->posB.q >> 16) - 0x10;
+                oamB.y = Q16_TO_INT(slot->posB.q) - 0x10;
                 oamB.x = slot->posA.h.i - 8;
                 oamB.tileNum = tile;
                 AddOamEntry(gOamBuffer, &oamB);
@@ -233,10 +234,10 @@ void DrawVvLogoPieces(struct logo_screen *self)
         oamC.size = 3;
         oamC.shape = 0;
         if (affine) {
-            oamC.y = (slot->posB.q >> 16) - 0x40;
-            oamC.x = slot->posA.h.i - ((slot->velA << 5) >> 16) - 0x40;
+            oamC.y = Q16_TO_INT(slot->posB.q) - 0x40;
+            oamC.x = slot->posA.h.i - Q16_TO_INT(slot->velA << 5) - 0x40;
         } else {
-            oamC.y = (slot->posB.q >> 16) - 0x20;
+            oamC.y = Q16_TO_INT(slot->posB.q) - 0x20;
             oamC.x = slot->posA.h.i - 0x40;
         }
         oamC.tileNum = tile;
@@ -245,7 +246,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             /* Read first, as the ROM loads posA before velA. */
             s32 x = slot->posA.h.i;
 
-            oamC.x = ((slot->velA << 5) >> 16) + x - 0x40;
+            oamC.x = Q16_TO_INT(slot->velA << 5) + x - 0x40;
         } else
             oamC.x = slot->posA.h.i;
         oamC.tileNum = tile + 0x40;
@@ -331,7 +332,7 @@ void LoadUniversalLogoBg(u32 *self)
  * `self`. */
 static inline u8 *CurFrame(struct actor_self *self)
 {
-    s32 base = self->animTime >> 8;
+    s32 base = Q8_TO_INT(self->animTime);
     s32 idx = self->animIndex;
     struct anim_frame_record *table = self->anims;
     s32 val = table[idx].frameIndex;
@@ -381,13 +382,13 @@ void UpdateLogoActor(struct actor_self *self)
         }
         break;
     case 1:
-        if ((self->animTime >> 8) == 0x12) {
+        if (Q8_TO_INT(self->animTime) == 0x12) {
             ACTOR_SET_STATE(self, 2, 7);
             PlaySfx(gAudioContext, SFX_UNKNOWN_4F, 0x100);
         }
         break;
     case 2:
-        if ((self->animTime >> 8) == 7) {
+        if (Q8_TO_INT(self->animTime) == 7) {
             self->animTimer = 0;
             self->state = 3;
             self->stateTime = 0;
@@ -405,8 +406,8 @@ void UpdateLogoActor(struct actor_self *self)
     self->animDone = 0;
     if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
         // clang-format off
-        self->animTime -= (self->anims[self->animIndex].loopThreshold -
-                           self->anims[self->animIndex].loopBase) << 8;
+        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
+                                    self->anims[self->animIndex].loopBase);
         // clang-format on
         self->animDone = 1;
     }
@@ -434,7 +435,7 @@ void DrawLogoActor(struct actor_self *self)
     if (self->state == 4)
         return;
     {
-        s32 base = self->animTime >> 8;
+        s32 base = Q8_TO_INT(self->animTime);
         s32 idx = self->animIndex;
         struct anim_frame_record *table = self->anims;
         s32 val;
@@ -460,8 +461,8 @@ void DrawLogoActor(struct actor_self *self)
         depth = self->z;
         scale = (depth << 8) / self->record->baseDepth;
         f = 0x100000 / depth;
-        sy = (((self->y * f) >> 12) + 0x5000) >> 8;
-        sx = (((self->x * f) >> 12) + 0x7800) >> 8;
+        sy = Q8_TO_INT(((self->y * f) >> 12) + 0x5000);
+        sx = Q8_TO_INT(((self->x * f) >> 12) + 0x7800);
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;
