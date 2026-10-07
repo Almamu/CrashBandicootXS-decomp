@@ -153,6 +153,24 @@ $(SOUND_BUILDDIR)/gax_sfx_data.bin: $(SOUND_SFX_SOURCES) tools/gax_audio.py
 $(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
 	python3 tools/sfx_table.py $@
 
+# The song and sound-effect IDs (#655), generated like levels.mk's
+# constants headers: the manifest's song_table (gSongTable's order) and
+# the names in sfx_table.json. Only the manifest is read, so these don't
+# wait for the music block.
+GENERATED_HEADERS += $(GENERATED_INCLUDE_DIR)/constants/songs.h $(GENERATED_INCLUDE_DIR)/constants/sfx.h
+
+$(GENERATED_INCLUDE_DIR)/constants/songs.h: sound/gax_manifest.json tools/gax_audio.py
+	@mkdir -p $(dir $@)
+	python3 tools/gax_audio.py --constants $@
+
+$(GENERATED_INCLUDE_DIR)/constants/sfx.h: sound/sfx_table.json tools/sfx_table.py
+	@mkdir -p $(dir $@)
+	python3 tools/sfx_table.py --constants $@
+
+# Every C object waits for all the generated constants headers (order-only,
+# so a regenerated header rebuilds only the objects whose .d lists it).
+$(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS): | $(GENERATED_HEADERS)
+
 clean:
 	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS) $(LIB_C_ASMS) $(LIBGCC2_ASMS) $(DEPS) $(GENERATED_HEADERS)
 

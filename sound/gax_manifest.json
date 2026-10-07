@@ -13523,6 +13523,85 @@
   "drums",
   "bonus_round"
  ],
+ "song_table": [
+  {
+   "song": "jungle",
+   "comment": "level theme (gThemeMusicCues)"
+  },
+  {
+   "song": "underwater",
+   "comment": "level theme"
+  },
+  {
+   "song": "arctic",
+   "comment": "level theme"
+  },
+  {
+   "song": "sewers",
+   "comment": "level theme"
+  },
+  {
+   "song": "future",
+   "comment": "level theme"
+  },
+  {
+   "song": "rocket_crash",
+   "comment": "level theme"
+  },
+  {
+   "song": "bonus_round",
+   "comment": "bonus rooms (PlayRoomMusic)"
+  },
+  {
+   "song": "dingodile",
+   "comment": "boss theme"
+  },
+  {
+   "song": "n_gin",
+   "comment": "boss theme"
+  },
+  {
+   "song": "tiny",
+   "comment": "boss theme"
+  },
+  {
+   "song": "neo_cortex",
+   "comment": "boss theme"
+  },
+  {
+   "song": "main_menu_europe",
+   "comment": "the title screen (InitTitleScreen)"
+  },
+  {
+   "song": "main_menu_japan",
+   "comment": "the title screen's cheat code (TitleScreenCheatInput)"
+  },
+  {
+   "song": "cutscenes",
+   "comment": "cutscene slides"
+  },
+  {
+   "song": "cutscenes_spooky",
+   "comment": "cutscene slides"
+  },
+  {
+   "song": "intro",
+   "comment": "cutscene slides, the power dialog"
+  },
+  {
+   "song": "warp_room",
+   "comment": "level select, save menu"
+  },
+  {
+   "song": "credits",
+   "comment": "RunCredits"
+  },
+  {
+   "song": "drums",
+   "comment": "maskLevel MASK_LEVEL_INVINCIBLE (PlayRoomMusic)"
+  }
+ ],
+ "no_song_comment": "AudioContext.currentSong/pendingSong: no song (StopSong)",
  "default_song": {
   "num_channels": 1,
   "num_rows_per_pattern": 1,

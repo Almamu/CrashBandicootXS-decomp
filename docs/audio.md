@@ -319,10 +319,17 @@ below), and the ambient-sfx sibling `PlayAmbientSfx` never reads it at all
 mixing voice (`GAX_fx_ex`) and play a note.
 
 The IDs whose sound is clear from where the game plays them are named in
-`include/constants/sfx.h` (`SFX_CRATE_BREAK`, `SFX_MENU_SELECT`, ...), and
-the song IDs (the `gSongTable` index) in `include/constants/songs.h`
-(`SONG_JUNGLE`, ..., named after the songs' keys in `gax_manifest.json`).
-See [naming.md](./naming.md#constants).
+`sound/sfx_table.json`: such an entry has a `name` and a `comment`, and
+`tools/sfx_table.py --constants` writes them as the `SFX_<name>` defines
+of the generated `constants/sfx.h` (`SFX_CRATE_BREAK`, `SFX_MENU_SELECT`,
+...; `none_comment` documents `SFX_NONE`, ID 99). The song IDs (the
+`gSongTable` index) are the order of `gax_manifest.json`'s `song_table`
+list (a song key and a comment per ID; `no_song_comment` documents
+`SONG_NONE`), and `tools/gax_audio.py --constants` writes them as the
+`SONG_<KEY>` defines of the generated `constants/songs.h` (`SONG_JUNGLE`,
+..., `SONG_COUNT`). Both headers go into `build/include/constants/`. To
+rename an ID, or to name one, edit the JSON. See
+[naming.md](./naming.md#constants).
 
 That note does **not** come from the music's instrument pool: an earlier
 version of this section said there was no separate sound-effect sample
@@ -379,7 +386,8 @@ Everything is generated from editable sources, never read from
 
 - `sound/gax_manifest.json` — one-time-extracted instrument definitions and
   per-song scaffold data (channel transposes, pattern grouping/order, title
-  strings, etc).
+  strings, etc), and `song_table`, the song IDs (`gSongTable`'s order,
+  which isn't `song_order`, the block's).
 - `sound/songs/*.xm` — one FastTracker II module per song (patterns/notes),
   editable in any XM tracker.
 - `sound/samples/*.wav` — one sample per instrument sample slot.
@@ -393,7 +401,9 @@ Everything is generated from editable sources, never read from
   binary layout: `tools/gax_audio.py OUT LAYOUT SONGS.h` the music block,
   the default song's layout struct (`gGaxDefaultSong`) and a header
   of each song's offset in the block (`GAX_SONG_<NAME>`),
-  `tools/gax_audio.py --sfx OUT` the sound-effect set. The music block's
+  `tools/gax_audio.py --sfx OUT` the sound-effect set, and
+  `tools/gax_audio.py --constants SONGS.h` the song IDs
+  (`constants/songs.h`, from the manifest alone). The music block's
   leading `sfxTypes` array is generated from the sound-effect set's
   layout (it was the verbatim 36-byte `gax_header_prefix.bin` before).
   With unedited sources, **it reproduces the original ROM's audio blocks
@@ -410,10 +420,12 @@ Everything is generated from editable sources, never read from
   total size (the tool stops with an error otherwise): a sample can be
   changed but not lengthened, unless another shrinks to match.
 - `tools/sfx_table.py` — rebuilds the sound-effect trigger table from
-  `sound/sfx_table.json`.
+  `sound/sfx_table.json`; `--constants SFX.h` writes its names
+  (`constants/sfx.h`).
 
-Both tools write into `build/crashbandicootxs/sound/` — `sound/` itself only
-ever holds editable sources, never build products.
+Both tools write into `build/crashbandicootxs/sound/`, and the constants
+headers into `build/include/constants/` — `sound/` itself only ever holds
+editable sources, never build products.
 
 ## Tooling used during reverse-engineering (not part of the build)
 

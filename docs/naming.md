@@ -132,8 +132,8 @@ the names with the header it already includes. A data table in
 
 | Header | Prefix | What |
 |---|---|---|
-| `sfx.h` | `SFX_` | sound-effect IDs (`PlaySfx`, `PlayAmbientSfx`, `StopSfx`) |
-| `songs.h` | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`) |
+| `sfx.h` (generated) | `SFX_` | sound-effect IDs (`PlaySfx`, `PlayAmbientSfx`, `StopSfx`), from `sound/sfx_table.json` |
+| `songs.h` (generated) | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`), from `sound/gax_manifest.json` |
 | `level_flags.h` | `LEVEL_FLAG_` | the bits of a `levelFlags[]` word |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
@@ -157,7 +157,10 @@ objects that include one when it changes. The entity types come from
 `data/levels/entity_types.json`, the crate kinds from
 `data/levels/crate_kinds.json` and the level ids from
 `data/levels/levels.json`'s `"levels"` list (`tools/levels.py constants`,
-see docs/levels.md). To rename one, edit the JSON.
+see docs/levels.md). The sound-effect IDs come from the names in
+`sound/sfx_table.json` (`tools/sfx_table.py --constants`) and the song IDs
+from `sound/gax_manifest.json`'s `song_table` (`tools/gax_audio.py
+--constants`, see docs/audio.md). To rename one, edit the JSON.
 
 
 `tools/magic_numbers.py` lists the literals that are left, by topic

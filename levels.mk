@@ -36,8 +36,8 @@ $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquo
 # (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
 # the level ids (levels.json's "levels" list).
 # They are generated into build/include, which is on every object's
-# include path; the C objects wait for them (order-only, so a regenerated
-# header rebuilds only the objects whose .d lists it).
+# include path. The Makefile adds the sound constants (songs.h, sfx.h) to
+# GENERATED_HEADERS, and makes every C object wait for the whole list.
 GENERATED_INCLUDE_DIR := build/include
 GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
 	$(GENERATED_INCLUDE_DIR)/constants/levels.h
@@ -54,5 +54,3 @@ $(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/
 $(GENERATED_INCLUDE_DIR)/constants/levels.h: data/levels/levels.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants levels $@
-
-$(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS): | $(GENERATED_HEADERS)
