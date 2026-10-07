@@ -71,7 +71,7 @@ const struct actor_pmf gActionCtrlStateTable[ACTION_STATE_COUNT] = {
 
 /* The 13-level animation rows (4-byte `struct level_anim` records,
  * gPlayerCtrlModeLevelAnims in speed_table_16c090.c), one pointer per mode:
- * swim_ctrl.c reads `gPlayerCtrlModeAnimRows[mode][level]`. */
+ * swim_ctrl.cpp reads `gPlayerCtrlModeAnimRows[mode][level]`. */
 const struct level_anim *const gPlayerCtrlModeAnimRows[8] = {
     gPlayerCtrlModeLevelAnims[0], gPlayerCtrlModeLevelAnims[1], gPlayerCtrlModeLevelAnims[2],
     gPlayerCtrlModeLevelAnims[3], gPlayerCtrlModeLevelAnims[4], gPlayerCtrlModeLevelAnims[5],

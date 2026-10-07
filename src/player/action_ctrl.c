@@ -148,7 +148,7 @@ tail:
  * issue-19-0x08015840-actor.md). Directly adjacent to the matched span
  * above (which ends with the shared `SetActionCtrlModeAnim` trampoline
  * helper this file's first function calls) and its parked `ActionCtrlSetTargetAnim`
- * right before this chunk starts. Non-adjacent to swim_ctrl_drift.c (this
+ * right before this chunk starts. Non-adjacent to swim_ctrl_drift.cpp (this
  * chunk's other matched file) since the left-raw
  * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` sit between them (see
  * asm/code_3_2_17_159f8.s). */

@@ -12,7 +12,7 @@
  * A touched object sends its own `kind`: CollidePartWithPlayer,
  * CheckSpritePickup and the bosses call the player's slot with the hazard's
  * or pickup's kind, and the player's kind (1, or one of the attacks while
- * it attacks: UpdateActionCtrl, swim_ctrl.c) goes to the enemy it hits. So
+ * it attacks: UpdateActionCtrl, swim_ctrl.cpp) goes to the enemy it hits. So
  * these values are also the kinds of those objects.
  *
  * Hits 1-10: PlayerHandleEvent takes a mask away (then sends
