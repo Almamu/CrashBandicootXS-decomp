@@ -6,6 +6,7 @@
 #include "objects.h"
 #include "globals.h"
 #include "player.h"
+#include "math_util.h"
 
 /* UpdateMegaMix: the update of Mega-Mix, the boss that entity type 0x49
  * spawns (SpawnMegaMix, sprite bank 30). Only room 37 places one, at its
@@ -290,8 +291,8 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
                         struct ab_part *t = e;
 
                         MATCH_KEEP(t);
-                        if (Abs((e->x >> 8) - (other->x >> 8)) <= 0x27 &&
-                            Abs((e->y >> 8) - (other->y >> 8)) <= 0x3B &&
+                        if (Abs(Q8_TO_INT(e->x) - Q8_TO_INT(other->x)) <= 0x27 &&
+                            Abs(Q8_TO_INT(e->y) - Q8_TO_INT(other->y)) <= 0x3B &&
                             (e->physMode & 0x7F) == 0) {
                             MATCH_HOLD_REG(s32, kind, r1) = e->kind;
 

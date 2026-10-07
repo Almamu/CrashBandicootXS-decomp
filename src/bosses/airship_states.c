@@ -6,6 +6,7 @@
 #include "vehicle.h"
 #include "bosses.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c/airship_damage.c - see airship_fireball.c's header comment
@@ -194,8 +195,8 @@ void AirshipStateCannon(void)
         if (speed > 0) {
             s32 dx, dy;
             speed = 0x1000 / speed;
-            dx = ((pl->x - (gAirshipX - 0xCDB)) * speed) >> 12;
-            dy = ((pl->y - (gAirshipY + 0x516D)) * speed) >> 12;
+            dx = Q12_TO_INT((pl->x - (gAirshipX - 0xCDB)) * speed);
+            dy = Q12_TO_INT((pl->y - (gAirshipY + 0x516D)) * speed);
             if (Abs(dx) + Abs(dy) <= 0x7FF) {
                 SpawnJetpackCannonball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10, dx,
                                        dy);

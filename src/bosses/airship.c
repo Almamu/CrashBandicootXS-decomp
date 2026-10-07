@@ -7,6 +7,7 @@
 #include "bosses.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
@@ -101,22 +102,18 @@ dy_done:
         s32 *p = &gAirshipVelX;
         s32 v = *p;
 
-        if (v > 0x180)
-            v = 0x180;
+        LIMIT_MAX(v, 0x180);
         *p = v;
-        if (v < -0x180)
-            v = -0x180;
+        LIMIT_MIN(v, -0x180);
         gAirshipVelX = v;
     }
     {
         s32 *p = &gAirshipVelY;
         s32 v = *p;
 
-        if (v > 0x100)
-            v = 0x100;
+        LIMIT_MAX(v, 0x100);
         *p = v;
-        if (v < -0x100)
-            v = -0x100;
+        LIMIT_MIN(v, -0x100);
         gAirshipVelY = v;
     }
 }
@@ -240,14 +237,14 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     gAirshipVolleyCount = 0;
     gAirshipBg2PageFlip = 1;
     gAirshipBg2Page = 0;
-    gAirshipDistance = gAirshipZ - (GetCellAnimDistance() << 8);
+    gAirshipDistance = gAirshipZ - INT_TO_Q8(GetCellAnimDistance());
     scale = __divsi3(0x1C00000, gAirshipDistance);
-    gAirshipScreenX = (gAirshipX * scale) >> 12;
-    gAirshipScreenY = (scale * gAirshipY) >> 12;
+    gAirshipScreenX = Q12_TO_INT(gAirshipX * scale);
+    gAirshipScreenY = Q12_TO_INT(scale * gAirshipY);
     SetActorBgLayerDepth(gAirshipDistance);
     self = gAirship;
     {
-        s32 t = self->animTime >> 8;
+        s32 t = Q8_TO_INT(self->animTime);
         DrawAirshipMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
     }
     REG_DISPCNT |= DISPCNT_BG2_ON;
@@ -285,7 +282,7 @@ extern s32 _call_via_r0(void *fn);
 
 void UpdateAirship(void)
 {
-    s32 prev = gAirship->animTime >> 8;
+    s32 prev = Q8_TO_INT(gAirship->animTime);
     struct actor_self *self;
 
     _call_via_r0(gAirshipStateFuncs[gAirshipState]);
@@ -299,19 +296,19 @@ void UpdateAirship(void)
         self->animDone = 0;
         if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
             // clang-format off
-            self->animTime -= (self->anims[self->animIndex].loopThreshold -
-                               self->anims[self->animIndex].loopBase) << 8;
+            self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
+                                         self->anims[self->animIndex].loopBase);
             // clang-format on
             self->animDone = 1;
         }
-        gAirshipDistance = gAirshipZ - (GetCellAnimDistance() << 8);
+        gAirshipDistance = gAirshipZ - INT_TO_Q8(GetCellAnimDistance());
         scale = __divsi3(0x1C00000, gAirshipDistance);
-        gAirshipScreenX = (gAirshipX * scale) >> 12;
-        gAirshipScreenY = (scale * gAirshipY) >> 12;
+        gAirshipScreenX = Q12_TO_INT(gAirshipX * scale);
+        gAirshipScreenY = Q12_TO_INT(scale * gAirshipY);
         SetActorBgLayerDepth(gAirshipDistance);
         {
             struct actor_self *cur = gAirship;
-            s32 t = cur->animTime >> 8;
+            s32 t = Q8_TO_INT(cur->animTime);
             if (prev != t) {
                 DrawAirshipMap((u16 *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
                 gAirshipBg2PageFlip = 1;
@@ -348,8 +345,8 @@ void UpdateAirshipBg2(void)
         s32 dy = gAirshipScreenX + GetActorBgCenterX();
         s32 dx = gAirshipScreenY + GetActorBgCenterY();
 
-        REG_BG2X = 0x8000 - ((dy * scale) >> 8);
-        REG_BG2Y = 0x8000 - ((dx * scale) >> 8);
+        REG_BG2X = 0x8000 - Q8_MUL(dy, scale);
+        REG_BG2Y = 0x8000 - Q8_MUL(dx, scale);
 
         REG_BG2PA = scale;
         REG_BG2PB = 0;

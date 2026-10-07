@@ -11,6 +11,7 @@
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Second half of issue #59's Phase 2 gap (`CreateJetpackRing`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
@@ -155,8 +156,8 @@ void UpdateJetpackCollectedWumpa(void *selfArg)
     base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
         // clang-format off
-        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold -
-                                self->base.anims[self->base.animIndex].loopBase) << 8;
+        self->base.animTime -= INT_TO_Q8(self->base.anims[self->base.animIndex].loopThreshold -
+                                          self->base.anims[self->base.animIndex].loopBase);
         // clang-format on
         self->base.animDone = one;
     }
@@ -187,8 +188,8 @@ void DrawJetpackCollectedWumpa(void *selfArg)
     {
         s32 qx = self->x, qy = self->y;
 
-        x = qx >> 8;
-        y = qy >> 8;
+        x = Q8_TO_INT(qx);
+        y = Q8_TO_INT(qy);
     }
     frame = GetAnimFrameData(self);
     scaled = 0;
@@ -636,17 +637,13 @@ void HovercraftStateCloseIn(void)
         vy = gHovercraftVelY - ((py - cy - (gHovercraftBox.y + gHovercraftBox.h / 2)) >> 12);
         gHovercraftVelY = vy;
 
-        if (vx > 0x200)
-            vx = 0x200;
+        LIMIT_MAX(vx, 0x200);
         gHovercraftVelX = vx;
-        if (vx < -0x200)
-            vx = -0x200;
+        LIMIT_MIN(vx, -0x200);
         gHovercraftVelX = vx;
-        if (vy > 0x200)
-            vy = 0x200;
+        LIMIT_MAX(vy, 0x200);
         gHovercraftVelY = vy;
-        if (vy < -0x200)
-            vy = -0x200;
+        LIMIT_MIN(vy, -0x200);
         gHovercraftVelY = vy;
 
         if (gHovercraftScreenX <= 0)
@@ -673,8 +670,8 @@ void HovercraftStateCloseIn(void)
             const s16 *tbl = gSineTable;
 
             a = ((gHovercraftFrameCount * 30) >> 4) & 0xff;
-            *px = (tbl[(a + 0x40) & 0xff] * gHovercraftOrbitRadius) >> 8;
-            gHovercraftY = (tbl[a] * gHovercraftOrbitRadius) >> 8;
+            *px = Q8_MUL(tbl[(a + 0x40) & 0xff], gHovercraftOrbitRadius);
+            gHovercraftY = Q8_MUL(tbl[a], gHovercraftOrbitRadius);
         }
     }
 
@@ -913,14 +910,14 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     gHovercraftPartsLeft = 4;
     gHovercraftHitFlashTimer = 0;
     gHovercraftHitFlashOn = 0;
-    gHovercraftDistance = gHovercraftZ - (GetCellAnimDistance() << 8);
+    gHovercraftDistance = gHovercraftZ - INT_TO_Q8(GetCellAnimDistance());
     scale = __divsi3(0x1C00000, gHovercraftDistance);
-    gHovercraftScreenX = (gHovercraftX * scale) >> 12;
-    gHovercraftScreenY = (scale * gHovercraftY) >> 12;
+    gHovercraftScreenX = Q12_TO_INT(gHovercraftX * scale);
+    gHovercraftScreenY = Q12_TO_INT(scale * gHovercraftY);
     SetActorBgLayerDepth(gHovercraftDistance);
     {
         struct actor_self *self = gHovercraft;
-        s32 t = self->animTime >> 8;
+        s32 t = Q8_TO_INT(self->animTime);
 
         DrawHovercraftMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
     }
@@ -947,7 +944,7 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
  * through a fresh local - the "4 extra bytes" of the earlier attempt. */
 void UpdateHovercraft(void)
 {
-    s32 prev = gHovercraft->animTime >> 8;
+    s32 prev = Q8_TO_INT(gHovercraft->animTime);
     struct actor_self *self;
 
     RunHovercraftState();
@@ -959,19 +956,19 @@ void UpdateHovercraft(void)
         self->animDone = 0;
         if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
             // clang-format off
-            self->animTime -= (self->anims[self->animIndex].loopThreshold -
-                               self->anims[self->animIndex].loopBase) << 8;
+            self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
+                                         self->anims[self->animIndex].loopBase);
             // clang-format on
             self->animDone = 1;
         }
-        gHovercraftDistance = gHovercraftZ - (GetCellAnimDistance() << 8);
+        gHovercraftDistance = gHovercraftZ - INT_TO_Q8(GetCellAnimDistance());
         scale = __divsi3(0x1C00000, gHovercraftDistance);
-        gHovercraftScreenX = (gHovercraftX * scale) >> 12;
-        gHovercraftScreenY = (scale * gHovercraftY) >> 12;
+        gHovercraftScreenX = Q12_TO_INT(gHovercraftX * scale);
+        gHovercraftScreenY = Q12_TO_INT(scale * gHovercraftY);
         SetActorBgLayerDepth(gHovercraftDistance);
         {
             struct actor_self *cur = gHovercraft;
-            s32 t = cur->animTime >> 8;
+            s32 t = Q8_TO_INT(cur->animTime);
 
             if (prev != t) {
                 DrawHovercraftMap(
@@ -1006,8 +1003,8 @@ void UpdateHovercraftBg2(void)
     dy = gHovercraftScreenX + GetActorBgCenterX();
     dx = gHovercraftScreenY + GetActorBgCenterY();
 
-    REG_BG2X = 0x8000 - ((dy * scale) >> 8);
-    REG_BG2Y = 0x8000 - ((dx * scale) >> 8);
+    REG_BG2X = 0x8000 - Q8_MUL(dy, scale);
+    REG_BG2Y = 0x8000 - Q8_MUL(dx, scale);
     REG_BG2PA = scale;
     REG_BG2PB = 0;
     REG_BG2PC = 0;
@@ -1048,7 +1045,7 @@ void LoadHovercraftGraphics(void)
         gHovercraftBg2Page = 0;
         self = gHovercraft;
         {
-            s32 t = self->animTime >> 8;
+            s32 t = Q8_TO_INT(self->animTime);
 
             DrawHovercraftMap(
                 (void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);

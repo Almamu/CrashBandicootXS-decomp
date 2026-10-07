@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "entity_bits.h"
 #include "gobj_1a794.h"
+#include "math_util.h"
 
 /* GitHub issue #22, ROM 0x080187FC-0x08018884 - non-adjacent to
  * airship_fireball.c since the raw `UpdateTiny`/`SetTinyState`/
@@ -65,7 +66,7 @@ case1:
 
         other->y = timer;
         subObj = gLevelLayers->layer0;
-        threshold = (subObj->heightPx << 8) + 0x2000;
+        threshold = INT_TO_Q8(subObj->heightPx) + 0x2000;
         if (timer >= threshold) {
             obj->state = 2;
         }

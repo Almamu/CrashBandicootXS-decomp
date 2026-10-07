@@ -3,6 +3,7 @@
 #include "actor_anim.h"
 #include "system.h"
 #include "bosses.h"
+#include "math_util.h"
 
 /* Same "boss-weapon self" object family as airship_fireball.c (see that
  * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md),
@@ -42,9 +43,9 @@ u8 IsTouchingAirship(void *selfArg)
         struct anim_box *pa, *pc;
 
         f.a = gAirshipBox;
-        BoxOffset(&f.a, gAirshipX >> 8, gAirshipY >> 8, gAirshipZ >> 8);
+        BoxOffset(&f.a, Q8_TO_INT(gAirshipX), Q8_TO_INT(gAirshipY), Q8_TO_INT(gAirshipZ));
         f.t = *(struct anim_box *)self->box;
-        BoxOffset(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
+        BoxOffset(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
         f.c = f.t;
         pc = &f.c;
         MemCopy32(pc, pc, sizeof(*pc));

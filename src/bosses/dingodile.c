@@ -12,6 +12,7 @@
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 
 /* codegen: GetSpriteAttackBox/GetSpriteBodyBox take the destination as
  * their first argument (objects.h); this file was matched against the
@@ -255,13 +256,13 @@ typedef u8 (*query_fn)(void *self);
 /* Right edge of the level, in Q8 units. */
 static inline s32 LevelRight(void)
 {
-    return gLevelLayers->layer0->widthPx << 8;
+    return INT_TO_Q8(gLevelLayers->layer0->widthPx);
 }
 
 /* Bottom edge of the level, in Q8 units. */
 static inline s32 LevelBottom(void)
 {
-    return gLevelLayers->layer0->heightPx << 8;
+    return INT_TO_Q8(gLevelLayers->layer0->heightPx);
 }
 
 static inline s32 AtLevelEdge(struct part_f28 *f, s32 x)
@@ -489,23 +490,22 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
 
             SetDingodileState(self, other, 1);
             if (other->f28.facing) {
-                s32 x = other->x >> 8;
-                s32 y = other->y >> 8;
+                s32 x = Q8_TO_INT(other->x);
+                s32 y = Q8_TO_INT(other->y);
 
                 x += 6;
-                other->x = x << 8;
-                other->y = y << 8;
+                other->x = INT_TO_Q8(x);
+                other->y = INT_TO_Q8(y);
             } else {
-                s32 x = other->x >> 8;
-                s32 y = other->y >> 8;
+                s32 x = Q8_TO_INT(other->x);
+                s32 y = Q8_TO_INT(other->y);
 
                 x -= 6;
-                other->x = x << 8;
-                other->y = y << 8;
+                other->x = INT_TO_Q8(x);
+                other->y = INT_TO_Q8(y);
             }
             n = 8;
-            if (n >= other->table->anims[other->tag].frameCount)
-                n = other->table->anims[other->tag].frameCount - 1;
+            CLAMP_INDEX(n, other->table->anims[other->tag].frameCount);
             other->frame = n;
             {
                 s32 v = other->f28.facing;
@@ -545,11 +545,11 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
     case 6:
         if (other->frame == 0x14 && other->stepTimer == 0) {
             if (other->f28.facing)
-                SpawnDingodileShieldOrRocket(self, 1, (other->x >> 8) + 6, (other->y >> 8) - 0x32,
-                                             other);
+                SpawnDingodileShieldOrRocket(self, 1, Q8_TO_INT(other->x) + 6,
+                                             Q8_TO_INT(other->y) - 0x32, other);
             else
-                SpawnDingodileShieldOrRocket(self, 1, (other->x >> 8) - 6, (other->y >> 8) - 0x32,
-                                             other);
+                SpawnDingodileShieldOrRocket(self, 1, Q8_TO_INT(other->x) - 6,
+                                             Q8_TO_INT(other->y) - 0x32, other);
         }
         if (!other->animDone)
             break;
@@ -562,8 +562,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         SetDingodileState(self, other, 1);
         {
             s32 n = 8;
-            if (n >= other->table->anims[other->tag].frameCount)
-                n = other->table->anims[other->tag].frameCount - 1;
+            CLAMP_INDEX(n, other->table->anims[other->tag].frameCount);
             other->frame = n;
         }
         break;
@@ -939,7 +938,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             other->rampYTarget = 0;
             VCALL2(self, m50, other, 8);
             other->slot = GetSpriteAnimPaletteSlot((struct actor *)other);
-            SpawnDingodileStalactite(self, other->x >> 8, other->y >> 8);
+            SpawnDingodileStalactite(self, Q8_TO_INT(other->x), Q8_TO_INT(other->y));
             VCALL1(self, m20, 2);
         }
         break;

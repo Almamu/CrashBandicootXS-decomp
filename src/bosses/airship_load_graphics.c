@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "bosses.h"
+#include "math_util.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/archive/issue-58-0x08030334-actor.md. Confirmed by
@@ -54,7 +55,7 @@ void LoadAirshipGraphics(void)
         gAirshipBg2Page = 0;
         self = gAirship;
         {
-            s32 t = self->animTime >> 8;
+            s32 t = Q8_TO_INT(self->animTime);
             DrawAirshipMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         }
         REG_DISPCNT |= DISPCNT_BG2_ON;
