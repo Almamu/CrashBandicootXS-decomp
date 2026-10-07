@@ -62,7 +62,7 @@ BASE_ADDR = 0x0855BCB4
 # identical across every song.
 HANDLER_FUNCS = {
     'info': (0x080393FD, 0x08039439, 0x0803943D),
-    'unknownc': (0x0803A22D, 0x0803A275, 0x0803A325),
+    'mixer': (0x0803A22D, 0x0803A275, 0x0803A325),
     'channel': (0x08039519, 0x080395A1, 0x080395A5),
     # the sound-effect voices (GaxFxChannelInit/GaxFxChannelUnknown/GaxFxChannelPlay)
     'sfx': (0x0803A105, 0x0803A229, 0x0803A159),
@@ -106,7 +106,7 @@ class SongInfo:
         self.ushort_0a = m['ushort_0a']
         self.sample_rate = m['sample_rate']
         self.num_fx_channels = m['num_fx_channels']
-        self.byte_1d = m['byte_1d']
+        self.half_rate_fx = m['half_rate_fx']
         self.sequence_data_ptr = 0
         self.instrument_set_ptr = 0
         self.sample_set_ptr = 0
@@ -116,7 +116,7 @@ class SongInfo:
                             self.num_channels, self.num_rows_per_pattern, self.num_patterns_per_channel,
                             self.loop_point, self.volume, self.ushort_0a,
                             self.sequence_data_ptr, self.instrument_set_ptr, self.sample_set_ptr,
-                            self.sample_rate, self.num_fx_channels, self.byte_1d)
+                            self.sample_rate, self.num_fx_channels, self.half_rate_fx)
 
 
 class PatternRow:
@@ -577,7 +577,7 @@ class Channel:
 class Song:
     def __init__(self, manifest_entry, num_items=7, unk_ptr=0):
         self.info = SongInfo(manifest_entry)
-        self.unknownc_data_bytes = bytes(manifest_entry['unknownc_data_bytes'])
+        self.mixer_data_bytes = bytes(manifest_entry['mixer_data_bytes'])
         self.title = manifest_entry['title']
         self.artist = manifest_entry['artist']
         self.title_bytes = base64.b64decode(manifest_entry['title_bytes'])
@@ -585,7 +585,7 @@ class Song:
         self.unk_ptr = unk_ptr
         self.channels = []
         self.info_handler = SoundHandler(*HANDLER_FUNCS['info'], type_flags=0x1C)
-        self.unknownc_handler = SoundHandler(*HANDLER_FUNCS['unknownc'], type_flags=0xC)
+        self.mixer_handler = SoundHandler(*HANDLER_FUNCS['mixer'], type_flags=0xC)
         self.channel_handlers = []
         self.pattern_group_bytes = {}  # gid -> original raw packed bytes
         # the default song's info has no instrument set and points its
@@ -710,7 +710,7 @@ def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix
         # its handler, then a single shared 1-entry "children" array (every
         # channel handler's Children[0] points back to the info handler, and
         # they all share this same one allocation), then the channel
-        # handlers themselves, then the UnknownC bits, then the song struct.
+        # handlers themselves, then the mixer bits, then the song struct.
         # Channels aren't necessarily laid out in logical index order in
         # memory (e.g. channel 3's data physically precedes channel 0's) -
         # channel_order (captured from the ROM) gives the real allocation
@@ -744,14 +744,14 @@ def link(instruments_by_index, songs, samples_by_index, base_addr, header_prefix
         children_ptr = alloc.addr_here()
         for a in channel_handler_addrs:
             alloc.buf += struct.pack('<I', a)
-        unknownc_data_addr = alloc.alloc(song.unknownc_data_bytes)
-        song.unknownc_handler.data_ptr = unknownc_data_addr
-        song.unknownc_handler.children_ptr = children_ptr
-        song.unknownc_handler.num_children = len(channel_handler_addrs)
-        unknownc_handler_addr = alloc.alloc(song.unknownc_handler.pack())
+        mixer_data_addr = alloc.alloc(song.mixer_data_bytes)
+        song.mixer_handler.data_ptr = mixer_data_addr
+        song.mixer_handler.children_ptr = children_ptr
+        song.mixer_handler.num_children = len(channel_handler_addrs)
+        mixer_handler_addr = alloc.alloc(song.mixer_handler.pack())
 
         song_bytes = struct.pack('<I', song.num_items)
-        song_bytes += struct.pack('<III', unknownc_handler_addr, info_handler_addr, song.unk_ptr)
+        song_bytes += struct.pack('<III', mixer_handler_addr, info_handler_addr, song.unk_ptr)
         for a in channel_handler_addrs:
             song_bytes += struct.pack('<I', a)
         song.new_offset = alloc.alloc(song_bytes)

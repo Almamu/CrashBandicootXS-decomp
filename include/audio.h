@@ -40,7 +40,7 @@ struct SfxRecord {
 };
 
 struct AudioContext {
-    u32 field_00;    // 0x00 - not touched by this function cluster
+    u32 unused_00;   // 0x00 - never read or written (InitAudioContext skips it too)
     u32 state;       // 0x04 - 0 = stopped, 1 = playing, 2 = paused
     u32 currentSong; // 0x08 - index into gSongTable (19 songs); 0x13 = none
     u32 pendingSong; // 0x0c - queued song index, started once the duck-out fade completes

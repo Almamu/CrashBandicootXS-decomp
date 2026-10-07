@@ -9,7 +9,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * data set (`0x0855BC98`: `GaxFxChannelInit`/`GaxFxChannelUnknown`/
  * `GaxFxChannelPlay`, built by tools/gax_audio.py's `HANDLER_FUNCS['sfx']`
  * as `0x0803A229`; see docs/audio.md's "Sound effects"). It sits right
- * before the mixer ("UnknownC") type's trio (`init_fn`/`unknown_fn`/
+ * before the mixer type's trio (`init_fn`/`unknown_fn`/
  * `play_fn` = `0x0803A22D`/`0x0803A275`/`0x0803A325`, i.e.
  * `GaxMixerInit`+1/`GaxMixerUnknown`+1/`GaxMixerPlay`+1, the Thumb bit).
  * Nothing in the engine calls a type's `unknown_fn` slot. */
@@ -18,7 +18,7 @@ void GaxFxChannelUnknown(void)
 }
 asm(".align 2, 0");
 
-/* GAX2_SoundHandler "UnknownC" type's `init_fn` (ROM `0x0803A22D`, see
+/* The GAX2_SoundHandler mixer type's `init_fn` (ROM `0x0803A22D`, see
  * docs/audio.md) - `self` is the mixer handler. Sets `pos` to 1, then
  * runs every child's `init` callback (`child->type->init`) through the
  * `_call_via_r1` trampoline. The children are the song's channels
@@ -49,11 +49,11 @@ void GaxMixerInit(void *self)
     }
 }
 
-/* GAX2_SoundHandler "UnknownC" type's `unknown_fn` (ROM `0x0803A275`,
+/* The GAX2_SoundHandler mixer type's `unknown_fn` (ROM `0x0803A275`,
  * see docs/audio.md) - a no-op stub, same as the "Info"/"Channel"/FX
  * voice types' `unknown_fn`s (`GaxInfoUnknown`/`GaxChannelUnknown`/
  * `GaxFxChannelUnknown`). `play_fn` is `GaxMixerPlay`
- * (gax_unknownc_play.c). */
+ * (gax_sound_handler_mixer_play.c). */
 void GaxMixerUnknown(void)
 {
 }

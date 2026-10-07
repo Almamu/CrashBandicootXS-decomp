@@ -147,7 +147,7 @@ void GAX2_estimate(struct GaxSongHeader *p)
         size += maxRate * rate / 1000 * 2;
         size += 0x18;
     }
-    if (p->layout->types[1]->data.song->field_1b != 0 || (p->flags & 0x20))
+    if (p->layout->types[1]->data.song->halfRateFx != 0 || (p->flags & 0x20))
         size += 0x130;
     else
         size += 0xdc;

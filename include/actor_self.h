@@ -45,8 +45,9 @@ struct actor_vtable {
     u8 unk_10[0x10];
     struct actor_method m20; // 0x20 - "damage" (called on the player with a strength)
     u8 unk_28[8];
-    // 0x30 - the percentage UpdateHudPercentCounters shows (called on gActorList's root)
-    struct actor_method m30;
+    // 0x30 - slot 6, "get HP": GetActorHp returns struct actor_hp's `hp`, the jetpack player's
+    // GetJetpackPlayerHpPercent its HP as a percentage (UpdateHudPercentCounters shows it)
+    struct actor_method getHp;
     struct actor_method m38; // 0x38 - "release" (no argument; DamageJetpackBalloon)
 };
 

@@ -84,14 +84,15 @@ struct hud_counter {
                                    * cache for `GetClockMinutes`'s value. */
     s32 shownSeconds;             /* +0x30 - same, for `GetClockSeconds`. */
     s32 shownTenths;              /* +0x34 - same, for `GetClockTenths`. */
-    s32 value_d;                  /* +0x38 - UpdateHudPercentCounters' first percentage */
+    s32 playerHpPercent;          /* +0x38 - UpdateHudPercentCounters' first percentage: the
+                                   * jetpack player's HP (gActorList's getHp method) */
     s32 airshipHpPercent;         /* +0x3c - its second one (GetAirshipHpPercent) */
     s32 shownLives;               /* +0x40 - ConfigureHudParts fills +0x40..+0x63 with -1 */
     s32 shownWumpa;               /* +0x44 */
     s32 shownCrateCount;          /* +0x48 */
     s32 shownCrateTotal;          /* +0x4c */
     u8 unknown_50[0xC];           /* +0x50 */
-    s32 shown_d;                  /* +0x5c - cache for `value_d` */
+    s32 shownPlayerHpPercent;     /* +0x5c - cache for `playerHpPercent` */
     s32 shownAirshipHpPercent;    /* +0x60 - cache for `airshipHpPercent` */
     struct hud_digit_part *parts; /* +0x64 - the 35 slots InitHud builds */
 };

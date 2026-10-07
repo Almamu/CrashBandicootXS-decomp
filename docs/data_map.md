@@ -836,7 +836,7 @@ vtable shapes).
 | `0817E76C` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `InitLanguageSelectGraphics` | high | done |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `InitLanguageSelectGraphics` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `RunPauseMenu`, `InitLevelState` | high | medium |
-| `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `GAX2_estimate`, `GAX2_init` | high | done |
+| `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, mixer, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `GAX2_estimate`, `GAX2_init` | high | done |
 | `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`lib/libgcc/data/clz_tab_5a4c70.c`) | `__divdi3` | high | done |
 | `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`lib/libgcc/data/clz_tab_5a4c70.c`) | `__udivdi3` | high | done |
 | `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |

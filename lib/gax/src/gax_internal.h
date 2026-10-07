@@ -41,15 +41,16 @@ struct GaxPlayerState {
     /* 0x41 - set by GAX2_jingle; skips the song's channels for one mixer tick */
     u8 skipSongChannels;
     /* 0x42 - mixCode holds the whole resampler (76 words, with its third,
-     * paired-sample loop) rather than the first 55: set when the song's
-     * GaxSongData.field_1b or GaxSongHeader.flags bit 5 is (GAX2_init) */
+     * half-rate loop, mode 2) rather than the first 55: set when the song's
+     * GaxSongData.halfRateFx or GaxSongHeader.flags bit 5 is (GAX2_init).
+     * The SFX voices then mix in mode 2 (GaxFxChannelInit). */
     u8 fullResampler;
     /* 0x43 - GAX_play ran since the last GAX_irq ("GAX_PLAY HAS NOT FINISHED" check) */
     u8 playDone;
     void *mixCode; /* 0x44 - IWRAM copy of the ARM resampler gGaxArmResample (GaxChannelMix) */
     /* 0x48/0x9c/0x17c - IWRAM copies of the ARM routines gGaxArmDownmix,
      * gGaxArmEcho and (only with GaxSongHeader.flags bit 2, else NULL)
-     * gGaxArmFilter (see gax_unknownc_play.c), entered in place via
+     * gGaxArmFilter (see gax_sound_handler_mixer_play.c), entered in place via
      * GAX_CALL_ARM. */
     u32 downmixCode[21]; /* 0x48 */
     u32 echoCode[56];    /* 0x9c */
@@ -145,7 +146,11 @@ struct GaxSongData {
     struct GaxWave *waves;                     /* 0x14 */
     u16 mixRate;                               /* 0x18 - default mix rate */
     u8 numSfx;                                 /* 0x1a - default number of SFX voices */
-    u8 field_1b;                               /* 0x1b */
+    /* 0x1b - mix the SFX voices at half the mix rate: the resampler's mode 2
+     * adds each sample to two output samples and steps twice as far
+     * (GAX2_init loads it, GaxFxChannelInit selects it). Set in the level
+     * and boss songs (tools/gax_audio.py's `half_rate_fx`, docs/audio.md). */
+    u8 halfRateFx;
 };
 
 /* One entry of a Channel handler type's order list. */
@@ -226,7 +231,7 @@ struct GaxInfoHandler {
 };
 
 /* The top-level mixer handler, `handlers[0]` of a GAX2 player (the
- * "UnknownC" type, see gax_unknownc_play.c): its children are the
+ * mixer type, see gax_sound_handler_mixer_play.c): its children are the
  * song's channels, followed by `extraChildren` sound-effect voices. */
 struct GaxMixerFormat {
     u8 pad_00;
@@ -326,8 +331,10 @@ struct GaxChannelState {
     /* 0x50 - note/instrument held for a delayed retrigger */
     u8 delayedNote;
     u8 delayedInstrument; /* 0x51 */
-    u8 mixMode;           /* 0x52 - the resampler mode used to add a forward sample, always 1 */
-    u8 index;             /* 0x53 - channel number (GaxCreateHandlers) */
+    /* 0x52 - the resampler mode used to add a forward sample: 1, or 2 (half
+     * rate) for SFX voices when fullResampler is set (GaxFxChannelInit) */
+    u8 mixMode;
+    u8 index; /* 0x53 - channel number (GaxCreateHandlers) */
 };
 
 /* A mixing rate in Hz and the Timer0 reload for it (16.78 MHz / rate),
@@ -373,7 +380,7 @@ extern u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *in
 extern void GaxHuffUnComp(void *src, void *dst);
 /* gax_text_render.c */
 extern void GaxDrawText(u32 col, u32 row, const char *str);
-/* gax_unknownc_play.c */
+/* gax_sound_handler_mixer_play.c */
 extern void GaxMixFrame(struct GaxMixerHandler *mixer, u32 *buf);
 /* gax_zero_fill.c */
 extern void GaxZeroFill(void *dest, s32 count);
@@ -383,7 +390,7 @@ extern void GaxZeroFill(void *dest, s32 count);
  * by name (the handler-type tables hold their addresses) and the helpers
  * only from their own file, but each definition still needs a prototype
  * (-Wmissing-prototypes). */
-struct UnknownC; /* gax_unknownc_play.c's view of the mixer handler */
+struct GaxMixerView; /* gax_sound_handler_mixer_play.c's view of the mixer handler */
 /* gax_channel_init.c, gax_channel_note_cut_driver.c: the FX channel type */
 extern void GaxFxChannelInit(void *self);
 extern u8 GaxFxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg);
@@ -398,14 +405,14 @@ extern void GaxInfoInit(void *self);
 extern void GaxInfoRestart(void *self);
 extern void GaxInfoUnknown(void);
 extern u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg);
-/* gax_sound_handler_unknownc.c, gax_unknownc_play.c: the mixer
- * ("UnknownC") type */
+/* gax_sound_handler_mixer.c, gax_sound_handler_mixer_play.c: the mixer
+ * type */
 extern void GaxFxChannelUnknown(void);
 extern void GaxMixerInit(void *self);
 extern void GaxMixerUnknown(void);
-extern void GaxMixerApplyEcho(struct UnknownC *self, u32 *buf);
-extern void GaxMixerApplyFilter(struct UnknownC *self, u32 *buf, u32 clampArg, u32 count);
-extern u8 GaxMixerPlay(struct UnknownC *self, u32 *buf, u32 arg2);
+extern void GaxMixerApplyEcho(struct GaxMixerView *self, u32 *buf);
+extern void GaxMixerApplyFilter(struct GaxMixerView *self, u32 *buf, u32 clampArg, u32 count);
+extern u8 GaxMixerPlay(struct GaxMixerView *self, u32 *buf, u32 arg2);
 
 /* ---- The engine's data ---- */
 
@@ -426,7 +433,7 @@ extern const char gGaxHaltFunctionLabel[];
 extern const u32 gGaxPeriodTable[0xEF4];
 extern const s8 gGaxVibratoTable[64];
 
-/* The raw ARM routines at the end of gax_unknownc_play.c, which GAX2_init
+/* The raw ARM routines at the end of gax_sound_handler_mixer_play.c, which GAX2_init
  * copies into the player state (downmixCode/echoCode/filterCode/mixCode),
  * and the four instructions of the resampler that GaxChannelMix patches
  * in the copy (by their offset from gGaxArmResample). */

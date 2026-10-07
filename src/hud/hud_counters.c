@@ -199,12 +199,11 @@ void UpdateHudWumpa(struct hud_counter *self)
 
 /* The percentage-counter widget (`docs/rom_map.md`'s "fx" investigation
  * already named it this way from the `cmp r1, #0x64` special case
- * below): a single 3-digit-or-percent display sourced from
- * `_call_via_r1(gActorList's own x-position field + a halfword
- * read off a nested struct, y-position field)` rather than any of the
- * mode/layout-value or `GetBossIndex`-family sources the rest of the
- * dispatcher's callees use - this is the only counter in the family
- * driven by something resembling a screen coordinate.
+ * below): a 3-digit-or-percent display of the player's HP. UpdateHud
+ * only runs it in the jetpack categories (`icon_flag`, set from the
+ * category type in SetupActorVramPool), where gActorList's root is the
+ * jetpack player, and it calls that actor's `getHp` method (vtable slot
+ * 6, GetJetpackPlayerHpPercent) through `_call_via_r1`.
  *
  * A value of exactly 100 (`0x64`) skips the digit split entirely and
  * shows a single dedicated "100%" icon (slot `0xc8*8`, tens/ones slots
@@ -231,10 +230,10 @@ void UpdateHudPercentCounters(struct hud_counter *self)
         struct actor_self *src = gActorList;
         struct actor_vtable *vt = src->vtable;
 
-        v = _call_via_r1((u8 *)src + vt->m30.thisOffset, vt->m30.fn);
+        v = _call_via_r1((u8 *)src + vt->getHp.thisOffset, vt->getHp.fn);
     }
-    self->value_d = v;
-    if (v != self->shown_d) {
+    self->playerHpPercent = v;
+    if (v != self->shownPlayerHpPercent) {
         if (v == 100) {
             struct hud_digit_part *p = self->parts;
 
@@ -247,7 +246,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
 
             parts = self->parts;
             CLAMP_FRAME(&parts[25], parts[25].anim_index, f);
-            f = __modsi3(self->value_d, 10);
+            f = __modsi3(self->playerHpPercent, 10);
             CLAMP_FRAME(&parts[26], parts[26].anim_index, f);
             CLAMP_FRAME(&parts[27], parts[27].anim_index, 10);
             CLAMP_FRAME(&parts[28], parts[28].anim_index, -1);
@@ -266,7 +265,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
     DrawHudPart(&self->parts[26], 0, 0);
     DrawHudPart(&self->parts[27], 0, 0);
     DrawHudPart(&self->parts[28], 0, 0);
-    self->shown_d = self->value_d;
+    self->shownPlayerHpPercent = self->playerHpPercent;
 
     if (GetBossIndex(gLevelState) != -1)
         return;
