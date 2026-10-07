@@ -33,12 +33,14 @@ $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
 
 # The constants headers named in the level data (#655): the entity types
-# (data/levels/entity_types.json) and the crate kinds (crate_kinds.json).
+# (data/levels/entity_types.json), the crate kinds (crate_kinds.json) and
+# the level ids (levels.json's "levels" list).
 # They are generated into build/include, which is on every object's
 # include path; the C objects wait for them (order-only, so a regenerated
 # header rebuilds only the objects whose .d lists it).
 GENERATED_INCLUDE_DIR := build/include
-GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h
+GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h \
+	$(GENERATED_INCLUDE_DIR)/constants/levels.h
 CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
 
 $(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
@@ -48,5 +50,9 @@ $(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json too
 $(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py constants crates $@
+
+$(GENERATED_INCLUDE_DIR)/constants/levels.h: data/levels/levels.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants levels $@
 
 $(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS): | $(GENERATED_HEADERS)

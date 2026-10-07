@@ -1,6 +1,8 @@
 #ifndef __ACTOR_ANIM_H__
 #define __ACTOR_ANIM_H__
 
+#include "constants/categories.h"
+
 /*
  * The category-descriptor -> vtable -> animation-table -> keyframe ->
  * frame system used to render rotating pickup/hazard sprites (crates,
@@ -258,8 +260,8 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
  * see the comment on category_descriptor.type above. What follows it at
  * gActorCategoryVtables+0x9C (ROM 0x08175760) is unrelated: the BG
  * palette-cycle frames of src/data/palette_cycle_175760.c. */
-extern const struct category_descriptor gActorCategories[7];
-extern const struct category_vtable gActorCategoryVtables[3];
+extern const struct category_descriptor gActorCategories[CATEGORY_COUNT];
+extern const struct category_vtable gActorCategoryVtables[CATEGORY_TYPE_COUNT];
 
 /* Defined in src/data/anim_family_178f80.c and anim_family_17aa6c.c. */
 extern const struct anim_table_record gCategoryFamily0AnimTable[41]; // 0x081796CC, categories 0-2

@@ -108,7 +108,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case 6:
         obj->type = 6;
-        if (GetBossIndex(gLevelState) != 1) {
+        if (GetBossIndex(gLevelState) != BOSS_NEO_CORTEX) {
             void *mem = OperatorNew(0x38);
 
             *(volatile u8 *)&args.dirY = 0;

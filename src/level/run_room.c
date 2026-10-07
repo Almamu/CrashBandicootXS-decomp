@@ -286,7 +286,7 @@ s32 RunRoom(struct level_progress *self)
 
     SetupRoomBlend((struct level_ctx *)self);
     ResetObjBuffers();
-    if (self->cat->kind == 1) {
+    if (self->cat->kind == ROOM_KIND_UNDERWATER) {
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->mode = 2;
     }
@@ -295,7 +295,7 @@ s32 RunRoom(struct level_progress *self)
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
 
-    if (self->cat->kind == 0) {
+    if (self->cat->kind == ROOM_KIND_ON_FOOT) {
         if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom(self)) ||
             (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom(self))) {
             struct gl_attach *a;

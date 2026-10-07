@@ -15,6 +15,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "vtable.h"
+#include "constants/categories.h"
 
 /* A small, moving on-screen object: position, a handful of flag bits, a
  * width/height pair (both raw and pre-halved/negated for centering), and

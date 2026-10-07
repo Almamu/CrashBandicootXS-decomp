@@ -28,7 +28,7 @@ struct level_state {
     u8 unk_03;
     // 0x004 - one word per level, indexed by `level`
     // (GetLevelFlags); LEVEL_FLAG_* (crystal, the two clear gems, best time)
-    u32 levelFlags[0x19];
+    u32 levelFlags[LEVEL_COUNT];
     s32 unk_68; // 0x068
     s32 wumpa;  // 0x06C - at 100 it wraps and adds a life (CollectWumpa)
     // 0x070 - crates broken (AddBrokenCrate); reaching

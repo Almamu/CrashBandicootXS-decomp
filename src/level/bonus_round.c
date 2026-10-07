@@ -111,7 +111,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
 {
     const struct level_room *level = self->cat;
 
-    if (level->kind == 3) {
+    if (level->kind == ROOM_KIND_CATEGORY) {
         self->checkpointCrateCount = GetCrateCount(self);
 
         /* Barrier: without this, the compiler notices `self + 0xa9`

@@ -272,7 +272,10 @@ each region in ROM order.
 `data/levels/`:
 
 - `levels.json`: the rooms, and per region its C file name and its rooms
-  in ROM order.
+  in ROM order; and the levels in id order (`"levels"`: each one's
+  `LEVEL_*` name, name text and world), from which
+  `tools/levels.py constants levels` generates `constants/levels.h`. `extract`
+  keeps this list, which doesn't come from the ROM's room data.
 - `entity_types.json`: the name of each entity type (see "Entity
   types"); `crate_kinds.json`: the name of each crate kind (`crate.kind`).
 - `roomNN_xxxxxx/room.json`: the palette (BGR555), the asset's symbol and

@@ -142,6 +142,10 @@ the names with the header it already includes. A data table in
 | `entities.h` (generated) | `ENTITY_`, `ENEMY_KIND_` | entity types (the `gEntitySpawnFuncs` index), enemy-controller kinds |
 | `crates.h` (generated) | `CRATE_KIND_` | `crate.kind` (`CreateCrate`, the `gCrateKind*` tables) |
 | `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
+| `levels.h` (generated) | `LEVEL_` | level ids, the `gLevelTable` index, from `data/levels/levels.json` |
+| `rooms.h` | `ROOM_KIND_` | `struct level_room.kind` (on foot, underwater, hover, category stage) |
+| `bosses.h` | `BOSS_` | `GetBossIndex` results |
+| `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
 
 **Constants that describe data the repository has as source files are
 generated from those files**, not written by hand: the names live in the
@@ -150,11 +154,12 @@ which is on the include path (after `include/`), so code includes it as
 `"constants/<topic>.h"` all the same. Every C object waits for the
 generated headers (an order-only prerequisite), and `-MMD` rebuilds the
 objects that include one when it changes. The entity types come from
-`data/levels/entity_types.json` and the crate kinds from
-`data/levels/crate_kinds.json` (`tools/levels.py constants`, see
-docs/levels.md). To rename one, edit the JSON.
+`data/levels/entity_types.json`, the crate kinds from
+`data/levels/crate_kinds.json` and the level ids from
+`data/levels/levels.json`'s `"levels"` list (`tools/levels.py constants`,
+see docs/levels.md). To rename one, edit the JSON.
 
-Planned topics use the same scheme (`levels.h`/`LEVEL_`, ...).
+
 `tools/magic_numbers.py` lists the literals that are left, by topic
 (`--report` for the counts), and `--topic T --fix` replaces the ones that
 have exactly one name.

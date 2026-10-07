@@ -18,6 +18,7 @@
 #include "core.h"
 #include "level_state.h"
 #include "level_data.h"
+#include "constants/bosses.h"
 #include "bg_scroll_layer.h"
 #include "vtable.h"
 #include "constants/entities.h"
@@ -624,7 +625,7 @@ extern u8 gTerrainHeights3[];
 extern const struct terrain_type gTerrainTypes[51];
 
 /* The level table (src/data/level_table_16c814.c, level_data.h). */
-extern const struct level_info gLevelTable[25];
+extern const struct level_info gLevelTable[LEVEL_COUNT];
 
 /* The level themes' music cues and palette cycles (src/data/level_table_16c814.c) */
 extern const u8 gThemeMusicCues[11];

@@ -94,7 +94,7 @@ void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
     s32 size;
     u8 *pFlag = &gCellAnimHasBanks;
 
-    flag = (arg0 == 0);
+    flag = (arg0 == CATEGORY_TYPE_POLAR);
     *pFlag = flag;
     gCellAnim = cell;
     gCellAnimCols = cell->cols;
@@ -351,7 +351,7 @@ void InitActorBgScroll(s32 arg0)
 
     gActorBgScrollType = arg0;
 
-    if (arg0 == 0) {
+    if (arg0 == CATEGORY_TYPE_POLAR) {
         gActorNearClipDepth = 0x88 << 5;
         gActorFarClipDepth = 0xa0 << 8;
         gActorFocalLength = 0xbc << 6;

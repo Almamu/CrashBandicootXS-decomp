@@ -267,7 +267,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
     DrawHudPart(&self->parts[28], 0, 0);
     self->shownPlayerHpPercent = self->playerHpPercent;
 
-    if (GetBossIndex(gLevelState) != -1)
+    if (GetBossIndex(gLevelState) != BOSS_NONE)
         return;
     if ((self->airshipHpPercent = GetAirshipHpPercent()) == -1)
         return;

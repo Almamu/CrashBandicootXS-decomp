@@ -48,7 +48,7 @@ void SetupActorVramPool(void)
         u8 *arr = (u8 *)gActorCategories;
         s32 idx = gActorCategory;
 
-        if (*(s32 *)(arr + idx * 0x34) == 0) {
+        if (*(s32 *)(arr + idx * 0x34) == CATEGORY_TYPE_POLAR) {
             anims = entityBank->anims;
             BindPaletteSlot(cache, 7, anims[0].paletteId);
             anims = otherBank->anims;
@@ -72,6 +72,6 @@ void SetupActorVramPool(void)
         u8 *arr = (u8 *)gActorCategories;
         s32 idx = gActorCategory;
 
-        ConfigureHudParts(iconArray, *(s32 *)(arr + idx * 0x34) != 0);
+        ConfigureHudParts(iconArray, *(s32 *)(arr + idx * 0x34) != CATEGORY_TYPE_POLAR);
     }
 }

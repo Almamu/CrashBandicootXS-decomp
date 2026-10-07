@@ -74,7 +74,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
             s32 life = GetBossIndex(gLevelState);
 
             slot = &self->parts[i];
-            self->parts[0x16].anim_index = life + 6;
+            self->parts[0x16].anim_index = life + BOSS_HUD_ANIM_BASE;
             RestartSlot(slot);
         } else {
             slot->anim_index = gHudPartAnims[i];
@@ -162,14 +162,14 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
             s32 life = GetBossIndex(gLevelState);
             struct hud_digit_part *slot = &self->parts[i];
 
-            self->parts[0x16].anim_index = life + 6;
+            self->parts[0x16].anim_index = life + BOSS_HUD_ANIM_BASE;
             RestartSlot(slot);
         }
         frame = 0;
         switch (i) {
         case 0x16:
         case 0x17:
-            if (GetBossIndex(gLevelState) == -1)
+            if (GetBossIndex(gLevelState) == BOSS_NONE)
                 break;
             goto get;
         case 0x1D:
@@ -183,7 +183,7 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
             break;
         }
 
-        if (GetBossIndex(gLevelState) == -1 && self->icon_flag) {
+        if (GetBossIndex(gLevelState) == BOSS_NONE && self->icon_flag) {
             switch (i) {
             case 0xE ... 0x15:
                 {

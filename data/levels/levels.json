@@ -98,5 +98,136 @@
         "room16_2beadc"
       ]
     }
+  ],
+  "levels": [
+    {
+      "constant": "LEVEL_JUNGLE_JAM",
+      "name": "jungle jam",
+      "world": 0
+    },
+    {
+      "constant": "LEVEL_SHIPWRECKED",
+      "name": "shipwrecked",
+      "world": 0
+    },
+    {
+      "constant": "LEVEL_TEMPLE_OF_BOOM",
+      "name": "temple of boom",
+      "world": 0
+    },
+    {
+      "constant": "LEVEL_FROSTBITE_CAVERN",
+      "name": "frostbite cavern",
+      "world": 0
+    },
+    {
+      "constant": "LEVEL_JUST_IN_SLIME",
+      "name": "just in slime",
+      "world": 0
+    },
+    {
+      "constant": "LEVEL_SNOW_CRASH",
+      "name": "snow crash",
+      "world": 1
+    },
+    {
+      "constant": "LEVEL_ROCKET_RACKET",
+      "name": "rocket racket",
+      "world": 1
+    },
+    {
+      "constant": "LEVEL_JUST_HANGIN",
+      "name": "just hangin'",
+      "world": 1
+    },
+    {
+      "constant": "LEVEL_SHARK_ATTACK",
+      "name": "shark attack",
+      "world": 1
+    },
+    {
+      "constant": "LEVEL_RUINED",
+      "name": "ruined",
+      "world": 1
+    },
+    {
+      "constant": "LEVEL_SNOW_JOB",
+      "name": "snow job",
+      "world": 2
+    },
+    {
+      "constant": "LEVEL_ACE_OF_SPACE",
+      "name": "ace of space",
+      "world": 2
+    },
+    {
+      "constant": "LEVEL_SUNKEN_CITY",
+      "name": "sunken city",
+      "world": 2
+    },
+    {
+      "constant": "LEVEL_DOWN_THE_HOLE",
+      "name": "down the hole",
+      "world": 2
+    },
+    {
+      "constant": "LEVEL_BLIMP_BONANZA",
+      "name": "blimp bonanza",
+      "world": 2
+    },
+    {
+      "constant": "LEVEL_STAR_TO_FINISH",
+      "name": "star to finish",
+      "world": 3
+    },
+    {
+      "constant": "LEVEL_AIR_SUPPLY",
+      "name": "air supply",
+      "world": 3
+    },
+    {
+      "constant": "LEVEL_NO_FLY_ZONE",
+      "name": "no-fly zone",
+      "world": 3
+    },
+    {
+      "constant": "LEVEL_DRIP_DRIP_DRIP",
+      "name": "drip, drip, drip",
+      "world": 3
+    },
+    {
+      "constant": "LEVEL_FINAL_COUNTDOWN",
+      "name": "final countdown",
+      "world": 3
+    },
+    {
+      "constant": "LEVEL_DINGODILE",
+      "name": "dingodile",
+      "world": 0,
+      "boss": true
+    },
+    {
+      "constant": "LEVEL_N_GIN",
+      "name": "n. gin",
+      "world": 1,
+      "boss": true
+    },
+    {
+      "constant": "LEVEL_TINY",
+      "name": "tiny",
+      "world": 2,
+      "boss": true
+    },
+    {
+      "constant": "LEVEL_NEO_CORTEX",
+      "name": "neo cortex",
+      "world": 3,
+      "boss": true
+    },
+    {
+      "constant": "LEVEL_MEGA_MIX",
+      "name": "mega-mix",
+      "boss": true
+    }
   ]
 }

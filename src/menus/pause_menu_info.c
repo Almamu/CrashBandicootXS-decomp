@@ -26,7 +26,7 @@ void InitPauseMenuInfo(struct pause_menu *self)
 
     self->levelName = (void *)GetUiText(labelId);
 
-    if (levelIdx <= 0x13) {
+    if (levelIdx <= LEVEL_LAST_NUMBERED) {
         self->levelLabel = (void *)GetUiText(0);
         self->buf78[0] = ' ';
         FormatDecimal(levelIdx + 1, &self->buf78[1]);

@@ -252,7 +252,7 @@ void JetpackPlayerStateFall(void *selfArg)
     }
 
     if (self->base.y > 0xE100) {
-        SetActorCategoryExitStatus(3);
+        SetActorCategoryExitStatus(CATEGORY_EXIT_DEATH);
     }
 }
 
@@ -277,7 +277,7 @@ void JetpackPlayerStateFinish(void *selfArg)
     }
 
     if (self->base.depth > 0xA000) {
-        SetActorCategoryExitStatus(1);
+        SetActorCategoryExitStatus(CATEGORY_EXIT_CLEARED);
     }
 }
 

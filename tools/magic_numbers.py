@@ -4,7 +4,8 @@
 Scans the C sources under src/ and include/ for integer literals in
 places where the game has named values: sound and song IDs, level-flag
 bits, mask levels, event IDs, action-controller states, entity and crate
-kinds, actor-category exit statuses and `& 0xNN` flag tests. Each hit is
+kinds, actor-category exit statuses, level ids, room kinds, boss ids,
+actor categories and `& 0xNN` flag tests. Each hit is
 put under one topic. A value that is already a name (`SFX_CRATE_BREAK`,
 `LEVEL_FLAG_CRATE_GEM`, ...) isn't a literal, so it isn't listed: the
 counts go down as literals are replaced.
@@ -56,6 +57,10 @@ TOPICS = collections.OrderedDict(
         ("action_state", ("action-controller states (SetActionCtrlMode, ->state)", ("ACTION_",))),
         ("kind", ("entity / crate kinds (->kind comparisons, CreateCrate)", ("ENTITY_", "CRATE_KIND_", "ENEMY_KIND_"))),
         ("category_exit", ("SetActorCategoryExitStatus values", ("CATEGORY_EXIT_",))),
+        (
+            "level",
+            ("level ids, room kinds, boss ids, actor categories", ("LEVEL_", "ROOM_KIND_", "BOSS_", "CATEGORY_")),
+        ),
         ("flag_test", ("`& 0xNN` flag tests (not counted above)", ())),
     ]
 )
@@ -108,6 +113,13 @@ FIELDS = [
         r"\s*(?:\(void \*\))?(?P<v>" + LIT + r")\b",
         os.path.join("src", "player", ""),
     ),
+    # level topic: room kinds (src/level/'s only ->kind tests), the level
+    # id, GetBossIndex's result and the category type. Before "kind".
+    ("level", r"->kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", os.path.join("src", "level", "")),
+    ("level", r"\bself->level\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None),
+    ("level", r"GetBossIndex\s*\([\w*>-]*\)\s*(?:==|!=)\s*(?P<v>-?" + LIT + r")(?![\w])", None),
+    ("level", r"(?:CUR_CATEGORY|gActorCategories\[\w+\])\.type\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", None),
+    ("category_exit", r"\bgActorCategoryExitStatus\s*" + CMP + r"\s*(?P<v>" + LIT + r")\b", None),
     ("kind", r"(?:->|\.)kind\s*(?:==|!=)\s*(?P<v>" + LIT + r")\b", None),
     (
         "level_flags",
@@ -316,10 +328,14 @@ def load_constants():
                     value = 1 << int(m.group(2))
             if value is None:
                 continue
-            for topic, (_, prefixes) in TOPICS.items():
-                for p in prefixes:
-                    if m.group(1).startswith(p):
-                        by_prefix[topic][value].append(m.group(1))
+            # The longest matching prefix wins (LEVEL_FLAG_ over LEVEL_).
+            best = max(
+                ((p, t) for t, (_, ps) in TOPICS.items() for p in ps if m.group(1).startswith(p)),
+                key=lambda pt: len(pt[0]),
+                default=None,
+            )
+            if best:
+                by_prefix[best[1]][value].append(m.group(1))
     return by_prefix
 
 

@@ -20,7 +20,7 @@ s32 CountCategoryCrates(s32 categoryIdx)
 
     count = 0;
     table = gActorCategories[categoryIdx].spawnTable;
-    if (gActorCategories[categoryIdx].type == 0) {
+    if (gActorCategories[categoryIdx].type == CATEGORY_TYPE_POLAR) {
         i = 0;
         total = table[0].link;
         /* Manual pre-rotated `if (count<total) do {...} while (++i<total)`

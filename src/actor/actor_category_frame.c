@@ -160,7 +160,7 @@ s32 RunActorCategoryFrame(void)
 
     if (gActorCategoryVtable->fn[3] != NULL)
         _call_via_r0(gActorCategoryVtable->fn[3]);
-    gActorCategoryExitStatus = 0;
+    gActorCategoryExitStatus = CATEGORY_EXIT_NONE;
     scroll = GetCellAnimDistance();
     if (scroll - gActorSpawnOffset > gActorSpawnTable->depth)
         _call_via_r0(gActorCategoryVtable->fn[10]);
