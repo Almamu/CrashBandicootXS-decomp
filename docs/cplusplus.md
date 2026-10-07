@@ -436,6 +436,10 @@ counts them by kind) and what the C++ still needs.
 | `src/bosses/tiny_update.cpp` | `TinyCtrl` (include/boss_ctrl.hpp): `Update`, `SetState`, `PickHopTarget`, `SpawnFallingLeaves` | 4 | old_agbcp | 8 pins, 3 keeps, 1 asm -> 2 pins | 6 |
 | `src/bosses/dingodile.cpp` | `DingodileCtrl`, `DingodileShieldCtrl`, `DingodileProjectileCtrl`, `DingodileSharkCtrl`, and `CortexTargetCtrl`'s, `CortexCannonCtrl`'s and `CortexBossCtrl`'s methods (include/boss_ctrl.hpp) | 25 | old_agbcp | 7 pins, 2 holds, 2 uses, 1 const, the `PREP_VOBJ_CALL2` shared call and gotos, 2 asm labels -> 3 pins, 2 holds, 2 uses, 1 const, 1 asm label | 6b |
 | `src/bosses/dingodile_create.cpp` | `DingodileShieldCtrl`'s constructor, `DingodileCtrl`'s `StartMotion`, constructor, destructor and setters | 6 | agbcp | 2 pins, 1 use -> 0 | 6b |
+| `src/player/action_ctrl_event.cpp` | `ActionCtrl::HandleEvent` | 1 | old_agbcp | 3 consts, a `volatile` read -> the same | 5b |
+| `src/player/action_ctrl_hang.cpp` | `ActionCtrl::StateLeftGround`, `StateDying`, `StateWarpIn`, the 6 hang states, `ReleaseHang`, `DoSuperBodySlamShockwave`, `StartTornadoSpin` | 11 | old_agbcp | 15 pins, 1 const, 3 uses, 3 holds, 1 keep, 2 asm and a file-scope pool word, 2 volatile casts, a retyped store, an asm label -> 1 pin, 1 hold, 1 use | 5b |
+| `src/player/action_ctrl_run_jump.cpp` | `ActionCtrl::StateRun`, `StateJump` | 2 | old_agbcp | 1 keep -> 1 keep | 5b |
+| `src/player/action_ctrl_states.cpp` | `ActionCtrl::StateAirborne`, `StateFlipBodySlamStart`, `StateSlide`, the spin, crouch and crawl states | 11 | old_agbcp | 6 pins, 1 keep, 1 volatile pointer -> 1 volatile pointer | 5b |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -633,6 +637,48 @@ and the mirror byte's bitfield view, `mirrorBits` (`gfxMode`, a signed
 byte `mirror`, packed: an ARM struct or union is 4-byte sized and
 aligned otherwise, which would move the fields after it.
 
+Part 5b in numbers: the rest of the action controller, 25 `ActionCtrl`
+methods in 4 objects (`action_ctrl_event.cpp`, `_hang.cpp`,
+`_run_jump.cpp`, `_states.cpp`), so the whole class is C++ now except
+`Reset` (`ResetActionCtrl`, in wumpa.c). Project-wide: `MATCH_HOLD_REG`
+1979 -> 1959, instruction-emitting `asm` 235 -> 233 (and one file-scope
+pool word fewer), `MATCH_USE` 78 -> 76, `MATCH_KEEP` 55 -> 53, `MATCH_HOLD`
+22 -> 21, `MATCH_CONST` 29 -> 28, asm labels 19 -> 18, retyped field reads
+95 -> 92; the four files' scoped volatiles go from 4 to 2. The C's 99
+`ACT_CALL*`/`ACT_VCALL*` vcalls are `SetMode(...)`/`SetTargetAnim(Sprite(),
+...)`, and with them gone, action_obj.h's vcall macros, `struct
+act_vtable`, `struct act_method`, `struct act_anim_pair` and `ActSetNext`
+go too (`struct act` keeps its layout, for wumpa.c). All four objects
+match only under old_agbcp, like their old_agbcc C.
+
+- **`DoSuperBodySlamShockwave`** had 7 pins, `_call_via_r1`/`_r4` calls
+  through raw slot offsets, gotos for the loop and two hand-written
+  `ldr` asm statements sharing a file-scope literal pool word. It is now a
+  `while` loop calling `other->GetClassId()` and `other->HandleEvent(0,
+  EVENT_ATTACK_SUPER_BODY_SLAM, 0)` on a new `MovingSprite` view
+  (sprite_obj.hpp, below), with no workaround: the loop's test calls an
+  inline function (`CollidableCount()`), which keeps gcc from copying
+  the test in front of the loop, so CSE doesn't carry the list's address
+  into the body and the ROM's reload comes out; the 0x40 range is a
+  variable (`range`), which the ROM keeps in r8.
+- **`StartTornadoSpin`** (2 pins, 2 holds/uses, slot arithmetic) and
+  **`StateDying`** (the gone-bit sequence spelled out with 5 pins, a
+  `MATCH_KEEP` and a `volatile` read) need nothing: the second is
+  `SpriteObj::MarkGone()`.
+- `StateLeftGround`'s `MATCH_CONST` and `MATCH_USE`, `StateSpin`'s and
+  `StateTornadoSpin`'s `ActSetNextB` (2 pins and a keep), `StateCrawlStart`'s
+  4 pins and the `UpdatePlayerFacing_u8` asm label go too.
+
+Kept, each with a comment: `ReleaseHang`'s r2 hold (one pin, one empty
+`MATCH_HOLD`/`MATCH_USE` pair, no code: the 0x600 reload must take r3),
+`StateJump`'s `MATCH_KEEP` and `HandleEvent`'s three `MATCH_CONST`s (a 1
+the ROM loads apart from the A test's own 1), `HandleEvent`'s dead
+`volatile` read of `state`, and `StateCrouch`'s scoped `volatile` pointer
+(the `+0x28` address computed in the part's register). Two C idioms stay:
+action_obj.h's byte view of `flags2` (`ACT_PART_FLAGS0D`) in
+`StateLeftGround`, `StateAirborne` and `StateAirSpin`, and a `do { }
+while (0)` around one call in `StateCrawl` (gotchas).
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
@@ -650,9 +696,12 @@ vtable data and the C callers. When the last C user of a struct is
 converted, the struct can go.
 
 **Sprite objects.** `include/sprite_obj.hpp` has `Entity` (struct
-actor's 0x1C-byte header, all of gEntityVtable's slots, `MarkGone()`)
-and `SpriteObj` (struct gobj's fields, `mover` the part's `Ctrl`),
-shared by the controllers instead of each file's own partial view.
+actor's 0x1C-byte header, all of gEntityVtable's slots, `MarkGone()`),
+`SpriteObj` (struct gobj's fields, `mover` the part's `Ctrl`, and
+gSpriteObjVtable's slots 11 and 12) and `MovingSprite` (slot 13, the
+event handler of gMovingSpriteVtable and the tables built on it, such as
+the player's), shared by the controllers instead of each file's own
+partial view.
 `Entity`'s constructor is InitEntity (still C) and its destructor is
 inline, as DestroyPeriodicSpawner shows; the family itself is converted
 later. `EnemyCtrl` reaches its part through an anonymous union, as
@@ -675,11 +724,10 @@ Bigger controllers, roughly in order (function counts from
    `Reset`/`Restart` (in `action_ctrl.cpp`) in part 5a. **The action
    controller** (`ActionCtrl`): part 5a converted `action_ctrl.c`,
    `_moves.c`, `_update.c`, `_idle.c`, `_land.c`, `_left_ground.c` and
-   `kill_player.c`. Left for part 5b: `action_ctrl_event.c`
-   (`HandleEvent`), `_hang.c` (11 methods), `_run_jump.c` (2) and
-   `_states.c` (11), 25 methods with about 35 pins and asm statements, and
-   then action_obj.h's vcall macros (`ACT_CALL*`/`ACT_VCALL*`) and trio
-   inlines can go.
+   `kill_player.c`; part 5b the other four (`action_ctrl_event.c`,
+   `_hang.c`, `_run_jump.c`, `_states.c`), and action_obj.h's vcall
+   macros went with them. Only `Reset` (`ResetActionCtrl`, wumpa.c) is
+   still C.
 4. **The boss controllers:** ~~`tiny_update.c`, `mega_mix_update.c`~~
    (done in part 6) and ~~`dingodile*.c`~~ (part 6b). Left: `cortex.c`
    (25 functions, 64 lines with pins or asm; it also has
@@ -838,3 +886,23 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **Two tests of the same bit** are threaded into one when spelled the
   same; the ROM's re-test needs two spellings (`sbits.flipX < 0`, then
   `(s32)(mirror.all << 27) >= 0`: `UpdateFacing`).
+- **A loop whose body reloads a global's address** the ROM loaded in the
+  test: gcc copies a simple exit test in front of the loop, so the body is
+  entered by falling through it and CSE reuses the test's register. A
+  test that calls an inline function (a block of its own) isn't copied
+  (`DoSuperBodySlamShockwave`'s `CollidableCount()`; part 5b).
+- **A constant the ROM keeps in a register across a loop** (`cmp r1, r8`
+  where `cmp r1, #0x40` would do) is a variable set before the loop: CSE
+  doesn't know its value at the loop's top (`range`, part 5b).
+- **CSE following a jump into a block** can give the block's uses of a
+  variable a copy in another register, which stops the ROM's
+  cross-jump of two identical tails. A `do { ... } while (0)` around a
+  call in the block (no code; it is a loop to gcc) stops the path there,
+  as the C's `ACT_VCALL` macros did (`StateCrawl`, part 5b).
+- **A variable initialised at its declaration and then tested** can
+  give the test a copy of it (an extra `adds`); assigning it in the test,
+  `if ((hit = x & 8) != 0)`, doesn't (`StateLeftGround`, part 5b).
+- **A store the ROM schedules after a constant's load**: `flags.all |=
+  0x80` let the scheduler move the next 0 into the `ldrb`'s slot, while
+  the bitfield store `flags.bits.flag7 = 1` keeps the ROM's order
+  (`StateWarpIn`, part 5b).

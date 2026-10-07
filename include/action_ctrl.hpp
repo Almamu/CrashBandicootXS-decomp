@@ -3,10 +3,9 @@
 
 /* The action controller as C++ (#664, docs/cplusplus.md): the player's
  * controller on foot (room kind 0; PlayRoom creates it). Its code is in
- * src/player/action_ctrl*.cpp and kill_player.cpp; the files that are
- * still C (action_ctrl_event.c, _hang.c, _run_jump.c, _states.c) use the
- * C view, struct act, and the C names (cxx_symbols.txt maps every method
- * declared here to its C name, so the C++ code calls them as methods).
+ * src/player/action_ctrl*.cpp and kill_player.cpp, except Reset (wumpa.c,
+ * still C, on the C view, struct act). cxx_symbols.txt maps every method
+ * declared here to its C name, for the vtable and state table data.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp); the ROM's is
  * gActionCtrlVtable (src/data/entity_vtables_7e3bec.c). */
@@ -74,9 +73,8 @@ public:
     typedef void (ActionCtrl::*StateFunc)();
     static const StateFunc stateFuncs[ACTION_STATE_COUNT];
 
-    /* gActionCtrlVtable's slots. HandleEvent is still C
-     * (ActionCtrlHandleEvent, src/player/action_ctrl_event.c); slots 5-8,
-     * 11 and 12 are Ctrl's. */
+    /* gActionCtrlVtable's slots; slots 5-8, 11 and 12 are Ctrl's.
+     * HandleEvent is in src/player/action_ctrl_event.cpp. */
     ActionCtrl();                                                    // InitActionCtrl
     virtual void Update(SpriteObj *unused);                          // 1
     virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg); // 2
@@ -124,6 +122,41 @@ public:
         motionYPending = 1;
         motionY = entry;
     }
+    /* QueueNowX with the `motionXKeepSpeed` value a parameter too (a
+     * register the method already holds), the 1 still a literal. */
+    void QueuePendingX(s32 keepSpeed, s32 entry)
+    {
+        motionXKeepSpeed = keepSpeed;
+        motionXPending = 1;
+        motionX = entry;
+    }
+
+    /* The same through a pointer to `motionX`/`motionY` that the caller
+     * already holds (the ROM keeps the one it tested). */
+    void QueueNowXAt(u8 *slot, s32 entry)
+    {
+        motionXKeepSpeed = 0;
+        motionXPending = 1;
+        *slot = entry;
+    }
+    void QueueNowXKeepSpeedAt(u8 *slot, s32 entry)
+    {
+        motionXKeepSpeed = 1;
+        motionXPending = 1;
+        *slot = entry;
+    }
+    void QueueNowYAt(u8 *slot, s32 entry)
+    {
+        motionYKeepSpeed = 0;
+        motionYPending = 1;
+        *slot = entry;
+    }
+    void QueueYAt(u8 *slot, s32 pending, s32 entry)
+    {
+        motionYKeepSpeed = 0;
+        motionYPending = pending;
+        *slot = entry;
+    }
 
     /* SetModeAnim inlined, for a `frame` that is set: the frame value is
      * computed before the two calls. */
@@ -166,8 +199,7 @@ public:
     void QueueMotionX(s32 entry);
     u8 GetPrevState();
 
-    /* src/player/action_ctrl_hang.c (still C, like run_jump.c and
-     * states.c below) */
+    /* src/player/action_ctrl_hang.cpp */
     void StateLeftGround();
     void StateDying();
     void StateWarpIn();
@@ -209,11 +241,11 @@ public:
     void StateCrawlStop();
     void StateBodySlamStart();
 
-    /* src/player/action_ctrl_run_jump.c */
+    /* src/player/action_ctrl_run_jump.cpp */
     void StateRun();
     void StateJump();
 
-    /* src/player/action_ctrl_states.c */
+    /* src/player/action_ctrl_states.cpp */
     void StateAirborne();
     void StateFlipBodySlamStart();
     void StateSlide();
@@ -250,6 +282,13 @@ static inline u8 IsSlippery(struct player *p)
 static inline void SetSlippery(struct player *p, s32 slippery)
 {
     p->slippery = slippery;
+}
+
+/* A store to the player's `hitAxes` (+0x68) whose value, as an inline
+ * parameter, is materialized before the field's address. */
+static inline void SetHitAxes(struct player *p, s32 axes)
+{
+    p->hitAxes = axes;
 }
 
 #endif /* !GUARD_ACTION_CTRL_HPP */
