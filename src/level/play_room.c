@@ -115,7 +115,7 @@ s32 PlayRoom(struct level_progress *selfArg)
          * r0, r0, #0` runtime mask computation instead of
          * constant-folding it to a single immediate load - the
          * "negative-constant bit-clear idiom" documented in
-         * docs/matching.md (see `ClearSpriteObjFlag5` in ground_sprite.c for the
+         * docs/matching.md (see `ClearSpriteObjFlag5` in ground_sprite.cpp for the
          * established `register ... = -N` shape this mirrors). */
         MATCH_HOLD_REG(s32, mask, r0) = -0x11;
         MATCH_HOLD_REG(u8, cur, r3) = *p;

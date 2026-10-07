@@ -464,6 +464,13 @@ counts them by kind) and what the C++ still needs.
 | `src/crates/crate_stack.cpp` | `Crate::OpenLife`, `IsKindBreakable`, `GetTop`, `GetBottom`, `CollideWithPlayer` | 5 | **old_agbcp** (was agbcc) | 4 pins, 7 asm, 1 `.pool` -> 1 asm label | 7e |
 | `src/crates/crate_time_trial.cpp` | `Crate::OpenAkuAku`, with `ConvertCratesForTimeTrial` | 1 + 1 | **old_agbcp** (was agbcc) | 3 pins, 1 asm, 1 volatile read -> 0 | 7e |
 | `src/crates/slot_crate.cpp` | `Crate`'s accessors (the slot crate's word, `kind`, `state`, ...) | 26 | **old_agbcp** (was agbcc) | 6 pins -> 0 | 7e |
+| `src/objects/moving_sprite.cpp` | `MovingSprite`: constructor, destructor, `Reset`, `ApplyVelocity`, `Update`, the previous position | 11 | **old_agbcp** (was agbcc) | 30 pins, 1 asm, 2 retyped stores, 2 retyped `vs32` reads -> 0 | 7b |
+| `src/objects/moving_sprite_collide.cpp` | `MovingSprite`'s `HandleEvent`, `CheckPlayerContact`, `ClassifyContact`, `AttachCtrl` and accessors | 21 | **old_agbcp** (was agbcc) | 13 pins, 1 volatile read -> 0 | 7b |
+| `src/objects/player_contact.cpp` | `MovingSprite::TouchPlayer`, `ResolvePlayerContact` | 2 | **old_agbcp** (was agbcc) | 24 pins, gotos, 5 volatile reads -> 1 volatile read | 7b |
+| `src/objects/step_probe.cpp` | `MovingSprite::ProbeEdgeTerrain` | 1 | agbcp | 1 pin -> 1 pin | 7b |
+| `src/objects/ground_sprite.cpp` | `GroundSprite`: constructor, destructor, `Reset`, `Draw`, the flag accessors | 16 | **old_agbcp** (was agbcc) | 34 pins -> 0 | 7b |
+| `src/objects/ground_sprite_collide.cpp` | `GroundSprite::CheckPlayerContact`, `ProbeTerrainAxes`, `ProbeFloor` | 3 | old_agbcp | 2 pins, gotos -> 0 (one goto) | 7b |
+| `src/objects/ground_sprite_update.cpp` | `GroundSprite::Update`, `AnchorHitbox` | 2 | **old_agbcp** (was agbcc) | 14 pins, 4 asm, gotos -> 0 | 7b |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -729,8 +736,8 @@ ROM's sizes (`CreateEntity` allocates 0x1C bytes, `CreateSpriteObj` 0x40,
 | `Entity` | 0x1C | gEntityVtable (11 slots) | graphics.cpp |
 | `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp |
 | `UiSprite` | 0x40 | gUiSpriteObjVtable | sprite_anim.cpp |
-| `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | still C (moving_sprite*.c, player_contact.c) |
-| `GroundSprite` | 0x80 | gGroundSpriteVtable | still C (ground_sprite*.c) |
+| `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, player_contact.cpp, step_probe.cpp (part 7b) |
+| `GroundSprite` | 0x80 | gGroundSpriteVtable (15) | ground_sprite.cpp, ground_sprite_collide.cpp, ground_sprite_update.cpp (part 7b) |
 | `SpriteObj` | 0x80 | none of its own | the controllers' name for what they drive |
 
 The 0x40-byte class is `Sprite`: the C names of its methods say "SpriteObj"
@@ -866,6 +873,67 @@ box's stack address recomputed at each call, as in the C). C idioms kept:
 `GetTopCrate`'s and `GetBottomCrate`'s `goto`s (the ROM has both returns
 before the loop) and `UpdateCrate`'s `goto done`, nested `if`s and `s32`
 copy of `kind`. The `DropExtraLife` alias is the one new asm label.
+Part 7b in numbers: `MovingSprite` and `GroundSprite`, 7 objects and 56
+functions (moving_sprite.cpp, moving_sprite_collide.cpp, player_contact.cpp,
+step_probe.cpp, ground_sprite.cpp, ground_sprite_collide.cpp,
+ground_sprite_update.cpp). Project-wide: `MATCH_HOLD_REG` 1707 -> 1590,
+instruction-emitting `asm` 197 -> 192, retyped field stores 217 -> 215,
+retyped field reads 90 -> 88 and scoped volatiles 44 -> 39. Of the C's 118
+pins, 5 `asm` statements and 10 retyped or volatile accesses, one pin and
+one volatile read are left (below). Six of the seven objects match only
+under old_agbcp: `moving_sprite.o`, `moving_sprite_collide.o`,
+`player_contact.o`, `ground_sprite.o` and `ground_sprite_update.o` move to
+`OLD_AGBCC_OBJS` (their pins were old_agbcc's constant-before-`ldrb` and
+register choices reproduced under agbcc; `ground_sprite_collide.o` was
+old already); `step_probe.o` compiles the same under both and stays agbcc.
+
+The classes now have every method of the two vtables, the constructors
+(`InitMovingSprite`, `InitGroundSprite`; `new MovingSprite(id, x, y)` and
+`new GroundSprite(id, x, y)` inline them into `Create`, as `Sprite` does),
+the destructors (`~MovingSprite` is `delete mover`), the motion and hit
+mask accessors and the terrain probes. The four `_call_via_rN` trampolines
+on the controller (`mover->Update(this)`, `HandleEvent`, `Attach`, `delete
+mover`) and the three on the sprite itself (`TouchPlayer()`, `GetBounds()`,
+`IsNearCamera()`) are plain virtual calls; the controller's still take a
+`SpriteObj *` (step 7b'), so `this` is cast. `EntityFlags` names the two
+low bits of +0x0D, `floorProbe` and `grounded` (entity.hpp).
+
+What made the C++ match:
+
+- **Block copies.** `MovingSprite::Pos()`/`PrevPos()` view the position
+  and the previous position as a `struct gfx_vec`. `PrevPos() = Pos()` is a
+  block copy (both loads, then both stores), after which gcc reloads `x`
+  and `y`, as the ROM does; the C read them through `vs32` casts.
+  `GetPrevPos` returns `PrevPos()`: a struct return, the hidden pointer in
+  r0 before `this`, which is the C's `GetSpritePrevPos(dest, self)`.
+- **No locals for the speeds.** `ApplyVelocity`'s tail uses `speedX` and
+  `speedY` directly; CSE keeps them in the ROM's registers (the C pinned
+  them), and the redundant `gLastSpriteVelY` store the C wrote in `asm` is
+  kept as written (`if (gLastSpriteVelY != 0 && speedY == 0)
+  gLastSpriteVelY = speedY;`).
+- **Early returns instead of a shared store.** `ProbeFloor`'s three exits
+  shared one `strb` in the C (a `val` and gotos, with two pins for the
+  copy of the flags byte). Written as `f.b.grounded = 1; return hit;` in
+  each hit path, and the "was it grounded" re-test inside the retry's
+  block, cross-jumping gives the shared store, the copy and the shared 1
+  by itself.
+- **One result variable.** `ClassifyContact` gets the ROM's shared
+  `result = 2` block from `if (...) result = 2; else { ...; if (...)
+  result = 2; }`, not from early returns.
+- **A pointer argument computed first.** `TouchPlayer` passes `gPlayer` to
+  the inlined `IsPlayerInvulnerable` (a file-local copy), so it is loaded
+  before the comparison's 0, as in the ROM.
+- **Declarations at the first assignment.** `TouchPlayer`'s two boxes are
+  declared where they are filled (`struct aabb box = GetAttackBox();`), at
+  function scope, so each has its own slot (the frame is 32 bytes) and no
+  copy.
+
+Kept: `ProbeEdgeTerrain`'s pin on the tries pointer (unpinned, it and the
+saved probe flag swap r6 and r7; rewrites of the retry loop were further
+off) and `TouchPlayer`'s volatile read of the body box's `w` (otherwise it
+is read through the register holding the box's address, and `this` moves
+from r4 to r5). `ProbeTerrainAxes` keeps one goto (the ROM jumps from the
+X nudge straight to the Y probe).
 
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
@@ -973,7 +1041,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | Part | Files | Classes | Size | Depends on |
 |---|---|---|---|---|
 | ~~7a~~ | ~~graphics.c, sprite.c, sprite_obj.c, sprite_anim.c~~ | `Entity`, `Sprite`, `UiSprite`, `PartList` (update, collide), the sprite graphics managers | done | |
-| 7b | objects/moving_sprite.c, moving_sprite_collide.c, player_contact.c, step_probe.c, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | 55 functions, 1700 lines, 118 pins, 5 asm | 7a |
+| ~~7b~~ | ~~objects/moving_sprite.c, moving_sprite_collide.c, player_contact.c, step_probe.c, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c~~ | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | done | 7a |
 | 7b' | the controller headers and cxx_symbols.txt | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes | a rename, no code change | 7b; no other part of #664 in flight |
 | ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
 | 7d | objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old) | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) | 18 functions, 1050 lines, 34 pins, 3 asm | 7b |
@@ -1191,3 +1259,14 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   first in its `.text`; a header fragment with no include guard
   (crate_line_step.hpp), `inline` through crate.hpp and plain at the end
   of crate.cpp, gives both from one source (part 7e).
+- **Reloads after a two-word copy:** where the ROM copies the position
+  (`ldr; ldr; str; str`) and then loads `x` and `y` again, the copy is a
+  block copy (`PrevPos() = Pos()`, part 7b): gcc reloads after it, where
+  two field stores let CSE reuse the loaded values.
+- **A C function whose first argument is the result's address**
+  (`GetSpritePrevPos(dest, self)`) is a method returning a struct: g++
+  passes the hidden result pointer in r0, before `this`.
+- **A shared final store with gotos** (three exits jumping to one `strb`)
+  can usually be written as a store and a `return` in each path:
+  cross-jumping merges the copies into the ROM's shared tail
+  (`GroundSprite::ProbeFloor`, part 7b).

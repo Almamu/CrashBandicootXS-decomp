@@ -11,7 +11,7 @@
  * (`struct player`, player.h). */
 
 /* Re-initializes `self` (via `InitGroundSprite`, already matched in
- * `ground_sprite.c`), then overwrites its table with
+ * `ground_sprite.cpp`), then overwrites its table with
  * `gPlayerVtable` and clears its trailing `+0x108`/`+0x10c`
  * fields via `ResetCollisionQueue` (still raw - a two-field, 4-byte-plus-byte
  * clear). Allocates a fresh `struct actor`-shaped child object
@@ -28,7 +28,7 @@
  * `self`'s velocity/state fields and hook the `self+0xb0` child up via
  * its own `GetSpriteAnimPaletteSlot` call. Finally sets `id` (`self+8`) and
  * the Q8 `x`/`y` position from the three `u16` arguments - the same
- * tail `CreateGroundSprite` (`ground_sprite.c`) uses for its own, smaller
+ * tail `CreateGroundSprite` (`ground_sprite.cpp`) uses for its own, smaller
  * `struct actor` - and returns `self`. */
 struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused)
 {

@@ -7218,7 +7218,7 @@
     "InitMovingSprite"
    ],
    "consumer_files": [
-    "objects/moving_sprite.c"
+    "objects/moving_sprite.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -7244,7 +7244,7 @@
     "InitGroundSprite"
    ],
    "consumer_files": [
-    "objects/ground_sprite.c"
+    "objects/ground_sprite.cpp"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,

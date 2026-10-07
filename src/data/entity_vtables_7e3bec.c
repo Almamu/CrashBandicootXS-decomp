@@ -78,7 +78,7 @@ const struct vtable_slot gUiSpriteObjVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by ground_sprite.c, moving_sprite.c (GetMovingSpriteClassId, DestroyMovingSprite,
+/* Used by ground_sprite.cpp, moving_sprite.cpp (GetMovingSpriteClassId, DestroyMovingSprite,
  * ResetMovingSprite). */
 const struct vtable_slot gMovingSpriteVtable[15] = {
     VTABLE_SLOT(NULL),
@@ -98,7 +98,7 @@ const struct vtable_slot gMovingSpriteVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by ground_sprite.c (GetGroundSpriteClassId, DestroyGroundSprite, ResetGroundSprite). */
+/* Used by ground_sprite.cpp (GetGroundSpriteClassId, DestroyGroundSprite, ResetGroundSprite). */
 const struct vtable_slot gGroundSpriteVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideGroundSprite),

@@ -8,8 +8,9 @@
  *   Entity        0x1C  gEntityVtable        (11 slots) src/gfx/graphics.cpp
  *   Sprite        0x40  gSpriteObjVtable     (13 slots) src/objects/sprite*.cpp
  *   UiSprite      0x40  gUiSpriteObjVtable              src/objects/sprite_anim.cpp
- *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.c
- *   GroundSprite  0x80  gGroundSpriteVtable             src/objects/ground_sprite*.c
+ *   MovingSprite  0x78  gMovingSpriteVtable  (15 slots) src/objects/moving_sprite*.cpp,
+ *                                                       player_contact.cpp, step_probe.cpp
+ *   GroundSprite  0x80  gGroundSpriteVtable  (15 slots) src/objects/ground_sprite*.cpp
  *
  * The sizes are the ROM's: CreateEntity allocates 0x1C bytes,
  * CreateSpriteObj 0x40, CreateMovingSprite 0x78 and CreateGroundSprite
@@ -213,9 +214,11 @@ public:
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(UiSprite) == 0x40);
 
-/* The moving sprite (src/objects/moving_sprite*.c, gMovingSpriteVtable):
- * a sprite with a controller (`mover`), per-axis speeds and their ramps,
- * and the terrain probe's state. Its methods are still C. */
+/* The moving sprite (src/objects/moving_sprite.cpp, moving_sprite_collide.cpp,
+ * player_contact.cpp, step_probe.cpp; gMovingSpriteVtable): a sprite with a
+ * controller (`mover`), per-axis speeds and their ramps, and the terrain
+ * probe's state. Its update runs the controller's, its events go to the
+ * controller, and its slot 14 is the contact with the player. */
 class MovingSprite : public Sprite
 {
 public:
@@ -232,6 +235,7 @@ public:
     s32 prevY;   // 0x70
     s32 hitMask; // 0x74 - the probe axes hit this frame
 
+    MovingSprite();                                         // InitMovingSprite
     virtual s32 CheckPlayerContact();                       // 1 CollideMovingSprite
     virtual void Update();                                  // 3 UpdateMovingSprite
     virtual s32 GetClassId();                               // 9 GetMovingSpriteClassId
@@ -239,6 +243,59 @@ public:
     virtual s32 ApplyVelocity();                            // 12 ApplySpriteVelocity
     virtual void HandleEvent(s32 from, s32 event, s32 arg); // 13 HitMovingSprite
     virtual void TouchPlayer();                             // 14 CheckPlayerContact
+
+    /* CreateMovingSprite's `new MovingSprite(id, x, y)`: the constructor
+     * inlined (Sprite's out of line), then the spawn's id and position. */
+    MovingSprite(u16 id, u16 px, u16 py)
+    {
+        Reset();
+        this->id = id;
+        x = INT_TO_Q8((s32)px);
+        y = INT_TO_Q8((s32)py);
+    }
+    static MovingSprite *Create(u16 id, u16 x, u16 y, u16 unused); // CreateMovingSprite
+
+    /* The position and the previous position as vectors: a copy of one
+     * is a block copy (both loads, then both stores). */
+    struct gfx_vec &Pos()
+    {
+        return *(struct gfx_vec *)&x;
+    }
+
+    struct gfx_vec &PrevPos()
+    {
+        return *(struct gfx_vec *)&prevX;
+    }
+
+    void Reset(); // ResetMovingSprite
+    void SetPrevPos(s32 px, s32 py);
+    struct gfx_vec GetPrevPos();
+    s32 GetPrevY(); // in pixels
+    s32 GetPrevX();
+    s32 ClassifyContact(struct aabb *region); // ClassifySpriteContact
+    s32 GetHitMask();                         // GetGroundSpriteHitMask, ...
+    s32 HasHitMask();
+    void ClearHitMask();
+    void AddHitMask(s32 mask);
+    void SetHitAxes(u8 value); // SetGroundSpriteHitAxes, ...
+    u8 GetHitAxes();
+    void SetSpeedY(s32 value); // SetSpriteSpeedY, ...
+    void SetSpeedX(s32 value);
+    s32 GetSpeedX();
+    s32 GetSpeedY();
+    Ctrl *GetCtrl();             // GetSpriteCtrl
+    void AttachCtrl(Ctrl *ctrl); // AttachSpriteCtrl: `mover`, then the controller's Attach
+    /* StartSpriteMotionY, ...: the speed and its ramp (Start), or the
+     * ramp alone (Set). */
+    void StartMotionY(s32 speed, s32 step, s32 target);
+    void SetMotionY(s32 start, s32 step, s32 target);
+    void StartMotionX(s32 speed, s32 step, s32 target);
+    void SetMotionX(s32 start, s32 step, s32 target);
+    u8 GetProbeTries(); // GetGroundSpriteProbeTries
+    void ResolvePlayerContact();
+    /* ProbeHitboxEdgeTerrain: ProbeTerrain along the edge of `quad` that
+     * faces `mode`, retried lower (src/objects/step_probe.cpp). */
+    s32 ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad);
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
@@ -246,20 +303,51 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == sizeof(struct box_pa
 // gfx_part.h's view stops at prevY
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(struct gfx_part) <= sizeof(MovingSprite));
 
-/* The ground sprite (src/objects/ground_sprite*.c, gGroundSpriteVtable):
- * a moving sprite that probes the terrain under it. Its methods are
- * still C. struct gobj (gobj_1a794.h) is its C view. */
+/* The ground sprite (src/objects/ground_sprite.cpp, ground_sprite_collide.cpp,
+ * ground_sprite_update.cpp; gGroundSpriteVtable): a moving sprite that
+ * probes the terrain under it (slot 1) and keeps its hitbox anchored to
+ * the floor or the ceiling (slot 3). struct gobj (gobj_1a794.h) is its C
+ * view. */
 class GroundSprite : public MovingSprite
 {
 public:
     s32 type; // 0x78 - the platform type (CreatePlatform)
     u8 unk_7C[4];
 
+    GroundSprite();                   // InitGroundSprite
     virtual s32 CheckPlayerContact(); // 1 CollideGroundSprite
     virtual void Update();            // 3 UpdateGroundSprite
     virtual void Draw();              // 4 DrawGroundSprite
     virtual s32 GetClassId();         // 9 GetGroundSpriteClassId
     virtual ~GroundSprite();          // 10 DestroyGroundSprite
+
+    /* CreateGroundSprite's `new GroundSprite(id, x, y)`: the constructor
+     * inlined (MovingSprite's out of line), then the id and position. */
+    GroundSprite(u16 id, u16 px, u16 py)
+    {
+        Reset();
+        this->id = id;
+        x = INT_TO_Q8((s32)px);
+        y = INT_TO_Q8((s32)py);
+    }
+    static GroundSprite *Create(u16 id, u16 x, u16 y, u16 unused); // CreateGroundSprite
+
+    void Reset();    // ResetGroundSprite
+    u8 IsGrounded(); // IsGroundSpriteGrounded, ...: `grounded`
+    void ClearGrounded();
+    void SetGrounded();
+    u8 IsFloorProbeEnabled(); // IsGroundSpriteFloorProbeEnabled, ...: `floorProbe`
+    void DisableFloorProbe();
+    void EnableFloorProbe();
+    void ClearFlag5(); // ClearSpriteObjFlag5, ...
+    void SetFlag5();
+    u8 GetFlag5();
+    Ctrl *GetMover(); // GetMovingSpriteCtrl: GetCtrl's twin
+    /* ProbeGroundSpriteTerrain: the floor, then the terrain along each
+     * axis it moves on; returns the axes it hit. */
+    s32 ProbeTerrainAxes();
+    u8 ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag); // ProbeGroundSpriteFloor
+    void AnchorHitbox();                                        // AnchorGroundSpriteHitbox
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == sizeof(struct gobj));
@@ -281,8 +369,11 @@ static inline GroundSprite *PlayerSprite()
 
 /* A list of sprite objects (box_part.h's struct part_list is its C view):
  * Update compacts `items` and fills `visible`, the parts on screen, which
- * Collide walks. Its other methods are still C (src/objects/part_list.c,
- * part_list_cull.c, part_collide.c). */
+ * Collide walks. Its methods are C++: Update, Collide and CollideWithPlayer
+ * in src/objects/sprite_anim.cpp, the rest in part_list.cpp,
+ * part_list_cull.cpp and part_collide.cpp (part 7c). The items are typed
+ * MovingSprite, but some lists hold other sprites (crates, pickups);
+ * retyping them is left to part 7b'. */
 class PartList
 {
 public:

@@ -3,7 +3,7 @@
 #include "level.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
- * physics/collision step-probe (`src/objects/step_probe.c`, see
+ * physics/collision step-probe (`src/objects/step_probe.cpp`, see
  * `docs/matching/archive/naked-spatial-grid-tail.md`) and `PlayerHasRoomForAnim`'s
  * input-action-check gate (`src/player/player_anim_room.c`, see
  * `docs/matching/archive/issue-9-10-0x0800aaec-graphics.md`) both flagged this

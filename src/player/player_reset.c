@@ -8,7 +8,7 @@
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
  * (see docs/matching/archive/issue-9-0x08007634-actor.md). `ResetPlayer`/
- * `ResetPlayerForRoom` sit right after already-matched ground_sprite.c
+ * `ResetPlayerForRoom` sit right after already-matched ground_sprite.cpp
  * (`DrawGroundSprite`-`GetMovingSpriteCtrl`). */
 
 /* `part`-object constructor/reset: clears the velocity/accel fields
@@ -20,7 +20,7 @@
  * child/"owner" object at `+0xb0`: calls `GetSpriteAnimPaletteSlot(child)` and packs
  * its low nibble into `child+0x29`'s own low nibble (preserving the
  * high nibble) - the same field `ResetPlayer`'s sibling constructors in
- * ground_sprite.c already touch at a different bit.
+ * ground_sprite.cpp already touch at a different bit.
  *
  * Matched after a second pass closed the gap an earlier session parked
  * on (see docs/matching/archive/issue-9-0x08007634-actor.md's original entry

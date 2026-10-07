@@ -243,7 +243,7 @@ u8 PlayerTouchesBox(struct player *self, struct aabb *box)
  * the `child` sprite object is set) fires its `table+0x50/0x54`-
  * driven trampoline via `_call_via_r2` with constant arg `3`, then
  * calls `DestroyCollisionQueue(self->collisionQueue, 2)` and tail-calls `DestroyGroundSprite`
- * (already matched in `ground_sprite.c`). */
+ * (already matched in `ground_sprite.cpp`). */
 void DestroyPlayer(struct player *self, u32 arg1)
 {
     self->vtable = (const struct player_vtable *)gPlayerVtable;

@@ -166,7 +166,7 @@ extern void ResetEffectCtrl(void *self);
 extern void DestroyEffectCtrl(void *self, s32 flags);
 extern void *InitEffectCtrl(void *self);
 
-/* src/objects/ground_sprite.c */
+/* src/objects/ground_sprite.cpp */
 extern void DrawGroundSprite(void *self);
 extern s32 GetGroundSpriteClassId(void);
 extern void *CreateGroundSprite(u16 id, u16 x, u16 y, u16 unused);
@@ -184,16 +184,16 @@ extern void SetSpriteObjFlag5(void *self);
 extern u8 GetSpriteObjFlag5(void *self);
 extern s32 GetMovingSpriteCtrl(void *self);
 
-/* src/objects/ground_sprite_collide.c */
+/* src/objects/ground_sprite_collide.cpp */
 extern u8 CollideGroundSprite(struct box_part *self);
 extern s32 ProbeGroundSpriteTerrain(struct box_part *self);
 extern u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *outFlag);
 
-/* src/objects/ground_sprite_update.c */
+/* src/objects/ground_sprite_update.cpp */
 extern void UpdateGroundSprite(struct gobj *self);
 extern void AnchorGroundSpriteHitbox(struct gobj *self);
 
-/* src/objects/moving_sprite.c */
+/* src/objects/moving_sprite.cpp */
 extern s32 ApplySpriteVelocity(void *self);
 extern void SetSpritePrevPos(struct gfx_part *self, s32 x, s32 y);
 extern void GetSpritePrevPos(struct gfx_vec *dest, struct gfx_part *self);
@@ -206,7 +206,7 @@ extern void ResetMovingSprite(void *self);
 extern struct actor *InitMovingSprite(struct actor *part);
 extern void UpdateMovingSprite(struct actor *self);
 
-/* src/objects/moving_sprite_collide.c */
+/* src/objects/moving_sprite_collide.cpp */
 extern void HitMovingSprite(struct gobj *self, s32 a, s32 b, s32 c);
 extern s32 ClassifySpriteContact(void *part, void *region);
 extern s32 CollideMovingSprite(struct gobj *self);
@@ -273,7 +273,7 @@ extern s32 CheckPlatformContact(struct gobj *self);
 /* src/objects/platform_create.c */
 extern struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind);
 
-/* src/objects/player_contact.c */
+/* src/objects/player_contact.cpp */
 extern void CheckPlayerContact(void *part);
 extern void ResolvePlayerContact(void *part);
 
@@ -378,7 +378,7 @@ extern void SetSpriteAnimTable(void *part, void *val);
 extern void *GetSpriteAnimTable(void *part);
 extern u8 IsSpriteAnimLooping(struct actor *part);
 
-/* src/objects/step_probe.c */
+/* src/objects/step_probe.cpp */
 extern s32 ProbeHitboxEdgeTerrain(struct box_part *self, s32 mode, struct hitbox_quad *quad);
 
 /* The controllers' motion records (src/data/motion_records_16b304.c),
