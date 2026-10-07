@@ -176,7 +176,6 @@ void ActionCtrlStateRun(struct act *self)
     UpdatePlayerFacing(self);
 }
 
-
 /* Clears part+0x0D bits 0/1, then: on contact bit 2 plays animations
  * 0x1A/0x15, holds the part on frame 2 and hands it to ClearPlayerSpeedY; on the
  * alt edge (with +0x26 clear) plays 0xE/0x10 and clears the charge state
@@ -290,4 +289,3 @@ void ActionCtrlStateJump(struct act *self)
     }
     UpdatePlayerFacing(self);
 }
-asm(".align 2, 0");

@@ -387,19 +387,31 @@ $(PATCHED_ARM_OBJS): CC1 := $(CC1_ARM_PATCHED)
 $(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -fno-schedule-insns -fno-schedule-insns2
 $(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr
 
+# Appended to every compiled .s before it is assembled (#663). agbcc
+# starts each function with `.align 2, 0`, but nothing aligns the end of
+# the last one, so when a .text section ends on a halfword boundary `as`
+# pads it to the section's 4-byte alignment with a Thumb NOP (`mov r8, r8`,
+# 0x46C0). The original build left zeros there. Ending .text with an
+# explicit zero-fill `.align 2, 0` reproduces that; it adds nothing to a
+# section that already ends aligned.
+ZERO_PAD_TEXT := \t.text\n\t.align\t2, 0\n
+
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $(DEPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
+	printf '$(ZERO_PAD_TEXT)' >> $(C_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
 
 $(LIB_BUILDDIR)/%.o : $(LIB_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $(DEPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/$*.s
+	printf '$(ZERO_PAD_TEXT)' >> $(LIB_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(LIB_BUILDDIR)/$*.s
 
 $(LIBGCC2_OBJS): $(LIB_BUILDDIR)/libgcc/%.o: $(LIB_SUBDIR)/libgcc/libgcc2.c $(LIB_SUBDIR)/libgcc/libgcc2_udivmoddi4.h
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $(DEPFLAGS) -DL$* $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/libgcc/$*.s
+	printf '$(ZERO_PAD_TEXT)' >> $(LIB_BUILDDIR)/libgcc/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(LIB_BUILDDIR)/libgcc/$*.s
 
 $(LIB1FUNCS_OBJS): $(LIB_BUILDDIR)/libgcc/%.o: $(LIB_SUBDIR)/libgcc/lib1funcs.s

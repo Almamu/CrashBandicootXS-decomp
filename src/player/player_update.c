@@ -178,7 +178,6 @@ skipY:
         }
     }
 }
-asm(".align 2, 0");
 
 /* The player object's (`struct player`, player.h) small accessors and
  * methods. */

@@ -210,5 +210,3 @@ u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, voi
     }
     return 1;
 }
-/* The ROM zero-fills the halfword after the final `bx`. */
-asm(".align 2, 0");

@@ -244,7 +244,6 @@ void ActionCtrlStateAirborne(struct act *self)
     }
     ActQueue27(self, 0, 0);
 }
-asm(".align 2, 0");
 
 /* GitHub issue #17, ROM 0x080138E8-0x08013C60 (details in
  * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
@@ -681,7 +680,6 @@ turn_done:
         }
     }
 }
-asm(".align 2, 0");
 
 /* This file (and action_ctrl_land.c, its non-adjacent continuation) covers
  * part of `gActionCtrlStateTable`, the 42-slot per-level action dispatch
@@ -834,7 +832,3 @@ void ActionCtrlStateCrawl(struct act *selfArg)
     }
     UpdatePlayerFacing(self);
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");

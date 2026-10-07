@@ -107,5 +107,3 @@ void DetonateNearbyPolarNitros(struct actor_self *self)
         n = ACTOR_NEXT(n);
     } while (n != gActorList);
 }
-
-asm(".align 2, 0");

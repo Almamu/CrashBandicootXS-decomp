@@ -31,13 +31,6 @@ void ActorCategoryEndStub(void)
 {
 }
 
-/* Being the last function in this translation unit, the trailing 2-byte
- * alignment pad needs an explicit file-scope `asm(".align 2, 0")` - this
- * compiler otherwise pads with a `mov r8, r8` no-op instead of the
- * ROM's zero bytes (see matching_decomp_alignment_fix memory /
- * docs/matching.md). */
-asm(".align 2, 0");
-
 /* Commits the BG0/BG1 scroll accumulators to the actual hardware
  * scroll registers, then clears the per-axis bias (gActorBgShake)
  * for the next frame. `x`/`yShift` are register-pinned (both reused

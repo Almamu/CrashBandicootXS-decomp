@@ -11,7 +11,6 @@
 /* GitHub issue #9/#10: 0x0800A884 - the player object's (`struct
  * player`, player.h) collision method. */
 
-
 /* A per-frame "reentrancy guard"-shaped wrapper (only runs if
  * `self+0xc` bit 7 is set): fires `self->table+0x70`'s trampoline via
  * `_call_via_r1`, then calls `CollideGroundSprite` (still raw) with the global
@@ -233,4 +232,3 @@ u8 CollidePlayer(struct player *self)
     }
     return self->hitAxes;
 }
-asm(".align 2, 0");

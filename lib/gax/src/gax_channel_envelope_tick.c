@@ -50,4 +50,3 @@ void GaxChannelTick(struct GaxChannelState *self, struct GaxInfoHandler *info)
         }
     }
 }
-asm(".align 2, 0");

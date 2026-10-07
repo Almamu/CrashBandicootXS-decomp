@@ -113,9 +113,6 @@ void StartActionCtrlTornadoFall(struct act *selfArg)
         *p34 = zero;
     }
 }
-/* Zero-fill alignment before the next function (see docs/matching.md's
- * alignment-padding gotcha). */
-asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
@@ -226,10 +223,6 @@ void SteerActionCtrlSpin(struct act *self, u8 mode)
     }
     UpdatePlayerFacing(self);
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");
 
 /* Continuation of the code above (issue #18's chunk) - covers
  * `SetActionCtrlMode` through `ActionCtrlStateBodySlamStart`. Same "self" object family
@@ -583,8 +576,3 @@ void ActionCtrlStateBodySlamStart(struct act *self)
         }
     }
 }
-
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");

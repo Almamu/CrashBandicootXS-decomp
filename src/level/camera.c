@@ -175,5 +175,3 @@ void *OperatorNew(u32 size)
 {
     return mem_alloc(size, MEM_HEAP_EWRAM);
 }
-
-asm(".align 2, 0");

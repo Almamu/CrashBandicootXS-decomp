@@ -166,10 +166,6 @@ void RunCutscenePlayer(struct cutscene_player *self)
         i = SkipSlides(self, i, res);
     }
 }
-/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
- * (a bare `.align 2, 0` follows `bx r0` there too) - see the
- * `matching_decomp_alignment_fix` precedent. */
-asm(".align 2, 0");
 
 /* Plain two-argument forwarding trampoline to `DestroySlideshow`
  * (slideshow_display.c) - a same-shaped alias for a different call site
@@ -432,10 +428,6 @@ void StreamBgRow(struct bg_streamer *self, s32 row)
         }
     }
 }
-/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
- * (a bare `.align 2, 0` follows `bx r0` there too) - see the
- * `matching_decomp_alignment_fix` precedent. */
-asm(".align 2, 0");
 
 /* Streams in the newly exposed tile column `col`: decodes each of its up
  * to 4 in-bounds tiles into the column's ring-buffer blocks. */
@@ -497,10 +489,6 @@ void FillBgStreamer(struct bg_streamer *self, s32 *pos)
         }
     }
 }
-/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
- * (a bare `.align 2, 0` follows `bx r0` there too) - see the
- * `matching_decomp_alignment_fix` precedent. */
-asm(".align 2, 0");
 
 /* Stores `source` (the room/level descriptor - see this file's header
  * comment) into `self+0`, caches its `+0x1a`/`+0x1c` 8px-tile dimensions at
@@ -720,7 +708,3 @@ void StepBgLayerScroll(void *self0, void *delta0)
     self->x += dx;
     self->y += dy;
 }
-/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
- * (a bare `.align 2, 0` follows `bx r0` there too) - see the
- * `matching_decomp_alignment_fix` precedent. */
-asm(".align 2, 0");

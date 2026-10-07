@@ -30,7 +30,6 @@ void DrawSpriteAt(void *self, void *part, s32 x, s32 y)
     }
     DrawSpritePieces(self, part, pos);
 }
-asm(".align 2, 0");
 
 /* `part`'s own leading {x, y} pair (the same Q8 fixed-point position
  * fields struct actor has at 0x00/0x04) becomes the explicit position
@@ -40,7 +39,6 @@ void DrawSprite(void *self, void *part)
 {
     DrawSpriteAt(self, part, ((struct box_part *)part)->x >> 8, ((struct box_part *)part)->y >> 8);
 }
-asm(".align 2, 0");
 
 void DestroySpriteRenderer(void *arg0, u32 arg1)
 {
@@ -48,14 +46,12 @@ void DestroySpriteRenderer(void *arg0, u32 arg1)
         OperatorDelete(arg0);
     }
 }
-asm(".align 2, 0");
 
 /* gSpriteRenderer's empty constructor (InitLevelState), next to its
  * destructor DestroySpriteRenderer. */
 void InitSpriteRenderer(void)
 {
 }
-asm(".align 2, 0");
 
 /* Initializes/clears the sprite fields also used by
  * DrawSpritePieces/DrawAffineSpritePieces: the animation state (`anim`,
@@ -172,7 +168,6 @@ struct aabb GetSpriteHitbox(struct box_part *part)
         box.y = (part->y >> 8) * 2 - (box.y + box.h);
     return box;
 }
-asm(".align 2, 0");
 
 /* A third AABB-for-keyframe builder (see GetSpriteBounds/GetSpriteHitbox
  * above), this time selecting its `struct hitbox_quad` from the current
@@ -531,7 +526,6 @@ s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region)
         return earlyResult;
     }
 }
-asm(".align 2, 0");
 
 /* Advances `part`'s per-keyframe animation timer by one tick, only
  * while `animating` is set. `timer` counts up each tick against the

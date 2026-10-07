@@ -51,9 +51,7 @@
  * linked), plus a full clean `rm -rf build && make NON_MATCHING=1
  * report` (no warnings) and `rm -rf build crashbandicootxs.elf
  * crashbandicootxs.gba crashbandicootxs.map && make compare`
- * (`crashbandicootxs.gba: La suma coincide`). Already flush to a
- * 4-byte boundary (56 bytes total) - no trailing `.align 2, 0` gap,
- * unlike `ProbeTerrain`'s own end-of-function padding quirk.
+ * (`crashbandicootxs.gba: La suma coincide`).
  *
  * See docs/matching/archive/issue-9-10-0x0800a884-graphics.md for the full
  * write-up of this closure, appended to the section that originally

@@ -77,10 +77,6 @@ void ActionCtrlStateBodySlamLand(struct act *self)
         }
     }
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");
 
 /* Clears `self+0x18`. If `gKeys` bit `0x100` is set, fires
  * the usual base+offset+fn-pointer trampoline pair and clears
@@ -119,7 +115,3 @@ void ActionCtrlStateLand(struct act *self)
     }
     ActionCtrlStateIdle(self);
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");

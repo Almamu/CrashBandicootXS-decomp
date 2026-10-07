@@ -166,10 +166,6 @@ void *GetCollisionChunk(struct tile_cache *self, s32 recordId)
         return dest;
     }
 }
-/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
- * (a bare `.align 2, 0` follows `bx r1` there too) - see the
- * `matching_decomp_alignment_fix` precedent. */
-asm(".align 2, 0");
 
 /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
  * slot per tile record. */
@@ -401,7 +397,3 @@ void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
         }
     } while (budget >= 0);
 }
-/* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
- * (a bare `.align 2, 0` follows `bx r0` there too) - see the
- * `matching_decomp_alignment_fix` precedent. */
-asm(".align 2, 0");

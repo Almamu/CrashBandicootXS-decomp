@@ -125,4 +125,3 @@ void UnlinkCrateFromGrid(struct pool_manager *manager, struct pool_item *item)
         }
     }
 }
-asm(".align 2, 0");

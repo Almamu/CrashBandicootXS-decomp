@@ -29,7 +29,6 @@ struct meter_actor {
     s32 meter; // 0x54
 };
 
-
 /* Accumulator-drain/reward-dispenser for the `gJetpackQueuedWumpa`
  * accumulator `QueueJetpackWumpa` fills: while the singleton flag
  * (`gJetpackPlayerInactive`) is set, fully drains it via repeated
@@ -351,9 +350,6 @@ void RunJetpackPlayerState(struct actor_self *self)
     ACTOR_PMF_CALL(self, gJetpackPlayerStateFuncs);
 }
 
-/* Pad to the next word with zeros, as the ROM does. */
-asm(".align 2, 0");
-
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
@@ -363,5 +359,3 @@ u8 IsJetpackPlayerInactive(void)
 {
     return gJetpackPlayerInactive;
 }
-
-asm(".align 2, 0");

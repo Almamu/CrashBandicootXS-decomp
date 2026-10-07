@@ -371,4 +371,3 @@ void StartCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp
         self->rampY.target = z;
     }
 }
-asm(".align 2, 0");

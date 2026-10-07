@@ -223,5 +223,3 @@ struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
 
     return self;
 }
-
-asm(".align 2, 0");

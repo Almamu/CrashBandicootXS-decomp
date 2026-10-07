@@ -109,4 +109,3 @@ void UpdateHudClock(struct hud_counter *self)
     DrawHudPart(&self->parts[19], 0, 0);
     DrawHudPart(&self->parts[21], 0, 0);
 }
-asm(".align 2, 0");

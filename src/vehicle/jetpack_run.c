@@ -280,5 +280,3 @@ void AllocJetpackPlayerTiles(void *selfArg)
     gJetpackPlayerTileBuffer = 1;
     gJetpackPlayerLastFrame = 0;
 }
-
-asm(".align 2, 0");

@@ -62,8 +62,6 @@ void UpdatePolarAkuAkuCrate(struct actor_self *self)
     UpdatePolarCrate(self);
 }
 
-asm(".align 2, 0");
-
 /* Sits right after `UpdatePolarAkuAkuCrate` above and before the
  * still-raw remainder of `asm/code_3_2_20_28568_c99c.s` (starting at
  * `UpdatePolarElectricFence`) - directly adjacent to it now, closing
@@ -335,5 +333,3 @@ void *CreatePolarBasicCrate(void *selfArg, void *part, s32 b, s32 c, s32 lastArg
     self->vtable = (struct actor_vtable *)gPolarBasicCrateVtable;
     return self;
 }
-
-asm(".align 2, 0");

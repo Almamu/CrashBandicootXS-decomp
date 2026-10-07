@@ -52,8 +52,6 @@ void UpdateHovercraftCannonFlash(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Same `InitActorPart`-rooted per-instance "self" object family
  * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. This is a
  * third, much smaller object kind (`struct cannon_flash`, vtable
@@ -91,8 +89,6 @@ void *CreateHovercraftCannonFlash(void *selfArg, void *part, s32 b, s32 c, s32 d
 
     return self;
 }
-
-asm(".align 2, 0");
 
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
@@ -135,8 +131,6 @@ s32 RunHovercraftCannonFlashState(void *selfArg)
     return doAnim;
 }
 
-asm(".align 2, 0");
-
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
@@ -147,5 +141,3 @@ u8 IsHovercraftCannonFlashUnshootable(void *selfArg)
 
     return self->unshootable;
 }
-
-asm(".align 2, 0");

@@ -96,8 +96,6 @@ void UpdateJetpackShot(struct actor_falling *self)
     }
 }
 
-asm(".align 2, 0");
-
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
@@ -141,8 +139,6 @@ void *CreateJetpackShot(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e, s
     return self;
 }
 
-asm(".align 2, 0");
-
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
@@ -151,5 +147,3 @@ s32 IsJetpackShotUnshootable(void)
 {
     return 1;
 }
-
-asm(".align 2, 0");

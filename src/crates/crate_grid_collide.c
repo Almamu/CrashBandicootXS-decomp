@@ -97,7 +97,6 @@ void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struc
     for (node = *last; node != NULL; node = node->next)
         CheckPart(m, node->data, &screen, &box, &tmp, other);
 }
-asm(".align 2, 0");
 
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
@@ -173,4 +172,3 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
         }
     }
 }
-asm(".align 2, 0");

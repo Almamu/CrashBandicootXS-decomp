@@ -29,4 +29,3 @@ void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_p
         other->flags |= 8;
     }
 }
-asm(".align 2, 0");

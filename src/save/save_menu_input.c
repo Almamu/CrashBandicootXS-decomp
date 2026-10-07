@@ -517,12 +517,6 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
         SummarizeProgress(self, &self->rowStats[rowIndex], PackSaveData(*c0Addr));
     }
 }
-/* Trailing byte-padding mismatch fix: GAS's default Thumb code
- * alignment filler is the `mov r8, r8` NOP (0x46c0), but the ROM pads
- * this function's tail with a zero halfword instead (see
- * docs/matching.md's alignment-padding gotcha / the
- * matching_decomp_alignment_fix convention). */
-asm(".align 2, 0");
 
 /* State 7's input handler: confirm/cancel-combo commits row `pendingSlot`
  * (SaveGameToSlot, src/save/save_menu_input.c) and returns to state 0

@@ -441,7 +441,6 @@ bigtail:
 end:
     return;
 }
-asm(".align 2, 0");
 
 /* `screenSpace == 1` is the same fast override seen in
  * IsSpriteObjOnScreen/SpriteObjOverlapsRect; otherwise defers to `IsEntityInsideRect` (already
@@ -562,12 +561,7 @@ s32 GetSpriteTileBase(void *part)
  * straight-line code (no switch, no case merging to protect), so a
  * plain inline-asm anchor on just that one instruction - the same
  * technique that had backfired inside those functions' shared case
- * blocks - works here with no caveats. Needed a trailing
- * `asm(".align 2, 0")` since it's the last function in this file (the
- * ROM has 2 bytes of zero padding here before `GetSpriteObjPriority`
- * below, and a plain compiled function's own natural
- * alignment produces a `0x46c0` nop-fill instead - the standard
- * `matching_decomp_alignment_fix` gotcha). */
+ * blocks - works here with no caveats. */
 void *GetSpriteFrame(struct gfx_part *part)
 {
     MATCH_HOLD_REG(void *, rec, r1) = part->bank;
@@ -615,7 +609,6 @@ void *GetSpriteFrame(struct gfx_part *part)
         return ptrArray[idx2];
     }
 }
-asm(".align 2, 0");
 
 /* A sprite's OBJ priority: layer 0's BG priority (`gLevelLayers->layer0`'s
  * BGnCNT shadow at +0x34, bits 0-1), minus one when
@@ -662,7 +655,6 @@ s32 GetSpriteObjClassId(void)
     return 1;
 }
 
-
 /* Same `gEntityVtable`/conditional-`OperatorDelete` shape as
  * `DestroyEntity` (already matched in `graphics.c`). */
 void DestroySpriteObj(struct actor *self, u32 arg1)
@@ -683,7 +675,6 @@ struct actor *InitSpriteObj(struct actor *self)
     ResetSpriteObj(self);
     return self;
 }
-
 
 /* Looks up `part`'s keyframe record via `GetSpriteFrame` (already parked
  * as `NON_MATCHING` in `sprite_obj.c`), then picks a pointer off it
@@ -1196,4 +1187,3 @@ u8 IsSpriteAnimLooping(struct actor *part)
     MATCH_KEEP_VOLATILE(test);
     return test;
 }
-asm(".align 2, 0");

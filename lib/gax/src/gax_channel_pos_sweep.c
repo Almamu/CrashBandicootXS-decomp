@@ -37,4 +37,3 @@ void GaxChannelTickSweep(struct GaxChannelState *self)
     }
     self->samplePos = self->samplePos - (old << 11) + (self->sweepPos << 11);
 }
-asm(".align 2, 0");

@@ -174,10 +174,6 @@ struct crate *ResolveStackCrateHit(struct crate *selfArg, struct aabb *box, u8 *
     }
     return self;
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem documented in docs/rom_map.md ("Confirmed: a shared
@@ -285,6 +281,3 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
             BreakCrateInStack((struct crate *)self, 0, 0, 0);
     }
 }
-
-/* The object ends word-aligned with zero fill, as the ROM does. */
-asm(".align 2, 0");

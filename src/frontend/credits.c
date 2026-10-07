@@ -89,8 +89,6 @@ void DrawContinuePrompt(struct continue_prompt *self)
     HideUnusedOamEntries(gOamBuffer);
 }
 
-asm(".align 2, 0");
-
 /* --------------------------------------------------------------------
  * GetContinuePromptBlink - blink/toggle helper: returns 1 immediately if `mode`
  * isn't the dialog's current selection; otherwise advances the
@@ -160,8 +158,6 @@ u8 RunContinuePrompt(void)
     mem_free_bytes(0xc0000000);
     return result;
 }
-
-asm(".align 2, 0");
 
 /* The credits screen's constructor (docs/rom_map.md's "InitCredits is a
  * combined constructor" note): builds the starfield
@@ -247,9 +243,6 @@ struct credits_screen *InitCredits(struct credits_screen *self)
     return self;
 }
 
-asm(".align 2, 0");
-
-
 /* --------------------------------------------------------------------
  * CreditsLoop - the credits screen's per-frame driver: an input-gated busy
  * loop toggling `frameParity` every iteration (driving the popup-text
@@ -309,8 +302,6 @@ void CreditsLoop(struct credits_screen *self)
     }
     self->popupListHead = NULL;
 }
-
-asm(".align 2, 0");
 
 /* The credits screen's per-frame OAM-icon draw dispatcher for the starfield
  * object (`self->starfield`, the `sp[0xc]`-cached argument throughout):
@@ -401,8 +392,6 @@ void DrawCreditsText(struct credits_screen *self)
     }
     HideUnusedOamEntries(gOamBuffer);
 }
-
-asm(".align 2, 0");
 
 /* The credits screen's floating-text popup driver (docs/rom_map.md's "A
  * floating-text/glyph popup system" note): first walks `self`'s
@@ -582,8 +571,6 @@ place:
     }
 }
 
-asm(".align 2, 0");
-
 /* The credits screen's popup-text asset loader (docs/rom_map.md's
  * `LoadCreditsLogos` note): iterates `gCreditsLogos`'s 5 records
  * (stride 0x14) into `self->asset0`-`asset4` (`struct credits_screen` above
@@ -695,8 +682,6 @@ void LoadCreditsLogos(struct credits_screen *self)
     }
 }
 
-asm(".align 2, 0");
-
 /* --------------------------------------------------------------------
  * CommitCreditsFrame - end-of-frame commit for the credits screen: resets BG0's
  * scroll registers, flushes the shared tile cache and OAM shadow
@@ -755,5 +740,3 @@ void RunCredits(void)
     if (self != NULL)
         DestroyCredits(self, 3);
 }
-
-asm(".align 2, 0");

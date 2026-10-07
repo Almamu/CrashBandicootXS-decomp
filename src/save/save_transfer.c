@@ -13,12 +13,6 @@ void SetSaveFlags(struct save_data *self, u8 flags)
     self->flags = v;
     UpdateSaveChecksum(self);
 }
-/* Trailing byte-padding mismatch fix: GAS's default Thumb code
- * alignment filler is the `mov r8, r8` NOP (0x46c0), but the ROM pads
- * this function's tail with a zero halfword instead - force zero
- * padding to match (see docs/matching.md's alignment-padding gotcha /
- * the matching_decomp_alignment_fix convention). */
-asm(".align 2, 0");
 
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * save_data out of `self->tmpl`) into the SIO session's

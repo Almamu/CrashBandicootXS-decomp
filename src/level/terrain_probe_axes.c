@@ -129,6 +129,3 @@ s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s3
         self->kind = flag;
     return hit;
 }
-
-/* Zero-fill the trailing halfword, as the ROM does. */
-asm(".align 2, 0");

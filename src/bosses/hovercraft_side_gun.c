@@ -340,5 +340,3 @@ u8 IsHovercraftSideGunUnshootable(void *selfArg)
 void DamageHovercraftCannonFlash(void)
 {
 }
-
-asm(".align 2, 0");

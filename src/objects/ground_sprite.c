@@ -222,4 +222,3 @@ s32 GetMovingSpriteCtrl(void *selfArg)
 {
     return (s32)((struct gfx_part *)selfArg)->ctrl;
 }
-asm(".align 2, 0");

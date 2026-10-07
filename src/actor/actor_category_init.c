@@ -204,5 +204,3 @@ s32 InitActorCategory(s32 category)
     *(vu16 *)PLTT = 0;
     return ret;
 }
-
-asm(".align 2, 0");

@@ -993,16 +993,11 @@ commit:
         gPlayer->hitMask |= hit;
     }
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
  * docs/matching/archive/issue-12-physics-collision.md). Compiled with
  * old_agbcc (see the Makefile's OLD_AGBCC_OBJS). */
-
 
 /* Walks `obj`'s doubly-linked neighbor list both ways (`GetCrateAbove`
  * = next, `GetCrateBelow` = prev), clearing each visited neighbor's
@@ -1075,10 +1070,6 @@ void MarkCrateStackTouched(struct crate *obj, struct aabb *ctxArg)
         } while (cur != NULL);
     }
 }
-/* Trailing byte count isn't a multiple of 4 - without this, `as` pads
- * with its default NOP fill instead of the ROM's zero fill (see
- * docs/matching.md's alignment-padding gotcha). */
-asm(".align 2, 0");
 
 /* GitHub issue #12 Phase 2: 0x0800E560-0x0800EEF0, the lower-address
  * half of the remaining tail of the physics/collision subsystem's
@@ -2864,9 +2855,3 @@ void UpdateCrateFall(struct crate *self)
             self->fallSpeed = 5;
     }
 }
-/* Trailing byte-padding mismatch fix: the function body is 342 bytes
- * (not 4-aligned), and the ROM pads the 2-byte gap before the next
- * function (FindLineCrossing) with a zero halfword rather than the
- * assembler's default `nop` (`mov r8, r8`) - see
- * matching_decomp_alignment_fix memory. */
-asm(".align 2, 0");

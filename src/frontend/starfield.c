@@ -383,8 +383,6 @@ void DrawStarfield(void *selfArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Same "self" object family as hovercraft_side_gun.c - see that file's header
  * comment and docs/matching/archive/issue-63-0x08033ef4-actor.md. These two
  * functions drive a small 128-slot particle-like effect array at
@@ -511,8 +509,6 @@ void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
     }
 }
 
-asm(".align 2, 0");
-
 /* Same "self" object family as hovercraft_side_gun.c - see
  * docs/matching/archive/issue-63-0x08033ef4-actor.md. */
 
@@ -595,5 +591,3 @@ void DestroyStarfield(void *selfArg, s32 flags)
         OperatorDelete(self);
     }
 }
-
-asm(".align 2, 0");

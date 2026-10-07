@@ -607,7 +607,6 @@ void DestroySpriteBankSet(void *arg0, u32 arg1)
 void InitSpriteBankSet(void)
 {
 }
-asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -734,7 +733,6 @@ s32 CheckEntityPlayerContact(struct actor *self)
 void DrawEntity(void)
 {
 }
-asm(".align 2, 0");
 
 void UpdateEntity(struct actor *self)
 {
@@ -776,11 +774,7 @@ s32 IsEntityOnScreen(void)
  * `self` and `box` are pinned - matching the ROM's exact register
  * dance required it (see the inline asm block below), and a plain-C
  * parameter reload picked different registers once anything else in
- * this function was pinned. This function's body is 94 bytes (not
- * 4-aligned) and is the last thing in this translation unit right
- * now, so the trailing `asm(".align 2, 0")` below is required to get
- * the ROM's zero-fill instead of `as`'s default NOP pad - see
- * docs/matching.md, "A gotcha worth knowing". */
+ * this function was pinned. */
 s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
 {
     MATCH_HOLD_REG(struct actor *, pSelf, r5) = self;
@@ -848,7 +842,6 @@ s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
     }
     return flag;
 }
-asm(".align 2, 0");
 
 /* `arg0` is unused by the ROM - overwritten as scratch before its
  * incoming value is ever read. The camera position is layer 0's scroll
@@ -889,8 +882,6 @@ void WorldPosToScreen(s32 *arg0, s32 *arg1, s32 *arg2)
 void nullsub_12(void)
 {
 }
-asm(".align 2, 0");
-
 
 struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2, u16 unused)
 {
@@ -911,9 +902,7 @@ s32 GetEntityClassId(void)
 }
 
 /* Clears self's bit1/bit0/bit3/bit4, sets bit2 - the actor-init step
- * called from CreateEntity. 44-byte body isn't 4-aligned, so the
- * trailing asm(".align 2, 0") is required (see the first entry in
- * docs/matching.md). */
+ * called from CreateEntity. */
 void ResetEntity(struct actor *self)
 {
     /* `result` and `tmp` are pinned so the running result stays in
@@ -951,7 +940,6 @@ void ResetEntity(struct actor *self)
     *(u8 *)&self->rawW = 1;
     *(u8 *)&self->rawH = 1;
 }
-asm(".align 2, 0");
 
 struct actor *InitEntity(struct actor *self)
 {
@@ -986,13 +974,11 @@ void SetEntityAlwaysActive(struct actor *self)
     result |= tmp;
     self->flags = result;
 }
-asm(".align 2, 0");
 
 u8 IsEntityAlwaysActive(struct actor *self)
 {
     return (self->flags >> 4) & 1;
 }
-asm(".align 2, 0");
 
 /* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
  * SetEntityAlwaysActive above. */
@@ -1019,13 +1005,11 @@ void SetEntityTouched(struct actor *self)
     result |= tmp;
     self->flags = result;
 }
-asm(".align 2, 0");
 
 u8 IsEntityTouched(struct actor *self)
 {
     return (self->flags >> 3) & 1;
 }
-asm(".align 2, 0");
 
 /* Register pins force the ROM's exact register dance: gcc otherwise
  * doesn't move `self` to r1 at all (it can ldrb directly through r0),
@@ -1041,7 +1025,6 @@ u8 IsEntityGone(struct actor *self)
     result = result & flags;
     return result;
 }
-asm(".align 2, 0");
 
 /* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
  * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched above. */
@@ -1111,7 +1094,6 @@ u8 IsEntityContactEnabled(struct actor *self)
 {
     return (self->flags >> 2) & 1;
 }
-asm(".align 2, 0");
 
 /* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
  * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone above. */
@@ -1138,13 +1120,11 @@ void EnableEntityContact(struct actor *self)
     result |= tmp;
     self->flags = result;
 }
-asm(".align 2, 0");
 
 u8 GetEntityFlag1(struct actor *self)
 {
     return (self->flags >> 1) & 1;
 }
-asm(".align 2, 0");
 
 /* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
  * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone/DisableEntityContact/
@@ -1173,7 +1153,6 @@ void SetEntityFlag1(struct actor *self)
     result |= tmp;
     self->flags = result;
 }
-asm(".align 2, 0");
 
 s32 GetEntityPixelY(struct actor *self)
 {
@@ -1200,7 +1179,6 @@ void SetEntityPixelPos(struct actor *self, s32 arg1, s32 arg2)
     self->x = arg1 << 8;
     self->y = arg2 << 8;
 }
-asm(".align 2, 0");
 
 void SetEntityPixelPosVec(struct actor *self, s32 *arg1)
 {
@@ -1212,7 +1190,6 @@ void SetEntityPos(struct actor *self, s32 arg1, s32 arg2)
     self->x = arg1;
     self->y = arg2;
 }
-asm(".align 2, 0");
 
 void SetEntityPosVec(struct actor *self, s32 *arg1)
 {

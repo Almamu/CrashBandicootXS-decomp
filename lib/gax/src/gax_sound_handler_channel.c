@@ -10,4 +10,3 @@
 void GaxChannelUnknown(void)
 {
 }
-asm(".align 2, 0");

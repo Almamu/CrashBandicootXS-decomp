@@ -307,5 +307,3 @@ void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32 b, s32
 
     return self;
 }
-
-asm(".align 2, 0");

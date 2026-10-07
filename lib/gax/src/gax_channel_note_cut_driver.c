@@ -40,4 +40,3 @@ u8 GaxFxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
     GaxChannelTick(self, info);
     return self->muted == 0 ? (u8)GaxChannelMix(self, info, buf, arg, self->type->data.song, 1) : 0;
 }
-asm(".align 2, 0");

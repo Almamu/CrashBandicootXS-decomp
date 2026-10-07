@@ -66,8 +66,6 @@ void IrqEmptyHandler(void)
 {
 }
 
-__asm__(".align 2,0");
-
 /* Clears the VBlank callbacks, installs VBlankHandler and enables the
  * VBlank IRQ in DISPSTAT. Called once from AgbMain. */
 void EnableVBlankHandler(void)
@@ -270,5 +268,3 @@ void ClearKeys(void)
     *(u16 *)&addr->held = zero;
     addr->pressed = zero;
 }
-
-__asm__(".align 2,0");

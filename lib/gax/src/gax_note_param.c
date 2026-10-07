@@ -23,4 +23,3 @@ void GAX_fx_note(s32 channel, u32 period)
         }
     }
 }
-asm(".align 2, 0");

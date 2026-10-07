@@ -53,6 +53,3 @@ s32 EEPROMWrite1_check(u16 addr, u16 *data)
     }
     return result;
 }
-/* Pads the object to 4 bytes with zeros: the libgcc `_call_via_r0`
- * (lib/libgcc/lib1funcs.s) that follows starts at 0x0803AD78. */
-asm(".align 2, 0");

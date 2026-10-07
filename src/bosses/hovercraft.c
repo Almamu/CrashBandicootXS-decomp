@@ -1168,5 +1168,3 @@ s32 sub_80337FC(void)
 void nullsub_35(void)
 {
 }
-
-asm(".align 2, 0");

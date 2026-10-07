@@ -86,9 +86,6 @@ void ResolveCollisionCandidates(struct collision_queue *self)
     }
 }
 
-/* Zero-fill the trailing halfword before AddCollisionCandidate, as the ROM does. */
-asm(".align 2, 0");
-
 /* GitHub issue #12/#14's physics/collision subsystem continues past
  * 0x08010D54 into a large, still-unexamined 25-function/~27KB chunk
  * (asm/code_3_2_17_e560_10d54.s). This file is Phase 1 of that chunk's

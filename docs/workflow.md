@@ -43,9 +43,9 @@ incomplete pass and should be finished before moving on.
    original disassembly (`arm-none-eabi-cpp` + `tools/agbcc/bin/agbcc`
    with the same flags `Makefile`'s `C_BUILDDIR` rule uses - see there
    for the exact invocation).
-3. Iterate on the C until it's byte-exact - register-variable pins,
-   inline-asm anchors, and a trailing `asm(".align 2, 0")` for padding
-   mismatches are all fair game (see
+3. Iterate on the C until it's byte-exact - register-variable pins
+   and inline-asm anchors are fair game (the build zero-fills the end
+   of each object's `.text`, so trailing padding needs nothing; see
    [matching_techniques.md](./matching_techniques.md) for the
    established techniques, and `include/match.h` for the macros that
    spell the asm idioms and register pins; `tools/match_idioms.py

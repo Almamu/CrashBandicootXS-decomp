@@ -89,7 +89,6 @@ void SetEnemyAnimMode(struct part_ctrl *self, s32 mode)
 
     _call_via_r3(addr, owner, entry, fn);
 }
-asm(".align 2, 0");
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyOscillateX`/
@@ -446,7 +445,6 @@ void SetEnemyOscillator(struct part_ctrl *self, s32 period, s32 phase, s32 ampli
     self->phase = phase;
     self->amplitude = amplitude;
 }
-asm(".align 2, 0");
 
 /* `self+0x48`/`0x4c` setter - the fields `UpdateEnemyShooter`'s
  * (`enemy_shooter.c`) own `__modsi3` "close enough" gate reads. */
@@ -474,9 +472,7 @@ void SetEnemyAttackTiming(struct part_ctrl *self, s32 idleTime, s32 attackTime, 
  * already builds from (`self`'s own position offset/size, distinct
  * from `owner`'s own smaller flags-byte field layout at the same
  * nominal offsets, per that function's own doc comment). The fourth
- * argument arrives on the stack (only 3 fit in `r1`-`r3`); needed the
- * trailing `[[matching_decomp_alignment_fix]]` idiom since its own
- * 18-byte body isn't 4-byte-aligned. */
+ * argument arrives on the stack (only 3 fit in `r1`-`r3`). */
 void SetEnemyTriggerBox(struct part_ctrl *self, s32 l, s32 t, s32 r, s32 b)
 {
     self->boxL = l;
@@ -484,7 +480,6 @@ void SetEnemyTriggerBox(struct part_ctrl *self, s32 l, s32 t, s32 r, s32 b)
     self->boxT = t;
     self->boxB = b;
 }
-asm(".align 2, 0");
 
 /* `self+0x84` setter - the per-instance mode-indexed pointer table
  * `SetEnemyAnimMode`/`SetEnemyState` (`enemy_ctrl.c`/`enemy_attack.c`)
@@ -493,7 +488,6 @@ void SetEnemyModeTable(struct part_ctrl *self, const s32 *anims)
 {
     self->anims = anims;
 }
-asm(".align 2, 0");
 
 /* `kind` (`self+0x6c`, the enemy kind) setter; the level spawners store
  * `kind` directly.
@@ -547,7 +541,6 @@ void UpdatePeriodicSpawner(struct periodic_spawner *self)
     }
 }
 
-
 /* Sets `self+0x18`'s table pointer (the struct-actor-shaped "table"
  * field role, per this file's own banner comment) to
  * `gEntityVtable` - the same table `graphics.c`'s own
@@ -577,7 +570,6 @@ void SetPeriodicSpawnerPeriod(struct periodic_spawner *self, s32 period, s32 pha
     self->period = period;
     self->phase = phase;
 }
-asm(".align 2, 0");
 
 /* `callback` setter (the function UpdatePeriodicSpawner calls);
  * SpawnSealSpawner (spawn_objects.c) stores `callback` directly.
@@ -662,7 +654,6 @@ void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
 void ResetKnockedEnemyCtrl(void *self)
 {
 }
-asm(".align 2, 0");
 
 /* Same "double-set" shape as `DestroyEnemyCtrl` above: sets `self+0xc`'s
  * table pointer to `gKnockedEnemyCtrlVtable` - the same fixed anchor

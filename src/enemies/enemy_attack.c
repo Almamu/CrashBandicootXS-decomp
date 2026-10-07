@@ -68,9 +68,7 @@
  *
  * `UpdateEnemyTriggerBox` is real C too (issue #9-#11 NAKED retry): holding
  * `self->target` in a block-local pinned to r1 reproduces the prelude's
- * load order and registers. `UpdateEnemyTriggerBox`'s trailing
- * byte count needs the trailing `asm(".align 2, 0")` (the ROM
- * zero-pads its last 2 bytes to the next 4-byte boundary). */
+ * load order and registers. */
 
 /* `LaunchHarmfulEffectPart` (enemy_ctrl.c), inlined. */
 static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e,
@@ -190,7 +188,6 @@ void UpdateEnemyTriggerBox(struct part_ctrl *self)
         break;
     }
 }
-asm(".align 2, 0");
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md): the last four
@@ -345,8 +342,6 @@ void SetEnemyState(struct part_ctrl *self, s32 state)
     self->baseX = self->target->x;
     self->baseY = self->target->y;
 }
-/* The ROM zero-pads to the next function. */
-asm(".align 2, 0");
 
 /* Sets the X homing bounds to the target's x +/- `radius` (Q8) and
  * caches the homing speed pair. */
@@ -376,4 +371,3 @@ void SetEnemyRangeX(struct part_ctrl *self, s32 radius)
     self->rangeX[0] = x - (radius << 8);
     self->rangeX[1] = self->target->x + (radius << 8);
 }
-asm(".align 2, 0");

@@ -89,7 +89,6 @@ s32 CountCrateEntities(void *self, const struct level_entity_list *list)
     }
     return count;
 }
-asm(".align 2, 0");
 
 /* The bit accessors of struct entity_flags (level.h), by entity id `n`:
  * `bits0` is the committed "gone" set (collected, broken or killed;
@@ -174,8 +173,6 @@ s32 IsEntityIdActivated(void *self, s32 n)
     }
     return result;
 }
-
-asm(".align 2, 0");
 
 /* Sets bit `n` in *both* `bits1` (`self+0x208`) and `bits1Copy`
  * (`self+0x308`): the activation is committed at once, so it survives a
