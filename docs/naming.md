@@ -139,9 +139,10 @@ the names with the header it already includes. A data table in
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
 | `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |
 | `attack_kinds.h` | `ATTACK_KIND_` | how the player hits a crate, the `gCrateHitResponse` column |
+| `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
 
 Planned topics use the same scheme (`entities.h`/`ENTITY_`,
-`crates.h`/`CRATE_KIND_`, `events.h`/`EVENT_`, ...).
+`crates.h`/`CRATE_KIND_`, ...).
 `tools/magic_numbers.py` lists the literals that are left, by topic
 (`--report` for the counts), and `--topic T --fix` replaces the ones that
 have exactly one name.

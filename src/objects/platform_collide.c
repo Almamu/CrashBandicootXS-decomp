@@ -232,7 +232,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 struct player *q = gPlayer;
 
                 if (!(q->hitAxes & 8)) {
-                    Call68(q, 0, 0xC, 4);
+                    Call68(q, 0, EVENT_BUMP, 4);
                     PosPtr(&pos)->y = (oy << 8) + PosPtr(&pos)->y;
                 }
             }
@@ -270,7 +270,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         }
         SetEntityPos((struct actor *)gPlayer, pos.x, PosPtr(&pos)->y);
         if (flags) {
-            Call68(gPlayer, 0, 0xC, flags);
+            Call68(gPlayer, 0, EVENT_BUMP, flags);
             gPlayer->hitMask |= flags;
         }
         if (result == 8) {
@@ -288,15 +288,15 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 if (d <= 7) {
                     switch (type) {
                     case 2:
-                        Call68(gPlayer, 0, 0x11, 0);
+                        Call68(gPlayer, 0, EVENT_WARP_EXIT, 0);
                         break;
                     case 3:
                         if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial)
-                            Call68(gPlayer, 0, 0xF, 0);
+                            Call68(gPlayer, 0, EVENT_WARP_BONUS_ROUND, 0);
                         break;
                     case 4:
                         if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial)
-                            Call68(gPlayer, 0, 0x10, 0);
+                            Call68(gPlayer, 0, EVENT_WARP_GEM_PATH, 0);
                         break;
                     }
                 }
@@ -328,7 +328,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 d ^= sign;
                 d -= sign;
                 if (d <= 7)
-                    Call68(gPlayer, 0, 0x11, 0);
+                    Call68(gPlayer, 0, EVENT_WARP_EXIT, 0);
             }
             break;
         case 3:
@@ -340,7 +340,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 d ^= sign;
                 d -= sign;
                 if (d <= 7)
-                    Call68(gPlayer, 0, 0xF, 0);
+                    Call68(gPlayer, 0, EVENT_WARP_BONUS_ROUND, 0);
             }
             break;
         case 4:
@@ -352,7 +352,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 d ^= sign;
                 d -= sign;
                 if (d <= 7)
-                    Call68(gPlayer, 0, 0x10, 0);
+                    Call68(gPlayer, 0, EVENT_WARP_GEM_PATH, 0);
             }
             break;
         case 1:

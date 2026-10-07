@@ -393,11 +393,11 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
             return;
         if ((gPlayer->x >> 8) < (self->x >> 8)) {
             if (kind != ATTACK_KIND_SLIDE || GetCrateAbove(obj) != NULL) {
-                D18C_CALL68(0, 0xc, 1);
+                D18C_CALL68(0, EVENT_BUMP, 1);
                 D18C_Hit(gPlayer, 1);
             }
         } else if (kind != ATTACK_KIND_SLIDE || GetCrateAbove(obj) != NULL) {
-            D18C_CALL68(0, 0xc, 2);
+            D18C_CALL68(0, EVENT_BUMP, 2);
             D18C_Hit(gPlayer, 2);
         }
         D18C_RING_PUSH(obj);
@@ -496,10 +496,10 @@ tail:
                     self->kind != 0xd) {
                     gPlayer->flags.all |= 0x40;
                     SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
-                    D18C_CALL68(0, 0xa, 0);
+                    D18C_CALL68(0, EVENT_HIT_CRUSH, 0);
                 } else {
                     BreakCrateInStack(self, 0, 0, 0);
-                    D18C_CALL68(0, 1, 0);
+                    D18C_CALL68(0, EVENT_HIT, 0);
                 }
                 return;
             } else if (dx > 6 && dy > 1 && f21 != 0) {
@@ -526,7 +526,7 @@ tail:
                     f.p2.x -= dx << 8;
                 SetEntityPos((struct actor *)gPlayer, f.p2.x, D18C_PosPtr(&f.p2)->y);
                 D18C_COMMIT();
-                D18C_CALL68(0, 0xc, dirX);
+                D18C_CALL68(0, EVENT_BUMP, dirX);
                 D18C_Hit(gPlayer, dirX);
                 return;
             } else {
@@ -544,7 +544,7 @@ tail:
                     pp->y -= dy << 8;
                 SetEntityPos((struct actor *)gPlayer, f.p3.x, pp->y);
                 D18C_COMMIT();
-                D18C_CALL68(0, 0xc, dirY);
+                D18C_CALL68(0, EVENT_BUMP, dirY);
                 D18C_Hit(gPlayer, dirY);
                 return;
             }
@@ -718,7 +718,7 @@ tail:
             code = 3;
         if (kind <= ATTACK_KIND_SLIDE || kind == ATTACK_KIND_INVINCIBLE ||
             (kind == ATTACK_KIND_SPIN && code <= 2)) {
-            D18C_CALL68(0, 0xc, 4);
+            D18C_CALL68(0, EVENT_BUMP, 4);
             D18C_Hit(gPlayer, 4);
             if (gPlayer->hitAxes != 8)
                 D18C_PosPtr(&f.pos)->y = (dy << 8) + D18C_PosPtr(&f.pos)->y;
@@ -858,16 +858,16 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                 if (kind == ATTACK_KIND_JUMP) {
                     if (k == 4 || k == 8) {
                         PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
-                        E08C_CALL68(0xe, 8);
+                        E08C_CALL68(EVENT_BOUNCE_HIGH, 8);
                     } else
-                        E08C_CALL68(0xd, 8);
+                        E08C_CALL68(EVENT_BOUNCE, 8);
                     gPlayer->speedY = 0;
                     gPlayer->rampY.start = 0;
                     gPlayer->rampY.step = 0;
                     gPlayer->rampY.target = 0;
                 } else if ((u32)(kind - ATTACK_KIND_BODY_SLAM) <= 1 && k == 8) {
                     PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
-                    E08C_CALL68(0xe, 8);
+                    E08C_CALL68(EVENT_BOUNCE_HIGH, 8);
                     gPlayer->speedY = 0;
                     gPlayer->rampY.start = 0;
                     gPlayer->rampY.step = 0;
@@ -988,7 +988,7 @@ commit:
             SetEntityPos((struct actor *)p, pos.x, pos.y);
     }
     if (hit != 0) {
-        E08C_CALL68(0xc, hit);
+        E08C_CALL68(EVENT_BUMP, hit);
         gPlayer->hitMask |= hit;
     }
 }
@@ -1672,7 +1672,7 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
             struct player *p = gPlayer;
 
             if (p->flags.all >> 7) {
-                PhysCall3(p, (struct actor_method *)&p->vtable->handleEvent, 0, 0x1a, 0);
+                PhysCall3(p, (struct actor_method *)&p->vtable->handleEvent, 0, EVENT_MASK_GAIN, 0);
                 PhysSfx(1);
             }
         }
@@ -1947,7 +1947,7 @@ void ExplodeCrate(struct crate *self, u8 near)
         if (near) {
         call:
             p = gPlayer;
-            PhysCall3(p, (struct actor_method *)&p->vtable->handleEvent, 0, 4, 0);
+            PhysCall3(p, (struct actor_method *)&p->vtable->handleEvent, 0, EVENT_HIT_EXPLOSION, 0);
         }
     }
     if (self->kind != 0xa)

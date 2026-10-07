@@ -126,7 +126,7 @@ fire:
         fn = (u8 *)d8obj + fnOffset;
         dead = *(vu32 *)&entry->fn;
         (void)dead;
-        _call_via_r4(fn, 0, 0x1a, 0);
+        _call_via_r4(fn, 0, EVENT_MASK_GAIN, 0);
         PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
     }
 end:;

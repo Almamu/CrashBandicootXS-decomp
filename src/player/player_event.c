@@ -218,15 +218,15 @@ static inline s32 Ac2cArmed(struct player *self)
 void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
 {
     switch (code) {
-    case 27:
+    case EVENT_CRYSTAL:
         *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRYSTAL;
         PlaySfx(gAudioContext, SFX_CRYSTAL, 0x100);
         break;
-    case 18:
+    case EVENT_ROOM_EXIT:
         RequestRoomExit();
         ShowHudCounters(gHud);
         break;
-    case 17:
+    case EVENT_WARP_EXIT:
         {
             struct level_state *game = gLevelState;
 
@@ -236,51 +236,51 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
         NOTIFY(self, a, code, c);
         ShowHudCounters(gHud);
         break;
-    case 15:
+    case EVENT_WARP_BONUS_ROUND:
         RequestBonusRound(gLevelState);
         NOTIFY(self, a, code, c);
         break;
-    case 16:
+    case EVENT_WARP_GEM_PATH:
         RequestGemPath(gLevelState);
         NOTIFY(self, a, code, c);
         break;
-    case 28:
+    case EVENT_STOPWATCH:
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             self->deadline = 0;
         PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
         StartTimeTrial(gLevelState);
         break;
-    case 29:
+    case EVENT_CRATE_GEM:
         PlaySfx(gAudioContext, SFX_GEM, 0x100);
         *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRATE_GEM;
         break;
-    case 30:
+    case EVENT_GEM_PATH_GEM:
         PlaySfx(gAudioContext, SFX_GEM, 0x100);
         *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_GEM_PATH_GEM;
         break;
-    case 34:
+    case EVENT_YELLOW_GEM:
         PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 2;
         break;
-    case 32:
+    case EVENT_GREEN_GEM:
         PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 4;
         break;
-    case 31:
+    case EVENT_RED_GEM:
         PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 1;
         break;
-    case 33:
+    case EVENT_BLUE_GEM:
         PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 8;
         break;
-    case 35:
-    case 36:
-    case 37:
-    case 38:
+    case EVENT_POWER_DOUBLE_JUMP:
+    case EVENT_POWER_TORNADO_SPIN:
+    case EVENT_POWER_BODY_SLAM:
+    case EVENT_POWER_TURBO_RUN:
         RequestRoomExit();
         break;
-    case 26:
+    case EVENT_MASK_GAIN:
         if (gLevelState->maskLevel == MASK_LEVEL_NONE) {
             struct player_pos *h = self->maskTrail;
             s32 i;
@@ -297,16 +297,16 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             self->deadline = gRoomFrameCount + 1200;
         break;
-    case 1:
-    case 2:
-    case 3:
-    case 4:
+    case EVENT_HIT:
+    case EVENT_HIT_FIRE:
+    case EVENT_HIT_ELECTRIC:
+    case EVENT_HIT_EXPLOSION:
     case 5:
-    case 6:
+    case EVENT_HIT_BITE:
     case 7:
     case 8:
-    case 9:
-    case 10:
+    case EVENT_HIT_CORTEX_SHOT:
+    case EVENT_HIT_CRUSH:
         if ((self->flags.all >> 6) & 1) {
             if (!Ac2cArmed(self)) {
                 struct level_state *game = gLevelState;
@@ -320,7 +320,7 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
                         SetMaskLevel(game, game->maskLevel - 1);
                         PlaySfx(gAudioContext, SFX_AKU_AKU_LOSE, 0x100);
                         PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
-                        NOTIFY(self, a, 0xb, c);
+                        NOTIFY(self, a, EVENT_MASK_HIT, c);
                         /* The ROM reloads the mode here and never uses it. */
                         (void)*(volatile s32 *)&gLevelState->maskLevel;
                         child = self->child;
@@ -336,19 +336,19 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
             }
         }
         break;
-    case 23:
-    case 24:
+    case EVENT_HANG_GRAB:
+    case EVENT_HANG_RELEASE:
         self->rampY.start = 0;
         self->rampY.step = 0;
         self->rampY.target = 0;
         NOTIFY(self, a, code, c);
         break;
-    case 12:
+    case EVENT_BUMP:
         NOTIFY(self, a, code, c);
         break;
-    case 13:
-    case 14:
-    case 25:
+    case EVENT_BOUNCE:
+    case EVENT_BOUNCE_HIGH:
+    case EVENT_LAUNCH_PAD:
         self->rampY.start = 0;
         self->rampY.step = 0;
         self->rampY.target = 0;

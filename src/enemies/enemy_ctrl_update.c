@@ -405,8 +405,8 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
     if (self->popup)
         MarkGone(self->popup);
     switch (state) {
-    case 19:
-    case 20:
+    case EVENT_ATTACK_SPIN:
+    case EVENT_ATTACK_SLIDE:
         {
             struct launch_obj *obj = CreateKnockedEnemyCtrl(OperatorNew(0x10));
             struct part_method *m;
@@ -432,9 +432,9 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
             }
         }
         break;
-    case 1:
-    case 21:
-    case 22:
+    case EVENT_HIT:
+    case EVENT_ATTACK_BODY_SLAM:
+    case EVENT_ATTACK_SUPER_BODY_SLAM:
         {
             struct ctrl_target *obj = SpawnAt(0x29, self->target->x >> 8, self->target->y >> 8);
             s32 one = 1;
