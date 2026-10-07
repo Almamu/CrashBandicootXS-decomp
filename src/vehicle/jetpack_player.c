@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "level_state.h"
@@ -266,7 +267,7 @@ void JetpackPlayerStateFinish(void *selfArg)
 
     self->base.z += 0x200;
 
-    v = self->base.z - (GetCellAnimDistance() << 8);
+    v = self->base.z - INT_TO_Q8(GetCellAnimDistance());
     self->base.depth = v;
 
     if (gJetpackFadeStarted == 0 && v > 0x8200) {

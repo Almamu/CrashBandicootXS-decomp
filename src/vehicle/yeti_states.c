@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "util.h"
@@ -46,19 +47,19 @@ void YetiStateChase(void)
     u8 dummyStack;
 
     if (GetCellAnimSpeed() == 0x24) {
-        gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
+        gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
     } else {
         gYetiPosition += 0x99;
-        gYetiDistance = (GetCellAnimDistance() << 8) - gYetiPosition;
+        gYetiDistance = INT_TO_Q8(GetCellAnimDistance()) - gYetiPosition;
     }
 
     if (gYetiDistance > 0xa000) {
         gYetiDistance = 0xa000;
-        gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
+        gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
     }
 
     {
-        s32 tier = gYeti->animTime >> 8;
+        s32 tier = Q8_TO_INT(gYeti->animTime);
 
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xc) {
@@ -161,15 +162,15 @@ void YetiStateCharge(void)
     s32 idx = gYetiParamsIndex;
 
     *c8 += *(s32 *)(table + idx * 0xc);
-    gYetiDistance = (GetCellAnimDistance() << 8) - gYetiPosition;
+    gYetiDistance = INT_TO_Q8(GetCellAnimDistance()) - gYetiPosition;
 
     if (gYetiDistance > 0xa000) {
         gYetiDistance = 0xa000;
-        gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
+        gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
     }
 
     {
-        s32 tier = gYeti->animTime >> 8;
+        s32 tier = Q8_TO_INT(gYeti->animTime);
 
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xb) {

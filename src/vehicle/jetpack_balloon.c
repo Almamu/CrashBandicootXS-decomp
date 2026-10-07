@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
@@ -176,8 +177,8 @@ void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
     base = GetAnimFrameBaseOffset(self);
     if (base >= self->anims[self->animIndex].loopThreshold) {
         // clang-format off
-        self->animTime -= (self->anims[self->animIndex].loopThreshold -
-                           self->anims[self->animIndex].loopBase) << 8;
+        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
+                                    self->anims[self->animIndex].loopBase);
         // clang-format on
         self->animDone = 1;
     }
@@ -217,8 +218,8 @@ void JetpackBalloonStatePop(struct actor_self *self)
     base = GetAnimFrameBaseOffset(self);
     if (base >= self->anims[self->animIndex].loopThreshold) {
         // clang-format off
-        self->animTime -= (self->anims[self->animIndex].loopThreshold -
-                           self->anims[self->animIndex].loopBase) << 8;
+        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
+                                    self->anims[self->animIndex].loopBase);
         // clang-format on
         self->animDone = 1;
     }
@@ -233,17 +234,15 @@ void JetpackBalloonStateFloatAway(struct jetpack_balloon *self)
 
     self->base.y += self->velY;
     self->velY -= 6;
-    if (self->velY > -0x12C) {
-        self->velY = -0x12C;
-    }
+    LIMIT_MAX(self->velY, -0x12C);
     self->base.stateTime++;
     self->base.animTime += *(s16 *)&self->base.animTimer;
     self->base.animDone = 0;
     base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
         // clang-format off
-        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold -
-                                self->base.anims[self->base.animIndex].loopBase) << 8;
+        self->base.animTime -= INT_TO_Q8(self->base.anims[self->base.animIndex].loopThreshold -
+                                         self->base.anims[self->base.animIndex].loopBase);
         // clang-format on
         self->base.animDone = 1;
     }

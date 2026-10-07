@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -1124,15 +1125,11 @@ void *CreateJetpackRocket(void *selfArg, void *part, s32 b, s32 c, s32 d)
     InitActorPartInline(self, part, b, 0xfa00, d);
     self->health = health;
     self->base.vtable = (struct actor_vtable *)gJetpackRocketVtable;
-    if (c > 0x3f00)
-        c = 0x3f00;
-    if (c < -0x3f00)
-        c = -0x3f00;
+    LIMIT_MAX(c, 0x3f00);
+    LIMIT_MIN(c, -0x3f00);
     self->limitY = c;
-    if (self->base.x > 0x8000)
-        self->base.x = 0x8000;
-    if (self->base.x < -0x8000)
-        self->base.x = -0x8000;
+    LIMIT_MAX(self->base.x, 0x8000);
+    LIMIT_MIN(self->base.x, -0x8000);
     self->originX = self->base.x;
     self->stepY = __divsi3(self->limitY - 0xfa00, 0xc6);
     self->hit = 0;

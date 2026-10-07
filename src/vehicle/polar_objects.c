@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "util.h"
@@ -357,8 +358,8 @@ void AimPolarPenguin(void *selfArg, s32 target)
 
             factor = __divsi3(lit, countdown2);
         }
-        self->velX = factor * (GetActorSpawnX(target) - self->base.x) >> 0xc;
-        self->velY = factor * (GetActorSpawnY(target) - self->base.y) >> 0xc;
+        self->velX = Q12_TO_INT(factor * (GetActorSpawnX(target) - self->base.x));
+        self->velY = Q12_TO_INT(factor * (GetActorSpawnY(target) - self->base.y));
         self->nextTarget = GetActorSpawnNextTarget(target);
     }
 }
@@ -653,7 +654,7 @@ void UpdatePolarAkuAku(void *selfArg)
             MATCH_HOLD_REG(s32, threshold, r2) = record->loopThreshold;
 
             if (frame >= threshold) {
-                MATCH_HOLD_REG(s32, diff, r0) = (threshold - record->loopBase) << 8;
+                MATCH_HOLD_REG(s32, diff, r0) = INT_TO_Q8(threshold - record->loopBase);
 
                 self->animTime -= diff;
                 *(u8 *)&self->animDone = 1;
@@ -690,11 +691,11 @@ void MovePolarAkuAku(struct actor_self *self, s32 posX, s32 posY, s32 posZ)
     s32 cur, d;
 
     if (self->state == 0) {
-        s32 ox = gSineTable[(self->stateTime * 4) & 0xff] * 24 - 0x1000;
+        s32 ox = SIN_Q8(self->stateTime * 4) * 24 - 0x1000;
         s32 oy;
 
         tx = posX + ox;
-        oy = gSineTable[(self->stateTime * 2) & 0xff] * 10 - 0x1e00;
+        oy = SIN_Q8(self->stateTime * 2) * 10 - 0x1e00;
         ty = posY + oy;
         tz = posZ - 0x200;
         self->x += (tx - self->x) / 16;
@@ -705,7 +706,7 @@ void MovePolarAkuAku(struct actor_self *self, s32 posX, s32 posY, s32 posZ)
         s32 oy;
 
         self->x = posX;
-        oy = gSineTable[(self->stateTime * 9) & 0xff] * 4 - 0xa00;
+        oy = SIN_Q8(self->stateTime * 9) * 4 - 0xa00;
         self->y = oy + posY;
         self->z = posZ + 0x200;
         return;

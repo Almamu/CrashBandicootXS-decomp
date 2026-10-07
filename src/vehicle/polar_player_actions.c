@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "actor_self.h"
@@ -47,9 +48,7 @@ void PolarPlayerStateLaunched(void *selfArg)
 
     self->y = total;
     gPolarPlayerVelY += 0x60;
-    if (gPolarPlayerVelY > 0x780) {
-        gPolarPlayerVelY = 0x780;
-    }
+    LIMIT_MAX(gPolarPlayerVelY, 0x780);
 
     if (total > 0x2800) {
         self->y = 0x2800;
@@ -170,9 +169,7 @@ void FinishPolarRun(void *player)
     if (gPolarPlayerInactive == 0) {
         gPolarFinishTimer = 0x16;
         SetCellAnimSpeed(0x24);
-        if (gPolarPlayerVelY < 0) {
-            gPolarPlayerVelY = 0;
-        }
+        LIMIT_MIN(gPolarPlayerVelY, 0);
         StopYeti();
         gPolarPlayerInactive = 1;
         gPolarSteerEnabled = 0;

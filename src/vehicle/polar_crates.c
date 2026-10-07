@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -225,17 +226,13 @@ void *InitPolarCrate(void *selfArg, void *part, s32 b, s32 c, s32 lastArg)
     InitActorPart(self, part, b, c, lastArg);
     self->vtable = (struct actor_vtable *)gPolarCrateVtable;
 
-    idx = __divsi3((b >> 8) + 0x3c, 0x14);
+    idx = __divsi3(Q8_TO_INT(b) + 0x3c, 0x14);
 
-    if (idx < 0) {
-        idx = 0;
-    }
-    if (idx > 5) {
-        idx = 5;
-    }
+    LIMIT_MIN(idx, 0);
+    LIMIT_MAX(idx, 5);
 
     {
-        s32 cShifted = c >> 8;
+        s32 cShifted = Q8_TO_INT(c);
 
         if (cShifted <= 0x2b) {
             idx += 6;

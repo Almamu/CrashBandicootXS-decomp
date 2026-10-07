@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "level_state.h"
@@ -181,7 +182,7 @@ void *CreatePolarBoostPad(struct actor_once *self, void *part, s32 posY, s32 c, 
     InitActorPart(self, part, posY, c, d);
     self->base.vtable = (struct actor_vtable *)gPolarBoostPadVtable;
 
-    classify >>= 8;
+    classify = Q8_TO_INT(classify);
 
     {
         s32 low = -0x14;

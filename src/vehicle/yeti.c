@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "actor.h"
@@ -57,7 +58,7 @@ void CreateYeti(void *arg0)
 
     gYetiX = 0;
     gYetiDistance = 0xa000;
-    gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
+    gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
     SetActorBgLayerDepth(gYetiDistance);
 
     gYetiState = 0;

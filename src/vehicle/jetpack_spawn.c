@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "byte_arg.h"
 #include "actor_self.h"
@@ -121,9 +122,9 @@ void *SpawnJetpackActor(struct jetpack_spawn_rec *rec, u8 alt, s32 dz)
         return 0;
     if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
         return 0;
-    x = rec->x << 8;
-    y = rec->y << 8;
-    z = (rec->z << 8) + dz;
+    x = INT_TO_Q8(rec->x);
+    y = INT_TO_Q8(rec->y);
+    z = INT_TO_Q8(rec->z) + dz;
     if ((u8)(kind - 0x10) <= 2) {
         SpawnAirship(kind - 0x10, x, y, z);
     } else if (kind != 0xa) {
@@ -341,8 +342,7 @@ void UpdateJetpackPlayer(struct actor_hp *self)
 
             gJetpackBomberSfxTimer = 0x16;
             vol = gJetpackBomberCount * 48;
-            if (vol > 0x100)
-                vol = 0x100;
+            LIMIT_MAX(vol, 0x100);
             PlaySfx(gAudioContext, SFX_JETPACK_BOMBER, vol);
         }
         gJetpackBomberCount = 0;
@@ -361,7 +361,7 @@ void UpdateJetpackPlayer(struct actor_hp *self)
     }
     if (gJetpackPlayerHalted == 0) {
         self->base.depth = 0x1c00;
-        self->base.z = (GetCellAnimDistance() << 8) + self->base.depth;
+        self->base.z = INT_TO_Q8(GetCellAnimDistance()) + self->base.depth;
     }
     {
         s32 d = (self->base.depth >> 1) & 0x7f80;
@@ -374,8 +374,8 @@ void UpdateJetpackPlayer(struct actor_hp *self)
     if (GetAnimFrameBaseOffset((struct actor_self *)self) >=
         self->base.anims[self->base.animIndex].loopThreshold) {
         // clang-format off
-        self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold -
-                                self->base.anims[self->base.animIndex].loopBase) << 8;
+        self->base.animTime -= INT_TO_Q8(self->base.anims[self->base.animIndex].loopThreshold -
+                                         self->base.anims[self->base.animIndex].loopBase);
         // clang-format on
         self->base.animDone = 1;
     }
@@ -386,7 +386,7 @@ void UpdateJetpackPlayer(struct actor_hp *self)
 /* The anim_part_instance accessors (actor_anim.c), inlined. */
 static inline s32 AnimBase(struct actor_self *self)
 {
-    return self->animTime >> 8;
+    return Q8_TO_INT(self->animTime);
 }
 
 static inline u8 *CurFrame(struct actor_self *self)
@@ -428,16 +428,16 @@ void DrawJetpackPlayer(struct actor_hp *self)
     halfH = h * 4;
     if (self->base.depth == self->base.record->baseDepth) {
         scale = 0x100;
-        sy = (self->base.y + GetActorBgCenterY()) >> 8;
-        sx = (self->base.x + GetActorBgCenterX()) >> 8;
+        sy = Q8_TO_INT(self->base.y + GetActorBgCenterY());
+        sx = Q8_TO_INT(self->base.x + GetActorBgCenterX());
     } else {
         s32 depth = self->base.depth;
         s32 f;
 
         scale = (depth << 8) / self->base.record->baseDepth;
         f = 0x1c00000 / depth;
-        sy = (((self->base.y * f) >> 12) + GetActorBgCenterY()) >> 8;
-        sx = (((self->base.x * f) >> 12) + GetActorBgCenterX()) >> 8;
+        sy = Q8_TO_INT(Q12_TO_INT(self->base.y * f) + GetActorBgCenterY());
+        sx = Q8_TO_INT(Q12_TO_INT(self->base.x * f) + GetActorBgCenterX());
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;
@@ -573,7 +573,7 @@ void JetpackPlayerStateFly(struct actor_hp *self)
             PlayAmbientSfx(gAudioContext, SFX_JETPACK_SHOOT, 1000, 0xa0, one);
             x = self->base.x + 0x1200;
             y = self->base.y - 0x1800;
-            SpawnJetpackShot(x, y, self->base.z + 10, (x * 0x199) >> 12, (y * 0x199) >> 12);
+            SpawnJetpackShot(x, y, self->base.z + 10, Q12_TO_INT(x * 0x199), Q12_TO_INT(y * 0x199));
         }
     }
 }
@@ -586,8 +586,7 @@ void JetpackPlayerStateRollLeft(struct actor_hp *self)
     SteerJetpackPlayerY(self);
     if (self->base.stateTime <= 5) {
         gJetpackPlayerVelX += -0x100;
-        if (gJetpackPlayerVelX < -0x500)
-            gJetpackPlayerVelX = -0x500;
+        LIMIT_MIN(gJetpackPlayerVelX, -0x500);
     } else {
         gJetpackPlayerVelX += 0x2d;
         if (Abs(gJetpackPlayerVelX) <= 0x2d)
@@ -619,8 +618,7 @@ void JetpackPlayerStateRollRight(struct actor_hp *self)
     SteerJetpackPlayerY(self);
     if (self->base.stateTime <= 5) {
         gJetpackPlayerVelX += 0x100;
-        if (gJetpackPlayerVelX > 0x500)
-            gJetpackPlayerVelX = 0x500;
+        LIMIT_MAX(gJetpackPlayerVelX, 0x500);
     } else {
         gJetpackPlayerVelX -= 0x2d;
         if (Abs(gJetpackPlayerVelX) <= 0x2d)

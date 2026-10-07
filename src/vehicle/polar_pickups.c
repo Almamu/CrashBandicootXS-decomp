@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -88,7 +89,7 @@ frameBlock:
             MATCH_HOLD_REG(s32, e6, r1) = *(s16 *)(entryPtr + six);
             MATCH_HOLD_REG(s32, diff, r1) = e4 - e6;
 
-            diff <<= 8;
+            diff = INT_TO_Q8(diff);
             self->base.animTime -= diff;
             self->base.animDone = 1;
         }
@@ -119,8 +120,8 @@ void DrawPolarCollectedWumpa(void *selfArg)
     MATCH_HOLD_REG(struct actor_self *, self, r6) = selfArg;
     MATCH_HOLD_REG(s32, rawX, r0) = self->x;
     MATCH_HOLD_REG(s32, rawY, r1) = self->y;
-    MATCH_HOLD_REG(s32, x, r4) = rawX >> 8;
-    MATCH_HOLD_REG(s32, y, r5) = rawY >> 8;
+    MATCH_HOLD_REG(s32, x, r4) = Q8_TO_INT(rawX);
+    MATCH_HOLD_REG(s32, y, r5) = Q8_TO_INT(rawY);
     u8 *frame;
     MATCH_HOLD_REG(u32, flag, r8);
     MATCH_HOLD_REG(u32, packed, r3);
