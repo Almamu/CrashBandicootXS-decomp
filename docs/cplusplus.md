@@ -434,6 +434,8 @@ counts them by kind) and what the C++ still needs.
 | `src/player/kill_player.cpp` | `ActionCtrl::KillPlayer`, `UpdateSkidAnim`, `UpdateFacing` | 3 | **old_agbcp** (was agbcc) | 44 pins, 1 asm -> 1 pin | 5a |
 | `src/bosses/mega_mix_update.cpp` | `MegaMixCtrl::Update` (include/boss_ctrl.hpp) | 1 | old_agbcp | 3 pins, 2 keeps, gotos -> 1 pin, 1 keep, one goto | 6 |
 | `src/bosses/tiny_update.cpp` | `TinyCtrl` (include/boss_ctrl.hpp): `Update`, `SetState`, `PickHopTarget`, `SpawnFallingLeaves` | 4 | old_agbcp | 8 pins, 3 keeps, 1 asm -> 2 pins | 6 |
+| `src/bosses/dingodile.cpp` | `DingodileCtrl`, `DingodileShieldCtrl`, `DingodileProjectileCtrl`, `DingodileSharkCtrl`, and `CortexTargetCtrl`'s, `CortexCannonCtrl`'s and `CortexBossCtrl`'s methods (include/boss_ctrl.hpp) | 25 | old_agbcp | 7 pins, 2 holds, 2 uses, 1 const, the `PREP_VOBJ_CALL2` shared call and gotos, 2 asm labels -> 3 pins, 2 holds, 2 uses, 1 const, 1 asm label | 6b |
+| `src/bosses/dingodile_create.cpp` | `DingodileShieldCtrl`'s constructor, `DingodileCtrl`'s `StartMotion`, constructor, destructor and setters | 6 | agbcp | 2 pins, 1 use -> 0 | 6b |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -600,6 +602,37 @@ merges the copies into the ROM's layout; only state 2's out-of-range
 path still jumps to state 0's copy (`goto run`), and only state 2's
 last `dead` read is one step off (pinned).
 
+Part 6b in numbers: Dingodile's two files, 31 functions and seven
+classes. The Neo Cortex fight's target, cannon and boss controllers
+sit between Dingodile's methods in the ROM, so their methods here are
+converted too; the rest of them (`UpdateCortexTarget`,
+`UpdateCortexBoss`, ...) are still C in cortex.c. `MATCH_HOLD_REG` 1985
+-> 1979, `MATCH_USE` 79 -> 78 and asm labels 20 -> 19 project-wide. The
+virtual calls (`SetMode`, `SetTargetAnim`, `Attach`, the part's
+`IsOnScreen`, `StartTargetMotionY` with the rocket and stalactite
+ramps, the shield's and the target's `mover->SetMode`) are plain C++,
+and `new DingodileShieldCtrl`/`DingodileProjectileCtrl`/`DingodileSharkCtrl`
+replace `Create...(OperatorNew(n))`. `SpawnStalactite` has the
+projectile's constructor inlined: that is an inline constructor
+(`DingodileProjectileCtrl(DingodileProjectileCtrl *rocket)`) next to
+the out-of-line default one. `SetDingodileState`'s four pins and the
+macro that loaded a shared indirect call's arguments go: the ROM's
+shared `bl _call_via_r3` is cross-jumping's merge of three
+`SetTargetAnim(part, n); StartMotion(part, 0); break;` cases, once each
+case has its own tail (a fall-through into `case 2:` blocks it).
+`StartMotion`'s two pins and use go too. `UpdateDingodileShield` (once NAKED,
+then C with holds) is C++ now, but keeps the C's
+r5/r6 holds and the BLDCNT accumulator's pin and constant-init: they
+are register allocation, needed under agbcp too, and no natural
+spelling of the unfolded `orrs` chain was found.
+
+`SpriteObj`'s fields gained names here (sprite_obj.hpp): the flag bits
+(`visible`, `active`, `vulnerable`, and `blink` in the byte at 0x0D)
+and the mirror byte's bitfield view, `mirrorBits` (`gfxMode`, a signed
+`flipX`, `flipY`, `priority`). The view is an anonymous union with the
+byte `mirror`, packed: an ARM struct or union is 4-byte sized and
+aligned otherwise, which would move the fields after it.
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
@@ -633,8 +666,8 @@ Bigger controllers, roughly in order (function counts from
 
 1. ~~**The enemy controllers**~~: done in part 2 (all of src/enemies/). Their
    C callers are still C: the level spawners (`spawn_enemies.c`,
-   `spawn_objects.c`'s SpawnSealSpawner) and `dingodile.c`, whose
-   Dingodile builds on `CreateEnemyCtrl`.
+   `spawn_objects.c`'s SpawnSealSpawner); Dingodile's shark
+   (`DingodileSharkCtrl`, part 6b) derives from it.
 2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3. Only
    `Ctrl::Update` (`UpdateCtrl`, an empty function in `system/boot.c`)
    is still C.
@@ -647,23 +680,14 @@ Bigger controllers, roughly in order (function counts from
    `_states.c` (11), 25 methods with about 35 pins and asm statements, and
    then action_obj.h's vcall macros (`ACT_CALL*`/`ACT_VCALL*`) and trio
    inlines can go.
-4. **The boss controllers:** `tiny_update.c`, `mega_mix_update.c`
-   (`UpdateMegaMix`), `dingodile*.c` and `cortex.c` (25 functions, 64 lines
-
-3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4, except
-   `Reset`/`Restart`, which live in `action_ctrl.c`. Next, **the action
-   controller** (`ActionCtrl`, `action_ctrl*.c`, 10 files, about 76
-   functions and most of the controllers' virtual calls), which takes
-   `PlayerCtrl`'s last two methods with it.
 4. **The boss controllers:** ~~`tiny_update.c`, `mega_mix_update.c`~~
-   (done in part 6), then `dingodile*.c` (Dingodile, his shield, shark
-   and rocket/stalactite, and the Cortex target/cannon/boss controllers'
-   methods that sit between them) and `cortex.c` (25 functions, 64 lines
-   with pins or asm; it also has `OneShotAnimCtrl`'s and
-   `UnusedOneShotAnimCtrl`'s constructors and destructors, Tiny's
-   constructor, destructor and `StartHop`, and the Cortex
-   cannon/target/shot classes). cortex.c mixes controllers and entities,
-   so it may wait for the entity family.
+   (done in part 6) and ~~`dingodile*.c`~~ (part 6b). Left: `cortex.c`
+   (25 functions, 64 lines with pins or asm; it also has
+   `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and
+   destructors, Tiny's constructor, destructor and `StartHop`, the
+   Cortex target's and boss controller's other methods, and the Cortex
+   shot class). cortex.c mixes controllers and entities, so it may wait
+   for the entity family.
 5. **The platform mover** (`src/objects/platform.c`, `gPlatformMoverVtable`:
    a `Ctrl`-shaped 0x38-byte class) with the platforms, in the entity
    family.
@@ -781,6 +805,20 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   `extern "C"` header gets C linkage and is emitted out of line as a
   global, even when `static inline` (`IsPlayerDead` in player.h). Pick
   another name.
+- **A struct assigned from a struct return** goes through a temporary
+  and an `ldmia`/`stmia` copy, where an output-pointer call fills it in
+  place. Where the ROM has the copy (`b = GetSpriteAttackBox_s(gPlayer)`
+  over the body box, dingodile.cpp), call the struct-return alias; where
+  it doesn't, declare the box at its first assignment, in the block that
+  uses it (`struct aabb hit = GetSpriteHitbox(t)`), so it gets a slot of
+  its own that later blocks reuse.
+- **Cross-jumping needs separate tails.** Two cases that end in the same
+  call sequence and `break` are merged after reload (the later one jumps
+  into the earlier's copy); a case that falls through into the next one
+  instead is not merged with them. `SetDingodileState`'s three
+  `SetTargetAnim` cases share one `bl _call_via_r3` only when the third
+  has its own `StartMotion(part, 0); break;` rather than falling into
+  `case 2:`.
 - **Reload register rotation.** The spill register a constant offset is
   reloaded into (`movs rN, #0x82; lsls` for the player's +0x104) rotates
   through r1-r3, so it depends on every reload before it, including those

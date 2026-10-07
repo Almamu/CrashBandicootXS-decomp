@@ -171,8 +171,7 @@ typedef void (*actor_method_ptr_fn)(void *self, void *a, s32 b);
  * parts' layout, `struct actor_method` entries): take the entry's
  * address once, then read the `this` adjustment and the function, as gcc
  * 2.x lowers the call. VCALL1 passes an `s32`, VCALL2 a pointer and an
- * `s32`. (dingodile.c's VOBJ_CALL1/VOBJ_CALL2 are the same calls on an
- * object cast to its `struct vobj` first.) */
+ * `s32`. */
 #define VCALL1(obj, m, a)                                                      \
     do                                                                         \
     {                                                                          \

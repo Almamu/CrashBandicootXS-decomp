@@ -422,11 +422,11 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
         }
     case 2:
         if (++self->counter > 2) {
-            SetCortexBossState((struct obj_476c *)self, (s32)part, 3);
+            SetCortexBossState(self, part, 3);
             break;
         }
     mode1:
-        SetCortexBossState((struct obj_476c *)self, (s32)part, 1);
+        SetCortexBossState(self, part, 1);
         break;
     case 4:
         break;
@@ -436,7 +436,7 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
         if (part->pos.y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000) {
             if ((u8)HasTurboRun(gLevelState))
                 RequestRoomExit();
-            SetCortexBossState((struct obj_476c *)self, (s32)part, 4);
+            SetCortexBossState(self, part, 4);
         }
         break;
     }
@@ -627,8 +627,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
                 *blinking = left;
                 SET_FRAME_R(part, 1, r3, r4);
             }
-            SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, gPlayer->x,
-                                gPlayer->y - 0xA00);
+            SetCortexTargetDest(self, part, gPlayer->x, gPlayer->y - 0xA00);
             {
                 s32 i = self->cfg->index;
 
@@ -706,8 +705,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
 {
     switch (mode) {
     case 8:
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part,
-                            (u32)INT_TO_Q8(gLevelLayers->layer0->widthPx) >> 1,
+        SetCortexTargetDest(self, part, (u32)INT_TO_Q8(gLevelLayers->layer0->widthPx) >> 1,
                             INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000);
         break;
     case 1:
@@ -726,8 +724,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
             self->high = mode;
             self->top = zero;
         }
-        SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part,
-                            INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0x400, 0x9800);
+        SetCortexTargetDest(self, part, INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0x400, 0x9800);
         self->nextState = 2;
         break;
     case 2:
@@ -756,7 +753,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
             } else {
                 y = 0x8200;
             }
-            SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, x, y);
+            SetCortexTargetDest(self, part, x, y);
             break;
         }
     case 5:

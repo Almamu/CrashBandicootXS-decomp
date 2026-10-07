@@ -10,6 +10,7 @@
 
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "enemy_ctrl.hpp"
 
 /* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp,
  * struct boss_ctrl in player.h): the base class of the bosses'
@@ -17,7 +18,7 @@
  * shield and rocket/stalactite). Its event handler keeps the event's msg
  * and arg; nothing reads them back. The word at 0x10 is the controlled
  * part (GetTarget) or, in the bosses that don't use that, a counter:
- * Tiny's round. */
+ * Tiny's and Neo Cortex's round, Dingodile's hits. */
 class BossCtrl : public Ctrl
 {
 public:
@@ -91,5 +92,150 @@ public:
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
+
+/* The Neo Cortex fight's controller (gCortexBossVtable; its Update,
+ * UpdateCortexBoss, is still C in src/bosses/cortex.c, the rest is in
+ * src/bosses/dingodile.cpp). `counter` is the round. It spawns the
+ * cannon and the target (crosshair) parts. spawn_bosses.c creates it in
+ * a 0x24-byte block. */
+class CortexBossCtrl : public BossCtrl
+{
+public:
+    SpriteObj *cannon; // 0x1C - SpawnCortexCannon's part
+    SpriteObj *target; // 0x20 - SpawnCortexTarget's part
+
+    CortexBossCtrl(); // CreateCortexBoss
+    virtual void Update(SpriteObj *part);
+    virtual ~CortexBossCtrl(); // DestroyCortexBoss
+    void SetState(SpriteObj *part, s32 next);
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
+
+/* The Neo Cortex fight's cannon (gCortexCannonVtable; 0x10 bytes,
+ * src/bosses/dingodile.cpp): hides its part in state 0. */
+class CortexCannonCtrl : public Ctrl
+{
+public:
+    CortexCannonCtrl(); // CreateCortexCannonCtrl
+    virtual void Update(SpriteObj *part);
+    virtual ~CortexCannonCtrl(); // DestroyCortexCannonCtrl
+    void SetState(SpriteObj *part, s32 next);
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == sizeof(struct ctrl));
+
+/* The Neo Cortex fight's target, the crosshair that hops between the
+ * player and the platforms (gCortexTargetVtable, 0x40 bytes). Its Update
+ * and the rest of its methods are still C, in src/bosses/cortex.c
+ * (UpdateCortexTarget, SetCortexTargetState, FireCortexShot); the
+ * constructor, destructor, SetDest and SetPlatformsKind are in
+ * src/bosses/dingodile.cpp. */
+class CortexTargetCtrl : public Ctrl
+{
+public:
+    u8 dirLeft; // 0x10
+    u8 high;    // 0x11
+    u8 top;     // 0x12
+    u8 unk_13;
+    s32 x;         // 0x14 - the hop's destination
+    s32 y;         // 0x18
+    s32 dx;        // 0x1C - and its distance from the start
+    s32 dy;        // 0x20
+    s32 stepsLeft; // 0x24
+    s32 steps;     // 0x28 - gCortexTargetHopSteps[the boss's round]
+    s32 nextState; // 0x2C
+    s32 timer;     // 0x30
+    s32 blink;     // 0x34
+    u8 blinking;   // 0x38
+    u8 unk_39[3];
+    CortexBossCtrl *boss; // 0x3C
+
+    CortexTargetCtrl(CortexBossCtrl *boss); // CreateCortexTargetCtrl
+    virtual void Update(SpriteObj *part);
+    virtual ~CortexTargetCtrl(); // DestroyCortexTargetCtrl
+    void SetPlatformsKind(u8 flag);
+    void SetDest(SpriteObj *part, s32 x, s32 y);
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
+
+/* Dingodile (gDingodileVtable, src/bosses/dingodile.cpp and
+ * dingodile_create.cpp): he walks the level, stopping at the approach
+ * tables' x positions to fire a rocket, turns round at the level's ends
+ * and hides behind his shield (`shield`). `counter` is the hits he has
+ * taken. spawn_bosses.c creates him in a 0x30-byte block. */
+class DingodileCtrl : public BossCtrl
+{
+public:
+    s32 step;          // 0x1C - the approach table's index
+    s32 timer;         // 0x20
+    s32 nextState;     // 0x24
+    s32 passes;        // 0x28
+    SpriteObj *shield; // 0x2C - SpawnShieldOrRocket's mode-0 part
+
+    DingodileCtrl(u32 x, u32 y); // CreateDingodile
+    virtual void Update(SpriteObj *part);
+    virtual ~DingodileCtrl(); // DestroyDingodile
+    s32 GetHits();
+    void SetState(SpriteObj *part, s32 next);
+    void SpawnShieldOrRocket(s32 mode, u16 x, u16 y, SpriteObj *owner);
+    void SpawnShark(u16 x, u16 y, u8 facing);
+    void StartMotion(SpriteObj *part, s32 index);
+    void SetStep(s32 value);
+    void SetNextState(s32 value);
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileCtrl) == 0x30);
+
+/* Dingodile's shield (gDingodileShieldVtable, 0x28 bytes): hurts the
+ * player on contact, and blinks twice when Dingodile is hit. */
+class DingodileShieldCtrl : public BossCtrl
+{
+public:
+    s32 blinkTimer;   // 0x1C
+    s32 blinksLeft;   // 0x20
+    SpriteObj *owner; // 0x24 - Dingodile's part
+
+    DingodileShieldCtrl(); // CreateDingodileShieldCtrl
+    virtual void Update(SpriteObj *part);
+    virtual ~DingodileShieldCtrl(); // DestroyDingodileShieldCtrl
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileShieldCtrl) == 0x28);
+
+/* Dingodile's rocket, and the stalactite it drops
+ * (gDingodileProjectileVtable, 0x20 bytes): both hurt the player, and
+ * the stalactite hurts Dingodile (`owner`) if it lands on him. */
+class DingodileProjectileCtrl : public BossCtrl
+{
+public:
+    SpriteObj *owner; // 0x1C - Dingodile's part
+
+    DingodileProjectileCtrl(); // CreateDingodileProjectileCtrl
+    /* The stalactite's, from its rocket's (SpawnStalactite): inline, as
+     * the ROM has it there */
+    DingodileProjectileCtrl(DingodileProjectileCtrl *rocket)
+    {
+        owner = rocket->owner;
+    }
+    virtual void Update(SpriteObj *part);
+    virtual ~DingodileProjectileCtrl(); // DestroyDingodileProjectileCtrl
+    void SpawnStalactite(u16 x, u16 y);
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileProjectileCtrl) == 0x20);
+
+/* The shark Dingodile's fight sends across the level
+ * (gDingodileSharkVtable): an enemy controller in a 0x8C-byte block. */
+class DingodileSharkCtrl : public EnemyCtrl
+{
+public:
+    DingodileSharkCtrl(); // CreateDingodileSharkCtrl
+    virtual void Update(SpriteObj *part);
+    virtual ~DingodileSharkCtrl(); // DestroyDingodileSharkCtrl
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileSharkCtrl) == sizeof(struct part_ctrl));
 
 #endif /* !GUARD_BOSS_CTRL_HPP */

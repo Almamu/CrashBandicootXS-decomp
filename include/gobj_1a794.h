@@ -14,7 +14,7 @@
 #include "globals.h"
 #include "match.h"
 
-/* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
+/* Shared by src/bosses/dingodile_create.cpp and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
  * ROM 0x0801A794-0x0801B85C).
  *

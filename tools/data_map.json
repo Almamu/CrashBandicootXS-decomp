@@ -1944,7 +1944,7 @@
     "SetCortexTargetDest"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2028,7 +2028,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2052,7 +2052,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2076,7 +2076,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2100,7 +2100,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2125,8 +2125,8 @@
     "StartDingodileMotion"
    ],
    "consumer_files": [
-    "bosses/dingodile.c",
-    "bosses/dingodile_create.c"
+    "bosses/dingodile.cpp",
+    "bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2151,7 +2151,7 @@
     "UpdateDingodileProjectile"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2172,7 +2172,7 @@
     "UpdateDingodileProjectile"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2193,7 +2193,7 @@
     "StartDingodileMotion"
    ],
    "consumer_files": [
-    "bosses/dingodile_create.c"
+    "bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7826,7 +7826,7 @@
     "CreateCortexTargetCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7851,7 +7851,7 @@
     "CreateCortexCannonCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7876,7 +7876,7 @@
     "CreateCortexBoss"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7901,7 +7901,7 @@
     "DestroyDingodileSharkCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7927,7 +7927,7 @@
     "CreateDingodileProjectileCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.c"
+    "bosses/dingodile.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7952,8 +7952,8 @@
     "CreateDingodileShieldCtrl"
    ],
    "consumer_files": [
-    "bosses/dingodile.c",
-    "bosses/dingodile_create.c"
+    "bosses/dingodile.cpp",
+    "bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7978,7 +7978,7 @@
     "CreateDingodile"
    ],
    "consumer_files": [
-    "bosses/dingodile_create.c"
+    "bosses/dingodile_create.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

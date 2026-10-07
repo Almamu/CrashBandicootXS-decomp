@@ -38,9 +38,16 @@ public:
         u8 flags; // 0x0C
         struct {
             u8 gone:1;
-            u8 unk_1:2;
-            u8 bit3:1; // the effect part was touched; SetTargetAnim clears it
-            u8 unk_4:4;
+            u8 unk_1:1;
+            u8 visible:1;
+            u8 bit3:1;   // the effect part was touched; SetTargetAnim clears it
+            u8 active:1; // always active (updated off screen too)
+            u8 unk_5:1;
+            u8 vulnerable:1; // the player's attacks hit it
+            u8 unk_7:1;
+            u8 unk_0D_0:2; // 0x0D
+            u8 blink:1;    // hidden this frame (a blinking part)
+            u8 unk_0D_3:5;
         } b; // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
     } f;
     s16 halfW; // 0x10
@@ -88,8 +95,17 @@ public:
     u8 dir;                  // 0x24
     u8 screenSpace;          // 0x25
     u8 unk_26[2];
-    u8 mirror;    // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
-    u8 palette:4; // 0x29 - low nibble: the OBJ palette slot
+    union {
+        u8 mirror; // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
+        struct MirrorBits {
+            u8 gfxMode:2;
+            u8 unk_2:2;
+            s32 flipX:1; // signed: test it with `< 0` (`lsl #27`, a sign test)
+            u32 flipY:1;
+            u8 priority:2;
+        } __attribute__((packed)) mirrorBits;
+    } __attribute__((packed)); // one byte, not the 4 of an ARM struct
+    u8 palette:4;              // 0x29 - low nibble: the OBJ palette slot
     u8 unk_29_4:4;
     u8 unk_2A[2];
     u8 animating; // 0x2C
