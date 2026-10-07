@@ -131,8 +131,24 @@ public:
     s32 hitMask; // 0x74
     s32 type;    // 0x78
     u8 unk_7C[4];
+
+    virtual s32 GetPriority();   // 11
+    virtual s32 ApplyVelocity(); // 12
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteObj) == sizeof(struct gobj));
+
+/* A sprite object that can be hit (gMovingSpriteVtable and the tables
+ * built on it: gGroundSpriteVtable, gPlayerVtable, ...): slot 13 takes
+ * an event (EVENT_*, HitMovingSprite, PlayerHandleEvent). Its code is
+ * still C; this is the view ActionCtrl::DoSuperBodySlamShockwave sends
+ * its event through. */
+class MovingSprite : public SpriteObj
+{
+public:
+    virtual void HandleEvent(s32 sender, s32 event, s32 arg); // 13
+};
+
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == sizeof(struct gobj));
 
 #endif /* !GUARD_SPRITE_OBJ_HPP */

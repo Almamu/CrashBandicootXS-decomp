@@ -373,10 +373,10 @@ extern u8 GetActionCtrlPrevState(struct act *self);
 extern void ResetPlayerCtrl(struct player_ctrl *self);
 extern void RestartPlayerCtrl(struct player_ctrl *self);
 
-/* src/player/action_ctrl_event.c */
+/* src/player/action_ctrl_event.cpp */
 extern void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3);
 
-/* src/player/action_ctrl_hang.c */
+/* src/player/action_ctrl_hang.cpp */
 extern void ActionCtrlStateLeftGround(struct act *self);
 extern void ActionCtrlStateDying(struct act *self);
 extern void ActionCtrlStateWarpIn(struct act *self);
@@ -420,11 +420,11 @@ extern void ActionCtrlStateWarpOut(struct act *self);
 extern void ActionCtrlStateCrawlStop(struct act *self);
 extern void ActionCtrlStateBodySlamStart(struct act *self);
 
-/* src/player/action_ctrl_run_jump.c */
+/* src/player/action_ctrl_run_jump.cpp */
 extern void ActionCtrlStateRun(struct act *self);
 extern void ActionCtrlStateJump(struct act *self);
 
-/* src/player/action_ctrl_states.c */
+/* src/player/action_ctrl_states.cpp */
 extern void ActionCtrlStateAirborne(struct act *self);
 extern void ActionCtrlStateFlipBodySlamStart(struct act *self);
 extern void ActionCtrlStateSlide(struct act *self);

@@ -30,9 +30,8 @@
  *
  * Copies that are still spelled out, each with a comment saying why:
  * graphics.c's MarkEntityGone itself, wumpa.c's UpdateStopwatch and
- * crate_break.c (other asm/pins or wrapper), action_ctrl_hang.c (a
- * MATCH_KEEP'd shift), and enemy_ctrl_update.cpp's MarkGoneFreshBit (a
- * MATCH_CONST inside the sequence). */
+ * crate_break.c (other asm/pins or wrapper), and enemy_ctrl_update.cpp's
+ * MarkGoneFreshBit (a MATCH_CONST inside the sequence). */
 
 /* An entity id that has no bit in the bitmaps (actor.h's `id`). */
 #define ENTITY_ID_NONE 0xFFFF

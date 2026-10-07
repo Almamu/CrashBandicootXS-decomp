@@ -6,8 +6,8 @@
  * `prevState`), the index into gActionCtrlStateTable
  * (src/data/action_table_16bf20.c) and gActionCtrlStateAttackKinds. A
  * state is entered through the controller's set-mode method
- * (SetActionCtrlMode, vtable slot 0x20: `ACT_CALL1(self, m20, state)`)
- * or SetActionCtrlModeAnim.
+ * (ActionCtrl::SetMode, SetActionCtrlMode: vtable slot 4) or
+ * ActionCtrl::SetModeAnim (SetActionCtrlModeAnim).
  *
  * Each name is the handler in the state's slot (ActionCtrlStateRun gives
  * ACTION_STATE_RUN). ActionCtrlStateAirborne handles six states; their

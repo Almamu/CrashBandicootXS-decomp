@@ -959,8 +959,8 @@
    "consumer_files": [
     "objects/sprite_obj.c",
     "player/player_collide.c",
-    "player/action_ctrl_event.c",
-    "player/action_ctrl_hang.c"
+    "player/action_ctrl_event.cpp",
+    "player/action_ctrl_hang.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
