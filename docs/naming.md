@@ -146,6 +146,7 @@ the names with the header it already includes. A data table in
 | `rooms.h` | `ROOM_KIND_` | `struct level_room.kind` (on foot, underwater, hover, category stage) |
 | `bosses.h` | `BOSS_` | `GetBossIndex` results |
 | `categories.h` | `CATEGORY_` | actor categories (`gActorCategories` index), `CATEGORY_TYPE_*` and the `CATEGORY_EXIT_*` statuses |
+| `chunk_tokens.h` | `CHUNK_TOKEN_` | the run kinds of a layer/collision chunk's token stream (`DecodeCollisionChunk`, `DecodeLayerChunk`) |
 
 **Constants that describe data the repository has as source files are
 generated from those files**, not written by hand: the names live in the

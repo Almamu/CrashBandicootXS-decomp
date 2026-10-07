@@ -65,7 +65,7 @@ extern void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 player
 extern s32 PollSaveTransfer(struct settings_sync_pump *self);
 
 /* src/save/save_menu.c */
-extern void SaveMenuMessageInput(struct save_menu *self, u32 flags);
+extern void SaveMenuMessageInput(struct save_menu *self, u32 keys);
 extern void CommitSaveMenuFrame(struct save_menu *self);
 extern void CloseSaveMenu(void);
 extern void OpenSaveMenu(void);
@@ -88,15 +88,15 @@ extern u8 RunSaveMenu(u32 state, u32 cursor);
 extern struct save_menu *InitSaveMenu(struct save_menu *self);
 extern void DestroySaveMenu(struct save_menu *self, u32 flags);
 extern void SaveMenuInput(struct save_menu *self, u32 keys);
-extern void SaveMenuMainInput(struct save_menu *self, u32 flags);
-extern void SaveMenuMoveCursor(struct save_menu *self, u32 flags);
-extern void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle);
+extern void SaveMenuMainInput(struct save_menu *self, u32 keys);
+extern void SaveMenuMoveCursor(struct save_menu *self, u32 keys);
+extern void SaveMenuLoadInput(struct save_menu *self, u32 keys, void *handle);
 extern void SaveMenuLinkInput(struct save_menu *self);
 extern void SaveGameToSlot(struct save_menu *self, s32 rowIndex);
-extern void SaveMenuOverwriteInput(struct save_menu *self, u32 flags);
-extern void SaveMenuSaveInput(struct save_menu *self, u32 flags);
-extern void SaveMenuDeleteInput(struct save_menu *self, u32 flags);
-extern void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags);
+extern void SaveMenuOverwriteInput(struct save_menu *self, u32 keys);
+extern void SaveMenuSaveInput(struct save_menu *self, u32 keys);
+extern void SaveMenuDeleteInput(struct save_menu *self, u32 keys);
+extern void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 keys);
 extern void DrawSaveMenuMain(struct save_menu *self);
 
 /* src/save/save_menu_ui.c */

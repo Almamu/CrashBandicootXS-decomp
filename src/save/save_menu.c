@@ -7,13 +7,13 @@
 #include "globals.h"
 
 /* Confirm/cancel handler for the composite pause/options screen: on
- * either flags bit 0 or bit 3, plays the standard "confirm" cue and
+ * A or START (`keys`: the newly pressed keys), plays the standard "confirm" cue and
  * resets `state`/`cursor` back to their initial values. */
-void SaveMenuMessageInput(struct save_menu *self, u32 flags)
+void SaveMenuMessageInput(struct save_menu *self, u32 keys)
 {
-    if (flags & 1) {
+    if (keys & A_BUTTON) {
         goto confirm;
-    } else if (flags & 8) {
+    } else if (keys & START_BUTTON) {
     confirm:
         PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         self->state = 0;

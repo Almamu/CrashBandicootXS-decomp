@@ -122,7 +122,7 @@ void ActionCtrlStateLeftGround(struct act *self)
             break;
         default:
             if (self->state == ACTION_STATE_AIR_SPIN) {
-                if (gKeys.all & 0x30) {
+                if (gKeys.all & DPAD_SIDEWAYS) {
                     ActQueue27(self, 0, 1);
                 } else {
                     self->motionXKeepSpeed = z;
@@ -172,7 +172,7 @@ void ActionCtrlStateLeftGround(struct act *self)
             if (alt) {
                 ActOrFlags0D(self->part, 1);
                 self->slamBlocked = fire;
-                if (gKeys.all & 0x30) {
+                if (gKeys.all & DPAD_SIDEWAYS) {
                     self->motionXKeepSpeed = fire;
                     self->motionXPending = one;
                     self->motionX = one;
@@ -185,7 +185,7 @@ void ActionCtrlStateLeftGround(struct act *self)
                     StartActionCtrlSpin(self);
                 else
                     ACT_VCALL1(self, m20, ACTION_STATE_SPIN);
-            } else if (INPUT_HELD(in) & 0x100) {
+            } else if (INPUT_HELD(in) & R_BUTTON) {
                 ActOrFlags0D(self->part, 1);
                 self->slamBlocked = alt;
                 ACT_VCALL1(self, m20, ACTION_STATE_CROUCH_DOWN);

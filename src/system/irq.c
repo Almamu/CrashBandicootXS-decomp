@@ -201,13 +201,13 @@ void VBlankHandler(void)
 u8 GetDpadDirection(void *input)
 {
     u8 idx = 0;
-    if (gKeys.half.held & 0x10)
+    if (gKeys.half.held & DPAD_RIGHT)
         idx |= 8;
-    if (gKeys.half.held & 0x20)
+    if (gKeys.half.held & DPAD_LEFT)
         idx |= 4;
-    if (gKeys.half.held & 0x80)
+    if (gKeys.half.held & DPAD_DOWN)
         idx |= 2;
-    if (gKeys.half.held & 0x40)
+    if (gKeys.half.held & DPAD_UP)
         idx |= 1;
     return gDpadDirectionTable[idx];
 }

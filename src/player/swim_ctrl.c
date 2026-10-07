@@ -404,9 +404,9 @@ void UpdatePlayerCtrl(struct player_ctrl *self)
         }
 
         PMF_DISPATCH(self);
-        if (self->target->hitMask & 3)
+        if (self->target->hitMask & PLAYER_HIT_X)
             self->target->speedX = 0;
-        if (self->target->hitMask & 0xC)
+        if (self->target->hitMask & PLAYER_HIT_Y)
             self->target->speedY = 0;
         SetHitAxes(self->target, 0);
         ApplyPlayerCtrlSwimDrift(self);

@@ -253,18 +253,18 @@ void SaveMenuInput(struct save_menu *self, u32 keys)
     self->frame += 1;
 }
 
-/* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
- * exit; confirm (bit 0) advances through this state's own little
+/* State 0's input handler (`keys`: the newly pressed keys): B or START
+ * requests an exit; A advances through this state's own little
  * sub-menu (`cursor` 0-4, mirroring the DrawSaveMenu states each
- * selects); L/R (bits 6/7) move the `cursor` cursor with wraparound. */
-void SaveMenuMainInput(struct save_menu *self, u32 flags)
+ * selects); up/down move the `cursor` cursor with wraparound. */
+void SaveMenuMainInput(struct save_menu *self, u32 keys)
 {
-    if (flags & 0xa) {
+    if (keys & (B_BUTTON | START_BUTTON)) {
         PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->done = 1;
         return;
     }
-    if (flags & 1) {
+    if (keys & A_BUTTON) {
         PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         switch (self->cursor) {
         case 0:
@@ -295,13 +295,13 @@ void SaveMenuMainInput(struct save_menu *self, u32 flags)
         }
         return;
     }
-    if (flags & 0x40) {
+    if (keys & DPAD_UP) {
         PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         self->cursor -= 1;
         if (self->cursor < 0) {
             self->cursor = 4;
         }
-    } else if (flags & 0x80) {
+    } else if (keys & DPAD_DOWN) {
         PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         self->cursor += 1;
         if (self->cursor > 4) {
@@ -310,12 +310,13 @@ void SaveMenuMainInput(struct save_menu *self, u32 flags)
     }
 }
 
-/* L/R-only row-cursor mover shared by several of this screen's other
+/* D-pad-only row-cursor mover shared by several of this screen's other
  * states (called directly by several handlers below when their own
- * confirm/cancel bits are clear). */
-void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
+ * confirm/cancel keys aren't pressed): up/down step through the rows,
+ * left/right swap columns (`cursor ^ 2`) except on "cancel" (4). */
+void SaveMenuMoveCursor(struct save_menu *self, u32 keys)
 {
-    if (flags & 0x40) {
+    if (keys & DPAD_UP) {
         PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         if ((u32)self->cursor <= 4) {
             switch (self->cursor) {
@@ -334,7 +335,7 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
         }
         return;
     }
-    if (flags & 0x80) {
+    if (keys & DPAD_DOWN) {
         PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         if ((u32)self->cursor <= 4) {
             switch (self->cursor) {
@@ -353,7 +354,7 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
         }
         return;
     }
-    if (flags & 0x30) {
+    if (keys & DPAD_SIDEWAYS) {
         if (self->cursor != 4) {
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
             self->cursor ^= 2;
@@ -362,20 +363,20 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
 }
 
 /* States 1/2's input handler ("load game" from `handle` = cartSave or
- * linkSave): confirm on "cancel" (cursor 4) goes back to state 0; on an
+ * linkSave): confirm (A or START) on "cancel" (cursor 4) goes back to state 0; on an
  * empty slot (IsSaveSlotEmpty) it only plays an error sound; otherwise it
  * reads the slot (ReadSaveSlot), unpacks it into gLevelState with its
  * level and volumes, summarizes it into `currentStats` and exits with
- * `gameLoaded` set. Cancel (bit 1) goes back to state 0; otherwise falls
+ * `gameLoaded` set. Cancel (B) goes back to state 0; otherwise falls
  * through to the shared cursor mover. */
-void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
+void SaveMenuLoadInput(struct save_menu *self, u32 keys, void *handle)
 {
     struct save_slot buf;
 
-    if (flags & 1) {
+    if (keys & A_BUTTON) {
         goto confirm;
     }
-    if (flags & 8) {
+    if (keys & START_BUTTON) {
     confirm:
         if (self->cursor == 4) {
             PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
@@ -398,13 +399,13 @@ void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
         self->done = 1;
         return;
     }
-    if (flags & 2) {
+    if (keys & B_BUTTON) {
         PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->state = 0;
         self->cursor = 0;
         return;
     }
-    SaveMenuMoveCursor(self, flags);
+    SaveMenuMoveCursor(self, keys);
 }
 
 /* State 3's input handler: polls the SIO-handshake spinner
@@ -518,17 +519,17 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
     }
 }
 
-/* State 7's input handler: confirm/cancel-combo commits row `pendingSlot`
+/* State 7's input handler: confirm (A or START) commits row `pendingSlot`
  * (SaveGameToSlot, src/save/save_menu_input.c) and returns to state 0
  * if it was already the "current" row (`cursor==0`), else re-enters
- * state 5 to reselect; cancel (bit 1) re-enters state 5 too; L/R toggle
+ * state 5 to reselect; cancel (B) re-enters state 5 too; up/down toggle
  * `cursor` between 0/1. */
-void SaveMenuOverwriteInput(struct save_menu *self, u32 flags)
+void SaveMenuOverwriteInput(struct save_menu *self, u32 keys)
 {
-    if (flags & 1) {
+    if (keys & A_BUTTON) {
         goto confirm;
     }
-    if (flags & 8) {
+    if (keys & START_BUTTON) {
     confirm:
         if (self->cursor == 0) {
             SaveGameToSlot(self, self->pendingSlot);
@@ -541,20 +542,20 @@ void SaveMenuOverwriteInput(struct save_menu *self, u32 flags)
         }
         return;
     }
-    if (flags & 2) {
+    if (keys & B_BUTTON) {
         self->state = 5;
         self->cursor = self->pendingSlot;
         PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         return;
     }
-    if (flags & 0x40) {
+    if (keys & DPAD_UP) {
         if (self->cursor == 1) {
             self->cursor = 0;
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
         return;
     }
-    if (flags & 0x80) {
+    if (keys & DPAD_DOWN) {
         if (self->cursor == 0) {
             self->cursor = 1;
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
@@ -562,17 +563,17 @@ void SaveMenuOverwriteInput(struct save_menu *self, u32 flags)
     }
 }
 
-/* State 5's input handler: confirm/cancel-combo either resets to state
+/* State 5's input handler: confirm (A or START) either resets to state
  * 0 (maxed out) or, if row `cursor` isn't already selected
  * (IsSaveSlotEmpty), enters state 9 to edit it, else commits it directly
- * (SaveGameToSlot) and returns to state 0; cancel (bit 1) resets to state
- * 0; otherwise falls through to the shared L/R cursor mover. */
-void SaveMenuSaveInput(struct save_menu *self, u32 flags)
+ * (SaveGameToSlot) and returns to state 0; cancel (B) resets to state
+ * 0; otherwise falls through to the shared d-pad cursor mover. */
+void SaveMenuSaveInput(struct save_menu *self, u32 keys)
 {
-    if (flags & 1) {
+    if (keys & A_BUTTON) {
         goto confirm;
     }
-    if (flags & 8) {
+    if (keys & START_BUTTON) {
     confirm:
         if (self->cursor == 4) {
             PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
@@ -592,24 +593,24 @@ void SaveMenuSaveInput(struct save_menu *self, u32 flags)
         }
         return;
     }
-    if (flags & 2) {
+    if (keys & B_BUTTON) {
         PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->state = 0;
         self->cursor = 2;
         return;
     }
-    SaveMenuMoveCursor(self, flags);
+    SaveMenuMoveCursor(self, keys);
 }
 
 /* State 6's input handler - same shape as SaveMenuSaveInput above, a
  * different row-selection sub-menu (state 7 on confirm-when-unselected,
  * cursor target value 3 rather than 2). */
-void SaveMenuDeleteInput(struct save_menu *self, u32 flags)
+void SaveMenuDeleteInput(struct save_menu *self, u32 keys)
 {
-    if (flags & 1) {
+    if (keys & A_BUTTON) {
         goto confirm;
     }
-    if (flags & 8) {
+    if (keys & START_BUTTON) {
     confirm:
         if (self->cursor == 4) {
             PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
@@ -627,27 +628,27 @@ void SaveMenuDeleteInput(struct save_menu *self, u32 flags)
         self->cursor = 0;
         return;
     }
-    if (flags & 2) {
+    if (keys & B_BUTTON) {
         PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->state = 0;
         self->cursor = 3;
         return;
     }
-    SaveMenuMoveCursor(self, flags);
+    SaveMenuMoveCursor(self, keys);
 }
 
-/* State 9's input handler: confirm/cancel-combo commits row `pendingSlot`
+/* State 9's input handler: confirm (A or START) commits row `pendingSlot`
  * unconditionally (ReadSaveSlot+EraseSaveSlot+optional WriteSaveSlot) then
- * settles at state 0; cancel (bit 1) re-enters state 6; L/R toggle
+ * settles at state 0; cancel (B) re-enters state 6; up/down toggle
  * `cursor` between 0/1. */
-void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
+void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 keys)
 {
     u8 buf[0x70];
 
-    if (flags & 1) {
+    if (keys & A_BUTTON) {
         goto confirm;
     }
-    if (flags & 8) {
+    if (keys & START_BUTTON) {
     confirm:
         if (self->cursor == 0) {
             s32 rowIndex = self->pendingSlot;
@@ -670,20 +671,20 @@ void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
         }
         return;
     }
-    if (flags & 2) {
+    if (keys & B_BUTTON) {
         self->state = 6;
         self->cursor = self->pendingSlot;
         PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         return;
     }
-    if (flags & 0x40) {
+    if (keys & DPAD_UP) {
         if (self->cursor == 1) {
             self->cursor = 0;
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
         return;
     }
-    if (flags & 0x80) {
+    if (keys & DPAD_DOWN) {
         if (self->cursor == 0) {
             self->cursor = 1;
             PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);

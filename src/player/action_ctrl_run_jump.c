@@ -111,7 +111,7 @@ void ActionCtrlStateRun(struct act *self)
             StartActionCtrlSpin(self);
             return;
         }
-        if (INPUT_PRESSED(in) & 0x100) {
+        if (INPUT_PRESSED(in) & R_BUTTON) {
             s32 frames;
             struct gfx_part *obj; /* the effect part (gfx_part.h) */
 
@@ -154,7 +154,7 @@ void ActionCtrlStateRun(struct act *self)
         }
     }
     {
-        s32 held = (u16)(INPUT_HELD(in) & 0x200);
+        s32 held = (u16)(INPUT_HELD(in) & L_BUTTON);
 
         if (held) {
             if (self->state == ACTION_STATE_RUN && (u8)HasTurboRun(gLevelState)) {
@@ -236,7 +236,7 @@ void ActionCtrlStateJump(struct act *self)
         if (part->animDone) {
             u32 cur = gKeys.all;
 
-            if ((cur & 1) && (cur & 0x30)) {
+            if ((cur & A_BUTTON) && (cur & DPAD_SIDEWAYS)) {
                 if (part->tag == 6) {
                     ACT_VCALL1(self, m20, ACTION_STATE_AIRBORNE_FLIP_JUMP);
                 } else {

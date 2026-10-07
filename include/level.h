@@ -22,6 +22,7 @@
 #include "bg_scroll_layer.h"
 #include "vtable.h"
 #include "constants/entities.h"
+#include "constants/chunk_tokens.h"
 
 struct bg_streamer;
 struct camera;
@@ -137,7 +138,7 @@ struct camera_target {
     s32 x;           // 0x00 - Q8
     s32 y;           // 0x04 - Q8
     u8 unk_08[0x1C]; // 0x08-0x23
-    u8 dirFlags;     // 0x24 - bit 0/1 = +x/-x, bit 2/3 = -y/+y (mode 2 look-ahead)
+    u8 dirFlags;     // 0x24 - struct player.dir: PLAYER_DIR_* (player.h; mode 2 look-ahead)
     u8 unk_25[3];    // 0x25-0x27
     u8 flags;        // 0x28 - bit 4 is the mirror flag
 };

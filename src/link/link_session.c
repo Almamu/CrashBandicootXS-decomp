@@ -299,7 +299,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
         if (nFree + nId == 4 && same && nId > 1) {
             self->playerCount = nId;
             {
-                s32 me = (REG_SIOCNT & 0x30) >> 4;
+                s32 me = (REG_SIOCNT & SIO_ID) >> 4;
 
                 self->playerId = me;
             }
