@@ -11,8 +11,8 @@
  * docs/data.md.
  */
 
-/* Per-state handlers dispatched by UpdatePlayerCtrl (swim_ctrl.c,
- * its `struct pmf` view); PlayerCtrlKillPlayer sets state 7. */
+/* Per-state handlers dispatched by UpdatePlayerCtrl (swim_ctrl.cpp,
+ * PlayerCtrl::stateFuncs); PlayerCtrlKillPlayer sets state 7. */
 const struct actor_pmf gPlayerCtrlStateFuncs[8] = {
     ACTOR_PMF(PlayerCtrlStateIdle),      ACTOR_PMF(PlayerCtrlStateSwim),
     ACTOR_PMF(PlayerCtrlStateStroke),    ACTOR_PMF(PlayerCtrlStateSpin),

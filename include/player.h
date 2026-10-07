@@ -198,7 +198,7 @@ struct player {
     s32 prevY;   // 0x70
     u32 hitMask; // 0x74 - probe axes hit this frame (bits 0-1: X, 2-3: Y)
 /* hitMask's axes: the swim controller zeroes speedX on an X hit and
- * speedY on a Y hit (UpdatePlayerCtrl, swim_ctrl.c). */
+ * speedY on a Y hit (UpdatePlayerCtrl, swim_ctrl.cpp). */
 #define PLAYER_HIT_X 3
 #define PLAYER_HIT_Y 0xC
     s32 type; // 0x78 - struct gobj.type; ResetPlayer clears it
@@ -443,9 +443,9 @@ extern u8 TryActionCtrlDoubleJump(struct act *self);
 extern void HandleActionCtrlAirInput(struct act *self);
 
 /* src/player/input_ctrl.cpp: the swim controller's motion queue
- * accessors (C functions), then InputCtrl's methods
- * (include/input_ctrl.hpp) under their C names (cxx_symbols.txt), for the
- * vtable, the state table and the C callers. */
+ * accessors (PlayerCtrl, include/player_ctrl.hpp), then InputCtrl's methods
+ * (include/input_ctrl.hpp), under their C names (cxx_symbols.txt), for the
+ * vtables, the state tables and the C callers. */
 extern void ClearPlayerCtrlMotionYPending(struct player_ctrl *self);
 extern void ClearPlayerCtrlMotionXPending(struct player_ctrl *self);
 extern u8 IsPlayerCtrlMotionYPending(struct player_ctrl *self);
@@ -567,7 +567,10 @@ extern void UpdatePlayer(struct player *self);
 extern u8 PlayerTouchesBox(struct player *self, struct aabb *box);
 extern void DestroyPlayer(struct player *self, u32 arg1);
 
-/* src/player/swim_ctrl.c */
+/* src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp, swim_ctrl_stroke.cpp:
+ * the swim controller's methods (PlayerCtrl, include/player_ctrl.hpp)
+ * under their C names (cxx_symbols.txt), for the vtable, the state table
+ * and the C callers. */
 extern void CheckPlayerCtrlTurn(struct player_ctrl *self);
 extern void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 arg);
 extern void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
@@ -597,11 +600,7 @@ extern struct player_ctrl *InitPlayerCtrl(struct player_ctrl *self);
 extern void sub_801750C(struct player_ctrl *self);
 extern void SetPlayerCtrlMotionYPending(struct player_ctrl *self);
 extern void SetPlayerCtrlMotionXPending(struct player_ctrl *self);
-
-/* src/player/swim_ctrl_drift.c */
 extern void SetPlayerSwimDriftY(s32 arg0, s32 arg1, s32 arg2);
-
-/* src/player/swim_ctrl_stroke.c */
 extern void StartPlayerCtrlStroke(struct player_ctrl *self);
 extern void StartPlayerCtrlSpin(struct player_ctrl *self);
 extern void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self);

@@ -307,7 +307,7 @@ const struct vtable_slot gActionCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by swim_ctrl.c (DestroyPlayerCtrl), player_ctrl.h. */
+/* Used by swim_ctrl.cpp (DestroyPlayerCtrl). */
 const struct vtable_slot gPlayerCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdatePlayerCtrl),

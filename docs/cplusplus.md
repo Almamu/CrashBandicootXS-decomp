@@ -415,6 +415,10 @@ counts them by kind) and what the C++ still needs.
 | `src/bosses/mega_mix.cpp` | `MegaMixCtrl` | 7 | agbcp | 23 pins, 8 asm -> 0 | 1 |
 | `src/player/player_flags.cpp` | `Ctrl`'s `SetMode`, `SetAnimSet`, `SetTargetMotionY`, `StartTargetMotionY` (ctrl.hpp), with 40 C-linkage player accessors | 4 + 40 | agbcp | 16 pins -> 0 (plus `StorePlayerListEntry`'s 6 -> 0; `GetPlayerListEntry` keeps 3) | 3 |
 | `src/player/input_ctrl.cpp` | `InputCtrl` (input_ctrl.hpp), with 6 C-linkage swim controller accessors | 19 + 6 | old_agbcp | 0 -> 0; the vcall macros and the 16-line PMF dispatch go | 3 |
+| `src/player/swim_ctrl.cpp` | `PlayerCtrl` (player_ctrl.hpp) | 26 | old_agbcp | 4 pins -> 0; the vcall macros and the 16-line PMF dispatch go | 4 |
+| `src/player/swim_ctrl_drift.cpp` | `PlayerCtrl::SetDriftY` | 1 | agbcp | 13 pins -> 0 | 4 |
+| `src/player/swim_ctrl_stroke.cpp` | `PlayerCtrl`'s `StartStroke`, `StartSpin`, `ApplySwimDrift` | 3 | old_agbcp | 0 -> 0 | 4 |
+| `src/player/input_ctrl.cpp` (again) | the 6 swim controller accessors are `PlayerCtrl` methods now | 6 | old_agbcp | 0 -> 0 | 4 |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -452,6 +456,38 @@ which compute the value before the stores like the C's static inlines),
 and `HandleEvent`'s `s32 lo = 1` lower bound (a literal 1 folds into one
 unsigned range check).
 
+Part 4 in numbers: the swim controller, `PlayerCtrl` (new
+`include/player_ctrl.hpp`), 36 methods in 4 objects (`swim_ctrl.cpp`,
+`swim_ctrl_drift.cpp`, `swim_ctrl_stroke.cpp`, and the six motion-queue
+accessors at the top of `input_ctrl.cpp`, which are methods now);
+`MATCH_HOLD_REG` 2096 -> 2079, instruction-emitting `asm` unchanged (239).
+`ApplyMotion`'s 4 pins go (the record computed into a local before the
+direct `Ctrl::StartTargetMotionX/Y` call gives the ROM's order), and so do
+all 13 of `SetDriftY`'s: as C++ it is the same plain code as its X twin,
+`SetDriftX`, and matches under both agbcp and old_agbcp, so
+`swim_ctrl_drift.o` stays on agbcc. `swim_ctrl.o` and `swim_ctrl_stroke.o`
+match only under old_agbcp, as their C did under old_agbcc.
+`SET_MODE`/`CTRL_SET_ANIM` (vtable-slot macros) and `PMF_DISPATCH` are
+`SetMode(...)`, `SetTargetAnim(...)` and `(this->*stateFuncs[state])()`;
+the constructor and destructor are empty bodies. `SetDriftX`/`SetDriftY`/
+`GetDriftStep` use only `gPlayer`, so they are static members.
+`PlayerCtrl`'s `Reset` and `Restart` are still C (`ResetPlayerCtrl`,
+`RestartPlayerCtrl`, in `action_ctrl.c` with the action controller, which
+the ROM puts them next to); the constructor calls `Reset` through its
+cxx_symbols.txt mapping. `struct player_ctrl` (player_ctrl.h) stays the C
+view for them and `play_room.c`; its vtable and anim-pair views
+(`pctrl_vtable`, `pctrl_method`, `pctrl_anim_pair`) are gone.
+
+One C++ difference turned up: a test of a 1-bit unsigned bitfield
+(`if (t->mirror.bits.flipX)`) compiles to `movs #16; ands` as C++, where
+the C front end (and the ROM) has `lsls #27` and a sign test. Testing the
+signed view, `t->mirror.sbits.flipX < 0`, gives the ROM's code. The one
+negated test that extracts the bit (`lsls #27; lsrs #31`) reads it through
+an inline `u8 FlipX()` helper. Two C idioms stay: the
+`*(volatile u8 *)&t->tag = t->tag` re-store in `StartStroke` (a plain
+self-assignment is deleted, in C++ as in C), and the BLKmode `struct keys`
+stack copy of `gKeys`.
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
@@ -485,9 +521,11 @@ Bigger controllers, roughly in order (function counts from
 2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3. Only
    `Ctrl::Update` (`UpdateCtrl`, an empty function in `system/boot.c`)
    is still C.
-3. **The swim controller** (`PlayerCtrl`, `swim_ctrl*.c`) and **the
-   action controller** (`ActionCtrl`, `action_ctrl*.c`, 10 files, about
-   76 functions and most of the controllers' virtual calls).
+3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4, except
+   `Reset`/`Restart`, which live in `action_ctrl.c`. Next, **the action
+   controller** (`ActionCtrl`, `action_ctrl*.c`, 10 files, about 76
+   functions and most of the controllers' virtual calls), which takes
+   `PlayerCtrl`'s last two methods with it.
 4. **The boss controllers:** `tiny_update.c`, `mega_mix_update.c`
    (`UpdateMegaMix`), `dingodile*.c` and `cortex.c` (25 functions, 64 lines
    with pins or asm; it also has `OneShotAnimCtrl`'s and

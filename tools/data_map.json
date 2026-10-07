@@ -1011,7 +1011,7 @@
     "StartPlayerCtrlMotionXFromSet"
    ],
    "consumer_files": [
-    "player/swim_ctrl.c"
+    "player/swim_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1763,7 +1763,7 @@
     "ApplyPlayerCtrlTilt"
    ],
    "consumer_files": [
-    "player/swim_ctrl.c"
+    "player/swim_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 8,
@@ -1786,7 +1786,7 @@
     "StartPlayerCtrlStroke"
    ],
    "consumer_files": [
-    "player/swim_ctrl_stroke.c"
+    "player/swim_ctrl_stroke.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1810,7 +1810,7 @@
     "UpdatePlayerCtrl"
    ],
    "consumer_files": [
-    "player/swim_ctrl.c"
+    "player/swim_ctrl.cpp"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -7551,7 +7551,7 @@
     "InitPlayerCtrl"
    ],
    "consumer_files": [
-    "player/swim_ctrl.c"
+    "player/swim_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

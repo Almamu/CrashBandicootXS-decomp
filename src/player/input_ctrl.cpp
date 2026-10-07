@@ -1,11 +1,11 @@
 #include "input_ctrl.hpp"
+#include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {
 #include "audio.h"
 #include "menus.h"
 #include "gfx.h"
-#include "player_ctrl.h"
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
@@ -16,12 +16,10 @@ extern "C" {
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
  *
- * The first six functions are byte accessors of the underwater player
- * controller (struct player_ctrl, include/player_ctrl.h; swim_ctrl.c
- * right before them): its queued X/Y motion entries (`+0x24`/`+0x25`)
- * and their "pending" flags (`+0x2C`/`+0x2D`). They are that class's
- * methods; until the swim controller is C++ they are plain functions
- * with C linkage on its C struct.
+ * The first six functions are the swim controller's (PlayerCtrl,
+ * include/player_ctrl.hpp; swim_ctrl.cpp right before them): the
+ * accessors of its queued X/Y motion entries (`motionX`/`motionY`) and
+ * their "pending" flags.
  *
  * The other 19 are InputCtrl's (include/input_ctrl.hpp, gInputCtrlVtable;
  * #664, docs/cplusplus.md), the controller play_room.c attaches in room
@@ -37,7 +35,7 @@ extern "C" {
  * (gInputCtrlStateFuncs) and applies the queued motion.
  *
  * UNUSED - no `bl`/`.4byte` reference in src/, and no Thumb pointer
- * anywhere in the ROM: the six player_ctrl accessors and
+ * anywhere in the ROM: the six PlayerCtrl accessors and
  * SetMotionYPending, SetMotionXPending, CancelMotionY, CancelMotionX and
  * IsMotionYPending. Matched anyway.
  *
@@ -50,36 +48,36 @@ extern "C" {
  * `(this->*stateFuncs[state])()`. The "mark gone" bitmap sequence
  * (MarkEntityGone's, inlined twice) is entity_bits.h's ENTITY_MARK_GONE. */
 
-void ClearPlayerCtrlMotionYPending(struct player_ctrl *self)
+void PlayerCtrl::ClearMotionYPending()
 {
-    self->motionYPending = 0;
+    motionYPending = 0;
 }
 
-void ClearPlayerCtrlMotionXPending(struct player_ctrl *self)
+void PlayerCtrl::ClearMotionXPending()
 {
-    self->motionXPending = 0;
+    motionXPending = 0;
 }
 
-u8 IsPlayerCtrlMotionYPending(struct player_ctrl *self)
+u8 PlayerCtrl::IsMotionYPending()
 {
-    return self->motionYPending;
+    return motionYPending;
 }
 
-u8 IsPlayerCtrlMotionXPending(struct player_ctrl *self)
+u8 PlayerCtrl::IsMotionXPending()
 {
-    return self->motionXPending;
+    return motionXPending;
 }
 
-void QueuePlayerCtrlMotionY(struct player_ctrl *self, u8 value)
+void PlayerCtrl::QueueMotionY(u8 entry)
 {
-    self->motionYPending = 1;
-    self->motionY = value;
+    motionYPending = 1;
+    motionY = entry;
 }
 
-void QueuePlayerCtrlMotionX(struct player_ctrl *self, u8 value)
+void PlayerCtrl::QueueMotionX(u8 entry)
 {
-    self->motionXPending = 1;
-    self->motionX = value;
+    motionXPending = 1;
+    motionX = entry;
 }
 
 /* The target is hit: plays the hurt sound, switches to state 3 (StateDead)
