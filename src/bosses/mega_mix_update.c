@@ -23,7 +23,7 @@
  * on frame 8 of anim 1).
  *
  * GitHub issue #22, ROM 0x08017AB0-0x08017ECC - the raw span between
- * input_ctrl_queue.c (ends 0x08017AAC) and mega_mix.c (starts
+ * input_ctrl_queue.cpp (ends 0x08017AAC) and mega_mix.cpp (starts
  * 0x08017ECC) that docs/matching/archive/issue-22-0x08017a44-actor.md's first
  * pass left completely untouched ("out of scope... given their size").
  * `self` (r4) is the same large per-level "player/action" object this

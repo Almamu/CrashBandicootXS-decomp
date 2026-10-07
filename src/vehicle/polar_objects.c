@@ -16,7 +16,7 @@
  * anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, a `self+0x50`-rooted event/trampoline
  * table, and the position triple at `self+0x1c`/`self+0x20`/`self+0x24`)
- * already documented for `ctrl.c`-`polar_crates.c` and
+ * already documented for `ctrl.cpp`-`polar_crates.c` and
  * `polar_aku_aku.c`. Sits between `polar_crates.c` (issue #53, ending
  * at `CreatePolarBasicCrate`) and issue #54's code (starting at
  * `MovePolarAkuAku`, at the end of this file) - the whole `0x0802CC9C`-`0x0802D3A8` gap

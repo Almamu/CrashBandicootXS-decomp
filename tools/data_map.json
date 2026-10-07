@@ -983,7 +983,7 @@
     "ApplyActionCtrlMotion"
    ],
    "consumer_files": [
-    "objects/ctrl.c",
+    "objects/ctrl.cpp",
     "player/action_ctrl_idle.c"
    ],
    "ptr_words_code": 0,
@@ -1857,7 +1857,7 @@
     "ResetMegaMixCtrl"
    ],
    "consumer_files": [
-    "bosses/mega_mix.c"
+    "bosses/mega_mix.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1880,7 +1880,7 @@
     "StartMegaMixMotionXFromSet"
    ],
    "consumer_files": [
-    "bosses/mega_mix.c"
+    "bosses/mega_mix.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7295,7 +7295,7 @@
     "InitCtrl"
    ],
    "consumer_files": [
-    "objects/ctrl.c"
+    "objects/ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7394,7 +7394,7 @@
     "InitEffectCtrl"
    ],
    "consumer_files": [
-    "objects/effect_ctrl.c"
+    "objects/effect_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7601,7 +7601,7 @@
     "CreateBossCtrl"
    ],
    "consumer_files": [
-    "player/input_ctrl_queue.c"
+    "player/input_ctrl_queue.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7626,7 +7626,7 @@
     "CreateMegaMixCtrl"
    ],
    "consumer_files": [
-    "bosses/mega_mix.c"
+    "bosses/mega_mix.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7651,7 +7651,7 @@
     "CreateStompedHopPadCtrl"
    ],
    "consumer_files": [
-    "bosses/tiny_hop_pad.c"
+    "bosses/tiny_hop_pad.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

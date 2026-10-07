@@ -6,15 +6,15 @@
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see include/gobj_1a794.h
  * and docs/matching/archive/issue-25-level-objects.md). CreateDingodileShieldCtrl/DestroyDingodile/
  * CreateDingodile are constructor/destructor bodies of a subclass of the
- * CreateBossCtrl object family (input_ctrl_queue.c), method tables
+ * CreateBossCtrl object family (input_ctrl_queue.cpp), method tables
  * gDingodileShieldVtable / gDingodileVtable; StartDingodileMotion is the same
- * mirror-gated velocity-record copy as SetMegaMixMotionXFromSet (mega_mix.c) but
+ * mirror-gated velocity-record copy as SetMegaMixMotionXFromSet (mega_mix.cpp) but
  * indexed straight into gDingodileMotionEntries.
  *
  * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files
  * and the ROM for Thumb pointers): SetDingodileStep, SetDingodileNextState. */
 
-/* The CreateBossCtrl-family object (input_ctrl_queue.c): only the fields touched
+/* The CreateBossCtrl-family object (input_ctrl_queue.cpp): only the fields touched
  * here. */
 struct seq_obj {
     u8 unk_00[0xC];

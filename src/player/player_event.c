@@ -90,7 +90,7 @@ void CollidePlayerWithObjects(struct player *self)
  * `self+0x20` (per-tag 28-byte-record table pointer,
  * `*(self+0x20) + tag*0x1c`, the exact convention `kill_player.c`
  * documents from a sibling call site), `self+0x28` bit 4 (the
- * mirror-flag bit `player_flags.c`/`ctrl.c`/`player_anim_room.c`
+ * mirror-flag bit `player_flags.c`/`ctrl.cpp`/`player_anim_room.c`
  * already read), `self+0x2d` (per-tag selector byte), and `self+0x8c`
  * (a `gRoomFrameCount`-relative deadline - the exact
  * `IsTimerArmed`/`SetTimer` convention `player_flags.c` names:

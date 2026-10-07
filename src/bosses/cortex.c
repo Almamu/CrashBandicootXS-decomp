@@ -19,7 +19,7 @@
  * asm/code_3_2_17_188d0.s (details in docs/matching/archive/issue-23-graphics.md).
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
- * family as input_ctrl.c/input_ctrl_queue.c/mega_mix.c: each class here is a
+ * family as input_ctrl.c/input_ctrl_queue.cpp/mega_mix.cpp: each class here is a
  * constructor (base InitCtrl/CreateBossCtrl/CreatePlatformMover, then its own
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one
@@ -300,7 +300,7 @@ void DestroyOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags)
 }
 
 /* gUnusedOneShotAnimCtrlVtable's class does what gOneShotAnimCtrlVtable's
- * does (UpdateOneShotAnimCtrl, tiny_hop_pad.c): once the part's animation
+ * does (UpdateOneShotAnimCtrl, tiny_hop_pad.cpp): once the part's animation
  * is done, mark it gone. Its constructor has no caller, so it is never
  * instantiated. */
 void UpdateUnusedOneShotAnimCtrl(struct gfx_ctrl *self, struct gfx_part *part)

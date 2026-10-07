@@ -7,7 +7,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (ctrl.c) and ApplyActionCtrlMotion
+/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (ctrl.cpp) and ApplyActionCtrlMotion
  * (action_ctrl_idle.c). */
 const struct speed_ramp gCtrlMotionRecords[44] = {
     { 0, 32, 0 },

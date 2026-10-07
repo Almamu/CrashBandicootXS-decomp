@@ -10,7 +10,7 @@
 #include "level.h"
 #include "globals.h"
 
-/* Same large per-instance "self" object family as ctrl.c/
+/* Same large per-instance "self" object family as ctrl.cpp/
  * action_ctrl_states.c/polar_player_actions.c/airship_fireball.c (state at `self+0x28`,
  * table-index at `self+0xc`, an anim-frame halfword/byte pair at
  * `self+0x10`/`self+0x12`, an accumulator at `self+8`, a "part table"

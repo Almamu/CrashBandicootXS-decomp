@@ -30,7 +30,7 @@
  * `+8`/`+9`, which this function's first two AABBs match exactly).
  * Each AABB is mirrored horizontally/vertically around its own
  * object's integer position when that object's own `+0x28` bits 4/5
- * (the mirror-flag convention `player_flags.c`/`ctrl.c`/
+ * (the mirror-flag convention `player_flags.c`/`ctrl.cpp`/
  * `crate_hit.c` all already read) are set:
  *
  *   - AABB1: from `self`'s own `+0x20`-table, indexed by `self`'s own

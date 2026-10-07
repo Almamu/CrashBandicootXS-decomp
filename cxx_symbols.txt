@@ -9,9 +9,27 @@
 # `__<len>Class` for a constructor, `_._<len>Class` for a destructor,
 # `_vt.<len>Class` for a vtable.
 #
-# Ctrl (include/ctrl.hpp; the C in src/objects/ctrl.c)
+# The global operators (g++ 2.x's assembler names; the game's own
+# replacements are in src/level/camera.c)
+__builtin_new OperatorNew
+__builtin_delete OperatorDelete
+__builtin_vec_new OperatorNewArray
+__builtin_vec_delete OperatorDeleteArray
+#
+# Ctrl (include/ctrl.hpp, src/objects/ctrl.cpp)
+_vt.4Ctrl gCtrlVtable
 __4Ctrl InitCtrl
 _._4Ctrl DestroyCtrl
+StartTargetMotionYFromSet__4CtrlP9SpriteObji StartCtrlTargetMotionYFromSet
+SetTargetMotionX__4CtrlP9SpriteObjPCi SetCtrlTargetMotionX
+StartTargetMotionX__4CtrlP9SpriteObjPCi StartCtrlTargetMotionX
+StartTargetMotionXFromSet__4CtrlP9SpriteObji StartCtrlTargetMotionXFromSet
+HandleEvent__4CtrlP9SpriteObjii CtrlHandleEvent
+SetTargetAnim__4CtrlP9SpriteObji SetCtrlTargetAnim
+Attach__4CtrlP9SpriteObj AttachCtrl
+GetMode__4Ctrl GetCtrlMode
+# (Ctrl's methods that are still C, in src/player/player_flags.c)
+StartTargetMotionY__4CtrlP9SpriteObjPC10speed_ramp StartCtrlTargetMotionY
 #
 # EffectCtrl (src/objects/effect_ctrl.cpp)
 _vt.10EffectCtrl gEffectCtrlVtable
@@ -20,3 +38,32 @@ _._10EffectCtrl DestroyEffectCtrl
 Update__10EffectCtrlP9SpriteObj UpdateEffectCtrl
 HandleEvent__10EffectCtrlP9SpriteObjii EffectCtrlHandleEvent
 Reset__10EffectCtrl ResetEffectCtrl
+#
+# StompedHopPadCtrl, OneShotAnimCtrl (src/bosses/tiny_hop_pad.cpp)
+_vt.17StompedHopPadCtrl gStompedHopPadVtable
+__17StompedHopPadCtrl CreateStompedHopPadCtrl
+_._17StompedHopPadCtrl DestroyStompedHopPadCtrl
+Update__17StompedHopPadCtrlP9SpriteObj UpdateStompedHopPad
+Update__15OneShotAnimCtrlP9SpriteObj UpdateOneShotAnimCtrl
+#
+# InputCtrl (the motion queue), BossCtrl (src/player/input_ctrl_queue.cpp)
+IsMotionXPending__9InputCtrl IsInputCtrlMotionXPending
+QueueMotionYKeepSpeed__9InputCtrlUc QueueInputCtrlMotionYKeepSpeed
+QueueMotionXKeepSpeed__9InputCtrlUc QueueInputCtrlMotionXKeepSpeed
+QueueMotionY__9InputCtrlUc QueueInputCtrlMotionY
+QueueMotionX__9InputCtrlUc QueueInputCtrlMotionX
+_vt.8BossCtrl gBossCtrlVtable
+__8BossCtrl CreateBossCtrl
+_._8BossCtrl DestroyBossCtrl
+HandleEvent__8BossCtrlP9SpriteObjii BossCtrlHandleEvent
+GetTarget__8BossCtrl GetCtrlTarget
+#
+# MegaMixCtrl (src/bosses/mega_mix.cpp)
+_vt.11MegaMixCtrl gMegaMixCtrlVtable
+__11MegaMixCtrl CreateMegaMixCtrl
+_._11MegaMixCtrl DestroyMegaMixCtrl
+SetMotionYFromSet__11MegaMixCtrlP9SpriteObji SetMegaMixMotionYFromSet
+SetMotionXFromSet__11MegaMixCtrlP9SpriteObji SetMegaMixMotionXFromSet
+StartTargetMotionYFromSet__11MegaMixCtrlP9SpriteObji StartMegaMixMotionYFromSet
+StartTargetMotionXFromSet__11MegaMixCtrlP9SpriteObji StartMegaMixMotionXFromSet
+Reset__11MegaMixCtrl ResetMegaMixCtrl

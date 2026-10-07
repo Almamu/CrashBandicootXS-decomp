@@ -91,8 +91,11 @@ struct entry_set {
     s32 scale; // 0x04 - Q8
 };
 
-/* The controllers' base class (src/objects/ctrl.c, method table
- * gCtrlVtable; InitCtrl/DestroyCtrl). Every controller extends it: the
+/* The controllers' base class: the C view of include/ctrl.hpp's C++
+ * class Ctrl (src/objects/ctrl.cpp, method table gCtrlVtable;
+ * InitCtrl/DestroyCtrl), for the C files. The two must keep the same
+ * layout: ctrl.hpp checks the class's size against this struct's. Every
+ * controller extends it: the
  * action controller (action_obj.h's `struct act`), the swim and input
  * controllers (player_ctrl.h, player.h), the boss controllers (player.h's
  * `struct boss_ctrl`), the enemy controller (part_ctrl.h) and the effect
@@ -139,7 +142,9 @@ extern void AddCollisionCandidate(struct collision_queue *self, struct crate *ne
 extern void DestroyCollisionQueue(struct collision_queue *self, s32 flags);
 extern void ResetCollisionQueue(struct collision_queue *self);
 
-/* src/objects/ctrl.c */
+/* src/objects/ctrl.cpp: Ctrl's methods (include/ctrl.hpp)
+ * under their C names (cxx_symbols.txt), for the vtables and the C
+ * callers. */
 extern void StartCtrlTargetMotionYFromSet(void *self, void *part, s32 index);
 extern void SetCtrlTargetMotionX(void *self, void *part, s32 *vec);
 extern void StartCtrlTargetMotionX(void *self, void *part, s32 *vec);
