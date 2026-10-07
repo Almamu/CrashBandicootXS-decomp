@@ -8,6 +8,7 @@
 #include "bosses.h"
 #include "level_state.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_states.c - see
@@ -53,8 +54,8 @@ static inline void BossSetState(s32 st, s32 idx)
 }
 
 /* One sub-projectile, jittered around (x, y) by the box's own +-range. */
-#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(gAirshipBox.w << 8),  \
-                                (y) + RandRange(gAirshipBox.h << 8),  \
+#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(INT_TO_Q8(gAirshipBox.w)), \
+                                (y) + RandRange(INT_TO_Q8(gAirshipBox.h)), \
                                 gAirshipZ - 0x100)
 
 void AirshipStateExplode(void)
@@ -67,8 +68,8 @@ void AirshipStateExplode(void)
     gAirshipZ += gAirshipVelZ;
     gAirshipHitFlashTimer = 0;
     pal = (u16 *)(BG_PLTT + 0x20);
-    x = gAirshipX + (gAirshipBox.x << 8);
-    y = gAirshipY + (gAirshipBox.y << 8);
+    x = gAirshipX + INT_TO_Q8(gAirshipBox.x);
+    y = gAirshipY + INT_TO_Q8(gAirshipBox.y);
 
     if (gAirshipStateTimer == 0xa) {
         pal[15] = 0;

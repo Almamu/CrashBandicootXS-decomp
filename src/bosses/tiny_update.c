@@ -10,6 +10,7 @@
 #include "box_part.h"
 #include "globals.h"
 #include "player.h"
+#include "math_util.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
@@ -217,8 +218,8 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         {
             s32 steps = --self->steps;
             s32 x = self->dx * steps / self->total + self->x;
-            s32 t = (steps << 8) / self->total;
-            s32 y = ((0x100 - self->squares[0x100 - t]) * self->dy >> 8) + self->y;
+            s32 t = INT_TO_Q8(steps) / self->total;
+            s32 y = Q8_MUL(0x100 - self->squares[0x100 - t], self->dy) + self->y;
 
             part->x = x;
             part->y = y;
@@ -249,8 +250,8 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
         {
             s32 steps = --self->steps;
             s32 x = self->dx * steps / self->total + self->x;
-            s32 t = (steps << 8) / self->total;
-            s32 y = (self->squares[t] * self->dy >> 8) + self->y;
+            s32 t = INT_TO_Q8(steps) / self->total;
+            s32 y = Q8_MUL(self->squares[t], self->dy) + self->y;
 
             part->x = x;
             part->y = y;
@@ -336,8 +337,7 @@ static inline void SetFrame(struct hop_part *part, s32 frame)
     const struct sprite_anim *records = bank->anims;
     s32 count = records[*tag].frameCount;
 
-    if (frame >= count)
-        frame = count - 1;
+    CLAMP_INDEX(frame, count);
     part->frame = frame;
 }
 
@@ -420,7 +420,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
             s32 y = anchor->y - 0x1800;
 
             if (!(u8)HasTornadoSpin(gLevelState))
-                SpawnTornadoSpinPower(0xFFFF, x >> 8, y >> 8, 0);
+                SpawnTornadoSpinPower(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
             break;
         }
     case 15:
@@ -428,7 +428,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
             s32 x = part->x;
 
             self->x = x;
-            self->y = (gLevelLayers->layer0->heightPx << 8) + 0x4000;
+            self->y = INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000;
             self->x = x + 0x6400;
             StartTinyHop((struct gfx_offset_ctrl *)self, (struct gfx_part *)part);
             break;
@@ -517,7 +517,7 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
         s32 y;
 
         x = x0 + (gPlayer->x - x0) * (n - 1) / 3;
-        y = gLevelLayers->layer0->y << 8;
+        y = INT_TO_Q8(gLevelLayers->layer0->y);
         p->x = x;
         p->y = y;
     }

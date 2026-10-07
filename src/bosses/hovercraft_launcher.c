@@ -7,6 +7,7 @@
 #include "vehicle.h"
 #include "bosses.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/archive/issue-62-0x08033804-actor.md. */
@@ -42,9 +43,9 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
         if (angle > 0) {
             s32 scale = 0x1000 / angle;
             s32 rawDx = (player->x - self->base.x) * scale;
-            s32 dx = rawDx >> 12;
+            s32 dx = Q12_TO_INT(rawDx);
             s32 rawDy = (player->y - self->base.y) * scale;
-            s32 dy = rawDy >> 12;
+            s32 dy = Q12_TO_INT(rawDy);
             s32 signDx = rawDx >> 31;
             s32 absDx = (dx ^ signDx) - signDx;
             s32 signDy = rawDy >> 31;

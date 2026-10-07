@@ -13,6 +13,7 @@
 #include "box_part.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/archive/issue-23-graphics.md).
@@ -248,8 +249,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
     struct anim_record *records = bank->records;
     s32 count = records[*tag].frameCount;
 
-    if (frame >= count)
-        frame = count - 1;
+    CLAMP_INDEX(frame, count);
     part->frame = frame;
 }
 
@@ -392,7 +392,7 @@ void *CreateTiny(struct gfx_squares *self)
     self->stomped = -1;
     self->squares = OperatorNewArray(0x202);
     for (i = 0; i <= 0x100; i++)
-        self->squares[i] = (i * i) >> 8;
+        self->squares[i] = Q8_MUL(i, i);
     return self;
 }
 
@@ -430,12 +430,11 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
             part->flipX = n >= 0;
             self->childA->flipX = n >= 0;
             {
-                s32 w = gLevelLayers->layer0->widthPx << 8;
+                s32 w = INT_TO_Q8(gLevelLayers->layer0->widthPx);
 
                 n = __udivsi3(Abs(n) * 12, w);
             }
-            if (n > 5)
-                n = 5;
+            LIMIT_MAX(n, 5);
             n = 5 - n;
             SetFrame(part, n);
             SetFrame(self->childA, n);
@@ -454,7 +453,7 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
     case 3:
         self->childA->pos.y += 0x80;
         part->pos.y += 0x80;
-        if (part->pos.y >= (gLevelLayers->layer0->heightPx << 8) + 0x4000) {
+        if (part->pos.y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000) {
             if ((u8)HasTurboRun(gLevelState))
                 RequestRoomExit();
             SetCortexBossState((struct obj_476c *)self, (s32)part, 4);
@@ -728,8 +727,8 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
     switch (mode) {
     case 8:
         SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part,
-                            (u32)(gLevelLayers->layer0->widthPx << 8) >> 1,
-                            (gLevelLayers->layer0->heightPx << 8) + 0x2000);
+                            (u32)INT_TO_Q8(gLevelLayers->layer0->widthPx) >> 1,
+                            INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000);
         break;
     case 1:
         {
@@ -748,7 +747,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
             self->top = zero;
         }
         SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part,
-                            (gLevelLayers->layer0->widthPx << 8) - 0x400, 0x9800);
+                            INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0x400, 0x9800);
         self->nextState = 2;
         break;
     case 2:
@@ -760,7 +759,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
             if (self->dirLeft) {
                 if (x - 0x1800 <= 0x400)
                     self->dirLeft = 0;
-            } else if (x + 0x1C00 >= gLevelLayers->layer0->widthPx << 8) {
+            } else if (x + 0x1C00 >= INT_TO_Q8(gLevelLayers->layer0->widthPx)) {
                 self->nextState = 5;
             }
             StepHeight(self, self->cfg->index);
