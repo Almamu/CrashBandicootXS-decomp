@@ -127,7 +127,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
     if (self->state == ACTION_STATE_DYING)
         return;
     switch (arg2) {
-    case 23:
+    case EVENT_HANG_GRAB:
         {
             struct sprite_point *from;
             struct sprite_point *to;
@@ -147,12 +147,12 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             }
         }
         break;
-    case 24:
+    case EVENT_HANG_RELEASE:
         self->part->hanging = 0;
         SetActionCtrlModeAnim(self, ACTION_STATE_AIRBORNE_FALL, 0x1b, 0x7FFFFFFF, 0x7FFFFFFF);
         ActSetNext(self, 4);
         break;
-    case 12:
+    case EVENT_BUMP:
         if (self->state == ACTION_STATE_IDLE) {
             ActSetNext27(self, 0);
             self->bumpedMotionX = 0;
@@ -197,7 +197,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         self->part->hitAxes |= arg3;
         self->part->speedX = 0;
         break;
-    case 13:
+    case EVENT_BOUNCE:
         {
             u32 in = gKeys.all;
             u32 held = in;
@@ -221,7 +221,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         }
         self->frame = 0;
         break;
-    case 14:
+    case EVENT_BOUNCE_HIGH:
         {
             u32 in = gKeys.all;
             u32 held = in;
@@ -245,7 +245,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         }
         self->frame = 0;
         break;
-    case 25:
+    case EVENT_LAUNCH_PAD:
         {
             u32 in = gKeys.all;
             s32 fire;
@@ -276,11 +276,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         }
         self->frame = 0;
         break;
-    case 15:
+    case EVENT_WARP_BONUS_ROUND:
         FadeOutMusic(gAudioContext, 0);
         /* fallthrough */
-    case 16:
-    case 17:
+    case EVENT_WARP_GEM_PATH:
+    case EVENT_WARP_EXIT:
         PlaySfx(gAudioContext, SFX_WARP, 0x100);
         {
             u8 *f = &gPlayer->flags.all;
@@ -293,10 +293,10 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         ActSetNext27(self, 0);
         ActSetNext(self, 0);
         break;
-    case 2:
+    case EVENT_HIT_FIRE:
         KillPlayer(self, 0x2e);
         break;
-    case 3:
+    case EVENT_HIT_ELECTRIC:
         KillPlayer(self, 0x2c);
         break;
     case 7:
@@ -305,12 +305,12 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
     case 8:
         KillPlayer(self, 0x2f);
         break;
-    case 9:
+    case EVENT_HIT_CORTEX_SHOT:
         KillPlayer(self, 0x2d);
         break;
-    case 1:
-    case 4:
-    case 6:
+    case EVENT_HIT:
+    case EVENT_HIT_EXPLOSION:
+    case EVENT_HIT_BITE:
         {
             struct player *p;
             s32 z;
@@ -327,10 +327,10 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             gCamera->mode = 3;
         }
         break;
-    case 10:
+    case EVENT_HIT_CRUSH:
         KillPlayer(self, 0x2a);
         break;
-    case 11:
+    case EVENT_MASK_HIT:
         if ((gPlayer->hitAxes & 8) &&
             PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);

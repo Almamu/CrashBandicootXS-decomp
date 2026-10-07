@@ -49,7 +49,7 @@ TOPICS = collections.OrderedDict(
         ("song", ("PlaySong song IDs", ("SONG_",))),
         ("level_flags", ("levelFlags bits (GetCurrentLevelFlags, level_state.c)", ("LEVEL_FLAG_",))),
         ("mask_level", ("maskLevel values (SetMaskLevel, comparisons)", ("MASK_LEVEL_",))),
-        ("event", ("NOTIFY / *HandleEvent event IDs", ("EVENT_",))),
+        ("event", ("event IDs (handler case labels, NOTIFY, event-slot calls)", ("EVENT_",))),
         ("action_state", ("action-controller states (SetActionCtrlMode, ->state)", ("ACTION_",))),
         ("kind", ("entity / crate kinds (->kind comparisons, CreateCrate)", ("ENTITY_", "CRATE_KIND_"))),
         ("category_exit", ("SetActorCategoryExitStatus values", ("CATEGORY_EXIT_",))),
@@ -69,6 +69,13 @@ CALLS = [
     ("event", r"\w*HandleEvent", 1),
     ("event", r"\w*HandleEvent", 2),
     ("event", r"PhysCall3", 3),
+    # Wrappers around the event slot (vtable +0x68).
+    ("event", r"CALL_M68H?", 2),
+    ("event", r"CALL_HIT", 2),
+    ("event", r"Call68", 2),
+    ("event", r"OBJ_CALL68", 2),
+    ("event", r"D18C_CALL68", 1),
+    ("event", r"E08C_CALL68", 0),
     ("action_state", r"SetActionCtrlMode", 1),
     ("action_state", r"SetCtrlMode", 1),
     ("action_state", r"SetActionCtrlModeAnim", 1),
@@ -111,6 +118,39 @@ FIELDS = [
 # this many lines of it is the bit.
 LEVEL_FLAGS_WINDOW = 3
 LEVEL_FLAGS_ASSIGN = re.compile(r"\bmask\b[^;=]*=\s*(?P<v>" + LIT + r")\s*;")
+
+# Event IDs: the `case` labels of the event handlers, and the inline calls
+# through the event slot (`&obj->vtable->handleEvent`,
+# `PART_METHOD(obj, 0x68)`), whose event is the third argument (this,
+# sender, event, arg) of the first call within EVENT_SLOT_REACH
+# characters of the slot lookup.
+EVENT_HANDLER_RE = re.compile(r"\b(?:\w*HandleEvent|HitEnemy)\s*\([^;{}]*\)\s*\{")
+EVENT_CASE_RE = re.compile(r"\bcase\s+(?P<v>" + LIT + r")(?:\s*\.\.\.\s*(?P<w>" + LIT + r"))?\s*:")
+EVENT_SLOT_RE = re.compile(r"->handleEvent\b|\bPART_METHOD\s*\(\s*\w+\s*,\s*0x68\s*\)")
+EVENT_SLOT_CALL_RE = re.compile(r"\b_call_via_r4\s*\(|->fn\s*\)\s*\(")
+EVENT_SLOT_REACH = 400
+
+
+def scan_events(text, add):
+    for m in EVENT_HANDLER_RE.finditer(text):
+        depth, end = 0, len(text)
+        for i in range(m.end() - 1, len(text)):
+            depth += {"{": 1, "}": -1}.get(text[i], 0)
+            if depth == 0:
+                end = i
+                break
+        for c in EVENT_CASE_RE.finditer(text, m.end(), end):
+            for g in ("v", "w"):
+                if c.group(g):
+                    add("event", c.start(g), c.group(g))
+    for m in EVENT_SLOT_RE.finditer(text):
+        if "PhysCall3" in text[text.rfind("\n", 0, m.start()) + 1 : m.start()]:
+            continue  # counted by CALLS
+        c = EVENT_SLOT_CALL_RE.search(text, m.end(), m.end() + EVENT_SLOT_REACH)
+        args = c and split_args(text, c.end() - 1)
+        if args and len(args) == 4 and LIT_RE.match(args[2][1].strip()):
+            add("event", args[2][0], args[2][1])
+
 
 FLAG_TEST = re.compile(r"(?<![&])&\s*(?P<v>0[xX][0-9a-fA-F]+)[uUlL]*\b")
 CALL_RE_CACHE = {}
@@ -230,6 +270,8 @@ def scan_file(path, rel):
             continue
         for m in re.finditer(pattern, text):
             add(topic, m.start("v"), m.group("v"))
+
+    scan_events(text, add)
 
     flag_lines = [line_of(text, m.start()) for m in re.finditer(r"\bGet(?:Current)?LevelFlags\s*\(", text)]
     if flag_lines:

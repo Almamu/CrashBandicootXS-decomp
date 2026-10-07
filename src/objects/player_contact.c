@@ -185,7 +185,7 @@ mode1or2:
             addr = (u8 *)part + offset2;
             deadRead = *(void *volatile *)&rec2->fn;
             arg1 = 1;
-            arg2 = 1;
+            arg2 = EVENT_HIT;
         }
         goto tail;
     }
@@ -204,7 +204,7 @@ checkMode3:
         void *addr3 = (u8 *)part + offset;
         MATCH_HOLD_REG(void *, deadRead3, r4) = *(void *volatile *)&rec->fn;
         (void)deadRead3;
-        _call_via_r4(addr3, 1, 1, 0);
+        _call_via_r4(addr3, 1, EVENT_HIT, 0);
     }
 }
 asm(".align 2, 0");

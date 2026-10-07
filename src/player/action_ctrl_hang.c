@@ -673,7 +673,7 @@ loop_body:
             void *addr2 = (u8 *)other + offset2;
             MATCH_HOLD_REG(void *, fn2, r4) = *(void *volatile *)&rec2->fn;
 
-            _call_via_r4(addr2, 0, 0x16, 0);
+            _call_via_r4(addr2, 0, EVENT_ATTACK_SUPER_BODY_SLAM, 0);
             (void)fn2;
         }
     }

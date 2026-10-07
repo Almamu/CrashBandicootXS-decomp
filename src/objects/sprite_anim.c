@@ -452,10 +452,10 @@ void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_p
         px = part->x;
         if (px < gPlayer->x) {
             gPlayer->x = px + ((b.w + a.w) << 7);
-            CALL_HIT((struct box_part *)gPlayer, 0, 0xc, 2);
+            CALL_HIT((struct box_part *)gPlayer, 0, EVENT_BUMP, 2);
         } else {
             gPlayer->x = px - ((b.w + a.w) << 7);
-            CALL_HIT((struct box_part *)gPlayer, 0, 0xc, 1);
+            CALL_HIT((struct box_part *)gPlayer, 0, EVENT_BUMP, 1);
         }
     } else {
         u8 kind;
@@ -471,8 +471,8 @@ void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_p
             kind = gPlayer->kind;
             if (kind == 1) {
                 if (gPlayer->speedY > 0) {
-                    CALL_HIT(part, 1, 1, 0);
-                    CALL_HIT((struct box_part *)gPlayer, 0, 0xd, 0);
+                    CALL_HIT(part, 1, EVENT_HIT, 0);
+                    CALL_HIT((struct box_part *)gPlayer, 0, EVENT_BOUNCE, 0);
                     PlaySfx(gAudioContext, SFX_BOUNCE, 0x100);
                 }
             } else {
@@ -482,7 +482,7 @@ void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_p
         case 2:
             part->flags |= 8;
             if (gLevelState->maskLevel) {
-                CALL_HIT(part, 1, 1, 0);
+                CALL_HIT(part, 1, EVENT_HIT, 0);
             }
             CALL_HIT((struct box_part *)gPlayer, 1, part->kind, 0);
             break;

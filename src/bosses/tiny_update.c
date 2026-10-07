@@ -190,7 +190,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
             struct player *pl = gPlayer;
             const struct actor_method *m = &pl->vtable->handleEvent;
             void *t = (u8 *)pl + m->thisOffset;
-            ((hop_fn3)m->fn)(t, 0, 1, 0);
+            ((hop_fn3)m->fn)(t, 0, EVENT_HIT, 0);
         }
     }
 

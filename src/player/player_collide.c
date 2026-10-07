@@ -156,7 +156,7 @@ u8 CollidePlayer(struct player *self)
                     *_p = _z;
                 }
                 SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
-                CALL_M68H(self, 0, 1, 0);
+                CALL_M68H(self, 0, EVENT_HIT, 0);
                 break;
             case 2:
             case 3:
@@ -225,10 +225,10 @@ u8 CollidePlayer(struct player *self)
 
                 snap -= y;
                 self->y += snap << 8;
-                CALL_M68(self, 0, 0x17, 0);
+                CALL_M68(self, 0, EVENT_HANG_GRAB, 0);
             }
         } else if (self->hanging != 0) {
-            CALL_M68(self, 0, 0x18, 0);
+            CALL_M68(self, 0, EVENT_HANG_RELEASE, 0);
         }
     }
     return self->hitAxes;

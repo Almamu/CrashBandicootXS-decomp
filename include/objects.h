@@ -17,6 +17,7 @@
 #include "aabb.h"
 #include "byte_arg.h"
 #include "vtable.h"
+#include "constants/events.h"
 
 struct actor;
 struct box_part;

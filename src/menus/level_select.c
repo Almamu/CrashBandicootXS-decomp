@@ -341,7 +341,7 @@ void CheckLaunchPadContact(void *self)
             void *addr = (u8 *)p + m->thisOffset;
             MATCH_HOLD_REG(void *, fn, r4) = *(void *const volatile *)&m->fn;
 
-            _call_via_r4(addr, 0, 0x19, 0);
+            _call_via_r4(addr, 0, EVENT_LAUNCH_PAD, 0);
             (void)fn;
         }
     }
