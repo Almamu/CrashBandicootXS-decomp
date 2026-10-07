@@ -318,8 +318,8 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->flipX = 0;
     self->flipY = 0;
     self->slot = GetSpriteAnimPaletteSlot((struct actor *)self);
-    self->x = x << 8;
-    self->y = y << 8;
+    self->x = INT_TO_Q8(x);
+    self->y = INT_TO_Q8(y);
     if ((u8)IsEntityIdActivated(gEntityFlags, id) &&
         (type == CRATE_KIND_MYSTERY || type == CRATE_KIND_SLOT) &&
         (PLACEMENT(slot)->flags & CRATE_PLACEMENT_FLAG_ASSIST_CHECKPOINT))

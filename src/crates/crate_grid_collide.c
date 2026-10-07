@@ -71,21 +71,20 @@ void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struc
 
     cam = gLevelLayers->layer0;
     {
-        s32 x = cam->x << 8;
-        s32 y = cam->y << 8;
+        s32 x = INT_TO_Q8(cam->x);
+        s32 y = INT_TO_Q8(cam->y);
         screen.x = x;
         screen.y = y;
     }
     {
-        s32 w = 240 << 8;
-        s32 h = 160 << 8;
+        s32 w = INT_TO_Q8(240);
+        s32 h = INT_TO_Q8(160);
         screen.w = w;
         screen.h = h;
     }
     lo = cam->x;
     lo >>= 8;
-    if (lo < 0)
-        lo = 0;
+    LIMIT_MIN(lo, 0);
     i = lo + 2;
     heads = m->gridHead;
     last = &m->gridHead[255];

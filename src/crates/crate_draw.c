@@ -58,9 +58,7 @@ void DrawCrate(struct crate *selfArg)
                             (struct anim_rec *)(tag * sizeof(*table) + (s32)table);
                         u8 limit = record->frames;
 
-                        if (idx >= limit) {
-                            idx = limit - 1;
-                        }
+                        CLAMP_INDEX(idx, limit);
                     }
                 }
                 self->frame = idx;

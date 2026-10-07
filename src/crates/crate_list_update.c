@@ -152,14 +152,13 @@ void UpdateCrateList(struct pool_manager *manager)
     box[2] = v2;
     box[3] = v3;
     pos = (s32 *)gLevelLayers->layer0;
-    v0 = (pos[0] << 8) - 0x6400;
-    v1 = (pos[1] << 8) - 0x3c00;
+    v0 = INT_TO_Q8(pos[0]) - 0x6400;
+    v1 = INT_TO_Q8(pos[1]) - 0x3c00;
     box[0] = v0;
     box[1] = v1;
     base = pos[0];
     base >>= 8;
-    if (base < 0)
-        base = 0;
+    LIMIT_MIN(base, 0);
 
     i = base + 2;
     gridHeadBase = manager->gridHead;

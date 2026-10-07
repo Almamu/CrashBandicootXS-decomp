@@ -14,6 +14,7 @@
  * which src/objects/part_list.c holds for ROM order. */
 
 #include "core.h"
+#include "math_util.h"
 #include "aabb.h"
 #include "gfx.h"
 #include "objects.h"

@@ -283,9 +283,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
 
     if (masked != 1) {
         s32 dx = self->x - testX;
-        if (dx < 0) {
-            dx = -dx;
-        }
+        MAKE_ABS(dx);
         /* Register-pinned, and declared only here (not at the top of
          * the enclosing block): the ROM loads the literal-pool
          * `0x3fff` bound into r2 only *after* `testX` (the incoming
@@ -298,9 +296,7 @@ s32 CollideCrateWithPlayer(struct crate *selfArg, u32 idx, s32 testX, s32 testY)
             MATCH_HOLD_REG(s32, limit, r2) = 0x3FFF;
             if (dx <= limit) {
                 s32 dy = self->y - testY;
-                if (dy < 0) {
-                    dy = -dy;
-                }
+                MAKE_ABS(dy);
                 if (dy <= limit) {
                     if (self->kind != CRATE_KIND_OUTLINE) {
                         QueueCratePlayerCollision(self, idx);

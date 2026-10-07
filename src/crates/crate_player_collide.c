@@ -32,8 +32,7 @@ void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
     u8 state;
 
     lo >>= 8;
-    if (lo < 0)
-        lo = 0;
+    LIMIT_MIN(lo, 0);
     i = lo + 2;
     p = gPlayer;
     state = p->ctrlMode;

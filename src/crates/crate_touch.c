@@ -97,8 +97,8 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
         rec = (u8 *)&(*self->keyframes)[self->frame];
         q = (struct hitbox_quad *)(rec + 4);
 
-        px = self->x >> 8;
-        py = self->y >> 8;
+        px = Q8_TO_INT(self->x);
+        py = Q8_TO_INT(self->y);
         offX = q->offX;
         offY = q->offY;
         w = q->w;
@@ -116,8 +116,8 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
         s32 offX, offY;
         u8 w, h;
 
-        px = pl->x >> 8;
-        py = pl->y >> 8;
+        px = Q8_TO_INT(pl->x);
+        py = Q8_TO_INT(pl->y);
         rec = (u8 *)&pl->anim->records[pl->tag];
         q = (struct hitbox_quad *)(rec + 4);
         offX = q->offX;
