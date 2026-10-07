@@ -5,9 +5,10 @@
  * docs/cplusplus.md): the classes behind gEntityVtable and the sprite
  * objects built on it. Their own code is still C (actor.h's `struct
  * actor`, gobj_1a794.h's `struct gobj`), so these are views for the C++
- * objects that use them: the same layout as the C structs, and only the
- * virtual methods those objects call are named. The rest of the family
- * becomes C++ in a later part of #664.
+ * objects that use them: the same layout as the C structs. Entity
+ * declares all of gEntityVtable's slots, since PeriodicSpawner
+ * (include/enemy_ctrl.hpp) derives from it; SpriteObj adds none of its
+ * own yet. The rest of the family becomes C++ in a later part of #664.
  *
  * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp). */
 #pragma interface
@@ -19,9 +20,12 @@ extern "C" {
 #include "entity_bits.h"
 }
 
+class Ctrl;
+
 /* struct actor's header, the 0x1C-byte base class of gEntityVtable: its
- * own fields, then the vtable pointer. Slot 5 is IsEntityOnScreen
- * (IsSpriteObjOnScreen for a sprite object). */
+ * own fields, then the vtable pointer. Its methods are still C, in
+ * src/gfx/graphics.c (InitEntity, IsEntityOnScreen, ...); a sprite object
+ * overrides them (IsSpriteObjOnScreen, ...). */
 class Entity
 {
 public:
@@ -46,11 +50,23 @@ public:
     u8 unused_16[2];
     // 0x18: the vtable pointer
 
-    virtual void CheckPlayerContact(); // 1
-    virtual void GetBounds();          // 2
-    virtual void Update();             // 3
-    virtual void Draw();               // 4
-    virtual u8 IsOnScreen();           // 5
+    Entity();                                   // InitEntity
+    virtual void CheckPlayerContact();          // 1
+    virtual void GetBounds();                   // 2
+    virtual void Update();                      // 3
+    virtual void Draw();                        // 4
+    virtual u8 IsOnScreen();                    // 5
+    virtual s32 OverlapsRect();                 // 6
+    virtual u8 IsNearCamera();                  // 7
+    virtual s32 IsInsideRect(struct aabb *box); // 8
+    virtual s32 GetClassId();                   // 9
+
+    /* 10, DestroyEntity: inline, as the subclasses' destructors have it
+     * (DestroyPeriodicSpawner). g++ adds the `delete` when bit 0 of the
+     * flags is set. */
+    virtual ~Entity()
+    {
+    }
 
     /* MarkEntityGone inlined: the `gone` flag, and unless the id is
      * ENTITY_ID_NONE, its bit in the bitmap. */
@@ -85,7 +101,7 @@ public:
     u16 affine; // 0x3C
     u8 unk_3E[2];
     s32 unk_40;              // 0x40
-    struct mover *mover;     // 0x44
+    Ctrl *mover;             // 0x44 - its controller
     struct speed_ramp rampX; // 0x48 - speedX's ramp
     struct speed_ramp rampY; // 0x54 - speedY's ramp
     s32 speedX;              // 0x60

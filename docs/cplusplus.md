@@ -415,6 +415,12 @@ counts them by kind) and what the C++ still needs.
 | `src/bosses/mega_mix.cpp` | `MegaMixCtrl` | 7 | agbcp | 23 pins, 8 asm -> 0 | 1 |
 | `src/player/player_flags.cpp` | `Ctrl`'s `SetMode`, `SetAnimSet`, `SetTargetMotionY`, `StartTargetMotionY` (ctrl.hpp), with 40 C-linkage player accessors | 4 + 40 | agbcp | 16 pins -> 0 (plus `StorePlayerListEntry`'s 6 -> 0; `GetPlayerListEntry` keeps 3) | 3 |
 | `src/player/input_ctrl.cpp` | `InputCtrl` (input_ctrl.hpp), with 6 C-linkage swim controller accessors | 19 + 6 | old_agbcp | 0 -> 0; the vcall macros and the 16-line PMF dispatch go | 3 |
+| `src/enemies/enemy_ctrl.cpp` | `EnemyCtrl`'s small methods, `KnockedEnemyCtrl`, `PeriodicSpawner` (include/enemy_ctrl.hpp) | 27 | old_agbcp (was agbcc) | 14 pins, 2 clobbers, 1 const, a `volatile` read and an `ENTITY_SET_GONE_BIT_ASR` -> 4 pins, 2 clobbers, 1 const | 2 |
+| `src/enemies/enemy_ctrl_update.cpp` | `EnemyCtrl::Update`, `EnemyCtrl::HandleEvent` | 2 | old_agbcp | 1 pin, 1 hold, 1 use, 1 const -> 1 const | 2 |
+| `src/enemies/enemy_attack.cpp` | `EnemyCtrl`'s attack cycle, trigger box, `SetState`, range setters | 6 | old_agbcp | 1 pin -> 1 pin | 2 |
+| `src/enemies/enemy_motion.cpp` | `EnemyCtrl`'s homing, hop, flip cycle | 4 | agbcp | 1 pin -> 1 pin | 2 |
+| `src/enemies/enemy_patrol.cpp` | `EnemyCtrl::UpdatePatrol` | 1 | old_agbcp | 0 -> 0 | 2 |
+| `src/enemies/enemy_shooter.cpp` | `EnemyCtrl::UpdateShooter` | 1 | agbcp | 1 pin -> 0 | 2 |
 | `src/player/swim_ctrl.cpp` | `PlayerCtrl` (player_ctrl.hpp) | 26 | old_agbcp | 4 pins -> 0; the vcall macros and the 16-line PMF dispatch go | 4 |
 | `src/player/swim_ctrl_drift.cpp` | `PlayerCtrl::SetDriftY` | 1 | agbcp | 13 pins -> 0 | 4 |
 | `src/player/swim_ctrl_stroke.cpp` | `PlayerCtrl`'s `StartStroke`, `StartSpin`, `ApplySwimDrift` | 3 | old_agbcp | 0 -> 0 | 4 |
@@ -456,6 +462,31 @@ which compute the value before the stores like the C's static inlines),
 and `HandleEvent`'s `s32 lo = 1` lower bound (a literal 1 folds into one
 unsigned range check).
 
+Part 2 in numbers: the whole enemy family (src/enemies/, ROM
+0x0800B8DC-0x0800CBF4), 41 functions in 6 objects; `MATCH_HOLD_REG`
+2096 -> 2078 and instruction-emitting `asm` 239 -> 238 project-wide (the
+last `ENTITY_SET_GONE_BIT_ASR` site went, and the macro with it), plus
+one `MATCH_HOLD`, one `MATCH_USE` and a `volatile` read. The virtual
+calls (`SetTargetAnim`, the knocked controller's `Attach`, `delete this`,
+the sea mine's `HandleEvent(0, EVENT_HIT, 0)`) and `new
+KnockedEnemyCtrl` are plain C++. Kept, each with a comment, because
+they're register allocation rather than C emulation (the same under
+agbcp and old_agbcp): the three oscillators' 4 pins, 2 clobbers and
+constant-init (`UpdateOscillateX`, `UpdateBob`, `UpdateOscillateY`),
+`UpdateHop`'s and `UpdateTriggerBox`'s pin, `HandleEvent`'s
+`MarkGoneFreshBit` constant-init and `Update`'s `vu8` re-read.
+`GetSfxVolumeAt`'s 6 pins, `UpdateShooter`'s and `PeriodicSpawner::Update`'s
+pins, and the knocked controller's whole `ENTITY_SET_GONE_BIT_ASR`
+were old_agbcc's code reproduced under agbcc, or C emulation; the C++
+needs none of them.
+
+Compilers: `enemy_ctrl.o` matches as clean C++ only under old_agbcp
+(`KnockedEnemyCtrl::Update` is `OneShotAnimCtrl::Update`'s
+constant-before-`ldrb`, and `GetSfxVolumeAt` comes out unpinned), so it
+moved to `OLD_AGBCC_OBJS`. `enemy_ctrl_update.o`, `enemy_attack.o` and
+`enemy_patrol.o` were already old_agbcc objects. `enemy_motion.o` and
+`enemy_shooter.o` compile the same under both and stay agbcc.
+
 Part 4 in numbers: the swim controller, `PlayerCtrl` (new
 `include/player_ctrl.hpp`), 36 methods in 4 objects (`swim_ctrl.cpp`,
 `swim_ctrl_drift.cpp`, `swim_ctrl_stroke.cpp`, and the six motion-queue
@@ -495,29 +526,33 @@ class in a `.hpp` header and keeps its C struct in the C header for the
 C files: `Ctrl`/`struct ctrl` (objects.h), `InputCtrl`/`struct
 input_ctrl` (input_ctrl.hpp) and `BossCtrl`/`struct boss_ctrl` (player.h),
 `MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h), `SpriteObj`/`struct
-gobj` (gobj_1a794.h). Each class has a `COMPILE_TIME_ASSERT` that its
-size is the C struct's (the `.hpp` includes the C header), and its
+gobj` (gobj_1a794.h), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
+`PeriodicSpawner`/`struct periodic_spawner` (enemies.h). Each class has
+a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
 vtable data and the C callers. When the last C user of a struct is
 converted, the struct can go.
 
 **Sprite objects.** `include/sprite_obj.hpp` has `Entity` (struct
-actor's 0x1C-byte header, slot 5 `IsOnScreen`, `MarkGone()`) and
-`SpriteObj` (struct gobj's fields), shared by the controllers instead of
-each file's own partial view. Only the methods the controllers call are
-declared; the family itself is converted later.
+actor's 0x1C-byte header, all of gEntityVtable's slots, `MarkGone()`)
+and `SpriteObj` (struct gobj's fields, `mover` the part's `Ctrl`),
+shared by the controllers instead of each file's own partial view.
+`Entity`'s constructor is InitEntity (still C) and its destructor is
+inline, as DestroyPeriodicSpawner shows; the family itself is converted
+later. `EnemyCtrl` reaches its part through an anonymous union, as
+part_ctrl.h's `struct ctrl_target` (its fields) or as a `SpriteObj`
+(what the `Ctrl` methods and the part's virtual methods take).
 
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
 `tools/cpp_survey.py --objects`):
 
-1. **The enemy controllers:** `src/enemies/enemy_ctrl.c` (27 functions:
-   `EnemyCtrl`, `KnockedEnemyCtrl`, the periodic spawner) and
-   `enemy_ctrl_update.c` (`UpdateEnemyCtrl`, `UpdateKnockedEnemyCtrl`;
-   old_agbcc). The knocked controller is a plain `Ctrl` subclass with an
-   `ENTITY_SET_GONE_BIT_ASR` like `OneShotAnimCtrl::Update`'s.
+1. ~~**The enemy controllers**~~: done in part 2 (all of src/enemies/). Their
+   C callers are still C: the level spawners (`spawn_enemies.c`,
+   `spawn_objects.c`'s SpawnSealSpawner) and `dingodile.c`, whose
+   Dingodile builds on `CreateEnemyCtrl`.
 2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3. Only
    `Ctrl::Update` (`UpdateCtrl`, an empty function in `system/boot.c`)
    is still C.
@@ -589,7 +624,9 @@ code the C++ compiler generated: the virtual-call and PMF macros, the
 evaluation-order pins around `_call_via_rN` calls, the `if (1) {} else
 (void)0` wrapping that keeps `ACTOR_PMF_CALL` from looking like a loop.
 Converting an object to C++ removes those outright: part 1 removed 33
-pins and 10 `asm` statements and kept 2 ([Progress](#progress)). #662's pruning tool should treat "convert
+pins and 10 `asm` statements and kept 2, part 2 removed 18 pins and an
+`asm` and kept 6, plus 2 clobbers and 2 constant-inits
+([Progress](#progress)). #662's pruning tool should treat "convert
 to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 
 ## Dead ends and gotchas
@@ -624,3 +661,17 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   instead (`StompedHopPadCtrl::Update`).
 - **The 45 files of experiment 4** differ when their C is compiled as
   C++: converting one of them means re-matching it, not just renaming it.
+- **A 1-bit bitfield test** (`if (t->mirror.x)`) is `movs #mask; ands`
+  under g++, where the C front end gave the ROM's `lsl` sign test. Spell
+  the sign test: `(s32)(part->mirror << 27) < 0` (`UpdateTriggerBox`,
+  `UpdatePatrol`). Loads and stores of the bitfield come out the same.
+- **An anonymous union member is reloaded after every store.** Reading
+  EnemyCtrl's `target`/`sprite` union again after a store through the
+  part reloads it, where the C kept it in a register; take it into a
+  local once (`HandleEvent`'s `part` and `t2`).
+- **Free functions keep C linkage** when their prototype is in a C
+  header included inside `extern "C"` (`GetSfxVolumeAt`,
+  `LaunchHarmfulEffectPart`): no cxx_symbols.txt entry.
+- **`delete this`** is the ROM's `if (self) self->vtable[9](self, 3)`
+  (`HandleEvent`), and an inline root destructor folds into the derived
+  one, its dead vtable pointer store dropped (`~PeriodicSpawner`).

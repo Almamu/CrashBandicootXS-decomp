@@ -213,7 +213,7 @@ the expression out or adding another file-local copy:
 | `math_util.h` | `ANIM_REWIND(animTime, rec)` | the animation loop rewind `animTime -= INT_TO_Q8(rec.loopThreshold - rec.loopBase)` |
 | `math_util.h` | `SIN_Q8(angle)`, `COS_Q8(angle)` | `gSineTable[angle & 0xFF]` and the quarter-turn `+ 0x40` cosine |
 | `entity_bits.h` | `ENTITY_ID_NONE`, `ENTITY_SET_GONE_BIT(_OF)`, `ENTITY_MARK_GONE` | MarkEntityGone's "gone" bitmap set, inlined |
-| `entity_bits.h` | `ENTITY_SET_GONE_BIT_PINNED`, `ENTITY_SET_GONE_BIT_ASR` | the same with the register pins several files share |
+| `entity_bits.h` | `ENTITY_SET_GONE_BIT_PINNED` | the same with the register pins several files share |
 
 Macros that several files used to define for themselves now live in the
 header that owns their type:

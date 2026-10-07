@@ -10,7 +10,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* ResetEnemyCtrl's (enemy_ctrl.c) entry set and its entries. */
+/* ResetEnemyCtrl's (enemy_ctrl.cpp) entry set and its entries. */
 extern const u32 gEnemyCtrlMotionEntries[4][2];
 
 const struct entry_set gEnemyCtrlMotionSet = {
