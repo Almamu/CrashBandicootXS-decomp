@@ -9,6 +9,7 @@
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 
 /* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
  * (0x08016128-0x08017524): the player-input controller class of
@@ -276,8 +277,7 @@ static inline void ClampFrame(struct player *t, s32 frame)
 {
     s32 n = t->anim->records[t->tag].frameCount;
 
-    if (frame >= n)
-        frame = n - 1;
+    CLAMP_INDEX(frame, n);
     t->frame = frame;
 }
 

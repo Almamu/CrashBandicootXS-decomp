@@ -20,6 +20,7 @@
 #include "level.h"
 #include "sprite_bank.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -143,7 +144,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 s32 d = to->y - from->y;
                 s32 y = self->part->y;
 
-                self->part->y = y - (d << 8);
+                self->part->y = y - INT_TO_Q8(d);
             }
         }
         break;

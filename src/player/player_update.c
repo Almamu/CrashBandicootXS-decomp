@@ -5,6 +5,7 @@
 #include "player.h"
 #include "objects.h"
 #include "box_part.h"
+#include "math_util.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
@@ -203,15 +204,9 @@ void StopPlayerFalling(struct player *selfArg)
 {
     MATCH_HOLD_REG(struct player *, self, r1) = selfArg;
 
-    if (self->speedY > 0) {
-        self->speedY = 0;
-    }
-    if (self->rampY.start > 0) {
-        self->rampY.start = 0;
-    }
-    if (self->rampY.step > 0) {
-        self->rampY.step = 0;
-    }
+    LIMIT_MAX(self->speedY, 0);
+    LIMIT_MAX(self->rampY.start, 0);
+    LIMIT_MAX(self->rampY.step, 0);
 }
 
 /* Decrements the `countdown` byte (if nonzero), then tail-

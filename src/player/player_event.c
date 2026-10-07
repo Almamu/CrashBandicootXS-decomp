@@ -12,6 +12,7 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/archive/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -322,8 +323,8 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
                         /* The ROM reloads the mode here and never uses it. */
                         (void)*(volatile s32 *)&gLevelState->maskLevel;
                         child = self->child;
-                        x = child->x >> 8;
-                        y = child->y >> 8;
+                        x = Q8_TO_INT(child->x);
+                        y = Q8_TO_INT(child->y);
                         m = child->mirrorX;
                         SpawnEffectPart(gEntitySpawner, 0x22, 3, x, y, m);
                     }
@@ -370,8 +371,7 @@ static inline void ClampTick(struct box_part *child, s32 v)
 {
     s32 n = (*child->keyframes)[child->frame].steps;
 
-    if (v >= n)
-        v = n - 1;
+    CLAMP_INDEX(v, n);
     child->tick = v;
 }
 
@@ -470,10 +470,8 @@ void DrawPlayer(struct player *self)
 
                 gAkuAkuFollowFrame = gAkuAkuFollowFrame + (u16)RandRange(3) - 1;
                 v = gAkuAkuFollowFrame;
-                if (v > 3)
-                    v = 3;
-                if (v < 0)
-                    v = 0;
+                LIMIT_MAX(v, 3);
+                LIMIT_MIN(v, 0);
                 gAkuAkuFollowFrame = v;
             }
             ClampTick(self->child, gAkuAkuFollowFrame);
@@ -482,9 +480,9 @@ void DrawPlayer(struct player *self)
 
                 // clang-format off
                 SetChildPos(self->child,
-                            self->maskTrail[idx].x + gSineTable[gRoomFrameCount & 0xff] * 16,
+                            self->maskTrail[idx].x + SIN_Q8(gRoomFrameCount) * 16,
                             self->maskTrail[idx].y +
-                                gSineTable[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
+                                SIN_Q8(gRoomFrameCount >> 1) * 8 - 0x1800);
                 // clang-format on
             }
             /* Hard-register hold (emits no code): r6 live here keeps

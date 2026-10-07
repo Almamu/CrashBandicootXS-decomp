@@ -5,6 +5,7 @@
 #include "objects.h"
 #include "gfx_part.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #9/#10: 0x0800B3F0 - the player object's constructor
  * (`struct player`, player.h). */
@@ -65,8 +66,8 @@ struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16
     ResetPlayer(self);
 
     self->id = arg1;
-    self->x = (s32)arg2 << 8;
-    self->y = (s32)arg3 << 8;
+    self->x = INT_TO_Q8((s32)arg2);
+    self->y = INT_TO_Q8((s32)arg3);
 
     return self;
 }

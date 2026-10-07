@@ -9,6 +9,7 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
@@ -156,14 +157,14 @@ void UpdateEnemyTriggerBox(struct part_ctrl *self)
     }
     switch (mode = self->mode) {
     case 0:
-        x = self->target->x >> 8;
-        y = self->target->y >> 8;
+        x = Q8_TO_INT(self->target->x);
+        y = Q8_TO_INT(self->target->y);
         w = self->boxR - self->boxL;
         h = self->boxB - self->boxT;
         SetAabbPos(&box, x + self->boxL, y + self->boxT);
         SetAabbSize(&box, w, h);
         if (self->target->mirror.u.x)
-            box.x = (self->target->x >> 8) * 2 - (box.x + box.w);
+            box.x = Q8_TO_INT(self->target->x) * 2 - (box.x + box.w);
         if (PlayerTouchesBox(gPlayer, &box)) {
             SetEnemyAnimMode(self, 2);
             if (self->kind == ENEMY_KIND_VULTURE) {
@@ -348,8 +349,8 @@ void SetEnemyState(struct part_ctrl *self, s32 state)
 void SetEnemyRangeXSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
 {
     s32 x = self->target->x;
-    self->rangeX[0] = x - (radius << 8);
-    self->rangeX[1] = self->target->x + (radius << 8);
+    self->rangeX[0] = x - INT_TO_Q8(radius);
+    self->rangeX[1] = self->target->x + INT_TO_Q8(radius);
     self->accel = p3;
     self->speed = p2;
 }
@@ -358,8 +359,8 @@ void SetEnemyRangeXSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
 void SetEnemyRangeYSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
 {
     s32 y = self->target->y;
-    self->rangeY[1] = y - (radius << 8);
-    self->rangeY[0] = self->target->y + (radius << 8);
+    self->rangeY[1] = y - INT_TO_Q8(radius);
+    self->rangeY[0] = self->target->y + INT_TO_Q8(radius);
     self->accel = p3;
     self->speed = p2;
 }
@@ -368,6 +369,6 @@ void SetEnemyRangeYSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
 void SetEnemyRangeX(struct part_ctrl *self, s32 radius)
 {
     s32 x = self->target->x;
-    self->rangeX[0] = x - (radius << 8);
-    self->rangeX[1] = self->target->x + (radius << 8);
+    self->rangeX[0] = x - INT_TO_Q8(radius);
+    self->rangeX[1] = self->target->x + INT_TO_Q8(radius);
 }

@@ -28,6 +28,7 @@
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 #include "player.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -148,13 +149,13 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             struct ctrl_target *t = self->target;
             s32 y = t->y;
 
-            if (y > (gLevelLayers->layer0->heightPx << 8) - 0x1E00) {
+            if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1E00) {
                 t->flag7 = 0;
                 {
                     struct ctrl_target *t2 = self->target;
 
                     y = t2->y;
-                    if (y > (gLevelLayers->layer0->heightPx << 8) + 0x1E00)
+                    if (y > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1E00)
                         MarkGone(t2);
                 }
             } else if (t->hitAxes == 8) {
@@ -167,20 +168,18 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
     case 18:
         {
             struct ctrl_target *t = self->target;
-            s32 x = t->x >> 8;
-            s32 y = t->y >> 8;
+            s32 x = Q8_TO_INT(t->x);
+            s32 y = Q8_TO_INT(t->y);
             struct player *p = gPlayer;
-            s32 dx = Abs(x - (p->x >> 8));
-            s32 d = Abs(y - (p->y >> 8));
+            s32 dx = Abs(x - Q8_TO_INT(p->x));
+            s32 d = Abs(y - Q8_TO_INT(p->y));
             struct byte_arg zero;
             s32 vol;
 
             zero.v = 0;
-            if (d < dx)
-                d = dx;
+            LIMIT_MIN(d, dx);
             d = d < 0x20 ? 0x20 : d;
-            if (d > 0xa0)
-                d = 0xa0;
+            LIMIT_MAX(d, 0xa0);
             vol = 0x100 - (d - 0x20) * 2;
             PlayAmbientSfx(gAudioContext, SFX_SAUCER_HUM, 8, vol, zero);
         }
@@ -390,7 +389,7 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
 {
     if (gPlayer->ctrlMode == 1) {
         MarkGoneHeld(self->target);
-        SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
+        SpawnAt(0x28, Q8_TO_INT(self->target->x), Q8_TO_INT(self->target->y));
         PlaySfx(gAudioContext, SFX_UNKNOWN_5A, 0x80);
         return;
     }
@@ -428,7 +427,8 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
     case EVENT_ATTACK_BODY_SLAM:
     case EVENT_ATTACK_SUPER_BODY_SLAM:
         {
-            struct ctrl_target *obj = SpawnAt(0x29, self->target->x >> 8, self->target->y >> 8);
+            struct ctrl_target *obj =
+                SpawnAt(0x29, Q8_TO_INT(self->target->x), Q8_TO_INT(self->target->y));
             s32 one = 1;
 
             obj->visible = 0;

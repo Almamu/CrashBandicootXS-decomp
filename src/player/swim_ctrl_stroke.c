@@ -8,6 +8,7 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
@@ -235,8 +236,8 @@ void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self)
     dir = GetDpadDirection(gInput);
     if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0) {
         struct player *t = self->target;
-        s32 x = t->x >> 8;
-        s32 y = (t->y >> 8) - 20;
+        s32 x = Q8_TO_INT(t->x);
+        s32 y = Q8_TO_INT(t->y) - 20;
         s32 flip = t->mirror.bits.flipX;
         struct gfx_part *obj = SpawnEffectPart(gEntitySpawner, 40, 4, x, y, flip);
 

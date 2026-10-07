@@ -9,6 +9,7 @@
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
@@ -179,7 +180,7 @@ void UpdateInputCtrl(struct input_ctrl *self)
         u32 keys;
         s32 x = self->target->x;
 
-        if (x > (gLevelLayers->layer0->widthPx << 8) - 0xA00) {
+        if (x > INT_TO_Q8(gLevelLayers->layer0->widthPx) - 0xA00) {
             {
                 struct follow_child *c = self->cameraLead;
 
