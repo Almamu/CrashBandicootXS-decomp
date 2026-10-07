@@ -60,23 +60,21 @@ void DrawCrateList(struct pool_manager *managerArg)
     s32 box[4];
     MATCH_HOLD_REG(struct level_layers *, P, r0) = gLevelLayers;
     MATCH_HOLD_REG(struct bg_scroll_layer *, subObj, r2) = P->layer0;
-    MATCH_HOLD_REG(s32, v0, r1) = subObj->x << 8;
-    MATCH_HOLD_REG(s32, v1, r0) = subObj->y << 8;
+    MATCH_HOLD_REG(s32, v0, r1) = INT_TO_Q8(subObj->x);
+    MATCH_HOLD_REG(s32, v1, r0) = INT_TO_Q8(subObj->y);
     s32 v2, v3;
     MATCH_HOLD_REG(s32, baseIdx, r5);
     s32 bucket;
 
     box[0] = v0;
     box[1] = v1;
-    v2 = 0xf0 << 8;
-    v3 = 0xa0 << 8;
+    v2 = INT_TO_Q8(0xf0);
+    v3 = INT_TO_Q8(0xa0);
     box[2] = v2;
     box[3] = v3;
 
     baseIdx = subObj->x >> 8;
-    if (baseIdx < 0) {
-        baseIdx = 0;
-    }
+    LIMIT_MIN(baseIdx, 0);
 
     bucket = baseIdx + 2;
     {

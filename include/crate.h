@@ -2,6 +2,7 @@
 #define GUARD_CRATE_H
 
 #include "gobj_1a794.h"
+#include "math_util.h"
 #include "constants/crates.h"
 
 /* The crate (CreateCrate, gCrateVtable): the object the issue #12
@@ -224,8 +225,7 @@ static inline void PhysSetFrame(struct crate *obj, s32 idx)
 {
     u8 n = obj->anim->records[obj->tag].frames;
 
-    if (idx >= n)
-        idx = n - 1;
+    CLAMP_INDEX(idx, n);
     obj->frame = idx;
 }
 

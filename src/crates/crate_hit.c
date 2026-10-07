@@ -156,8 +156,8 @@ struct crate *ResolveStackCrateHit(struct crate *selfArg, struct aabb *box, u8 *
         u8 *rec = (u8 *)&prev->anim->records[prev->tag];
         struct hitbox_quad *q = (struct hitbox_quad *)(rec + 4);
         struct aabb b;
-        s32 px = prev->x >> 8;
-        s32 py = prev->y >> 8;
+        s32 px = Q8_TO_INT(prev->x);
+        s32 py = Q8_TO_INT(prev->y);
         s32 x = q->offX;
         s32 y = q->offY;
         u8 w = q->w;
@@ -235,8 +235,8 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
 
         rec = (u8 *)&(*self->keyframes)[self->frame];
         pb = (struct hitbox_quad *)(rec + 4);
-        px = self->x >> 8;
-        py = self->y >> 8;
+        px = Q8_TO_INT(self->x);
+        py = Q8_TO_INT(self->y);
         offX = pb->offX;
         offY = pb->offY;
         w = pb->w;
@@ -256,8 +256,8 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
         u8 w;
         u8 h;
 
-        px = gPlayer->x >> 8;
-        py = gPlayer->y >> 8;
+        px = Q8_TO_INT(gPlayer->x);
+        py = Q8_TO_INT(gPlayer->y);
         rec = (u8 *)&gPlayer->anim->records[gPlayer->tag];
         pb = (struct hitbox_quad *)(rec + 4);
         offX = pb->offX;

@@ -246,8 +246,8 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         u8 w;
         u8 h;
 
-        px = self->x >> 8;
-        py = self->y >> 8;
+        px = Q8_TO_INT(self->x);
+        py = Q8_TO_INT(self->y);
         offX = pb->offX;
         offY = pb->offY;
         w = pb->w;
@@ -259,8 +259,8 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         if (self->flipY)
             f.a.y = py * 2 - (f.a.y + f.a.h);
     }
-    px = gPlayer->x >> 8;
-    py = gPlayer->y >> 8;
+    px = Q8_TO_INT(gPlayer->x);
+    py = Q8_TO_INT(gPlayer->y);
     if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
         kind = ATTACK_KIND_INVINCIBLE;
     else {
@@ -393,7 +393,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         }
         if (f.found == 0)
             return;
-        if ((gPlayer->x >> 8) < (self->x >> 8)) {
+        if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(self->x)) {
             if (kind != ATTACK_KIND_SLIDE || GetCrateAbove(obj) != NULL) {
                 D18C_CALL68(0, EVENT_BUMP, 1);
                 D18C_Hit(gPlayer, 1);
@@ -478,14 +478,14 @@ tail:
             s32 ax = GetSpritePrevX((struct gfx_part *)gPlayer);
 
             MATCH_USE2(ax, px);
-            if ((gPlayer->x >> 8) < (self->x >> 8)) {
+            if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(self->x)) {
                 dirX = 1;
                 dx = D18C_Span(f.b.x, f.b.w, f.c.x) + 1;
             } else {
                 dirX = 2;
                 dx = D18C_Span(f.c.x, f.c.w, f.b.x) + 1;
             }
-            if ((gPlayer->y >> 8) > (self->y >> 8)) {
+            if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(self->y)) {
                 dirY = 4;
                 dy = D18C_Span(f.c.y, f.c.h, f.b.y);
             } else {
@@ -510,7 +510,7 @@ tail:
                 f.p1.x = gPlayer->x;
                 y = gPlayer->y;
                 pp = &f.p1;
-                pp->y = y - ((dy - 1) << 8);
+                pp->y = y - INT_TO_Q8(dy - 1);
                 gPlayer->speedY = 0;
                 SetEntityPos((struct actor *)gPlayer, f.p1.x, pp->y);
                 D18C_COMMIT();
@@ -523,9 +523,9 @@ tail:
                 y = gPlayer->y;
                 D18C_PosPtr(&f.p2)->y = y;
                 if (dirX == 2)
-                    f.p2.x = (dx << 8) + f.p2.x;
+                    f.p2.x = INT_TO_Q8(dx) + f.p2.x;
                 else if (dirX == 1)
-                    f.p2.x -= dx << 8;
+                    f.p2.x -= INT_TO_Q8(dx);
                 SetEntityPos((struct actor *)gPlayer, f.p2.x, D18C_PosPtr(&f.p2)->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, EVENT_BUMP, dirX);
@@ -541,9 +541,9 @@ tail:
                 D18C_PosPtr(&f.p3)->y = y;
                 pp = &f.p3; /* shared with the p1 arm, where it gets r2 */
                 if (dirY == 4)
-                    pp->y = (dy << 8) + pp->y;
+                    pp->y = INT_TO_Q8(dy) + pp->y;
                 else if (dirX == 8)
-                    pp->y -= dy << 8;
+                    pp->y -= INT_TO_Q8(dy);
                 SetEntityPos((struct actor *)gPlayer, f.p3.x, pp->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, EVENT_BUMP, dirY);
@@ -573,14 +573,14 @@ tail:
 
         if (px > ax)
             side = 1;
-        if ((gPlayer->x >> 8) < (self->x >> 8)) {
+        if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(self->x)) {
             dirX = 1;
             dx = D18C_Span(f.b.x, f.b.w, f.a.x) + 1;
         } else {
             dirX = 2;
             dx = D18C_Span(f.a.x, f.a.w, f.b.x) + 1;
         }
-        if ((gPlayer->y >> 8) > (self->y >> 8)) {
+        if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(self->y)) {
             dirY = 4;
             dy = D18C_Span(f.a.y, f.a.h, f.b.y);
         } else {
@@ -699,10 +699,8 @@ tail:
         y = gPlayer->y;
         D18C_PosPtr(&f.pos)->y = y;
     }
-    if (dx < 0)
-        dx = 0;
-    if (dy < 0)
-        dy = 0;
+    LIMIT_MIN(dx, 0);
+    LIMIT_MIN(dy, 0);
     hit = 0;
     f20 = gAttackKindBreakLimited[kind];
     tgt = self;
@@ -723,7 +721,7 @@ tail:
             D18C_CALL68(0, EVENT_BUMP, 4);
             D18C_Hit(gPlayer, 4);
             if (gPlayer->hitAxes != 8)
-                D18C_PosPtr(&f.pos)->y = (dy << 8) + D18C_PosPtr(&f.pos)->y;
+                D18C_PosPtr(&f.pos)->y = INT_TO_Q8(dy) + D18C_PosPtr(&f.pos)->y;
         }
         break;
     case 8:
@@ -737,12 +735,12 @@ tail:
             code = 1;
         }
         if (code == 1 || code == 2) {
-            D18C_PosPtr(&f.pos)->y -= (dy - 1) << 8;
+            D18C_PosPtr(&f.pos)->y -= INT_TO_Q8(dy - 1);
             D18C_PosPtr(&f.pos)->y &= ~0xff;
             SetEntityPos((struct actor *)gPlayer, f.pos.x, D18C_PosPtr(&f.pos)->y);
             D18C_COMMIT();
         } else if (code == 0 || code == 2)
-            D18C_PosPtr(&f.pos)->y -= dy << 8;
+            D18C_PosPtr(&f.pos)->y -= INT_TO_Q8(dy);
         D18C_PosPtr(&f.pos)->y &= ~0xff;
         break;
     case 1:
@@ -755,9 +753,9 @@ tail:
         } else {
             if ((*st & CRATE_STATE_MASK) == 0) {
                 if (hit == 2)
-                    f.pos.x += dx << 8;
+                    f.pos.x += INT_TO_Q8(dx);
                 else if (hit == 1)
-                    f.pos.x -= dx << 8;
+                    f.pos.x -= INT_TO_Q8(dx);
             }
             if (kind > ATTACK_KIND_JUMP) {
                 code = gCrateHitResponse[self->kind][kind];
@@ -778,7 +776,7 @@ tail:
             s32 ok = 1;
             struct crate *next = GetCrateAbove(self);
             struct crate *prev = GetCrateBelow(self);
-            s32 vy = gPlayer->speedY >> 8;
+            s32 vy = Q8_TO_INT(gPlayer->speedY);
 
             if (dirY == 8 && next == NULL && (vy >= dy - 1 || dy <= 2))
                 ok = 0;
@@ -922,7 +920,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                     struct e08c_pos *pp = &pos;
                     s32 y = gPlayer->y;
 
-                    pp->y = y - ((depth - 1) << 8);
+                    pp->y = y - INT_TO_Q8(depth - 1);
                     hit = 0;
                     pp->x = gPlayer->x;
                 }
@@ -1189,8 +1187,8 @@ void BounceWumpaCrate(struct crate *self)
                 MATCH_HOLD_REG(u8, one, r4);
 
                 {
-                    s32 x = self->x >> 8;
-                    s32 y = (self->y >> 8) - 6;
+                    s32 x = Q8_TO_INT(self->x);
+                    s32 y = Q8_TO_INT(self->y) - 6;
 
                     // clang-format off
                     SPAWN_CALL(gEntitySpawner, x, y, (*(volatile s32 *)&argP4 = 0xe, ({
@@ -1202,8 +1200,8 @@ void BounceWumpaCrate(struct crate *self)
                     // clang-format on
                 }
                 {
-                    s32 x = (self->x >> 8) + 3;
-                    s32 y = self->y >> 8;
+                    s32 x = Q8_TO_INT(self->x) + 3;
+                    s32 y = Q8_TO_INT(self->y);
 
                     // clang-format off
                     SPAWN_CALL(gEntitySpawner, x, y, (*(volatile s32 *)&argP4 = 0, ({
@@ -1376,8 +1374,8 @@ void OpenCheckpointCrate(struct crate *self)
     u8 one;
 
     {
-        s32 x = (self->x >> 8) - 10;
-        s32 y = self->y >> 8;
+        s32 x = Q8_TO_INT(self->x) - 10;
+        s32 y = Q8_TO_INT(self->y);
 
         puff = SpawnEffectPart(gEntitySpawner, 0x2a, 0, x, y, 0);
     }
@@ -1583,7 +1581,7 @@ void BreakCrate(struct crate *self, u32 arg1)
         FreezeLevelClock(gLevelState, 3);
         break;
     case CRATE_KIND_BASIC:
-        PHYS_SPAWN(self->x >> 8, (self->y >> 8) + 3, 0, 3, chained);
+        PHYS_SPAWN(Q8_TO_INT(self->x), Q8_TO_INT(self->y) + 3, 0, 3, chained);
         if (flag == 0)
             PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         break;
@@ -1639,8 +1637,8 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
     switch (self->paramB) {
     case 10:
         {
-            s32 x = self->x >> 8;
-            s32 y = self->y >> 8;
+            s32 x = Q8_TO_INT(self->x);
+            s32 y = Q8_TO_INT(self->y);
 
             // clang-format off
             SPAWN_CALL(gEntitySpawner, x, y, (*(volatile s32 *)&argP4 = 0xff, ({
@@ -1662,7 +1660,7 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
                     SetEntityIdActivated(gEntityFlags, self->id);
             }
         }
-        PHYS_BONUS(self->x >> 8, (self->y >> 8) + 3, 0, 3, flag);
+        PHYS_BONUS(Q8_TO_INT(self->x), Q8_TO_INT(self->y) + 3, 0, 3, flag);
         break;
     case 7:
         {
@@ -1675,18 +1673,18 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
         }
         break;
     case 6:
-        PHYS_SPAWN((self->x >> 8) - 1, (self->y >> 8) + 3, 1, 3, flag);
+        PHYS_SPAWN(Q8_TO_INT(self->x) - 1, Q8_TO_INT(self->y) + 3, 1, 3, flag);
     case 5:
-        PHYS_SPAWN((self->x >> 8) + 1, (self->y >> 8) + 1, 0, 3, flag);
+        PHYS_SPAWN(Q8_TO_INT(self->x) + 1, Q8_TO_INT(self->y) + 1, 0, 3, flag);
     case 4:
-        PHYS_SPAWN((self->x >> 8) - 3, (self->y >> 8) + 3, 1, 1, flag);
+        PHYS_SPAWN(Q8_TO_INT(self->x) - 3, Q8_TO_INT(self->y) + 3, 1, 1, flag);
     case 3:
-        PHYS_SPAWN((self->x >> 8) + 3, (self->y >> 8) + 2, 0, 1, flag);
+        PHYS_SPAWN(Q8_TO_INT(self->x) + 3, Q8_TO_INT(self->y) + 2, 0, 1, flag);
     case 2:
-        PHYS_SPAWN((self->x >> 8) + 5, (self->y >> 8) + 2, 0, 2, flag);
+        PHYS_SPAWN(Q8_TO_INT(self->x) + 5, Q8_TO_INT(self->y) + 2, 0, 2, flag);
     case 1:
     default:
-        PHYS_SPAWN((self->x >> 8) - 5, (self->y >> 8) + 3, 1, 2, flag);
+        PHYS_SPAWN(Q8_TO_INT(self->x) - 5, Q8_TO_INT(self->y) + 3, 1, 2, flag);
         break;
     }
 }
@@ -1729,7 +1727,7 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
                     SetEntityIdActivated(gEntityFlags, self->id);
             }
         }
-        PhysBonus(&argP4, (u8 *)&argP5, self->x >> 8, (self->y >> 8) + 3, flag);
+        PhysBonus(&argP4, (u8 *)&argP5, Q8_TO_INT(self->x), Q8_TO_INT(self->y) + 3, flag);
         break;
     case 2:
         OpenMysteryCrate(self, flag);
@@ -1770,7 +1768,7 @@ void DropCratesAbove(struct crate *self)
     struct anim_table *anim = self->anim;
     u32 off = self->tag * sizeof(struct anim_rec);
     struct anim_rec *rec = (struct anim_rec *)((u8 *)anim->records + off);
-    s32 base = (rec->padY + 1) << 8;
+    s32 base = INT_TO_Q8(rec->padY + 1);
     struct crate *n = GetCrateAbove(self);
     s32 spread;
     s32 carry;
@@ -1786,8 +1784,7 @@ void DropCratesAbove(struct crate *self)
         n->fallTargetY = self->y;
     spread = n->fallTargetY;
     spread -= n->y;
-    if (spread < 0)
-        spread = 0;
+    LIMIT_MIN(spread, 0);
     carry = 0;
     while (n != NULL) {
         s32 t;
@@ -1800,8 +1797,7 @@ void DropCratesAbove(struct crate *self)
             n->fallTargetY = n->y + base;
         }
         t = n->fallSpeed;
-        if (t > 0)
-            t = 0;
+        LIMIT_MAX(t, 0);
         {
             s32 d = delta;
 
@@ -1931,11 +1927,11 @@ void ExplodeCrate(struct crate *self, u8 near)
 
     if ((gPlayer->flags.all >> 6) & 1 && !PhysComboMaxed(gPlayer)) {
         struct player *p;
-        s32 t1 = (gPlayer->x >> 8) - (self->x >> 8);
+        s32 t1 = Q8_TO_INT(gPlayer->x) - Q8_TO_INT(self->x);
         s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
 
         if (dx <= 0x1d) {
-            s32 t2 = (gPlayer->y >> 8) - (self->y >> 8);
+            s32 t2 = Q8_TO_INT(gPlayer->y) - Q8_TO_INT(self->y);
             s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
             if (dy <= 0x1d)
@@ -1990,9 +1986,9 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
             struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3) {
-                s32 t1 = (o->x >> 8) - (self->x >> 8);
+                s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(self->x);
                 s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
-                s32 t2 = (o->y >> 8) - (self->y >> 8);
+                s32 t2 = Q8_TO_INT(o->y) - Q8_TO_INT(self->y);
                 s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
                 if (dx + dy <= dist && (o->state & CRATE_STATE_MASK) == 0) {
@@ -2020,9 +2016,9 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
             struct crate *o = (struct crate *)(*list)->items[i];
 
             if (PHYS_CALL(o, m48) == 2) {
-                s32 t1 = (o->x >> 8) - (self->x >> 8);
+                s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(self->x);
                 s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
-                s32 t2 = (o->y >> 8) - (self->y >> 8);
+                s32 t2 = Q8_TO_INT(o->y) - Q8_TO_INT(self->y);
                 s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
                 if (dx + dy <= dist) {
@@ -2409,9 +2405,9 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
             struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3) {
-                s32 t1 = (o->x >> 8) - x;
+                s32 t1 = Q8_TO_INT(o->x) - x;
                 s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
-                s32 t2 = (o->y >> 8) - y;
+                s32 t2 = Q8_TO_INT(o->y) - y;
                 s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
                 if (dx + dy <= dist && dy < height && (o->state & CRATE_STATE_MASK) == 0) {
@@ -2603,15 +2599,13 @@ void UpdateSlotCrate(struct crate *self)
         struct player *pl = gPlayer;
         s32 d;
 
-        d = pl->x >> 8;
-        d -= self->x >> 8;
-        if (d < 0)
-            d = -d;
+        d = Q8_TO_INT(pl->x);
+        d -= Q8_TO_INT(self->x);
+        MAKE_ABS(d);
         if (d <= 0x4f) {
-            d = pl->y >> 8;
-            d -= self->y >> 8;
-            if (d < 0)
-                d = -d;
+            d = Q8_TO_INT(pl->y);
+            d -= Q8_TO_INT(self->y);
+            MAKE_ABS(d);
             if (d <= 0x3f) {
                 w &= CRATE_SLOT_CLEAR_STAGE;
                 w |= 0x40;
@@ -2859,7 +2853,6 @@ void UpdateCrateFall(struct crate *self)
     else {
         if (++self->fallSpeed == 0)
             ++self->fallSpeed;
-        if (self->fallSpeed > 5)
-            self->fallSpeed = 5;
+        LIMIT_MAX(self->fallSpeed, 5);
     }
 }
