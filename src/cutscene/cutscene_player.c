@@ -202,11 +202,9 @@ struct cutscene_player *InitCutscenePlayer(struct cutscene_player *self)
  * `asr; lsl` order there. */
 #define RING_CELL(out, i) (out)[((i) >> 4) * 64 + ((i) & 0xf)]
 
-/* A token's run mode (its low byte is the run length). With neither bit
- * set, the run is copied raw. */
-#define STREAM_TOKEN_FILL  0x8000 // repeat the next halfword
-#define STREAM_TOKEN_DELTA 0x4000 // a start value, then signed byte deltas
-
+/* A token's run mode is one of the CHUNK_TOKEN_* bits
+ * (constants/chunk_tokens.h, shared with DecodeCollisionChunk); its low
+ * byte is the run length, and with neither bit set the run is copied raw. */
 void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
 {
     u16 *out = dest;
@@ -223,7 +221,7 @@ void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
         u16 n = *(u8 *)src;
 
         src++;
-        if (token & STREAM_TOKEN_FILL) {
+        if (token & CHUNK_TOKEN_FILL) {
             u16 value = *src++;
 
             budget -= n;
@@ -232,7 +230,7 @@ void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
                 written++;
                 n--;
             } while (n != 0);
-        } else if (token & STREAM_TOKEN_DELTA) {
+        } else if (token & CHUNK_TOKEN_DELTA) {
             s16 acc;
 
             budget -= n;
