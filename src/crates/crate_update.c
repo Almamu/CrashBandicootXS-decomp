@@ -64,28 +64,28 @@ void UpdateCrate(struct crate *self)
         {
             s32 kind = self->kind;
 
-            if (kind > 0x12) {
-                if (kind <= 0x15) {
+            if (kind > CRATE_KIND_TIME_3) {
+                if (kind <= CRATE_KIND_TNT_LIT_3) {
                     UpdateTntCountdown(self);
                     gCrateListChanged = 1;
                     goto done;
                 }
             }
         }
-        if (self->kind == 0xf) {
+        if (self->kind == CRATE_KIND_SLOT) {
             if ((self->state & 0x7f) == 0) {
                 UpdateSlotCrate(self);
                 goto done;
             }
         }
-        if (self->kind == 0xc) {
+        if (self->kind == CRATE_KIND_BOUNCY_WUMPA) {
             if (self->timer == 0)
                 self->paramA = 0;
-        } else if (self->kind == 3)
+        } else if (self->kind == CRATE_KIND_IRON_SWITCH)
             SolidifyOutlineCrates(self);
     done:;
     }
-    if (self->kind == 0xc && self->u48.bounceTimer > 0)
+    if (self->kind == CRATE_KIND_BOUNCY_WUMPA && self->u48.bounceTimer > 0)
         self->u48.bounceTimer--;
     UpdateCrateFall(self);
     if (self->state & 0x80) {
@@ -94,11 +94,11 @@ void UpdateCrate(struct crate *self)
             self->animDone = 0;
             self->state &= 0x7f;
             gPlayer->busy = 0;
-            if (self->kind == 6) {
+            if (self->kind == CRATE_KIND_NITRO_SWITCH) {
                 struct anim_rec *recs;
                 struct anim_rec *rec;
 
-                self->kind = 7;
+                self->kind = CRATE_KIND_IRON;
                 self->tag = 0x20;
                 ResetSpriteFrameTimer(self);
                 ResetSpriteFrameIndex(self);
@@ -106,7 +106,7 @@ void UpdateCrate(struct crate *self)
                 recs = self->anim->records;
                 rec = &recs[self->tag];
                 self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
-            } else if (self->kind == 3) {
+            } else if (self->kind == CRATE_KIND_IRON_SWITCH) {
                 self->tag = 0x20;
                 ResetSpriteFrameTimer(self);
                 ResetSpriteFrameIndex(self);

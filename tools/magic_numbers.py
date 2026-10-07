@@ -37,7 +37,10 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCAN_DIRS = ("src", "include")
-CONSTANTS_DIR = os.path.join(ROOT, "include", "constants")
+# The constants headers: hand-written ones, and the ones make generates
+# from the data (build/include, e.g. the entity types and crate kinds).
+CONSTANTS_DIRS = (os.path.join(ROOT, "include", "constants"),
+                  os.path.join(ROOT, "build", "include", "constants"))
 
 LIT = r"(?:0[xX][0-9a-fA-F]+|[0-9]+)[uUlL]*"
 LIT_RE = re.compile(r"^-?\s*" + LIT + r"$")
@@ -51,7 +54,7 @@ TOPICS = collections.OrderedDict(
         ("mask_level", ("maskLevel values (SetMaskLevel, comparisons)", ("MASK_LEVEL_",))),
         ("event", ("event IDs (handler case labels, NOTIFY, event-slot calls)", ("EVENT_",))),
         ("action_state", ("action-controller states (SetActionCtrlMode, ->state)", ("ACTION_",))),
-        ("kind", ("entity / crate kinds (->kind comparisons, CreateCrate)", ("ENTITY_", "CRATE_KIND_"))),
+        ("kind", ("entity / crate kinds (->kind comparisons, CreateCrate)", ("ENTITY_", "CRATE_KIND_", "ENEMY_KIND_"))),
         ("category_exit", ("SetActorCategoryExitStatus values", ("CATEGORY_EXIT_",))),
         ("flag_test", ("`& 0xNN` flag tests (not counted above)", ())),
     ]
@@ -81,7 +84,7 @@ CALLS = [
     ("action_state", r"SetActionCtrlModeAnim", 1),
     ("action_state", r"StartActionCtrlTornadoSpin", 1),
     ("action_state", r"StartActionCtrlTornadoSpin", 2),
-    ("kind", r"CreateCrate", 1),
+    ("kind", r"CreateCrate", 4),
     ("category_exit", r"SetActorCategoryExitStatus", 0),
 ]
 
@@ -294,16 +297,15 @@ def scan_file(path, rel):
 
 
 def load_constants():
-    """value -> [names] per prefix, from include/constants/*.h."""
+    """value -> [names] per prefix, from the constants headers (CONSTANTS_DIRS)."""
     by_prefix = collections.defaultdict(lambda: collections.defaultdict(list))
-    if not os.path.isdir(CONSTANTS_DIR):
-        return by_prefix
     define = re.compile(r"^\s*#\s*define\s+([A-Z][A-Z0-9_]*)\s+\(?\s*(" + LIT + r")\s*\)?\s*(?:/[/*].*)?$")
     shift = re.compile(r"^\s*#\s*define\s+([A-Z][A-Z0-9_]*)\s+\(\s*1\s*<<\s*(\d+)\s*\)")
-    for name in sorted(os.listdir(CONSTANTS_DIR)):
-        if not name.endswith(".h"):
+    paths = [os.path.join(d, n) for d in CONSTANTS_DIRS if os.path.isdir(d) for n in sorted(os.listdir(d))]
+    for path in paths:
+        if not path.endswith(".h"):
             continue
-        for line in open(os.path.join(CONSTANTS_DIR, name)):
+        for line in open(path):
             m = define.match(line)
             value = None
             if m:

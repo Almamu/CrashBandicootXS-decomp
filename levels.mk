@@ -22,7 +22,7 @@ $(foreach room,$(LEVEL_ROOMS),$(eval $(call LEVEL_ASSET_RULE,$(room))))
 $(LEVELS_BUILDDIR)/%.lz: $(LEVELS_BUILDDIR)/% | $(GFX)
 	$(GFX) $< $@
 
-$(LEVELS_BUILDDIR)/level_rooms_%.inc: $(LEVEL_SOURCES) tools/levels.py
+$(LEVELS_BUILDDIR)/level_rooms_%.inc: $(LEVEL_SOURCES) data/levels/entity_types.json tools/levels.py
 	@mkdir -p $(dir $@)
 	python3 tools/levels.py c level_rooms_$* $@
 
@@ -31,3 +31,22 @@ LEVELS_BUILT := $(foreach room,$(LEVEL_ROOMS),$(LEVELS_BUILDDIR)/$(room)/asset.b
 
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: $(LEVELS_BUILDDIR)/$(r).inc))
 $(foreach r,$(LEVEL_REGIONS),$(eval $(C_BUILDDIR)/data/$(r).o: CPPFLAGS += -iquote $(LEVELS_BUILDDIR)))
+
+# The constants headers named in the level data (#655): the entity types
+# (data/levels/entity_types.json) and the crate kinds (crate_kinds.json).
+# They are generated into build/include, which is on every object's
+# include path; the C objects wait for them (order-only, so a regenerated
+# header rebuilds only the objects whose .d lists it).
+GENERATED_INCLUDE_DIR := build/include
+GENERATED_HEADERS := $(GENERATED_INCLUDE_DIR)/constants/entities.h $(GENERATED_INCLUDE_DIR)/constants/crates.h
+CPPFLAGS += -iquote $(GENERATED_INCLUDE_DIR)
+
+$(GENERATED_INCLUDE_DIR)/constants/entities.h: data/levels/entity_types.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants entities $@
+
+$(GENERATED_INCLUDE_DIR)/constants/crates.h: data/levels/crate_kinds.json tools/levels.py
+	@mkdir -p $(dir $@)
+	python3 tools/levels.py constants crates $@
+
+$(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS): | $(GENERATED_HEADERS)

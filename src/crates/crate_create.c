@@ -146,43 +146,43 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         self = obj;
     }
     self->id = id;
-    if (type == 9 && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id))
-        type = 0;
+    if (type == CRATE_KIND_LIFE && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id))
+        type = CRATE_KIND_BASIC;
     if (gLevelState->timeTrial == 0 &&
         GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState)) {
-        if (type == 0xb) {
+        if (type == CRATE_KIND_MYSTERY) {
             struct crate_placement *rec = Placement(slot);
 
             if (rec->flags & 0x40)
-                type = 2;
+                type = CRATE_KIND_AKU_AKU;
             else if (rec->flags & 0x80)
-                type = 1;
+                type = CRATE_KIND_CHECKPOINT;
             else if (rec->options & 1)
-                type = 9;
-        } else if (type == 0xf) {
+                type = CRATE_KIND_LIFE;
+        } else if (type == CRATE_KIND_SLOT) {
             struct crate_placement *rec = PLACEMENT(slot);
 
             if (rec->flags & 0x40)
-                type = 2;
+                type = CRATE_KIND_AKU_AKU;
             else if (rec->flags & 0x80)
-                type = 1;
+                type = CRATE_KIND_CHECKPOINT;
             else if (rec->options & 1)
-                type = 9;
+                type = CRATE_KIND_LIFE;
         }
     }
     special = 0;
     self->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x174);
     switch (type) {
-    case 1:
-    case 9:
-    case 11:
-    case 12:
-    case 15:
+    case CRATE_KIND_CHECKPOINT:
+    case CRATE_KIND_LIFE:
+    case CRATE_KIND_MYSTERY:
+    case CRATE_KIND_BOUNCY_WUMPA:
+    case CRATE_KIND_SLOT:
         special = 1;
         break;
-    case 3:
+    case CRATE_KIND_IRON_SWITCH:
         if ((u8)IsEntityIdActivated(gEntityFlags, id))
-            type = 7;
+            type = CRATE_KIND_IRON;
         break;
     }
     flagged = 0;
@@ -191,26 +191,26 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
 
         if (special || (rec->flags & 0x20)) {
             flagged = 1;
-            if ((u16)rec->trialKind == 0x1b)
-                self->trialKind = 0x15;
+            if ((u16)rec->trialKind == ENTITY_NITRO_SWITCH_CRATE)
+                self->trialKind = ENTITY_BASIC_CRATE;
             else
                 self->trialKind = rec->trialKind;
             if (gLevelState->timeTrial)
-                type = self->trialKind - 0x15;
+                type = self->trialKind - ENTITY_BASIC_CRATE;
         }
     }
     switch (type) {
-    case 0:
+    case CRATE_KIND_BASIC:
         PhysSetTag(self, 0x1f);
         break;
-    case 1:
+    case CRATE_KIND_CHECKPOINT:
         self->paramA = (u32)(PLACEMENT(slot)->flags << 25) >> 31;
         PhysSetTag(self, 0x1a);
         break;
-    case 2:
+    case CRATE_KIND_AKU_AKU:
         PhysSetTag(self, 0x17);
         break;
-    case 3:
+    case CRATE_KIND_IRON_SWITCH:
         {
             struct crate_placement *rec = PLACEMENT(slot);
 
@@ -220,10 +220,10 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             self->fallSpeed = rec->u08.stepDelay;
         }
         break;
-    case 4:
+    case CRATE_KIND_ARROW:
         PhysSetTag(self, 0x18);
         break;
-    case 5:
+    case CRATE_KIND_OUTLINE:
         {
             struct crate_placement *rec = PLACEMENT(slot);
 
@@ -233,27 +233,27 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             self->u48.solidKind = rec->u08.solidKind;
         }
         break;
-    case 6:
+    case CRATE_KIND_NITRO_SWITCH:
         PhysSetTag(self, 4);
         break;
-    case 7:
+    case CRATE_KIND_IRON:
         PhysSetTag(self, 0x20);
         break;
-    case 8:
+    case CRATE_KIND_IRON_ARROW:
         PhysSetTag(self, 2);
         break;
-    case 9:
+    case CRATE_KIND_LIFE:
         PhysSetTag(self, 0x1c);
         if (!flagged) {
-            self->trialKind = 0x15;
+            self->trialKind = ENTITY_BASIC_CRATE;
             if (gLevelState->timeTrial)
-                type = 0;
+                type = CRATE_KIND_BASIC;
         }
         break;
-    case 10:
+    case CRATE_KIND_NITRO:
         PhysSetTag(self, 5);
         break;
-    case 11:
+    case CRATE_KIND_MYSTERY:
         {
             struct crate_placement *rec = PLACEMENT(slot);
 
@@ -267,17 +267,17 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             self->paramB = rec->param6;
         }
         break;
-    case 12:
+    case CRATE_KIND_BOUNCY_WUMPA:
         self->u48.bounceTimer = -0x2a;
         PhysSetTag(self, 0x19);
         break;
-    case 13:
+    case CRATE_KIND_REINFORCED:
         PhysSetTag(self, 6);
         break;
-    case 14:
+    case CRATE_KIND_TNT:
         PhysSetTag(self, 0x11);
         break;
-    case 15:
+    case CRATE_KIND_SLOT:
         {
             struct crate_placement *rec = Placement(slot);
 
@@ -304,13 +304,13 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 self->paramA |= 4;
         }
         break;
-    case 16:
+    case CRATE_KIND_TIME_1:
         PhysSetTag(self, 0xe);
         break;
-    case 17:
+    case CRATE_KIND_TIME_2:
         PhysSetTag(self, 0xf);
         break;
-    case 18:
+    case CRATE_KIND_TIME_3:
         PhysSetTag(self, 0x10);
         break;
     }
@@ -319,10 +319,11 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->slot = GetSpriteAnimPaletteSlot((struct actor *)self);
     self->x = x << 8;
     self->y = y << 8;
-    if ((u8)IsEntityIdActivated(gEntityFlags, id) && (type == 0xb || type == 0xf) &&
-        (PLACEMENT(slot)->flags & 0x80))
-        type = 1;
-    if (type == 1 && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id)) {
+    if ((u8)IsEntityIdActivated(gEntityFlags, id) &&
+        (type == CRATE_KIND_MYSTERY || type == CRATE_KIND_SLOT) && (PLACEMENT(slot)->flags & 0x80))
+        type = CRATE_KIND_CHECKPOINT;
+    if (type == CRATE_KIND_CHECKPOINT && id != 0xffff &&
+        (u8)IsEntityIdActivated(gEntityFlags, id)) {
         PhysSetTag(self, 0x1b);
         self->frame = self->anim->records[self->tag].frames - 1;
         self->state = (self->state & 0x80) | type;
@@ -334,7 +335,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     MATCH_USE(type);
     MATCH_USE(type);
     MATCH_USE(type);
-    if (type == 5 && (u8)IsEntityIdActivated(gEntityFlags, id))
+    if (type == CRATE_KIND_OUTLINE && (u8)IsEntityIdActivated(gEntityFlags, id))
         SolidifyOutlineCrate(self);
     AddCrateToList(gCrateList, (struct box_part *)self);
     return self;

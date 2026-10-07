@@ -51,7 +51,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0xd;
+    hdr->kind = ENEMY_KIND_LIZARD;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -84,7 +84,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0xb;
+    hdr->kind = ENEMY_KIND_VULTURE;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -317,7 +317,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0xe;
+    hdr->kind = ENEMY_KIND_PATROLLING_JUNGLE_ENEMY;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -348,7 +348,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0xc;
+    hdr->kind = ENEMY_KIND_BLOWGUN_TRIBESMAN;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -381,7 +381,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0xf;
+    hdr->kind = ENEMY_KIND_PENGUIN;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -416,7 +416,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x11;
+    hdr->kind = ENEMY_KIND_SEAL;
     SetPartAnim(part, 0);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
@@ -446,7 +446,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x10;
+    hdr->kind = ENEMY_KIND_POLAR_BEAR;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -477,7 +477,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 5;
+    hdr->kind = ENEMY_KIND_PUFFERFISH;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -512,7 +512,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 4;
+    hdr->kind = ENEMY_KIND_SHARK;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -544,7 +544,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 3;
+    hdr->kind = ENEMY_KIND_MORAY_EEL;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -578,7 +578,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 8;
+    hdr->kind = ENEMY_KIND_ELECTRIC_EEL;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -613,7 +613,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 7;
+    hdr->kind = ENEMY_KIND_SQUID;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -645,7 +645,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 9;
+    hdr->kind = ENEMY_KIND_JELLYFISH;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -672,7 +672,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x19;
+    hdr->kind = ENEMY_KIND_LASER_BARRIER;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -711,7 +711,7 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x1b;
+    hdr->kind = ENEMY_KIND_STATIONARY_SPACE_ENEMY;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -747,7 +747,7 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x18;
+    hdr->kind = ENEMY_KIND_PATROLLING_SPACE_ENEMY;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -782,7 +782,7 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x1d;
+    hdr->kind = ENEMY_KIND_SAUCER_LAB_ASSISTANT;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -814,7 +814,7 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x1a;
+    hdr->kind = ENEMY_KIND_PISTON_CRUSHER;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -869,7 +869,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x17;
+    hdr->kind = ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -944,7 +944,7 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x16;
+    hdr->kind = ENEMY_KIND_HOMING_SEWER_ENEMY;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -979,7 +979,7 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x14;
+    hdr->kind = ENEMY_KIND_PATROLLING_SEWER_ENEMY;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -1011,7 +1011,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x15;
+    hdr->kind = ENEMY_KIND_RAT;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -1041,7 +1041,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     OperatorNew(0x8c);
     hdr = CreateEnemyCtrl_r0();
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x13;
+    hdr->kind = ENEMY_KIND_FROG;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -1071,7 +1071,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 6;
+    hdr->kind = ENEMY_KIND_SEA_MINE;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);
@@ -1106,7 +1106,7 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateEnemyCtrl(OperatorNew(0x8c));
     POPUP_ATTACH(hdr, part);
-    hdr->kind = 0x12;
+    hdr->kind = ENEMY_KIND_WOODEN_CRUSHER;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartKind(part, 1);

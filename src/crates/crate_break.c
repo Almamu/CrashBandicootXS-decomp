@@ -264,7 +264,8 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         kind = ATTACK_KIND_INVINCIBLE;
     else {
         kind = gActionCtrlStateAttackKinds[idx];
-        if (self->kind == 0xd && kind == ATTACK_KIND_BODY_SLAM && gPlayer->dir == 4)
+        if (self->kind == CRATE_KIND_REINFORCED && kind == ATTACK_KIND_BODY_SLAM &&
+            gPlayer->dir == 4)
             kind = ATTACK_KIND_JUMP;
     }
     {
@@ -357,9 +358,9 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     switch (code) {
     case 0:
     case 1:
-        if (obj->kind == 6)
+        if (obj->kind == CRATE_KIND_NITRO_SWITCH)
             ActivateNitroSwitchCrate(obj);
-        else if (obj->kind == 3)
+        else if (obj->kind == CRATE_KIND_IRON_SWITCH)
             ActivateIronSwitchCrate(obj);
         break;
     case 2:
@@ -493,7 +494,7 @@ tail:
             if (dx > 5 && f21 == 0) {
                 if ((gLevelState->maskLevel == MASK_LEVEL_NONE && ((gPlayer->flags.all >> 6) & 1) &&
                      !D18C_TimerOver()) ||
-                    self->kind != 0xd) {
+                    self->kind != CRATE_KIND_REINFORCED) {
                     gPlayer->flags.all |= 0x40;
                     SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
                     D18C_CALL68(0, EVENT_HIT_CRUSH, 0);
@@ -714,7 +715,7 @@ tail:
     case 4:
         tgt = GetBottomCrate(self);
         code = gCrateHitResponse[tgt->kind][kind];
-        if (tgt->kind == 4 && kind == ATTACK_KIND_JUMP)
+        if (tgt->kind == CRATE_KIND_ARROW && kind == ATTACK_KIND_JUMP)
             code = 3;
         if (kind <= ATTACK_KIND_SLIDE || kind == ATTACK_KIND_INVINCIBLE ||
             (kind == ATTACK_KIND_SPIN && code <= 2)) {
@@ -727,7 +728,7 @@ tail:
     case 8:
         tgt = GetTopCrate(self);
         code = D18C_Code(tgt->kind, kind);
-        if (kind == ATTACK_KIND_SPIN && tgt->kind != 0xa && gPlayer->listCount != 0) {
+        if (kind == ATTACK_KIND_SPIN && tgt->kind != CRATE_KIND_NITRO && gPlayer->listCount != 0) {
             gPlayer->speedY = 0;
             gPlayer->rampY.start = 0;
             gPlayer->rampY.step = 0;
@@ -789,7 +790,7 @@ tail:
         }
         break;
     }
-    if (gPlayer->ctrlMode == 1 && self->kind == 0xe && code <= 1 &&
+    if (gPlayer->ctrlMode == 1 && self->kind == CRATE_KIND_TNT && code <= 1 &&
         AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         LightTntCrate(tgt);
     AddCollisionCandidate_b(D18C_QUEUE(gPlayer), tgt, kind, code, edge, dy, f.pos, hit,
@@ -854,9 +855,9 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
         s32 d4 = dir & 4;
 
         if (d4 == 0) {
-            if (k != 0xd) {
+            if (k != CRATE_KIND_REINFORCED) {
                 if (kind == ATTACK_KIND_JUMP) {
-                    if (k == 4 || k == 8) {
+                    if (k == CRATE_KIND_ARROW || k == CRATE_KIND_IRON_ARROW) {
                         PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
                         E08C_CALL68(EVENT_BOUNCE_HIGH, 8);
                     } else
@@ -865,7 +866,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                     gPlayer->rampY.start = 0;
                     gPlayer->rampY.step = 0;
                     gPlayer->rampY.target = 0;
-                } else if ((u32)(kind - ATTACK_KIND_BODY_SLAM) <= 1 && k == 8) {
+                } else if ((u32)(kind - ATTACK_KIND_BODY_SLAM) <= 1 && k == CRATE_KIND_IRON_ARROW) {
                     PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
                     E08C_CALL68(EVENT_BOUNCE_HIGH, 8);
                     gPlayer->speedY = 0;
@@ -884,9 +885,9 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
             }
         }
     }
-    if (code == 3 && self->kind == 0xf && (self->u48.slotState & 7) == 3) {
+    if (code == 3 && self->kind == CRATE_KIND_SLOT && (self->u48.slotState & 7) == 3) {
         {
-            u8 e = 0xe;
+            u8 e = CRATE_KIND_TNT;
 
             self->kind = e;
             self->u48.blastState = 0;
@@ -930,15 +931,15 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
             hit = 0;
             pos.x = gPlayer->x;
         }
-        if (self->kind == 6)
+        if (self->kind == CRATE_KIND_NITRO_SWITCH)
             ActivateNitroSwitchCrate(self);
-        else if (self->kind == 3)
+        else if (self->kind == CRATE_KIND_IRON_SWITCH)
             ActivateIronSwitchCrate(self);
         goto commit;
     case 2:
-        if (self->kind == 0xe)
+        if (self->kind == CRATE_KIND_TNT)
             LightTntCrate(self);
-        else if (self->kind == 0xc)
+        else if (self->kind == CRATE_KIND_BOUNCY_WUMPA)
             BounceWumpaCrate(self);
         else {
             self->state |= 0x80;
@@ -1241,7 +1242,7 @@ void LightTntCrate(struct crate *selfArg)
     u8 *entry;
     u8 lo;
 
-    self[0x4e] = 0x15;
+    self[0x4e] = CRATE_KIND_TNT_LIT_3;
     {
         /* Anchored: the ROM loads the `0x14` immediate before computing
          * `&self[0x2d]` for this store (the opposite order from the
@@ -1542,50 +1543,50 @@ void BreakCrate(struct crate *self, u32 arg1)
     }
     DropCratesAbove(self);
     switch (self->kind) {
-    case 2:
+    case CRATE_KIND_AKU_AKU:
         if (flag == 0)
             OpenAkuAkuCrate(self);
         break;
-    case 9:
+    case CRATE_KIND_LIFE:
         if (flag == 0)
             OpenLifeCrate((struct actor *)self, chained);
         break;
-    case 3:
+    case CRATE_KIND_IRON_SWITCH:
         ActivateIronSwitchCrate(self);
         break;
-    case 6:
+    case CRATE_KIND_NITRO_SWITCH:
         ActivateNitroSwitchCrate(self);
         break;
-    case 11:
+    case CRATE_KIND_MYSTERY:
         if (flag == 0)
             OpenMysteryCrate(self, chained);
         break;
-    case 4:
-    case 12:
-    case 13:
+    case CRATE_KIND_ARROW:
+    case CRATE_KIND_BOUNCY_WUMPA:
+    case CRATE_KIND_REINFORCED:
         PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         break;
-    case 10:
-    case 14:
-    case 19:
-    case 20:
-    case 21:
+    case CRATE_KIND_NITRO:
+    case CRATE_KIND_TNT:
+    case CRATE_KIND_TNT_LIT_1:
+    case CRATE_KIND_TNT_LIT_2:
+    case CRATE_KIND_TNT_LIT_3:
         ExplodeCrate(self, 0);
         break;
-    case 15:
+    case CRATE_KIND_SLOT:
         if (flag == 0)
             OpenSlotCrate(self, chained);
         break;
-    case 16:
+    case CRATE_KIND_TIME_1:
         FreezeLevelClock(gLevelState, 1);
         break;
-    case 17:
+    case CRATE_KIND_TIME_2:
         FreezeLevelClock(gLevelState, 2);
         break;
-    case 18:
+    case CRATE_KIND_TIME_3:
         FreezeLevelClock(gLevelState, 3);
         break;
-    case 0:
+    case CRATE_KIND_BASIC:
         PHYS_SPAWN(self->x >> 8, (self->y >> 8) + 3, 0, 3, chained);
         if (flag == 0)
             PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
@@ -1817,7 +1818,7 @@ void DropCratesAbove(struct crate *self)
             struct crate *prev = GetCrateBelow(n);
 
             if (next == NULL && prev != NULL) {
-                if (n->kind != 10)
+                if (n->kind != CRATE_KIND_NITRO)
                     goto advance;
                 if (n->state & 0x7f)
                     goto advance;
@@ -1919,7 +1920,7 @@ void ExplodeCrate(struct crate *self, u8 near)
     LinkCrateToActiveBucket(gCrateList, (struct box_part *)self);
     one = 1;
     self->state = (self->state & 0x80) | one;
-    if (self->kind == 0xa) {
+    if (self->kind == CRATE_KIND_NITRO) {
         self->tag = one;
         ResetSpriteFrameTimer(self);
         ResetSpriteFrameIndex(self);
@@ -1950,8 +1951,8 @@ void ExplodeCrate(struct crate *self, u8 near)
             PhysCall3(p, (struct actor_method *)&p->vtable->handleEvent, 0, EVENT_HIT_EXPLOSION, 0);
         }
     }
-    if (self->kind != 0xa)
-        self->kind = 0x13;
+    if (self->kind != CRATE_KIND_NITRO)
+        self->kind = CRATE_KIND_TNT_LIT_1;
 }
 
 /* Called from `FinishBrokenCrate` (`BlastNearbyCrates(self, 0x14)` /
@@ -2005,9 +2006,9 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
                         ExplodeCrate(o, 0);
                     else if (gCrateKindBreakable[kind])
                         BreakCrateInStack(o, 1, 0, 0);
-                    else if (kind == 3)
+                    else if (kind == CRATE_KIND_IRON_SWITCH)
                         ActivateIronSwitchCrate(o);
-                    else if (kind == 6)
+                    else if (kind == CRATE_KIND_NITRO_SWITCH)
                         ActivateNitroSwitchCrate(o);
                 }
             }
@@ -2101,7 +2102,7 @@ void DetonateNitroCrates(void)
         do {
             struct crate *o = (struct crate *)(*list)->slotArray[i];
 
-            if (PHYS_CALL(o, m48) == 3 && o->kind == 0xa) {
+            if (PHYS_CALL(o, m48) == 3 && o->kind == CRATE_KIND_NITRO) {
                 if ((o->state & 0x7f) == 0)
                     ExplodeCrate(o, 0);
             }
@@ -2225,7 +2226,7 @@ void ActivateIronSwitchCrate(struct crate *self)
             struct crate *o = (struct crate *)gCrateList->slotArray[i];
 
             if (PHYS_CALL(o, m48) == 3 && (o->state & 0x7f) == 0) {
-                if (o->kind == 5 && o->paramA == self->paramA) {
+                if (o->kind == CRATE_KIND_OUTLINE && o->paramA == self->paramA) {
                     found[n] = o;
                     n++;
                     n &= 0x1f;
@@ -2286,7 +2287,7 @@ void SolidifyOutlineCrates(struct crate *self)
         }
         self->u48.group = PHYS_NO_GROUP;
         {
-            u8 kind = 7;
+            u8 kind = CRATE_KIND_IRON;
             self->kind = kind;
         }
     } else {
@@ -2301,7 +2302,7 @@ void SolidifyOutlineCrates(struct crate *self)
             for (i = 0; i < n; i++) {
                 struct crate *o = items[i];
 
-                if (o->kind == 5 && self->paramA >= o->paramB) {
+                if (o->kind == CRATE_KIND_OUTLINE && self->paramA >= o->paramB) {
                     SolidifyOutlineCrate(o);
                     if (!played) {
                         PlaySfx(gAudioContext, SFX_OUTLINE_CRATES_SOLIDIFY, 0x100);
@@ -2335,49 +2336,49 @@ void SolidifyOutlineCrates(struct crate *self)
 
 void SolidifyOutlineCrate(struct crate *self)
 {
-    self->kind = self->u48.solidKind - 0x15;
+    self->kind = self->u48.solidKind - ENTITY_BASIC_CRATE;
     switch (self->kind) {
-    case 0:
+    case CRATE_KIND_BASIC:
         PhysSetTag(self, 0x1f);
         break;
-    case 1:
+    case CRATE_KIND_CHECKPOINT:
         PhysSetTag(self, 0x1a);
         break;
-    case 2:
+    case CRATE_KIND_AKU_AKU:
         PhysSetTag(self, 0x17);
         break;
-    case 4:
+    case CRATE_KIND_ARROW:
         PhysSetTag(self, 0x18);
         break;
-    case 6:
+    case CRATE_KIND_NITRO_SWITCH:
         PhysSetTag(self, 4);
         break;
-    case 7:
+    case CRATE_KIND_IRON:
         PhysSetTag(self, 0x20);
         break;
-    case 8:
+    case CRATE_KIND_IRON_ARROW:
         PhysSetTag(self, 2);
         break;
-    case 10:
+    case CRATE_KIND_NITRO:
         PhysSetTag(self, 5);
         break;
-    case 12:
+    case CRATE_KIND_BOUNCY_WUMPA:
         self->u48.bounceTimer = -0x2a;
         PhysSetTag(self, 0x19);
         break;
-    case 13:
+    case CRATE_KIND_REINFORCED:
         PhysSetTag(self, 6);
         break;
-    case 14:
+    case CRATE_KIND_TNT:
         PhysSetTag(self, 0x11);
         break;
-    case 16:
+    case CRATE_KIND_TIME_1:
         PhysSetTag(self, 0xe);
         break;
-    case 17:
+    case CRATE_KIND_TIME_2:
         PhysSetTag(self, 0xf);
         break;
-    case 18:
+    case CRATE_KIND_TIME_3:
         PhysSetTag(self, 0x10);
         break;
     }
@@ -2421,7 +2422,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
                     if (*(u8 *)(o->kind + (u32)commit))
                         ExplodeCrate(o, 0);
                     else if (gCrateKindBreakable[o->kind]) {
-                        if (o->kind == 1)
+                        if (o->kind == CRATE_KIND_CHECKPOINT)
                             OpenCheckpointCrate(o);
                         else
                             BreakCrateInStack(o, 0, 0, 0);
@@ -2486,7 +2487,7 @@ void FinishBrokenCrate(struct crate *self)
             SetCrateAbove(prev, NULL);
         }
 
-        if (self->kind == 1)
+        if (self->kind == CRATE_KIND_CHECKPOINT)
             return;
         gCrateListChanged = 1;
         PHYS_GONE(self) = 1;
@@ -2502,7 +2503,7 @@ void FinishBrokenCrate(struct crate *self)
                 i++;
             } while (i < (*pp)->listCount);
         }
-    } else if (self->kind != 1) {
+    } else if (self->kind != CRATE_KIND_CHECKPOINT) {
         gCrateListChanged = 1;
     }
 }
@@ -2537,19 +2538,19 @@ void UpdateTntCountdown(struct crate *self)
 
     kind = self->kind;
     switch (kind) {
-    case 0x15:
+    case CRATE_KIND_TNT_LIT_3:
         PhysSetTag(self, 0x13);
         PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
-        self->kind = 0x14;
+        self->kind = CRATE_KIND_TNT_LIT_2;
         self->timer = 0x3c;
         break;
-    case 0x14:
+    case CRATE_KIND_TNT_LIT_2:
         PhysSetTag(self, 0x12);
         PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
-        self->kind = 0x13;
+        self->kind = CRATE_KIND_TNT_LIT_1;
         self->timer = 0x3c;
         break;
-    case 0x13:
+    case CRATE_KIND_TNT_LIT_1:
         if ((self->state & 0x7f) == 0)
             ExplodeCrate(self, 0);
         break;
@@ -2672,7 +2673,7 @@ void UpdateSlotCrate(struct crate *self)
                             break;
                         case 3:
                             PhysSetTag(self, 0x20);
-                            self->kind = 7;
+                            self->kind = CRATE_KIND_IRON;
                             break;
                         }
                     }
@@ -2822,10 +2823,10 @@ void UpdateCrateFall(struct crate *self)
                 acc = 0;
                 self->fallDistance = remaining;
                 if (gCrateKindExplosive[kind = self->kind]) {
-                    if (self->u48.blastState != 0 || kind == 10) {
+                    if (self->u48.blastState != 0 || kind == CRATE_KIND_NITRO) {
                         if ((self->state & 0x7f) == 0)
                             ExplodeCrate(self, 0);
-                    } else if (kind == 0xe) {
+                    } else if (kind == CRATE_KIND_TNT) {
                         struct crate *next = GetCrateAbove(self);
                         struct crate *prev = GetCrateBelow(self);
 
@@ -2838,7 +2839,7 @@ void UpdateCrateFall(struct crate *self)
                 if (n != NULL) {
                     n = GetCrateBelow(n);
                     while (n != NULL) {
-                        if (n->kind == 0xe)
+                        if (n->kind == CRATE_KIND_TNT)
                             LightTntCrate(n);
                         n = GetCrateBelow(n);
                     }

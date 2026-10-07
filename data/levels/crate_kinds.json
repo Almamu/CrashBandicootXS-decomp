@@ -1,0 +1,26 @@
+{
+  "kinds": [
+    {"kind": 0, "name": "BASIC", "comment": "SpawnBasicCrate: drops wumpa when broken"},
+    {"kind": 1, "name": "CHECKPOINT", "comment": "SpawnCheckpointCrate"},
+    {"kind": 2, "name": "AKU_AKU", "comment": "SpawnAkuAkuCrate (OpenAkuAkuCrate)"},
+    {"kind": 3, "name": "IRON_SWITCH", "comment": "SpawnIronSwitchCrate: solidifies its outline crates"},
+    {"kind": 4, "name": "ARROW", "comment": "SpawnArrowCrate"},
+    {"kind": 5, "name": "OUTLINE", "comment": "SpawnOutlineCrate (SolidifyOutlineCrate)"},
+    {"kind": 6, "name": "NITRO_SWITCH", "comment": "SpawnNitroSwitchCrate (ActivateNitroSwitchCrate)"},
+    {"kind": 7, "name": "IRON", "comment": "SpawnIronCrate; also a pressed switch crate"},
+    {"kind": 8, "name": "IRON_ARROW", "comment": "SpawnIronArrowCrate"},
+    {"kind": 9, "name": "LIFE", "comment": "SpawnLifeCrate (OpenLifeCrate)"},
+    {"kind": 10, "name": "NITRO", "comment": "SpawnNitroCrate: explodes on any touch"},
+    {"kind": 11, "name": "MYSTERY", "comment": "SpawnMysteryCrate, the \"?\" crate (OpenMysteryCrate)"},
+    {"kind": 12, "name": "BOUNCY_WUMPA", "comment": "SpawnBouncyWumpaCrate (BounceWumpaCrate)"},
+    {"kind": 13, "name": "REINFORCED", "comment": "SpawnReinforcedCrate: only a body slam breaks it"},
+    {"kind": 14, "name": "TNT", "comment": "SpawnTntCrate (LightTntCrate)"},
+    {"kind": 15, "name": "SLOT", "comment": "SpawnSlotCrate (OpenSlotCrate, UpdateSlotCrate)"},
+    {"kind": 16, "name": "TIME_1", "comment": "SpawnTimeCrate1: FreezeLevelClock(1)"},
+    {"kind": 17, "name": "TIME_2", "comment": "SpawnTimeCrate2: FreezeLevelClock(2)"},
+    {"kind": 18, "name": "TIME_3", "comment": "SpawnTimeCrate3: FreezeLevelClock(3)"},
+    {"kind": 19, "name": "TNT_LIT_1", "comment": "the last count; explodes next (UpdateTntCountdown)"},
+    {"kind": 20, "name": "TNT_LIT_2", "comment": "the second count"},
+    {"kind": 21, "name": "TNT_LIT_3", "comment": "just lit (LightTntCrate)"}
+  ]
+}

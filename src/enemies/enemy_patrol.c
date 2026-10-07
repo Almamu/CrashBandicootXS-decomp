@@ -55,7 +55,7 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
             self->target->mirror.u.x = !m;
             SetEnemyAnimMode(self, 0);
             SetEnemyMotionX(self, 1);
-            if (self->kind == 15) {
+            if (self->kind == ENEMY_KIND_PENGUIN) {
                 target = self->target;
                 t = 8;
                 steps = (*target->keyframes)[target->frame].steps;

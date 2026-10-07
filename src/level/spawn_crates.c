@@ -15,9 +15,9 @@ void SpawnNitroSwitchCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     void *result;
 
     if (IsSwitchPressed(gLevelState)) {
-        result = CreateCrate(arg0, arg1, arg2, arg3, 7);
+        result = CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_IRON);
     } else {
-        result = CreateCrate(arg0, arg1, arg2, arg3, 6);
+        result = CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_NITRO_SWITCH);
     }
     (void)result;
 }
@@ -25,31 +25,31 @@ void SpawnNitroSwitchCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Plain `CreateCrate` trampoline, type `5`. */
 void SpawnOutlineCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 5);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_OUTLINE);
 }
 
 /* Plain `CreateCrate` trampoline, type `4`. */
 void SpawnArrowCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 4);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_ARROW);
 }
 
 /* Plain `CreateCrate` trampoline, type `3`. */
 void SpawnIronSwitchCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 3);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_IRON_SWITCH);
 }
 
 /* Plain `CreateCrate` trampoline, type `2`. */
 void SpawnAkuAkuCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 2);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_AKU_AKU);
 }
 
 /* Plain `CreateCrate` trampoline, type `1`. */
 void SpawnCheckpointCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    CreateCrate(arg0, arg1, arg2, arg3, 1);
+    CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_CHECKPOINT);
 }
 
 /* `CreateCrate` trampoline (type `0`), then indexes a small per-record
@@ -75,7 +75,7 @@ void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MATCH_HOLD_REG(u8 *, tmp, r0);
     MATCH_HOLD_REG(u8 *, flagsAddr, r3);
 
-    obj = CreateCrate(arg0, arg1, arg2, arg3, 0);
+    obj = CreateCrate(arg0, arg1, arg2, arg3, CRATE_KIND_BASIC);
 
     rec = gEntityFlags->list;
     arrayBase = (u16 *)rec->paramOffsets;

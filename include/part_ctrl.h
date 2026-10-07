@@ -3,6 +3,7 @@
 
 #include "core.h"
 #include "box_part.h"
+#include "constants/entities.h"
 
 /* The enemy controller of the 0x0800B8DC-0x0800CA60 cluster
  * (src/enemies/, UpdateEnemyCtrl's own `self`,
