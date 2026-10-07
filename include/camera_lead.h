@@ -6,7 +6,7 @@
 
 /*
  * The camera lead (`struct follow_child`, 0x80 bytes, method table
- * gCameraLeadVtable): the moving sprite InputCtrlStateStart (input_ctrl.c)
+ * gCameraLeadVtable): the moving sprite InputCtrlStateStart (input_ctrl.cpp)
  * spawns for the input controller (CreateCameraLead, level_select.c). It
  * trails the player at a horizontal offset that eases 2 px per frame toward
  * a clamped target, and registers itself as gCamera's follow target while
@@ -19,9 +19,9 @@
 struct follow_child {
     s32 x;        // 0x00
     s32 y;        // 0x04
-    u16 field_08; // 0x08 - bitmap id (ENTITY_MARK_GONE in input_ctrl.c)
+    u16 field_08; // 0x08 - bitmap id (ENTITY_MARK_GONE in input_ctrl.cpp)
     u8 unk_0A[2];
-    /* The flags byte: level_select.c ORs it whole, input_ctrl.c sets
+    /* The flags byte: level_select.c ORs it whole, input_ctrl.cpp sets
      * `gone`. `packed` keeps the union one byte. */
     union {
         u8 all;

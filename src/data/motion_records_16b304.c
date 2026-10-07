@@ -170,7 +170,7 @@ const u32 gPlayerCtrlMotionEntries[38][2] = {
     { 0, 30 },
 };
 
-/* The records ApplyInputCtrlMotion (input_ctrl.c) indexes by its entry
+/* The records ApplyInputCtrlMotion (input_ctrl.cpp) indexes by its entry
  * set's entries. */
 const struct speed_ramp gInputCtrlMotionRecords[9] = {
     { 0, 0, 0 },

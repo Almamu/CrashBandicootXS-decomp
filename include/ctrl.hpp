@@ -26,9 +26,9 @@ class SpriteObj;
  * that has virtual methods, which is why it sits at +0x0C. Each virtual
  * method's slot in gCtrlVtable is its declaration order, from slot 1
  * (slot 0 is the empty RTTI slot: the game was built with -fno-rtti).
- * Slots 1, 4, 6 and 8 are still C: UpdateCtrl (an empty function in
- * system/boot.c), SetCtrlMode, StartCtrlTargetMotionY and
- * SetCtrlTargetMotionY (player/player_flags.c). */
+ * Slot 1 is still C: UpdateCtrl, an empty function in system/boot.c.
+ * SetMode, StartTargetMotionY, SetTargetMotionY and SetAnimSet are in
+ * src/player/player_flags.cpp, with the player's accessors. */
 class Ctrl
 {
 public:
@@ -51,6 +51,7 @@ public:
     virtual void StartTargetMotionXFromSet(SpriteObj *part, s32 index);       // 11
     virtual void StartTargetMotionYFromSet(SpriteObj *part, s32 index);       // 12
     s32 GetMode();                                                            // GetCtrlMode
+    void SetAnimSet(const struct entry_set *set);                             // SetCtrlAnimSet
 };
 
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(Ctrl) == sizeof(struct ctrl));
@@ -97,42 +98,6 @@ public:
 };
 
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(OneShotAnimCtrl) == sizeof(struct ctrl));
-
-/* The input controller (gInputCtrlVtable, struct input_ctrl in player.h):
- * the player's controller in the rooms where the input alone moves the
- * player. Only its motion queue setters are C++ so far
- * (src/player/input_ctrl_queue.cpp); the rest of it is still C, in
- * src/player/input_ctrl.c, so the virtual methods are only declared here. */
-class InputCtrl : public Ctrl
-{
-public:
-    struct player *target; // 0x10
-    u8 motionX;            // 0x14 - queued X motion entry (animSet->entries[][0])
-    u8 motionY;            // 0x15 - queued Y motion entry (animSet->entries[][1])
-    u8 dirState;           // 0x16
-    u8 motionXPending;     // 0x17 - ApplyInputCtrlMotion applies motionX
-    u8 motionYPending;     // 0x18 - ApplyInputCtrlMotion applies motionY
-    u8 motionXKeepSpeed;   // 0x19 - apply with SetTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed;   // 0x1A - the same for Y
-    u8 unk_1B;
-    struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
-    u8 flag20;                       // 0x20
-    u8 unk_21[3];
-    s32 timer; // 0x24
-
-    InputCtrl(); // CreateInputCtrl
-    virtual void Update(SpriteObj *part);
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg);
-    virtual void Attach(SpriteObj *owner);
-    virtual ~InputCtrl();
-    u8 IsMotionXPending();
-    void QueueMotionYKeepSpeed(u8 entry);
-    void QueueMotionXKeepSpeed(u8 entry);
-    void QueueMotionY(u8 entry);
-    void QueueMotionX(u8 entry);
-};
-
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(InputCtrl) == sizeof(struct input_ctrl));
 
 /* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp,
  * struct boss_ctrl in player.h): the base class of the bosses'

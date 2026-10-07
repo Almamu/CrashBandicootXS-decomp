@@ -1,10 +1,10 @@
-#include "ctrl.hpp"
+#include "input_ctrl.hpp"
 
 /* GitHub issue #22, ROM 0x08017A44-0x08017AAC. Two classes' methods
- * share this file (include/ctrl.hpp):
+ * share this file (include/input_ctrl.hpp, include/ctrl.hpp):
  *
  * - InputCtrl's IsMotionXPending .. QueueMotionX (0x08017A44-0x08017A6C)
- *   finish the input controller's accessor run that ends input_ctrl.c
+ *   finish the input controller's accessor run that ends input_ctrl.cpp
  *   (SetInputCtrlMotionYPending .. IsInputCtrlMotionYPending,
  *   0x08017A20-0x08017A40): its motion queue. Nothing calls them.
  * - BossCtrl, the controller base of the bosses: Mega-Mix

@@ -20,7 +20,7 @@ const struct actor_pmf gPlayerCtrlStateFuncs[8] = {
     ACTOR_PMF(PlayerCtrlStateSwimStart), ACTOR_PMF(PlayerCtrlStateDead),
 };
 
-/* Per-state handlers dispatched by UpdateInputCtrl (input_ctrl.c). */
+/* Per-state handlers dispatched by UpdateInputCtrl (input_ctrl.cpp). */
 const struct actor_pmf gInputCtrlStateFuncs[4] = {
     ACTOR_PMF(InputCtrlStateStart),
     ACTOR_PMF(InputCtrlStateRide),
