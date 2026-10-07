@@ -15,6 +15,7 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -293,8 +294,8 @@ struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused)
     obj->vtable = (struct sprite_vtable *)gLaunchPadVtable;
     ClearLaunchPadVulnerable(obj);
     obj->id = id;
-    obj->x = x << 8;
-    obj->y = y << 8;
+    obj->x = INT_TO_Q8(x);
+    obj->y = INT_TO_Q8(y);
     AddToPartList(gCollidableList, obj);
     obj->anim = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x150);
     obj->animIndex = 0;
@@ -718,8 +719,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             MATCH_HOLD_REG(s32, n, r2) = rec->frameCount;
             MATCH_HOLD_REG(struct sprite *, t, r0) = s;
 
-            if (f >= n)
-                f = n - 1;
+            CLAMP_INDEX(f, n);
             t->frame = f;
             DrawSpriteWithOffset((struct actor *)t, 0, 0);
         }
@@ -735,8 +735,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             (const struct sprite_anim *)(idx * sizeof(struct sprite_anim) + (u32)recs);
         MATCH_HOLD_REG(s32, n, r0) = rec->frameCount;
 
-        if (f >= n)
-            f = n - 1;
+        CLAMP_INDEX(f, n);
         s->frame = f;
         DrawSpriteWithOffset((struct actor *)s, 0, 0);
     }

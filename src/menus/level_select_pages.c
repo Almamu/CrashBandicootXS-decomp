@@ -6,6 +6,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38, the whole of the former
  * asm/code_3_2_17_188d0_1cee0.s. The rest of the level-select screen
@@ -254,8 +255,7 @@ static inline void SetAnim(struct sprite *s, u32 idx)
 void RefreshLevelSelectPage(struct level_menu *self)
 {
     SetAnim(self->sprites[0], gLevelSelectWorldAnims[self->world]);
-    if (self->index > self->lastIndex)
-        self->index = self->lastIndex;
+    LIMIT_MAX(self->index, self->lastIndex);
     {
         const struct xy_pair *pos = &self->positions[self->index];
 
@@ -437,8 +437,8 @@ static inline void SetPalette(struct sprite *s, s32 pal)
 
 static inline void SetPos(struct sprite *s, s32 x, s32 y)
 {
-    s->x = x << 8;
-    s->y = y << 8;
+    s->x = INT_TO_Q8(x);
+    s->y = INT_TO_Q8(y);
 }
 
 /* BG2 constructor: the BGCNT fields (priority 1, 256 colours), a

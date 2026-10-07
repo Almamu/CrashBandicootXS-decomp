@@ -12,6 +12,7 @@
 #include "menus.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
@@ -532,8 +533,7 @@ void UpdateCreditsText(struct credits_screen *self)
                     }
                 }
                 penX += advance;
-                if (maxHeight < height)
-                    maxHeight = height;
+                LIMIT_MIN(maxHeight, height);
                 {
                     const u8 *q = self->streamCursor;
 

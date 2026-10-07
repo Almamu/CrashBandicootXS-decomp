@@ -6,6 +6,7 @@
 #include "system.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see docs/matching/archive/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
@@ -130,7 +131,7 @@ void *InitStarfield(void *selfArg)
     gradCount = 2;
     do {
         s32 half = gradIdx / 2;
-        u16 color = half | (half << 5) | (half << 10);
+        u16 color = RGB16(half, half, half);
         *gradDst = color;
         gradDst++;
         gradIdx += 0x1f;
@@ -277,9 +278,9 @@ void DrawStarfield(void *selfArg)
             s32 xRaw, yRaw, xPix, yPix;
 
             xRaw = slot->x;
-            xPix = xRaw >> 8;
+            xPix = Q8_TO_INT(xRaw);
             yRaw = slot->y;
-            yPix = yRaw >> 8;
+            yPix = Q8_TO_INT(yRaw);
 
             if ((u32)xPix <= 0xef && yPix >= 0 && yPix <= 0x9f) {
                 s32 blockX, blockY;
@@ -339,9 +340,9 @@ void DrawStarfield(void *selfArg)
                 MATCH_HOLD_REG(s32, oldVal, ip);
 
                 xRaw2 = slot->x;
-                xPix2 = xRaw2 >> 8;
+                xPix2 = Q8_TO_INT(xRaw2);
                 yRaw2 = slot->y;
-                yPix2 = yRaw2 >> 8;
+                yPix2 = Q8_TO_INT(yRaw2);
                 oldVal = 2;
 
                 if ((u32)xPix2 <= 0xef && yPix2 >= 0 && yPix2 <= 0x9f) {
@@ -423,8 +424,8 @@ void SpawnStar(void *mgrArg, s32 idx)
     rng1 = (u16)RandRange(0x100);
     speed = (u16)RandRange(0x200) + 0x100;
 
-    slot->dx = (gSineTable[(rng1 + 0x40) & 0xff] * speed) >> 8;
-    slot->dy = (gSineTable[rng1 & 0xff] * speed) >> 8;
+    slot->dx = Q8_MUL(COS_Q8(rng1), speed);
+    slot->dy = Q8_MUL(SIN_Q8(rng1), speed);
 
     slot->x += slot->dx * 5;
     slot->y += slot->dy * 5;
@@ -525,9 +526,7 @@ void UpdateStarfield(void *mgrArg)
     if (mgr->count <= 0x7f) {
         s32 count = 0x80 - mgr->count;
 
-        if (count > 8) {
-            count = 8;
-        }
+        LIMIT_MAX(count, 8);
         count -= 1;
 
         if (count != -1) {

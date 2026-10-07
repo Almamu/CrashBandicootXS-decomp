@@ -14,6 +14,7 @@
 #include "actor.h"
 #include "gfx.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110) starts here, right at
  * the 40.4 KB actor-per-type-behavior zone's own end (docs/rom_map.md's
@@ -432,25 +433,25 @@ void UpdateTitleLogoPieces(u32 *self_arg)
                         {
                             s32 *dst = PosCAt(self, stride);
                             MATCH_HOLD_REG(u16, tmp, r4) = record->dPosC;
-                            MATCH_HOLD_REG(s32, shifted, r1) = (s32)tmp << 16;
+                            MATCH_HOLD_REG(s32, shifted, r1) = INT_TO_Q16((s32)tmp);
                             *dst = shifted;
                         }
                         *DeltaCAt(self, stride) = record->deltaC;
-                        *VelAAt(self, stride) = record->dVelA << 8;
+                        *VelAAt(self, stride) = INT_TO_Q8(record->dVelA);
                         *DeltaDAt(self, stride) = record->deltaD;
-                        *VelBAt(self, stride) = record->dVelB << 8;
+                        *VelBAt(self, stride) = INT_TO_Q8(record->dVelB);
                         *DeltaEAt(self, stride) = record->deltaE;
                         {
                             s32 *dst = PosAAt(self, stride);
                             MATCH_HOLD_REG(u16, tmp, r4) = record->dPosA;
-                            MATCH_HOLD_REG(s32, shifted, r1) = (s32)tmp << 16;
+                            MATCH_HOLD_REG(s32, shifted, r1) = INT_TO_Q16((s32)tmp);
                             *dst = shifted;
                         }
                         *DeltaAAt(self, stride) = record->deltaA;
                         {
                             s32 *dst = PosBAt(self, stride);
                             MATCH_HOLD_REG(u16, tmp, r4) = record->dPosB;
-                            MATCH_HOLD_REG(s32, shifted, r1) = (s32)tmp << 16;
+                            MATCH_HOLD_REG(s32, shifted, r1) = INT_TO_Q16((s32)tmp);
                             *dst = shifted;
                         }
                         *DeltaBAt(self, stride) = record->deltaB;
@@ -568,17 +569,17 @@ void DrawTitleLogoPieces(u32 *self)
             oamA.palette = 3;
             oamA.size = 2;
             oamA.shape = 1;
-            oamA.y = (slot->posB.q >> 16) - 16;
+            oamA.y = Q16_TO_INT(slot->posB.q) - 16;
             oamA.tileNum = 0x1c0;
-            oamA.x = (slot->posA.q >> 16) - 0x20 - ((slot->velA << 5) >> 16);
+            oamA.x = Q16_TO_INT(slot->posA.q) - 0x20 - Q16_TO_INT(slot->velA << 5);
             AddOamEntry(gOamBuffer, &oamA);
             oamA.tileNum += 8;
-            oamA.x = (slot->posA.q >> 16) - 0x20;
+            oamA.x = Q16_TO_INT(slot->posA.q) - 0x20;
             AddOamEntry(gOamBuffer, &oamA);
             oamA.tileNum += 8;
             {
-                s32 px = slot->posA.q >> 16;
-                s32 dx = ((slot->velA << 5) >> 16) - 0x20;
+                s32 px = Q16_TO_INT(slot->posA.q);
+                s32 dx = Q16_TO_INT(slot->velA << 5) - 0x20;
 
                 oamA.x = px + dx;
             }
@@ -623,12 +624,12 @@ void DrawTitleLogoPieces(u32 *self)
             oamB.tileNum = i << 6;
             oamB.size = 3;
             {
-                s32 px = slot->posA.q >> 16;
+                s32 px = Q16_TO_INT(slot->posA.q);
                 s32 dx = off - 32;
 
                 oamB.x = px + dx;
             }
-            oamB.y = (slot->posB.q >> 16) - 32 + off;
+            oamB.y = Q16_TO_INT(slot->posB.q) - 32 + off;
             AddOamEntry(gOamBuffer, &oamB);
         }
     }
@@ -669,8 +670,8 @@ void DrawTitleLogoPieces(u32 *self)
             oamC.size = 2;
             oamC.priority = 2;
             for (j = 0; j < 4; j++) {
-                s32 x = (slot->posA.q >> 16) + *tbl++;
-                s32 y = (slot->posB.q >> 16) + *tbl++;
+                s32 x = Q16_TO_INT(slot->posA.q) + *tbl++;
+                s32 y = Q16_TO_INT(slot->posB.q) + *tbl++;
 
                 if (y <= 0x8b) {
                     oamC.x = x;
@@ -709,8 +710,8 @@ void DrawTitleLogoPieces(u32 *self)
             }
             q = &TITLE_SCREEN(self)->bgScale;
             *q = 0x1000000 / rec->velA;
-            TITLE_SCREEN(self)->bgX = *q * (-a >> 16) + 0x4000;
-            TITLE_SCREEN(self)->bgY = (-b >> 16) * *q + 0x4000;
+            TITLE_SCREEN(self)->bgX = *q * Q16_TO_INT(-a) + 0x4000;
+            TITLE_SCREEN(self)->bgY = Q16_TO_INT(-b) * *q + 0x4000;
         }
     }
 }
