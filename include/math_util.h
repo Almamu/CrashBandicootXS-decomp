@@ -80,7 +80,7 @@
  * branch, so they aren't interchangeable with these. The statement form
  * updates `x` in place, so agbcc keeps the whole sequence in one
  * register instead of materializing a temporary. It is a plain `{ }`
- * block: a do/while(0) wrapper changes platform_collide.c's object. As
+ * block: a do/while(0) wrapper changes platform_collide.cpp's object. As
  * with the other statement helpers, don't use it as the body of an `if`
  * that has an `else`. A site whose sign mask comes from another value,
  * or whose steps carry register pins, keeps its own spelling. */

@@ -65,7 +65,7 @@
             ENTITY_SET_GONE_BIT(id);                                           \
     }
 
-/* The register-pinned copy (cortex.c's three, platform.c's): unless
+/* The register-pinned copy (cortex.c's three): unless
  * `t->id` is ENTITY_ID_NONE, sets its bit in the bitmap. The ROM tests
  * the id in a register of its own (R_CUR) against an r0 0xFFFF, re-reads
  * it (`volatile`) into r3 after the test, and divides that zero-extended

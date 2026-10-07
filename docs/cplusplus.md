@@ -484,6 +484,10 @@ counts them by kind) and what the C++ still needs.
 | `src/crates/crate_list_reset.cpp` | `CrateList::Reset` | 1 | agbcp | 0 -> 0 | 7f |
 | `src/crates/crate_list.cpp` | `CrateList::CollideWithObject`, `Remove`, `RemoveAt`, `AddNode`, `Link`, `Add`, destructor | 7 | old_agbcp | 4 pins -> 0 | 7f |
 | `src/crates/crate_break.cpp` | `Crate` (include/crate.hpp): the player's hits (`QueuePlayerCollision`, `ApplyCollision`), the breaks, the kinds' contents, the explosions and blasts, the falls, the switches, the TNT countdown and the slot crate's tick; with `UpdateCrates`, `DetonateNitroCrates`, `BreakCratesInArea` (C linkage) | 22 + 3 | old_agbcp | 11 pins, 4 asm, 1 keep, 2 uses, 8 volatile casts, 2 asm labels, 6 `BOX_ADDR` -> 6 `BOX_ADDR` (and the two drop aliases, shared with crate_stack.cpp) | 7g |
+| `src/objects/platform.cpp` | `Platform` (include/platform.hpp): `Update`, the exit facing, `GetClassId`, constructor, destructor, `ClearVulnerable`; `PlatformMover`: `Update`, `MovePlayer`, the four motion setters, constructor, destructor, `ClearActive` | 16 | **old_agbcp** (was agbcc) | 27 pins, 2 keeps, 1 asm, 1 asm label, an `ENTITY_SET_GONE_BIT_PINNED`, gotos -> 2 pins, 2 keeps | 7d |
+| `src/objects/platform_contact.cpp` | `Platform::CheckPlayerContact` | 1 | **old_agbcp** (was agbcc) | 4 pins -> 0 | 7d |
+| `src/objects/platform_collide.cpp` | `Platform::ResolveCollision` | 1 | old_agbcp | 2 pins, 2 holds, 2 uses, 1 keep, 1 asm label, gotos -> 1 keep, 1 asm label | 7d |
+| `src/objects/platform_create.cpp` | `Platform::Create` | 1 | old_agbcp | 1 keep, 8 retyped stores, 8 volatiles, the `MOVER_NEW` cast -> 0 | 7d |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -964,7 +968,8 @@ palette_cache` (sprite_obj.hpp), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
 `ActionCtrl` (whose C view, `struct act`, went in part 7h with its last
 C user), `Crate`/`struct crate` (crate.h; crate.hpp), `ExtraLife` and
 `Wumpa`/`struct orbit_part` (orbit_part.h; pickups.hpp), `CrateList`/`struct
-pool_manager` (crates.h; crate_list.hpp). Each class has
+pool_manager` (crates.h; crate_list.hpp), `Platform`/`struct gobj` and
+`PlatformMover`/`struct mover` (gobj_1a794.h; platform.hpp). Each class has
 a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
@@ -1197,6 +1202,67 @@ copied in front of the loops (see the gotchas), which changes the
 layout. `DetonateNitroCrates` and `ActivateIronSwitchCrate` use
 `Crates()->count` and `slots`.
 
+Part 7d in numbers: the platforms, `Platform` (a 0x80-byte `MovingSprite`,
+gPlatformVtable) and its controller `PlatformMover` (a 0x38-byte `Ctrl`,
+gPlatformMoverVtable), in the new include/platform.hpp: 4 objects and 19
+functions. Project-wide: `MATCH_HOLD_REG` 1544 -> 1512, instruction-emitting
+`asm` 173 -> 172, `MATCH_KEEP` 52 -> 51, `MATCH_HOLD` 21 -> 19, `MATCH_USE`
+73 -> 70, asm labels 19 -> 18, retyped field stores 214 -> 206 and scoped
+volatiles 38 -> 30. All four match only under old_agbcp: `platform.o` and
+`platform_contact.o` move to `OLD_AGBCC_OBJS` (`ClearVulnerable`'s and
+`CheckPlayerContact`'s constant before the `ldrb`; the C pinned
+old_agbcc's registers under agbcc), the other two were old already.
+
+- **The classes.** `Platform` overrides `CheckPlayerContact` (slot 1),
+  `Update`, `GetClassId` and the destructor; `PlatformMover` overrides
+  `Update` (slot 1), the destructor and the two `...FromSet` motion
+  setters (slots 11 and 12, which call `Ctrl::StartTargetMotionX/Y`
+  directly with gPlatformMoverMotionRecords). The C views stay:
+  gobj_1a794.h's `struct gobj` (also the player's base) and `struct mover`
+  (cortex.c's Neo Cortex platform mover is built on it), each checked
+  against its class; the unused `GobjInit` and the `OBJ_CALL*` macros go.
+- **`new PlatformMover(distX, distY, dirX, dirY, kind)`.** The ROM stores
+  the fifth argument with `strb` and reads it with `ldrb`: the two
+  direction flags are `bool` parameters (part 7e's gotcha), and the C's
+  `MOVER_NEW` 4-argument cast, its two volatile stack stores and the
+  constructor's `add r0, sp, #0x18` asm go. `CreatePlatform` is `new
+  Platform` (the constructor `inline` in platform_create.cpp, as part 7e
+  does), the four `new PlatformMover`, `m->Attach(...)`, `SetExitMirror`,
+  `SetAlwaysActive` and the sprite accessors; the palette nibble is a
+  `u32` local stored into `palette`.
+- **`MovePlayer`** (`MovePlayerWithPlatform`) had 11 pins and wrote the
+  player's `hitAxes` through `&carried - 0x44`. Plain field stores give the
+  ROM's `sub r0, #0x44` once the 8 is a variable set after the `carried`
+  store (`u8 m = 8;`, in its own block); the position goes back through
+  `SetPrevPos(q->x = ..., q->y = ...)`, which is the call the C made
+  through a one-argument alias of `SetSpritePrevPos`.
+- **`PlatformMover::Update`** had 20 pins, a keep and the pinned gone-bit
+  macro. The direction flips are `dirX ^= 1; if (dirX)`; one
+  function-scope `e` for the four motion-record reads keeps it in r3; the
+  "travelled far enough" test reads the record directly; the timed types
+  are an `else if` chain (the C's three gotos go), with the first-frame
+  hold an inline (`HoldFirstFrame`) used twice and `MarkGone()` for the
+  crumbling platform; the wobble's `% 30` is the operator.
+- **`ResolveCollision`** keeps the C's `pb` keep and its `GetSpriteHitbox`
+  alias (below); its 2 holds, 2 uses and 2 pins go once the classify
+  block is an `if`/`else if` chain and the two `goto set_hdir`s are `result
+  = hdir;` in place.
+
+Kept, each with a comment:
+- `PlatformMover::Update`'s pin on the frame count (`now`, r5): it crosses
+  the `__umodsi3` call, and global allocation ranks it above `part` (5
+  refs over 11 insns against 55 over 369), so unpinned it takes r4 and
+  `part` and every temporary after it swap r4 and r5. The C pinned `part`
+  instead. Its 0x300 keeps the C's r2 pin and keep (reload picks r1).
+- `SetExitMirror`'s keep on the 1: reload would otherwise build the
+  `-0x11` mask from it as `subs r2, #18` (as in the C).
+- `ResolveCollision`'s `pb` keep and the `GetSpriteHitbox_p` alias
+  (headers_plan.md's codegen exceptions): the ROM keeps `&b` in r4 from
+  the player's box call to the overlap tests of the no-contact branch, at
+  the end of the function, where CSE forms it from sp again. With a
+  struct return, `*pb = ...GetAnimHitbox()` goes through a temporary, so
+  the box is built through the alias's explicit destination.
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -1226,8 +1292,8 @@ Bigger controllers, roughly in order (function counts from
    shot class). cortex.c mixes controllers and entities: it is part 7i
    below.
 5. **The entity family** (part 7, below), with the platform mover
-   (`src/objects/platform.c`, `gPlatformMoverVtable`: a `Ctrl`-shaped
-   0x38-byte class) in 7d.
+   (`PlatformMover`, gPlatformMoverVtable: a 0x38-byte `Ctrl`; include/platform.hpp)
+   done in 7d.
 
 #### The entity family (part 7)
 
@@ -1242,7 +1308,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7b~~ | ~~objects/moving_sprite.c, moving_sprite_collide.c, player_contact.c, step_probe.c, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c~~ | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | done | 7a |
 | 7b' | the controller headers and cxx_symbols.txt | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes | a rename, no code change | 7b; no other part of #664 in flight |
 | ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
-| 7d | objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old) | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) | 18 functions, 1050 lines, 34 pins, 3 asm | 7b |
+| ~~7d~~ | ~~objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old)~~ | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) (include/platform.hpp) | done | 7b |
 | ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_player_collide.c, crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c~~ | `Crate` (include/crate.hpp) and its accessors | done | |
 | ~~7f~~ | ~~crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old)~~ | `CrateList` (include/crate_list.hpp), the crate grid | done | |
 | ~~7g~~ | ~~crates/crate_break.c (old)~~ | the crates' break and bounce paths | done | |
@@ -1492,3 +1558,21 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   function-scope variable (used elsewhere): flow keeps the compare until
   after reload. A block-local one is deleted before reload
   (`QueuePlayerCollision`'s `side`; part 7g).
+- **A byte flag flipped and tested** (`ldrb; eors` with the 1 loaded
+  first, the result stored and tested) is `dirX ^= 1; if (dirX)`; a local
+  `u8 d = 1 ^ dirX` gives other registers (`PlatformMover::Update`, part
+  7d).
+- **A store addressed off another field's address** (`adds r0, #0xac;
+  str; subs r0, #0x44; strb`) comes out when the stored constant is a
+  variable set between the two stores (`p->carried = part; { u8 m = 8;
+  p->hitAxes = m; }`); with a literal, the second address is formed from
+  the base again (`MovePlayer`, part 7d).
+- **Two long-lived pseudos swapping r4 and r5** (or r8 and r9) is global
+  allocation's order: by `floor_log2(refs) * refs / live_length`, so a
+  short-lived value that crosses a call can outrank a pointer used all
+  through the function. The `.greg` dump (`-dg`) lists both numbers. When
+  no spelling changes them, pin the short-lived one (`now` in
+  `PlatformMover::Update`, part 7d).
+- **A `goto` into another branch's tail** can cost registers the plain
+  duplicate doesn't: `ResolveCollision`'s two `goto set_hdir`s needed two
+  holds and a pin, `result = hdir;` in place needs nothing (part 7d).

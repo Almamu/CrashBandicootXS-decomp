@@ -1,51 +1,22 @@
-#include "core.h"
-#include "math_util.h"
-#include "match.h"
-#include "gobj_1a794.h"
+#include "platform.hpp"
+
+extern "C" {
 #include "gfx.h"
-#include "objects.h"
-
-/* codegen: GetSpriteHitbox returns the box by value (objects.h); this
- * file was matched against the same call written with the destination
- * as an explicit first argument, and through the struct return gcc adds
- * a temporary on the stack. docs/headers_plan.md */
-extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox");
-
-/* GitHub issue #25, ROM 0x0801AB98-0x0801B208: ResolvePlatformCollision, the
- * player-vs-object collision resolver (see include/gobj_1a794.h and
- * docs/matching/archive/issue-25-level-objects.md for what it computes).
- *
- * Built with old_agbcc (OLD_AGBCC_OBJS). Closed in the last-five NAKED
- * retry (docs/matching/archive/last5-naked-retry.md); what it took, beyond the
- * gap4 structure (empty `case 0`, the `Span` inline, the shared
- * `set_hdir` arm):
- * - A hard-register hold on r8 up to the first overlap test, so `self`
- *   can't take r8 and `result` gets it (the ROM has self in sb).
- * - Both FindLineCrossing calls pass `px` as the third argument, reassigned
- *   in each arm (`px = b.x + b.w` / `px = b.x`), and `r` is one
- *   function-level local shared by both classify blocks.
- * - `&b` goes through a `pb` local hidden from cse, so it stays in r4
- *   from the first box build into the no-overlap switch.
- * - The player's position is written as `pos`, then read and written
- *   back only through the `PosPtr` inline (no `pp` pointer local): the
- *   ROM's pointer is a gcse copy inserted after the `&gPlayer`
- *   one.
- * - The vtable call is a `static inline` (`Call68`) calling through the
- *   method's function pointer, not the r4-pinned OBJ_CALL68 macro.
- * - `flags = hdir` in case 1/2 (the commit's hit flag), `(oy << 8) +
- *   y` operand order, `u8 m = 8` for the stand mode, the inline
- *   sign-mask abs, and a hold on r5 over the `result == 0` test so the
- *   reload there takes r0. */
-
-typedef void (*ab98_fn3)(void *self, s32 a, s32 b, s32 c);
-
-/* The player's hit handler (vtable +0x68), called with three arguments. */
-static inline void Call68(struct player *obj, s32 a, s32 b, s32 c)
-{
-    const struct actor_method *m = &obj->vtable->handleEvent;
-
-    ((ab98_fn3)m->fn)((u8 *)obj + m->thisOffset, a, b, c);
+#include "util.h"
+#include "crates.h"
+#include "level.h"
 }
+
+/* Platform::ResolveCollision (#664, include/platform.hpp), ROM
+ * 0x0801AB98-0x0801B208: ResolvePlatformCollision, the player-vs-platform
+ * collision CheckPlayerContact runs (see
+ * docs/matching/archive/issue-25-level-objects.md for what it computes). */
+
+/* GetSpriteHitbox (Sprite::GetAnimHitbox) with the result's address as an
+ * explicit first argument: the player's box is built through `pb`, which
+ * the ROM keeps in a register for the later overlap tests; a struct
+ * return assigned to `*pb` goes through a temporary. */
+extern "C" void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox");
 
 /* Returns its argument: reading `pos` through it keeps the address in a
  * register, as the ROM does. */
@@ -60,11 +31,8 @@ static inline s32 Span(s32 x, s32 w, s32 o)
     return x + w - o;
 }
 
-void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
+void Platform::ResolveCollision(void *)
 {
-    struct gobj *self = selfArg;
-    struct aabb a;
-    struct aabb b;
     struct pos2 pos;
     s32 ox;
     s32 oy;
@@ -79,75 +47,54 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     struct hitbox_quad *box;
     s32 result;
     s32 flags;
-    struct aabb *pb;
     s32 r;
-    MATCH_HOLD_REG(s32, hold8, r8);
+    struct aabb a = GetAnimHitbox();
+    struct aabb b;
+    struct aabb *pb;
 
-    /* Emits nothing: keeps r8 live up to the first overlap test, so
-     * `self` goes to sb and `result` gets r8, as in the ROM. */
-    MATCH_HOLD(hold8);
-    GetSpriteHitbox_p(&a, self);
-    {
-        s32 t = gPlayer->x;
-
-        px = Q8_TO_INT(t);
-    }
+    px = Q8_TO_INT(gPlayer->x);
     py = Q8_TO_INT(gPlayer->y);
     pb = &b;
-    /* Emits nothing: hides `pb`'s value from cse, so `&b` stays in a
-     * register (r4) instead of being re-added to sp at each use. */
+    /* Emits nothing: hides `pb`'s value from CSE, so that `&b` stays in a
+     * register (r4) for the overlap tests below, as in the ROM, instead
+     * of being formed again from sp at each one. */
     MATCH_KEEP(pb);
     GetSpriteHitbox_p(pb, gPlayer);
-    {
-        struct player *q = gPlayer;
-        struct act_anim_bank *anim = q->anim;
-        u32 tag = q->tag;
-
-        box = (struct hitbox_quad *)&anim->records[tag].offX;
-    }
-    /* Emits nothing: end of the r8 hold. */
-    MATCH_USE(hold8);
+    box = (struct hitbox_quad *)&gPlayer->anim->records[gPlayer->tag].offX;
     if (AabbOverlaps(&a, pb)) {
         result = 0;
         above = 0;
         if (b.y < a.y)
             above = 1;
-        tx = GetSpritePrevX((struct gfx_part *)gPlayer);
-        ty = GetSpritePrevY((struct gfx_part *)gPlayer);
+        tx = PlayerSprite()->GetPrevX();
+        ty = PlayerSprite()->GetPrevY();
         side = 2;
         if (px > tx)
             side = 1;
-        if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(self->x)) {
+        if (Q8_TO_INT(gPlayer->x) < Q8_TO_INT(x)) {
             hdir = 1;
             ox = Span(b.x, b.w, a.x) + 1;
         } else {
             hdir = 2;
             ox = Span(a.x, a.w, b.x) + 1;
         }
-        if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(self->y)) {
+        if (Q8_TO_INT(gPlayer->y) > Q8_TO_INT(y)) {
             vdir = 4;
             oy = Span(a.y, a.h, b.y);
         } else {
             vdir = 8;
             oy = Span(b.y, b.h, a.y);
         }
-        if (self->type != 1 && self->type != 5 && self->type != 6) {
-            if (ty == py) {
-                if (tx == px) {
-                    result = hdir;
-                    if (oy <= 2)
-                        result = 8;
-                    goto classified;
-                }
-                if (GetSpritePrevY((struct gfx_part *)self) == Q8_TO_INT(self->y) && oy > 2) {
-                    result = hdir;
-                    goto classified;
-                }
-            }
-            if (tx == px && GetSpritePrevX((struct gfx_part *)self) == Q8_TO_INT(self->x))
+        if (type != 1 && type != 5 && type != 6) {
+            if (ty == py && tx == px) {
+                result = hdir;
+                if (oy <= 2)
+                    result = 8;
+            } else if (ty == py && GetPrevY() == Q8_TO_INT(y) && oy > 2)
+                result = hdir;
+            else if (tx == px && GetPrevX() == Q8_TO_INT(x))
                 result = vdir;
         }
-    classified:
         if (ty <= py && above) {
             if (result == 0) {
                 ty += box->offY + box->h;
@@ -176,16 +123,10 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                             result = hdir;
                     }
                 } else
-                    goto set_hdir;
+                    result = hdir;
             }
         } else {
-            MATCH_HOLD_REG(s32, hold5, r5);
-
-            /* Emits nothing: r5 is live across the `result == 0` test,
-             * so its reload of `result` takes r0 as in the ROM. */
-            MATCH_HOLD(hold5);
             if (result == 0) {
-                MATCH_USE(hold5);
                 ty += box->offY;
                 if (ty >= a.y) {
                     if (side == 1) {
@@ -211,10 +152,8 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                         else
                             result = hdir;
                     }
-                } else {
-                set_hdir:
+                } else
                     result = hdir;
-                }
             }
         }
 
@@ -228,10 +167,10 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             break;
         case 4:
             {
-                struct player *q = gPlayer;
+                GroundSprite *q = PlayerSprite();
 
                 if (!(q->hitAxes & 8)) {
-                    Call68(q, 0, EVENT_BUMP, 4);
+                    q->HandleEvent(0, EVENT_BUMP, 4);
                     PosPtr(&pos)->y = INT_TO_Q8(oy) + PosPtr(&pos)->y;
                 }
             }
@@ -252,7 +191,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             struct player *q = gPlayer;
 
             if (!(q->dir & 4) && above) {
-                q->carried = self;
+                q->carried = (struct gobj *)this;
                 {
                     u8 m = 8;
 
@@ -269,31 +208,31 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         }
         SetEntityPos((struct actor *)gPlayer, pos.x, PosPtr(&pos)->y);
         if (flags) {
-            Call68(gPlayer, 0, EVENT_BUMP, flags);
+            PlayerSprite()->HandleEvent(0, EVENT_BUMP, flags);
             gPlayer->hitMask |= flags;
         }
         if (result == 8) {
-            s32 type = self->type;
+            s32 t = type;
 
-            if (type == 1 || type == 5 || type == 6)
-                self->mover->active = 1;
+            if (t == 1 || t == 5 || t == 6)
+                Mover()->active = 1;
             else {
-                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
+                s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7) {
-                    switch (type) {
+                    switch (t) {
                     case 2:
-                        Call68(gPlayer, 0, EVENT_WARP_EXIT, 0);
+                        PlayerSprite()->HandleEvent(0, EVENT_WARP_EXIT, 0);
                         break;
                     case 3:
                         if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial)
-                            Call68(gPlayer, 0, EVENT_WARP_BONUS_ROUND, 0);
+                            PlayerSprite()->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
                         break;
                     case 4:
                         if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial)
-                            Call68(gPlayer, 0, EVENT_WARP_GEM_PATH, 0);
+                            PlayerSprite()->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
                         break;
                     }
                 }
@@ -302,13 +241,13 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     } else {
         a.y -= 4;
         a.h += 4;
-        switch (self->type) {
+        switch (type) {
         case 0:
         case 7:
             if (AabbOverlaps(&a, pb)) {
                 struct player *q = gPlayer;
 
-                q->carried = self;
+                q->carried = (struct gobj *)this;
                 {
                     u8 m = 8;
 
@@ -318,39 +257,39 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
             break;
         case 2:
             if (AabbOverlaps(&a, pb)) {
-                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
+                s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
-                    Call68(gPlayer, 0, EVENT_WARP_EXIT, 0);
+                    PlayerSprite()->HandleEvent(0, EVENT_WARP_EXIT, 0);
             }
             break;
         case 3:
             if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
-                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
+                s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
-                    Call68(gPlayer, 0, EVENT_WARP_BONUS_ROUND, 0);
+                    PlayerSprite()->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
             }
             break;
         case 4:
             if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
-                s32 d = Q8_TO_INT(self->x) - Q8_TO_INT(gPlayer->x);
+                s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
-                    Call68(gPlayer, 0, EVENT_WARP_GEM_PATH, 0);
+                    PlayerSprite()->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
             }
             break;
         case 1:
         case 5:
         case 6:
             if (!AabbOverlaps(&a, pb))
-                self->mover->active = 0;
+                Mover()->active = 0;
             break;
         }
     }

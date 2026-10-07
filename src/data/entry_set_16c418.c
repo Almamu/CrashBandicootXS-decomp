@@ -11,7 +11,7 @@
 /* {a, b} motion-record index pairs (`struct vec_pair`, gobj_1a794.h):
  * dingodile_create.cpp indexes gDingodileMotionRecords with entries 0-3;
  * entries 4-7 are gPlatformMoverMotionSet's, indexing gPlatformMoverMotionRecords
- * (platform.c). */
+ * (platform.cpp). */
 const u32 gDingodileMotionEntries[8][2] = {
     { 0, 0 },
     { 1, 0 },
@@ -23,7 +23,7 @@ const u32 gDingodileMotionEntries[8][2] = {
     { 0, 2 },
 };
 
-/* The entry set CreatePlatformMover (platform.c) stores in its
+/* The entry set CreatePlatformMover (platform.cpp) stores in its
  * object's `set`. */
 const struct entry_set gPlatformMoverMotionSet = {
     &gDingodileMotionEntries[4], 0x100,
