@@ -11,10 +11,10 @@
  * (`ActionCtrlStateSlide` etc.) call for their action codes `0xB`/`0x10` (see
  * docs/rom_map.md). Iterates the `gCrateList` object list (the
  * same count-prefixed `{count, unused_4, items}` layout already
- * established in `src/crates/crate_time_trial.c`'s `ConvertCratesForTimeTrial`), testing
+ * established in `src/crates/crate_time_trial.cpp`'s `ConvertCratesForTimeTrial`), testing
  * each entry's own `+0x18`-table `+0x48` trampoline via `_call_via_r1`
  * (matched elsewhere) and, on a hit (state `3`), calling `PlayerAnimWouldTouchCrate`
- * (this function's own companion, see `crate_touch.c`) with that
+ * (this function's own companion, see `crate_touch.cpp`) with that
  * entry and `x`.
  *
  * Before the loop, gates the whole call on a `ProbeTerrain` proximity/

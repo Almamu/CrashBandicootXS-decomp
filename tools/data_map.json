@@ -1498,7 +1498,7 @@
     "CreateCrate"
    ],
    "consumer_files": [
-    "crates/crate_create.c",
+    "crates/crate_create.cpp",
     "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
@@ -1545,7 +1545,7 @@
     "IsCrateKindBreakable"
    ],
    "consumer_files": [
-    "crates/crate_stack.c",
+    "crates/crate_stack.cpp",
     "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
@@ -1574,7 +1574,7 @@
    "consumer_files": [
     "crates/crate_break.c",
     "crates/crate_break.c",
-    "crates/crate_hit.c"
+    "crates/crate_hit.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7420,8 +7420,8 @@
     "InitCrate"
    ],
    "consumer_files": [
-    "crates/crate.c",
-    "crates/crate_create.c"
+    "crates/crate.cpp",
+    "crates/crate_create.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

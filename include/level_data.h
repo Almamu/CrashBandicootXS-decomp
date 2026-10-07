@@ -51,7 +51,7 @@ struct level_entity_group {
 /* A room's entities (`gEntityFlags->list`, level.h). The local views
  * were `struct lk_list` (room_entities.c), `struct collect_info`
  * (dingodile.c), `struct level_record_table` (text_popup.h), `struct
- * placement_level` (crate_create.c) and CreatePlatform's level header. */
+ * placement_level` (crate_create.cpp) and CreatePlatform's level header. */
 struct level_entity_list {
     u16 count;                               // 0x00 - all entities
     u16 groupCount;                          // 0x02
