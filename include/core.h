@@ -14,6 +14,10 @@
 #define NON_MATCHING 0
 #endif
 
+/* The number of elements of an array (not a pointer): a compile-time
+ * constant of type size_t. */
+#define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
+
 #define STATIC_ASSERT(COND, MSG) typedef char static_assertion_##MSG[(!!(COND))*2-1]
 /* COMPILE_TIME_ASSERT(TAG, COND): TAG is the file's name with the dot
  * replaced (`logo_screen_h`, `actor_spawn_c`). The typedef is named after

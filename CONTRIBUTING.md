@@ -219,6 +219,29 @@ that one site, with a comment saying why. agbcc 2.9 has no
 
 Never remove `-Werror` or a flag from `WARNFLAGS` to get a change in.
 
+### Shared helpers
+
+Common operations have shared `#define` helpers (#667): fixed-point
+conversions, min/max/abs/clamp and the sine lookups in
+`include/math_util.h` (`Q8_TO_INT(x)`, `INT_TO_Q8(x)`, `Q8_MUL(a, b)`,
+`MIN`, `CLAMP_INDEX`, `SIN_Q8`, ...), the entity "gone" bitmap set in
+`include/entity_bits.h` (`ENTITY_MARK_GONE`, `ENTITY_SET_GONE_BIT`) and
+`ARRAY_COUNT` in `core.h`. [docs/naming.md](docs/naming.md#helper-macros)
+has the list and the rules. In short:
+
+- Use a helper instead of writing the operation out, and instead of a
+  new file-local macro. If two files need the same local macro, move it
+  into a header.
+- **A helper must expand to exactly the expression it replaces** (the
+  same operand order, casts, signedness, and ternary-versus-`if` form),
+  so a conversion never changes a byte. Check the object after each
+  one, as for any cleanup.
+- A spelled-out copy that differs for codegen (register pins, a
+  `match.h` idiom inside it, another wrapper) stays as it is, with a
+  comment naming the helper and saying why it isn't used.
+- `python3 tools/common_ops.py --report` lists the sites still spelled
+  out, by shape, subsystem and file, and the duplicated local macros.
+
 ### Code style
 
 The C style is set by `.clang-format` (#572), and `.editorconfig` gives

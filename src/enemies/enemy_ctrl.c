@@ -10,6 +10,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 #include "player.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
@@ -625,26 +626,7 @@ void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
         one |= flags;
         other->flags = one;
 
-        {
-            MATCH_HOLD_REG(s32, sentinel, r0) = 0xFFFF;
-            MATCH_HOLD_REG(u16, val, r2) = other->id;
-
-            if (val != sentinel) {
-                MATCH_HOLD_REG(u16, val2, r3) = *(u16 volatile *)&other->id;
-                MATCH_HOLD_REG(struct entity_flags *, base, r2) = gEntityFlags;
-                MATCH_HOLD_REG(s32, idx, r0);
-                s32 idxOffset;
-                s32 *bitmap;
-                MATCH_HOLD_REG(s32, bit, r0);
-
-                asm("add %0, %1, #0\n\tasr %0, %0, #5" : "=r"(idx) : "r"(val2));
-                idxOffset = idx * 4;
-                bitmap = (s32 *)base->bits0Copy;
-                bitmap = (s32 *)((u8 *)bitmap + idxOffset);
-                bit = val2 - (idx << 5);
-                *bitmap |= 1 << bit;
-            }
-        }
+        ENTITY_SET_GONE_BIT_ASR(other, r2);
     }
 }
 

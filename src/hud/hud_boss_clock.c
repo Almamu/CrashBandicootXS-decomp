@@ -19,20 +19,9 @@
 
 static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
 {
-    part->x = x << 8;
-    part->y = y << 8;
+    part->x = INT_TO_Q8(x);
+    part->y = INT_TO_Q8(y);
 }
-
-/* Sets the part's desired frame, clamped to its animation's last one. */
-#define CLAMP_FRAME(part, index, frame)                                   \
-    {                                                                     \
-        struct hud_digit_part *_p = (part);                               \
-        s32 _f = (frame);                                                 \
-        s32 _n = _p->anim_data->records[index].frame_count;               \
-        if (_f >= _n)                                                     \
-            _f = _n - 1;                                                  \
-        _p->frame_index = _f;                                             \
-    }
 
 void UpdateHudBoss(struct hud_counter *self)
 {
@@ -41,7 +30,7 @@ void UpdateHudBoss(struct hud_counter *self)
 
     gHudSlideOffset = 0;
     SetPartPos(gHudPartPositions[22].x, gHudPartPositions[22].y, (part = &self->parts[22]));
-    CLAMP_FRAME(part, self->parts[22].anim_index, 0);
+    HUD_CLAMP_FRAME(part, self->parts[22].anim_index, 0);
     DrawHudPart(part, 0, 0);
 
     count = GetBossHealth(gLevelState);
@@ -49,7 +38,7 @@ void UpdateHudBoss(struct hud_counter *self)
         struct hud_digit_part *second = &self->parts[23];
 
         SetPartPos(gHudPartPositions[23].x, gHudPartPositions[23].y, second);
-        CLAMP_FRAME(second, self->parts[23].anim_index, count - 1);
+        HUD_CLAMP_FRAME(second, self->parts[23].anim_index, count - 1);
         DrawHudPart(second, 0, 0);
     }
 }
@@ -63,7 +52,7 @@ void UpdateHudBoss(struct hud_counter *self)
  * always gets a fixed desired frame of 0 (a single-frame icon, not a
  * digit). All six slots get redrawn unconditionally afterward via
  * `DrawHudPart` - slot 21 appears twice in that list, matching the ROM
- * exactly. Old_agbcc, like `UpdateHudBoss`; `CLAMP_FRAME` binds the
+ * exactly. Old_agbcc, like `UpdateHudBoss`; `HUD_CLAMP_FRAME` binds the
  * part pointer before the frame value, which is the order the ROM
  * computes them in. */
 void UpdateHudClock(struct hud_counter *self)
@@ -77,9 +66,9 @@ void UpdateHudClock(struct hud_counter *self)
         self->shownMinutes = GetClockMinutes(gLevelState);
         f = __udivsi3(self->shownMinutes, 10);
         parts = self->parts;
-        CLAMP_FRAME(&parts[14], parts[14].anim_index, f);
+        HUD_CLAMP_FRAME(&parts[14], parts[14].anim_index, f);
         f = __umodsi3(self->shownMinutes, 10);
-        CLAMP_FRAME(&parts[15], parts[15].anim_index, f);
+        HUD_CLAMP_FRAME(&parts[15], parts[15].anim_index, f);
     }
     if (self->shownSeconds != GetClockSeconds(gLevelState)) {
         s32 f;
@@ -87,17 +76,17 @@ void UpdateHudClock(struct hud_counter *self)
         self->shownSeconds = GetClockSeconds(gLevelState);
         f = __udivsi3(self->shownSeconds, 10);
         parts = self->parts;
-        CLAMP_FRAME(&parts[17], parts[17].anim_index, f);
+        HUD_CLAMP_FRAME(&parts[17], parts[17].anim_index, f);
         f = __umodsi3(self->shownSeconds, 10);
-        CLAMP_FRAME(&parts[18], parts[18].anim_index, f);
+        HUD_CLAMP_FRAME(&parts[18], parts[18].anim_index, f);
     }
     if (self->shownTenths != GetClockTenths(gLevelState)) {
         s32 f;
 
         self->shownTenths = f = GetClockTenths(gLevelState);
         parts = self->parts;
-        CLAMP_FRAME(&parts[20], parts[20].anim_index, f);
-        CLAMP_FRAME(&parts[21], parts[21].anim_index, 0);
+        HUD_CLAMP_FRAME(&parts[20], parts[20].anim_index, f);
+        HUD_CLAMP_FRAME(&parts[21], parts[21].anim_index, 0);
     }
     DrawHudPart(&self->parts[14], 0, 0);
     DrawHudPart(&self->parts[15], 0, 0);

@@ -22,8 +22,7 @@ static inline void RestartSlot(struct hud_digit_part *slot)
 static inline void SetSlotFrame(struct hud_digit_part *slot, s32 frame)
 {
     s32 n = SLOT_RECORD(slot).frame_count;
-    if (frame >= n)
-        frame = n - 1;
+    CLAMP_INDEX(frame, n);
     slot->frame_index = frame;
 }
 
@@ -190,7 +189,7 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
                     const struct hud_pos *tbl = gHudPartPositions;
                     const struct hud_pos *pos = tbl + i;
 
-                    self->parts[i].x = pos->x << 8;
+                    self->parts[i].x = INT_TO_Q8(pos->x);
                     self->parts[i].y = 0x1400;
                     SetPal(&self->parts[i], frame);
                     break;

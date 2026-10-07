@@ -10,6 +10,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 #include "player.h"
 
 /* `screenSpace` selects whether (x, y) are already screen-relative
@@ -382,17 +383,8 @@ s32 CheckSpritePickup(struct collect_part *part)
                                                              part->kind, 0);
                 }
                 COLLECT_FLAGS(part) |= one;
-                if (part->id != 0xFFFF)
-                    do {
-                        s32 id = part->id;
-                        u8 *base = (u8 *)gEntityFlags;
-                        s32 word = id / 32;
-                        s32 off = word * 4;
-                        u32 *slot = (u32 *)(base + 0x108);
-
-                        slot = (u32 *)((u8 *)slot + off);
-                        *slot |= 1 << (id - word * 32);
-                    } while (0);
+                if (part->id != ENTITY_ID_NONE)
+                    ENTITY_SET_GONE_BIT(part->id);
 
                 spawned = NULL;
                 switch (part->kind) {

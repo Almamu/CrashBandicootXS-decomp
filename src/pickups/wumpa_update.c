@@ -11,6 +11,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -169,22 +170,9 @@ typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
     if (1)                                                                     \
     {                                                                          \
         (self)->base.flags |= (one);                                           \
-        if ((self)->base.id != 0xffff) {                                 \
-            ORBIT_SET_ID_BIT((self)->base.id, 1);                        \
+        if ((self)->base.id != ENTITY_ID_NONE) {                               \
+            ENTITY_SET_GONE_BIT((self)->base.id);                              \
         }                                                                      \
-    } else (void)0
-
-#define ORBIT_SET_ID_BIT(idExpr, one)                                          \
-    if (1)                                                                     \
-    {                                                                          \
-        s32 _id = (idExpr);                                                    \
-        u8 *_base = (u8 *)gEntityFlags;                                  \
-        s32 _word = _id / 32;                                                  \
-        s32 _off = _word * 4;                                                  \
-        u32 *_slot = (u32 *)(_base + 0x108);                                   \
-                                                                               \
-        _slot = (u32 *)((u8 *)_slot + _off);                                   \
-        *_slot |= (one) << (_id - _word * 32);                                 \
     } else (void)0
 
 /* An `s32` view of the timer: keeps the compare signed after the

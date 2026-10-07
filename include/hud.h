@@ -19,6 +19,7 @@
  * globals.h. */
 
 #include "core.h"
+#include "math_util.h"
 
 /* One HUD part's per-animation record (`anim_data->records[anim_index]`). */
 struct hud_anim_record {
@@ -153,5 +154,17 @@ extern void DestroyHud(struct hud_counter *self, s32 flags);
  * src/gfx/palette_cycle.c, which holds the ROM range they sit in. */
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern struct hud_digit_part *InitHudPart(struct hud_digit_part *part);
+
+/* Sets the part's desired frame, clamped to its animation's last one
+ * (hud_counters.c, hud_boss_clock.c). The part pointer is bound before
+ * the frame value, which is what gives old_agbcc's clamp sequence. */
+#define HUD_CLAMP_FRAME(part, index, frame)                                    \
+    {                                                                          \
+        struct hud_digit_part *_p = (part);                                    \
+        s32 _f = (frame);                                                      \
+        s32 _n = _p->anim_data->records[index].frame_count;                    \
+        CLAMP_INDEX(_f, _n);                                                   \
+        _p->frame_index = _f;                                                  \
+    }
 
 #endif /* !__HUD_H__ */

@@ -193,3 +193,52 @@ have exactly one name.
   any other entry, so it stays the same as other sounds get named. When
   you identify one (by ear in an emulator, say), rename it in the JSON
   and update its call sites; nothing else uses the placeholder.
+
+# Helper macros
+
+Operations that the code spells out at many sites have shared `#define`
+helpers (#667). Use them in new and converted code instead of writing
+the expression out or adding another file-local copy:
+
+| Header | Helpers | What |
+|---|---|---|
+| `core.h` | `ARRAY_COUNT(a)` | element count of an array |
+| `math_util.h` | `Q8_TO_INT`, `INT_TO_Q8`, `Q12_*`, `Q16_*`, `Q8_MUL(a, b)` | fixed-point conversions (`x >> 8`, `x << 8`, ...) and the Q8 product `(a * b) >> 8` |
+| `math_util.h` | `MIN`, `MAX`, `ABS`, `CLAMP` | the ternaries (`a < b ? a : b`, ...) |
+| `math_util.h` | `LIMIT_MAX`, `LIMIT_MIN`, `MAKE_ABS`, `CLAMP_INDEX` | the clamp statements (`if (x > hi) x = hi`, `if (i >= n) i = n - 1`, ...) |
+| `math_util.h` | `SIN_Q8(angle)`, `COS_Q8(angle)` | `gSineTable[angle & 0xFF]` and the quarter-turn `+ 0x40` cosine |
+| `entity_bits.h` | `ENTITY_ID_NONE`, `ENTITY_SET_GONE_BIT(_OF)`, `ENTITY_MARK_GONE` | MarkEntityGone's "gone" bitmap set, inlined |
+| `entity_bits.h` | `ENTITY_SET_GONE_BIT_PINNED`, `ENTITY_SET_GONE_BIT_ASR` | the same with the register pins several files share |
+
+- **A helper expands to exactly the expression it replaces**: the same
+  operands in the same order, the same casts and signedness, the same
+  statement or expression form. agbcc (gcc 2.9) compiles some
+  "equivalent" spellings differently: `MIN` (a ternary) is not
+  `LIMIT_MAX` (an `if`), `(b * a) >> 8` is not `Q8_MUL(a, b)`, and
+  wrapping a sequence in `do { } while (0)` adds loop notes that a plain
+  `{ }` block doesn't (`ENTITY_SET_GONE_BIT` needs them; crate_break.c's
+  copy must not have them). Convert a site only when it already has the
+  helper's shape, and compare the object.
+- **The helpers don't cast.** A shift's signedness comes from its
+  operand, as before: `Q8_TO_INT` of an `s32` is `asr`, of a `u32` `lsr`.
+- **Only convert what the helper means.** `>> 8` that takes a byte out
+  of a word, or `(x << 16) >> 16` that sign-extends to 16 bits, is not a
+  fixed-point conversion and keeps its spelling (or gets a helper of its
+  own). Literals stay literals: `0x1400` doesn't become
+  `INT_TO_Q8(0x14)`.
+- **Matching copies stay local, with a comment.** A copy that differs for
+  codegen (other register pins, a `match.h` idiom inside the sequence,
+  another wrapper) keeps its spelled-out form and says which helper it
+  would be and why it isn't. When several files share the same
+  variant, it becomes a helper of its own (`ENTITY_SET_GONE_BIT_PINNED`
+  takes its registers as bare names, `r2`, and passes them to
+  `MATCH_HOLD_REG`).
+- **Naming:** a helper is named after what it does, upper case:
+  `<FORMAT>_TO_<FORMAT>` for conversions, a verb for statements
+  (`LIMIT_MAX`, `ENTITY_MARK_GONE`). A subsystem's own helper gets the
+  subsystem prefix and lives in its header (`HUD_CLAMP_FRAME` in
+  `hud.h`), not a `.c` file, once two files use it.
+
+`tools/common_ops.py` lists the sites that are still spelled out, by
+shape (`--report` for the counts per shape, subsystem and file), and the
+file-local macros that more than one file defines (`--macros`).

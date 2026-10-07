@@ -11,6 +11,7 @@
 #include "crates.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* codegen: GetSpriteAttackBox/GetSpriteBodyBox take the destination as
  * their first argument (objects.h); this file was matched against the
@@ -289,15 +290,7 @@ static inline void SetTag(struct part *p, u8 tag)
 
 static inline void MarkCollected(struct part *p)
 {
-    p->fl.b.gone = 1;
-    if (p->id != 0xFFFF) {
-        s32 id = p->id;
-        struct entity_flags *ls = gEntityFlags;
-        s32 w = id;
-
-        w /= 32;
-        ls->bits0Copy[w] |= 1 << (id - w * 32);
-    }
+    ENTITY_MARK_GONE(p->fl.b.gone, p->id);
 }
 
 /* Sets `kind` to `flag` (0 or 1) on every part in the gTouchableList

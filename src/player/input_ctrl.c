@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
@@ -57,7 +58,7 @@
  * `QueueMotionX`/`QueueMotionY`/`SetCameraLeadSpeed` inline helpers reproduce the ROM
  * evaluating the stored constant before the store's own loads; the
  * "mark actor gone" bitmap sequence (MarkEntityGone's, inlined twice) is
- * MARK_GONE, swim_ctrl.c's MarkGone - its word index comes from a signed
+ * entity_bits.h's ENTITY_MARK_GONE - its word index comes from a signed
  * division of the zero-extended id. */
 
 /* include/player_ctrl.h's `struct player_ctrl`, as far as these
@@ -88,31 +89,6 @@ extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
         struct actor_method *_m = &(obj)->vtable->m;                            \
         _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } else (void)0
-
-/* MarkEntityGone's "set the id's bit in the gEntityFlags+0x108 bitmap"
- * (see swim_ctrl.c: the do/while(0) loop notes are what reproduce
- * the id reload after the 0xFFFF test) */
-#define SET_ID_BIT(idExpr)                                                     \
-    do                                                                         \
-    {                                                                          \
-        s32 _id = (idExpr);                                                    \
-        u8 *_base = (u8 *)gEntityFlags;                                  \
-        s32 _word = _id / 32;                                                  \
-        s32 _off = _word * 4;                                                  \
-        u32 *_slot = (u32 *)(_base + 0x108);                                   \
-                                                                               \
-        _slot = (u32 *)((u8 *)_slot + _off);                                   \
-        *_slot |= 1 << (_id - _word * 32);                                     \
-    } while (0)
-
-/* "Mark gone": MarkEntityGone's sequence (graphics.c), inlined, on an
- * object's `gone` bit and bitmap id */
-#define MARK_GONE(gone, id)                                                    \
-    {                                                                          \
-        (gone) = 1;                                                            \
-        if ((id) != 0xFFFF)                                                    \
-            SET_ID_BIT(id);                                                    \
-    }
 
 static inline void SetCameraLeadSpeed(struct input_ctrl *self, s32 speed)
 {
@@ -207,7 +183,7 @@ void UpdateInputCtrl(struct input_ctrl *self)
             {
                 struct follow_child *c = self->cameraLead;
 
-                MARK_GONE(c->flags.bits.gone, c->field_08);
+                ENTITY_MARK_GONE(c->flags.bits.gone, c->field_08);
             }
             self->cameraLead = NULL;
             RequestRoomExit();
@@ -312,7 +288,7 @@ void InputCtrlStateDead(struct input_ctrl *self)
     struct player *t = self->target;
 
     if (t->animDone)
-        MARK_GONE(t->flags.bits.gone, t->id);
+        ENTITY_MARK_GONE(t->flags.bits.gone, t->id);
 }
 
 /* gInputCtrlStateFuncs[2]: once the target's animation ends, goes back to

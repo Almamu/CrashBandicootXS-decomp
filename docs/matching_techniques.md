@@ -355,12 +355,14 @@ gcc picks. An initialiser follows the macro as it would the declarator:
 - Pinning the old and new value of `x = prev + d` separately keeps the
   result out of `prev`'s register.
 
-Five pins stay written out as `register T x asm(R)`: the ones in
-`src/bosses/cortex.c`'s `SET_FRAME_R`, `MARK_GONE` and
-`MARK_GONE_BITMAP_OFF` macros, where the register is a macro parameter
-holding a string (`R_FRAME`, `R_TAG`, `R_FLAGS`, `R_CUR`, `R_BASE`,
-passed as `"r5"` etc.). `MATCH_HOLD_REG` stringizes a bare register name,
-so it can't take those. `tools/match_idioms.py --kind pin` lists them.
+A macro whose pins differ per call site takes the registers as
+parameters and passes them on to `MATCH_HOLD_REG` as bare names:
+`src/bosses/cortex.c`'s `SET_FRAME_R(part, 1, r3, r4)` and `MARK_GONE`,
+and `include/entity_bits.h`'s `ENTITY_SET_GONE_BIT_PINNED(t, r2, r4)`
+(#667). A macro argument is expanded before it is substituted, so
+`MATCH_HOLD_REG`'s `#reg` sees `r4`, not the parameter's name. No pin is
+written out as `register T x asm(R)` any more; `tools/match_idioms.py
+--kind pin` would list one.
 
 ### Holds and the reload round-robin
 
@@ -465,8 +467,7 @@ against a constant
 
 Three empty asms stay written out, each a one-off shape that no macro
 covers (a macro for one site would only add a name to look up). They
-are `ALLOWED_SPELLED` in `tools/match_idioms.py`, with the five cortex.c
-pins ([Register pins](#register-pins)):
+are `ALLOWED_SPELLED` in `tools/match_idioms.py`:
 
 - `asm volatile("" : : "m"(src), "m"(dst))` in `lib/gax/src/gax_swi.c`:
   two `"m"` inputs in one insn (`mem_ref`).

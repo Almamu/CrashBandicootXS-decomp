@@ -22,8 +22,6 @@
  * the picture only (RunCutscenePlayer).
  */
 
-#define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
-
 extern const u16 gCutscenePicture00[], gCutscenePicture01[], gCutscenePicture02[],
     gCutscenePicture03[], gCutscenePicture04[], gCutscenePicture05[], gCutscenePicture06[],
     gCutscenePicture07[], gCutscenePicture08[], gCutscenePicture09[], gCutscenePicture10[],

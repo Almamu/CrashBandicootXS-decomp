@@ -20,8 +20,6 @@
  * Every pointer is a symbol reference, so the room data can move.
  */
 
-#define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
-
 COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_info) == 0x24);
 COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room_list) == 0x10);
 COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room) == 0x14);

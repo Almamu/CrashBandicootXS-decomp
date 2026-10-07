@@ -12,20 +12,9 @@ extern s32 _call_via_r1(void *self, void *fn);
 
 static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
 {
-    part->x = x << 8;
-    part->y = y << 8;
+    part->x = INT_TO_Q8(x);
+    part->y = INT_TO_Q8(y);
 }
-
-/* Sets the part's desired frame, clamped to its animation's last one. */
-#define CLAMP_FRAME(part, index, frame)                                   \
-    {                                                                     \
-        struct hud_digit_part *_p = (part);                               \
-        s32 _f = (frame);                                                 \
-        s32 _n = _p->anim_data->records[index].frame_count;               \
-        if (_f >= _n)                                                     \
-            _f = _n - 1;                                                  \
-        _p->frame_index = _f;                                             \
-    }
 
 /* The remaining three callees of the HUD stat-widget dispatcher
  * (`UpdateHud`, `hud.c`) - see `docs/matching/
@@ -34,7 +23,7 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
  *
  * These were parked as NAKED on the belief that a second "r7 wrong-value
  * miscompile" broke every clamp site; under old_agbcc the plain clamp
- * (`CLAMP_FRAME`, part pointer bound before the frame value) reproduces
+ * (`HUD_CLAMP_FRAME`, part pointer bound before the frame value) reproduces
  * the ROM's `ldrb r7; ...; adds rN, r7, #0` sequence exactly. The other
  * things that mattered: a literal `-1` frame lets the compiler fold the
  * clamp into a bare store (the ROM does that in some branches), while a
@@ -75,27 +64,27 @@ void UpdateHudCrates(struct hud_counter *self)
             s32 f = __divsi3(v, 100);
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
             f = __modsi3(__divsi3(self->crateCount, 10), 10);
-            CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
             f = __modsi3(self->crateCount, 10);
-            CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
         } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
             f = __modsi3(self->crateCount, 10);
-            CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
-            CLAMP_FRAME(&parts[5], parts[5].anim_index, -1);
+            HUD_CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[5], parts[5].anim_index, -1);
         } else {
             s32 f;
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[3], parts[3].anim_index, v);
+            HUD_CLAMP_FRAME(&parts[3], parts[3].anim_index, v);
             f = -1;
-            CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
-            CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
         }
     }
     DrawHudPart(&self->parts[3], 0, 0);
@@ -117,25 +106,25 @@ void UpdateHudCrates(struct hud_counter *self)
         if (v > 99) {
             s32 f = __divsi3(v, 100);
 
-            CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
             f = __modsi3(__divsi3(self->crateTotal, 10), 10);
-            CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
             f = __modsi3(self->crateTotal, 10);
-            CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
         } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
-            CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
             f = __modsi3(self->crateTotal, 10);
-            CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
-            CLAMP_FRAME(&parts[8], parts[8].anim_index, -1);
+            HUD_CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[8], parts[8].anim_index, -1);
         } else {
             s32 f;
 
-            CLAMP_FRAME(&parts[6], parts[6].anim_index, v);
+            HUD_CLAMP_FRAME(&parts[6], parts[6].anim_index, v);
             f = -1;
-            CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
-            CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
         }
     }
     DrawHudPart(&parts[6], off, 0);
@@ -147,7 +136,7 @@ void UpdateHudCrates(struct hud_counter *self)
 
         SetPartPos(gHudPartPositions[10].x + off, gHudPartPositions[10].y,
                    (part = &self->parts[10]));
-        CLAMP_FRAME(part, self->parts[10].anim_index, 0);
+        HUD_CLAMP_FRAME(part, self->parts[10].anim_index, 0);
         DrawHudPart(part, 0, 0);
     }
     DrawHudPart(&self->parts[9], 0, 0);
@@ -183,13 +172,13 @@ void UpdateHudWumpa(struct hud_counter *self)
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[11], parts[11].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[11], parts[11].anim_index, f);
             f = __modsi3(self->wumpa, 10);
-            CLAMP_FRAME(&parts[12], parts[12].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[12], parts[12].anim_index, f);
         } else {
             parts = self->parts;
-            CLAMP_FRAME(&parts[11], parts[11].anim_index, v);
-            CLAMP_FRAME(&parts[12], parts[12].anim_index, -1);
+            HUD_CLAMP_FRAME(&parts[11], parts[11].anim_index, v);
+            HUD_CLAMP_FRAME(&parts[12], parts[12].anim_index, -1);
         }
     }
     DrawHudPart(&self->parts[11], 0, 0);
@@ -223,7 +212,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
 
     gHudSlideOffset = 0;
     SetPartPos(gHudPartPositions[24].x, gHudPartPositions[24].y, (part = &self->parts[24]));
-    CLAMP_FRAME(part, self->parts[24].anim_index, 0);
+    HUD_CLAMP_FRAME(part, self->parts[24].anim_index, 0);
     DrawHudPart(part, 0, 0);
 
     {
@@ -237,28 +226,28 @@ void UpdateHudPercentCounters(struct hud_counter *self)
         if (v == 100) {
             struct hud_digit_part *p = self->parts;
 
-            CLAMP_FRAME(&p[25], p[25].anim_index, 1);
-            CLAMP_FRAME(&p[26], p[26].anim_index, 0);
-            CLAMP_FRAME(&p[27], p[27].anim_index, 0);
-            CLAMP_FRAME(&p[28], p[28].anim_index, 10);
+            HUD_CLAMP_FRAME(&p[25], p[25].anim_index, 1);
+            HUD_CLAMP_FRAME(&p[26], p[26].anim_index, 0);
+            HUD_CLAMP_FRAME(&p[27], p[27].anim_index, 0);
+            HUD_CLAMP_FRAME(&p[28], p[28].anim_index, 10);
         } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[25], parts[25].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[25], parts[25].anim_index, f);
             f = __modsi3(self->playerHpPercent, 10);
-            CLAMP_FRAME(&parts[26], parts[26].anim_index, f);
-            CLAMP_FRAME(&parts[27], parts[27].anim_index, 10);
-            CLAMP_FRAME(&parts[28], parts[28].anim_index, -1);
+            HUD_CLAMP_FRAME(&parts[26], parts[26].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[27], parts[27].anim_index, 10);
+            HUD_CLAMP_FRAME(&parts[28], parts[28].anim_index, -1);
         } else {
             s32 f;
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[25], parts[25].anim_index, v);
-            CLAMP_FRAME(&parts[26], parts[26].anim_index, 10);
+            HUD_CLAMP_FRAME(&parts[25], parts[25].anim_index, v);
+            HUD_CLAMP_FRAME(&parts[26], parts[26].anim_index, 10);
             f = -1;
-            CLAMP_FRAME(&parts[27], parts[27].anim_index, f);
-            CLAMP_FRAME(&parts[28], parts[28].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[27], parts[27].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[28], parts[28].anim_index, f);
         }
     }
     DrawHudPart(&self->parts[25], 0, 0);
@@ -273,7 +262,7 @@ void UpdateHudPercentCounters(struct hud_counter *self)
         return;
 
     SetPartPos(gHudPartPositions[29].x, gHudPartPositions[29].y, (part = &self->parts[29]));
-    CLAMP_FRAME(part, self->parts[29].anim_index, 0);
+    HUD_CLAMP_FRAME(part, self->parts[29].anim_index, 0);
     DrawHudPart(part, 0, 0);
 
     v = self->airshipHpPercent;
@@ -281,29 +270,29 @@ void UpdateHudPercentCounters(struct hud_counter *self)
         if (v == 100) {
             struct hud_digit_part *p = self->parts;
 
-            CLAMP_FRAME(&p[30], p[30].anim_index, 1);
-            CLAMP_FRAME(&p[31], p[31].anim_index, 0);
-            CLAMP_FRAME(&p[32], p[32].anim_index, 0);
-            CLAMP_FRAME(&p[33], p[33].anim_index, 10);
+            HUD_CLAMP_FRAME(&p[30], p[30].anim_index, 1);
+            HUD_CLAMP_FRAME(&p[31], p[31].anim_index, 0);
+            HUD_CLAMP_FRAME(&p[32], p[32].anim_index, 0);
+            HUD_CLAMP_FRAME(&p[33], p[33].anim_index, 10);
         } else if (v > 9) {
             s32 f = __divsi3(v, 10);
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[30], parts[30].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[30], parts[30].anim_index, f);
             f = __modsi3(self->airshipHpPercent, 10);
-            CLAMP_FRAME(&parts[31], parts[31].anim_index, f);
-            CLAMP_FRAME(&parts[32], parts[32].anim_index, 10);
+            HUD_CLAMP_FRAME(&parts[31], parts[31].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[32], parts[32].anim_index, 10);
             f = -1;
-            CLAMP_FRAME(&parts[33], parts[33].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[33], parts[33].anim_index, f);
         } else {
             s32 f;
 
             parts = self->parts;
-            CLAMP_FRAME(&parts[30], parts[30].anim_index, v);
-            CLAMP_FRAME(&parts[31], parts[31].anim_index, 10);
+            HUD_CLAMP_FRAME(&parts[30], parts[30].anim_index, v);
+            HUD_CLAMP_FRAME(&parts[31], parts[31].anim_index, 10);
             f = -1;
-            CLAMP_FRAME(&parts[32], parts[32].anim_index, f);
-            CLAMP_FRAME(&parts[33], parts[33].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[32], parts[32].anim_index, f);
+            HUD_CLAMP_FRAME(&parts[33], parts[33].anim_index, f);
         }
     }
     DrawHudPart(&self->parts[30], 0, 0);

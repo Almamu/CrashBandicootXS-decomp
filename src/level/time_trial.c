@@ -8,6 +8,7 @@
 #include "box_part.h"
 #include "sprite_bank.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
@@ -101,10 +102,8 @@ void StartTimeTrial(struct level_state *self)
                     PickUpWumpa((struct orbit_part *)e, 1);
                 else {
                     a->flags |= 1;
-                    if (a->id != 0xffff) {
-                        s32 id = a->id;
-                        gEntityFlags->bits0Copy[id / 32] |= 1 << (id % 32);
-                    }
+                    if (a->id != ENTITY_ID_NONE)
+                        ENTITY_SET_GONE_BIT(a->id);
                 }
             }
         } while (++i < gTouchableList->count);

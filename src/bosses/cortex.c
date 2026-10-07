@@ -12,6 +12,7 @@
 #include "level.h"
 #include "box_part.h"
 #include "globals.h"
+#include "entity_bits.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/archive/issue-23-graphics.md).
@@ -259,11 +260,11 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
 #define SET_FRAME_R(part, frameExpr, R_FRAME, R_TAG)                           \
     do                                                                         \
     {                                                                          \
-        register s32 _frame asm(R_FRAME) = (frameExpr);                        \
+        MATCH_HOLD_REG(s32, _frame, R_FRAME) = (frameExpr);                    \
         struct anim_bank *_bank = (part)->bank;                                \
         MATCH_HOLD_REG(u8 *, _tagp, r2) = &(part)->tag;                        \
         MATCH_HOLD_REG(struct anim_record *, _records, r1) = _bank->records;   \
-        register u32 _tag asm(R_TAG) = *_tagp;                                 \
+        MATCH_HOLD_REG(u32, _tag, R_TAG) = *_tagp;                             \
         s32 _count = _records[_tag].frameCount;                                \
                                                                                \
         if (_frame >= _count)                                                  \
@@ -279,23 +280,24 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
  * the ROM's copy + `asr #5` + subtract. The register pins are
  * load-bearing (docs/workflow.md step 7) and differ per call site, so they
  * are macro parameters: the flags scratch register, the register the
- * first id read lands in, and the bitmap base. */
+ * first id read lands in, and the bitmap base (entity_bits.h's
+ * ENTITY_SET_GONE_BIT_PINNED). */
 #define MARK_GONE(t, R_FLAGS, R_CUR, R_BASE)                                   \
     do                                                                         \
     {                                                                          \
         {                                                                      \
             MATCH_HOLD_REG(s32, _v, r0) = 1;                                   \
-            register s32 _f asm(R_FLAGS) = PART_FLAGS(t);                      \
+            MATCH_HOLD_REG(s32, _f, R_FLAGS) = PART_FLAGS(t);                  \
                                                                                \
             _v |= _f;                                                          \
             PART_FLAGS(t) = _v;                                                \
         }                                                                      \
-        MARK_GONE_BITMAP(t, R_CUR, R_BASE);                                    \
+        ENTITY_SET_GONE_BIT_PINNED(t, R_CUR, R_BASE);                          \
     } while (0)
 
-#define GONE_SLOT(slot, base) slot = (u32 *)((base) + 0x108)
 /* UpdateCortexShot: the ROM holds the 0x108 bitmap offset in r4, where the
- * allocator would otherwise pick r5 */
+ * allocator would otherwise pick r5 (entity_bits.h's
+ * ENTITY_SET_GONE_BIT_PINNED_SLOT, in place of ENTITY_GONE_SLOT) */
 #define GONE_SLOT_R4(slot, base)                                               \
     {                                                                          \
         MATCH_HOLD_REG(s32, _k, r4) = 0x108;                                   \
@@ -303,36 +305,6 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
         MATCH_KEEP(_k);                                                        \
         slot = (u32 *)((base) + _k);                                           \
     }
-
-#define MARK_GONE_BITMAP(t, R_CUR, R_BASE)                                     \
-    MARK_GONE_BITMAP_OFF(t, R_CUR, R_BASE, GONE_SLOT)
-#define MARK_GONE_BITMAP_R4(t, R_CUR, R_BASE)                                  \
-    MARK_GONE_BITMAP_OFF(t, R_CUR, R_BASE, GONE_SLOT_R4)
-
-#define MARK_GONE_BITMAP_OFF(t, R_CUR, R_BASE, OFFSET_STMT)                    \
-    do                                                                         \
-    {                                                                          \
-        {                                                                      \
-            MATCH_HOLD_REG(s32, _none, r0) = 0xFFFF;                           \
-            register u32 _cur asm(R_CUR) = (t)->id;                            \
-                                                                               \
-            if (_cur != _none)                                                 \
-            {                                                                  \
-                MATCH_HOLD_REG(s32, _id, r3) = *(vu16 *)&(t)->id;              \
-                register u8 *_base asm(R_BASE) = (u8 *)gEntityFlags;     \
-                MATCH_HOLD_REG(s32, _word, r0) = _id;                          \
-                s32 _off;                                                      \
-                u32 *_slot;                                                    \
-                                                                               \
-                _word /= 32;                                                   \
-                _off = _word * 4;                                              \
-                OFFSET_STMT(_slot, _base);                                     \
-                _slot = (u32 *)((u8 *)_slot + _off);                           \
-                _word = _id - _word * 32;                                      \
-                *_slot |= 1 << _word;                                          \
-            }                                                                  \
-        }                                                                      \
-    } while (0)
 
 void *CreateOneShotAnimCtrl(struct gfx_ctrl *self)
 {
@@ -354,7 +326,7 @@ void DestroyOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags)
 void UpdateUnusedOneShotAnimCtrl(struct gfx_ctrl *self, struct gfx_part *part)
 {
     if (part->animDone)
-        MARK_GONE(part, "r2", "r4", "r2");
+        MARK_GONE(part, r2, r4, r2);
 }
 
 /* UNUSED - see the top-of-file comment. */
@@ -653,7 +625,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
                 asm("mov %0, %1" : "=l"(blinking) : "l"(bp));
                 if (on && ++self->blink > 9) {
                     self->blink = 0;
-                    SET_FRAME_R(part, part->frame ^ 1, "r3", "r4");
+                    SET_FRAME_R(part, part->frame ^ 1, r3, r4);
                 }
             }
             if ((left = self->stepsLeft) != 0)
@@ -674,7 +646,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
                 part->animating = left;
                 CALL3(self, method_50, part, 0x10);
                 *blinking = left;
-                SET_FRAME_R(part, 1, "r3", "r4");
+                SET_FRAME_R(part, 1, r3, r4);
             }
             SetCortexTargetDest((struct obj_4704 *)self, (s32 *)part, gPlayer->x,
                                 gPlayer->y - 0xA00);
@@ -936,7 +908,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
         t = part;
         MATCH_KEEP(t);
         PART_FLAGS(t) = v;
-        MARK_GONE_BITMAP_R4(t, "r5", "r2");
+        ENTITY_SET_GONE_BIT_PINNED_SLOT(t, r5, r2, GONE_SLOT_R4);
     }
 }
 
@@ -945,7 +917,7 @@ void UpdateCortexBossPlatformMover(struct gfx_ctrl *self, struct gfx_part *part)
     s32 target;
 
     if (self->state == 0) {
-        SET_FRAME_R(part, 0x1A, "r4", "r6");
+        SET_FRAME_R(part, 0x1A, r4, r6);
         self->state = 1;
     }
     target = 0x1A;
@@ -961,7 +933,7 @@ void UpdateCortexBossPlatformMover(struct gfx_ctrl *self, struct gfx_part *part)
         p += 0x38 - 0x2C;
         MATCH_KEEP(p);
         if (*p)
-            SET_FRAME_R(part, 0, "r4", "r5");
+            SET_FRAME_R(part, 0, r4, r5);
     }
 }
 
@@ -990,7 +962,7 @@ void UpdateCortexBossGem(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
         break;
     case 1:
         if (part->animDone)
-            MARK_GONE(part, "r1", "r2", "r1");
+            MARK_GONE(part, r1, r2, r1);
         break;
     }
 }
