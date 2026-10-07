@@ -38,7 +38,8 @@ union EntityFlags {
         u8 unk_5:1;      // Get/Set/ClearSpriteObjFlag5
         u8 vulnerable:1; // the player's attacks hit it
         u8 collides:1;   // Is/Enable/DisableCollision
-        u8 unk_0D_0:2;   // 0x0D
+        u8 floorProbe:1; // 0x0D - a ground sprite probes the floor (Enable/DisableFloorProbe)
+        u8 grounded:1;   // a ground sprite stands on the floor (ProbeFloor)
         u8 blink:1;      // hidden this frame (a blinking part; Is/ToggleHidden)
         u8 solid:1;      // pushes the player out (Is/Set/ClearSolid)
         u8 unk_0D_4:4;

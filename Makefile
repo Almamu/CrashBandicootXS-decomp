@@ -227,6 +227,11 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \
                   $(C_BUILDDIR)/objects/ground_sprite_collide.o \
+                  $(C_BUILDDIR)/objects/moving_sprite.o \
+                  $(C_BUILDDIR)/objects/moving_sprite_collide.o \
+                  $(C_BUILDDIR)/objects/player_contact.o \
+                  $(C_BUILDDIR)/objects/ground_sprite.o \
+                  $(C_BUILDDIR)/objects/ground_sprite_update.o \
                   $(C_BUILDDIR)/crates/crate_grid_unlink.o \
                   $(C_BUILDDIR)/crates/crate_list_update.o \
                   $(C_BUILDDIR)/crates/crate_player_collide.o \
