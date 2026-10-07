@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
@@ -120,7 +121,7 @@ void UpdateGroundSprite(struct gobj *self)
         goto skip;
     }
 
-    delta <<= 8;
+    delta = INT_TO_Q8(delta);
     self->y += delta;
 
 skip:
@@ -192,7 +193,7 @@ void AnchorGroundSpriteHitbox(struct gobj *self)
         goto skip;
     }
 
-    delta <<= 8;
+    delta = INT_TO_Q8(delta);
     self->y += delta;
 
 skip:

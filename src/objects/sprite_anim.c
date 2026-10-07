@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor.h"
 #include "actor_self.h"
@@ -215,8 +216,8 @@ void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2)
 {
     s32 pos[2];
 
-    pos[0] = (part->x >> 8) + arg1;
-    pos[1] = (part->y >> 8) + arg2;
+    pos[0] = Q8_TO_INT(part->x) + arg1;
+    pos[1] = Q8_TO_INT(part->y) + arg2;
 
     if (((struct box_part *)part)->affine != 0) {
         DrawAffineSpritePieces(gSpriteRenderer, (struct affine_part *)part, pos);
@@ -312,8 +313,8 @@ void UpdatePartList(struct part_list *list)
     struct aabb *ps;
 
     {
-        s32 w = 440 << 8;
-        s32 h = 280 << 8;
+        s32 w = INT_TO_Q8(440);
+        s32 h = INT_TO_Q8(280);
         f.near.w = w;
         f.near.h = h;
     }
@@ -322,23 +323,23 @@ void UpdatePartList(struct part_list *list)
         s32 x;
         s32 y;
 
-        x = cam->x << 8;
+        x = INT_TO_Q8(cam->x);
         zero = 0;
-        x -= 100 << 8;
-        y = (cam->y << 8) - (60 << 8);
+        x -= INT_TO_Q8(100);
+        y = INT_TO_Q8(cam->y) - INT_TO_Q8(60);
         f.near.x = x;
         f.near.y = y;
     }
     {
-        s32 x = cam->x << 8;
-        s32 y = cam->y << 8;
+        s32 x = INT_TO_Q8(cam->x);
+        s32 y = INT_TO_Q8(cam->y);
         f.screen.x = x;
         f.screen.y = y;
     }
     ps = &f.screen;
     {
-        s32 w = 240 << 8;
-        s32 h = 160 << 8;
+        s32 w = INT_TO_Q8(240);
+        s32 h = INT_TO_Q8(160);
         ps->w = w;
         ps->h = h;
     }

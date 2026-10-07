@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "gobj_1a794.h"
 #include "objects.h"
@@ -20,13 +21,11 @@ s32 CheckPlatformContact(struct gobj *self)
             MATCH_HOLD_REG(s32, d, r2) = self->x;
 
             d -= p->x;
-            if (d < 0)
-                d = -d;
+            MAKE_ABS(d);
             if (d <= 0x7FFF) {
                 d = self->y;
                 d -= p->y;
-                if (d < 0)
-                    d = -d;
+                MAKE_ABS(d);
                 if (d <= 0x7FFF)
                     ResolvePlatformCollision(self, arg);
             }

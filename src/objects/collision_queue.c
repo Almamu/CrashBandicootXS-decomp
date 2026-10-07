@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "crate.h"
 #include "crates.h"
@@ -41,11 +42,9 @@ void ResolveCollisionCandidates(struct collision_queue *self)
         bestDx = self->candidates[0].neighbor->x;
         bestDy = self->candidates[0].neighbor->y;
         bestDx -= px;
-        if (bestDx < 0)
-            bestDx = -bestDx;
+        MAKE_ABS(bestDx);
         bestDy -= py;
-        if (bestDy < 0)
-            bestDy = -bestDy;
+        MAKE_ABS(bestDy);
         forced = 0;
 
         for (i = 1; i < self->count; i++) {
@@ -55,14 +54,11 @@ void ResolveCollisionCandidates(struct collision_queue *self)
             s32 d;
 
             dx -= px;
-            if (dx < 0)
-                dx = -dx;
+            MAKE_ABS(dx);
             dy -= py;
-            if (dy < 0)
-                dy = -dy;
+            MAKE_ABS(dy);
             d = dy - bestDy;
-            if (d < 0)
-                d = -d;
+            MAKE_ABS(d);
             if (d > 8 || self->candidates[i].kind == ATTACK_KIND_SPIN) {
                 ApplyCrateCollision(
                     n, self->candidates[i].kind, self->candidates[i].code, self->candidates[i].edge,
