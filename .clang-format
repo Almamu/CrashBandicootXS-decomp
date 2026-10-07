@@ -24,6 +24,9 @@ BreakBeforeBraces: Linux
 IndentCaseLabels: false
 # A `case N:` with a block body puts the block on the next line, indented.
 IndentCaseBlocks: true
+# C++ (docs/cplusplus.md): `public:` at the class's own indent, like a
+# case label.
+AccessModifierOffset: -4
 
 PointerAlignment: Right
 DerivePointerAlignment: false

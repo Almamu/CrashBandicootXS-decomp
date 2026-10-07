@@ -66,6 +66,12 @@ C_SRCS := $(wildcard $(C_SUBDIR)/*/*.c)
 C_ASMS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.s,$(C_SRCS))
 C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
 
+# The game objects written as C++ (#664, docs/cplusplus.md): src/*/*.cpp,
+# built by agbcp/old_agbcp (see "C++ objects" below).
+CXX_SRCS := $(wildcard $(C_SUBDIR)/*/*.cpp)
+CXX_ASMS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.s,$(CXX_SRCS))
+CXX_OBJS := $(patsubst $(C_SUBDIR)/%.cpp,$(C_BUILDDIR)/%.o,$(CXX_SRCS))
+
 ASM_SRCS := $(wildcard $(ASM_SUBDIR)/*.s)
 ASM_OBJS := $(patsubst $(ASM_SUBDIR)/%.s,$(ASM_BUILDDIR)/%.o,$(ASM_SRCS))
 
@@ -100,10 +106,10 @@ LIBAGBSYSCALL_OBJS := $(LIB_BUILDDIR)/libagbsyscall/libagbsyscall.o
 
 LIB_OBJS := $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS) $(LIBAGBSYSCALL_OBJS)
 
-OBJS := $(C_OBJS) $(LIB_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
+OBJS := $(C_OBJS) $(CXX_OBJS) $(LIB_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 
 # The .d files the C objects' preprocess step writes (see DEPFLAGS).
-DEPS := $(C_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=.d)
+DEPS := $(C_OBJS:.o=.d) $(CXX_OBJS:.o=.d) $(LIB_C_OBJS:.o=.d) $(LIBGCC2_OBJS:.o=.d)
 
 include graphics.mk
 include levels.mk
@@ -169,10 +175,10 @@ $(GENERATED_INCLUDE_DIR)/constants/sfx.h: sound/sfx_table.json tools/sfx_table.p
 
 # Every C object waits for all the generated constants headers (order-only,
 # so a regenerated header rebuilds only the objects whose .d lists it).
-$(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS): | $(GENERATED_HEADERS)
+$(C_OBJS) $(CXX_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS): | $(GENERATED_HEADERS)
 
 clean:
-	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS) $(LIB_C_ASMS) $(LIBGCC2_ASMS) $(DEPS) $(GENERATED_HEADERS)
+	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS) $(CXX_ASMS) $(LIB_C_ASMS) $(LIBGCC2_ASMS) $(DEPS) $(GENERATED_HEADERS)
 
 tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
@@ -192,7 +198,7 @@ tidy:
 # assets it incbins, but not data.o itself (that needs baserom.gba).
 
 .PHONY: report
-report: $(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
+report: $(C_OBJS) $(CXX_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
 	python3 tools/report_units.py
 
 #### Recipes ####
@@ -305,6 +311,21 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/link/link_session.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
+
+# C++ objects (#664, docs/cplusplus.md). The game is g++ 2.x C++; these
+# objects are built from C++ source with the C++ front end of the same
+# compiler: agbcp, and old_agbcp for the ones in OLD_AGBCC_OBJS. Both are
+# built from notyourav/agbcc's `cp` branch by tools/build_agbccpp.sh,
+# which ports agbcc's -fprologue-bugfix and OLD_COMPILER switches to it,
+# so the C flags above apply unchanged. The game had no RTTI (every
+# vtable's slot 0 is empty) and no exceptions. After assembling,
+# cxx_symbols.txt renames the mangled names to the C names the rest of
+# the build links against.
+CXX1     := tools/agbcc/bin/agbcp
+CXX1_OLD := tools/agbcc/bin/old_agbcp
+CXX_SYMBOLS := cxx_symbols.txt
+$(CXX_OBJS): CC1FLAGS += -fno-rtti -fno-exceptions
+$(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 
 # Objects built with -fno-strength-reduce on top of their compiler's -O2.
 # title_screen.o: InitVvLogoPieces's first loop keeps its up-counting
@@ -419,6 +440,13 @@ $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	$(CPP) $(CPPFLAGS) $(DEPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
 	printf '$(ZERO_PAD_TEXT)' >> $(C_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
+
+$(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.cpp $(CXX_SYMBOLS)
+	@mkdir -p $(dir $@)
+	$(CPP) -x c++ $(CPPFLAGS) $(DEPFLAGS) $< | $(CXX1) -quiet $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
+	printf '$(ZERO_PAD_TEXT)' >> $(C_BUILDDIR)/$*.s
+	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
+	$(OBJCOPY) --redefine-syms=$(CXX_SYMBOLS) $@
 
 $(LIB_BUILDDIR)/%.o : $(LIB_SUBDIR)/%.c
 	@mkdir -p $(dir $@)

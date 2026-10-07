@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Count the matching workarounds left in the C sources (#576).
 
-Scans every .c and .h file under src/, lib/ and include/ and counts each
+Scans every .c, .h, .cpp and .hpp file under src/, lib/ and include/ and counts each
 workaround idiom by kind and by file, plus the per-object compiler flag
 lists in the Makefile. The idioms and the macros that replace them are
 described in docs/matching_techniques.md and include/match.h.
@@ -644,7 +644,7 @@ def main():
             for dirpath, _, files in sorted(os.walk(os.path.join(ROOT, d))):
                 for fn in sorted(files):
                     p = os.path.join(dirpath, fn)
-                    if fn.endswith((".c", ".h")) and os.path.relpath(p, ROOT) not in SKIP_FILES:
+                    if fn.endswith((".c", ".h", ".cpp", ".hpp")) and os.path.relpath(p, ROOT) not in SKIP_FILES:
                         n = convert_file(p, kinds)
                         if n:
                             print("%3d  %s" % (n, os.path.relpath(p, ROOT)))
@@ -663,7 +663,7 @@ def main():
             for fn in sorted(files):
                 p = os.path.join(dirpath, fn)
                 rel = os.path.relpath(p, ROOT)
-                if fn.endswith((".c", ".h")) and rel not in SKIP_FILES:
+                if fn.endswith((".c", ".h", ".cpp", ".hpp")) and rel not in SKIP_FILES:
                     scan_file(p, rel, hits)
 
     if args.check:

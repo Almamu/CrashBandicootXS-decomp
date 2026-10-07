@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Format the C sources with clang-format (#572).
+"""Format the C and C++ sources with clang-format (#572).
 
 The style lives in .clang-format; CONTRIBUTING.md ("Code style") describes
 it. The paths in FORMATTED (the whole tree) are kept formatted and checked
@@ -95,7 +95,7 @@ def c_files(paths):
                 d for d in dirnames
                 if not any(fnmatch.fnmatch(os.path.join(rel, d), pat) for pat in UNFORMATTED))
             for n in sorted(names):
-                if n.endswith((".c", ".h")):
+                if n.endswith((".c", ".h", ".cpp", ".hpp")):
                     files.append(os.path.relpath(os.path.join(dirpath, n), ROOT))
     return files
 

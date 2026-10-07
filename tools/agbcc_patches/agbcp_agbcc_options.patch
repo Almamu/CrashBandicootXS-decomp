@@ -1,0 +1,217 @@
+agbcp/old_agbcp: agbcc's compiler switches in the C++ compiler
+==============================================================
+
+Applies to notyourav/agbcc's `cp` branch (its g++/ tree: gcc
+2.9-arm-000512 with the C++ front end, whose cc1plus is decomp.me's
+"agbccpp") with `patch -p1` from the checkout's root.
+tools/build_agbccpp.sh does that on a copy and builds it twice: as
+tools/agbcc/bin/agbcp, and with -DOLD_COMPILER as .../old_agbcp.
+
+Why: SAT-R/agbcc builds agbcc and old_agbcc from one gcc/ tree, the
+latter with -DOLD_COMPILER, and agbcc has -fprologue-bugfix. The `cp`
+branch's g++/ tree is the same compiler without either, so its cc1plus
+generates agbcc's code minus the prologue bugfix, and can't generate
+old_agbcc's. This patch ports both (docs/cplusplus.md):
+
+  -fprologue-bugfix   toplev.c, flags.h, config/arm/thumb.c: the option,
+                      which makes far_jump_used_p rescan instead of
+                      trusting its cached answer (the "lr saved for no
+                      reason" bug). The Makefile passes it to agbcp as
+                      it does to agbcc.
+
+  -DOLD_COMPILER      config/arm/thumb.c: s_register_operand is plain
+                      register_operand (this is what gives old_agbcc's
+                      constant-before-`ldrb` scheduling), and
+                      far_jump_used_p never caches.
+                      function.c: no use_return_register () at the end
+                      of a function.
+                      loop.c: check_dbra_loop doesn't check that the biv
+                      increment is a CONST_INT.
+                      unroll.c: local_regno is bounded by maxregnum.
+
+  -fhex-asm fix       config/arm/thumb.c: the epilogue of a function with
+                      pretend (stdarg) arguments printed `add sp, sp,
+                      0x<decimal>`, which doesn't assemble. SAT-R/agbcc
+                      prints `#0x<hex>`; so does this.
+
+Without -DOLD_COMPILER and -fprologue-bugfix the patched compiler is
+the stock one, apart from that fix.
+
+--- a/g++/config/arm/thumb.c
++++ b/g++/config/arm/thumb.c
+@@ -981,8 +981,13 @@
+ {
+   rtx insn;
+ 
+-  if (current_function_has_far_jump)
+-    return 1;
++#ifndef OLD_COMPILER
++  if (!flag_prologue_bugfix)
++    {
++      if (current_function_has_far_jump)
++        return 1;
++    }
++#endif
+ 
+   for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
+     {
+@@ -992,7 +997,9 @@
+ 	  && GET_CODE (PATTERN (insn)) != ADDR_DIFF_VEC
+ 	  && get_attr_far_jump (insn) == FAR_JUMP_YES)
+ 	{
++#ifndef OLD_COMPILER
+ 	  current_function_has_far_jump = 1;
++#endif
+ 	  return 1;
+ 	}
+     }
+@@ -1398,7 +1405,9 @@
+      function will be emitted as assembly immediately after we generate
+      RTL for it.  This does not happen for inline functions.  */
+   return_used_this_function = 0;
++#ifndef OLD_COMPILER
+   current_function_has_far_jump = 0;
++#endif
+ #if 0 /* TODO : comment not really needed */
+   fprintf (f, "%s THUMB Epilogue\n", ASM_COMMENT_START);
+ #endif
+@@ -1561,7 +1570,7 @@
+       /* Remove the argument registers that were pushed onto the stack.  */
+       if (flag_hex_asm)
+       {
+-        asm_fprintf (asm_out_file, "\tadd\t%s, %s, 0x%d\n",
++        asm_fprintf (asm_out_file, "\tadd\t%s, %s, #0x%x\n",
+             reg_names [STACK_POINTER],
+             reg_names [STACK_POINTER],
+             current_function_pretend_args_size);
+@@ -2133,6 +2142,7 @@
+      register rtx op;
+      enum machine_mode mode;
+ {
++#ifndef OLD_COMPILER
+   if (GET_MODE (op) != mode && mode != VOIDmode)
+     return 0;
+ 
+@@ -2145,4 +2155,7 @@
+   return (GET_CODE (op) == REG
+ 	  && (REGNO (op) >= FIRST_PSEUDO_REGISTER
+ 	      || REGNO_REG_CLASS (REGNO (op)) != NO_REGS));
++#else
++  return register_operand (op, mode);
++#endif
+ }
+--- a/g++/flags.h
++++ b/g++/flags.h
+@@ -549,5 +549,9 @@
+ /* Nonzero if ASM output should use hex instead of decimal.  */
+ extern int flag_hex_asm;
+ 
++/* Nonzero to fix the prologue bug of the new compiler (agbcc's
++   -fprologue-bugfix).  */
++extern int flag_prologue_bugfix;
++
+ /* Nonzero if dwarf bug should be fixed.  */
+  extern int flag_dwarf_bugfix;
+\ No hay ningún carácter de nueva línea al final del archivo
+--- a/g++/function.c
++++ b/g++/function.c
+@@ -6368,7 +6368,9 @@
+       use_variable (outgoing);
+     }
+ 
++#ifndef OLD_COMPILER
+   use_return_register ();
++#endif
+ 
+   /* If this is an implementation of __throw, do what's necessary to 
+      communicate between __builtin_eh_return and the epilogue.  */
+--- a/g++/loop.c
++++ b/g++/loop.c
+@@ -7634,8 +7634,12 @@
+ 	    }
+ 	}
+     }
++#ifndef OLD_COMPILER
+   else if (GET_CODE (bl->biv->add_val) == CONST_INT
+   && INTVAL (bl->biv->add_val) > 0)
++#else
++  else if (INTVAL (bl->biv->add_val) > 0)
++#endif
+     {
+       /* Try to change inc to dec, so can apply above optimization.  */
+       /* Can do this if:
+--- a/g++/toplev.c
++++ b/g++/toplev.c
+@@ -783,6 +783,9 @@
+ /* Use hex instead of decimal in ASM output.  */
+ int flag_hex_asm = 0;
+ 
++/* Fix prologue bug in new compiler.  */
++int flag_prologue_bugfix = 0;
++
+ /* Output standard-compliant dwarf .debug_abbrev section.  */
+ int flag_dwarf_bugfix = 0;
+ 
+@@ -1010,6 +1013,10 @@
+    "Instrument function entry/exit with profiling calls"},
+   {"leading-underscore", &flag_leading_underscore, 1,
+    "External symbols have a leading underscore" },
++#ifndef OLD_COMPILER
++  {"prologue-bugfix", &flag_prologue_bugfix, 1,
++   "Prevent unnecessary saving of the lr register to the stack"},
++#endif
+   {"hex-asm", &flag_hex_asm, 1,
+    "Use hex instead of decimal in assembly output"},
+   {"dwarf-bugfix", &flag_dwarf_bugfix, 1,
+--- a/g++/unroll.c
++++ b/g++/unroll.c
+@@ -238,7 +238,9 @@
+   struct inline_remap *map;
+   char *local_label;
+   char *local_regno;
++#ifndef OLD_COMPILER
+   int max_local_regnum;
++#endif
+   int maxregnum;
+   int new_maxregnum;
+   rtx exit_label = 0;
+@@ -757,7 +759,9 @@
+   maxregnum = max_reg_num ();
+ 
+   /* local_regno is only valid for regnos < max_local_regnum.  */
++#ifndef OLD_COMPILER
+   max_local_regnum = maxregnum;
++#endif
+ 
+   /* Allocate and zero out the splittable_regs and addr_combined_regs
+      arrays.  These must be zeroed here because they will be used if
+@@ -1058,7 +1062,13 @@
+ 		if (local_label[j])
+ 		  set_label_in_map (map, j, gen_label_rtx ());
+ 
+-	      for (j = FIRST_PSEUDO_REGISTER; j < max_local_regnum; j++)
++	      for (j = FIRST_PSEUDO_REGISTER; j <
++#ifndef OLD_COMPILER
++ max_local_regnum
++#else
++ maxregnum
++#endif
++ ; j++)
+ 		if (local_regno[j])
+ 		  {
+ 		    map->reg_map[j] = gen_reg_rtx (GET_MODE (regno_reg_rtx[j]));
+@@ -1214,7 +1224,13 @@
+ 	if (local_label[j])
+ 	  set_label_in_map (map, j, gen_label_rtx ());
+ 
+-      for (j = FIRST_PSEUDO_REGISTER; j < max_local_regnum; j++)
++      for (j = FIRST_PSEUDO_REGISTER; j <
++#ifndef OLD_COMPILER
++ max_local_regnum
++#else
++ maxregnum
++#endif
++ ; j++)
+ 	if (local_regno[j])
+ 	  {
+ 	    map->reg_map[j] = gen_reg_rtx (GET_MODE (regno_reg_rtx[j]));

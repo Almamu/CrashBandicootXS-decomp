@@ -56,6 +56,21 @@ jobs:
     - name: Build patched agbcc_arm
       run: tools/build_patched_agbcc_arm.sh agbcc .
 
+    # agbcp and old_agbcp, the C++ compilers for the objects written as C++
+    # (the Makefile's CXX_OBJS, docs/cplusplus.md): the g++ 2.9 front end
+    # from notyourav/agbcc's `cp` branch (decomp.me's "agbccpp"), pinned,
+    # plus tools/agbcc_patches/agbcp_agbcc_options.patch. The script builds
+    # a copy; the checkout stays as it is.
+    - name: Checkout agbcc (C++)
+      uses: actions/checkout@v5
+      with:
+        path: agbcc-cp
+        repository: notyourav/agbcc
+        ref: 1caa6becde5e4676b59c31c74d68f45ced79557c
+
+    - name: Build agbcp and old_agbcp
+      run: tools/build_agbccpp.sh agbcc-cp .
+
     - name: Fetch baserom
       if: env.HAS_ROM == 'true'
       run: curl -fsS -o baserom.gba -u '${{ secrets.BASEROM_USERNAME }}:${{ secrets.BASEROM_PASSWORD }}' ${{ secrets.BASEROM_URL }}

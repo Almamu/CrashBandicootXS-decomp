@@ -202,7 +202,7 @@ const struct vtable_slot gKnockedEnemyCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by effect_ctrl.c. */
+/* Used by effect_ctrl.cpp (EffectCtrl, include/ctrl.hpp). */
 const struct vtable_slot gEffectCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateEffectCtrl),
