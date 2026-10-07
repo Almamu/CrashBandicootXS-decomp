@@ -95,7 +95,7 @@ void PolarPlayerStateFinish(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animDone != 0) {
-        PlaySfx(gAudioContext, 0x3c, 0x100);
+        PlaySfx(gAudioContext, SFX_POLAR_FINISH_LEAP, 0x100);
         gPolarPlayerVelY = 0xFFFFF980;
         {
             MATCH_HOLD_REG(s32, stateVal, r0) = 0xb;
@@ -213,7 +213,7 @@ void CatchPolarPlayer(void *selfArg)
         }
     }
 
-    PlaySfx(gAudioContext, 0x41, 0x100);
+    PlaySfx(gAudioContext, SFX_YETI_CATCH, 0x100);
 }
 
 /* Accumulator: while `gLevelState+0x8c` is clear, arms

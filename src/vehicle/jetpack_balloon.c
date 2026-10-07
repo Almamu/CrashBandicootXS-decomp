@@ -126,7 +126,7 @@ void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
         ((void (*)(void *))vt->m38.fn)((u8 *)pending + vt->m38.thisOffset);
         self->pending = NULL;
     }
-    PlaySfx(gAudioContext, 0x2E, 0x100);
+    PlaySfx(gAudioContext, SFX_UNKNOWN_2E, 0x100);
     ACTOR_SET_STATE(&self->base, 2, 1);
 }
 

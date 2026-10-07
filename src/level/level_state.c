@@ -976,7 +976,7 @@ void PlayNewGameCutscene(void *self)
 void PlayIntroCutscene(void *self)
 {
     PlayCutscene(self, 1);
-    StopSfx(gAudioContext, 0x5d);
+    StopSfx(gAudioContext, SFX_SPACE_STATION_AMBIENCE);
 }
 
 /* Allocates a `0x44c`-byte block, fires an (empty) `InitCompanyLogos` hook and

@@ -343,7 +343,7 @@ void UpdateJetpackPlayer(struct actor_hp *self)
             vol = gJetpackBomberCount * 48;
             if (vol > 0x100)
                 vol = 0x100;
-            PlaySfx(gAudioContext, 0x37, vol);
+            PlaySfx(gAudioContext, SFX_JETPACK_BOMBER, vol);
         }
         gJetpackBomberCount = 0;
     }
@@ -469,7 +469,7 @@ void DrawJetpackPlayer(struct actor_hp *self)
 
 /* Damage handler: ignored during the first 16 frames of states 2/3.
  * Out of hit points, the vehicle enters state 4 (anim 3), input is
- * locked and the steering speeds are cut; otherwise sfx 0x42 plays. */
+ * locked and the steering speeds are cut; otherwise SFX_UNKNOWN_42 plays. */
 void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
 {
     if ((u32)(self->base.state - 2) <= 1 && self->base.stateTime <= 0x10)
@@ -478,7 +478,7 @@ void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
     gJetpackFlashTimer = 0x12;
     if (self->hp <= 0) {
         self->hp = 0;
-        PlaySfx(gAudioContext, 0x3a, 0x100);
+        PlaySfx(gAudioContext, SFX_JETPACK_PLAYER_DOWN, 0x100);
         ACTOR_SET_STATE(&self->base, 4, 3);
         if (gLevelState->timeTrial == 0)
             LoseLife(gLevelState);
@@ -490,7 +490,7 @@ void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
         CLAMP_SPEED(gJetpackPlayerVelX);
         gJetpackPlayerVelX /= 2;
     } else {
-        PlaySfx(gAudioContext, 0x42, 0x100);
+        PlaySfx(gAudioContext, SFX_UNKNOWN_42, 0x100);
     }
 }
 

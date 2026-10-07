@@ -405,7 +405,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* Popup spawner, tag 0x11, built with CreateGroundSprite instead of
  * CreateMovingSprite. Resets the part's animation (tag 0 plus the OAM trio)
- * before attaching it, sets flag bit 4, and plays sound 0x27. */
+ * before attaching it, sets flag bit 4, and plays SFX_SEAL_SPAWN. */
 void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateGroundSprite(arg0, arg1, arg2, arg3);
@@ -429,7 +429,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 5);
-    PlaySfx(gAudioContext, 0x27, 0x100);
+    PlaySfx(gAudioContext, SFX_SEAL_SPAWN, 0x100);
 }
 
 /* Popup spawner, tag 0x10. After registering the part it switches

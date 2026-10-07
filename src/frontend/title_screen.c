@@ -583,7 +583,7 @@ void RunCompanyLogos(u32 *self)
         WaitForVBlank();
         UpdateStarfield(bgObj);
     }
-    PlaySfx(gAudioContext, 0x4b, 0x100);
+    PlaySfx(gAudioContext, SFX_UNIVERSAL_LOGO_IN, 0x100);
     scale = 0x2000;
     SLOT_SYSTEM(self)->fade = -1;
     do {
@@ -601,7 +601,7 @@ void RunCompanyLogos(u32 *self)
         fade = &SLOT_SYSTEM(self)->fade;
         if (*fade != -1) {
             if (*fade == 0x40)
-                PlaySfx(gAudioContext, 0x4c, 0x100);
+                PlaySfx(gAudioContext, SFX_UNIVERSAL_LOGO_OUT, 0x100);
             v = *fade;
             if (v <= 0x40) {
                 s32 a = v >> 2;
@@ -892,7 +892,7 @@ void UpdateVvLogoPieces(u32 *self)
     if (*timer > 0) {
         if (--*timer != 0)
             return;
-        PlaySfx(gAudioContext, 0x50, 0x100);
+        PlaySfx(gAudioContext, SFX_UNKNOWN_50, 0x100);
     }
     if (*timer == 0) {
         s32 allDone = 1;

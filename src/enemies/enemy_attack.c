@@ -116,15 +116,15 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
             if (self->kind == ENEMY_KIND_WOODEN_CRUSHER ||
                 self->kind == ENEMY_KIND_PISTON_CRUSHER) {
                 self->target->solid = 1;
-                PlaySfx(gAudioContext, 0x26, 0x100);
+                PlaySfx(gAudioContext, SFX_CRUSHER_SLAM, 0x100);
             } else if (self->kind == ENEMY_KIND_PENGUIN) {
-                PlaySfx(gAudioContext, 9, 0x100);
+                PlaySfx(gAudioContext, SFX_UNKNOWN_09, 0x100);
             }
         }
         if (self->kind == ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT && self->target->tick == 9 &&
             self->target->timer == 0) {
             SpawnPart(0x17, 4, -0x2d, 2, 0, self->target)->kind = 2;
-            PlaySfx(gAudioContext, 0x1e, 0x100);
+            PlaySfx(gAudioContext, SFX_FLAMETHROWER, 0x100);
         }
         break;
     case 5:
@@ -135,7 +135,7 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
             SetEnemyMotionX(self, 1);
         }
         if (self->kind == ENEMY_KIND_PENGUIN && self->target->tick == 8 && self->target->timer == 0)
-            PlaySfx(gAudioContext, 0x23, 0x100);
+            PlaySfx(gAudioContext, SFX_UNKNOWN_23, 0x100);
         break;
     }
 }

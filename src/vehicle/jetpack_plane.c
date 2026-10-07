@@ -226,7 +226,7 @@ void DamageJetpackPlane(struct jetpack_plane *self, s32 damage)
         idx = 4;
     }
     ACTOR_SET_STATE(&self->base, 2, idx);
-    PlaySfx(gAudioContext, 0x25, 0x100);
+    PlaySfx(gAudioContext, SFX_JETPACK_PLANE_DOWN, 0x100);
 }
 
 /* Constructor: 4 hit points; a spawn whose first target needs a fast

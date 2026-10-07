@@ -52,7 +52,7 @@ void FinishJetpackRun(void *selfArg)
             *(u8 *)&self->animDone = zero2;
         }
         self->animTime = zero;
-        PlaySfx(gAudioContext, 0x3b, 0x100);
+        PlaySfx(gAudioContext, SFX_JETPACK_RUN_FINISH, 0x100);
         if (gLevelState->timeTrial != 0) {
             FreezeLevelClock(gLevelState, 0x2710);
         }

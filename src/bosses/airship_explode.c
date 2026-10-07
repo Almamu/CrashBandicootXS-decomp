@@ -91,7 +91,7 @@ void AirshipStateExplode(void)
     } else if (gAirshipStateTimer == 0xaa) {
         ResumeActorSpawns();
         BossSetState(5, 1);
-        PlaySfx(gAudioContext, 0x42, 0x100);
+        PlaySfx(gAudioContext, SFX_UNKNOWN_42, 0x100);
         gAirshipVelZ = 0x9d;
         if (gLevelState->timeTrial == 0 && gAirshipCheckpointCount <= 1) {
             struct actor_self **pl = &gActorList;

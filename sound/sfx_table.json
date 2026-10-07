@@ -46,7 +46,9 @@
   {
    "slot_id": 11,
    "pitch_offset": -100,
-   "volume": 200
+   "volume": 200,
+   "name": "WUMPA_HIT",
+   "comment": "a wumpa hit by an attack, with SFX_WUMPA at half volume (CheckWumpaPickup)"
   },
   {
    "slot_id": 16,
@@ -65,7 +67,9 @@
   {
    "slot_id": 21,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_09",
+   "comment": "the underwater spin (StartPlayerCtrlSpin); a penguin starts its attack (UpdateEnemyAttackCycle)"
   },
   {
    "slot_id": 22,
@@ -124,12 +128,16 @@
   {
    "slot_id": 4,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "SAUCER_ATTACK",
+   "comment": "the saucer lab assistant's attack (UpdateEnemyCtrl state 18)"
   },
   {
    "slot_id": 5,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_13",
+   "comment": "the vulture (UpdateEnemyCtrl state 17, as its animation restarts); Tiny's falling hazard (SpawnTinyFallingLeaves)"
   },
   {
    "slot_id": 7,
@@ -141,7 +149,9 @@
   {
    "slot_id": 8,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "BOSS_HIT",
+   "comment": "Tiny or Dingodile takes a hit (SetTinyState 9, SetDingodileState 11)"
   },
   {
    "slot_id": 12,
@@ -193,12 +203,16 @@
   {
    "slot_id": 41,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_1D",
+   "comment": "cutscene 8's second and third slides (the minimizer's lightning)"
   },
   {
    "slot_id": 29,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "FLAMETHROWER",
+   "comment": "the flamethrower lab assistant fires (UpdateEnemyAttackCycle)"
   },
   {
    "slot_id": 32,
@@ -210,7 +224,9 @@
   {
    "slot_id": 33,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "YETI_CHASE",
+   "comment": "the yeti starts a chase close behind (YetiStateChase); cutscene 8's last slide (the monster)"
   },
   {
    "slot_id": 34,
@@ -227,7 +243,9 @@
   {
    "slot_id": 48,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_23",
+   "comment": "a penguin, 8 ticks into the end of its attack (UpdateEnemyAttackCycle)"
   },
   {
    "slot_id": 49,
@@ -239,17 +257,23 @@
   {
    "slot_id": 51,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "JETPACK_PLANE_DOWN",
+   "comment": "a jetpack plane runs out of hit points (DamageJetpackPlane)"
   },
   {
    "slot_id": 50,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "CRUSHER_SLAM",
+   "comment": "a wooden or piston crusher comes down (UpdateEnemyAttackCycle)"
   },
   {
    "slot_id": 58,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "SEAL_SPAWN",
+   "comment": "SpawnSeal"
   },
   {
    "slot_id": 61,
@@ -261,17 +285,23 @@
   {
    "slot_id": 61,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "DINGODILE_ROCKET",
+   "comment": "Dingodile's rocket (SpawnDingodileShieldOrRocket mode 1)"
   },
   {
    "slot_id": 64,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "TINY_LAND",
+   "comment": "Tiny lands from a hop (UpdateTiny)"
   },
   {
    "slot_id": 44,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "SAUCER_HUM",
+   "comment": "ambient, louder near the player (UpdateEnemyCtrl state 18, the saucer lab assistant)"
   },
   {
    "slot_id": 74,
@@ -283,12 +313,16 @@
   {
    "slot_id": 81,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "JETPACK_ROCKET",
+   "comment": "CreateJetpackRocket"
   },
   {
    "slot_id": 3,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNKNOWN_2E",
+   "comment": "the player dying (ActionCtrlStateDying); a jetpack balloon destroyed (DamageJetpackBalloon)"
   },
   {
    "slot_id": 6,
@@ -305,17 +339,23 @@
   {
    "slot_id": 52,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "CORTEX_SHOT_FAST",
+   "comment": "FireCortexShot's fast shot (kind 1)"
   },
   {
    "slot_id": 18,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "CORTEX_SHOT",
+   "comment": "FireCortexShot's other shot"
   },
   {
    "slot_id": 28,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "ELECTRIC_SHOCK",
+   "comment": "the polar electric fence (ShockPolarPlayer); cutscene 8's first slide"
   },
   {
    "slot_id": 35,
@@ -325,7 +365,9 @@
   {
    "slot_id": 39,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "POLAR_MOUNT",
+   "comment": "landing on the polar bear (PolarPlayerStateMount)"
   },
   {
    "slot_id": 42,
@@ -337,7 +379,9 @@
   {
    "slot_id": 43,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "JETPACK_BOMBER",
+   "comment": "repeated, louder the more bombers are near (UpdateJetpackPlayer)"
   },
   {
    "slot_id": 47,
@@ -349,57 +393,79 @@
   {
    "slot_id": 54,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_39",
+   "comment": "Dingodile's stalactite shatters (UpdateDingodileProjectile); a Tiny hop pad is stomped (UpdateTiny)"
   },
   {
    "slot_id": 55,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "JETPACK_PLAYER_DOWN",
+   "comment": "the jetpack runs out of hit points (DamageJetpackPlayer)"
   },
   {
    "slot_id": 56,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "JETPACK_RUN_FINISH",
+   "comment": "FinishJetpackRun"
   },
   {
    "slot_id": 59,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "POLAR_FINISH_LEAP",
+   "comment": "the leap off the polar bear at the run's end (PolarPlayerStateFinish)"
   },
   {
    "slot_id": 60,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_3D",
+   "comment": "Tiny, landing before his attack (UpdateTiny); a title-logo arrow piece appears (DrawTitleLogoPieces)"
   },
   {
    "slot_id": 69,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "JETPACK_RING",
+   "comment": "flying through a jetpack ring (UpdateJetpackRing)"
   },
   {
    "slot_id": 82,
    "pitch_offset": -100,
-   "volume": 150
+   "volume": 150,
+   "name": "YETI_STOMP_1",
+   "comment": "the yeti's charge, first stomp (YetiStateCharge)"
   },
   {
    "slot_id": 83,
    "pitch_offset": -100,
-   "volume": 150
+   "volume": 150,
+   "name": "YETI_STOMP_2",
+   "comment": "the yeti's charge, second stomp (YetiStateCharge)"
   },
   {
    "slot_id": 84,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "YETI_CATCH",
+   "comment": "the yeti catches the player (CatchPolarPlayer)"
   },
   {
    "slot_id": 85,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNKNOWN_42",
+   "comment": "the jetpack is hit (DamageJetpackPlayer); the airship falls (AirshipStateExplode)"
   },
   {
    "slot_id": 6,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "AIRSHIP_HIT",
+   "comment": "the airship hit but not destroyed (DamageAirship)"
   },
   {
    "slot_id": 87,
@@ -444,42 +510,58 @@
   {
    "slot_id": 82,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNKNOWN_4A",
+   "comment": "a title-logo piece, 10 frames after it appears (DrawTitleLogoPieces)"
   },
   {
    "slot_id": 70,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNIVERSAL_LOGO_IN",
+   "comment": "the Universal logo starts zooming in, once faded in (RunCompanyLogos)"
   },
   {
    "slot_id": 71,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNIVERSAL_LOGO_OUT",
+   "comment": "the Universal logo starts zooming out and fading (RunCompanyLogos)"
   },
   {
    "slot_id": 73,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_4D",
+   "comment": "the Vicarious Visions logo's animated strip appears (DrawVvLogoPieces)"
   },
   {
    "slot_id": 40,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_4E",
+   "comment": "a Vicarious Visions logo piece starts scaling (DrawVvLogoPieces)"
   },
   {
    "slot_id": 59,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_4F",
+   "comment": "the company logos' Crash, at frame 0x12 (UpdateLogoActor)"
   },
   {
    "slot_id": 77,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "UNKNOWN_50",
+   "comment": "the end of the Vicarious Visions logo's countdown (UpdateVvLogoPieces)"
   },
   {
    "slot_id": 77,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "ZOOM_BG_SHOWN",
+   "comment": "the level-select picture has zoomed in (LevelSelectLoop)"
   },
   {
    "slot_id": 80,
@@ -536,47 +618,65 @@
   {
    "slot_id": 72,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNKNOWN_5A",
+   "comment": "an enemy touched in player control mode 1 vanishes (HitEnemy)"
   },
   {
    "slot_id": 26,
    "pitch_offset": 0,
-   "volume": 128
+   "volume": 128,
+   "name": "UNKNOWN_5B",
+   "comment": "cutscene slide: Cortex on the big screens over a crowd"
   },
   {
    "slot_id": 53,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "CORTEX_TARGET_BLINK",
+   "comment": "a Cortex target starts blinking before it fires (UpdateCortexTarget); the minimizer's cutscene slide"
   },
   {
    "slot_id": 57,
    "pitch_offset": 0,
-   "volume": 32
+   "volume": 32,
+   "name": "SPACE_STATION_AMBIENCE",
+   "comment": "looping, quiet: the space-station cutscene slides; PlayIntroCutscene stops it"
   },
   {
    "slot_id": 46,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "MINIMIZER_BEAM",
+   "comment": "cutscene slides: the space station's beam hits the earth"
   },
   {
    "slot_id": 52,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNKNOWN_5F",
+   "comment": "cutscene slides: the earth shrinks; the earth glows, restored"
   },
   {
    "slot_id": 30,
    "pitch_offset": 0,
-   "volume": 96
+   "volume": 96,
+   "name": "UNKNOWN_60",
+   "comment": "cutscene slide: Crash, Coco and Aku Aku"
   },
   {
    "slot_id": 75,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNKNOWN_61",
+   "comment": "cutscene slide: Crash flies at the space station"
   },
   {
    "slot_id": 76,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "UNKNOWN_62",
+   "comment": "cutscene slide: Crash flies round the earth"
   }
  ]
 }
