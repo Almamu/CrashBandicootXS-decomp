@@ -488,6 +488,8 @@ counts them by kind) and what the C++ still needs.
 | `src/objects/platform_contact.cpp` | `Platform::CheckPlayerContact` | 1 | **old_agbcp** (was agbcc) | 4 pins -> 0 | 7d |
 | `src/objects/platform_collide.cpp` | `Platform::ResolveCollision` | 1 | old_agbcp | 2 pins, 2 holds, 2 uses, 1 keep, 1 asm label, gotos -> 1 keep, 1 asm label | 7d |
 | `src/objects/platform_create.cpp` | `Platform::Create` | 1 | old_agbcp | 1 keep, 8 retyped stores, 8 volatiles, the `MOVER_NEW` cast -> 0 | 7d |
+| `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor; `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `nullsub_19` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
+| `src/objects/platform_create.cpp` (again) | `Platform::Create`: `new CortexBossPlatformMover` (the C prototype before) | 0 | old_agbcp | 0 -> 0 | 7i |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1263,6 +1265,72 @@ Kept, each with a comment:
   struct return, `*pb = ...GetAnimHitbox()` goes through a temporary, so
   the box is built through the alias's explicit destination.
 
+Part 7i in numbers: cortex.c, the last file of the entity family and the
+last boss controller file, 25 functions: 23 methods of nine classes and
+two C-linkage functions (`nullsub_19`, which tiny_update.cpp calls, and
+`SpawnCortexBossGem`, which spawn_gems.c calls). Project-wide:
+`MATCH_HOLD_REG` 1457 -> 1404, `MATCH_KEEP` 47 -> 34, instruction-emitting
+`asm` 164 -> 160, retyped field stores 204 -> 202 and scoped volatiles 13
+-> 10. Of the C's 49 pins, 13 keeps, 4 `asm` statements and its five
+per-site macros, one pin is left (below). It was an old_agbcc object and
+matches only under old_agbcp (under agbcp 12 of the 25 functions differ).
+
+- **The classes.** The Neo Cortex fight's shot (`CortexShotCtrl`, 0x18
+  bytes: the fast flag and the boss) and gem (`CortexBossGemCtrl`, 0x14
+  bytes: the gem's colour) and `UnusedOneShotAnimCtrl` are new in
+  boss_ctrl.hpp; `CortexBossCtrl` and `CortexTargetCtrl` gain their
+  methods here (`SpawnCannon`, `SpawnTarget`, `SetState`, `FireShot`);
+  `CortexBossPlatformMover` is a `PlatformMover` in platform.hpp, whose
+  constructor is `PlatformMover(0, 0, false, false, 6)`: the `MOVER_NEW`
+  cast and its volatile stack stores go, and so does include/mover_new.h.
+  `Platform::Create` makes it with `new CortexBossPlatformMover`. The
+  file-local views (`gfx_squares`, `gfx_pair_ctrl`, `gfx_offset_ctrl`,
+  `gfx_mover`, `gfx_hit_ctrl`, `gfx_kind_ctrl`) and bosses.h's `struct
+  gfx_ctrl`/`gfx_vtable` go; the C prototypes take `void *`.
+- **Natural C++.** `VTABLE_CALL2/3` and the `_call_via_r2` attach calls
+  are `SetMode`, `SetTargetAnim` and `Attach`; `new CortexCannonCtrl`,
+  `new CortexTargetCtrl(this)`, `new CortexShotCtrl(boss)`, `new
+  CortexBossGemCtrl(kind)` replace `Create...(OperatorNew(n))`; Tiny's
+  squares table is `new s16[0x101]` and `delete[] squares`; the palette
+  nibble is the `palette` bitfield (the C's `SetFrameNibble` pins and
+  `asm`), the frame clamps an inline `ClampFrame` (the C's `SET_FRAME_R`
+  pins), the gone bit `MarkGone()` (the C's `MARK_GONE` and
+  `ENTITY_SET_GONE_BIT_PINNED`, which has no user left and goes).
+  `UpdateCortexBoss` and `CreateCortexBossPlatformMover`, NAKED under
+  agbcc once, are plain C++.
+- **`Entity::MarkGone`** (entity.hpp) indexes the bitmap
+  (`flags->bits0Copy[word] |= ...`) instead of expanding entity_bits.h's
+  `ENTITY_MARK_GONE`, which forms the word's address from a byte offset.
+  Every object compiles the same either way; the indexed spelling also
+  gives the gem's and the shot's updates the ROM's registers (the `1 <<`
+  shift reuses the gem's `state` register, which then ranks below `this`
+  and `part`).
+- **Small shapes**, each with a comment: `e->SetKind(1)` (the inline)
+  in the shot's gem loop, where a plain store makes reload pick other
+  registers for `part`, held in r8, in the rest of the function;
+  `c->SetPos(part->x, part->y)` in `FireShot` (two loads of `part` rank
+  it above `this`); `SetCortexTargetState`'s height pattern as an inline
+  that switches on a copy of its parameter (the ROM's `== 2` compare on a
+  copy, which the C wrote as a hand-made compare tree with a pin and an
+  `asm` move); `SetTag` with an `s32` tag; a named 1 in
+  `CortexBossPlatformMover::Update`; Tiny's mirror bit set through the
+  byte in two steps; the target's step in locals (`dx` before `steps`,
+  both stores after the second division).
+
+Kept, with a comment: `CortexTargetCtrl::Update`'s pin of `n` (the step
+count) to r5. The ROM has `n` in r5, `part` in r6 and `this` in r7;
+unpinned, global allocation ranks `this` (45 refs) first and gives it r6.
+No spelling tried (an inline for the step, the blink flag through a
+pointer, the step's locals, ...) changed that. The C pinned `part` and
+`n` and needed 11 more pins and an `asm` move in case 5; with `n` pinned,
+the C++ needs none of them. `UpdateCortexBoss` keeps the C's `goto` from
+state 0 into state 2's `SetState(part, 1)`.
+
+The entity family (part 7) is done but for step 7b' (the controllers'
+`SpriteObj *` parameters). The boss controllers are all C++; the player,
+the level select's sprites and the effect parts' spawner are the classes
+built on the family that are still C.
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -1283,17 +1351,14 @@ Bigger controllers, roughly in order (function counts from
    `_hang.c`, `_run_jump.c`, `_states.c`), and action_obj.h's vcall
    macros went with them. Its last method, `Reset` (`ResetActionCtrl`,
    wumpa.cpp), was converted with the pickups in part 7h.
-4. **The boss controllers:** ~~`tiny_update.c`, `mega_mix_update.c`~~
-   (done in part 6) and ~~`dingodile*.c`~~ (part 6b). Left: `cortex.c`
-   (25 functions, 64 lines with pins or asm; it also has
-   `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and
-   destructors, Tiny's constructor, destructor and `StartHop`, the
-   Cortex target's and boss controller's other methods, and the Cortex
-   shot class). cortex.c mixes controllers and entities: it is part 7i
-   below.
-5. **The entity family** (part 7, below), with the platform mover
+4. ~~**The boss controllers**~~: `tiny_update.c` and `mega_mix_update.c`
+   in part 6, `dingodile*.c` in part 6b, and `cortex.c` (the rest of the
+   Neo Cortex fight, Tiny's constructor, destructor and `StartHop`, the
+   one-shot animation controllers' constructors and destructors) in part
+   7i.
+5. ~~**The entity family**~~ (part 7, below), with the platform mover
    (`PlatformMover`, gPlatformMoverVtable: a 0x38-byte `Ctrl`; include/platform.hpp)
-   done in 7d.
+   done in 7d. Only step 7b' is left.
 
 #### The entity family (part 7)
 
@@ -1313,7 +1378,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7f~~ | ~~crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old)~~ | `CrateList` (include/crate_list.hpp), the crate grid | done | |
 | ~~7g~~ | ~~crates/crate_break.c (old)~~ | the crates' break and bounce paths | done | |
 | ~~7h~~ | ~~pickups/extra_life.c, wumpa.c, wumpa_update.c~~ | `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl::Reset`; `struct act` went | done | |
-| 7i | bosses/cortex.c (old) | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | 25 functions, 1000 lines, 49 pins, 4 asm | 7d |
+| ~~7i~~ | ~~bosses/cortex.c (old)~~ | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | done | 7d |
 
 Outside this family, the classes built on these: the player (`struct
 player`, a `GroundSprite`; player*.c), the level select's camera lead and
@@ -1576,3 +1641,17 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **A `goto` into another branch's tail** can cost registers the plain
   duplicate doesn't: `ResolveCollision`'s two `goto set_hdir`s needed two
   holds and a pin, `result = hdir;` in place needs nothing (part 7d).
+- **When only the registers differ, try the same code through an inline.**
+  An inline call's arguments and an inline's body are different RTL from
+  the same statement written in place, even where the final code is the
+  same, and that can move global allocation's ranking or reload's
+  round-robin of reload registers. In part 7i, `c->SetPos(part->x,
+  part->y)` for a block copy of the position, `e->SetKind(1)` for
+  `e->kind = 1`, and `Entity::MarkGone` with the bitmap indexed instead of
+  addressed by byte offset each fixed a function whose only difference was
+  a permutation of registers. A script that builds every combination of a
+  few such spellings (variants of one function, compared with the ROM's)
+  finds these faster than reasoning from the `.greg` dump.
+- **A switch on a copy:** where the ROM runs the last compare of a
+  switch's tree on a copy of the index in another register, switch on a
+  local copy of an inline function's parameter (`StepHeight`, part 7i).

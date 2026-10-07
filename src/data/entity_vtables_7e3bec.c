@@ -396,7 +396,8 @@ const struct vtable_slot gStompedHopPadVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by cortex.c (CreateOneShotAnimCtrl, DestroyOneShotAnimCtrl). */
+/* Used by cortex.cpp (OneShotAnimCtrl, include/ctrl.hpp) and
+ * tiny_hop_pad.cpp. */
 const struct vtable_slot gOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateOneShotAnimCtrl),
@@ -413,7 +414,7 @@ const struct vtable_slot gOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by cortex.c (CreateUnusedOneShotAnimCtrl, DestroyUnusedOneShotAnimCtrl). */
+/* Used by cortex.cpp (UnusedOneShotAnimCtrl, include/boss_ctrl.hpp). */
 const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateUnusedOneShotAnimCtrl),
@@ -430,8 +431,7 @@ const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by tiny_update.cpp (TinyCtrl, include/boss_ctrl.hpp), cortex.c
- * (DestroyTiny, CreateTiny). */
+/* Used by tiny_update.cpp and cortex.cpp (TinyCtrl, include/boss_ctrl.hpp). */
 const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateTiny),
@@ -448,7 +448,7 @@ const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by cortex.c (DestroyCortexBossGemCtrl, CreateCortexBossGemCtrl). */
+/* Used by cortex.cpp (CortexBossGemCtrl, include/boss_ctrl.hpp). */
 const struct vtable_slot gCortexBossGemVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBossGem),
@@ -465,7 +465,7 @@ const struct vtable_slot gCortexBossGemVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by cortex.c (DestroyCortexBossPlatformMover, CreateCortexBossPlatformMover). */
+/* Used by cortex.cpp (CortexBossPlatformMover, include/platform.hpp). */
 const struct vtable_slot gCortexBossPlatformMoverVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBossPlatformMover),
@@ -482,7 +482,7 @@ const struct vtable_slot gCortexBossPlatformMoverVtable[13] = {
     VTABLE_SLOT(StartPlatformMoverMotionYFromSet),
 };
 
-/* Used by cortex.c (DestroyCortexShotCtrl, CreateCortexShotCtrl). */
+/* Used by cortex.cpp (CortexShotCtrl, include/boss_ctrl.hpp). */
 const struct vtable_slot gCortexShotVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexShot),
@@ -499,7 +499,7 @@ const struct vtable_slot gCortexShotVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.cpp (DestroyCortexTargetCtrl). */
+/* Used by dingodile.cpp and cortex.cpp (CortexTargetCtrl). */
 const struct vtable_slot gCortexTargetVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexTarget),
@@ -533,7 +533,7 @@ const struct vtable_slot gCortexCannonVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by dingodile.cpp (DestroyCortexBoss). */
+/* Used by dingodile.cpp and cortex.cpp (CortexBossCtrl). */
 const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBoss),

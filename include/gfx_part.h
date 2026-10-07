@@ -62,10 +62,6 @@ struct gfx_part {
     s32 prevY; // 0x70
 };
 
-/* The whole flags byte at +0x0C, for the spots that update it as one
- * byte through register pins (see UpdateUnusedOneShotAnimCtrl). */
-#define PART_FLAGS(p) (*((u8 *)(p) + 0xC))
-
 /* Bit `7 - (shift - 24)` of the flags byte at +0x28 (the OBJ mode, mirror
  * and 8bpp bits), tested as a sign test (`lsl #shift; cmp #0; bge`), as
  * the sprite piece loops do; a 1-bit field test compiles to `movs #0x20;

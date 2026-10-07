@@ -271,7 +271,7 @@ UpdateFacing__10ActionCtrl UpdatePlayerFacing
 # part 6: the boss controllers (include/boss_ctrl.hpp): MegaMixCtrl's
 # Update (src/bosses/mega_mix_update.cpp) and TinyCtrl
 # (src/bosses/tiny_update.cpp; its constructor, destructor and StartHop
-# are still C, in cortex.c)
+# are in cortex.cpp, part 7i)
 Update__11MegaMixCtrlP9SpriteObj UpdateMegaMix
 _vt.8TinyCtrl gTinyVtable
 __8TinyCtrl CreateTiny
@@ -746,3 +746,31 @@ MovePlayer__13PlatformMoverP9SpriteObj MovePlayerWithPlatform
 SetTargetMotionYFromSet__13PlatformMoverP9SpriteObji SetPlatformMoverMotionYFromSet
 SetTargetMotionXFromSet__13PlatformMoverP9SpriteObji SetPlatformMoverMotionXFromSet
 ClearActive__13PlatformMover ClearPlatformMoverActive
+#
+# part 7i: the rest of the Neo Cortex fight, Tiny's constructor,
+# destructor and StartHop, and the one-shot animation controllers
+# (include/boss_ctrl.hpp, include/platform.hpp, src/bosses/cortex.cpp)
+_vt.15OneShotAnimCtrl gOneShotAnimCtrlVtable
+_._15OneShotAnimCtrl DestroyOneShotAnimCtrl
+_vt.21UnusedOneShotAnimCtrl gUnusedOneShotAnimCtrlVtable
+__21UnusedOneShotAnimCtrl CreateUnusedOneShotAnimCtrl
+_._21UnusedOneShotAnimCtrl DestroyUnusedOneShotAnimCtrl
+Update__21UnusedOneShotAnimCtrlP9SpriteObj UpdateUnusedOneShotAnimCtrl
+Update__14CortexBossCtrlP9SpriteObj UpdateCortexBoss
+SpawnCannon__14CortexBossCtrlP9SpriteObj SpawnCortexCannon
+SpawnTarget__14CortexBossCtrlP9SpriteObj SpawnCortexTarget
+Update__16CortexTargetCtrlP9SpriteObj UpdateCortexTarget
+SetState__16CortexTargetCtrlP9SpriteObji SetCortexTargetState
+FireShot__16CortexTargetCtrlP9SpriteObji FireCortexShot
+_vt.14CortexShotCtrl gCortexShotVtable
+__14CortexShotCtrlP14CortexBossCtrl CreateCortexShotCtrl
+_._14CortexShotCtrl DestroyCortexShotCtrl
+Update__14CortexShotCtrlP9SpriteObj UpdateCortexShot
+_vt.17CortexBossGemCtrl gCortexBossGemVtable
+__17CortexBossGemCtrli CreateCortexBossGemCtrl
+_._17CortexBossGemCtrl DestroyCortexBossGemCtrl
+Update__17CortexBossGemCtrlP9SpriteObj UpdateCortexBossGem
+_vt.23CortexBossPlatformMover gCortexBossPlatformMoverVtable
+__23CortexBossPlatformMover CreateCortexBossPlatformMover
+_._23CortexBossPlatformMover DestroyCortexBossPlatformMover
+Update__23CortexBossPlatformMoverP9SpriteObj UpdateCortexBossPlatformMover

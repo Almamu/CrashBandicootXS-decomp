@@ -19,7 +19,7 @@ inline Platform::Platform()
  * type is the record's, or forced by the spawn kind; a moving one (type
  * 1) gets a PlatformMover over the record's distances, and types 5, 6 and
  * 7 one of their own kind (the Neo Cortex fight's type 6 the fight's own,
- * CreateCortexBossPlatformMover). The bonus platform (3) takes its exit
+ * CortexBossPlatformMover, src/bosses/cortex.cpp). The bonus platform (3) takes its exit
  * facing from the record. The platform goes into the touchable list, with
  * animation `kind` of sprite bank 0x1D4. */
 Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
@@ -93,8 +93,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         if (GetBossIndex(gLevelState) != BOSS_NEO_CORTEX)
             m = new PlatformMover(0, 0, false, false, 6);
         else
-            m = (PlatformMover *)CreateCortexBossPlatformMover(
-                (struct gfx_ctrl *)operator new(sizeof(PlatformMover)));
+            m = new CortexBossPlatformMover;
         obj->mover = m;
         m->Attach((SpriteObj *)obj);
         break;

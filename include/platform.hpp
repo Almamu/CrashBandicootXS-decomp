@@ -2,9 +2,10 @@
 #define GUARD_PLATFORM_HPP
 
 /* The platforms as C++ (#664, docs/cplusplus.md, part 7d): the classes
- * behind gPlatformVtable and gPlatformMoverVtable (src/objects/platform*.cpp).
+ * behind gPlatformVtable and gPlatformMoverVtable (src/objects/platform*.cpp),
+ * and the Neo Cortex fight's mover subclass (part 7i, src/bosses/cortex.cpp).
  * gobj_1a794.h's `struct gobj` and `struct mover` are their C views, for
- * the files that are still C (the level spawners, cortex.c, the player).
+ * the files that are still C (the level spawners, the player).
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp); cxx_symbols.txt
  * maps the mangled names onto the C names. */
@@ -55,8 +56,8 @@ COMPILE_TIME_ASSERT(platform_hpp, sizeof(Platform) == sizeof(struct gobj));
  * motion records of gPlatformMoverMotionRecords, and carries the player
  * while it is `active` (the player stands on the platform). `kind` is the
  * platform's type (5, 6 and 7 add timed behaviour, see Update). The Neo
- * Cortex fight's platforms have a subclass (cortex.c,
- * gCortexBossPlatformMoverVtable). */
+ * Cortex fight's platforms have a subclass (CortexBossPlatformMover,
+ * below). */
 class PlatformMover : public Ctrl
 {
 public:
@@ -87,5 +88,20 @@ public:
 };
 
 COMPILE_TIME_ASSERT(platform_hpp, sizeof(PlatformMover) == sizeof(struct mover));
+
+/* The Neo Cortex fight's platforms' controller
+ * (gCortexBossPlatformMoverVtable; src/bosses/cortex.cpp): a still type-6
+ * PlatformMover whose Update runs the platform's animation to frame 0x1A,
+ * or to frame 10 while the target has set the platform's `kind` (its
+ * state 5, CortexTargetCtrl::SetPlatformsKind). */
+class CortexBossPlatformMover : public PlatformMover
+{
+public:
+    CortexBossPlatformMover(); // CreateCortexBossPlatformMover
+    virtual void Update(SpriteObj *part);
+    virtual ~CortexBossPlatformMover(); // DestroyCortexBossPlatformMover
+};
+
+COMPILE_TIME_ASSERT(platform_hpp, sizeof(CortexBossPlatformMover) == sizeof(struct mover));
 
 #endif /* !GUARD_PLATFORM_HPP */

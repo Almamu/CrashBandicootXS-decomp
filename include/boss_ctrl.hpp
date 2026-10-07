@@ -59,13 +59,12 @@ public:
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == sizeof(struct mega_mix_ctrl));
 
-/* The Tiny boss's controller (gTinyVtable; src/bosses/tiny_update.cpp).
+/* The Tiny boss's controller (gTinyVtable; src/bosses/tiny_update.cpp,
+ * and its constructor, destructor and StartHop in src/bosses/cortex.cpp).
  * Tiny hops his part along parabolic arcs between gTouchableList's
  * anchors (the hop pads), stomping them: Update steps the hop and the
  * state machine, SetState enters a state. `counter` is the round (1-3,
- * the hits taken). Its constructor and destructor are still C, in
- * src/bosses/cortex.c (CreateTiny, DestroyTiny), as is StartHop
- * (StartTinyHop). spawn_bosses.c creates it in a 0x4C-byte block. */
+ * the hits taken). spawn_bosses.c creates it in a 0x4C-byte block. */
 class TinyCtrl : public BossCtrl
 {
 public:
@@ -93,21 +92,23 @@ public:
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 
-/* The Neo Cortex fight's controller (gCortexBossVtable; its Update,
- * UpdateCortexBoss, is still C in src/bosses/cortex.c, the rest is in
+/* The Neo Cortex fight's controller (gCortexBossVtable; Update and the
+ * two spawners are in src/bosses/cortex.cpp, the rest is in
  * src/bosses/dingodile.cpp). `counter` is the round. It spawns the
  * cannon and the target (crosshair) parts. spawn_bosses.c creates it in
  * a 0x24-byte block. */
 class CortexBossCtrl : public BossCtrl
 {
 public:
-    SpriteObj *cannon; // 0x1C - SpawnCortexCannon's part
-    SpriteObj *target; // 0x20 - SpawnCortexTarget's part
+    SpriteObj *cannon; // 0x1C - SpawnCannon's part
+    SpriteObj *target; // 0x20 - SpawnTarget's part
 
     CortexBossCtrl(); // CreateCortexBoss
     virtual void Update(SpriteObj *part);
     virtual ~CortexBossCtrl(); // DestroyCortexBoss
     void SetState(SpriteObj *part, s32 next);
+    void SpawnCannon(SpriteObj *part); // SpawnCortexCannon
+    void SpawnTarget(SpriteObj *part); // SpawnCortexTarget
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
@@ -126,11 +127,9 @@ public:
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == sizeof(struct ctrl));
 
 /* The Neo Cortex fight's target, the crosshair that hops between the
- * player and the platforms (gCortexTargetVtable, 0x40 bytes). Its Update
- * and the rest of its methods are still C, in src/bosses/cortex.c
- * (UpdateCortexTarget, SetCortexTargetState, FireCortexShot); the
- * constructor, destructor, SetDest and SetPlatformsKind are in
- * src/bosses/dingodile.cpp. */
+ * player and the platforms (gCortexTargetVtable, 0x40 bytes). Update,
+ * SetState and FireShot are in src/bosses/cortex.cpp; the constructor,
+ * destructor, SetDest and SetPlatformsKind in src/bosses/dingodile.cpp. */
 class CortexTargetCtrl : public Ctrl
 {
 public:
@@ -156,9 +155,55 @@ public:
     virtual ~CortexTargetCtrl(); // DestroyCortexTargetCtrl
     void SetPlatformsKind(u8 flag);
     void SetDest(SpriteObj *part, s32 x, s32 y);
+    void SetState(SpriteObj *part, s32 next); // SetCortexTargetState
+    void FireShot(SpriteObj *part, s32 kind); // FireCortexShot
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
+
+/* The target's shot (gCortexShotVtable, 0x18 bytes; src/bosses/cortex.cpp):
+ * a slow one (kind 0) hurts the player, a fast one (1) also shrinks the
+ * Neo Cortex gems it hits (CortexBossGemCtrl) and tells the boss. */
+class CortexShotCtrl : public Ctrl
+{
+public:
+    u8 fast; // 0x10 - kind 1 (FireShot)
+    u8 unk_11[3];
+    CortexBossCtrl *boss; // 0x14
+
+    CortexShotCtrl(CortexBossCtrl *boss); // CreateCortexShotCtrl
+    virtual void Update(SpriteObj *part);
+    virtual ~CortexShotCtrl(); // DestroyCortexShotCtrl
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexShotCtrl) == 0x18);
+
+/* A gem of the Neo Cortex fight (gCortexBossGemVtable, 0x14 bytes;
+ * src/bosses/cortex.cpp, SpawnCortexBossGem): once a fast shot hits it
+ * (the part's `kind` 1), it plays its shrink animation and goes. */
+class CortexBossGemCtrl : public Ctrl
+{
+public:
+    s32 kind; // 0x10 - 0 red, 1 green, 2 yellow
+
+    CortexBossGemCtrl(s32 kind); // CreateCortexBossGemCtrl
+    virtual void Update(SpriteObj *part);
+    virtual ~CortexBossGemCtrl(); // DestroyCortexBossGemCtrl
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossGemCtrl) == 0x14);
+
+/* gUnusedOneShotAnimCtrlVtable's class (src/bosses/cortex.cpp): does what
+ * OneShotAnimCtrl does. Its constructor has no caller (UNUSED). */
+class UnusedOneShotAnimCtrl : public Ctrl
+{
+public:
+    UnusedOneShotAnimCtrl(); // CreateUnusedOneShotAnimCtrl
+    virtual void Update(SpriteObj *part);
+    virtual ~UnusedOneShotAnimCtrl(); // DestroyUnusedOneShotAnimCtrl
+};
+
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == sizeof(struct ctrl));
 
 /* Dingodile (gDingodileVtable, src/bosses/dingodile.cpp and
  * dingodile_create.cpp): he walks the level, stopping at the approach

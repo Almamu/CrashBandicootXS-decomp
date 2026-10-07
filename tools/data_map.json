@@ -1965,7 +1965,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1986,7 +1986,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2007,7 +2007,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7676,7 +7676,7 @@
     "DestroyOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7701,7 +7701,7 @@
     "DestroyUnusedOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7726,7 +7726,7 @@
     "CreateTiny"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7751,7 +7751,7 @@
     "CreateCortexBossGemCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7776,7 +7776,7 @@
     "CreateCortexBossPlatformMover"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7801,7 +7801,7 @@
     "CreateCortexShotCtrl"
    ],
    "consumer_files": [
-    "bosses/cortex.c"
+    "bosses/cortex.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

@@ -87,8 +87,8 @@ COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == sizeof(struct ctrl));
 
 /* A controller that marks its sprite object gone once the animation has
  * played through (gOneShotAnimCtrlVtable). Its Update is in
- * src/bosses/tiny_hop_pad.cpp; its constructor and destructor are still
- * C, in src/bosses/cortex.c (CreateOneShotAnimCtrl, DestroyOneShotAnimCtrl). */
+ * src/bosses/tiny_hop_pad.cpp, its constructor and destructor in
+ * src/bosses/cortex.cpp. */
 class OneShotAnimCtrl : public Ctrl
 {
 public:

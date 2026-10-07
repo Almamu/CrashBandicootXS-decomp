@@ -359,10 +359,10 @@ gcc picks. An initialiser follows the macro as it would the declarator:
   result out of `prev`'s register.
 
 A macro whose pins differ per call site takes the registers as
-parameters and passes them on to `MATCH_HOLD_REG` as bare names:
-`src/bosses/cortex.c`'s `SET_FRAME_R(part, 1, r3, r4)` and `MARK_GONE`,
-and `include/entity_bits.h`'s `ENTITY_SET_GONE_BIT_PINNED(t, r2, r4)`
-(#667). A macro argument is expanded before it is substituted, so
+parameters and passes them on to `MATCH_HOLD_REG` as bare names, as
+`src/bosses/cortex.c`'s `SET_FRAME_R(part, 1, r3, r4)` and `MARK_GONE`
+and `include/entity_bits.h`'s `ENTITY_SET_GONE_BIT_PINNED(t, r2, r4)` did
+(#667; they went when cortex.c became C++, #664 part 7i). A macro argument is expanded before it is substituted, so
 `MATCH_HOLD_REG`'s `#reg` sees `r4`, not the parameter's name. No pin is
 written out as `register T x asm(R)` any more; `tools/match_idioms.py
 --kind pin` would list one.

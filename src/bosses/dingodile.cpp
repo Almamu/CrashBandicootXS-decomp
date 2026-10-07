@@ -19,9 +19,9 @@ extern "C" {
  *
  * The small boss controllers of include/boss_ctrl.hpp, in ROM order:
  * the Neo Cortex fight's target (CortexTargetCtrl: SetPlatformsKind,
- * SetDest, destructor, constructor; the rest is in cortex.c), cannon
+ * SetDest, destructor, constructor; the rest is in cortex.cpp), cannon
  * (CortexCannonCtrl) and boss controller (CortexBossCtrl: SetState,
- * destructor, constructor; Update is in cortex.c), then Dingodile
+ * destructor, constructor; Update is in cortex.cpp), then Dingodile
  * (DingodileCtrl), his shield (DingodileShieldCtrl), rocket and
  * stalactite (DingodileProjectileCtrl) and shark (DingodileSharkCtrl).
  *
@@ -124,7 +124,7 @@ CortexTargetCtrl::CortexTargetCtrl(CortexBossCtrl *boss)
 }
 
 /* The same shape as CortexBossCtrl::SetState below (and
- * SetCortexTargetState, cortex.c) without any state of its own. */
+ * SetCortexTargetState, cortex.cpp) without any state of its own. */
 void CortexCannonCtrl::SetState(SpriteObj *, s32 next)
 {
     SetMode(next);

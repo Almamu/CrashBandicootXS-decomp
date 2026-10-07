@@ -16,7 +16,7 @@ extern "C" {
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
  * docs/matching/archive/issue-22-0x08018008-hopper.md). Built with
- * old_agbcp (Makefile OLD_AGBCC_OBJS), like cortex.c right after it.
+ * old_agbcp (Makefile OLD_AGBCC_OBJS), like cortex.cpp right after it.
  *
  * TinyCtrl's (include/boss_ctrl.hpp, gTinyVtable) per-frame Update and
  * "enter state" SetState: Tiny hops his `part` along parabolic arcs (the

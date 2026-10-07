@@ -36,7 +36,7 @@ const u8 gCortexTargetHopSteps[4] = {
     0x10, 0xE, 0xA, 0x20,
 };
 
-/* UpdateCortexTarget (cortex.c), per config index, while the
+/* UpdateCortexTarget (cortex.cpp), per config index, while the
  * crosshair chases the player (state 5): the glide step count, and the
  * countdown values at which it starts blinking (with SFX_CORTEX_TARGET_BLINK) and stops
  * blinking on frame 1, before it fires. */
