@@ -6,9 +6,9 @@
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
- * already tracked in part_list.c-ctrl.cpp (see
+ * already tracked in part_list.cpp-ctrl.cpp (see
  * docs/matching/archive/issue-9-0x08007634-actor.md). `UpdateGroundSprite`/
- * `AnchorGroundSpriteHitbox` sit between part_list.c's raw tail (still-raw
+ * `AnchorGroundSpriteHitbox` sit between part_list.cpp's raw tail (still-raw
  * CollideGroundSprite/ProbeGroundSpriteTerrain/ProbeGroundSpriteFloor) and the already-matched
  * ground_sprite.c (DrawGroundSprite onward). */
 

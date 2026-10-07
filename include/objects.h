@@ -6,7 +6,7 @@
  * controllers), their animation, the part lists and the collision queue.
  * Every function src/objects/ defines, with the prototype of its
  * definition, and the globals and tables its files use
- * (docs/headers_plan.md). InitCrateList (part_list.c) is in crates.h. A
+ * (docs/headers_plan.md). InitCrateList (part_list.cpp) is in crates.h. A
  * .c file that needs a different local declaration for codegen keeps it
  * as an asm-label alias with a `codegen:` comment.
  *
@@ -31,7 +31,7 @@ struct hitbox_quad;
 struct mover;
 struct sprite_point;
 
-/* A position pair: a collision candidate's (src/objects/collision_queue.c),
+/* A position pair: a collision candidate's (src/objects/collision_queue.cpp),
  * which ApplyCrateCollision takes by value. Copied as one 8-byte struct
  * (the ROM's paired `ldr; ldr; str; str`). */
 struct e08c_pos {
@@ -43,7 +43,7 @@ struct e08c_pos {
  * One queued collision of the player with a crate, 0x24 bytes:
  * AddCollisionCandidate (QueueCratePlayerCollision) appends it, and
  * ResolveCollisionCandidates hands it to ApplyCrateCollision, whose
- * parameter names the fields take. The two views of collision_queue.c,
+ * parameter names the fields take. The two views of collision_queue.cpp,
  * `struct candidate` and `struct collision_candidate`, were merged here
  * (`unk_10`..`unk_1C`/`field10`..`field1c` are `code`/`edge`/`depth`/`hit`,
  * `unk_20`/`field20` and `unk_21`/`field21` are `p20`/`p21`; #574,
@@ -66,9 +66,10 @@ struct collision_candidate {
  * The player's collision queue (`struct player.collisionQueue`, +0x108):
  * the crate collisions found during the frame, resolved once a frame by
  * ResolvePlayerCollisions. The player object is 0x350 bytes, so the queue
- * holds 16 candidates. collision_queue.c's `struct candidate_list` and
+ * holds 16 candidates. collision_queue.cpp's `struct candidate_list` and
  * `struct collision_queue` and player_event.c's `struct ab9c_link` (the
- * head) were views of it (#574, batch 9e).
+ * head) were views of it (#574, batch 9e). It is the C view of
+ * CollisionQueue (include/part_list.hpp), which checks the size.
  */
 struct collision_queue {
     s32 count; // 0x00
@@ -134,7 +135,7 @@ struct speed_ramp {
     s32 target;
 };
 
-/* src/objects/collision_queue.c */
+/* src/objects/collision_queue.cpp */
 extern void ResolveCollisionCandidates(struct collision_queue *self);
 extern void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind,
                                   s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
@@ -227,11 +228,11 @@ extern void StartSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c);
 extern void SetSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c);
 extern u8 GetGroundSpriteProbeTries(struct gobj *self);
 
-/* src/objects/part_collide.c */
+/* src/objects/part_collide.cpp */
 extern void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part,
                                   struct box_part *other);
 
-/* src/objects/part_list.c */
+/* src/objects/part_list.cpp */
 extern void DrawPartList(struct part_list *manager);
 extern void RemoveFromPartList(struct part_list *manager, void *target);
 extern void RemovePartListAt(struct part_list *manager, s32 index);
@@ -239,7 +240,7 @@ extern void AddToPartList(struct part_list *manager, void *value);
 extern void DestroyPartList(struct part_list *manager, s32 flags);
 extern struct part_list *InitPartList(struct part_list *manager, s32 count);
 
-/* src/objects/part_list_cull.c */
+/* src/objects/part_list_cull.cpp */
 extern void CullPartList(struct part_list *manager);
 extern void ClearPartList(struct part_list *manager);
 extern void CollidePartsOfClass(struct part_list *manager, s32 classId);

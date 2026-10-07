@@ -366,7 +366,7 @@ void SendExtraLifeToHud(struct orbit_part *self)
  * `self` here is a further, still-unnamed "part"-shaped object -
  * distinct from `struct actor` (only 0x1c bytes) and from the
  * `struct collision_queue` `AddCollisionCandidate`/`DestroyCollisionQueue`/`ResetCollisionQueue`
- * (collision_queue.c) operate on - the same "big, mostly-uncharacterized
+ * (collision_queue.cpp) operate on - the same "big, mostly-uncharacterized
  * object, individual fields named only by offset" situation already
  * documented for this object family in `src/player/player_update.c`'s
  * own file header. The fields these functions use are named in `struct

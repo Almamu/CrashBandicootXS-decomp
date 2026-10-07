@@ -8234,7 +8234,7 @@
     "InitHudPart"
    ],
    "consumer_files": [
-    "gfx/palette_cycle.c"
+    "gfx/palette_cycle.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

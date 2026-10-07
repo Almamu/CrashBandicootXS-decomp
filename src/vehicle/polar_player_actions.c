@@ -21,7 +21,7 @@
  * same convention action_ctrl_states.c documents at `animTimer` for its own
  * object), plus a `+0x50`-rooted `{s16 offset; void *fn}` trampoline
  * record fed through `_call_via_r2`/`_call_via_r3` (the same convention
- * already named in part_list_cull.c/part_list.c for a sibling "part"
+ * already named in part_list_cull.cpp/part_list.cpp for a sibling "part"
  * object, just at a different fixed offset here) and a `+0x48`/`+0x4c`
  * circular doubly-linked-list pair (confirmed by `DestroyPolarPlayer`'s own
  * unlink sequence below) rooted at the player-pointer global
