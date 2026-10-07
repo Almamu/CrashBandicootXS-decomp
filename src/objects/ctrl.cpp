@@ -16,7 +16,7 @@ extern "C" {
  * starts the Y record it names (virtual: a subclass can override
  * StartTargetMotionY). The record is computed before the call: a virtual
  * call evaluates `this` and the slot first, the arguments after. */
-void Ctrl::StartTargetMotionYFromSet(SpriteObj *part, s32 index)
+void Ctrl::StartTargetMotionYFromSet(MovingSprite *part, s32 index)
 {
     const speed_ramp *rec = &gCtrlMotionRecords[animSet->entries[index][1]];
 
@@ -26,7 +26,7 @@ void Ctrl::StartTargetMotionYFromSet(SpriteObj *part, s32 index)
 /* Scales `vec` by the entry set's `scale` and writes it into `part`'s X
  * speed ramp (`rampX`: start, step, target), negating the start and the
  * target when `part` is X-mirrored (`mirror` bit 4). */
-void Ctrl::SetTargetMotionX(SpriteObj *part, const s32 *vec)
+void Ctrl::SetTargetMotionX(MovingSprite *part, const s32 *vec)
 {
     if ((s32)(part->mirror << 27) < 0) {
         s32 x = -FixedMul(vec[0], animSet->scale);
@@ -50,7 +50,7 @@ void Ctrl::SetTargetMotionX(SpriteObj *part, const s32 *vec)
 /* Same scaled ramp write as SetTargetMotionX, also loading the (possibly
  * negated) start into `speedX`: the scaled-copy counterpart of
  * StartTargetMotionY's plain-copy `speedY` load. */
-void Ctrl::StartTargetMotionX(SpriteObj *part, const s32 *vec)
+void Ctrl::StartTargetMotionX(MovingSprite *part, const s32 *vec)
 {
     if ((s32)(part->mirror << 27) < 0) {
         s32 x = -FixedMul(vec[0], animSet->scale);
@@ -75,7 +75,7 @@ void Ctrl::StartTargetMotionX(SpriteObj *part, const s32 *vec)
 
 /* Same as StartTargetMotionYFromSet, with the pair's X record and
  * StartTargetMotionX. */
-void Ctrl::StartTargetMotionXFromSet(SpriteObj *part, s32 index)
+void Ctrl::StartTargetMotionXFromSet(MovingSprite *part, s32 index)
 {
     const speed_ramp *rec = &gCtrlMotionRecords[animSet->entries[index][0]];
 
@@ -84,7 +84,7 @@ void Ctrl::StartTargetMotionXFromSet(SpriteObj *part, s32 index)
 
 /* The base controller ignores events (ActionCtrlHandleEvent,
  * PlayerCtrlHandleEvent and HitEnemy override it). */
-void Ctrl::HandleEvent(SpriteObj *, s32, s32)
+void Ctrl::HandleEvent(MovingSprite *, s32, s32)
 {
 }
 
@@ -94,7 +94,7 @@ void Ctrl::HandleEvent(SpriteObj *, s32, s32)
  * here, not called), clears `flags` bit 3, and returns 1. The result is
  * a full int: ActionCtrl's override passes it through without the
  * zero-extension a `u8` return would add (the code here is the same). */
-s32 Ctrl::SetTargetAnim(SpriteObj *part, s32 anim)
+s32 Ctrl::SetTargetAnim(MovingSprite *part, s32 anim)
 {
     s32 result = 0;
 
@@ -111,7 +111,7 @@ s32 Ctrl::SetTargetAnim(SpriteObj *part, s32 anim)
 
 /* Attaches the controller to sprite object `owner`. AttachSpriteCtrl
  * calls it through the vtable. */
-void Ctrl::Attach(SpriteObj *owner)
+void Ctrl::Attach(MovingSprite *owner)
 {
     this->owner = owner;
 }

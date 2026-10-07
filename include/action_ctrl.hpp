@@ -13,6 +13,7 @@
 #pragma interface
 
 #include "ctrl.hpp"
+#include "sprite_obj.hpp"
 
 extern "C" {
 #include "action_obj.h"
@@ -76,18 +77,18 @@ public:
 
     /* gActionCtrlVtable's slots; slots 5-8, 11 and 12 are Ctrl's.
      * HandleEvent is in src/player/action_ctrl_event.cpp. */
-    ActionCtrl();                                                    // InitActionCtrl
-    virtual void Update(SpriteObj *unused);                          // 1
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg); // 2
-    virtual void Attach(SpriteObj *owner);                           // 3
-    virtual void SetMode(s32 mode);                                  // 4
-    virtual ~ActionCtrl();                                           // 9 DestroyActionCtrl
-    virtual s32 SetTargetAnim(SpriteObj *part, s32 anim);            // 10
+    ActionCtrl();                                                       // InitActionCtrl
+    virtual void Update(MovingSprite *unused);                          // 1
+    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg); // 2
+    virtual void Attach(MovingSprite *owner);                           // 3
+    virtual void SetMode(s32 mode);                                     // 4
+    virtual ~ActionCtrl();                                              // 9 DestroyActionCtrl
+    virtual s32 SetTargetAnim(MovingSprite *part, s32 anim);            // 10
 
     /* The player as the sprite object Ctrl's methods take. */
-    SpriteObj *Sprite()
+    GroundSprite *Sprite()
     {
-        return (SpriteObj *)part;
+        return (GroundSprite *)part;
     }
 
     /* The motion queue stores as the methods have them inlined: the

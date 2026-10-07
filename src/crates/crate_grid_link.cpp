@@ -13,7 +13,7 @@
  * node off the free list for it (AddNode's body), appends it to column
  * 255, and links the two. crate_break.cpp calls it when a crate starts to
  * move. */
-void CrateList::LinkActive(Sprite *sprite)
+void CrateList::LinkActive(Crate *sprite)
 {
     s32 column;
 
@@ -23,7 +23,7 @@ void CrateList::LinkActive(Sprite *sprite)
         if (node == 0)
             continue;
         do {
-            Sprite *data = node->data;
+            Crate *data = node->data;
 
             if (data == sprite) {
                 if (data->IsAlwaysActive() && node->link == 0)

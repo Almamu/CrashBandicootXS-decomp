@@ -45,7 +45,7 @@ skip:
 
         if (p->speedX == 0 && p->anim->animCount != 0x12 && idleFidget == 0) {
             StopSfx(gAudioContext, SFX_SKID);
-            SetTargetAnim((SpriteObj *)gPlayer, 0x12);
+            SetTargetAnim((GroundSprite *)gPlayer, 0x12);
         }
     }
     if (state == ACTION_STATE_IDLE || state == ACTION_STATE_CROUCH) {
@@ -114,20 +114,20 @@ void ActionCtrl::StateIdle()
     }
     p = part;
     if (p->animDone) {
-        SetTargetAnim((SpriteObj *)p, 0x12);
+        SetTargetAnim((GroundSprite *)p, 0x12);
         idleFidget = 0;
     }
     count = ++frames;
     p = part;
     if (p->tag == 0x12 && p->frame == 0) {
         if (count > 0x708) {
-            SetTargetAnim((SpriteObj *)p, 0x1A);
+            SetTargetAnim((GroundSprite *)p, 0x1A);
             frames = 0;
         } else if (count >= 0x49D && count <= 0x4C3) {
-            SetTargetAnim((SpriteObj *)p, 5);
+            SetTargetAnim((GroundSprite *)p, 5);
             frames = 0x4C4;
         } else if (count >= 0x1E1 && count <= 0x207) {
-            SetTargetAnim((SpriteObj *)p, 0xE);
+            SetTargetAnim((GroundSprite *)p, 0xE);
             frames = 0x208;
         } else {
             goto skip;

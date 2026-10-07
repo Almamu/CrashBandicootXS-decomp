@@ -122,5 +122,5 @@ void MovingSprite::Update()
 {
     Sprite::Update();
     if (mover != 0)
-        mover->Update((SpriteObj *)this);
+        mover->Update(this);
 }

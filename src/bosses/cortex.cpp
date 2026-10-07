@@ -46,7 +46,7 @@ static inline void HitPlayer(struct player *pl, s32 event)
 /* Switches to animation `t` from its start. `t` is an s32: with a u8
  * parameter, SpawnCortexBossGem's tag 0 is loaded after the tag's address,
  * where the ROM loads it first. */
-static inline void SetTag(SpriteObj *p, s32 t)
+static inline void SetTag(MovingSprite *p, s32 t)
 {
     p->tag = t;
     p->ResetFrameTimer();
@@ -55,7 +55,7 @@ static inline void SetTag(SpriteObj *p, s32 t)
 }
 
 /* Sets `frame` to `idx`, clamped to the animation's last step. */
-static inline void ClampFrame(SpriteObj *p, s32 idx)
+static inline void ClampFrame(MovingSprite *p, s32 idx)
 {
     u8 n = p->bank->anims[p->tag].frameCount;
 
@@ -73,7 +73,7 @@ OneShotAnimCtrl::~OneShotAnimCtrl()
 
 /* Marks the sprite object gone once its animation has played through,
  * as OneShotAnimCtrl::Update (tiny_hop_pad.cpp) does. */
-void UnusedOneShotAnimCtrl::Update(SpriteObj *part)
+void UnusedOneShotAnimCtrl::Update(MovingSprite *part)
 {
     if (part->animDone)
         part->MarkGone();
@@ -99,7 +99,7 @@ void nullsub_19(void *self, void *part)
 /* Starts a hop from (x, y) to the part's position, facing it. The ROM
  * clears and sets the mirror bit in two steps (`& -0x11`, then `| 0x10`),
  * through the byte; a bitfield store of 1 is one `orr`. */
-void TinyCtrl::StartHop(SpriteObj *part)
+void TinyCtrl::StartHop(MovingSprite *part)
 {
     s32 px = part->x;
 
@@ -141,7 +141,7 @@ TinyCtrl::TinyCtrl()
  * horizontal distance (0-5, scaled by the level width); state 2 counts to
  * 3 before moving on; state 3 sinks everything 0x80 per frame until it
  * leaves the bottom of the level, then signals RequestRoomExit. */
-void CortexBossCtrl::Update(SpriteObj *part)
+void CortexBossCtrl::Update(MovingSprite *part)
 {
     switch (state) {
     case 0:
@@ -198,9 +198,9 @@ void CortexBossCtrl::Update(SpriteObj *part)
 }
 
 /* The cannon: animation 3 of bank 53, still, facing as `part` does. */
-void CortexBossCtrl::SpawnCannon(SpriteObj *part)
+void CortexBossCtrl::SpawnCannon(MovingSprite *part)
 {
-    SpriteObj *c = (SpriteObj *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *c = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
 
     c->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x27C);
@@ -213,15 +213,15 @@ void CortexBossCtrl::SpawnCannon(SpriteObj *part)
     c->Pos() = part->Pos();
     c->mirrorFlags.mirrorX = part->mirrorFlags.mirrorX;
     c->f.b.active = 1;
-    AddToPartList(gForegroundList, c);
+    ForegroundList()->Add(c);
     cannon = c;
 }
 
 /* The target: the green crosshair (animation 0xF), above and right of
  * `part`. */
-void CortexBossCtrl::SpawnTarget(SpriteObj *part)
+void CortexBossCtrl::SpawnTarget(MovingSprite *part)
 {
-    SpriteObj *c = (SpriteObj *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *c = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
     s32 x, y;
 
@@ -238,7 +238,7 @@ void CortexBossCtrl::SpawnTarget(SpriteObj *part)
     c->x = x;
     c->y = y;
     c->f.b.active = 1;
-    AddToPartList(gForegroundList, c);
+    ForegroundList()->Add(c);
     target = c;
 }
 
@@ -247,7 +247,7 @@ void CortexBossCtrl::SpawnTarget(SpriteObj *part)
  * shot finds it. */
 void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
 {
-    SpriteObj *c = (SpriteObj *)CreateMovingSprite(a0, a1, a2, a3);
+    MovingSprite *c = (MovingSprite *)CreateMovingSprite(a0, a1, a2, a3);
     Ctrl *ctrl;
 
     c->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
@@ -269,7 +269,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     c->kind = 0;
     c->f.b.visible = 0;
     c->f.b.active = 1;
-    AddToPartList(gCollidableList, c);
+    CollidableList()->Add(c);
 }
 
 /* Steps the hop towards (x, y), then runs the state: 1, 2 and 6 hop and
@@ -277,7 +277,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
  * shot, 5 chases the player, blinking (0x10) as its timer runs out and
  * firing a fast shot when it does, 8 sends the target off the bottom of
  * the level. */
-void CortexTargetCtrl::Update(SpriteObj *part)
+void CortexTargetCtrl::Update(MovingSprite *part)
 {
     /* Pinned: the ROM keeps `n` in r5, `part` in r6 and `this` in r7.
      * Unpinned, global allocation ranks `this` first (45 refs) and gives it
@@ -402,7 +402,7 @@ static inline void StepHeight(CortexTargetCtrl *t, s32 pattern)
     }
 }
 
-void CortexTargetCtrl::SetState(SpriteObj *part, s32 next)
+void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
 {
     switch (next) {
     case 8:
@@ -459,9 +459,9 @@ void CortexTargetCtrl::SetState(SpriteObj *part, s32 next)
 
 /* Fires a shot from the target's position: a slow one (kind 0, animation
  * 0xE) or a fast one (1, 0x11). */
-void CortexTargetCtrl::FireShot(SpriteObj *part, s32 kind)
+void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
 {
-    SpriteObj *c = (SpriteObj *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *c = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
     CortexShotCtrl *ctrl;
 
     c->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x27C);
@@ -485,7 +485,7 @@ void CortexTargetCtrl::FireShot(SpriteObj *part, s32 kind)
     c->f.b.visible = 0;
     c->kind = 1;
     c->f.b.active = 1;
-    AddToPartList(gForegroundList, c);
+    ForegroundList()->Add(c);
     if (kind == 1)
         PlaySfx(gAudioContext, SFX_CORTEX_SHOT_FAST, 0x100);
     else
@@ -495,7 +495,7 @@ void CortexTargetCtrl::FireShot(SpriteObj *part, s32 kind)
 /* While the part's `kind` is 1, the shot hurts the player it touches, or
  * (a fast one) shrinks the first gems it touches and tells the boss; it
  * goes once its animation is done. */
-void CortexShotCtrl::Update(SpriteObj *part)
+void CortexShotCtrl::Update(MovingSprite *part)
 {
     struct aabb a;
     struct aabb b;
@@ -516,7 +516,7 @@ void CortexShotCtrl::Update(SpriteObj *part)
             s32 i;
 
             for (i = 0; i < n; i++) {
-                SpriteObj *e = (SpriteObj *)gCollidableList->items[i];
+                MovingSprite *e = (MovingSprite *)gCollidableList->items[i];
                 struct aabb c = GetSpriteHitbox((struct box_part *)e);
 
                 if (AabbOverlaps(&c, &b)) {
@@ -536,7 +536,7 @@ void CortexShotCtrl::Update(SpriteObj *part)
 
 /* Runs the platform's animation up to frame 0x1A, or to frame 10 while its
  * `kind` is 1, and stops it there. */
-void CortexBossPlatformMover::Update(SpriteObj *part)
+void CortexBossPlatformMover::Update(MovingSprite *part)
 {
     s32 target;
 
@@ -562,7 +562,7 @@ void CortexBossPlatformMover::Update(SpriteObj *part)
 
 /* Once a fast shot has hit it (`kind` 1), the gem plays its shrink
  * animation (bank 53's 0xC, 0xB or 0xD) and goes when it is done. */
-void CortexBossGemCtrl::Update(SpriteObj *part)
+void CortexBossGemCtrl::Update(MovingSprite *part)
 {
     switch (state) {
     case 0:

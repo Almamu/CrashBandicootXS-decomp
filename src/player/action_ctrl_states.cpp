@@ -228,9 +228,9 @@ void ActionCtrl::StateFlipBodySlamStart()
         s32 frame = p->frame;
 
         if (frame == 3)
-            SetTargetAnim((SpriteObj *)p, 9);
+            SetTargetAnim((GroundSprite *)p, 9);
         else if (frame > 3 || p->animDone)
-            SetTargetAnim((SpriteObj *)p, 8);
+            SetTargetAnim((GroundSprite *)p, 8);
     } else if (p->animDone) {
         if ((u8)HasSuperBodySlam(gLevelState)) {
             SetMode(ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);

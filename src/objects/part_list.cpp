@@ -22,7 +22,7 @@ void PartList::Draw()
 
 /* Removes `part` from `items`: the entries after it move down one place
  * (CpuSet), and the last slot is cleared. */
-void PartList::Remove(MovingSprite *part)
+void PartList::Remove(Sprite *part)
 {
     s32 i = 0;
     s32 n = capacity;
@@ -51,7 +51,7 @@ void PartList::RemoveAt(s32 index)
 }
 
 /* Appends `part` if there's room. */
-void PartList::Add(MovingSprite *part)
+void PartList::Add(Sprite *part)
 {
     if (count < capacity)
         items[count++] = part;
@@ -72,8 +72,8 @@ PartList::PartList(s32 n)
     count = 0;
     visibleCount = 0;
     capacity = n;
-    items = new MovingSprite *[n];
-    visible = new MovingSprite *[n];
+    items = new Sprite *[n];
+    visible = new Sprite *[n];
     for (i = 0; i < capacity; i++)
         items[i] = 0;
 }
@@ -85,7 +85,7 @@ CrateList::CrateList(s32 n)
 {
     count = 0;
     capacity = n;
-    slots = new Sprite *[n];
+    slots = new Crate *[n];
     nodes = new CrateGridNode[capacity];
     links = new CrateGridLink[capacity];
     for (s32 j = 0; j < capacity; j++)

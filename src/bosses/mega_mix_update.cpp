@@ -55,7 +55,7 @@ static inline u8 PlayerDeadByte(struct player *pl)
 
 /* Runs towards the player: faces him (X record 3 when mirrored, else 1),
  * anim 0, mode 1. */
-static inline void Run(MegaMixCtrl *self, SpriteObj *part)
+static inline void Run(MegaMixCtrl *self, MovingSprite *part)
 {
     if ((s8)(part->mirror << 3) < 0)
         self->StartTargetMotionXFromSet(part, 3);
@@ -66,14 +66,14 @@ static inline void Run(MegaMixCtrl *self, SpriteObj *part)
 }
 
 /* Stops: anim 2, mode 0, X record 0. */
-static inline void Stop(MegaMixCtrl *self, SpriteObj *part)
+static inline void Stop(MegaMixCtrl *self, MovingSprite *part)
 {
     self->SetTargetAnim(part, 2);
     self->SetMode(0);
     self->StartTargetMotionXFromSet(part, 0);
 }
 
-void MegaMixCtrl::Update(SpriteObj *part)
+void MegaMixCtrl::Update(MovingSprite *part)
 {
     if (stamp == -1) {
         SetMotionXFromSet(part, 1);

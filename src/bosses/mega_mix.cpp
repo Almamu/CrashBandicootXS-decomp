@@ -10,7 +10,7 @@
 
 /* Copies the pair's Y record into `part->rampY` (the speed is kept),
  * negated when `part` is Y-mirrored. */
-void MegaMixCtrl::SetMotionYFromSet(SpriteObj *part, s32 index)
+void MegaMixCtrl::SetMotionYFromSet(MovingSprite *part, s32 index)
 {
     const speed_ramp *rec = &gMegaMixMotionRecords[animSet->entries[index][1]];
 
@@ -34,7 +34,7 @@ void MegaMixCtrl::SetMotionYFromSet(SpriteObj *part, s32 index)
 }
 
 /* The same with the pair's X record, `part->rampX` and the X mirror bit. */
-void MegaMixCtrl::SetMotionXFromSet(SpriteObj *part, s32 index)
+void MegaMixCtrl::SetMotionXFromSet(MovingSprite *part, s32 index)
 {
     const speed_ramp *rec = &gMegaMixMotionRecords[animSet->entries[index][0]];
 
@@ -59,13 +59,13 @@ void MegaMixCtrl::SetMotionXFromSet(SpriteObj *part, s32 index)
 
 /* Starts the pair's Y record: Ctrl::StartTargetMotionY (player_flags.cpp),
  * called directly, not through the vtable. */
-void MegaMixCtrl::StartTargetMotionYFromSet(SpriteObj *part, s32 index)
+void MegaMixCtrl::StartTargetMotionYFromSet(MovingSprite *part, s32 index)
 {
     Ctrl::StartTargetMotionY(part, &gMegaMixMotionRecords[animSet->entries[index][1]]);
 }
 
 /* Starts the pair's X record: Ctrl::StartTargetMotionX (ctrl.cpp). */
-void MegaMixCtrl::StartTargetMotionXFromSet(SpriteObj *part, s32 index)
+void MegaMixCtrl::StartTargetMotionXFromSet(MovingSprite *part, s32 index)
 {
     Ctrl::StartTargetMotionX(part, &gMegaMixMotionRecords[animSet->entries[index][0]].start);
 }

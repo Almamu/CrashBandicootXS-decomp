@@ -20,7 +20,7 @@ void CrateList::CollideWithObject(struct aabb box, MovingSprite *part, MovingSpr
 }
 
 /* Removes `sprite` (Detach, out of line). */
-void CrateList::Remove(Sprite *sprite)
+void CrateList::Remove(Crate *sprite)
 {
     Detach(sprite);
 }
@@ -39,14 +39,14 @@ void CrateList::RemoveAt(s32 index)
 
 /* Takes a node off the free list for `sprite` and appends it to column
  * `column`, with `link` its other node (Append, out of line). */
-CrateGridNode *CrateList::AddNode(Sprite *sprite, s32 column, CrateGridNode *link)
+CrateGridNode *CrateList::AddNode(Crate *sprite, s32 column, CrateGridNode *link)
 {
     return Append(sprite, column, link);
 }
 
 /* Files `sprite` in the column of its x, and an always-active one in
  * column 255 too, the two nodes linked to each other. */
-void CrateList::Link(Sprite *sprite)
+void CrateList::Link(Crate *sprite)
 {
     CrateGridNode *node = AddNode(sprite, ColumnOf(sprite), 0);
 
@@ -55,7 +55,7 @@ void CrateList::Link(Sprite *sprite)
 }
 
 /* Appends `sprite` if there's room, filing it in the grid first. */
-void CrateList::Add(Sprite *sprite)
+void CrateList::Add(Crate *sprite)
 {
     if (count < capacity) {
         Link(sprite);

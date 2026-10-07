@@ -222,7 +222,7 @@ void ActionCtrl::StartMaskHitJump()
     part->hitAxes = 0;
 }
 
-void ActionCtrl::Attach(SpriteObj *owner)
+void ActionCtrl::Attach(MovingSprite *owner)
 {
     part = (struct player *)owner;
 }

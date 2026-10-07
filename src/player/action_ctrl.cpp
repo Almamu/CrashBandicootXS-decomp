@@ -64,7 +64,7 @@ void ActionCtrl::SetModeAnim(s32 mode, s32 anim, s32 frame, s32 frames)
  * zero-extends it after the call, which the ROM doesn't (the C needed a
  * cast of SetCtrlTargetAnim to an `s32` function, and gotos for the
  * switch's layout). */
-s32 ActionCtrl::SetTargetAnim(SpriteObj *part, s32 anim)
+s32 ActionCtrl::SetTargetAnim(MovingSprite *part, s32 anim)
 {
     struct player *player = gPlayer;
 

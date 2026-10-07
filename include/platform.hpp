@@ -75,15 +75,15 @@ public:
     u8 unk_33;
     u32 time; // 0x34 - type 6: the frame its animation runs again
 
-    PlatformMover(s32 distX, s32 distY, bool dirX, bool dirY, s32 kind); // CreatePlatformMover
-    virtual void Update(SpriteObj *part);                                // 1 UpdatePlatformMover
-    virtual ~PlatformMover();                                            // 9 DestroyPlatformMover
-    virtual void StartTargetMotionXFromSet(SpriteObj *part, s32 index);  // 11
-    virtual void StartTargetMotionYFromSet(SpriteObj *part, s32 index);  // 12
+    PlatformMover(s32 distX, s32 distY, bool dirX, bool dirY, s32 kind);   // CreatePlatformMover
+    virtual void Update(MovingSprite *part);                               // 1 UpdatePlatformMover
+    virtual ~PlatformMover();                                              // 9 DestroyPlatformMover
+    virtual void StartTargetMotionXFromSet(MovingSprite *part, s32 index); // 11
+    virtual void StartTargetMotionYFromSet(MovingSprite *part, s32 index); // 12
 
-    void MovePlayer(SpriteObj *part); // MovePlayerWithPlatform
-    void SetTargetMotionYFromSet(SpriteObj *part, s32 index);
-    void SetTargetMotionXFromSet(SpriteObj *part, s32 index);
+    void MovePlayer(MovingSprite *part); // MovePlayerWithPlatform
+    void SetTargetMotionYFromSet(MovingSprite *part, s32 index);
+    void SetTargetMotionXFromSet(MovingSprite *part, s32 index);
     void ClearActive();
 };
 
@@ -98,7 +98,7 @@ class CortexBossPlatformMover : public PlatformMover
 {
 public:
     CortexBossPlatformMover(); // CreateCortexBossPlatformMover
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~CortexBossPlatformMover(); // DestroyCortexBossPlatformMover
 };
 

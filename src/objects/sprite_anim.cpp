@@ -224,7 +224,7 @@ void PartList::Update()
     visibleCount = zero;
 
     for (i = 0; i < count; i++) {
-        MovingSprite *part = items[i];
+        Sprite *part = items[i];
 
         if (part->f.flags & PART_FLAG_GONE) {
             if (i < capacity) {
@@ -253,10 +253,11 @@ void PartList::Collide(struct aabb box, s32 unused, MovingSprite *other)
     s32 i;
 
     for (i = 0; i < visibleCount; i++) {
-        MovingSprite *part = visible[i];
+        Sprite *s = visible[i];
 
-        if (part->GetClassId() <= 4)
+        if (s->GetClassId() <= 4)
             continue;
+        MovingSprite *part = (MovingSprite *)s; // class 5 or 6
         s32 inContact = (part->f.flags >> 2) & 1;
 
         if (!inContact)

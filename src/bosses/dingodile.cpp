@@ -59,7 +59,7 @@ static inline s32 LevelBottom(void)
 #define LayerWidthPlus(n) (((gLevelLayers->layer0->widthPx << 16) + ((n) << 16)) >> 16)
 
 /* The player's HandleEvent (gPlayerVtable; the player is still C). */
-static inline void HitPlayer(SpriteObj *by)
+static inline void HitPlayer(MovingSprite *by)
 {
     struct player *pl = gPlayer;
     const struct actor_method *m = &pl->vtable->handleEvent;
@@ -72,7 +72,7 @@ static inline void HitPlayer(SpriteObj *by)
  * (the ROM's frame and its ldmia/stmia copy). */
 extern "C" struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox");
 
-static inline void SetTag(SpriteObj *p, u8 tag)
+static inline void SetTag(MovingSprite *p, u8 tag)
 {
     p->tag = tag;
 }
@@ -89,7 +89,7 @@ void CortexTargetCtrl::SetPlatformsKind(u8 flag)
     s32 n = gTouchableList->count;
 
     for (i = 0; i < n; i++) {
-        SpriteObj *p = (SpriteObj *)gTouchableList->items[i];
+        MovingSprite *p = (MovingSprite *)gTouchableList->items[i];
 
         if (flag)
             p->kind = 1;
@@ -100,7 +100,7 @@ void CortexTargetCtrl::SetPlatformsKind(u8 flag)
 
 /* Hops from `part`'s position to (x, y), in the boss round's number of
  * steps. */
-void CortexTargetCtrl::SetDest(SpriteObj *part, s32 x, s32 y)
+void CortexTargetCtrl::SetDest(MovingSprite *part, s32 x, s32 y)
 {
     u8 v;
 
@@ -125,12 +125,12 @@ CortexTargetCtrl::CortexTargetCtrl(CortexBossCtrl *boss)
 
 /* The same shape as CortexBossCtrl::SetState below (and
  * SetCortexTargetState, cortex.cpp) without any state of its own. */
-void CortexCannonCtrl::SetState(SpriteObj *, s32 next)
+void CortexCannonCtrl::SetState(MovingSprite *, s32 next)
 {
     SetMode(next);
 }
 
-void CortexCannonCtrl::Update(SpriteObj *part)
+void CortexCannonCtrl::Update(MovingSprite *part)
 {
     if (state == 0)
         part->f.b.visible = 0;
@@ -146,7 +146,7 @@ CortexCannonCtrl::CortexCannonCtrl()
 
 /* State 3 (Neo Cortex beaten) also stops the target (mode 9) and, unless
  * the player has it, spawns the body slam power. */
-void CortexBossCtrl::SetState(SpriteObj *, s32 next)
+void CortexBossCtrl::SetState(MovingSprite *, s32 next)
 {
     if (next == 3) {
         target->mover->SetMode(9);
@@ -170,13 +170,13 @@ s32 DingodileCtrl::GetHits()
 }
 
 /* Close enough to the player (on the side he is facing) to react. */
-static inline void Approach(DingodileCtrl *self, SpriteObj *part, s32 d)
+static inline void Approach(DingodileCtrl *self, MovingSprite *part, s32 d)
 {
     if (d <= 0x1FFF)
         self->SetState(part, 5);
 }
 
-static inline s32 AtLevelEdge(SpriteObj::MirrorBits *f, s32 x)
+static inline s32 AtLevelEdge(Sprite::MirrorBits *f, s32 x)
 {
     if (f->flipX < 0)
         return x <= 0x2000;
@@ -184,7 +184,7 @@ static inline s32 AtLevelEdge(SpriteObj::MirrorBits *f, s32 x)
         return x >= LevelRight() - 0x2000;
 }
 
-void DingodileCtrl::Update(SpriteObj *part)
+void DingodileCtrl::Update(MovingSprite *part)
 {
     struct aabb hurt;
     struct aabb box;
@@ -193,14 +193,14 @@ void DingodileCtrl::Update(SpriteObj *part)
     if (part->mirrorBits.flipX < 0) {
         s32 x = part->x;
         s32 y = part->y;
-        SpriteObj *p = shield;
+        MovingSprite *p = shield;
 
         p->x = x + 0x600;
         p->y = y;
     } else {
         s32 x = part->x;
         s32 y = part->y;
-        SpriteObj *p = shield;
+        MovingSprite *p = shield;
 
         p->x = x - 0x600;
         p->y = y;
@@ -227,7 +227,7 @@ void DingodileCtrl::Update(SpriteObj *part)
     case 1:
     case 14:
         {
-            SpriteObj::MirrorBits *f = &part->mirrorBits;
+            Sprite::MirrorBits *f = &part->mirrorBits;
             s32 x = part->x;
 
             if (state == 1) {
@@ -416,7 +416,7 @@ void DingodileCtrl::Update(SpriteObj *part)
 
 /* "Enter state `next`": sets the mode, then plays the matching
  * animation/spawns. */
-void DingodileCtrl::SetState(SpriteObj *part, s32 next)
+void DingodileCtrl::SetState(MovingSprite *part, s32 next)
 {
     SetMode(next);
     switch (next) {
@@ -473,9 +473,9 @@ void DingodileCtrl::SetState(SpriteObj *part, s32 next)
     }
 }
 
-void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, SpriteObj *owner)
+void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *owner)
 {
-    SpriteObj *p = (SpriteObj *)CreateMovingSprite(0xFFFF, x, y, 0);
+    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, x, y, 0);
     Ctrl *ctl;
     u8 *bits;
 
@@ -527,16 +527,16 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, SpriteObj *owner
     p->mirrorBits.flipY = (*bits >> 2) & 1;
     p->f.b.active = 1;
     if (mode == 0)
-        AddToPartList(gTouchableList, p);
+        TouchableList()->Add(p);
     else
-        AddToPartList(gCollidableList, p);
+        CollidableList()->Add(p);
 }
 
 /* Spawns a shark (sprite bank 4's anim 1, `kind` 6) at (x, y), facing
  * `facing`, and registers it with gCollidableList. */
 void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
 {
-    SpriteObj *p = (SpriteObj *)CreateMovingSprite(0xFFFF, x, y, 0);
+    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, x, y, 0);
     Ctrl *ctl;
 
     p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x30);
@@ -552,7 +552,7 @@ void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
     p->mirrorBits.flipX = facing;
     p->f.b.active = 1;
     ctl->Attach(p);
-    AddToPartList(gCollidableList, p);
+    CollidableList()->Add(p);
 }
 
 /* The shield's update (`part` is the shield): while the player isn't
@@ -562,7 +562,7 @@ void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
  * = 16) and moves to state 5; states 1/2 arm a two-blink countdown and
  * move to 3/4; states 3/4 toggle the part's blink bit every 20 frames
  * until the blinks run out (then state 5). */
-void DingodileShieldCtrl::Update(SpriteObj *part)
+void DingodileShieldCtrl::Update(MovingSprite *part)
 {
     struct aabb a;
     struct aabb b;
@@ -640,14 +640,14 @@ void DingodileShieldCtrl::Update(SpriteObj *part)
  * stalactite (states 5, 3/4) falls. Either one breaks (state 6) when it
  * hits the player, the stalactite also when it hits Dingodile while he
  * is vulnerable, or the floor. */
-void DingodileProjectileCtrl::Update(SpriteObj *part)
+void DingodileProjectileCtrl::Update(MovingSprite *part)
 {
     struct aabb a;
 
     GetSpriteAttackBox(&a, part);
     if (a.w) {
         if (state != 4 && state != 6) {
-            SpriteObj *t = owner;
+            MovingSprite *t = owner;
 
             /* the vulnerable bit, extracted (as a 1-bit field, g++ tests
              * it with `movs #0x40; ands`) */
@@ -728,7 +728,7 @@ void DingodileProjectileCtrl::Update(SpriteObj *part)
 /* Spawns the stalactite (anim 8, then 9 as it falls) at (x, y). */
 void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
 {
-    SpriteObj *p = (SpriteObj *)CreateMovingSprite(0xFFFF, x, y, 0);
+    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, x, y, 0);
     DingodileProjectileCtrl *c;
 
     p->f.b.visible = 0;
@@ -744,13 +744,13 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
     p->mover = c;
     c->Attach(p);
     p->f.b.active = 1;
-    AddToPartList(gCollidableList, p);
+    CollidableList()->Add(p);
 }
 
 /* The shark's update: state 0 starts it across the level (motion record
  * 3, negated when it faces left), state 1 removes it once it is past the
  * level's edge. */
-void DingodileSharkCtrl::Update(SpriteObj *part)
+void DingodileSharkCtrl::Update(MovingSprite *part)
 {
     switch (Ctrl::state) {
     case 0:

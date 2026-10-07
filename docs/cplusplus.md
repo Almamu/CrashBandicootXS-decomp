@@ -224,7 +224,7 @@ compiles to exactly the code `ACTOR_PMF_CALL` spells out
 
 **Names.** The ROM has no symbols, so mangling doesn't matter, but the
 build links C++ objects with C ones. g++ 2.9 mangles a method as
-`Method__<len>Class<args>` (`Update__10EffectCtrlP9SpriteObj`), a
+`Method__<len>Class<args>` (`Update__10EffectCtrlP12MovingSprite`), a
 constructor as `__<len>Class`, a destructor as `_._<len>Class` and a
 vtable as `_vt.<len>Class`. See [How a C++ object is built](#how-a-c-object-is-built).
 
@@ -243,13 +243,13 @@ class EffectCtrl : public Ctrl
 {
 public:
     EffectCtrl(); // InitEffectCtrl
-    virtual void Update(SpriteObj *part);
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg);
+    virtual void Update(MovingSprite *part);
+    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg);
     virtual ~EffectCtrl(); // DestroyEffectCtrl
     void Reset();          // ResetEffectCtrl
 };
 
-void EffectCtrl::Update(SpriteObj *part)
+void EffectCtrl::Update(MovingSprite *part)
 {
     if (!part->IsOnScreen())
         part->MarkGone();
@@ -284,8 +284,9 @@ front end adds no difference of its own here.
 
 **Readability.** 102 lines against the C's 117, and those lines are the
 class declarations rather than casts and slot arithmetic. (The file's
-own `SpriteObj`/`Entity` view has since moved to
-`include/sprite_obj.hpp`.)
+own `SpriteObj`/`Entity` view has since become the real classes of
+`include/entity.hpp` and `include/sprite_obj.hpp`, and the controllers
+take a `MovingSprite *` since part 7b'.)
 
 ### 2. The controller base class (now `src/objects/ctrl.cpp`)
 
@@ -389,7 +390,7 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
   vtable, a weak symbol in a `.gnu.linkonce.d` section, which the linker
   script discards (`/DISCARD/`); the C table wins.
 - **Names.** `cxx_symbols.txt` maps each mangled name the C++ objects
-  define or use to its C name (`Update__10EffectCtrlP9SpriteObj
+  define or use to its C name (`Update__10EffectCtrlP12MovingSprite
   UpdateEffectCtrl`, `_vt.10EffectCtrl gEffectCtrlVtable`, `__4Ctrl
   InitCtrl`). objcopy renames them after assembling, so the vtable data,
   the C callers, the linker script and the objdiff report see the C names.
@@ -398,7 +399,7 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
 - **Style.** clang-format formats `.cpp`/`.hpp` too (`tools/format.py`);
   `.clang-format` puts `public:` at the class's indent.
 
-asm labels (`void Update(SpriteObj *) asm("UpdateEffectCtrl");`) work for
+asm labels (`void Update(MovingSprite *) asm("UpdateEffectCtrl");`) work for
 methods and constructors, but not for destructors: g++ 2.9 then fails to
 find the destructor (`no matching function for call to B::__dt`). That,
 and the vtable names, is why the build renames with objcopy instead.
@@ -490,6 +491,7 @@ counts them by kind) and what the C++ still needs.
 | `src/objects/platform_create.cpp` | `Platform::Create` | 1 | old_agbcp | 1 keep, 8 retyped stores, 8 volatiles, the `MOVER_NEW` cast -> 0 | 7d |
 | `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor; `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `nullsub_19` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
 | `src/objects/platform_create.cpp` (again) | `Platform::Create`: `new CortexBossPlatformMover` (the C prototype before) | 0 | old_agbcp | 0 -> 0 | 7i |
+| the controller headers (ctrl.hpp, enemy_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp, action_ctrl.hpp, boss_ctrl.hpp, platform.hpp), sprite_obj.hpp, crate_list.hpp, and 38 `.cpp` files | every controller method takes a `MovingSprite *` (`SpriteObj` removed); `Ctrl::owner` a `MovingSprite *`; `PartList`'s items `Sprite *`s, `CrateList`'s `Crate *`s | 0 | (unchanged) | 0 -> 0 | 7b' |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -757,17 +759,13 @@ ROM's sizes (`CreateEntity` allocates 0x1C bytes, `CreateSpriteObj` 0x40,
 | `UiSprite` | 0x40 | gUiSpriteObjVtable | sprite_anim.cpp |
 | `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | moving_sprite.cpp, moving_sprite_collide.cpp, player_contact.cpp, step_probe.cpp (part 7b) |
 | `GroundSprite` | 0x80 | gGroundSpriteVtable (15) | ground_sprite.cpp, ground_sprite_collide.cpp, ground_sprite_update.cpp (part 7b) |
-| `SpriteObj` | 0x80 | none of its own | the controllers' name for what they drive |
 
 The 0x40-byte class is `Sprite`: the C names of its methods say "SpriteObj"
 (`InitSpriteObj`, `DestroySpriteObj`, `gSpriteObjVtable`), and cxx_symbols.txt
-maps them. The name `SpriteObj` was taken: every controller method takes a
-`SpriteObj *` (in its mangled name, `P9SpriteObj`), and the C++ files use
-its fields from `mover` to `type`. So `SpriteObj` stays, as an empty
-subclass of `GroundSprite`: it has every field it had, and every Entity,
-Sprite and MovingSprite method. The controllers drive moving sprites; their
-methods can take a `MovingSprite *` once no part of #664 is in flight
-(the plan below).
+maps them. Part 7a kept a fifth class, `SpriteObj`, an empty subclass of
+`GroundSprite` that every controller method took (`P9SpriteObj` in the
+mangled names) while other parts were in flight; step 7b' replaced it with
+`MovingSprite`, what a controller really drives (below).
 
 **#656 for this family.** The classes are the definitions now: one set of
 names per byte (`tag` the animation, `frame` the step, `stepTimer`,
@@ -913,8 +911,8 @@ the destructors (`~MovingSprite` is `delete mover`), the motion and hit
 mask accessors and the terrain probes. The four `_call_via_rN` trampolines
 on the controller (`mover->Update(this)`, `HandleEvent`, `Attach`, `delete
 mover`) and the three on the sprite itself (`TouchPlayer()`, `GetBounds()`,
-`IsNearCamera()`) are plain virtual calls; the controller's still take a
-`SpriteObj *` (step 7b'), so `this` is cast. `EntityFlags` names the two
+`IsNearCamera()`) are plain virtual calls; the controller's took a
+`SpriteObj *` until step 7b', so `this` was cast. `EntityFlags` names the two
 low bits of +0x0D, `floorProbe` and `grounded` (entity.hpp).
 
 What made the C++ match:
@@ -982,7 +980,7 @@ converted, the struct can go.
 `include/sprite_obj.hpp` the classes built on it (part 7a, above), shared
 by the controllers instead of each file's own partial view. `EnemyCtrl`
 reaches its part through an anonymous union, as part_ctrl.h's `struct
-ctrl_target` (its fields) or as a `SpriteObj` (what the `Ctrl` methods and
+ctrl_target` (its fields) or as a `MovingSprite` (what the `Ctrl` methods and
 the part's virtual methods take). The player is still C: C++ code reaches
 it as a `GroundSprite` through `PlayerSprite()`.
 
@@ -1326,10 +1324,114 @@ pointer, the step's locals, ...) changed that. The C pinned `part` and
 the C++ needs none of them. `UpdateCortexBoss` keeps the C's `goto` from
 state 0 into state 2's `SetState(part, 1)`.
 
-The entity family (part 7) is done but for step 7b' (the controllers'
-`SpriteObj *` parameters). The boss controllers are all C++; the player,
-the level select's sprites and the effect parts' spawner are the classes
-built on the family that are still C.
+Part 7b' in numbers: no object changes and no function converted; the
+types the conversion had kept for parts in flight are the real ones now.
+Every object is byte-identical to the one before, and the symbol tables
+too: only mangled names changed, each mapped to the same C name.
+
+- **The controllers take a `MovingSprite *`.** `SpriteObj`, part 7a's empty
+  subclass of `GroundSprite` that every controller method took, is gone.
+  Every `Ctrl` virtual (`Update`, `HandleEvent`, `Attach`, the motion
+  setters, `SetTargetAnim`) and every controller's own method that takes
+  its part (`EnemyCtrl`, `KnockedEnemyCtrl`, `InputCtrl`, `PlayerCtrl`,
+  `ActionCtrl`, `BossCtrl`, the Mega Mix, Tiny, Dingodile and Neo Cortex
+  controllers, `PlatformMover`, `OneShotAnimCtrl`, `EffectCtrl`, ...) takes
+  a `MovingSprite *`, and so do the bosses' part pointers (`cannon`,
+  `target`, `shield`, `owner`). A controller is attached to a moving
+  sprite's `mover` (+0x44), and the moving sprite calls it with `this`:
+  that is the class the ROM shows. None of the controllers' code used a
+  `GroundSprite` field. The overrides must keep the base's parameter type,
+  so the more specific objects (a platform, the player) stay
+  `MovingSprite *` there. cxx_symbols.txt: 64 mangled names
+  `P9SpriteObj` -> `P12MovingSprite`, the same C names.
+- **`Ctrl::owner`** (`Attach`'s) is a `MovingSprite *`, not a `void *`.
+- **The player is a `GroundSprite`.** Where the controllers pass the player
+  (`struct player`, still C) to a `Ctrl` method, they cast it to
+  `GroundSprite *`, what the player is, not to the controller's type;
+  `ActionCtrl::Sprite()` returns a `GroundSprite *`.
+- **Casts gone:** `mover->Update(this)` and `ctrl->Attach(this)`
+  (moving_sprite.cpp, moving_sprite_collide.cpp, platform.cpp), the four
+  `m->Attach(obj)` of `Platform::Create`, and the `(MovingSprite *)` of
+  the pickups' `Add`.
+- **`PartList` holds `Sprite *`s.** gTouchableList holds pickups (class 2),
+  platforms (4) and Tiny's hop pads, so `items` and `visible` are `Sprite
+  **`, and `Add`/`Remove` take a `Sprite *` (`P6Sprite`). `Update`, `Cull`,
+  `Clear`, `Draw` and `CollideClass` use only `Sprite`'s virtuals. `Collide`
+  hands on only the parts whose class id is above 4, which are the moving
+  sprites (`MovingSprite` 5, `GroundSprite` 6), so it casts there, for
+  `CollideWithPlayer` and `CollideWithObject` (slot 13, `HandleEvent`).
+- **`CrateList` holds `Crate *`s** (`slots`, the grid nodes' `data`, and
+  `Add`, `Remove`, `AddNode`, `Link`, `LinkActive`, `Unlink`: `P5Crate`), so
+  `CollidePlayer`'s and crate_break.cpp's `(Crate *)` casts go.
+  crate_list.hpp includes crate.hpp for it. The unused `Collide` still casts
+  its nodes to `MovingSprite`, as the ROM's copy of `PartList::Collide` does.
+- **The C++ callers of the part lists** use the class: `TouchableList()`,
+  `CollidableList()` and `ForegroundList()` (sprite_obj.hpp, like
+  `Crates()`) replace the `((PartList *)gTouchableList)` casts and the C
+  `AddToPartList(gCollidableList, p)` calls of cortex.cpp, dingodile.cpp,
+  tiny_update.cpp, platform_create.cpp and the pickups. `InputCtrl::StateStart`
+  keeps `AddToPartList` for the camera lead, a C struct (`struct
+  follow_child`, level_select.c).
+
+### The entity family is done
+
+With 7b', part 7 is complete: `Entity` and every class built on it whose
+code is in the family's files (`Sprite`, `UiSprite`, `MovingSprite`,
+`GroundSprite`, `PartList`, `Crate`, `CrateList`, `Platform`,
+`PlatformMover`, the pickups, `HudPart`), and every controller, are C++.
+The C++ conversion so far, #685 to part 7b' (`tools/match_idioms.py`
+counts, project-wide; `tools/cpp_survey.py`):
+
+| | #685 | now | change |
+|---|---:|---:|---:|
+| objects built from C++ (`CXX_OBJS`) | 1 | 74 | +73 |
+| functions in them | 5 | 793 | +788 |
+| classes with a ROM vtable (`_vt.` names in cxx_symbols.txt) | 1 of 93 | 36 of 93 | +35 |
+| objects in `OLD_AGBCC_OBJS` | 94 | 118 | +24 (agbcc objects whose clean C++ matches only under old_agbcp) |
+| `MATCH_HOLD_REG` pins | 2151 | 1404 | -747 |
+| instruction-emitting `asm` | 249 | 160 | -89 |
+| `MATCH_USE` | 83 | 60 | -23 |
+| `MATCH_KEEP` | 61 | 34 | -27 |
+| `MATCH_HOLD` | 23 | 18 | -5 |
+| `MATCH_CONST` | 30 | 26 | -4 |
+| asm labels | 20 | 17 | -3 |
+| `.pool` in asm | 7 | 6 | -1 |
+| file-scope asm blocks | 5 | 4 | -1 |
+| retyped field stores | 228 | 202 | -26 |
+| retyped field reads | 96 | 82 | -14 |
+| scoped `volatile`s | 50 | 10 | -40 |
+
+The 74 objects: bosses 7, crates 19, enemies 6, gfx 2, objects 20, pickups 3,
+player 17. `MATCH_BARRIER` (17), the clobbers (3), the memory barriers (2)
+and the `BOX_ADDR`s (12) are unchanged. Every remaining workaround in a C++
+object is listed, with its reason, in its part's notes above.
+
+**What is still C** (the game's other 168 objects outside src/data/; 77 of
+them have C++ traits, `tools/cpp_survey.py --objects`):
+
+- **The player** (`struct player`, a `GroundSprite` with the player's
+  fields; gPlayerVtable): player_update.c, player_event.c,
+  player_collide.c, player_init.c, player_reset.c, player_anim_room.c. C++
+  code reaches it through `PlayerSprite()` and `(GroundSprite *)` casts.
+- **The level select's sprites**: the camera lead (`struct follow_child`)
+  and launch pad, `MovingSprite`s, in menus/level_select.c, with
+  level_select_widgets.c and level_select_pages.c.
+- **The effect parts' spawner** (level/entity_spawner.c: `SpawnEffectPart`'s
+  `InitEffectCtrl(OperatorNew(0x10))` and its `attach` slot call, `new
+  EffectCtrl` and `mgr->Attach(part)` in C++), and the level spawners that
+  create the family's objects (spawn_enemies.c, spawn_objects.c,
+  spawn_pickups.c, spawn_gems.c, spawn_gem_platforms.c, spawn_crates.c,
+  spawn_bosses.c, drop_extra_life.c, time_trial.c).
+- **The 3D actors** (`struct actor_self`, vtable pointer at +0x50) and their
+  pointer-to-member tables (src/data/actor_pmf_*.c, `ACTOR_PMF_CALL`):
+  src/actor/ (actor_anim.c alone has 48 methods), the vehicle levels
+  (src/vehicle/: the jetpack, polar and yeti files) and the 3D bosses
+  (airship*.c, hovercraft*.c).
+- **The rest with C++ traits**: the background layers (bg_layer*.c), the
+  fonts (src/text/), the menus and frontend screens (pause menu, power
+  dialog, save menu, title screen, company logos, language select), the
+  cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
+  in system/boot.c) and the room code (play_room.c, run_room.c).
 
 ### Next batches
 
@@ -1358,7 +1460,30 @@ Bigger controllers, roughly in order (function counts from
    7i.
 5. ~~**The entity family**~~ (part 7, below), with the platform mover
    (`PlatformMover`, gPlatformMoverVtable: a 0x38-byte `Ctrl`; include/platform.hpp)
-   done in 7d. Only step 7b' is left.
+   done in 7d, and the controllers' `MovingSprite *` in 7b'.
+
+Next, the classes built on the family, then the 3D actors (one family per
+PR, as before):
+
+6. **The player** (part 8): a `Player` class deriving from `GroundSprite`
+   (its fields after 0x80, its vtable, `PlayerSprite()` and the
+   `(GroundSprite *)` casts gone), player*.c. `struct player` stays the C
+   view for the C files left (the rooms, the HUD, the vehicles).
+7. **The spawners** (part 9): entity_spawner.c (`new EffectCtrl`,
+   `mgr->Attach(part)`) and the level's spawn_*.c, which create the
+   family's objects with `Create...(OperatorNew(n))` and C casts; with them
+   the C views (`struct box_part`, `struct gobj`, `struct orbit_part`,
+   `struct crate`, `struct part_list`, `struct pool_manager`) lose most of
+   their users.
+8. **The level select's sprites** (part 10): the camera lead and launch pad
+   as `MovingSprite` subclasses (`InputCtrl::StateStart`'s `AddToPartList` then
+   becomes `CollidableList()->Add`).
+9. **The 3D actors** (part 11 onwards): `ActorSelf` (vtable pointer at
+   +0x50), actor*.c first, then the vehicles and the 3D bosses; the PMF
+   tables become `const StateFunc t[] = { &X::f, ... }` (experiment 3) and
+   `ACTOR_PMF_CALL` goes.
+10. **Then the vtables** (plan item 5 below): once a family has no C class
+   left, let g++ emit its vtables and check them against the ROM's.
 
 #### The entity family (part 7)
 
@@ -1371,7 +1496,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 |---|---|---|---|---|
 | ~~7a~~ | ~~graphics.c, sprite.c, sprite_obj.c, sprite_anim.c~~ | `Entity`, `Sprite`, `UiSprite`, `PartList` (update, collide), the sprite graphics managers | done | |
 | ~~7b~~ | ~~objects/moving_sprite.c, moving_sprite_collide.c, player_contact.c, step_probe.c, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c~~ | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | done | 7a |
-| 7b' | the controller headers and cxx_symbols.txt | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes | a rename, no code change | 7b; no other part of #664 in flight |
+| ~~7b'~~ | ~~the controller headers and cxx_symbols.txt~~ | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes; `PartList`'s and `CrateList`'s items retyped | done | 7b |
 | ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
 | ~~7d~~ | ~~objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old)~~ | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) (include/platform.hpp) | done | 7b |
 | ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_player_collide.c, crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c~~ | `Crate` (include/crate.hpp) and its accessors | done | |
@@ -1380,11 +1505,10 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7h~~ | ~~pickups/extra_life.c, wumpa.c, wumpa_update.c~~ | `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl::Reset`; `struct act` went | done | |
 | ~~7i~~ | ~~bosses/cortex.c (old)~~ | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | done | 7d |
 
-Outside this family, the classes built on these: the player (`struct
-player`, a `GroundSprite`; player*.c), the level select's camera lead and
-launch pad (`MovingSprite`s, menus/level_select.c) and the effect parts'
-spawner (level/entity_spawner.c, `new EffectCtrl`). With the family
-converted, its vtables could be emitted by g++ (plan item 5 below).
+Outside this family, the classes built on these are still C: the
+player, the level select's sprites and the effect parts' spawner (see
+[The entity family is done](#the-entity-family-is-done) and items 6-8
+above).
 
 ## Recommendation and plan
 

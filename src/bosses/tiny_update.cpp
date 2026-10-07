@@ -40,14 +40,14 @@ static inline void ClearFlags(u8 *flags, s32 mask)
     *flags &= mask;
 }
 
-void TinyCtrl::Update(SpriteObj *part)
+void TinyCtrl::Update(MovingSprite *part)
 {
     struct aabb a;
     struct aabb b;
     s32 state;
 
     if (stomped != -1) {
-        SpriteObj *pad = (SpriteObj *)gTouchableList->items[stomped];
+        MovingSprite *pad = (MovingSprite *)gTouchableList->items[stomped];
         Ctrl *ctrl;
 
         delete pad->mover;
@@ -202,13 +202,13 @@ void TinyCtrl::Update(SpriteObj *part)
 }
 
 /* Sets the animation (no reset). */
-static inline void SetTag(SpriteObj *p, s32 tag)
+static inline void SetTag(MovingSprite *p, s32 tag)
 {
     p->tag = tag;
 }
 
 /* Sets the frame, clamped to the current animation's frame count. */
-static inline void SetFrame(SpriteObj *part, s32 frame)
+static inline void SetFrame(MovingSprite *part, s32 frame)
 {
     const struct sprite_bank *bank = (const struct sprite_bank *)part->anim;
     u8 *tag = &part->tag;
@@ -219,7 +219,7 @@ static inline void SetFrame(SpriteObj *part, s32 frame)
     part->frame = frame;
 }
 
-void TinyCtrl::SetState(SpriteObj *part, s32 next)
+void TinyCtrl::SetState(MovingSprite *part, s32 next)
 {
     switch (next) {
     case 13:
@@ -233,7 +233,7 @@ void TinyCtrl::SetState(SpriteObj *part, s32 next)
             /* pinned, as in the C (under agbcp and old_agbcp): unpinned,
              * `pad` lands in r0 where the ROM has r2, and pinning it
              * alone moves `x` off r1 */
-            MATCH_HOLD_REG(SpriteObj *, pad, r2);
+            MATCH_HOLD_REG(MovingSprite *, pad, r2);
             MATCH_HOLD_REG(s32, x, r1);
 
             if (next == 1)
@@ -241,7 +241,7 @@ void TinyCtrl::SetState(SpriteObj *part, s32 next)
             else
                 SetTargetAnim(part, 1);
             SetFrame(part, 4);
-            pad = (SpriteObj *)gTouchableList->items[anchor];
+            pad = (MovingSprite *)gTouchableList->items[anchor];
             x = pad->x;
             this->x = x;
             if (next == 11 || next == 13)
@@ -252,14 +252,14 @@ void TinyCtrl::SetState(SpriteObj *part, s32 next)
     case 3:
     case 7:
         {
-            SpriteObj *pad;
+            MovingSprite *pad;
             s32 ax;
             s32 ay;
             s32 y;
 
             anchor = PickHopTarget();
             SetTargetAnim(part, 4);
-            pad = (SpriteObj *)gTouchableList->items[anchor];
+            pad = (MovingSprite *)gTouchableList->items[anchor];
             ax = pad->x;
             ay = pad->y;
             y = ay - 0x2400;
@@ -295,7 +295,7 @@ void TinyCtrl::SetState(SpriteObj *part, s32 next)
         break;
     case 14:
         {
-            SpriteObj *pad = (SpriteObj *)gTouchableList->items[2];
+            MovingSprite *pad = (MovingSprite *)gTouchableList->items[2];
             s32 x = pad->x;
             s32 y = pad->y - 0x1800;
 
@@ -326,7 +326,7 @@ s32 TinyCtrl::PickHopTarget()
     s32 i;
 
     for (i = 0; i < gTouchableList->count; i++) {
-        SpriteObj *pad = (SpriteObj *)gTouchableList->items[i];
+        MovingSprite *pad = (MovingSprite *)gTouchableList->items[i];
         s32 px = gPlayer->x;
         s32 py = gPlayer->y;
         s32 ax = pad->x;
@@ -344,9 +344,9 @@ s32 TinyCtrl::PickHopTarget()
 /* Spawns a falling hazard (a gCollidableList part driven by a
  * OneShotAnimCtrl) at the `n`th third of the way from `part` towards
  * the player. */
-void TinyCtrl::SpawnFallingLeaves(SpriteObj *part, s32 n)
+void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
 {
-    SpriteObj *p = (SpriteObj *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
     s32 x;
 
@@ -362,7 +362,7 @@ void TinyCtrl::SpawnFallingLeaves(SpriteObj *part, s32 n)
     p->mover = ctrl;
     ctrl->Attach(p);
     p->f.flags |= 0x10;
-    AddToPartList(gCollidableList, p);
+    CollidableList()->Add(p);
     {
         /* the ROM materializes 0x80 before storing the 0s */
         s32 k = 0x80;

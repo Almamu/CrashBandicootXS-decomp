@@ -17,7 +17,7 @@ extern "C" {
 #include "bosses.h"
 }
 
-class SpriteObj;
+class MovingSprite;
 
 /* The controllers' base class (src/objects/ctrl.cpp); struct ctrl
  * (objects.h) is its C view, for the C files, and must keep the same
@@ -32,26 +32,26 @@ class SpriteObj;
 class Ctrl
 {
 public:
-    void *owner;                     // 0x00 - the attached sprite object (Attach)
+    MovingSprite *owner;             // 0x00 - the attached sprite (Attach)
     const struct entry_set *animSet; // 0x04
     s32 state;                       // 0x08 - GetCtrlMode/SetCtrlMode
     // 0x0C: the vtable pointer, gCtrlVtable or a subclass's
 
-    Ctrl();                                                                   // InitCtrl
-    virtual void Update(SpriteObj *part);                                     // 1 UpdateCtrl
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg);          // 2 CtrlHandleEvent
-    virtual void Attach(SpriteObj *owner);                                    // 3 AttachCtrl
-    virtual void SetMode(s32 mode);                                           // 4 SetCtrlMode
-    virtual void StartTargetMotionX(SpriteObj *part, const s32 *vec);         // 5
-    virtual void StartTargetMotionY(SpriteObj *part, const speed_ramp *ramp); // 6
-    virtual void SetTargetMotionX(SpriteObj *part, const s32 *vec);           // 7
-    virtual void SetTargetMotionY(SpriteObj *part, const speed_ramp *ramp);   // 8
-    virtual ~Ctrl();                                                          // 9 DestroyCtrl
-    virtual s32 SetTargetAnim(SpriteObj *part, s32 anim);                     // 10
-    virtual void StartTargetMotionXFromSet(SpriteObj *part, s32 index);       // 11
-    virtual void StartTargetMotionYFromSet(SpriteObj *part, s32 index);       // 12
-    s32 GetMode();                                                            // GetCtrlMode
-    void SetAnimSet(const struct entry_set *set);                             // SetCtrlAnimSet
+    Ctrl();                                                              // InitCtrl
+    virtual void Update(MovingSprite *part);                             // 1 UpdateCtrl
+    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg);  // 2 CtrlHandleEvent
+    virtual void Attach(MovingSprite *owner);                            // 3 AttachCtrl
+    virtual void SetMode(s32 mode);                                      // 4 SetCtrlMode
+    virtual void StartTargetMotionX(MovingSprite *part, const s32 *vec); // 5
+    virtual void StartTargetMotionY(MovingSprite *part, const speed_ramp *ramp); // 6
+    virtual void SetTargetMotionX(MovingSprite *part, const s32 *vec);           // 7
+    virtual void SetTargetMotionY(MovingSprite *part, const speed_ramp *ramp);   // 8
+    virtual ~Ctrl();                                                             // 9 DestroyCtrl
+    virtual s32 SetTargetAnim(MovingSprite *part, s32 anim);                     // 10
+    virtual void StartTargetMotionXFromSet(MovingSprite *part, s32 index);       // 11
+    virtual void StartTargetMotionYFromSet(MovingSprite *part, s32 index);       // 12
+    s32 GetMode();                                                               // GetCtrlMode
+    void SetAnimSet(const struct entry_set *set);                                // SetCtrlAnimSet
 };
 
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(Ctrl) == sizeof(struct ctrl));
@@ -64,8 +64,8 @@ class EffectCtrl : public Ctrl
 {
 public:
     EffectCtrl(); // InitEffectCtrl
-    virtual void Update(SpriteObj *part);
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg);
+    virtual void Update(MovingSprite *part);
+    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg);
     virtual ~EffectCtrl(); // DestroyEffectCtrl
     void Reset();          // ResetEffectCtrl
 };
@@ -79,7 +79,7 @@ class StompedHopPadCtrl : public Ctrl
 {
 public:
     StompedHopPadCtrl(); // CreateStompedHopPadCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~StompedHopPadCtrl(); // DestroyStompedHopPadCtrl
 };
 
@@ -93,7 +93,7 @@ class OneShotAnimCtrl : public Ctrl
 {
 public:
     OneShotAnimCtrl();
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~OneShotAnimCtrl();
 };
 

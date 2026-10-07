@@ -35,7 +35,7 @@ void CrateList::CollidePlayer(s32 unused)
             CrateGridNode *node;
 
             for (node = heads[i]; node != 0; node = node->next)
-                ((Crate *)node->data)->BreakIfTouchedByPlayer();
+                node->data->BreakIfTouchedByPlayer();
             i--;
         } while (i >= lo);
     } else {
@@ -52,7 +52,7 @@ void CrateList::CollidePlayer(s32 unused)
             CrateGridNode *node;
 
             for (node = heads[i]; node != 0; node = node->next)
-                ((Crate *)node->data)->CollideWithPlayer(action, px, py);
+                node->data->CollideWithPlayer(action, px, py);
             i--;
         } while (i >= lo);
     }

@@ -6,7 +6,7 @@
  * in the Makefile's OLD_AGBCC_OBJS (the constant-before-`ldrb` flag ORs
  * in Update are old_agbcc's tell), and cxx_symbols.txt gives the
  * methods their C names. The sprite object it drives is sprite_obj.hpp's
- * SpriteObj. */
+ * MovingSprite. */
 
 /* Marks the effect part gone when it has left the screen, when it has
  * been touched (flags bit 3), or when its animation has played through.
@@ -14,7 +14,7 @@
  * the gone bit through the bitfield view of +0x0C and bit 3 is tested
  * through the byte view: that is what makes the second copy reuse the
  * tested byte and its `1` for the OR, in the ROM's registers. */
-void EffectCtrl::Update(SpriteObj *part)
+void EffectCtrl::Update(MovingSprite *part)
 {
     if (!part->IsOnScreen())
         part->MarkGone();
@@ -24,7 +24,7 @@ void EffectCtrl::Update(SpriteObj *part)
         part->MarkGone();
 }
 
-void EffectCtrl::HandleEvent(SpriteObj *, s32, s32)
+void EffectCtrl::HandleEvent(MovingSprite *, s32, s32)
 {
 }
 

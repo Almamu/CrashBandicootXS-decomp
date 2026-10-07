@@ -1621,7 +1621,7 @@ void DetonateNitroCrates(void)
 
     if (i < Crates()->count) {
         do {
-            Crate *o = (Crate *)Crates()->slots[i];
+            Crate *o = Crates()->slots[i];
 
             if (o->GetClassId() == 3 && o->kind == CRATE_KIND_NITRO) {
                 if ((o->state & CRATE_STATE_MASK) == 0)
@@ -1695,7 +1695,7 @@ void Crate::ActivateIronSwitch()
     i = 0;
     if (i < Crates()->count) {
         do {
-            Crate *o = (Crate *)Crates()->slots[i];
+            Crate *o = Crates()->slots[i];
 
             if (o->GetClassId() == 3 && (o->state & CRATE_STATE_MASK) == 0) {
                 if (o->kind == CRATE_KIND_OUTLINE && o->paramA == paramA) {

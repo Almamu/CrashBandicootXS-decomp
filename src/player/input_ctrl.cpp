@@ -87,7 +87,7 @@ void InputCtrl::KillPlayer(s32 anim)
 {
     PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
     SetMode(3);
-    SetTargetAnim((SpriteObj *)target, anim);
+    SetTargetAnim((GroundSprite *)target, anim);
     target->flags.bits.flag7 = 0;
     target->flags.bits.flag6 = 0;
     target->dead = 1;
@@ -118,7 +118,7 @@ void InputCtrl::StateStart()
  * entries 3/5/0; right: X entry 8 and a near camera lead; left, for up to
  * 30 frames at a time: X entry 7 and a far lead; neither: X entry 1). Then
  * the state method, then the queued motion. */
-void InputCtrl::Update(SpriteObj *)
+void InputCtrl::Update(MovingSprite *)
 {
     if (state != 3) {
         u32 keys;
@@ -181,9 +181,9 @@ void InputCtrl::ApplyMotion()
         const speed_ramp *rec = &gInputCtrlMotionRecords[animSet->entries[motionX][0]];
 
         if (motionXKeepSpeed)
-            SetTargetMotionX((SpriteObj *)target, &rec->start);
+            SetTargetMotionX((GroundSprite *)target, &rec->start);
         else
-            StartTargetMotionX((SpriteObj *)target, &rec->start);
+            StartTargetMotionX((GroundSprite *)target, &rec->start);
         motionXPending = 0;
         motionXKeepSpeed = 0;
     }
@@ -191,9 +191,9 @@ void InputCtrl::ApplyMotion()
         const speed_ramp *rec = &gInputCtrlMotionRecords[animSet->entries[motionY][1]];
 
         if (motionYKeepSpeed)
-            SetTargetMotionY((SpriteObj *)target, rec);
+            SetTargetMotionY((GroundSprite *)target, rec);
         else
-            StartTargetMotionY((SpriteObj *)target, rec);
+            StartTargetMotionY((GroundSprite *)target, rec);
         motionYPending = 0;
         motionYKeepSpeed = 0;
     }
@@ -204,7 +204,7 @@ void InputCtrl::ApplyMotion()
 void InputCtrl::SetModeAnim(s32 mode, s32 anim, s32, s32)
 {
     SetMode(mode);
-    SetTargetAnim((SpriteObj *)target, anim);
+    SetTargetAnim((GroundSprite *)target, anim);
 }
 
 /* gInputCtrlStateFuncs[3]: once the death animation ends, the target is
@@ -266,7 +266,7 @@ void InputCtrl::Reset()
 }
 
 /* Events 1-4 (the hits) kill the player on animation 1. */
-void InputCtrl::HandleEvent(SpriteObj *, s32 event, s32)
+void InputCtrl::HandleEvent(MovingSprite *, s32 event, s32)
 {
     /* a non-literal lower bound keeps gcc from folding `>= 1` into
      * `> 0` (the ROM compares against 1) and from merging the two tests
@@ -278,7 +278,7 @@ void InputCtrl::HandleEvent(SpriteObj *, s32 event, s32)
 }
 
 /* The controlled sprite object is the player. */
-void InputCtrl::Attach(SpriteObj *owner)
+void InputCtrl::Attach(MovingSprite *owner)
 {
     target = (struct player *)owner;
 }
