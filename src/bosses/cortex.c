@@ -254,7 +254,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
 
 /* "Mark part gone": set flags bit 0, then unless its id is 0xFFFF set the
  * id's bit in the gEntityFlags+0x108 bitmap - the same sequence as
- * MarkEntityGone (graphics.c) and InputCtrlStateDead (input_ctrl.cpp), inlined.
+ * MarkEntityGone (graphics.cpp) and InputCtrlStateDead (input_ctrl.cpp), inlined.
  * The id is re-read (`volatile`) after the 0xFFFF test, and the word index
  * is a *signed* division of that zero-extended value, which is what gives
  * the ROM's copy + `asr #5` + subtract. The register pins are

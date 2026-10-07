@@ -6,10 +6,11 @@
 #include "globals.h"
 
 /* DrawSpritePieces (0x080073DC-0x08007634), the plain (non-affine) sibling of
- * `DrawAffineSpritePieces` (affine_sprite_pieces.c). Split out of graphics.c: it is the
- * last function there, and it needs old_agbcc (Makefile OLD_AGBCC_OBJS)
- * while the rest of graphics.c is built with agbcc - the ROM loads the
- * piece id's `0xf` mask before the `ldrb` it is combined with.
+ * `DrawAffineSpritePieces` (affine_sprite_pieces.c). Split out of graphics.c
+ * (now graphics.cpp) when that was still built with agbcc: it needs
+ * old_agbcc (Makefile OLD_AGBCC_OBJS) - the ROM loads the piece id's
+ * `0xf` mask before the `ldrb` it is combined with. graphics.cpp is an
+ * old_agbcp object too since #664.
  *
  * Queues one OAM entry per visible sub-piece of an animated `part`
  * (mirrored per the part's flag bits) and sends the part's whole tile

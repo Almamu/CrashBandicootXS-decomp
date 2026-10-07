@@ -23,7 +23,7 @@
 /* AABB-overlap test between `self`'s own table-driven half-width/
  * half-height box (centered on `self`'s own position, via the same
  * `_call_via_r1` table-trampoline convention `CheckEntityPlayerContact`/
- * `UpdateEntity`, graphics.c, already establish - here at the table's
+ * `UpdateEntity`, graphics.cpp, already establish - here at the table's
  * own `+0x10`/`+0x14` offset pair) and a caller-supplied `struct aabb
  * *`. Short-circuits true (skipping the real test) when `flags` bit 4
  * is set, or while the crate is falling (`fallDistance`, where the base
@@ -69,7 +69,7 @@ u32 IsCrateInsideRect(struct crate *selfArg, struct aabb *boxArg)
          * `rec[5] << 7` shift, stealing r3/r0 from each other (the
          * same "which anonymous scratch register" gap already
          * NAKED-parked for `GetSpriteBounds`/`GetSpriteHitbox`,
-         * sprite.c) - anchored as one literal block instead,
+         * sprite.cpp) - anchored as one literal block instead,
          * matching `self`'s own register (r5, reused here for `top`
          * once `self` is dead) and `rec`'s (r0, reused for the
          * `self->y` load once `rec` is dead). */
@@ -212,7 +212,7 @@ u32 GetCrateClassId(void)
 /* Sets `self->table`, then - for an iron switch crate (`kind` 3) -
  * frees its outline-crate `group` (unless it's PHYS_NO_GROUP or
  * `NULL`) and clears `groupAllocated`, before tail-calling
- * `DestroySpriteObj` (already matched, `sprite_obj.c`) - same table-set/
+ * `DestroySpriteObj` (already matched, `sprite_obj.cpp`) - same table-set/
  * tail-call shape as `DestroyWumpa` (`wumpa.c`). */
 void DestroyCrate(struct actor *self, u32 arg1)
 {
@@ -234,7 +234,7 @@ void DestroyCrate(struct actor *self, u32 arg1)
 }
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched,
- * `sprite_obj.c`), sets `self->table`, clears `groupAllocated`, then
+ * `sprite_obj.cpp`), sets `self->table`, clears `groupAllocated`, then
  * resets `self`'s own collision-response state via `ResetCrate`
  * (`crate_reset.c`). */
 struct actor *InitCrate(struct actor *self)

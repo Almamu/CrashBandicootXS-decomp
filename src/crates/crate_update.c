@@ -42,7 +42,7 @@
  * `FinishBrokenCrate`. Finally, unconditionally, calls `AdvanceSpriteAnim` and
  * hands `self+0x18`'s table's own `+0x60`/`+0x64` offset/function-
  * pointer pair off to the `_call_via_r1` table-trampoline (the same
- * convention `CheckEntityPlayerContact`/`UpdateEntity`, graphics.c, establish).
+ * convention `CheckEntityPlayerContact`/`UpdateEntity`, graphics.cpp, establish).
  *
  * Matches under old_agbcc. The old NAKED note blamed register pressure
  * on the field addresses; the source-level causes were (see

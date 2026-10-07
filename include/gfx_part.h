@@ -6,10 +6,11 @@
  * ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone/GetSpriteAnimPaletteSlot. First written for
  * src/bosses/cortex.c (issue #23); also used by the
  * "trigger effect type N" spawners in
- * src/level/spawn_gems.c. The same object is described
- * under other local names elsewhere (`struct gobj` in
- * include/gobj_1a794.h, `struct settings_icon_actor` in
- * include/pause_menu.h) - not merged yet. */
+ * src/level/spawn_gems.c. A C view of include/sprite_obj.hpp's
+ * MovingSprite, the definition (sprite_obj.hpp checks that this view
+ * fits in it), for the C files; also described as `struct gobj`
+ * (include/gobj_1a794.h), `struct box_part` (include/box_part.h) and
+ * `struct settings_icon_actor` (include/pause_menu.h). */
 
 struct anim_record {
     u8 unk_00[0x16];

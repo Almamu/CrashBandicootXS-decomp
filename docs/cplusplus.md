@@ -383,7 +383,11 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
 - **Vtables stay C data.** The class header has `#pragma interface`, so
   g++ doesn't emit the classes' vtables; the code refers to
   `_vt.<len>Class`, and the ROM's tables stay the C arrays in
-  `src/data/entity_vtables_7e3bec.c`.
+  `src/data/entity_vtables_7e3bec.c`. One header has no `#pragma
+  interface`, include/entity.hpp: graphics.cpp needs the out-of-line
+  copies of `Entity`'s inline methods (part 7a). It also gets Entity's
+  vtable, a weak symbol in a `.gnu.linkonce.d` section, which the linker
+  script discards (`/DISCARD/`); the C table wins.
 - **Names.** `cxx_symbols.txt` maps each mangled name the C++ objects
   define or use to its C name (`Update__10EffectCtrlP9SpriteObj
   UpdateEffectCtrl`, `_vt.10EffectCtrl gEffectCtrlVtable`, `__4Ctrl
@@ -440,6 +444,10 @@ counts them by kind) and what the C++ still needs.
 | `src/player/action_ctrl_hang.cpp` | `ActionCtrl::StateLeftGround`, `StateDying`, `StateWarpIn`, the 6 hang states, `ReleaseHang`, `DoSuperBodySlamShockwave`, `StartTornadoSpin` | 11 | old_agbcp | 15 pins, 1 const, 3 uses, 3 holds, 1 keep, 2 asm and a file-scope pool word, 2 volatile casts, a retyped store, an asm label -> 1 pin, 1 hold, 1 use | 5b |
 | `src/player/action_ctrl_run_jump.cpp` | `ActionCtrl::StateRun`, `StateJump` | 2 | old_agbcp | 1 keep -> 1 keep | 5b |
 | `src/player/action_ctrl_states.cpp` | `ActionCtrl::StateAirborne`, `StateFlipBodySlamStart`, `StateSlide`, the spin, crouch and crawl states | 11 | old_agbcp | 6 pins, 1 keep, 1 volatile pointer -> 1 volatile pointer | 5b |
+| `src/gfx/graphics.cpp` | `Entity` (include/entity.hpp), and the sprite graphics managers `OamBuffer`, `ObjVramCursor`, `PaletteCache`, `SpriteBankSet` (sprite_obj.hpp), with 7 C-linkage functions (the VRAM DMA queue, `WorldToScreen`, ...) | 76 + 7 | **old_agbcp** (was agbcc) | 64 pins, 11 asm, 5 retyped stores, 1 volatile read -> 0 | 7a |
+| `src/objects/sprite.cpp` | `SpriteRenderer`, `Sprite`'s `Reset`, boxes, `CheckPlayerContact` (the pickups'), `IsOnScreen`, `OverlapsRect`, `AdvanceAnim` | 13 | old_agbcp | 22 pins, 2 asm, 2 retyped stores -> 1 pin, 1 retyped store | 7a |
+| `src/objects/sprite_obj.cpp` | `Sprite`: constructor, destructor, the other virtual methods, the frame and animation accessors, with the 3 C-linkage hitbox edge helpers | 46 + 3 | **old_agbcp** (was agbcc) | 108 pins, 1 keep, 11 asm, 2 retyped reads -> 0 | 7a |
+| `src/objects/sprite_anim.cpp` | the rest of `Sprite`'s accessors, `UiSprite`, `PartList`'s `Update`, `Collide`, `CollideWithPlayer` | 32 | old_agbcp | 22 pins, 3 asm -> 0 | 7a |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -679,14 +687,114 @@ action_obj.h's byte view of `flags2` (`ACT_PART_FLAGS0D`) in
 `StateLeftGround`, `StateAirborne` and `StateAirSpin`, and a `do { }
 while (0)` around one call in `StateCrawl` (gotchas).
 
+Part 7a in numbers: the base of the entity family, 4 objects and 177
+functions: `graphics.cpp` (the `Entity` base class and the sprite
+graphics managers it shares the file with), `sprite.cpp`,
+`sprite_obj.cpp` and `sprite_anim.cpp` (`Sprite`, `UiSprite`, the part
+list's update and collision passes). Project-wide: `MATCH_HOLD_REG` 1959
+-> 1744, instruction-emitting `asm` 233 -> 206, `MATCH_KEEP` 53 -> 52,
+retyped field stores 224 -> 217, retyped field reads 92 -> 90 and scoped
+volatiles 45 -> 44. All four
+match only under old_agbcp, with no workaround but one pin
+(`Sprite::CheckPlayerContact`'s shared 1, below) and one retyped store
+(`Sprite::Reset` clears the mirror and palette bytes as one halfword).
+`graphics.o` and `sprite_obj.o` move to `OLD_AGBCC_OBJS`: their 172 pins
+and 22 `asm` statements were old_agbcc's code (constant before `ldrb`,
+the accumulator in the constant's register, the operand order of an
+`add`) reproduced under agbcc. Even `IsEntityInsideRect`'s 10-instruction
+`asm` block and `MarkEntityGone`'s copy-and-shift are plain C++ now.
+
+**The real classes** (include/entity.hpp, include/sprite_obj.hpp), with the
+ROM's sizes (`CreateEntity` allocates 0x1C bytes, `CreateSpriteObj` 0x40,
+`CreateMovingSprite` 0x78, `CreateGroundSprite` 0x80):
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `Entity` | 0x1C | gEntityVtable (11 slots) | graphics.cpp |
+| `Sprite` | 0x40 | gSpriteObjVtable (13) | sprite.cpp, sprite_obj.cpp, sprite_anim.cpp |
+| `UiSprite` | 0x40 | gUiSpriteObjVtable | sprite_anim.cpp |
+| `MovingSprite` | 0x78 | gMovingSpriteVtable (15) | still C (moving_sprite*.c, player_contact.c) |
+| `GroundSprite` | 0x80 | gGroundSpriteVtable | still C (ground_sprite*.c) |
+| `SpriteObj` | 0x80 | none of its own | the controllers' name for what they drive |
+
+The 0x40-byte class is `Sprite`: the C names of its methods say "SpriteObj"
+(`InitSpriteObj`, `DestroySpriteObj`, `gSpriteObjVtable`), and cxx_symbols.txt
+maps them. The name `SpriteObj` was taken: every controller method takes a
+`SpriteObj *` (in its mangled name, `P9SpriteObj`), and the C++ files use
+its fields from `mover` to `type`. So `SpriteObj` stays, as an empty
+subclass of `GroundSprite`: it has every field it had, and every Entity,
+Sprite and MovingSprite method. The controllers drive moving sprites; their
+methods can take a `MovingSprite *` once no part of #664 is in flight
+(the plan below).
+
+**#656 for this family.** The classes are the definitions now: one set of
+names per byte (`tag` the animation, `frame` the step, `stepTimer`,
+`bank` the sprite bank, the flag bits of +0x0C/+0x0D in `EntityFlags`,
+the mirror byte's two bitfield views). The C views stay for the C files,
+each checked against its class in sprite_obj.hpp: actor.h's `struct
+actor` (Entity), box_part.h's `struct box_part` (MovingSprite, with a few
+subclass fields), gfx_part.h's `struct gfx_part` (a prefix of
+MovingSprite) and gobj_1a794.h's `struct gobj` (GroundSprite).
+
+What made the C++ match:
+
+- **`Entity`'s inline methods.** The ROM's graphics.c ends with
+  `InitEntity`, 26 one-line accessors and `DestroyEntity`, in that order,
+  after `CreateEntity`, `GetEntityClassId` and `ResetEntity`; and the
+  subclasses inline `DestroyEntity` (`DestroySpriteObj`) and
+  `MarkEntityGone` (the controllers). That is a class whose accessors,
+  constructor and destructor are inline, in a header with no `#pragma
+  interface`: g++ 2.9 then emits the vtable in the file that defines the
+  first non-inline virtual method (`CheckPlayerContact`, graphics.cpp),
+  and with it out-of-line copies of all the inline methods, at the end of
+  the file, **in the reverse of their declaration order**. So
+  include/entity.hpp has no `#pragma interface`, declares the accessors
+  inline from `GetId` (`DestroyEntity`'s neighbour) up to
+  `ClearAlwaysActive`, and graphics.cpp defines the constructor `inline`
+  just before `Create`, which inlines it (`new Entity`); its copy is the
+  first one emitted. The vtable g++ emits is a weak symbol in a
+  `.gnu.linkonce.d` section: the linker script's `/DISCARD/` drops it, and
+  the ROM's table is still the C data. Two accessors call another one out
+  of line (`SetPosVec`, `SetPixelPosVec`), as in the ROM: a method declared
+  later in the class isn't compiled yet when an earlier one's body is, so
+  it can't be inlined there.
+- **Struct arguments.** A struct passed by value is copied by g++ with
+  `memcpy`, which in this ROM is `MemCopy32` (src/system/boot.c; GAX has
+  `.set memcpy, MemCopy32`), so cxx_symbols.txt maps `memcpy` to it. That
+  is `CollidePartList`'s "copy the box into a shared temporary" before each
+  call: `CollideWithPlayer(box, part)`, with no `MemCopy32` in the source.
+- **Bit tests and stores.** The ROM extracts single flag bits as `(flags >>
+  n) & 1` (a byte, a shift and a 1), which a 1-bit `u8` field read doesn't
+  give (`lsl; lsr`): the accessors and tests spell the shift, with a local
+  where the test is negated (`s32 hidden = ...; if (!hidden)`, else g++
+  adds an `eor`). Clears and sets are bitfield stores (`f.b.vulnerable =
+  0`), which give the ROM's `-0x41` mask; a two-bit store (`attr0.affineMode
+  = 2`, gfx.h's new byte view of an OAM entry's attribute 0) gives
+  `HideUnusedOamEntries`'s `-4` where `& ~3` gives `0xFC`. The mirror byte
+  has an unsigned bitfield view too (`mirrorFlags`), for the values the ROM
+  extracts (`lsl #27; lsr #31`); the signed one (`mirrorBits`) is for tests.
+- **Small shapes.** `table[i++]` four times gives `SetOamAffineScales`'s
+  pointer stepping 8 bytes per store; `if (slotOf[id] != 0xFF) return
+  slotOf[id];` gives `GetPaletteSlot`'s registers; reading `gPlayer` again at
+  each use (`PlayerSprite()`) gives `CollidePartWithPlayer`'s reloads; a
+  local copy of `bank` gives `SetSpriteFrameIndex`'s load order.
+
+Kept: `Sprite::CheckPlayerContact`'s one pin (the 1 shared by the two flag
+tests and the gone flag's `orr`; unpinned, old_agbcp gives that register to
+the gone bit's shift instead) and `Reset`'s halfword store.
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
 class in a `.hpp` header and keeps its C struct in the C header for the
 C files: `Ctrl`/`struct ctrl` (objects.h), `InputCtrl`/`struct
 input_ctrl` (input_ctrl.hpp) and `BossCtrl`/`struct boss_ctrl` (player.h)
-and `MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h) (boss_ctrl.hpp), `SpriteObj`/`struct
-gobj` (gobj_1a794.h), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
+and `MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h) (boss_ctrl.hpp),
+`Entity`/`struct actor` (actor.h; entity.hpp), `MovingSprite`/`struct
+box_part` (box_part.h), `GroundSprite`/`struct gobj` (gobj_1a794.h),
+`PartList`/`struct part_list`, `OamBuffer`/`struct oam_shadow_buffer`,
+`ObjVramCursor`/`struct vram_upload_cursor`, `PaletteCache`/`struct
+palette_cache` (sprite_obj.hpp), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
 `PeriodicSpawner`/`struct periodic_spawner` (enemies.h),
 `ActionCtrl`/`struct act` (action_obj.h). Each class has
 a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
@@ -695,18 +803,13 @@ converted methods stay in the C headers, under their C names, for the
 vtable data and the C callers. When the last C user of a struct is
 converted, the struct can go.
 
-**Sprite objects.** `include/sprite_obj.hpp` has `Entity` (struct
-actor's 0x1C-byte header, all of gEntityVtable's slots, `MarkGone()`),
-`SpriteObj` (struct gobj's fields, `mover` the part's `Ctrl`, and
-gSpriteObjVtable's slots 11 and 12) and `MovingSprite` (slot 13, the
-event handler of gMovingSpriteVtable and the tables built on it, such as
-the player's), shared by the controllers instead of each file's own
-partial view.
-`Entity`'s constructor is InitEntity (still C) and its destructor is
-inline, as DestroyPeriodicSpawner shows; the family itself is converted
-later. `EnemyCtrl` reaches its part through an anonymous union, as
-part_ctrl.h's `struct ctrl_target` (its fields) or as a `SpriteObj`
-(what the `Ctrl` methods and the part's virtual methods take).
+**Sprite objects.** `include/entity.hpp` has `Entity` and
+`include/sprite_obj.hpp` the classes built on it (part 7a, above), shared
+by the controllers instead of each file's own partial view. `EnemyCtrl`
+reaches its part through an anonymous union, as part_ctrl.h's `struct
+ctrl_target` (its fields) or as a `SpriteObj` (what the `Ctrl` methods and
+the part's virtual methods take). The player is still C: C++ code reaches
+it as a `GroundSprite` through `PlayerSprite()`.
 
 ### Next batches
 
@@ -734,11 +837,37 @@ Bigger controllers, roughly in order (function counts from
    `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and
    destructors, Tiny's constructor, destructor and `StartHop`, the
    Cortex target's and boss controller's other methods, and the Cortex
-   shot class). cortex.c mixes controllers and entities, so it may wait
-   for the entity family.
-5. **The platform mover** (`src/objects/platform.c`, `gPlatformMoverVtable`:
-   a `Ctrl`-shaped 0x38-byte class) with the platforms, in the entity
-   family.
+   shot class). cortex.c mixes controllers and entities: it is part 7i
+   below.
+5. **The entity family** (part 7, below), with the platform mover
+   (`src/objects/platform.c`, `gPlatformMoverVtable`: a `Ctrl`-shaped
+   0x38-byte class) in 7d.
+
+#### The entity family (part 7)
+
+Whole files only, base classes first. Function and workaround counts are
+the C's (`tools/cpp_survey.py --objects`, `tools/match_idioms.py`); "old"
+is an object already in `OLD_AGBCC_OBJS`. Expect most objects to match
+only under old_agbcp, as all four of 7a's do, and most of their pins to go.
+
+| Part | Files | Classes | Size | Depends on |
+|---|---|---|---|---|
+| ~~7a~~ | ~~graphics.c, sprite.c, sprite_obj.c, sprite_anim.c~~ | `Entity`, `Sprite`, `UiSprite`, `PartList` (update, collide), the sprite graphics managers | done | |
+| 7b | objects/moving_sprite.c, moving_sprite_collide.c, player_contact.c, step_probe.c, ground_sprite.c, ground_sprite_collide.c (old), ground_sprite_update.c | `MovingSprite` (its 15 slots, the speeds, the controller), `GroundSprite` (the terrain probe) | 55 functions, 1700 lines, 118 pins, 5 asm | 7a |
+| 7b' | the controller headers and cxx_symbols.txt | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes | a rename, no code change | 7b; no other part of #664 in flight |
+| 7c | objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`-like class) and the palette cycles | 20 functions, 970 lines, 37 pins, 9 asm | 7a |
+| 7d | objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old) | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) | 18 functions, 1050 lines, 34 pins, 3 asm | 7b |
+| 7e | crates/crate.c, crate_create.c (old), crate_draw.c, crate_update.c (old), crate_hit.c (old), crate_touch.c (old), crate_player_collide.c (old), crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c | `Crate` (struct crate: a 0x64-byte `Sprite`) and its accessors (slot_crate.c) | 53 functions, 2320 lines, 48 pins, 20 asm | 7a |
+| 7f | crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old) | `CrateList`, the crate grid | 13 functions, 1120 lines, 21 pins, 1 asm | 7e |
+| 7g | crates/crate_break.c (old) | the crates' break and bounce paths | 24 functions, 2860 lines, 11 pins, 6 asm | 7e, 7f |
+| 7h | pickups/extra_life.c (old), wumpa.c, wumpa_update.c (old) | `ExtraLife` and `Wumpa` (0x54-byte `Sprite`s with a 14th slot), `Stopwatch` (a `Sprite`), and `ActionCtrl::Reset` (`ResetActionCtrl` is in wumpa.c; then action_obj.h's `struct act` can go) | 37 functions, 1370 lines, 24 pins, 3 asm | 7a |
+| 7i | bosses/cortex.c (old) | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | 25 functions, 1000 lines, 49 pins, 4 asm | 7d |
+
+Outside this family, the classes built on these: the player (`struct
+player`, a `GroundSprite`; player*.c), the level select's camera lead and
+launch pad (`MovingSprite`s, menus/level_select.c) and the effect parts'
+spawner (level/entity_spawner.c, `new EffectCtrl`). With the family
+converted, its vtables could be emitted by g++ (plan item 5 below).
 
 ## Recommendation and plan
 
@@ -813,8 +942,23 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **asm labels on destructors** break g++ 2.9's destructor lookup, hence
   the objcopy rename.
 - **Without `#pragma interface`,** g++ emits each class's vtable in the
-  file that defines its first virtual method, as a weak
-  `.gnu.linkonce.d` section the linker script doesn't place.
+  file that defines its first non-inline virtual method, as a weak
+  `.gnu.linkonce.d` section the linker script doesn't place (it
+  discards it). That file also gets an out-of-line copy of **every**
+  inline method of the class, used or not, at its end, in the reverse
+  of their declaration order: that is how graphics.cpp ends with
+  `InitEntity`, the accessors and `DestroyEntity` (include/entity.hpp).
+  An inline method meant only for other files (a second constructor,
+  say) would be emitted there too.
+- **An inline method calls a later-declared one out of line.** g++
+  compiles in-class method bodies in declaration order, so a method
+  declared after the caller isn't available for inlining yet
+  (`Entity::SetPosVec` calls `SetPos`).
+- **A method defined `inline` in one file only** (declared plainly in
+  the class) is inlined in that file and called out of line from the
+  others: `Entity::Entity()`, inlined into `Entity::Create` (`new
+  Entity`), called as `InitEntity` by the subclasses' constructors, as in
+  the ROM.
 - **Argument order.** A virtual call evaluates `this` and the slot before
   the arguments. Where the ROM computes an argument first, put it in a
   local (experiment 2), not in a pin.
@@ -845,7 +989,14 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   local in C++: `CollidePartList(list, box, ...)` after `box =
   GetSpriteHitbox(part)` copies twice and grows the frame. Pass the call
   itself, `CollidePartList(list, GetSpriteHitbox(part), ...)`
-  (`UpdateMegaMix`).
+  (`UpdateMegaMix`). Where the ROM does copy (a `MemCopy32` call into a
+  temporary, then the call), that copy is g++'s: pass the variable
+  (`PartList::Collide` passes its `box` parameter on). The game's
+  `memcpy` is `MemCopy32`, and cxx_symbols.txt maps the name.
+- **A single flag bit read as a value** is `(flags >> n) & 1` in the ROM
+  (shift, then AND with a 1); a 1-bit `u8` field gives `lsl; lsr`. And
+  `if (!((flags >> n) & 1))` gets an `eor`: test a local (`s32 hidden =
+  (flags >> 2) & 1; if (!hidden)`).
 - **A byte RMW with a folded mask:** `flags &= ~4` on a `u8` member
   compiles to the byte constant `0xFB` where the C front end kept `-5`
   (`movs #5; negs`). Pass the mask as an `s32` (`ClearFlags(&f, ~4)`).

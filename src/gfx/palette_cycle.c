@@ -300,7 +300,7 @@ void DrawHudPart(struct hud_digit_part *part, s32 arg1, s32 arg2)
  * reached through that table (no `bl`; an earlier note called it
  * unused). Like every gcc 2.x destructor here it restores its own class's
  * table, then chains to the base destructor `DestroyUiSpriteObj` (which
- * swaps `table` again, see sprite_anim.c). */
+ * swaps `table` again, see sprite_anim.cpp). */
 void DestroyHudPart(struct actor *part, u32 arg1)
 {
     part->table = (void *)gHudPartVtable;

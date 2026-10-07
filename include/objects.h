@@ -276,7 +276,7 @@ extern struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind);
 extern void CheckPlayerContact(void *part);
 extern void ResolvePlayerContact(void *part);
 
-/* src/objects/sprite.c */
+/* src/objects/sprite.cpp */
 extern void DrawSpriteAt(void *self, void *part, s32 x, s32 y);
 extern void DrawSprite(void *self, void *part);
 extern void DestroySpriteRenderer(void *self, u32 flags);
@@ -291,7 +291,7 @@ extern s32 IsSpriteObjOnScreen(struct box_part *part);
 extern s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region);
 extern void AdvanceSpriteAnim(struct box_part *part);
 
-/* src/objects/sprite_anim.c */
+/* src/objects/sprite_anim.cpp */
 extern u8 GetSpriteAnimFrameCount(struct actor *part);
 extern u8 GetSpriteAnimDuration(struct actor *part);
 extern void ResetSpriteFrameIndex(void *part);
@@ -326,7 +326,7 @@ extern void CollidePartList(struct part_list *list, struct aabb box, s32 unused,
                             struct box_part *other);
 extern void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
 
-/* src/objects/sprite_obj.c */
+/* src/objects/sprite_obj.cpp */
 extern s32 SpriteHitboxOverlaps(struct actor *part, void *region);
 extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);

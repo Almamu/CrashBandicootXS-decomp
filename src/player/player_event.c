@@ -123,7 +123,7 @@ void CollidePlayerWithObjects(struct player *self)
  *   refresh/notify convention). Also (regardless of the mode-3 gate,
  *   using `self`'s own blink deadline at `self+0x8c`) draws `self`
  *   itself via `DrawSprite(gSpriteRenderer, self)` (matched,
- *   `sprite.c` - queues `self`'s own OAM using its own Q8
+ *   `sprite.cpp` - queues `self`'s own OAM using its own Q8
  *   position) either unconditionally (mode == 3, or the deadline has
  *   expired) or, while the deadline is still armed, only on the same
  *   4-frame parity - a standard hit-invincibility blink. Once that

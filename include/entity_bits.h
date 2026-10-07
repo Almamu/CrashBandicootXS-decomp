@@ -6,7 +6,7 @@
 #include "globals.h"
 
 /* The entity "gone" bitmap helpers (#667): MarkEntityGone's sequence
- * (graphics.c), which many objects inline instead of calling it. An
+ * (graphics.cpp), which many objects inline instead of calling it. An
  * entity that is collected, broken or killed sets its own `gone` flag
  * and, unless its id is ENTITY_ID_NONE, bit `id` of
  * `gEntityFlags->bits0Copy` (struct entity_flags, level.h).
@@ -29,7 +29,7 @@
  *   offset), which is what the matched copies did.
  *
  * Copies that are still spelled out, each with a comment saying why:
- * graphics.c's MarkEntityGone itself, wumpa.c's UpdateStopwatch and
+ * graphics.cpp's MarkEntityGone itself, wumpa.c's UpdateStopwatch and
  * crate_break.c (other asm/pins or wrapper), and enemy_ctrl_update.cpp's
  * MarkGoneFreshBit (a MATCH_CONST inside the sequence). */
 

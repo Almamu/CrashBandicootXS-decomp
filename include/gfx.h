@@ -31,6 +31,14 @@ struct vram_tile_block;
 union oam_shadow_entry {
     u32 words[2];
     u16 attr[4]; // [3] is the affine parameter
+    struct {
+        u8 y;
+        u8 affineMode:2; // 0 regular, 1 affine, 2 hidden, 3 affine at double size
+        u8 objMode:2;    // struct oam_attrs' names
+        u8 mosaic:1;
+        u8 bpp:1;
+        u8 shape:2;
+    } attr0; // byte-wide, as HideUnusedOamEntries stores it
 };
 
 /* Manages a shadow copy of a chunk of the 128-entry hardware OAM table:
@@ -39,10 +47,8 @@ union oam_shadow_entry {
  * the number of affine matrices handed out this frame, then the
  * 1024-byte shadow table itself (128 entries * 8 bytes) starting right
  * after. Affine matrix `m`'s pa/pb/pc/pd are the affine parameters of
- * entries 4m..4m+3 (`table[4 * m + n].attr[3]`). Several functions in
- * graphics.c still use raw pointer casts for volatile or register-pinned
- * access to `count`/the table on purpose (see docs/matching.md, "Matching
- * decompilation"). */
+ * entries 4m..4m+3 (`table[4 * m + n].attr[3]`). The C view of
+ * sprite_obj.hpp's OamBuffer (graphics.cpp). */
 struct oam_shadow_buffer {
     s32 count;
     s32 base;
@@ -256,7 +262,7 @@ extern void DarkenPalette(s32 factor);
 extern void FadePaletteToBlack(void);
 extern s32 IsBrightnessFadeActive(void);
 
-/* src/gfx/graphics.c: the OAM shadow buffer */
+/* src/gfx/graphics.cpp: the OAM shadow buffer */
 extern s32 GetCompletionPercent(void *progress);
 extern void SetOamAffineScales(void *table, u16 *scales, s32 count);
 extern void AppendOamEntries(struct oam_shadow_buffer *self, void *entries, s32 count);
@@ -269,7 +275,7 @@ extern void AddOamEntry(struct oam_shadow_buffer *self, const void *entry);
 extern void DestroyOamBuffer(struct oam_shadow_buffer *self, u32 flags);
 extern struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *self);
 
-/* src/gfx/graphics.c: the VRAM DMA queue and OBJ VRAM cursor */
+/* src/gfx/graphics.cpp: the VRAM DMA queue and OBJ VRAM cursor */
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void FreeVramDmaQueue(void);
@@ -284,7 +290,7 @@ extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
 extern void DestroyObjVramCursor(struct vram_upload_cursor *self, u32 flags);
 extern struct vram_upload_cursor *InitObjVramCursor(struct vram_upload_cursor *self, s32 count);
 
-/* src/gfx/graphics.c: the palette cache */
+/* src/gfx/graphics.cpp: the palette cache */
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
 extern void BindPaletteSlot(struct palette_cache *self, s32 slot, s32 index);
 extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
@@ -302,7 +308,7 @@ extern struct palette_cache *InitPaletteCache(struct palette_cache *self);
 extern void DestroySpriteBankSet(void *self, u32 flags);
 extern void InitSpriteBankSet(void);
 
-/* src/gfx/graphics.c: the entity (`struct actor`, actor.h) */
+/* src/gfx/graphics.cpp: the entity (`struct actor`, actor.h) */
 extern u8 IsEntityNearCamera(struct actor *self);
 extern s32 CheckEntityPlayerContact(struct actor *self);
 extern void DrawEntity(void);
@@ -427,7 +433,7 @@ extern const s32 gObjSizeWidths[12];
 extern u16 gPaletteBackup[512];
 extern u16 gPaletteFadeBuffer[512];
 
-/* sym_iwram.txt: the VRAM DMA queue (graphics.c) */
+/* sym_iwram.txt: the VRAM DMA queue (graphics.cpp) */
 extern struct dma_queue gVramDmaQueue;
 
 /* sym_iwram.txt: the OBJ tile allocator (sprite_frame.c) */

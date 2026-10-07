@@ -9,9 +9,9 @@
 #include "level.h"
 #include "math_util.h"
 
-/* Calls `DrawSprite` (already matched in `sprite.c`) with the
+/* Calls `DrawSprite` (already matched in `sprite.cpp`) with the
  * global `gSpriteRenderer` as `self` - same tail-call shape as
- * `DrawSpriteObj` (`sprite_obj.c`), but here as a leading step rather
+ * `DrawSpriteObj` (`sprite_obj.cpp`), but here as a leading step rather
  * than the whole body. If `part+0x38` (a field not otherwise
  * characterized yet in this ROM region) is nonzero, also clears
  * `part->flags` bit 3 - written as `& -9` (the established
@@ -31,14 +31,14 @@ void DrawWumpa(struct orbit_part *self)
 }
 
 /* Always-2 stub - same shape as `GetSpriteObjClassId`'s always-true stub
- * (`sprite_obj.c`). */
+ * (`sprite_obj.cpp`). */
 s32 GetWumpaClassId(void)
 {
     return 2;
 }
 
 /* Sets `self->table` then tail-calls `DestroySpriteObj` (already matched in
- * `sprite_obj.c`), which unconditionally overwrites `table` again
+ * `sprite_obj.cpp`), which unconditionally overwrites `table` again
  * with `gEntityVtable` - so this function's own store is
  * immediately clobbered by the callee. Kept faithfully anyway; the
  * compiler can't see through the opaque call to know the store is
@@ -60,7 +60,7 @@ void ResetWumpaPickup(struct orbit_part *self)
 }
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched in
- * `sprite_obj.c`), then overwrites its table with
+ * `sprite_obj.cpp`), then overwrites its table with
  * `gWumpaVtable` and runs `ResetWumpaPickup` on it. */
 struct orbit_part *InitWumpa(struct orbit_part *self)
 {
@@ -129,9 +129,9 @@ void SetWumpaCounter(struct orbit_part *self, u8 value)
 
 /* Distance-gate: if the player (`gPlayer`) is within 0x180
  * (384 px) of `self` on both axes, calls `UpdateSpriteObj` (already
- * matched in `sprite_obj.c`) on `self`. Otherwise sets `self->flags`
+ * matched in `sprite_obj.cpp`) on `self`. Otherwise sets `self->flags`
  * bit 0 and, unless `self->id == 0xFFFF`, marks its bit in the
- * same `gEntityFlags+0x108` bitmap `sprite.c` already
+ * same `gEntityFlags+0x108` bitmap `sprite.cpp` already
  * writes - identical idiom, reused verbatim including the
  * register-pinned `>> 5` (see that file's note on why a plain C shift
  * doesn't reproduce the ROM's exact instruction here). Its pins and
@@ -197,7 +197,7 @@ inRange:
 }
 
 /* Allocates a new `struct actor`-shaped object (`OperatorNew(0x40)`,
- * same size as `CreateSpriteObj`'s constructor in `sprite_obj.c`),
+ * same size as `CreateSpriteObj`'s constructor in `sprite_obj.cpp`),
  * re-initializes it via `InitSpriteObj`, overwrites its table with
  * `gStopwatchVtable`, and runs the empty `ResetStopwatch` on it before
  * setting `id`/`x`/`y` from the raw pixel arguments. `unused` is
@@ -232,7 +232,7 @@ void DestroyStopwatch(struct actor *self, u32 flags)
 /* Same re-init/table-set/`ResetStopwatch` shape as `CreateStopwatch` above,
  * but re-initializing an existing `self` instead of allocating a new
  * one - the same relationship `InitSpriteObj` itself has to
- * `CreateSpriteObj` (see `sprite_obj.c`'s note on that pair). */
+ * `CreateSpriteObj` (see `sprite_obj.cpp`'s note on that pair). */
 struct actor *InitStopwatch(struct actor *self)
 {
     InitSpriteObj(self);

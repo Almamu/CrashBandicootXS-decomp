@@ -20,7 +20,7 @@
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
  * object classes (docs/rom_map.md's "93 entity vtables"), in ROM order.
  * Constructors store one at the object's method-table pointer (e.g.
- * `obj->table = gEntityVtable` in graphics.c, `self->vtable` in
+ * `obj->table = gEntityVtable` in graphics.cpp, `self->vtable` in
  * gobj_1a794.h); the code reads the slots through `struct actor_method`
  * (actor_self.h). Tables of the same class family share their
  * leading slots, the ROM's own inheritance. Linked in ROM order between
@@ -28,7 +28,7 @@
  */
 
 /* Used by aabb_setup.c, enemy_ctrl.cpp, wumpa.c,
- * sprite_obj.c (DestroySpriteObj), sprite_anim.c, graphics.c (nullsub_12,
+ * sprite_obj.cpp (DestroySpriteObj), sprite_anim.cpp, graphics.cpp (nullsub_12,
  * ResetEntity, DestroyEntity). */
 const struct vtable_slot gEntityVtable[11] = {
     VTABLE_SLOT(NULL),
@@ -44,7 +44,7 @@ const struct vtable_slot gEntityVtable[11] = {
     VTABLE_SLOT(DestroyEntity),
 };
 
-/* Used by sprite_obj.c (GetSpriteObjPriority, DestroySpriteObj), sprite_anim.c. */
+/* Used by sprite_obj.cpp (GetSpriteObjPriority, DestroySpriteObj), sprite_anim.cpp. */
 const struct vtable_slot gSpriteObjVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -61,7 +61,7 @@ const struct vtable_slot gSpriteObjVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by sprite_anim.c (DestroyUiSpriteObj). */
+/* Used by sprite_anim.cpp (DestroyUiSpriteObj). */
 const struct vtable_slot gUiSpriteObjVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),

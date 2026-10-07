@@ -10,7 +10,7 @@
 #include "globals.h"
 
 /* GitHub issue #9: DrawAffineSpritePieces (0x08007634-0x08007A48), the affine
- * (rotation/scaling) sibling of `DrawSpritePieces` (graphics.c) - see
+ * (rotation/scaling) sibling of `DrawSpritePieces` (graphics.cpp) - see
  * docs/matching/archive/issue-9-0x08007634-actor.md. Moved here from
  * asm/code_3_2.s in the issue #9 raw-asm pass.
  *

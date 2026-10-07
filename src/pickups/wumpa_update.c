@@ -149,7 +149,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * gPlayer's own position minus a small fixed offset
  * (0xFFFFFC00/0xFFFFF200, i.e. -0x400/-0xe00 in Q8). Every path ends
  * with a tail call to UpdateSpriteObj(self) (already matched elsewhere,
- * src/objects/sprite_obj.c).
+ * src/objects/sprite_obj.cpp).
  *
  * Matched (old_agbcc) over three passes, see
  * docs/matching/archive/big-naked-retry-3.md and

@@ -32,7 +32,7 @@
  * also already flagged both functions as built on `OffsetToHitboxEdge`/
  * `ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` - two of those four
  * (`OffsetToHitboxEdge`, `ProbeTerrain`) are already matched this session
- * (`src/objects/sprite_obj.c`, `src/level/terrain_probe.c`); this
+ * (`src/objects/sprite_obj.cpp`, `src/level/terrain_probe.c`); this
  * session additionally reads `ProbeSolidFloorHeight`/`ProbeFloorHeight` (still raw,
  * `asm/code_3_2_17_266bc.s`) far enough to place them precisely.
  *

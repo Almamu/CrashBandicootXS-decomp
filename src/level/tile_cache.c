@@ -5,7 +5,7 @@
 /* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
- * shape to `DestroySpriteBankSet` (src/gfx/graphics.c). */
+ * shape to `DestroySpriteBankSet` (src/gfx/graphics.cpp). */
 void DestroyTileCache(void *self, u32 flags)
 {
     if (flags & 1) {

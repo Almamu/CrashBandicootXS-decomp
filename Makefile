@@ -216,6 +216,8 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # docs/matching/archive/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
+                  $(C_BUILDDIR)/objects/sprite_obj.o \
+                  $(C_BUILDDIR)/gfx/graphics.o \
                   $(C_BUILDDIR)/gfx/sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
                   $(C_BUILDDIR)/text/wrapped_text.o \
