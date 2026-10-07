@@ -219,7 +219,7 @@ const struct vtable_slot gEffectCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by crate.c (DestroyCrate), crate_create.c (CreateCrate). */
+/* Used by crate.cpp (DestroyCrate), crate_create.cpp (CreateCrate). */
 const struct vtable_slot gCrateVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),

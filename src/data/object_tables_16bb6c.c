@@ -25,7 +25,7 @@ const u32 gEnemyCtrlMotionEntries[4][2] = {
     { 37, 38 },
 };
 
-/* Timer values per direction, CreateCrate (crate_create.c) and
+/* Timer values per direction, CreateCrate (crate_create.cpp) and
  * UpdateSlotCrate (crate_break.c). */
 const u8 gSlotCrateTimers[4] = {
     40,
@@ -35,7 +35,7 @@ const u8 gSlotCrateTimers[4] = {
 };
 
 /* Per-object-kind flags of the collision system (22 kinds), read by
- * crate_hit.c, crate_stack.c and crate_break.c. */
+ * crate_hit.cpp, crate_stack.cpp and crate_break.c. */
 const u8 gCrateKindCounted[CRATE_KIND_COUNT] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };

@@ -4,7 +4,7 @@
 #include "bg_scroll_layer.h"
 #include "level.h"
 
-/* Initializes a BG-scroll-layer object (see crate_hit.c's viewport/
+/* Initializes a BG-scroll-layer object (see crate_hit.cpp's viewport/
  * parallax-scroll-layer family) for hardware BG `bgIndex`: caches
  * `gBgLayerVtable` as its method table, screen block
  * `bgIndex + 0x1c`'s address as `screen`, `&REG_BGnCNT` as `cntReg`,
