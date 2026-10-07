@@ -286,7 +286,7 @@ struct input_ctrl {
 };
 
 /* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp;
- * the C view of include/ctrl.hpp's class BossCtrl, same layout):
+ * the C view of include/boss_ctrl.hpp's class BossCtrl, same layout):
  * the base class of the bosses' controllers (Mega Mix, Tiny, Neo Cortex's
  * fight, Dingodile and his shield and rocket/stalactite), each of which
  * extends it. Its event slot keeps the event's msg and arg. */

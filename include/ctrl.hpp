@@ -99,46 +99,4 @@ public:
 
 COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(OneShotAnimCtrl) == sizeof(struct ctrl));
 
-/* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp,
- * struct boss_ctrl in player.h): the base class of the bosses'
- * controllers (Mega Mix, Tiny, Neo Cortex's fight, Dingodile and his
- * shield and rocket/stalactite). Its event handler keeps the event's msg
- * and arg; nothing reads them back. */
-class BossCtrl : public Ctrl
-{
-public:
-    void *target; // 0x10 - the controlled part
-    s32 msg;      // 0x14
-    s32 arg;      // 0x18
-
-    BossCtrl(); // CreateBossCtrl
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg);
-    virtual ~BossCtrl(); // DestroyBossCtrl
-    void *GetTarget();   // GetCtrlTarget
-};
-
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(BossCtrl) == sizeof(struct boss_ctrl));
-
-/* The Mega Mix boss's controller (gMegaMixCtrlVtable, struct
- * mega_mix_ctrl in bosses.h; src/bosses/mega_mix.cpp). Its Update
- * (UpdateMegaMix) is still C, in src/bosses/mega_mix_update.c. Its
- * motion records are gMegaMixMotionRecords, not gCtrlMotionRecords. */
-class MegaMixCtrl : public BossCtrl
-{
-public:
-    s32 stamp; // 0x1C - reset to -1 by Reset
-    u8 latch;  // 0x20
-
-    MegaMixCtrl(); // CreateMegaMixCtrl
-    virtual void Update(SpriteObj *part);
-    virtual ~MegaMixCtrl(); // DestroyMegaMixCtrl
-    virtual void StartTargetMotionXFromSet(SpriteObj *part, s32 index);
-    virtual void StartTargetMotionYFromSet(SpriteObj *part, s32 index);
-    void SetMotionYFromSet(SpriteObj *part, s32 index);
-    void SetMotionXFromSet(SpriteObj *part, s32 index);
-    void Reset();
-};
-
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(MegaMixCtrl) == sizeof(struct mega_mix_ctrl));
-
 #endif /* !GUARD_CTRL_HPP */

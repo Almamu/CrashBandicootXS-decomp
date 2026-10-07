@@ -432,6 +432,8 @@ counts them by kind) and what the C++ still needs.
 | `src/player/action_ctrl_land.cpp` | `ActionCtrl::StateCrawlStandUp`, `StateBodySlamLand`, `StateLand` | 3 | agbcp | 0 -> 0 | 5a |
 | `src/player/action_ctrl_left_ground.cpp` | `ActionCtrl::CheckLeftGround` | 1 | **old_agbcp** (was agbcc) | 3 pins -> 0 | 5a |
 | `src/player/kill_player.cpp` | `ActionCtrl::KillPlayer`, `UpdateSkidAnim`, `UpdateFacing` | 3 | **old_agbcp** (was agbcc) | 44 pins, 1 asm -> 1 pin | 5a |
+| `src/bosses/mega_mix_update.cpp` | `MegaMixCtrl::Update` (include/boss_ctrl.hpp) | 1 | old_agbcp | 3 pins, 2 keeps, gotos -> 1 pin, 1 keep, one goto | 6 |
+| `src/bosses/tiny_update.cpp` | `TinyCtrl` (include/boss_ctrl.hpp): `Update`, `SetState`, `PickHopTarget`, `SpawnFallingLeaves` | 4 | old_agbcp | 8 pins, 3 keeps, 1 asm -> 2 pins | 6 |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -568,13 +570,43 @@ returns the base's result, and with a `u8` g++ zero-extends it after the
 call, which the ROM doesn't. `ctrl.o`'s code is the same either way. The C
 had cast `SetCtrlTargetAnim` to an `s32` function for the same reason.
 
+Part 6 in numbers: the first two boss controller objects (`UpdateMegaMix`,
+and Tiny's four functions), in the new `include/boss_ctrl.hpp`, which also
+takes `BossCtrl` and `MegaMixCtrl` from ctrl.hpp; `MATCH_HOLD_REG` 2061 ->
+2053, `MATCH_KEEP` 61 -> 57 and instruction-emitting `asm` 238 -> 237
+project-wide. `TinyCtrl`'s constructor, destructor and `StartHop` are
+still C (`CreateTiny`, `DestroyTiny`, `StartTinyHop`, in cortex.c), as is
+`OneShotAnimCtrl`'s constructor, which `new OneShotAnimCtrl` calls through
+its cxx_symbols.txt mapping. `delete pad->mover`, `new StompedHopPadCtrl`,
+`ctrl->Attach(pad)`, `SetTargetAnim`, `SetMode`, the part's `IsOnScreen`
+and the crates' `GetClassId` are plain C++. The word at 0x10 is
+`BossCtrl`'s `target` or, through an anonymous union, `counter` (Tiny's
+round). The palette nibble of `SpriteObj` is a bitfield now (`palette:4`,
+as in box_part.h): stored as one, it gives the ROM's `v & 15` before
+the `-16` mask, which `SpawnFallingLeaves`'s C pinned and spelled in
+`asm`. Kept, each with a comment: `SetState`'s two pins (unpinned, `pad`
+is r0 where the ROM has r2, as in the C) and `UpdateMegaMix`'s one pin and
+keep on the player's `dead` read in state 2 (below). C idioms kept: the
+s32-mask and s32-tag helpers (`ClearFlags`, `SetTag`), named constants
+(`one`, `k`, `m`) and the `ExplodeCrate` copy `c`, each placing a constant
+or a register as the ROM has it.
+
+`UpdateMegaMix`'s C shared its "run towards the player" tail between
+states 0 and 2 with gotos, and pinned two of its three `dead` reads.
+Written with the tail as an inline (`Run`) in both places, the
+duplicated code puts the reloads of the constant 0x104 into the same
+rotation of r1-r3 as the ROM's, and the cross-jumping pass after reload
+merges the copies into the ROM's layout; only state 2's out-of-range
+path still jumps to state 0's copy (`goto run`), and only state 2's
+last `dead` read is one step off (pinned).
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
 class in a `.hpp` header and keeps its C struct in the C header for the
 C files: `Ctrl`/`struct ctrl` (objects.h), `InputCtrl`/`struct
-input_ctrl` (input_ctrl.hpp) and `BossCtrl`/`struct boss_ctrl` (player.h),
-`MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h), `SpriteObj`/`struct
+input_ctrl` (input_ctrl.hpp) and `BossCtrl`/`struct boss_ctrl` (player.h)
+and `MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h) (boss_ctrl.hpp), `SpriteObj`/`struct
 gobj` (gobj_1a794.h), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
 `PeriodicSpawner`/`struct periodic_spawner` (enemies.h),
 `ActionCtrl`/`struct act` (action_obj.h). Each class has
@@ -617,10 +649,21 @@ Bigger controllers, roughly in order (function counts from
    inlines can go.
 4. **The boss controllers:** `tiny_update.c`, `mega_mix_update.c`
    (`UpdateMegaMix`), `dingodile*.c` and `cortex.c` (25 functions, 64 lines
+
+3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4, except
+   `Reset`/`Restart`, which live in `action_ctrl.c`. Next, **the action
+   controller** (`ActionCtrl`, `action_ctrl*.c`, 10 files, about 76
+   functions and most of the controllers' virtual calls), which takes
+   `PlayerCtrl`'s last two methods with it.
+4. **The boss controllers:** ~~`tiny_update.c`, `mega_mix_update.c`~~
+   (done in part 6), then `dingodile*.c` (Dingodile, his shield, shark
+   and rocket/stalactite, and the Cortex target/cannon/boss controllers'
+   methods that sit between them) and `cortex.c` (25 functions, 64 lines
    with pins or asm; it also has `OneShotAnimCtrl`'s and
-   `UnusedOneShotAnimCtrl`'s constructors and destructors and the
-   Cortex cannon/target/shot classes). These mix controllers and
-   entities, so they may wait for the entity family.
+   `UnusedOneShotAnimCtrl`'s constructors and destructors, Tiny's
+   constructor, destructor and `StartHop`, and the Cortex
+   cannon/target/shot classes). cortex.c mixes controllers and entities,
+   so it may wait for the entity family.
 5. **The platform mover** (`src/objects/platform.c`, `gPlatformMoverVtable`:
    a `Ctrl`-shaped 0x38-byte class) with the platforms, in the entity
    family.
@@ -726,6 +769,24 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **Free functions keep C linkage** when their prototype is in a C
   header included inside `extern "C"` (`GetSfxVolumeAt`,
   `LaunchHarmfulEffectPart`): no cxx_symbols.txt entry.
+- **A struct passed by value** is copied with `memcpy` from a named
+  local in C++: `CollidePartList(list, box, ...)` after `box =
+  GetSpriteHitbox(part)` copies twice and grows the frame. Pass the call
+  itself, `CollidePartList(list, GetSpriteHitbox(part), ...)`
+  (`UpdateMegaMix`).
+- **A byte RMW with a folded mask:** `flags &= ~4` on a `u8` member
+  compiles to the byte constant `0xFB` where the C front end kept `-5`
+  (`movs #5; negs`). Pass the mask as an `s32` (`ClearFlags(&f, ~4)`).
+- **A file-local helper with the name of a C function** declared in an
+  `extern "C"` header gets C linkage and is emitted out of line as a
+  global, even when `static inline` (`IsPlayerDead` in player.h). Pick
+  another name.
+- **Reload register rotation.** The spill register a constant offset is
+  reloaded into (`movs rN, #0x82; lsls` for the player's +0x104) rotates
+  through r1-r3, so it depends on every reload before it, including those
+  of code cross-jumping deletes later. Code the C shared with gotos may
+  need to be written out twice for the rotation to come out as the ROM's
+  (`UpdateMegaMix`'s `Run`).
 - **`delete this`** is the ROM's `if (self) self->vtable[9](self, 3)`
   (`HandleEvent`), and an inline root destructor folds into the derived
   one, its dead vtable pointer store dropped (`~PeriodicSpawner`).

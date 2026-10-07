@@ -1902,7 +1902,7 @@
     "SetTinyState"
    ],
    "consumer_files": [
-    "bosses/tiny_update.c"
+    "bosses/tiny_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1923,7 +1923,7 @@
     "PickTinyHopTarget"
    ],
    "consumer_files": [
-    "bosses/tiny_update.c"
+    "bosses/tiny_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
