@@ -2,6 +2,7 @@
  * (crate_line_step.hpp). */
 #define CRATE_LINE_STEP
 #include "crate.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "memory.h"
@@ -46,10 +47,10 @@ s32 Crate::IsInsideRect(struct aabb *box)
  * counts `bounce` up unless it is 0. */
 void ResolvePlayerCollisions(void)
 {
-    struct player *p = gPlayer;
+    Player *p = gPlayer;
     u8 *bounce;
 
-    ResolveCollisionCandidates(&p->collisionQueue);
+    p->collisionQueue.Resolve();
     bounce = &gPlayer->bounce;
     if (*bounce != 0)
         *bounce = *bounce + 1;
@@ -102,3 +103,4 @@ Crate::Crate()
 }
 
 #include "crate_line_step.hpp"
+#include "player.hpp"

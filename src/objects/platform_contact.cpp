@@ -1,4 +1,5 @@
 #include "platform.hpp"
+#include "player.hpp"
 
 /* Platform::CheckPlayerContact (#664, include/platform.hpp), ROM
  * 0x0801AB34-0x0801AB98: CheckPlatformContact, gPlatformVtable's slot 1. */
@@ -10,9 +11,9 @@
 s32 Platform::CheckPlayerContact()
 {
     if (type != 6 || frame <= 0x12) {
-        struct player *p = gPlayer;
-        void *arg = (void *)((Ctrl *)p->ctrl)->state;
-        s32 collides = p->flags.all >> 7;
+        Player *p = gPlayer;
+        void *arg = (void *)p->mover->state;
+        s32 collides = p->f.flags >> 7;
 
         if (collides) {
             s32 d = x;

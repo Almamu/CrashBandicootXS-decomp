@@ -5,7 +5,7 @@
  * behind gPlatformVtable and gPlatformMoverVtable (src/objects/platform*.cpp),
  * and the Neo Cortex fight's mover subclass (part 7i, src/bosses/cortex.cpp).
  * gobj_1a794.h's `struct gobj` and `struct mover` are their C views, for
- * the files that are still C (the level spawners, the player).
+ * the files that are still C (the level spawners).
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp); cxx_symbols.txt
  * maps the mangled names onto the C names. */

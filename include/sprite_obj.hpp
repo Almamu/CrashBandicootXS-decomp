@@ -24,9 +24,9 @@
  * The C files keep their views of the same objects: actor.h's `struct
  * actor` (Entity), box_part.h's `struct box_part` and gfx_part.h's
  * `struct gfx_part` (the sprite fields), gobj_1a794.h's `struct gobj`
- * (a ground sprite) and player.h's `struct player` (a ground sprite with
- * the player's fields after it). Each class checks its size against
- * them below; the fields keep their offsets in comments.
+ * (a ground sprite). Each class checks its size against them below; the
+ * fields keep their offsets in comments. The player, a ground sprite with
+ * its own fields after it, is class Player (player.hpp).
  *
  * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp). */
 #pragma interface
@@ -348,13 +348,6 @@ public:
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == sizeof(struct gobj));
-
-/* The player (gPlayer; its own code is still C) as the ground sprite it
- * is. Each call reads gPlayer again. */
-static inline GroundSprite *PlayerSprite()
-{
-    return (GroundSprite *)gPlayer;
-}
 
 /* A list of sprite objects (box_part.h's struct part_list is its C view):
  * Update compacts `items` and fills `visible`, the parts on screen, which

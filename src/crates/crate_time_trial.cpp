@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "audio.h"
@@ -37,7 +38,7 @@ void ConvertCratesForTimeTrial(void)
  * sound. */
 void Crate::OpenAkuAku()
 {
-    GroundSprite *p = PlayerSprite();
+    Player *p = gPlayer;
 
     if (p->f.flags >> 7) {
         p->HandleEvent(0, EVENT_MASK_GAIN, 0);

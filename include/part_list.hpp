@@ -29,7 +29,7 @@ extern "C" {
 #include "hud.h"
 }
 
-/* The player's collision queue (`struct player`'s `collisionQueue`,
+/* The player's collision queue (Player's `collisionQueue`,
  * +0x108; objects.h's `struct collision_queue` is its C view): the crate
  * collisions found during the frame, resolved once a frame. */
 class CollisionQueue
@@ -40,12 +40,12 @@ public:
     u8 unk_05[3];
     struct collision_candidate candidates[16]; // 0x08
 
+    CollisionQueue();  // ResetCollisionQueue: empties it (Player's constructor)
     ~CollisionQueue(); // DestroyCollisionQueue
     void Resolve();    // ResolveCollisionCandidates
     void Add(struct crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct e08c_pos pos,
              s32 hit, struct byte_arg p20,
              struct byte_arg p21); // AddCollisionCandidate
-    void Reset();                  // ResetCollisionQueue
 };
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == sizeof(struct collision_queue));

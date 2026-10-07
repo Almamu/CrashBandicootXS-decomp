@@ -1,4 +1,5 @@
 #include "crate.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "globals.h"

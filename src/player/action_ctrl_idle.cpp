@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "util.h"
@@ -25,7 +26,7 @@ extern "C" {
 void ActionCtrl::ApplyMotion()
 {
     struct speed_ramp rec;
-    struct player *p;
+    Player *p;
 
     p = gPlayer;
     if (p->pushLeft == 0) {
@@ -37,19 +38,19 @@ void ActionCtrl::ApplyMotion()
             p->x -= 0x100;
         else if (p->pushRight)
             p->x += 0x100;
-        SetSpritePrevPos((struct gfx_part *)gPlayer, gPlayer->x, gPlayer->y);
+        gPlayer->SetPrevPos(gPlayer->x, gPlayer->y);
     }
 skip:
     if (state == ACTION_STATE_IDLE) {
-        struct player *p = gPlayer;
+        Player *p = gPlayer;
 
-        if (p->speedX == 0 && p->anim->animCount != 0x12 && idleFidget == 0) {
+        if (p->speedX == 0 && p->bank->animCount != 0x12 && idleFidget == 0) {
             StopSfx(gAudioContext, SFX_SKID);
-            SetTargetAnim((GroundSprite *)gPlayer, 0x12);
+            SetTargetAnim(gPlayer, 0x12);
         }
     }
     if (state == ACTION_STATE_IDLE || state == ACTION_STATE_CROUCH) {
-        struct player *p = gPlayer;
+        Player *p = gPlayer;
 
         if (p->speedX != 0 && p->slippery == 0)
             QueueNowX(0);
@@ -58,7 +59,7 @@ skip:
         u8 pending = motionXPending;
 
         if (pending == 1) {
-            struct player *q;
+            Player *q;
 
             rec = gCtrlMotionRecords[animSet->entries[motionX][0]];
             q = gPlayer;
@@ -75,18 +76,18 @@ skip:
                 }
             }
             if (motionXKeepSpeed)
-                SetTargetMotionX(Sprite(), &rec.start);
+                SetTargetMotionX(part, &rec.start);
             else
-                StartTargetMotionX(Sprite(), &rec.start);
+                StartTargetMotionX(part, &rec.start);
             motionXPending = 0;
         }
     }
     if (motionYPending == 1) {
         rec = gCtrlMotionRecords[animSet->entries[motionY][1]];
         if (motionYKeepSpeed)
-            SetTargetMotionY(Sprite(), &rec);
+            SetTargetMotionY(part, &rec);
         else
-            StartTargetMotionY(Sprite(), &rec);
+            StartTargetMotionY(part, &rec);
         motionYPending = 0;
     }
 }
@@ -105,7 +106,7 @@ void ActionCtrl::StateIdle()
     u32 in = gKeys.all;
     u8 dir = GetDpadDirection(pad);
     s32 count;
-    struct player *p;
+    Player *p;
 
     if (dpadLockTimer != 0) {
         dpadLockTimer--;
@@ -114,20 +115,20 @@ void ActionCtrl::StateIdle()
     }
     p = part;
     if (p->animDone) {
-        SetTargetAnim((GroundSprite *)p, 0x12);
+        SetTargetAnim(p, 0x12);
         idleFidget = 0;
     }
     count = ++frames;
     p = part;
     if (p->tag == 0x12 && p->frame == 0) {
         if (count > 0x708) {
-            SetTargetAnim((GroundSprite *)p, 0x1A);
+            SetTargetAnim(p, 0x1A);
             frames = 0;
         } else if (count >= 0x49D && count <= 0x4C3) {
-            SetTargetAnim((GroundSprite *)p, 5);
+            SetTargetAnim(p, 5);
             frames = 0x4C4;
         } else if (count >= 0x1E1 && count <= 0x207) {
-            SetTargetAnim((GroundSprite *)p, 0xE);
+            SetTargetAnim(p, 0xE);
             frames = 0x208;
         } else {
             goto skip;
@@ -144,7 +145,7 @@ skip:
         if (INPUT_PRESSED(in) & 1) {
             PlaySfx(gAudioContext, SFX_JUMP, 0x100);
             SetMode(ACTION_STATE_JUMP);
-            SetTargetAnim(Sprite(), 0x13);
+            SetTargetAnim(part, 0x13);
             frame = left;
             QueueNowY(7);
         } else {
@@ -156,7 +157,7 @@ skip:
                 if ((held = INPUT_HELD(in) & R_BUTTON) == 0)
                     goto other;
                 SetMode(ACTION_STATE_CROUCH_DOWN);
-                SetTargetAnim(Sprite(), 3);
+                SetTargetAnim(part, 3);
                 frames = alt;
             }
         }
@@ -165,7 +166,7 @@ skip:
     other:
         turboRun = held;
         if (dir == 0) {
-            struct player *q = part;
+            Player *q = part;
 
             if (IsSlippery(q) && motionX != 0x1F && q->speedX != 0)
                 QueueNowXKeepSpeed(0x1F);
@@ -178,7 +179,7 @@ skip:
                     if ((INPUT_HELD(in) & L_BUTTON) && (u8)HasTurboRun(gLevelState)) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
-                        SetTargetAnim(Sprite(), 0x18);
+                        SetTargetAnim(part, 0x18);
                         QueueX(wait, 1, 0x1B);
                     } else {
                         StartRun();
@@ -186,7 +187,7 @@ skip:
                     break;
                 case 2:
                     SetMode(ACTION_STATE_CROUCH_DOWN);
-                    SetTargetAnim(Sprite(), 3);
+                    SetTargetAnim(part, 3);
                     frames = wait;
                     break;
                 }

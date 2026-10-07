@@ -99,9 +99,14 @@ extern struct part_list *gForegroundList;
 extern struct level_layers *gLevelLayers;
 extern struct pool_manager *gCrateList;
 
-/* sym_iwram.txt: the player object (struct player, player.h), built by
- * PlayRoom. */
+/* sym_iwram.txt: the player object, built by PlayRoom. The C++ files see
+ * it as its class, Player (player.hpp), the C files as its C view, struct
+ * player (player.h). */
+#ifdef __cplusplus
+extern class Player *gPlayer;
+#else
 extern struct player *gPlayer;
+#endif
 
 /* src/data/entity_vtables_7e3bec.c: the two base-class method tables. The
  * entity base (graphics.cpp's struct actor: check contact, bounds, update,

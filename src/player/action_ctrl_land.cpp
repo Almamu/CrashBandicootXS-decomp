@@ -12,7 +12,7 @@ extern "C" {
 /* Standing up from a crawl: once the animation is done, idle. */
 void ActionCtrl::StateCrawlStandUp()
 {
-    struct player *p = part;
+    Player *p = part;
 
     if (p->animDone != 0) {
         SetModeAnim(ACTION_STATE_IDLE, 0x12, 0, 0);
@@ -29,7 +29,7 @@ void ActionCtrl::StateCrawlStandUp()
  * crouching down (animation 3) with R held or the D-pad down. */
 void ActionCtrl::StateBodySlamLand()
 {
-    struct player *p = part;
+    Player *p = part;
 
     if (p->animDone != 0) {
         void *pad = gInput;
@@ -54,7 +54,7 @@ void ActionCtrl::StateBodySlamLand()
             motionY = crouch;
         } else {
             SetMode(ACTION_STATE_CROUCH_DOWN);
-            SetTargetAnim(Sprite(), 3);
+            SetTargetAnim(part, 3);
             QueueNowX(0);
         }
     }
@@ -69,7 +69,7 @@ void ActionCtrl::StateLand()
     frame = 0;
     if ((held = gKeys.all & R_BUTTON) != 0) {
         SetMode(ACTION_STATE_CROUCH_DOWN);
-        SetTargetAnim(Sprite(), 3);
+        SetTargetAnim(part, 3);
         frames = 0;
         return;
     }

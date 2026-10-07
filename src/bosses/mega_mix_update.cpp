@@ -1,4 +1,5 @@
 #include "boss_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -45,7 +46,7 @@ extern "C" {
 /* The player's `dead` byte (+0x104). The 0x104 is loaded into a spill
  * register that rotates through r1-r3; for this one read the ROM's is r3,
  * one step from what g++ picks (the same in C), so it is pinned there. */
-static inline u8 PlayerDeadByte(struct player *pl)
+static inline u8 PlayerDeadByte(Player *pl)
 {
     MATCH_HOLD_REG(s32, off, r3) = 0x104;
 
@@ -92,7 +93,7 @@ void MegaMixCtrl::Update(MovingSprite *part)
             s32 i;
             s32 px;
 
-            if (gPlayer->dead != 0 || ((Ctrl *)gPlayer->ctrl)->state == 0x1E)
+            if (gPlayer->dead != 0 || gPlayer->mover->state == 0x1E)
                 Stop(this, part);
             if (part->IsOnScreen() && latch == 0) {
                 stamp = gRoomFrameCount;
@@ -141,7 +142,7 @@ void MegaMixCtrl::Update(MovingSprite *part)
                 }
             }
             {
-                struct player *pl = gPlayer;
+                Player *pl = gPlayer;
 
                 if (ABS_BRANCHLESS(pl->x - part->x) <= 0x27FF &&
                     ABS_BRANCHLESS(pl->y - part->y) <= 0x31FF) {
@@ -187,21 +188,14 @@ void MegaMixCtrl::Update(MovingSprite *part)
         }
     case 2:
         if (part->frame == 8 && part->stepTimer == 0) {
-            struct player *pl = gPlayer;
+            Player *pl = gPlayer;
 
             /* out of range: run again (the same code as state 0's, which
              * the ROM shares) */
             if (ABS_BRANCHLESS(pl->x - part->x) > 0x27FF ||
                 ABS_BRANCHLESS(pl->y - part->y) > 0x31FF)
                 goto run;
-            /* the player's HandleEvent (gPlayerVtable; the player is
-             * still C) */
-            {
-                const struct actor_method *m = &pl->vtable->handleEvent;
-                void *t = (u8 *)pl + m->thisOffset;
-
-                ((void (*)(void *, s32, s32, s32))m->fn)(t, 0, EVENT_HIT, 0);
-            }
+            pl->HandleEvent(0, EVENT_HIT, 0);
             return;
         }
         if (!part->animDone)

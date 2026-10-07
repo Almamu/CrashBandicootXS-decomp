@@ -1,4 +1,5 @@
 #include "player_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "globals.h"
@@ -27,7 +28,7 @@ extern "C" {
  * and `step` otherwise. */
 void PlayerCtrl::SetDriftY(s32 start, s32 step, s32 target)
 {
-    struct player *p = gPlayer;
+    Player *p = gPlayer;
     s32 v = p->speedY;
     s32 t = (v * v / 0x4000 + 4) * 3 / 2;
     s32 signV;

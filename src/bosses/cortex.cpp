@@ -1,5 +1,6 @@
 #include "boss_ctrl.hpp"
 #include "platform.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -35,12 +36,10 @@ extern "C" {
  * in baserom.gba): UnusedOneShotAnimCtrl's constructor
  * (CreateUnusedOneShotAnimCtrl). Matched anyway. */
 
-/* The player's HandleEvent (gPlayerVtable; the player is still C). */
-static inline void HitPlayer(struct player *pl, s32 event)
+/* The player's HandleEvent (Player, include/player.hpp). */
+static inline void HitPlayer(Player *pl, s32 event)
 {
-    const struct actor_method *m = &pl->vtable->handleEvent;
-
-    ((void (*)(void *, s32, s32, s32))m->fn)((u8 *)pl + m->thisOffset, 0, event, 0);
+    pl->HandleEvent(0, event, 0);
 }
 
 /* Switches to animation `t` from its start. `t` is an s32: with a u8

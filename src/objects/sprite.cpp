@@ -1,4 +1,5 @@
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -227,12 +228,12 @@ s32 Sprite::CheckPlayerContact()
     if (!touched && ((flags >> 26) & one)) {
         struct aabb a = GetAnimHitbox();
 
-        if (PlayerSprite()->f.flags >> 7) {
-            struct aabb b = PlayerSprite()->GetAnimHitbox();
+        if (gPlayer->f.flags >> 7) {
+            struct aabb b = gPlayer->GetAnimHitbox();
 
             if (AabbOverlaps(&b, &a)) {
                 f.b.bit3 = 1;
-                PlayerSprite()->HandleEvent(0, kind, 0);
+                gPlayer->HandleEvent(0, kind, 0);
                 f.flags |= one;
                 if (id != ENTITY_ID_NONE)
                     ENTITY_SET_GONE_BIT(id);

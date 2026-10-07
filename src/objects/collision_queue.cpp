@@ -1,4 +1,5 @@
 #include "part_list.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -99,13 +100,13 @@ void CollisionQueue::Add(struct crate *neighbor, s32 kind, s32 code, s32 edge, s
     count++;
 }
 
-/* player_update.c calls it with flags 2: no delete. */
+/* Player's destructor calls it with flags 2 (a member): no delete. */
 CollisionQueue::~CollisionQueue()
 {
 }
 
-/* Empties the queue (player_init.c). */
-void CollisionQueue::Reset()
+/* Empties the queue: Player's constructor constructs its member. */
+CollisionQueue::CollisionQueue()
 {
     count = 0;
     posCommitted = 0;

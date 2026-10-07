@@ -1,4 +1,5 @@
 #include "boss_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -24,13 +25,10 @@ extern "C" {
  * stomping them. PickHopTarget picks the next anchor from a per-round
  * table, SpawnFallingLeaves spawns a falling hazard. */
 
-/* The player's HandleEvent (gPlayerVtable; the player is still C). */
-static inline void HitPlayer(struct player *pl)
+/* The player's HandleEvent (Player, include/player.hpp). */
+static inline void HitPlayer(Player *pl)
 {
-    const struct actor_method *m = &pl->vtable->handleEvent;
-    void *t = (u8 *)pl + m->thisOffset;
-
-    ((void (*)(void *, s32, s32, s32))m->fn)(t, 0, EVENT_HIT, 0);
+    pl->HandleEvent(0, EVENT_HIT, 0);
 }
 
 /* `*flags &= mask` with an s32 mask: in place, g++ folds `~4` to the byte

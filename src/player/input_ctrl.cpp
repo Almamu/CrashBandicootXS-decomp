@@ -87,12 +87,12 @@ void InputCtrl::KillPlayer(s32 anim)
 {
     PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
     SetMode(3);
-    SetTargetAnim((GroundSprite *)target, anim);
-    target->flags.bits.flag7 = 0;
-    target->flags.bits.flag6 = 0;
+    SetTargetAnim(target, anim);
+    target->f.b.collides = 0;
+    target->f.b.vulnerable = 0;
     target->dead = 1;
     LoseLife(gLevelState);
-    LoadPaletteSlot(gPaletteCache, target->slot, target->anim->records[target->tag].paletteId);
+    LoadPaletteSlot(gPaletteCache, target->palette, target->anim->records[target->tag].paletteId);
 }
 
 /* gInputCtrlStateFuncs[0]: state 1 on animation 0, X motion entry 1 and
@@ -181,9 +181,9 @@ void InputCtrl::ApplyMotion()
         const speed_ramp *rec = &gInputCtrlMotionRecords[animSet->entries[motionX][0]];
 
         if (motionXKeepSpeed)
-            SetTargetMotionX((GroundSprite *)target, &rec->start);
+            SetTargetMotionX(target, &rec->start);
         else
-            StartTargetMotionX((GroundSprite *)target, &rec->start);
+            StartTargetMotionX(target, &rec->start);
         motionXPending = 0;
         motionXKeepSpeed = 0;
     }
@@ -191,9 +191,9 @@ void InputCtrl::ApplyMotion()
         const speed_ramp *rec = &gInputCtrlMotionRecords[animSet->entries[motionY][1]];
 
         if (motionYKeepSpeed)
-            SetTargetMotionY((GroundSprite *)target, rec);
+            SetTargetMotionY(target, rec);
         else
-            StartTargetMotionY((GroundSprite *)target, rec);
+            StartTargetMotionY(target, rec);
         motionYPending = 0;
         motionYKeepSpeed = 0;
     }
@@ -204,17 +204,17 @@ void InputCtrl::ApplyMotion()
 void InputCtrl::SetModeAnim(s32 mode, s32 anim, s32, s32)
 {
     SetMode(mode);
-    SetTargetAnim((GroundSprite *)target, anim);
+    SetTargetAnim(target, anim);
 }
 
 /* gInputCtrlStateFuncs[3]: once the death animation ends, the target is
  * gone. */
 void InputCtrl::StateDead()
 {
-    struct player *t = target;
+    Player *t = target;
 
     if (t->animDone)
-        ENTITY_MARK_GONE(t->flags.bits.gone, t->id);
+        ENTITY_MARK_GONE(t->f.b.gone, t->id);
 }
 
 /* gInputCtrlStateFuncs[2]: once the target's animation ends, goes back to
@@ -280,7 +280,7 @@ void InputCtrl::HandleEvent(MovingSprite *, s32 event, s32)
 /* The controlled sprite object is the player. */
 void InputCtrl::Attach(MovingSprite *owner)
 {
-    target = (struct player *)owner;
+    target = (Player *)owner;
 }
 
 /* g++ stores gInputCtrlVtable and calls ~Ctrl (DestroyCtrl). */

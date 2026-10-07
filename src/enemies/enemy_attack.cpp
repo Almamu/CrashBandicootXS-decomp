@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -134,7 +135,7 @@ void EnemyCtrl::UpdateTriggerBox()
          * bitfield with an `and`. */
         if ((s32)(sprite->mirror << 27) < 0)
             box.x = Q8_TO_INT(target->x) * 2 - (box.x + box.w);
-        if (PlayerTouchesBox(gPlayer, &box)) {
+        if (gPlayer->TouchesBox(&box)) {
             SetAnimMode(2);
             if (kind == ENEMY_KIND_VULTURE) {
                 struct ctrl_target *part = target;

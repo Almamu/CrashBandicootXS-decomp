@@ -1,4 +1,5 @@
 #include "platform.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "gfx.h"
@@ -66,8 +67,8 @@ void Platform::ResolveCollision(void *)
         above = 0;
         if (b.y < a.y)
             above = 1;
-        tx = PlayerSprite()->GetPrevX();
-        ty = PlayerSprite()->GetPrevY();
+        tx = gPlayer->GetPrevX();
+        ty = gPlayer->GetPrevY();
         side = 2;
         if (px > tx)
             side = 1;
@@ -167,7 +168,7 @@ void Platform::ResolveCollision(void *)
             break;
         case 4:
             {
-                GroundSprite *q = PlayerSprite();
+                Player *q = gPlayer;
 
                 if (!(q->hitAxes & 8)) {
                     q->HandleEvent(0, EVENT_BUMP, 4);
@@ -188,10 +189,10 @@ void Platform::ResolveCollision(void *)
             break;
         }
         if (result == 8 || oy <= 1) {
-            struct player *q = gPlayer;
+            Player *q = gPlayer;
 
             if (!(q->dir & 4) && above) {
-                q->carried = (struct gobj *)this;
+                q->carried = this;
                 {
                     u8 m = 8;
 
@@ -208,7 +209,7 @@ void Platform::ResolveCollision(void *)
         }
         SetEntityPos((struct actor *)gPlayer, pos.x, PosPtr(&pos)->y);
         if (flags) {
-            PlayerSprite()->HandleEvent(0, EVENT_BUMP, flags);
+            gPlayer->HandleEvent(0, EVENT_BUMP, flags);
             gPlayer->hitMask |= flags;
         }
         if (result == 8) {
@@ -224,15 +225,15 @@ void Platform::ResolveCollision(void *)
                 if (d <= 7) {
                     switch (t) {
                     case 2:
-                        PlayerSprite()->HandleEvent(0, EVENT_WARP_EXIT, 0);
+                        gPlayer->HandleEvent(0, EVENT_WARP_EXIT, 0);
                         break;
                     case 3:
                         if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial)
-                            PlayerSprite()->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
+                            gPlayer->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
                         break;
                     case 4:
                         if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial)
-                            PlayerSprite()->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
+                            gPlayer->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
                         break;
                     }
                 }
@@ -245,9 +246,9 @@ void Platform::ResolveCollision(void *)
         case 0:
         case 7:
             if (AabbOverlaps(&a, pb)) {
-                struct player *q = gPlayer;
+                Player *q = gPlayer;
 
-                q->carried = (struct gobj *)this;
+                q->carried = this;
                 {
                     u8 m = 8;
 
@@ -262,7 +263,7 @@ void Platform::ResolveCollision(void *)
 
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
-                    PlayerSprite()->HandleEvent(0, EVENT_WARP_EXIT, 0);
+                    gPlayer->HandleEvent(0, EVENT_WARP_EXIT, 0);
             }
             break;
         case 3:
@@ -272,7 +273,7 @@ void Platform::ResolveCollision(void *)
 
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
-                    PlayerSprite()->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
+                    gPlayer->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
             }
             break;
         case 4:
@@ -282,7 +283,7 @@ void Platform::ResolveCollision(void *)
 
                 MAKE_ABS_BRANCHLESS(d, sign);
                 if (d <= 7)
-                    PlayerSprite()->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
+                    gPlayer->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
             }
             break;
         case 1:

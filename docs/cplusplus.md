@@ -380,7 +380,10 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
   "C" { }`, with the same warning flags and `-Werror`. C++-only
   declarations go in `.hpp` headers (`include/ctrl.hpp`,
   `include/sprite_obj.hpp`), next to the C structs they mirror (see
-  [Progress](#progress)).
+  [Progress](#progress)). One C declaration has a C++ type: globals.h
+  declares `gPlayer` as a `Player *` under `__cplusplus` (`extern class
+  Player *gPlayer;`, still C linkage) and as a `struct player *` for C
+  (part 8).
 - **Vtables stay C data.** The class header has `#pragma interface`, so
   g++ doesn't emit the classes' vtables; the code refers to
   `_vt.<len>Class`, and the ROM's tables stay the C arrays in
@@ -492,6 +495,15 @@ counts them by kind) and what the C++ still needs.
 | `src/bosses/cortex.cpp` | `OneShotAnimCtrl`'s constructor and destructor (ctrl.hpp); `UnusedOneShotAnimCtrl`; `TinyCtrl`'s `StartHop`, destructor and constructor; `CortexBossCtrl::Update`, `SpawnCannon`, `SpawnTarget`; `CortexTargetCtrl::Update`, `SetState`, `FireShot`; `CortexShotCtrl`, `CortexBossGemCtrl` (boss_ctrl.hpp); `CortexBossPlatformMover` (platform.hpp); with `nullsub_19` and `SpawnCortexBossGem` (C linkage) | 23 + 2 | old_agbcp | 49 pins, 13 keeps, 4 asm, 3 volatiles, 2 retyped stores, the `MOVER_NEW` cast, the per-site `SET_FRAME_R`/`MARK_GONE`/`GONE_SLOT_R4` macros and entity_bits.h's `ENTITY_SET_GONE_BIT_PINNED` (5 pins), gotos -> 1 pin, one goto | 7i |
 | `src/objects/platform_create.cpp` (again) | `Platform::Create`: `new CortexBossPlatformMover` (the C prototype before) | 0 | old_agbcp | 0 -> 0 | 7i |
 | the controller headers (ctrl.hpp, enemy_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp, action_ctrl.hpp, boss_ctrl.hpp, platform.hpp), sprite_obj.hpp, crate_list.hpp, and 38 `.cpp` files | every controller method takes a `MovingSprite *` (`SpriteObj` removed); `Ctrl::owner` a `MovingSprite *`; `PartList`'s items `Sprite *`s, `CrateList`'s `Crate *`s | 0 | (unchanged) | 0 -> 0 | 7b' |
+| `src/player/player_update.cpp` | `Player` (include/player.hpp): `ApplyVelocity`, `Update`, `TouchesBox`, destructor, `HasRampYTarget`, `ClearSpeedY`, `StopFalling` | 7 | **old_agbcp** (was agbcc) | 14 pins, 1 asm, 2 retyped reads, gotos, the destructor's slot call -> 0 | 8 |
+| `src/player/player_init.cpp` | `Player`'s constructor | 1 | agbcp | 1 pin, 1 retyped store -> 0 | 8 |
+| `src/player/player_reset.cpp` | `Player::Reset`, `ResetForRoom` | 2 | **old_agbcp** (was agbcc) | 30 pins, 4 asm, gotos -> 0 | 8 |
+| `src/player/player_collide.cpp` | `Player::CheckPlayerContact` | 1 | old_agbcp | 5 pins, 3 holds, 3 uses, 4 consts, three vcall macros -> 0 | 8 |
+| `src/player/player_anim_room.cpp` | `Player::HasRoomForAnim` | 1 | agbcp | 0 -> 0; the slot call goes | 8 |
+| `src/player/player_event.cpp` | `Player::TouchPlayer`, `HandleEvent`, `Draw` | 3 | old_agbcp | 1 pin, 2 holds, 2 uses, a volatile read, the `NOTIFY` macro and slot calls -> the volatile read | 8 |
+| `src/player/player_flags.cpp` (again) | the 40 player accessors are `Player` methods (C linkage before) | 40 | agbcp | 3 pins, gotos -> 0 | 8 |
+| `src/objects/collision_queue.cpp` (again) | `CollisionQueue`'s constructor (`ResetCollisionQueue`; `Reset` before) | 0 | agbcp | 0 -> 0 | 8 |
+| globals.h, action_obj.h, the controller headers (action_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp), sprite_obj.hpp, and 43 `.cpp` files | `gPlayer` and the controllers' player pointers are `Player *`s; `PlayerSprite()`, `ActionCtrl::Sprite()` and the `(GroundSprite *)` casts go | 0 | (unchanged) | 4 hand-written vcalls, the flags2 offset macro -> 0 | 8 |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1348,7 +1360,8 @@ too: only mangled names changed, each mapped to the same C name.
 - **The player is a `GroundSprite`.** Where the controllers pass the player
   (`struct player`, still C) to a `Ctrl` method, they cast it to
   `GroundSprite *`, what the player is, not to the controller's type;
-  `ActionCtrl::Sprite()` returns a `GroundSprite *`.
+  `ActionCtrl::Sprite()` returns a `GroundSprite *` (until part 8, which
+  made the player a class).
 - **Casts gone:** `mover->Update(this)` and `ctrl->Attach(this)`
   (moving_sprite.cpp, moving_sprite_collide.cpp, platform.cpp), the four
   `m->Attach(obj)` of `Platform::Create`, and the `(MovingSprite *)` of
@@ -1372,6 +1385,107 @@ too: only mangled names changed, each mapped to the same C name.
   tiny_update.cpp, platform_create.cpp and the pickups. `InputCtrl::StateStart`
   keeps `AddToPartList` for the camera lead, a C struct (`struct
   follow_child`, level_select.c).
+
+### The player (part 8)
+
+Part 8 in numbers: the player, `Player` (new include/player.hpp, a
+`GroundSprite`, 0x350 bytes; gPlayerVtable), all six of its C files
+(player_update.c, player_init.c, player_reset.c, player_collide.c,
+player_anim_room.c, player_event.c), 15 functions, and player_flags.cpp's
+40 accessors as its methods. Project-wide: `MATCH_HOLD_REG` 1404 -> 1351,
+`MATCH_USE` 60 -> 55, `MATCH_HOLD` 18 -> 13, `MATCH_CONST` 26 -> 22,
+instruction-emitting `asm` 160 -> 155, retyped field stores 202 -> 201 and
+reads 82 -> 80. Every pin, hold, use, constant-init and `asm` of the six
+files goes; one volatile read stays (below). player_update.o and
+player_reset.o match only under old_agbcp (their pins and `asm` were
+old_agbcc's constant-before-`ldrb` order under agbcc) and move to
+`OLD_AGBCC_OBJS`; player_init.o and player_anim_room.o stay agbcc,
+player_collide.o and player_event.o were old_agbcc already.
+
+- **The class.** `Player`'s fields after 0x80 keep `struct player`'s names
+  (`busy`, `ctrlMode`, `deadline`, ..., `slippery`, `hanging`, `dead`);
+  `list` holds `Crate *`s, `carried` and Aku Aku's `child` are `Sprite *`s,
+  `maskTrail` is `struct gfx_vec`s (so the mask's trail reset copies
+  `Pos()`), and `collisionQueue` is a `CollisionQueue`. Its slots: 1
+  `CheckPlayerContact` (CollidePlayer), 3 `Update`, 4 `Draw`, 10 the
+  destructor, 12 `ApplyVelocity`, 13 `HandleEvent`, 14 `TouchPlayer`
+  (CollidePlayerWithObjects); the others are the base classes'. player.h's
+  `struct player` stays the C view (the rooms, the HUD, the vehicles), and
+  player.hpp checks both sizes.
+- **The constructor and destructor are g++'s.** `InitPlayer` is
+  `Player(id, x, y, unused)`: g++ calls `InitGroundSprite`, stores the
+  vtable pointer and then constructs the member `collisionQueue`, which is
+  `ResetCollisionQueue`. That makes `ResetCollisionQueue` `CollisionQueue`'s
+  constructor (part 7c had it as `Reset`). `DestroyPlayer` is `~Player() {
+  delete child; }`: the `delete` is the C's null test and slot-10 call with
+  3, and g++ then destroys the member with flags 2 (`DestroyCollisionQueue(q,
+  2)`, which part 7c's comment had predicted) and calls
+  `DestroyGroundSprite`.
+- **`ApplyVelocity` is `MovingSprite::ApplyVelocity`'s code.** The C's 14
+  pins, gotos, two retyped reads and the 8-instruction `asm` block for
+  the redundant store go. The global is a new name, `gLastPlayerVelY`
+  (0x0300129C, the word after `gLastSpriteVelY`; sym_iwram.txt), where the
+  C wrote the address: the object's literal becomes a relocation, the
+  ROM's word is the same.
+- **`gPlayer` is a `Player *` to C++** (globals.h, above). The 42 C++ files
+  that use it include player.hpp, and every field access uses the class's
+  names (`f.flags`, `f.b.collides`, `mirrorBits.flipX`,
+  `mirrorFlags.mirrorX`, `mirror`, `palette`, `mover`, `bank->anims[...]`).
+  `PlayerSprite()` and every `(GroundSprite *)` and `(MovingSprite *)`
+  cast of the player go, and so does `ActionCtrl::Sprite()`: `ActionCtrl`,
+  `PlayerCtrl` and `InputCtrl` hold a `Player *` (`P6Player` in
+  `PlayerCtrl::StartMotion?FromSet`'s mangled names). The C-linkage calls
+  that took the player are method calls (`gPlayer->TouchesBox(&box)`,
+  `p->HasRoomForAnim(0xB)`, `p->ClearSpeedY()`, `gPlayer->HasRampYTarget()`,
+  `p->collisionQueue.Resolve()`, `p->mover->state`).
+- **Hand-written virtual calls go.** cortex.cpp's, dingodile.cpp's,
+  tiny_update.cpp's and mega_mix_update.cpp's slot-13 calls through
+  `vtable->handleEvent` are `pl->HandleEvent(0, event, 0)`, byte for byte.
+- **The accessors** (player_flags.cpp) are `Player` methods,
+  cxx_symbols.txt mapping them to the C names. `GetListEntry`'s 3 pins and
+  gotos go: as a method, the plain test matches (`GetPlayerListEntry`
+  returns a `struct crate *` now, as `GetPlayerStandingOn` returns a
+  `struct gobj *`, in player.h).
+- **Inline helpers in the class.** `StoreHitAxes`, `StoreSlippery`,
+  `StorePushLeft`, `StorePushRight`: a store through an inline method, whose
+  value (a parameter) is materialized before the field's address, as the
+  ROM has it in `CheckPlayerContact` and the controllers (they replace
+  action_ctrl.hpp's and swim_ctrl.cpp's `SetHitAxes`/`SetSlippery`). And
+  `FrameAnchor()`, `GetSpriteFrameAnchor` inlined, which
+  `CheckPlayerContact` and `ActionCtrl::HandleEvent` share (below).
+  `ActAndFlags0D`/`ActOrFlags0D` moved from action_obj.h to action_ctrl.hpp
+  and write flags2 through a pointer to the member, not `(u8 *)p + 0xD`.
+
+What made the C++ match:
+
+- **`CheckPlayerContact`'s registers come from `FrameAnchor`'s.** The
+  ROM's `ldrsh` index of every virtual call in the function is r2, where
+  g++ gave r3; the C held r3 with register variables through the whole
+  function. The cause is reload's spill registers: a hard register that
+  global allocation gave to a pseudo is only taken for reloads when no
+  free one is left, and in the ROM the frame anchor (`off`) lives in r3.
+  With the anchor computed by a `return` per case (action_ctrl_event.cpp's
+  spelling), it gets r3, reload's scratch for the earlier `ldrsh`es comes
+  out r2, and every register of the function is the ROM's. The C's
+  `result = ...; break;` form left the anchor in r0, copied to r2.
+- **`f.b.vulnerable = 1` before `deadline = 0`** (hurting ground): with
+  `f.flags |= 0x40`, the 0 is scheduled into the `ldrb`'s delay slot.
+- **Jump threading.** `Draw` tests the mask level twice; when the first
+  test is false, g++ jumps past the second (same RTL, no store between).
+  The ROM reloads it, and so does a test through a local (`struct
+  level_state *game = gLevelState;`). The C had the effect from its r6
+  holds, which C++ doesn't need for the registers.
+- **`ResetForRoom`'s switch on a copy** (`s32 mode = ctrlMode; s32 m =
+  mode; switch (m)`), as `StepHeight` (part 7i): the C's goto chain and two
+  pins.
+- **`HasRoomForAnim`'s box through an inline** (`AnimBox`): the `+ 4` of
+  the first box is its own `adds` before the copy into the variable.
+- **`Reset`'s flags** are bitfield stores, which g++ merges into one
+  `ldrb`/`strb` per byte, in the ROM's order of operations under
+  old_agbcp: the C's three `asm` blocks and 30 pins go.
+
+Kept: `HandleEvent`'s volatile read of the mask level after the
+controller call (the ROM loads it and never uses it).
 
 ### The entity family is done
 
@@ -1406,13 +1520,10 @@ player 17. `MATCH_BARRIER` (17), the clobbers (3), the memory barriers (2)
 and the `BOX_ADDR`s (12) are unchanged. Every remaining workaround in a C++
 object is listed, with its reason, in its part's notes above.
 
-**What is still C** (the game's other 168 objects outside src/data/; 77 of
-them have C++ traits, `tools/cpp_survey.py --objects`):
+**What is still C** (the game's other 168 objects outside src/data/ after
+7b'; 77 of them have C++ traits, `tools/cpp_survey.py --objects`; the
+player, then the first item here, is C++ since part 8):
 
-- **The player** (`struct player`, a `GroundSprite` with the player's
-  fields; gPlayerVtable): player_update.c, player_event.c,
-  player_collide.c, player_init.c, player_reset.c, player_anim_room.c. C++
-  code reaches it through `PlayerSprite()` and `(GroundSprite *)` casts.
 - **The level select's sprites**: the camera lead (`struct follow_child`)
   and launch pad, `MovingSprite`s, in menus/level_select.c, with
   level_select_widgets.c and level_select_pages.c.
@@ -1465,10 +1576,10 @@ Bigger controllers, roughly in order (function counts from
 Next, the classes built on the family, then the 3D actors (one family per
 PR, as before):
 
-6. **The player** (part 8): a `Player` class deriving from `GroundSprite`
-   (its fields after 0x80, its vtable, `PlayerSprite()` and the
-   `(GroundSprite *)` casts gone), player*.c. `struct player` stays the C
-   view for the C files left (the rooms, the HUD, the vehicles).
+6. ~~**The player**~~: done in part 8 (`Player : GroundSprite`,
+   include/player.hpp; `PlayerSprite()` and the `(GroundSprite *)` casts
+   gone). `struct player` stays the C view for the C files left (the
+   rooms, the HUD, the vehicles).
 7. **The spawners** (part 9): entity_spawner.c (`new EffectCtrl`,
    `mgr->Attach(part)`) and the level's spawn_*.c, which create the
    family's objects with `Create...(OperatorNew(n))` and C casts; with them
@@ -1505,10 +1616,10 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7h~~ | ~~pickups/extra_life.c, wumpa.c, wumpa_update.c~~ | `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl::Reset`; `struct act` went | done | |
 | ~~7i~~ | ~~bosses/cortex.c (old)~~ | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | done | 7d |
 
-Outside this family, the classes built on these are still C: the
-player, the level select's sprites and the effect parts' spawner (see
-[The entity family is done](#the-entity-family-is-done) and items 6-8
-above).
+Outside this family, the classes built on these were still C: the
+player (part 8 since), the level select's sprites and the effect parts'
+spawner (see [The entity family is done](#the-entity-family-is-done) and
+items 6-8 above).
 
 ## Recommendation and plan
 
@@ -1779,3 +1890,20 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **A switch on a copy:** where the ROM runs the last compare of a
   switch's tree on a copy of the index in another register, switch on a
   local copy of an inline function's parameter (`StepHeight`, part 7i).
+- **Reload avoids a register global allocation gave a pseudo.** A
+  register difference in a reload's scratch (an `ldrsh` index, a constant's
+  register) can come from a pseudo elsewhere in the function: reload takes
+  a hard register that holds a pseudo only when no free one is left. In
+  `Player::CheckPlayerContact` the frame anchor's spelling decided whether
+  r3 held it, and with it every virtual call's `ldrsh` register (part 8).
+- **Jump threading over a repeated test.** Two identical tests of a global
+  with no store between are threaded: the false path of the first jumps
+  past the second, where the ROM tests again. Testing through a local copy
+  of the global's pointer keeps the second load (`Player::Draw`, part 8).
+- **A member object's constructor and destructor** are called by g++: the
+  constructor after the base's constructor and the vtable pointer store,
+  the destructor after the body with flags 2 (no delete), before the
+  base's destructor (`Player`'s `collisionQueue`, part 8).
+- **A `#ifdef __cplusplus` declaration** gives a C global its class type in
+  C++ with the same symbol (`extern class Player *gPlayer;` inside `extern
+  "C"`), so the C++ files need no accessor or cast for it (part 8).

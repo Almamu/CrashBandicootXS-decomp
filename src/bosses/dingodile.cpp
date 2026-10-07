@@ -1,4 +1,5 @@
 #include "boss_ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -58,13 +59,10 @@ static inline s32 LevelBottom(void)
  * halfword, then shifted back down. */
 #define LayerWidthPlus(n) (((gLevelLayers->layer0->widthPx << 16) + ((n) << 16)) >> 16)
 
-/* The player's HandleEvent (gPlayerVtable; the player is still C). */
+/* The player's HandleEvent (Player, include/player.hpp). */
 static inline void HitPlayer(MovingSprite *by)
 {
-    struct player *pl = gPlayer;
-    const struct actor_method *m = &pl->vtable->handleEvent;
-
-    ((void (*)(void *, s32, s32, s32))m->fn)((u8 *)pl + m->thisOffset, 0, by->kind, 0);
+    gPlayer->HandleEvent(0, by->kind, 0);
 }
 
 /* GetSpriteAttackBox (objects.h) as a struct return: assigned to a box

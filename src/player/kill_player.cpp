@@ -1,5 +1,6 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "match.h"
@@ -20,16 +21,16 @@ extern "C" {
  * first as a parameter (the turbo run's 0, the pending X motion's 1): an
  * inline parameter is computed before the body, as there; the right turn
  * keeps the mask in SImode (`& -0x11`, then `| 0x10`). */
-static inline void FaceLeft(ActionCtrl *ctrl, struct player *p, s32 turboRun)
+static inline void FaceLeft(ActionCtrl *ctrl, Player *p, s32 turboRun)
 {
-    p->mirror.bits.flipX = 0;
+    p->mirrorFlags.mirrorX = 0;
     ctrl->motionXPending = 1;
     ctrl->turboRun = turboRun;
 }
 
-static inline void FaceRight(ActionCtrl *ctrl, struct player *p, s32 pending)
+static inline void FaceRight(ActionCtrl *ctrl, Player *p, s32 pending)
 {
-    u8 *mirror = &p->mirror.all;
+    u8 *mirror = &p->mirror;
     s32 m = ~0x10;
 
     m &= *mirror;
@@ -46,19 +47,19 @@ static inline void FaceRight(ActionCtrl *ctrl, struct player *p, s32 pending)
 void ActionCtrl::KillPlayer(s32 anim)
 {
     PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
-    SetTargetAnim(Sprite(), anim);
+    SetTargetAnim(part, anim);
     SetMode(ACTION_STATE_DYING);
     QueueNowX(0);
     QueueNowY(0);
     ApplyMotion();
-    SetSlippery(part, 0);
+    part->StoreSlippery(0);
     part->pushLeft = 0;
     part->pushRight = 0;
-    part->flags.bits.flag7 = 0;
-    part->flags.bits.flag6 = 0;
+    part->f.b.collides = 0;
+    part->f.b.vulnerable = 0;
     part->dead = 1;
     LoseLife(gLevelState);
-    LoadPaletteSlot(gPaletteCache, part->slot, part->anim->records[part->tag].paletteId);
+    LoadPaletteSlot(gPaletteCache, part->palette, part->anim->records[part->tag].paletteId);
 }
 
 /* Update calls this when the player's `slippery` changed. On slippery
@@ -68,7 +69,7 @@ void ActionCtrl::KillPlayer(s32 anim)
  * sound and goes back to idle. */
 void ActionCtrl::UpdateSkidAnim()
 {
-    struct player *player = gPlayer;
+    Player *player = gPlayer;
     s32 slippery = player->slippery;
 
     if (slippery) {
@@ -147,10 +148,10 @@ s32 ActionCtrl::UpdateFacing()
     default:
         goto done;
     }
-    part->mirror.bits.flipY = 0;
-    if (part->mirror.sbits.flipX < 0 && (dir == 4 || dir == 6 || dir == 8)) {
+    part->mirrorFlags.mirrorY = 0;
+    if (part->mirrorBits.flipX < 0 && (dir == 4 || dir == 6 || dir == 8)) {
         FaceLeft(this, part, 0);
-    } else if ((s32)(part->mirror.all << 27) >= 0 && (dir == 3 || dir == 5 || dir == 7)) {
+    } else if ((s32)(part->mirror << 27) >= 0 && (dir == 3 || dir == 5 || dir == 7)) {
         FaceRight(this, part, 1);
     } else {
         goto done;

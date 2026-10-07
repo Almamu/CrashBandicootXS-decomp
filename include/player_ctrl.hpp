@@ -10,6 +10,7 @@
 #pragma interface
 
 #include "ctrl.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "player_ctrl.h"
@@ -25,11 +26,11 @@ extern "C" {
 class PlayerCtrl : public Ctrl
 {
 public:
-    struct player *target; // 0x10 - the player (gPlayer)
-    s32 unk_14;            // 0x14 - only ever cleared (Reset, ClearUnk14)
-    s32 timer;             // 0x18
-    s32 timerMax;          // 0x1C
-    u8 repeat;             // 0x20 - D-pad auto-repeat countdown
+    Player *target; // 0x10 - the player (gPlayer)
+    s32 unk_14;     // 0x14 - only ever cleared (Reset, ClearUnk14)
+    s32 timer;      // 0x18
+    s32 timerMax;   // 0x1C
+    u8 repeat;      // 0x20 - D-pad auto-repeat countdown
     // 0x21 - swim direction, 0 (up) .. 6 (level) .. 12 (down); column of gPlayerCtrlModeAnimRows
     u8 tilt;
     // 0x22 - row of gPlayerCtrlModeAnimRows (0 idle, 1 swim, 2 stroke, 3 spin, 4-7 turn)
@@ -69,8 +70,8 @@ public:
     void StateSwimStart();
     void StateStop();
     void StateDead();
-    void StartMotionYFromSet(struct player *target, s32 idx);
-    void StartMotionXFromSet(struct player *target, s32 idx);
+    void StartMotionYFromSet(Player *target, s32 idx);
+    void StartMotionXFromSet(Player *target, s32 idx);
     void SetState(s32 newState, s32 newMode, s32 newTimer, s32 newTimerMax);
     void ApplyTilt();
     void StartSwim();

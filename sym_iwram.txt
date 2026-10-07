@@ -10,6 +10,7 @@
 . = 0x00001288; gDispcnt = .;
 . = 0x00001290; gVramDmaQueue = .;
 . = 0x00001298; gLastSpriteVelY = .;
+. = 0x0000129C; gLastPlayerVelY = .;
 . = 0x000012A0; gHomingEnemyX = .;
 . = 0x000012A4; gHomingEnemyXSaved = .;
 . = 0x000012A8; gHomingEnemyY = .;
