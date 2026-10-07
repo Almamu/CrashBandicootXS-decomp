@@ -26,7 +26,6 @@
 
 struct bg_streamer;
 struct camera;
-struct fx_part;
 struct level_ctx;
 struct level_progress;
 struct orbit_part;
@@ -113,7 +112,7 @@ struct level_layers {
  * in `bits0Copy` when it is collected, broken or killed, and
  * SetCheckpointAtPlayer copies the two back. The names are room_entities.c's
  * (`struct lk_self`); dingodile.c called the object `struct entity_flags`
- * (`bits0Copy` was `bitmap`, the list `struct collect_info`), time_trial.c
+ * (`bits0Copy` was `bitmap`, the list `struct collect_info`), time_trial.cpp
  * `struct collision_map` (`seen`), text_popup.h a `struct
  * level_record_table **`. */
 struct entity_flags {
@@ -229,9 +228,6 @@ extern void ClearBitmapBit(void *self, s32 n);
 extern void ClearBitmap(void *dst);
 extern void *InitBitmap(void *self);
 
-/* src/level/drop_extra_life.c */
-extern struct orbit_part *DropExtraLife(void *unused, u32 x, u32 y, u32 p3, u32 p5, u32 flag6);
-
 /* src/level/entity_flags.c */
 extern s32 CountCrateEntities(void *self, const struct level_entity_list *list);
 extern void SetEntityIdGone(void *self, s32 n);
@@ -243,15 +239,9 @@ extern void SetEntityFlagsPos(void *self, s32 val);
 extern void DestroyEntityFlags(void *self, s32 flags);
 extern void *InitEntityFlags(void *self);
 
-/* src/level/entity_spawner.c */
-extern void *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed,
-                              struct fx_part *src);
-extern void *SpawnEffectPart(void *unused, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
-extern struct orbit_part *DropWumpa(void *unused, u32 x, u32 y, u32 p3, u32 p4, u32 flag5);
-extern void SpawnEntity(void **table, s32 id, u16 *rec);
-extern void SetEntitySpawnerTable(void *self, const void *table, s32 count);
-extern void DestroyEntitySpawnerObj(void *self, s32 flags);
-extern void InitEntitySpawner(void *self);
+/* src/level/entity_spawner.cpp: EntitySpawner (include/spawners.hpp).
+ * The C callers' prototype: room_entities.c's spawns. */
+extern void SpawnEntity(struct entity_spawner *self, u32 id, const struct level_entity *rec);
 
 /* src/level/game_frame.c */
 extern void UpdateGameFrame(struct level_state *self);
@@ -346,7 +336,7 @@ extern void ResetDeaths(struct level_state *self);
 extern u8 GetSpawnAtStart(struct level_state *self);
 extern void ClearSpawnAtStart(struct level_state *self);
 extern void ArmStartSpawn(struct level_state *self);
-extern void SetLevelBoss(struct level_state *self, struct level_state_1c8 *value);
+extern void SetLevelBoss(struct level_state *self, void *value);
 extern s32 GetRoomIndex(struct level_state *self);
 extern s32 GetCurrentLevel(struct level_state *self);
 extern void SetCurrentLevel(struct level_state *self, s32 value);
@@ -364,8 +354,8 @@ extern s32 IsCrystalSaved(struct level_state *self);
 extern void CollectWumpa(struct level_state *self);
 extern void AddLife(struct level_state *self);
 extern void CheckAllCratesBroken(void *self);
-extern void SetGemPlatform(struct level_state *self, s32 value);
-extern void SetBonusPlatform(struct level_state *self, s32 value);
+extern void SetGemPlatform(struct level_state *self, void *value);
+extern void SetBonusPlatform(struct level_state *self, void *value);
 extern void SetCrateGemPos(struct level_state *self, s32 *point);
 extern void RequestGemPath(struct level_state *self);
 extern void RequestBonusRound(struct level_state *self);
@@ -402,13 +392,13 @@ extern void SetupRoomBlend(struct level_ctx *self);
 /* src/level/run_room.c */
 extern s32 RunRoom(struct level_progress *self);
 
-/* src/level/spawn_bosses.c */
+/* src/level/spawn_bosses.cpp */
 extern void SpawnRoomExit(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnDingodile(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnTiny(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnCortexBoss(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 
-/* src/level/spawn_crates.c */
+/* src/level/spawn_crates.cpp */
 extern void SpawnNitroSwitchCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnOutlineCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnArrowCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -445,13 +435,13 @@ extern void SpawnFrog(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSeaMine(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnWoodenCrusher(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 
-/* src/level/spawn_gem_platforms.c */
+/* src/level/spawn_gem_platforms.cpp */
 extern void SpawnRedGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnYellowGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnGreenGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnBlueGemPlatform(u32 a, u16 a1, u16 a2, u16 a3);
 
-/* src/level/spawn_gems.c */
+/* src/level/spawn_gems.cpp */
 extern void SpawnCrystal(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnCrateGem(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnGemPathGem(u32 a, u16 a1, u16 a2, u16 a3);
@@ -459,7 +449,7 @@ extern void SpawnRedGem(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnGreenGem(u32 a, u16 a1, u16 a2, u16 a3);
 extern void SpawnYellowGem(u32 a, u16 a1, u16 a2, u16 a3);
 
-/* src/level/spawn_objects.c */
+/* src/level/spawn_objects.cpp */
 extern void SpawnMegaMix(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSeaweed(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnSeaweedNoAnimReset(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -486,7 +476,7 @@ extern void SpawnLifeCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnIronArrowCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnIronCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 
-/* src/level/spawn_pickups.c */
+/* src/level/spawn_pickups.cpp */
 extern void SpawnBodySlamPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnTornadoSpinPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnDoubleJumpPower(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -504,9 +494,9 @@ extern void SpawnPlayerPosition(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnStartMarkerStub(void);
 extern void DestroyEntitySpawner(void);
 extern void CreateEntitySpawner(void);
-extern void *InitLevelState(void *self);
+extern struct level_state *InitLevelState(struct level_state *self);
 
-/* src/level/spawn_start_marker.c */
+/* src/level/spawn_start_marker.cpp */
 extern void SpawnStartMarker(u32 arg, u16 x, u16 y, u16 z);
 
 /* src/level/terrain.c */
@@ -540,7 +530,7 @@ extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
 extern void UploadTileSlot(struct tile_slot_pool *pool, s32 tileId, s32 slot);
 extern void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src);
 
-/* src/level/time_trial.c */
+/* src/level/time_trial.cpp */
 extern void StartTimeTrial(struct level_state *self);
 
 /* src/cutscene/cutscene_player.c (for ROM order): the tile-map streamer of
@@ -581,7 +571,7 @@ extern struct part_list *gDecorationList;
  * read. */
 extern struct level_state *gGameFrameLevelState;
 /* Updated and cleared, but never culled or drawn: the invisible objects,
- * the entity type 0x55 room-exit zones (spawn_bosses.c) and
+ * the entity type 0x55 room-exit zones (spawn_bosses.cpp) and
  * SpawnSealSpawner's spawner. */
 extern struct part_list *gUpdateOnlyPartList;
 

@@ -380,10 +380,11 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
   "C" { }`, with the same warning flags and `-Werror`. C++-only
   declarations go in `.hpp` headers (`include/ctrl.hpp`,
   `include/sprite_obj.hpp`), next to the C structs they mirror (see
-  [Progress](#progress)). One C declaration has a C++ type: globals.h
+  [Progress](#progress)). Two C declarations have a C++ type: globals.h
   declares `gPlayer` as a `Player *` under `__cplusplus` (`extern class
   Player *gPlayer;`, still C linkage) and as a `struct player *` for C
-  (part 8).
+  (part 8), and `gEntitySpawner` as an `EntitySpawner *` and a `struct
+  entity_spawner *` (part 9).
 - **Vtables stay C data.** The class header has `#pragma interface`, so
   g++ doesn't emit the classes' vtables; the code refers to
   `_vt.<len>Class`, and the ROM's tables stay the C arrays in
@@ -504,6 +505,17 @@ counts them by kind) and what the C++ still needs.
 | `src/player/player_flags.cpp` (again) | the 40 player accessors are `Player` methods (C linkage before) | 40 | agbcp | 3 pins, gotos -> 0 | 8 |
 | `src/objects/collision_queue.cpp` (again) | `CollisionQueue`'s constructor (`ResetCollisionQueue`; `Reset` before) | 0 | agbcp | 0 -> 0 | 8 |
 | globals.h, action_obj.h, the controller headers (action_ctrl.hpp, input_ctrl.hpp, player_ctrl.hpp), sprite_obj.hpp, and 43 `.cpp` files | `gPlayer` and the controllers' player pointers are `Player *`s; `PlayerSprite()`, `ActionCtrl::Sprite()` and the `(GroundSprite *)` casts go | 0 | (unchanged) | 4 hand-written vcalls, the flags2 offset macro -> 0 | 8 |
+| `src/level/entity_spawner.cpp` | `EntitySpawner` (include/spawners.hpp): `SpawnEffectPart`, `LaunchEffectPart`, `DropWumpa`, `Spawn` (SpawnEntity), `SetTable`, constructor, destructor | 7 | old_agbcp | 4 pins, 1 use, 1 keep, 1 asm label, the `attach` slot call -> 0 | 9 |
+| `src/level/drop_extra_life.cpp` | `EntitySpawner::DropExtraLife` | 1 | old_agbcp | 0 -> 0 | 9 |
+| `src/level/spawn_gems.cpp` | the crystal and gem spawners (C linkage) | 6 | old_agbcp | 0 -> 0 | 9 |
+| `src/level/spawn_gem_platforms.cpp` | the gem platform spawners (C linkage) | 4 | old_agbcp | 0 -> 0 | 9 |
+| `src/level/spawn_crates.cpp` | the crate spawners (C linkage) | 7 | **old_agbcp** (was agbcc) | 16 pins, 3 asm -> 0 | 9 |
+| `src/level/spawn_start_marker.cpp` | `SpawnStartMarker` (C linkage) | 1 | old_agbcp | 17 pins, 2 asm, 1 retyped read, the slot-13 call, gotos -> 0 | 9 |
+| `src/level/spawn_bosses.cpp` | the room exit and the bosses' spawners (C linkage) | 4 | old_agbcp | 4 pins, 1 keep, 3 slot calls -> 4 pins, 1 keep | 9 |
+| `src/level/spawn_objects.cpp` | Mega Mix, the decorations, the platform and crate spawners, the seal spawner (C linkage) | 25 | old_agbcp | the slot call -> 0 | 9 |
+| `src/level/spawn_pickups.cpp` | the power, stopwatch, blue gem, wumpa and player-start spawners, `CreateEntitySpawner`, `DestroyEntitySpawner`, `InitLevelState` (C linkage), with `KeyInput` (spawners.hpp; its constructor ClearKeys is still C) | 18 | **old_agbcp** (was agbcc) | 38 pins, 10 asm, 5 retyped stores -> 4 pins, 1 asm | 9 |
+| `src/level/time_trial.cpp` | `StartTimeTrial` (C linkage) | 1 | old_agbcp | 2 vcall macros, an `ENTITY_SET_GONE_BIT` -> 0 | 9 |
+| globals.h, level.h, level_state.h, level_data.h, crate.hpp, enemy_ctrl.hpp, and 17 `.cpp` files | `gEntitySpawner` is an `EntitySpawner *` to C++, and the effect parts' and dropped pickups' callers call its methods; `CreateMovingSprite` calls are `MovingSprite::Create` | 0 | (unchanged) | 2 asm labels (`DropWumpaFlag`, `DropExtraLifeFlag`), a function-pointer cast -> 0 | 9 |
 | `src/menus/level_select.cpp` | `CameraLead`, `LaunchPad`, and `LevelSelect`'s constructor, destructor, update, draw, record and loop (include/level_select.hpp), with `RunLevelSelect` (C linkage) | 24 + 1 | old_agbcp | 31 pins, 2 keeps, 2 asm, 2 asm labels, 1 volatile read, the byte views of DISPCNT, BLDY and the save record, the `Opaque` and `ItemAt` helpers, gotos, 7 hand-written vcalls -> 3 pins, 1 keep, 2 asm labels | 10 |
 | `src/menus/level_select_pages.cpp` | `LevelSelect`'s page turns, exits and entry refresh; `LevelSelectPageBg`; `ZoomBg`'s constructor; with `SetNewWorldOpened` (C linkage) | 24 + 1 | old_agbcp | 0 -> 0; the entries' 2 function-pointer vcalls go | 10 |
 | `src/menus/level_select_widgets.cpp` | `ZoomBg`, `LevelSelectEntry`, `LevelSelectCursor` | 41 | old_agbcp | 0 -> 0; `DELETE_PART` (the parts' slot-10 calls) goes | 10 |
@@ -1491,6 +1503,125 @@ What made the C++ match:
 Kept: `HandleEvent`'s volatile read of the mask level after the
 controller call (the ROM loads it and never uses it).
 
+### The spawners (part 9)
+
+Part 9 in numbers: the effect-part spawner and the level spawners, 10 of
+the 11 spawn files in src/level/ (all but spawn_enemies.c), 74 functions.
+Project-wide (after part 10): `MATCH_HOLD_REG` 1323 -> 1252,
+instruction-emitting `asm` 153 -> 139, `MATCH_USE` 55 -> 54, `MATCH_KEEP`
+33 -> 32, asm labels 17 -> 14, retyped field stores 201 -> 196 and reads
+79 -> 78. spawn_crates.o and
+spawn_pickups.o match only under old_agbcp (their pins and `asm` held
+agbcc to old_agbcc's constant-before-`ldrb` order) and move to
+`OLD_AGBCC_OBJS`; the other eight were old_agbcc already.
+
+- **The entity spawner is a class.** `EntitySpawner` (include/spawners.hpp;
+  level.h's `struct entity_spawner` is its C view) holds the spawn table,
+  and every function whose first argument is `gEntitySpawner` (the C's
+  `pool` or `unused`) is its method: `SpawnEffectPart`, `LaunchEffectPart`,
+  `DropWumpa`, `DropExtraLife`, `Spawn` (SpawnEntity) and `SetTable`. Its
+  constructor and destructor are InitEntitySpawner and
+  DestroyEntitySpawnerObj. It has no vtable, so `delete gEntitySpawner`
+  is the null test and a direct call of the destructor with 3
+  (DestroyEntitySpawner), and `new EntitySpawner` uses the constructor's
+  `return this` (the C's `bl InitEntitySpawner` asm).
+- **The effect part is a `MovingSprite`** with an `EffectCtrl`:
+  `SpawnEffectPart` is `MovingSprite::Create`, `new EffectCtrl`,
+  `part->mover = mgr` and `mgr->Attach(part)` (the C's slot call through
+  `_call_via_r2`). `struct fx_part` goes; no effect-part class is needed.
+- **`gEntitySpawner` is an `EntitySpawner *` to C++** (globals.h, as
+  `gPlayer`), so the C++ callers call the methods: crate_break.cpp,
+  crate_stack.cpp, wumpa_update.cpp, sprite.cpp, player_event.cpp, the
+  action and swim controllers and the enemy controllers. The casts go:
+  `(struct fx_part *)gPlayer` (now `LaunchEffectPart(..., gPlayer)`), the
+  `(struct gfx_part *)` and `(MovingSprite *)` casts of the result (the
+  sparks' `hidden` and `gfxMode` are `f.b.visible` and
+  `mirrorBits.gfxMode`), crate.hpp's `DropWumpaFlag`/`DropExtraLifeFlag`
+  asm-label aliases and wumpa_update.cpp's `DropWumpaFunc` cast (the flag
+  is the method's `bool` parameter). `LaunchHarmfulEffectPart`
+  (enemy_ctrl.cpp) takes and returns a `MovingSprite *`; its prototype
+  moved from enemies.h to enemy_ctrl.hpp. level.h keeps one C prototype,
+  `SpawnEntity`, for room_entities.c, which passes its `struct
+  level_entity` without the `(u16 *)` cast.
+- **The spawners build with the classes.** `Sprite::Create`,
+  `MovingSprite::Create`, `Entity::Create`, `Platform::Create`,
+  `Crate::Create`, `Wumpa::Create`, `ExtraLife::Create` and
+  `Stopwatch::Create` replace the C names; `new DingodileCtrl(x, y)`, `new
+  TinyCtrl`, `new CortexBossCtrl`, `new MegaMixCtrl`, `new PeriodicSpawner`
+  and `new EffectCtrl` replace `CreateX(OperatorNew(n))`, and
+  `hdr->Attach(part)` the `POPUP_ATTACH` slot calls. The part lists are the
+  class (`TouchableList()->Add`, `DecorationList()`, and `AddUpdateOnly`
+  for the update-only list, which holds bare entities). The bosses' own
+  `(MovingSprite *)CreateMovingSprite` calls (cortex.cpp, dingodile.cpp,
+  tiny_update.cpp) are `MovingSprite::Create` too.
+- **`InitLevelState`** (spawn_pickups.cpp) builds the C++ classes with
+  `new`: `SpriteRenderer`, `SpriteBankSet`, `PaletteCache`, `OamBuffer`,
+  `ObjVramCursor(0)`, `PaletteCycles`, and the key input, `KeyInput`
+  (spawners.hpp), whose constructor is ClearKeys (src/system/irq.c, still
+  C, `void ClearKeys(void)`, which leaves `this` in r0). The C's six `bl`
+  asm statements with the pointer pinned to r0 go: a constructor returns
+  `this`. The globals keep their C types (the C files use them), so the
+  new objects are stored through casts to their C views. The audio
+  context, the fonts and the entity flags are still C and are built by
+  their C constructors.
+- **The parameter records.** text_popup.h's `struct level_record` is
+  level_data.h's `struct entity_params` now (level_menu.h has a `union
+  level_record`, and C++ has one tag namespace for both), and
+  `EntityParams(index)` (spawners.hpp) looks one up.
+- **The level state's platforms and boss** (`bonusPlatform`,
+  `gemPlatform`, SetGemPlatform, SetBonusPlatform, SetLevelBoss) take
+  `void *`s: the spawners pass the `Platform *` or the boss controller
+  without the C's `(s32)` and `(struct level_state_1c8 *)` casts.
+
+What made the C++ match:
+
+- **SpawnEntity's table offset.** The ROM adds the scaled index to the
+  table (`lsls r0, r3, #2; adds r0, r0, r1`), with the table loaded first
+  and the function after the record's halfwords; `&funcs[rec->type]` adds
+  the other way round. The byte offset added to the table, `(rec->type <<
+  2) + (u32)table`, gives the ROM's code; the C's 4 pins and `MATCH_USE`
+  go.
+- **`LaunchEffectPart`'s two boxes.** The first box named (`struct aabb a
+  = part->GetAnimHitbox()`) and the second a temporary (`w2 =
+  src->GetAnimHitbox().w`) give the ROM's two stack slots and its
+  re-added `sp` offsets. Two named boxes hold the second one's address in
+  a register; two temporaries share one slot. The flip is the sign test
+  (`mirrorBits.flipX < 0`).
+- **`DropWumpa`'s always-active bit** is `SetAlwaysActive()` (a bitfield
+  store): with `f.flags |= 0x10` the phase's 0 is scheduled before the
+  flags' `ldrb`, where the C needed a `MATCH_KEEP`.
+- **A bitfield set from an inline's parameter** is a full insert (the field
+  cleared with `~mask`, the value ORed in) even when the argument is a
+  constant: g++ 2.9 inlines at the RTL level. `SpawnBasicCrate`'s and
+  `SpawnStartMarker`'s mirror bits are that (`SetFlipX(obj, 1)`), where a
+  literal store is a plain OR; the C spelled the masks out in `asm`.
+- **`EntityParams(index)` through an inline** gives the record's address
+  a register copy of its own (`adds r3, r0, #0`), which the C made with
+  an `asm` copy.
+- **`new X` into a global** loads the global's address before the
+  allocation, as the ROM does. A C constructor's result is stored through
+  a pointer to the global taken first (`struct AudioContext **audio =
+  &gAudioContext;`), and an object that needs a later call is kept from
+  the `new` expression itself (`gPaletteCache = (struct palette_cache
+  *)(cache = new PaletteCache)`). `operator new(n)`, not the C name
+  OperatorNew, for the C constructors keeps the object's one undefined
+  `OperatorNew` symbol.
+- **A constant the ROM keeps in a callee-saved register** across calls is
+  a variable: the powers' tags and kinds are `u8` locals (a literal 0 is
+  loaded again at the store), and `InitLevelState`'s display-control 0,
+  stored again into the unused flags after two calls, is a `u16 zero`,
+  with the display control's address taken first.
+
+Kept (both the same gap): `SpawnRoomExit`'s 4 pins and `MATCH_KEEP`
+(spawn_bosses.cpp) and `SpawnCrateGemMarker`'s 4 pins and truncation
+`asm` (spawn_pickups.cpp). In both, the ROM computes the crate gem's
+point into fresh registers (`subs r2, r1, #2`; `lsr r3, r1, #16; lsr r4,
+r2, #16`, r4 a callee-saved register it pushes for nothing), as if the
+values were global allocation's pseudos; g++ computes them in place with
+every spelling tried (locals, `u16` parameters, an inline setter, a point
+class with a constructor, a loop around the stores) under both
+compilers.
+
 ### The level select (part 10)
 
 Part 10 in numbers: the level select's three files (src/menus/level_select*.c,
@@ -1616,12 +1747,11 @@ player, then the first item here, is C++ since part 8):
 - ~~**The level select's sprites**~~: the camera lead and launch pad, with
   the rest of the level select (level_select_widgets.c,
   level_select_pages.c), are C++ since part 10.
-- **The effect parts' spawner** (level/entity_spawner.c: `SpawnEffectPart`'s
-  `InitEffectCtrl(OperatorNew(0x10))` and its `attach` slot call, `new
-  EffectCtrl` and `mgr->Attach(part)` in C++), and the level spawners that
-  create the family's objects (spawn_enemies.c, spawn_objects.c,
-  spawn_pickups.c, spawn_gems.c, spawn_gem_platforms.c, spawn_crates.c,
-  spawn_bosses.c, drop_extra_life.c, time_trial.c).
+- **The enemy spawners** (level/spawn_enemies.c, 26 spawners): the last
+  level spawner file, with `CreateEnemyCtrl(OperatorNew(0x8c))` and the
+  `POPUP_ATTACH` slot calls (`new EnemyCtrl` and `hdr->Attach(part)` in
+  C++). The effect-part spawner and the other level spawners are C++
+  since part 9.
 - **The 3D actors** (`struct actor_self`, vtable pointer at +0x50) and their
   pointer-to-member tables (src/data/actor_pmf_*.c, `ACTOR_PMF_CALL`):
   src/actor/ (actor_anim.c alone has 48 methods), the vehicle levels
@@ -1669,12 +1799,11 @@ PR, as before):
    include/player.hpp; `PlayerSprite()` and the `(GroundSprite *)` casts
    gone). `struct player` stays the C view for the C files left (the
    rooms, the HUD, the vehicles).
-7. **The spawners** (part 9): entity_spawner.c (`new EffectCtrl`,
-   `mgr->Attach(part)`) and the level's spawn_*.c, which create the
-   family's objects with `Create...(OperatorNew(n))` and C casts; with them
-   the C views (`struct box_part`, `struct gobj`, `struct orbit_part`,
-   `struct crate`, `struct part_list`, `struct pool_manager`) lose most of
-   their users.
+7. **The spawners**: ~~entity_spawner.c, drop_extra_life.c, time_trial.c
+   and the level's spawn_*.c but spawn_enemies.c~~, done in part 9
+   (`EntitySpawner`, include/spawners.hpp). Left: spawn_enemies.c (26
+   enemy spawners, 1126 lines, the group's most pins and `asm`), part 9b;
+   with it text_popup.h's `struct popup_part` and `POPUP_ATTACH` go.
 8. ~~**The level select's sprites**~~: done in part 10 (the camera lead and
    launch pad as `MovingSprite` subclasses, and the whole level select,
    include/level_select.hpp; `InputCtrl::StateStart`'s `AddToPartList` is
@@ -2012,3 +2141,19 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   declared after it, it stays in a register (`LevelSelectLoop`, part 10).
 - **g++ 2.9 has no anonymous structs:** `union { struct { u16 a, b; }; u32
   ab; }` is "anonymous class type not used to declare any objects".
+- **A bitfield stored from an inline's parameter** is a general insert (the
+  field cleared, the value ORed in) even with a constant argument, where a
+  literal store is a plain OR: g++ 2.9 inlines at the RTL level, after the
+  store has been expanded (`SetFlipX(obj, 1)`, `SpawnBasicCrate`, part 9).
+- **`gX = new X` loads `&gX` first,** before the allocation, as the ROM's
+  constructors-into-globals do; a C function's result is stored after the
+  call unless written through a pointer to the global taken first
+  (`InitLevelState`, part 9).
+- **`delete p` of a class with no vtable** is the null test and a direct
+  call of its destructor with 3 (`delete gEntitySpawner`, part 9).
+- **`operator new(n)` in C++, not OperatorNew(n):** the C name next to a
+  `new` gives the object two undefined `OperatorNew` symbols after the
+  rename, one from `__builtin_new` (part 9).
+- **A constant held in a callee-saved register across calls** (stored
+  before and after them) is a variable set before the calls; a literal 0
+  is loaded again at each store (the powers' tags, part 9).

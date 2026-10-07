@@ -926,3 +926,14 @@ LoadRecord__11LevelSelect LoadLevelSelectRecord
 Loop__11LevelSelect LevelSelectLoop
 CursorLeft__11LevelSelect LevelSelectCursorLeft
 CursorRight__11LevelSelect LevelSelectCursorRight
+# part 9: the spawners (include/spawners.hpp; src/level/entity_spawner.cpp,
+# drop_extra_life.cpp, spawn_*.cpp, time_trial.cpp)
+__13EntitySpawner InitEntitySpawner
+_._13EntitySpawner DestroyEntitySpawnerObj
+Spawn__13EntitySpawnerUiPC12level_entity SpawnEntity
+SetTable__13EntitySpawnerPCPFUiUsUsUs_vi SetEntitySpawnerTable
+SpawnEffectPart__13EntitySpawneriiiii SpawnEffectPart
+LaunchEffectPart__13EntitySpawneriiiiiP12MovingSprite LaunchEffectPart
+DropWumpa__13EntitySpawnerUiUiUiUib DropWumpa
+DropExtraLife__13EntitySpawnerUiUiUiUib DropExtraLife
+__8KeyInput ClearKeys

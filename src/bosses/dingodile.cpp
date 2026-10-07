@@ -473,7 +473,7 @@ void DingodileCtrl::SetState(MovingSprite *part, s32 next)
 
 void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *owner)
 {
-    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, x, y, 0);
+    MovingSprite *p = MovingSprite::Create(0xFFFF, x, y, 0);
     Ctrl *ctl;
     u8 *bits;
 
@@ -534,7 +534,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
  * `facing`, and registers it with gCollidableList. */
 void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
 {
-    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, x, y, 0);
+    MovingSprite *p = MovingSprite::Create(0xFFFF, x, y, 0);
     Ctrl *ctl;
 
     p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x30);
@@ -726,7 +726,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
 /* Spawns the stalactite (anim 8, then 9 as it falls) at (x, y). */
 void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
 {
-    MovingSprite *p = (MovingSprite *)CreateMovingSprite(0xFFFF, x, y, 0);
+    MovingSprite *p = MovingSprite::Create(0xFFFF, x, y, 0);
     DingodileProjectileCtrl *c;
 
     p->f.b.visible = 0;

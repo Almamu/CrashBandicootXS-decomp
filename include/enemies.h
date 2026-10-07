@@ -26,7 +26,7 @@
 /* A periodic trigger actor (CreatePeriodicSpawner builds one on top of
  * `struct actor`, in a 0x28-byte block): calls `callback` at its own
  * position once every `period` frames while near the camera
- * (UpdatePeriodicSpawner). SpawnSealSpawner (src/level/spawn_objects.c)
+ * (UpdatePeriodicSpawner). SpawnSealSpawner (src/level/spawn_objects.cpp)
  * makes one with SpawnSeal. */
 struct periodic_spawner {
     struct actor base;      // 0x00 - `base.table` is the method table
@@ -61,7 +61,6 @@ extern void SetEnemyAnimMode(struct part_ctrl *self, s32 mode);
 extern void UpdateEnemyOscillateX(struct part_ctrl *self);
 extern void UpdateEnemyBob(struct part_ctrl *self);
 extern void UpdateEnemyOscillateY(struct part_ctrl *self);
-extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 extern void AttachEnemyCtrl(struct part_ctrl *self, struct ctrl_target *target);
 extern s32 GetSfxVolumeAt(s32 x, s32 y);
 extern void ResetEnemyCtrl(struct part_ctrl *self);

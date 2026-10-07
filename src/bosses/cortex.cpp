@@ -199,7 +199,7 @@ void CortexBossCtrl::Update(MovingSprite *part)
 /* The cannon: animation 3 of bank 53, still, facing as `part` does. */
 void CortexBossCtrl::SpawnCannon(MovingSprite *part)
 {
-    MovingSprite *c = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *c = MovingSprite::Create(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
 
     c->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x27C);
@@ -220,7 +220,7 @@ void CortexBossCtrl::SpawnCannon(MovingSprite *part)
  * `part`. */
 void CortexBossCtrl::SpawnTarget(MovingSprite *part)
 {
-    MovingSprite *c = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *c = MovingSprite::Create(0xFFFF, 0, 0, 0);
     Ctrl *ctrl;
     s32 x, y;
 
@@ -246,7 +246,7 @@ void CortexBossCtrl::SpawnTarget(MovingSprite *part)
  * shot finds it. */
 void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
 {
-    MovingSprite *c = (MovingSprite *)CreateMovingSprite(a0, a1, a2, a3);
+    MovingSprite *c = MovingSprite::Create(a0, a1, a2, a3);
     Ctrl *ctrl;
 
     c->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
@@ -460,7 +460,7 @@ void CortexTargetCtrl::SetState(MovingSprite *part, s32 next)
  * 0xE) or a fast one (1, 0x11). */
 void CortexTargetCtrl::FireShot(MovingSprite *part, s32 kind)
 {
-    MovingSprite *c = (MovingSprite *)CreateMovingSprite(0xFFFF, 0, 0, 0);
+    MovingSprite *c = MovingSprite::Create(0xFFFF, 0, 0, 0);
     CortexShotCtrl *ctrl;
 
     c->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x27C);

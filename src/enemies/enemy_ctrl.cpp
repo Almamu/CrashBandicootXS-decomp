@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "spawners.hpp"
 #include "player.hpp"
 
 extern "C" {
@@ -116,17 +117,17 @@ void EnemyCtrl::UpdateOscillateY()
  * swaps the loads and loads the mask positive. LaunchEffectPart reads
  * five arguments after the pool; the sixth, `f`, is only stored to the
  * stack, as in the ROM. */
-void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
+MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingSprite *src)
 {
-    u8 *obj;
+    MovingSprite *obj;
     s32 flags;
     s32 mask;
 
-    obj = (u8 *)LaunchEffectPart(gEntitySpawner, a, b, c, d, e, (struct fx_part *)f);
+    obj = gEntitySpawner->LaunchEffectPart(a, b, c, d, e, src);
     flags = 4;
-    flags |= obj[0xc];
+    flags |= obj->f.flags;
     mask = -0x41;
-    obj[0xc] = flags & mask;
+    obj->f.flags = flags & mask;
     return obj;
 }
 
@@ -259,7 +260,7 @@ void PeriodicSpawner::SetPeriod(s32 newPeriod, s32 newPhase)
     phase = newPhase;
 }
 
-/* The function Update calls; SpawnSealSpawner (spawn_objects.c) stores
+/* The function Update calls; SpawnSealSpawner (spawn_objects.cpp) stores
  * `callback` directly.
  * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
  * file and every word-aligned Thumb pointer in baserom.gba). */

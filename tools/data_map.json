@@ -2818,7 +2818,7 @@
     "CreateEntitySpawner"
    ],
    "consumer_files": [
-    "level/spawn_pickups.c"
+    "level/spawn_pickups.cpp"
    ],
    "ptr_words_code": 92,
    "ptr_words_data": 0,
@@ -2982,7 +2982,7 @@
    ],
    "consumer_files": [
     "menus/level_select.c",
-    "level/spawn_bosses.c",
+    "level/spawn_bosses.cpp",
     "menus/power_dialog_draw.c",
     "menus/pause_menu_info.c",
     "menus/pause_menu_pages_init.c",
@@ -5071,7 +5071,7 @@
     "InitLevelState"
    ],
    "consumer_files": [
-    "level/spawn_pickups.c",
+    "level/spawn_pickups.cpp",
     "menus/pause_menu.c"
    ],
    "ptr_words_code": 220,

@@ -166,8 +166,8 @@ extern u8 IsTouchingAirship(void *self);
  * UnusedOneShotAnimCtrl, TinyCtrl, CortexBossCtrl, CortexTargetCtrl,
  * CortexShotCtrl, CortexBossGemCtrl (include/boss_ctrl.hpp) and
  * CortexBossPlatformMover (include/platform.hpp) under their C names
- * (cxx_symbols.txt), for the vtables and the C callers (spawn_bosses.c,
- * spawn_gems.c). nullsub_19 and SpawnCortexBossGem have C linkage. */
+ * (cxx_symbols.txt), for the vtables. nullsub_19 and SpawnCortexBossGem
+ * (spawn_gems.cpp calls it) have C linkage. */
 extern void *CreateOneShotAnimCtrl(void *self);
 extern void DestroyOneShotAnimCtrl(void *self, s32 flags);
 extern void UpdateUnusedOneShotAnimCtrl(void *self, void *part);
@@ -198,7 +198,7 @@ extern void *CreateCortexShotCtrl(void *self, void *boss);
  * CortexTargetCtrl, CortexCannonCtrl, CortexBossCtrl, DingodileCtrl,
  * DingodileShieldCtrl, DingodileProjectileCtrl and DingodileSharkCtrl
  * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
- * vtables and the C callers (spawn_bosses.c). */
+ * vtables. */
 extern void SetCortexPlatformsKind(void *self, u8 flag);
 extern void SetCortexTargetDest(void *self, void *part, s32 x, s32 y);
 extern void DestroyCortexTargetCtrl(void *self, s32 flags);

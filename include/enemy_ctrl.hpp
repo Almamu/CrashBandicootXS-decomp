@@ -129,7 +129,7 @@ COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == sizeof(struct ct
 /* A periodic trigger entity (gPeriodicSpawnerVtable; struct
  * periodic_spawner in enemies.h): calls `callback` at its own position
  * once every `period` frames while near the camera. SpawnSealSpawner
- * (src/level/spawn_objects.c) makes one with SpawnSeal. */
+ * (src/level/spawn_objects.cpp) makes one with SpawnSeal. */
 class PeriodicSpawner : public Entity
 {
 public:
@@ -145,5 +145,10 @@ public:
 };
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == sizeof(struct periodic_spawner));
+
+/* src/enemies/enemy_ctrl.cpp: EntitySpawner::LaunchEffectPart from `src`
+ * (spawners.hpp), the new part harmful. C linkage, C++ callers only. */
+extern "C" MovingSprite *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e,
+                                                 MovingSprite *src);
 
 #endif /* !GUARD_ENEMY_CTRL_HPP */

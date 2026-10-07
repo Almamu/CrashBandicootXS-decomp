@@ -256,7 +256,7 @@ void SetEntityFlagsPos(void *self, s32 val)
 }
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
- * conditional-destroy shape as entity_spawner.c's
+ * conditional-destroy shape as entity_spawner.cpp's
  * near-identical `DestroyEntitySpawnerObj`. */
 void DestroyEntityFlags(void *self, s32 flags)
 {

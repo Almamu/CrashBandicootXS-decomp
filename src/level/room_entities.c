@@ -11,7 +11,7 @@
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
  * 8022d50-80255d4.md` left for a follow-up pass (the first,
- * `StartTimeTrial`, is `time_trial.c`, now plain C).
+ * `StartTimeTrial`, is `time_trial.cpp`, now plain C).
  *
  * `self` is `*gEntityFlags` (the same collision-bitmap base
  * `SetEntityIdGone`/`IsEntityIdGone`/`IsEntityIdActivated`, entity_flags.c, and
@@ -33,7 +33,7 @@
  * `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
  * each item not already flagged in the `self+8` bit-grid
  * (`IsEntityIdGone`), `SpawnEntity` (the table-indexed interworking-
- * trampoline dispatcher, entity_spawner.c) fires with a running,
+ * trampoline dispatcher, entity_spawner.cpp) fires with a running,
  * never-reset-per-group counter as its own `self` argument, indexing
  * `gEntitySpawner`'s table.
  *
@@ -116,7 +116,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
 
         for (k = 0; k < group->count; k++) {
             if (!(u8)IsEntityIdGone(self, counter))
-                SpawnEntity(gEntitySpawner, counter, (u16 *)&group->entities[k]);
+                SpawnEntity(gEntitySpawner, counter, &group->entities[k]);
             counter++;
         }
     }

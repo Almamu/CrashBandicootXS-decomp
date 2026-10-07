@@ -1,10 +1,10 @@
 #include "action_ctrl.hpp"
+#include "spawners.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
 
 extern "C" {
 #include "match.h"
-#include "gfx_part.h"
 #include "system.h"
 #include "audio.h"
 #include "level.h"
@@ -46,7 +46,7 @@ void ActionCtrl::StateRun()
         }
         if (INPUT_PRESSED(in) & R_BUTTON) {
             s32 frames;
-            struct gfx_part *obj;
+            MovingSprite *obj;
 
             PlaySfx(gAudioContext, SFX_SLIDE, 0x100);
             frames = 0x10;
@@ -57,10 +57,9 @@ void ActionCtrl::StateRun()
             QueueX(alt, 1, 0x1E);
             gPlayer->listCount = alt;
             gPlayer->listCount = alt;
-            obj = (struct gfx_part *)LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xA, alt,
-                                                      (struct fx_part *)gPlayer);
-            obj->hidden = 0;
-            obj->gfxMode = 1;
+            obj = gEntitySpawner->LaunchEffectPart(0x29, 1, 0, 0xA, alt, gPlayer);
+            obj->f.b.visible = 0;
+            obj->mirrorBits.gfxMode = 1;
         }
     }
     {

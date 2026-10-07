@@ -1,4 +1,5 @@
 #include "enemy_ctrl.hpp"
+#include "spawners.hpp"
 #include "player.hpp"
 
 extern "C" {
@@ -42,13 +43,12 @@ extern "C" {
  * stores (QImode `-0x41`/`-9` masks). */
 
 /* LaunchHarmfulEffectPart (enemy_ctrl.cpp), inlined. */
-static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e,
-                                            struct ctrl_target *f)
+static inline MovingSprite *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, MovingSprite *f)
 {
-    struct ctrl_target *obj =
-        (struct ctrl_target *)LaunchEffectPart(gEntitySpawner, a, b, c, d, e, (struct fx_part *)f);
-    obj->visible = 1;
-    obj->flag6 = 0;
+    MovingSprite *obj = gEntitySpawner->LaunchEffectPart(a, b, c, d, e, f);
+
+    obj->f.b.visible = 1;
+    obj->f.b.vulnerable = 0;
     return obj;
 }
 
@@ -91,7 +91,7 @@ void EnemyCtrl::UpdateAttackCycle()
         }
         if (kind == ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT && target->tick == 9 &&
             target->timer == 0) {
-            SpawnPart(0x17, 4, -0x2d, 2, 0, target)->kind = 2;
+            SpawnPart(0x17, 4, -0x2d, 2, 0, sprite)->kind = 2;
             PlaySfx(gAudioContext, SFX_FLAMETHROWER, 0x100);
         }
         break;

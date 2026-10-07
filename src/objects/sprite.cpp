@@ -1,4 +1,5 @@
 #include "sprite_obj.hpp"
+#include "spawners.hpp"
 #include "player.hpp"
 
 extern "C" {
@@ -205,7 +206,7 @@ struct aabb Sprite::GetBodyBox()
  * bank 0x2b) of `kind` at (x, y). */
 static inline Sprite *SpawnPickupEffect(s32 kind, s32 x, s32 y)
 {
-    return (Sprite *)SpawnEffectPart(gEntitySpawner, 0x2b, kind, x, y, 0);
+    return gEntitySpawner->SpawnEffectPart(0x2b, kind, x, y, 0);
 }
 
 /* A pickup's contact with the player: unless it was already touched,

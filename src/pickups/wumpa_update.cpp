@@ -1,4 +1,5 @@
 #include "pickups.hpp"
+#include "spawners.hpp"
 #include "player.hpp"
 
 extern "C" {
@@ -19,7 +20,7 @@ extern "C" {
  * wumpa counter (`randomize` 0: state 1, and shows the counter) or to a
  * random point off the screen (state 2; `counter` says which way). The
  * position becomes a screen position, and the step covers the distance
- * to the target in 20 frames. Called by crate_break.cpp and time_trial.c
+ * to the target in 20 frames. Called by crate_break.cpp and time_trial.cpp
  * with `randomize` 1, by CheckPickup with either. */
 void Wumpa::PickUp(u8 randomize)
 {
@@ -67,13 +68,6 @@ void Wumpa::PickUp(u8 randomize)
     velY = -FixedDiv(newY - dy, 0x1400);
 }
 
-/* DropWumpa (entity_spawner.c, still C) as C++ sees it: its last
- * parameter, `toHud`, is a `bool`, which g++ passes as a byte (`strb`
- * into the stack slot; the C reads it back with `ldrb`). level.h's C
- * prototype has a `u32` there. */
-typedef struct orbit_part *(*DropWumpaFunc)(void *spawner, s32 x, s32 y, s32 p3, s32 p4,
-                                            bool toHud);
-
 /* State 1 flies to the HUD (while `affine` grows by 4 up to 0x100) and,
  * there, collects the wumpa; state 2 flies off the screen (`affine` down
  * by 4 below 0x40, or up by 12 past 0x1B0) and is gone. State 3 pays out:
@@ -117,7 +111,7 @@ void Wumpa::Update()
             s32 px = Q8_TO_INT(x);
             s32 py = Q8_TO_INT(y);
 
-            ((DropWumpaFunc)DropWumpa)(gEntitySpawner, px, py, 0, 0, true);
+            gEntitySpawner->DropWumpa(px, py, 0, 0, true);
             /* The byte's zero-extension spelled out: `++phase > 9` gives an
              * `and` with a 0xFF hoisted to the top of the function. */
             u32 dropped = phase + 1;
@@ -157,7 +151,7 @@ void Wumpa::Update()
     Sprite::Update();
 }
 
-/* The wumpa spawner (SpawnWumpa, spawn_pickups.c; DropWumpa): a wumpa at
+/* The wumpa spawner (SpawnWumpa, spawn_pickups.cpp; DropWumpa): a wumpa at
  * pixel (x, y), at home there, in the foreground list if `special` is
  * 0xFFFF and the touchable list otherwise, with animation 1 of the sprite
  * bank at SPRITE_BANK_BASE + 0x1A4.
