@@ -1,0 +1,73 @@
+#!/bin/sh
+# Build agbcp and old_agbcp, the C++ compilers (cc1plus) that match
+# agbcc and old_agbcc, from notyourav/agbcc's `cp` branch.
+#
+#   tools/build_agbccpp.sh <agbcc-cp-source-dir> [<install-dir>]
+#
+# <agbcc-cp-source-dir> is a checkout of https://github.com/notyourav/agbcc
+# at branch `cp` (decomp.me's "agbccpp" is that branch's release). It
+# isn't modified. <install-dir> is the decomp repository (default: this
+# script's repository). The compilers are installed as
+# <install-dir>/tools/agbcc/bin/agbcp and .../old_agbcp, next to agbcc.
+#
+# Both are the branch's g++/ tree with
+# tools/agbcc_patches/agbcp_agbcc_options.patch applied, which ports
+# agbcc's -fprologue-bugfix and OLD_COMPILER switches; old_agbcp is built
+# with -DOLD_COMPILER, the way SAT-R/agbcc builds old_agbcc. The Makefile
+# builds the C++ objects (CXX_OBJS) with them; see docs/cplusplus.md.
+set -e
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <agbcc-cp-source-dir> [<install-dir>]" >&2
+	exit 1
+fi
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+SRC=$(cd "$1" && pwd)
+DEST=$(cd "${2:-$HERE/..}" && pwd)
+PATCH="$HERE/agbcc_patches/agbcp_agbcc_options.patch"
+
+if [ ! -d "$SRC/g++/cp" ]; then
+	echo "$SRC: not an agbcc \`cp' checkout (no g++/cp/)" >&2
+	exit 1
+fi
+
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+
+# The 1999 sources need an old C dialect and warnings off on a current
+# host gcc. -fstack-reuse=none: grokdeclarator (cp/decl.c) keeps a
+# pointer to a block-scoped variable past its block when it parses a
+# destructor; with stack slot reuse that crashes ("Internal compiler
+# error") on any class with a destructor. gcc 14 made implicit int and
+# implicit declarations errors; -fpermissive turns them back into
+# warnings (older gcc doesn't accept it for C, and doesn't need it).
+HOSTCC="${CC:-gcc} -std=gnu99 -w -fcommon -fstack-reuse=none"
+if ${CC:-gcc} -fpermissive -Werror -x c -c -o /dev/null /dev/null 2>/dev/null; then
+	HOSTCC="$HOSTCC -fpermissive"
+fi
+
+# Same configure line as the branch's build.sh.
+build() { # <tree> <extra host CFLAGS>
+	(cd "$1/g++" &&
+	 rm -f config.cache config.status &&
+	 CC="$HOSTCC $2" ./configure --target=thumb-elf --disable-werror \
+		--with-cpu=arm7tdmi --with-no-thumb-interwork --disable-multilib \
+		--enable-languages="c++" --host=i686-pc-linux --build=i686-pc-linux >/dev/null &&
+	 make clean >/dev/null &&
+	 make cc1plus >/dev/null)
+}
+
+cp -R "$SRC" "$WORK/src"
+(cd "$WORK/src" && patch -p1 < "$PATCH")
+
+cp -R "$WORK/src" "$WORK/new"
+build "$WORK/new" ""
+
+cp -R "$WORK/src" "$WORK/old"
+build "$WORK/old" "-DOLD_COMPILER"
+
+mkdir -p "$DEST/tools/agbcc/bin"
+cp "$WORK/new/g++/cc1plus" "$DEST/tools/agbcc/bin/agbcp"
+cp "$WORK/old/g++/cc1plus" "$DEST/tools/agbcc/bin/old_agbcp"
+echo "agbcp and old_agbcp installed in $DEST/tools/agbcc/bin"

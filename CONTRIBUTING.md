@@ -75,6 +75,10 @@ matched code - read it before starting.** In short:
   is placed at its ROM address by its position in `ldscript.txt`, so
   splitting or merging files means updating `ldscript.txt` and
   `tools/report_units.py` too.
+- **C++:** the game was C++. An object rewritten as C++ is a
+  `src/<dir>/<name>.cpp` (the Makefile's `CXX_OBJS`), its classes go in
+  a `.hpp` header, and its mangled names in `cxx_symbols.txt`; see
+  [docs/cplusplus.md](docs/cplusplus.md).
 - **Data and assets** are rebuilt from source by the Makefile (see
   [README.md](README.md#data-and-assets)): edit the PNG, the level JSON or
   the table in `src/data/`, never anything under `build/`.

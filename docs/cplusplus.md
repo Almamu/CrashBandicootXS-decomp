@@ -1,0 +1,476 @@
+# C++ (#664)
+
+The game was written in C++ and built with the g++ 2.9 that agbcc comes
+from. The decompilation reproduces it as C, which means writing out by
+hand what the C++ compiler generated: vtables, vtable pointer stores,
+`this` adjustments, pointer-to-member calls, `new` and `delete`. This
+page records what the ROM shows, the C++ compiler that matches it, the
+first object built from C++ source (`src/objects/effect_ctrl.cpp`), and
+how to carry on.
+
+**Short answer.** The C++ front end of the same compiler reproduces the
+game's code byte for byte, and the C++ source is shorter and closer to
+what was written. Every C++ pattern tried (constructors, destructors,
+virtual calls, `new`, pointer-to-member calls) compiles to exactly what
+the ROM has, with none of the C emulation. The recommendation is to
+convert gradually, class family by class family, through the Makefile's
+`CXX_OBJS`, starting with the controllers. The libraries stay C.
+
+Contents:
+
+1. [What the ROM shows](#what-the-rom-shows)
+2. [Survey: which objects are C++](#survey-which-objects-are-c)
+3. [The compiler: agbcp and old_agbcp](#the-compiler-agbcp-and-old_agbcp)
+4. [g++ 2.9's C++ ABI, as the ROM has it](#g-29s-c-abi-as-the-rom-has-it)
+5. [Experiments](#experiments)
+6. [How a C++ object is built](#how-a-c-object-is-built)
+7. [Recommendation and plan](#recommendation-and-plan)
+8. [Dead ends and gotchas](#dead-ends-and-gotchas)
+
+## What the ROM shows
+
+| C++ artefact | In the ROM | What it means |
+|---|---|---|
+| g++ 2.x vtables (`{s16 delta, s16 index, void *pfn}` slots) | 93 tables, 831 slots, `0x087E3BEC`-`0x087E55E4` | polymorphic classes, built without `-fvtable-thunks` (the gcc 2.x default) |
+| vtable slot 0 (the RTTI slot, `__tf<class>`) | empty in all 93 | built with `-fno-rtti` |
+| a nonzero `this` delta in a vtable slot | none of 831 | no multiple inheritance that overrides through a second base |
+| a nonzero `thisOffset` in a pointer-to-member table | none of 100 entries (`ACTOR_PMF`) | the same |
+| type_info records, type-name strings (`10EffectCtrl`) | none | no RTTI |
+| `__pure_virtual` ("pure virtual method called") | none | no pure virtual slot is ever emitted |
+| exception tables, `__throw`, `__eh_*`, `terminate` | none | built with `-fno-exceptions` (or no `throw`) |
+| static constructor lists (`__CTOR_LIST__`, `.ctors`, a `__main` call) | none: crt0 calls `AgbMain` directly, and `AgbMain` calls no `__main` | no global object has a constructor |
+| `operator new`/`delete`/`new[]`/`delete[]` | `OperatorNew` & co. in `src/level/camera.c` | the game's own replacements: see below |
+
+**The operators.** In g++ 2.x the global `operator new(size_t)` has the
+assembler name `__builtin_new`, and `new[]`, `delete` and `delete[]` are
+`__builtin_vec_new`, `__builtin_delete` and `__builtin_vec_delete`. A
+`new X` expression calls `__builtin_new` and then the constructor; a
+`delete p` calls the destructor through the vtable with `__in_chrg` = 3.
+libgcc's own versions (new1.cc, new2.cc) call `malloc` and the new
+handler. The game's four, in camera.c, call `mem_alloc(size,
+MEM_HEAP_EWRAM)` and `mem_free`: they are the game's replacement global
+operators, and `OperatorNew` is `__builtin_new`. None of libgcc's C++
+support (new handler, `__pure_virtual`, `__terminate`) is linked.
+
+**Where the vtables are.** g++ 2.9 puts a vtable in a writable data
+section (`.gnu.linkonce.d._vt.<class>`), not in `.rodata`. The 93 tables
+are the last thing in the ROM before the IWRAM image, after all the
+constant data: exactly where `.data` goes (the GBA build left `.data` in
+ROM). The region is nothing but vtables (831 * 8 bytes = 0x19F8). Their
+order follows the order of the classes' code: taking each table's
+destructor as its class's marker, 85 of the 93 are in ascending code
+order, which is what you get when each vtable is emitted with its class's
+first virtual method.
+
+**What is C.** The libraries under `lib/`: Shin'en's GAX2, Nintendo's
+AgbEeprom SDK, libgcc and the BIOS wrappers ([libraries.md](libraries.md))
+have none of the traits. The IWRAM ARM routines were built by agbcc_arm,
+the ARM C compiler. For the rest of the game, being "C-like" doesn't mean
+it was C: the C++ front end compiles plain C-style code to the same bytes
+as the C front end (80% of the game's files, see
+[experiment 4](#4-every-game-file-compiled-unchanged-as-c)), so a file
+with no C++ constructs can't be told apart.
+
+## Survey: which objects are C++
+
+`tools/cpp_survey.py` classifies each object by the C++ runtime
+structures its C writes out by hand. Its output on this branch:
+
+| Trait | Game objects | Count | What it is |
+|---|---:|---:|---|
+| method | 82 | 415 functions | a vtable slot or a pointer-to-member table points at it |
+| vptr | 56 | 200 stores | `x->vtable = gFooVtable`: constructors and destructors |
+| ctor | 46 | 90 functions | stores a vptr and returns the object (a constructor returns `this`) |
+| dtor | 22 | 38 functions | stores a vptr and takes the `flags` (`__in_chrg`) argument |
+| new | 46 | 157 calls | `OperatorNew(...)` / `OperatorNewArray(...)`; 86 are the direct `CreateX(OperatorNew(size))` = `new X` shape |
+| delete | 40 | 79 calls | `OperatorDelete(...)` / `OperatorDeleteArray(...)` |
+| vcall | 79 | 356 sites | a virtual call: the slot's `delta` added to the object, then `_call_via_rN` |
+| pmf | 15 | 29 sites | a pointer-to-member call (`ACTOR_PMF_CALL`, `PMF_CALL`, `PMF_DISPATCH`) |
+| fnptr | 64 | 155 calls | other `_call_via_rN` calls, plain function pointers |
+
+- **Game (`src/`, data tables excluded):** 242 objects, about 1,980
+  functions. **136 objects (1,541 functions) have C++ traits**; 106 have
+  none; 1 is already C++ source (`effect_ctrl.cpp`).
+- **Libraries (`lib/`):** 37 objects, none with a C++ trait (the `fnptr`
+  hits are GAX's mixer calling its channels through a plain function
+  pointer).
+- **Vtables:** 93 tables, 831 slots, 320 distinct functions. Every class
+  has its own destructor: each table has exactly one `Destroy*` slot, all
+  93 different.
+- **Pointer-to-member tables:** 100 entries in 13 tables, all
+  non-virtual `{0, -1, fn}` constants.
+
+The C++ objects are spread over every game directory: player 20,
+objects 18, level 17, vehicle 14, bosses 13, crates 11, menus 8,
+frontend 7, actor 6, text 5, and a few in the others. The 106 C-like
+objects are mostly non-virtual member functions and helpers (level 16,
+bosses 10, menus 9, util 9, crates 8, ...). Run
+`tools/cpp_survey.py --objects` for the per-object table, `--plain` for
+the C-like list.
+
+## The compiler: agbcp and old_agbcp
+
+**Source.** decomp.me's "agbccpp" is the `cp` release of
+[notyourav/agbcc](https://github.com/notyourav/agbcc) (decomp.me's
+`platforms/gba/agbccpp` Dockerfile downloads
+`releases/download/cp/agbcc.tar.gz`). Its `agbcp` binary is `cc1plus`,
+built from the branch's `g++/` tree: gcc 2.9-arm-000512, the same
+snapshot as agbcc, with the C++ front end. SAT-R/pret agbcc (the one in
+`tools/agbcc`) has no C++ front end: its `gcc/` builds only `cc1`.
+
+The release publishes no checksum (the asset has no digest and there is
+no checksum file). For the record, the tarball downloaded on 2026-10-07
+was sha256 `05a30f03ee916563bba29efdc9da64c47909892aa878002cf07e8e7ae5bd32f5`.
+The build doesn't use it: `tools/build_agbccpp.sh` builds both compilers
+from the branch's source, which CI checks out at a pinned commit
+(`1caa6becde5e4676b59c31c74d68f45ced79557c`). The source-built `agbcp`
+and the release's generate identical assembly for effect_ctrl.cpp.
+
+**What the branch lacks.** Its `g++/` tree is agbcc's compiler *without*
+agbcc's two switches, so `tools/agbcc_patches/agbcp_agbcc_options.patch`
+adds them:
+
+- **`-fprologue-bugfix`**: without it, `far_jump_used_p` trusts a cached
+  answer, the "lr saved for no reason" bug agbcc's option fixes. The
+  Makefile passes it to agbcp as it does to agbcc.
+- **The `OLD_COMPILER` switches**, so that the tree built with
+  `-DOLD_COMPILER` is old_agbcc's C++ twin, `old_agbcp`. The one that
+  matters for code generation is in `thumb.c`: old_agbcc's
+  `s_register_operand` is plain `register_operand`, and that is what gives
+  old_agbcc its "constant before `ldrb`" scheduling
+  ([matching_techniques.md](matching_techniques.md#old_agbcc-vs-agbcc)).
+  The others (`function.c`'s `use_return_register`, `loop.c`,
+  `unroll.c`, the far-jump cache) are ported for completeness.
+- **A `-fhex-asm` bug** in the branch: the epilogue of a function with
+  stdarg arguments printed `add sp, sp, 0x<decimal>`, which doesn't
+  assemble. SAT-R prints `#0x<hex>`; the patch does the same.
+
+With the patch, agbcp generates agbcc's code and old_agbcp generates
+old_agbcc's (experiments [1](#1-the-effect-controller-in-this-pr)-[4](#4-every-game-file-compiled-unchanged-as-c)).
+
+**Building it** (INSTALL.md, CI's "Build agbcp and old_agbcp" step):
+
+```
+git clone -b cp https://github.com/notyourav/agbcc path/to/agbcc-cp
+tools/build_agbccpp.sh path/to/agbcc-cp
+```
+
+The script copies the checkout, applies the patch and builds `cc1plus`
+twice, installing `tools/agbcc/bin/agbcp` and `tools/agbcc/bin/old_agbcp`.
+On a current host gcc the 1999 sources need `-std=gnu99`, warnings off,
+`-fpermissive` (gcc 14+) and **`-fstack-reuse=none`**: `grokdeclarator`
+(cp/decl.c) keeps a pointer to a block-scoped variable past its block
+when it parses a destructor declaration, and with stack slot reuse every
+class with a destructor fails with a bare "Internal compiler error". It
+takes about a minute per compiler.
+
+## g++ 2.9's C++ ABI, as the ROM has it
+
+Everything below was checked by compiling C++ with agbcp and comparing
+with the ROM's code.
+
+**Class layout.** Fields in declaration order, base class first. The
+vtable pointer is added after the fields of the first class in the
+hierarchy that has virtual methods; derived classes' fields follow it.
+That is why the pointer sits at different offsets in different families:
+
+| Base class | Fields before the vtable pointer | Vtable pointer |
+|---|---|---|
+| controllers (`struct ctrl`) | `owner`, `animSet`, `state` | +0x0C |
+| entities (`struct actor`, `gEntityVtable`) | x, y, id, kind, flags, half sizes, raw sizes | +0x18 (size 0x1C) |
+| 3D actors (`struct actor_self`) | animation, position, state, links | +0x50 |
+
+**Vtables.** Slot 0 is the RTTI slot (`__tf<class>`, 0 with
+`-fno-rtti`), then one slot per virtual method in declaration order,
+with an overriding method reusing its base slot and new ones appended.
+Each slot is `{s16 delta, s16 index (0), void *pfn}`: `struct
+vtable_slot` (include/vtable.h).
+
+**Virtual calls.** `p->f(a)` loads the vtable pointer, adds the slot's
+`delta` to `p` and calls `pfn` through `_call_via_rN` (Thumb
+interworking), with `this` in r0. The delta is always added, even though
+it is always 0 here. The object pointer and the function are evaluated
+*before* the arguments; to get the ROM's order where it computes an
+argument first, put the argument in a local before the call
+([experiment 2](#2-the-controller-base-class-scratch)).
+
+**Constructors.** `X::X()` calls the base class's constructor, stores
+X's vtable pointer, runs the body and returns `this` (r0). This is the
+`CreateX(self)`/`InitX(self)` shape: `InitCtrl(self); self->vtable =
+gEffectCtrlVtable; ...; return self;`.
+
+**`new`.** `new X` is `__builtin_new(sizeof(X))` and then `X::X` on the
+result, with no null check: `InitEffectCtrl(OperatorNew(0x10))`.
+`new X[n]` calls `__builtin_vec_new(n * size + 4)`, stores `n` in the
+first word and constructs each element after it: the
+`NEW_ARRAY_COUNT`/`NEW_ARRAY_BLOCK` cookie (include/memory.h).
+
+**Destructors.** `X::~X(int __in_chrg)` runs the body, stores X's vtable
+pointer again, and calls the base destructor with the same flags; the
+root class's destructor calls `__builtin_delete(this)` when bit 0 is set.
+This is the `DestroyX(self, flags)` shape: `self->vtable =
+gEffectCtrlVtable; DestroyCtrl(self, flags);` and `DestroyCtrl`'s `if
+(flags & 1) OperatorDelete(self)`. `delete p` tests `p` for null and
+calls the destructor slot with 3: `actor_vtable.destroy` "called with 3
+to delete".
+
+**Pointers to members.** A `void (X::*)()` is `{s16 delta, s16 index,
+union {s16 vtable offset; void *pfn}}`: `{0, -1, fn}` for a non-virtual
+method, `{0, slot + 1, vptr offset}` for a virtual one. That is `struct
+actor_pmf` and `ACTOR_PMF` (include/actor_self.h). `(this->*t[state])()`
+compiles to exactly the code `ACTOR_PMF_CALL` spells out
+([experiment 3](#3-a-pointer-to-member-dispatch-scratch)).
+
+**Names.** The ROM has no symbols, so mangling doesn't matter, but the
+build links C++ objects with C ones. g++ 2.9 mangles a method as
+`Method__<len>Class<args>` (`Update__10EffectCtrlP9SpriteObj`), a
+constructor as `__<len>Class`, a destructor as `_._<len>Class` and a
+vtable as `_vt.<len>Class`. See [How a C++ object is built](#how-a-c-object-is-built).
+
+## Experiments
+
+### 1. The effect controller (in this PR)
+
+`src/objects/effect_ctrl.c` was the C for the effect controller
+(`gEffectCtrlVtable`): `UpdateEffectCtrl`, `EffectCtrlHandleEvent`,
+`ResetEffectCtrl`, `DestroyEffectCtrl`, `InitEffectCtrl`, ROM
+`0x0800CBF4`-`0x0800CD00`, an old_agbcc object. It is now
+`src/objects/effect_ctrl.cpp`, with the classes in `include/ctrl.hpp`:
+
+```cpp
+class EffectCtrl : public Ctrl
+{
+public:
+    EffectCtrl(); // InitEffectCtrl
+    virtual void Update(SpriteObj *part);
+    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg);
+    virtual ~EffectCtrl(); // DestroyEffectCtrl
+    void Reset();          // ResetEffectCtrl
+};
+
+void EffectCtrl::Update(SpriteObj *part)
+{
+    if (!part->IsOnScreen())
+        MarkGone(part);
+    ...
+}
+
+EffectCtrl::~EffectCtrl()
+{
+}
+
+EffectCtrl::EffectCtrl()
+{
+    Reset();
+}
+```
+
+**Result: byte-identical** under old_agbcp (`make compare` OK, the
+report still 2059/2059). The destructor and constructor are empty
+bodies; g++ generates the vtable pointer stores, the `InitCtrl` and
+`DestroyCtrl` calls and the `return this`. The virtual call
+`part->IsOnScreen()` replaces `_call_via_r1((u8 *)other +
+other->table[5].delta, other->table[5].fn)`. `Update`'s body is the C's,
+including its one matching trick (the gone bit set through a bitfield
+view, the flags tested through the byte view), which is about the
+compiler, not the language.
+
+The comparison was also run with agbcp (the agbcc twin): everything but
+`Update` matches, and `Update` differs where agbcc and old_agbcc differ
+(the constant-before-`ldrb` ORs and the `id` reloads). The old C compiled
+with agbcc gives exactly the same code as the C++ with agbcp, so the C++
+front end adds no difference of its own here.
+
+**Readability.** 102 lines against the C's 117, and those lines are the
+class declarations rather than casts and slot arithmetic. The
+`SpriteObj`/`Entity` classes at the top of the file are a partial view,
+like the C's `struct cbf4_other` was: only what this file reads.
+
+### 2. The controller base class (scratch)
+
+`src/objects/ctrl.c` (`gCtrlVtable`'s own methods) rewritten as
+`Ctrl`'s methods, in the scratch area, not in this PR:
+
+```cpp
+void Ctrl::StartTargetMotionYFromSet(struct gobj *part, s32 index)
+{
+    const speed_ramp *rec = &gCtrlMotionRecords[animSet->entries[index][1]];
+
+    StartTargetMotionY(part, rec);
+}
+```
+
+**Result: all ten functions byte-identical, under old_agbcp, with no
+pins and no inline asm.** The C needs 7 `MATCH_*` uses and 2 `asm`
+statements in this file: each `...FromSet` function pins two registers
+and forces an `add` with asm to reproduce the virtual call's evaluation
+order, and `SetCtrlTargetAnim` pins three registers to get `movs r0, #9;
+negs r0, r0` before the `ldrb`. In C++ the first is the natural virtual
+call (with the argument computed into a local first), and the second is
+a bitfield clear of `flags` bit 3 under old_agbcp. That last point is a
+finding of its own: `ctrl.o` is built with agbcc today, and its pins
+reproduce old_agbcc's constant-before-`ldrb` order, so it is most likely
+an old_agbcc object (#662). The pinned C compiles to the same bytes under
+old_agbcc too, so moving it to `OLD_AGBCC_OBJS` is byte-neutral, and the
+same unpinned rewrite may well work in C there.
+
+### 3. A pointer-to-member dispatch (scratch)
+
+`UpdateHovercraftCannon` (src/bosses/hovercraft_cannon.c) with a minimal
+`ActorSelf` class (vtable pointer at +0x50):
+
+```cpp
+typedef void (HovercraftCannon::*StateFunc)();
+extern const StateFunc gHovercraftCannonStateFuncs[];
+
+void HovercraftCannon::Update()
+{
+    (this->*gHovercraftCannonStateFuncs[this->state])();
+    ...
+}
+```
+
+**Result: byte-identical** to the ROM, under agbcp. The 30-line
+`ACTOR_PMF_CALL` macro, which took a long time to find, is one line of
+C++. A table defined in C++ (`const StateFunc t[] = { &X::f, ... }`)
+comes out as `ACTOR_PMF`'s `{0, -1, fn}` records.
+
+### 4. Every game file compiled unchanged as C++
+
+Each `src/*/*.c` (not the data tables, the ARM objects or the two
+per-file-flag objects), preprocessed as C++ and compiled with agbcp or
+old_agbcp (per `OLD_AGBCC_OBJS`) and `-fpermissive`, its `.text`
+compared with the C build's:
+
+| Result | Files |
+|---|---:|
+| identical `.text` | 185 |
+| different `.text` | 45 |
+| doesn't compile | 7 |
+
+The 7 failures are trivial to fix: `asm("..." :: "r"(x))` (6 files),
+where `::` is one token in C++ (write `: :`), and one `asm` whose
+operand constraints g++ rejects. The 45 differences are code generation:
+the C++ front end lays out some temporaries and stack slots differently
+(e.g. `player_contact.c`'s frame is 16 bytes, not 32) or ranks registers
+differently (`palette_cycle.c` uses r9). They cluster in the files with
+the most matching workarounds, i.e. the ones tuned hardest against the C
+front end. So **80% of the game's C is already valid C++ that compiles to
+the same bytes**; a conversion only has to re-match the functions it
+actually rewrites, plus those 45 files' quirks if they are converted.
+
+## How a C++ object is built
+
+The Makefile's `CXX_OBJS` are the `src/*/*.cpp` files:
+
+```
+$(CPP) -x c++ $(CPPFLAGS) $< | $(CXX1) -quiet $(CC1FLAGS) -o foo.s   # agbcp or old_agbcp
+printf '$(ZERO_PAD_TEXT)' >> foo.s
+$(AS) $(ASFLAGS) -o foo.o foo.s
+$(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
+```
+
+- **Compiler.** `agbcp`, or `old_agbcp` for an object in
+  `OLD_AGBCC_OBJS` (the list holds both C and C++ objects). The flags are
+  the C ones (warnings, `-O2`, `-fhex-asm`, `-fprologue-bugfix` unless
+  old) plus `-fno-rtti -fno-exceptions`.
+- **Headers.** All of `include/` parses as C++ when wrapped in `extern
+  "C" { }`, with the same warning flags and `-Werror`. C++-only
+  declarations go in `.hpp` headers (`include/ctrl.hpp`).
+- **Vtables stay C data.** The class header has `#pragma interface`, so
+  g++ doesn't emit the classes' vtables; the code refers to
+  `_vt.<len>Class`, and the ROM's tables stay the C arrays in
+  `src/data/entity_vtables_7e3bec.c`.
+- **Names.** `cxx_symbols.txt` maps each mangled name the C++ objects
+  define or use to its C name (`Update__10EffectCtrlP9SpriteObj
+  UpdateEffectCtrl`, `_vt.10EffectCtrl gEffectCtrlVtable`, `__4Ctrl
+  InitCtrl`). objcopy renames them after assembling, so the vtable data,
+  the C callers, the linker script and the objdiff report see the C names.
+  A missing or stale entry fails the link (the C side's reference stays
+  undefined).
+- **Style.** clang-format formats `.cpp`/`.hpp` too (`tools/format.py`);
+  `.clang-format` puts `public:` at the class's indent.
+
+asm labels (`void Update(SpriteObj *) asm("UpdateEffectCtrl");`) work for
+methods and constructors, but not for destructors: g++ 2.9 then fails to
+find the destructor (`no matching function for call to B::__dt`). That,
+and the vtable names, is why the build renames with objcopy instead.
+
+## Recommendation and plan
+
+**Convert gradually, with `CXX_OBJS`.** The evidence is unambiguous that
+the game is C++, the compiler matches, and every C++ construct comes out
+as the ROM has it. The C++ source is shorter, has no casts of `self`, no
+hand-written vtable stores, slot arithmetic or `_call_via_rN` calls, and
+in experiment 2 no matching workarounds at all. Plan:
+
+1. **One class family per PR,** base class first, so each header defines
+   a complete hierarchy: the controllers (`ctrl.c`, then `enemy_ctrl.c`,
+   `action_ctrl*.c`, `input_ctrl*.c`, `swim_ctrl*.c`, the boss
+   controllers), then the entities/sprite objects (`gEntityVtable` and
+   its subclasses: sprites, crates, pickups, platforms), then the 3D
+   actors (`actor_self`, the vehicle and boss actors, the PMF tables).
+2. **Each converted object** moves from `foo.c` to `foo.cpp`, its class
+   goes into a `.hpp` header, its mangled names into `cxx_symbols.txt`.
+   Keep it byte-identical: the usual full clean `make compare` and the
+   report. Expect most pins in the virtual-call and PMF code to go
+   (experiment 2); drop each one that isn't needed.
+3. **Recheck the compiler** of each object as it's converted: ctrl.o
+   matches as clean C++ only under old_agbcp, which suggests more
+   objects are misattributed to agbcc and held there by pins.
+4. **While the code is mixed,** C callers keep using the C structs and the
+   C names. A class and its C struct must keep the same layout: add
+   `sizeof` checks on both sides (as `ctrl.hpp` does), and convert the C
+   callers of a family together with it where practical (e.g.
+   `SpawnEffectPart`'s `InitEffectCtrl(OperatorNew(0x10))` and its
+   `attach` slot call become `new EffectCtrl` and `mgr->Attach(part)`
+   once entity_spawner.c is C++).
+5. **Vtables** stay C data until a whole family is C++. Then they could
+   be emitted by g++ (drop `#pragma interface`), which would also check
+   the hierarchy: the slot order and overrides would have to come out the
+   same. That needs the `.gnu.linkonce.d` sections placed in the ROM's
+   vtable order by the linker script; not tried yet.
+6. **Leave C as C:** `lib/` (GAX2, AgbEeprom, libgcc, BIOS wrappers), the
+   IWRAM ARM code (agbcc_arm; the `cp` branch also has an ARM `agbcp_arm`,
+   untried), and the data tables.
+
+**#656 (base structs).** For a family that becomes C++, the base class
+*is* the embedding: `class EffectCtrl : public Ctrl` has the base at
+offset 0 by construction, with flat field access, which is #656's goal
+with none of its options' downsides. So #656 should not convert families
+that are about to become C++; for those, the C structs only need to stay
+in step with the classes until their C users are gone. #656's
+reconciliation work (one set of field names and types per base, unions
+where files need different views) is still needed either way: it is
+exactly what the class definitions need.
+
+**#662 (MATCH_ macros).** Many workarounds exist because the C emulates
+code the C++ compiler generated: the virtual-call and PMF macros, the
+evaluation-order pins around `_call_via_rN` calls, the `if (1) {} else
+(void)0` wrapping that keeps `ACTOR_PMF_CALL` from looking like a loop.
+Converting an object to C++ removes those outright (9 of ctrl.c's 9
+workarounds in experiment 2). #662's pruning tool should treat "convert
+to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
+
+## Dead ends and gotchas
+
+- **SAT-R/pret agbcc has no C++ compiler.** Only notyourav's `cp` branch
+  does, and its `g++/` tree lacks agbcc's options: built as is, it can't
+  produce old_agbcc's code, and the first `old_agbcp` attempt (porting
+  only the far-jump and `function.c` switches) still loaded the byte
+  before the constant. The difference turned out to be
+  `s_register_operand`.
+- **Building `cc1plus` on a current gcc** crashes on every destructor
+  until it is built with `-fstack-reuse=none` (above). The release
+  binary doesn't have the problem: it was built in 2022 with an older gcc.
+- **`::` in inline asm** (`asm("" :: "r"(x))`) is a syntax error in C++.
+- **asm labels on destructors** break g++ 2.9's destructor lookup, hence
+  the objcopy rename.
+- **Without `#pragma interface`,** g++ emits each class's vtable in the
+  file that defines its first virtual method, as a weak
+  `.gnu.linkonce.d` section the linker script doesn't place.
+- **Argument order.** A virtual call evaluates `this` and the slot before
+  the arguments. Where the ROM computes an argument first, put it in a
+  local (experiment 2), not in a pin.
+- **The 45 files of experiment 4** differ when their C is compiled as
+  C++: converting one of them means re-matching it, not just renaming it.

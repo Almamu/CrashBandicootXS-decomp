@@ -281,6 +281,9 @@ in [include/actor_self.h](../include/actor_self.h) reproduce it with no
 pins. See [pmf-dispatch-retry.md](./matching/archive/pmf-dispatch-retry.md)
 (21 functions, e.g. `RunPolarPlayerState`) and
 [issue-57-0x0802fbf0-actor.md](./matching/archive/issue-57-0x0802fbf0-actor.md).
+In C++ source (built by agbcp, [cplusplus.md](./cplusplus.md)) it is just
+`(this->*table[state])()`, and a virtual call is `obj->method(arg)`:
+both compile to these exact sequences.
 
 ### Struct-by-value and one-byte-struct arguments
 

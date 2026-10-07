@@ -21,7 +21,6 @@
 
 struct actor;
 struct box_part;
-struct cbf4_other;
 struct collect_part;
 struct crate;
 struct part_list;
@@ -97,7 +96,8 @@ struct entry_set {
  * action controller (action_obj.h's `struct act`), the swim and input
  * controllers (player_ctrl.h, player.h), the boss controllers (player.h's
  * `struct boss_ctrl`), the enemy controller (part_ctrl.h) and the effect
- * controller (effect_ctrl.c). The knocked enemy controller
+ * controller (effect_ctrl.cpp, which uses
+ * include/ctrl.hpp's C++ classes). The knocked enemy controller
  * (CreateKnockedEnemyCtrl), the stomped hop pad and the one-shot
  * animation controllers are this base alone (OperatorNew(0x10)).
  *
@@ -151,9 +151,11 @@ extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
 extern s32 GetCtrlMode(void *self);
 
-/* src/objects/effect_ctrl.c */
-extern void UpdateEffectCtrl(void *self, struct cbf4_other *other);
-extern void EffectCtrlHandleEvent(void *self);
+/* src/objects/effect_ctrl.cpp: EffectCtrl's methods (include/ctrl.hpp) under
+ * their C names (cxx_symbols.txt), for gEffectCtrlVtable and the C
+ * callers. */
+extern void UpdateEffectCtrl(void *self, void *part);
+extern void EffectCtrlHandleEvent(void *self, void *sender, s32 event, s32 arg);
 extern void ResetEffectCtrl(void *self);
 extern void DestroyEffectCtrl(void *self, s32 flags);
 extern void *InitEffectCtrl(void *self);

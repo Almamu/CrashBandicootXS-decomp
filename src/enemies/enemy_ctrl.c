@@ -587,7 +587,7 @@ extern void *_call_via_r1(void *addr, void *fn);
  * Reads `other+0x18`'s own struct-actor-shaped table pointer, fires a
  * `_call_via_r1` hit-probe against its `+0x28`/`+0x2c` `{s16 offset,
  * void *fn}` pair (the exact same convention `src/level/room_frame.c`'s
- * `UpdateRoomFrame` and `effect_ctrl.c`'s `UpdateEffectCtrl` both already
+ * `UpdateRoomFrame` and `effect_ctrl.cpp`'s `UpdateEffectCtrl` both already
  * read from their own `table+0x28`/`+0x2c`), and - only when that
  * probe reports *no* hit - runs the "flag active + bitmap-set" idiom
  * on `other` (`other+0xc` |= bit 0; unless `other+8`'s id sentinel-
