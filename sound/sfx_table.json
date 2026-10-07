@@ -1,34 +1,47 @@
 {
+ "none_comment": "a cutscene slide's \"no sound effect\" (struct cutscene_slide.sfx)",
  "entries": [
   {
    "slot_id": 1,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "AKU_AKU_LOSE",
+   "comment": "a hit takes a mask (PlayerHandleEvent, RemovePolarAkuAkuMask)"
   },
   {
    "slot_id": 2,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "AKU_AKU_GAIN",
+   "comment": "OpenAkuAkuCrate, SpawnStartMarker, AddPolarAkuAkuMask"
   },
   {
    "slot_id": 36,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "ARROW_CRATE_BOUNCE",
+   "comment": "landing on an arrow crate (ApplyCrateCollision)"
   },
   {
    "slot_id": 9,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "CRATE_BREAK",
+   "comment": "BreakCrate, the jetpack and polar crates"
   },
   {
    "slot_id": 10,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "EXPLOSION",
+   "comment": "TNT and nitro crates, boss parts, jetpack bombs"
   },
   {
    "slot_id": 11,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "ENEMY_KNOCKED_AWAY",
+   "comment": "an enemy sent flying (HitEnemy, UpdatePolarPenguin)"
   },
   {
    "slot_id": 11,
@@ -38,12 +51,16 @@
   {
    "slot_id": 16,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "EXTRA_LIFE",
+   "comment": "PickUpExtraLife, life crates, jetpack rings"
   },
   {
    "slot_id": 31,
    "pitch_offset": -100,
-   "volume": 200
+   "volume": 200,
+   "name": "WUMPA",
+   "comment": "PickUpWumpa, DispenseJetpackWumpa, DispensePolarWumpa"
   },
   {
    "slot_id": 21,
@@ -53,7 +70,9 @@
   {
    "slot_id": 22,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "SPIN",
+   "comment": "the spin (B); the jetpack's barrel roll"
   },
   {
    "slot_id": 23,
@@ -63,32 +82,44 @@
   {
    "slot_id": 37,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "HIGH_JUMP",
+   "comment": "from a crouch or a slide; the double jump"
   },
   {
    "slot_id": 38,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "JUMP",
+   "comment": "the jump (A): on foot, hanging, on the polar bear"
   },
   {
    "slot_id": 17,
    "pitch_offset": -200,
-   "volume": 150
+   "volume": 150,
+   "name": "HUD_COLLECT",
+   "comment": "a wumpa or life reaches the HUD; the pause menu's volume test"
   },
   {
    "slot_id": 62,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "OUTLINE_CRATES_SOLIDIFY",
+   "comment": "the \"!\" crate fills the outlines in"
   },
   {
    "slot_id": 63,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "SLOT_CRATE_SPIN",
+   "comment": "UpdateSlotCrate"
   },
   {
    "slot_id": 65,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "TNT_TICK",
+   "comment": "LightTntCrate, each UpdateTntCountdown step"
   },
   {
    "slot_id": 4,
@@ -103,7 +134,9 @@
   {
    "slot_id": 7,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "ENEMY_HOP",
+   "comment": "UpdateEnemyHop"
   },
   {
    "slot_id": 8,
@@ -118,32 +151,44 @@
   {
    "slot_id": 14,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "CHECKPOINT",
+   "comment": "OpenCheckpointCrate, the jetpack/polar checkpoints"
   },
   {
    "slot_id": 15,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "CLOCK",
+   "comment": "the stopwatch (StartTimeTrial), time crates (FreezeLevelClock)"
   },
   {
    "slot_id": 20,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "BODY_SLAM_LAND",
+   "comment": "landing from a body slam (ActionCtrlStateAirborne)"
   },
   {
    "slot_id": 25,
    "pitch_offset": 0,
-   "volume": 128
+   "volume": 128,
+   "name": "SLIDE",
+   "comment": "the slide (R) from a run"
   },
   {
    "slot_id": 24,
    "pitch_offset": 100,
-   "volume": 200
+   "volume": 200,
+   "name": "PLAYER_HURT",
+   "comment": "KillPlayer, a masked hit, HurtPolarPlayer; a company logo"
   },
   {
    "slot_id": 27,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "CRYSTAL",
+   "comment": "player event 27"
   },
   {
    "slot_id": 41,
@@ -158,7 +203,9 @@
   {
    "slot_id": 32,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "GEM",
+   "comment": "player events 29-34"
   },
   {
    "slot_id": 33,
@@ -168,7 +215,9 @@
   {
    "slot_id": 34,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "BOUNCE",
+   "comment": "bouncing on a part from above (CollidePartWithPlayer)"
   },
   {
    "slot_id": 45,
@@ -183,7 +232,9 @@
   {
    "slot_id": 49,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "JETPACK_SHOOT",
+   "comment": "ambient (JetpackPlayerStateFly)"
   },
   {
    "slot_id": 51,
@@ -203,7 +254,9 @@
   {
    "slot_id": 61,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "BOOST_PAD",
+   "comment": "UpdatePolarBoostPad"
   },
   {
    "slot_id": 61,
@@ -223,7 +276,9 @@
   {
    "slot_id": 74,
    "pitch_offset": 300,
-   "volume": 256
+   "volume": 256,
+   "name": "WARP",
+   "comment": "warping into or out of a bonus room or the gem path"
   },
   {
    "slot_id": 81,
@@ -243,7 +298,9 @@
   {
    "slot_id": 13,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "CANNONBALL_FIRE",
+   "comment": "SpawnJetpackCannonball"
   },
   {
    "slot_id": 52,
@@ -273,7 +330,9 @@
   {
    "slot_id": 42,
    "pitch_offset": -100,
-   "volume": 64
+   "volume": 64,
+   "name": "SKID",
+   "comment": "the run's skid (ActionCtrlSetTargetAnim)"
   },
   {
    "slot_id": 43,
@@ -283,7 +342,9 @@
   {
    "slot_id": 47,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "FIREBALL_LAUNCH",
+   "comment": "SpawnHovercraftFireball, SpawnAirshipFireball"
   },
   {
    "slot_id": 54,
@@ -348,27 +409,37 @@
   {
    "slot_id": 6,
    "pitch_offset": 100,
-   "volume": 256
+   "volume": 256,
+   "name": "HOVERCRAFT_PART_HIT",
+   "comment": "a cannon, launcher or side gun hit but not destroyed"
   },
   {
    "slot_id": 63,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "MENU_MOVE",
+   "comment": "a menu cursor moves"
   },
   {
    "slot_id": 31,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "MENU_BACK",
+   "comment": "the save menu's B"
   },
   {
    "slot_id": 65,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "MENU_ERROR",
+   "comment": "a move or choice that isn't allowed"
   },
   {
    "slot_id": 17,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "MENU_SELECT",
+   "comment": "a menu choice is confirmed"
   },
   {
    "slot_id": 82,
@@ -413,32 +484,44 @@
   {
    "slot_id": 80,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "LEVEL_SELECT_CONFIRM",
+   "comment": "LevelSelectConfirm"
   },
   {
    "slot_id": 75,
    "pitch_offset": 0,
-   "volume": 64
+   "volume": 64,
+   "name": "ZOOM_BG_IN",
+   "comment": "the level-select picture zooms in (UpdateZoomBg)"
   },
   {
    "slot_id": 76,
    "pitch_offset": 0,
-   "volume": 64
+   "volume": 64,
+   "name": "ZOOM_BG_OUT",
+   "comment": "ClearZoomBgPicture"
   },
   {
    "slot_id": 79,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "LEVEL_SELECT_NEXT_WORLD",
+   "comment": "LevelSelectNextWorld"
   },
   {
    "slot_id": 78,
    "pitch_offset": 0,
-   "volume": 256
+   "volume": 256,
+   "name": "LEVEL_SELECT_PREV_WORLD",
+   "comment": "LevelSelectPrevWorld"
   },
   {
    "slot_id": 66,
    "pitch_offset": 0,
-   "volume": 200
+   "volume": 200,
+   "name": "TORNADO_SPIN",
+   "comment": "+ the turn's variant 0-2 (StartActionCtrlTornadoSpin)"
   },
   {
    "slot_id": 67,

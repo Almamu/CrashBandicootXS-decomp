@@ -10,8 +10,10 @@ put under one topic. A value that is already a name (`SFX_CRATE_BREAK`,
 `LEVEL_FLAG_CRATE_GEM`, ...) isn't a literal, so it isn't listed: the
 counts go down as literals are replaced.
 
-When include/constants/<topic>.h already has a define with the literal's
-value and the topic's prefix, the listing shows it (`-> NAME`), so the
+When a constants header (include/constants/, or one the build generates
+into build/include/constants/, e.g. songs.h and sfx.h: run make first)
+already has a define with the literal's value and the topic's prefix,
+the listing shows it (`-> NAME`), so the
 remaining sites of a topic that has a header can be finished off.
 
 It doesn't run the preprocessor. Comments and strings are blanked out
@@ -39,7 +41,8 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCAN_DIRS = ("src", "include")
 # The constants headers: hand-written ones, and the ones make generates
-# from the data (build/include, e.g. the entity types and crate kinds).
+# from the data (build/include, e.g. the entity types, crate kinds, songs
+# and sound effects).
 CONSTANTS_DIRS = (os.path.join(ROOT, "include", "constants"),
                   os.path.join(ROOT, "build", "include", "constants"))
 
