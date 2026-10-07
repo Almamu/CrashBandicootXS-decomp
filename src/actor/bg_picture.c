@@ -99,7 +99,7 @@ void LoadBgPicture(u8 *pic)
     MATCH_USE(cols);
     MATCH_USE(cols);
     MapFill(tileData + tiles * 32, (u16 *)pic, cols, rows);
-    REG_DISPCNT |= 0x200;
+    REG_DISPCNT |= DISPCNT_BG1_ON;
     REG_BG1CNT = 0x5A07;
     {
         void *vd = (void *)(VRAM + GetCellAnimFreeTile() * 32);

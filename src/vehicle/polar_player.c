@@ -84,7 +84,7 @@ void UpdatePolarPlayer(struct actor_self *self)
     if (gPolarSteerEnabled != 0) {
         struct held_pressed_pair keys = gKeys.half;
 
-        if (keys.held & 0x20) {
+        if (keys.held & DPAD_LEFT) {
             if (gPolarSteerTime++ > 12)
                 self->x += -0x380;
             else
@@ -92,7 +92,7 @@ void UpdatePolarPlayer(struct actor_self *self)
             if (self->x < -0x3200)
                 self->x = -0x3200;
         } else {
-            u16 right = keys.held & 0x10;
+            u16 right = keys.held & DPAD_RIGHT;
 
             if (right) {
                 if (gPolarSteerTime++ > 12)

@@ -149,7 +149,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
         self->sortKey = value;
 
         if (self->depth > GetActorBgLayerDepth()) {
-            self->sortKey |= 0x8000;
+            self->sortKey |= SORT_KEY_FLAG_BEHIND_BG;
         }
     }
 
@@ -211,7 +211,7 @@ void UpdateActor(void *selfArg)
         self->sortKey = value;
 
         if (self->depth > GetActorBgLayerDepth()) {
-            self->sortKey |= 0x8000;
+            self->sortKey |= SORT_KEY_FLAG_BEHIND_BG;
         }
     }
 
@@ -408,7 +408,7 @@ void DrawActor(void *selfArg)
             v = self->palette;
             pre = v << 0xc;
 
-            if (self->sortKey & 0x8000) {
+            if (self->sortKey & SORT_KEY_FLAG_BEHIND_BG) {
                 shifted = (pre | 0x800) << 0x10;
             } else {
                 shifted = v << 0x1c;
@@ -455,7 +455,7 @@ void UpdateActorDepth(struct actor_self *self)
     self->sortKey = value;
 
     if (self->depth > GetActorBgLayerDepth()) {
-        self->sortKey |= 0x8000;
+        self->sortKey |= SORT_KEY_FLAG_BEHIND_BG;
     }
 }
 

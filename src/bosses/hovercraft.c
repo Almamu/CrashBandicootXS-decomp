@@ -209,7 +209,7 @@ void DrawJetpackCollectedWumpa(void *selfArg)
     attr = (y & 0xff) | ((x & 0x1ff) << 16) | GetAnimFrameAttr(self) | scaled;
     x = self->palette;
     attr2 = x << 12;
-    if (self->sortKey & 0x8000)
+    if (self->sortKey & SORT_KEY_FLAG_BEHIND_BG)
         attr2Out = attr2 | highBit;
     else
         attr2Out = attr2;
@@ -904,7 +904,7 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     gHovercraftFireTimer = gHovercraftAttack->timing[0].burstDelay;
     gHovercraftHp = gHovercraftAttack->hp;
     gHovercraftVolleyCount = 0;
-    REG_DISPCNT |= 0x400;
+    REG_DISPCNT |= DISPCNT_BG2_ON;
     gHovercraftBg2PageFlip = 1;
     gHovercraftBg2Page = 0;
     gHovercraftPhase = 0;
@@ -1053,7 +1053,7 @@ void LoadHovercraftGraphics(void)
             DrawHovercraftMap(
                 (void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         }
-        REG_DISPCNT |= 0x400;
+        REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateHovercraftBg2();
     }
 }

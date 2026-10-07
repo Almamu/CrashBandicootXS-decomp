@@ -519,9 +519,9 @@ static inline void DecaySpeed(s32 *p)
  * decays to zero; clamped to +-0x240. */
 void SteerJetpackPlayerY(void *self)
 {
-    if (gJetpackInputEnabled && (ReadKeys().held & 0x40))
+    if (gJetpackInputEnabled && (ReadKeys().held & DPAD_UP))
         gJetpackPlayerVelY -= 0x40;
-    else if (gJetpackInputEnabled && (ReadKeys().held & 0x80))
+    else if (gJetpackInputEnabled && (ReadKeys().held & DPAD_DOWN))
         gJetpackPlayerVelY += 0x40;
     else {
         DecaySpeed(&gJetpackPlayerVelY);
@@ -535,9 +535,9 @@ void SteerJetpackPlayerY(void *self)
  * `gJetpackPlayerVelX`. */
 void SteerJetpackPlayerX(void *self)
 {
-    if (gJetpackInputEnabled && (ReadKeys().held & 0x20))
+    if (gJetpackInputEnabled && (ReadKeys().held & DPAD_LEFT))
         gJetpackPlayerVelX -= 0x40;
-    else if (gJetpackInputEnabled && (ReadKeys().held & 0x10))
+    else if (gJetpackInputEnabled && (ReadKeys().held & DPAD_RIGHT))
         gJetpackPlayerVelX += 0x40;
     else {
         DecaySpeed(&gJetpackPlayerVelX);
@@ -556,11 +556,11 @@ void JetpackPlayerStateFly(struct actor_hp *self)
     if (gJetpackInputEnabled) {
         struct held_pressed_pair keys = gKeys.half;
 
-        if (keys.held & 0x200) {
+        if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
-        } else if (keys.held & 0x100) {
+        } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
@@ -598,11 +598,11 @@ void JetpackPlayerStateRollLeft(struct actor_hp *self)
 
         SteerJetpackPlayerX(self);
         keys = gKeys.half;
-        if (keys.held & 0x200) {
+        if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
-        } else if (keys.held & 0x100) {
+        } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
@@ -631,11 +631,11 @@ void JetpackPlayerStateRollRight(struct actor_hp *self)
 
         SteerJetpackPlayerX(self);
         keys = gKeys.half;
-        if (keys.held & 0x200) {
+        if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
-        } else if (keys.held & 0x100) {
+        } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);

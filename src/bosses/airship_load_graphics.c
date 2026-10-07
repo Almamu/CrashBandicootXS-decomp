@@ -57,7 +57,7 @@ void LoadAirshipGraphics(void)
             s32 t = self->animTime >> 8;
             DrawAirshipMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         }
-        REG_DISPCNT |= 0x400;
+        REG_DISPCNT |= DISPCNT_BG2_ON;
         UpdateAirshipBg2();
         pal = (vu16 *)(PLTT + 0x20);
         DmaCopy16(3, gAirshipPalette, pal, 0x20);
