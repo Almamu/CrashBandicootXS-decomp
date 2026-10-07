@@ -56,7 +56,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     u8 recordId, slot;
     const struct level_room *level;
 
-    PlaySfx(gAudioContext, 0x18, 0x100);
+    PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
 
     self->countdown += seconds * 60;
 
@@ -206,9 +206,9 @@ void AddBrokenCrate(struct level_state *self)
                 u8 *flags = GetCurrentLevelFlags(self);
                 /* Register pins reproduce the ROM's "build the OR
                  * mask before loading the byte" order - a plain
-                 * `*flags |= 2;` loads the byte first regardless of
+                 * `*flags |= LEVEL_FLAG_CRATE_GEM;` loads the byte first regardless of
                  * statement order (see docs/workflow.md step 7). */
-                MATCH_HOLD_REG(s32, mask, r1) = 2;
+                MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
                 MATCH_HOLD_REG(s32, value, r2) = *flags;
                 mask |= value;
                 *flags = mask;
@@ -245,7 +245,7 @@ void PressSwitchCrate(struct level_state *self)
 
         if (level->kind == 3) {
             u8 *flags = GetCurrentLevelFlags(self);
-            MATCH_HOLD_REG(s32, mask, r1) = 2;
+            MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
             MATCH_HOLD_REG(s32, value, r2) = *flags;
             mask |= value;
             *flags = mask;
@@ -435,7 +435,7 @@ struct AudioContext;
 
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
  * invincibility mask) always fires a jingle (`StartSong(
- * gAudioContext, 0x12)`) and skips the rest; leaving level 3 re-fires
+ * gAudioContext, SONG_DRUMS)`) and skips the rest; leaving level 3 re-fires
  * `PlayRoomMusic(&self->level)` once. Either way `maskLevel` ends up
  * holding `state`. */
 void SetMaskLevel(void *selfArg, s32 stateArg)
@@ -447,9 +447,9 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
     MATCH_HOLD_REG(struct level_state *, self, r4) = selfArg;
     MATCH_HOLD_REG(s32, state, r5) = stateArg;
 
-    if (state == 3) {
-        StartSong(gAudioContext, 0x12);
-    } else if (self->maskLevel == 3) {
+    if (state == MASK_LEVEL_INVINCIBLE) {
+        StartSong(gAudioContext, SONG_DRUMS);
+    } else if (self->maskLevel == MASK_LEVEL_INVINCIBLE) {
         self->maskLevel = state;
         PlayRoomMusic((struct level_progress *)&self->level);
     }
@@ -816,7 +816,7 @@ void CheckAllCratesBroken(void *selfArg)
 
         if (level->kind == 3) {
             u8 *flags = GetCurrentLevelFlags(self);
-            MATCH_HOLD_REG(s32, mask, r1) = 2;
+            MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
             MATCH_HOLD_REG(s32, value, r2) = *flags;
             mask |= value;
             *flags = mask;
@@ -1032,13 +1032,13 @@ void UnpackSaveData(struct level_state *self, void *src)
     MemCopy32(snap, self, 0x68);
 
     raw = *snap;
-    val = (u32)(raw << 25) >> 25;
+    val = PACKED_STATS_LIVES(raw);
     self->lives = val;
 
     self->wumpa = self->saveData[1] >> 1;
 
     packed = *(u16 *)snap;
-    val = (u32)(packed << 23) >> 30;
+    val = PACKED_STATS_MASK_LEVEL(packed);
     self->maskLevel = val;
 }
 
@@ -1076,7 +1076,7 @@ void *PackSaveData(void *selfArg)
 
     t = self->lives;
     snap = self->saveData;
-    t &= 0x7f;
+    t &= PACKED_STATS_LIVES_MASK;
     {
         MATCH_HOLD_REG(s32, mask, r1);
         asm volatile("mov %0, #0x80\n\tneg %0, %0" : "=r"(mask));
@@ -1098,8 +1098,8 @@ void *PackSaveData(void *selfArg)
     }
 
     {
-        MATCH_HOLD_REG(s32, shifted, r2) = (self->maskLevel & 3) << 7;
-        MATCH_HOLD_REG(s32, mask, r1) = 0xFFFFFE7F;
+        MATCH_HOLD_REG(s32, shifted, r2) = (self->maskLevel & 3) << PACKED_STATS_MASK_LEVEL_SHIFT;
+        MATCH_HOLD_REG(s32, mask, r1) = ~PACKED_STATS_MASK_LEVEL_MASK;
         MATCH_HOLD_REG(u16, loaded, r5) = *(u16 *)snap;
         mask &= loaded;
         packed = mask | shifted;

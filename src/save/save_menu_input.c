@@ -108,7 +108,7 @@ struct save_menu *InitSaveMenu(struct save_menu *arg0)
     FreeUnlockedPaletteSlots(gPaletteCache);
     InitSaveMenuIcons(self);
     LoadSaveMenuBg(self);
-    PlaySong(gAudioContext, 0x10);
+    PlaySong(gAudioContext, SONG_WARP_ROOM);
     LoadSaveMenuData(self);
     SummarizeProgress(self, &self->currentStats, PackSaveData(gLevelState));
     RefreshSaveSlotSummaries(self, *cartSaveAddr);
@@ -260,12 +260,12 @@ void SaveMenuInput(struct save_menu *self, u32 keys)
 void SaveMenuMainInput(struct save_menu *self, u32 flags)
 {
     if (flags & 0xa) {
-        PlaySfx(gAudioContext, 0x47, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->done = 1;
         return;
     }
     if (flags & 1) {
-        PlaySfx(gAudioContext, 0x49, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         switch (self->cursor) {
         case 0:
             self->state = 1;
@@ -296,13 +296,13 @@ void SaveMenuMainInput(struct save_menu *self, u32 flags)
         return;
     }
     if (flags & 0x40) {
-        PlaySfx(gAudioContext, 0x46, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         self->cursor -= 1;
         if (self->cursor < 0) {
             self->cursor = 4;
         }
     } else if (flags & 0x80) {
-        PlaySfx(gAudioContext, 0x46, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         self->cursor += 1;
         if (self->cursor > 4) {
             self->cursor = 0;
@@ -316,7 +316,7 @@ void SaveMenuMainInput(struct save_menu *self, u32 flags)
 void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
 {
     if (flags & 0x40) {
-        PlaySfx(gAudioContext, 0x46, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         if ((u32)self->cursor <= 4) {
             switch (self->cursor) {
             case 0:
@@ -335,7 +335,7 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
         return;
     }
     if (flags & 0x80) {
-        PlaySfx(gAudioContext, 0x46, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         if ((u32)self->cursor <= 4) {
             switch (self->cursor) {
             case 0:
@@ -355,7 +355,7 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
     }
     if (flags & 0x30) {
         if (self->cursor != 4) {
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
             self->cursor ^= 2;
         }
     }
@@ -378,16 +378,16 @@ void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
     if (flags & 8) {
     confirm:
         if (self->cursor == 4) {
-            PlaySfx(gAudioContext, 0x49, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
             self->state = 0;
             self->cursor = 0;
             return;
         }
         if (IsSaveSlotEmpty(handle, self->cursor)) {
-            PlaySfx(gAudioContext, 0x48, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
             return;
         }
-        PlaySfx(gAudioContext, 0x49, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         ReadSaveSlot(handle, self->cursor, &buf);
         UnpackSaveData(gLevelState, &buf);
         SetCurrentLevel(gLevelState, buf.level);
@@ -399,7 +399,7 @@ void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
         return;
     }
     if (flags & 2) {
-        PlaySfx(gAudioContext, 0x47, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->state = 0;
         self->cursor = 0;
         return;
@@ -423,7 +423,7 @@ void SaveMenuLinkInput(struct save_menu *self)
     if (state == 3) {
         self->state = 0;
         self->cursor = 1;
-        PlaySfx(gAudioContext, 0x47, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         return;
     }
 
@@ -543,27 +543,27 @@ void SaveMenuOverwriteInput(struct save_menu *self, u32 flags)
         } else {
             self->state = 5;
             self->cursor = self->pendingSlot;
-            PlaySfx(gAudioContext, 0x49, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         }
         return;
     }
     if (flags & 2) {
         self->state = 5;
         self->cursor = self->pendingSlot;
-        PlaySfx(gAudioContext, 0x47, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         return;
     }
     if (flags & 0x40) {
         if (self->cursor == 1) {
             self->cursor = 0;
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
         return;
     }
     if (flags & 0x80) {
         if (self->cursor == 0) {
             self->cursor = 1;
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
     }
 }
@@ -581,12 +581,12 @@ void SaveMenuSaveInput(struct save_menu *self, u32 flags)
     if (flags & 8) {
     confirm:
         if (self->cursor == 4) {
-            PlaySfx(gAudioContext, 0x49, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
             self->state = 0;
             self->cursor = 2;
             return;
         }
-        PlaySfx(gAudioContext, 0x49, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         if (!IsSaveSlotEmpty(self->cartSave, self->cursor)) {
             self->state = 9;
             self->pendingSlot = self->cursor;
@@ -599,7 +599,7 @@ void SaveMenuSaveInput(struct save_menu *self, u32 flags)
         return;
     }
     if (flags & 2) {
-        PlaySfx(gAudioContext, 0x47, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->state = 0;
         self->cursor = 2;
         return;
@@ -618,23 +618,23 @@ void SaveMenuDeleteInput(struct save_menu *self, u32 flags)
     if (flags & 8) {
     confirm:
         if (self->cursor == 4) {
-            PlaySfx(gAudioContext, 0x49, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
             self->state = 0;
             self->cursor = 3;
             return;
         }
         if (IsSaveSlotEmpty(self->cartSave, self->cursor)) {
-            PlaySfx(gAudioContext, 0x48, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
             return;
         }
-        PlaySfx(gAudioContext, 0x49, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         self->state = 7;
         self->pendingSlot = self->cursor;
         self->cursor = 0;
         return;
     }
     if (flags & 2) {
-        PlaySfx(gAudioContext, 0x47, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         self->state = 0;
         self->cursor = 3;
         return;
@@ -672,27 +672,27 @@ void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
         } else {
             self->state = 6;
             self->cursor = self->pendingSlot;
-            PlaySfx(gAudioContext, 0x49, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         }
         return;
     }
     if (flags & 2) {
         self->state = 6;
         self->cursor = self->pendingSlot;
-        PlaySfx(gAudioContext, 0x47, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_BACK, 0x100);
         return;
     }
     if (flags & 0x40) {
         if (self->cursor == 1) {
             self->cursor = 0;
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
         return;
     }
     if (flags & 0x80) {
         if (self->cursor == 0) {
             self->cursor = 1;
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
     }
 }

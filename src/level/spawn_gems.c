@@ -34,7 +34,7 @@
  * variable set before the call (a literal would be loaded at the store). */
 void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    s32 bit = *GetCurrentLevelFlags(gLevelState) & 1;
+    s32 bit = *GetCurrentLevelFlags(gLevelState) & LEVEL_FLAG_CRYSTAL;
 
     if (bit == 0) {
         u8 type = 0x1B;
@@ -53,7 +53,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = *GetCurrentLevelFlags(gLevelState) & 2;
+    u8 bit = *GetCurrentLevelFlags(gLevelState) & LEVEL_FLAG_CRATE_GEM;
 
     if (bit == 0) {
         u8 tag = 1;
@@ -79,7 +79,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if ((*GetCurrentLevelFlags(gLevelState) & 4) == 0) {
+    if ((*GetCurrentLevelFlags(gLevelState) & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
         u8 tag = 1;
         u8 type = 0x1E;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);

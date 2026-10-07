@@ -75,7 +75,7 @@ void DispenseJetpackWumpa(void *selfArg)
         gJetpackQueuedWumpa -= 8;
     }
 
-    PlaySfx(gAudioContext, 8, 0x100);
+    PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
 }
 
 /* Trivial pre-increment counter accessor. `player` is unused; the caller

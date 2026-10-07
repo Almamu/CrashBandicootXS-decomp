@@ -52,9 +52,9 @@
  * frame loop snapshots into `checkpointData`/`saveData` and restores from. */
 union level_best_time {
     struct {
-        u32 flag:1;
-        u32 unk_1:2;
-        u32 time:13; // tenths of a second, capped at 0x1fff
+        u32 flag:1;  // LEVEL_FLAG_CRYSTAL
+        u32 unk_1:2; // LEVEL_FLAG_CRATE_GEM, LEVEL_FLAG_GEM_PATH_GEM
+        u32 time:13; // tenths of a second, capped at LEVEL_FLAG_TIME_MAX
         u32 unk_16:16;
     } f;
     u16 raw;
@@ -88,7 +88,7 @@ void UpdateGameFrame(struct level_state *self)
     }
     MemCopy32(self->saveData, self, 0x68);
     gGameFrameLevelState = self;
-    self->maskLevel = 0;
+    self->maskLevel = MASK_LEVEL_NONE;
     {
         void *gfx;
         s32 result;
@@ -203,9 +203,9 @@ void UpdateGameFrame(struct level_state *self)
             ResetAmbientSfx(gAudioContext);
             {
                 s32 tier = self->maskLevel;
-                s32 arg = 2;
+                s32 arg = MASK_LEVEL_TWO;
 
-                if (tier <= 1)
+                if (tier <= MASK_LEVEL_ONE)
                     arg = tier;
                 SetMaskLevel(self, arg);
             }
@@ -319,10 +319,11 @@ void UpdateGameFrame(struct level_state *self)
             if (self->timeTrial) {
                 u32 t = self->tenths + self->seconds * 10 + self->minutes * 600;
 
-                if (t > 0x1fff)
-                    t = 0x1fff;
+                if (t > LEVEL_FLAG_TIME_MAX)
+                    t = LEVEL_FLAG_TIME_MAX;
                 if (t < ((union level_best_time *)GetCurrentLevelFlags(self))->f.time ||
-                    (((union level_best_time *)GetCurrentLevelFlags(self))->raw & 0xfff8) == 0)
+                    (((union level_best_time *)GetCurrentLevelFlags(self))->raw &
+                     LEVEL_FLAG_TIME_MASK) == 0)
                     ((union level_best_time *)GetCurrentLevelFlags(self))->f.time = t;
             }
             MemCopy32(self->saveData, self, 0x68);

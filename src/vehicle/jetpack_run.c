@@ -175,7 +175,7 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
     case 4:
         if (gLevelState->timeTrial == 0) {
             AddLife(gLevelState);
-            PlaySfx(gAudioContext, 7, 0x100);
+            PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
         }
         break;
     }

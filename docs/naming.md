@@ -119,3 +119,45 @@ honest placeholder, since other code and docs will start depending on it.
    `make NON_MATCHING=1 report` should still produce a sane result (see
    `docs/decomp_dev.md` - this is how a missed corrections.txt update
    would surface, as the function silently vanishing from the report).
+
+# Constants
+
+Named values (sound IDs, flag bits, states, kinds, ...) are `#define`s in
+`include/constants/<topic>.h`, one header per value set (#655). The
+subsystem header that owns the type or the function includes it
+(`audio.h` includes `constants/sfx.h` and `constants/songs.h`,
+`level_state.h` includes `constants/level_flags.h`), so a `.c` file gets
+the names with the header it already includes. A data table in
+`src/data/` may include a constants header directly.
+
+| Header | Prefix | What |
+|---|---|---|
+| `sfx.h` | `SFX_` | sound-effect IDs (`PlaySfx`, `PlayAmbientSfx`, `StopSfx`) |
+| `songs.h` | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`) |
+| `level_flags.h` | `LEVEL_FLAG_` | the bits of a `levelFlags[]` word |
+| `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
+| `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
+
+Planned topics use the same scheme (`entities.h`/`ENTITY_`,
+`crates.h`/`CRATE_KIND_`, `events.h`/`EVENT_`, ...).
+`tools/magic_numbers.py` lists the literals that are left, by topic
+(`--report` for the counts), and `--topic T --fix` replaces the ones that
+have exactly one name.
+
+- **`#define`, not `enum`.** The project has no enums. A define can't
+  change the width of a field or a parameter the way an int-sized enum
+  type could, it works in `#if`, in `.s` files and in the tools, and it
+  doesn't trigger `-Wswitch`. This is also pret's convention.
+- **Same literal.** A define expands to exactly the value it replaces,
+  with the same type: `#define SFX_CRATE_BREAK 0x3`, not `0x3u` or
+  `((u8)3)`. Anything else (a cast, an unsigned suffix, `~MASK` for a
+  spelled-out `0xFFFFFE7F`) needs a check that every object stays
+  identical.
+- **Flag bits are masks:** `#define LEVEL_FLAG_CRATE_GEM (1 << 1)`, used
+  as `flags & LEVEL_FLAG_CRATE_GEM` and `flags |= LEVEL_FLAG_CRATE_GEM`.
+  A multi-bit field gets a `_MASK` and a `_SHIFT`.
+- **Names come from evidence:** the ROM's strings, the GAX manifests,
+  the code that uses the value, existing comments. A comment on each
+  define says where it comes from. A value whose meaning isn't clear
+  keeps its number (as the naming rounds did); `<PREFIX>_<n>`-style
+  names are not used.

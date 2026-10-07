@@ -120,19 +120,19 @@ void LanguageSelectInput(struct language_select *self, u32 flags)
     } else if (flags & 1) {
         self->done = 1;
     confirm:
-        PlaySfx(gAudioContext, 0x49, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
     } else if (flags & 0x40) {
         self->language--;
         if (self->language < 0) {
             self->language = 5;
         }
-        PlaySfx(gAudioContext, 0x46, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
     } else if (flags & 0x80) {
         self->language++;
         if (self->language > 5) {
             self->language = 0;
         }
-        PlaySfx(gAudioContext, 0x46, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
     }
     self->frame = (self->frame + 1) & 0xff;
 }

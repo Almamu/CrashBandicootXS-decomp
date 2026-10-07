@@ -12,27 +12,30 @@
  */
 
 #include "level_data.h"
+#include "constants/level_flags.h"
+#include "constants/mask_level.h"
+#include "constants/packed_stats.h"
 
 struct level_state_1c8;
 
 struct level_state {
     // 0x000 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8)
-    // (UnpackSaveData/PackSaveData)
+    // (UnpackSaveData/PackSaveData; PACKED_STATS_*)
     u8 packedStats[2];
     // 0x002 - bits 0-3: colored gems (CountGems); bits 4-7: powers
     // (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump)
     u8 flags;
     u8 unk_03;
     // 0x004 - one word per level, indexed by `level`
-    // (GetLevelFlags); bit 0 crystal, bits 1-2 clear gems
+    // (GetLevelFlags); LEVEL_FLAG_* (crystal, the two clear gems, best time)
     u32 levelFlags[0x19];
     s32 unk_68; // 0x068
     s32 wumpa;  // 0x06C - at 100 it wraps and adds a life (CollectWumpa)
     // 0x070 - crates broken (AddBrokenCrate); reaching
-    // `crateTotal` awards the crate gem (levelFlags bit 1)
+    // `crateTotal` awards the crate gem (LEVEL_FLAG_CRATE_GEM)
     s32 crateCount;
     s32 lives;     // 0x074 - 5 at the start (ResetLives), capped at 99
-    s32 maskLevel; // 0x078 - 0-3; 3 plays the invincibility jingle (SetMaskLevel)
+    s32 maskLevel; // 0x078 - MASK_LEVEL_*; invincible plays SONG_DRUMS (SetMaskLevel)
     s32 deaths;    // 0x07C - maskless hits since the last checkpoint (AddDeath, ResetDeaths)
     // 0x080 - 5 at game start (UpdateGameFrame); SetUnusedAssistDeaths/
     // GetUnusedAssistDeaths, but nothing reads it

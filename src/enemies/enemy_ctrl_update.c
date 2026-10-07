@@ -286,7 +286,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             struct part_method *m = &self->anchor->bounce;
 
             ((ctrl_bounce_fn)m->fn)((u8 *)self + m->thisOffset, 0, 1, 0);
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         }
         break;
     case 15:
@@ -425,7 +425,7 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
             v = ((u16)RandRange(3) << 9) - 0x200;
             SetVelY(self->target, v, 0, v);
             self->target->visible = 0;
-            PlaySfx(gAudioContext, 5, 0x80);
+            PlaySfx(gAudioContext, SFX_ENEMY_KNOCKED_AWAY, 0x80);
             if (self) {
                 struct part_method *m2 = &self->anchor->launch;
                 ((bd48_method_i_fn)m2->fn)((u8 *)self + m2->thisOffset, 3);

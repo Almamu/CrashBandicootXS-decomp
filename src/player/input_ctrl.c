@@ -166,7 +166,7 @@ void QueuePlayerCtrlMotionX(struct pctrl_motion_queue *self, u8 value)
 
 void InputCtrlKillPlayer(struct input_ctrl *self, void *arg)
 {
-    PlaySfx(gAudioContext, 0x1B, 0x100);
+    PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
     CTRL_CALL2(self, setMode, 3);
     CTRL_CALL3(self, setAnim, self->target, arg);
     self->target->flags.bits.flag7 = 0;

@@ -175,7 +175,7 @@ asm(".align 2, 0");
  * the shared tile cache and VRAM upload cursor, initializes the
  * popup-text opcode-stream fields to `gCreditsText`, sets the
  * DISPCNT "OBJ enable"-adjacent bit in `gDispcnt`, and ducks
- * the audio context (`PlaySong(gAudioContext, 0x11)`). Returns
+ * the audio context (`PlaySong(gAudioContext, SONG_CREDITS)`). Returns
  * `self`.
  *
  * Was a NAKED transcription until the issue #64/#65 NAKED retry. The
@@ -243,7 +243,7 @@ struct credits_screen *InitCredits(struct credits_screen *self)
     gDispcnt[1] |= 0x10;
     CommitDispcnt();
     self->frameParity = 0;
-    PlaySong(gAudioContext, 0x11);
+    PlaySong(gAudioContext, SONG_CREDITS);
     return self;
 }
 

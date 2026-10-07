@@ -75,7 +75,7 @@ void DispensePolarWumpa(void *selfArg)
         gPolarQueuedWumpa -= 8;
     }
 
-    PlaySfx(gAudioContext, 8, 0x100);
+    PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
 }
 
 /* Trivial byte getter. `player` is unused; PolarIsPauseLocked

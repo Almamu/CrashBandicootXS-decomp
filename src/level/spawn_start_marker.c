@@ -108,7 +108,7 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
         if (IsInBonusRound(gLevelState) != 0) {
             goto end;
         }
-        if (gLevelState->maskLevel != 0) {
+        if (gLevelState->maskLevel != MASK_LEVEL_NONE) {
             goto end;
         }
     }
@@ -127,7 +127,7 @@ fire:
         dead = *(vu32 *)&entry->fn;
         (void)dead;
         _call_via_r4(fn, 0, 0x1a, 0);
-        PlaySfx(gAudioContext, 1, 0x100);
+        PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
     }
 end:;
 }

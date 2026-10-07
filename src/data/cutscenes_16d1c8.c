@@ -1,5 +1,7 @@
 #include "core.h"
 #include "cutscene.h"
+#include "constants/sfx.h"
+#include "constants/songs.h"
 
 /*
  * ROM 0x0816D1C8-0x081725A8: the 11 cutscenes. PlayCutscene
@@ -22,7 +24,13 @@
 
 #define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
-extern const u16 gCutscenePicture00[], gCutscenePicture01[], gCutscenePicture02[], gCutscenePicture03[], gCutscenePicture04[], gCutscenePicture05[], gCutscenePicture06[], gCutscenePicture07[], gCutscenePicture08[], gCutscenePicture09[], gCutscenePicture10[], gCutscenePicture11[], gCutscenePicture12[], gCutscenePicture13[], gCutscenePicture14[], gCutscenePicture15[], gCutscenePicture16[], gCutscenePicture17[], gCutscenePicture18[], gCutscenePicture19[], gCutscenePicture20[], gCutscenePicture21[], gCutscenePicture22[], gCutscenePicture23[];
+extern const u16 gCutscenePicture00[], gCutscenePicture01[], gCutscenePicture02[],
+    gCutscenePicture03[], gCutscenePicture04[], gCutscenePicture05[], gCutscenePicture06[],
+    gCutscenePicture07[], gCutscenePicture08[], gCutscenePicture09[], gCutscenePicture10[],
+    gCutscenePicture11[], gCutscenePicture12[], gCutscenePicture13[], gCutscenePicture14[],
+    gCutscenePicture15[], gCutscenePicture16[], gCutscenePicture17[], gCutscenePicture18[],
+    gCutscenePicture19[], gCutscenePicture20[], gCutscenePicture21[], gCutscenePicture22[],
+    gCutscenePicture23[];
 
 extern const struct cutscene_page gCutscene01English[4];
 extern const struct cutscene_page gCutscene02English[9];
@@ -435,17 +443,9 @@ extern const u8 *const gCutscene10DutchPage5[1];
 
 /* The pages of each cutscene, per language. */
 const struct cutscene_page *const gCutsceneTextEnglish[11] = {
-    gCutscene00English,
-    gCutscene01English,
-    gCutscene02English,
-    gCutscene03English,
-    gCutscene04English,
-    gCutscene05English,
-    gCutscene06English,
-    gCutscene07English,
-    gCutscene08English,
-    gCutscene09English,
-    gCutscene10English,
+    gCutscene00English, gCutscene01English, gCutscene02English, gCutscene03English,
+    gCutscene04English, gCutscene05English, gCutscene06English, gCutscene07English,
+    gCutscene08English, gCutscene09English, gCutscene10English,
 };
 
 /* The slides of each cutscene (PlayCutscene). */
@@ -503,12 +503,9 @@ const struct cutscene_page gCutscene08English[4] = {
     { gCutscene08EnglishPage3, ARRAY_COUNT(gCutscene08EnglishPage3) },
 };
 const struct cutscene_page gCutscene09English[6] = {
-    { NULL, 0 },
-    { gCutscene09EnglishPage1, ARRAY_COUNT(gCutscene09EnglishPage1) },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { gCutscene09EnglishPage5, ARRAY_COUNT(gCutscene09EnglishPage5) },
+    { NULL, 0 }, { gCutscene09EnglishPage1, ARRAY_COUNT(gCutscene09EnglishPage1) },
+    { NULL, 0 }, { NULL, 0 },
+    { NULL, 0 }, { gCutscene09EnglishPage5, ARRAY_COUNT(gCutscene09EnglishPage5) },
 };
 const struct cutscene_page gCutscene10English[6] = {
     { gCutscene10EnglishPage0, ARRAY_COUNT(gCutscene10EnglishPage0) },
@@ -522,87 +519,57 @@ const struct cutscene_page gCutscene00English[1] = {
     { NULL, 0 },
 };
 const struct cutscene_page *const gCutsceneTextFrench[11] = {
-    gCutscene00French,
-    gCutscene01French,
-    gCutscene02French,
-    gCutscene03French,
-    gCutscene04French,
-    gCutscene05French,
-    gCutscene06French,
-    gCutscene07French,
-    gCutscene08French,
-    gCutscene09French,
-    gCutscene10French,
+    gCutscene00French, gCutscene01French, gCutscene02French, gCutscene03French,
+    gCutscene04French, gCutscene05French, gCutscene06French, gCutscene07French,
+    gCutscene08French, gCutscene09French, gCutscene10French,
 };
 
 const struct cutscene_page *const gCutsceneTextGerman[11] = {
-    gCutscene00German,
-    gCutscene01German,
-    gCutscene02German,
-    gCutscene03German,
-    gCutscene04German,
-    gCutscene05German,
-    gCutscene06German,
-    gCutscene07German,
-    gCutscene08German,
-    gCutscene09German,
-    gCutscene10German,
+    gCutscene00German, gCutscene01German, gCutscene02German, gCutscene03German,
+    gCutscene04German, gCutscene05German, gCutscene06German, gCutscene07German,
+    gCutscene08German, gCutscene09German, gCutscene10German,
 };
 
 const struct cutscene_page *const gCutsceneTextSpanish[11] = {
-    gCutscene00Spanish,
-    gCutscene01Spanish,
-    gCutscene02Spanish,
-    gCutscene03Spanish,
-    gCutscene04Spanish,
-    gCutscene05Spanish,
-    gCutscene06Spanish,
-    gCutscene07Spanish,
-    gCutscene08Spanish,
-    gCutscene09Spanish,
-    gCutscene10Spanish,
+    gCutscene00Spanish, gCutscene01Spanish, gCutscene02Spanish, gCutscene03Spanish,
+    gCutscene04Spanish, gCutscene05Spanish, gCutscene06Spanish, gCutscene07Spanish,
+    gCutscene08Spanish, gCutscene09Spanish, gCutscene10Spanish,
 };
 
 const struct cutscene_page *const gCutsceneTextItalian[11] = {
-    gCutscene00Italian,
-    gCutscene01Italian,
-    gCutscene02Italian,
-    gCutscene03Italian,
-    gCutscene04Italian,
-    gCutscene05Italian,
-    gCutscene06Italian,
-    gCutscene07Italian,
-    gCutscene08Italian,
-    gCutscene09Italian,
-    gCutscene10Italian,
+    gCutscene00Italian, gCutscene01Italian, gCutscene02Italian, gCutscene03Italian,
+    gCutscene04Italian, gCutscene05Italian, gCutscene06Italian, gCutscene07Italian,
+    gCutscene08Italian, gCutscene09Italian, gCutscene10Italian,
 };
 
 const struct cutscene_page *const gCutsceneTextDutch[11] = {
-    gCutscene00Dutch,
-    gCutscene01Dutch,
-    gCutscene02Dutch,
-    gCutscene03Dutch,
-    gCutscene04Dutch,
-    gCutscene05Dutch,
-    gCutscene06Dutch,
-    gCutscene07Dutch,
-    gCutscene08Dutch,
-    gCutscene09Dutch,
-    gCutscene10Dutch,
+    gCutscene00Dutch, gCutscene01Dutch, gCutscene02Dutch, gCutscene03Dutch,
+    gCutscene04Dutch, gCutscene05Dutch, gCutscene06Dutch, gCutscene07Dutch,
+    gCutscene08Dutch, gCutscene09Dutch, gCutscene10Dutch,
 };
 
 const struct cutscene_slide *const gCutscene00Slides[1] = { &gCutsceneSlide23 };
-const struct cutscene_slide *const gCutscene01Slides[4] = { &gCutsceneSlide00, &gCutsceneSlide01, &gCutsceneSlide02, &gCutsceneSlide01 };
-const struct cutscene_slide *const gCutscene02Slides[9] = { &gCutsceneSlide00, &gCutsceneSlide03, &gCutsceneSlide04, &gCutsceneSlide05, &gCutsceneSlide06, &gCutsceneSlide07, &gCutsceneSlide08, &gCutsceneSlide09, &gCutsceneSlide10 };
+const struct cutscene_slide *const gCutscene01Slides[4] = { &gCutsceneSlide00, &gCutsceneSlide01,
+                                                            &gCutsceneSlide02, &gCutsceneSlide01 };
+const struct cutscene_slide *const gCutscene02Slides[9] = {
+    &gCutsceneSlide00, &gCutsceneSlide03, &gCutsceneSlide04, &gCutsceneSlide05, &gCutsceneSlide06,
+    &gCutsceneSlide07, &gCutsceneSlide08, &gCutsceneSlide09, &gCutsceneSlide10
+};
 const struct cutscene_slide *const gCutscene03Slides[1] = { &gCutsceneSlide11 };
 const struct cutscene_slide *const gCutscene06Slides[2] = { &gCutsceneSlide01, &gCutsceneSlide02 };
 const struct cutscene_slide *const gCutscene04Slides[1] = { &gCutsceneSlide11 };
 const struct cutscene_slide *const gCutscene05Slides[1] = { &gCutsceneSlide12 };
 const struct cutscene_slide *const gCutscene07Slides[1] = { &gCutsceneSlide12 };
-const struct cutscene_slide *const gCutscene08Slides[4] = { &gCutsceneSlide13, &gCutsceneSlide14, &gCutsceneSlide15, &gCutsceneSlide16 };
-const struct cutscene_slide *const gCutscene09Slides[6] = { &gCutsceneSlide17, &gCutsceneSlide18, &gCutsceneSlide19, &gCutsceneSlide20, &gCutsceneSlide21, &gCutsceneSlide22 };
-const struct cutscene_slide *const gCutscene10Slides[6] = { &gCutsceneSlide13, &gCutsceneSlide17, &gCutsceneSlide18, &gCutsceneSlide19, &gCutsceneSlide20, &gCutsceneSlide10 };
-const u8 gCutscene01EnglishPage0Text[] = "on a mysterious space station orbiting high above the earth ...";
+const struct cutscene_slide *const gCutscene08Slides[4] = { &gCutsceneSlide13, &gCutsceneSlide14,
+                                                            &gCutsceneSlide15, &gCutsceneSlide16 };
+const struct cutscene_slide *const gCutscene09Slides[6] = { &gCutsceneSlide17, &gCutsceneSlide18,
+                                                            &gCutsceneSlide19, &gCutsceneSlide20,
+                                                            &gCutsceneSlide21, &gCutsceneSlide22 };
+const struct cutscene_slide *const gCutscene10Slides[6] = { &gCutsceneSlide13, &gCutsceneSlide17,
+                                                            &gCutsceneSlide18, &gCutsceneSlide19,
+                                                            &gCutsceneSlide20, &gCutsceneSlide10 };
+const u8 gCutscene01EnglishPage0Text[] =
+    "on a mysterious space station orbiting high above the earth ...";
 const u8 *const gCutscene01EnglishPage0[1] = { gCutscene01EnglishPage0Text };
 const u8 gCutscene01EnglishPage1Text[] =
     "uka uka:  cortex, remind me why i keep you around.  you have "
@@ -619,7 +586,8 @@ const u8 gCutscene01EnglishPage3_0Text[] =
 const u8 gCutscene01EnglishPage3_1Text[] =
     "cortex:  trust me uka, i have a little plan to bring earth's "
     "puny inhabitants down to size ...";
-const u8 *const gCutscene01EnglishPage3[2] = { gCutscene01EnglishPage3_0Text, gCutscene01EnglishPage3_1Text };
+const u8 *const gCutscene01EnglishPage3[2] = { gCutscene01EnglishPage3_0Text,
+                                               gCutscene01EnglishPage3_1Text };
 const u8 gCutscene02EnglishPage0Text[] = "cortex:  at last, my planetary minimizer is complete!";
 const u8 *const gCutscene02EnglishPage0[1] = { gCutscene02EnglishPage0Text };
 const u8 gCutscene02EnglishPage1Text[] = "cortex: earthlings will bow to my superior intellect!";
@@ -639,7 +607,8 @@ const u8 gCutscene02EnglishPage7_1Text[] =
     "shrinking machine ...  crash, if you can find the proper "
     "crystals from around the world, i think i can build a device to "
     "reverse the effects.";
-const u8 *const gCutscene02EnglishPage7[2] = { gCutscene02EnglishPage7_0Text, gCutscene02EnglishPage7_1Text };
+const u8 *const gCutscene02EnglishPage7[2] = { gCutscene02EnglishPage7_0Text,
+                                               gCutscene02EnglishPage7_1Text };
 const u8 gCutscene02EnglishPage6Text[] =
     "cortex:  i have finally won!  now nothing can stop me, not even "
     "that little bandicoot!";
@@ -666,9 +635,8 @@ const u8 gCutscene06EnglishPage0Text[] =
     "three of your stooges!  he must be stopped.  i will not tolerate "
     "another failure.";
 const u8 *const gCutscene06EnglishPage0[1] = { gCutscene06EnglishPage0Text };
-const u8 gCutscene06EnglishPage1Text[] =
-    "cortex:  uka ...  i'm sorry!  however, do not be overly "
-    "concerned - my planetary minimizer will stop him!";
+const u8 gCutscene06EnglishPage1Text[] = "cortex:  uka ...  i'm sorry!  however, do not be overly "
+                                         "concerned - my planetary minimizer will stop him!";
 const u8 *const gCutscene06EnglishPage1[1] = { gCutscene06EnglishPage1Text };
 const u8 gCutscene07EnglishPage0Text[] =
     "coco:  okay crash, i have all of the crystals, but i need you to "
@@ -676,7 +644,8 @@ const u8 gCutscene07EnglishPage0Text[] =
     "original state.  i'll use the enlarger to make you big enough to "
     "take on cortex!";
 const u8 *const gCutscene07EnglishPage0[1] = { gCutscene07EnglishPage0Text };
-const u8 gCutscene10EnglishPage0Text[] = "cortex:  you fool!  it will take me forever to fix this mess!";
+const u8 gCutscene10EnglishPage0Text[] =
+    "cortex:  you fool!  it will take me forever to fix this mess!";
 const u8 *const gCutscene10EnglishPage0[1] = { gCutscene10EnglishPage0Text };
 const u8 gCutscene08EnglishPage0Text[] =
     "cortex:  you idiot!  what have you done?  you have destroyed the "
@@ -741,12 +710,9 @@ const struct cutscene_page gCutscene08French[4] = {
     { gCutscene08FrenchPage3, ARRAY_COUNT(gCutscene08FrenchPage3) },
 };
 const struct cutscene_page gCutscene09French[6] = {
-    { NULL, 0 },
-    { gCutscene09FrenchPage1, ARRAY_COUNT(gCutscene09FrenchPage1) },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { gCutscene09FrenchPage5, ARRAY_COUNT(gCutscene09FrenchPage5) },
+    { NULL, 0 }, { gCutscene09FrenchPage1, ARRAY_COUNT(gCutscene09FrenchPage1) },
+    { NULL, 0 }, { NULL, 0 },
+    { NULL, 0 }, { gCutscene09FrenchPage5, ARRAY_COUNT(gCutscene09FrenchPage5) },
 };
 const struct cutscene_page gCutscene10French[6] = {
     { gCutscene10FrenchPage0, ARRAY_COUNT(gCutscene10FrenchPage0) },
@@ -799,12 +765,9 @@ const struct cutscene_page gCutscene08German[4] = {
     { gCutscene08GermanPage3, ARRAY_COUNT(gCutscene08GermanPage3) },
 };
 const struct cutscene_page gCutscene09German[6] = {
-    { NULL, 0 },
-    { gCutscene09GermanPage1, ARRAY_COUNT(gCutscene09GermanPage1) },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { gCutscene09GermanPage5, ARRAY_COUNT(gCutscene09GermanPage5) },
+    { NULL, 0 }, { gCutscene09GermanPage1, ARRAY_COUNT(gCutscene09GermanPage1) },
+    { NULL, 0 }, { NULL, 0 },
+    { NULL, 0 }, { gCutscene09GermanPage5, ARRAY_COUNT(gCutscene09GermanPage5) },
 };
 const struct cutscene_page gCutscene10German[6] = {
     { gCutscene10GermanPage0, ARRAY_COUNT(gCutscene10GermanPage0) },
@@ -857,12 +820,9 @@ const struct cutscene_page gCutscene08Spanish[4] = {
     { gCutscene08SpanishPage3, ARRAY_COUNT(gCutscene08SpanishPage3) },
 };
 const struct cutscene_page gCutscene09Spanish[6] = {
-    { NULL, 0 },
-    { gCutscene09SpanishPage1, ARRAY_COUNT(gCutscene09SpanishPage1) },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { gCutscene09SpanishPage5, ARRAY_COUNT(gCutscene09SpanishPage5) },
+    { NULL, 0 }, { gCutscene09SpanishPage1, ARRAY_COUNT(gCutscene09SpanishPage1) },
+    { NULL, 0 }, { NULL, 0 },
+    { NULL, 0 }, { gCutscene09SpanishPage5, ARRAY_COUNT(gCutscene09SpanishPage5) },
 };
 const struct cutscene_page gCutscene10Spanish[6] = {
     { gCutscene10SpanishPage0, ARRAY_COUNT(gCutscene10SpanishPage0) },
@@ -915,12 +875,9 @@ const struct cutscene_page gCutscene08Italian[4] = {
     { gCutscene08ItalianPage3, ARRAY_COUNT(gCutscene08ItalianPage3) },
 };
 const struct cutscene_page gCutscene09Italian[6] = {
-    { NULL, 0 },
-    { gCutscene09ItalianPage1, ARRAY_COUNT(gCutscene09ItalianPage1) },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { gCutscene09ItalianPage5, ARRAY_COUNT(gCutscene09ItalianPage5) },
+    { NULL, 0 }, { gCutscene09ItalianPage1, ARRAY_COUNT(gCutscene09ItalianPage1) },
+    { NULL, 0 }, { NULL, 0 },
+    { NULL, 0 }, { gCutscene09ItalianPage5, ARRAY_COUNT(gCutscene09ItalianPage5) },
 };
 const struct cutscene_page gCutscene10Italian[6] = {
     { gCutscene10ItalianPage0, ARRAY_COUNT(gCutscene10ItalianPage0) },
@@ -973,12 +930,9 @@ const struct cutscene_page gCutscene08Dutch[4] = {
     { gCutscene08DutchPage3, ARRAY_COUNT(gCutscene08DutchPage3) },
 };
 const struct cutscene_page gCutscene09Dutch[6] = {
-    { NULL, 0 },
-    { gCutscene09DutchPage1, ARRAY_COUNT(gCutscene09DutchPage1) },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { gCutscene09DutchPage5, ARRAY_COUNT(gCutscene09DutchPage5) },
+    { NULL, 0 }, { gCutscene09DutchPage1, ARRAY_COUNT(gCutscene09DutchPage1) },
+    { NULL, 0 }, { NULL, 0 },
+    { NULL, 0 }, { gCutscene09DutchPage5, ARRAY_COUNT(gCutscene09DutchPage5) },
 };
 const struct cutscene_page gCutscene10Dutch[6] = {
     { gCutscene10DutchPage0, ARRAY_COUNT(gCutscene10DutchPage0) },
@@ -992,76 +946,76 @@ const struct cutscene_page gCutscene00Dutch[1] = {
     { NULL, 0 },
 };
 const struct cutscene_slide gCutsceneSlide00 = {
-    gCutscenePicture00, 0, 0, 0, 1, 0, 0, 14, 93,
+    gCutscenePicture00, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 93,
 };
 const struct cutscene_slide gCutsceneSlide01 = {
-    gCutscenePicture01, 0, 0, 0, 1, 0, 0, 14, 93,
+    gCutscenePicture01, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 93,
 };
 const struct cutscene_slide gCutsceneSlide02 = {
-    gCutscenePicture02, 0, 0, 0, 1, 0, 0, 14, 93,
+    gCutscenePicture02, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 93,
 };
 const struct cutscene_slide gCutsceneSlide03 = {
-    gCutscenePicture03, 0, 0, 0, 1, 0, 1, 14, 93,
+    gCutscenePicture03, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, 93,
 };
 const struct cutscene_slide gCutsceneSlide04 = {
-    gCutscenePicture04, 140, 0, 0, 1, 0, 0, 14, 92,
+    gCutscenePicture04, 140, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 92,
 };
 const struct cutscene_slide gCutsceneSlide05 = {
-    gCutscenePicture05, 90, 0, -1, 1, 0, 0, 14, 94,
+    gCutscenePicture05, 90, 0, -1, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 94,
 };
 const struct cutscene_slide gCutsceneSlide06 = {
-    gCutscenePicture06, 120, 1, 0, 1, 0, 0, 14, 95,
+    gCutscenePicture06, 120, 1, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 95,
 };
 const struct cutscene_slide gCutsceneSlide07 = {
-    gCutscenePicture07, 0, 0, 0, 1, 0, 1, 14, 91,
+    gCutscenePicture07, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, 91,
 };
 const struct cutscene_slide gCutsceneSlide08 = {
-    gCutscenePicture09, 0, 0, 0, 1, 0, 1, 14, 93,
+    gCutscenePicture09, 0, 0, 0, 1, 0, 1, SONG_CUTSCENES_SPOOKY, 93,
 };
 const struct cutscene_slide gCutsceneSlide09 = {
-    gCutscenePicture08, 0, 0, 0, 1, 0, 1, 15, 96,
+    gCutscenePicture08, 0, 0, 0, 1, 0, 1, SONG_INTRO, 96,
 };
 const struct cutscene_slide gCutsceneSlide10 = {
-    gCutscenePicture10, 0, 0, 0, 1, 0, 0, 15, 1,
+    gCutscenePicture10, 0, 0, 0, 1, 0, 0, SONG_INTRO, 1,
 };
 const struct cutscene_slide gCutsceneSlide11 = {
-    gCutscenePicture11, 0, 0, 0, 1, 0, 1, 15, 93,
+    gCutscenePicture11, 0, 0, 0, 1, 0, 1, SONG_INTRO, 93,
 };
 const struct cutscene_slide gCutsceneSlide12 = {
-    gCutscenePicture12, 0, 0, 0, 1, 0, 0, 15, 14,
+    gCutscenePicture12, 0, 0, 0, 1, 0, 0, SONG_INTRO, 14,
 };
 const struct cutscene_slide gCutsceneSlide13 = {
-    gCutscenePicture13, 0, 0, 0, 1, 0, 0, 14, 51,
+    gCutscenePicture13, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 51,
 };
 const struct cutscene_slide gCutsceneSlide14 = {
-    gCutscenePicture14, 0, 0, 0, 1, 0, 0, 14, 29,
+    gCutscenePicture14, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 29,
 };
 const struct cutscene_slide gCutsceneSlide15 = {
-    gCutscenePicture15, 0, 0, 0, 1, 0, 0, 14, 29,
+    gCutscenePicture15, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 29,
 };
 const struct cutscene_slide gCutsceneSlide16 = {
-    gCutscenePicture16, 0, 0, 0, 1, 0, 0, 14, 32,
+    gCutscenePicture16, 0, 0, 0, 1, 0, 0, SONG_CUTSCENES_SPOOKY, 32,
 };
 const struct cutscene_slide gCutsceneSlide17 = {
-    gCutscenePicture17, 90, 0, 0, 1, 0, 0, 15, 97,
+    gCutscenePicture17, 90, 0, 0, 1, 0, 0, SONG_INTRO, 97,
 };
 const struct cutscene_slide gCutsceneSlide18 = {
-    gCutscenePicture18, 0, 0, 0, 1, 0, 0, 15, 1,
+    gCutscenePicture18, 0, 0, 0, 1, 0, 0, SONG_INTRO, 1,
 };
 const struct cutscene_slide gCutsceneSlide19 = {
-    gCutscenePicture19, 120, 0, 0, 1, 0, 0, 15, 95,
+    gCutscenePicture19, 120, 0, 0, 1, 0, 0, SONG_INTRO, 95,
 };
 const struct cutscene_slide gCutsceneSlide20 = {
-    gCutscenePicture20, 120, 0, 0, 1, 0, 0, 15, 98,
+    gCutscenePicture20, 120, 0, 0, 1, 0, 0, SONG_INTRO, 98,
 };
 const struct cutscene_slide gCutsceneSlide21 = {
-    gCutscenePicture21, 120, 0, 0, 1, 0, 0, 15, 4,
+    gCutscenePicture21, 120, 0, 0, 1, 0, 0, SONG_INTRO, 4,
 };
 const struct cutscene_slide gCutsceneSlide22 = {
-    gCutscenePicture22, 0, 0, 0, 1, 0, 0, 15, 94,
+    gCutscenePicture22, 0, 0, 0, 1, 0, 0, SONG_INTRO, 94,
 };
 const struct cutscene_slide gCutsceneSlide23 = {
-    gCutscenePicture23, 120, 0, 0, 0, 0, 0, 13, 99,
+    gCutscenePicture23, 120, 0, 0, 0, 0, 0, SONG_CUTSCENES, SFX_NONE,
 };
 const u8 gCutscene01FrenchPage0Text[] =
     "a bord d'une myst\351rieuse station spatiale en orbite autour de "
@@ -1082,8 +1036,10 @@ const u8 gCutscene01FrenchPage3_0Text[] =
 const u8 gCutscene01FrenchPage3_1Text[] =
     "cortex: fais-moi confiance uka, j'ai un plan pour remettre ces "
     "minables terriens \340 leur place ... ";
-const u8 *const gCutscene01FrenchPage3[2] = { gCutscene01FrenchPage3_0Text, gCutscene01FrenchPage3_1Text };
-const u8 gCutscene02FrenchPage0Text[] = "cortex: mon r\351ducteur de plan\350te est enfin termin\351!";
+const u8 *const gCutscene01FrenchPage3[2] = { gCutscene01FrenchPage3_0Text,
+                                              gCutscene01FrenchPage3_1Text };
+const u8 gCutscene02FrenchPage0Text[] =
+    "cortex: mon r\351ducteur de plan\350te est enfin termin\351!";
 const u8 *const gCutscene02FrenchPage0[1] = { gCutscene02FrenchPage0Text };
 const u8 gCutscene02FrenchPage1Text[] =
     "cortex: les terriens devront s'incliner devant mon intelligence "
@@ -1105,7 +1061,8 @@ const u8 gCutscene02FrenchPage7_1Text[] =
     "son r\351ducteur ... crash, si tu me ram\350nes les cristaux "
     "ad\351quats, je pense pouvoir mettre au point un appareil "
     "capable d'inverser les effets de la machine de cortex.";
-const u8 *const gCutscene02FrenchPage7[2] = { gCutscene02FrenchPage7_0Text, gCutscene02FrenchPage7_1Text };
+const u8 *const gCutscene02FrenchPage7[2] = { gCutscene02FrenchPage7_0Text,
+                                              gCutscene02FrenchPage7_1Text };
 const u8 gCutscene02FrenchPage6Text[] =
     "cortex: j'ai enfin gagn\351! rien ne peut plus m'arr\352ter, "
     "m\352me pas ce petit bandicoot!";
@@ -1144,9 +1101,8 @@ const u8 gCutscene07FrenchPage0Text[] =
     "l'agrandisseur pour que tu sois assez grand pour affronter "
     "cortex!";
 const u8 *const gCutscene07FrenchPage0[1] = { gCutscene07FrenchPage0Text };
-const u8 gCutscene10FrenchPage0Text[] =
-    "cortex: cr\351tin! il va me falloir des ann\351es pour "
-    "r\351parer tout \347a!";
+const u8 gCutscene10FrenchPage0Text[] = "cortex: cr\351tin! il va me falloir des ann\351es pour "
+                                        "r\351parer tout \347a!";
 const u8 *const gCutscene10FrenchPage0[1] = { gCutscene10FrenchPage0Text };
 const u8 gCutscene08FrenchPage0Text[] =
     "cortex: esp\350ce d'imb\351cile! regarde ce que tu as fait?! tu "
@@ -1190,10 +1146,12 @@ const u8 gCutscene01GermanPage3_0Text[] =
 const u8 gCutscene01GermanPage3_1Text[] =
     "cortex: vertraue mir, uka. ich habe einen kleinen plan, wie ich "
     "die k\374mmerlichen erdbewohner zurechtstutzen kann ... ";
-const u8 *const gCutscene01GermanPage3[2] = { gCutscene01GermanPage3_0Text, gCutscene01GermanPage3_1Text };
+const u8 *const gCutscene01GermanPage3[2] = { gCutscene01GermanPage3_0Text,
+                                              gCutscene01GermanPage3_1Text };
 const u8 gCutscene02GermanPage0Text[] = "cortex: endlich ist mein planetenschrumpfer fertig!";
 const u8 *const gCutscene02GermanPage0[1] = { gCutscene02GermanPage0Text };
-const u8 gCutscene02GermanPage1Text[] = "cortex: die erdlinge werden sich meiner intelligenz unterwerfen!";
+const u8 gCutscene02GermanPage1Text[] =
+    "cortex: die erdlinge werden sich meiner intelligenz unterwerfen!";
 const u8 *const gCutscene02GermanPage1[1] = { gCutscene02GermanPage1Text };
 const u8 gCutscene02GermanPage2Text[] = "cortex: hahahahahaha!";
 const u8 *const gCutscene02GermanPage2[1] = { gCutscene02GermanPage2Text };
@@ -1213,7 +1171,8 @@ const u8 gCutscene02GermanPage7_1Text[] =
     "wenn du die richtigen kristalle auf der welt findest, kann ich "
     "bestimmt ein ger\344t bauen, das die welt wieder "
     "vergr\366\337ert.";
-const u8 *const gCutscene02GermanPage7[2] = { gCutscene02GermanPage7_0Text, gCutscene02GermanPage7_1Text };
+const u8 *const gCutscene02GermanPage7[2] = { gCutscene02GermanPage7_0Text,
+                                              gCutscene02GermanPage7_1Text };
 const u8 gCutscene02GermanPage6Text[] =
     "cortex: ich habe es endlich geschafft! jetzt kann mich niemand "
     "mehr aufhalten, nicht einmal das kleine bandicoot!";
@@ -1257,11 +1216,10 @@ const u8 gCutscene10GermanPage0Text[] =
     "cortex: du schwachkopf! ich werde ewig brauchen, das wieder in "
     "ordnung zu bringen!";
 const u8 *const gCutscene10GermanPage0[1] = { gCutscene10GermanPage0Text };
-const u8 gCutscene08GermanPage0Text[] =
-    "cortex: du idiot! was hast du getan! meine "
-    "stabilisierungs-kristalle sind zerst\366rt! wenn die "
-    "schrumpfmaschine nicht gedrosselt wird, kann ungeahntes "
-    "passieren!";
+const u8 gCutscene08GermanPage0Text[] = "cortex: du idiot! was hast du getan! meine "
+                                        "stabilisierungs-kristalle sind zerst\366rt! wenn die "
+                                        "schrumpfmaschine nicht gedrosselt wird, kann ungeahntes "
+                                        "passieren!";
 const u8 *const gCutscene08GermanPage0[1] = { gCutscene08GermanPage0Text };
 const u8 gCutscene08GermanPage1Text[] = "aahh!  aaahhh!!!";
 const u8 *const gCutscene08GermanPage1[1] = { gCutscene08GermanPage1Text };
@@ -1302,8 +1260,10 @@ const u8 gCutscene01SpanishPage3_1Text[] =
     "cortex: conf\355a en m\355, uka. he estado maquinando un "
     "planecillo para bajarles los humos a esos insignificantes "
     "terr\355colas ... ";
-const u8 *const gCutscene01SpanishPage3[2] = { gCutscene01SpanishPage3_0Text, gCutscene01SpanishPage3_1Text };
-const u8 gCutscene02SpanishPage0Text[] = "cortex: \241por fin he terminado el miniaturizador planetario!";
+const u8 *const gCutscene01SpanishPage3[2] = { gCutscene01SpanishPage3_0Text,
+                                               gCutscene01SpanishPage3_1Text };
+const u8 gCutscene02SpanishPage0Text[] =
+    "cortex: \241por fin he terminado el miniaturizador planetario!";
 const u8 *const gCutscene02SpanishPage0[1] = { gCutscene02SpanishPage0Text };
 const u8 gCutscene02SpanishPage1Text[] =
     "cortex: \241los terr\355colas tendr\341n que rendirse ante la "
@@ -1326,7 +1286,8 @@ const u8 gCutscene02SpanishPage7_1Text[] =
     "encontrar los cristales adecuados por el mundo, creo que "
     "podr\351 construir un dispositivo para contrarrestar los efectos "
     "de la m\341quina de cortex.";
-const u8 *const gCutscene02SpanishPage7[2] = { gCutscene02SpanishPage7_0Text, gCutscene02SpanishPage7_1Text };
+const u8 *const gCutscene02SpanishPage7[2] = { gCutscene02SpanishPage7_0Text,
+                                               gCutscene02SpanishPage7_1Text };
 const u8 gCutscene02SpanishPage6Text[] =
     "cortex: \241por fin he triunfado! \241nada podr\341 detenerme "
     "ahora, ni siquiera ese insignificante bandicoot!";
@@ -1392,7 +1353,8 @@ const u8 gCutscene10SpanishPage5Text[] =
     "miniaturizador planetario. debes regresar y recolectar las gemas "
     "de todos los lugares.";
 const u8 *const gCutscene10SpanishPage5[1] = { gCutscene10SpanishPage5Text };
-const u8 gCutscene01ItalianPage0Text[] = "su una misteriosa stazione spaziale in orbita sulla terra ...";
+const u8 gCutscene01ItalianPage0Text[] =
+    "su una misteriosa stazione spaziale in orbita sulla terra ...";
 const u8 *const gCutscene01ItalianPage0[1] = { gCutscene01ItalianPage0Text };
 const u8 gCutscene01ItalianPage1Text[] =
     "uka uka: cortex, non so perch\351 ti permetto di restare. mi hai "
@@ -1409,7 +1371,8 @@ const u8 gCutscene01ItalianPage3_0Text[] =
 const u8 gCutscene01ItalianPage3_1Text[] =
     "cortex: fidati di me uka, ho un piano che ridimensioner\340 gli "
     "abitanti della terra ...";
-const u8 *const gCutscene01ItalianPage3[2] = { gCutscene01ItalianPage3_0Text, gCutscene01ItalianPage3_1Text };
+const u8 *const gCutscene01ItalianPage3[2] = { gCutscene01ItalianPage3_0Text,
+                                               gCutscene01ItalianPage3_1Text };
 const u8 gCutscene02ItalianPage0Text[] = "cortex: il miniaturizzatore planetario \350 pronto!";
 const u8 *const gCutscene02ItalianPage0[1] = { gCutscene02ItalianPage0Text };
 const u8 gCutscene02ItalianPage1Text[] = "cortex: i terrestri dovranno inchinarsi al mio genio!";
@@ -1429,7 +1392,8 @@ const u8 gCutscene02ItalianPage7_1Text[] =
     "miniaturizzatore ... crash, se riesci a trovare i cristalli "
     "giusti, potr\362 costruire un apparecchio per contrastarne gli "
     "effetti.";
-const u8 *const gCutscene02ItalianPage7[2] = { gCutscene02ItalianPage7_0Text, gCutscene02ItalianPage7_1Text };
+const u8 *const gCutscene02ItalianPage7[2] = { gCutscene02ItalianPage7_0Text,
+                                               gCutscene02ItalianPage7_1Text };
 const u8 gCutscene02ItalianPage6Text[] =
     "cortex: ho vinto io, alla fine! nulla potr\340 fermarmi, nemmeno "
     "quel microbo di bandicoot!";
@@ -1438,9 +1402,8 @@ const u8 gCutscene02ItalianPage8Text[] =
     "aku: buona fortuna, crash. trova i cristalli e potremo sventare "
     "i diabolici piani di cortex.";
 const u8 *const gCutscene02ItalianPage8[1] = { gCutscene02ItalianPage8Text };
-const u8 gCutscene03ItalianPage0Text[] =
-    "cortex: so cosa stai cercando di fare, bandicoot, ma non "
-    "funzioner\340. i miei scagnozzi ti aspettano al varco!";
+const u8 gCutscene03ItalianPage0Text[] = "cortex: so cosa stai cercando di fare, bandicoot, ma non "
+                                         "funzioner\340. i miei scagnozzi ti aspettano al varco!";
 const u8 *const gCutscene03ItalianPage0[1] = { gCutscene03ItalianPage0Text };
 const u8 gCutscene04ItalianPage0Text[] =
     "cortex: marsupiale impiccione! sei stato fortunato, ma la "
@@ -1456,9 +1419,8 @@ const u8 gCutscene06ItalianPage0Text[] =
     "dei tuoi scagnozzi! dobbiamo fermarlo, non tollerer\362 un altro "
     "fallimento.";
 const u8 *const gCutscene06ItalianPage0[1] = { gCutscene06ItalianPage0Text };
-const u8 gCutscene06ItalianPage1Text[] =
-    "cortex: mi dispiace, uka! ma non preoccuparti, il mio "
-    "miniaturizzatore planetario lo fermer\340!";
+const u8 gCutscene06ItalianPage1Text[] = "cortex: mi dispiace, uka! ma non preoccuparti, il mio "
+                                         "miniaturizzatore planetario lo fermer\340!";
 const u8 *const gCutscene06ItalianPage1[1] = { gCutscene06ItalianPage1Text };
 const u8 gCutscene07ItalianPage0Text[] =
     "coco: bene crash, adesso ho tutti i cristalli, ma prima che io "
@@ -1508,7 +1470,8 @@ const u8 gCutscene01DutchPage3_0Text[] =
 const u8 gCutscene01DutchPage3_1Text[] =
     "cortex: vertrouw me nu maar, uka, ik heb een duivels plan "
     "ontwikkeld om de aardebewoners een kopje kleiner te maken ...";
-const u8 *const gCutscene01DutchPage3[2] = { gCutscene01DutchPage3_0Text, gCutscene01DutchPage3_1Text };
+const u8 *const gCutscene01DutchPage3[2] = { gCutscene01DutchPage3_0Text,
+                                             gCutscene01DutchPage3_1Text };
 const u8 gCutscene02DutchPage0Text[] = "cortex: eindelijk is mijn planetenverkleiner klaar!";
 const u8 *const gCutscene02DutchPage0[1] = { gCutscene02DutchPage0Text };
 const u8 gCutscene02DutchPage1Text[] =
@@ -1530,10 +1493,10 @@ const u8 gCutscene02DutchPage7_1Text[] =
     "brandstof voor zijn verkleiningsmachine. crash, als jij de "
     "juiste kristallen die over de wereld verspreid zijn op kunt "
     "halen, kan ik een machine bouwen om het effect tegen te gaan.";
-const u8 *const gCutscene02DutchPage7[2] = { gCutscene02DutchPage7_0Text, gCutscene02DutchPage7_1Text };
-const u8 gCutscene02DutchPage6Text[] =
-    "cortex: eindelijk heb ik gewonnen!  niemand kan me nu meer "
-    "stoppen, zelfs die kleine bandicoot niet!";
+const u8 *const gCutscene02DutchPage7[2] = { gCutscene02DutchPage7_0Text,
+                                             gCutscene02DutchPage7_1Text };
+const u8 gCutscene02DutchPage6Text[] = "cortex: eindelijk heb ik gewonnen!  niemand kan me nu meer "
+                                       "stoppen, zelfs die kleine bandicoot niet!";
 const u8 *const gCutscene02DutchPage6[1] = { gCutscene02DutchPage6Text };
 const u8 gCutscene02DutchPage8Text[] =
     "aku: succes, crash.  we moeten de kristallen zoeken, zodat we "
@@ -1559,10 +1522,9 @@ const u8 gCutscene06DutchPage0Text[] =
     "je knechten verslagen. we moeten hem tegenhouden. ik accepteer "
     "geen nederlaag meer.";
 const u8 *const gCutscene06DutchPage0[1] = { gCutscene06DutchPage0Text };
-const u8 gCutscene06DutchPage1Text[] =
-    "cortex: uka ... het spijt me, maar maak je niet al te veel "
-    "zorgen, mijn planetenvernietiger maakt hem wel een kopje "
-    "kleiner.";
+const u8 gCutscene06DutchPage1Text[] = "cortex: uka ... het spijt me, maar maak je niet al te veel "
+                                       "zorgen, mijn planetenvernietiger maakt hem wel een kopje "
+                                       "kleiner.";
 const u8 *const gCutscene06DutchPage1[1] = { gCutscene06DutchPage1Text };
 const u8 gCutscene07DutchPage0Text[] =
     "coco:  ok\351 crash, ik heb alle kristallen, maar ik kan de "

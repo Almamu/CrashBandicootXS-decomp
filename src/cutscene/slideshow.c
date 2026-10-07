@@ -17,7 +17,7 @@ struct AudioContext;
 
 /* Starts sound cue `slides[idx]->cue` on the audio context. If the
  * channel already reports that cue, plays the item's secondary sfx
- * (unless it is the 0x63 "none" sentinel) and then starts the item's
+ * (unless it is the SFX_NONE sentinel, 0x63) and then starts the item's
  * fade; otherwise starts the fade first, then busy-waits for the cue
  * before playing the sfx. */
 void BeginSlide(struct cutscene_player *self, s32 idx)
@@ -26,12 +26,12 @@ void BeginSlide(struct cutscene_player *self, s32 idx)
 
     PlaySong(gAudioContext, self->slides[idx]->cue);
     if (GetCurrentSong(gAudioContext) == (item = self->slides[idx])->cue) {
-        if (item->sfx != 0x63)
+        if (item->sfx != SFX_NONE)
             PlaySfx(gAudioContext, item->sfx, 0x100);
         FadeBrightness(self->slides[idx]->fade | -0x80, 1, 0);
     } else {
         FadeBrightness(item->fade | -0x80, 1, 0);
-        if (self->slides[idx]->sfx != 0x63) {
+        if (self->slides[idx]->sfx != SFX_NONE) {
             while (GetCurrentSong(gAudioContext) != self->slides[idx]->cue)
                 ;
             PlaySfx(gAudioContext, self->slides[idx]->sfx, 0x100);
@@ -81,7 +81,7 @@ void RunSlideshow(struct cutscene_player *self0)
         {
             const struct cutscene_slide *item2 = self->slides[i];
 
-            if (item2->rearmSfx != 0 && item2->sfx != 0x63) {
+            if (item2->rearmSfx != 0 && item2->sfx != SFX_NONE) {
                 StopSfx(gAudioContext, item2->sfx);
             }
         }

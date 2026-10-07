@@ -278,7 +278,7 @@ void StartActionCtrlSpin(struct act *self)
         struct vtable_slot *mgr;
         struct act_method *off;
 
-        PlaySfx(gAudioContext, 0xa, 0x100);
+        PlaySfx(gAudioContext, SFX_SPIN, 0x100);
         self->frame = 0;
         self->frames = 0x18;
 
@@ -305,7 +305,7 @@ void StartActionCtrlHangSpin(struct act *self)
         struct vtable_slot *mgr;
         struct act_method *off;
 
-        PlaySfx(gAudioContext, 0xa, 0x100);
+        PlaySfx(gAudioContext, SFX_SPIN, 0x100);
         self->frame = 0;
         self->frames = 0x18;
 

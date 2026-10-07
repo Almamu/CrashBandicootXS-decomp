@@ -4,6 +4,8 @@
 #include "core.h"
 #include "byte_arg.h"
 #include <gax.h>
+#include "constants/sfx.h"
+#include "constants/songs.h"
 
 /* The music/SFX-trigger "context" object `PlaySfx` and its neighbors take
  * as their first argument - `*gAudioContext` in the ROM, an
@@ -42,7 +44,7 @@ struct SfxRecord {
 struct AudioContext {
     u32 unused_00;   // 0x00 - never read or written (InitAudioContext skips it too)
     u32 state;       // 0x04 - 0 = stopped, 1 = playing, 2 = paused
-    u32 currentSong; // 0x08 - index into gSongTable (19 songs); 0x13 = none
+    u32 currentSong; // 0x08 - index into gSongTable (SONG_*); SONG_NONE = none
     u32 pendingSong; // 0x0c - queued song index, started once the duck-out fade completes
     // 0x10/0x14 - round-robin record of the last 2 PlaySfx ids (StopSfx stop-if-playing scan)
     u32 lastSfxId[2];
@@ -93,7 +95,7 @@ extern struct SfxTableEntry gSfxTable[99];
 /* The GAX2 music block (data/data.s, built by tools/gax_audio.py) and
  * the song table pointing into it (src/data/song_table_16aa20.c). */
 extern const u8 gGaxMusicData[];
-extern const void *const gSongTable[19];
+extern const void *const gSongTable[SONG_COUNT];
 
 /* src/iwram/iwram_data.c */
 /* VBlankHandler (src/system/irq.c) calls GAX_irq while this is set. */

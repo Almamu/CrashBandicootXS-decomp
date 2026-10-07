@@ -219,8 +219,8 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
 {
     switch (code) {
     case 27:
-        *GetCurrentLevelFlags(gLevelState) |= 1;
-        PlaySfx(gAudioContext, 0x1c, 0x100);
+        *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRYSTAL;
+        PlaySfx(gAudioContext, SFX_CRYSTAL, 0x100);
         break;
     case 18:
         RequestRoomExit();
@@ -245,33 +245,33 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
         NOTIFY(self, a, code, c);
         break;
     case 28:
-        if (gLevelState->maskLevel == 3)
+        if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             self->deadline = 0;
-        PlaySfx(gAudioContext, 0x18, 0x100);
+        PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
         StartTimeTrial(gLevelState);
         break;
     case 29:
-        PlaySfx(gAudioContext, 0x1f, 0x100);
-        *GetCurrentLevelFlags(gLevelState) |= 2;
+        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRATE_GEM;
         break;
     case 30:
-        PlaySfx(gAudioContext, 0x1f, 0x100);
-        *GetCurrentLevelFlags(gLevelState) |= 4;
+        PlaySfx(gAudioContext, SFX_GEM, 0x100);
+        *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_GEM_PATH_GEM;
         break;
     case 34:
-        PlaySfx(gAudioContext, 0x1f, 0x100);
+        PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 2;
         break;
     case 32:
-        PlaySfx(gAudioContext, 0x1f, 0x100);
+        PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 4;
         break;
     case 31:
-        PlaySfx(gAudioContext, 0x1f, 0x100);
+        PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 1;
         break;
     case 33:
-        PlaySfx(gAudioContext, 0x1f, 0x100);
+        PlaySfx(gAudioContext, SFX_GEM, 0x100);
         gLevelState->flags |= 8;
         break;
     case 35:
@@ -281,7 +281,7 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
         RequestRoomExit();
         break;
     case 26:
-        if (gLevelState->maskLevel == 0) {
+        if (gLevelState->maskLevel == MASK_LEVEL_NONE) {
             struct player_pos *h = self->maskTrail;
             s32 i;
 
@@ -291,10 +291,10 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
         {
             s32 mode = gLevelState->maskLevel;
 
-            if ((mode <= 2 && gPlayer->ctrlMode != 1) || mode <= 1)
+            if ((mode <= MASK_LEVEL_TWO && gPlayer->ctrlMode != 1) || mode <= MASK_LEVEL_ONE)
                 RaiseMaskLevel(gLevelState);
         }
-        if (gLevelState->maskLevel == 3)
+        if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             self->deadline = gRoomFrameCount + 1200;
         break;
     case 1:
@@ -311,15 +311,15 @@ void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c)
             if (!Ac2cArmed(self)) {
                 struct level_state *game = gLevelState;
 
-                if (game->maskLevel != 0) {
-                    if (game->maskLevel <= 2) {
+                if (game->maskLevel != MASK_LEVEL_NONE) {
+                    if (game->maskLevel <= MASK_LEVEL_TWO) {
                         struct box_part *child;
                         s32 x, y, m;
 
                         self->deadline = gRoomFrameCount + 90;
                         SetMaskLevel(game, game->maskLevel - 1);
-                        PlaySfx(gAudioContext, 0, 0x100);
-                        PlaySfx(gAudioContext, 0x1b, 0x100);
+                        PlaySfx(gAudioContext, SFX_AKU_AKU_LOSE, 0x100);
+                        PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
                         NOTIFY(self, a, 0xb, c);
                         /* The ROM reloads the mode here and never uses it. */
                         (void)*(volatile s32 *)&gLevelState->maskLevel;
@@ -414,7 +414,7 @@ void DrawPlayer(struct player *self)
 {
     MATCH_HOLD_REG(s32, hold, r6);
 
-    if (gLevelState->maskLevel == 3) {
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE) {
         if (!(gRoomFrameCount & 7))
             /* One expression, so the store address is loaded before
              * the call; the locals keep `+ 2` from being folded into
@@ -441,15 +441,16 @@ void DrawPlayer(struct player *self)
     /* Hard-register hold (emits no code): r6 live across the blink
      * call keeps `self` out of r6, so it gets r7 as in the ROM. */
     MATCH_HOLD(hold);
-    if (gLevelState->maskLevel == 3 || !BlinkArmed(self) || (gRoomFrameCount & 4))
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE || !BlinkArmed(self) ||
+        (gRoomFrameCount & 4))
         DrawSprite(gSpriteRenderer, self);
     /* End of the hold above (emits no code). */
     MATCH_USE(hold);
     {
         struct level_state *game = gLevelState;
 
-        if (game->maskLevel == 3 && !BlinkArmed(self))
-            SetMaskLevel(game, 2);
+        if (game->maskLevel == MASK_LEVEL_INVINCIBLE && !BlinkArmed(self))
+            SetMaskLevel(game, MASK_LEVEL_TWO);
     }
     {
         s32 x = self->x;

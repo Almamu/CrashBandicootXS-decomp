@@ -166,7 +166,7 @@ void UpdateActionCtrl(struct act *self)
 
                 if (py2 > (gLevelLayers->layer0->heightPx << 8) + 0x1400) {
                     r->deadline = 0;
-                    SetMaskLevel(gLevelState, 0);
+                    SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
                     {
                         struct act_method *m = &self->vt->m10;
 
@@ -300,7 +300,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
                 ACT_CALL2(self, m50, self->part, 6);
                 ActTrio27(self, frame, one, 0xD);
                 ActTrio28(self, frame, one, 0xD);
-                PlaySfx(gAudioContext, 0xC, 0x100);
+                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
                 return 1;
             } else if (self->part->tag == 0xB && self->part->frame >= 0) {
                 self->frame++;
@@ -308,7 +308,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
                 ACT_CALL2(self, m50, self->part, 0xA);
                 ActSet27(self, 0xE);
                 ActSet28(self, 0xE);
-                PlaySfx(gAudioContext, 0xC, 0x100);
+                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
                 return 1;
             } else if (self->part->tag == 0xC) {
                 self->frame++;
@@ -316,7 +316,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
                 ACT_CALL2(self, m50, self->part, 0xA);
                 ActSet27(self, 0xC);
                 ActSet28(self, 0xC);
-                PlaySfx(gAudioContext, 0xC, 0x100);
+                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
                 return 1;
             }
         }

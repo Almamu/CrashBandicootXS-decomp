@@ -195,7 +195,7 @@ void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 ar
 
 void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
 {
-    PlaySfx(gAudioContext, 0x1B, 0x100);
+    PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
     SET_MODE(self, 7);
     SET_ANIM(self, self->target, anim);
     self->target->flags.bits.flag7 = 0;

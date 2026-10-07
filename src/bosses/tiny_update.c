@@ -323,7 +323,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
             SetTinyState(self, part, 14);
         if (part->animDone) {
             SetTinyState(self, part, 10);
-            PlaySfx(gAudioContext, 0xD, 0x100);
+            PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         }
         break;
     }

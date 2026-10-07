@@ -27,7 +27,7 @@ void DamageAirshipFireball(void *selfArg, s32 delta)
     self->hp -= delta;
     if (self->hp <= 0) {
         self->base.palette = 4;
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         {
             MATCH_HOLD_REG(s32, stateVal, r0) = 2;
             MATCH_HOLD_REG(s32, idxVal, r1) = 1;

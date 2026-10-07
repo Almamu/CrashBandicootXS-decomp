@@ -260,7 +260,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     }
     px = gPlayer->x >> 8;
     py = gPlayer->y >> 8;
-    if (gLevelState->maskLevel == 3)
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
         kind = 6;
     else {
         kind = gActionCtrlStateAttackKinds[idx];
@@ -491,11 +491,11 @@ tail:
                 dy = D18C_Span(f.b.y, f.b.h, f.c.y);
             }
             if (dx > 5 && f21 == 0) {
-                if ((gLevelState->maskLevel == 0 && ((gPlayer->flags.all >> 6) & 1) &&
+                if ((gLevelState->maskLevel == MASK_LEVEL_NONE && ((gPlayer->flags.all >> 6) & 1) &&
                      !D18C_TimerOver()) ||
                     self->kind != 0xd) {
                     gPlayer->flags.all |= 0x40;
-                    SetMaskLevel(gLevelState, 0);
+                    SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
                     D18C_CALL68(0, 0xa, 0);
                 } else {
                     BreakCrateInStack(self, 0, 0, 0);
@@ -856,7 +856,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
             if (k != 0xd) {
                 if (kind == 2) {
                     if (k == 4 || k == 8) {
-                        PlaySfx(gAudioContext, 2, 0x100);
+                        PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
                         E08C_CALL68(0xe, 8);
                     } else
                         E08C_CALL68(0xd, 8);
@@ -865,7 +865,7 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                     gPlayer->rampY.step = 0;
                     gPlayer->rampY.target = 0;
                 } else if ((u32)(kind - 5) <= 1 && k == 8) {
-                    PlaySfx(gAudioContext, 2, 0x100);
+                    PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
                     E08C_CALL68(0xe, 8);
                     gPlayer->speedY = 0;
                     gPlayer->rampY.start = 0;
@@ -1349,7 +1349,7 @@ void LightTntCrate(struct crate *selfArg)
         // clang-format on
     }
 
-    PlaySfx(gAudioContext, 0x11, 0x100);
+    PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
     self[0x4f] = 0x3c;
 }
 
@@ -1389,7 +1389,7 @@ void OpenCheckpointCrate(struct crate *self)
     puff->flipX = 0;
     PuffSetMotion(puff, -0x180, 8, -0x10);
     PhysSetTag(self, 0x1b);
-    PlaySfx(gAudioContext, 0x17, 0x100);
+    PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
     {
         u16 id = self->id;
 
@@ -1562,7 +1562,7 @@ void BreakCrate(struct crate *self, u32 arg1)
     case 4:
     case 12:
     case 13:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         break;
     case 10:
     case 14:
@@ -1587,7 +1587,7 @@ void BreakCrate(struct crate *self, u32 arg1)
     case 0:
         PHYS_SPAWN(self->x >> 8, (self->y >> 8) + 3, 0, 3, chained);
         if (flag == 0)
-            PlaySfx(gAudioContext, 3, 0x100);
+            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         break;
     case 22:
         break;
@@ -1625,7 +1625,7 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
     u32 argP5;
     u8 flag = arg1;
 
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     if (self->paramB == 9) {
         u8 r = (u16)rand() >> 8;
 
@@ -1717,12 +1717,12 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
     u32 argP5;
     u8 flag = arg1;
 
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     switch (self->u48.slotState & 7) {
     case 0:
         break;
     case 1:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         {
             u16 id = self->id;
 
@@ -1928,7 +1928,7 @@ void ExplodeCrate(struct crate *self, u8 near)
     if (gCrateKindCounted[self->kind])
         AddBrokenCrate(gLevelState);
     PHYS_SET_ID_BIT(self->id);
-    PlaySfx(gAudioContext, 4, 0x100);
+    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
     DropCratesAbove(self);
 
     if ((gPlayer->flags.all >> 6) & 1 && !PhysComboMaxed(gPlayer)) {
@@ -2152,7 +2152,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
         self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         DetonateNitroCrates();
         ShowHudCrates(gHud);
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         self->u48.pressed = one;
         PressSwitchCrate(gLevelState);
     }
@@ -2303,7 +2303,7 @@ void SolidifyOutlineCrates(struct crate *self)
                 if (o->kind == 5 && self->paramA >= o->paramB) {
                     SolidifyOutlineCrate(o);
                     if (!played) {
-                        PlaySfx(gAudioContext, 0xf, 0x100);
+                        PlaySfx(gAudioContext, SFX_OUTLINE_CRATES_SOLIDIFY, 0x100);
                         played = TRUE;
                     }
                 }
@@ -2538,13 +2538,13 @@ void UpdateTntCountdown(struct crate *self)
     switch (kind) {
     case 0x15:
         PhysSetTag(self, 0x13);
-        PlaySfx(gAudioContext, 0x11, 0x100);
+        PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
         self->kind = 0x14;
         self->timer = 0x3c;
         break;
     case 0x14:
         PhysSetTag(self, 0x12);
-        PlaySfx(gAudioContext, 0x11, 0x100);
+        PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
         self->kind = 0x13;
         self->timer = 0x3c;
         break;
@@ -2742,7 +2742,7 @@ void UpdateSlotCrate(struct crate *self)
             self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         }
         if (self->u48.slotState & 0xc0)
-            PlaySfx(gAudioContext, 0x10, 0x100);
+            PlaySfx(gAudioContext, SFX_SLOT_CRATE_SPIN, 0x100);
     }
 }
 

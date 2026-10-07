@@ -28,7 +28,7 @@ void OpenLifeCrate(struct actor *self, u32 arg1)
 {
     u8 flag6 = (u8)arg1;
 
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
 
     if (self->id != 0xFFFF) {
         if ((u8)IsEntityIdActivated(gEntityFlags, self->id) == 0) {

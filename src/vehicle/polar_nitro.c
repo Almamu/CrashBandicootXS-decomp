@@ -96,7 +96,7 @@ void DetonateNearbyPolarNitros(struct actor_self *self)
 
     do {
         if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n) && n->animIndex != 0x12) {
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
             AddBrokenCrate(gLevelState);
             n->stateTime = 0;
             n->animIndex = 0x12;

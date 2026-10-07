@@ -83,7 +83,7 @@ void UpdateZoomBg(struct zoom_bg *self)
     case 2:
         if (self->image == 11)
             break;
-        PlaySfx(gAudioContext, 0x53, 0x100);
+        PlaySfx(gAudioContext, SFX_ZOOM_BG_IN, 0x100);
         LoadTaggedAsset(gLevelSelectPictures[self->image].palette, buf);
         DmaCopy16(3, buf, BG_PLTT, 0x40);
         LoadTaggedAsset(gLevelSelectPictures[self->image].tiles,
@@ -187,7 +187,7 @@ void StartZoomBgExit(struct zoom_bg *self)
 /* Zooms the picture out with no follow-up picture (page turn). */
 void ClearZoomBgPicture(struct zoom_bg *self)
 {
-    PlaySfx(gAudioContext, 0x54, 0x100);
+    PlaySfx(gAudioContext, SFX_ZOOM_BG_OUT, 0x100);
     self->state = 1;
     self->image = 11;
 }

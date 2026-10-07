@@ -49,7 +49,7 @@ static inline void OrbitClampFrame(struct orbit_part *self)
 
 /* PickUpWumpa: "randomized-position spawn/despawn picker" (docs/rom_map.md),
  * called as `PickUpWumpa(entry, 1)`/`(other, 1)` from time_trial.c/
- * crate_break.c for despawn. PlaySfx(gAudioContext, 8, 0x100), then
+ * crate_break.c for despawn. PlaySfx(gAudioContext, SFX_WUMPA, 0x100), then
  * either derives a randomized (dx,dy) offset pair from rand() (arg1
  * nonzero - self->0x48 = 2, self->0x49 tags which of three rand()-driven
  * bands was picked) or uses a fixed (0x1000,0x1000) offset and fires
@@ -73,7 +73,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gAudioContext, 8, 0x100);
+    PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
     if (randomize) {
         u32 rv = (u16)rand();
         u8 lowbit = rv & 1;
@@ -119,7 +119,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  *    "distance to travel" pair PickUpWumpa/PickUpExtraLife/etc. compute),
  *    wraps self->0x3c by +/-4 (mode-gated by self->0x49) each frame in
  *    [0,0x140], and once self->x>>8/self->y>>8 both fall within a small
- *    box (|x|<=0x10, |y|<=0x10) fires PlaySfx(gAudioContext,0xe,
+ *    box (|x|<=0x10, |y|<=0x10) fires PlaySfx(gAudioContext,SFX_HUD_COLLECT,
  *    0x100), calls CollectWumpa(gLevelState) (a scoring/counter
  *    candidate per docs/rom_map.md), sets self->0xc bit 0, and - unless
  *    self->8 == 0xffff - sets self->8's bit in the gEntityFlags+
@@ -221,7 +221,7 @@ void UpdateWumpa(struct orbit_part *self)
                 self->timer = 0;
         }
         if (self->base.x >> 8 <= 0x10 && self->base.y >> 8 <= 0x10) {
-            PlaySfx(gAudioContext, 0xe, 0x100);
+            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
             CollectWumpa(gLevelState);
             ORBIT_MARK_GONE(self, 1);
         }
@@ -396,7 +396,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
 /* SendWumpaToHud: alternative to SendExtraLifeToHud (drop_extra_life.c), called from
  * entity_spawner.c "instead of SendExtraLifeToHud" per that file's own doc
  * comment. Same shape as SendExtraLifeToHud/PickUpWumpa's tail: PlaySfx(
- * gAudioContext, 8, 0x100), self->0x48 = 1, self->x -= self->0x4a<<8
+ * gAudioContext, SFX_WUMPA, 0x100), self->0x48 = 1, self->x -= self->0x4a<<8
  * (a fixed-offset nudge), self->0x3c = 0xa0, self->0x30 clamped from the
  * same self->0x20/self->0x2d table-lookup idiom, self->0x25 = 1, calls
  * WorldToScreen(self, x>>8, y>>8, &outX, &outY) and re-derives self->x/
@@ -420,7 +420,7 @@ void SendWumpaToHud(struct orbit_part *self)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gAudioContext, 8, 0x100);
+    PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
     self->state = 1;
     self->base.x -= self->mode << 8;
     self->timer = 0xa0;

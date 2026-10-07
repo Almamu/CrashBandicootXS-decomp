@@ -185,7 +185,7 @@ void CreateJetpackCheckpointText(void)
 {
     struct actor_hp *obj;
 
-    PlaySfx(gAudioContext, 0x17, 0x100);
+    PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
     obj = AllocActor(0x58);
     InitHpActor(obj, &gJetpackAnimTable[46], 0, 0, 0, 1);
     obj->base.vtable = (struct actor_vtable *)gJetpackCheckpointTextVtable;
@@ -196,7 +196,7 @@ void CreateJetpackExplosion(s32 x, s32 y, s32 z)
 {
     struct actor_hp *obj;
 
-    PlaySfx(gAudioContext, 4, 0x100);
+    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
     obj = AllocActor(0x58);
     InitHpActor(obj, &gJetpackAnimTable[45], x, y, z, 1);
     obj->base.vtable = (struct actor_vtable *)gJetpackExplosionVtable;
@@ -251,21 +251,21 @@ void SpawnHovercraftCannon(s32 a, s32 b, s32 c)
 /* Plays sfx 0x38 and spawns a kind-39 object. */
 void SpawnHovercraftFireball(s32 x, s32 y, s32 z)
 {
-    PlaySfx(gAudioContext, 0x38, 0x100);
+    PlaySfx(gAudioContext, SFX_FIREBALL_LAUNCH, 0x100);
     CreateHovercraftFireball(AllocActor(0x6c), &gJetpackAnimTable[39], x, y, z);
 }
 
 /* Plays sfx 0x38 and spawns a kind-38 object. */
 void SpawnAirshipFireball(s32 x, s32 y, s32 z)
 {
-    PlaySfx(gAudioContext, 0x38, 0x100);
+    PlaySfx(gAudioContext, SFX_FIREBALL_LAUNCH, 0x100);
     CreateAirshipFireball(AllocActor(0x6c), &gJetpackAnimTable[38], x, y, z);
 }
 
 /* Plays sfx 0x30 and spawns a kind-3 object. */
 void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e)
 {
-    PlaySfx(gAudioContext, 0x30, 0x100);
+    PlaySfx(gAudioContext, SFX_CANNONBALL_FIRE, 0x100);
     CreateJetpackCannonball(AllocActor(0x60), &gJetpackAnimTable[3], a, b, c, d, e);
 }
 
@@ -560,11 +560,11 @@ void JetpackPlayerStateFly(struct actor_hp *self)
 
         if (keys.held & 0x200) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         } else if (gJetpackShotCooldown == 0 && (keys.held & 1)) {
             struct byte_arg one;
@@ -572,7 +572,7 @@ void JetpackPlayerStateFly(struct actor_hp *self)
 
             gJetpackShotCooldown = 0x12;
             one.v = 1;
-            PlayAmbientSfx(gAudioContext, 0x24, 1000, 0xa0, one);
+            PlayAmbientSfx(gAudioContext, SFX_JETPACK_SHOOT, 1000, 0xa0, one);
             x = self->base.x + 0x1200;
             y = self->base.y - 0x1800;
             SpawnJetpackShot(x, y, self->base.z + 10, (x * 0x199) >> 12, (y * 0x199) >> 12);
@@ -602,11 +602,11 @@ void JetpackPlayerStateRollLeft(struct actor_hp *self)
         keys = gKeys.half;
         if (keys.held & 0x200) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         }
     }
@@ -635,11 +635,11 @@ void JetpackPlayerStateRollRight(struct actor_hp *self)
         keys = gKeys.half;
         if (keys.held & 0x200) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         }
     }

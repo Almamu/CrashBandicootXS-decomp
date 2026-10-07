@@ -131,12 +131,12 @@ case12:
 setC26:
     mode = 0x26;
 playCue:
-    StopSfx(gAudioContext, 0x36);
-    PlaySfx(gAudioContext, 0x36, 0x100);
+    StopSfx(gAudioContext, SFX_SKID);
+    PlaySfx(gAudioContext, SFX_SKID, 0x100);
     goto tail;
 
 rearm:
-    StopSfx(gAudioContext, 0x36);
+    StopSfx(gAudioContext, SFX_SKID);
 
 tail:
     return ((s32 (*)(void *, void *, s32))SetCtrlTargetAnim)(self, part, mode);

@@ -282,8 +282,8 @@ s32 CountRoomCrates(const struct level_room *item)
 }
 
 /* Resolves which sound cue to play for a medal-results screen event:
- * `0x12` while `gLevelState`'s mode field (`+0x78`, see
- * src/objects/sprite_anim.c) is 3, `6` if `IsInBonusRoom` (the
+ * SONG_DRUMS while `gLevelState->maskLevel` is MASK_LEVEL_INVINCIBLE,
+ * SONG_BONUS_ROUND if `IsInBonusRoom` (the
  * item-list `extra1`-matches-cached-value check) is true, otherwise a
  * byte looked up from the per-level sound-cue-ID table
  * `gThemeMusicCues` at `gLevelTable[self->level]`'s `+0x04`
@@ -297,10 +297,10 @@ void PlayRoomMusic(struct level_progress *self)
     s32 mode = gLevelState->maskLevel;
     u32 id;
 
-    if (mode == 3) {
-        id = 0x12;
+    if (mode == MASK_LEVEL_INVINCIBLE) {
+        id = SONG_DRUMS;
     } else if ((u8)IsInBonusRoom(self) != 0) {
-        id = 6;
+        id = SONG_BONUS_ROUND;
     } else {
         u32 offset = gLevelTable[self->level].theme;
 

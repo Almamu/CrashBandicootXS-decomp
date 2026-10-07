@@ -87,7 +87,7 @@ void *InitTitleScreen(u32 *self)
     self[0] = 0;
     self[1] = 0;
 
-    StartSong(gAudioContext, 0xb);
+    StartSong(gAudioContext, SONG_MAIN_MENU_EUROPE);
 
     return self;
 }

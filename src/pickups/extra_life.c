@@ -111,7 +111,7 @@ void PickUpExtraLife(struct orbit_part *self, u8 randomize)
 
     MATCH_KEEP_VOLATILE(self);
 
-    PlaySfx(gAudioContext, 7, 0x100);
+    PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
     self->timer = 0xa0;
 
     if (randomize) {
@@ -220,7 +220,7 @@ void UpdateExtraLife(struct orbit_part *self)
             /* Extra reference: puts velX in r3 and y in r2, as in the
              * ROM. */
             MATCH_USE(vx);
-            PlaySfx(gAudioContext, 0xe, 0x100);
+            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
             AddLife(gLevelState);
             self->base.flags |= 1;
             if (self->base.id != 0xffff)
@@ -348,7 +348,7 @@ void SendExtraLifeToHud(struct orbit_part *self)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gAudioContext, 7, 0x100);
+    PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
     self->state = 1;
     {
         MATCH_HOLD_REG(s32, off, r0) = self->mode;
