@@ -58,7 +58,7 @@ void MegaMixCtrl::SetMotionXFromSet(SpriteObj *part, s32 index)
     }
 }
 
-/* Starts the pair's Y record: Ctrl::StartTargetMotionY (player_flags.c),
+/* Starts the pair's Y record: Ctrl::StartTargetMotionY (player_flags.cpp),
  * called directly, not through the vtable. */
 void MegaMixCtrl::StartTargetMotionYFromSet(SpriteObj *part, s32 index)
 {

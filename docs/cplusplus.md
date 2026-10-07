@@ -406,13 +406,15 @@ object that is now built from C++ source; "workarounds" counts the
 `MATCH_*` pins and `asm` statements of its old C (`tools/match_idioms.py`
 counts them by kind) and what the C++ still needs.
 
-| Object | Classes (include/ctrl.hpp) | Functions | Compiler | Workarounds: C -> C++ | Part |
+| Object | Classes (include/ctrl.hpp unless noted) | Functions | Compiler | Workarounds: C -> C++ | Part |
 |---|---|---:|---|---|---|
 | `src/objects/effect_ctrl.cpp` | `EffectCtrl` | 5 | old_agbcp | 0 -> 0 | #685 |
 | `src/objects/ctrl.cpp` | `Ctrl` | 10 | old_agbcp (was agbcc) | 7 pins, 2 asm -> 0 | 1 |
 | `src/bosses/tiny_hop_pad.cpp` | `StompedHopPadCtrl`, `OneShotAnimCtrl::Update` | 4 | old_agbcp (was agbcc) | 5 pins and an `ENTITY_SET_GONE_BIT_ASR` (6 pins, 1 asm), gotos -> 2 pins | 1 |
-| `src/player/input_ctrl_queue.cpp` | `InputCtrl`'s queue setters, `BossCtrl` | 9 | agbcp | 0 -> 0 | 1 |
+| `src/player/input_ctrl_queue.cpp` | `InputCtrl`'s queue setters (input_ctrl.hpp since part 3), `BossCtrl` | 9 | agbcp | 0 -> 0 | 1 |
 | `src/bosses/mega_mix.cpp` | `MegaMixCtrl` | 7 | agbcp | 23 pins, 8 asm -> 0 | 1 |
+| `src/player/player_flags.cpp` | `Ctrl`'s `SetMode`, `SetAnimSet`, `SetTargetMotionY`, `StartTargetMotionY` (ctrl.hpp), with 40 C-linkage player accessors | 4 + 40 | agbcp | 16 pins -> 0 (plus `StorePlayerListEntry`'s 6 -> 0; `GetPlayerListEntry` keeps 3) | 3 |
+| `src/player/input_ctrl.cpp` | `InputCtrl` (input_ctrl.hpp), with 6 C-linkage swim controller accessors | 19 + 6 | old_agbcp | 0 -> 0; the vcall macros and the 16-line PMF dispatch go | 3 |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -428,12 +430,34 @@ constant-before-`ldrb`), so both moved to `OLD_AGBCC_OBJS`; their C was
 pinned to old_agbcc's code under agbcc. `mega_mix.o` and
 `input_ctrl_queue.o` compile the same under both and stay agbcc.
 
+Part 3 in numbers: 23 methods in 2 objects, plus the 46 plain functions
+that share their files; `MATCH_HOLD_REG` 2118 -> 2096, instruction-emitting
+`asm` unchanged (239). `player_flags.cpp` is mostly the player's accessors:
+a file is either C or C++, so they are compiled as C++ too, with C linkage
+(their prototypes in player.h are C declarations, so the definitions keep
+the C names). Every one compiles to the same code; `StorePlayerListEntry`'s
+6 pins also go, and `GetPlayerListEntry` keeps its 3 (unpinned, agbcp
+swaps r0 and r1 in the address computation). `player_flags.o` compiles
+the same under agbcp and old_agbcp and stays on agbcc; `input_ctrl.o`
+(old_agbcc C already) matches only under old_agbcp (agbcp's code differs
+from `KillPlayer`'s bitfield clears on, old_agbcp's constant before the
+`ldrb`) and stays in `OLD_AGBCC_OBJS`.
+
+`InputCtrl` moved from ctrl.hpp to its own header, `include/input_ctrl.hpp`.
+Its state table is a static member, `static const StateFunc
+stateFuncs[4]`, which cxx_symbols.txt maps to the C table
+`gInputCtrlStateFuncs` (`_9InputCtrl.stateFuncs`). Two C idioms stay: the
+three in-class inline helpers (`QueueNowX`/`QueueNowY`/`SetLeadSpeed`,
+which compute the value before the stores like the C's static inlines),
+and `HandleEvent`'s `s32 lo = 1` lower bound (a literal 1 folds into one
+unsigned range check).
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
 class in a `.hpp` header and keeps its C struct in the C header for the
 C files: `Ctrl`/`struct ctrl` (objects.h), `InputCtrl`/`struct
-input_ctrl` and `BossCtrl`/`struct boss_ctrl` (player.h),
+input_ctrl` (input_ctrl.hpp) and `BossCtrl`/`struct boss_ctrl` (player.h),
 `MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h), `SpriteObj`/`struct
 gobj` (gobj_1a794.h). Each class has a `COMPILE_TIME_ASSERT` that its
 size is the C struct's (the `.hpp` includes the C header), and its
@@ -458,10 +482,9 @@ Bigger controllers, roughly in order (function counts from
    `enemy_ctrl_update.c` (`UpdateEnemyCtrl`, `UpdateKnockedEnemyCtrl`;
    old_agbcc). The knocked controller is a plain `Ctrl` subclass with an
    `ENTITY_SET_GONE_BIT_ASR` like `OneShotAnimCtrl::Update`'s.
-2. **The rest of `Ctrl` and `InputCtrl`:** `SetCtrlMode`,
-   `SetCtrlAnimSet`, `SetCtrlTargetMotionY`, `StartCtrlTargetMotionY`
-   are in `src/player/player_flags.c` (with player code), and
-   `src/player/input_ctrl.c` (25 functions).
+2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3. Only
+   `Ctrl::Update` (`UpdateCtrl`, an empty function in `system/boot.c`)
+   is still C.
 3. **The swim controller** (`PlayerCtrl`, `swim_ctrl*.c`) and **the
    action controller** (`ActionCtrl`, `action_ctrl*.c`, 10 files, about
    76 functions and most of the controllers' virtual calls).

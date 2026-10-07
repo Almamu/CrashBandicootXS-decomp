@@ -1035,7 +1035,7 @@
     "ApplyInputCtrlMotion"
    ],
    "consumer_files": [
-    "player/input_ctrl.c"
+    "player/input_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1834,7 +1834,7 @@
     "UpdateInputCtrl"
    ],
    "consumer_files": [
-    "player/input_ctrl.c"
+    "player/input_ctrl.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -7576,7 +7576,7 @@
     "CreateInputCtrl"
    ],
    "consumer_files": [
-    "player/input_ctrl.c"
+    "player/input_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

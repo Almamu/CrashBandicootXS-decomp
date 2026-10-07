@@ -324,7 +324,7 @@ const struct vtable_slot gPlayerCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by input_ctrl.c (DestroyInputCtrl). */
+/* Used by input_ctrl.cpp (DestroyInputCtrl). */
 const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateInputCtrl),

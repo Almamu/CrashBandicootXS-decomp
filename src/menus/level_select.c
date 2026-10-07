@@ -25,7 +25,7 @@
  *
  * - sub_801B85C-GetCameraLeadOffset: `struct follow_child`, the 0x80-byte
  *   object (method table gCameraLeadVtable) InputCtrlStateStart
- *   (input_ctrl.c) spawns for the input controller. It trails the
+ *   (input_ctrl.cpp) spawns for the input controller. It trails the
  *   player (gPlayer) at a horizontal offset that eases 2 px per
  *   frame toward a clamped target, and registers itself as
  *   gCamera's follow target while alive.
@@ -241,7 +241,7 @@ void DestroyCameraLead(struct follow_child *self, s32 flags)
     DestroyMovingSprite((struct actor *)self, flags);
 }
 
-/* Constructor, called from InputCtrlStateStart (input_ctrl.c). */
+/* Constructor, called from InputCtrlStateStart (input_ctrl.cpp). */
 struct follow_child *CreateCameraLead(struct follow_child *self)
 {
     InitMovingSprite((struct actor *)self);

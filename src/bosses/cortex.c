@@ -19,7 +19,7 @@
  * asm/code_3_2_17_188d0.s (details in docs/matching/archive/issue-23-graphics.md).
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
- * family as input_ctrl.c/input_ctrl_queue.cpp/mega_mix.cpp: each class here is a
+ * family as input_ctrl.cpp/input_ctrl_queue.cpp/mega_mix.cpp: each class here is a
  * constructor (base InitCtrl/CreateBossCtrl/CreatePlatformMover, then its own
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one
@@ -254,7 +254,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
 
 /* "Mark part gone": set flags bit 0, then unless its id is 0xFFFF set the
  * id's bit in the gEntityFlags+0x108 bitmap - the same sequence as
- * MarkEntityGone (graphics.c) and InputCtrlStateDead (input_ctrl.c), inlined.
+ * MarkEntityGone (graphics.c) and InputCtrlStateDead (input_ctrl.cpp), inlined.
  * The id is re-read (`volatile`) after the 0xFFFF test, and the word index
  * is a *signed* division of that zero-extended value, which is what gives
  * the ROM's copy + `asr #5` + subtract. The register pins are

@@ -32,7 +32,6 @@ struct crate;
 struct gobj;
 struct follow_child;
 struct input_ctrl;
-struct pctrl_motion_queue;
 struct player_ctrl;
 
 /* The swim controller's turn: speedX at each frame of the turn animation
@@ -144,7 +143,7 @@ struct player_vtable {
  * same 0x80-byte base as gobj_1a794.h's `struct gobj`, whose names it
  * keeps) with the player's own fields after it. PlayRoom builds it in a
  * 0x350-byte block (InitPlayer); its method table is gPlayerVtable. The
- * names past 0x80 come from the accessors in player_flags.c. Only the
+ * names past 0x80 come from the accessors in player_flags.cpp. Only the
  * fields the code reads are named. */
 struct player {
     s32 x;   // 0x00 - Q8
@@ -260,43 +259,25 @@ COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
  * (action_obj.h) and the swim controller `struct player_ctrl`
  * (player_ctrl.h); the input and boss controllers are below. */
 
-/* The input controller's method table (gInputCtrlVtable), as its calls
- * read it. */
-struct ctrl_vtable {
-    u8 unk_00[0x20];
-    struct actor_method setMode;      // 0x20 - SetCtrlMode
-    struct actor_method startMotionX; // 0x28 - StartCtrlTargetMotionX
-    struct actor_method startMotionY; // 0x30 - StartCtrlTargetMotionY
-    struct actor_method setMotionX;   // 0x38 - SetCtrlTargetMotionX
-    struct actor_method setMotionY;   // 0x40 - SetCtrlTargetMotionY
-    u8 unk_48[8];
-    struct actor_method setAnim; // 0x50 - SetCtrlTargetAnim
-};
-
-struct anim_pair {
-    u32 a;
-    u32 b;
-};
-
-/* The input controller (gInputCtrlVtable, src/player/input_ctrl.c and
+/* The input controller (gInputCtrlVtable, src/player/input_ctrl.cpp and
  * input_ctrl_queue.cpp): the player's controller in the rooms where the
- * player is moved by the input alone. The C view of include/ctrl.hpp's
- * class InputCtrl, which keeps the same layout (checked there). */
+ * player is moved by the input alone. The C view of
+ * include/input_ctrl.hpp's class InputCtrl, which keeps the same layout
+ * (checked there). Its code is all C++; the C files only pass it around
+ * (play_room.c creates it). */
 struct input_ctrl {
     u8 unk_00[4];
-    struct {
-        struct anim_pair *entries;
-    } *animSet;                 // 0x04
-    s32 state;                  // 0x08
-    struct ctrl_vtable *vtable; // 0x0C
-    struct player *target;      // 0x10
-    u8 motionX;                 // 0x14 - queued X motion entry (animSet->entries[].a)
-    u8 motionY;                 // 0x15 - queued Y motion entry (animSet->entries[].b)
-    u8 dirState;                // 0x16
-    u8 motionXPending;          // 0x17 - ApplyInputCtrlMotion applies motionX
-    u8 motionYPending;          // 0x18 - ApplyInputCtrlMotion applies motionY
-    u8 motionXKeepSpeed;        // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed;        // 0x1A - the same for Y
+    const struct entry_set *animSet;  // 0x04
+    s32 state;                        // 0x08
+    const struct vtable_slot *vtable; // 0x0C - gInputCtrlVtable
+    struct player *target;            // 0x10
+    u8 motionX;                       // 0x14 - queued X motion entry (animSet->entries[][0])
+    u8 motionY;                       // 0x15 - queued Y motion entry (animSet->entries[][1])
+    u8 dirState;                      // 0x16
+    u8 motionXPending;                // 0x17 - ApplyInputCtrlMotion applies motionX
+    u8 motionYPending;                // 0x18 - ApplyInputCtrlMotion applies motionY
+    u8 motionXKeepSpeed; // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
+    u8 motionYKeepSpeed; // 0x1A - the same for Y
     u8 unk_1B;
     struct follow_child *cameraLead; // 0x1C - CreateCameraLead's object (camera_lead.h)
     u8 flag20;                       // 0x20
@@ -461,13 +442,16 @@ extern void UpdateActionCtrl(struct act *self);
 extern u8 TryActionCtrlDoubleJump(struct act *self);
 extern void HandleActionCtrlAirInput(struct act *self);
 
-/* src/player/input_ctrl.c */
-extern void ClearPlayerCtrlMotionYPending(struct pctrl_motion_queue *self);
-extern void ClearPlayerCtrlMotionXPending(struct pctrl_motion_queue *self);
-extern u8 IsPlayerCtrlMotionYPending(struct pctrl_motion_queue *self);
-extern u8 IsPlayerCtrlMotionXPending(struct pctrl_motion_queue *self);
-extern void QueuePlayerCtrlMotionY(struct pctrl_motion_queue *self, u8 value);
-extern void QueuePlayerCtrlMotionX(struct pctrl_motion_queue *self, u8 value);
+/* src/player/input_ctrl.cpp: the swim controller's motion queue
+ * accessors (C functions), then InputCtrl's methods
+ * (include/input_ctrl.hpp) under their C names (cxx_symbols.txt), for the
+ * vtable, the state table and the C callers. */
+extern void ClearPlayerCtrlMotionYPending(struct player_ctrl *self);
+extern void ClearPlayerCtrlMotionXPending(struct player_ctrl *self);
+extern u8 IsPlayerCtrlMotionYPending(struct player_ctrl *self);
+extern u8 IsPlayerCtrlMotionXPending(struct player_ctrl *self);
+extern void QueuePlayerCtrlMotionY(struct player_ctrl *self, u8 value);
+extern void QueuePlayerCtrlMotionX(struct player_ctrl *self, u8 value);
 extern void InputCtrlKillPlayer(struct input_ctrl *self, void *arg);
 extern void InputCtrlStateStart(struct input_ctrl *self);
 extern void UpdateInputCtrl(struct input_ctrl *self);
@@ -490,7 +474,7 @@ extern void CancelInputCtrlMotionX(struct input_ctrl *self);
 extern u8 IsInputCtrlMotionYPending(struct input_ctrl *self);
 
 /* src/player/input_ctrl_queue.cpp: InputCtrl's and BossCtrl's methods
- * (include/ctrl.hpp)
+ * (include/input_ctrl.hpp, include/ctrl.hpp)
  * under their C names (cxx_symbols.txt), for the vtables and the C
  * callers. */
 extern u8 IsInputCtrlMotionXPending(struct input_ctrl *self);
@@ -519,7 +503,7 @@ extern void CollidePlayerWithObjects(struct player *self);
 extern void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c);
 extern void DrawPlayer(struct player *self);
 
-/* src/player/player_flags.c */
+/* src/player/player_flags.cpp */
 extern struct collision_queue *GetPlayerCollisionQueue(struct player *self);
 extern void ClearPlayerDead(struct player *self);
 extern void SetPlayerDead(struct player *self);
@@ -560,6 +544,8 @@ extern u8 IsPlayerSlippery(struct player *self);
 extern void SetPlayerSlippery(struct player *self, u8 arg1);
 extern s32 GetPlayerListEntry(struct player *self, s32 idx);
 extern void StorePlayerListEntry(struct player *self, s32 val);
+/* Ctrl's methods (include/ctrl.hpp) under their C names
+ * (cxx_symbols.txt), for the vtables and the C callers. */
 extern void SetCtrlMode(void *self, s32 val);
 extern void SetCtrlAnimSet(void *self, s32 val);
 extern void SetCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);

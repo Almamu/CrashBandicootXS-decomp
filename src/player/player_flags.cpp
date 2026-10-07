@@ -1,14 +1,23 @@
-#include "core.h"
+#include "ctrl.hpp"
+#include "sprite_obj.hpp"
+
+extern "C" {
 #include "match.h"
 #include "actor.h"
-#include "gobj_1a794.h"
-#include "player.h"
 #include "globals.h"
+}
 
-/* The player object's accessors (`struct player`, player.h), then the
- * controllers' setters (SetCtrlMode/SetCtrlAnimSet) and the motion
- * setters that act on a controller's target, a moving sprite (`struct
- * gobj`, gobj_1a794.h: the player, a platform or a boss part). */
+/* The player object's accessors (`struct player`, player.h), then four
+ * of the controller base class's methods (Ctrl, include/ctrl.hpp; the
+ * rest are in src/objects/ctrl.cpp): the SetMode/SetAnimSet setters and
+ * the Y motion setters, which act on a controller's target, a moving
+ * sprite object (the player, a platform or a boss part).
+ *
+ * The file is C++ for the Ctrl methods (#664, docs/cplusplus.md); the
+ * player's accessors are plain functions with C linkage (their
+ * prototypes, in player.h, are C declarations). As C, the two motion
+ * setters needed 8 register pins each to load the ramp in the ROM's
+ * order; as C++, with the values in locals, they need none. */
 
 /* `collisionQueue` (+0x108) address getter. */
 struct collision_queue *GetPlayerCollisionQueue(struct player *self)
@@ -243,7 +252,9 @@ void SetPlayerSlippery(struct player *self, u8 arg1)
 
 /* Indexed getter into `list` (+0x98, the recently touched crates), gated by
  * `ctrlMode` and (for `idx > 4`) `listCount`; the same test
- * QueueCratePlayerCollision makes inline. UNUSED. */
+ * QueueCratePlayerCollision makes inline. UNUSED. Still pinned: unpinned
+ * (`if (ctrlMode == 0 && (idx <= 4 || idx < listCount))`), agbcp swaps
+ * the address computation's r0 and r1. */
 s32 GetPlayerListEntry(struct player *self, s32 idx)
 {
     s32 result;
@@ -273,101 +284,77 @@ end:
 
 /* Stores `val` into `list` at index `listCount` (the next free slot,
  * without counting it), gated by `ctrlMode` and the index staying `<= 4`.
- * UNUSED. */
-void StorePlayerListEntry(struct player *selfArg, s32 val)
+ * UNUSED. The C needed 6 register pins; built by agbcp, the plain code
+ * matches. */
+void StorePlayerListEntry(struct player *self, s32 val)
 {
-    MATCH_HOLD_REG(struct player *, self, r2) = selfArg;
-    MATCH_HOLD_REG(s32, val3, r3) = val;
-
     if (self->ctrlMode == 0) {
-        MATCH_HOLD_REG(u8 *, p94, r0) = &self->listCount;
-        MATCH_HOLD_REG(u32, idx, r1) = *p94;
+        u32 idx = self->listCount;
 
-        if (idx <= 4) {
-            MATCH_HOLD_REG(u8 *, arr, r0);
-            MATCH_HOLD_REG(s32, offset, r1);
-
-            offset = idx << 2;
-            arr = p94 + 4; /* &self->list[0] */
-            arr = arr + offset;
-            *(s32 *)arr = val3;
-        }
+        if (idx <= 4)
+            self->list[idx] = (struct crate *)val;
     }
 }
 
-/* The controller base's `state`/`animSet` setters (struct ctrl). */
-void SetCtrlMode(void *selfArg, s32 val)
+/* `state` setter (slot 4). */
+void Ctrl::SetMode(s32 mode)
 {
-    struct ctrl *self = selfArg;
-    self->state = val;
+    state = mode;
 }
 
-void SetCtrlAnimSet(void *selfArg, s32 val)
+/* `animSet` setter: the motion entry set the ...FromSet methods index
+ * (play_room.c sets each room kind's). */
+void Ctrl::SetAnimSet(const struct entry_set *set)
 {
-    struct ctrl *self = selfArg;
-    self->animSet = (const struct entry_set *)val;
+    animSet = set;
 }
 
-/* Copies `ramp` into `self+0x54`/`self+0x58`/`self+0x5c`, negating the
- * X and Z components when `self+0x28` bit 5 is set (a mirror-flag
- * bit, matching the same encoding convention used throughout this
- * ROM for X/Z axis flips). Matched with `self`/`vec` pinned to
- * `r3`/`r2` (avoiding the callee-saved spill three earlier attempts
- * hit - see docs/matching.md's now-stale note and
- * asm/code_3_2_18.s's former guard) plus each branch's X/Y/Z locals
- * pinned to their own ABI registers in the ROM's actual load order:
- * X, then Z, then Y last in the negated branch (`v[1]`'s load is what
- * finally overwrites `v`'s own register, so it has to come after `Z`'s
- * load, not before it, even though the source lists them X/Y/Z). */
-void SetCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp *ramp)
+/* Copies `ramp` into `part`'s Y speed ramp (`rampY`; the speed is kept),
+ * negating the start and the target when `part` is Y-mirrored (`mirror`
+ * bit 5). The negated branch loads the target before the step. */
+void Ctrl::SetTargetMotionY(SpriteObj *part, const speed_ramp *ramp)
 {
-    MATCH_HOLD_REG(struct gobj *, self, r3) = selfArg;
-    MATCH_HOLD_REG(const s32 *, v, r2) = (const s32 *)ramp;
+    if ((s32)(part->mirror << 26) < 0) {
+        s32 x = -ramp->start;
+        s32 z = -ramp->target;
+        s32 y = ramp->step;
 
-    if ((s8)(self->mirror << 2) < 0) {
-        MATCH_HOLD_REG(s32, x, r0) = -v[0];
-        MATCH_HOLD_REG(s32, z, r1) = -v[2];
-        MATCH_HOLD_REG(s32, y, r2) = v[1];
-
-        self->rampY.start = x;
-        self->rampY.step = y;
-        self->rampY.target = z;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     } else {
-        MATCH_HOLD_REG(s32, x, r0) = v[0];
-        MATCH_HOLD_REG(s32, y, r1) = v[1];
-        MATCH_HOLD_REG(s32, z, r2) = v[2];
+        s32 x = ramp->start;
+        s32 y = ramp->step;
+        s32 z = ramp->target;
 
-        self->rampY.start = x;
-        self->rampY.step = y;
-        self->rampY.target = z;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     }
 }
 
-/* Same mirror-flag-gated copy as `SetCtrlTargetMotionY`, also duplicating the
- * (possibly negated) X component into `self+0x64`. Matched the same
- * way. */
-void StartCtrlTargetMotionY(void *unused, void *selfArg, const struct speed_ramp *ramp)
+/* The same, also starting `speedY` at the (possibly negated) start: the
+ * plain-copy counterpart of StartTargetMotionX (ctrl.cpp), which scales
+ * the record by the entry set's `scale`. */
+void Ctrl::StartTargetMotionY(SpriteObj *part, const speed_ramp *ramp)
 {
-    MATCH_HOLD_REG(struct gobj *, self, r3) = selfArg;
-    MATCH_HOLD_REG(const s32 *, v, r2) = (const s32 *)ramp;
+    if ((s32)(part->mirror << 26) < 0) {
+        s32 x = -ramp->start;
+        s32 z = -ramp->target;
+        s32 y = ramp->step;
 
-    if ((s8)(self->mirror << 2) < 0) {
-        MATCH_HOLD_REG(s32, x, r0) = -v[0];
-        MATCH_HOLD_REG(s32, z, r1) = -v[2];
-        MATCH_HOLD_REG(s32, y, r2) = v[1];
-
-        self->speedY = x;
-        self->rampY.start = x;
-        self->rampY.step = y;
-        self->rampY.target = z;
+        part->speedY = x;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     } else {
-        MATCH_HOLD_REG(s32, x, r0) = v[0];
-        MATCH_HOLD_REG(s32, y, r1) = v[1];
-        MATCH_HOLD_REG(s32, z, r2) = v[2];
+        s32 x = ramp->start;
+        s32 y = ramp->step;
+        s32 z = ramp->target;
 
-        self->speedY = x;
-        self->rampY.start = x;
-        self->rampY.step = y;
-        self->rampY.target = z;
+        part->speedY = x;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     }
 }
