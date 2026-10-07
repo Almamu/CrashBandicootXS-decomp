@@ -213,7 +213,6 @@ the expression out or adding another file-local copy:
 | `math_util.h` | `ANIM_REWIND(animTime, rec)` | the animation loop rewind `animTime -= INT_TO_Q8(rec.loopThreshold - rec.loopBase)` |
 | `math_util.h` | `SIN_Q8(angle)`, `COS_Q8(angle)` | `gSineTable[angle & 0xFF]` and the quarter-turn `+ 0x40` cosine |
 | `entity_bits.h` | `ENTITY_ID_NONE`, `ENTITY_SET_GONE_BIT(_OF)`, `ENTITY_MARK_GONE` | MarkEntityGone's "gone" bitmap set, inlined |
-| `entity_bits.h` | `ENTITY_SET_GONE_BIT_PINNED` | the same with the register pins several files share |
 
 Macros that several files used to define for themselves now live in the
 header that owns their type:
@@ -255,9 +254,9 @@ each copy says so.
   codegen (other register pins, a `match.h` idiom inside the sequence,
   another wrapper) keeps its spelled-out form and says which helper it
   would be and why it isn't. When several files share the same
-  variant, it becomes a helper of its own (`ENTITY_SET_GONE_BIT_PINNED`
-  takes its registers as bare names, `r2`, and passes them to
-  `MATCH_HOLD_REG`).
+  variant, it becomes a helper of its own, which takes its registers as
+  bare names (`r2`) and passes them to `MATCH_HOLD_REG` (cortex.c's
+  `ENTITY_SET_GONE_BIT_PINNED` was one, until cortex.c became C++).
 - **Naming:** a helper is named after what it does, upper case:
   `<FORMAT>_TO_<FORMAT>` for conversions, a verb for statements
   (`LIMIT_MAX`, `ENTITY_MARK_GONE`). A subsystem's own helper gets the

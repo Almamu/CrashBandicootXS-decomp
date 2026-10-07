@@ -13,7 +13,7 @@
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
 
-/* An OAM-backed part (same layout as cortex.c's gfx_part). */
+/* An OAM-backed part (same layout as gfx_part.h's gfx_part). */
 struct slot_part {
     struct actor base; // 0x00
     u8 unk_1C[4];

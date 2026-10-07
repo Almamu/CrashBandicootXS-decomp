@@ -10,10 +10,11 @@
  * data tables.
  *
  * Declarations here are the functions' real prototypes, copied from
- * their definitions. Many take a file-local view of their object (`struct
- * gfx_mover`, `struct gfx_pair_ctrl`, ...), declared here only by tag. A .c
- * file that needs a different local declaration for codegen keeps it as
- * an asm-label alias with a `codegen:` comment (docs/headers_plan.md). */
+ * their definitions; the methods of the C++ files (include/boss_ctrl.hpp)
+ * take `void *`. Some take a file-local view of their object, declared
+ * here only by tag. A .c file that needs a different local declaration
+ * for codegen keeps it as an asm-label alias with a `codegen:` comment
+ * (docs/headers_plan.md). */
 
 #include "core.h"
 #include "actor.h"
@@ -58,24 +59,6 @@ struct cannon_flash {
     struct actor_self base;
     s32 hp;         // 0x54
     u8 unshootable; // 0x58
-};
-
-/* The method table of the InitCtrl-based controllers (ctrl.cpp) of
- * cortex.c, as its calls read it. */
-struct gfx_vtable {
-    u8 unk_00[0x18];
-    struct actor_method method_18; // 0x18 - "attach to part"
-    struct actor_method method_20; // 0x20 - "set state"
-    u8 unk_28[0x28];
-    struct actor_method method_50; // 0x50 - SetCtrlTargetAnim
-};
-
-/* Those controllers' base: objects.h's `struct ctrl` (InitCtrl/
- * DestroyCtrl), with the method table typed as their calls read it. */
-struct gfx_ctrl {
-    u8 unk_00[8];
-    s32 state;                 // 0x08
-    struct gfx_vtable *vtable; // 0x0C
 };
 
 /* The Mega Mix controller (CreateMegaMixCtrl, vtable gMegaMixCtrlVtable):
@@ -126,13 +109,6 @@ struct hovercraft_attack {
  * .c files that use them). */
 struct anim_box;
 struct entry_set;
-struct gfx_hit_ctrl;
-struct gfx_kind_ctrl;
-struct gfx_mover;
-struct gfx_offset_ctrl;
-struct gfx_pair_ctrl;
-struct gfx_part;
-struct gfx_squares;
 struct gobj;
 
 /* src/actor/actor_anim.c */
@@ -186,38 +162,43 @@ extern void AirshipStateCannon(void);
 /* src/bosses/airship_touch.c */
 extern u8 IsTouchingAirship(void *self);
 
-/* src/bosses/cortex.c */
-extern void *CreateOneShotAnimCtrl(struct gfx_ctrl *self);
-extern void DestroyOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags);
-extern void UpdateUnusedOneShotAnimCtrl(struct gfx_ctrl *self, struct gfx_part *part);
-extern void *CreateUnusedOneShotAnimCtrl(struct gfx_ctrl *self);
-extern void DestroyUnusedOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags);
+/* src/bosses/cortex.cpp: the methods of OneShotAnimCtrl (include/ctrl.hpp),
+ * UnusedOneShotAnimCtrl, TinyCtrl, CortexBossCtrl, CortexTargetCtrl,
+ * CortexShotCtrl, CortexBossGemCtrl (include/boss_ctrl.hpp) and
+ * CortexBossPlatformMover (include/platform.hpp) under their C names
+ * (cxx_symbols.txt), for the vtables and the C callers (spawn_bosses.c,
+ * spawn_gems.c). nullsub_19 and SpawnCortexBossGem have C linkage. */
+extern void *CreateOneShotAnimCtrl(void *self);
+extern void DestroyOneShotAnimCtrl(void *self, s32 flags);
+extern void UpdateUnusedOneShotAnimCtrl(void *self, void *part);
+extern void *CreateUnusedOneShotAnimCtrl(void *self);
+extern void DestroyUnusedOneShotAnimCtrl(void *self, s32 flags);
 extern void nullsub_19(void *self, void *part);
-extern void StartTinyHop(struct gfx_offset_ctrl *self, struct gfx_part *part);
-extern void DestroyTiny(struct gfx_squares *self, s32 flags);
-extern void *CreateTiny(struct gfx_squares *self);
-extern void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part);
-extern void SpawnCortexCannon(struct gfx_pair_ctrl *self, struct gfx_part *part);
-extern void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part);
+extern void StartTinyHop(void *self, void *part);
+extern void DestroyTiny(void *self, s32 flags);
+extern void *CreateTiny(void *self);
+extern void UpdateCortexBoss(void *self, void *part);
+extern void SpawnCortexCannon(void *self, void *part);
+extern void SpawnCortexTarget(void *self, void *part);
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
-extern void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *part);
-extern void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mode);
-extern void FireCortexShot(struct gfx_mover *self, struct gfx_part *part, s32 kind);
-extern void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *part);
-extern void UpdateCortexBossPlatformMover(struct gfx_ctrl *self, struct gfx_part *part);
-extern void UpdateCortexBossGem(struct gfx_kind_ctrl *self, struct gfx_part *part);
-extern void DestroyCortexBossGemCtrl(struct gfx_ctrl *self, s32 flags);
+extern void UpdateCortexTarget(void *self, void *part);
+extern void SetCortexTargetState(void *self, void *part, s32 mode);
+extern void FireCortexShot(void *self, void *part, s32 kind);
+extern void UpdateCortexShot(void *self, void *part);
+extern void UpdateCortexBossPlatformMover(void *self, void *part);
+extern void UpdateCortexBossGem(void *self, void *part);
+extern void DestroyCortexBossGemCtrl(void *self, s32 flags);
 extern void *CreateCortexBossGemCtrl(void *self, s32 kind);
-extern void DestroyCortexBossPlatformMover(struct gfx_ctrl *self, s32 flags);
-extern void *CreateCortexBossPlatformMover(struct gfx_ctrl *self);
-extern void DestroyCortexShotCtrl(struct gfx_ctrl *self, s32 flags);
-extern void *CreateCortexShotCtrl(void *self, void *cfg);
+extern void DestroyCortexBossPlatformMover(void *self, s32 flags);
+extern void *CreateCortexBossPlatformMover(void *self);
+extern void DestroyCortexShotCtrl(void *self, s32 flags);
+extern void *CreateCortexShotCtrl(void *self, void *boss);
 
 /* src/bosses/dingodile.cpp and dingodile_create.cpp: the methods of
  * CortexTargetCtrl, CortexCannonCtrl, CortexBossCtrl, DingodileCtrl,
  * DingodileShieldCtrl, DingodileProjectileCtrl and DingodileSharkCtrl
  * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
- * vtables and the C callers (cortex.c, spawn_bosses.c). */
+ * vtables and the C callers (spawn_bosses.c). */
 extern void SetCortexPlatformsKind(void *self, u8 flag);
 extern void SetCortexTargetDest(void *self, void *part, s32 x, s32 y);
 extern void DestroyCortexTargetCtrl(void *self, s32 flags);

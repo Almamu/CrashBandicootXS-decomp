@@ -184,10 +184,22 @@ public:
     }
 
     /* MarkEntityGone: the `gone` flag, and unless the id is
-     * ENTITY_ID_NONE, its bit in the bitmap. */
+     * ENTITY_ID_NONE, its bit in the bitmap (gEntityFlags->bits0Copy).
+     * The same code as entity_bits.h's ENTITY_MARK_GONE everywhere, but
+     * with the bitmap indexed rather than addressed by byte offset: every
+     * object compiles the same either way, and this one also gives
+     * cortex.cpp's gem and shot updates the ROM's register allocation
+     * (part 7i). */
     void MarkGone()
     {
-        ENTITY_MARK_GONE(f.b.gone, id);
+        f.b.gone = 1;
+        if (id != ENTITY_ID_NONE) {
+            s32 i = id;
+            struct entity_flags *flags = gEntityFlags;
+            s32 word = i / 32;
+
+            flags->bits0Copy[word] |= 1 << (i - word * 32);
+        }
     }
 
     void ClearGone()

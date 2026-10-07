@@ -17,7 +17,7 @@
 #include "level.h"
 #include "globals.h"
 
-/* The sprite part CreateMovingSprite returns. Same layout as cortex.c's
+/* The sprite part CreateMovingSprite returns. Same layout as gfx_part.h's
  * `struct gfx_part`. The +0x28 bits are declared on a 32-bit base type:
  * with `u8` bitfields the shared `1` constant is a QImode pseudo that CSE
  * merges with `kind = 1`, and the allocator no longer matches. */

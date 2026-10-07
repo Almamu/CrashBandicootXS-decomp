@@ -1,7 +1,6 @@
 #ifndef GUARD_GOBJ_1A794_H
 #define GUARD_GOBJ_1A794_H
 
-#include "mover_new.h"
 #include <libgcc.h>
 #include "util.h"
 #include "crates.h"
@@ -16,7 +15,7 @@
 
 /* The C views of the platforms (GitHub issue #25, ROM
  * 0x0801A794-0x0801B85C), shared by the C files that still use them (the
- * player, the crates, cortex.c, the vtable data) and by
+ * player, the crates, the vtable data) and by
  * src/bosses/dingodile_create.cpp. The platforms are C++ now:
  * include/platform.hpp's `Platform` and `PlatformMover`
  * (src/objects/platform*.cpp) are the definitions, and check their sizes
@@ -34,8 +33,8 @@
  *   view of PlatformMover) that oscillates its owner back and forth over
  *   `rangeX`/`rangeY` pixels using the 12-byte velocity records of
  *   gPlatformMoverMotionRecords, and drags the player along while it is
- *   `active` (MovePlayerWithPlatform). cortex.c's Neo Cortex platform mover
- *   is built on it. */
+ *   `active` (MovePlayerWithPlatform). The Neo Cortex fight's platform
+ *   mover, platform.hpp's CortexBossPlatformMover, is a subclass. */
 
 struct vec_pair {
     u32 a;

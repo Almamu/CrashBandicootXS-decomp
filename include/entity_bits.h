@@ -31,7 +31,9 @@
  * Copies that are still spelled out, each with a comment saying why:
  * graphics.cpp's MarkEntityGone itself and
  * crate_break.cpp (other asm/pins or wrapper), and enemy_ctrl_update.cpp's
- * MarkGoneFreshBit (a MATCH_CONST inside the sequence). */
+ * MarkGoneFreshBit (a MATCH_CONST inside the sequence). The C++ classes
+ * use Entity::MarkGone (include/entity.hpp), the same code with the
+ * bitmap indexed. */
 
 /* An entity id that has no bit in the bitmaps (actor.h's `id`). */
 #define ENTITY_ID_NONE 0xFFFF
@@ -64,44 +66,5 @@
         if ((id) != ENTITY_ID_NONE)                                            \
             ENTITY_SET_GONE_BIT(id);                                           \
     }
-
-/* The register-pinned copy (cortex.c's three): unless
- * `t->id` is ENTITY_ID_NONE, sets its bit in the bitmap. The ROM tests
- * the id in a register of its own (R_CUR) against an r0 0xFFFF, re-reads
- * it (`volatile`) into r3 after the test, and divides that zero-extended
- * value *signed* (r0: copy, `asr #5`, subtract); the bitmap base is in
- * R_BASE. R_CUR and R_BASE are bare register names (r2), as for
- * MATCH_HOLD_REG: the pins differ per site and are load-bearing
- * (docs/matching_techniques.md, "Register pins"). */
-#define ENTITY_SET_GONE_BIT_PINNED(t, R_CUR, R_BASE)                           \
-    ENTITY_SET_GONE_BIT_PINNED_SLOT(t, R_CUR, R_BASE, ENTITY_GONE_SLOT)
-
-/* The statement that points `slot` at the bitmap, for
- * ENTITY_SET_GONE_BIT_PINNED_SLOT: a site that needs the 0x108 offset
- * in a register of its own passes its own (cortex.c's GONE_SLOT_R4). */
-#define ENTITY_GONE_SLOT(slot, base) slot = (u32 *)((base) + 0x108)
-
-#define ENTITY_SET_GONE_BIT_PINNED_SLOT(t, R_CUR, R_BASE, SLOT_STMT)           \
-    do {                                                                       \
-        {                                                                      \
-            MATCH_HOLD_REG(s32, _none, r0) = ENTITY_ID_NONE;                   \
-            MATCH_HOLD_REG(u32, _cur, R_CUR) = (t)->id;                        \
-                                                                               \
-            if (_cur != _none) {                                               \
-                MATCH_HOLD_REG(s32, _id, r3) = *(vu16 *)&(t)->id;              \
-                MATCH_HOLD_REG(u8 *, _base, R_BASE) = (u8 *)gEntityFlags;      \
-                MATCH_HOLD_REG(s32, _word, r0) = _id;                          \
-                s32 _off;                                                      \
-                u32 *_slot;                                                    \
-                                                                               \
-                _word /= 32;                                                   \
-                _off = _word * 4;                                              \
-                SLOT_STMT(_slot, _base);                                       \
-                _slot = (u32 *)((u8 *)_slot + _off);                           \
-                _word = _id - _word * 32;                                      \
-                *_slot |= 1 << _word;                                          \
-            }                                                                  \
-        }                                                                      \
-    } while (0)
 
 #endif // GUARD_ENTITY_BITS_H

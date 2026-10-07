@@ -18,7 +18,7 @@
  *   second (0x2B) effect through SpawnEffectPart.
  * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask GetBossIndex whether
  *   the level is in mode 1, and if so hand over to SpawnCortexBossGem
- *   (cortex.c) with kind 0/1/2 instead; otherwise they test
+ *   (cortex.cpp) with kind 0/1/2 instead; otherwise they test
  *   bits 0/2/1 of gLevelState+2.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the ROM materializes
