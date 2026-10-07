@@ -7,7 +7,7 @@
 
 /* The crate (CreateCrate, gCrateVtable): the object the issue #12
  * "physics/collision" cluster (ROM 0x0800D040-0x0800FC70,
- * src/crates/crate_hit.cpp/crate_break.c) turned out to be. `kind`
+ * src/crates/crate_hit.cpp/crate_break.cpp) turned out to be. `kind`
  * is the crate type CreateCrate picks (CRATE_KIND_*, constants/crates.h,
  * generated from data/levels/crate_kinds.json). Only the fields those functions touch are named;
  * the head (position, flags, anim table/tag, mirror bits) has the same
@@ -16,42 +16,7 @@
  * `struct crate` is the C view of the `Crate` class (include/crate.hpp,
  * #664), for the files that are still C; crate.hpp checks that the sizes
  * agree. */
-struct crate_vtable {
-    u8 unk_00[0x10];
-    // 0x10 - slot 2, the hitbox record (GetSpriteObjHitbox; IsCrateInsideRect)
-    struct actor_method m10;
-    struct actor_method m18; // 0x18 - slot 3, the per-frame update (UpdateCrate)
-    u8 unk_20[0x28];
-    struct actor_method m48; // 0x48 - returns the object's class id (3: box)
-    struct actor_method m50; // 0x50
-    u8 unk_58[8];
-    struct actor_method m60; // 0x60
-    struct actor_method m68; // 0x68
-};
-
 struct crate;
-
-/* UpdateSlotCrate's view of crate.u48: this compiler pads the struct to a
- * word, so a copy of it lives in one register and its bitfields are
- * updated with word-sized masks. */
-struct phys_b48 {
-    u8 phase:3; // face 0-3; bit 2: the spin has started
-    u8 spins:3; // full turns left at this stage
-    u8 stage:2; // 0 idle, 1-3 faster each time (gSlotCrateTimers); past 3 it turns to iron
-};
-
-
-/* Bit view of crate.flags (a separate struct: this compiler pads
- * every struct to a word, so it can't be embedded). */
-struct phys_flag_bits {
-    u8 gone:1; // removed (see MarkEntityGone)
-    u8 unk_1:3;
-    u8 bit4:1; // set by BreakCrate (also `flags |= 0x10` elsewhere)
-    u8 unk_5:3;
-};
-
-#define PHYS_GONE(obj) (((struct phys_flag_bits *)&(obj)->flags)->gone)
-#define PHYS_FLAG4(obj) (((struct phys_flag_bits *)&(obj)->flags)->bit4)
 
 /* A group of objects that trigger together (ActivateIronSwitchCrate builds it). */
 struct crate_group {
@@ -67,9 +32,9 @@ struct crate {
     s32 y;  // 0x04
     u16 id; // 0x08 - 0xffff: none
     u8 unk_0A[2];
-    u8 flags; // 0x0C - bit 0: removed, see PHYS_GONE
+    u8 flags; // 0x0C - bit 0: removed (Entity's `gone`)
     u8 unk_0D[0xB];
-    struct crate_vtable *vtable; // 0x18
+    const struct vtable_slot *vtable; // 0x18 - gCrateVtable
     u8 unk_1C[4];
     struct anim_table *anim; // 0x20
     u8 unk_24[4];
@@ -101,12 +66,11 @@ struct crate {
                          //   counted down by UpdateCrate (BounceWumpaCrate)
         s32 slotState;   // 15 (slot): bits 0-2 phase (face 0-3, bit 2 started), 3-5 spins
                          //   left at this stage, 6-7 stage (gSlotCrateTimers index; 0 idle);
-                         //   see struct phys_b48, UpdateSlotCrate and CRATE_SLOT_*
+                         //   see UpdateSlotCrate and CRATE_SLOT_*
         s32 pressed;     // 6 (nitro switch): set once ActivateNitroSwitchCrate has fired
         s32 blastState;  // explosive kinds: 1 once it has fallen far enough to explode on
                          //   landing (DropCratesAbove/UpdateCrateFall), 0xFF once it has
                          //   blasted (BlastNearbyCrates)
-        struct phys_b48 b;
     } u48;
     s8 fallSpeed; // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron switch
                   //        instead keeps its step delay here (placement byte 8, reloaded
@@ -145,9 +109,10 @@ struct crate {
 #define CRATE_STATE_BUSY 0x80
 
 /* crate.u48.slotState (slot crates), as UpdateSlotCrate and the slot_crate.cpp
- * accessors read the raw word. The fields mirror struct phys_b48's
- * bitfields: `phase` (bits 0-2), `spins` (3-5) and `stage` (6-7). The
- * CLEAR_ masks keep the other two fields. */
+ * accessors read the raw word: `phase` (bits 0-2; bit 2: the spin has
+ * started), `spins` (3-5, full turns left at this stage) and `stage` (6-7,
+ * 0 idle, 1-3 faster each time, gSlotCrateTimers; past 3 it turns to
+ * iron). The CLEAR_ masks keep the other two fields. */
 #define CRATE_SLOT_PHASE_MASK    7
 #define CRATE_SLOT_PHASE_STARTED 4 // phase bit 2: the spin has started
 #define CRATE_SLOT_SPINS_MASK    0x38
@@ -186,51 +151,5 @@ struct crate_placement {
 /* crate_placement.options bit 0: an assisted "?" or slot crate becomes a
  * life crate (after the two flags above). */
 #define CRATE_PLACEMENT_OPTION_ASSIST_LIFE 1
-
-typedef s32 (*phys_method_fn)(void *self);
-
-/* Calls method `m` (a gcc 2.x {s16 thisOffset; fn} vtable slot) on `obj`. */
-static inline s32 PhysCall(void *obj, struct actor_method *m)
-{
-    return ((phys_method_fn)m->fn)((u8 *)obj + m->thisOffset);
-}
-#define PHYS_CALL(obj, m) PhysCall((obj), &(obj)->vtable->m)
-
-typedef void (*phys_method1_fn)(void *self, s32 arg);
-
-static inline void PhysCall1(void *obj, struct actor_method *m, s32 arg)
-{
-    ((phys_method1_fn)m->fn)((u8 *)obj + m->thisOffset, arg);
-}
-#define PHYS_CALL1(obj, m, arg) PhysCall1((obj), &(obj)->vtable->m, (arg))
-
-typedef void (*phys_method3_fn)(void *self, s32 a, s32 b, s32 c);
-
-static inline void PhysCall3(void *obj, struct actor_method *m, s32 a, s32 b, s32 c)
-{
-    ((phys_method3_fn)m->fn)((u8 *)obj + m->thisOffset, a, b, c);
-}
-
-/* Switches `self` to animation tag `tag` and refreshes its sprite - the
- * three-call idiom every state change in this cluster uses. */
-static inline void PhysSetTag(struct crate *self, u8 tag)
-{
-    self->tag = tag;
-    ResetSpriteFrameTimer(self);
-    ResetSpriteFrameIndex(self);
-    SetSpriteAnimDone(self, 0);
-}
-
-/* Sets `frame` to `idx`, clamped to the current tag's frame count. `idx`
- * being a parameter matters: the inlined copy keeps the constant
- * argument in its own register, which the callers' later zero/constant
- * stores reuse (BreakCrate, UpdateCrate). */
-static inline void PhysSetFrame(struct crate *obj, s32 idx)
-{
-    u8 n = obj->anim->records[obj->tag].frames;
-
-    CLAMP_INDEX(idx, n);
-    obj->frame = idx;
-}
 
 #endif // GUARD_CRATE_H

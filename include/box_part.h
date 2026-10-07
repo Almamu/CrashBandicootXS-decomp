@@ -101,8 +101,8 @@ struct box_part {
     u32 hitMask; // 0x74 - probe axes ProbeGroundSpriteTerrain hit this call
 };
 
-/* box_part.flags (the byte at 0x0C every part view shares; crate.h's
- * struct phys_flag_bits is the bitfield view of the same byte). */
+/* box_part.flags (the byte at 0x0C every part view shares; entity.hpp's
+ * `union EntityFlags` is the bitfield view of the same byte). */
 #define PART_FLAG_GONE    1 // removed (MarkEntityGone); the part and crate lists drop it
 #define PART_FLAG_TOUCHED 8 // hit by another object (CollidePartWithObject); IsEntityTouched
 

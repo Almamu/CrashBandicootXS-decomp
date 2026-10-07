@@ -2,16 +2,18 @@
 #define GUARD_PICKUPS_H
 
 /* The pickups subsystem (src/pickups/): the wumpa fruit, the extra life
- * and the time-trial stopwatch. Wumpas and extra lives are `struct
+ * and the time-trial stopwatch, include/pickups.hpp's C++ classes
+ * (#664). For the C files, wumpas and extra lives are `struct
  * orbit_part`s (include/orbit_part.h); the stopwatch is a plain 0x40-byte
- * sprite object.
+ * sprite object. The prototypes below keep the methods' C names
+ * (cxx_symbols.txt), for the C callers and the vtable data.
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * `ResetActionCtrl` (src/pickups/wumpa.c) only shares the file's ROM
+ * `ResetActionCtrl` (src/pickups/wumpa.cpp) only shares the file's ROM
  * range; it is in player.h. */
 
 #include "core.h"
@@ -35,7 +37,7 @@ extern const struct vtable_slot gStopwatchVtable[13];
 extern const s32 gExtraLifeHopWidths[3];
 extern const s32 gWumpaHopWidths[3];
 
-/* src/pickups/extra_life.c */
+/* src/pickups/extra_life.cpp */
 extern void CheckExtraLifePickup(struct orbit_part *self);
 extern void PickUpExtraLife(struct orbit_part *self, u8 randomize);
 extern void UpdateExtraLife(struct orbit_part *self);
@@ -53,7 +55,7 @@ extern void SetExtraLifeHop(struct orbit_part *self, u8 mode);
 extern void SetExtraLifeCounter(struct orbit_part *self, u8 val);
 extern void CheckWumpaPickup(struct orbit_part *self);
 
-/* src/pickups/wumpa_update.c */
+/* src/pickups/wumpa_update.cpp */
 extern void PickUpWumpa(struct orbit_part *self, u8 randomize);
 extern void UpdateWumpa(struct orbit_part *self);
 extern struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special);
@@ -61,7 +63,7 @@ extern void SendWumpaToHud(struct orbit_part *self);
 extern void StartWumpaPayout(struct orbit_part *self);
 extern void UpdateWumpaHop(struct orbit_part *self);
 
-/* src/pickups/wumpa.c */
+/* src/pickups/wumpa.cpp */
 extern void DrawWumpa(struct orbit_part *self);
 extern s32 GetWumpaClassId(void);
 extern void DestroyWumpa(struct orbit_part *self, u32 flags);

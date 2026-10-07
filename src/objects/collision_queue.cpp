@@ -11,7 +11,7 @@ extern "C" {
 
 /* The player's collision queue, CollisionQueue (#664, part 7c;
  * include/part_list.hpp): the crate collisions QueueCratePlayerCollision
- * (crate_break.c) finds during the frame, resolved once a frame by
+ * (crate_break.cpp) finds during the frame, resolved once a frame by
  * ResolvePlayerCollisions (crate.c). */
 
 /* Resolves the frame's queued collision candidates. `candidates[0]` seeds
@@ -78,7 +78,7 @@ void CollisionQueue::Resolve()
 }
 
 /* Appends a candidate: the last call of QueueCratePlayerCollision
- * (crate_break.c). The two byte arguments are one-byte structs (the
+ * (crate_break.cpp). The two byte arguments are one-byte structs (the
  * ROM reads them with `ldrb` from their stack words, both addresses
  * first); a `u8` parameter loads the whole word and narrows it. */
 void CollisionQueue::Add(struct crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth,

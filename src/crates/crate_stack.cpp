@@ -9,11 +9,6 @@ extern "C" {
 /* The crate's stack walks and player collision, and the life crate
  * (#664, include/crate.hpp). */
 
-/* codegen: DropExtraLife (level.h) with its flag a u8, as the ROM passes
- * it: a byte store into the stack slot. */
-extern struct orbit_part *DropExtraLifeFlag(void *spawner, u32 x, u32 y, u32 p3, u32 p5,
-                                            bool flag6) asm("DropExtraLife");
-
 /* The life crate: the break sound, the crate's entity id marked
  * activated (not again once it is), and an extra life dropped three
  * pixels below the crate. */

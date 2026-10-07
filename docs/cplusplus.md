@@ -471,6 +471,19 @@ counts them by kind) and what the C++ still needs.
 | `src/objects/ground_sprite.cpp` | `GroundSprite`: constructor, destructor, `Reset`, `Draw`, the flag accessors | 16 | **old_agbcp** (was agbcc) | 34 pins -> 0 | 7b |
 | `src/objects/ground_sprite_collide.cpp` | `GroundSprite::CheckPlayerContact`, `ProbeTerrainAxes`, `ProbeFloor` | 3 | old_agbcp | 2 pins, gotos -> 0 (one goto) | 7b |
 | `src/objects/ground_sprite_update.cpp` | `GroundSprite::Update`, `AnchorHitbox` | 2 | **old_agbcp** (was agbcc) | 14 pins, 4 asm, gotos -> 0 | 7b |
+| `src/pickups/extra_life.cpp` | `ExtraLife` (include/pickups.hpp), `Wumpa::CheckPickup` | 16 | old_agbcp | 8 pins, 5 uses, 2 keeps, 1 retyped store, 2 volatile reads -> 0 | 7h |
+| `src/pickups/wumpa_update.cpp` | `Wumpa`'s `PickUp`, `Update`, `Create`, `SendToHud`, `StartPayout`, `UpdateHop` | 6 | old_agbcp | 1 pin, 2 uses, 1 keep, 1 const, a volatile store and pointer -> 1 keep | 7h |
+| `src/pickups/wumpa.cpp` | `Wumpa`'s small methods, `Stopwatch`, `ActionCtrl::Reset` | 15 | **old_agbcp** (was agbcc) | 15 pins, 3 asm, 5 volatile accesses -> 0 | 7h |
+| `src/objects/part_list.cpp` (again) | `CrateList`'s constructor (`InitCrateList`, include/crate_list.hpp; C linkage before) | 1 | agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_grid_unlink.cpp` | `CrateList::Unlink` | 1 | old_agbcp | 1 pin -> 1 pin | 7f |
+| `src/crates/crate_grid_link.cpp` | `CrateList::LinkActive` | 1 | **old_agbcp** (was agbcc) | 8 pins, 1 keep -> 0 | 7f |
+| `src/crates/crate_list_update.cpp` | `CrateList::Update` | 1 | old_agbcp | 1 pin, 1 hold, 1 use, 1 barrier, statement-expression copies -> the barrier (in `Detach`), inline copies | 7f |
+| `src/crates/crate_list_draw.cpp` | `CrateList::Draw` | 1 | agbcp | 7 pins, 1 asm -> 0 | 7f |
+| `src/crates/crate_grid_collide.cpp` | `CrateList::Collide` (UNUSED), `CollideWithPlayer` | 2 | old_agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_player_collide.cpp` (again) | `CrateList::CollidePlayer` (C linkage before) | 1 | old_agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_list_reset.cpp` | `CrateList::Reset` | 1 | agbcp | 0 -> 0 | 7f |
+| `src/crates/crate_list.cpp` | `CrateList::CollideWithObject`, `Remove`, `RemoveAt`, `AddNode`, `Link`, `Add`, destructor | 7 | old_agbcp | 4 pins -> 0 | 7f |
+| `src/crates/crate_break.cpp` | `Crate` (include/crate.hpp): the player's hits (`QueuePlayerCollision`, `ApplyCollision`), the breaks, the kinds' contents, the explosions and blasts, the falls, the switches, the TNT countdown and the slot crate's tick; with `UpdateCrates`, `DetonateNitroCrates`, `BreakCratesInArea` (C linkage) | 22 + 3 | old_agbcp | 11 pins, 4 asm, 1 keep, 2 uses, 8 volatile casts, 2 asm labels, 6 `BOX_ADDR` -> 6 `BOX_ADDR` (and the two drop aliases, shared with crate_stack.cpp) | 7g |
 | `src/objects/platform.cpp` | `Platform` (include/platform.hpp): `Update`, the exit facing, `GetClassId`, constructor, destructor, `ClearVulnerable`; `PlatformMover`: `Update`, `MovePlayer`, the four motion setters, constructor, destructor, `ClearActive` | 16 | **old_agbcp** (was agbcc) | 27 pins, 2 keeps, 1 asm, 1 asm label, an `ENTITY_SET_GONE_BIT_PINNED`, gotos -> 2 pins, 2 keeps | 7d |
 | `src/objects/platform_contact.cpp` | `Platform::CheckPlayerContact` | 1 | **old_agbcp** (was agbcc) | 4 pins -> 0 | 7d |
 | `src/objects/platform_collide.cpp` | `Platform::ResolveCollision` | 1 | old_agbcp | 2 pins, 2 holds, 2 uses, 1 keep, 1 asm label, gotos -> 1 keep, 1 asm label | 7d |
@@ -836,7 +849,7 @@ links `Crate *`. It overrides `Update`, `Draw`, `IsInsideRect`,
 `PhysSetTag`/`PhysSetFrame` are inline methods (`SetTag`, `ClampFrame`).
 `crate.hpp` also declares crate_break.c's functions that these files call
 (`UpdateFall`, `Explode`, `QueuePlayerCollision`, ...) as methods, mapped
-to their C names; crate_break.c is part 7g. `CollidePlayerWithCrates`
+to their C names; crate_break.c became C++ in part 7g. `CollidePlayerWithCrates`
 (the crate list's) keeps C linkage for part 7f's `CrateList`.
 
 What made the C++ match:
@@ -952,9 +965,11 @@ box_part` (box_part.h), `GroundSprite`/`struct gobj` (gobj_1a794.h),
 `ObjVramCursor`/`struct vram_upload_cursor`, `PaletteCache`/`struct
 palette_cache` (sprite_obj.hpp), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
 `PeriodicSpawner`/`struct periodic_spawner` (enemies.h),
-`ActionCtrl`/`struct act` (action_obj.h), `Crate`/`struct crate` (crate.h;
-crate.hpp), `Platform`/`struct gobj` and `PlatformMover`/`struct mover`
-(gobj_1a794.h; platform.hpp). Each class has
+`ActionCtrl` (whose C view, `struct act`, went in part 7h with its last
+C user), `Crate`/`struct crate` (crate.h; crate.hpp), `ExtraLife` and
+`Wumpa`/`struct orbit_part` (orbit_part.h; pickups.hpp), `CrateList`/`struct
+pool_manager` (crates.h; crate_list.hpp), `Platform`/`struct gobj` and
+`PlatformMover`/`struct mover` (gobj_1a794.h; platform.hpp). Each class has
 a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
@@ -1003,6 +1018,189 @@ match under both and stay on agbcc.
   >= n) return;`, `n` a copy of `capacity`) gives the ROM's rotated loop
   and its exit straight to the return; a `for` with a `break` makes gcc
   reuse the bound for the `if (i < capacity)` after it.
+
+Part 7h in numbers: the pickups, 3 objects and 37 functions (the new
+include/pickups.hpp): `ExtraLife` and `Wumpa` (0x54-byte `Sprite`s with a
+14th virtual, `CheckPickup`), `Stopwatch` (a `Sprite`) and the action
+controller's last C method, `ActionCtrl::Reset`, which the ROM puts after
+the stopwatch. Project-wide: `MATCH_HOLD_REG` 1544 -> 1520, instruction-emitting
+`asm` 173 -> 170, `MATCH_USE` 73 -> 66, `MATCH_KEEP` 52 -> 50, `MATCH_CONST`
+27 -> 26, retyped field stores 214 -> 212, retyped field reads 88 -> 82 and
+scoped volatiles 38 -> 29. All three match only under old_agbcp: `wumpa.o`
+moves to `OLD_AGBCC_OBJS` (`Draw`'s and `Reset`'s constant before the
+`ldrb`; its pins reproduced them under agbcc), the other two were old_agbcc
+objects already. With `ResetActionCtrl` converted, action_obj.h's `struct
+act` has no C user left and is gone: `ActionCtrl` checks its size against
+0x38 (PlayRoom's `OperatorNew(0x38)`), and player.h's C prototypes keep
+`struct act` as an incomplete type. action_obj.h keeps only the input and
+flags2 helpers of the action controller's C++ files. orbit_part.h's `struct
+orbit_part` stays the C view of both pickups (drop_extra_life.c,
+entity_spawner.c, crate_break.c and time_trial.c still use it).
+
+- **`DropWumpa`'s last parameter is a `bool`,** like `DropExtraLife`'s
+  (part 7e). The wumpa's payout calls
+  `DropWumpa(spawner, x, y, 0, 0, 1)` with the 1 stored as a byte (`strb`
+  into the stack slot), and entity_spawner.c reads it back with `ldrb`. g++
+  passes a `bool` exactly that way, register order included; a one-byte
+  struct (`struct byte_arg`) gives the same instructions with the 1 loaded
+  before the slot's address, which the C needed a `MATCH_CONST` and
+  hand-written stack slots for. entity_spawner.c is still C, so the call
+  casts `DropWumpa` to the `bool` signature (a function pointer cast; part
+  7e's `DropExtraLife` call uses an asm-label alias). The other `struct byte_arg`
+  parameters (`AddCollisionCandidate`, `AddPaletteCycle`, ...) may well be
+  `bool`s too.
+- **One variable for both axes.** The flight step (`Fly`: `n = x + velX;
+  x = n; n = y + velY; y = n;`, one `n`) gives the ROM's registers
+  (position r1, velocity r0), which the C forced with two `MATCH_USE`s per
+  velocity; and `ExtraLife::Update`'s arrival test computes `x + velX`
+  again from the old values because the sum's variable then holds the new
+  y, which the C did with a `MATCH_KEEP` and a `MATCH_USE`.
+- **`UpdateStopwatch`'s distance test** (9 pins and 2 `asr` asm
+  statements in the C) is a plain `if`/`else` on one variable, `d`, used
+  for both axes (a variable per axis ties the load to the shift), with
+  `MarkGone()` written in both `else`s; cross-jumping merges them into the
+  ROM's single tail.
+- **Kept:** `CreateWumpa`'s `MATCH_KEEP` of `phase` (the C's too). The ROM
+  compares an unknown-to-CSE 0 in r6 with the frame count and stores it at
+  +0x4B while `counter` gets a fresh 0; written as constants, CSE shares
+  one 0. Inline `SetAnim`/`SetFrameIndex`/`SetHop` helpers didn't give it.
+  C idioms kept, each with a comment: `u8 one` locals for the `screenSpace`
+  stores (the 1 before the address), an `s32` view of `affine` for its
+  signed re-read (`Affine`), the `phase + 1` zero-extension spelled out, the
+  palette slot through an `s32` for the `u8` return's zero-extension, and
+  `SendToHud`'s `Offset` inline (the pool constant reloaded per axis).
+
+Part 7f in numbers: the crate list, `CrateList` (new `include/crate_list.hpp`,
+`gCrateList`), 7 objects converted and 16 methods: the 14 functions of the
+7 files, plus the constructor (`InitCrateList`, in part_list.cpp for ROM
+order) and `CollidePlayer` (`CollidePlayerWithCrates`, crate_player_collide.cpp),
+which parts 7c and 7e left with C linkage. Project-wide: `MATCH_HOLD_REG`
+1520 -> 1500, instruction-emitting `asm` 170 -> 169, `MATCH_USE` 66 -> 65,
+`MATCH_KEEP` 50 -> 49, `MATCH_HOLD` 21 -> 20; `MATCH_BARRIER` stays 17 (the
+C's moved into the header). Of the C's 21 pins, 1 `asm`, 1 keep, 1 hold and
+1 use, one pin is left (below). `crate_grid_link.o` moves to
+`OLD_AGBCC_OBJS` (`LinkActive`'s flag test is old_agbcp's `ldrb r1; lsrs r0,
+r1, #4`, which the C pinned); `crate_list_draw.o`, `crate_list_reset.o` and
+`part_list.o` match under both and stay on agbcc; the other four were old
+already.
+
+The class: crates.h's `struct pool_manager` is its C view (play_room.c,
+run_room.c, crate_break.c, ... still use it), and `CrateGridNode`/`CrateGridLink`
+are `struct pool_node`/`struct pool_link`'s. The slots and nodes hold
+`Sprite *`s (crates in practice; `CollidePlayer` casts to `Crate *`, and the
+unused `Collide` and its two helpers take `MovingSprite`s, as PartList's do).
+The slot calls are virtual calls: `OverlapsRect`/`Draw` (Draw),
+`IsInsideRect`/`Update`/`delete` (Update, Reset), `GetClassId` (Collide). The
+grid's column is `ColumnOf(sprite)`, the high halfword of `x` (one `ldrsh`).
+`Crates()` is `gCrateList` as the class (crate_create.cpp's `Crates()->Add(this)`).
+
+What made the C++ match:
+
+- **Inline bodies with an out-of-line copy.** The ROM inlines
+  `AddCrateGridNode` into `LinkCrateToActiveBucket` (and `UpdateCrateList`)
+  and `RemoveCrateFromList` into `UpdateCrateList`, and has both out of line
+  too. The bodies are inline methods, `Append` and `Detach`, and the
+  out-of-line `AddNode` and `Remove` call them. With `Append` inlined,
+  `LinkActive` needs none of the C's 8 pins or its `MATCH_KEEP_VOLATILE`:
+  the free-list head's address is recomputed in each column, and the
+  registers come out as the ROM's.
+- **Column 255's head computed in the loop.** Draw and Update keep `&heads[255]`
+  in a register across the loop, computed after the column array's address
+  and with the operands of an `add` the other way round from what a local
+  computed before the loop gives. Assigned at the top of the loop body, the
+  loop optimizer hoists it after the `heads[i]` base, as in the ROM, and
+  `heads[i]` keeps its base-first `add`: the C's `asm` `add`, its 7 pins
+  (Draw) and its byte-arithmetic indexing (Update) go.
+- **`lo = cam->x; lo >>= 8;`** in two statements loads into the shift's
+  register, as Collide's C already had.
+- `Unlink`'s "always active" test through a local (`s32 active = (f.flags >>
+  4) & 1; if (!active)`) gives old_agbcp's `ldrb r1; lsrs r0, r1`.
+
+Kept, each with a comment: `Unlink`'s free-list push keeps its r1 pin (the
+ROM loads the head before the entry; unpinned, the registers or the order
+swap, with every spelling tried). `Detach` has the C's `MATCH_BARRIER` (no
+code): without it, cse swaps `n` and its copy in Update's two inlined
+copies (`Remove` is the same either way); declaring `n` first gives the
+registers but loads it before the 0. Update keeps the C's register copies
+of the sprite for `Destroy`'s two calls, as an inline identity function
+(`Copy`) where the C had statement expressions, its `next = i - 1` before
+the walk, its double read of `node->data`, and `Append`'s body written out
+through `last` (Append recomputes the address, which takes `last` out of its
+register).
+
+Part 7g in numbers: crate_break.c, the rest of `Crate` (include/crate.hpp):
+25 functions, 22 of them methods and 3 free functions with C linkage
+(`UpdateCrates`, `DetonateNitroCrates`, `BreakCratesInArea`, which take no
+crate). Project-wide: `MATCH_HOLD_REG` 1500 -> 1489, instruction-emitting
+`asm` 169 -> 165, `MATCH_USE` 65 -> 63, `MATCH_KEEP` 49 -> 48, scoped
+volatiles 29 -> 21 and asm labels 19 -> 18. It was an old_agbcc object
+already and matches only under old_agbcp. Every function matched as soon
+as the C became methods, except five (below); none of the C's pins was
+needed.
+
+- **The slot calls.** crate.h's `PHYS_CALL`/`PhysCall3` slot calls are
+  `o->GetClassId()`, `o->Update()`, `delete o` (`UpdateCrates`' slot-10
+  call with 3, after its own null test) and `PlayerSprite()->HandleEvent(...)`;
+  `PhysSetTag`/`PhysSetFrame` are `SetTag`/`ClampFrame`, `PHYS_GONE` with
+  its bit is `MarkGone()`, `AddCollisionCandidate` is
+  `CollisionQueue::Add`, `LinkCrateToActiveBucket` and `RemoveCrateListAt`
+  are `Crates()->LinkActive(this)` and `Crates()->RemoveAt(i)` (part 7f),
+  and `PickUpWumpa` is `Wumpa::PickUp` (part 7h). With crate_break.c gone, crate.h's `struct
+  crate_vtable`, the `PHYS_*` call macros, `PhysSetTag`/`PhysSetFrame`
+  and the bit and slot-state views (`struct phys_flag_bits`, `struct
+  phys_b48`) have no users and are removed; `struct crate` stays the C
+  view (the crate list and grid, room_entities.c, the C prototypes).
+- **Byte flags are `bool`s.** Five shapes the C spelt with one-byte
+  structs, `volatile` stores and pins are `bool` parameters: g++ 2.9
+  doesn't promote a `bool`, so a `bool` in a register is a QImode value
+  (reloaded with `ldrb`) and one on the stack is stored with `strb`.
+  `BreakInStack(u8 flag, bool once, u32 dir)` (the C's `u32` arguments
+  and a `(u8)` test): `ApplyCollision` passes its `limited` flag straight
+  through, which gives the ROM's `mov r5, sp; ldrb r2, [r5]` (the C needed
+  a register union of a `u32` and a one-byte struct and an asm-label
+  alias); `ApplyCollision`'s three trailing byte arguments are `bool`s;
+  `OpenMystery` and `OpenSlot` take a `bool`, as `OpenLife` does; and the
+  `DropWumpa`/`DropExtraLife` calls go through `bool`-flag aliases
+  (crate.hpp, now shared with crate_stack.cpp), which replace the C's
+  four-argument function-pointer casts with `volatile` stores into
+  `argP4`/`argP5` and `BounceWumpaCrate`'s two pins. `BreakCrate`'s
+  `chained` is a `bool` too, so `OpenLife(chained)` loads `this` first.
+- **`LightTntCrate`**'s four `asm` blocks, seven pins and keep (the
+  `0x14` before the tag's address, the `0x10` before the `ldrb`, the
+  record's address, the palette nibble's mask) are `SetTag(0x14)`,
+  `f.b.active = 1` and a `u32` palette slot stored into `palette`, with
+  the animation's address in a local before the `GetPaletteSlot` call
+  (the 7e `UpdateCrate` shape).
+- **A dead compare's reload.** `QueuePlayerCollision`'s first path calls
+  `GetPrevX` for nothing, and the ROM reloads `px` after the call: a
+  compare deleted after reload. The C kept the reload with `MATCH_USE2(ax,
+  px)`; in C++ it is the other path's code, `side = 2; if (px > prevX)
+  side = 1;`, with `side` a function-scope variable: the compare then
+  lives until after reload, and only then goes (a block-local `side` is
+  deleted earlier, with its reload).
+- **`UpdateSlotCrate`**'s `MATCH_USE(lw)` is `lw &= CLEAR_PHASE; lw |=
+  nx;` in two steps, which keeps `lw` in r1.
+- Small shapes: the record lookups through `bank` (`&anims[tag]` from a
+  local copy of `bank->anims` where the ROM loads the table first, and a
+  local copy of `bank` itself in `DropCratesAbove`), an inline
+  `SetPlayerBusy()` for the `p = gPlayer; one = 1; p->busy = one` latch
+  set four times, and `MarkStackTouched`'s box as a `struct aabb *`.
+
+Kept, each with a comment: the 6 `BOX_ADDR`s of `QueuePlayerCollision`
+(the player box's stack address recomputed at each call, as in 7e's
+crate_hit.cpp and crate_touch.cpp; without them it is held in a
+callee-saved register and the function's registers shift), and the C's
+small inline helpers and local copies (`PosPtr`, `HitResponseAt`, `Span`,
+`AddPlayerHit`, `u8 one = 1`, `u16 eid = id`, ...): each was tried
+written in place, and each placed a load or a register as the ROM has it.
+`BreakCrate` keeps its spelled-out gone bit (entity_bits.h) and
+`BlastNearbyCrates`/`BreakCratesInArea` their `kind + table` integer
+sums (indexing adds the other way round). Those two and `UpdateCrates`
+walk the crate list through `gCrateList`'s C view (`activeCount`,
+`slotArray`): through `Crates()`, an inline call, their loop tests aren't
+copied in front of the loops (see the gotchas), which changes the
+layout. `DetonateNitroCrates` and `ActivateIronSwitchCrate` use
+`Crates()->count` and `slots`.
 
 Part 7d in numbers: the platforms, `Platform` (a 0x80-byte `MovingSprite`,
 gPlatformVtable) and its controller `PlatformMover` (a 0x38-byte `Ctrl`,
@@ -1083,8 +1281,8 @@ Bigger controllers, roughly in order (function counts from
    `_moves.c`, `_update.c`, `_idle.c`, `_land.c`, `_left_ground.c` and
    `kill_player.c`; part 5b the other four (`action_ctrl_event.c`,
    `_hang.c`, `_run_jump.c`, `_states.c`), and action_obj.h's vcall
-   macros went with them. Only `Reset` (`ResetActionCtrl`, wumpa.c) is
-   still C.
+   macros went with them. Its last method, `Reset` (`ResetActionCtrl`,
+   wumpa.cpp), was converted with the pickups in part 7h.
 4. **The boss controllers:** ~~`tiny_update.c`, `mega_mix_update.c`~~
    (done in part 6) and ~~`dingodile*.c`~~ (part 6b). Left: `cortex.c`
    (25 functions, 64 lines with pins or asm; it also has
@@ -1112,9 +1310,9 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
 | ~~7d~~ | ~~objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old)~~ | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) (include/platform.hpp) | done | 7b |
 | ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_player_collide.c, crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c~~ | `Crate` (include/crate.hpp) and its accessors | done | |
-| 7f | crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old) | `CrateList`, the crate grid | 13 functions, 1120 lines, 21 pins, 1 asm | 7e |
-| 7g | crates/crate_break.c (old) | the crates' break and bounce paths | 24 functions, 2860 lines, 11 pins, 6 asm | 7e, 7f |
-| 7h | pickups/extra_life.c (old), wumpa.c, wumpa_update.c (old) | `ExtraLife` and `Wumpa` (0x54-byte `Sprite`s with a 14th slot), `Stopwatch` (a `Sprite`), and `ActionCtrl::Reset` (`ResetActionCtrl` is in wumpa.c; then action_obj.h's `struct act` can go) | 37 functions, 1370 lines, 24 pins, 3 asm | 7a |
+| ~~7f~~ | ~~crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old)~~ | `CrateList` (include/crate_list.hpp), the crate grid | done | |
+| ~~7g~~ | ~~crates/crate_break.c (old)~~ | the crates' break and bounce paths | done | |
+| ~~7h~~ | ~~pickups/extra_life.c, wumpa.c, wumpa_update.c~~ | `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl::Reset`; `struct act` went | done | |
 | 7i | bosses/cortex.c (old) | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | 25 functions, 1000 lines, 49 pins, 4 asm | 7d |
 
 Outside this family, the classes built on these: the player (`struct
@@ -1325,6 +1523,15 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   first in its `.text`; a header fragment with no include guard
   (crate_line_step.hpp), `inline` through crate.hpp and plain at the end
   of crate.cpp, gives both from one source (part 7e).
+- **An inline body the ROM also has out of line:** where one function
+  is inlined into another and also exists on its own, make the body an
+  inline method and have the out-of-line method call it
+  (`CrateList::Append`/`AddNode`, `Detach`/`Remove`; part 7f). The header
+  fragment of part 7e is for copies emitted at the end of the file.
+- **A loop invariant the ROM computes after the loop's own:** an address
+  computed before a loop comes before the ones loop.c hoists out of it, and
+  as a different `add`. Assigned inside the loop, it is hoisted with them,
+  after them (`CrateList::Draw`'s `last`; part 7f).
 - **Reloads after a two-word copy:** where the ROM copies the position
   (`ldr; ldr; str; str`) and then loads `x` and `y` again, the copy is a
   block copy (`PrevPos() = Pos()`, part 7b): gcc reloads after it, where
@@ -1336,6 +1543,21 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   can usually be written as a store and a `return` in each path:
   cross-jumping merges the copies into the ROM's shared tail
   (`GroundSprite::ProbeFloor`, part 7b).
+- **A value the ROM computes again** instead of reusing a sum it just
+  stored: give the sum a variable that is assigned again afterwards (the
+  next axis's sum). CSE then has no register holding it and recomputes the
+  expression (`ExtraLife::Update`, `Fly`, part 7h). Two `MATCH_USE`s per
+  operand were the C's way to get the same registers.
+- **A byte the ROM passes in a register and reloads with `ldrb`** (a
+  QImode argument) is a `bool` parameter: g++ 2.9 doesn't promote a
+  `bool`, where a `u8` is promoted to a word. The C used a one-byte
+  struct, which needed an asm-label alias of the callee
+  (`Crate::BreakInStack`'s `once`; part 7g).
+- **A reload left by a deleted compare** (the ROM reloads a variable
+  after a call for nothing) is a dead test of it whose result is a
+  function-scope variable (used elsewhere): flow keeps the compare until
+  after reload. A block-local one is deleted before reload
+  (`QueuePlayerCollision`'s `side`; part 7g).
 - **A byte flag flipped and tested** (`ldrb; eors` with the 1 loaded
   first, the result stored and tested) is `dirX ^= 1; if (dirX)`; a local
   `u8 d = 1 ^ dirX` gives other registers (`PlatformMover::Update`, part

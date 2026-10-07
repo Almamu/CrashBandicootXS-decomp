@@ -26,7 +26,7 @@ const u32 gEnemyCtrlMotionEntries[4][2] = {
 };
 
 /* Timer values per direction, CreateCrate (crate_create.cpp) and
- * UpdateSlotCrate (crate_break.c). */
+ * UpdateSlotCrate (crate_break.cpp). */
 const u8 gSlotCrateTimers[4] = {
     40,
     30,
@@ -35,7 +35,7 @@ const u8 gSlotCrateTimers[4] = {
 };
 
 /* Per-object-kind flags of the collision system (22 kinds), read by
- * crate_hit.cpp, crate_stack.cpp and crate_break.c. */
+ * crate_hit.cpp, crate_stack.cpp and crate_break.cpp. */
 const u8 gCrateKindCounted[CRATE_KIND_COUNT] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
@@ -49,7 +49,7 @@ const u8 gCrateKindUnbreakable[CRATE_KIND_COUNT] = {
     0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-/* QueueCratePlayerCollision (crate_break.c): the attack kind of each action
+/* QueueCratePlayerCollision (crate_break.cpp): the attack kind of each action
  * controller state. */
 const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT] = {
     [ACTION_STATE_IDLE] = ATTACK_KIND_TOUCH,
@@ -96,7 +96,7 @@ const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT] = {
     [ACTION_STATE_WARP_IN] = ATTACK_KIND_NONE,
 };
 
-/* QueueCratePlayerCollision and ApplyCrateCollision (crate_break.c): the collision response
+/* QueueCratePlayerCollision and ApplyCrateCollision (crate_break.cpp): the collision response
  * code of each crate kind (row) against each attack kind (column,
  * ATTACK_KIND_*). */
 const s32 gCrateHitResponse[CRATE_KIND_COUNT][7] = {
@@ -131,8 +131,8 @@ const u8 gAttackKindBreakLimited[8] = {
     [ATTACK_KIND_JUMP] = 1,
 };
 
-/* The {x, y, z} scale triples of UpdateExtraLifeHop (extra_life.c) and
- * UpdateWumpaHop (wumpa_update.c). */
+/* The {x, y, z} scale triples of UpdateExtraLifeHop (extra_life.cpp) and
+ * UpdateWumpaHop (wumpa_update.cpp). */
 const s32 gExtraLifeHopWidths[3] = {
     0x300,
     0x0,

@@ -3,8 +3,8 @@
 
 /* The player subsystem (src/player/): the player object (InitPlayer,
  * UpdatePlayer, DrawPlayer, its flag accessors and collision), and its
- * controllers: the action controller (`struct act`, action_obj.h, the
- * on-foot state machine), the input controller, the boss controller and
+ * controllers: the action controller (class ActionCtrl, action_ctrl.hpp,
+ * the on-foot state machine), the input controller, the boss controller and
  * the swim controller (`struct player_ctrl`, player_ctrl.h).
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -14,10 +14,11 @@
  *
  * The player object is `struct player` below (gPlayer, globals.h); the
  * player's own functions take it. Each controller's functions take its
- * struct: `struct act` (action_obj.h), `struct player_ctrl`
- * (player_ctrl.h), and `struct input_ctrl`/`struct boss_ctrl` below.
- * ResetActionCtrl (src/pickups/wumpa.c) is here, with the rest of the
- * action controller. */
+ * struct: `struct act` (the action controller; an incomplete type, as all
+ * of its code is C++), `struct player_ctrl` (player_ctrl.h), and `struct
+ * input_ctrl`/`struct boss_ctrl` below. ResetActionCtrl
+ * (src/pickups/wumpa.cpp) is here, with the rest of the action
+ * controller. */
 
 #include "core.h"
 #include "actor_self.h"
@@ -98,7 +99,7 @@ union player_flags {
 
 /* The mirror byte at +0x28 (bit 4: X mirrored, bit 5: Y mirrored), as a
  * byte (the action controller), as `u32` bits (the swim controller,
- * crate_hit.cpp, crate_touch.cpp) or as `s32` bits (crate_break.c, the
+ * crate_hit.cpp, crate_touch.cpp) or as `s32` bits (crate_break.cpp, the
  * layout of `struct crate`). The bit views read the same, but the signed
  * one expands to more insns before optimization, which shifts the
  * `.LCB` label numbers in the `.s`. Packed, so that the union is one byte. */
@@ -218,7 +219,7 @@ struct player {
                   //        on each side
     u8 countdown; // 0x91 - crate-break limiter: BreakCrateInStack arms it (2) and skips the
                   //        break while it runs; UpdatePlayer counts it down
-    u8 bounce;    // 0x92 - a counter (crate_break.c's name): crate_break.c tests and
+    u8 bounce;    // 0x92 - a counter (crate_break.cpp's name): crate_break.cpp tests and
                   //        steps it on a bounce, ResolvePlayerCollisions steps it, the action
                   //        controller clears it
     u8 unk_93;
@@ -255,8 +256,8 @@ COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
 /* The controllers share a base, objects.h's `struct ctrl` (InitCtrl/
  * DestroyCtrl, ctrl.cpp): +0x04 the motion entry set (SetCtrlAnimSet),
  * +0x08 the state, +0x0C the method table. Most subclasses keep their
- * controlled part at +0x10. The action controller is `struct act`
- * (action_obj.h) and the swim controller `struct player_ctrl`
+ * controlled part at +0x10. The action controller is class ActionCtrl
+ * (action_ctrl.hpp) and the swim controller `struct player_ctrl`
  * (player_ctrl.h); the input and boss controllers are below. */
 
 /* The input controller (gInputCtrlVtable, src/player/input_ctrl.cpp and
@@ -343,7 +344,7 @@ extern const struct entry_set gInputCtrlMotionSet;
 /* The player's controller (sym_iwram.txt), built by PlayRoom. */
 extern void *gPlayerCtrl;
 
-/* src/pickups/wumpa.c */
+/* src/pickups/wumpa.cpp */
 extern void ResetActionCtrl(struct act *self);
 
 /* src/player/action_ctrl.cpp */

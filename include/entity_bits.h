@@ -20,7 +20,7 @@
  * - ENTITY_SET_GONE_BIT's do/while(0) is load-bearing. gcc 2.9 puts loop
  *   notes around it, and they stop CSE from reusing an id already loaded
  *   for the caller's ENTITY_ID_NONE test, which gives the ROM's reload of
- *   the id. crate_break.c's BreakCrate spells the same body out in a
+ *   the id. crate_break.cpp's BreakCrate spells the same body out in a
  *   plain `{ }` block, which compiles differently there, so don't rewrite
  *   the wrapper.
  * - The word index is a signed division (`_id` is an s32), so the ROM's
@@ -29,8 +29,8 @@
  *   offset), which is what the matched copies did.
  *
  * Copies that are still spelled out, each with a comment saying why:
- * graphics.cpp's MarkEntityGone itself, wumpa.c's UpdateStopwatch and
- * crate_break.c (other asm/pins or wrapper), and enemy_ctrl_update.cpp's
+ * graphics.cpp's MarkEntityGone itself and
+ * crate_break.cpp (other asm/pins or wrapper), and enemy_ctrl_update.cpp's
  * MarkGoneFreshBit (a MATCH_CONST inside the sequence). */
 
 /* An entity id that has no bit in the bitmaps (actor.h's `id`). */

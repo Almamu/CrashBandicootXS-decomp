@@ -3,9 +3,10 @@
 
 /* The action controller as C++ (#664, docs/cplusplus.md): the player's
  * controller on foot (room kind 0; PlayRoom creates it). Its code is in
- * src/player/action_ctrl*.cpp and kill_player.cpp, except Reset (wumpa.c,
- * still C, on the C view, struct act). cxx_symbols.txt maps every method
- * declared here to its C name, for the vtable and state table data.
+ * src/player/action_ctrl*.cpp and kill_player.cpp, and Reset in
+ * src/pickups/wumpa.cpp (the ROM puts it there). cxx_symbols.txt maps
+ * every method declared here to its C name, for the vtable and state
+ * table data.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp); the ROM's is
  * gActionCtrlVtable (src/data/entity_vtables_7e3bec.c). */
@@ -17,9 +18,9 @@ extern "C" {
 #include "action_obj.h"
 }
 
-/* The action controller (gActionCtrlVtable; struct act in action_obj.h is
- * its C view, with the same layout). Each frame Update runs the
- * current state's method (`stateFuncs`, indexed by `state`, an
+/* The action controller (gActionCtrlVtable; 0x38 bytes, as PlayRoom's
+ * `InitActionCtrl(OperatorNew(0x38))` allocates). Each frame Update runs
+ * the current state's method (`stateFuncs`, indexed by `state`, an
  * ACTION_STATE_* id), then applies the queued motion entries (ApplyMotion):
  * `motionX`/`motionY` name rows of the entry set (`animSet`), applied with
  * the speed kept (SetTargetMotion*) or restarted (StartTargetMotion*). */
@@ -174,7 +175,7 @@ public:
         this->frames = frames;
     }
 
-    /* src/pickups/wumpa.c (still C) */
+    /* src/pickups/wumpa.cpp */
     void Reset();
 
     /* src/player/action_ctrl.cpp */
@@ -268,7 +269,7 @@ public:
     s32 UpdateFacing();
 };
 
-COMPILE_TIME_ASSERT(action_ctrl_hpp, sizeof(ActionCtrl) == sizeof(struct act));
+COMPILE_TIME_ASSERT(action_ctrl_hpp, sizeof(ActionCtrl) == 0x38);
 
 /* The player's `slippery` (+0x100), read and written through inline
  * functions: the 0x100 offset is then materialized at each access, as in

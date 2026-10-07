@@ -243,7 +243,7 @@ void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16
     return part;
 }
 
-/* Spawns a wumpa (`CreateWumpa`, wumpa_update.c) with this slot's four
+/* Spawns a wumpa (`CreateWumpa`, wumpa_update.cpp) with this slot's four
  * arguments, unless `gLevelState+0x8c` (time trial) is set. */
 void SpawnWumpa(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {

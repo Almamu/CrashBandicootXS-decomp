@@ -2,15 +2,15 @@
 #define GUARD_ORBIT_PART_H
 
 #include "actor.h"
-#include "action_obj.h"
+#include "player.h"
 
-/* The 0x54-byte "orbiting hazard / collectible" part object spawned by
- * CreateExtraLife (extra_life.c) and CreateWumpa (wumpa_update.c) and driven
- * by the per-frame updaters UpdateExtraLife/UpdateWumpa and the orbit helpers
- * UpdateExtraLifeHop/UpdateWumpaHop (GitHub issues #14/#15). It starts with the
- * shared `struct actor` header; `bank` is the same animation-record bank
- * `struct player` (player.h) points at (records are 0x1C bytes,
- * `frameCount` at +0x16). */
+/* The C view of the extra life and the wumpa, include/pickups.hpp's
+ * classes ExtraLife and Wumpa (0x54-byte sprites; src/pickups/*.cpp), for
+ * the C files that spawn them or pick them up (drop_extra_life.c,
+ * entity_spawner.c, time_trial.c). pickups.hpp checks both
+ * classes' sizes against it. It starts with the shared `struct actor`
+ * header; `bank` is the sprite bank (records are 0x1C bytes, `frameCount`
+ * at +0x16), `timer` the sprite's `affine` halfword. */
 struct orbit_vec {
     s32 x;
     s32 y;

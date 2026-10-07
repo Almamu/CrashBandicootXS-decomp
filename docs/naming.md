@@ -241,7 +241,7 @@ each copy says so.
   "equivalent" spellings differently: `MIN` (a ternary) is not
   `LIMIT_MAX` (an `if`), `(b * a) >> 8` is not `Q8_MUL(a, b)`, and
   wrapping a sequence in `do { } while (0)` adds loop notes that a plain
-  `{ }` block doesn't (`ENTITY_SET_GONE_BIT` needs them; crate_break.c's
+  `{ }` block doesn't (`ENTITY_SET_GONE_BIT` needs them; crate_break.cpp's
   copy must not have them). Convert a site only when it already has the
   helper's shape, and compare the object.
 - **The helpers don't cast.** A shift's signedness comes from its

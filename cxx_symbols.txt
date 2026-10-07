@@ -581,7 +581,7 @@ OpenAkuAku__5Crate OpenAkuAkuCrate
 BreakIfTouchedByPlayer__5Crate BreakCrateTouchedByPlayer
 PlayerHitboxOverlapsAt__5CrateP11hitbox_quadP4aabbii PlayerHitboxOverlapsAt
 ResolveStackHit__5CrateP4aabbPUc ResolveStackCrateHit
-BreakInStack__5CrateUiUiUi BreakCrateInStack
+BreakInStack__5CrateUcbUi BreakCrateInStack
 Explode__5CrateUc ExplodeCrate
 PlayerAnimWouldTouch__5Cratei PlayerAnimWouldTouchCrate
 Create__5CrateUsUsUsUsUc CreateCrate
@@ -646,6 +646,83 @@ ProbeTerrainAxes__12GroundSprite ProbeGroundSpriteTerrain
 ProbeFloor__12GroundSpritePC11hitbox_quadPUc ProbeGroundSpriteFloor
 Update__12GroundSprite UpdateGroundSprite
 AnchorHitbox__12GroundSprite AnchorGroundSpriteHitbox
+# part 7h: the pickups (include/pickups.hpp, src/pickups/*.cpp) and
+# ActionCtrl::Reset (wumpa.cpp; its entry is in part 5's block)
+_vt.9ExtraLife gExtraLifeVtable
+CheckPickup__9ExtraLife CheckExtraLifePickup
+PickUp__9ExtraLifeUc PickUpExtraLife
+Update__9ExtraLife UpdateExtraLife
+Create__9ExtraLifeUsUsUsi CreateExtraLife
+SendToHud__9ExtraLife SendExtraLifeToHud
+UpdateHop__9ExtraLife UpdateExtraLifeHop
+Draw__9ExtraLife DrawExtraLife
+GetClassId__9ExtraLife GetExtraLifeClassId
+_._9ExtraLife DestroyExtraLife
+Reset__9ExtraLife ResetExtraLifePickup
+__9ExtraLife InitExtraLife
+CheckPlayerContact__9ExtraLife CollideExtraLife
+SetHome__9ExtraLifeii SetExtraLifePos
+SetHop__9ExtraLifeUc SetExtraLifeHop
+SetCounter__9ExtraLifeUc SetExtraLifeCounter
+_vt.5Wumpa gWumpaVtable
+CheckPickup__5Wumpa CheckWumpaPickup
+PickUp__5WumpaUc PickUpWumpa
+Update__5Wumpa UpdateWumpa
+Create__5WumpaUsUsUsUs CreateWumpa
+SendToHud__5Wumpa SendWumpaToHud
+StartPayout__5Wumpa StartWumpaPayout
+UpdateHop__5Wumpa UpdateWumpaHop
+Draw__5Wumpa DrawWumpa
+GetClassId__5Wumpa GetWumpaClassId
+_._5Wumpa DestroyWumpa
+Reset__5Wumpa ResetWumpaPickup
+__5Wumpa InitWumpa
+CheckPlayerContact__5Wumpa CollideWumpa
+SetHome__5Wumpaii SetWumpaPos
+SetHop__5Wumpai SetWumpaHop
+SetCounter__5WumpaUc SetWumpaCounter
+_vt.9Stopwatch gStopwatchVtable
+Update__9Stopwatch UpdateStopwatch
+Create__9StopwatchUsUsUsUs CreateStopwatch
+Reset__9Stopwatch ResetStopwatch
+_._9Stopwatch DestroyStopwatch
+__9Stopwatch InitStopwatch
+#
+# part 7f: the crate list (include/crate_list.hpp; src/crates/crate_list*.cpp,
+# crate_grid_*.cpp, crate_player_collide.cpp; the constructor in
+# src/objects/part_list.cpp)
+__9CrateListi InitCrateList
+_._9CrateList DestroyCrateList
+Reset__9CrateList ResetCrateList
+Update__9CrateList UpdateCrateList
+Draw__9CrateList DrawCrateList
+Collide__9CrateListG4aabbiP12MovingSprite CollideCrateGrid
+CollideWithPlayer__9CrateListG4aabbP12MovingSprite CollideCrateGridPartWithPlayer
+CollideWithObject__9CrateListG4aabbP12MovingSpriteT2 CollideCrateGridPartWithObject
+CollidePlayer__9CrateListi CollidePlayerWithCrates
+Remove__9CrateListP6Sprite RemoveCrateFromList
+RemoveAt__9CrateListi RemoveCrateListAt
+Add__9CrateListP6Sprite AddCrateToList
+AddNode__9CrateListP6SpriteiP13CrateGridNode AddCrateGridNode
+Link__9CrateListP6Sprite LinkCrateInGrid
+LinkActive__9CrateListP6Sprite LinkCrateToActiveBucket
+Unlink__9CrateListP6Sprite UnlinkCrateFromGrid
+#
+# part 7g: the crate's hits, breaks and explosions (include/crate.hpp,
+# src/crates/crate_break.cpp)
+ApplyCollision__5CrateiiiiG8e08c_posibN27 ApplyCrateCollision
+ClearStackTouched__5Crate ClearCrateStackTouched
+MarkStackTouched__5CrateP4aabb MarkCrateStackTouched
+BounceWumpa__5Crate BounceWumpaCrate
+LightTnt__5Crate LightTntCrate
+OpenCheckpoint__5Crate OpenCheckpointCrate
+Break__5CrateUi BreakCrate
+OpenMystery__5Crateb OpenMysteryCrate
+OpenSlot__5Crateb OpenSlotCrate
+DropAbove__5Crate DropCratesAbove
+BlastNearby__5Cratei BlastNearbyCrates
+ActivateNitroSwitch__5Crate ActivateNitroSwitchCrate
+ActivateIronSwitch__5Crate ActivateIronSwitchCrate
 #
 # part 7d: the platforms (include/platform.hpp, src/objects/platform*.cpp)
 _vt.8Platform gPlatformVtable
