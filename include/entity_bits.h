@@ -29,7 +29,7 @@
  *   offset), which is what the matched copies did.
  *
  * Copies that are still spelled out, each with a comment saying why:
- * graphics.cpp's MarkEntityGone itself, wumpa.c's UpdateStopwatch and
+ * graphics.cpp's MarkEntityGone itself and
  * crate_break.c (other asm/pins or wrapper), and enemy_ctrl_update.cpp's
  * MarkGoneFreshBit (a MATCH_CONST inside the sequence). */
 

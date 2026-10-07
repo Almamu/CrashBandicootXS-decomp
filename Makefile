@@ -322,6 +322,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_time_trial.o \
                   $(C_BUILDDIR)/pickups/wumpa_update.o \
                   $(C_BUILDDIR)/pickups/extra_life.o \
+                  $(C_BUILDDIR)/pickups/wumpa.o \
                   $(C_BUILDDIR)/level/game_frame.o \
                   $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \

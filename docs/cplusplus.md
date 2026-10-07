@@ -471,6 +471,9 @@ counts them by kind) and what the C++ still needs.
 | `src/objects/ground_sprite.cpp` | `GroundSprite`: constructor, destructor, `Reset`, `Draw`, the flag accessors | 16 | **old_agbcp** (was agbcc) | 34 pins -> 0 | 7b |
 | `src/objects/ground_sprite_collide.cpp` | `GroundSprite::CheckPlayerContact`, `ProbeTerrainAxes`, `ProbeFloor` | 3 | old_agbcp | 2 pins, gotos -> 0 (one goto) | 7b |
 | `src/objects/ground_sprite_update.cpp` | `GroundSprite::Update`, `AnchorHitbox` | 2 | **old_agbcp** (was agbcc) | 14 pins, 4 asm, gotos -> 0 | 7b |
+| `src/pickups/extra_life.cpp` | `ExtraLife` (include/pickups.hpp), `Wumpa::CheckPickup` | 16 | old_agbcp | 8 pins, 5 uses, 2 keeps, 1 retyped store, 2 volatile reads -> 0 | 7h |
+| `src/pickups/wumpa_update.cpp` | `Wumpa`'s `PickUp`, `Update`, `Create`, `SendToHud`, `StartPayout`, `UpdateHop` | 6 | old_agbcp | 1 pin, 2 uses, 1 keep, 1 const, a volatile store and pointer -> 1 keep | 7h |
+| `src/pickups/wumpa.cpp` | `Wumpa`'s small methods, `Stopwatch`, `ActionCtrl::Reset` | 15 | **old_agbcp** (was agbcc) | 15 pins, 3 asm, 5 volatile accesses -> 0 | 7h |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -948,8 +951,9 @@ box_part` (box_part.h), `GroundSprite`/`struct gobj` (gobj_1a794.h),
 `ObjVramCursor`/`struct vram_upload_cursor`, `PaletteCache`/`struct
 palette_cache` (sprite_obj.hpp), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
 `PeriodicSpawner`/`struct periodic_spawner` (enemies.h),
-`ActionCtrl`/`struct act` (action_obj.h), `Crate`/`struct crate` (crate.h;
-crate.hpp). Each class has
+`ActionCtrl` (whose C view, `struct act`, went in part 7h with its last
+C user), `Crate`/`struct crate` (crate.h; crate.hpp), `ExtraLife` and
+`Wumpa`/`struct orbit_part` (orbit_part.h; pickups.hpp). Each class has
 a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
@@ -999,6 +1003,57 @@ match under both and stay on agbcc.
   and its exit straight to the return; a `for` with a `break` makes gcc
   reuse the bound for the `if (i < capacity)` after it.
 
+Part 7h in numbers: the pickups, 3 objects and 37 functions (the new
+include/pickups.hpp): `ExtraLife` and `Wumpa` (0x54-byte `Sprite`s with a
+14th virtual, `CheckPickup`), `Stopwatch` (a `Sprite`) and the action
+controller's last C method, `ActionCtrl::Reset`, which the ROM puts after
+the stopwatch. Project-wide: `MATCH_HOLD_REG` 1544 -> 1520, instruction-emitting
+`asm` 173 -> 170, `MATCH_USE` 73 -> 66, `MATCH_KEEP` 52 -> 50, `MATCH_CONST`
+27 -> 26, retyped field stores 214 -> 212, retyped field reads 88 -> 82 and
+scoped volatiles 38 -> 29. All three match only under old_agbcp: `wumpa.o`
+moves to `OLD_AGBCC_OBJS` (`Draw`'s and `Reset`'s constant before the
+`ldrb`; its pins reproduced them under agbcc), the other two were old_agbcc
+objects already. With `ResetActionCtrl` converted, action_obj.h's `struct
+act` has no C user left and is gone: `ActionCtrl` checks its size against
+0x38 (PlayRoom's `OperatorNew(0x38)`), and player.h's C prototypes keep
+`struct act` as an incomplete type. action_obj.h keeps only the input and
+flags2 helpers of the action controller's C++ files. orbit_part.h's `struct
+orbit_part` stays the C view of both pickups (drop_extra_life.c,
+entity_spawner.c, crate_break.c and time_trial.c still use it).
+
+- **`DropWumpa`'s last parameter is a `bool`,** like `DropExtraLife`'s
+  (part 7e). The wumpa's payout calls
+  `DropWumpa(spawner, x, y, 0, 0, 1)` with the 1 stored as a byte (`strb`
+  into the stack slot), and entity_spawner.c reads it back with `ldrb`. g++
+  passes a `bool` exactly that way, register order included; a one-byte
+  struct (`struct byte_arg`) gives the same instructions with the 1 loaded
+  before the slot's address, which the C needed a `MATCH_CONST` and
+  hand-written stack slots for. entity_spawner.c is still C, so the call
+  casts `DropWumpa` to the `bool` signature (a function pointer cast; part
+  7e's `DropExtraLife` call uses an asm-label alias). The other `struct byte_arg`
+  parameters (`AddCollisionCandidate`, `AddPaletteCycle`, ...) may well be
+  `bool`s too.
+- **One variable for both axes.** The flight step (`Fly`: `n = x + velX;
+  x = n; n = y + velY; y = n;`, one `n`) gives the ROM's registers
+  (position r1, velocity r0), which the C forced with two `MATCH_USE`s per
+  velocity; and `ExtraLife::Update`'s arrival test computes `x + velX`
+  again from the old values because the sum's variable then holds the new
+  y, which the C did with a `MATCH_KEEP` and a `MATCH_USE`.
+- **`UpdateStopwatch`'s distance test** (9 pins and 2 `asr` asm
+  statements in the C) is a plain `if`/`else` on one variable, `d`, used
+  for both axes (a variable per axis ties the load to the shift), with
+  `MarkGone()` written in both `else`s; cross-jumping merges them into the
+  ROM's single tail.
+- **Kept:** `CreateWumpa`'s `MATCH_KEEP` of `phase` (the C's too). The ROM
+  compares an unknown-to-CSE 0 in r6 with the frame count and stores it at
+  +0x4B while `counter` gets a fresh 0; written as constants, CSE shares
+  one 0. Inline `SetAnim`/`SetFrameIndex`/`SetHop` helpers didn't give it.
+  C idioms kept, each with a comment: `u8 one` locals for the `screenSpace`
+  stores (the 1 before the address), an `s32` view of `affine` for its
+  signed re-read (`Affine`), the `phase + 1` zero-extension spelled out, the
+  palette slot through an `s32` for the `u8` return's zero-extension, and
+  `SendToHud`'s `Offset` inline (the pool constant reloaded per axis).
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -1017,8 +1072,8 @@ Bigger controllers, roughly in order (function counts from
    `_moves.c`, `_update.c`, `_idle.c`, `_land.c`, `_left_ground.c` and
    `kill_player.c`; part 5b the other four (`action_ctrl_event.c`,
    `_hang.c`, `_run_jump.c`, `_states.c`), and action_obj.h's vcall
-   macros went with them. Only `Reset` (`ResetActionCtrl`, wumpa.c) is
-   still C.
+   macros went with them. Its last method, `Reset` (`ResetActionCtrl`,
+   wumpa.cpp), was converted with the pickups in part 7h.
 4. **The boss controllers:** ~~`tiny_update.c`, `mega_mix_update.c`~~
    (done in part 6) and ~~`dingodile*.c`~~ (part 6b). Left: `cortex.c`
    (25 functions, 64 lines with pins or asm; it also has
@@ -1048,7 +1103,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_player_collide.c, crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c~~ | `Crate` (include/crate.hpp) and its accessors | done | |
 | 7f | crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old) | `CrateList`, the crate grid | 13 functions, 1120 lines, 21 pins, 1 asm | 7e |
 | 7g | crates/crate_break.c (old) | the crates' break and bounce paths | 24 functions, 2860 lines, 11 pins, 6 asm | 7e, 7f |
-| 7h | pickups/extra_life.c (old), wumpa.c, wumpa_update.c (old) | `ExtraLife` and `Wumpa` (0x54-byte `Sprite`s with a 14th slot), `Stopwatch` (a `Sprite`), and `ActionCtrl::Reset` (`ResetActionCtrl` is in wumpa.c; then action_obj.h's `struct act` can go) | 37 functions, 1370 lines, 24 pins, 3 asm | 7a |
+| ~~7h~~ | ~~pickups/extra_life.c, wumpa.c, wumpa_update.c~~ | `ExtraLife`, `Wumpa`, `Stopwatch`, `ActionCtrl::Reset`; `struct act` went | done | |
 | 7i | bosses/cortex.c (old) | the Neo Cortex fight's gem, platform mover (a `PlatformMover`) and shot controllers, the rest of the target's, cannon's and boss's methods, Tiny's constructor, destructor and `StartHop`, `OneShotAnimCtrl`'s and `UnusedOneShotAnimCtrl`'s constructors and destructors | 25 functions, 1000 lines, 49 pins, 4 asm | 7d |
 
 Outside this family, the classes built on these: the player (`struct
@@ -1270,3 +1325,8 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   can usually be written as a store and a `return` in each path:
   cross-jumping merges the copies into the ROM's shared tail
   (`GroundSprite::ProbeFloor`, part 7b).
+- **A value the ROM computes again** instead of reusing a sum it just
+  stored: give the sum a variable that is assigned again afterwards (the
+  next axis's sum). CSE then has no register holding it and recomputes the
+  expression (`ExtraLife::Update`, `Fly`, part 7h). Two `MATCH_USE`s per
+  operand were the C's way to get the same registers.

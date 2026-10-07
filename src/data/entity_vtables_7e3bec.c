@@ -27,7 +27,7 @@
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
-/* Used by aabb_setup.c, enemy_ctrl.cpp, wumpa.c,
+/* Used by aabb_setup.c, enemy_ctrl.cpp, wumpa.cpp,
  * sprite_obj.cpp (DestroySpriteObj), sprite_anim.cpp, graphics.cpp (nullsub_12,
  * ResetEntity, DestroyEntity). */
 const struct vtable_slot gEntityVtable[11] = {
@@ -236,7 +236,7 @@ const struct vtable_slot gCrateVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by extra_life.c (UpdateExtraLife). */
+/* Used by extra_life.cpp (UpdateExtraLife). */
 const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideExtraLife),
@@ -254,7 +254,7 @@ const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(CheckExtraLifePickup),
 };
 
-/* Used by wumpa.c (DestroyWumpa, ResetWumpaPickup), wumpa_update.c
+/* Used by wumpa.cpp (DestroyWumpa, ResetWumpaPickup), wumpa_update.cpp
  * (UpdateWumpa). */
 const struct vtable_slot gWumpaVtable[14] = {
     VTABLE_SLOT(NULL),
@@ -273,7 +273,7 @@ const struct vtable_slot gWumpaVtable[14] = {
     VTABLE_SLOT(CheckWumpaPickup),
 };
 
-/* Used by wumpa.c (UpdateStopwatch, DestroyStopwatch). */
+/* Used by wumpa.cpp (UpdateStopwatch, DestroyStopwatch). */
 const struct vtable_slot gStopwatchVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -290,7 +290,7 @@ const struct vtable_slot gStopwatchVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by wumpa.c, action_ctrl.cpp. */
+/* Used by wumpa.cpp, action_ctrl.cpp. */
 const struct vtable_slot gActionCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateActionCtrl),
