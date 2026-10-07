@@ -141,6 +141,7 @@ the names with the header it already includes. A data table in
 | `attack_kinds.h` | `ATTACK_KIND_` | how the player hits a crate, the `gCrateHitResponse` column |
 | `entities.h` (generated) | `ENTITY_`, `ENEMY_KIND_` | entity types (the `gEntitySpawnFuncs` index), enemy-controller kinds |
 | `crates.h` (generated) | `CRATE_KIND_` | `crate.kind` (`CreateCrate`, the `gCrateKind*` tables) |
+| `events.h` | `EVENT_` | event IDs (the event method's `case` labels, `NOTIFY`, the `handleEvent` slot calls); also the kinds that touched objects send |
 
 **Constants that describe data the repository has as source files are
 generated from those files**, not written by hand: the names live in the
@@ -153,7 +154,7 @@ objects that include one when it changes. The entity types come from
 `data/levels/crate_kinds.json` (`tools/levels.py constants`, see
 docs/levels.md). To rename one, edit the JSON.
 
-Planned topics use the same scheme (`events.h`/`EVENT_`, ...).
+Planned topics use the same scheme (`levels.h`/`LEVEL_`, ...).
 `tools/magic_numbers.py` lists the literals that are left, by topic
 (`--report` for the counts), and `--topic T --fix` replaces the ones that
 have exactly one name.

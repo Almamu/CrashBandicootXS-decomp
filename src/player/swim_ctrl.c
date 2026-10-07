@@ -158,7 +158,7 @@ void CheckPlayerCtrlTurn(struct player_ctrl *self)
 void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 arg)
 {
     switch (msg) {
-    case 12:
+    case EVENT_BUMP:
         {
             s32 side = arg & 3;
 
@@ -177,18 +177,18 @@ void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 ar
     case 5:
         PlayerCtrlKillPlayer(self, 0x2D);
         break;
-    case 3:
+    case EVENT_HIT_ELECTRIC:
         PlayerCtrlKillPlayer(self, 0x2B);
         break;
-    case 4:
+    case EVENT_HIT_EXPLOSION:
         PlayerCtrlKillPlayer(self, 0x2C);
         break;
-    case 1:
-    case 6:
-    case 10:
+    case EVENT_HIT:
+    case EVENT_HIT_BITE:
+    case EVENT_HIT_CRUSH:
         PlayerCtrlKillPlayer(self, 0x2E);
         break;
-    case 13:
+    case EVENT_BOUNCE:
         break;
     }
 }

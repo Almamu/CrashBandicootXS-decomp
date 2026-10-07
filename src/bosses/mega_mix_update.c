@@ -317,7 +317,7 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
                 const struct actor_method *m = &pl->vtable->handleEvent;
                 void *t = (u8 *)pl + m->thisOffset;
 
-                ((ab_fn3)m->fn)(t, 0, 1, 0);
+                ((ab_fn3)m->fn)(t, 0, EVENT_HIT, 0);
             }
             return;
         }
