@@ -11,6 +11,7 @@
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -38,8 +39,7 @@ static inline void OrbitClampFrame(struct orbit_part *self)
     s32 frame = 0;
     s32 count = self->bank->records[self->tag].frameCount;
 
-    if (frame >= count)
-        frame = count - 1;
+    CLAMP_INDEX(frame, count);
     self->frame = frame;
 }
 
@@ -122,14 +122,14 @@ void PickUpExtraLife(struct orbit_part *self, u8 randomize)
         self->counter = lowbit;
         if (lowbit) {
             if (rv & 2) {
-                dx = ((rv & 0x3f) + 5) << 8;
+                dx = INT_TO_Q8((rv & 0x3f) + 5);
             } else {
-                dx = (0xeb - (rv & 0x3f)) << 8;
+                dx = INT_TO_Q8(0xeb - (rv & 0x3f));
             }
         } else {
-            dx = ((rv & 0x7f) + 0x24) << 8;
+            dx = INT_TO_Q8((rv & 0x7f) + 0x24);
         }
-        dy = ((rv & 0x1f) + 0x10) << 8;
+        dy = INT_TO_Q8((rv & 0x1f) + 0x10);
         self->state = 2;
     } else {
         dx = 0xb400;
@@ -152,13 +152,13 @@ void PickUpExtraLife(struct orbit_part *self, u8 randomize)
         *(u8 *)&self->screenSpace = one;
     }
 
-    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+    WorldToScreen(self, Q8_TO_INT(self->base.x), Q8_TO_INT(self->base.y), &outX, &outY);
 
-    newX = outX << 8;
+    newX = INT_TO_Q8(outX);
     self->base.x = newX;
     self->velX = -FixedDiv(newX - dx, 0x1400);
 
-    newY = outY << 8;
+    newY = INT_TO_Q8(outY);
     self->base.y = newY;
     self->velY = -FixedDiv(newY - dy, 0x1400);
 }
@@ -204,7 +204,7 @@ void UpdateExtraLife(struct orbit_part *self)
         MATCH_KEEP(vx);
         y = self->base.y + self->velY;
         self->base.y = y;
-        if ((x + vx) >> 8 <= 0xb4 && y >> 8 <= 0xc) {
+        if (Q8_TO_INT(x + vx) <= 0xb4 && Q8_TO_INT(y) <= 0xc) {
             /* Extra reference: puts velX in r3 and y in r2, as in the
              * ROM. */
             MATCH_USE(vx);
@@ -306,8 +306,8 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
     ResetExtraLifePickup(self);
     zero = 0;
     self->base.id = id;
-    self->base.x = x << 8;
-    self->base.y = y << 8;
+    self->base.x = INT_TO_Q8(x);
+    self->base.y = INT_TO_Q8(y);
     self->anchor = ORBIT_POS(self);
     AddToPartList(gTouchableList, self);
     OrbitClampFrame(self);
@@ -340,19 +340,19 @@ void SendExtraLifeToHud(struct orbit_part *self)
     self->state = 1;
     {
         MATCH_HOLD_REG(s32, off, r0) = self->mode;
-        MATCH_HOLD_REG(s32, shifted, r1) = off << 8;
+        MATCH_HOLD_REG(s32, shifted, r1) = INT_TO_Q8(off);
 
         self->base.x -= shifted;
     }
     self->screenSpace = 1;
 
-    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+    WorldToScreen(self, Q8_TO_INT(self->base.x), Q8_TO_INT(self->base.y), &outX, &outY);
 
-    newX = outX << 8;
+    newX = INT_TO_Q8(outX);
     self->base.x = newX;
     self->velX = -FixedDiv(newX - 0xb400, 0x1400);
 
-    newY = outY << 8;
+    newY = INT_TO_Q8(outY);
     self->base.y = newY;
     self->velY = -FixedDiv(newY - 0xc00, 0x1400);
 
@@ -518,8 +518,8 @@ void SetExtraLifePos(struct orbit_part *self, s32 x, s32 y)
 {
     s32 qx, qy;
 
-    self->base.x = x << 8;
-    self->base.y = y << 8;
+    self->base.x = INT_TO_Q8(x);
+    self->base.y = INT_TO_Q8(y);
     qx = *(volatile s32 *)&self->base.x;
     qy = *(volatile s32 *)&self->base.y;
     self->anchor.x = qx;

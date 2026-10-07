@@ -7,6 +7,7 @@
 #include "level.h"
 #include "gfx_part.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
  * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
@@ -138,8 +139,7 @@ void ActionCtrlStateAirborne(struct act *self)
                     part = self->part;
                     frame = 2;
                     count = part->anim->records[part->tag].frameCount;
-                    if (frame >= count)
-                        frame = count - 1;
+                    CLAMP_INDEX(frame, count);
                     part->frame = frame;
                 }
                 ClearPlayerSpeedY(self->part);
@@ -181,8 +181,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 OrMaskByte((u8 *)obj + 0x28, -0x11, 0x10);
                 frame = 3;
                 count = obj->bank->records[obj->tag].frameCount;
-                if (frame >= count)
-                    frame = count - 1;
+                CLAMP_INDEX(frame, count);
                 obj->frame = frame;
 
                 x = gPlayer->x;
@@ -197,8 +196,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 AndByte((u8 *)obj + 0x28, -0x11);
                 frame = 3;
                 count = obj->bank->records[obj->tag].frameCount;
-                if (frame >= count)
-                    frame = count - 1;
+                CLAMP_INDEX(frame, count);
                 obj->frame = frame;
 
                 if (self->state == ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM)
@@ -320,8 +318,7 @@ void ActionCtrlStateSlide(struct act *self)
         part->stepTimer = 0;
         frame = 3;
         count = part->anim->records[part->tag].frameCount;
-        if (frame >= count)
-            frame = count - 1;
+        CLAMP_INDEX(frame, count);
         part->frame = frame;
         return;
     }

@@ -7,6 +7,7 @@
 #include "level.h"
 #include "sprite_bank.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #9/#10: 0x0800A884 - the player object's (`struct
  * player`, player.h) collision method. */
@@ -211,8 +212,8 @@ u8 CollidePlayer(struct player *self)
 
         MATCH_USE(hold); /* r3 hold ends: no code */
         off = A884Offset(self);
-        x = self->x >> 8;
-        y = self->y >> 8;
+        x = Q8_TO_INT(self->x);
+        y = Q8_TO_INT(self->y);
         if (self->mirror.bits.flipX)
             x -= off[0];
         else
@@ -223,7 +224,7 @@ u8 CollidePlayer(struct player *self)
                 s32 snap = (y & 0x00FFFFF8) + 7;
 
                 snap -= y;
-                self->y += snap << 8;
+                self->y += INT_TO_Q8(snap);
                 CALL_M68(self, 0, EVENT_HANG_GRAB, 0);
             }
         } else if (self->hanging != 0) {

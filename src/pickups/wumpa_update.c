@@ -12,6 +12,7 @@
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -43,8 +44,7 @@ static inline void OrbitClampFrame(struct orbit_part *self)
     s32 frame = 0;
     s32 count = self->bank->records[self->tag].frameCount;
 
-    if (frame >= count)
-        frame = count - 1;
+    CLAMP_INDEX(frame, count);
     self->frame = frame;
 }
 
@@ -82,13 +82,13 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
         self->counter = lowbit;
         if (lowbit) {
             if (rv & 2)
-                dx = ((rv & 0x3f) + 5) << 8;
+                dx = INT_TO_Q8((rv & 0x3f) + 5);
             else
-                dx = (0xeb - (rv & 0x3f)) << 8;
+                dx = INT_TO_Q8(0xeb - (rv & 0x3f));
         } else {
-            dx = ((rv & 0x7f) + 0x24) << 8;
+            dx = INT_TO_Q8((rv & 0x7f) + 0x24);
         }
-        dy = ((rv & 0x1f) + 0x10) << 8;
+        dy = INT_TO_Q8((rv & 0x1f) + 0x10);
         self->state = 2;
     } else {
         dx = dy = 0x1000;
@@ -104,12 +104,12 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
     }
     self->base.flags |= 0x10;
 
-    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+    WorldToScreen(self, Q8_TO_INT(self->base.x), Q8_TO_INT(self->base.y), &outX, &outY);
 
-    newX = outX << 8;
+    newX = INT_TO_Q8(outX);
     self->base.x = newX;
     self->velX = -FixedDiv(newX - dx, 0x1400);
-    newY = outY << 8;
+    newY = INT_TO_Q8(outY);
     self->base.y = newY;
     self->velY = -FixedDiv(newY - dy, 0x1400);
 }
@@ -208,7 +208,7 @@ void UpdateWumpa(struct orbit_part *self)
             if (OrbitTimer(self) > 0x100)
                 self->timer = 0;
         }
-        if (self->base.x >> 8 <= 0x10 && self->base.y >> 8 <= 0x10) {
+        if (Q8_TO_INT(self->base.x) <= 0x10 && Q8_TO_INT(self->base.y) <= 0x10) {
             PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
             CollectWumpa(gLevelState);
             ORBIT_MARK_GONE(self, 1);
@@ -237,8 +237,8 @@ void UpdateWumpa(struct orbit_part *self)
         if (++self->counter > 10) {
             self->counter = 0;
             {
-                s32 sx = self->base.x >> 8;
-                s32 sy = self->base.y >> 8;
+                s32 sx = Q8_TO_INT(self->base.x);
+                s32 sy = Q8_TO_INT(self->base.y);
 
                 volatile u8 *q;
 
@@ -340,8 +340,8 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     self->base.table = (void *)gWumpaVtable;
     ResetWumpaPickup(self);
     self->base.id = id;
-    self->base.x = x << 8;
-    self->base.y = y << 8;
+    self->base.x = INT_TO_Q8(x);
+    self->base.y = INT_TO_Q8(y);
     self->anchor = ORBIT_POS(self);
     if (special == 0xffff)
         AddToPartList(gForegroundList, self);
@@ -410,17 +410,17 @@ void SendWumpaToHud(struct orbit_part *self)
 
     PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
     self->state = 1;
-    self->base.x -= self->mode << 8;
+    self->base.x -= INT_TO_Q8(self->mode);
     self->timer = 0xa0;
     OrbitClampFrame(self);
     self->screenSpace = 1;
 
-    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+    WorldToScreen(self, Q8_TO_INT(self->base.x), Q8_TO_INT(self->base.y), &outX, &outY);
 
-    newX = outX << 8;
+    newX = INT_TO_Q8(outX);
     self->base.x = newX;
     self->velX = -FixedDiv(OrbitOffset(newX, 0x1000), 0x1400);
-    newY = outY << 8;
+    newY = INT_TO_Q8(outY);
     self->base.y = newY;
     self->velY = -FixedDiv(OrbitOffset(newY, 0x1000), 0x1400);
     ShowHudWumpa(gHud);

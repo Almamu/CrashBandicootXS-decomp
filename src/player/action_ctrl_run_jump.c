@@ -7,6 +7,7 @@
 #include "player.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
  * docs/matching/archive/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
@@ -201,8 +202,7 @@ void ActionCtrlStateJump(struct act *self)
         part = self->part;
         frame = 2;
         count = part->anim->records[part->tag].frameCount;
-        if (frame >= count)
-            frame = count - 1;
+        CLAMP_INDEX(frame, count);
         part->frame = frame;
         ClearPlayerSpeedY(part);
         ActSetContact(self->part, 0);

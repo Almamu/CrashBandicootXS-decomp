@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "globals.h"
 #include "level.h"
+#include "math_util.h"
 
 /* Calls `DrawSprite` (already matched in `sprite.c`) with the
  * global `gSpriteRenderer` as `self` - same tail-call shape as
@@ -97,8 +98,8 @@ void SetWumpaPos(struct orbit_part *self, s32 x, s32 y)
 {
     s32 storedX, storedY;
 
-    self->base.x = x << 8;
-    self->base.y = y << 8;
+    self->base.x = INT_TO_Q8(x);
+    self->base.y = INT_TO_Q8(y);
     storedX = *(volatile s32 *)&self->base.x;
     storedY = *(volatile s32 *)&self->base.y;
     self->anchor.x = storedX;
@@ -145,10 +146,8 @@ void UpdateStopwatch(struct actor *self)
     s32 dy;
 
     asm volatile("asr %0, %1, #8" : "=r"(dxPart) : "r"(rawX));
-    dx = dxPart - (self->x >> 8);
-    if (dx < 0) {
-        dx = -dx;
-    }
+    dx = dxPart - Q8_TO_INT(self->x);
+    MAKE_ABS(dx);
     if (dx > 0x180) {
         goto outOfRange;
     }
@@ -157,11 +156,9 @@ void UpdateStopwatch(struct actor *self)
         MATCH_HOLD_REG(s32, dyPart, r1);
 
         asm volatile("asr %0, %1, #8" : "=r"(dyPart) : "r"(rawY));
-        dy = dyPart - (self->y >> 8);
+        dy = dyPart - Q8_TO_INT(self->y);
     }
-    if (dy < 0) {
-        dy = -dy;
-    }
+    MAKE_ABS(dy);
     if (dy <= 0x180) {
         goto inRange;
     }
@@ -215,8 +212,8 @@ struct actor *CreateStopwatch(u16 id, u16 x, u16 y, u16 unused)
     self->table = (void *)gStopwatchVtable;
     ResetStopwatch(self);
     self->id = id;
-    self->x = (s32)x << 8;
-    self->y = (s32)y << 8;
+    self->x = INT_TO_Q8((s32)x);
+    self->y = INT_TO_Q8((s32)y);
     return self;
 }
 

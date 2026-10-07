@@ -11,6 +11,7 @@
 #include "level.h"
 #include "globals.h"
 #include "entity_bits.h"
+#include "math_util.h"
 #include "player.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
@@ -163,7 +164,7 @@ static inline s16 Wave(const s16 *table, s32 t, s32 phase)
 void UpdateEnemyOscillateX(struct part_ctrl *self)
 {
     const s16 *table = gSineTable;
-    s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
+    s32 t = __udivsi3(INT_TO_Q8(gRoomFrameCount), self->period);
     MATCH_HOLD_REG(s32, v, r2);
     s32 w;
     struct ctrl_target *target;
@@ -205,7 +206,7 @@ void UpdateEnemyOscillateY(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     MATCH_HOLD_REG(const s16 *, table, r6) = gSineTable;
-    s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
+    s32 t = __udivsi3(INT_TO_Q8(gRoomFrameCount), self->period);
 
     /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
     MATCH_CLOBBER(r8);
@@ -368,13 +369,13 @@ s32 GetSfxVolumeAt(s32 x, s32 y)
     MATCH_HOLD_REG(s32, mask, r2);
     MATCH_HOLD_REG(s32, d, r1);
 
-    mask = obj->x >> 8;
+    mask = Q8_TO_INT(obj->x);
     dx = dx - mask;
     mask = dx >> 31;
     dx = dx ^ mask;
     mask = dx - mask;
 
-    dy = dy - (obj->y >> 8);
+    dy = dy - Q8_TO_INT(obj->y);
     {
         MATCH_HOLD_REG(s32, mask2, r0);
         mask2 = dy >> 31;
@@ -384,8 +385,7 @@ s32 GetSfxVolumeAt(s32 x, s32 y)
 
     d = (dy >= mask) ? dy : mask;
     d = (d >= 0x20) ? d : 0x20;
-    if (d > 0xa0)
-        d = 0xa0;
+    LIMIT_MAX(d, 0xa0);
     return 0x100 - (d - 0x20) * 2;
 }
 
@@ -521,8 +521,8 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * declaration here takes the four arguments only. */
 void UpdatePeriodicSpawner(struct periodic_spawner *self)
 {
-    s32 selfX = self->base.x >> 8;
-    s32 cameraX = gPlayer->x >> 8;
+    s32 selfX = Q8_TO_INT(self->base.x);
+    s32 cameraX = Q8_TO_INT(gPlayer->x);
 
     if ((u32)(selfX - cameraX - 0xa1) <= 0xee) {
         s32 base = (s32)gRoomFrameCount;

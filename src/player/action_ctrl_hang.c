@@ -13,6 +13,7 @@
 #include "sprite_bank.h"
 #include "box_part.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #17, ROM 0x08014674-0x08014F8C, formerly
  * asm/code_3_2_17_14674.s (details in
@@ -399,8 +400,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
             part = self->part;
             frame = 5;
             count = part->anim->records[part->tag].frameCount;
-            if (frame >= count)
-                frame = count - 1;
+            CLAMP_INDEX(frame, count);
             part->frame = frame;
             ActQueue27(self, zero, 0x20);
         }
@@ -513,13 +513,13 @@ void ActionCtrlStateHangMove(struct act *self)
             info = &gEmptySpritePoint;
             break;
         }
-        x = self->part->x >> 8;
+        x = Q8_TO_INT(self->part->x);
         y = self->part->y;
         if ((s8)(self->part->mirror.all << 3) < 0)
             x += info->x;
         else
             x -= info->x;
-        self->part->x = x << 8;
+        self->part->x = INT_TO_Q8(x);
         self->part->y = y;
     }
 }
@@ -587,12 +587,12 @@ void DoSuperBodySlamShockwave(struct act *self)
     s32 i;
 
     part = (struct actor *)self->part;
-    BreakCratesInArea(part->x >> 8, part->y >> 8, 0x40, 0x12);
+    BreakCratesInArea(Q8_TO_INT(part->x), Q8_TO_INT(part->y), 0x40, 0x12);
     threshold = 0x40;
 
     part = (struct actor *)self->part;
-    px = part->x >> 8;
-    py = part->y >> 8;
+    px = Q8_TO_INT(part->x);
+    py = Q8_TO_INT(part->y);
 
     i = 0;
     goto loop_cond;
@@ -639,12 +639,12 @@ loop_body:
         {
             MATCH_HOLD_REG(s32, sign, r0);
 
-            dx = (other->x >> 8) - px;
+            dx = Q8_TO_INT(other->x) - px;
             sign = dx >> 31;
             dx ^= sign;
             dx -= sign;
 
-            sign = (other->y >> 8) - py;
+            sign = Q8_TO_INT(other->y) - py;
             dy = sign >> 31;
             sign ^= dy;
             dy = sign - dy;

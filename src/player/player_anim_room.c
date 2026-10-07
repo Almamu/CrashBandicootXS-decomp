@@ -4,6 +4,7 @@
 #include "player.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* GitHub issue #9/#10: 0x0800AAEC, the input-action-check function the
  * 42-slot `gActionCtrlStateTable` action-dispatch table's own entries
@@ -60,7 +61,7 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
         dir = 2;
     else
         dir = 1;
-    pos.y = pos.y + (box->offY << 8);
+    pos.y = pos.y + INT_TO_Q8(box->offY);
     pos.x >>= 8;
     pos.y >>= 8;
     if ((u8)ProbeTerrain(gLevelLayers, dir, (struct probe_pos *)&pos, h, &origY))

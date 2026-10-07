@@ -6,6 +6,7 @@
 #include "player.h"
 #include "level.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): three
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -149,7 +150,7 @@ void UpdateActionCtrl(struct act *self)
         struct player *part = self->part;
         s32 py = part->y;
 
-        if (py > (gLevelLayers->layer0->heightPx << 8) - 0x1400) {
+        if (py > INT_TO_Q8(gLevelLayers->layer0->heightPx) - 0x1400) {
             part->flags.all &= 0x7F;
             {
                 struct player *q = self->part;
@@ -164,7 +165,7 @@ void UpdateActionCtrl(struct act *self)
                 struct player *r = self->part;
                 s32 py2 = r->y;
 
-                if (py2 > (gLevelLayers->layer0->heightPx << 8) + 0x1400) {
+                if (py2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
                     r->deadline = 0;
                     SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
                     {

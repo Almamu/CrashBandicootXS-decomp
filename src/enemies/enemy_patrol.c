@@ -34,6 +34,7 @@
  */
 #include "part_ctrl.h"
 #include "enemies.h"
+#include "math_util.h"
 
 void UpdateEnemyPatrol(struct part_ctrl *self)
 {
@@ -59,8 +60,7 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
                 target = self->target;
                 t = 8;
                 steps = (*target->keyframes)[target->frame].steps;
-                if (t >= steps)
-                    t = steps - 1;
+                CLAMP_INDEX(t, steps);
                 target->tick = t;
             }
         }
