@@ -12,6 +12,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "globals.h"
+#include "math_util.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -192,8 +193,8 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
 {
     struct row_obj *o = p;
 
-    o->x = x << 8;
-    o->y = y << 8;
+    o->x = INT_TO_Q8(x);
+    o->y = INT_TO_Q8(y);
     DrawSpriteWithOffset((struct actor *)o, 0, 0);
 }
 

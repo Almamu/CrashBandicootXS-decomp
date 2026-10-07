@@ -2,6 +2,7 @@
 #include <agb_syscall.h>
 #include <libgcc.h>
 #include "util.h"
+#include "math_util.h"
 
 /* Fixed-point helpers on the game's 24.8 coordinates (the s16 ones on
  * 8.8 values).
@@ -10,11 +11,11 @@
  * each delta, squares, sums, and shifts the result back to 24.8. */
 s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2)
 {
-    s32 dx = (x1 - x2) >> 8;
+    s32 dx = Q8_TO_INT(x1 - x2);
     s32 dxSq = dx * dx;
-    s32 dy = (y1 - y2) >> 8;
+    s32 dy = Q8_TO_INT(y1 - y2);
     s32 dySq = dy * dy;
-    return (dxSq + dySq) << 8;
+    return INT_TO_Q8(dxSq + dySq);
 }
 
 
@@ -22,11 +23,11 @@ s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2)
  * through the BIOS Sqrt, shifted back to 24.8. */
 u32 FixedDist(s32 x1, s32 x2, s32 y1, s32 y2)
 {
-    s32 dx = (x1 - x2) >> 8;
+    s32 dx = Q8_TO_INT(x1 - x2);
     s32 dxSq = dx * dx;
-    s32 dy = (y1 - y2) >> 8;
+    s32 dy = Q8_TO_INT(y1 - y2);
     s32 dySq = dy * dy;
-    return (u16)Sqrt(dxSq + dySq) << 8;
+    return INT_TO_Q8((u16)Sqrt(dxSq + dySq));
 }
 
 /* arg0 / arg1 in 24.8. */
@@ -41,9 +42,9 @@ s32 FixedDiv(s32 arg0, s32 arg1)
 s32 FixedMul(s32 a, s32 b)
 {
     if (a > b) {
-        a >>= 8;
+        a = Q8_TO_INT(a);
     } else {
-        b >>= 8;
+        b = Q8_TO_INT(b);
     }
     return a * b;
 }

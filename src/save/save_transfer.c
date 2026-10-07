@@ -2,6 +2,7 @@
 #include "match.h"
 #include "link.h"
 #include "save.h"
+#include "math_util.h"
 
 void SetSaveFlags(struct save_data *self, u8 flags)
 {
@@ -32,8 +33,7 @@ void SendSaveTransferChunk(struct settings_sync_pump *self)
             u8 *src;
             s32 i;
 
-            if (n > 0x60)
-                n = 0x60;
+            LIMIT_MAX(n, 0x60);
             src = self->cursor;
             if (ch->writePos < 0x80 - n) {
                 for (i = n - 1; i != -1; i--) {
