@@ -73,7 +73,7 @@ struct collision_candidate {
  */
 struct collision_queue {
     s32 count; // 0x00
-    // 0x04 - ResetCollisionQueue clears it, crate_break.c's D18C_COMMIT sets
+    // 0x04 - ResetCollisionQueue clears it, QueueCratePlayerCollision (crate_break.cpp) sets
     // it, and while it is set ApplyCrateCollision leaves the player's
     // position alone
     u8 posCommitted;

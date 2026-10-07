@@ -1,10 +1,10 @@
 #ifndef GUARD_CRATE_HPP
 #define GUARD_CRATE_HPP
 
-/* The crate as C++ (#664, docs/cplusplus.md, part 7e): the class behind
- * gCrateVtable (src/crates/). crate.h's `struct crate` is its C view, for
- * the files that are still C (crate_break.c, the crate list and grid,
- * collision_queue.c, room_entities.c).
+/* The crate as C++ (#664, docs/cplusplus.md, parts 7e and 7g): the class
+ * behind gCrateVtable (src/crates/). crate.h's `struct crate` is its C
+ * view, for the files that are still C (the crate list and grid,
+ * room_entities.c) and the C prototypes (crates.h).
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp); cxx_symbols.txt
  * maps the mangled names onto the C names. */
@@ -102,19 +102,33 @@ public:
     void SetTrialKind(s32 value);
     s32 GetTrialKind();
 
-    /* Still C, in crate_break.c (part 7g). */
+    /* The hits, breaks and explosions (crate_break.cpp, part 7g). */
     void QueuePlayerCollision(s32 idx); // QueueCratePlayerCollision
-    void BreakInStack(u32 arg1, u32 arg2, u32 dir);
-    void Explode(u8 near);
+    void ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+                        bool limited, bool above, bool forced); // ApplyCrateCollision
+    void ClearStackTouched();                                   // ClearCrateStackTouched
+    void MarkStackTouched(struct aabb *box);                    // MarkCrateStackTouched
+    void BounceWumpa();                                         // BounceWumpaCrate
+    void LightTnt();                                            // LightTntCrate
+    void OpenCheckpoint();                                      // OpenCheckpointCrate
+    void BreakInStack(u8 flag, bool once, u32 dir);             // BreakCrateInStack
+    void Break(u32 arg1);                                       // BreakCrate
+    void OpenMystery(bool flag);                                // OpenMysteryCrate
+    void OpenSlot(bool flag);                                   // OpenSlotCrate
+    void DropAbove();                                           // DropCratesAbove
+    void Explode(u8 near);                                      // ExplodeCrate
+    void BlastNearby(s32 dist);                                 // BlastNearbyCrates
+    void ActivateNitroSwitch();                                 // ActivateNitroSwitchCrate
+    void ActivateIronSwitch();                                  // ActivateIronSwitchCrate
+    void SolidifyOutlines();                                    // SolidifyOutlineCrates
+    void SolidifyOutline();                                     // SolidifyOutlineCrate
+    void FinishBroken();                                        // FinishBrokenCrate
     void UpdateTntCountdown();
-    void UpdateSlot();       // UpdateSlotCrate
-    void UpdateFall();       // UpdateCrateFall
-    void FinishBroken();     // FinishBrokenCrate
-    void SolidifyOutlines(); // SolidifyOutlineCrates
-    void SolidifyOutline();  // SolidifyOutlineCrate
+    void UpdateSlot(); // UpdateSlotCrate
+    void UpdateFall(); // UpdateCrateFall
 
     /* Switches to animation `t` from its start: the three-call idiom
-     * every state change uses (crate.h's PhysSetTag). */
+     * every state change uses. */
     void SetTag(u8 t)
     {
         tag = t;
@@ -124,8 +138,8 @@ public:
     }
 
     /* Sets `frame` to `idx`, clamped to the animation's last step. `idx`
-     * being a parameter keeps a constant argument in its own register
-     * (crate.h's PhysSetFrame). */
+     * being a parameter keeps a constant argument in its own register,
+     * which the callers' later stores reuse (BreakCrate, UpdateCrate). */
     void ClampFrame(s32 idx)
     {
         u8 n = bank->anims[tag].frameCount;
@@ -134,6 +148,14 @@ public:
         frame = idx;
     }
 };
+
+/* codegen: DropWumpa and DropExtraLife (level.h) with their flag a bool,
+ * as the crates pass it: a byte store into its stack slot (a u32 or u8
+ * argument is stored as a word). */
+extern struct orbit_part *DropWumpaFlag(void *spawner, u32 x, u32 y, u32 p3, u32 p4,
+                                        bool flag5) asm("DropWumpa");
+extern struct orbit_part *DropExtraLifeFlag(void *spawner, u32 x, u32 y, u32 p3, u32 p5,
+                                            bool flag6) asm("DropExtraLife");
 
 /* The line steppers (crate_line_step.hpp), inline: FindLineCrossing
  * (crate_reset.cpp) inlines them. crate.cpp, which has their out-of-line

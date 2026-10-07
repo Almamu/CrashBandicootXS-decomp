@@ -102,7 +102,7 @@ extern const u8 gAttackKindBreakLimited[8];
 /* Set when the crate list changes (sym_iwram.txt). */
 extern u8 gCrateListChanged;
 
-/* src/crates/crate_break.c */
+/* src/crates/crate_break.cpp */
 extern void QueueCratePlayerCollision(struct crate *self, s32 idx);
 extern void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
                                 struct e08c_pos pos, s32 hit, struct byte_arg p20,
