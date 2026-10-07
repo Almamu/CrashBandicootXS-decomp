@@ -425,6 +425,13 @@ counts them by kind) and what the C++ still needs.
 | `src/player/swim_ctrl_drift.cpp` | `PlayerCtrl::SetDriftY` | 1 | agbcp | 13 pins -> 0 | 4 |
 | `src/player/swim_ctrl_stroke.cpp` | `PlayerCtrl`'s `StartStroke`, `StartSpin`, `ApplySwimDrift` | 3 | old_agbcp | 0 -> 0 | 4 |
 | `src/player/input_ctrl.cpp` (again) | the 6 swim controller accessors are `PlayerCtrl` methods now | 6 | old_agbcp | 0 -> 0 | 4 |
+| `src/player/action_ctrl.cpp` | `ActionCtrl` (include/action_ctrl.hpp): constructor, destructor, `SetModeAnim`, `SetTargetAnim`, `Restart`, the motion queue accessors, 4 short state methods; `PlayerCtrl::Reset`/`Restart` | 23 + 2 | agbcp | 6 pins -> 0 (and the `SetTargetAnim` return cast and gotos) | 5a |
+| `src/player/action_ctrl_moves.cpp` | `ActionCtrl::SetMode`, `Attach`, the spin/run/jump starts, `StartTornadoFall`, `EndSpin`, `SteerSpin`, 7 state methods | 17 | old_agbcp | 18 pins, 2 keeps, 1 const, 1 `"+r"` asm, 1 asm jump table, 3 volatile casts, 4 retyped stores -> 2 pins, 1 const, 1 `"+r"` asm | 5a |
+| `src/player/action_ctrl_update.cpp` | `ActionCtrl::Update`, `TryDoubleJump`, `HandleAirInput` | 3 | old_agbcp | 1 const -> 0; the 20-line PMF dispatch goes | 5a |
+| `src/player/action_ctrl_idle.cpp` | `ActionCtrl::ApplyMotion`, `StateIdle` | 2 | old_agbcp | 3 uses -> 0 | 5a |
+| `src/player/action_ctrl_land.cpp` | `ActionCtrl::StateCrawlStandUp`, `StateBodySlamLand`, `StateLand` | 3 | agbcp | 0 -> 0 | 5a |
+| `src/player/action_ctrl_left_ground.cpp` | `ActionCtrl::CheckLeftGround` | 1 | **old_agbcp** (was agbcc) | 3 pins -> 0 | 5a |
+| `src/player/kill_player.cpp` | `ActionCtrl::KillPlayer`, `UpdateSkidAnim`, `UpdateFacing` | 3 | **old_agbcp** (was agbcc) | 44 pins, 1 asm -> 1 pin | 5a |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -519,6 +526,48 @@ an inline `u8 FlipX()` helper. Two C idioms stay: the
 self-assignment is deleted, in C++ as in C), and the BLKmode `struct keys`
 stack copy of `gKeys`.
 
+Part 5a in numbers: the first 7 of the action controller's 11 files, 52
+`ActionCtrl` methods plus `PlayerCtrl::Reset`/`Restart`;
+`MATCH_HOLD_REG` 2061 -> 1993, instruction-emitting `asm` 238 -> 236,
+`MATCH_CONST` 30 -> 29, `MATCH_USE` 82 -> 79, `MATCH_KEEP` 61 -> 59,
+retyped field stores 228 -> 224 and scoped volatiles 48 -> 45
+project-wide. `ActionCtrl` (include/action_ctrl.hpp) declares all of its
+methods, also those still in C files (cxx_symbols.txt maps them to their
+C names), and its state table is `static const StateFunc
+stateFuncs[ACTION_STATE_COUNT]` (`gActionCtrlStateTable`), dispatched by
+`(this->*stateFuncs[state])()`. `kill_player.o` and
+`action_ctrl_left_ground.o` move to `OLD_AGBCC_OBJS`: their clean C++
+matches only under old_agbcp (`KillPlayer`'s constant-before-`ldrb`); their
+47 pins reproduced old_agbcc's code under agbcc. `action_ctrl.o` and
+`action_ctrl_land.o` match under both and stay on agbcc.
+
+What replaced the pins, mostly one idea: **an inline function's
+parameter is computed before its body.** Where the ROM materializes a
+constant early (before a call, before the stores that use it), an inline
+helper taking it as a parameter gives that order: `QueueX`/`QueueY`/
+`QueueNowX`/`QueueNowY` for the motion queue's three-byte stores,
+`SetModeAnimNow(mode, anim, frame[, frames])` for a mode change whose 0
+stays in a callee-saved register across the two virtual calls
+(`StartHighJump`, `StateHangGrab`), and `UpdateFacing`'s two turns
+(`FaceLeft`/`FaceRight`, whose 0 and 1 come first). Likewise an inline
+accessor (`IsSlippery`, `SetSlippery`, `KeysHeld`) keeps the player's
+`slippery` offset, 0x100, from being shared with another 0x100 (an
+R_BUTTON test, a `PlaySfx` volume) through a register, which is what the
+C's `PartByte(part, 0x100)` and `K100()` were for.
+
+Three workarounds stay, each with a comment: `StartTornadoFall`'s two
+pins (the ROM's `this`/`entry` registers and the late 0), `EndSpin`'s
+`MATCH_CONST` plus `"+r"` asm (the ROM ANDs L_BUTTON through a copy into
+the input's own register), and `UpdateSkidAnim`'s one pin (the ROM tests
+0x18 on a copy of the animation; a `switch` tests all four on one
+register). `HandleAirInput` keeps action_obj.h's byte view of `flags2`
+(`ACT_PART_FLAGS0D`) for its register order.
+
+`Ctrl::SetTargetAnim` (slot 10) now returns `s32`, not `u8`: the override
+returns the base's result, and with a `u8` g++ zero-extends it after the
+call, which the ROM doesn't. `ctrl.o`'s code is the same either way. The C
+had cast `SetCtrlTargetAnim` to an `s32` function for the same reason.
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
@@ -527,7 +576,8 @@ C files: `Ctrl`/`struct ctrl` (objects.h), `InputCtrl`/`struct
 input_ctrl` (input_ctrl.hpp) and `BossCtrl`/`struct boss_ctrl` (player.h),
 `MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h), `SpriteObj`/`struct
 gobj` (gobj_1a794.h), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
-`PeriodicSpawner`/`struct periodic_spawner` (enemies.h). Each class has
+`PeriodicSpawner`/`struct periodic_spawner` (enemies.h),
+`ActionCtrl`/`struct act` (action_obj.h). Each class has
 a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
@@ -556,11 +606,15 @@ Bigger controllers, roughly in order (function counts from
 2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3. Only
    `Ctrl::Update` (`UpdateCtrl`, an empty function in `system/boot.c`)
    is still C.
-3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4, except
-   `Reset`/`Restart`, which live in `action_ctrl.c`. Next, **the action
-   controller** (`ActionCtrl`, `action_ctrl*.c`, 10 files, about 76
-   functions and most of the controllers' virtual calls), which takes
-   `PlayerCtrl`'s last two methods with it.
+3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4; its
+   `Reset`/`Restart` (in `action_ctrl.cpp`) in part 5a. **The action
+   controller** (`ActionCtrl`): part 5a converted `action_ctrl.c`,
+   `_moves.c`, `_update.c`, `_idle.c`, `_land.c`, `_left_ground.c` and
+   `kill_player.c`. Left for part 5b: `action_ctrl_event.c`
+   (`HandleEvent`), `_hang.c` (11 methods), `_run_jump.c` (2) and
+   `_states.c` (11), 25 methods with about 35 pins and asm statements, and
+   then action_obj.h's vcall macros (`ACT_CALL*`/`ACT_VCALL*`) and trio
+   inlines can go.
 4. **The boss controllers:** `tiny_update.c`, `mega_mix_update.c`
    (`UpdateMegaMix`), `dingodile*.c` and `cortex.c` (25 functions, 64 lines
    with pins or asm; it also has `OneShotAnimCtrl`'s and
@@ -675,3 +729,13 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **`delete this`** is the ROM's `if (self) self->vtable[9](self, 3)`
   (`HandleEvent`), and an inline root destructor folds into the derived
   one, its dead vtable pointer store dropped (`~PeriodicSpawner`).
+- **A constant the ROM loads early** (before the calls or stores that use
+  it) is usually an inline function's parameter: the inliner computes the
+  arguments before the body. Try an inline helper before a pin
+  (`ActionCtrl::QueueNowX`, `SetModeAnimNow`; part 5a).
+- **A `u8`-returning virtual whose override returns the base's result**
+  gets a zero-extension after the call. The ROM's `ActionCtrl::SetTargetAnim`
+  has none, so slot 10 returns `s32`.
+- **Two tests of the same bit** are threaded into one when spelled the
+  same; the ROM's re-test needs two spellings (`sbits.flipX < 0`, then
+  `(s32)(mirror.all << 27) >= 0`: `UpdateFacing`).

@@ -254,6 +254,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_event.o \
                   $(C_BUILDDIR)/player/action_ctrl_idle.o \
                   $(C_BUILDDIR)/player/action_ctrl_update.o \
+                  $(C_BUILDDIR)/player/kill_player.o \
+                  $(C_BUILDDIR)/player/action_ctrl_left_ground.o \
                   $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
                   $(C_BUILDDIR)/player/action_ctrl_run_jump.o \

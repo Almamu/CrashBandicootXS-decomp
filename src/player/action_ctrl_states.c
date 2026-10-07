@@ -678,7 +678,7 @@ turn_done:
     }
 }
 
-/* This file (and action_ctrl_land.c, its non-adjacent continuation) covers
+/* This file (and action_ctrl_land.cpp, its non-adjacent continuation) covers
  * part of `gActionCtrlStateTable`, the 42-slot per-level action dispatch
  * table documented in docs/rom_map.md ("`gActionCtrlStateTable` is a
  * 42-slot, fully-populated action dispatch table") - `self` is the

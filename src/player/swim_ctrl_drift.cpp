@@ -4,7 +4,7 @@ extern "C" {
 #include "globals.h"
 }
 
-/* GitHub issue #19: continuation of action_ctrl.c's chunk
+/* GitHub issue #19: continuation of action_ctrl.cpp's chunk
  * (0x08015840-0x08016128), non-adjacent since
  * `StartStroke`/`StartSpin`/`ApplySwimDrift` (swim_ctrl_stroke.cpp)
  * sit between them - see docs/matching/archive/issue-19-0x08015840-actor.md.
