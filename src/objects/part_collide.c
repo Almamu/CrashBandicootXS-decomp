@@ -26,6 +26,6 @@ void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_p
         struct part_method *m = PART_METHOD(part, 0x68);
 
         ((part_method3_fn)m->fn)((u8 *)part + m->thisOffset, 1, other->kind, 0);
-        other->flags |= 8;
+        other->flags |= PART_FLAG_TOUCHED;
     }
 }

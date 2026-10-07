@@ -15,7 +15,7 @@
  * `& 7`). */
 u32 GetSlotCrateStage(struct crate *self)
 {
-    return ((u32)self->u48.slotState & 0xc0) >> 6;
+    return ((u32)self->u48.slotState & CRATE_SLOT_STAGE_MASK) >> CRATE_SLOT_STAGE_SHIFT;
 }
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
@@ -33,7 +33,8 @@ void DecrementSlotCrateStage(struct crate *self)
 
     if (state != 0) {
         u8 newState = (u8)(state - 1);
-        self->u48.slotState = (self->u48.slotState & 0x3f) | (newState << 6);
+        self->u48.slotState =
+            (self->u48.slotState & CRATE_SLOT_CLEAR_STAGE) | (newState << CRATE_SLOT_STAGE_SHIFT);
     }
 }
 
@@ -41,21 +42,22 @@ void DecrementSlotCrateStage(struct crate *self)
 void SetSlotCrateStage(struct crate *self, u32 state)
 {
     u8 s = (u8)state;
-    self->u48.slotState = (self->u48.slotState & 0x3f) | (s << 6);
+    self->u48.slotState =
+        (self->u48.slotState & CRATE_SLOT_CLEAR_STAGE) | (s << CRATE_SLOT_STAGE_SHIFT);
 }
 
 /* Clears the slot crate's stage (`u48.slotState` bits 6-7). */
 void ClearSlotCrateStage(struct crate *self)
 {
     u32 v = self->u48.slotState;
-    v &= 0x3f;
+    v &= CRATE_SLOT_CLEAR_STAGE;
     self->u48.slotState = v;
 }
 
 /* Getter for the slot crate's spins left (`u48.slotState` bits 3-5). */
 u32 GetSlotCrateSpins(struct crate *self)
 {
-    return ((u32)self->u48.slotState & 0x38) >> 3;
+    return ((u32)self->u48.slotState & CRATE_SLOT_SPINS_MASK) >> CRATE_SLOT_SPINS_SHIFT;
 }
 
 /* Decrements `self+0x48`'s bits 3-5 sub-state by one, if it isn't
@@ -67,7 +69,8 @@ void DecrementSlotCrateSpins(struct crate *self)
 
     if (state != 0) {
         u8 newState = (u8)(state - 1);
-        self->u48.slotState = (self->u48.slotState & 0xc7) | (newState << 3);
+        self->u48.slotState =
+            (self->u48.slotState & CRATE_SLOT_CLEAR_SPINS) | (newState << CRATE_SLOT_SPINS_SHIFT);
     }
 }
 
@@ -75,20 +78,21 @@ void DecrementSlotCrateSpins(struct crate *self)
 void SetSlotCrateSpins(struct crate *self, u32 state)
 {
     u8 s = (u8)state;
-    self->u48.slotState = (self->u48.slotState & 0xc7) | (s << 3);
+    self->u48.slotState =
+        (self->u48.slotState & CRATE_SLOT_CLEAR_SPINS) | (s << CRATE_SLOT_SPINS_SHIFT);
 }
 
 /* Setter for the slot crate's phase (`u48.slotState` bits 0-2). */
 void SetSlotCratePhase(struct crate *self, u32 state)
 {
     u8 s = (u8)state;
-    self->u48.slotState = (self->u48.slotState & 0xf8) | s;
+    self->u48.slotState = (self->u48.slotState & CRATE_SLOT_CLEAR_PHASE) | s;
 }
 
 /* Getter for the slot crate's phase (`u48.slotState` bits 0-2). */
 u32 GetSlotCratePhase(struct crate *self)
 {
-    return self->u48.slotState & 7;
+    return self->u48.slotState & CRATE_SLOT_PHASE_MASK;
 }
 
 void SetCrateKind(struct crate *self, u8 val)
@@ -116,7 +120,7 @@ void SetCrateState(struct crate *self, u32 val)
 {
     u8 v = (u8)val;
     u8 *p = &self->state;
-    u32 mask = 0x80;
+    u32 mask = CRATE_STATE_BUSY;
     *p = v | (mask & *p);
 }
 
@@ -127,7 +131,7 @@ u32 GetCrateState(struct crate *self)
      * 0x7f` lets this compiler reuse r0 as the address register
      * instead, dropping the ROM's own `adds r1, r0, #0` copy. */
     MATCH_HOLD_REG(u8 *, p, r1) = &self->state;
-    MATCH_HOLD_REG(u32, mask, r0) = 0x7f;
+    MATCH_HOLD_REG(u32, mask, r0) = CRATE_STATE_MASK;
     MATCH_HOLD_REG(u8, v, r1) = *p;
     return mask & v;
 }
@@ -150,7 +154,7 @@ s32 GetCrateFallSpeed(struct crate *self)
 u32 IsCrateBusy(struct crate *self)
 {
     MATCH_HOLD_REG(u8 *, p, r0) = &self->state;
-    MATCH_HOLD_REG(u32, mask, r1) = 0x80;
+    MATCH_HOLD_REG(u32, mask, r1) = CRATE_STATE_BUSY;
     MATCH_HOLD_REG(u8, v, r0) = *p;
     mask &= v;
     if (mask != 0) {
@@ -164,7 +168,7 @@ u32 IsCrateBusy(struct crate *self)
 void SetCrateBusy(struct crate *self)
 {
     u8 *p = &self->state;
-    u32 mask = 0x80;
+    u32 mask = CRATE_STATE_BUSY;
     u8 v = mask | *p;
     struct player *g;
     u32 one;
@@ -179,7 +183,7 @@ void SetCrateBusy(struct crate *self)
 void ClearCrateBusy(struct crate *self)
 {
     u8 *p = &self->state;
-    u32 mask = 0x7f;
+    u32 mask = CRATE_STATE_MASK;
     u8 v = mask & *p;
     u32 zero = 0;
     *p = v;

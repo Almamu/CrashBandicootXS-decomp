@@ -348,9 +348,10 @@ void UpdatePartList(struct part_list *list)
         struct box_part **items = list->items;
         struct box_part *part = items[i];
 
-        if (part->flags & 1) {
+        if (part->flags & PART_FLAG_GONE) {
             if (i < list->capacity) {
-                CpuSet(&items[i + 1], &items[i], ((list->count - i) & 0x1FFFFF) | 0x4000000);
+                CpuSet(&items[i + 1], &items[i],
+                       ((list->count - i) & CPU_SET_COUNT_MASK) | CPU_SET_32BIT);
                 list->count--;
                 list->items[list->count] = NULL;
             }
@@ -480,7 +481,7 @@ void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_p
             }
             break;
         case 2:
-            part->flags |= 8;
+            part->flags |= PART_FLAG_TOUCHED;
             if (gLevelState->maskLevel) {
                 CALL_HIT(part, 1, EVENT_HIT, 0);
             }

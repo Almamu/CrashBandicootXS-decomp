@@ -79,10 +79,10 @@ void RemoveFromPartList(struct part_list *manager, void *target)
         s32 srcOff = off + 4;
         void *src = (u8 *)base + srcOff;
         void *dst = (u8 *)base + off;
-        s32 control = (manager->count - i) & 0x1FFFFF;
+        s32 control = (manager->count - i) & CPU_SET_COUNT_MASK;
         s32 newCount;
 
-        control |= 0x4000000;
+        control |= CPU_SET_32BIT;
         CpuSet(src, dst, control);
 
         newCount = manager->count - 1;
@@ -109,8 +109,8 @@ void RemovePartListAt(struct part_list *manager, s32 index)
         base = (u8 *)manager->items;
         src = base + srcOff;
         dst = base + off;
-        control = (manager->count - index) & 0x1FFFFF;
-        control |= 0x4000000;
+        control = (manager->count - index) & CPU_SET_COUNT_MASK;
+        control |= CPU_SET_32BIT;
         CpuSet(src, dst, control);
 
         newCount = manager->count - 1;

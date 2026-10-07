@@ -53,7 +53,7 @@ struct box_part {
     u16 id;  // 0x08 - bit index in the "gone" bitmap, 0xFFFF for none
     u8 kind; // 0x0A
     u8 unk_0B;
-    u8 flags;  // 0x0C - bit 0 gone, bit 2 visible, bit 3 hit
+    u8 flags;  // 0x0C - bit 0 gone, bit 2 visible, bit 3 touched (PART_FLAG_*)
     u8 flags2; // 0x0D - bit 3: solid (pushes the player out)
     u8 unk_0E[0xa];
     u8 *vtable; // 0x18 - method table, see PART_METHOD
@@ -91,6 +91,17 @@ struct box_part {
     u8 unk_6A[0xa];
     u32 hitMask; // 0x74 - probe axes ProbeGroundSpriteTerrain hit this call
 };
+
+/* box_part.flags (the byte at 0x0C every part view shares; crate.h's
+ * struct phys_flag_bits is the bitfield view of the same byte). */
+#define PART_FLAG_GONE    1 // removed (MarkEntityGone); the part and crate lists drop it
+#define PART_FLAG_TOUCHED 8 // hit by another object (CollidePartWithObject); IsEntityTouched
+
+/* box_part.moveAxes (player.h's `dir`, the same byte): the direction
+ * bits, 1 right, 2 left, 4 up, 8 down. The X pair is also the X probe
+ * mode, the Y pair the Y probe mode (ProbeGroundSpriteTerrain). */
+#define PART_DIR_X_MASK 3
+#define PART_DIR_Y_MASK 0xc
 
 /* The part list the per-frame collision passes walk (UpdatePartList
  * compacts `items` and fills `visible`; CollidePartList walks `visible`). */

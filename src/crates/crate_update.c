@@ -73,7 +73,7 @@ void UpdateCrate(struct crate *self)
             }
         }
         if (self->kind == CRATE_KIND_SLOT) {
-            if ((self->state & 0x7f) == 0) {
+            if ((self->state & CRATE_STATE_MASK) == 0) {
                 UpdateSlotCrate(self);
                 goto done;
             }
@@ -88,11 +88,11 @@ void UpdateCrate(struct crate *self)
     if (self->kind == CRATE_KIND_BOUNCY_WUMPA && self->u48.bounceTimer > 0)
         self->u48.bounceTimer--;
     UpdateCrateFall(self);
-    if (self->state & 0x80) {
+    if (self->state & CRATE_STATE_BUSY) {
         if (self->animDone != 0) {
             PhysSetFrame(self, 0);
             self->animDone = 0;
-            self->state &= 0x7f;
+            self->state &= CRATE_STATE_MASK;
             gPlayer->busy = 0;
             if (self->kind == CRATE_KIND_NITRO_SWITCH) {
                 struct anim_rec *recs;
@@ -113,7 +113,7 @@ void UpdateCrate(struct crate *self)
                 SetSpriteAnimDone(self, 0);
             }
         }
-    } else if ((self->state & 0x7f) == 1)
+    } else if ((self->state & CRATE_STATE_MASK) == 1)
         FinishBrokenCrate(self);
     AdvanceSpriteAnim((struct box_part *)(struct gobj *)self);
     PHYS_CALL(self, m60);

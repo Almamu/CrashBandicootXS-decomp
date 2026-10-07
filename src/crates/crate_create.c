@@ -153,20 +153,20 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         if (type == CRATE_KIND_MYSTERY) {
             struct crate_placement *rec = Placement(slot);
 
-            if (rec->flags & 0x40)
+            if (rec->flags & CRATE_PLACEMENT_FLAG_ASSIST_AKU_AKU)
                 type = CRATE_KIND_AKU_AKU;
-            else if (rec->flags & 0x80)
+            else if (rec->flags & CRATE_PLACEMENT_FLAG_ASSIST_CHECKPOINT)
                 type = CRATE_KIND_CHECKPOINT;
-            else if (rec->options & 1)
+            else if (rec->options & CRATE_PLACEMENT_OPTION_ASSIST_LIFE)
                 type = CRATE_KIND_LIFE;
         } else if (type == CRATE_KIND_SLOT) {
             struct crate_placement *rec = PLACEMENT(slot);
 
-            if (rec->flags & 0x40)
+            if (rec->flags & CRATE_PLACEMENT_FLAG_ASSIST_AKU_AKU)
                 type = CRATE_KIND_AKU_AKU;
-            else if (rec->flags & 0x80)
+            else if (rec->flags & CRATE_PLACEMENT_FLAG_ASSIST_CHECKPOINT)
                 type = CRATE_KIND_CHECKPOINT;
-            else if (rec->options & 1)
+            else if (rec->options & CRATE_PLACEMENT_OPTION_ASSIST_LIFE)
                 type = CRATE_KIND_LIFE;
         }
     }
@@ -189,7 +189,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     {
         struct crate_placement *rec = Placement(slot);
 
-        if (special || (rec->flags & 0x20)) {
+        if (special || (rec->flags & CRATE_PLACEMENT_FLAG_TRIAL_KIND)) {
             flagged = 1;
             if ((u16)rec->trialKind == ENTITY_NITRO_SWITCH_CRATE)
                 self->trialKind = ENTITY_BASIC_CRATE;
@@ -286,11 +286,12 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
 
                 GetPaletteSlot(gPaletteCache, ar->paletteId);
             }
-            self->u48.slotState &= 0x3f;
-            self->u48.slotState &= 0xf8;
+            self->u48.slotState &= CRATE_SLOT_CLEAR_STAGE;
+            self->u48.slotState &= CRATE_SLOT_CLEAR_PHASE;
             PhysSetTag(self, 7);
             {
-                u32 idx = (u32)(self->u48.slotState & 0x38) >> 3;
+                u32 idx =
+                    (u32)(self->u48.slotState & CRATE_SLOT_SPINS_MASK) >> CRATE_SLOT_SPINS_SHIFT;
 
                 self->timer = gSlotCrateTimers[idx];
             }
@@ -320,13 +321,14 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->x = x << 8;
     self->y = y << 8;
     if ((u8)IsEntityIdActivated(gEntityFlags, id) &&
-        (type == CRATE_KIND_MYSTERY || type == CRATE_KIND_SLOT) && (PLACEMENT(slot)->flags & 0x80))
+        (type == CRATE_KIND_MYSTERY || type == CRATE_KIND_SLOT) &&
+        (PLACEMENT(slot)->flags & CRATE_PLACEMENT_FLAG_ASSIST_CHECKPOINT))
         type = CRATE_KIND_CHECKPOINT;
     if (type == CRATE_KIND_CHECKPOINT && id != 0xffff &&
         (u8)IsEntityIdActivated(gEntityFlags, id)) {
         PhysSetTag(self, 0x1b);
         self->frame = self->anim->records[self->tag].frames - 1;
-        self->state = (self->state & 0x80) | type;
+        self->state = (self->state & CRATE_STATE_BUSY) | type;
     }
     self->kind = type;
     /* three extra references to `type`: raise its allocation priority so

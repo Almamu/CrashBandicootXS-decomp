@@ -98,11 +98,11 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
             struct box_part **base2 = manager->slotArray;
             void *src = (u8 *)base2 + srcOff;
             void *dst = (u8 *)base2 + off;
-            s32 control = (manager->activeCount - i) & 0x1FFFFF;
+            s32 control = (manager->activeCount - i) & CPU_SET_COUNT_MASK;
             s32 cnt;
             struct box_part **base3;
 
-            control |= 0x4000000;
+            control |= CPU_SET_32BIT;
             CpuSet(src, dst, control);
 
             cnt = manager->activeCount;
@@ -192,7 +192,7 @@ void UpdateCrateList(struct pool_manager *manager)
                     manager->gridTail[255]->next = newNode;
                 manager->gridTail[255] = newNode;
                 node->link = newNode;
-            } else if (part->flags & 1) {
+            } else if (part->flags & PART_FLAG_GONE) {
                 pool_destroy(manager, PART_COPY(part), 1);
             } else {
                 struct part_method *m = PART_METHOD(part, 0x40);
@@ -213,7 +213,7 @@ void UpdateCrateList(struct pool_manager *manager)
     for (node = *gridHead255; node != NULL; node = node->next) {
         struct box_part *part = node->data;
 
-        if (part->flags & 1) {
+        if (part->flags & PART_FLAG_GONE) {
             pool_destroy(manager, PART_COPY(part), 0);
         } else if (node->link->mark == 0) {
             struct part_method *m = PART_METHOD(part, 0x18);
