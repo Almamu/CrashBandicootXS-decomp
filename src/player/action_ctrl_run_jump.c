@@ -97,7 +97,7 @@ void ActionCtrlStateRun(struct act *self)
     if (busy)
         return;
     if (INPUT_PRESSED(in) & 1) {
-        PlaySfx(gAudioContext, 0xD, 0x100);
+        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         ACT_CALL1(self, m20, 5);
         ACT_CALL2(self, m50, self->part, 0x13);
         self->frame = busy;
@@ -115,7 +115,7 @@ void ActionCtrlStateRun(struct act *self)
             s32 frames;
             struct gfx_part *obj; /* the effect part (gfx_part.h) */
 
-            PlaySfx(gAudioContext, 0x1A, 0x100);
+            PlaySfx(gAudioContext, SFX_SLIDE, 0x100);
             frames = 0x10;
             ACT_CALL1(self, m20, 0xC);
             ACT_CALL2(self, m50, self->part, 0xF);
@@ -216,7 +216,7 @@ void ActionCtrlStateJump(struct act *self)
         if (busy == 0 && (INPUT_PRESSED(in) & 2)) {
             s32 frames;
 
-            PlaySfx(gAudioContext, 0xA, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             frames = 0x18;
             ACT_VCALL1(self, m20, 0xE);
             ACT_VCALL2(self, m50, self->part, 0x10);

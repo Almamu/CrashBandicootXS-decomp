@@ -55,7 +55,7 @@ void EndSlide(struct cutscene_player *self0, s32 idx)
     {
         const struct cutscene_slide *item = self->slides[idx];
 
-        if (item->rearmSfx != 0 && item->sfx != 0x63) {
+        if (item->rearmSfx != 0 && item->sfx != SFX_NONE) {
             StopSfx(gAudioContext, item->sfx);
         }
     }

@@ -251,7 +251,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             s32 fire;
             s32 one;
 
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             /* one = 1, kept apart from the fire test's 1 (see above). */
             MATCH_CONST(one, 1);
             fire = in & 1;
@@ -281,7 +281,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         /* fallthrough */
     case 16:
     case 17:
-        PlaySfx(gAudioContext, 0x2c, 0x100);
+        PlaySfx(gAudioContext, SFX_WARP, 0x100);
         {
             u8 *f = &gPlayer->flags.all;
 

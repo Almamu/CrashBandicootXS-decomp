@@ -155,7 +155,7 @@ u8 CollidePlayer(struct player *self)
                     MATCH_HOLD_REG(s32, _z, r0) = 0;
                     *_p = _z;
                 }
-                SetMaskLevel(gLevelState, 0);
+                SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
                 CALL_M68H(self, 0, 1, 0);
                 break;
             case 2:

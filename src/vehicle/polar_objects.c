@@ -73,7 +73,7 @@ struct hazard {
 #define HAZARD_HIT(self)                                                       \
     if (1)                                                                     \
     {                                                                          \
-        PlaySfx(gAudioContext, 4, 0x100);                                  \
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);                                  \
         (self)->animIndex = 1;                                                 \
         (self)->animTimer = (self)->anims[1].duration;                         \
         (self)->animDone = 0;                                                  \
@@ -190,7 +190,7 @@ case0:
 
         if (fired) {
             LaunchPolarPlayer(gActorList);
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
             self->state = 1;
             self->stateTime = state;
             self->animIndex = 1;
@@ -205,7 +205,7 @@ case0:
             goto done;
         }
         if (IsTouchingYeti(self)) {
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
             self->state = 1;
             self->stateTime = fired;
             self->animIndex = 1;
@@ -283,7 +283,7 @@ void UpdatePolarPenguin(void *selfArg)
                     self->velX = velX;
                     self->velY = -(s32)(u16)RandRange(0x300);
                     self->velZ += 0x200;
-                    PlaySfx(gAudioContext, 5, 0x100);
+                    PlaySfx(gAudioContext, SFX_ENEMY_KNOCKED_AWAY, 0x100);
                     self->base.state = 1;
                     self->base.stateTime = state;
                     self->base.animIndex = state;
@@ -302,7 +302,7 @@ void UpdatePolarPenguin(void *selfArg)
                 self->velX = velX;
                 self->velY = -(s32)(u16)RandRange(0x300);
                 self->velZ += 0x200;
-                PlaySfx(gAudioContext, 5, 0x100);
+                PlaySfx(gAudioContext, SFX_ENEMY_KNOCKED_AWAY, 0x100);
                 self->base.state = 1;
                 self->base.stateTime = fired;
                 self->base.animIndex = fired;
@@ -509,7 +509,7 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
     u8 retrigger = (u8)retriggerParam;
     MATCH_HOLD_REG(s32, tier, r5) = gLevelState->maskLevel;
 
-    if (tier == 0 && retrigger == 0) {
+    if (tier == MASK_LEVEL_NONE && retrigger == 0) {
         self->visible = tier;
     } else {
         MATCH_HOLD_REG(s32, zero, r6);
@@ -541,7 +541,7 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
         }
     }
 
-    if (tier == 3) {
+    if (tier == MASK_LEVEL_INVINCIBLE) {
         {
             MATCH_HOLD_REG(s32 *, addr, r1) = &gPolarAkuAkuInvincibleTimer;
             MATCH_HOLD_REG(s32, val, r0) = 0x1F4;
@@ -565,7 +565,7 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
             self->animTime = zero;
         }
         return;
-    } else if (tier == 0 && retrigger != 0) {
+    } else if (tier == MASK_LEVEL_NONE && retrigger != 0) {
         MATCH_HOLD_REG(s32, two, r0);
         MATCH_HOLD_REG(s32, one, r1);
 
@@ -628,7 +628,7 @@ void UpdatePolarAkuAku(void *selfArg)
 
         gPolarAkuAkuInvincibleTimer -= 1;
         if (gPolarAkuAkuInvincibleTimer == 0) {
-            SetMaskLevel(gLevelState, 2);
+            SetMaskLevel(gLevelState, MASK_LEVEL_TWO);
             RefreshPolarAkuAku(self, 0);
         }
     }

@@ -164,22 +164,22 @@ void UpdateJetpackQuestionCrate(void *selfArg)
         goto after_dispatch;
 
     case_14:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         QueueJetpackWumpa(gActorList, 1);
         goto after_dispatch;
 
     case_15:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         QueueJetpackWumpa(gActorList, 3);
         goto after_dispatch;
 
     case_16:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         QueueJetpackWumpa(gActorList, 5);
         goto after_dispatch;
 
     case_17:
-        PlaySfx(gAudioContext, 7, 0x100);
+        PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
         MarkSpawnCollected(self->spawn);
         AddLife(gLevelState);
 
@@ -253,22 +253,22 @@ gt_15:
     goto after_dispatch;
 
 case_14:
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     QueueJetpackWumpa(gActorList, 1);
     goto after_dispatch;
 
 case_15:
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     QueueJetpackWumpa(gActorList, 3);
     goto after_dispatch;
 
 case_16:
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     QueueJetpackWumpa(gActorList, 5);
     goto after_dispatch;
 
 case_17:
-    PlaySfx(gAudioContext, 7, 0x100);
+    PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
     MarkSpawnCollected(self->spawn);
     AddLife(gLevelState);
 
@@ -306,7 +306,7 @@ void UpdateJetpackHealthCrate(void *selfArg)
         self->base.animTime = kind;
 
         HealJetpackPlayer(gActorList, 0x14);
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
 
         if (self->child != NULL) {
             AddBrokenCrate(gLevelState);
@@ -370,22 +370,22 @@ void UpdateJetpackTimeCrate(void *selfArg)
         goto after_dispatch;
 
     case_18:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         FreezeLevelClock(gLevelState, 1);
         goto after_dispatch;
 
     case_19:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         FreezeLevelClock(gLevelState, 2);
         goto after_dispatch;
 
     case_1a:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         FreezeLevelClock(gLevelState, 3);
         goto after_dispatch;
 
     case_1d:
-        PlaySfx(gAudioContext, 0x18, 0x100);
+        PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
         StartTimeTrial(gLevelState);
 
     after_dispatch:
@@ -459,22 +459,22 @@ gt_19:
     goto after_dispatch;
 
 case_18:
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     FreezeLevelClock(gLevelState, 1);
     goto after_dispatch;
 
 case_19:
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     FreezeLevelClock(gLevelState, 2);
     goto after_dispatch;
 
 case_1a:
-    PlaySfx(gAudioContext, 3, 0x100);
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
     FreezeLevelClock(gLevelState, 3);
     goto after_dispatch;
 
 case_1d:
-    PlaySfx(gAudioContext, 0x18, 0x100);
+    PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
     StartTimeTrial(gLevelState);
 
 after_dispatch:
@@ -545,7 +545,7 @@ void DamageJetpackHealthCrate(void *selfArg, s32 delta)
             *(s32 *)&self->base.animTime = zero2;
 
             HealJetpackPlayer(gActorList, 0x14);
-            PlaySfx(gAudioContext, 3, 0x100);
+            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
 
             if (self->child != NULL) {
                 AddBrokenCrate(gLevelState);
@@ -666,7 +666,7 @@ void DamageJetpackBalloonCrate(void *selfArg, s32 delta)
             *(s32 *)&self->base.animTime = zero2;
 
             if (self->child != NULL) {
-                PlaySfx(gAudioContext, 3, 0x100);
+                PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
                 AddBrokenCrate(gLevelState);
                 ReleaseJetpackBalloon(self->child);
                 self->child = (void *)zero2;
@@ -832,7 +832,7 @@ void UpdateJetpackParachuteNitro(void *selfArg)
 
         _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
         AddBrokenCrate(gLevelState);
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         self->base.animIndex = 1;
         {
             MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
@@ -872,7 +872,7 @@ void DamageJetpackParachuteNitro(void *selfArg, s32 delta)
         MATCH_HOLD_REG(s32, one, r4) = 1;
 
         *deathPtr = one;
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         self->base.animIndex = one;
         {
             MATCH_HOLD_REG(u16, anim, r0) = *(u16 *)&self->base.anims[1].duration;
@@ -1050,7 +1050,7 @@ void LaunchJetpackRocket(void *selfArg)
     MATCH_HOLD_REG(s32, one, r5) = 1;
 
     *statePtr = one;
-    PlaySfx(gAudioContext, 4, 0x100);
+    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
     self->base.palette = 7;
     self->base.animIndex = one;
     {
@@ -1084,7 +1084,7 @@ void DamageJetpackRocket(void *selfArg, s32 delta)
         *statePtr = one;
         asm volatile("add %0, %0, #1" : "+r"(statePtr));
         *statePtr = one;
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         self->base.palette = 4;
         self->base.animIndex = 2;
         {

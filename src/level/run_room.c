@@ -302,7 +302,7 @@ s32 RunRoom(struct level_progress *self)
 
             gPlayer->flags.all &= 0x7F;
             RestartPlayerAnim(gPlayer, 0x29);
-            PlaySfx(gAudioContext, 0x2C, 0x100);
+            PlaySfx(gAudioContext, SFX_WARP, 0x100);
             a = gPlayer->ctrl;
             _call_via_r2((u8 *)a + a->vtable->attach.thisOffset, 0x29, a->vtable->attach.fn);
             RefreshPlayerTiles();

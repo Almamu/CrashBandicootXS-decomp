@@ -67,6 +67,6 @@ void OpenAkuAkuCrate(struct crate *crate)
 
         _call_via_r4(addr, 0, 0x1a, 0);
         (void)fn;
-        PlaySfx(gAudioContext, 1, 0x100);
+        PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
     }
 }

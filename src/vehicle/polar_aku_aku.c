@@ -43,7 +43,7 @@ struct actor_once {
  * `gPolarAkuAku`). */
 void ClearPolarAkuAkuMask(void *self)
 {
-    SetMaskLevel(gLevelState, 0);
+    SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
     RefreshPolarAkuAku(self, 0);
 }
 
@@ -55,9 +55,9 @@ s32 RemovePolarAkuAkuMask(void *self)
 {
     s32 count;
 
-    PlaySfx(gAudioContext, 0, 0x100);
+    PlaySfx(gAudioContext, SFX_AKU_AKU_LOSE, 0x100);
     count = gLevelState->maskLevel;
-    if (count != 0) {
+    if (count != MASK_LEVEL_NONE) {
         count -= 1;
         SetMaskLevel(gLevelState, count);
     }
@@ -71,9 +71,9 @@ s32 AddPolarAkuAkuMask(void *self)
 {
     s32 count;
 
-    PlaySfx(gAudioContext, 1, 0x100);
+    PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
     count = gLevelState->maskLevel;
-    if (count != 3) {
+    if (count != MASK_LEVEL_INVINCIBLE) {
         count += 1;
         SetMaskLevel(gLevelState, count);
     }
@@ -158,7 +158,7 @@ void UpdatePolarBoostPad(void *selfArg)
             u8 *flag = &self->once;
 
             if (*flag == 0) {
-                PlaySfx(gAudioContext, 0x28, 0x100);
+                PlaySfx(gAudioContext, SFX_BOOST_PAD, 0x100);
                 *flag = 1;
             }
         }
@@ -240,7 +240,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
             }
             self->animTime = kind;
 
-            PlaySfx(gAudioContext, 0x17, 0x100);
+            PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
             AddBrokenCrate(gLevelState);
             SetActorCheckpoint(self->z);
             CreatePolarCheckpointText(self->x, self->y - 0xF00, self->z);
@@ -260,7 +260,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
             self->animTime = kind;
             self->palette = 1;
 
-            PlaySfx(gAudioContext, 3, 0x100);
+            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
             AddBrokenCrate(gLevelState);
         }
     }
@@ -302,7 +302,7 @@ void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32 b, s32
             self->animTime = zero2;
         }
 
-        PlaySfx(gAudioContext, 0x17, 0x100);
+        PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
     }
 
     return self;

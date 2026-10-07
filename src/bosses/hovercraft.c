@@ -144,7 +144,7 @@ void UpdateJetpackCollectedWumpa(void *selfArg)
     x = self->base.x += self->velX;
     y = self->base.y += self->velY;
     if (x <= 0x1000 || y <= 0x1000) {
-        PlaySfx(gAudioContext, 0xE, 0x100);
+        PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
         if (self != NULL) {
             ACTOR_VCALL(&self->base, destroy, 3);
         }
@@ -321,7 +321,7 @@ void DamageHovercraftFireball(void *selfArg, s32 delta)
     }
 
     self->base.palette = 4;
-    PlaySfx(gAudioContext, 4, 0x100);
+    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
     {
         MATCH_HOLD_REG(s32, one, r0) = 1;
 
@@ -428,7 +428,7 @@ void HovercraftFireballStateFly(void *selfArg)
         _call_via_r2((u8 *)player + table->m20.thisOffset, 6, table->m20.fn);
 
         self->base.palette = 4;
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         {
             MATCH_HOLD_REG(s32, one, r0) = 1;
 

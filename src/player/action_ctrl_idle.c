@@ -94,7 +94,7 @@ skip:
     if (self->state == 0) {
         struct player *p = gPlayer;
         if (p->speedX == 0 && p->anim->animCount != 0x12 && self->idleFidget == 0) {
-            StopSfx(gAudioContext, 0x36);
+            StopSfx(gAudioContext, SFX_SKID);
             ACT_CALL2(self, m50, gPlayer, 0x12);
         }
     }
@@ -217,7 +217,7 @@ skip:
         if (busy)
             return;
         if (INPUT_PRESSED(in) & 1) {
-            PlaySfx(gAudioContext, 0xD, 0x100);
+            PlaySfx(gAudioContext, SFX_JUMP, 0x100);
             ACT_CALL1(self, m20, 5);
             ACT_CALL2(self, m50, self->part, 0x13);
             self->frame = busy;

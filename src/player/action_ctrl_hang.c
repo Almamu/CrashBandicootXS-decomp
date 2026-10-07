@@ -277,7 +277,7 @@ void ActionCtrlStateHang(struct act *self)
             break;
         }
     if (INPUT_PRESSED(in) & 1) {
-        PlaySfx(gAudioContext, 0xD, 0x100);
+        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         ActionCtrlReleaseHang(self);
         return;
     }
@@ -297,7 +297,7 @@ void ActionCtrlStateUnusedHang(struct act *self)
     s32 fire = INPUT_PRESSED(in) & 1;
 
     if (fire) {
-        PlaySfx(gAudioContext, 0xD, 0x100);
+        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         ActionCtrlReleaseHang(self);
         return;
     }
@@ -354,7 +354,7 @@ void ActionCtrlStateHangMoveStart(struct act *self)
     s32 v = INPUT_PRESSED(in) & 1;
 
     if (v) {
-        PlaySfx(gAudioContext, 0xD, 0x100);
+        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         ActQueue27(self, 0, 0);
         ActionCtrlReleaseHang(self);
         return;
@@ -431,7 +431,7 @@ void ActionCtrlStateHangMove(struct act *self)
         SetTag(part, 0x21);
     fire = INPUT_PRESSED(in) & 1;
     if (fire) {
-        PlaySfx(gAudioContext, 0xD, 0x100);
+        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         ActQueue27(self, 0, 0);
         ActionCtrlReleaseHang(self);
         return;
@@ -529,7 +529,7 @@ void ActionCtrlStateHangStop(struct act *self)
     u16 alt;
 
     if (fire) {
-        PlaySfx(gAudioContext, 0xD, 0x100);
+        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         ActSetNext27(self, 0);
         ActionCtrlReleaseHang(self);
         return;
@@ -741,7 +741,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
         _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)idx, off->fn);
         self->frame = zero;
         self->frames = wait;
-        PlaySfx(gAudioContext, self->tornadoVariant + 0x57, 0x100);
+        PlaySfx(gAudioContext, self->tornadoVariant + SFX_TORNADO_SPIN, 0x100);
         if (++self->tornadoTurn >= self->charge) {
             self->tornadoUnwinding = 1;
             if (self->tornadoTurn > 1)
@@ -779,7 +779,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)idx, off->fn);
             self->frame = zero;
             self->frames = wait;
-            PlaySfx(gAudioContext, self->tornadoVariant + 0x57, 0x100);
+            PlaySfx(gAudioContext, self->tornadoVariant + SFX_TORNADO_SPIN, 0x100);
         } else {
             u8 *p21 = &self->tornadoVariant;
             s32 zero = 0;
@@ -795,7 +795,7 @@ void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2)
             _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x10, off->fn);
             self->frame = zero;
             self->frames = wait;
-            PlaySfx(gAudioContext, 0xa, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             self->spinCooldown = 0x63;
         }
         self->tornadoTurn--;

@@ -203,7 +203,7 @@ flag_zero:
         if (type2 != 0x26)
             goto end;
     do_call:
-        StopSfx(gAudioContext, 0x36);
+        StopSfx(gAudioContext, SFX_SKID);
         SetActionCtrlModeAnim(self, 0, 0x12, 0, flag);
     }
 end:

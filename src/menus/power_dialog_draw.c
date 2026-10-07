@@ -131,7 +131,7 @@ void ShowSuperBodySlamDialog(void)
 
 s32 GetProgressLives(void *arg0)
 {
-    return (u32)(*(u8 *)arg0 << 25) >> 25;
+    return PACKED_STATS_LIVES(*(u8 *)arg0);
 }
 
 /* Counts records whose derived value is <= times[2] alone (no lower
@@ -174,7 +174,7 @@ s32 CountGoldRelics(void *arg0)
     offset = 0;
     for (i = 0; i < 20; i++) {
         raw = *(u16 *)&save->levels[i];
-        val = raw >> 3;
+        val = raw >> LEVEL_FLAG_TIME_SHIFT;
         if (val != 0) {
             // clang-format off
             asm volatile("add %0, %1, #0\n\tadd %0, %0, #0xc\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));
@@ -209,7 +209,7 @@ s32 CountSapphireRelics(void *arg0)
     offset = 0;
     for (i = 0; i < 20; i++) {
         raw = *(u16 *)&save->levels[i];
-        val = raw >> 3;
+        val = raw >> LEVEL_FLAG_TIME_SHIFT;
         if (val != 0) {
             // clang-format off
             asm volatile("add %0, %1, #0\n\tadd %0, %0, #8\n\tadd %0, %2, %0" : "=r"(addr) : "r"(gLevelTable), "r"(offset));

@@ -126,16 +126,16 @@ s32 ContinuePromptLoop(struct continue_prompt *self)
             // clang-format off
             if ((k.pressed & 1) || ({ MATCH_KEEP(k); (u16)(k.pressed & 8); })) {
                 // clang-format on
-                PlaySfx(*audio, 0x49, 0x100);
+                PlaySfx(*audio, SFX_MENU_SELECT, 0x100);
                 break;
             }
             if ((k.pressed & 0x40) && self->selection == 1) {
-                PlaySfx(*audio, 0x46, 0x100);
+                PlaySfx(*audio, SFX_MENU_MOVE, 0x100);
                 self->selection = 0;
             }
         }
         if ((input->pressed & 0x80) && self->selection == 0) {
-            PlaySfx(*audio, 0x46, 0x100);
+            PlaySfx(*audio, SFX_MENU_MOVE, 0x100);
             self->selection = 1;
         }
         DrawContinuePrompt(self);

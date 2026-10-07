@@ -151,9 +151,9 @@ void DamageHovercraftLauncher(struct spawner *self, s32 dmg)
                 *(u8 *)&self->base.animDone = zero2;
             }
             self->base.animTime = zero;
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         } else {
-            PlaySfx(gAudioContext, 0x45, 0x100);
+            PlaySfx(gAudioContext, SFX_HOVERCRAFT_PART_HIT, 0x100);
         }
     }
 }

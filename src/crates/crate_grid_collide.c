@@ -121,7 +121,7 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
  * `CollidePlayerWithCrates` (`crate_player_collide.c`) in ROM order. */
 void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part)
 {
-    if (gLevelState->maskLevel == 3) {
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE) {
         if (!ClassifySpriteContact(part, &box))
             return;
         CALL_HIT(part, 1, gPlayer->kind, 0);
@@ -157,7 +157,7 @@ void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, str
                 if (gPlayer->speedY > 0) {
                     CALL_HIT(part, 1, 1, 0);
                     CALL_HIT((struct box_part *)gPlayer, 0, 0xd, 0);
-                    PlaySfx(gAudioContext, 0x21, 0x100);
+                    PlaySfx(gAudioContext, SFX_BOUNCE, 0x100);
                 }
             } else {
                 CALL_HIT(part, 1, kind, 0);

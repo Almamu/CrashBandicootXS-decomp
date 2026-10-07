@@ -58,7 +58,7 @@ void StartTimeTrial(struct level_state *self)
     struct slot_part *part;
     s32 i;
 
-    SetMaskLevel(self, 0);
+    SetMaskLevel(self, MASK_LEVEL_NONE);
     self->timeTrial = 1;
     self->minutes = 0;
     self->seconds = 0;

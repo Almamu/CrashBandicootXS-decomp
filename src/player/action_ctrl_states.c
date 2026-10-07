@@ -86,7 +86,7 @@ void ActionCtrlStateAirborne(struct act *self)
         if (busy == 0 && (INPUT_PRESSED(in) & 2) && (u32)(state - 0x18) > 1) {
             s32 frames;
 
-            PlaySfx(gAudioContext, 0xA, 0x100);
+            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
             frames = 0x18;
             ACT_VCALL1(self, m20, 0xE);
             ACT_VCALL2(self, m50, self->part, 0x10);
@@ -203,7 +203,7 @@ void ActionCtrlStateAirborne(struct act *self)
                 if (self->state == 0x19)
                     DoSuperBodySlamShockwave(self);
                 if (self->state != 0x1D) {
-                    PlaySfx(gAudioContext, 0x19, 0x100);
+                    PlaySfx(gAudioContext, SFX_BODY_SLAM_LAND, 0x100);
                     ACT_VCALL1(self, m20, 0x16);
                     ACT_VCALL2(self, m50, self->part, 0x11);
                     self->motionYKeepSpeed = bit4;
@@ -297,7 +297,7 @@ void ActionCtrlStateSlide(struct act *self)
             ActSetNext(self, 5);
         } else if (INPUT_HELD(in) & 1) {
             if (PlayerHasRoomForAnim((struct box_part *)part, 0xB) == 1) {
-                PlaySfx(gAudioContext, 0xC, 0x100);
+                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
                 ActAndFlags0D(self->part, -2);
                 ActAndFlags0D(self->part, -3);
                 StartActionCtrlHighJump(self);
@@ -557,7 +557,7 @@ void ActionCtrlStateCrouchDown(struct act *self)
     fire = INPUT_PRESSED(in) & 1;
 
     if (fire) {
-        PlaySfx(gAudioContext, 0xC, 0x100);
+        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
         StartActionCtrlHighJump(self);
@@ -601,7 +601,7 @@ void ActionCtrlStateCrouch(struct act *self)
         dir = GetDpadDirection(pad);
     }
     if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xB) == 1) {
-        PlaySfx(gAudioContext, 0xC, 0x100);
+        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
         StartActionCtrlHighJump(self);
@@ -732,7 +732,7 @@ void ActionCtrlStateCrawlStart(struct act *self)
 
     if ((INPUT_PRESSED(snap) & 1) != 0 &&
         PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
-        PlaySfx(gAudioContext, 0xc, 0x100);
+        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
 
         {
             MATCH_HOLD_REG(u8 *, part, r1) = (u8 *)self->part;
@@ -790,7 +790,7 @@ void ActionCtrlStateCrawl(struct act *selfArg)
     u32 held;
 
     if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xB) == 1) {
-        PlaySfx(gAudioContext, 0xC, 0x100);
+        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
         StartActionCtrlHighJump(self);

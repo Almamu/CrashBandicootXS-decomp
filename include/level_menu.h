@@ -69,12 +69,13 @@ struct sprite {
 
 COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct sprite) == 0x40);
 
-/* One level's saved record word (`level_menu.save + 4 + id * 4`). */
+/* One level's saved record word (`level_menu.save + 4 + id * 4`), a
+ * `level_state.levelFlags` word (constants/level_flags.h). */
 struct level_save {
-    u32 cleared:1;
-    u32 flag1:1;
-    u32 flag2:1;
-    u32 time:13; // best time, centiseconds (0 = none)
+    u32 cleared:1; // LEVEL_FLAG_CRYSTAL
+    u32 flag1:1;   // LEVEL_FLAG_CRATE_GEM
+    u32 flag2:1;   // LEVEL_FLAG_GEM_PATH_GEM
+    u32 time:13;   // best time, tenths of a second (0 = none; UpdateGameFrame)
     u32 unk_16:16;
 };
 
@@ -85,7 +86,7 @@ struct level_save_h {
     u16 cleared:1;
     u16 flag1:1;
     u16 flag2:1;
-    u16 time:13; // best time, centiseconds (0 = none)
+    u16 time:13; // best time, tenths of a second (0 = none; UpdateGameFrame)
     u16 unk_16;
 };
 

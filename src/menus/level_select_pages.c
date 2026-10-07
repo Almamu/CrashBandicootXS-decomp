@@ -152,7 +152,7 @@ void LevelSelectConfirm(struct level_menu *self)
 {
     s32 t;
 
-    PlaySfx(gAudioContext, 0x52, 0x100);
+    PlaySfx(gAudioContext, SFX_LEVEL_SELECT_CONFIRM, 0x100);
     SetLevelSelectEntrySelected((struct level_item *)self->items[self->index], 0);
     MoveLevelSelectCursor(self->panel, 0x78, 0x35);
     HideLevelSelectCursor(self->panel);
@@ -186,7 +186,7 @@ void LevelSelectExit(struct level_menu *self)
 {
     s32 t;
 
-    PlaySfx(gAudioContext, 0x49, 0x100);
+    PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
     self->blend.bits.effect = 3;
     self->blend.bits.bdFirst = 1;
     self->blend.bits.bg0First = 1;
@@ -270,7 +270,7 @@ void LevelSelectPrevWorld(struct level_menu *self)
 {
     if (LevelSelectHasPrevWorld(self)) {
         SettleLevelSelectPage(self);
-        PlaySfx(gAudioContext, 0x56, 0x100);
+        PlaySfx(gAudioContext, SFX_LEVEL_SELECT_PREV_WORLD, 0x100);
         goto check;
     loop:
         self->world--;
@@ -285,7 +285,7 @@ void LevelSelectPrevWorld(struct level_menu *self)
     done:
         RefreshLevelSelectPage(self);
     } else {
-        PlaySfx(gAudioContext, 0x48, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
     }
 }
 
@@ -295,7 +295,7 @@ void LevelSelectNextWorld(struct level_menu *self)
 {
     if (LevelSelectIsNextWorldOpen(self)) {
         SettleLevelSelectPage(self);
-        PlaySfx(gAudioContext, 0x55, 0x100);
+        PlaySfx(gAudioContext, SFX_LEVEL_SELECT_NEXT_WORLD, 0x100);
         goto check;
     loop:
         self->world++;
@@ -310,7 +310,7 @@ void LevelSelectNextWorld(struct level_menu *self)
     done:
         RefreshLevelSelectPage(self);
     } else {
-        PlaySfx(gAudioContext, 0x48, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
     }
 }
 

@@ -126,7 +126,7 @@ void PauseMenuVolumeDown(struct pause_menu *self)
             self->soundVolume = count;
             format_pct(self->soundVolumeText, count * 5);
             SetSfxVolume(gAudioContext, ((self->soundVolume << 8) + 1) / 20);
-            PlaySfx(gAudioContext, 0xe, 0x100);
+            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
         }
         break;
     }
@@ -155,7 +155,7 @@ void PauseMenuVolumeUp(struct pause_menu *self)
             self->soundVolume = count;
             format_pct(self->soundVolumeText, count * 5);
             SetSfxVolume(gAudioContext, ((self->soundVolume << 8) + 1) / 20);
-            PlaySfx(gAudioContext, 0xe, 0x100);
+            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
         }
         break;
     }

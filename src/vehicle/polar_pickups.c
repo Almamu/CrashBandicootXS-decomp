@@ -54,7 +54,7 @@ void UpdatePolarCollectedWumpa(void *selfArg)
         goto frameBlock;
     }
 
-    PlaySfx(gAudioContext, 0xe, 0x100);
+    PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
     if (self != 0) {
         struct actor_vtable *table = self->base.vtable;
         _call_via_r2((u8 *)self + table->destroy.thisOffset, (void *)3, table->destroy.fn);
@@ -373,7 +373,7 @@ void UpdatePolarCrate(void *selfArg)
 
     if (self->animIndex != 0x12) {
         if (IsTouchingYeti(self)) {
-            PlaySfx(gAudioContext, 3, 0x100);
+            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
             AddBrokenCrate(gLevelState);
             self->animIndex = 0x12;
             {
@@ -437,17 +437,17 @@ void UpdatePolarQuestionCrate(void *selfArg)
         goto state_block;
 
     case_1c:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         QueuePolarWumpa(gActorList, 1);
         goto state_block;
 
     case_1d:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         QueuePolarWumpa(gActorList, 3);
         goto state_block;
 
     case_1e:
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         QueuePolarWumpa(gActorList, 5);
         goto state_block;
 
@@ -483,7 +483,7 @@ void UpdatePolarLifeCrate(void *selfArg)
 
     if (self->animIndex != 0x12) {
         if ((u8)IsTouchingPlayer(self)) {
-            PlaySfx(gAudioContext, 7, 0x100);
+            PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
             AddBrokenCrate(gLevelState);
             GivePolarPlayerLife(gActorList);
             MarkSpawnCollected(((struct polar_life_crate *)self)->spawn);
@@ -501,7 +501,7 @@ void UpdatePolarLifeCrate(void *selfArg)
         }
 
         if (self->animIndex != 0x12 && IsTouchingYeti(self)) {
-            PlaySfx(gAudioContext, 3, 0x100);
+            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
             AddBrokenCrate(gLevelState);
             self->animIndex = 0x12;
             {
@@ -551,7 +551,7 @@ void UpdatePolarNitroCrate(void *selfArg)
         found = raw >> 24;
 
         if (found) {
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
             AddBrokenCrate(gLevelState);
             HurtPolarPlayer(gActorList);
             {
@@ -569,7 +569,7 @@ void UpdatePolarNitroCrate(void *selfArg)
                 *(s32 *)&self->animTime = zero2;
             }
         } else if (IsTouchingYeti(self)) {
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
             AddBrokenCrate(gLevelState);
             {
                 MATCH_HOLD_REG(s32, zero2, r5) = found;

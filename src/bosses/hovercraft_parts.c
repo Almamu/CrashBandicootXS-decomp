@@ -77,7 +77,7 @@ s32 GetHovercraftPartsLeft(void)
  * table-index-0 transition via `SetHovercraftState`. */
 void LoseHovercraftPart(void)
 {
-    PlaySfx(gAudioContext, 4, 0x100);
+    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
 
     gHovercraftPartsLeft -= 1;
     if (gHovercraftPartsLeft == 0) {

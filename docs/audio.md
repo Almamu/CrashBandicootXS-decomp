@@ -318,6 +318,12 @@ below), and the ambient-sfx sibling `PlayAmbientSfx` never reads it at all
 (always passes a hardcoded `0` there instead) - and uses it to steal a
 mixing voice (`GAX_fx_ex`) and play a note.
 
+The IDs whose sound is clear from where the game plays them are named in
+`include/constants/sfx.h` (`SFX_CRATE_BREAK`, `SFX_MENU_SELECT`, ...), and
+the song IDs (the `gSongTable` index) in `include/constants/songs.h`
+(`SONG_JUNGLE`, ..., named after the songs' keys in `gax_manifest.json`).
+See [naming.md](./naming.md#constants).
+
 That note does **not** come from the music's instrument pool: an earlier
 version of this section said there was no separate sound-effect sample
 bank, which is wrong. The sound effects have their own GAX2 data set, the

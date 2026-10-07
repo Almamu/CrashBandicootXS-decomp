@@ -56,7 +56,7 @@ void UpdatePolarPlayer(struct actor_self *self)
         ACTOR_SET_STATE(self, 10, 10);
     }
     if (gPolarInvulnTimer != 0 && --gPolarInvulnTimer != 0 && gPolarPlayerInactive == 0 &&
-        gLevelState->maskLevel != 3)
+        gLevelState->maskLevel != MASK_LEVEL_INVINCIBLE)
         self->visible = ((u32)gPolarInvulnTimer >> 2) & 1;
     else
         self->visible = 1;
@@ -234,8 +234,8 @@ s32 HurtPolarPlayer(void *selfArg)
         struct level_state **playerAddr = &gLevelState;
         s32 tier = (*playerAddr)->maskLevel;
 
-        if (tier == 0) {
-            PlaySfx(gAudioContext, 0x1b, 0x100);
+        if (tier == MASK_LEVEL_NONE) {
+            PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
             QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
             {
                 MATCH_HOLD_REG(s32, state, r0) = 6;
@@ -310,7 +310,7 @@ s32 ShockPolarPlayer(void *selfArg)
         struct level_state **playerAddr = &gLevelState;
         s32 tier = (*playerAddr)->maskLevel;
 
-        if (tier == 0) {
+        if (tier == MASK_LEVEL_NONE) {
             MATCH_HOLD_REG(s32, state, r0) = 0xc;
             MATCH_HOLD_REG(s32, idx, r1) = 0xb;
 
@@ -501,7 +501,7 @@ tail:
                 }
                 self->animTime = zero;
             }
-            PlaySfx(gAudioContext, 0xd, 0x100);
+            PlaySfx(gAudioContext, SFX_JUMP, 0x100);
             gPolarPlayerVelY = 0xFFFFF880;
         }
         if ((*(u32 *)addr & 2) != 0) {
@@ -572,7 +572,7 @@ void PolarPlayerStateDash(struct actor_self *self)
 
     if (input->pressed & 1) {
         ACTOR_SET_STATE(self, 4, 3);
-        PlaySfx(gAudioContext, 0xd, 0x100);
+        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
         gPolarPlayerVelY = 0xFFFFF880;
     }
 }

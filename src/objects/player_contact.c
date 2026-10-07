@@ -40,7 +40,7 @@ void CheckPlayerContact(void *partArg)
             fast = 1;
         }
         if (fast != 0) {
-            if (gLevelState->maskLevel != 3) {
+            if (gLevelState->maskLevel != MASK_LEVEL_INVINCIBLE) {
                 goto gate2;
             }
         }
@@ -67,7 +67,7 @@ gate2:
             return;
         }
     }
-    if (gLevelState->maskLevel != 3) {
+    if (gLevelState->maskLevel != MASK_LEVEL_INVINCIBLE) {
         return;
     }
 doCheck:
@@ -144,12 +144,12 @@ void ResolvePlayerContact(void *partArg)
     mode = gLevelState->maskLevel;
 
     switch (mode) {
-    case 0:
+    case MASK_LEVEL_NONE:
         goto mode0;
-    case 1:
-    case 2:
+    case MASK_LEVEL_ONE:
+    case MASK_LEVEL_TWO:
         goto mode1or2;
-    case 3:
+    case MASK_LEVEL_INVINCIBLE:
         goto checkMode3;
     default:
         return;
@@ -198,7 +198,7 @@ tail:
     return;
 
 checkMode3:
-    if (mode == 3) {
+    if (mode == MASK_LEVEL_INVINCIBLE) {
         struct part_method *rec = PART_METHOD(part, 0x68);
         s16 offset = rec->thisOffset;
         void *addr3 = (u8 *)part + offset;

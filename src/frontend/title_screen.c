@@ -183,7 +183,7 @@ u32 TitleScreenCheatInput(u32 *self, u32 pressed)
     else if (pressed & 8)
         HashInput(self, 0x828A048B);
     if (TITLE_SCREEN(self)->cheatHash == 0x3034AF3B) {
-        PlaySong(gAudioContext, 0xc);
+        PlaySong(gAudioContext, SONG_MAIN_MENU_JAPAN);
         TITLE_SCREEN(self)->cheatHash = 0;
     }
     return 0;
@@ -280,19 +280,19 @@ seedLoop:
         pressed = gKeys.half.pressed;
         pressed = TitleScreenCheatInput(self, pressed);
         if (pressed & 9) {
-            PlaySfx(gAudioContext, 0x49, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
             fade = 0;
             goto fadeLoop;
         }
         if (pressed & 0x40) {
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
             if (self[0] != 0)
                 self[0]--;
             else
                 self[0] = 2;
         }
         if (pressed & 0x80) {
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
             self[0]++;
             self[0] = (s32)self[0] % 3;
         }

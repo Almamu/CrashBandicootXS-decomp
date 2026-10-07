@@ -122,7 +122,7 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * point, the icon's `palette`'s low nibble from `GetSpriteAnimPaletteSlot`). Finally sets
  * `REG_BG0CNT` from `GetBgSetupControl(self)`, clears `REG_BG0HOFS`/
  * `REG_BG0VOFS` (one 32-bit write), and restores the last-played song
- * via `PlaySong(gAudioContext, 0xf)`.
+ * via `PlaySong(gAudioContext, SONG_INTRO)`.
  *
  * Matched byte-exact, but only after heavy register pinning (mirroring
  * `power_dialog_draw.c`'s `SUB_8006600_*` macros and `pause_menu_pages_init.c`'s
@@ -293,7 +293,7 @@ struct power_dialog *InitPowerDialog(struct power_dialog *selfArg, s32 label1Arg
 
     REG_BG0CNT = GetBgSetupControl(&self->bg);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    PlaySong(gAudioContext, 0xf);
+    PlaySong(gAudioContext, SONG_INTRO);
 
     return self;
 }

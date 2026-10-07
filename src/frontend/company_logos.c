@@ -391,7 +391,7 @@ void UpdateLogoActor(struct actor_self *self)
             self->animTimer = 0;
             self->state = 3;
             self->stateTime = 0;
-            PlaySfx(gAudioContext, 0x1b, 0x100);
+            PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
         }
         break;
     case 3:

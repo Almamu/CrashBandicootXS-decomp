@@ -437,7 +437,7 @@ void CollidePartList(struct part_list *list, struct aabb box, s32 unused, struct
  * hit-flag update goes through a pointer to keep the ROM's registers. */
 void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part)
 {
-    if (gLevelState->maskLevel == 3) {
+    if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE) {
         if (!ClassifySpriteContact(part, &box))
             return;
         CALL_HIT(part, 1, gPlayer->kind, 0);
@@ -473,7 +473,7 @@ void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_p
                 if (gPlayer->speedY > 0) {
                     CALL_HIT(part, 1, 1, 0);
                     CALL_HIT((struct box_part *)gPlayer, 0, 0xd, 0);
-                    PlaySfx(gAudioContext, 0x21, 0x100);
+                    PlaySfx(gAudioContext, SFX_BOUNCE, 0x100);
                 }
             } else {
                 CALL_HIT(part, 1, kind, 0);

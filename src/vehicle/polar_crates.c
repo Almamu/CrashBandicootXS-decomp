@@ -44,7 +44,7 @@ void UpdatePolarAkuAkuCrate(struct actor_self *self)
     }
 
     if (self->animIndex != 0x12 && IsTouchingYeti(self)) {
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
         self->animIndex = 0x12;
         {
@@ -87,7 +87,7 @@ void UpdatePolarTimeCrate(void *selfArg)
     if (self->animIndex != 0x12 && (u8)IsTouchingPlayer(self)) {
         s32 typeByte;
 
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
 
         typeByte = *(u8 *)&self->record->index;
@@ -132,7 +132,7 @@ void DetonatePolarNitroCrate(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12) {
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         AddBrokenCrate(gLevelState);
         {
             MATCH_HOLD_REG(s32, zero2, r2) = 0;
@@ -168,7 +168,7 @@ void UpdatePolarFourWumpaCrate(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12 && (u8)IsTouchingPlayer(self)) {
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
         QueuePolarWumpa(gActorList, 4);
         self->animIndex = 0x12;
@@ -193,7 +193,7 @@ void UpdatePolarBasicCrate(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12 && (u8)IsTouchingPlayer(self)) {
-        PlaySfx(gAudioContext, 3, 0x100);
+        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
         QueuePolarWumpa(gActorList, 1);
         self->animIndex = 0x12;

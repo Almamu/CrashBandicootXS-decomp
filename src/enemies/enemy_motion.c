@@ -148,12 +148,12 @@ void UpdateEnemyHop(struct part_ctrl *self)
         case 0:
             SetEnemyMotionX(self, 3);
             SetEnemyMotionY(self, 3);
-            PlaySfx(gAudioContext, 0x14, 0x100);
+            PlaySfx(gAudioContext, SFX_ENEMY_HOP, 0x100);
             break;
         case 1:
             SetEnemyMotionX(self, 0);
             SetEnemyMotionY(self, 3);
-            PlaySfx(gAudioContext, 0x14, 0x100);
+            PlaySfx(gAudioContext, SFX_ENEMY_HOP, 0x100);
             break;
         }
     }

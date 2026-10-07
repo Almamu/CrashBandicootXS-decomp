@@ -61,9 +61,9 @@ void UpdateAudio(struct AudioContext *self)
             if (self->duckVolCurrent <= self->duckVolTarget) {
                 self->duckVolCurrent = self->duckVolTarget;
                 self->duckVolFadeDownArmed = 0;
-                if (self->pendingSong != 0x13) {
+                if (self->pendingSong != SONG_NONE) {
                     StartSong(self, self->pendingSong);
-                    self->pendingSong = 0x13;
+                    self->pendingSong = SONG_NONE;
                 }
             } else {
                 self->duckVolCurrent -= 0x10;
@@ -95,8 +95,8 @@ void StartSong(struct AudioContext *self, u32 songIndex)
         }
         zero = wasStopped;
         if (zero == 0) {
-            self->pendingSong = 0x13;
-            self->currentSong = 0x13;
+            self->pendingSong = SONG_NONE;
+            self->currentSong = SONG_NONE;
             self->state = zero;
             GAX_stop();
             gGaxIrqEnabled = zero;
@@ -502,8 +502,8 @@ void StopSong(struct AudioContext *self)
     }
     zero = isStopped;
     if (zero == 0) {
-        self->pendingSong = 0x13;
-        self->currentSong = 0x13;
+        self->pendingSong = SONG_NONE;
+        self->currentSong = SONG_NONE;
         self->state = zero;
         GAX_stop();
         gGaxIrqEnabled = zero;
@@ -521,13 +521,13 @@ void DestroyAudioContext(struct AudioContext *self, u32 flags)
 }
 
 /* Constructor: resets every field to its idle default (both volume
- * pairs to `0x100` = 1.0 in Q8.8, both song slots to the `0x13` "none"
+ * pairs to `0x100` = 1.0 in Q8.8, both song slots to the `SONG_NONE` (0x13)
  * sentinel, every fade-direction flag cleared) and returns `self`. */
 struct AudioContext *InitAudioContext(struct AudioContext *self)
 {
     self->state = 0;
-    self->pendingSong = 0x13;
-    self->currentSong = 0x13;
+    self->pendingSong = SONG_NONE;
+    self->currentSong = SONG_NONE;
     self->musicVolCurrent = 0x100;
     self->duckVolCurrent = 0x100;
     self->duckVolDefault = 0x100;

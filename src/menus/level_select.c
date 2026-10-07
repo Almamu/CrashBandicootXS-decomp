@@ -426,7 +426,7 @@ s32 RunLevelSelect(s32 *arg)
     }
     IconReserve(&gLargeFont);
     MarkObjVram(gObjVramCursor);
-    PlaySong(gAudioContext, 0x10);
+    PlaySong(gAudioContext, SONG_WARP_ROOM);
     {
         struct level_menu **menuAddr = &gLevelSelect;
 
@@ -1088,7 +1088,7 @@ void SettleLevelSelectPage(struct level_menu *self)
 void LevelSelectCursorLeft(struct level_menu *self)
 {
     if (self->index == 0) {
-        PlaySfx(gAudioContext, 0x48, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
         return;
     }
     SetLevelSelectEntrySelected(self->items[self->index], 0);
@@ -1111,7 +1111,7 @@ void LevelSelectCursorLeft(struct level_menu *self)
 void LevelSelectCursorRight(struct level_menu *self)
 {
     if (self->index == self->lastIndex) {
-        PlaySfx(gAudioContext, 0x48, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
         return;
     }
     SetLevelSelectEntrySelected(self->items[self->index], 0);

@@ -15,7 +15,7 @@ void SaveMenuMessageInput(struct save_menu *self, u32 flags)
         goto confirm;
     } else if (flags & 8) {
     confirm:
-        PlaySfx(gAudioContext, 0x49, 0x100);
+        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         self->state = 0;
         self->cursor = 1;
     }

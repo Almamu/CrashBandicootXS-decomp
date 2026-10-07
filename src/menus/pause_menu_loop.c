@@ -96,12 +96,12 @@ s32 PauseMenuLoop(struct pause_menu *self)
         if (KEYS.pressed & 0x40) {
             PauseMenuCursorUp(self);
             self->flashTimer = 0x1e;
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
         if (KEYS.pressed & 0x80) {
             PauseMenuCursorDown(self);
             self->flashTimer = 0x1e;
-            PlaySfx(gAudioContext, 0x46, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
         }
         in = gKeys.all;
         pressed = in >> 16;
@@ -134,14 +134,14 @@ s32 PauseMenuLoop(struct pause_menu *self)
         if (KEYS.pressed & 1) {
             result = self->rows[self->cursor].type;
             if ((u32)(result - 4) <= 1) {
-                PlaySfx(gAudioContext, 0x48, 0x100);
+                PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
             } else {
-                PlaySfx(gAudioContext, 0x49, 0x100);
+                PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
                 break;
             }
         }
         if (KEYS.pressed & 8) {
-            PlaySfx(gAudioContext, 0x49, 0x100);
+            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
             result = 0;
             break;
         }

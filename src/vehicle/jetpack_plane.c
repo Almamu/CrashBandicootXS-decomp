@@ -380,7 +380,7 @@ void UpdateJetpackBomber(struct jetpack_bomber *self)
         if (self->base.state != 6 && (u8)IsTouchingPlayer(self)) {
             ACTOR_VCALL(gActorList, m20, 10);
             self->base.palette = 4;
-            PlaySfx(gAudioContext, 4, 0x100);
+            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
             ACTOR_SET_STATE(&self->base, 6, 1);
         }
     }
@@ -474,7 +474,7 @@ void DamageJetpackBomber(struct jetpack_bomber *self, s32 damage)
 {
     if (self->base.state != 6 && (self->hp -= damage) <= 0) {
         self->base.palette = 4;
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         ACTOR_SET_STATE(&self->base, 6, 1);
     }
 }
@@ -586,7 +586,7 @@ void AirshipFireballStateOrbit(struct actor_orbit *self)
     if ((u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         self->base.palette = 4;
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         ACTOR_SET_STATE(&self->base, 2, 1);
     }
 }
@@ -630,7 +630,7 @@ void AirshipFireballStateSpiralIn(struct actor_orbit *self)
     if ((u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         self->base.palette = 4;
-        PlaySfx(gAudioContext, 4, 0x100);
+        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         ACTOR_SET_STATE(&self->base, 2, 1);
     }
 }
