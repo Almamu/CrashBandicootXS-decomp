@@ -67,7 +67,7 @@ static inline void SetStateNow(PlayerCtrl *self, s32 newState, s32 newMode, s32 
 {
     self->SetMode(newState);
     self->mode = newMode;
-    self->SetTargetAnim((SpriteObj *)self->target, LevelAnim(self));
+    self->SetTargetAnim((GroundSprite *)self->target, LevelAnim(self));
     if (newTimer != CTRL_KEEP)
         self->timer = newTimer;
     if (newTimerMax != CTRL_KEEP)
@@ -146,7 +146,7 @@ void PlayerCtrl::CheckTurn()
     }
 }
 
-void PlayerCtrl::HandleEvent(SpriteObj *, s32 event, s32 arg)
+void PlayerCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
 {
     s32 side;
 
@@ -187,7 +187,7 @@ void PlayerCtrl::KillPlayer(s32 anim)
 {
     PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
     SetMode(7);
-    SetTargetAnim((SpriteObj *)target, anim);
+    SetTargetAnim((GroundSprite *)target, anim);
     target->flags.bits.flag7 = 0;
     target->flags.bits.flag6 = 0;
     target->dead = 1;
@@ -284,7 +284,7 @@ static inline void ApplyLevel(PlayerCtrl *self)
     }
 }
 
-void PlayerCtrl::Update(SpriteObj *)
+void PlayerCtrl::Update(MovingSprite *)
 {
     if (state == 7) {
         (this->*stateFuncs[state])();
@@ -369,12 +369,12 @@ void PlayerCtrl::ApplyMotion()
     if (motionXPending == 1) {
         motionXPending = 0;
         rec = &gPlayerCtrlMotionRecords[animSet->entries[motionX][0]];
-        Ctrl::StartTargetMotionX((SpriteObj *)target, &rec->start);
+        Ctrl::StartTargetMotionX((GroundSprite *)target, &rec->start);
     }
     if (motionYPending == 1) {
         motionYPending = 0;
         rec = &gPlayerCtrlMotionRecords[animSet->entries[motionY][1]];
-        Ctrl::StartTargetMotionY((SpriteObj *)target, rec);
+        Ctrl::StartTargetMotionY((GroundSprite *)target, rec);
     }
 }
 
@@ -395,14 +395,14 @@ void PlayerCtrl::StateIdle()
         idleTimer = 0;
     }
     if (target->animDone)
-        SetTargetAnim((SpriteObj *)target, 0x1F);
+        SetTargetAnim((GroundSprite *)target, 0x1F);
     if (k.pressed & A_BUTTON) {
         StartStroke();
     } else if (k.pressed & (B_BUTTON | R_BUTTON)) {
         StartSpin();
     } else if (dir) {
         SetMode(6);
-        SetTargetAnim((SpriteObj *)target, 0x1D);
+        SetTargetAnim((GroundSprite *)target, 0x1D);
         QueueNowX(this, 0xC);
     }
     unk_26 = 0;
@@ -423,7 +423,7 @@ void PlayerCtrl::StateSwim()
         StartSpin();
     if (dir == 0 && tilt == 6) {
         SetMode(5);
-        SetTargetAnim((SpriteObj *)target, 0x20);
+        SetTargetAnim((GroundSprite *)target, 0x20);
         mode = dir;
     }
     CheckTurn();
@@ -448,7 +448,7 @@ void PlayerCtrl::StateStroke()
             ResetMode(this);
         else if (tilt == 6) {
             SetMode(5);
-            SetTargetAnim((SpriteObj *)target, 0x20);
+            SetTargetAnim((GroundSprite *)target, 0x20);
         } else
             ResetMode(this);
     }
@@ -484,13 +484,13 @@ void PlayerCtrl::StateTurn()
         case 7:
             frame = target->frame;
             mode = 6;
-            SetTargetAnim((SpriteObj *)target, gPlayerCtrlModeAnimRows[6][tilt].anim);
+            SetTargetAnim((GroundSprite *)target, gPlayerCtrlModeAnimRows[6][tilt].anim);
             ClampFrame(target, frame);
             break;
         case 5:
             frame = target->frame;
             mode = 4;
-            SetTargetAnim((SpriteObj *)target, gPlayerCtrlModeAnimRows[4][tilt].anim);
+            SetTargetAnim((GroundSprite *)target, gPlayerCtrlModeAnimRows[4][tilt].anim);
             ClampFrame(target, frame);
             break;
         }
@@ -505,7 +505,7 @@ void PlayerCtrl::StateTurn()
             mode = 5;
         else
             mode = 7;
-        SetTargetAnim((SpriteObj *)target, gPlayerCtrlModeAnimRows[mode][tilt].anim);
+        SetTargetAnim((GroundSprite *)target, gPlayerCtrlModeAnimRows[mode][tilt].anim);
         StartSpin();
         ClampFrame(target, frame);
         return;
@@ -556,7 +556,7 @@ void PlayerCtrl::StateSwimStart()
             ResetMode(this);
         else if (tilt == 6) {
             SetMode(5);
-            SetTargetAnim((SpriteObj *)target, 0x20);
+            SetTargetAnim((GroundSprite *)target, 0x20);
         }
     }
     CheckTurn();
@@ -589,7 +589,7 @@ void PlayerCtrl::StateDead()
         MarkGone(target);
 }
 
-void PlayerCtrl::Attach(SpriteObj *owner)
+void PlayerCtrl::Attach(MovingSprite *owner)
 {
     target = (struct player *)owner;
 }
@@ -597,14 +597,14 @@ void PlayerCtrl::Attach(SpriteObj *owner)
 /* UNUSED */
 void PlayerCtrl::StartMotionYFromSet(struct player *part, s32 idx)
 {
-    Ctrl::StartTargetMotionY((SpriteObj *)part,
+    Ctrl::StartTargetMotionY((GroundSprite *)part,
                              &gPlayerCtrlMotionRecords[animSet->entries[idx][1]]);
 }
 
 /* UNUSED */
 void PlayerCtrl::StartMotionXFromSet(struct player *part, s32 idx)
 {
-    Ctrl::StartTargetMotionX((SpriteObj *)part,
+    Ctrl::StartTargetMotionX((GroundSprite *)part,
                              &gPlayerCtrlMotionRecords[animSet->entries[idx][0]].start);
 }
 

@@ -21,7 +21,7 @@ extern "C" {
  * statement of its own; g++ gives the ROM's code as written. */
 void EnemyCtrl::UpdateShooter()
 {
-    SpriteObj *part;
+    MovingSprite *part;
     struct ctrl_target *shot;
 
     if (__modsi3(gRoomFrameCount + shotPeriod - shotPhase, shotPeriod) == 0) {

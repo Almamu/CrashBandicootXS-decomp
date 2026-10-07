@@ -15,13 +15,13 @@ extern "C" {
  * pairs (sb/ip in the columns' copy, sl/sb in column 255's); the C had
  * statement expressions for them. Without them, the sprite takes another
  * register and both copies' code is off. */
-static inline Sprite *Copy(Sprite *s)
+static inline Crate *Copy(Crate *s)
 {
     return s;
 }
 
 /* Removes `sprite` (Detach, Remove's body, inlined) and deletes it. */
-static inline void Destroy(CrateList *list, Sprite *sprite)
+static inline void Destroy(CrateList *list, Crate *sprite)
 {
     list->Detach(Copy(sprite));
     delete Copy(sprite);
@@ -73,7 +73,7 @@ void CrateList::Update()
             /* Reading `node->data` twice gives the ROM's load into r2 and
              * the copy into r5. */
             s32 active = (node->data->f.flags >> 4) & 1;
-            Sprite *sprite = node->data;
+            Crate *sprite = node->data;
 
             if (active && node->link == 0) {
                 /* Append's body, through `last`: Append itself recomputes
@@ -106,7 +106,7 @@ void CrateList::Update()
         i = next;
     } while (i >= lo);
     for (node = *last; node != 0; node = node->next) {
-        Sprite *sprite = node->data;
+        Crate *sprite = node->data;
 
         if (sprite->IsGone()) {
             Destroy(this, Copy(sprite));

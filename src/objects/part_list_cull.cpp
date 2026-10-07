@@ -34,7 +34,7 @@ void PartList::Cull()
     }
     visibleCount = 0;
     for (i = 0; i < count; i++) {
-        MovingSprite *part = items[i];
+        Sprite *part = items[i];
 
         if ((u8)part->OverlapsRect(&screen))
             visible[visibleCount++] = part;
@@ -61,7 +61,7 @@ void PartList::CollideClass(s32 classId)
     s32 i;
 
     for (i = 0; i < visibleCount; i++) {
-        MovingSprite *part = visible[i];
+        Sprite *part = visible[i];
 
         if (part->GetClassId() != classId)
             continue;

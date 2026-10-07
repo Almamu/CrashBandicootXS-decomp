@@ -21,10 +21,10 @@ extern "C" {
  * The two pins are still needed in C++: unpinned, g++ gives `this` r2
  * and `part` r4 where the ROM has r3 and r2 (the C needed the same two,
  * plus gotos for the block order, which the switch gives). */
-void StompedHopPadCtrl::Update(SpriteObj *partArg)
+void StompedHopPadCtrl::Update(MovingSprite *partArg)
 {
     MATCH_HOLD_REG(StompedHopPadCtrl *, self, r3) = this;
-    MATCH_HOLD_REG(SpriteObj *, part, r2) = partArg;
+    MATCH_HOLD_REG(MovingSprite *, part, r2) = partArg;
     s32 y;
 
     switch (self->state) {
@@ -52,7 +52,7 @@ StompedHopPadCtrl::StompedHopPadCtrl()
 }
 
 /* Marks the sprite object gone once its animation has played through. */
-void OneShotAnimCtrl::Update(SpriteObj *part)
+void OneShotAnimCtrl::Update(MovingSprite *part)
 {
     if (part->animDone)
         part->MarkGone();

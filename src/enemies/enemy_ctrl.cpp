@@ -131,7 +131,7 @@ void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
 
 /* Takes the part to steer. The level spawners attach it through this
  * slot. */
-void EnemyCtrl::Attach(SpriteObj *part)
+void EnemyCtrl::Attach(MovingSprite *part)
 {
     sprite = part;
 }
@@ -269,7 +269,7 @@ void PeriodicSpawner::SetCallback(void (*newCallback)(u32 arg, u16 x, u16 y, u16
 
 /* Marks the knocked enemy's part gone once it has left the screen (the
  * same test as EffectCtrl::Update's first). */
-void KnockedEnemyCtrl::Update(SpriteObj *part)
+void KnockedEnemyCtrl::Update(MovingSprite *part)
 {
     if (!part->IsOnScreen())
         part->MarkGone();

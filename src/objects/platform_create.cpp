@@ -68,7 +68,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         obj->type = 1;
         m = new PlatformMover(rec->distX, rec->distY, rec->dirX != 0, rec->dirY != 0, 1);
         obj->mover = m;
-        m->Attach((SpriteObj *)obj);
+        m->Attach(obj);
         if (rec->flag)
             obj->SetAlwaysActive();
         break;
@@ -86,7 +86,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         obj->type = 5;
         m = new PlatformMover(0, 0, false, false, 5);
         obj->mover = m;
-        m->Attach((SpriteObj *)obj);
+        m->Attach(obj);
         break;
     case 6:
         obj->type = 6;
@@ -95,16 +95,16 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         else
             m = new CortexBossPlatformMover;
         obj->mover = m;
-        m->Attach((SpriteObj *)obj);
+        m->Attach(obj);
         break;
     case 7:
         obj->type = 7;
         m = new PlatformMover(0, 0, false, false, 7);
         obj->mover = m;
-        m->Attach((SpriteObj *)obj);
+        m->Attach(obj);
         break;
     }
-    ((PartList *)gTouchableList)->Add(obj);
+    TouchableList()->Add(obj);
     obj->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x1D4);
     obj->tag = kind;
     obj->ResetFrameTimer();

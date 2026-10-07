@@ -17,12 +17,9 @@
  * 0x80. The C names of Sprite's methods say "SpriteObj"
  * (InitSpriteObj, DestroySpriteObj, ...); cxx_symbols.txt maps them.
  *
- * SpriteObj is the name the controllers (ctrl.hpp and the rest) use for
- * the object they drive: an empty subclass of GroundSprite, so that it
- * has every field from the entity header to the ground sprite's `type`.
- * The controllers' methods take a `SpriteObj *` in their mangled names
- * (cxx_symbols.txt); the object is really a moving sprite or one of its
- * subclasses, and they move to MovingSprite in a later part.
+ * A controller (ctrl.hpp and the rest) drives a MovingSprite: its `mover`
+ * calls the controller's methods with itself (`P12MovingSprite` in their
+ * mangled names, cxx_symbols.txt).
  *
  * The C files keep their views of the same objects: actor.h's `struct
  * actor` (Entity), box_part.h's `struct box_part` and gfx_part.h's
@@ -352,14 +349,6 @@ public:
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == sizeof(struct gobj));
 
-/* The object a controller drives, as the controllers' methods name it
- * (see the top of this file). */
-class SpriteObj : public GroundSprite
-{
-};
-
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteObj) == sizeof(struct gobj));
-
 /* The player (gPlayer; its own code is still C) as the ground sprite it
  * is. Each call reads gPlayer again. */
 static inline GroundSprite *PlayerSprite()
@@ -371,17 +360,20 @@ static inline GroundSprite *PlayerSprite()
  * Update compacts `items` and fills `visible`, the parts on screen, which
  * Collide walks. Its methods are C++: Update, Collide and CollideWithPlayer
  * in src/objects/sprite_anim.cpp, the rest in part_list.cpp,
- * part_list_cull.cpp and part_collide.cpp (part 7c). The items are typed
- * MovingSprite, but some lists hold other sprites (crates, pickups);
- * retyping them is left to part 7b'. */
+ * part_list_cull.cpp and part_collide.cpp (part 7c). The items are
+ * Sprites: gTouchableList holds pickups, platforms and Tiny's hop pads,
+ * gCollidableList and gForegroundList moving sprites and effect parts.
+ * Collide hands on only the parts whose class id is above 4, the moving
+ * sprites (MovingSprite 5, GroundSprite 6), which are what CollideWithPlayer
+ * and CollideWithObject take. */
 class PartList
 {
 public:
-    s32 capacity;           // 0x00
-    s32 count;              // 0x04
-    s32 visibleCount;       // 0x08
-    MovingSprite **items;   // 0x0C
-    MovingSprite **visible; // 0x10
+    s32 capacity;     // 0x00
+    s32 count;        // 0x04
+    s32 visibleCount; // 0x08
+    Sprite **items;   // 0x0C
+    Sprite **visible; // 0x10
 
     void Update();                                                  // UpdatePartList
     void Collide(struct aabb box, s32 unused, MovingSprite *other); // CollidePartList
@@ -390,18 +382,35 @@ public:
                            MovingSprite *other); // CollidePartWithObject
     /* part 7c (include/part_list.hpp; src/objects/part_list.cpp,
      * part_list_cull.cpp) */
-    PartList(s32 capacity);          // InitPartList
-    ~PartList();                     // DestroyPartList
-    void Draw();                     // DrawPartList
-    void Remove(MovingSprite *part); // RemoveFromPartList
-    void RemoveAt(s32 index);        // RemovePartListAt
-    void Add(MovingSprite *part);    // AddToPartList
-    void Cull();                     // CullPartList
-    void Clear();                    // ClearPartList
-    void CollideClass(s32 classId);  // CollidePartsOfClass
+    PartList(s32 capacity);         // InitPartList
+    ~PartList();                    // DestroyPartList
+    void Draw();                    // DrawPartList
+    void Remove(Sprite *part);      // RemoveFromPartList
+    void RemoveAt(s32 index);       // RemovePartListAt
+    void Add(Sprite *part);         // AddToPartList
+    void Cull();                    // CullPartList
+    void Clear();                   // ClearPartList
+    void CollideClass(s32 classId); // CollidePartsOfClass
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PartList) == sizeof(struct part_list));
+
+/* The room's part lists (globals.h) as the class, as Crates() is the
+ * crate list (crate_list.hpp). */
+static inline PartList *TouchableList()
+{
+    return (PartList *)gTouchableList;
+}
+
+static inline PartList *CollidableList()
+{
+    return (PartList *)gCollidableList;
+}
+
+static inline PartList *ForegroundList()
+{
+    return (PartList *)gForegroundList;
+}
 
 /* The sprite graphics managers (src/gfx/graphics.cpp). */
 

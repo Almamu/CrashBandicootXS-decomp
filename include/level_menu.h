@@ -20,7 +20,7 @@
 #include "actor_self.h"
 #include "sprite_bank.h"
 
-/* Bits of a sprite's `+0x28` byte (see SpriteObj::MirrorBits in
+/* Bits of a sprite's `+0x28` byte (see Sprite::MirrorBits in
  * include/sprite_obj.hpp). */
 struct sprite_f28 {
     u8 mode:2;

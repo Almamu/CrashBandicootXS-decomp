@@ -159,7 +159,7 @@ ExtraLife *ExtraLife::Create(u16 id, u16 x, u16 y, s32 unused)
 {
     ExtraLife *self = new ExtraLife(id, x, y);
 
-    ((PartList *)gTouchableList)->Add((MovingSprite *)self);
+    TouchableList()->Add(self);
     ClampFrame(self);
     self->mirrorBits.flipX = 0;
     self->mirrorBits.flipY = 0;

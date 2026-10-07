@@ -60,7 +60,7 @@ public:
      * virtual methods take (`sprite`). */
     union {
         struct ctrl_target *target;
-        SpriteObj *sprite;
+        MovingSprite *sprite;
     };
     s32 state;                 // 0x74 - Update's state (SetState)
     s32 modeB;                 // 0x78 - see SetMotionX
@@ -70,11 +70,11 @@ public:
                                //        bank anim (gEnemyDefaultAnimMap..., SetModeTable)
     struct ctrl_target *popup; // 0x88 - floating popup spawned in state 18
 
-    EnemyCtrl();                                                     // CreateEnemyCtrl
-    virtual void Update(SpriteObj *part);                            // UpdateEnemyCtrl
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg); // HitEnemy
-    virtual void Attach(SpriteObj *part);                            // AttachEnemyCtrl
-    virtual ~EnemyCtrl();                                            // DestroyEnemyCtrl
+    EnemyCtrl();                                                        // CreateEnemyCtrl
+    virtual void Update(MovingSprite *part);                            // UpdateEnemyCtrl
+    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg); // HitEnemy
+    virtual void Attach(MovingSprite *part);                            // AttachEnemyCtrl
+    virtual ~EnemyCtrl();                                               // DestroyEnemyCtrl
 
     /* src/enemies/enemy_ctrl.cpp */
     void SetMotionY(s32 mode);
@@ -118,10 +118,10 @@ COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == sizeof(struct part_ctrl
 class KnockedEnemyCtrl : public Ctrl
 {
 public:
-    KnockedEnemyCtrl();                   // CreateKnockedEnemyCtrl
-    virtual void Update(SpriteObj *part); // UpdateKnockedEnemyCtrl
-    virtual ~KnockedEnemyCtrl();          // DestroyKnockedEnemyCtrl
-    void Reset();                         // ResetKnockedEnemyCtrl
+    KnockedEnemyCtrl();                      // CreateKnockedEnemyCtrl
+    virtual void Update(MovingSprite *part); // UpdateKnockedEnemyCtrl
+    virtual ~KnockedEnemyCtrl();             // DestroyKnockedEnemyCtrl
+    void Reset();                            // ResetKnockedEnemyCtrl
 };
 
 COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == sizeof(struct ctrl));

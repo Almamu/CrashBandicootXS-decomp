@@ -34,7 +34,7 @@ static inline u32 KeysHeld(u32 in, u32 mask)
  * the player hit a ceiling (`hitAxes` bit 3), the queued motion
  * (ApplyMotion), and the player's attack kind for the hit handlers
  * (`kind`: 0x13 spinning, 0x14 sliding, 0x15/0x16 body slamming, else 1). */
-void ActionCtrl::Update(SpriteObj *)
+void ActionCtrl::Update(MovingSprite *)
 {
     u32 in = gKeys.all;
 

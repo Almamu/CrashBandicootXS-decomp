@@ -30,7 +30,7 @@ public:
     s32 arg; // 0x18
 
     BossCtrl(); // CreateBossCtrl
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg);
+    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg);
     virtual ~BossCtrl(); // DestroyBossCtrl
     void *GetTarget();   // GetCtrlTarget
 };
@@ -48,12 +48,12 @@ public:
     u8 latch;  // 0x20
 
     MegaMixCtrl(); // CreateMegaMixCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~MegaMixCtrl(); // DestroyMegaMixCtrl
-    virtual void StartTargetMotionXFromSet(SpriteObj *part, s32 index);
-    virtual void StartTargetMotionYFromSet(SpriteObj *part, s32 index);
-    void SetMotionYFromSet(SpriteObj *part, s32 index);
-    void SetMotionXFromSet(SpriteObj *part, s32 index);
+    virtual void StartTargetMotionXFromSet(MovingSprite *part, s32 index);
+    virtual void StartTargetMotionYFromSet(MovingSprite *part, s32 index);
+    void SetMotionYFromSet(MovingSprite *part, s32 index);
+    void SetMotionXFromSet(MovingSprite *part, s32 index);
     void Reset();
 };
 
@@ -82,12 +82,12 @@ public:
     s16 *squares;  // 0x48 - i * i >> 8 for i = 0..0x100 (CreateTiny)
 
     TinyCtrl(); // CreateTiny
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~TinyCtrl(); // DestroyTiny
-    void SetState(SpriteObj *part, s32 next);
+    void SetState(MovingSprite *part, s32 next);
     s32 PickHopTarget();
-    void SpawnFallingLeaves(SpriteObj *part, s32 n);
-    void StartHop(SpriteObj *part); // StartTinyHop
+    void SpawnFallingLeaves(MovingSprite *part, s32 n);
+    void StartHop(MovingSprite *part); // StartTinyHop
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
@@ -100,15 +100,15 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(TinyCtrl) == 0x4C);
 class CortexBossCtrl : public BossCtrl
 {
 public:
-    SpriteObj *cannon; // 0x1C - SpawnCannon's part
-    SpriteObj *target; // 0x20 - SpawnTarget's part
+    MovingSprite *cannon; // 0x1C - SpawnCannon's part
+    MovingSprite *target; // 0x20 - SpawnTarget's part
 
     CortexBossCtrl(); // CreateCortexBoss
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~CortexBossCtrl(); // DestroyCortexBoss
-    void SetState(SpriteObj *part, s32 next);
-    void SpawnCannon(SpriteObj *part); // SpawnCortexCannon
-    void SpawnTarget(SpriteObj *part); // SpawnCortexTarget
+    void SetState(MovingSprite *part, s32 next);
+    void SpawnCannon(MovingSprite *part); // SpawnCortexCannon
+    void SpawnTarget(MovingSprite *part); // SpawnCortexTarget
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexBossCtrl) == 0x24);
@@ -119,9 +119,9 @@ class CortexCannonCtrl : public Ctrl
 {
 public:
     CortexCannonCtrl(); // CreateCortexCannonCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~CortexCannonCtrl(); // DestroyCortexCannonCtrl
-    void SetState(SpriteObj *part, s32 next);
+    void SetState(MovingSprite *part, s32 next);
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == sizeof(struct ctrl));
@@ -151,12 +151,12 @@ public:
     CortexBossCtrl *boss; // 0x3C
 
     CortexTargetCtrl(CortexBossCtrl *boss); // CreateCortexTargetCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~CortexTargetCtrl(); // DestroyCortexTargetCtrl
     void SetPlatformsKind(u8 flag);
-    void SetDest(SpriteObj *part, s32 x, s32 y);
-    void SetState(SpriteObj *part, s32 next); // SetCortexTargetState
-    void FireShot(SpriteObj *part, s32 kind); // FireCortexShot
+    void SetDest(MovingSprite *part, s32 x, s32 y);
+    void SetState(MovingSprite *part, s32 next); // SetCortexTargetState
+    void FireShot(MovingSprite *part, s32 kind); // FireCortexShot
 };
 
 COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
@@ -172,7 +172,7 @@ public:
     CortexBossCtrl *boss; // 0x14
 
     CortexShotCtrl(CortexBossCtrl *boss); // CreateCortexShotCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~CortexShotCtrl(); // DestroyCortexShotCtrl
 };
 
@@ -187,7 +187,7 @@ public:
     s32 kind; // 0x10 - 0 red, 1 green, 2 yellow
 
     CortexBossGemCtrl(s32 kind); // CreateCortexBossGemCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~CortexBossGemCtrl(); // DestroyCortexBossGemCtrl
 };
 
@@ -199,7 +199,7 @@ class UnusedOneShotAnimCtrl : public Ctrl
 {
 public:
     UnusedOneShotAnimCtrl(); // CreateUnusedOneShotAnimCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~UnusedOneShotAnimCtrl(); // DestroyUnusedOneShotAnimCtrl
 };
 
@@ -213,20 +213,20 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == sizeof(struc
 class DingodileCtrl : public BossCtrl
 {
 public:
-    s32 step;          // 0x1C - the approach table's index
-    s32 timer;         // 0x20
-    s32 nextState;     // 0x24
-    s32 passes;        // 0x28
-    SpriteObj *shield; // 0x2C - SpawnShieldOrRocket's mode-0 part
+    s32 step;             // 0x1C - the approach table's index
+    s32 timer;            // 0x20
+    s32 nextState;        // 0x24
+    s32 passes;           // 0x28
+    MovingSprite *shield; // 0x2C - SpawnShieldOrRocket's mode-0 part
 
     DingodileCtrl(u32 x, u32 y); // CreateDingodile
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~DingodileCtrl(); // DestroyDingodile
     s32 GetHits();
-    void SetState(SpriteObj *part, s32 next);
-    void SpawnShieldOrRocket(s32 mode, u16 x, u16 y, SpriteObj *owner);
+    void SetState(MovingSprite *part, s32 next);
+    void SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *owner);
     void SpawnShark(u16 x, u16 y, u8 facing);
-    void StartMotion(SpriteObj *part, s32 index);
+    void StartMotion(MovingSprite *part, s32 index);
     void SetStep(s32 value);
     void SetNextState(s32 value);
 };
@@ -238,12 +238,12 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileCtrl) == 0x30);
 class DingodileShieldCtrl : public BossCtrl
 {
 public:
-    s32 blinkTimer;   // 0x1C
-    s32 blinksLeft;   // 0x20
-    SpriteObj *owner; // 0x24 - Dingodile's part
+    s32 blinkTimer;      // 0x1C
+    s32 blinksLeft;      // 0x20
+    MovingSprite *owner; // 0x24 - Dingodile's part
 
     DingodileShieldCtrl(); // CreateDingodileShieldCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~DingodileShieldCtrl(); // DestroyDingodileShieldCtrl
 };
 
@@ -255,7 +255,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileShieldCtrl) == 0x28);
 class DingodileProjectileCtrl : public BossCtrl
 {
 public:
-    SpriteObj *owner; // 0x1C - Dingodile's part
+    MovingSprite *owner; // 0x1C - Dingodile's part
 
     DingodileProjectileCtrl(); // CreateDingodileProjectileCtrl
     /* The stalactite's, from its rocket's (SpawnStalactite): inline, as
@@ -264,7 +264,7 @@ public:
     {
         owner = rocket->owner;
     }
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~DingodileProjectileCtrl(); // DestroyDingodileProjectileCtrl
     void SpawnStalactite(u16 x, u16 y);
 };
@@ -277,7 +277,7 @@ class DingodileSharkCtrl : public EnemyCtrl
 {
 public:
     DingodileSharkCtrl(); // CreateDingodileSharkCtrl
-    virtual void Update(SpriteObj *part);
+    virtual void Update(MovingSprite *part);
     virtual ~DingodileSharkCtrl(); // DestroyDingodileSharkCtrl
 };
 

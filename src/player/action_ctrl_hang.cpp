@@ -165,7 +165,7 @@ void ActionCtrl::StateDying()
         PlaySfx(gAudioContext, SFX_UNKNOWN_2E, 0x100);
     p = part;
     if (p->animDone)
-        ((SpriteObj *)p)->MarkGone();
+        ((GroundSprite *)p)->MarkGone();
 }
 
 /* Warping in: once the animation is done, the player's collision is

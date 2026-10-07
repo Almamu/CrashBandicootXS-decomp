@@ -18,7 +18,7 @@
  * others (see ctrl.hpp). */
 #pragma interface
 
-#include "sprite_obj.hpp"
+#include "crate.hpp"
 
 extern "C" {
 #include "core.h"
@@ -38,7 +38,7 @@ struct CrateGridLink;
  * mark the nodes they have handled in the columns, so that the pass over
  * column 255 skips them. */
 struct CrateGridNode {
-    Sprite *data;        // 0x00
+    Crate *data;         // 0x00
     CrateGridNode *next; // 0x04
     CrateGridLink *wrap; // 0x08
     CrateGridNode *link; // 0x0C - the sprite's other node (column 255's, or its column's)
@@ -70,7 +70,7 @@ class CrateList
 public:
     s32 count;                 // 0x000 - pool_manager's activeCount
     s32 capacity;              // 0x004
-    Sprite **slots;            // 0x008 - slotArray
+    Crate **slots;             // 0x008 - slotArray
     CrateGridNode *nodes;      // 0x00C - nodeArray
     CrateGridNode *heads[256]; // 0x010 - gridHead
     CrateGridNode *tails[256]; // 0x410 - gridTail
@@ -87,18 +87,18 @@ public:
     void CollideWithObject(struct aabb box, MovingSprite *part,
                            MovingSprite *other); // CollideCrateGridPartWithObject
     void CollidePlayer(s32 unused);              // CollidePlayerWithCrates
-    void Remove(Sprite *sprite);                 // RemoveCrateFromList
+    void Remove(Crate *sprite);                  // RemoveCrateFromList
     void RemoveAt(s32 index);                    // RemoveCrateListAt
-    void Add(Sprite *sprite);                    // AddCrateToList
-    CrateGridNode *AddNode(Sprite *sprite, s32 column, CrateGridNode *link); // AddCrateGridNode
-    void Link(Sprite *sprite);                                               // LinkCrateInGrid
-    void LinkActive(Sprite *sprite); // LinkCrateToActiveBucket
-    void Unlink(Sprite *sprite);     // UnlinkCrateFromGrid
+    void Add(Crate *sprite);                     // AddCrateToList
+    CrateGridNode *AddNode(Crate *sprite, s32 column, CrateGridNode *link); // AddCrateGridNode
+    void Link(Crate *sprite);                                               // LinkCrateInGrid
+    void LinkActive(Crate *sprite); // LinkCrateToActiveBucket
+    void Unlink(Crate *sprite);     // UnlinkCrateFromGrid
 
     /* AddNode's body, which LinkActive inlines: takes a node off the free
      * list for `sprite` and appends it to column `column` (`heads[column]`
      * is set when the column was empty), with `link` its other node. */
-    CrateGridNode *Append(Sprite *sprite, s32 column, CrateGridNode *link)
+    CrateGridNode *Append(Crate *sprite, s32 column, CrateGridNode *link)
     {
         CrateGridLink *entry = freeHead;
         CrateGridNode *node = entry->node;
@@ -121,7 +121,7 @@ public:
     /* Remove's body, which Update inlines: finds `sprite` in the slots,
      * takes its nodes out of the grid (Unlink), moves the slots after it
      * down one place (CpuSet) and clears the last. */
-    void Detach(Sprite *sprite)
+    void Detach(Crate *sprite)
     {
         s32 i = 0;
         s32 n = capacity;
@@ -193,7 +193,7 @@ public:
 
     /* The column of `sprite`'s x: its high halfword, read with one
      * `ldrsh`. */
-    static s32 ColumnOf(Sprite *sprite)
+    static s32 ColumnOf(Crate *sprite)
     {
         return (s16)(sprite->x >> 16);
     }

@@ -72,7 +72,7 @@ static inline u32 TargetHit(struct ctrl_target *t)
  * - state 5's height tests read `t->y` into a local first, and the
  *   second test goes through its own `t2`;
  * - state 9 reads each position into a local before storing it. */
-void EnemyCtrl::Update(SpriteObj *)
+void EnemyCtrl::Update(MovingSprite *)
 {
     switch (state) {
     case 1:
@@ -102,7 +102,7 @@ void EnemyCtrl::Update(SpriteObj *)
             }
         }
         {
-            SpriteObj *t = sprite;
+            MovingSprite *t = sprite;
 
             if (t->frame == 0 && t->stepTimer == 0 && t->IsOnScreen())
                 PlaySfx(gAudioContext, SFX_UNKNOWN_13, 0x100);
@@ -301,7 +301,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
         } while (0);
 }
 
-void EnemyCtrl::HandleEvent(SpriteObj *, s32 event, s32)
+void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
 {
     if (gPlayer->ctrlMode == 1) {
         MarkGone(target);
@@ -316,7 +316,7 @@ void EnemyCtrl::HandleEvent(SpriteObj *, s32 event, s32)
     case EVENT_ATTACK_SLIDE:
         {
             KnockedEnemyCtrl *knocked = new KnockedEnemyCtrl;
-            SpriteObj *part = sprite;
+            MovingSprite *part = sprite;
             struct ctrl_target *t;
             s32 a, v;
 

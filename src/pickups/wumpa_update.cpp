@@ -176,9 +176,9 @@ Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
     Wumpa *self = new Wumpa(id, x, y);
 
     if (special == 0xffff)
-        ((PartList *)gForegroundList)->Add((MovingSprite *)self);
+        ForegroundList()->Add(self);
     else
-        ((PartList *)gTouchableList)->Add((MovingSprite *)self);
+        TouchableList()->Add(self);
     self->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0xd2 * 2);
     {
         u8 one = 1;

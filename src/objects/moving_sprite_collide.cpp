@@ -12,7 +12,7 @@ extern "C" {
 void MovingSprite::HandleEvent(s32 from, s32 event, s32 arg)
 {
     if (mover != 0)
-        mover->HandleEvent((SpriteObj *)from, event, arg);
+        mover->HandleEvent((MovingSprite *)from, event, arg);
 }
 
 /* How the sprite touches `region`: 2 when its attack box does, or when
@@ -103,7 +103,7 @@ Ctrl *MovingSprite::GetCtrl()
 void MovingSprite::AttachCtrl(Ctrl *ctrl)
 {
     mover = ctrl;
-    ctrl->Attach((SpriteObj *)this);
+    ctrl->Attach(this);
 }
 
 void MovingSprite::StartMotionY(s32 speed, s32 step, s32 target)

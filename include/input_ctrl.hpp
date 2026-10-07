@@ -44,11 +44,11 @@ public:
     typedef void (InputCtrl::*StateFunc)();
     static const StateFunc stateFuncs[4];
 
-    InputCtrl();                                                     // CreateInputCtrl
-    virtual void Update(SpriteObj *part);                            // 1
-    virtual void HandleEvent(SpriteObj *sender, s32 event, s32 arg); // 2
-    virtual void Attach(SpriteObj *owner);                           // 3
-    virtual ~InputCtrl();                                            // 9 DestroyInputCtrl
+    InputCtrl();                                                        // CreateInputCtrl
+    virtual void Update(MovingSprite *part);                            // 1
+    virtual void HandleEvent(MovingSprite *sender, s32 event, s32 arg); // 2
+    virtual void Attach(MovingSprite *owner);                           // 3
+    virtual ~InputCtrl();                                               // 9 DestroyInputCtrl
     void KillPlayer(s32 anim);
     void StateStart();
     void ApplyMotion();

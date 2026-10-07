@@ -22,11 +22,11 @@ void Platform::Update()
                 *c = 0;
         }
         if (mover)
-            mover->Update((SpriteObj *)this);
+            mover->Update(this);
     } else {
         ApplyVelocity();
         if (mover)
-            mover->Update((SpriteObj *)this);
+            mover->Update(this);
     }
 }
 
@@ -82,7 +82,7 @@ static inline const struct speed_ramp *MoverRamp(PlatformMover *self)
 }
 
 /* Holds the animation at its first frame (its last, if it has none). */
-static inline void HoldFirstFrame(SpriteObj *part)
+static inline void HoldFirstFrame(MovingSprite *part)
 {
     s32 f = 0;
     s32 n = part->anim->records[part->tag].frames;
@@ -100,7 +100,7 @@ static inline void HoldFirstFrame(SpriteObj *part)
  * their animation at its first frames until the player lands on a 7 or
  * a 6's timer runs out, and a 7 is gone (MarkGone) once its animation
  * ends. Then MovePlayer carries the player along. */
-void PlatformMover::Update(SpriteObj *part)
+void PlatformMover::Update(MovingSprite *part)
 {
     const struct speed_ramp *e;
 
@@ -276,7 +276,7 @@ void PlatformMover::Update(SpriteObj *part)
  * last frame, makes the platform the one the player stands on, and folds
  * the platform's velocity signs into the player's `dir`. A type 5
  * platform starts its timer. */
-void PlatformMover::MovePlayer(SpriteObj *part)
+void PlatformMover::MovePlayer(MovingSprite *part)
 {
     if (active && kind != 6) {
         struct player *p = gPlayer;
@@ -302,7 +302,7 @@ void PlatformMover::MovePlayer(SpriteObj *part)
 
                 px += dx;
                 py += dy;
-                ((MovingSprite *)q)->SetPrevPos(q->x = INT_TO_Q8(px), q->y = INT_TO_Q8(py));
+                ((GroundSprite *)q)->SetPrevPos(q->x = INT_TO_Q8(px), q->y = INT_TO_Q8(py));
             }
             dir = gPlayer->dir;
             if (part->speedX > 0)
@@ -320,7 +320,7 @@ void PlatformMover::MovePlayer(SpriteObj *part)
     }
 }
 
-void PlatformMover::SetTargetMotionYFromSet(SpriteObj *part, s32 index)
+void PlatformMover::SetTargetMotionYFromSet(MovingSprite *part, s32 index)
 {
     const struct speed_ramp *e = &gPlatformMoverMotionRecords[animSet->entries[index][1]];
 
@@ -343,7 +343,7 @@ void PlatformMover::SetTargetMotionYFromSet(SpriteObj *part, s32 index)
     }
 }
 
-void PlatformMover::SetTargetMotionXFromSet(SpriteObj *part, s32 index)
+void PlatformMover::SetTargetMotionXFromSet(MovingSprite *part, s32 index)
 {
     const struct speed_ramp *e = &gPlatformMoverMotionRecords[animSet->entries[index][0]];
 
@@ -366,12 +366,12 @@ void PlatformMover::SetTargetMotionXFromSet(SpriteObj *part, s32 index)
     }
 }
 
-void PlatformMover::StartTargetMotionYFromSet(SpriteObj *part, s32 index)
+void PlatformMover::StartTargetMotionYFromSet(MovingSprite *part, s32 index)
 {
     Ctrl::StartTargetMotionY(part, &gPlatformMoverMotionRecords[animSet->entries[index][1]]);
 }
 
-void PlatformMover::StartTargetMotionXFromSet(SpriteObj *part, s32 index)
+void PlatformMover::StartTargetMotionXFromSet(MovingSprite *part, s32 index)
 {
     Ctrl::StartTargetMotionX(part, &gPlatformMoverMotionRecords[animSet->entries[index][0]].start);
 }

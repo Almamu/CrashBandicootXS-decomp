@@ -33,7 +33,7 @@ static inline void FreeNode(CrateList *list, CrateGridNode *node)
  * and a later match in the same list is unlinked against `heads[0x100]`,
  * which is `tails[0]`. That is what the original source did, so this does
  * it too. */
-void CrateList::Unlink(Sprite *sprite)
+void CrateList::Unlink(Crate *sprite)
 {
     s32 column = ColumnOf(sprite);
     CrateGridNode *found = heads[column];

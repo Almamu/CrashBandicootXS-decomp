@@ -20,7 +20,7 @@ DingodileShieldCtrl::DingodileShieldCtrl()
 
 /* Starts motion entry `index`: its X record (negated when `part` faces
  * left) and its Y record, with the speed set to the record's start. */
-void DingodileCtrl::StartMotion(SpriteObj *part, s32 index)
+void DingodileCtrl::StartMotion(MovingSprite *part, s32 index)
 {
     const struct speed_ramp *e = &gDingodileMotionRecords[gDingodileMotionEntries[index][0]];
 

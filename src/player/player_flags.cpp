@@ -312,7 +312,7 @@ void Ctrl::SetAnimSet(const struct entry_set *set)
 /* Copies `ramp` into `part`'s Y speed ramp (`rampY`; the speed is kept),
  * negating the start and the target when `part` is Y-mirrored (`mirror`
  * bit 5). The negated branch loads the target before the step. */
-void Ctrl::SetTargetMotionY(SpriteObj *part, const speed_ramp *ramp)
+void Ctrl::SetTargetMotionY(MovingSprite *part, const speed_ramp *ramp)
 {
     if ((s32)(part->mirror << 26) < 0) {
         s32 x = -ramp->start;
@@ -336,7 +336,7 @@ void Ctrl::SetTargetMotionY(SpriteObj *part, const speed_ramp *ramp)
 /* The same, also starting `speedY` at the (possibly negated) start: the
  * plain-copy counterpart of StartTargetMotionX (ctrl.cpp), which scales
  * the record by the entry set's `scale`. */
-void Ctrl::StartTargetMotionY(SpriteObj *part, const speed_ramp *ramp)
+void Ctrl::StartTargetMotionY(MovingSprite *part, const speed_ramp *ramp)
 {
     if ((s32)(part->mirror << 26) < 0) {
         s32 x = -ramp->start;

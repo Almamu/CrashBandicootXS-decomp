@@ -49,7 +49,7 @@ void InputCtrl::QueueMotionX(u8 entry)
 
 /* Keeps the event's msg and arg; the sender is unused. Nothing reads
  * them back. */
-void BossCtrl::HandleEvent(SpriteObj *, s32 event, s32 arg)
+void BossCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
 {
     msg = event;
     this->arg = arg;
