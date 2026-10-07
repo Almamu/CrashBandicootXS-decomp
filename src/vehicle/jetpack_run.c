@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
@@ -217,7 +218,7 @@ void AllocJetpackPlayerTiles(void *selfArg)
     struct actor_self *self = selfArg;
 
     {
-        s32 accum = self->animTime >> 8;
+        s32 accum = Q8_TO_INT(self->animTime);
         s32 idx = self->animIndex;
         struct anim_frame_record *table = self->anims;
         s16 off = table[idx].frameIndex;
@@ -241,7 +242,7 @@ void AllocJetpackPlayerTiles(void *selfArg)
         gJetpackPlayerTiles[0] = AllocVramTileBlock(size);
     }
     {
-        s32 accum = self->animTime >> 8;
+        s32 accum = Q8_TO_INT(self->animTime);
         s32 idx = self->animIndex;
         MATCH_HOLD_REG(u8 *, table, r3) = (u8 *)self->anims;
         MATCH_HOLD_REG(s32, shiftResult, r0) = idx * 3 * 4;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include "system.h"
@@ -46,15 +47,15 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     s32 x, y, z;
 
     f.t = *(struct anim_box *)pl->box;
-    x = pl->x >> 8;
-    y = pl->y >> 8;
-    z = pl->z >> 8;
+    x = Q8_TO_INT(pl->x);
+    y = Q8_TO_INT(pl->y);
+    z = Q8_TO_INT(pl->z);
     t = &f.t;
     BoxMove(t, x, y, z);
     f.a = *t;
     MemCopy32(&f.a, &f.a, sizeof(f.a));
     f.s = *(struct anim_box *)self->box;
-    BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
+    BoxMove(&f.s, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
     *t = f.s;
     MemCopy32(t, t, sizeof(*t));
     return BoxOverlap(&f.a, t);

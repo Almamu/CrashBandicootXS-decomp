@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include "system.h"
@@ -56,9 +57,9 @@ u8 IsTouchingYeti(struct actor_self *self)
     struct anim_box *b;
 
     f.a = gYetiBox;
-    BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);
+    BoxMove(&f.a, Q8_TO_INT(gYetiX), 0, Q8_TO_INT(gYetiPosition));
     f.t = *(struct anim_box *)self->box;
-    BoxMove(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
+    BoxMove(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
     f.b = f.t;
     b = &f.b;
     MemCopy32(b, b, sizeof(*b));
@@ -101,7 +102,7 @@ static inline void FillDotPattern(u8 *dst, u8 seed)
 
 static inline u8 *CurFrame(struct actor_self *self)
 {
-    s32 t = self->animTime >> 8;
+    s32 t = Q8_TO_INT(self->animTime);
 
     return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
 }

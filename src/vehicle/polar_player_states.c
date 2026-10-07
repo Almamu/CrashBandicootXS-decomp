@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "audio.h"
@@ -137,7 +138,7 @@ void PolarPlayerStateFinishLeap(void *selfArg)
     self->y += gPolarPlayerVelY;
     gPolarPlayerVelY += 0x2d;
     self->z += 0x3c;
-    self->depth = (GetCellAnimDistance() << 8) - self->z;
+    self->depth = INT_TO_Q8(GetCellAnimDistance()) - self->z;
 
     if (gPolarFadeStarted == 0 && self->depth <= 0x16FF) {
         FadeBrightness(0, 2, 1);
@@ -160,7 +161,7 @@ void PolarPlayerStateCarriedOff(void *selfArg)
     self->y += gPolarPlayerVelY;
     gPolarPlayerVelY += 0x2d;
     self->z += 0x3c;
-    self->depth = (GetCellAnimDistance() << 8) - self->z;
+    self->depth = INT_TO_Q8(GetCellAnimDistance()) - self->z;
 
     if (gPolarFadeStarted == 0 && self->depth <= 0x16FF) {
         FadeBrightness(0, 2, 1);

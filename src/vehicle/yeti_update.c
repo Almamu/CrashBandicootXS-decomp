@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -100,17 +101,17 @@ void UpdateYeti(void)
     if (gYetiState != 3)
         gYetiX += ((gActorList)->x - gYetiX) / 32;
     obj = gYeti;
-    old = obj->animTime >> 8;
+    old = Q8_TO_INT(obj->animTime);
     obj->animTime += *(s16 *)&obj->animTimer;
     obj->animDone = 0;
     if (GetAnimFrameBaseOffset(obj) >= obj->anims[obj->animIndex].loopThreshold) {
-        obj->animTime -=
-            (obj->anims[obj->animIndex].loopThreshold - obj->anims[obj->animIndex].loopBase) << 8;
+        obj->animTime -= INT_TO_Q8(obj->anims[obj->animIndex].loopThreshold -
+                                   obj->anims[obj->animIndex].loopBase);
         obj->animDone = 1;
     }
     gYetiStateFuncs[gYetiState]();
     obj = gYeti;
-    cur = obj->animTime >> 8;
+    cur = Q8_TO_INT(obj->animTime);
     if (old != cur) {
         gUnpackNibbleTilesFunc(
             (u16 *)((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4),
@@ -120,7 +121,7 @@ void UpdateYeti(void)
     SetActorBgLayerDepth(gYetiDistance);
     UpdateYetiPalette();
     f.a = gYetiCatchBox;
-    BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);
+    BoxMove(&f.a, Q8_TO_INT(gYetiX), 0, Q8_TO_INT(gYetiPosition));
     if ((u32)gYetiState <= 1) {
         struct actor_self **playerAddr = &gActorList;
         struct actor_self *pl;
@@ -130,7 +131,7 @@ void UpdateYeti(void)
             return;
         pl = *playerAddr;
         f.t = *(struct anim_box *)pl->box;
-        BoxMove(&f.t, pl->x >> 8, pl->y >> 8, pl->z >> 8);
+        BoxMove(&f.t, Q8_TO_INT(pl->x), Q8_TO_INT(pl->y), Q8_TO_INT(pl->z));
         f.b = f.t;
         b = &f.b;
         MemCopy32(b, b, sizeof(*b));
@@ -182,10 +183,10 @@ void UpdateYetiPalette(void)
 
         for (i = 15; i >= 0; i--) {
             u16 c = *src;
-            s32 r = ((mask2 & c) * f) >> 8;
-            s32 g = (((c >> 5) & mask) * f) >> 8;
+            s32 r = Q8_MUL(mask2 & c, f);
+            s32 g = Q8_MUL((c >> 5) & mask, f);
 
-            *dst = r | (g << 5) | (g << 10);
+            *dst = RGB16(r, g, g);
             dst++;
             src++;
         }
@@ -227,8 +228,8 @@ void UpdateYetiBg2(void)
     scale = (gYetiDistance << 8) / 0x5500;
     base = GetActorBgCenterX();
     t = (gYetiX * 47 << 8) / gYetiDistance + base;
-    *(vs32 *)REG_ADDR_BG2X = 0x4000 - ((t * scale) >> 8);
-    *(vs32 *)REG_ADDR_BG2Y = 0x4400 - ((GetActorBgCenterY() * scale) >> 8);
+    *(vs32 *)REG_ADDR_BG2X = 0x4000 - Q8_MUL(t, scale);
+    *(vs32 *)REG_ADDR_BG2Y = 0x4400 - Q8_MUL(GetActorBgCenterY(), scale);
     {
         vu16 *pa = (vu16 *)REG_ADDR_BG2PA;
 

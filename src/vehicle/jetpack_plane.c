@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include <libgcc.h>
@@ -55,9 +56,9 @@ void UpdateJetpackPlane(struct actor_fa38 *self)
             if (angle > 0 && self->base.depth <= 0x8BFF) {
                 s32 scale = 0x1000 / angle;
                 s32 rawDx = (player->x - self->base.x) * scale;
-                s32 dx = rawDx >> 12;
+                s32 dx = Q12_TO_INT(rawDx);
                 s32 rawDy = (player->y - self->base.y) * scale;
-                s32 dy = rawDy >> 12;
+                s32 dy = Q12_TO_INT(rawDy);
                 s32 signDx = rawDx >> 31;
                 s32 absDx = (dx ^ signDx) - signDx;
                 s32 signDy = rawDy >> 31;
@@ -259,9 +260,7 @@ void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s
 void JetpackPlaneStateFall(struct jetpack_plane *self)
 {
     self->velY += self->accY;
-    if (self->velY > 0x1400) {
-        self->velY = 0x1400;
-    }
+    LIMIT_MAX(self->velY, 0x1400);
 }
 
 /* gJetpackPlaneStateFuncs[2], entered by DamageJetpackPlane with the
@@ -435,8 +434,7 @@ void JetpackBomberStateCircle(struct jetpack_bomber *self)
 void JetpackBomberStateSwingHorizontal(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
-        self->base.x = self->homeX +
-                       gSineTable[((((self->base.stateTime * 10) >> 4) & 0xff) + 0x40) & 0xff] * 80;
+        self->base.x = self->homeX + COS_Q8(((self->base.stateTime * 10) >> 4) & 0xff) * 80;
     } else {
         HomeJetpackBomber(self);
     }
@@ -446,7 +444,7 @@ void JetpackBomberStateSwingHorizontal(struct jetpack_bomber *self)
 void JetpackBomberStateBobVertical(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
-        self->base.y = self->homeY + gSineTable[((self->base.stateTime << 4) >> 4) & 0xff] * 60;
+        self->base.y = self->homeY + SIN_Q8((self->base.stateTime << 4) >> 4) * 60;
     } else {
         HomeJetpackBomber(self);
     }
@@ -573,8 +571,8 @@ void AirshipFireballStateOrbit(struct actor_orbit *self)
         sine = gSineTable;
         t = self->base.stateTime;
         angle = ((t << 5) >> 4) & 0xff;
-        self->base.x = cx + ((sine[(angle + 0x40) & 0xff] * self->radius) >> 8);
-        self->base.y = cy + ((sine[angle] * self->radius) >> 8);
+        self->base.x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], self->radius);
+        self->base.y = cy + Q8_MUL(sine[angle], self->radius);
     }
     if (self->base.depth <= 0x2bff) {
         ACTOR_SET_STATE(&self->base, 1, 0);
@@ -621,8 +619,8 @@ void AirshipFireballStateSpiralIn(struct actor_orbit *self)
         self->centerY = cy;
         sine = gSineTable;
         angle = ((self->base.stateTime << 5) >> 4) & 0xff;
-        self->base.x = cx + ((sine[(angle + 0x40) & 0xff] * self->radius) >> 8);
-        self->base.y = cy + ((sine[angle] * self->radius) >> 8);
+        self->base.x = cx + Q8_MUL(sine[(angle + 0x40) & 0xff], self->radius);
+        self->base.y = cy + Q8_MUL(sine[angle], self->radius);
     }
     if ((u8)IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);

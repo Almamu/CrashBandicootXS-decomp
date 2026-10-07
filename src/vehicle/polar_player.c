@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
@@ -62,7 +63,7 @@ void UpdatePolarPlayer(struct actor_self *self)
         self->visible = 1;
     if (gPolarPlayerHalted == 0) {
         self->depth = 0x2f00;
-        self->z = (GetCellAnimDistance() << 8) - self->depth;
+        self->z = INT_TO_Q8(GetCellAnimDistance()) - self->depth;
     }
     {
         s32 d = (self->depth >> 1) & 0x7f80;
@@ -74,8 +75,8 @@ void UpdatePolarPlayer(struct actor_self *self)
     self->animDone = 0;
     if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
         // clang-format off
-        self->animTime -= (self->anims[self->animIndex].loopThreshold -
-                           self->anims[self->animIndex].loopBase) << 8;
+        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
+                                    self->anims[self->animIndex].loopBase);
         // clang-format on
         self->animDone = 1;
     }
@@ -89,8 +90,7 @@ void UpdatePolarPlayer(struct actor_self *self)
                 self->x += -0x380;
             else
                 self->x += -0x2cd;
-            if (self->x < -0x3200)
-                self->x = -0x3200;
+            LIMIT_MIN(self->x, -0x3200);
         } else {
             u16 right = keys.held & DPAD_RIGHT;
 
@@ -99,8 +99,7 @@ void UpdatePolarPlayer(struct actor_self *self)
                     self->x += 0x380;
                 else
                     self->x += 0x2cd;
-                if (self->x > 0x3200)
-                    self->x = 0x3200;
+                LIMIT_MAX(self->x, 0x3200);
             } else {
                 gPolarSteerTime = right;
             }
@@ -128,7 +127,7 @@ static inline s32 CurAttr(struct actor_self *self)
 
 static inline u8 *CurFrame(struct actor_self *self)
 {
-    s32 t = self->animTime >> 8;
+    s32 t = Q8_TO_INT(self->animTime);
 
     return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
 }
@@ -155,16 +154,16 @@ void DrawPolarPlayer(struct actor_self *self)
     halfH = h * 4;
     if (self->depth == self->record->baseDepth) {
         scale = 0x100;
-        sy = (self->y + GetActorBgCenterY()) >> 8;
-        sx = (self->x + GetActorBgCenterX()) >> 8;
+        sy = Q8_TO_INT(self->y + GetActorBgCenterY());
+        sx = Q8_TO_INT(self->x + GetActorBgCenterX());
     } else {
         s32 depth = self->depth;
         s32 f;
 
         scale = (depth << 8) / self->record->baseDepth;
         f = 0x2f00000 / depth;
-        sy = (((self->y * f) >> 12) + GetActorBgCenterY()) >> 8;
-        sx = (((self->x * f) >> 12) + GetActorBgCenterX()) >> 8;
+        sy = Q8_TO_INT(Q12_TO_INT(self->y * f) + GetActorBgCenterY());
+        sx = Q8_TO_INT(Q12_TO_INT(self->x * f) + GetActorBgCenterX());
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;
@@ -539,8 +538,7 @@ void PolarPlayerStateJump(struct actor_self *self)
 
     self->y += *budget;
     *budget += 0x60;
-    if (*budget > 0x780)
-        *budget = 0x780;
+    LIMIT_MAX(*budget, 0x780);
     if (self->stateTime <= 10 && !(gKeys.all & 1) && *budget < (s32)0xFFFFFC00)
         *budget = 0xFFFFFC00;
     if (self->y > 0x2800) {
