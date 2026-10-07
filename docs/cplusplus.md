@@ -453,6 +453,17 @@ counts them by kind) and what the C++ still needs.
 | `src/objects/part_collide.cpp` | `PartList::CollideWithObject` | 1 | old_agbcp | 0 -> 0 | 7c |
 | `src/objects/collision_queue.cpp` | `CollisionQueue` (include/part_list.hpp) | 4 | agbcp | 1 pin, 1 const (`STACK_ARG_U8_ADDR`) -> 0 | 7c |
 | `src/gfx/palette_cycle.cpp` | `PaletteCycles`, `HudPart` (include/part_list.hpp) | 8 | **old_agbcp** (was agbcc) | 11 pins, 9 asm -> 0 | 7c |
+| `src/crates/crate.cpp` | `Crate` (include/crate.hpp): `IsInsideRect`, the stack links, `GetClassId`, constructor, destructor; with `ResolvePlayerCollisions` and the line steppers' out-of-line copies | 8 + 3 | **old_agbcp** (was agbcc) | 13 pins, 3 asm -> 0 | 7e |
+| `src/crates/crate_create.cpp` | `Crate::Create` | 1 | old_agbcp | 3 uses, 1 const -> 1 const | 7e |
+| `src/crates/crate_draw.cpp` | `Crate::Draw` | 1 | **old_agbcp** (was agbcc) | 7 pins, 1 asm -> 0 | 7e |
+| `src/crates/crate_update.cpp` | `Crate::Update` | 1 | old_agbcp | 0 -> 0; the vcall macro goes | 7e |
+| `src/crates/crate_hit.cpp` | `Crate::PlayerHitboxOverlapsAt`, `ResolveStackHit`, `BreakIfTouchedByPlayer` | 3 | old_agbcp | 3 `BOX_ADDR` -> the same | 7e |
+| `src/crates/crate_touch.cpp` | `Crate::PlayerAnimWouldTouch` | 1 | old_agbcp | 3 `BOX_ADDR` -> the same | 7e |
+| `src/crates/crate_player_collide.cpp` | `CollidePlayerWithCrates` (C linkage) | 0 + 1 | old_agbcp | 0 -> 0 | 7e |
+| `src/crates/crate_reset.cpp` | `Crate::Reset`, with `FindLineCrossing` | 1 + 1 | **old_agbcp** (was agbcc) | 13 pins, 7 asm, 1 retyped store -> 0 | 7e |
+| `src/crates/crate_stack.cpp` | `Crate::OpenLife`, `IsKindBreakable`, `GetTop`, `GetBottom`, `CollideWithPlayer` | 5 | **old_agbcp** (was agbcc) | 4 pins, 7 asm, 1 `.pool` -> 1 asm label | 7e |
+| `src/crates/crate_time_trial.cpp` | `Crate::OpenAkuAku`, with `ConvertCratesForTimeTrial` | 1 + 1 | **old_agbcp** (was agbcc) | 3 pins, 1 asm, 1 volatile read -> 0 | 7e |
+| `src/crates/slot_crate.cpp` | `Crate`'s accessors (the slot crate's word, `kind`, `state`, ...) | 26 | **old_agbcp** (was agbcc) | 6 pins -> 0 | 7e |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -788,6 +799,74 @@ Kept: `Sprite::CheckPlayerContact`'s one pin (the 1 shared by the two flag
 tests and the gone flag's `orr`; unpinned, old_agbcp gives that register to
 the gone bit's shift instead) and `Reset`'s halfword store.
 
+Part 7e in numbers: the crate, `Crate` (new `include/crate.hpp`, a
+0x64-byte `Sprite`, gCrateVtable), 11 objects and 54 functions (48
+methods, and 6 free functions that share their files:
+`ResolvePlayerCollisions`, `CollidePlayerWithCrates`, `FindLineCrossing`,
+the two line steppers and `ConvertCratesForTimeTrial`). Project-wide:
+`MATCH_HOLD_REG` 1744 -> 1698, instruction-emitting `asm` 206 -> 187,
+`MATCH_USE` 76 -> 73, `.pool` 7 -> 6, retyped field stores 217 -> 216 and
+scoped volatiles 44 -> 43; asm labels 18 -> 19 (below). All 11 match only
+under old_agbcp: the 6 agbcc objects (crate.o, crate_draw.o, crate_reset.o,
+crate_stack.o, crate_time_trial.o, slot_crate.o) move to `OLD_AGBCC_OBJS`,
+their 46 pins and 15 `asm` statements old_agbcc's code (the constant
+before the `ldrb`, the shift into another register) reproduced under
+agbcc. `IsCrateInsideRect`'s 10-instruction box `asm`, `ResetCrate`'s
+mask `asm`, the `~8` clears of `DrawCrate` and `CollideCrateWithPlayer`
+and `GetTopCrate`'s mask checks are plain C++ now (`ClearTouched()`, the
+`state & 0x7f` tests).
+
+The class: the fields from 0x40 are crate.h's, the per-kind word at 0x48
+an anonymous union (`slotState`, `group`, `bounceTimer`, ...), the stack
+links `Crate *`. It overrides `Update`, `Draw`, `IsInsideRect`,
+`GetClassId` and the destructor. crate.h's `PHYS_CALL` and
+`_call_via_rN` calls are virtual calls (`ApplyVelocity()`,
+`GetBounds()`, `e->GetClassId()`, the player's `HandleEvent`), and
+`PhysSetTag`/`PhysSetFrame` are inline methods (`SetTag`, `ClampFrame`).
+`crate.hpp` also declares crate_break.c's functions that these files call
+(`UpdateFall`, `Explode`, `QueuePlayerCollision`, ...) as methods, mapped
+to their C names; crate_break.c is part 7g. `CollidePlayerWithCrates`
+(the crate list's) keeps C linkage for part 7f's `CrateList`.
+
+What made the C++ match:
+
+- **`new Crate`.** `CreateCrate` has the constructor inlined, then the
+  id stored through its result: crate_create.cpp defines `Crate::Crate()`
+  `inline` before `Create` (the "inline in one file only" gotcha), and
+  `InitCrate` is crate.cpp's out-of-line definition.
+- **The line steppers.** `FindLineCrossing`'s four octants are
+  `FindLineCrossingXMajor`/`YMajor` inlined (with a step of 1 or -1),
+  which the ROM also has out of line, with no caller, at the end of
+  crate.o. Written that way, `FindLineCrossing` comes out as the ROM's,
+  including the first octant's own copy of the return, which the plain
+  four-case C got merged into the others' by the cross-jump: the C's
+  `goto`, 10 pins and 5 `asm` statements go. The two are in
+  include/crate_line_step.hpp, a header fragment: crate.hpp includes it
+  with `CRATE_LINE_STEP` `inline`, crate.cpp at its end with it empty.
+- **A `bool` stack argument is stored with `strb`.** `OpenLifeCrate`
+  passes `DropExtraLife`'s sixth argument (on the stack) as a byte; a `u8`
+  parameter is promoted and stored with `str`, a `bool` isn't. The C spelt
+  the whole call in `asm`; the C++ calls it through a `bool`-flag alias
+  (an asm label, since drop_extra_life.c is C with a `u32` flag), and
+  `OpenLife` takes a `bool`.
+- **A u8 result stored into a 4-bit bitfield** loses the zero-extension
+  the ROM has (`palette = GetPaletteSlot(...)`, `palette` a `u8:4`): store
+  it through a `u32` local (`UpdateCrate`).
+- Small shapes: a local copy of `id` (`OpenLifeCrate`'s single load), the
+  drop position in locals before the call (the spawner is loaded last),
+  `struct player *p; u32 one;` assigned in turn (`SetCrateBusy`'s 1 between
+  the player and its address), `ResolveStackHit` through a local copy of
+  `this`.
+
+Kept, each with a comment: `CreateCrate`'s `MATCH_CONST` (the mystery
+crate's tag 0, which the ROM loads before the tag's address; a plain 0 is
+loaded after it, from a register CSE shares) and the 6 `BOX_ADDR`s of
+`BreakCrateTouchedByPlayer` and `PlayerAnimWouldTouchCrate` (the player
+box's stack address recomputed at each call, as in the C). C idioms kept:
+`GetTopCrate`'s and `GetBottomCrate`'s `goto`s (the ROM has both returns
+before the loop) and `UpdateCrate`'s `goto done`, nested `if`s and `s32`
+copy of `kind`. The `DropExtraLife` alias is the one new asm label.
+
 **How the C and C++ views share a layout.** One header for both
 languages would need `#ifdef __cplusplus` around every class, and a C
 struct can't have a class's base or methods, so each family has a C++
@@ -801,7 +880,8 @@ box_part` (box_part.h), `GroundSprite`/`struct gobj` (gobj_1a794.h),
 `ObjVramCursor`/`struct vram_upload_cursor`, `PaletteCache`/`struct
 palette_cache` (sprite_obj.hpp), `EnemyCtrl`/`struct part_ctrl` (part_ctrl.h),
 `PeriodicSpawner`/`struct periodic_spawner` (enemies.h),
-`ActionCtrl`/`struct act` (action_obj.h). Each class has
+`ActionCtrl`/`struct act` (action_obj.h), `Crate`/`struct crate` (crate.h;
+crate.hpp). Each class has
 a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the C header), and its
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
@@ -897,7 +977,7 @@ only under old_agbcp, as all four of 7a's do, and most of their pins to go.
 | 7b' | the controller headers and cxx_symbols.txt | the controllers' `SpriteObj *` parameters become `MovingSprite *` (`P9SpriteObj` -> `P12MovingSprite`), and `SpriteObj` goes | a rename, no code change | 7b; no other part of #664 in flight |
 | ~~7c~~ | ~~objects/part_list.c, part_list_cull.c, part_collide.c (old), collision_queue.c, gfx/palette_cycle.c~~ | the rest of `PartList`, the player's `CollisionQueue`, `HudPart` (a `UiSprite`) and the palette cycles | done | |
 | 7d | objects/platform.c, platform_collide.c (old), platform_contact.c, platform_create.c (old) | `Platform` (a `MovingSprite`, 0x80 bytes), `PlatformMover` (a `Ctrl`) | 18 functions, 1050 lines, 34 pins, 3 asm | 7b |
-| 7e | crates/crate.c, crate_create.c (old), crate_draw.c, crate_update.c (old), crate_hit.c (old), crate_touch.c (old), crate_player_collide.c (old), crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c | `Crate` (struct crate: a 0x64-byte `Sprite`) and its accessors (slot_crate.c) | 53 functions, 2320 lines, 48 pins, 20 asm | 7a |
+| ~~7e~~ | ~~crates/crate.c, crate_create.c, crate_draw.c, crate_update.c, crate_hit.c, crate_touch.c, crate_player_collide.c, crate_reset.c, crate_stack.c, crate_time_trial.c, slot_crate.c~~ | `Crate` (include/crate.hpp) and its accessors | done | |
 | 7f | crates/crate_list.c (old), crate_list_draw.c, crate_list_reset.c, crate_list_update.c (old), crate_grid_collide.c (old), crate_grid_link.c, crate_grid_unlink.c (old) | `CrateList`, the crate grid | 13 functions, 1120 lines, 21 pins, 1 asm | 7e |
 | 7g | crates/crate_break.c (old) | the crates' break and bounce paths | 24 functions, 2860 lines, 11 pins, 6 asm | 7e, 7f |
 | 7h | pickups/extra_life.c (old), wumpa.c, wumpa_update.c (old) | `ExtraLife` and `Wumpa` (0x54-byte `Sprite`s with a 14th slot), `Stopwatch` (a `Sprite`), and `ActionCtrl::Reset` (`ResetActionCtrl` is in wumpa.c; then action_obj.h's `struct act` can go) | 37 functions, 1370 lines, 24 pins, 3 asm | 7a |
@@ -1097,3 +1177,17 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   0x80` let the scheduler move the next 0 into the `ldrb`'s slot, while
   the bitfield store `flags.bits.flag7 = 1` keeps the ROM's order
   (`StateWarpIn`, part 5b).
+- **A `bool` argument passed on the stack is stored with `strb`;** a `u8`
+  one is promoted and stored with `str`. Where the ROM stores a byte
+  (`add r3, sp, #4; strb`), the parameter is a `bool` (`OpenLifeCrate`'s
+  `DropExtraLife` call; part 7e).
+- **A `u8` call result stored into a `u8` 4-bit bitfield** isn't
+  zero-extended first, where the C's `u32` bitfield (and the ROM) did:
+  assign it to a `u32` local first (`UpdateCrate`; part 7e).
+- **Inline functions with an out-of-line copy in another file**: the ROM
+  has `FindLineCrossing` inline the two line steppers, and the steppers'
+  out-of-line copies at the end of crate.o. With `#pragma interface` no
+  copy is emitted, and a definition at the top of crate.cpp would come
+  first in its `.text`; a header fragment with no include guard
+  (crate_line_step.hpp), `inline` through crate.hpp and plain at the end
+  of crate.cpp, gives both from one source (part 7e).

@@ -7,11 +7,15 @@
 
 /* The crate (CreateCrate, gCrateVtable): the object the issue #12
  * "physics/collision" cluster (ROM 0x0800D040-0x0800FC70,
- * src/crates/crate_hit.c/crate_break.c) turned out to be. `kind`
+ * src/crates/crate_hit.cpp/crate_break.c) turned out to be. `kind`
  * is the crate type CreateCrate picks (CRATE_KIND_*, constants/crates.h,
  * generated from data/levels/crate_kinds.json). Only the fields those functions touch are named;
  * the head (position, flags, anim table/tag, mirror bits) has the same
- * layout as `struct gobj`. See docs/matching/archive/issue-12-physics-collision.md. */
+ * layout as `struct gobj`. See docs/matching/archive/issue-12-physics-collision.md.
+ *
+ * `struct crate` is the C view of the `Crate` class (include/crate.hpp,
+ * #664), for the files that are still C; crate.hpp checks that the sizes
+ * agree. */
 struct crate_vtable {
     u8 unk_00[0x10];
     // 0x10 - slot 2, the hitbox record (GetSpriteObjHitbox; IsCrateInsideRect)
@@ -140,7 +144,7 @@ struct crate {
 #define CRATE_STATE_MASK 0x7f
 #define CRATE_STATE_BUSY 0x80
 
-/* crate.u48.slotState (slot crates), as UpdateSlotCrate and the slot_crate.c
+/* crate.u48.slotState (slot crates), as UpdateSlotCrate and the slot_crate.cpp
  * accessors read the raw word. The fields mirror struct phys_b48's
  * bitfields: `phase` (bits 0-2), `spins` (3-5) and `stage` (6-7). The
  * CLEAR_ masks keep the other two fields. */

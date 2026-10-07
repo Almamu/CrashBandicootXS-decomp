@@ -1,0 +1,111 @@
+#include "crate.hpp"
+
+extern "C" {
+#include "audio.h"
+#include "level.h"
+#include "globals.h"
+}
+
+/* The crate's stack walks and player collision, and the life crate
+ * (#664, include/crate.hpp). */
+
+/* codegen: DropExtraLife (level.h) with its flag a u8, as the ROM passes
+ * it: a byte store into the stack slot. */
+extern struct orbit_part *DropExtraLifeFlag(void *spawner, u32 x, u32 y, u32 p3, u32 p5,
+                                            bool flag6) asm("DropExtraLife");
+
+/* The life crate: the break sound, the crate's entity id marked
+ * activated (not again once it is), and an extra life dropped three
+ * pixels below the crate. */
+void Crate::OpenLife(bool flag6)
+{
+    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+    u16 eid = id;
+    if (eid != 0xFFFF) {
+        if ((u8)IsEntityIdActivated(gEntityFlags, eid) == 0)
+            SetEntityIdActivated(gEntityFlags, id);
+    }
+    s32 px = Q8_TO_INT(x);
+    s32 py = Q8_TO_INT(y) + 3;
+    DropExtraLifeFlag(gEntitySpawner, px, py, 0, 3, flag6);
+}
+
+/* gCrateKindBreakable[kind]. */
+u8 Crate::IsKindBreakable(u32 kind)
+{
+    return gCrateKindBreakable[kind];
+}
+
+/* The top of the stack the crate is in: the crates above it, up to the
+ * first committed one (state 1). The ROM has the two returns before the
+ * loop, which the gotos give. */
+Crate *Crate::GetTop()
+{
+    Crate *cur = GetAbove();
+    Crate *next;
+
+    if (cur == 0)
+        goto top;
+    if ((cur->state & CRATE_STATE_MASK) != 1)
+        goto loop;
+top:
+    return this;
+end:
+    return cur;
+loop:
+    next = cur->GetAbove();
+    if (next == 0)
+        goto end;
+    if ((next->state & CRATE_STATE_MASK) == 1)
+        goto end;
+    cur = next;
+    goto loop;
+}
+
+/* The bottom of the stack, the same way down. */
+Crate *Crate::GetBottom()
+{
+    Crate *cur = GetBelow();
+    Crate *next;
+
+    if (cur == 0)
+        goto top;
+    if ((cur->state & CRATE_STATE_MASK) != 1)
+        goto loop;
+top:
+    return this;
+end:
+    return cur;
+loop:
+    next = cur->GetBelow();
+    if (next == 0)
+        goto end;
+    if ((next->state & CRATE_STATE_MASK) == 1)
+        goto end;
+    cur = next;
+    goto loop;
+}
+
+/* Unless the crate is committed (state 1), or is an outline crate, a
+ * player at (testX, testY) (Q8) within 0x3FFF of it queues a collision
+ * with it (QueueCratePlayerCollision; `idx` is the player's action). The
+ * touched flag is cleared either way. */
+s32 Crate::CollideWithPlayer(u32 idx, s32 testX, s32 testY)
+{
+    if ((state & CRATE_STATE_MASK) != 1) {
+        s32 dx = x - testX;
+
+        MAKE_ABS(dx);
+        if (dx <= 0x3FFF) {
+            s32 dy = y - testY;
+
+            MAKE_ABS(dy);
+            if (dy <= 0x3FFF) {
+                if (kind != CRATE_KIND_OUTLINE)
+                    QueuePlayerCollision(idx);
+            }
+        }
+    }
+    ClearTouched();
+    return 0;
+}
