@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "memory.h"
 #include "actor_anim.h"
 #include "actor_self.h"
@@ -219,7 +220,8 @@ struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffse
     }
     if (kind == 0 || kind == 32 || kind == 33 || kind == 34 || kind == 62)
         return NULL;
-    return CreateActor(kind, spawn->x << 8, spawn->y << 8, (spawn->z << 8) + zOffset, spawn);
+    return CreateActor(kind, INT_TO_Q8(spawn->x), INT_TO_Q8(spawn->y),
+                       INT_TO_Q8(spawn->z) + zOffset, spawn);
 }
 
 struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec, s32 z)

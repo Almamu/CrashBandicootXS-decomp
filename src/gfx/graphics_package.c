@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "graphics_package.h"
 #include "gfx.h"
@@ -135,8 +136,8 @@ void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height)
     self->oam.size = idx;
     self->oam.shape = idx >> 2;
     self->oam.tileNum = 0x400 - best / 32;
-    self->scaleX = (widths[idx] << 8) / width;
-    self->scaleY = (heights[idx] << 8) / height;
+    self->scaleX = INT_TO_Q8(widths[idx]) / width;
+    self->scaleY = INT_TO_Q8(heights[idx]) / height;
     if (self->scaleX < 0x100 || self->scaleY < 0x100)
         self->oam.affineMode = 3;
     else if (self->scaleX > 0x100 || self->scaleY > 0x100)

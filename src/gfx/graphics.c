@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "gfx.h"
 #include "memory.h"
@@ -635,8 +636,8 @@ u8 IsEntityNearCamera(struct actor *self)
         buf[3] = b;
 
         layer = gLevelLayers->layer0;
-        c = (layer->x << 8) + (s32)0xFFFF9C00;
-        d = (layer->y << 8) + (s32)0xFFFFC400;
+        c = INT_TO_Q8(layer->x) + (s32)0xFFFF9C00;
+        d = INT_TO_Q8(layer->y) + (s32)0xFFFFC400;
         buf[0] = c;
         buf[1] = d;
 
@@ -677,9 +678,9 @@ s32 CheckEntityPlayerContact(struct actor *self)
     table = self->table;
     rec = _call_via_r1((u8 *)self + table[2].delta, table[2].fn);
 
-    x = self->x >> 8;
+    x = Q8_TO_INT(self->x);
     rx = rec->offX;
-    y = self->y >> 8;
+    y = Q8_TO_INT(self->y);
     ry = rec->offY;
     rw = rec->w;
     rh = rec->h;
@@ -873,10 +874,10 @@ void WorldPosToScreen(s32 *arg0, s32 *arg1, s32 *arg2)
         y += 0x80;
     }
     layer = gLevelLayers->layer0;
-    subX = layer->x << 8;
-    subY = layer->y << 8;
-    *arg1 = (x - subX) >> 8;
-    *arg2 = (y - subY) >> 8;
+    subX = INT_TO_Q8(layer->x);
+    subY = INT_TO_Q8(layer->y);
+    *arg1 = Q8_TO_INT(x - subX);
+    *arg2 = Q8_TO_INT(y - subY);
 }
 
 void nullsub_12(void)
@@ -891,8 +892,8 @@ struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2, u16 unused)
     obj->table = (void *)gEntityVtable;
     ResetEntity(obj);
     obj->id = arg0;
-    obj->x = (s32)arg1 << 8;
-    obj->y = (s32)arg2 << 8;
+    obj->x = INT_TO_Q8((s32)arg1);
+    obj->y = INT_TO_Q8((s32)arg2);
     return obj;
 }
 
@@ -1156,12 +1157,12 @@ void SetEntityFlag1(struct actor *self)
 
 s32 GetEntityPixelY(struct actor *self)
 {
-    return self->y >> 8;
+    return Q8_TO_INT(self->y);
 }
 
 s32 GetEntityPixelX(struct actor *self)
 {
-    return self->x >> 8;
+    return Q8_TO_INT(self->x);
 }
 
 s32 GetEntityY(struct actor *self)
@@ -1176,8 +1177,8 @@ s32 GetEntityX(struct actor *self)
 
 void SetEntityPixelPos(struct actor *self, s32 arg1, s32 arg2)
 {
-    self->x = arg1 << 8;
-    self->y = arg2 << 8;
+    self->x = INT_TO_Q8(arg1);
+    self->y = INT_TO_Q8(arg2);
 }
 
 void SetEntityPixelPosVec(struct actor *self, s32 *arg1)

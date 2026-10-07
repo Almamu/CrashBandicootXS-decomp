@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "actor_self.h"
@@ -125,7 +126,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
     self->visible = 1;
 
     {
-        MATCH_HOLD_REG(s32, value, r2) = self->z - (GetCellAnimDistance() << 8);
+        MATCH_HOLD_REG(s32, value, r2) = self->z - INT_TO_Q8(GetCellAnimDistance());
         s32 sign;
 
         ABS32(value, sign);
@@ -187,7 +188,7 @@ void UpdateActor(void *selfArg)
     struct actor_self *self = selfArg;
 
     {
-        MATCH_HOLD_REG(s32, value, r2) = self->z - (GetCellAnimDistance() << 8);
+        MATCH_HOLD_REG(s32, value, r2) = self->z - INT_TO_Q8(GetCellAnimDistance());
         s32 sign;
 
         ABS32(value, sign);
@@ -247,7 +248,7 @@ void UpdateActor(void *selfArg)
             if (frame >= v4) {
                 s32 v6 = record->loopBase;
 
-                self->animTime -= (v4 - v6) << 8;
+                self->animTime -= INT_TO_Q8(v4 - v6);
                 self->animDone = 1;
             }
         }
@@ -307,7 +308,7 @@ void DrawActor(void *selfArg)
         posX = tmp * scaleY;
         posX >>= 0xc;
         posX += off;
-        posX >>= 8;
+        posX = Q8_TO_INT(posX);
     }
 
     {
@@ -317,7 +318,7 @@ void DrawActor(void *selfArg)
         tmp = tmp * scaleY;
         tmp >>= 0xc;
         tmp += off;
-        posY = tmp >> 8;
+        posY = Q8_TO_INT(tmp);
     }
 
     frame = GetAnimFrameData(self);
@@ -431,7 +432,7 @@ void DrawActor(void *selfArg)
  * update tail - just refreshes `depth`/`sortKey`. */
 void UpdateActorDepth(struct actor_self *self)
 {
-    MATCH_HOLD_REG(s32, value, r2) = self->z - (GetCellAnimDistance() << 8);
+    MATCH_HOLD_REG(s32, value, r2) = self->z - INT_TO_Q8(GetCellAnimDistance());
     s32 sign;
 
     ABS32(value, sign);
