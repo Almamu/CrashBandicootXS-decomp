@@ -12,7 +12,7 @@
 #include "globals.h"
 
 /* The `InitActorPart`/`gActorList`-rooted "self" object family
- * already documented in ctrl.c/action_ctrl_states.c/polar_player_actions.c/
+ * already documented in ctrl.cpp/action_ctrl_states.c/polar_player_actions.c/
  * hovercraft_parts.c/hovercraft_cannon.c: a "part table" pointer at `self+0`
  * (copied from the constructor's `part` argument's own `+4` field), a
  * table-index/"kind" field at `self+0xc`, an anim-frame halfword/byte

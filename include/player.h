@@ -254,7 +254,7 @@ struct player {
 COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
 
 /* The controllers share a base, objects.h's `struct ctrl` (InitCtrl/
- * DestroyCtrl, ctrl.c): +0x04 the motion entry set (SetCtrlAnimSet),
+ * DestroyCtrl, ctrl.cpp): +0x04 the motion entry set (SetCtrlAnimSet),
  * +0x08 the state, +0x0C the method table. Most subclasses keep their
  * controlled part at +0x10. The action controller is `struct act`
  * (action_obj.h) and the swim controller `struct player_ctrl`
@@ -279,8 +279,9 @@ struct anim_pair {
 };
 
 /* The input controller (gInputCtrlVtable, src/player/input_ctrl.c and
- * input_ctrl_queue.c): the player's controller in the rooms where the
- * player is moved by the input alone. */
+ * input_ctrl_queue.cpp): the player's controller in the rooms where the
+ * player is moved by the input alone. The C view of include/ctrl.hpp's
+ * class InputCtrl, which keeps the same layout (checked there). */
 struct input_ctrl {
     u8 unk_00[4];
     struct {
@@ -303,7 +304,8 @@ struct input_ctrl {
     s32 timer; // 0x24
 };
 
-/* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.c):
+/* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp;
+ * the C view of include/ctrl.hpp's class BossCtrl, same layout):
  * the base class of the bosses' controllers (Mega Mix, Tiny, Neo Cortex's
  * fight, Dingodile and his shield and rocket/stalactite), each of which
  * extends it. Its event slot keeps the event's msg and arg. */
@@ -487,7 +489,10 @@ extern void CancelInputCtrlMotionY(struct input_ctrl *self);
 extern void CancelInputCtrlMotionX(struct input_ctrl *self);
 extern u8 IsInputCtrlMotionYPending(struct input_ctrl *self);
 
-/* src/player/input_ctrl_queue.c */
+/* src/player/input_ctrl_queue.cpp: InputCtrl's and BossCtrl's methods
+ * (include/ctrl.hpp)
+ * under their C names (cxx_symbols.txt), for the vtables and the C
+ * callers. */
 extern u8 IsInputCtrlMotionXPending(struct input_ctrl *self);
 extern void QueueInputCtrlMotionYKeepSpeed(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionXKeepSpeed(struct input_ctrl *self, u8 val);

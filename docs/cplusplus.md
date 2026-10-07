@@ -5,8 +5,8 @@ from. The decompilation reproduces it as C, which means writing out by
 hand what the C++ compiler generated: vtables, vtable pointer stores,
 `this` adjustments, pointer-to-member calls, `new` and `delete`. This
 page records what the ROM shows, the C++ compiler that matches it, the
-first object built from C++ source (`src/objects/effect_ctrl.cpp`), and
-how to carry on.
+objects built from C++ source so far ([Progress](#progress)), and how to
+carry on.
 
 **Short answer.** The C++ front end of the same compiler reproduces the
 game's code byte for byte, and the C++ source is shorter and closer to
@@ -24,8 +24,9 @@ Contents:
 4. [g++ 2.9's C++ ABI, as the ROM has it](#g-29s-c-abi-as-the-rom-has-it)
 5. [Experiments](#experiments)
 6. [How a C++ object is built](#how-a-c-object-is-built)
-7. [Recommendation and plan](#recommendation-and-plan)
-8. [Dead ends and gotchas](#dead-ends-and-gotchas)
+7. [Progress](#progress)
+8. [Recommendation and plan](#recommendation-and-plan)
+9. [Dead ends and gotchas](#dead-ends-and-gotchas)
 
 ## What the ROM shows
 
@@ -229,7 +230,7 @@ vtable as `_vt.<len>Class`. See [How a C++ object is built](#how-a-c-object-is-b
 
 ## Experiments
 
-### 1. The effect controller (in this PR)
+### 1. The effect controller (#685)
 
 `src/objects/effect_ctrl.c` was the C for the effect controller
 (`gEffectCtrlVtable`): `UpdateEffectCtrl`, `EffectCtrlHandleEvent`,
@@ -251,7 +252,7 @@ public:
 void EffectCtrl::Update(SpriteObj *part)
 {
     if (!part->IsOnScreen())
-        MarkGone(part);
+        part->MarkGone();
     ...
 }
 
@@ -282,14 +283,15 @@ with agbcc gives exactly the same code as the C++ with agbcp, so the C++
 front end adds no difference of its own here.
 
 **Readability.** 102 lines against the C's 117, and those lines are the
-class declarations rather than casts and slot arithmetic. The
-`SpriteObj`/`Entity` classes at the top of the file are a partial view,
-like the C's `struct cbf4_other` was: only what this file reads.
+class declarations rather than casts and slot arithmetic. (The file's
+own `SpriteObj`/`Entity` view has since moved to
+`include/sprite_obj.hpp`.)
 
-### 2. The controller base class (scratch)
+### 2. The controller base class (now `src/objects/ctrl.cpp`)
 
 `src/objects/ctrl.c` (`gCtrlVtable`'s own methods) rewritten as
-`Ctrl`'s methods, in the scratch area, not in this PR:
+`Ctrl`'s methods, first in a scratch area, then in part 1 of the
+conversion:
 
 ```cpp
 void Ctrl::StartTargetMotionYFromSet(struct gobj *part, s32 index)
@@ -310,9 +312,8 @@ call (with the argument computed into a local first), and the second is
 a bitfield clear of `flags` bit 3 under old_agbcp. That last point is a
 finding of its own: `ctrl.o` is built with agbcc today, and its pins
 reproduce old_agbcc's constant-before-`ldrb` order, so it is most likely
-an old_agbcc object (#662). The pinned C compiles to the same bytes under
-old_agbcc too, so moving it to `OLD_AGBCC_OBJS` is byte-neutral, and the
-same unpinned rewrite may well work in C there.
+an old_agbcc object (#662). Part 1 confirmed it: `ctrl.cpp` is in
+`OLD_AGBCC_OBJS`, unpinned.
 
 ### 3. A pointer-to-member dispatch (scratch)
 
@@ -376,7 +377,9 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
   old) plus `-fno-rtti -fno-exceptions`.
 - **Headers.** All of `include/` parses as C++ when wrapped in `extern
   "C" { }`, with the same warning flags and `-Werror`. C++-only
-  declarations go in `.hpp` headers (`include/ctrl.hpp`).
+  declarations go in `.hpp` headers (`include/ctrl.hpp`,
+  `include/sprite_obj.hpp`), next to the C structs they mirror (see
+  [Progress](#progress)).
 - **Vtables stay C data.** The class header has `#pragma interface`, so
   g++ doesn't emit the classes' vtables; the code refers to
   `_vt.<len>Class`, and the ROM's tables stay the C arrays in
@@ -395,6 +398,82 @@ asm labels (`void Update(SpriteObj *) asm("UpdateEffectCtrl");`) work for
 methods and constructors, but not for destructors: g++ 2.9 then fails to
 find the destructor (`no matching function for call to B::__dt`). That,
 and the vtable names, is why the build renames with objcopy instead.
+
+## Progress
+
+The conversion goes one class family per PR (#664). Each row is an
+object that is now built from C++ source; "workarounds" counts the
+`MATCH_*` pins and `asm` statements of its old C (`tools/match_idioms.py`
+counts them by kind) and what the C++ still needs.
+
+| Object | Classes (include/ctrl.hpp) | Functions | Compiler | Workarounds: C -> C++ | Part |
+|---|---|---:|---|---|---|
+| `src/objects/effect_ctrl.cpp` | `EffectCtrl` | 5 | old_agbcp | 0 -> 0 | #685 |
+| `src/objects/ctrl.cpp` | `Ctrl` | 10 | old_agbcp (was agbcc) | 7 pins, 2 asm -> 0 | 1 |
+| `src/bosses/tiny_hop_pad.cpp` | `StompedHopPadCtrl`, `OneShotAnimCtrl::Update` | 4 | old_agbcp (was agbcc) | 5 pins and an `ENTITY_SET_GONE_BIT_ASR` (6 pins, 1 asm), gotos -> 2 pins | 1 |
+| `src/player/input_ctrl_queue.cpp` | `InputCtrl`'s queue setters, `BossCtrl` | 9 | agbcp | 0 -> 0 | 1 |
+| `src/bosses/mega_mix.cpp` | `MegaMixCtrl` | 7 | agbcp | 23 pins, 8 asm -> 0 | 1 |
+
+Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
+2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
+`ENTITY_SET_GONE_BIT_ASR` site (its 6 pins and `asm` are in the macro).
+The two pins left are `StompedHopPadCtrl::Update`'s: unpinned, g++ gives
+`this` r2 and `part` r4 where the ROM has r3 and r2, with every natural
+rewrite tried (switch orders, locals, `this` copies). The C needed the
+same two pins, plus gotos for the block order, which a `switch` gives.
+
+Compilers: `ctrl.o` and `tiny_hop_pad.o` match as clean C++ only under
+old_agbcp (`SetTargetAnim`'s and `OneShotAnimCtrl::Update`'s
+constant-before-`ldrb`), so both moved to `OLD_AGBCC_OBJS`; their C was
+pinned to old_agbcc's code under agbcc. `mega_mix.o` and
+`input_ctrl_queue.o` compile the same under both and stay agbcc.
+
+**How the C and C++ views share a layout.** One header for both
+languages would need `#ifdef __cplusplus` around every class, and a C
+struct can't have a class's base or methods, so each family has a C++
+class in a `.hpp` header and keeps its C struct in the C header for the
+C files: `Ctrl`/`struct ctrl` (objects.h), `InputCtrl`/`struct
+input_ctrl` and `BossCtrl`/`struct boss_ctrl` (player.h),
+`MegaMixCtrl`/`struct mega_mix_ctrl` (bosses.h), `SpriteObj`/`struct
+gobj` (gobj_1a794.h). Each class has a `COMPILE_TIME_ASSERT` that its
+size is the C struct's (the `.hpp` includes the C header), and its
+fields keep the C names and offset comments. The C prototypes of the
+converted methods stay in the C headers, under their C names, for the
+vtable data and the C callers. When the last C user of a struct is
+converted, the struct can go.
+
+**Sprite objects.** `include/sprite_obj.hpp` has `Entity` (struct
+actor's 0x1C-byte header, slot 5 `IsOnScreen`, `MarkGone()`) and
+`SpriteObj` (struct gobj's fields), shared by the controllers instead of
+each file's own partial view. Only the methods the controllers call are
+declared; the family itself is converted later.
+
+### Next batches
+
+Bigger controllers, roughly in order (function counts from
+`tools/cpp_survey.py --objects`):
+
+1. **The enemy controllers:** `src/enemies/enemy_ctrl.c` (27 functions:
+   `EnemyCtrl`, `KnockedEnemyCtrl`, the periodic spawner) and
+   `enemy_ctrl_update.c` (`UpdateEnemyCtrl`, `UpdateKnockedEnemyCtrl`;
+   old_agbcc). The knocked controller is a plain `Ctrl` subclass with an
+   `ENTITY_SET_GONE_BIT_ASR` like `OneShotAnimCtrl::Update`'s.
+2. **The rest of `Ctrl` and `InputCtrl`:** `SetCtrlMode`,
+   `SetCtrlAnimSet`, `SetCtrlTargetMotionY`, `StartCtrlTargetMotionY`
+   are in `src/player/player_flags.c` (with player code), and
+   `src/player/input_ctrl.c` (25 functions).
+3. **The swim controller** (`PlayerCtrl`, `swim_ctrl*.c`) and **the
+   action controller** (`ActionCtrl`, `action_ctrl*.c`, 10 files, about
+   76 functions and most of the controllers' virtual calls).
+4. **The boss controllers:** `tiny_update.c`, `mega_mix_update.c`
+   (`UpdateMegaMix`), `dingodile*.c` and `cortex.c` (25 functions, 64 lines
+   with pins or asm; it also has `OneShotAnimCtrl`'s and
+   `UnusedOneShotAnimCtrl`'s constructors and destructors and the
+   Cortex cannon/target/shot classes). These mix controllers and
+   entities, so they may wait for the entity family.
+5. **The platform mover** (`src/objects/platform.c`, `gPlatformMoverVtable`:
+   a `Ctrl`-shaped 0x38-byte class) with the platforms, in the entity
+   family.
 
 ## Recommendation and plan
 
@@ -416,8 +495,8 @@ in experiment 2 no matching workarounds at all. Plan:
    report. Expect most pins in the virtual-call and PMF code to go
    (experiment 2); drop each one that isn't needed.
 3. **Recheck the compiler** of each object as it's converted: ctrl.o
-   matches as clean C++ only under old_agbcp, which suggests more
-   objects are misattributed to agbcc and held there by pins.
+   and tiny_hop_pad.o match as clean C++ only under old_agbcp, and were
+   held on agbcc by pins; expect more.
 4. **While the code is mixed,** C callers keep using the C structs and the
    C names. A class and its C struct must keep the same layout: add
    `sizeof` checks on both sides (as `ctrl.hpp` does), and convert the C
@@ -448,8 +527,8 @@ exactly what the class definitions need.
 code the C++ compiler generated: the virtual-call and PMF macros, the
 evaluation-order pins around `_call_via_rN` calls, the `if (1) {} else
 (void)0` wrapping that keeps `ACTOR_PMF_CALL` from looking like a loop.
-Converting an object to C++ removes those outright (9 of ctrl.c's 9
-workarounds in experiment 2). #662's pruning tool should treat "convert
+Converting an object to C++ removes those outright: part 1 removed 33
+pins and 10 `asm` statements and kept 2 ([Progress](#progress)). #662's pruning tool should treat "convert
 to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 
 ## Dead ends and gotchas
@@ -472,5 +551,15 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **Argument order.** A virtual call evaluates `this` and the slot before
   the arguments. Where the ROM computes an argument first, put it in a
   local (experiment 2), not in a pin.
+- **Pins can still be needed.** Register allocation isn't always
+  about the C emulation: `StompedHopPadCtrl::Update` keeps the C's two
+  `MATCH_HOLD_REG`s (`register T x asm("rN") = this;` works in C++).
+- **A direct call to a base method** that is virtual is
+  `Ctrl::StartTargetMotionY(part, rec)`: a plain `bl` to its C name, as
+  `MegaMixCtrl::StartTargetMotionYFromSet` does. cxx_symbols.txt also
+  needs the mangled name of every C method a C++ object calls.
+- **`case 1: { ... }`** is formatted with the braces on their own
+  indented line; declare the case's locals at the top of the function
+  instead (`StompedHopPadCtrl::Update`).
 - **The 45 files of experiment 4** differ when their C is compiled as
   C++: converting one of them means re-matching it, not just renaming it.

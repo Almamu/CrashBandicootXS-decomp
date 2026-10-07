@@ -60,8 +60,8 @@ struct cannon_flash {
     u8 unshootable; // 0x58
 };
 
-/* The method table of the InitCtrl-based controllers (ctrl.c) of
- * cortex.c and tiny_hop_pad.c, as their calls read it. */
+/* The method table of the InitCtrl-based controllers (ctrl.cpp) of
+ * cortex.c, as its calls read it. */
 struct gfx_vtable {
     u8 unk_00[0x18];
     struct actor_method method_18; // 0x18 - "attach to part"
@@ -336,7 +336,9 @@ extern void RunHovercraftSideGunState(void *self);
 extern u8 IsHovercraftSideGunUnshootable(void *self);
 extern void DamageHovercraftCannonFlash(void);
 
-/* src/bosses/mega_mix.c */
+/* src/bosses/mega_mix.cpp: MegaMixCtrl's methods (include/ctrl.hpp)
+ * under their C names (cxx_symbols.txt), for the vtables and the C
+ * callers. */
 extern void SetMegaMixMotionYFromSet(void *self, void *part, s32 index);
 extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern void StartMegaMixMotionYFromSet(void *self, void *part, s32 index);
@@ -348,7 +350,10 @@ extern void *CreateMegaMixCtrl(void *self);
 /* src/bosses/mega_mix_update.c */
 extern void UpdateMegaMix(struct ab_self *self, struct ab_part *other);
 
-/* src/bosses/tiny_hop_pad.c */
+/* src/bosses/tiny_hop_pad.cpp: StompedHopPadCtrl's methods and
+ * OneShotAnimCtrl's Update (include/ctrl.hpp)
+ * under their C names (cxx_symbols.txt), for the vtables and the C
+ * callers. */
 extern void UpdateStompedHopPad(void *obj, void *other);
 extern void DestroyStompedHopPadCtrl(void *self, s32 flags);
 extern void *CreateStompedHopPadCtrl(void *self);
@@ -504,7 +509,7 @@ extern const s32 gDingodileStopXLeft[4];
 extern const s32 gDingodileStopXLeftHurt[6];
 extern const s32 gDingodileStopXRight[4];
 extern const s32 gDingodileStopXRightHurt[6];
-extern const s32 gMegaMixMotionRecords[4][3];
+extern const struct speed_ramp gMegaMixMotionRecords[4];
 extern const u8 gTinyHopTargets[77];
 extern const u8 gTinyRoundAnchors[3];
 

@@ -7,8 +7,8 @@
  */
 
 /* The 12-byte vector records SetMegaMixMotionYFromSet and its siblings
- * (mega_mix.c) look up by type id. */
-const s32 gMegaMixMotionRecords[4][3] = {
+ * (mega_mix.cpp) look up by type id. */
+const struct speed_ramp gMegaMixMotionRecords[4] = {
     { 0, 0, 0 },
     { 0, 32, 450 },
     { 0, 32, 620 },

@@ -231,6 +231,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_grid_collide.o \
                   $(C_BUILDDIR)/crates/crate_list.o \
                   $(C_BUILDDIR)/enemies/enemy_attack.o \
+                  $(C_BUILDDIR)/objects/ctrl.o \
+                  $(C_BUILDDIR)/bosses/tiny_hop_pad.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/vehicle/polar_player.o \
                   $(C_BUILDDIR)/vehicle/jetpack_spawn.o \
