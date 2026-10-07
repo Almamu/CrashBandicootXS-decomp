@@ -105,8 +105,7 @@ void UpdateYeti(void)
     obj->animTime += *(s16 *)&obj->animTimer;
     obj->animDone = 0;
     if (GetAnimFrameBaseOffset(obj) >= obj->anims[obj->animIndex].loopThreshold) {
-        obj->animTime -= INT_TO_Q8(obj->anims[obj->animIndex].loopThreshold -
-                                   obj->anims[obj->animIndex].loopBase);
+        ANIM_REWIND(obj->animTime, obj->anims[obj->animIndex]);
         obj->animDone = 1;
     }
     gYetiStateFuncs[gYetiState]();
@@ -174,7 +173,7 @@ void UpdateYetiPalette(void)
     } else if (v > 0xbdff) {
         DmaFill16(3, 0, (void *)(PLTT + 0x1E0), 0x20);
     } else {
-        s32 f = ((0xbe00 - v) << 8) / 0x6e00;
+        s32 f = Q8_DIV(0xbe00 - v, 0x6e00);
         s32 mask = 0x1f;
         u16 *dst = (u16 *)(PLTT + 0x1E0);
         const u16 *src = gYetiPalette;
@@ -225,9 +224,9 @@ void UpdateYetiBg2(void)
         *changed = 0;
         *alt ^= 1;
     }
-    scale = (gYetiDistance << 8) / 0x5500;
+    scale = Q8_DIV(gYetiDistance, 0x5500);
     base = GetActorBgCenterX();
-    t = (gYetiX * 47 << 8) / gYetiDistance + base;
+    t = Q8_DIV(gYetiX * 47, gYetiDistance) + base;
     *(vs32 *)REG_ADDR_BG2X = 0x4000 - Q8_MUL(t, scale);
     *(vs32 *)REG_ADDR_BG2Y = 0x4400 - Q8_MUL(GetActorBgCenterY(), scale);
     {

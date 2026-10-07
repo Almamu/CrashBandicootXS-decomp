@@ -11,14 +11,6 @@
 #include "gfx.h"
 #include "globals.h"
 
-/* Branchless absolute value, matching this ROM's own codegen for `abs()`
- * (`asrs`/`eors`/`subs` on the value's own sign-extended shift, updating
- * the value in place) rather than a `?:`/`if`, which this compiler turns
- * into an actual branch. Written as sequential in-place updates (not a
- * single expression) so this compiler reuses the same register for the
- * whole sequence instead of materializing a fresh temporary. */
-#define ABS32(x, sign) do { (sign) = (x) >> 0x1f; (x) ^= (sign); (x) -= (sign); } while (0)
-
 /* The `InitActorPart`/`gActorList`-rooted "self" object family
  * already documented in ctrl.c/action_ctrl_states.c/polar_player_actions.c/
  * hovercraft_parts.c/hovercraft_cannon.c: a "part table" pointer at `self+0`
@@ -129,7 +121,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
         MATCH_HOLD_REG(s32, value, r2) = self->z - INT_TO_Q8(GetCellAnimDistance());
         s32 sign;
 
-        ABS32(value, sign);
+        MAKE_ABS_BRANCHLESS(value, sign);
         self->depth = value;
         value = (value >> 1) & 0x7f80;
 
@@ -138,9 +130,9 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
             s32 cSign;
             s32 b, bSign;
 
-            ABS32(c, cSign);
+            MAKE_ABS_BRANCHLESS(c, cSign);
             b = self->x;
-            ABS32(b, bSign);
+            MAKE_ABS_BRANCHLESS(b, bSign);
             c = c + b;
             c >>= 0xb;
             c &= 0x7f;
@@ -191,7 +183,7 @@ void UpdateActor(void *selfArg)
         MATCH_HOLD_REG(s32, value, r2) = self->z - INT_TO_Q8(GetCellAnimDistance());
         s32 sign;
 
-        ABS32(value, sign);
+        MAKE_ABS_BRANCHLESS(value, sign);
         self->depth = value;
         value = (value >> 1) & 0x7f80;
 
@@ -200,9 +192,9 @@ void UpdateActor(void *selfArg)
             s32 cSign;
             s32 b, bSign;
 
-            ABS32(c, cSign);
+            MAKE_ABS_BRANCHLESS(c, cSign);
             b = self->x;
-            ABS32(b, bSign);
+            MAKE_ABS_BRANCHLESS(b, bSign);
             c = c + b;
             c >>= 0xb;
             c &= 0x7f;
@@ -421,8 +413,6 @@ void DrawActor(void *selfArg)
     }
 }
 
-/* Branchless absolute value: `ABS32`, defined at the top of this file. */
-
 /* Same "self" object family as above - see this file's header
  * comment and docs/matching/archive/issue-50-actor-2a69c.md. (This was a
  * separate file while `DrawActor`, above, was still raw.) */
@@ -435,7 +425,7 @@ void UpdateActorDepth(struct actor_self *self)
     MATCH_HOLD_REG(s32, value, r2) = self->z - INT_TO_Q8(GetCellAnimDistance());
     s32 sign;
 
-    ABS32(value, sign);
+    MAKE_ABS_BRANCHLESS(value, sign);
     self->depth = value;
     value = (value >> 1) & 0x7f80;
 
@@ -444,9 +434,9 @@ void UpdateActorDepth(struct actor_self *self)
         s32 cSign;
         s32 b, bSign;
 
-        ABS32(c, cSign);
+        MAKE_ABS_BRANCHLESS(c, cSign);
         b = self->x;
-        ABS32(b, bSign);
+        MAKE_ABS_BRANCHLESS(b, bSign);
         c = c + b;
         c >>= 0xb;
         c &= 0x7f;

@@ -134,24 +134,9 @@ struct ab_part {
     u8 kind;     // 0x4E
 };
 
-typedef void (*ab_fn1)(void *self, s32 a);
-typedef void (*ab_fn2)(void *self, void *a, s32 b);
 typedef void (*ab_fn3)(void *self, s32 a, s32 b, s32 c);
 typedef u8 (*ab_probe)(void *self);
 typedef s32 (*ab_probe_s)(void *self);
-
-#define VCALL1(obj, m, a)                                                      \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vt->m;                                  \
-        ((ab_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));              \
-    } while (0)
-#define VCALL2(obj, m, a, b)                                                   \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vt->m;                                  \
-        ((ab_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
-    } while (0)
 
 /* virtual queries on `part`'s own method table (+0x18) */
 static inline u8 Probe28(struct ab_part *p)
@@ -180,13 +165,6 @@ static inline u8 IsDead(struct player *pl)
     MATCH_KEEP(off);
     p = (u8 *)pl + off;
     return *p;
-}
-
-static inline s32 Abs(s32 v)
-{
-    s32 sign = v >> 31;
-
-    return (v ^ sign) - sign;
 }
 
 void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
@@ -265,7 +243,8 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
             {
                 struct player *pl = gPlayer;
 
-                if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF) {
+                if (ABS_BRANCHLESS(pl->x - other->x) <= 0x27FF &&
+                    ABS_BRANCHLESS(pl->y - other->y) <= 0x31FF) {
                     SetMegaMixMotionXFromSet(self, other, 0);
                     VCALL1(self, m20, 2);
                     VCALL2(self, m50, other, 1);
@@ -291,8 +270,8 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
                         struct ab_part *t = e;
 
                         MATCH_KEEP(t);
-                        if (Abs(Q8_TO_INT(e->x) - Q8_TO_INT(other->x)) <= 0x27 &&
-                            Abs(Q8_TO_INT(e->y) - Q8_TO_INT(other->y)) <= 0x3B &&
+                        if (ABS_BRANCHLESS(Q8_TO_INT(e->x) - Q8_TO_INT(other->x)) <= 0x27 &&
+                            ABS_BRANCHLESS(Q8_TO_INT(e->y) - Q8_TO_INT(other->y)) <= 0x3B &&
                             (e->physMode & 0x7F) == 0) {
                             MATCH_HOLD_REG(s32, kind, r1) = e->kind;
 
@@ -312,7 +291,8 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
         if (other->frame == 8 && other->stepTimer == 0) {
             struct player *pl = gPlayer;
 
-            if (Abs(pl->x - other->x) > 0x27FF || Abs(pl->y - other->y) > 0x31FF)
+            if (ABS_BRANCHLESS(pl->x - other->x) > 0x27FF ||
+                ABS_BRANCHLESS(pl->y - other->y) > 0x31FF)
                 goto test;
             {
                 const struct actor_method *m = &pl->vtable->handleEvent;

@@ -32,13 +32,6 @@
 /* The gLevelState fields read here. */
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-static inline s32 Abs(s32 x)
-{
-    s32 s = x >> 31;
-
-    return (x ^ s) - s;
-}
-
 /* The per-frame update (`docs/rom_map.md`'s "UpdatePolarPlayer", a slot of
  * the `gPolarPlayerVtable` method table): runs `DispensePolarWumpa`, ticks
  * the two countdowns (`gPolarFinishTimer` expiring into state 10;
@@ -68,16 +61,13 @@ void UpdatePolarPlayer(struct actor_self *self)
     {
         s32 d = (self->depth >> 1) & 0x7f80;
 
-        self->sortKey = d | (((Abs(self->y) + Abs(self->x)) >> 11) & 0x7f);
+        self->sortKey = d | (((ABS_BRANCHLESS(self->y) + ABS_BRANCHLESS(self->x)) >> 11) & 0x7f);
     }
     self->stateTime++;
     self->animTime += *(s16 *)&self->animTimer;
     self->animDone = 0;
     if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-        // clang-format off
-        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
-                                    self->anims[self->animIndex].loopBase);
-        // clang-format on
+        ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
         self->animDone = 1;
     }
     UpdateActorBgScroll(self->x, self->y);
@@ -160,10 +150,10 @@ void DrawPolarPlayer(struct actor_self *self)
         s32 depth = self->depth;
         s32 f;
 
-        scale = (depth << 8) / self->record->baseDepth;
+        scale = Q8_DIV(depth, self->record->baseDepth);
         f = 0x2f00000 / depth;
-        sy = Q8_TO_INT(Q12_TO_INT(self->y * f) + GetActorBgCenterY());
-        sx = Q8_TO_INT(Q12_TO_INT(self->x * f) + GetActorBgCenterX());
+        sy = Q8_TO_INT(Q12_MUL(self->y, f) + GetActorBgCenterY());
+        sx = Q8_TO_INT(Q12_MUL(self->x, f) + GetActorBgCenterX());
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;

@@ -44,6 +44,8 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
         struct icon_record *_r = _m->record;                                    \
         _call_via_r2((u8 *)_m + _r->slots[0].offset, (s32)(label), _r->slots[0].ptr); \
     })
+/* pause_menu_gems.c has its own DRAW_ICON_TEXT, without the `(s32)` cast
+ * on `label`; the two expand differently, so each stays local. */
 #define DRAW_ICON_TEXT(mgrExpr, label)                                          \
     {                                                                           \
         struct bitmap_font *_m = (mgrExpr);                                    \

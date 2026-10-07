@@ -134,12 +134,12 @@ struct part {
     s32 speedY;      // 0x64
 };
 
-#define PART_OFFSET(f) ((u32)&((struct part *)0)->f)
-COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(vt) == 0x18);
-COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(f28) == 0x28);
-COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(tag) == 0x2D);
-COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(frame) == 0x30);
-COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(ctl) == 0x44);
+#define PART_FIELD_OFFSET(f) ((u32)&((struct part *)0)->f)
+COMPILE_TIME_ASSERT(dingodile_c, PART_FIELD_OFFSET(vt) == 0x18);
+COMPILE_TIME_ASSERT(dingodile_c, PART_FIELD_OFFSET(f28) == 0x28);
+COMPILE_TIME_ASSERT(dingodile_c, PART_FIELD_OFFSET(tag) == 0x2D);
+COMPILE_TIME_ASSERT(dingodile_c, PART_FIELD_OFFSET(frame) == 0x30);
+COMPILE_TIME_ASSERT(dingodile_c, PART_FIELD_OFFSET(ctl) == 0x44);
 
 /* Every class in this file keeps its method table at +0x0C. */
 struct vobj {
@@ -214,31 +214,31 @@ typedef void (*method2_fn)(void *self, void *a, s32 b);
 typedef void (*method3_fn)(void *self, s32 a, s32 b, s32 c);
 typedef u8 (*query_fn)(void *self);
 
-#define VCALL1(obj, m, a)                                                      \
+#define VOBJ_CALL1(obj, m, a)                                                      \
     do                                                                         \
     {                                                                          \
         struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
         ((method1_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));          \
     } while (0)
-#define VCALL2(obj, m, a, b)                                                   \
+#define VOBJ_CALL2(obj, m, a, b)                                                   \
     do                                                                         \
     {                                                                          \
         struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
         ((method2_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
 
-/* VCALL1 as a plain block: `do { } while (0)` is not neutral under
+/* VOBJ_CALL1 as a plain block: `do { } while (0)` is not neutral under
  * agbcc (its loop notes change allocation), and some call sites only
  * match without it. */
-#define VCALL1_B(obj, m, a)                                                    \
+#define VOBJ_CALL1_B(obj, m, a)                                                    \
     {                                                                          \
         struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
         ((method1_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));          \
     }
 
-/* VCALL2 split in two, for call sites that share one indirect call:
+/* VOBJ_CALL2 split in two, for call sites that share one indirect call:
  * load `this`/function/first argument here, then `goto` the call. */
-#define PREP_VCALL2(obj, m, a_)                                                \
+#define PREP_VOBJ_CALL2(obj, m, a_)                                                \
     do                                                                         \
     {                                                                          \
         struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
@@ -246,12 +246,6 @@ typedef u8 (*query_fn)(void *self);
         fn = _m->fn;                                                           \
         a = (a_);                                                              \
     } while (0)
-
-/* The ROM re-reads a just-filled box's `w` (a box with no width is
- * empty) straight from its stack slot rather than through the register
- * already holding the box's address; a volatile read is what stops
- * gcc's CSE from rewriting the address. */
-#define BOX_VALID(bx) (*(vs32 *)&(bx).w)
 
 /* Right edge of the level, in Q8 units. */
 static inline s32 LevelRight(void)
@@ -351,7 +345,7 @@ struct obj_4704 *CreateCortexTargetCtrl(struct obj_4704 *self, void *src)
  * UNUSED - no caller or pointer anywhere in the ROM. */
 void SetCortexCannonState(struct vobj *self, s32 unused, s32 arg)
 {
-    VCALL1(self, m20, arg);
+    VOBJ_CALL1(self, m20, arg);
 }
 
 void UpdateCortexCannon(struct obj_476c *self, struct part *other)
@@ -376,11 +370,11 @@ struct obj_476c *CreateCortexCannonCtrl(struct obj_476c *self)
 void SetCortexBossState(struct obj_476c *self, s32 unused, s32 arg)
 {
     if (arg == 3) {
-        VCALL1(self->part->ctl, m20, 9);
+        VOBJ_CALL1(self->part->ctl, m20, 9);
         if (!(u8)HasTurboRun(gLevelState))
             SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
     }
-    VCALL1(self, m20, arg);
+    VOBJ_CALL1(self, m20, arg);
 }
 
 void DestroyCortexBoss(struct vobj *self, s32 flags)
@@ -426,7 +420,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
     hurt = GetSpriteBodyBox_s(other);
     if (self->state == 8 && gPlayer->kind == 0x13) {
         box = GetSpriteAttackBox_s(gPlayer);
-        if (BOX_VALID(box) && AabbOverlaps(&box, &hurt)) {
+        if (AABB_VALID(box) && AabbOverlaps(&box, &hurt)) {
             self->hits++;
             SetDingodileState(self, other, 11);
         }
@@ -572,7 +566,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         break;
     case 7:
         StartDingodileMotion(self, (struct gobj *)other, 0);
-        VCALL2(self, m50, other, 5);
+        VOBJ_CALL2(self, m50, other, 5);
         SetDingodileState(self, other, 8);
         break;
     case 8:
@@ -646,7 +640,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
     MATCH_HOLD_REG(s32, b, r2);
     MATCH_HOLD_REG(void *, fn, r3);
 
-    VCALL1(self, m20, next);
+    VOBJ_CALL1(self, m20, next);
     switch (next) {
     case 16:
         if (!(u8)HasSuperBodySlam(gLevelState))
@@ -659,22 +653,22 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
         SpawnDingodileShark(self, LayerWidthPlus(0x46), 0x64, 1);
     case 1:
     case 14:
-        VCALL2(self, m50, other, 0);
+        VOBJ_CALL2(self, m50, other, 0);
         StartDingodileMotion(self, (struct gobj *)other, 1);
         break;
     case 3:
     case 13:
-        PREP_VCALL2(self, m50, other);
+        PREP_VOBJ_CALL2(self, m50, other);
         b = 6;
         goto call;
     case 4:
-        PREP_VCALL2(self, m50, other);
+        PREP_VOBJ_CALL2(self, m50, other);
         b = 1;
         goto call;
     case 6:
         self->passes = 0;
     case 5:
-        PREP_VCALL2(self, m50, other);
+        PREP_VOBJ_CALL2(self, m50, other);
         b = 4;
     call:
         ((method2_fn)fn)(t, a, b);
@@ -682,13 +676,13 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
         StartDingodileMotion(self, (struct gobj *)other, 0);
         break;
     case 8:
-        VCALL1(self->part->ctl, m20, 2);
+        VOBJ_CALL1(self->part->ctl, m20, 2);
         self->timer = 0xD2;
         break;
     case 9:
     case 10:
-        VCALL1(self->part->ctl, m20, 1);
-        VCALL2(self, m50, other, 2);
+        VOBJ_CALL1(self->part->ctl, m20, 1);
+        VOBJ_CALL2(self, m50, other, 2);
         break;
     case 11:
         self->timer = 0x64;
@@ -697,7 +691,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
         PlaySfx(gAudioContext, SFX_BOSS_HIT, 0x100);
         other->fl.b.shown = 0;
         StartDingodileMotion(self, (struct gobj *)other, 2);
-        VCALL2(self, m50, other, 1);
+        VOBJ_CALL2(self, m50, other, 1);
         break;
     }
 }
@@ -743,7 +737,7 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
     }
     p->slot = GetSpriteAnimPaletteSlot((struct actor *)p);
     p->ctl = ctl;
-    VCALL1(ctl, m18, p);
+    VOBJ_CALL1(ctl, m18, p);
     bits = &((u8 *)gEntityFlags->list->params)[*gEntityFlags->list->paramOffsets];
     p->f28.facing = ((*bits >> 1) ^ 1) & 1;
     p->f28.flag5 = (*bits >> 2) & 1;
@@ -758,7 +752,7 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
  * `+0x30` table, `kind` 6) at (x, y), with a gDingodileSharkVtable
  * controller, facing `facing`, and registers it with gCollidableList.
  *
- * The two virtual calls are written as plain blocks, not VCALL1's
+ * The two virtual calls are written as plain blocks, not VOBJ_CALL1's
  * `do { } while (0)` (whose loop notes swap the part/controller
  * registers), and `facing` goes into the 1-bit field unmasked (an
  * explicit `& 1` makes the tag store reuse the held constant 1). */
@@ -776,10 +770,10 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     ctl = CreateDingodileSharkCtrl(OperatorNew(0x8C));
     p->slot = GetSpriteAnimPaletteSlot((struct actor *)p);
     p->ctl = ctl;
-    VCALL1_B(ctl, m18, p)
+    VOBJ_CALL1_B(ctl, m18, p)
     p->f28.facing = facing;
     p->fl.b.active = 1;
-    VCALL1_B(ctl, m18, p)
+    VOBJ_CALL1_B(ctl, m18, p)
     AddToPartList(gCollidableList, p);
 }
 
@@ -821,7 +815,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                 MATCH_HOLD(hr6);
                 a = GetSpriteAttackBox_s(other);
                 b = GetSpriteBodyBox_s(gPlayer);
-                if (!BOX_VALID(b)) {
+                if (!AABB_VALID(b)) {
                     struct aabb *pb = &b;
 
                     *pb = GetSpriteAttackBox_s(gPlayer);
@@ -857,17 +851,17 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
             w |= 0x10000000;
             *(vu32 *)REG_ADDR_BLDCNT = w;
         }
-        VCALL1(self, m20, 5);
+        VOBJ_CALL1(self, m20, 5);
         break;
     case 1:
         self->blinksLeft = 2;
         self->blinkTimer = 0;
-        VCALL1(self, m20, 3);
+        VOBJ_CALL1(self, m20, 3);
         break;
     case 2:
         self->blinksLeft = 2;
         self->blinkTimer = 0;
-        VCALL1(self, m20, 4);
+        VOBJ_CALL1(self, m20, 4);
         break;
     case 3:
     case 4:
@@ -875,7 +869,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
             self->blinkTimer = 0x14;
             other->blink = !other->blink;
             if (self->blinksLeft == 0)
-                VCALL1(self, m20, 5);
+                VOBJ_CALL1(self, m20, 5);
             self->blinksLeft--;
         }
         self->blinkTimer--;
@@ -897,16 +891,16 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             if ((t->fl.raw >> 6) & 1) {
                 b = GetSpriteHitbox((struct box_part *)t);
                 if (AabbOverlaps(&a, &b)) {
-                    VCALL1(self->target->ctl, m20, 7);
-                    VCALL1(self, m20, 6);
-                    VCALL2(self, m50, other, 8);
+                    VOBJ_CALL1(self->target->ctl, m20, 7);
+                    VOBJ_CALL1(self, m20, 6);
+                    VOBJ_CALL2(self, m50, other, 8);
                     PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
                 }
             }
         }
         if (!gPlayer->dead) {
             b = GetSpriteBodyBox_s(gPlayer);
-            if (!BOX_VALID(b)) {
+            if (!AABB_VALID(b)) {
                 struct aabb *pb = &b;
 
                 *pb = GetSpriteAttackBox_s(gPlayer);
@@ -917,8 +911,8 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
 
                 ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
                 if (self->state == 3) {
-                    VCALL1(self, m20, 6);
-                    VCALL2(self, m50, other, 8);
+                    VOBJ_CALL1(self, m20, 6);
+                    VOBJ_CALL2(self, m50, other, 8);
                     PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
                 }
             }
@@ -927,8 +921,8 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
 
     switch (self->state) {
     case 0:
-        VCALL2(self, m30, other, gDingodileRocketRiseMotion);
-        VCALL1(self, m20, 1);
+        VOBJ_CALL2(self, m30, other, gDingodileRocketRiseMotion);
+        VOBJ_CALL1(self, m20, 1);
         break;
     case 1:
         if (other->y <= 0x800) {
@@ -936,16 +930,16 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             other->rampYStart = 0;
             other->rampYStep = 0;
             other->rampYTarget = 0;
-            VCALL2(self, m50, other, 8);
+            VOBJ_CALL2(self, m50, other, 8);
             other->slot = GetSpriteAnimPaletteSlot((struct actor *)other);
             SpawnDingodileStalactite(self, Q8_TO_INT(other->x), Q8_TO_INT(other->y));
-            VCALL1(self, m20, 2);
+            VOBJ_CALL1(self, m20, 2);
         }
         break;
     case 5:
-        VCALL2(self, m50, other, 9);
-        VCALL2(self, m30, other, gDingodileStalactiteFallMotion);
-        VCALL1(self, m20, 3);
+        VOBJ_CALL2(self, m50, other, 9);
+        VOBJ_CALL2(self, m30, other, gDingodileStalactiteFallMotion);
+        VOBJ_CALL1(self, m20, 3);
         break;
     case 3:
     case 4:
@@ -953,8 +947,8 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             s32 y = other->y;
 
             if (y >= LevelBottom() - 0x2000) {
-                VCALL1(self, m20, 6);
-                VCALL2(self, m50, other, 8);
+                VOBJ_CALL1(self, m20, 6);
+                VOBJ_CALL2(self, m50, other, 8);
                 PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
             }
             break;
@@ -987,10 +981,10 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     CreateBossCtrl((struct boss_ctrl *)c);
     c->vt = (struct vtable *)gDingodileProjectileVtable;
     c->target = self->target;
-    VCALL1(c, m20, 5);
+    VOBJ_CALL1(c, m20, 5);
     p->slot = GetSpriteAnimPaletteSlot((struct actor *)p);
     p->ctl = c;
-    VCALL1(c, m18, p);
+    VOBJ_CALL1(c, m18, p);
     p->fl.b.active = 1;
     AddToPartList(gCollidableList, p);
 }

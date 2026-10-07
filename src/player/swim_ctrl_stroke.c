@@ -26,8 +26,6 @@
  * appear in the ROM in the order below (the source order); the shared
  * tails are gcc's cross-jumping, not gotos. */
 
-#define KEEP 0x7FFFFFFF
-
 /* `v`, mirrored when the target faces left */
 #define SIGNED_X(t, v) ((t)->mirror.bits.flipX ? -(v) : (v))
 
@@ -56,7 +54,7 @@ void StartPlayerCtrlStroke(struct player_ctrl *self)
     ResetSpriteFrameTimer(t);
     ResetSpriteFrameIndex(t);
     SetSpriteAnimDone(t, 0);
-    SetPlayerCtrlState(self, 2, 2, KEEP, KEEP);
+    SetPlayerCtrlState(self, 2, 2, CTRL_KEEP, CTRL_KEEP);
 
     switch (self->tilt) {
     case 1:

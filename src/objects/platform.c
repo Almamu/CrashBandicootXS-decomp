@@ -37,11 +37,11 @@ void UpdatePlatform(struct gobj *self)
                 *c = NULL;
         }
         if (self->mover)
-            MOVER_CALL2(self->mover, m08, self);
+            VTABLE_CALL2(self->mover, m08, self);
     } else {
         OBJ_CALL1(self, m60);
         if (self->mover)
-            MOVER_CALL2(self->mover, m08, self);
+            VTABLE_CALL2(self->mover, m08, self);
     }
 }
 
@@ -183,13 +183,13 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 v = (Q8_TO_INT(obj->x)) - self->lastX;
             s32 sign;
 
-            ABS32(v, sign);
+            MAKE_ABS_BRANCHLESS(v, sign);
             self->distX = d + v;
         } else {
             MATCH_HOLD_REG(s32, v, r2) = obj->speedX;
             s32 sign;
 
-            ABS32(v, sign);
+            MAKE_ABS_BRANCHLESS(v, sign);
             if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].target)
                 self->distX = 0;
         }
@@ -201,13 +201,13 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 v = (Q8_TO_INT(obj->y)) - self->lastY;
             s32 sign;
 
-            ABS32(v, sign);
+            MAKE_ABS_BRANCHLESS(v, sign);
             self->distY = d + v;
         } else {
             MATCH_HOLD_REG(s32, v, r2) = obj->speedY;
             s32 sign;
 
-            ABS32(v, sign);
+            MAKE_ABS_BRANCHLESS(v, sign);
             if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].target)
                 self->distY = 0;
         }
@@ -274,7 +274,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
 
     kind = self->kind;
     if (kind == 5 && self->timer > 0 && gRoomFrameCount - self->timer == 60) {
-        MOVER_CALL3(self, m60, obj, 3);
+        VTABLE_CALL3(self, m60, obj, 3);
         self->timer = -1;
     } else if (kind == 5 && self->timer > 0) {
         u32 now = gRoomFrameCount;

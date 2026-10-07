@@ -31,7 +31,8 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * `record->slots[2]` method (a gcc 2.x virtual call; _call_via_r2 is
  * `_call_via_r2`). Kept as a block macro rather than an inline
  * function: the method's `this` must be computed before the label
- * argument, as in the ROM. */
+ * argument, as in the ROM. pause_menu_pages_draw.c's copy casts `label`
+ * to `s32`, so the two expand differently and each stays local. */
 #define DRAW_ICON_TEXT(mgrExpr, label)                                          \
     {                                                                           \
         struct bitmap_font *_m = (mgrExpr);                                    \

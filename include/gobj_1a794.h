@@ -183,17 +183,6 @@ static inline struct gobj *GobjInit(struct gobj *self)
     return self;
 }
 
-/* Branchless absolute value, updating `x` in place (same helper as
- * actor.c) - the ROM's asr/eor/sub sequence. */
-#define ABS32(x, sign) do { (sign) = (x) >> 0x1f; (x) ^= (sign); (x) -= (sign); } while (0)
-
-#define MOVER_CALL3(obj, m, a, b)                                              \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m;                                 \
-        _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
-    } while (0)
-
 /* _call_via_r4 calls the function in r4 */
 #define OBJ_CALL68(obj, a, b, c)                                               \
     do                                                                         \
@@ -211,13 +200,6 @@ static inline struct gobj *GobjInit(struct gobj *self)
     {                                                                          \
         struct actor_method *_m = &(obj)->vtable->m;                                 \
         _call_via_r1((u8 *)(obj) + _m->thisOffset, _m->fn);                     \
-    } while (0)
-
-#define MOVER_CALL2(obj, m, a)                                                 \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m;                                 \
-        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } while (0)
 
 #endif /* GUARD_GOBJ_1A794_H */

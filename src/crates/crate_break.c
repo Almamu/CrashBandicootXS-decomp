@@ -1928,11 +1928,11 @@ void ExplodeCrate(struct crate *self, u8 near)
     if ((gPlayer->flags.all >> 6) & 1 && !PhysComboMaxed(gPlayer)) {
         struct player *p;
         s32 t1 = Q8_TO_INT(gPlayer->x) - Q8_TO_INT(self->x);
-        s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+        s32 dx = ABS_BRANCHLESS(t1);
 
         if (dx <= 0x1d) {
             s32 t2 = Q8_TO_INT(gPlayer->y) - Q8_TO_INT(self->y);
-            s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+            s32 dy = ABS_BRANCHLESS(t2);
 
             if (dy <= 0x1d)
                 goto call;
@@ -1987,9 +1987,9 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(self->x);
-                s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+                s32 dx = ABS_BRANCHLESS(t1);
                 s32 t2 = Q8_TO_INT(o->y) - Q8_TO_INT(self->y);
-                s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+                s32 dy = ABS_BRANCHLESS(t2);
 
                 if (dx + dy <= dist && (o->state & CRATE_STATE_MASK) == 0) {
                     u32 kind = o->kind;
@@ -2017,9 +2017,9 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
 
             if (PHYS_CALL(o, m48) == 2) {
                 s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(self->x);
-                s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+                s32 dx = ABS_BRANCHLESS(t1);
                 s32 t2 = Q8_TO_INT(o->y) - Q8_TO_INT(self->y);
-                s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+                s32 dy = ABS_BRANCHLESS(t2);
 
                 if (dx + dy <= dist) {
                     PickUpWumpa((struct orbit_part *)o, 1);
@@ -2406,9 +2406,9 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = Q8_TO_INT(o->x) - x;
-                s32 dx = (t1 ^ (t1 >> 31)) - (t1 >> 31);
+                s32 dx = ABS_BRANCHLESS(t1);
                 s32 t2 = Q8_TO_INT(o->y) - y;
-                s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
+                s32 dy = ABS_BRANCHLESS(t2);
 
                 if (dx + dy <= dist && dy < height && (o->state & CRATE_STATE_MASK) == 0) {
                     if (*(u8 *)(o->kind + (u32)commit))

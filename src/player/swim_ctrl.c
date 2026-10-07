@@ -72,13 +72,11 @@ typedef void (*pctrl_fn0)(void *self);
         struct pctrl_method *_m = &(obj)->vtable->setMode;                     \
         ((pctrl_fn1)_m->fn)((u8 *)(obj) + _m->thisOffset, (a));                \
     }
-#define SET_ANIM(obj, t, a)                                                    \
+#define CTRL_SET_ANIM(obj, t, a)                                                    \
     {                                                                          \
         struct pctrl_method *_m = &(obj)->vtable->setAnim;                     \
         ((pctrl_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (t), (a));           \
     }
-
-#define KEEP 0x7FFFFFFF
 
 static inline u8 LevelAnim(struct player_ctrl *self)
 {
@@ -90,17 +88,17 @@ static inline void SetState(struct player_ctrl *self, s32 a, s32 mode, s32 timer
 {
     SET_MODE(self, a);
     self->mode = mode;
-    SET_ANIM(self, self->target, LevelAnim(self));
-    if (timer != KEEP)
+    CTRL_SET_ANIM(self, self->target, LevelAnim(self));
+    if (timer != CTRL_KEEP)
         self->timer = timer;
-    if (timerMax != KEEP)
+    if (timerMax != CTRL_KEEP)
         self->timerMax = timerMax;
 }
 
 /* the out-of-line copy is StartPlayerCtrlSwim */
 static inline void ResetMode(struct player_ctrl *self)
 {
-    SetPlayerCtrlState(self, 1, 1, KEEP, 0);
+    SetPlayerCtrlState(self, 1, 1, CTRL_KEEP, 0);
 }
 
 /* The value arrives as a (constant-propagated) inline parameter, so the
@@ -138,18 +136,18 @@ void CheckPlayerCtrlTurn(struct player_ctrl *self)
         if (self->target->mirror.bits.flipX && (dir == 4 || dir == 6 || dir == 8)) {
             self->target->mirror.bits.flipX = 0;
             if (self->state != 3) {
-                SetPlayerCtrlState(self, 4, 4, KEEP, KEEP);
+                SetPlayerCtrlState(self, 4, 4, CTRL_KEEP, CTRL_KEEP);
                 self->timerMax = 0;
             } else {
-                SetPlayerCtrlState(self, 4, 5, KEEP, KEEP);
+                SetPlayerCtrlState(self, 4, 5, CTRL_KEEP, CTRL_KEEP);
             }
             self->unk_26 = 0;
         } else if (!(self->target->mirror.bits.flipX & 1) && (dir == 3 || dir == 5 || dir == 7)) {
             if (self->state != 3) {
-                SetPlayerCtrlState(self, 4, 6, KEEP, KEEP);
+                SetPlayerCtrlState(self, 4, 6, CTRL_KEEP, CTRL_KEEP);
                 self->timerMax = 0;
             } else {
-                SetPlayerCtrlState(self, 4, 7, KEEP, KEEP);
+                SetPlayerCtrlState(self, 4, 7, CTRL_KEEP, CTRL_KEEP);
             }
             self->unk_26 = 0;
         }
@@ -199,7 +197,7 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
 {
     PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
     SET_MODE(self, 7);
-    SET_ANIM(self, self->target, anim);
+    CTRL_SET_ANIM(self, self->target, anim);
     self->target->flags.bits.flag7 = 0;
     self->target->flags.bits.flag6 = 0;
     self->target->dead = 1;
@@ -451,14 +449,14 @@ void PlayerCtrlStateIdle(struct player_ctrl *self)
         self->idleTimer = 0;
     }
     if (self->target->animDone)
-        SET_ANIM(self, self->target, 0x1F);
+        CTRL_SET_ANIM(self, self->target, 0x1F);
     if (k.pressed & A_BUTTON) {
         StartPlayerCtrlStroke(self);
     } else if (k.pressed & (B_BUTTON | R_BUTTON)) {
         StartPlayerCtrlSpin(self);
     } else if (dir) {
         SET_MODE(self, 6);
-        SET_ANIM(self, self->target, 0x1D);
+        CTRL_SET_ANIM(self, self->target, 0x1D);
         QueueMotionX(self, 0xC);
     }
     self->unk_26 = 0;
@@ -479,7 +477,7 @@ void PlayerCtrlStateSwim(struct player_ctrl *self)
         StartPlayerCtrlSpin(self);
     if (dir == 0 && self->tilt == 6) {
         SET_MODE(self, 5);
-        SET_ANIM(self, self->target, 0x20);
+        CTRL_SET_ANIM(self, self->target, 0x20);
         self->mode = dir;
     }
     CheckPlayerCtrlTurn(self);
@@ -504,7 +502,7 @@ void PlayerCtrlStateStroke(struct player_ctrl *self)
             ResetMode(self);
         else if (self->tilt == 6) {
             SET_MODE(self, 5);
-            SET_ANIM(self, self->target, 0x20);
+            CTRL_SET_ANIM(self, self->target, 0x20);
         } else
             ResetMode(self);
     }
@@ -540,13 +538,13 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
         case 7:
             frame = self->target->frame;
             self->mode = 6;
-            SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[6][self->tilt].anim);
+            CTRL_SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[6][self->tilt].anim);
             ClampFrame(self->target, frame);
             break;
         case 5:
             frame = self->target->frame;
             self->mode = 4;
-            SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[4][self->tilt].anim);
+            CTRL_SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[4][self->tilt].anim);
             ClampFrame(self->target, frame);
             break;
         }
@@ -561,7 +559,7 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
             self->mode = 5;
         else
             self->mode = 7;
-        SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[self->mode][self->tilt].anim);
+        CTRL_SET_ANIM(self, self->target, gPlayerCtrlModeAnimRows[self->mode][self->tilt].anim);
         StartPlayerCtrlSpin(self);
         ClampFrame(self->target, frame);
         return;
@@ -583,11 +581,11 @@ void PlayerCtrlStateTurn(struct player_ctrl *self)
     case 5:
         if (self->target->mirror.bits.flipX)
             self->target->mirror.bits.flipX = 0;
-        SetState(self, 3, 3, KEEP, KEEP);
+        SetState(self, 3, 3, CTRL_KEEP, CTRL_KEEP);
         break;
     case 7:
         SetFlipX(self->target, 1);
-        SetState(self, 3, 3, KEEP, KEEP);
+        SetState(self, 3, 3, CTRL_KEEP, CTRL_KEEP);
         break;
     }
     self->motionXPending = 1;
@@ -612,7 +610,7 @@ void PlayerCtrlStateSwimStart(struct player_ctrl *self)
             ResetMode(self);
         else if (self->tilt == 6) {
             SET_MODE(self, 5);
-            SET_ANIM(self, self->target, 0x20);
+            CTRL_SET_ANIM(self, self->target, 0x20);
         }
     }
     CheckPlayerCtrlTurn(self);
@@ -689,7 +687,7 @@ void ApplyPlayerCtrlTilt(struct player_ctrl *self)
 /* UNUSED */
 void StartPlayerCtrlSwim(struct player_ctrl *self)
 {
-    SetPlayerCtrlState(self, 1, 1, KEEP, 0);
+    SetPlayerCtrlState(self, 1, 1, CTRL_KEEP, 0);
 }
 
 void DestroyPlayerCtrl(struct player_ctrl *self, s32 flags)

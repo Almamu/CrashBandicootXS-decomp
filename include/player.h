@@ -593,6 +593,9 @@ extern void PlayerCtrlStateDead(struct player_ctrl *self);
 extern void AttachPlayerCtrl(struct player_ctrl *self, struct player *target);
 extern void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct player *target, s32 idx);
 extern void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct player *target, s32 idx);
+/* SetPlayerCtrlState's `timer`/`timerMax` value that keeps the current
+ * one. */
+#define CTRL_KEEP 0x7FFFFFFF
 extern void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
 extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
 extern s32 GetPlayerSwimDriftStep(s32 v);

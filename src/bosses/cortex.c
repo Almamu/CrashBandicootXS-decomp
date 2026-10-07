@@ -148,19 +148,6 @@ extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
-#define CALL2(obj, m, a)                                                       \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m;                             \
-        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
-    } while (0)
-#define CALL3(obj, m, a, b)                                                    \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m;                             \
-        _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
-    } while (0)
-
 static inline void SetTag(struct gfx_part *part, s32 tag)
 {
     part->tag = tag;
@@ -234,13 +221,6 @@ static inline void CopyFlipX(struct gfx_part *dst, struct gfx_part *src)
     *dp = m;
 }
 
-
-static inline s32 Abs(s32 v)
-{
-    s32 sign = v >> 31;
-
-    return (v ^ sign) - sign;
-}
 
 static inline void SetFrame(struct gfx_part *part, s32 frame)
 {
@@ -432,7 +412,7 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
             {
                 s32 w = INT_TO_Q8(gLevelLayers->layer0->widthPx);
 
-                n = __udivsi3(Abs(n) * 12, w);
+                n = __udivsi3(ABS_BRANCHLESS(n) * 12, w);
             }
             LIMIT_MAX(n, 5);
             n = 5 - n;
@@ -598,13 +578,13 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
         goto next;
     case 3:
         self->nextState = 4;
-        CALL3(self, method_50, part, 0x12);
+        VTABLE_CALL3(self, method_50, part, 0x12);
         SetCortexTargetState(self, part, 7);
         break;
     case 4:
         FireCortexShot(self, part, 0);
         SetCortexTargetState(self, part, 2);
-        CALL3(self, method_50, part, 0xF);
+        VTABLE_CALL3(self, method_50, part, 0xF);
         break;
     case 7:
         if (part->animDone) {
@@ -637,13 +617,13 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
             if (self->timer == gCortexTargetBlinkStartTimes[self->cfg->index]) {
                 PlaySfx(gAudioContext, SFX_CORTEX_TARGET_BLINK, 0x100);
                 part->animating = left;
-                CALL3(self, method_50, part, 0x10);
+                VTABLE_CALL3(self, method_50, part, 0x10);
                 *blinking = 1;
                 self->blink = left;
             }
             if (self->timer == gCortexTargetBlinkStopTimes[self->cfg->index]) {
                 part->animating = left;
-                CALL3(self, method_50, part, 0x10);
+                VTABLE_CALL3(self, method_50, part, 0x10);
                 *blinking = left;
                 SET_FRAME_R(part, 1, r3, r4);
             }
@@ -741,7 +721,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
                 zero = 0;
                 *p = mode;
             }
-            CALL3(self, method_50, part, 0xF);
+            VTABLE_CALL3(self, method_50, part, 0xF);
             self->dirLeft = mode;
             self->high = mode;
             self->top = zero;
@@ -785,7 +765,7 @@ void SetCortexTargetState(struct gfx_mover *self, struct gfx_part *part, s32 mod
         self->timer = 0x14;
         break;
     }
-    CALL2(self, method_20, mode);
+    VTABLE_CALL2(self, method_20, mode);
 }
 
 void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
@@ -878,7 +858,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 
                 c = GetSpriteHitbox((struct box_part *)e);
                 if (AabbOverlaps(&c, &b)) {
-                    CALL2(self->owner, method_20, 2);
+                    VTABLE_CALL2(self->owner, method_20, 2);
                     e->kind = 1;
                     {
                         MATCH_HOLD_REG(s32, zero, r2) = 0;
@@ -946,17 +926,17 @@ void UpdateCortexBossGem(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
             part->bank = (struct anim_bank *)(SPRITE_BANK_BASE + 0x27C);
             switch (self->kind) {
             case 0:
-                CALL3(self, method_50, part, 0xC);
+                VTABLE_CALL3(self, method_50, part, 0xC);
                 break;
             case 1:
-                CALL3(self, method_50, part, 0xB);
+                VTABLE_CALL3(self, method_50, part, 0xB);
                 break;
             case 2:
-                CALL3(self, method_50, part, 0xD);
+                VTABLE_CALL3(self, method_50, part, 0xD);
                 break;
             }
             SetFrameNibble(part, GetSpriteAnimPaletteSlot((struct actor *)part));
-            CALL2(self, method_20, 1);
+            VTABLE_CALL2(self, method_20, 1);
         }
         break;
     case 1:

@@ -29,13 +29,6 @@
  * `0x13FF`) and a final `0x180`/`-0x180`, `0x100`/`-0x100` hard clamp.
  */
 
-static inline s32 Abs(s32 x)
-{
-    s32 s = x >> 31;
-
-    return (x ^ s) - s;
-}
-
 /* The register split between `&gAirshipVelX` (r6) and
  * `&gAirshipVelY` (r4) follows from how many stores each easing
  * block has before cross-jumping merges them: the X step stores its
@@ -59,7 +52,7 @@ void SteerAirship(void)
     cy = gAirshipScreenY + 0x1800;
     dy = py - cy - (gAirshipBox.y + gAirshipBox.h / 2);
 
-    if (Abs(dx) <= 0x2CFF) {
+    if (ABS_BRANCHLESS(dx) <= 0x2CFF) {
         s32 s = dx >> 10;
         s32 t;
 
@@ -74,7 +67,7 @@ void SteerAirship(void)
         gAirshipVelX = t;
     }
 dx_done:
-    if (Abs(dy) <= 0x2CFF) {
+    if (ABS_BRANCHLESS(dy) <= 0x2CFF) {
         s32 v;
 
         if ((dy >> 10) >= 0) {
@@ -239,8 +232,8 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     gAirshipBg2Page = 0;
     gAirshipDistance = gAirshipZ - INT_TO_Q8(GetCellAnimDistance());
     scale = __divsi3(0x1C00000, gAirshipDistance);
-    gAirshipScreenX = Q12_TO_INT(gAirshipX * scale);
-    gAirshipScreenY = Q12_TO_INT(scale * gAirshipY);
+    gAirshipScreenX = Q12_MUL(gAirshipX, scale);
+    gAirshipScreenY = Q12_MUL(scale, gAirshipY);
     SetActorBgLayerDepth(gAirshipDistance);
     self = gAirship;
     {
@@ -295,16 +288,13 @@ void UpdateAirship(void)
         self->animTime += (s16)self->animTimer;
         self->animDone = 0;
         if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-            // clang-format off
-            self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
-                                         self->anims[self->animIndex].loopBase);
-            // clang-format on
+            ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
             self->animDone = 1;
         }
         gAirshipDistance = gAirshipZ - INT_TO_Q8(GetCellAnimDistance());
         scale = __divsi3(0x1C00000, gAirshipDistance);
-        gAirshipScreenX = Q12_TO_INT(gAirshipX * scale);
-        gAirshipScreenY = Q12_TO_INT(scale * gAirshipY);
+        gAirshipScreenX = Q12_MUL(gAirshipX, scale);
+        gAirshipScreenY = Q12_MUL(scale, gAirshipY);
         SetActorBgLayerDepth(gAirshipDistance);
         {
             struct actor_self *cur = gAirship;

@@ -47,6 +47,15 @@ struct part_method {
 
 #define PART_METHOD(obj, off) ((struct part_method *)((obj)->vtable + (off)))
 
+typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
+
+/* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
+#define CALL_HIT(obj, a, b, c)                                                 \
+    if (1) {                                                                   \
+        struct part_method *_m = PART_METHOD(obj, 0x68);                       \
+        ((part_method3_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c)); \
+    } else (void)0
+
 struct box_part {
     s32 x;   // 0x00 - Q8 fixed-point
     s32 y;   // 0x04 - Q8 fixed-point

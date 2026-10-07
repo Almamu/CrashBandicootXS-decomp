@@ -518,19 +518,10 @@ static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 p
     buf->table[idx + 2].attr[3] = pc;
 }
 
+/* `self`'s logo piece `i`, the pieces starting at +0x10 (company_logos.c's
+ * SLOT_AT, a different macro, starts them at `self`). */
 #define SLOT_AT(self, i) (&((struct logo_piece *)((u8 *)(self) + 0x10))[i])
 
-
-#define ClearOam(oam)                                           \
-{                                                               \
-    struct dma_regs *dma;                                       \
-    zero = 0;                                                   \
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;                  \
-    dma->src = (u32)&zero;                                      \
-    dma->dst = (u32)(oam);                                      \
-    dma->cnt = 0x81000004;                                      \
-    dma->cnt;                                                   \
-}
 
 /* Closed in the issues #64/#65 second NAKED retry (old_agbcc, strength
  * reduction on):
@@ -538,7 +529,7 @@ static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 p
  *   Strength reduction reverses it (check_dbra_loop) and emits the
  *   `j = 3` start after the hoisted invariants, as in the ROM. This is
  *   why the function lives in an object without -fno-strength-reduce.
- * - ClearOam is a macro that stores `zero` before loading the DMA base.
+ * - CLEAR_OAM is a macro that stores `zero` before loading the DMA base.
  *   The second slot loop does its DMA through `dma2`, set before the
  *   loop, so loop.c hoists it into r9 and the table pointer is spilled.
  * - The counter addresses compute the scaled index before
@@ -563,7 +554,7 @@ void DrawTitleLogoPieces(u32 *self)
         if (slot->active) {
             u16 scale = 0x1000000 / slot->velA;
             SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
-            ClearOam(&oamA);
+            CLEAR_OAM(&oamA);
             oamA.affineMode = 3;
             oamA.matrixLo = 0;
             oamA.palette = 3;
@@ -610,7 +601,7 @@ void DrawTitleLogoPieces(u32 *self)
             d = 0x1000000 / slot->velA;
             scale = d;
             SetAffine(gOamBuffer, matrix, scale, 0, 0, scale);
-            ClearOam(&oamB);
+            CLEAR_OAM(&oamB);
             off = 0;
             if (d != 0x100) {
                 off = -32;

@@ -48,15 +48,6 @@
  * of plain C. */
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-/* `record->slots[n]` on an icon manager, called with `label` (slot 0
- * measures and returns the pixel width, slot 2 draws). */
-#define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
-    ({                                                                          \
-        struct bitmap_font *_m = (mgrExpr);                                    \
-        struct icon_slot *_s = &_m->record->slots[n];                           \
-        _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
-    })
-
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;

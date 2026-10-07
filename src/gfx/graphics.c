@@ -27,7 +27,6 @@ struct dma_queue {
     s32 count;
 };
 
-#define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gVramDmaQueue)->count)
 /* Allocated capacity of gVramDmaQueue.entries. */
 #define DMA_QUEUE_MAX_ENTRIES 0x300

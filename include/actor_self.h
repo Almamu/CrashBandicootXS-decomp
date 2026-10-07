@@ -147,6 +147,45 @@ typedef void (*actor_method_fn)(void *self, s32 arg);
         ((actor_method_fn)_vt->m.fn)((u8 *)(obj) + _vt->m.thisOffset, (arg));  \
     } else (void)0
 
+/* Virtual calls through `obj->vtable` (`struct actor_method` entries)
+ * via libgcc's `_call_via_r2`/`_call_via_r3`: take the entry's address
+ * once, then read the `this` adjustment and the function, as gcc 2.x
+ * lowers the call. VTABLE_CALL2 passes one argument, VTABLE_CALL3 two;
+ * the argument types come from the file's `_call_via_rN` prototype. */
+#define VTABLE_CALL2(obj, m, a)                                                \
+    do                                                                         \
+    {                                                                          \
+        struct actor_method *_m = &(obj)->vtable->m;                           \
+        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
+    } while (0)
+#define VTABLE_CALL3(obj, m, a, b)                                             \
+    do                                                                         \
+    {                                                                          \
+        struct actor_method *_m = &(obj)->vtable->m;                           \
+        _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
+    } while (0)
+
+typedef void (*actor_method_ptr_fn)(void *self, void *a, s32 b);
+
+/* Virtual calls through a method table held in a `vt` field (the boss
+ * parts' layout, `struct actor_method` entries): take the entry's
+ * address once, then read the `this` adjustment and the function, as gcc
+ * 2.x lowers the call. VCALL1 passes an `s32`, VCALL2 a pointer and an
+ * `s32`. (dingodile.c's VOBJ_CALL1/VOBJ_CALL2 are the same calls on an
+ * object cast to its `struct vobj` first.) */
+#define VCALL1(obj, m, a)                                                      \
+    do                                                                         \
+    {                                                                          \
+        struct actor_method *_m = &(obj)->vt->m;                               \
+        ((actor_method_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));     \
+    } while (0)
+#define VCALL2(obj, m, a, b)                                                   \
+    do                                                                         \
+    {                                                                          \
+        struct actor_method *_m = &(obj)->vt->m;                               \
+        ((actor_method_ptr_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
+    } while (0)
+
 /* `(self->*table[self->state])()` - a gcc 2.x pointer-to-member-function
  * call through one of the per-state dispatch tables. The table entry is
  * re-read after the virtual/non-virtual split exactly the way the

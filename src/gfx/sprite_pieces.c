@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gfx.h"
+#include "gfx_part.h"
 #include "vtable.h"
 #include "objects.h"
 #include "globals.h"
@@ -27,9 +28,6 @@ struct oam_part {
     u8 palette:4; // 0x29
     u8 paletteHi:4;
 };
-
-/* The 0x28 flag bits tested as sign tests (`lsl #N; cmp #0; bge`). */
-#define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
 extern s32 _call_via_r1(void *self, void *fn);
 

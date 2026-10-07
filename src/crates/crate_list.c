@@ -8,7 +8,6 @@
 #include "objects.h"
 #include "memory.h"
 
-typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
 /* `CollidePartWithObject`'s twin (part_collide.c): the same collision-hit
  * resolver, called from elsewhere in this AI/collision cluster (`list`

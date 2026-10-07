@@ -25,7 +25,7 @@ struct part_flags_21668 {
     u8 bit7:1;
 };
 
-#define PART_FLAGS(part) ((struct part_flags_21668 *)&(part)->base.flags)
+#define PART_FLAG_BITS(part) ((struct part_flags_21668 *)&(part)->base.flags)
 
 /* Inline so old_agbcc re-truncates GetPaletteSlot's u8 result before the
  * nibble insert, as the ROM does. */
@@ -60,10 +60,10 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     part->base.kind = 1;
-    PART_FLAGS(part)->bit7 = 0;
-    PART_FLAGS(part)->bit2 = 0;
-    PART_FLAGS(part)->bit6 = 0;
-    PART_FLAGS(part)->bit4 = 1;
+    PART_FLAG_BITS(part)->bit7 = 0;
+    PART_FLAG_BITS(part)->bit2 = 0;
+    PART_FLAG_BITS(part)->bit6 = 0;
+    PART_FLAG_BITS(part)->bit4 = 1;
     AddToPartList(gCollidableList, part);
 }
 
@@ -80,8 +80,8 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
-    PART_FLAGS(part)->bit7 = 0;
-    PART_FLAGS(part)->bit2 = 0;
+    PART_FLAG_BITS(part)->bit7 = 0;
+    PART_FLAG_BITS(part)->bit2 = 0;
     part->base.kind = 0;
     AddToPartList((struct part_list *)gDecorationList, part);
 }
@@ -94,8 +94,8 @@ void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     part->anim = POPUP_ANIM(0x21c);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
-    PART_FLAGS(part)->bit7 = 0;
-    PART_FLAGS(part)->bit2 = 0;
+    PART_FLAG_BITS(part)->bit7 = 0;
+    PART_FLAG_BITS(part)->bit2 = 0;
     part->base.kind = 0;
     AddToPartList((struct part_list *)gDecorationList, part);
 }
@@ -113,8 +113,8 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
-    PART_FLAGS(part)->bit7 = 0;
-    PART_FLAGS(part)->bit2 = 0;
+    PART_FLAG_BITS(part)->bit7 = 0;
+    PART_FLAG_BITS(part)->bit2 = 0;
     part->base.kind = 0;
     AddToPartList((struct part_list *)gDecorationList, part);
 }

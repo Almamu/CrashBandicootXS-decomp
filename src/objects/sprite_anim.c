@@ -276,7 +276,6 @@ struct actor *InitUiSpriteObj(struct actor *part)
 
 typedef s32 (*part_method0_fn)(void *self);
 typedef s32 (*part_method1_fn)(void *self, void *arg);
-typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
@@ -410,13 +409,6 @@ void CollidePartList(struct part_list *list, struct aabb box, s32 unused, struct
         }
     }
 }
-
-/* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
-#define CALL_HIT(obj, a, b, c)                                                 \
-    if (1) {                                                                   \
-        struct part_method *_m = PART_METHOD(obj, 0x68);                       \
-        ((part_method3_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c)); \
-    } else (void)0
 
 /* Resolves a hit between `part` and the player (gPlayer)
  * against the incoming box passed by CollidePartList (`list` is unused).

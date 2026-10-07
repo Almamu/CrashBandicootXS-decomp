@@ -203,12 +203,37 @@ the expression out or adding another file-local copy:
 | Header | Helpers | What |
 |---|---|---|
 | `core.h` | `ARRAY_COUNT(a)` | element count of an array |
-| `math_util.h` | `Q8_TO_INT`, `INT_TO_Q8`, `Q12_*`, `Q16_*`, `Q8_MUL(a, b)` | fixed-point conversions (`x >> 8`, `x << 8`, ...) and the Q8 product `(a * b) >> 8` |
+| `math_util.h` | `Q8_TO_INT`, `INT_TO_Q8`, `Q12_*`, `Q16_*` | fixed-point conversions (`x >> 8`, `x << 8`, ...) |
+| `math_util.h` | `Q8_TO_INT_INPLACE(x)` | the in-place conversion `x >>= 8` |
+| `math_util.h` | `Q8_MUL(a, b)`, `Q8_DIV(a, b)`, `Q12_MUL(a, b)` | the Q8 product `(a * b) >> 8`, the Q8 quotient `(a << 8) / b` (a ratio or scale), a value times a Q12 scale `(a * b) >> 12` (the screen projections) |
 | `math_util.h` | `MIN`, `MAX`, `ABS`, `CLAMP` | the ternaries (`a < b ? a : b`, ...) |
+| `math_util.h` | `CLAMP_MIN(x, lo)`, `CLAMP_MAX(x, hi)` | one side of `CLAMP`, `x < lo ? lo : x` / `x > hi ? hi : x` (not `MAX`/`MIN`, which compare the other way round) |
+| `math_util.h` | `ABS_BRANCHLESS(x)`, `MAKE_ABS_BRANCHLESS(x, sign)` | the branchless abs `(x ^ (x >> 31)) - (x >> 31)`, and in place: `sign = x >> 31; x ^= sign; x -= sign;` |
 | `math_util.h` | `LIMIT_MAX`, `LIMIT_MIN`, `MAKE_ABS`, `CLAMP_INDEX` | the clamp statements (`if (x > hi) x = hi`, `if (i >= n) i = n - 1`, ...) |
+| `math_util.h` | `ANIM_REWIND(animTime, rec)` | the animation loop rewind `animTime -= INT_TO_Q8(rec.loopThreshold - rec.loopBase)` |
 | `math_util.h` | `SIN_Q8(angle)`, `COS_Q8(angle)` | `gSineTable[angle & 0xFF]` and the quarter-turn `+ 0x40` cosine |
 | `entity_bits.h` | `ENTITY_ID_NONE`, `ENTITY_SET_GONE_BIT(_OF)`, `ENTITY_MARK_GONE` | MarkEntityGone's "gone" bitmap set, inlined |
 | `entity_bits.h` | `ENTITY_SET_GONE_BIT_PINNED`, `ENTITY_SET_GONE_BIT_ASR` | the same with the register pins several files share |
+
+Macros that several files used to define for themselves now live in the
+header that owns their type:
+
+| Header | Helpers | What |
+|---|---|---|
+| `actor_self.h` | `VCALL1`, `VCALL2` | virtual calls through a `vt` method table (the boss parts) |
+| `actor_self.h` | `VTABLE_CALL2`, `VTABLE_CALL3` | virtual calls through `vtable` via `_call_via_r2`/`_call_via_r3` |
+| `actor_self.h` | `ACTOR_LINK_NEXT` | the actor list's `next` link (was also `ACTOR_NEXT`) |
+| `aabb.h` | `AABB_VALID(box)` | a box's `w`, read through a volatile (the "box isn't empty" re-read) |
+| `bitmap_font.h` | `ICON_TEXT_CALL` | an icon manager's `record->slots[n]` text call |
+| `box_part.h` | `CALL_HIT`, `part_method3_fn` | a part's "hit" method (`vtable + 0x68`) |
+| `gfx_part.h` | `PART_FLAG_SET(part, shift)` | a +0x28 flag bit tested as a sign test |
+| `gba/dma_macros.h` | `DMA3` | channel 3's registers as a `struct dma_regs` |
+| `frontend.h` | `CLEAR_OAM(oam)` | the logo screens' one-entry OAM clear |
+| `player.h` | `CTRL_KEEP` | SetPlayerCtrlState's "keep the current timer" value |
+
+Two file-local pairs keep the same name on purpose because they expand
+differently: `DRAW_ICON_TEXT` (pause menu) and `SLOT_AT` (logo screens);
+each copy says so.
 
 - **A helper expands to exactly the expression it replaces**: the same
   operands in the same order, the same casts and signedness, the same
@@ -241,4 +266,10 @@ the expression out or adding another file-local copy:
 
 `tools/common_ops.py` lists the sites that are still spelled out, by
 shape (`--report` for the counts per shape, subsystem and file), and the
-file-local macros that more than one file defines (`--macros`).
+file-local macros that more than one file defines (`--macros`; the pairs
+kept local on purpose are marked). The sites it still lists are either
+not what the helper means (byte packing, register and OAM fields, sign
+extensions, asset header sizes, CRC steps) or spelled in a form no
+helper expands to exactly (a register pin inside the sequence, a sign
+mask taken from another value, an explicit `__divsi3` call, a clamp
+`if` with more statements or an `else`).

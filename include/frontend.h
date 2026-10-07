@@ -255,4 +255,19 @@ extern void LoadVvLogoGraphics(u32 *self);
 extern void InitVvLogoPieces(u32 *self);
 extern void UpdateVvLogoPieces(u32 *self);
 
+/* Clears one OAM entry (4 words) with a DMA3 fill from `zero`, a
+ * variable the caller declares (company_logos.c, title_screen_init.c).
+ * A macro, not a function: `zero` is stored before the DMA base is
+ * loaded, as in the ROM. */
+#define CLEAR_OAM(oam)                                          \
+{                                                               \
+    struct dma_regs *dma;                                       \
+    zero = 0;                                                   \
+    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;                  \
+    dma->src = (u32)&zero;                                      \
+    dma->dst = (u32)(oam);                                      \
+    dma->cnt = 0x81000004;                                      \
+    dma->cnt;                                                   \
+}
+
 #endif /* GUARD_FRONTEND_H */

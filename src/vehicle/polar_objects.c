@@ -358,8 +358,8 @@ void AimPolarPenguin(void *selfArg, s32 target)
 
             factor = __divsi3(lit, countdown2);
         }
-        self->velX = Q12_TO_INT(factor * (GetActorSpawnX(target) - self->base.x));
-        self->velY = Q12_TO_INT(factor * (GetActorSpawnY(target) - self->base.y));
+        self->velX = Q12_MUL(factor, GetActorSpawnX(target) - self->base.x);
+        self->velY = Q12_MUL(factor, GetActorSpawnY(target) - self->base.y);
         self->nextTarget = GetActorSpawnNextTarget(target);
     }
 }

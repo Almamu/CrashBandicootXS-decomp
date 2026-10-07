@@ -261,8 +261,8 @@ void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
  * twins, per docs/rom_map.md.
  *
  * The Manhattan-distance/abs-value computation uses the ROM's own
- * branchless abs idiom (`(x ^ (x >> 31)) - (x >> 31)`, compiling to
- * `asr`/`eor`/`sub`) rather than a `(x < 0) ? -x : x` ternary, which
+ * branchless abs idiom (`ABS_BRANCHLESS(x)`, `(x ^ (x >> 31)) - (x >> 31)`,
+ * compiling to `asr`/`eor`/`sub`) rather than a `(x < 0) ? -x : x` ternary, which
  * this compiler instead turns into a `cmp`/`bge`/`neg` branch. The
  * `x` (+0x1c) reload also needs pinning to `r1` and reading *after*
  * the `GetActorBgCenterX()` call (not before) - pinning it before the call
@@ -294,10 +294,10 @@ void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spa
 
     {
         s32 a1 = dy - 0x1000;
-        s32 a2 = (a1 ^ (a1 >> 31)) - (a1 >> 31);
+        s32 a2 = ABS_BRANCHLESS(a1);
         s32 dx = self->base.y;
         s32 b1 = dx - 0x1000;
-        s32 b2 = (b1 ^ (b1 >> 31)) - (b1 >> 31);
+        s32 b2 = ABS_BRANCHLESS(b1);
 
         sum = a2 + b2;
         if (sum < 0) {

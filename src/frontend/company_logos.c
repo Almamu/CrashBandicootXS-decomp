@@ -68,18 +68,10 @@ static inline void SetAffineZ(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 
     buf->table[idx + 2].attr[3] = 0;
 }
 
+/* `self`'s logo piece `i`, the pieces starting at `self` itself.
+ * title_screen_init.c's SLOT_AT is a different macro: its pieces start
+ * at +0x10. */
 #define SLOT_AT(self, i) (&((struct logo_piece *)(self))[i])
-
-#define ClearOam(oam)                                           \
-{                                                               \
-    struct dma_regs *dma;                                       \
-    zero = 0;                                                   \
-    dma = (struct dma_regs *)REG_ADDR_DMA3SAD;                  \
-    dma->src = (u32)&zero;                                      \
-    dma->dst = (u32)(oam);                                      \
-    dma->cnt = 0x81000004;                                      \
-    dma->cnt;                                                   \
-}
 
 /* Matched in the #65 strength-reduction retry
  * (docs/matching/archive/sr65-naked-retry.md). It needs strength reduction ON,
@@ -101,7 +93,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             u32 tiles;
             s32 j;
 
-            ClearOam(&oamA);
+            CLEAR_OAM(&oamA);
             tiles = self->tilesB;
             oamA.palette = 0xd;
             oamA.size = 2;
@@ -124,7 +116,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             if (slot->active) {
                 s32 pa, pd, affine;
 
-                ClearOam(&oamB);
+                CLEAR_OAM(&oamB);
                 pa = 0x1000000 / slot->velA;
                 pd = 0x1000000 / slot->velB;
                 affine = (pa != 0x100 || pd != pa);
@@ -217,7 +209,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
             MATCH_BARRIER();
         }
         QueueVramDmaTransfer(self->scratch, (void *)self->tilesC, 0x1000, 0x10);
-        ClearOam(&oamC);
+        CLEAR_OAM(&oamC);
         pa = 0x1000000 / slot->velA;
         pd = 0x1000000 / slot->velB;
         affine = (pa != 0x100 || pd != pa);
@@ -405,10 +397,7 @@ void UpdateLogoActor(struct actor_self *self)
     self->animTime += *(s16 *)&self->animTimer;
     self->animDone = 0;
     if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-        // clang-format off
-        self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
-                                    self->anims[self->animIndex].loopBase);
-        // clang-format on
+        ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
         self->animDone = 1;
     }
 }
@@ -459,10 +448,10 @@ void DrawLogoActor(struct actor_self *self)
         h = frame[1];
         halfH = h * 4;
         depth = self->z;
-        scale = (depth << 8) / self->record->baseDepth;
+        scale = Q8_DIV(depth, self->record->baseDepth);
         f = 0x100000 / depth;
-        sy = Q8_TO_INT(((self->y * f) >> 12) + 0x5000);
-        sx = Q8_TO_INT(((self->x * f) >> 12) + 0x7800);
+        sy = Q8_TO_INT(Q12_MUL(self->y, f) + 0x5000);
+        sx = Q8_TO_INT(Q12_MUL(self->x, f) + 0x7800);
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "math_util.h"
 #include "text.h"
 
 /* GitHub issue #46. Built with old_agbcc, which FontMeasureText needs. */
@@ -27,5 +28,5 @@ s32 FontMeasureText(struct bitmap_font *self, u8 *text)
             break;
         }
     }
-    return cur < maxWidth ? maxWidth : cur;
+    return CLAMP_MIN(cur, maxWidth);
 }

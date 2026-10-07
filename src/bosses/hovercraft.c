@@ -155,10 +155,7 @@ void UpdateJetpackCollectedWumpa(void *selfArg)
     self->base.animDone = 0;
     base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
-        // clang-format off
-        self->base.animTime -= INT_TO_Q8(self->base.anims[self->base.animIndex].loopThreshold -
-                                          self->base.anims[self->base.animIndex].loopBase);
-        // clang-format on
+        ANIM_REWIND(self->base.animTime, self->base.anims[self->base.animIndex]);
         self->base.animDone = one;
     }
 }
@@ -281,10 +278,10 @@ void *CreateJetpackCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 s
 
     {
         s32 a1 = dy - 0x1000;
-        s32 a2 = (a1 ^ (a1 >> 31)) - (a1 >> 31);
+        s32 a2 = ABS_BRANCHLESS(a1);
         s32 dx = self->base.y;
         s32 b1 = dx - 0x1000;
-        s32 b2 = (b1 ^ (b1 >> 31)) - (b1 >> 31);
+        s32 b2 = ABS_BRANCHLESS(b1);
 
         sum = a2 + b2;
         if (sum < 0) {
@@ -912,8 +909,8 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     gHovercraftHitFlashOn = 0;
     gHovercraftDistance = gHovercraftZ - INT_TO_Q8(GetCellAnimDistance());
     scale = __divsi3(0x1C00000, gHovercraftDistance);
-    gHovercraftScreenX = Q12_TO_INT(gHovercraftX * scale);
-    gHovercraftScreenY = Q12_TO_INT(scale * gHovercraftY);
+    gHovercraftScreenX = Q12_MUL(gHovercraftX, scale);
+    gHovercraftScreenY = Q12_MUL(scale, gHovercraftY);
     SetActorBgLayerDepth(gHovercraftDistance);
     {
         struct actor_self *self = gHovercraft;
@@ -955,16 +952,13 @@ void UpdateHovercraft(void)
         self->animTime += (s16)self->animTimer;
         self->animDone = 0;
         if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-            // clang-format off
-            self->animTime -= INT_TO_Q8(self->anims[self->animIndex].loopThreshold -
-                                         self->anims[self->animIndex].loopBase);
-            // clang-format on
+            ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
             self->animDone = 1;
         }
         gHovercraftDistance = gHovercraftZ - INT_TO_Q8(GetCellAnimDistance());
         scale = __divsi3(0x1C00000, gHovercraftDistance);
-        gHovercraftScreenX = Q12_TO_INT(gHovercraftX * scale);
-        gHovercraftScreenY = Q12_TO_INT(scale * gHovercraftY);
+        gHovercraftScreenX = Q12_MUL(gHovercraftX, scale);
+        gHovercraftScreenY = Q12_MUL(scale, gHovercraftY);
         SetActorBgLayerDepth(gHovercraftDistance);
         {
             struct actor_self *cur = gHovercraft;
