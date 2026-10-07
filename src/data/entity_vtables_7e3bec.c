@@ -27,7 +27,7 @@
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
-/* Used by aabb_setup.c, enemy_ctrl.c, wumpa.c,
+/* Used by aabb_setup.c, enemy_ctrl.cpp, wumpa.c,
  * sprite_obj.c (DestroySpriteObj), sprite_anim.c, graphics.c (nullsub_12,
  * ResetEntity, DestroyEntity). */
 const struct vtable_slot gEntityVtable[11] = {
@@ -136,7 +136,7 @@ const struct vtable_slot gPlayerVtable[15] = {
     VTABLE_SLOT(CollidePlayerWithObjects),
 };
 
-/* Used by enemy_ctrl.c, ctrl.cpp (Ctrl, include/ctrl.hpp), input_ctrl_queue.cpp, action_ctrl.c. */
+/* Used by enemy_ctrl.cpp, ctrl.cpp (Ctrl, include/ctrl.hpp), input_ctrl_queue.cpp, action_ctrl.c. */
 const struct vtable_slot gCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCtrl),
@@ -153,7 +153,7 @@ const struct vtable_slot gCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by enemy_ctrl_update.c, enemy_ctrl.c. */
+/* Used by enemy_ctrl_update.cpp, enemy_ctrl.cpp. */
 const struct vtable_slot gEnemyCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateEnemyCtrl),
@@ -170,7 +170,7 @@ const struct vtable_slot gEnemyCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by enemy_ctrl.c. */
+/* Used by enemy_ctrl.cpp. */
 const struct vtable_slot gPeriodicSpawnerVtable[11] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckEntityPlayerContact),
@@ -185,7 +185,7 @@ const struct vtable_slot gPeriodicSpawnerVtable[11] = {
     VTABLE_SLOT(DestroyPeriodicSpawner),
 };
 
-/* Used by enemy_ctrl_update.c, enemy_ctrl.c. */
+/* Used by enemy_ctrl_update.cpp, enemy_ctrl.cpp. */
 const struct vtable_slot gKnockedEnemyCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateKnockedEnemyCtrl),

@@ -365,7 +365,7 @@
    ],
    "consumer_files": [
     "player/player_event.c",
-    "enemies/enemy_ctrl.c",
+    "enemies/enemy_ctrl.cpp",
     "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
     "vehicle/polar_objects.c",
@@ -1476,7 +1476,7 @@
     "ResetEnemyCtrl"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.c"
+    "enemies/enemy_ctrl.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -7140,7 +7140,7 @@
     "DestroyPeriodicSpawner"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.c",
+    "enemies/enemy_ctrl.cpp",
     "objects/sprite_obj.c",
     "gfx/graphics.c"
    ],
@@ -7320,7 +7320,7 @@
     "CreateEnemyCtrl"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.c"
+    "enemies/enemy_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7344,7 +7344,7 @@
     "CreatePeriodicSpawner"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.c"
+    "enemies/enemy_ctrl.cpp"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -7369,7 +7369,7 @@
     "CreateKnockedEnemyCtrl"
    ],
    "consumer_files": [
-    "enemies/enemy_ctrl.c"
+    "enemies/enemy_ctrl.cpp"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

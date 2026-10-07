@@ -11,9 +11,12 @@
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * The knocked controller is a plain 0x10-byte controller (InitCtrl,
- * src/objects/ctrl.cpp; objects.h's `struct ctrl`), so its functions
- * take `void *`. */
+ * The subsystem is C++ (#664): the classes are EnemyCtrl, KnockedEnemyCtrl
+ * and PeriodicSpawner in include/enemy_ctrl.hpp. The prototypes below are
+ * their methods' C names (cxx_symbols.txt), for the vtables and the C
+ * callers (the level spawners). The knocked controller is a plain
+ * 0x10-byte controller (objects.h's `struct ctrl`), so its functions take
+ * `void *`. */
 
 #include "core.h"
 #include "actor.h"
@@ -51,7 +54,7 @@ extern s32 gHomingEnemyXSaved;
 extern s32 gHomingEnemyY;
 extern s32 gHomingEnemyYSaved;
 
-/* src/enemies/enemy_ctrl.c */
+/* src/enemies/enemy_ctrl.cpp */
 extern void SetEnemyMotionY(struct part_ctrl *self, s32 mode);
 extern void SetEnemyMotionX(struct part_ctrl *self, s32 mode);
 extern void SetEnemyAnimMode(struct part_ctrl *self, s32 mode);
@@ -81,7 +84,7 @@ extern void ResetKnockedEnemyCtrl(void *self);
 extern void DestroyKnockedEnemyCtrl(void *self, s32 flags);
 extern void *CreateKnockedEnemyCtrl(void *self);
 
-/* src/enemies/enemy_attack.c */
+/* src/enemies/enemy_attack.cpp */
 extern void UpdateEnemyAttackCycle(struct part_ctrl *self);
 extern void UpdateEnemyTriggerBox(struct part_ctrl *self);
 extern void SetEnemyState(struct part_ctrl *self, s32 state);
@@ -89,20 +92,20 @@ extern void SetEnemyRangeXSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 
 extern void SetEnemyRangeYSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3);
 extern void SetEnemyRangeX(struct part_ctrl *self, s32 radius);
 
-/* src/enemies/enemy_ctrl_update.c */
+/* src/enemies/enemy_ctrl_update.cpp */
 extern void UpdateEnemyCtrl(struct part_ctrl *self);
 extern void HitEnemy(struct part_ctrl *self, s32 unused, s32 state);
 
-/* src/enemies/enemy_motion.c */
+/* src/enemies/enemy_motion.cpp */
 extern void UpdateEnemyHomingX(struct part_ctrl *self);
 extern void UpdateEnemyHomingY(struct part_ctrl *self);
 extern void UpdateEnemyHop(struct part_ctrl *self);
 extern void UpdateEnemyFlipCycle(struct part_ctrl *self);
 
-/* src/enemies/enemy_patrol.c */
+/* src/enemies/enemy_patrol.cpp */
 extern void UpdateEnemyPatrol(struct part_ctrl *self);
 
-/* src/enemies/enemy_shooter.c */
+/* src/enemies/enemy_shooter.cpp */
 extern void UpdateEnemyShooter(struct part_ctrl *self);
 
 #endif /* GUARD_ENEMIES_H */
