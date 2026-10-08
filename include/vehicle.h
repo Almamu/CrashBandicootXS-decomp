@@ -64,16 +64,15 @@ struct vec3_words {
 /* actor_anim.h, and the file-local views of the objects (defined in the
  * .c files that use them). */
 struct anim_box;
+struct anim_table_record;
 struct actor_283c;
 struct actor_fa38;
-struct actor_falling;
 struct actor_once;
 struct jetpack_balloon;
 struct jetpack_bomber;
 struct jetpack_cannonball;
 struct jetpack_plane;
 struct jetpack_spawn_rec;
-struct kind_entry;
 
 /* src/actor/actor.cpp */
 extern void JetpackReloadPlayerTiles(void *arg0);
@@ -224,35 +223,29 @@ extern void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part
                                      s32 d, s32 velX, s32 velY);
 extern s32 IsJetpackCannonballUnshootable(struct jetpack_cannonball *self);
 
-/* src/vehicle/jetpack_player.c */
-extern void DispenseJetpackWumpa(void *self);
+/* src/vehicle/jetpack_player.cpp: JetpackPlayer's methods (vehicle.hpp)
+ * that the C files and the vtable data use, and a C-linkage getter */
 extern s32 CountJetpackBomber(void *player);
 extern s32 GetJetpackPlayerHpPercent(void *self);
 extern void SetJetpackCheckpoint(void *self);
 extern s32 IsJetpackPauseLocked(void *player);
-extern void AnimateJetpackPlayerPalette(void *self);
 extern void HealJetpackPlayer(void *self, s32 delta);
 extern void QueueJetpackWumpa(void *self, s32 delta);
-extern void JetpackPlayerStateResume(void *self);
-extern void JetpackPlayerStateBoost(void *self);
-extern void JetpackPlayerStateFall(void *self);
-extern void JetpackPlayerStateFinish(void *self);
-extern void JetpackPlayerStateEnter(void *self);
 extern void DestroyJetpackPlayer(void *self, s32 flags);
-extern void RunJetpackPlayerState(struct actor_self *self);
 extern u8 IsJetpackPlayerInactive(void);
 
-/* src/vehicle/jetpack_run.c */
+/* src/vehicle/jetpack_run.cpp: JetpackPlayer's (vehicle.hpp) */
 extern void FinishJetpackRun(void *self);
 extern void PassJetpackRing(void *self, s32 x, s32 y);
 extern void AllocJetpackPlayerTiles(void *self);
 
-/* src/vehicle/jetpack_shot.c */
-extern void UpdateJetpackShot(struct actor_falling *self);
-extern void *CreateJetpackShot(void *self, void *part, s32 b, s32 c, s32 d, s32 e, s32 f);
+/* src/vehicle/jetpack_shot.cpp: JetpackShot's (vehicle.hpp), for the
+ * vtable data */
+extern void UpdateJetpackShot(void *self);
 extern s32 IsJetpackShotUnshootable(void);
 
-/* src/vehicle/jetpack_spawn.c */
+/* src/vehicle/jetpack_spawn.cpp: the spawners (C linkage), and
+ * JetpackPlayer's virtual methods (vehicle.hpp), for the vtable data */
 extern void YetiStateStop(void);
 extern void *SpawnJetpackActor(struct jetpack_spawn_rec *rec, u8 alt, s32 dz);
 extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
@@ -262,16 +255,10 @@ extern void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c);
 extern void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d);
 extern void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e);
-extern void CreateJetpackPlayer(struct kind_entry *table, s32 z);
-extern struct actor_hp *InitJetpackPlayer(struct actor_hp *self, struct kind_entry *rec, s32 z);
-extern void UpdateJetpackPlayer(struct actor_hp *self);
-extern void DrawJetpackPlayer(struct actor_hp *self);
-extern void DamageJetpackPlayer(struct actor_hp *self, s32 dmg);
-extern void SteerJetpackPlayerY(void *self);
-extern void SteerJetpackPlayerX(void *self);
-extern void JetpackPlayerStateFly(struct actor_hp *self);
-extern void JetpackPlayerStateRollLeft(struct actor_hp *self);
-extern void JetpackPlayerStateRollRight(struct actor_hp *self);
+extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
+extern void UpdateJetpackPlayer(void *self);
+extern void DrawJetpackPlayer(void *self);
+extern void DamageJetpackPlayer(void *self, s32 dmg);
 
 /* src/vehicle/polar_aku_aku.c */
 extern void ClearPolarAkuAkuMask(void *self);
@@ -393,7 +380,7 @@ extern void UpdateYetiPalette(void);
 extern void UpdateYetiBg2(void);
 
 /* The vehicles' globals (sym_iwram.txt). */
-extern struct kind_entry *gJetpackAnimTable;
+extern struct anim_table_record *gJetpackAnimTable; /* actor_anim.h */
 extern s32 gJetpackBomberCount;
 extern s32 gJetpackBomberSfxTimer;
 extern u8 gJetpackFadeStarted;
@@ -429,7 +416,13 @@ extern u8 gPolarSteerEnabled;
 extern s32 gPolarSteerTime;
 extern s32 gPolarWumpaDispenseTimer;
 extern struct actor_self *gRiderlessPolar;
+/* The yeti's actor: an ActorSelf to the C++ files (actor_self.hpp), the
+ * C files see its C view. */
+#ifdef __cplusplus
+extern class ActorSelf *gYeti;
+#else
 extern struct actor_self *gYeti;
+#endif
 extern u8 gYetiBg2Page;
 extern u8 gYetiBg2PageFlip;
 extern s32 gYetiDistance;
@@ -487,9 +480,6 @@ extern const struct actor_pmf gJetpackPlaneStateFuncs[4];
 
 /* src/data/palette_strip_17c200.c */
 extern const u16 gJetpackFlashPalettes[3][16];
-
-/* src/data/actor_pmf_17c1c0.c */
-extern const struct actor_pmf gJetpackPlayerStateFuncs[8];
 
 /* src/data/actor_box_17c444.c */
 extern const struct anim_box gJetpackRocketBox;

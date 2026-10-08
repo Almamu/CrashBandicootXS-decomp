@@ -147,10 +147,11 @@ inline ActorSelf::~ActorSelf()
 #endif
 
 /* The actors with hit points (vehicle.h's `struct actor_hp`): the jetpack
- * levels' and the 3D bosses'. Its constructor is inline (InitHpActor,
- * jetpack_spawn.c). Slot 5 has no default in the ROM: the class's vtable
- * was never emitted, and each subclass returns its own constant; the
- * jetpack player's is this class's (IsJetpackPlayerUnshootable). */
+ * levels' and the 3D bosses'. Its constructor is inline (the C's
+ * InitHpActor): every subclass's expands it. Slot 5 has no default in the
+ * ROM: the class's vtable was never emitted, and each subclass returns its
+ * own constant; the jetpack player's is this class's
+ * (IsJetpackPlayerUnshootable). */
 class HpActor : public ActorSelf
 {
 public:

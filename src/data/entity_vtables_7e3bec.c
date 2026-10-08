@@ -820,7 +820,7 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
  * jetpack_crates.c, hovercraft.c (DestroyJetpackCollectedWumpa), polar_player_actions.c,
- * polar_pickups.c, jetpack_player.c, actor.c. */
+ * polar_pickups.c, jetpack_player.cpp, actor.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyActor),
@@ -1005,7 +1005,7 @@ const struct vtable_slot gPolarCheckpointCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by jetpack_spawn.c (CreateJetpackCheckpointText). */
+/* Used by jetpack_spawn.cpp (CreateJetpackCheckpointText). */
 const struct vtable_slot gJetpackCheckpointTextVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackCheckpointText),
@@ -1016,7 +1016,7 @@ const struct vtable_slot gJetpackCheckpointTextVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_spawn.c (CreateJetpackExplosion). */
+/* Used by jetpack_spawn.cpp (CreateJetpackExplosion). */
 const struct vtable_slot gJetpackExplosionVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackExplosion),
@@ -1027,7 +1027,7 @@ const struct vtable_slot gJetpackExplosionVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_spawn.c (CreateJetpackPlayer), jetpack_player.c. */
+/* Used by jetpack_spawn.cpp (CreateJetpackPlayer), jetpack_player.cpp. */
 const struct vtable_slot gJetpackPlayerVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackPlayer),
@@ -1038,7 +1038,7 @@ const struct vtable_slot gJetpackPlayerVtable[7] = {
     VTABLE_SLOT(GetJetpackPlayerHpPercent),
 };
 
-/* Used by jetpack_shot.c. */
+/* Used by jetpack_shot.cpp. */
 const struct vtable_slot gJetpackShotVtable[7] = {
     VTABLE_SLOT(NULL),       VTABLE_SLOT(DestroyJetpackShot), VTABLE_SLOT(UpdateJetpackShot),
     VTABLE_SLOT(DrawActor),  VTABLE_SLOT(DamageActor),        VTABLE_SLOT(IsJetpackShotUnshootable),

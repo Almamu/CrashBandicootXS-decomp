@@ -112,7 +112,7 @@ gSfxTable:
 
 @ gYetiPalette..0x0817C1C0 (categories 3-6 family data): src/data/anim_family_17aa6c.c
 
-@ gJetpackPlayerStateFuncs: src/data/actor_pmf_17c1c0.c
+@ gJetpackPlayerStateFuncs: src/data/actor_pmf_17c1c0.cpp
 
 @ gJetpackFlashPalettes: src/data/palette_strip_17c200.c
 
