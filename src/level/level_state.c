@@ -671,7 +671,7 @@ s32 LevelHasGemPathGem(void *self, s32 idx)
 
 /* Dispatches on `self+0xc4`'s "current index" field: index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
- * `hovercraft_parts.c`); indices `0x14`/`0x16`/`0x17` instead compute
+ * `hovercraft_parts.cpp`); indices `0x14`/`0x16`/`0x17` instead compute
  * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `SetLevelBoss`
  * above sets, apparently itself a pointer to a small record); anything
  * else returns `0`. */

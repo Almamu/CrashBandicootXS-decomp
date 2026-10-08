@@ -15,7 +15,8 @@
  * where the ROM only has a constructor inlined and its code is still C,
  * its signature is a placeholder until it is converted. Part 11e gives
  * the jetpack player (JetpackPlayer), its shot and the checkpoint banner's
- * and explosion's constructors their code.
+ * and explosion's constructors their code, part 11h the jetpack ring and
+ * the collected wumpa (src/bosses/hovercraft.cpp).
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
 #pragma interface
@@ -584,12 +585,42 @@ public:
     virtual ~JetpackRocket(); // 1 DestroyJetpackRocket
 };
 
+/* A jetpack ring (gJetpackRingVtable; vehicle.h's `struct jetpack_ring` is
+ * its C view). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
+ * (part 11h), its Update is still C (jetpack_crates.c, part 11g). */
 class JetpackRing : public HpActor
 {
 public:
+    u8 cued; // 0x58 - set once UpdateJetpackRing has played its cue
+
     // CreateJetpackRing
     JetpackRing(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~JetpackRing(); // 1 DestroyJetpackRing
+    virtual ~JetpackRing();      // 1 DestroyJetpackRing
+    virtual void Update();       // 2 UpdateJetpackRing (jetpack_crates.c)
+    virtual s32 IsUnshootable(); // 5 IsJetpackRingUnshootable
 };
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == sizeof(struct jetpack_ring));
+
+/* A collected wumpa of the jetpack levels (gJetpackCollectedWumpaVtable,
+ * src/bosses/hovercraft.cpp, part 11h; PolarCollectedWumpa's twin): it
+ * flies from where it was collected to the HUD's wumpa counter, and its
+ * destructor adds the fruit it carries. */
+class JetpackCollectedWumpa : public HpActor
+{
+public:
+    s32 velX;   // 0x58
+    s32 velY;   // 0x5C
+    s32 reward; // 0x60 - how many fruit the destructor adds
+
+    // CreateJetpackCollectedWumpa
+    JetpackCollectedWumpa(const struct anim_table_record *rec, s32 x, s32 y, s32 reward);
+    virtual ~JetpackCollectedWumpa(); // 1 DestroyJetpackCollectedWumpa
+    virtual void Update();            // 2 UpdateJetpackCollectedWumpa
+    virtual void Draw();              // 3 DrawJetpackCollectedWumpa
+    virtual s32 IsUnshootable();      // 5 IsJetpackCollectedWumpaUnshootable
+};
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCollectedWumpa) == 0x64);
 
 #endif /* GUARD_VEHICLE_HPP */

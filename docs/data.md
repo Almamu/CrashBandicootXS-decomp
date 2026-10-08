@@ -234,9 +234,9 @@ The first batch (all pointer tables, all byte-exact):
 | `actor_pmf_17c414.cpp` | `0x0817C414` | 1 actor PMF table, in C++ (`JetpackBalloon::stateFuncs`) |
 | `actor_pmf_17c42c.c` | `0x0817C42C` | 1 actor PMF table |
 | `actor_box_17c444.c` | `0x0817C444` | 1 `struct anim_box` |
-| `actor_pmf_17c450.c` | `0x0817C450` | 1 actor PMF table |
+| `actor_pmf_17c450.cpp` | `0x0817C450` | 1 actor PMF table, in C++ (`HovercraftFireball::stateFuncs`, docs/cplusplus.md) |
 | `singleton_kind_17c460.c` | `0x0817C460` | 2 singleton-kind records, a box, 1 keyframe |
-| `actor_state_17c4c8.c` | `0x0817C4C8` | 1 function table, 2 actor PMF tables |
+| `actor_state_17c4c8.cpp` | `0x0817C4C8` | 1 function table, 2 actor PMF tables, in C++ (`HovercraftCannon::stateFuncs`, `HovercraftLauncher::stateFuncs`) |
 | `hud_palettes_17c510.c` | `0x0817C510` | the ">" icon text, 4 palette halves |
 | `bg_package_17c594.c` | `0x0817C594` | 3 `struct bg_package` |
 | `credits_17c5d0.c` | `0x0817C5D0` | the credits (see "Credits") |

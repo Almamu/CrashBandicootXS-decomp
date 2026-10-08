@@ -21,9 +21,10 @@
 #include "objects.h"
 #include "player.h"
 
-/* A spawner object of the hovercraft fight (the cannon, launcher and
- * side gun, hovercraft_parts.c): `actor_self` plus a hit-point word, its
- * spawn cooldown/count and a "dead" flag. */
+/* A spawner object of the hovercraft fight (the cannon and the launcher):
+ * `actor_self` plus a hit-point word, its spawn cooldown/count and a
+ * "dead" flag. The C view of boss_actors.hpp's classes HovercraftCannon
+ * and HovercraftLauncher, same layout. */
 struct spawner {
     struct actor_self base;
     s32 hp;     // 0x54
@@ -41,7 +42,8 @@ struct spawner {
  * (jetpack_plane.cpp) fly around the constructor's `b`/`c`, and an
  * "exploding" flag. The hovercraft's sets the orbit up but never reads
  * it; it only flies straight on at `velZ`. The C view of
- * boss_actors.hpp's class AirshipFireball, same layout. */
+ * boss_actors.hpp's classes AirshipFireball and HovercraftFireball, same
+ * layout. */
 struct actor_orbit {
     struct actor_self base;
     s32 hp;       // 0x54
@@ -55,7 +57,8 @@ struct actor_orbit {
 
 /* The hovercraft cannon's muzzle flash (CreateHovercraftCannonFlash,
  * vtable gHovercraftCannonFlashVtable): `actor_self` plus hit points and
- * a flag that is always set. */
+ * a flag that is always set. The C view of boss_actors.hpp's class
+ * HovercraftCannonFlash, same layout. */
 struct cannon_flash {
     struct actor_self base;
     s32 hp;         // 0x54
@@ -217,13 +220,10 @@ extern void DestroyDingodile(void *self, s32 flags);
 extern void SetDingodileStep(void *self, s32 value);
 extern void SetDingodileNextState(void *self, s32 value);
 
-/* src/bosses/hovercraft.c */
+/* src/bosses/hovercraft.cpp: HovercraftFireball's methods
+ * (boss_actors.hpp) under their C names, for the vtable */
 extern void DamageHovercraftFireball(void *self, s32 delta);
 extern void UpdateHovercraftFireball(void *self);
-extern void *CreateHovercraftFireball(void *self, void *part, s32 b, s32 c, s32 d);
-extern void HovercraftFireballStateExplode(void *self);
-extern void HovercraftFireballStateFly(void *self);
-extern void RunHovercraftFireballState(void *self);
 extern u8 IsHovercraftFireballUnshootable(void *self);
 extern void UpdateHovercraftHitFlash(void);
 extern void RunHovercraftState(void);
@@ -242,33 +242,24 @@ extern void nullsub_34(void);
 extern s32 sub_80337FC(void);
 extern void nullsub_35(void);
 
-/* src/bosses/hovercraft_cannon.c */
-extern void HovercraftCannonStateFire(struct spawner *self);
+/* src/bosses/hovercraft_cannon.cpp: HovercraftCannon's methods
+ * (boss_actors.hpp) under their C names, for the vtable */
 extern void DamageHovercraftCannon(struct spawner *self, s32 dmg);
 extern void UpdateHovercraftCannon(struct actor_self *self);
-extern void *CreateHovercraftCannon(void *self, void *part, s32 b, s32 c, s32 d);
-extern void HovercraftCannonStateDestroyed(void *self);
-extern void HovercraftCannonStateWait(void *self);
-extern s32 RunHovercraftCannonState(struct actor_self *self);
 extern u8 IsHovercraftCannonUnshootable(void *self);
 
-/* src/bosses/hovercraft_cannon_flash.c */
+/* src/bosses/hovercraft_cannon_flash.cpp: HovercraftCannonFlash's methods
+ * (boss_actors.hpp) under their C names, for the vtable */
 extern void UpdateHovercraftCannonFlash(void *self);
-extern void *CreateHovercraftCannonFlash(void *self, void *part, s32 b, s32 c, s32 d);
-extern s32 RunHovercraftCannonFlashState(void *self);
 extern u8 IsHovercraftCannonFlashUnshootable(void *self);
 
-/* src/bosses/hovercraft_launcher.c */
-extern void HovercraftLauncherStateLaunch(struct spawner *self);
+/* src/bosses/hovercraft_launcher.cpp: HovercraftLauncher's methods
+ * (boss_actors.hpp) under their C names, for the vtable */
 extern void DamageHovercraftLauncher(struct spawner *self, s32 dmg);
 extern void UpdateHovercraftLauncher(struct actor_self *self);
-extern void *CreateHovercraftLauncher(void *self, void *part, s32 b, s32 c, s32 d);
-extern void HovercraftLauncherStateDestroyed(void *self);
-extern void HovercraftLauncherStateWait(void *self);
-extern s32 RunHovercraftLauncherState(struct actor_self *self);
 extern u8 IsHovercraftLauncherUnshootable(void *self);
 
-/* src/bosses/hovercraft_parts.c */
+/* src/bosses/hovercraft_parts.cpp */
 extern void StartHovercraftHitFlash(void);
 extern void SetHovercraftFlashColor(u8 flag);
 extern s32 GetHovercraftPartsLeft(void);
@@ -284,11 +275,11 @@ extern void HovercraftStateInactive(void);
 extern void HovercraftStateApproach(void);
 extern void HovercraftStateExplodeStub(void);
 
-/* src/bosses/hovercraft_side_gun.c */
-extern void *CreateHovercraftSideGun(void *self, void *part, s32 b, s32 c, s32 d, u8 eByte);
+/* src/bosses/hovercraft_side_gun.cpp: HovercraftSideGun's methods
+ * (boss_actors.hpp), and HovercraftCannonFlash's Damage, under their C
+ * names, for the vtables */
 extern void DamageHovercraftSideGun(void *self, s32 dmg);
 extern void UpdateHovercraftSideGun(void *self);
-extern void RunHovercraftSideGunState(void *self);
 extern u8 IsHovercraftSideGunUnshootable(void *self);
 extern void DamageHovercraftCannonFlash(void);
 
@@ -325,7 +316,13 @@ extern void AirshipStateInactive(void);
 
 /* src/vehicle/jetpack_spawn.cpp */
 extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);
-extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 d);
+/* `left` is the side gun's `bool` (HovercraftSideGun's constructor); only
+ * C++ calls it. */
+#ifdef __cplusplus
+extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, bool left);
+#else
+extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 left);
+#endif
 extern void SpawnHovercraftLauncher(s32 a, s32 b, s32 c);
 extern void SpawnHovercraftCannon(s32 a, s32 b, s32 c);
 extern void SpawnHovercraftFireball(s32 x, s32 y, s32 z);
@@ -362,7 +359,12 @@ extern s32 gAirshipVolleyCount;
 extern s32 gAirshipX;
 extern s32 gAirshipY;
 extern s32 gAirshipZ;
+/* The hovercraft is a bare AnimPart too (part 11h), and only C++ uses it. */
+#ifdef __cplusplus
+extern class AnimPart *gHovercraft;
+#else
 extern struct actor_self *gHovercraft;
+#endif
 extern const struct hovercraft_attack *gHovercraftAttack;
 extern s32 gHovercraftBg2Page;
 extern u8 gHovercraftBg2PageFlip;
@@ -473,13 +475,10 @@ extern const struct hovercraft_attack gHovercraftAttacks[2];
 extern const struct anim_box gHovercraftBox;
 extern const struct anim_frame_record gHovercraftKeyframes[1];
 
-/* src/data/actor_state_17c4c8.c */
-extern const struct actor_pmf gHovercraftCannonStateFuncs[3];
-extern const struct actor_pmf gHovercraftLauncherStateFuncs[3];
+/* src/data/actor_state_17c4c8.cpp, with HovercraftCannon's and
+ * HovercraftLauncher's state tables (boss_actors.hpp); the fireball's is
+ * in actor_pmf_17c450.cpp */
 extern void (*const gHovercraftStateFuncs[6])(void);
-
-/* src/data/actor_pmf_17c450.c */
-extern const struct actor_pmf gHovercraftFireballStateFuncs[2];
 
 /* src/data/player_pmf_16c250.c */
 extern const struct entry_set gMegaMixMotionSet;
