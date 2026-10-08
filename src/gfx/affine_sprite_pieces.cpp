@@ -3,7 +3,6 @@
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
 #include "gfx.h"
@@ -63,8 +62,8 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
     struct piece_info *info = (struct piece_info *)part->GetFrame();
     s32 tile = gObjVramCursor->GetTile();
     s32 scale = part->affine;
-    u16 pa;
-    u16 pd;
+    s16 pa; // the matrix scales, signed 8.8
+    s16 pd;
     s32 idx;
     s32 k;
     OamBuffer *buf;
@@ -88,10 +87,6 @@ void SpriteRenderer::DrawAffinePieces(Sprite *part, s32 *pos)
     buf->table[k + 1].attr[3] = 0;
     buf->table[k + 2].attr[3] = 0;
     buf->table[k + 3].attr[3] = pd;
-    /* Extra reference, no code: keeps `pa` live past `pd`, so cse2 leaves
-     * the call result in `pa` (r6) and `pd` as the copy (r7), as in the
-     * ROM. Without it the two registers swap. */
-    MATCH_USE(pa);
     oam.objMode = part->mirrorFlags.gfxMode;
     oam.mosaic = part->mirrorFlags.mosaic;
     oam.bpp = part->mirrorFlags.colorMode;
