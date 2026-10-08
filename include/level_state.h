@@ -142,7 +142,7 @@ struct level_state {
     // 0x000 - the per-attempt progress block, snapshotted into
     // `checkpointData`/`saveData` and restored from them (UpdateGameFrame)
     struct game_progress progress;
-    s32 unk_68; // 0x068
+    s32 unk_68; // 0x068 - zeroed at game start (UpdateGameFrame); nothing reads it
     s32 wumpa;  // 0x06C - at 100 it wraps and adds a life (CollectWumpa)
     // 0x070 - crates broken (AddBrokenCrate); reaching
     // `crateTotal` awards the crate gem (LEVEL_FLAG_CRATE_GEM)

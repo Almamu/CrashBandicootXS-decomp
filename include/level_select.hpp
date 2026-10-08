@@ -201,7 +201,7 @@ struct Twinkle {
 struct ZoomBgCntBits16 {
     u16 priority:2;
     u16 charBase:2;
-    u16 unk_4:2;
+    u16 unused_4:2; // bits 4-5, unused by the hardware
     u16 mosaic:1;
     u16 colors256:1;
     u16 screenBase:5;
@@ -236,10 +236,10 @@ public:
         struct {
             u8 priority:2; // 0x34
             u8 charBase:2;
-            u8 unk_34_4:3;
+            u8 unk_34_4:3; // bits 4-6: the two unused bits and mosaic
             u8 color256:1;
             u8 screenBase:5; // 0x35
-            u8 unk_35_5:1;
+            u8 wrap:1;       // bit 13, the affine wrap-around
             u8 screenSize:2;
         } __attribute__((packed)) bits;
         struct ZoomBgCntBits16 bits16;

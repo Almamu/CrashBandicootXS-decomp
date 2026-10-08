@@ -393,7 +393,7 @@ struct popup_glyph_src {
     s32 h;              /* 0x04 */
     const u32 *palette; /* 0x08 - tagged asset, size in the header's bits 9+ */
     const u32 *tiles;   /* 0x0c - tagged asset, size in the header's bits 8+ */
-    u32 unk_10;
+    u32 map;            /* 0x10 - bg_package's mapAsset, NULL for every logo; not read */
 };
 
 /* Loads the five logos: each one's tiles rearranged into 32x32 OAM cells
