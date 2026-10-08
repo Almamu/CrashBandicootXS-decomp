@@ -123,7 +123,7 @@ s32 gJetpackPlaneHopSpeeds[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 u16 *gFlashBgPalette = (u16 *)(PLTT + 0x20);
 u16 *gFlashObjPalette = (u16 *)(PLTT + 0x340);
 
-/* title_screen_init.c: the four OBJ sprite packages of
+/* title_screen_init.cpp: the four OBJ sprite packages of
  * src/data/level_gfx_17cff4.c. */
 const void *gTitleObjPackages[4] = {
     &gTitleCrashObj,

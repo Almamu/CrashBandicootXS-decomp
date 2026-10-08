@@ -755,7 +755,7 @@ the code starts over there.
 
 `gTitleScreenBg` and `gUniversalLogoBg` are each a BG2
 picture (`struct bg_package`) followed by the motion scripts of the
-countdown slots of `title_screen.c`: `struct delta_record`s
+countdown slots of `title_screen.cpp`: `struct delta_record`s
 (a hold count, positions, velocities, per-frame deltas), in sequences
 that end with a zero hold. The seed tables (`popup_glyphs_17cf40.c`'s
 `gTitleLogoPieceSeeds`, `slot_seeds_17d6c0.c`'s `gVvLogoPieceSeeds`)

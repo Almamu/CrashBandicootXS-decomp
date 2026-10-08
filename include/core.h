@@ -20,7 +20,7 @@
 
 #define STATIC_ASSERT(COND, MSG) typedef char static_assertion_##MSG[(!!(COND))*2-1]
 /* COMPILE_TIME_ASSERT(TAG, COND): TAG is the file's name with the dot
- * replaced (`logo_screen_h`, `actor_spawn_c`). The typedef is named after
+ * replaced (`frontend_hpp`, `actor_spawn_c`). The typedef is named after
  * the tag and __LINE__, so asserts in different files can sit on the same
  * line number (agbcc has no __COUNTER__). A typedef emits no code. */
 #define COMPILE_TIME_ASSERT3(T, X, L) STATIC_ASSERT(X,T##_at_line_##L)

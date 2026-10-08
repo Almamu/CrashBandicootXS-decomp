@@ -1,32 +1,34 @@
 #ifndef GUARD_FRONTEND_HPP
 #define GUARD_FRONTEND_HPP
 
-/* The front end's classes as C++ (#664, docs/cplusplus.md, parts 10b
- * and 10c):
+/* The front end's classes as C++ (#664, docs/cplusplus.md, parts 10b,
+ * 10c and 10c-2):
  *
  *   Starfield       0x14                     src/frontend/starfield.cpp
  *   Credits         0x98                     src/frontend/credits.cpp
  *   ContinuePrompt  0x24                     src/frontend/credits.cpp,
  *                                            src/menus/continue_prompt*.cpp
+ *   TitleScreen     0x220                    src/frontend/title_screen_init.cpp,
+ *                                            title_screen.cpp
  *   CompanyLogos    0x44C                    src/frontend/company_logos.cpp,
- *                                            language_select.cpp
- *                                            (and title_screen.c, still C)
+ *                                            language_select.cpp,
+ *                                            title_screen.cpp
  *   LogoActor       0x54   gLogoActorVtable  src/frontend/company_logos.cpp,
  *                                            language_select.cpp
  *   LanguageSelect  0x14                     src/frontend/language_select.cpp,
  *                                            language_select_setup.cpp
  *
  * The sizes are the ROM's (the allocations in RunCredits,
- * RunContinuePrompt, ShowCompanyLogos, RunCompanyLogos,
+ * RunContinuePrompt, UpdateGameFrame, ShowCompanyLogos, RunCompanyLogos,
  * OpenLanguageSelect and InitLanguageSelect). Only the logo actor has a
  * vtable; the others are plain classes with a constructor and a
  * destructor (`delete` calls the destructor with 3, and it frees the
  * object when bit 0 is set).
  *
  * The C files see these objects through C structs (frontend.h's struct
- * logo_screen and struct actor_self; struct language_select and struct
- * credits_screen are opaque tags) and prototypes; cxx_symbols.txt maps
- * the methods to those names.
+ * actor_self; struct language_select, struct credits_screen and struct
+ * title_screen are opaque tags) and prototypes; cxx_symbols.txt maps the
+ * methods to those names.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
 #pragma interface
@@ -36,7 +38,6 @@
 extern "C" {
 #include "core.h"
 #include "gfx.h"
-#include "logo_screen.h"
 #include "math_util.h"
 #include "frontend.h"
 #include "menus.h"
@@ -155,15 +156,89 @@ public:
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == 0x24);
 
+/* One logo piece (0x34 bytes): the title screen has nine, the company
+ * logos twenty (the Vicarious Visions logo's). It moves through its
+ * motion (struct delta_record, frontend.h) a step at a time: while
+ * `countdown` runs it adds the five deltas each frame, and when it runs
+ * out it loads the next step from `record`. */
+struct LogoPiece {
+    u8 active; // 0x00
+    u8 pad_01[3];
+    s32 countdown; // 0x04 - frames left in this step
+    union {
+        s32 q; // 0x08 - Q16.16 x
+        struct {
+            u16 frac;
+            s16 i;
+        } h;
+    } posA;
+    union {
+        s32 q; // 0x0C - Q16.16 y
+        struct {
+            u16 frac;
+            s16 i;
+        } h;
+    } posB;
+    s32 posC;                          // 0x10
+    s32 velA;                          // 0x14 - x scale (Q24.8)
+    s32 velB;                          // 0x18 - y scale (Q24.8)
+    s32 deltaA;                        // 0x1C - added to posA each frame
+    s32 deltaB;                        // 0x20 - to posB
+    s32 deltaC;                        // 0x24 - to posC
+    s32 deltaD;                        // 0x28 - to velA
+    s32 deltaE;                        // 0x2C - to velB
+    const struct delta_record *record; // 0x30 - the next motion step
+};
+
+COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoPiece) == 0x34);
+
+/* The title screen (InitTitleScreen, RunTitleScreen and
+ * DestroyTitleScreen, from game_frame.c; 0x220 bytes): the CRASH
+ * BANDICOOT logo flying in over the starfield, piece by piece, then the
+ * three-item menu. */
+class TitleScreen
+{
+public:
+    s32 selection;            // 0x000 - the menu choice Run returns (0-2)
+    s32 blinkCounter;         // 0x004 - the selected item blinks with bit 2
+    u8 menuShown;             // 0x008 - Draw draws the menu items
+    u8 unk_009[3];            //
+    struct bitmap_font *font; // 0x00C - gSmallFont
+    LogoPiece pieces[9];      // 0x010
+    s32 landTimer[9];         // 0x1E4 - -1 until the piece lands, then frames to its cue
+    Starfield *starfield;     // 0x208
+    s32 shake;                // 0x20C - frames the BG2 logo keeps shaking
+    u32 cheatHash;            // 0x210 - CheatInput's rolling hash
+    s32 bgX;                  // 0x214 - REG_BG2X
+    s32 bgY;                  // 0x218 - REG_BG2Y
+    s32 bgScale;              // 0x21C - REG_BG2PA/PD
+
+    TitleScreen();                         // InitTitleScreen
+    ~TitleScreen();                        // DestroyTitleScreen
+    void LoadBg();                         // LoadTitleScreenBg
+    void LoadObjTiles();                   // LoadTitleScreenObjTiles
+    void UpdateLogoPieces();               // UpdateTitleLogoPieces
+    void DrawLogoPieces();                 // DrawTitleLogoPieces
+    u32 CheatInput(u32 pressed);           // TitleScreenCheatInput
+    void HashInput(u32 val);               // inline: CheatInput's, HashCheatInput's body
+    s32 Run();                             // RunTitleScreen
+    void CommitFrame();                    // CommitTitleScreenFrame
+    void DrawMenuItem(s32 text, s32 item); // DrawTitleMenuItem
+    void Draw();                           // DrawTitleScreen
+    void HashCheatInput(u32 val);          // HashTitleCheatInput (unused)
+    void ResetLogoPieces();                // ResetTitleLogoPieces (unused)
+};
+
+COMPILE_TIME_ASSERT(frontend_hpp, sizeof(TitleScreen) == 0x220);
+
 /* The 0x44C-byte company-logo screen (ShowCompanyLogos, level_state.c):
- * the Vicarious Visions logo's 20 pieces (struct logo_piece), the frame
- * strip of its last one, then the Universal logo on BG2. Its constructor
- * is empty. */
+ * the Vicarious Visions logo's 20 pieces, the frame strip of its first
+ * one, then the Universal logo on BG2. Its constructor is empty. */
 class CompanyLogos
 {
 public:
-    struct logo_piece slots[20]; // 0x000
-    u8 sfxPending[0x12];         // 0x410 - per-slot "play the cue once" flags
+    LogoPiece slots[20]; // 0x000
+    u8 sfxPending[0x12]; // 0x410 - per-slot "play the cue once" flags
     u8 pad_422[2];
     u32 tilesA;    // 0x424 - OBJ VRAM tile block (0x1200 bytes)
     u32 tilesB;    // 0x428 - OBJ VRAM tile block (0x400 bytes)
@@ -187,7 +262,7 @@ public:
     void LoadAssetBuffered(const void *asset, void *dest); // LoadTaggedAssetBuffered
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(CompanyLogos) == sizeof(struct logo_screen));
+COMPILE_TIME_ASSERT(frontend_hpp, sizeof(CompanyLogos) == 0x44C);
 
 /* The company logos' 3D actor (gLogoActorVtable): Crash, who walks on
  * between the logos (UpdateLogoActor's states 0-4), double-buffering his

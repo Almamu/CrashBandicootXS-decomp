@@ -14,7 +14,8 @@ is still open. They are kept up to date.
   functions (#553) and why they stay assembly.
 - [per-file-flags-investigation.md](./per-file-flags-investigation.md):
   whether the original build used per-file optimization flags, and the
-  evidence for the Makefile's `NO_STRENGTH_REDUCE_OBJS`.
+  evidence for the Makefile's former `NO_STRENGTH_REDUCE_OBJS` (gone
+  since #664 part 10c-2).
 - [eeprom-sdk-o1.md](./eeprom-sdk-o1.md): why the Nintendo EEPROM
   library (`lib/agb_eeprom/`) is built at `-O1` (`O1_OBJS`).
 

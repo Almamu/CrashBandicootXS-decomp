@@ -361,23 +361,6 @@ CXX_SYMBOLS := cxx_symbols.txt
 $(CXX_OBJS): CC1FLAGS += -fno-rtti -fno-exceptions
 $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 
-# Objects built with -fno-strength-reduce on top of their compiler's -O2.
-# title_screen.o: InitVvLogoPieces's first loop keeps its up-counting
-# `i` (with strength reduction on, gcc reverses a loop whose counter only
-# feeds the exit test), and the flag leaves every other real-C function in
-# the file byte-identical. It is NOT a global property: adding it to all
-# old_agbcc objects breaks matched functions in 11 other files, and
-# DrawTitleLogoPieces (title_screen_init.o, split off for this reason) needs
-# strength reduction ON: its up-counting inner loop must be reversed. See
-# docs/matching/per-file-flags-investigation.md and
-# docs/matching/archive/issue-64-65-naked-retry-2.md. company_logos.o
-# (DrawVvLogoPieces onward) was split off it for the same reason and is NOT
-# listed: DrawVvLogoPieces's reversed header loop and reduced row pointer need
-# strength reduction on; the rest of that file also matches with it on
-# (docs/matching/archive/sr65-naked-retry.md).
-NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/frontend/title_screen.o
-$(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
-
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
 # link_session_reset.c holds only ResetLinkSessionState, which is real C: it keeps the
 # ROM's up-counting inner copy loop only with this flag (the rerun pass

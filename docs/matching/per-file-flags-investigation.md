@@ -1,5 +1,15 @@
 # Per-file optimization flags: investigation
 
+> **Update (#664 part 10c-2):** the one flag this page found,
+> `-fno-strength-reduce` on title_screen.o, is gone. Converted to C++
+> (title_screen.cpp, [cplusplus.md](../cplusplus.md)), `InitVvLogoPieces`
+> is the plain indexed loop (`slots[i].countdown =
+> gVvLogoPieceSeeds[i].hold + 1`), which matches with strength reduction
+> on, as does every other function in the file. The C's hand-written
+> pointer walks, which matched only without strength reduction, were the
+> C front end's problem, not a per-file flag of the original build. The
+> rest of the page is the investigation as it was.
+
 Question: besides the old_agbcc/agbcc split, did the original build
 also use different `-O2` sub-flags for some translation units? The lead
 came from issue #65's retry pass (`issue-65-naked-retry.md`): three NAKED

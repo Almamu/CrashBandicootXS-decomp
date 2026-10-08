@@ -532,6 +532,8 @@ counts them by kind) and what the C++ still needs.
 | `src/menus/power_dialog_draw.cpp` | `PowerDialog`'s `Draw`, `Animate`, `CommitFrame`, destructor; the four `Show*Dialog`s and the save block's counts (C linkage) | 4 + 12 | **old_agbcp** (was agbcc) | 18 pins, 4 `asm`, 6 retyped reads -> 0 | 10d |
 | `src/menus/continue_prompt_init.cpp` | `ContinuePrompt`'s constructor (include/frontend.hpp) | 1 | **old_agbcp** (was agbcc) | 13 pins, 4 `asm`, 1 keep -> 0 | 10d |
 | `src/menus/continue_prompt.cpp` | `ContinuePrompt::InitGraphics`, `Loop` | 2 | old_agbcp | 1 use, 1 keep -> the same | 10d |
+| `src/frontend/title_screen_init.cpp` | `TitleScreen`'s constructor, `LoadBg`, `LoadObjTiles`, `UpdateLogoPieces`, `DrawLogoPieces` (include/frontend.hpp) | 5 | old_agbcp | 18 pins, 5 `asm`, 12 per-field inline accessors -> 1 pin | 10c-2 |
+| `src/frontend/title_screen.cpp` | `TitleScreen`'s `CheatInput`, `Run`, `CommitFrame`, `DrawMenuItem`, `Draw`, `HashCheatInput`, `ResetLogoPieces`, destructor; `CompanyLogos::Run`, `LoadVvLogoGraphics`, `InitVvLogoPieces`, `UpdateVvLogoPieces` | 12 | old_agbcp, **with strength reduction** (was `-fno-strength-reduce`) | 10 pins, 2 keeps, 5 uses, 1 const, 23 per-field inline accessors (12 of them copies of title_screen_init.c's), the hand-written vtable calls -> 1 pin, 5 uses, 1 const | 10c-2 |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1793,7 +1795,7 @@ the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
 |---|---:|---|---|
 | `ActorSelf` | 0x54 | gActorVtable (a root class: the vtable pointer at +0x50) | still C (src/actor/actor.c) |
 | `LogoActor` | 0x54 | gLogoActorVtable (an `ActorSelf`) | company_logos.cpp, language_select.cpp (destructor) |
-| `CompanyLogos` | 0x44C | none | company_logos.cpp, language_select.cpp, and title_screen.c (still C) |
+| `CompanyLogos` | 0x44C | none | company_logos.cpp, language_select.cpp, and title_screen.c (still C; C++ since part 10c-2) |
 | `LanguageSelect` | 0x14 | none | language_select.cpp, language_select_setup.cpp |
 | `Starfield` | 0x14 | none | still C (src/frontend/starfield.c; C++ since part 10c) |
 
@@ -1810,7 +1812,7 @@ the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
   destructor calls. `InitLogoActor` is `LogoActor(anim) : ActorSelf(anim,
   0, 0, 0x100)`. Part 11 builds the rest of the 3D actors on this class.
 - **The screens are plain classes.** `CompanyLogos` (the C's `struct
-  logo_screen`, which title_screen.c still uses) has an empty constructor
+  logo_screen`, which title_screen.c still used until part 10c-2) has an empty constructor
   and destructor (`InitCompanyLogos`, `DestroyCompanyLogos`), and
   `LoadTaggedAssetBuffered`, whose unused first argument is the screen
   (LoadVvLogoGraphics's), is its method `LoadAssetBuffered`.
@@ -2002,6 +2004,90 @@ differs, also in C++. C idioms kept: `RunPauseMenu`'s `mgr_12c` accessor
 trial page's byte offset into the save block, and `CountGems`' shifts of
 the colored-gem flags.
 
+### The title screen (part 10c-2)
+
+Part 10c-2 in numbers: the last two objects of src/frontend/
+(title_screen_init.c and title_screen.c, ROM 0x080354E0-0x0803686C), 17
+functions: the title screen (`TitleScreen`, include/frontend.hpp) and four
+of `CompanyLogos`'s methods. With it every object of src/frontend/ is C++.
+Project-wide: `MATCH_HOLD_REG` 1125 -> 1099, instruction-emitting `asm`
+114 -> 109 and `MATCH_KEEP` 31 -> 29. Both objects were old_agbcc C
+already; title_screen.o loses its `-fno-strength-reduce`, and the
+Makefile's `NO_STRENGTH_REDUCE_OBJS` with it.
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `TitleScreen` | 0x220 | none | title_screen_init.cpp, title_screen.cpp |
+| `CompanyLogos` | 0x44C | none | company_logos.cpp, language_select.cpp, title_screen.cpp (`Run`, `LoadVvLogoGraphics`, `InitVvLogoPieces`, `UpdateVvLogoPieces`) |
+| `LogoPiece` | 0x34 | (a struct) | the logo pieces of both screens |
+
+- **The classes.** `TitleScreen` replaces the `u32 *` the C reached the
+  title screen through (`self[0x82]`, `self[5]`, `TITLE_SCREEN(self)`):
+  its constructor (`InitTitleScreen`) is `new Starfield` and the loads, its
+  destructor `delete starfield` and the screen blank, and game_frame.c
+  keeps calling `InitTitleScreen(OperatorNew(0x220))`, `RunTitleScreen`
+  and `DestroyTitleScreen(p, 3)` by their C names. `CompanyLogos::Run` is
+  `new LogoActor(&gLogoActorAnim)` (the class's own `operator new`, the
+  C's inline `New`), `part->Update()` and `part->Draw()` (the C spelled
+  out the vtable's slots 2 and 3), `delete part`, `new`/`delete
+  Starfield` and `delete[]` of the frame buffers.
+- **The C views go.** No C file reads the title screen or the company
+  logos: `struct title_screen` is an opaque tag (frontend.h),
+  `TITLE_SCREEN()` went, and so did logo_screen.h (`struct logo_screen`
+  and `struct logo_piece`; the piece is `LogoPiece` in frontend.hpp, with
+  its five deltas named). frontend.h's dead prototypes went too: the
+  starfield's seven, the title screen's but the three game_frame.c calls,
+  `CompanyLogos`'s but `RunCompanyLogos` (level_state.c), and
+  `InitLogoActor`, `DrawVvLogoPieces` and `LoadUniversalLogoBg`.
+- **The fonts are still C** (src/text/): the font calls stay spelled out
+  (`ICON_TEXT_CALL`, `SetFontTileBase`).
+
+What made the C++ match:
+
+- **Strength reduction is back on for title_screen.o.** Its C needed
+  `-fno-strength-reduce` (#64/#65, docs/matching/per-file-flags-investigation.md)
+  for `InitVvLogoPieces`, whose hand-written pointer walks only matched
+  without it. As C++, the plain indexed loop (`slots[i].countdown =
+  gVvLogoPieceSeeds[i].hold + 1; slots[i].record = ...`) matches with it
+  on, and the other eleven functions of the file match either way.
+- **The per-field inline accessors went.** `UpdateTitleLogoPieces` and
+  `UpdateVvLogoPieces` used a one-line `static inline` accessor per field
+  (`PosCAt(self, stride)`, `SLOT20_ACCESSOR`; 35 in the two files) so that each field address
+  was computed afresh as `self + K + i * 0x34`, plus 9 pins. In C++ the
+  plain `pieces[i].posC += pieces[i].deltaC` gives exactly that code, and
+  `record = pieces[i].record++` the ROM's r0/r2 split of the record
+  pointer, where the C pinned it.
+- **`LoadObjTiles`'s five `asm` statements and nine of its ten pins
+  went.** The tile remap (`tiles + ((map[i] & 0xff) << 5)`, a plain
+  indexed loop), the `ldm r7!` of the next package
+  (`(*pkg++)->mapAsset`) and the DMA readback come out as written, with
+  the inner loop's DMA base in its own variable (one variable for both
+  loads is kept in a callee-saved register). One pin is left, below.
+- **The cheat hash** is an inline method, `HashInput(val)`, the body of the
+  unused `HashCheatInput` too: the inline's argument is loaded before
+  `&cheatHash`, so cross-jumping shares the rest of the seven branches, as
+  in the ROM. Its rotate's left shift is `v * 2`: `(v << 1) | (v >> 31)`
+  is combined into a `ror`, which the ROM doesn't have (the C pinned four
+  registers and kept one in each copy).
+- **Smaller ones:** the constructor's palette DMAs are written out (an
+  inline with the destination as a parameter shares the constants), the
+  fade and timer pointers of `CompanyLogos::Run` and `UpdateVvLogoPieces`
+  (`fade = &SLOT_SYSTEM(self)->fade`) are the plain members, and
+  `LoadVvLogoGraphics`'s buffers are `frames = buf = new u8[size]` and
+  `scratch = new u8[0x1000]`.
+
+Kept, each with a comment: `LoadObjTiles`'s `next` package, pinned to r8.
+The ROM keeps `pkg` in r7 only until the map load and the next package in
+r8 across the inner loop (`mov r8, r7` ... `mov r7, r8`), where the inner
+loop's 0x80000010 reuses r7: a copy in a second variable gives that, but
+unpinned it and the pass counter swap r8 and r9. `CompanyLogos::Run`'s r1
+pin on the fade-out value, as in the C. C idioms kept: `Run`'s and
+`ResetLogoPieces`' seed loops (`goto` loops with their address sums
+written out, the `MATCH_USE`s and the `MATCH_CONST` of the C; the natural
+loop is strength-reduced), `DrawLogoPieces`' `px + dx` locals and counter
+addresses, `LoadBg`'s `bg2cnt = bg2cnt`, and the `u8 *` walk of the
+pieces' active flags (`slot[offsetof(TitleScreen, pieces[0].active)]`).
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -2054,11 +2140,12 @@ player, then the first item here, is C++ since part 8):
   (src/vehicle/: the jetpack, polar and yeti files) and the 3D bosses
   (airship*.c, hovercraft*.c).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
-  fonts (src/text/), the menus and frontend screens (save menu, title
-  screen; the language select and the logo actor are C++ since part 10b,
-  the starfield, the credits and part of the continue prompt since part
-  10c, the pause menu, the power dialog and the rest of the continue
-  prompt since part 10d), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
+  fonts (src/text/), the menus (the save menu, and the pause menu's and
+  the power dialog's plain-C files; all of src/frontend/ is C++: the
+  language select and the logo actor since part 10b, the starfield, the
+  credits and part of the continue prompt since part 10c, the title
+  screen since part 10c-2; the pause menu, the power dialog and the rest
+  of the continue prompt since part 10d), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
   in system/boot.c) and the room code (play_room.c, run_room.c).
 
 ### Next batches
@@ -2112,9 +2199,9 @@ PR, as before):
    the continue prompt's last methods), ~~the pause menu and the power
    dialog~~ (part 10d: pause_menu.c, pause_menu_pages_init.c,
    power_dialog.c, power_dialog_draw.c and continue_prompt*.c, the objects
-   with C++ traits; the classes' plain-C files stay C), then
-   title_screen_init.c and title_screen.c (`CompanyLogos`'s other methods
-   and the title screen).
+   with C++ traits; the classes' plain-C files stay C) and
+   ~~title_screen_init.c and title_screen.c~~ (part 10c-2: `CompanyLogos`'s
+   other methods and the title screen).
 9. **The 3D actors** (part 11 onwards): `ActorSelf` (vtable pointer at
    +0x50; part 10b declared it, include/actor_self.hpp), actor*.c first,
    then the vehicles and the 3D bosses; the PMF tables become `const
@@ -2474,6 +2561,20 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   body, with its own vtable pointer store: the C's two stores (the class's
   table, then the base's) and the base's code after the body are g++'s
   (`~LogoActor` with `~ActorSelf`'s actor list unlink inlined; part 10b).
+- **A pointer the ROM moves to another register mid-loop** (`mov r8, r7`
+  after its last use, `mov r7, r8` before the loop's test, and r7 reused in
+  between) is two variables: the loop's pointer, and a copy of it taken
+  after its last use and copied back at the end (`next = pkg; ... pkg =
+  next;`). flow folds the copy into the post-increment (`ldm r7!`). The
+  two registers may still need a pin (`TitleScreen::LoadObjTiles`, part
+  10c-2).
+- **`(v << 1) | (v >> 31)` is a rotate** to combine, which emits `ror`.
+  Where the ROM has the two shifts and the `orr`, write the left shift as
+  `v * 2` (`TitleScreen::HashInput`, part 10c-2).
+- **A loop that matched only with `-fno-strength-reduce` in C** may match
+  with it on in C++, written as the plain indexed loop: the C's pointer
+  walks were the workaround (`CompanyLogos::InitVvLogoPieces`, part 10c-2,
+  which removed the project's only `-fno-strength-reduce`).
 - **A value the ROM keeps in a call-clobbered register across a call**
   (saved to the stack just before the `bl`, loaded back later) ranked
   below every callee-saved candidate in the ROM's allocation; when g++

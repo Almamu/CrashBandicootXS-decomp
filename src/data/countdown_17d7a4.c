@@ -14,7 +14,7 @@ extern const u8 gUniversalLogoBgMap[];
 const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gUniversalLogoBgPalette, (void *)gUniversalLogoBgTiles, (void *)gUniversalLogoBgMap };
 
 /* The motion sequences of the twenty countdown slots of InitVvLogoPieces
- * (title_screen.c), which slot_seeds_17d6c0.c's
+ * (title_screen.cpp), which slot_seeds_17d6c0.c's
  * gVvLogoPieceSeeds seeds: each ends with a zero hold. */
 const struct delta_record gVvLogoPieceMotion00[11] = {
     { 79, 120, 80, 0, 76, 76, 0, 0, 0, 580, 580 },

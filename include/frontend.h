@@ -20,7 +20,6 @@
 #include "core.h"
 #include "actor_self.h"
 #include "graphics_package.h"
-#include "logo_screen.h"
 #include "vtable.h"
 
 /* The language select (OpenLanguageSelect/RunLanguageSelect/
@@ -54,29 +53,10 @@ struct slot_seed {
     s32 hold;
 };
 
-/* The 0x220-byte title-screen object (UpdateGameFrame's
- * `OperatorNew(0x220)`, InitTitleScreen/RunTitleScreen): nine logo pieces,
- * the starfield behind them and the BG2 affine scroll. The title-screen
- * functions still take it as a `u32 *` and reach most of it by word
- * index (`self[N]`); TITLE_SCREEN() names the rest. */
-struct title_screen {
-    s32 selection; // 0x000 - the menu choice RunTitleScreen returns
-    u8 unk_004[4];
-    u8 menuShown; // 0x008 - DrawTitleScreen draws the menu items
-    u8 unk_009[3];
-    struct bitmap_font *font;    // 0x00C - gSmallFont
-    struct logo_piece pieces[9]; // 0x010
-    s32 landTimer[9];            // 0x1E4 - -1 until the piece lands, then frames to `shake`
-    void *starfield;             // 0x208 - InitStarfield
-    s32 shake;                   // 0x20C - frames the BG2 logo keeps shaking
-    u32 cheatHash;               // 0x210 - TitleScreenCheatInput's rolling hash
-    s32 bgX;                     // 0x214 - REG_BG2X
-    s32 bgY;                     // 0x218 - REG_BG2Y
-    s32 bgScale;                 // 0x21C - REG_BG2PA/PD
-};
-COMPILE_TIME_ASSERT(frontend_h, sizeof(struct title_screen) == 0x220);
-
-#define TITLE_SCREEN(self) ((struct title_screen *)(self))
+/* The title screen (InitTitleScreen/RunTitleScreen/DestroyTitleScreen,
+ * from game_frame.c). Its class, TitleScreen, is in frontend.hpp; no C
+ * file reads its fields. */
+struct title_screen;
 
 /* The credits screen (RunCredits, 0x98 bytes). Its class, Credits, is
  * in frontend.hpp; no C file reads its fields. */
@@ -150,11 +130,7 @@ extern const u8 gCreditsEmptyText[4];
 extern const struct bg_package gCreditsLogos[5];
 
 /* src/frontend/company_logos.cpp (C++, frontend.hpp: the C names of
- * CompanyLogos's and LogoActor's methods, for the vtable data and the C
- * callers) */
-extern void DrawVvLogoPieces(struct logo_screen *self);
-extern void LoadUniversalLogoBg(u32 *self);
-extern struct actor_self *InitLogoActor(struct actor_self *self, const void *anim);
+ * LogoActor's methods, for the vtable data) */
 extern void UpdateLogoActor(struct actor_self *self);
 extern void DrawLogoActor(struct actor_self *self);
 
@@ -187,38 +163,16 @@ extern void *InitLanguageSelect(struct language_select *self);
 extern void CloseLanguageSelect(void);
 extern void OpenLanguageSelect(void);
 
-/* src/frontend/starfield.cpp (C++, frontend.hpp: Starfield's methods) */
-extern void *InitStarfield(void *self);
-extern void DrawStarfield(void *self);
-extern void SpawnStar(void *mgr, s32 idx);
-extern void PlotStarfieldPixel(void *mgr, u32 x, s32 y, s32 val);
-extern void UpdateStarfield(void *mgr);
-extern void StarfieldWaitForButton(void *mgr);
-extern void DestroyStarfield(void *self, s32 flags);
-
-/* src/frontend/title_screen_init.c */
-extern void *InitTitleScreen(u32 *self);
-extern void LoadTitleScreenBg(u32 *self);
-extern void LoadTitleScreenObjTiles(u32 *self);
-extern void UpdateTitleLogoPieces(u32 *self);
-extern void DrawTitleLogoPieces(u32 *self);
-
-/* src/frontend/title_screen.c */
-extern u32 TitleScreenCheatInput(u32 *self, u32 pressed);
-extern s32 RunTitleScreen(u32 *self);
-extern void CommitTitleScreenFrame(u32 *self);
-extern void DrawTitleMenuItem(u32 *self, s32 text, s32 variant);
-extern void DrawTitleScreen(u32 *self);
-extern void HashTitleCheatInput(u32 *self, u32 val);
-extern void ResetTitleLogoPieces(u32 *self);
-extern void DestroyTitleScreen(u32 *self, u32 flag);
-extern void RunCompanyLogos(u32 *self);
-extern void LoadVvLogoGraphics(u32 *self);
-extern void InitVvLogoPieces(u32 *self);
-extern void UpdateVvLogoPieces(u32 *self);
+/* src/frontend/title_screen_init.cpp and title_screen.cpp (C++,
+ * frontend.hpp: the C names of TitleScreen's and CompanyLogos's methods,
+ * for the C callers, game_frame.c and level_state.c) */
+extern struct title_screen *InitTitleScreen(struct title_screen *self);
+extern s32 RunTitleScreen(struct title_screen *self);
+extern void DestroyTitleScreen(struct title_screen *self, u32 flags);
+extern void RunCompanyLogos(void *self);
 
 /* Clears one OAM entry (4 words) with a DMA3 fill from `zero`, a
- * variable the caller declares (company_logos.cpp, title_screen_init.c).
+ * variable the caller declares (company_logos.cpp, title_screen_init.cpp).
  * A macro, not a function: `zero` is stored before the DMA base is
  * loaded, as in the ROM. */
 #define CLEAR_OAM(oam)                                          \

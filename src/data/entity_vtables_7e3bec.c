@@ -1243,8 +1243,8 @@ const struct vtable_slot gHovercraftCannonFlashVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by language_select.cpp (DestroyLogoActor), title_screen_init.c,
- * title_screen.c, company_logos.cpp (LoadUniversalLogoBg). */
+/* Used by language_select.cpp (DestroyLogoActor), title_screen_init.cpp,
+ * title_screen.cpp, company_logos.cpp (LoadUniversalLogoBg). */
 const struct vtable_slot gLogoActorVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyLogoActor),

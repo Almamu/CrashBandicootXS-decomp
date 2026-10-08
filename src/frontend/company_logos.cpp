@@ -17,17 +17,15 @@ extern "C" {
 }
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
- * `title_screen.c` at `DrawVvLogoPieces`. The company-logo screen's last
- * two methods (CompanyLogos, #664 part 10b, include/frontend.hpp; the
- * others are still C in title_screen.c) and the logo actor's (LogoActor:
+ * `title_screen.cpp` at `DrawVvLogoPieces`. The company-logo screen's
+ * last two methods (CompanyLogos, #664 part 10b, include/frontend.hpp;
+ * four others are in title_screen.cpp) and the logo actor's (LogoActor:
  * constructor, Update, Draw; its destructor starts language_select.cpp).
  *
- * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc, but built WITH
- * strength reduction (it is not on NO_STRENGTH_REDUCE_OBJS):
- * `DrawVvLogoPieces`'s header loop is check_dbra_loop's reversed counter
- * after the hoisted `&oamA`, which only strength reduction emits, while
- * `InitVvLogoPieces` (still in `title_screen.c`) needs it off. See
- * docs/matching/archive/sr65-naked-retry.md. */
+ * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc, with strength
+ * reduction: `DrawVvLogoPieces`'s header loop is check_dbra_loop's
+ * reversed counter after the hoisted `&oamA`, which only strength
+ * reduction emits. See docs/matching/archive/sr65-naked-retry.md. */
 
 static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
 {
@@ -61,7 +59,7 @@ static inline void SetAffineZ(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 
  *
  * Matched in the #65 strength-reduction retry
  * (docs/matching/archive/sr65-naked-retry.md). It needs strength reduction ON,
- * which is why this file was split off `title_screen.c`. */
+ * which is why this file was split off `title_screen.cpp`. */
 void CompanyLogos::DrawVvLogoPieces()
 {
     vu16 zero;
@@ -73,7 +71,7 @@ void CompanyLogos::DrawVvLogoPieces()
     s32 i;
 
     {
-        struct logo_piece *hdr = &slots[19];
+        LogoPiece *hdr = &slots[19];
 
         if (hdr->active) {
             u32 tiles;
@@ -95,7 +93,7 @@ void CompanyLogos::DrawVvLogoPieces()
         }
     }
     {
-        struct logo_piece *slot = &slots[1];
+        LogoPiece *slot = &slots[1];
         u32 tile = (tilesA - (u32)OBJ_VRAM0) >> 5;
 
         for (i = 0; i <= 0x11; i++) {
@@ -138,7 +136,7 @@ void CompanyLogos::DrawVvLogoPieces()
     }
     if (slots[0].active) {
         u8 *flag = sfxPending;
-        struct logo_piece *slot;
+        LogoPiece *slot;
         u32 tile;
         u8 *buf;
         u8 *base;
