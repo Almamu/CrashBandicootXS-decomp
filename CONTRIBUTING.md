@@ -63,6 +63,31 @@ matched code - read it before starting.** In short:
   use those rather than spelling the `asm` out. CI runs
   `tools/match_idioms.py --check`, which fails on a hand-spelled idiom
   (see "Writing new matching code" in that doc).
+- **Pruning workarounds** (#662): `python3 tools/match_prune.py PATH...`
+  tries removing each workaround site in the given `.c`/`.cpp` files or
+  directories, one at a time and then in pairs and pin bundles until a
+  fixed point, rebuilding just that object through the Makefile's own
+  rules (its compiler and per-object flags, into a temporary directory)
+  and keeping the removals that leave the object byte-identical. It
+  covers every `include/match.h` macro (a `MATCH_HOLD_REG` pin becomes
+  a plain local, `MATCH_CONST(v, K)` becomes `v = K;`, the empty-asm
+  statements are deleted, ...), the spelled-out empty asm, instruction
+  asm it can translate to C, and `T x = x;`:
+
+  ```
+  tools/match_prune.py src/                 # dry run: per-file tried/removable/kept and a summary
+  tools/match_prune.py -v src/util/aabb.c   # also each kept site and why (doesn't compile / object differs)
+  tools/match_prune.py --write src/gfx/     # apply the removals, verified once more as written
+  tools/match_prune.py --list src/          # the sites, without building
+  ```
+
+  `-j N` sets the number of parallel builds. A dry run never touches
+  the sources, and `--write` writes nothing if interrupted. With
+  `--write` it also drops the removed lines' comments and an unused
+  `#include "match.h"`, runs clang-format, and lists comments elsewhere
+  that still name a removed macro. Read the diff, fix those comments,
+  and verify the PR as usual (clean `make compare`, the report, the
+  format and idiom checks).
 - **Renames** follow [docs/naming.md](docs/naming.md): rename only once
   the meaning is understood confidently, and go through its "What
   renaming touches" checklist, including the `rename` line in

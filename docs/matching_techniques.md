@@ -19,6 +19,11 @@ plainer version doesn't.
   macros expand to the spellings they replace (`--check-macros`),
   converts a kind to its macro (`--convert K`) and fails if an idiom
   that has a macro is written out by hand (`--check`, run by CI).
+- [tools/match_prune.py](../tools/match_prune.py) finds the workarounds
+  that are no longer needed (#662): it removes each site, alone and
+  then in pairs and pin bundles, rebuilds the object through the
+  Makefile and keeps every removal that leaves the object
+  byte-identical (see [Pruning workarounds](#pruning-workarounds)).
 - The process (isolated compiles, clean rebuilds, `make compare`, the
   report) is in [workflow.md](./workflow.md) and
   [CONTRIBUTING.md](../CONTRIBUTING.md#verification). An isolated compile
@@ -64,7 +69,8 @@ plainer version doesn't.
    `.pool`, instruction asm
 8. [Warnings](#warnings): `x = x` self-init
 9. [NON_MATCHING](#non_matching)
-10. [Survey and conversion record (#576)](#survey-and-conversion-record-576)
+10. [Pruning workarounds](#pruning-workarounds): `tools/match_prune.py` (#662)
+11. [Survey and conversion record (#576)](#survey-and-conversion-record-576)
 
 ## Compilers and flags
 
@@ -623,6 +629,60 @@ comment saying what it fixes.
 | `MATCH_KEEP_EXPR(T, e)` | `({ T _p = (e); asm("" : "+r"(_p)); _p; })` |
 | `BOX_ADDR(a)` | `MATCH_KEEP_EXPR(struct aabb *, a)` |
 
+## Pruning workarounds
+
+`tools/match_prune.py` (#662) re-tests the workarounds mechanically. For
+each site in the `.c`/`.cpp` files it's given, it builds the object
+without it and keeps the removal if the object is unchanged:
+
+| Site | Removal tried |
+|---|---|
+| `MATCH_HOLD_REG(T, x, rN)` | a plain local `T x` (same initializer); in a bundle, the declaration deleted |
+| `MATCH_BARRIER`, `MATCH_MEMORY_BARRIER`, `MATCH_USE`, `MATCH_USE2`(`_VOLATILE`), `MATCH_KEEP`(`_VOLATILE`), `MATCH_HOLD`(`_VOLATILE`), `MATCH_CLOBBER`(`_VOLATILE`), `MATCH_KEEP_MEM`, `MATCH_USE_MEM` | the statement deleted |
+| `MATCH_CONST(v, K)` | `v = K;` |
+| `MATCH_KEEP_EXPR(T, e)`, `BOX_ADDR(a)` | `((T)e)`, `a` |
+| spelled-out empty asm | deleted, or `v = K;` for an `"=r"` output from one input |
+| instruction asm | the same operations in C, when every instruction is a `mov`/`add`/`sub`/`neg`/shift/logic/`mul`/load/store on `%N` operands and immediates (`mov %0, #8; neg %0, %0` becomes `v = -8;`, an `lsl`/`lsr` pair by 16 a `(u16)` cast); labels, `swi`, `.byte` and hard registers have no translation |
+| `T x = x;` | `T x;` |
+
+How it decides, in short (the tool's docstring has the details):
+
+- **Build:** make runs on the Makefile itself, with `OBJ_DIR`, the
+  source and build directories and the generated-header directory moved
+  into a temporary directory per parallel worker. The worker's source
+  directory mirrors the file's own one with symlinks, holding the trial
+  version of the file in place of its link. So each object gets the
+  ROM build's compiler and flags (old_agbcc, agbcp, agbcc_arm_patched,
+  `-fno-implement-inlines`, ...), and build/ and src/ are never written.
+  A site in a preprocessor arm the ROM build doesn't compile is found
+  by preprocessing through the same rule and is not tried.
+- **Compare:** the two `.o` files are equal if their sections (other
+  than the symbol, string and relocation tables) have the same names,
+  flags, sizes and bytes in the same order, their relocations have the
+  same offsets and types and point at the same symbols (by name,
+  binding, section and value, not by symbol index), and their symbol
+  tables hold the same symbols. Only the symbol table's order may
+  differ.
+- **Search:** every site alone; the ones that work are checked together
+  (or added one at a time if they don't all work together); repeat
+  until none works alone; then pairs of sites in one function and
+  bundles (a pin with every `MATCH_HOLD`/`USE`/`KEEP`/`CONST` of its
+  variable), and back to single sites, until a fixed point.
+
+`--write` applies the result, takes the emptied lines and the comment
+right above them (when it names the workaround or a register) along,
+drops an unused `#include "match.h"`, formats the file, builds that text
+once more and only then replaces the file. Comments elsewhere that still
+name a removed macro are listed: check them by hand, along with
+function-header comments that describe a removed pin. Commit
+the result like any other change, after the full clean checks.
+
+On main at the time of #662 step 1, the dry run over src/ (510 sites in
+the .c/.cpp files; headers aren't tried) found 206 removable, all of
+them alone (no pair or bundle was needed), among them 184 of 357
+`MATCH_HOLD_REG` pins. Applying all 206 at once kept
+`crashbandicootxs.gba: OK`.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4
@@ -680,4 +740,5 @@ functions and 100% data).
 
 Not done: re-testing whether individual pins and nudges are still needed
 (the optional item in #576). Removing one is fine whenever a clean
-rebuild shows the object stays identical.
+rebuild shows the object stays identical; `tools/match_prune.py` does
+that for every site ([above](#pruning-workarounds), #662).
