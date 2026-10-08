@@ -78,7 +78,7 @@ PowerDialog::~PowerDialog()
     delete icon;
 }
 
-/* The four powers' dialogs (game_frame.c): each power's name and
+/* The four powers' dialogs (game_frame.cpp): each power's name and
  * description text and its icon. */
 void ShowTurboRunDialog(void)
 {

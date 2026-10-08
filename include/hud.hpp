@@ -3,8 +3,8 @@
 
 /* The in-game HUD as C++ (#664 cleanup): class Hud, gHud (globals.h
  * declares it as a `Hud *` to C++), built by `new Hud` in
- * src/level/game_frame.c (InitHud(OperatorNew(0x68))) and deleted there
- * (DestroyHud(gHud, 3)). It has no vtable. Its 35 parts are HudParts
+ * src/level/game_frame.cpp and deleted there (`delete
+ * gHud`). It has no vtable. Its 35 parts are HudParts
  * (part_list.hpp), allocated with `new HudPart[35]` by the constructor
  * and freed with `delete[]` by the destructor.
  *

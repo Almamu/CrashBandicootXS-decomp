@@ -128,11 +128,9 @@ extern void CheckPlayerContact(void *part);
 extern void ResolvePlayerContact(void *part);
 
 /* src/objects/sprite.cpp */
-extern void DestroySpriteRenderer(void *self, u32 flags);
 extern struct aabb GetSpriteHitbox(struct box_part *part);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
-extern void AdvanceSpriteAnim(struct box_part *part);
 
 /* src/objects/sprite_anim.cpp */
 extern void ResetSpriteFrameIndex(void *part);

@@ -16,7 +16,7 @@ extern "C" {
  *
  * It owns BG layer 0 (`+0x10`, a PooledBgLayer), three BgLayers for
  * BG1-3 (`+0x14`-`+0x1C`), the terrain tile cache (`+0x20`, 0x1064 bytes,
- * tile_cache.c) and an optional level asset (`+0x24`, heap-owned when
+ * tile_cache.cpp) and an optional level asset (`+0x24`, heap-owned when
  * `+0x28` is set).
  *
  * - The constructor and `Get` (get-or-create); the destructor frees the

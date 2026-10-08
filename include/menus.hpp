@@ -135,7 +135,7 @@ public:
 COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);
 
 /* The power dialog (ShowPowerDialog, from the four Show*Dialog wrappers
- * game_frame.c calls when a boss gives Crash a power): the power's name
+ * game_frame.cpp calls when a boss gives Crash a power): the power's name
  * and description over a scrolling sky, with its icon, faded in and out
  * through BLDY. */
 class PowerDialog

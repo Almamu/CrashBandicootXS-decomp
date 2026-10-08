@@ -216,7 +216,7 @@ LaunchPad::LaunchPad()
     ClearVulnerable();
 }
 
-/* The level-select screen, modal (called from game_frame.c): resets the
+/* The level-select screen, modal (called from game_frame.cpp): resets the
  * display, palette, VRAM cursor and both fonts (the same setup as
  * ShowPowerDialog), builds the menu for level `*arg`, runs it, stores the
  * chosen level back through `arg`, tears the menu down and returns its

@@ -15,7 +15,7 @@
  *
  * `GetTerrainFlagsAt(arg0, x, y)` is a small wrapper around the already-
  * matched terrain-tile-cache lookup `GetTerrainType` (`src/level/
- * tile_cache.c`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
+ * tile_cache.cpp`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
  * `struct tile_cache`, converts `x`/`y` into that cache's own lookup
  * units via a plain `>>3` (clamped to a minimum of 0 on each axis
  * independently - `ProbeTerrain`'s own bounds-clamp neighbors use the
@@ -39,7 +39,7 @@
  * this function only ever touches the one field, following the same
  * "duplicate only what's needed, no shared header" precedent
  * `struct tile_cache` itself already set between `bg_layer_base.cpp`/
- * `tile_cache.c`.
+ * `tile_cache.cpp`.
  *
  * Matched as real C on the first isolated-compile attempt - no
  * register pins or opaque asm needed, following `ProbeTerrain`'s own
@@ -106,7 +106,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * `struct probe_pos` reuses `terrain_probe.c`'s own plain-int (not Q8)
  * probe-position layout unchanged (same "duplicate only what's needed,
  * no shared header" precedent `struct tile_cache` itself already set
- * between `bg_layer_base.cpp`/`tile_cache.c`).
+ * between `bg_layer_base.cpp`/`tile_cache.cpp`).
  *
  * Both reload `pos->x`/`pos->y` a second time from memory after their
  * respective lookup call rather than keeping the pre-shifted tile

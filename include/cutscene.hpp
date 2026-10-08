@@ -5,9 +5,10 @@
  * slideshow (src/cutscene/slideshow.cpp, slideshow_display.cpp) and the
  * cutscene player built on it (src/cutscene/cutscene_player.cpp).
  * cutscene.h's struct cutscene_player is the C view, for PlayCutscene
- * (level_cutscene.c, still C), which keeps one on the stack and calls the
- * constructor, RunCutscenePlayer and the destructor by their C names
- * (cxx_symbols.txt). Neither class has a vtable.
+ * (level_cutscene.cpp), which keeps one inside a stack aggregate (so it is
+ * constructed where the ROM calls the constructor, after the display
+ * setup) and calls the constructor, RunCutscenePlayer and the destructor
+ * by their C names (cxx_symbols.txt). Neither class has a vtable.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
  * emit; the pragma keeps g++ from emitting out-of-line copies of inline
@@ -47,7 +48,7 @@ public:
 COMPILE_TIME_ASSERT(cutscene_hpp, sizeof(Slideshow) == 0x10);
 
 /* The cutscene player: the slideshow plus each slide's pages of text,
- * drawn with `font` into `box` (PlayCutscene, level_cutscene.c). */
+ * drawn with `font` into `box` (PlayCutscene, level_cutscene.cpp). */
 class CutscenePlayer : public Slideshow
 {
 public:

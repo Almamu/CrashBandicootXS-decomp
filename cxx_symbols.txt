@@ -1568,6 +1568,8 @@ _._16LevelEntityFlags DestroyEntityFlags
 __16LevelEntityFlags InitEntityFlags
 _._17UnusedLevelObject sub_802425C
 __17UnusedLevelObject nullsub_25
+__10LevelState InitLevelState
+_._10LevelState DestroyLevelState
 BeginSlide__9Slideshowi BeginSlide
 Run__9Slideshow RunSlideshow
 Skip__9SlideshowiUc SkipSlides

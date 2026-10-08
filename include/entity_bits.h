@@ -10,7 +10,7 @@
  * entity that is collected, broken or killed sets its own `gone` flag
  * and, unless its id is ENTITY_ID_NONE, bit `id` of
  * `gEntityFlags->bits0Copy` (struct entity_flags, level.h).
- * entity_flags.c has the out-of-line accessors for the other bitmaps.
+ * entity_flags.cpp has the out-of-line accessors for the other bitmaps.
  *
  * Like the rest of the project's helpers, each macro expands to exactly
  * the code the matched copies spelled out, statement for statement, so

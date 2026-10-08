@@ -1,3 +1,10 @@
+#include "level_state.hpp"
+#include "sprite_obj.hpp"
+#include "part_list.hpp"
+#include "spawners.hpp"
+#include "font.hpp"
+
+extern "C" {
 #include "core.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
@@ -10,74 +17,56 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.cpp, which
  * ends with the game-context constructor InitLevelState) and
- * UpdateGameFrame (game_frame.c). See
+ * UpdateGameFrame (game_frame.cpp). See
  * docs/matching/archive/gap-22354-game-context.md.
  *
- * - DestroyLevelState (UNUSED): the destructor matching InitLevelState - frees every
- *   subsystem singleton that constructor built and clears the context
- *   pointer gLevelStateSingleton.
+ * - DestroyLevelState (UNUSED): LevelState's destructor
+ *   (include/level_state.hpp), the counterpart of its constructor
+ *   (InitLevelState) - frees every subsystem singleton that constructor
+ *   built and clears the context pointer gLevelStateSingleton.
  * - PlayCutscene: plays cutscene `idx` (include/cutscene.h): blanks the
  *   palette, resets the BG2 affine transform, then runs a stack-allocated
  *   cutscene player (InitCutscenePlayer/RunCutscenePlayer) over the
  *   slides gCutscenes[idx] and the current language's pages until it
  *   finishes.
  *
- * Both match under either compiler; built with the current agbcc like
- * their neighbours. */
-
-typedef void (*destroy_fn)(void *self, s32 flags);
-
-/* Destroys an icon manager through its method table (a gcc 2.x virtual
- * `delete`). */
-#define DESTROY_FONT(m)                                                \
-    {                                                                          \
-        struct bitmap_font *_m = (m);                                         \
-        struct icon_record *_r = _m->record;                                   \
-        ((destroy_fn)_r->destroy.ptr)((u8 *)_m + _r->destroy.offset, 3);       \
-    }
+ * C++ since the #664 cleanup (the destructor's `delete`s and the font's
+ * virtual calls were spelled out as calls and slot reads); built with the
+ * current agbcp, as the C was with agbcc. */
 
 /* UNUSED - no caller anywhere in the ROM (checked every asm/ and src/
  * file for the symbol, every Thumb `bl` in baserom.gba for its address,
  * and every word in baserom.gba for 0x08022355). Matched anyway.
  *
- * The game context's destructor: tears down every subsystem singleton
- * InitLevelState (spawn_pickups.cpp) constructed, each with the
- * "delete" flags 3, clears the context pointer and - on bit 0 of
- * `flags`, gcc 2.x's deleting-destructor flag - frees `self`. The game
- * never leaves MainLoop, so it never runs. */
-void DestroyLevelState(void *self, s32 flags)
+ * The game context's destructor: deletes every subsystem singleton its
+ * constructor (InitLevelState, spawn_pickups.cpp) built (the fonts
+ * through their virtual destructors) and clears the context pointer;
+ * g++'s deleting destructor then frees `this` on bit 0 of its __in_chrg.
+ * The game never leaves MainLoop, so it never runs. The globals keep
+ * their C types, so each `delete` names its class. */
+LevelState::~LevelState()
 {
     FreeVramDmaQueue();
-    if (gOamBuffer != NULL)
-        DestroyOamBuffer(gOamBuffer, 3);
-    if (gObjVramCursor != NULL)
-        DestroyObjVramCursor(gObjVramCursor, 3);
-    if (gInput != NULL)
-        OperatorDelete(gInput);
+    delete (OamBuffer *)gOamBuffer;
+    delete (ObjVramCursor *)gObjVramCursor;
+    if (gInput != NULL) /* KeyInput has no destructor: `delete` alone tests nothing */
+        delete (KeyInput *)gInput;
     DisableMusicVCountIrq(gAudioContext);
     if (gAudioContext != NULL)
         DestroyAudioContext(gAudioContext, 3);
-    if (gLargeFont != NULL)
-        DESTROY_FONT(gLargeFont);
-    if (gSmallFont != NULL)
-        DESTROY_FONT(gSmallFont);
-    if (gSpriteRenderer != NULL)
-        DestroySpriteRenderer(gSpriteRenderer, 3);
-    if (gSpriteBankSet != NULL)
-        DestroySpriteBankSet(gSpriteBankSet, 3);
-    if (gPaletteCache != NULL)
-        DestroyPaletteCache(gPaletteCache, 3);
-    if (gEntityFlags != NULL)
-        DestroyEntityFlags(gEntityFlags, 3);
-    if (gPaletteCycles != NULL)
-        DestroyPaletteCycles(gPaletteCycles, 3);
-    gLevelStateSingleton = NULL;
-    if (flags & 1)
-        OperatorDelete(self);
+    delete gLargeFont;
+    delete gSmallFont;
+    delete (SpriteRenderer *)gSpriteRenderer;
+    delete (SpriteBankSet *)gSpriteBankSet;
+    delete (PaletteCache *)gPaletteCache;
+    delete (LevelEntityFlags *)gEntityFlags;
+    delete (PaletteCycles *)gPaletteCycles;
+    gLevelStateSingleton = 0;
 }
 
 struct text_vec {
@@ -90,17 +79,15 @@ struct text_rect {
     struct text_vec size;
 };
 
-typedef void (*method_fn)(void *self);
-
-/* Built with a brace initializer from its parameters so the pair is
- * materialized in a register pair and stored in one go, as the ROM does
- * (field-by-field assignment of a local, or a constant initializer,
- * compile differently). */
-static inline struct text_vec MakeVec(s32 x, s32 y)
+/* Through an inline's parameters both values of a pair are loaded before
+ * the two stores, as in the ROM (the C needed a brace-initialized struct
+ * returned by value; returned by value in C++, the pair goes through a
+ * stack temporary, and stored field by field, each constant is loaded
+ * right before its store). */
+static inline void SetVec(struct text_vec *v, s32 x, s32 y)
 {
-    struct text_vec v = { x, y };
-
-    return v;
+    v->x = x;
+    v->y = y;
 }
 
 void PlayCutscene(void *self, s32 idx)
@@ -117,8 +104,8 @@ void PlayCutscene(void *self, s32 idx)
     u16 mode;
     u16 *dispcnt;
 
-    f.box.pos = MakeVec(7, 0x7E);
-    f.box.size = MakeVec(0xE4, 0x1E);
+    SetVec(&f.box.pos, 7, 0x7E);
+    SetVec(&f.box.size, 0xE4, 0x1E);
     dispcnt = (u16 *)gDispcnt;
     zero = 0;
     mode = 0x40;
@@ -141,16 +128,8 @@ void PlayCutscene(void *self, s32 idx)
     REG_BG2X = zero;
     REG_BG2Y = zero;
     FreeUnlockedPaletteSlots(gPaletteCache);
-    {
-        struct bitmap_font *m = gSmallFont;
-        u32 tileBase = 0x200;
-        struct icon_slot *slot;
-
-        m->tileBase = tileBase;
-        slot = &m->record->slots[6];
-        ((method_fn)slot->ptr)((u8 *)m + slot->offset);
-    }
-    FontResetPalette(gSmallFont);
+    gSmallFont->SetTileBase(0x200);
+    gSmallFont->ResetPalette();
     UploadPaletteCache(gPaletteCache);
     InitCutscenePlayer(&f.pager);
     f.pager.font = gSmallFont;

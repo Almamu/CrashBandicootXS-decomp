@@ -84,7 +84,7 @@ u32 gRoomFrameCount = 0;
 u8 gRoomExitRequested = 0;
 
 /* The cutscene text of each language, indexed by gLanguage
- * (src/data/cutscenes_16d1c8.c, level_cutscene.c). */
+ * (src/data/cutscenes_16d1c8.c, level_cutscene.cpp). */
 const struct cutscene_page *const *gCutsceneTexts[6] = {
     gCutsceneTextEnglish, gCutsceneTextFrench,  gCutsceneTextGerman,
     gCutsceneTextSpanish, gCutsceneTextItalian, gCutsceneTextDutch,

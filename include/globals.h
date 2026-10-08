@@ -86,7 +86,7 @@ extern struct entity_spawner *gEntitySpawner;
 extern struct vram_upload_cursor *gObjVramCursor;
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void *gInput; /* UpdateKeys's object; it only reads gKeys */
-/* The HUD (game_frame.c builds it): a Hud (hud.hpp) to the C++ files,
+/* The HUD (game_frame.cpp builds it): a Hud (hud.hpp) to the C++ files,
  * its C view, struct hud_counter (hud.h), to the C ones. */
 #ifdef __cplusplus
 extern class Hud *gHud;
@@ -95,7 +95,7 @@ extern struct hud_counter *gHud;
 #endif
 extern u8 gJetpackPlayerInactive;
 
-/* sym_iwram.txt: the level's objects. game_frame.c builds the level
+/* sym_iwram.txt: the level's objects. game_frame.cpp builds the level
  * state and the entity flags; PlayRoom (play_room.cpp) builds the rest per
  * room. The structs are in level_state.h (struct level_state), level.h
  * (struct level_layers, entity_flags, camera), box_part.h (struct

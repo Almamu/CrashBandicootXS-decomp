@@ -7,7 +7,7 @@
 /*
  * The cutscene subsystem (src/cutscene/): the slideshow player that shows
  * the cutscenes (src/data/cutscenes_16d1c8.c). PlayCutscene
- * (level_cutscene.c) plays cutscene `idx` as a sequence of slides, each a
+ * (level_cutscene.cpp) plays cutscene `idx` as a sequence of slides, each a
  * full-screen picture shown with its page of text in the current
  * language.
  *
@@ -96,7 +96,7 @@ extern void SetSlideshowDispcnt(u32 value);
 
 /* src/cutscene/cutscene_player.cpp: CutscenePlayer's (include/cutscene.hpp)
  * constructor, Run and destructor under their C names (cxx_symbols.txt),
- * for PlayCutscene (level_cutscene.c). */
+ * for PlayCutscene (level_cutscene.cpp). */
 extern struct cutscene_player *InitCutscenePlayer(struct cutscene_player *self);
 extern void RunCutscenePlayer(struct cutscene_player *self);
 extern void DestroyCutscenePlayer(struct cutscene_player *self, s32 flags);

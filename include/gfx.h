@@ -267,7 +267,6 @@ extern void RewindOamBuffer(struct oam_shadow_buffer *self);
 extern void ResetOamBuffer(struct oam_shadow_buffer *self);
 extern void CommitOamBuffer(struct oam_shadow_buffer *self);
 extern void AddOamEntry(struct oam_shadow_buffer *self, const void *entry);
-extern void DestroyOamBuffer(struct oam_shadow_buffer *self, u32 flags);
 
 /* src/gfx/graphics.cpp: the VRAM DMA queue and OBJ VRAM cursor */
 extern void FlushVramDmaQueue(void);
@@ -280,7 +279,6 @@ extern s32 GetObjVramTile(struct vram_upload_cursor *self);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
-extern void DestroyObjVramCursor(struct vram_upload_cursor *self, u32 flags);
 
 /* src/gfx/graphics.cpp: the palette cache */
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
@@ -293,8 +291,6 @@ extern void UploadPaletteCache(struct palette_cache *self);
 extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
-extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
-extern void DestroySpriteBankSet(void *self, u32 flags);
 
 /* src/gfx/graphics.cpp: the entity (`struct actor`, actor.h) */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
@@ -320,7 +316,6 @@ extern void TickPaletteCycles(struct palette_cycler *self);
 extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate,
                             s32 listCount, u8 direction);
 extern void ClearPaletteCycles(struct palette_cycler *self);
-extern void DestroyPaletteCycles(struct palette_cycler *self, s32 flags);
 
 /* src/gfx/sprite_frame.c */
 extern void InitObjTileFreeList(void *base);

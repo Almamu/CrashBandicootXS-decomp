@@ -1,3 +1,8 @@
+#include "hud.hpp"
+#include "frontend.hpp"
+#include "level_state.hpp"
+
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "vram_pool.h"
@@ -14,6 +19,12 @@
 #include "globals.h"
 #include "player.h"
 #include "sprite_bank.h"
+}
+
+/* The level state's accessors and helpers (C linkage; they take level_state.h's
+ * struct level_state). C++ since the #664 cleanup, for GetLevelState's
+ * `new LevelState` (level_state.hpp) and ShowCompanyLogos' `new
+ * CompanyLogos`. */
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
@@ -221,7 +232,7 @@ void AddBrokenCrate(struct level_state *self)
     }
 
     if (self->timeTrial == 0) {
-        ShowHudCrates(gHud);
+        gHud->ShowCrates();
     }
 }
 
@@ -444,7 +455,7 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
      * `adds r5,r1,#0` (state) copy order is reproduced - a plain pair
      * of locals lets this compiler swap the order since `state` is
      * referenced first, in the `if` condition below. */
-    MATCH_HOLD_REG(struct level_state *, self, r4) = selfArg;
+    MATCH_HOLD_REG(struct level_state *, self, r4) = (struct level_state *)selfArg;
     MATCH_HOLD_REG(s32, state, r5) = stateArg;
 
     if (state == MASK_LEVEL_INVINCIBLE) {
@@ -480,7 +491,7 @@ void LoseLife(struct level_state *self)
         self->lives = v;
 
         if (v >= 0) {
-            ShowHudLives(gHud);
+            gHud->ShowLives();
         }
     }
 }
@@ -618,7 +629,7 @@ void ArmStartSpawn(struct level_state *self)
  * `CheckAllCratesBroken` below reads. */
 void SetLevelBoss(struct level_state *self, void *value)
 {
-    self->boss = value;
+    self->boss = (struct level_state_1c8 *)value;
 }
 
 /* Plain getter/getter/setter trio for `roomIndex` (`self+0xc8`, the
@@ -643,7 +654,7 @@ void SetCurrentLevel(struct level_state *self, s32 value)
 
 /* Five thin two-argument wrappers that drop `self` entirely and forward
  * straight to one of `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` (the medal
- * "flag index" wrappers, `level_query.c`). */
+ * "flag index" wrappers, `level_query.cpp`). */
 s32 LevelHasYellowGem(void *self, s32 idx)
 {
     return LevelHasYellowGemEntity(idx);
@@ -783,9 +794,9 @@ void CollectWumpa(struct level_state *self)
         if (self->lives <= 0x62) {
             self->lives += 1;
         }
-        ShowHudLives(gHud);
+        gHud->ShowLives();
     }
-    ShowHudWumpa(gHud);
+    gHud->ShowWumpa();
 }
 
 /* Just the "add a life (`lives`), ping `ShowHudLives`" half of
@@ -795,7 +806,7 @@ void AddLife(struct level_state *self)
     if (self->lives <= 0x62) {
         self->lives += 1;
     }
-    ShowHudLives(gHud);
+    gHud->ShowLives();
 }
 
 /* GitHub issue #37: closes the loop on the `self+0x1c0`/`0x1c4`
@@ -811,7 +822,7 @@ void AddLife(struct level_state *self)
  * `*gLevelState` as `self`. */
 void CheckAllCratesBroken(void *selfArg)
 {
-    MATCH_HOLD_REG(struct level_state *, self, r4) = selfArg;
+    MATCH_HOLD_REG(struct level_state *, self, r4) = (struct level_state *)selfArg;
 
     if (self->crateCount == self->crateTotal && !IsInBonusRound(self) && !IsInGemPath(self)) {
         const struct level_room *level = self->cat;
@@ -910,7 +921,7 @@ void RestoreCheckpoint(struct level_state *self)
  * `0xe4`-byte snapshot block (see `RestoreCheckpoint` above). */
 void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
 {
-    MATCH_HOLD_REG(struct level_state *, self, r5) = selfArg;
+    MATCH_HOLD_REG(struct level_state *, self, r5) = (struct level_state *)selfArg;
     MATCH_HOLD_REG(s32 *, pair, r4) = pairArg;
     u8 tmp;
 
@@ -957,9 +968,9 @@ void EndGemPath(struct level_state *self, u8 flag)
         ClearInGemPath(self);
         ClearSpawnAtStart(self);
         SetGemPathDone(self);
-        SetHudCrateTotal(gHud, self->crateTotal);
+        gHud->SetCrateTotal(self->crateTotal);
         {
-            struct player *player = gPlayer;
+            Player *player = gPlayer;
             s32 *p = &self->checkpointX;
             SetEntityPos((struct actor *)player, p[0], p[1]);
         }
@@ -980,29 +991,16 @@ void PlayIntroCutscene(void *self)
     StopSfx(gAudioContext, SFX_SPACE_STATION_AMBIENCE);
 }
 
-/* Allocates a `0x44c`-byte block, fires an (empty) `InitCompanyLogos` hook and
- * `RunCompanyLogos`, then hands the block to `DestroyCompanyLogos` with flags `3`
- * if the allocation succeeded. */
+/* The company logos (CompanyLogos, frontend.hpp; 0x44c bytes): made, run
+ * and deleted. The constructor is empty (InitCompanyLogos,
+ * language_select.cpp), and g++'s `new` keeps the block in r0 across its
+ * call, which the C could only write as an asm `bl` with a pinned r0. */
 void ShowCompanyLogos(void *unused)
 {
-    /* `InitCompanyLogos` is a real no-op (`bx lr`) but, split into its own
-     * translation unit (src/frontend/language_select.cpp), an ordinary call
-     * forces the allocated block's pointer into a callee-saved register
-     * *before* the call, one instruction earlier than the ROM (which
-     * keeps it in r0 across the call and only moves it afterward - only
-     * possible because the two functions were compiled together
-     * originally). Spelling the call as inline asm that doesn't clobber
-     * r0 reproduces the ROM's exact (and, here, still safe) delayed
-     * move. */
-    MATCH_HOLD_REG(void *, tmp, r0) = OperatorNew(0x44c);
-    void *block;
+    CompanyLogos *logos = new CompanyLogos;
 
-    asm volatile("bl InitCompanyLogos" : "+r"(tmp) : : "r1", "r2", "r3", "lr", "cc");
-    block = tmp;
-    RunCompanyLogos(tmp);
-    if (block != NULL) {
-        DestroyCompanyLogos(block, 3);
-    }
+    logos->Run();
+    delete logos;
 }
 
 void PlayBootCutscene(void *self)
@@ -1070,7 +1068,7 @@ void UnpackSaveData(struct level_state *self, void *src)
  *    `pop {r1}; bx r1` without any extra hint. */
 void *PackSaveData(void *selfArg)
 {
-    MATCH_HOLD_REG(struct level_state *, self, r3) = selfArg;
+    MATCH_HOLD_REG(struct level_state *, self, r3) = (struct level_state *)selfArg;
     MATCH_HOLD_REG(u8 *, snap, r0);
     u8 byte0;
     u16 packed;
@@ -1111,8 +1109,9 @@ void *PackSaveData(void *selfArg)
     return snap;
 }
 
-/* Lazily allocates `gLevelStateSingleton` (0x1cc bytes) through
- * `InitLevelState` the first time it's needed, then returns it. Its own
+/* Makes `gLevelStateSingleton` (a LevelState, level_state.hpp; its
+ * constructor is InitLevelState) the first time it's needed, then
+ * returns it. Its own
  * file: ROM-adjacent to `PlayRoom` (now matched, `play_room.c`)
  * and the still-raw `RunRoom` on both sides
  * (asm/code_3_2_17_236ec.s before it, `PlayRoom`/
@@ -1122,7 +1121,7 @@ void *PackSaveData(void *selfArg)
 struct level_state *GetLevelState(void)
 {
     if (gLevelStateSingleton == NULL) {
-        gLevelStateSingleton = InitLevelState(OperatorNew(0x1cc));
+        gLevelStateSingleton = new LevelState;
     }
     return gLevelStateSingleton;
 }

@@ -53,11 +53,6 @@ struct slot_seed {
     s32 hold;
 };
 
-/* The title screen (InitTitleScreen/RunTitleScreen/DestroyTitleScreen,
- * from game_frame.c). Its class, TitleScreen, is in frontend.hpp; no C
- * file reads its fields. */
-struct title_screen;
-
 /* The credits screen (RunCredits, 0x98 bytes). Its class, Credits, is
  * in frontend.hpp; no C file reads its fields. */
 struct credits_screen;
@@ -133,20 +128,11 @@ extern const struct bg_package gCreditsLogos[5];
 extern void RunCredits(void);
 
 /* src/frontend/language_select.cpp (C++, as above) */
-extern void DestroyCompanyLogos(void *self, u32 flags);
 extern s32 RunLanguageSelect(void);
 
 /* src/frontend/language_select_setup.cpp (C++, as above) */
 extern void CloseLanguageSelect(void);
 extern void OpenLanguageSelect(void);
-
-/* src/frontend/title_screen_init.cpp and title_screen.cpp (C++,
- * frontend.hpp: the C names of TitleScreen's and CompanyLogos's methods,
- * for the C callers, game_frame.c and level_state.c) */
-extern struct title_screen *InitTitleScreen(struct title_screen *self);
-extern s32 RunTitleScreen(struct title_screen *self);
-extern void DestroyTitleScreen(struct title_screen *self, u32 flags);
-extern void RunCompanyLogos(void *self);
 
 /* Clears one OAM entry (4 words) with a DMA3 fill from `zero`, a
  * variable the caller declares (company_logos.cpp, title_screen_init.cpp).

@@ -1,3 +1,8 @@
+#include "hud.hpp"
+#include "frontend.hpp"
+#include "spawners.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "gba/io_reg.h"
@@ -13,6 +18,7 @@
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -20,7 +26,7 @@
  * (src/system/main_loop.c) with `self` = `gLevelState`, the
  * central per-level state object every other function in this
  * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.c; the
- * `self+0x80`-`0xc4`/`+2` accessor family, level_state.c) also shares.
+ * `self+0x80`-`0xc4`/`+2` accessor family, level_state.cpp) also shares.
  *
  * Shape: a level-load loop (`InitTitleScreen` / `RunTitleScreen`, the
  * map screen `RunCredits` on result 2), then the level loop. Each pass
@@ -31,7 +37,10 @@
  * attempt dispatches on the level number (20-24 are the special
  * levels) and records a time-trial best time.
  *
- * Real C under old_agbcc (docs/matching/archive/big-naked-retry.md):
+ * C++ since the #664 cleanup (`new TitleScreen`, `new LevelEntityFlags`
+ * and their `delete`s, where the C called the constructors on
+ * OperatorNew and the destructors with flags 3), built with old_agbcp as
+ * the C was with old_agbcc (docs/matching/archive/big-naked-retry.md):
  * - The level loop and the attempt loop are real `for (;;)` loops.
  *   gcc rolls each one's first exit test to the end, which gives the
  *   ROM's `b` into the middle of the loop. The restore step is a `goto`
@@ -44,9 +53,9 @@
  * - `self->bonusPlatform = self->gemPlatform = 0` computes the 0x1b8 address
  *   first, and the `SetMaskLevel` argument starts at 2 and takes the
  *   tier only when it is <= 1.
- * - `gHud = (void *)InitHud(...)`: through the `void *` conversion the
- *   store loads the global's address before the call, as in the ROM;
- *   storing the typed result directly loads it after.
+ * - `gHud = new Hud`: the HUD's constructor (include/hud.hpp; the C
+ *   needed a `void *` conversion of InitHud's result to load the global's
+ *   address before the call, as the ROM does), and `delete gHud`.
  */
 /* The per-level state object (`gLevelState`) as UpdateGameFrame
  * uses it. The first 0x68 bytes are the per-attempt block that the
@@ -91,14 +100,13 @@ void UpdateGameFrame(struct level_state *self)
     gGameFrameLevelState = self;
     self->maskLevel = MASK_LEVEL_NONE;
     {
-        void *gfx;
+        TitleScreen *gfx;
         s32 result;
 
     load:
-        gfx = InitTitleScreen(OperatorNew(0x220));
-        result = RunTitleScreen(gfx);
-        if (gfx != NULL)
-            DestroyTitleScreen(gfx, 3);
+        gfx = new TitleScreen;
+        result = gfx->Run();
+        delete gfx;
         if (result == 2) {
             RunCredits();
             goto load;
@@ -142,8 +150,8 @@ void UpdateGameFrame(struct level_state *self)
         self->checkpointFlags = 0;
         status = 1;
         self->crateTotal = CountLevelCrates(self->level);
-        gHud = (void *)InitHud(OperatorNew(0x68));
-        SetHudCrateTotal(gHud, self->crateTotal);
+        gHud = new Hud;
+        gHud->SetCrateTotal(self->crateTotal);
         ClearBonusRoundDone(self);
         ClearInBonusRound(self);
         ClearGemPathDone(self);
@@ -151,7 +159,7 @@ void UpdateGameFrame(struct level_state *self)
         ResetCrateCount(self);
         ClearSwitchPressed(self);
         self->pendingSwitchCrates = 0;
-        gEntityFlags->list = NULL;
+        gEntityFlags->list = 0;
         best = self->maskLevel;
         SetCheckpointAtPlayer(self, 0);
         ArmStartSpawn(self);
@@ -160,7 +168,7 @@ void UpdateGameFrame(struct level_state *self)
             self->bonusPlatform = self->gemPlatform = 0;
             if (IsInBonusRound(self) || IsInGemPath(self)) {
                 self->savedBitmap = *bitmap;
-                *bitmap = InitEntityFlags(OperatorNew(0x408));
+                *bitmap = new LevelEntityFlags;
                 if (IsInBonusRound(self)) {
                     self->savedWumpa = GetWumpa(self);
                     self->savedLives = GetLives(self);
@@ -169,19 +177,19 @@ void UpdateGameFrame(struct level_state *self)
                     self->lives = 0;
                     ResetCrateCount(self);
                     EnterBonusRoom((struct level_progress *)&self->level);
-                    SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
+                    gHud->SetCrateTotal(CountRoomCrates(self->cat));
                 } else {
                     self->savedCrateCount = GetCrateCount(self);
                     ResetCrateCount(self);
                     EnterGemPathRoom((struct level_progress *)&self->level);
-                    SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
+                    gHud->SetCrateTotal(CountRoomCrates(self->cat));
                 }
                 ArmStartSpawn(self);
             } else if (!(u8)SelectRoom((struct level_progress *)&self->level)) {
                 break;
             }
             FreeUnlockedPaletteSlots(gPaletteCache);
-            ConfigureHudParts(gHud, 0);
+            gHud->ConfigureParts(0);
             gRoomFrameCount = 0;
             SetLevelBoss(self, 0);
             PlayRoomMusic((struct level_progress *)&self->level);
@@ -211,14 +219,12 @@ void UpdateGameFrame(struct level_state *self)
             }
             mem_free_bytes(0xC0000000);
             if ((u8)IsInBonusRoom((struct level_progress *)&self->level) && IsInBonusRound(self)) {
-                if (gEntityFlags != NULL)
-                    DestroyEntityFlags(gEntityFlags, 3);
+                delete (LevelEntityFlags *)gEntityFlags;
                 gEntityFlags = self->savedBitmap;
                 EndBonusRound(self, status == 0);
             }
             if ((u8)IsInGemPathRoom((struct level_progress *)&self->level) && IsInGemPath(self)) {
-                if (gEntityFlags != NULL)
-                    DestroyEntityFlags(gEntityFlags, 3);
+                delete (LevelEntityFlags *)gEntityFlags;
                 gEntityFlags = self->savedBitmap;
                 EndGemPath(self, status == 0);
             }
@@ -251,7 +257,7 @@ void UpdateGameFrame(struct level_state *self)
             }
         }
         if (gHud != NULL)
-            DestroyHud(gHud, 3);
+            delete gHud;
         if (GetLives(self) < 0) {
             if (RunContinuePrompt())
                 ResetLives(self);

@@ -80,16 +80,11 @@ extern const struct hud_pos gHudPartPositions[35];
 extern void UpdateHud(struct hud_counter *self);
 
 /* src/hud/hud_init.cpp */
-extern struct hud_counter *InitHud(struct hud_counter *self);
 extern void ConfigureHudParts(struct hud_counter *self, u8 iconFlag);
 
 /* src/hud/hud_slide.cpp */
 extern void UpdateHudSlides(struct hud_counter *self);
-extern void ShowHudCrates(struct hud_counter *self);
-extern void ShowHudLives(struct hud_counter *self);
-extern void ShowHudWumpa(struct hud_counter *self);
 extern void ShowHudCounters(struct hud_counter *self);
 extern void SetHudCrateTotal(struct hud_counter *self, s32 val);
-extern void DestroyHud(struct hud_counter *self, s32 flags);
 
 #endif /* !__HUD_H__ */

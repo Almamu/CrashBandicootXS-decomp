@@ -44,7 +44,7 @@ void CompanyLogos::LoadAssetBuffered(const void *asset, void *dest)
 }
 
 /* The company-logo screen's constructor and destructor, both empty
- * (ShowCompanyLogos, level_state.c, allocates the screen, runs it and
+ * (ShowCompanyLogos, level_state.cpp, allocates the screen, runs it and
  * deletes it). */
 CompanyLogos::CompanyLogos()
 {
