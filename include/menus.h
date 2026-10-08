@@ -93,11 +93,6 @@ struct power_dialog {
 
 COMPILE_TIME_ASSERT(menus_h, sizeof(struct power_dialog) == 0x2c);
 
-/* The method tables (src/data/entity_vtables_7e3bec.c). */
-extern const struct vtable_slot gCameraLeadVtable[15];
-extern const struct vtable_slot gLaunchPadVtable[15];
-extern const struct vtable_slot gLevelSelectEntryVtable[6];
-
 /* The level select (src/iwram/iwram_data.c): the screen while
  * RunLevelSelect runs. The C++ files see it as its class, LevelSelect
  * (level_select.hpp); for C it is an opaque `struct level_menu`. */
@@ -163,22 +158,11 @@ extern const u16 gContinuePromptPalette3[17];
 extern u8 RunContinuePrompt(void);
 
 /* src/menus/level_select.cpp */
-extern void UpdateCameraLead(struct follow_child *self);
-extern void DestroyCameraLead(struct follow_child *self, s32 flags);
 extern struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused);
-extern void CheckLaunchPadContact(void *self);
-extern void DestroyLaunchPad(struct sprite *self, s32 flags);
 extern s32 RunLevelSelect(s32 *arg);
 
 /* src/menus/level_select_pages.cpp */
 extern void SetNewWorldOpened(void);
-
-/* src/menus/level_select_widgets.cpp */
-extern void AnimateLevelSelectEntry(struct level_item *self, s32 phase);
-extern void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index);
-extern void SetLevelSelectEntryPos(struct level_item *self, s32 *pos);
-extern void DrawLevelSelectEntry(void);
-extern void DestroyLevelSelectEntry(struct level_item *self, s32 flags);
 
 /* src/menus/pause_menu.cpp (C++, menus.hpp: PauseMenu::Run) */
 extern s32 RunPauseMenu(void);

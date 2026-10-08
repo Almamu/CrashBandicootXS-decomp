@@ -375,6 +375,8 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # ROM has the copies in (Entity's inline methods, DestroyEntity last).
 NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/crates/crate_update.o \
+                             $(C_BUILDDIR)/frontend/language_select.o \
+                             $(C_BUILDDIR)/menus/level_select.o \
                              $(C_BUILDDIR)/objects/ground_sprite_collide.o \
                              $(C_BUILDDIR)/objects/moving_sprite_collide.o \
                              $(C_BUILDDIR)/objects/platform_contact.o \

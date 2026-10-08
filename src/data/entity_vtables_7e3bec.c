@@ -46,54 +46,6 @@ const struct vtable_slot gCtrlVtable[13] VTABLE_SECTION(gCtrlVtable) = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by level_select.cpp (DestroyCameraLead). */
-const struct vtable_slot gCameraLeadVtable[15] VTABLE_SECTION(gCameraLeadVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(CollideMovingSprite),
-    VTABLE_SLOT(GetSpriteObjHitbox),
-    VTABLE_SLOT(UpdateCameraLead),
-    VTABLE_SLOT(DrawSpriteObj),
-    VTABLE_SLOT(IsSpriteObjOnScreen),
-    VTABLE_SLOT(SpriteObjOverlapsRect),
-    VTABLE_SLOT(IsSpriteObjNearCamera),
-    VTABLE_SLOT(IsSpriteObjInsideRect),
-    VTABLE_SLOT(GetMovingSpriteClassId),
-    VTABLE_SLOT(DestroyCameraLead),
-    VTABLE_SLOT(GetSpriteObjPriority),
-    VTABLE_SLOT(ApplySpriteVelocity),
-    VTABLE_SLOT(HitMovingSprite),
-    VTABLE_SLOT(CheckPlayerContact),
-};
-
-/* Used by level_select.cpp (GetCameraLeadOffset, DestroyLaunchPad, ClearLaunchPadVulnerable). */
-const struct vtable_slot gLaunchPadVtable[15] VTABLE_SECTION(gLaunchPadVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(CollideMovingSprite),
-    VTABLE_SLOT(GetSpriteObjHitbox),
-    VTABLE_SLOT(UpdateMovingSprite),
-    VTABLE_SLOT(DrawSpriteObj),
-    VTABLE_SLOT(IsSpriteObjOnScreen),
-    VTABLE_SLOT(SpriteObjOverlapsRect),
-    VTABLE_SLOT(IsSpriteObjNearCamera),
-    VTABLE_SLOT(IsSpriteObjInsideRect),
-    VTABLE_SLOT(GetMovingSpriteClassId),
-    VTABLE_SLOT(DestroyLaunchPad),
-    VTABLE_SLOT(GetSpriteObjPriority),
-    VTABLE_SLOT(ApplySpriteVelocity),
-    VTABLE_SLOT(HitMovingSprite),
-    VTABLE_SLOT(CheckLaunchPadContact),
-};
-
-/* Used by level_select_widgets.cpp (DestroyLevelSelectEntry). */
-const struct vtable_slot gLevelSelectEntryVtable[6] VTABLE_SECTION(gLevelSelectEntryVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(AnimateLevelSelectEntry),
-    VTABLE_SLOT(SetLevelSelectEntryLevel),
-    VTABLE_SLOT(SetLevelSelectEntryPos),
-    VTABLE_SLOT(DrawLevelSelectEntry),
-    VTABLE_SLOT(DestroyLevelSelectEntry),
-};
-
 /* Used by cutscene_player.c. */
 const struct vtable_slot gBgStreamerVtable[2] VTABLE_SECTION(gBgStreamerVtable) = {
     VTABLE_SLOT(NULL),
@@ -614,13 +566,4 @@ const struct vtable_slot gHovercraftCannonFlashVtable[7] VTABLE_SECTION(gHovercr
     VTABLE_SLOT(DamageHovercraftCannonFlash),
     VTABLE_SLOT(IsHovercraftCannonFlashUnshootable),
     VTABLE_SLOT(GetActorHp),
-};
-
-/* Used by language_select.cpp (DestroyLogoActor), title_screen_init.cpp,
- * title_screen.cpp, company_logos.cpp (LoadUniversalLogoBg). */
-const struct vtable_slot gLogoActorVtable[4] VTABLE_SECTION(gLogoActorVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(DestroyLogoActor),
-    VTABLE_SLOT(UpdateLogoActor),
-    VTABLE_SLOT(DrawLogoActor),
 };

@@ -434,9 +434,9 @@ SECTIONS
         build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.13DingodileCtrl); /* gDingodileVtable */
         build/crashbandicootxs/src/objects/platform_contact.o(.gnu.linkonce.d._vt.8Platform); /* gPlatformVtable */
         build/crashbandicootxs/src/objects/platform.o(.gnu.linkonce.d._vt.13PlatformMover); /* gPlatformMoverVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCameraLeadVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLaunchPadVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLevelSelectEntryVtable);
+        build/crashbandicootxs/src/menus/level_select.o(.gnu.linkonce.d._vt.10CameraLead); /* gCameraLeadVtable */
+        build/crashbandicootxs/src/menus/level_select.o(.gnu.linkonce.d._vt.9LaunchPad); /* gLaunchPadVtable */
+        build/crashbandicootxs/src/menus/level_select_widgets.o(.gnu.linkonce.d._vt.16LevelSelectEntry); /* gLevelSelectEntryVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgStreamerVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerBaseVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerVtable);
@@ -490,7 +490,7 @@ SECTIONS
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftLauncherVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftSideGunVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftCannonFlashVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLogoActorVtable);
+        build/crashbandicootxs/src/frontend/language_select.o(.gnu.linkonce.d._vt.9LogoActor); /* gLogoActorVtable */
 
 	} = 0
 

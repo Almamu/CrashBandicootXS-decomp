@@ -30,8 +30,8 @@
  * title_screen are opaque tags) and prototypes; cxx_symbols.txt maps the
  * methods to those names.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits LogoActor's vtable, the one class here
+ * with one, in language_select.cpp (see ctrl.hpp). */
 
 #include "actor_self.hpp"
 

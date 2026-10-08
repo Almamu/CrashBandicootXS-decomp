@@ -179,19 +179,14 @@ extern u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad
 extern void AnchorGroundSpriteHitbox(struct gobj *self);
 
 /* src/objects/moving_sprite.cpp */
-extern s32 ApplySpriteVelocity(void *self);
 extern void SetSpritePrevPos(struct gfx_part *self, s32 x, s32 y);
 extern void GetSpritePrevPos(struct gfx_vec *dest, struct gfx_part *self);
 extern s32 GetSpritePrevY(struct gfx_part *self);
 extern s32 GetSpritePrevX(struct gfx_part *self);
-extern s32 GetMovingSpriteClassId(void);
 extern void ResetMovingSprite(void *self);
-extern void UpdateMovingSprite(struct actor *self);
 
 /* src/objects/moving_sprite_collide.cpp */
-extern void HitMovingSprite(struct gobj *self, s32 a, s32 b, s32 c);
 extern s32 ClassifySpriteContact(void *part, void *region);
-extern s32 CollideMovingSprite(struct gobj *self);
 extern s32 GetGroundSpriteHitMask(struct gobj *self);
 extern s32 HasGroundSpriteHitMask(struct gobj *self);
 extern void ClearGroundSpriteHitMask(struct gobj *self);
@@ -252,8 +247,6 @@ extern struct aabb GetSpriteBounds(struct box_part *part);
 extern struct aabb GetSpriteHitbox(struct box_part *part);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
-extern s32 IsSpriteObjOnScreen(struct box_part *part);
-extern s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region);
 extern void AdvanceSpriteAnim(struct box_part *part);
 
 /* src/objects/sprite_anim.cpp */
@@ -295,13 +288,8 @@ extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
-extern s32 IsSpriteObjInsideRect(struct actor *part, void *box);
-extern s32 IsSpriteObjNearCamera(struct actor *part);
-extern void DrawSpriteObj(void *part);
-extern void *GetSpriteObjHitbox(struct actor *part);
 extern s32 GetSpriteTileBase(void *part);
 extern void *GetSpriteFrame(struct gfx_part *part);
-extern s32 GetSpriteObjPriority(void);
 extern void *GetSpriteFrameAnchor(void *part);
 extern void *GetSpriteFrameThirdBox(void *part);
 extern void *GetSpriteFrameAttackBox(void *part);
