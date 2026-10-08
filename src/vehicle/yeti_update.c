@@ -1,6 +1,5 @@
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "actor_self.h"
 #include "actor_anim.h"
 #include "system.h"
@@ -201,28 +200,18 @@ void UpdateYetiPalette(void)
  * from `GetActorBgCenterY()`, and the `PA`/`PB`/`PC`/`PD` matrix at
  * `0x04000020` as `scale, 0, 0, scale`.
  *
- * Matches under old_agbcc. The flag addresses are copied into their own
- * locals after the load (the ROM's `ldrb r1, [r0]; adds r3, r0, #0`),
- * with the loaded flag pinned to r1. */
+ * Matches under old_agbcc. */
 void UpdateYetiBg2(void)
 {
     s32 scale, base, t;
-    u8 *p = &gYetiBg2PageFlip;
-    MATCH_HOLD_REG(s32, v, r1) = *p;
-    u8 *changed = p;
 
-    if (v != 0) {
-        u8 *alt;
-
-        p = &gYetiBg2Page;
-        v = *p;
-        alt = p;
-        if (v != 0)
+    if (gYetiBg2PageFlip != 0) {
+        if (gYetiBg2Page != 0)
             REG_BG2CNT = 0x1a09;
         else
             REG_BG2CNT = 0x1b09;
-        *changed = 0;
-        *alt ^= 1;
+        gYetiBg2PageFlip = 0;
+        gYetiBg2Page ^= 1;
     }
     scale = Q8_DIV(gYetiDistance, 0x5500);
     base = GetActorBgCenterX();
