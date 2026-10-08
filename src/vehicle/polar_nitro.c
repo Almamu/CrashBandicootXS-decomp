@@ -18,7 +18,7 @@
  * idiom (`+0xc = 0x12`, `+0x10`/`+0x12` anim reset, `+8` accumulator
  * reset). */
 
-/* The actor_category_frame.c AABB helpers: the three scratch boxes live in
+/* The actor_category_frame.cpp AABB helpers: the three scratch boxes live in
  * one frame struct so each box address is rematerialized from `sp`
  * (see that file and yeti_update.c). */
 static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)

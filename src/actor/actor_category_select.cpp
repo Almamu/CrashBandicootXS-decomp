@@ -1,12 +1,19 @@
+#include "actor_self.hpp"
+
+extern "C" {
 #include "core.h"
 #include "match.h"
+#include "memory.h"
+#include "actor_anim.h"
+#include "actor.h"
+}
 
 /* Sets up the currently-selected category's runtime state:
  * `gActorCategoryVtable` = `&gActorCategoryVtables[type]` (the category's
  * shared vtable, `type` being the first argument), `gActorSpawnUseBonus`
  * = the 4th argument (a variant-selector byte), `gActorSpawnTable` =
  * the 2nd argument (the category's `spawnTable` array pointer,
- * see `struct sub_effect_record` in actor_spawn.c/include/actor_anim.h),
+ * see `struct sub_effect_record` in actor_spawn.cpp/include/actor_anim.h),
  * resets `gActorSpawnIndex`/`gActorSpawnsPaused`/`gActorSpawnOffset` to
  * 0, draws the vtable's slot-0 function pointer via `_call_via_r3`
  * (arg2/arg3 as x/y - the 5th argument, stack-passed, per the ROM's own
@@ -32,17 +39,13 @@
  * `GetCellAnimDistance` adds one reference to it. That extra-reference nudge
  * emits no code; it just makes the pointer outrank `base`. The scan
  * loops still use the global directly, which gives the ROM's loop-local
- * copies of the address. Matches under both compilers.
- * NextThreshold is actor_spawn.c's `GetActorSpawnZ` address shape,
+ * copies of the address. Matches under both compilers, in C and in C++
+ * (#664 part 11b), and the C++ still needs the nudge.
+ * NextThreshold is actor_spawn.cpp's `GetActorSpawnZ` address shape,
  * returned as a pointer so the load lands after the limit. */
-#include "memory.h"
-#include "actor_anim.h"
-#include "actor.h"
-#include "bosses.h"
-#include "vehicle.h"
 
 /* `table[idx + 1].depth`, with the record-boundary constant added
- * to the base before the index (same shape as actor_spawn.c's
+ * to the base before the index (same shape as actor_spawn.cpp's
  * `GetActorSpawnZ`). */
 static inline s32 *NextThreshold(struct sub_effect_record *table, s32 idx)
 {
@@ -57,7 +60,7 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTa
                          s32 variant, s32 checkpoint)
 {
     struct sub_effect_record *t;
-    struct actor_self ***buf;
+    ActorSelf ***buf;
     s32 base;
     s32 *idx;
 
@@ -76,7 +79,7 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTa
            *NextThreshold(t, gActorSpawnIndex) < (s32)gActorCategoryVtable->fn[8] + base)
         gActorSpawnIndex++;
     buf = &gActorDrawList;
-    *buf = mem_alloc(0xc8, 0x80000000);
+    *buf = (ActorSelf **)mem_alloc(0xc8, MEM_HEAP_IWRAM);
     if (gActorCategoryVtable->fn[2] != NULL)
         ((void (*)(s32))gActorCategoryVtable->fn[2])(variant);
     while (gActorSpawnIndex < gActorSpawnTable->link &&

@@ -2,17 +2,18 @@
 #define GUARD_VEHICLE_HPP
 
 /* The vehicle levels' 3D actors as C++ (#664, docs/cplusplus.md), on
- * ActorSelf and HpActor (actor_self.hpp). Part 11a declares what the
- * C++ objects so far need: the destructors that src/actor/actor_anim.cpp
+ * ActorSelf and HpActor (actor_self.hpp). Part 11a declared what the
+ * C++ objects needed then: the destructors that src/actor/actor_anim.cpp
  * has (the ROM keeps them there, with a few small methods), and the polar
  * player's state dispatch and table (src/vehicle/polar_player_dispatch.cpp,
- * src/data/actor_pmf_17a6b8.cpp). Their other methods, and their fields
- * past ActorSelf's or HpActor's, are still C (vehicle.h, src/vehicle/);
- * cxx_symbols.txt maps the C++ names to the C ones. The constructors are
- * declared with ActorSelf's arguments and the extra ones of their C
- * prototypes (Create*, Init*, named in a comment); where the ROM only has
- * a constructor inlined, its signature is a placeholder until its code is
- * converted.
+ * src/data/actor_pmf_17a6b8.cpp). Part 11b added the polar actors' fields
+ * and the constructors src/actor/actor_factory.cpp uses. Their other
+ * methods, and the jetpack actors' fields past HpActor's, are still C
+ * (vehicle.h, src/vehicle/); cxx_symbols.txt maps the C++ names to the C
+ * ones. The constructors are declared with ActorSelf's arguments and the
+ * extra ones of their C prototypes (Create*, Init*, named in a comment);
+ * where the ROM only has a constructor inlined and its code is still C,
+ * its signature is a placeholder until it is converted.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
 #pragma interface
@@ -23,13 +24,20 @@ extern "C" {
 #include "vehicle.h"
 }
 
-/* The polar bear levels (4 vtable slots: ActorSelf's). */
+/* The polar bear levels (4 vtable slots: ActorSelf's). Part 11b gives
+ * them their fields and the constructors CreateActor and the other
+ * factories in src/actor/actor_factory.cpp use: inline ones where the ROM
+ * expands them there (the crates' and the wumpa's also have an out-of-line
+ * C copy, Create*, in src/vehicle/), and declarations of the out-of-line
+ * ones, still C. */
 
 class RiderlessPolar : public ActorSelf
 {
 public:
-    // constructor inlined where it is used
-    RiderlessPolar(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
+    RiderlessPolar(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : ActorSelf(rec, x, y, z)
+    {
+    }
     virtual ~RiderlessPolar(); // 1 DestroyRiderlessPolar
 };
 
@@ -39,6 +47,7 @@ class PolarPlayer : public ActorSelf
 public:
     PolarPlayer(const struct anim_table_record *rec, s32 z); // ConstructActorPart
     void RunState();                                         // RunPolarPlayerState
+    void AllocTiles();                                       // AllocPolarPlayerTiles
 
     /* The states, indexed by `state` (stateFuncs, gPolarPlayerStateFuncs). */
     void StateMount();      // PolarPlayerStateMount
@@ -63,82 +72,131 @@ public:
 class PolarCheckpointText : public ActorSelf
 {
 public:
-    // constructor inlined where it is used
-    PolarCheckpointText(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
+    PolarCheckpointText(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : ActorSelf(rec, x, y, z)
+    {
+    }
     virtual ~PolarCheckpointText(); // 1 DestroyPolarCheckpointText
     virtual void Update();          // 2 UpdatePolarCheckpointText
 };
 
+/* The wumpa fruit flying to the HUD (gPolarCollectedWumpaVtable). */
+class PolarCollectedWumpa : public ActorSelf
+{
+public:
+    s32 velX;  // 0x54
+    s32 velY;  // 0x58
+    s32 count; // 0x5C - how many fruit the destructor hands out
+
+    PolarCollectedWumpa(const struct anim_table_record *rec, s32 x, s32 y,
+                        s32 count); // CreatePolarCollectedWumpa
+    virtual ~PolarCollectedWumpa(); // 1 DestroyPolarCollectedWumpa
+    virtual void Update();          // 2 UpdatePolarCollectedWumpa
+    virtual void Draw();            // 3 DrawPolarCollectedWumpa
+};
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarCollectedWumpa) == 0x60);
+
 class PolarWumpa : public ActorSelf
 {
 public:
-    // CreatePolarWumpa
-    PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
+    // inline here, and CreatePolarWumpa out of line
+    PolarWumpa(const struct anim_table_record *rec, s32 x, s32 y, s32 z) : ActorSelf(rec, x, y, z)
+    {
+    }
     virtual ~PolarWumpa(); // 1 DestroyPolarWumpa
 };
 
-class PolarTimeCrate : public ActorSelf
-{
-public:
-    // CreatePolarTimeCrate
-    PolarTimeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~PolarTimeCrate(); // 1 DestroyPolarTimeCrate
-};
-
-class PolarQuestionCrate : public ActorSelf
-{
-public:
-    // CreatePolarQuestionCrate
-    PolarQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~PolarQuestionCrate(); // 1 DestroyPolarQuestionCrate
-};
-
-class PolarAkuAkuCrate : public ActorSelf
-{
-public:
-    // CreatePolarAkuAkuCrate
-    PolarAkuAkuCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~PolarAkuAkuCrate(); // 1 DestroyPolarAkuAkuCrate
-};
-
-class PolarNitroCrate : public ActorSelf
-{
-public:
-    // CreatePolarNitroCrate
-    PolarNitroCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~PolarNitroCrate(); // 1 DestroyPolarNitroCrate
-};
-
-class PolarLifeCrate : public ActorSelf
-{
-public:
-    // CreatePolarLifeCrate
-    PolarLifeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, void *spawn);
-    virtual ~PolarLifeCrate(); // 1 DestroyPolarLifeCrate
-};
-
-class PolarFourWumpaCrate : public ActorSelf
-{
-public:
-    // CreatePolarFourWumpaCrate
-    PolarFourWumpaCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~PolarFourWumpaCrate(); // 1 DestroyPolarFourWumpaCrate
-};
-
-class PolarBasicCrate : public ActorSelf
-{
-public:
-    // CreatePolarBasicCrate
-    PolarBasicCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~PolarBasicCrate(); // 1 DestroyPolarBasicCrate
-};
-
+/* The crates' base (gPolarCrateVtable). Its destructor is inline, as
+ * every crate kind's expands it; actor_anim.cpp has the out-of-line copy
+ * (DestroyPolarCrate). The kinds' constructors are inline, and each also
+ * has an out-of-line C copy (CreatePolarTimeCrate, ..., polar_crates.c). */
 class PolarCrate : public ActorSelf
 {
 public:
-    // InitPolarCrate
-    PolarCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~PolarCrate(); // 1 DestroyPolarCrate
+    PolarCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z); // InitPolarCrate
+    virtual ~PolarCrate();                                                // 1 DestroyPolarCrate
+};
+
+inline PolarCrate::~PolarCrate()
+{
+}
+
+class PolarTimeCrate : public PolarCrate
+{
+public:
+    PolarTimeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : PolarCrate(rec, x, y, z)
+    {
+    }
+    virtual ~PolarTimeCrate(); // 1 DestroyPolarTimeCrate
+};
+
+class PolarQuestionCrate : public PolarCrate
+{
+public:
+    PolarQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : PolarCrate(rec, x, y, z)
+    {
+    }
+    virtual ~PolarQuestionCrate(); // 1 DestroyPolarQuestionCrate
+};
+
+class PolarAkuAkuCrate : public PolarCrate
+{
+public:
+    PolarAkuAkuCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : PolarCrate(rec, x, y, z)
+    {
+    }
+    virtual ~PolarAkuAkuCrate(); // 1 DestroyPolarAkuAkuCrate
+};
+
+class PolarNitroCrate : public PolarCrate
+{
+public:
+    PolarNitroCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : PolarCrate(rec, x, y, z)
+    {
+    }
+    virtual ~PolarNitroCrate(); // 1 DestroyPolarNitroCrate
+};
+
+/* Remembers the spawn record that built it, for MarkSpawnCollected
+ * (vehicle.h's `struct polar_life_crate`). */
+class PolarLifeCrate : public PolarCrate
+{
+public:
+    void *spawn; // 0x54
+
+    PolarLifeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, void *spawn)
+        : PolarCrate(rec, x, y, z)
+    {
+        this->spawn = spawn;
+    }
+    virtual ~PolarLifeCrate(); // 1 DestroyPolarLifeCrate
+};
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarLifeCrate) == sizeof(struct polar_life_crate));
+
+class PolarFourWumpaCrate : public PolarCrate
+{
+public:
+    PolarFourWumpaCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : PolarCrate(rec, x, y, z)
+    {
+    }
+    virtual ~PolarFourWumpaCrate(); // 1 DestroyPolarFourWumpaCrate
+};
+
+class PolarBasicCrate : public PolarCrate
+{
+public:
+    PolarBasicCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : PolarCrate(rec, x, y, z)
+    {
+    }
+    virtual ~PolarBasicCrate(); // 1 DestroyPolarBasicCrate
 };
 
 class PolarElectricFence : public ActorSelf
@@ -165,13 +223,22 @@ public:
     virtual ~PolarLauncher(); // 1 DestroyPolarLauncher
 };
 
+/* Hops from spawn to spawn (AimPolarPenguin). */
 class PolarPenguin : public ActorSelf
 {
 public:
+    s32 velX;       // 0x54
+    s32 velY;       // 0x58
+    s32 velZ;       // 0x5C
+    s32 countdown;  // 0x60 - frames until the next retarget
+    s32 nextTarget; // 0x64 - the spawn index it aims for next
+
     // CreatePolarPenguin
     PolarPenguin(const struct anim_table_record *rec, s32 x, s32 y, s32 z, struct spawn_arg *arg);
     virtual ~PolarPenguin(); // 1 DestroyPolarPenguin
 };
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPenguin) == 0x68);
 
 class PolarIcicle : public ActorSelf
 {
@@ -200,10 +267,14 @@ public:
 class PolarBoostPad : public ActorSelf
 {
 public:
+    u8 once; // 0x54 - the boost was given
+
     // CreatePolarBoostPad
     PolarBoostPad(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
     virtual ~PolarBoostPad(); // 1 DestroyPolarBoostPad
 };
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarBoostPad) == 0x58);
 
 class PolarCheckpointCrate : public ActorSelf
 {

@@ -102,8 +102,16 @@ PolarBasicCrate::~PolarBasicCrate()
 {
 }
 
-PolarCrate::~PolarCrate()
+/* PolarCrate's destructor is inline (vehicle.hpp), as the crate kinds'
+ * destructors above expand it; this is its out-of-line copy, the
+ * deleting destructor g++ emits with the class's vtable (part 11b). */
+void DestroyPolarCrate(struct actor_self *self, u32 flags)
 {
+    PolarCrate *crate = (PolarCrate *)self;
+
+    crate->PolarCrate::~PolarCrate();
+    if (flags & 1)
+        AnimPart::operator delete(crate);
 }
 
 PolarElectricFence::~PolarElectricFence()

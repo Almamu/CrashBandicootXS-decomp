@@ -58,6 +58,16 @@ public:
     u8 *GetAnimFrameData();       // GetAnimFrameData
     void SetAnim(s32 idx);        // SetActorAnim
 
+    /* SetAnim's body, inline (CreateActor's obstacles and goal, the polar
+     * player's constructor). */
+    void RestartAnim(s32 idx)
+    {
+        animIndex = idx;
+        animTimer = anims[idx].duration;
+        animDone = 0;
+        animTime = 0;
+    }
+
     static void *operator new(size_t size)
     {
         return mem_alloc(size, MEM_HEAP_IWRAM);

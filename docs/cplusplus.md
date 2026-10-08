@@ -538,6 +538,11 @@ counts them by kind) and what the C++ still needs.
 | `src/actor/actor_anim.cpp` | `AnimPart` (actor_self.hpp): `GetAnimFrameBaseOffset`, `GetAnimFrameAttr`, `GetAnimFrameData`, `SetAnim` (`SetActorAnim`); `HpActor`'s `GetHp`, `Damage`, `IsUnshootable`; 36 subclasses' destructors, and the checkpoint banners' and the jetpack explosion's methods (include/vehicle.hpp, include/boss_actors.hpp); 3 implicit destructors (C linkage) | 49 + 3 | **old_agbcp** (was agbcc) | 27 pins, 2 `asm`, 1 retyped store, 3 `destroy` slot calls -> 1 const | 11a |
 | `src/vehicle/polar_player_dispatch.cpp` | `PolarPlayer::RunState` (include/vehicle.hpp): `(this->*stateFuncs[state])()` | 1 | agbcp | `ACTOR_PMF_CALL` -> 0 | 11a |
 | `src/data/actor_pmf_17a6b8.cpp` | `PolarPlayer::stateFuncs`, the first pointer-to-member table in C++ (`&PolarPlayer::StateMount`, ...) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11a |
+| `src/actor/actor_factory.cpp` | `PolarPlayer`'s constructor (`ConstructActorPart`, include/vehicle.hpp), with `CreateActor`, `SpawnActor`, `ConstructAnimTableState`, `CreatePolarCheckpointText`, `SpawnPolarCollectedWumpa`, `SpawnPolarAkuAku` (C linkage): the polar actors' `new`s, the crates', wumpa's, riderless polar's and checkpoint banner's constructors inline | 1 + 6 | agbcp | 0 -> 0; 3 macros of hand-written `new`s (allocation, base constructor, vtable store), the `REC_AT` index cast and `AllocActor` go | 11b |
+| `src/actor/actor_spawn.cpp` | the category hooks and spawn accessors (C linkage): `DestroyAllActors` (`delete`), `CanPauseActorCategory`, ... | 0 + 16 | agbcp | 3 pins, 3 `asm` -> 1 pin | 11b |
+| `src/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
+| `src/actor/actor_category_select.cpp` | `SelectActorCategory` (C linkage) | 0 + 1 | agbcp | 1 use -> 1 use | 11b |
+| `src/actor/actor_anim.cpp` (again) | `PolarCrate`'s destructor is inline (vehicle.hpp); `DestroyPolarCrate` is its out-of-line copy, with C linkage | 0 + 1 | old_agbcp | 0 -> 0 | 11b |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2200,6 +2205,78 @@ projection first, with every spelling tried, and the pin is the C's), and
 helper's flag argument were 0; g++ folds any spelling of the 0, the C
 wrote the `orr` in asm (and pinned 23 registers in that function).
 
+### The polar actors' constructors and the category frame (part 11b)
+
+Part 11b in numbers: actor_factory.c, actor_spawn.c, actor_category_frame.c
+and actor_category_select.c, 28 functions, all with C linkage but
+`PolarPlayer`'s constructor. Project-wide: `MATCH_HOLD_REG` 1039 -> 1037,
+instruction-emitting `asm` 101 -> 98. The objects keep their compilers
+(`actor_category_frame.o` old_agbcp, the others agbcp; all three of the
+latter match under both).
+
+- **The polar actors get their fields and constructors** (include/vehicle.hpp):
+  `PolarLifeCrate::spawn`, `PolarBoostPad::once`, `PolarPenguin`'s
+  velocity and targets, and a new class, `PolarCollectedWumpa` (0x60:
+  the velocity and the fruit count). `CreateActor` is the per-kind `new`:
+  `new PolarTimeCrate(rec, x, y, z)` is AnimPart's inline operator new
+  (mem_alloc into IWRAM), then the constructor, with its arguments
+  evaluated after the allocation, which is the ROM's order with no
+  `AllocActor` wrapper or `REC_AT` index cast.
+- **The crate kinds derive from `PolarCrate`.** CreateActor expands their
+  constructors (InitPolarCrate, then the kind's vtable store), so they are
+  inline over PolarCrate's out-of-line one. Their destructors expand
+  PolarCrate's, so `~PolarCrate` is inline too (vehicle.hpp), and
+  actor_anim.cpp has its out-of-line copy at DestroyPolarCrate's place as
+  a C-linkage function, the deleting destructor g++ would emit with the
+  class's vtable (`crate->PolarCrate::~PolarCrate()`, then AnimPart's
+  operator delete). The ROM's ~PolarTimeCrate & co. are unchanged: both
+  dead vtable stores go.
+- **`PolarPlayer`'s constructor** is ConstructActorPart:
+  `ActorSelf(rec, 0, z != 0 ? 0x2800 : -0x5000, z)`, then `AllocTiles()`
+  (AllocPolarPlayerTiles, still C) and `SetState(0xD, 0xC)` or
+  `RestartAnim(8)`. `AnimPart::RestartAnim` is new, SetAnim's body inline
+  (the goal's and obstacle's second parts in CreateActor use it too).
+  `gActorList = new PolarPlayer(gActorAnimTable, z)` is
+  ConstructAnimTableState.
+- **The category frame's virtual calls** are `n->Update()` and
+  `gActorDrawList[i]->Draw()`, FindShotTarget's slot-5 query is
+  `n->IsUnshootable()` on an `HpActor`, and DestroyAllActors is `delete n`
+  for each actor and `delete gActorList` for the root.
+- **The category vtable stays C:** `struct category_vtable` is 13 plain
+  function pointers (two of them hold values), not a g++ vtable; the
+  slots are called as `gActorCategoryVtable->fn[5]()`, with casts where a
+  slot takes arguments or returns a value.
+- **C views:** CreateActor, SpawnActor and SpawnPolarAkuAku return an
+  `ActorSelf *` to C++, and gActorDrawList and gHeapSortActorsByKeyFunc
+  use `ActorSelf **` (`__cplusplus` declarations in actor.h and
+  vehicle.h, as `gActorList`'s). PolarIsTouchingPlayer and
+  JetpackIsTouchingPlayer take a `void *` (their only users are the
+  category tables). ConstructActorPart's C prototype goes (no C caller).
+
+What made the C++ match:
+
+- **The box tests' `MemCopy32(box, box, 12)` self-copies are g++'s.**
+  The ROM copies each actor's moved box into a slot and then copies the
+  slot onto itself with memcpy. That is a returned struct bound to a
+  `const &` parameter: `BoxOverlap(WorldBox(pl), WorldBox(self))`, with
+  `WorldBox` ActorSelf::GetWorldBox's body inline and `BoxOverlap` taking
+  `const struct anim_box &`. The C wrote the two calls and kept the boxes
+  in a frame struct. (Initialising a local from the call, or passing by
+  value, copies once with no memcpy.)
+- **DestroyAllActors** is two plain loops of `delete`: the C needed three
+  pins and two `asm` blocks for the root's address copied to r5.
+- **FindShotTarget's query** tests the low byte of slot 5's result
+  (`lsls r0, r0, #24`): `(u8)n->IsUnshootable() == 0`, as HpActor's slot
+  returns `s32` (actor_self.hpp; the jetpack slices define its overrides).
+
+Kept, each with a comment: `CanPauseActorCategory`'s r0 pin (the ROM
+EORs the 1 into the call's result in r0; g++ copies the result to r1
+and builds the 1 in r0 with every spelling tried; the C wrote the two
+instructions in asm), `SelectActorCategory`'s `MATCH_USE` (the C's
+extra-reference nudge, still needed), and the four `GetActorSpawn*`
+accessors' byte-offset arithmetic (`base + 0x18` before the index:
+indexing the struct folds the offset into the load).
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -2251,8 +2328,9 @@ player, then the first item here, is C++ since part 8):
   `ACTOR_PMF_CALL`): the rest of src/actor/, the vehicle levels
   (src/vehicle/: the jetpack, polar and yeti files) and the 3D bosses
   (airship*.c, hovercraft*.c). Part 11a converted the base classes
-  (actor.c, actor_anim.c), the polar player's dispatch and its table; the
-  plan for the rest is [below](#the-3d-actors-part-11).
+  (actor.c, actor_anim.c), the polar player's dispatch and its table, part
+  11b the actor factory, the spawn hooks and the category frame; the plan
+  for the rest is [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
   fonts (src/text/), the menus (the save menu, and the pause menu's and
   the power dialog's plain-C files; all of src/frontend/ is C++: the
@@ -2318,7 +2396,8 @@ PR, as before):
    other methods and the title screen).
 9. **The 3D actors** (part 11 onwards, [below](#the-3d-actors-part-11)):
    the base classes (`AnimPart`, `ActorSelf`, `HpActor`) in part 11a,
-   then the rest of src/actor/, the vehicles and the 3D bosses; the PMF
+   the actor factory and the category frame in part 11b, then the rest of
+   src/actor/, the vehicles and the 3D bosses; the PMF
    tables become `const StateFunc t[] = { &X::f, ... }` (experiment 3,
    part 11a's actor_pmf_17a6b8.cpp) and `ACTOR_PMF_CALL` goes.
 10. **Then the vtables** (plan item 5 below): once a family has no C class
@@ -2344,7 +2423,7 @@ and, once no C file reads one, its PMF table to C++.
 | Part | Files | Classes | Functions, pins, `asm` | PMF tables | Depends on |
 |---|---|---|---|---|---|
 | ~~11a~~ | ~~actor/actor.c, actor_anim.c; vehicle/polar_player_dispatch.c; data/actor_pmf_17a6b8.c~~ | `AnimPart`, `ActorSelf`, `HpActor`; the subclasses' destructors; `PolarPlayer::RunState` | done | gPolarPlayerStateFuncs | |
-| 11b | actor/actor_factory.c, actor_spawn.c, actor_category_frame.c (old), actor_category_select.c | the polar actors' constructors (CreateActor's inlined `new`s, `ConstructActorPart` = `PolarPlayer`'s), `FindShotTarget`, the category frame's virtual calls | 28, 3, 3 | | 11a |
+| ~~11b~~ | ~~actor/actor_factory.c, actor_spawn.c, actor_category_frame.c (old), actor_category_select.c~~ | the polar actors' constructors (CreateActor's inlined `new`s, `ConstructActorPart` = `PolarPlayer`'s), `FindShotTarget`, the category frame's virtual calls | done | | 11a |
 | 11c | vehicle/polar_player.c (old), polar_player_actions.c, polar_player_states.c | `PolarPlayer` (its fields, `Update`, `Draw`, the 14 states, the destructor) | 29, 89, 1 | (gPolarPlayerStateFuncs' last C user) | 11a |
 | 11d | vehicle/polar_crates.c, polar_pickups.c, polar_objects.c, polar_aku_aku.c, polar_nitro.c (old) | the polar crates (`PolarCrate` and its kinds), wumpas, hazards, Aku Aku, goal, boost pad | 51, 145, 3 | | 11b |
 | 11e | vehicle/jetpack_spawn.c (old), jetpack_player.c, jetpack_run.c, jetpack_shot.c | `HpActor`'s constructor, `JetpackPlayer`, `JetpackShot`, the jetpack spawners | 47, 52, 6 | gJetpackPlayerStateFuncs | 11a |
@@ -2773,3 +2852,17 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   static constructor; the data file becomes a `.cpp` and the methods'
   mangled names map to their C ones (src/data/actor_pmf_17a6b8.cpp, part
   11a).
+- **A memcpy of a struct onto itself** (`MemCopy32(p, p, 12)` right after
+  a copy into `p`) is a returned struct bound to a `const &` parameter of
+  an inline function: `BoxOverlap(WorldBox(a), WorldBox(b))`
+  (actor_category_frame.cpp, part 11b).
+- **An inline base destructor with an out-of-line copy in a file that
+  also expands it** (actor_anim.cpp has the crate kinds' destructors and
+  DestroyPolarCrate): define it `inline` in the header, and write the
+  out-of-line copy as the C-linkage deleting destructor,
+  `p->Base::~Base()` and the class's `operator delete` when bit 0 is set
+  (part 11b).
+- **A `new` with an inline operator new** evaluates the constructor's
+  arguments after the allocation: `new X(&gTable[i], ...)` loads the
+  table and scales the index after `mem_alloc` returns (CreateActor,
+  part 11b).

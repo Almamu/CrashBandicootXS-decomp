@@ -66,7 +66,7 @@ const struct bg_picture_13d934 gCategory3BgPicture = {
 };
 
 /* Category 3's spawnTable (gActorCategories[3].spawnTable,
- * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(121) gCategory3SpawnTable = {
     {
         { 5608, 121, 29, 29, 29, 33, -96, -30 },

@@ -80,7 +80,7 @@ void DispensePolarWumpa(void *selfArg)
 }
 
 /* Trivial byte getter. `player` is unused; PolarIsPauseLocked
- * (actor_spawn.c) passes gActorList. */
+ * (actor_spawn.cpp) passes gActorList. */
 s32 IsPolarPauseLocked(void *player)
 {
     return gPolarPauseLocked;

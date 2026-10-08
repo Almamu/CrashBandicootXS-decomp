@@ -38,7 +38,7 @@ const struct bg_picture_151ac4 gCategory4BgPicture = {
 };
 
 /* Category 4's spawnTable (gActorCategories[4].spawnTable,
- * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
     {
         { 7240, 230, 29, 29, 29, 0, -32, -30 },
@@ -307,7 +307,7 @@ const struct bg_picture_155260 gCategory5BgPicture = {
 };
 
 /* Category 5's spawnTable (gActorCategories[5].spawnTable,
- * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
     {
         { 8452, 295, 29, 29, 29, 0, -96, -30 },
@@ -610,7 +610,7 @@ const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
 };
 
 /* Category 6's spawnTable (gActorCategories[6].spawnTable,
- * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(1) gCategory6SpawnTable = {
     {
         { 712, 1, 10, 10, 10, 0, 160, 30 },
