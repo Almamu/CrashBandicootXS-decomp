@@ -1,9 +1,9 @@
 #include "core.h"
-#include "match.h"
 #include "gfx.h"
 #include "system.h"
 #include "actor.h"
 #include "globals.h"
+#include "math_util.h"
 
 /* A meta-node for a doubly-linked, address-ordered free-block list that
  * tracks allocations inside the OBJ tile VRAM pool (OBJ_VRAM0,
@@ -49,7 +49,6 @@ void InitObjTileFreeList(void *base)
     u8 **lookupSlot;
     s32 len;
     s32 i;
-    u16 zero;
 
     gVramTileBlockPool = (struct vram_tile_block *)mem_alloc(
         sizeof(struct vram_tile_block) * VRAM_TILE_BLOCK_POOL_COUNT, MEM_HEAP_EWRAM);
@@ -58,15 +57,7 @@ void InitObjTileFreeList(void *base)
 
     len = (s32)((u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE - (u8 *)base);
 
-    {
-        u16 *addr = &zero;
-
-        *addr = 0;
-        DMA3.src = (u32)addr;
-    }
-    DMA3.dst = (u32)base;
-    DMA3.cnt = (len / 2) | ((DMA_ENABLE | DMA_SRC_FIXED) << 16);
-    (void)DMA3.cnt;
+    DmaFill16(3, 0, base, len);
 
     gVramTileBlockSpares = gVramTileBlockPool;
     node = gVramTileBlockPool;
@@ -104,36 +95,23 @@ void FreeVramTileBlock(void *addr)
 {
     struct vram_tile_block *node;
     struct vram_tile_block *adj;
-    struct vram_tile_block **poolSlot;
-    u32 index;
-    MATCH_HOLD_REG(u8, byteVal, r0);
-    MATCH_HOLD_REG(u32, shifted, r1);
-    MATCH_HOLD_REG(u16, target_size, r4);
-    MATCH_HOLD_REG(u16, other_size, r1);
-    MATCH_HOLD_REG(u16, sum, r0);
+    struct vram_tile_block *next;
+    u32 tile;
 
     if (addr == NULL) {
         return;
     }
 
-    index = GET_TILE_NUM(addr);
-    poolSlot = &gVramTileBlockPool;
-    byteVal = gVramTileBlockIndex[index];
-    shifted = byteVal << 4;
-    node = (struct vram_tile_block *)((u8 *)*poolSlot + shifted);
+    tile = GET_TILE_NUM(addr);
+    node = &gVramTileBlockPool[gVramTileBlockIndex[tile]];
     node->status = VRAM_TILE_BLOCK_FREE;
 
     adj = node->prev;
     if (adj->status == VRAM_TILE_BLOCK_FREE) {
-        struct vram_tile_block *tmp;
-
-        target_size = adj->size;
-        other_size = node->size;
-        sum = target_size + other_size;
-        adj->size = sum;
-        tmp = node->next;
-        adj->next = tmp;
-        tmp->prev = adj;
+        adj->size += node->size;
+        next = node->next;
+        adj->next = next;
+        next->prev = adj;
         if (node == gVramTileBlockRover) {
             gVramTileBlockRover = adj;
         }
@@ -144,15 +122,10 @@ void FreeVramTileBlock(void *addr)
 
     adj = node->next;
     if (adj->status == VRAM_TILE_BLOCK_FREE) {
-        struct vram_tile_block *tmp;
-
-        target_size = node->size;
-        other_size = adj->size;
-        sum = target_size + other_size;
-        node->size = sum;
-        tmp = adj->next;
-        node->next = tmp;
-        tmp->prev = node;
+        node->size += adj->size;
+        next = adj->next;
+        node->next = next;
+        next->prev = node;
         if (adj == gVramTileBlockRover) {
             gVramTileBlockRover = node;
         }
@@ -163,7 +136,7 @@ void FreeVramTileBlock(void *addr)
 
 /* ROM 0x08028CD4 - next-fit search (starting from and updating the
  * `gVramTileBlockRover` rover, the same strategy `mem_alloc` uses over
- * its own free list) for a free block at least `requestedSize` bytes,
+ * its own free list) for a free block at least `size` bytes,
  * splitting the remainder off into a spare record when there's enough
  * left over to bother (unlike `mem_alloc`'s in-place split, this one
  * needs a free node record to represent the split-off piece - if the
@@ -173,130 +146,51 @@ void FreeVramTileBlock(void *addr)
  * the `gVramTileBlockIndex` tile lookup table so FreeVramTileBlock can
  * find it again from a bare VRAM address.
  *
- * Matched via one continuous `asm volatile` island covering the search
- * loop through the free-list split, rather than plain C. The search
- * loop's own C reconstruction was semantically correct and every
- * register/field access already matched, but its *entry shape* never
- * did: the ROM's compiled output checks the starting rover once as a
- * standalone, differently-registered copy of the free+size check
- * (`bge`/`blt` polarity), only falling into the shared advance/re-check
- * block on failure - but this compiler's cross-jump/tail-merging pass
- * at -O2 collapses every C phrasing tried (plain while/for,
- * do-while-with-guard, explicit `goto found`, manually duplicating the
- * check text with swapped operand order) back down to one shared check
- * block reached via a leading unconditional branch, the same
- * `bcc`-shaped, singly-deduplicated loop `mem_alloc` itself compiles to
- * (contrast the real `mem_alloc`/`FreeVramTileBlock` ROM bytes, which
- * never had the ROM's two-copy shape to begin with) - a loop-rotation
- * transform this compiler's optimizer won't perform no matter how the
- * C is phrased. `roverSlot`/`cur`/`requestedSize` are register-pinned
- * (r6/r3/r4) to match the registers the rest of the (already-matching)
- * function body expects; the asm's own local numeric labels (`1:`/`2:`)
- * handle the loop's back-edges, while the two ROM-shared merge points -
- * the "not found" early return and the free-list-split/no-split
- * rejoin - use real, uniquely-named `.L`-prefixed labels
- * (`.Lalloc_vram_notfound`/`.Lalloc_vram_remzero`) that a later,
- * ordinary-looking C statement's own `asm volatile(".Lname:")` marker
- * defines, the same "opaque asm reaching a named landing point in
- * later plain C" idiom `UpdateActorPaletteCycle` (src/actor/actor.c)
- * established for this project - `.Lalloc_vram_epilogue` marks the
- * point right before the function's one real (compiler-generated)
- * epilogue, split off `return result;`'s value computation via a
- * separate `result = cur->addr;` statement so the marker can land
- * exactly between them, and `.pool` right after
- * `.Lalloc_vram_notfound`'s `b .Lalloc_vram_epilogue` forces the
- * `gVramTileBlockRover` literal (loaded via the assembler's own
- * `=symbol` syntax, opaque to this compiler's own pool bookkeeping -
- * see actor.c's own comment for why only that route respects an
- * explicit pool split) to group with the compiler's own
- * `gVramTileBlockSpares` literal in that same ROM-matching mid-function
- * gap instead of at the function's end. The free-list-split logic
- * itself (from `gVramTileBlockSpares = spare->next;` on) is ROM-identical
- * arithmetic, but two more of this compiler's own CSE choices needed
- * the same asm treatment to land byte-exact: past the split, ROM
- * reloads `cur->next` from memory for `*roverSlot = cur->next;` (its
- * shared _08028D38 tail doesn't know a split may have just made that
- * value redundant with `spare`, still sitting in r2) where this
- * compiler reused the cached register instead (fixed with a `"memory"`
- * clobber on the `.Lalloc_vram_remzero` marker); and ROM reuses r0
- * (already `cur->next` from the immediately preceding load) for
- * `cur->next->prev = spare;` where plain C's two separate statements
- * made this compiler reload it a second time (fixed by writing that
- * whole split sequence as literal ROM instructions in the same asm
- * island, rather than trying a cached-local-variable rewrite in C -
- * the latter forced `curNext` into `r8`, an extra spill this small
- * function has no free low register for). */
-void *AllocVramTileBlock(s32 requestedSizeArg)
+ * Was one `asm volatile` island (#662). Under old_agbcc the plain loop
+ * matches, with `rover` as its own local: the ROM's copy of the search
+ * test before the loop uses other registers than the one at its bottom,
+ * so cross-jumping doesn't merge them. */
+void *AllocVramTileBlock(s32 size)
 {
-    MATCH_HOLD_REG(s32, requestedSize, r4) = requestedSizeArg;
-    MATCH_HOLD_REG(struct vram_tile_block **, roverSlot, r6);
-    MATCH_HOLD_REG(struct vram_tile_block *, cur, r3);
-    void *result;
+    struct vram_tile_block *cur;
+    struct vram_tile_block *last;
+    struct vram_tile_block *rover;
+    s32 rest;
 
-    // clang-format off
-    asm volatile(
-        "ldr r0, =gVramTileBlockRover\n"
-        "ldr r1, [r0]\n"
-        "ldr r2, [r1, #0xc]\n"
-        "add r3, r1, #0\n"
-        "ldrh r1, [r3, #6]\n"
-        "add r6, r0, #0\n"
-        "cmp r1, #0\n"
-        "bne 1f\n"
-        "ldrh r0, [r3, #4]\n"
-        "cmp r0, r4\n"
-        "bge 2f\n"
-        "1:\n"
-        "cmp r3, r2\n"
-        "beq .Lalloc_vram_notfound\n"
-        "ldr r3, [r3, #8]\n"
-        "ldrh r0, [r3, #6]\n"
-        "cmp r0, #0\n"
-        "bne 1b\n"
-        "ldrh r1, [r3, #4]\n"
-        "cmp r1, r4\n"
-        "blt 1b\n"
-        "2:\n"
-        "ldrh r0, [r3, #4]\n"
-        "sub r5, r0, r4\n"
-        "cmp r5, #0\n"
-        "beq .Lalloc_vram_remzero\n"
-        "ldr r1, =gVramTileBlockSpares\n"
-        "ldr r2, [r1]\n"
-        "cmp r2, #0\n"
-        "bne .Lalloc_vram_sparefound\n"
-        ".Lalloc_vram_notfound:\n"
-        "mov r0, #0\n"
-        "b .Lalloc_vram_epilogue\n"
-        ".pool\n"
-        ".Lalloc_vram_sparefound:\n"
-        "ldr r0, [r2, #8]\n"
-        "str r0, [r1]\n"
-        "mov r1, #0\n"
-        "strh r5, [r2, #4]\n"
-        "ldr r0, [r3]\n"
-        "add r0, r0, r4\n"
-        "str r0, [r2]\n"
-        "strh r1, [r2, #6]\n"
-        "str r3, [r2, #0xc]\n"
-        "ldr r0, [r3, #8]\n"
-        "str r0, [r2, #8]\n"
-        "str r2, [r0, #0xc]\n"
-        "str r2, [r3, #8]\n"
-        "strh r4, [r3, #4]\n"
-        ".Lalloc_vram_remzero:\n"
-        : "=r"(cur), "=r"(roverSlot)
-        : "r"(requestedSize)
-        : "r0", "r1", "r2", "r5", "cc", "memory"
-    );
-    // clang-format on
+    rover = gVramTileBlockRover;
+    last = rover->prev;
+    cur = rover;
+    while (cur->status != VRAM_TILE_BLOCK_FREE || cur->size < size) {
+        if (cur == last) {
+            return NULL;
+        }
+        cur = cur->next;
+    }
+
+    rest = cur->size - size;
+    if (rest != 0) {
+        struct vram_tile_block *spare = gVramTileBlockSpares;
+        struct vram_tile_block *next;
+
+        if (spare == NULL) {
+            return NULL;
+        }
+        gVramTileBlockSpares = spare->next;
+        spare->size = rest;
+        spare->addr = (u8 *)cur->addr + size;
+        spare->status = VRAM_TILE_BLOCK_FREE;
+        spare->prev = cur;
+        next = cur->next;
+        spare->next = next;
+        next->prev = spare;
+        cur->next = spare;
+        cur->size = size;
+    }
 
     cur->status = VRAM_TILE_BLOCK_USED;
-    *roverSlot = cur->next;
-    gVramTileBlockIndex[GET_TILE_NUM(cur->addr)] = (u8)(cur - gVramTileBlockPool);
-    result = cur->addr;
-    asm volatile(".Lalloc_vram_epilogue:");
-    return result;
+    gVramTileBlockRover = cur->next;
+    gVramTileBlockIndex[GET_TILE_NUM(cur->addr)] = cur - gVramTileBlockPool;
+    return cur->addr;
 }
 
 /* UNUSED - ROM 0x08028D6C, no caller anywhere in the ROM (checked
@@ -331,17 +225,10 @@ s32 GetFreeVramTileBytes(void)
     s32 total;
 
     total = 0;
-    node = gVramTileBlockList.next;
-    if (node != &gVramTileBlockList) {
-        do {
-            if (node->status == VRAM_TILE_BLOCK_FREE) {
-                {
-                    s32 size = node->size;
-                    asm volatile("add %0, %1, %0" : "+r"(total) : "r"(size));
-                }
-            }
-            node = node->next;
-        } while (node != &gVramTileBlockList);
+    for (node = gVramTileBlockList.next; node != &gVramTileBlockList; node = node->next) {
+        if (node->status == VRAM_TILE_BLOCK_FREE) {
+            total += node->size;
+        }
     }
     return total;
 }
@@ -373,6 +260,17 @@ struct queued_oam_entry {
 #define QUEUED_OAM_NEGATE_X 0x10000000 // negate the affine x scale
 #define QUEUED_OAM_NEGATE_Y 0x20000000 // negate the affine y scale
 
+/* An affine x/y scale pair as `gSpriteAffineQueue` stores it: x in the
+ * low halfword, y in the high one. The ROM builds it in one register,
+ * inserting each half into whatever the register held. */
+union affine_scale {
+    s32 raw;
+    struct {
+        u32 x:16;
+        u32 y:16;
+    } xy;
+};
+
 /* ROM 0x08028DD8 - appends one OAM entry (`attr01`/`attr2`, hardware
  * ATTR0|ATTR1<<16 and ATTR2) to the `gSpriteOamQueue` overflow queue
  * `FlushSpriteFrameOamQueue` later commits. When ATTR0 bit 8 (the
@@ -384,63 +282,27 @@ struct queued_oam_entry {
  * scale are extremely common), otherwise appends a new one, then
  * writes that entry's index into `attr01` bits 25-29 (ATTR1's real
  * affine-index field) after clearing the two negate-flag bits that
- * used to live there. `x`/`y` are pinned to r0/r1 and the two
- * truncate/shift steps split into their own statements - without
- * those this compiler folds the "value or its negation" ternary into
- * a single assign-then-conditionally-negate sequence instead of the
- * ROM's two independent branches into the same register, and reorders
- * the mask/shift pair relative to the ROM (see docs/workflow.md step 7,
- * confirmed by rebuilding without them). */
+ * used to live there. */
 void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
 {
-    struct queued_oam_entry *entry;
-
     if (attr01 & QUEUED_OAM_AFFINE) {
-        MATCH_HOLD_REG(s32, x, r0);
-        MATCH_HOLD_REG(s32, y, r1);
-        /* Self-initialized: the ROM merges both halves into whatever the
-         * register held, so it is never zeroed; this silences
-         * -Wuninitialized without adding code (#577). */
-        s32 combined = combined;
+        union affine_scale scale;
 
-        if (attr01 & QUEUED_OAM_NEGATE_X) {
-            x = -priority;
-        } else {
-            x = priority;
-        }
-        x = (u16)x;
-        combined = (combined & 0xFFFF0000) | x;
-        if (attr01 & QUEUED_OAM_NEGATE_Y) {
-            y = -priority;
-        } else {
-            y = priority;
-        }
-        y = y << 16;
-        combined = (combined & 0x0000FFFF) | y;
+        scale.xy.x = (attr01 & QUEUED_OAM_NEGATE_X) ? -priority : priority;
+        scale.xy.y = (attr01 & QUEUED_OAM_NEGATE_Y) ? -priority : priority;
         attr01 &= ~(QUEUED_OAM_NEGATE_X | QUEUED_OAM_NEGATE_Y);
 
         if (gSpriteAffineQueueCount == 0 ||
-            combined != gSpriteAffineQueue[gSpriteAffineQueueCount - 1]) {
-            gSpriteAffineQueue[gSpriteAffineQueueCount] = combined;
+            scale.raw != gSpriteAffineQueue[gSpriteAffineQueueCount - 1]) {
+            gSpriteAffineQueue[gSpriteAffineQueueCount] = scale.raw;
             gSpriteAffineQueueCount++;
         }
         attr01 |= (gSpriteAffineQueueCount - 1) << 25;
     }
 
-    {
-        s32 count = gSpriteOamQueueCount;
-        MATCH_HOLD_REG(struct queued_oam_entry *, base, r2);
-        s32 offset;
-
-        base = gSpriteOamQueue;
-        offset = count << 3;
-        asm volatile("add %0, %0, %1" : "+r"(offset) : "r"(base));
-
-        entry = (struct queued_oam_entry *)offset;
-        entry->attr01 = attr01;
-        entry->attr2 = attr2;
-        gSpriteOamQueueCount = count + 1;
-    }
+    gSpriteOamQueue[gSpriteOamQueueCount].attr01 = attr01;
+    gSpriteOamQueue[gSpriteOamQueueCount].attr2 = attr2;
+    gSpriteOamQueueCount++;
 }
 
 /* ROM 0x08028E88 - frees the two EWRAM buffers `InitSpriteFrameOamQueue`
@@ -474,24 +336,11 @@ void FlushSpriteFrameOamQueue(void)
  * here hiding every hardware sprite as this system's startup state. */
 void InitSpriteFrameOamQueue(void)
 {
-    u16 hideValue;
-
     gSpriteOamQueue = (struct queued_oam_entry *)mem_alloc(OAM_ENTRY_COUNT * 8, MEM_HEAP_EWRAM);
     gSpriteAffineQueue = (s32 *)mem_alloc(32 * 4, MEM_HEAP_EWRAM);
     gSpriteOamQueueCount = 0;
     gSpriteAffineQueueCount = 0;
-
-    {
-        u16 *addr = &hideValue;
-        MATCH_HOLD_REG(u16, val, r0);
-
-        val = 0x80 << 2;
-        *addr = val;
-    }
-    DMA3.src = (u32)&hideValue;
-    DMA3.dst = OAM;
-    DMA3.cnt = (OAM_ENTRY_COUNT * 8 / 2) | ((DMA_ENABLE | DMA_SRC_FIXED) << 16);
-    (void)DMA3.cnt;
+    DmaFill16(3, 0x200, OAM, OAM_ENTRY_COUNT * 8);
 }
 
 /* A doubly-linked frame-cache entry: `frame` is the source animation-
@@ -523,7 +372,6 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * block. */
 s32 LoadSpriteFrameTiles(u8 *frame)
 {
-    struct sprite_frame_cache_node **spareSlot;
     struct sprite_frame_cache_node *node;
     struct sprite_frame_cache_node *oldFirst;
     s32 byteCount;
@@ -543,40 +391,20 @@ s32 LoadSpriteFrameTiles(u8 *frame)
     gSpriteFrameCacheCurrent.next->prev = node;
     gSpriteFrameCacheCurrent.next = node;
 
-    {
-        MATCH_HOLD_REG(u32, w, r1);
-        MATCH_HOLD_REG(u32, h, r3);
-        MATCH_HOLD_REG(u32, product, r0);
+    byteCount = frame[1] * frame[0] * 32;
 
-        w = frame[0];
-        h = frame[1];
-        asm volatile("mov %0, %1" : "=r"(product) : "r"(w));
-        product *= h;
-        byteCount = product << 5;
+    while ((node->vramAddr = AllocVramTileBlock(byteCount)) == NULL) {
+        struct sprite_frame_cache_node *victim = gSpriteFrameCachePrevious.prev;
+
+        FreeVramTileBlock(victim->vramAddr);
+        victim->prev->next = victim->next;
+        victim->next->prev = victim->prev;
+        victim->next = gSpriteFrameCacheSpares;
+        gSpriteFrameCacheSpares = victim;
     }
 
-    spareSlot = &gSpriteFrameCacheSpares;
-
-    {
-        void *vramAddr = AllocVramTileBlock(byteCount);
-
-        node->vramAddr = vramAddr;
-        while (vramAddr == NULL) {
-            struct sprite_frame_cache_node *victim = gSpriteFrameCachePrevious.prev;
-
-            FreeVramTileBlock(victim->vramAddr);
-            victim->prev->next = victim->next;
-            victim->next->prev = victim->prev;
-            victim->next = *spareSlot;
-            *spareSlot = victim;
-
-            vramAddr = AllocVramTileBlock(byteCount);
-            node->vramAddr = vramAddr;
-        }
-
-        QueueVramDmaTransfer(node->frame + 4, vramAddr, (u16)byteCount, 0x10);
-        return GET_TILE_NUM(node->vramAddr);
-    }
+    QueueVramDmaTransfer(node->frame + 4, node->vramAddr, (u16)byteCount, 0x10);
+    return GET_TILE_NUM(node->vramAddr);
 }
 
 /* ROM 0x08028FF8 - builds and queues one sprite frame's OAM entry:
@@ -612,12 +440,7 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
             shapeBits = 0x80 << 8;
         }
 
-        diff = w - h;
-        {
-            MATCH_HOLD_REG(s32, mask, r1);
-            mask = diff >> 31;
-            diff = (diff ^ mask) - mask;
-        }
+        diff = ABS_BRANCHLESS(w - h);
         if (diff == 4) {
             shapeBits |= 0xC0 << 24;
         } else if (diff == 2) {
@@ -700,9 +523,8 @@ void InitSpriteFrameCache(void)
  * for the record format. Identical logic is also inlined directly into
  * `SetupSpriteFrameOam` below (the ROM compiles that copy separately
  * rather than calling this one - see that function's own comment).
- * The abs-value sign mask `mask` is pinned to r1, the same kind of
- * register-shuffle fix as on `AllocVramTileBlock`/`QueueSpriteFrameOam`
- * above; `result` and `diff` land in the ROM's r2/r0 on their own. */
+ * The ROM's abs is branchless, and written as one expression it gets the
+ * ROM's registers (a separate sign-mask local doesn't). */
 u32 GetSpriteShapeSizeBits(u8 *frame)
 {
     u32 result;
@@ -727,13 +549,7 @@ u32 GetSpriteShapeSizeBits(u8 *frame)
         result = 0x80 << 8;
     }
 
-    {
-        MATCH_HOLD_REG(s32, mask, r1);
-
-        diff = w - h;
-        mask = diff >> 31;
-        diff = (diff ^ mask) - mask;
-    }
+    diff = ABS_BRANCHLESS(w - h);
     if (diff == 4) {
         result |= 0xC0 << 24;
     } else if (diff == 2) {

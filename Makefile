@@ -222,6 +222,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/display.o \
                   $(C_BUILDDIR)/gfx/fade.o \
+                  $(C_BUILDDIR)/gfx/sprite_frame.o \
                   $(C_BUILDDIR)/text/wrapped_text.o \
                   $(C_BUILDDIR)/actor/actor_category_init.o \
                   $(C_BUILDDIR)/actor/actor_category_frame.o \
