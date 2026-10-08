@@ -74,30 +74,6 @@ public:
             }
         }
     }
-    /* Takes `n` bytes (SaveTransfer::ReceiveChunk, LinkSession::HandleSerial). */
-    void Pop(u8 *dst, s32 n)
-    {
-        s32 i;
-
-        if (readPos < 0x80 - n) {
-            for (i = n - 1; i != -1; i--) {
-                *dst++ = buf[readPos];
-                readPos++;
-                count--;
-            }
-        } else {
-            for (i = n - 1; i != -1; i--) {
-                s32 old = readPos;
-                s32 next = 0;
-
-                if (old != 0x7f)
-                    next = old + 1;
-                readPos = next;
-                count--;
-                *dst++ = buf[old];
-            }
-        }
-    }
     LinkRing()
     {
         Reset();
