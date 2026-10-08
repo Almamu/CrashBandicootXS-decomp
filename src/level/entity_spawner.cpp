@@ -91,7 +91,7 @@ MovingSprite *EntitySpawner::SpawnEffectPart(s32 anim, s32 tag, s32 x, s32 y, s3
     part->mover = mgr;
     mgr->Attach(part);
     part->f.b.visible = 0;
-    part->f.b.unk_1 = 0;
+    part->f.b.attacks = 0;
     CollidableList()->Add(part);
     return part;
 }

@@ -133,12 +133,12 @@ public:
 
     void SetFlag1()
     {
-        f.b.unk_1 = 1;
+        f.b.attacks = 1;
     }
 
     void ClearFlag1()
     {
-        f.b.unk_1 = 0;
+        f.b.attacks = 0;
     }
 
     u8 GetFlag1()

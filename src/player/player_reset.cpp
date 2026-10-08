@@ -16,7 +16,7 @@ void Player::Reset()
 {
     f.b.collides = 1;
     f.b.vulnerable = 1;
-    f.b.unk_1 = 1;
+    f.b.attacks = 1;
     f.b.visible = 0;
     f.b.floorProbe = 1;
     speedX = 0;
