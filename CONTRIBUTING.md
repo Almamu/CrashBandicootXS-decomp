@@ -179,6 +179,35 @@ full rules and the history (#574). For new code:
   editing headers). A NAME is a struct/class name, with `@file` to pick
   one definition (`actor@actor.h`). Use it before merging or renaming a
   C view of a class, and after, to check the view and the class agree.
+- **One layout, one type (#656).** A record that extends another embeds
+  it, so each field has one name and one type:
+  - **Plain C:** the base is the named first member (memory.h's `struct
+    mem_heap` starts with `struct mem_heap_header base;`): agbcc and
+    old_agbcc reject anonymous struct and union members. Don't copy the
+    base's fields into the derived struct, and don't keep a second struct
+    with the same fields under other names: merge it into the one that
+    exists (aabb.h's `struct vec2` is every {x, y} pair, sprite_bank.h's
+    `struct sprite_anim`/`struct sprite_bank` every animation record and
+    bank, vtable.h's `struct vtable_slot` every vtable slot, gfx.h's `union
+    dispcnt` every DISPCNT copy).
+  - **C++:** a derived class inherits its base (`class Player : public
+    GroundSprite`); it doesn't redeclare the base's fields.
+  - **C views of classes:** a C file that reads a C++ object's fields
+    does it through one C struct per class (player.h's `struct player`
+    for Player), with the class's field names and types. A view whose
+    fields no C file reads is only a tag (`struct hud_counter;`). The
+    class's header checks the view's size and every named field's
+    offset with `ASSERT_VIEW_FIELD(tag, Class, view, field)` (core.h:
+    `COMPILE_TIME_ASSERT(tag, offsetof(Class, field) == offsetof(struct
+    view, field))`); bitfields and the vtable pointer can't be checked.
+  - **Codegen views** (a second type for the same bytes that a function
+    only matches with, such as crates.h's `struct pool_init_node` or
+    cutscene.h's `struct cutscene_player`) stay, with a `codegen:`
+    comment saying what the other type changes, and the same offset
+    checks.
+  - `tools/layout_audit.py views` and `names` list the layouts that
+    still view one another and the bytes that have two names; check them
+    before and after such a change.
 
 ### Compiler warnings
 
