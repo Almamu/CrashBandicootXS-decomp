@@ -4,6 +4,7 @@
 #include "input_ctrl.hpp"
 #include "crate_list.hpp"
 #include "bg_layer.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -24,7 +25,7 @@ extern "C" {
  * `gForegroundList`, the crate list `gCrateList`, the camera), takes the
  * level layers singleton (`LevelLayers::Get`), builds the player
  * (`gPlayer`) at the checkpoint, and gives it the room kind's controller
- * (`self->cat->kind`): the action controller on foot, the swim controller
+ * (`cat->kind`): the action controller on foot, the swim controller
  * (`gPlayerCtrl`) underwater, the input controller on the hover levels.
  * Then it runs the room (`RunRoom`) and deletes everything again.
  *
@@ -34,7 +35,7 @@ extern "C" {
  * controller case reads `gPlayer` once into `pl` after the sprite bank,
  * and the constant stores (`tag`, `ctrlMode` 3) go through a `u8` local
  * so the constant is loaded before the field's address. */
-s32 PlayRoom(struct level_progress *self)
+s32 LevelProgress::PlayRoom()
 {
     s32 mode;
     s32 result;
@@ -57,11 +58,11 @@ s32 PlayRoom(struct level_progress *self)
     }
 
     gPlayer = new Player(0xffff, 0, 0, 0);
-    SetEntityPos(gPlayer, self->checkpointX, self->checkpointY);
+    SetEntityPos(gPlayer, checkpointX, checkpointY);
     gPlayer->f.bytes.flags |= 0x10;
-    gPlayer->mirrorFlags.mirrorX = self->checkpointFlags;
+    gPlayer->mirrorFlags.mirrorX = checkpointFlags;
 
-    mode = self->cat->kind;
+    mode = cat->kind;
     switch (mode) {
     case ROOM_KIND_ON_FOOT:
         {
@@ -132,7 +133,7 @@ s32 PlayRoom(struct level_progress *self)
         }
     }
 
-    result = RunRoom(self);
+    result = RunRoom();
 
     delete gLevelLayers;
     operator delete(gCamera);

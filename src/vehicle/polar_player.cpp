@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -189,7 +190,7 @@ s32 PolarPlayer::Hurt()
         SetState(6, 5);
         gPolarPauseLocked = 1;
         if (gLevelState->timeTrial == 0)
-            LoseLife(gLevelState);
+            gLevelState->LoseLife();
         gPolarSteerEnabled = 0;
         gPolarPlayerInactive = 1;
         SetCellAnimSpeed(0);
@@ -348,7 +349,7 @@ void PolarPlayer::StateShocked()
         gPolarPauseLocked = 1;
         SetState(6, 5);
         if (gLevelState->timeTrial == 0)
-            LoseLife(gLevelState);
+            gLevelState->LoseLife();
     } else if (counter & 4) {
         QueueVramDmaTransfer((void *)gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
     } else {
@@ -368,6 +369,6 @@ void PolarPlayer::StateCaught()
         SetState(8, 7);
         gPolarPauseLocked = 1;
         if (gLevelState->timeTrial == 0)
-            LoseLife(gLevelState);
+            gLevelState->LoseLife();
     }
 }

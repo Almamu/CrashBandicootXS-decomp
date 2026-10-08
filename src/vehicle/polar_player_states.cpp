@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -31,7 +32,7 @@ void PolarPlayer::DispenseWumpa()
 
     if (gPolarPlayerInactive != 0) {
         do {
-            CollectWumpa(gLevelState);
+            gLevelState->CollectWumpa();
             gPolarQueuedWumpa--;
         } while (gPolarQueuedWumpa != 0);
         return;

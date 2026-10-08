@@ -2,6 +2,7 @@
 #include "crate_list.hpp"
 #include "player.hpp"
 #include "hud.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -10,7 +11,6 @@ extern "C" {
 #include "gfx.h"
 #include "actor_self.h"
 #include "sprite_bank.h"
-#include "level_state.h"
 #include "hud.h"
 #include "system.h"
 #include "crates.h"
@@ -29,16 +29,16 @@ struct oam_shadow_buffer;
 
 /* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA
- * queue - only while `self->level` is `<= 0x1000` (always, for a level
+ * queue - only while `level` is `<= 0x1000` (always, for a level
  * index), otherwise this is a no-op. */
-void UpdateRoomFrame(struct level_progress *self)
+void LevelProgress::UpdateRoomFrame()
 {
     gPaletteCache->Upload();
     UpdateCamera(gCamera);
     gLevelLayers->Scroll();
     gPaletteCycles->Tick();
 
-    if (self->level <= 0x1000) {
+    if (level <= 0x1000) {
         gHud->Update();
         gForegroundList->Draw();
 
@@ -63,18 +63,18 @@ void UpdateRoomFrame(struct level_progress *self)
  * sets gLevelLayers->raiseObjPriority in an underwater room (kind 1). With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. The effect
  * is tested as a halfword and stored from its low byte, as in the ROM. */
-void SetupRoomBlend(struct level_progress *self)
+void LevelProgress::SetupRoomBlend()
 {
     union blend *b = &gBlendRegs.blend;
 
     b->raw = 0;
     gLevelLayers->raiseObjPriority = 0;
-    if (self->cat->param.blend.effect != 0) {
-        if (self->cat->kind == ROOM_KIND_UNDERWATER)
+    if (cat->param.blend.effect != 0) {
+        if (cat->kind == ROOM_KIND_UNDERWATER)
             gLevelLayers->raiseObjPriority = 1;
-        b->bits.effect = *(const u8 *)&self->cat->param.blend.effect;
-        b->bits.eva = self->cat->param.blend.eva;
-        b->bits.evb = self->cat->param.blend.evb;
+        b->bits.effect = *(const u8 *)&cat->param.blend.effect;
+        b->bits.eva = cat->param.blend.eva;
+        b->bits.evb = cat->param.blend.evb;
         b->bits.bg3First = 1;
         b->bits.bg0Second = 1;
         b->bits.bg1Second = 1;

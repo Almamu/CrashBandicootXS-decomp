@@ -2,6 +2,7 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "util.h"
@@ -176,7 +177,7 @@ skip:
             if (wait == 0) {
                 switch (dir) {
                 case 3 ... 8:
-                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)HasTurboRun(gLevelState)) {
+                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)gLevelState->HasTurboRun()) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
                         SetTargetAnim(part, 0x18);

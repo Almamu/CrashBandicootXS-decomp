@@ -6,6 +6,7 @@
 #include "player.hpp"
 #include "hud.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -467,7 +468,7 @@ tail:
                      !PlayerInvulnerable()) ||
                     kind != CRATE_KIND_REINFORCED) {
                     gPlayer->f.flags |= 0x40;
-                    SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
+                    gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
                     gPlayer->HandleEvent(0, EVENT_HIT_CRUSH, 0);
                 } else {
                     BreakInStack(0, 0, 0);
@@ -1073,8 +1074,8 @@ void Crate::OpenCheckpoint()
             SetEntityIdActivated(gEntityFlags, eid);
     }
     if (gCrateKindCounted[kind])
-        AddBrokenCrate(gLevelState);
-    SetCheckpointAtPlayer(gLevelState, paramA != 0);
+        gLevelState->AddBrokenCrate();
+    gLevelState->SetCheckpointAtPlayer(paramA != 0);
     state &= CRATE_STATE_MASK;
     gPlayer->busy = 0;
     one = 1;
@@ -1170,7 +1171,7 @@ void Crate::Break(u32 arg1)
     }
     ClampFrame(3);
     if (gCrateKindCounted[kind])
-        AddBrokenCrate(gLevelState);
+        gLevelState->AddBrokenCrate();
     /* ENTITY_SET_GONE_BIT_OF(id, one) (entity_bits.h) in a plain
      * block: the macro's do/while(0) changes this object. */
     {
@@ -1220,13 +1221,13 @@ void Crate::Break(u32 arg1)
             OpenSlot(chained);
         break;
     case CRATE_KIND_TIME_1:
-        FreezeLevelClock(gLevelState, 1);
+        gLevelState->FreezeLevelClock(1);
         break;
     case CRATE_KIND_TIME_2:
-        FreezeLevelClock(gLevelState, 2);
+        gLevelState->FreezeLevelClock(2);
         break;
     case CRATE_KIND_TIME_3:
-        FreezeLevelClock(gLevelState, 3);
+        gLevelState->FreezeLevelClock(3);
         break;
     case CRATE_KIND_BASIC:
         {
@@ -1493,7 +1494,7 @@ void Crate::Explode(u8 near)
     } else
         SetTag(0x21);
     if (gCrateKindCounted[kind])
-        AddBrokenCrate(gLevelState);
+        gLevelState->AddBrokenCrate();
     ENTITY_SET_GONE_BIT(id);
     gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     DropAbove();
@@ -1658,7 +1659,7 @@ void Crate::ActivateNitroSwitch()
         gHud->ShowCrates();
         gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         pressed = 1;
-        PressSwitchCrate(gLevelState);
+        gLevelState->PressSwitchCrate();
     }
 }
 

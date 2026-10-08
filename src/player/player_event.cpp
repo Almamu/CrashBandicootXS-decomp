@@ -3,6 +3,7 @@
 #include "crate_list.hpp"
 #include "hud.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "util.h"
@@ -68,7 +69,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
 {
     switch (event) {
     case EVENT_CRYSTAL:
-        *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRYSTAL;
+        *gLevelState->GetCurrentLevelFlags() |= LEVEL_FLAG_CRYSTAL;
         gAudioContext->PlaySfx(SFX_CRYSTAL, 0x100);
         break;
     case EVENT_ROOM_EXIT:
@@ -77,35 +78,35 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         break;
     case EVENT_WARP_EXIT:
         {
-            struct level_state *game = gLevelState;
+            LevelState *game = gLevelState;
 
             if (game->timeTrial)
-                FreezeLevelClock(game, 100);
+                game->FreezeLevelClock(100);
         }
         mover->HandleEvent((MovingSprite *)from, event, arg);
         gHud->ShowCounters();
         break;
     case EVENT_WARP_BONUS_ROUND:
-        RequestBonusRound(gLevelState);
+        gLevelState->RequestBonusRound();
         mover->HandleEvent((MovingSprite *)from, event, arg);
         break;
     case EVENT_WARP_GEM_PATH:
-        RequestGemPath(gLevelState);
+        gLevelState->RequestGemPath();
         mover->HandleEvent((MovingSprite *)from, event, arg);
         break;
     case EVENT_STOPWATCH:
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             deadline = 0;
         gAudioContext->PlaySfx(SFX_CLOCK, 0x100);
-        StartTimeTrial(gLevelState);
+        gLevelState->StartTimeTrial();
         break;
     case EVENT_CRATE_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_CRATE_GEM;
+        *gLevelState->GetCurrentLevelFlags() |= LEVEL_FLAG_CRATE_GEM;
         break;
     case EVENT_GEM_PATH_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
-        *GetCurrentLevelFlags(gLevelState) |= LEVEL_FLAG_GEM_PATH_GEM;
+        *gLevelState->GetCurrentLevelFlags() |= LEVEL_FLAG_GEM_PATH_GEM;
         break;
     case EVENT_YELLOW_GEM:
         gAudioContext->PlaySfx(SFX_GEM, 0x100);
@@ -141,7 +142,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
             s32 mode = gLevelState->maskLevel;
 
             if ((mode <= MASK_LEVEL_TWO && gPlayer->ctrlMode != 1) || mode <= MASK_LEVEL_ONE)
-                RaiseMaskLevel(gLevelState);
+                gLevelState->RaiseMaskLevel();
         }
         if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE)
             deadline = gRoomFrameCount + 1200;
@@ -158,7 +159,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
     case EVENT_HIT_CRUSH:
         if ((f.flags >> 6) & 1) {
             if (!IsBlinking(this)) {
-                struct level_state *game = gLevelState;
+                LevelState *game = gLevelState;
 
                 if (game->maskLevel != MASK_LEVEL_NONE) {
                     if (game->maskLevel <= MASK_LEVEL_TWO) {
@@ -166,7 +167,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                         s32 cx, cy, m;
 
                         deadline = gRoomFrameCount + 90;
-                        SetMaskLevel(game, game->maskLevel - 1);
+                        game->SetMaskLevel(game->maskLevel - 1);
                         gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
                         gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
                         mover->HandleEvent((MovingSprite *)from, EVENT_MASK_HIT, arg);
@@ -179,7 +180,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                         gEntitySpawner->SpawnEffectPart(0x22, 3, cx, cy, m);
                     }
                 } else {
-                    AddDeath(game);
+                    game->AddDeath();
                     mover->HandleEvent((MovingSprite *)from, event, arg);
                 }
             }
@@ -275,16 +276,16 @@ void Player::Draw()
         /* Through a local, the mask level is loaded again here: tested
          * straight from gLevelState, a not-invincible first test jumps past
          * this one (jump threading). */
-        struct level_state *game = gLevelState;
+        LevelState *game = gLevelState;
 
         if (game->maskLevel == MASK_LEVEL_INVINCIBLE || !IsBlinking(this) || (gRoomFrameCount & 4))
             gSpriteRenderer->Draw(this);
     }
     {
-        struct level_state *game = gLevelState;
+        LevelState *game = gLevelState;
 
         if (game->maskLevel == MASK_LEVEL_INVINCIBLE && !IsBlinking(this))
-            SetMaskLevel(game, MASK_LEVEL_TWO);
+            game->SetMaskLevel(MASK_LEVEL_TWO);
     }
     {
         s32 px = x;

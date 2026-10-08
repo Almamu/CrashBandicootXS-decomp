@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -100,7 +101,7 @@ void PolarPlayer::QueueWumpa(s32 n)
 /* The extra life crate's life. */
 void PolarPlayer::GiveLife()
 {
-    AddLife(gLevelState);
+    gLevelState->AddLife();
 }
 
 /* A boost pad at `x` (polar_aku_aku.cpp): only while running, dashing or
@@ -158,7 +159,7 @@ PolarPlayer::~PolarPlayer()
 {
     if (gPolarQueuedWumpa != 0) {
         do {
-            CollectWumpa(gLevelState);
+            gLevelState->CollectWumpa();
             gPolarQueuedWumpa--;
         } while (gPolarQueuedWumpa != 0);
     }

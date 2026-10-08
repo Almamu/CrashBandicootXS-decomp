@@ -1,8 +1,8 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "level_state.hpp"
 
 extern "C" {
-#include "level_state.h"
 #include "player.h"
 #include "constants/events.h"
 }

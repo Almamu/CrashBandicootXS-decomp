@@ -1,6 +1,7 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -66,7 +67,7 @@ void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
     } else if (alt != 0) {
         kind = rec->bonusKind;
     }
-    if (kind == 0x1d && !(u8)IsCrystalSaved(gLevelState))
+    if (kind == 0x1d && !(u8)gLevelState->IsCrystalSaved())
         return 0;
     if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
         return 0;
@@ -395,7 +396,7 @@ void JetpackPlayer::Damage(s32 dmg)
         gAudioContext->PlaySfx(SFX_JETPACK_PLAYER_DOWN, 0x100);
         SetState(4, 3);
         if (gLevelState->timeTrial == 0)
-            LoseLife(gLevelState);
+            gLevelState->LoseLife();
         gJetpackInputEnabled = 0;
         gJetpackPauseLocked = 1;
         gJetpackPlayerInactive = 1;

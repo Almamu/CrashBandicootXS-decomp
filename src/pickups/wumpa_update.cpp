@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include "hud.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -84,7 +85,7 @@ void Wumpa::Update()
         }
         if (Q8_TO_INT(x) <= 0x10 && Q8_TO_INT(y) <= 0x10) {
             gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
-            CollectWumpa(gLevelState);
+            gLevelState->CollectWumpa();
             MarkGone();
         }
     } else if (state == 2) {

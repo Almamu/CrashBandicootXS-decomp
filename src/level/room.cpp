@@ -1,12 +1,12 @@
 #include "sprite_obj.hpp"
 #include "bg_layer.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
 #include "util.h"
 #include "gfx.h"
 #include "level.h"
-#include "level_state.h"
 #include "globals.h"
 }
 
@@ -29,7 +29,7 @@ u8 IsRoomExitRequested(void)
  * RAM, clears its first color, then re-runs the
  * same VRAM/OAM/DMA refresh pass as `UpdateRoomFrame` and the four
  * `display.cpp` state resets. */
-void ResumeRoomAfterPause(struct level_progress *self)
+void LevelProgress::ResumeRoomAfterPause()
 {
     struct dma_regs *dma;
     u32 pltt;
@@ -37,7 +37,7 @@ void ResumeRoomAfterPause(struct level_progress *self)
     gPaletteCache->Upload();
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)self->cat->palette;
+    dma->src = (u32)cat->palette;
     pltt = PLTT;
     dma->dst = pltt;
     dma->cnt = 0x80000100;
@@ -48,7 +48,7 @@ void ResumeRoomAfterPause(struct level_progress *self)
     gOamBuffer->Reset();
     SnapCamera(gCamera);
     gLevelLayers->Reset();
-    UpdateRoomFrame(self);
+    UpdateRoomFrame();
     SetDispcntMode(0);
     ShowObj();
     CommitDispcnt();

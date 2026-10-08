@@ -3,6 +3,7 @@
 #include "platform.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -191,7 +192,7 @@ void CortexBossCtrl::Update(MovingSprite *part)
         cannon->y += 0x80;
         part->y += 0x80;
         if (part->y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x4000) {
-            if ((u8)HasTurboRun(gLevelState))
+            if ((u8)gLevelState->HasTurboRun())
                 RequestRoomExit();
             SetState(part, 4);
         }

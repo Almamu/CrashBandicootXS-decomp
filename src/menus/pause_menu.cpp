@@ -1,6 +1,7 @@
 #include "menus.hpp"
 #include "font.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "system.h"
@@ -101,7 +102,7 @@ PauseMenu::PauseMenu() : bg(0, 0x1f, 0, 3)
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.obj = 1;
     bg.Load(&gPauseMenuBg);
-    progress = PackSaveData(gLevelState);
+    progress = gLevelState->PackSaveData();
     InitInfo();
     {
         UiSprite *s;

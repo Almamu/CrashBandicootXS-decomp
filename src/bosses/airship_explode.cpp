@@ -1,12 +1,12 @@
 #include "boss_actors.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "util.h"
 #include "actor.h"
 #include "vehicle.h"
-#include "level_state.h"
 #include "globals.h"
 #include "math_util.h"
 }

@@ -167,7 +167,7 @@ struct level_desc {
 /*
  * One room record of the level table (src/data/level_table_16c814.c):
  * the record RunRoom hands to LoadRoom, and the current room
- * (`level_progress.cat`, `level_state.room.cat`). It merges level_layers.cpp's
+ * (`LevelProgress::cat`, `LevelState::room.cat`). It merges level_layers.cpp's
  * `struct level_load_args` (batch 8b), level_query.cpp's `MedalListItem`
  * (`linkedObj`/`type` are `desc`/`kind`), level_state.h's `struct
  * level_category`, run_room.cpp's `gl_widget_kind` (#574, batch 9e) and

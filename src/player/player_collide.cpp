@@ -1,5 +1,6 @@
 #include "bg_layer.hpp"
 #include "player.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "level.h"
@@ -52,7 +53,7 @@ s32 Player::CheckPlayerContact()
             case 1:
                 f.b.vulnerable = 1;
                 deadline = 0;
-                SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
+                gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
                 HandleEvent(0, EVENT_HIT, 0);
                 break;
             case 2:

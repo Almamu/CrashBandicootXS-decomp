@@ -1,5 +1,6 @@
 #include "crate.hpp"
 #include "spawners.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "level.h"
@@ -9,10 +10,10 @@ extern "C" {
 /* Dispatches to the `CreateCrate` entity-constructor trampoline family
  * (docs/rom_map.md, "already-documented `CreateCrate` entity-constructor
  * trampoline family") with type `7` or `6` depending on
- * `IsSwitchPressed(gLevelState)`. */
+ * `gLevelState->IsSwitchPressed()`. */
 void SpawnNitroSwitchCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (IsSwitchPressed(gLevelState))
+    if (gLevelState->IsSwitchPressed())
         Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_IRON);
     else
         Crate::Create(arg0, arg1, arg2, arg3, CRATE_KIND_NITRO_SWITCH);

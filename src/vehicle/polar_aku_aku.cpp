@@ -1,9 +1,9 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
-#include "level_state.h"
 #include "actor.h"
 #include "level.h"
 #include "globals.h"
@@ -18,7 +18,7 @@ extern "C" {
 /* All masks gone (PolarPlayer::Catch). */
 void PolarAkuAku::ClearMask()
 {
-    SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
+    gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
     Refresh(0);
 }
 
@@ -32,7 +32,7 @@ s32 PolarAkuAku::RemoveMask()
     level = gLevelState->maskLevel;
     if (level != MASK_LEVEL_NONE) {
         level -= 1;
-        SetMaskLevel(gLevelState, level);
+        gLevelState->SetMaskLevel(level);
     }
     Refresh(1);
     return level;
@@ -48,7 +48,7 @@ s32 PolarAkuAku::AddMask()
     level = gLevelState->maskLevel;
     if (level != MASK_LEVEL_INVINCIBLE) {
         level += 1;
-        SetMaskLevel(gLevelState, level);
+        gLevelState->SetMaskLevel(level);
     }
     Refresh(0);
     return level;
@@ -59,14 +59,14 @@ s32 PolarAkuAku::AddMask()
 PolarAkuAku::PolarAkuAku(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 level)
     : ActorSelf(rec, x - 0x1000, y - 0x1E00, z - 0x200)
 {
-    SetMaskLevel(gLevelState, level);
+    gLevelState->SetMaskLevel(level);
     Refresh(0);
 }
 
 /* The mask level (no caller). */
 void PolarAkuAku::SetMask(s32 level)
 {
-    SetMaskLevel(gLevelState, level);
+    gLevelState->SetMaskLevel(level);
 }
 
 /* The mask level (no caller). */
@@ -137,7 +137,7 @@ void PolarCheckpointCrate::Update()
         if ((u8)IsTouchingPlayer(this)) {
             RestartAnim(1);
             gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
-            AddBrokenCrate(gLevelState);
+            gLevelState->AddBrokenCrate();
             SetActorCheckpoint(z);
             CreatePolarCheckpointText(x, y - 0xF00, z);
         }
@@ -146,7 +146,7 @@ void PolarCheckpointCrate::Update()
             RestartAnim(3);
             palette = 1;
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            AddBrokenCrate(gLevelState);
+            gLevelState->AddBrokenCrate();
         }
     }
 

@@ -2,6 +2,7 @@
 #include "crate_list.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"

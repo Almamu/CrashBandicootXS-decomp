@@ -87,7 +87,7 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * once the level's crystal is saved. */
 void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if ((u8)IsCrystalSaved(gLevelState)) {
+    if ((u8)gLevelState->IsCrystalSaved()) {
         Stopwatch *part = Stopwatch::Create(arg0, arg1, arg2, arg3);
 
         part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1b0);
@@ -144,7 +144,7 @@ void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
     // clang-format on
     point[0] = x;
     point[1] = y;
-    SetCrateGemPos(gLevelState, point);
+    gLevelState->SetCrateGemPos(point);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the spawn

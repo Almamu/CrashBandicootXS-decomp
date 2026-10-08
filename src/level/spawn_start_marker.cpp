@@ -1,9 +1,9 @@
 #include "spawners.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
-#include "level_state.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -33,7 +33,7 @@ static inline void SetFlipX(Player *p, u32 v)
  * gotos; the C++ needs none. */
 void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
 {
-    if (GetSpawnAtStart(gLevelState)) {
+    if (gLevelState->GetSpawnAtStart()) {
         const struct entity_params *rec = EntityParams(z);
 
         SetFlipX(gPlayer, (rec->flags >> 1) & 1);
@@ -42,8 +42,8 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
     }
     if (gLevelState->timeTrial != 0)
         return;
-    if (GetDeaths(gLevelState) >= GetMaskAssistDeaths(gLevelState) ||
-        (GetLives(gLevelState) == 0 && !IsInBonusRound(gLevelState) &&
+    if (gLevelState->GetDeaths() >= gLevelState->GetMaskAssistDeaths() ||
+        (gLevelState->GetLives() == 0 && !gLevelState->IsInBonusRound() &&
          gLevelState->maskLevel == MASK_LEVEL_NONE)) {
         gPlayer->HandleEvent(0, EVENT_MASK_GAIN, 0);
         gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);

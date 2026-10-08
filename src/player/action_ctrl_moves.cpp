@@ -2,6 +2,7 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -89,7 +90,7 @@ void ActionCtrl::EndSpin(u8 mode, s32 flags)
             flags &= m2;
             asm volatile("" : "+r"(flags) : "r"(m));
         }
-        if (flags != 0 && (u8)HasTurboRun(gLevelState)) {
+        if (flags != 0 && (u8)gLevelState->HasTurboRun()) {
             turboRun = 1;
             SetMode(ACTION_STATE_TURBO_RUN);
             SetTargetAnim(part, 0x18);
@@ -293,7 +294,7 @@ void ActionCtrl::StateCrawlStop()
 void ActionCtrl::StateBodySlamStart()
 {
     if (part->animDone != 0) {
-        if ((u8)HasSuperBodySlam(gLevelState)) {
+        if ((u8)gLevelState->HasSuperBodySlam()) {
             SetMode(ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);
             SetTargetAnim(part, 7);
         } else {

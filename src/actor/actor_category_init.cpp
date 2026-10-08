@@ -1,5 +1,6 @@
 #include "sprite_obj.hpp"
 #include "hud.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -17,7 +18,7 @@ extern "C" {
 #include "globals.h"
 }
 
-/* codegen: SetCheckpointAtPlayer takes (state, flag) (level.h); this
+/* codegen: LevelState::SetCheckpointAtPlayer takes a flag (level_state.hpp); this
  * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
 extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
 
@@ -101,7 +102,7 @@ s32 InitActorCategory(s32 category)
     s32 ret = 1;
     s32 *activeCount;
     s32 *variantCount;
-    struct level_state **state;
+    LevelState **state;
     struct dma_regs *dma;
     vu16 zero;
     u32 variant;
@@ -125,7 +126,7 @@ s32 InitActorCategory(s32 category)
         activeCount = &gActorCategoryDeaths;
         variantCount = &gActorCategoryBossDeaths;
         gActorMissedNitros = gActorCheckpointMissedNitros;
-        RestoreCheckpoint(gLevelState);
+        gLevelState->RestoreCheckpoint();
         if (*variantCount >= (s32)CUR_CATEGORY.retryBossDeaths)
             variant = CUR_CATEGORY.retryBossLevel;
         else
@@ -156,7 +157,7 @@ s32 InitActorCategory(s32 category)
             AdvanceCellAnim();
             status = RunActorCategoryFrame();
             if ((*state)->timeTrial != 0)
-                TickLevelClock(*state);
+                (*state)->TickLevelClock();
             gObjVramCursor->Reset();
             gOamBuffer->Rewind();
             gHud->UpdateSlides();
@@ -216,7 +217,7 @@ s32 InitActorCategory(s32 category)
     done:
         DestroyAllActors();
         ActorCategoryAttemptEndStub();
-    } while (ret == 1 && GetLives(gLevelState) >= 0 && PAUSED == 0);
+    } while (ret == 1 && gLevelState->GetLives() >= 0 && PAUSED == 0);
 
     ActorCategoryEndStub();
     FreeSpriteFrameCache();

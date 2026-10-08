@@ -2,6 +2,7 @@
 #include "boss_ctrl.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -105,7 +106,7 @@ void TinyCtrl::Update(MovingSprite *part)
                 break;
             gAudioContext->PlaySfx(SFX_TINY_LAND, 0x100);
             if (this->state == 15) {
-                if ((u8)HasTornadoSpin(gLevelState))
+                if ((u8)gLevelState->HasTornadoSpin())
                     RequestRoomExit();
                 SetState(part, 16);
             } else if (this->state == 1) {
@@ -298,7 +299,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             s32 x = pad->x;
             s32 y = pad->y - 0x1800;
 
-            if (!(u8)HasTornadoSpin(gLevelState))
+            if (!(u8)gLevelState->HasTornadoSpin())
                 SpawnTornadoSpinPower(0xFFFF, Q8_TO_INT(x), Q8_TO_INT(y), 0);
             break;
         }

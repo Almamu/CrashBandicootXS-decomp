@@ -123,14 +123,19 @@ extern u8 gJetpackPlayerInactive;
 
 /* sym_iwram.txt: the level's objects. game_frame.cpp builds the level
  * state and the entity flags; PlayRoom (play_room.cpp) builds the rest per
- * room. The structs are in level_state.h (struct level_state) and level.h
+ * room. The level state is a C++ class, LevelState (level_state.hpp;
+ * C sees an incomplete struct level_state); the structs are in level.h
  * (struct level_layers, entity_flags, camera). The C++ files see the
  * level layers as their class, LevelLayers (bg_layer.hpp), the C files as
  * its C view. The part lists (PartList, sprite_obj.hpp) and the crate list
  * (CrateList, crate_list.hpp) have no C view and no C user: only the C++
  * files see them. */
 extern struct entity_flags *gEntityFlags;
+#ifdef __cplusplus
+extern class LevelState *gLevelState;
+#else
 extern struct level_state *gLevelState;
+#endif
 extern struct camera *gCamera;
 #ifdef __cplusplus
 /* What the player's body touches (CollidePlayerWithObjects runs

@@ -85,7 +85,7 @@ static inline void SetBoxSize(struct aabb *b, s32 w, s32 h)
     b->h = h;
 }
 
-void PlayCutscene(void *self, s32 idx)
+void LevelState::PlayCutscene(s32 idx)
 {
     /* One aggregate so that every field access stays sp-relative: as
      * separate locals, the pager's field stores go through the register

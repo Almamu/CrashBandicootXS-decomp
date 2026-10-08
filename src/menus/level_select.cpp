@@ -1,5 +1,6 @@
 #include "level_select.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -314,7 +315,7 @@ LevelSelect::LevelSelect(s32 arg)
         index = 5;
     }
     nameText = 0;
-    save = PackSaveData(gLevelState);
+    save = gLevelState->PackSaveData();
     result = 0;
     bg1 = new LevelSelectPageBg(0, 0x1D);
     BgSetup bg0cnt(2, 0x1E, 2, 3);
@@ -588,15 +589,15 @@ void LevelSelect::LoadRecord()
     struct level_save_h *sv;
 
     *r = 5;
-    if ((u8)LevelHasGemPathGem(gLevelState, levelId))
+    if ((u8)gLevelState->LevelHasGemPathGem(levelId))
         *r = 0;
-    if ((u8)LevelHasRedGem(gLevelState, levelId))
+    if ((u8)gLevelState->LevelHasRedGem(levelId))
         *r = 1;
-    if ((u8)LevelHasGreenGem(gLevelState, levelId))
+    if ((u8)gLevelState->LevelHasGreenGem(levelId))
         *r = 2;
-    if ((u8)LevelHasBlueGem(gLevelState, levelId))
+    if ((u8)gLevelState->LevelHasBlueGem(levelId))
         *r = 3;
-    if ((u8)LevelHasYellowGem(gLevelState, levelId))
+    if ((u8)gLevelState->LevelHasYellowGem(levelId))
         *r = 4;
     clearedIconY = 0;
     flag1IconY = 0;

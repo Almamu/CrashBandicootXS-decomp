@@ -697,6 +697,10 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/link/link_sio.cpp`, `link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp` (again) | `LinkSession` (new include/link_session.hpp, with `LinkRing` and `LinkPlayer`): constructor (`InitLinkSession`: `new LinkSession`), destructor (`DestroyLinkSession`: `delete gLinkSession`), `Start` (UNUSED), `Reset`, `Stop`, `Update`, `HandleSerial`, `ResetState`; LinkSetupSio (UNUSED), MakeLinkHandshakeId and the two IRQ handlers keep C linkage | 8 | (unchanged) | 3 keeps, 1 `MATCH_KEEP_EXPR`, 14 uses, 1 const, 1 barrier -> the same (tools/match_prune.py: none removable); the constructor's ring loop and the destructor's empty players loop are g++'s | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
 | `src/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp`, `save_menu_input.cpp` (again) | `SaveData` and `SaveTransfer` (new include/save_data.hpp): `SaveData`'s `Load`, `Validate` (UNUSED), `CheckChecksum` (the out-of-line copy of the inline `ChecksumOk` that `Validate` expands), `UpdateChecksum`, `GetGameId`, `Store`, the slot and flag accessors, `SetFlags`; `SaveTransfer`'s `SendChunk`, `ReceiveChunk`, `Poll`, `SetRecord`, `GetData`, `Reset`; ReadSaveData and WriteSaveData (a `void *` buffer) keep C linkage | 14 + 6 | (unchanged) | 4 pins, 1 use, 1 empty-template asm -> the same | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
 | `src/save/save_menu.cpp`, `save_menu_draw.cpp`, `save_menu_input.cpp`, `save_menu_ui.cpp`, `src/iwram/iwram_data.cpp` | the callers: SaveMenu's `cartSave`/`linkSave` are `SaveData *` (`new SaveData`; `P9save_data` -> `P8SaveData` in cxx_symbols.txt), the link exchange `new`s a `SaveTransfer`, `gLinkSession` is a `LinkSession *` (link.h) | 0 | (unchanged) | 0 -> 0 | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
+| `src/level/level_state.cpp` (again) | `LevelState` (include/level_state.hpp, now the whole class: level_state.h's struct level_state and struct level_progress went): its 85 accessors and helpers as methods; `nullsub_24` and `GetLevelState` stay free (no `self`) | 85 + 2 | old_agbcp | 1 pin -> 0 (SetCheckpoint's r2 hold: an inline `CopyBitmapSpan` loads the CpuSet control word at each call) | [#750](#the-level-state-as-a-class-750) |
+| `src/level/game_frame.cpp`, `bonus_round.cpp`, `time_trial.cpp`, `level_cutscene.cpp`, `src/util/aabb_setup.cpp` | `LevelState::UpdateGameFrame`, `EndBonusRound`, `SetCheckpointAtPlayer`, `StartTimeTrial`, `PlayCutscene`, `GetLives` | 6 | (unchanged) | 1 pin -> 0 (SetCheckpointAtPlayer's, as SetCheckpoint's) | [#750](#the-level-state-as-a-class-750) |
+| `src/level/level_query.cpp`, `play_room.cpp`, `run_room.cpp`, `room.cpp`, `room_frame.cpp` | `LevelProgress` (the room block, `LevelState::room`): `IsInGemPathRoom`, `IsInBonusRoom`, `PlayRoomMusic`, `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom`, `PlayRoom`, `RunRoom`, `ResumeRoomAfterPause`, `UpdateRoomFrame`, `SetupRoomBlend` | 12 | (unchanged) | 0 -> 0 | [#750](#the-level-state-as-a-class-750) |
+| globals.h, level.h, util.h, level_data.h, 62 `.cpp` files (61 callers and iwram_data.cpp) | `gLevelState`, `gLevelStateSingleton` and `gGameFrameLevelState` are `LevelState *`s to C++; every `Foo(gLevelState, ...)` is `gLevelState->Foo(...)`, `Foo(&self->room)` `room.Foo()`; the 103 C prototypes went | 0 | (unchanged) | 0 -> 0 | [#750](#the-level-state-as-a-class-750) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -3230,9 +3234,9 @@ Every game source file under src/ outside src/data/ is C++ since the
 #748 link/save/iwram, including the IWRAM ARM routines with
 `agbcp_arm_patched`); they replaced the list of 49 C-like objects this
 section had.
-- Possible follow-ups, not needed for the match: level_state.cpp's 87
-  functions as `LevelState` methods (they keep C linkage and the
-  `struct level_state *` parameter; renaming them touches every caller),
+- Possible follow-ups, not needed for the match: ~~level_state.cpp's 87
+  functions as `LevelState` methods~~ (done in
+  [#750](#the-level-state-as-a-class-750)),
   ~~graphics_package.cpp's BgSetup as a class~~ (done, #753), the link session
   as a `LinkSession` class (`InitLinkSession`/`DestroyLinkSession` are
   its `new`/`delete`), and the C views of classes that no C file reads
@@ -3358,7 +3362,8 @@ instruction asm 61 -> 56, MATCH_HOLD 13 -> 12. Nothing in this family was left C
   trampoline. An object destroyed at scope end gets `__in_chrg` 2
   (PlayCutscene's `DestroyCutscenePlayer(&f.pager, 2)`).
 - **Deriving from the C struct.** TileCache, LevelEntityFlags and
-  LevelState are `class X : public <c struct>`: the C struct stays the
+  LevelState (until #750, which made it the whole class) are `class X :
+  public <c struct>`: the C struct stays the
   one field list, the lookups that take the struct (bg_layer_base.cpp,
   collision_map.c, the level-state accessors) take the class through the
   implicit conversion, and `new X` / `delete p` match the ROM.
@@ -3376,7 +3381,7 @@ instruction asm 61 -> 56, MATCH_HOLD 13 -> 12. Nothing in this family was left C
   old_agbcp, only the DISPCNT shadow rebuild's mask and byte in `s32`
   locals (word AND, `movs #17; negs`, not a byte `0xef`).
 - **Left as C-like code:** level_state.cpp's 87 functions stay C-linkage
-  functions taking `struct level_state *` (making them LevelState methods
+  functions taking `struct level_state *` (until #750: making them LevelState methods
   is mechanical but touches every C caller's names; their 49 pins are
   plain register-allocation workarounds, and removing them all changes
   most functions); entity_flags.cpp's SetEntityIdActivated keeps its pins
@@ -3961,6 +3966,53 @@ stay (cxx_symbols.txt's `#752` and `#753` blocks):
 - **ScaledSprite** (graphics_package.hpp; was graphics_package.cpp's
   struct gfx_box_obj): the six sprite-box functions, all UNUSED, are its
   methods; gfx.h's nine prototypes went.
+
+### The level state as a class (#750)
+
+`LevelState` (include/level_state.hpp) was a class only for its
+constructor and destructor (`class LevelState : public level_state`, the
+#664 cleanup); its functions were C functions taking `struct level_state
+*self`. It is now the whole class: the field list moved from level_state.h
+into the class, with the room block as a class of its own, `LevelProgress`
+(the `room` member, +0xC4; level_state.h's struct level_progress), and
+every function that took either as `self` is a method under its C name
+(cxx_symbols.txt): LevelState's 85 accessors in level_state.cpp,
+`UpdateGameFrame`, `EndBonusRound`, `SetCheckpointAtPlayer`,
+`StartTimeTrial`, `PlayCutscene` and `GetLives` in their files, and
+LevelProgress's 12 room functions (level_query.cpp, play_room.cpp,
+run_room.cpp, room.cpp, room_frame.cpp). C sees `struct level_state` only
+as an incomplete type (the data tables include level.h); globals.h and
+level.h declare gLevelState, gLevelStateSingleton and gGameFrameLevelState
+as `LevelState *`s to C++, so the 61 calling files' `Foo(gLevelState, ...)`
+are `gLevelState->Foo(...)` and UpdateGameFrame's `Foo(&self->room)` are
+`room.Foo()`. The methods' bodies are the C's with `self->` dropped, and
+every object is byte-identical to origin/main's.
+
+- **Stayed free functions:** `nullsub_24` and `GetLevelState` (no `self`).
+  The functions that took `void *self` (SetMaskLevel, SetCheckpoint,
+  PackSaveData, the five `LevelHas*Gem` wrappers, which ignore it, and the
+  three cutscene starters and ShowCompanyLogos, which only pass it on or
+  ignore it) are methods like the others: `this` is r0 either way.
+- **`struct game_progress` stays a plain struct** in level_state.h, as
+  LevelState's `progress`, `checkpointData` and `saveData`: the save slots
+  (save_data.h), the menus' counts (CountGems & co., power_dialog_draw.cpp)
+  and GetCompletionPercent (graphics.cpp) share it, and none of them is
+  the level state's. A GameProgress class would retype the save slot's
+  member and the menu prototypes in the headers the data tables parse as
+  C, for no change in the code.
+- **Pins gone:** SetCheckpoint's and SetCheckpointAtPlayer's r2 hold
+  (`MATCH_HOLD_REG(u32, ctrl, r2)`, which kept gcc from holding the CpuSet
+  control word in a callee-saved register across the first of the two
+  bitmap copies). Through an inline `CopyBitmapSpan(dst, src)` the
+  constant is loaded at each call, as the ROM has it ("A constant the ROM
+  loads early" is the opposite case of the same inliner behaviour).
+  `tools/match_idioms.py`: `MATCH_HOLD_REG` 86 -> 84.
+- **Kept:** the `SetCheckpointAtPlayer_1` asm-label aliases of
+  actor_category_init.cpp and cell_anim.cpp (they call the method with
+  r1 left as it is, and a method call can't leave out an argument), and
+  RunRoom's `x` reuse: `x = (s32)gLevelState; LevelState *state =
+  (LevelState *)x;` matches, a `LevelState *state = gLevelState;` doesn't
+  (the global goes through another register).
 
 ### Next batches
 

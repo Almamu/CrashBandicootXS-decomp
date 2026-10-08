@@ -2,6 +2,7 @@
 #include "frontend.hpp"
 #include "spawners.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -23,10 +24,10 @@ extern "C" {
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
  * docs/matching.md). Called once per frame from `MainLoop`
- * (src/system/main_loop.cpp) with `self` = `gLevelState`, the
+ * (src/system/main_loop.cpp) on `gLevelState`, the
  * central per-level state object every other function in this
  * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.cpp; the
- * `self+0x80`-`0xc4`/`+2` accessor family, level_state.cpp) also shares.
+ * `+0x80`-`0xc4`/`+2` accessor family, level_state.cpp) also shares.
  *
  * Shape: a level-load loop (`InitTitleScreen` / `RunTitleScreen`, the
  * map screen `RunCredits` on result 2), then the level loop. Each pass
@@ -50,42 +51,42 @@ extern "C" {
  * - The best-time "unset" test reads the record as a halfword
  *   (`raw & 0xfff8`), as the ROM does, while the compare and the store
  *   go through the 13-bit field.
- * - `self->bonusPlatform = self->gemPlatform = 0` computes the 0x1b8 address
+ * - `bonusPlatform = gemPlatform = 0` computes the 0x1b8 address
  *   first, and the `SetMaskLevel` argument starts at 2 and takes the
  *   tier only when it is <= 1.
  * - `gHud = new Hud`: the HUD's constructor (include/hud.hpp; the C
  *   needed a `void *` conversion of InitHud's result to load the global's
  *   address before the call, as the ROM does), and `delete gHud`.
  */
-void UpdateGameFrame(struct level_state *self)
+void LevelState::UpdateGameFrame()
 {
     vu16 zero;
     s32 best;
     s32 status;
     struct entity_flags **bitmap;
 
-    self->unk_68 = 0;
-    ResetLives(self);
-    ResetWumpa(self);
-    ResetCrateCount(self);
-    SetUnusedAssistDeaths(self, 5);
-    SetMaskAssistDeaths(self, 5);
-    SetCrateAssistDeaths(self, 5);
-    self->room.level = LEVEL_JUNGLE_JAM;
-    self->room.checkpointFlags = 0;
+    unk_68 = 0;
+    ResetLives();
+    ResetWumpa();
+    ResetCrateCount();
+    SetUnusedAssistDeaths(5);
+    SetMaskAssistDeaths(5);
+    SetCrateAssistDeaths(5);
+    room.level = LEVEL_JUNGLE_JAM;
+    room.checkpointFlags = 0;
     {
         struct dma_regs *dma;
 
         zero = 0;
         dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)&zero;
-        dma->dst = (u32)self;
+        dma->dst = (u32)this;
         dma->cnt = 0x81000034;
         dma->cnt;
     }
-    MemCopy32(&self->saveData, &self->progress, sizeof(struct game_progress));
-    gGameFrameLevelState = self;
-    self->maskLevel = MASK_LEVEL_NONE;
+    MemCopy32(&saveData, &progress, sizeof(struct game_progress));
+    gGameFrameLevelState = this;
+    maskLevel = MASK_LEVEL_NONE;
     {
         TitleScreen *gfx;
         s32 result;
@@ -103,7 +104,7 @@ void UpdateGameFrame(struct level_state *self)
             RunSaveMenu(1, 0);
             CloseSaveMenu();
         } else {
-            PlayCutscene(gLevelState, 2);
+            gLevelState->PlayCutscene(2);
         }
     }
     for (;;) {
@@ -112,140 +113,140 @@ void UpdateGameFrame(struct level_state *self)
 
         restore:
             {
-                s32 level = self->room.level;
+                s32 level = room.level;
 
                 LIMIT_MAX(level, LEVEL_NEO_CORTEX);
-                self->room.level = level;
+                room.level = level;
             }
-            quit = RunLevelSelect(&self->room.level);
-            MemCopy32(&self->progress, &self->saveData, sizeof(struct game_progress));
-            MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
+            quit = RunLevelSelect(&room.level);
+            MemCopy32(&progress, &saveData, sizeof(struct game_progress));
+            MemCopy32(&checkpointData, &progress, sizeof(struct game_progress));
             if (quit) {
                 OpenSaveMenu();
                 quit = RunSaveMenu(0, 0);
                 CloseSaveMenu();
                 if (quit)
-                    self->room.checkpointFlags = 0;
+                    room.checkpointFlags = 0;
                 goto restore;
             }
         }
-        ClearTimeTrial(self);
+        ClearTimeTrial();
 
     start:
-        self->room.roomIndex = 0;
-        self->room.checkpointCrateCount = 0;
-        self->room.checkpointFlags = 0;
+        room.roomIndex = 0;
+        room.checkpointCrateCount = 0;
+        room.checkpointFlags = 0;
         status = 1;
-        self->crateTotal = CountLevelCrates(self->room.level);
+        crateTotal = CountLevelCrates(room.level);
         gHud = new Hud;
-        gHud->SetCrateTotal(self->crateTotal);
-        ClearBonusRoundDone(self);
-        ClearInBonusRound(self);
-        ClearGemPathDone(self);
-        ClearInGemPath(self);
-        ResetCrateCount(self);
-        ClearSwitchPressed(self);
-        self->pendingSwitchCrates = 0;
+        gHud->SetCrateTotal(crateTotal);
+        ClearBonusRoundDone();
+        ClearInBonusRound();
+        ClearGemPathDone();
+        ClearInGemPath();
+        ResetCrateCount();
+        ClearSwitchPressed();
+        pendingSwitchCrates = 0;
         gEntityFlags->list = 0;
-        best = self->maskLevel;
-        SetCheckpointAtPlayer(self, 0);
-        ArmStartSpawn(self);
+        best = maskLevel;
+        SetCheckpointAtPlayer(0);
+        ArmStartSpawn();
         bitmap = &gEntityFlags;
         for (;;) {
-            self->bonusPlatform = self->gemPlatform = 0;
-            if (IsInBonusRound(self) || IsInGemPath(self)) {
-                self->savedBitmap = *bitmap;
+            bonusPlatform = gemPlatform = 0;
+            if (IsInBonusRound() || IsInGemPath()) {
+                savedBitmap = *bitmap;
                 *bitmap = new LevelEntityFlags;
-                if (IsInBonusRound(self)) {
-                    self->savedWumpa = GetWumpa(self);
-                    self->savedLives = GetLives(self);
-                    self->savedCrateCount = GetCrateCount(self);
-                    ResetWumpa(self);
-                    self->lives = 0;
-                    ResetCrateCount(self);
-                    EnterBonusRoom(&self->room);
-                    gHud->SetCrateTotal(CountRoomCrates(self->room.cat));
+                if (IsInBonusRound()) {
+                    savedWumpa = GetWumpa();
+                    savedLives = GetLives();
+                    savedCrateCount = GetCrateCount();
+                    ResetWumpa();
+                    lives = 0;
+                    ResetCrateCount();
+                    room.EnterBonusRoom();
+                    gHud->SetCrateTotal(CountRoomCrates(room.cat));
                 } else {
-                    self->savedCrateCount = GetCrateCount(self);
-                    ResetCrateCount(self);
-                    EnterGemPathRoom(&self->room);
-                    gHud->SetCrateTotal(CountRoomCrates(self->room.cat));
+                    savedCrateCount = GetCrateCount();
+                    ResetCrateCount();
+                    room.EnterGemPathRoom();
+                    gHud->SetCrateTotal(CountRoomCrates(room.cat));
                 }
-                ArmStartSpawn(self);
-            } else if (!(u8)SelectRoom(&self->room)) {
+                ArmStartSpawn();
+            } else if (!(u8)room.SelectRoom()) {
                 break;
             }
             gPaletteCache->FreeUnlockedSlots();
             gHud->ConfigureParts(0);
             gRoomFrameCount = 0;
-            SetLevelBoss(self, 0);
-            PlayRoomMusic(&self->room);
+            SetLevelBoss(0);
+            room.PlayRoomMusic();
             mem_free_bytes(0xC0000000);
-            switch (self->room.cat->kind) {
+            switch (room.cat->kind) {
             case ROOM_KIND_ON_FOOT:
             case ROOM_KIND_UNDERWATER:
             case ROOM_KIND_HOVER:
-                status = PlayRoom(&self->room);
+                status = room.PlayRoom();
                 break;
             case ROOM_KIND_CATEGORY:
-                status = InitActorCategory(self->room.cat->param.catIndex);
+                status = InitActorCategory(room.cat->param.catIndex);
                 if (status == 0) {
-                    AddPendingSwitchCrates(self, GetActorMissedNitros());
-                    SetCheckpointAtPlayer(self, 0);
+                    AddPendingSwitchCrates(GetActorMissedNitros());
+                    SetCheckpointAtPlayer(0);
                 }
                 break;
             }
             gAudioContext->ResetAmbientSfx();
             {
-                s32 tier = self->maskLevel;
+                s32 tier = maskLevel;
                 s32 arg = MASK_LEVEL_TWO;
 
                 if (tier <= MASK_LEVEL_ONE)
                     arg = tier;
-                SetMaskLevel(self, arg);
+                SetMaskLevel(arg);
             }
             mem_free_bytes(0xC0000000);
-            if ((u8)IsInBonusRoom(&self->room) && IsInBonusRound(self)) {
+            if ((u8)room.IsInBonusRoom() && IsInBonusRound()) {
                 delete (LevelEntityFlags *)gEntityFlags;
-                gEntityFlags = self->savedBitmap;
-                EndBonusRound(self, status == 0);
+                gEntityFlags = savedBitmap;
+                EndBonusRound(status == 0);
             }
-            if ((u8)IsInGemPathRoom(&self->room) && IsInGemPath(self)) {
+            if ((u8)room.IsInGemPathRoom() && IsInGemPath()) {
                 delete (LevelEntityFlags *)gEntityFlags;
-                gEntityFlags = self->savedBitmap;
-                EndGemPath(self, status == 0);
+                gEntityFlags = savedBitmap;
+                EndGemPath(status == 0);
             }
             if (status == 2)
                 break;
-            if (status == 1 && GetLives(self) < 0)
+            if (status == 1 && GetLives() < 0)
                 break;
-            if (self->timeTrial && status == 1) {
-                self->pendingSwitchCrates = 0;
-                self->room.checkpointSwitchPressed = 0;
-                self->room.roomIndex = 0;
-                self->room.checkpointCrateCount = 0;
-                ArmStartSpawn(self);
-                ClearTimeTrial(self);
+            if (timeTrial && status == 1) {
+                pendingSwitchCrates = 0;
+                room.checkpointSwitchPressed = 0;
+                room.roomIndex = 0;
+                room.checkpointCrateCount = 0;
+                ArmStartSpawn();
+                ClearTimeTrial();
             }
             if (status == 0) {
                 u8 done;
 
-                if (!(u8)IsInBonusRoom(&self->room) && !IsInBonusRound(self) &&
-                    !(u8)IsInGemPathRoom(&self->room) && !(done = IsInGemPath(self))) {
-                    if (!(u8)NextRoom(&self->room))
+                if (!(u8)room.IsInBonusRoom() && !IsInBonusRound() && !(u8)room.IsInGemPathRoom() &&
+                    !(done = IsInGemPath())) {
+                    if (!(u8)room.NextRoom())
                         break;
-                    ArmStartSpawn(self);
+                    ArmStartSpawn();
                     *(s32 *)*bitmap = done;
                 }
             } else {
-                RestoreCheckpoint(self);
+                RestoreCheckpoint();
             }
         }
         if (gHud != NULL)
             delete gHud;
-        if (GetLives(self) < 0) {
+        if (GetLives() < 0) {
             if (RunContinuePrompt())
-                ResetLives(self);
+                ResetLives();
             else
                 break;
         }
@@ -253,69 +254,69 @@ void UpdateGameFrame(struct level_state *self)
         if (status == 2) {
             s32 tier = best;
 
-            LIMIT_MAX(tier, self->maskLevel);
-            self->maskLevel = tier;
+            LIMIT_MAX(tier, maskLevel);
+            maskLevel = tier;
         }
         if (status == 0) {
-            switch (self->room.level) {
+            switch (room.level) {
             case LEVEL_DINGODILE:
-                if (!(u8)HasSuperBodySlam(self)) {
+                if (!(u8)HasSuperBodySlam()) {
                     SetNewWorldOpened();
-                    GiveSuperBodySlam(self);
+                    GiveSuperBodySlam();
                     ShowSuperBodySlamDialog();
-                    PlayCutscene(self, 4);
+                    PlayCutscene(4);
                 }
                 break;
             case LEVEL_N_GIN:
-                if (!(u8)HasDoubleJump(self)) {
+                if (!(u8)HasDoubleJump()) {
                     SetNewWorldOpened();
-                    GiveDoubleJump(self);
+                    GiveDoubleJump();
                     ShowDoubleJumpDialog();
-                    PlayCutscene(self, 5);
+                    PlayCutscene(5);
                 }
                 break;
             case LEVEL_TINY:
-                if (!(u8)HasTornadoSpin(self)) {
+                if (!(u8)HasTornadoSpin()) {
                     SetNewWorldOpened();
-                    GiveTornadoSpin(self);
+                    GiveTornadoSpin();
                     ShowTornadoSpinDialog();
-                    PlayCutscene(self, 6);
+                    PlayCutscene(6);
                 }
                 break;
             case LEVEL_NEO_CORTEX:
-                if (!(u8)HasTurboRun(self)) {
+                if (!(u8)HasTurboRun()) {
                     SetNewWorldOpened();
-                    GiveTurboRun(self);
+                    GiveTurboRun();
                     ShowTurboRunDialog();
                 }
-                if (GetCompletionPercent(&self->progress) > 99) {
-                    PlayCutscene(self, 8);
-                    self->room.level++;
-                    self->room.roomIndex = 0;
+                if (GetCompletionPercent(&progress) > 99) {
+                    PlayCutscene(8);
+                    room.level++;
+                    room.roomIndex = 0;
                     goto start;
                 }
-                PlayCutscene(self, 10);
+                PlayCutscene(10);
                 RunCredits();
                 break;
             case LEVEL_MEGA_MIX:
-                PlayCutscene(self, 9);
+                PlayCutscene(9);
                 RunCredits();
                 break;
             default:
-                if (self->room.cat->kind == ROOM_KIND_CATEGORY)
-                    ((union level_record *)GetCurrentLevelFlags(self))->w.cleared = 1;
+                if (room.cat->kind == ROOM_KIND_CATEGORY)
+                    ((union level_record *)GetCurrentLevelFlags())->w.cleared = 1;
                 break;
             }
-            if (self->timeTrial) {
-                u32 t = self->tenths + self->seconds * 10 + self->minutes * 600;
+            if (timeTrial) {
+                u32 t = tenths + seconds * 10 + minutes * 600;
 
                 LIMIT_MAX(t, LEVEL_FLAG_TIME_MAX);
-                if (t < ((union level_record *)GetCurrentLevelFlags(self))->w.time ||
-                    (((union level_record *)GetCurrentLevelFlags(self))->low &
-                     LEVEL_FLAG_TIME_MASK) == 0)
-                    ((union level_record *)GetCurrentLevelFlags(self))->w.time = t;
+                if (t < ((union level_record *)GetCurrentLevelFlags())->w.time ||
+                    (((union level_record *)GetCurrentLevelFlags())->low & LEVEL_FLAG_TIME_MASK) ==
+                        0)
+                    ((union level_record *)GetCurrentLevelFlags())->w.time = t;
             }
-            MemCopy32(&self->saveData, &self->progress, sizeof(struct game_progress));
+            MemCopy32(&saveData, &progress, sizeof(struct game_progress));
         }
     }
 }

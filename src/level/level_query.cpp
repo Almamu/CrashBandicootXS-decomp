@@ -1,7 +1,7 @@
 #include "audio.hpp"
+#include "level_state.hpp"
 extern "C" {
 #include "core.h"
-#include "level_state.h"
 #include "actor.h"
 #include "memory.h"
 #include "level.h"
@@ -177,15 +177,15 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
     return result;
 }
 
-/* `self->cat == gLevelTable[self->level].rooms->extra2` - i.e.
- * "does self's cached value (see SelectRoom) match this medal entry's
+/* `cat == gLevelTable[level].rooms->extra2` - i.e.
+ * "does this object's cached value (see SelectRoom) match this medal entry's
  * item list's `extra2` slot" - a sibling read of the same field
  * EnterGemPathRoom copies out. */
-s32 IsInGemPathRoom(struct level_progress *self)
+s32 LevelProgress::IsInGemPathRoom()
 {
-    const struct level_room_list *list = gLevelTable[self->level].rooms;
+    const struct level_room_list *list = gLevelTable[level].rooms;
     s32 result = 0;
-    s32 cached = (s32)self->cat;
+    s32 cached = (s32)cat;
 
     if (cached == (s32)list->extra2) {
         result = 1;
@@ -194,11 +194,11 @@ s32 IsInGemPathRoom(struct level_progress *self)
 }
 
 /* Same as IsInGemPathRoom but against the item list's `extra1` slot. */
-s32 IsInBonusRoom(struct level_progress *self)
+s32 LevelProgress::IsInBonusRoom()
 {
-    const struct level_room_list *list = gLevelTable[self->level].rooms;
+    const struct level_room_list *list = gLevelTable[level].rooms;
     s32 result = 0;
-    s32 cached = (s32)self->cat;
+    s32 cached = (s32)cat;
 
     if (cached == (s32)list->extra1) {
         result = 1;
@@ -262,23 +262,23 @@ s32 CountRoomCrates(const struct level_room *item)
  * SONG_BONUS_ROUND if `IsInBonusRoom` (the
  * item-list `extra1`-matches-cached-value check) is true, otherwise a
  * byte looked up from the per-level sound-cue-ID table
- * `gThemeMusicCues` at `gLevelTable[self->level]`'s `+0x04`
+ * `gThemeMusicCues` at `gLevelTable[level]`'s `+0x04`
  * field (a byte offset into that table) - then plays it via
  * `PlaySong`. The `IsInBonusRoom` call's result is truncated to `u8`
  * before the nonzero test, matching this codebase's established
  * `(u8)funcCall(...) != 0` idiom for a callee whose real return value
  * is only byte-wide (see e.g. src/player/action_ctrl_moves.cpp). */
-void PlayRoomMusic(struct level_progress *self)
+void LevelProgress::PlayRoomMusic()
 {
     s32 mode = gLevelState->maskLevel;
     u32 id;
 
     if (mode == MASK_LEVEL_INVINCIBLE) {
         id = SONG_DRUMS;
-    } else if ((u8)IsInBonusRoom(self) != 0) {
+    } else if ((u8)IsInBonusRoom() != 0) {
         id = SONG_BONUS_ROUND;
     } else {
-        u32 offset = gLevelTable[self->level].theme;
+        u32 offset = gLevelTable[level].theme;
 
         id = gThemeMusicCues[offset];
     }
@@ -286,56 +286,56 @@ void PlayRoomMusic(struct level_progress *self)
     gAudioContext->PlaySong(id);
 }
 
-/* Advances `self->roomIndex` (a cursor into `gLevelTable[self->level]`'s
+/* Advances `roomIndex` (a cursor into `gLevelTable[level]`'s
  * item list) by one if it's still below `count - 1`; returns whether
  * it advanced. */
-s32 NextRoom(struct level_progress *self)
+s32 LevelProgress::NextRoom()
 {
     s32 advanced = 0;
-    const struct level_room_list *list = gLevelTable[self->level].rooms;
+    const struct level_room_list *list = gLevelTable[level].rooms;
     s32 threshold = list->count - 1;
-    s32 cur = self->roomIndex;
+    s32 cur = roomIndex;
 
     if (cur < threshold) {
-        self->roomIndex = cur + 1;
+        roomIndex = cur + 1;
         advanced = 1;
     }
     return advanced;
 }
 
-/* Copies `gLevelTable[self->level]`'s item list's `extra2` slot
- * into `self->cat` - the write-side counterpart of IsInGemPathRoom's
+/* Copies `gLevelTable[level]`'s item list's `extra2` slot
+ * into `cat` - the write-side counterpart of IsInGemPathRoom's
  * read. */
-void EnterGemPathRoom(struct level_progress *self)
+void LevelProgress::EnterGemPathRoom()
 {
-    const struct level_room_list *list = gLevelTable[self->level].rooms;
+    const struct level_room_list *list = gLevelTable[level].rooms;
 
-    self->cat = list->extra2;
+    cat = list->extra2;
 }
 
 /* Same as EnterGemPathRoom but for the item list's `extra1` slot. */
-void EnterBonusRoom(struct level_progress *self)
+void LevelProgress::EnterBonusRoom()
 {
-    const struct level_room_list *list = gLevelTable[self->level].rooms;
+    const struct level_room_list *list = gLevelTable[level].rooms;
 
-    self->cat = list->extra1;
+    cat = list->extra1;
 }
 
-/* If `gLevelTable[self->level]`'s item list is nonempty, caches
- * `list->rooms[self->roomIndex]` into `self->cat`. Returns whether the list
+/* If `gLevelTable[level]`'s item list is nonempty, caches
+ * `list->rooms[roomIndex]` into `cat`. Returns whether the list
  * was nonempty either way - the trailing `-x|x` bit-trick reproduces
  * the ROM's own idiom for a bare `return expr != 0;` (as opposed to the
  * `if (expr != 0)` earlier in the same function, which compiles as a
  * plain compare-and-branch) - see matching_decomp_register_pinning-
  * style notes in docs/matching.md for other instances of this split. */
-s32 SelectRoom(struct level_progress *self)
+s32 LevelProgress::SelectRoom()
 {
-    const struct level_room_list *list = gLevelTable[self->level].rooms;
+    const struct level_room_list *list = gLevelTable[level].rooms;
 
     if (list->count != 0) {
-        s32 cur = self->roomIndex;
+        s32 cur = roomIndex;
 
-        self->cat = list->rooms[cur];
+        cat = list->rooms[cur];
     }
     {
         s32 v = list->count;
