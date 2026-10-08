@@ -102,7 +102,7 @@ public:
     CameraLead();          // CreateCameraLead
     virtual void Update(); // 3 UpdateCameraLead
     virtual ~CameraLead(); // 10 DestroyCameraLead
-    void SetUnk32();       // sub_801B85C (UNUSED)
+    void SetUnk32();       // SetCameraLeadUnk32 (UNUSED)
     void Reset();          // ResetCameraLead
     void SetOffset(s32 v); // SetCameraLeadOffset (UNUSED)
     s32 GetOffset();       // GetCameraLeadOffset (UNUSED)

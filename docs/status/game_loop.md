@@ -151,8 +151,8 @@ system from "core" system startup/init code.
 - `src/level/bg_layer.c` (GitHub issue #41): `CommitBgLayerScroll` -
   truncates the Q8 position to a tile-scroll halfword pair and writes
   it through the `self+0x58` hardware-register pointer
-- `src/level/level_query.c` (GitHub issue #38): `sub_802425C`,
-  `nullsub_25`, `CountLevelCrates` - a bit-tested `OperatorDelete` teardown
+- `src/level/level_query.c` (GitHub issue #38): `DestroyUnusedLevelObject`,
+  `InitUnusedLevelObject`, `CountLevelCrates` - a bit-tested `OperatorDelete` teardown
   wrapper, an empty stub, and the medal-table per-level tally
 - `src/level/level_query.c` (GitHub issue #38): `IsInGemPathRoom`,
   `IsInBonusRoom`, `LevelHasYellowGemEntity`, `LevelHasBlueGemEntity`, `LevelHasGreenGemEntity`,
@@ -164,7 +164,7 @@ system from "core" system startup/init code.
 - `src/cutscene/slideshow_display.c` (GitHub issue #38): `SetSlideshowDispcnt` -
   trivial `gSlideshowDispcnt` setter
 - `src/cutscene/slideshow_display.c` (GitHub issue #38): `DestroySlideshow`,
-  `ResetSlideshow` - the `sub_802425C`-shaped teardown wrapper and a
+  `ResetSlideshow` - the `DestroyUnusedLevelObject`-shaped teardown wrapper and a
   trivial constructor
 - `src/crates/crate_reset.c` (GitHub issue #13 - numbered `22` rather
   than `17` since issue #38's PR above independently claimed

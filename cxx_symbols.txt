@@ -905,7 +905,7 @@ _._17LevelSelectPageBg DestroyLevelSelectPageBg
 __17LevelSelectPageBgii CreateLevelSelectPageBg
 Update__11LevelSelect UpdateLevelSelect
 SettlePage__11LevelSelect SettleLevelSelectPage
-SetUnk32__10CameraLead sub_801B85C
+SetUnk32__10CameraLead SetCameraLeadUnk32
 Reset__10CameraLead ResetCameraLead
 Update__10CameraLead UpdateCameraLead
 _._10CameraLead DestroyCameraLead
@@ -1566,8 +1566,8 @@ MarkActivated__16LevelEntityFlagsi MarkEntityIdActivated
 SetPos__16LevelEntityFlagsi SetEntityFlagsPos
 _._16LevelEntityFlags DestroyEntityFlags
 __16LevelEntityFlags InitEntityFlags
-_._17UnusedLevelObject sub_802425C
-__17UnusedLevelObject nullsub_25
+_._17UnusedLevelObject DestroyUnusedLevelObject
+__17UnusedLevelObject InitUnusedLevelObject
 __10LevelState InitLevelState
 _._10LevelState DestroyLevelState
 BeginSlide__9Slideshowi BeginSlide

@@ -73,7 +73,7 @@ union level_record {
  * to the menus (the level select, the pause menu, the power dialog and
  * the save menu's summaries, which count it: CountGems, CountCrystals,
  * GetCompletionPercent, ...) and a save slot's `progress`
- * (settings_sync.h). It merges level_menu.h's `struct menu_save` and the
+ * (save_data.h). It merges level_menu.h's `struct menu_save` and the
  * raw `u8 [0x68]` blocks (#656, batch 8).
  */
 struct game_progress {

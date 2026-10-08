@@ -376,7 +376,7 @@ void WriteSaveSlot(struct save_data *self, s32 row, void *src)
 }
 
 /* Marks row `row` as explicitly selected/edited and refreshes the
- * checksum. See `include/settings_sync.h`'s `slotEmpty` field
+ * checksum. See `include/save_data.h`'s `slotEmpty` field
  * comment, which already anticipated this function (matched from a
  * later chunk, issue #5, before this one). */
 void EraseSaveSlot(struct save_data *self, s32 row)

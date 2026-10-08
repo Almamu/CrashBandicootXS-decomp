@@ -289,7 +289,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
             this->x = x + 0x6400;
             StartHop(part);
         }
-        nullsub_19(this, part);
+        TinyHitStub(this, part);
         SetTargetAnim(part, 7);
         break;
     case 14:

@@ -812,7 +812,9 @@ void DestroyHovercraft(void)
 /* UNUSED - no caller anywhere in the ROM (checked every src/ file, the
  * category vtables and every word-aligned Thumb pointer in baserom.gba).
  * Empty. With sub_80337FC and nullsub_35 it trails DestroyHovercraft the
- * way nullsub_30 trails DestroyAirship; no table slot names them. */
+ * way nullsub_30 trails DestroyAirship; no table slot names them, so all
+ * three keep their placeholder names (docs/naming.md: nullsub_N for an
+ * empty one, sub_XXXXXXXX when in doubt). */
 void nullsub_34(void)
 {
 }

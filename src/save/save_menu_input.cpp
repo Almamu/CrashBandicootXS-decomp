@@ -22,18 +22,18 @@ extern "C" {
  * issue-5-overlay-ui-sync.md). The C++ needs none of them, and matches
  * under both compilers. */
 
-void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
+void SetSaveTransferRecord(struct save_transfer *self, struct save_data *tmpl)
 {
     self->tmpl = tmpl;
     self->cursor = (u8 *)tmpl;
 }
 
-void *GetSaveTransferData(struct settings_sync_pump *self)
+void *GetSaveTransferData(struct save_transfer *self)
 {
     return self->data;
 }
 
-void ResetSaveTransfer(struct settings_sync_pump *self)
+void ResetSaveTransfer(struct save_transfer *self)
 {
     self->remaining = sizeof(self->data);
     self->totalReceived = 0;

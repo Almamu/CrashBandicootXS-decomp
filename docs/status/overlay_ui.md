@@ -14,7 +14,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   `save_menu_input.c` (`save_transfer_poll.c` new in the
   second pass - issue #5, 0x08002C84-0x08003B40): the settings-sync
   record's init/flag/checksum accessors (`struct save_data`,
-  `include/settings_sync.h`), the SIO send/receive pump's handle
+  `include/save_data.h`), the SIO send/receive pump's handle
   accessors and per-frame poll step, the spinner dialog's blocking
   modal loop and shared field_8c/field_90 constructor/destructor
   (also used by the composite screen itself), the per-frame input

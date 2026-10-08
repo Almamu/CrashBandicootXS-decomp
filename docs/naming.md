@@ -62,7 +62,12 @@ normal conventions. See [`docs/audio.md`](./audio.md#engine-api-names).
   is still, and will remain for a long time, `sub_XXXXXXXX`.
 - **`nullsub_N`** - reserved for empty/do-nothing stub functions, an
   established pret/GBA-decomp convention (`N` assigned sequentially as
-  they're found; don't renumber existing ones to "fix" gaps).
+  they're found; don't renumber existing ones to "fix" gaps). A stub
+  that something calls or that fills a table slot is named after that
+  role (`ActorCategoryEndStub`, `HovercraftStateExplodeStub`,
+  `TinyHitStub`). A dead stub with nothing around it to name it after
+  keeps its placeholder (`nullsub_N`, or `sub_XXXXXXXX` for one that
+  returns a constant), and its UNUSED comment says so.
 
 ## Functions with no caller anywhere in the ROM
 

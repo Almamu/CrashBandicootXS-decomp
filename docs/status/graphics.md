@@ -116,7 +116,7 @@ and [graphics_loading.md](./graphics_loading.md).
   [docs/matching/archive/issue-23-graphics.md](../matching/archive/issue-23-graphics.md)
   and [docs/matching/archive/old-agbcc-retry.md](../matching/archive/old-agbcc-retry.md).
 - `src/menus/level_select.c` (new file - GitHub issue #26):
-  `sub_801B85C`-`GetCameraLeadOffset` (the player-follow child `InputCtrlStateStart`
+  `SetCameraLeadUnk32`-`GetCameraLeadOffset` (the player-follow child `InputCtrlStateStart`
   spawns), `SpawnLaunchPad`-`InitLaunchPad` (a 0x78-byte sprite subclass),
   `RunLevelSelect` (the modal level-select screen), `DestroyLevelSelect`,
   `UpdateLevelSelect`, `UpdateLevelSelectPageArrows`, `DrawLevelSelectRecord`, `DrawLevelSelectTime`,

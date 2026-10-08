@@ -1,5 +1,5 @@
-#ifndef __SETTINGS_SYNC_H__
-#define __SETTINGS_SYNC_H__
+#ifndef __SAVE_DATA_H__
+#define __SAVE_DATA_H__
 
 #include "level_state.h"
 
@@ -16,8 +16,8 @@ struct save_slot {
     u16 musicVolume; /* 0x6c */
     u8 unused_6e[2];
 };
-COMPILE_TIME_ASSERT(settings_sync_h, offsetof(struct save_slot, level) == 0x68);
-COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_slot) == 0x70);
+COMPILE_TIME_ASSERT(save_data_h, offsetof(struct save_slot, level) == 0x68);
+COMPILE_TIME_ASSERT(save_data_h, sizeof(struct save_slot) == 0x70);
 
 /* The 0x200-byte save data, as stored in the cartridge EEPROM
  * (ReadSaveData/WriteSaveData, and LoadSaveData/StoreSaveData with
@@ -47,8 +47,8 @@ struct save_data {
     u8 field_1fb;     /* 0x1fb - zeroed by ResetSaveData, otherwise untouched in this chunk */
     u32 checksum;     /* 0x1fc - UpdateSaveChecksum/CheckSaveChecksum (still raw) */
 };
-COMPILE_TIME_ASSERT(settings_sync_h, offsetof(struct save_data, slotEmpty) == 0x1f4);
-COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_data) == 0x200);
+COMPILE_TIME_ASSERT(save_data_h, offsetof(struct save_data, slotEmpty) == 0x1f4);
+COMPILE_TIME_ASSERT(save_data_h, sizeof(struct save_data) == 0x200);
 
 /* A transient SIO send/receive envelope wrapping a save_data
  * copy - allocated per "connecting..." spinner-dialog session
@@ -58,8 +58,9 @@ COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_data) == 0x200);
  * receives the remote side's copy of the same shape from its own ring
  * buffer (ReceiveSaveTransferChunk), with `writePtr` as the fill cursor. See
  * docs/matching/archive/issue-5-overlay-ui-sync.md for the full protocol
- * write-up. */
-struct settings_sync_pump {
+ * write-up. Formerly `struct settings_sync_pump` (and this header
+ * `settings_sync.h`). */
+struct save_transfer {
     /* 0x000 - bytes left to send out of `tmpl`, reset to sizeof(data) */
     u32 remaining;
     u32 totalReceived;      /* 0x004 - running total of bytes received into `data` */
@@ -74,6 +75,6 @@ struct settings_sync_pump {
     u32 receiveDone;
     u32 settleTimer; /* 0x21c - elapsed-poll counter, PollSaveTransfer */
 };
-COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct settings_sync_pump) == 0x220);
+COMPILE_TIME_ASSERT(save_data_h, sizeof(struct save_transfer) == 0x220);
 
-#endif /* __SETTINGS_SYNC_H__ */
+#endif /* __SAVE_DATA_H__ */

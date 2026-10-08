@@ -3,7 +3,7 @@
 
 /* The save subsystem (src/save/): the cartridge save data in EEPROM, the
  * save menu, and the save transfer over the link cable. The save data
- * and transfer layouts are in settings_sync.h, the menu's class in
+ * and transfer layouts are in save_data.h, the menu's class in
  * save_menu.hpp (save_menu.h has its slot summaries).
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -13,7 +13,7 @@
 
 #include "core.h"
 #include "save_menu.h"
-#include "settings_sync.h"
+#include "save_data.h"
 
 /* The save menu, between OpenSaveMenu and CloseSaveMenu. Defined in
  * src/iwram/iwram_data.c. The C++ files see it as its class, SaveMenu
@@ -62,11 +62,11 @@ extern void ClearSaveFlags(struct save_data *self, u8 flags);
 
 /* src/save/save_transfer.c */
 extern void SetSaveFlags(struct save_data *self, u8 flags);
-extern void SendSaveTransferChunk(struct settings_sync_pump *self);
-extern void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex);
+extern void SendSaveTransferChunk(struct save_transfer *self);
+extern void ReceiveSaveTransferChunk(struct save_transfer *self, s32 playerIndex);
 
 /* src/save/save_transfer_poll.c */
-extern s32 PollSaveTransfer(struct settings_sync_pump *self);
+extern s32 PollSaveTransfer(struct save_transfer *self);
 
 /* The save menu (C++, include/save_menu.hpp: class SaveMenu; the methods
  * have no C caller and no C prototype). Its C-linkage functions, for
@@ -76,9 +76,9 @@ extern void OpenSaveMenu(void);
 
 /* src/save/save_menu_input.cpp (C linkage): the save transfer's
  * accessors, and the menu's loop */
-extern void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl);
-extern void *GetSaveTransferData(struct settings_sync_pump *self);
-extern void ResetSaveTransfer(struct settings_sync_pump *self);
+extern void SetSaveTransferRecord(struct save_transfer *self, struct save_data *tmpl);
+extern void *GetSaveTransferData(struct save_transfer *self);
+extern void ResetSaveTransfer(struct save_transfer *self);
 extern u8 RunSaveMenu(u32 state, u32 cursor);
 
 #endif /* GUARD_SAVE_H */
