@@ -8,7 +8,7 @@
  * that the file layout put in actor or bosses files for ROM order (the
  * teardown functions in actor_anim.cpp, the per-category hooks in actor.cpp,
  * actor_category_frame.cpp and actor_spawn.cpp, the jetpack ring and
- * collected wumpa in hovercraft.c, ...), plus their globals and data
+ * collected wumpa in hovercraft.cpp, ...), plus their globals and data
  * tables.
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -29,9 +29,10 @@ struct actor_hp {
     s32 hp; // 0x54
 };
 
-/* A jetpack ring (CreateJetpackRing, hovercraft.c; vtable
+/* A jetpack ring (CreateJetpackRing, hovercraft.cpp; vtable
  * gJetpackRingVtable): `actor_self` plus hit points and a flag that makes
- * UpdateJetpackRing play its cue only once. */
+ * UpdateJetpackRing play its cue only once. The C view of vehicle.hpp's
+ * class JetpackRing, same layout. */
 struct jetpack_ring {
     struct actor_self base;
     s32 hp;  // 0x54
@@ -133,13 +134,12 @@ extern struct actor_self *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 extern s32 JetpackIsPauseLocked(void);
 extern s32 PolarIsPauseLocked(void);
 
-/* src/bosses/hovercraft.c */
-extern void *CreateJetpackRing(void *self, void *part, s32 b, s32 c, s32 d);
+/* src/bosses/hovercraft.cpp: JetpackRing's and JetpackCollectedWumpa's
+ * methods (vehicle.hpp) under their C names, for the vtables */
 extern s32 IsJetpackRingUnshootable(void *self);
 extern void UpdateJetpackCollectedWumpa(void *self);
 extern void DrawJetpackCollectedWumpa(void *self);
 extern void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags);
-extern void *CreateJetpackCollectedWumpa(void *self, void *part, s32 b, s32 c, s32 spawn);
 extern s32 IsJetpackCollectedWumpaUnshootable(void *self);
 
 /* src/vehicle/jetpack_balloon.cpp: a C-linkage function, and

@@ -141,9 +141,9 @@ void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 28:
         return CreateJetpackRocket(AllocActor(0x68), &gJetpackAnimTable[kind], x, y, z);
     case 31:
-        CreateJetpackRing(AllocActor(0x5c), &gJetpackAnimTable[43],
-                          x - gJetpackAnimTable[kind].spawnX + gJetpackAnimTable[43].spawnX, y, z);
-        return CreateJetpackRing(AllocActor(0x5c), &gJetpackAnimTable[kind], x, y, z);
+        new JetpackRing(&gJetpackAnimTable[43],
+                        x - gJetpackAnimTable[kind].spawnX + gJetpackAnimTable[43].spawnX, y, z);
+        return new JetpackRing(&gJetpackAnimTable[kind], x, y, z);
     }
     return 0;
 }
@@ -165,7 +165,7 @@ void CreateJetpackExplosion(s32 x, s32 y, s32 z)
 /* Kind-44 constructor. */
 void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c)
 {
-    CreateJetpackCollectedWumpa(AllocActor(0x64), &gJetpackAnimTable[44], a, b, c);
+    new JetpackCollectedWumpa(&gJetpackAnimTable[44], a, b, c);
 }
 
 /* A balloon of record `kind` holding crate `d` (the crates' constructors,
@@ -178,42 +178,33 @@ void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
 /* Kind-14 constructor. */
 void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c)
 {
-    CreateHovercraftCannonFlash(AllocActor(0x5c), &gJetpackAnimTable[14], a, b, c);
+    new HovercraftCannonFlash(&gJetpackAnimTable[14], a, b, c);
 }
 
-/* codegen: CreateHovercraftSideGun takes a `u8 eByte`, but this caller was
- * matched passing a one-byte struct: through the u8 prototype the stack
- * argument is stored with `str` in place of `add r2, sp, #4; strb`.
- * docs/headers_plan.md */
-extern "C" void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d,
-                                           struct byte_arg e) asm("CreateHovercraftSideGun");
-
-/* Kind-13 constructor; the last argument is passed as a single byte. */
-void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 d)
+/* Kind-13 constructor. The side gun's `left` is a `bool`, which g++
+ * passes as a byte on the stack (`add r2, sp, #4; strb`). */
+void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, bool left)
 {
-    struct byte_arg arg;
-
-    arg.v = d;
-    CreateHovercraftSideGun_b(AllocActor(0x70), &gJetpackAnimTable[13], a, b, c, arg);
+    new HovercraftSideGun(&gJetpackAnimTable[13], a, b, c, left);
 }
 
 /* Kind-12 constructor. */
 void SpawnHovercraftLauncher(s32 a, s32 b, s32 c)
 {
-    CreateHovercraftLauncher(AllocActor(0x70), &gJetpackAnimTable[12], a, b, c);
+    new HovercraftLauncher(&gJetpackAnimTable[12], a, b, c);
 }
 
 /* Kind-11 constructor. */
 void SpawnHovercraftCannon(s32 a, s32 b, s32 c)
 {
-    CreateHovercraftCannon(AllocActor(0x70), &gJetpackAnimTable[11], a, b, c);
+    new HovercraftCannon(&gJetpackAnimTable[11], a, b, c);
 }
 
 /* Plays sfx 0x38 and spawns a kind-39 object. */
 void SpawnHovercraftFireball(s32 x, s32 y, s32 z)
 {
     PlaySfx(gAudioContext, SFX_FIREBALL_LAUNCH, 0x100);
-    CreateHovercraftFireball(AllocActor(0x6c), &gJetpackAnimTable[39], x, y, z);
+    new HovercraftFireball(&gJetpackAnimTable[39], x, y, z);
 }
 
 /* Plays sfx 0x38 and spawns an airship fireball (record 38). */

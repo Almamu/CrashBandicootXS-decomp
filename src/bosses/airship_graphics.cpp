@@ -24,7 +24,7 @@ extern "C" {
  * `gAirshipMapFrames`-indexed level data.
  *
  * Matched as plain C with the fixes that closed the one-row twin
- * `ConvertHovercraftTiles` (hovercraft.c, see
+ * `ConvertHovercraftTiles` (hovercraft.cpp, see
  * docs/matching/archive/near-miss-polish-3.md). */
 
 /* The height is re-read after the row-pointer store (the ROM's `ldm

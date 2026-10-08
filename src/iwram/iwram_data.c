@@ -119,7 +119,7 @@ void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock) = UnpackNibbleTiles;
  * point's spawn kind minus 0x20 (GetActorSpawnKindIndex; AimJetpackPlane). */
 s32 gJetpackPlaneHopSpeeds[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 
-/* Palette RAM addresses (hovercraft.c, hovercraft_parts.c). */
+/* Palette RAM addresses (hovercraft.cpp, hovercraft_parts.cpp). */
 u16 *gFlashBgPalette = (u16 *)(PLTT + 0x20);
 u16 *gFlashObjPalette = (u16 *)(PLTT + 0x340);
 

@@ -434,9 +434,8 @@ gcc 2.9:
   can merge two identical ones and flow deletes it when the output is
   dead. `asm volatile` stops all three and makes it a full scheduling
   barrier. The `_VOLATILE` macros are for the sites where the plain form
-  was moved or merged (the `2` sunk to its store in
-  `src/bosses/hovercraft_launcher.c`, the recheck in
-  `src/bosses/hovercraft_cannon_flash.c`).
+  was moved or merged (the recheck in
+  `src/bosses/hovercraft_cannon_flash.cpp`).
 
 | Spelling | Macro | What gcc 2.9 does with it | Typical use |
 |---|---|---|---|

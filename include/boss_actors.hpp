@@ -6,9 +6,10 @@
  * Part 11a declares their destructors (src/actor/actor_anim.cpp). The
  * airship's fireball is complete since part 11i (src/bosses/airship*.cpp,
  * with the airship itself), its two flight states since part 11f
- * (src/vehicle/jetpack_plane.cpp); the hovercraft's weapons' other methods and fields
- * are still C (bosses.h, src/bosses/hovercraft*.c). cxx_symbols.txt maps
- * the C++ names to the C ones.
+ * (src/vehicle/jetpack_plane.cpp); the hovercraft's weapons since part
+ * 11h (src/bosses/hovercraft*.cpp, with the hovercraft itself).
+ * bosses.h's structs are their C views. cxx_symbols.txt maps the C++
+ * names to the C ones.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
 #pragma interface
@@ -76,44 +77,179 @@ static inline void SetAirshipState(s32 st, s32 idx)
         a->animTime = 0;
 }
 
+/* The hovercraft's weapons (#664 part 11h, src/bosses/hovercraft*.cpp).
+ * The hovercraft itself is no class of its own, like the airship: a bare
+ * AnimPart (gHovercraft) and globals, stepped through the plain function
+ * table gHovercraftStateFuncs; its functions keep their C names. Its
+ * weapons follow it around (GetHovercraftX/Y/Z plus an offset) and count
+ * down its parts (LoseHovercraftPart) as they are shot down. */
+
+/* EnterHovercraftState: state `st` and animation `idx`, keeping the
+ * current frame unless it is past the new animation's end
+ * (SetAirshipState without the timer). SetHovercraftState
+ * (hovercraft_parts.cpp) is its out-of-line copy. */
+static inline void EnterHovercraftState(s32 st, s32 idx)
+{
+    AnimPart *a;
+
+    gHovercraftState = st;
+    a = gHovercraft;
+    a->animIndex = idx;
+    a->animTimer = a->anims[idx].duration;
+    a->animDone = 0;
+    if (a->GetAnimFrameBaseOffset() >= a->anims[a->animIndex].loopThreshold)
+        a->animTime = 0;
+}
+
+/* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft.cpp;
+ * bosses.h's `struct actor_orbit` is its C view, the airship fireball's
+ * layout): the side guns fire it (SpawnHovercraftFireball). It sets the
+ * orbit fields up as the airship's does, but never reads them: it flies
+ * straight on at `velZ`. */
 class HovercraftFireball : public HpActor
 {
 public:
+    s32 centerX;  // 0x58 - the constructor's `x`, never read
+    s32 centerY;  // 0x5C - the constructor's `y`, never read
+    s32 velZ;     // 0x60 - Z step, decays by 5 down to 0x14
+    s32 radius;   // 0x64 - never read
+    u8 exploding; // 0x68 - set by StateExplode, IsUnshootable returns it
+
     // CreateHovercraftFireball
     HovercraftFireball(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~HovercraftFireball(); // 1 DestroyHovercraftFireball
+    virtual ~HovercraftFireball();   // 1 DestroyHovercraftFireball
+    virtual void Update();           // 2 UpdateHovercraftFireball
+    virtual void Damage(s32 amount); // 4 DamageHovercraftFireball
+    virtual s32 IsUnshootable();     // 5 IsHovercraftFireballUnshootable
+
+    void RunState(); // RunHovercraftFireballState
+
+    /* The states, indexed by `state` (stateFuncs, gHovercraftFireballStateFuncs). */
+    void StateFly();     // HovercraftFireballStateFly
+    void StateExplode(); // HovercraftFireballStateExplode
+
+    typedef void (HovercraftFireball::*StateFunc)();
+    static const StateFunc stateFuncs[2];
 };
 
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftFireball) == sizeof(struct actor_orbit));
+
+/* The cannon (gHovercraftCannonVtable, hovercraft_cannon.cpp; bosses.h's
+ * `struct spawner` is its C view): it waits until the hovercraft is close
+ * enough (StateWait), then fires cannonballs at the player in bursts
+ * (StateFire), and is destroyed when shot down (StateDestroyed). */
 class HovercraftCannon : public HpActor
 {
 public:
+    s32 spawnX; // 0x58 - the constructor's `x`, never read
+    s32 spawnY; // 0x5C - the constructor's `y`, never read
+    u8 unk_60[4];
+    s32 cooldown; // 0x64 - frames until the next shot
+    s32 count;    // 0x68 - shots in this burst
+    u8 dead;      // 0x6C - set when shot down, IsUnshootable returns it
+
     // CreateHovercraftCannon
     HovercraftCannon(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~HovercraftCannon(); // 1 DestroyHovercraftCannon
+    virtual ~HovercraftCannon();     // 1 DestroyHovercraftCannon
+    virtual void Update();           // 2 UpdateHovercraftCannon
+    virtual void Damage(s32 amount); // 4 DamageHovercraftCannon
+    virtual s32 IsUnshootable();     // 5 IsHovercraftCannonUnshootable
+
+    s32 RunState(); // RunHovercraftCannonState
+
+    /* The states, indexed by `state` (stateFuncs, gHovercraftCannonStateFuncs). */
+    void StateWait();      // HovercraftCannonStateWait
+    void StateFire();      // HovercraftCannonStateFire
+    void StateDestroyed(); // HovercraftCannonStateDestroyed
+
+    typedef void (HovercraftCannon::*StateFunc)();
+    static const StateFunc stateFuncs[3];
 };
 
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == 0x70);
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannon) == sizeof(struct spawner));
+
+/* The launcher (gHovercraftLauncherVtable, hovercraft_launcher.cpp; the
+ * same layout as the cannon, `struct spawner`): it launches planes,
+ * bombers and balloons (CreateJetpackActor kinds 5, 6 and 8) once the
+ * hovercraft has lost two parts. */
 class HovercraftLauncher : public HpActor
 {
 public:
+    s32 spawnX; // 0x58 - the constructor's `x`, never read
+    s32 spawnY; // 0x5C - the constructor's `y`, never read
+    u8 unk_60[4];
+    s32 cooldown; // 0x64 - frames until the next launch
+    s32 count;    // 0x68 - launches in this burst
+    u8 dead;      // 0x6C - set when shot down, IsUnshootable returns it
+
     // CreateHovercraftLauncher
     HovercraftLauncher(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~HovercraftLauncher(); // 1 DestroyHovercraftLauncher
+    virtual ~HovercraftLauncher();   // 1 DestroyHovercraftLauncher
+    virtual void Update();           // 2 UpdateHovercraftLauncher
+    virtual void Damage(s32 amount); // 4 DamageHovercraftLauncher
+    virtual s32 IsUnshootable();     // 5 IsHovercraftLauncherUnshootable
+
+    s32 RunState(); // RunHovercraftLauncherState
+
+    /* The states, indexed by `state` (stateFuncs, gHovercraftLauncherStateFuncs). */
+    void StateWait();      // HovercraftLauncherStateWait
+    void StateLaunch();    // HovercraftLauncherStateLaunch
+    void StateDestroyed(); // HovercraftLauncherStateDestroyed
+
+    typedef void (HovercraftLauncher::*StateFunc)();
+    static const StateFunc stateFuncs[3];
 };
 
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == 0x70);
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftLauncher) == sizeof(struct spawner));
+
+/* A side gun (gHovercraftSideGunVtable, hovercraft_side_gun.cpp): one on
+ * each side of the hovercraft (`left`), firing fireballs in bursts. */
 class HovercraftSideGun : public HpActor
 {
 public:
+    u8 dead; // 0x58 - set when shot down, IsUnshootable returns it
+    u8 left; // 0x59 - the constructor's `left`: the side and the animation
+    u8 unk_5A[2];
+    s32 offX;       // 0x5C - added to the hovercraft's position
+    s32 offY;       // 0x60
+    s32 offZ;       // 0x64
+    s32 orbitTimer; // 0x68 - frames until the next fireball
+    s32 lap;        // 0x6C - fireballs in this burst
+
     // CreateHovercraftSideGun
-    HovercraftSideGun(const struct anim_table_record *rec, s32 x, s32 y, s32 z, u8 arg);
-    virtual ~HovercraftSideGun(); // 1 DestroyHovercraftSideGun
+    HovercraftSideGun(const struct anim_table_record *rec, s32 x, s32 y, s32 z, bool left);
+    virtual ~HovercraftSideGun();    // 1 DestroyHovercraftSideGun
+    virtual void Update();           // 2 UpdateHovercraftSideGun
+    virtual void Damage(s32 amount); // 4 DamageHovercraftSideGun
+    virtual s32 IsUnshootable();     // 5 IsHovercraftSideGunUnshootable
+
+    void RunState(); // RunHovercraftSideGunState (UNUSED)
 };
 
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftSideGun) == 0x70);
+
+/* The cannon's muzzle flash (gHovercraftCannonFlashVtable,
+ * hovercraft_cannon_flash.cpp; bosses.h's `struct cannon_flash` is its C
+ * view): it plays its animation once in front of the cannon, then deletes
+ * itself. */
 class HovercraftCannonFlash : public HpActor
 {
 public:
+    u8 unshootable; // 0x58 - always set
+
     // CreateHovercraftCannonFlash
     HovercraftCannonFlash(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
     virtual ~HovercraftCannonFlash(); // 1 DestroyHovercraftCannonFlash
+    virtual void Update();            // 2 UpdateHovercraftCannonFlash
+    virtual void Damage(s32 amount);  // 4 DamageHovercraftCannonFlash (none)
+    virtual s32 IsUnshootable();      // 5 IsHovercraftCannonFlashUnshootable
+
+    s32 RunState(); // RunHovercraftCannonFlashState (UNUSED)
 };
+
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == 0x5C);
+COMPILE_TIME_ASSERT(boss_actors_hpp, sizeof(HovercraftCannonFlash) == sizeof(struct cannon_flash));
 
 #endif /* GUARD_BOSS_ACTORS_HPP */

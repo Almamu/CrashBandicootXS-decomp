@@ -130,11 +130,11 @@ gSfxTable:
 
 @ gJetpackRocketBox: src/data/actor_box_17c444.c
 
-@ gHovercraftFireballStateFuncs: src/data/actor_pmf_17c450.c
+@ gHovercraftFireballStateFuncs: src/data/actor_pmf_17c450.cpp
 
 @ gHovercraftAttacks..gHovercraftKeyframes: src/data/singleton_kind_17c460.c
 
-@ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/data/actor_state_17c4c8.c
+@ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/data/actor_state_17c4c8.cpp
 
 @ gContinuePromptCursorText..gContinuePromptPalette3: src/data/hud_palettes_17c510.c
 

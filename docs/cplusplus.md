@@ -566,6 +566,15 @@ counts them by kind) and what the C++ still needs.
 | `src/vehicle/jetpack_balloon.cpp` | `JetpackBalloon` (include/vehicle.hpp): constructor (`CreateJetpackBalloon`), `Update`, `Damage`, `IsUnshootable`, `ClearCrate`, `Release`, `Move`, `RunState`, 3 states; `GetAirshipHpPercent`, `DestroyAirship` (`delete gAirship`), `nullsub_30`, `AirshipStateInactive` (C linkage) | 11 + 4 | agbcp (both match) | 7 pins, 2 retyped stores, 3 retyped reads, `ACTOR_PMF_CALL`, `ACTOR_VCALL`, a hand-written slot-7 call, `ACTOR_SET_STATE`, a `goto` -> 0 | 11f |
 | `src/data/actor_pmf_17c260.cpp` | `JetpackPlane::stateFuncs`, `JetpackBomber::stateFuncs` (gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
 | `src/data/actor_pmf_17c414.cpp` | `JetpackBalloon::stateFuncs` (gJetpackBalloonStateFuncs; split from actor_state_17c3fc.c, with the balloon crate's table after it in the new actor_pmf_17c42c.c, still C) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
+| `src/bosses/hovercraft.cpp` | `JetpackRing` (include/vehicle.hpp): constructor (`CreateJetpackRing`), `IsUnshootable`; `JetpackCollectedWumpa` (new): `Update`, `Draw`, destructor, constructor, `IsUnshootable`; `HovercraftFireball` (include/boss_actors.hpp): `Damage`, `Update`, constructor, `StateExplode`, `StateFly`, `RunState`, `IsUnshootable`; the hovercraft (an `AnimPart`, gHovercraft): `UpdateHovercraftHitFlash`, `RunHovercraftState`, its states, `DrawHovercraftMap`, `CreateHovercraft` (`new AnimPart`), `SpawnHovercraft`, `UpdateHovercraft`, `UpdateHovercraftBg2`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles`, `DestroyHovercraft` (`delete`), 3 unused stubs (C linkage) | 14 + 16 | old_agbcp (old_agbcc C already) | 28 pins, 1 const, 2 keeps, 1 memory keep, 4 retyped stores, 1 retyped read, 3 `ACTOR_PMF_CALL`s, 3 slot calls, the inline `AllocActor`/`InitAnimPart` pair -> 4 pins, 1 const, 1 memory keep | 11h |
+| `src/bosses/hovercraft_parts.cpp` | the hovercraft's getters, `StartHovercraftHitFlash`, `SetHovercraftFlashColor`, `LoseHovercraftPart`, `SetHovercraftState` (the inline `EnterHovercraftState` out of line), 3 states (C linkage) | 0 + 14 | agbcp | 22 pins, 2 `asm`, 4 retyped stores -> 1 pin | 11h |
+| `src/bosses/hovercraft_cannon.cpp` | `HovercraftCannon` (include/boss_actors.hpp): `StateFire`, `Damage`, `Update`, constructor (`CreateHovercraftCannon`), `StateDestroyed`, `StateWait`, `RunState`, `IsUnshootable` | 8 | agbcp | 15 pins, 1 const, 4 retyped stores, 1 retyped read, 2 `ACTOR_PMF_CALL`s, the hand-written destroy-slot call -> 0 | 11h |
+| `src/bosses/hovercraft_launcher.cpp` | `HovercraftLauncher` (include/boss_actors.hpp): the same eight methods as the cannon's | 8 | agbcp | 20 pins, 3 consts, 7 retyped stores, 2 `ACTOR_PMF_CALL`s, the hand-written destroy-slot call -> 0 | 11h |
+| `src/bosses/hovercraft_side_gun.cpp` | `HovercraftSideGun` (include/boss_actors.hpp): constructor (`CreateHovercraftSideGun`), `Damage`, `Update`, `RunState`, `IsUnshootable`; `HovercraftCannonFlash::Damage` | 6 | agbcp | 20 pins, 2 `asm` (one with a `.pool`), 4 retyped stores -> 0 | 11h |
+| `src/bosses/hovercraft_cannon_flash.cpp` | `HovercraftCannonFlash` (include/boss_actors.hpp): `Update`, constructor (`CreateHovercraftCannonFlash`), `RunState`, `IsUnshootable` | 4 | agbcp | 5 pins, 1 keep, 2 retyped stores, 2 hand-written destroy-slot calls -> 1 keep | 11h |
+| `src/data/actor_pmf_17c450.cpp` | `HovercraftFireball::stateFuncs` (gHovercraftFireballStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11h |
+| `src/data/actor_state_17c4c8.cpp` | gHovercraftStateFuncs (a plain function table, C linkage), `HovercraftCannon::stateFuncs`, `HovercraftLauncher::stateFuncs` | data | agbcp | the `ACTOR_PMF` records -> 0 | 11h |
+| `src/vehicle/jetpack_spawn.cpp` (again) | the hovercraft's weapons', the ring's and the collected wumpa's spawners: `new` | 0 + 7 | old_agbcp | the `CreateHovercraftSideGun_b` alias, the `byte_arg` and 8 C-constructor calls on `AllocActor` -> 0 | 11h |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2350,6 +2359,98 @@ What made the C++ match:
   fifth of the hit points multiplies by a variable (`pct = 0x14`): a literal
   is strength-reduced to shifts, where the ROM has `muls`.
 
+### The hovercraft (part 11h)
+
+Part 11h in numbers: the six src/bosses/hovercraft*.c files (ROM
+0x080326E4-0x08034374), 70 functions, and the hovercraft's three
+pointer-to-member tables (src/data/actor_pmf_17c450.cpp and
+actor_state_17c4c8.cpp). Project-wide (against part 11f): `MATCH_HOLD_REG`
+840 -> 735, instruction-emitting `asm` 88 -> 84, `.pool` in asm 4 -> 3,
+asm-label aliases 13 -> 12, `MATCH_CONST` 20 -> 16, `MATCH_KEEP` 29 -> 27,
+retyped field stores 139 -> 114 and reads 53 -> 51. Every object matches
+under the compiler its C had: old_agbcp for hovercraft.o (already in
+`OLD_AGBCC_OBJS`, for DrawHovercraftMap), agbcp for the other five, which
+match under agbcp as their C did.
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `HovercraftFireball : HpActor` | 0x6C | gHovercraftFireballVtable (7 slots) | hovercraft.cpp; its table in actor_pmf_17c450.cpp |
+| `HovercraftCannon : HpActor` | 0x70 | gHovercraftCannonVtable | hovercraft_cannon.cpp; its table in actor_state_17c4c8.cpp |
+| `HovercraftLauncher : HpActor` | 0x70 | gHovercraftLauncherVtable | hovercraft_launcher.cpp; its table in actor_state_17c4c8.cpp |
+| `HovercraftSideGun : HpActor` | 0x70 | gHovercraftSideGunVtable | hovercraft_side_gun.cpp |
+| `HovercraftCannonFlash : HpActor` | 0x5C | gHovercraftCannonFlashVtable | hovercraft_cannon_flash.cpp (its `Damage` in hovercraft_side_gun.cpp) |
+| `JetpackRing : HpActor` (vehicle.hpp) | 0x5C | gJetpackRingVtable | hovercraft.cpp (its `Update` is still C, jetpack_crates.c, 11g) |
+| `JetpackCollectedWumpa : HpActor` (vehicle.hpp, new) | 0x64 | gJetpackCollectedWumpaVtable | hovercraft.cpp |
+| the hovercraft | 0x1C | none | a bare `AnimPart` (gHovercraft) and globals, the airship's twin; its functions keep C linkage |
+
+- **The weapons get their fields** (bosses.h's `struct spawner`, `struct
+  actor_orbit` and `struct cannon_flash` are the C views, with `sizeof`
+  checks; the side gun's was a file-local struct). Their constructors are
+  `HpActor(rec, x, y, z, hp)` and the body's stores, and their states and
+  `RunState`s are methods. `delete this` replaces the hand-written
+  destroy-slot calls (`_call_via_r2` on `table->destroy`), and the fireball
+  hurts the player with `((HpActor *)gActorList)->Damage(6)` (slot 4).
+- **The PMF tables are C++**: their only users were these files. The
+  fireball's table is all of actor_pmf_17c450.cpp, and actor_state_17c4c8
+  holds the cannon's and the launcher's after gHovercraftStateFuncs, a plain
+  function table that keeps its C name (bosses.h declares it in `extern
+  "C"`), so the whole file is C++.
+- **The hovercraft is an `AnimPart`**, as the airship: `gHovercraft` is an
+  `AnimPart *` to C++ (a `__cplusplus` declaration in bosses.h),
+  `CreateHovercraft` is `gHovercraft = new AnimPart(...)` and
+  `DestroyHovercraft` `delete gHovercraft` (AnimPart has no destructor: a
+  plain `mem_free`). `RunHovercraftState` calls
+  `gHovercraftStateFuncs[gHovercraftState]()` directly.
+- **One state change for the hovercraft**, `EnterHovercraftState(st, idx)`
+  in boss_actors.hpp (SetAirshipState without the timer):
+  `SetHovercraftState` is its out-of-line copy, `HovercraftStateApproach`,
+  `HovercraftStateCloseIn`, `HovercraftStateFallBack`, `CreateHovercraft`
+  and `SpawnHovercraft` expand it. The C had an inline `SingletonSetKind`
+  and two hand-expanded copies with 8 pins and an `add` in `asm` each.
+- **The spawners use `new`** (jetpack_spawn.cpp, part 11e's file):
+  `new HovercraftCannon(...)`, `new JetpackRing(...)`, ... The side gun's
+  `left` is a `bool`, which g++ passes as a byte on the stack (`add r2, sp,
+  #4; strb`) and reads back with `ldrb`, so the `CreateHovercraftSideGun_b`
+  asm-label alias over a one-byte struct goes. `SpawnHovercraftSideGun`
+  takes a `bool` too, in a `__cplusplus` declaration (only C++ calls it): a
+  `u8` would be converted (`negs; lsrs`) before the store.
+- **`JetpackCollectedWumpa`** is `PolarCollectedWumpa`'s twin with hit
+  points. Its destructor is explicit (it adds the fruit it carries), so g++
+  stores its own vtable first, then the inline `~ActorSelf`'s, as the C
+  wrote out.
+- **C views**: the prototypes of the methods no C file uses any more go
+  (the states, the `RunState`s, the constructors, gHovercraft*StateFuncs'
+  C declarations); the rest stay for the vtable data.
+
+What made the C++ match:
+
+- **The animation resets** are `SetState`, where the C pinned the duration
+  and the two zeros and stored through retyped pointers (most of the 105
+  pins and all 25 retyped stores).
+- **The side gun's constructor** was two `asm` blocks (the vtable store,
+  and the X offset's two-way diamond with a `.pool` after its `b`) and 5
+  pins. In C++ the hit points are HpActor's argument (`GetHovercraftLevel()
+  == 0 ? 0x18 : 0x10`, computed before the base constructor, as in the
+  ROM), the X offset an `if`/`else` of two stores (cross-jumping makes the
+  diamond, and the pool lands after its `b`), and the animation index
+  `idx = 1; if (l != 0) idx = 0;` from a `u8` local.
+- **The cannon's and the launcher's `Update`** read `state` into a local
+  before the `step = 1`, as the C did; everything else in the two files
+  matched as written.
+
+Kept, each with a comment:
+- `UpdateHovercraftCannonFlash`'s `MATCH_KEEP_VOLATILE`: the ROM tests the
+  0 or 1 its inlined body returns again, and CSE folds the test with every
+  spelling tried (a `bool`, a local, empty loops around the call or the
+  test), as in the C.
+- The flash colour's r1 pin in `SetHovercraftFlashColor` and
+  `RunHovercraftState` (the C had 3 and 4 pins, and two `MATCH_KEEP`s): the
+  ROM loads the white into r2 and copies it to r1.
+- `UpdateHovercraftHitFlash`'s two loop pins (it had eight) and the volatile
+  re-read of the timer.
+- `ConvertHovercraftTiles`' `MATCH_CONST` and `MATCH_KEEP_MEM`, as
+  `ConvertAirshipTiles`' (part 11i).
+
 ### The polar actors' constructors and the category frame (part 11b)
 
 Part 11b in numbers: actor_factory.c, actor_spawn.c, actor_category_frame.c
@@ -2594,7 +2695,8 @@ player, then the first item here, is C++ since part 8):
   part 11b the actor factory, the spawn hooks and the category frame,
   part 11i the airship (airship*.c), part 11e the jetpack player, its
   shot, the jetpack spawners and their table, part 11c the polar player,
-  part 11f the planes, bombers, cannonballs and balloons and their tables;
+  part 11f the planes, bombers, cannonballs and balloons and their tables,
+  part 11h the hovercraft (hovercraft*.c), its weapons and their tables;
   the plan for the rest is
   [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
@@ -2695,7 +2797,7 @@ and, once no C file reads one, its PMF table to C++.
 | ~~11e~~ | ~~vehicle/jetpack_spawn.c (old), jetpack_player.c, jetpack_run.c, jetpack_shot.c~~ | `HpActor`'s constructor, `JetpackPlayer`, `JetpackShot`, the jetpack spawners | done | gJetpackPlayerStateFuncs | 11a |
 | ~~11f~~ | ~~vehicle/jetpack_plane.c, jetpack_balloon.c~~ | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | done | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs (split into actor_pmf_17c414.cpp) | 11e |
 | 11g | vehicle/jetpack_crates.c | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | 30, 62, 3 | gJetpackBalloonCrateStateFuncs | 11e |
-| 11h | bosses/hovercraft.c (old), hovercraft_cannon.c, hovercraft_cannon_flash.c, hovercraft_launcher.c, hovercraft_side_gun.c, hovercraft_parts.c | the hovercraft's weapons (`HovercraftFireball`, `HovercraftCannon`, ...), `JetpackRing`'s and `JetpackCollectedWumpa`'s constructors and methods (in hovercraft.c), the hovercraft singleton | 70, 110, 4 | gHovercraftFireballStateFuncs, gHovercraftCannonStateFuncs, gHovercraftLauncherStateFuncs | 11e |
+| ~~11h~~ | ~~bosses/hovercraft.c (old), hovercraft_cannon.c, hovercraft_cannon_flash.c, hovercraft_launcher.c, hovercraft_side_gun.c, hovercraft_parts.c~~ | the hovercraft's weapons (`HovercraftFireball`, `HovercraftCannon`, ...), `JetpackRing`'s and `JetpackCollectedWumpa`'s constructors and methods (in hovercraft.c), the hovercraft (an `AnimPart` singleton) | done | gHovercraftFireballStateFuncs, gHovercraftCannonStateFuncs, gHovercraftLauncherStateFuncs | 11e |
 | ~~11i~~ | ~~bosses/airship*.c (10 files; airship_map.c, airship_touch.c old)~~ | `AirshipFireball` (but its two flight states, 11f's); the airship (an `AnimPart` singleton) | done | gAirshipFireballStateFuncs (split into actor_pmf_17c2b8.cpp) | |
 | 11j | actor/actor_bg.c, actor_category_init.c (old), actor_category_stats.c, actor_vram_pool.c, bg_picture.c (old), cell_anim.c; vehicle/yeti*.c (yeti_graphics.c, yeti_update.c old) | none: C-like (no C++ trait), only if the family's files should all be C++ | 43, 33, 3 | | |
 
@@ -3169,3 +3271,18 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   call in it) is an assignment inside that expression (`(scale2 = scale *
   2)` in `JetpackPlane::Aim`, part 11f); assigned as a statement before,
   it is computed before the call.
+- **A `bool` parameter passed on the stack** is the ROM's `strb` by the
+  caller and `ldrb` by the callee (`add rN, sp, #k; ldrb`), where a `u8`
+  is a promoted word: a constructor's last argument can be a `bool` where
+  the C needed a one-byte struct and an asm-label alias
+  (`HovercraftSideGun`, part 11h). A `u8` handed on to it is converted
+  first (`negs; lsrs`), so the caller's parameter is a `bool` too.
+- **A base constructor's argument computed before the call** (the hit
+  points of `HovercraftSideGun`, from a function call, ahead of
+  InitActorPart's) is an expression in the mem-initializer list:
+  `HpActor(rec, x, y, z, f() == 0 ? 0x18 : 0x10)` (part 11h).
+- **A two-way diamond with a literal pool after its `b`**, where an `if`
+  only sets a value, is an `if`/`else` of two stores of the field:
+  cross-jumping merges the stores and keeps the branch, and the pool goes
+  after it. A ternary or a conditional overwrite has no `b` (the side gun's
+  X offset, part 11h, where the C needed an `asm` block with a `.pool`).

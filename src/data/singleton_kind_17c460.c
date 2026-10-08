@@ -16,10 +16,10 @@ const struct hovercraft_attack gHovercraftAttacks[2] = {
 };
 
 /* The camera-offset target box (struct anim_box) HovercraftStateCloseIn
- * (hovercraft.c) steers by. */
+ * (hovercraft.cpp) steers by. */
 const struct anim_box gHovercraftBox = { -102, -12, -2, 51, 68, 4 };
 
-/* The one keyframe CreateHovercraft (hovercraft.c) gives the singleton. */
+/* The one keyframe CreateHovercraft (hovercraft.cpp) gives the singleton. */
 const struct anim_frame_record gHovercraftKeyframes[1] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
 };

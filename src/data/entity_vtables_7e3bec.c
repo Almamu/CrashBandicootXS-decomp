@@ -819,7 +819,7 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
- * jetpack_crates.c, hovercraft.c (DestroyJetpackCollectedWumpa), polar_player_actions.cpp,
+ * jetpack_crates.c, hovercraft.cpp (~JetpackCollectedWumpa), polar_player_actions.cpp,
  * polar_pickups.c, jetpack_player.cpp, actor.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
@@ -1170,14 +1170,14 @@ const struct vtable_slot gJetpackRocketVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by hovercraft.c. */
+/* Used by hovercraft.cpp. */
 const struct vtable_slot gJetpackRingVtable[7] = {
     VTABLE_SLOT(NULL),       VTABLE_SLOT(DestroyJetpackRing), VTABLE_SLOT(UpdateJetpackRing),
     VTABLE_SLOT(DrawActor),  VTABLE_SLOT(DamageActor),        VTABLE_SLOT(IsJetpackRingUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by hovercraft.c (DestroyJetpackCollectedWumpa). */
+/* Used by hovercraft.cpp (JetpackCollectedWumpa's destructor). */
 const struct vtable_slot gJetpackCollectedWumpaVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackCollectedWumpa),
@@ -1188,7 +1188,7 @@ const struct vtable_slot gJetpackCollectedWumpaVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by hovercraft.c. */
+/* Used by hovercraft.cpp. */
 const struct vtable_slot gHovercraftFireballVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftFireball),
@@ -1199,7 +1199,7 @@ const struct vtable_slot gHovercraftFireballVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by hovercraft_cannon.c. */
+/* Used by hovercraft_cannon.cpp. */
 const struct vtable_slot gHovercraftCannonVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftCannon),
@@ -1210,7 +1210,7 @@ const struct vtable_slot gHovercraftCannonVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by hovercraft_launcher.c. */
+/* Used by hovercraft_launcher.cpp. */
 const struct vtable_slot gHovercraftLauncherVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftLauncher),
@@ -1221,7 +1221,7 @@ const struct vtable_slot gHovercraftLauncherVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by hovercraft_launcher.c, hovercraft_side_gun.c (CreateHovercraftSideGun and the functions after it). */
+/* Used by hovercraft_side_gun.cpp. */
 const struct vtable_slot gHovercraftSideGunVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftSideGun),
@@ -1232,7 +1232,7 @@ const struct vtable_slot gHovercraftSideGunVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by hovercraft_cannon_flash.c. */
+/* Used by hovercraft_cannon_flash.cpp. */
 const struct vtable_slot gHovercraftCannonFlashVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftCannonFlash),

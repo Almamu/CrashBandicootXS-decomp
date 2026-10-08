@@ -50,7 +50,7 @@ const struct airship_picture {
 #include "boss_pictures/167cd4.inc"
 };
 
-/* Cortex's hovercraft: its palette. LoadHovercraftGraphics (hovercraft.c) DMAs
+/* Cortex's hovercraft: its palette. LoadHovercraftGraphics (hovercraft.cpp) DMAs
  * the first 16 colours to BG palette 1 and UpdateHovercraftHitFlash restores them
  * from here; the other 240 entries are the 0x03E0 filler colour. */
 const u16 gHovercraftPalette[256] = {
@@ -88,7 +88,7 @@ const u16 gHovercraftPalette[256] = {
     0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0, 0x03E0,
 };
 
-/* The hovercraft, 1 frame. CreateHovercraft (hovercraft.c) reads cols and
+/* The hovercraft, 1 frame. CreateHovercraft (hovercraft.cpp) reads cols and
  * rows, ConvertHovercraftTiles uploads the tiles. */
 const struct hovercraft_picture {
     struct boss_picture_size size;
