@@ -4,7 +4,6 @@
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "memory.h"
 #include "util.h"
 #include "audio.h"
@@ -143,15 +142,13 @@ void YetiStateCharge(void)
         s32 tier = Q8_TO_INT(gYeti->animTime);
 
         if (gYetiDistance <= 0x4FFF) {
-            if (tier == 0xb) {
-                gAudioContext->PlaySfx(SFX_YETI_STOMP_1, 0x100);
-                /* The ROM cross-jumps only the ShakeActorBg(0x200) tail
-                 * of the two cues; without the barrier the PlaySfx call
-                 * is shared too (as YetiStateChase's is). */
-                MATCH_BARRIER();
-                ShakeActorBg(0x200);
-            } else if (tier == 0x1b) {
-                gAudioContext->PlaySfx(SFX_YETI_STOMP_2, 0x100);
+            /* The two stomp cues share their ShakeActorBg(0x200) (the
+             * ROM's one cross-jumped tail). */
+            if (tier == 0xb || tier == 0x1b) {
+                if (tier == 0xb)
+                    gAudioContext->PlaySfx(SFX_YETI_STOMP_1, 0x100);
+                else
+                    gAudioContext->PlaySfx(SFX_YETI_STOMP_2, 0x100);
                 ShakeActorBg(0x200);
             } else if (tier == 0xc || tier == 0x1c) {
                 ShakeActorBg(0x100);

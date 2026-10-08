@@ -3,7 +3,6 @@
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "memory.h"
 #include "level.h"
 }
@@ -157,44 +156,28 @@ s32 LevelEntityFlags::IsActivated(s32 n)
  * docs/matching/archive/naked-sub_80259d4-matched.md for the derivation of how
  * this was finally matched. This is a true leaf function in the ROM
  * (no `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
- * function, which old_agbcp does on its own). The ROM keeps `n`'s
- * pristine copy (`t`, r2) untouched by the "clamp negative indices"
- * adjustment (which lands in a *separate* register, r0), reusing the
- * untouched `t` again later for `bitIndex` - a second local
- * (`adjusted`) instead of adjusting `t` in place reproduces that split.
- * The word address is an integer built constant-first (`movs r1,
- * #0x82; lsls; add r1, ip`), which a pointer sum can't spell (gcc puts
- * the pointer first). Its r1 pin stays: without it gcc leaves `t` in
- * the incoming r1 and the address goes to r3, where the ROM copies `n`
- * to r2 and builds the address in r1. */
+ * function, which old_agbcp does on its own). The ROM shifts the word
+ * index to a byte offset before it builds `bits1`'s address
+ * (`movs r1, #0x82; lsls; add r1, ip`) and adds the two: the offset is
+ * its own statement and is added to the separately loaded `bits1`
+ * pointer (`committed += word` would shift after the address, and
+ * `&bits1[word]` adds the constant to the offset first). The copy then
+ * reuses the shifted index (`live += word`). This replaced an integer
+ * address pinned to r1 (#662 round 2). */
 void LevelEntityFlags::SetActivated(s32 n)
 {
-    u8 *base = (u8 *)this;
-    s32 t = n;
-    s32 adjusted, wordIndex;
-    s32 bitIndex;
-    s32 mask;
-    s32 shifted;
-    MATCH_HOLD_REG(s32, addr, r1);
+    s32 word = n / 32;
+    s32 offset = word * 4;
+    u32 *committed = bits1;
+    u32 *live;
+    u32 mask;
 
-    adjusted = t;
-    if (t < 0) {
-        adjusted += 0x1f;
-    }
-    wordIndex = adjusted >> 5;
-    shifted = wordIndex << 2;
-
-    addr = 0x208;
-    addr += (s32)base;
-    addr += shifted;
-    bitIndex = t - (wordIndex << 5);
-    mask = 1 << bitIndex;
-    *(s32 *)addr |= mask;
-
-    addr = 0x308;
-    addr += (s32)base;
-    addr += shifted;
-    *(s32 *)addr |= mask;
+    committed = (u32 *)((u8 *)committed + offset);
+    mask = 1 << (n % 32);
+    *committed |= mask;
+    live = bits1Copy;
+    live += word;
+    *live |= mask;
 }
 
 /* Sets bit `n` of `bits1Copy` (`self+0x308`) only: the live "activated"

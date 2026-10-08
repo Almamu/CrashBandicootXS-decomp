@@ -104,7 +104,7 @@ void UpdateYeti(void)
         gYetiX += ((gActorList)->x - gYetiX) / 32;
     obj = gYeti;
     old = Q8_TO_INT(obj->animTime);
-    obj->animTime += *(s16 *)&obj->animTimer;
+    obj->animTime += (s16)obj->animTimer;
     obj->animDone = 0;
     if (obj->GetAnimFrameBaseOffset() >= obj->anims[obj->animIndex].loopThreshold) {
         ANIM_REWIND(obj->animTime, obj->anims[obj->animIndex]);

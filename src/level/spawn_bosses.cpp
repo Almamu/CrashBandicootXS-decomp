@@ -54,7 +54,12 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
  * (spawn_pickups.cpp). The ROM's shape is the point built as one
  * `struct vec2` value in a register pair (r2:r3) and then stored: the C
  * compiler gives exactly that for an inline returning a `struct vec2`,
- * but g++ keeps a struct value in memory, so here it takes the pins. */
+ * but g++ keeps a struct value in memory, so here it takes the pins.
+ * #662 round 2 retried the C++ shapes: a `struct vec2` local copied whole
+ * (assignment, initializer, or into the array through a cast) gets a
+ * stack slot of its own (`sub sp, #20`), and one copied field by field is
+ * split into two SImode registers that are offset in place (`subs r1,
+ * #2`), never the r2:r3 pair. */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if (!gLevelState->IsInGemPath() && !gLevelState->IsInBonusRound() &&

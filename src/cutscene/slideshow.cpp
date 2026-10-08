@@ -146,7 +146,10 @@ s32 Slideshow::Skip(s32 startIdx, u8 condFlag)
  * (docs/matching/archive/issue-38-sound-channel-family.md); as a C++
  * method under old_agbcp none of that is needed: the rebuild only has to
  * keep the mask and the shadow byte in `s32` locals (so the AND is done
- * on the word, `movs #17; negs`, not folded to a byte `0xef`). */
+ * on the word, `movs #17; negs`, not folded to a byte `0xef`). The
+ * toggle's bit is read with `ldrb`: a `u8` copy of the field, which the
+ * expander narrows to a byte load (a `(u8)` cast inside the expression
+ * is folded away by the `& 1`). */
 void Slideshow::ShowPicture(s32 idx)
 {
     Slideshow *self = this;
@@ -165,7 +168,8 @@ void Slideshow::ShowPicture(s32 idx)
     {
         u8 *shadow = (u8 *)&gSlideshowDispcnt;
         {
-            s32 bit4 = (1 & *(u8 *)&self->toggle) << 4;
+            u8 toggleByte = self->toggle;
+            s32 bit4 = (1 & toggleByte) << 4;
             s32 mask = ~0x10;
             s32 byte = *shadow;
 

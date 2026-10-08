@@ -856,6 +856,28 @@ After step 3, `tools/match_idioms.py --functions` counts 1955 of the
 2059 functions with no workaround at all (README.md has the
 per-directory table).
 
+Round 2 in level/, objects/, vehicle/, cutscene/ and pickups/ (C++):
+
+- **A narrowed load is a narrow local.** A `u8`/`u16` copy of an `s32`
+  field (`u8 toggleByte = toggle;`) gives the `ldrb`/`ldrh` the C wrote
+  as `*(u8 *)&field`: the expander loads the low part of the memory
+  operand directly. Inside an expression the cast can be folded away
+  (`1 & (u8)toggle` is `ldr; and`), so it needs its own statement
+  (`Slideshow::ShowPicture`, `LevelState::AddBrokenCrate`); a plain cast
+  is enough where nothing folds it (`SetupRoomBlend`, `UpdateYeti`).
+- **An inline flag test** (`TokenHas`) replaced `TileCache::DecodeChunk`'s
+  extra `MATCH_USE` reference; the decomp-permuter on the C++ found it.
+- **A cross-jumped tail from the source's own nesting**:
+  `YetiStateCharge`'s two stomp cues are one `if` with the two sounds
+  inside, sharing their ShakeActorBg call, instead of two branches kept
+  apart by a `MATCH_BARRIER`.
+- **A byte offset as its own statement** (`LevelEntityFlags::SetActivated`):
+  the ROM shifts the index before it forms `bits1`'s address, which
+  `bits1 + word` and `&bits1[word]` don't; the offset computed first and
+  added to `bits1` as bytes replaced an integer address pinned to r1.
+- **A dead load through a pointer-to-volatile parameter**
+  (`sub_8026C80`) instead of a volatile cast in the body.
+
 **Round 2, lib/iwram/system/util/audio/text.** 23 functions -> 17
 (`tools/match_idioms.py --functions`). What removed them:
 
