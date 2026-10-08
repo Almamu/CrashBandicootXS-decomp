@@ -58,7 +58,7 @@ u8 IsTouchingYeti(struct actor_self *self)
 
     f.a = gYetiBox;
     BoxMove(&f.a, Q8_TO_INT(gYetiX), 0, Q8_TO_INT(gYetiPosition));
-    f.t = *(struct anim_box *)self->box;
+    f.t = self->box;
     BoxMove(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
     f.b = f.t;
     b = &f.b;

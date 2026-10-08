@@ -61,6 +61,15 @@ public:
     void Run();        // RunCutscenePlayer
 };
 
+
+/* cutscene.h's struct cutscene_player, the view PlayCutscene keeps on its
+ * stack (see there). */
 COMPILE_TIME_ASSERT(cutscene_hpp, sizeof(CutscenePlayer) == sizeof(struct cutscene_player));
+ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, slides);
+ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, count);
+ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, toggle);
+ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, pages);
+ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, font);
+ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, box);
 
 #endif /* !GUARD_CUTSCENE_HPP */

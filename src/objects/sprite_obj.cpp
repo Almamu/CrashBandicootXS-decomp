@@ -4,7 +4,6 @@
 extern "C" {
 #include "math_util.h"
 #include "match.h"
-#include "vram_pool.h"
 #include "util.h"
 #include "gfx.h"
 #include "memory.h"

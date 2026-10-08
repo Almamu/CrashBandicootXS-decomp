@@ -1,6 +1,5 @@
 #include "core.h"
 #include "actor_anim.h"
-#include "vram_pool.h"
 #include "sprite_bank.h"
 #include "hud.h"
 #include "actor.h"

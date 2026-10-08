@@ -52,10 +52,14 @@ struct cutscene_page {
     s32 count;
 };
 
-/* The slideshow player. ResetSlideshow/InitCutscenePlayer construct one
- * (PlayCutscene keeps it on the stack), RunCutscenePlayer shows its
- * slides with their pages of text, and RunSlideshow (unused) shows the
- * slides alone. */
+/* The slideshow player, class CutscenePlayer (include/cutscene.hpp, which
+ * checks the offsets): InitCutscenePlayer constructs one, RunCutscenePlayer
+ * shows its slides with their pages of text. codegen: PlayCutscene
+ * (level_cutscene.cpp) keeps one on its stack in this view, in one
+ * aggregate with its other locals (for the ROM's sp-relative stores), and
+ * calls the constructor and destructor by their C names (below): a
+ * CutscenePlayer member would be constructed where the aggregate is
+ * declared, before the display setup the ROM does first. */
 struct cutscene_player {
     const struct cutscene_slide *const *slides; // 0x00
     s32 count;                                  // 0x04

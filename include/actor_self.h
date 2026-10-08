@@ -4,8 +4,10 @@
 /*
  * The C view of the 3D actors' base class, ActorSelf (actor_self.hpp;
  * C++ since #664 part 11a, src/actor/actor.cpp), for the files still in
- * C: an object built by `InitActorPart` (ActorSelf's constructor), its
- * vtable pointer at +0x50, and the layout of its vtable slots. Every 3D
+ * C (the yeti, the IWRAM sorter): an object built by `InitActorPart`
+ * (ActorSelf's constructor), its vtable pointer at +0x50, and the layout
+ * of its vtable slots. The fields have the class's names and types
+ * (actor_self.hpp checks their offsets). Every 3D
  * actor class is C++ since #664 part 11g, and the C macros that called
  * through them (ACTOR_PMF_CALL, ACTOR_VCALL, ...) are gone, as are the
  * pointer-to-member records of the C state tables (struct actor_pmf,
@@ -53,6 +55,16 @@ struct actor_vtable {
 
 struct anim_table_record;
 
+/* A box in the actors' 16-bit world units: position then size. The
+ * anim_table_record's box_14, `actor_self.box` and several small src/data
+ * tables are this. A fixed box is copied into an actor by struct
+ * assignment (`box = gJetpackRocketBox`): the ROM's `ldm`/`stm`. */
+struct anim_box {
+    s16 x, y, z;
+    s16 w, h, d;
+}; // 0xC
+COMPILE_TIME_ASSERT(actor_self_h, sizeof(struct anim_box) == 0xC);
+
 /* actor_self.sortKey bits. The low 15 bits are the draw-order key
  * ((depth >> 1) & 0x7f80 | ((|x| + |y|) >> 11) & 0x7f); InitActorPart,
  * UpdateActor and UpdateActorDepth set bit 15 when the actor's depth is past
@@ -82,8 +94,7 @@ struct actor_self {
     struct anim_table_record *record; // 0x30 - the record InitActorPart was given (actor_anim.h);
                                       //        the draw functions scale by its baseDepth
     s32 depth;                        // 0x34
-    u8 box[0xC];             // 0x38 - collision box, copied from record->box_14 by InitActorPart
-                             //        (ActorsOverlap and friends read it as a struct box16)
+    struct anim_box box;     // 0x38 - collision box, copied from record->box_14 by InitActorPart
     s32 stateTime;           // 0x44 - frames spent in `state`
     struct actor_self *prev; // 0x48 - circular actor list (rooted at the player, gActorList):
     struct actor_self *next; // 0x4C   InitActorPart appends before the head; the draw and

@@ -1,7 +1,6 @@
 #include "core.h"
 #include "math_util.h"
 #include "match.h"
-#include "vram_pool.h"
 #include "actor.h"
 #include "level_state.h"
 #include <agb_syscall.h>

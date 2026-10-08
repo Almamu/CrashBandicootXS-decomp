@@ -3,7 +3,10 @@
 
 /* Two things share this header (docs/headers_plan.md):
  *
- * - `struct actor`, the small on-screen entity of src/gfx/graphics.cpp;
+ * - the entity's flags (`union EntityFlags`), which class Entity
+ *   (include/entity.hpp) and the C view of the player (player.h) share,
+ *   and the `struct actor` tag the C prototypes of the entity's methods
+ *   take (gfx.h);
  * - the actor subsystem (src/actor/): every function it defines, and the
  *   globals and data tables its files use. The prototypes are copied from
  *   the definitions. A .c file that needs a different local declaration
@@ -17,39 +20,36 @@
 #include "vtable.h"
 #include "constants/categories.h"
 
-/* A small, moving on-screen object: position, a handful of flag bits, a
- * width/height pair (both raw and pre-halved/negated for centering), and
- * a pointer to a per-category data table (offset/text record pairs read
- * at several different fixed offsets by src/gfx/graphics.cpp's
- * IsEntityNearCamera/CheckEntityPlayerContact/IsEntityInsideRect/UpdateEntity/ResetEntity/etc. and
- * by power_dialog_draw.cpp's DestroyPowerDialog - none of that table's own shape is
- * understood yet, so it stays a raw `void *` here). Exactly 0x1c bytes -
- * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. The
- * fields at 0x0B, 0x0D-0x0F and 0x16-0x17 aren't understood beyond their
- * offset yet - named `unusedNN` rather than guessed. `id` and `kind`
- * have the same offsets and roles as `struct player`'s. */
-struct actor {
-    s32 x; // 0x00 - Q8 fixed-point screen position
-    s32 y; // 0x04 - Q8 fixed-point screen position
-    // 0x08 - the spawn's bit index in the "gone" bitmap (MarkEntityGone); 0xFFFF: none
-    u16 id;
-    // 0x0A - the object kind sent to the player's hit method
-    // on contact (CheckEntityPlayerContact, Get/SetEntityKind)
-    u8 kind;
-    u8 unused_0B;    // 0x0B
-    u8 flags;        // 0x0C - bit 0 gone (MarkEntityGone), 1 unknown, 2 player contact enabled,
-                     //        3 touched by the player, 4 always active (skips the camera tests);
-                     //        sprite objects add 5 unknown, 6 vulnerable, 7 collision enabled
-    u8 unused_0D[3]; // 0x0D-0x0F
-    s16 halfW;       // 0x10 - -rawW/2, set by SetEntitySize/ResetEntity
-    s16 halfH;       // 0x12 - -rawH/2, set by SetEntitySize/ResetEntity
-    u8 rawW;         // 0x14
-    u8 rawH;         // 0x15
-    u8 unused_16[2]; // 0x16-0x17
-    void *table;     // 0x18 - per-category data table, shape not yet known
+/* The entity flags byte at +0x0C and the one after it, +0x0D (Entity's
+ * `f`, struct player's). */
+union EntityFlags {
+    u8 flags; // 0x0C
+    struct {
+        u8 gone:1;       // removed (SetGone); the lists drop it
+        u8 unk_1:1;      // Get/Set/ClearFlag1
+        u8 visible:1;    // in contact with the player (Is/Enable/DisableContact)
+        u8 bit3:1;       // touched by the player or another object; SetTargetAnim clears it
+        u8 active:1;     // always active: skips the camera tests (updated off screen too)
+        u8 unk_5:1;      // Get/Set/ClearSpriteObjFlag5
+        u8 vulnerable:1; // the player's attacks hit it
+        u8 collides:1;   // Is/Enable/DisableCollision
+        u8 floorProbe:1; // 0x0D - a ground sprite probes the floor (Enable/DisableFloorProbe)
+        u8 grounded:1;   // a ground sprite stands on the floor (ProbeFloor)
+        u8 blink:1;      // hidden this frame (a blinking part; Is/ToggleHidden)
+        u8 solid:1;      // pushes the player out (Is/Set/ClearSolid)
+        u8 unk_0D_4:4;
+    } b; // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
+    struct {
+        u8 flags;  // 0x0C
+        u8 flags2; // 0x0D
+    } bytes;
 };
 
-COMPILE_TIME_ASSERT(actor_h, sizeof(struct actor) == 0x1c);
+/* The entity (class Entity, include/entity.hpp: 0x1C bytes, built by
+ * CreateEntity). No C file reads its fields: the C callers of its methods
+ * (SetEntityPos, SetEntityPixelPos; gfx.h) only pass the pointer, so the
+ * C side has the tag alone. */
+struct actor;
 
 /* actor_anim.h has the full definitions; it can't be included here,
  * since several includers of this header define their own `struct

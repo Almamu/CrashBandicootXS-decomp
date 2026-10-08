@@ -3,9 +3,8 @@
 
 /* The player as C++ (#664, docs/cplusplus.md, part 8): the class behind
  * gPlayerVtable, whose code is src/player/player_*.cpp. player.h's `struct
- * player` is its C view, for the files that are still C (the rooms, the
- * HUD, the vehicles) and the C prototypes; the two are checked against
- * each other below. cxx_symbols.txt maps the methods to the C names.
+ * player` is its C view, for the C files (bonus_round.c); the two are
+ * checked against each other field by field below. cxx_symbols.txt maps the methods to the C names.
  *
  * No `#pragma interface`: g++ emits the vtable in player_collide.cpp (see
  * ctrl.hpp). */
@@ -180,6 +179,61 @@ public:
 };
 
 COMPILE_TIME_ASSERT(player_hpp, sizeof(Player) == 0x350);
-COMPILE_TIME_ASSERT(player_hpp, sizeof(Player) == sizeof(Player));
+
+/* player.h's struct player, the C view, has the class's fields at the
+ * class's offsets (the bitfields, `palette`, aren't checkable; the vtable
+ * pointer is the view's `vtable`). */
+COMPILE_TIME_ASSERT(player_hpp, sizeof(Player) == sizeof(struct player));
+ASSERT_VIEW_FIELD(player_hpp, Player, player, x);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, y);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, id);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, kind);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, f);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, halfW);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, halfH);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, rawW);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, rawH);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, lastHitbox);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, anim);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, dir);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, screenSpace);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, mirror);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, animating);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, tag);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, frame);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, stepTimer);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, animDone);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, affine);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, unk_40);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, mover);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, rampX);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, rampY);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, speedX);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, speedY);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, hitAxes);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, probeTries);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, prevX);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, prevY);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, hitMask);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, type);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, busy);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, ctrlMode);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, deadline);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, bumped);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, countdown);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, bounce);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, listCount);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, list);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, carried);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, child);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, maskTrailIdx);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, maskTrail);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, slippery);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, hanging);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, pushLeft);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, pushRight);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, dead);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, cleared);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, collisionQueue);
 
 #endif /* !GUARD_PLAYER_HPP */

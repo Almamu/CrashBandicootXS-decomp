@@ -129,7 +129,7 @@ void UpdateYeti(void)
         if (gPolarPlayerInactive != 0)
             return;
         pl = *playerAddr;
-        f.t = *(struct anim_box *)pl->box;
+        f.t = pl->box;
         BoxMove(&f.t, Q8_TO_INT(pl->x), Q8_TO_INT(pl->y), Q8_TO_INT(pl->z));
         f.b = f.t;
         b = &f.b;

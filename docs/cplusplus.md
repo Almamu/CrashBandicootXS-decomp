@@ -3461,6 +3461,37 @@ still read through them. `tools/layout_audit.py views` lists them.
   methods use it before spawners.hpp can be included) and the DISPCNT
   shadow bytes.
 
+- **Batch 6, one name per field.** The C views that C files still read
+  have their class's field names and types, and the class header checks
+  every named field with `ASSERT_VIEW_FIELD(tag, Class, view, f)`
+  (core.h: `COMPILE_TIME_ASSERT(tag, offsetof(Class, f) == offsetof(struct
+  view, f))`; agbcp takes offsetof of a class with a vtable pointer and of
+  a base class's field): struct player (player.hpp; the +0x0C flags are
+  Entity's `union EntityFlags f`, now in actor.h for both, so `hit`,
+  `flag4`, `flag6` and `flag7` are `bit3`, `active`, `vulnerable` and
+  `collides`; `slot` is `palette`, `ctrl` `mover`, `hitMask` an `s32`,
+  `maskTrail` `struct gfx_vec`s, and the halves, raw sizes, `affine` and
+  `unk_40` are named as in the class), struct actor_self (actor_self.hpp;
+  `box` is a `struct anim_box`, which moved to actor_self.h, so the yeti
+  files lost their casts), struct bg_scroll_layer and struct level_layers
+  (bg_layer.hpp), struct bitmap_font (font.hpp), struct collision_queue
+  (part_list.hpp), struct sprite_bank_set (sprite_obj.hpp), the camera's
+  struct camera_target (sprite_obj.hpp, against Sprite: `dirFlags` and
+  `flags` are `dir` and `mirror`), and the two codegen views, struct
+  cutscene_player (cutscene.hpp; PlayCutscene's stack aggregate, which
+  calls the constructor and destructor by their C names) and crates.h's
+  struct pool_init_node (crate_list.hpp; ResetGrid's zeroing view). The
+  vtable pointer has no name in a class, so the views' `vtable`/`record`
+  is unchecked, as are bitfields. The views whose fields no C file reads
+  are tags now, their notes moved into the classes: actor.h's struct actor
+  (Entity), hud.h's struct hud_counter (Hud), gfx.h's struct
+  oam_shadow_buffer, struct palette_cache and struct vram_upload_cursor
+  (OamBuffer, PaletteCache, ObjVramCursor; vram_pool.h had nothing else
+  and went) and level.h's struct entity_spawner (EntitySpawner). player.h's
+  `union player_flags`, `union player_mirror`, `struct player_pos`,
+  `struct act_anim_record` and `struct act_anim_bank` went with the old
+  field types. Every object is byte-identical.
+
 `tools/layout_audit.py views` on origin/main listed 90 view pairs; after
 batches 2-5 it lists 49, none of them a C view a C++ file reads through.
 `MATCH_HOLD_REG` stays at 411 and instruction-emitting `asm` at 49:

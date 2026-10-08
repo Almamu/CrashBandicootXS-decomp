@@ -50,6 +50,9 @@ public:
 };
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == sizeof(struct collision_queue));
+ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, count);
+ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, posCommitted);
+ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, candidates);
 
 /* Up to three palette colour cycles (gPaletteCycles, `new
  * PaletteCycles`, 0x48 bytes). run_room.cpp adds them (Add) with

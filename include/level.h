@@ -119,22 +119,21 @@ struct entity_flags {
     u32 bits1Copy[64];                    // 0x308
 };
 
-/* The entity spawner (`gEntitySpawner`, CreateEntitySpawner): the table
- * of spawn functions SpawnEntity calls by entity type. */
-struct entity_spawner {
-    const void *funcs; // 0x00 - gEntitySpawnFuncs
-    s32 count;         // 0x04 - its length
-};
+/* The entity spawner (`gEntitySpawner`, class EntitySpawner,
+ * spawners.hpp). No C file reads it: the C side has the tag alone. */
+struct entity_spawner;
 
 /* The camera's followed object (gPlayer, or the camera lead, class
- * CameraLead in level_select.hpp). */
+ * CameraLead in level_select.hpp): the C view of the Sprite they both
+ * derive from, with Sprite's names (include/sprite_obj.hpp checks the
+ * offsets). */
 struct camera_target {
     s32 x;           // 0x00 - Q8
     s32 y;           // 0x04 - Q8
     u8 unk_08[0x1C]; // 0x08-0x23
-    u8 dirFlags;     // 0x24 - struct player.dir: PLAYER_DIR_* (player.h; mode 2 look-ahead)
+    u8 dir;          // 0x24 - PLAYER_DIR_* (player.h; mode 2 look-ahead)
     u8 unk_25[3];    // 0x25-0x27
-    u8 flags;        // 0x28 - bit 4 is the mirror flag
+    u8 mirror;       // 0x28 - bit 4 is the X mirror flag
 };
 
 /* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.c):

@@ -13,13 +13,16 @@
  * header keeps the data the C++ code and the data tables share. */
 
 #include "core.h"
+#include "actor.h"
 #include "actor_self.h"
+#include "gfx_part.h"
 #include "vtable.h"
 #include "objects.h"
 #include "constants/action_states.h"
 #include "constants/attack_kinds.h"
 
 struct follow_child;
+struct anim_table;
 
 /* The swim controller's turn: speedX at each frame of the turn animation
  * (state 4), copied to the stack in one go by StartPlayerCtrlStroke
@@ -36,101 +39,34 @@ struct level_anim {
     u8 pad[2];
 };
 
-/* A sprite bank as the player code reads it (struct sprite_bank,
- * sprite_bank.h): its animation records, 0x1C bytes each (gobj_1a794.h's
- * `struct anim_rec`). */
-struct act_anim_record {
-    u8 unk_00[4];
-    s16 offX; // 0x04 - a struct hitbox_quad (gfx.h)
-    s16 offY; // 0x06
-    u8 padX;  // 0x08
-    u8 padY;  // 0x09
-    u8 unk_0A[0xA];
-    u8 paletteId; // 0x14 - LoadPaletteSlot/GetPaletteSlot record id
-    u8 unk_15;
-    u8 frameCount; // 0x16
-    u8 unk_17[5];
-};
-
-struct act_anim_bank {
-    struct act_anim_record *records;
-    u8 unk_04[6];
-    u16 animCount; // 0x0A - struct sprite_bank.animCount
-};
-
-/* A Q8 position (struct player.maskTrail). */
-struct player_pos {
-    s32 x;
-    s32 y;
-};
-
-/* The flags byte at +0x0C (struct actor.flags), as a byte or as bits
- * (the bit names are entity.hpp's `union EntityFlags`). The views give
- * different code: clearing a bit through the bitfield is an `and` with a
- * negative constant, through the byte with a positive one. Packed, so
- * that the union is one byte (agbcc pads an unpacked one to 4). */
-union player_flags {
-    u8 all;
-    struct {
-        u8 gone:1;
-        u8 unk_1:1;
-        u8 visible:1;
-        u8 hit:1;
-        u8 flag4:1;
-        u8 unk_5:1;
-        u8 flag6:1;
-        u8 flag7:1;
-    } __attribute__((packed)) bits;
-} __attribute__((packed));
-
-/* The mirror byte at +0x28 (bit 4: X mirrored, bit 5: Y mirrored), as a
- * byte (the action controller), as `u32` bits (the swim controller,
- * crate_hit.cpp, crate_touch.cpp) or as `s32` bits (crate_break.cpp,
- * Sprite's `mirrorBits`). The bit views read the same, but the signed
- * one expands to more insns before optimization, which shifts the
- * `.LCB` label numbers in the `.s`. Packed, so that the union is one byte. */
-union player_mirror {
-    u8 all;
-    struct {
-        u8 unk_0:4;
-        u32 flipX:1;
-        u32 flipY:1;
-        u8 unk_6:2;
-    } __attribute__((packed)) bits;
-    struct {
-        u32 unk_0:4;
-        s32 flipX:1;
-        s32 flipY:1;
-        u32 unk_6:2;
-    } __attribute__((packed)) sbits;
-} __attribute__((packed));
-
 /* The player object (gPlayer) as the C files see it: the C view of class
- * Player (include/player.hpp, which checks the size), a ground sprite
- * (InitGroundSprite, GroundSprite's 0x80-byte base, whose names it
- * mostly keeps) with the player's own fields after it.
- * PlayRoom builds it in a 0x350-byte block (InitPlayer); its method table
- * is gPlayerVtable. Only the fields the code reads are named. */
+ * Player (include/player.hpp, which checks every named field's offset
+ * against the class's), a ground sprite (GroundSprite's 0x80-byte base)
+ * with the player's own fields after it. The fields have the class's
+ * names and types; the class's notes describe them. Where the class has
+ * an anonymous union (Sprite's `anim`/`bank` and `mirror` bits), which
+ * agbcc can't express, the view has its first member, and a class
+ * pointer is a `void *`. Only bonus_round.c reads it (x, y). */
 struct player {
     s32 x;   // 0x00 - Q8
     s32 y;   // 0x04 - Q8
-    u16 id;  // 0x08 - bit index in the "gone" bitmap (InitPlayer: 0xFFFF)
-    u8 kind; // 0x0A - object kind passed to the hit handlers: 0x13 while
+    u16 id;  // 0x08
+    u8 kind; // 0x0A - the object kind sent to the hit handlers: 0x13 while
              //        attacking, 0x14-0x16 during some attack actions, else 1
-    u8 unk_0B;
-    union player_flags flags; // 0x0C - struct actor.flags: bit 0 gone, 4 always active
-                              //        (set by PlayRoom), 6 vulnerable, 7 collision enabled
-    u8 flags2;                // 0x0D
-    u8 unk_0E[0xA];
-    const void *vtable; // 0x18 - gPlayerVtable (class Player's)
-    void *lastHitbox;   // 0x1C - GroundSprite's lastHitbox
-    // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
-    struct act_anim_bank *anim;
-    // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
-    //        2 left, 4 up, 8 down
-    u8 dir;
-/* `dir`'s bits; also struct camera_target.dirFlags (level.h), the same
- * byte (PlayRoom points gCamera->target at gPlayer). */
+    u8 unused_0B;
+    union EntityFlags f; // 0x0C (actor.h)
+    s16 halfW;           // 0x10
+    s16 halfH;           // 0x12
+    u8 rawW;             // 0x14
+    u8 rawH;             // 0x15
+    u8 unused_16[2];
+    const void *vtable;      // 0x18 - gPlayerVtable (the class's vtable pointer)
+    void *lastHitbox;        // 0x1C
+    struct anim_table *anim; // 0x20 - the sprite bank
+    u8 dir;                  // 0x24 - PLAYER_DIR_*
+/* `dir`'s bits (motion direction, ApplyPlayerVelocity); also struct
+ * camera_target.dir (level.h), the same byte (PlayRoom points
+ * gCamera->target at gPlayer). */
 #define PLAYER_DIR_RIGHT 1
 #define PLAYER_DIR_LEFT 2
 #define PLAYER_DIR_UP 4
@@ -139,81 +75,62 @@ struct player {
 #define PLAYER_DIR_Y 0xC // PLAYER_DIR_UP | PLAYER_DIR_DOWN
     u8 screenSpace; // 0x25
     u8 unk_26[2];
-    union player_mirror mirror; // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
-    u8 slot:4;                  // 0x29 - palette slot (GetSpriteAnimPaletteSlot)
+    u8 mirror;    // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
+    u8 palette:4; // 0x29 - the OBJ palette slot
     u8 unk_29_4:4;
     u8 unk_2A[2];
-    u8 animating; // 0x2C - nonzero while the keyframe timer runs
-    u8 tag;       // 0x2D - animation index into `anim`
+    u8 animating; // 0x2C
+    u8 tag;       // 0x2D - the animation in the bank
     u8 unk_2E[2];
-    s32 frame;     // 0x30 - step within the animation
-    s32 stepTimer; // 0x34 - ticks spent on the current step
-    u8 animDone;   // 0x38 - set once a non-looping animation ends
-    u8 unk_39[0xB];
-    void *ctrl;              // 0x44 - the room kind's controller (the action, swim, input or
-                             //        boss controller; GroundSprite's mover)
-    struct speed_ramp rampX; // 0x48 - speedX's ramp (StartPlayerRampX)
-    struct speed_ramp rampY; // 0x54 - speedY's ramp
+    s32 frame;     // 0x30
+    s32 stepTimer; // 0x34
+    u8 animDone;   // 0x38
+    u8 unk_39[3];
+    u16 affine; // 0x3C
+    u8 unk_3E[2];
+    s32 unk_40;              // 0x40
+    void *mover;             // 0x44 - the room kind's controller (Ctrl *)
+    struct speed_ramp rampX; // 0x48
+    struct speed_ramp rampY; // 0x54
     s32 speedX;              // 0x60
     s32 speedY;              // 0x64 - > 0: falling
-    // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
-    u8 hitAxes;
-    u8 probeTries; // 0x69
+    u8 hitAxes;              // 0x68 - the axes the terrain probe resolved (8: Y, standing; 4: X)
+    u8 probeTries;           // 0x69
     u8 unk_6A[2];
-    s32 prevX;   // 0x6C - previous position (Q8), cached by ApplyPlayerVelocity
+    s32 prevX;   // 0x6C
     s32 prevY;   // 0x70
-    u32 hitMask; // 0x74 - probe axes hit this frame (bits 0-1: X, 2-3: Y)
+    s32 hitMask; // 0x74 - the probe axes hit this frame (bits 0-1: X, 2-3: Y)
 /* hitMask's axes: the swim controller zeroes speedX on an X hit and
- * speedY on a Y hit (UpdatePlayerCtrl, swim_ctrl.cpp). */
+ * speedY on a Y hit (PlayerCtrl::Update, swim_ctrl.cpp). */
 #define PLAYER_HIT_X 3
 #define PLAYER_HIT_Y 0xC
-    s32 type; // 0x78 - GroundSprite's type; ResetPlayer clears it
+    s32 type; // 0x78 - ResetPlayer clears it
     u8 unk_7C[4];
-    u8 busy; // 0x80 - set while a triggered crate animation runs (the crate's state
-             //        bit 7), cleared when it ends; enemies skip the player meanwhile
+    u8 busy; // 0x80
     u8 unk_81[7];
-    u8 ctrlMode; // 0x88 - control mode 0-3, picks the controller (player_reset.c);
-                 //        1: crates fall at quarter speed and touched enemies just
-                 //        vanish; nonzero stops `list` recording
+    u8 ctrlMode; // 0x88
     u8 unk_89[3];
-    u32 deadline; // 0x8C - gRoomFrameCount frame IsPlayerInvulnerable tests against
-    u8 bumped;    // 0x90 - set when a crate's side stopped the X motion
-                  //        (ActionCtrlHandleEvent event 12); cleared when the
-                  //        controller's bumpTimer runs out or its mode changes.
-                  //        While set, crate_hit.cpp widens the player's box by 2 px
-                  //        on each side
-    u8 countdown; // 0x91 - crate-break limiter: BreakCrateInStack arms it (2) and skips the
-                  //        break while it runs; UpdatePlayer counts it down
-    u8 bounce;    // 0x92 - a counter (crate_break.cpp's name): crate_break.cpp tests and
-                  //        steps it on a bounce, ResolvePlayerCollisions steps it, the action
-                  //        controller clears it
+    u32 deadline; // 0x8C - the gRoomFrameCount frame IsPlayerInvulnerable tests against
+    u8 bumped;    // 0x90
+    u8 countdown; // 0x91
+    u8 bounce;    // 0x92
     u8 unk_93;
-    u8 listCount; // 0x94 - entries in `list`
+    u8 listCount; // 0x94
     u8 unk_95[3];
-    void *list[5];                  // 0x98 - the recently touched crates (Crate *s)
-    void *carried;                  // 0xAC - the platform or crate the player stands on
-    void *child;                    // 0xB0 - a sprite object InitPlayer creates (sprite bank 0xCC),
-                                    //        drawn with the player (DrawPlayer)
-    s32 maskTrailIdx;               // 0xB4 - the newest entry of `maskTrail`
-    struct player_pos maskTrail[8]; // 0xB8 - the player's recent positions, which Aku Aku follows
+    void *list[5];               // 0x98 - Crate *s
+    void *carried;               // 0xAC - a Sprite *
+    void *child;                 // 0xB0 - a Sprite *
+    s32 maskTrailIdx;            // 0xB4
+    struct gfx_vec maskTrail[8]; // 0xB8 (gfx_part.h)
     u8 unk_F8[8];
-    u8 slippery; // 0x100 - standing on terrain kind 5 (CollidePlayer): the player keeps
-                 //         sliding (speedX isn't zeroed, motion keeps its speed, steps halve)
-                 //         and skids (anims 0x25/0x26, sfx 0x36; ActionCtrlSetTargetAnim)
-    // 0x101 - hanging from hang terrain (code 6): CollidePlayer sends event
-    //         0x17 to grab and 0x18 when it's gone; ActionCtrlHandleEvent sets/clears it
-    u8 hanging;
-    u8 pushLeft;  // 0x102 - nonzero: moves the standing player 1px left per frame
-    u8 pushRight; // 0x103 - nonzero: moves the standing player 1px right per frame
-    u8 dead;      // 0x104 - the player died (KillPlayer and the other controllers'
-                  //         kill handlers); blocks pause and further hits
-    u8 cleared;   // 0x105 - CollidePlayerWithObjects
+    u8 slippery;  // 0x100
+    u8 hanging;   // 0x101
+    u8 pushLeft;  // 0x102
+    u8 pushRight; // 0x103
+    u8 dead;      // 0x104
+    u8 cleared;   // 0x105
     u8 unk_106[2];
-    // 0x108 - the embedded collision queue (objects.h;
-    //         ResetCollisionQueue/DestroyCollisionQueue; GetPlayerCollisionQueue
-    //         returns its address). Its `posCommitted` (0x10C) is the "position
-    //         committed" byte
-    struct collision_queue collisionQueue;
+    struct collision_queue collisionQueue; // 0x108 (objects.h)
 };
 
 COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);

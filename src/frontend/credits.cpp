@@ -4,7 +4,6 @@
 extern "C" {
 #include "match.h"
 #include "gba/io_reg.h"
-#include "vram_pool.h"
 #include "audio.h"
 #include "gba/dma_macros.h"
 #include <agb_syscall.h>

@@ -2,7 +2,6 @@
 #include "frontend.hpp"
 
 extern "C" {
-#include "vram_pool.h"
 #include "gba/dma_macros.h"
 #include "system.h"
 #include "gfx.h"

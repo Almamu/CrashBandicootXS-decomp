@@ -57,7 +57,7 @@ void StepCameraDirectional(struct camera *cam)
     // r2/r3 pins are load-bearing (see docs/workflow.md step 7 and the file comment)
     MATCH_HOLD_REG(s32, tx, r2) = cam->target->x;
     MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
-    u8 dir = cam->target->dirFlags;
+    u8 dir = cam->target->dir;
 
     if (dir != 0) {
         if ((dir & PLAYER_DIR_UP) && cam->vy > -0x1AAA)
@@ -104,7 +104,7 @@ void StepCameraFacing(struct camera *cam)
     MATCH_HOLD_REG(s32, tx, r2) = cam->target->x;
     MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
 
-    if ((cam->target->flags << 27) < 0) {
+    if ((cam->target->mirror << 27) < 0) {
         if (cam->vx > -0x1276)
             cam->vx -= 0x100;
     } else {
@@ -127,7 +127,7 @@ void SnapCamera(struct camera *cam)
     cam->y = target->y;
 
     if (cam->mode == 1) {
-        if ((target->flags << 27) < 0)
+        if ((target->mirror << 27) < 0)
             cam->vx = -0x1276;
         else
             cam->vx = 0x1276;

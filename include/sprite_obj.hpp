@@ -21,10 +21,11 @@
  * calls the controller's methods with itself (`P12MovingSprite` in their
  * mangled names, cxx_symbols.txt).
  *
- * The C files keep one view of these objects: actor.h's `struct actor`
- * (Entity; entity.hpp checks the size). The fields keep their offsets in
- * comments. The player, a ground sprite with
- * its own fields after it, is class Player (player.hpp).
+ * The fields keep their offsets in comments. The C files read these
+ * objects through two views only: the camera's followed object (level.h's
+ * `struct camera_target`, a Sprite prefix, checked field by field below)
+ * and the player (player.h's `struct player`, the C view of class Player,
+ * a ground sprite with its own fields after it; player.hpp checks it).
  *
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
  * UiSprite (sprite_anim.cpp), MovingSprite (moving_sprite_collide.cpp) and
@@ -44,8 +45,8 @@ extern "C" {
 #include "objects.h"
 #include "gobj_1a794.h"
 #include "gfx.h"
-#include "vram_pool.h"
 #include "globals.h"
+#include "level.h"
 }
 
 class Ctrl;
@@ -198,6 +199,13 @@ public:
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
+
+/* level.h's struct camera_target, the camera's view of the Sprite it
+ * follows. */
+ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, x);
+ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, y);
+ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, dir);
+ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, mirror);
 
 /* A sprite on the HUD or a menu (gUiSpriteObjVtable;
  * src/objects/sprite_anim.cpp): its OBJ priority is its own. */
@@ -403,11 +411,12 @@ static inline PartList *ForegroundList()
 
 /* The sprite graphics managers (src/gfx/graphics.cpp). */
 
-/* The OAM shadow buffer (gOamBuffer; gfx.h's struct oam_shadow_buffer is
- * its C view): `count` entries of the 128-entry shadow table are in use,
- * `base` of them kept from frame to frame (MarkBase, Rewind), and
- * `matrixCount` affine matrices handed out this frame. Matrix `m`'s
- * pa/pb/pc/pd are the affine parameters of entries 4m..4m+3. */
+/* The OAM shadow buffer (gOamBuffer; the C files have gfx.h's `struct
+ * oam_shadow_buffer` tag): a shadow copy of the 128-entry hardware OAM
+ * table. `count` entries of it are in use, `base` of them kept from frame
+ * to frame (MarkBase, Rewind), and `matrixCount` affine matrices handed
+ * out this frame. Matrix `m`'s pa/pb/pc/pd are the affine parameters of
+ * entries 4m..4m+3 (`table[4 * m + n].attr[3]`). */
 class OamBuffer
 {
 public:
@@ -428,11 +437,15 @@ public:
     void Add(const void *entry); // AddOamEntry
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(OamBuffer) == sizeof(struct oam_shadow_buffer));
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(OamBuffer) == 0x40C);
 
-/* The OBJ VRAM upload cursor (gObjVramCursor; vram_pool.h's struct
- * vram_upload_cursor): uploads tiles to OBJ VRAM from tile `baseTile` on,
- * `offset` bytes in so far, `mark` the offset Rewind goes back to. */
+/* The OBJ VRAM upload cursor (gObjVramCursor; the C files have gfx.h's
+ * `struct vram_upload_cursor` tag): a bump allocator over OBJ tile VRAM
+ * (OBJ_VRAM0, OBJ_VRAM0_SIZE bytes) for the tile data uploaded through
+ * the VRAM DMA queue. `offset` is the next free byte, bumped by Reserve
+ * and Upload; `mark` is the checkpoint Mark saves and Rewind restores.
+ * `baseTile` is the number of tiles kept below the allocator; Reset
+ * starts both cursors there. */
 class ObjVramCursor
 {
 public:
@@ -451,11 +464,16 @@ public:
     s32 Upload(void *src, s32 size);
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(ObjVramCursor) == sizeof(struct vram_upload_cursor));
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(ObjVramCursor) == 0xC);
 
-/* The OBJ palette cache (gPaletteCache; vram_pool.h's struct
- * palette_cache): maps the `count` palettes of `palettes` onto the 16
- * OBJ palette banks. */
+/* The OBJ palette cache (gPaletteCache; the C files have gfx.h's `struct
+ * palette_cache` tag): maps a ROM table of `count` 16-colour OBJ palettes
+ * (`palettes`, 32 bytes each: the sprite bank table's 125 palettes) onto
+ * the 16 OBJ palette banks. `slotOf[id]` is the bank palette `id` is
+ * loaded in, or 0xFF; `slots` holds each bank's colours, uploaded to
+ * OBJ_PLTT by UploadSlot/Upload. `isFree[bank]` marks a bank available to
+ * GetSlot; `locked[bank]` keeps a bank from being reclaimed by
+ * FreeUnlockedSlots (Lock/Unlock). */
 class PaletteCache
 {
 public:
@@ -485,10 +503,11 @@ public:
     void Clear();
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PaletteCache) == sizeof(struct palette_cache));
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PaletteCache) == 0x230);
 
 /* The sprite bank set (gSpriteBankSet; globals.h's struct
- * sprite_bank_set): InitLevelState points it at gSpriteBankTable. */
+ * sprite_bank_set is its C view, checked below): InitLevelState points it
+ * at gSpriteBankTable. */
 class SpriteBankSet
 {
 public:
@@ -497,6 +516,9 @@ public:
     SpriteBankSet();  // InitSpriteBankSet
     ~SpriteBankSet(); // DestroySpriteBankSet
 };
+
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == sizeof(struct sprite_bank_set));
+ASSERT_VIEW_FIELD(sprite_obj_hpp, SpriteBankSet, sprite_bank_set, table);
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
  * allocates): draws a sprite's OAM pieces (DrawPieces in

@@ -12,7 +12,6 @@
 
 #include "core.h"
 #include "graphics_package.h"
-#include "vram_pool.h"
 #include "hitbox_quad.h"
 
 struct aabb;
@@ -40,21 +39,15 @@ union oam_shadow_entry {
     } attr0; // byte-wide, as HideUnusedOamEntries stores it
 };
 
-/* Manages a shadow copy of a chunk of the 128-entry hardware OAM table:
- * a count of active entries, the `base` count RewindOamBuffer goes
- * back to (entries kept from frame to frame, set by MarkOamBufferBase),
- * the number of affine matrices handed out this frame, then the
- * 1024-byte shadow table itself (128 entries * 8 bytes) starting right
- * after. Affine matrix `m`'s pa/pb/pc/pd are the affine parameters of
- * entries 4m..4m+3 (`table[4 * m + n].attr[3]`). The C view of
- * sprite_obj.hpp's OamBuffer (graphics.cpp). */
-struct oam_shadow_buffer {
-    s32 count;
-    s32 base;
-    s32 matrixCount;
-    union oam_shadow_entry table[0x80];
-};
-COMPILE_TIME_ASSERT(gfx_h, sizeof(struct oam_shadow_buffer) == 0x40C);
+/* The OAM shadow buffer (gOamBuffer: class OamBuffer, sprite_obj.hpp,
+ * whose `table` is the entries above), the palette cache (gPaletteCache:
+ * PaletteCache) and the OBJ VRAM upload cursor (gObjVramCursor:
+ * ObjVramCursor). No C file reads their fields: the C callers of their
+ * methods (below) only pass the pointers, so the C side has the tags
+ * alone. */
+struct oam_shadow_buffer;
+struct palette_cache;
+struct vram_upload_cursor;
 
 /* A sprite frame (GetSpriteFrame) as DrawSpritePieces and
  * DrawAffineSpritePieces read it: one offset and one shape/size id per

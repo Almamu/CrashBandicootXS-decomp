@@ -7,7 +7,6 @@ extern "C" {
 #include "menus.h"
 #include "graphics_package.h"
 #include "objects.h"
-#include "vram_pool.h"
 #include "text.h"
 #include "link.h"
 #include "save.h"

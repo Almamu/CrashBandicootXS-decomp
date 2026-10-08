@@ -8,7 +8,6 @@
 
 extern "C" {
 #include "match.h"
-#include "vram_pool.h"
 #include "pickups.h"
 #include "util.h"
 #include "audio.h"
