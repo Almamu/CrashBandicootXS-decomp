@@ -37,7 +37,8 @@ union EntityFlags {
         u8 grounded:1;   // a ground sprite stands on the floor (ProbeFloor)
         u8 blink:1;      // hidden this frame (a blinking part; Is/ToggleHidden)
         u8 solid:1;      // pushes the player out (Is/Set/ClearSolid)
-        u8 unk_0D_4:4;
+        u8 exitMirror:1; // a bonus platform's exit facing (Platform::Get/SetExitMirror)
+        u8 unk_0D_5:3;
     } b; // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
     struct {
         u8 flags;  // 0x0C
