@@ -368,7 +368,7 @@ public:
     s32 trialIconY;                   // 0x90 - sprite 5's (time-trial icons)
     s32 trialIcon2Y;                  // 0x94 - sprite 6's
     s32 rank;                         // 0x98 - LoadRecord's classification, 5 = none
-    struct menu_save *save;           // 0x9C - PackSaveData's save block
+    struct game_progress *save;       // 0x9C - PackSaveData's save block
     union blend blend;                // 0xA0 - REG_BLDCNT + REG_BLDALPHA
     struct bldy bldy;                 // 0xA4 - REG_BLDY
     union LevelSelectDispcnt dispcnt; // 0xA8 - REG_DISPCNT

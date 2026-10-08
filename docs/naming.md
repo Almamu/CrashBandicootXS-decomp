@@ -134,7 +134,7 @@ the names with the header it already includes. A data table in
 |---|---|---|
 | `sfx.h` (generated) | `SFX_` | sound-effect IDs (`PlaySfx`, `PlayAmbientSfx`, `StopSfx`), from `sound/sfx_table.json` |
 | `songs.h` (generated) | `SONG_` | song IDs, the `gSongTable` index (`PlaySong`, `StartSong`), from `sound/gax_manifest.json` |
-| `level_flags.h` | `LEVEL_FLAG_` | the bits of a `levelFlags[]` word |
+| `level_flags.h` | `LEVEL_FLAG_` | the bits of a `game_progress.levels[]` word |
 | `mask_level.h` | `MASK_LEVEL_` | `level_state.maskLevel` values |
 | `packed_stats.h` | `PACKED_STATS_` | the packed lives/mask/wumpa halfword |
 | `action_states.h` | `ACTION_STATE_` | the player's action-controller states, the `gActionCtrlStateTable` index |

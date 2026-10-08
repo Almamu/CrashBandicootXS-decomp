@@ -2,8 +2,9 @@
 #define GUARD_CONSTANTS_PACKED_STATS_H
 
 /*
- * The packed halfword at the start of the attempt block
- * (`level_state.packedStats`, and `saveData` in the save), which
+ * The packed halfword at the start of the progress block
+ * (`game_progress.packedStats`: `level_state.progress`, and `saveData`
+ * in the save), which
  * PackSaveData writes from `lives`, `maskLevel` and `wumpa` and
  * UnpackSaveData reads back:
  *

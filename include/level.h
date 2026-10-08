@@ -308,8 +308,8 @@ extern void PlayIntroCutscene(void *self);
 extern void ShowCompanyLogos(void *unused);
 extern void PlayBootCutscene(void *self);
 extern void nullsub_24(void);
-extern void UnpackSaveData(struct level_state *self, void *src);
-extern void *PackSaveData(void *self);
+extern void UnpackSaveData(struct level_state *self, const struct game_progress *src);
+extern struct game_progress *PackSaveData(void *self);
 extern struct level_state *GetLevelState(void);
 
 /* src/level/play_room.cpp */

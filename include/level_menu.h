@@ -2,9 +2,10 @@
 #define GUARD_LEVEL_MENU_H
 
 /* The menus' shared C types: the 0x40-byte UI sprite part as the C files
- * see it (`struct sprite`, the pause menu's icons), and the save block
- * PackSaveData returns (`struct menu_save`, read by the level select, the
- * pause menu and the power dialog).
+ * see it (`struct sprite`, the pause menu's icons). The save block
+ * PackSaveData returns, read by the level select, the pause menu and the
+ * power dialog, is level_state.h's `struct game_progress` (it was
+ * `struct menu_save` here; #656, batch 8).
  *
  * The level select's own objects are C++ classes now (include/
  * level_select.hpp, #664 part 10): the screen, its page entries, the two
@@ -16,6 +17,7 @@
 #include "gfx.h"
 #include "actor_self.h"
 #include "sprite_bank.h"
+#include "level_state.h"
 
 /* Bits of a sprite's `+0x28` byte (see Sprite::MirrorBits in
  * include/sprite_obj.hpp). */
@@ -64,52 +66,5 @@ struct sprite {
 };
 
 COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct sprite) == 0x40);
-
-/* One level's saved record word (`level_menu.save + 4 + id * 4`), a
- * `level_state.levelFlags` word (constants/level_flags.h). */
-struct level_save {
-    u32 cleared:1; // LEVEL_FLAG_CRYSTAL
-    u32 flag1:1;   // LEVEL_FLAG_CRATE_GEM
-    u32 flag2:1;   // LEVEL_FLAG_GEM_PATH_GEM
-    u32 time:13;   // best time, tenths of a second (0 = none; UpdateGameFrame)
-    u32 unk_16:16;
-};
-
-/* The same word with halfword bitfields: the level select's reads load it
- * with `ldrh` (byte 2 of the save block itself holds four more flags
- * LoadLevelSelectRecord tests). */
-struct level_save_h {
-    u16 cleared:1;
-    u16 flag1:1;
-    u16 flag2:1;
-    u16 time:13; // best time, tenths of a second (0 = none; UpdateGameFrame)
-    u16 unk_16;
-};
-
-/* The same word, read a byte at a time. */
-struct level_save_b {
-    u8 cleared:1;
-    u8 flag1:1;
-    u8 flag2:1;
-    u8 unk_0_3:5;
-    u8 unk_1[3];
-};
-
-union level_record {
-    struct level_save w;
-    struct level_save_h h;
-    struct level_save_b b;
-};
-
-/* The save block PackSaveData returns, as far as the menu reads it. */
-struct menu_save {
-    u8 unk_00[2];
-    /* 0x02 - level_state.flags: bits 0-3 the colored gems (CountGems,
-     * DrawPauseGemsPage), bits 4-7 the powers; bits 5/7/6 make level-select
-     * pages 1/2/3 reachable */
-    u8 flags;
-    u8 unk_03;
-    union level_record levels[0x19]; // 0x04, level_state.levelFlags; five per page
-};
 
 #endif /* GUARD_LEVEL_MENU_H */

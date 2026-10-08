@@ -100,18 +100,17 @@ void ShowSuperBodySlamDialog(void)
     PowerDialog::Show(0x3C, 0x40, 3);
 }
 
-s32 GetProgressLives(void *arg0)
+s32 GetProgressLives(const struct game_progress *save)
 {
-    return PACKED_STATS_LIVES(*(u8 *)arg0);
+    return PACKED_STATS_LIVES(save->packedStats[0]);
 }
 
 /* The save block's counts (the pause menu's pages, the save menu's rows,
  * the game-over screen's totals). The relics are the time-trial medals:
  * a platinum relic for a time within the level's times[2], gold within
  * times[1], sapphire within times[0]. */
-s32 CountPlatinumRelics(void *arg0)
+s32 CountPlatinumRelics(const struct game_progress *save)
 {
-    struct menu_save *save = (struct menu_save *)arg0;
     s32 count;
     s32 i;
     u32 val;
@@ -128,9 +127,8 @@ s32 CountPlatinumRelics(void *arg0)
     return count;
 }
 
-s32 CountGoldRelics(void *arg0)
+s32 CountGoldRelics(const struct game_progress *save)
 {
-    struct menu_save *save = (struct menu_save *)arg0;
     s32 count;
     s32 i;
     u32 val;
@@ -147,9 +145,8 @@ s32 CountGoldRelics(void *arg0)
     return count;
 }
 
-s32 CountSapphireRelics(void *arg0)
+s32 CountSapphireRelics(const struct game_progress *save)
 {
-    struct menu_save *save = (struct menu_save *)arg0;
     s32 count;
     s32 i;
     u32 val;
@@ -166,23 +163,22 @@ s32 CountSapphireRelics(void *arg0)
     return count;
 }
 
-s32 CountRelics(void *arg0)
+s32 CountRelics(const struct game_progress *save)
 {
     s32 total;
     s32 b;
     s32 c;
 
-    total = CountSapphireRelics(arg0);
-    b = CountGoldRelics(arg0);
-    c = CountPlatinumRelics(arg0);
+    total = CountSapphireRelics(save);
+    b = CountGoldRelics(save);
+    c = CountPlatinumRelics(save);
     total += b;
     total += c;
     return total;
 }
 
-s32 CountGems(void *arg0)
+s32 CountGems(const struct game_progress *save)
 {
-    struct menu_save *save = (struct menu_save *)arg0;
     s32 total;
     s32 i;
     s32 result;
@@ -200,9 +196,8 @@ s32 CountGems(void *arg0)
     return result;
 }
 
-s32 CountClearGems(void *arg0)
+s32 CountClearGems(const struct game_progress *save)
 {
-    struct menu_save *save = (struct menu_save *)arg0;
     s32 total;
     s32 i;
 
@@ -213,9 +208,8 @@ s32 CountClearGems(void *arg0)
     return total;
 }
 
-s32 CountCrystals(void *arg0)
+s32 CountCrystals(const struct game_progress *save)
 {
-    struct menu_save *save = (struct menu_save *)arg0;
     s32 count;
     s32 i;
 

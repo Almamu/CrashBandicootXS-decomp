@@ -57,19 +57,6 @@ extern "C" {
  *   needed a `void *` conversion of InitHud's result to load the global's
  *   address before the call, as the ROM does), and `delete gHud`.
  */
-/* The per-level state object (`gLevelState`) as UpdateGameFrame
- * uses it. The first 0x68 bytes are the per-attempt block that the
- * frame loop snapshots into `checkpointData`/`saveData` and restores from. */
-union level_best_time {
-    struct {
-        u32 flag:1;  // LEVEL_FLAG_CRYSTAL
-        u32 unk_1:2; // LEVEL_FLAG_CRATE_GEM, LEVEL_FLAG_GEM_PATH_GEM
-        u32 time:13; // tenths of a second, capped at LEVEL_FLAG_TIME_MAX
-        u32 unk_16:16;
-    } f;
-    u16 raw;
-};
-
 void UpdateGameFrame(struct level_state *self)
 {
     vu16 zero;
@@ -96,7 +83,7 @@ void UpdateGameFrame(struct level_state *self)
         dma->cnt = 0x81000034;
         dma->cnt;
     }
-    MemCopy32(self->saveData, self, 0x68);
+    MemCopy32(&self->saveData, &self->progress, sizeof(struct game_progress));
     gGameFrameLevelState = self;
     self->maskLevel = MASK_LEVEL_NONE;
     {
@@ -131,8 +118,8 @@ void UpdateGameFrame(struct level_state *self)
                 self->room.level = level;
             }
             quit = RunLevelSelect(&self->room.level);
-            MemCopy32(self, self->saveData, 0x68);
-            MemCopy32(self->checkpointData, self, 0x68);
+            MemCopy32(&self->progress, &self->saveData, sizeof(struct game_progress));
+            MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
             if (quit) {
                 OpenSaveMenu();
                 quit = RunSaveMenu(0, 0);
@@ -301,7 +288,7 @@ void UpdateGameFrame(struct level_state *self)
                     GiveTurboRun(self);
                     ShowTurboRunDialog();
                 }
-                if (GetCompletionPercent(self) > 99) {
+                if (GetCompletionPercent(&self->progress) > 99) {
                     PlayCutscene(self, 8);
                     self->room.level++;
                     self->room.roomIndex = 0;
@@ -316,19 +303,19 @@ void UpdateGameFrame(struct level_state *self)
                 break;
             default:
                 if (self->room.cat->kind == ROOM_KIND_CATEGORY)
-                    ((union level_best_time *)GetCurrentLevelFlags(self))->f.flag = 1;
+                    ((union level_record *)GetCurrentLevelFlags(self))->w.cleared = 1;
                 break;
             }
             if (self->timeTrial) {
                 u32 t = self->tenths + self->seconds * 10 + self->minutes * 600;
 
                 LIMIT_MAX(t, LEVEL_FLAG_TIME_MAX);
-                if (t < ((union level_best_time *)GetCurrentLevelFlags(self))->f.time ||
-                    (((union level_best_time *)GetCurrentLevelFlags(self))->raw &
+                if (t < ((union level_record *)GetCurrentLevelFlags(self))->w.time ||
+                    (((union level_record *)GetCurrentLevelFlags(self))->low &
                      LEVEL_FLAG_TIME_MASK) == 0)
-                    ((union level_best_time *)GetCurrentLevelFlags(self))->f.time = t;
+                    ((union level_record *)GetCurrentLevelFlags(self))->w.time = t;
             }
-            MemCopy32(self->saveData, self, 0x68);
+            MemCopy32(&self->saveData, &self->progress, sizeof(struct game_progress));
         }
     }
 }
