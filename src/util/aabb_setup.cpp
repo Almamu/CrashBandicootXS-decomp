@@ -1,7 +1,7 @@
 #include "font.hpp"
+#include "level_state.hpp"
 
 extern "C" {
-#include "level_state.h"
 #include "util.h"
 #include "memory.h"
 }
@@ -25,9 +25,9 @@ void SetAabbPos(struct aabb *dest, s32 x, s32 y)
 /* Lives getter of the level state (`gLevelState`; read by
  * game_frame.cpp, hud_lives.cpp, actor_category_init.cpp and
  * spawn_start_marker.cpp). */
-s32 GetLives(struct level_state *self)
+s32 LevelState::GetLives()
 {
-    return self->lives;
+    return lives;
 }
 
 /* The two fonts' destructors (include/font.hpp), their classes' key

@@ -25,7 +25,6 @@
 #include "constants/chunk_tokens.h"
 
 struct camera;
-struct level_progress;
 
 /* The terrain types of the level collision maps (bg_layer_base.cpp): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
@@ -127,10 +126,6 @@ struct camera {
  * PooledBgLayer's, include/bg_layer.hpp) */
 extern void nullsub_26(void);
 
-/* src/level/bonus_round.cpp */
-extern void EndBonusRound(struct level_state *self, u8 arg1);
-extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
-
 /* src/level/camera.cpp */
 extern void StepCameraDirectional(struct camera *cam);
 extern void StepCameraFacing(struct camera *cam);
@@ -151,12 +146,6 @@ extern s32 IsEntityIdActivated(void *self, s32 n);
 extern void SetEntityIdActivated(void *self, s32 n);
 extern void MarkEntityIdActivated(void *self, s32 n);
 
-/* src/level/game_frame.cpp */
-extern void UpdateGameFrame(struct level_state *self);
-
-/* src/level/level_cutscene.cpp */
-extern void PlayCutscene(void *self, s32 idx);
-
 /* src/level/level_layers.cpp */
 extern s32 sub_80269DC(void *self, s32 arg1, s32 *arg2, s32 arg3);
 extern s32 sub_80269F8(void *self, s32 arg1, s32 *arg2, s32 arg3);
@@ -165,129 +154,30 @@ extern s32 sub_8026A14(void);
 /* src/level/level_query.cpp (C linkage) */
 extern s32 CountLevelCrates(s32 idx);
 extern s32 LevelHasEntityType(s32 idx, s32 flagIdx);
-extern s32 IsInGemPathRoom(struct level_progress *self);
-extern s32 IsInBonusRoom(struct level_progress *self);
 extern s32 LevelHasYellowGemEntity(s32 idx);
 extern s32 LevelHasBlueGemEntity(s32 idx);
 extern s32 LevelHasGreenGemEntity(s32 idx);
 extern s32 LevelHasRedGemEntity(s32 idx);
 extern s32 LevelHasGemPathGemEntity(s32 idx);
 extern s32 CountRoomCrates(const struct level_room *item);
-extern void PlayRoomMusic(struct level_progress *self);
-extern s32 NextRoom(struct level_progress *self);
-extern void EnterGemPathRoom(struct level_progress *self);
-extern void EnterBonusRoom(struct level_progress *self);
-extern s32 SelectRoom(struct level_progress *self);
 
-/* src/level/level_state.cpp */
-extern void FreezeLevelClock(struct level_state *self, s32 seconds);
-extern void TickLevelClock(struct level_state *self);
-extern void AddBrokenCrate(struct level_state *self);
-extern void PressSwitchCrate(struct level_state *self);
-extern void *GetBonusPlatform(struct level_state *self);
-extern void SetCrateAssistDeaths(struct level_state *self, s32 value);
-extern void SetMaskAssistDeaths(struct level_state *self, s32 value);
-extern void SetUnusedAssistDeaths(struct level_state *self, s32 value);
-extern s32 GetCrateAssistDeaths(struct level_state *self);
-extern s32 GetMaskAssistDeaths(struct level_state *self);
-extern s32 GetUnusedAssistDeaths(struct level_state *self);
-extern void AddPendingSwitchCrates(struct level_state *self, s32 delta);
-extern void SetUnusedFlags(struct level_state *self, s32 mask);
-extern s32 TestUnusedFlags(struct level_state *self, s32 mask);
-extern void ClearPowers(struct level_state *self);
-extern void GiveTornadoSpin(struct level_state *self);
-extern void GiveSuperBodySlam(struct level_state *self);
-extern void GiveTurboRun(struct level_state *self);
-extern void GiveDoubleJump(struct level_state *self);
-extern s32 HasTornadoSpin(struct level_state *self);
-extern s32 HasSuperBodySlam(struct level_state *self);
-extern s32 HasTurboRun(struct level_state *self);
-extern s32 HasDoubleJump(struct level_state *self);
-extern void ResetCrateCount(struct level_state *self);
-extern void ResetWumpa(struct level_state *self);
-extern void ResetLives(struct level_state *self);
-extern void SetMaskLevel(void *self, s32 state);
-extern void SetLives(struct level_state *self, s32 value);
-extern void RaiseMaskLevel(struct level_state *self);
-extern void LoseLife(struct level_state *self);
-extern s32 GetWumpa(struct level_state *self);
-extern s32 GetClockTenths(struct level_state *self);
-extern s32 GetClockSeconds(struct level_state *self);
-extern s32 GetClockMinutes(struct level_state *self);
-extern u8 IsGemPathDone(struct level_state *self);
-extern void ClearGemPathDone(struct level_state *self);
-extern void SetGemPathDone(struct level_state *self);
-extern u8 IsInGemPath(struct level_state *self);
-extern void ClearInGemPath(struct level_state *self);
-extern u8 IsBonusRoundDone(struct level_state *self);
-extern void ClearBonusRoundDone(struct level_state *self);
-extern void SetBonusRoundDone(struct level_state *self);
-extern u8 IsInBonusRound(struct level_state *self);
-extern void ClearInBonusRound(struct level_state *self);
-extern u8 IsSwitchPressed(struct level_state *self);
-extern void ClearSwitchPressed(struct level_state *self);
-extern void ClearTimeTrial(struct level_state *self);
-extern s32 GetDeaths(struct level_state *self);
-extern void AddDeath(struct level_state *self);
-extern void ResetDeaths(struct level_state *self);
-extern u8 GetSpawnAtStart(struct level_state *self);
-extern void ClearSpawnAtStart(struct level_state *self);
-extern void ArmStartSpawn(struct level_state *self);
-extern void SetLevelBoss(struct level_state *self, void *value);
-extern s32 GetRoomIndex(struct level_state *self);
-extern s32 GetCurrentLevel(struct level_state *self);
-extern void SetCurrentLevel(struct level_state *self, s32 value);
-extern s32 LevelHasYellowGem(void *self, s32 idx);
-extern s32 LevelHasBlueGem(void *self, s32 idx);
-extern s32 LevelHasGreenGem(void *self, s32 idx);
-extern s32 LevelHasRedGem(void *self, s32 idx);
-extern s32 LevelHasGemPathGem(void *self, s32 idx);
-extern s32 GetBossHealth(struct level_state *self);
-extern s32 GetBossIndex(struct level_state *self);
-extern u8 *GetLevelFlags(struct level_state *self, s32 idx);
-extern u8 *GetCurrentLevelFlags(struct level_state *self);
-extern s32 GetCrateCount(struct level_state *self);
-extern s32 IsCrystalSaved(struct level_state *self);
-extern void CollectWumpa(struct level_state *self);
-extern void AddLife(struct level_state *self);
-extern void CheckAllCratesBroken(struct level_state *self);
-extern void SetGemPlatform(struct level_state *self, void *value);
-extern void SetBonusPlatform(struct level_state *self, void *value);
-extern void SetCrateGemPos(struct level_state *self, s32 *point);
-extern void RequestGemPath(struct level_state *self);
-extern void RequestBonusRound(struct level_state *self);
-extern void RestoreCheckpoint(struct level_state *self);
-extern void SetCheckpoint(void *self, s32 flag, s32 *pair);
-extern void EndGemPath(struct level_state *self, u8 flag);
-extern void PlayNewGameCutscene(void *self);
-extern void PlayIntroCutscene(void *self);
-extern void ShowCompanyLogos(void *unused);
-extern void PlayBootCutscene(void *self);
+/* src/level/level_state.cpp (LevelState's methods: level_state.hpp) */
 extern void nullsub_24(void);
-extern void UnpackSaveData(struct level_state *self, const struct game_progress *src);
-extern struct game_progress *PackSaveData(void *self);
+#ifdef __cplusplus
+extern class LevelState *GetLevelState(void);
+#else
 extern struct level_state *GetLevelState(void);
-
-/* src/level/play_room.cpp */
-extern s32 PlayRoom(struct level_progress *self);
+#endif
 
 /* src/level/room.cpp */
 extern void ClearRoomExit(void);
 extern void RequestRoomExit(void);
 extern u8 IsRoomExitRequested(void);
-extern void ResumeRoomAfterPause(struct level_progress *self);
 extern void ResetObjBuffers(void);
 
 /* src/level/room_entities.cpp */
 extern void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
                               const struct level_link_list *links, s32 pos, s32 unused);
-
-/* src/level/room_frame.cpp */
-extern void UpdateRoomFrame(struct level_progress *self);
-extern void SetupRoomBlend(struct level_progress *self);
-
-/* src/level/run_room.cpp */
-extern s32 RunRoom(struct level_progress *self);
 
 /* src/level/spawn_bosses.cpp */
 extern void SpawnRoomExit(u32 arg, u16 arg1, u16 arg2, u16 arg3);
@@ -411,9 +301,6 @@ extern s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, 
 extern s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
                          s32 submode);
 
-/* src/level/time_trial.cpp */
-extern void StartTimeTrial(struct level_state *self);
-
 /* sym_iwram.txt */
 #ifdef __cplusplus
 /* The decoration parts (PartList, sprite_obj.hpp; C++ only). */
@@ -421,7 +308,11 @@ extern class PartList *gDecorationList;
 #endif
 /* UpdateGameFrame's level state, stored once when the game starts and never
  * read. */
+#ifdef __cplusplus
+extern class LevelState *gGameFrameLevelState;
+#else
 extern struct level_state *gGameFrameLevelState;
+#endif
 /* Updated and cleared, but never culled or drawn: the invisible objects,
  * the entity type 0x55 room-exit zones (spawn_bosses.cpp) and
  * SpawnSealSpawner's spawner. */
@@ -461,7 +352,11 @@ extern class LevelLayers *gLevelLayersSingleton;
 #else
 extern struct level_layers *gLevelLayersSingleton;
 #endif
+#ifdef __cplusplus
+extern class LevelState *gLevelStateSingleton;
+#else
 extern struct level_state *gLevelStateSingleton;
+#endif
 extern u8 gRoomExitRequested;
 
 /* The terrain height tables (src/data/terrain_1725a8.c, top-level asm) */

@@ -1,5 +1,6 @@
 #include "platform.hpp"
 #include "player.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "gfx.h"
@@ -228,11 +229,11 @@ void Platform::ResolveCollision(void *)
                         gPlayer->HandleEvent(0, EVENT_WARP_EXIT, 0);
                         break;
                     case 3:
-                        if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial)
+                        if (!gLevelState->IsBonusRoundDone() && !gLevelState->timeTrial)
                             gPlayer->HandleEvent(0, EVENT_WARP_BONUS_ROUND, 0);
                         break;
                     case 4:
-                        if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial)
+                        if (!gLevelState->IsGemPathDone() && !gLevelState->timeTrial)
                             gPlayer->HandleEvent(0, EVENT_WARP_GEM_PATH, 0);
                         break;
                     }
@@ -267,7 +268,8 @@ void Platform::ResolveCollision(void *)
             }
             break;
         case 3:
-            if (!IsBonusRoundDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
+            if (!gLevelState->IsBonusRoundDone() && !gLevelState->timeTrial &&
+                AabbOverlaps(&a, pb)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 
@@ -277,7 +279,7 @@ void Platform::ResolveCollision(void *)
             }
             break;
         case 4:
-            if (!IsGemPathDone(gLevelState) && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
+            if (!gLevelState->IsGemPathDone() && !gLevelState->timeTrial && AabbOverlaps(&a, pb)) {
                 s32 d = Q8_TO_INT(x) - Q8_TO_INT(gPlayer->x);
                 s32 sign;
 

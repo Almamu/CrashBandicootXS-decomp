@@ -1,4 +1,5 @@
 #include "spawners.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "globals.h"

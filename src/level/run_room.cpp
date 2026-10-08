@@ -5,6 +5,7 @@
 #include "platform.hpp"
 #include "crate.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -24,12 +25,12 @@ extern "C" {
 /* GitHub issue #37 follow-up to `docs/matching/archive/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
  * `play_room.cpp`, but left this one "not yet confidently understood
- * branch-by-branch"). `self` (r7) is the level object `PlayRoom`
+ * branch-by-branch"). `this` (r7) is the level object `PlayRoom`
  * itself received; `gLevelState` is the separate "level" object
  * most of its own callees take. `gLevelTable` is the confirmed
  * 36-slot, 0x24-byte-stride per-level master table (see
  * `pause_menu_info.cpp`/`power_dialog_draw.cpp`/`level_query.cpp`'s own struct views
- * of it) - here indexed by `self+0`, reading its `+0x1c` `isBoss`
+ * of it) - here indexed by `+0`, reading its `+0x1c` `isBoss`
  * byte (calls `CheckAllCratesBroken` if clear), then
  * `+0x14`/`+0x18` (`maskAssistDeaths`/`crateAssistDeaths`, fed to `SetMaskAssistDeaths`/`SetCrateAssistDeaths`)
  * and finally `+4`, the **state field the 6-case jump table below
@@ -78,9 +79,9 @@ extern "C" {
  * every call site's own `list_count` argument exactly. No further
  * struct needed.
  *
- * **Shared tail**: calls `SetupRoomBlend(self)`/`ResetObjBuffers()` (the
+ * **Shared tail**: calls `SetupRoomBlend()`/`ResetObjBuffers()` (the
  * latter already matched in `room.cpp`), then re-reads the
- * current room's (`self->cat`) `kind`
+ * current room's (`cat`) `kind`
  * (the same field `PlayRoom` dispatched its own widget-construction
  * switch on) - if it's `1`, re-stamps the player's `+0x2d` byte to
  * `0x1f`, refreshes its OAM entry (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
@@ -104,7 +105,7 @@ extern "C" {
  * Either way, this converges on culling the four object lists
  * (`CullPartList` on `gForegroundList`, `gTouchableList`,
  * `gCollidableList` and `gDecorationList`), a
- * `UpdateRoomFrame(self)` VRAM/OAM refresh, and the fade-cluster
+ * `UpdateRoomFrame()` VRAM/OAM refresh, and the fade-cluster
  * `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
@@ -196,7 +197,7 @@ static inline void RefreshPlayerTiles(void)
     cache->LoadSlot(p->palette, p->bank->anims[p->tag].paletteId);
 }
 
-s32 RunRoom(struct level_progress *self)
+s32 LevelProgress::RunRoom()
 {
     s32 ret = 1;
     s32 i;
@@ -204,15 +205,15 @@ s32 RunRoom(struct level_progress *self)
     gPlayer->ResetForRoom();
     gCamera->target = (struct camera_target *)gPlayer;
     gCamera->mode = ret;
-    gLevelLayers->LoadRoom(self->cat);
-    if (!gLevelTable[self->level].isBoss)
-        CheckAllCratesBroken(gLevelState);
-    if (IsSwitchPressed(gLevelState))
+    gLevelLayers->LoadRoom(cat);
+    if (!gLevelTable[level].isBoss)
+        gLevelState->CheckAllCratesBroken();
+    if (gLevelState->IsSwitchPressed())
         UpdateCrates();
-    SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].maskAssistDeaths);
-    SetCrateAssistDeaths(gLevelState, gLevelTable[self->level].crateAssistDeaths);
+    gLevelState->SetMaskAssistDeaths(gLevelTable[level].maskAssistDeaths);
+    gLevelState->SetCrateAssistDeaths(gLevelTable[level].crateAssistDeaths);
 
-    switch (gLevelTable[self->level].theme) {
+    switch (gLevelTable[level].theme) {
     case 2:
         gPaletteCycles->Clear();
         FX_CYCLE(gThemePaletteCycle2, 6, 5, 1);
@@ -236,9 +237,9 @@ s32 RunRoom(struct level_progress *self)
         break;
     }
 
-    SetupRoomBlend(self);
+    SetupRoomBlend();
     ResetObjBuffers();
-    if (self->cat->kind == ROOM_KIND_UNDERWATER) {
+    if (cat->kind == ROOM_KIND_UNDERWATER) {
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->mode = 2;
     }
@@ -247,9 +248,9 @@ s32 RunRoom(struct level_progress *self)
     SnapCamera(gCamera);
     gLevelLayers->Reset();
 
-    if (self->cat->kind == ROOM_KIND_ON_FOOT) {
-        if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom(self)) ||
-            (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom(self))) {
+    if (cat->kind == ROOM_KIND_ON_FOOT) {
+        if ((gLevelState->IsInBonusRound() && (u8)IsInBonusRoom()) ||
+            (gLevelState->IsInGemPath() && (u8)IsInGemPathRoom())) {
             gPlayer->f.bytes.flags &= 0x7F;
             RestartPlayerAnim(gPlayer, 0x29);
             gAudioContext->PlaySfx(SFX_WARP, 0x100);
@@ -262,7 +263,7 @@ s32 RunRoom(struct level_progress *self)
     gTouchableList->Cull();
     gCollidableList->Cull();
     gDecorationList->Cull();
-    UpdateRoomFrame(self);
+    UpdateRoomFrame();
     SetDispcntMode(0);
     SetObjMapping1D();
     ShowObj();
@@ -271,13 +272,13 @@ s32 RunRoom(struct level_progress *self)
 
     while (!IsRoomExitRequested() && (gPlayer->f.bytes.flags & 1) == 0) {
         ResetObjBuffers();
-        UpdateRoomFrame(self);
+        UpdateRoomFrame();
         UpdateKeys(gInput);
         if (!gPlayer->dead && (gKeys.half.pressed & 8)) {
             s32 r = RunPauseMenu();
 
             if (r == 0) {
-                ResumeRoomAfterPause(self);
+                ResumeRoomAfterPause();
                 UpdateKeys(gInput);
             }
             if (r == 1) {
@@ -301,26 +302,30 @@ s32 RunRoom(struct level_progress *self)
         gDecorationList->Update();
         gHud->UpdateSlides();
         if (gLevelState->timeTrial)
-            TickLevelClock(gLevelState);
+            gLevelState->TickLevelClock();
         gRoomFrameCount++;
     }
 fade:
     FadePaletteToBlack();
     if (IsRoomExitRequested()) {
         ret = 0;
-        if (!(u8)IsInBonusRoom(self) && IsInBonusRound(gLevelState)) {
+        if (!(u8)IsInBonusRoom() && gLevelState->IsInBonusRound()) {
             struct vec2 point;
             s32 x;
 
-            x = *(s32 *)GetBonusPlatform(gLevelState) + -0x1E00;
+            x = *(s32 *)gLevelState->GetBonusPlatform() + -0x1E00;
             i = gPlayer->y + 0x1200;
             point.x = x;
             point.y = i;
+            // `x` again: the level state goes through the same register
             x = (s32)gLevelState;
-            SetCheckpoint((void *)x,
-                          ((Platform *)GetBonusPlatform((struct level_state *)x))->GetExitMirror(),
-                          &point.x);
-        } else if (!(u8)IsInGemPathRoom(self) && IsInGemPath(gLevelState)) {
+            {
+                LevelState *state = (LevelState *)x;
+
+                state->SetCheckpoint(((Platform *)state->GetBonusPlatform())->GetExitMirror(),
+                                     &point.x);
+            }
+        } else if (!(u8)IsInGemPathRoom() && gLevelState->IsInGemPath()) {
             struct vec2 point;
             Player *pl;
             MATCH_HOLD_REG(s32, hold, r0);
@@ -337,7 +342,7 @@ fade:
             MATCH_USE(hold1);
             /* copied as one 8-byte struct (ldr; ldr; str; str) */
             point = *(struct vec2 *)&pl->x;
-            SetCheckpoint(gLevelState, 0, &point.x);
+            gLevelState->SetCheckpoint(0, &point.x);
         } else {
             s32 count = 0;
             CrateList **list;
@@ -353,7 +358,7 @@ fade:
                     i++;
                 } while (i < (*list)->count);
             }
-            AddPendingSwitchCrates(gLevelState, count);
+            gLevelState->AddPendingSwitchCrates(count);
         }
     }
     gUpdateOnlyPartList->Clear();

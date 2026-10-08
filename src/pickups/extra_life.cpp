@@ -2,6 +2,7 @@
 #include "player.hpp"
 #include "hud.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -113,7 +114,7 @@ void ExtraLife::Update()
         y = n;
         if (Q8_TO_INT(px + vx) <= 0xb4 && Q8_TO_INT(n) <= 0xc) {
             gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
-            AddLife(gLevelState);
+            gLevelState->AddLife();
             MarkGone();
         }
     } else if (s == 2) {

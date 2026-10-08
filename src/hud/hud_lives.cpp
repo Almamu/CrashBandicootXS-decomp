@@ -1,4 +1,5 @@
 #include "hud.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -23,8 +24,8 @@ void Hud::UpdateLives()
     if (livesSlide == 0)
         return;
 
-    if (GetLives(gLevelState) > 0)
-        lives = GetLives(gLevelState);
+    if (gLevelState->GetLives() > 0)
+        lives = gLevelState->GetLives();
     else
         lives = 0;
 

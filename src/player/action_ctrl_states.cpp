@@ -3,6 +3,7 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "system.h"
@@ -233,7 +234,7 @@ void ActionCtrl::StateFlipBodySlamStart()
         else if (frame > 3 || p->animDone)
             SetTargetAnim(p, 8);
     } else if (p->animDone) {
-        if ((u8)HasSuperBodySlam(gLevelState)) {
+        if ((u8)gLevelState->HasSuperBodySlam()) {
             SetMode(ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM);
             SetTargetAnim(part, 7);
         } else {
@@ -320,7 +321,7 @@ void ActionCtrl::StateSlide()
             if (dir != 0 && part->HasRoomForAnim(2)) {
                 switch (dir) {
                 case 3 ... 4:
-                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)HasTurboRun(gLevelState)) {
+                    if ((INPUT_HELD(in) & L_BUTTON) && (u8)gLevelState->HasTurboRun()) {
                         turboRun = 1;
                         SetMode(ACTION_STATE_TURBO_RUN);
                         SetTargetAnim(part, 0x18);
@@ -379,7 +380,7 @@ void ActionCtrl::StateSpin()
         part->hitAxes = 0;
         return;
     }
-    if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
+    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }
@@ -421,7 +422,7 @@ void ActionCtrl::StateAirSpin()
         StateSpin();
         return;
     }
-    if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
+    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }
@@ -478,7 +479,7 @@ void ActionCtrl::StateTornadoSpin()
         part->hitAxes = 0;
         return;
     }
-    if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
+    if ((u8)gLevelState->HasTornadoSpin() && (INPUT_PRESSED(in) & 2) && spinCooldown == 0) {
         if (++charge > 3)
             charge = 3;
     }

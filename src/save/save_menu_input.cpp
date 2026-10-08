@@ -1,5 +1,6 @@
 #include "save_menu.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -114,7 +115,7 @@ SaveMenu::SaveMenu()
     LoadBg();
     gAudioContext->PlaySong(SONG_WARP_ROOM);
     LoadData();
-    SummarizeProgress(&currentStats, PackSaveData(gLevelState));
+    SummarizeProgress(&currentStats, gLevelState->PackSaveData());
     RefreshSlotSummaries(*cartSaveAddr);
 
     {
@@ -339,11 +340,11 @@ void SaveMenu::LoadInput(u32 keys, struct save_data *handle)
         }
         gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
         ReadSaveSlot(handle, cursor, &buf);
-        UnpackSaveData(gLevelState, &buf.progress);
-        SetCurrentLevel(gLevelState, buf.level);
+        gLevelState->UnpackSaveData(&buf.progress);
+        gLevelState->SetCurrentLevel(buf.level);
         gAudioContext->SetSfxVolume(buf.sfxVolume);
         gAudioContext->SetMusicVolume(buf.musicVolume);
-        SummarizeProgress(&currentStats, PackSaveData(gLevelState));
+        SummarizeProgress(&currentStats, gLevelState->PackSaveData());
         gameLoaded = 1;
         done = 1;
         return;
@@ -423,7 +424,7 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
     struct save_data **handleAddr = &cartSave;
     struct save_data **handleAddr2;
     u32 wasSelected;
-    struct level_state **c0Addr;
+    LevelState **c0Addr;
     AudioContext **bcAddr;
 
     if (!IsSaveSlotEmpty(*handleAddr, rowIndex)) {
@@ -440,10 +441,10 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
          * MemCopy32, not the other way around) - a plain nested call
          * expression here lets this compiler compute the pointer
          * argument first instead. */
-        struct game_progress *result = PackSaveData(*c0Addr);
+        struct game_progress *result = (*c0Addr)->PackSaveData();
         MemCopy32(&buf[1].progress, result, sizeof(struct game_progress));
     }
-    buf[1].level = (u8)GetCurrentLevel(*c0Addr);
+    buf[1].level = (u8)(*c0Addr)->GetCurrentLevel();
 
     bcAddr = &gAudioContext;
     buf[1].sfxVolume = (u16)(*bcAddr)->GetSfxVolume();
@@ -464,7 +465,7 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
             WriteSaveSlot(*handleAddr2, rowIndex, &buf[0]);
         }
     } else {
-        SummarizeProgress(&rowStats[rowIndex], PackSaveData(*c0Addr));
+        SummarizeProgress(&rowStats[rowIndex], (*c0Addr)->PackSaveData());
     }
 }
 

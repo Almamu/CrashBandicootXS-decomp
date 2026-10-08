@@ -1,3 +1,5 @@
+#include "level_state.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -81,7 +83,7 @@ s32 gAkuAkuInvincibleFrame = 0;
 s32 gAkuAkuFollowFrame = 0;
 LevelSelect *gLevelSelect = 0;
 u8 gNewWorldOpened = 0;
-struct level_state *gLevelStateSingleton = 0;
+LevelState *gLevelStateSingleton = 0;
 u32 gRoomFrameCount = 0;
 u8 gRoomExitRequested = 0;
 

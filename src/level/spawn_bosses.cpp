@@ -2,6 +2,7 @@
 #include "platform.hpp"
 #include "boss_ctrl.hpp"
 #include "player.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -56,8 +57,8 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
  * but g++ keeps a struct value in memory, so here it takes the pins. */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState) && !GetRoomIndex(gLevelState) &&
-        gLevelTable[GetCurrentLevel(gLevelState)].theme == 0) {
+    if (!gLevelState->IsInGemPath() && !gLevelState->IsInBonusRound() &&
+        !gLevelState->GetRoomIndex() && gLevelTable[gLevelState->GetCurrentLevel()].theme == 0) {
         Entity *part = Entity::Create(arg0, arg1, arg2, arg3);
 
         part->SetSize(0x64, 0x64);
@@ -77,7 +78,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         y = py - 0x1E;
         point[0] = x;
         point[1] = y;
-        SetCrateGemPos(gLevelState, point);
+        gLevelState->SetCrateGemPos(point);
     } else {
         Entity *part = Entity::Create(arg0, arg1, arg2, arg3);
 
@@ -104,7 +105,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     hdr = new DingodileCtrl(arg1, arg2);
     part->mover = hdr;
     hdr->Attach(part);
-    SetLevelBoss(gLevelState, hdr);
+    gLevelState->SetLevelBoss(hdr);
 }
 
 /* Tiny: his part (bank 0x294) and controller (TinyCtrl), mirrored by
@@ -122,7 +123,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetMirrorFromRecord(part, arg3);
     part->f.flags |= 0x10;
     CollidableList()->Add(part);
-    SetLevelBoss(gLevelState, hdr);
+    gLevelState->SetLevelBoss(hdr);
 }
 
 /* Neo Cortex: his part (bank 0x27C, animation 1) and controller
@@ -143,5 +144,5 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->f.flags |= 0x10;
     ForegroundList()->Add(part);
     part->animating = 0;
-    SetLevelBoss(gLevelState, hdr);
+    gLevelState->SetLevelBoss(hdr);
 }

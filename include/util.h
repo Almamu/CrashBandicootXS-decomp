@@ -19,8 +19,6 @@
 #include "aabb.h"
 #include "line_util.h"
 
-struct level_state;
-
 /* The RNG's state (src/iwram/iwram_data.cpp). */
 extern u32 gRandSeed;
 
@@ -34,7 +32,6 @@ extern void *IwramAlloc(u32 size);
 /* src/util/aabb_setup.cpp */
 extern void SetAabbSize(struct aabb *dest, s32 w, s32 h);
 extern void SetAabbPos(struct aabb *dest, s32 x, s32 y);
-extern s32 GetLives(struct level_state *self);
 
 /* src/util/fixed_math.cpp */
 extern s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2);

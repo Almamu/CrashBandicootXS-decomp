@@ -1,6 +1,7 @@
 #define POLAR_WUMPA_CONSTRUCTOR_OUT_OF_LINE
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -113,7 +114,7 @@ PolarCollectedWumpa::~PolarCollectedWumpa()
     s32 i;
 
     for (i = 0; i < count; i++)
-        CollectWumpa(gLevelState);
+        gLevelState->CollectWumpa();
 }
 
 /* At (x, y) on the screen, from the BG's centre, aimed at the wumpa
@@ -164,7 +165,7 @@ void PolarCrate::Update()
     if (animIndex != 0x12) {
         if (IsTouchingYeti(this)) {
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            AddBrokenCrate(gLevelState);
+            gLevelState->AddBrokenCrate();
             Break();
         }
     }
@@ -181,7 +182,7 @@ void PolarCrate::Update()
 void PolarQuestionCrate::Update()
 {
     if (animIndex != 0x12 && (u8)IsTouchingPlayer(this)) {
-        AddBrokenCrate(gLevelState);
+        gLevelState->AddBrokenCrate();
 
         switch ((u8)record->index) {
         case 0x1c:
@@ -214,7 +215,7 @@ void PolarLifeCrate::Update()
     if (animIndex != 0x12) {
         if ((u8)IsTouchingPlayer(this)) {
             gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
-            AddBrokenCrate(gLevelState);
+            gLevelState->AddBrokenCrate();
             static_cast<PolarPlayer *>(gActorList)->GiveLife();
             MarkSpawnCollected(spawn);
             Break();
@@ -223,7 +224,7 @@ void PolarLifeCrate::Update()
 
         if (animIndex != 0x12 && IsTouchingYeti(this)) {
             gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
-            AddBrokenCrate(gLevelState);
+            gLevelState->AddBrokenCrate();
             Break();
             palette = 1;
         }
@@ -246,12 +247,12 @@ void PolarNitroCrate::Update()
         }
         if ((u8)IsTouchingPlayer(this)) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-            AddBrokenCrate(gLevelState);
+            gLevelState->AddBrokenCrate();
             static_cast<PolarPlayer *>(gActorList)->Hurt();
             Explode();
         } else if (IsTouchingYeti(this)) {
             gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
-            AddBrokenCrate(gLevelState);
+            gLevelState->AddBrokenCrate();
             Explode();
         }
     } else {

@@ -3,6 +3,7 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -90,7 +91,7 @@ void ActionCtrl::StateRun()
         s32 held = (u16)(INPUT_HELD(in) & L_BUTTON);
 
         if (held) {
-            if (state == ACTION_STATE_RUN && (u8)HasTurboRun(gLevelState)) {
+            if (state == ACTION_STATE_RUN && (u8)gLevelState->HasTurboRun()) {
                 turboRun = 1;
                 SetMode(ACTION_STATE_TURBO_RUN);
                 SetTargetAnim(part, 0x18);

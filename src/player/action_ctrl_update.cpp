@@ -3,6 +3,7 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "system.h"
@@ -70,7 +71,7 @@ void ActionCtrl::Update(MovingSprite *)
 
                 if (y2 > INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x1400) {
                     r->deadline = 0;
-                    SetMaskLevel(gLevelState, MASK_LEVEL_NONE);
+                    gLevelState->SetMaskLevel(MASK_LEVEL_NONE);
                     HandleEvent(0, 1, 0);
                 }
             }
@@ -158,7 +159,7 @@ u8 ActionCtrl::TryDoubleJump()
     if (pressed) {
         s32 jumps = frame;
 
-        if (jumps == 0 && (u8)HasDoubleJump(gLevelState)) {
+        if (jumps == 0 && (u8)gLevelState->HasDoubleJump()) {
             if (part->tag == 6 && part->frame >= 0) {
                 frame++;
                 gPlayer->StoreSlippery(jumps);

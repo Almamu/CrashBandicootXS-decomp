@@ -1,5 +1,6 @@
 #include "hud.hpp"
 #include "actor_self.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -52,7 +53,7 @@ void Hud::UpdateCrates()
 
     if (crateSlide == 0)
         return;
-    crateCount = GetCrateCount(gLevelState);
+    crateCount = gLevelState->GetCrateCount();
     if (crateSlide == 1 || crateSlide == 3)
         gHudSlideOffset = crateSlideTimer * 2 - 0x28;
     else
@@ -161,7 +162,7 @@ void Hud::UpdateWumpa()
         gHudSlideOffset = wumpaSlideTimer * 2 - 0x28;
     else
         gHudSlideOffset = 0;
-    wumpa = GetWumpa(gLevelState);
+    wumpa = gLevelState->GetWumpa();
     parts[13].AdvanceAnim();
     parts[13].Draw(0, 0);
 
@@ -250,7 +251,7 @@ void Hud::UpdatePercentCounters()
     parts[28].Draw(0, 0);
     shownPlayerHpPercent = playerHpPercent;
 
-    if (GetBossIndex(gLevelState) != BOSS_NONE)
+    if (gLevelState->GetBossIndex() != BOSS_NONE)
         return;
     if ((airshipHpPercent = GetAirshipHpPercent()) == -1)
         return;

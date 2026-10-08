@@ -1,5 +1,6 @@
 #include "menus.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -17,7 +18,7 @@ extern "C" {
  * five info pages (pause_menu_pages_init.cpp). */
 void PauseMenu::InitInfo()
 {
-    s32 levelIdx = GetCurrentLevel(gLevelState);
+    s32 levelIdx = gLevelState->GetCurrentLevel();
     u32 labelId = *(u32 *)((u8 *)gLevelTable + levelIdx * 0x24);
 
     levelName = (void *)GetUiText(labelId);

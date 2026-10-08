@@ -1,4 +1,5 @@
 #include "platform.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "level.h"
@@ -90,7 +91,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case 6:
         obj->type = 6;
-        if (GetBossIndex(gLevelState) != BOSS_NEO_CORTEX)
+        if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX)
             m = new PlatformMover(0, 0, false, false, 6);
         else
             m = new CortexBossPlatformMover;

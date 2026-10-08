@@ -1,3 +1,5 @@
+#include "level_state.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -18,16 +20,16 @@ extern "C" {
 s32 MainLoop(void)
 {
     gLevelState = GetLevelState();
-    PlayBootCutscene(gLevelState);
-    ShowCompanyLogos(gLevelState);
+    gLevelState->PlayBootCutscene();
+    gLevelState->ShowCompanyLogos();
     OpenLanguageSelect();
     gLanguage = RunLanguageSelect();
     CloseLanguageSelect();
-    PlayIntroCutscene(gLevelState);
+    gLevelState->PlayIntroCutscene();
 
     for (;;) {
         mem_free_bytes(MEM_HEAP_BOTH);
-        UpdateGameFrame(gLevelState);
+        gLevelState->UpdateGameFrame();
         mem_free_bytes(MEM_HEAP_BOTH);
     }
 }

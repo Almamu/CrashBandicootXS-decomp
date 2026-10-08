@@ -2,6 +2,7 @@
 #include "boss_ctrl.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -149,7 +150,7 @@ void CortexBossCtrl::SetState(MovingSprite *, s32 next)
 {
     if (next == 3) {
         target->mover->SetMode(9);
-        if (!(u8)HasTurboRun(gLevelState))
+        if (!(u8)gLevelState->HasTurboRun())
             SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
     }
     SetMode(next);
@@ -402,7 +403,7 @@ void DingodileCtrl::Update(MovingSprite *part)
 
             if (y >= LevelBottom() + 0x2000) {
                 StartMotion(part, 0);
-                if ((u8)HasSuperBodySlam(gLevelState))
+                if ((u8)gLevelState->HasSuperBodySlam())
                     RequestRoomExit();
                 SetState(part, 17);
             }
@@ -420,7 +421,7 @@ void DingodileCtrl::SetState(MovingSprite *part, s32 next)
     SetMode(next);
     switch (next) {
     case 16:
-        if (!(u8)HasSuperBodySlam(gLevelState))
+        if (!(u8)gLevelState->HasSuperBodySlam())
             SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
         StartMotion(part, 3);
         break;

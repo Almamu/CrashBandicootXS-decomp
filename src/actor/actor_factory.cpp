@@ -1,4 +1,5 @@
 #include "vehicle.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -8,7 +9,6 @@ extern "C" {
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
-#include "level_state.h"
 #include "globals.h"
 }
 

@@ -1,4 +1,5 @@
 #include "hud.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -35,7 +36,7 @@ void Hud::UpdateBoss()
     HUDPART_CLAMP_FRAME(part, parts[22].tag, 0);
     part->Draw(0, 0);
 
-    count = GetBossHealth(gLevelState);
+    count = gLevelState->GetBossHealth();
     if (count > 0) {
         HudPart *second = &parts[23];
 
@@ -62,30 +63,30 @@ void Hud::UpdateClock()
     HudPart *cur;
 
     gHudSlideOffset = 0;
-    if (shownMinutes != GetClockMinutes(gLevelState)) {
+    if (shownMinutes != gLevelState->GetClockMinutes()) {
         s32 f;
 
-        shownMinutes = GetClockMinutes(gLevelState);
+        shownMinutes = gLevelState->GetClockMinutes();
         f = __udivsi3(shownMinutes, 10);
         cur = parts;
         HUDPART_CLAMP_FRAME(&cur[14], cur[14].tag, f);
         f = __umodsi3(shownMinutes, 10);
         HUDPART_CLAMP_FRAME(&cur[15], cur[15].tag, f);
     }
-    if (shownSeconds != GetClockSeconds(gLevelState)) {
+    if (shownSeconds != gLevelState->GetClockSeconds()) {
         s32 f;
 
-        shownSeconds = GetClockSeconds(gLevelState);
+        shownSeconds = gLevelState->GetClockSeconds();
         f = __udivsi3(shownSeconds, 10);
         cur = parts;
         HUDPART_CLAMP_FRAME(&cur[17], cur[17].tag, f);
         f = __umodsi3(shownSeconds, 10);
         HUDPART_CLAMP_FRAME(&cur[18], cur[18].tag, f);
     }
-    if (shownTenths != GetClockTenths(gLevelState)) {
+    if (shownTenths != gLevelState->GetClockTenths()) {
         s32 f;
 
-        shownTenths = f = GetClockTenths(gLevelState);
+        shownTenths = f = gLevelState->GetClockTenths();
         cur = parts;
         HUDPART_CLAMP_FRAME(&cur[20], cur[20].tag, f);
         HUDPART_CLAMP_FRAME(&cur[21], cur[21].tag, 0);

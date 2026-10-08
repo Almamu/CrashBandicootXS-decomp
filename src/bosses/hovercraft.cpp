@@ -1,6 +1,7 @@
 #include "boss_actors.hpp"
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "match.h"
@@ -117,7 +118,7 @@ JetpackCollectedWumpa::~JetpackCollectedWumpa()
     s32 i;
 
     for (i = 0; i < reward; i++)
-        CollectWumpa(gLevelState);
+        gLevelState->CollectWumpa();
 }
 
 /* PolarCollectedWumpa's constructor with 1 hit point: from the BG's

@@ -1,4 +1,5 @@
 #include "menus.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "util.h"
@@ -122,7 +123,7 @@ void PauseMenu::InitTimeTrialPage()
     const struct level_info *entry;
     u8 earned;
 
-    levelIdx = GetCurrentLevel(gLevelState);
+    levelIdx = gLevelState->GetCurrentLevel();
     {
         /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
          * computed before the base is loaded. */

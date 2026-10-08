@@ -1,5 +1,6 @@
 #include "platform.hpp"
 #include "pickups.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "crates.h"
@@ -24,38 +25,38 @@ static inline void SetTag(Platform *part, s32 t)
  * palette reloaded), the crates become their time-trial kinds
  * (ConvertCratesForTimeTrial), and every pickup in the touchable list
  * (class 2) is collected if it is on screen, or else gone. */
-void StartTimeTrial(struct level_state *self)
+void LevelState::StartTimeTrial()
 {
     Platform *part;
     s32 i;
 
-    SetMaskLevel(self, MASK_LEVEL_NONE);
-    self->timeTrial = 1;
-    self->minutes = 0;
-    self->seconds = 0;
-    self->tenths = 0;
-    self->frames = 0;
-    self->countdown = 0;
-    if (self->room.cat->kind == ROOM_KIND_CATEGORY)
+    SetMaskLevel(MASK_LEVEL_NONE);
+    timeTrial = 1;
+    minutes = 0;
+    seconds = 0;
+    tenths = 0;
+    frames = 0;
+    countdown = 0;
+    if (room.cat->kind == ROOM_KIND_CATEGORY)
         return;
 
-    part = (Platform *)self->bonusPlatform;
+    part = (Platform *)bonusPlatform;
     if (part != 0) {
         SetTag(part, 7);
         part->ResetFrameTimer();
         part->ResetFrameIndex();
         part->SetAnimDone(0);
     }
-    part = (Platform *)self->gemPlatform;
+    part = (Platform *)gemPlatform;
     if (part != 0) {
         SetTag(part, 0xc);
         part->ResetFrameTimer();
         part->ResetFrameIndex();
         part->SetAnimDone(0);
         // clang-format off
-        gPaletteCache->LoadSlot(((Platform *)self->gemPlatform)->palette,
-                        ((Platform *)self->gemPlatform)->bank->anims[
-                            ((Platform *)self->gemPlatform)->tag].paletteId);
+        gPaletteCache->LoadSlot(((Platform *)gemPlatform)->palette,
+                        ((Platform *)gemPlatform)->bank->anims[
+                            ((Platform *)gemPlatform)->tag].paletteId);
         // clang-format on
     }
     ConvertCratesForTimeTrial();

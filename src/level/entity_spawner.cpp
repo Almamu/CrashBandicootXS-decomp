@@ -1,6 +1,7 @@
 #include "bg_layer.hpp"
 #include "spawners.hpp"
 #include "ctrl.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "level_data.h"

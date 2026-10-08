@@ -2,6 +2,7 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "system.h"
@@ -188,7 +189,7 @@ void PlayerCtrl::KillPlayer(s32 anim)
     target->f.b.collides = 0;
     target->f.b.vulnerable = 0;
     target->dead = 1;
-    LoseLife(gLevelState);
+    gLevelState->LoseLife();
     gPaletteCache->LoadSlot(target->palette, target->bank->anims[target->tag].paletteId);
 }
 

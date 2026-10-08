@@ -1,4 +1,5 @@
 #include "spawners.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "bosses.h"
@@ -15,7 +16,7 @@ extern "C" {
  * the level's "already collected" bit for it is set:
  *
  * - SpawnCrystal/SpawnCrateGem/SpawnGemPathGem test bits 0/1/2 of the byte
- *   GetCurrentLevelFlags(gLevelState) points at; SpawnCrateGem also spawns a
+ *   gLevelState->GetCurrentLevelFlags() points at; SpawnCrateGem also spawns a
  *   second (0x2B) effect through SpawnEffectPart.
  * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask GetBossIndex whether
  *   the level is in mode 1, and if so hand over to SpawnCortexBossGem
@@ -36,7 +37,7 @@ extern "C" {
  * variable set before the call (a literal would be loaded at the store). */
 void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    s32 bit = *GetCurrentLevelFlags(gLevelState) & LEVEL_FLAG_CRYSTAL;
+    s32 bit = *gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_CRYSTAL;
 
     if (bit == 0) {
         u8 type = 0x1B;
@@ -55,7 +56,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = *GetCurrentLevelFlags(gLevelState) & LEVEL_FLAG_CRATE_GEM;
+    u8 bit = *gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_CRATE_GEM;
 
     if (bit == 0) {
         u8 tag = 1;
@@ -81,7 +82,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if ((*GetCurrentLevelFlags(gLevelState) & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
+    if ((*gLevelState->GetCurrentLevelFlags() & LEVEL_FLAG_GEM_PATH_GEM) == 0) {
         u8 tag = 1;
         u8 type = 0x1E;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
@@ -99,7 +100,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (GetBossIndex(gLevelState) != BOSS_NEO_CORTEX) {
+    if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & 1) == 0) {
             u8 tag = 3;
             u8 type = 0x1F;
@@ -121,7 +122,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (GetBossIndex(gLevelState) != BOSS_NEO_CORTEX) {
+    if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         if ((gLevelState->progress.flags & 4) == 0) {
             u8 tag = 2;
             u8 type = 0x20;
@@ -143,7 +144,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (GetBossIndex(gLevelState) != BOSS_NEO_CORTEX) {
+    if (gLevelState->GetBossIndex() != BOSS_NEO_CORTEX) {
         u8 bit = gLevelState->progress.flags & 2;
 
         if (bit == 0) {

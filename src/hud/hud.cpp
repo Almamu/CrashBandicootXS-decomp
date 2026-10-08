@@ -1,4 +1,5 @@
 #include "hud.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -30,12 +31,12 @@ void Hud::Update()
 
     UpdateLives();
 
-    if (GetBossIndex(gLevelState) != BOSS_NONE) {
+    if (gLevelState->GetBossIndex() != BOSS_NONE) {
         UpdateBoss();
         return;
     }
 
-    if (IsInBonusRound(gLevelState)) {
+    if (gLevelState->IsInBonusRound()) {
         gHudSlideOffset = 0;
         parts[34].AdvanceAnim();
         parts[34].Draw(0, 0);

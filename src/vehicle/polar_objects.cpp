@@ -1,5 +1,6 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -266,7 +267,7 @@ void PolarAkuAku::Update()
 
         gPolarAkuAkuInvincibleTimer -= 1;
         if (gPolarAkuAkuInvincibleTimer == 0) {
-            SetMaskLevel(gLevelState, MASK_LEVEL_TWO);
+            gLevelState->SetMaskLevel(MASK_LEVEL_TWO);
             Refresh(0);
         }
     }

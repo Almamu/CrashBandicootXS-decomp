@@ -1,5 +1,6 @@
 #include "crate.hpp"
 #include "crate_list.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "objects.h"
@@ -53,7 +54,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     if (type == CRATE_KIND_LIFE && id != 0xffff && (u8)IsEntityIdActivated(gEntityFlags, id))
         type = CRATE_KIND_BASIC;
     if (gLevelState->timeTrial == 0 &&
-        GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState)) {
+        gLevelState->GetDeaths() >= gLevelState->GetCrateAssistDeaths()) {
         if (type == CRATE_KIND_MYSTERY) {
             struct crate_placement *rec = Placement(slot);
 

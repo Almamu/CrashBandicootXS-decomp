@@ -1,4 +1,5 @@
 #include "hud.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
@@ -63,7 +64,7 @@ Hud::Hud()
             SET_PART_BANK(slot, anim);
         }
         if (i == 0x16) {
-            s32 life = GetBossIndex(gLevelState);
+            s32 life = gLevelState->GetBossIndex();
 
             slot = &parts[i];
             parts[0x16].tag = life + BOSS_HUD_ANIM_BASE;
@@ -150,7 +151,7 @@ void Hud::ConfigureParts(u8 iconFlag)
         s32 frame;
 
         if (i == 0x16) {
-            s32 life = GetBossIndex(gLevelState);
+            s32 life = gLevelState->GetBossIndex();
             HudPart *slot = &parts[i];
 
             parts[0x16].tag = life + BOSS_HUD_ANIM_BASE;
@@ -160,7 +161,7 @@ void Hud::ConfigureParts(u8 iconFlag)
         switch (i) {
         case 0x16:
         case 0x17:
-            if (GetBossIndex(gLevelState) == BOSS_NONE)
+            if (gLevelState->GetBossIndex() == BOSS_NONE)
                 break;
             goto get;
         case 0x1D:
@@ -174,7 +175,7 @@ void Hud::ConfigureParts(u8 iconFlag)
             break;
         }
 
-        if (GetBossIndex(gLevelState) == BOSS_NONE && icon_flag) {
+        if (gLevelState->GetBossIndex() == BOSS_NONE && icon_flag) {
             switch (i) {
             case 0xE ... 0x15:
                 {

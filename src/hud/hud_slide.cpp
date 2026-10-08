@@ -1,8 +1,8 @@
 #include "hud.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "core.h"
-#include "level_state.h"
 #include "globals.h"
 }
 

@@ -1,10 +1,10 @@
 #include "vehicle.hpp"
 #include "audio.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "match.h"
-#include "level_state.h"
 #include <libgcc.h>
 #include "system.h"
 #include "actor.h"
@@ -32,7 +32,7 @@ void JetpackPlayer::DispenseWumpa()
 
     if (gJetpackPlayerInactive != 0) {
         do {
-            CollectWumpa(gLevelState);
+            gLevelState->CollectWumpa();
             gJetpackQueuedWumpa--;
         } while (gJetpackQueuedWumpa != 0);
         return;
@@ -231,7 +231,7 @@ JetpackPlayer::~JetpackPlayer()
 {
     if (gJetpackQueuedWumpa != 0) {
         do {
-            CollectWumpa(gLevelState);
+            gLevelState->CollectWumpa();
             gJetpackQueuedWumpa--;
         } while (gJetpackQueuedWumpa != 0);
     }

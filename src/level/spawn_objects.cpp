@@ -4,6 +4,7 @@
 #include "boss_ctrl.hpp"
 #include "enemy_ctrl.hpp"
 #include "level_select.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "menus.h"
@@ -127,18 +128,18 @@ void SpawnFlipPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     Platform::Create(arg0, arg1, arg2, arg3, 6);
 }
 
-/* Spawns a platform of kind 7 if IsBonusRoundDone(gLevelState)
+/* Spawns a platform of kind 7 if gLevelState->IsBonusRoundDone()
  * is set or gLevelState+0x8C is nonzero, else id 5, and hands the
  * result to SetBonusPlatform. */
 void SpawnBonusPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Platform *result;
 
-    if (IsBonusRoundDone(gLevelState) || gLevelState->timeTrial)
+    if (gLevelState->IsBonusRoundDone() || gLevelState->timeTrial)
         result = Platform::Create(arg0, arg1, arg2, arg3, 7);
     else
         result = Platform::Create(arg0, arg1, arg2, arg3, 5);
-    SetBonusPlatform(gLevelState, result);
+    gLevelState->SetBonusPlatform(result);
 }
 
 /* Plain `CreatePlatform` trampoline, id `2`. */
