@@ -357,7 +357,9 @@ since both patterns will likely recur:
   out breaks the ROM's byte layout - it's now written as real, labelled
   Thumb instructions (`mem_walk_heaps`) instead, with `expected/corrections.txt`
   giving the frozen target a matching `split` entry. Same bytes, same
-  `make compare` result, just inspectable instead of opaque.
+  `make compare` result, just inspectable instead of opaque. #662
+  round 2 replaced the asm with plain C (a walk to each heap's last
+  block, the result discarded), which matches.
 
 Asset extraction also shows up in the report now, as its own data measure;
 see "Data progress" below. The per-asset details are still tracked in

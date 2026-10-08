@@ -161,7 +161,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * sub_8026C80(void *arg0, s32 arg1, s32 *arg2): arg0 is never touched
  * (dead parameter). If arg1 is nonzero, dereferences arg2 and discards
  * the result, a real load with no observable effect, needing arg2 typed
- * volatile to survive optimization (matching the ROM own unconditional
+ * as a pointer to volatile to survive optimization (matching the ROM own unconditional
  * ldr r0, [r2], whose result is immediately clobbered by the trailing
  * movs r0, #0). Always returns 0 regardless of which path was taken.
  * Shape-wise this reads like a stripped-down conditional accessor or
@@ -222,10 +222,10 @@ s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
  * expected/*.s, and every .c file under src/ for a bl/.4byte reference).
  * See the file-level comment above. */
-s32 sub_8026C80(void *arg0, s32 arg1, s32 *arg2)
+s32 sub_8026C80(void *arg0, s32 arg1, volatile s32 *arg2)
 {
     if (arg1 != 0)
-        (void)*(volatile s32 *)arg2;
+        (void)*arg2;
     return 0;
 }
 

@@ -9,21 +9,15 @@
 void GAX2_new(void *self)
 {
     struct GaxSongHeader *params = self;
-    u16 val;
 
-    if (self == NULL) {
+    if (params == NULL) {
         GaxFatalError(gGaxErrNameNew, gGaxErrParamsNull);
         return;
     }
-    GaxZeroFill(self, 0x3c);
-    val = 0xFFFF;
-    /* not a plain member store: that makes gcc build the 0 and -1 below
-     * as fresh constants instead of reusing val's register */
-    *(u16 *)&params->mixRate = val;
-    val = 0;
-    params->filter = val;
-    val -= 1;
-    params->numSfx = val;
-    params->volume = val;
+    GaxZeroFill(params, 0x3c);
+    params->mixRate = 0xFFFF;
+    params->filter = 0;
+    params->numSfx = 0xFFFF;
+    params->volume = 0xFFFF;
     params->showErrors = 1;
 }

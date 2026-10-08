@@ -333,7 +333,12 @@ fade:
 
             /* Hard-register hold (no code): with r0 and r1 live, the
              * global's address and the player pointer both land in r2,
-             * as in the ROM. */
+             * as in the ROM. Unheld, the 8-byte copy loads through r0
+             * (`ldr r1, [r0, #4]; ldr r0, [r0]`); #662 round 2 also tried
+             * the copy as an inline returning the `struct vec2`, as a
+             * by-value argument of an inline calling SetCheckpoint (either
+             * argument order), as an aggregate initializer and as two
+             * `s32` locals, none of which keeps the pointer out of r0/r1. */
             MATCH_HOLD(hold);
             MATCH_HOLD(hold1);
             pl = gPlayer;
