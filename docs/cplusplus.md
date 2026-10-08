@@ -2965,8 +2965,9 @@ nothing with a C++ trait. Every item this list had (the level select's
 sprites, the enemy spawners, the 3D actors, the background layers and
 fonts, the C prototypes of C++ methods, the save menu, the pause menu's
 and the power dialog's C files, the cutscene player's C files, the text
-box's wrapper, the HUD and the room code) is done; what stays C, and why,
-is listed there.
+box's wrapper, the HUD and the room code) is done, and since the "C++
+everywhere" PRs (#746-#748) every game file is C++: only lib/ and
+src/data/ stay C, as listed there.
 
 ### Emitting the vtables (step 10)
 
@@ -3211,25 +3212,25 @@ files under src/.
 
 **What stays C**, on purpose:
 
-- lib/ (GAX2, AgbEeprom, libgcc, the BIOS wrappers) and the IWRAM ARM
-  routines (agbcc_arm), as planned.
-- The 49 C-like game objects: the actor zone's C helpers (actor_bg.c,
-  actor_category_init.c, actor_category_stats.c, actor_vram_pool.c,
-  bg_picture.c, cell_anim.c), the yeti (yeti*.c: a singleton driven by a
-  plain function table), the display and fades, the link cable
-  and save data/transfer code, the terrain and collision maps, the
-  system and util code, text_box.c, and camera.c (with the game's
-  `operator new`/`delete` replacements, `OperatorNew` & co., which keep
-  their C names). None has a C++ trait; a C++ compile would give the same
-  bytes (experiment 4), so converting them is only worth it with their
-  callers' classes.
+- lib/ (GAX2, AgbEeprom, libgcc, the BIOS wrappers): third-party code
+  that was C, linked as-is.
+- src/data/: the ROM's data tables (no code; C or C++ gives the same
+  bytes).
+
+Every game source file under src/ outside src/data/ is C++ since the
+"C++ everywhere" PRs (#746 gfx/system/util/text, #747 actor/vehicle/level,
+#748 link/save/iwram, including the IWRAM ARM routines with
+`agbcp_arm_patched`); they replaced the list of 49 C-like objects this
+section had.
 - Possible follow-ups, not needed for the match: level_state.cpp's 87
   functions as `LevelState` methods (they keep C linkage and the
   `struct level_state *` parameter; renaming them touches every caller),
   graphics_package.cpp's BgSetup as a class (its C++ callers'
-  `InitBgSetup(&bg, ...)` would become constructors), and the C views
-  the remaining C files still use (struct player, struct hud_counter,
-  struct bitmap_font, struct actor_self, ...).
+  `InitBgSetup(&bg, ...)` would become constructors), the link session
+  as a `LinkSession` class (`InitLinkSession`/`DestroyLinkSession` are
+  its `new`/`delete`), and the C views of classes that no C file reads
+  any more (struct player and others): they can go now that every game
+  file is C++.
 
 **The pause menu, the power dialog and DrawWrappedText (cleanup A).** The
 last C files of PauseMenu and PowerDialog (menus.hpp) are their methods
