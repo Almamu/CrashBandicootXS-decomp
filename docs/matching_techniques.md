@@ -856,7 +856,7 @@ After step 3, `tools/match_idioms.py --functions` counts 1955 of the
 2059 functions with no workaround at all (README.md has the
 per-directory table).
 
-**Round 2, lib/iwram/system/util/audio/text.** 23 functions -> 16
+**Round 2, lib/iwram/system/util/audio/text.** 23 functions -> 17
 (`tools/match_idioms.py --functions`). What removed them:
 
 - **A re-read instead of a local** (`GaxInfoPlay`, pins, two `ldrsh`
