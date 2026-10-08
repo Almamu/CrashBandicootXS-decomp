@@ -70,7 +70,7 @@ extern s32 PollSaveTransfer(struct settings_sync_pump *self);
 
 /* The save menu (C++, include/save_menu.hpp: class SaveMenu; the methods
  * have no C caller and no C prototype). Its C-linkage functions, for
- * game_frame.c: src/save/save_menu.cpp */
+ * game_frame.cpp: src/save/save_menu.cpp */
 extern void CloseSaveMenu(void);
 extern void OpenSaveMenu(void);
 

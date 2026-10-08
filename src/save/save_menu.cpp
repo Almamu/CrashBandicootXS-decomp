@@ -37,7 +37,7 @@ void SaveMenu::CommitFrame()
     FlushVramDmaQueue();
 }
 
-/* Deletes the save menu (C linkage, for game_frame.c) and frees the
+/* Deletes the save menu (C linkage, for game_frame.cpp) and frees the
  * palette slots it held. */
 void CloseSaveMenu(void)
 {
@@ -46,7 +46,7 @@ void CloseSaveMenu(void)
     FreeUnlockedPaletteSlots(gPaletteCache);
 }
 
-/* Builds the save menu into gSaveMenu (C linkage, for game_frame.c);
+/* Builds the save menu into gSaveMenu (C linkage, for game_frame.cpp);
  * RunSaveMenu runs it. */
 void OpenSaveMenu(void)
 {

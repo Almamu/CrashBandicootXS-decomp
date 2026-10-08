@@ -14,7 +14,7 @@
  * over the link cable (`linkSave`). Formerly
  * `struct settings_sync_record`. See docs/matching/archive/issue-5-overlay-ui-sync.md.
  * Shared (via this header) between src/save/save_data.c and
- * save_menu_input.c, split apart so the two parked
+ * save_menu_input.cpp, split apart so the two parked
  * functions between them (SendSaveTransferChunk/ReceiveSaveTransferChunk/PollSaveTransfer,
  * SaveGameToSlot) can stay raw asm without breaking ROM link order. */
 struct save_data {
@@ -44,7 +44,7 @@ COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_slot) == 0x70);
 
 /* A transient SIO send/receive envelope wrapping a save_data
  * copy - allocated per "connecting..." spinner-dialog session
- * (LinkExchangeSaveData, src/save/save_menu_draw.c, parked) and torn down
+ * (LinkExchangeSaveData, src/save/save_menu_draw.cpp, parked) and torn down
  * with it. `tmpl`/`cursor` stream a save_data's bytes out to
  * the SIO session's per-player ring buffer (SendSaveTransferChunk); `data`
  * receives the remote side's copy of the same shape from its own ring

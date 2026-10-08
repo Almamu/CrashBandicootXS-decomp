@@ -7,10 +7,10 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The text DrawYesNoPrompt (save_menu_draw.c) draws in an icon's text slot. */
+/* The text DrawYesNoPrompt (save_menu_draw.cpp) draws in an icon's text slot. */
 const u8 gMenuCursorText[] = ">";
 
-/* InitSaveMenuIcons (save_menu_draw.c) fills palette-cache slot 0 from the
+/* InitSaveMenuIcons (save_menu_draw.cpp) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
  * (the same four as continue_prompt.cpp's gContinuePromptPalette0 ... 0817C572). */
 const u16 gSaveMenuPalette0[16] = {
@@ -33,7 +33,7 @@ const u16 gSaveMenuPalette3[16] = {
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
 
-/* The text ids of the five labels DrawSaveMenuMain (save_menu_input.c) draws. */
+/* The text ids of the five labels DrawSaveMenuMain (save_menu_input.cpp) draws. */
 const s32 gSaveMenuOptions[5] = {
     0x1B, 0x1C, 0x1E, 0x1D, 0x20,
 };

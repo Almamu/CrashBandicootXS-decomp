@@ -2,7 +2,7 @@
 #define __HUD_H__
 
 /* The in-game HUD (`gHud`): class Hud (include/hud.hpp; all of its code
- * is C++, src/hud/*.cpp), built and deleted by game_frame.c.
+ * is C++, src/hud/*.cpp), built and deleted by game_frame.cpp.
  * docs/rom_map.md's "hud" investigation. Hud::Update (UpdateHud) is the
  * per-frame dispatcher; its widgets are UpdateLives, UpdateClock,
  * UpdateWumpa, UpdateCrates, UpdateBoss and UpdatePercentCounters. The
@@ -11,9 +11,10 @@
  * counter's slide state is 0 hidden, 1 sliding in, 2 held, 3 sliding out,
  * and while it slides `gHudSlideOffset = slideTimer * 2 - 40`.
  *
- * struct hud_counter below is Hud's C view, for the C files (the level
- * and actor code), and the prototypes are the C names of the Hud methods
- * they call (cxx_symbols.txt). `gHud` itself is declared in globals.h. */
+ * struct hud_counter below is Hud's C view, for the C files
+ * (bonus_round.c, actor_category_init.c, actor_vram_pool.c), and the
+ * prototypes are the C names of the Hud methods they call
+ * (cxx_symbols.txt). `gHud` itself is declared in globals.h. */
 
 #include "core.h"
 #include "math_util.h"

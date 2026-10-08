@@ -20,7 +20,7 @@
  * piece_info in gfx.h). The menus' copies (level_menu.h,
  * level_select_parts.h, level_select.c) and the file-local ones
  * (time_trial.cpp, dingodile.cpp, tiny_update.cpp, spawn_objects.cpp,
- * affine_sprite_pieces.c's kf_record) use these types since #574 batch 9e.
+ * affine_sprite_pieces.cpp's kf_record) use these types since #574 batch 9e.
  */
 
 /* One OBJ piece's position relative to the part, in pixels. */

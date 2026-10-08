@@ -18,13 +18,13 @@ extern "C" {
  * `StartTimeTrial`, is `time_trial.cpp`, now plain C).
  *
  * `self` is `*gEntityFlags` (the same collision-bitmap base
- * `SetEntityIdGone`/`IsEntityIdGone`/`IsEntityIdActivated`, entity_flags.c, and
- * `MarkEntityIdActivated`, entity_flags.c, already operate on).
+ * `SetEntityIdGone`/`IsEntityIdGone`/`IsEntityIdActivated`, entity_flags.cpp, and
+ * `MarkEntityIdActivated`, entity_flags.cpp, already operate on).
  *
  * First half (fully understood, matches the ROM's own idiom one for
  * one): if `list` differs from `self`'s cached copy at `self+0`,
  * `self+8`/`self+0x208` (the first two of the three overlapping
- * collision-bitmap arrays `entity_flags.c`'s header comment documents)
+ * collision-bitmap arrays `entity_flags.cpp`'s header comment documents)
  * are DMA3-zero-filled 64 bytes each (`DmaFill32(3, 0, dest, 64)`,
  * expanding to the exact same `REG_DMA3`-field-by-field store sequence
  * seen here); either way `self+8`->`self+0x108` and

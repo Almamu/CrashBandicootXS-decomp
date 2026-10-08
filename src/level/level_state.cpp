@@ -818,7 +818,7 @@ void AddLife(struct level_state *self)
  * counter/threshold pair, `IsInBonusRound`/`IsInGemPath` readiness checks,
  * then either OR a bit into `GetCurrentLevelFlags`'s slot or forward
  * `self+0x1c0`/`0x1c4` to `SpawnCrateGem`). Only caller is
- * `RunRoom`'s dispatch opener (`run_room.c`), which passes
+ * `RunRoom`'s dispatch opener (`run_room.cpp`), which passes
  * `*gLevelState` as `self`. */
 void CheckAllCratesBroken(void *selfArg)
 {
@@ -1112,7 +1112,7 @@ void *PackSaveData(void *selfArg)
 /* Makes `gLevelStateSingleton` (a LevelState, level_state.hpp; its
  * constructor is InitLevelState) the first time it's needed, then
  * returns it. Its own
- * file: ROM-adjacent to `PlayRoom` (now matched, `play_room.c`)
+ * file: ROM-adjacent to `PlayRoom` (now matched, `play_room.cpp`)
  * and the still-raw `RunRoom` on both sides
  * (asm/code_3_2_17_236ec.s before it, `PlayRoom`/
  * asm/code_3_2_17_23a1c.s after), so it can't share an object file

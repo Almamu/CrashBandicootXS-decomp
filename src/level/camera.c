@@ -35,9 +35,9 @@
  * - `SnapCamera`: snaps straight to the target (no easing), seeding the
  *   mode-1 look-ahead at its limit (or zero for any other mode), then
  *   publishes. Called from `ResumeRoomAfterPause`'s teardown/refresh pass
- *   (`room.c`) and `PlayRoom`'s shared tail (`run_room.c`).
+ *   (`room.c`) and `PlayRoom`'s shared tail (`run_room.cpp`).
  * - `UpdateCamera`: the per-frame update, dispatching on `mode`, then
- *   publishing. Called from `UpdateRoomFrame` (`room_frame.c`).
+ *   publishing. Called from `UpdateRoomFrame` (`room_frame.cpp`).
  *
  * Matching notes: `tx`/`ty` are pinned to r2/r3 in both easing
  * functions - left to itself this compiler gives them r3/r4 (or r4/r5)

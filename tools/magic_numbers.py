@@ -54,7 +54,7 @@ TOPICS = collections.OrderedDict(
     [
         ("sfx", ("PlaySfx/PlayAmbientSfx/StopSfx sound-effect IDs", ("SFX_",))),
         ("song", ("PlaySong song IDs", ("SONG_",))),
-        ("level_flags", ("levelFlags bits (GetCurrentLevelFlags, level_state.c)", ("LEVEL_FLAG_",))),
+        ("level_flags", ("levelFlags bits (GetCurrentLevelFlags, level_state.cpp)", ("LEVEL_FLAG_",))),
         ("mask_level", ("maskLevel values (SetMaskLevel, comparisons)", ("MASK_LEVEL_",))),
         ("event", ("event IDs (handler case labels, NOTIFY, event-slot calls)", ("EVENT_",))),
         ("action_state", ("action-controller states (SetActionCtrlMode, ->state)", ("ACTION_",))),
@@ -130,7 +130,7 @@ FIELDS = [
     ),
 ]
 
-# level_state.c's crate-gem helpers build the OR mask in a pinned register
+# level_state.cpp's crate-gem helpers build the OR mask in a pinned register
 # right after taking GetCurrentLevelFlags' slot: a literal assigned within
 # this many lines of it is the bit.
 LEVEL_FLAGS_WINDOW = 3

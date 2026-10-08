@@ -21,12 +21,12 @@ extern "C" {
 
 /* GitHub issue #37 follow-up to `docs/matching/archive/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
- * `play_room.c`, but left this one "not yet confidently understood
+ * `play_room.cpp`, but left this one "not yet confidently understood
  * branch-by-branch"). `self` (r7) is the level object `PlayRoom`
  * itself received; `gLevelState` is the separate "level" object
  * most of its own callees take. `gLevelTable` is the confirmed
  * 36-slot, 0x24-byte-stride per-level master table (see
- * `pause_menu_info.c`/`power_dialog_draw.cpp`/`level_query.c`'s own struct views
+ * `pause_menu_info.cpp`/`power_dialog_draw.cpp`/`level_query.cpp`'s own struct views
  * of it) - here indexed by `self+0`, reading its `+0x1c` `isBoss`
  * byte (calls `CheckAllCratesBroken` if clear), then
  * `+0x14`/`+0x18` (`maskAssistDeaths`/`crateAssistDeaths`, fed to `SetMaskAssistDeaths`/`SetCrateAssistDeaths`)

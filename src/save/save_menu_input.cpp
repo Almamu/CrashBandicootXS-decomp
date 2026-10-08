@@ -52,7 +52,7 @@ void ResetSaveTransfer(struct settings_sync_pump *self)
  * access here rather than `(u8*)&gKeys + 2`, which the
  * compiler folds into the linker-relocated constant instead. */
 
-/* The save menu's modal loop (C linkage, for game_frame.c): sets up
+/* The save menu's modal loop (C linkage, for game_frame.cpp): sets up
  * gSaveMenu's `state`/`cursor`/`flags`/`done`/`gameLoaded`, then
  * repeatedly dispatches input (Input) through the draw state machine
  * (Draw), VBlank-waits and commits the frame (CommitFrame) until `done`

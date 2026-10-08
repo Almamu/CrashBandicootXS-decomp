@@ -14,11 +14,11 @@
 
 /* The link session the link IRQ handlers and the save transfer work on:
  * allocated by InitSaveMenu, freed by DestroySaveMenu
- * (src/save/save_menu_input.c). Defined in src/iwram/iwram_data.c. */
+ * (src/save/save_menu_input.cpp). Defined in src/iwram/iwram_data.c. */
 extern struct link_session *gLinkSession;
 
 /* Set by ResetLinkSessionState, cleared by LinkExchangeSaveData
- * (src/save/save_menu_draw.c). Defined in src/iwram/iwram_data.c. */
+ * (src/save/save_menu_draw.cpp). Defined in src/iwram/iwram_data.c. */
 extern u8 gLinkSessionReset;
 
 /* The CRC-16 table MakeLinkHandshakeId and HandleLinkSerial hash with

@@ -189,7 +189,7 @@ void Hud::IncCrateTotal()
 
 /* DestroyHud: deletes the parts (each one's virtual destructor, slot 10
  * of gHudPartVtable, from the last to the first, then the array with its
- * count word); game_frame.c deletes gHud itself (`flags` 3). */
+ * count word); game_frame.cpp deletes gHud itself (`flags` 3). */
 Hud::~Hud()
 {
     delete[] parts;
