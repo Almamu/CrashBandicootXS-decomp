@@ -9,9 +9,7 @@
  * speeds and terrain probe; the classes are the definitions, and
  * sprite_obj.hpp checks this struct's size against MovingSprite's), with
  * a few fields of the subclasses (`physMode`, `state`). The same object
- * as include/gfx_part.h's `struct gfx_part`, include/gobj_1a794.h's
- * `struct gobj` and include/actor.h's `struct actor`; read by the C files
- * of the part lists, the crates and the player. Only the fields
+ * as include/actor.h's `struct actor`. Only the fields
  * those functions touch are named; this view's `frame` is the classes'
  * `tag` (the animation), its `tick`/`timer` their `frame`/`stepTimer`.
  *
@@ -74,7 +72,7 @@ struct box_part {
     u8 physMode; // 0x4D - low 7 bits 1: skipped by the physics AABB tests
     u8 state;    // 0x4E - PlayerAnimWouldTouchCrate skips 5 and 0xA
     u8 unk_4F[0x15];
-    s32 speedY;    // 0x64 - struct gobj.speedY (> 0: falling, so a touch stomps)
+    s32 speedY;    // 0x64 - (> 0: falling, so a touch stomps)
     u8 hitAxes;    // 0x68 - collision axes ProbeGroundSpriteTerrain resolved (bit 3: Y)
     u8 probeTries; // 0x69 - ProbeHitboxEdgeTerrain's retry counter
     u8 unk_6A[0xa];

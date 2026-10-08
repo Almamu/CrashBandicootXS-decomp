@@ -14,9 +14,8 @@
  * level_select.hpp, the pause menu and the power dialog in menus.hpp, the
  * continue prompt in frontend.hpp. The prototypes below are the C names
  * (cxx_symbols.txt) of the methods that a C file or a vtable still uses,
- * and the free functions. `struct sprite` and the save block are in
- * level_menu.h, which this header doesn't include (it only declares the
- * tags). */
+ * and the free functions. The save block is level_state.h's `struct
+ * game_progress`. */
 
 #include "core.h"
 #include "vtable.h"
@@ -29,7 +28,6 @@ struct game_progress;
 struct level_item;
 struct level_menu;
 struct settings_icon_actor;
-struct sprite;
 
 /* A screen position, as the level-select tables store them. */
 struct xy_pair {
@@ -124,7 +122,6 @@ extern const u16 gContinuePromptPalette3[17];
 extern u8 RunContinuePrompt(void);
 
 /* src/menus/level_select.cpp */
-extern struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused);
 extern s32 RunLevelSelect(s32 *arg);
 
 /* src/menus/level_select_pages.cpp */

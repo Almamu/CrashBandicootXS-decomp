@@ -24,9 +24,7 @@ struct box_part;
 struct collect_part;
 struct crate;
 struct part_list;
-struct gfx_part;
 struct gfx_vec;
-struct gobj;
 struct hitbox_quad;
 struct sprite_point;
 
@@ -90,7 +88,7 @@ struct entry_set {
     s32 scale; // 0x04 - Q8
 };
 
-/* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, struct
+/* A sprite object's per-axis speed ramp (MovingSprite's rampX/rampY, struct
  * player's): each frame ApplySpriteVelocity steps speedX/speedY by `step`
  * toward `target` without overshooting. The Start...MotionX/Y setters also
  * load `start` into the speed; the Set... ones keep the current speed.
@@ -109,7 +107,6 @@ struct speed_ramp {
 
 /* src/objects/ctrl.cpp: Ctrl's methods (include/ctrl.hpp)
  * under their C names (cxx_symbols.txt), for the C callers. */
-extern void AttachCtrl(void *self, s32 val);
 
 /* src/objects/moving_sprite_collide.cpp */
 extern s32 ClassifySpriteContact(void *part, void *region);
@@ -122,8 +119,6 @@ extern void CullPartList(struct part_list *manager);
 extern void ClearPartList(struct part_list *manager);
 
 /* src/objects/player_contact.cpp */
-extern void CheckPlayerContact(void *part);
-extern void ResolvePlayerContact(void *part);
 
 /* src/objects/sprite.cpp */
 extern struct aabb GetSpriteHitbox(struct box_part *part);

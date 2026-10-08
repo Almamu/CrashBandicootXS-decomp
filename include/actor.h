@@ -27,8 +27,7 @@
  * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. The
  * fields at 0x0B, 0x0D-0x0F and 0x16-0x17 aren't understood beyond their
  * offset yet - named `unusedNN` rather than guessed. `id` and `kind`
- * have the same offsets and roles as `struct gobj`'s and `struct
- * player`'s. */
+ * have the same offsets and roles as `struct player`'s. */
 struct actor {
     s32 x; // 0x00 - Q8 fixed-point screen position
     s32 y; // 0x04 - Q8 fixed-point screen position

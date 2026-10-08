@@ -15,10 +15,9 @@
  * GetSpriteFrameAnchor-GetSpriteFrameBodyBox (the frame's boxes and anchor, picked by the
  * layout type), GetPaletteSlot (the OBJ palettes). Older files read the
  * same records through views with only the fields they use (struct
- * anim_record/anim_bank in gfx_part.h, struct act_anim_record in
- * player.h, struct anim_rec/anim_table in gobj_1a794.h, struct
- * piece_info in gfx.h). The menus' copies (level_menu.h,
- * level_select_parts.h, level_select.c) and the file-local ones
+ * act_anim_record in player.h, struct anim_rec/anim_table in
+ * gobj_1a794.h, struct piece_info in gfx.h). The menus' copies
+ * (level_menu.h's, level_select_parts.h, level_select.c) and the file-local ones
  * (time_trial.cpp, dingodile.cpp, tiny_update.cpp, spawn_objects.cpp,
  * affine_sprite_pieces.cpp's kf_record) use these types since #574 batch 9e.
  */

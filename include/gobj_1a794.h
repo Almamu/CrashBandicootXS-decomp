@@ -13,19 +13,15 @@
 #include "globals.h"
 #include "match.h"
 
-/* The C view of the platforms (GitHub issue #25, ROM
- * 0x0801A794-0x0801B85C). The platforms are C++ now:
- * include/platform.hpp's `Platform` and `PlatformMover`
- * (src/objects/platform*.cpp) are the definitions.
- *
- * - `struct gobj`, a 0x80-byte level object: CreatePlatform's
- *   (gPlatformVtable) and, with the player's fields after it, the player
- *   (gPlayer, player.h's `struct player`). It is the C view of
- *   include/sprite_obj.hpp's GroundSprite (the classes are the
- *   definitions: Entity, Sprite, MovingSprite, GroundSprite; sprite_obj.hpp
- *   checks this struct's size against GroundSprite's) and of
- *   platform.hpp's Platform. Its `type` (+0x78) is the platform type;
- *   types 1/5/6/7 get a PlatformMover (platform.hpp) attached at +0x44. */
+/* What is left of the platforms' C views (GitHub issue #25, ROM
+ * 0x0801A794-0x0801B85C): the platforms are C++ (include/platform.hpp's
+ * Platform and PlatformMover, src/objects/platform*.cpp), and `struct
+ * gobj`, their and the ground sprites' C view, went with its last user
+ * (#656). Kept here: the sprite bank as the older code reads it (`struct
+ * anim_table`, the type of Sprite's `anim`, and its 0x1C-byte `struct
+ * anim_rec` records; sprite_bank.h's `struct sprite_bank` is the same
+ * data), the platform collision's position pair and the platform spawn
+ * record (CreatePlatform). */
 
 struct anim_rec {
     u8 unk_00[4];
@@ -42,64 +38,6 @@ struct anim_rec {
 
 struct anim_table {
     struct anim_rec *records;
-};
-
-struct gobj_vtable {
-    u8 unk_00[0x10];
-    // 0x10 - slot 2, returns the current frame's hitbox record
-    // (GetSpriteObjHitbox; UpdateGroundSprite, ProbeGroundSpriteTerrain)
-    struct actor_method m10;
-    u8 unk_18[0x20];
-    struct actor_method m38; // 0x38
-    u8 unk_40[0x20];
-    struct actor_method m60;          // 0x60
-    struct actor_method m68;          // 0x68
-    struct actor_method checkContact; // 0x70 - CheckPlayerContact (CollideMovingSprite)
-};
-
-struct gobj {
-    s32 x;  // 0x00
-    s32 y;  // 0x04
-    u16 id; // 0x08
-    u8 unk_0A[2];
-    u8 flags;  // 0x0C
-    u8 flags2; // 0x0D
-    u8 unk_0E[0xA];
-    struct gobj_vtable *vtable; // 0x18
-    void *lastHitbox;           // 0x1C - the last m10 record (AnchorGroundSpriteHitbox)
-    struct anim_table *anim;    // 0x20
-    u8 dir;                     // 0x24
-    // 0x25 - 1: x/y are screen coordinates (DrawSpriteAt skips WorldToScreen;
-    //        always counts as on screen). GetSpriteScreenSpace/SetSpriteScreenSpace
-    u8 screenSpace;
-    u8 unk_26[2];
-    u8 mirror; // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
-    u8 slot;   // 0x29 - low nibble: palette/tile slot
-    u8 unk_2A[2];
-    u8 animating; // 0x2C - nonzero while the keyframe timer runs (box_part.h)
-    u8 tag;       // 0x2D
-    u8 unk_2E[2];
-    s32 frame;     // 0x30
-    s32 stepTimer; // 0x34 - ticks spent on the current step (ResetSpriteFrameTimer)
-    u8 animDone;   // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
-    u8 unk_39[3];
-    u16 affine; // 0x3C - box_part.h's `affine` (ResetSpriteObj clears it)
-    u8 unk_3E[2];
-    s32 unk_40;              // 0x40 - ResetMovingSprite clears it; nothing reads it
-    void *mover;             // 0x44 - its controller (a Ctrl)
-    struct speed_ramp rampX; // 0x48 - speedX's ramp (ApplySpriteVelocity)
-    struct speed_ramp rampY; // 0x54 - speedY's ramp
-    s32 speedX;              // 0x60
-    s32 speedY;              // 0x64
-    // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
-    u8 hitAxes;
-    u8 probeTries; // 0x69
-    u8 unk_6A[2];
-    s32 prevX;   // 0x6C - previous position (Q8), cached by ApplySpriteVelocity
-    s32 prevY;   // 0x70
-    s32 hitMask; // 0x74 - probe axes hit this frame (OR-accumulated, see box_part.h)
-    s32 type;    // 0x78
-    u8 unk_7C[4];
 };
 
 struct pos2 {

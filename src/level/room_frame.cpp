@@ -4,7 +4,11 @@
 extern "C" {
 #include "core.h"
 #include "actor.h"
-#include "level_menu.h"
+#include "menus.h"
+#include "gfx.h"
+#include "actor_self.h"
+#include "sprite_bank.h"
+#include "level_state.h"
 #include "hud.h"
 #include "system.h"
 #include "crates.h"

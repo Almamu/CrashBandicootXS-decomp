@@ -60,7 +60,6 @@ struct hovercraft_attack {
  * .c files that use them). */
 struct anim_box;
 struct entry_set;
-struct gobj;
 
 /* src/bosses/airship.cpp */
 extern void SteerAirship(void);

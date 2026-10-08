@@ -107,7 +107,6 @@ extern void ExplodeCrate(struct crate *self, u8 near);
 extern void UpdateCrates(void);
 extern void DetonateNitroCrates(void);
 extern void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height);
-extern void UpdateTntCountdown(struct crate *self);
 
 /* src/crates/crate.cpp */
 extern void ResolvePlayerCollisions(void);
@@ -115,8 +114,6 @@ extern void ResolvePlayerCollisions(void);
  * (include/crate.hpp). */
 
 /* src/crates/crate_hit.cpp */
-extern u8 PlayerHitboxOverlapsAt(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
-                                 s32 xOffset, s32 yOffset);
 
 /* src/crates/crate_list_draw.cpp */
 extern void DrawCrateList(struct pool_manager *manager);

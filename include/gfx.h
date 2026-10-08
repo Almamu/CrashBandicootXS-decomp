@@ -314,8 +314,6 @@ extern void ResetScaledSpriteAttrs(u8 *self);
 
 /* src/gfx/palette_cycle.cpp */
 extern void TickPaletteCycles(struct palette_cycler *self);
-extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate,
-                            s32 listCount, u8 direction);
 extern void ClearPaletteCycles(struct palette_cycler *self);
 
 /* src/gfx/sprite_frame.c */

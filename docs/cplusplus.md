@@ -3403,6 +3403,23 @@ still read through them. `tools/layout_audit.py views` lists them.
   methods). `struct actor_self` is now only the yeti's and the IWRAM
   sorter's C view (and ActorSelf's size check). The objects are
   byte-identical.
+- **Batch 4, the dead views.** gobj_1a794.h's `struct gobj` and `struct
+  gobj_vtable` (GroundSprite's and Platform's C view: only their size
+  checks used it, which compare with 0x80 now; player.h's `carried` is a
+  `void *`), gfx_part.h's `struct gfx_part`, `struct anim_bank` and
+  `struct anim_record` (the header keeps `struct gfx_vec` and
+  `PART_FLAG_SET`), and level_menu.h with its `struct sprite`,
+  `sprite_f28` and `sprite_vtable` (spawn_objects.cpp's
+  SpawnLaunchPadEntity calls `LaunchPad::Spawn`, so menus.h's
+  SpawnLaunchPad prototype went too). Six more C prototypes of C++
+  methods had no user but the method calls of the same name
+  (UpdateTntCountdown, PlayerHitboxOverlapsAt, AddPaletteCycle,
+  AttachCtrl, CheckPlayerContact, ResolvePlayerContact). Found by
+  deleting each candidate and compiling everything: the 51 others are
+  still called by their C names from .cpp files (batch 5 turns the
+  ones on a class's object into method calls). The C-linkage
+  destructor copies (DestroyJetpackHealthCrate & co.) need their
+  prototypes for the linkage.
 
 ### Next batches
 

@@ -22,10 +22,9 @@
  * mangled names, cxx_symbols.txt).
  *
  * The C files keep their views of the same objects: actor.h's `struct
- * actor` (Entity), box_part.h's `struct box_part` and gfx_part.h's
- * `struct gfx_part` (the sprite fields), gobj_1a794.h's `struct gobj`
- * (a ground sprite). Each class checks its size against them below; the
- * fields keep their offsets in comments. The player, a ground sprite with
+ * actor` (Entity) and box_part.h's `struct box_part` (a moving sprite).
+ * Each class checks its size against them below; the fields keep their
+ * offsets in comments. The player, a ground sprite with
  * its own fields after it, is class Player (player.hpp).
  *
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
@@ -299,14 +298,11 @@ public:
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == 0x78);
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(MovingSprite) == sizeof(struct box_part));
-// gfx_part.h's view stops at prevY
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(struct gfx_part) <= sizeof(MovingSprite));
 
 /* The ground sprite (src/objects/ground_sprite.cpp, ground_sprite_collide.cpp,
  * ground_sprite_update.cpp; gGroundSpriteVtable): a moving sprite that
  * probes the terrain under it (slot 1) and keeps its hitbox anchored to
- * the floor or the ceiling (slot 3). struct gobj (gobj_1a794.h) is its C
- * view. */
+ * the floor or the ceiling (slot 3). */
 class GroundSprite : public MovingSprite
 {
 public:
@@ -349,7 +345,7 @@ public:
     void AnchorHitbox();                                        // AnchorGroundSpriteHitbox
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == sizeof(struct gobj));
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(GroundSprite) == 0x80);
 
 /* A list of sprite objects (box_part.h's struct part_list is its C view):
  * Update compacts `items` and fills `visible`, the parts on screen, which

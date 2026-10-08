@@ -21,7 +21,6 @@
 
 struct box_part;
 struct crate;
-struct gobj;
 struct follow_child;
 
 /* The swim controller's turn: speedX at each frame of the turn animation
@@ -110,8 +109,8 @@ union player_mirror {
 
 /* The player object (gPlayer) as the C files see it: the C view of class
  * Player (include/player.hpp, which checks the size), a ground sprite
- * (InitGroundSprite, the same 0x80-byte base as gobj_1a794.h's `struct
- * gobj`, whose names it keeps) with the player's own fields after it.
+ * (InitGroundSprite, GroundSprite's 0x80-byte base, whose names it
+ * mostly keeps) with the player's own fields after it.
  * PlayRoom builds it in a 0x350-byte block (InitPlayer); its method table
  * is gPlayerVtable. Only the fields the code reads are named. */
 struct player {
@@ -126,7 +125,7 @@ struct player {
     u8 flags2;                // 0x0D
     u8 unk_0E[0xA];
     const void *vtable; // 0x18 - gPlayerVtable (class Player's)
-    void *lastHitbox;   // 0x1C - struct gobj.lastHitbox
+    void *lastHitbox;   // 0x1C - GroundSprite's lastHitbox
     // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
     struct act_anim_bank *anim;
     // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
@@ -154,7 +153,7 @@ struct player {
     u8 animDone;   // 0x38 - set once a non-looping animation ends
     u8 unk_39[0xB];
     void *ctrl;              // 0x44 - the room kind's controller (the action, swim, input or
-                             //        boss controller; struct gobj.mover)
+                             //        boss controller; GroundSprite's mover)
     struct speed_ramp rampX; // 0x48 - speedX's ramp (StartPlayerRampX)
     struct speed_ramp rampY; // 0x54 - speedY's ramp
     s32 speedX;              // 0x60
@@ -170,7 +169,7 @@ struct player {
  * speedY on a Y hit (UpdatePlayerCtrl, swim_ctrl.cpp). */
 #define PLAYER_HIT_X 3
 #define PLAYER_HIT_Y 0xC
-    s32 type; // 0x78 - struct gobj.type; ResetPlayer clears it
+    s32 type; // 0x78 - GroundSprite's type; ResetPlayer clears it
     u8 unk_7C[4];
     u8 busy; // 0x80 - set while a triggered crate animation runs (the crate's state
              //        bit 7), cleared when it ends; enemies skip the player meanwhile
@@ -194,7 +193,7 @@ struct player {
     u8 listCount; // 0x94 - entries in `list`
     u8 unk_95[3];
     struct crate *list[5];          // 0x98 - the recently touched crates
-    struct gobj *carried;           // 0xAC - the platform or crate the player stands on
+    void *carried;                  // 0xAC - the platform or crate the player stands on
     struct box_part *child;         // 0xB0 - a sprite object InitPlayer creates (sprite bank 0xCC),
                                     //        drawn with the player (DrawPlayer)
     s32 maskTrailIdx;               // 0xB4 - the newest entry of `maskTrail`

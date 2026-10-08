@@ -11,7 +11,7 @@
  * is the crate type CreateCrate picks (CRATE_KIND_*, constants/crates.h,
  * generated from data/levels/crate_kinds.json). Only the fields those functions touch are named;
  * the head (position, flags, anim table/tag, mirror bits) has the same
- * layout as `struct gobj`. See docs/matching/archive/issue-12-physics-collision.md.
+ * layout as Sprite's (sprite_obj.hpp). See docs/matching/archive/issue-12-physics-collision.md.
  *
  * `struct crate` is the C view of the `Crate` class (include/crate.hpp,
  * #664), for the files that are still C; crate.hpp checks that the sizes
