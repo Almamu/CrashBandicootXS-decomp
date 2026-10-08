@@ -28,7 +28,7 @@ void JetpackReloadPlayerTiles(void *arg0)
 
 void PolarReloadPlayerTiles(void *arg0)
 {
-    AllocPolarPlayerTiles((struct actor_self *)gActorList);
+    AllocPolarPlayerTiles(gActorList);
 }
 
 void JetpackReachCourseEnd(void *arg0)

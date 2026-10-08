@@ -186,7 +186,7 @@ void SetActorCategoryExitStatus(s32 arg0)
 }
 
 /* Both forward the callee's result untouched: the callees are `u8`
- * (jetpack_player.cpp / polar_player_states.c), but this file's source saw them
+ * (jetpack_player.cpp / polar_player_states.cpp), but this file's source saw them
  * returning `int`, so there is no re-narrowing and the epilogue returns
  * through `pop {r1}`. The old NAKED note blamed a TU-wide allocator
  * quirk; it was just the missing return value. */

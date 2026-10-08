@@ -293,23 +293,15 @@ extern void UpdatePolarQuestionCrate(void *self);
 extern void UpdatePolarLifeCrate(void *self);
 extern void UpdatePolarNitroCrate(void *self);
 
-/* src/vehicle/polar_player.c */
+/* src/vehicle/polar_player.cpp, polar_player_states.cpp and
+ * polar_player_actions.cpp: PolarPlayer's methods (vehicle.hpp) that the
+ * vtable data and the C files call by their C names. */
 extern void UpdatePolarPlayer(struct actor_self *self);
 extern void DrawPolarPlayer(struct actor_self *self);
 extern s32 HurtPolarPlayer(void *self);
 extern s32 ShockPolarPlayer(void *self);
-extern void AllocPolarPlayerTiles(struct actor_self *self);
-extern void PolarPlayerStateMount(struct actor_self *self);
-extern void PolarPlayerStateRun(void *self);
-extern void PolarPlayerStateJump(struct actor_self *self);
-extern void PolarPlayerStateDash(struct actor_self *self);
-extern void PolarPlayerStateShocked(void *self);
-extern void PolarPlayerStateCaught(struct actor_self *self);
-
-/* src/vehicle/polar_player_actions.c */
-extern void PolarPlayerStateLaunched(void *self);
-extern void PolarPlayerStateFinish(void *self);
-extern void PolarPlayerStateLand(void *self);
+extern void AllocPolarPlayerTiles(void *self);
+extern s32 IsPolarPauseLocked(void *player);
 extern void FinishPolarRun(void *player);
 extern void CatchPolarPlayer(void *self);
 extern void QueuePolarWumpa(void *arg0, s32 delta);
@@ -318,18 +310,6 @@ extern void BoostPolarPlayer(void *self, s32 arg1);
 extern void GivePolarPlayerMask(void *arg0);
 extern void LaunchPolarPlayer(void *self);
 extern void DestroyPolarPlayer(void *self, u32 arg1);
-
-/* src/vehicle/polar_player_dispatch.cpp: PolarPlayer::RunState (vehicle.hpp) */
-extern void RunPolarPlayerState(struct actor_self *self);
-
-/* src/vehicle/polar_player_states.c */
-extern void DispensePolarWumpa(void *self);
-extern s32 IsPolarPauseLocked(void *player);
-extern void PolarPlayerStateRecover(void *self);
-extern void PolarPlayerStateFinishLeap(void *self);
-extern void PolarPlayerStateCarriedOff(void *self);
-extern void PolarPlayerStateKnockedOff(void *self);
-extern void PolarPlayerStateBoost(void *self);
 
 /* src/vehicle/yeti.c */
 extern void StopYeti(void);
@@ -371,7 +351,13 @@ extern s32 gJetpackRingChain;
 extern s32 gJetpackRingLastFrame;
 extern s32 gJetpackShotCooldown;
 extern s32 gJetpackWumpaDispenseTimer;
+/* The polar actors the player keeps: ActorSelfs to the C++ files
+ * (actor_self.hpp), as gYeti below. */
+#ifdef __cplusplus
+extern class ActorSelf *gPolarAkuAku;
+#else
 extern struct actor_self *gPolarAkuAku;
+#endif
 extern s32 gPolarAkuAkuInvincibleTimer;
 extern u8 gPolarFadeStarted;
 extern s32 gPolarFinishTimer;
@@ -387,7 +373,11 @@ extern s32 gPolarQueuedWumpa;
 extern u8 gPolarSteerEnabled;
 extern s32 gPolarSteerTime;
 extern s32 gPolarWumpaDispenseTimer;
+#ifdef __cplusplus
+extern class ActorSelf *gRiderlessPolar;
+#else
 extern struct actor_self *gRiderlessPolar;
+#endif
 /* The yeti's actor: an ActorSelf to the C++ files (actor_self.hpp), the
  * C files see its C view. */
 #ifdef __cplusplus
@@ -462,10 +452,6 @@ extern const struct anim_box gPolarNitroCrateBox;
 extern const u16 gPolarPlayerShockBlinkPalette[16];
 extern const u16 gPolarPlayerShockPalette[16];
 extern const s32 gYetiChargeParams[6][3];
-
-/* src/data/actor_pmf_17a6b8.cpp: PolarPlayer::stateFuncs (vehicle.hpp), whose
- * C view this is */
-extern const struct actor_pmf gPolarPlayerStateFuncs[14];
 
 /* src/iwram/iwram_data.c */
 extern s32 gPolarPenguinSpeeds[3];

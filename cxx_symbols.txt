@@ -1189,6 +1189,22 @@ __11JetpackShotPC17anim_table_recordiiiii CreateJetpackShot
 Update__11JetpackShot UpdateJetpackShot
 IsUnshootable__11JetpackShot IsJetpackShotUnshootable
 #
+# part 11c: the polar player (include/vehicle.hpp; src/vehicle/polar_player.cpp,
+# polar_player_states.cpp, polar_player_actions.cpp)
+_._11PolarPlayer DestroyPolarPlayer
+Update__11PolarPlayer UpdatePolarPlayer
+Draw__11PolarPlayer DrawPolarPlayer
+Hurt__11PolarPlayer HurtPolarPlayer
+Shock__11PolarPlayer ShockPolarPlayer
+DispenseWumpa__11PolarPlayer DispensePolarWumpa
+IsPauseLocked__11PolarPlayer IsPolarPauseLocked
+FinishRun__11PolarPlayer FinishPolarRun
+Catch__11PolarPlayer CatchPolarPlayer
+QueueWumpa__11PolarPlayeri QueuePolarWumpa
+GiveLife__11PolarPlayer GivePolarPlayerLife
+Boost__11PolarPlayeri BoostPolarPlayer
+GiveMask__11PolarPlayer GivePolarPlayerMask
+Launch__11PolarPlayer LaunchPolarPlayer
 # part 11f: the planes, bombers, cannonballs and balloons (include/vehicle.hpp;
 # src/vehicle/jetpack_plane.cpp, jetpack_balloon.cpp, src/data/actor_pmf_17c260.cpp,
 # actor_pmf_17c414.cpp)
