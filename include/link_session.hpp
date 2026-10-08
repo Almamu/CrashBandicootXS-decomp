@@ -121,14 +121,14 @@ public:
     /* 0x30 - with `hash`, the outgoing 8-byte packet (first
      * MakeLinkHandshakeId's id) */
     u8 id[6];
-    u16 hash;                          // 0x36 - the packet's CRC-16
-    s32 sendWordIndex;                 // 0x38 - which of the packet's 4 halfwords goes out next
-    s32 sendRound;                     // 0x3c - full packets sent since the last new one
-    LinkRing ring;                     // 0x40 - outgoing bytes
-    LinkPlayer players[4];             // 0xd0
-    s32 ackedMask;                     // 0x3f0 - peers that acknowledged our packet
-    s32 receivedMask;                  // 0x3f4 - peers whose new packet we accepted
-    s32 peerMask;                      // 0x3f8 - every player's bit but ours
+    u16 hash;              // 0x36 - the packet's CRC-16
+    s32 sendWordIndex;     // 0x38 - which of the packet's 4 halfwords goes out next
+    s32 sendRound;         // 0x3c - full packets sent since the last new one
+    LinkRing ring;         // 0x40 - outgoing bytes
+    LinkPlayer players[4]; // 0xd0
+    s32 ackedMask;         // 0x3f0 - peers that acknowledged our packet
+    s32 receivedMask;      // 0x3f4 - peers whose new packet we accepted
+    s32 peerMask;          // 0x3f8 - every player's bit but ours
     /* 0x3fc - SIOCNT's multiplayer id, -1 = none yet. volatile: HandleSerial
      * (the serial IRQ) sets it, and SaveTransfer::Poll reads it twice. */
     volatile s32 playerId;
