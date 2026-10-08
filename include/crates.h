@@ -140,12 +140,8 @@ extern void SetCrateBelow(struct crate *self, struct crate *val);
 extern void SetCrateAbove(struct crate *self, struct crate *val);
 extern u32 GetCrateClassId(void);
 extern void DestroyCrate(struct actor *self, u32 arg1);
-extern struct actor *InitCrate(struct actor *self);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
  * (include/crate.hpp). */
-
-/* src/crates/crate_create.cpp */
-extern void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type);
 
 /* src/crates/crate_draw.cpp */
 extern void DrawCrate(struct crate *self);

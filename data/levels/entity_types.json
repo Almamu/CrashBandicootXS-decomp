@@ -42,7 +42,7 @@
     {"type": 39, "name": "TIME_CRATE_3", "spawner": "SpawnTimeCrate3"},
     {"type": 40, "name": "LIZARD", "spawner": "SpawnLizard", "enemy_kind": 13},
     {"type": 41, "name": "VULTURE", "spawner": "SpawnVulture", "enemy_kind": 11},
-    {"type": 42, "name": "VENUS_FLYTRAP", "spawner": "SpawnVenusFlytrap"},
+    {"type": 42, "name": "VENUS_FLYTRAP", "spawner": "SpawnVenusFlytrap", "enemy_kind": 10},
     {"type": 43, "name": "PATROLLING_JUNGLE_ENEMY", "spawner": "SpawnPatrollingJungleEnemy", "enemy_kind": 14},
     {"type": 44, "name": "BLOWGUN_TRIBESMAN", "spawner": "SpawnBlowgunTribesman", "enemy_kind": 12},
     {"type": 45, "name": "PENGUIN", "spawner": "SpawnPenguin", "enemy_kind": 15},

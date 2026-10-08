@@ -113,8 +113,8 @@ struct level_layers {
  * SetCheckpointAtPlayer copies the two back. The names are room_entities.c's
  * (`struct lk_self`); dingodile.c called the object `struct entity_flags`
  * (`bits0Copy` was `bitmap`, the list `struct collect_info`), time_trial.cpp
- * `struct collision_map` (`seen`), text_popup.h a `struct
- * level_record_table **`. */
+ * `struct collision_map` (`seen`), the enemy spawners' text_popup.h a
+ * `struct level_record_table **`. */
 struct entity_flags {
     const struct level_entity_list *list; // 0x000 - the room's entities and their parameters
     s32 pos;                              // 0x004 - SpawnRoomEntities's position argument >> 8
@@ -407,10 +407,10 @@ extern void SpawnAkuAkuCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnCheckpointCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnBasicCrate(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 
-/* src/level/spawn_enemies.c */
+/* src/level/spawn_enemies.cpp */
 extern void SpawnLizard(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnVulture(u32 arg, u16 arg1, u16 arg2, u16 arg3);
-extern void SpawnVenusFlytrap(u32 arg, u32 arg1, u32 arg2, u32 arg3);
+extern void SpawnVenusFlytrap(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnPatrollingJungleEnemy(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnBlowgunTribesman(u32 arg, u16 arg1, u16 arg2, u16 arg3);
 extern void SpawnPenguin(u32 arg, u16 arg1, u16 arg2, u16 arg3);

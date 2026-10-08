@@ -491,7 +491,6 @@ extern void QueueInputCtrlMotionY(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionX(struct input_ctrl *self, u8 val);
 extern void BossCtrlHandleEvent(struct boss_ctrl *self, s32 arg1, s32 a, s32 b);
 extern void DestroyBossCtrl(struct boss_ctrl *self, s32 flags);
-extern struct boss_ctrl *CreateBossCtrl(struct boss_ctrl *self);
 extern void *GetCtrlTarget(struct boss_ctrl *self);
 
 /* src/player/kill_player.cpp */

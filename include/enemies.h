@@ -13,8 +13,8 @@
  *
  * The subsystem is C++ (#664): the classes are EnemyCtrl, KnockedEnemyCtrl
  * and PeriodicSpawner in include/enemy_ctrl.hpp. The prototypes below are
- * their methods' C names (cxx_symbols.txt), for the vtables and the C
- * callers (the level spawners). The knocked controller is a plain
+ * their methods' C names (cxx_symbols.txt), for the vtables; the enemy
+ * spawners (spawn_enemies.cpp) are C++ too. The knocked controller is a plain
  * 0x10-byte controller (objects.h's `struct ctrl`), so its functions take
  * `void *`. */
 
@@ -54,57 +54,19 @@ extern s32 gHomingEnemyXSaved;
 extern s32 gHomingEnemyY;
 extern s32 gHomingEnemyYSaved;
 
-/* src/enemies/enemy_ctrl.cpp */
-extern void SetEnemyMotionY(struct part_ctrl *self, s32 mode);
-extern void SetEnemyMotionX(struct part_ctrl *self, s32 mode);
-extern void SetEnemyAnimMode(struct part_ctrl *self, s32 mode);
-extern void UpdateEnemyOscillateX(struct part_ctrl *self);
-extern void UpdateEnemyBob(struct part_ctrl *self);
-extern void UpdateEnemyOscillateY(struct part_ctrl *self);
+/* src/enemies/enemy_ctrl.cpp: the vtables' slots, and GetSfxVolumeAt
+ * (C linkage). The other methods have no C caller left and no C name
+ * here (cxx_symbols.txt has them). */
 extern void AttachEnemyCtrl(struct part_ctrl *self, struct ctrl_target *target);
 extern s32 GetSfxVolumeAt(s32 x, s32 y);
-extern void ResetEnemyCtrl(struct part_ctrl *self);
 extern void DestroyEnemyCtrl(struct part_ctrl *self, s32 flags);
-extern struct part_ctrl *CreateEnemyCtrl(struct part_ctrl *self);
-extern void SetEnemyOscillator(struct part_ctrl *self, s32 period, s32 phase, s32 amplitude);
-extern void SetEnemyShotPeriod(struct part_ctrl *self, s32 period, s32 phase);
-extern void SetEnemyAttackTiming(struct part_ctrl *self, s32 idleTime, s32 attackTime,
-                                 s32 cycleOffset);
-extern void SetEnemyTriggerBox(struct part_ctrl *self, s32 l, s32 t, s32 r, s32 b);
-extern void SetEnemyModeTable(struct part_ctrl *self, const s32 *anims);
-extern void SetEnemyKind(struct part_ctrl *self, s32 kind);
 extern void UpdatePeriodicSpawner(struct periodic_spawner *self);
 extern void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags);
-extern struct periodic_spawner *CreatePeriodicSpawner(struct periodic_spawner *self);
-extern void SetPeriodicSpawnerPeriod(struct periodic_spawner *self, s32 period, s32 phase);
-extern void SetPeriodicSpawnerCallback(struct periodic_spawner *self, void (*callback)(void));
 extern void UpdateKnockedEnemyCtrl(void *self, struct actor *other);
-extern void ResetKnockedEnemyCtrl(void *self);
 extern void DestroyKnockedEnemyCtrl(void *self, s32 flags);
-extern void *CreateKnockedEnemyCtrl(void *self);
-
-/* src/enemies/enemy_attack.cpp */
-extern void UpdateEnemyAttackCycle(struct part_ctrl *self);
-extern void UpdateEnemyTriggerBox(struct part_ctrl *self);
-extern void SetEnemyState(struct part_ctrl *self, s32 state);
-extern void SetEnemyRangeXSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3);
-extern void SetEnemyRangeYSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3);
-extern void SetEnemyRangeX(struct part_ctrl *self, s32 radius);
 
 /* src/enemies/enemy_ctrl_update.cpp */
 extern void UpdateEnemyCtrl(struct part_ctrl *self);
 extern void HitEnemy(struct part_ctrl *self, s32 unused, s32 state);
-
-/* src/enemies/enemy_motion.cpp */
-extern void UpdateEnemyHomingX(struct part_ctrl *self);
-extern void UpdateEnemyHomingY(struct part_ctrl *self);
-extern void UpdateEnemyHop(struct part_ctrl *self);
-extern void UpdateEnemyFlipCycle(struct part_ctrl *self);
-
-/* src/enemies/enemy_patrol.cpp */
-extern void UpdateEnemyPatrol(struct part_ctrl *self);
-
-/* src/enemies/enemy_shooter.cpp */
-extern void UpdateEnemyShooter(struct part_ctrl *self);
 
 #endif /* GUARD_ENEMIES_H */
