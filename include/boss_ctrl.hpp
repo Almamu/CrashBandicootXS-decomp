@@ -133,21 +133,19 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
 class CortexTargetCtrl : public Ctrl
 {
 public:
-    u8 dirLeft; // 0x10
-    u8 high;    // 0x11
-    u8 top;     // 0x12
-    u8 unk_13;
-    s32 x;         // 0x14 - the hop's destination
-    s32 y;         // 0x18
-    s32 dx;        // 0x1C - and its distance from the start
-    s32 dy;        // 0x20
-    s32 stepsLeft; // 0x24
-    s32 steps;     // 0x28 - gCortexTargetHopSteps[the boss's round]
-    s32 nextState; // 0x2C
-    s32 timer;     // 0x30
-    s32 blink;     // 0x34
-    u8 blinking;   // 0x38
-    u8 unk_39[3];
+    u8 dirLeft;           // 0x10
+    u8 high;              // 0x11
+    u8 top;               // 0x12
+    s32 x;                // 0x14 - the hop's destination
+    s32 y;                // 0x18
+    s32 dx;               // 0x1C - and its distance from the start
+    s32 dy;               // 0x20
+    s32 stepsLeft;        // 0x24
+    s32 steps;            // 0x28 - gCortexTargetHopSteps[the boss's round]
+    s32 nextState;        // 0x2C
+    s32 timer;            // 0x30
+    s32 blink;            // 0x34
+    u8 blinking;          // 0x38
     CortexBossCtrl *boss; // 0x3C
 
     CortexTargetCtrl(CortexBossCtrl *boss); // CreateCortexTargetCtrl
@@ -167,8 +165,7 @@ COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexTargetCtrl) == 0x40);
 class CortexShotCtrl : public Ctrl
 {
 public:
-    u8 fast; // 0x10 - kind 1 (FireShot)
-    u8 unk_11[3];
+    u8 fast;              // 0x10 - kind 1 (FireShot)
     CortexBossCtrl *boss; // 0x14
 
     CortexShotCtrl(CortexBossCtrl *boss); // CreateCortexShotCtrl

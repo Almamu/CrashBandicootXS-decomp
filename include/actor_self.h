@@ -62,7 +62,6 @@ struct actor_self {
     s32 animIndex;                   // 0x0C - current index into anims
     u16 animTimer;                   // 0x10
     u8 animDone;                     // 0x12 - set once the current sequence has played through
-    u8 unk_13;
     s32 sortKey; // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list
                  //        by it (HeapSortActorsByKey); bit 15 also sets OAM priority
                  //        (SORT_KEY_FLAG_BEHIND_BG)
@@ -73,7 +72,6 @@ struct actor_self {
     s32 state;   // 0x28
     u8 visible;  // 0x2C - nonzero: drawn (RunActorCategoryFrame only puts these in
                  //        gActorDrawList); InitActorPart sets it to 1
-    u8 unk_2D[3];
     struct anim_table_record *record; // 0x30 - the record InitActorPart was given (actor_anim.h);
                                       //        the draw functions scale by its baseDepth
     s32 depth;                        // 0x34

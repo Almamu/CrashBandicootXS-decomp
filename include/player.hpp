@@ -35,7 +35,6 @@ public:
     //        fall at quarter speed and touched enemies just vanish; nonzero stops `list`
     //        recording
     u8 ctrlMode;
-    u8 unk_89[3];
     u32 deadline; // 0x8C - the gRoomFrameCount frame the invulnerability lasts until
     // 0x90 - a crate's side stopped the X motion (ActionCtrl::HandleEvent, event 12);
     //        while set, crate_hit.cpp widens the player's box by 2 px on each side
@@ -45,8 +44,7 @@ public:
     u8 countdown;
     u8 bounce; // 0x92 - stepped on a crate bounce (crate_break.cpp), cleared by the controller
     u8 unk_93;
-    u8 listCount; // 0x94 - entries in `list`
-    u8 unk_95[3];
+    u8 listCount;             // 0x94 - entries in `list`
     Crate *list[5];           // 0x98 - the recently touched crates
     Sprite *carried;          // 0xAC - the platform or crate the player stands on
     Sprite *child;            // 0xB0 - Aku Aku, drawn with the player (Draw)
@@ -63,7 +61,6 @@ public:
     u8 pushRight; // 0x103 - nonzero: moves the standing player 1 px right per frame
     u8 dead;      // 0x104 - the player died; blocks pause and further hits
     u8 cleared;   // 0x105 - TouchPlayer's latch
-    u8 unk_106[2];
     CollisionQueue collisionQueue; // 0x108 - the crate collisions of the frame
 
     Player(u16 id, u16 px, u16 py, u16 unused);             // InitPlayer

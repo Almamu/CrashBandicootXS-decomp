@@ -95,17 +95,14 @@ public:
         } __attribute__((packed)) mirrorFlags;
     } __attribute__((packed)); // one byte, not the 4 of an ARM union
     u8 palette:4;              // 0x29 - low nibble: the OBJ palette slot
-    u8 unk_29_4:4;
-    u8 unk_2A[2];
-    u8 animating; // 0x2C - nonzero while the animation timer runs
-    u8 tag;       // 0x2D - the animation (SetTargetAnim)
-    u8 unk_2E[2];
-    s32 frame;     // 0x30 - the step within the animation
-    s32 stepTimer; // 0x34 - ticks spent on the current step
-    u8 animDone;   // 0x38 - set once a non-looping animation ends
+    u32:20;                    // 0x29 bit 4-0x2B: the unused rest of the 0x28 word
+    u8 animating;              // 0x2C - nonzero while the animation timer runs
+    u8 tag;                    // 0x2D - the animation (SetTargetAnim)
+    s32 frame;                 // 0x30 - the step within the animation
+    s32 stepTimer;             // 0x34 - ticks spent on the current step
+    u8 animDone;               // 0x38 - set once a non-looping animation ends
     u8 unk_39[3];
     u16 affine; // 0x3C - nonzero: DrawWithOffset draws the affine pieces
-    u8 unk_3E[2];
 
     Sprite();                                      // InitSpriteObj
     virtual s32 CheckPlayerContact();              // 1 CheckSpritePickup
@@ -238,10 +235,9 @@ public:
     s32 speedY;              // 0x64
     u8 hitAxes;              // 0x68 - the collision axes the terrain probe resolved
     u8 probeTries;           // 0x69
-    u8 unk_6A[2];
-    s32 prevX;   // 0x6C - the previous position (Q8), cached by ApplyVelocity
-    s32 prevY;   // 0x70
-    s32 hitMask; // 0x74 - the probe axes hit this frame
+    s32 prevX;               // 0x6C - the previous position (Q8), cached by ApplyVelocity
+    s32 prevY;               // 0x70
+    s32 hitMask;             // 0x74 - the probe axes hit this frame
 
     MovingSprite();                                         // InitMovingSprite
     virtual s32 CheckPlayerContact();                       // 1 CollideMovingSprite

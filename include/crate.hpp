@@ -44,34 +44,32 @@ public:
                          //   on landing (DropCratesAbove/UpdateCrateFall), 0xFF once it
                          //   has blasted (BlastNearbyCrates)
     };
-    s8 fallSpeed; // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron
-                  //        switch instead keeps its step delay here (placement byte 8,
-                  //        reloaded into `timer` after each step)
-    u8 state;     // 0x4D - low 7 bits: state (1: committed), bit 7: busy (CRATE_STATE_*)
-    u8 kind;      // 0x4E - index into the gCrateKind* tables and gCrateHitResponse
-    u8 timer;     // 0x4F
-    u8 paramA;    // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
-                  //        1 (checkpoint): placement flag bit 6, handed to
-                  //        SetCheckpointAtPlayer; 3 (iron switch): group id, then the
-                  //        step counter once activated; 5 (outline): group id (matches
-                  //        its switch's); 12 (bouncy wumpa): set while a bounce
-                  //        animation runs; 15 (slot): mask of the faces it may stop on
-                  //        (placement byte 1 bits 1-3)
-    u8 paramB;    // 0x51 - per-kind parameter (placement byte 6/7): 3 (iron switch):
-                  //        number of steps; 5 (outline): the step it solidifies on;
-                  //        11 ("?"): contents (9: random, OpenMysteryCrate); 12 (bouncy
-                  //        wumpa): bounces so far (breaks after 5); 15 (slot): placement
-                  //        byte 6
-    u8 unk_52[2];
+    s8 fallSpeed;      // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron
+                       //        switch instead keeps its step delay here (placement byte 8,
+                       //        reloaded into `timer` after each step)
+    u8 state;          // 0x4D - low 7 bits: state (1: committed), bit 7: busy (CRATE_STATE_*)
+    u8 kind;           // 0x4E - index into the gCrateKind* tables and gCrateHitResponse
+    u8 timer;          // 0x4F
+    u8 paramA;         // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
+                       //        1 (checkpoint): placement flag bit 6, handed to
+                       //        SetCheckpointAtPlayer; 3 (iron switch): group id, then the
+                       //        step counter once activated; 5 (outline): group id (matches
+                       //        its switch's); 12 (bouncy wumpa): set while a bounce
+                       //        animation runs; 15 (slot): mask of the faces it may stop on
+                       //        (placement byte 1 bits 1-3)
+    u8 paramB;         // 0x51 - per-kind parameter (placement byte 6/7): 3 (iron switch):
+                       //        number of steps; 5 (outline): the step it solidifies on;
+                       //        11 ("?"): contents (9: random, OpenMysteryCrate); 12 (bouncy
+                       //        wumpa): bounces so far (breaks after 5); 15 (slot): placement
+                       //        byte 6
     s32 trialKind;     // 0x54 - the entity type (ENTITY_*) it becomes in a time trial
                        //        (placement halfword +4, ENTITY_NITRO_SWITCH_CRATE read as
                        //        ENTITY_BASIC_CRATE); -1: none (ResetCrate). See
                        //        ConvertCratesForTimeTrial
     u8 touched;        // 0x58
     u8 groupAllocated; // 0x59 - `group` was allocated (ActivateIronSwitchCrate)
-    u8 unk_5A[2];
-    Crate *above; // 0x5C - the crate stacked on this one
-    Crate *below; // 0x60 - the crate this one stands on
+    Crate *above;      // 0x5C - the crate stacked on this one
+    Crate *below;      // 0x60 - the crate this one stands on
 
     Crate();               // InitCrate: inline in crate_create.cpp (`new Crate`)
     virtual void Update(); // 3 UpdateCrate
