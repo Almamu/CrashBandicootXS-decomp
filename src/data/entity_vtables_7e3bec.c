@@ -29,23 +29,6 @@
  * own inheritance. See docs/data.md.
  */
 
-/* Used by enemy_ctrl.cpp, ctrl.cpp (Ctrl, include/ctrl.hpp), input_ctrl_queue.cpp, action_ctrl.cpp. */
-const struct vtable_slot gCtrlVtable[13] VTABLE_SECTION(gCtrlVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(UpdateCtrl),
-    VTABLE_SLOT(CtrlHandleEvent),
-    VTABLE_SLOT(AttachCtrl),
-    VTABLE_SLOT(SetCtrlMode),
-    VTABLE_SLOT(StartCtrlTargetMotionX),
-    VTABLE_SLOT(StartCtrlTargetMotionY),
-    VTABLE_SLOT(SetCtrlTargetMotionX),
-    VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(DestroyCtrl),
-    VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
-    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
-};
-
 /* Used by cutscene_player.c. */
 const struct vtable_slot gBgStreamerVtable[2] VTABLE_SECTION(gBgStreamerVtable) = {
     VTABLE_SLOT(NULL),

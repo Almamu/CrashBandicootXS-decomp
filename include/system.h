@@ -46,10 +46,9 @@ extern void LoadBackgroundTileAndPalette(const void *asset);
  * of CompanyLogos::LoadAssetBuffered (frontend.hpp), `self` the logo screen */
 extern void LoadTaggedAssetBuffered(void *self, const void *asset, void *dest);
 
-/* src/system/boot.c */
+/* src/system/boot.cpp */
 extern s32 DivMod(s32 number, s32 denom, s32 *remainderOut);
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
-extern void UpdateCtrl(void);
 
 /* src/system/input.c */
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
