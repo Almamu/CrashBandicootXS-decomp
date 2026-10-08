@@ -1,5 +1,6 @@
 #include "save_menu.hpp"
 #include "audio.hpp"
+#include "link_session.hpp"
 
 extern "C" {
 #include "core.h"
@@ -22,26 +23,26 @@ extern "C" {
  * issue-5-overlay-ui-sync.md). The C++ needs none of them, and matches
  * under both compilers. */
 
-void SetSaveTransferRecord(struct save_transfer *self, struct save_data *tmpl)
+void SaveTransfer::SetRecord(SaveData *record)
 {
-    self->tmpl = tmpl;
-    self->cursor = (u8 *)tmpl;
+    tmpl = record;
+    cursor = (u8 *)record;
 }
 
-void *GetSaveTransferData(struct save_transfer *self)
+void *SaveTransfer::GetData()
 {
-    return self->data;
+    return data;
 }
 
-void ResetSaveTransfer(struct save_transfer *self)
+void SaveTransfer::Reset()
 {
-    self->remaining = sizeof(self->data);
-    self->totalReceived = 0;
-    self->cursor = (u8 *)self->tmpl;
-    self->writePtr = self->data;
-    self->sendDone = 0;
-    self->receiveDone = 0;
-    self->settleTimer = 0;
+    remaining = sizeof(data);
+    totalReceived = 0;
+    cursor = (u8 *)tmpl;
+    writePtr = data;
+    sendDone = 0;
+    receiveDone = 0;
+    settleTimer = 0;
 }
 
 /* gKeys is a plain u32 elsewhere (e.g.
@@ -96,17 +97,17 @@ u8 RunSaveMenu(u32 state, u32 cursor)
  * and r8, as in the ROM. */
 SaveMenu::SaveMenu()
 {
-    struct save_data **cartSaveAddr = &cartSave;
-    struct save_data **linkSaveAddr;
-    struct save_data *save;
+    SaveData **cartSaveAddr = &cartSave;
+    SaveData **linkSaveAddr;
+    SaveData *save;
 
-    save = new save_data;
-    ResetSaveData(save);
+    save = new SaveData;
+    save->Reset();
     *cartSaveAddr = save;
 
     linkSaveAddr = &linkSave;
-    save = new save_data;
-    ResetSaveData(save);
+    save = new SaveData;
+    save->Reset();
     *linkSaveAddr = save;
 
     gPaletteCache->FreeUnlockedSlots();
@@ -118,25 +119,23 @@ SaveMenu::SaveMenu()
     RefreshSlotSummaries(*cartSaveAddr);
 
     {
-        struct link_session **sessionAddr = &gLinkSession;
+        LinkSession **sessionAddr = &gLinkSession;
 
-        *sessionAddr = InitLinkSession((struct link_session *)IwramAlloc(0x408));
+        *sessionAddr = new LinkSession;
     }
     FadeBrightness(0x80, 1, 0);
     gameLoaded = 0;
 }
 
 /* CloseSaveMenu's `delete gSaveMenu` (DestroySaveMenu): destroys the link
- * session if there is one (`DestroyLinkSession(.., 3)`, link_session.cpp is
- * C), deletes the two saves and the slot list's 15 icons (through their
+ * session (`delete gLinkSession`: a null test and DestroyLinkSession with
+ * 3), deletes the two saves and the slot list's 15 icons (through their
  * virtual destructors, slot 10). */
 SaveMenu::~SaveMenu()
 {
     s32 i;
 
-    if (gLinkSession != NULL) {
-        DestroyLinkSession(gLinkSession, 3);
-    }
+    delete gLinkSession;
 
     delete linkSave;
     delete cartSave;
@@ -313,12 +312,12 @@ void SaveMenu::MoveCursor(u32 keys)
 
 /* States 1/2's input handler ("load game" from `handle` = cartSave or
  * linkSave): confirm (A or START) on "cancel" (cursor 4) goes back to state 0; on an
- * empty slot (IsSaveSlotEmpty) it only plays an error sound; otherwise it
- * reads the slot (ReadSaveSlot), unpacks it into gLevelState with its
+ * empty slot (SaveData::IsSlotEmpty) it only plays an error sound; otherwise it
+ * reads the slot (SaveData::ReadSlot), unpacks it into gLevelState with its
  * level and volumes, summarizes it into `currentStats` and exits with
  * `gameLoaded` set. Cancel (B) goes back to state 0; otherwise falls
  * through to the shared cursor mover. */
-void SaveMenu::LoadInput(u32 keys, struct save_data *handle)
+void SaveMenu::LoadInput(u32 keys, SaveData *handle)
 {
     struct save_slot buf;
 
@@ -333,12 +332,12 @@ void SaveMenu::LoadInput(u32 keys, struct save_data *handle)
             cursor = 0;
             return;
         }
-        if (IsSaveSlotEmpty(handle, cursor)) {
+        if (handle->IsSlotEmpty(cursor)) {
             gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
             return;
         }
         gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-        ReadSaveSlot(handle, cursor, &buf);
+        handle->ReadSlot(cursor, &buf);
         UnpackSaveData(gLevelState, &buf.progress);
         SetCurrentLevel(gLevelState, buf.level);
         gAudioContext->SetSfxVolume(buf.sfxVolume);
@@ -361,7 +360,7 @@ void SaveMenu::LoadInput(u32 keys, struct save_data *handle)
  * (LinkExchangeSaveData, parked). Timeout/cancel -> settle back to state 0;
  * error/checksum-mismatch -> a "connection failed" message (state 4);
  * otherwise, if both sides agree on the checksummed record
- * (GetSaveGameId's version nibble), accept it (state 2); if they don't,
+ * (SaveData::GetGameId's version nibble), accept it (state 2); if they don't,
  * inspect the remote's nibble to merge either flag 2 or flag 4 into our
  * own record and show a matching "conflict" message. */
 void SaveMenu::LinkInput()
@@ -377,30 +376,30 @@ void SaveMenu::LinkInput()
         return;
     }
 
-    if (result == 2 || !(u8)CheckSaveChecksum(linkSave)) {
+    if (result == 2 || !(u8)linkSave->CheckChecksum()) {
         state = 4;
         messageLine1 = GetUiText(0x2c);
         messageLine2 = GetUiText(0x2e);
         return;
     }
 
-    if (GetSaveGameId(cartSave) == GetSaveGameId(linkSave)) {
+    if (cartSave->GetGameId() == linkSave->GetGameId()) {
         state = 2;
         cursor = 0;
         RefreshSlotSummaries(linkSave);
         return;
     }
 
-    switch (GetSaveGameId(linkSave)) {
+    switch (linkSave->GetGameId()) {
     case 2:
-        SetSaveFlags(cartSave, 2);
-        StoreSaveData(cartSave);
+        cartSave->SetFlags(2);
+        cartSave->Store();
         state = 4;
         messageLine1 = (u32)gCrash2LinkTextPtr;
         break;
     case 3:
-        SetSaveFlags(cartSave, 4);
-        StoreSaveData(cartSave);
+        cartSave->SetFlags(4);
+        cartSave->Store();
         state = 4;
         messageLine1 = (u32)gCrash3LinkTextPtr;
         break;
@@ -415,19 +414,19 @@ void SaveMenu::LinkInput()
 /* Shared "commit or refresh row `rowIndex`" step used by states 5-9
  * below: pulls the row's stats/name/icon scratch data, feeds it through
  * `cartSave`'s pending-edit slot, and either finalises the edit
- * (EraseSaveSlot, when it wasn't already selected) or just refreshes the
+ * (SaveData::EraseSlot, when it wasn't already selected) or just refreshes the
  * row's aggregate stats. */
 void SaveMenu::SaveToSlot(s32 rowIndex)
 {
     struct save_slot buf[2]; /* [0] the slot's old contents, [1] the new */
-    struct save_data **handleAddr = &cartSave;
-    struct save_data **handleAddr2;
+    SaveData **handleAddr = &cartSave;
+    SaveData **handleAddr2;
     u32 wasSelected;
     struct level_state **c0Addr;
     AudioContext **bcAddr;
 
-    if (!IsSaveSlotEmpty(*handleAddr, rowIndex)) {
-        ReadSaveSlot(*handleAddr, rowIndex, buf);
+    if (!(*handleAddr)->IsSlotEmpty(rowIndex)) {
+        (*handleAddr)->ReadSlot(rowIndex, buf);
         wasSelected = 0;
     } else {
         wasSelected = 1;
@@ -456,12 +455,12 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
      * matching the technique noted in docs/matching.md for this class
      * of gap. */
     handleAddr2 = &cartSave;
-    WriteSaveSlot(*handleAddr2, rowIndex, &buf[1]);
-    if (StoreSaveData(*handleAddr2)) {
+    (*handleAddr2)->WriteSlot(rowIndex, &buf[1]);
+    if ((*handleAddr2)->Store()) {
         if (wasSelected) {
-            EraseSaveSlot(*handleAddr2, rowIndex);
+            (*handleAddr2)->EraseSlot(rowIndex);
         } else {
-            WriteSaveSlot(*handleAddr2, rowIndex, &buf[0]);
+            (*handleAddr2)->WriteSlot(rowIndex, &buf[0]);
         }
     } else {
         SummarizeProgress(&rowStats[rowIndex], PackSaveData(*c0Addr));
@@ -514,7 +513,7 @@ void SaveMenu::OverwriteInput(u32 keys)
 
 /* State 5's input handler: confirm (A or START) either resets to state
  * 0 (maxed out) or, if row `cursor` isn't already selected
- * (IsSaveSlotEmpty), enters state 9 to edit it, else commits it directly
+ * (SaveData::IsSlotEmpty), enters state 9 to edit it, else commits it directly
  * (SaveGameToSlot) and returns to state 0; cancel (B) resets to state
  * 0; otherwise falls through to the shared d-pad cursor mover. */
 void SaveMenu::SaveInput(u32 keys)
@@ -531,7 +530,7 @@ void SaveMenu::SaveInput(u32 keys)
             return;
         }
         gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
-        if (!IsSaveSlotEmpty(cartSave, cursor)) {
+        if (!cartSave->IsSlotEmpty(cursor)) {
             state = 9;
             pendingSlot = cursor;
             cursor = 0;
@@ -567,7 +566,7 @@ void SaveMenu::DeleteInput(u32 keys)
             cursor = 3;
             return;
         }
-        if (IsSaveSlotEmpty(cartSave, cursor)) {
+        if (cartSave->IsSlotEmpty(cursor)) {
             gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
             return;
         }
@@ -587,7 +586,7 @@ void SaveMenu::DeleteInput(u32 keys)
 }
 
 /* State 9's input handler: confirm (A or START) commits row `pendingSlot`
- * unconditionally (ReadSaveSlot+EraseSaveSlot+optional WriteSaveSlot) then
+ * unconditionally (SaveData::ReadSlot+SaveData::EraseSlot+optional SaveData::WriteSlot) then
  * settles at state 0; cancel (B) re-enters state 6; up/down toggle
  * `cursor` between 0/1. */
 void SaveMenu::ConfirmDeleteInput(u32 keys)
@@ -601,15 +600,15 @@ void SaveMenu::ConfirmDeleteInput(u32 keys)
     confirm:
         if (cursor == 0) {
             s32 rowIndex = pendingSlot;
-            struct save_data *handle = cartSave;
+            SaveData *handle = cartSave;
 
-            ReadSaveSlot(handle, rowIndex, buf);
+            handle->ReadSlot(rowIndex, buf);
             handle = cartSave;
-            EraseSaveSlot(handle, rowIndex);
+            handle->EraseSlot(rowIndex);
             handle = cartSave;
-            if (StoreSaveData(handle)) {
+            if (handle->Store()) {
                 handle = cartSave;
-                WriteSaveSlot(handle, rowIndex, buf);
+                handle->WriteSlot(rowIndex, buf);
             }
             state = 0;
             cursor = 4;

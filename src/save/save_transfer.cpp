@@ -1,3 +1,6 @@
+#include "save_data.hpp"
+#include "link_session.hpp"
+
 extern "C" {
 #include "core.h"
 #include "match.h"
@@ -6,10 +9,10 @@ extern "C" {
 #include "math_util.h"
 }
 
-void SetSaveFlags(struct save_data *self, u8 flags)
+void SaveData::SetFlags(u8 mask)
 {
-    self->flags |= flags;
-    UpdateSaveChecksum(self);
+    flags |= mask;
+    UpdateChecksum();
 }
 
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
@@ -19,19 +22,19 @@ void SetSaveFlags(struct save_data *self, u8 flags)
  * channel pointer has to be its own local: written as `s->ring.`
  * throughout, gcc keeps the first `&count` computation alive for both
  * fill loops instead of recomputing it as the ROM does. */
-void SendSaveTransferChunk(struct save_transfer *self)
+void SaveTransfer::SendChunk()
 {
-    if (self->remaining != 0) {
-        struct link_session *s = gLinkSession;
-        struct link_ring *ch = &s->ring;
+    if (remaining != 0) {
+        LinkSession *s = gLinkSession;
+        LinkRing *ch = &s->ring;
 
         if (ch->count == 0) {
-            s32 n = self->remaining;
+            s32 n = remaining;
             u8 *src;
             s32 i;
 
             LIMIT_MAX(n, 0x60);
-            src = self->cursor;
+            src = cursor;
             if (ch->writePos < 0x80 - n) {
                 for (i = n - 1; i != -1; i--) {
                     ch->writePos++;
@@ -47,17 +50,17 @@ void SendSaveTransferChunk(struct save_transfer *self)
                     ch->buf[ch->writePos] = b;
                 }
             }
-            self->cursor += n;
-            self->remaining -= n;
+            cursor += n;
+            remaining -= n;
         }
     } else if (gLinkSession->ring.count == 0) {
-        self->sendDone = 1;
+        sendDone = 1;
     }
 }
 
-/* Counterpart to SendSaveTransferChunk above: drains whatever's available from
+/* Counterpart to SaveTransfer::SendChunk above: drains whatever's available from
  * `playerIndex`'s incoming channel (`gLinkSession->players[playerIndex].ring`)
- * into `self->data` via `self->writePtr`, and marks `receiveDone` once
+ * into `data` via `writePtr`, and marks `receiveDone` once
  * `totalReceived` reaches a full record's worth.
  *
  * Matched in the last-eight pass (docs/matching/archive/last-eight-naked-retry.md).
@@ -69,9 +72,9 @@ void SendSaveTransferChunk(struct save_transfer *self)
  * the wrap loop's `old` out of r2. The wrap loop's count pointer is
  * pinned to r1 (the ROM's register), and the loop is an explicit
  * `if` + `do`/`while` so the pin is set after the zero-trip test. */
-void ReceiveSaveTransferChunk(struct save_transfer *self, s32 playerIndex)
+void SaveTransfer::ReceiveChunk(s32 playerIndex)
 {
-    struct link_session *s = gLinkSession;
+    LinkSession *s = gLinkSession;
     s32 pi = playerIndex;
     /* One 0xc8 register for both products: the second multiplies
      * straight into it (`muls r2, r1`), and it then becomes the channel
@@ -81,15 +84,15 @@ void ReceiveSaveTransferChunk(struct save_transfer *self, s32 playerIndex)
 
     /* players[pi].ring.count, with `players[pi]` as `s` moved on by
      * pi * 0xc8 (the product lands in `c`). */
-    n = ((struct link_session *)(pi * c + (s32)s))->players[0].ring.count;
+    n = ((LinkSession *)(pi * c + (s32)s))->players[0].ring.count;
     if (n != 0) {
         u8 *dst;
-        struct link_ring *ch;
+        LinkRing *ch;
         s32 *rd;
         s32 i;
 
         {
-            u8 **wp = &self->writePtr;
+            u8 **wp = &writePtr;
 
             c = c * pi + (s32)s;
             /* &players[pi].ring (0xd0 + 0x38). No code: keeps the +0x108
@@ -124,9 +127,9 @@ void ReceiveSaveTransferChunk(struct save_transfer *self, s32 playerIndex)
                 } while (--i != -1);
             }
         }
-        self->writePtr += n;
-        self->totalReceived += n;
-    } else if (self->totalReceived == 0x200) {
-        self->receiveDone = 1;
+        writePtr += n;
+        totalReceived += n;
+    } else if (totalReceived == 0x200) {
+        receiveDone = 1;
     }
 }

@@ -13,15 +13,21 @@
 #include "link_session.h"
 
 /* The link session the link IRQ handlers and the save transfer work on:
- * allocated by InitSaveMenu, freed by DestroySaveMenu
- * (src/save/save_menu_input.cpp). Defined in src/iwram/iwram_data.cpp. */
+ * made by SaveMenu's constructor (`new LinkSession`), deleted by its
+ * destructor (src/save/save_menu_input.cpp). Defined in
+ * src/iwram/iwram_data.cpp. The C++ files see it as its class,
+ * LinkSession (link_session.hpp). */
+#ifdef __cplusplus
+extern class LinkSession *gLinkSession;
+#else
 extern struct link_session *gLinkSession;
+#endif
 
-/* Set by ResetLinkSessionState, cleared by LinkExchangeSaveData
+/* Set by LinkSession::ResetState, cleared by LinkExchangeSaveData
  * (src/save/save_menu_draw.cpp). Defined in src/iwram/iwram_data.cpp. */
 extern u8 gLinkSessionReset;
 
-/* The CRC-16 table MakeLinkHandshakeId and HandleLinkSerial hash with
+/* The CRC-16 table MakeLinkHandshakeId and LinkSession::HandleSerial hash with
  * (src/data/link_crc_16af10.c). */
 extern const u16 gCrc16Table[256];
 
@@ -30,24 +36,16 @@ extern const u16 gCrc16Table[256];
 extern const char gCrash2LinkText[];
 extern const char gCrash3LinkText[];
 
+/* The link session's methods (C++, include/link_session.hpp: class
+ * LinkSession) have no C caller and no C prototype. Its C-linkage
+ * functions: */
+
 /* src/link/link_sio.cpp */
-extern s32 LinkStart(struct link_session *self, u32 flags);
 extern s32 LinkSetupSio(void);
-extern s32 ResetLinkSession(struct link_session *self);
-extern void DestroyLinkSession(struct link_session *self, u32 flags);
-extern struct link_session *InitLinkSession(struct link_session *self);
 extern void LinkSerialIntr(void);
 extern void LinkTimer3Intr(void);
 
 /* src/link/link_handshake.cpp */
 extern void MakeLinkHandshakeId(u8 *self);
-extern s32 LinkStop(struct link_session *self);
-
-/* src/link/link_session.cpp */
-extern s32 UpdateLinkSession(struct link_session *self);
-extern void HandleLinkSerial(struct link_session *self, u16 *data);
-
-/* src/link/link_session_reset.cpp */
-extern s32 ResetLinkSessionState(struct link_session *self);
 
 #endif /* GUARD_LINK_H */
