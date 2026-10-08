@@ -146,8 +146,8 @@ extern void AddCollisionCandidate(struct collision_queue *self, struct crate *ne
 extern struct collision_queue *ResetCollisionQueue(struct collision_queue *self);
 
 /* src/objects/ctrl.cpp: Ctrl's methods (include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtables and the C
- * callers. */
+ * under their C names (cxx_symbols.txt), for gCtrlVtable (still C data)
+ * and the C callers. */
 extern void StartCtrlTargetMotionYFromSet(void *self, void *part, s32 index);
 extern void SetCtrlTargetMotionX(void *self, void *part, s32 *vec);
 extern void StartCtrlTargetMotionX(void *self, void *part, s32 *vec);

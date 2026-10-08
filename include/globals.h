@@ -121,11 +121,6 @@ extern class Player *gPlayer;
 extern struct player *gPlayer;
 #endif
 
-/* src/data/entity_vtables_7e3bec.c: the actor base's method table
- * (DestroyActor/UpdateActor/DrawActor), which every actor-zone destructor
- * stores back before it frees the object. */
-extern const struct vtable_slot gActorVtable[4];
-
 /* src/data/boss_pictures_167ad4.c: a full turn in 256 steps, scaled by 0x100. */
 extern const s16 gSineTable[256];
 

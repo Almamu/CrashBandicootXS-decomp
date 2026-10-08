@@ -115,14 +115,6 @@ struct anim_box;
 struct entry_set;
 struct gobj;
 
-/* src/actor/actor_anim.c */
-extern void DestroyAirshipFireball(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftFireball(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftCannon(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftLauncher(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftSideGun(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftCannonFlash(struct actor_self *self, u32 flags);
-
 /* src/bosses/airship.cpp */
 extern void SteerAirship(void);
 extern void CreateAirship(s32 level);
@@ -138,12 +130,6 @@ extern void AirshipStateExplode(void);
 
 /* src/bosses/airship_fall.cpp */
 extern void AirshipStateFall(void);
-
-/* src/bosses/airship_fireball.cpp: AirshipFireball's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageAirshipFireball(void *self, s32 delta);
-extern void UpdateAirshipFireball(struct actor_self *self);
-extern u8 IsAirshipFireballUnshootable(void *self);
 
 /* src/bosses/airship_graphics.cpp */
 extern void ConvertAirshipTiles(void);
@@ -193,11 +179,7 @@ extern void StartDingodileMotion(void *self, void *part, s32 index);
 extern void SetDingodileStep(void *self, s32 value);
 extern void SetDingodileNextState(void *self, s32 value);
 
-/* src/bosses/hovercraft.cpp: HovercraftFireball's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageHovercraftFireball(void *self, s32 delta);
-extern void UpdateHovercraftFireball(void *self);
-extern u8 IsHovercraftFireballUnshootable(void *self);
+/* src/bosses/hovercraft.cpp */
 extern void UpdateHovercraftHitFlash(void);
 extern void RunHovercraftState(void);
 extern void HovercraftStateCloseIn(void);
@@ -215,23 +197,6 @@ extern void nullsub_34(void);
 extern s32 sub_80337FC(void);
 extern void nullsub_35(void);
 
-/* src/bosses/hovercraft_cannon.cpp: HovercraftCannon's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageHovercraftCannon(struct spawner *self, s32 dmg);
-extern void UpdateHovercraftCannon(struct actor_self *self);
-extern u8 IsHovercraftCannonUnshootable(void *self);
-
-/* src/bosses/hovercraft_cannon_flash.cpp: HovercraftCannonFlash's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void UpdateHovercraftCannonFlash(void *self);
-extern u8 IsHovercraftCannonFlashUnshootable(void *self);
-
-/* src/bosses/hovercraft_launcher.cpp: HovercraftLauncher's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageHovercraftLauncher(struct spawner *self, s32 dmg);
-extern void UpdateHovercraftLauncher(struct actor_self *self);
-extern u8 IsHovercraftLauncherUnshootable(void *self);
-
 /* src/bosses/hovercraft_parts.cpp */
 extern void StartHovercraftHitFlash(void);
 extern void SetHovercraftFlashColor(u8 flag);
@@ -248,14 +213,6 @@ extern void HovercraftStateInactive(void);
 extern void HovercraftStateApproach(void);
 extern void HovercraftStateExplodeStub(void);
 
-/* src/bosses/hovercraft_side_gun.cpp: HovercraftSideGun's methods
- * (boss_actors.hpp), and HovercraftCannonFlash's Damage, under their C
- * names, for the vtables */
-extern void DamageHovercraftSideGun(void *self, s32 dmg);
-extern void UpdateHovercraftSideGun(void *self);
-extern u8 IsHovercraftSideGunUnshootable(void *self);
-extern void DamageHovercraftCannonFlash(void);
-
 /* src/bosses/mega_mix.cpp and mega_mix_update.cpp: MegaMixCtrl's methods
  * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
  * vtables and the C callers. */
@@ -264,7 +221,7 @@ extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern void ResetMegaMixCtrl(void *self);
 
 /* src/bosses/tiny_update.cpp: TinyCtrl's methods (include/boss_ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtable. */
+ * under their C names (cxx_symbols.txt). */
 extern void SetTinyState(void *self, void *part, s32 next);
 extern s32 PickTinyHopTarget(void *self);
 extern void SpawnTinyFallingLeaves(void *self, void *part, s32 n);
@@ -365,14 +322,6 @@ extern const struct airship_attack gAirshipAttacks[6];
 extern const struct anim_box gAirshipBox;
 extern const u16 gAirshipHitFlashPalettes[3][16];
 extern const struct anim_frame_record gAirshipKeyframes[2];
-
-/* src/data/entity_vtables_7e3bec.c */
-extern const struct vtable_slot gAirshipFireballVtable[7];
-extern const struct vtable_slot gHovercraftCannonFlashVtable[7];
-extern const struct vtable_slot gHovercraftCannonVtable[7];
-extern const struct vtable_slot gHovercraftFireballVtable[7];
-extern const struct vtable_slot gHovercraftLauncherVtable[7];
-extern const struct vtable_slot gHovercraftSideGunVtable[7];
 
 /* src/data/boss_pictures_167ad4.c */
 extern const u16 gAirshipPalette[256];

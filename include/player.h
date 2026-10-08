@@ -463,8 +463,7 @@ extern u8 IsInputCtrlMotionYPending(struct input_ctrl *self);
 
 /* src/player/input_ctrl_queue.cpp: InputCtrl's and BossCtrl's methods
  * (include/input_ctrl.hpp, include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtables and the C
- * callers. */
+ * under their C names (cxx_symbols.txt), for the C callers. */
 extern u8 IsInputCtrlMotionXPending(struct input_ctrl *self);
 extern void QueueInputCtrlMotionYKeepSpeed(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionXKeepSpeed(struct input_ctrl *self, u8 val);
@@ -478,7 +477,7 @@ extern void UpdateActionCtrlSkidAnim(struct act *self);
 extern s32 UpdatePlayerFacing(struct act *self);
 
 /* src/player/player_*.cpp: Player's methods (include/player.hpp) under
- * their C names (cxx_symbols.txt), for the vtable and the C callers. */
+ * their C names (cxx_symbols.txt), for the C callers. */
 
 /* src/player/player_anim_room.cpp */
 extern u8 PlayerHasRoomForAnim(struct player *self, s32 anim);
@@ -528,7 +527,7 @@ extern void SetPlayerSlippery(struct player *self, u8 arg1);
 extern struct crate *GetPlayerListEntry(struct player *self, s32 idx);
 extern void StorePlayerListEntry(struct player *self, struct crate *crate);
 /* Ctrl's methods (include/ctrl.hpp) under their C names
- * (cxx_symbols.txt), for the vtables and the C callers. */
+ * (cxx_symbols.txt), for gCtrlVtable and the C callers. */
 extern void SetCtrlMode(void *self, s32 val);
 extern void SetCtrlAnimSet(void *self, s32 val);
 extern void SetCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
@@ -549,8 +548,8 @@ extern u8 PlayerTouchesBox(struct player *self, struct aabb *box);
 
 /* src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp, swim_ctrl_stroke.cpp:
  * the swim controller's methods (PlayerCtrl, include/player_ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtable, the state table
- * and the C callers. */
+ * under their C names (cxx_symbols.txt), for the state table and the C
+ * callers. */
 extern void CheckPlayerCtrlTurn(struct player_ctrl *self);
 extern void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
 extern void ApplyPlayerCtrlMotion(struct player_ctrl *self);

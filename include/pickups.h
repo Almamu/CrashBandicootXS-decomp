@@ -6,7 +6,7 @@
  * (#664). For the C files, wumpas and extra lives are `struct
  * orbit_part`s (include/orbit_part.h); the stopwatch is a plain 0x40-byte
  * sprite object. The prototypes below keep the methods' C names
- * (cxx_symbols.txt), for the C callers and the vtable data.
+ * (cxx_symbols.txt), for the C callers.
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration

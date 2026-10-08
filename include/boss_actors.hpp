@@ -11,8 +11,8 @@
  * bosses.h's structs are their C views. cxx_symbols.txt maps the C++
  * names to the C ones.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits the vtables in actor_anim.cpp, where
+ * their destructors are (see ctrl.hpp). */
 
 #include "actor_self.hpp"
 

@@ -13,7 +13,7 @@
  *
  * The subsystem is C++ (#664): the classes are EnemyCtrl, KnockedEnemyCtrl
  * and PeriodicSpawner in include/enemy_ctrl.hpp. The prototypes below are
- * their methods' C names (cxx_symbols.txt), for the vtables; the enemy
+ * their methods' C names (cxx_symbols.txt); the enemy
  * spawners (spawn_enemies.cpp) are C++ too. The knocked controller is a plain
  * 0x10-byte controller (objects.h's `struct ctrl`), so its functions take
  * `void *`. */

@@ -373,7 +373,9 @@ $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 # object's code is the same with and without it as long as the class
 # keeps `#pragma interface`. graphics.o is the one key-method object the
 # ROM has the copies in (Entity's inline methods, DestroyEntity last).
-NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/bosses/dingodile.o \
+NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
+                             $(C_BUILDDIR)/actor/actor_anim.o \
+                             $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/crates/crate_update.o \
                              $(C_BUILDDIR)/frontend/language_select.o \
                              $(C_BUILDDIR)/menus/level_select.o \
@@ -385,7 +387,9 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/pickups/wumpa.o \
                              $(C_BUILDDIR)/player/action_ctrl_update.o \
                              $(C_BUILDDIR)/player/input_ctrl.o \
-                             $(C_BUILDDIR)/player/player_collide.o
+                             $(C_BUILDDIR)/player/player_collide.o \
+                             $(C_BUILDDIR)/vehicle/jetpack_crates.o \
+                             $(C_BUILDDIR)/vehicle/polar_pickups.o
 $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
