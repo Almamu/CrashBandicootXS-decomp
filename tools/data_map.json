@@ -369,7 +369,7 @@
     "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
     "vehicle/polar_objects.c",
-    "frontend/starfield.c",
+    "frontend/starfield.cpp",
     "menus/level_select_widgets.c",
     "vehicle/jetpack_plane.c",
     "pickups/extra_life.cpp",
@@ -2267,7 +2267,7 @@
     "LoadLanguageSelectBg"
    ],
    "consumer_files": [
-    "frontend/language_select_setup.c",
+    "frontend/language_select_setup.cpp",
     "menus/level_select.c",
     "menus/power_dialog.c",
     "save/save_menu_ui.c"
@@ -4375,7 +4375,7 @@
     "DrawContinuePrompt"
    ],
    "consumer_files": [
-    "frontend/credits.c"
+    "frontend/credits.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4552,7 +4552,7 @@
     "InitCredits"
    ],
    "consumer_files": [
-    "frontend/credits.c"
+    "frontend/credits.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4574,7 +4574,7 @@
     "UpdateCreditsText"
    ],
    "consumer_files": [
-    "frontend/credits.c"
+    "frontend/credits.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4595,7 +4595,7 @@
     "LoadCreditsLogos"
    ],
    "consumer_files": [
-    "frontend/credits.c"
+    "frontend/credits.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 10,
@@ -4855,7 +4855,7 @@
     "LoadUniversalLogoBg"
    ],
    "consumer_files": [
-    "frontend/company_logos.c"
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4877,7 +4877,7 @@
     "DrawLanguageSelect"
    ],
    "consumer_files": [
-    "frontend/language_select.c"
+    "frontend/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 6,
@@ -4900,7 +4900,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.c"
+    "frontend/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4924,7 +4924,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.c"
+    "frontend/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4948,7 +4948,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.c"
+    "frontend/language_select.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4972,7 +4972,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "frontend/language_select.c"
+    "frontend/language_select.cpp"
    ],
    "ptr_words_code": 67,
    "ptr_words_data": 1875,
@@ -8384,7 +8384,7 @@
     "DestroyHovercraftCannonFlash"
    ],
    "consumer_files": [
-    "frontend/language_select.c",
+    "frontend/language_select.cpp",
     "actor/actor_anim.c",
     "vehicle/jetpack_crates.c",
     "bosses/hovercraft.c",
@@ -9497,8 +9497,8 @@
     "DestroyLogoActor"
    ],
    "consumer_files": [
-    "frontend/language_select.c",
-    "frontend/company_logos.c"
+    "frontend/language_select.cpp",
+    "frontend/company_logos.cpp"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,

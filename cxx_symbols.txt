@@ -967,3 +967,24 @@ InitGraphics__14LanguageSelect InitLanguageSelectGraphics
 LoadBg__14LanguageSelect LoadLanguageSelectBg
 Blink__14LanguageSelect LanguageSelectBlink
 CommitFrame__14LanguageSelect CommitLanguageSelectFrame
+# part 10c: the rest of the front end (include/frontend.hpp;
+# src/frontend/starfield.cpp, credits.cpp)
+Draw__9Starfield DrawStarfield
+SpawnStar__9Starfieldi SpawnStar
+PlotPixel__9StarfieldUiii PlotStarfieldPixel
+WaitForButton__9Starfield StarfieldWaitForButton
+__14ContinuePrompt InitContinuePrompt
+_._14ContinuePrompt DestroyContinuePrompt
+Run__14ContinuePrompt RunContinuePrompt
+Loop__14ContinuePrompt ContinuePromptLoop
+Draw__14ContinuePrompt DrawContinuePrompt
+Blink__14ContinuePrompti GetContinuePromptBlink
+CommitFrame__14ContinuePrompt CommitContinuePromptFrame
+__7Credits InitCredits
+_._7Credits DestroyCredits
+Run__7Credits RunCredits
+Loop__7Credits CreditsLoop
+DrawText__7Credits DrawCreditsText
+UpdateText__7Credits UpdateCreditsText
+LoadLogos__7Credits LoadCreditsLogos
+CommitFrame__7Credits CommitCreditsFrame

@@ -1,8 +1,14 @@
 #ifndef GUARD_FRONTEND_HPP
 #define GUARD_FRONTEND_HPP
 
-/* The front end's classes as C++ (#664, docs/cplusplus.md, part 10b):
+/* The front end's classes as C++ (#664, docs/cplusplus.md, parts 10b
+ * and 10c):
  *
+ *   Starfield       0x14                     src/frontend/starfield.cpp
+ *   Credits         0x98                     src/frontend/credits.cpp
+ *   ContinuePrompt  0x24                     src/frontend/credits.cpp
+ *                                            (and src/menus/continue_prompt*.c,
+ *                                            still C)
  *   CompanyLogos    0x44C                    src/frontend/company_logos.cpp,
  *                                            language_select.cpp
  *                                            (and title_screen.c, still C)
@@ -10,16 +16,17 @@
  *                                            language_select.cpp
  *   LanguageSelect  0x14                     src/frontend/language_select.cpp,
  *                                            language_select_setup.cpp
- *   Starfield       0x14                     src/frontend/starfield.c (still C)
  *
- * The sizes are the ROM's (ShowCompanyLogos's, RunCompanyLogos's,
- * OpenLanguageSelect's and InitLanguageSelect's allocations). Only the
- * logo actor has a vtable; the others are plain classes with a
- * constructor and a destructor (`delete` calls the destructor with 3,
- * and it frees the object when bit 0 is set).
+ * The sizes are the ROM's (the allocations in RunCredits,
+ * RunContinuePrompt, ShowCompanyLogos, RunCompanyLogos,
+ * OpenLanguageSelect and InitLanguageSelect). Only the logo actor has a
+ * vtable; the others are plain classes with a constructor and a
+ * destructor (`delete` calls the destructor with 3, and it frees the
+ * object when bit 0 is set).
  *
- * The C files see these objects through frontend.h's C structs (struct
- * logo_screen, struct actor_self, struct language_select) and
+ * The C files see these objects through C structs (frontend.h's struct
+ * logo_screen and struct actor_self, menus.h's struct continue_prompt;
+ * struct language_select and struct credits_screen are opaque tags) and
  * prototypes; cxx_symbols.txt maps the methods to those names.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
@@ -33,25 +40,117 @@ extern "C" {
 #include "logo_screen.h"
 #include "math_util.h"
 #include "frontend.h"
+#include "menus.h"
 }
 
+/* One star: a 24.8 fixed-point position and its per-frame step. */
+struct StarParticle {
+    s32 x;
+    s32 y;
+    s32 dx;
+    s32 dy;
+};
+
 /* The starfield the language select, the credits and the company logos
- * draw behind their text (starfield.c's struct particle_bg). */
+ * draw behind their text (starfield.cpp). */
 class Starfield
 {
 public:
-    u32 tileVramBase; // 0x00 - VRAM, where tileBuffer is DMA'd
-    u32 mapVramBase;  // 0x04 - BG0's screen base
-    void *particles;  // 0x08 - 128 stars, 16 bytes each
-    s32 count;        // 0x0C - stars alive
-    void *tileBuffer; // 0x10 - the 4bpp screen buffer
+    u32 tileVramBase;        // 0x00 - VRAM, where tileBuffer is DMA'd
+    u32 mapVramBase;         // 0x04 - BG0's screen base
+    StarParticle *particles; // 0x08 - 128 stars
+    s32 count;               // 0x0C - stars alive
+    u8 *tileBuffer;          // 0x10 - the 4bpp screen buffer
 
-    Starfield();   // InitStarfield
-    ~Starfield();  // DestroyStarfield
-    void Update(); // UpdateStarfield
+    Starfield();                           // InitStarfield
+    ~Starfield();                          // DestroyStarfield
+    void Draw();                           // DrawStarfield
+    void SpawnStar(s32 idx);               // SpawnStar
+    void PlotPixel(u32 x, s32 y, s32 val); // PlotStarfieldPixel (unused)
+    void Plot(u32 x, s32 y, s32 val);      // inline: Draw's, PlotPixel's body
+    void Update();                         // UpdateStarfield
+    void WaitForButton();                  // StarfieldWaitForButton
 };
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Starfield) == 0x14);
+
+/* One line of the credits on screen: a run of text, or one of the
+ * logos, floating up from the bottom (0x18 bytes). */
+struct CreditsPopup {
+    CreditsPopup *next; // 0x00
+    s32 x;              // 0x04
+    s32 y;              // 0x08 - counts down while alive
+    s32 height;         // 0x0C - it dies once y + height <= 0
+    s32 mode;           // 0x10 - 0/1: a character of gSmallFont/gLargeFont, 2: a logo
+    u8 index;           // 0x14 - the character, or the logo's index
+};
+
+/* One of the five logos LoadLogos loads from gCreditsLogos (0x18 bytes). */
+struct CreditsLogo {
+    s32 cols;    // 0x00 - width in 32-px OAM cells
+    s32 rows;    // 0x04 - height in 32-px OAM cells
+    s32 height;  // 0x08 - pixel height
+    s32 width;   // 0x0C - pixel advance
+    s32 palette; // 0x10 - its palette-cache slot
+    u8 *tiles;   // 0x14 - its 4bpp tiles, OAM-cell ordered
+};
+
+/* The credits screen (RunCredits, run from the title menu and after the
+ * ending, game_frame.c; 0x98 bytes): a starfield, with the credits text
+ * (gCreditsText, a byte stream: characters, 1 <logo>, 2/3 small/large
+ * font, '\n' a line) floating up over it, a line at a time. */
+class Credits
+{
+public:
+    CreditsPopup *popups; // 0x00 - the lines on screen, oldest first
+    const u8 *streamBase; // 0x04 - gCreditsText
+    const u8 *stream;     // 0x08 - the next line
+    Starfield *starfield; // 0x0C
+    s32 largeFont;        // 0x10 - the font of the text to come: 0 small, 1 large
+    s32 lineDelay;        // 0x14 - updates to wait before the next line
+    u8 unused_18[4];      // 0x18
+    CreditsLogo logos[5]; // 0x1C
+    u32 frameParity;      // 0x94 - the text moves every other frame
+
+    Credits();          // InitCredits
+    ~Credits();         // DestroyCredits
+    static void Run();  // RunCredits
+    void Loop();        // CreditsLoop
+    void DrawText();    // DrawCreditsText
+    void UpdateText();  // UpdateCreditsText
+    void LoadLogos();   // LoadCreditsLogos
+    void CommitFrame(); // CommitCreditsFrame
+};
+
+COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Credits) == 0x98);
+
+/* The continue prompt ("Continue? Yes/No", 0x24 bytes; menus.h's struct
+ * continue_prompt is its C view). Its constructor and loop are still C
+ * (src/menus/continue_prompt*.c); its other methods start credits.cpp. */
+class ContinuePrompt
+{
+public:
+    struct bg_setup *bg1Buf; // 0x00 - BG1
+    struct bg_setup *bg0Buf; // 0x04 - BG0
+    struct bg_setup *bg2Buf; // 0x08 - BG2
+    u16 dispcnt;             // 0x0C - REG_DISPCNT
+    u8 unused_0e[2];
+    u32 blend; // 0x10 - REG_BLDCNT/BLDALPHA
+    u8 unused_14[4];
+    struct bitmap_font *icons; // 0x18 - gSmallFont
+    s32 blinkCounter;          // 0x1C - the selected option's blink counter
+    s32 selection;             // 0x20 - the Yes/No cursor, 0/1
+
+    ContinuePrompt();      // InitContinuePrompt (still C)
+    ~ContinuePrompt();     // DestroyContinuePrompt
+    static u8 Run();       // RunContinuePrompt
+    s32 Loop();            // ContinuePromptLoop (still C)
+    void Draw();           // DrawContinuePrompt
+    s32 Blink(s32 option); // GetContinuePromptBlink
+    void CommitFrame();    // CommitContinuePromptFrame
+};
+
+COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == sizeof(struct continue_prompt));
 
 /* The 0x44C-byte company-logo screen (ShowCompanyLogos, level_state.c):
  * the Vicarious Visions logo's 20 pieces (struct logo_piece), the frame

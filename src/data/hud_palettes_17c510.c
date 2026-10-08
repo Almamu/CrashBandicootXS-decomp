@@ -6,7 +6,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The text DrawContinuePrompt (credits.c) prints in an icon's text
+/* The text DrawContinuePrompt (credits.cpp) prints in an icon's text
  * slot. */
 const u8 gContinuePromptCursorText[] = ">";
 

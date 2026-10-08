@@ -523,6 +523,8 @@ counts them by kind) and what the C++ still needs.
 | `src/frontend/company_logos.cpp` | `CompanyLogos::DrawVvLogoPieces`, `LoadUniversalLogoBg`; `LogoActor`'s constructor, `Update`, `Draw` (include/frontend.hpp; `ActorSelf`, its base, in include/actor_self.hpp) | 5 | old_agbcp | 2 pins, 2 uses, 3 barriers -> 1 pin, 3 barriers | 10b |
 | `src/frontend/language_select.cpp` | `CompanyLogos`'s constructor, destructor, `LoadAssetBuffered`; `LogoActor`'s destructor; `LanguageSelect::Run`, `Input`, `Draw`, `InitGraphics` | 8 | agbcp | 0 -> 0; a goto and the hand-written destructors' vtable stores, unlink and frees go | 10b |
 | `src/frontend/language_select_setup.cpp` | `LanguageSelect`'s constructor, destructor, `LoadBg`, `Blink`, `CommitFrame`, `Open`, `Close` | 7 | **old_agbcp** (was agbcc) | 2 pins, a retyped store and read (the DISPCNT bytes) -> 0 | 10b |
+| `src/frontend/starfield.cpp` | `Starfield` (include/frontend.hpp) | 7 | **old_agbcp** (was agbcc) | 16 pins, 5 `asm` -> 0 | 10c |
+| `src/frontend/credits.cpp` | `ContinuePrompt`'s `Draw`, `Blink`, `CommitFrame`, destructor, `Run`; `Credits` (include/frontend.hpp) | 13 | old_agbcp | 4 pins, 1 use, 1 volatile keep, 1 barrier, a retyped store -> 1 pin, 1 use, 1 volatile keep, 1 barrier | 10c |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1727,7 +1729,7 @@ the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
 | `LogoActor` | 0x54 | gLogoActorVtable (an `ActorSelf`) | company_logos.cpp, language_select.cpp (destructor) |
 | `CompanyLogos` | 0x44C | none | company_logos.cpp, language_select.cpp, and title_screen.c (still C) |
 | `LanguageSelect` | 0x14 | none | language_select.cpp, language_select_setup.cpp |
-| `Starfield` | 0x14 | none | still C (src/frontend/starfield.c) |
+| `Starfield` | 0x14 | none | still C (src/frontend/starfield.c; C++ since part 10c) |
 
 - **The logo actor is the first 3D actor in C++.** `ActorSelf` declares
   only what `LogoActor` needs: the fields of `struct actor_self`, the
@@ -1749,7 +1751,7 @@ the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
   `LanguageSelect`'s constructor is `new Starfield` and its destructor
   `delete starfield` (a null test and `DestroyStarfield(p, 3)`); `Open` and
   `Close` are `new LanguageSelect` and `delete gLanguageSelect`. `Starfield`
-  is declared for those, with starfield.c still C.
+  is declared for those, with starfield.c still C (C++ since part 10c).
 - **The C view goes** for the language select: no C file reads `struct
   language_select`'s fields, so it is an opaque tag (frontend.h), and
   `gLanguageSelect` is a `LanguageSelect *` to C++ (a `__cplusplus`
@@ -1784,6 +1786,61 @@ unsigned `switch ((u32)state)` of `LogoActor::Update` (one bounds check),
 the `u8 z = 0` store of the sound-cue flag, `InitGraphics`'s inline icon
 helpers and shared `zero`, and the `(struct dispcnt_bits *)gDispcnt`
 views.
+
+### The front end, continued (part 10c)
+
+Part 10c in numbers: starfield.c and credits.c (ROM 0x08034480-0x080354E0),
+20 functions, and three more classes in include/frontend.hpp.
+Project-wide: `MATCH_HOLD_REG` 1249 -> 1230, instruction-emitting `asm`
+139 -> 134 and retyped field stores 195 -> 194. `starfield.o` moves to
+`OLD_AGBCC_OBJS`; `credits.o` was old_agbcc C already.
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `Starfield` | 0x14 | none | starfield.cpp |
+| `Credits` | 0x98 | none | credits.cpp |
+| `ContinuePrompt` | 0x24 | none | credits.cpp (`Draw`, `Blink`, `CommitFrame`, the destructor, `Run`); its constructor and `Loop` are still C (src/menus/continue_prompt*.c) |
+
+- **The classes.** All three are plain classes with a constructor and a
+  destructor. `Starfield`'s `particles` and `tileBuffer` are `new
+  StarParticle[0x80]` and `new u8[0x4B00]`, freed with `delete[]` (the C's
+  `OperatorNewArray` and null-tested `OperatorDeleteArray`). `Credits::Run`
+  and `ContinuePrompt::Run` are `new X`, the loop and `delete self`; the
+  credits' text lines are `new CreditsPopup` and `delete node` (a POD, so
+  the C's direct `OperatorNew(0x18)` and `OperatorDelete`).
+- **The C views go** for the credits: no C file reads `struct
+  credits_screen`, `struct popup_node` or `struct popup_glyph`, so the
+  first is an opaque tag (frontend.h) and the others went. The continue
+  prompt keeps menus.h's `struct continue_prompt`, which its C files use.
+  frontend.h and menus.h keep the C prototypes (the C names) for the C
+  callers (game_frame.c, continue_prompt.c, title_screen*.c).
+- **The fonts are still C** (src/text/): the font calls stay spelled out
+  through the record's slots.
+
+What made the C++ match:
+
+- **The starfield matches as written under old_agbcp,** where the agbcc
+  C needed 16 pins and 5 `asm` blocks. `Draw`'s two trail plots are the
+  out-of-line `PlotPixel`'s body as an inline method (`Plot`, called with
+  `Q8_TO_INT(slot->x)`), and the nibble write is `*entry = (*entry &
+  ~(0xf << shift)) | (val << shift)`, where the C wrote the ROM's
+  `bic`/`orr` tail as `asm`. The constructor's tile mask is the literal
+  `tileIdx | 0xF000` (loop.c hoists it twice: the ROM's `ldr r1, =...;
+  adds r5, r1, #0`) and the row address `(row << 6) + mapBase`.
+- **`ContinuePrompt::Blink`** is `if (option == selection) return
+  (blinkCounter++ >> 1) & 2; return 1;`; the C pinned the result to r0.
+- `Credits::Loop`'s key test is a plain `if (gKeys.half.pressed & 9)`
+  (the C pinned both operands), and the logos' palette slot is a plain
+  `s32` (the C's retyped store).
+
+Kept, each with a comment: `Credits::LoadLogos`'s palette index (an r1
+pin, a `MATCH_KEEP_VOLATILE` and a `MATCH_USE`: GCSE hoists any `slot <<
+5` to the y loop's pre-test and spills it, and the ROM computes it at the
+copy) and the constructor's `MATCH_BARRIER` (no code: the longer live
+ranges give `&gPaletteCache` and `&gObjVramCursor` r4, `&gSmallFont` r6).
+C idioms kept: `DrawText`'s and `UpdateText`'s gotos, the `bg0cnt =
+bg0cnt` self-initialisation and the `UpdateText` font slot calls written
+out.
 
 ### The entity family is done
 
@@ -1837,8 +1894,9 @@ player, then the first item here, is C++ since part 8):
   (airship*.c, hovercraft*.c).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
   fonts (src/text/), the menus and frontend screens (pause menu, power
-  dialog, save menu, title screen, credits; the language select and the
-  logo actor are C++ since part 10b), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
+  dialog, save menu, title screen; the language select and the logo
+  actor are C++ since part 10b, the starfield, the credits and part of
+  the continue prompt since part 10c), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
   in system/boot.c) and the room code (play_room.c, run_room.c).
 
 ### Next batches
@@ -1888,11 +1946,12 @@ PR, as before):
    `CollidableList()->Add`). The other C++-trait objects of the frontend and
    the menus are next, a few files per part: ~~frontend/company_logos.c,
    language_select.c and language_select_setup.c~~ (part 10b: the logo
-   actor, the first `ActorSelf`, and the language select), then
-   starfield.c, credits.c and title_screen*.c (`Starfield`, the credits,
-   `CompanyLogos`'s other methods and the title screen), then the pause
-   menu and the power dialog (menus/pause_menu*.c, power_dialog*.c,
-   continue_prompt_init.c).
+   actor, the first `ActorSelf`, and the language select),
+   ~~starfield.c and credits.c~~ (part 10c: `Starfield`, the credits and
+   the continue prompt's last methods), then title_screen_init.c and
+   title_screen.c (`CompanyLogos`'s other methods and the title screen),
+   then the pause menu and the power dialog (menus/pause_menu*.c,
+   power_dialog*.c, continue_prompt*.c).
 9. **The 3D actors** (part 11 onwards): `ActorSelf` (vtable pointer at
    +0x50; part 10b declared it, include/actor_self.hpp), actor*.c first,
    then the vehicles and the 3D bosses; the PMF tables become `const
@@ -2232,6 +2291,11 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   (`InitLevelState`, part 9).
 - **`delete p` of a class with no vtable** is the null test and a direct
   call of its destructor with 3 (`delete gEntitySpawner`, part 9).
+- **`delete p` of a struct with no destructor** (a POD) is a plain
+  `OperatorDelete(p)` call, with no null test: the credits' text lines
+  and the continue prompt's BG buffers (part 10c). `new T` of one is
+  `OperatorNew(sizeof(T))`, and `new T[n]`/`delete[]` are
+  `OperatorNewArray` and the null-tested `OperatorDeleteArray`.
 - **`operator new(n)` in C++, not OperatorNew(n):** the C name next to a
   `new` gives the object two undefined `OperatorNew` symbols after the
   rename, one from `__builtin_new` (part 9).

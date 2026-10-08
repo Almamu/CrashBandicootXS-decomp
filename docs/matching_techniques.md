@@ -568,7 +568,7 @@ uninitialized register (a `& 0xFFFF0000` on garbage before ORing in
 BGxCNT bits, a `bestIdx` when the count is 0), an initializer would add
 code, so the variable stays uninitialized and is self-initialized:
 `u32 bg0cnt = bg0cnt;` emits nothing and silences `-Wuninitialized`
-(6 sites; `src/frontend/starfield.c`,
+(6 sites; `src/frontend/starfield.cpp`,
 [issue-65-naked-retry.md](./matching/archive/issue-65-naked-retry.md)).
 The order of escape hatches (self-init, `UNUSED`, a per-object
 `-Wno-...`) is in CONTRIBUTING.md's "Compiler warnings".
