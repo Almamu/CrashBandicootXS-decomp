@@ -26,7 +26,8 @@ union EntityFlags {
     u8 flags; // 0x0C
     struct {
         u8 gone:1;       // removed (SetGone); the lists drop it
-        u8 unk_1:1;      // Get/Set/ClearFlag1
+        u8 attacks:1;    // its attack box hits the collidables (Player::TouchPlayer);
+                         // only Player::Reset sets it (Get/Set/ClearFlag1)
         u8 visible:1;    // in contact with the player (Is/Enable/DisableContact)
         u8 bit3:1;       // touched by the player or another object; SetTargetAnim clears it
         u8 active:1;     // always active: skips the camera tests (updated off screen too)

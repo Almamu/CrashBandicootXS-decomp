@@ -643,11 +643,11 @@ s32 Entity::GetClassId()
     return 0;
 }
 
-/* Out of contact, no longer touched or always active, the flag-1 bit and
+/* Out of contact, no longer touched or always active, the `attacks` bit and
  * gone cleared, contact enabled; a 1x1 size. */
 void Entity::Reset()
 {
-    f.b.unk_1 = 0;
+    f.b.attacks = 0;
     f.b.visible = 1;
     f.b.gone = 0;
     f.b.bit3 = 0;
