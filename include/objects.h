@@ -143,7 +143,6 @@ extern void ResolveCollisionCandidates(struct collision_queue *self);
 extern void AddCollisionCandidate(struct collision_queue *self, struct crate *neighbor, s32 kind,
                                   s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
                                   s32 p20, s32 p21);
-extern void DestroyCollisionQueue(struct collision_queue *self, s32 flags);
 extern struct collision_queue *ResetCollisionQueue(struct collision_queue *self);
 
 /* src/objects/ctrl.cpp: Ctrl's methods (include/ctrl.hpp)
@@ -157,7 +156,6 @@ extern void CtrlHandleEvent(void);
 extern u8 SetCtrlTargetAnim(void *unused, void *part, s32 newVal);
 extern void AttachCtrl(void *self, s32 val);
 extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
 extern s32 GetCtrlMode(void *self);
 
 /* src/objects/effect_ctrl.cpp: EffectCtrl's methods (include/ctrl.hpp) under
@@ -167,15 +165,12 @@ extern void UpdateEffectCtrl(void *self, void *part);
 extern void EffectCtrlHandleEvent(void *self, void *sender, s32 event, s32 arg);
 extern void ResetEffectCtrl(void *self);
 extern void DestroyEffectCtrl(void *self, s32 flags);
-extern void *InitEffectCtrl(void *self);
 
 /* src/objects/ground_sprite.cpp */
 extern void DrawGroundSprite(void *self);
 extern s32 GetGroundSpriteClassId(void);
-extern void *CreateGroundSprite(u16 id, u16 x, u16 y, u16 unused);
 extern void DestroyGroundSprite(struct actor *self, u32 unused);
 extern void ResetGroundSprite(void *self);
-extern struct actor *InitGroundSprite(struct actor *self);
 extern u8 IsGroundSpriteGrounded(void *self);
 extern void ClearGroundSpriteGrounded(void *self);
 extern void SetGroundSpriteGrounded(void *self);
@@ -203,10 +198,8 @@ extern void GetSpritePrevPos(struct gfx_vec *dest, struct gfx_part *self);
 extern s32 GetSpritePrevY(struct gfx_part *self);
 extern s32 GetSpritePrevX(struct gfx_part *self);
 extern s32 GetMovingSpriteClassId(void);
-extern void *CreateMovingSprite(u16 id, u16 x, u16 y, u16 unused);
 extern void DestroyMovingSprite(struct actor *self, u32 flags);
 extern void ResetMovingSprite(void *self);
-extern struct actor *InitMovingSprite(struct actor *part);
 extern void UpdateMovingSprite(struct actor *self);
 
 /* src/objects/moving_sprite_collide.cpp */
@@ -255,7 +248,6 @@ extern void SetPlatformExitMirror(struct gobj *self, u8 value);
 extern s32 GetPlatformClassId(void);
 extern void DestroyPlatform(struct gobj *self, s32 flags);
 extern void ClearPlatformVulnerable(struct gobj *self);
-extern struct gobj *InitPlatform(struct gobj *self);
 extern void UpdatePlatformMover(struct mover *self, struct gobj *obj);
 extern void MovePlayerWithPlatform(struct mover *self, struct gobj *obj);
 extern void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index);
@@ -263,8 +255,6 @@ extern void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part
 extern void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index);
 extern void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index);
 extern void DestroyPlatformMover(struct mover *self, s32 flags);
-extern struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 dirX,
-                                         u8 dirY, s32 kind);
 extern void ClearPlatformMoverActive(struct mover *self);
 
 /* src/objects/platform_collide.cpp */
@@ -272,9 +262,6 @@ extern void ResolvePlatformCollision(struct gobj *self, void *unused);
 
 /* src/objects/platform_contact.cpp */
 extern s32 CheckPlatformContact(struct gobj *self);
-
-/* src/objects/platform_create.cpp */
-extern struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind);
 
 /* src/objects/player_contact.cpp */
 extern void CheckPlayerContact(void *part);
@@ -284,7 +271,6 @@ extern void ResolvePlayerContact(void *part);
 extern void DrawSpriteAt(void *self, void *part, s32 x, s32 y);
 extern void DrawSprite(void *self, void *part);
 extern void DestroySpriteRenderer(void *self, u32 flags);
-extern void InitSpriteRenderer(void);
 extern void ResetSpriteObj(void *self);
 extern struct aabb GetSpriteBounds(struct box_part *part);
 extern struct aabb GetSpriteHitbox(struct box_part *part);
@@ -345,10 +331,8 @@ extern void *GetSpriteObjHitbox(struct actor *part);
 extern s32 GetSpriteTileBase(void *part);
 extern void *GetSpriteFrame(struct gfx_part *part);
 extern s32 GetSpriteObjPriority(void);
-extern void *CreateSpriteObj(u16 id, u16 x, u16 y, u16 unused);
 extern s32 GetSpriteObjClassId(void);
 extern void DestroySpriteObj(struct actor *self, u32 flags);
-extern struct actor *InitSpriteObj(struct actor *self);
 extern void *GetSpriteFrameAnchor(void *part);
 extern void *GetSpriteFrameThirdBox(void *part);
 extern void *GetSpriteFrameAttackBox(void *part);

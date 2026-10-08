@@ -6,10 +6,10 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The 8-word tables the text popups of spawn_enemies.c hand their
- * header (text_popup.h's `gfx`, +0x84): a small index 0-5 per slot, 8 in
- * the unused ones. gEnemyDefaultAnimMap is the one every popup starts
- * with. */
+/* The 8-word animation maps the enemy spawners (spawn_enemies.cpp) give
+ * their EnemyCtrl (`anims`, +0x84): a small index 0-5 per slot, 8 in
+ * the unused ones. gEnemyDefaultAnimMap is the one almost every spawner
+ * starts with. */
 const s32 gEnemyDefaultAnimMap[8] = { 0, 1, 8, 8, 8, 8, 8, 8 };
 const s32 gPenguinAnimMap[8] = { 0, 3, 8, 2, 1, 4, 8, 8 };
 const s32 gPufferfishAnimMap[8] = { 2, 8, 8, 0, 1, 3, 8, 8 };

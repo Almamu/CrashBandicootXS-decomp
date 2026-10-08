@@ -50,8 +50,9 @@ struct level_entity_group {
 
 /* A room's entities (`gEntityFlags->list`, level.h). The local views
  * were `struct lk_list` (room_entities.c), `struct collect_info`
- * (dingodile.c), `struct level_record_table` (text_popup.h), `struct
- * placement_level` (crate_create.cpp) and CreatePlatform's level header. */
+ * (dingodile.c), `struct level_record_table` (the enemy spawners'
+ * text_popup.h), `struct placement_level` (crate_create.cpp) and
+ * CreatePlatform's level header. */
 struct level_entity_list {
     u16 count;                               // 0x00 - all entities
     u16 groupCount;                          // 0x02
@@ -62,11 +63,11 @@ struct level_entity_list {
     const u16 *typeCounts; // 0x10 - entities per type
 };
 
-/* One entity's parameter record (was text_popup.h's `struct
- * level_record`), at `params + paramOffsets[id]` (bytes) in the
+/* One entity's parameter record (was the enemy spawners' text_popup.h's
+ * `struct level_record`), at `params + paramOffsets[id]` (bytes) in the
  * room's entity list (gEntityFlags->list). After the flags come
  * per-type parameter words; `p` has one view per layout, named after
- * the part_ctrl setters spawn_enemies.c hands them to (SetEnemyRangeX:
+ * the part_ctrl setters spawn_enemies.cpp hands them to (SetEnemyRangeX:
  * `rangeX`/`rangeY` are pixels either side of the spawn point;
  * SetEnemyRangeXSpeed/SetEnemyRangeYSpeed: `speed`/`accel`;
  * SetEnemyAttackCycle: `idleTime`/`attackTime`/`cycleOffset`;

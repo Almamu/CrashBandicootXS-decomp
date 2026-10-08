@@ -523,6 +523,7 @@ counts them by kind) and what the C++ still needs.
 | `src/frontend/company_logos.cpp` | `CompanyLogos::DrawVvLogoPieces`, `LoadUniversalLogoBg`; `LogoActor`'s constructor, `Update`, `Draw` (include/frontend.hpp; `ActorSelf`, its base, in include/actor_self.hpp) | 5 | old_agbcp | 2 pins, 2 uses, 3 barriers -> 1 pin, 3 barriers | 10b |
 | `src/frontend/language_select.cpp` | `CompanyLogos`'s constructor, destructor, `LoadAssetBuffered`; `LogoActor`'s destructor; `LanguageSelect::Run`, `Input`, `Draw`, `InitGraphics` | 8 | agbcp | 0 -> 0; a goto and the hand-written destructors' vtable stores, unlink and frees go | 10b |
 | `src/frontend/language_select_setup.cpp` | `LanguageSelect`'s constructor, destructor, `LoadBg`, `Blink`, `CommitFrame`, `Open`, `Close` | 7 | **old_agbcp** (was agbcc) | 2 pins, a retyped store and read (the DISPCNT bytes) -> 0 | 10b |
+| `src/level/spawn_enemies.cpp` | the 26 enemy spawners (C linkage): `new EnemyCtrl`, `hdr->Attach(part)` | 26 | old_agbcp | 22 pins, 6 asm, 6 uses, 1 hold, 1 keep, 1 mem use, 1 asm label, 52 `POPUP_ATTACH` slot calls -> 1 pin, 5 uses, 1 hold, 1 keep, 1 mem use (all `SpawnFlamethrowerLabAssistant`'s) | 9b |
 | `src/frontend/starfield.cpp` | `Starfield` (include/frontend.hpp) | 7 | **old_agbcp** (was agbcc) | 16 pins, 5 `asm` -> 0 | 10c |
 | `src/frontend/credits.cpp` | `ContinuePrompt`'s `Draw`, `Blink`, `CommitFrame`, destructor, `Run`; `Credits` (include/frontend.hpp) | 13 | old_agbcp | 4 pins, 1 use, 1 volatile keep, 1 barrier, a retyped store -> 1 pin, 1 use, 1 volatile keep, 1 barrier | 10c |
 
@@ -1511,7 +1512,8 @@ controller call (the ROM loads it and never uses it).
 ### The spawners (part 9)
 
 Part 9 in numbers: the effect-part spawner and the level spawners, 10 of
-the 11 spawn files in src/level/ (all but spawn_enemies.c), 74 functions.
+the 11 spawn files in src/level/ (all but spawn_enemies.c, part 9b), 74
+functions.
 Project-wide (after part 10): `MATCH_HOLD_REG` 1323 -> 1252,
 instruction-emitting `asm` 153 -> 139, `MATCH_USE` 55 -> 54, `MATCH_KEEP`
 33 -> 32, asm labels 17 -> 14, retyped field stores 201 -> 196 and reads
@@ -1626,6 +1628,64 @@ values were global allocation's pseudos; g++ computes them in place with
 every spelling tried (locals, `u16` parameters, an inline setter, a point
 class with a constructor, a loop around the stores) under both
 compilers.
+
+### The enemy spawners (part 9b)
+
+Part 9b in numbers: src/level/spawn_enemies.c, the last level spawner
+file, 26 functions. Project-wide (after part 10b): `MATCH_HOLD_REG` 1249
+-> 1228, instruction-emitting `asm` 139 -> 133, `MATCH_USE` 52 -> 51,
+asm labels 14 -> 13. The object was old_agbcc already and is old_agbcp
+now (agbcp differs in all 26).
+
+- **Each spawner is the classes' code.** `MovingSprite::Create` (the
+  seal's `GroundSprite::Create`), `new EnemyCtrl`, and `hdr->Attach(part)`
+  for the two `POPUP_ATTACH` slot calls; `part->mover`, `part->palette`,
+  `mirrorFlags`, `CollidableList()->Add`, `EntityParams(arg3)`, and
+  `EnemyCtrl`'s `SetState`, `SetRangeX`, `SetRangeXSpeed` and
+  `SetRangeYSpeed`. The field setters the ROM inlines (the animation map,
+  the trigger box, the attack cycle, the wave, the shot timing) are
+  file-local inlines, as text_popup.h's were. `SetMirror` sets the mirror
+  bits from the record and `SetAnim` restarts an animation.
+- **`new EnemyCtrl` matches in all 26.** In 11 of them the C needed
+  `OperatorNew(0x8c);` and an asm-label alias of CreateEnemyCtrl taking
+  no argument (the block left in r0), the other 15 `CreateEnemyCtrl(
+  OperatorNew(0x8c))`; g++ gives each the ROM's registers from the one
+  spelling.
+- **SpawnVenusFlytrap** was still its agbcc-era pinned C (21 pins and 6
+  `asm` statements, among them the whole mirror-bit and trigger-box code
+  and a hand-written `_call_via_r2` call): the plain C was 5 halfwords off
+  under old_agbcc. The C++ is the same code as its siblings', with no
+  workaround. Its prototype takes `u16`s like the others', so the spawn
+  table's `(entity_spawn_fn)` cast goes, and its enemy kind (0xA) is
+  `ENEMY_KIND_VENUS_FLYTRAP` (data/levels/entity_types.json).
+- **text_popup.h goes**: `struct popup_part`, `POPUP_ATTACH`,
+  `POPUP_ANIM`, `LEVEL_RECORD` and its inline setters had no other user.
+  enemies.h keeps only the C names the vtables need (and GetSfxVolumeAt);
+  the 31 method prototypes the spawners called are gone.
+- **Dead prototypes.** The C prototypes of the C++ constructors no C file
+  calls any more went with them: CreateCrate, CreatePlatform,
+  CreatePlatformMover, CreateSpriteObj, CreateMovingSprite,
+  CreateGroundSprite, CreateEntity, CreateWumpa, CreateExtraLife,
+  CreateStopwatch, the bosses' and controllers' `Create*`, and the
+  `Init*` constructors of the classes (InitSpriteObj, InitMovingSprite,
+  InitPlatform, InitOamBuffer, ...; 43 in objects.h, crates.h, gfx.h,
+  pickups.h, bosses.h and player.h). menus.h's were left alone, and about
+  440 other prototypes of C++ methods have no C caller either (most of
+  objects.h's, crates.h's, player.h's and menus.h's accessors); see "What
+  is still C".
+
+Kept: `SpawnFlamethrowerLabAssistant`'s workarounds, one `MATCH_USE` fewer
+than the C's (1 pin, 1 `MATCH_HOLD`, 5 `MATCH_USE`, 1 `MATCH_KEEP`, 1
+`MATCH_USE_MEM`). The ROM keeps the mirror byte's address (part+0x28) in
+r3 across `AddToPartList` through a stack slot, with &gEntityFlags in r9
+and -0x11 in sl. g++, like the C front end, ranks the address (6
+references) above both of them and gives it a callee-saved register,
+the same with every spelling tried (inline setters taking the sprite or
+the bits, the pointer taken earlier, the sign test, the second lookup
+moved, the pointer set by an inline through a reference). The address is
+kept in memory instead (`MATCH_USE_MEM`), stored inside the call's
+argument after a `MATCH_KEEP` copy of the part, and the hold and uses
+steer reload's registers, as in the C.
 
 ### The level select (part 10)
 
@@ -1882,11 +1942,12 @@ player, then the first item here, is C++ since part 8):
 - ~~**The level select's sprites**~~: the camera lead and launch pad, with
   the rest of the level select (level_select_widgets.c,
   level_select_pages.c), are C++ since part 10.
-- **The enemy spawners** (level/spawn_enemies.c, 26 spawners): the last
-  level spawner file, with `CreateEnemyCtrl(OperatorNew(0x8c))` and the
-  `POPUP_ATTACH` slot calls (`new EnemyCtrl` and `hdr->Attach(part)` in
-  C++). The effect-part spawner and the other level spawners are C++
-  since part 9.
+- ~~**The enemy spawners**~~ (level/spawn_enemies.c): C++ since part 9b,
+  with the effect-part spawner and the other level spawners since part 9.
+- **The C prototypes of C++ methods with no C caller**: about 440 left
+  in objects.h, crates.h, player.h, menus.h, gfx.h, bosses.h and
+  pickups.h (the C names the vtables and C files use stay). Part 9b
+  dropped enemies.h's and the constructors'.
 - **The 3D actors** (`struct actor_self`, vtable pointer at +0x50) and their
   pointer-to-member tables (src/data/actor_pmf_*.c, `ACTOR_PMF_CALL`):
   src/actor/ (actor_anim.c alone has 48 methods), the vehicle levels
@@ -1905,8 +1966,8 @@ Bigger controllers, roughly in order (function counts from
 `tools/cpp_survey.py --objects`):
 
 1. ~~**The enemy controllers**~~: done in part 2 (all of src/enemies/). Their
-   C callers are still C: the level spawners (`spawn_enemies.c`,
-   `spawn_objects.c`'s SpawnSealSpawner); Dingodile's shark
+   C callers, the level spawners (`spawn_enemies.c`, `spawn_objects.c`'s
+   SpawnSealSpawner), are C++ since parts 9 and 9b; Dingodile's shark
    (`DingodileSharkCtrl`, part 6b) derives from it.
 2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3. Only
    `Ctrl::Update` (`UpdateCtrl`, an empty function in `system/boot.c`)
@@ -1935,11 +1996,10 @@ PR, as before):
    include/player.hpp; `PlayerSprite()` and the `(GroundSprite *)` casts
    gone). `struct player` stays the C view for the C files left (the
    rooms, the HUD, the vehicles).
-7. **The spawners**: ~~entity_spawner.c, drop_extra_life.c, time_trial.c
-   and the level's spawn_*.c but spawn_enemies.c~~, done in part 9
-   (`EntitySpawner`, include/spawners.hpp). Left: spawn_enemies.c (26
-   enemy spawners, 1126 lines, the group's most pins and `asm`), part 9b;
-   with it text_popup.h's `struct popup_part` and `POPUP_ATTACH` go.
+7. ~~**The spawners**~~: entity_spawner.c, drop_extra_life.c, time_trial.c
+   and the level's spawn_*.c but spawn_enemies.c in part 9
+   (`EntitySpawner`, include/spawners.hpp), spawn_enemies.c (the 26
+   enemy spawners) in part 9b, and text_popup.h went with it.
 8. ~~**The level select's sprites**~~: done in part 10 (the camera lead and
    launch pad as `MovingSprite` subclasses, and the whole level select,
    include/level_select.hpp; `InputCtrl::StateStart`'s `AddToPartList` is
@@ -2311,3 +2371,10 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   body, with its own vtable pointer store: the C's two stores (the class's
   table, then the base's) and the base's code after the body are g++'s
   (`~LogoActor` with `~ActorSelf`'s actor list unlink inlined; part 10b).
+- **A value the ROM keeps in a call-clobbered register across a call**
+  (saved to the stack just before the `bl`, loaded back later) ranked
+  below every callee-saved candidate in the ROM's allocation; when g++
+  ranks it higher (more references than the values it displaces) no
+  spelling changes that, and the C's `MATCH_USE_MEM` stack slot is still
+  the way (`SpawnFlamethrowerLabAssistant`'s mirror byte address, part
+  9b).

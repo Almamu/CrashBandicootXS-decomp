@@ -9,8 +9,8 @@
  * (src/enemies/, UpdateEnemyCtrl's own `self`,
  * docs/matching/archive/issue-9-10-0x0800b8dc-graphics.md) and the part it steers
  * (`self->target`, "owner" in the older docs). CreateEnemyCtrl constructs
- * the controller in a 0x8C-byte block, and the level spawners
- * (include/text_popup.h) attach it to the sprite part they create. Only
+ * the controller in a 0x8C-byte block, and the enemy spawners
+ * (src/level/spawn_enemies.cpp) attach it to the sprite part they create. Only
  * the fields the code touches are named.
  *
  * `struct part_ctrl` is the C view of the C++ class EnemyCtrl

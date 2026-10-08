@@ -274,7 +274,6 @@ extern void ResetOamBuffer(struct oam_shadow_buffer *self);
 extern void CommitOamBuffer(struct oam_shadow_buffer *self);
 extern void AddOamEntry(struct oam_shadow_buffer *self, const void *entry);
 extern void DestroyOamBuffer(struct oam_shadow_buffer *self, u32 flags);
-extern struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *self);
 
 /* src/gfx/graphics.cpp: the VRAM DMA queue and OBJ VRAM cursor */
 extern void FlushVramDmaQueue(void);
@@ -289,7 +288,6 @@ extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
 extern void DestroyObjVramCursor(struct vram_upload_cursor *self, u32 flags);
-extern struct vram_upload_cursor *InitObjVramCursor(struct vram_upload_cursor *self, s32 count);
 
 /* src/gfx/graphics.cpp: the palette cache */
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
@@ -307,7 +305,6 @@ extern void ClearPaletteCache(struct palette_cache *self);
 extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
 extern struct palette_cache *InitPaletteCache(struct palette_cache *self);
 extern void DestroySpriteBankSet(void *self, u32 flags);
-extern void InitSpriteBankSet(void);
 
 /* src/gfx/graphics.cpp: the entity (`struct actor`, actor.h) */
 extern u8 IsEntityNearCamera(struct actor *self);
@@ -322,10 +319,8 @@ extern s32 IsEntityInsideRect(struct actor *self, struct aabb *box);
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
-extern struct actor *CreateEntity(u16 id, u16 x, u16 y, u16 unused);
 extern s32 GetEntityClassId(void);
 extern void ResetEntity(struct actor *self);
-extern struct actor *InitEntity(struct actor *self);
 extern void ClearEntityAlwaysActive(struct actor *self);
 extern void SetEntityAlwaysActive(struct actor *self);
 extern u8 IsEntityAlwaysActive(struct actor *self);
@@ -372,7 +367,6 @@ extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *list
                             s32 listCount, u8 direction);
 extern void ClearPaletteCycles(struct palette_cycler *self);
 extern void DestroyPaletteCycles(struct palette_cycler *self, s32 flags);
-extern struct palette_cycler *InitPaletteCycles(struct palette_cycler *self);
 extern void DestroyHudPart(struct actor *part, u32 flags);
 
 /* src/gfx/sprite_frame.c */

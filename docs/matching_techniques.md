@@ -462,7 +462,7 @@ The rarer forms, a few sites each:
 | `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 3 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.c`); also forces a reload of whatever it held (`src/level/play_room.c`). |
 | `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 2 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for (`src/frontend/title_screen.c`). |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
-| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 1 | `x` must be in memory here: keeps it in its stack slot across a call (`src/level/spawn_enemies.c`). |
+| `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 1 | `x` must be in memory here: keeps it in its stack slot across a call (`src/level/spawn_enemies.cpp`). |
 
 An asm that reads a field through `"m"` can also fix the order of a load
 against a constant

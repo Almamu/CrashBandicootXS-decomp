@@ -36,7 +36,7 @@
 // An exploding crate (ExplodeCrate, SFX_EXPLOSION), the sea mine
 // (SpawnSeaMine) and Dingodile's projectile
 #define EVENT_HIT_EXPLOSION 4
-// The shark, moray eel, polar bear and venus flytrap (spawn_enemies.c) and
+// The shark, moray eel, polar bear and venus flytrap (spawn_enemies.cpp) and
 // Dingodile's shark (SpawnDingodileShark)
 #define EVENT_HIT_BITE 6
 // Neo Cortex's shot (UpdateCortexShot)
