@@ -14,7 +14,8 @@
  * the continue prompt functions at the start of credits.c
  * (DrawContinuePrompt..RunContinuePrompt) are in menus.h, with the rest
  * of the continue prompt. LoadTaggedAssetBuffered
- * (language_select.c) is in system.h, with LoadTaggedAsset. */
+ * (language_select.cpp, CompanyLogos::LoadAssetBuffered) is in system.h,
+ * with LoadTaggedAsset. */
 
 #include "core.h"
 #include "actor_self.h"
@@ -23,20 +24,9 @@
 #include "vtable.h"
 
 /* The language select (OpenLanguageSelect/RunLanguageSelect/
- * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
- * through the six entries of gLanguageNames, A or START confirms, and
- * MainLoop stores the result in gLanguage. (Formerly `struct
- * counter_widget`.) */
-struct language_select {
-    s32 frame; /* 0x00 - frame counter, wraps at 0x100; bit 2 blinks the selection */
-    u8 done;   /* 0x04 */
-    u8 pad_5[3];
-    s32 language; /* 0x08 - the selected entry, 0-5 */
-    u8 dispcntLo; /* 0x0c - DISPCNT shadow, low byte */
-    u8 dispcntHi; /* 0x0d - DISPCNT shadow, high byte */
-    u8 pad_e[2];
-    void *starfield; /* 0x10 - InitStarfield */
-};
+ * CloseLanguageSelect, called from MainLoop). Its class, LanguageSelect,
+ * is in frontend.hpp; no C file reads its fields. */
+struct language_select;
 
 /* One step of a logo piece's motion (the gTitleLogoPieceMotionN and
  * gVvLogoPieceMotionNN tables). When the piece's hold count runs out it
@@ -129,7 +119,11 @@ COMPILE_TIME_ASSERT(frontend_h, sizeof(struct credits_screen) == 0x98);
 
 /* The language select, between OpenLanguageSelect and
  * CloseLanguageSelect (src/iwram/iwram_data.c). */
+#ifdef __cplusplus
+extern class LanguageSelect *gLanguageSelect;
+#else
 extern struct language_select *gLanguageSelect;
+#endif
 
 /* The six language names (src/data/digit_glyphs_17e714.c) and the four
  * palettes InitLanguageSelectGraphics copies (palettes_17e72c.c,
@@ -190,7 +184,9 @@ extern const u8 gCreditsText[];
 extern const u8 gCreditsEmptyText[4];
 extern const struct bg_package gCreditsLogos[5];
 
-/* src/frontend/company_logos.c */
+/* src/frontend/company_logos.cpp (C++, frontend.hpp: the C names of
+ * CompanyLogos's and LogoActor's methods, for the vtable data and the C
+ * callers) */
 extern void DrawVvLogoPieces(struct logo_screen *self);
 extern void LoadUniversalLogoBg(u32 *self);
 extern struct actor_self *InitLogoActor(struct actor_self *self, const void *anim);
@@ -207,7 +203,7 @@ extern void CommitCreditsFrame(void *unused);
 extern void DestroyCredits(struct credits_screen *self, s32 mode);
 extern void RunCredits(void);
 
-/* src/frontend/language_select.c */
+/* src/frontend/language_select.cpp (C++, as above) */
 extern void InitCompanyLogos(void);
 extern void DestroyCompanyLogos(void *self, u32 flags);
 extern void DestroyLogoActor(struct actor_self *self, u32 flags);
@@ -216,7 +212,7 @@ extern void LanguageSelectInput(struct language_select *self, u32 flags);
 extern void DrawLanguageSelect(struct language_select *self);
 extern void InitLanguageSelectGraphics(void *unused);
 
-/* src/frontend/language_select_setup.c */
+/* src/frontend/language_select_setup.cpp (C++, as above) */
 extern void LoadLanguageSelectBg(struct language_select *self);
 extern s32 LanguageSelectBlink(struct language_select *self);
 extern void CommitLanguageSelectFrame(struct language_select *self);
@@ -256,7 +252,7 @@ extern void InitVvLogoPieces(u32 *self);
 extern void UpdateVvLogoPieces(u32 *self);
 
 /* Clears one OAM entry (4 words) with a DMA3 fill from `zero`, a
- * variable the caller declares (company_logos.c, title_screen_init.c).
+ * variable the caller declares (company_logos.cpp, title_screen_init.c).
  * A macro, not a function: `zero` is stored before the DMA base is
  * loaded, as in the ROM. */
 #define CLEAR_OAM(oam)                                          \

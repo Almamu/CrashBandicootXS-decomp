@@ -122,7 +122,7 @@ comment with its evidence.
 
 | Flag | Objects | Why |
 |---|---|---|
-| `-fno-strength-reduce` | `title_screen.o` | `InitVvLogoPieces` keeps an up-counting loop that `check_dbra_loop` would reverse. Not global: it breaks 11 other old_agbcc files, and `DrawVvLogoPieces` (split into `company_logos.c`) needs the reversal. |
+| `-fno-strength-reduce` | `title_screen.o` | `InitVvLogoPieces` keeps an up-counting loop that `check_dbra_loop` would reverse. Not global: it breaks 11 other old_agbcc files, and `DrawVvLogoPieces` (split into `company_logos.cpp`) needs the reversal. |
 | `-fno-rerun-loop-opt` | `link_session_reset.o` | The second loop pass reverses `ResetLinkSessionState`'s copy loop; the flag breaks `HandleLinkSerial`, hence the split. |
 | `-O1` | `lib/agb_eeprom` (4 objects) | SDK code, above. |
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
@@ -182,7 +182,7 @@ programmer did, not by workarounds. The recurring ones:
   `LinkCrateToActiveBucket`; `src/crates/crate_grid_link.c`).
 - **Insn counts.** loop.c's decision to move an invariant depends on the
   loop's insn count; `MATCH_BARRIER()`s in the body change it
-  (`src/frontend/company_logos.c`).
+  (`src/frontend/company_logos.cpp`).
 - **`do { } while (0)` is a loop** to agbcc: it gets loop notes and
   loop-weighted register priorities. Statement macros use
   `if (1) { ... } else (void)0` instead (`include/actor_self.h`).

@@ -3,7 +3,7 @@
 
 /* The 0x44c-byte block ShowCompanyLogos (level_state.c) allocates for the
  * 20-slot object subsystem RunCompanyLogos drives
- * (src/frontend/title_screen.c / company_logos.c):
+ * (src/frontend/title_screen.c / company_logos.cpp):
  * 20 `struct logo_piece` records, then a small header. Only the fields
  * matched code reads are named. */
 

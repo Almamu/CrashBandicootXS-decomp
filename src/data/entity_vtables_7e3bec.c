@@ -811,7 +811,7 @@ const struct vtable_slot gFontVtable[9] = {
  * InitActorPart installs it, and every derived destructor puts it back
  * before unlinking the actor.
  *
- * Used by language_select.c (DestroyLogoActor), actor_anim.c (DestroyRiderlessPolar,
+ * Used by language_select.cpp (DestroyLogoActor), actor_anim.c (DestroyRiderlessPolar,
  * DestroyPolarCheckpointText, DestroyPolarWumpa, DestroyPolarTimeCrate, DestroyPolarQuestionCrate, DestroyPolarAkuAkuCrate,
  * DestroyPolarNitroCrate, DestroyPolarLifeCrate, DestroyPolarFourWumpaCrate, DestroyPolarBasicCrate, DestroyPolarCrate,
  * DestroyPolarElectricFence, DestroyPolarObstacle, DestroyPolarLauncher, DestroyPolarPenguin, DestroyPolarIcicle,
@@ -1243,8 +1243,8 @@ const struct vtable_slot gHovercraftCannonFlashVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by language_select.c (DestroyLogoActor), title_screen_init.c,
- * title_screen.c, company_logos.c (LoadUniversalLogoBg). */
+/* Used by language_select.cpp (DestroyLogoActor), title_screen_init.c,
+ * title_screen.c, company_logos.cpp (LoadUniversalLogoBg). */
 const struct vtable_slot gLogoActorVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyLogoActor),

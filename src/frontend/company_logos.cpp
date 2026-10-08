@@ -1,13 +1,12 @@
-#include "core.h"
+#include "frontend.hpp"
+
+extern "C" {
 #include "match.h"
 #include "gba/io_reg.h"
 #include "bitmap_font.h"
-#include "actor_self.h"
-#include "actor_anim.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 #include "text.h"
-#include "frontend.h"
 #include "util.h"
 #include <libgcc.h>
 #include "system.h"
@@ -15,35 +14,20 @@
 #include "actor.h"
 #include "gfx.h"
 #include "globals.h"
-#include "math_util.h"
+}
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
- * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
- * this is old_agbcc code (OLD_AGBCC_OBJS), but it is built WITH strength
- * reduction (it is not on NO_STRENGTH_REDUCE_OBJS): `DrawVvLogoPieces`'s
- * header loop is check_dbra_loop's reversed counter after the hoisted
- * `&oamA`, which only strength reduction emits, while `InitVvLogoPieces`
- * (still in `title_screen.c`) needs it off. The shared
- * declarations below are copied from the first file. See
+ * `title_screen.c` at `DrawVvLogoPieces`. The company-logo screen's last
+ * two methods (CompanyLogos, #664 part 10b, include/frontend.hpp; the
+ * others are still C in title_screen.c) and the logo actor's (LogoActor:
+ * constructor, Update, Draw; its destructor starts language_select.cpp).
+ *
+ * old_agbcp (OLD_AGBCC_OBJS), as its C was old_agbcc, but built WITH
+ * strength reduction (it is not on NO_STRENGTH_REDUCE_OBJS):
+ * `DrawVvLogoPieces`'s header loop is check_dbra_loop's reversed counter
+ * after the hoisted `&oamA`, which only strength reduction emits, while
+ * `InitVvLogoPieces` (still in `title_screen.c`) needs it off. See
  * docs/matching/archive/sr65-naked-retry.md. */
-
-
-extern void *_call_via_r1(void *arg0, void *fn);
-extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-
-
-/* The other half of `UpdateVvLogoPieces`'s per-frame slot-array update: if
- * the header's own `self+0x3dc` byte is set, positions the header's own
- * OAM-attribute build (via `AddOamEntry`, looped 4x for a 4-frame
- * animation strip) from `self+0x224`'s int16 fields; then, for each of
- * 18 slots, builds and queues (`AddOamEntry`) an OAM entry from that
- * slot's own position fields whenever its `__divsi3`-derived on/off-
- * screen test passes, using the header's own play-index accumulator
- * (`sp+0x20`) to place it into consecutive shadow-OAM group slots. Tail
- * repeats the whole shape once more, unconditionally, for a 19th
- * "extra" slot pair fed from `self+0x424`/`self+0x42c`/`self+0x434`
- * (the same header fields `LoadVvLogoGraphics` populates), queuing a
- * `QueueVramDmaTransfer` for its tile data first. */
 
 static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
 {
@@ -68,15 +52,17 @@ static inline void SetAffineZ(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 
     buf->table[idx + 2].attr[3] = 0;
 }
 
-/* `self`'s logo piece `i`, the pieces starting at `self` itself.
- * title_screen_init.c's SLOT_AT is a different macro: its pieces start
- * at +0x10. */
-#define SLOT_AT(self, i) (&((struct logo_piece *)(self))[i])
-
-/* Matched in the #65 strength-reduction retry
+/* Draws the Vicarious Visions logo: piece 19 (four 32x16 entries 32 px
+ * apart, tilesB) when it is active; pieces 1-18 (tilesA, 8 tiles each),
+ * each one affine while its scale isn't 1:1, playing its sound cue once
+ * when it first is; and piece 0, the emblem, whose current frame of
+ * `frames` is copied into `scratch`, queued to tilesC and drawn as two
+ * 64x64 halves (pulled apart by its x scale while affine).
+ *
+ * Matched in the #65 strength-reduction retry
  * (docs/matching/archive/sr65-naked-retry.md). It needs strength reduction ON,
  * which is why this file was split off `title_screen.c`. */
-void DrawVvLogoPieces(struct logo_screen *self)
+void CompanyLogos::DrawVvLogoPieces()
 {
     vu16 zero;
     vu32 zero32;
@@ -87,14 +73,14 @@ void DrawVvLogoPieces(struct logo_screen *self)
     s32 i;
 
     {
-        struct logo_piece *hdr = SLOT_AT(self, 19);
+        struct logo_piece *hdr = &slots[19];
 
         if (hdr->active) {
             u32 tiles;
             s32 j;
 
             CLEAR_OAM(&oamA);
-            tiles = self->tilesB;
+            tiles = tilesB;
             oamA.palette = 0xd;
             oamA.size = 2;
             oamA.shape = 1;
@@ -109,8 +95,8 @@ void DrawVvLogoPieces(struct logo_screen *self)
         }
     }
     {
-        struct logo_piece *slot = SLOT_AT(self, 1);
-        u32 tile = (self->tilesA - (u32)OBJ_VRAM0) >> 5;
+        struct logo_piece *slot = &slots[1];
+        u32 tile = (tilesA - (u32)OBJ_VRAM0) >> 5;
 
         for (i = 0; i <= 0x11; i++) {
             if (slot->active) {
@@ -121,7 +107,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
                 pd = 0x1000000 / slot->velB;
                 affine = (pa != 0x100 || pd != pa);
                 if (affine) {
-                    u8 *flags = self->sfxPending;
+                    u8 *flags = sfxPending;
                     u8 *flag = flags + i;
 
                     if (*flag) {
@@ -146,16 +132,12 @@ void DrawVvLogoPieces(struct logo_screen *self)
                 oamB.tileNum = tile;
                 AddOamEntry(gOamBuffer, &oamB);
             }
-            /* Extra-reference nudge (#468): one more use of `tile` raises
-             * its allocation priority above `self`'s, so `tile` takes r8
-             * and `self` sb, as in the ROM. Emits no code. */
-            MATCH_USE(tile);
             tile += 8;
             slot++;
         }
     }
-    if (SLOT_AT(self, 0)->active) {
-        u8 *flag = self->sfxPending;
+    if (slots[0].active) {
+        u8 *flag = sfxPending;
         struct logo_piece *slot;
         u32 tile;
         u8 *buf;
@@ -164,24 +146,25 @@ void DrawVvLogoPieces(struct logo_screen *self)
         s32 row;
         s32 pa, pd;
         u8 affine;
-        /* Pinned so the local `self + 0x430` address below takes r3 and
-         * `d` (the reduced `base + row * 0x100 + 0x60`) r3 in the loop. */
+        /* Pinned (register allocation; unpinned the DMA base and the
+         * address of `frames` swap r2 and r3), so `&frames` takes r3 and
+         * the reduced `base + row * 0x100 + 0x60` r3 in the loop. */
         MATCH_HOLD_REG(struct dma_regs *, dma, r2);
 
         if (*flag) {
             PlaySfx(gAudioContext, SFX_UNKNOWN_4D, 0x100);
             *flag = 0;
         }
-        slot = SLOT_AT(self, 0);
-        tile = (self->tilesC - (u32)OBJ_VRAM0) >> 5;
+        slot = &slots[0];
+        tile = (tilesC - (u32)OBJ_VRAM0) >> 5;
         zero32 = 0;
         dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)&zero32;
-        buf = self->scratch;
+        buf = scratch;
         dma->dst = (u32)buf;
         dma->cnt = 0x85000400;
         dma->cnt;
-        src = self->frames + self->frame * 0xa00;
+        src = frames + frame * 0xa00;
         /* `base + row * 0x100 + 0x60` is a giv of the row counter, which
          * check_dbra_loop reverses, so loop.c must reduce it into its own
          * pointer (the ROM's r3). `buf + 0x800` stays unreduced: `buf`
@@ -208,15 +191,11 @@ void DrawVvLogoPieces(struct logo_screen *self)
             MATCH_BARRIER();
             MATCH_BARRIER();
         }
-        QueueVramDmaTransfer(self->scratch, (void *)self->tilesC, 0x1000, 0x10);
+        QueueVramDmaTransfer(scratch, (void *)tilesC, 0x1000, 0x10);
         CLEAR_OAM(&oamC);
         pa = 0x1000000 / slot->velA;
         pd = 0x1000000 / slot->velB;
         affine = (pa != 0x100 || pd != pa);
-        /* Extra-reference nudge (#468): lifts `affine` above `matrix` in
-         * global-alloc priority, which keeps sb (preferred by `matrix`)
-         * out of its first-pass choice, so it lands in r7. No code. */
-        MATCH_USE(affine);
         if (affine) {
             SetAffineZ(gOamBuffer, matrix, pa, pd);
             oamC.affineMode = 3;
@@ -246,23 +225,17 @@ void DrawVvLogoPieces(struct logo_screen *self)
     }
 }
 
-/* BG2's tilemap remap loader (the same "remap the tilemap's per-tile
- * palette-select nibble while copying it to VRAM" shape
- * `LoadTitleScreenBg`/`LoadTitleScreenObjTiles` already established), here
- * for `gUniversalLogoBg`'s own package: loads its palette (DMA'd to
- * `0x05000002`), tileset (`0x06008000`), and tilemap (into a freshly
- * `OperatorNewArray`-allocated scratch buffer), remaps every tile's palette
- * nibble into `0x0600F000`, then sets `REG_BG2CNT` (256-color, 8x8
- * screen, priority/base built from the same bit pattern
- * `LoadTitleScreenBg` uses) and marks the icon-manager/HUD blend flags
- * (`gDispcnt`) active. Takes no arguments - this package's
- * pointer lives entirely in the static table, not the scratch
- * object. */
-/* Closed in the issue #64/#65 NAKED retry: each branch stores through
+/* Loads the Universal logo onto BG2 (gUniversalLogoBg): its palette
+ * (through a scratch buffer, DMA'd from colour 1), its tiles at VRAM
+ * +0x8000, and its map, which BG2's 8-bit affine map at +0xF000 gets a
+ * byte per tile of; then BG2CNT (256 colours, 256x256, priority 1) and
+ * BG2 on in mode 1. The screen's own fields aren't used.
+ *
+ * Closed in the issue #64/#65 NAKED retry: each branch stores through
  * `dest++` itself (cross-jumping merges the two stores back into the
  * ROM's single shared `strh`), which doubles `dest`'s reference count
  * and gives it r4 ahead of `y`/`bg2cnt`. */
-void LoadUniversalLogoBg(u32 *self)
+void CompanyLogos::LoadUniversalLogoBg()
 {
     const struct bg_package *pkg = &gUniversalLogoBg;
     u16 *palBuf;
@@ -272,7 +245,7 @@ void LoadUniversalLogoBg(u32 *self)
     s32 y;
     union bgcnt bg2cnt;
 
-    palBuf = OperatorNewArray(0x200);
+    palBuf = new u16[0x100];
     LoadTaggedAsset(pkg->paletteAsset, palBuf);
     {
         struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
@@ -281,10 +254,9 @@ void LoadUniversalLogoBg(u32 *self)
         dma->cnt = 0x80000040;
         dma->cnt;
     }
-    if (palBuf != NULL)
-        OperatorDeleteArray(palBuf);
+    delete[] palBuf;
     LoadTaggedAsset(pkg->tileAsset, (void *)(VRAM + 0x8000));
-    mapBuf = OperatorNewArray((s32)pkg->height * (s32)pkg->width * 2);
+    mapBuf = new u16[(s32)pkg->height * (s32)pkg->width];
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
     dest = (u16 *)(VRAM + 0xF000);
     for (y = 0; y <= 0x1f; y++) {
@@ -306,133 +278,95 @@ void LoadUniversalLogoBg(u32 *self)
     REG_BG2CNT = bg2cnt.raw;
     ((struct dispcnt_bits *)gDispcnt)->bg2 = 1;
     ((struct dispcnt_bits *)gDispcnt)->mode = 1;
-    if (mapBuf != NULL)
-        OperatorDeleteArray(mapBuf);
+    delete[] mapBuf;
 }
 
-/* Constructs an actor-part object via `InitActorPart(self, ?, 0, 0,
- * 0x100)` (the "a" parameter is passed straight through from this
- * function's own, unused-by-name second argument - the ROM leaves it
- * as whatever the caller's own `r1` held, here always
- * `gLogoActorAnim`'s address per `RunCompanyLogos`'s call site) then
- * sets its vtable pointer (`self+0x50`) to `gLogoActorVtable` and
- * allocates two VRAM tile blocks sized from the part's own current
- * animation frame's tile dimensions (`GetAnimFrameData`-shaped lookup,
- * inlined twice), stashing both into `gLogoActorTiles[0]`/`[1]` and
- * resetting the `gLogoActorTileBuffer`/`gLogoActorLastFrame`
- * frame-tile-cache bookkeeping pair `DrawLogoActor` reads back. Returns
- * `self`. */
-static inline u8 *CurFrame(struct actor_self *self)
-{
-    s32 base = Q8_TO_INT(self->animTime);
-    s32 idx = self->animIndex;
-    struct anim_frame_record *table = self->anims;
-    s32 val = table[idx].frameIndex;
-
-    val += base;
-    return (u8 *)self->frameOffsets[val];
-}
-
-struct actor_self *InitLogoActor(struct actor_self *self, const void *anim)
+/* The constructor: ActorSelf's (InitActorPart) at (0, 0, 0x100), then
+ * two VRAM tile blocks sized from the current frame's tile dimensions
+ * (CurFrame, inlined twice), the frame cache's buffer index and last
+ * frame reset (DrawLogoActor). */
+LogoActor::LogoActor(const struct anim_table_record *anim) : ActorSelf(anim, 0, 0, 0x100)
 {
     u8 *frame;
 
-    InitActorPart(self, (void *)anim, 0, 0, 0x100);
-    self->vtable = (struct actor_vtable *)gLogoActorVtable;
-    frame = CurFrame(self);
+    frame = CurFrame();
     gLogoActorTiles[0] = AllocVramTileBlock(frame[1] * frame[0] * 32);
-    frame = CurFrame(self);
+    frame = CurFrame();
     gLogoActorTiles[1] = AllocVramTileBlock(frame[1] * frame[0] * 32);
     gLogoActorTileBuffer = 1;
     gLogoActorLastFrame = 0;
-    return self;
 }
 
-/* One state (of at least 5, `self+0x28`) in an actor-part's own
- * animation-state machine (see `struct anim_part_instance`,
- * src/actor/actor_anim.c): state 0 waits for a `self+0x12` flag then
- * jumps to state 1 (resets the frame accumulator and reloads the
- * initial frame's duration from the part table's own header);
- * state 1 waits for frame id 0x12 then jumps to state 2 (loads a
- * different frame, plays SFX_UNKNOWN_4F); state 2 waits for frame id 7 then
- * jumps to state 3 (plays SFX_PLAYER_HURT); state 3 decays a position field
- * (`self+0x24`/`self+0x20`) for 16 frames then jumps to state 4 (a
- * terminal/idle state, tested by `DrawLogoActor`). Every state's tail
- * advances the frame accumulator by the current frame's duration
- * (`self+0x10`) and rolls over to the next keyframe via
- * `GetAnimFrameBaseOffset` once it crosses the current keyframe's own
- * threshold (`+4`), wrapping the accumulator back by `(threshold -
- * loopBase) << 8` per `struct anim_frame_record`. */
-void UpdateLogoActor(struct actor_self *self)
+/* The actor's state machine: 0 waits for the first animation to play
+ * through, then 1 (sequence 1) waits for frame 0x12, then 2 (sequence 7,
+ * SFX_UNKNOWN_4F) waits for frame 7 and freezes the animation
+ * (SFX_PLAYER_HURT); 3 moves the actor towards the camera and up for 16
+ * frames, then 4, the end (Draw draws nothing). Every frame then steps
+ * the animation and rewinds it at the keyframe's loop threshold. */
+void LogoActor::Update()
 {
-    s32 time = ++self->stateTime;
+    s32 time = ++stateTime;
 
-    switch ((u32)self->state) {
+    /* On the unsigned state: one bounds check for the jump table. */
+    switch ((u32)state) {
     case 0:
-        if (self->animDone) {
-            ACTOR_SET_STATE(self, 1, 1);
+        if (animDone) {
+            SetState(1, 1);
         }
         break;
     case 1:
-        if (Q8_TO_INT(self->animTime) == 0x12) {
-            ACTOR_SET_STATE(self, 2, 7);
+        if (Q8_TO_INT(animTime) == 0x12) {
+            SetState(2, 7);
             PlaySfx(gAudioContext, SFX_UNKNOWN_4F, 0x100);
         }
         break;
     case 2:
-        if (Q8_TO_INT(self->animTime) == 7) {
-            self->animTimer = 0;
-            self->state = 3;
-            self->stateTime = 0;
+        if (Q8_TO_INT(animTime) == 7) {
+            animTimer = 0;
+            state = 3;
+            stateTime = 0;
             PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
         }
         break;
     case 3:
-        self->z -= 0xe;
-        self->y -= 0x100;
+        z -= 0xe;
+        y -= 0x100;
         if (time > 0xf)
-            self->state = 4;
+            state = 4;
         break;
     }
-    self->animTime += *(s16 *)&self->animTimer;
-    self->animDone = 0;
-    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
-        ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
-        self->animDone = 1;
+    animTime += (s16)animTimer;
+    animDone = 0;
+    if (GetAnimFrameBaseOffset() >= anims[animIndex].loopThreshold) {
+        ANIM_REWIND(animTime, anims[animIndex]);
+        animDone = 1;
     }
 }
 
-/* The actor-part's own OAM builder, a no-op once its state machine
- * (`UpdateLogoActor`) reaches state 4 (`self+0x28 == 4`). Resolves the
- * part's current keyframe's tile-graphics pointer (the same
- * `GetAnimFrameData`-shaped lookup `InitLogoActor` inlines), computes its
- * screen position via two `__divsi3` sine/cosine projections against
- * the part's own position/scale fields (`self+0x1c`/`self+0x20`,
- * `self+0x30`'s trampoline record), clips it against the screen bounds,
- * and - only if the resolved tile pointer differs from the last frame's
- * cached one (`gLogoActorLastFrame`) - re-uploads it to whichever of the
- * two VRAM tile blocks `InitLogoActor` allocated isn't currently displayed
- * (`gLogoActorTileBuffer` toggles which), before queuing the OAM entry
- * itself via `QueueSpriteFrameOam`. */
-void DrawLogoActor(struct actor_self *self)
+/* Draws the actor, unless it is in state 4: projects its position by
+ * its depth (an affine sprite scaled by depth / the record's baseDepth,
+ * double-size when nearer than that), clips it against the screen and, when the frame changed since
+ * the last draw, unpacks the new one into the other of the two VRAM tile
+ * blocks before queuing the OAM entry (QueueSpriteFrameOam). */
+void LogoActor::Draw()
 {
     s32 scale;
     s32 attr1;
     struct anim_frame_record *rec;
     u8 *frame;
 
-    if (self->state == 4)
+    if (state == 4)
         return;
     {
-        s32 base = Q8_TO_INT(self->animTime);
-        s32 idx = self->animIndex;
-        struct anim_frame_record *table = self->anims;
+        s32 base = Q8_TO_INT(animTime);
+        s32 idx = animIndex;
+        struct anim_frame_record *table = anims;
         s32 val;
 
         val = table[idx].frameIndex;
         rec = &table[idx];
         val += base;
-        frame = (u8 *)self->frameOffsets[val];
+        frame = (u8 *)frameOffsets[val];
     }
     /* Declared in a nested block so their stack slots land after
      * `rec`'s, as in the ROM. */
@@ -447,11 +381,11 @@ void DrawLogoActor(struct actor_self *self)
         halfW = w * 4;
         h = frame[1];
         halfH = h * 4;
-        depth = self->z;
-        scale = Q8_DIV(depth, self->record->baseDepth);
+        depth = z;
+        scale = Q8_DIV(depth, record->baseDepth);
         f = 0x100000 / depth;
-        sy = Q8_TO_INT(Q12_MUL(self->y, f) + 0x5000);
-        sx = Q8_TO_INT(Q12_MUL(self->x, f) + 0x7800);
+        sy = Q8_TO_INT(Q12_MUL(y, f) + 0x5000);
+        sx = Q8_TO_INT(Q12_MUL(x, f) + 0x7800);
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;
@@ -466,15 +400,16 @@ void DrawLogoActor(struct actor_self *self)
             attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
             if (frame != gLogoActorLastFrame) {
                 gLogoActorTileBuffer ^= 1;
-                gUnpackRleSpriteFrameFunc(gLogoActorTiles[gLogoActorTileBuffer],
+                gUnpackRleSpriteFrameFunc((u16 *)gLogoActorTiles[gLogoActorTileBuffer],
                                           (struct rle_frame *)frame);
                 gLogoActorLastFrame = frame;
             }
             {
-                /* the ROM computes the tile number in r0 */
-                MATCH_HOLD_REG(u32, tile, r0) = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
+                /* The tile number first (r0), then the palette into r1:
+                 * a local, ORed into the palette. */
+                u32 tile = GET_TILE_NUM(gLogoActorTiles[gLogoActorTileBuffer]);
 
-                QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
+                QueueSpriteFrameOam(attr1, (palette << 12) | tile, scale);
             }
         }
     }

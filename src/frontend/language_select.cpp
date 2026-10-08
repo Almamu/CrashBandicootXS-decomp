@@ -1,13 +1,15 @@
-#include "core.h"
+#include "frontend.hpp"
+
+extern "C" {
 #include "gba/dma_macros.h"
 #include "system.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
-#include "frontend.h"
 #include "audio.h"
 #include "gfx.h"
 #include "globals.h"
+}
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
  * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
@@ -17,91 +19,78 @@
  * result in gLanguage, which picks the gUiText<Lang>/cutscene tables.
  * Sits at the very start of the address range docs/audio.md calls the
  * GAX2 engine, but is game-side code that merely uses PlaySfx.
- * `struct language_select` is in frontend.h. */
+ * LanguageSelect is in frontend.hpp (#664, part 10b); the file starts
+ * with the last of CompanyLogos's and LogoActor's methods
+ * (company_logos.cpp).
+ *
+ * gSmallFont and gLargeFont are still C (src/text/): their virtual calls
+ * are spelled out through the record's slots. */
 
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.c)
- * into a freshly allocated buffer, then queues a DMA3 transfer from that
- * buffer out to `dest` - `unused` (r0) is never read. */
-void LoadTaggedAssetBuffered(void *unused, const void *asset, void *dest)
+ * into a freshly allocated buffer, then DMAs it to `dest`. A method of
+ * the logo screen (LoadVvLogoGraphics's), which it doesn't use. */
+void CompanyLogos::LoadAssetBuffered(const void *asset, void *dest)
 {
     u32 val = *(const u32 *)asset;
     struct dma_regs *dma;
-    void *buf;
-    u32 cnt;
+    u8 *buf;
 
     val >>= 8;
-    buf = OperatorNewArray(val);
+    buf = new u8[val];
     LoadTaggedAsset(asset, buf);
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)buf;
     dma->dst = (u32)dest;
     val >>= 1;
     dma->cnt = val | 0x80000000;
-    cnt = dma->cnt;
-    if (buf != NULL) {
-        OperatorDeleteArray(buf);
-    }
+    dma->cnt;
+    delete[] buf;
 }
 
-/* The company-logo screen's constructor: empty (ShowCompanyLogos
- * allocates the 0x44c-byte object, calls this with it in r0, runs
- * RunCompanyLogos and frees it with DestroyCompanyLogos below). */
-void InitCompanyLogos(void)
+/* The company-logo screen's constructor and destructor, both empty
+ * (ShowCompanyLogos, level_state.c, allocates the screen, runs it and
+ * deletes it). */
+CompanyLogos::CompanyLogos()
 {
 }
 
-void DestroyCompanyLogos(void *self, u32 flags)
+CompanyLogos::~CompanyLogos()
 {
-    if (flags & 1) {
-        OperatorDelete(self);
-    }
 }
 
-/* The company-logo actor's destructor (RunCompanyLogos, title_screen.c):
- * slot 1 of gLogoActorVtable, so no `bl` reaches it - it is
- * called through the vtable with the deleting flags 3. It frees the two
- * VRAM tile blocks InitLogoActor allocated, drops back to the base
- * gActorVtable, unlinks the actor from the actor ring and frees it on
- * flags bit 0 - the same shape as DestroyActor. */
-
-
-void DestroyLogoActor(struct actor_self *self, u32 flags)
+/* The company-logo actor's destructor (slot 1; RunCompanyLogos deletes
+ * it): frees the two VRAM tile blocks the constructor allocated. g++ adds
+ * ActorSelf's inline destructor (the unlink) and the class's operator
+ * delete (mem_free). */
+LogoActor::~LogoActor()
 {
-    self->vtable = (struct actor_vtable *)gLogoActorVtable;
     FreeVramTileBlock(gLogoActorTiles[0]);
     FreeVramTileBlock(gLogoActorTiles[1]);
-    self->vtable = (struct actor_vtable *)gActorVtable;
-    self->next->prev = self->prev;
-    self->prev->next = self->next;
-    if (flags & 1) {
-        mem_free((u8 *)self);
-    }
 }
 
 /* Runs the widget: resets it, draws/flushes once, then polls input each
- * frame (dispatching newly-pressed keys to LanguageSelectInput) until it signals
+ * frame (dispatching newly-pressed keys to Input) until it signals
  * `done`, returning the selected `language`. */
-s32 RunLanguageSelect(void)
+s32 LanguageSelect::Run()
 {
     gLanguageSelect->language = 0;
     gLanguageSelect->frame = 0;
     gLanguageSelect->done = 0;
-    DrawLanguageSelect(gLanguageSelect);
+    gLanguageSelect->Draw();
     WaitForVBlank();
-    CommitLanguageSelectFrame(gLanguageSelect);
+    gLanguageSelect->CommitFrame();
 
     while (gLanguageSelect->done == 0) {
         u16 keys;
-        struct held_pressed_pair *addr;
 
         UpdateKeys(gInput);
-        addr = &gKeys.half;
-        keys = addr->pressed;
-        LanguageSelectInput(gLanguageSelect, keys);
-        DrawLanguageSelect(gLanguageSelect);
+        /* Read before gLanguageSelect, as the ROM loads them. */
+        keys = gKeys.half.pressed;
+        gLanguageSelect->Input(keys);
+        gLanguageSelect->Draw();
         WaitForVBlank();
-        CommitLanguageSelectFrame(gLanguageSelect);
-        UpdateStarfield(gLanguageSelect->starfield);
+        gLanguageSelect->CommitFrame();
+        gLanguageSelect->starfield->Update();
     }
 
     return gLanguageSelect->language;
@@ -112,37 +101,36 @@ s32 RunLanguageSelect(void)
  * 0x49); bit 6/bit 7 decrement/increment the 0-5 `language` value
  * (wrapping around, sfx 0x46). `frame` is a free-running frame
  * counter, incremented every call regardless. */
-void LanguageSelectInput(struct language_select *self, u32 flags)
+void LanguageSelect::Input(u32 flags)
 {
     if (flags & START_BUTTON) {
-        self->done = 1;
-        goto confirm;
+        done = 1;
+        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
     } else if (flags & A_BUTTON) {
-        self->done = 1;
-    confirm:
+        done = 1;
         PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
     } else if (flags & DPAD_UP) {
-        self->language--;
-        if (self->language < 0) {
-            self->language = 5;
+        language--;
+        if (language < 0) {
+            language = 5;
         }
         PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
     } else if (flags & DPAD_DOWN) {
-        self->language++;
-        if (self->language > 5) {
-            self->language = 0;
+        language++;
+        if (language > 5) {
+            language = 0;
         }
         PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
     }
-    self->frame = (self->frame + 1) & 0xff;
+    frame = (frame + 1) & 0xff;
 }
 
 /* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
-extern s32 _call_via_r2(void *self, void *arg, void *fn);
+extern "C" s32 _call_via_r2(void *self, void *arg, void *fn);
 
-/* The language menu's (src/frontend/language_select.c) per-frame draw
+/* The language menu's per-frame draw
  * loop: for each of the six language names (0-5) it sets the shared
- * overlay frame (`gSmallFont`: 1 or 2 from `LanguageSelectBlink`'s blink
+ * overlay frame (`gSmallFont`: 1 or 2 from `Blink`'s blink
  * state on the currently selected entry `language`, 0 elsewhere), measures
  * that slot's glyph with the icon manager's `slots[0]` method, centers
  * it horizontally, and draws it with `slots[2]` at a Y stepping by 0xa
@@ -153,7 +141,7 @@ extern s32 _call_via_r2(void *self, void *arg, void *fn);
  * first call's argument list (so it's loaded between `this` and the
  * method pointer, as the ROM does) matches outright - see
  * docs/matching/archive/gax-toolchain-retry.md. */
-void DrawLanguageSelect(struct language_select *self)
+void LanguageSelect::Draw()
 {
     s32 y;
     s32 i;
@@ -165,8 +153,8 @@ void DrawLanguageSelect(struct language_select *self)
         const u8 *glyph;
         s32 x;
 
-        if (i == self->language)
-            FontSetPalette(gSmallFont, LanguageSelectBlink(self));
+        if (i == language)
+            FontSetPalette(gSmallFont, Blink());
         else
             FontSetPalette(gSmallFont, 0);
         // clang-format off
@@ -199,7 +187,7 @@ void DrawLanguageSelect(struct language_select *self)
  * offsets; the E0 base is read from DC before E0 itself), plus one
  * `zero` local shared by the `gObjVramCursor` word 2/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
-extern void _call_via_r1(void *self, void *fn);
+extern "C" void _call_via_r1(void *self, void *fn);
 
 static inline void IconSetBase(struct bitmap_font *m, u32 base)
 {
@@ -210,12 +198,12 @@ static inline void IconSetBase(struct bitmap_font *m, u32 base)
     _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
-static inline void IconReserveVram(void *c, struct bitmap_font *m)
+static inline void IconReserveVram(struct vram_upload_cursor *c, struct bitmap_font *m)
 {
     ReserveObjVram(c, m->tileCount << 5);
 }
 
-void InitLanguageSelectGraphics(void *unused)
+void LanguageSelect::InitGraphics()
 {
     s32 i;
 
