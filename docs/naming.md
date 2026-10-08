@@ -219,18 +219,12 @@ header that owns their type:
 
 | Header | Helpers | What |
 |---|---|---|
-| `actor_self.h` | `VCALL1`, `VCALL2` | virtual calls through a `vt` method table (the boss parts) |
-| `actor_self.h` | `VTABLE_CALL2`, `VTABLE_CALL3` | virtual calls through `vtable` via `_call_via_r2`/`_call_via_r3` |
-| `actor_self.h` | `ACTOR_LINK_NEXT` | the actor list's `next` link (was also `ACTOR_NEXT`) |
+| `actor_self.h` | `ACTOR_PMF(func)` | a `{0, -1, func}` pointer-to-member record of the C state tables |
 | `aabb.h` | `AABB_VALID(box)` | a box's `w`, read through a volatile (the "box isn't empty" re-read) |
 | `gfx_part.h` | `PART_FLAG_SET(part, shift)` | a +0x28 flag bit tested as a sign test |
 | `gba/dma_macros.h` | `DMA3` | channel 3's registers as a `struct dma_regs` |
 | `frontend.h` | `CLEAR_OAM(oam)` | the logo screens' one-entry OAM clear |
 | `player.h` | `CTRL_KEEP` | SetPlayerCtrlState's "keep the current timer" value |
-
-Two file-local pairs keep the same name on purpose because they expand
-differently: `DRAW_ICON_TEXT` (pause menu) and `SLOT_AT` (logo screens);
-each copy says so.
 
 - **A helper expands to exactly the expression it replaces**: the same
   operands in the same order, the same casts and signedness, the same

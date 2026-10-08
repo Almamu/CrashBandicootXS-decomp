@@ -135,7 +135,6 @@ extern void *GetSpriteBodyBox(void *dest, void *pt);
 /* src/objects/sprite_anim.cpp */
 extern void ResetSpriteFrameIndex(void *part);
 extern void ResetSpriteFrameTimer(void *part);
-extern void DrawSpriteWithOffset(struct actor *part, s32 dx, s32 dy);
 extern void UpdatePartList(struct part_list *list);
 extern void CollidePartList(struct part_list *list, struct aabb box, s32 unused,
                             struct box_part *other);

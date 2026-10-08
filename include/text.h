@@ -35,10 +35,6 @@ extern const struct icon_glyph_metrics gLargeFontGlyphs[75];
 extern const u8 gSmallFontTiles[];
 extern const u8 gLargeFontTiles[];
 
-/* Font's methods (include/font.hpp) under their C names
- * (cxx_symbols.txt), for the C callers: src/text/font.cpp */
-extern void FontSetPalette(struct bitmap_font *self, u8 val);
-
 /* src/text/text_box.c */
 extern s32 GetWordLength(u8 *s);
 #ifdef __cplusplus
