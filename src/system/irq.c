@@ -1,5 +1,4 @@
 #include "core.h"
-#include "match.h"
 #include "system.h"
 #include "audio.h"
 #include <gax.h>
@@ -72,31 +71,25 @@ void EnableVBlankHandler(void)
 {
     irq_handler_t fn = VBlankHandler;
     struct vblank_callbacks *base = &gVBlankCallbacks;
-    s32 unknown = 0;
+    s32 zero = 0;
     s32 *current = &base->funcs[7];
-    // this does not look right, but matches generated assembly
-    u8 tmp;
-    MATCH_HOLD_REG(u8 *, value, r1);
 
     do {
-        *current-- = unknown;
+        *current-- = zero;
     } while ((s32)current >= (s32)&base->funcs[0]);
 
     IrqSetHandler(INTR_INDEX_VBLANK, fn);
 
-    value = (u8 *)REG_ADDR_DISPSTAT;
-    tmp = DISPSTAT_VBLANK_INTR;
-    *value = tmp | *value;
+    *(u8 *)REG_ADDR_DISPSTAT |= DISPSTAT_VBLANK_INTR;
 }
 
 /* The inverse of EnableVBlankHandler: disables the VBlank IRQ in
  * DISPSTAT and reinstalls the previous VBlank handler. */
 void DisableVBlankHandler(void)
 {
-    MATCH_HOLD_REG(vu8 *, dispstat, r1) = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VBLANK_INTR;
 
-    *dispstat &= ~tmp;
+    *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;
 
     IrqRestoreHandler(INTR_INDEX_VBLANK);
 }
@@ -213,57 +206,32 @@ u8 GetDpadDirection(void *input)
 }
 
 /* Reads the raw (active-low) hardware key register, inverts it to
- * active-high, records newly-pressed bits into gKeys' second halfword
- * (`pressed`, read/written through pointer
- * arithmetic off gKeys rather than its own extern: agbcc
- * doesn't know the two globals are adjacent and emits a second,
- * non-matching literal-pool load/store pair otherwise), updates
- * gKeys to the new state, then returns 1 if the low 4 bits
- * (A/B/Select/Start) are all held - a "soft reset" combo check. Both
- * register pins below are plain caller-saved scratch (r3/r0), so
- * neither carries the r4-r7 save/restore hazard: `prevKeys` (r3)
- * matches the ROM's choice for the reload, and `mask` (r0) its choice
- * for the closing mask-and-compare (gcc's own unpinned allocator
- * compares against a fresh immediate instead of reusing r0's
- * already-loaded 0xF). The
- * inline `add %0,%1,#0` anchors a copy of `keys` into a scratch value
- * gcc would otherwise schedule after the `prevKeys` reload instead of
- * before it, despite neither having a data dependency on the other.
+ * active-high, records the newly pressed bits in gKeys' `pressed`,
+ * updates `held` to the new state, then returns 1 if the low 4 bits
+ * (A/B/Select/Start) are all held - a "soft reset" combo check. The
+ * combo is a variable compared against the masked keys, as the ROM
+ * compares two registers (a literal 0xF would be `cmp r0, #15`).
  * `input` (gInput at every call site) is unused. */
 s32 UpdateKeys(void *input)
 {
-    u16 keys;
-    u16 keysCopy;
-    struct held_pressed_pair *addr;
-    MATCH_HOLD_REG(u16, prevKeys, r3);
-    u16 keysLow;
-    MATCH_HOLD_REG(s32, mask, r0);
+    u16 keys = ~REG_KEYINPUT;
+    s32 combo;
 
-    keys = (u16)~REG_KEYINPUT;
-    addr = &gKeys.half;
-    asm volatile("add %0, %1, #0" : "=r"(keysCopy) : "r"(keys));
-    prevKeys = addr->held;
-    addr->pressed = keysCopy & ~prevKeys;
-    addr->held = keys;
-    keysLow = keys;
-    mask = 0xF;
-    keysLow &= mask;
-    if (mask == keysLow) {
+    gKeys.half.pressed = keys & ~gKeys.half.held;
+    gKeys.half.held = keys;
+    combo = 0xF;
+    keys &= combo;
+    if (combo == keys)
         return 1;
-    }
     return 0;
 }
 
-/* Clears gKeys (held and newly pressed). */
-void ClearKeys(void)
+/* Clears gKeys (held and newly pressed). The KeyInput constructor
+ * (spawners.hpp): it returns `self`, which is why the ROM keeps r0 free
+ * and builds the stores in r1/r2. */
+void *ClearKeys(void *self)
 {
-    MATCH_HOLD_REG(struct held_pressed_pair *, addr, r2);
-    MATCH_HOLD_REG(u16, zero, r1);
-
-    addr = &gKeys.half;
-    zero = 0;
-    /* Retyped store: as a plain member store gcc copies `zero` into r0
-     * for it. */
-    *(u16 *)&addr->held = zero;
-    addr->pressed = zero;
+    gKeys.half.held = 0;
+    gKeys.half.pressed = 0;
+    return self;
 }

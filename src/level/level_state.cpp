@@ -32,61 +32,25 @@ extern "C" {
  * palette slot for sprite bank 47's animation 1 palette and loads
  * animation 4's palette into it.
  *
- * The ROM keeps `&gSpriteBankSet` and `&gPaletteCache` alive
- * across the `GetPaletteSlot` call in `r4`/`r7` (only 4 low registers
- * total, `r4`'s slot reused from the now-dead `seconds` parameter).
- * Blanket register pins for all of `self`/`seconds`/the two cached
- * globals/`slot` (mirroring the ROM's map directly) made things worse
- * - a pinned `slot` picked up a spurious truncate-and-remask on every
- * read, and a stray stack spill appeared for the `0x234` offset
- * constant. What actually closes it: 1) a `base` local snapshotting
- * `gPaletteCache`'s value *before* the first chase (not inline in
- * the call), so its evaluation lands in `r0` early exactly like the
- * ROM's `ldr r0,[r7]` and the chase is forced into `r1`; 2) a single
- * `MATCH_HOLD_REG(s32, off, r2)` pin for the `0x8d << 2` (`0x234`) field
- * offset in the *first* chase only, matching the ROM's `movs
- * r2,#0x8d; lsls r2,r2,#2` - this also stops gcc from caching that
- * constant in a register across the `GetPaletteSlot` call, which is what
- * was pushing something else into `r8`; 3) fresh, differently-named
- * locals (`p3b`/`headerb`/`recordb`) for the *second* chase instead of
- * reusing `p3`/`header`/`record` - reusing the same C variable names
- * across both chases made gcc "stick" the second chase's registers to
- * the first's choice instead of letting `r0`/`r1` fall out naturally
- * (`r0` is free again there since the first call's result is already
- * in `slot`/r6). No explicit pin is needed for `self`, `cache1`
- * (`&gPaletteCache`), or `slot` - they land in `r5`/`r7`/`r6`
- * purely from the resulting register pressure, matching the ROM
- * exactly. */
+ * Bank 47 is read through SpriteBankSet::Anims (sprite_obj.hpp) both
+ * times: the ROM rebuilds the bank's offset after the `GetPaletteSlot`
+ * call instead of keeping it in a register across it. The second
+ * palette id is its own statement, so it is read before
+ * `gPaletteCache`, as in the ROM. */
 void FreezeLevelClock(struct level_state *self, s32 seconds)
 {
-    MATCH_HOLD_REG(s32, off, r2);
-    PaletteCache *base;
-    const struct sprite_bank_table *p3, *p3b;
-    const struct sprite_bank *header, *headerb;
-    const struct sprite_anim *record, *recordb;
     u8 recordId, slot;
-    const struct level_room *level;
 
     PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
 
     self->countdown += seconds * 60;
 
-    base = gPaletteCache;
-    p3 = gSpriteBankSet->table;
-    header = p3->banks;
-    off = 0x8d << 2; /* &banks[47] */
-    record = *(const struct sprite_anim **)((u8 *)header + off);
-    recordId = record[1].paletteId;
-    slot = base->GetSlot(recordId);
+    slot = gPaletteCache->GetSlot(gSpriteBankSet->Anims(47)[1].paletteId);
 
-    p3b = gSpriteBankSet->table;
-    headerb = p3b->banks;
-    recordb = headerb[47].anims;
-    recordId = recordb[4].paletteId;
+    recordId = gSpriteBankSet->Anims(47)[4].paletteId;
     gPaletteCache->LoadSlot(slot, recordId);
 
-    level = self->room.cat;
-    if (level->kind == ROOM_KIND_CATEGORY) {
+    if (self->room.cat->kind == ROOM_KIND_CATEGORY) {
         gPaletteCache->UploadSlot(slot);
     }
 }
@@ -100,9 +64,8 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
  * `5`/`9`/`0x3b`/`0x63`) - shaped like a minutes:seconds:centiseconds
  * odometer, saturating (not wrapping) once the top field hits its cap.
  *
- * The trigger half uses the same `FreezeLevelClock` register-pinning recipe
- * (see its comment above) for the `GetPaletteSlot`/`LoadPaletteSlot` cross-
- * call pair. The countdown pointer `addr` is *reused* (reassigned, not
+ * The trigger half reads bank 47 the way `FreezeLevelClock` does (see
+ * its comment above). The countdown pointer `addr` is *reused* (reassigned, not
  * redeclared) for the digit-cascade's own address-chasing in the `else`
  * branch, which is what makes gcc emit the ROM's `subs r1,#4`
  * chain-decrement instead of recomputing `self+0x98`/`self+0x94` fresh
@@ -130,30 +93,14 @@ void TickLevelClock(struct level_state *self)
         *addr = newCountdown;
 
         if (newCountdown == 0) {
-            MATCH_HOLD_REG(s32, off, r2);
-            PaletteCache *base;
-            const struct sprite_bank_table *p3, *p3b;
-            const struct sprite_bank *header, *headerb;
-            const struct sprite_anim *record, *recordb;
             u8 recordId, slot;
-            const struct level_room *level;
 
-            base = gPaletteCache;
-            p3 = gSpriteBankSet->table;
-            header = p3->banks;
-            off = 0x8d << 2; /* &banks[47] */
-            record = *(const struct sprite_anim **)((u8 *)header + off);
-            recordId = record[1].paletteId;
-            slot = base->GetSlot(recordId);
+            slot = gPaletteCache->GetSlot(gSpriteBankSet->Anims(47)[1].paletteId);
 
-            p3b = gSpriteBankSet->table;
-            headerb = p3b->banks;
-            recordb = headerb[47].anims;
-            recordId = recordb[1].paletteId;
+            recordId = gSpriteBankSet->Anims(47)[1].paletteId;
             gPaletteCache->LoadSlot(slot, recordId);
 
-            level = self->room.cat;
-            if (level->kind == ROOM_KIND_CATEGORY) {
+            if (self->room.cat->kind == ROOM_KIND_CATEGORY) {
                 gPaletteCache->UploadSlot(slot);
             }
         }
@@ -811,10 +758,8 @@ void AddLife(struct level_state *self)
  * `self+0x1c0`/`0x1c4` to `SpawnCrateGem`). Only caller is
  * `RunRoom`'s dispatch opener (`run_room.cpp`), which passes
  * `*gLevelState` as `self`. */
-void CheckAllCratesBroken(void *selfArg)
+void CheckAllCratesBroken(struct level_state *self)
 {
-    MATCH_HOLD_REG(struct level_state *, self, r4) = (struct level_state *)selfArg;
-
     if (self->crateCount == self->crateTotal && !IsInBonusRound(self) && !IsInGemPath(self)) {
         const struct level_room *level = self->room.cat;
 
@@ -825,24 +770,7 @@ void CheckAllCratesBroken(void *selfArg)
             mask |= value;
             *flags = mask;
         } else {
-            /* Reproduces the ROM's exact map: `magic` (the 3rd
-             * `SpawnCrateGem` argument's true value) is loaded into r0
-             * early rather than right before the call, and `off` is
-             * pinned to r3 and kept across its own +4 increment instead
-             * of being recomputed from scratch for the second field - see
-             * docs/workflow.md step 7 / matching_decomp_register_pinning
-             * memory. */
-            s32 magic = 0xffff;
-            MATCH_HOLD_REG(s32, off, r3) = 0xe0 << 1;
-            u16 *addr1 = (u16 *)((u8 *)self + off); /* &self->crateGemX */
-            u16 b = *addr1;
-            MATCH_HOLD_REG(u16 *, addr2, r2);
-            u16 c;
-            off += 4;
-            MATCH_KEEP_VOLATILE(off);
-            addr2 = (u16 *)((u8 *)self + off); /* &self->crateGemY */
-            c = *addr2;
-            SpawnCrateGem(magic, b, c, 0);
+            SpawnCrateGem(0xffff, self->crateGemX, self->crateGemY, 0);
         }
     }
 }
@@ -912,6 +840,7 @@ void RestoreCheckpoint(struct level_state *self)
 void SetCheckpoint(void *selfArg, s32 flag, s32 *pair)
 {
     struct level_state *self = (struct level_state *)selfArg;
+    struct entity_flags *flags;
     u8 tmp;
 
     self->room.checkpointFlags = flag;
@@ -928,19 +857,16 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pair)
         dst[1] = py;
     }
 
-    pair = (s32 *)gEntityFlags;
+    flags = gEntityFlags;
     {
-        void *a = (u8 *)pair + 0x108;
-        void *b = (u8 *)pair + 8;
+        void *a = flags->bits0Copy;
+        void *b = flags->bits0;
+        // the ROM loads the control word fresh for each call: the r2 pin
+        // (SetCheckpointAtPlayer, bonus_round.c, has the reason)
         MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
         CpuSet(a, b, ctrl);
     }
-    {
-        void *a = (u8 *)pair + 0x308;
-        void *b = (u8 *)pair + 0x208;
-
-        CpuSet(a, b, CPU_SET_32BIT | 0x40);
-    }
+    CpuSet(flags->bits1Copy, flags->bits1, CPU_SET_32BIT | 0x40);
 
     MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
 }
@@ -1002,98 +928,35 @@ void nullsub_24(void)
 {
 }
 
-/* Unpacks the packed halfword at `self->0x14c`/`0x14d` (see
- * `PackSaveData`'s inverse below) into `self->0x74`/`0x6c`/`0x78`, but
- * first refreshes the snapshot itself: copies `src` into `self`'s first
- * `0x68` bytes, then re-copies `self` into the `0x14c`-based snapshot
- * block. */
+/* Unpacks the packed halfword of `saveData` (see `PackSaveData`'s
+ * inverse below) into `lives`/`wumpa`/`maskLevel`, but first refreshes
+ * the snapshot itself: copies `src` into `self`'s progress block, then
+ * re-copies that into `saveData`. `wumpa` is read off `self` (the ROM's
+ * `ldrb [self, 0x14d]`), the other two through `snap`. */
 void UnpackSaveData(struct level_state *self, const struct game_progress *src)
 {
-    u8 *snap = self->saveData.packedStats;
-    /* Register pins reproduce the ROM's exact "freshly loaded value in
-     * one register, shifted result in another" shape for both the byte
-     * and halfword extracts below (see docs/workflow.md step 7). */
-    MATCH_HOLD_REG(u8, raw, r1);
-    MATCH_HOLD_REG(s32, val, r0);
-    MATCH_HOLD_REG(u16, packed, r5);
+    struct game_progress *snap = &self->saveData;
 
     MemCopy32(&self->progress, src, sizeof(struct game_progress));
     MemCopy32(snap, &self->progress, sizeof(struct game_progress));
 
-    raw = *snap;
-    val = PACKED_STATS_LIVES(raw);
-    self->lives = val;
-
-    self->wumpa = self->saveData.packedStats[1] >> 1;
-
-    packed = *(u16 *)snap;
-    val = PACKED_STATS_MASK_LEVEL(packed);
-    self->maskLevel = val;
+    self->lives = snap->lives;
+    self->wumpa = self->saveData.wumpa;
+    self->maskLevel = snap->maskLevel;
 }
 
-/* Packs `self->0x74`/`0x6c`/`0x78` back into the halfword at
- * `self->0x14c`/`0x14d` - the inverse of `UnpackSaveData` above - and
- * returns the `self->0x14c` snapshot, `&self->saveData`.
- *
- * Register-pinned to reproduce three ROM-specific shapes plain C
- * phrasing alone didn't reach (see docs/workflow.md step 7):
- *  - `self` stays live in r3 across the whole function (natural
- *    codegen instead folds `self` into each field access as an
- *    immediate-offset addressing mode).
- *  - `self->0x14d` is addressed via register+register indexing (a
- *    literal `0x14D` loaded once into r5, added to r3 right at the
- *    `ldrb`/`strb`) rather than through a precomputed pointer -
- *    reproduced with two opaque `asm volatile` accesses.
- *  - the first field's `~0x7f` mask is materialized as a full 32-bit
- *    `0x80; neg` pair (the same "freshly loaded value and its
- *    transformed result in different registers" idiom as
- *    `UnpackSaveData`) rather than narrowed to an 8-bit `#0x80` AND the
- *    way this compiler's optimizer does when it can prove the masked
- *    operand is byte-ranged - reproduced with an opaque `asm volatile`
- *    for just that mask. Because the return value (`self+0x14c`) ends
- *    up already sitting in r0 at the end, the epilogue's LR-restore
- *    register naturally lands on r1 instead of r0, matching the ROM's
- *    `pop {r1}; bx r1` without any extra hint. */
+/* Packs `lives`/`wumpa`/`maskLevel` back into `saveData`'s halfword -
+ * the inverse of `UnpackSaveData` above - and returns `&self->saveData`.
+ * As there, `wumpa` goes through `self` (`strb [self, 0x14d]`). */
 struct game_progress *PackSaveData(void *selfArg)
 {
-    MATCH_HOLD_REG(struct level_state *, self, r3) = (struct level_state *)selfArg;
-    struct game_progress *snap;
-    u8 byte0;
-    u16 packed;
-    MATCH_HOLD_REG(s32, t, r2);
+    struct level_state *self = (struct level_state *)selfArg;
+    s32 lives = self->lives;
+    struct game_progress *snap = &self->saveData;
 
-    t = self->lives;
-    snap = &self->saveData;
-    t &= PACKED_STATS_LIVES_MASK;
-    {
-        s32 mask;
-        asm volatile("mov %0, #0x80\n\tneg %0, %0" : "=r"(mask));
-        mask &= snap->packedStats[0];
-        byte0 = mask | t;
-    }
-    snap->packedStats[0] = byte0;
-
-    {
-        s32 field6c = self->wumpa;
-        u32 off = offsetof(struct level_state, saveData.packedStats[1]);
-        s32 shifted = field6c << 1;
-        s32 one = 1;
-        MATCH_HOLD_REG(u32, raw, r4);
-        asm volatile("ldrb %0, [%1, %2]" : "=r"(raw) : "r"(off), "r"(self));
-        one &= raw;
-        one |= shifted;
-        asm volatile("strb %0, [%1, %2]" : : "r"(one), "r"(off), "r"(self));
-    }
-
-    {
-        s32 shifted = (self->maskLevel & 3) << PACKED_STATS_MASK_LEVEL_SHIFT;
-        s32 mask = ~PACKED_STATS_MASK_LEVEL_MASK;
-        MATCH_HOLD_REG(u16, loaded, r5) = *(u16 *)snap->packedStats;
-        mask &= loaded;
-        packed = mask | shifted;
-    }
-    *(u16 *)snap->packedStats = packed;
-
+    snap->lives = lives;
+    self->saveData.wumpa = self->wumpa;
+    snap->maskLevel = self->maskLevel;
     return snap;
 }
 

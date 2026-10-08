@@ -95,16 +95,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
  * (`gPlayer`) into `checkpointX`/`checkpointY`, clears two flag
  * bytes, and syncs two spans of the `gEntityFlags` bitmap
  * (`+0x108`->`+8`, `+0x308`->`+0x208`) via the BIOS `CpuSet` wrapper -
- * reads like an end-of-level "freeze the HUD/save state" snapshot.
- *
- * The `self+0xa9`-byte-to-`+0xd0` copy is written as a read, then
- * `p += 0x27` on the *same* pointer, then the store - matching the
- * ROM's "derive `+0xd0` by adding `0x27` to the register that still
- * holds `+0xa9`" shape (a plain `*(p+0x27) = *p;` computed the
- * destination address before the read instead). In the `kind == 3`
- * branch that same pointer is then bumped again (`p += 0x14`) to
- * become the `self+0xe4` destination for the trailing `MemCopy32`
- * copy, reusing the register chain exactly like the ROM. */
+ * reads like an end-of-level "freeze the HUD/save state" snapshot. */
 void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
 {
     const struct level_room *level = self->room.cat;
@@ -112,32 +103,18 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
     if (level->kind == ROOM_KIND_CATEGORY) {
         self->room.checkpointCrateCount = GetCrateCount(self);
 
-        {
-            MATCH_HOLD_REG(u8 *, p, r0) = (u8 *)self + 0xa9;
-            u8 value = *p;
-
-            p += 0x27;
-            *p = value;
-            p += 0x14;
-            MemCopy32(p, self, 0x68);
-        }
+        self->room.checkpointSwitchPressed = self->switchPressed;
+        MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
     } else {
         struct player *player = gPlayer;
         s32 x = player->x;
         s32 y = player->y;
-        void *base;
+        struct entity_flags *flags;
 
         self->room.checkpointFlags = arg1;
         self->room.checkpointCrateCount = GetCrateCount(self);
 
-        {
-            MATCH_HOLD_REG(u8 *, p, r0) = (u8 *)self + 0xa9;
-            u8 value = *p;
-
-            p += 0x27;
-            *p = value;
-        }
-
+        self->room.checkpointSwitchPressed = self->switchPressed;
         ClearSpawnAtStart(self);
         ResetDeaths(self);
         {
@@ -155,24 +132,24 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
             dst[1] = y;
         }
 
-        base = gEntityFlags;
+        flags = gEntityFlags;
         {
-            /* The control word is loaded from the literal pool fresh
-             * for each call (matching the ROM's two separate `ldr
-             * r2, =0x04000040`) rather than hoisted into one shared
-             * register across both calls - see `SetCheckpoint`'s
-             * identical gotcha in docs/matching/issue-37-game-loop-
-             * 234e8.md. The first call's control word is pinned to r2
-             * after the two pointer arguments are computed; the second
-             * call needs nothing. */
-            void *a = (u8 *)base + 0x108;
-            void *b = (u8 *)base + 8;
+            /* The ROM loads the control word from the literal pool
+             * fresh for each call (two `ldr r2, =0x04000040`). Written
+             * as the same constant twice, gcc keeps it in one callee-
+             * saved register across the first call (SpawnRoomEntities's
+             * shape, room_entities.cpp), and no spelling of the
+             * constant stops that; pinning the first call's copy to its
+             * argument register r2 does (the second call then needs
+             * nothing). SetCheckpoint (level_state.cpp) is the same. */
+            void *a = flags->bits0Copy;
+            void *b = flags->bits0;
             MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
 
             CpuSet(a, b, ctrl);
         }
-        CpuSet((u8 *)base + 0x308, (u8 *)base + 0x208, CPU_SET_32BIT | 0x40);
+        CpuSet(flags->bits1Copy, flags->bits1, CPU_SET_32BIT | 0x40);
 
-        MemCopy32((u8 *)self + 0xe4, self, 0x68);
+        MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
     }
 }

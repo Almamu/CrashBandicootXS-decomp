@@ -56,7 +56,7 @@ extern void DisableFrameLimit(void);
 extern void SetFrameLimit(u32 interval);
 extern u8 GetDpadDirection(void *input);
 extern s32 UpdateKeys(void *input);
-extern void ClearKeys(void);
+extern void *ClearKeys(void *self);
 
 /* src/system/main.c */
 extern s32 AgbMain(void);
