@@ -3,7 +3,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 #include "gba/io_reg.h"
@@ -123,11 +122,6 @@ void TitleScreen::LoadObjTiles()
     u8 *tileDest = (u8 *)OBJ_VRAM0;
     u8 *paletteDest = (u8 *)OBJ_PLTT;
     s32 pass;
-    /* The next package, from the map load to the end of the pass: with
-     * the copy, the ROM's r7 holds `pkg` only until then and the inner
-     * loop reuses it. Pinned (register allocation): unpinned, `next` and
-     * `pass` swap r8 and r9. */
-    MATCH_HOLD_REG(const struct bg_package *const *, next, r8);
 
     for (pass = 0; pass <= 3; pass++) {
         u8 *palette;
@@ -137,14 +131,7 @@ void TitleScreen::LoadObjTiles()
 
         palette = new u8[*(u32 *)(*pkg)->paletteAsset >> 8];
         LoadTaggedAsset((*pkg)->paletteAsset, palette);
-        {
-            struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-
-            dma->src = (u32)palette;
-            dma->dst = (u32)paletteDest;
-            dma->cnt = 0x80000010;
-            dma->cnt;
-        }
+        DmaCopy16(3, palette, paletteDest, 0x20);
         paletteDest += 0x20;
         delete[] palette;
 
@@ -153,25 +140,19 @@ void TitleScreen::LoadObjTiles()
 
         count = (*pkg)->height * (*pkg)->width;
         map = new u16[count];
-        LoadTaggedAsset((*pkg++)->mapAsset, map);
-        next = pkg;
+        LoadTaggedAsset((*pkg)->mapAsset, map);
         {
             s32 i;
 
             for (i = 0; i < count; i++) {
-                struct dma_regs *dma2 = (struct dma_regs *)REG_ADDR_DMA3SAD;
-
-                dma2->src = (u32)(tiles + ((map[i] & 0xff) << 5));
-                dma2->dst = (u32)tileDest;
-                dma2->cnt = 0x80000010;
-                dma2->cnt;
+                DmaCopy16(3, tiles + ((map[i] & 0xff) << 5), tileDest, 0x20);
                 tileDest += 0x20;
             }
         }
 
         delete[] map;
         delete[] tiles;
-        pkg = next;
+        pkg++;
     }
 }
 

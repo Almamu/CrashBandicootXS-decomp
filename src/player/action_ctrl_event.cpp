@@ -137,7 +137,13 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
                 slamBlocked = 1;
             /* The ROM loads this 1 (r5) apart from the A test's own 1;
              * unhidden, cse copies it into the test (`adds r4, r5`), with
-             * QueueNowY's literal 1 too. The same in the two cases below. */
+             * QueueNowY's literal 1 too. The same in the case below. A
+             * `u8` flag, which frees the launch pad's (below), loads the
+             * test's 1 apart here too, but the byte AND's result then
+             * takes a copy into the flag's register (`movs r0, #1; adds
+             * r4, r0`); `bool`/`s16`/`u16` flags, a `u8` copy of the AND
+             * and `(u8)` casts don't help, and the permuter only found a
+             * shared `s16` 1 also used by an unrelated test. */
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
@@ -178,11 +184,16 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
     case EVENT_LAUNCH_PAD:
         {
             u32 in = gKeys.all;
-            s32 fire;
+            u8 fire;
             s32 one;
 
             gAudioContext->PlaySfx(SFX_SPIN, 0x100);
-            MATCH_CONST(one, 1);
+            /* A `u8` A flag (it is stored to the u8 tornado fields): the
+             * AND is then done on the byte, whose 1 cse doesn't take from
+             * `one`'s word-sized 1 (with an `s32` flag it does, as in the
+             * two cases above). `in` dies at the AND, so the result
+             * takes its register, as in the ROM. */
+            one = 1;
             fire = in & 1;
             if (fire) {
                 SetModeAnim(ACTION_STATE_AIR_SPIN, 0x10, 0, 0x18);

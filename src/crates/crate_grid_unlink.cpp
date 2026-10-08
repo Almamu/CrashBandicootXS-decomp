@@ -12,7 +12,10 @@ extern "C" {
  * pin reproduces that. Unpinned, the head gets r0 and the entry r1, or
  * (read in the store, `node->wrap->next = freeHead`) the entry is loaded
  * first; a copy of `node`, the loads into locals in either order and an
- * inline setter don't change that. */
+ * inline setter don't change that. Through a reference or a pointer to
+ * `freeHead` (#662 round 2) the registers are the ROM's but `node->wrap`
+ * is loaded first again; an inline push taking the head by pointer or
+ * reference, or the link first, doesn't help either. */
 static inline void FreeNode(CrateList *list, CrateGridNode *node)
 {
     MATCH_HOLD_REG(CrateGridLink *, head, r1) = list->freeHead;

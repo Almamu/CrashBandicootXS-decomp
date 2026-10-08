@@ -847,8 +847,8 @@ each:
 - **Instructions no C produces** (17 instruction asms): `swi` calls,
   GAX2's hardware settle delays and call into ARM code.
 - **Accesses of another width or a forced load** (23 retyped field
-  accesses, 9 scoped volatiles): `PlayerCtrl::StartStroke`'s byte
-  re-store of `tag`, `Player::HandleEvent`'s dead load of `maskLevel`.
+  accesses, 9 scoped volatiles): `Player::HandleEvent`'s dead load of
+  `maskLevel`.
 - **An uninitialized register the ROM really uses** (2 self-inits, both
   in lib/): `GAX_fx`'s `sel`.
 
@@ -914,6 +914,31 @@ self-inits (the ROM uses the uninitialized register), `itoa_arm`,
 barriers, `FindSubstring`'s case folds (63 more spellings: only `char`
 locals keep both arms' copies, with the truncation inside one arm),
 `GAX2_init`'s and `DrawWrappedText`'s holds and `GaxChannelMix`'s keep.
+
+Round 2, player/crates/frontend (after the C++ conversion):
+
+- **The project's DMA macros instead of a shared register struct.**
+  `CompanyLogos::DrawVvLogoPieces` copied its emblem rows through one
+  `struct dma_regs *` held for the whole block, which needed an r2 pin
+  and three `MATCH_BARRIER`s of loop insn-count padding. With
+  `DmaCopy16` (its own `dmaRegs` pointer, set inside the loop) both go.
+  `TitleScreen::LoadObjTiles`'s r8 pin went with a plain `pkg++` at the
+  end of the pass instead of a `next` copy.
+- **A store the optimizer folds, through an inline parameter.**
+  `PlayerCtrl::StartStroke`'s `ldrb`/`strb` of `tag` is the
+  "switch to animation `tag`" idiom (Crate::SetTag's) called with the
+  current animation; `t->tag = t->tag` is folded away, the parameter
+  store isn't, so the volatile cast went.
+- **A byte flag for a separate constant.** In `ActionCtrl::HandleEvent`
+  the launch pad's A flag as a `u8` (it is stored to `u8` fields) makes
+  the AND a byte operation, whose 1 cse doesn't share with `one`'s
+  word-sized 1, so its `MATCH_CONST` went. In the two bounce cases (and
+  `StateJump`) the byte AND then lands in another register.
+- **Kept:** the stack-box `BOX_ADDR`s are two passes' doing: cse1
+  merges the builder calls' `&f.b` inside one basic block (no flag
+  changes that), and gcse's PRE moves the overlap test's. -fno-gcse
+  frees the latter in crate_touch.o and crate_hit.o but puts
+  `Crate::QueuePlayerCollision` 2000 lines off, so no flag was added.
 
 ## Survey and conversion record (#576)
 
