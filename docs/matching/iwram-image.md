@@ -603,9 +603,12 @@ tree before this pass, with agbcc_arm_patched as the ARM compiler,
 prints `crashbandicootxs.gba: OK`.
 
 **Building it.** `tools/build_patched_agbcc_arm.sh <agbcc-dir> [<repo>]`
-copies the agbcc checkout to a temporary directory, applies the patch,
-runs SAT-R's `build.sh` steps for `gcc_arm` (`configure
---target=arm-elf --host=i386-linux-gnu`, then `make clean` - a built
+copies the agbcc checkout to a temporary directory, applies the patch
+(unless the checkout already has it), runs SAT-R's `build.sh` steps for
+`gcc_arm` (`configure --target=arm-elf --host=i386-linux-gnu`, with
+`CC="gcc -std=gnu99 -w -fpermissive"` since on a current host gcc some
+of the 1999 configure checks otherwise fail to compile and answer wrong,
+`-fpermissive` only where gcc accepts it for C; then `make clean` - a built
 checkout's objects are stock and the Makefile doesn't track `arm.h` -
 and `make cc1`), and installs `cc1` as
 `tools/agbcc/bin/agbcc_arm_patched`. agbcc, old_agbcc and agbcc_arm

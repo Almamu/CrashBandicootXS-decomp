@@ -5,9 +5,10 @@
 #   tools/build_agbccpp.sh <agbcc-cp-source-dir> [<install-dir>]
 #
 # <agbcc-cp-source-dir> is a checkout of https://github.com/notyourav/agbcc
-# at branch `cp` (decomp.me's "agbccpp" is that branch's release). It
-# isn't modified. <install-dir> is the decomp repository (default: this
-# script's repository). The compilers are installed as
+# at branch `cp` (decomp.me's "agbccpp" is that branch's release), with
+# the patch below already applied or not. It isn't modified.
+# <install-dir> is the decomp repository (default: this script's
+# repository). The compilers are installed as
 # <install-dir>/tools/agbcc/bin/agbcp and .../old_agbcp, next to agbcc.
 #
 # Both are the branch's g++/ tree with
@@ -59,7 +60,17 @@ build() { # <tree> <extra host CFLAGS>
 }
 
 cp -R "$SRC" "$WORK/src"
-(cd "$WORK/src" && patch -p1 < "$PATCH")
+# A checkout that already has the patch applied is used as it is.
+cd "$WORK/src"
+if patch -p1 -f -s --dry-run < "$PATCH" >/dev/null 2>&1; then
+	patch -p1 -f < "$PATCH"
+elif patch -p1 -R -f -s --dry-run < "$PATCH" >/dev/null 2>&1; then
+	echo "$SRC: patch already applied"
+else
+	echo "$PATCH doesn't apply to $SRC" >&2
+	exit 1
+fi
+cd "$WORK"
 
 cp -R "$WORK/src" "$WORK/new"
 build "$WORK/new" ""
