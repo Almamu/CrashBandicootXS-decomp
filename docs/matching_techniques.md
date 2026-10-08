@@ -718,6 +718,34 @@ and under it `SetSaveFlags`/`ClearSaveFlags` are plain `|=`/`&= ~`
 (four pins and an instruction asm gone); `pause_menu_draw.o` also
 matches under old_agbcp, but that frees none of its sites.
 
+Step 3 (actors, bosses, crates, enemies, player, vehicles) replaced
+these with plain C/C++:
+
+- **A re-read for the ROM's register copy.** Reading the field again
+  (`table->kind == 0x1b` after `u8 v = table->kind`) gives cse a load
+  it turns into `adds r0, r1, #0`, where the asm wrote that copy
+  (`CountCategoryCrates`).
+- **A `u8` copy that stays a copy.** An `s32` copy of a loaded byte is
+  folded into it; a `u8` one keeps its own register (`UpdateSkidAnim`'s
+  `tagCopy`, found by decomp-permuter).
+- **Constant field stores instead of zero locals.** `bc->animDone = 0`
+  loads its 0 into a byte-mode register that cse doesn't share with an
+  `s32` 0, so the ROM's two `movs rN, #0` come out without pinning
+  either (`YetiStateChase`, `YetiStateCharge`).
+- **An inline helper for the argument order.** `CreateYeti`'s
+  `movs r0, #0x1c` before the heap flag is the actors' operator new
+  inlined: the size goes in as the helper's argument (`AllocIwram`),
+  which [inline-argument order](#inline-argument-order) puts first.
+- **`bool` for a tested 0/1 result.** With an `s32` inline result, cse
+  folds `if (StepCannonFlash(this))` on both paths; a `bool` keeps the
+  ROM's `movs r0, #0/#1; cmp r0, #0`.
+- **One local per axis.** `UpdateActorBgScroll` reused one `target` and
+  one `delta` for X and Y; separate `targetX`/`targetY` and
+  `deltaX`/`deltaY` (decomp-permuter) and `MIN` for the clamp replace
+  three pins.
+- **Read the globals directly.** `UpdateYetiBg2`'s address locals and
+  r1 pin go when the flags are read and written by name.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4
