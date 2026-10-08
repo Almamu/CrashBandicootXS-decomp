@@ -1,5 +1,4 @@
 #include "gax_internal.h"
-#include "match.h"
 
 /* Word-wrap text/console-tile renderer used by the fatal-error screen
  * (GaxFatalError): writes `str`'s characters as tile indices into BG
@@ -26,150 +25,70 @@
  * lowercase glyphs), and the three remapped punctuation marks above
  * land at tiles 37-39 right after 'Z'.
  *
- * The ROM keeps every one of `dst`/`colIdx`/`s`/`c`/`peekSeed`/`len`/
- * `mask`/`peek` alive simultaneously across the word-wrap scan, filling
- * every low register plus `ip` (this function has no calls at all,
- * nothing to save across). `colIdx`, `peekSeed` and the r0 temporaries
- * (`t`, `peek`, `tmp`) are pinned; the rest land in the ROM's registers
- * on their own. `colIdx` does double
- * duty as the ROM's own r1 does: the word-wrap column index while
- * scanning ahead, then (once that's dead) reused for the char being
- * remapped into a tile index - matching the ROM's own register reuse,
- * not a naming accident. The final `else if (colIdx > 0x40)` (no
- * trailing `else`) is provably always true there (the two branches
- * above it already establish `colIdx > 0x40`), but the ROM re-tests it
- * anyway with its own dead `bls`-to-store branch that skips both the
- * subtraction and the shared truncation tail below - kept exactly as
- * the ROM has it rather than simplified to a plain `else`, since that
- * changes gcc's cross-jump merging of the three arithmetic branches'
- * shared `(u8)`-truncation tail. */
+ * `tile` is a copy of the character (the ROM maps it in r1 from r6),
+ * and each subtraction is truncated back to a byte, which agbcc does in
+ * r0 before moving it to r1. The final `else if (tile > 0x40)` (no
+ * trailing `else`) is always true there, but the ROM re-tests it (a
+ * dead `bls` to the store), so it's kept. */
 void GaxDrawText(u32 col, u32 row, const char *str)
 {
-    u8 *dst;
-    MATCH_HOLD_REG(s32, colIdx, r1);
-    const u8 *s;
-    u32 c;
-    MATCH_HOLD_REG(s32, peekSeed, r2);
+    const u8 *s = (const u8 *)str;
+    u32 base = col + BG_SCREEN_ADDR(0);
+    u8 *dst = (u8 *)(col + base + row * 64);
+    s32 x;
     s32 len;
-    s32 mask;
-    u32 base;
+    u32 c;
+    u32 first;
+    u32 peek;
+    u32 tile;
 
-    s = (const u8 *)str;
-    base = col + BG_SCREEN_ADDR(0);
-    dst = (u8 *)(col + base + row * 64);
-
-    peekSeed = *s;
-    if (peekSeed == 0) {
+    first = *s;
+    if (first == 0)
         return;
-    }
-
-    mask = -0x40;
-
     do {
-        const u8 *next;
-
         len = 0;
-        {
-            /* Same r0-first routing as everywhere else in this
-             * function - the ROM loads the 0x3f mask into r0 and ANDs
-             * dst into it there, only shifting into colIdx (r1) as a
-             * separate last step. */
-            MATCH_HOLD_REG(s32, t, r0) = 0x3f;
-            t &= (s32)dst;
-            colIdx = t >> 1;
-        }
-        c = s[0];
-        next = s + 1;
-
-        if (colIdx <= 0x1f) {
-            MATCH_HOLD_REG(s32, peek, r0) = peekSeed;
-
-            /* The ROM re-tests `colIdx > 0x1f` at the top of every
-             * lookahead iteration (not just once on entry, which the
-             * `if` above already covers) - dead in practice since the
-             * `colIdx > 0x1d` break below always fires first, but kept
-             * exactly as a `goto`-driven first-iteration skip to match
-             * gcc's own loop-rotated codegen byte-for-byte. */
-            goto term_check;
+        x = ((u32)dst & 0x3f) >> 1;
+        c = *s;
+        if (x <= 0x1f) {
+            /* The loop is entered at its test, with the byte already
+             * read for the outer loop's condition. */
+            peek = first;
+            goto check;
             for (;;) {
-                colIdx++;
+                x++;
                 len++;
-                if (colIdx > 0x1f) {
+                if (x > 0x1f)
                     break;
-                }
                 peek = s[len];
-            term_check:
-                if (peek == 0 || peek == ' ' || peek == '\n') {
+            check:
+                if (peek == 0 || peek == ' ' || peek == '\n')
                     break;
-                }
-                if (colIdx > 0x1d) {
-                    /* `dst &= mask;` alone lets gcc's copy propagation
-                     * compute the AND directly into r3 (`and r3,r3,r0`)
-                     * - the ROM instead routes it through r0 first
-                     * (`mov r0,ip; ands r0,r3; adds r3,r0,#0`); `dst`
-                     * is genuinely modified by this, so it's an output
-                     * operand rather than just a clobber. */
-                    // clang-format off
-                    asm volatile("mov r0, %1\n\t"
-                                 "and r0, %0\n\t"
-                                 "add %0, r0, #0"
-                                 : "+r"(dst)
-                                 : "r"(mask)
-                                 : "r0");
-                    // clang-format on
-                    dst += 0x40;
+                if (x > 0x1d) {
+                    dst = (u8 *)(((s32)dst & ~0x3f) + 0x40);
                     break;
                 }
             }
         }
-
-        colIdx = c;
-        s = next;
-
-        if (colIdx == '_') {
-            colIdx = 0x5d;
-        }
-        if (colIdx == ':') {
-            colIdx = 0x5c;
-        }
-        if (colIdx == '.') {
-            colIdx = 0x5b;
-        }
-        if (colIdx == '\n') {
-            /* Same "route the AND through r0 first" quirk as the
-             * word-wrap case above. */
-            // clang-format off
-            asm volatile("mov r0, %1\n\t"
-                         "and r0, %0\n\t"
-                         "add %0, r0, #0"
-                         : "+r"(dst)
-                         : "r"(mask)
-                         : "r0");
-            // clang-format on
-            dst += 0x3f;
-        }
-
-        /* Each arithmetic branch below computes into `tmp` (r0), a
-         * genuinely different register from `colIdx` (r1) - the ROM
-         * always copies `colIdx` into r0 before subtracting there,
-         * then truncates back into r1 on the way out, rather than ever
-         * subtracting r1 in place. */
-        if (colIdx == ' ') {
-            colIdx = 0;
-        } else if ((u32)colIdx <= 0x40) {
-            MATCH_HOLD_REG(s32, tmp, r0) = colIdx - 0x2f;
-            colIdx = (u8)tmp;
-        } else if ((u32)colIdx > 0x60) {
-            MATCH_HOLD_REG(s32, tmp, r0) = colIdx - 0x56;
-            colIdx = (u8)tmp;
-        } else if ((u32)colIdx > 0x40) {
-            MATCH_HOLD_REG(s32, tmp, r0) = colIdx - 0x36;
-            colIdx = (u8)tmp;
-        }
-
-        *(u16 *)dst = colIdx;
+        tile = c;
+        s++;
+        if (tile == '_')
+            tile = 0x5d;
+        if (tile == ':')
+            tile = 0x5c;
+        if (tile == '.')
+            tile = 0x5b;
+        if (tile == '\n')
+            dst = (u8 *)(((s32)dst & ~0x3f) + 0x3f);
+        if (tile == ' ')
+            tile = 0;
+        else if (tile <= 0x40)
+            tile = (u8)(tile - 0x2f);
+        else if (tile > 0x60)
+            tile = (u8)(tile - 0x56);
+        else if (tile > 0x40)
+            tile = (u8)(tile - 0x36);
+        *(u16 *)dst = tile;
         dst += 2;
-
-        peekSeed = *s;
-    } while (peekSeed != 0);
+        first = *s;
+    } while (first != 0);
 }

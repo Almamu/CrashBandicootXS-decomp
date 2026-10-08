@@ -20,12 +20,9 @@
  * `src/system/irq.c`) fresh each poll (no caching across polls, since
  * `UpdateKeys`'s call in between could change it). `UpdateKeys`
  * takes the input object (`gInput`, in r0 at every call) but never
- * reads it (system.h). `keys` is set via an inline-asm copy of
- * `mask` (rather than a plain `keys = mask & ...`) to reproduce the
- * ROM's redundant `adds r1, mask, #0` before the load - gcc's own
- * codegen for the combined expression instead loads straight into r1
- * and ANDs with the mask register in place, one instruction shorter
- * (but not what the ROM does).
+ * reads it (system.h). Built with old_agbcc: agbcc loads `pressed`
+ * straight into r1 and ANDs `mask` into it, where the ROM (and
+ * old_agbcc) copies `mask` to r1 first (`adds r1, r7, #0`).
  *
  * The count-limited loop's cancel-bit check (`keys &= 8; if (keys) goto
  * fail;`) is written textually *before* the increment/poll code, with
@@ -48,6 +45,8 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
 {
     s32 result;
     s32 i;
+    /* The ROM has the flag in r4 and `i` in r5; old_agbcc swaps them
+     * without the pin (every loop shape tried). */
     MATCH_HOLD_REG(u8, flagR, r4);
     s32 keys;
     s32 confirm;
@@ -76,8 +75,7 @@ checkCount:
     WaitForVBlank();
     UpdateKeys(gInput);
     addr = &gKeys.half;
-    asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
-    keys &= addr->pressed;
+    keys = mask & addr->pressed;
     if (flagR == 0) {
         goto increment;
     }
@@ -95,8 +93,7 @@ loopNoLimit:
     WaitForVBlank();
     UpdateKeys(gInput);
     addr = &gKeys.half;
-    asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
-    keys &= addr->pressed;
+    keys = mask & addr->pressed;
     if ((keys & 1) != 0) {
         goto done;
     }

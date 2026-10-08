@@ -86,6 +86,9 @@ void UpdateAudio(struct AudioContext *self)
 void StartSong(struct AudioContext *self, u32 songIndex)
 {
     {
+        /* The ROM sets the flag in r1 and copies it to r4 (the zero it
+         * stores after GAX_stop); unpinned, agbcc builds the flag in r4
+         * directly, as it does for an inline IsStopped() too. */
         MATCH_HOLD_REG(s32, wasStopped, r1);
         s32 zero;
 
@@ -486,6 +489,8 @@ void PauseSong(struct AudioContext *self)
  * stopped) and disarms the per-tick GAX2 IRQ update. */
 void StopSong(struct AudioContext *self)
 {
+    /* As in StartSong: the ROM's flag (r2) and its copy (r4) are two
+     * registers, which agbcc merges without the pin. */
     MATCH_HOLD_REG(s32, isStopped, r2);
     s32 zero;
 
@@ -541,10 +546,9 @@ struct AudioContext *InitAudioContext(struct AudioContext *self)
  * DestroyLevelState passes gAudioContext in r0. */
 void DisableMusicVCountIrq(struct AudioContext *self)
 {
-    MATCH_HOLD_REG(vu8 *, dispstat, r1) = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
-    *dispstat &= ~tmp;
+    *(u8 *)REG_ADDR_DISPSTAT &= ~tmp;
     IrqRestoreHandler(INTR_INDEX_VCOUNT);
 }
 
@@ -555,17 +559,12 @@ void DisableMusicVCountIrq(struct AudioContext *self)
  * which already anticipated this function. */
 void EnableMusicVCountIrq(void)
 {
-    vu8 *p;
-    u8 v;
-    MATCH_HOLD_REG(u8, loaded, r2);
+    u8 *p;
 
     IrqSetHandler(INTR_INDEX_VCOUNT, MusicVCountIrqHandler);
-    p = (vu8 *)REG_ADDR_DISPSTAT;
+    p = (u8 *)REG_ADDR_DISPSTAT;
     p[1] = 0x35;
-    v = DISPSTAT_VCOUNT_INTR;
-    loaded = *p;
-    v |= loaded;
-    *p = v;
+    *p |= DISPSTAT_VCOUNT_INTR;
 }
 
 /* The VCount-IRQ handler installed by `EnableMusicVCountIrq` above: just forwards

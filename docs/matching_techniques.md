@@ -741,6 +741,23 @@ and under it `SetSaveFlags`/`ClearSaveFlags` are plain `|=`/`&= ~`
 (four pins and an instruction asm gone); `pause_menu_draw.o` also
 matches under old_agbcp, but that frees none of its sites.
 
+Step 3 (system, util, audio, iwram, lib): `input.o`, `irq.o`, `aabb.o`
+and `audio.o` joined old_agbcc (Makefile, own `+=` block); its copy
+before an AND (`adds r1, r7, #0` ahead of the load) and its BLDY address
+derived from BLDCNT's are what the `add %0, %1, #0` / `str; add #4` asms
+and the DISPSTAT pins imitated. The other big lesson: rewrite from the
+ROM's code as plain C before tuning a draft. GaxChannelSetInstrument
+(ex-NAKED, 5 pins and 2 asms), GaxDrawText (7 pins, 2 asms),
+GaxFxChannelInit, GAX_set_music_volume and GaxMixerInit match as
+straight field stores and loops; their workarounds were fixing
+artefacts of the first draft's shape. Two smaller ones:
+- ClearKeys is the KeyInput constructor and returns `self`; that, not
+  an allocator whim, is why the ROM keeps r0 out of its stores.
+- FormatPaddedNumber's tail is an inlined strcpy and strlen
+  (`static inline` copies in number_format.c): the ROM's
+  re-materialized `movs r0, #0` for the terminator is the inline's own
+  `*dst = 0`, which a plain loop folds into the known-zero byte.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4

@@ -73,8 +73,8 @@ COMPILE_TIME_ASSERT(spawners_hpp, sizeof(LevelEntityFlags) == 0x408);
 
 /* The key input object (gInput; system.h): UpdateKeys and
  * GetDpadDirection take it but read gKeys. Its constructor is ClearKeys
- * (src/system/irq.c, still C, declared `void ClearKeys(void)` there),
- * which leaves `this` in r0 as a constructor returns it. */
+ * (src/system/irq.c, still C, declared `void *ClearKeys(void *self)`
+ * there), which returns `this` in r0 as a constructor does. */
 class KeyInput
 {
 public:

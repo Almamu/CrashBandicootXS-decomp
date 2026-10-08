@@ -1,5 +1,4 @@
 #include "core.h"
-#include "match.h"
 #include "util.h"
 #include "system.h"
 
@@ -80,6 +79,28 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
     return len;
 }
 
+/* strcpy and strlen (src/util/string.c), as the inline copies
+ * FormatPaddedNumber's code has: the ROM inlines both, re-storing the
+ * terminator from a fresh `movs r0, #0`. */
+static inline void InlineCopyString(u8 *dst, u8 *src)
+{
+    u8 c;
+    while ((c = *src) != 0) {
+        *dst = c;
+        src++;
+        dst++;
+    }
+    *dst = 0;
+}
+
+static inline s32 InlineStringLength(u8 *s)
+{
+    s32 i = 0;
+    while (s[i] != 0)
+        i++;
+    return i;
+}
+
 /* Formats a single printf-style `%<width><specifier>` conversion
  * (specifier is 'd', 'x' or 'X' - anything else pads but writes no
  * digits) at `*fmt` into `dest`, left-padding with `padChar` to reach
@@ -94,118 +115,45 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
  * the whole time rather than storing it early), and returns `dest`
  * advanced past everything just written.
  *
- * The specifier check must stay a `switch` using `goto` to a single
- * shared call site (not `break`, which produces two separate physical
- * `bl itoa` copies here rather than one shared one like the
- * ROM has) - and the value/buffer-pointer/base arguments must each be
- * assigned to their own local *inside* every case (not referenced
- * directly at the shared call site) so gcc's cross-jump merging only
- * shares the trailing `bl`+adjustment it finds byte-identical in both
- * paths, leaving the (also identical, but positioned earlier) argument
- * setup duplicated per branch like the ROM does. The `default` case
- * must `goto` past the `width -= digitCount` subtraction entirely
- * (skipping straight to the unconditional `width -= 1` after it)
- * rather than computing `digitCount = 0` and subtracting a no-op - the
- * ROM has no instruction for the default case's "subtraction" at all.
- * `dstp` is pinned to r3 to match the ROM once `charsConsumed` living
- * in r1 across the whole function pushes gcc's own choice elsewhere. The final copy-from-`buf`-into-`dest` loop must be written
- * with an explicit `goto check` (matching the ROM's own
- * jump-to-condition-first shape) rather than a `for(;;) { ...; if
- * (c==0) break; ...}` - the more natural form makes gcc hoist a
- * `buf + 1` address computation out to before the switch and cache it
- * in a second high register (r9) the ROM never uses; the goto form
- * doesn't trigger that hoist. The `negOne` local (a literal `-1` in
- * the loop tests compiles differently) and the explicit `mov %0, #0`
- * before the final NUL write exist because the ROM re-materializes a
- * literal it already has sitting in a register from an unrelated
- * preceding comparison, rather than reusing it - plain C naturally
- * reuses the already-live value instead. */
+ * `negOne` holds the padding loop's -1 so it's loaded before
+ * `consumed` is computed, as in the ROM. */
 u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsConsumedPtr)
 {
     u8 buf[0x20];
-    u8 *fmtStart;
-    u8 c;
-    s32 width;
-    s32 digitCount;
-    s32 i;
-    u8 *srcp;
-    MATCH_HOLD_REG(u8 *, dstp, r3);
-    u8 ch;
-    s32 charsConsumed;
+    u8 *start = fmt;
+    u8 c = *fmt++;
+    s32 width = c - '0';
+    s32 consumed;
 
-    fmtStart = fmt;
-    c = *fmt;
-    fmt++;
-    width = c - 0x30;
     for (;;) {
-        c = *fmt;
-        fmt++;
-        if ((u8)(c - 0x30) > 9) {
+        c = *fmt++;
+        if ((u8)(c - '0') > 9)
             break;
-        }
         width = width * 10 + c;
     }
 
-    {
-        s32 v;
-        u8 *bufp;
-        s32 base;
-        switch (c) {
-        case 'd':
-            v = *valuePtr;
-            bufp = buf;
-            base = 10;
-            goto doCall;
-        case 'x':
-        case 'X':
-            v = *valuePtr;
-            bufp = buf;
-            base = 0x10;
-            goto doCall;
-        default:
-            goto skipSub;
-        }
-    doCall:
-        digitCount = itoa(v, bufp, base);
-        width -= digitCount;
-    skipSub:;
+    switch (c) {
+    case 'd':
+        width -= itoa(*valuePtr, buf, 10);
+        break;
+    case 'x':
+    case 'X':
+        width -= itoa(*valuePtr, buf, 16);
+        break;
     }
-    width -= 1;
-
+    width--;
     {
         s32 negOne = -1;
-        charsConsumed = fmt - fmtStart;
-        if (width != negOne) {
-            do {
-                *dest = padChar;
-                dest++;
-                width--;
-            } while (width != negOne);
+
+        consumed = fmt - start;
+        while (width != negOne) {
+            *dest++ = padChar;
+            width--;
         }
     }
     *dest = 0;
-
-    dstp = dest;
-    srcp = buf;
-    goto check;
-    do {
-        *dstp = ch;
-        srcp++;
-        dstp++;
-    check:
-        ch = *srcp;
-    } while (ch != 0);
-    {
-        u8 zero;
-        asm volatile("mov %0, #0" : "=r"(zero));
-        *dstp = zero;
-    }
-
-    i = 0;
-    while (dest[i] != 0) {
-        i++;
-    }
-    dest += i;
-    *charsConsumedPtr = charsConsumed;
+    InlineCopyString(dest, buf);
+    dest += InlineStringLength(dest);
+    *charsConsumedPtr = consumed;
     return dest;
 }
