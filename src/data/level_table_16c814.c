@@ -185,7 +185,7 @@ extern const struct level_room gLevelStage6;
 
 /*
  * Palette entries cycled by the level-start colour animations of
- * RunRoom (run_room.c), one list per theme case: each is the
+ * RunRoom (run_room.cpp), one list per theme case: each is the
  * `lists` argument of a AddPaletteCycle call on BG palette RAM.
  */
 const u16 gThemePaletteCycle2[5] = { 0xb1, 0xb2, 0xb3, 0xb4, 0xb5 };
@@ -349,7 +349,7 @@ const struct level_room_list gLevelRoomLists[LEVEL_COUNT] = {
 
 /*
  * The music cue of each level theme (`struct level_info.theme`), read by
- * PlayRoomMusic (level_query.c).
+ * PlayRoomMusic (level_query.cpp).
  */
 const u8 gThemeMusicCues[11] = {
     SONG_ARCTIC,    SONG_JUNGLE, SONG_SEWERS, SONG_UNDERWATER, SONG_ROCKET_CRASH, SONG_FUTURE,

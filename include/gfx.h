@@ -5,8 +5,8 @@
  * palette caches, the small `struct actor` entity, brightness fades,
  * DISPCNT helpers, BG packages and the sprite frame cache. Every function
  * src/gfx/ defines, with the prototype of its definition, and the globals
- * and tables its files use (docs/headers_plan.md). `DrawHudPart`/
- * `InitHudPart` (palette_cycle.cpp) are in hud.h. A .c file that needs a
+ * and tables its files use (docs/headers_plan.md). HudPart's methods
+ * (palette_cycle.cpp) are C++ only (part_list.hpp). A .c file that needs a
  * different local declaration for codegen keeps it as an asm-label alias
  * with a `codegen:` comment. */
 
@@ -17,10 +17,8 @@
 
 struct aabb;
 struct actor;
-struct affine_part;
 struct dma_queue;
 struct gfx_box_obj;
-struct oam_part;
 struct queued_oam_entry;
 struct rle_frame;
 struct sprite_bank_table;
@@ -191,7 +189,7 @@ struct sprite_frame_cache_node {
 };
 
 /* Up to three palette colour cycles, at `gPaletteCycles`
- * (`OperatorNew(0x48)`, matching this struct's size). run_room.c
+ * (`OperatorNew(0x48)`, matching this struct's size). run_room.cpp
  * adds them with `targets` = BG palette RAM and `lists` = the palette
  * indices to cycle; every `periods[i]` = 60 / rate frames,
  * `TickPaletteCycles` shifts the colours at those indices by one
@@ -232,9 +230,6 @@ struct palette_cycler {
 };
 COMPILE_TIME_ASSERT(gfx_h, sizeof(struct palette_cycler) == 0x48);
 
-/* src/gfx/affine_sprite_pieces.c */
-extern void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos);
-
 /* src/gfx/bitmap_screen.c */
 extern void ShowBitmapScreen(void *asset, void *palette);
 
@@ -269,11 +264,9 @@ extern void SetOamAffineScales(void *table, u16 *scales, s32 count);
 extern void AppendOamEntries(struct oam_shadow_buffer *self, void *entries, s32 count);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *self);
 extern void RewindOamBuffer(struct oam_shadow_buffer *self);
-extern void MarkOamBufferBase(struct oam_shadow_buffer *self);
 extern void ResetOamBuffer(struct oam_shadow_buffer *self);
 extern void CommitOamBuffer(struct oam_shadow_buffer *self);
 extern void AddOamEntry(struct oam_shadow_buffer *self, const void *entry);
-extern void DestroyOamBuffer(struct oam_shadow_buffer *self, u32 flags);
 
 /* src/gfx/graphics.cpp: the VRAM DMA queue and OBJ VRAM cursor */
 extern void FlushVramDmaQueue(void);
@@ -282,12 +275,10 @@ extern void FreeVramDmaQueue(void);
 extern s32 AllocVramDmaQueue(void);
 extern void RewindObjVram(struct vram_upload_cursor *self);
 extern void MarkObjVram(struct vram_upload_cursor *self);
-extern s32 GetObjVramFreeBytes(struct vram_upload_cursor *self);
 extern s32 GetObjVramTile(struct vram_upload_cursor *self);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
-extern void DestroyObjVramCursor(struct vram_upload_cursor *self, u32 flags);
 
 /* src/gfx/graphics.cpp: the palette cache */
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
@@ -298,48 +289,17 @@ extern void LockPalette(struct palette_cache *self, s32 index);
 extern void UploadPaletteSlot(struct palette_cache *self, s32 index);
 extern void UploadPaletteCache(struct palette_cache *self);
 extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
-extern s32 FreePaletteSlot(struct palette_cache *self, s32 slot);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
-extern void ClearPaletteCache(struct palette_cache *self);
-extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
-extern struct palette_cache *InitPaletteCache(struct palette_cache *self);
-extern void DestroySpriteBankSet(void *self, u32 flags);
 
 /* src/gfx/graphics.cpp: the entity (`struct actor`, actor.h) */
-extern void SetEntitySize(struct actor *self, s32 w, s32 h);
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
-extern void ResetEntity(struct actor *self);
-extern void ClearEntityAlwaysActive(struct actor *self);
-extern void SetEntityAlwaysActive(struct actor *self);
-extern u8 IsEntityAlwaysActive(struct actor *self);
-extern void ClearEntityTouched(struct actor *self);
-extern void SetEntityTouched(struct actor *self);
-extern u8 IsEntityTouched(struct actor *self);
-extern u8 IsEntityGone(struct actor *self);
-extern void ClearEntityGone(struct actor *self);
-extern void MarkEntityGone(struct actor *self);
-extern u8 IsEntityContactEnabled(struct actor *self);
-extern void DisableEntityContact(struct actor *self);
-extern void EnableEntityContact(struct actor *self);
-extern u8 GetEntityFlag1(struct actor *self);
-extern void ClearEntityFlag1(struct actor *self);
-extern void SetEntityFlag1(struct actor *self);
-extern s32 GetEntityPixelY(struct actor *self);
-extern s32 GetEntityPixelX(struct actor *self);
-extern s32 GetEntityY(struct actor *self);
-extern s32 GetEntityX(struct actor *self);
 extern void SetEntityPixelPos(struct actor *self, s32 x, s32 y);
-extern void SetEntityPixelPosVec(struct actor *self, s32 *pos);
 extern void SetEntityPos(struct actor *self, s32 x, s32 y);
-extern void SetEntityPosVec(struct actor *self, s32 *pos);
-extern void SetEntityKind(struct actor *self, u8 kind);
-extern u8 GetEntityKind(struct actor *self);
-extern u16 GetEntityId(struct actor *self);
 
-/* src/gfx/graphics_package.c */
+/* src/gfx/graphics_package.cpp */
 extern void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg);
 extern u16 GetBgSetupControl(struct bg_setup *self);
 extern struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock,
@@ -356,7 +316,6 @@ extern void TickPaletteCycles(struct palette_cycler *self);
 extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *lists, s32 rate,
                             s32 listCount, u8 direction);
 extern void ClearPaletteCycles(struct palette_cycler *self);
-extern void DestroyPaletteCycles(struct palette_cycler *self, s32 flags);
 
 /* src/gfx/sprite_frame.c */
 extern void InitObjTileFreeList(void *base);
@@ -377,9 +336,6 @@ extern void InitSpriteFrameCache(void);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void FreeCategorySpriteSheet(void);
 extern void DecompressCategorySpriteSheet(const void *sheet);
-
-/* src/gfx/sprite_pieces.c */
-extern void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos);
 
 /* The menus' sky background (src/data/bg_package_16c484.c): the language
  * select, level select, power dialog and save menu load it on BG0. */

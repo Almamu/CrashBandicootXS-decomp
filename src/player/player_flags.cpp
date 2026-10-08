@@ -280,7 +280,7 @@ void Ctrl::SetMode(s32 mode)
 }
 
 /* `animSet` setter: the motion entry set the ...FromSet methods index
- * (play_room.c sets each room kind's). */
+ * (play_room.cpp sets each room kind's). */
 void Ctrl::SetAnimSet(const struct entry_set *set)
 {
     animSet = set;

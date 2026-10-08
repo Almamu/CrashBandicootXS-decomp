@@ -55,10 +55,10 @@ public:
  * right, and jumps; the rest of its state is in the gPolar* globals
  * (vehicle.h), as the ROM has it. ConstructAnimTableState
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The
- * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`;
- * the few that C or the actor zone's C-linkage hooks call (Catch,
- * AllocTiles, FinishRun, IsPauseLocked) keep their C prototypes in
- * vehicle.h. */
+ * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
+ * as do the actor zone's C-linkage category hooks (actor.cpp,
+ * actor_spawn.cpp); Catch, which yeti_update.c calls, keeps its C
+ * prototype in vehicle.h. */
 class PolarPlayer : public ActorSelf
 {
 public:
@@ -433,7 +433,7 @@ public:
 };
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == sizeof(struct actor_hp));
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
 
 /* The checkpoint banner, drawn at a fixed screen position. */
 class JetpackCheckpointText : public HpActor
@@ -737,8 +737,7 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 
-/* A jetpack ring (gJetpackRingVtable; vehicle.h's `struct jetpack_ring` is
- * its C view). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
+/* A jetpack ring (gJetpackRingVtable). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
  * (part 11h), its Update in src/vehicle/jetpack_crates.cpp (part 11g). */
 class JetpackRing : public HpActor
 {
@@ -752,7 +751,7 @@ public:
     virtual s32 IsUnshootable(); // 5 IsJetpackRingUnshootable
 };
 
-COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == sizeof(struct jetpack_ring));
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRing) == 0x5C);
 
 /* A collected wumpa of the jetpack levels (gJetpackCollectedWumpaVtable,
  * src/bosses/hovercraft.cpp, part 11h; PolarCollectedWumpa's twin): it

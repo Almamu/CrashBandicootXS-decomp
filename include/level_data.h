@@ -49,7 +49,7 @@ struct level_entity_group {
 };
 
 /* A room's entities (`gEntityFlags->list`, level.h). The local views
- * were `struct lk_list` (room_entities.c), `struct collect_info`
+ * were `struct lk_list` (room_entities.cpp), `struct collect_info`
  * (dingodile.c), `struct level_record_table` (the enemy spawners'
  * text_popup.h), `struct placement_level` (crate_create.cpp) and
  * CreatePlatform's level header. */
@@ -141,7 +141,7 @@ struct entity_params {
     } p;
 };
 
-/* Was `struct lk_link` in room_entities.c: chains entity `from` to entity
+/* Was `struct lk_link` in room_entities.cpp: chains entity `from` to entity
  * `to` (entity ids = spawn order). */
 struct level_link {
     s32 from;
@@ -170,9 +170,9 @@ struct level_desc {
  * One room record of the level table (src/data/level_table_16c814.c):
  * the record RunRoom hands to LoadRoom, and the current room
  * (`level_state.cat`, `level_progress.cat`). It merges level_layers.cpp's
- * `struct level_load_args` (batch 8b), level_query.c's `MedalListItem`
+ * `struct level_load_args` (batch 8b), level_query.cpp's `MedalListItem`
  * (`linkedObj`/`type` are `desc`/`kind`), level_state.h's `struct
- * level_category` and run_room.c's `gl_widget_kind` (#574, batch 9e).
+ * level_category` and run_room.cpp's `gl_widget_kind` (#574, batch 9e).
  */
 struct level_room {
     const u16 *palette;            // 0x00 - BG palette, 256 colours
@@ -185,7 +185,7 @@ struct level_room {
     u16 unk_12;                    // 0x12
 };
 
-/* A level's rooms (level_query.c's `MedalItemList` was a view: `items` is
+/* A level's rooms (level_query.cpp's `MedalItemList` was a view: `items` is
  * `rooms`). */
 struct level_room_list {
     s32 count;

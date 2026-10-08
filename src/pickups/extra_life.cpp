@@ -1,9 +1,9 @@
 #include "pickups.hpp"
 #include "player.hpp"
+#include "hud.hpp"
 
 extern "C" {
 #include "math_util.h"
-#include "hud.h"
 #include "util.h"
 #include "audio.h"
 #include "gfx.h"
@@ -76,7 +76,7 @@ void ExtraLife::PickUp(u8 randomize)
         dx = 0xb400;
         dy = 0xc00;
         state = 1;
-        ShowHudLives(gHud);
+        gHud->ShowLives();
     }
     f.b.active = 1;
     {
@@ -190,7 +190,7 @@ void ExtraLife::SendToHud()
     newY = INT_TO_Q8(outY);
     y = newY;
     velY = -FixedDiv(newY - 0xc00, 0x1400);
-    ShowHudLives(gHud);
+    gHud->ShowLives();
 }
 
 /* The hop: `phase` steps a sine, the height 8 pixels; hop 1 moves to the

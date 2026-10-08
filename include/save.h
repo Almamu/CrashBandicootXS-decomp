@@ -3,8 +3,8 @@
 
 /* The save subsystem (src/save/): the cartridge save data in EEPROM, the
  * save menu, and the save transfer over the link cable. The save data
- * and transfer layouts are in settings_sync.h, the menu's in
- * save_menu.h.
+ * and transfer layouts are in settings_sync.h, the menu's class in
+ * save_menu.hpp (save_menu.h has its slot summaries).
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
@@ -12,13 +12,17 @@
  * (docs/headers_plan.md). */
 
 #include "core.h"
-#include "byte_arg.h"
 #include "save_menu.h"
 #include "settings_sync.h"
 
 /* The save menu, between OpenSaveMenu and CloseSaveMenu. Defined in
- * src/iwram/iwram_data.c. */
+ * src/iwram/iwram_data.c. The C++ files see it as its class, SaveMenu
+ * (save_menu.hpp). */
+#ifdef __cplusplus
+extern class SaveMenu *gSaveMenu;
+#else
 extern struct save_menu *gSaveMenu;
+#endif
 
 /* Set until the first EEPROM access has run AgbEepromInit
  * (src/iwram/iwram_data.c). */
@@ -64,59 +68,17 @@ extern void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 player
 /* src/save/save_transfer_poll.c */
 extern s32 PollSaveTransfer(struct settings_sync_pump *self);
 
-/* src/save/save_menu.c */
-extern void SaveMenuMessageInput(struct save_menu *self, u32 keys);
-extern void CommitSaveMenuFrame(struct save_menu *self);
+/* The save menu (C++, include/save_menu.hpp: class SaveMenu; the methods
+ * have no C caller and no C prototype). Its C-linkage functions, for
+ * game_frame.cpp: src/save/save_menu.cpp */
 extern void CloseSaveMenu(void);
 extern void OpenSaveMenu(void);
 
-/* src/save/save_menu_draw.c */
-extern s32 LinkExchangeSaveData(struct save_menu *self);
-extern void DrawSaveMenuMessageLines(struct save_menu *self, s32 label1, s32 label2);
-extern void DrawSaveMenuCancel(struct save_menu *self, u8 highlight);
-extern void DrawYesNoPrompt(struct save_menu *self, s32 value);
-extern void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx,
-                              struct byte_arg flag);
-extern void DrawSaveSlots(struct save_menu *self, void *handle, s32 selectedIndex);
-extern void InitSaveMenuIcons(struct save_menu *self);
-
-/* src/save/save_menu_input.c */
+/* src/save/save_menu_input.cpp (C linkage): the save transfer's
+ * accessors, and the menu's loop */
 extern void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl);
 extern void *GetSaveTransferData(struct settings_sync_pump *self);
 extern void ResetSaveTransfer(struct settings_sync_pump *self);
 extern u8 RunSaveMenu(u32 state, u32 cursor);
-extern struct save_menu *InitSaveMenu(struct save_menu *self);
-extern void DestroySaveMenu(struct save_menu *self, u32 flags);
-extern void SaveMenuInput(struct save_menu *self, u32 keys);
-extern void SaveMenuMainInput(struct save_menu *self, u32 keys);
-extern void SaveMenuMoveCursor(struct save_menu *self, u32 keys);
-extern void SaveMenuLoadInput(struct save_menu *self, u32 keys, void *handle);
-extern void SaveMenuLinkInput(struct save_menu *self);
-extern void SaveGameToSlot(struct save_menu *self, s32 rowIndex);
-extern void SaveMenuOverwriteInput(struct save_menu *self, u32 keys);
-extern void SaveMenuSaveInput(struct save_menu *self, u32 keys);
-extern void SaveMenuDeleteInput(struct save_menu *self, u32 keys);
-extern void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 keys);
-extern void DrawSaveMenuMain(struct save_menu *self);
-
-/* src/save/save_menu_ui.c */
-extern void LoadSaveMenuBg(struct save_menu *self);
-extern void RefreshSaveSlotSummaries(struct save_menu *self, void *handle);
-extern void LoadSaveMenuData(struct save_menu *self);
-extern void SummarizeProgress(struct save_menu *self, struct settings_row_stats *dest, void *src);
-extern void DrawEmptySlotLabel(struct save_menu *self, s32 x, s32 y, u8 highlight);
-extern void DrawSaveMenuTitle(struct save_menu *self, s32 labelIndex);
-extern s32 GetSaveMenuBlinkPalette(struct save_menu *self);
-extern void EndLinkSaveTransfer(struct save_menu *self);
-extern void BeginLinkSaveTransfer(struct save_menu *self);
-extern void DrawSaveMenuConfirmDelete(struct save_menu *self);
-extern void DrawSaveMenuDelete(struct save_menu *self);
-extern void DrawSaveMenuOverwrite(struct save_menu *self);
-extern void DrawSaveMenuSave(struct save_menu *self);
-extern void DrawSaveMenuMessage(struct save_menu *self);
-extern void DrawSaveMenuLoadLink(struct save_menu *self);
-extern void DrawSaveMenuLoad(struct save_menu *self);
-extern void DrawSaveMenu(struct save_menu *self);
-extern void DeleteSaveSlot(struct save_menu *self, s32 row);
 
 #endif /* GUARD_SAVE_H */

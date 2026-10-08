@@ -31,7 +31,7 @@ extern "C" {
  *   then runs the state method through `stateFuncs`
  *   (gPlayerCtrlStateFuncs).
  * - HandleEvent (slot 2) is the message handler, Attach (slot 3) sets the
- *   target; the constructor is play_room.c's `new PlayerCtrl`.
+ *   target; the constructor is play_room.cpp's `new PlayerCtrl`.
  * - SetState sets the state (SetMode) and picks the animation from
  *   gPlayerCtrlModeAnimRows[mode][tilt].
  * - SetDriftX writes the player's X drift ramp from its speed, like

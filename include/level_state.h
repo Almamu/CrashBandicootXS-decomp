@@ -3,12 +3,12 @@
 
 /*
  * The level/session state object `gLevelState` points at (0x1CC
- * bytes). Its accessor family is src/level/level_state.c
- * (FreezeLevelClock through CheckAllCratesBroken); game_frame.c's level loop still carries
+ * bytes). Its accessor family is src/level/level_state.cpp
+ * (FreezeLevelClock through CheckAllCratesBroken); game_frame.cpp's level loop still carries
  * its own copy of the same layout (`struct level_state` there).
  *
  * The first 0x68 bytes are the per-attempt block the frame loop
- * snapshots into `checkpointData`/`saveData` and restores from (game_frame.c).
+ * snapshots into `checkpointData`/`saveData` and restores from (game_frame.cpp).
  */
 
 #include "level_data.h"
@@ -91,7 +91,8 @@ struct level_state {
     // 0x14C - the committed progress: restored before each level,
     // updated when one is won, packed for the save menus (PackSaveData)
     u8 saveData[0x68];
-    void *savedBitmap;   // 0x1B4
+    struct entity_flags
+        *savedBitmap;    // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
     void *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
     void *gemPlatform;   // 0x1BC - the gem-path platform object (SetGemPlatform)
     // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to SpawnCrateGem
@@ -104,13 +105,13 @@ COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_state) == 0x1CC);
 
 /*
  * The room block of `struct level_state`, from `level` (+0x0C4) on: the
- * record the room functions take (game_frame.c passes
+ * record the room functions take (game_frame.cpp passes
  * `&gLevelState->level`): SelectRoom, NextRoom, EnterBonusRoom and the
- * other level_query.c functions, PlayRoom (play_room.c) and RunRoom
- * (run_room.c). Field names are the level state's. It merges the three
- * file-local views `level_progress` (level_query.c), `level_start_args`
- * (play_room.c; `spawnX`/`spawnY` were `checkpointX`/`checkpointY`) and
- * `gl_self` (run_room.c; `widget` was `cat`) (#574, batch 9e).
+ * other level_query.cpp functions, PlayRoom (play_room.cpp) and RunRoom
+ * (run_room.cpp). Field names are the level state's. It merges the three
+ * file-local views `level_progress` (level_query.cpp), `level_start_args`
+ * (play_room.cpp; `spawnX`/`spawnY` were `checkpointX`/`checkpointY`) and
+ * `gl_self` (run_room.cpp; `widget` was `cat`) (#574, batch 9e).
  */
 struct level_progress {
     s32 level;                  // 0x00 (0x0C4) - index into gLevelTable

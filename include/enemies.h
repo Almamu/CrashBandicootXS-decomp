@@ -1,8 +1,8 @@
 #ifndef GUARD_ENEMIES_H
 #define GUARD_ENEMIES_H
 
-/* The enemies subsystem (src/enemies/): the enemy controller (`struct
- * part_ctrl`, include/part_ctrl.h) that steers an enemy's sprite part, its
+/* The enemies subsystem (src/enemies/): the enemy controller that steers
+ * an enemy's sprite part (`struct ctrl_target`, include/part_ctrl.h), its
  * motion/attack updaters, the "knocked" controller HitEnemy launches, and
  * the periodic spawner.
  *
@@ -12,28 +12,13 @@
  * (docs/headers_plan.md).
  *
  * The subsystem is C++ (#664): the classes are EnemyCtrl, KnockedEnemyCtrl
- * and PeriodicSpawner in include/enemy_ctrl.hpp. The prototypes below are
- * their methods' C names (cxx_symbols.txt); the enemy
- * spawners (spawn_enemies.cpp) are C++ too. The knocked controller is a plain
- * 0x10-byte controller (objects.h's `struct ctrl`), so its functions take
- * `void *`. */
+ * and PeriodicSpawner in include/enemy_ctrl.hpp, and the enemy spawners
+ * (spawn_enemies.cpp) are C++ too. */
 
 #include "core.h"
 #include "actor.h"
 #include "part_ctrl.h"
 #include "vtable.h"
-
-/* A periodic trigger actor (CreatePeriodicSpawner builds one on top of
- * `struct actor`, in a 0x28-byte block): calls `callback` at its own
- * position once every `period` frames while near the camera
- * (UpdatePeriodicSpawner). SpawnSealSpawner (src/level/spawn_objects.cpp)
- * makes one with SpawnSeal. */
-struct periodic_spawner {
-    struct actor base;      // 0x00 - `base.table` is the method table
-    void (*callback)(void); // 0x1C - called through _call_via_r4
-    s32 period;             // 0x20
-    s32 phase;              // 0x24
-};
 
 struct entry_set;
 

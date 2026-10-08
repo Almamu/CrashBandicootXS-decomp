@@ -4,20 +4,21 @@
 /* The pause menu and the power dialog as C++ (#664, docs/cplusplus.md,
  * part 10d):
  *
- *   PauseMenu    0xD4  src/menus/pause_menu.cpp, pause_menu_pages_init.cpp
- *                      (and the pause menu's C files)
- *   PowerDialog  0x2C  src/menus/power_dialog.cpp, power_dialog_draw.cpp
- *                      (and power_dialog_loop.c, still C)
+ *   PauseMenu    0xD4  src/menus/pause_menu.cpp, pause_menu_pages_init.cpp,
+ *                      pause_menu_info.cpp, pause_menu_draw.cpp, _gems.cpp,
+ *                      _loop.cpp, _pages_draw.cpp, _powers.cpp, _widgets.cpp
+ *   PowerDialog  0x2C  src/menus/power_dialog.cpp, power_dialog_draw.cpp,
+ *                      power_dialog_loop.cpp
  *
  * The sizes are the ROM's (RunPauseMenu's and ShowPowerDialog's `new`s).
  * Neither has a vtable: they are plain classes with a constructor and a
  * destructor (`delete` calls the destructor with 3, and it frees the
  * object when bit 0 is set). Their icons are UiSprites.
  *
- * The C files see these objects through pause_menu.h's `struct
- * pause_menu` and menus.h's `struct power_dialog`, and call their methods
- * by the C names in menus.h; cxx_symbols.txt maps them. The continue
- * prompt's class, ContinuePrompt, is in frontend.hpp.
+ * All of their code is C++ (the pause menu's and the power dialog's last
+ * C files since the #664 cleanup); cxx_symbols.txt maps the methods to
+ * their C names. The continue prompt's class, ContinuePrompt, is in
+ * frontend.hpp.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to emit;
  * the pragma keeps g++ from emitting out-of-line copies of the inline
@@ -58,8 +59,7 @@ static inline void SetIconBank(Sprite *p, s32 offset)
  * pause button): the rows on the left (gPauseMenuRows: resume, music,
  * sound, warp room, restart trial), and on the right five info pages that
  * cycle every 180 frames (crystals, powers, gems, relics, the level's
- * time trial), over a background with blinking eyes. See pause_menu.h's
- * `struct pause_menu`, the C view, for the fields. */
+ * time trial), over a background with blinking eyes. */
 class PauseMenu
 {
 public:
@@ -104,22 +104,38 @@ public:
     struct bldy bldy;             // 0xCC - REG_BLDY
     union MenuDispcnt dispcnt;    // 0xD0 - REG_DISPCNT (a word: a struct is 4-aligned)
 
-    PauseMenu();              // InitPauseMenu
-    ~PauseMenu();             // DestroyPauseMenu
-    static s32 Run();         // RunPauseMenu
-    void InitInfo();          // InitPauseMenuInfo (pause_menu_info.c, still C)
-    s32 Loop();               // PauseMenuLoop (pause_menu_loop.c, still C)
-    void InitCrystalsPage();  // InitPauseCrystalsPage
-    void InitPowersPage();    // InitPausePowersPage
-    void InitGemsPage();      // InitPauseGemsPage
-    void InitRelicsPage();    // InitPauseRelicsPage
-    void InitTimeTrialPage(); // InitPauseTimeTrialPage
+    PauseMenu();                                 // InitPauseMenu
+    ~PauseMenu();                                // DestroyPauseMenu
+    static s32 Run();                            // RunPauseMenu
+    void InitInfo();                             // InitPauseMenuInfo
+    s32 Loop();                                  // PauseMenuLoop
+    void InitCrystalsPage();                     // InitPauseCrystalsPage
+    void InitPowersPage();                       // InitPausePowersPage
+    void InitGemsPage();                         // InitPauseGemsPage
+    void InitRelicsPage();                       // InitPauseRelicsPage
+    void InitTimeTrialPage();                    // InitPauseTimeTrialPage
+    void DrawPowersPage();                       // DrawPausePowersPage
+    void DrawGemsPage();                         // DrawPauseGemsPage
+    void DrawRelicsPage();                       // DrawPauseRelicsPage
+    void DrawFraction(void *count, void *total); // DrawPauseFraction
+    void VolumeDown();                           // PauseMenuVolumeDown
+    void VolumeUp();                             // PauseMenuVolumeUp
+    void CursorDown();                           // PauseMenuCursorDown
+    s32 CursorUp();                              // PauseMenuCursorUp
+    void FormatVolume(s32 volume, u8 *out);      // FormatVolumePercent
+    void DrawTimeTrialPage();                    // DrawPauseTimeTrialPage
+    void DrawCrystalsPage();                     // DrawPauseCrystalsPage
+    void DrawPageTitle();                        // DrawPauseMenuPageTitle
+    void CommitFrame();                          // CommitPauseMenuFrame
+    void Animate();                              // AnimatePauseMenu
+    void Draw();                                 // DrawPauseMenu
+    void DrawRows();                             // DrawPauseMenuRows
 };
 
-COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == sizeof(struct pause_menu));
+COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);
 
 /* The power dialog (ShowPowerDialog, from the four Show*Dialog wrappers
- * game_frame.c calls when a boss gives Crash a power): the power's name
+ * game_frame.cpp calls when a boss gives Crash a power): the power's name
  * and description over a scrolling sky, with its icon, faded in and out
  * through BLDY. */
 class PowerDialog
@@ -140,9 +156,9 @@ public:
     void Draw();                                        // DrawPowerDialog
     void Animate();                                     // AnimatePowerDialog
     void CommitFrame();                                 // CommitPowerDialogFrame
-    void Loop(); // PowerDialogLoop (power_dialog_loop.c, still C)
+    void Loop();                                        // PowerDialogLoop
 };
 
-COMPILE_TIME_ASSERT(menus_hpp, sizeof(PowerDialog) == sizeof(struct power_dialog));
+COMPILE_TIME_ASSERT(menus_hpp, sizeof(PowerDialog) == 0x2C);
 
 #endif /* GUARD_MENUS_HPP */

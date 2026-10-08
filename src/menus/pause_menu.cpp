@@ -18,7 +18,7 @@ extern "C" {
  * DISPCNT, swaps gPaletteCache for a new palette cache with the menu's
  * palette in slot 15, sets up both fonts (each one's tiles uploaded, the
  * two fonts' tiles reserved in OBJ VRAM), builds the menu, runs its loop
- * (PauseMenuLoop, still C) and deletes it, then restores the old palette
+ * (Loop, pause_menu_loop.cpp) and deletes it, then restores the old palette
  * cache and returns the loop's result.
  *
  * The ROM builds the font's 0x12c offset again for each `tileCount` read:

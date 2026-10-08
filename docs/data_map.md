@@ -33,7 +33,7 @@ label, with `regions` sub-lists for the composite blobs.
   checks out (the chained tag-0 assets, the 2,429 frames of the sprite
   banks, the 41 level descriptors).
 - **Structure walkers** for the big blobs, written from the matched C:
-  the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.c`),
+  the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.cpp`),
   the level-descriptor walker (`level_layers.c`, `bg_layer.c`,
   `collision_map.c`), the category-descriptor fields (`cell_anim.c`,
   `bg_picture.c`, `include/actor_anim.h`), and a `LoadTaggedAsset`
@@ -68,10 +68,10 @@ the appendix.
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `InitLanguageSelectGraphics` | high | **done** (C) |
 | `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_layer.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
-| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.c`, `cutscene_player.c`, `room_entities.c` | high | **done** (C, [levels.md](./levels.md)) |
+| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.c`, `cutscene_player.c`, `room_entities.cpp` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
-| `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.c`/`sprite_pieces.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
+| `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.cpp`/`sprite_pieces.cpp` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 OBJ palettes (`gObjPalettes`) | `InitLevelState`/`RunPauseMenu` palette cache, `GetPaletteSlot` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gSpriteBankSet` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
@@ -266,8 +266,8 @@ is reached through two pointer graphs.
 them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
 ...; u16 catIndex @0x10}` (now `struct level_room` in
 `src/data/level_table_16c814.c`). Every reader uses that struct
-(`level_layers.c`'s `struct level_load_args`, `run_room.c`'s
-`gl_widget_kind` and `level_query.c`'s `MedalListItem` were views of
+(`level_layers.c`'s `struct level_load_args`, `run_room.cpp`'s
+`gl_widget_kind` and `level_query.cpp`'s `MedalListItem` were views of
 it; `desc->entities` is the descriptor's object list). A room record is
 the `cat` that `RunRoom` hands to `LoadRoom`.
 Walking them:
@@ -302,8 +302,8 @@ two room-data blocks (`0824B638`, `082B91D0`) are typed C
 `tools/levels.py` from `data/levels/` ([levels.md](./levels.md)).
 
 **2. Sprite banks.** The `gSpriteBankTable` header's second word is
-`0x082BF120`, and `GetSpriteTileBase` returns it. `affine_sprite_pieces.c` and
-`sprite_pieces.c` upload `GetSpriteTileBase() + (frame.packed & 0xFFFFFF)`.
+`0x082BF120`, and `GetSpriteTileBase` returns it. `affine_sprite_pieces.cpp` and
+`sprite_pieces.cpp` upload `GetSpriteTileBase() + (frame.packed & 0xFFFFFF)`.
 
 | Range | Size | Content | Evidence | Effort |
 |---|---:|---|---|---|
@@ -333,7 +333,7 @@ see [levels.md](./levels.md).
 This is the "master asset table" of docs/rom_map.md. Its structure,
 from the matched readers (`RunPauseMenu` in `pause_menu.cpp`, `GetSpriteTileBase`/
 `GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `sprite_obj.c`,
-`affine_sprite_pieces.c`, and the `**gSpriteBankSet + N` users):
+`affine_sprite_pieces.cpp`, and the `**gSpriteBankSet + N` users):
 
 ```
 0x084A5600 header (0x10):

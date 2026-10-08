@@ -14,11 +14,9 @@
  * level_select.hpp, the pause menu and the power dialog in menus.hpp, the
  * continue prompt in frontend.hpp. The prototypes below are the C names
  * (cxx_symbols.txt) of the methods that a C file or a vtable still uses,
- * and the free functions. The C files left (the pause menu's drawing and
- * input, power_dialog_loop.c) see their objects through C structs:
- * `struct pause_menu` in pause_menu.h, `struct power_dialog` below;
- * `struct sprite` and the save block are in level_menu.h, which this
- * header doesn't include (it only declares the tags). */
+ * and the free functions. `struct sprite` and the save block are in
+ * level_menu.h, which this header doesn't include (it only declares the
+ * tags). */
 
 #include "core.h"
 #include "vtable.h"
@@ -29,7 +27,6 @@ struct bg_package;
 struct follow_child;
 struct level_item;
 struct level_menu;
-struct pause_menu;
 struct settings_icon_actor;
 struct sprite;
 
@@ -46,7 +43,7 @@ struct icon_pos {
     s32 y;
 };
 
-/* One row of the pause menu (gPauseMenuRows, `pause_menu.field_14`): a
+/* One row of the pause menu (gPauseMenuRows, PauseMenu::rows): a
  * GetUiText label id, then the row's type (4/5 are the music/sound
  * volume rows; PauseMenuLoop returns the confirmed row's type). */
 struct pause_row {
@@ -60,38 +57,6 @@ struct image_pair {
     const u8 *palette;
     const u8 *tiles;
 };
-
-/* The power dialog (ShowPowerDialog, 0x2c bytes): a power's name and
- * description over a scrolling background, faded in and out through
- * BLDY. The C view of class PowerDialog (menus.hpp), for
- * power_dialog_loop.c. */
-struct power_dialog {
-    struct bg_setup bg;               /* 0x00 - BG0 (InitBgSetup) */
-    s32 titleText;                    /* 0x10 - the title's text */
-    void *descText;                   /* 0x14 - the description's text */
-    struct settings_icon_actor *icon; /* 0x18 - the power's icon */
-    u32 frame;                        /* 0x1c - frame counter, BG0HOFS = frame >> 3 */
-    u32 bldcnt;                       /* 0x20 - REG_BLDCNT */
-    union {
-        u8 raw;
-        struct {
-            u8 level:5; /* REG_BLDY, faded 0x10 -> 0 -> 0x10 by PowerDialogLoop */
-            u8 rest:3;
-        } __attribute__((packed)) bits;
-    } __attribute__((packed)) bldy;
-    u8 unused_25[3];
-    /* REG_DISPCNT: cleared as a halfword, then bit 6 of its low byte
-     * set (PowerDialogLoop). */
-    union {
-        u16 all;
-        struct {
-            u8 flags;
-            u8 hi;
-        } b;
-    } dispcnt;
-};
-
-COMPILE_TIME_ASSERT(menus_h, sizeof(struct power_dialog) == 0x2c);
 
 /* The level select (src/iwram/iwram_data.c): the screen while
  * RunLevelSelect runs. The C++ files see it as its class, LevelSelect
@@ -167,51 +132,11 @@ extern void SetNewWorldOpened(void);
 /* src/menus/pause_menu.cpp (C++, menus.hpp: PauseMenu::Run) */
 extern s32 RunPauseMenu(void);
 
-/* src/menus/pause_menu_draw.c */
-extern void AnimatePauseMenu(struct pause_menu *self);
-extern void DrawPauseMenu(struct pause_menu *self);
-extern void DrawPauseMenuRows(struct pause_menu *self);
-
-/* src/menus/pause_menu_gems.c */
-extern void DrawPauseGemsPage(struct pause_menu *self);
-extern void DrawPauseRelicsPage(struct pause_menu *self);
-
-/* src/menus/pause_menu_info.c */
-extern void InitPauseMenuInfo(struct pause_menu *self);
-
-/* src/menus/pause_menu_loop.c */
-extern s32 PauseMenuLoop(struct pause_menu *self);
-
-/* src/menus/pause_menu_pages_draw.c */
-extern void DrawPauseTimeTrialPage(struct pause_menu *self);
-extern void DrawPauseCrystalsPage(struct pause_menu *self);
-extern void DrawPauseMenuPageTitle(struct pause_menu *self);
-extern void CommitPauseMenuFrame(struct pause_menu *self);
-
-/* src/menus/pause_menu_pages_init.cpp (C++, menus.hpp: PauseMenu's methods) */
-extern void InitPauseCrystalsPage(struct pause_menu *self);
-extern void InitPausePowersPage(struct pause_menu *self);
-extern void InitPauseGemsPage(struct pause_menu *self);
-extern void InitPauseRelicsPage(struct pause_menu *self);
-extern void InitPauseTimeTrialPage(struct pause_menu *self);
-
-/* src/menus/pause_menu_powers.c */
-extern void DrawPausePowersPage(struct pause_menu *self);
-
-/* src/menus/pause_menu_widgets.c */
-extern void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2);
-extern void PauseMenuVolumeDown(struct pause_menu *self);
-extern void PauseMenuVolumeUp(struct pause_menu *self);
-extern void PauseMenuCursorDown(struct pause_menu *self);
-extern s32 PauseMenuCursorUp(struct pause_menu *self);
+/* src/menus/pause_menu_widgets.cpp (C linkage) */
 extern s32 FormatDecimal(s32 value, u8 *dest);
-extern void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out);
 
 /* src/menus/power_dialog_draw.cpp (C++, menus.hpp: PowerDialog's methods and
  * the free functions) */
-extern void DrawPowerDialog(struct power_dialog *arg0);
-extern void AnimatePowerDialog(struct power_dialog *arg0);
-extern void CommitPowerDialogFrame(struct power_dialog *arg0);
 extern void ShowTurboRunDialog(void);
 extern void ShowTornadoSpinDialog(void);
 extern void ShowDoubleJumpDialog(void);
@@ -224,8 +149,5 @@ extern s32 CountRelics(void *arg0);
 extern s32 CountGems(void *arg0);
 extern s32 CountClearGems(void *arg0);
 extern s32 CountCrystals(void *arg0);
-
-/* src/menus/power_dialog_loop.c */
-extern void PowerDialogLoop(struct power_dialog *self);
 
 #endif /* GUARD_MENUS_H */

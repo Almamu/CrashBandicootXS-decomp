@@ -9,7 +9,7 @@ extern "C" {
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six spawners, five of them entity spawners of
  * gEntitySpawnFuncs (types 0x07, 0x08, 0x0A-0x0C) and SpawnCrateGem, which
- * level_state.c calls directly. Each one
+ * level_state.cpp calls directly. Each one
  * spawns a sprite (Sprite::Create, CreateSpriteObj) with a fixed bank offset, tag and type byte
  * (+0x0A) and registers it with the gTouchableList manager, unless
  * the level's "already collected" bit for it is set:

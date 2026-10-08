@@ -1,9 +1,9 @@
 #include "player.hpp"
 #include "spawners.hpp"
 #include "crate_list.hpp"
+#include "hud.hpp"
 
 extern "C" {
-#include "hud.h"
 #include "util.h"
 #include "system.h"
 #include "audio.h"
@@ -73,7 +73,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         break;
     case EVENT_ROOM_EXIT:
         RequestRoomExit();
-        ShowHudCounters(gHud);
+        gHud->ShowCounters();
         break;
     case EVENT_WARP_EXIT:
         {
@@ -83,7 +83,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
                 FreezeLevelClock(game, 100);
         }
         mover->HandleEvent((MovingSprite *)from, event, arg);
-        ShowHudCounters(gHud);
+        gHud->ShowCounters();
         break;
     case EVENT_WARP_BONUS_ROUND:
         RequestBonusRound(gLevelState);

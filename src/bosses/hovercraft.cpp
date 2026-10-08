@@ -512,7 +512,7 @@ void HovercraftStateFall(void)
 
         if (gHovercraftY > 0x4b00) {
             ResumeActorSpawns();
-            FinishJetpackRun(gActorList);
+            ((JetpackPlayer *)gActorList)->FinishRun();
         }
     }
 

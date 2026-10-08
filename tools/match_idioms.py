@@ -49,7 +49,7 @@ KINDS = collections.OrderedDict([
     ("barrier_macro", "MATCH_BARRIER()"),
     ("use", 'extra-reference nudge / hold end: `asm("" : : "r"(x))`'),
     ("use_volatile", 'extra-reference nudge: `asm volatile("" : : "r"(x))`'),
-    ("use_macro", "MATCH_USE(x) / MATCH_USE2(a, b) / their _VOLATILE forms"),
+    ("use_macro", "MATCH_USE(x) / MATCH_USE2(a, b) / MATCH_USE2_VOLATILE(a, b)"),
     ("keep", 'value keeper: `asm("" : "+r"(x))`'),
     ("keep_volatile", 'value keeper: `asm volatile("" : "+r"(x))`'),
     ("keep_macro", "MATCH_KEEP(x) / MATCH_KEEP_VOLATILE(x)"),
@@ -58,7 +58,7 @@ KINDS = collections.OrderedDict([
     ("hold_macro", "MATCH_HOLD(x) / MATCH_HOLD_VOLATILE(x)"),
     ("const", 'constant-init: `asm("" : "=r"(v) : "0"(K))`'),
     ("const_volatile", 'constant-init: `asm volatile("" : "=r"(v) : "0"(K))`'),
-    ("const_macro", "MATCH_CONST(v, K) / MATCH_CONST_VOLATILE(v, K)"),
+    ("const_macro", "MATCH_CONST(v, K)"),
     ("mem_barrier", 'memory barrier: `asm volatile("" ::: "memory")`'),
     ("mem_barrier_macro", "MATCH_MEMORY_BARRIER()"),
     ("reg_clobber", 'register clobber: `asm("" : : : "rN")`'),
@@ -333,13 +333,11 @@ CONVERTERS = {
     "pin": ("MATCH_HOLD_REG", None),  # declarator-aware: convert_pin
     "empty": ("MATCH_BARRIER", []),
     "use": ("MATCH_USE", ["r"]),
-    "use_volatile": ("MATCH_USE_VOLATILE", ["r"]),
     "keep": ("MATCH_KEEP", ["+r"]),
     "keep_volatile": ("MATCH_KEEP_VOLATILE", ["+r"]),
     "hold": ("MATCH_HOLD", ["=r"]),
     "hold_volatile": ("MATCH_HOLD_VOLATILE", ["=r"]),
     "const": ("MATCH_CONST", ["=r", "0"]),
-    "const_volatile": ("MATCH_CONST_VOLATILE", ["=r", "0"]),
 }
 
 
@@ -516,7 +514,6 @@ MACRO_CHECKS = [
     ('MATCH_HOLD_REG(const u8 *, r, r2) = t + 1;', 'register const u8 *r asm("r2") = t + 1;'),
     ('MATCH_BARRIER();', 'asm("");'),
     ('MATCH_USE(x);', 'asm("" : : "r"(x));'),
-    ('MATCH_USE_VOLATILE(x);', 'asm volatile("" : : "r"(x));'),
     ('MATCH_USE2(ax, px);', 'asm("" : : "r"(ax), "r"(px));'),
     ('MATCH_USE2_VOLATILE(r0, r1);', 'asm volatile("" : : "r"(r0), "r"(r1));'),
     ('MATCH_KEEP(x);', 'asm("" : "+r"(x));'),
@@ -525,7 +522,6 @@ MACRO_CHECKS = [
     ('MATCH_HOLD_VOLATILE(hold);', 'asm volatile("" : "=r"(hold));'),
     ('MATCH_CONST(zero, 0);', 'asm("" : "=r"(zero) : "0"(0));'),
     ('MATCH_CONST(t2, (void *)label2);', 'asm("" : "=r"(t2) : "0"((void *)label2));'),
-    ('MATCH_CONST_VOLATILE(state, 2);', 'asm volatile("" : "=r"(state) : "0"(2));'),
     ('MATCH_CLOBBER(r5);', 'asm("" : : : "r5");'),
     ('MATCH_CLOBBER_VOLATILE(r4);', 'asm volatile("" ::: "r4");'),
     ('MATCH_MEMORY_BARRIER();', 'asm volatile("" ::: "memory");'),
@@ -557,7 +553,9 @@ def check_macros():
 
 
 # --check: the kinds that have a match.h macro and so must not be spelled
-# out in new code.
+# out in new code. use_volatile and const_volatile have no macro since the
+# C++ conversion's cleanup (#664: no site needed MATCH_USE_VOLATILE or
+# MATCH_CONST_VOLATILE any more); a new site would add it back to match.h.
 SPELLED_KINDS = ("pin", "empty", "empty_volatile", "use", "use_volatile", "keep",
                  "keep_volatile", "hold", "hold_volatile", "const", "const_volatile",
                  "mem_barrier", "reg_clobber", "mem_ref", "empty_other")

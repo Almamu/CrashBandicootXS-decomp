@@ -28,8 +28,7 @@
  * fields at 0x0B, 0x0D-0x0F and 0x16-0x17 aren't understood beyond their
  * offset yet - named `unusedNN` rather than guessed. `id` and `kind`
  * have the same offsets and roles as `struct gobj`'s and `struct
- * player`'s. `struct power_dialog.icon` (in
- * power_dialog_draw.cpp) points at one of these. */
+ * player`'s. */
 struct actor {
     s32 x; // 0x00 - Q8 fixed-point screen position
     s32 y; // 0x04 - Q8 fixed-point screen position
@@ -60,7 +59,6 @@ struct anim_table_record;
 struct category_vtable;
 struct sub_effect_record;
 
-struct actor_hp;
 struct actor_spawn;
 
 /* The actor zone (src/actor/): the 3D actor object (`struct actor_self`),
@@ -69,15 +67,6 @@ struct actor_spawn;
 /* src/actor/actor.cpp: C linkage, and the C names of ActorSelf's methods
  * (actor_self.hpp) */
 extern s32 IsTouchingPlayer(void *self);
-extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-extern void UpdateActorDepth(struct actor_self *self);
-extern u8 GetActorRecordIndex(struct actor_self *self);
-extern void SetActorState(struct actor_self *self, s32 a, s32 kind);
-extern s32 GetActorZ(struct actor_self *self);
-extern s32 GetActorY(struct actor_self *self);
-extern s32 GetActorX(struct actor_self *self);
-extern void *GetActorWorldBox(void *out, void *self);
-extern u8 IsActorVisible(void *self);
 extern s32 IsSpawnCollected(void *self);
 extern void MarkSpawnCollected(void *self);
 extern void ClearCollectedSpawns(void);

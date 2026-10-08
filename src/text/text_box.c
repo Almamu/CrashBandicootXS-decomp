@@ -8,7 +8,7 @@
 /* Returns the length of the next "word" starting at `s`: the number of
  * characters up to and including the first space, or up to (but not
  * including) the NUL terminator if no space is found first. Used by
- * the still-parked DrawWrappedText (src/text/wrapped_text.c) to walk text one
+ * DrawWrappedText (src/text/wrapped_text.cpp) to walk text one
  * token at a time. */
 s32 GetWordLength(u8 *s)
 {
@@ -38,7 +38,7 @@ done:
     return len;
 }
 
-/* Thin wrapper around the still-parked DrawWrappedText (src/text/wrapped_text.c):
+/* Thin wrapper around DrawWrappedText (src/text/wrapped_text.cpp):
  * stashes `params->x` into `self`'s own `marginX`, computes a
  * line-count limit as `params->h / self->lineHeight`, then
  * forwards to DrawWrappedText with that limit and returns its result

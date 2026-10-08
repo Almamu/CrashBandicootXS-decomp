@@ -16,7 +16,7 @@ extern "C" {
  *
  * It owns BG layer 0 (`+0x10`, a PooledBgLayer), three BgLayers for
  * BG1-3 (`+0x14`-`+0x1C`), the terrain tile cache (`+0x20`, 0x1064 bytes,
- * tile_cache.c) and an optional level asset (`+0x24`, heap-owned when
+ * tile_cache.cpp) and an optional level asset (`+0x24`, heap-owned when
  * `+0x28` is set).
  *
  * - The constructor and `Get` (get-or-create); the destructor frees the
@@ -90,7 +90,7 @@ void LevelLayers::LoadRoom(const struct level_room *args)
 LevelLayers::LevelLayers()
 {
     layer0 = new PooledBgLayer(0);
-    tiles = InitTileCache((struct tile_cache *)operator new(0x1064));
+    tiles = new TileCache;
     layers[0] = new BgLayer(1);
     layers[1] = new BgLayer(2);
     layers[2] = new BgLayer(3);
@@ -107,8 +107,7 @@ LevelLayers::~LevelLayers()
         delete[] (u8 *)asset;
 
     delete layer0;
-    if (tiles != NULL)
-        DestroyTileCache(tiles, 3);
+    delete tiles;
     delete layers[0];
     delete layers[1];
     delete layers[2];

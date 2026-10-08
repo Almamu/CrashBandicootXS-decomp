@@ -1,5 +1,6 @@
 #include "bg_layer.hpp"
 #include "font.hpp"
+#include "cutscene.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -13,7 +14,7 @@ extern "C" {
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
- * family (slideshow.c/slideshow_display.c) and the terrain-tile decode cache
+ * family (slideshow.cpp/slideshow_display.cpp) and the terrain-tile decode cache
  * (bg_layer_base.cpp, GitHub issue #40). docs/rom_map.md's "A new find: a
  * custom RLE/delta token-stream decoder" and its two follow-up sections
  * ("Follow-up: resolved the semantics by tracing callers", "The
@@ -25,19 +26,19 @@ extern "C" {
  *
  * - `InitSlideshow`/`RunCutscenePlayer`/`DestroyCutscenePlayer`/`InitCutscenePlayer`
  *   are the cutscene player (`struct cutscene_player`, include/cutscene.h)
- *   that slideshow.c/slideshow_display.c also drive: `ResetSlideshow`
+ *   that slideshow.cpp/slideshow_display.cpp also drive: `ResetSlideshow`
  *   sets the VRAM-bank toggle to 1, and `InitCutscenePlayer` also clears
- *   `pages`/`font`. `RunCutscenePlayer` is `RunSlideshow`'s (slideshow.c)
+ *   `pages`/`font`. `RunCutscenePlayer` is `RunSlideshow`'s (slideshow.cpp)
  *   loop over the slides, interleaved with an explicit OAM-shadow-buffer
  *   flush (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/
  *   `CommitOamBuffer` on `gOamBuffer`) and a nested text-paging loop
  *   through each slide's `struct cutscene_page`, rendering each string
- *   via `DrawWrappedText` (wrapped_text.c) with `font` into `box`,
+ *   via `DrawWrappedText` (wrapped_text.cpp) with `font` into `box`,
  *   continuing to the next string while a held-input mask (9, versus
  *   `RunSlideshow`'s 8) stays set. `box.h` divided by the font's line
  *   height gives the per-call text-wrap `limit`.
  *   `DestroyCutscenePlayer` is a plain two-argument forwarding trampoline to
- *   `DestroySlideshow` (slideshow_display.c).
+ *   `DestroySlideshow` (slideshow_display.cpp).
  *
  * - `BgStreamer` (gBgStreamerVtable) is the "visual scrolling background
  *   streamer" docs/rom_map.md names: a circular 4x4-block (64 halfword
@@ -63,16 +64,14 @@ extern "C" {
  * Built with old_agbcp (the Makefile's OLD_AGBCC_OBJS) - see
  * docs/matching/archive/game-loop-old-agbcc.md. */
 
-/* Trivial wrapper: runs `ResetSlideshow`'s reset, then returns `self`
- * unchanged (a "chained constructor" idiom this project sees a lot of). */
-struct cutscene_player *InitSlideshow(struct cutscene_player *self)
+/* InitSlideshow, Slideshow's constructor (include/cutscene.hpp): Reset. */
+Slideshow::Slideshow()
 {
-    ResetSlideshow(self);
-    return self;
+    Reset();
 }
 
 /* Per-frame driver loop over `self`'s slides (the loop `RunSlideshow`
- * (slideshow.c) also runs), interleaved with an explicit OAM-shadow-buffer
+ * (slideshow.cpp) also runs), interleaved with an explicit OAM-shadow-buffer
  * flush and a nested text-paging walk through each slide's page. See
  * this file's header comment for the full shape.
  *
@@ -84,8 +83,9 @@ struct cutscene_player *InitSlideshow(struct cutscene_player *self)
  * prologue reads the box word and `font` into locals before the
  * store, and the page loop is a plain `for` with `j++`. */
 
-void RunCutscenePlayer(struct cutscene_player *self)
+void CutscenePlayer::Run()
 {
+    CutscenePlayer *self = this;
     struct oam_shadow_buffer **oamp = &gOamBuffer;
     s32 limit;
     s32 i;
@@ -100,12 +100,12 @@ void RunCutscenePlayer(struct cutscene_player *self)
     for (i = 0; i < self->count; i++) {
         u8 res = 1;
 
-        ShowSlidePicture(self, i);
+        self->ShowPicture(i);
         ResetOamBuffer(*oamp);
         HideUnusedOamEntries(*oamp);
         WaitForVBlank();
         CommitOamBuffer(*oamp);
-        BeginSlide(self, i);
+        self->BeginSlide(i);
         if (self->pages[i].count == 0) {
             res = WaitForKeyPress(self->slides[i]->wait, self->slides[i]->buttons, 9);
         } else {
@@ -121,27 +121,24 @@ void RunCutscenePlayer(struct cutscene_player *self)
                 }
             }
         }
-        EndSlide(self, i);
-        i = SkipSlides(self, i, res);
+        self->EndSlide(i);
+        i = self->Skip(i, res);
     }
 }
 
-/* Plain two-argument forwarding trampoline to `DestroySlideshow`
- * (slideshow_display.c) - a same-shaped alias for a different call site
- * (matches this project's other trivial-wrapper aliases, e.g.
- * `sub_802425C`/`DestroySlideshow` themselves). */
-void DestroyCutscenePlayer(struct cutscene_player *self, s32 flags)
+/* DestroyCutscenePlayer: g++'s destructor of a derived class with nothing
+ * of its own to tear down passes its __in_chrg on to the base's
+ * (DestroySlideshow), which frees `this` if asked. */
+CutscenePlayer::~CutscenePlayer()
 {
-    DestroySlideshow(self, flags);
 }
 
-/* Extends `InitSlideshow`'s reset: no pages and no font yet. */
-struct cutscene_player *InitCutscenePlayer(struct cutscene_player *self)
+/* InitCutscenePlayer: the slideshow's constructor, then no pages and no
+ * font yet. */
+CutscenePlayer::CutscenePlayer()
 {
-    InitSlideshow(self);
-    self->pages = 0;
-    self->font = 0;
-    return self;
+    pages = 0;
+    font = 0;
 }
 
 /* The custom RLE/delta token-stream decoder (docs/rom_map.md's "A new

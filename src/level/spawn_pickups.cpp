@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include "part_list.hpp"
 #include "font.hpp"
+#include "level_state.hpp"
 
 extern "C" {
 #include "audio.h"
@@ -252,11 +253,12 @@ void CreateEntitySpawner(void)
  * VRAM cursor, the key input, the entity flags and the palette cycles -
  * clears the display control and the level state's unused flags.
  *
- * The globals keep their C types (the C files use them), so the new
- * objects of the C++ classes are stored through their C views (the fonts
- * are `Font *`s to C++, text.h). The audio context and the entity flags
- * are still C, built by their C constructors. */
-struct level_state *InitLevelState(struct level_state *self)
+ * It is LevelState's constructor (include/level_state.hpp). The globals
+ * keep their C types (the C files use them), so the new objects of the
+ * C++ classes are stored through their C views (the fonts are `Font *`s
+ * to C++, text.h). The audio context is still C, built by its C
+ * constructor. */
+LevelState::LevelState()
 {
     {
         struct AudioContext **audio = &gAudioContext;
@@ -290,8 +292,7 @@ struct level_state *InitLevelState(struct level_state *self)
     gOamBuffer = (struct oam_shadow_buffer *)new OamBuffer;
     gObjVramCursor = (struct vram_upload_cursor *)new ObjVramCursor(0);
     gInput = new KeyInput;
-    gEntityFlags =
-        (struct entity_flags *)InitEntityFlags(operator new(sizeof(struct entity_flags)));
+    gEntityFlags = new LevelEntityFlags;
     gPaletteCycles = (struct palette_cycler *)new PaletteCycles;
     {
         u16 *dispcnt = (u16 *)gDispcnt;
@@ -300,7 +301,6 @@ struct level_state *InitLevelState(struct level_state *self)
         *dispcnt = zero;
         SetObjMapping1D();
         CommitDispcnt();
-        self->unusedFlags = zero;
+        unusedFlags = zero;
     }
-    return self;
 }

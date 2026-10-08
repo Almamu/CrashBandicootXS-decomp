@@ -7,8 +7,8 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The HUD digit array's 35 slots (hud_init.c, hud_boss_clock.c,
- * hud_counters.c): an animation index and a position per slot. */
+/* The HUD digit array's 35 slots (hud_init.cpp, hud_boss_clock.cpp,
+ * hud_counters.cpp): an animation index and a position per slot. */
 const u32 gHudPartAnims[35] = {
     0, 0, 10, 0, 0, 0, 1, 1, 1, 2, 3, 0,
     0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 6, 5,

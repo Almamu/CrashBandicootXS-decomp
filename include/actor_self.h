@@ -44,7 +44,7 @@ struct actor_vtable {
     u8 unk_10[0x10];
     struct actor_method m20; // 0x20 - "damage" (called on the player with a strength)
     u8 unk_28[8];
-    // 0x30 - slot 6, "get HP": GetActorHp returns struct actor_hp's `hp`, the jetpack player's
+    // 0x30 - slot 6, "get HP": GetActorHp returns HpActor's `hp` (actor_self.hpp), the jetpack player's
     // GetJetpackPlayerHpPercent its HP as a percentage (UpdateHudPercentCounters shows it)
     struct actor_method getHp;
     struct actor_method m38; // 0x38 - "release" (no argument; DamageJetpackBalloon)
@@ -107,25 +107,5 @@ struct actor_self {
                              //        teardown loops walk `next` from the head
     struct actor_vtable *vtable; // 0x50
 };
-
-/* Resets `self` into state `st`, restarting animation sequence `idx`:
- * the C spelling of ActorSelf::SetState (actor_self.hpp). No C file uses
- * it any more (every 3D actor class is C++, #664 part 11). Both values go
- * through locals so constant pairs are materialized before the stores,
- * as the ROM does; the `if (1) { ... } else (void)0` wrapper, rather than
- * `do { ... } while (0)`, is because agbcc treats the latter as a real
- * loop when weighing register priorities. */
-#define ACTOR_SET_STATE(self, st, idx)                                         \
-    if (1)                                                                     \
-    {                                                                          \
-        s32 _st = (st);                                                        \
-        s32 _idx = (idx);                                                      \
-        (self)->state = _st;                                                   \
-        (self)->stateTime = 0;                                                 \
-        (self)->animIndex = _idx;                                              \
-        (self)->animTimer = (self)->anims[_idx].duration;                      \
-        (self)->animDone = 0;                                                  \
-        (self)->animTime = 0;                                                  \
-    } else (void)0
 
 #endif /* !GUARD_ACTOR_SELF_H */

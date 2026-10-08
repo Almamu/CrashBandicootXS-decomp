@@ -17,7 +17,7 @@ extern "C" {
 
 /* The swim controller (gPlayerCtrlVtable, struct player_ctrl in
  * player_ctrl.h): the diving Crash's controller in the room-kind-1
- * (underwater) rooms, where play_room.c creates it (`new PlayerCtrl`,
+ * (underwater) rooms, where play_room.cpp creates it (`new PlayerCtrl`,
  * InitPlayerCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
  * states. Reset and Restart are in src/player/action_ctrl.cpp
  * (ResetPlayerCtrl, RestartPlayerCtrl), which the ROM puts with the action

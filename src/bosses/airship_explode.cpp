@@ -1,4 +1,5 @@
 #include "boss_actors.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "util.h"
@@ -82,7 +83,7 @@ void AirshipStateExplode(void)
         if (gLevelState->timeTrial == 0 && gAirshipCheckpointCount <= 1) {
             ActorSelf **pl = &gActorList;
             if (gJetpackPlayerInactive == 0) {
-                SetJetpackCheckpoint(*pl);
+                ((JetpackPlayer *)*pl)->SetCheckpoint();
                 CreateJetpackCheckpointText();
                 gAirshipCheckpointCount++;
             }

@@ -11,7 +11,7 @@
 /* The OBJ shape/size index of a sprite piece (the low nibble of its piece
  * byte, include/sprite_bank.h) as width and height in pixels: square
  * 8-64, horizontal 16x8-64x32, vertical 8x16-32x64. Read by DrawSpritePieces
- * (sprite_pieces.c) and DrawAffineSpritePieces (affine_sprite_pieces.c). */
+ * (sprite_pieces.cpp) and DrawAffineSpritePieces (affine_sprite_pieces.cpp). */
 const u8 gObjPieceWidths[12] = {
     8, 16, 32, 64, 16, 32, 32, 64, 8, 8, 16, 32,
 };

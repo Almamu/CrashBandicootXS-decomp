@@ -140,7 +140,7 @@ void EntitySpawner::SetTable(const entity_spawn_fn *table, s32 n)
     funcs = table;
 }
 
-/* An identical body to DestroyEntityFlags (entity_flags.c): g++'s
+/* An identical body to DestroyEntityFlags (entity_flags.cpp): g++'s
  * delete when bit 0 of the flags is set. */
 EntitySpawner::~EntitySpawner()
 {

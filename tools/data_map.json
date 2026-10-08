@@ -452,7 +452,7 @@
     "DrawYesNoPrompt"
    ],
    "consumer_files": [
-    "save/save_menu_draw.c"
+    "save/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -473,7 +473,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.c"
+    "save/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -497,7 +497,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.c"
+    "save/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -521,7 +521,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.c"
+    "save/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -545,7 +545,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "save/save_menu_draw.c"
+    "save/save_menu_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -569,7 +569,7 @@
     "DrawSaveMenuMain"
    ],
    "consumer_files": [
-    "save/save_menu_input.c"
+    "save/save_menu_input.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -593,7 +593,7 @@
     "DrawPauseMenuPageTitle"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.c"
+    "menus/pause_menu_pages_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -618,7 +618,7 @@
     "DrawPauseCrystalsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.c",
+    "menus/pause_menu_pages_draw.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -692,7 +692,7 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_gems.c",
+    "menus/pause_menu_gems.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -742,7 +742,7 @@
     "InitPauseRelicsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_gems.c",
+    "menus/pause_menu_gems.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -793,7 +793,7 @@
     "DrawPauseTimeTrialPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.c",
+    "menus/pause_menu_pages_draw.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -881,8 +881,8 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_pieces.c",
-    "gfx/affine_sprite_pieces.c"
+    "gfx/sprite_pieces.cpp",
+    "gfx/affine_sprite_pieces.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -904,8 +904,8 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_pieces.c",
-    "gfx/affine_sprite_pieces.c"
+    "gfx/sprite_pieces.cpp",
+    "gfx/affine_sprite_pieces.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1056,7 +1056,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "level/play_room.c"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1076,7 +1076,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "level/play_room.c"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1096,7 +1096,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "level/play_room.c"
+    "level/play_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -2270,7 +2270,7 @@
     "frontend/language_select_setup.cpp",
     "menus/level_select.c",
     "menus/power_dialog.cpp",
-    "save/save_menu_ui.c"
+    "save/save_menu_ui.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -2769,7 +2769,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/graphics_package.c"
+    "gfx/graphics_package.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2794,7 +2794,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/graphics_package.c"
+    "gfx/graphics_package.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2842,7 +2842,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.c"
+    "level/run_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2866,7 +2866,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.c"
+    "level/run_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2890,7 +2890,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.c"
+    "level/run_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2914,7 +2914,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.c"
+    "level/run_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2938,7 +2938,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "level/run_room.c"
+    "level/run_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2984,10 +2984,10 @@
     "menus/level_select.c",
     "level/spawn_bosses.cpp",
     "menus/power_dialog_draw.cpp",
-    "menus/pause_menu_info.c",
+    "menus/pause_menu_info.cpp",
     "menus/pause_menu_pages_init.cpp",
-    "level/level_query.c",
-    "level/run_room.c"
+    "level/level_query.cpp",
+    "level/run_room.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 67,
@@ -3017,7 +3017,7 @@
     "PlayRoomMusic"
    ],
    "consumer_files": [
-    "level/level_query.c"
+    "level/level_query.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 125,
@@ -3039,7 +3039,7 @@
     "PlayCutscene"
    ],
    "consumer_files": [
-    "level/level_cutscene.c"
+    "level/level_cutscene.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 444,
@@ -3175,7 +3175,7 @@
     "ConfigureHudParts"
    ],
    "consumer_files": [
-    "hud/hud_init.c"
+    "hud/hud_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3203,9 +3203,9 @@
     "UpdateHudPercentCounters"
    ],
    "consumer_files": [
-    "hud/hud_init.c",
-    "hud/hud_boss_clock.c",
-    "hud/hud_counters.c"
+    "hud/hud_init.cpp",
+    "hud/hud_boss_clock.cpp",
+    "hud/hud_counters.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,

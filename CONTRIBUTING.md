@@ -254,8 +254,8 @@ has the list and the rules. In short:
 
 - Use a helper instead of writing the operation out, and instead of a
   new file-local macro. If two files need the same local macro, move it
-  into the header that owns its type (the virtual-call macros are in
-  `actor_self.h`, `CALL_HIT` in `box_part.h`, `DMA3` in
+  into the header that owns its type (`ACTOR_PMF` is in
+  `actor_self.h`, `ENTITY_MARK_GONE` in `entity_bits.h`, `DMA3` in
   `gba/dma_macros.h`, ...). Two different macros shouldn't share a name
   either: rename one.
 - **A helper must expand to exactly the expression it replaces** (the

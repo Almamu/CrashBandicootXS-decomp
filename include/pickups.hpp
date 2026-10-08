@@ -14,10 +14,8 @@
  * each constructor calls InitSpriteObj (Sprite's) directly, and each
  * destructor DestroySpriteObj.
  *
- * The C prototypes in pickups.h keep the C view, orbit_part.h's `struct
- * orbit_part`, checked against both classes below; cxx_symbols.txt maps
- * the methods to those names. Their spawners (src/level/, include/spawners.hpp)
- * are C++ since part 9.
+ * cxx_symbols.txt maps the methods to their C names. Their spawners
+ * (src/level/, include/spawners.hpp) are C++ since part 9.
  *
  * No `#pragma interface`: g++ emits the vtables in extra_life.cpp and
  * wumpa.cpp (see ctrl.hpp). */
@@ -26,7 +24,6 @@
 
 extern "C" {
 #include "core.h"
-#include "orbit_part.h"
 #include "pickups.h"
 }
 
@@ -103,7 +100,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(pickups_hpp, sizeof(ExtraLife) == sizeof(struct orbit_part));
+COMPILE_TIME_ASSERT(pickups_hpp, sizeof(ExtraLife) == 0x54);
 
 /* The wumpa fruit (gWumpaVtable): the extra life's fields and behaviour,
  * plus a payout (`state` 3: it stays at the player and drops 10 wumpas
@@ -158,7 +155,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Wumpa) == sizeof(struct orbit_part));
+COMPILE_TIME_ASSERT(pickups_hpp, sizeof(Wumpa) == 0x54);
 
 /* The time trial's stopwatch (gStopwatchVtable): a plain sprite, updated
  * while the player is within 0x180 pixels and gone once the player is

@@ -4,11 +4,11 @@
 #include "part_list.hpp"
 #include "pickups.hpp"
 #include "player.hpp"
+#include "hud.hpp"
 
 extern "C" {
 #include "match.h"
 #include "vram_pool.h"
-#include "hud.h"
 #include "pickups.h"
 #include "util.h"
 #include "audio.h"
@@ -1589,7 +1589,7 @@ void Crate::BlastNearby(s32 dist)
     blastState = 0xff;
 }
 
-/* The crate list's update pass (run_room.c): DetonateNitroCrates, then
+/* The crate list's update pass (run_room.cpp): DetonateNitroCrates, then
  * each crate of the list is updated, and a crate that is gone is removed
  * and deleted; all of it again while the list keeps changing. */
 void UpdateCrates(void)
@@ -1656,7 +1656,7 @@ void Crate::ActivateNitroSwitch()
         slot = GetPaletteSlot(gPaletteCache, a->paletteId);
         palette = slot;
         DetonateNitroCrates();
-        ShowHudCrates(gHud);
+        gHud->ShowCrates();
         PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
         pressed = 1;
         PressSwitchCrate(gLevelState);

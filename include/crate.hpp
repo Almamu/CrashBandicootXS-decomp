@@ -3,7 +3,7 @@
 
 /* The crate as C++ (#664, docs/cplusplus.md, parts 7e and 7g): the class
  * behind gCrateVtable (src/crates/). crate.h's `struct crate` is its C
- * view, for the files that are still C (room_entities.c) and the C
+ * view, for the files that are still C and the C
  * prototypes (crates.h).
  *
  * No `#pragma interface`: g++ emits the vtable in crate_update.cpp (see

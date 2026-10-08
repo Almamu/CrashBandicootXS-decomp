@@ -97,7 +97,7 @@ struct CreditsLogo {
 };
 
 /* The credits screen (RunCredits, run from the title menu and after the
- * ending, game_frame.c; 0x98 bytes): a starfield, with the credits text
+ * ending, game_frame.cpp; 0x98 bytes): a starfield, with the credits text
  * (gCreditsText, a byte stream: characters, 1 <logo>, 2/3 small/large
  * font, '\n' a line) floating up over it, a line at a time. */
 class Credits
@@ -194,7 +194,7 @@ struct LogoPiece {
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoPiece) == 0x34);
 
 /* The title screen (InitTitleScreen, RunTitleScreen and
- * DestroyTitleScreen, from game_frame.c; 0x220 bytes): the CRASH
+ * DestroyTitleScreen, from game_frame.cpp; 0x220 bytes): the CRASH
  * BANDICOOT logo flying in over the starfield, piece by piece, then the
  * three-item menu. */
 class TitleScreen
@@ -232,7 +232,7 @@ public:
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(TitleScreen) == 0x220);
 
-/* The 0x44C-byte company-logo screen (ShowCompanyLogos, level_state.c):
+/* The 0x44C-byte company-logo screen (ShowCompanyLogos, level_state.cpp):
  * the Vicarious Visions logo's 20 pieces, the frame strip of its first
  * one, then the Universal logo on BG2. Its constructor is empty. */
 class CompanyLogos

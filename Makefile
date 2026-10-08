@@ -299,6 +299,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/frontend/starfield.o \
                   $(C_BUILDDIR)/gfx/graphics_package.o \
                   $(C_BUILDDIR)/hud/hud_init.o \
+                  $(C_BUILDDIR)/hud/hud_lives.o \
                   $(C_BUILDDIR)/text/font_glyph.o \
                   $(C_BUILDDIR)/text/font_draw_text.o \
                   $(C_BUILDDIR)/text/font.o \
@@ -306,9 +307,11 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/hud/hud_counters.o \
                   $(C_BUILDDIR)/frontend/title_screen_init.o \
                   $(C_BUILDDIR)/save/save_menu_draw.o \
+                  $(C_BUILDDIR)/save/save_menu_ui.o \
                   $(C_BUILDDIR)/menus/power_dialog_loop.o \
                   $(C_BUILDDIR)/menus/pause_menu_loop.o \
                   $(C_BUILDDIR)/menus/pause_menu_gems.o \
+                  $(C_BUILDDIR)/menus/pause_menu_powers.o \
                   $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
                   $(C_BUILDDIR)/menus/power_dialog.o \
                   $(C_BUILDDIR)/menus/power_dialog_draw.o \
@@ -325,6 +328,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_create.o \
                   $(C_BUILDDIR)/cutscene/slideshow.o \
                   $(C_BUILDDIR)/level/tile_cache.o \
+                  $(C_BUILDDIR)/level/entity_flags.o \
                   $(C_BUILDDIR)/level/time_trial.o \
                   $(C_BUILDDIR)/level/room_entities.o \
                   $(C_BUILDDIR)/crates/crate_hit.o \
@@ -344,6 +348,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/run_room.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
                   $(C_BUILDDIR)/level/room_frame.o \
+                  $(C_BUILDDIR)/level/play_room.o \
                   $(C_BUILDDIR)/level/spawn_crates.o \
                   $(C_BUILDDIR)/level/spawn_pickups.o \
                   $(C_BUILDDIR)/link/link_handshake.o \

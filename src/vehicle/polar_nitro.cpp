@@ -11,34 +11,8 @@ extern "C" {
  * An old_agbcc object (current agbcc schedules the box moves' `asr`s
  * differently).
  *
- * The box test is actor_category_frame.cpp's: each actor's box moved to
- * its position in whole units, the two compared on Z, Y and X. BoxOverlap
- * takes the boxes by reference, so g++ binds each returned box to a
- * temporary, and the ROM's two `MemCopy32(box, box, 12)` self-copies are
- * that binding's (docs/cplusplus.md, part 11b). */
-
-static inline u8 BoxOverlap(const struct anim_box &b, const struct anim_box &a)
-{
-    if (b.z < a.z + a.d && b.z + b.d > a.z && b.y < a.y + a.h && b.y + b.h > a.y &&
-        b.x < a.x + a.w && b.x + b.w > a.x)
-        goto hit;
-    return 0;
-hit:
-    return 1;
-}
-
-static inline struct anim_box WorldBox(ActorSelf *s)
-{
-    struct anim_box b = s->box;
-    s32 dx = s->x >> 8;
-    s32 dy = s->y >> 8;
-    s32 dz = s->z >> 8;
-
-    b.x += dx;
-    b.y += dy;
-    b.z += dz;
-    return b;
-}
+ * The box test is actor_category_frame.cpp's: actor_self.hpp's
+ * BoxOverlap of the two actors' WorldBoxes. */
 
 static inline u8 ActorsOverlap(ActorSelf *a, ActorSelf *b)
 {

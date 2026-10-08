@@ -23,35 +23,8 @@ extern "C" {
  * All three tests are the same 3-axis (Z, Y, X) box overlap, as in
  * UpdateYeti, IsTouchingYeti, DetonateNearbyPolarNitros and
  * IsTouchingAirship: each actor's box (`box`, +0x38) moved to its
- * position in whole units, the two compared. WorldBox is the body of
- * ActorSelf::GetWorldBox (actor.cpp, GetActorWorldBox, which has no
- * caller), inline here. BoxOverlap takes the two boxes by reference, so
- * g++ binds each returned box to a temporary: the ROM's two
- * `MemCopy32(box, box, 12)` self-copies are that binding's, which the C
- * spelled out as calls. */
-
-static inline u8 BoxOverlap(const struct anim_box &b, const struct anim_box &a)
-{
-    if (b.z < a.z + a.d && b.z + b.d > a.z && b.y < a.y + a.h && b.y + b.h > a.y &&
-        b.x < a.x + a.w && b.x + b.w > a.x)
-        goto hit;
-    return 0;
-hit:
-    return 1;
-}
-
-static inline struct anim_box WorldBox(ActorSelf *s)
-{
-    struct anim_box b = s->box;
-    s32 dx = s->x >> 8;
-    s32 dy = s->y >> 8;
-    s32 dz = s->z >> 8;
-
-    b.x += dx;
-    b.y += dy;
-    b.z += dz;
-    return b;
-}
+ * position in whole units, the two compared: actor_self.hpp's
+ * BoxOverlap of two WorldBoxes. */
 
 static inline u8 ActorsOverlap(ActorSelf *pl, ActorSelf *self)
 {

@@ -18,7 +18,7 @@
  * (cxx_symbols.txt) and take it. Each controller's functions take its
  * struct: `struct act` (the action controller; an incomplete type, as all
  * of its code is C++), `struct player_ctrl` (player_ctrl.h), and `struct
- * input_ctrl`/`struct boss_ctrl` below. ResetActionCtrl
+ * input_ctrl` below. ResetActionCtrl
  * (src/pickups/wumpa.cpp) is here, with the rest of the action
  * controller. */
 
@@ -121,27 +121,6 @@ union player_mirror {
     } __attribute__((packed)) sbits;
 } __attribute__((packed));
 
-/* The player's method table (gPlayerVtable), as the C callers read it
- * (room_frame.c): a `this` adjustment and the function of each slot. The
- * slot names are the functions gPlayerVtable holds. */
-struct player_vtable {
-    struct actor_method unk_00;             // 0x00 - empty (no RTTI)
-    struct actor_method collide;            // 0x08 - CollidePlayer
-    struct actor_method getHitbox;          // 0x10 - GetSpriteObjHitbox
-    struct actor_method update;             // 0x18 - UpdatePlayer
-    struct actor_method draw;               // 0x20 - DrawPlayer
-    struct actor_method isOnScreen;         // 0x28 - IsSpriteObjOnScreen
-    struct actor_method overlapsRect;       // 0x30 - SpriteObjOverlapsRect
-    struct actor_method isNearCamera;       // 0x38 - IsSpriteObjNearCamera
-    struct actor_method isInsideRect;       // 0x40 - IsSpriteObjInsideRect
-    struct actor_method getClassId;         // 0x48 - GetGroundSpriteClassId
-    struct actor_method destroy;            // 0x50 - DestroyPlayer
-    struct actor_method getPriority;        // 0x58 - GetSpriteObjPriority
-    struct actor_method applyVelocity;      // 0x60 - ApplyPlayerVelocity
-    struct actor_method handleEvent;        // 0x68 - PlayerHandleEvent (the hit handler)
-    struct actor_method collideWithObjects; // 0x70 - CollidePlayerWithObjects
-};
-
 /* The player object (gPlayer) as the C files see it: the C view of class
  * Player (include/player.hpp, which checks the size), a ground sprite
  * (InitGroundSprite, the same 0x80-byte base as gobj_1a794.h's `struct
@@ -159,8 +138,8 @@ struct player {
                               //        (set by PlayRoom), 6 vulnerable, 7 collision enabled
     u8 flags2;                // 0x0D
     u8 unk_0E[0xA];
-    const struct player_vtable *vtable; // 0x18 - gPlayerVtable
-    void *lastHitbox;                   // 0x1C - struct gobj.lastHitbox
+    const void *vtable; // 0x18 - gPlayerVtable (class Player's)
+    void *lastHitbox;   // 0x1C - struct gobj.lastHitbox
     // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
     struct act_anim_bank *anim;
     // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
@@ -255,19 +234,20 @@ struct player {
 
 COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
 
-/* The controllers share a base, objects.h's `struct ctrl` (InitCtrl/
+/* The controllers share a base, ctrl.hpp's class Ctrl (InitCtrl/
  * DestroyCtrl, ctrl.cpp): +0x04 the motion entry set (SetCtrlAnimSet),
  * +0x08 the state, +0x0C the method table. Most subclasses keep their
  * controlled part at +0x10. The action controller is class ActionCtrl
  * (action_ctrl.hpp) and the swim controller `struct player_ctrl`
- * (player_ctrl.h); the input and boss controllers are below. */
+ * (player_ctrl.h); the input controller is below, the boss controllers
+ * are boss_ctrl.hpp's classes. */
 
 /* The input controller (gInputCtrlVtable, src/player/input_ctrl.cpp and
  * input_ctrl_queue.cpp): the player's controller in the rooms where the
  * player is moved by the input alone. The C view of
  * include/input_ctrl.hpp's class InputCtrl, which keeps the same layout
  * (checked there). Its code is all C++; the C files only pass it around
- * (play_room.c creates it). */
+ * (play_room.cpp creates it). */
 struct input_ctrl {
     u8 unk_00[4];
     const struct entry_set *animSet;  // 0x04
@@ -286,21 +266,6 @@ struct input_ctrl {
     u8 flag20;                       // 0x20
     u8 unk_21[3];
     s32 timer; // 0x24
-};
-
-/* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp;
- * the C view of include/boss_ctrl.hpp's class BossCtrl, same layout):
- * the base class of the bosses' controllers (Mega Mix, Tiny, Neo Cortex's
- * fight, Dingodile and his shield and rocket/stalactite), each of which
- * extends it. Its event slot keeps the event's msg and arg. */
-struct boss_ctrl {
-    u8 unk_00[4];
-    const struct entry_set *animSet;  // 0x04
-    s32 state;                        // 0x08
-    const struct vtable_slot *vtable; // 0x0C - gBossCtrlVtable or a subclass's
-    void *target;                     // 0x10 - the controlled part
-    s32 msg;                          // 0x14 - BossCtrlHandleEvent's msg; nothing reads it back
-    s32 arg;                          // 0x18 - and its arg
 };
 
 /* The controllers' state functions, indexed by state
@@ -343,33 +308,11 @@ extern const struct entry_set gInputCtrlMotionSet;
 /* The player's controller (sym_iwram.txt), built by PlayRoom. */
 extern void *gPlayerCtrl;
 
-/* src/pickups/wumpa.cpp */
-extern void ResetActionCtrl(struct act *self);
-
 /* src/player/action_ctrl.cpp */
 extern void ActionCtrlStateNop6(void);
 extern void ActionCtrlStateTurboRun(struct act *self);
 extern void ActionCtrlStateNop2(void);
 extern void ActionCtrlStateUnusedIdle(struct act *self);
-extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
-extern void RestartActionCtrl(struct act *self);
-extern struct act *InitActionCtrl(struct act *self);
-extern void sub_80158AC(struct act *self);
-extern void SetActionCtrlMotionYKeepSpeed(struct act *self);
-extern void SetActionCtrlMotionXKeepSpeed(struct act *self);
-extern void SetActionCtrlMotionYPending(struct act *self);
-extern void SetActionCtrlMotionXPending(struct act *self);
-extern void ClearActionCtrlMotionYPending(struct act *self);
-extern void ClearActionCtrlMotionXPending(struct act *self);
-extern u8 IsActionCtrlMotionYPending(struct act *self);
-extern u8 IsActionCtrlMotionXPending(struct act *self);
-extern void QueueActionCtrlMotionYKeepSpeed(struct act *self, s32 val);
-extern void QueueActionCtrlMotionXKeepSpeed(struct act *self, s32 val);
-extern void QueueActionCtrlMotionY(struct act *self, s32 val);
-extern void QueueActionCtrlMotionX(struct act *self, s32 val);
-extern u8 GetActionCtrlPrevState(struct act *self);
-extern void ResetPlayerCtrl(struct player_ctrl *self);
-extern void RestartPlayerCtrl(struct player_ctrl *self);
 
 /* src/player/action_ctrl_hang.cpp */
 extern void ActionCtrlStateLeftGround(struct act *self);
@@ -382,10 +325,8 @@ extern void ActionCtrlStateHangMoveStart(struct act *self);
 extern void ActionCtrlStateHangMove(struct act *self);
 extern void ActionCtrlStateHangStop(struct act *self);
 extern void DoSuperBodySlamShockwave(struct act *self);
-extern void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param2);
 
 /* src/player/action_ctrl_idle.cpp */
-extern void ApplyActionCtrlMotion(struct act *self);
 extern void ActionCtrlStateIdle(struct act *self);
 
 /* src/player/action_ctrl_land.cpp */
@@ -393,18 +334,7 @@ extern void ActionCtrlStateCrawlStandUp(struct act *self);
 extern void ActionCtrlStateBodySlamLand(struct act *self);
 extern void ActionCtrlStateLand(struct act *self);
 
-/* src/player/action_ctrl_left_ground.cpp */
-extern u8 CheckActionCtrlLeftGround(struct act *self);
-
 /* src/player/action_ctrl_moves.cpp */
-extern void StartActionCtrlTornadoFall(struct act *self);
-extern void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags);
-extern void SteerActionCtrlSpin(struct act *self, u8 mode);
-extern void StartActionCtrlSpin(struct act *self);
-extern void StartActionCtrlHangSpin(struct act *self);
-extern void StartActionCtrlRun(struct act *self);
-extern void StartActionCtrlHighJump(struct act *self);
-extern void StartActionCtrlMaskHitJump(struct act *self);
 extern void ActionCtrlStateUnusedHangRelease(struct act *self);
 extern void ActionCtrlStateUnusedHangGrab(struct act *self);
 extern void ActionCtrlStateHangSpin(struct act *self);
@@ -430,126 +360,31 @@ extern void ActionCtrlStateStandUp(struct act *self);
 extern void ActionCtrlStateCrawlStart(struct act *self);
 extern void ActionCtrlStateCrawl(struct act *self);
 
-/* src/player/action_ctrl_update.cpp */
-extern u8 TryActionCtrlDoubleJump(struct act *self);
-extern void HandleActionCtrlAirInput(struct act *self);
-
 /* src/player/input_ctrl.cpp: the swim controller's motion queue
  * accessors (PlayerCtrl, include/player_ctrl.hpp), then InputCtrl's methods
  * (include/input_ctrl.hpp), under their C names (cxx_symbols.txt), for the
  * vtables, the state tables and the C callers. */
-extern void ClearPlayerCtrlMotionYPending(struct player_ctrl *self);
-extern void ClearPlayerCtrlMotionXPending(struct player_ctrl *self);
-extern u8 IsPlayerCtrlMotionYPending(struct player_ctrl *self);
-extern u8 IsPlayerCtrlMotionXPending(struct player_ctrl *self);
-extern void QueuePlayerCtrlMotionY(struct player_ctrl *self, u8 value);
-extern void QueuePlayerCtrlMotionX(struct player_ctrl *self, u8 value);
-extern void InputCtrlKillPlayer(struct input_ctrl *self, void *arg);
 extern void InputCtrlStateStart(struct input_ctrl *self);
-extern void ApplyInputCtrlMotion(struct input_ctrl *self);
-extern void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unused3,
-                                 s32 unused4);
 extern void InputCtrlStateDead(struct input_ctrl *self);
 extern void InputCtrlStateUnusedRide(struct input_ctrl *self);
 extern void InputCtrlStateRide(struct input_ctrl *self);
-extern void RestartInputCtrl(struct input_ctrl *self);
-extern void ResetInputCtrl(struct input_ctrl *self);
-extern struct input_ctrl *CreateInputCtrl(struct input_ctrl *self);
-extern void SetInputCtrlMotionYPending(struct input_ctrl *self);
-extern void SetInputCtrlMotionXPending(struct input_ctrl *self);
-extern void CancelInputCtrlMotionY(struct input_ctrl *self);
-extern void CancelInputCtrlMotionX(struct input_ctrl *self);
-extern u8 IsInputCtrlMotionYPending(struct input_ctrl *self);
-
-/* src/player/input_ctrl_queue.cpp: InputCtrl's and BossCtrl's methods
- * (include/input_ctrl.hpp, include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the C callers. */
-extern u8 IsInputCtrlMotionXPending(struct input_ctrl *self);
-extern void QueueInputCtrlMotionYKeepSpeed(struct input_ctrl *self, u8 val);
-extern void QueueInputCtrlMotionXKeepSpeed(struct input_ctrl *self, u8 val);
-extern void QueueInputCtrlMotionY(struct input_ctrl *self, u8 val);
-extern void QueueInputCtrlMotionX(struct input_ctrl *self, u8 val);
-extern void *GetCtrlTarget(struct boss_ctrl *self);
 
 /* src/player/kill_player.cpp */
 extern void KillPlayer(struct act *self, s32 id);
-extern void UpdateActionCtrlSkidAnim(struct act *self);
-extern s32 UpdatePlayerFacing(struct act *self);
 
 /* src/player/player_*.cpp: Player's methods (include/player.hpp) under
  * their C names (cxx_symbols.txt), for the C callers. */
-
-/* src/player/player_anim_room.cpp */
-extern u8 PlayerHasRoomForAnim(struct player *self, s32 anim);
 
 /* src/player/player_collide.cpp */
 extern u8 CollidePlayer(struct player *self);
 
 /* src/player/player_flags.cpp: Player's accessors (include/player.hpp). */
-extern struct collision_queue *GetPlayerCollisionQueue(struct player *self);
-extern void ClearPlayerDead(struct player *self);
-extern void SetPlayerDead(struct player *self);
-extern u8 IsPlayerDead(struct player *self);
-extern void StartPlayerRampX(struct player *self, s32 a, s32 b, s32 c);
-extern void SetPlayerRampX(struct player *self, s32 a, s32 b, s32 c);
-extern void DecrementPlayerCountdown(struct player *self);
-extern void ClearPlayerCountdown(struct player *self);
-extern void IncrementPlayerCountdown(struct player *self);
-extern u8 GetPlayerCountdown(struct player *self);
-extern u8 IsPlayerInvulnerable(struct player *self);
-extern void ClearPlayerInvulnerability(struct player *self);
-extern void SetPlayerInvulnerable(struct player *self, s32 arg1);
-extern void SetPlayerControlMode(struct player *self, u8 arg1);
-extern u8 GetPlayerControlMode(struct player *self);
-extern struct gobj *GetPlayerStandingOn(struct player *self);
-extern void SetPlayerStandingOn(struct player *self, struct gobj *part);
 extern void SetPlayerBusy(struct player *self, u8 arg1);
-extern u8 IsPlayerBusy(struct player *self);
-extern void ClearPlayerListCount(struct player *self);
-extern void IncrementPlayerListCount(struct player *self);
-extern u8 GetPlayerListCount(struct player *self);
-extern void ClearPlayerListCountAlt(struct player *self);
-extern void IncrementPlayerListCountAlt(struct player *self);
-extern u8 GetPlayerListCountAlt(struct player *self);
-extern void ClearPlayerBounce(struct player *self);
-extern void IncrementPlayerBounce(struct player *self);
-extern u8 GetPlayerBounce(struct player *self);
-extern void SetPlayerBumped(struct player *self, u8 arg1);
-extern u8 IsPlayerBumped(struct player *self);
-extern u8 GetPlayerPushRight(struct player *self);
-extern void SetPlayerPushRight(struct player *self, u8 arg1);
-extern u8 GetPlayerPushLeft(struct player *self);
-extern void SetPlayerPushLeft(struct player *self, u8 arg1);
-extern u8 IsPlayerHanging(struct player *self);
-extern void SetPlayerHanging(struct player *self, u8 arg1);
-extern u8 IsPlayerSlippery(struct player *self);
-extern void SetPlayerSlippery(struct player *self, u8 arg1);
-extern struct crate *GetPlayerListEntry(struct player *self, s32 idx);
-extern void StorePlayerListEntry(struct player *self, struct crate *crate);
-/* Ctrl's methods (include/ctrl.hpp) under their C names
- * (cxx_symbols.txt), for the C callers. */
-extern void SetCtrlAnimSet(void *self, s32 val);
-
-/* src/player/player_init.cpp */
-extern struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused);
-
-/* src/player/player_reset.cpp */
-extern void ResetPlayer(struct player *self);
-extern void ResetPlayerForRoom(struct player *self);
-
-/* src/player/player_update.cpp */
-extern u8 HasPlayerRampYTarget(struct player *self);
-extern void ClearPlayerSpeedY(struct player *self);
-extern void StopPlayerFalling(struct player *self);
-extern u8 PlayerTouchesBox(struct player *self, struct aabb *box);
 
 /* src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp, swim_ctrl_stroke.cpp:
  * the swim controller's methods (PlayerCtrl, include/player_ctrl.hpp)
  * under their C names (cxx_symbols.txt), for the state table and the C
  * callers. */
-extern void CheckPlayerCtrlTurn(struct player_ctrl *self);
-extern void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
-extern void ApplyPlayerCtrlMotion(struct player_ctrl *self);
 extern void PlayerCtrlStateIdle(struct player_ctrl *self);
 extern void PlayerCtrlStateSwim(struct player_ctrl *self);
 extern void PlayerCtrlStateStroke(struct player_ctrl *self);
@@ -558,23 +393,8 @@ extern void PlayerCtrlStateTurn(struct player_ctrl *self);
 extern void PlayerCtrlStateSwimStart(struct player_ctrl *self);
 extern void PlayerCtrlStateStop(struct player_ctrl *self);
 extern void PlayerCtrlStateDead(struct player_ctrl *self);
-extern void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct player *target, s32 idx);
-extern void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct player *target, s32 idx);
 /* SetPlayerCtrlState's `timer`/`timerMax` value that keeps the current
  * one. */
 #define CTRL_KEEP 0x7FFFFFFF
-extern void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
-extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
-extern s32 GetPlayerSwimDriftStep(s32 v);
-extern void ApplyPlayerCtrlTilt(struct player_ctrl *self);
-extern void StartPlayerCtrlSwim(struct player_ctrl *self);
-extern struct player_ctrl *InitPlayerCtrl(struct player_ctrl *self);
-extern void sub_801750C(struct player_ctrl *self);
-extern void SetPlayerCtrlMotionYPending(struct player_ctrl *self);
-extern void SetPlayerCtrlMotionXPending(struct player_ctrl *self);
-extern void SetPlayerSwimDriftY(s32 arg0, s32 arg1, s32 arg2);
-extern void StartPlayerCtrlStroke(struct player_ctrl *self);
-extern void StartPlayerCtrlSpin(struct player_ctrl *self);
-extern void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self);
 
 #endif /* GUARD_PLAYER_H */

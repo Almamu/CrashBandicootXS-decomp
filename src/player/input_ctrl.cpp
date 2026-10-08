@@ -21,7 +21,7 @@ extern "C" {
  * their "pending" flags.
  *
  * The other 19 are InputCtrl's (include/input_ctrl.hpp, gInputCtrlVtable;
- * #664, docs/cplusplus.md), the controller play_room.c attaches in room
+ * #664, docs/cplusplus.md), the controller play_room.cpp attaches in room
  * kind 2, where the player uses sprite bank 2 (Crash riding a hover
  * vehicle; anim 1 is it blowing up). Each frame Update reads the held
  * D-pad bits from `gKeys` and queues motion entries for its target
@@ -287,7 +287,7 @@ InputCtrl::~InputCtrl()
 {
 }
 
-/* Ctrl(), the vtable pointer, then Reset. play_room.c's
+/* Ctrl(), the vtable pointer, then Reset. play_room.cpp's
  * CreateInputCtrl(OperatorNew(0x28)) is `new InputCtrl`. */
 InputCtrl::InputCtrl()
 {

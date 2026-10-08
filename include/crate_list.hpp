@@ -9,8 +9,7 @@
  *              crate_player_collide.cpp
  *
  * crates.h's `struct pool_manager`, `struct pool_node` and `struct
- * pool_link` are the C views, for the files that are still C (play_room.c,
- * run_room.c, ...) and three of crate_break.cpp's loops; each class checks
+ * pool_link` are the C views, for the files that are still C and three of crate_break.cpp's loops; each class checks
  * its size against its view below. The C prototypes (crates.h) keep the C names; cxx_symbols.txt
  * maps the methods to them.
  *
@@ -57,7 +56,7 @@ struct CrateGridLink {
 
 COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == sizeof(struct pool_link));
 
-/* The crate list (`gCrateList`, play_room.c allocates 0x818 bytes for
+/* The crate list (`gCrateList`, play_room.cpp allocates 0x818 bytes for
  * 0xC0 crates): `slots` holds the listed sprites (`count` of them, up to
  * `capacity`); `nodes` are the grid's `capacity` nodes, and `links` the
  * free list over them, `freeHead` its first entry. The grid has 256
