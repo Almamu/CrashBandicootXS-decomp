@@ -1700,7 +1700,7 @@ agbcc to old_agbcc's constant-before-`ldrb` order) and move to
   `new`: `SpriteRenderer`, `SpriteBankSet`, `PaletteCache`, `OamBuffer`,
   `ObjVramCursor(0)`, `PaletteCycles`, and the key input, `KeyInput`
   (spawners.hpp), whose constructor is ClearKeys (src/system/irq.c, still
-  C, `void ClearKeys(void)`, which leaves `this` in r0). The C's six `bl`
+  C, `void *ClearKeys(void *self)`, which returns `this` in r0). The C's six `bl`
   asm statements with the pointer pinned to r0 go: a constructor returns
   `this`. The globals keep their C types (the C files use them), so the
   new objects are stored through casts to their C views. The audio

@@ -147,8 +147,10 @@ void sprintf(u8 *dest, u8 *fmt, ...)
  *    a plain `if (cond) x += 0x20;` just branches straight past it,
  *    and gcc folds an equivalent ternary back into the same shape once
  *    it proves the truncate redundant. Fixed the same way as
- *    `SetDispcntMode`/`CommitBlendRegs`: each fold is materialized as an
- *    opaque inline-asm block the optimizer can't see into.
+ *    `SetDispcntMode`: each fold is materialized as an opaque
+ *    inline-asm block the optimizer can't see into. (#662: a macro, a
+ *    ternary, if/else and four inline-function spellings all become a
+ *    conditional move under both agbcc and old_agbcc.)
  * 2. The inner verify loop's "needle exhausted, match found" check
  *    compiled with the opposite branch sense from the ROM (`bne` to a
  *    same-iteration fallthrough instead of the ROM's `beq` clear across

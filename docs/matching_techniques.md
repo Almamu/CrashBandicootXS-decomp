@@ -750,6 +750,51 @@ and under it `SetSaveFlags`/`ClearSaveFlags` are plain `|=`/`&= ~`
 (four pins and an instruction asm gone); `pause_menu_draw.o` also
 matches under old_agbcp, but that frees none of its sites.
 
+Step 3 (system, util, audio, iwram, lib): `input.o`, `irq.o`, `aabb.o`
+and `audio.o` joined old_agbcc (Makefile, own `+=` block); its copy
+before an AND (`adds r1, r7, #0` ahead of the load) and its BLDY address
+derived from BLDCNT's are what the `add %0, %1, #0` / `str; add #4` asms
+and the DISPSTAT pins imitated. The other big lesson: rewrite from the
+ROM's code as plain C before tuning a draft. GaxChannelSetInstrument
+(ex-NAKED, 5 pins and 2 asms), GaxDrawText (7 pins, 2 asms),
+GaxFxChannelInit, GAX_set_music_volume and GaxMixerInit match as
+straight field stores and loops; their workarounds were fixing
+artefacts of the first draft's shape. Two smaller ones:
+- ClearKeys is the KeyInput constructor and returns `self`; that, not
+  an allocator whim, is why the ROM keeps r0 out of its stores.
+- FormatPaddedNumber's tail is an inlined strcpy and strlen
+  (`static inline` copies in number_format.c): the ROM's
+  re-materialized `movs r0, #0` for the terminator is the inline's own
+  `*dst = 0`, which a plain loop folds into the known-zero byte.
+
+Step 3 (actors, bosses, crates, enemies, player, vehicles) replaced
+these with plain C/C++:
+
+- **A re-read for the ROM's register copy.** Reading the field again
+  (`table->kind == 0x1b` after `u8 v = table->kind`) gives cse a load
+  it turns into `adds r0, r1, #0`, where the asm wrote that copy
+  (`CountCategoryCrates`).
+- **A `u8` copy that stays a copy.** An `s32` copy of a loaded byte is
+  folded into it; a `u8` one keeps its own register (`UpdateSkidAnim`'s
+  `tagCopy`, found by decomp-permuter).
+- **Constant field stores instead of zero locals.** `bc->animDone = 0`
+  loads its 0 into a byte-mode register that cse doesn't share with an
+  `s32` 0, so the ROM's two `movs rN, #0` come out without pinning
+  either (`YetiStateChase`, `YetiStateCharge`).
+- **An inline helper for the argument order.** `CreateYeti`'s
+  `movs r0, #0x1c` before the heap flag is the actors' operator new
+  inlined: the size goes in as the helper's argument (`AllocIwram`),
+  which [inline-argument order](#inline-argument-order) puts first.
+- **`bool` for a tested 0/1 result.** With an `s32` inline result, cse
+  folds `if (StepCannonFlash(this))` on both paths; a `bool` keeps the
+  ROM's `movs r0, #0/#1; cmp r0, #0`.
+- **One local per axis.** `UpdateActorBgScroll` reused one `target` and
+  one `delta` for X and Y; separate `targetX`/`targetY` and
+  `deltaX`/`deltaY` (decomp-permuter) and `MIN` for the clamp replace
+  three pins.
+- **Read the globals directly.** `UpdateYetiBg2`'s address locals and
+  r1 pin go when the flags are read and written by name.
+
 Step 3 in gfx/, objects/ and text/ (62 sites, 53 removed):
 
 - **The compiler first.** display.o, fade.o and sprite_frame.o load the
