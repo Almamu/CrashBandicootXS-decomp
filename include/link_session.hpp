@@ -142,7 +142,10 @@ public:
     struct link_id_word handshakeWord; // 0x20 - 0xF0B, low nibble = answers seen
     s32 totalSent;                     // 0x24 - payload bytes popped from `ring`
     u8 prevPacket[8];                  // 0x28 - the previous `id`, re-sent every fourth round
-    u8 id[8];                          // 0x30 - the outgoing packet; first MakeLinkHandshakeId's id
+    /* 0x30 - with `hash`, the outgoing 8-byte packet (first
+     * MakeLinkHandshakeId's id) */
+    u8 id[6];
+    u16 hash;                          // 0x36 - the packet's CRC-16
     s32 sendWordIndex;                 // 0x38 - which of the packet's 4 halfwords goes out next
     s32 sendRound;                     // 0x3c - full packets sent since the last new one
     LinkRing ring;                     // 0x40 - outgoing bytes

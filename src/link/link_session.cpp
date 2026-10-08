@@ -436,13 +436,13 @@ void LinkSession::HandleSerial(u16 *data)
 
                 *b = (*b & ~0xf) | nib;
             }
-            hash = *(u16 *)&this->id[6];
+            hash = this->hash;
             LINK_HASH(hash, &this->id[1]);
             {
                 /* The ROM sets this 0 before the hash store. */
                 s32 z = 0;
 
-                *(u16 *)&this->id[6] = hash;
+                this->hash = hash;
                 sendRound = z;
             }
             changed = 1;
