@@ -13,7 +13,7 @@ extern "C" {
  *
  * The accessors were plain functions with C linkage on `struct player`
  * (part 3) until the player became a class; cxx_symbols.txt maps them to
- * the C names their prototypes in player.h keep for the C callers. As C,
+ * their C names. As C,
  * the two motion setters needed 8 register pins each to load the ramp in
  * the ROM's order; as C++, with the values in locals, they need none. */
 

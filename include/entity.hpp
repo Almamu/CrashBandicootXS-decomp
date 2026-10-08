@@ -25,8 +25,7 @@ extern "C" {
 #include "entity_bits.h"
 }
 
-/* union EntityFlags, the flags at +0x0C, is actor.h's (struct player, the
- * C view of the player, has it too). */
+/* union EntityFlags, the flags at +0x0C, is actor.h's. */
 
 /* The entity: a position, the spawn's id, a kind, the flags and a size;
  * then the vtable pointer. Each

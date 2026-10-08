@@ -37,40 +37,6 @@ struct terrain_type {
     u8 heights[4][8];
 };
 
-/* The collision tile cache (gLevelLayers->tiles, 0x1064 bytes): the class
- * TileCache (include/bg_layer.hpp), opaque to C. */
-struct tile_cache;
-
-/* The level-layers singleton (gLevelLayersSingleton, gLevelLayers): the
- * level's scroll position and limits, BG layer 0 (a PooledBgLayer, 0x60
- * bytes) and the three other BG layers (BgLayers, 0x5C bytes each), the
- * collision tile cache and the loaded level asset. The C view of the
- * class LevelLayers (include/bg_layer.hpp, src/level/level_layers.cpp). */
-struct level_layers {
-    s32 maxScrollX;                    // 0x00 - pixels
-    s32 maxScrollY;                    // 0x04
-    s32 scrollX;                       // 0x08 - pixels
-    s32 scrollY;                       // 0x0C
-    struct bg_scroll_layer *layer0;    // 0x10 - a PooledBgLayer
-    struct bg_scroll_layer *layers[3]; // 0x14
-#ifdef __cplusplus
-    class TileCache *tiles; // 0x20 - 0x1064 bytes
-#else
-    struct tile_cache *tiles; // 0x20
-#endif
-    void *asset;   // 0x24
-    u8 assetOwned; // 0x28
-    // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set
-    // (ProbeTerrainX/Y; terrain_probe_axes.cpp's `nibble`)
-    u8 kind;
-    // 0x2A - CollidePlayer sets it around its ground probe (player_collide.c's `busy`,
-    // terrain_probe_axes.cpp's `flagHeld`)
-    u8 probeFlag;
-    // 0x2B - set when the room's blend mode is 1 (SetupRoomBlend): sprites then
-    // take layer 0's priority minus one (GetSpriteObjPriority)
-    u8 raiseObjPriority;
-};
-
 /* The entity flags (`gEntityFlags`, 0x408 bytes, InitEntityFlags; built
  * by UpdateGameFrame): the room's entity list and two pairs of bitmaps,
  * one bit per entity id (entity_flags.cpp's bit accessors, SetEntityIdGone
@@ -92,34 +58,21 @@ struct entity_flags {
     u32 bits1Copy[64];                    // 0x308
 };
 
-/* The entity spawner (`gEntitySpawner`, class EntitySpawner,
- * spawners.hpp). No C file reads it: the C side has the tag alone. */
-struct entity_spawner;
-
-/* The camera's followed object (gPlayer, or the camera lead, class
- * CameraLead in level_select.hpp): the C view of the Sprite they both
- * derive from, with Sprite's names (include/sprite_obj.hpp checks the
- * offsets). `pos` is Sprite's x, y: the camera copies it as one 8-byte
- * struct (camera.cpp). */
-struct camera_target {
-    struct vec2 pos; // 0x00 - Q8
-    u8 unk_08[0x1C]; // 0x08-0x23
-    u8 dir;          // 0x24 - PLAYER_DIR_* (player.h; mode 2 look-ahead)
-    u8 unk_25[3];    // 0x25-0x27
-    u8 mirror;       // 0x28 - bit 4 is the X mirror flag
-};
-
 /* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.cpp):
  * a Q8 position, a Q8 look-ahead offset, the followed object and the
  * mode. run_room.cpp called it `struct gl_scratch`, action_ctrl_event.c
  * `struct follow_state` and level_select.c `struct follow_owner`. */
 struct camera {
-    s32 x;                        // 0x00 - Q8
-    s32 y;                        // 0x04 - Q8
-    s32 vx;                       // 0x08 - Q8 look-ahead
-    s32 vy;                       // 0x0C - Q8 look-ahead
-    struct camera_target *target; // 0x10
-    s32 mode;                     // 0x14 - 1/2 select StepCameraFacing/StepCameraDirectional
+    s32 x;  // 0x00 - Q8
+    s32 y;  // 0x04 - Q8
+    s32 vx; // 0x08 - Q8 look-ahead
+    s32 vy; // 0x0C - Q8 look-ahead
+#ifdef __cplusplus
+    class Sprite *target; // 0x10 - gPlayer, or the level select's camera lead (CameraLead)
+#else
+    void *target; // 0x10
+#endif
+    s32 mode; // 0x14 - 1/2 select StepCameraFacing/StepCameraDirectional
 };
 
 /* src/level/pooled_bg_layer.cpp (the BG layers' methods are BgLayer's and
@@ -295,11 +248,13 @@ extern s32 sub_8026C8C(void);
 /* src/level/terrain_probe.cpp */
 extern s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue);
 
-/* src/level/terrain_probe_axes.cpp */
-extern s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
+/* src/level/terrain_probe_axes.cpp (C linkage; only C++ calls them) */
+#ifdef __cplusplus
+extern s32 ProbeTerrainY(class LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue,
                          s32 submode);
-extern s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
+extern s32 ProbeTerrainX(class LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue,
                          s32 submode);
+#endif
 
 /* sym_iwram.txt */
 #ifdef __cplusplus
@@ -349,8 +304,6 @@ extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 /* src/iwram/iwram_data.cpp */
 #ifdef __cplusplus
 extern class LevelLayers *gLevelLayersSingleton;
-#else
-extern struct level_layers *gLevelLayersSingleton;
 #endif
 #ifdef __cplusplus
 extern class LevelState *gLevelStateSingleton;

@@ -91,8 +91,8 @@ does; an object that fails to compile is reported and skipped.
 
 Usage:
   tools/layout_audit.py --db /tmp/layouts.json views
-  tools/layout_audit.py --db /tmp/layouts.json views Player player
-  tools/layout_audit.py --db /tmp/layouts.json diff --types Font bitmap_font
+  tools/layout_audit.py --db /tmp/layouts.json views CrateGridNode
+  tools/layout_audit.py --db /tmp/layouts.json diff --types CrateGridNode CrateGridNodeInit
   tools/layout_audit.py --db /tmp/layouts.json names pool_manager
   tools/layout_audit.py --db /tmp/layouts.json show Entity
 """

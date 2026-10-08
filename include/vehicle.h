@@ -33,7 +33,6 @@ struct spawn_arg {
  * .c files that use them). */
 struct anim_box;
 struct anim_table_record;
-struct actor_283c;
 
 /* src/actor/actor.cpp */
 extern void JetpackReloadPlayerTiles(void *arg0);
@@ -57,8 +56,6 @@ extern void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
 extern void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
 #ifdef __cplusplus
 extern class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
-#else
-extern struct actor_self *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 #endif
 
 /* src/actor/actor_spawn.cpp */
@@ -138,8 +135,6 @@ extern s32 gJetpackWumpaDispenseTimer;
  * (actor_self.hpp), as gYeti below. */
 #ifdef __cplusplus
 extern class PolarAkuAku *gPolarAkuAku;
-#else
-extern struct actor_self *gPolarAkuAku;
 #endif
 extern s32 gPolarAkuAkuInvincibleTimer;
 extern u8 gPolarFadeStarted;
@@ -158,8 +153,6 @@ extern s32 gPolarSteerTime;
 extern s32 gPolarWumpaDispenseTimer;
 #ifdef __cplusplus
 extern class ActorSelf *gRiderlessPolar;
-#else
-extern struct actor_self *gRiderlessPolar;
 #endif
 /* The yeti's animation: a 0x1C-byte AnimPart (actor_self.hpp), as the
  * airship's (CreateYeti, yeti.cpp). No C file uses it. */

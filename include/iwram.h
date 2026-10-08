@@ -9,8 +9,6 @@
 
 #include "core.h"
 
-struct actor_self;
-
 /* A zero-run-compressed OBJ frame (docs/data.md "Compressed sprite
  * frames"): the size in tiles, then u16 counts alternating between a run
  * of zero halfwords and a run of literal halfwords that follow it. */
@@ -31,12 +29,10 @@ extern s32 itoa_arm(s32 value, u8 *buf, s32 base);
 /* src/iwram/sprite_arm.cpp */
 extern void UnpackNibbleTiles(u16 *src, s32 lowBlock);
 extern void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h);
-/* C++ sees the list as ActorSelf's (actor_self.hpp), as actor.h's
- * gHeapSortActorsByKeyFunc. */
+/* The list is ActorSelf's (actor_self.hpp), as actor.h's
+ * gHeapSortActorsByKeyFunc; only C++ uses it. */
 #ifdef __cplusplus
 extern void HeapSortActorsByKey(s32 n, class ActorSelf **list);
-#else
-extern void HeapSortActorsByKey(s32 n, struct actor_self **list);
 #endif
 extern void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame);
 extern s32 LookupSpriteFrameCache(u8 *frame);

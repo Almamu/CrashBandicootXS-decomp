@@ -2,9 +2,9 @@
 #define GUARD_TEXT_H
 
 /* The text subsystem (src/text/): the bitmap-font renderer and the
- * word-wrapping text box. The fonts are C++ classes (include/font.hpp);
- * `struct bitmap_font`, their C view, and its vtable record are in
- * bitmap_font.h; the text rectangle is a `struct aabb` (aabb.h).
+ * word-wrapping text box. The fonts are C++ classes (include/font.hpp)
+ * with no C view; their glyph metrics are in bitmap_font.h; the text
+ * rectangle is a `struct aabb` (aabb.h).
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
@@ -17,13 +17,10 @@
 #include "bitmap_font.h"
 
 /* The two font instances, built by InitLevelState (IWRAM, sym_iwram.txt):
- * a SmallFont and a LargeFont (include/font.hpp) to the C++ files. */
+ * a SmallFont and a LargeFont (include/font.hpp). No C file uses them. */
 #ifdef __cplusplus
 extern class Font *gSmallFont;
 extern class Font *gLargeFont;
-#else
-extern struct bitmap_font *gSmallFont;
-extern struct bitmap_font *gLargeFont;
 #endif
 
 /* The two fonts' character sets and glyph metrics

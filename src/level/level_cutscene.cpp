@@ -4,6 +4,7 @@
 #include "spawners.hpp"
 #include "font.hpp"
 #include "audio.hpp"
+#include "cutscene.hpp"
 
 extern "C" {
 #include "core.h"
@@ -85,16 +86,32 @@ static inline void SetBoxSize(struct aabb *b, s32 w, s32 h)
     b->h = h;
 }
 
+/* Placement new: PlayCutscene constructs its CutscenePlayer in place. */
+inline void *operator new(size_t, void *p)
+{
+    return p;
+}
+
+/* PlayCutscene's locals, one aggregate so that every access stays
+ * sp-relative (as separate locals, the player's field stores go through
+ * the register holding its address instead). The player is raw storage,
+ * constructed in place where the ROM calls its constructor, after the
+ * display setup (a CutscenePlayer member would be constructed where the
+ * aggregate is declared), and reached through a cast at each use: through
+ * a pointer variable or an accessor, gcc keeps its address in a register
+ * too. */
+struct CutsceneLocals {
+    struct aabb box;
+    u16 fill;
+    union {
+        u8 bytes[sizeof(CutscenePlayer)];
+        s32 align;
+    } pager;
+};
+
 void LevelState::PlayCutscene(s32 idx)
 {
-    /* One aggregate so that every field access stays sp-relative: as
-     * separate locals, the pager's field stores go through the register
-     * holding &pager instead. */
-    struct {
-        struct aabb box;
-        u16 fill;
-        struct cutscene_player pager;
-    } f;
+    CutsceneLocals f;
     s32 zero;
     u16 mode;
     u16 *dispcnt;
@@ -126,30 +143,30 @@ void LevelState::PlayCutscene(s32 idx)
     gSmallFont->SetTileBase(0x200);
     gSmallFont->ResetPalette();
     gPaletteCache->Upload();
-    InitCutscenePlayer(&f.pager);
-    f.pager.font = gSmallFont;
+    new (&f.pager) CutscenePlayer;
+    ((CutscenePlayer *)&f.pager)->font = gSmallFont;
     {
         /* f.pager.box = f.box, spelled out: the ROM stores the two x
          * words sp-relative and the two y words through one pointer
          * register - see docs/matching/archive/gap-22354-game-context.md. */
         s32 x0 = f.box.x;
         s32 y0 = f.box.y;
-        s32 *d = &f.pager.box.x;
+        s32 *d = &((CutscenePlayer *)&f.pager)->box.x;
         s32 x1, y1;
 
         d[0] = x0;
         d[1] = y0;
         x1 = f.box.w;
         y1 = f.box.h;
-        f.pager.box.w = x1;
+        ((CutscenePlayer *)&f.pager)->box.w = x1;
         d[3] = y1;
     }
     SetSlideshowDispcnt(*(u32 *)dispcnt);
-    f.pager.slides = gCutscenes[idx].slides;
-    f.pager.count = gCutscenes[idx].count;
-    f.pager.pages = gCutsceneTexts[gLanguage][idx];
-    RunCutscenePlayer(&f.pager);
+    ((CutscenePlayer *)&f.pager)->slides = gCutscenes[idx].slides;
+    ((CutscenePlayer *)&f.pager)->count = gCutscenes[idx].count;
+    ((CutscenePlayer *)&f.pager)->pages = gCutsceneTexts[gLanguage][idx];
+    ((CutscenePlayer *)&f.pager)->Run();
     *dispcnt = mode;
     CommitDispcnt();
-    DestroyCutscenePlayer(&f.pager, 2);
+    ((CutscenePlayer *)&f.pager)->~CutscenePlayer();
 }

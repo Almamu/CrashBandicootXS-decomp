@@ -701,6 +701,11 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/level/game_frame.cpp`, `bonus_round.cpp`, `time_trial.cpp`, `level_cutscene.cpp`, `src/util/aabb_setup.cpp` | `LevelState::UpdateGameFrame`, `EndBonusRound`, `SetCheckpointAtPlayer`, `StartTimeTrial`, `PlayCutscene`, `GetLives` | 6 | (unchanged) | 1 pin -> 0 (SetCheckpointAtPlayer's, as SetCheckpoint's) | [#750](#the-level-state-as-a-class-750) |
 | `src/level/level_query.cpp`, `play_room.cpp`, `run_room.cpp`, `room.cpp`, `room_frame.cpp` | `LevelProgress` (the room block, `LevelState::room`): `IsInGemPathRoom`, `IsInBonusRoom`, `PlayRoomMusic`, `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom`, `PlayRoom`, `RunRoom`, `ResumeRoomAfterPause`, `UpdateRoomFrame`, `SetupRoomBlend` | 12 | (unchanged) | 0 -> 0 | [#750](#the-level-state-as-a-class-750) |
 | globals.h, level.h, util.h, level_data.h, 62 `.cpp` files (61 callers and iwram_data.cpp) | `gLevelState`, `gLevelStateSingleton` and `gGameFrameLevelState` are `LevelState *`s to C++; every `Foo(gLevelState, ...)` is `gLevelState->Foo(...)`, `Foo(&self->room)` `room.Foo()`; the 103 C prototypes went | 0 | (unchanged) | 0 -> 0 | [#750](#the-level-state-as-a-class-750) |
+| include/player.h, actor_self.h, bitmap_font.h, bg_scroll_layer.h, level.h, objects.h, globals.h, hud.h, gfx.h, menus.h, frontend.h, save_menu.h, crates.h | the C views go (#754): `struct player`, `actor_self`, `bitmap_font`, `bg_scroll_layer`, `level_layers`, `collision_queue`, `sprite_bank_set`, `camera_target` and the tags `hud_counter`, `actor`, `crate`, `oam_shadow_buffer`, `palette_cache`, `vram_upload_cursor`, `entity_spawner`, `level_menu`, `language_select`, `credits_screen`, `save_menu` (and the C arms of the globals' declarations), with their ASSERT_VIEW_FIELD checks and their dead C prototypes | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
+| `src/level/level_cutscene.cpp` | `LevelState::PlayCutscene` builds its `CutscenePlayer` with placement new in its stack aggregate and calls `Run` and the destructor; cutscene.h's `struct cutscene_player` and its three C prototypes go | 0 + 1 | agbcp | 0 -> 0 | [views](#the-c-views-go-754) |
+| `src/level/camera.cpp`, `run_room.cpp`, `src/menus/level_select.cpp` | the camera follows a `Sprite *` (`Pos()`, `dir`, `mirror`; `Pos()` moved up from MovingSprite) | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
+| `src/level/terrain.cpp`, `terrain_probe.cpp`, `terrain_probe_axes.cpp` | ProbeTerrainX/Y take a `LevelLayers *`, and the terrain lookups cast `self` to one | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
+| include/crate_list.hpp | crates.h's codegen view `struct pool_init_node` (and `struct pool_link`) is `CrateGridNodeInit`, next to `ResetGrid`, its user | 0 | (unchanged) | 0 -> 0 | [views](#the-c-views-go-754) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1187,7 +1192,8 @@ a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
 vtable data and the C callers. When the last C user of a struct is
-converted, the struct can go. `tools/layout_audit.py` (#656) checks the
+converted, the struct can go; since #754 none is left ([The C views
+go](#the-c-views-go-754)). `tools/layout_audit.py` (#656) checks the
 pairs from the compiler's debug info: `views` lists every C view of a
 class (and every other struct that is a prefix or partial view of
 another), `diff Class view` puts the two side by side, and `names`
@@ -4013,6 +4019,74 @@ every object is byte-identical to origin/main's.
   RunRoom's `x` reuse: `x = (s32)gLevelState; LevelState *state =
   (LevelState *)x;` matches, a `LevelState *state = gLevelState;` doesn't
   (the global goes through another register).
+
+### The C views go (#754)
+
+With every game file C++ (#746-#748), the C structs kept as views of the
+classes for the C files had no C reader left: src/data/ and lib/ never
+read an object's fields. They go, with their ASSERT_VIEW_FIELD checks,
+the C (`#else`) arms of the globals' declarations (gPlayer, gActorList,
+gHud, gLevelLayers, gSpriteBankSet, gPaletteCache, gOamBuffer,
+gObjVramCursor, gAudioContext, gSpriteRenderer, gEntitySpawner,
+gLevelSelect, gLanguageSelect, gSaveMenu, gSmallFont, gLargeFont, gAirship,
+gHovercraft, gPolarAkuAku, gRiderlessPolar, gActorDrawList and the actor
+sort hook) and the C prototypes that only took a view (gfx.h's
+OamBuffer, PaletteCache and ObjVramCursor methods, SetEntityPos and
+SetEntityPixelPos; cutscene.h's CutscenePlayer methods). Every object is
+byte-identical to origin/main's.
+
+- **The views**: player.h's `struct player` (and objects.h's `struct
+  collision_queue`, which only it embedded), actor_self.h's `struct
+  actor_self`, bitmap_font.h's `struct bitmap_font`, bg_scroll_layer.h's
+  `struct bg_scroll_layer`, level.h's `struct level_layers` and `struct
+  camera_target`, globals.h's `struct sprite_bank_set` and the opaque tags
+  (`hud_counter`, `actor`, `oam_shadow_buffer`, `palette_cache`,
+  `vram_upload_cursor`, `entity_spawner`, `level_menu`, `level_item`,
+  `language_select`, `credits_screen`, `save_menu`, `follow_child`,
+  `actor_283c`, `collect_part`). The field notes the views had and the
+  classes didn't moved to the classes (ActorSelf's, Font's, LevelLayers').
+  The classes check their ROM sizes instead of the views'.
+- **What the headers keep**: the plain records (actor_self.h's
+  `anim_frame_record` and `anim_box`, bitmap_font.h's
+  `icon_glyph_metrics`, bg_scroll_layer.h's `union bg_cnt`, player.h's
+  PLAYER_DIR_* and PLAYER_HIT_* bits). Where a C header's struct or the
+  category vtable data (src/data/actor_category_175558.c, slot 1) needs a
+  pointer to a class, it names the class's own tag: `struct Crate *` in
+  `struct crate_group` and `struct collision_candidate`, `struct ActorSelf
+  *` in SpawnActor's prototype. To C that is an incomplete struct; to C++
+  it is the class, so one declaration serves both, with no `#ifdef
+  __cplusplus`.
+- **The camera** (`struct camera`, still a C struct) follows a `Sprite *`:
+  StepCameraDirectional and StepCameraFacing copy `target->Pos()` (the
+  8-byte block copy the view's `struct vec2 pos` gave; `Pos()` moved from
+  MovingSprite up to Sprite), and SnapCamera reads `x`/`y`. PlayRoom and
+  the level select store `gPlayer` and `this` with no cast.
+- **The terrain probes** (terrain.cpp, terrain_probe.cpp,
+  terrain_probe_axes.cpp) take and cast to `LevelLayers *` and call its
+  `tiles`' TileCache methods (#755). They stay free functions with C
+  linkage.
+- **PlayCutscene** kept a `struct cutscene_player` in its stack aggregate,
+  a codegen view: a CutscenePlayer member would be constructed where the
+  aggregate is declared, before the display setup the ROM does first. The
+  aggregate (`CutsceneLocals`) now holds raw storage for the player, built
+  with placement new (`new (&f.pager) CutscenePlayer`, an inline `operator
+  new(size_t, void *)`) and destroyed with an explicit destructor call;
+  `Run` is the method. Each use casts the storage to `CutscenePlayer *`:
+  through a pointer variable, or an inline accessor, gcc keeps the
+  player's address in a register and stores through it (`str r0, [r4,
+  #20]`) where the ROM stores sp-relative.
+- **The crate list's codegen view** stays, as C++: crates.h's `struct
+  pool_init_node` (with `struct pool_link`) is crate_list.hpp's
+  `CrateGridNodeInit`, next to ResetGrid, its one user, whose `wrap` is a
+  `CrateGridLink *` (`struct pool_link` was its only other use). The
+  untyped fields are still what keeps gcc from reloading `nodes`.
+- **Not views**: audio.h's `struct audio_context` is AudioContext's base
+  (its field list); vtable.h's `struct vtable_slot` has no user left.
+  level.h's opaque `struct tile_cache` tag (#755), which only struct
+  level_layers used, goes with it: LevelLayers holds the `TileCache *`.
+
+CONTRIBUTING.md's "One layout, one type" now says there are no C views of
+the classes.
 
 ### Next batches
 

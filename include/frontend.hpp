@@ -25,10 +25,9 @@
  * destructor (`delete` calls the destructor with 3, and it frees the
  * object when bit 0 is set).
  *
- * The C files see these objects through C structs (frontend.h's struct
- * actor_self; struct language_select, struct credits_screen and struct
- * title_screen are opaque tags) and prototypes; cxx_symbols.txt maps the
- * methods to those names.
+ * They have no C views (the last, frontend.h's opaque `struct
+ * language_select` and `struct credits_screen` tags, went in #754);
+ * cxx_symbols.txt maps the methods to their C names.
  *
  * No `#pragma interface`: g++ emits LogoActor's vtable, the one class here
  * with one, in language_select.cpp (see ctrl.hpp). */

@@ -15,9 +15,8 @@
  *   src/hud/hud_counters.cpp  UpdateCrates, UpdateWumpa, UpdatePercentCounters
  *   src/hud/hud_slide.cpp     the slides, the crate total, destructor
  *
- * The C files (the level and actor code) see gHud as hud.h's `struct
- * hud_counter` tag; the C prototypes there keep the methods' C names,
- * which cxx_symbols.txt maps them to. */
+ * Hud has no C view (hud.h's `struct hud_counter` tag went in #754);
+ * cxx_symbols.txt maps the methods to their C names. */
 
 #include "part_list.hpp"
 

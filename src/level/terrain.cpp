@@ -70,7 +70,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
     LIMIT_MIN(tileX, 0);
     LIMIT_MIN(tileY, 0);
 
-    ((struct level_layers *)arg0)->tiles->GetTerrainType(tileX, tileY, &flagsOut, &hiOut);
+    ((LevelLayers *)arg0)->tiles->GetTerrainType(tileX, tileY, &flagsOut, &hiOut);
 
     return flagsOut;
 }
@@ -188,7 +188,7 @@ s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 {
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 *row = (s8 *)((struct level_layers *)player)->tiles->GetTerrainHeights(tileX, tileY);
+    s8 *row = (s8 *)((LevelLayers *)player)->tiles->GetTerrainHeights(tileX, tileY);
 
     if (row != NULL) {
         s32 y = pos->y;
@@ -208,8 +208,7 @@ s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
     u8 scratch;
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 height =
-        ((struct level_layers *)player)->tiles->GetSolidTerrainModeValue(tileX, tileY, 0, &scratch);
+    s8 height = ((LevelLayers *)player)->tiles->GetSolidTerrainModeValue(tileX, tileY, 0, &scratch);
 
     if (height >= 0) {
         s32 y = pos->y;

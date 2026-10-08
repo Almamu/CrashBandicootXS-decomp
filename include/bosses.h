@@ -157,11 +157,9 @@ extern void SpawnHovercraftFireball(s32 x, s32 y, s32 z);
 extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
 /* The bosses' globals (sym_iwram.txt). The airship is a bare AnimPart
- * (actor_self.hpp) in C++; the C files only use its first 0x1C bytes. */
+ * (actor_self.hpp); only C++ uses it. */
 #ifdef __cplusplus
 extern class AnimPart *gAirship;
-#else
-extern struct actor_self *gAirship;
 #endif
 extern const struct airship_attack *gAirshipAttack;
 extern s32 gAirshipBg2Page;
@@ -190,8 +188,6 @@ extern s32 gAirshipZ;
 /* The hovercraft is a bare AnimPart too (part 11h), and only C++ uses it. */
 #ifdef __cplusplus
 extern class AnimPart *gHovercraft;
-#else
-extern struct actor_self *gHovercraft;
 #endif
 extern const struct hovercraft_attack *gHovercraftAttack;
 extern s32 gHovercraftBg2Page;

@@ -25,8 +25,9 @@
  * spawners (spawn_objects.c's SpawnLaunchPadEntity). The screen's sprites
  * are UiSprites.
  *
- * The C files see these objects through opaque tags and menus.h's
- * prototypes; cxx_symbols.txt maps the methods to those names.
+ * They have no C views (menus.h's opaque `struct level_menu` tag went in
+ * #754); menus.h has the C names of the methods the vtable data uses, and
+ * cxx_symbols.txt maps the methods to them.
  *
  * No `#pragma interface`: g++ emits the vtables, CameraLead's and
  * LaunchPad's in level_select.cpp, LevelSelectEntry's in

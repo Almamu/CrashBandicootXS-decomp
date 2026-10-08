@@ -11,8 +11,6 @@
  *   PaletteCycles   src/gfx/palette_cycle.cpp
  *   HudPart         src/gfx/palette_cycle.cpp (gHudPartVtable)
  *
- * objects.h's `struct collision_queue` stays the C view of the
- * CollisionQueue (struct player embeds it), checked below.
  * cxx_symbols.txt maps the methods to their C names. The HUD that owns the
  * HudParts is hud.hpp's Hud.
  *
@@ -30,9 +28,14 @@ extern "C" {
 #include "hud.h"
 }
 
-/* The player's collision queue (Player's `collisionQueue`,
- * +0x108; objects.h's `struct collision_queue` is its C view): the crate
- * collisions found during the frame, resolved once a frame. */
+/* The player's collision queue (Player's `collisionQueue`, +0x108): the
+ * crate collisions found during the frame, resolved once a frame by
+ * ResolvePlayerCollisions. The player object is 0x350 bytes, so the queue
+ * holds 16 candidates (objects.h's `struct collision_candidate`).
+ * collision_queue.cpp's `struct candidate_list` and `struct
+ * collision_queue` and player_event.c's `struct ab9c_link` (the head) were
+ * views of it (#574, batch 9e); objects.h's `struct collision_queue`, its
+ * last C view, went in #754. */
 class CollisionQueue
 {
 public:
@@ -48,10 +51,7 @@ public:
              struct byte_arg p21); // AddCollisionCandidate
 };
 
-COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == sizeof(struct collision_queue));
-ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, count);
-ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, posCommitted);
-ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, candidates);
+COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == 0x248);
 
 /* Up to three palette colour cycles (gPaletteCycles, `new
  * PaletteCycles`, 0x48 bytes). run_room.cpp adds them (Add) with

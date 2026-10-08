@@ -251,7 +251,7 @@ void FreeObjTileFreeList(void)
  * shape/size bits below get OR'd into), `attr2` is the real hardware
  * ATTR2 (tile index/priority/palette). `QueueSpriteFrameOam` appends
  * these; `FlushSpriteFrameOamQueue` commits them into the real
- * `struct oam_shadow_buffer`. */
+ * OAM shadow buffer (OamBuffer, sprite_obj.hpp). */
 struct queued_oam_entry {
     u32 attr01;
     u16 attr2;
@@ -321,7 +321,7 @@ void FreeSpriteFrameOamQueue(void)
  * (`AppendOamEntries`), hides whatever hardware slots are still unused
  * (`HideUnusedOamEntries`), pads the affine-parameter table out with the last
  * entry repeated (`SetOamAffineScales`, the same "hide unused affine groups"
- * idiom `struct oam_shadow_buffer`'s own comment describes), then
+ * idiom OamBuffer's own comment describes), then
  * resets both overflow counts for the next frame. */
 void FlushSpriteFrameOamQueue(void)
 {

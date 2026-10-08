@@ -3,9 +3,9 @@
 
 /* The bitmap fonts as C++ (#664, docs/cplusplus.md, step 10b): the classes
  * behind gFontVtable, gSmallFontVtable and gLargeFontVtable (src/text/,
- * src/util/aabb_setup.cpp). bitmap_font.h's struct bitmap_font is their C
- * view, for the files that are still C, and gSmallFont/gLargeFont are
- * the two instances.
+ * src/util/aabb_setup.cpp). gSmallFont/gLargeFont are the two instances.
+ * There is no C view (bitmap_font.h's `struct bitmap_font` went in #754);
+ * bitmap_font.h keeps the glyph metrics.
  *
  * No `#pragma interface`: g++ emits Font's vtable in src/text/font.cpp,
  * which has its key method, MeasureText (its first non-inline virtual
@@ -33,18 +33,24 @@ extern "C" {
 class Font
 {
 public:
-    u8 oam_scratch[8];                             // 0x000 - the glyph's OAM entry
-    u8 charLookup[0x100];                          // 0x008 - char -> glyph index
-    u32 tileBase;                                  // 0x108
+    // 0x000 - the glyph's OAM entry, rebuilt by DrawGlyph for every glyph and
+    //         handed to AddOamEntry; the constructor zeroes it
+    u8 oam_scratch[8];
+    // 0x008 - char -> glyph index (1-0x4F; 0: not in the font), built by the
+    //         subclasses' constructors from the font's character set
+    u8 charLookup[0x100];
+    // 0x108 - the OBJ tile base: a glyph's tile is tileBase + glyph * glyphTileStride
+    u32 tileBase;
     const struct icon_glyph_metrics *glyphRecords; // 0x10C
     u32 posX;                                      // 0x110
     u32 posY;                                      // 0x114
     u32 marginX;                                   // 0x118 - posX after a newline
-    s32 lineHeight;                                // 0x11C
-    s32 spaceWidth;                                // 0x120
+    s32 lineHeight;                                // 0x11C - posY's step on a newline
+    s32 spaceWidth;                                // 0x120 - a space's advance
     s32 glyphTileStride;                           // 0x124
     const void *tiles;                             // 0x128 - the tagged tile asset
-    u32 tileCount;                                 // 0x12C
+    // 0x12C - set by UploadTiles: the tile asset's first word >> 13
+    u32 tileCount;
     // 0x130: the vtable pointer, gFontVtable or a subclass's
 
     /* 1 DestroyFont */
@@ -134,22 +140,7 @@ public:
     }
 };
 
-
-/* bitmap_font.h's struct bitmap_font, the C view (its `record` is the
- * class's vtable pointer). */
-COMPILE_TIME_ASSERT(font_hpp, sizeof(Font) == sizeof(struct bitmap_font));
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, oam_scratch);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, charLookup);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, tileBase);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, glyphRecords);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, posX);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, posY);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, marginX);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, lineHeight);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, spaceWidth);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, glyphTileStride);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, tiles);
-ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, tileCount);
+COMPILE_TIME_ASSERT(font_hpp, sizeof(Font) == 0x134);
 
 /* gSmallFont: 9-pixel lines, 4-pixel spaces, 2 tiles per glyph
  * (InitSmallFont, src/text/font_glyph.cpp; ~SmallFont, aabb_setup.cpp). */

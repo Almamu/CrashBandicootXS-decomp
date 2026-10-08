@@ -14,7 +14,7 @@ extern "C" {
  * one actually resolves" section). Both are plain C, built with
  * old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md.
  *
- * `s32 fn(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
+ * `s32 fn(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue,
  * s32 submode)`:
  *
  *   - `ProbeTerrainY` (the Y-axis/floor-ceiling resolver, `mode ==
@@ -53,7 +53,7 @@ extern "C" {
  * pos->y's row until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (down for submode 2, up for submode 0).
  * Returns whether anything was hit. */
-s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainY(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -91,7 +91,7 @@ s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, s32 *ou
  * pos->x's column until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (right for submode 3, left for submode 1),
  * one unit past it. Returns whether anything was hit. */
-s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainX(LevelLayers *self, struct vec2 *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;

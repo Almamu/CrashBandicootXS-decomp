@@ -207,7 +207,8 @@ full rules and the history (#574). For new code:
   `--db` keeps the layout database between runs (`--rebuild` after
   editing headers). A NAME is a struct/class name, with `@file` to pick
   one definition (`actor@actor.h`). Use it before merging or renaming a
-  C view of a class, and after, to check the view and the class agree.
+  view of a class (a codegen view), and after, to check the view and the
+  class agree.
 - **One layout, one type (#656).** A record that extends another embeds
   it, so each field has one name and one type:
   - **Plain C:** the base is the named first member (memory.h's `struct
@@ -221,19 +222,18 @@ full rules and the history (#574). For new code:
     dispcnt` every DISPCNT copy).
   - **C++:** a derived class inherits its base (`class Player : public
     GroundSprite`); it doesn't redeclare the base's fields.
-  - **C views of classes:** a C file that reads a C++ object's fields
-    does it through one C struct per class (player.h's `struct player`
-    for Player), with the class's field names and types. A view whose
-    fields no C file reads is only a tag (`struct hud_counter;`). The
-    class's header checks the view's size and every named field's
-    offset with `ASSERT_VIEW_FIELD(tag, Class, view, field)` (core.h:
-    `COMPILE_TIME_ASSERT(tag, offsetof(Class, field) == offsetof(struct
-    view, field))`); bitfields and the vtable pointer can't be checked.
+  - **No C views of classes:** every game file is C++, and src/data/ and
+    lib/ never read an object's fields, so a class has no C struct
+    mirroring it (#754). Where a C header needs a pointer to a class (a
+    record src/data/ fills, a prototype a C vtable names), it names the
+    class's own tag, `struct Crate *` (objects.h's `struct
+    collision_candidate`): incomplete to C, the class to C++.
   - **Codegen views** (a second type for the same bytes that a function
-    only matches with, such as crates.h's `struct pool_init_node` or
-    cutscene.h's `struct cutscene_player`) stay, with a `codegen:`
-    comment saying what the other type changes, and the same offset
-    checks.
+    only matches with, such as crate_list.hpp's `CrateGridNodeInit`) stay,
+    next to their user, with a `codegen:` comment saying what the other
+    type changes, and `ASSERT_VIEW_FIELD(tag, Class, view, field)` (core.h:
+    `COMPILE_TIME_ASSERT(tag, offsetof(Class, field) == offsetof(struct
+    view, field))`) on every named field.
   - `tools/layout_audit.py views` and `names` list the layouts that
     still view one another and the bytes that have two names; check them
     before and after such a change.

@@ -21,11 +21,9 @@
  * calls the controller's methods with itself (`P12MovingSprite` in their
  * mangled names, cxx_symbols.txt).
  *
- * The fields keep their offsets in comments. The C files read these
- * objects through two views only: the camera's followed object (level.h's
- * `struct camera_target`, a Sprite prefix, checked field by field below)
- * and the player (player.h's `struct player`, the C view of class Player,
- * a ground sprite with its own fields after it; player.hpp checks it).
+ * The fields keep their offsets in comments. No C file reads these
+ * objects, and they have no C view: level.h's `struct camera_target` (the
+ * camera's followed Sprite) and player.h's `struct player` went in #754.
  *
  * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
  * UiSprite (sprite_anim.cpp), MovingSprite (moving_sprite_collide.cpp) and
@@ -196,16 +194,16 @@ public:
     void SetAffine(u16 value);
     void DrawWithOffset(s32 dx, s32 dy);
     void SetPriority(s32 value);
+
+    /* The position as a vector: a copy of it is a block copy (both
+     * loads, then both stores; the camera's goal, MovingSprite's). */
+    struct vec2 &Pos()
+    {
+        return *(struct vec2 *)&x;
+    }
 };
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
-
-/* level.h's struct camera_target, the camera's view of the Sprite it
- * follows. */
-COMPILE_TIME_ASSERT(sprite_obj_hpp, offsetof(Sprite, x) == offsetof(struct camera_target, pos.x));
-COMPILE_TIME_ASSERT(sprite_obj_hpp, offsetof(Sprite, y) == offsetof(struct camera_target, pos.y));
-ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, dir);
-ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, mirror);
 
 /* A sprite on the HUD or a menu (gUiSpriteObjVtable;
  * src/objects/sprite_anim.cpp): its OBJ priority is its own. */
@@ -259,13 +257,8 @@ public:
     }
     static MovingSprite *Create(u16 id, u16 x, u16 y, u16 unused); // CreateMovingSprite
 
-    /* The position and the previous position as vectors: a copy of one
-     * is a block copy (both loads, then both stores). */
-    struct vec2 &Pos()
-    {
-        return *(struct vec2 *)&x;
-    }
-
+    /* The previous position as a vector, as Sprite's Pos(): a copy of
+     * it is a block copy (both loads, then both stores). */
     struct vec2 &PrevPos()
     {
         return *(struct vec2 *)&prevX;
@@ -410,8 +403,7 @@ static inline PartList *ForegroundList()
 
 /* The sprite graphics managers (src/gfx/graphics.cpp). */
 
-/* The OAM shadow buffer (gOamBuffer; the C files have gfx.h's `struct
- * oam_shadow_buffer` tag): a shadow copy of the 128-entry hardware OAM
+/* The OAM shadow buffer (gOamBuffer): a shadow copy of the 128-entry hardware OAM
  * table. `count` entries of it are in use, `base` of them kept from frame
  * to frame (MarkBase, Rewind), and `matrixCount` affine matrices handed
  * out this frame. Matrix `m`'s pa/pb/pc/pd are the affine parameters of
@@ -438,8 +430,7 @@ public:
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(OamBuffer) == 0x40C);
 
-/* The OBJ VRAM upload cursor (gObjVramCursor; the C files have gfx.h's
- * `struct vram_upload_cursor` tag): a bump allocator over OBJ tile VRAM
+/* The OBJ VRAM upload cursor (gObjVramCursor): a bump allocator over OBJ tile VRAM
  * (OBJ_VRAM0, OBJ_VRAM0_SIZE bytes) for the tile data uploaded through
  * the VRAM DMA queue. `offset` is the next free byte, bumped by Reserve
  * and Upload; `mark` is the checkpoint Mark saves and Rewind restores.
@@ -465,8 +456,7 @@ public:
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(ObjVramCursor) == 0xC);
 
-/* The OBJ palette cache (gPaletteCache; the C files have gfx.h's `struct
- * palette_cache` tag): maps a ROM table of `count` 16-colour OBJ palettes
+/* The OBJ palette cache (gPaletteCache): maps a ROM table of `count` 16-colour OBJ palettes
  * (`palettes`, 32 bytes each: the sprite bank table's 125 palettes) onto
  * the 16 OBJ palette banks. `slotOf[id]` is the bank palette `id` is
  * loaded in, or 0xFF; `slots` holds each bank's colours, uploaded to
@@ -502,9 +492,10 @@ public:
 
 COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(PaletteCache) == 0x230);
 
-/* The sprite bank set (gSpriteBankSet; globals.h's struct
- * sprite_bank_set is its C view, checked below): InitLevelState points it
- * at gSpriteBankTable. */
+/* The sprite bank set (gSpriteBankSet, 4 bytes): InitLevelState points it
+ * at gSpriteBankTable, the table the level's sprites come from. Its users
+ * take the first bank's animations (`table->banks`, globals.h's
+ * SPRITE_BANK_BASE) as the base of their byte offsets. */
 class SpriteBankSet
 {
 public:
@@ -524,8 +515,7 @@ public:
     ~SpriteBankSet(); // DestroySpriteBankSet
 };
 
-COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == sizeof(struct sprite_bank_set));
-ASSERT_VIEW_FIELD(sprite_obj_hpp, SpriteBankSet, sprite_bank_set, table);
+COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(SpriteBankSet) == 4);
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
  * allocates): draws a sprite's OAM pieces (DrawPieces in

@@ -203,7 +203,7 @@ s32 LevelProgress::RunRoom()
     s32 i;
 
     gPlayer->ResetForRoom();
-    gCamera->target = (struct camera_target *)gPlayer;
+    gCamera->target = gPlayer;
     gCamera->mode = ret;
     gLevelLayers->LoadRoom(cat);
     if (!gLevelTable[level].isBoss)

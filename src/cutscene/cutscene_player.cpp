@@ -26,7 +26,7 @@ extern "C" {
  * Two systems share this address range:
  *
  * - `InitSlideshow`/`RunCutscenePlayer`/`DestroyCutscenePlayer`/`InitCutscenePlayer`
- *   are the cutscene player (`struct cutscene_player`, include/cutscene.h)
+ *   are the cutscene player (class CutscenePlayer, include/cutscene.hpp)
  *   that slideshow.cpp/slideshow_display.cpp also drive: `ResetSlideshow`
  *   sets the VRAM-bank toggle to 1, and `InitCutscenePlayer` also clears
  *   `pages`/`font`. `RunCutscenePlayer` is `RunSlideshow`'s (slideshow.cpp)
@@ -447,7 +447,7 @@ void BgStreamer::Fill(const s32 *pos)
 /* Takes the layer's map from `src`: caches its 8px-tile size and the
  * decoder's record table, gLevelLayers's asset plus the layer's
  * section offset - the same "asset + offset" shape as the terrain-tile
- * cache's `decodeBase` (level.h's `struct tile_cache`). */
+ * cache's `decodeBase` (TileCache, bg_layer.hpp). */
 void BgStreamer::SetSource(const struct level_layer_desc *src)
 {
     s32 w;
