@@ -380,7 +380,10 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/bosses/dingodile.o \
                              $(C_BUILDDIR)/objects/platform_contact.o \
                              $(C_BUILDDIR)/objects/sprite.o \
                              $(C_BUILDDIR)/pickups/extra_life.o \
-                             $(C_BUILDDIR)/pickups/wumpa.o
+                             $(C_BUILDDIR)/pickups/wumpa.o \
+                             $(C_BUILDDIR)/player/action_ctrl_update.o \
+                             $(C_BUILDDIR)/player/input_ctrl.o \
+                             $(C_BUILDDIR)/player/player_collide.o
 $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).

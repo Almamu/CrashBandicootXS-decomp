@@ -7,8 +7,8 @@
  * HUD, the vehicles) and the C prototypes; the two are checked against
  * each other below. cxx_symbols.txt maps the methods to the C names.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits the vtable in player_collide.cpp (see
+ * ctrl.hpp). */
 
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"

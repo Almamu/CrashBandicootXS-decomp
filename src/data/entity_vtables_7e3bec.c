@@ -29,25 +29,6 @@
  * own inheritance. See docs/data.md.
  */
 
-/* Used by player_update.c, player_init.c. */
-const struct vtable_slot gPlayerVtable[15] VTABLE_SECTION(gPlayerVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(CollidePlayer),
-    VTABLE_SLOT(GetSpriteObjHitbox),
-    VTABLE_SLOT(UpdatePlayer),
-    VTABLE_SLOT(DrawPlayer),
-    VTABLE_SLOT(IsSpriteObjOnScreen),
-    VTABLE_SLOT(SpriteObjOverlapsRect),
-    VTABLE_SLOT(IsSpriteObjNearCamera),
-    VTABLE_SLOT(IsSpriteObjInsideRect),
-    VTABLE_SLOT(GetGroundSpriteClassId),
-    VTABLE_SLOT(DestroyPlayer),
-    VTABLE_SLOT(GetSpriteObjPriority),
-    VTABLE_SLOT(ApplyPlayerVelocity),
-    VTABLE_SLOT(PlayerHandleEvent),
-    VTABLE_SLOT(CollidePlayerWithObjects),
-};
-
 /* Used by enemy_ctrl.cpp, ctrl.cpp (Ctrl, include/ctrl.hpp), input_ctrl_queue.cpp, action_ctrl.cpp. */
 const struct vtable_slot gCtrlVtable[13] VTABLE_SECTION(gCtrlVtable) = {
     VTABLE_SLOT(NULL),
@@ -60,40 +41,6 @@ const struct vtable_slot gCtrlVtable[13] VTABLE_SECTION(gCtrlVtable) = {
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyCtrl),
-    VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
-    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
-};
-
-/* Used by wumpa.cpp, action_ctrl.cpp. */
-const struct vtable_slot gActionCtrlVtable[13] VTABLE_SECTION(gActionCtrlVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(UpdateActionCtrl),
-    VTABLE_SLOT(ActionCtrlHandleEvent),
-    VTABLE_SLOT(AttachActionCtrl),
-    VTABLE_SLOT(SetActionCtrlMode),
-    VTABLE_SLOT(StartCtrlTargetMotionX),
-    VTABLE_SLOT(StartCtrlTargetMotionY),
-    VTABLE_SLOT(SetCtrlTargetMotionX),
-    VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(DestroyActionCtrl),
-    VTABLE_SLOT(ActionCtrlSetTargetAnim),
-    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
-    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
-};
-
-/* Used by input_ctrl.cpp (DestroyInputCtrl). */
-const struct vtable_slot gInputCtrlVtable[13] VTABLE_SECTION(gInputCtrlVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(UpdateInputCtrl),
-    VTABLE_SLOT(InputCtrlHandleEvent),
-    VTABLE_SLOT(AttachInputCtrl),
-    VTABLE_SLOT(SetCtrlMode),
-    VTABLE_SLOT(StartCtrlTargetMotionX),
-    VTABLE_SLOT(StartCtrlTargetMotionY),
-    VTABLE_SLOT(SetCtrlTargetMotionX),
-    VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(DestroyInputCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),

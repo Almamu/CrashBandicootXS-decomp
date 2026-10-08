@@ -403,7 +403,7 @@ SECTIONS
         build/crashbandicootxs/src/objects/sprite_anim.o(.gnu.linkonce.d._vt.8UiSprite); /* gUiSpriteObjVtable */
         build/crashbandicootxs/src/objects/moving_sprite_collide.o(.gnu.linkonce.d._vt.12MovingSprite); /* gMovingSpriteVtable */
         build/crashbandicootxs/src/objects/ground_sprite_collide.o(.gnu.linkonce.d._vt.12GroundSprite); /* gGroundSpriteVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlayerVtable);
+        build/crashbandicootxs/src/player/player_collide.o(.gnu.linkonce.d._vt.6Player); /* gPlayerVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCtrlVtable);
         build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.9EnemyCtrl); /* gEnemyCtrlVtable */
         build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
@@ -413,9 +413,9 @@ SECTIONS
         build/crashbandicootxs/src/pickups/extra_life.o(.gnu.linkonce.d._vt.9ExtraLife); /* gExtraLifeVtable */
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.5Wumpa); /* gWumpaVtable */
         build/crashbandicootxs/src/pickups/wumpa.o(.gnu.linkonce.d._vt.9Stopwatch); /* gStopwatchVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gActionCtrlVtable);
+        build/crashbandicootxs/src/player/action_ctrl_update.o(.gnu.linkonce.d._vt.10ActionCtrl); /* gActionCtrlVtable */
         build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.10PlayerCtrl); /* gPlayerCtrlVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gInputCtrlVtable);
+        build/crashbandicootxs/src/player/input_ctrl.o(.gnu.linkonce.d._vt.9InputCtrl); /* gInputCtrlVtable */
         build/crashbandicootxs/src/player/input_ctrl_queue.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
         build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.11MegaMixCtrl); /* gMegaMixCtrlVtable */
         build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */

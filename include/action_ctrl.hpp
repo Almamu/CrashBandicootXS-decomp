@@ -8,9 +8,8 @@
  * every method declared here to its C name, for the vtable and state
  * table data.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp); the ROM's is
- * gActionCtrlVtable (src/data/entity_vtables_7e3bec.c). */
-#pragma interface
+ * No `#pragma interface`: g++ emits its vtable, gActionCtrlVtable, in
+ * action_ctrl_update.cpp (see ctrl.hpp). */
 
 #include "ctrl.hpp"
 #include "player.hpp"

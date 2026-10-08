@@ -159,7 +159,6 @@ extern void DestroyCtrl(void *self, s32 flags);
 extern s32 GetCtrlMode(void *self);
 
 /* src/objects/ground_sprite.cpp */
-extern s32 GetGroundSpriteClassId(void);
 extern void ResetGroundSprite(void *self);
 extern u8 IsGroundSpriteGrounded(void *self);
 extern void ClearGroundSpriteGrounded(void *self);
