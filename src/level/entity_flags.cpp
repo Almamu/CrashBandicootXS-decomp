@@ -157,26 +157,25 @@ s32 LevelEntityFlags::IsActivated(s32 n)
  * docs/matching/archive/naked-sub_80259d4-matched.md for the derivation of how
  * this was finally matched. This is a true leaf function in the ROM
  * (no `push`/`pop` at all - `self` lives in `ip`/`r12` for the whole
- * function). The gap: the ROM does `mov ip, r0` (stash `self`) before
- * `adds r2, r1, #0` (copy `n` into its own working register `t`), and
- * this compiler always emits the `n`-copy first regardless of C
- * source order - fixed by materializing both moves as one opaque
- * inline-asm block. The ROM also keeps `n`'s pristine copy (`t`, r2)
- * untouched by the "clamp negative indices" adjustment (which lands in
- * a *separate* register, r0), reusing the untouched `t` again later
- * for `bitIndex` - a second local (`adjusted`) instead of adjusting
- * `t` in place reproduces that split. */
+ * function, which old_agbcp does on its own). The ROM keeps `n`'s
+ * pristine copy (`t`, r2) untouched by the "clamp negative indices"
+ * adjustment (which lands in a *separate* register, r0), reusing the
+ * untouched `t` again later for `bitIndex` - a second local
+ * (`adjusted`) instead of adjusting `t` in place reproduces that split.
+ * The word address is an integer built constant-first (`movs r1,
+ * #0x82; lsls; add r1, ip`), which a pointer sum can't spell (gcc puts
+ * the pointer first). Its r1 pin stays: without it gcc leaves `t` in
+ * the incoming r1 and the address goes to r3, where the ROM copies `n`
+ * to r2 and builds the address in r1. */
 void LevelEntityFlags::SetActivated(s32 n)
 {
-    u8 *base;
-    s32 t;
+    u8 *base = (u8 *)this;
+    s32 t = n;
     s32 adjusted, wordIndex;
     s32 bitIndex;
     s32 mask;
     s32 shifted;
     MATCH_HOLD_REG(s32, addr, r1);
-
-    asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(base), "=r"(t) : "r"(this), "r"(n));
 
     adjusted = t;
     if (t < 0) {
