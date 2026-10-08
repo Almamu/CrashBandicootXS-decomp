@@ -635,6 +635,15 @@ Treat its output as hints: it often reaches a lower score with C that
 changes what the function does (an uninitialized local, a load hoisted
 out of a loop), so port only the changes that keep the behaviour.
 
+For a function in a C++ object (#662 step 3), port that one function
+to C: structs with its fields at their offsets, a virtual call as a
+call through the vtable entry (`e = &obj->vtbl[n];
+e->fn((u8 *)obj + e->delta, ...)`), inline methods as `static inline`
+functions. The compile script feeds the file straight to `old_agbcp`
+or `agbcp` inside `extern "C" { }`, so the port has no comments, macros
+or `#include`s. Check first that the port with the old workaround
+compiles to the ROM's code, and use that object as `target.o`.
+
 ## The match.h macros
 
 [include/match.h](../include/match.h) gives each one-statement idiom a
@@ -740,6 +749,31 @@ object is cheap and worth doing first. `save_data.o` and
 and under it `SetSaveFlags`/`ClearSaveFlags` are plain `|=`/`&= ~`
 (four pins and an instruction asm gone); `pause_menu_draw.o` also
 matches under old_agbcp, but that frees none of its sites.
+
+Step 3 in gfx/, objects/ and text/ (62 sites, 53 removed):
+
+- **The compiler first.** display.o, fade.o and sprite_frame.o load the
+  constant before the `ldrb`; under old_agbcc their plain C matches,
+  including `AllocVramTileBlock`, which had been an asm island with
+  hand-placed labels and a `.pool`. Their pins and instruction asm were
+  making agbcc imitate old_agbcc.
+- **A value built in one register from pieces** (`and #0xFFFF0000;
+  orr`, never zeroed: the C's `x = x` self-init) is a word-sized union
+  of bitfields held in a local (`DarkenPalette`'s channels,
+  `QueueSpriteFrameOam`'s affine x/y pair).
+- **Types.** `DrawAffinePieces`' matrix scales as `s16`, not `u16`, keep
+  the call result in the ROM's register (a `MATCH_USE` before).
+- **decomp-permuter on the C++ ports** found a `volatile` DMA source
+  halfword (`SetScaledSpriteColor`: `DmaFill16`), an `s32` copy of a
+  `u8` argument before a bitfield store, which stops reload turning the
+  field mask's `1` into an add (`Platform::SetExitMirror`), and two
+  copies of a pointer for the two registers the ROM keeps it in
+  (`ProbeEdgeTerrain`).
+- **Kept**, each with its comment: `Sprite::CheckPlayerContact`'s shared
+  1 in r6, `PlatformMover::Update`'s frame count in r5 and 0x300 in r2,
+  `ResolveCollision`'s `pb` in a register, and `DrawWrappedText`'s `len`
+  priority and r1 hold. The permuter brought each of them down only
+  with an uninitialized value or a no-op (`len++; len--;`).
 
 ## Survey and conversion record (#576)
 
