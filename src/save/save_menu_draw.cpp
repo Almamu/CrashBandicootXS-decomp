@@ -1,4 +1,5 @@
 #include "save_menu.hpp"
+#include "link_session.hpp"
 
 extern "C" {
 #include "core.h"
@@ -32,22 +33,22 @@ extern "C" {
 /* State 3's link exchange: `new`s a save transfer (struct
  * save_transfer, 0x220 bytes) sending cartSave, then loops
  * VBlank-waiting while polling input (B cancels: 3), the link-reset flag
- * gLinkSessionReset and UpdateLinkSession (the link-connection/handshake
+ * gLinkSessionReset and LinkSession::Update (the link-connection/handshake
  * driver, docs/rom_map.md's SIO/link-cable section) until the transfer's
- * state (PollSaveTransfer) settles. Returns that state; on 0 (done) it
+ * state (SaveTransfer::Poll) settles. Returns that state; on 0 (done) it
  * copies the received save into linkSave.
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
  * value the ROM reuses to clear `gLinkSessionReset`, and the
- * `GetSaveTransferData` result is taken before `linkSave` is loaded. */
+ * `SaveTransfer::GetData` result is taken before `linkSave` is loaded. */
 s32 SaveMenu::LinkExchange()
 {
-    struct save_transfer *spinner = new save_transfer;
+    SaveTransfer *spinner = new SaveTransfer;
     s32 result;
 
-    SetSaveTransferRecord(spinner, cartSave);
-    ResetSaveTransfer(spinner);
+    spinner->SetRecord(cartSave);
+    spinner->Reset();
     do {
         WaitForVBlank();
         UpdateKeys(gInput);
@@ -56,14 +57,14 @@ s32 SaveMenu::LinkExchange()
         } else {
             if (gLinkSessionReset) {
                 gLinkSessionReset = 0;
-                ResetSaveTransfer(spinner);
+                spinner->Reset();
             }
-            UpdateLinkSession(gLinkSession);
-            result = PollSaveTransfer(spinner);
+            gLinkSession->Update();
+            result = spinner->Poll();
         }
     } while (result == 1);
     if (result == 0) {
-        s32 data = (s32)GetSaveTransferData(spinner);
+        s32 data = (s32)spinner->GetData();
 
         MemCopy32(linkSave, (void *)data, 0x200);
     }
@@ -278,7 +279,7 @@ static inline void draw_row_mark(SaveMenu *self, s32 arg1, s32 arg2, u8 arg3)
 }
 
 #define DRAW_ROW(i, labelX, labelY)                                             \
-    if (IsSaveSlotEmpty(handle, (i))) {                                             \
+    if (handle->IsSlotEmpty((i))) {                                             \
         draw_row_mark(this, (labelX), (labelY), selectedIndex == (i));          \
     } else {                                                                    \
         struct byte_arg sel;                                                    \
@@ -289,7 +290,7 @@ static inline void draw_row_mark(SaveMenu *self, s32 arg1, s32 arg2, u8 arg3)
 /* Per docs/rom_map.md's "narrowed down which screen overlay_ui is"
  * section: one of 4 settings rows, `handle`/`selectedIndex` from the
  * 6-wrapper-caller family (DrawConfirmDelete etc.,
- * src/save/save_menu_ui.cpp). When `IsSaveSlotEmpty(handle, i)`
+ * src/save/save_menu_ui.cpp). When `handle->IsSlotEmpty(i)`
  * reports row `i` selected, draws a highlighted numeric glyph
  * (label 0x25) centered at the row's fixed position; otherwise draws
  * the row's normal label pair via DrawSlotStats (above in this file),
@@ -301,7 +302,7 @@ static inline void draw_row_mark(SaveMenu *self, s32 arg1, s32 arg2, u8 arg3)
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The "selected" branch is an inlined copy of DrawEmptySlotLabel
  * (src/save/save_menu_ui.cpp), `draw_row_mark` above. */
-void SaveMenu::DrawSlots(struct save_data *handle, s32 selectedIndex)
+void SaveMenu::DrawSlots(SaveData *handle, s32 selectedIndex)
 {
     DRAW_ROW(0, 0x26, 0x21);
     DRAW_ROW(1, 0x26, 0x53);

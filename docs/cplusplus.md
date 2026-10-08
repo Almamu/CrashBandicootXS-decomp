@@ -694,6 +694,9 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/level/pooled_bg_layer.cpp`, `level_layers.cpp`, `terrain.cpp`, `terrain_probe_axes.cpp` (again) | callers: `pool->Acquire(...)`, `tiles->SetSource(...)`, `tiles->GetTerrainType(...)` & co.; level.h's struct level_layers holds a `TileCache *` for C++ | 0 | (unchanged) | 0 -> 0 | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/gfx/graphics_package.cpp` (again) | `BgSetup` (new include/graphics_package.hpp; was graphics_package.h's struct bg_setup): constructor (InitBgSetup), `Load` (LoadGraphicsPackage), `GetControl` (GetBgSetupControl); `ScaledSprite` (was the file-local struct gfx_box_obj; all UNUSED): `Fit`, `Draw`, `SetColor`, `SetPriority`, `SetPos`, `ResetAttrs` | 3 + 6 | old_agbcp | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/menus/pause_menu.cpp`, `power_dialog.cpp`, `level_select_pages.cpp`, `level_select.cpp`, `continue_prompt_init.cpp`, `src/save/save_menu_ui.cpp`, `src/frontend/language_select_setup.cpp` (again) | callers: `BgSetup` members built in the mem-initializer list, stack ones declared at their construction, `new BgSetup(...)`; `bg.Load(...)`, `bg.GetControl()` | 0 | (unchanged) | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
+| `src/link/link_sio.cpp`, `link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp` (again) | `LinkSession` (new include/link_session.hpp, with `LinkRing` and `LinkPlayer`): constructor (`InitLinkSession`: `new LinkSession`), destructor (`DestroyLinkSession`: `delete gLinkSession`), `Start` (UNUSED), `Reset`, `Stop`, `Update`, `HandleSerial`, `ResetState`; LinkSetupSio (UNUSED), MakeLinkHandshakeId and the two IRQ handlers keep C linkage | 8 | (unchanged) | 3 keeps, 1 `MATCH_KEEP_EXPR`, 14 uses, 1 const, 1 barrier -> the same (tools/match_prune.py: none removable); the constructor's ring loop and the destructor's empty players loop are g++'s | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
+| `src/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp`, `save_menu_input.cpp` (again) | `SaveData` and `SaveTransfer` (new include/save_data.hpp): `SaveData`'s `Load`, `Validate` (UNUSED), `CheckChecksum` (the out-of-line copy of the inline `ChecksumOk` that `Validate` expands), `UpdateChecksum`, `GetGameId`, `Store`, the slot and flag accessors, `SetFlags`; `SaveTransfer`'s `SendChunk`, `ReceiveChunk`, `Poll`, `SetRecord`, `GetData`, `Reset`; ReadSaveData and WriteSaveData (a `void *` buffer) keep C linkage | 14 + 6 | (unchanged) | 4 pins, 1 use, 1 empty-template asm -> the same | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
+| `src/save/save_menu.cpp`, `save_menu_draw.cpp`, `save_menu_input.cpp`, `save_menu_ui.cpp`, `src/iwram/iwram_data.cpp` | the callers: SaveMenu's `cartSave`/`linkSave` are `SaveData *` (`new SaveData`; `P9save_data` -> `P8SaveData` in cxx_symbols.txt), the link exchange `new`s a `SaveTransfer`, `gLinkSession` is a `LinkSession *` (link.h) | 0 | (unchanged) | 0 -> 0 | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
 | `src/level/level_state.cpp` (again) | `LevelState` (include/level_state.hpp, now the whole class: level_state.h's struct level_state and struct level_progress went): its 85 accessors and helpers as methods; `nullsub_24` and `GetLevelState` stay free (no `self`) | 85 + 2 | old_agbcp | 1 pin -> 0 (SetCheckpoint's r2 hold: an inline `CopyBitmapSpan` loads the CpuSet control word at each call) | [#750](#the-level-state-as-a-class-750) |
 | `src/level/game_frame.cpp`, `bonus_round.cpp`, `time_trial.cpp`, `level_cutscene.cpp`, `src/util/aabb_setup.cpp` | `LevelState::UpdateGameFrame`, `EndBonusRound`, `SetCheckpointAtPlayer`, `StartTimeTrial`, `PlayCutscene`, `GetLives` | 6 | (unchanged) | 1 pin -> 0 (SetCheckpointAtPlayer's, as SetCheckpoint's) | [#750](#the-level-state-as-a-class-750) |
 | `src/level/level_query.cpp`, `play_room.cpp`, `run_room.cpp`, `room.cpp`, `room_frame.cpp` | `LevelProgress` (the room block, `LevelState::room`): `IsInGemPathRoom`, `IsInBonusRoom`, `PlayRoomMusic`, `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom`, `PlayRoom`, `RunRoom`, `ResumeRoomAfterPause`, `UpdateRoomFrame`, `SetupRoomBlend` | 12 | (unchanged) | 0 -> 0 | [#750](#the-level-state-as-a-class-750) |
@@ -3758,10 +3761,64 @@ per-object flags apply to the `.o`, whatever its source.
   DestroyLinkSession takes `__in_chrg`, frees on bit 0 and is called with
   3 (`delete gLinkSession`); its dead loop from `&players[4]` down to
   `players` is the empty destructor loop of the `players` array. There
-  is no class for it yet (`struct link_session`, link_session.h), so the
-  functions stay free functions; a LinkSession class with LinkPlayer
-  members is a possible follow-up. The save data (`struct save_data`)
-  and the transfer state (`struct save_transfer`) have no trait.
+  was no class for it yet (`struct link_session`, link_session.h), so the
+  functions stayed free functions; [#751](#the-link-session-the-save-data-and-the-save-transfer)
+  made the class. The save data (`struct save_data`) and the transfer
+  state (`struct save_transfer`) have no trait, but every function of
+  theirs takes one as `self`: #751 made them classes too.
+
+### The link session, the save data and the save transfer
+
+#751 turns the free functions of the previous section into three
+classes (and two helpers), with every object byte-identical and every
+function keeping its C name through cxx_symbols.txt:
+
+- **LinkSession** (include/link_session.hpp) is the link session, with
+  the layouts of `struct link_session`, `link_player` and `link_ring`
+  moved into it, `LinkPlayer` and `LinkRing` (link_session.h keeps the
+  packed bit views and a `struct link_session` tag). The constructor
+  and destructor are g++'s shape of the C's. InitLinkSession's ring
+  resets are LinkRing's inline constructor, run for the outgoing `ring`
+  and then, in g++'s array loop (`i = 3; ... while (i != -1)`, the
+  C's `zero`/`fill`/`sentinel` locals), for the four players' rings;
+  the body is `Reset(); enabled = 0;`. DestroyLinkSession's dead loop
+  from `&players[4]` down to `players`, with its null test, is the
+  players array's destructor loop: LinkRing's empty `~LinkRing() {}`
+  makes LinkPlayer's implicit destructor non-trivial, so g++ walks the
+  array calling it, and the calls are empty. The class's inline
+  operator new and delete call IwramAlloc and IwramFree (as
+  AudioContext's), so the save menu's `InitLinkSession(IwramAlloc(0x408))`
+  is `new LinkSession` and its `if (gLinkSession != NULL)
+  DestroyLinkSession(gLinkSession, 3)` is `delete gLinkSession`.
+  ResetLinkSessionState's ring resets call the same `LinkRing::Reset`
+  the constructor does. LinkStart and LinkStop are methods that don't
+  read `this` (their callers pass the session); LinkSetupSio (no
+  argument) and MakeLinkHandshakeId (it takes the id bytes) stay free
+  functions, as do the IRQ handlers the IRQ table points at.
+- **SaveData** and **SaveTransfer** (include/save_data.hpp) have no
+  constructor, destructor or vtable: the save menu's `new save_data` and
+  `delete linkSave` are POD allocations already, and stay so. The
+  checksum loop ValidateSaveData expanded inline (a `static inline` copy
+  in the C) is the inline method `ChecksumOk`, and CheckSaveChecksum is
+  `return ChecksumOk();` ([An inline body the ROM also has out of
+  line](#dead-ends-and-gotchas)). TestSaveFlags' and ClearSaveFlags'
+  parameter was called `flags` like the field; it is `mask` now.
+  ReadSaveData and WriteSaveData take a `void *` buffer and a length and
+  stay free functions.
+
+The layouts are the classes' alone now: no C file used them (the two
+data files that include link.h and save.h only see the tags). save.h's
+and link.h's C prototypes of the 28 methods go.
+
+Kept, every site tried with tools/match_prune.py and still needed as
+C++: UpdateLinkSession's two `MATCH_KEEP`s, HandleLinkSerial's
+`MATCH_KEEP`, `MATCH_KEEP_EXPR`, `MATCH_USE` and `MATCH_CONST`,
+ResetLinkSessionState's 13 `MATCH_USE(id)` and `MATCH_BARRIER`,
+ValidateSaveData's pin and `MATCH_USE`, TestSaveFlags' pin (without it
+g++ drops the ROM's zero-extension of the `u8` parameter; written as a
+`mask &= flags` test it is two instructions shorter), and
+ReceiveSaveTransferChunk's two pins and its empty-template asm.
+`tools/match_idioms.py` counts are unchanged (pins 86, uses 46).
 
 ### The IWRAM ARM code
 

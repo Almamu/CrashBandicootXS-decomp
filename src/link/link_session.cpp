@@ -1,3 +1,5 @@
+#include "link_session.hpp"
+
 extern "C" {
 #include "core.h"
 #include "match.h"
@@ -7,7 +9,7 @@ extern "C" {
 }
 
 /* The link-cable session's per-frame handshake driver and SIO data pump
- * (split from link_handshake.cpp so ResetLinkSessionState can sit in its own object;
+ * (split from link_handshake.cpp so LinkSession::ResetState can sit in its own object;
  * see link_session_reset.cpp). */
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
@@ -25,7 +27,7 @@ extern "C" {
  * 0x708. Until `connected`, `connectCounter` steps down while there is
  * no `playerId` and up once there is: above 14 the link is `connected`
  * (`idleFrames`/`peakIdleFrames` cleared), at -15 the session is reset
- * (`LinkStop` + `ResetLinkSessionState`), in between it returns 0.
+ * (`LinkSession::Stop` + `LinkSession::ResetState`), in between it returns 0.
  * Then `peakIdleFrames` keeps the larger of itself and `idleFrames`,
  * `idleFrames` restarts at 0 if the serial IRQ made `progressed` and
  * counts up otherwise, and past 0x1d idle frames the session is reset.
@@ -44,21 +46,21 @@ extern "C" {
  * Both asm statements emit no code. Matches under both compilers. As
  * C++, the ready test is written `(v & 1) == 0`: g++'s `!(v & 1)` is a
  * bool negation, which combine turns into an eor/and pair. */
-s32 UpdateLinkSession(struct link_session *self)
+s32 LinkSession::Update()
 {
     s32 arm3;
     u16 saved;
     s32 one;
 
-    if (!self->enabled)
+    if (!enabled)
         return 0;
-    if (!self->sioConfigured) {
+    if (!sioConfigured) {
         REG_RCNT = 0;
         REG_SIOCNT = 0x2000;
         REG_SIOCNT |= 0x4003;
-        self->sioConfigured = 1;
+        sioConfigured = 1;
     }
-    if (!self->started) {
+    if (!started) {
         s32 one1;
         u32 v = REG_SIOCNT >> 3;
 
@@ -66,13 +68,13 @@ s32 UpdateLinkSession(struct link_session *self)
         MATCH_KEEP(one1); /* keep the flag's own 1 (r1) */
         one = 1;
         if ((v & 1) == 0) {
-            LinkStop(self);
+            Stop();
             REG_RCNT = 0;
             REG_SIOCNT = 0x2000;
             REG_SIOCNT |= 0x4003;
             return 0;
         }
-        self->started = one;
+        started = one;
         arm3 = (REG_SIOCNT >> 2) ^ one1;
         MATCH_KEEP(arm3); /* keep eor/and, not bic */
         arm3 &= one1;
@@ -94,47 +96,47 @@ s32 UpdateLinkSession(struct link_session *self)
             REG_TM3CNT = 0x00C0BBBC;
         }
         REG_IME = one;
-        self->playerId = -1;
-        self->idleFrames = 0;
-        self->framesSinceIrq = 0;
-        self->progressed = 0;
+        playerId = -1;
+        idleFrames = 0;
+        framesSinceIrq = 0;
+        progressed = 0;
     }
-    if (self->framesSinceIrq > 15) {
-        self->connectCounter = -15;
-        self->idleFrames = 0x708;
+    if (framesSinceIrq > 15) {
+        connectCounter = -15;
+        idleFrames = 0x708;
     }
-    self->framesSinceIrq++;
-    if (!self->connected) {
-        if (self->playerId < 0)
-            self->connectCounter = self->connectCounter - 1;
+    framesSinceIrq++;
+    if (!connected) {
+        if (playerId < 0)
+            connectCounter = connectCounter - 1;
         else
-            self->connectCounter = self->connectCounter + 1;
-        if (self->connectCounter > 14) {
-            self->connected = 1;
-            self->idleFrames = 0;
-            self->peakIdleFrames = 0;
-        } else if (self->connectCounter > -15) {
+            connectCounter = connectCounter + 1;
+        if (connectCounter > 14) {
+            connected = 1;
+            idleFrames = 0;
+            peakIdleFrames = 0;
+        } else if (connectCounter > -15) {
             return 0;
         } else {
-            LinkStop(self);
-            ResetLinkSessionState(self);
+            Stop();
+            ResetState();
         }
     }
     {
-        s32 a = self->peakIdleFrames;
-        s32 b = self->idleFrames;
+        s32 a = peakIdleFrames;
+        s32 b = idleFrames;
 
         LIMIT_MIN(a, b);
-        self->peakIdleFrames = a;
-        b = self->progressed ? 0 : b + 1;
-        self->idleFrames = b;
-        self->progressed = 0;
+        peakIdleFrames = a;
+        b = progressed ? 0 : b + 1;
+        idleFrames = b;
+        progressed = 0;
         if (b > 0x1d) {
-            LinkStop(self);
-            ResetLinkSessionState(self);
+            Stop();
+            ResetState();
         }
     }
-    self->connectCounter++;
+    connectCounter++;
     return 1;
 }
 
@@ -157,7 +159,7 @@ s32 UpdateLinkSession(struct link_session *self)
  * packet is built once every peer has acknowledged ours (`ackedMask` ==
  * `peerMask`), our ack counter is bumped once every peer's new data has
  * arrived (`receivedMask`), and every fourth round re-sends the previous
- * packet (`prevPacket`). `progressed` tells UpdateLinkSession the link
+ * packet (`prevPacket`). `progressed` tells LinkSession::Update the link
  * moved.
  *
  * Once a NAKED transcription (1488 bytes, this project's biggest); it
@@ -207,7 +209,7 @@ struct link_rx_word {
  * made right after the id copy (`adds r4, r7, #0`), and the wrap loop's
  * from the original. The bounds test goes through `rd`, the caller's
  * `&ring.readPos`. */
-static inline void LinkRingPop(struct link_ring *r, struct link_ring *rf, u8 *dst, s32 n, s32 *rd)
+static inline void LinkRingPop(LinkRing *r, LinkRing *rf, u8 *dst, s32 n, s32 *rd)
 {
     s32 k;
 
@@ -231,7 +233,7 @@ static inline void LinkRingPop(struct link_ring *r, struct link_ring *rf, u8 *ds
     }
 }
 
-void HandleLinkSerial(struct link_session *self, u16 *data)
+void LinkSession::HandleSerial(u16 *data)
 {
     struct link_rx_word w[4];
     s32 i;
@@ -240,22 +242,22 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
     u16 siocnt;
     u32 one;
 
-    self->framesSinceIrq = 0;
-    if (self->inSerialIrq) {
-        u16 v = self->sendWord;
+    framesSinceIrq = 0;
+    if (inSerialIrq) {
+        u16 v = sendWord;
 
         REG_SIOMLT_SEND = v;
         return;
     }
     one = 1;
-    self->inSerialIrq = one;
+    inSerialIrq = one;
     siocnt = REG_SIOCNT;
     changed = 0;
-    nib = LINK_NIB(&self->id[1]).lo + 1;
+    nib = LINK_NIB(&id[1]).lo + 1;
     nib &= 0xf;
     if ((siocnt >> 6) & one)
         goto send;
-    if (!self->connected) {
+    if (!connected) {
         s32 nId, nFree, same;
         struct link_id_word *f20;
 
@@ -268,12 +270,12 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             u16 *p;
             u32 kid, kfree;
 
-            /* Set before the loop, in the ROM's order: `&self->handshakeWord`,
+            /* Set before the loop, in the ROM's order: `&handshakeWord`,
              * then the two compare constants, then the load pointer.
              * `kfree` uses the constant-init form (no code beyond the
              * `ldr`) so loop.c doesn't hoist it after `p`'s init; `kid`
              * stays in place as a plain assignment. */
-            f20 = &self->handshakeWord;
+            f20 = &handshakeWord;
             kid = 0xF0B;
             MATCH_CONST(kfree, 0xffff);
             p = data;
@@ -298,32 +300,32 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 same = 0;
         }
         if (nFree + nId == 4 && same && nId > 1) {
-            self->playerCount = nId;
+            playerCount = nId;
             {
                 s32 me = (REG_SIOCNT & SIO_ID) >> 4;
 
-                self->playerId = me;
+                playerId = me;
             }
-            self->peerMask = ~(-1 << nId);
-            self->peerMask &= ~(1 << self->playerId);
+            peerMask = ~(-1 << nId);
+            peerMask &= ~(1 << playerId);
         }
         f20->lo = nId;
         {
-            u16 *dst = &self->sendWord;
+            u16 *dst = &sendWord;
 
-            *dst = *(u16 *)&self->handshakeWord;
+            *dst = *(u16 *)&handshakeWord;
         }
         goto send;
     }
 
-    for (i = 0; i < self->playerCount; i++) {
-        struct link_player *p;
+    for (i = 0; i < playerCount; i++) {
+        LinkPlayer *p;
         u8 *q;
         s32 ok;
 
-        if (i == self->playerId)
+        if (i == playerId)
             continue;
-        p = &self->players[i];
+        p = &players[i];
         p->rx[p->rxCount] = data[i];
         p->rxCount = (p->rxCount + 1) & 0xf;
         if (p->rxCount <= 3)
@@ -376,7 +378,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 /* The bounds test reaches the ring through an escaped copy
                  * of `p` (no code), so CSE doesn't share its address with
                  * the loop pre-headers, which recompute it as the ROM does. */
-                if (MATCH_KEEP_EXPR(struct link_player *, p)->ring.writePos < 0x80 - n) {
+                if (MATCH_KEEP_EXPR(LinkPlayer *, p)->ring.writePos < 0x80 - n) {
                     for (k = n - 1; k != -1; k--) {
                         p->ring.writePos++;
                         p->ring.count++;
@@ -394,37 +396,37 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
                 p->totalReceived += n;
                 p->prevHash = p->hash;
                 p->rxSeq = (p->rxSeq + 1) & 0xf;
-                self->receivedMask |= 1 << i;
+                receivedMask |= 1 << i;
             }
         }
     copy:
         LINK_COPY_ID(p->id, q);
         if (LINK_NIB(&p->id[0]).hi == nib)
-            self->ackedMask |= 1 << i;
+            ackedMask |= 1 << i;
         p->rxCount = 0;
         changed = 1;
     }
 
     if (changed) {
         changed = 0;
-        if (self->ackedMask == self->peerMask) {
+        if (ackedMask == peerMask) {
             s32 n, k;
             u8 *dst;
             u16 hash;
             u8 *id;
-            struct link_ring *ring;
+            LinkRing *ring;
             s32 *cnt;
             s32 *rd;
-            struct link_ring *rf;
+            LinkRing *rf;
 
-            self->ackedMask = 0;
-            id = self->id;
-            ring = &self->ring;
-            cnt = &self->ring.count;
-            dst = &self->id[2];
-            rd = &self->ring.readPos;
+            ackedMask = 0;
+            id = this->id;
+            ring = &this->ring;
+            cnt = &this->ring.count;
+            dst = &this->id[2];
+            rd = &this->ring.readPos;
             {
-                u8 *d = self->prevPacket;
+                u8 *d = prevPacket;
                 u8 *s = id;
 
                 for (k = 0; k <= 3; k++) {
@@ -445,35 +447,35 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             LIMIT_MAX(n, 4);
             LINK_NIB(&id[1]).hi = n;
             LinkRingPop(ring, rf, dst, n, rd);
-            self->totalSent += n;
+            totalSent += n;
             {
                 /* A signed QImode read-modify-write: the ROM's mask is
                  * -16 and `nib` (already masked) is not masked again. */
-                s8 *b = (s8 *)&self->id[1];
+                s8 *b = (s8 *)&this->id[1];
 
                 *b = (*b & ~0xf) | nib;
             }
-            hash = *(u16 *)&self->id[6];
-            LINK_HASH(hash, &self->id[1]);
+            hash = *(u16 *)&this->id[6];
+            LINK_HASH(hash, &this->id[1]);
             {
                 /* The ROM sets this 0 before the hash store. */
                 s32 z = 0;
 
-                *(u16 *)&self->id[6] = hash;
-                self->sendRound = z;
+                *(u16 *)&this->id[6] = hash;
+                sendRound = z;
             }
             changed = 1;
         }
-        if (self->receivedMask == self->peerMask) {
-            self->receivedMask = 0;
-            LINK_NIB(&self->id[0]).hi = (LINK_NIB(&self->id[0]).hi + 1) & 0xf;
+        if (receivedMask == peerMask) {
+            receivedMask = 0;
+            LINK_NIB(&id[0]).hi = (LINK_NIB(&id[0]).hi + 1) & 0xf;
             changed = 1;
         }
         if (changed) {
-            self->sendWordIndex = 0;
-            self->progressed = 1;
+            sendWordIndex = 0;
+            progressed = 1;
             {
-                u8 *id = self->id;
+                u8 *id = this->id;
                 u32 n = LINK_NIB(&id[0]).hi;
                 u32 v = (id[7] << 8) | id[6];
                 s32 w = (n + v) & 0xf;
@@ -485,28 +487,28 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
     {
         u8 *lo, *hi;
 
-        if ((self->sendRound & 3) == 3) {
-            u8 *b = (u8 *)self + self->sendWordIndex * 2;
+        if ((sendRound & 3) == 3) {
+            u8 *b = (u8 *)this + sendWordIndex * 2;
 
             lo = b + 0x28;
             hi = b + 0x29;
         } else {
-            u8 *b = (u8 *)self + self->sendWordIndex * 2;
+            u8 *b = (u8 *)this + sendWordIndex * 2;
 
             lo = b + 0x30;
             hi = b + 0x31;
         }
-        self->sendWord = (*hi << 8) | *lo;
+        sendWord = (*hi << 8) | *lo;
     }
-    if (++self->sendWordIndex == 4) {
-        self->sendWordIndex = 0;
-        self->sendRound++;
+    if (++sendWordIndex == 4) {
+        sendWordIndex = 0;
+        sendRound++;
     }
 send:
     {
-        u16 v = self->sendWord;
+        u16 v = sendWord;
 
         REG_SIOMLT_SEND = v;
     }
-    self->inSerialIrq = 0;
+    inSerialIrq = 0;
 }

@@ -68,7 +68,7 @@ u32 gSfxVoiceToggle = 0;
  * session object the link IRQ handlers work on. gEepromNeedsInit is the
  * save code's (save_data.cpp): set until its first EEPROMConfigure. */
 u8 gLinkSessionReset = 1;
-struct link_session *gLinkSession = 0;
+LinkSession *gLinkSession = 0;
 u8 gEepromNeedsInit = 1;
 SaveMenu *gSaveMenu = 0;
 /* The two link compatibility messages, stored after the CRC table

@@ -1,4 +1,5 @@
 #include "audio.hpp"
+#include "save_data.hpp"
 
 extern "C" {
 #include "core.h"
@@ -24,7 +25,7 @@ extern "C" {
  * The IME-save/IE-clear/IME-restore snippet (repeated once per exit
  * path) matches the ROM's exact "no extra copy" shape here as plain
  * C (`u16 savedIme = REG_IME; ...`), the same phrasing already proven
- * for `LinkStop` (src/link/link_handshake.cpp) - the previously
+ * for `LinkSession::Stop` (src/link/link_handshake.cpp) - the previously
  * suspected register-pressure gap didn't reproduce with this
  * function's actual field/loop structure. Byte-identical to the ROM,
  * confirmed via a direct `.text`-section `cmp` against
@@ -146,7 +147,7 @@ fail_restore:
  * marker bytes and checksum. Returns 4 (EEPROM read failed after
  * retries), 2 (bad `magic` marker), 1 (bad `versionNibble`
  * marker), 3 (checksum mismatch) or 0 (fully valid). */
-s32 LoadSaveData(struct save_data *self)
+s32 SaveData::Load()
 {
     AudioContext *audio;
     bool wasPlaying;
@@ -164,7 +165,7 @@ s32 LoadSaveData(struct save_data *self)
 
     i = 0;
     do {
-        result = ReadSaveData(self, 0x200);
+        result = ReadSaveData(this, 0x200);
         i++;
     } while (i <= 2 && result != 0);
 
@@ -175,27 +176,26 @@ s32 LoadSaveData(struct save_data *self)
     if (result != 0) {
         return 4;
     }
-    if (self->magic != 0x43) {
+    if (magic != 0x43) {
         return 2;
     }
-    if (self->versionNibble != 0x12) {
+    if (versionNibble != 0x12) {
         return 1;
     }
-    if ((u8)CheckSaveChecksum(self) == 0) {
+    if ((u8)CheckChecksum() == 0) {
         return 3;
     }
     return 0;
 }
 
-/* Validates the record's checksum (inline word-sum, same shape as
- * `CheckSaveChecksum` below but not a call to it - the ROM genuinely inlines
- * this one) and, if it fails, repairs the record in place: DMA-fills
+/* Validates the record's checksum (the inline ChecksumOk, which
+ * CheckChecksum below is the out-of-line copy of) and, if it fails, repairs the record in place: DMA-fills
  * the whole 0x200 bytes with 0 (raw DMA3 register pokes rather than a
  * `DmaFill16` call - a different, earlier style than
- * `src/save/save_data.cpp`'s `ResetSaveData` uses for the same
+ * `Reset` uses for the same
  * "reset to blank" operation), marks every row selected
- * (`EraseSaveSlot`), re-stamps the two marker bytes, clears
- * `flags`/`field_1fb`, and refreshes the checksum (`UpdateSaveChecksum`).
+ * (`SaveData::EraseSlot`), re-stamps the two marker bytes, clears
+ * `flags`/`field_1fb`, and refreshes the checksum (`SaveData::UpdateChecksum`).
  *
  * Parked as NAKED until the near-miss polish pass
  * (docs/matching/archive/near-miss-polish.md): the ROM computes `&flags` before
@@ -205,76 +205,44 @@ s32 LoadSaveData(struct save_data *self)
  * `MATCH_USE(flags)` below emits nothing; it adds one reference
  * to `flags`, which lifts its allocation priority (floor_log2(refs) *
  * refs / live length) above `field_1fb`'s. */
-/* An inlined copy of CheckSaveChecksum below. */
-static inline u32 checksum_ok(struct save_data *self)
-{
-    u32 *p = (u32 *)self;
-    u32 sum = 0;
-    s32 i;
-    u32 result;
-
-    for (i = 0x7e; i >= 0; i--) {
-        sum += *p++;
-    }
-
-    result = 0;
-    if (sum == self->checksum) {
-        result = 1;
-    }
-    return result;
-}
-
-void ValidateSaveData(struct save_data *self)
+void SaveData::Validate()
 {
     s32 i;
 
-    if (!checksum_ok(self)) {
+    if (!ChecksumOk()) {
         MATCH_HOLD_REG(u8 *, marker, r6);
-        u8 *flags, *f1fb, *version;
+        u8 *pflags, *f1fb, *version;
 
-        DmaFill16(3, 0, self, 0x200);
+        DmaFill16(3, 0, this, 0x200);
         i = 0;
-        marker = &self->magic;
-        version = &self->versionNibble;
-        flags = &self->flags;
-        /* No code: one extra use of `flags` for global-alloc's ranking. */
-        MATCH_USE(flags);
-        f1fb = &self->field_1fb;
+        marker = &magic;
+        version = &versionNibble;
+        pflags = &flags;
+        /* No code: one extra use of `pflags` for global-alloc's ranking. */
+        MATCH_USE(pflags);
+        f1fb = &field_1fb;
         for (; i <= 3; i++) {
-            EraseSaveSlot(self, i);
+            EraseSlot(i);
         }
         {
             u8 z = 0;
 
             *marker = 0x43;
             *version = 0x12;
-            *flags = z;
+            *pflags = z;
             *f1fb = z;
         }
-        UpdateSaveChecksum(self);
+        UpdateChecksum();
     }
 }
 
 /* Recomputes this record's additive word-sum checksum over its first
  * 0x1fc bytes (127 words) and compares it against the stored
- * `checksum` field, returning 1 on match. Counterpart to `UpdateSaveChecksum`
+ * `checksum` field, returning 1 on match. Counterpart to `SaveData::UpdateChecksum`
  * below, which stores instead of comparing. */
-u32 CheckSaveChecksum(struct save_data *self)
+u32 SaveData::CheckChecksum()
 {
-    u32 *p = (u32 *)self;
-    u32 sum = 0;
-    s32 i;
-    u32 result;
-
-    for (i = 0x7e; i >= 0; i--) {
-        sum += *p++;
-    }
-
-    result = 0;
-    if (sum == self->checksum) {
-        result = 1;
-    }
-    return result;
+    return ChecksumOk();
 }
 
 /* Recomputes and stores this record's additive word-sum checksum over
@@ -283,30 +251,30 @@ u32 CheckSaveChecksum(struct save_data *self)
  * checksum in sync - see src/save/save_data.cpp's header
  * comment, which already anticipated this function (it was matched
  * from a later chunk, issue #5, before this one). */
-void UpdateSaveChecksum(struct save_data *self)
+void SaveData::UpdateChecksum()
 {
-    u32 *p = (u32 *)self;
+    u32 *p = (u32 *)this;
     u32 sum = 0;
     s32 i;
 
     for (i = 0x7e; i >= 0; i--) {
         sum += *p++;
     }
-    self->checksum = sum;
+    checksum = sum;
 }
 
 /* `versionNibble`'s high-nibble accessor. */
-u32 GetSaveGameId(struct save_data *self)
+u32 SaveData::GetGameId()
 {
-    return self->versionNibble >> 4;
+    return versionNibble >> 4;
 }
 
 /* Saves the settings record to EEPROM (`WriteSaveData`, retried up to 5
  * times), muting the music player across the transfer the same way
- * `LoadSaveData` (src/save/save_data.cpp) does (checksum
- * refreshed first via `UpdateSaveChecksum`, before the mute). Returns 4
+ * `SaveData::Load` (src/save/save_data.cpp) does (checksum
+ * refreshed first via `SaveData::UpdateChecksum`, before the mute). Returns 4
  * (EEPROM write failed after retries) or 0 (success). */
-s32 StoreSaveData(struct save_data *self)
+s32 SaveData::Store()
 {
     AudioContext *audio;
     bool wasPlaying;
@@ -318,7 +286,7 @@ s32 StoreSaveData(struct save_data *self)
     wasPlaying = audio->IsPlaying();
 
     savedSong = audio->GetCurrentSong();
-    UpdateSaveChecksum(self);
+    UpdateChecksum();
 
     if (wasPlaying) {
         gAudioContext->StopSong();
@@ -326,7 +294,7 @@ s32 StoreSaveData(struct save_data *self)
 
     i = 0;
     do {
-        result = WriteSaveData(self, 0x200);
+        result = WriteSaveData(this, 0x200);
         i++;
     } while (i <= 4 && result != 0);
 
@@ -344,13 +312,13 @@ s32 StoreSaveData(struct save_data *self)
  * hasn't been explicitly selected/edited (`slotEmpty[row] == 0`) -
  * refreshes a caller-side scratch copy with the stored default/synced
  * value while leaving a user-edited row alone. */
-void ReadSaveSlot(struct save_data *self, s32 row, void *dst)
+void SaveData::ReadSlot(s32 row, void *dst)
 {
-    if (self->slotEmpty[row] == 0) {
+    if (slotEmpty[row] == 0) {
         s32 offset;
 
         offset = row * 0x70;
-        offset = offset + (s32)self;
+        offset = offset + (s32)this;
         MemCopy32(dst, (void *)offset, 0x70);
     }
 }
@@ -358,56 +326,56 @@ void ReadSaveSlot(struct save_data *self, s32 row, void *dst)
 /* Force-writes `src` into row `row`'s 0x70-byte slot, clears the row's
  * `slotEmpty` flag (marking it "not explicitly edited" again), and
  * refreshes the checksum. */
-void WriteSaveSlot(struct save_data *self, s32 row, void *src)
+void SaveData::WriteSlot(s32 row, void *src)
 {
     s32 offset;
 
-    self->slotEmpty[row] = 0;
+    slotEmpty[row] = 0;
     offset = row * 0x70;
-    offset = offset + (s32)self;
+    offset = offset + (s32)this;
     MemCopy32((void *)offset, src, 0x70);
-    UpdateSaveChecksum(self);
+    UpdateChecksum();
 }
 
 /* Marks row `row` as explicitly selected/edited and refreshes the
  * checksum. See `include/save_data.h`'s `slotEmpty` field
  * comment, which already anticipated this function (matched from a
  * later chunk, issue #5, before this one). */
-void EraseSaveSlot(struct save_data *self, s32 row)
+void SaveData::EraseSlot(s32 row)
 {
-    self->slotEmpty[row] = 1;
-    UpdateSaveChecksum(self);
+    slotEmpty[row] = 1;
+    UpdateChecksum();
 }
 
 /* Zeroes the whole 0x200-byte record via a DMA16 fill, marks every row
- * "selected" (EraseSaveSlot), stamps the two fixed marker
+ * "selected" (SaveData::EraseSlot), stamps the two fixed marker
  * bytes, clears `flags`/`field_1fb`, then refreshes the checksum. */
-void ResetSaveData(struct save_data *self)
+void SaveData::Reset()
 {
     s32 i;
 
-    DmaFill16(3, 0, self, sizeof(*self));
+    DmaFill16(3, 0, this, sizeof(*this));
     for (i = 0; i <= 3; i++) {
-        EraseSaveSlot(self, i);
+        EraseSlot(i);
     }
-    self->magic = 0x43;
-    self->versionNibble = 0x12;
-    self->flags = 0;
-    self->field_1fb = 0;
-    UpdateSaveChecksum(self);
+    magic = 0x43;
+    versionNibble = 0x12;
+    flags = 0;
+    field_1fb = 0;
+    UpdateChecksum();
 }
 
-u8 IsSaveSlotEmpty(struct save_data *self, s32 rowIndex)
+u8 SaveData::IsSlotEmpty(s32 rowIndex)
 {
-    return self->slotEmpty[rowIndex];
+    return slotEmpty[rowIndex];
 }
 
-u8 TestSaveFlags(struct save_data *self, u8 flags)
+u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);
     u8 result;
 
-    v = flags & self->flags;
+    v = mask & flags;
     result = v;
     if (v != 0) {
         result = 1;
@@ -415,8 +383,8 @@ u8 TestSaveFlags(struct save_data *self, u8 flags)
     return result;
 }
 
-void ClearSaveFlags(struct save_data *self, u8 flags)
+void SaveData::ClearFlags(u8 mask)
 {
-    self->flags &= ~flags;
-    UpdateSaveChecksum(self);
+    flags &= ~mask;
+    UpdateChecksum();
 }

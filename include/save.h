@@ -3,8 +3,9 @@
 
 /* The save subsystem (src/save/): the cartridge save data in EEPROM, the
  * save menu, and the save transfer over the link cable. The save data
- * and transfer layouts are in save_data.h, the menu's class in
- * save_menu.hpp (save_menu.h has its slot summaries).
+ * and the transfer are classes SaveData and SaveTransfer
+ * (save_data.hpp; save_data.h has the slot layout), the menu's class is
+ * in save_menu.hpp (save_menu.h has its slot summaries).
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
@@ -46,27 +47,10 @@ extern const u16 gSaveMenuPalette3[16];
 /* src/save/save_data.cpp */
 extern s32 ReadSaveData(void *self, s32 len);
 extern s32 WriteSaveData(void *self, s32 len);
-extern s32 LoadSaveData(struct save_data *self);
-extern void ValidateSaveData(struct save_data *self);
-extern u32 CheckSaveChecksum(struct save_data *self);
-extern void UpdateSaveChecksum(struct save_data *self);
-extern u32 GetSaveGameId(struct save_data *self);
-extern s32 StoreSaveData(struct save_data *self);
-extern void ReadSaveSlot(struct save_data *self, s32 row, void *dst);
-extern void WriteSaveSlot(struct save_data *self, s32 row, void *src);
-extern void EraseSaveSlot(struct save_data *self, s32 row);
-extern void ResetSaveData(struct save_data *self);
-extern u8 IsSaveSlotEmpty(struct save_data *self, s32 row);
-extern u8 TestSaveFlags(struct save_data *self, u8 flags);
-extern void ClearSaveFlags(struct save_data *self, u8 flags);
 
-/* src/save/save_transfer.cpp */
-extern void SetSaveFlags(struct save_data *self, u8 flags);
-extern void SendSaveTransferChunk(struct save_transfer *self);
-extern void ReceiveSaveTransferChunk(struct save_transfer *self, s32 playerIndex);
-
-/* src/save/save_transfer_poll.cpp */
-extern s32 PollSaveTransfer(struct save_transfer *self);
+/* The save data's and the save transfer's methods (C++,
+ * include/save_data.hpp: classes SaveData and SaveTransfer) have no C
+ * caller and no C prototype. */
 
 /* The save menu (C++, include/save_menu.hpp: class SaveMenu; the methods
  * have no C caller and no C prototype). Its C-linkage functions, for
@@ -74,11 +58,7 @@ extern s32 PollSaveTransfer(struct save_transfer *self);
 extern void CloseSaveMenu(void);
 extern void OpenSaveMenu(void);
 
-/* src/save/save_menu_input.cpp (C linkage): the save transfer's
- * accessors, and the menu's loop */
-extern void SetSaveTransferRecord(struct save_transfer *self, struct save_data *tmpl);
-extern void *GetSaveTransferData(struct save_transfer *self);
-extern void ResetSaveTransfer(struct save_transfer *self);
+/* src/save/save_menu_input.cpp (C linkage): the menu's loop */
 extern u8 RunSaveMenu(u32 state, u32 cursor);
 
 #endif /* GUARD_SAVE_H */
