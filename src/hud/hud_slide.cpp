@@ -1,13 +1,14 @@
+#include "hud.hpp"
+
+extern "C" {
 #include "core.h"
 #include "level_state.h"
-#include "hud.h"
-#include "vtable.h"
-#include "memory.h"
 #include "globals.h"
+}
 
-/* The lives, wumpa and crate counters' slide-in timers (`struct
- * hud_counter`, include/hud.h), shared with `SetHudCrateTotal`/
- * `IncHudCrateTotal` via the `gHud` instance. Each counter has a
+/* Hud's (#664 cleanup, include/hud.hpp) slide-in timers for the lives,
+ * wumpa and crate counters, the crate total's setters and the
+ * destructor. Each counter has a
  * {state, timer} pair: state 0 idle, 1 counting up to a threshold then
  * -> 2, 2 counting down 0x14 frames then -> 3, 3 counting down its own
  * timer then back to 0. The lives counter slides in with
@@ -22,7 +23,7 @@
  * first), then runs the generic `StepHudSlide` advance on all three
  * counters unconditionally. The crate counter doesn't get the manual
  * force-advance the other two do - reproduced as-is. */
-void UpdateHudSlides(struct hud_counter *self)
+void Hud::UpdateSlides()
 {
     /* Pointer arithmetic is kept inline (not cached into locals) at each
      * use site, matching the ROM's own redundant recomputation - a
@@ -37,7 +38,7 @@ void UpdateHudSlides(struct hud_counter *self)
     if (gLevelState->timeTrial != 0) {
         s32 v;
 
-        v = self->livesSlide;
+        v = livesSlide;
         if (v == 1) {
             goto set0;
         }
@@ -47,12 +48,12 @@ void UpdateHudSlides(struct hud_counter *self)
         if (v != 2) {
             goto skip0;
         }
-        self->livesSlideTimer = 0x14;
+        livesSlideTimer = 0x14;
     set0:
-        self->livesSlide = 3;
+        livesSlide = 3;
     skip0:
 
-        v = self->wumpaSlide;
+        v = wumpaSlide;
         if (v == 1) {
             goto set1;
         }
@@ -62,15 +63,15 @@ void UpdateHudSlides(struct hud_counter *self)
         if (v != 2) {
             goto skip1;
         }
-        self->wumpaSlideTimer = 0x14;
+        wumpaSlideTimer = 0x14;
     set1:
-        self->wumpaSlide = 3;
+        wumpaSlide = 3;
     skip1:;
     }
 
-    StepHudSlide(self, &self->crateSlide, &self->crateSlideTimer, 0x78);
-    StepHudSlide(self, &self->livesSlide, &self->livesSlideTimer, 0x78);
-    StepHudSlide(self, &self->wumpaSlide, &self->wumpaSlideTimer, 0x78);
+    StepSlide(&crateSlide, &crateSlideTimer, 0x78);
+    StepSlide(&livesSlide, &livesSlideTimer, 0x78);
+    StepSlide(&wumpaSlide, &wumpaSlideTimer, 0x78);
 }
 
 /* Trigger for the crate counter: only runs while the level state's `timeTrial`
@@ -78,64 +79,63 @@ void UpdateHudSlides(struct hud_counter *self)
  * a fresh blink (state -> 1); already counting down the "on" phase (2)
  * instead just refreshes its timer back to the full 0x78-frame hold.
  * Already counting up (1) is left alone. */
-void ShowHudCrates(struct hud_counter *self)
+void Hud::ShowCrates()
 {
     s32 slotState;
 
     if (gLevelState->timeTrial == 0) {
-        slotState = self->crateSlide;
+        slotState = crateSlide;
 
         if (slotState == 0 || slotState == 3) {
-            self->crateSlide = 1;
+            crateSlide = 1;
         } else if (slotState == 2) {
-            self->crateSlideTimer = 0x78;
+            crateSlideTimer = 0x78;
         }
     }
 }
 
 /* Same trigger as `ShowHudCrates`, for the lives counter. */
-void ShowHudLives(struct hud_counter *self)
+void Hud::ShowLives()
 {
     s32 slotState;
 
     if (gLevelState->timeTrial == 0) {
-        slotState = self->livesSlide;
+        slotState = livesSlide;
 
         if (slotState == 0 || slotState == 3) {
-            self->livesSlide = 1;
+            livesSlide = 1;
         } else if (slotState == 2) {
-            self->livesSlideTimer = 0x78;
+            livesSlideTimer = 0x78;
         }
     }
 }
 
 /* Same trigger as `ShowHudCrates`, for the wumpa counter. */
-void ShowHudWumpa(struct hud_counter *self)
+void Hud::ShowWumpa()
 {
     s32 slotState;
 
     if (gLevelState->timeTrial == 0) {
-        slotState = self->wumpaSlide;
+        slotState = wumpaSlide;
 
         if (slotState == 0 || slotState == 3) {
-            self->wumpaSlide = 1;
+            wumpaSlide = 1;
         } else if (slotState == 2) {
-            self->wumpaSlideTimer = 0x78;
+            wumpaSlideTimer = 0x78;
         }
     }
 }
 
 /* Fires all three counters' triggers at once. */
-void ShowHudCounters(struct hud_counter *self)
+void Hud::ShowCounters()
 {
-    ShowHudCrates(self);
-    ShowHudLives(self);
-    ShowHudWumpa(self);
+    ShowCrates();
+    ShowLives();
+    ShowWumpa();
 }
 
 /* Generic single-counter slide advance, called once per counter by
- * `UpdateHudSlides` above. `self` is unused - forwarded through purely for
- * calling-convention parity with the trigger functions above.
+ * `UpdateSlides` above. A method, though it doesn't use `this`.
  *
  * The explicit (never-reached, since callers only ever pass 0-3 and
  * state 0 is otherwise idle/inert) `case 0` below is load-bearing, not
@@ -143,7 +143,7 @@ void ShowHudCounters(struct hud_counter *self)
  * comparison tree pivoting on the middle case value (2) instead of the
  * ROM's plain ascending compare chain (1, then an early-out for
  * anything <= 1, then 2, then 3) - see docs/workflow.md step 7. */
-void StepHudSlide(struct hud_counter *self, s32 *state, s32 *timer, s32 threshold)
+void Hud::StepSlide(s32 *state, s32 *timer, s32 threshold)
 {
     switch (*state) {
     case 1:
@@ -173,59 +173,24 @@ void StepHudSlide(struct hud_counter *self, s32 *state, s32 *timer, s32 threshol
 
 /* Setter/increment pair for `crateTotal` (see the file doc comment
  * above) - GitHub issue #46. */
-void SetHudCrateTotal(struct hud_counter *self, s32 val)
+void Hud::SetCrateTotal(s32 val)
 {
-    self->crateTotal = val;
+    crateTotal = val;
 }
 
-void IncHudCrateTotal(struct hud_counter *self)
+void Hud::IncCrateTotal()
 {
-    self->crateTotal += 1;
+    crateTotal += 1;
 }
 
-/* Sits right after hud_slide.c's blink-timer trio (ROM 0x08028568) and
+/* Sits right after hud_slide.cpp's blink-timer trio (ROM 0x08028568) and
  * before FontDrawGlyph/InitSmallFont/InitLargeFont/FontPutChar
- * (src/text/font_glyph.cpp) - see GitHub issue #46. Just
- * `DestroyHud` here: a `struct hud_counter`-parts destructor, unrelated
- * to the `struct bitmap_font` text/icon-glyph renderer the rest of this
- * chunk's functions operate on (see include/bitmap_font.h and the other
- * src/text/font*.c files). */
+ * (src/text/font_glyph.cpp) - see GitHub issue #46. */
 
-extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-
-/* Destructor for a `struct hud_counter`'s `parts` array (see
- * include/hud.h): walks the array back to front, invoking each
- * `hud_digit_part`'s own per-type descriptor's slot-10 (`table+0x50`)
- * teardown trampoline via `_call_via_r2`, frees the array itself
- * (`self->parts`, allocated with a leading element-count word per the
- * NEW_ARRAY_COUNT read below - see the same convention in src/gfx/
- * palette_cycle.cpp/actor files), then optionally frees `self` when
- * `flags` bit 0 is set (same "free-self" convention as
- * DestroyPaletteCycles/DestroyLanguageSelect elsewhere in this codebase). The
- * descriptor is a vtable (gHudPartVtable, include/vtable.h), and
- * `table+0x50` is its slot 10. */
-void DestroyHud(struct hud_counter *self, s32 flags)
+/* DestroyHud: deletes the parts (each one's virtual destructor, slot 10
+ * of gHudPartVtable, from the last to the first, then the array with its
+ * count word); game_frame.c deletes gHud itself (`flags` 3). */
+Hud::~Hud()
 {
-    struct hud_digit_part *parts;
-    struct hud_digit_part *end;
-
-    parts = self->parts;
-    if (parts != NULL) {
-        s32 count = NEW_ARRAY_COUNT(parts);
-
-        end = (struct hud_digit_part *)((u8 *)parts + (count << 6));
-        if (parts != end) {
-            do {
-                struct vtable_slot *slot;
-
-                end--;
-                slot = (struct vtable_slot *)end->table + 10; /* slot 10 */
-                _call_via_r2((u8 *)end + slot->delta, 0, slot->fn);
-            } while (self->parts != end);
-        }
-        OperatorDeleteArray(NEW_ARRAY_BLOCK(self->parts));
-    }
-    if (flags & 1) {
-        OperatorDelete(self);
-    }
+    delete[] parts;
 }

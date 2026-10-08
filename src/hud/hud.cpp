@@ -1,16 +1,15 @@
+#include "hud.hpp"
+
+extern "C" {
 #include "core.h"
-#include "match.h"
-#include "actor.h"
-#include "hud.h"
-#include "objects.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
- * HUD stat-widget family" section. `self` is the same `struct
- * hud_counter` passed straight through to every callee here (including
- * `UpdateHudLives`, matched separately in hud_lives.c) - `sself->parts`
- * is the 35-slot OAM array `InitHud` builds. Runs the percentage
+ * HUD stat-widget family" section. Hud::Update (UpdateHud)
+ * calls the other widgets on the same HUD (UpdateLives is in
+ * hud_lives.cpp) - `parts` is the 35-slot array the constructor builds. Runs the percentage
  * counter (`UpdateHudPercentCounters`) when `icon_flag` is set, then the score
  * counter (`UpdateHudLives`) unconditionally, then branches on
  * `GetBossIndex`'s level-type/game-mode result: a non-"none" mode
@@ -21,33 +20,31 @@
  * `UpdateHudClock` while a "paused"-style central-state flag is set and
  * `mode`/`field_08` are both still zero, then unconditionally runs the
  * two remaining digit counters (`UpdateHudCrates`, `UpdateHudWumpa`). */
-void UpdateHud(struct hud_counter *self)
+void Hud::Update()
 {
-    MATCH_HOLD_REG(struct hud_counter *, sself, r5) = self;
-
     gHudSlideOffset = 0;
 
-    if (sself->icon_flag) {
-        UpdateHudPercentCounters(sself);
+    if (icon_flag) {
+        UpdatePercentCounters();
     }
 
-    UpdateHudLives(sself);
+    UpdateLives();
 
     if (GetBossIndex(gLevelState) != BOSS_NONE) {
-        UpdateHudBoss(sself);
+        UpdateBoss();
         return;
     }
 
     if (IsInBonusRound(gLevelState)) {
         gHudSlideOffset = 0;
-        AdvanceSpriteAnim((struct box_part *)(struct actor *)&sself->parts[34]);
-        DrawHudPart(&sself->parts[34], 0, 0);
+        parts[34].AdvanceAnim();
+        parts[34].Draw(0, 0);
     }
 
-    if (gLevelState->timeTrial != 0 && sself->livesSlide == 0 && sself->wumpaSlide == 0) {
-        UpdateHudClock(sself);
+    if (gLevelState->timeTrial != 0 && livesSlide == 0 && wumpaSlide == 0) {
+        UpdateClock();
     }
 
-    UpdateHudCrates(sself);
-    UpdateHudWumpa(sself);
+    UpdateCrates();
+    UpdateWumpa();
 }

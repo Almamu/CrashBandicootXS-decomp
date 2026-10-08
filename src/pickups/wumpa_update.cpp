@@ -1,11 +1,11 @@
 #include "pickups.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
+#include "hud.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "match.h"
-#include "hud.h"
 #include "util.h"
 #include "audio.h"
 #include "gfx.h"
@@ -47,7 +47,7 @@ void Wumpa::PickUp(u8 randomize)
     } else {
         dx = dy = 0x1000;
         state = 1;
-        ShowHudWumpa(gHud);
+        gHud->ShowWumpa();
     }
     affine = 0xa0;
     ClampFrame(this);
@@ -238,7 +238,7 @@ void Wumpa::SendToHud()
     newY = INT_TO_Q8(outY);
     y = newY;
     velY = -FixedDiv(Offset(newY, 0x1000), 0x1400);
-    ShowHudWumpa(gHud);
+    gHud->ShowWumpa();
 }
 
 /* The payout: 10 drops, the first on the next frame (Update). */

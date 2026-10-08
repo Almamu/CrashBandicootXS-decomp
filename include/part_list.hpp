@@ -12,10 +12,10 @@
  *   HudPart         src/gfx/palette_cycle.cpp (gHudPartVtable)
  *
  * The C views stay for the C files, each checked against its class
- * below: objects.h's `struct collision_queue`, gfx.h's `struct
- * palette_cycler` and hud.h's `struct hud_digit_part`. The C prototypes
- * (objects.h, gfx.h, hud.h) keep the C names; cxx_symbols.txt maps the
- * methods to them.
+ * below: objects.h's `struct collision_queue` and gfx.h's `struct
+ * palette_cycler`. The C prototypes (objects.h, gfx.h) keep the C
+ * names; cxx_symbols.txt maps the methods to them. The HUD that owns the
+ * HudParts is hud.hpp's Hud.
  *
  * No `#pragma interface`: g++ emits HudPart's vtable in
  * palette_cycle.cpp (see ctrl.hpp). */
@@ -79,8 +79,7 @@ public:
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(PaletteCycles) == sizeof(struct palette_cycler));
 
-/* One HUD digit or icon (gHudPartVtable; hud.h's `struct hud_digit_part`
- * is its C view): a UiSprite whose `frame` is -1 while it is hidden. */
+/* One HUD digit or icon (gHudPartVtable, 0x40 bytes): a UiSprite whose `frame` is -1 while it is hidden. */
 class HudPart : public UiSprite
 {
 public:
@@ -89,6 +88,6 @@ public:
     void Draw(s32 dx, s32 dy); // DrawHudPart
 };
 
-COMPILE_TIME_ASSERT(part_list_hpp, sizeof(HudPart) == sizeof(struct hud_digit_part));
+COMPILE_TIME_ASSERT(part_list_hpp, sizeof(HudPart) == 0x40);
 
 #endif /* !GUARD_PART_LIST_HPP */

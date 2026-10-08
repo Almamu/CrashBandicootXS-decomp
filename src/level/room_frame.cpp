@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include "hud.hpp"
 
 extern "C" {
 #include "core.h"
@@ -33,7 +34,7 @@ void UpdateRoomFrame(void *self)
     TickPaletteCycles(gPaletteCycles);
 
     if (*(s32 *)self <= 0x1000) {
-        UpdateHud(gHud);
+        gHud->Update();
         DrawPartList(gForegroundList);
 
         if (gPlayer->IsOnScreen())

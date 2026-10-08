@@ -5,8 +5,8 @@
  * palette caches, the small `struct actor` entity, brightness fades,
  * DISPCNT helpers, BG packages and the sprite frame cache. Every function
  * src/gfx/ defines, with the prototype of its definition, and the globals
- * and tables its files use (docs/headers_plan.md). `DrawHudPart`/
- * `InitHudPart` (palette_cycle.cpp) are in hud.h. A .c file that needs a
+ * and tables its files use (docs/headers_plan.md). HudPart's methods
+ * (palette_cycle.cpp) are C++ only (part_list.hpp). A .c file that needs a
  * different local declaration for codegen keeps it as an asm-label alias
  * with a `codegen:` comment. */
 

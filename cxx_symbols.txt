@@ -1532,3 +1532,22 @@ CommitFrame__9PauseMenu CommitPauseMenuFrame
 Animate__9PauseMenu AnimatePauseMenu
 Draw__9PauseMenu DrawPauseMenu
 DrawRows__9PauseMenu DrawPauseMenuRows
+# #664 cleanup C: the HUD (include/hud.hpp)
+__3Hud InitHud
+_._3Hud DestroyHud
+ConfigureParts__3HudUc ConfigureHudParts
+Update__3Hud UpdateHud
+UpdateBoss__3Hud UpdateHudBoss
+UpdateClock__3Hud UpdateHudClock
+UpdateLives__3Hud UpdateHudLives
+UpdateCrates__3Hud UpdateHudCrates
+UpdateWumpa__3Hud UpdateHudWumpa
+UpdatePercentCounters__3Hud UpdateHudPercentCounters
+UpdateSlides__3Hud UpdateHudSlides
+ShowCrates__3Hud ShowHudCrates
+ShowLives__3Hud ShowHudLives
+ShowWumpa__3Hud ShowHudWumpa
+ShowCounters__3Hud ShowHudCounters
+StepSlide__3HudPiT1i StepHudSlide
+SetCrateTotal__3Hudi SetHudCrateTotal
+IncCrateTotal__3Hud IncHudCrateTotal

@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include "hud.hpp"
 #include "platform.hpp"
 #include "crate.hpp"
 
@@ -258,7 +259,7 @@ s32 RunRoom(struct level_progress *self)
             PlaySfx(gAudioContext, SFX_WARP, 0x100);
             gPlayer->mover->SetMode(0x29);
             RefreshPlayerTiles();
-            ShowHudCounters(gHud);
+            gHud->ShowCounters();
         }
     }
     CullPartList(gForegroundList);
@@ -293,7 +294,7 @@ s32 RunRoom(struct level_progress *self)
             }
         }
         if (gKeys.all & 4)
-            ShowHudCounters(gHud);
+            gHud->ShowCounters();
         UpdatePartList(gForegroundList);
         UpdatePartList(gUpdateOnlyPartList);
         if (gPlayer->IsNearCamera())
@@ -302,7 +303,7 @@ s32 RunRoom(struct level_progress *self)
         UpdatePartList(gTouchableList);
         UpdatePartList(gCollidableList);
         UpdatePartList(gDecorationList);
-        UpdateHudSlides(gHud);
+        gHud->UpdateSlides();
         if (gLevelState->timeTrial)
             TickLevelClock(gLevelState);
         gRoomFrameCount++;
