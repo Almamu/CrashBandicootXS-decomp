@@ -121,10 +121,10 @@ struct entity_spawner;
 /* The camera's followed object (gPlayer, or the camera lead, class
  * CameraLead in level_select.hpp): the C view of the Sprite they both
  * derive from, with Sprite's names (include/sprite_obj.hpp checks the
- * offsets). */
+ * offsets). `pos` is Sprite's x, y: the camera copies it as one 8-byte
+ * struct (camera.c). */
 struct camera_target {
-    s32 x;           // 0x00 - Q8
-    s32 y;           // 0x04 - Q8
+    struct vec2 pos; // 0x00 - Q8
     u8 unk_08[0x1C]; // 0x08-0x23
     u8 dir;          // 0x24 - PLAYER_DIR_* (player.h; mode 2 look-ahead)
     u8 unk_25[3];    // 0x25-0x27

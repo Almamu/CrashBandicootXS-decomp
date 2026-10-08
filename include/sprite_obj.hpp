@@ -205,8 +205,8 @@ COMPILE_TIME_ASSERT(sprite_obj_hpp, sizeof(Sprite) == 0x40);
 
 /* level.h's struct camera_target, the camera's view of the Sprite it
  * follows. */
-ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, x);
-ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, y);
+COMPILE_TIME_ASSERT(sprite_obj_hpp, offsetof(Sprite, x) == offsetof(struct camera_target, pos.x));
+COMPILE_TIME_ASSERT(sprite_obj_hpp, offsetof(Sprite, y) == offsetof(struct camera_target, pos.y));
 ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, dir);
 ASSERT_VIEW_FIELD(sprite_obj_hpp, Sprite, camera_target, mirror);
 

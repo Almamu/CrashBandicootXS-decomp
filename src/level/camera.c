@@ -1,6 +1,5 @@
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "memory.h"
 #include "level.h"
 #include "player.h"
@@ -39,12 +38,11 @@
  * - `UpdateCamera`: the per-frame update, dispatching on `mode`, then
  *   publishing. Called from `UpdateRoomFrame` (`room_frame.cpp`).
  *
- * Matching notes: `tx`/`ty` are pinned to r2/r3 in both easing
- * functions - left to itself this compiler gives them r3/r4 (or r4/r5)
- * and moves `cam` down into the low register the ROM uses for `tx`;
- * pinning `cam` to r4 instead breaks the shared +-0x100 tail. The
- * easing tail in `StepCameraDirectional` also needs an r4-pinned `cur` temp and a
- * separate `n` result so the add lands as `adds r0, r4, r0`. The empty
+ * Matching notes: both easing functions copy the target's position as
+ * one 8-byte `struct vec2` (the pair lands in r2/r3, as in the ROM; two
+ * s32 locals get r3/r4 and push `cam` down into r2), and
+ * `StepCameraDirectional` turns its goal into the remaining distance
+ * (`goal.x -= cam->x`) before each quarter step. The empty
  * `case 3` in `UpdateCamera` has no behavior; it reproduces the ROM's
  * switch decision tree (`cmp #2 / beq`, `bgt`, `cmp #1 / bne`), which
  * a two-case switch compiles to a flat compare chain instead. See
@@ -54,9 +52,7 @@
 
 void StepCameraDirectional(struct camera *cam)
 {
-    // r2/r3 pins are load-bearing (see docs/workflow.md step 7 and the file comment)
-    MATCH_HOLD_REG(s32, tx, r2) = cam->target->x;
-    MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
+    struct vec2 goal = cam->target->pos;
     u8 dir = cam->target->dir;
 
     if (dir != 0) {
@@ -85,24 +81,17 @@ void StepCameraDirectional(struct camera *cam)
         }
     }
 
-    tx += cam->vx;
-    ty += cam->vy;
-    {
-        // r4 pin and separate `n` are load-bearing (see the file comment)
-        MATCH_HOLD_REG(s32, cur, r4) = cam->x;
-        s32 n = cur + (tx - cur) / 4;
-        cam->x = n;
-        cur = cam->y;
-        n = cur + (ty - cur) / 4;
-        cam->y = n;
-    }
+    goal.x += cam->vx;
+    goal.y += cam->vy;
+    goal.x -= cam->x;
+    cam->x += goal.x / 4;
+    goal.y -= cam->y;
+    cam->y += goal.y / 4;
 }
 
 void StepCameraFacing(struct camera *cam)
 {
-    // r2/r3 pins are load-bearing (see docs/workflow.md step 7 and the file comment)
-    MATCH_HOLD_REG(s32, tx, r2) = cam->target->x;
-    MATCH_HOLD_REG(s32, ty, r3) = cam->target->y;
+    struct vec2 goal = cam->target->pos;
 
     if ((cam->target->mirror << 27) < 0) {
         if (cam->vx > -0x1276)
@@ -113,18 +102,18 @@ void StepCameraFacing(struct camera *cam)
     }
 
     cam->vy = -0x1000;
-    tx += cam->vx;
-    ty += cam->vy;
-    cam->x += (tx - cam->x) / 4;
-    cam->y += (ty - cam->y) / 4;
+    goal.x += cam->vx;
+    goal.y += cam->vy;
+    cam->x += (goal.x - cam->x) / 4;
+    cam->y += (goal.y - cam->y) / 4;
 }
 
 void SnapCamera(struct camera *cam)
 {
     struct camera_target *target = cam->target;
 
-    cam->x = target->x;
-    cam->y = target->y;
+    cam->x = target->pos.x;
+    cam->y = target->pos.y;
 
     if (cam->mode == 1) {
         if ((target->mirror << 27) < 0)
