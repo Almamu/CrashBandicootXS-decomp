@@ -121,8 +121,11 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * ROM truncates both in one batch (`lsl r1; lsl r2; lsr r3, r1; lsr r4,
  * r2`) into fresh registers, one of them callee-saved; g++ truncates them
  * in place, with every spelling tried (u16 parameters, locals, a point
- * class with a constructor), the same gap as SpawnRoomExit
- * (spawn_bosses.cpp). */
+ * class with a constructor, an inline returning a `struct vec2`), the
+ * same gap as SpawnRoomExit (spawn_bosses.cpp). The ROM's shape is the
+ * point as one `struct vec2` value in a register pair (r3:r4, hence the
+ * pushed r4) stored to the stack: agbcc gives exactly these instructions
+ * for that inline, but g++ keeps a struct value in memory. */
 void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
 {
     MATCH_HOLD_REG(u32, rx, r1) = arg1;
