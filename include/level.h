@@ -284,7 +284,7 @@ extern s32 GetCrateCount(struct level_state *self);
 extern s32 IsCrystalSaved(struct level_state *self);
 extern void CollectWumpa(struct level_state *self);
 extern void AddLife(struct level_state *self);
-extern void CheckAllCratesBroken(void *self);
+extern void CheckAllCratesBroken(struct level_state *self);
 extern void SetGemPlatform(struct level_state *self, void *value);
 extern void SetBonusPlatform(struct level_state *self, void *value);
 extern void SetCrateGemPos(struct level_state *self, s32 *point);

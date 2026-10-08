@@ -516,6 +516,16 @@ class SpriteBankSet
 public:
     const struct sprite_bank_table *table;
 
+    /* Bank `bank`'s animations. FreezeLevelClock and TickLevelClock
+     * read bank 47 twice around a call, and the ROM rebuilds its offset
+     * (`movs #0x8d; lsls #2`) at each read: through this inline the
+     * offset is a constant only after inlining, so gcc doesn't keep it
+     * in a register across the call as it does for `banks[47]`. */
+    const struct sprite_anim *Anims(s32 bank) const
+    {
+        return table->banks[bank].anims;
+    }
+
     SpriteBankSet();  // InitSpriteBankSet
     ~SpriteBankSet(); // DestroySpriteBankSet
 };

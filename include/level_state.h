@@ -16,7 +16,6 @@
 #include "level_data.h"
 #include "constants/level_flags.h"
 #include "constants/mask_level.h"
-#include "constants/packed_stats.h"
 
 struct level_state_1c8;
 
@@ -78,9 +77,12 @@ union level_record {
  * raw `u8 [0x68]` blocks (#656, batch 8).
  */
 struct game_progress {
-    // 0x00 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8)
-    // (UnpackSaveData/PackSaveData; PACKED_STATS_*)
-    u8 packedStats[2];
+    // 0x00 - the packed stats, a halfword (UnpackSaveData/PackSaveData):
+    // gcc reads and writes each field through the narrowest access that
+    // holds it (`lives` and `wumpa` a byte each, `maskLevel` the halfword)
+    u16 lives:7;     // 0-99
+    u16 maskLevel:2; // MASK_LEVEL_*
+    u16 wumpa:7;     // 0-99
     // 0x02 - bits 0-3: colored gems (CountGems, DrawPauseGemsPage); bits 4-7:
     // powers (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump);
     // bits 5/7/6 make level-select pages 1/2/3 reachable
