@@ -189,49 +189,29 @@ s32 SaveData::Load()
 }
 
 /* Validates the record's checksum (the inline ChecksumOk, which
- * CheckChecksum below is the out-of-line copy of) and, if it fails, repairs the record in place: DMA-fills
- * the whole 0x200 bytes with 0 (raw DMA3 register pokes rather than a
- * `DmaFill16` call - a different, earlier style than
- * `Reset` uses for the same
- * "reset to blank" operation), marks every row selected
- * (`SaveData::EraseSlot`), re-stamps the two marker bytes, clears
- * `flags`/`field_1fb`, and refreshes the checksum (`SaveData::UpdateChecksum`).
+ * CheckChecksum below is the out-of-line copy of) and, if it fails,
+ * repairs the record in place, as Reset does: clears the 0x200 bytes
+ * (DmaClear16), marks every row selected (`SaveData::EraseSlot`),
+ * re-stamps the header (StampHeader: the two marker bytes, `flags` and
+ * `field_1fb` cleared) and refreshes the checksum
+ * (`SaveData::UpdateChecksum`).
  *
- * Parked as NAKED until the near-miss polish pass
- * (docs/matching/archive/near-miss-polish.md): the ROM computes `&flags` before
- * `&field_1fb` yet still gives `flags` r7 (global-alloc's first pick).
- * With `flags` computed first its live range is one insn longer, so it
- * ranked below `field_1fb` and the two swapped r7/r8. The empty
- * `MATCH_USE(flags)` below emits nothing; it adds one reference
- * to `flags`, which lifts its allocation priority (floor_log2(refs) *
- * refs / live length) above `field_1fb`'s. */
+ * The ROM computes the four header addresses before the EraseSlot loop
+ * (r6, sb, r7, r8). With the stores written out here gcc computes them
+ * after the loop; through the StampHeader inline it hoists them, and
+ * DmaClear16 (its `_dest`/`_size` locals) gives the ROM's registers,
+ * where DmaFill16 swaps three of them (#662 round 2; the C took the
+ * addresses into locals, with a pin and an extra reference for the
+ * order). */
 void SaveData::Validate()
 {
     s32 i;
 
     if (!ChecksumOk()) {
-        MATCH_HOLD_REG(u8 *, marker, r6);
-        u8 *pflags, *f1fb, *version;
-
-        DmaFill16(3, 0, this, 0x200);
-        i = 0;
-        marker = &magic;
-        version = &versionNibble;
-        pflags = &flags;
-        /* No code: one extra use of `pflags` for global-alloc's ranking. */
-        MATCH_USE(pflags);
-        f1fb = &field_1fb;
-        for (; i <= 3; i++) {
+        DmaClear16(3, this, sizeof(*this));
+        for (i = 0; i <= 3; i++)
             EraseSlot(i);
-        }
-        {
-            u8 z = 0;
-
-            *marker = 0x43;
-            *version = 0x12;
-            *pflags = z;
-            *f1fb = z;
-        }
+        StampHeader();
         UpdateChecksum();
     }
 }
@@ -358,10 +338,7 @@ void SaveData::Reset()
     for (i = 0; i <= 3; i++) {
         EraseSlot(i);
     }
-    magic = 0x43;
-    versionNibble = 0x12;
-    flags = 0;
-    field_1fb = 0;
+    StampHeader();
     UpdateChecksum();
 }
 
