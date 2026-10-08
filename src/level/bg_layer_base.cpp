@@ -1,7 +1,6 @@
 #include "bg_layer.hpp"
 
 extern "C" {
-#include "match.h"
 #include "globals.h"
 }
 
@@ -309,10 +308,15 @@ s8 TileCache::GetSolidTerrainModeValue(s32 x, s32 y, s32 mode, u8 *flagsOut)
  *   before the `>> 24`. That makes gcc emit the pair's left shift, then
  *   `acc`'s own `lsl/asr #16`, then the pair's `asr #24`, which is the
  *   ROM's interleaving; `(s8)pair` emits the two shifts back to back.
- * - `MATCH_USE(n)` after `n -= 2` (an extra-reference nudge that
- *   emits no code, see #468) gives `n` one more reference, so the pair
- *   loop's run counter wins r3 and `acc` keeps r4. Without it the
- *   allocator swaps the two. Still needed in C++ (old_agbcp). */
+ * - The token's mode bits are tested through an inline (`TokenHas`): the
+ *   pair loop's run counter then wins r3 and `acc` keeps r4. With the two
+ *   `&` tests written out the allocator swaps the two; until #662 round 2
+ *   an extra `MATCH_USE(n)` reference stood in for the inline. */
+static inline s32 TokenHas(u16 token, s32 flag)
+{
+    return token & flag;
+}
+
 void TileCache::DecodeChunk(s32 recordId, void *dest)
 {
     u16 *out = (u16 *)dest;
@@ -329,7 +333,7 @@ void TileCache::DecodeChunk(s32 recordId, void *dest)
         u16 n = *(u8 *)src;
 
         src++;
-        if (token & CHUNK_TOKEN_FILL) {
+        if (TokenHas(token, CHUNK_TOKEN_FILL)) {
             u16 value = *src++;
 
             budget -= n;
@@ -338,7 +342,7 @@ void TileCache::DecodeChunk(s32 recordId, void *dest)
                 written++;
                 n--;
             } while (n != 0);
-        } else if (token & CHUNK_TOKEN_DELTA) {
+        } else if (TokenHas(token, CHUNK_TOKEN_DELTA)) {
             s16 acc;
 
             budget -= n;
@@ -364,7 +368,6 @@ void TileCache::DecodeChunk(s32 recordId, void *dest)
                 }
                 out[written++] = acc;
                 n -= 2;
-                MATCH_USE(n);
             } while (n > 1);
             if (n != 0) {
                 u16 last = *src++;

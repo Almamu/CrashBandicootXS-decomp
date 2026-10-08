@@ -59,7 +59,9 @@ void LevelProgress::UpdateRoomFrame()
  * blend settings (`level_room.param.blend`) and
  * sets gLevelLayers->raiseObjPriority in an underwater room (kind 1). With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. The effect
- * is tested as a halfword and stored from its low byte, as in the ROM. */
+ * is tested as a halfword and stored from its low byte (the `(u8)` cast:
+ * `ldrb`, where the bitfield store alone reads it with `ldrh`), as in the
+ * ROM. */
 void LevelProgress::SetupRoomBlend()
 {
     union blend *b = &gBlendRegs.blend;
@@ -69,7 +71,7 @@ void LevelProgress::SetupRoomBlend()
     if (cat->param.blend.effect != 0) {
         if (cat->kind == ROOM_KIND_UNDERWATER)
             gLevelLayers->raiseObjPriority = 1;
-        b->bits.effect = *(const u8 *)&cat->param.blend.effect;
+        b->bits.effect = (u8)cat->param.blend.effect;
         b->bits.eva = cat->param.blend.eva;
         b->bits.evb = cat->param.blend.evb;
         b->bits.bg3First = 1;

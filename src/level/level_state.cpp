@@ -168,8 +168,11 @@ void LevelState::AddBrokenCrate()
                 mask |= value;
                 *flags = mask;
             } else {
-                u16 b = *(u16 *)&this->crateGemX;
-                u16 c = *(u16 *)&this->crateGemY;
+                /* `u16` copies: the ROM loads both halves before the
+                 * `0xffff`; passing the fields directly loads the constant
+                 * first, CheckAllCratesBroken's order. */
+                u16 b = crateGemX;
+                u16 c = crateGemY;
                 SpawnCrateGem(0xffff, b, c, 0);
             }
         }
@@ -205,8 +208,8 @@ void LevelState::PressSwitchCrate()
             mask |= value;
             *flags = mask;
         } else {
-            u16 b = *(u16 *)&this->crateGemX;
-            u16 c = *(u16 *)&this->crateGemY;
+            u16 b = crateGemX;
+            u16 c = crateGemY;
             SpawnCrateGem(0xffff, b, c, 0);
         }
     }
