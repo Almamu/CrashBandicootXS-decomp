@@ -49,11 +49,7 @@ inline void Starfield::Plot(u32 x, s32 y, s32 val)
 Starfield::Starfield()
 {
     struct dma_regs *dma;
-    /* Deliberately left uninitialized: the ROM builds REG_BG0CNT's value
-     * with an `ands r5, =0xFFFF0000` against whatever was already in the
-     * register, then sets every bit the halfword write reads. */
-    /* self-init: deliberately unset (see above); silences -Wuninitialized (#577) */
-    u32 bg0cnt = bg0cnt;
+    union bgcnt bg0cnt;
     s32 gradIdx;
     s32 gradCount;
     s32 row;
@@ -78,10 +74,10 @@ Starfield::Starfield()
     /* Clears BG0HOFS/BG0VOFS together via one word store. */
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 
-    bg0cnt &= -0x10000;
-    bg0cnt |= 3;         /* priority 3 */
-    bg0cnt |= 0xf8 << 5; /* screen base block 31 */
-    REG_BG0CNT = bg0cnt;
+    bg0cnt.raw = 0;
+    bg0cnt.bits.priority = 3;
+    bg0cnt.bits.screenBase = 31;
+    REG_BG0CNT = bg0cnt.raw;
 
     tileVramBase = VRAM;
     mapVramBase = BG_SCREEN_ADDR(31);
