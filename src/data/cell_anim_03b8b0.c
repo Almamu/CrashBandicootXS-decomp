@@ -9,7 +9,7 @@
 
 /* BG0 cell animation A, gActorCategories[0..2].cellAnim
  * (cellAnimSize = its size, 0x75B94), played by InitCellAnim/
- * UploadCellAnimFrame (cell_anim.c): 19x13 cells, 60 frames. These are type-0
+ * UploadCellAnimFrame (cell_anim.cpp): 19x13 cells, 60 frames. These are type-0
  * categories, so each frame carries its cells' palette banks after the
  * tiles. Built from graphics/category_bg/03b8b0_cell_anim.png, all 60
  * frames stacked top to bottom (tools/grit_bg.py interleaves grit's tiles

@@ -73,7 +73,7 @@ void PolarPlayer::FinishRun()
     }
 }
 
-/* Caught by the yeti (yeti_update.c): the steering off, the player halted
+/* Caught by the yeti (yeti_update.cpp): the steering off, the player halted
  * and inactive, Aku Aku's masks gone, and state 7 (anim 6). */
 void PolarPlayer::Catch()
 {

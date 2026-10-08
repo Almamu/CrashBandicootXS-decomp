@@ -1,9 +1,14 @@
+#include "sprite_obj.hpp"
+#include "bg_layer.hpp"
+
+extern "C" {
 #include "core.h"
 #include "util.h"
 #include "gfx.h"
 #include "level.h"
 #include "level_state.h"
 #include "globals.h"
+}
 
 void ClearRoomExit(void)
 {
@@ -29,7 +34,7 @@ void ResumeRoomAfterPause(struct level_progress *self)
     struct dma_regs *dma;
     u32 pltt;
 
-    UploadPaletteCache(gPaletteCache);
+    gPaletteCache->Upload();
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)self->cat->palette;
@@ -39,10 +44,10 @@ void ResumeRoomAfterPause(struct level_progress *self)
     (void)dma->cnt;
     *(vu16 *)pltt = 0;
 
-    ResetObjVram(gObjVramCursor);
-    ResetOamBuffer(gOamBuffer);
+    gObjVramCursor->Reset();
+    gOamBuffer->Reset();
     SnapCamera(gCamera);
-    ResetLevelLayers(gLevelLayers);
+    gLevelLayers->Reset();
     UpdateRoomFrame(self);
     SetDispcntMode(0);
     ShowObj();
@@ -56,6 +61,6 @@ void ResumeRoomAfterPause(struct level_progress *self)
  * level-end teardown. */
 void ResetObjBuffers(void)
 {
-    ResetObjVram(gObjVramCursor);
-    ResetOamBuffer(gOamBuffer);
+    gObjVramCursor->Reset();
+    gOamBuffer->Reset();
 }

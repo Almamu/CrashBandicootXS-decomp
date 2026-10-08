@@ -103,8 +103,7 @@ extern u32 gSfxVoiceToggle;
 
 /* src/audio/audio.cpp */
 /* The C names of AudioContext's methods (include/audio.hpp) the C files
- * call (save_data.c, yeti_states.c); cxx_symbols.txt maps the methods to
- * them. */
+ * call (save_data.c); cxx_symbols.txt maps the methods to them. */
 extern void PlaySfx(struct audio_context *self, u32 id, u32 volumeParam);
 extern u32 GetCurrentSong(struct audio_context *self);
 extern void PlaySong(struct audio_context *self, u32 id);

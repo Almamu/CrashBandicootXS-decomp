@@ -15,7 +15,7 @@ system from "core" system startup/init code.
   were NAKED. `effect_ctrl.o` and `crate_hit.o` moved to old_agbcc
   (whole-file matches).
 
-- `src/level/bonus_round.c` (GitHub issue #34): `EndBonusRound`
+- `src/level/bonus_round.cpp` (GitHub issue #34): `EndBonusRound`
   (level-start/checkpoint-restore progress-total updater) and
   `SetCheckpointAtPlayer` (its cached-state/snapshot helper) - see
   [docs/matching/archive/issue-37-game-loop-234e8.md](../matching/archive/issue-37-game-loop-234e8.md)
@@ -74,7 +74,7 @@ system from "core" system startup/init code.
 - `src/level/tile_cache.c` (GitHub issue #40): `DestroyTileCache`,
   `InitTileCache`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md))
-- `src/level/collision_map.c` (GitHub issue #40): `GetCollisionCell`,
+- `src/level/collision_map.cpp` (GitHub issue #40): `GetCollisionCell`,
   `SetCollisionSource`, `SetBitmapBit`, `ClearBitmapBit`, `ClearBitmap`,
   `InitBitmap` - the terrain tile-record decode cache's constructor,
   a raw-cell-lookup variant, a floor-div-by-32 bitmap set/clear pair,
@@ -105,7 +105,7 @@ system from "core" system startup/init code.
   [docs/matching/archive/issue-37-game-loop-2375c.md](../matching/archive/issue-37-game-loop-2375c.md)
   for the register-pinning/evaluation-order gotchas that closed this
   out.
-- `src/level/room.c` (GitHub issue #37): `ClearRoomExit`,
+- `src/level/room.cpp` (GitHub issue #37): `ClearRoomExit`,
   `RequestRoomExit`, `IsRoomExitRequested`, `ResumeRoomAfterPause`, `ResetObjBuffers` - a
   boolean flag clear/set/get trio, the level-end teardown, and the
   shared vram-upload-cursor/OAM-shadow flush tail
@@ -296,7 +296,7 @@ system from "core" system startup/init code.
   digit-cascade rewrites for `TickLevelClock`'s front half and `else`
   branch). Real bytes formerly in `asm/code_3_2_17_22ea8.s` (now
   removed, folded into `src/level/level_state.o`).
-- **`ProbeTerrain`** (`src/level/terrain_probe.c`, new file - dedicated
+- **`ProbeTerrain`** (`src/level/terrain_probe.cpp`, new file - dedicated
   deep investigation) - independently flagged "still unexamined" from
   two other closed call sites this session (`ProbeHitboxEdgeTerrain`'s physics/
   collision step-probe and `PlayerHasRoomForAnim`'s input-action-check gate) and
@@ -305,7 +305,7 @@ system from "core" system startup/init code.
   `switch` on `mode`, matched on the first isolated-compile attempt
   with no register pins needed - see
   [docs/matching/archive/issue-9-10-41-0x08026628-game-loop.md](../matching/archive/issue-9-10-41-0x08026628-game-loop.md).
-- **`ProbeTerrainY`**/**`ProbeTerrainX`** (`src/level/terrain_probe_axes.c`) -
+- **`ProbeTerrainY`**/**`ProbeTerrainX`** (`src/level/terrain_probe_axes.cpp`) -
   `ProbeTerrain`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
   resolvers, 208/216 B. Plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/archive/game-loop-old-agbcc.md) and
   [docs/matching/archive/issue-9-10-41-0x08026628-game-loop.md](../matching/archive/issue-9-10-41-0x08026628-game-loop.md).
@@ -340,7 +340,7 @@ system from "core" system startup/init code.
   scroll clamp (`SetLevelScroll`), per-layer method-table passes, and two
   identical predicates. All plain C; only `SetLevelScroll` needed separate
   per-axis temps. `asm/code_3_2_17_266bc.s` removed.
-- **`GetTerrainFlagsAt`** (`src/level/terrain.c`, new file - dedicated
+- **`GetTerrainFlagsAt`** (`src/level/terrain.cpp`, new file - dedicated
   deep investigation) - independently flagged "still raw" by two
   already-documented callers (`CollidePlayer`'s camera-probe tail and a
   jump-table dispatch context in `DrawAffineSpritePieces`'s own write-up). A
@@ -353,7 +353,7 @@ system from "core" system startup/init code.
   isolated-compile attempt with no register pins needed - see
   [docs/matching/archive/issue-9-10-0x0800a884-graphics.md](../matching/archive/issue-9-10-0x0800a884-graphics.md).
 - **`ProbeFloorHeight`/`ProbeSolidFloorHeight`/`sub_8026C80`/`sub_8026C8C`**
-  (`src/level/terrain.c`, new file - GitHub issue #9/#10, matching
+  (`src/level/terrain.cpp`, new file - GitHub issue #9/#10, matching
   pass on functions already fully understood from
   `docs/matching/archive/issue-9-0x0800a178-graphics.md`) - the single-point
   terrain-height ("floor") probes `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
@@ -371,7 +371,7 @@ system from "core" system startup/init code.
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
   at `StepCameraDirectional`.
 - **`StepCameraDirectional`/`StepCameraFacing`/`SnapCamera`/`UpdateCamera`/`OperatorDeleteArray`/`OperatorNewArray`/`OperatorDelete`/`OperatorNew`**
-  (`src/level/camera.c`, new file - GitHub issue #44) - the
+  (`src/level/camera.cpp`, new file - GitHub issue #44) - the
   `gCamera` camera follower: Q8 position eased a quarter-step
   per frame toward `target + look-ahead`, published centered on screen
   (`- (120 << 8)`, `- (80 << 8)`) through `SetLevelScroll`'s level-bounds
@@ -535,7 +535,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   than per-level records with their own shape - closing that open
   question. Past the dispatch, a shared tail rebuilds the player's OAM
   entry and re-derives its `+0x29` low nibble, then a wait loop polls
-  `IsRoomExitRequested` (`gRoomExitRequested`, `room.c`) until ready before
+  `IsRoomExitRequested` (`gRoomExitRequested`, `room.cpp`) until ready before
   firing the fade (`FadePaletteToBlack`), and a post-fade tail counts
   `gCrateList` entries in physics state `0xA`
   (`gCrateHitResponse`'s own convention,

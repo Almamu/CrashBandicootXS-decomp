@@ -9,20 +9,15 @@
  * lives, wumpa and crate counters each slide in from the top of the
  * screen (ShowLives/ShowWumpa/ShowCrates/UpdateSlides, hud_slide.cpp): a
  * counter's slide state is 0 hidden, 1 sliding in, 2 held, 3 sliding out,
- * and while it slides `gHudSlideOffset = slideTimer * 2 - 40`.
- *
- * The C files (bonus_round.c, actor_category_init.c, actor_vram_pool.c)
- * see gHud as a `struct hud_counter *` (a tag: they don't read its
- * fields), and the prototypes are the C names of the Hud methods they
- * call (cxx_symbols.txt). `gHud` itself is declared in globals.h. */
+ * and while it slides `gHudSlideOffset = slideTimer * 2 - 40`. `gHud`
+ * itself is declared in globals.h. */
 
 #include "core.h"
 #include "math_util.h"
 #include "aabb.h"
 
-/* The HUD object (`gHud`, class Hud, include/hud.hpp: 0x68 bytes). No C
- * file reads its fields: the C callers of its methods (below) only pass
- * the pointer, so the C side has the tag alone. */
+/* The HUD object (`gHud`, class Hud, include/hud.hpp: 0x68 bytes) as the
+ * C side sees it: a tag (globals.h). */
 struct hud_counter;
 
 /* The vertical offset HudPart::Draw adds to every part, set by the
@@ -33,16 +28,5 @@ extern s32 gHudSlideOffset;
  * (src/data/hud_fonts_174be0.c). */
 extern const u32 gHudPartAnims[35];
 extern const struct vec2 gHudPartPositions[35];
-
-/* src/hud/hud.cpp */
-extern void UpdateHud(struct hud_counter *self);
-
-/* src/hud/hud_init.cpp */
-extern void ConfigureHudParts(struct hud_counter *self, u8 iconFlag);
-
-/* src/hud/hud_slide.cpp */
-extern void UpdateHudSlides(struct hud_counter *self);
-extern void ShowHudCounters(struct hud_counter *self);
-extern void SetHudCrateTotal(struct hud_counter *self, s32 val);
 
 #endif /* !__HUD_H__ */

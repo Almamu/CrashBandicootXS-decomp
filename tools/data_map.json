@@ -14,7 +14,7 @@
    "format": "composite: BG0 streamed cell animation A + category-0 sub-effect table",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Reached only through gActorCategories (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). InitCellAnim/UploadCellAnimFrame/ResetCellAnimBg (cell_anim.c) stream it to BG0.",
+   "notes": "Reached only through gActorCategories (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). InitCellAnim/UploadCellAnimFrame/ResetCellAnimBg (cell_anim.cpp) stream it to BG0.",
    "consumers_indirect": [
     "InitCellAnim",
     "UploadCellAnimFrame",
@@ -3316,10 +3316,10 @@
     "IsActorMaskAssistDue"
    ],
    "consumer_files": [
-    "actor/actor_category_stats.c",
-    "actor/actor_category_init.c",
-    "actor/actor_vram_pool.c",
-    "actor/cell_anim.c"
+    "actor/actor_category_stats.cpp",
+    "actor/actor_category_init.cpp",
+    "actor/actor_vram_pool.cpp",
+    "actor/cell_anim.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -3343,7 +3343,7 @@
     "InitActorCategory"
    ],
    "consumer_files": [
-    "actor/actor_category_init.c"
+    "actor/actor_category_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 4,
@@ -3361,7 +3361,7 @@
     "InitActorCategory"
    ],
    "consumer_files": [
-    "actor/actor_category_init.c"
+    "actor/actor_category_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 34,
@@ -3728,7 +3728,7 @@
     "YetiStateCharge"
    ],
    "consumer_files": [
-    "vehicle/yeti_states.c"
+    "vehicle/yeti_states.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3749,7 +3749,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti_update.c"
+    "vehicle/yeti_update.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -3773,7 +3773,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti.c"
+    "vehicle/yeti.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3794,7 +3794,7 @@
     "CreateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti.c"
+    "vehicle/yeti.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 123,
@@ -3818,7 +3818,7 @@
     "UpdateYetiPalette"
    ],
    "consumer_files": [
-    "vehicle/yeti_update.c"
+    "vehicle/yeti_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3842,7 +3842,7 @@
     "IsTouchingYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti_graphics.c"
+    "vehicle/yeti_graphics.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3863,7 +3863,7 @@
     "UpdateYeti"
    ],
    "consumer_files": [
-    "vehicle/yeti_update.c"
+    "vehicle/yeti_update.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 191,

@@ -1,3 +1,7 @@
+#include "player.hpp"
+#include "hud.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "match.h"
@@ -10,6 +14,7 @@
 #include "level.h"
 #include "globals.h"
 #include "player.h"
+}
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals
@@ -72,7 +77,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
             self->lives = total;
 
             SetBonusRoundDone(self);
-            SetEntityPos((struct actor *)gPlayer, fieldd4[0], fieldd4[1]);
+            SetEntityPos(gPlayer, fieldd4[0], fieldd4[1]);
             SetCheckpointAtPlayer(self, *fielde0);
         }
     } else {
@@ -83,7 +88,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
         fieldbc = &self->crateTotal;
     }
 
-    SetHudCrateTotal(gHud, *fieldbc);
+    gHud->SetCrateTotal(*fieldbc);
     ClearInBonusRound(self);
 }
 
@@ -106,7 +111,7 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
         self->room.checkpointSwitchPressed = self->switchPressed;
         MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
     } else {
-        struct player *player = gPlayer;
+        Player *player = gPlayer;
         s32 x = player->x;
         s32 y = player->y;
         struct entity_flags *flags;

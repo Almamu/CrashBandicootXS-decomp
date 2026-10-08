@@ -79,7 +79,7 @@ extern "C" {
  * struct needed.
  *
  * **Shared tail**: calls `SetupRoomBlend(self)`/`ResetObjBuffers()` (the
- * latter already matched in `room.c`), then re-reads the
+ * latter already matched in `room.cpp`), then re-reads the
  * current room's (`self->cat`) `kind`
  * (the same field `PlayRoom` dispatched its own widget-construction
  * switch on) - if it's `1`, re-stamps the player's `+0x2d` byte to
@@ -109,7 +109,7 @@ extern "C" {
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
  * poll `IsRoomExitRequested` (the `gRoomExitRequested` readiness flag,
- * `room.c`) each iteration; while not ready and the player's
+ * `room.cpp`) each iteration; while not ready and the player's
  * `+0xc` bit 0 is clear, run one more "outstanding work" pass
  * (`ResetObjBuffers`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
  * dispatch that can early-exit this whole function with return value

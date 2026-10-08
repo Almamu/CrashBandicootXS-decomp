@@ -10,7 +10,7 @@
 
 /* BG0 cell animation B, gActorCategories[3..6].cellAnim
  * (cellAnimSize = its size, 0x3E784), played by InitCellAnim/
- * UploadCellAnimFrame (cell_anim.c): 38x10 cells, 21 frames. Not a type-0
+ * UploadCellAnimFrame (cell_anim.cpp): 38x10 cells, 21 frames. Not a type-0
  * category, so there are no per-cell banks: ResetCellAnimBg maps the cells to
  * consecutive tiles in palette bank 0. Built from
  * graphics/category_bg/0ff1b0_cell_anim.png, all 21 frames stacked top to
@@ -36,7 +36,7 @@ const struct cell_anim_0ff1b0 gCategoryFamily1CellAnim = {
 };
 
 /* Category 3's BG1 picture (gActorCategories[3].bgPicture,
- * loaded by LoadBgPicture in bg_picture.c): 38x16 map, 357 tiles. Built from
+ * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 357 tiles. Built from
  * graphics/category_bg/13d934_picture.png (palette and map) and
  * 13d934_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_13d934 {

@@ -9,8 +9,8 @@
  * the boss controllers (boss_ctrl.hpp).
  *
  * All of the player's code is C++. `struct player` below is the C view of
- * Player (gPlayer, globals.h) for the C files left (bonus_round.c); this
- * header keeps the data the C++ code and the data tables share. */
+ * Player (gPlayer, globals.h); no C file reads it any more (bonus_round.c
+ * was the last, C++ since). This header keeps the data the C++ code and the data tables share. */
 
 #include "core.h"
 #include "actor.h"
@@ -45,7 +45,7 @@ struct level_anim {
  * names and types; the class's notes describe them. Where the class has
  * an anonymous union (Sprite's `bank` and `mirror` bits), which agbcc
  * can't express, the view has its first member, and a class pointer is a
- * `void *`. Only bonus_round.c reads it (x, y). */
+ * `void *`. No C file reads it any more. */
 struct player {
     s32 x;   // 0x00 - Q8
     s32 y;   // 0x04 - Q8

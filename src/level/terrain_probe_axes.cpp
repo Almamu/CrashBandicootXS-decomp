@@ -1,9 +1,11 @@
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "level.h"
+}
 
 /* GitHub issues #9/#10/#41's remaining piece of `ProbeTerrain`'s own
- * "umbrella 5-mode dispatcher" cluster (`terrain_probe.c`,
+ * "umbrella 5-mode dispatcher" cluster (`terrain_probe.cpp`,
  * docs/matching/archive/issue-9-10-41-0x08026628-game-loop.md): that pass fully
  * derived both of these axis resolvers' semantics from their own raw
  * bytes (see that doc's "`ProbeTerrainX`/`ProbeTerrainY`: which axis each

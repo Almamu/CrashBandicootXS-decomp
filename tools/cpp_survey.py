@@ -56,7 +56,7 @@ CXX_TRAITS = ("method", "vptr", "new", "vcall", "pmf")
 FUNC_DEF = re.compile(r"^((?:static\s+)?(?:inline\s+)?)(?:[A-Za-z_][\w\s\*]*?[\s\*])?((?:\w+::)?~?\w+)\s*\(([^;{}]*)\)\s*$")
 VPTR_STORE = re.compile(r"(?:->|\.)\s*(?:vtable|table|methods|vt)\s*=\s*(?:\([^)]*\)\s*)?&?\s*g\w*(?:Vtable|Methods)\b"
                         r"|=\s*(?:\([^)]*\)\s*)?g\w*Vtable\b")
-# Calls, not camera.c's definitions (`void *OperatorNew(u32 size)`).
+# Calls of the C names, not definitions (`void *OperatorNew(u32 size)`).
 NEW = re.compile(r"(?<!\*)\bOperatorNew(?:Array)?\s*\(")
 DELETE = re.compile(r"(?<!void )\bOperatorDelete(?:Array)?\s*\(")
 VCALL = re.compile(r"\b(?:ACTOR_VCALL|ACT_VCALL\d?|PART_METHOD|ACTOR_METHOD)\s*\(|\.\s*(?:delta|thisOffset)\b|->\s*thisOffset\b")

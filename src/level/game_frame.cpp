@@ -25,7 +25,7 @@ extern "C" {
  * docs/matching.md). Called once per frame from `MainLoop`
  * (src/system/main_loop.cpp) with `self` = `gLevelState`, the
  * central per-level state object every other function in this
- * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.c; the
+ * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.cpp; the
  * `self+0x80`-`0xc4`/`+2` accessor family, level_state.cpp) also shares.
  *
  * Shape: a level-load loop (`InitTitleScreen` / `RunTitleScreen`, the

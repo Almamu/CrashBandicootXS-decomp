@@ -1,3 +1,4 @@
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "actor_anim.h"
@@ -8,6 +9,7 @@
 #include "vehicle.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* codegen: SetCheckpointAtPlayer takes (state, flag) (level.h); this
  * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
@@ -87,7 +89,7 @@ void UploadCellAnimFrame(void)
  * taking the address and copying it. Matches under both compilers. */
 void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
 {
-    struct cell_anim_header *cell = cellAnim;
+    struct cell_anim_header *cell = (struct cell_anim_header *)cellAnim;
     s32 area;
     s32 flag;
     s32 size;
@@ -179,7 +181,7 @@ void ResetCellAnimBg(void)
 
 /* Empty hook InitActorCategory calls at the end of each attempt (after
  * DestroyAllActors), named after that call site. ActorCategoryEndStub
- * (actor_bg.c) is its counterpart at the end of the whole category. */
+ * (actor_bg.cpp) is its counterpart at the end of the whole category. */
 void ActorCategoryAttemptEndStub(void)
 {
 }

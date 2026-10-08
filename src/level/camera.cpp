@@ -1,9 +1,13 @@
+#include "bg_layer.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "memory.h"
 #include "level.h"
 #include "player.h"
 #include "globals.h"
+}
 
 /* GitHub issue #44: the `gCamera` camera-follow block (the
  * "generic 0x18-byte block" docs/matching/archive/issue-37-game-loop-2375c.md
@@ -34,7 +38,7 @@
  * - `SnapCamera`: snaps straight to the target (no easing), seeding the
  *   mode-1 look-ahead at its limit (or zero for any other mode), then
  *   publishes. Called from `ResumeRoomAfterPause`'s teardown/refresh pass
- *   (`room.c`) and `PlayRoom`'s shared tail (`run_room.cpp`).
+ *   (`room.cpp`) and `PlayRoom`'s shared tail (`run_room.cpp`).
  * - `UpdateCamera`: the per-frame update, dispatching on `mode`, then
  *   publishing. Called from `UpdateRoomFrame` (`room_frame.cpp`).
  *
@@ -128,7 +132,7 @@ void SnapCamera(struct camera *cam)
 
     cam->x += cam->vx;
     cam->y += cam->vy;
-    SetLevelScroll(gLevelLayers, cam->x - INT_TO_Q8(120), cam->y - INT_TO_Q8(80));
+    gLevelLayers->SetScroll(cam->x - INT_TO_Q8(120), cam->y - INT_TO_Q8(80));
 }
 
 void UpdateCamera(struct camera *cam)
@@ -144,25 +148,25 @@ void UpdateCamera(struct camera *cam)
         break;
     }
 
-    SetLevelScroll(gLevelLayers, cam->x - INT_TO_Q8(120), cam->y - INT_TO_Q8(80));
+    gLevelLayers->SetScroll(cam->x - INT_TO_Q8(120), cam->y - INT_TO_Q8(80));
 }
 
-void OperatorDeleteArray(void *ptr)
+void operator delete[](void *ptr)
 {
     mem_free(ptr);
 }
 
-void *OperatorNewArray(u32 size)
+void *operator new[](size_t size)
 {
     return mem_alloc(size, MEM_HEAP_EWRAM);
 }
 
-void OperatorDelete(void *ptr)
+void operator delete(void *ptr)
 {
     mem_free(ptr);
 }
 
-void *OperatorNew(u32 size)
+void *operator new(size_t size)
 {
     return mem_alloc(size, MEM_HEAP_EWRAM);
 }

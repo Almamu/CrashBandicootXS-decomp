@@ -858,7 +858,7 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pair)
         void *a = flags->bits0Copy;
         void *b = flags->bits0;
         // the ROM loads the control word fresh for each call: the r2 pin
-        // (SetCheckpointAtPlayer, bonus_round.c, has the reason)
+        // (SetCheckpointAtPlayer, bonus_round.cpp, has the reason)
         MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
         CpuSet(a, b, ctrl);
     }

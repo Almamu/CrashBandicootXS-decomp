@@ -269,7 +269,7 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
 
 /* The collision tile cache (src/level/tile_cache.cpp; LevelLayers'
  * `tiles`, 0x1064 bytes): level.h's struct tile_cache, which the lookups
- * (bg_layer_base.cpp, tile_cache.cpp, collision_map.c, ...) take, with a
+ * (bg_layer_base.cpp, tile_cache.cpp, collision_map.cpp, ...) take, with a
  * constructor and destructor. It has no vtable. */
 class TileCache : public tile_cache
 {

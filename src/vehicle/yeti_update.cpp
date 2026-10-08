@@ -1,21 +1,24 @@
+#include "vehicle.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "actor_self.h"
 #include "actor_anim.h"
 #include "system.h"
 #include "actor.h"
 #include "vehicle.h"
 #include "globals.h"
+}
 
 /* Sits right after polar_aku_aku.cpp's `CreatePolarCheckpointCrate` and before
- * yeti_states.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
+ * yeti_states.cpp's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
  * range that used to be `asm/code_3_2_20_28568_c99c_d7b0.s`. All three
  * functions here operate on the `gYeti`-rooted "position-
  * tracking object with tier-threshold sound cues" documented in
- * yeti_states.c's header comment and docs/matching/archive/issue-54-actor-d3a8.md
+ * yeti_states.cpp's header comment and docs/matching/archive/issue-54-actor-d3a8.md
  * (the "third RAM-struct family" from docs/rom_map.md). See that issue
  * doc's "Second pass" section for how the 12-byte AABB-record layout
- * used here and by `IsTouchingYeti` (yeti_graphics.c) was finally pinned
+ * used here and by `IsTouchingYeti` (yeti_graphics.cpp) was finally pinned
  * down.
  *
  * Built with old_agbcc: `UpdateYetiBg2` only matches under it, and
@@ -94,7 +97,7 @@ void UpdateYeti(void)
     struct {
         struct anim_box a, b, t;
     } f;
-    struct actor_self *obj;
+    AnimPart *obj;
     s32 old, cur;
 
     if (gYetiState != 3)
@@ -103,7 +106,7 @@ void UpdateYeti(void)
     old = Q8_TO_INT(obj->animTime);
     obj->animTime += *(s16 *)&obj->animTimer;
     obj->animDone = 0;
-    if (GetAnimFrameBaseOffset(obj) >= obj->anims[obj->animIndex].loopThreshold) {
+    if (obj->GetAnimFrameBaseOffset() >= obj->anims[obj->animIndex].loopThreshold) {
         ANIM_REWIND(obj->animTime, obj->anims[obj->animIndex]);
         obj->animDone = 1;
     }
@@ -121,8 +124,8 @@ void UpdateYeti(void)
     f.a = gYetiCatchBox;
     BoxMove(&f.a, Q8_TO_INT(gYetiX), 0, Q8_TO_INT(gYetiPosition));
     if ((u32)gYetiState <= 1) {
-        struct actor_self **playerAddr = &gActorList;
-        struct actor_self *pl;
+        ActorSelf **playerAddr = &gActorList;
+        ActorSelf *pl;
         struct anim_box *b;
 
         if (gPolarPlayerInactive != 0)
@@ -134,15 +137,12 @@ void UpdateYeti(void)
         b = &f.b;
         MemCopy32(b, b, sizeof(*b));
         if (BoxOverlap(b, &f.a)) {
-            struct actor_self *g;
+            AnimPart *g;
 
             gYetiState = 2;
             g = gYeti;
-            g->animIndex = 2;
-            g->animTimer = g->anims[2].duration;
-            g->animDone = 0;
-            g->animTime = 0;
-            CatchPolarPlayer(gActorList);
+            g->RestartAnim(2);
+            static_cast<PolarPlayer *>(gActorList)->Catch();
             SetCellAnimSpeed(0);
         }
     }

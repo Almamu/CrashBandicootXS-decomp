@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "level.h"
+}
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `ProbeHitboxEdgeTerrain`'s
  * physics/collision step-probe (`src/objects/step_probe.cpp`, see
@@ -21,17 +23,17 @@
  *   - `mode == 2`: if `pos->x < 0`, clamps `*outValue = 0` and reports
  *     a hit immediately (the probe position is already off the left
  *     edge of the loaded region - nothing to scan). Otherwise calls
- *     `ProbeTerrainX(self, pos, span, outValue, 3)`.
+ *     `ProbeTerrainX(layers, pos, span, outValue, 3)`.
  *   - `mode == 1`: reads `self+0x10`'s pointed-to record's own `+0x10`
  *     field (`bounds->widthPx` below - a right/loaded-region edge, plain
  *     ints, not Q8, matching `pos`'s own units). If `pos->x` is past
  *     it, clamps `*outValue = bound << 8` and reports a hit without
- *     scanning. Otherwise calls `ProbeTerrainX(self, pos, span,
+ *     scanning. Otherwise calls `ProbeTerrainX(layers, pos, span,
  *     outValue, 1)`.
- *   - `mode == 4`: always calls `ProbeTerrainY(self, pos, span,
+ *   - `mode == 4`: always calls `ProbeTerrainY(layers, pos, span,
  *     outValue, 2)` - no short-circuit for this arm.
  *   - `mode == 8`: same shape as `mode == 1` but on the Y axis
- *     (`bounds->heightPx`, `pos->y`), calling `ProbeTerrainY(self, pos,
+ *     (`bounds->heightPx`, `pos->y`), calling `ProbeTerrainY(layers, pos,
  *     span, outValue, 0)` when not already past the bound.
  *   - any other `mode` (in practice just `0`): returns `0` with no
  *     side effects.
@@ -81,6 +83,7 @@
  * directly against the caller's plain-int probe position, not Q8. */
 s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
 {
+    struct level_layers *layers = (struct level_layers *)self;
     s32 hit = 0;
 
     switch (mode) {
@@ -88,33 +91,33 @@ s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue
         if (pos->x < 0) {
             *outValue = 0;
             hit = 1;
-        } else if ((u8)ProbeTerrainX(self, pos, span, outValue, 3) != 0) {
+        } else if ((u8)ProbeTerrainX(layers, pos, span, outValue, 3) != 0) {
             hit = 1;
         }
         break;
     case 1:
         {
-            s32 bound = ((struct level_layers *)self)->layer0->widthPx;
+            s32 bound = layers->layer0->widthPx;
             if (pos->x > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeTerrainX(self, pos, span, outValue, mode) != 0) {
+            } else if ((u8)ProbeTerrainX(layers, pos, span, outValue, mode) != 0) {
                 hit = 1;
             }
             break;
         }
     case 4:
-        if ((u8)ProbeTerrainY(self, pos, span, outValue, 2) != 0) {
+        if ((u8)ProbeTerrainY(layers, pos, span, outValue, 2) != 0) {
             hit = 1;
         }
         break;
     case 8:
         {
-            s32 bound = ((struct level_layers *)self)->layer0->heightPx;
+            s32 bound = layers->layer0->heightPx;
             if (pos->y > bound) {
                 *outValue = INT_TO_Q8(bound);
                 hit = 1;
-            } else if ((u8)ProbeTerrainY(self, pos, span, outValue, 0) != 0) {
+            } else if ((u8)ProbeTerrainY(layers, pos, span, outValue, 0) != 0) {
                 hit = 1;
             }
             break;

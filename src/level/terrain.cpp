@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "level.h"
+}
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `CollidePlayer`
  * (`src/player/player_collide.c`, still `NON_MATCHING`/parked) flags
@@ -102,7 +104,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  *
  * Both are Y-axis (floor-height) probes - matching how `ProbeGroundSpriteTerrain`
  * only ever uses them against `self.y`/`self->y`, never `self.x`.
- * `struct vec2` reuses `terrain_probe.c`'s own plain-int (not Q8)
+ * `struct vec2` reuses `terrain_probe.cpp`'s own plain-int (not Q8)
  * probe-position layout unchanged (same "duplicate only what's needed,
  * no shared header" precedent `struct tile_cache` itself already set
  * between `bg_layer_base.cpp`/`tile_cache.cpp`).
