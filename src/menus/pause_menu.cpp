@@ -82,9 +82,8 @@ s32 PauseMenu::Run()
  * OBJs on, the background, the save block, the info pages (InitInfo),
  * the blinking eyes (sprite bank 0x228, at (238, 188) / 2), then the
  * rows (five in a time trial: "restart trial") and BG0's registers. */
-PauseMenu::PauseMenu()
+PauseMenu::PauseMenu() : bg(0, 0x1f, 0, 3)
 {
-    InitBgSetup(&bg, 0, 0x1f, 0, 3);
     blend.raw = 0;
     blend.bits.effect = 3;
     blend.bits.bdFirst = 1;
@@ -101,7 +100,7 @@ PauseMenu::PauseMenu()
     dispcnt.bits.mode = 0;
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.obj = 1;
-    LoadGraphicsPackage(&bg, &gPauseMenuBg);
+    bg.Load(&gPauseMenuBg);
     progress = PackSaveData(gLevelState);
     InitInfo();
     {
@@ -123,7 +122,7 @@ PauseMenu::PauseMenu()
     rowSpacing = 0x10;
     page = 0;
     pageTimer = 0xb4;
-    REG_BG0CNT = GetBgSetupControl(&bg);
+    REG_BG0CNT = bg.GetControl();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
 }
 

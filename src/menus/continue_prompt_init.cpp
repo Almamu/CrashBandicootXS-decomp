@@ -17,12 +17,12 @@ extern "C" {
  * faded out. */
 ContinuePrompt::ContinuePrompt()
 {
-    bg0Buf = InitBgSetup(new bg_setup, 0, 0x1f, 0, 3);
-    bg1Buf = InitBgSetup(new bg_setup, 3, 0x1e, 0, 1);
-    bg2Buf = InitBgSetup(new bg_setup, 2, 0x1d, 1, 2);
-    LoadGraphicsPackage(bg1Buf, &gContinuePromptUkaUkaBg);
-    LoadGraphicsPackage(bg0Buf, &gContinuePromptSmokeBg);
-    LoadGraphicsPackage(bg2Buf, &gContinuePromptGlowBg);
+    bg0Buf = new BgSetup(0, 0x1f, 0, 3);
+    bg1Buf = new BgSetup(3, 0x1e, 0, 1);
+    bg2Buf = new BgSetup(2, 0x1d, 1, 2);
+    bg1Buf->Load(&gContinuePromptUkaUkaBg);
+    bg0Buf->Load(&gContinuePromptSmokeBg);
+    bg2Buf->Load(&gContinuePromptGlowBg);
     *(vu16 *)PLTT = 0;
     dispcnt.raw = 0;
     dispcnt.bits.objMap1D = 1;
@@ -37,11 +37,11 @@ ContinuePrompt::ContinuePrompt()
     blend.bits.eva = 8;
     blend.bits.evb = 16;
     blend.bits.effect = 1;
-    REG_BG0CNT = GetBgSetupControl(bg0Buf);
+    REG_BG0CNT = bg0Buf->GetControl();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    REG_BG1CNT = GetBgSetupControl(bg1Buf);
+    REG_BG1CNT = bg1Buf->GetControl();
     *(vu32 *)REG_ADDR_BG1HOFS = 0;
-    REG_BG2CNT = GetBgSetupControl(bg2Buf);
+    REG_BG2CNT = bg2Buf->GetControl();
     *(vu32 *)REG_ADDR_BG2HOFS = 0;
     *(vu16 *)REG_ADDR_DISPCNT = dispcnt.raw;
     *(vu32 *)REG_ADDR_BLDCNT = blend.raw;

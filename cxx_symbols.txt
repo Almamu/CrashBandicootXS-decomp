@@ -1662,3 +1662,13 @@ DecodeChunk__9TileCacheiPv DecodeCollisionChunk
 GetTerrainType__9TileCacheiiPUcPi GetTerrainType
 GetCell__9TileCacheii GetCollisionCell
 SetSource__9TileCacheP16level_layer_desc SetCollisionSource
+# #753: the BG setup and the sprite box (BgSetup, ScaledSprite, include/graphics_package.hpp)
+__7BgSetupUiUiUiUi InitBgSetup
+Load__7BgSetupPC10bg_package LoadGraphicsPackage
+GetControl__7BgSetup GetBgSetupControl
+Fit__12ScaledSpriteii FitScaledSprite
+Draw__12ScaledSprite DrawScaledSprite
+SetColor__12ScaledSpritei SetScaledSpriteColor
+SetPriority__12ScaledSpriteUi SetScaledSpritePriority
+SetPos__12ScaledSpriteUiUi SetScaledSpritePos
+ResetAttrs__12ScaledSprite ResetScaledSpriteAttrs

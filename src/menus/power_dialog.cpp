@@ -60,9 +60,8 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
  * it in), BG0 and the OBJs on, the two texts, the sky background, and the
  * power's icon (animation `type` of sprite bank 0x1C8) at (240, 160) / 2,
  * then BG0's registers and the intro song. */
-PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type)
+PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type) : bg(0, 0x1f, 0, 3)
 {
-    InitBgSetup(&bg, 0, 0x1f, 0, 3);
     blend.raw = 0;
     blend.bits.effect = 3;
     blend.bits.bdFirst = 1;
@@ -81,7 +80,7 @@ PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type)
     dispcnt.bits.obj = 1;
     this->titleText = titleText;
     this->descText = descText;
-    LoadGraphicsPackage(&bg, &gMenuSkyBg);
+    bg.Load(&gMenuSkyBg);
     frame = 0;
     {
         UiSprite *s = new UiSprite;
@@ -96,7 +95,7 @@ PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type)
     icon->x = 0xf0 << 7;
     icon->y = 0xa0 << 7;
     icon->palette = icon->GetAnimPaletteSlot();
-    REG_BG0CNT = GetBgSetupControl(&bg);
+    REG_BG0CNT = bg.GetControl();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     gAudioContext->PlaySong(SONG_INTRO);
 }
