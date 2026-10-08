@@ -135,6 +135,9 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
 
             if (held & R_BUTTON)
                 slamBlocked = 1;
+            /* The ROM loads this 1 (r5) apart from the A test's own 1;
+             * unhidden, cse copies it into the test (`adds r4, r5`), with
+             * QueueNowY's literal 1 too. The same in the two cases below. */
             MATCH_CONST(one, 1);
             fire = held & 1;
             if (fire) {
