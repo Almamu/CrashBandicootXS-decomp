@@ -46,7 +46,8 @@ u8 GAX2_init(struct GaxSongHeader *p)
     struct GaxHandlerLayout *layout;
     /* no-code hold: the ROM leaves r3 unused while `layout` is live
      * between the first tap scan and its `types[2]` test, so `layout`
-     * lands in r4 */
+     * lands in r4. `hold` is never assigned; its MATCH_USE after the
+     * tap scan keeps r3 reserved up to there. */
     MATCH_HOLD_REG(u32, hold, r3);
 
     if (size <= 0x18b)
@@ -117,7 +118,6 @@ u8 GAX2_init(struct GaxSongHeader *p)
         i = 0;
         l = p->layout;
         t0 = l->types[0];
-        MATCH_HOLD(hold);
         layout = l;
         tap = t0->data.dsp->taps;
         for (; i <= 2; i++) {
@@ -225,17 +225,9 @@ u8 GAX2_init(struct GaxSongHeader *p)
     } else {
         gGaxPlayerState->filterCode = NULL;
     }
-    {
-        struct GaxHandlerLayout *l = p->layout;
-
-        gGaxPlayerState->filter = 0;
-        /* no code: an extra reference that puts the (PRE-hoisted)
-         * `p->layout` argument first in global.c's order, so it takes r4
-         * and the other arguments sb/r6 as in the ROM */
-        MATCH_USE(l);
-        if (!GaxCreateHandlers(l, p->sfxTypes, p->numSfx, &buf, &size))
-            goto fail;
-    }
+    gGaxPlayerState->filter = 0;
+    if (!GaxCreateHandlers(p->layout, p->sfxTypes, p->numSfx, &buf, &size))
+        goto fail;
     ALIGN4(buf, size);
     GAX_MIXER()->extraChildren = p->numSfx;
     GAX_MIXER()->mixBuf = gGaxPlayerState->mixBuf;

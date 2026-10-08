@@ -65,12 +65,12 @@ void GAX_set_music_volume(s32 idx, u32 vol)
 
         for (i = 0; i < GAX_MIXER()->type->childCount; i++) {
             MATCH_HOLD_REG(struct GaxHandler **, chan, r1) = GAX_CHAN();
-            MATCH_HOLD_REG(u32, off, r0) = (u32)i << 2;
-            MATCH_HOLD_REG(struct GaxChannelState **, entryAddr, r0);
+            u32 off = (u32)i << 2;
+            struct GaxChannelState **entryAddr;
             struct GaxChannelState *entry;
 
             /* Forces the ROM's exact "adds r0, r0, r1" register-operand
-             * order (chan/off pinned to r1/r0 above) - gcc-2.9 always
+             * order (`chan` pinned to r1 above) - gcc-2.9 always
              * canonicalizes this pointer+offset add with the pointer
              * operand first (`adds r0, r1, r0`) regardless of C-level
              * source order, so only a raw instruction closes this gap
@@ -83,12 +83,12 @@ void GAX_set_music_volume(s32 idx, u32 vol)
             entry->volume = vol;
         }
     } else if (idx > -2) {
-        MATCH_HOLD_REG(struct GaxHandler **, chan, r1) = GAX_CHAN();
+        struct GaxHandler **chan = GAX_CHAN();
         struct GaxMixerHandler *obj = (struct GaxMixerHandler *)chan[0];
 
         if (idx < obj->type->childCount) {
-            MATCH_HOLD_REG(u32, off, r0) = (u32)idx << 2;
-            MATCH_HOLD_REG(struct GaxChannelState **, entryAddr, r0);
+            u32 off = (u32)idx << 2;
+            struct GaxChannelState **entryAddr;
             struct GaxChannelState *entry;
 
             /* Same "adds r0, r0, r1" operand-order gap as the loop body
