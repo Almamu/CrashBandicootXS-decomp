@@ -6,10 +6,10 @@
  * bytes) into gSaveMenu and CloseSaveMenu deletes. Its code is
  * src/save/save_menu.cpp, save_menu_draw.cpp, save_menu_input.cpp and
  * save_menu_ui.cpp; cxx_symbols.txt maps the methods onto their C names
- * (SaveMenuInput, DrawSaveMenu, ...). The link transfer it drives
- * (struct save_transfer, save_data.h) and the save data (struct
- * save_data) stay C structs: their own files (save_data.cpp,
- * save_transfer*.cpp) are free functions over them.
+ * (SaveMenuInput, DrawSaveMenu, ...). The save data it holds and the
+ * link transfer it drives are classes SaveData and SaveTransfer
+ * (save_data.hpp), the link session class LinkSession
+ * (link_session.hpp).
  *
  * SaveMenu has no vtable: its destructor is a plain one, called with
  * `__in_chrg` 3 by `delete gSaveMenu`. `#pragma interface`, as in
@@ -20,6 +20,7 @@
 
 #include "sprite_obj.hpp"
 #include "font.hpp"
+#include "save_data.hpp"
 
 extern "C" {
 #include "core.h"
@@ -52,8 +53,8 @@ public:
     u32 pendingSlot;  // 0x24 - the slot the "delete?"/"overwrite?" prompt acts on
     struct settings_row_stats currentStats; // 0x28
     struct settings_row_stats rowStats[4];  // 0x3C
-    struct save_data *cartSave;             // 0x8C - the cartridge's save data
-    struct save_data *linkSave;             // 0x90 - the save received over the link cable
+    SaveData *cartSave;                     // 0x8C - the cartridge's save data
+    SaveData *linkSave;                     // 0x90 - the save received over the link cable
     u8 unused_94[0xa8 - 0x94];              //
     UiSprite *rowObjA[5];                   // 0xA8 - the slot list's gem icons
     UiSprite *rowObjB[5];                   // 0xBC - its relic icons
@@ -72,27 +73,27 @@ public:
     void DrawCancel(u8 highlight);                 // DrawSaveMenuCancel
     void DrawYesNoPrompt(s32 value);               // DrawYesNoPrompt
     void DrawSlotStats(s32 label1, s32 label2, s32 rowIdx,
-                       struct byte_arg flag);                    // DrawSaveSlotStats
-    void DrawSlots(struct save_data *handle, s32 selectedIndex); // DrawSaveSlots
-    void InitIcons();                                            // InitSaveMenuIcons
+                       struct byte_arg flag);            // DrawSaveSlotStats
+    void DrawSlots(SaveData *handle, s32 selectedIndex); // DrawSaveSlots
+    void InitIcons();                                    // InitSaveMenuIcons
 
     /* src/save/save_menu_input.cpp */
-    void Input(u32 keys);                               // SaveMenuInput
-    void MainInput(u32 keys);                           // SaveMenuMainInput
-    void MoveCursor(u32 keys);                          // SaveMenuMoveCursor
-    void LoadInput(u32 keys, struct save_data *handle); // SaveMenuLoadInput
-    void LinkInput();                                   // SaveMenuLinkInput
-    void SaveToSlot(s32 rowIndex);                      // SaveGameToSlot
-    void OverwriteInput(u32 keys);                      // SaveMenuOverwriteInput
-    void SaveInput(u32 keys);                           // SaveMenuSaveInput
-    void DeleteInput(u32 keys);                         // SaveMenuDeleteInput
-    void ConfirmDeleteInput(u32 keys);                  // SaveMenuConfirmDeleteInput
-    void DrawMain();                                    // DrawSaveMenuMain
+    void Input(u32 keys);                       // SaveMenuInput
+    void MainInput(u32 keys);                   // SaveMenuMainInput
+    void MoveCursor(u32 keys);                  // SaveMenuMoveCursor
+    void LoadInput(u32 keys, SaveData *handle); // SaveMenuLoadInput
+    void LinkInput();                           // SaveMenuLinkInput
+    void SaveToSlot(s32 rowIndex);              // SaveGameToSlot
+    void OverwriteInput(u32 keys);              // SaveMenuOverwriteInput
+    void SaveInput(u32 keys);                   // SaveMenuSaveInput
+    void DeleteInput(u32 keys);                 // SaveMenuDeleteInput
+    void ConfirmDeleteInput(u32 keys);          // SaveMenuConfirmDeleteInput
+    void DrawMain();                            // DrawSaveMenuMain
 
     /* src/save/save_menu_ui.cpp */
-    void LoadBg();                                       // LoadSaveMenuBg
-    void RefreshSlotSummaries(struct save_data *handle); // RefreshSaveSlotSummaries
-    void LoadData();                                     // LoadSaveMenuData
+    void LoadBg();                               // LoadSaveMenuBg
+    void RefreshSlotSummaries(SaveData *handle); // RefreshSaveSlotSummaries
+    void LoadData();                             // LoadSaveMenuData
     void SummarizeProgress(struct settings_row_stats *dest,
                            const struct game_progress *src); // SummarizeProgress
     void DrawEmptySlotLabel(s32 x, s32 y, u8 highlight);     // DrawEmptySlotLabel

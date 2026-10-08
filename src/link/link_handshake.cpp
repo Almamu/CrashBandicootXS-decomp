@@ -1,3 +1,5 @@
+#include "link_session.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -5,20 +7,20 @@ extern "C" {
 }
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
- * SIO/link-cable section. `ResetLinkSessionState` resets a per-session object at
- * `gLinkSession` (`struct link_session`, link_session.h); its 4
+ * SIO/link-cable section. `LinkSession::ResetState` resets the session
+ * object at `gLinkSession` (class LinkSession, link_session.hpp); its 4
  * per-player 0xc8-byte records are at session+0xd0+playerIndex*0xc8. */
 
 /* Fills `self`'s first 8 bytes with a fixed 0xEC pattern (byte 0 masked
  * to its low nibble, byte 1 zeroed), then hashes bytes 1-5 with a
  * CRC-16-style table walk seeded at 0x1234 (`gCrc16Table`,
- * also used by `HandleLinkSerial`), stores the 16-bit result
+ * also used by `LinkSession::HandleSerial`), stores the 16-bit result
  * into bytes 6-7, and folds its low nibble into byte 0's low nibble
  * (preserving byte 0's high nibble; that high nibble is always 0 at
  * this point from the earlier mask, which is why the ROM's own
  * `(self[0]>>4) + hash` tail - reconstructing `hash` from the just-
  * stored bytes 6/7 rather than reusing the register - reduces to plain
- * `hash & 0xF`). Called once by `ResetLinkSessionState`, on the
+ * `hash & 0xF`). Called once by `LinkSession::ResetState`, on the
  * session's own `id`, which it then copies into every player record.
  *
  * Once a NAKED transcription; it matches as plain C under old_agbcc
@@ -74,10 +76,9 @@ void MakeLinkHandshakeId(u8 *self)
  * lines (each individually IME-guarded), clears their installed
  * handlers, restores IME, resets RCNT to general-purpose mode, sets
  * SIOCNT to a fixed idle value, reloads Timer3 (stopped) with 0xBBBC,
- * and acknowledges both IRQ flags in IF. Always returns 0. Its callers
- * in this file pass the session in r0 (`self` is unused), which the
- * NON_MATCHING drafts below reproduce by passing it. */
-s32 LinkStop(struct link_session *self)
+ * and acknowledges both IRQ flags in IF. Always returns 0. A method
+ * that doesn't read `this`: its callers pass the session in r0. */
+s32 LinkSession::Stop()
 {
     u16 savedIme;
 

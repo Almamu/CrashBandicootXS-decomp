@@ -1,10 +1,10 @@
 #include "save_menu.hpp"
+#include "link_session.hpp"
 
 extern "C" {
 #include "core.h"
 #include "text.h"
 #include "link.h"
-#include "link_session.h"
 #include "save.h"
 #include "system.h"
 #include "menus.h"
@@ -48,8 +48,8 @@ void SaveMenu::LoadBg()
 }
 
 /* Refreshes each of the 4 settings rows' aggregate stats from `handle`,
- * skipping any row IsSaveSlotEmpty reports as inactive/hidden. */
-void SaveMenu::RefreshSlotSummaries(struct save_data *handle)
+ * skipping any row SaveData::IsSlotEmpty reports as inactive/hidden. */
+void SaveMenu::RefreshSlotSummaries(SaveData *handle)
 {
     struct settings_row_stats *row;
     struct save_slot buf;
@@ -58,8 +58,8 @@ void SaveMenu::RefreshSlotSummaries(struct save_data *handle)
     i = 0;
     row = &rowStats[0];
     do {
-        if (!IsSaveSlotEmpty(handle, i)) {
-            ReadSaveSlot(handle, i, &buf);
+        if (!handle->IsSlotEmpty(i)) {
+            handle->ReadSlot(i, &buf);
             row->gems = CountClearGems(&buf.progress);
             row->relics = CountRelics(&buf.progress);
             row->lives = GetProgressLives(&buf.progress);
@@ -73,10 +73,10 @@ void SaveMenu::RefreshSlotSummaries(struct save_data *handle)
 
 void SaveMenu::LoadData()
 {
-    s32 v = LoadSaveData(cartSave);
+    s32 v = cartSave->Load();
     if ((u32)(v - 1) <= 3) {
-        ResetSaveData(cartSave);
-        StoreSaveData(cartSave);
+        cartSave->Reset();
+        cartSave->Store();
     }
 }
 
@@ -145,16 +145,16 @@ s32 SaveMenu::GetBlinkPalette()
  * up in r0). */
 void SaveMenu::EndLinkTransfer()
 {
-    struct link_session *p = gLinkSession;
-    ResetLinkSession(p);
+    LinkSession *p = gLinkSession;
+    p->Reset();
     p->enabled = 0;
 }
 
 void SaveMenu::BeginLinkTransfer()
 {
-    ResetLinkSession(gLinkSession);
+    gLinkSession->Reset();
     gLinkSession->enabled = 1;
-    ResetSaveData(linkSave);
+    linkSave->Reset();
 }
 
 void SaveMenu::DrawConfirmDelete()
@@ -251,9 +251,9 @@ void SaveMenu::DeleteSlot(s32 arg1)
 {
     u8 buf[0x70];
 
-    ReadSaveSlot(cartSave, arg1, buf);
-    EraseSaveSlot(cartSave, arg1);
-    if (StoreSaveData(cartSave)) {
-        WriteSaveSlot(cartSave, arg1, buf);
+    cartSave->ReadSlot(arg1, buf);
+    cartSave->EraseSlot(arg1);
+    if (cartSave->Store()) {
+        cartSave->WriteSlot(arg1, buf);
     }
 }

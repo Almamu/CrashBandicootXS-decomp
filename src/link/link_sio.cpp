@@ -1,3 +1,5 @@
+#include "link_session.hpp"
+
 extern "C" {
 #include "core.h"
 #include "system.h"
@@ -5,16 +7,15 @@ extern "C" {
 #include "util.h"
 }
 
-/* "Start" step of the link session - counterpart to `LinkStop`
- * above. Disables the Serial/Timer3 IRQ lines (same IME-guarded
+/* "Start" step of the link session - counterpart to `Stop`
+ * (link_handshake.cpp). UNUSED: Update writes the same steps out. Disables the Serial/Timer3 IRQ lines (same IME-guarded
  * pattern), installs `LinkSerialIntr` as the Serial IRQ handler and
  * enables it, and - only if `arm3` is set - also installs `LinkTimer3Intr`
  * as the Timer3 IRQ handler, enables it, and arms Timer3 with a fixed
- * reload/control word. Always ends with IME re-enabled. `self` (the
- * session pointer every sibling function in this file takes) is never
- * read past the prologue - the ROM genuinely ignores it here, same as
- * `WaitForVBlank` in src/system/irq.cpp. */
-s32 LinkStart(struct link_session *self, u32 flags)
+ * reload/control word. Always ends with IME re-enabled. `this` is never
+ * read - the ROM genuinely ignores it here, same as `WaitForVBlank` in
+ * src/system/irq.cpp. */
+s32 LinkSession::Start(u32 flags)
 {
     u8 arm3 = (u8)flags;
     u16 savedIme;
@@ -45,7 +46,8 @@ s32 LinkStart(struct link_session *self, u32 flags)
 }
 
 /* Small standalone helper: resets RCNT to general-purpose mode and sets
- * SIOCNT to a fixed idle-multiplayer-mode value. Always returns 0. */
+ * SIOCNT to a fixed idle-multiplayer-mode value. Always returns 0.
+ * UNUSED. */
 s32 LinkSetupSio(void)
 {
     REG_RCNT = 0;
@@ -54,87 +56,44 @@ s32 LinkSetupSio(void)
     return 0;
 }
 
-/* Convenience "full reset": stop (`LinkStop`) then re-init the
- * session (`ResetLinkSessionState`). Always returns 0. */
-s32 ResetLinkSession(struct link_session *self)
+/* Convenience "full reset": stop (`Stop`) then re-init the session
+ * (`ResetState`). Always returns 0. */
+s32 LinkSession::Reset()
 {
-    LinkStop(self);
-    ResetLinkSessionState(self);
+    Stop();
+    ResetState();
     return 0;
 }
 
-/* Resets the session (`ResetLinkSession`), then walks a dead loop from
- * `&players[4]` back to `players` (4 iterations, result unused - the
- * empty destructor loop of the `players` array), then - only if `flags` bit
- * 0 is set - tears the session down (`IwramFree`, matched in
- * src/util/aabb.cpp, also AudioContext's operator delete in
- * include/audio.hpp - the IWRAM heap's free).
- */
-void DestroyLinkSession(struct link_session *self, u32 flags)
+/* `delete gLinkSession` (DestroyLinkSession): resets the session
+ * (`Reset`); g++ then destroys the members, the four players in a loop
+ * from `&players[4]` back to `players` that does nothing (LinkRing's
+ * destructor is empty), and frees the session when `__in_chrg` bit 0 is
+ * set (the class's operator delete, IwramFree). */
+LinkSession::~LinkSession()
 {
-    struct link_player *p;
-
-    ResetLinkSession(self);
-
-    p = self->players;
-    if (p != NULL) {
-        struct link_player *q = &self->players[4];
-        if (p != q) {
-            do {
-                q--;
-            } while (p != q);
-        }
-    }
-
-    if (flags & 1) {
-        IwramFree((u8 *)self);
-    }
+    Reset();
 }
 
-/* Session object constructor: zeroes the transient TX ring bookkeeping
- * (`ring.count`/`readPos`, `writePos` = 0x7f), zeroes the same trio
- * for all 4 per-player rings (`players[i].ring`), resets the session
- * (`ResetLinkSession`), clears `enabled`, and returns `self`. */
-struct link_session *InitLinkSession(struct link_session *self)
+/* `new LinkSession` (InitLinkSession): g++ resets the session's outgoing
+ * ring and the four players' incoming rings (LinkRing's constructor:
+ * `count`/`readPos` 0, `writePos` 0x7f), then the body resets the
+ * session (`Reset`) and clears `enabled`. */
+LinkSession::LinkSession()
 {
-    struct link_player *player;
-    s32 i;
-    s32 zero;
-    s32 fill;
-    s32 sentinel;
-
-    self->ring.count = 0;
-    self->ring.readPos = 0;
-    self->ring.writePos = 0x7f;
-
-    i = 3;
-    zero = 0;
-    fill = 0x7f;
-    sentinel = -1;
-    player = self->players;
-    do {
-        player->ring.count = zero;
-        player->ring.readPos = zero;
-        player->ring.writePos = fill;
-        player++;
-        i--;
-    } while (i != sentinel);
-
-    ResetLinkSession(self);
-    self->enabled = 0;
-
-    return self;
+    Reset();
+    enabled = 0;
 }
 
-/* The Serial-IRQ handler installed by `LinkStart` above: forwards
- * into the still-raw per-frame SIO data pump (`HandleLinkSerial`) with the
- * session object and SIODATA32's low half register address. */
+/* The Serial-IRQ handler installed by `Start` above and by Update:
+ * forwards into the SIO data pump (`HandleSerial`) with SIODATA32's low
+ * half register address. */
 void LinkSerialIntr(void)
 {
-    HandleLinkSerial(gLinkSession, (u16 *)REG_ADDR_SIODATA32);
+    gLinkSession->HandleSerial((u16 *)REG_ADDR_SIODATA32);
 }
 
-/* The Timer3-IRQ handler installed by `LinkStart` above (the
+/* The Timer3-IRQ handler installed by `Start` above (the
  * handshake-timeout retry beat): re-arms Timer3 (stop, set SIOCNT's
  * start-transfer bit, restart). */
 void LinkTimer3Intr(void)

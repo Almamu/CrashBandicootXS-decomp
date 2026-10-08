@@ -2,7 +2,7 @@
 #define __SAVE_MENU_H__
 
 /* A save slot's summary: five totals counted from the slot's 0x70 bytes
- * (ReadSaveSlot). SaveMenu keeps the current game's (`currentStats`) and
+ * (SaveData::ReadSlot). SaveMenu keeps the current game's (`currentStats`) and
  * the four slots' (`rowStats`, RefreshSlotSummaries in
  * src/save/save_menu_ui.cpp), and the slot list reads them as one
  * 5-entry array. */
