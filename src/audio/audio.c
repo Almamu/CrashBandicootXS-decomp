@@ -86,6 +86,9 @@ void UpdateAudio(struct AudioContext *self)
 void StartSong(struct AudioContext *self, u32 songIndex)
 {
     {
+        /* The ROM sets the flag in r1 and copies it to r4 (the zero it
+         * stores after GAX_stop); unpinned, agbcc builds the flag in r4
+         * directly, as it does for an inline IsStopped() too. */
         MATCH_HOLD_REG(s32, wasStopped, r1);
         s32 zero;
 
@@ -486,6 +489,8 @@ void PauseSong(struct AudioContext *self)
  * stopped) and disarms the per-tick GAX2 IRQ update. */
 void StopSong(struct AudioContext *self)
 {
+    /* As in StartSong: the ROM's flag (r2) and its copy (r4) are two
+     * registers, which agbcc merges without the pin. */
     MATCH_HOLD_REG(s32, isStopped, r2);
     s32 zero;
 

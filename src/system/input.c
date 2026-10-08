@@ -45,6 +45,8 @@ s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
 {
     s32 result;
     s32 i;
+    /* The ROM has the flag in r4 and `i` in r5; old_agbcc swaps them
+     * without the pin (every loop shape tried). */
     MATCH_HOLD_REG(u8, flagR, r4);
     s32 keys;
     s32 confirm;
