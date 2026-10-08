@@ -27,7 +27,7 @@
 void CommitBlendRegs(void)
 {
     MATCH_HOLD_REG(vu32 *, bldReg, r2) = (vu32 *)REG_ADDR_BLDCNT;
-    MATCH_HOLD_REG(struct blend_regs *, src, r1) = &gBlendRegs;
+    struct blend_regs *src = &gBlendRegs;
     MATCH_HOLD_REG(u32, word, r0) = src->blend.raw;
     MATCH_HOLD_REG(u32, bldy, r1);
     MATCH_HOLD_REG(u32, masked, r0);

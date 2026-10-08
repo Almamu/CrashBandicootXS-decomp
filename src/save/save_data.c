@@ -212,7 +212,7 @@ static inline u32 checksum_ok(struct save_data *self)
     u32 *p = (u32 *)self;
     u32 sum = 0;
     s32 i;
-    MATCH_HOLD_REG(u32, result, r1);
+    u32 result;
 
     for (i = 0x7e; i >= 0; i--) {
         sum += *p++;
@@ -265,7 +265,7 @@ u32 CheckSaveChecksum(struct save_data *self)
     u32 *p = (u32 *)self;
     u32 sum = 0;
     s32 i;
-    MATCH_HOLD_REG(u32, result, r1);
+    u32 result;
 
     for (i = 0x7e; i >= 0; i--) {
         sum += *p++;
@@ -353,7 +353,7 @@ s32 StoreSaveData(struct save_data *self)
 void ReadSaveSlot(struct save_data *self, s32 row, void *dst)
 {
     if (self->slotEmpty[row] == 0) {
-        MATCH_HOLD_REG(s32, offset, r1);
+        s32 offset;
 
         offset = row * 0x70;
         offset = offset + (s32)self;
@@ -366,7 +366,7 @@ void ReadSaveSlot(struct save_data *self, s32 row, void *dst)
  * refreshes the checksum. */
 void WriteSaveSlot(struct save_data *self, s32 row, void *src)
 {
-    MATCH_HOLD_REG(s32, offset, r0);
+    s32 offset;
 
     self->slotEmpty[row] = 0;
     offset = row * 0x70;

@@ -1,5 +1,4 @@
 #include "core.h"
-#include "match.h"
 #include "system.h"
 #include "link.h"
 #include "util.h"
@@ -94,16 +93,14 @@ void DestroyLinkSession(struct link_session *self, u32 flags)
  * (`ring.count`/`readPos`, `writePos` = 0x7f), zeroes the same trio
  * for all 4 per-player rings (`players[i].ring`), resets the session
  * (`ResetLinkSession`), clears `enabled`, and returns `self`. */
-struct link_session *InitLinkSession(struct link_session *arg0)
+struct link_session *InitLinkSession(struct link_session *self)
 {
-    MATCH_HOLD_REG(struct link_session *, self, r4);
     struct link_player *player;
-    MATCH_HOLD_REG(s32, i, r1);
-    MATCH_HOLD_REG(s32, zero, r2);
-    MATCH_HOLD_REG(s32, fill, r5);
-    MATCH_HOLD_REG(s32, sentinel, r3);
+    s32 i;
+    s32 zero;
+    s32 fill;
+    s32 sentinel;
 
-    self = arg0;
     self->ring.count = 0;
     self->ring.readPos = 0;
     self->ring.writePos = 0x7f;

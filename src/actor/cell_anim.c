@@ -79,9 +79,8 @@ void UploadCellAnimFrame(void)
  * Matched in the second near-miss sweep. The ROM stores
  * `gCellAnimFrameSize` once, after the `if`, then reloads it for the
  * division through a *copy* of its address taken before the branch
- * (`ldr r4, =A4; ...; add r1, r4, #0`). The copy is
- * `MATCH_CONST(reload, a4)` (include/match.h), which emits no code but gives
- * gcc a second pointer it can't merge back into `a4`. Evaluation order
+ * (`ldr r4, =A4; ...; add r1, r4, #0`). The copy is a second pointer
+ * local, `reload` (dividing through `*a4` itself loses it). Evaluation order
  * fixes the rest: the flag goes through a pointer to
  * `gCellAnimHasBanks` loaded first, `area` is assigned inside the
  * `gCellAnimTileBytes` store so that global's address loads before the
@@ -106,7 +105,7 @@ void InitCellAnim(s32 arg0, void *cellAnim, u32 animSize, s32 arg3)
         s32 *reload;
 
         size = gCellAnimTileBytes;
-        MATCH_CONST(reload, a4);
+        reload = a4;
         if (flag)
             size += (area + 7) / 8 * 4;
         *a4 = size;
@@ -205,15 +204,15 @@ s32 GetCellAnimFreeTile(void)
  * `.4byte 0x04000008` pool entries), while a ternary/single-store
  * collapses it to one shared pool entry and a shorter, differently
  * shaped sequence (see docs/workflow.md step 3/7). The trailing toggle
- * pins its accumulator to `r0` - this compiler otherwise canonicalizes
- * `1 ^ gCellAnimPage`/`gCellAnimPage ^= 1` the same way
- * regardless of source operand order, loading the memory operand first;
- * the ROM loads the constant `1` first instead, so the pin forces that
- * exact order (see docs/workflow.md step 3). */
+ * goes through a `toggled` local set to `1` first - this compiler
+ * otherwise canonicalizes `1 ^ gCellAnimPage`/`gCellAnimPage ^= 1` the
+ * same way regardless of source operand order, loading the memory
+ * operand first, where the ROM loads the constant `1` first (see
+ * docs/workflow.md step 3). */
 void FlipCellAnimPage(void)
 {
     if (gCellAnimUploaded != 0) {
-        MATCH_HOLD_REG(u8, toggled, r0);
+        u8 toggled;
 
         if (gCellAnimPage != 0) {
             REG_BG0CNT = 0x5C02;
@@ -239,26 +238,19 @@ s32 GetCellAnimDistance(void)
  * `gCellAnimSpeed` (a Q8.8 per-frame velocity), wrapping it against
  * `gCellAnimLength`, and - whenever the whole-tile column actually
  * changed - shifts the visible-column counter and re-triggers the
- * pending-cell DMA/palette-cursor pair. `prev`/`velocity`/`pos` are
- * register-pinned to `r1`/`r0`/`r3` - this compiler otherwise reuses
- * `prev`'s own register in place for the sum (since `prev` is dead
- * after computing it), while the ROM keeps the updated position in a
- * genuinely separate register from the old value. `bcPtr` is
- * materialized (and pinned back to `r1`, reusing `prev`'s now-dead
- * register) *before* the shift/subtract that becomes `delta` - the ROM
- * loads the store destination's address ahead of computing the value,
- * not right before the store. `wrapped` is likewise pinned to a fresh
- * register rather than reusing `pos`'s own - same "ROM keeps the new
- * value in a genuinely separate register" pattern as `pos` itself (see
- * docs/workflow.md step 3 for this whole family of fixes). */
+ * pending-cell DMA/palette-cursor pair. The ROM keeps the updated
+ * position `pos` in a separate register from the old value `prev`.
+ * `bcPtr` is materialized *before* the shift/subtract that becomes
+ * `delta` - the ROM loads the store destination's address ahead of
+ * computing the value, not right before the store (see
+ * docs/workflow.md step 3 for this family of fixes). */
 void AdvanceCellAnim(void)
 {
-    MATCH_HOLD_REG(s32 *, b0ptr, r4) = &gCellAnimTime;
-    MATCH_HOLD_REG(s32, prev, r1) = *b0ptr;
+    s32 *b0ptr = &gCellAnimTime;
+    s32 prev = *b0ptr;
     s32 prevShifted = Q8_TO_INT(prev);
-    MATCH_HOLD_REG(s32, velocity, r0) = gCellAnimSpeed;
-    MATCH_HOLD_REG(s32, pos, r3) = prev + velocity;
-    MATCH_HOLD_REG(s32 *, bcPtr, r1);
+    s32 pos = prev + gCellAnimSpeed;
+    s32 *bcPtr;
     s32 delta;
 
     *b0ptr = pos;
@@ -267,8 +259,7 @@ void AdvanceCellAnim(void)
     *bcPtr = delta;
 
     if (pos >= gCellAnimLength) {
-        MATCH_HOLD_REG(s32, wrapped, r0) = pos - gCellAnimLength;
-        *b0ptr = wrapped;
+        *b0ptr = pos - gCellAnimLength;
     }
 
     if (delta != 0) {
@@ -295,14 +286,14 @@ s32 GetCellAnimSpeed(void)
     return Q8_TO_INT(((v << 4) - v) << 2);
 }
 
-/* `dest` is materialized (and pinned to the callee-saved `r4`) before
- * the `__divsi3` call, not after - the ROM loads the store
+/* `dest` is materialized before the `__divsi3` call, not after (a
+ * plain `gCellAnimSpeed = ...` loads it after) - the ROM loads the store
  * destination's address ahead of the call so it survives across it in
  * a register `bl` doesn't clobber, rather than recomputing it from the
  * return value's position afterward (see docs/workflow.md step 3). */
 void SetCellAnimSpeed(s32 arg0)
 {
-    MATCH_HOLD_REG(s32 *, dest, r4) = &gCellAnimSpeed;
+    s32 *dest = &gCellAnimSpeed;
 
     *dest = __divsi3(INT_TO_Q8(arg0), 0x3c);
 }
@@ -348,7 +339,7 @@ void FillCellAnimTilemap(s32 arg0, s32 w, s32 h)
  * position/register state from them. */
 void InitActorBgScroll(s32 arg0)
 {
-    MATCH_HOLD_REG(s32, v, r1);
+    s32 v;
 
     gActorBgScrollType = arg0;
 
@@ -374,7 +365,7 @@ void InitActorBgScroll(s32 arg0)
         gActorBg0VOffset = 2;
     }
 
-    /* `v` is register-pinned to `r1` from the moment it's first computed
+    /* `v` stays in `r1` from the moment it's first computed
      * (as `gActorBgScrollMaxX`'s new value) through the sign-rounded
      * `/2`/`>>9`/`>>9` triple below, all reusing that same register in
      * place rather than reloading `gActorBgScrollMaxX` fresh - matching
@@ -384,16 +375,15 @@ void InitActorBgScroll(s32 arg0)
      * `gActorBg0VOffset + (v >> 9)` - there's no addition in the ROM's
      * own instructions for this store. */
     {
-        MATCH_HOLD_REG(s32 *, ecPtr, r0) = &gActorBgScrollMaxX;
-        MATCH_HOLD_REG(s32, delta, r2) = (s32)0xFFFF1000;
+        s32 *ecPtr = &gActorBgScrollMaxX;
 
-        v = gActorBgWidth + delta;
+        v = gActorBgWidth + (s32)0xFFFF1000;
         *ecPtr = v;
     }
     gActorBgScrollMaxY = gActorBgHeight + (s32)0xFFFF6000;
 
     {
-        MATCH_HOLD_REG(s32 *, d0Ptr, r2) = &gActorBgScrollX;
+        s32 *d0Ptr = &gActorBgScrollX;
 
         v = v + (s32)((u32)v >> 31);
         *d0Ptr = v >> 1;
@@ -401,7 +391,7 @@ void InitActorBgScroll(s32 arg0)
     gActorBgScrollY = 0;
 
     {
-        MATCH_HOLD_REG(vu16 *, bg0hofsPtr, r0) = &REG_BG0HOFS;
+        vu16 *bg0hofsPtr = &REG_BG0HOFS;
 
         v >>= 9;
         *bg0hofsPtr = v;

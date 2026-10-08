@@ -116,15 +116,13 @@ void PauseMenu::Draw()
         u32 x, t;
         MATCH_HOLD_REG(s32, hold, r2);
 
-        /* Hard-register hold (no code): r2 stays live across the x
-         * computation, so y takes it afterwards. */
-        MATCH_HOLD(hold);
         t = 0xf0 - w;
         x = t >> 1;
         /* Extra reference (no code): keeps `t` (r1) from being tied
          * to `x` (r3). */
         MATCH_USE(t);
-        /* End of the hold. */
+        /* Hard-register hold (no code): `hold`, never assigned, keeps r2
+         * live from its declaration to here, so y takes it afterwards. */
         MATCH_USE(hold);
         gLargeFont->SetPos(x, 0xe);
     }
@@ -140,14 +138,12 @@ void PauseMenu::Draw()
         u32 x, t;
         MATCH_HOLD_REG(s32, hold, r2);
 
-        /* Hard-register hold (no code), as above. */
-        MATCH_HOLD(hold);
         t = 0x8c;
         x = t - width;
         /* Extra references (no code): neither the 0x8c (r1) nor
          * `width` (r0) is tied to `x` (r3). */
         MATCH_USE2(t, width);
-        /* End of the hold. */
+        /* Hard-register hold (no code), as above. */
         MATCH_USE(hold);
         gLargeFont->SetPos(x, 0x88);
     }

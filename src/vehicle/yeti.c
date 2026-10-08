@@ -1,6 +1,5 @@
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "memory.h"
 #include "actor.h"
 #include "vehicle.h"
@@ -35,14 +34,14 @@ void DestroyYeti(void)
 void CreateYeti(void *arg0)
 {
     struct actor_self *obj;
-    MATCH_HOLD_REG(u32, size, r0);
-    MATCH_HOLD_REG(s32, flags, r1);
-    MATCH_HOLD_REG(void **, bcAddr, r5);
+    u32 size;
+    s32 flags;
+    void **bcAddr;
 
     gYetiParamsIndex = (s32)arg0;
     bcAddr = (void **)&gYeti;
     asm volatile("mov %0, #0x1c" : "=r"(size));
-    asm volatile("mov %0, #0x80\n\tlsl %0, %0, #0x18" : "=r"(flags));
+    flags = MEM_HEAP_IWRAM;
     obj = mem_alloc(size, flags);
     {
         struct anim_frame_record *v0 = (struct anim_frame_record *)gYetiKeyframes;

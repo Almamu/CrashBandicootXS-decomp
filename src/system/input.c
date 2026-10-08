@@ -20,7 +20,7 @@
  * `src/system/irq.c`) fresh each poll (no caching across polls, since
  * `UpdateKeys`'s call in between could change it). `UpdateKeys`
  * takes the input object (`gInput`, in r0 at every call) but never
- * reads it (system.h). `keys` is pinned to r1 and set via an inline-asm copy of
+ * reads it (system.h). `keys` is set via an inline-asm copy of
  * `mask` (rather than a plain `keys = mask & ...`) to reproduce the
  * ROM's redundant `adds r1, mask, #0` before the load - gcc's own
  * codegen for the combined expression instead loads straight into r1
@@ -47,9 +47,9 @@
 s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
 {
     s32 result;
-    MATCH_HOLD_REG(s32, i, r5);
+    s32 i;
     MATCH_HOLD_REG(u8, flagR, r4);
-    MATCH_HOLD_REG(s32, keys, r1);
+    s32 keys;
     s32 confirm;
     struct held_pressed_pair *addr;
 

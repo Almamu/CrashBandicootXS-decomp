@@ -87,7 +87,7 @@ void StartSong(struct AudioContext *self, u32 songIndex)
 {
     {
         MATCH_HOLD_REG(s32, wasStopped, r1);
-        MATCH_HOLD_REG(s32, zero, r4);
+        s32 zero;
 
         wasStopped = 0;
         if (self->state == 0) {
@@ -168,8 +168,7 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
             }
             if (voice != -1) {
                 u32 baseVolume = gSfxTable[id].baseVolume;
-                MATCH_HOLD_REG(struct AudioContext *, p2, r2) = pself;
-                u32 volume = Q16_TO_INT((baseVolume * p2->sfxVolume) * volumeParam);
+                u32 volume = Q16_TO_INT((baseVolume * pself->sfxVolume) * volumeParam);
 
                 GAX_set_fx_volume(voice, volume);
                 pself->lastSfxId[gSfxVoiceToggle] = id;
@@ -195,11 +194,10 @@ void TickAmbientSfx(struct AudioContext *self)
     }
     now = gRoomFrameCount;
     if (now >= self->activeSfx.deadline) {
-        MATCH_HOLD_REG(s32, v, r0);
+        s32 v;
 
         self->activeSfx.volume = 0;
-        v = self->ambientSfxVolume;
-        v -= 0x10;
+        v = self->ambientSfxVolume - 0x10;
         self->ambientSfxVolume = v;
         if (v > 0) {
             GAX_set_fx_volume(2, *(volatile s32 *)&self->ambientSfxVolume);
@@ -489,7 +487,7 @@ void PauseSong(struct AudioContext *self)
 void StopSong(struct AudioContext *self)
 {
     MATCH_HOLD_REG(s32, isStopped, r2);
-    MATCH_HOLD_REG(s32, zero, r4);
+    s32 zero;
 
     isStopped = 0;
     if (self->state == 0) {
@@ -557,8 +555,8 @@ void DisableMusicVCountIrq(struct AudioContext *self)
  * which already anticipated this function. */
 void EnableMusicVCountIrq(void)
 {
-    MATCH_HOLD_REG(vu8 *, p, r1);
-    MATCH_HOLD_REG(u8, v, r0);
+    vu8 *p;
+    u8 v;
     MATCH_HOLD_REG(u8, loaded, r2);
 
     IrqSetHandler(INTR_INDEX_VCOUNT, MusicVCountIrqHandler);

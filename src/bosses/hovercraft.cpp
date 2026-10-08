@@ -320,9 +320,8 @@ void RunHovercraftState(void)
         }
         {
             u16 *p = gFlashBgPalette;
-            MATCH_HOLD_REG(u16, val, r1) = gHovercraftFlashSavedColor;
 
-            CommitFlashColor(p, val);
+            CommitFlashColor(p, gHovercraftFlashSavedColor);
         }
     }
 

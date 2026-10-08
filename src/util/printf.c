@@ -162,13 +162,13 @@ void sprintf(u8 *dest, u8 *fmt, ...)
 u8 *FindSubstring(u8 *haystack0, u8 *needle, s32 caseInsensitive)
 {
     MATCH_HOLD_REG(u8 *, needleRest, ip) = needle;
-    MATCH_HOLD_REG(u8 *, haystack, r5) = haystack0;
-    MATCH_HOLD_REG(u32, c0, r6) = *needle;
+    u8 *haystack = haystack0;
+    u32 c0 = *needle;
     MATCH_HOLD_REG(u32, hc, r3);
-    MATCH_HOLD_REG(u8 *, matchHaystack, r4);
-    MATCH_HOLD_REG(u8 *, matchNeedle, r2);
-    MATCH_HOLD_REG(u32, nc, r3);
-    MATCH_HOLD_REG(u32, hc2, r1);
+    u8 *matchHaystack;
+    u8 *matchNeedle;
+    u32 nc;
+    u32 hc2;
 
     asm volatile("mov r0, #1\n\tadd %0, r0" : "+r"(needleRest) : : "r0");
 

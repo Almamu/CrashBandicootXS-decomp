@@ -10,87 +10,67 @@
  * base falls back to DivMod (a divmod helper). Digits are produced
  * least-significant-first then reversed in place at the end.
  *
- * Every local here is register-pinned to r0-r7, chosen to match the
- * ROM's own allocation exactly - none of them touch the r4-r7 hazard in
- * matching_decomp_register_pinning memory, since each pinned r4-r7
- * variable's whole lifetime genuinely survives a call within this
- * function (v/buf/baseR/len/negative all live across the DivMod
- * call in the generic-base branch; j survives across the reversal
- * loop's body). `i`/`rem` reuse r1, and `j`/`baseR` reuse r4, matching
- * the ROM reusing a register once its previous occupant is dead - these
- * are two *separate* C locals with non-overlapping lifetimes, not one
- * value living in two places. Plain (unpinned) locals for `len`/
- * `negative` put them in the opposite registers from the ROM (r5/r7
- * instead of r7/r5) with no consistent way found to flip just one via
- * declaration order - pinning `negative` to r5 was enough to push gcc's
- * own allocator onto r7 for `len` unpinned, which is what actually
- * keeps the r7 push/pop safe here (a *pinned* r7 never gets saved, see
- * memory; letting gcc pick r7 on its own always does). */
+ * No pins: the plain locals land in the ROM's registers, `i`/`rem`
+ * sharing r1 and `j`/`base` sharing r4 (separate C locals with
+ * non-overlapping lifetimes, as in the ROM). */
 s32 itoa(s32 value, u8 *buffer, s32 base)
 {
-    MATCH_HOLD_REG(s32, v, r3);
-    MATCH_HOLD_REG(u8 *, buf, r6);
-    MATCH_HOLD_REG(s32, baseR, r4);
     s32 len;
-    MATCH_HOLD_REG(s32, negative, r5);
-    MATCH_HOLD_REG(s32, rem, r1);
+    s32 negative;
+    s32 rem;
     s32 temp;
-    MATCH_HOLD_REG(s32, i, r1);
-    MATCH_HOLD_REG(s32, j, r4);
-    MATCH_HOLD_REG(s32, k, r5);
+    s32 i;
+    s32 j;
+    s32 k;
 
-    v = value;
-    buf = buffer;
-    baseR = base;
     len = 0;
     negative = 0;
-    if (v < 0) {
+    if (value < 0) {
         negative = 1;
-        v = -v;
+        value = -value;
     }
-    if (baseR == 16) {
-        MATCH_HOLD_REG(s32, mask, r2) = 0xF;
+    if (base == 16) {
         do {
-            rem = v & mask;
-            temp = v;
-            if (v < 0) {
+            rem = value & 0xF;
+            temp = value;
+            if (value < 0) {
                 temp += 0xF;
             }
-            v = temp >> 4;
+            value = temp >> 4;
             if (rem > 9) {
                 rem = rem + 0x37;
             } else {
                 rem = rem + 0x30;
             }
-            buf[len] = rem;
+            buffer[len] = rem;
             len++;
-        } while (v > 0);
+        } while (value > 0);
     } else {
         s32 rem2;
         s32 quotient;
         do {
-            quotient = DivMod(v, baseR, &rem2);
-            v = quotient;
+            quotient = DivMod(value, base, &rem2);
+            value = quotient;
             rem2 += 0x30;
-            buf[len] = rem2;
+            buffer[len] = rem2;
             len++;
-        } while (v > 0);
+        } while (value > 0);
     }
     if (negative) {
-        buf[len] = '-';
+        buffer[len] = '-';
         len++;
     }
-    buf[len] = 0;
+    buffer[len] = 0;
 
     i = 0;
-    while (buf[i] != 0)
+    while (buffer[i] != 0)
         i++;
     j = i - 1;
     k = 0;
     while (k < j) {
-        u8 *p1 = &buf[k];
+        u8 *p1 = &buffer[k];
         u8 tmp = *p1;
-        u8 *p2 = &buf[j];
+        u8 *p2 = &buffer[j];
         u8 val = *p2;
         *p1 = val;
         *p2 = tmp;
@@ -127,20 +107,19 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
  * (skipping straight to the unconditional `width -= 1` after it)
  * rather than computing `digitCount = 0` and subtracting a no-op - the
  * ROM has no instruction for the default case's "subtraction" at all.
- * `srcp`/`dstp` are pinned to r2/r3 to match the ROM once `charsConsumed`
- * living in r1 across the whole function pushes gcc's own choice
- * elsewhere. The final copy-from-`buf`-into-`dest` loop must be written
+ * `dstp` is pinned to r3 to match the ROM once `charsConsumed` living
+ * in r1 across the whole function pushes gcc's own choice elsewhere. The final copy-from-`buf`-into-`dest` loop must be written
  * with an explicit `goto check` (matching the ROM's own
  * jump-to-condition-first shape) rather than a `for(;;) { ...; if
  * (c==0) break; ...}` - the more natural form makes gcc hoist a
  * `buf + 1` address computation out to before the switch and cache it
  * in a second high register (r9) the ROM never uses; the goto form
- * doesn't trigger that hoist. The two other inline-asm/pin spots
- * (`negOne`/r0 and the explicit `mov %0, #0`/r0 before the final NUL
- * write) exist because the ROM re-materializes a literal it already
- * has sitting in a register from an unrelated preceding comparison,
- * rather than reusing it - plain C naturally reuses the already-live
- * value instead. */
+ * doesn't trigger that hoist. The `negOne` local (a literal `-1` in
+ * the loop tests compiles differently) and the explicit `mov %0, #0`
+ * before the final NUL write exist because the ROM re-materializes a
+ * literal it already has sitting in a register from an unrelated
+ * preceding comparison, rather than reusing it - plain C naturally
+ * reuses the already-live value instead. */
 u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsConsumedPtr)
 {
     u8 buf[0x20];
@@ -149,7 +128,7 @@ u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsC
     s32 width;
     s32 digitCount;
     s32 i;
-    MATCH_HOLD_REG(u8 *, srcp, r2);
+    u8 *srcp;
     MATCH_HOLD_REG(u8 *, dstp, r3);
     u8 ch;
     s32 charsConsumed;
@@ -194,7 +173,7 @@ u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsC
     width -= 1;
 
     {
-        MATCH_HOLD_REG(s32, negOne, r0) = -1;
+        s32 negOne = -1;
         charsConsumed = fmt - fmtStart;
         if (width != negOne) {
             do {
@@ -217,7 +196,7 @@ u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsC
         ch = *srcp;
     } while (ch != 0);
     {
-        MATCH_HOLD_REG(u8, zero, r0);
+        u8 zero;
         asm volatile("mov %0, #0" : "=r"(zero));
         *dstp = zero;
     }
