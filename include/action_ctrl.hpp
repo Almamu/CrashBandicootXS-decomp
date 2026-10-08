@@ -71,7 +71,7 @@ public:
                          //        slam needs R released first (Update clears it then)
 
     /* The state methods, indexed by `state` (gActionCtrlStateTable,
-     * src/data/action_table_16bf20.c, which names each state). */
+     * src/data/action_table_16bf20.cpp, which names each state). */
     typedef void (ActionCtrl::*StateFunc)();
     static const StateFunc stateFuncs[ACTION_STATE_COUNT];
 

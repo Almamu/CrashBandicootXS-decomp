@@ -219,7 +219,6 @@ header that owns their type:
 
 | Header | Helpers | What |
 |---|---|---|
-| `actor_self.h` | `ACTOR_PMF(func)` | a `{0, -1, func}` pointer-to-member record of the C state tables |
 | `aabb.h` | `AABB_VALID(box)` | a box's `w`, read through a volatile (the "box isn't empty" re-read) |
 | `gfx_part.h` | `PART_FLAG_SET(part, shift)` | a +0x28 flag bit tested as a sign test |
 | `gba/dma_macros.h` | `DMA3` | channel 3's registers as a `struct dma_regs` |

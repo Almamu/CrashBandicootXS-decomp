@@ -8,7 +8,7 @@
 
 const struct speed_table gPlayerCtrlTurnSpeeds = { { 528, 352, 176, -176, -352, -528, -704, -704 } };
 
-/* 8 modes x 13 levels; action_table_16bf20.c's gPlayerCtrlModeAnimRows
+/* 8 modes x 13 levels; action_table_16bf20.cpp's gPlayerCtrlModeAnimRows
  * points at each row. */
 const struct level_anim gPlayerCtrlModeLevelAnims[8][13] = {
     {

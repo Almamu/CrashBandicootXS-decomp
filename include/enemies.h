@@ -2,7 +2,7 @@
 #define GUARD_ENEMIES_H
 
 /* The enemies subsystem (src/enemies/): the enemy controller that steers
- * an enemy's sprite part (`struct ctrl_target`, include/part_ctrl.h), its
+ * an enemy's sprite part (a MovingSprite, include/sprite_obj.hpp), its
  * motion/attack updaters, the "knocked" controller HitEnemy launches, and
  * the periodic spawner.
  *
@@ -17,7 +17,7 @@
 
 #include "core.h"
 #include "actor.h"
-#include "part_ctrl.h"
+#include "constants/entities.h"
 #include "vtable.h"
 
 struct entry_set;

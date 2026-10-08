@@ -8,7 +8,7 @@
 /* The polar player's state methods, indexed by `state` (gPolarPlayerStateFuncs;
  * PolarPlayer::RunState, polar_player_dispatch.cpp, and PolarPlayer::Update,
  * polar_player.cpp, dispatch through it). Each non-virtual `&PolarPlayer::f`
- * is g++'s {0, -1, f} record (actor_self.h's struct actor_pmf). */
+ * is g++'s {0, -1, f} record: {s16 this delta, s16 index, the code}. */
 const PolarPlayer::StateFunc PolarPlayer::stateFuncs[14] = {
     &PolarPlayer::StateMount,
     &PolarPlayer::StateRun,

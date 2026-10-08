@@ -3372,6 +3372,29 @@ SetCrateAbove, SetCrateBelow), with player.h's `struct player_vtable`
 `MATCH_HOLD_REG` 501 -> 487, `MATCH_CLOBBER` sites 3 -> 2, instruction asm
 61 -> 61. No file of the family was left C.
 
+**The class families' leftover C views (#656 batches 2-5).** After the
+conversion, the C views of the classes (`struct ctrl_target`, `struct
+gobj`, `struct box_part`, ...) had almost no C user left: the .cpp files
+still read through them. `tools/layout_audit.py views` lists them.
+
+- **Batch 2, the controllers.** The two state-table files are C++
+  (src/data/action_table_16bf20.cpp: `ActionCtrl::stateFuncs`;
+  player_pmf_16c250.cpp: `PlayerCtrl::stateFuncs` and
+  `InputCtrl::stateFuncs`), so player.h's 53 C prototypes of the
+  controllers' and the player's methods (the state methods, KillPlayer,
+  DoSuperBodySlamShockwave, CollidePlayer, SetPlayerBusy: the C++ callers
+  call the methods), the three `struct actor_pmf` table externs, and `struct actor_pmf`/`ACTOR_PMF` (actor_self.h) went. The
+  objects are byte-identical, symbols included. With them went the
+  controllers' C views: player_ctrl.h (`struct player_ctrl`), player.h's
+  `struct input_ctrl` and `struct act` tag, gobj_1a794.h's `struct mover`
+  and `struct mover_vtable`, and part_ctrl.h (`struct ctrl_target`): the
+  classes check the ROM sizes (0x30, 0x28, 0x38) instead. EnemyCtrl's
+  `target` and `popup` are `MovingSprite *`s (the `target`/`sprite` union
+  went); the enemy files read the class's fields (`f.b.gone`,
+  `mirrorFlags.mirrorX`, `rampX.start`, `bank->anims[tag].frameCount`,
+  ...). The six enemy objects are byte-identical, the `MATCH_HOLD_REG`
+  pins (now on `MovingSprite *`s) unchanged.
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from

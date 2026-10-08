@@ -11,7 +11,7 @@
 #include "player.hpp"
 #include "level_select.hpp"
 
-/* The input controller (gInputCtrlVtable, struct input_ctrl in player.h):
+/* The input controller (gInputCtrlVtable; 0x28 bytes):
  * the player's controller in room kind 2 (play_room.cpp creates it), where
  * the player uses sprite bank 2 (Crash riding a hover vehicle) and the
  * D-pad alone moves him. Each frame Update reads the D-pad, queues the
@@ -36,7 +36,7 @@ public:
     s32 timer; // 0x24 - how long left has been held, and the cooldown after
 
     /* The state methods, indexed by `state` (gInputCtrlStateFuncs,
-     * src/data/player_pmf_16c250.c): 0 StateStart, 1 StateRide,
+     * src/data/player_pmf_16c250.cpp): 0 StateStart, 1 StateRide,
      * 2 StateUnusedRide, 3 StateDead. */
     typedef void (InputCtrl::*StateFunc)();
     static const StateFunc stateFuncs[4];
@@ -85,6 +85,6 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(input_ctrl_hpp, sizeof(InputCtrl) == sizeof(struct input_ctrl));
+COMPILE_TIME_ASSERT(input_ctrl_hpp, sizeof(InputCtrl) == 0x28);
 
 #endif /* !GUARD_INPUT_CTRL_HPP */

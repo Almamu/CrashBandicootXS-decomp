@@ -66,7 +66,7 @@ void EnemyCtrl::UpdateAttackCycle()
             if (kind == ENEMY_KIND_PENGUIN) {
                 SetMotionX(0);
             } else if (kind == ENEMY_KIND_WOODEN_CRUSHER || kind == ENEMY_KIND_PISTON_CRUSHER) {
-                target->solid = 0;
+                target->f.b.solid = 0;
             }
         }
         break;
@@ -83,15 +83,15 @@ void EnemyCtrl::UpdateAttackCycle()
         if (target->animDone) {
             SetAnimMode(4);
             if (kind == ENEMY_KIND_WOODEN_CRUSHER || kind == ENEMY_KIND_PISTON_CRUSHER) {
-                target->solid = 1;
+                target->f.b.solid = 1;
                 PlaySfx(gAudioContext, SFX_CRUSHER_SLAM, 0x100);
             } else if (kind == ENEMY_KIND_PENGUIN) {
                 PlaySfx(gAudioContext, SFX_UNKNOWN_09, 0x100);
             }
         }
-        if (kind == ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT && target->tick == 9 &&
-            target->timer == 0) {
-            SpawnPart(0x17, 4, -0x2d, 2, 0, sprite)->kind = 2;
+        if (kind == ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT && target->frame == 9 &&
+            target->stepTimer == 0) {
+            SpawnPart(0x17, 4, -0x2d, 2, 0, target)->kind = 2;
             PlaySfx(gAudioContext, SFX_FLAMETHROWER, 0x100);
         }
         break;
@@ -102,7 +102,7 @@ void EnemyCtrl::UpdateAttackCycle()
                 break;
             SetMotionX(1);
         }
-        if (kind == ENEMY_KIND_PENGUIN && target->tick == 8 && target->timer == 0)
+        if (kind == ENEMY_KIND_PENGUIN && target->frame == 8 && target->stepTimer == 0)
             PlaySfx(gAudioContext, SFX_UNKNOWN_23, 0x100);
         break;
     }
@@ -117,7 +117,7 @@ void EnemyCtrl::UpdateTriggerBox()
     if (kind == ENEMY_KIND_VULTURE) {
         /* r1 pin: the allocator otherwise swaps target/baseY (r2/r1),
          * under C++ as under C. */
-        MATCH_HOLD_REG(struct ctrl_target *, t, r1) = target;
+        MATCH_HOLD_REG(MovingSprite *, t, r1) = target;
         if (t->y < baseY) {
             t->y = baseY;
             SetMotionY(0);
@@ -133,23 +133,23 @@ void EnemyCtrl::UpdateTriggerBox()
         SetAabbSize(&box, w, h);
         /* X-mirrored: bit 4 as a sign test (`lsl #27`); g++ tests the
          * bitfield with an `and`. */
-        if ((s32)(sprite->mirror << 27) < 0)
+        if ((s32)(target->mirror << 27) < 0)
             box.x = Q8_TO_INT(target->x) * 2 - (box.x + box.w);
         if (gPlayer->TouchesBox(&box)) {
             SetAnimMode(2);
             if (kind == ENEMY_KIND_VULTURE) {
-                struct ctrl_target *part = target;
+                MovingSprite *part = target;
                 s32 a = 0x300, b = 0x20, c;
 
                 part->speedY = a;
-                part->rampY[0] = a;
-                part->rampY[1] = b;
-                part->rampY[2] = m;
+                part->rampY.start = a;
+                part->rampY.step = b;
+                part->rampY.target = m;
                 c = -0x200;
                 part->speedX = m;
-                part->rampX[0] = m;
-                part->rampX[1] = b;
-                part->rampX[2] = c;
+                part->rampX.start = m;
+                part->rampX.step = b;
+                part->rampX.target = c;
             }
         }
         break;
@@ -177,35 +177,35 @@ void EnemyCtrl::UpdateTriggerBox()
 static inline void SetMotionYInline(EnemyCtrl *self, s32 mode)
 {
     self->modeA = mode;
-    self->Ctrl::StartTargetMotionYFromSet(self->sprite, mode);
+    self->Ctrl::StartTargetMotionYFromSet(self->target, mode);
 }
 
 static inline void SetMotionXInline(EnemyCtrl *self, s32 mode)
 {
     self->modeB = mode;
-    self->Ctrl::StartTargetMotionXFromSet(self->sprite, mode);
+    self->Ctrl::StartTargetMotionXFromSet(self->target, mode);
 }
 
 static inline void SetAnimModeInline(EnemyCtrl *self, s32 mode)
 {
     self->mode = mode;
-    self->SetTargetAnim(self->sprite, self->anims[mode]);
+    self->SetTargetAnim(self->target, self->anims[mode]);
 }
 
-static inline void SetVelX(struct ctrl_target *t, s32 v, s32 w)
+static inline void SetVelX(MovingSprite *t, s32 v, s32 w)
 {
     t->speedX = v;
-    t->rampX[0] = v;
-    t->rampX[1] = w;
-    t->rampX[2] = v;
+    t->rampX.start = v;
+    t->rampX.step = w;
+    t->rampX.target = v;
 }
 
-static inline void SetVelY(struct ctrl_target *t, s32 v, s32 w)
+static inline void SetVelY(MovingSprite *t, s32 v, s32 w)
 {
     t->speedY = v;
-    t->rampY[0] = v;
-    t->rampY[1] = w;
-    t->rampY[2] = v;
+    t->rampY.start = v;
+    t->rampY.step = w;
+    t->rampY.target = v;
 }
 
 /* Sets Update's `state` (1-18) and starts it: the motion and animation
@@ -218,11 +218,11 @@ void EnemyCtrl::SetState(s32 newState)
     switch (newState) {
     case 5:
         {
-            struct ctrl_target *part = target;
+            MovingSprite *part = target;
 
             SetVelX(part, -0x180, 0);
             SetVelY(part, 0x400, 0);
-            part->flag7 = 1;
+            part->f.b.collides = 1;
         }
         break;
     case 6:
@@ -245,14 +245,14 @@ void EnemyCtrl::SetState(s32 newState)
         if (cycleOffset >= idleTime) {
             SetAnimModeInline(this, 4);
             {
-                struct ctrl_target *part = target;
-                part->tick = (*part->keyframes)[part->frame].steps - 1;
+                MovingSprite *part = target;
+                part->frame = part->bank->anims[part->tag].frameCount - 1;
             }
         } else {
             SetAnimModeInline(this, 0);
             if (kind == ENEMY_KIND_STATIONARY_SPACE_ENEMY) {
-                struct ctrl_target *part = target;
-                part->tick = (*part->keyframes)[part->frame].steps - 1;
+                MovingSprite *part = target;
+                part->frame = part->bank->anims[part->tag].frameCount - 1;
             }
         }
         break;

@@ -19,7 +19,7 @@ the file's `.rodata` at the table's ROM address, between the raw parts of
 
 - **One file per contiguous run of converted tables.** Name it
   `<what>_<ROM offset>.c`, the offset in lowercase hex without the
-  `0x08` (`action_table_16bf20.c` is at `0x0816BF20`), the way
+  `0x08` (`action_table_16bf20.cpp` is at `0x0816BF20`), the way
   `src/player/swim_ctrl.c` is named. Two C files can sit next to
   each other when their tables are unrelated (`bg_package_16c58c.c`,
   then `image_table_16c5a0.c`).
@@ -31,7 +31,7 @@ the file's `.rodata` at the table's ROM address, between the raw parts of
   label nothing references can be dropped when a C table spans it (see
   `actor_category_175558.c`).
 - **Types come from the code's headers** when there is one:
-  `struct actor_pmf` (`actor_self.h`), `struct category_descriptor` /
+  `struct category_descriptor` /
   `struct category_vtable` (`actor_anim.h`), `struct bg_package`
   (`graphics_package.h`), and the new `struct vtable_slot` (`vtable.h`).
   When the only view is a struct local to one `.c` file, the data file
@@ -48,7 +48,7 @@ hole:
 gWumpaHopWidths:
 	.incbin "baserom.gba", 0x0016BF14, 0x0000000C
 
-@ gActionCtrlStateTable..gPlayerCtrlModeAnimRows: src/data/action_table_16bf20.c
+@ gActionCtrlStateTable..gPlayerCtrlModeAnimRows: src/data/action_table_16bf20.cpp
 
 .section .rodata.0816C090
 
@@ -83,9 +83,11 @@ harmless.
    at data. Then read how the C uses it: `grep -rn gStaticData_XXXXXXXX
    src include`. The patterns found so far:
    - `{0xFFFF0000, fn}` pairs: a gcc 2.x pointer-to-member-function
-     (thisOffset 0, index -1 = non-virtual, then the code address), the
-     tables behind `ACTOR_PMF_CALL`. Initialize them with
-     `ACTOR_PMF(fn)`.
+     (thisOffset 0, index -1 = non-virtual, then the code address): the
+     classes' state tables. All of them are C++ now, `const
+     X::StateFunc X::stateFuncs[] = { &X::f, ... }` (the
+     `actor_pmf_*.cpp`, `action_table_16bf20.cpp` and
+     `player_pmf_16c250.cpp` files), each `&X::f` g++'s own record.
    - `{0, fn}` pairs after an all-zero first pair: a gcc 2.x virtual
      table (`struct vtable_slot`). The game's 93 are all found, and all
      are emitted by g++ from the classes
@@ -129,8 +131,7 @@ Checked by compiling test tables and by the conversions themselves:
   the Thumb bit itself: the R_ARM_ABS32 relocation against a Thumb
   function symbol yields the odd address, so never write `sub_XXXX + 1`.
 - Designated initializers work (`{ .fn = sub_XXXX }`), which a union
-  whose first member isn't the pointer needs (`struct actor_pmf`'s
-  `u.vtableOffset`/`u.fn`).
+  whose first member isn't the pointer needs.
 - Integer constants cast to pointers work in initializers
   (`(void (*)(void))0xffffffef` for the non-code slots of
   `struct category_vtable`).
@@ -201,9 +202,9 @@ The first batch (all pointer tables, all byte-exact):
 | `entry_set_16b93c.c` | `0x0816B93C` | 1 entry set and its entries |
 | `popup_tables_16b98c.c` | `0x0816B98C` | 15 text-popup tables |
 | `object_tables_16bb6c.c` | `0x0816BB6C` | 1 entry set, the collision system's kind tables, 2 scale triples |
-| `action_table_16bf20.c` | `0x0816BF20` | 42-slot player action PMF table, per-mode animation row pointers |
+| `action_table_16bf20.cpp` | `0x0816BF20` | 42-slot player action PMF table, per-mode animation row pointers |
 | `speed_table_16c090.c` | `0x0816C090` | the player speed table, the per-mode level animation rows |
-| `player_pmf_16c250.c` | `0x0816C250` | 2 player-controller PMF tables, an entry table and its set |
+| `player_pmf_16c250.cpp` | `0x0816C250` | 2 player-controller PMF tables, an entry table and its set |
 | `actor_tables_16c2d8.c` | `0x0816C2D8` | small actor tables (vectors, per-round bytes, thresholds, argument blocks) |
 | `entry_set_16c418.c` | `0x0816C418` | an entry table and its set |
 | `velocity_16c460.c` | `0x0816C460` | 3 velocity vectors |
@@ -594,7 +595,7 @@ because it only reaches them through a pointer, are named after their
 address: the pairs in `motion_records_16b304.c` (`gActionCtrlMotionEntries`,
 `gPlayerCtrlMotionEntries`), which `entry_set_16b92c.c` now points at by
 name, the level animation rows `gPlayerCtrlModeLevelAnims` that
-`action_table_16bf20.c` points at, and the two link-cable names
+`action_table_16bf20.cpp` points at, and the two link-cable names
 `gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.c`). A few
 byte tables sit at odd addresses (`gTinyHopTargets`); brace-list `u8`
 arrays aren't aligned by agbcc, so they stay in place.

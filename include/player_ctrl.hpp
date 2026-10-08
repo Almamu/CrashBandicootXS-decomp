@@ -11,12 +11,7 @@
 #include "ctrl.hpp"
 #include "player.hpp"
 
-extern "C" {
-#include "player_ctrl.h"
-}
-
-/* The swim controller (gPlayerCtrlVtable, struct player_ctrl in
- * player_ctrl.h): the diving Crash's controller in the room-kind-1
+/* The swim controller (gPlayerCtrlVtable; 0x30 bytes): the diving Crash's controller in the room-kind-1
  * (underwater) rooms, where play_room.cpp creates it (`new PlayerCtrl`,
  * InitPlayerCtrl(OperatorNew(0x30)) in its C). See swim_ctrl.cpp for the
  * states. Reset and Restart are in src/player/action_ctrl.cpp
@@ -47,7 +42,7 @@ public:
     u8 motionYPending; // 0x2D - motionY is queued
 
     /* The state methods, indexed by `state` (gPlayerCtrlStateFuncs,
-     * src/data/player_pmf_16c250.c): 0 StateIdle, 1 StateSwim,
+     * src/data/player_pmf_16c250.cpp): 0 StateIdle, 1 StateSwim,
      * 2 StateStroke, 3 StateSpin, 4 StateTurn, 5 StateStop,
      * 6 StateSwimStart, 7 StateDead. */
     typedef void (PlayerCtrl::*StateFunc)();
@@ -96,6 +91,6 @@ public:
     static s32 GetDriftStep(s32 v);
 };
 
-COMPILE_TIME_ASSERT(player_ctrl_hpp, sizeof(PlayerCtrl) == sizeof(struct player_ctrl));
+COMPILE_TIME_ASSERT(player_ctrl_hpp, sizeof(PlayerCtrl) == 0x30);
 
 #endif /* !GUARD_PLAYER_CTRL_HPP */

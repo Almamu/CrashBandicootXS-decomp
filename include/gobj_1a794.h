@@ -13,13 +13,10 @@
 #include "globals.h"
 #include "match.h"
 
-/* The C views of the platforms (GitHub issue #25, ROM
- * 0x0801A794-0x0801B85C), shared by the C files that still use them (the
- * player, the crates, the vtable data) and by
- * src/bosses/dingodile_create.cpp. The platforms are C++ now:
+/* The C view of the platforms (GitHub issue #25, ROM
+ * 0x0801A794-0x0801B85C). The platforms are C++ now:
  * include/platform.hpp's `Platform` and `PlatformMover`
- * (src/objects/platform*.cpp) are the definitions, and check their sizes
- * against these two structs.
+ * (src/objects/platform*.cpp) are the definitions.
  *
  * - `struct gobj`, a 0x80-byte level object: CreatePlatform's
  *   (gPlatformVtable) and, with the player's fields after it, the player
@@ -28,18 +25,7 @@
  *   definitions: Entity, Sprite, MovingSprite, GroundSprite; sprite_obj.hpp
  *   checks this struct's size against GroundSprite's) and of
  *   platform.hpp's Platform. Its `type` (+0x78) is the platform type;
- *   types 1/5/6/7 get a `struct mover` attached at +0x44.
- * - `struct mover`, a 0x38-byte controller (gPlatformMoverVtable; the C
- *   view of PlatformMover) that oscillates its owner back and forth over
- *   `rangeX`/`rangeY` pixels using the 12-byte velocity records of
- *   gPlatformMoverMotionRecords, and drags the player along while it is
- *   `active` (MovePlayerWithPlatform). The Neo Cortex fight's platform
- *   mover, platform.hpp's CortexBossPlatformMover, is a subclass. */
-
-struct vec_pair {
-    u32 a;
-    u32 b;
-};
+ *   types 1/5/6/7 get a PlatformMover (platform.hpp) attached at +0x44. */
 
 struct anim_rec {
     u8 unk_00[4];
@@ -71,8 +57,6 @@ struct gobj_vtable {
     struct actor_method checkContact; // 0x70 - CheckPlayerContact (CollideMovingSprite)
 };
 
-struct mover;
-
 struct gobj {
     s32 x;  // 0x00
     s32 y;  // 0x04
@@ -102,7 +86,7 @@ struct gobj {
     u16 affine; // 0x3C - box_part.h's `affine` (ResetSpriteObj clears it)
     u8 unk_3E[2];
     s32 unk_40;              // 0x40 - ResetMovingSprite clears it; nothing reads it
-    struct mover *mover;     // 0x44
+    void *mover;             // 0x44 - its controller (a Ctrl)
     struct speed_ramp rampX; // 0x48 - speedX's ramp (ApplySpriteVelocity)
     struct speed_ramp rampY; // 0x54 - speedY's ramp
     s32 speedX;              // 0x60
@@ -116,39 +100,6 @@ struct gobj {
     s32 hitMask; // 0x74 - probe axes hit this frame (OR-accumulated, see box_part.h)
     s32 type;    // 0x78
     u8 unk_7C[4];
-};
-
-struct mover_vtable {
-    u8 unk_00[8];
-    struct actor_method m08; // 0x08
-    struct actor_method m10; // 0x10
-    struct actor_method m18; // 0x18
-    u8 unk_20[0x28];
-    struct actor_method destroy; // 0x48 - the destructor (DestroyMovingSprite passes 3)
-    u8 unk_50[0x10];
-    struct actor_method m60; // 0x60
-};
-
-struct mover {
-    u8 unk_00[4];
-    struct {
-        struct vec_pair *entries;
-    } *set; // 0x04
-    u8 unk_08[4];
-    struct mover_vtable *vtable; // 0x0C
-    s32 kind;                    // 0x10
-    s32 timer;                   // 0x14
-    s32 distX;                   // 0x18
-    s32 distY;                   // 0x1C
-    s32 lastX;                   // 0x20
-    s32 lastY;                   // 0x24
-    s32 rangeX;                  // 0x28
-    s32 rangeY;                  // 0x2C
-    u8 dirX;                     // 0x30
-    u8 dirY;                     // 0x31
-    u8 active;                   // 0x32
-    u8 unk_33;
-    u32 time; // 0x34
 };
 
 struct pos2 {

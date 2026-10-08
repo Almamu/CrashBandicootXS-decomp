@@ -30,44 +30,44 @@ extern "C" {
  */
 void EnemyCtrl::UpdatePatrol()
 {
-    struct ctrl_target *part;
+    MovingSprite *part;
     s32 t;
     s32 steps;
 
     switch (mode) {
     case 0:
-        if (((s32)(sprite->mirror << 27) < 0 && target->x < rangeX[0]) ||
-            ((s8)(sprite->mirror << 3) >= 0 && target->x > rangeX[1])) {
+        if (((s32)(target->mirror << 27) < 0 && target->x < rangeX[0]) ||
+            ((s8)(target->mirror << 3) >= 0 && target->x > rangeX[1])) {
             SetAnimMode(1);
             SetMotionX(0);
         }
         break;
     case 1:
         if (target->animDone) {
-            u32 m = target->mirror.x;
-            target->mirror.x = !m;
+            u32 m = target->mirrorFlags.mirrorX;
+            target->mirrorFlags.mirrorX = !m;
             SetAnimMode(0);
             SetMotionX(1);
             if (kind == ENEMY_KIND_PENGUIN) {
                 part = target;
                 t = 8;
-                steps = (*part->keyframes)[part->frame].steps;
+                steps = part->bank->anims[part->tag].frameCount;
                 CLAMP_INDEX(t, steps);
-                part->tick = t;
+                part->frame = t;
             }
         }
         break;
     case 4:
-        if (((s32)(sprite->mirror << 27) < 0 && target->x < rangeX[0]) ||
-            ((s8)(sprite->mirror << 3) >= 0 && target->x > rangeX[1])) {
+        if (((s32)(target->mirror << 27) < 0 && target->x < rangeX[0]) ||
+            ((s8)(target->mirror << 3) >= 0 && target->x > rangeX[1])) {
             SetAnimMode(6);
             SetMotionX(0);
         }
         break;
     case 6:
         if (target->animDone) {
-            u32 m = target->mirror.x;
-            target->mirror.x = !m;
+            u32 m = target->mirrorFlags.mirrorX;
+            target->mirrorFlags.mirrorX = !m;
             SetAnimMode(4);
             SetMotionX(1);
         }

@@ -1,26 +1,16 @@
 #ifndef GUARD_PLAYER_H
 #define GUARD_PLAYER_H
 
-/* The player subsystem (src/player/): the player object (InitPlayer,
- * UpdatePlayer, DrawPlayer, its flag accessors and collision), and its
- * controllers: the action controller (class ActionCtrl, action_ctrl.hpp,
- * the on-foot state machine), the input controller, the boss controller and
- * the swim controller (`struct player_ctrl`, player_ctrl.h).
+/* The player subsystem (src/player/): the player object (class Player,
+ * include/player.hpp: InitPlayer, UpdatePlayer, DrawPlayer, its flag
+ * accessors and collision) and its controllers, the C++ classes ActionCtrl
+ * (action_ctrl.hpp, the on-foot state machine), InputCtrl
+ * (input_ctrl.hpp), PlayerCtrl (player_ctrl.hpp, the swim controller) and
+ * the boss controllers (boss_ctrl.hpp).
  *
- * Declarations here are the functions' real prototypes, copied from
- * their definitions. A .c file that needs a different local declaration
- * for codegen keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md).
- *
- * The player object is class Player (include/player.hpp; all of its code
- * is C++), and `struct player` below is its C view (gPlayer, globals.h) for
- * the C files; the prototypes of its methods keep their C names
- * (cxx_symbols.txt) and take it. Each controller's functions take its
- * struct: `struct act` (the action controller; an incomplete type, as all
- * of its code is C++), `struct player_ctrl` (player_ctrl.h), and `struct
- * input_ctrl` below. ResetActionCtrl
- * (src/pickups/wumpa.cpp) is here, with the rest of the action
- * controller. */
+ * All of the player's code is C++. `struct player` below is the C view of
+ * Player (gPlayer, globals.h) for the C files left (bonus_round.c); this
+ * header keeps the data the C++ code and the data tables share. */
 
 #include "core.h"
 #include "actor_self.h"
@@ -29,13 +19,10 @@
 #include "constants/action_states.h"
 #include "constants/attack_kinds.h"
 
-struct act;
 struct box_part;
 struct crate;
 struct gobj;
 struct follow_child;
-struct input_ctrl;
-struct player_ctrl;
 
 /* The swim controller's turn: speedX at each frame of the turn animation
  * (state 4), copied to the stack in one go by StartPlayerCtrlStroke
@@ -81,7 +68,7 @@ struct player_pos {
 };
 
 /* The flags byte at +0x0C (struct actor.flags), as a byte or as bits
- * (the bit names are part_ctrl.h's `struct ctrl_target`). The views give
+ * (the bit names are entity.hpp's `union EntityFlags`). The views give
  * different code: clearing a bit through the bitfield is an `and` with a
  * negative constant, through the byte with a positive one. Packed, so
  * that the union is one byte (agbcc pads an unpacked one to 4). */
@@ -237,49 +224,18 @@ COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
 /* The controllers share a base, ctrl.hpp's class Ctrl (InitCtrl/
  * DestroyCtrl, ctrl.cpp): +0x04 the motion entry set (SetCtrlAnimSet),
  * +0x08 the state, +0x0C the method table. Most subclasses keep their
- * controlled part at +0x10. The action controller is class ActionCtrl
- * (action_ctrl.hpp) and the swim controller `struct player_ctrl`
- * (player_ctrl.h); the input controller is below, the boss controllers
- * are boss_ctrl.hpp's classes. */
-
-/* The input controller (gInputCtrlVtable, src/player/input_ctrl.cpp and
- * input_ctrl_queue.cpp): the player's controller in the rooms where the
- * player is moved by the input alone. The C view of
- * include/input_ctrl.hpp's class InputCtrl, which keeps the same layout
- * (checked there). Its code is all C++; the C files only pass it around
- * (play_room.cpp creates it). */
-struct input_ctrl {
-    u8 unk_00[4];
-    const struct entry_set *animSet;  // 0x04
-    s32 state;                        // 0x08
-    const struct vtable_slot *vtable; // 0x0C - gInputCtrlVtable
-    struct player *target;            // 0x10
-    u8 motionX;                       // 0x14 - queued X motion entry (animSet->entries[][0])
-    u8 motionY;                       // 0x15 - queued Y motion entry (animSet->entries[][1])
-    u8 dirState;                      // 0x16
-    u8 motionXPending;                // 0x17 - ApplyInputCtrlMotion applies motionX
-    u8 motionYPending;                // 0x18 - ApplyInputCtrlMotion applies motionY
-    u8 motionXKeepSpeed; // 0x19 - apply with SetCtrlTargetMotionX (speed kept), not Start...
-    u8 motionYKeepSpeed; // 0x1A - the same for Y
-    u8 unk_1B;
-    struct follow_child *cameraLead; // 0x1C - the camera lead (class CameraLead, level_select.hpp)
-    u8 flag20;                       // 0x20
-    u8 unk_21[3];
-    s32 timer; // 0x24
-};
-
-/* The controllers' state functions, indexed by state
- * (src/data/action_table_16bf20.c, player_pmf_16c250.c). */
-extern const struct actor_pmf gActionCtrlStateTable[ACTION_STATE_COUNT];
-extern const struct actor_pmf gPlayerCtrlStateFuncs[8];
-extern const struct actor_pmf gInputCtrlStateFuncs[4];
+ * controlled part at +0x10. They are all C++ classes with no C view: the
+ * action controller ActionCtrl (action_ctrl.hpp), the swim controller
+ * PlayerCtrl (player_ctrl.hpp), the input controller InputCtrl
+ * (input_ctrl.hpp) and the boss controllers (boss_ctrl.hpp). The C files
+ * see them only as gPlayerCtrl's `void *`. */
 
 /* The attack kind of each action controller state (QueueCratePlayerCollision,
  * src/data/object_tables_16bb6c.c). */
 extern const s32 gActionCtrlStateAttackKinds[ACTION_STATE_COUNT];
 
 /* The swim controller's animations: one row of 13 tilt levels per mode
- * (src/data/speed_table_16c090.c, action_table_16bf20.c), and the
+ * (src/data/speed_table_16c090.c, action_table_16bf20.cpp), and the
  * stroke speeds. */
 extern const struct level_anim gPlayerCtrlModeLevelAnims[8][13];
 extern const struct level_anim *const gPlayerCtrlModeAnimRows[8];
@@ -308,91 +264,6 @@ extern const struct entry_set gInputCtrlMotionSet;
 /* The player's controller (sym_iwram.txt), built by PlayRoom. */
 extern void *gPlayerCtrl;
 
-/* src/player/action_ctrl.cpp */
-extern void ActionCtrlStateNop6(void);
-extern void ActionCtrlStateTurboRun(struct act *self);
-extern void ActionCtrlStateNop2(void);
-extern void ActionCtrlStateUnusedIdle(struct act *self);
-
-/* src/player/action_ctrl_hang.cpp */
-extern void ActionCtrlStateLeftGround(struct act *self);
-extern void ActionCtrlStateDying(struct act *self);
-extern void ActionCtrlStateWarpIn(struct act *self);
-extern void ActionCtrlStateHang(struct act *self);
-extern void ActionCtrlStateUnusedHang(struct act *self);
-extern void ActionCtrlReleaseHang(struct act *self);
-extern void ActionCtrlStateHangMoveStart(struct act *self);
-extern void ActionCtrlStateHangMove(struct act *self);
-extern void ActionCtrlStateHangStop(struct act *self);
-extern void DoSuperBodySlamShockwave(struct act *self);
-
-/* src/player/action_ctrl_idle.cpp */
-extern void ActionCtrlStateIdle(struct act *self);
-
-/* src/player/action_ctrl_land.cpp */
-extern void ActionCtrlStateCrawlStandUp(struct act *self);
-extern void ActionCtrlStateBodySlamLand(struct act *self);
-extern void ActionCtrlStateLand(struct act *self);
-
-/* src/player/action_ctrl_moves.cpp */
-extern void ActionCtrlStateUnusedHangRelease(struct act *self);
-extern void ActionCtrlStateUnusedHangGrab(struct act *self);
-extern void ActionCtrlStateHangSpin(struct act *self);
-extern void ActionCtrlStateHangGrab(struct act *self);
-extern void ActionCtrlStateWarpOut(struct act *self);
-extern void ActionCtrlStateCrawlStop(struct act *self);
-extern void ActionCtrlStateBodySlamStart(struct act *self);
-
-/* src/player/action_ctrl_run_jump.cpp */
-extern void ActionCtrlStateRun(struct act *self);
-extern void ActionCtrlStateJump(struct act *self);
-
-/* src/player/action_ctrl_states.cpp */
-extern void ActionCtrlStateAirborne(struct act *self);
-extern void ActionCtrlStateFlipBodySlamStart(struct act *self);
-extern void ActionCtrlStateSlide(struct act *self);
-extern void ActionCtrlStateSpin(struct act *self);
-extern void ActionCtrlStateAirSpin(struct act *self);
-extern void ActionCtrlStateTornadoSpin(struct act *self);
-extern void ActionCtrlStateCrouchDown(struct act *self);
-extern void ActionCtrlStateCrouch(struct act *self);
-extern void ActionCtrlStateStandUp(struct act *self);
-extern void ActionCtrlStateCrawlStart(struct act *self);
-extern void ActionCtrlStateCrawl(struct act *self);
-
-/* src/player/input_ctrl.cpp: the swim controller's motion queue
- * accessors (PlayerCtrl, include/player_ctrl.hpp), then InputCtrl's methods
- * (include/input_ctrl.hpp), under their C names (cxx_symbols.txt), for the
- * vtables, the state tables and the C callers. */
-extern void InputCtrlStateStart(struct input_ctrl *self);
-extern void InputCtrlStateDead(struct input_ctrl *self);
-extern void InputCtrlStateUnusedRide(struct input_ctrl *self);
-extern void InputCtrlStateRide(struct input_ctrl *self);
-
-/* src/player/kill_player.cpp */
-extern void KillPlayer(struct act *self, s32 id);
-
-/* src/player/player_*.cpp: Player's methods (include/player.hpp) under
- * their C names (cxx_symbols.txt), for the C callers. */
-
-/* src/player/player_collide.cpp */
-extern u8 CollidePlayer(struct player *self);
-
-/* src/player/player_flags.cpp: Player's accessors (include/player.hpp). */
-extern void SetPlayerBusy(struct player *self, u8 arg1);
-
-/* src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp, swim_ctrl_stroke.cpp:
- * the swim controller's methods (PlayerCtrl, include/player_ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the state table and the C
- * callers. */
-extern void PlayerCtrlStateIdle(struct player_ctrl *self);
-extern void PlayerCtrlStateSwim(struct player_ctrl *self);
-extern void PlayerCtrlStateStroke(struct player_ctrl *self);
-extern void PlayerCtrlStateSpin(struct player_ctrl *self);
-extern void PlayerCtrlStateTurn(struct player_ctrl *self);
-extern void PlayerCtrlStateSwimStart(struct player_ctrl *self);
-extern void PlayerCtrlStateStop(struct player_ctrl *self);
-extern void PlayerCtrlStateDead(struct player_ctrl *self);
 /* SetPlayerCtrlState's `timer`/`timerMax` value that keeps the current
  * one. */
 #define CTRL_KEEP 0x7FFFFFFF

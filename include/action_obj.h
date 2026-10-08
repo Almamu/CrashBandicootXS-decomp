@@ -3,10 +3,10 @@
 
 /* Helpers of the action controller's C++ files (include/action_ctrl.hpp,
  * src/player/action_ctrl*.cpp): the input word's halves. The byte view of
- * the player's flags2 is in action_ctrl.hpp. The controller's C view, `struct act`, went
- * with its last C user (ResetActionCtrl, part 7h of #664); the C
- * prototypes in player.h (for the vtable and state table data) keep the
- * tag as an incomplete type. */
+ * the player's flags2 is in action_ctrl.hpp. The controller has no C view:
+ * `struct act` went with its last C user (ResetActionCtrl, part 7h of
+ * #664), and its C prototypes with the state table's conversion to C++
+ * (src/data/action_table_16bf20.cpp, #656). */
 
 #include "player.h"
 

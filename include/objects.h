@@ -28,7 +28,6 @@ struct gfx_part;
 struct gfx_vec;
 struct gobj;
 struct hitbox_quad;
-struct mover;
 struct sprite_point;
 
 /* A position pair: a collision candidate's (src/objects/collision_queue.cpp),
@@ -85,8 +84,7 @@ struct collision_queue {
  * records per state; `entries` is an array of pairs) and a Q8 scale,
  * 0x100 (1.0) in every set in the ROM, that SetCtrlTargetMotionX and
  * StartCtrlTargetMotionX multiply the motion vector by. A controller or
- * mover keeps one at +0x04 (SetCtrlAnimSet, gobj_1a794.h's `struct mover`
- * `set`). */
+ * mover keeps one at +0x04 (SetCtrlAnimSet, Ctrl's `animSet`). */
 struct entry_set {
     const u32 (*entries)[2];
     s32 scale; // 0x04 - Q8
