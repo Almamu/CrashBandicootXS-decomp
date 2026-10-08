@@ -101,7 +101,7 @@ void ShowSuperBodySlamDialog(void)
 
 s32 GetProgressLives(const struct game_progress *save)
 {
-    return PACKED_STATS_LIVES(save->packedStats[0]);
+    return save->lives;
 }
 
 /* The save block's counts (the pause menu's pages, the save menu's rows,

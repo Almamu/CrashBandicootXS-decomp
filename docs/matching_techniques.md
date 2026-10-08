@@ -106,7 +106,10 @@ Cases: [issue-24-boss-actor.md](./matching/archive/issue-24-boss-actor.md)
 [old-agbcc-retry.md](./matching/archive/old-agbcc-retry.md)
 (`UpdateCortexBoss`, `CreatePlatform`; whole-file moves),
 [issue-31-old-agbcc.md](./matching/archive/issue-31-old-agbcc.md)
-(`SpawnSquid` and the r7 push).
+(`SpawnSquid` and the r7 push). #662 step 3 moved level_state.o and
+level_query.o over: under old_agbcp their pins and asm went with plain C
+(`LevelHasEntityType`, `CheckAllCratesBroken`, `UnpackSaveData`), which
+agbcp only matched pinned.
 
 ### -O1 SDK code
 
@@ -270,6 +273,26 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   wider or equal mode. Loading the first constant through a `u8`
   variable pinned to the same register (`MATCH_HOLD_REG(u8, minus, r4)
   = '-';`) keeps the later `= 0` a `mov` (`itoa_arm`, seventh pass).
+- **A constant offset rebuilt after a call** (`movs r2, #0x8d; lsls
+  r2, #2` before the call and again, in another register, after it):
+  the index passed to an inline function as a parameter
+  (`gSpriteBankSet->Anims(47)`, sprite_obj.hpp). Written as
+  `banks[47]` twice, gcc keeps the offset in a callee-saved register
+  across the call (`FreezeLevelClock`, #662 step 3).
+- **Packed fields read with `ldrb`/`ldrh` and shifts** (a byte for a
+  field inside one byte, the halfword for one that straddles two):
+  bitfields of the struct itself (`u16 lives:7; u16 maskLevel:2; u16
+  wumpa:7;` in `game_progress`); gcc accesses each through the narrowest
+  mode that holds it. A bitfield sub-struct is word-sized and gives
+  `ldr` (`UnpackSaveData`/`PackSaveData`, #662 step 3).
+- **Two values computed into a fresh register pair, then stored to a
+  stack array** (`subs r2, r1, #2; ...; adds r3, r0, #0; subs r3, #30;
+  str r2, [sp]; str r3, [sp, #4]`, or a callee-saved r4 pushed for
+  `r3:r4` in a leaf): a `struct vec2` *value* held in a DImode register
+  pair. In C, `struct vec2 goal = target->pos;` (camera.c) or an inline
+  returning a `struct vec2` gives it; g++ keeps a struct value in
+  memory, so the C++ spawners `SpawnRoomExit` and `SpawnCrateGemMarker`
+  still need pins (#662 step 3).
 
 ## Calls
 

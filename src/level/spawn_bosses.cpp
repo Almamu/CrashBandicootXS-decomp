@@ -50,7 +50,10 @@ static inline void SetMirrorFromRecord(MovingSprite *part, u16 index)
  * r0, #0; subs r3, #30`); g++ reuses their inputs, with every spelling
  * tried (locals, an inline setter, a point class with a constructor, a
  * loop around the stores), the same gap as SpawnCrateGemMarker
- * (spawn_pickups.cpp). */
+ * (spawn_pickups.cpp). The ROM's shape is the point built as one
+ * `struct vec2` value in a register pair (r2:r3) and then stored: the C
+ * compiler gives exactly that for an inline returning a `struct vec2`,
+ * but g++ keeps a struct value in memory, so here it takes the pins. */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState) && !GetRoomIndex(gLevelState) &&
