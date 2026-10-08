@@ -580,6 +580,9 @@ counts them by kind) and what the C++ still needs.
 | `src/vehicle/polar_crates.cpp` | `PolarCrate`'s constructor (InitPolarCrate); `PolarAkuAkuCrate`'s, `PolarTimeCrate`'s, `PolarFourWumpaCrate`'s and `PolarBasicCrate`'s `Update`; `PolarNitroCrate::Detonate`; the 7 crate kinds' out-of-line constructors (include/polar_crate_ctors.hpp) | 13 | agbcp (both match) | 21 pins, 19 retyped stores, 5 retyped reads -> 0 | 11d |
 | `src/vehicle/polar_objects.cpp` | `PolarElectricFence`, `PolarObstacle`, `PolarLauncher`, `PolarPenguin`, `PolarIcicle`: `Update` and constructor (and `PolarPenguin::Aim`); `PolarAkuAku`'s `Refresh`, `Update`, `Move` | 14 | agbcp (both match) | 56 pins, 1 `asm`, 24 retyped stores, 1 retyped read, `ACTOR_VCALL` and a hand-written slot call, 9 gotos -> 0 (`Move`'s `goto` stays) | 11d |
 | `src/vehicle/polar_aku_aku.cpp` | `PolarAkuAku`'s `ClearMask`, `RemoveMask`, `AddMask`, `SetMask`, constructor; `PolarGoal`, `PolarBoostPad`, `PolarCheckpointCrate`: `Update` and constructor; `GetPolarMaskLevel` (C linkage) | 11 + 1 | agbcp (both match) | 9 pins, 4 retyped stores, a hand-written slot call -> 0 | 11d |
+| `src/vehicle/jetpack_crates.cpp` | `JetpackBalloonCrate` (include/vehicle.hpp): `Update`, `Damage`, `Break`, `IsUnshootable`, the destructor, the out-of-line constructor (`InitJetpackBalloonCrate`, unused), `ClearBalloon`, `RunState` (unused), 3 states; `JetpackHealthCrate`, `JetpackTimeCrate`, `JetpackQuestionCrate`: constructors (`CreateJetpack*Crate`), `Update`, `Damage`; `JetpackParachuteNitro`, `JetpackRocket`: constructors, `Update`, `Damage`, `IsUnshootable`, `JetpackRocket::Launch`; `JetpackRing::Update` | 30 | agbcp (both match) | 62 pins, 3 `asm`, a file-scope `asm` literal pool, 30 retyped stores, 19 retyped reads, 2 `ACTOR_PMF_CALL`s, 2 `ACTOR_VCALL`s, 5 hand-written slot calls, the `goto` dispatch chains, a `__divsi3` call -> 0 | 11g |
+| `src/data/actor_pmf_17c42c.cpp` | `JetpackBalloonCrate::stateFuncs` (gJetpackBalloonCrateStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11g |
+| `src/vehicle/jetpack_spawn.cpp` (again) | the crates', the parachute nitro's and the rocket's spawners: `new` | 0 + 1 | old_agbcp | 6 C-constructor calls on `AllocActor` (and `AllocActor`) -> 0 | 11g |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2456,6 +2459,69 @@ Kept, each with a comment:
 - `ConvertHovercraftTiles`' `MATCH_CONST` and `MATCH_KEEP_MEM`, as
   `ConvertAirshipTiles`' (part 11i).
 
+### The balloon crates, the parachute nitro and the rocket (part 11g)
+
+Part 11g in numbers: jetpack_crates.c (ROM 0x08031A6C-0x08032650), 30
+functions, and the balloon crate's pointer-to-member table
+(actor_pmf_17c42c.cpp), all C++ now with no pins and no `asm`.
+Project-wide (against part 11d): `MATCH_HOLD_REG` 590 -> 528,
+instruction-emitting `asm` 81 -> 78, other file-scope `asm` 4 -> 3, retyped
+field stores 49 -> 19 and reads 38 -> 19. The object matches under agbcp
+and old_agbcp (identical assembly) and stays agbcp.
+
+| Class (include/vehicle.hpp) | Size | Vtable | Code |
+|---|---:|---|---|
+| `JetpackBalloonCrate : HpActor` | 0x70 | gJetpackBalloonCrateVtable (1, 2, 4, 5, 7) | jetpack_crates.cpp; its balloon, `done`, the sway's centre and phase, `fallSpeed`; its table in actor_pmf_17c42c.cpp |
+| `JetpackHealthCrate`, `JetpackTimeCrate : JetpackBalloonCrate` | 0x70 | their own (2, 4) | jetpack_crates.cpp (their destructors are g++'s implicit ones, actor_anim.cpp) |
+| `JetpackQuestionCrate : JetpackBalloonCrate` | 0x74 | gJetpackQuestionCrateVtable (2, 4) | jetpack_crates.cpp; the level spawn record |
+| `JetpackParachuteNitro : HpActor` | 0x60 | gJetpackParachuteNitroVtable (2, 4, 5) | jetpack_crates.cpp; `dead`, `limitY` |
+| `JetpackRocket : HpActor` | 0x68 | gJetpackRocketVtable (2, 4, 5) | jetpack_crates.cpp; the swing's origin, `limitY`, `stepY`, `triggered`, `hit` |
+| `JetpackRing` | | | `Update` (the rest is 11h's, hovercraft.cpp) |
+
+- **The kinds expand the crate's constructor; the ROM also has it out of
+  line**, uncalled (InitJetpackBalloonCrate, in the middle of the file). One
+  file can't have one function both inline and out of line, so the class
+  has two: the public `(rec, x, y, z, u8 kind)` one, defined plainly at
+  InitJetpackBalloonCrate's place, and a protected inline one with an
+  `s32` kind, which the kinds' `: JetpackBalloonCrate(rec, x, y, z, 0x28)`
+  picks (an `int` literal is an exact match). Both are `HpActor(rec, x, y,
+  z, 2)` and one inline body, `Hang`. The C pinned the hit points to r8 in
+  each kind's constructor: the base constructor's argument does it.
+- **`new`**: CreateJetpackActor's crates, nitro and rocket are `new X(...)`
+  (jetpack_spawn.cpp), byte-identical, and the spawners' `AllocActor`
+  goes. `JetpackQuestionCrate` takes the spawn record as a `void *`.
+- **The PMF table is C++**: `Update` and `RunState` were its only users.
+  `RunState` and the out-of-line constructor have no caller and no pointer
+  in the ROM: tagged UNUSED.
+- **The calls**: the destroy-slot calls are `delete this`, the player's slot
+  4 `Player()->Damage(n)`, `HealJetpackPlayer` & co. `Player()->Heal(0x14)`,
+  `QueueWumpa`, `PassRing` (their C prototypes go: no C caller left), the
+  balloon's `Release` and `Move` methods (theirs go too), and the kinds'
+  tail call `JetpackBalloonCrate::Update()`. jetpack_balloon.cpp's
+  `ClearJetpackCrateBalloon(crate)` is `crate->ClearBalloon()`.
+- **`~JetpackBalloonCrate`** is an empty body: its own vtable store is dead
+  before the inline `~ActorSelf`'s, as in the ROM (the C pinned the unlink's
+  two loads).
+
+What made the C++ match:
+
+- **The animation resets** are `SetState` and `RestartAnim` (most of the 62
+  pins and all 30 retyped stores). The kinds' `stateTime = kind` and
+  `animTime = kind` (the tested 0, reused) are `SetState` after the test.
+- **The payout dispatch** is a plain `switch`: the C's `goto` chains were
+  the compare tree gcc builds for four cases.
+- **The nitro's and the rocket's constructors** pass their fixed `y`
+  (`-0xFA00`, `0xFA00`) to `HpActor`. The C needed an `asm` block for the
+  nitro's whole `InitActorPart` call, a file-scope `asm` literal pool and an
+  inline wrapper for the rocket's: the constant goes through the inline
+  base constructor's argument, which puts its load after the stack
+  argument's store.
+- **The rocket's box** is `box = gJetpackRocketBox` (a struct assignment, the
+  ROM's `ldm`/`stm`), where the C copied a `struct vec3_words` view (vehicle.h; its last user, it goes).
+- `StateFall` reads `y` into a local before `fallSpeed`, as the C did.
+- `DamageJetpackRocket`'s two flag stores are two plain stores, where the C
+  stepped the pointer with an `add` in `asm`.
+
 ### The polar actors' constructors and the category frame (part 11b)
 
 Part 11b in numbers: actor_factory.c, actor_spawn.c, actor_category_frame.c
@@ -2799,8 +2865,9 @@ player, then the first item here, is C++ since part 8):
   shot, the jetpack spawners and their table, part 11c the polar player,
   part 11f the planes, bombers, cannonballs and balloons and their tables,
   part 11h the hovercraft (hovercraft*.c), its weapons and their tables,
-  part 11d the other polar actors (every polar class is C++ now);
-  the plan for the rest is
+  part 11d the other polar actors (every polar class is C++ now),
+  part 11g the balloon crates, the parachute nitro, the rocket and their
+  table; the plan for the rest is
   [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
   fonts (src/text/), the menus (the save menu, and the pause menu's and
@@ -2899,15 +2966,16 @@ and, once no C file reads one, its PMF table to C++.
 | ~~11d~~ | ~~vehicle/polar_crates.c, polar_pickups.c, polar_objects.c, polar_aku_aku.c, polar_nitro.c (old)~~ | the polar crates (`PolarCrate` and its kinds), wumpas, hazards, Aku Aku, goal, boost pad | done | | 11b |
 | ~~11e~~ | ~~vehicle/jetpack_spawn.c (old), jetpack_player.c, jetpack_run.c, jetpack_shot.c~~ | `HpActor`'s constructor, `JetpackPlayer`, `JetpackShot`, the jetpack spawners | done | gJetpackPlayerStateFuncs | 11a |
 | ~~11f~~ | ~~vehicle/jetpack_plane.c, jetpack_balloon.c~~ | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | done | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs (split into actor_pmf_17c414.cpp) | 11e |
-| 11g | vehicle/jetpack_crates.c | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | 30, 62, 3 | gJetpackBalloonCrateStateFuncs | 11e |
+| ~~11g~~ | ~~vehicle/jetpack_crates.c~~ | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | done | gJetpackBalloonCrateStateFuncs | 11e |
 | ~~11h~~ | ~~bosses/hovercraft.c (old), hovercraft_cannon.c, hovercraft_cannon_flash.c, hovercraft_launcher.c, hovercraft_side_gun.c, hovercraft_parts.c~~ | the hovercraft's weapons (`HovercraftFireball`, `HovercraftCannon`, ...), `JetpackRing`'s and `JetpackCollectedWumpa`'s constructors and methods (in hovercraft.c), the hovercraft (an `AnimPart` singleton) | done | gHovercraftFireballStateFuncs, gHovercraftCannonStateFuncs, gHovercraftLauncherStateFuncs | 11e |
 | ~~11i~~ | ~~bosses/airship*.c (10 files; airship_map.c, airship_touch.c old)~~ | `AirshipFireball` (but its two flight states, 11f's); the airship (an `AnimPart` singleton) | done | gAirshipFireballStateFuncs (split into actor_pmf_17c2b8.cpp) | |
 | 11j | actor/actor_bg.c, actor_category_init.c (old), actor_category_stats.c, actor_vram_pool.c, bg_picture.c (old), cell_anim.c; vehicle/yeti*.c (yeti_graphics.c, yeti_update.c old) | none: C-like (no C++ trait), only if the family's files should all be C++ | 43, 33, 3 | | |
 
-After 11i every 3D actor class is C++: actor_self.h's `ACTOR_PMF_CALL`,
-`ACTOR_VCALL`, `VTABLE_CALL2`/`3` and `VCALL1`/`2` go with their last C
-users, and the family's 47 vtables (with the logo actor's) can be
-emitted by g++ (item 10).
+Since 11g every 3D actor class is C++: actor_self.h's `ACTOR_PMF_CALL`,
+`ACTOR_VCALL`, `VTABLE_CALL2`/`3`, `VCALL1`/`2` and the `ACTOR_RECORD`/
+`ACTOR_LINK_*` casts went with their last C users (11d's polar_objects.c,
+11g's jetpack_crates.c), and the family's 47 vtables (with the logo
+actor's) can be emitted by g++ (item 10).
 
 #### The entity family (part 7)
 
@@ -3401,3 +3469,16 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   shape: ActorSelf::Draw's tail as an inline called with scale 0x140
   gives `DrawPolarCollectedWumpa`'s dead `flag = 0`, its folded size
   tests and its ORed 0x100 (part 11d), which the C wrote in asm.
+- **A constructor both inlined and out of line in one file** (the kinds
+  expand it, and the ROM has its own copy in the middle of the file) is two
+  overloads: the out-of-line one at its place, and a protected inline one
+  told apart by a parameter type the callers' arguments match exactly (an
+  `s32` kind for an `int` literal, against the out-of-line `u8`), both on
+  one inline body (`JetpackBalloonCrate`, part 11g). Define that body before
+  the inline constructor: an inline function used before its definition is
+  called out of line, and the link fails.
+- **A constant argument loaded after the stack argument's store** (`str rN,
+  [sp]; adds r0, r4, #0; ldr r3, =K; bl`) is a constant passed through an
+  inline function's parameter, such as the inline base constructor's:
+  `HpActor(rec, x, -0xFA00, z, 2)` (`JetpackParachuteNitro`, part 11g).
+  Written directly as a call argument, it is loaded before the store.

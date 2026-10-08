@@ -819,7 +819,7 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
- * jetpack_crates.c, hovercraft.cpp (~JetpackCollectedWumpa), polar_player_actions.cpp,
+ * jetpack_crates.cpp, hovercraft.cpp (~JetpackCollectedWumpa), polar_player_actions.cpp,
  * polar_pickups.cpp, jetpack_player.cpp, actor.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
@@ -1100,7 +1100,7 @@ const struct vtable_slot gJetpackBalloonVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_crates.c. */
+/* Used by jetpack_crates.cpp. */
 const struct vtable_slot gJetpackHealthCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackHealthCrate),
@@ -1112,7 +1112,7 @@ const struct vtable_slot gJetpackHealthCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by jetpack_crates.c. */
+/* Used by jetpack_crates.cpp. */
 const struct vtable_slot gJetpackTimeCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackTimeCrate),
@@ -1124,7 +1124,7 @@ const struct vtable_slot gJetpackTimeCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by jetpack_crates.c. */
+/* Used by jetpack_crates.cpp. */
 const struct vtable_slot gJetpackQuestionCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackQuestionCrate),
@@ -1136,7 +1136,7 @@ const struct vtable_slot gJetpackQuestionCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by jetpack_crates.c. */
+/* Used by jetpack_crates.cpp. */
 const struct vtable_slot gJetpackBalloonCrateVtable[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackBalloonCrate),
@@ -1148,7 +1148,7 @@ const struct vtable_slot gJetpackBalloonCrateVtable[8] = {
     VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
-/* Used by jetpack_crates.c (CreateJetpackParachuteNitro). */
+/* Used by jetpack_crates.cpp (CreateJetpackParachuteNitro). */
 const struct vtable_slot gJetpackParachuteNitroVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackParachuteNitro),
@@ -1159,7 +1159,7 @@ const struct vtable_slot gJetpackParachuteNitroVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_crates.c. */
+/* Used by jetpack_crates.cpp. */
 const struct vtable_slot gJetpackRocketVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackRocket),

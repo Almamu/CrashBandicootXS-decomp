@@ -294,7 +294,7 @@ JetpackBalloon::~JetpackBalloon()
 
 /* The balloon crates' kinds: g++'s implicit destructors (the classes
  * declare none), which call JetpackBalloonCrate's out of line (in
- * jetpack_crates.c), with no delete, and then delete. They are written as
+ * jetpack_crates.cpp), with no delete, and then delete. They are written as
  * the functions g++ synthesized: g++ skips the class's own vtable store
  * only in an implicit destructor (an explicit one, even empty, stores it
  * before the call). */

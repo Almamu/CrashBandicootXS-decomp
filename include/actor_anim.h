@@ -21,8 +21,8 @@
 
 /* A box in the actors' 16-bit world units: position then size. The
  * anim_table_record's box_14, `actor_self.box` and several small src/data
- * tables are this. A fixed box is copied into an actor as three words
- * (`struct vec3_words`, vehicle.h) for the ROM's `ldm`/`stm`. */
+ * tables are this. A fixed box is copied into an actor by struct
+ * assignment (`box = gJetpackRocketBox`): the ROM's `ldm`/`stm`. */
 struct anim_box {
     s16 x, y, z;
     s16 w, h, d;

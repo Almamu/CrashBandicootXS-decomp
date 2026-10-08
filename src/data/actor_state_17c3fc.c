@@ -5,7 +5,7 @@
 /*
  * ROM 0x0817C3FC-0x0817C414. The two pointer-to-member tables that
  * followed, the balloon's and the balloon crate's, are split into
- * actor_pmf_17c414.cpp and actor_pmf_17c42c.c (#664 part 11f). Linked in
+ * actor_pmf_17c414.cpp and actor_pmf_17c42c.cpp (#664 part 11f). Linked in
  * ROM order between data/data.s sections by ldscript.txt - see
  * docs/data.md.
  */
