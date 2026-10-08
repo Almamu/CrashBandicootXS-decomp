@@ -1,4 +1,5 @@
 #include "actor_self.hpp"
+#include "vehicle.hpp"
 
 extern "C" {
 #include "core.h"
@@ -185,17 +186,17 @@ void SetActorCategoryExitStatus(s32 arg0)
     gActorCategoryExitStatus = arg0;
 }
 
-/* Both forward the callee's result untouched: the callees are `u8`
- * (jetpack_player.cpp / polar_player_states.cpp), but this file's source saw them
- * returning `int`, so there is no re-narrowing and the epilogue returns
- * through `pop {r1}`. The old NAKED note blamed a TU-wide allocator
- * quirk; it was just the missing return value. */
+/* Both forward the player's IsPauseLocked untouched: it returns `s32`
+ * (vehicle.hpp; the bodies, in jetpack_player.cpp and
+ * polar_player_states.cpp, return a byte), so there is no re-narrowing
+ * and the epilogue returns through `pop {r1}`. The old NAKED note blamed
+ * a TU-wide allocator quirk; it was just the missing return value. */
 s32 JetpackIsPauseLocked(void)
 {
-    return IsJetpackPauseLocked(gActorList);
+    return ((JetpackPlayer *)gActorList)->IsPauseLocked();
 }
 
 s32 PolarIsPauseLocked(void)
 {
-    return IsPolarPauseLocked(gActorList);
+    return ((PolarPlayer *)gActorList)->IsPauseLocked();
 }

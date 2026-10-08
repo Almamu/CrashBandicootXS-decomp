@@ -55,10 +55,10 @@ public:
  * right, and jumps; the rest of its state is in the gPolar* globals
  * (vehicle.h), as the ROM has it. ConstructAnimTableState
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The
- * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`;
- * the few that C or the actor zone's C-linkage hooks call (Catch,
- * AllocTiles, FinishRun, IsPauseLocked) keep their C prototypes in
- * vehicle.h. */
+ * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
+ * as do the actor zone's C-linkage category hooks (actor.cpp,
+ * actor_spawn.cpp); Catch, which yeti_update.c calls, keeps its C
+ * prototype in vehicle.h. */
 class PolarPlayer : public ActorSelf
 {
 public:

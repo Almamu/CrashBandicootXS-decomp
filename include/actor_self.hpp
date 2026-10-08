@@ -146,6 +146,39 @@ inline ActorSelf::~ActorSelf()
 }
 #endif
 
+/* The 3D actors' box test (actor_category_frame.cpp's player hooks and
+ * FindShotTarget, polar_nitro.cpp's DetonateNearby; UpdateYeti,
+ * IsTouchingYeti and IsTouchingAirship spell out the same test): each
+ * actor's box (`box`, +0x38) moved to its position in whole units, the
+ * two compared on Z, Y and X. WorldBox is the body of
+ * ActorSelf::GetWorldBox (actor.cpp, GetActorWorldBox, which has no
+ * caller). BoxOverlap takes the two boxes by reference, so g++ binds each
+ * returned box to a temporary: the ROM's two `MemCopy32(box, box, 12)`
+ * self-copies are that binding's, which the C spelled out as calls
+ * (docs/cplusplus.md, part 11b). */
+static inline u8 BoxOverlap(const struct anim_box &b, const struct anim_box &a)
+{
+    if (b.z < a.z + a.d && b.z + b.d > a.z && b.y < a.y + a.h && b.y + b.h > a.y &&
+        b.x < a.x + a.w && b.x + b.w > a.x)
+        goto hit;
+    return 0;
+hit:
+    return 1;
+}
+
+static inline struct anim_box WorldBox(ActorSelf *s)
+{
+    struct anim_box b = s->box;
+    s32 dx = s->x >> 8;
+    s32 dy = s->y >> 8;
+    s32 dz = s->z >> 8;
+
+    b.x += dx;
+    b.y += dy;
+    b.z += dz;
+    return b;
+}
+
 /* The actors with hit points (0x58 bytes): the jetpack
  * levels' and the 3D bosses'. Its constructor is inline (the C's
  * InitHpActor): every subclass's expands it. Slot 5 has no default in the

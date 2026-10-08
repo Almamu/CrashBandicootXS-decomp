@@ -72,15 +72,8 @@ extern void nullsub_30(void);
  * (vehicle.hpp), for actor_anim.cpp's kinds' destructors */
 extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
 
-/* src/vehicle/jetpack_player.cpp: JetpackPlayer's methods (vehicle.hpp)
- * that the C files use, and a C-linkage getter */
-extern void SetJetpackCheckpoint(void *self);
-extern s32 IsJetpackPauseLocked(void *player);
+/* src/vehicle/jetpack_player.cpp: a C-linkage getter */
 extern u8 IsJetpackPlayerInactive(void);
-
-/* src/vehicle/jetpack_run.cpp: JetpackPlayer's (vehicle.hpp) */
-extern void FinishJetpackRun(void *self);
-extern void AllocJetpackPlayerTiles(void *self);
 
 /* src/vehicle/jetpack_spawn.cpp: the spawners (C linkage) */
 extern void YetiStateStop(void);
@@ -99,13 +92,8 @@ extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
 extern s32 GetPolarMaskLevel(void);
 extern u8 IsPolarPlayerInactive(void);
 
-/* src/vehicle/polar_player.cpp, polar_player_states.cpp and
- * polar_player_actions.cpp: PolarPlayer's methods (vehicle.hpp) that
- * yeti_update.c (CatchPolarPlayer) and actor.cpp's and actor_spawn.cpp's
- * hooks call by their C names. */
-extern void AllocPolarPlayerTiles(void *self);
-extern s32 IsPolarPauseLocked(void *player);
-extern void FinishPolarRun(void *player);
+/* src/vehicle/polar_player_actions.cpp: PolarPlayer::Catch (vehicle.hpp)
+ * under its C name, for yeti_update.c. */
 extern void CatchPolarPlayer(void *self);
 
 /* src/vehicle/yeti.c */
