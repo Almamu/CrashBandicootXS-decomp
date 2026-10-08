@@ -12,8 +12,7 @@ typedef void (*irq_handler_t)(void);
  * VBlankHandler() calls every non-zero one each VBlank. */
 struct vblank_callbacks {
     s32 funcs[8];
-    char pad2[48];
-}; // 0x80
+};
 
 /* gIntrTable is the per-IRQ handler table IntrMain dispatches through,
  * one entry per REG_IF bit (IrqSetup fills all 14); gPrevIntrTable holds

@@ -64,7 +64,7 @@ s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, s32 *ou
     end >>= 3;
     if (x == -1)
         x = 0;
-    if (end == self->tiles->unk010)
+    if (end == self->tiles->widthTiles)
         end--;
     for (; x <= end && !hit; x++) {
         if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))
@@ -102,7 +102,7 @@ s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *ou
     end >>= 3;
     if (y == -1)
         y = 0;
-    if (end == self->tiles->unk014)
+    if (end == self->tiles->heightTiles)
         end--;
     for (; y <= end && !hit; y++) {
         if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))

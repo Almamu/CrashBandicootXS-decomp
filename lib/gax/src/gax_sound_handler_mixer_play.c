@@ -24,45 +24,18 @@ asm(".set memcpy, MemCopy32");
  * reproducible as narrow inline asm with a `"m"` operand (see
  * docs/matching/archive/gax-toolchain-retry.md). */
 
-/* Only the parts of the song/channel/handler objects this file touches. */
-struct GaxSongInfo3 {
-    u8 pad_00[0x1b];
-    u8 halfRateFx; /* 0x1b - GaxSongData.halfRateFx */
-};
-
-struct GaxSongInfo2 {
-    u8 pad_00[0x18];
-    struct GaxSongInfo3 *song; /* 0x18 - GaxHandlerType.data.song */
-};
-
-struct GaxSongInfo1 {
-    u8 pad_00[8];
-    struct GaxSongInfo2 *infoType; /* 0x08 - GaxHandlerLayout.types[1], the Info type */
-};
-
-struct GaxSong {
-    u8 pad_00[0xc];
-    u16 flags; /* 0x0c */
-    u8 pad_0e[0x30 - 0xe];
-    struct GaxSongInfo1 *layout; /* 0x30 - GaxSongHeader.layout */
-};
-
+/* Only the parts of the channel objects this file touches. */
 struct GaxChannelView {
     u8 pad_00[0x18];
     u8 volume; /* 0x18 - GaxChannelState.volume (GAX_set_music_volume) */
-};
-
-struct GaxChanInfo {
-    u8 pad_00[0x1f];
-    u8 volume; /* 0x1f - GaxInfoHandler.volume */
 };
 
 /* The player's handler array (GAX_PLAYER()): the mixer, the Info
  * handler, the handler of the layout's third slot, then the song's
  * channels. */
 struct GaxPlayerHandlers {
-    u32 mixer;                /* 0x00 */
-    struct GaxChanInfo *info; /* 0x04 */
+    u32 mixer;                   /* 0x00 */
+    struct GaxInfoHandler *info; /* 0x04 */
     u32 field_08;
     struct GaxChannelView *channels[1]; /* 0x0c - really hdr->childCount long */
 };
@@ -208,8 +181,8 @@ u8 GaxMixerPlay(struct GaxMixerView *self, u32 *buf, u32 arg2)
     }
     if (gGaxPlayerState->fxEcho != 0) {
         if (result == 0) {
-            struct GaxSong *song = gGaxPlayerState->songPtr;
-            if (song->layout->infoType->song->halfRateFx != 0 || (song->flags & 0x20))
+            struct GaxSongHeader *song = gGaxPlayerState->songPtr;
+            if (song->layout->types[1]->data.song->halfRateFx != 0 || (song->flags & 0x20))
                 GAX_MIXER_CLEAR(self, buf);
         }
         for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)
@@ -252,8 +225,8 @@ u8 GaxMixerPlay(struct GaxMixerView *self, u32 *buf, u32 arg2)
     }
     if (gGaxPlayerState->fxEcho == 0) {
         if (result == 0) {
-            struct GaxSong *song = gGaxPlayerState->songPtr;
-            if (song->layout->infoType->song->halfRateFx != 0 || (song->flags & 0x20))
+            struct GaxSongHeader *song = gGaxPlayerState->songPtr;
+            if (song->layout->types[1]->data.song->halfRateFx != 0 || (song->flags & 0x20))
                 GAX_MIXER_CLEAR(self, buf);
         }
         for (i = self->hdr->childCount; i < self->hdr->childCount + self->extraChildren; i++)

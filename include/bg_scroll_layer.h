@@ -16,10 +16,12 @@ union bg_cnt {
     struct {
         u8 priority:2;   // BGnCNT bits 0-1
         u8 charBase:2;   // bits 2-3
-        u8 unk4:3;       // bits 4-6 (bit 6 = mosaic)
+        u8:2;            // bits 4-5, unused by the hardware
+        u8 mosaic:1;     // bit 6
         u8 colors256:1;  // bit 7
         u8 screenBase:5; // bits 8-12
-        u8 unk13:3;      // bits 13-15
+        u8 wrap:1;       // bit 13, the affine wrap-around
+        u8 size:2;       // bits 14-15
     } bits;
 };
 
@@ -36,7 +38,6 @@ struct bg_scroll_layer {
     s32 scaleX;         // 0x20 - Q8 parallax factor
     s32 scaleY;         // 0x24
     u8 enabled;         // 0x28
-    u8 unk_29[3];       // 0x29
     void *streamer;     // 0x2C - the tile-map ring buffer (BgStreamer)
     const void *vtable; // 0x30
     union bg_cnt cnt;   // 0x34 - BGnCNT shadow (the union pads to 4 bytes)

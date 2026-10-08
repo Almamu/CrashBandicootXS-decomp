@@ -68,7 +68,6 @@ struct audio_context {
     u8 duckVolFadeDownArmed;     // 0x53
     // 0x54 - only ever cleared in this cluster (StartSong, on a successful song start)
     u8 field_54;
-    u8 pad_55[3];             // 0x55-0x57
     struct GaxSongHeader gax; // 0x58 - the music player's GAX2 parameter block
     u8 gaxWork[0x2000];       // 0x94 - GAX2's work RAM (gax.workBuf)
 };

@@ -17,7 +17,8 @@
 #include "constants/level_flags.h"
 #include "constants/mask_level.h"
 
-struct level_state_1c8;
+/* boss_ctrl.hpp's class, opaque to C. */
+struct BossCtrl;
 
 /* One level's progress word (`game_progress.levels[level]`;
  * constants/level_flags.h, LEVEL_FLAG_*). */
@@ -26,7 +27,7 @@ struct level_save {
     u32 flag1:1;   // LEVEL_FLAG_CRATE_GEM
     u32 flag2:1;   // LEVEL_FLAG_GEM_PATH_GEM
     u32 time:13;   // best time, tenths of a second (0 = none; UpdateGameFrame)
-    u32 unk_16:16;
+    // bits 16-31: nothing uses them (the u32 bitfield word sizes the struct)
 };
 
 /* The same word with halfword bitfields: the level select's reads load it
@@ -37,21 +38,16 @@ struct level_save_h {
     u16 flag1:1;
     u16 flag2:1;
     u16 time:13; // best time, tenths of a second (0 = none; UpdateGameFrame)
-    u16 unk_16;
 };
 
-/* The same word, read a byte at a time. The three upper bytes are
- * separate fields, not a `u8 [3]`: an array member would give this struct,
- * and so union level_record, BLKmode, and UpdateGameFrame's word read of
- * `w.time` (`ldr`, then two shifts) would become an `ldrh`. */
+/* The same word, read a byte at a time. (No `u8 [3]` for the upper bytes:
+ * an array member would give this struct, and so union level_record,
+ * BLKmode, and UpdateGameFrame's word read of `w.time` (`ldr`, then two
+ * shifts) would become an `ldrh`.) */
 struct level_save_b {
     u8 cleared:1;
     u8 flag1:1;
     u8 flag2:1;
-    u8 unk_0_3:5;
-    u8 unk_1;
-    u8 unk_2;
-    u8 unk_3;
 };
 
 /* A level's progress word, read through whichever access width its user
@@ -87,7 +83,6 @@ struct game_progress {
     // powers (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump);
     // bits 5/7/6 make level-select pages 1/2/3 reachable
     u8 flags;
-    u8 unk_03;
     // 0x04 - one word per level, indexed by `level` (GetLevelFlags);
     // LEVEL_FLAG_* (crystal, the two clear gems, best time); five per
     // level-select page
@@ -119,7 +114,6 @@ struct level_progress {
     // 0x08 (0x0CC) - checkpoint copy of crateCount (SetCheckpoint/RestoreCheckpoint)
     s32 checkpointCrateCount;
     u8 checkpointSwitchPressed; // 0x0C (0x0D0) - checkpoint copy of switchPressed
-    u8 unk_0d[3];
     // 0x10 (0x0D4) - the player's position at the checkpoint, where PlayRoom
     // places the player
     s32 checkpointX;
@@ -131,7 +125,6 @@ struct level_progress {
     // bit 0: PlayRoom starts the player X-mirrored. Not the level state's
     // own `flags` (+0x002, the gems and powers)
     u8 checkpointFlags;
-    u8 unk_1d[3];
 };
 
 COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_progress, cat) == 0x18);
@@ -159,8 +152,7 @@ struct level_state {
     // `deaths` reaches it outside a time trial, CreateCrate turns placement-flagged
     // "?" crates (and kind 0xF) into Aku Aku, checkpoint or life crates
     s32 crateAssistDeaths;
-    u8 timeTrial; // 0x08C - nonzero: no lives lost, the clock runs (StartTimeTrial)
-    u8 unk_8d[3];
+    u8 timeTrial;      // 0x08C - nonzero: no lives lost, the clock runs (StartTimeTrial)
     s32 minutes;       // 0x090 - the time-trial clock (TickLevelClock), capped at 99
     s32 seconds;       // 0x094
     s32 tenths;        // 0x098
@@ -172,7 +164,6 @@ struct level_state {
     u8 gemPathDone;    // 0x0A7 - the gem-path platform stays inactive
     u8 spawnAtStart;   // 0x0A8 - the player is placed on the room's start marker (ArmStartSpawn)
     u8 switchPressed;  // 0x0A9 - the switch crate was hit (PressSwitchCrate)
-    u8 unk_aa[2];
     s32 pendingSwitchCrates; // 0x0AC - amount PressSwitchCrate adds to crateCount
     // 0x0B0 - saved on bonus-round entry (UpdateGameFrame), restored or added to by EndBonusRound
     s32 savedWumpa;
@@ -196,8 +187,10 @@ struct level_state {
     void *gemPlatform;   // 0x1BC - the gem-path platform object (SetGemPlatform)
     // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to SpawnCrateGem
     s32 crateGemX;
-    s32 crateGemY;                // 0x1C4
-    struct level_state_1c8 *boss; // 0x1C8 - SetLevelBoss
+    s32 crateGemY; // 0x1C4
+    // 0x1C8 - the boss's controller (SetLevelBoss); GetBossHealth reads its
+    // `counter`, the hits taken
+    struct BossCtrl *boss;
 };
 
 COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, unk_68) == 0x068);
@@ -206,11 +199,5 @@ COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, checkpointData) 
 COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, saveData) == 0x14C);
 COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, savedBitmap) == 0x1B4);
 COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_state) == 0x1CC);
-
-/* The record `level_state.boss` points at (GetBossHealth). */
-struct level_state_1c8 {
-    u8 unk_00[0x10];
-    s32 hits; // 0x10 - hits taken; GetBossHealth returns 3 minus this
-};
 
 #endif /* GUARD_LEVEL_STATE_H */

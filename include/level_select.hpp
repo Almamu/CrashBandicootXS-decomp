@@ -38,6 +38,7 @@
 
 extern "C" {
 #include "core.h"
+#include <agb_syscall.h>
 #include "gfx.h"
 #include "graphics_package.h"
 #include "line_util.h"
@@ -143,9 +144,8 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LaunchPad) == 0x78);
 class LevelSelectEntry
 {
 public:
-    s32 id;      // 0x00 - the level id (GetLevel)
-    u8 selected; // 0x04
-    u8 unk_05[3];
+    s32 id;          // 0x00 - the level id (GetLevel)
+    u8 selected;     // 0x04
     UiSprite *icon;  // 0x08
     UiSprite *frame; // 0x0C
     // 0x10: the vtable pointer
@@ -201,7 +201,7 @@ struct Twinkle {
 struct ZoomBgCntBits16 {
     u16 priority:2;
     u16 charBase:2;
-    u16 unused_4:2; // bits 4-5, unused by the hardware
+    u16:2; // bits 4-5, unused by the hardware
     u16 mosaic:1;
     u16 colors256:1;
     u16 screenBase:5;
@@ -236,7 +236,8 @@ public:
         struct {
             u8 priority:2; // 0x34
             u8 charBase:2;
-            u8 unk_34_4:3; // bits 4-6: the two unused bits and mosaic
+            u8:2; // bits 4-5, unused by the hardware
+            u8 mosaic:1;
             u8 color256:1;
             u8 screenBase:5; // 0x35
             u8 wrap:1;       // bit 13, the affine wrap-around
@@ -244,16 +245,9 @@ public:
         } __attribute__((packed)) bits;
         struct ZoomBgCntBits16 bits16;
     } __attribute__((packed)) bgcnt;
-    u8 unk_36[2];
-    /* BgAffineSet source, 0x38-0x49 */
-    s32 texX;  // 0x38
-    s32 texY;  // 0x3C
-    s16 x16;   // 0x40 - screen centre
-    s16 y16;   // 0x42
-    s16 sx;    // 0x44
-    s16 sy;    // 0x46
-    u16 alpha; // 0x48 - rotation
-    u8 unk_4A[2];
+    // 0x38 - BgAffineSet's source: the screen centre is (x, y) plus the
+    // wobble, the angle turns on exit
+    struct bg_affine_src affine;
     /* BgAffineSet destination, committed by Commit */
     s16 pa;              // 0x4C
     s16 pb;              // 0x4E
@@ -291,19 +285,15 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(ZoomBg) == 0x8C);
 class LevelSelectCursor
 {
 public:
-    struct bresenham_line line; // 0x00 - (x0, y0) is the position
-    UiSprite *part;             // 0x28
-    s32 timer;                  // 0x2C - frames to the next idle cycle
-    s32 state;                  // 0x30 - see Update
-    struct oam_attrs oam;       // 0x34
-    s32 speed;                  // 0x3C - zoom step (Move)
-    s32 scale;                  // 0x40 - 0x100 = 1:1
-    /* ObjAffineSet source */
-    s16 sx;    // 0x44
-    s16 sy;    // 0x46
-    u16 angle; // 0x48
-    u8 unk_4A[2];
-    s16 matrix[4]; // 0x4C - pa, pb, pc, pd
+    struct bresenham_line line;   // 0x00 - (x0, y0) is the position
+    UiSprite *part;               // 0x28
+    s32 timer;                    // 0x2C - frames to the next idle cycle
+    s32 state;                    // 0x30 - see Update
+    struct oam_attrs oam;         // 0x34
+    s32 speed;                    // 0x3C - zoom step (Move)
+    s32 scale;                    // 0x40 - 0x100 = 1:1
+    struct obj_affine_src affine; // 0x44 - ObjAffineSet's source
+    s16 matrix[4];                // 0x4C - pa, pb, pc, pd
 
     LevelSelectCursor();  // CreateLevelSelectCursor
     ~LevelSelectCursor(); // DestroyLevelSelectCursor
@@ -342,8 +332,7 @@ COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
 class LevelSelect
 {
 public:
-    u8 result; // 0x00 - returned by RunLevelSelect
-    u8 unk_01[3];
+    u8 result;                    // 0x00 - returned by RunLevelSelect
     s32 lastIndex;                // 0x04 - last valid `index` on this page
     s32 index;                    // 0x08 - cursor, 0-5
     s32 world;                    // 0x0C - page
@@ -357,19 +346,18 @@ public:
     UiSprite *sprites[10];        // 0x40
     u8 timeText[9];               // 0x68 - best time
     u8 recordText[9];             // 0x71 - next threshold to beat
-    u8 unk_7A[2];
-    u32 scroll;                 // 0x7C - BG0 auto-scroll counter
-    s32 panelSlideX;            // 0x80 - x offset of the record panel
-    s32 clearedIconY;           // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
-    s32 flag1IconY;             // 0x88 - sprite 3's
-    s32 gemIconY;               // 0x8C - sprite 4's (the `rank` gem icon)
-    s32 trialIconY;             // 0x90 - sprite 5's (time-trial icons)
-    s32 trialIcon2Y;            // 0x94 - sprite 6's
-    s32 rank;                   // 0x98 - LoadRecord's classification, 5 = none
-    struct game_progress *save; // 0x9C - PackSaveData's save block
-    union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
-    struct bldy bldy;           // 0xA4 - REG_BLDY
-    union dispcnt dispcnt;      // 0xA8 - REG_DISPCNT (gfx.h)
+    u32 scroll;                   // 0x7C - BG0 auto-scroll counter
+    s32 panelSlideX;              // 0x80 - x offset of the record panel
+    s32 clearedIconY;             // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
+    s32 flag1IconY;               // 0x88 - sprite 3's
+    s32 gemIconY;                 // 0x8C - sprite 4's (the `rank` gem icon)
+    s32 trialIconY;               // 0x90 - sprite 5's (time-trial icons)
+    s32 trialIcon2Y;              // 0x94 - sprite 6's
+    s32 rank;                     // 0x98 - LoadRecord's classification, 5 = none
+    struct game_progress *save;   // 0x9C - PackSaveData's save block
+    union blend blend;            // 0xA0 - REG_BLDCNT + REG_BLDALPHA
+    struct bldy bldy;             // 0xA4 - REG_BLDY
+    union dispcnt dispcnt;        // 0xA8 - REG_DISPCNT (gfx.h)
 
     LevelSelect(s32 arg); // InitLevelSelect
     ~LevelSelect();       // DestroyLevelSelect

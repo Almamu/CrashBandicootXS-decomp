@@ -74,7 +74,6 @@ struct level_entity_list {
  * SetEnemyWave: `period`/`phase`/`amplitude`). */
 struct entity_params {
     u8 flags; // bit 1: clear = X-mirrored (the X mirror bit), bit 2: Y-mirrored
-    u8 unk_01[3];
     union {
         // lizard, patrolling jungle enemy, polar bear, patrolling sewer enemy, rat
         struct {
@@ -160,7 +159,6 @@ struct level_desc {
     const struct level_layer_desc *collision; // 0x10 - the terrain cache's
     const void *asset;                        // 0x14 - chunk streams
     u8 assetPacked;                           // 0x18 - asset is LZ77
-    u8 unk_19[3];
     const struct level_entity_list *entities; // 0x1C
     const struct level_link_list *links;      // 0x20 - or NULL
     u8 unk_24[0xC];                           // 0x24 - zero in every room

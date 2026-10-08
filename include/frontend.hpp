@@ -160,8 +160,7 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == 0x24);
  * `countdown` runs it adds the five deltas each frame, and when it runs
  * out it loads the next step from `record`. */
 struct LogoPiece {
-    u8 active; // 0x00
-    u8 pad_01[3];
+    u8 active;     // 0x00
     s32 countdown; // 0x04 - frames left in this step
     union {
         s32 q; // 0x08 - Q16.16 x
@@ -200,7 +199,6 @@ public:
     s32 selection;        // 0x000 - the menu choice Run returns (0-2)
     s32 blinkCounter;     // 0x004 - the selected item blinks with bit 2
     u8 menuShown;         // 0x008 - Draw draws the menu items
-    u8 unk_009[3];        //
     Font *font;           // 0x00C - gSmallFont
     LogoPiece pieces[9];  // 0x010
     s32 landTimer[9];     // 0x1E4 - -1 until the piece lands, then frames to its cue
@@ -237,17 +235,16 @@ class CompanyLogos
 public:
     LogoPiece slots[20]; // 0x000
     u8 sfxPending[0x12]; // 0x410 - per-slot "play the cue once" flags
-    u8 pad_422[2];
-    u32 tilesA;    // 0x424 - OBJ VRAM tile block (0x1200 bytes)
-    u32 tilesB;    // 0x428 - OBJ VRAM tile block (0x400 bytes)
-    u32 tilesC;    // 0x42C - OBJ VRAM tile block (0x1000 bytes)
-    u8 *frames;    // 0x430 - unpacked frame strip, 0xa00 bytes a frame
-    u8 *scratch;   // 0x434 - 0x1000-byte frame build buffer
-    s32 frame;     // 0x438 - index into `frames` (0-9)
-    s32 loops;     // 0x43C - `frames` passes played, stops at 2
-    s32 frameTick; // 0x440 - ticks on the current frame (0-3)
-    s32 fade;      // 0x444 - fade/zoom counter, -1 when idle
-    s32 timer;     // 0x448 - -1 while the slots move, then the outro countdown
+    u32 tilesA;          // 0x424 - OBJ VRAM tile block (0x1200 bytes)
+    u32 tilesB;          // 0x428 - OBJ VRAM tile block (0x400 bytes)
+    u32 tilesC;          // 0x42C - OBJ VRAM tile block (0x1000 bytes)
+    u8 *frames;          // 0x430 - unpacked frame strip, 0xa00 bytes a frame
+    u8 *scratch;         // 0x434 - 0x1000-byte frame build buffer
+    s32 frame;           // 0x438 - index into `frames` (0-9)
+    s32 loops;           // 0x43C - `frames` passes played, stops at 2
+    s32 frameTick;       // 0x440 - ticks on the current frame (0-3)
+    s32 fade;            // 0x444 - fade/zoom counter, -1 when idle
+    s32 timer;           // 0x448 - -1 while the slots move, then the outro countdown
 
     CompanyLogos();                                        // InitCompanyLogos
     ~CompanyLogos();                                       // DestroyCompanyLogos
@@ -295,9 +292,8 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(LogoActor) == 0x54);
 class LanguageSelect
 {
 public:
-    s32 frame; // 0x00 - frame counter, wraps at 0x100; bit 2 blinks the selection
-    u8 done;   // 0x04
-    u8 pad_5[3];
+    s32 frame;             // 0x00 - frame counter, wraps at 0x100; bit 2 blinks the selection
+    u8 done;               // 0x04
     s32 language;          // 0x08 - the selected entry, 0-5
     union dispcnt dispcnt; // 0x0C - the DISPCNT value CommitFrame writes (gfx.h)
     Starfield *starfield;  // 0x10

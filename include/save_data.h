@@ -11,10 +11,8 @@
 struct save_slot {
     struct game_progress progress; /* 0x00 */
     u8 level;                      /* 0x68 */
-    u8 unused_69;
-    u16 sfxVolume;   /* 0x6a */
-    u16 musicVolume; /* 0x6c */
-    u8 unused_6e[2];
+    u16 sfxVolume;                 /* 0x6a */
+    u16 musicVolume;               /* 0x6c */
 };
 COMPILE_TIME_ASSERT(save_data_h, offsetof(struct save_slot, level) == 0x68);
 COMPILE_TIME_ASSERT(save_data_h, sizeof(struct save_slot) == 0x70);

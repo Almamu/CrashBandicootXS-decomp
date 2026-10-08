@@ -22,7 +22,6 @@ struct hitbox_quad {
     s16 offY;
     u8 w;
     u8 h;
-    u16 unk_06; /* always 0 */
 };
 
 #endif /* GUARD_HITBOX_QUAD_H */

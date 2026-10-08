@@ -147,11 +147,11 @@ struct blend_bits {
     u32 bg3Second:1;
     u32 objSecond:1;
     u32 bdSecond:1;
-    u32 unused_14:2; // BLDCNT bits 14-15, unused by the hardware
-    u32 eva:5;       // BLDALPHA
-    u32 unused_21:3; // BLDALPHA bits 5-7, unused
+    u32:2;     // BLDCNT bits 14-15, unused by the hardware
+    u32 eva:5; // BLDALPHA
+    u32:3;     // BLDALPHA bits 5-7, unused
     u32 evb:5;
-    u32 unused_29:3; // BLDALPHA bits 13-15, unused
+    // BLDALPHA bits 13-15 are unused
 };
 
 union blend {
@@ -160,8 +160,7 @@ union blend {
 };
 
 struct bldy {
-    u32 evy:5;
-    u32 unused_5:27; // BLDY bits 5-31, unused by the hardware
+    u32 evy:5; // bits 5-31 are unused by the hardware
 };
 
 /* `gBlendRegs`, the blend register shadow SetupRoomBlend builds and

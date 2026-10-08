@@ -56,10 +56,10 @@ struct tile_cache {
     void *source; /* 0x000 */
     /* 0x004 - gLevelLayers's camera offset + source->4; DecodeCollisionChunk's decode-table base */
     void *decodeBase;
-    s32 unk008;        /* 0x008 - source->0x1a << 3; not read anywhere in this cluster */
-    s32 unk00c;        /* 0x00c - source->0x1c << 3; not read anywhere in this cluster */
-    s32 unk010;        /* 0x010 - copy of source->0x1a; not read anywhere in this cluster */
-    s32 unk014;        /* 0x014 - copy of source->0x1c; not read anywhere in this cluster */
+    s32 widthPx;       /* 0x008 - widthTiles << 3; nothing reads it */
+    s32 heightPx;      /* 0x00c - heightTiles << 3; nothing reads it */
+    s32 widthTiles;    /* 0x010 - source->widthTiles (ProbeTerrainY's right edge) */
+    s32 heightTiles;   /* 0x014 - source->heightTiles (ProbeTerrainX's bottom edge) */
     s32 width;         /* 0x018 - tiles, copy of source->0x16 */
     s32 height;        /* 0x01c - tiles, copy of source->0x18; not read anywhere in this cluster */
     u8 buf[16][0x100]; /* 0x020 - 0x1020, 16 decoded 256-byte chunks */

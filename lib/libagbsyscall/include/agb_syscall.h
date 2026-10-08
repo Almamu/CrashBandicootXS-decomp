@@ -8,6 +8,27 @@
  * game's callers use (they decide the callers' code, the wrappers don't
  * care). */
 
+/* BgAffineSet's source record (the SDK's BgAffineSrcData): the texture
+ * point (8.8 fixed point) shown at the screen point, the scale and the
+ * angle. Its size, 0x14, is gcc's rounding of the struct to 4 bytes. */
+struct bg_affine_src {
+    s32 texX;
+    s32 texY;
+    s16 scrX;
+    s16 scrY;
+    s16 sx; // 8.8
+    s16 sy;
+    u16 angle;
+};
+
+/* ObjAffineSet's source record (the SDK's ObjAffineSrcData), 8 bytes
+ * the same way. */
+struct obj_affine_src {
+    s16 sx; // 8.8
+    s16 sy;
+    u16 angle;
+};
+
 /* SWI 0xE: `count` BG affine parameter sets from `src` to `dst`. */
 void BgAffineSet(void *src, void *dst, s32 count);
 

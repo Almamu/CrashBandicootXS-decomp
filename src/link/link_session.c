@@ -168,7 +168,6 @@ s32 UpdateLinkSession(struct link_session *self)
 struct link_rx_word {
     u32 lo:4;
     u32 hi:12;
-    u32 unused_10:16;
 };
 
 #define LINK_NIB(p) (*(struct nibble_pair *)(p))
