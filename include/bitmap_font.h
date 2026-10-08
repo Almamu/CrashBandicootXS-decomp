@@ -6,35 +6,13 @@
  * (include/font.hpp, src/text/), for the C files. There are two fonts,
  * gSmallFont (InitSmallFont) and gLargeFont (InitLargeFont), both built
  * in InitLevelState; menus, the credits and the dialogs draw all their
- * text with them. The C files' calls go
- * through the font's vtable (`record`, gFontVtable/gSmallFontVtable/
- * gLargeFontVtable): `record->slots[n]` is vtable slot n + 2, so
- * slots[0] FontMeasureText, [1] FontMeasureChars, [2] FontDrawText,
- * [3] FontDrawChars, [4] FontDrawGlyph, [5] FontPutChar and
- * [6] FontUploadTiles; `destroy` is slot 1 (DestroyFont/
- * DestroySmallFont/DestroyLargeFont). */
+ * text with them. `record` is the font's vtable (gFontVtable/
+ * gSmallFontVtable/gLargeFontVtable): slot 1 the destructor (DestroyFont/
+ * DestroySmallFont/DestroyLargeFont), then FontMeasureText,
+ * FontMeasureChars, FontDrawText, FontDrawChars, FontDrawGlyph,
+ * FontPutChar and FontUploadTiles. */
 
-/* One (OAM-slot-offset, pointer) pair, as used by _call_via_r2/
- * _call_via_r3 to draw a single OAM entry. `struct icon_record` is an
- * array of these, 8 bytes apart, starting at offset 0x10: slot i is Font's
- * vtable slot i + 2 (include/font.hpp), the slots the remaining C files
- * call by hand. */
-struct icon_slot {
-    s16 offset;
-    u8 unused_2[2];
-    void *ptr;
-};
-
-struct icon_record {
-    u8 unused_00[8];
-    /* The object's destructor entry (gcc 2.x {this-adjust, fn} method
-     * record): DestroyLevelState tears both icon managers down by calling it
-     * with the "delete" flags 3. */
-    struct icon_slot destroy;
-    /* A 7th slot (index 6, offset 0x40) is read by InitLanguageSelectGraphics - extends
-     * the 6-slot record DrawPowerDialog/DrawWrappedText already established. */
-    struct icon_slot slots[7];
-};
+struct vtable_slot;
 
 /* A single glyph's draw metrics - `bitmap_font.glyphRecords` is an
  * array of these, 12 bytes apart, indexed by `bitmap_font.charLookup`.
@@ -106,7 +84,7 @@ struct bitmap_font {
      * gLargeFont's copy by InitLanguageSelectGraphics - meaning not understood
      * yet. */
     u32 tileCount;
-    struct icon_record *record;
+    const struct vtable_slot *record; // 0x130 - Font's vtable (vtable.h)
 };
 
 COMPILE_TIME_ASSERT(bitmap_font_h, sizeof(struct bitmap_font) == 0x134);

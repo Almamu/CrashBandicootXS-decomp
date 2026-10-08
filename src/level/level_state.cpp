@@ -3,6 +3,7 @@
 #include "level_state.hpp"
 #include "player.hpp"
 #include "audio.hpp"
+#include "boss_ctrl.hpp"
 
 extern "C" {
 #include "core.h"
@@ -565,7 +566,7 @@ void ArmStartSpawn(struct level_state *self)
  * `CheckAllCratesBroken` below reads. */
 void SetLevelBoss(struct level_state *self, void *value)
 {
-    self->boss = (struct level_state_1c8 *)value;
+    self->boss = (BossCtrl *)value;
 }
 
 /* Plain getter/getter/setter trio for `room.roomIndex` (`self+0xc8`, the
@@ -619,9 +620,8 @@ s32 LevelHasGemPathGem(void *self, s32 idx)
 /* Dispatches on the "current index" field `room.level` (`self+0xc4`): index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
  * `hovercraft_parts.cpp`); indices `0x14`/`0x16`/`0x17` instead compute
- * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `SetLevelBoss`
- * above sets, apparently itself a pointer to a small record); anything
- * else returns `0`. */
+ * `3 - boss->counter` (the boss controller `SetLevelBoss` above
+ * sets; its counter is the hits taken); anything else returns `0`. */
 s32 GetBossHealth(struct level_state *self)
 {
     s32 idx = self->room.level;
@@ -631,18 +631,18 @@ s32 GetBossHealth(struct level_state *self)
         return GetHovercraftPartsLeft();
     case LEVEL_DINGODILE:
         {
-            struct level_state_1c8 *p = self->boss;
-            return 3 - p->hits;
+            BossCtrl *p = self->boss;
+            return 3 - p->counter;
         }
     case LEVEL_TINY:
         {
-            struct level_state_1c8 *p = self->boss;
-            return 3 - p->hits;
+            BossCtrl *p = self->boss;
+            return 3 - p->counter;
         }
     case LEVEL_NEO_CORTEX:
         {
-            struct level_state_1c8 *p = self->boss;
-            return 3 - p->hits;
+            BossCtrl *p = self->boss;
+            return 3 - p->counter;
         }
     default:
         return 0;

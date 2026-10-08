@@ -454,7 +454,6 @@ def room_c(room_dir):
     out.append("    %s," % lref("collision"))
     out.append("    %s," % ext(a["symbol"]))
     out.append("    %d," % (1 if a["packed"] else 0))
-    out.append("    { 0, 0, 0 },")
     out.append("    &%s," % sym["entities"])
     out.append("    %s," % ("(const struct level_link_list *)&%s" % sym["links"] if links is not None else "NULL"))
     out.append("};\n")

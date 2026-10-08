@@ -39,10 +39,9 @@ extern "C" {
 class SaveMenu
 {
 public:
-    u32 frame; // 0x00 - frame counter (Input); CommitFrame scrolls BG0 by frame >> 3
-    s32 flags; // 0x04 - a wrapping 0-0xff frame counter; bit 2 is the highlight blink
-    u8 done;   // 0x08 - set to leave RunSaveMenu's loop
-    u8 unused_09[3];
+    u32 frame;        // 0x00 - frame counter (Input); CommitFrame scrolls BG0 by frame >> 3
+    s32 flags;        // 0x04 - a wrapping 0-0xff frame counter; bit 2 is the highlight blink
+    u8 done;          // 0x08 - set to leave RunSaveMenu's loop
     u32 state;        // 0x0C - see above
     s32 cursor;       // 0x10
     u32 messageLine1; // 0x14 - state 4's first text line
@@ -50,7 +49,6 @@ public:
     u16 dispcnt;      // 0x1C - the REG_DISPCNT shadow
     u8 unused_1e[2];  //
     u8 gameLoaded;    // 0x20 - a game was loaded; RunSaveMenu returns it
-    u8 unused_21[3];  //
     u32 pendingSlot;  // 0x24 - the slot the "delete?"/"overwrite?" prompt acts on
     struct settings_row_stats currentStats; // 0x28
     struct settings_row_stats rowStats[4];  // 0x3C

@@ -71,7 +71,6 @@ struct GaxEnvelopePoint {
     u16 pos;   /* tick of this breakpoint */
     s16 slope; /* Q8 value change per tick up to the next one */
     u8 value;
-    u8 pad_05[3];
 };
 
 struct GaxEnvelope {
@@ -84,9 +83,8 @@ struct GaxEnvelope {
 
 /* One of an instrument's 4 wave rows (28 bytes). */
 struct GaxInstrumentRow {
-    u8 sweep;    /* 0x00 - nonzero = sweep mode; 0 = loop between sweepMin and sweepMax */
-    u8 pingPong; /* 0x01 - sweep bounces instead of wrapping */
-    u8 pad_02[2];
+    u8 sweep;      /* 0x00 - nonzero = sweep mode; 0 = loop between sweepMin and sweepMax */
+    u8 pingPong;   /* 0x01 - sweep bounces instead of wrapping */
     s32 start;     /* 0x04 - sample start position */
     s32 sweepMin;  /* 0x08 - lower bound of the ping-pong sweep */
     s32 sweepMax;  /* 0x0c - upper bound */
@@ -103,7 +101,6 @@ struct GaxInstrumentSeqEntry {
     u8 fixedPitch; /* the note ignores pitch slides and the order's transpose
                     * (tools/gax_audio.py's `dont_use_note_pitch`) */
     u8 wave;       /* 1-based rows[] index, 0 = none */
-    u8 pad_03;
     u16 fx[2];
 };
 
@@ -116,14 +113,12 @@ struct GaxChannelInstrument {
     u8 vibratoDelay; /* 0x08 - initial GaxChannelState.vibratoDelay */
     /* 0x09 - Q8 scale of the vibrato table value, 0 = off (GaxChannelTickVibrato) */
     u8 vibratoDepth;
-    u8 vibratoSpeed; /* 0x0a - phase step per tick */
-    u8 pad_0b;
+    u8 vibratoSpeed;                 /* 0x0a - phase step per tick */
     struct GaxInstrumentRow rows[4]; /* 0x0c */
     struct GaxEnvelope *envelope;    /* 0x7c */
     u8 pad_80[4];
     u8 seqSpeed; /* 0x84 - ticks per sequence step, GaxChannelState.cutDelay's initial value */
     u8 seqLen;   /* 0x85 */
-    u8 pad_86[2];
     struct GaxInstrumentSeqEntry *seq; /* 0x88 - per-tick instrument sequence */
 };
 
@@ -135,13 +130,12 @@ struct GaxWave {
 };
 
 struct GaxSongData {
-    u8 pad_00[2];
-    u16 patternRows; /* 0x02 - rows per pattern */
-    u16 orderCount;  /* 0x04 - entries in each channel's order list */
-    u16 loopOrder;   /* 0x06 - order position the song loops back to */
-    u16 volume;      /* 0x08 - Q8 master volume */
-    u8 pad_0a[2];
-    u8 *patterns;                              /* 0x0c - base of the packed pattern streams */
+    u16 channelCount; /* 0x00 - the song's channels (tools/gax_audio.py's `num_channels`) */
+    u16 patternRows;  /* 0x02 - rows per pattern */
+    u16 orderCount;   /* 0x04 - entries in each channel's order list */
+    u16 loopOrder;    /* 0x06 - order position the song loops back to */
+    u16 volume;       /* 0x08 - Q8 master volume */
+    u8 *patterns;     /* 0x0c - base of the packed pattern streams */
     struct GaxChannelInstrument **instruments; /* 0x10 - indexed by instrument number */
     struct GaxWave *waves;                     /* 0x14 */
     u16 mixRate;                               /* 0x18 - default mix rate */
@@ -157,7 +151,6 @@ struct GaxSongData {
 struct GaxOrderEntry {
     u16 patternOffset; /* this channel's pattern for the order, relative to song->patterns */
     s8 transpose;      /* in semitones */
-    u8 pad_03;
 };
 
 /* An ARM routine's tap/rate table (the mixer type's data). */
@@ -226,7 +219,6 @@ struct GaxInfoHandler {
     u8 songEnded; /* 0x21 - set once the song has played past its last order (or stopped) */
     /* 0x22 - pattern-break effect (cmd 13): jump to the pattern's end on the next row */
     u8 patternBreak;
-    u8 pad_23;
     u16 breakRow; /* 0x24 - the pattern-break effect's (cmd 13) parameter; stored, never read */
 };
 
@@ -297,7 +289,6 @@ struct GaxChannelState {
     u8 vol17;      /* 0x17 - 0-0xff, ramped by volStep17 */
     /* 0x18 - volume set by GAX_set_music_volume/GAX_set_fx_volume (-1 = default) */
     s8 volume;
-    u8 pad_19;
     s16 volStep15;   /* 0x1a */
     s16 volStep17;   /* 0x1c */
     u8 cutDelay;     /* 0x1e */

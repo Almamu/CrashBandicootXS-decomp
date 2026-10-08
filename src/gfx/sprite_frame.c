@@ -251,7 +251,6 @@ void FreeObjTileFreeList(void)
 struct queued_oam_entry {
     u32 attr01;
     u16 attr2;
-    u8 pad_06[2];
 };
 
 /* attr01 bits QueueSpriteFrameOam tests. The two negate flags sit in

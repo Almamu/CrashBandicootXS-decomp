@@ -21,7 +21,6 @@ struct EepromConfig {
     u16 maxCount;    /* number of 8-byte blocks */
     u16 waitcntBits; /* WAITCNT wait-state 2 setting */
     u8 addrBitCount; /* address bits in a request (6 or 14) */
-    u8 pad[3];
 };
 
 /* The active chip's config (EEPROMConfigure). */

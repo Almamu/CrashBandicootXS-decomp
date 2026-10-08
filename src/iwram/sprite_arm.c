@@ -97,13 +97,7 @@ void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h)
     }
 }
 
-/* The only field the sort looks at. */
-struct sort_entry {
-    u8 unk_00[0x14];
-    u32 key;
-};
-
-/* a[i]->key > a[j]->key as a u8 1/0. The two results come in as
+/* a[i]->sortKey > a[j]->sortKey, compared unsigned (`movls`), as a u8 1/0. The two results come in as
  * arguments: the ROM keeps 1 and 0 in two registers loaded before each
  * sift loop (`mov r3, one; movls r3, zero; cmp r3, #0`), and it only gets
  * them there when the caller's u8 locals `one`/`zero` are copied into
@@ -111,23 +105,23 @@ struct sort_entry {
  * Indices rather than pointers: each inlined `child + 1` argument is its
  * own pseudo, which is why the ROM reloads a[child + 1] for the second
  * test instead of reusing it. */
-static inline u8 KeyGreater(struct sort_entry **a, s32 i, s32 j, u8 one, u8 zero)
+static inline u8 KeyGreater(struct actor_self **a, s32 i, s32 j, u8 one, u8 zero)
 {
-    if (a[i]->key <= a[j]->key)
+    if ((u32)a[i]->sortKey <= (u32)a[j]->sortKey)
         return zero;
     return one;
 }
 
 /* gHeapSortActorsByKeyFunc(n, list): heapsorts `n` actor pointers into
- * ascending order of the u32 at +0x14. Called by actor_category_frame.cpp.
+ * ascending order of their `sortKey`, taken as unsigned. Called by actor_category_frame.cpp.
  * Both phases spell out the sift-down loop on the shared `root`/`child`
  * (an inline sift function allocates them to other registers). See
  * docs/matching/iwram-image.md, "Fourth pass". */
 void HeapSortActorsByKey(s32 n, struct actor_self **list)
 {
-    struct sort_entry **a = (struct sort_entry **)list;
+    struct actor_self **a = list;
     s32 i, root, child;
-    struct sort_entry *t;
+    struct actor_self *t;
 
     for (i = n / 2; i > 0;) {
         i--;

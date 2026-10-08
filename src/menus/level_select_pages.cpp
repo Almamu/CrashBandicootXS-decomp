@@ -370,10 +370,10 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
     state = 2;
     scale = 8;
     dx = dy = phase = 0;
-    texY = texX = 0x2000;
-    x16 = x;
-    y16 = y;
-    alpha = 0;
+    affine.texY = affine.texX = 0x2000;
+    affine.scrX = x;
+    affine.scrY = y;
+    affine.angle = 0;
     for (i = 0; i <= 3; i++) {
         twinkles[i].part = new UiSprite;
         SetBankNow(twinkles[i].part, AnimTable(0x258));

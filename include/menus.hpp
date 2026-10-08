@@ -88,7 +88,6 @@ public:
     s32 soundVolume;                // 0x64
     s32 flashTimer;                 // 0x68
     u8 trialEarned;                 // 0x6C
-    u8 unused_6d[3];                // 0x6D
     void *levelName;                // 0x70
     void *levelLabel;               // 0x74
     u8 levelNumber[4];              // 0x78

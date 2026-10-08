@@ -37,10 +37,10 @@ void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source
 
     self->source = source;
     self->decodeBase = (u8 *)gLevelLayers->asset + (s32)source->assetOffset;
-    self->unk010 = source->widthTiles;
-    self->unk014 = source->heightTiles;
-    self->unk008 = self->unk010 << 3;
-    self->unk00c = self->unk014 << 3;
+    self->widthTiles = source->widthTiles;
+    self->heightTiles = source->heightTiles;
+    self->widthPx = self->widthTiles << 3;
+    self->heightPx = self->heightTiles << 3;
     self->width = source->gridWidth;
     self->height = source->gridHeight;
 

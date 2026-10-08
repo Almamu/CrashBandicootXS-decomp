@@ -87,7 +87,7 @@ void ZoomBg::Update()
     case 4:
         if (scale > 8) {
             scale -= 8;
-            alpha += 0x100;
+            affine.angle += 0x100;
             break;
         }
         scale = 8;
@@ -115,19 +115,19 @@ void ZoomBg::Draw()
         {
             u16 s;
 
-            x16 = x + dx;
-            y16 = y + dy;
+            affine.scrX = x + dx;
+            affine.scrY = y + dy;
             s = 0x10000 / scale;
-            sx = s;
-            sy = s;
+            affine.sx = s;
+            affine.sy = s;
             break;
         }
     case 4 ... 5:
-        sx = scale;
-        sy = scale;
+        affine.sx = scale;
+        affine.sy = scale;
         break;
     }
-    BgAffineSet(&texX, &pa, 1);
+    BgAffineSet(&affine, &pa, 1);
 }
 
 /* Commits the affine matrix to BG2PA-BG2Y. */
@@ -352,7 +352,7 @@ LevelSelectCursor::LevelSelectCursor()
     oam.priority = 0;
     oam.palette = part->palette;
     LoadTaggedAsset(gLevelSelectCursorZoomTiles, OBJ_VRAM0 + 0x7800);
-    angle = 0;
+    affine.angle = 0;
     scale = 8;
     state = 4;
 }
@@ -450,9 +450,9 @@ void LevelSelectCursor::SetMatrix()
 {
     u16 s = 0x10000 / scale;
 
-    sx = s;
-    sy = s;
-    ObjAffineSet(&sx, matrix, 1, 2);
+    affine.sx = s;
+    affine.sy = s;
+    ObjAffineSet(&affine, matrix, 1, 2);
 }
 
 /* UNUSED. Shrunk away (state 5). */

@@ -17,8 +17,7 @@ struct actor_self;
 struct rle_frame {
     u8 w;
     u8 h;
-    u8 unk_2;
-    u8 unk_3;
+    u8 unk_2; // 0x30 in every frame; nothing reads it
     u16 data[0];
 };
 
