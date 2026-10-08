@@ -223,6 +223,8 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/text/wrapped_text.o \
                   $(C_BUILDDIR)/actor/actor_category_init.o \
                   $(C_BUILDDIR)/actor/actor_category_frame.o \
+                  $(C_BUILDDIR)/actor/actor.o \
+                  $(C_BUILDDIR)/actor/actor_anim.o \
                   $(C_BUILDDIR)/crates/crate_touch.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \

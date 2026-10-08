@@ -60,13 +60,14 @@ struct anim_table_record;
 struct category_vtable;
 struct sub_effect_record;
 
-struct actor_self_54;
+struct actor_hp;
 struct actor_spawn;
 
 /* The actor zone (src/actor/): the 3D actor object (`struct actor_self`),
  * its animation, spawning, category frame and backgrounds. */
 
-/* src/actor/actor.c */
+/* src/actor/actor.cpp: C linkage, and the C names of ActorSelf's methods
+ * (actor_self.hpp) */
 extern s32 IsTouchingPlayer(void *self);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 extern void UpdateActor(void *self);
@@ -89,14 +90,15 @@ extern void UpdateActorPaletteCycle(void);
 extern void SetActorPaletteCycle(s32 idx);
 extern void EnableActorPaletteCycle(u8 flag);
 
-/* src/actor/actor_anim.c */
+/* src/actor/actor_anim.cpp: the C names of AnimPart's and HpActor's methods
+ * and two destructors (actor_self.hpp, vehicle.hpp) */
 extern s32 GetAnimFrameBaseOffset(struct actor_self *self);
 extern s32 GetAnimFrameAttr(struct actor_self *self);
 extern u8 *GetAnimFrameData(struct actor_self *self);
 extern void SetActorAnim(struct actor_self *self, s32 idx);
 extern void DestroyPolarFourWumpaCrate(struct actor_self *self, u32 flags);
 extern void DestroyPolarObstacle(struct actor_self *self, u32 flags);
-extern s32 GetActorHp(struct actor_self_54 *self);
+extern s32 GetActorHp(struct actor_hp *self);
 extern void DamageActor(void *self);
 
 /* src/actor/actor_bg.c */
