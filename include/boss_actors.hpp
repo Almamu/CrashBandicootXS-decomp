@@ -5,8 +5,8 @@
  * fireball and the hovercraft's weapons, all HpActors (actor_self.hpp).
  * Part 11a declares their destructors (src/actor/actor_anim.cpp). The
  * airship's fireball is complete since part 11i (src/bosses/airship*.cpp,
- * with the airship itself), but for its two flight states (still C,
- * jetpack_plane.c); the hovercraft's weapons' other methods and fields
+ * with the airship itself), its two flight states since part 11f
+ * (src/vehicle/jetpack_plane.cpp); the hovercraft's weapons' other methods and fields
  * are still C (bosses.h, src/bosses/hovercraft*.c). cxx_symbols.txt maps
  * the C++ names to the C ones.
  *
@@ -22,7 +22,8 @@ extern "C" {
 /* The airship's fireball (gAirshipFireballVtable, src/bosses/airship_fireball.cpp;
  * bosses.h's `struct actor_orbit` is its C view): it flies around the
  * point it was spawned at (StateOrbit), then spirals in on it
- * (StateSpiralIn); its two flight states are still C (jetpack_plane.c). */
+ * (StateSpiralIn); the ROM has those two flight states in
+ * src/vehicle/jetpack_plane.cpp. */
 class AirshipFireball : public HpActor
 {
 public:

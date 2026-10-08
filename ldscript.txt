@@ -362,6 +362,8 @@ SECTIONS
         build/crashbandicootxs/src/data/actor_pmf_17c2b8.o(.rodata);
         build/crashbandicootxs/src/data/weapon_kind_17c2d0.o(.rodata);
         build/crashbandicootxs/src/data/actor_state_17c3fc.o(.rodata);
+        build/crashbandicootxs/src/data/actor_pmf_17c414.o(.rodata);
+        build/crashbandicootxs/src/data/actor_pmf_17c42c.o(.rodata);
         build/crashbandicootxs/src/data/actor_box_17c444.o(.rodata);
         build/crashbandicootxs/src/data/actor_pmf_17c450.o(.rodata);
         build/crashbandicootxs/src/data/singleton_kind_17c460.o(.rodata);

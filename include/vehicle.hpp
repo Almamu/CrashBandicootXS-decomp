@@ -380,37 +380,134 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
 
+/* The plane (gJetpackPlaneVtable, src/vehicle/jetpack_plane.cpp): it hops
+ * from spawn point to spawn point (Aim, the GetActorSpawn* accessors) and
+ * fires cannonballs at the player from its low pose; shot down, it falls
+ * out of the sky. */
 class JetpackPlane : public HpActor
 {
 public:
+    s32 cooldown;  // 0x58 - frames to the next cannonball
+    s32 shotCount; // 0x5C - cannonballs fired since the last long cooldown
+    s32 velX;      // 0x60
+    s32 velY;      // 0x64
+    s32 velZ;      // 0x68 - the hop speed (gJetpackPlaneHopSpeeds)
+    s32 accX;      // 0x6C
+    s32 accY;      // 0x70
+    s32 steps;     // 0x74 - frames left in the hop
+    s32 next;      // 0x78 - the next spawn point it aims for
+    u8 dying;      // 0x7C
+
     // CreateJetpackPlane
     JetpackPlane(const struct anim_table_record *rec, s32 x, s32 y, s32 z, struct spawn_arg *arg);
-    virtual ~JetpackPlane(); // 1 DestroyJetpackPlane
+    virtual ~JetpackPlane();         // 1 DestroyJetpackPlane
+    virtual void Update();           // 2 UpdateJetpackPlane
+    virtual void Damage(s32 amount); // 4 DamageJetpackPlane
+    virtual s32 IsUnshootable();     // 5 IsJetpackPlaneUnshootable
+
+    void Aim(s32 target); // AimJetpackPlane
+    void RunState();      // RunJetpackPlaneState
+
+    /* The states, indexed by `state` (stateFuncs, gJetpackPlaneStateFuncs). */
+    void StateFly();        // JetpackPlaneStateFly
+    void StateFollow();     // JetpackPlaneStateFollow
+    void StateKnockedOut(); // JetpackPlaneStateKnockedOut
+    void StateFall();       // JetpackPlaneStateFall
+
+    typedef void (JetpackPlane::*StateFunc)();
+    static const StateFunc stateFuncs[4];
 };
 
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlane) == 0x80);
+
+/* The bomber (gJetpackBomberVtable, src/vehicle/jetpack_plane.cpp): its
+ * record's kind (4-9) picks how it moves around its home point; it
+ * explodes on the player. */
 class JetpackBomber : public HpActor
 {
 public:
+    s32 homeX;      // 0x58
+    s32 homeY;      // 0x5C
+    u8 unshootable; // 0x60 - only ever cleared
+
     // CreateJetpackBomber
     JetpackBomber(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~JetpackBomber(); // 1 DestroyJetpackBomber
+    virtual ~JetpackBomber();        // 1 DestroyJetpackBomber
+    virtual void Update();           // 2 UpdateJetpackBomber
+    virtual void Damage(s32 amount); // 4 DamageJetpackBomber
+    virtual s32 IsUnshootable();     // 5 IsJetpackBomberUnshootable
+
+    void Home();     // HomeJetpackBomber
+    void RunState(); // RunJetpackBomberState
+
+    /* The states, indexed by `state` (stateFuncs, gJetpackBomberStateFuncs). */
+    void StateIdle();            // JetpackBomberStateIdle
+    void StateHome();            // JetpackBomberStateHome
+    void StateBobVertical();     // JetpackBomberStateBobVertical
+    void StateSwingHorizontal(); // JetpackBomberStateSwingHorizontal
+    void StateCircle();          // JetpackBomberStateCircle
+    void StateDrop();            // JetpackBomberStateDrop
+    void StateDying();           // JetpackBomberStateDying
+
+    typedef void (JetpackBomber::*StateFunc)();
+    static const StateFunc stateFuncs[7];
 };
 
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBomber) == 0x64);
+
+/* The cannonball the planes and the airship fire
+ * (gJetpackCannonballVtable, src/vehicle/jetpack_plane.cpp). */
 class JetpackCannonball : public HpActor
 {
 public:
+    s32 velX; // 0x58
+    s32 velY; // 0x5C
+
     // CreateJetpackCannonball
     JetpackCannonball(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 velX, s32 velY);
     virtual ~JetpackCannonball(); // 1 DestroyJetpackCannonball
+    virtual void Update();        // 2 UpdateJetpackCannonball
+    virtual s32 IsUnshootable();  // 5 IsJetpackCannonballUnshootable
 };
 
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackCannonball) == 0x60);
+
+class JetpackBalloonCrate;
+
+/* The balloon a crate hangs from (gJetpackBalloonVtable,
+ * src/vehicle/jetpack_balloon.cpp): the crate moves it (Move) until it is
+ * released (Release) and floats away, or is shot and pops. */
 class JetpackBalloon : public HpActor
 {
 public:
+    JetpackBalloonCrate *crate; // 0x58 - the crate hanging from it
+    u8 dying;                   // 0x5C
+    s32 velY;                   // 0x60
+
     // CreateJetpackBalloon
-    JetpackBalloon(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 arg);
-    virtual ~JetpackBalloon(); // 1 DestroyJetpackBalloon
+    JetpackBalloon(const struct anim_table_record *rec, s32 x, s32 y, s32 z,
+                   JetpackBalloonCrate *crate);
+    virtual ~JetpackBalloon();       // 1 DestroyJetpackBalloon
+    virtual void Update();           // 2 UpdateJetpackBalloon
+    virtual void Damage(s32 amount); // 4 DamageJetpackBalloon
+    virtual s32 IsUnshootable();     // 5 IsJetpackBalloonUnshootable
+
+    void ClearCrate();              // ClearJetpackBalloonCrate
+    void Release();                 // ReleaseJetpackBalloon
+    void Move(s32 x, s32 y, s32 z); // MoveJetpackBalloon
+    void Animate();                 // the animation step (inline, jetpack_balloon.cpp)
+    void RunState();                // RunJetpackBalloonState
+
+    /* The states, indexed by `state` (stateFuncs, gJetpackBalloonStateFuncs). */
+    void StateAttached();  // JetpackBalloonStateAttached
+    void StateFloatAway(); // JetpackBalloonStateFloatAway
+    void StatePop();       // JetpackBalloonStatePop
+
+    typedef void (JetpackBalloon::*StateFunc)();
+    static const StateFunc stateFuncs[3];
 };
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
 
 /* The crates hanging from balloons (gJetpackBalloonCrateVtable), and the
  * three kinds built on them, whose destructors are g++'s implicit ones
@@ -422,6 +519,8 @@ public:
     // InitJetpackBalloonCrate
     JetpackBalloonCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, u8 kind);
     virtual ~JetpackBalloonCrate(); // 1 DestroyJetpackBalloonCrate (jetpack_crates.c)
+    /* Slot 7 is declared for JetpackBalloon::Damage's call (part 11f). */
+    virtual void Break(); // 7 BreakJetpackBalloonCrate (jetpack_crates.c)
 };
 
 class JetpackHealthCrate : public JetpackBalloonCrate

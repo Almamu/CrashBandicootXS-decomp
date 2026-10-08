@@ -1045,7 +1045,7 @@ const struct vtable_slot gJetpackShotVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_plane.c (CreateJetpackPlane). */
+/* Used by jetpack_plane.cpp (JetpackPlane, vehicle.hpp). */
 const struct vtable_slot gJetpackPlaneVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackPlane),
@@ -1056,7 +1056,7 @@ const struct vtable_slot gJetpackPlaneVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_plane.c (CreateJetpackBomber). */
+/* Used by jetpack_plane.cpp (JetpackBomber, vehicle.hpp). */
 const struct vtable_slot gJetpackBomberVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackBomber),
@@ -1067,7 +1067,7 @@ const struct vtable_slot gJetpackBomberVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_plane.c (CreateJetpackCannonball). */
+/* Used by jetpack_plane.cpp (JetpackCannonball, vehicle.hpp). */
 const struct vtable_slot gJetpackCannonballVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackCannonball),
@@ -1089,7 +1089,7 @@ const struct vtable_slot gAirshipFireballVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by jetpack_balloon.c. */
+/* Used by jetpack_balloon.cpp (JetpackBalloon, vehicle.hpp). */
 const struct vtable_slot gJetpackBalloonVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackBalloon),

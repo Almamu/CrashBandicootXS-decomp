@@ -39,8 +39,9 @@ struct jetpack_spawn_rec {
     s32 z; // 0x0C
 };
 
-/* The actors whose classes have no fields yet (the other part 11 slices)
- * are built by their C constructors on AnimPart's operator new, the
+/* The actors whose classes have no fields yet (the crates, the ring, the
+ * collected wumpa and the hovercraft's weapons: parts 11g and 11h) are
+ * built by their C constructors on AnimPart's operator new, the
  * allocation `new` would make. */
 static inline void *AllocActor(u32 size)
 {
@@ -110,16 +111,14 @@ void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     y += gJetpackAnimTable[kind].spawnY;
     switch (kind) {
     case 1:
-        return CreateJetpackPlane((struct jetpack_plane *)AllocActor(0x80),
-                                  &gJetpackAnimTable[kind], x, y, z, (struct spawn_arg *)spawn);
+        return new JetpackPlane(&gJetpackAnimTable[kind], x, y, z, (struct spawn_arg *)spawn);
     case 4:
     case 5:
     case 6:
     case 7:
     case 8:
     case 9:
-        return CreateJetpackBomber((struct jetpack_bomber *)AllocActor(0x64),
-                                   (u8 *)&gJetpackAnimTable[kind], x, y, z);
+        return new JetpackBomber(&gJetpackAnimTable[kind], x, y, z);
     case 19:
         return CreateJetpackHealthCrate(AllocActor(0x70), &gJetpackAnimTable[kind], x, y, z);
     case 23:
@@ -169,10 +168,11 @@ void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c)
     CreateJetpackCollectedWumpa(AllocActor(0x64), &gJetpackAnimTable[44], a, b, c);
 }
 
-/* `CreateJetpackBalloon`-class constructor for any kind. */
+/* A balloon of record `kind` holding crate `d` (the crates' constructors,
+ * jetpack_crates.c). */
 void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
 {
-    return CreateJetpackBalloon(AllocActor(0x64), &gJetpackAnimTable[kind], a, b, c, d);
+    return new JetpackBalloon(&gJetpackAnimTable[kind], a, b, c, (JetpackBalloonCrate *)d);
 }
 
 /* Kind-14 constructor. */
@@ -223,12 +223,11 @@ void SpawnAirshipFireball(s32 x, s32 y, s32 z)
     new AirshipFireball(&gJetpackAnimTable[38], x, y, z);
 }
 
-/* Plays sfx 0x30 and spawns a kind-3 object. */
+/* Plays sfx 0x30 and fires a cannonball (record 3) at (d, e). */
 void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e)
 {
     PlaySfx(gAudioContext, SFX_CANNONBALL_FIRE, 0x100);
-    CreateJetpackCannonball((struct jetpack_cannonball *)AllocActor(0x60), &gJetpackAnimTable[3], a,
-                            b, c, d, e);
+    new JetpackCannonball(&gJetpackAnimTable[3], a, b, c, d, e);
 }
 
 /* Spawns the player's shot (record 2; JetpackPlayer::StateFly). */

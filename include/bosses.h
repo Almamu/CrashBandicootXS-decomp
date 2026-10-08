@@ -37,8 +37,8 @@ struct spawner {
 
 /* The airship's and the hovercraft's fireballs (CreateAirshipFireball,
  * CreateHovercraftFireball): `actor_self` plus hit points, the orbit
- * that AirshipFireballStateOrbit/AirshipFireballStateSpiralIn
- * (jetpack_plane.c) fly around the constructor's `b`/`c`, and an
+ * that AirshipFireball::StateOrbit/StateSpiralIn
+ * (jetpack_plane.cpp) fly around the constructor's `b`/`c`, and an
  * "exploding" flag. The hovercraft's sets the orbit up but never reads
  * it; it only flies straight on at `velZ`. The C view of
  * boss_actors.hpp's class AirshipFireball, same layout. */
@@ -318,14 +318,10 @@ extern void SetTinyState(void *self, void *part, s32 next);
 extern s32 PickTinyHopTarget(void *self);
 extern void SpawnTinyFallingLeaves(void *self, void *part, s32 n);
 
-/* src/vehicle/jetpack_balloon.c */
+/* src/vehicle/jetpack_balloon.cpp (C linkage) */
 extern s32 GetAirshipHpPercent(void);
 extern void DestroyAirship(void);
 extern void AirshipStateInactive(void);
-
-/* src/vehicle/jetpack_plane.c */
-extern void AirshipFireballStateOrbit(struct actor_orbit *self);
-extern void AirshipFireballStateSpiralIn(struct actor_orbit *self);
 
 /* src/vehicle/jetpack_spawn.cpp */
 extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);
