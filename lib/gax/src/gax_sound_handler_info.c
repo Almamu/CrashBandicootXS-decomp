@@ -1,5 +1,4 @@
 #include "gax_internal.h"
-#include "match.h"
 
 /* All three fixed per-type function-pointer constants docs/audio.md
  * records for the GAX2_SoundHandler "Info" type (init_fn/unknown_fn/
@@ -73,7 +72,7 @@ void GaxInfoUnknown(void)
  * docs/audio.md's per-type function-pointer table): advances the song
  * position once per mixer tick. Every Channel handler shares this one
  * Info handler, so it bails out (still returning 0) when this tick
- * (`chanArg`, the mixer's `pos`) already ran (`lastTick`), or when the
+ * (`tick`, the mixer's `pos`) already ran (`lastTick`), or when the
  * song isn't playing (`playing == 0`).
  *
  * When a row is due (`speed`'s low byte nonzero and `tickCounter` run
@@ -89,136 +88,63 @@ void GaxInfoUnknown(void)
  * the tick in `lastTick` (and `firstTick`, if that's still unset) and
  * counts `muteTicks` down if armed.
  *
- * Several compiler-quirk fixups were needed to match:
- * - The `tickCounter==0` check's "known zero" value needs materializing
- *   into its own register *only after* confirming `speed(byte)!=0`
- *   (nested `if`, not a single `&&`) - the ROM only computes this copy
- *   inside the outer branch, then reuses it both for the second
- *   comparison and (via `goto`) as the literal 0 later stored into
- *   `patternBreak`.
- * - The two `row`/`orderPos` reads compared against the song's table
- *   are 16-bit *signed* loads at a non-immediate offset (0x16/0x14) -
- *   Thumb's `ldrsh` has no immediate-offset form, only register-offset,
- *   and gcc's default codegen for this pattern picks the wrong register
- *   pairing (and a redundant sign-extend masking pass) compared to the
- *   ROM's `movs r0,#0x16; ldrsh r1,[r3,r0]` shape - transcribed as a
- *   tiny raw-asm block per read to force the ROM's exact register
- *   choice.
- * - The `tickCounter`/`newRow` "not retriggering" fallback path needs
- *   its decrement computed into a *fresh* register (pinned to r0)
- *   rather than modified in place on the register `tickCounter` was
- *   loaded into - otherwise gcc reuses that register directly instead
- *   of the ROM's separate `subs r0,r1,#1` / `movs r1,#0` pair. */
-u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
+ * Plain C since #662 round 2 (it was pins, two `ldrsh` asm blocks and
+ * retyped `speed`/`row` accesses). Two details: `p` is the parameter
+ * itself (a `void *self` copied to `p` makes gcc copy `tick` first), and
+ * the final low-byte test reads `p->speed` again rather than a local:
+ * GCSE then keeps the halfword in r4 from the top (and reloads it after
+ * a new row), as the ROM does. */
+u32 GaxInfoPlay(struct GaxInfoHandler *p, u32 arg1, u32 tick)
 {
-    struct GaxInfoHandler *p = self;
-    MATCH_HOLD_REG(u32, c, r6) = chanArg;
-    u8 b18lo;
-    MATCH_HOLD_REG(u16, h18, r4);
-    MATCH_HOLD_REG(u8, b1c, r1);
-
-    if (p->lastTick == c) {
+    if (p->lastTick == tick) {
         return 0;
     }
     if (p->playing == 0) {
         return 0;
     }
 
-    b18lo = *(u8 *)&p->speed;
-    h18 = p->speed;
-    b1c = p->tickCounter;
-
-    if (b18lo != 0) {
-        u32 zero = b1c;
-        if (zero == 0) {
-            u8 *flag = &p->patternBreak;
-
-            if (*flag != 0) {
-                *flag = zero;
-                p->row = p->type->data.song->patternRows;
-            } else {
-                p->row = p->row + 1;
-            }
-
-            {
-                u16 v18 = p->speed;
-                u16 lo = v18 >> 8;
-                if (lo != 0) {
-                    u16 mask = 0xff;
-                    u32 hi;
-                    hi = mask & v18;
-                    hi <<= 8;
-                    lo |= hi;
-                    p->speed = lo;
-                }
-            }
-
-            {
-                u8 dec = *(u8 *)&p->speed - 1;
-                h18 = 0;
-                p->tickCounter = dec;
-
-                {
-                    MATCH_HOLD_REG(s32, cnt, r1);
-                    struct GaxHandlerType *base0;
-                    u16 thresh;
-
-                    asm("movs r0, #0x16\n\tldrsh r1, [%1, r0]" : "=r"(cnt) : "r"(p) : "r0");
-                    base0 = p->type;
-                    thresh = base0->data.song->patternRows;
-
-                    if (!(cnt < thresh)) {
-                        u8 one;
-                        MATCH_HOLD_REG(s32, cnt2, r1);
-                        u16 thresh2;
-
-                        /* Stored through plain `u16 *` casts: a direct
-                         * field store copies `h18` into r0 first. */
-                        *(u16 *)&p->row = h18;
-                        *(u16 *)&p->breakRow = h18;
-                        one = 1;
-                        p->newOrder = one;
-                        p->orderPos = p->orderPos + 1;
-
-                        asm("movs r0, #0x14\n\tldrsh r1, [%1, r0]" : "=r"(cnt2) : "r"(p) : "r0");
-                        thresh2 = base0->data.song->orderCount;
-
-                        if (!(cnt2 < thresh2)) {
-                            if (p->stopAtEnd != 0) {
-                                p->playing = 0;
-                                p->speed = h18;
-                            }
-                            p->songEnded = one;
-                            p->orderPos = p->type->data.song->loopOrder;
-                        }
-                    } else {
-                        p->newOrder = h18;
-                    }
-                }
-            }
-            p->newRow = 1;
-            h18 = p->speed;
-            goto after_retrigger;
+    if ((p->speed & 0xff) != 0 && p->tickCounter == 0) {
+        if (p->patternBreak != 0) {
+            p->patternBreak = 0;
+            p->row = p->type->data.song->patternRows;
+        } else {
+            p->row++;
         }
+        if (p->speed >> 8) {
+            p->speed = (p->speed >> 8) | ((p->speed & 0xff) << 8);
+        }
+        p->tickCounter = (u8)p->speed - 1;
+        if (p->row >= p->type->data.song->patternRows) {
+            p->row = 0;
+            p->breakRow = 0;
+            p->newOrder = 1;
+            p->orderPos++;
+            if (p->orderPos >= p->type->data.song->orderCount) {
+                if (p->stopAtEnd != 0) {
+                    p->playing = 0;
+                    p->speed = 0;
+                }
+                p->songEnded = 1;
+                p->orderPos = p->type->data.song->loopOrder;
+            }
+        } else {
+            p->newOrder = 0;
+        }
+        p->newRow = 1;
+    } else {
+        p->tickCounter--;
+        p->newRow = 0;
     }
-    {
-        MATCH_HOLD_REG(u8, dec, r0) = b1c - 1;
-        u8 zeroB = 0;
-        p->tickCounter = dec;
-        p->newRow = zeroB;
-    }
-after_retrigger:
 
-    if ((h18 & 0xff) == 0) {
+    if ((p->speed & 0xff) == 0) {
         p->songEnded = 1;
     }
-
-    p->lastTick = c;
+    p->lastTick = tick;
     if (p->firstTick == 0) {
-        p->firstTick = c;
+        p->firstTick = tick;
     }
     if (p->muteTicks != 0) {
-        p->muteTicks = p->muteTicks - 1;
+        p->muteTicks--;
     }
 
     return 0;
