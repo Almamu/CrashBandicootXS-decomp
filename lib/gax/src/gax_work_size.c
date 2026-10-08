@@ -1,5 +1,4 @@
 #include "gax_internal.h"
-#include "match.h"
 
 /* GAX2's work-RAM size estimator (GitHub issue #66's range, formerly the
  * raw asm/code_3_2_20c.s): computes how many bytes `GAX2_init`
@@ -30,30 +29,24 @@
  *   loop and the tap scans (that's what puts it in r4 behind the inner
  *   loop's walking pointer in r3); the second alternative-layout scan
  *   tests `types[2]` in the condition and keeps `k + 1` in `next`;
- * - the MATCH_BARRIER()s below: see the comment there. */
+ * - every scalar local initialized to 0 where it's declared. The dead
+ *   stores are deleted later, but GCSE sizes its expression hash table
+ *   from the insn count and creates the preheader copies of
+ *   `p->layout`, `rate << 5` and `p->flags` in hash-bucket order, which
+ *   fixes their stack-slot order: without them the slots come out
+ *   0x18/0x10/0x14 instead of the ROM's 0x10/0x14/0x18. (Until #662
+ *   round 2 four empty asms supplied the extra insns.) */
 /* `layout->types[2]`'s slot holds a list of alternative layouts
  * (`struct GaxLayoutList`, gax_internal.h). */
 void GAX2_estimate(struct GaxSongHeader *p)
 {
     u32 size = 0;
-    u32 rate;
+    u32 rate = 0;
     u32 maxRate = 0;
-    u32 mixRate;
-    u32 numSfx;
-    u32 i;
+    u32 mixRate = 0;
+    u32 numSfx = 0;
+    u32 i = 0;
 
-    /* Four empty asms (no code). They only lengthen the RTL: GCSE sizes
-     * its expression hash table from the insn count and creates the
-     * preheader copies of `p->layout`, `rate << 5` and `p->flags` in
-     * hash-bucket order, which fixes their stack-slot order. Without
-     * them the slots come out 0x18/0x10/0x14 instead of the ROM's
-     * 0x10/0x14/0x18 and nothing else differs; any 4-11 extra insns give
-     * the ROM's order. The original source evidently had a few more RTL
-     * insns here that later passes removed - not identified. */
-    MATCH_BARRIER();
-    MATCH_BARRIER();
-    MATCH_BARRIER();
-    MATCH_BARRIER();
     if (p->layout == NULL)
         p->layout = &gGaxDefaultSong;
     if (p->mixRate == 0xffff)

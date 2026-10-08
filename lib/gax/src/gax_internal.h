@@ -33,7 +33,11 @@ struct GaxPlayerState {
     u32 echoLen; /* 0x28 - echoBuf's size in bytes */
     /* 0x2c - which half of outBuf GAX_play mixes into next (0/1) */
     u32 outHalf;
-    u32 state;       /* 0x30 - 0 = stopped, 1 = starting, 2 = playing */
+    /* 0x30 - 0 = stopped, 1 = starting, 2 = playing. Volatile: GAX_irq
+     * (the Timer/VBlank interrupt side) advances it from 1 to 2 while the
+     * main loop sets and tests it; GAX_irq reads it twice (#662 round 2,
+     * was a scoped volatile cast there). */
+    vu32 state;
     u32 timerReload; /* 0x34 - Timer0 reload for the mix rate (gGaxMixRates) */
     u8 pad_38[8];    /* 0x38-0x3f - not modeled yet */
     /* 0x40 - mix the SFX voices before the echo pass, so they get echo too */
