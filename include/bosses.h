@@ -40,7 +40,8 @@ struct spawner {
  * that AirshipFireballStateOrbit/AirshipFireballStateSpiralIn
  * (jetpack_plane.c) fly around the constructor's `b`/`c`, and an
  * "exploding" flag. The hovercraft's sets the orbit up but never reads
- * it; it only flies straight on at `velZ`. */
+ * it; it only flies straight on at `velZ`. The C view of
+ * boss_actors.hpp's class AirshipFireball, same layout. */
 struct actor_orbit {
     struct actor_self base;
     s32 hp;       // 0x54
@@ -119,47 +120,47 @@ extern void DestroyHovercraftLauncher(struct actor_self *self, u32 flags);
 extern void DestroyHovercraftSideGun(struct actor_self *self, u32 flags);
 extern void DestroyHovercraftCannonFlash(struct actor_self *self, u32 flags);
 
-/* src/bosses/airship.c */
+/* src/bosses/airship.cpp */
 extern void SteerAirship(void);
 extern void CreateAirship(s32 level);
 extern void SpawnAirship(s32 kind, s32 x, s32 y, s32 z);
 extern void UpdateAirship(void);
 extern void UpdateAirshipBg2(void);
 
-/* src/bosses/airship_damage.c */
+/* src/bosses/airship_damage.cpp */
 extern void DamageAirship(s32 delta);
 
-/* src/bosses/airship_explode.c */
+/* src/bosses/airship_explode.cpp */
 extern void AirshipStateExplode(void);
 
-/* src/bosses/airship_fall.c */
+/* src/bosses/airship_fall.cpp */
 extern void AirshipStateFall(void);
 
-/* src/bosses/airship_fireball.c */
+/* src/bosses/airship_fireball.cpp: AirshipFireball's methods
+ * (boss_actors.hpp) under their C names, for the vtable and
+ * SpawnAirshipFireball */
 extern void DamageAirshipFireball(void *self, s32 delta);
 extern void UpdateAirshipFireball(struct actor_self *self);
 extern void *CreateAirshipFireball(void *self, void *part, s32 b, s32 c, s32 d);
-extern void AirshipFireballStateExplode(void *self);
-extern void RunAirshipFireballState(struct actor_self *self);
 extern u8 IsAirshipFireballUnshootable(void *self);
 
-/* src/bosses/airship_graphics.c */
+/* src/bosses/airship_graphics.cpp */
 extern void ConvertAirshipTiles(void);
 extern void UpdateAirshipFlashColor(void);
 extern void AnimateAirshipPalette(void);
 
-/* src/bosses/airship_load_graphics.c */
+/* src/bosses/airship_load_graphics.cpp */
 extern void LoadAirshipGraphics(void);
 
-/* src/bosses/airship_map.c */
+/* src/bosses/airship_map.cpp */
 extern void DrawAirshipMap(u16 *src);
 
-/* src/bosses/airship_states.c */
+/* src/bosses/airship_states.cpp */
 extern void AirshipStateApproach(void);
 extern void AirshipStateFireballs(void);
 extern void AirshipStateCannon(void);
 
-/* src/bosses/airship_touch.c */
+/* src/bosses/airship_touch.cpp */
 extern u8 IsTouchingAirship(void *self);
 
 /* src/bosses/cortex.cpp: the methods of OneShotAnimCtrl (include/ctrl.hpp),
@@ -336,8 +337,13 @@ extern void SpawnHovercraftCannon(s32 a, s32 b, s32 c);
 extern void SpawnHovercraftFireball(s32 x, s32 y, s32 z);
 extern void SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
-/* The bosses' globals (sym_iwram.txt). */
+/* The bosses' globals (sym_iwram.txt). The airship is a bare AnimPart
+ * (actor_self.hpp) in C++; the C files only use its first 0x1C bytes. */
+#ifdef __cplusplus
+extern class AnimPart *gAirship;
+#else
 extern struct actor_self *gAirship;
+#endif
 extern const struct airship_attack *gAirshipAttack;
 extern s32 gAirshipBg2Page;
 extern u8 gAirshipBg2PageFlip;
@@ -403,9 +409,6 @@ extern const struct airship_attack gAirshipAttacks[6];
 extern const struct anim_box gAirshipBox;
 extern const u16 gAirshipHitFlashPalettes[3][16];
 extern const struct anim_frame_record gAirshipKeyframes[2];
-
-/* src/data/actor_pmf_17c260.c */
-extern const struct actor_pmf gAirshipFireballStateFuncs[3];
 
 /* src/data/entity_vtables_7e3bec.c */
 extern const struct vtable_slot gAirshipFireballVtable[7];
