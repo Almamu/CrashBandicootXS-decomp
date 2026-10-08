@@ -39,25 +39,18 @@ struct jetpack_ring {
     u8 cued; // 0x58
 };
 
-/* A polar life crate (CreatePolarLifeCrate, polar_crates.c; vtable
- * gPolarLifeCrateVtable): `actor_self` plus the spawn record that
- * UpdatePolarLifeCrate hands to MarkSpawnCollected's 15-entry list. */
-struct polar_life_crate {
-    struct actor_self base;
-    void *spawn; // 0x54 - CreatePolarLifeCrate's 6th argument
-};
-
-/* The spawn argument of CreateJetpackPlane and CreatePolarPenguin. */
+/* The spawn argument of CreateJetpackPlane and PolarPenguin's
+ * constructor (vehicle.hpp). */
 struct spawn_arg {
     u8 unk_00[0x10];
     s32 target; // 0x10 - the first hop target index (AimJetpackPlane,
-                //        AimPolarPenguin)
+                //        PolarPenguin::Aim)
 };
 
 /* An actor box (`struct anim_box`, actor_anim.h) copied as three words:
  * this shape, rather than the 6-halfword struct or three separate `s32`
  * copies, gives the ROM's `ldm`/`stm` when a fixed box is copied into an
- * actor's `box` (jetpack_crates.c, polar_objects.c, polar_pickups.c). */
+ * actor's `box` (jetpack_crates.c). */
 struct vec3_words {
     s32 a, b, c;
 };
@@ -67,7 +60,6 @@ struct vec3_words {
 struct anim_box;
 struct anim_table_record;
 struct actor_283c;
-struct actor_once;
 struct jetpack_spawn_rec;
 
 /* src/actor/actor.cpp */
@@ -125,7 +117,7 @@ extern s32 JetpackIsTouchingPlayer(void *self);
 extern void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
 extern void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
 #ifdef __cplusplus
-extern class ActorSelf *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
+extern class PolarAkuAku *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 #else
 extern struct actor_self *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
 #endif
@@ -232,62 +224,28 @@ extern void UpdateJetpackPlayer(void *self);
 extern void DrawJetpackPlayer(void *self);
 extern void DamageJetpackPlayer(void *self, s32 dmg);
 
-/* src/vehicle/polar_aku_aku.c */
-extern void ClearPolarAkuAkuMask(void *self);
-extern s32 RemovePolarAkuAkuMask(void *self);
-extern s32 AddPolarAkuAkuMask(void *self);
-extern void *CreatePolarAkuAku(struct actor_self *self, void *part, s32 b, s32 c, s32 d, s32 sixth);
-extern void SetPolarMaskLevel(void *arg0, s32 arg1);
+/* src/vehicle/polar_aku_aku.cpp, polar_crates.cpp, polar_objects.cpp and
+ * polar_pickups.cpp: the C-linkage functions, and the C names of the polar
+ * actors' methods (vehicle.hpp) that the vtable data uses. */
 extern s32 GetPolarMaskLevel(void);
+extern u8 IsPolarPlayerInactive(void);
 extern void UpdatePolarGoal(void *self);
-extern void *CreatePolarGoal(struct actor_self *self, void *part, s32 b, s32 c, s32 d);
 extern void UpdatePolarBoostPad(void *self);
-extern void *CreatePolarBoostPad(struct actor_once *self, void *part, s32 posY, s32 c, s32 d);
 extern void UpdatePolarCheckpointCrate(void *self);
-extern void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32 b, s32 c, s32 d);
-
-/* src/vehicle/polar_crates.c */
 extern void UpdatePolarAkuAkuCrate(struct actor_self *self);
 extern void UpdatePolarTimeCrate(void *self);
-extern void DetonatePolarNitroCrate(void *self);
 extern void UpdatePolarFourWumpaCrate(void *self);
 extern void UpdatePolarBasicCrate(void *self);
-extern void *InitPolarCrate(void *self, void *part, s32 b, s32 c, s32 last);
-extern void *CreatePolarTimeCrate(void *self, void *part, s32 b, s32 c, s32 last);
-extern void *CreatePolarQuestionCrate(void *self, void *part, s32 b, s32 c, s32 last);
-extern void *CreatePolarAkuAkuCrate(void *self, void *part, s32 b, s32 c, s32 last);
-extern void *CreatePolarNitroCrate(void *self, void *part, s32 b, s32 c, s32 last);
-extern void *CreatePolarLifeCrate(void *self, void *part, s32 b, s32 c, s32 last, s32 arg6);
-extern void *CreatePolarFourWumpaCrate(void *self, void *part, s32 b, s32 c, s32 last);
-extern void *CreatePolarBasicCrate(void *self, void *part, s32 b, s32 c, s32 last);
-
-/* src/vehicle/polar_nitro.c */
-extern void DetonateNearbyPolarNitros(struct actor_self *self);
-
-/* src/vehicle/polar_objects.c */
 extern void UpdatePolarElectricFence(void *self);
-extern void *CreatePolarElectricFence(void *self, void *part, s32 b, s32 c, s32 d);
 extern void UpdatePolarObstacle(void *self);
-extern void *CreatePolarObstacle(void *self, void *part, s32 b, s32 c, s32 d);
 extern void UpdatePolarLauncher(void *self);
-extern void *CreatePolarLauncher(void *self, void *part, s32 b, s32 c, s32 d);
 extern void UpdatePolarPenguin(void *self);
-extern void AimPolarPenguin(void *self, s32 target);
-extern void *CreatePolarPenguin(void *self, void *part, s32 b, s32 c, s32 d, struct spawn_arg *e);
 extern void UpdatePolarIcicle(void *self);
-extern void *CreatePolarIcicle(void *self, u8 *b, s32 c, s32 d, s32 e);
-extern void RefreshPolarAkuAku(void *self, s32 retrigger);
 extern void UpdatePolarAkuAku(void *self);
-extern void MovePolarAkuAku(struct actor_self *self, s32 posX, s32 posY, s32 posZ);
-
-/* src/vehicle/polar_pickups.c */
-extern u8 IsPolarPlayerInactive(void);
 extern void UpdatePolarCollectedWumpa(void *self);
 extern void DrawPolarCollectedWumpa(void *self);
 extern void DestroyPolarCollectedWumpa(void *self, u32 arg1);
-extern void *CreatePolarCollectedWumpa(void *self, void *part, s32 b, s32 c, s32 spawn);
 extern void UpdatePolarWumpa(void *self);
-extern void *CreatePolarWumpa(void *self, void *part, s32 b, s32 c, s32 last);
 extern void UpdatePolarCrate(void *self);
 extern void UpdatePolarQuestionCrate(void *self);
 extern void UpdatePolarLifeCrate(void *self);
@@ -295,20 +253,14 @@ extern void UpdatePolarNitroCrate(void *self);
 
 /* src/vehicle/polar_player.cpp, polar_player_states.cpp and
  * polar_player_actions.cpp: PolarPlayer's methods (vehicle.hpp) that the
- * vtable data and the C files call by their C names. */
+ * vtable data, yeti_update.c (CatchPolarPlayer) and actor.cpp's and
+ * actor_spawn.cpp's hooks call by their C names. */
 extern void UpdatePolarPlayer(struct actor_self *self);
 extern void DrawPolarPlayer(struct actor_self *self);
-extern s32 HurtPolarPlayer(void *self);
-extern s32 ShockPolarPlayer(void *self);
 extern void AllocPolarPlayerTiles(void *self);
 extern s32 IsPolarPauseLocked(void *player);
 extern void FinishPolarRun(void *player);
 extern void CatchPolarPlayer(void *self);
-extern void QueuePolarWumpa(void *arg0, s32 delta);
-extern void GivePolarPlayerLife(void *arg0);
-extern void BoostPolarPlayer(void *self, s32 arg1);
-extern void GivePolarPlayerMask(void *arg0);
-extern void LaunchPolarPlayer(void *self);
 extern void DestroyPolarPlayer(void *self, u32 arg1);
 
 /* src/vehicle/yeti.c */
@@ -319,7 +271,11 @@ extern void BuildYetiBg2Map(u8 *dst, u8 seed);
 extern void YetiStateCaught(void);
 
 /* src/vehicle/yeti_graphics.c */
+#ifdef __cplusplus
+extern u8 IsTouchingYeti(class ActorSelf *self);
+#else
 extern u8 IsTouchingYeti(struct actor_self *self);
+#endif
 extern void LoadYetiGraphics(void);
 
 /* src/vehicle/yeti_states.c */
@@ -354,7 +310,7 @@ extern s32 gJetpackWumpaDispenseTimer;
 /* The polar actors the player keeps: ActorSelfs to the C++ files
  * (actor_self.hpp), as gYeti below. */
 #ifdef __cplusplus
-extern class ActorSelf *gPolarAkuAku;
+extern class PolarAkuAku *gPolarAkuAku;
 #else
 extern struct actor_self *gPolarAkuAku;
 #endif

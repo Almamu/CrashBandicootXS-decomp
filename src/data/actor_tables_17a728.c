@@ -19,15 +19,15 @@ const u16 gPolarPlayerShockBlinkPalette[16] = {
     0x18C8, 0x31B1, 0x294C, 0x52D8, 0x3E32, 0x5F3B, 0x4675, 0x6BBF,
 };
 
-/* Boxes (struct anim_box): the one UpdatePolarNitroCrate (polar_pickups.c) copies
- * into a part's +0x38 box, and the three UpdatePolarElectricFence (polar_objects.c)
+/* Boxes (struct anim_box): the one UpdatePolarNitroCrate (polar_pickups.cpp) copies
+ * into a part's +0x38 box, and the three UpdatePolarElectricFence (polar_objects.cpp)
  * picks from. */
 const struct anim_box gPolarNitroCrateBox = { -15, -15, -2, 30, 30, 5 };
 const struct anim_box gPolarElectricFenceLeftPostBox = { -24, -25, 0, 10, 40, 1 };
 const struct anim_box gPolarElectricFenceRightPostBox = { 14, -25, 0, 10, 40, 1 };
 const struct anim_box gPolarElectricFenceWireBox = { -14, -25, 0, 28, 40, 1 };
 
-/* 16-colour palettes polar_objects.c queues for OBJ palette 14:
+/* 16-colour palettes polar_objects.cpp queues for OBJ palette 14:
  * RefreshPolarAkuAku takes gPolarAkuAkuPalette1 + (tier - 1) * 0x20, so the
  * higher tiers read the palettes after it; UpdatePolarAkuAku blinks
  * between gPolarAkuAkuPalette3 and gPolarAkuAkuPalette2. */

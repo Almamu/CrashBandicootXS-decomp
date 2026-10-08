@@ -575,6 +575,11 @@ counts them by kind) and what the C++ still needs.
 | `src/data/actor_pmf_17c450.cpp` | `HovercraftFireball::stateFuncs` (gHovercraftFireballStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11h |
 | `src/data/actor_state_17c4c8.cpp` | gHovercraftStateFuncs (a plain function table, C linkage), `HovercraftCannon::stateFuncs`, `HovercraftLauncher::stateFuncs` | data | agbcp | the `ACTOR_PMF` records -> 0 | 11h |
 | `src/vehicle/jetpack_spawn.cpp` (again) | the hovercraft's weapons', the ring's and the collected wumpa's spawners: `new` | 0 + 7 | old_agbcp | the `CreateHovercraftSideGun_b` alias, the `byte_arg` and 8 C-constructor calls on `AllocActor` -> 0 | 11h |
+| `src/vehicle/polar_pickups.cpp` | `PolarCollectedWumpa` (include/vehicle.hpp): `Update`, `Draw`, destructor, constructor; `PolarWumpa`'s `Update` and out-of-line constructor; `PolarCrate::Update`; `PolarQuestionCrate`'s, `PolarLifeCrate`'s and `PolarNitroCrate`'s `Update`; `IsPolarPlayerInactive` (C linkage) | 10 + 1 | agbcp (both match) | 59 pins, 2 `asm`, 18 retyped stores, 7 retyped reads, 4 hand-written `destroy` slot calls, 13 gotos -> 0 | 11d |
+| `src/vehicle/polar_nitro.cpp` | `PolarNitroCrate::DetonateNearby` | 1 | old_agbcp (old_agbcc C already; agbcp doesn't match) | the `ACTOR_TYPE` cast, the frame struct and its two explicit `MemCopy32` self-copies -> 0 | 11d |
+| `src/vehicle/polar_crates.cpp` | `PolarCrate`'s constructor (InitPolarCrate); `PolarAkuAkuCrate`'s, `PolarTimeCrate`'s, `PolarFourWumpaCrate`'s and `PolarBasicCrate`'s `Update`; `PolarNitroCrate::Detonate`; the 7 crate kinds' out-of-line constructors (include/polar_crate_ctors.hpp) | 13 | agbcp (both match) | 21 pins, 19 retyped stores, 5 retyped reads -> 0 | 11d |
+| `src/vehicle/polar_objects.cpp` | `PolarElectricFence`, `PolarObstacle`, `PolarLauncher`, `PolarPenguin`, `PolarIcicle`: `Update` and constructor (and `PolarPenguin::Aim`); `PolarAkuAku`'s `Refresh`, `Update`, `Move` | 14 | agbcp (both match) | 56 pins, 1 `asm`, 24 retyped stores, 1 retyped read, `ACTOR_VCALL` and a hand-written slot call, 9 gotos -> 0 (`Move`'s `goto` stays) | 11d |
+| `src/vehicle/polar_aku_aku.cpp` | `PolarAkuAku`'s `ClearMask`, `RemoveMask`, `AddMask`, `SetMask`, constructor; `PolarGoal`, `PolarBoostPad`, `PolarCheckpointCrate`: `Update` and constructor; `GetPolarMaskLevel` (C linkage) | 11 + 1 | agbcp (both match) | 9 pins, 4 retyped stores, a hand-written slot call -> 0 | 11d |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2640,6 +2645,103 @@ Kept: `JetpackPlane::Aim`'s `scale2` assigned inside the X term (the C's
 spelling): the ROM doubles the scale after the GetActorSpawnX call, and
 assigned before it, the shift is scheduled first.
 
+### The polar crates, pickups, hazards and Aku Aku (part 11d)
+
+Part 11d in numbers: polar_pickups.c, polar_nitro.c, polar_crates.c,
+polar_objects.c and polar_aku_aku.c (ROM 0x0802C1EC-0x0802D5D4, between
+polar_player_dispatch.cpp and yeti_update.c), 51 functions, all C++ now
+with no pins and no `asm`. With them every polar class is C++.
+Project-wide (against part 11h): `MATCH_HOLD_REG` 735 -> 590,
+instruction-emitting `asm` 84 -> 81, retyped field stores 114 -> 49 and
+reads 51 -> 38. The objects keep their compilers: polar_nitro.o old_agbcp
+(it doesn't match under agbcp), the other four agbcp (they match under
+both).
+
+| Class (include/vehicle.hpp) | Size | Vtable | Code |
+|---|---:|---|---|
+| `PolarCollectedWumpa : ActorSelf` | 0x60 | gPolarCollectedWumpaVtable (1-3) | polar_pickups.cpp: flies to the HUD, its destructor counts in its fruit |
+| `PolarWumpa : ActorSelf` | 0x54 | gPolarWumpaVtable (1, 2) | polar_pickups.cpp |
+| `PolarCrate : ActorSelf` | 0x54 | gPolarCrateVtable (1, 2) | constructor (polar_crates.cpp), `Update` (polar_pickups.cpp), `Break` (inline) |
+| its 7 kinds (`PolarTimeCrate`, ..., `PolarLifeCrate` 0x58) | | their own (1, 2) | `Update` (polar_crates.cpp, polar_pickups.cpp); `PolarNitroCrate::Detonate`, `DetonateNearby` (polar_nitro.cpp), `Explode` (inline); the constructors in include/polar_crate_ctors.hpp |
+| `PolarElectricFence`, `PolarObstacle`, `PolarLauncher`, `PolarPenguin` (0x68), `PolarIcicle` | | their own (1, 2) | polar_objects.cpp |
+| `PolarAkuAku : ActorSelf` | 0x54 | gPolarAkuAkuVtable (1, 2) | polar_objects.cpp (`Refresh`, `Update`, `Move`), polar_aku_aku.cpp (the masks, constructor) |
+| `PolarGoal`, `PolarBoostPad` (0x58), `PolarCheckpointCrate` | | their own (1, 2) | polar_aku_aku.cpp |
+
+- **The crate kinds' constructors are inline and out of line** from one
+  source: include/polar_crate_ctors.hpp, a header fragment with no include
+  guard (part 7e's crate_line_step.hpp). vehicle.hpp includes it with
+  `POLAR_CRATE_CTOR` `inline` (CreateActor expands them, part 11b), and
+  polar_crates.cpp, which defines `POLAR_CRATE_CONSTRUCTORS_OUT_OF_LINE`,
+  includes it at its end with the macro empty, for the ROM's
+  CreatePolarTimeCrate & co. (no caller). `PolarWumpa`'s one constructor
+  uses the `~ActorSelf` way (part 11a): inline in vehicle.hpp under
+  `#ifndef POLAR_WUMPA_CONSTRUCTOR_OUT_OF_LINE`, plain in
+  polar_pickups.cpp (CreatePolarWumpa).
+- **The constructors** are `ActorSelf(rec, x, y, z)` and the body:
+  InitPolarCrate's look by place (the C's explicit `__divsi3` is `/
+  0x14`), the icicle's by `(u8)rec->index`, the boost pad's by side, Aku
+  Aku's offset position and mask level. The C pinned 21 registers for
+  them.
+- **The animation resets** are `RestartAnim` and `SetState`; a crate's
+  break is `Break()` (`RestartAnim(0x12)`) and a nitro's `Explode()`
+  (`stateTime = 0` too). The C pinned the duration and the zeros in
+  nearly every one and stored through `*(u16 *)`/`*(u8 *)` casts. Where
+  the ROM stores a register just tested against 0 (the launcher's, the
+  penguin's, the nitro's yeti path, the checkpoint crate's), the inline
+  after the test gives it, as part 11c found.
+- **The `destroy` slot calls** (4 hand-written `_call_via_r2` calls and an
+  `ACTOR_VCALL`) are `delete this`, and the calls on the player are
+  `static_cast<PolarPlayer *>(gActorList)->Hurt()` and the like.
+- **`DrawPolarCollectedWumpa`** (25 pins and an `asm` for the dead `flag
+  = 0` in r8) is ActorSelf::Draw's tail at a constant scale:
+  a static inline `DrawScaledFrame(this, x >> 8, y >> 8, 0x140)` with
+  DrawActor's double-size and affine tests. The tests fold, and the
+  dead zero, the `h << 3`/`halfW << 1` asymmetry of the culling and the
+  ORed 0x100 come out as the ROM has them.
+- **Switch trees**: `PolarQuestionCrate::Update`'s 9 gotos are a plain
+  `switch` on the record (cases 0x1C-0x1F), and `PolarLauncher::Update`'s
+  5 a `switch (state)`. The icicle's two steps are two `if`s with the
+  anim switch and `state + 1` each, merged by cross-jumping.
+- **gPolarAkuAku and SpawnPolarAkuAku are `PolarAkuAku *`** to C++
+  (vehicle.h's `__cplusplus` declarations), so polar_player.cpp and
+  polar_player_actions.cpp call `gPolarAkuAku->Move(...)`,
+  `AddMask()`, `RemoveMask()` and `ClearMask()`, where 11c called the C
+  names with a cast. `IsTouchingYeti` (yeti_graphics.c) takes an
+  `ActorSelf *` to C++ the same way.
+- **Prototypes**: vehicle.h keeps the vtable data's (the `Update`s, the
+  collected wumpa's `Draw` and destructor), and the two C-linkage
+  getters; the constructors', InitPolarCrate's, the Aku Aku methods',
+  `AimPolarPenguin`'s, `DetonateNearbyPolarNitros`' and
+  `DetonatePolarNitroCrate`'s go, with `struct polar_life_crate` and
+  `struct actor_once`. Of PolarPlayer's, `HurtPolarPlayer`,
+  `ShockPolarPlayer`, `LaunchPolarPlayer`, `BoostPolarPlayer`,
+  `QueuePolarWumpa`, `GivePolarPlayerLife` and `GivePolarPlayerMask` go
+  (these files were their last callers); `CatchPolarPlayer`
+  (yeti_update.c), `AllocPolarPlayerTiles`, `FinishPolarRun` and
+  `IsPolarPauseLocked` (actor.cpp's and actor_spawn.cpp's C-linkage
+  hooks, which call their jetpack twins the same way) stay.
+
+What made the C++ match, beyond the above:
+
+- **`DetonateNearby`'s overlap test** goes through a `u8` inline,
+  `ActorsOverlap(this, n)` (BoxOverlap of the two WorldBoxes, as in
+  actor_category_frame.cpp): written as `BoxOverlap(...)` in the `&&`
+  chain, the result is stored in a register and tested again.
+- **`PolarCollectedWumpa`'s constructor** adds the BG centre as `x +
+  GetActorBgCenterX()` and reads `y` again after the first `abs`, as the
+  ROM does.
+- **The boost pad's side** is `if (side < -0x14) idx = 0; else { idx = 1;
+  if (side > 0x14) idx = 2; }`: initialised to 0 first, the 0 is loaded
+  before the -0x14.
+
+Kept, each with a comment: the electric fence's four hits and the
+penguin's two knock-aways are written out (through an inline helper,
+PlaySfx's two constant arguments are loaded in the other order), and
+`PolarAkuAku::Move`'s `goto` into the shared Y/Z easing (the ROM's one
+copy; with the targets set per branch and one easing after them the
+registers differ). The BoxOverlap/WorldBox inlines are a copy of
+actor_category_frame.cpp's (file-local there).
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -2696,7 +2798,8 @@ player, then the first item here, is C++ since part 8):
   part 11i the airship (airship*.c), part 11e the jetpack player, its
   shot, the jetpack spawners and their table, part 11c the polar player,
   part 11f the planes, bombers, cannonballs and balloons and their tables,
-  part 11h the hovercraft (hovercraft*.c), its weapons and their tables;
+  part 11h the hovercraft (hovercraft*.c), its weapons and their tables,
+  part 11d the other polar actors (every polar class is C++ now);
   the plan for the rest is
   [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
@@ -2793,7 +2896,7 @@ and, once no C file reads one, its PMF table to C++.
 | ~~11a~~ | ~~actor/actor.c, actor_anim.c; vehicle/polar_player_dispatch.c; data/actor_pmf_17a6b8.c~~ | `AnimPart`, `ActorSelf`, `HpActor`; the subclasses' destructors; `PolarPlayer::RunState` | done | gPolarPlayerStateFuncs | |
 | ~~11b~~ | ~~actor/actor_factory.c, actor_spawn.c, actor_category_frame.c (old), actor_category_select.c~~ | the polar actors' constructors (CreateActor's inlined `new`s, `ConstructActorPart` = `PolarPlayer`'s), `FindShotTarget`, the category frame's virtual calls | done | | 11a |
 | ~~11c~~ | ~~vehicle/polar_player.c (old), polar_player_actions.c, polar_player_states.c~~ | `PolarPlayer` (`Update`, `Draw`, the 14 states, the destructor, the methods the polar actors call) | done | (gPolarPlayerStateFuncs' last C user) | 11a |
-| 11d | vehicle/polar_crates.c, polar_pickups.c, polar_objects.c, polar_aku_aku.c, polar_nitro.c (old) | the polar crates (`PolarCrate` and its kinds), wumpas, hazards, Aku Aku, goal, boost pad | 51, 145, 3 | | 11b |
+| ~~11d~~ | ~~vehicle/polar_crates.c, polar_pickups.c, polar_objects.c, polar_aku_aku.c, polar_nitro.c (old)~~ | the polar crates (`PolarCrate` and its kinds), wumpas, hazards, Aku Aku, goal, boost pad | done | | 11b |
 | ~~11e~~ | ~~vehicle/jetpack_spawn.c (old), jetpack_player.c, jetpack_run.c, jetpack_shot.c~~ | `HpActor`'s constructor, `JetpackPlayer`, `JetpackShot`, the jetpack spawners | done | gJetpackPlayerStateFuncs | 11a |
 | ~~11f~~ | ~~vehicle/jetpack_plane.c, jetpack_balloon.c~~ | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | done | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs (split into actor_pmf_17c414.cpp) | 11e |
 | 11g | vehicle/jetpack_crates.c | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | 30, 62, 3 | gJetpackBalloonCrateStateFuncs | 11e |
@@ -3286,3 +3389,15 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   cross-jumping merges the stores and keeps the branch, and the pool goes
   after it. A ternary or a conditional overwrite has no `b` (the side gun's
   X offset, part 11h, where the C needed an `asm` block with a `.pool`).
+- **A `&&` chain with an inline box test** (`... && BoxOverlap(a, b) &&
+  ...`) keeps the test's result in a register and tests it again; through
+  a `u8`-returning inline wrapper the chain's branches are the ROM's
+  (`PolarNitroCrate::DetonateNearby`, part 11d).
+- **A constant argument loaded before another** (`movs r2, #0x80; lsls`
+  before `movs r1, #4` for `PlaySfx(ctx, 4, 0x100)`) is a call written in
+  place: the same call in an inline helper loads them in argument order
+  (`PolarElectricFence::Update`, `PolarPenguin::Update`, part 11d).
+- **Dead code of an inline with a constant argument** stays in the ROM's
+  shape: ActorSelf::Draw's tail as an inline called with scale 0x140
+  gives `DrawPolarCollectedWumpa`'s dead `flag = 0`, its folded size
+  tests and its ORed 0x100 (part 11d), which the C wrote in asm.

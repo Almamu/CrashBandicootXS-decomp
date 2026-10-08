@@ -820,7 +820,7 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
  * jetpack_crates.c, hovercraft.cpp (~JetpackCollectedWumpa), polar_player_actions.cpp,
- * polar_pickups.c, jetpack_player.cpp, actor.c. */
+ * polar_pickups.cpp, jetpack_player.cpp, actor.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyActor),
@@ -853,7 +853,7 @@ const struct vtable_slot gPolarPlayerVtable[4] = {
     VTABLE_SLOT(DrawPolarPlayer),
 };
 
-/* Used by polar_player_actions.cpp, polar_pickups.c. */
+/* Used by polar_player_actions.cpp, polar_pickups.cpp. */
 const struct vtable_slot gPolarCollectedWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCollectedWumpa),
@@ -861,7 +861,7 @@ const struct vtable_slot gPolarCollectedWumpaVtable[4] = {
     VTABLE_SLOT(DrawPolarCollectedWumpa),
 };
 
-/* Used by polar_player_actions.cpp, polar_pickups.c, actor_factory.cpp. */
+/* Used by polar_player_actions.cpp, polar_pickups.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarWumpa),
@@ -869,7 +869,7 @@ const struct vtable_slot gPolarWumpaVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c, actor_factory.cpp. */
+/* Used by polar_crates.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarTimeCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarTimeCrate),
@@ -877,7 +877,7 @@ const struct vtable_slot gPolarTimeCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c, actor_factory.cpp. */
+/* Used by polar_crates.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarQuestionCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarQuestionCrate),
@@ -885,7 +885,7 @@ const struct vtable_slot gPolarQuestionCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c, actor_factory.cpp. */
+/* Used by polar_crates.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarAkuAkuCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarAkuAkuCrate),
@@ -893,7 +893,7 @@ const struct vtable_slot gPolarAkuAkuCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c, actor_factory.cpp. */
+/* Used by polar_crates.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarNitroCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarNitroCrate),
@@ -901,7 +901,7 @@ const struct vtable_slot gPolarNitroCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c, actor_factory.cpp. */
+/* Used by polar_crates.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarLifeCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarLifeCrate),
@@ -909,7 +909,7 @@ const struct vtable_slot gPolarLifeCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c, actor_factory.cpp. */
+/* Used by polar_crates.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarFourWumpaCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarFourWumpaCrate),
@@ -917,7 +917,7 @@ const struct vtable_slot gPolarFourWumpaCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c, actor_factory.cpp. */
+/* Used by polar_crates.cpp, actor_factory.cpp. */
 const struct vtable_slot gPolarBasicCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarBasicCrate),
@@ -925,7 +925,7 @@ const struct vtable_slot gPolarBasicCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_crates.c. */
+/* Used by polar_crates.cpp. */
 const struct vtable_slot gPolarCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCrate),
@@ -933,7 +933,7 @@ const struct vtable_slot gPolarCrateVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_objects.c. */
+/* Used by polar_objects.cpp. */
 const struct vtable_slot gPolarElectricFenceVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarElectricFence),
@@ -941,7 +941,7 @@ const struct vtable_slot gPolarElectricFenceVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_objects.c. */
+/* Used by polar_objects.cpp. */
 const struct vtable_slot gPolarObstacleVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarObstacle),
@@ -949,7 +949,7 @@ const struct vtable_slot gPolarObstacleVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_objects.c. */
+/* Used by polar_objects.cpp. */
 const struct vtable_slot gPolarLauncherVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarLauncher),
@@ -957,7 +957,7 @@ const struct vtable_slot gPolarLauncherVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_objects.c. */
+/* Used by polar_objects.cpp. */
 const struct vtable_slot gPolarPenguinVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarPenguin),
@@ -965,7 +965,7 @@ const struct vtable_slot gPolarPenguinVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_objects.c. */
+/* Used by polar_objects.cpp. */
 const struct vtable_slot gPolarIcicleVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarIcicle),
@@ -973,7 +973,7 @@ const struct vtable_slot gPolarIcicleVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_aku_aku.c. */
+/* Used by polar_aku_aku.cpp. */
 const struct vtable_slot gPolarAkuAkuVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarAkuAku),
@@ -981,7 +981,7 @@ const struct vtable_slot gPolarAkuAkuVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_aku_aku.c. */
+/* Used by polar_aku_aku.cpp. */
 const struct vtable_slot gPolarGoalVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarGoal),
@@ -989,7 +989,7 @@ const struct vtable_slot gPolarGoalVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_aku_aku.c. */
+/* Used by polar_aku_aku.cpp. */
 const struct vtable_slot gPolarBoostPadVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarBoostPad),
@@ -997,7 +997,7 @@ const struct vtable_slot gPolarBoostPadVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_aku_aku.c. */
+/* Used by polar_aku_aku.cpp. */
 const struct vtable_slot gPolarCheckpointCrateVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCheckpointCrate),
