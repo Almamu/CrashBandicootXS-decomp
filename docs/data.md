@@ -596,7 +596,7 @@ address: the pairs in `motion_records_16b304.c` (`gActionCtrlMotionEntries`,
 `gPlayerCtrlMotionEntries`), which `entry_set_16b92c.c` now points at by
 name, the level animation rows `gPlayerCtrlModeLevelAnims` that
 `action_table_16bf20.cpp` points at, and the two link-cable names
-`gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.c`). A few
+`gCrash2LinkText`/`0816B124` that the IWRAM data points at (`src/iwram/iwram_data.cpp`). A few
 byte tables sit at odd addresses (`gTinyHopTargets`); brace-list `u8`
 arrays aren't aligned by agbcc, so they stay in place.
 
@@ -647,7 +647,7 @@ effect), shown with the page of text at the same index of the current
 language's `struct cutscene_page` array. The six language tables
 (`gCutsceneTextEnglish` is English, then French, German, Spanish,
 Italian and Dutch) are listed by `gCutsceneTexts`, a pointer table in
-the IWRAM image (`src/iwram/iwram_data.c`). The text is plain C strings (Latin-1, all lower case),
+the IWRAM image (`src/iwram/iwram_data.cpp`). The text is plain C strings (Latin-1, all lower case),
 each page's strings in a `const u8 *const []`, and page and slide counts
 are `ARRAY_COUNT()`s.
 
@@ -737,7 +737,7 @@ table: they aren't objects, so the report doesn't count them.
 
 Then `src/data/ui_text_172cd4.c`: the game's own text (menus, level
 names, popups) in six languages, 70 strings each. `GetUiText` looks a
-text id up in `gUiTextTables[language]` (`src/iwram/iwram_data.c`),
+text id up in `gUiTextTables[language]` (`src/iwram/iwram_data.cpp`),
 which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
 language's new strings sit before its array, and strings several
 languages share (mostly the level names) are stored once. Every string
@@ -848,7 +848,7 @@ u16 zeros;         // ...
 ```
 
 The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
-`src/iwram/sprite_arm.c`, the `gUnpackRleSpriteFrameFunc` hook, called by
+`src/iwram/sprite_arm.cpp`, the `gUnpackRleSpriteFrameFunc` hook, called by
 `polar_player.cpp`, `jetpack_spawn.cpp` and `company_logos.cpp`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and

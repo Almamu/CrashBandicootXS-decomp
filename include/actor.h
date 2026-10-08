@@ -246,7 +246,7 @@ extern s32 gActorBgScrollRangeY;
  * category's `bonusKindDeaths`): spawns use their record's `bonusKind`. */
 extern u8 gActorSpawnUseBonus;
 
-/* src/iwram/iwram_data.c */
+/* src/iwram/iwram_data.cpp */
 extern s32 gActorCheckpoint;
 extern s32 gCollectedSpawnCount;
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);

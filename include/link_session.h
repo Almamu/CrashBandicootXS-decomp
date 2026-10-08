@@ -13,7 +13,7 @@ struct nibble_pair {
 
 /* A 0x90-byte byte ring: the session's outgoing ring at +0x40 and each
  * player record's incoming ring at +0x38 (SendSaveTransferChunk and
- * ReceiveSaveTransferChunk, src/save/save_transfer.c, stream the save
+ * ReceiveSaveTransferChunk, src/save/save_transfer.cpp, stream the save
  * data through them). */
 struct link_ring {
     u8 unused_00[4];
@@ -43,7 +43,7 @@ struct link_id_word {
 } __attribute__((packed));
 
 /* The link session object (`*gLinkSession`). UpdateLinkSession and
- * HandleLinkSerial (src/link/link_session.c) describe the protocol. */
+ * HandleLinkSerial (src/link/link_session.cpp) describe the protocol. */
 struct link_session {
     u8 unused_00[4];
     u8 inSerialIrq;     /* 0x04 - HandleLinkSerial's re-entrancy guard */
@@ -67,9 +67,11 @@ struct link_session {
     s32 ackedMask;                 /* 0x3f0 - peers that acknowledged our packet */
     s32 receivedMask;              /* 0x3f4 - peers whose new packet we accepted */
     s32 peerMask;                  /* 0x3f8 - every player's bit but ours */
-    s32 playerId;                  /* 0x3fc - SIOCNT's multiplayer id, -1 = none yet */
-    u16 sendWord;                  /* 0x400 - the halfword written to SIOMLT_SEND */
-    s32 framesSinceIrq;            /* 0x404 - UpdateLinkSession calls since the last serial IRQ */
+    /* 0x3fc - SIOCNT's multiplayer id, -1 = none yet. volatile: HandleLinkSerial
+     * (the serial IRQ) sets it, and PollSaveTransfer reads it twice. */
+    volatile s32 playerId;
+    u16 sendWord;       /* 0x400 - the halfword written to SIOMLT_SEND */
+    s32 framesSinceIrq; /* 0x404 - UpdateLinkSession calls since the last serial IRQ */
 };
 COMPILE_TIME_ASSERT(link_session_h, sizeof(struct link_player) == 0xc8);
 COMPILE_TIME_ASSERT(link_session_h, sizeof(struct link_session) == 0x408);

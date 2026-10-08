@@ -4,6 +4,10 @@ agbcc_arm_patched: two opt-in ARM back-end options for the IWRAM code
 Applies to SAT-R/agbcc's gcc_arm (2.9-arm-000512) with `patch -p1` from
 the agbcc checkout's root. tools/build_patched_agbcc_arm.sh does that on
 a copy and installs the result as tools/agbcc/bin/agbcc_arm_patched.
+tools/build_agbccpp.sh applies it, with the paths rewritten to g++_arm/,
+to notyourav/agbcc's `cp` branch's ARM C++ compiler (the same
+config/arm/arm.c and arm.h) and installs tools/agbcc/bin/agbcp_arm_patched,
+the compiler the Makefile builds the IWRAM ARM code with.
 
 Why: Crash Bandicoot XS's IWRAM ARM code was built by a later build of
 agbcc_arm's own Cygnus/Red Hat ARM gcc line. That build isn't public.

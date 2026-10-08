@@ -21,7 +21,7 @@
 struct hud_counter;
 
 /* The vertical offset HudPart::Draw adds to every part, set by the
- * counters while they slide (src/iwram/iwram_data.c). */
+ * counters while they slide (src/iwram/iwram_data.cpp). */
 extern s32 gHudSlideOffset;
 
 /* Each of the 35 parts' starting animation and position

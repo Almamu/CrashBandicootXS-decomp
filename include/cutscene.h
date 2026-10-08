@@ -80,7 +80,7 @@ struct cutscene_player {
 extern const struct cutscene_slides gCutscenes[11];
 
 /* Every cutscene's pages, per language (gLanguage), each indexed like
- * gCutscenes. Defined in src/iwram/iwram_data.c. */
+ * gCutscenes. Defined in src/iwram/iwram_data.cpp. */
 extern const struct cutscene_page *const *gCutsceneTexts[6];
 /* The tables gCutsceneTexts points at (src/data/cutscenes_16d1c8.c). */
 extern const struct cutscene_page *const gCutsceneTextEnglish[11];

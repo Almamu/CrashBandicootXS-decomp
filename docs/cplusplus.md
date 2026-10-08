@@ -71,8 +71,9 @@ vtables](#the-last-c-vtables-step-10b)).
 
 **What is C.** The libraries under `lib/`: Shin'en's GAX2, Nintendo's
 AgbEeprom SDK, libgcc and the BIOS wrappers ([libraries.md](libraries.md))
-have none of the traits. The IWRAM ARM routines were built by agbcc_arm,
-the ARM C compiler. For the rest of the game, being "C-like" doesn't mean
+have none of the traits. The IWRAM ARM routines were built by an ARM
+build of the same compiler; they are C++ source now too, built by the
+ARM C++ compiler ([the IWRAM ARM code](#the-iwram-arm-code)). For the rest of the game, being "C-like" doesn't mean
 it was C: the C++ front end compiles plain C-style code to the same bytes
 as the C front end (80% of the game's files, see
 [experiment 4](#4-every-game-file-compiled-unchanged-as-c)), so a file
@@ -684,6 +685,10 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/level/terrain.cpp` | none (C linkage) | 0 + 5 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/terrain_probe.cpp` | none (C linkage) | 0 + 1 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 | `src/level/terrain_probe_axes.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/link/link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp`, `link_sio.cpp` | none: free functions over `struct link_session`, C linkage | 2 + 2 + 1 + 7 | old_agbcp (the first three, old_agbcc C already; link_session_reset.o keeps `-fno-rerun-loop-opt`), agbcp | 0 -> 0 | all-C++: link, save, iwram |
+| `src/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp` | none: free functions, C linkage; LoadSaveData and StoreSaveData call `AudioContext`'s `IsPlaying`, `GetCurrentSong`, `StopSong`, `PlaySong` | 15 + 3 + 1 | old_agbcp, old_agbcp, agbcp | 1 instruction asm (PollSaveTransfer, with its pin) -> 0, with `volatile` on `struct link_session`'s `playerId` | all-C++: link, save, iwram |
+| `src/iwram/iwram_data.cpp` | the IWRAM image's initialised globals; `gSaveMenu`, `gLevelSelect`, `gLevelLayersSingleton`, `gActorList`, `gLanguageSelect` and `gHeapSortActorsByKeyFunc` defined with their C++ types | 0 | agbcp | 0 -> 0 | all-C++: link, save, iwram |
+| `src/iwram/string_arm.cpp`, `sprite_arm.cpp` | none: the IWRAM image's ARM routines, C linkage; HeapSortActorsByKey takes `ActorSelf **` | 5 + 5 | agbcp_arm_patched (new; agbcc_arm_patched C) | 0 -> 0 | all-C++: link, save, iwram |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -3693,6 +3698,96 @@ tried as an inline function under agbcp: still a conditional move),
 string's `strcpy`/`strlen` asm labels and memory's hand-written
 `mem_walk_heaps`. `MATCH_HOLD_REG` 87 -> 87 and instruction-emitting
 `asm` 17 -> 17 project-wide (tools/match_idioms.py).
+### The link, save and IWRAM data
+
+The link cable (src/link/), the save data and its link transfer
+(save_data, save_transfer, save_transfer_poll) and the IWRAM image's
+initialised globals (iwram_data) are C++ source now. Each file is the C
+with its C headers wrapped in `extern "C" { }`, so the functions keep
+their C names (no cxx_symbols.txt lines) and the globals theirs. Every
+object is byte-identical to the C build's, under the compiler the C
+object had: old_agbcp for the OLD_AGBCC_OBJS ones (link_handshake,
+link_session, link_session_reset, save_data, save_transfer), agbcp for
+the others. link_session_reset.o keeps `-fno-rerun-loop-opt`; the
+per-object flags apply to the `.o`, whatever its source.
+
+- **C-only constructs.** iwram_data.cpp initialises its pointers with 0
+  (NULL is `(void *)0`, which C++ doesn't convert implicitly) and
+  defines the globals that C++ declares as class pointers with those
+  types (`SaveMenu *gSaveMenu`, `LevelSelect *gLevelSelect`,
+  `LevelLayers *gLevelLayersSingleton`, `ActorSelf *gActorList`,
+  `LanguageSelect *gLanguageSelect`); HeapSortActorsByKey has an
+  `ActorSelf **` prototype for C++ in iwram.h, like actor.h's
+  `gHeapSortActorsByKeyFunc`. Data and symbols are unchanged.
+- **Two g++ code-generation differences**, both in UpdateLinkSession and
+  HandleLinkSerial (link_session.cpp). `!(v & 1)` on an int is a bool
+  negation in C++, which combine turns into `eor`/`and`; the ready test
+  is written `(v & 1) == 0`, as the ROM tests it. And g++ keeps a 4-bit
+  `u32` bitfield unsigned in a compare with an `s32` (C promotes it to
+  int), which -Werror rejects as a signed/unsigned comparison; a `(s32)`
+  cast gives the C's code.
+- **The save data's audio calls.** LoadSaveData and StoreSaveData
+  tested `audio->state == 1` with the flag shape AudioContext's inline
+  IsPlaying returns ([the audio context](#the-audio-context)), so they
+  were C++ that inlined it: `bool wasPlaying = audio->IsPlaying()`, and
+  method calls for GetCurrentSong, StopSong and PlaySong. Same bytes;
+  audio.h's C prototypes of those three go, and PlaySfx's, whose other
+  C caller, yeti_states, is C++ too: no C file calls an AudioContext
+  method by its C name any more.
+- **PollSaveTransfer** was the last instruction-for-instruction asm
+  transcription with a `.pool` (and a `MATCH_HOLD_REG` for its result).
+  As C++ it matches with no workaround once `struct link_session`'s
+  `playerId` is `volatile`: the ROM reads it twice (`== 0`, then `==
+  1`), and the serial IRQ (HandleLinkSerial) writes it. The field's
+  other users compile the same. `tools/match_idioms.py`: pins 87 -> 86,
+  `.pool` 1 -> 0.
+- **Not made methods.** The link session has C++ traits the survey
+  missed, like the audio context: InitLinkSession returns `this` and its
+  caller allocates first (`InitLinkSession(IwramAlloc(0x408))`, save_menu_input.cpp:
+  `new LinkSession`, IWRAM's heap as AudioContext's), and
+  DestroyLinkSession takes `__in_chrg`, frees on bit 0 and is called with
+  3 (`delete gLinkSession`); its dead loop from `&players[4]` down to
+  `players` is the empty destructor loop of the `players` array. There
+  is no class for it yet (`struct link_session`, link_session.h), so the
+  functions stay free functions; a LinkSession class with LinkPlayer
+  members is a possible follow-up. The save data (`struct save_data`)
+  and the transfer state (`struct save_transfer`) have no trait.
+
+### The IWRAM ARM code
+
+The IWRAM image's ten ARM routines (src/iwram/string_arm.cpp,
+sprite_arm.cpp) are C++ too, built with **agbcp_arm_patched**:
+notyourav/agbcc's `cp` branch also has an ARM tree, `g++_arm`, which
+is agbcc_arm's gcc 2.9-arm-000512 (same version string, same
+`config/arm/arm.c` and `arm.h`) with the C++ front end; its `cc1plus` is
+agbcp_arm. tools/build_agbccpp.sh builds it with
+tools/agbcc_patches/agbcc_arm_prologue_return.patch (the two opt-in
+options itoa_arm and LookupSpriteFrameCache need,
+[iwram-image.md](matching/iwram-image.md), "Seventh pass"), its paths
+rewritten from `gcc_arm/` to `g++_arm/` (it applies cleanly), and
+installs it as `tools/agbcc/bin/agbcp_arm_patched`. CI's "Build agbcp,
+old_agbcp and agbcp_arm_patched" step runs it; the step that built
+agbcc_arm_patched went, since nothing uses that compiler any more
+(tools/build_patched_agbcc_arm.sh stays, for comparisons).
+
+Evidence, on both files (assembled code compared, the objects' flags):
+
+- agbcc_arm (C) against stock agbcp_arm and agbcp_arm_patched (C++)
+  without the options, with and without `-fno-schedule-insns
+  -fno-schedule-insns2`: the same code.
+- agbcc_arm_patched (C) against agbcp_arm_patched (C++) with
+  `-mleaf-no-lr-save`, `-minterwork-return-lr` and both: the same code.
+- The Makefile build (`ARM_OBJS`: agbcp_arm_patched, `-mthumb-interwork
+  -O2 -fomit-frame-pointer -fno-rtti -fno-exceptions` plus each object's
+  options): string_arm.o and sprite_arm.o byte-identical to the
+  agbcc_arm_patched objects.
+
+The only source change besides the `extern "C"` includes is
+HeapSortActorsByKey's list, `ActorSelf **` (sprite_arm.cpp includes
+actor_self.hpp; sortKey is AnimPart's): with the C's `struct actor_self
+**` the definition no longer matched iwram.h's C++ prototype and got a
+mangled name. The Makefile's ARM objects use the C++ rule like every
+other `.cpp`, with `CXX1` set to agbcp_arm_patched.
 
 ### C++ everywhere: actor, vehicle, level
 
@@ -3936,9 +4031,10 @@ in experiment 2 no matching workarounds at all. Plan:
    C tables left. Done in step 10 for 85 of the 93
    ([Emitting the vtables](#emitting-the-vtables-step-10)) and in step
    10b for the last 8 ([The last C vtables](#the-last-c-vtables-step-10b)).
-6. **Leave C as C:** `lib/` (GAX2, AgbEeprom, libgcc, BIOS wrappers), the
-   IWRAM ARM code (agbcc_arm; the `cp` branch also has an ARM `agbcp_arm`,
-   untried), and the data tables.
+6. **Leave C as C:** `lib/` (GAX2, AgbEeprom, libgcc, BIOS wrappers)
+   and the data tables. (The IWRAM ARM code was on this list; the `cp`
+   branch's ARM `agbcp_arm` turned out to match it,
+   [the IWRAM ARM code](#the-iwram-arm-code).)
 
 **#656 (base structs).** For a family that becomes C++, the base class
 *is* the embedding: `class EffectCtrl : public Ctrl` has the base at

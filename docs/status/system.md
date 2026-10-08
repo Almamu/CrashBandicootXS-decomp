@@ -18,10 +18,10 @@ category page - see [game_loop.md](./game_loop.md).
   `UpdateKeys`, `ClearKeys` (Sept 2026, `code_3.s` lineage - `irq.c` is
   a mixed file, see `docs/decomp_dev.md`)
 - The IWRAM image (`0x03000000`, stored at ROM `0x087E55E4`):
-  `asm/intr_main.s` (`IntrMain`, hand-written), `src/iwram/string_arm.c`
-  and `src/iwram/sprite_arm.c` (ARM C, all ten matched - `strncpy_arm`
+  `asm/intr_main.s` (`IntrMain`, hand-written), `src/iwram/string_arm.cpp`
+  and `src/iwram/sprite_arm.cpp` (ARM C, all ten matched - `strncpy_arm`
   in the second pass, `HeapSortActorsByKey` in the fourth, `itoa_arm`
-  and `LookupSpriteFrameCache` in the seventh with agbcc_arm_patched) and `src/iwram/iwram_data.c` (the
+  and `LookupSpriteFrameCache` in the seventh with agbcc_arm_patched) and `src/iwram/iwram_data.cpp` (the
   initialised IWRAM globals) - see
   [iwram-image.md](../matching/iwram-image.md).
 - `src/system/asset.cpp`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
@@ -69,7 +69,7 @@ category page - see [game_loop.md](./game_loop.md).
   register" trampoline table, already referenced by name from `irq.c`'s
   `VBlankHandler` and several actor and object files), `_call_via_lr` (bonus,
   just past issue #69's listed range) - GitHub issue #69
-- `src/link/link_handshake.c`/`link_sio.c` (new files - the GBA
+- `src/link/link_handshake.cpp`/`link_sio.cpp` (new files - the GBA
   multiplayer link-cable/SIO transport, `0x08001C80`-`0x08002868`,
   interleaved with `audio`/`overlay_ui` in this same address range -
   see `docs/rom_map.md`'s SIO/link-cable section): `LinkStop`
@@ -78,7 +78,7 @@ category page - see [game_loop.md](./game_loop.md).
   (reset convenience wrapper), `DestroyLinkSession` (reset + conditional
   teardown), `InitLinkSession` (session object constructor), `LinkSerialIntr`/
   `LinkTimer3Intr` (Serial/Timer3 IRQ handlers), `ReadSaveData`/`WriteSaveData`
-  (`src/save/save_data.c`, EEPROM load/save block-loop pair
+  (`src/save/save_data.cpp`, EEPROM load/save block-loop pair
   for the settings record - the previously-suspected register-pressure
   gap in their shared IME-save/IE-clear/IME-restore snippet didn't
   reproduce with the actual field/loop structure; plain C matches
@@ -86,7 +86,7 @@ category page - see [game_loop.md](./game_loop.md).
   matched, GitHub
   issue #4, see `docs/matching/archive/issue-4-sio-settings-sync.md`. (`ResetLinkSessionState`,
   the link-session reset/init, is real C in its own
-  `link_session_reset.c` since the last-eleven NAKED retry - see
+  `link_session_reset.cpp` since the last-eleven NAKED retry - see
   [last-eleven-naked-retry.md](../matching/archive/last-eleven-naked-retry.md); `HandleLinkSerial`, the
   per-frame SIO pump, is real C since the last-seven NAKED retry - see
   [last-seven-naked-retry.md](../matching/archive/last-seven-naked-retry.md). `UpdateLinkSession`, the

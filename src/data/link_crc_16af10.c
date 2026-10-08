@@ -8,8 +8,8 @@
 
 /* The CRC-16/CCITT table (polynomial 0x1021, MSB first: entry i is
  * i << 8 run through 8 shift-and-xor steps) of the link-cable packet
- * checksums, MakeLinkHandshakeId (link_handshake.c) and UpdateLinkSession
- * (link_session.c). */
+ * checksums, MakeLinkHandshakeId (link_handshake.cpp) and UpdateLinkSession
+ * (link_session.cpp). */
 const u16 gCrc16Table[256] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
     0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
@@ -46,6 +46,6 @@ const u16 gCrc16Table[256] = {
 };
 
 /* The two link-cable pairing names. The IWRAM data points at them
- * (gCrash2LinkTextPtr/gCrash3LinkTextPtr, src/iwram/iwram_data.c). */
+ * (gCrash2LinkTextPtr/gCrash3LinkTextPtr, src/iwram/iwram_data.cpp). */
 const char gCrash2LinkText[] = "crash 1 <-> crash 2";
 const char gCrash3LinkText[] = "crash 1 <-> crash 3";

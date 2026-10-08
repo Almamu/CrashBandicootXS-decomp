@@ -210,7 +210,7 @@ they don't count as "matched" for this project's tracking - the goal
 is readable C, and an asm blob wrapped in a C function signature
 doesn't advance that even when byte-correct. See
 [docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
-(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/link/link_handshake.c`) for the
+(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/link/link_handshake.cpp`) for the
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 

@@ -44,7 +44,7 @@ struct image_pair {
     const u8 *tiles;
 };
 
-/* The level select (src/iwram/iwram_data.c): the screen while
+/* The level select (src/iwram/iwram_data.cpp): the screen while
  * RunLevelSelect runs. The C++ files see it as its class, LevelSelect
  * (level_select.hpp); for C it is an opaque `struct level_menu`. */
 #ifdef __cplusplus

@@ -49,18 +49,15 @@ jobs:
       working-directory: agbcc
       run: ./build.sh && ./install.sh ../
 
-    # agbcc_arm plus tools/agbcc_patches/, for the two IWRAM ARM functions
-    # whose prologue/return code stock agbcc_arm can't produce
-    # (docs/matching/iwram-image.md, "Seventh pass"). The script builds a
-    # copy; the checkout and the stock compilers stay as they are.
-    - name: Build patched agbcc_arm
-      run: tools/build_patched_agbcc_arm.sh agbcc .
-
     # agbcp and old_agbcp, the C++ compilers for the objects written as C++
     # (the Makefile's CXX_OBJS, docs/cplusplus.md): the g++ 2.9 front end
     # from notyourav/agbcc's `cp` branch (decomp.me's "agbccpp"), pinned,
-    # plus tools/agbcc_patches/agbcp_agbcc_options.patch. The script builds
-    # a copy; the checkout stays as it is.
+    # plus tools/agbcc_patches/agbcp_agbcc_options.patch; and
+    # agbcp_arm_patched, the branch's ARM C++ compiler plus
+    # tools/agbcc_patches/agbcc_arm_prologue_return.patch, for the IWRAM
+    # ARM code, whose prologue/return code stock agbcc_arm can't produce
+    # (docs/matching/iwram-image.md, "Seventh pass"). The script builds
+    # copies; the checkout stays as it is.
     - name: Checkout agbcc (C++)
       uses: actions/checkout@v5
       with:
@@ -68,7 +65,7 @@ jobs:
         repository: notyourav/agbcc
         ref: 1caa6becde5e4676b59c31c74d68f45ced79557c
 
-    - name: Build agbcp and old_agbcp
+    - name: Build agbcp, old_agbcp and agbcp_arm_patched
       run: tools/build_agbccpp.sh agbcc-cp .
 
     - name: Fetch baserom

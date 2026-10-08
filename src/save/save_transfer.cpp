@@ -1,8 +1,10 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "link.h"
 #include "save.h"
 #include "math_util.h"
+}
 
 void SetSaveFlags(struct save_data *self, u8 flags)
 {

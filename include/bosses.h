@@ -271,7 +271,7 @@ extern const struct speed_ramp gMegaMixMotionRecords[4];
 extern const u8 gTinyHopTargets[77];
 extern const u8 gTinyRoundAnchors[3];
 
-/* src/iwram/iwram_data.c */
+/* src/iwram/iwram_data.cpp */
 extern u16 *gFlashBgPalette;
 extern u16 *gFlashObjPalette;
 

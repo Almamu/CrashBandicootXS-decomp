@@ -95,19 +95,15 @@ extern struct SfxTableEntry gSfxTable[99];
 extern const u8 gGaxMusicData[];
 extern const void *const gSongTable[SONG_COUNT];
 
-/* src/iwram/iwram_data.c */
+/* src/iwram/iwram_data.cpp */
 /* VBlankHandler (src/system/irq.cpp) calls GAX_irq while this is set. */
 extern u8 gGaxIrqEnabled;
 /* PlaySfx's two-voice round robin. */
 extern u32 gSfxVoiceToggle;
 
 /* src/audio/audio.cpp */
-/* The C names of AudioContext's methods (include/audio.hpp) the C files
- * call (save_data.c); cxx_symbols.txt maps the methods to them. */
-extern void PlaySfx(struct audio_context *self, u32 id, u32 volumeParam);
-extern u32 GetCurrentSong(struct audio_context *self);
-extern void PlaySong(struct audio_context *self, u32 id);
-extern void StopSong(struct audio_context *self);
+/* The two functions with C linkage: the IRQ table points at the handler.
+ * The methods' C names (cxx_symbols.txt) have no C caller left. */
 extern void EnableMusicVCountIrq(void);
 extern void MusicVCountIrqHandler(void);
 

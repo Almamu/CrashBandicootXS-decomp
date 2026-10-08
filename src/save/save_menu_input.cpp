@@ -127,7 +127,7 @@ SaveMenu::SaveMenu()
 }
 
 /* CloseSaveMenu's `delete gSaveMenu` (DestroySaveMenu): destroys the link
- * session if there is one (`DestroyLinkSession(.., 3)`, link_session.c is
+ * session if there is one (`DestroyLinkSession(.., 3)`, link_session.cpp is
  * C), deletes the two saves and the slot list's 15 icons (through their
  * virtual destructors, slot 10). */
 SaveMenu::~SaveMenu()

@@ -8,8 +8,8 @@
  * save_menu_ui.cpp; cxx_symbols.txt maps the methods onto their C names
  * (SaveMenuInput, DrawSaveMenu, ...). The link transfer it drives
  * (struct save_transfer, save_data.h) and the save data (struct
- * save_data) stay C structs: their own files (save_data.c,
- * save_transfer*.c) have no C++ trait.
+ * save_data) stay C structs: their own files (save_data.cpp,
+ * save_transfer*.cpp) are free functions over them.
  *
  * SaveMenu has no vtable: its destructor is a plain one, called with
  * `__in_chrg` 3 by `delete gSaveMenu`. `#pragma interface`, as in

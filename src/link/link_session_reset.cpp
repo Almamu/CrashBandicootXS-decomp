@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "link.h"
+}
 
 /* Link-session reset/init - see docs/rom_map.md's SIO/link-cable
  * section. Sets the link-active flag (`gLinkSessionReset`), resets a

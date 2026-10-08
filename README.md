@@ -15,7 +15,7 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 
 - **Code: all 2059 functions are byte-exact C.** Two of them, ARM
   functions in the IWRAM image (`src/iwram/`), are built with a locally
-  patched agbcc_arm (`agbcc_arm_patched`, see INSTALL.md): the ROM's ARM
+  patched ARM compiler (`agbcp_arm_patched`, see INSTALL.md): the ROM's ARM
   compiler is a later, unreleased build whose prologue and return code
   stock agbcc_arm can't produce (#553,
   [docs/matching/iwram-image.md](./docs/matching/iwram-image.md)).

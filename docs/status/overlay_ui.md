@@ -10,8 +10,8 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 
 ## Matched
 
-- `src/save/save_data.c`/`save_transfer.c`/`save_transfer_poll.c`/
-  `save_menu_input.c` (`save_transfer_poll.c` new in the
+- `src/save/save_data.cpp`/`save_transfer.cpp`/`save_transfer_poll.cpp`/
+  `save_menu_input.c` (`save_transfer_poll.cpp` new in the
   second pass - issue #5, 0x08002C84-0x08003B40): the settings-sync
   record's init/flag/checksum accessors (`struct save_data`,
   `include/save_data.h`), the SIO send/receive pump's handle
@@ -58,11 +58,11 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   [hard-register-hold-retry.md](../matching/archive/hard-register-hold-retry.md).
 - `src/menus/pause_menu_gems.c` (issue #7 retry, old_agbcc): the
   icon-row fraction readouts `DrawPauseGemsPage`, `DrawPauseRelicsPage`.
-- `src/save/save_data.c` (new file - issue #4,
+- `src/save/save_data.cpp` (new file - issue #4,
   0x08002A08-0x08002AA4): the settings-sync record's EEPROM-load-with-
   retry orchestrator, muting the music player across the transfer:
   `LoadSaveData`. See `docs/matching/archive/issue-4-sio-settings-sync.md`.
-- `src/save/save_data.c` (new file - issue #4,
+- `src/save/save_data.cpp` (new file - issue #4,
   0x08002B44-0x08002C84): checksum compare/store, the `versionNibble`
   accessor, the EEPROM-save-with-retry orchestrator, and three per-row
   default-refresh/force-set/mark-selected helpers extending
@@ -128,10 +128,10 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
-- **`SendSaveTransferChunk`** (`src/save/save_transfer.c`) - the SIO pump's
+- **`SendSaveTransferChunk`** (`src/save/save_transfer.cpp`) - the SIO pump's
   TX fill step (issue #5). Plain C; it was NAKED. The old "r7 can never be
   pushed" note was wrong - plain C gives the r7/r8/sb prologue. See [old-agbcc-round5.md](../matching/archive/old-agbcc-round5.md).
-- **`ReceiveSaveTransferChunk`** (`src/save/save_transfer.c`) - the SIO pump's
+- **`ReceiveSaveTransferChunk`** (`src/save/save_transfer.cpp`) - the SIO pump's
   RX drain step (issue #5). Plain C; it was NAKED. The channel pointer
   comes out of an asm with a plain `"r"` input (no copy preference for
   r2) and the wrap loop's count pointer is pinned to r1. See

@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
 #include "link.h"
+}
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
  * SIO/link-cable section. `ResetLinkSessionState` resets a per-session object at

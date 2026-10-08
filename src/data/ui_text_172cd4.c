@@ -9,7 +9,7 @@
 /* The game's own text (menus, level names, popups, credits labels) in
  * the six languages: per language an array of 70 strings, which
  * GetUiText (`text id -> string`) reads through the IWRAM table
- * gUiTextTables (src/iwram/iwram_data.c), indexed by the language
+ * gUiTextTables (src/iwram/iwram_data.cpp), indexed by the language
  * setting gLanguage. Each language's new strings come before its
  * array; strings that are the same in several languages (the level names,
  * mostly) are stored once, under the first language that uses them.

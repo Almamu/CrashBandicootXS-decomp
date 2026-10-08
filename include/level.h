@@ -496,7 +496,7 @@ typedef void (*entity_spawn_fn)(u32 id, u16 x, u16 y, u16 index);
  * the few with other parameters are cast. */
 extern const entity_spawn_fn gEntitySpawnFuncs[ENTITY_COUNT];
 
-/* src/iwram/iwram_data.c */
+/* src/iwram/iwram_data.cpp */
 #ifdef __cplusplus
 extern class LevelLayers *gLevelLayersSingleton;
 #else

@@ -1,12 +1,14 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "system.h"
 #include "link.h"
 #include "math_util.h"
+}
 
 /* The link-cable session's per-frame handshake driver and SIO data pump
- * (split from link_handshake.c so ResetLinkSessionState can sit in its own object;
- * see link_session_reset.c). */
+ * (split from link_handshake.cpp so ResetLinkSessionState can sit in its own object;
+ * see link_session_reset.cpp). */
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
  * cable section. Called once per frame. Does nothing until the session
@@ -39,7 +41,9 @@
  *   constant's register.
  * - `MATCH_KEEP(arm3)` between the eor and the and stops combine
  *   from folding `(x ^ 1) & 1` into a `bic`, which the ROM doesn't have.
- * Both asm statements emit no code. Matches under both compilers. */
+ * Both asm statements emit no code. Matches under both compilers. As
+ * C++, the ready test is written `(v & 1) == 0`: g++'s `!(v & 1)` is a
+ * bool negation, which combine turns into an eor/and pair. */
 s32 UpdateLinkSession(struct link_session *self)
 {
     s32 arm3;
@@ -61,7 +65,7 @@ s32 UpdateLinkSession(struct link_session *self)
         one1 = 1;
         MATCH_KEEP(one1); /* keep the flag's own 1 (r1) */
         one = 1;
-        if (!(v & 1)) {
+        if ((v & 1) == 0) {
             LinkStop(self);
             REG_RCNT = 0;
             REG_SIOCNT = 0x2000;
@@ -135,7 +139,7 @@ s32 UpdateLinkSession(struct link_session *self)
 }
 
 /* The Serial IRQ's half of the link (called from `LinkSerialIntr` in
- * src/link/link_sio.c with the SIOMULTI0-3 words). `inSerialIrq` guards
+ * src/link/link_sio.cpp with the SIOMULTI0-3 words). `inSerialIrq` guards
  * against re-entry: a nested call only re-sends `sendWord`. Before the
  * session is `connected` it runs the handshake: it counts the consoles
  * answering with `handshakeWord` (0xF0B), takes `playerCount` (more than
@@ -163,7 +167,7 @@ s32 UpdateLinkSession(struct link_session *self)
  * last-six-naked-retry.md and last-seven-naked-retry.md (the first
  * receive loop, closed last: the load goes through a pointer biv and
  * the compare constants use the constant-init form).
- * `data` is SIOMULTI0-3 (link_sio.c passes 0x04000120). */
+ * `data` is SIOMULTI0-3 (link_sio.cpp passes 0x04000120). */
 /* A received SIOMULTI word, read back from a stack copy. */
 struct link_rx_word {
     u32 lo:4;
@@ -290,7 +294,7 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
         }
         same = 1;
         for (i = 0; i < nId; i++) {
-            if (w[i].lo != nId)
+            if ((s32)w[i].lo != nId) /* g++ keeps the bitfield unsigned */
                 same = 0;
         }
         if (nFree + nId == 4 && same && nId > 1) {

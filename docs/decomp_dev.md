@@ -231,13 +231,13 @@ still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
 NOLOAD section). The image holds, in order:
 
 - `asm/intr_main.s`: `IntrMain`, hand-written ARM - `HANDWRITTEN`.
-- `src/iwram/string_arm.c` and `src/iwram/sprite_arm.c`: compiled ARM C,
-  built with `tools/agbcc/bin/agbcc_arm_patched` (the `ARM_OBJS` and
-  `PATCHED_ARM_OBJS` in the Makefile: `-O2 -fomit-frame-pointer
-  -mthumb-interwork` plus one option each; agbcc_arm_patched is
-  SAT-R/agbcc's agbcc_arm with `tools/agbcc_patches/`, built by
-  `tools/build_patched_agbcc_arm.sh`). Their `.text` goes into `iwram`.
-- `src/iwram/iwram_data.c`: the initialised globals from `0x030007CC`,
+- `src/iwram/string_arm.cpp` and `src/iwram/sprite_arm.cpp`: compiled ARM
+  C++, built with `tools/agbcc/bin/agbcp_arm_patched` (the `ARM_OBJS` in
+  the Makefile: `-O2 -fomit-frame-pointer -mthumb-interwork` plus one
+  option each; agbcp_arm_patched is notyourav/agbcc's ARM C++ compiler
+  with `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, built by
+  `tools/build_agbccpp.sh`). Their `.text` goes into `iwram`.
+- `src/iwram/iwram_data.cpp`: the initialised globals from `0x030007CC`,
   its `.data`.
 
 **Code units.** The report can't slice these from `expected/code_3.s`:
@@ -252,7 +252,7 @@ the objects' `$a`/`$t` mapping symbols, so ARM units need nothing else.
 The two C files are one unit each (`util` and `graphics`), and their
 functions count toward the code totals like any other.
 
-**Data unit.** `iwram_data.c`'s `.data` is the last data unit
+**Data unit.** `iwram_data.cpp`'s `.data` is the last data unit
 (`IWRAM_DATA` in the script, at ROM `IWRAM_LMA + 0x7CC`, target bytes
 from the ROM like any `src/data` table). The image's code bytes are not
 data any more, so `total_data` dropped by `0x7CC`.
@@ -306,7 +306,7 @@ where each is handled:
 After these fixes, every function in a matched unit scores 100%, and
 code progress is 100%: every compiled function in the ROM is matched.
 The last two, ARM functions in the IWRAM image (`itoa_arm`,
-`LookupSpriteFrameCache`), match with a locally patched agbcc_arm
+`LookupSpriteFrameCache`), match with a locally patched ARM compiler
 (docs/matching/iwram-image.md, seventh pass). Any function below 100%
 in a future report is either a regression or a new case of one of the
 causes above.

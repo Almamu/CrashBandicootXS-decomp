@@ -18,9 +18,8 @@
  * a second register in StartSong and StopSong is the inline's return
  * value, which the C needed a register pin for.
  *
- * struct audio_context (audio.h) is the field list and the C view, for
- * the C files left (save_data.c), which call the methods
- * by their C names (audio.h; cxx_symbols.txt maps them).
+ * struct audio_context (audio.h) is the field list, the class's base; no
+ * C file is left that calls the methods by their C names.
  *
  * `#pragma interface`: no vtable to emit, and no out-of-line copies of
  * the inline methods. */
