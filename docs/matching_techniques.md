@@ -877,6 +877,29 @@ Round 2 in level/, objects/, vehicle/, cutscene/ and pickups/ (C++):
 - **A dead load through a pointer-to-volatile parameter**
   (`sub_8026C80`) instead of a volatile cast in the body.
 
+Round 2 in menus/, save/ and link/ (C++):
+
+- **A key-state copy** (`struct held_pressed_pair k = KEYS`): the word
+  load plus `lsr #16` that `PauseMenu::Loop` pinned two registers for.
+- **The same call in both arms of an `if`**: `UpdatePageArrows`'s
+  `ShowFrame(sprites[8], 0)` / `(..., 1)`, which the ROM loads
+  `sprites[8]` for twice; one call after the `if` needed two pins.
+- **A literal where the draft had a variable**: `DrawYesNoPrompt`'s Y
+  0x87 at each SetPos; gcc shares the constant the ROM's way by itself.
+- **An inline method around a statement group**: `SaveData::StampHeader`
+  (the four header stores) makes gcc compute their addresses before the
+  EraseSlot loop, as `Validate` does in the ROM; written out, they come
+  after it. `DmaClear16` instead of `DmaFill16` then gives the ROM's
+  registers.
+- **The class's own method for shared code**: `LinkRing::Push`, the ring
+  push `SaveTransfer::SendChunk` and `LinkSession::HandleSerial` both
+  inline, frees HandleSerial's escaped `p` (`MATCH_KEEP_EXPR`).
+- **Hardware registers as volatile**: HandleSerial reads each SIOMULTI
+  register twice (the word copy and the 0xffff test) because they are
+  volatile, not because of a pointer biv and a `MATCH_CONST`.
+- **A field for a retyped access**: LinkSession's packet CRC is a `u16
+  hash` field after `id[6]`, as LinkPlayer's.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4
