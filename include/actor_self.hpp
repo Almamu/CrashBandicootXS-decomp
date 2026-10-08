@@ -21,8 +21,9 @@
  * which is AnimPart's own operator new and delete: the ROM's destructors
  * free with a direct mem_free, not OperatorDelete.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits ActorSelf's vtable (gActorVtable) in
+ * actor.cpp and HpActor's in actor_anim.cpp; AnimPart has none (see
+ * ctrl.hpp). */
 
 extern "C" {
 #include "core.h"

@@ -10,7 +10,9 @@
  * `unused`. It has no vtable: `delete gEntitySpawner` calls the
  * destructor directly. level.h's struct entity_spawner is its C view.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
+ * `#pragma interface`: no class here has a vtable, so there is none to emit;
+ * the pragma keeps g++ from emitting out-of-line copies of the inline
+ * methods (docs/cplusplus.md, "Emitting the vtables"). */
 #pragma interface
 
 #include "sprite_obj.hpp"

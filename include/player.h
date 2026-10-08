@@ -303,13 +303,6 @@ struct boss_ctrl {
     s32 arg;                          // 0x18 - and its arg
 };
 
-/* The method tables (src/data/entity_vtables_7e3bec.c). */
-extern const struct vtable_slot gPlayerVtable[15];
-extern const struct vtable_slot gActionCtrlVtable[13];
-extern const struct vtable_slot gPlayerCtrlVtable[13];
-extern const struct vtable_slot gInputCtrlVtable[13];
-extern const struct vtable_slot gBossCtrlVtable[13];
-
 /* The controllers' state functions, indexed by state
  * (src/data/action_table_16bf20.c, player_pmf_16c250.c). */
 extern const struct actor_pmf gActionCtrlStateTable[ACTION_STATE_COUNT];
@@ -359,9 +352,7 @@ extern void ActionCtrlStateTurboRun(struct act *self);
 extern void ActionCtrlStateNop2(void);
 extern void ActionCtrlStateUnusedIdle(struct act *self);
 extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 ActionCtrlSetTargetAnim(struct act *self, struct player *part, s32 mode);
 extern void RestartActionCtrl(struct act *self);
-extern void DestroyActionCtrl(struct act *self, s32 flags);
 extern struct act *InitActionCtrl(struct act *self);
 extern void sub_80158AC(struct act *self);
 extern void SetActionCtrlMotionYKeepSpeed(struct act *self);
@@ -379,9 +370,6 @@ extern void QueueActionCtrlMotionX(struct act *self, s32 val);
 extern u8 GetActionCtrlPrevState(struct act *self);
 extern void ResetPlayerCtrl(struct player_ctrl *self);
 extern void RestartPlayerCtrl(struct player_ctrl *self);
-
-/* src/player/action_ctrl_event.cpp */
-extern void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3);
 
 /* src/player/action_ctrl_hang.cpp */
 extern void ActionCtrlStateLeftGround(struct act *self);
@@ -412,13 +400,11 @@ extern u8 CheckActionCtrlLeftGround(struct act *self);
 extern void StartActionCtrlTornadoFall(struct act *self);
 extern void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags);
 extern void SteerActionCtrlSpin(struct act *self, u8 mode);
-extern void SetActionCtrlMode(struct act *self, s32 arg1);
 extern void StartActionCtrlSpin(struct act *self);
 extern void StartActionCtrlHangSpin(struct act *self);
 extern void StartActionCtrlRun(struct act *self);
 extern void StartActionCtrlHighJump(struct act *self);
 extern void StartActionCtrlMaskHitJump(struct act *self);
-extern void AttachActionCtrl(struct act *self, struct player *player);
 extern void ActionCtrlStateUnusedHangRelease(struct act *self);
 extern void ActionCtrlStateUnusedHangGrab(struct act *self);
 extern void ActionCtrlStateHangSpin(struct act *self);
@@ -445,7 +431,6 @@ extern void ActionCtrlStateCrawlStart(struct act *self);
 extern void ActionCtrlStateCrawl(struct act *self);
 
 /* src/player/action_ctrl_update.cpp */
-extern void UpdateActionCtrl(struct act *self);
 extern u8 TryActionCtrlDoubleJump(struct act *self);
 extern void HandleActionCtrlAirInput(struct act *self);
 
@@ -461,7 +446,6 @@ extern void QueuePlayerCtrlMotionY(struct player_ctrl *self, u8 value);
 extern void QueuePlayerCtrlMotionX(struct player_ctrl *self, u8 value);
 extern void InputCtrlKillPlayer(struct input_ctrl *self, void *arg);
 extern void InputCtrlStateStart(struct input_ctrl *self);
-extern void UpdateInputCtrl(struct input_ctrl *self);
 extern void ApplyInputCtrlMotion(struct input_ctrl *self);
 extern void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unused3,
                                  s32 unused4);
@@ -470,9 +454,6 @@ extern void InputCtrlStateUnusedRide(struct input_ctrl *self);
 extern void InputCtrlStateRide(struct input_ctrl *self);
 extern void RestartInputCtrl(struct input_ctrl *self);
 extern void ResetInputCtrl(struct input_ctrl *self);
-extern void InputCtrlHandleEvent(struct input_ctrl *self, s32 arg1, s32 arg2);
-extern void AttachInputCtrl(struct input_ctrl *self, struct player *target);
-extern void DestroyInputCtrl(struct input_ctrl *self, s32 flags);
 extern struct input_ctrl *CreateInputCtrl(struct input_ctrl *self);
 extern void SetInputCtrlMotionYPending(struct input_ctrl *self);
 extern void SetInputCtrlMotionXPending(struct input_ctrl *self);
@@ -482,15 +463,12 @@ extern u8 IsInputCtrlMotionYPending(struct input_ctrl *self);
 
 /* src/player/input_ctrl_queue.cpp: InputCtrl's and BossCtrl's methods
  * (include/input_ctrl.hpp, include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtables and the C
- * callers. */
+ * under their C names (cxx_symbols.txt), for the C callers. */
 extern u8 IsInputCtrlMotionXPending(struct input_ctrl *self);
 extern void QueueInputCtrlMotionYKeepSpeed(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionXKeepSpeed(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionY(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionX(struct input_ctrl *self, u8 val);
-extern void BossCtrlHandleEvent(struct boss_ctrl *self, s32 arg1, s32 a, s32 b);
-extern void DestroyBossCtrl(struct boss_ctrl *self, s32 flags);
 extern void *GetCtrlTarget(struct boss_ctrl *self);
 
 /* src/player/kill_player.cpp */
@@ -499,18 +477,13 @@ extern void UpdateActionCtrlSkidAnim(struct act *self);
 extern s32 UpdatePlayerFacing(struct act *self);
 
 /* src/player/player_*.cpp: Player's methods (include/player.hpp) under
- * their C names (cxx_symbols.txt), for the vtable and the C callers. */
+ * their C names (cxx_symbols.txt), for the C callers. */
 
 /* src/player/player_anim_room.cpp */
 extern u8 PlayerHasRoomForAnim(struct player *self, s32 anim);
 
 /* src/player/player_collide.cpp */
 extern u8 CollidePlayer(struct player *self);
-
-/* src/player/player_event.cpp */
-extern void CollidePlayerWithObjects(struct player *self);
-extern void PlayerHandleEvent(struct player *self, s32 a, s32 code, s32 c);
-extern void DrawPlayer(struct player *self);
 
 /* src/player/player_flags.cpp: Player's accessors (include/player.hpp). */
 extern struct collision_queue *GetPlayerCollisionQueue(struct player *self);
@@ -554,7 +527,7 @@ extern void SetPlayerSlippery(struct player *self, u8 arg1);
 extern struct crate *GetPlayerListEntry(struct player *self, s32 idx);
 extern void StorePlayerListEntry(struct player *self, struct crate *crate);
 /* Ctrl's methods (include/ctrl.hpp) under their C names
- * (cxx_symbols.txt), for the vtables and the C callers. */
+ * (cxx_symbols.txt), for gCtrlVtable and the C callers. */
 extern void SetCtrlMode(void *self, s32 val);
 extern void SetCtrlAnimSet(void *self, s32 val);
 extern void SetCtrlTargetMotionY(void *unused, void *self, const struct speed_ramp *ramp);
@@ -568,22 +541,17 @@ extern void ResetPlayer(struct player *self);
 extern void ResetPlayerForRoom(struct player *self);
 
 /* src/player/player_update.cpp */
-extern s32 ApplyPlayerVelocity(struct player *self);
 extern u8 HasPlayerRampYTarget(struct player *self);
 extern void ClearPlayerSpeedY(struct player *self);
 extern void StopPlayerFalling(struct player *self);
-extern void UpdatePlayer(struct player *self);
 extern u8 PlayerTouchesBox(struct player *self, struct aabb *box);
-extern void DestroyPlayer(struct player *self, u32 arg1);
 
 /* src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp, swim_ctrl_stroke.cpp:
  * the swim controller's methods (PlayerCtrl, include/player_ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtable, the state table
- * and the C callers. */
+ * under their C names (cxx_symbols.txt), for the state table and the C
+ * callers. */
 extern void CheckPlayerCtrlTurn(struct player_ctrl *self);
-extern void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 arg);
 extern void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
-extern void UpdatePlayerCtrl(struct player_ctrl *self);
 extern void ApplyPlayerCtrlMotion(struct player_ctrl *self);
 extern void PlayerCtrlStateIdle(struct player_ctrl *self);
 extern void PlayerCtrlStateSwim(struct player_ctrl *self);
@@ -593,7 +561,6 @@ extern void PlayerCtrlStateTurn(struct player_ctrl *self);
 extern void PlayerCtrlStateSwimStart(struct player_ctrl *self);
 extern void PlayerCtrlStateStop(struct player_ctrl *self);
 extern void PlayerCtrlStateDead(struct player_ctrl *self);
-extern void AttachPlayerCtrl(struct player_ctrl *self, struct player *target);
 extern void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct player *target, s32 idx);
 extern void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct player *target, s32 idx);
 /* SetPlayerCtrlState's `timer`/`timerMax` value that keeps the current
@@ -604,7 +571,6 @@ extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
 extern s32 GetPlayerSwimDriftStep(s32 v);
 extern void ApplyPlayerCtrlTilt(struct player_ctrl *self);
 extern void StartPlayerCtrlSwim(struct player_ctrl *self);
-extern void DestroyPlayerCtrl(struct player_ctrl *self, s32 flags);
 extern struct player_ctrl *InitPlayerCtrl(struct player_ctrl *self);
 extern void sub_801750C(struct player_ctrl *self);
 extern void SetPlayerCtrlMotionYPending(struct player_ctrl *self);

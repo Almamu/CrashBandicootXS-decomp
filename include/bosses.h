@@ -115,14 +115,6 @@ struct anim_box;
 struct entry_set;
 struct gobj;
 
-/* src/actor/actor_anim.c */
-extern void DestroyAirshipFireball(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftFireball(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftCannon(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftLauncher(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftSideGun(struct actor_self *self, u32 flags);
-extern void DestroyHovercraftCannonFlash(struct actor_self *self, u32 flags);
-
 /* src/bosses/airship.cpp */
 extern void SteerAirship(void);
 extern void CreateAirship(s32 level);
@@ -138,12 +130,6 @@ extern void AirshipStateExplode(void);
 
 /* src/bosses/airship_fall.cpp */
 extern void AirshipStateFall(void);
-
-/* src/bosses/airship_fireball.cpp: AirshipFireball's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageAirshipFireball(void *self, s32 delta);
-extern void UpdateAirshipFireball(struct actor_self *self);
-extern u8 IsAirshipFireballUnshootable(void *self);
 
 /* src/bosses/airship_graphics.cpp */
 extern void ConvertAirshipTiles(void);
@@ -164,67 +150,36 @@ extern void AirshipStateCannon(void);
 /* src/bosses/airship_touch.cpp */
 extern u8 IsTouchingAirship(void *self);
 
-/* src/bosses/cortex.cpp: the methods of OneShotAnimCtrl (include/ctrl.hpp),
- * UnusedOneShotAnimCtrl, TinyCtrl, CortexBossCtrl, CortexTargetCtrl,
- * CortexShotCtrl, CortexBossGemCtrl (include/boss_ctrl.hpp) and
- * CortexBossPlatformMover (include/platform.hpp) under their C names
- * (cxx_symbols.txt), for the vtables. nullsub_19 and SpawnCortexBossGem
+/* src/bosses/cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
+ * CortexTargetCtrl and CortexShotCtrl (include/boss_ctrl.hpp) under their
+ * C names (cxx_symbols.txt). nullsub_19 and SpawnCortexBossGem
  * (spawn_gems.cpp calls it) have C linkage. */
-extern void DestroyOneShotAnimCtrl(void *self, s32 flags);
-extern void UpdateUnusedOneShotAnimCtrl(void *self, void *part);
-extern void DestroyUnusedOneShotAnimCtrl(void *self, s32 flags);
 extern void nullsub_19(void *self, void *part);
 extern void StartTinyHop(void *self, void *part);
-extern void DestroyTiny(void *self, s32 flags);
-extern void UpdateCortexBoss(void *self, void *part);
 extern void SpawnCortexCannon(void *self, void *part);
 extern void SpawnCortexTarget(void *self, void *part);
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
-extern void UpdateCortexTarget(void *self, void *part);
 extern void SetCortexTargetState(void *self, void *part, s32 mode);
 extern void FireCortexShot(void *self, void *part, s32 kind);
-extern void UpdateCortexShot(void *self, void *part);
-extern void UpdateCortexBossPlatformMover(void *self, void *part);
-extern void UpdateCortexBossGem(void *self, void *part);
-extern void DestroyCortexBossGemCtrl(void *self, s32 flags);
-extern void DestroyCortexBossPlatformMover(void *self, s32 flags);
-extern void DestroyCortexShotCtrl(void *self, s32 flags);
 
 /* src/bosses/dingodile.cpp and dingodile_create.cpp: the methods of
  * CortexTargetCtrl, CortexCannonCtrl, CortexBossCtrl, DingodileCtrl,
  * DingodileShieldCtrl, DingodileProjectileCtrl and DingodileSharkCtrl
- * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
- * vtables. */
+ * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt). */
 extern void SetCortexPlatformsKind(void *self, u8 flag);
 extern void SetCortexTargetDest(void *self, void *part, s32 x, s32 y);
-extern void DestroyCortexTargetCtrl(void *self, s32 flags);
 extern void SetCortexCannonState(void *self, void *part, s32 next);
-extern void UpdateCortexCannon(void *self, void *part);
-extern void DestroyCortexCannonCtrl(void *self, s32 flags);
 extern void SetCortexBossState(void *self, void *part, s32 next);
-extern void DestroyCortexBoss(void *self, s32 flags);
 extern s32 GetDingodileHits(void *self);
-extern void UpdateDingodile(void *self, void *part);
 extern void SetDingodileState(void *self, void *part, s32 next);
 extern void SpawnDingodileShieldOrRocket(void *self, s32 mode, u16 x, u16 y, void *owner);
 extern void SpawnDingodileShark(void *self, u16 x, u16 y, u8 facing);
-extern void UpdateDingodileShield(void *self, void *part);
-extern void UpdateDingodileProjectile(void *self, void *part);
 extern void SpawnDingodileStalactite(void *self, u16 x, u16 y);
-extern void UpdateDingodileShark(void *self, void *part);
-extern void DestroyDingodileSharkCtrl(void *self, s32 flags);
-extern void DestroyDingodileProjectileCtrl(void *self, s32 flags);
-extern void DestroyDingodileShieldCtrl(void *self, s32 flags);
 extern void StartDingodileMotion(void *self, void *part, s32 index);
-extern void DestroyDingodile(void *self, s32 flags);
 extern void SetDingodileStep(void *self, s32 value);
 extern void SetDingodileNextState(void *self, s32 value);
 
-/* src/bosses/hovercraft.cpp: HovercraftFireball's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageHovercraftFireball(void *self, s32 delta);
-extern void UpdateHovercraftFireball(void *self);
-extern u8 IsHovercraftFireballUnshootable(void *self);
+/* src/bosses/hovercraft.cpp */
 extern void UpdateHovercraftHitFlash(void);
 extern void RunHovercraftState(void);
 extern void HovercraftStateCloseIn(void);
@@ -242,23 +197,6 @@ extern void nullsub_34(void);
 extern s32 sub_80337FC(void);
 extern void nullsub_35(void);
 
-/* src/bosses/hovercraft_cannon.cpp: HovercraftCannon's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageHovercraftCannon(struct spawner *self, s32 dmg);
-extern void UpdateHovercraftCannon(struct actor_self *self);
-extern u8 IsHovercraftCannonUnshootable(void *self);
-
-/* src/bosses/hovercraft_cannon_flash.cpp: HovercraftCannonFlash's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void UpdateHovercraftCannonFlash(void *self);
-extern u8 IsHovercraftCannonFlashUnshootable(void *self);
-
-/* src/bosses/hovercraft_launcher.cpp: HovercraftLauncher's methods
- * (boss_actors.hpp) under their C names, for the vtable */
-extern void DamageHovercraftLauncher(struct spawner *self, s32 dmg);
-extern void UpdateHovercraftLauncher(struct actor_self *self);
-extern u8 IsHovercraftLauncherUnshootable(void *self);
-
 /* src/bosses/hovercraft_parts.cpp */
 extern void StartHovercraftHitFlash(void);
 extern void SetHovercraftFlashColor(u8 flag);
@@ -275,36 +213,15 @@ extern void HovercraftStateInactive(void);
 extern void HovercraftStateApproach(void);
 extern void HovercraftStateExplodeStub(void);
 
-/* src/bosses/hovercraft_side_gun.cpp: HovercraftSideGun's methods
- * (boss_actors.hpp), and HovercraftCannonFlash's Damage, under their C
- * names, for the vtables */
-extern void DamageHovercraftSideGun(void *self, s32 dmg);
-extern void UpdateHovercraftSideGun(void *self);
-extern u8 IsHovercraftSideGunUnshootable(void *self);
-extern void DamageHovercraftCannonFlash(void);
-
 /* src/bosses/mega_mix.cpp and mega_mix_update.cpp: MegaMixCtrl's methods
  * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
  * vtables and the C callers. */
 extern void SetMegaMixMotionYFromSet(void *self, void *part, s32 index);
 extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
-extern void StartMegaMixMotionYFromSet(void *self, void *part, s32 index);
-extern void StartMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern void ResetMegaMixCtrl(void *self);
-extern void DestroyMegaMixCtrl(void *self, s32 flags);
-extern void UpdateMegaMix(void *self, void *part);
-
-/* src/bosses/tiny_hop_pad.cpp: StompedHopPadCtrl's methods and
- * OneShotAnimCtrl's Update (include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtables and the C
- * callers. */
-extern void UpdateStompedHopPad(void *obj, void *other);
-extern void DestroyStompedHopPadCtrl(void *self, s32 flags);
-extern void UpdateOneShotAnimCtrl(void *unused, void *other);
 
 /* src/bosses/tiny_update.cpp: TinyCtrl's methods (include/boss_ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtable. */
-extern void UpdateTiny(void *self, void *part);
+ * under their C names (cxx_symbols.txt). */
 extern void SetTinyState(void *self, void *part, s32 next);
 extern s32 PickTinyHopTarget(void *self);
 extern void SpawnTinyFallingLeaves(void *self, void *part, s32 n);
@@ -405,29 +322,6 @@ extern const struct airship_attack gAirshipAttacks[6];
 extern const struct anim_box gAirshipBox;
 extern const u16 gAirshipHitFlashPalettes[3][16];
 extern const struct anim_frame_record gAirshipKeyframes[2];
-
-/* src/data/entity_vtables_7e3bec.c */
-extern const struct vtable_slot gAirshipFireballVtable[7];
-extern const struct vtable_slot gCortexBossGemVtable[13];
-extern const struct vtable_slot gCortexBossPlatformMoverVtable[13];
-extern const struct vtable_slot gCortexBossVtable[13];
-extern const struct vtable_slot gCortexCannonVtable[13];
-extern const struct vtable_slot gCortexShotVtable[13];
-extern const struct vtable_slot gCortexTargetVtable[13];
-extern const struct vtable_slot gDingodileProjectileVtable[13];
-extern const struct vtable_slot gDingodileSharkVtable[13];
-extern const struct vtable_slot gDingodileShieldVtable[13];
-extern const struct vtable_slot gDingodileVtable[13];
-extern const struct vtable_slot gHovercraftCannonFlashVtable[7];
-extern const struct vtable_slot gHovercraftCannonVtable[7];
-extern const struct vtable_slot gHovercraftFireballVtable[7];
-extern const struct vtable_slot gHovercraftLauncherVtable[7];
-extern const struct vtable_slot gHovercraftSideGunVtable[7];
-extern const struct vtable_slot gMegaMixCtrlVtable[13];
-extern const struct vtable_slot gOneShotAnimCtrlVtable[13];
-extern const struct vtable_slot gStompedHopPadVtable[13];
-extern const struct vtable_slot gTinyVtable[13];
-extern const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13];
 
 /* src/data/boss_pictures_167ad4.c */
 extern const u16 gAirshipPalette[256];

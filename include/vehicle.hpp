@@ -23,8 +23,9 @@
  * part 11g the balloon crates, the parachute nitro and the rocket
  * (src/vehicle/jetpack_crates.cpp).
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits the vtables, each in its key-method
+ * object: most in actor_anim.cpp, where the classes' destructors are (see
+ * ctrl.hpp). */
 
 #include "actor_self.hpp"
 

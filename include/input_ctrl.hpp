@@ -4,9 +4,8 @@
 /* The input controller as C++ (#664, docs/cplusplus.md):
  * src/player/input_ctrl.cpp and input_ctrl_queue.cpp.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp); the ROM's is
- * gInputCtrlVtable (src/data/entity_vtables_7e3bec.c). */
-#pragma interface
+ * No `#pragma interface`: g++ emits its vtable, gInputCtrlVtable, in
+ * input_ctrl.cpp (see ctrl.hpp). */
 
 #include "ctrl.hpp"
 #include "player.hpp"

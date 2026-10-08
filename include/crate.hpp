@@ -6,9 +6,8 @@
  * view, for the files that are still C (room_entities.c) and the C
  * prototypes (crates.h).
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp); cxx_symbols.txt
- * maps the mangled names onto the C names. */
-#pragma interface
+ * No `#pragma interface`: g++ emits the vtable in crate_update.cpp (see
+ * ctrl.hpp); cxx_symbols.txt maps the mangled names onto the C names. */
 
 #include "sprite_obj.hpp"
 

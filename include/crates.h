@@ -87,9 +87,6 @@ struct pool_manager {
     struct pool_link *freeListHead;  // 0x814
 };
 
-/* The method table (src/data/entity_vtables_7e3bec.c). */
-extern const struct vtable_slot gCrateVtable[13];
-
 /* The crate tables, indexed by crate kind (src/data/object_tables_16bb6c.c). */
 extern const u8 gSlotCrateTimers[4];
 extern const u8 gCrateKindCounted[CRATE_KIND_COUNT];
@@ -132,19 +129,13 @@ extern void UpdateSlotCrate(struct crate *self);
 extern void UpdateCrateFall(struct crate *self);
 
 /* src/crates/crate.cpp */
-extern u32 IsCrateInsideRect(struct crate *self, struct aabb *box);
 extern void ResolvePlayerCollisions(void);
 extern struct crate *GetCrateBelow(struct crate *self);
 extern struct crate *GetCrateAbove(struct crate *self);
 extern void SetCrateBelow(struct crate *self, struct crate *val);
 extern void SetCrateAbove(struct crate *self, struct crate *val);
-extern u32 GetCrateClassId(void);
-extern void DestroyCrate(struct actor *self, u32 arg1);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
  * (include/crate.hpp). */
-
-/* src/crates/crate_draw.cpp */
-extern void DrawCrate(struct crate *self);
 
 /* src/crates/crate_grid_collide.cpp */
 extern void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused,
@@ -207,9 +198,6 @@ extern void OpenAkuAkuCrate(struct crate *crate);
 
 /* src/crates/crate_touch.cpp */
 extern u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action);
-
-/* src/crates/crate_update.cpp */
-extern void UpdateCrate(struct crate *self);
 
 /* src/crates/slot_crate.cpp */
 extern u32 GetSlotCrateStage(struct crate *self);

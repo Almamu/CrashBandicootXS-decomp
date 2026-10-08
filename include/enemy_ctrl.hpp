@@ -5,9 +5,9 @@
  * controller, the knocked controller HitEnemy hands a knocked-away enemy
  * to, and the periodic spawner (src/enemies/).
  *
- * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp);
+ * No `#pragma interface`: g++ emits their vtables (EnemyCtrl's in
+ * enemy_ctrl_update.cpp, the others in enemy_ctrl.cpp; see ctrl.hpp);
  * cxx_symbols.txt maps their mangled names onto the C names. */
-#pragma interface
 
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"

@@ -61,7 +61,8 @@ ROM). The region is nothing but vtables (831 * 8 bytes = 0x19F8). Their
 order follows the order of the classes' code: taking each table's
 destructor as its class's marker, 85 of the 93 are in ascending code
 order, which is what you get when each vtable is emitted with its class's
-first virtual method.
+first virtual method. Since step 10, g++ emits 85 of them from the
+classes ([Emitting the vtables](#emitting-the-vtables-step-10)).
 
 **What is C.** The libraries under `lib/`: Shin'en's GAX2, Nintendo's
 AgbEeprom SDK, libgcc and the BIOS wrappers ([libraries.md](libraries.md))
@@ -385,14 +386,19 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
   Player *gPlayer;`, still C linkage) and as a `struct player *` for C
   (part 8), and `gEntitySpawner` as an `EntitySpawner *` and a `struct
   entity_spawner *` (part 9).
-- **Vtables stay C data.** The class header has `#pragma interface`, so
-  g++ doesn't emit the classes' vtables; the code refers to
-  `_vt.<len>Class`, and the ROM's tables stay the C arrays in
-  `src/data/entity_vtables_7e3bec.c`. One header has no `#pragma
-  interface`, include/entity.hpp: graphics.cpp needs the out-of-line
-  copies of `Entity`'s inline methods (part 7a). It also gets Entity's
-  vtable, a weak symbol in a `.gnu.linkonce.d` section, which the linker
-  script discards (`/DISCARD/`); the C table wins.
+- **Vtables are g++'s.** A class header has no `#pragma interface`, so
+  g++ emits each class's vtable in its key-method object, as a weak
+  symbol in a `.gnu.linkonce.d._vt.<len><Class>` section, and
+  ldscript.txt places that section at the table's ROM address. A key-method
+  object that would also get out-of-line copies of the class's inline
+  methods the ROM doesn't have is in the Makefile's
+  `NO_IMPLEMENT_INLINES_OBJS` (`-fno-implement-inlines`). Only the 8
+  tables whose classes' key methods are C stay C arrays in
+  `src/data/entity_vtables_7e3bec.c`. See [Emitting the
+  vtables](#emitting-the-vtables-step-10); until step 10 every header
+  but entity.hpp had `#pragma interface` and all 93 tables were C.
+  Headers with no polymorphic class (crate_list.hpp, menus.hpp,
+  spawners.hpp) keep the pragma.
 - **Names.** `cxx_symbols.txt` maps each mangled name the C++ objects
   define or use to its C name (`Update__10EffectCtrlP12MovingSprite
   UpdateEffectCtrl`, `_vt.10EffectCtrl gEffectCtrlVtable`, `__4Ctrl
@@ -2878,6 +2884,104 @@ player, then the first item here, is C++ since part 8):
   of the continue prompt since part 10d), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
   in system/boot.c) and the room code (play_room.c, run_room.c).
 
+### Emitting the vtables (step 10)
+
+**85 of the 93 vtables are emitted by g++** from the class declarations,
+and only 8 are still C data. Each emitted table comes out byte for byte
+as the ROM has it, so the compiler now checks the hierarchy: a slot out
+of order, a missing override or an extra virtual would change the bytes
+and fail `make compare`. The report stays 2059/2059 functions and 100%
+data.
+
+**The mechanism.**
+
+- **Where g++ puts a vtable.** Without `#pragma interface`, g++ 2.9
+  emits a class's vtable in the object that defines the class's *key
+  method*: its first virtual method, in declaration order, that is
+  declared in that class and isn't inline. The table goes in a section
+  of its own, `.gnu.linkonce.d._vt.<len><Class>`, flagged `"aw"`, under a
+  weak symbol `_vt.<len><Class>`. The contents are the ROM's: slot 0 is
+  `{0, 0, 0}` (with `-fno-rtti`) and every slot is `{0, 0, fn}`, with the
+  base's methods where the class doesn't override them. A class whose
+  key method is C (`Ctrl`: `Update` is `UpdateCtrl` in system/boot.c) or
+  defined in no object gets no vtable anywhere.
+- **The names.** objcopy's `--redefine-syms` (cxx_symbols.txt) already
+  renamed `_vt.<len><Class>` to the C table's name, and the relocations
+  in the table to the C names of the methods, so nothing else changes:
+  the constructors and destructors store the same symbol, and the
+  remaining C files' references still resolve. Only the section keeps
+  its mangled name.
+- **The placement.** ldscript.txt lists the 93 tables one by one, in ROM
+  order (0x087E3BEC-0x087E55E4): an emitted one as
+  `<key-method object>(.gnu.linkonce.d._vt.<len><Class>)`, a C one as
+  `entity_vtables_7e3bec.o(.rodata.<name>)`. For that, every C table is
+  in a section of its own (`VTABLE_SECTION(name)`, include/vtable.h: an
+  `__attribute__((section(".rodata.<name>")))`). Naming the object
+  makes the build check that g++ emitted the table where expected: in
+  another object, the link fails. A `.gnu.linkonce.d` section the script
+  doesn't list is still dropped by `/DISCARD/`: HpActor's, the one
+  emitted table with no ROM counterpart (nothing refers to it).
+- **The out-of-line inline methods.** An object that gets a class's
+  vtable also gets an out-of-line copy of every inline method of the
+  class (the [gotcha](#dead-ends-and-gotchas) graphics.cpp shows). The
+  ROM has them only in graphics.o (Entity's, with `DestroyEntity` last).
+  In 17 other key-method objects they would be new code: inline
+  constructors (`Sprite(u16, u16, u16)`, `LaunchPad`'s, ...), accessors
+  (`MovingSprite::Pos`, `Player::StoreSlippery`, ...), `ActionCtrl`'s 12
+  queue helpers, and the copy-like `DingodileProjectileCtrl(rocket)`.
+  Those 17 are built with g++'s **`-fno-implement-inlines`**, the
+  Makefile's `NO_IMPLEMENT_INLINES_OBJS`, which drops exactly these
+  copies: each object's code is the same as with `#pragma interface`.
+  This snapshot of g++ drops the inline *virtual* ones too, so a table
+  that points at an inline destructor gets an undefined reference
+  instead: `PolarCrate`'s and the balloon crate kinds' implicit ones.
+  Their ROM copies are the C-linkage `DestroyPolarCrate` and
+  `DestroyJetpack{Health,Time,Question}Crate` in actor_anim.cpp, and
+  cxx_symbols.txt maps the mangled destructors (`_._10PolarCrate`, ...)
+  to them; likewise `Update__4CtrlP12MovingSprite` to C's `UpdateCtrl`.
+- **The report.** tools/report_units.py reads an emitted table as a data
+  blob of its object, like a src/data table (its symbol is weak, `w`,
+  not `g`); each one is a 100% data unit named after its `.cpp`.
+
+**The tables**, by the object that emits them:
+
+| Object | Tables | Classes |
+|---|---:|---|
+| `src/actor/actor_anim.cpp` | 35 | every polar, jetpack and boss actor whose destructor is here: `RiderlessPolar` ... `PolarCheckpointCrate`, `JetpackCheckpointText` ... `JetpackRing`, `AirshipFireball`, the hovercraft's five weapons |
+| `src/bosses/cortex.cpp` | 6 | `UnusedOneShotAnimCtrl`, `CortexBossGemCtrl`, `CortexBossPlatformMover`, `CortexShotCtrl`, `CortexTargetCtrl`, `CortexBossCtrl` |
+| `src/bosses/dingodile.cpp` | 5 | `CortexCannonCtrl`, `DingodileSharkCtrl`, `DingodileProjectileCtrl`, `DingodileShieldCtrl`, `DingodileCtrl` |
+| `src/vehicle/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
+| `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/bosses/tiny_hop_pad.cpp`, `src/menus/level_select.cpp`, `src/vehicle/polar_pickups.cpp` | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `StompedHopPadCtrl`, `OneShotAnimCtrl`; `CameraLead`, `LaunchPad`; `PolarCollectedWumpa`, `PolarCrate` |
+| 23 others | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (hovercraft.cpp), `LogoActor` |
+
+**Still C** (src/data/entity_vtables_7e3bec.c), 8 tables whose class's
+key method is C code:
+
+- `gCtrlVtable`: `Ctrl::Update` is `UpdateCtrl`, an empty function in
+  system/boot.c. It goes once boot.c (or that function) is C++.
+- `gBgStreamerVtable`, `gBgLayerBaseVtable`, `gBgLayerVtable`,
+  `gPooledBgLayerVtable`: the background layers (level/bg_layer*.c,
+  tile_slot_pool.c, cutscene_player.c) are C.
+- `gLargeFontVtable`, `gSmallFontVtable`, `gFontVtable`: the fonts
+  (src/text/) are C.
+
+The headers that still have `#pragma interface` (crate_list.hpp,
+menus.hpp, spawners.hpp) have no class with a vtable.
+
+**What the ROM's order says.** Within one object, g++ writes the
+tables in the order the ROM has them (cortex.cpp's six, actor_anim.cpp's
+35). But the ROM interleaves some objects' tables: `TinyCtrl`'s
+(tiny_update.cpp) and `CortexCannonCtrl`'s (dingodile.cpp) sit among
+cortex.cpp's, and `PolarPlayer`'s, `PolarCollectedWumpa`'s,
+`PolarCrate`'s, `JetpackPlayer`'s, the balloon crates' and
+`JetpackCollectedWumpa`'s among actor_anim.cpp's. If the original
+linked each table with its key-method object, as g++ does, those
+classes' key methods were in the same file as their neighbours'
+(cortex.cpp's, actor_anim.cpp's) there, and the reconstruction's file
+split or method order differs. The explicit placement keeps the bytes
+right either way; moving those methods is a possible follow-up, not
+needed for the match.
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -2938,8 +3042,10 @@ PR, as before):
    src/actor/, the vehicles and the 3D bosses; the PMF
    tables become `const StateFunc t[] = { &X::f, ... }` (experiment 3,
    part 11a's actor_pmf_17a6b8.cpp) and `ACTOR_PMF_CALL` goes.
-10. **Then the vtables** (plan item 5 below): once a family has no C class
-   left, let g++ emit its vtables and check them against the ROM's.
+10. ~~**Then the vtables**~~ (plan item 5 below): done in step 10, for
+   every class whose key method is C++: 85 of the 93 tables
+   ([Emitting the vtables](#emitting-the-vtables-step-10)). The other 8
+   (`Ctrl`, the BG layers, the fonts) follow their classes' C files.
 
 #### The 3D actors (part 11)
 
@@ -3031,11 +3137,14 @@ in experiment 2 no matching workarounds at all. Plan:
    `SpawnEffectPart`'s `InitEffectCtrl(OperatorNew(0x10))` and its
    `attach` slot call become `new EffectCtrl` and `mgr->Attach(part)`
    once entity_spawner.c is C++).
-5. **Vtables** stay C data until a whole family is C++. Then they could
-   be emitted by g++ (drop `#pragma interface`), which would also check
-   the hierarchy: the slot order and overrides would have to come out the
-   same. That needs the `.gnu.linkonce.d` sections placed in the ROM's
-   vtable order by the linker script; not tried yet.
+5. **Vtables** are emitted by g++ once a class's key method is C++
+   (drop the header's `#pragma interface`), which also checks the
+   hierarchy: the slot order and overrides come out as the ROM has them
+   or `make compare` fails. ldscript.txt places each
+   `.gnu.linkonce.d._vt.<class>` section at its ROM address, between the
+   C tables left. Done in step 10 for 85 of the 93
+   ([Emitting the vtables](#emitting-the-vtables-step-10)); a class
+   converted later drops its C table the same way.
 6. **Leave C as C:** `lib/` (GAX2, AgbEeprom, libgcc, BIOS wrappers), the
    IWRAM ARM code (agbcc_arm; the `cp` branch also has an ARM `agbcp_arm`,
    untried), and the data tables.
@@ -3076,13 +3185,23 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   the objcopy rename.
 - **Without `#pragma interface`,** g++ emits each class's vtable in the
   file that defines its first non-inline virtual method, as a weak
-  `.gnu.linkonce.d` section the linker script doesn't place (it
-  discards it). That file also gets an out-of-line copy of **every**
-  inline method of the class, used or not, at its end, in the reverse
-  of their declaration order: that is how graphics.cpp ends with
-  `InitEntity`, the accessors and `DestroyEntity` (include/entity.hpp).
-  An inline method meant only for other files (a second constructor,
-  say) would be emitted there too.
+  `.gnu.linkonce.d` section (ldscript.txt places it, step 10). That file
+  also gets an out-of-line copy of **every** inline method of the class,
+  used or not, at its end, in the reverse of their declaration order:
+  that is how graphics.cpp ends with `InitEntity`, the accessors and
+  `DestroyEntity` (include/entity.hpp). An inline method meant only for
+  other files (a second constructor, say) would be emitted there too;
+  `-fno-implement-inlines` (`NO_IMPLEMENT_INLINES_OBJS`) drops them.
+  Defining the inline method `inline` in the `.cpp` instead of in the
+  class doesn't help: it is still emitted.
+- **`-fno-implement-inlines` drops inline virtual methods too** in this
+  g++ snapshot (later gccs keep them), so a vtable that points at an
+  inline or implicit destructor gets an undefined `_._<len><Class>`.
+  Map it in cxx_symbols.txt to the destructor's C-linkage ROM copy
+  (`_._10PolarCrate DestroyPolarCrate`, step 10).
+- **A g++-emitted vtable's symbol is weak** (`objdump -t` flags ` w O`),
+  not global: tools that look for a table's `g` symbol need to accept
+  both (tools/report_units.py).
 - **An inline method calls a later-declared one out of line.** g++
   compiles in-class method bodies in declaration order, so a method
   declared after the caller isn't available for inlining yet

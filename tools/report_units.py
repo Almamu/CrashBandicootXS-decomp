@@ -762,9 +762,10 @@ def parse_data_s():
 
 def c_data_blobs(obj, section):
     """One blob per global object symbol in `section` of a src/data C
-    object, in address order, plus the section's alignment. A blob runs
-    to the next symbol (or the section's end), so alignment padding
-    between two tables counts toward the first."""
+    object (or a C++ object's g++-emitted vtable, whose symbol is weak),
+    in address order, plus the section's alignment. A blob runs to the
+    next symbol (or the section's end), so alignment padding between two
+    tables counts toward the first."""
     path = ROOT / OBJ_ROOT / obj
     if not path.exists():
         sys.exit(f"{path} missing - build it first (`make report` does)")
@@ -781,15 +782,18 @@ def c_data_blobs(obj, section):
     for line in table.splitlines():
         # "00000000 g     O .rodata\t00000150 gActionCtrlStateTable"
         f = re.match(r"([0-9a-f]{8}) (.{7}) (\S+)\t[0-9a-f]+ (\S+)$", line)
-        if f and f.group(3) == section and f.group(2)[0] == "g" and f.group(2)[6] == "O":
+        # (a weak one, "00000000  w    O ...", for a g++-emitted vtable)
+        if f and f.group(3) == section and (f.group(2)[0] == "g" or f.group(2)[1] == "w") \
+                and f.group(2)[6] == "O":
             syms.append((int(f.group(1), 16), f.group(4)))
     syms.sort()
     if not syms or syms[0][0] != 0:
         sys.exit(f"{obj}: {section} must start with a global object symbol")
+    source = obj[:-2] + (".cpp" if (ROOT / (obj[:-2] + ".cpp")).exists() else ".c")
     blobs = []
     for i, (value, name) in enumerate(syms):
         end = syms[i + 1][0] if i + 1 < len(syms) else sec_size
-        blobs.append({"name": name, "size": end - value, "path": obj[:-2] + ".c",
+        blobs.append({"name": name, "size": end - value, "path": source,
                       "off": None, "len": None, "built": True, "c_source": True})
     return blobs, align
 
@@ -810,6 +814,10 @@ def parse_data():
                 sys.exit(f"ldscript.txt links data.o({section}), which data/data.s doesn't define")
             part, align = sections.pop(section), 1
         elif obj.startswith("src/data/") or re.match(r"lib/\w+/data/", obj):
+            part, align = c_data_blobs(obj, section)
+        elif obj.startswith("src/") and section.startswith(".gnu.linkonce.d._vt."):
+            # a vtable g++ emitted in its class's key-method object
+            # (docs/cplusplus.md, "Emitting the vtables")
             part, align = c_data_blobs(obj, section)
         else:
             sys.exit(f"ldscript.txt: unexpected object {obj} in the data block")
@@ -840,11 +848,12 @@ def parse_data():
 def blob_group(blob):
     """Asset directory a built blob comes from (e.g. graphics/intro), the
     source file minus `.c` for a src/data table (each C file is its own
-    unit), None for a baserom blob."""
+    unit) or minus `.cpp` for a g++-emitted vtable, None for a baserom
+    blob."""
     if not blob["built"]:
         return None
     if blob.get("c_source"):
-        return blob["path"][:-2]
+        return str(Path(blob["path"]).with_suffix(""))
     return str(Path(blob["path"]).parent.relative_to("build/crashbandicootxs"))
 
 

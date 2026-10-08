@@ -307,19 +307,10 @@ extern struct palette_cache *InitPaletteCache(struct palette_cache *self);
 extern void DestroySpriteBankSet(void *self, u32 flags);
 
 /* src/gfx/graphics.cpp: the entity (`struct actor`, actor.h) */
-extern u8 IsEntityNearCamera(struct actor *self);
-extern s32 CheckEntityPlayerContact(struct actor *self);
-extern void DrawEntity(void);
-extern void UpdateEntity(struct actor *self);
-extern void *GetEntityBounds(struct actor *self);
 extern void SetEntitySize(struct actor *self, s32 w, s32 h);
-extern s32 EntityOverlapsRect(void);
-extern s32 IsEntityOnScreen(void);
-extern s32 IsEntityInsideRect(struct actor *self, struct aabb *box);
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
-extern s32 GetEntityClassId(void);
 extern void ResetEntity(struct actor *self);
 extern void ClearEntityAlwaysActive(struct actor *self);
 extern void SetEntityAlwaysActive(struct actor *self);
@@ -347,7 +338,6 @@ extern void SetEntityPosVec(struct actor *self, s32 *pos);
 extern void SetEntityKind(struct actor *self, u8 kind);
 extern u8 GetEntityKind(struct actor *self);
 extern u16 GetEntityId(struct actor *self);
-extern void DestroyEntity(struct actor *self, u32 flags);
 
 /* src/gfx/graphics_package.c */
 extern void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg);
@@ -367,7 +357,6 @@ extern void AddPaletteCycle(struct palette_cycler *self, u16 *targets, u16 *list
                             s32 listCount, u8 direction);
 extern void ClearPaletteCycles(struct palette_cycler *self);
 extern void DestroyPaletteCycles(struct palette_cycler *self, s32 flags);
-extern void DestroyHudPart(struct actor *part, u32 flags);
 
 /* src/gfx/sprite_frame.c */
 extern void InitObjTileFreeList(void *base);

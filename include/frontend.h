@@ -80,11 +80,10 @@ extern const u16 gLanguageSelectPalette2[16];
 extern const u16 gLanguageSelectPalette3[16];
 
 /* The company logo actor (InitLogoActor): its animation record
- * (src/data/level_gfx_17cff4.c, an anim_table_record), its method table
- * (entity_vtables_7e3bec.c) and the two VRAM tile blocks DrawLogoActor
+ * (src/data/level_gfx_17cff4.c, an anim_table_record) and the two VRAM
+ * tile blocks DrawLogoActor
  * double-buffers its frames in (IWRAM, sym_iwram.txt). */
 extern const struct anim_table_record gLogoActorAnim; /* actor_anim.h */
-extern const struct vtable_slot gLogoActorVtable[4];
 extern void *gLogoActorTiles[2];
 extern s32 gLogoActorTileBuffer;  /* the block on screen, 0 or 1 */
 extern void *gLogoActorLastFrame; /* the frame last unpacked */
@@ -129,11 +128,6 @@ extern const u8 gCreditsText[];
 extern const u8 gCreditsEmptyText[4];
 extern const struct bg_package gCreditsLogos[5];
 
-/* src/frontend/company_logos.cpp (C++, frontend.hpp: the C names of
- * LogoActor's methods, for the vtable data) */
-extern void UpdateLogoActor(struct actor_self *self);
-extern void DrawLogoActor(struct actor_self *self);
-
 /* src/frontend/credits.cpp (C++, frontend.hpp: the C names of Credits's
  * methods, for the C callers) */
 extern struct credits_screen *InitCredits(struct credits_screen *self);
@@ -148,7 +142,6 @@ extern void RunCredits(void);
 /* src/frontend/language_select.cpp (C++, as above) */
 extern void InitCompanyLogos(void);
 extern void DestroyCompanyLogos(void *self, u32 flags);
-extern void DestroyLogoActor(struct actor_self *self, u32 flags);
 extern s32 RunLanguageSelect(void);
 extern void LanguageSelectInput(struct language_select *self, u32 flags);
 extern void DrawLanguageSelect(struct language_select *self);

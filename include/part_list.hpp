@@ -17,8 +17,8 @@
  * (objects.h, gfx.h, hud.h) keep the C names; cxx_symbols.txt maps the
  * methods to them.
  *
- * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits HudPart's vtable in
+ * palette_cycle.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
 

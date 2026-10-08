@@ -70,8 +70,6 @@ struct actor_spawn;
  * (actor_self.hpp) */
 extern s32 IsTouchingPlayer(void *self);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-extern void UpdateActor(void *self);
-extern void DrawActor(void *self);
 extern void UpdateActorDepth(struct actor_self *self);
 extern u8 GetActorRecordIndex(struct actor_self *self);
 extern void SetActorState(struct actor_self *self, s32 a, s32 kind);
@@ -80,7 +78,6 @@ extern s32 GetActorY(struct actor_self *self);
 extern s32 GetActorX(struct actor_self *self);
 extern void *GetActorWorldBox(void *out, void *self);
 extern u8 IsActorVisible(void *self);
-extern void DestroyActor(void *self, s32 flags);
 extern s32 IsSpawnCollected(void *self);
 extern void MarkSpawnCollected(void *self);
 extern void ClearCollectedSpawns(void);
@@ -96,10 +93,6 @@ extern s32 GetAnimFrameBaseOffset(struct actor_self *self);
 extern s32 GetAnimFrameAttr(struct actor_self *self);
 extern u8 *GetAnimFrameData(struct actor_self *self);
 extern void SetActorAnim(struct actor_self *self, s32 idx);
-extern void DestroyPolarFourWumpaCrate(struct actor_self *self, u32 flags);
-extern void DestroyPolarObstacle(struct actor_self *self, u32 flags);
-extern s32 GetActorHp(struct actor_hp *self);
-extern void DamageActor(void *self);
 
 /* src/actor/actor_bg.c */
 extern void ShakeActorBg(s32 arg0);
@@ -270,8 +263,5 @@ extern void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list);
 extern const u16 gActorPaletteCycleFrames[32][14 * 16];
 extern const s32 gActorPaletteCycleStartFrames[4];
 extern const s32 gActorPaletteCycleTargetFrames[4];
-
-/* src/data/entity_vtables_7e3bec.c */
-extern const struct vtable_slot gPolarFourWumpaCrateVtable[4];
 
 #endif /* !__ACTOR_H__ */

@@ -5,9 +5,8 @@
  * src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp and swim_ctrl_stroke.cpp,
  * and the six motion-queue accessors at the top of input_ctrl.cpp.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp); the ROM's is
- * gPlayerCtrlVtable (src/data/entity_vtables_7e3bec.c). */
-#pragma interface
+ * No `#pragma interface`: g++ emits its vtable, gPlayerCtrlVtable, in
+ * swim_ctrl.cpp (see ctrl.hpp). */
 
 #include "ctrl.hpp"
 #include "player.hpp"

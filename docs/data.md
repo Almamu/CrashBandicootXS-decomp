@@ -87,7 +87,9 @@ harmless.
      tables behind `ACTOR_PMF_CALL`. Initialize them with
      `ACTOR_PMF(fn)`.
    - `{0, fn}` pairs after an all-zero first pair: a gcc 2.x virtual
-     table (`struct vtable_slot`, `VTABLE_SLOT(fn)`).
+     table (`struct vtable_slot`, `VTABLE_SLOT(fn)`). The game's 93 are
+     all found; 85 are now emitted by g++ from the classes
+     ([cplusplus.md](cplusplus.md#emitting-the-vtables-step-10)).
    - Plain words that are all odd code addresses: a function-pointer
      array.
    - Records with pointers among scalars: find the struct the consumer
@@ -259,7 +261,7 @@ The first batch (all pointer tables, all byte-exact):
 | `gax_tables_5a6100.c` | `0x085A6100` | the GAX2 engine's strings, mixing-rate table, period table and vibrato wave |
 | `eeprom_5a9eec.c` | `0x085A9EEC` | the SDK EEPROM library's id string, chip configs, timeout and address constants |
 | `cutscene_pictures_5a9f70.c` | `0x085A9F70` | the 24 cutscene pictures: palette (C) + Mode 4 bitmap (grit) each |
-| `entity_vtables_7e3bec.c` | `0x087E3BEC` | the 93 entity virtual tables |
+| `entity_vtables_7e3bec.c` | `0x087E3BEC` | 8 of the 93 virtual tables, the ones whose classes' key methods are C (`Ctrl`, the BG layers, the fonts); g++ emits the other 85, and ldscript.txt places each table, C or emitted, at its ROM address ([cplusplus.md](cplusplus.md#emitting-the-vtables-step-10)) |
 
 The actor-category backgrounds and tables (grit-built, see "Category
 backgrounds" below):

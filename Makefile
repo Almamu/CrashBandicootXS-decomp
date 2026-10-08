@@ -364,6 +364,34 @@ CXX_SYMBOLS := cxx_symbols.txt
 $(CXX_OBJS): CC1FLAGS += -fno-rtti -fno-exceptions
 $(filter $(OLD_AGBCC_OBJS),$(CXX_OBJS)): CXX1 := $(CXX1_OLD)
 
+# C++ objects built with -fno-implement-inlines. Each is the key-method
+# object of a class whose vtable g++ emits (docs/cplusplus.md, "Emitting
+# the vtables"): there g++ 2.9 also emits an out-of-line copy of every
+# inline method of the class, used or not, and the ROM has none of them
+# (the copy constructor-like `DingodileProjectileCtrl(rocket)` in
+# dingodile.o, ...). The flag drops those copies and nothing else: each
+# object's code is the same with and without it as long as the class
+# keeps `#pragma interface`. graphics.o is the one key-method object the
+# ROM has the copies in (Entity's inline methods, DestroyEntity last).
+NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
+                             $(C_BUILDDIR)/actor/actor_anim.o \
+                             $(C_BUILDDIR)/bosses/dingodile.o \
+                             $(C_BUILDDIR)/crates/crate_update.o \
+                             $(C_BUILDDIR)/frontend/language_select.o \
+                             $(C_BUILDDIR)/menus/level_select.o \
+                             $(C_BUILDDIR)/objects/ground_sprite_collide.o \
+                             $(C_BUILDDIR)/objects/moving_sprite_collide.o \
+                             $(C_BUILDDIR)/objects/platform_contact.o \
+                             $(C_BUILDDIR)/objects/sprite.o \
+                             $(C_BUILDDIR)/pickups/extra_life.o \
+                             $(C_BUILDDIR)/pickups/wumpa.o \
+                             $(C_BUILDDIR)/player/action_ctrl_update.o \
+                             $(C_BUILDDIR)/player/input_ctrl.o \
+                             $(C_BUILDDIR)/player/player_collide.o \
+                             $(C_BUILDDIR)/vehicle/jetpack_crates.o \
+                             $(C_BUILDDIR)/vehicle/polar_pickups.o
+$(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
+
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
 # link_session_reset.c holds only ResetLinkSessionState, which is real C: it keeps the
 # ROM's up-counting inner copy loop only with this flag (the rerun pass

@@ -28,8 +28,9 @@
  * The C files see these objects through opaque tags and menus.h's
  * prototypes; cxx_symbols.txt maps the methods to those names.
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits the vtables, CameraLead's and
+ * LaunchPad's in level_select.cpp, LevelSelectEntry's in
+ * level_select_widgets.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
 #include "player.hpp"
