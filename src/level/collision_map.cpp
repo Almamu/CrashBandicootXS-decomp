@@ -8,16 +8,17 @@ extern "C" {
 #include "globals.h"
 }
 
-/* Same lookup as `GetTerrainHeights`/`GetTerrainType`, but returns the raw
+/* TileCache::GetCell (include/bg_layer.hpp). Same lookup as
+ * `GetTerrainHeights`/`GetTerrainType`, but returns the raw
  * decoded halfword unfiltered - no bounds check, no output params. */
-u16 GetCollisionCell(struct tile_cache *self, s32 x, s32 y)
+u16 TileCache::GetCell(s32 x, s32 y)
 {
     s32 tileX = x >> 4;
     s32 tileY = y >> 3;
-    void *src = self->source;
-    s32 tileIdx = tileY * self->width + tileX;
+    void *src = source;
+    s32 tileIdx = tileY * width + tileX;
     u16 recordId = (*(u16 **)src)[tileIdx];
-    u16 *cache = (u16 *)GetCollisionChunk(self, recordId);
+    u16 *cache = (u16 *)GetChunk(recordId);
     s32 my = y & 7;
     s32 mx = x & 0xf;
 
@@ -25,13 +26,13 @@ u16 GetCollisionCell(struct tile_cache *self, s32 x, s32 y)
     return cache[my + mx];
 }
 
-/* Constructs `self` from `source` (see the `tile_cache` comment above):
+/* TileCache::SetSource: points the cache at `source`:
  * caches the tile-grid pointer, the decode-table base
  * (`gLevelLayers`'s camera offset + `source->assetOffset`), the tile-grid
  * dimensions, and the pixel-dimension fields nothing in this cluster
  * reads back - then resets every cache slot's resident id to -1 and the
  * eviction cursor to 0. Does nothing when `source` is NULL. */
-void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source)
+void TileCache::SetSource(struct level_layer_desc *source)
 {
     s32 i;
 
@@ -39,19 +40,19 @@ void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source
         return;
     }
 
-    self->source = source;
-    self->decodeBase = (u8 *)gLevelLayers->asset + (s32)source->assetOffset;
-    self->widthTiles = source->widthTiles;
-    self->heightTiles = source->heightTiles;
-    self->widthPx = self->widthTiles << 3;
-    self->heightPx = self->heightTiles << 3;
-    self->width = source->gridWidth;
-    self->height = source->gridHeight;
+    this->source = source;
+    decodeBase = (u8 *)gLevelLayers->asset + (s32)source->assetOffset;
+    widthTiles = source->widthTiles;
+    heightTiles = source->heightTiles;
+    widthPx = widthTiles << 3;
+    heightPx = heightTiles << 3;
+    width = source->gridWidth;
+    height = source->gridHeight;
 
     for (i = 0; i < 16; i++) {
-        self->id[i] = -1;
+        id[i] = -1;
     }
-    self->nextSlot = 0;
+    nextSlot = 0;
 }
 
 /* Sets bit `n & 0x1f` of the (32-bit-word-per-block) bitmap array at

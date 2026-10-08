@@ -26,6 +26,7 @@
 #pragma interface
 
 #include "sprite_obj.hpp"
+#include "graphics_package.hpp"
 
 extern "C" {
 #include "core.h"
@@ -63,7 +64,7 @@ static inline void SetIconBank(Sprite *p, s32 offset)
 class PauseMenu
 {
 public:
-    struct bg_setup bg;             // 0x00 - BG0
+    BgSetup bg;                     // 0x00 - BG0
     struct game_progress *progress; // 0x10 - PackSaveData(gLevelState)
     const struct pause_row *rows;   // 0x14 - gPauseMenuRows
     s32 cursor;                     // 0x18 - the selected row
@@ -140,7 +141,7 @@ COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);
 class PowerDialog
 {
 public:
-    struct bg_setup bg;    // 0x00 - BG0
+    BgSetup bg;            // 0x00 - BG0
     s32 titleText;         // 0x10 - GetUiText's result
     s32 descText;          // 0x14
     UiSprite *icon;        // 0x18 - the power's icon

@@ -35,14 +35,7 @@ union bgcnt {
     } bits;
 };
 
-/* The BG setup buffer callers fill with InitBgSetup before calling
- * LoadGraphicsPackage; GetBgSetupControl reads the control value back for
- * REG_BGnCNT. */
-struct bg_setup {
-    u32 charBlock;    // 0x00
-    u32 screenBlock;  // 0x04
-    u32 paletteBank;  // 0x08
-    union bgcnt ctrl; // 0x0C - BGnCNT
-};
+/* The BG setup (BGnCNT's `ctrl` and the blocks it names) is the C++ class
+ * BgSetup, include/graphics_package.hpp. */
 
 #endif /* __GRAPHICS_PACKAGE_H__ */

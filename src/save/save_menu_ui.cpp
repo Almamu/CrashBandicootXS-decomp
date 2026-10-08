@@ -1,4 +1,5 @@
 #include "save_menu.hpp"
+#include "graphics_package.hpp"
 
 extern "C" {
 #include "core.h"
@@ -23,7 +24,6 @@ extern "C" {
  * language_select doesn't have. */
 void SaveMenu::LoadBg()
 {
-    struct bg_setup buf;
     u32 zero = 0;
     s32 a;
     s32 b;
@@ -40,10 +40,10 @@ void SaveMenu::LoadBg()
     b |= 0x10;
     ((u8 *)&dispcnt)[1] = b;
 
-    InitBgSetup(&buf, 2, 0x1e, 1, 3);
-    LoadGraphicsPackage(&buf, &gMenuSkyBg);
+    BgSetup buf(2, 0x1e, 1, 3);
+    buf.Load(&gMenuSkyBg);
     frame = 0;
-    REG_BG0CNT = GetBgSetupControl(&buf);
+    REG_BG0CNT = buf.GetControl();
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 

@@ -35,6 +35,7 @@
 #include "sprite_obj.hpp"
 #include "player.hpp"
 #include "font.hpp"
+#include "graphics_package.hpp"
 
 extern "C" {
 #include "core.h"
@@ -164,14 +165,14 @@ public:
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectEntry) == 0x14);
 
-/* BG1, the page strip (CreateLevelSelectPageBg). `bg` is the InitBgSetup
- * background descriptor (BGxCNT at +0x0C, GetBgSetupControl). */
+/* BG1, the page strip (CreateLevelSelectPageBg). `bg` is its BG setup
+ * (BGxCNT at +0x0C, BgSetup::GetControl). */
 class LevelSelectPageBg
 {
 public:
-    struct bg_setup bg; // 0x00 - BG1 (InitBgSetup)
-    s32 scroll;         // 0x10 - current page scroll, Q8 (0x100 = a page)
-    s32 target;         // 0x14 - scroll `scroll` eases toward
+    BgSetup bg; // 0x00 - BG1
+    s32 scroll; // 0x10 - current page scroll, Q8 (0x100 = a page)
+    s32 target; // 0x14 - scroll `scroll` eases toward
     u8 unk_18[0x0C];
     u16 hofs; // 0x24 - BG1HOFS (GetOffsets returns hofs|vofs)
     u16 vofs; // 0x26 - BG1VOFS
@@ -395,7 +396,7 @@ public:
         scroll++;
         *(vu16 *)REG_ADDR_BG0HOFS = scroll >> 3;
         *(vu32 *)REG_ADDR_BG1HOFS = bg1->GetOffsets();
-        *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(&bg1->bg);
+        *(vu16 *)REG_ADDR_BG1CNT = bg1->bg.GetControl();
         *(vu16 *)REG_ADDR_BG2CNT = bg2->GetControl();
         *(vu16 *)PLTT = 0;
         *(vu32 *)REG_ADDR_BLDCNT = blend.raw;

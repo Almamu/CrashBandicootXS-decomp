@@ -286,7 +286,6 @@ s32 RunLevelSelect(s32 *arg)
  * constant. */
 LevelSelect::LevelSelect(s32 arg)
 {
-    struct bg_setup bg0cnt;
     s32 i;
     UiSprite *s;
 
@@ -318,8 +317,8 @@ LevelSelect::LevelSelect(s32 arg)
     save = PackSaveData(gLevelState);
     result = 0;
     bg1 = new LevelSelectPageBg(0, 0x1D);
-    InitBgSetup(&bg0cnt, 2, 0x1E, 2, 3);
-    LoadGraphicsPackage(&bg0cnt, &gMenuSkyBg);
+    BgSetup bg0cnt(2, 0x1E, 2, 3);
+    bg0cnt.Load(&gMenuSkyBg);
     scroll = 0;
     panel = new LevelSelectCursor;
     bg2 = new ZoomBg(3, 0x1F);
@@ -384,8 +383,8 @@ LevelSelect::LevelSelect(s32 arg)
     }
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     *(vu32 *)REG_ADDR_BG1HOFS = bg1->GetOffsets();
-    *(vu16 *)REG_ADDR_BG0CNT = GetBgSetupControl(&bg0cnt);
-    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(&bg1->bg);
+    *(vu16 *)REG_ADDR_BG0CNT = bg0cnt.GetControl();
+    *(vu16 *)REG_ADDR_BG1CNT = bg1->bg.GetControl();
     *(vu16 *)REG_ADDR_BG2CNT = bg2->GetControl();
 }
 

@@ -300,10 +300,10 @@ LevelSelectPageBg::~LevelSelectPageBg()
 }
 
 LevelSelectPageBg::LevelSelectPageBg(s32 charBlock, s32 screenBlock)
+    : bg(charBlock, screenBlock, 0, 2)
 {
-    InitBgSetup(&bg, charBlock, screenBlock, 0, 2);
     scroll = target = 0x300;
-    LoadGraphicsPackage(&bg, &gLevelSelectPageBg);
+    bg.Load(&gLevelSelectPageBg);
 }
 
 /* Setters as the original's inline member functions: storing a parameter

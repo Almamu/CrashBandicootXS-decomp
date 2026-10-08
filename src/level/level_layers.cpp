@@ -64,7 +64,7 @@ void LevelLayers::LoadRoom(const struct level_room *args)
     }
 
     layer0->Load(args->desc->layer0);
-    SetCollisionSource(tiles, (struct level_layer_desc *)args->desc->collision);
+    tiles->SetSource((struct level_layer_desc *)args->desc->collision);
     maxScrollX = layer0->widthPx - DISPLAY_WIDTH;
     maxScrollY = layer0->heightPx - DISPLAY_HEIGHT;
     ShowBg0();

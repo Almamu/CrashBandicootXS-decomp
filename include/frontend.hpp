@@ -35,6 +35,7 @@
 
 #include "actor_self.hpp"
 #include "font.hpp"
+#include "graphics_package.hpp"
 
 extern "C" {
 #include "core.h"
@@ -132,11 +133,11 @@ COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Credits) == 0x98);
 class ContinuePrompt
 {
 public:
-    struct bg_setup *bg1Buf; // 0x00 - BG1
-    struct bg_setup *bg0Buf; // 0x04 - BG0
-    struct bg_setup *bg2Buf; // 0x08 - BG2
-    union dispcnt dispcnt;   // 0x0C - REG_DISPCNT (gfx.h)
-    union blend blend;       // 0x10 - REG_BLDCNT/BLDALPHA; Loop pulses `eva`
+    BgSetup *bg1Buf;       // 0x00 - BG1
+    BgSetup *bg0Buf;       // 0x04 - BG0
+    BgSetup *bg2Buf;       // 0x08 - BG2
+    union dispcnt dispcnt; // 0x0C - REG_DISPCNT (gfx.h)
+    union blend blend;     // 0x10 - REG_BLDCNT/BLDALPHA; Loop pulses `eva`
     u8 unused_14[4];
     Font *icons;      // 0x18 - gSmallFont
     s32 blinkCounter; // 0x1C - the selected option's blink counter
