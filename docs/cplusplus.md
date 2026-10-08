@@ -562,6 +562,10 @@ counts them by kind) and what the C++ still needs.
 | `src/vehicle/polar_player.cpp` | `PolarPlayer` (include/vehicle.hpp): `Update`, `Draw`, `Hurt`, `Shock`, `AllocTiles`, `StateMount`, `StateRun`, `StateJump`, `StateDash`, `StateShocked`, `StateCaught` | 11 | old_agbcp (old_agbcc C already) | 38 pins, 14 retyped stores, 1 retyped read, `ACTOR_PMF_CALL`, 5 `ACTOR_SET_STATE`s, the `destroy` slot call, 7 gotos -> 0 | 11c |
 | `src/vehicle/polar_player_states.cpp` | `PolarPlayer`'s `DispenseWumpa`, `IsPauseLocked`, `StateRecover`, `StateFinishLeap`, `StateCarriedOff`, `StateKnockedOff`, `StateBoost` | 7 | agbcp | 11 pins, 4 retyped stores, 2 retyped reads -> 0 | 11c |
 | `src/vehicle/polar_player_actions.cpp` | `PolarPlayer`'s `StateLaunched`, `StateFinish`, `StateLand`, `FinishRun`, `Catch`, `QueueWumpa`, `GiveLife`, `Boost`, `GiveMask`, `Launch`, destructor | 11 | agbcp | 40 pins, 1 `asm`, 12 retyped stores, 6 retyped reads, the hand-written destructor -> 0 | 11c |
+| `src/vehicle/jetpack_plane.cpp` | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball` (include/vehicle.hpp): constructors (`CreateJetpackPlane`, ...), `Update`, `Damage`, `IsUnshootable`, `Aim`, `Home`, `RunState`s, the 11 states; `AirshipFireball::StateOrbit` and `StateSpiralIn` (include/boss_actors.hpp) | 28 | agbcp (both match) | 14 pins, 4 `ACTOR_PMF_CALL`s, 9 `ACTOR_VCALL`s, 14 `ACTOR_SET_STATE`s, 2 explicit `__divsi3` calls -> 0 | 11f |
+| `src/vehicle/jetpack_balloon.cpp` | `JetpackBalloon` (include/vehicle.hpp): constructor (`CreateJetpackBalloon`), `Update`, `Damage`, `IsUnshootable`, `ClearCrate`, `Release`, `Move`, `RunState`, 3 states; `GetAirshipHpPercent`, `DestroyAirship` (`delete gAirship`), `nullsub_30`, `AirshipStateInactive` (C linkage) | 11 + 4 | agbcp (both match) | 7 pins, 2 retyped stores, 3 retyped reads, `ACTOR_PMF_CALL`, `ACTOR_VCALL`, a hand-written slot-7 call, `ACTOR_SET_STATE`, a `goto` -> 0 | 11f |
+| `src/data/actor_pmf_17c260.cpp` | `JetpackPlane::stateFuncs`, `JetpackBomber::stateFuncs` (gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
+| `src/data/actor_pmf_17c414.cpp` | `JetpackBalloon::stateFuncs` (gJetpackBalloonStateFuncs; split from actor_state_17c3fc.c, with the balloon crate's table after it in the new actor_pmf_17c42c.c, still C) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11f |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2476,6 +2480,65 @@ What made the C++ match:
   into `state` (`str r1`), where the ROM loads it again; the C pinned the
   state to r0.
 
+### The planes, bombers, cannonballs and balloons (part 11f)
+
+Part 11f in numbers: jetpack_plane.c (ROM 0x0802FA38-0x08030530) and
+jetpack_balloon.c (0x08031784-0x08031A6C), 43 functions, and three
+pointer-to-member tables (actor_pmf_17c260.cpp, and the balloon's, split
+into actor_pmf_17c414.cpp), all C++ now with no pins and no `asm`.
+Project-wide (against part 11e): `MATCH_HOLD_REG` 950 -> 929, retyped
+field stores 171 -> 169 and reads 65 -> 62. Both objects match under
+agbcp and old_agbcp and stay agbcp.
+
+| Class (include/vehicle.hpp) | Size | Vtable | Code |
+|---|---:|---|---|
+| `JetpackPlane : HpActor` | 0x80 | gJetpackPlaneVtable (2, 4, 5) | jetpack_plane.cpp; the hop's velocity, accelerations, steps and next target, the cannonball cooldown, `dying` |
+| `JetpackBomber : HpActor` | 0x64 | gJetpackBomberVtable (2, 4, 5) | jetpack_plane.cpp; the home point, `unshootable` |
+| `JetpackCannonball : HpActor` | 0x60 | gJetpackCannonballVtable (2, 5) | jetpack_plane.cpp; the velocity |
+| `JetpackBalloon : HpActor` | 0x64 | gJetpackBalloonVtable (2, 4, 5) | jetpack_balloon.cpp; its crate, `dying`, `velY` |
+
+- **Constructors and `new`**: each constructor is `HpActor(rec, x, y, z,
+  hp)` and the body's stores. The C pinned the hit points (and the
+  bomber's arguments and stack argument, 6 pins) to get them loaded before
+  InitActorPart, which the inline base constructor's argument does. The
+  bomber's kind is `(u8)rec->index`, an `ldrb` of the record's first
+  byte. `CreateJetpackActor`'s planes and bombers, `SpawnJetpackBalloon`
+  and `SpawnJetpackCannonball` (jetpack_spawn.cpp) are `new X(...)` now,
+  byte-identical, where 11e called the C constructors on `AllocActor`.
+- **The PMF tables are C++**: the five `ACTOR_PMF_CALL`s are `(this->*stateFuncs[state])()`.
+  gJetpackBalloonStateFuncs was the middle table of actor_state_17c3fc.c,
+  between the airship's function table (C, kept there) and the balloon
+  crate's (11g's, still read from C): it moves to actor_pmf_17c414.cpp
+  and the crate's to a new C file, actor_pmf_17c42c.c, both linked after
+  actor_state_17c3fc.o (ldscript.txt, data/data.s, docs/data.md). The
+  three objects' `.rodata` and relocations are the old one's.
+- **The airship fireball's two flight states** are `AirshipFireball`
+  methods: the C's split locals (centre, target, player) stay, its three
+  pins go.
+- **`DestroyAirship` is `delete gAirship`**: `AnimPart` has no destructor,
+  so the `delete` is its inline operator delete (mem_free) with no null
+  test, as the ROM has it.
+- **The balloon's crate** is a `JetpackBalloonCrate *`, and `Damage` breaks
+  it off with `crate->Break()`, slot 7 (BreakJetpackBalloonCrate): the C
+  read `vtable->m38` by hand. `JetpackBalloonCrate` (11g's class) gets that
+  one declaration.
+- **Other rewrites**: the `ACTOR_SET_STATE`s are `SetState`, the slot
+  calls `PlayerActor()->Damage(n)` and `delete this`, the anim step of
+  `Move`, `StatePop` and `StateFloatAway` one inline method (`Animate`)
+  reading `(s16)animTimer` (the C's retyped read), and `Update`'s `goto`
+  into the shared `delete` two plain `delete this`.
+- **Prototypes**: vehicle.h keeps the vtable data's and jetpack_crates.c's
+  (as `void *`); the states', the constructors', `AimJetpackPlane`,
+  `HomeJetpackBomber`, the `Run*State`s and the tables' go, with the
+  file-local `struct jetpack_plane`/`_bomber`/`_cannonball`/`_balloon`/
+  `actor_fa38` views. bosses.h's fireball state prototypes go.
+- `ClearJetpackBalloonCrate` (`JetpackBalloon::ClearCrate`) has no caller in
+  the ROM: tagged UNUSED.
+
+Kept: `JetpackPlane::Aim`'s `scale2` assigned inside the X term (the C's
+spelling): the ROM doubles the scale after the GetActorSpawnX call, and
+assigned before it, the shift is scheduled first.
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -2530,7 +2593,8 @@ player, then the first item here, is C++ since part 8):
   (actor.c, actor_anim.c), the polar player's dispatch and its table,
   part 11b the actor factory, the spawn hooks and the category frame,
   part 11i the airship (airship*.c), part 11e the jetpack player, its
-  shot, the jetpack spawners and their table, part 11c the polar player;
+  shot, the jetpack spawners and their table, part 11c the polar player,
+  part 11f the planes, bombers, cannonballs and balloons and their tables;
   the plan for the rest is
   [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
@@ -2629,7 +2693,7 @@ and, once no C file reads one, its PMF table to C++.
 | ~~11c~~ | ~~vehicle/polar_player.c (old), polar_player_actions.c, polar_player_states.c~~ | `PolarPlayer` (`Update`, `Draw`, the 14 states, the destructor, the methods the polar actors call) | done | (gPolarPlayerStateFuncs' last C user) | 11a |
 | 11d | vehicle/polar_crates.c, polar_pickups.c, polar_objects.c, polar_aku_aku.c, polar_nitro.c (old) | the polar crates (`PolarCrate` and its kinds), wumpas, hazards, Aku Aku, goal, boost pad | 51, 145, 3 | | 11b |
 | ~~11e~~ | ~~vehicle/jetpack_spawn.c (old), jetpack_player.c, jetpack_run.c, jetpack_shot.c~~ | `HpActor`'s constructor, `JetpackPlayer`, `JetpackShot`, the jetpack spawners | done | gJetpackPlayerStateFuncs | 11a |
-| 11f | vehicle/jetpack_plane.c, jetpack_balloon.c | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | 43, 21, 0 | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs | 11e |
+| ~~11f~~ | ~~vehicle/jetpack_plane.c, jetpack_balloon.c~~ | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | done | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs (split into actor_pmf_17c414.cpp) | 11e |
 | 11g | vehicle/jetpack_crates.c | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | 30, 62, 3 | gJetpackBalloonCrateStateFuncs | 11e |
 | 11h | bosses/hovercraft.c (old), hovercraft_cannon.c, hovercraft_cannon_flash.c, hovercraft_launcher.c, hovercraft_side_gun.c, hovercraft_parts.c | the hovercraft's weapons (`HovercraftFireball`, `HovercraftCannon`, ...), `JetpackRing`'s and `JetpackCollectedWumpa`'s constructors and methods (in hovercraft.c), the hovercraft singleton | 70, 110, 4 | gHovercraftFireballStateFuncs, gHovercraftCannonStateFuncs, gHovercraftLauncherStateFuncs | 11e |
 | ~~11i~~ | ~~bosses/airship*.c (10 files; airship_map.c, airship_touch.c old)~~ | `AirshipFireball` (but its two flight states, 11f's); the airship (an `AnimPart` singleton) | done | gAirshipFireballStateFuncs (split into actor_pmf_17c2b8.cpp) | |
@@ -3098,3 +3162,10 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   idx)` after the test: CSE knows the register is 0 on that path and uses
   it for the inline's zero stores (`PolarPlayer::Launch`, `StateBoost`,
   part 11c).
+- **Two tests that share a `delete this`** need no `goto`: written as two
+  `delete this` in an `else if` chain, the copies are cross-jumped into the
+  ROM's one tail (`JetpackBalloon::Update`, part 11f).
+- **A value the ROM computes in the middle of an expression** (after a
+  call in it) is an assignment inside that expression (`(scale2 = scale *
+  2)` in `JetpackPlane::Aim`, part 11f); assigned as a statement before,
+  it is computed before the call.

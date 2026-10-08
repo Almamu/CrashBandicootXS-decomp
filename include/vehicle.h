@@ -13,7 +13,7 @@
  *
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. Many take a file-local view of their object
- * (`struct jetpack_plane`, `struct actor_hp`, ...), declared here only
+ * (`struct jetpack_ring`, `struct actor_hp`, ...), declared here only
  * by tag. A .c file that needs a different local declaration for codegen
  * keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md). */
@@ -66,12 +66,7 @@ struct vec3_words {
 struct anim_box;
 struct anim_table_record;
 struct actor_283c;
-struct actor_fa38;
 struct actor_once;
-struct jetpack_balloon;
-struct jetpack_bomber;
-struct jetpack_cannonball;
-struct jetpack_plane;
 struct jetpack_spawn_rec;
 
 /* src/actor/actor.cpp */
@@ -147,19 +142,15 @@ extern void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags);
 extern void *CreateJetpackCollectedWumpa(void *self, void *part, s32 b, s32 c, s32 spawn);
 extern s32 IsJetpackCollectedWumpaUnshootable(void *self);
 
-/* src/vehicle/jetpack_balloon.c */
+/* src/vehicle/jetpack_balloon.cpp: a C-linkage function, and
+ * JetpackBalloon's methods (vehicle.hpp) that the C files and the vtable
+ * data use */
 extern void nullsub_30(void);
-extern void UpdateJetpackBalloon(struct jetpack_balloon *self);
-extern void ClearJetpackBalloonCrate(void *self);
-extern void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage);
+extern void UpdateJetpackBalloon(void *self);
+extern void DamageJetpackBalloon(void *self, s32 damage);
 extern void ReleaseJetpackBalloon(void *self);
-extern void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z);
-extern void *CreateJetpackBalloon(void *self, void *part, s32 b, s32 c, s32 d, s32 e);
-extern void JetpackBalloonStatePop(struct actor_self *self);
-extern void JetpackBalloonStateFloatAway(struct jetpack_balloon *self);
-extern void JetpackBalloonStateAttached(void);
-extern void RunJetpackBalloonState(struct actor_self *self);
-extern u8 IsJetpackBalloonUnshootable(void *self);
+extern void MoveJetpackBalloon(void *self, s32 x, s32 y, s32 z);
+extern s32 IsJetpackBalloonUnshootable(void *self);
 
 /* src/vehicle/jetpack_crates.c */
 extern void UpdateJetpackBalloonCrate(void *self);
@@ -193,35 +184,16 @@ extern void *CreateJetpackRocket(void *self, void *part, s32 b, s32 c, s32 d);
 extern u8 IsJetpackRocketUnshootable(void *self);
 extern void UpdateJetpackRing(void *self);
 
-/* src/vehicle/jetpack_plane.c */
-extern void UpdateJetpackPlane(struct actor_fa38 *self);
-extern void AimJetpackPlane(struct jetpack_plane *self, s32 target);
-extern void DamageJetpackPlane(struct jetpack_plane *self, s32 damage);
-extern void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d,
-                                struct spawn_arg *arg);
-extern void JetpackPlaneStateFall(struct jetpack_plane *self);
-extern void JetpackPlaneStateKnockedOut(struct jetpack_plane *self);
-extern void JetpackPlaneStateFollow(struct jetpack_plane *self);
-extern void JetpackPlaneStateFly(struct jetpack_plane *self);
-extern void RunJetpackPlaneState(struct jetpack_plane *self);
-extern u8 IsJetpackPlaneUnshootable(struct jetpack_plane *self);
-extern void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s32 d);
-extern void UpdateJetpackBomber(struct jetpack_bomber *self);
-extern void HomeJetpackBomber(struct jetpack_bomber *self);
-extern void JetpackBomberStateDying(struct jetpack_bomber *self);
-extern void JetpackBomberStateDrop(struct jetpack_bomber *self);
-extern void JetpackBomberStateCircle(struct jetpack_bomber *self);
-extern void JetpackBomberStateSwingHorizontal(struct jetpack_bomber *self);
-extern void JetpackBomberStateBobVertical(struct jetpack_bomber *self);
-extern void JetpackBomberStateHome(struct jetpack_bomber *self);
-extern void JetpackBomberStateIdle(struct jetpack_bomber *self);
-extern void DamageJetpackBomber(struct jetpack_bomber *self, s32 damage);
-extern void RunJetpackBomberState(struct jetpack_bomber *self);
-extern u8 IsJetpackBomberUnshootable(struct jetpack_bomber *self);
-extern void UpdateJetpackCannonball(struct jetpack_cannonball *self);
-extern void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c,
-                                     s32 d, s32 velX, s32 velY);
-extern s32 IsJetpackCannonballUnshootable(struct jetpack_cannonball *self);
+/* src/vehicle/jetpack_plane.cpp: JetpackPlane's, JetpackBomber's and
+ * JetpackCannonball's methods (vehicle.hpp), for the vtable data */
+extern void UpdateJetpackPlane(void *self);
+extern void DamageJetpackPlane(void *self, s32 damage);
+extern s32 IsJetpackPlaneUnshootable(void *self);
+extern void UpdateJetpackBomber(void *self);
+extern void DamageJetpackBomber(void *self, s32 damage);
+extern s32 IsJetpackBomberUnshootable(void *self);
+extern void UpdateJetpackCannonball(void *self);
+extern s32 IsJetpackCannonballUnshootable(void *self);
 
 /* src/vehicle/jetpack_player.cpp: JetpackPlayer's methods (vehicle.hpp)
  * that the C files and the vtable data use, and a C-linkage getter */
@@ -421,9 +393,8 @@ extern s32 gYetiPosition;
 extern s32 gYetiState;
 extern s32 gYetiX;
 
-/* src/data/actor_state_17c3fc.c */
+/* src/data/actor_pmf_17c42c.c */
 extern const struct actor_pmf gJetpackBalloonCrateStateFuncs[3];
-extern const struct actor_pmf gJetpackBalloonStateFuncs[3];
 
 /* src/data/entity_vtables_7e3bec.c */
 extern const struct vtable_slot gJetpackBalloonCrateVtable[8];
@@ -463,10 +434,6 @@ extern const struct vtable_slot gPolarTimeCrateVtable[4];
 extern const struct vtable_slot gPolarWumpaVtable[4];
 extern const struct vtable_slot gRiderlessPolarVtable[4];
 extern const struct vtable_slot gPolarObstacleVtable[4];
-
-/* src/data/actor_pmf_17c260.c */
-extern const struct actor_pmf gJetpackBomberStateFuncs[7];
-extern const struct actor_pmf gJetpackPlaneStateFuncs[4];
 
 /* src/data/palette_strip_17c200.c */
 extern const u16 gJetpackFlashPalettes[3][16];

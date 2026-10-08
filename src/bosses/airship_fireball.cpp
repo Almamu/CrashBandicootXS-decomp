@@ -9,7 +9,7 @@ extern "C" {
 /* The airship's fireball (#664 part 11i, include/boss_actors.hpp): an
  * HpActor that the airship fires in volleys (AirshipStateFireballs,
  * SpawnAirshipFireball). It circles the point it was spawned at, then
- * spirals in on it (StateOrbit, StateSpiralIn, jetpack_plane.c), and
+ * spirals in on it (StateOrbit, StateSpiralIn, jetpack_plane.cpp), and
  * explodes when shot down. See
  * docs/matching/archive/issue-58-0x08030334-actor.md. */
 

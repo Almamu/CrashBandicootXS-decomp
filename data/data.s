@@ -116,13 +116,17 @@ gSfxTable:
 
 @ gJetpackFlashPalettes: src/data/palette_strip_17c200.c
 
-@ gJetpackPlaneStateFuncs..gJetpackBomberStateFuncs: src/data/actor_pmf_17c260.c
+@ gJetpackPlaneStateFuncs..gJetpackBomberStateFuncs: src/data/actor_pmf_17c260.cpp
 
 @ gAirshipFireballStateFuncs: src/data/actor_pmf_17c2b8.cpp
 
 @ gAirshipAttacks..gAirshipKeyframes: src/data/weapon_kind_17c2d0.c
 
-@ gAirshipStateFuncs..gJetpackBalloonCrateStateFuncs: src/data/actor_state_17c3fc.c
+@ gAirshipStateFuncs: src/data/actor_state_17c3fc.c
+
+@ gJetpackBalloonStateFuncs: src/data/actor_pmf_17c414.cpp
+
+@ gJetpackBalloonCrateStateFuncs: src/data/actor_pmf_17c42c.c
 
 @ gJetpackRocketBox: src/data/actor_box_17c444.c
 
