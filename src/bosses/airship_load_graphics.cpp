@@ -1,9 +1,10 @@
-#include "core.h"
-#include "actor_self.h"
-#include "bosses.h"
-#include "math_util.h"
+#include "boss_actors.hpp"
 
-/* Same boss-weapon subsystem as airship_fireball.c - see that file's header
+extern "C" {
+#include "math_util.h"
+}
+
+/* Same boss-weapon subsystem as airship_fireball.cpp - see that file's header
  * comment and docs/matching/archive/issue-58-0x08030334-actor.md. Confirmed by
  * docs/rom_map.md as a `category_vtable` slot (`gActorCategoryVtables`,
  * type 1, slot 6) - part of this actor's per-frame dispatch table.
@@ -13,17 +14,16 @@
  * filler tile), then DMA3-fills a 0xffff halfword into BG char block 3
  * itself and runs `ConvertAirshipTiles`'s VRAM fill-level meter generator (see
  * docs/rom_map.md's "procedurally-generated VRAM fill-level meter"
- * finding). While the small tracker object (`gAirship`)'s
- * state (`gAirshipState`) is non-zero: forces a BG2CNT preset
- * toggle (via `gAirshipBg2PageFlip`/`gAirshipBg2Page` and
- * `UpdateAirshipBg2`), looks up a keyframe-table tilemap pointer through the
- * tracker object's own table-index (`+0xc`) and accumulator (`+8`,
- * `>>8`) fields and blits it via `DrawAirshipMap` (docs/rom_map.md's
+ * finding). While the airship's state (`gAirshipState`) is non-zero:
+ * forces a BG2CNT preset toggle (via `gAirshipBg2PageFlip`/
+ * `gAirshipBg2Page` and `UpdateAirshipBg2`), looks up the current
+ * frame's tilemap through its AnimPart (`gAirship`'s `animIndex` and
+ * `animTime`) and blits it via `DrawAirshipMap` (docs/rom_map.md's
  * confirmed "rectangular BG-tilemap blit routine"), sets DISPCNT's
  * bit10 (the same window/mosaic-family bit `AirshipStateFall` clears), and
  * DMAs a 0x10-halfword palette strip from `gAirshipPalette` into
  * BG palette bank 1 (`0x05000020`). Once there, one of two mutually
- * exclusive tails run based on the tracker's state: state 5 mirrors
+ * exclusive tails run based on the airship's state: state 5 mirrors
  * palette index 8/0/0xf (slots `+0x10`/`+8`/`+2`/`+0x1e`) all down to
  * black; state 4 clears individual palette slots (`+0x1e`/`+2`/`+8`/
  * `+0x10`) as `gAirshipStateTimer` (a frame/flags counter) crosses four
@@ -48,7 +48,7 @@ void LoadAirshipGraphics(void)
     DmaFill16(3, 0xFFFF, (void *)(VRAM + 0xC000), 0x1000);
     ConvertAirshipTiles();
     if (gAirshipState != 0) {
-        struct actor_self *self;
+        AnimPart *self;
         vu16 *pal;
 
         gAirshipBg2PageFlip = 1;

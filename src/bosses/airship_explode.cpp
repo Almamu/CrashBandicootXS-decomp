@@ -1,21 +1,19 @@
-#include "core.h"
-#include "actor_self.h"
-#include "actor_anim.h"
+#include "boss_actors.hpp"
+
+extern "C" {
 #include "util.h"
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
-#include "bosses.h"
 #include "level_state.h"
 #include "globals.h"
 #include "math_util.h"
+}
 
-/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
- * airship_states.c - see
- * airship_fireball.c's header comment and
+/* The airship (#664 part 11i, include/boss_actors.hpp). See
  * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
- * Large weapon-kind projectile spawner: advances the position
+ * gAirshipStateFuncs[4], the explosion: advances the position
  * accumulators (`gAirshipX`/`gAirshipY`/
  * `gAirshipZ`), clears `gAirshipHitFlashTimer`'s DMA-refresh
  * counter, and derives two base screen coordinates from a fixed
@@ -26,7 +24,7 @@
  * BG palette bank-1 slot then spawning 1-3 sub-projectiles via
  * `RandRange` (a per-axis jitter/randomizer) and `CreateJetpackExplosion` (the
  * actual spawn call, `(x, y, z)`); the 0xaa case instead
- * fires the state-5/table-index-1 transition on the tracker object,
+ * enters state 5 (falling) with animation 1,
  * plays a sound, and - gated by a lock byte
  * (`gLevelState+0x8c`) and a spawn-budget counter
  * (`gAirshipCheckpointCount`) - spawns a homing/seek effect via
@@ -39,19 +37,6 @@
  * the RNG `RandRange` is read back as a `u16` here (the ROM zero-
  * extends its result), and the seek spawn takes `&gActorList`
  * before the last lock check, as the ROM loads that address early. */
-
-static inline void BossSetState(s32 st, s32 idx)
-{
-    struct actor_self *self;
-    gAirshipState = st;
-    gAirshipStateTimer = 0;
-    self = gAirship;
-    self->animIndex = idx;
-    self->animTimer = self->anims[idx].duration;
-    self->animDone = 0;
-    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold)
-        self->animTime = 0;
-}
 
 /* One sub-projectile, jittered around (x, y) by the box's own +-range. */
 #define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(INT_TO_Q8(gAirshipBox.w)), \
@@ -91,11 +76,11 @@ void AirshipStateExplode(void)
         SPAWN(x, y);
     } else if (gAirshipStateTimer == 0xaa) {
         ResumeActorSpawns();
-        BossSetState(5, 1);
+        SetAirshipState(5, 1);
         PlaySfx(gAudioContext, SFX_UNKNOWN_42, 0x100);
         gAirshipVelZ = 0x9d;
         if (gLevelState->timeTrial == 0 && gAirshipCheckpointCount <= 1) {
-            struct actor_self **pl = &gActorList;
+            ActorSelf **pl = &gActorList;
             if (gJetpackPlayerInactive == 0) {
                 SetJetpackCheckpoint(*pl);
                 CreateJetpackCheckpointText();
