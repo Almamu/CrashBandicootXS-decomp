@@ -61,11 +61,11 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | `src/iwram/` | 10 | 7 | 3 |
 | `src/level/` | 321 | 308 | 13 |
 | `src/link/` | 12 | 9 | 3 |
-| `src/menus/` | 140 | 134 | 6 |
+| `src/menus/` | 140 | 136 | 4 |
 | `src/objects/` | 198 | 194 | 4 |
 | `src/pickups/` | 37 | 36 | 1 |
 | `src/player/` | 202 | 194 | 8 |
-| `src/save/` | 65 | 59 | 6 |
+| `src/save/` | 65 | 62 | 3 |
 | `src/system/` | 30 | 28 | 2 |
 | `src/text/` | 26 | 25 | 1 |
 | `src/util/` | 33 | 32 | 1 |
