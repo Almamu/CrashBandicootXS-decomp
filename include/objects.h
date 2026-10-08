@@ -148,8 +148,6 @@ extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
-extern s32 GetSpriteTileBase(void *part);
-extern void *GetSpriteFrame(struct gfx_part *part);
 extern void SetSpriteAnimDone(void *part, u8 val);
 
 /* The controllers' motion records (src/data/motion_records_16b304.c),

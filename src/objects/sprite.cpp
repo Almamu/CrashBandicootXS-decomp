@@ -17,7 +17,7 @@ extern "C" {
  * include/sprite_obj.hpp). An old_agbcp object (OLD_AGBCC_OBJS). */
 
 /* `screenSpace` says whether (x, y) are already screen coordinates;
- * otherwise WorldToScreen makes them camera-relative. DrawSpritePieces
+ * otherwise WorldToScreen makes them camera-relative. DrawPieces
  * builds and queues the part's OAM entries at the resolved position. */
 void SpriteRenderer::DrawAt(Sprite *part, s32 x, s32 y)
 {
@@ -29,7 +29,7 @@ void SpriteRenderer::DrawAt(Sprite *part, s32 x, s32 y)
         pos[0] = x;
         pos[1] = y;
     }
-    DrawSpritePieces(this, (struct oam_part *)part, pos);
+    DrawPieces(part, pos);
 }
 
 /* Draws `part` at its own position. */

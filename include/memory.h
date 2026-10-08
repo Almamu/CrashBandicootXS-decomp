@@ -58,7 +58,7 @@ extern void *OperatorNew(u32 size);
 /* operator new[] of a type with a destructor stores the element count in
  * the word before the array (the block OperatorNewArray returned), and
  * the destructor reads it back to walk the array and frees that block.
- * The game builds these by hand (InitHud, src/hud/hud_init.c). */
+ * The game builds these by hand (InitHud, src/hud/hud_init.cpp). */
 #define NEW_ARRAY_COUNT(array) (((s32 *)(array))[-1])
 #define NEW_ARRAY_BLOCK(array) ((void *)((s32 *)(array) - 1))
 

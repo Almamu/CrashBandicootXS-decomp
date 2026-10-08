@@ -39,7 +39,7 @@ struct icon_record {
 /* A single glyph's draw metrics - `bitmap_font.glyphRecords` is an
  * array of these, 12 bytes apart, indexed by `bitmap_font.charLookup`.
  * Established by GitHub issue #46's chunk (`FontDrawGlyph`/`FontMeasureChars`/
- * `FontMeasureText`, src/hud/hud_slide.c): `width` is the glyph's
+ * `FontMeasureText`, src/hud/hud_slide.cpp): `width` is the glyph's
  * horizontal advance (added to `posX` after each draw, and what
  * `FontMeasureText`/`FontMeasureChars` sum to measure a run of text); `shape`
  * feeds a small (2-bit, `<<6` into a byte) shape/size selector;
@@ -59,7 +59,7 @@ COMPILE_TIME_ASSERT(bitmap_font_h, sizeof(struct icon_glyph_metrics) == 0xC);
  *
  * The leading `unused_00`/`unused_10c` regions and part of `unused_118`
  * were opaque when this struct was first written; GitHub issue #46's chunk
- * (src/hud/hud_slide.c) reads and writes them directly and
+ * (src/hud/hud_slide.cpp) reads and writes them directly and
  * fills in the real shape below. */
 struct bitmap_font {
     /* A 6-byte OAM-shaped draw-request scratch buffer, rebuilt fresh by

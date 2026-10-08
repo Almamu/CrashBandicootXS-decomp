@@ -17,10 +17,8 @@
 
 struct aabb;
 struct actor;
-struct affine_part;
 struct dma_queue;
 struct gfx_box_obj;
-struct oam_part;
 struct queued_oam_entry;
 struct rle_frame;
 struct sprite_bank_table;
@@ -232,9 +230,6 @@ struct palette_cycler {
 };
 COMPILE_TIME_ASSERT(gfx_h, sizeof(struct palette_cycler) == 0x48);
 
-/* src/gfx/affine_sprite_pieces.c */
-extern void DrawAffineSpritePieces(void *unused, struct affine_part *part, s32 *pos);
-
 /* src/gfx/bitmap_screen.c */
 extern void ShowBitmapScreen(void *asset, void *palette);
 
@@ -308,7 +303,7 @@ extern void nullsub_12(void);
 extern void SetEntityPixelPos(struct actor *self, s32 x, s32 y);
 extern void SetEntityPos(struct actor *self, s32 x, s32 y);
 
-/* src/gfx/graphics_package.c */
+/* src/gfx/graphics_package.cpp */
 extern void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg);
 extern u16 GetBgSetupControl(struct bg_setup *self);
 extern struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock,
@@ -346,9 +341,6 @@ extern void InitSpriteFrameCache(void);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void FreeCategorySpriteSheet(void);
 extern void DecompressCategorySpriteSheet(const void *sheet);
-
-/* src/gfx/sprite_pieces.c */
-extern void DrawSpritePieces(void *unused, struct oam_part *part, s32 *pos);
 
 /* The menus' sky background (src/data/bg_package_16c484.c): the language
  * select, level select, power dialog and save menu load it on BG0. */

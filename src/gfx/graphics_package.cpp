@@ -1,3 +1,4 @@
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "match.h"
@@ -6,6 +7,12 @@
 #include "gba/gba.h"
 #include "system.h"
 #include "globals.h"
+}
+
+/* C++ since the #664 cleanup: LoadGraphicsPackage's tilemap buffer is a
+ * `new u16[]`/`delete[]` (the C called OperatorNewArray and
+ * OperatorDeleteArray). The functions keep C linkage; the BG setup and
+ * the sprite box are plain structs (graphics_package.h, below). */
 
 /* GitHub issue #30. Loads one BG: the palette into bank `paletteBank`,
  * the tiles into char block `charBlock`, and the tilemap into screen
@@ -27,7 +34,7 @@ void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg)
         self->ctrl.bits.colorMode = 1;
     LoadTaggedAsset(pkg->paletteAsset, (void *)(PLTT + (self->paletteBank << 5)));
     LoadTaggedAsset(pkg->tileAsset, (void *)(VRAM + (self->charBlock << 14)));
-    map = OperatorNewArray(*(u32 *)pkg->mapAsset >> 9 << 1);
+    map = new u16[*(u32 *)pkg->mapAsset >> 9];
     LoadTaggedAsset(pkg->mapAsset, map);
     pal = self->paletteBank << 12;
     src = map;
@@ -39,8 +46,7 @@ void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg)
         src += pkg->width;
         dest = next;
     }
-    if (map != NULL)
-        OperatorDeleteArray(map);
+    delete[] map;
 }
 
 /* GitHub issue #30. Both built with old_agbcc - see

@@ -505,7 +505,8 @@ public:
 };
 
 /* The sprite renderer (gSpriteRenderer, an empty object InitLevelState
- * allocates): draws a sprite's OAM pieces. */
+ * allocates): draws a sprite's OAM pieces (DrawPieces in
+ * src/gfx/sprite_pieces.cpp, DrawAffinePieces in affine_sprite_pieces.cpp). */
 class SpriteRenderer
 {
 public:
@@ -513,6 +514,8 @@ public:
     ~SpriteRenderer(); // DestroySpriteRenderer
     void DrawAt(Sprite *part, s32 x, s32 y);
     void Draw(Sprite *part);
+    void DrawPieces(Sprite *part, s32 *pos);       // DrawSpritePieces
+    void DrawAffinePieces(Sprite *part, s32 *pos); // DrawAffineSpritePieces
 };
 
 #endif /* !GUARD_SPRITE_OBJ_HPP */

@@ -152,9 +152,9 @@ void Sprite::DrawWithOffset(s32 dx, s32 dy)
     pos[0] = Q8_TO_INT(x) + dx;
     pos[1] = Q8_TO_INT(y) + dy;
     if (affine != 0)
-        DrawAffineSpritePieces(gSpriteRenderer, (struct affine_part *)this, pos);
+        ((SpriteRenderer *)gSpriteRenderer)->DrawAffinePieces(this, pos);
     else
-        DrawSpritePieces(gSpriteRenderer, (struct oam_part *)this, pos);
+        ((SpriteRenderer *)gSpriteRenderer)->DrawPieces(this, pos);
 }
 
 void Sprite::SetPriority(s32 value)

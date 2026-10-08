@@ -881,8 +881,8 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_pieces.c",
-    "gfx/affine_sprite_pieces.c"
+    "gfx/sprite_pieces.cpp",
+    "gfx/affine_sprite_pieces.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -904,8 +904,8 @@
     "DrawAffineSpritePieces"
    ],
    "consumer_files": [
-    "gfx/sprite_pieces.c",
-    "gfx/affine_sprite_pieces.c"
+    "gfx/sprite_pieces.cpp",
+    "gfx/affine_sprite_pieces.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2769,7 +2769,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/graphics_package.c"
+    "gfx/graphics_package.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2794,7 +2794,7 @@
     "DrawScaledSprite"
    ],
    "consumer_files": [
-    "gfx/graphics_package.c"
+    "gfx/graphics_package.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3175,7 +3175,7 @@
     "ConfigureHudParts"
    ],
    "consumer_files": [
-    "hud/hud_init.c"
+    "hud/hud_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3203,9 +3203,9 @@
     "UpdateHudPercentCounters"
    ],
    "consumer_files": [
-    "hud/hud_init.c",
-    "hud/hud_boss_clock.c",
-    "hud/hud_counters.c"
+    "hud/hud_init.cpp",
+    "hud/hud_boss_clock.cpp",
+    "hud/hud_counters.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,

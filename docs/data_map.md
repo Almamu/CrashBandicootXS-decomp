@@ -33,7 +33,7 @@ label, with `regions` sub-lists for the composite blobs.
   checks out (the chained tag-0 assets, the 2,429 frames of the sprite
   banks, the 41 level descriptors).
 - **Structure walkers** for the big blobs, written from the matched C:
-  the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.c`),
+  the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.cpp`),
   the level-descriptor walker (`level_layers.c`, `bg_layer.c`,
   `collision_map.c`), the category-descriptor fields (`cell_anim.c`,
   `bg_picture.c`, `include/actor_anim.h`), and a `LoadTaggedAsset`
@@ -71,7 +71,7 @@ the appendix.
 | `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.c`, `cutscene_player.c`, `room_entities.c` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
-| `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.c`/`sprite_pieces.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
+| `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.cpp`/`sprite_pieces.cpp` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 OBJ palettes (`gObjPalettes`) | `InitLevelState`/`RunPauseMenu` palette cache, `GetPaletteSlot` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gSpriteBankSet` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
@@ -302,8 +302,8 @@ two room-data blocks (`0824B638`, `082B91D0`) are typed C
 `tools/levels.py` from `data/levels/` ([levels.md](./levels.md)).
 
 **2. Sprite banks.** The `gSpriteBankTable` header's second word is
-`0x082BF120`, and `GetSpriteTileBase` returns it. `affine_sprite_pieces.c` and
-`sprite_pieces.c` upload `GetSpriteTileBase() + (frame.packed & 0xFFFFFF)`.
+`0x082BF120`, and `GetSpriteTileBase` returns it. `affine_sprite_pieces.cpp` and
+`sprite_pieces.cpp` upload `GetSpriteTileBase() + (frame.packed & 0xFFFFFF)`.
 
 | Range | Size | Content | Evidence | Effort |
 |---|---:|---|---|---|
@@ -333,7 +333,7 @@ see [levels.md](./levels.md).
 This is the "master asset table" of docs/rom_map.md. Its structure,
 from the matched readers (`RunPauseMenu` in `pause_menu.cpp`, `GetSpriteTileBase`/
 `GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `sprite_obj.c`,
-`affine_sprite_pieces.c`, and the `**gSpriteBankSet + N` users):
+`affine_sprite_pieces.cpp`, and the `**gSpriteBankSet + N` users):
 
 ```
 0x084A5600 header (0x10):
