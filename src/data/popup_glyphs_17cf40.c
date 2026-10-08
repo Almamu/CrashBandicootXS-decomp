@@ -38,7 +38,7 @@ const struct bg_package gCreditsLogos[5] = {
 };
 
 /* Nine {record, hold} seeds for the countdown slots of
- * title_screen.c (RunTitleScreen, ResetTitleLogoPieces): the motion
+ * title_screen.cpp (RunTitleScreen, ResetTitleLogoPieces): the motion
  * sequences in level_gfx_17cff4.c, NULL-terminated. */
 const struct slot_seed gTitleLogoPieceSeeds[10] = {
     { gTitleLogoPieceMotion0, 0x54 },

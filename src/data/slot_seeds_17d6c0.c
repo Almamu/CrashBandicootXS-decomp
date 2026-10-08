@@ -34,7 +34,7 @@ extern const u8 gVvLogoLettersTiles[];
 extern const u8 gVvLogoUrlTiles[];
 
 /* Twenty {record, hold} seeds read by InitVvLogoPieces
- * (title_screen.c): the motion sequences in
+ * (title_screen.cpp): the motion sequences in
  * countdown_17d7a4.c, then a {NULL, 0} terminator. */
 const struct slot_seed gVvLogoPieceSeeds[21] = {
     { gVvLogoPieceMotion00, 0 },
@@ -60,7 +60,7 @@ const struct slot_seed gVvLogoPieceSeeds[21] = {
     { NULL, 0 },
 };
 
-/* The three BG banks' packages RunCompanyLogos (title_screen.c)
+/* The three BG banks' packages RunCompanyLogos (title_screen.cpp)
  * loads as PKG_A/PKG_B/PKG_C: only the tiles and map are set. */
 const struct bg_package gVvLogoEmblemObj = {
     0,

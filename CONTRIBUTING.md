@@ -212,7 +212,7 @@ that one site, with a comment saying why. agbcc 2.9 has no
 
 1. **Self-initialization** for `-Wuninitialized`: `u32 bg0cnt = bg0cnt;`
    gcc emits no code for it. Used in `starfield.cpp`,
-   `title_screen_init.c`, `fade.c`, `sprite_frame.c`, `eeprom_verify.c`
+   `title_screen_init.cpp`, `fade.c`, `sprite_frame.c`, `eeprom_verify.c`
    and `gax_voice_steal.c`.
 2. **`__attribute__((unused))`** on a variable or parameter that has to
    stay for codegen, for `-Wunused`.

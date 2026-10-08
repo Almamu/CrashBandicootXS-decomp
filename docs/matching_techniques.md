@@ -122,7 +122,7 @@ comment with its evidence.
 
 | Flag | Objects | Why |
 |---|---|---|
-| `-fno-strength-reduce` | `title_screen.o` | `InitVvLogoPieces` keeps an up-counting loop that `check_dbra_loop` would reverse. Not global: it breaks 11 other old_agbcc files, and `DrawVvLogoPieces` (split into `company_logos.cpp`) needs the reversal. |
+| ~~`-fno-strength-reduce`~~ | none (`title_screen.o` until #664 part 10c-2) | Its C needed it for `InitVvLogoPieces`'s up-counting loop. As C++ the plain indexed loop matches with strength reduction on, and so does the rest of the file ([per-file-flags-investigation.md](./matching/per-file-flags-investigation.md)). |
 | `-fno-rerun-loop-opt` | `link_session_reset.o` | The second loop pass reverses `ResetLinkSessionState`'s copy loop; the flag breaks `HandleLinkSerial`, hence the split. |
 | `-O1` | `lib/agb_eeprom` (4 objects) | SDK code, above. |
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
@@ -175,7 +175,7 @@ programmer did, not by workarounds. The recurring ones:
 - **`goto` loops.** A `label: ... if (++i < n) goto label;` loop has no
   loop notes, so loop.c hoists and reduces nothing in it. That's the fix
   when the ROM hoists nothing ([per-file-flags-investigation.md](./matching/per-file-flags-investigation.md),
-  `ResetTitleLogoPieces`; `src/frontend/title_screen.c`).
+  `ResetLogoPieces`; `src/frontend/title_screen.cpp`).
 - **Hoisting.** If gcc hoists an invariant the ROM recomputes in the
   loop, put a `MATCH_KEEP_VOLATILE(base)` at the use
   ([sub_8009150-loop-invariant-hoist-matched.md](./matching/archive/sub_8009150-loop-invariant-hoist-matched.md),
@@ -460,7 +460,7 @@ The rarer forms, a few sites each:
 |---|---|---|---|
 | `asm("" : : "r"(a), "r"(b))` | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | 3 | `MATCH_USE` of two values in one insn. Not the same as two `MATCH_USE`s, which are two insns. |
 | `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 3 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.c`); also forces a reload of whatever it held (`src/level/play_room.c`). |
-| `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 2 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for (`src/frontend/title_screen.c`). |
+| `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 2 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for (`src/frontend/title_screen.cpp`). |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
 | `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 1 | `x` must be in memory here: keeps it in its stack slot across a call (`src/level/spawn_enemies.cpp`). |
 
@@ -502,7 +502,9 @@ are `ALLOWED_SPELLED` in `tools/match_idioms.py`:
   site, the ROM's fresh `self + K + i*stride` per access, where a local
   would be CSE'd into one base register
   ([issue-59-60-static-inline-cse-promotion.md](./matching/archive/issue-59-60-static-inline-cse-promotion.md),
-  `UpdateTitleLogoPieces`; `src/frontend/title_screen.c`). The opposite
+  `UpdateTitleLogoPieces` in its C). In C++ the plain `pieces[i].field`
+  gives the same code, and the accessors went (`TitleScreen::UpdateLogoPieces`,
+  `CompanyLogos::UpdateVvLogoPieces`; #664 part 10c-2). The opposite
   case, re-reading through `self` instead of caching a local so old_agbcc
   makes the ROM's copies, is in near-miss-polish-3.md.
 

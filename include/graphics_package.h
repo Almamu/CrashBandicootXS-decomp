@@ -6,7 +6,7 @@
 /* A 5-field {width, height, paletteAsset, tileAsset, mapAsset} asset
  * package descriptor - shared shape between `LoadGraphicsPackage`
  * (src/gfx/graphics_package.c) and the level/obj loaders
- * (`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, src/frontend/title_screen_init.c)
+ * (`LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, src/frontend/title_screen_init.cpp)
  * that first surfaced it as `struct bg_package`. Moved here (rather than
  * duplicated in each file) per docs/workflow.md step 7's "check whether a
  * struct for the same object already exists elsewhere first" rule. */
