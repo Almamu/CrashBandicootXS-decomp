@@ -54,7 +54,7 @@ extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
  * with the player's `+0x1c`/`0x20`/`0x24` position (all `>>8`) added
  * into all three of `x`/`y`/`z`. The second record is then run through
  * `MemCopy32` - a real, byte-verified `memcpy(box, box, 0xc)`
- * self-copy (`MemCopy32`'s own definition, `src/system/boot.c`,
+ * self-copy (`MemCopy32`'s own definition, `src/system/boot.cpp`,
  * confirmed a plain `memcpy`-style `CpuSet` wrapper) - a genuine no-op
  * kept byte-faithful since a shared "copy src into a working buffer,
  * then test" helper is being called here with a buffer that already

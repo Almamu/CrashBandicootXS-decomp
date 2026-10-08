@@ -39,7 +39,7 @@
  * `ProbeTerrainX`/`ProbeTerrainY` (both still raw, `asm/code_3_2_17_266bc.s`)
  * are `docs/rom_map.md`'s already-documented "horizontal/vertical
  * collision-resolver pair": each iterates a run of tiles along one axis
- * via `GetSolidTerrainHeights` (matched, `src/level/bg_layer_base.c`) and, on a
+ * via `GetSolidTerrainHeights` (matched, `src/level/bg_layer_base.cpp`) and, on a
  * solid hit, accumulates a `±(tile_edge_distance << 8)` push-out delta
  * into `*outValue`. Reading their own raw bytes alongside this
  * function confirms which axis each one actually resolves:

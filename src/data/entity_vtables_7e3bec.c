@@ -29,51 +29,6 @@
  * own inheritance. See docs/data.md.
  */
 
-/* Used by cutscene_player.c. */
-const struct vtable_slot gBgStreamerVtable[2] VTABLE_SECTION(gBgStreamerVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(DestroyBgStreamer),
-};
-
-/* Used by cutscene_player.c. */
-const struct vtable_slot gBgLayerBaseVtable[5] VTABLE_SECTION(gBgLayerBaseVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(DestroyBgLayerBase),
-    VTABLE_SLOT(ResetBgLayerBase),
-    VTABLE_SLOT(ScrollBgLayerBase),
-    VTABLE_SLOT(ClampBgLayerScrollStep),
-};
-
-/* Used by bg_layer.c (DestroyBgLayer), bg_layer_init.c
- * (InitBgLayer), tile_slot_pool.c (DestroyPooledBgLayer), bg_scroll_layer.h. */
-const struct vtable_slot gBgLayerVtable[10] VTABLE_SECTION(gBgLayerVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(DestroyBgLayer),
-    VTABLE_SLOT(ResetBgLayer),
-    VTABLE_SLOT(ScrollBgLayer),
-    VTABLE_SLOT(ClampBgLayerScrollStep),
-    VTABLE_SLOT(LoadBgLayerTiles),
-    VTABLE_SLOT(DrawBgLayerRow),
-    VTABLE_SLOT(DrawBgLayerColumn),
-    VTABLE_SLOT(ClipBgLayerColumns),
-    VTABLE_SLOT(ClipBgLayerRows),
-};
-
-/* Used by bg_layer.c, tile_slot_pool.c (DestroyPooledBgLayer),
- * bg_scroll_layer.h. */
-const struct vtable_slot gPooledBgLayerVtable[10] VTABLE_SECTION(gPooledBgLayerVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(DestroyPooledBgLayer),
-    VTABLE_SLOT(ResetPooledBgLayer),
-    VTABLE_SLOT(ScrollBgLayer),
-    VTABLE_SLOT(ClampPooledBgLayerScrollStep),
-    VTABLE_SLOT(LoadPooledBgLayerTiles),
-    VTABLE_SLOT(DrawPooledBgLayerRow),
-    VTABLE_SLOT(DrawPooledBgLayerColumn),
-    VTABLE_SLOT(ClipPooledBgLayerColumns),
-    VTABLE_SLOT(ClipPooledBgLayerRows),
-};
-
 /* Used by aabb_setup.c, font_glyph.c (FontDrawGlyph). */
 const struct vtable_slot gLargeFontVtable[9] VTABLE_SECTION(gLargeFontVtable) = {
     VTABLE_SLOT(NULL),

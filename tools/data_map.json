@@ -3064,7 +3064,7 @@
     "GetSolidTerrainModeValue"
    ],
    "consumer_files": [
-    "level/bg_layer_base.c"
+    "level/bg_layer_base.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3089,7 +3089,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.c"
+    "level/bg_layer_base.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3110,7 +3110,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.c"
+    "level/bg_layer_base.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3131,7 +3131,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.c"
+    "level/bg_layer_base.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3152,7 +3152,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "level/bg_layer_base.c"
+    "level/bg_layer_base.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 420,
@@ -8131,7 +8131,7 @@
     "InitBgStreamer"
    ],
    "consumer_files": [
-    "cutscene/cutscene_player.c"
+    "cutscene/cutscene_player.cpp"
    ],
    "ptr_words_code": 1,
    "ptr_words_data": 0,
@@ -8156,7 +8156,7 @@
     "InitBgLayerBase"
    ],
    "consumer_files": [
-    "cutscene/cutscene_player.c"
+    "cutscene/cutscene_player.cpp"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -8182,9 +8182,9 @@
     "DestroyPooledBgLayer"
    ],
    "consumer_files": [
-    "level/bg_layer.c",
-    "level/bg_layer_init.c",
-    "level/tile_slot_pool.c"
+    "level/bg_layer.cpp",
+    "level/bg_layer_init.cpp",
+    "level/tile_slot_pool.cpp"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,
@@ -8209,7 +8209,7 @@
     "InitPooledBgLayer"
    ],
    "consumer_files": [
-    "level/tile_slot_pool.c"
+    "level/tile_slot_pool.cpp"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,

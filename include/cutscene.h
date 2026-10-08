@@ -16,10 +16,9 @@
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * The background streamer and layer functions in cutscene_player.c
- * (DecodeLayerChunk..StepBgLayerScroll) only share its ROM range. They
- * go in the level subsystem's header (docs/headers_plan.md, "Who owns a
- * symbol").
+ * The background streamer and layer classes in cutscene_player.cpp
+ * (BgStreamer, BgLayerBase: include/bg_layer.hpp) only share its ROM
+ * range.
  */
 
 struct bitmap_font;
@@ -100,7 +99,7 @@ extern void EndSlide(struct cutscene_player *self, s32 idx);
 extern void DestroySlideshow(struct cutscene_player *self, s32 flags);
 extern void ResetSlideshow(struct cutscene_player *self);
 
-/* src/cutscene/cutscene_player.c */
+/* src/cutscene/cutscene_player.cpp */
 extern struct cutscene_player *InitSlideshow(struct cutscene_player *self);
 extern void RunCutscenePlayer(struct cutscene_player *self);
 extern void DestroyCutscenePlayer(struct cutscene_player *self, s32 flags);

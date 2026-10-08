@@ -180,6 +180,7 @@ SECTIONS
         build/crashbandicootxs/src/level/entity_spawner.o(.text);
         build/crashbandicootxs/src/level/bg_layer_init.o(.text);
         build/crashbandicootxs/src/level/bg_layer.o(.text);
+        build/crashbandicootxs/src/level/pooled_bg_layer.o(.text);
         build/crashbandicootxs/src/level/tile_slot_pool.o(.text);
         build/crashbandicootxs/src/level/terrain_probe.o(.text);
         build/crashbandicootxs/src/level/level_layers.o(.text);
@@ -437,10 +438,10 @@ SECTIONS
         build/crashbandicootxs/src/menus/level_select.o(.gnu.linkonce.d._vt.10CameraLead); /* gCameraLeadVtable */
         build/crashbandicootxs/src/menus/level_select.o(.gnu.linkonce.d._vt.9LaunchPad); /* gLaunchPadVtable */
         build/crashbandicootxs/src/menus/level_select_widgets.o(.gnu.linkonce.d._vt.16LevelSelectEntry); /* gLevelSelectEntryVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgStreamerVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerBaseVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPooledBgLayerVtable);
+        build/crashbandicootxs/src/cutscene/cutscene_player.o(.gnu.linkonce.d._vt.10BgStreamer); /* gBgStreamerVtable */
+        build/crashbandicootxs/src/cutscene/cutscene_player.o(.gnu.linkonce.d._vt.11BgLayerBase); /* gBgLayerBaseVtable */
+        build/crashbandicootxs/src/level/bg_layer.o(.gnu.linkonce.d._vt.7BgLayer); /* gBgLayerVtable */
+        build/crashbandicootxs/src/level/tile_slot_pool.o(.gnu.linkonce.d._vt.13PooledBgLayer); /* gPooledBgLayerVtable */
         build/crashbandicootxs/src/gfx/palette_cycle.o(.gnu.linkonce.d._vt.7HudPart); /* gHudPartVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLargeFontVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gSmallFontVtable);

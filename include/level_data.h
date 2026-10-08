@@ -13,9 +13,9 @@
  * through its own local views, named on each struct below.
  */
 
-/* One layer (BG0-3 or the collision layer): `struct bg_layer_desc` in
- * bg_layer.c, `struct stream_source` in cutscene_player.c, and
- * the raw `source` of the terrain cache (bg_layer_base.c/collision_map.c). */
+/* One layer (BG0-3 or the collision layer): the BG layers' and their
+ * streamers' source (include/bg_layer.hpp), and the raw `source` of the
+ * terrain cache (bg_layer_base.cpp/collision_map.c). */
 struct level_layer_desc {
     const u16 *chunkGrid; // 0x00 - gridWidth x gridHeight chunk ids, row-major
     u32 assetOffset;      // 0x04 - this layer's section in the level asset
@@ -153,7 +153,7 @@ struct level_link_list {
     struct level_link links[1]; // `count` of them
 };
 
-/* One room: `struct level_desc` in level_layers.c. */
+/* One room: `struct level_desc` in level_layers.cpp. */
 struct level_desc {
     const struct level_layer_desc *layers[3]; // 0x00 - BG1-3
     const struct level_layer_desc *layer0;    // 0x0C - BG0 (tile-slot pooled)
@@ -169,7 +169,7 @@ struct level_desc {
 /*
  * One room record of the level table (src/data/level_table_16c814.c):
  * the record RunRoom hands to LoadRoom, and the current room
- * (`level_state.cat`, `level_progress.cat`). It merges level_layers.c's
+ * (`level_state.cat`, `level_progress.cat`). It merges level_layers.cpp's
  * `struct level_load_args` (batch 8b), level_query.c's `MedalListItem`
  * (`linkedObj`/`type` are `desc`/`kind`), level_state.h's `struct
  * level_category` and run_room.c's `gl_widget_kind` (#574, batch 9e).

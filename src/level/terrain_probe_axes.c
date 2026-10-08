@@ -19,10 +19,10 @@
  *     0 if it computes to exactly -1 and the end index down by one if
  *     it lands exactly on `(*(struct tile_cache **)(self+0x20))+0x10`
  *     (that cache's own cached width-in-tiles field, `struct
- *     tile_cache::unk010` in `bg_layer_base.c` - confirmed genuinely read
+ *     tile_cache::unk010` in `bg_layer_base.cpp` - confirmed genuinely read
  *     here, unlike that struct's own comment there which predates this
  *     pass), calling `GetSolidTerrainHeights(self->0x20, tileX, tileY, submode,
- *     &scratch)` (matched, `bg_layer_base.c`) per tile until a hit or the
+ *     &scratch)` (matched, `bg_layer_base.cpp`) per tile until a hit or the
  *     range is exhausted. On a hit, accumulates into `*outValue` using
  *     `pos->y & 7`: `submode == 2` adds `(8-(y&7))<<8`, `submode == 0`
  *     subtracts `(y&7)<<8` (any other submode value leaves `*outValue`
