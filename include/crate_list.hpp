@@ -8,9 +8,9 @@
  *              src/crates/crate_list*.cpp, crate_grid_*.cpp,
  *              crate_player_collide.cpp
  *
- * The classes have no C view (crates.h keeps `struct pool_init_node`, a
- * codegen view of the nodes, below). cxx_symbols.txt maps the methods to
- * their C names.
+ * The classes have no C view (crates.h's `struct pool_init_node`, a
+ * codegen view of the nodes, is CrateGridNodeInit below since #754).
+ * cxx_symbols.txt maps the methods to their C names.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to emit;
  * the pragma keeps g++ from emitting out-of-line copies of the inline
@@ -47,14 +47,6 @@ struct CrateGridNode {
 
 COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridNode) == 0x14);
 
-/* crates.h's struct pool_init_node, the codegen view ResetGrid (below)
- * zeroes the nodes through. */
-ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, data);
-ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, next);
-ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, wrap);
-ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, link);
-ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, mark);
-
 /* An entry of the free list: a node not in use, and the next entry. */
 struct CrateGridLink {
     CrateGridNode *node; // 0x00
@@ -62,6 +54,25 @@ struct CrateGridLink {
 };
 
 COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridLink) == 8);
+
+/* codegen: a grid node with untyped pointers, the view ResetGrid (below)
+ * zeroes the nodes through: through the real `CrateGridNode *` fields, gcc
+ * takes the zeroing stores as possible writes to the list's `nodes` and
+ * reloads it (docs/headers_plan.md, "Codegen findings"). Formerly crates.h's
+ * `struct pool_init_node`. */
+struct CrateGridNodeInit {
+    void *data;
+    void *next;
+    CrateGridLink *wrap;
+    void *link;
+    u8 mark;
+};
+
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, data);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, next);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, wrap);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, link);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, CrateGridNodeInit, mark);
 
 /* The crate list (`gCrateList`, play_room.cpp allocates 0x818 bytes for
  * 0xC0 crates): `slots` holds the listed sprites (`count` of them, up to
@@ -159,8 +170,7 @@ public:
      * free-list loop reads `links` through a copy (`fl`) taken inside the
      * `if (i < n)`, right before the `do` (the ROM's `mov ip, sb`); read
      * directly, the loop optimizer hoists `this + 0x810` above the clear.
-     * The nodes are zeroed through crates.h's `struct pool_init_node`, the
-     * untyped view: through `CrateGridNode *` fields, gcc takes the stores
+     * The nodes are zeroed through CrateGridNodeInit, the untyped view: through `CrateGridNode *` fields, gcc takes the stores
      * as possible writes to `nodes` and reloads it. */
     void ResetGrid()
     {
@@ -182,12 +192,11 @@ public:
                 CrateGridLink *arr;
 
                 (*fl)[i].node = &nodes[i];
-                ((struct pool_init_node *)nodes)[i].data = 0;
-                ((struct pool_init_node *)nodes)[i].next = 0;
-                ((struct pool_init_node *)nodes)[i].link = 0;
-                ((struct pool_init_node *)nodes)[i].mark = 0;
-                ((struct pool_init_node *)nodes)[i].wrap =
-                    (struct pool_link *)(link = &(arr = *fl)[i]);
+                ((CrateGridNodeInit *)nodes)[i].data = 0;
+                ((CrateGridNodeInit *)nodes)[i].next = 0;
+                ((CrateGridNodeInit *)nodes)[i].link = 0;
+                ((CrateGridNodeInit *)nodes)[i].mark = 0;
+                ((CrateGridNodeInit *)nodes)[i].wrap = link = &(arr = *fl)[i];
                 if (i == capacity - 1)
                     link->next = 0;
                 else

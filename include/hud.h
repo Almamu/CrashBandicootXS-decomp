@@ -16,10 +16,6 @@
 #include "math_util.h"
 #include "aabb.h"
 
-/* The HUD object (`gHud`, class Hud, include/hud.hpp: 0x68 bytes) as the
- * C side sees it: a tag (globals.h). */
-struct hud_counter;
-
 /* The vertical offset HudPart::Draw adds to every part, set by the
  * counters while they slide (src/iwram/iwram_data.cpp). */
 extern s32 gHudSlideOffset;

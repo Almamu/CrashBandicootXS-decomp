@@ -16,7 +16,6 @@ struct settings_row_stats {
 COMPILE_TIME_ASSERT(save_menu_h, sizeof(struct settings_row_stats) == 0x14);
 
 /* The save menu (gSaveMenu) is the C++ class SaveMenu
- * (include/save_menu.hpp); C sees only the tag. */
-struct save_menu;
+ * (include/save_menu.hpp), with no C view. */
 
 #endif /* __SAVE_MENU_H__ */

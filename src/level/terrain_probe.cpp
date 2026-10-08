@@ -1,3 +1,5 @@
+#include "bg_layer.hpp"
+
 extern "C" {
 #include "core.h"
 #include "math_util.h"
@@ -79,11 +81,11 @@ extern "C" {
  * the new `asm/code_3_2_17_266bc.s`. */
 
 /* `self` is gLevelLayers; the bounds are layer 0's `widthPx`/`heightPx`
- * (struct bg_scroll_layer), the right/lower edge of the level, compared
+ * (BgLayerBase's), the right/lower edge of the level, compared
  * directly against the caller's plain-int probe position, not Q8. */
 s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
 {
-    struct level_layers *layers = (struct level_layers *)self;
+    LevelLayers *layers = (LevelLayers *)self;
     s32 hit = 0;
 
     switch (mode) {

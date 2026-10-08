@@ -3,17 +3,15 @@
 
 /* Two things share this header (docs/headers_plan.md):
  *
- * - the entity's flags (`union EntityFlags`), which class Entity
- *   (include/entity.hpp) and the C view of the player (player.h) share,
- *   and the `struct actor` tag the C prototypes of the entity's methods
- *   take (gfx.h);
+ * - the entity's flags (`union EntityFlags`), class Entity's
+ *   (include/entity.hpp);
  * - the actor subsystem (src/actor/): every function it defines, and the
  *   globals and data tables its files use. The prototypes are copied from
  *   the definitions. A .c file that needs a different local declaration
  *   for codegen keeps it as an asm-label alias with a `codegen:` comment.
  *
- * The bosses and vehicles built on `struct actor_self` are declared in
- * bosses.h and vehicle.h. */
+ * The bosses and vehicles built on ActorSelf (actor_self.hpp) are
+ * declared in bosses.h and vehicle.h. */
 
 #include "core.h"
 #include "actor_self.h"
@@ -21,7 +19,7 @@
 #include "constants/categories.h"
 
 /* The entity flags byte at +0x0C and the one after it, +0x0D (Entity's
- * `f`, struct player's). */
+ * `f`). */
 union EntityFlags {
     u8 flags; // 0x0C
     struct {
@@ -45,12 +43,6 @@ union EntityFlags {
         u8 flags2; // 0x0D
     } bytes;
 };
-
-/* The entity (class Entity, include/entity.hpp: 0x1C bytes, built by
- * CreateEntity). No C file reads its fields: the C callers of its methods
- * (SetEntityPos, SetEntityPixelPos; gfx.h) only pass the pointer, so the
- * C side has the tag alone. */
-struct actor;
 
 /* actor_anim.h has the full definitions; it can't be included here,
  * since several includers of this header define their own `struct
@@ -77,7 +69,7 @@ struct actor_spawn {
     s32 z; // 0x0C
 };
 
-/* The actor zone (src/actor/): the 3D actor object (`struct actor_self`),
+/* The actor zone (src/actor/): the 3D actor object (ActorSelf),
  * its animation, spawning, category frame and backgrounds. */
 
 /* src/actor/actor.cpp: C linkage, and the C names of ActorSelf's methods
@@ -117,14 +109,13 @@ extern void AddActorMissedNitro(void);
 extern s32 GetActorMissedNitros(void);
 extern s32 GetActorCheckpoint(void);
 
-/* src/actor/actor_factory.cpp */
+/* src/actor/actor_factory.cpp. SpawnActor is also slot 1 of the category
+ * vtables (src/data/actor_category_175558.c): to C, `struct ActorSelf` is
+ * the class's tag, with no fields. */
 #ifdef __cplusplus
 extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
-extern class ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
-#else
-extern struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
-extern struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
 #endif
+extern struct ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
 extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
 
 /* src/actor/actor_spawn.cpp */
@@ -191,8 +182,6 @@ extern s32 gActorCheckpointMissedNitros;
 extern s32 gActorDrawCount;
 #ifdef __cplusplus
 extern class ActorSelf **gActorDrawList;
-#else
-extern struct actor_self **gActorDrawList;
 #endif
 extern s32 gActorFarClipDepth;
 /* A frame-tick counter, incremented every category-load-loop tick
@@ -252,8 +241,6 @@ extern s32 gCollectedSpawnCount;
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
 #ifdef __cplusplus
 extern void (*gHeapSortActorsByKeyFunc)(s32 n, class ActorSelf **list);
-#else
-extern void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list);
 #endif
 
 /* src/data/palette_cycle_175760.c */

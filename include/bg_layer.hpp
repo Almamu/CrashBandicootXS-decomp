@@ -13,8 +13,9 @@
  * Reset, in src/level/bg_layer.cpp),
  * and ldscript.txt places them at their ROM addresses (docs/cplusplus.md,
  * "Emitting the vtables"). cxx_symbols.txt maps the mangled names onto
- * the C names. bg_scroll_layer.h's struct bg_scroll_layer is the C view
- * of a layer, for the files that read gLevelLayers's layers. */
+ * the C names. The classes have no C view (bg_scroll_layer.h's `struct
+ * bg_scroll_layer` and level.h's `struct level_layers` went in #754);
+ * bg_scroll_layer.h keeps the BGnCNT shadow. */
 
 extern "C" {
 #include "core.h"
@@ -214,33 +215,6 @@ public:
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayer) == 0x5C);
 
-/* bg_scroll_layer.h's struct bg_scroll_layer, the C view (its `vtable` is
- * the class's vtable pointer). */
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayer) == sizeof(struct bg_scroll_layer));
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, x);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, y);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, maxX);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, maxY);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, widthPx);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, heightPx);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, widthTiles);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, heightTiles);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, scaleX);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, scaleY);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, enabled);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, streamer);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, cnt);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, cntReg);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, rowLo);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, rowHi);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, colLo);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, colHi);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, screen);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, tileData);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, hofs);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, vofs);
-ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, ofsReg);
-
 #define TILE_SLOT_NONE 0x200
 
 /* Layer 0's VRAM tile-slot pool (PooledBgLayer::pool, 0x480C bytes;
@@ -323,8 +297,7 @@ public:
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
 
-/* The collision tile cache (LevelLayers' `tiles`, 0x1064 bytes; level.h's
- * struct level_layers sees a `TileCache *`): a 16-slot decode/LRU cache of
+/* The collision tile cache (LevelLayers' `tiles`, 0x1064 bytes): a 16-slot decode/LRU cache of
  * the room's collision tile records (docs/rom_map.md's "Collision/terrain-map
  * streamer"). `id[N]` holds the record ID currently decoded into the
  * matching 256-byte `buf[N]` slot; `nextSlot` is the ring-buffer eviction
@@ -378,7 +351,7 @@ COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileCache) == 0x1064);
 /* The level-layers singleton (gLevelLayersSingleton, gLevelLayers;
  * src/level/level_layers.cpp): BG layer 0, the three other BG layers, the
  * collision tile cache and the level asset.
- * level.h's struct level_layers is its C view. It has no vtable. */
+ * It has no vtable. */
 class LevelLayers
 {
 public:
@@ -388,12 +361,16 @@ public:
     s32 scrollY;           // 0x0C
     PooledBgLayer *layer0; // 0x10
     BgLayer *layers[3];    // 0x14
-    TileCache *tiles;      // 0x20
-    void *asset;           // 0x24
+    TileCache *tiles;      // 0x20 - 0x1064 bytes
+    void *asset;           // 0x24 - the loaded level asset
     u8 assetOwned;         // 0x28
-    u8 kind;               // 0x29
-    u8 probeFlag;          // 0x2A
-    u8 raiseObjPriority;   // 0x2B
+    // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set
+    //        (ProbeTerrainX/Y)
+    u8 kind;
+    u8 probeFlag; // 0x2A - CollidePlayer sets it around its ground probe
+    // 0x2B - set when the room's blend mode is 1 (SetupRoomBlend): sprites then
+    //        take layer 0's priority minus one (GetSpriteObjPriority)
+    u8 raiseObjPriority;
 
     LevelLayers();                                // InitLevelLayers
     ~LevelLayers();                               // DestroyLevelLayers
@@ -405,20 +382,6 @@ public:
     void Reset();                                 // ResetLevelLayers
 };
 
-
-/* level.h's struct level_layers, the C view. */
-COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == sizeof(struct level_layers));
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, maxScrollX);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, maxScrollY);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, scrollX);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, scrollY);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, layer0);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, layers);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, tiles);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, asset);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, assetOwned);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, kind);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, probeFlag);
-ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, raiseObjPriority);
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == 0x2C);
 
 #endif /* !GUARD_BG_LAYER_HPP */

@@ -2,10 +2,12 @@
 #define __GFX_H__
 
 /* The gfx subsystem (src/gfx/): the OAM shadow buffer, the OBJ VRAM and
- * palette caches, the small `struct actor` entity, brightness fades,
- * DISPCNT helpers, BG packages and the sprite frame cache. Every function
- * src/gfx/ defines, with the prototype of its definition, and the globals
- * and tables its files use (docs/headers_plan.md). HudPart's methods
+ * palette caches, the entity (class Entity, entity.hpp), brightness fades,
+ * DISPCNT helpers, BG packages and the sprite frame cache. The C linkage
+ * functions src/gfx/ defines, with the prototype of their definition, and
+ * the globals and tables its files use (docs/headers_plan.md); the
+ * classes' methods are declared in their C++ headers (sprite_obj.hpp,
+ * entity.hpp). HudPart's methods
  * (palette_cycle.cpp) are C++ only (part_list.hpp). A .c file that needs a
  * different local declaration for codegen keeps it as an asm-label alias
  * with a `codegen:` comment. */
@@ -16,7 +18,6 @@
 #include "sprite_bank.h"
 
 struct aabb;
-struct actor;
 struct dma_queue;
 struct game_progress;
 struct queued_oam_entry;
@@ -42,12 +43,7 @@ union oam_shadow_entry {
 /* The OAM shadow buffer (gOamBuffer: class OamBuffer, sprite_obj.hpp,
  * whose `table` is the entries above), the palette cache (gPaletteCache:
  * PaletteCache) and the OBJ VRAM upload cursor (gObjVramCursor:
- * ObjVramCursor). No C file reads their fields: the C callers of their
- * methods (below) only pass the pointers, so the C side has the tags
- * alone. */
-struct oam_shadow_buffer;
-struct palette_cache;
-struct vram_upload_cursor;
+ * ObjVramCursor) are C++ classes with no C view. */
 
 /* A sprite frame (sprite_bank.h's struct sprite_frame, GetSpriteFrame) as
  * DrawSpritePieces and DrawAffineSpritePieces read it: one offset and one
@@ -225,32 +221,17 @@ extern s32 IsBrightnessFadeActive(void);
 
 /* src/gfx/graphics.cpp: the OAM shadow buffer */
 extern s32 GetCompletionPercent(const struct game_progress *progress);
-extern void RewindOamBuffer(struct oam_shadow_buffer *self);
-extern void ResetOamBuffer(struct oam_shadow_buffer *self);
-extern void CommitOamBuffer(struct oam_shadow_buffer *self);
 
 /* src/gfx/graphics.cpp: the VRAM DMA queue and OBJ VRAM cursor */
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void FreeVramDmaQueue(void);
 extern s32 AllocVramDmaQueue(void);
-extern void ResetObjVram(struct vram_upload_cursor *self);
 
-/* src/gfx/graphics.cpp: the palette cache */
-extern void BindPaletteSlot(struct palette_cache *self, s32 slot, s32 index);
-extern void UploadPaletteCache(struct palette_cache *self);
-extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-
-/* src/gfx/graphics.cpp: the entity (`struct actor`, actor.h) */
+/* src/gfx/graphics.cpp: the entity's world-to-screen helpers */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
-#ifndef __cplusplus
-/* Entity's out-of-line SetPixelPos and SetPos; the C++ files see them
- * taking an Entity (entity.hpp). */
-extern void SetEntityPixelPos(struct actor *self, s32 x, s32 y);
-extern void SetEntityPos(struct actor *self, s32 x, s32 y);
-#endif
 
 /* src/gfx/sprite_frame.cpp */
 extern void InitObjTileFreeList(void *base);

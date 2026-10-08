@@ -21,8 +21,6 @@
  * (save_menu.hpp). */
 #ifdef __cplusplus
 extern class SaveMenu *gSaveMenu;
-#else
-extern struct save_menu *gSaveMenu;
 #endif
 
 /* Set until the first EEPROM access has run AgbEepromInit

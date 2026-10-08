@@ -8,8 +8,8 @@
  * with the airship itself), its two flight states since part 11f
  * (src/vehicle/jetpack_plane.cpp); the hovercraft's weapons since part
  * 11h (src/bosses/hovercraft*.cpp, with the hovercraft itself).
- * bosses.h's structs are their C views. cxx_symbols.txt maps the C++
- * names to the C ones.
+ * They have no C views. cxx_symbols.txt maps the C++ names to the C
+ * ones.
  *
  * No `#pragma interface`: g++ emits the vtables in actor_anim.cpp, where
  * their destructors are (see ctrl.hpp). */

@@ -18,11 +18,7 @@
  * builds it): an iron switch crate's outline crates. */
 struct crate_group {
     s32 count;
-#ifdef __cplusplus
-    class Crate *items[0];
-#else
-    struct crate *items[0];
-#endif
+    struct Crate *items[0]; // class Crate (crate.hpp)
 };
 
 #define PHYS_NO_GROUP ((struct crate_group *)-1)

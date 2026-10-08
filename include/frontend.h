@@ -22,11 +22,6 @@
 #include "graphics_package.h"
 #include "vtable.h"
 
-/* The language select (OpenLanguageSelect/RunLanguageSelect/
- * CloseLanguageSelect, called from MainLoop). Its class, LanguageSelect,
- * is in frontend.hpp; no C file reads its fields. */
-struct language_select;
-
 /* One step of a logo piece's motion (the gTitleLogoPieceMotionN and
  * gVvLogoPieceMotionNN tables). When the piece's hold count runs out it
  * loads the next record: a new hold count (0 ends the sequence), three
@@ -53,16 +48,11 @@ struct slot_seed {
     s32 hold;
 };
 
-/* The credits screen (RunCredits, 0x98 bytes). Its class, Credits, is
- * in frontend.hpp; no C file reads its fields. */
-struct credits_screen;
-
 /* The language select, between OpenLanguageSelect and
- * CloseLanguageSelect (src/iwram/iwram_data.cpp). */
+ * CloseLanguageSelect (src/iwram/iwram_data.cpp): a LanguageSelect
+ * (frontend.hpp). No C file uses it. */
 #ifdef __cplusplus
 extern class LanguageSelect *gLanguageSelect;
-#else
-extern struct language_select *gLanguageSelect;
 #endif
 
 /* The six language names (src/data/digit_glyphs_17e714.c) and the four

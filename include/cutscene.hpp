@@ -4,11 +4,10 @@
 /* The cutscene player as C++ (#664 cleanup, docs/cplusplus.md): the
  * slideshow (src/cutscene/slideshow.cpp, slideshow_display.cpp) and the
  * cutscene player built on it (src/cutscene/cutscene_player.cpp).
- * cutscene.h's struct cutscene_player is the C view, for PlayCutscene
- * (level_cutscene.cpp), which keeps one inside a stack aggregate (so it is
- * constructed where the ROM calls the constructor, after the display
- * setup) and calls the constructor, RunCutscenePlayer and the destructor
- * by their C names (cxx_symbols.txt). Neither class has a vtable.
+ * PlayCutscene (level_cutscene.cpp) constructs a CutscenePlayer in place
+ * in a stack aggregate (where the ROM calls the constructor, after the
+ * display setup). Neither class has a vtable, and neither has a C view
+ * (cutscene.h's `struct cutscene_player` went in #754).
  *
  * `#pragma interface`: no class here has a vtable, so there is none to
  * emit; the pragma keeps g++ from emitting out-of-line copies of inline
@@ -61,15 +60,6 @@ public:
     void Run();        // RunCutscenePlayer
 };
 
-
-/* cutscene.h's struct cutscene_player, the view PlayCutscene keeps on its
- * stack (see there). */
-COMPILE_TIME_ASSERT(cutscene_hpp, sizeof(CutscenePlayer) == sizeof(struct cutscene_player));
-ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, slides);
-ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, count);
-ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, toggle);
-ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, pages);
-ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, font);
-ASSERT_VIEW_FIELD(cutscene_hpp, CutscenePlayer, cutscene_player, box);
+COMPILE_TIME_ASSERT(cutscene_hpp, sizeof(CutscenePlayer) == 0x28);
 
 #endif /* !GUARD_CUTSCENE_HPP */

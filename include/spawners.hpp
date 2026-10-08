@@ -8,8 +8,8 @@
  * methods that spawn the effect parts and the dropped pickups. Their
  * callers all pass gEntitySpawner, the `this` the C called `pool` or
  * `unused`. It has no vtable: `delete gEntitySpawner` calls the
- * destructor directly. The C files have level.h's `struct entity_spawner`
- * tag.
+ * destructor directly. It has no C view (level.h's `struct
+ * entity_spawner` tag went in #754).
  *
  * `#pragma interface`: no class here has a vtable, so there is none to emit;
  * the pragma keeps g++ from emitting out-of-line copies of the inline

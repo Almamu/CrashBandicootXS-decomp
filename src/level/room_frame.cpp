@@ -24,9 +24,6 @@ extern "C" {
  * docs/matching/archive/game-loop-old-agbcc.md. C++ since the #664
  * cleanup: the player's IsOnScreen and Draw are virtual calls. */
 
-struct palette_cache;
-struct oam_shadow_buffer;
-
 /* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA
  * queue - only while `level` is `<= 0x1000` (always, for a level

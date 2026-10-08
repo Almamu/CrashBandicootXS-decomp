@@ -19,9 +19,6 @@
 #include "vtable.h"
 #include "constants/events.h"
 
-struct actor;
-struct collect_part;
-struct crate;
 struct vec2;
 struct hitbox_quad;
 struct sprite_point;
@@ -37,37 +34,15 @@ struct sprite_point;
  * batch 9e).
  */
 struct collision_candidate {
-#ifdef __cplusplus
-    class Crate *neighbor; // 0x00 - the crate (crate.hpp)
-#else
-    struct crate *neighbor; // 0x00 - the crate; its position is its first two words
-#endif
-    struct vec2 pos;     // 0x04
-    s32 kind;            // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
-    s32 code;            // 0x10
-    s32 edge;            // 0x14
-    s32 depth;           // 0x18
-    s32 hit;             // 0x1C
-    struct byte_arg p20; // 0x20 - passed on the stack as a byte (`strb`)
-    struct byte_arg p21; // 0x21
-};
-
-/*
- * The player's collision queue (`struct player.collisionQueue`, +0x108):
- * the crate collisions found during the frame, resolved once a frame by
- * ResolvePlayerCollisions. The player object is 0x350 bytes, so the queue
- * holds 16 candidates. collision_queue.cpp's `struct candidate_list` and
- * `struct collision_queue` and player_event.c's `struct ab9c_link` (the
- * head) were views of it (#574, batch 9e). It is the C view of
- * CollisionQueue (include/part_list.hpp), which checks the size.
- */
-struct collision_queue {
-    s32 count; // 0x00
-    // 0x04 - ResetCollisionQueue clears it, QueueCratePlayerCollision (crate_break.cpp) sets
-    // it, and while it is set ApplyCrateCollision leaves the player's
-    // position alone
-    u8 posCommitted;
-    struct collision_candidate candidates[16]; // 0x08
+    struct Crate *neighbor; // 0x00 - the crate (class Crate, crate.hpp)
+    struct vec2 pos;        // 0x04
+    s32 kind;               // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
+    s32 code;               // 0x10
+    s32 edge;               // 0x14
+    s32 depth;              // 0x18
+    s32 hit;                // 0x1C
+    struct byte_arg p20;    // 0x20 - passed on the stack as a byte (`strb`)
+    struct byte_arg p21;    // 0x21
 };
 
 /* An entry set: the {a, b} index pairs into a motion record table (two
@@ -80,8 +55,7 @@ struct entry_set {
     s32 scale; // 0x04 - Q8
 };
 
-/* A sprite object's per-axis speed ramp (MovingSprite's rampX/rampY, struct
- * player's): each frame ApplySpriteVelocity steps speedX/speedY by `step`
+/* A sprite object's per-axis speed ramp (MovingSprite's rampX/rampY): each frame ApplySpriteVelocity steps speedX/speedY by `step`
  * toward `target` without overshooting. The Start...MotionX/Y setters also
  * load `start` into the speed; the Set... ones keep the current speed.
  *

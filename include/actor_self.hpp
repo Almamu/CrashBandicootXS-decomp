@@ -14,8 +14,9 @@
  * as in every root class. `HpActor` adds the hit points of the jetpack
  * levels' and the 3D bosses' actors and vtable slots 4-6. The classes
  * built on these are in vehicle.hpp and boss_actors.hpp (and LogoActor
- * in frontend.hpp). `struct actor_self` (actor_self.h) is ActorSelf's C
- * view, for the files still in C.
+ * in frontend.hpp). They have no C view (actor_self.h's `struct
+ * actor_self` went with its last C reader, #754); actor_self.h keeps the
+ * plain records they use.
  *
  * The actors live in IWRAM's heap (mem_alloc's MEM_HEAP_IWRAM flag),
  * which is AnimPart's own operator new and delete: the ROM's destructors
@@ -40,9 +41,12 @@ public:
     s32 animTime;                    // 0x08 - Q8 frame accumulator
     s32 animIndex;                   // 0x0C - current index into anims
     u16 animTimer;                   // 0x10
-    u8 animDone;                     // 0x12
-    s32 sortKey;                     // 0x14 - draw order (actor_self.h)
-    s32 palette;                     // 0x18 - OBJ palette bank
+    u8 animDone;                     // 0x12 - set once the current sequence has played through
+    // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list by it
+    //        (HeapSortActorsByKey); bit 15 also sets OAM priority
+    //        (SORT_KEY_FLAG_BEHIND_BG, actor_self.h)
+    s32 sortKey;
+    s32 palette; // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
 
     /* Inline: InitActorPart and CreateAirship expand it. */
     AnimPart(struct anim_frame_record *a, u32 *offsets, s32 pal)
@@ -83,17 +87,24 @@ COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(AnimPart) == 0x1C);
 class ActorSelf : public AnimPart
 {
 public:
-    s32 x;                            // 0x1C
-    s32 y;                            // 0x20
-    s32 z;                            // 0x24
-    s32 state;                        // 0x28
-    u8 visible;                       // 0x2C
-    struct anim_table_record *record; // 0x30
-    s32 depth;                        // 0x34
-    struct anim_box box;              // 0x38
-    s32 stateTime;                    // 0x44 - frames spent in `state`
-    ActorSelf *prev;                  // 0x48 - the circular actor list
-    ActorSelf *next;                  // 0x4C
+    s32 x;     // 0x1C
+    s32 y;     // 0x20
+    s32 z;     // 0x24
+    s32 state; // 0x28
+    // 0x2C - nonzero: drawn (RunActorCategoryFrame only puts these in
+    //        gActorDrawList); InitActorPart sets it to 1
+    u8 visible;
+    // 0x30 - the record InitActorPart was given (actor_anim.h); the draw
+    //        functions scale by its baseDepth
+    struct anim_table_record *record;
+    s32 depth;           // 0x34
+    struct anim_box box; // 0x38 - collision box, copied from record->box_14 by InitActorPart
+    s32 stateTime;       // 0x44 - frames spent in `state`
+    // 0x48 - the circular actor list (rooted at the player, gActorList):
+    //        InitActorPart appends before the head; the draw and teardown
+    //        loops walk `next` from the head
+    ActorSelf *prev;
+    ActorSelf *next; // 0x4C
     // 0x50: the vtable pointer
 
     ActorSelf(const struct anim_table_record *rec, s32 x, s32 y, s32 z); // InitActorPart
@@ -134,29 +145,6 @@ public:
 };
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == 0x54);
-
-/* actor_self.h's struct actor_self, the C view (its `vtable` is the
- * class's vtable pointer). */
-COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == sizeof(struct actor_self));
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, anims);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, frameOffsets);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animTime);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animIndex);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animTimer);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animDone);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, sortKey);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, palette);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, x);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, y);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, z);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, state);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, visible);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, record);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, depth);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, box);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, stateTime);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, prev);
-ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, next);
 
 /* actor.cpp defines ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE for its own copy. */
 #ifndef ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE

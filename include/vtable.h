@@ -7,8 +7,9 @@
  * ROM always leaves 0, and the (Thumb) code address. Slot 0 is the
  * type-info slot, empty (all zero) everywhere - the game has no RTTI.
  *
- * This is the layout of a C++ object's vtable as the C views see it
- * (struct actor_self's `vtable`). gobj_1a794.h's and level_menu.h's
+ * This is the layout of a C++ object's vtable. The C views that held a
+ * pointer to one (struct actor_self's `vtable`, struct bitmap_font's
+ * `record`) went in #754, and nothing names the struct now. gobj_1a794.h's and level_menu.h's
  * `struct method` and the file-local `*_method` copies were merged into
  * it (#574 batch 9e), and actor_self.h's `struct actor_method` and box
  * part's `struct part_method` (#656). g++ emits every one of the 93

@@ -12,9 +12,9 @@
  *
  * The menus are C++ classes (#664): the level select's in
  * level_select.hpp, the pause menu and the power dialog in menus.hpp, the
- * continue prompt in frontend.hpp. The prototypes below are the C names
- * (cxx_symbols.txt) of the methods that a C file or a vtable still uses,
- * and the free functions. The save block is level_state.h's `struct
+ * continue prompt in frontend.hpp, with no C views. The prototypes below
+ * are the C names (cxx_symbols.txt) of the methods that a vtable in
+ * src/data/ still uses, and the free functions. The save block is level_state.h's `struct
  * game_progress`. */
 
 #include "core.h"
@@ -24,10 +24,7 @@
 #include "constants/levels.h"
 
 struct bg_package;
-struct follow_child;
 struct game_progress;
-struct level_item;
-struct level_menu;
 
 /* One row of the pause menu (gPauseMenuRows, PauseMenu::rows): a
  * GetUiText label id, then the row's type (4/5 are the music/sound
@@ -45,12 +42,10 @@ struct image_pair {
 };
 
 /* The level select (src/iwram/iwram_data.cpp): the screen while
- * RunLevelSelect runs. The C++ files see it as its class, LevelSelect
- * (level_select.hpp); for C it is an opaque `struct level_menu`. */
+ * RunLevelSelect runs, a LevelSelect (level_select.hpp). No C file uses
+ * it. */
 #ifdef __cplusplus
 extern class LevelSelect *gLevelSelect;
-#else
-extern struct level_menu *gLevelSelect;
 #endif
 extern u8 gNewWorldOpened;
 

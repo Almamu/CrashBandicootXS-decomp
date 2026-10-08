@@ -1,4 +1,5 @@
 #include "bg_layer.hpp"
+#include "sprite_obj.hpp"
 
 extern "C" {
 #include "core.h"
@@ -56,7 +57,7 @@ extern "C" {
 
 void StepCameraDirectional(struct camera *cam)
 {
-    struct vec2 goal = cam->target->pos;
+    struct vec2 goal = cam->target->Pos();
     u8 dir = cam->target->dir;
 
     if (dir != 0) {
@@ -95,7 +96,7 @@ void StepCameraDirectional(struct camera *cam)
 
 void StepCameraFacing(struct camera *cam)
 {
-    struct vec2 goal = cam->target->pos;
+    struct vec2 goal = cam->target->Pos();
 
     if ((cam->target->mirror << 27) < 0) {
         if (cam->vx > -0x1276)
@@ -114,10 +115,10 @@ void StepCameraFacing(struct camera *cam)
 
 void SnapCamera(struct camera *cam)
 {
-    struct camera_target *target = cam->target;
+    Sprite *target = cam->target;
 
-    cam->x = target->pos.x;
-    cam->y = target->pos.y;
+    cam->x = target->x;
+    cam->y = target->y;
 
     if (cam->mode == 1) {
         if ((target->mirror << 27) < 0)

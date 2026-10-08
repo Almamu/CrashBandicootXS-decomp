@@ -86,7 +86,7 @@ u8 IsTouchingYeti(ActorSelf *self)
  * the gauge's sound/palette state immediately.
  *
  * The frame pointer goes through the usual `CurFrame()` inline with the
- * global passed straight in: a `struct actor_self *obj` local puts
+ * global passed straight in: an `AnimPart *obj` local puts
  * `&gYeti` last in the r8/sb/sl assignment, where the ROM
  * gives it r8 (docs/matching/archive/issue-51-54-naked-retry.md). */
 static inline void FillDotPattern(u8 *dst, u8 seed)

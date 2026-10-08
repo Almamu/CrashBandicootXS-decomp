@@ -26,27 +26,6 @@
 #include "constants/entities.h"
 
 
-/* One entry of the crate list's free list (crate_list.hpp's
- * CrateGridLink), as `struct pool_init_node` below points at it. */
-struct pool_link {
-    struct pool_node *node; // 0x00
-    struct pool_link *next; // 0x04
-};
-
-/* codegen: a grid node (crate_list.hpp's CrateGridNode) with untyped
- * fields, the view CrateList::ResetGrid (include/crate_list.hpp) zeroes
- * the nodes through.
- * Through the real node pointer fields, gcc takes the zeroing stores as
- * possible writes to the list's `nodes` and reloads it
- * (docs/headers_plan.md, "Codegen findings"). */
-struct pool_init_node {
-    void *data;
-    void *next;
-    struct pool_link *wrap;
-    void *link;
-    u8 mark;
-};
-
 /* The crate tables, indexed by crate kind (src/data/object_tables_16bb6c.c). */
 extern const u8 gSlotCrateTimers[4];
 extern const u8 gCrateKindCounted[CRATE_KIND_COUNT];

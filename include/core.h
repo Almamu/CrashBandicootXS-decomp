@@ -27,12 +27,13 @@
 #define COMPILE_TIME_ASSERT2(T, X, L) COMPILE_TIME_ASSERT3(T,X,L)
 #define COMPILE_TIME_ASSERT(T, X)     COMPILE_TIME_ASSERT2(T,X,__LINE__)
 
-/* ASSERT_VIEW_FIELD(TAG, Class, view, f): a C view's field `f` (`struct
+/* ASSERT_VIEW_FIELD(TAG, Class, view, f): a view's field `f` (`struct
  * view`) is at the C++ class's offset of `f`, that is
  * COMPILE_TIME_ASSERT(TAG, offsetof(Class, f) == offsetof(struct view, f)).
- * The class headers check every named field of their C views with it
- * (CONTRIBUTING.md, "Declarations and headers"); agbcp takes offsetof of
- * a class with a vtable pointer, and of a base class's field. */
+ * The class headers check every named field of their codegen views with it
+ * (CONTRIBUTING.md, "One layout, one type"; the classes have no C views
+ * since #754); agbcp takes offsetof of a class with a vtable pointer, and
+ * of a base class's field. */
 #define ASSERT_VIEW_FIELD(T, C, V, F) COMPILE_TIME_ASSERT(T, offsetof(C, F) == offsetof(struct V, F))
 
 #endif /* __CORE_H__ */

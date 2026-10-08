@@ -83,7 +83,7 @@ void CameraLead::Reset()
 
     if (!(v & one))
         ToggleHiddenNow(this);
-    gCamera->target = (struct camera_target *)this;
+    gCamera->target = this;
     {
         Player *p = gPlayer;
         s32 px = p->x;
@@ -135,7 +135,7 @@ void CameraLead::Update()
 /* Slot 10: hands gCamera's follow target back to the player. */
 CameraLead::~CameraLead()
 {
-    gCamera->target = (struct camera_target *)gPlayer;
+    gCamera->target = gPlayer;
 }
 
 /* The constructor, called from InputCtrl::StateStart (input_ctrl.cpp). */
