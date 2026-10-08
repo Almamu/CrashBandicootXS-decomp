@@ -389,7 +389,11 @@ self->part->y += 0x600;      /* its reload now gets r3, as in the ROM */
 MATCH_USE(hold);             /* end of the hold */
 ```
 
-The insn to cover is the one listed under "Spilling for insn
+The start can sometimes go: a pinned local that is never assigned is
+live from the top of the function to its `MATCH_USE`, which is enough
+when nothing earlier needs the register (`ReleaseHang`, where this
+example came from, and `PauseMenu::Draw`'s two holds have no
+`MATCH_HOLD` since #662). The insn to cover is the one listed under "Spilling for insn
 N" in a `-da` `.greg` dump. Holds of callee-saved registers across calls
 model registers the ROM leaves unused. See
 [late-naked-retry-3.md](./matching/archive/late-naked-retry-3.md)
@@ -449,13 +453,13 @@ gcc 2.9:
 | `asm("" : : "r"(x))` | `MATCH_USE(x)` | `x` must be live in a register here: extends its range and adds a reference (raising its allocation priority; loop-weighted inside loops). | Keep a value in its register past a call; reach the ROM's register priority; end a hold. |
 | `asm("" : "+r"(x))` | `MATCH_KEEP(x)` | `x` has an unknown value afterwards: no constant propagation, CSE, rematerialization or immediate folding through it. | Keep a per-branch reload; stop `w & 0xff` folding; `BOX_ADDR`. |
 | `asm("" : "=r"(x))` | `MATCH_HOLD(x)` | Defines `x` here with an unknown value. With a pin, occupies that register until the last use. | Start a hold; a deliberately undefined value. |
-| `asm("" : "=r"(v) : "0"(K))` | `MATCH_CONST(v, K)` | Loads K into v's register here, but v isn't a known constant: not CSE'd with another K, hoisted, sunk to its store or folded into an immediate, and no doubled live range. | The ROM loads a constant at a given point, once per use (e.g. before the address); an opaque copy of a pointer. |
+| `asm("" : "=r"(v) : "0"(K))` | `MATCH_CONST(v, K)` | Loads K into v's register here, but v isn't a known constant: not CSE'd with another K, hoisted, sunk to its store or folded into an immediate, and no doubled live range. | The ROM loads a constant at a given point, once per use (e.g. before the address); an opaque copy of a value. |
 | `({ T _p = (e); asm("" : "+r"(_p)); _p; })` | `MATCH_KEEP_EXPR(T, e)`, `BOX_ADDR(a)` | An expression whose value is opaque at each use. | Stack-box addresses, above. |
 
 Cases: [near-miss-polish-3.md](./matching/archive/near-miss-polish-3.md)
 (constant-init), [sp-box-retry.md](./matching/archive/sp-box-retry.md)
-(`"+r"` vs `"=r"/"0"`), `src/actor/cell_anim.c` (`MATCH_CONST` as an
-opaque pointer copy), `src/actor/actor_category_select.cpp` (use).
+(`"+r"` vs `"=r"/"0"`), `src/player/action_ctrl_moves.cpp` (`MATCH_CONST`
+as an opaque copy, `m2`), `src/actor/actor_category_select.cpp` (use).
 
 ### Other empty-asm forms
 
@@ -682,6 +686,27 @@ the .c/.cpp files; headers aren't tried) found 206 removable, all of
 them alone (no pair or bundle was needed), among them 184 of 357
 `MATCH_HOLD_REG` pins. Applying all 206 at once kept
 `crashbandicootxs.gba: OK`.
+
+Step 2 applied them, and lib/'s 31, with the diffs reviewed by hand:
+de-pinned locals folded into their uses where the object stayed the
+same, and the comments that described a removed pin rewritten. That
+C cleanup made 7 more sites removable (six of DarkenPalette's pins,
+strcat's `i`), so 237 sites went in all. Seven sites the tool finds
+removable were kept on purpose; a dry run still lists them:
+
+- **A pin whose register the asm template names.** `itoa_arm`'s `num`
+  (the `swi` reads r0), `DivMod`'s `quotient`/`remainder` (`svc #6`),
+  `PollSaveTransfer`'s `result` (the template computes in r0) and
+  `GaxInfoPlay`'s `cnt`/`cnt2` (`ldrsh r1, ...` writes r1 while the
+  output operand is `%0`). Without the pin the code is only right
+  because the allocator happens to pick that register, so the object
+  stays the same while the C is wrong. Check this before applying a
+  removal next to an asm with hard registers in its template.
+- **Half of a symmetric hold.** `run_room.cpp`'s r0/r1 hold keeps
+  `MATCH_HOLD(hold1)` next to `MATCH_HOLD(hold)`. A never-assigned pin
+  is live from the top of the function anyway, so where a hold has only
+  the one start, step 2 dropped it (`ReleaseHang`, `PauseMenu::Draw`,
+  `GAX2_init`) and said so in the comment.
 
 ## Survey and conversion record (#576)
 
