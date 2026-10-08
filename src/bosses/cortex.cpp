@@ -6,7 +6,6 @@
 #include "level_state.hpp"
 
 extern "C" {
-#include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
 #include "memory.h"
@@ -282,22 +281,22 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
  * the level. */
 void CortexTargetCtrl::Update(MovingSprite *part)
 {
-    /* Pinned: the ROM keeps `n` in r5, `part` in r6 and `this` in r7.
-     * Unpinned, global allocation ranks `this` first (45 refs) and gives it
-     * r6, `n` r7 and `part` r5; no spelling tried (an inline for the step,
-     * locals for `n`, the blink flag through a pointer, ...) changed that.
-     * The C pinned `part` and `n` and needed 11 more pins and an `asm` for
-     * case 5's blink flag and frame clamps, which the C++ doesn't. */
-    MATCH_HOLD_REG(s32, n, r5);
-
-    if ((n = stepsLeft) != 0) {
+    /* `n` is the step block's own local: the ROM keeps it in r5, `part`
+     * in r6 and `this` in r7. Declared for the whole function (as the C
+     * had it), global allocation ranks `this` first (45 refs) and gives
+     * it r6, `n` r7 and `part` r5, which took an r5 pin on `n` (#662
+     * round 2). The C also pinned `part` and needed 11 more pins and an
+     * `asm` for case 5's blink flag and frame clamps, which the C++
+     * doesn't. */
+    if (stepsLeft != 0) {
         /* the ROM loads `dx` before `steps`, and stores both coordinates
          * after the second division */
+        s32 n;
         s32 total;
         s32 t;
         s32 nx, ny;
 
-        stepsLeft = --n;
+        n = --stepsLeft;
         t = dx * n;
         total = steps;
         nx = x - t / total;

@@ -132,7 +132,11 @@ void ActorSelf::Draw()
     s32 dist = depth;
     s32 scale = __divsi3(dist << 8, record->baseDepth);
     /* r5: unpinned, the projection and the screen y swap r4 and r5 (no
-     * spelling changes global allocation's ranking of the two). */
+     * spelling changes global allocation's ranking of the two). The
+     * projection is local to the first basic block, so local allocation
+     * gives it r4 before the screen y (global) is ranked; #662 round 2:
+     * scoping it (or `dist`, `scale`) in blocks, and testing `scale`
+     * instead of `flag`, don't change that. */
     MATCH_HOLD_REG(s32, proj, r5) = __divsi3(gActorFocalLength << 0xc, dist);
     s32 screenY;
     s32 screenX;

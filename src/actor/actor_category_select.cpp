@@ -40,7 +40,9 @@ extern "C" {
  * emits no code; it just makes the pointer outrank `base`. The scan
  * loops still use the global directly, which gives the ROM's loop-local
  * copies of the address. Matches under both compilers, in C and in C++
- * (#664 part 11b), and the C++ still needs the nudge.
+ * (#664 part 11b), and the C++ still needs the nudge; #662 round 2:
+ * `idx` dropped, used in the scan loops, the reset in an inline, or a
+ * `bool active` all differ.
  * NextThreshold is actor_spawn.cpp's `GetActorSpawnZ` address shape,
  * returned as a pointer so the load lands after the limit. */
 

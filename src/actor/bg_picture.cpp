@@ -1,6 +1,5 @@
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
@@ -32,33 +31,28 @@ extern "C" {
  * gets and a standalone compile doesn't (that one combines them into one
  * pointer plus 0x7c0, as in 8E8). So 7B0 calls the `static inline`
  * `MapFill` and 8E8 is the same loop written out as its own function.
- * The loop needs two spellings: the map entry read as `v = *map; v +=
- * base;` (the map pointer then outranks `v` for r5) and the high nibble
+ * The loop needs three spellings: the map entry read as `v = *map; v +=
+ * base;` (the map pointer then outranks `v` for r5), the high nibble
  * masked, `(*nib >> 4) & 0xf` (without the mask the next-row pointer and
- * row+1 swap ip/r9).
- *
- * 7B0 also needs two empty asm statements, which emit no code but each
- * add one reference to a value and so raise its register-allocation
- * priority (docs/matching/archive/late-rom-naked-retry.md):
- *  - `MATCH_USE(dest)` after MapFill's loop: without it the nibble
- *    pointer (13 refs over 56 insns) narrowly outranks `dest` (9 over 40)
- *    and they trade r5/r6. The same reference in 8E8 breaks 8E8, which
- *    is why MapFill is a separate copy of the loop rather than 8E8
- *    itself declared `inline`.
- *  - `MATCH_USE(cols)` before the call: `cols` and row+1 tie for
- *    r8/sl otherwise. */
+ * row+1 swap ip/r9), and the nibble toggle a `bool` (`odd = !odd`). With
+ * an `s32` toggle (`odd ^= 1`), 7B0 needed two empty asm statements,
+ * each adding a reference to a value to raise its register-allocation
+ * priority: `dest` after the loop (or the nibble pointer outranked it
+ * for r5) and `cols` before the call (or it tied with row+1 for r8/sl)
+ * (#662 round 2; docs/matching/archive/late-rom-naked-retry.md). 8E8
+ * compiles the same either way. */
 
 static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
 {
     u16 *dest;
     s32 base;
-    s32 odd;
+    bool odd;
     s32 r;
     s32 c;
 
     dest = (u16 *)BG_SCREEN_ADDR(26);
     base = GetCellAnimFreeTile() - 0x200;
-    odd = 0;
+    odd = false;
     for (r = 0; r < rows; r++) {
         for (c = 0; c < cols; c++) {
             s32 v, n;
@@ -72,7 +66,7 @@ static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
             } else {
                 n = *nib & 0xf;
             }
-            odd ^= 1;
+            odd = !odd;
             n = (n << 12) | v;
             if (c < 0x20)
                 dest[c] = n;
@@ -81,7 +75,6 @@ static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
         }
         dest += 0x20;
     }
-    MATCH_USE(dest); /* extra reference: dest outranks nib for r5 */
 }
 
 void LoadBgPicture(u8 *pic)
@@ -97,7 +90,6 @@ void LoadBgPicture(u8 *pic)
     tiles = *(u32 *)pic;
     pic += 4;
     tileData = pic + ((cols * rows + 1) / 2) * 4;
-    MATCH_USE(cols); /* extra reference: cols outranks row+1 for r8 */
     MapFill(tileData + tiles * 32, (u16 *)pic, cols, rows);
     REG_DISPCNT |= DISPCNT_BG1_ON;
     REG_BG1CNT = 0x5A07;
@@ -114,13 +106,13 @@ void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows)
 {
     u16 *dest;
     s32 base;
-    s32 odd;
+    bool odd;
     s32 r;
     s32 c;
 
     dest = (u16 *)BG_SCREEN_ADDR(26);
     base = GetCellAnimFreeTile() - 0x200;
-    odd = 0;
+    odd = false;
     for (r = 0; r < rows; r++) {
         for (c = 0; c < cols; c++) {
             s32 v, n;
@@ -134,7 +126,7 @@ void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows)
             } else {
                 n = *nib & 0xf;
             }
-            odd ^= 1;
+            odd = !odd;
             n = (n << 12) | v;
             if (c < 0x20)
                 dest[c] = n;

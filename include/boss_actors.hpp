@@ -101,6 +101,29 @@ static inline void EnterHovercraftState(s32 st, s32 idx)
         a->animTime = 0;
 }
 
+/* ApplyHovercraftFlashColor: colour 15 of the hovercraft's BG and OBJ
+ * palettes (gFlashBgPalette, gFlashObjPalette) white when `flag` is set,
+ * or else the colour saved the first time. SetHovercraftFlashColor
+ * (hovercraft_parts.cpp) is its out-of-line copy; RunHovercraftState
+ * inlines it twice. Each branch stores both palettes: that gives the
+ * ROM's white loaded into r2 and copied to r1, which a colour local
+ * assigned in the branches and stored once after them only got with an
+ * r1 pin (#662 round 2). */
+static inline void ApplyHovercraftFlashColor(u8 flag)
+{
+    if (gHovercraftFlashColorSaved == 0) {
+        gHovercraftFlashSavedColor = gFlashBgPalette[15];
+        gHovercraftFlashColorSaved = 1;
+    }
+    if (flag != 0) {
+        gFlashBgPalette[15] = RGB_WHITE;
+        gFlashObjPalette[15] = RGB_WHITE;
+    } else {
+        gFlashBgPalette[15] = gHovercraftFlashSavedColor;
+        gFlashObjPalette[15] = gHovercraftFlashSavedColor;
+    }
+}
+
 /* The hovercraft's fireball (gHovercraftFireballVtable, hovercraft.cpp;
  * the airship fireball's layout): the side guns fire it (SpawnHovercraftFireball). It sets the
  * orbit fields up as the airship's does, but never reads them: it flies

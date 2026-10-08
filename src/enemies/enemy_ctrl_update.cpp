@@ -5,7 +5,6 @@
 #include "audio.hpp"
 
 extern "C" {
-#include "match.h"
 #include "util.h"
 #include "memory.h"
 #include "level.h"
@@ -149,15 +148,23 @@ void EnemyCtrl::Update(MovingSprite *)
             vol = 0x100 - (d - 0x20) * 2;
             gAudioContext->PlayAmbientSfx(SFX_SAUCER_HUM, 8, vol, false);
         }
-        if (target->animDone && mode == 3) {
-            MovingSprite *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, target);
+        {
+            /* The first test reads the target through a local and the
+             * second reads it again: the ROM reloads the target and its
+             * animDone for the mode-5 test (#662 round 2; the C read
+             * animDone through a volatile cast). */
+            MovingSprite *t = target;
 
-            popup = pop;
-            pop->kind = 3;
-            gAudioContext->PlaySfx(SFX_SAUCER_ATTACK, 0x100);
-        } else if (*(vu8 *)&target->animDone && mode == 5) {
-            MarkGone(popup);
-            popup = 0;
+            if (t->animDone && mode == 3) {
+                MovingSprite *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, t);
+
+                popup = pop;
+                pop->kind = 3;
+                gAudioContext->PlaySfx(SFX_SAUCER_ATTACK, 0x100);
+            } else if (target->animDone && mode == 5) {
+                MarkGone(popup);
+                popup = 0;
+            }
         }
         UpdatePatrol();
         UpdateAttackCycle();
@@ -269,37 +276,16 @@ void EnemyCtrl::Update(MovingSprite *)
  * What the match needs (late NAKED retry 3,
  * docs/matching/archive/late-naked-retry-3.md): the squash stores the
  * layer from an `s32 one` local, so the `1` is loaded before the `-4`
- * mask and shared with the `gone` OR, and `MarkGoneFreshBit` builds its
- * bitmap `1` with the constant-init asm after the shift count, so it
- * doesn't reuse `one`. The C also held r2 live across the first
- * MarkGone's id compare with an asm-only register variable, to get the
- * ROM's reload registers; g++ gives them without it. */
+ * mask and shared with the `gone` OR. The squash's MarkGone is
+ * Entity::MarkGone (the bitmap indexed, the method's own `1`), which
+ * gives the ROM's fresh `movs #1` after the shift count; the C built that
+ * `1` with a constant-init asm (#662 round 2). The C also held r2 live
+ * across the first MarkGone's id compare with an asm-only register
+ * variable, to get the ROM's reload registers; g++ gives them without
+ * it. */
 static inline MovingSprite *SpawnAt(s32 kind, s32 x, s32 y)
 {
     return gEntitySpawner->SpawnEffectPart(kind, 2, x, y, 0);
-}
-
-/* MarkGone whose bitmap `1` is loaded after the shift count and isn't
- * shared with an earlier 1 (see above). The MATCH_CONST is what keeps it
- * from being entity_bits.h's ENTITY_MARK_GONE. */
-static inline void MarkGoneFreshBit(MovingSprite *t)
-{
-    t->f.b.gone = 1;
-    if (t->id != 0xFFFF)
-        do {
-            s32 id = t->id;
-            u8 *base = (u8 *)gEntityFlags;
-            s32 word = id / 32;
-            s32 off = word * 4;
-            u32 *slot = (u32 *)(base + 0x108);
-            s32 bit;
-            s32 sh;
-
-            slot = (u32 *)((u8 *)slot + off);
-            sh = id - word * 32;
-            MATCH_CONST(bit, 1); /* movs #1 here, not CSE'd */
-            *slot |= bit << sh;
-        } while (0);
 }
 
 void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
@@ -349,7 +335,7 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
 
             obj->f.b.visible = 0;
             obj->mirrorFlags.gfxMode = one;
-            MarkGoneFreshBit(target);
+            target->MarkGone();
         }
         break;
     }

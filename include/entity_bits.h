@@ -30,8 +30,7 @@
  *
  * Copies that are still spelled out, each with a comment saying why:
  * graphics.cpp's MarkEntityGone itself and
- * crate_break.cpp (other asm/pins or wrapper), and enemy_ctrl_update.cpp's
- * MarkGoneFreshBit (a MATCH_CONST inside the sequence). The C++ classes
+ * crate_break.cpp (other asm/pins or wrapper). The C++ classes
  * use Entity::MarkGone (include/entity.hpp), the same code with the
  * bitmap indexed. */
 

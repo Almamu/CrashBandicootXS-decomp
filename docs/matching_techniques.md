@@ -877,6 +877,43 @@ Round 2 in level/, objects/, vehicle/, cutscene/ and pickups/ (C++):
 - **A dead load through a pointer-to-volatile parameter**
   (`sub_8026C80`) instead of a volatile cast in the body.
 
+Round 2 in bosses/, enemies/ and actor/ (C++):
+
+- **A `bool`.** `CanPauseActorCategory` returns `!` of a `bool`
+  function's result: the ROM's `movs r1, #1; eors r0, r1` on the call's
+  r0 (through an `s32` the result is copied away; the C had the two
+  instructions in asm, the first C++ a pin). `MapFill`'s nibble toggle
+  as a `bool` (`odd = !odd`) replaces `LoadBgPicture`'s two `MATCH_USE`
+  priority nudges.
+- **A local's scope.** `CortexTargetCtrl::Update`'s step count declared
+  in the step's `if` block instead of for the whole function gives the
+  ROM's r5/r6/r7 without a pin.
+- **Constants stored where they are used.** The hovercraft's flash
+  colour stored to both palettes in each branch, white as a constant,
+  instead of a colour local stored after the branches: the ROM's white
+  loaded into r2 and copied to r1, which took an r1 pin
+  (`SetHovercraftFlashColor`, and `RunHovercraftState`, which inlines it
+  as `ApplyHovercraftFlashColor`). `UpdateHovercraftHitFlash`'s palette
+  loop as an indexed `for` with a constant white drops two pins and a
+  volatile re-read of the timer.
+- **The class's own method.** `EnemyCtrl::HandleEvent`'s squash calls
+  `Entity::MarkGone`, whose `1` is the ROM's fresh `movs #1` (a
+  constant-init asm before); `EnemyCtrl::Update` reads the target
+  through a local for the first test and again for the second, the
+  ROM's reload (a volatile cast before).
+- **A flag the ROM keeps.** `JetpackCheckpointText::Draw` is
+  `ActorSelf::Draw` at a fixed scale with its size tests on `scale`: the
+  flag folds in the tests but not in the OR, where reload rematerializes
+  it as the ROM's `movs r0, #0` (a constant-init before).
+- **What didn't move** (evidence in each site's comment): swaps where
+  the ROM's load order and its allocation come from different spellings
+  (`UpdateOscillateX`, `UpdateTriggerBox`, `UpdateHop`), where the
+  permuter on the C++ reached the ROM only through `do { } while (0)`
+  wrappers (loop-depth weighting of the references), `x++; x--;` pairs
+  or dummy stores; `MegaMixCtrl::Update`'s spill-register rotation for
+  the 0x104 reload; the unused saved registers of `UpdateBob` and
+  `UpdateOscillateY`.
+
 ## Survey and conversion record (#576)
 
 The conversion is complete. `tools/match_idioms.py` after part 4
