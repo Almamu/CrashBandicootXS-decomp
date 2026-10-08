@@ -169,7 +169,10 @@ static inline void SetPlayerBusy(void)
  * mode 1, a TNT crate the player touches is lit.
  *
  * The shapes the ROM needs are in the comments below; the C was matched
- * over three passes (docs/matching/archive/huge-naked-retry-3.md). */
+ * over three passes (docs/matching/archive/huge-naked-retry-3.md). The
+ * six BOX_ADDRs are crate_touch.cpp's case (its #662 round 2 note);
+ * here no subset of them can go: -fno-gcse, which frees the overlap
+ * tests' sites there, puts this function over 2000 lines off. */
 void Crate::QueuePlayerCollision(s32 idx)
 {
     struct {

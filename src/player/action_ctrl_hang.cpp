@@ -244,11 +244,12 @@ void ActionCtrl::StateUnusedHang()
  * (animation 0x1B, held on its last frame), Y entry 4.
  *
  * Kept from the C: reload loads the 0x600 into a spill register, and the
- * ROM's is r3. With r2 and r3 both free it takes r2, and every later
- * reload then rotates through {1,2,6} instead of the ROM's {1,3,6}.
- * `hold`, pinned to r2 and never assigned, keeps r2 live from the start
- * of the function to its `MATCH_USE` after the add (an empty asm, no
- * code). */
+ * ROM's is r3. With r2 and r3 both free it takes r2 (the only difference
+ * left in C++: the later reloads are the ROM's). `hold`, pinned to r2 and
+ * never assigned, keeps r2 live from the start of the function to its
+ * `MATCH_USE` after the add (an empty asm, no code). Round 2 of #662:
+ * `part->y = part->y + 0x600`, a Player copy, `0x600u`, `-= -0x600` and
+ * the 0x600 in a local all take r2. */
 void ActionCtrl::ReleaseHang()
 {
     Player *p;
