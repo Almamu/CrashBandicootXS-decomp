@@ -6,7 +6,7 @@
  * boss objects. Every function they define is declared here, including
  * those that the file layout put in actor or vehicle files for ROM order
  * (the airship and hovercraft teardown functions in actor_anim.c, the
- * hovercraft spawners in jetpack_spawn.c, ...), plus their globals and
+ * hovercraft spawners in jetpack_spawn.cpp, ...), plus their globals and
  * data tables.
  *
  * Declarations here are the functions' real prototypes, copied from
@@ -137,11 +137,9 @@ extern void AirshipStateExplode(void);
 extern void AirshipStateFall(void);
 
 /* src/bosses/airship_fireball.cpp: AirshipFireball's methods
- * (boss_actors.hpp) under their C names, for the vtable and
- * SpawnAirshipFireball */
+ * (boss_actors.hpp) under their C names, for the vtable */
 extern void DamageAirshipFireball(void *self, s32 delta);
 extern void UpdateAirshipFireball(struct actor_self *self);
-extern void *CreateAirshipFireball(void *self, void *part, s32 b, s32 c, s32 d);
 extern u8 IsAirshipFireballUnshootable(void *self);
 
 /* src/bosses/airship_graphics.cpp */
@@ -329,7 +327,7 @@ extern void AirshipStateInactive(void);
 extern void AirshipFireballStateOrbit(struct actor_orbit *self);
 extern void AirshipFireballStateSpiralIn(struct actor_orbit *self);
 
-/* src/vehicle/jetpack_spawn.c */
+/* src/vehicle/jetpack_spawn.cpp */
 extern void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c);
 extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 d);
 extern void SpawnHovercraftLauncher(s32 a, s32 b, s32 c);

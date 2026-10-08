@@ -16,14 +16,14 @@
  * (`CreatePolarCheckpointText`-`PolarPlayerStateCaught`) are still raw - this file only covers
  * the literal tail of that raw `.s` file, a self-contained run of
  * accumulator-drain/hazard-threshold helpers on the same `self` object
- * family documented in polar_player_actions.c/jetpack_player.c, operating on the
+ * family documented in polar_player_actions.c/jetpack_player.cpp, operating on the
  * polar player globals (`gPolarPauseLocked`-`gPolarPlayerVelY`) those files
  * already established (`gPolarQueuedWumpa`'s "reward" accumulator,
  * the `gPolarPlayerInactive`-`gPolarPlayerVelY` quintet). See
  * docs/rom_map.md's "boss's BG2 spin/zoom effect..." section, which
  * already reads `DispensePolarWumpa` as one of a matched pair of accumulator-
  * drain/reward-dispenser functions (the other being `DispenseJetpackWumpa` in
- * jetpack_player.c) and `SpawnPolarCollectedWumpa` as a "spawn effect type N" family
+ * jetpack_player.cpp) and `SpawnPolarCollectedWumpa` as a "spawn effect type N" family
  * member - both confirmed here by this function's own body.
  *
  * `self` is `struct actor_self`; the animation-reset blocks store
@@ -36,7 +36,7 @@
  * `gPolarWumpaDispenseTimer` cooldown elapses, dispenses one of four tiers of
  * reward (via `SpawnPolarCollectedWumpa` at `self`'s position) sized by the
  * accumulator's own magnitude, and plays a cue. Exact structural twin
- * of `DispenseJetpackWumpa` (jetpack_player.c) on a different accumulator/cooldown
+ * of `DispenseJetpackWumpa` (jetpack_player.cpp) on a different accumulator/cooldown
  * pair - see docs/rom_map.md. */
 void DispensePolarWumpa(void *selfArg)
 {
@@ -126,7 +126,7 @@ void PolarPlayerStateRecover(void *selfArg)
  * budget (`gPolarPlayerVelY`) into `y`, advances `z`
  * by a fixed step, and derives a camera-relative depth
  * (`depth`, via `GetCellAnimDistance`) - the same shape as `JetpackPlayerStateFall`/
- * `JetpackPlayerStateFinish` (jetpack_player.c). Once that depth drops to/below the
+ * `JetpackPlayerStateFinish` (jetpack_player.cpp). Once that depth drops to/below the
  * far threshold, triggers a screen-flash (`FadeBrightness`) once (latched
  * via `gPolarFadeStarted`) and also latches `gPolarPauseLocked` (this
  * axis's own one-shot flag, see `IsPolarPauseLocked`); once it drops to/below

@@ -225,7 +225,7 @@ The first batch (all pointer tables, all byte-exact):
 | `anim_frames_17a850.c` | `0x0817A850` | 4 keyframes (`struct anim_frame_record`) |
 | `frame_table_17a880.c` | `0x0817A880` | 123 frame pointers |
 | `anim_family_17aa6c.c` | `0x0817AA6C` | a palette, 2 boxes, then categories 3-6: 2 OBJ palettes, animation table `gCategoryFamily1AnimTable`, keyframe and frame arrays |
-| `actor_pmf_17c1c0.c` | `0x0817C1C0` | 1 actor PMF table |
+| `actor_pmf_17c1c0.cpp` | `0x0817C1C0` | 1 actor PMF table |
 | `palette_strip_17c200.c` | `0x0817C200` | a 3-frame palette strip |
 | `actor_pmf_17c260.c` | `0x0817C260` | 2 actor PMF tables |
 | `actor_pmf_17c2b8.cpp` | `0x0817C2B8` | 1 actor PMF table, in C++ (`AirshipFireball::stateFuncs`, docs/cplusplus.md) |
@@ -845,7 +845,7 @@ u16 zeros;         // ...
 
 The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
 `src/iwram/sprite_arm.c`, the `gUnpackRleSpriteFrameFunc` hook, called by
-`polar_player.c`, `jetpack_spawn.c` and `company_logos.cpp`)
+`polar_player.c`, `jetpack_spawn.cpp` and `company_logos.cpp`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and
 `gYetiFrames`) point at the frame headers.

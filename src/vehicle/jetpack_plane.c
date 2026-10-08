@@ -505,7 +505,7 @@ void UpdateJetpackCannonball(struct jetpack_cannonball *self)
 }
 
 /* Constructor: 1 hit point and the given velocity - the same shape as
- * CreateJetpackShot (jetpack_shot.c), matched with the same register
+ * CreateJetpackShot (jetpack_shot.cpp), matched with the same register
  * arrangement (the constant pinned to r5, the two stack arguments left
  * to the allocator). */
 void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c, s32 d,

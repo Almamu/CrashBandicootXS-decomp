@@ -40,7 +40,7 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
  * pointer-to-member call), left/right steering while
  * `gPolarSteerEnabled` is set, then drives - or first spawns - the
  * companion object in `gPolarAkuAku`. Same shape as
- * `jetpack_spawn.c`'s `UpdateJetpackPlayer`. */
+ * `jetpack_spawn.cpp`'s `UpdateJetpackPlayer`. */
 void UpdatePolarPlayer(struct actor_self *self)
 {
     DispensePolarWumpa(self);
@@ -126,7 +126,7 @@ static inline u8 *CurFrame(struct actor_self *self)
  * double-sized when drawn behind the camera's reference depth), culls
  * against the screen, uploads the frame's tiles into the other of the
  * two VRAM buffers when the frame changed, and queues the OAM entry.
- * The same code as `jetpack_spawn.c`'s `DrawJetpackPlayer` with a different
+ * The same code as `jetpack_spawn.cpp`'s `DrawJetpackPlayer` with a different
  * projection constant. */
 void DrawPolarPlayer(struct actor_self *self)
 {
@@ -336,7 +336,7 @@ end:
  * keyframe-table byte-pair lookup (`self`'s part table, indexed by
  * `self+0xc`, offset by `self+8`'s frame accumulator, into a *second*
  * pointer array at `self+4`) already established for `AllocJetpackPlayerTiles`
- * (`jetpack_run.c`, `docs/matching/archive/issue-56-0x0802f0dc-actor.md`);
+ * (`jetpack_run.cpp`, `docs/matching/archive/issue-56-0x0802f0dc-actor.md`);
  * arms `gPolarPlayerTileBuffer`, clears `gPolarPlayerLastFrame`. The ROM's
  * "multiply into a copy, copy again, then shift" sequence is simply
  * old_agbcc's code for `h * w * 32` - no register forcing needed. */

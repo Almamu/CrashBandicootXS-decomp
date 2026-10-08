@@ -13,7 +13,9 @@
  * ones. The constructors are declared with ActorSelf's arguments and the
  * extra ones of their C prototypes (Create*, Init*, named in a comment);
  * where the ROM only has a constructor inlined and its code is still C,
- * its signature is a placeholder until it is converted.
+ * its signature is a placeholder until it is converted. Part 11e gives
+ * the jetpack player (JetpackPlayer), its shot and the checkpoint banner's
+ * and explosion's constructors their code.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
 #pragma interface
@@ -287,12 +289,61 @@ public:
 /* The jetpack levels (7 vtable slots: HpActor's; the balloon crates
  * add an 8th). */
 
+/* The jetpack player (gJetpackPlayerVtable; src/vehicle/jetpack_spawn.cpp,
+ * jetpack_player.cpp and jetpack_run.cpp): its hit points are HpActor's,
+ * shown as a percentage (GetHp); the rest of its state is in the
+ * gJetpack* globals (vehicle.h), as the ROM has it. CreateJetpackPlayer
+ * makes it gActorList, the actor list's root. */
+class JetpackPlayer : public HpActor
+{
+public:
+    JetpackPlayer(const struct anim_table_record *rec, s32 z); // InitJetpackPlayer
+    virtual ~JetpackPlayer();                                  // 1 DestroyJetpackPlayer
+    virtual void Update();                                     // 2 UpdateJetpackPlayer
+    virtual void Draw();                                       // 3 DrawJetpackPlayer
+    virtual void Damage(s32 amount);                           // 4 DamageJetpackPlayer
+    virtual s32 GetHp();                                       // 6 GetJetpackPlayerHpPercent
+
+    void SteerY();               // SteerJetpackPlayerY
+    void SteerX();               // SteerJetpackPlayerX
+    void DispenseWumpa();        // DispenseJetpackWumpa
+    s32 CountBomber();           // CountJetpackBomber
+    void SetCheckpoint();        // SetJetpackCheckpoint
+    s32 IsPauseLocked();         // IsJetpackPauseLocked
+    void AnimatePalette();       // AnimateJetpackPlayerPalette
+    void Heal(s32 delta);        // HealJetpackPlayer
+    void QueueWumpa(s32 delta);  // QueueJetpackWumpa
+    void RunState();             // RunJetpackPlayerState
+    void FinishRun();            // FinishJetpackRun
+    void PassRing(s32 x, s32 y); // PassJetpackRing
+    void AllocTiles();           // AllocJetpackPlayerTiles
+
+    /* The states, indexed by `state` (stateFuncs, gJetpackPlayerStateFuncs). */
+    void StateEnter();     // JetpackPlayerStateEnter
+    void StateFly();       // JetpackPlayerStateFly
+    void StateRollLeft();  // JetpackPlayerStateRollLeft
+    void StateRollRight(); // JetpackPlayerStateRollRight
+    void StateFall();      // JetpackPlayerStateFall
+    void StateFinish();    // JetpackPlayerStateFinish
+    void StateBoost();     // JetpackPlayerStateBoost
+    void StateResume();    // JetpackPlayerStateResume
+
+    typedef void (JetpackPlayer::*StateFunc)();
+    static const StateFunc stateFuncs[8];
+};
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == 0x58);
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackPlayer) == sizeof(struct actor_hp));
+
 /* The checkpoint banner, drawn at a fixed screen position. */
 class JetpackCheckpointText : public HpActor
 {
 public:
-    // constructor inlined where it is used
-    JetpackCheckpointText(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
+    /* Inline: CreateJetpackCheckpointText expands it. */
+    JetpackCheckpointText(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : HpActor(rec, x, y, z, 1)
+    {
+    }
     virtual ~JetpackCheckpointText(); // 1 DestroyJetpackCheckpointText
     virtual void Update();            // 2 UpdateJetpackCheckpointText
     virtual void Draw();              // 3 DrawJetpackCheckpointText
@@ -302,20 +353,32 @@ public:
 class JetpackExplosion : public HpActor
 {
 public:
-    // constructor inlined where it is used
-    JetpackExplosion(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
+    /* Inline: CreateJetpackExplosion expands it. */
+    JetpackExplosion(const struct anim_table_record *rec, s32 x, s32 y, s32 z)
+        : HpActor(rec, x, y, z, 1)
+    {
+    }
     virtual ~JetpackExplosion(); // 1 DestroyJetpackExplosion
     virtual void Update();       // 2 UpdateJetpackExplosion
     virtual s32 IsUnshootable(); // 5 IsJetpackExplosionUnshootable
 };
 
+/* The jetpack player's shot (src/vehicle/jetpack_shot.cpp): it flies by
+ * its speed, and hits the first shootable actor or the airship. */
 class JetpackShot : public HpActor
 {
 public:
+    s32 velX; // 0x58
+    s32 velY; // 0x5C
+
     // CreateJetpackShot
     JetpackShot(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 velX, s32 velY);
-    virtual ~JetpackShot(); // 1 DestroyJetpackShot
+    virtual ~JetpackShot();      // 1 DestroyJetpackShot
+    virtual void Update();       // 2 UpdateJetpackShot
+    virtual s32 IsUnshootable(); // 5 IsJetpackShotUnshootable
 };
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackShot) == 0x60);
 
 class JetpackPlane : public HpActor
 {

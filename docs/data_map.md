@@ -206,7 +206,7 @@ pixels, the last windows ran past each region's end, and the tiles came
 out scrambled. The `0x30` byte is the clue: these frames are
 **compressed**, and they are never passed to `LoadSpriteFrameTiles`.
 
-The consumers (`polar_player.c`, `jetpack_spawn.c`,
+The consumers (`polar_player.c`, `jetpack_spawn.cpp`,
 `company_logos.cpp`) call `gUnpackRleSpriteFrameFunc(vramBlock, frame)`.
 That IWRAM variable is initialised by the `crt0` copy of the IWRAM image
 (`0x087E55E4 + 0x874`) to `0x03000634`, an ARM routine in the same image.
