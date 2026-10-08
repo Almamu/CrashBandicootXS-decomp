@@ -1,11 +1,11 @@
 @ IntrMain: the interrupt dispatcher, the first thing in the IWRAM image
 @ (runs at 0x03000000, stored in ROM at 0x087E55E4; crt0 copies the image
-@ and irq.c's IrqSetup points INTR_VECTOR here). Hand-written ARM (the
+@ and irq.cpp's IrqSetup points INTR_VECTOR here). Hand-written ARM (the
 @ AGB SDK crt0 style, one branch per IRQ bit, no nesting), so it is
 @ excluded from progress like crt0 (tools/report_units.py HANDWRITTEN).
 @
 @ It acknowledges the lowest pending, enabled interrupt in REG_IF and jumps
-@ to its handler in gIntrTable (irq.c's handler table, one word per
+@ to its handler in gIntrTable (irq.cpp's handler table, one word per
 @ IRQ bit). A VBlank also sets bit 0 of the BIOS IntrCheck flags at
 @ 0x03FFFFF8 (0x04000000 - 8) for VBlankIntrWait. A Game Pak interrupt
 @ (cartridge pulled) hangs on the last test instead of being dispatched.

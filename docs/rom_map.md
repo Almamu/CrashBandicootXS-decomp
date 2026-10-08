@@ -449,7 +449,7 @@ one sample read.
 | `0x08029ED0`-`0x0802B348`ish | ~5.6 KB | actor system | high | `SelectActorCategory`, `InitActorPart`, `DrawActor`, `ConstructAnimTableState`, `ConstructActorPart` - the vtable/animation system documented in `docs/graphics.md` |
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
-| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset.c` |
+| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset.cpp` |
 | `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/actor/actor_anim.c` |
 | `0x0803B060`-`0x0803B8B0` | ~2.1 KB | actor system | medium | `GetAnimFrameData`, 43 other still-unnamed neighbors in `code_3_3.s` |
 
@@ -654,7 +654,7 @@ them directly:
   passed as the `struct oam_shadow_buffer *` argument to `HideUnusedOamEntries`
   (matched, `src/gfx/graphics.c`) - and `HideUnusedOamEntries` shows up
   repeatedly as an outgoing call from these leftover actor runs too, as
-  does `WaitForVBlank` (matched, `src/system/irq.c`'s region). So the same
+  does `WaitForVBlank` (matched, `src/system/irq.cpp`'s region). So the same
   OAM-shadow-buffer singleton and the same low-level sync helper get
   used by text layout, the 94 KB zone's frame-end display commit
   function, and these actor-behavior functions alike - one shared piece
@@ -1800,7 +1800,7 @@ dispatched (all reached via `bl`); the two concrete new leads:
   suggesting they're sibling state machines on the same object-type
   family. `UpdatePlayerCtrl` (2088 B) is a per-frame input/state-machine
   handler: reads D-pad input via the already-matched `GetDpadDirection`
-  (`src/system/irq.c`), gates on a child object's `+0x2D` type field
+  (`src/system/irq.cpp`), gates on a child object's `+0x2D` type field
   against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
   `self+0x22` - strong evidence of core **player movement/action
   control**, referencing a new unlabeled table `gPlayerCtrlStateFuncs`.
@@ -2760,7 +2760,7 @@ tables:
   - show a hint icon when near a specific object type, distance varying
   by type.
 - **`ApplyPlayerCtrlSwimDrift`** (484 B): dispatches on a `self+8` type (`2`/`3`/
-  default), calls the matched `GetDpadDirection` (`src/system/irq.c`), gates
+  default), calls the matched `GetDpadDirection` (`src/system/irq.cpp`), gates
   on `gRoomFrameCount`'s low 7 bits `==0` (a periodic ~128-frame
   check - `gRoomFrameCount` is the same counter the post-fade
   investigation above also touches) **and** an input check
@@ -3435,14 +3435,14 @@ The ~0.4 KB of tiny leaf singletons left unlabeled by the split above
 noise. **`FadePaletteToBlack`**, the very first function in the entire file,
 loops calling **`DarkenPalette`** at increasing factors (`0, 2, 4, ...,
 0x10`) - and `DarkenPalette` is not raw asm at all, it's **already matched**
-(`src/gfx/fade.c`), documented there as blending the whole
+(`src/gfx/fade.cpp`), documented there as blending the whole
 512-entry palette toward black by `factor/16` per channel. Between each
-step, `FadePaletteToBlack` calls `WaitForVBlank` (matched, `src/system/irq.c`'s
+step, `FadePaletteToBlack` calls `WaitForVBlank` (matched, `src/system/irq.cpp`'s
 region - a VBlank-wait/commit helper used throughout this document) and
 DMAs the result out - the textbook shape of a **fade-to-black effect**,
 one step per frame. `fade.c`'s own header comment already
 anticipated this: *"Sits right after `FadeBrightness`
-(`src/gfx/fade.c`) and before whatever's still raw in
+(`src/gfx/fade.cpp`) and before whatever's still raw in
 `asm/code_3_1_7.s`"* - this is that continuation, finally identified.
 
 The other 12 functions in the cluster (16-24 B each) are get/set
@@ -4025,7 +4025,7 @@ concrete evidence: `LZ77UnCompVram`/`RLUnCompVram` sit at
 `0x0803A950`, only ~630 bytes after the last address `docs/audio.md`
 names as GAX2-internal (`0x0803A325`) - and those two wrapper functions
 are **confirmed non-audio**, directly referenced by
-`src/system/asset.c`'s already-matched `LoadTaggedAsset`. Since
+`src/system/asset.cpp`'s already-matched `LoadTaggedAsset`. Since
 functions from one original source file are contiguous in this ROM, GAX2
 can't extend past wherever its last real function ends, somewhere at or
 before `0x0803A950` - **at least 1.5 KB less than previously estimated**,

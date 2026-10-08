@@ -1,7 +1,7 @@
 #ifndef __IRQ_H__
 #define __IRQ_H__
 
-/* The interrupt table and the VBlank callbacks (src/system/irq.c).
+/* The interrupt table and the VBlank callbacks (src/system/irq.cpp).
  * IntrMain (asm/intr_main.s) dispatches each IRQ through gIntrTable. */
 
 #include "core.h"

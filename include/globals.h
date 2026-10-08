@@ -29,7 +29,7 @@ struct sprite_bank_table;
 struct vram_upload_cursor;
 
 /* The input word: the held keys in the low half, the keys newly pressed
- * this frame in the high half (UpdateKeys, irq.c). The action
+ * this frame in the high half (UpdateKeys, irq.cpp). The action
  * controller's handlers read it whole (`all`); the menus read the
  * halves. */
 struct held_pressed_pair {

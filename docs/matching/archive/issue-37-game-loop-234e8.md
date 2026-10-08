@@ -26,7 +26,7 @@ that stash and restore a `0x68`-byte block at `self+0xe4`, a packed
 bitfield accessor pair at `self+0x14c`/`0x14d`, the `PlayCutscene`
 mode-trampoline family, a DMA3/VRAM refresh pass gating on
 `self+0x0 <= 0x1000` ("near start of level"), a `REG_BLDCNT`/
-`REG_BLDALPHA` shadow-word rebuild (see `src/util/aabb.c`'s
+`REG_BLDALPHA` shadow-word rebuild (see `src/util/aabb.cpp`'s
 `CommitBlendRegs`, which commits that same shadow to hardware), and the
 level-end teardown/VRAM-flush tail. Sandwiched in the middle of all
 that: two large functions (`PlayRoom`, ~300 instructions;
@@ -275,7 +275,7 @@ instructions rebuilding the `gBlendRegs` `REG_BLDCNT`/
 `REG_BLDALPHA` shadow word) stayed exactly as impractical to hand-pin
 register-by-register as the original parked note described. What
 closed it was the same "one continuous opaque `asm volatile` island"
-technique `AllocVramTileBlock` (`src/gfx/sprite_frame.c`)
+technique `AllocVramTileBlock` (`src/gfx/sprite_frame.cpp`)
 and `UpdateActorPaletteCycle` (`src/actor/actor.c`) established: instead
 of fighting this compiler's natural register allocation instruction by
 instruction, the whole sequence (both the `if`- and `else`-branch

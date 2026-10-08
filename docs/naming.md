@@ -22,7 +22,7 @@ function, match *that* name's casing over generic PascalCase rules.
 ## Exception: snake_case for the memory allocator
 
 `mem_alloc`/`mem_free`/`mem_heap_init`/`mem_collect`/`mem_free_bytes` (and
-their `static` helpers) in `src/system/memory.c` intentionally use
+their `static` helpers) in `src/system/memory.cpp` intentionally use
 snake_case, matching the `malloc`/`free`-style C standard library
 convention they mirror. This is a **deliberate exception for this specific
 subsystem**, not a general "system-level code can be snake_case" rule -

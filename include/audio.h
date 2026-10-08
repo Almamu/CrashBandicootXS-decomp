@@ -96,7 +96,7 @@ extern const u8 gGaxMusicData[];
 extern const void *const gSongTable[SONG_COUNT];
 
 /* src/iwram/iwram_data.c */
-/* VBlankHandler (src/system/irq.c) calls GAX_irq while this is set. */
+/* VBlankHandler (src/system/irq.cpp) calls GAX_irq while this is set. */
 extern u8 gGaxIrqEnabled;
 /* PlaySfx's two-voice round robin. */
 extern u32 gSfxVoiceToggle;

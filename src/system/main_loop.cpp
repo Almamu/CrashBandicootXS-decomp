@@ -1,11 +1,13 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
 #include "frontend.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* The game's top-level loop (called once from `AgbMain`, see
- * src/system/main.c): sets up the central per-level state object
+ * src/system/main.cpp): sets up the central per-level state object
  * (`gLevelState`, see docs/rom_map.md's "hud"/"game_loop"
  * investigations for what its fields mean), the boot language menu
  * (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`, src/audio/

@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
+}
 
 
 s32 AgbMain(void)

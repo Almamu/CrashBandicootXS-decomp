@@ -1,9 +1,13 @@
+#include "spawners.hpp"
+
+extern "C" {
 #include "core.h"
 #include "system.h"
 #include "audio.h"
 #include <gax.h>
 #include <agb_syscall.h>
 #include "globals.h"
+}
 
 /* Points an IRQ's handler at IrqEmptyHandler (its IE bit is left alone). */
 void IrqClearHandler(s32 interruptIndex)
@@ -17,7 +21,7 @@ void IrqRestoreHandler(s32 interruptIndex)
 {
     irq_handler_t tmp = gIntrTable[interruptIndex] = gPrevIntrTable[interruptIndex];
 
-    if (tmp == NULL) {
+    if (tmp == 0) {
         u16 previousIMEvalue = REG_IME;
         REG_IME = 0;                      // disable IME
         REG_IE &= ~(1 << interruptIndex); // disable specific interrupt
@@ -164,7 +168,7 @@ void SetFrameLimit(u32 interval)
     gFrameLimitEnabled = 1;
 }
 
-extern void _call_via_r0(void);
+extern "C" void _call_via_r0(void);
 
 /* The VBlank IRQ handler: calls GAX_irq while gGaxIrqEnabled is set, calls every VBlank callback (through
  * _call_via_r0, with the pointer left in r0 by the test) and counts the
@@ -226,12 +230,11 @@ s32 UpdateKeys(void *input)
     return 0;
 }
 
-/* Clears gKeys (held and newly pressed). The KeyInput constructor
- * (spawners.hpp): it returns `self`, which is why the ROM keeps r0 free
- * and builds the stores in r1/r2. */
-void *ClearKeys(void *self)
+/* ClearKeys: clears gKeys (held and newly pressed). It returns `this`,
+ * as a constructor does, which is why the ROM keeps r0 free and builds
+ * the stores in r1/r2. */
+KeyInput::KeyInput()
 {
     gKeys.half.held = 0;
     gKeys.half.pressed = 0;
-    return self;
 }

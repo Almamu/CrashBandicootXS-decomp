@@ -37,7 +37,7 @@ object family:
     12 bytes/entry, indexed by `charLookup`.
   - `field_118`/`field_11c`/`spaceWidth`/`field_124`/`field_128` (was
     `unused_118`) - left margin X, line height (confirmed against
-    `src/text/text_box.c`'s existing `DrawWrappedTextInBox`, which already used
+    `src/text/text_box.cpp`'s existing `DrawWrappedTextInBox`, which already used
     this same field as a divisor), space-character advance width, a
     per-glyph OAM-attribute stride, and a pointer to the widget's own
     upload asset table respectively.

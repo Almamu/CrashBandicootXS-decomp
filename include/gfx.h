@@ -164,14 +164,14 @@ struct bldy {
 };
 
 /* `gBlendRegs`, the blend register shadow SetupRoomBlend builds and
- * CommitBlendRegs (util/aabb.c) writes: BLDCNT/BLDALPHA as one word, then
+ * CommitBlendRegs (util/aabb.cpp) writes: BLDCNT/BLDALPHA as one word, then
  * the BLDY byte. */
 struct blend_regs {
     union blend blend; // 0x00
     u8 bldy;           // 0x04
 };
 
-/* The brightness fade state (fade.c), set up by FadeBrightness. */
+/* The brightness fade state (fade.cpp), set up by FadeBrightness. */
 struct brightness_fade {
     s32 period; /* frames per step of StepBrightnessFade; -1 when idle (IsBrightnessFadeActive) */
     s32 callbackId; /* StepBrightnessFade's VBlank callback (AddVBlankCallback) */
@@ -182,7 +182,7 @@ struct brightness_fade {
 #define FADE_FLAG_WHITE 1    /* fade through white (BLDCNT lighten), not black (darken) */
 #define FADE_FLAG_IN    0x80 /* count BLDY down from 0x10 (fade in), not up from 0 */
 
-/* One node of the sprite frame cache (sprite_frame.c, sprite_arm.c): the
+/* One node of the sprite frame cache (sprite_frame.cpp, sprite_arm.c): the
  * frame record and the OBJ VRAM its pixel data was DMA'd into. Nodes live
  * in a fixed pool (`gSpriteFrameCacheSpares`, seeded by
  * InitSpriteFrameCache) and move between two ring lists as they age:
@@ -196,10 +196,10 @@ struct sprite_frame_cache_node {
     void *vramAddr;                       // 0x0C
 };
 
-/* src/gfx/bitmap_screen.c */
+/* src/gfx/bitmap_screen.cpp */
 extern void ShowBitmapScreen(void *asset, void *palette);
 
-/* src/gfx/display.c */
+/* src/gfx/display.cpp */
 extern void SetDispcntMode(s32 val);
 extern void HideBg3(void);
 extern void HideBg2(void);
@@ -215,20 +215,17 @@ extern void SetObjMapping2D(void);
 extern void SetObjMapping1D(void);
 extern void CommitDispcnt(void);
 
-/* src/gfx/fade.c */
+/* src/gfx/fade.cpp */
 extern void StepBrightnessFade(void);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void DarkenPalette(s32 factor);
 
-/* src/gfx/fade_to_black.c */
+/* src/gfx/fade_to_black.cpp */
 extern void FadePaletteToBlack(void);
 extern s32 IsBrightnessFadeActive(void);
 
 /* src/gfx/graphics.cpp: the OAM shadow buffer */
 extern s32 GetCompletionPercent(const struct game_progress *progress);
-extern void SetOamAffineScales(void *table, u16 *scales, s32 count);
-extern void AppendOamEntries(struct oam_shadow_buffer *self, void *entries, s32 count);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *self);
 extern void RewindOamBuffer(struct oam_shadow_buffer *self);
 extern void ResetOamBuffer(struct oam_shadow_buffer *self);
 extern void CommitOamBuffer(struct oam_shadow_buffer *self);
@@ -268,7 +265,7 @@ extern void SetScaledSpritePriority(struct gfx_box_obj *self, u32 priority);
 extern void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2);
 extern void ResetScaledSpriteAttrs(struct gfx_box_obj *self);
 
-/* src/gfx/sprite_frame.c */
+/* src/gfx/sprite_frame.cpp */
 extern void InitObjTileFreeList(void *base);
 extern void FreeVramTileBlock(void *addr);
 extern void *AllocVramTileBlock(s32 requestedSize);
@@ -323,14 +320,14 @@ extern const u8 gObjPieceWidths[12];
 extern const s32 gObjSizeHeights[12];
 extern const s32 gObjSizeWidths[12];
 
-/* sym_iwram.txt: the palette fade buffers (fade.c, fade_to_black.c) */
+/* sym_iwram.txt: the palette fade buffers (fade.cpp, fade_to_black.cpp) */
 extern u16 gPaletteBackup[512];
 extern u16 gPaletteFadeBuffer[512];
 
 /* sym_iwram.txt: the VRAM DMA queue (graphics.cpp) */
 extern struct dma_queue gVramDmaQueue;
 
-/* sym_iwram.txt: the OBJ tile allocator (sprite_frame.c) */
+/* sym_iwram.txt: the OBJ tile allocator (sprite_frame.cpp) */
 extern struct vram_tile_block *gVramTileBlockPool;   /* pool base */
 extern struct vram_tile_block gVramTileBlockList;    /* address-sorted free-block list sentinel */
 extern struct vram_tile_block *gVramTileBlockRover;  /* next-fit search cursor ("rover") */
@@ -338,14 +335,14 @@ extern struct vram_tile_block *gVramTileBlockSpares; /* spare-record stack head 
 /* tile-index -> pool-record-index lookup table, TOTAL_OBJ_TILE_COUNT bytes */
 extern u8 *gVramTileBlockIndex;
 
-/* sym_iwram.txt: the overflow OAM queue (sprite_frame.c) */
+/* sym_iwram.txt: the overflow OAM queue (sprite_frame.cpp) */
 extern struct queued_oam_entry *gSpriteOamQueue; /* queued OAM entries, OAM_ENTRY_COUNT max */
 /* queued affine (x,y) pairs, packed one s16 each into a u32, deduped */
 extern s32 *gSpriteAffineQueue;
 extern s32 gSpriteOamQueueCount;    /* gSpriteOamQueue count */
 extern s32 gSpriteAffineQueueCount; /* gSpriteAffineQueue count */
 
-/* sym_iwram.txt: the sprite frame cache (sprite_frame.c, sprite_arm.c) */
+/* sym_iwram.txt: the sprite frame cache (sprite_frame.cpp, sprite_arm.c) */
 extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent; /* "this frame" MRU list sentinel */
 /* "last frame" eviction list sentinel */
 extern struct sprite_frame_cache_node gSpriteFrameCachePrevious;

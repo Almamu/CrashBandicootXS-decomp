@@ -80,7 +80,7 @@ matched code - read it before starting.** In short:
 
   ```
   tools/match_prune.py src/                 # dry run: per-file tried/removable/kept and a summary
-  tools/match_prune.py -v src/util/aabb.c   # also each kept site and why (doesn't compile / object differs)
+  tools/match_prune.py -v src/util/aabb.cpp   # also each kept site and why (doesn't compile / object differs)
   tools/match_prune.py --write src/gfx/     # apply the removals, verified once more as written
   tools/match_prune.py --list src/          # the sites, without building
   ```
@@ -287,7 +287,7 @@ that one site, with a comment saying why. agbcc 2.9 has no
 `#pragma GCC diagnostic`, so use one of these, in this order:
 
 1. **Self-initialization** for `-Wuninitialized`: `s32 sel = sel;`
-   gcc emits no code for it. Used in `fade.c`, `sprite_frame.c`,
+   gcc emits no code for it. Used in `fade.cpp`, `sprite_frame.cpp`,
    `eeprom_verify.c` and `gax_voice_steal.c`. (A struct or union local
    isn't checked at all, which is how `starfield.cpp` builds its BGnCNT
    value.)

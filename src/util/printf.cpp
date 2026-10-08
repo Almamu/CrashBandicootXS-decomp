@@ -1,7 +1,9 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include <stdarg.h>
 #include "util.h"
+}
 
 /* Custom sprintf: writes the formatted result of `fmt`/`args` into
  * `dest` (NUL-terminated) and returns a pointer to the end of it.
@@ -194,7 +196,7 @@ u8 *FindSubstring(u8 *haystack0, u8 *needle, s32 caseInsensitive)
             "2:\n\t"
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
-            : "+r"(c0) :: "r0");
+            : "+r"(c0) : : "r0");
         // clang-format on
     }
 
@@ -218,7 +220,7 @@ scan:
             "2:\n\t"
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
-            : "+r"(hc) :: "r0");
+            : "+r"(hc) : : "r0");
         // clang-format on
     }
     if (hc == c0) {
@@ -257,7 +259,7 @@ inner:
             "2:\n\t"
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
-            : "+r"(nc) :: "r0");
+            : "+r"(nc) : : "r0");
         // clang-format on
         // clang-format off
         asm volatile(
@@ -275,7 +277,7 @@ inner:
             "2:\n\t"
             "lsl r0, r0, #0x18\n\t"
             "lsr %0, r0, #0x18\n\t"
-            : "+r"(hc2) :: "r0");
+            : "+r"(hc2) : : "r0");
         // clang-format on
     }
     if (nc == hc2) {

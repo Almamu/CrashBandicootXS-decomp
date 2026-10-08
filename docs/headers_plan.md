@@ -1431,7 +1431,7 @@ see "Codegen exceptions").
   - the blend registers: level_menu.h's and level_select.c's `struct
     blend_bits`/`union blend`/`struct bldy` moved to gfx.h, and
     `gBlendRegs` is a `struct blend_regs { union blend blend; u8 bldy; }`
-    (room_frame.c's `union blend` view and util/aabb.c's `struct
+    (room_frame.c's `union blend` view and util/aabb.cpp's `struct
     unk_03001280`).
 - **Definition fixes**, all identical:
   - an unused parameter where the callers pass one: `InitBgLayerBase`
@@ -2205,7 +2205,7 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | call with no argument -> passing the global just stored from r0 | `PlayBootCutscene(gLevelState)` in MainLoop | identical |
 | array extern of a struct type that is still incomplete where it is declared (the file completes it later) | `gTerrainTypes` in bg_layer_base.c, while level.h only had the `struct terrain_type` tag | **changes** (GetSolidTerrainModeValue's `modeValue[n]` loads change); with the struct defined in level.h, identical |
 | `struct dual_array_manager` -> `struct part_list` (`void **` -> `struct box_part **` arrays, read through `(void **)` casts) | part_list.c | identical |
-| `union blend` global view / `struct unk_03001280` -> `struct blend_regs` | room_frame.c, util/aabb.c | identical |
+| `union blend` global view / `struct unk_03001280` -> `struct blend_regs` | room_frame.c, util/aabb.cpp | identical |
 | `u32 gKeys` -> `union key_state`, `gKeys` -> `gKeys.all`; struct users -> `gKeys.half.pressed`; `u16` users -> `gKeys.half.held`/`&gKeys.half.held` | the action controller handlers, menus, frontend, irq.c, input.c (old_agbcc and agbcc) | identical; the `u16` users read `half.held`, since through `gKeys.all` their halfword tests would be word loads |
 | anonymous `struct { u16 held, pressed; } gKeys = { 0, 0 }` -> `union key_state gKeys = { { 0, 0 } }`, struct member first | iwram_data.c | identical; with the `u32` member first the `.s` has one `.word 0` for the two `.short 0` (same bytes) |
 | `void *`/`u8 *` global -> its struct pointer (`gAudioContext`, `gPaletteCache`, `gOamBuffer`, `gObjVramCursor`, `gHud`) | about 100 files | identical |
@@ -2266,7 +2266,7 @@ Experiments for later batches:
 
 - **`RandRange` (util, applied in batch 4): neither type works
   everywhere.** The definition
-  (`src/util/rand.c`) returns `u16`. 14 callers declare `s32`, and
+  (`src/util/rand.cpp`) returns `u16`. 14 callers declare `s32`, and
   `airship_explode.c` declares `u16`.
   - Switching `airship_explode.c` to `s32` removes every `lsl #0x10`/
     `lsr #0x10` pair after the calls.
@@ -2302,5 +2302,5 @@ adds its entries here.
 | src/actor/actor_category_init.c, src/actor/cell_anim.c | `SetCheckpointAtPlayer` | `void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer")` | `void (struct level_state *self, u8 flag)` (level.h) | the callers pass the state only and leave r1 as it is; the definition stores `flag` |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the
-one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.c`
+one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.cpp`
 (docs/libraries.md).

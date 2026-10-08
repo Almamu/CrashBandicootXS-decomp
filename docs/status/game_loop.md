@@ -20,7 +20,7 @@ system from "core" system startup/init code.
   `SetCheckpointAtPlayer` (its cached-state/snapshot helper) - see
   [docs/matching/archive/issue-37-game-loop-234e8.md](../matching/archive/issue-37-game-loop-234e8.md)
   for the register-allocation fixes that closed these two out.
-- `src/system/main_loop.c` (new file, GitHub issue #45 - categorized
+- `src/system/main_loop.cpp` (new file, GitHub issue #45 - categorized
   `hud` by the chunk generator, but `MainLoop` itself is squarely
   `game_loop`): `MainLoop` - the game's actual top-level loop (called
   once from `AgbMain`, sets up the central per-level state object and

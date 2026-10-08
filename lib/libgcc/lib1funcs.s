@@ -104,7 +104,7 @@ __udivsi3:
 .ifdef L_divsi3
 
 @ __divsi3: signed 32-bit division, truncating toward zero (what `/`
-@ compiles to, also called directly, e.g. fixed_math.c's FixedDiv
+@ compiles to, also called directly, e.g. fixed_math.cpp's FixedDiv
 @ wrappers). __udivsi3's loop on the magnitudes, with the result sign
 @ (dividend ^ divisor) kept in ip. Note the per-path register saves:
 @ `push {r4}` ... `mov pc, lr` on the normal path, a separate

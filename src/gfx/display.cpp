@@ -1,8 +1,10 @@
+extern "C" {
 #include "core.h"
 #include "gfx.h"
 #include "globals.h"
+}
 
-/* Continuation of the fade_to_black.c cluster - see docs/matching.md
+/* Continuation of the fade_to_black.cpp cluster - see docs/matching.md
  * for why this cluster needed splitting into this many pieces.
  * `gDispcnt` is a 2-byte packed mode/flags shadow copy of
  * `REG_DISPCNT`, committed to the real hardware register by

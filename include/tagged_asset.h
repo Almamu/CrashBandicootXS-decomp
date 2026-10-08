@@ -5,7 +5,7 @@
 
 /*
  * A tag-0x00 ("raw") tagged asset, as LoadTaggedAsset
- * (src/system/asset.c) reads it: one header word whose bits 4-7 are
+ * (src/system/asset.cpp) reads it: one header word whose bits 4-7 are
  * the format (0 = uncompressed, 1 = LZ77, 3 = run-length) and whose top
  * 24 bits are the payload size, then the payload itself. The LZ77 and RL
  * variants are the GBA BIOS stream formats; they are built from their own

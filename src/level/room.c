@@ -23,7 +23,7 @@ u8 IsRoomExitRequested(void)
 /* Level-end teardown: DMA-copies the room's BG palette into BG palette
  * RAM, clears its first color, then re-runs the
  * same VRAM/OAM/DMA refresh pass as `UpdateRoomFrame` and the four
- * `display.c` state resets. */
+ * `display.cpp` state resets. */
 void ResumeRoomAfterPause(struct level_progress *self)
 {
     struct dma_regs *dma;

@@ -4,8 +4,8 @@
 
 /*
  * IWRAM 0x030000D4-0x0300024C (stored in ROM at 0x087E56B8): ARM copies
- * of the string helpers the Thumb code also has (src/util/number_format.c,
- * src/util/string.c), part of the IWRAM image crt0 copies to
+ * of the string helpers the Thumb code also has (src/util/number_format.cpp,
+ * src/util/string.cpp), part of the IWRAM image crt0 copies to
  * 0x03000000 at boot (see src/iwram/iwram_data.c and docs/data.md).
  *
  * Built as ARM code (Makefile ARM_OBJS) with agbcc_arm_patched,

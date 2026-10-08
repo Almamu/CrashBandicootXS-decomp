@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
 #include "gfx.h"
+}
 
 /* Sits right after the still-raw remainder of asm/code_3_1_6.s'
  * SIO/link-cable and overlay_ui functions and before the small

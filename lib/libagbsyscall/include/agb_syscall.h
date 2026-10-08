@@ -41,7 +41,7 @@ void CpuFastSet(const void *src, void *dst, u32 control);
 void CpuSet(const void *src, void *dst, u32 control);
 
 /* SWI 0x12/0x15: LZ77/run-length decompression into VRAM (16-bit
- * writes). src/system/asset.c declares them with `src` alone: its
+ * writes). src/system/asset.cpp declares them with `src` alone: its
  * callers leave `dst` in r1 from their own argument. */
 void LZ77UnCompVram(const void *src, void *dst);
 void RLUnCompVram(const void *src, void *dst);

@@ -351,7 +351,7 @@ since both patterns will likely recur:
   caller anywhere in the matched source: two near-identical
   `mem_i/ewram_heap_pointer`-chasing loops, most likely an
   identical-code-folding artifact from agbcc's optimizer rather than
-  anything reachable from a real call site. `src/system/memory.c` already
+  anything reachable from a real call site. `src/system/memory.cpp` already
   had this embedded as a raw `.byte` blob (`// this is ugly AF`) from
   whoever matched `mem_collect` originally, precisely because leaving it
   out breaks the ROM's byte layout - it's now written as real, labelled

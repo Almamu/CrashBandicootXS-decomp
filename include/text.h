@@ -35,20 +35,12 @@ extern const struct icon_glyph_metrics gLargeFontGlyphs[75];
 extern const u8 gSmallFontTiles[];
 extern const u8 gLargeFontTiles[];
 
-/* src/text/text_box.c */
+/* src/text/text_box.cpp and src/text/wrapped_text.cpp (C linkage). Their
+ * callers are all C++. */
 extern s32 GetWordLength(u8 *s);
 #ifdef __cplusplus
 extern s32 DrawWrappedTextInBox(u8 *text, class Font *self, struct aabb *box, s32 mode);
-#else
-extern s32 DrawWrappedTextInBox(u8 *text, struct bitmap_font *self, struct aabb *box, s32 mode);
-#endif
-
-/* src/text/wrapped_text.cpp (C linkage) */
-#ifdef __cplusplus
 extern s32 DrawWrappedText(u8 *text, class Font *self, struct aabb *box, s32 limit, s32 mode);
-#else
-extern s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct aabb *box, s32 limit,
-                           s32 mode);
 #endif
 
 #endif /* GUARD_TEXT_H */

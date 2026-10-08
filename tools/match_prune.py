@@ -86,7 +86,7 @@ the sources, and nothing is written when interrupted before the end.
 
 Usage:
   tools/match_prune.py src/                   dry run, per-file report and summary
-  tools/match_prune.py -v src/util/aabb.c     also list the sites kept, and why
+  tools/match_prune.py -v src/util/aabb.cpp     also list the sites kept, and why
   tools/match_prune.py --write src/gfx/       apply the removals
   tools/match_prune.py --list src/            list the sites without building
   tools/match_prune.py --kinds MATCH_BARRIER,MATCH_USE src/

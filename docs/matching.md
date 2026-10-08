@@ -657,7 +657,7 @@ memory. It must never be used, even in parked/`NON_MATCHING` code.
 **Refined this session**: the bug is narrower than it first looked. It
 is specific to *explicit* `register T x asm("r7")` pinning (and likely
 inline-asm `"=&r"`-constrained outputs), not to r7 in general. Proof:
-`FadeBrightness` (`src/gfx/fade.c`, already matched byte-exact) has a
+`FadeBrightness` (`src/gfx/fade.cpp`, already matched byte-exact) has a
 do-while loop where a plain, completely unpinned local (`dirBit8`,
 originally just a normal C value) survives repeated calls to
 `WaitForVBlank()` inside the loop, and gcc's own *unforced* allocator
@@ -768,7 +768,7 @@ byte-exact on the second try (first attempt used `s32`/plain globals and
 got the branch condition, register letters, and the `+=`'s redundant
 reload all slightly wrong).
 
-Next four matched functions, all in `src/system/irq.c` immediately after
+Next four matched functions, all in `src/system/irq.cpp` immediately after
 `WaitForVBlank`, matched first-try each:
 
 - `DisableFrameLimit` (ROM `0x080006EC`): trivial, `gFrameLimitEnabled = 0;`.
@@ -858,7 +858,7 @@ whenever a hard-to-match function needs to be skipped without blocking
 everything after it.
 
 Seventh matched function: `FixedDistSq` (ROM `0x080008B4`, immediately
-after `ShowBitmapScreen`; lives in new file `src/util/fixed_math.c`, since it's not
+after `ShowBitmapScreen`; lives in new file `src/util/fixed_math.cpp`, since it's not
 yet called by anything matched and didn't fit thematically in
 `irq.c`) - a fixed-point squared-distance-style helper:
 `((dx>>8)^2 + (dy>>8)^2) << 8`. Matched first-try structurally; needed
@@ -887,7 +887,7 @@ Eighth matched function (after a second pass): `itoa`, a custom
 itoa (int-to-string, with a fast path for base 16 using bit-AND +
 arithmetic-shift instead of a division call, falling back to a
 `DivMod` divmod helper for other bases, then reversing the digits
-in place). Lives in new file `src/util/number_format.c`. This one needed
+in place). Lives in new file `src/util/number_format.cpp`. This one needed
 **every** local pinned to a specific register to match - a good worked
 example of the technique 5 warning in `matching_decomp_register_pinning`
 memory (the same *kind* of value needing different pins at different
@@ -972,7 +972,7 @@ approach in `matching_decomp_register_pinning` memory:
 
 Tenth matched function: `vsprintf` (ROM `0x08000AA8`, right after
 `FormatPaddedNumber`) - the actual printf-style driver these last several
-functions were building toward. Lives in new file `src/util/printf.c`.
+functions were building toward. Lives in new file `src/util/printf.cpp`.
 Walks `fmt`, echoing literal characters, and dispatching `%`-conversions
 through a jump table: `%s` (string copy), `%c` (single byte from the
 arg array - every slot is 4 bytes regardless of the value's real size),
@@ -1073,7 +1073,7 @@ every register correct except this branch shape in the 4 blocks.
 Whichever register ends up hosting the `s32 t` temp needs to be pinned
 without disturbing anything else already correct here; not yet found.
 
-**Build toggle**: this function's C definition in `src/util/printf.c` is
+**Build toggle**: this function's C definition in `src/util/printf.cpp` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes in
 `asm/code_3_1_2.s` are wrapped in `.if NON_MATCHING == 0` / `.endif`
 (same pattern as `DrawPowerDialog`, see above), so exactly one definition is
@@ -1098,7 +1098,7 @@ as `ShowBitmapScreen`'s: it sits between `FindSubstring` (parked, still raw in
 `asm/code_3_1_2.s`) and `strcat` onward, so `asm/code_3_1_2.s` was
 trimmed to end right after `FindSubstring`'s `.endif`, everything from
 `strcat` on moved to a new `asm/code_3_1_3.s` (same three-line
-header), and `CountNonSpaceChars` itself lives in a new `src/util/string.c`
+header), and `CountNonSpaceChars` itself lives in a new `src/util/string.cpp`
 (not `number_format.c` - that object already links *before*
 `printf.o`/`code_3_1_2.o` in `ldscript.txt`, which would put this
 function's code at the wrong address; a fresh translation unit was the
@@ -1150,7 +1150,7 @@ originally produced this file didn't detect the boundary. Gave it the
 `strlen` name (its ROM address) like every other function here.
 
 Seventeenth through nineteenth matched functions, all first-try, in new
-file `src/util/rand.c` (RNG, doesn't fit any existing file): `srand`
+file `src/util/rand.cpp` (RNG, doesn't fit any existing file): `srand`
 (ROM `0x08000E10`, right after `strlen`) seeds a global LCG state
 (`gRandSeed` in IWRAM) with its argument; `rand` (ROM
 `0x08000E4C`) advances that LCG (`seed = seed * 0x41C64E6D + 0x3039` -
@@ -1175,7 +1175,7 @@ entirely inside one already-open file) and added one `ldscript.txt`
 line for `rand.o` between `string.o` and `code_3_1_3.o`.
 
 Twentieth matched function: `InitBresenhamLine` (ROM `0x08000E6C`, right after
-`rand`) - Bresenham-line setup, in new file `src/util/line.c`
+`rand`) - Bresenham-line setup, in new file `src/util/line.cpp`
 (doesn't fit any existing file). Given a `struct bresenham_line *` with
 `x0`/`y0`/`x1`/`y1` already filled in, computes `dx`/`dy`, records each
 axis's step direction (`sx`/`sy`, `+1`/`-1`/`0`) and the absolute
@@ -1288,7 +1288,7 @@ compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
 Twenty-first matched function: `FormatCentiseconds` (ROM `0x0800106C`, right
-after the still-parked `DrawWrappedText`), in new file `src/util/time_format.c` -
+after the still-parked `DrawWrappedText`), in new file `src/util/time_format.cpp` -
 formats a centisecond count as `"MM:SS.X0"` into a 9-byte buffer (`void
 FormatCentiseconds(s32 value, u8 *buf)`); only one fractional digit is
 actually computed (`value % 10`) - the other is always `'0'`, so the
@@ -1296,7 +1296,7 @@ displayed precision is really just tenths of a second despite the
 two-digit-looking field. Built on two not-yet-matched helpers,
 `__umodsi3` (mod) and `__udivsi3` (div) - both declared here with
 plain `s32`/`s32` signatures despite `__umodsi3` already having a
-`u16`/`s32`-typed extern declaration in `src/util/rand.c` for a
+`u16`/`s32`-typed extern declaration in `src/util/rand.cpp` for a
 different call site; harmless; C linkage doesn't check parameter types
 across translation units, and both signatures compile to the same
 calling convention here anyway. Matched first-try structurally, needed
@@ -1307,13 +1307,13 @@ Extracting this one function required the same kind of split as
 `FindSubstring`'s and `CountNonSpaceChars`'s: `asm/code_3_1_3.s` was trimmed to
 end right after `DrawWrappedText`'s `.endif`, and everything from
 `WaitForKeyPress` on moved to a new `asm/code_3_1_4.s`, with
-`src/util/time_format.c`'s object linked between them in `ldscript.txt`.
+`src/util/time_format.cpp`'s object linked between them in `ldscript.txt`.
 (`asm/code_3_1_4.s` was later removed again - see `WaitForKeyPress`'s own
 notes just below - once it turned out to hold only one function that
 also needed parking.)
 
 **Parked, not matched: `WaitForKeyPress`** (ROM `0x080010E0`, right after `FormatCentiseconds`), in new
-file `src/system/input.c`. Polls input (the same `WaitForVBlank`-then-
+file `src/system/input.cpp`. Polls input (the same `WaitForVBlank`-then-
 `UpdateKeys` VBlank-wait-and-update-keys pair used elsewhere) until a
 button matching `mask`'s bit 0 (confirm) or bit 3 (cancel) is newly
 pressed, or - if `count != 0` - until `count` polls elapse; returns 0
@@ -1344,7 +1344,7 @@ sense with no special handling at all, which points at a fixed gcc-2.9
 canonicalization for this exact shape rather than something reachable
 from this file's C.
 
-**Build toggle**: this function's C definition in `src/system/input.c` is
+**Build toggle**: this function's C definition in `src/system/input.cpp` is
 wrapped in `#if NON_MATCHING`, and the corresponding raw bytes - now
 living in `asm/code_3_1_5.s`, right before `LoadTaggedAsset` (since
 `asm/code_3_1_4.s`, which held only this one function, was removed
@@ -1357,7 +1357,7 @@ and link cleanly with no duplicate-symbol errors).
 
 Twenty-second matched function: `LoadTaggedAsset` (ROM `0x08001174`,
 right after the still-parked `WaitForKeyPress`), in new file
-`src/system/asset.c`. Loads (or raw-copies) an asset based on a tag in
+`src/system/asset.cpp`. Loads (or raw-copies) an asset based on a tag in
 its first word's high nibble: `0` = uncompressed (a manual DMA3 setup -
 `SAD`/`DAD`/`CNT` written directly through a `vu32 *` at `0x040000D4`,
 word-sized transfer, byte count taken from the header's remaining 24
@@ -1399,14 +1399,14 @@ never end up sharing an object with something that no longer sits
 immediately next to it in the final link.
 
 Twenty-third matched function: `LoadBackgroundTileAndPalette` (ROM `0x080011C0`, right
-after `LoadTaggedAsset`), also in `src/system/asset.c` - loads one
+after `LoadTaggedAsset`), also in `src/system/asset.cpp` - loads one
 background's tile/tileset data (the tagged asset at `asset + 0x200`,
 via `LoadTaggedAsset`) into VRAM at `0x06000000`, then DMAs the first
 `0x200` bytes of `asset` itself (a raw 256-halfword palette) straight
 into palette RAM at `0x05000000`. Matched first-try.
 
 Twenty-fourth matched function: `GetWordLength` (ROM `0x080011F4`, right
-after `LoadBackgroundTileAndPalette`), in new file `src/text/text_box.c` - returns the
+after `LoadBackgroundTileAndPalette`), in new file `src/text/text_box.cpp` - returns the
 length of the next "word" starting at `s`: the count of characters up
 to and including the first space, or up to (but not including) the NUL
 terminator if no space comes first. This is exactly what the still-
@@ -1421,7 +1421,7 @@ nothing and removed, its ldscript slot going to `text_box.o`, with
 everything from `DrawWrappedTextInBox` on moved to a new `asm/code_3_1_7.s`.
 
 Twenty-fifth matched function: `DrawWrappedTextInBox` (ROM `0x08001214`, right
-after `GetWordLength`), also in `src/text/text_box.c` - a thin wrapper around
+after `GetWordLength`), also in `src/text/text_box.cpp` - a thin wrapper around
 the still-parked `DrawWrappedText`: stashes one field from its `params`
 struct into the render-target object's own `field_118`, computes a
 line-count limit (`params->field_c / self->field_11c`), then forwards
@@ -1442,8 +1442,8 @@ constant plus 4 for the `field_11c` offset instead of recomputing it
 from scratch, incidentally also matching the ROM there).
 
 Twenty-sixth matched function: `StepBresenhamLine` (ROM `0x08001254`, right
-after `DrawWrappedTextInBox`), in new file `src/util/line_step.c` - advances a
-Bresenham line (set up by `InitBresenhamLine`, `src/util/line.c`) by one
+after `DrawWrappedTextInBox`), in new file `src/util/line_step.cpp` - advances a
+Bresenham line (set up by `InitBresenhamLine`, `src/util/line.cpp`) by one
 step: the "driving" axis (`x0` if `flag` is set, `y0` otherwise) always
 advances by its sign; the other axis advances only when the
 accumulated error term (`field_10`) is positive, in which case the
@@ -1465,7 +1465,7 @@ produced an inverted branch (`ble`/fallthrough-swapped) that still
 byte-for-byte. Needed the usual trailing `asm(".align 2, 0")` fix.
 
 Twenty-seventh matched function: `StepBrightnessFade` (ROM `0x080012AC`, right
-after `StepBresenhamLine`), in new file `src/gfx/fade.c` - a per-frame
+after `StepBresenhamLine`), in new file `src/gfx/fade.cpp` - a per-frame
 screen-brightness fade tick. Every `gBrightnessFade.field_0` frames,
 writes the next step to `BLDY` (`0x04000054`), counting up or down
 depending on `field_8`'s top bit (fade in vs. out); after 17 steps (a
@@ -1481,7 +1481,7 @@ the loaded byte in r0 and the constant in r1 instead, one register off,
 regardless of which order the two operands are written in the C.
 
 Twenty-eighth matched function: `FadeBrightness` (ROM `0x0800132C`, right
-after `StepBrightnessFade`), also in `src/gfx/fade.c` - starts a screen fade.
+after `StepBrightnessFade`), also in `src/gfx/fade.cpp` - starts a screen fade.
 `flags` bit 0 selects the blend target (`BLDCNT`, `0xBF` vs `0xFF`),
 bit 7 selects direction (fade in from `0x10` vs fade out from `0`);
 `frameDelay` (clamped to at least 1) is how many frames each of the 17
@@ -1502,7 +1502,7 @@ identical either way and only showed up as a real mismatch once
 directly diffed.
 
 Twenty-ninth matched function: `DarkenPalette` (ROM `0x080013FC`, right
-after `FadeBrightness`), in new file `src/gfx/fade.c` - blends the
+after `FadeBrightness`), in new file `src/gfx/fade.cpp` - blends the
 whole 512-entry palette at `gPaletteBackup` toward black by
 `factor`/16 per channel (5 bits each, GBA BGR555), writing the result
 to `gPaletteFadeBuffer`. Each channel is extracted via an explicit
@@ -1587,24 +1587,24 @@ Another readability pass over everything matched or parked since the
 previous cleanup, again re-checking both `make compare` and
 `make NON_MATCHING=1` after every edit:
 
-- **Hardware registers**: `src/gfx/fade.c`'s raw `0x04000054`/
+- **Hardware registers**: `src/gfx/fade.cpp`'s raw `0x04000054`/
   `0x04000050`/`0x04000208` became `REG_BLDY`/`REG_BLDCNT`/`REG_IME` -
   the last one had been mislabeled as `REG_IE` in an earlier writeup
   (`0x04000208` is actually `IME`, the interrupt *master* enable, not
   the per-source `IE` at `0x04000200` - an easy mix-up since both are
   "the interrupt enable register" in casual terms, but the ROM's own
   "write 0, do a critical section, write 1" idiom here specifically
-  needs the master switch). `src/system/asset.c`'s two raw
+  needs the master switch). `src/system/asset.cpp`'s two raw
   `0x040000D4`-based `vu32 *dma` pointers became `struct dma_regs *`
   (see next point) through `REG_ADDR_DMA3SAD`.
 - **Struct consolidation**:
   - `struct dma_regs` (`src/gfx/graphics.c`'s local `{ vu32 src, dst, cnt;
     }`) moved to `include/gba/dma_macros.h` (the header that already
     holds every other DMA-related macro) and is now shared by
-    `src/system/asset.c`'s `LoadTaggedAsset`/`LoadBackgroundTileAndPalette` instead of each
+    `src/system/asset.cpp`'s `LoadTaggedAsset`/`LoadBackgroundTileAndPalette` instead of each
     doing raw `vu32 *` + manual `[0]`/`[1]`/`[2]` indexing.
   - `struct bresenham_line` (independently declared, identically, in
-    both `src/util/line.c` and `src/util/line_step.c` purely because the
+    both `src/util/line.cpp` and `src/util/line_step.cpp` purely because the
     two functions that share it link far apart) moved to a new
     `include/line_util.h`, included by both.
   - `struct bitmap_font`/`struct icon_record` (`src/menus/power_dialog_draw.c`,
@@ -1620,11 +1620,11 @@ previous cleanup, again re-checking both `make compare` and
     instead of raw `u8 *self + <offset>` arithmetic throughout.
   - Checked for (but didn't find) a similar merge opportunity between
     `DrawWrappedText`'s `struct wrapped_text_box` and `DrawWrappedTextInBox`'s
-    `struct wrapped_text_box_params` (`src/text/text_box.c`) - different field
+    `struct wrapped_text_box_params` (`src/text/text_box.cpp`) - different field
     layouts (offsets 0/4/8 vs. 0/0xc), not the same object.
-  - Left `gKeys` (`src/system/irq.c`)/`gRandSeed`
-    (`src/util/rand.c`)/`gBrightnessFade`+`gBrightnessFadeStep`+
-    `gBrightnessFadeTimer` (`src/gfx/fade.c`) as separate globals despite
+  - Left `gKeys` (`src/system/irq.cpp`)/`gRandSeed`
+    (`src/util/rand.cpp`)/`gBrightnessFade`+`gBrightnessFadeStep`+
+    `gBrightnessFadeTimer` (`src/gfx/fade.cpp`) as separate globals despite
     being adjacent in IWRAM (`0x7E0`-`0x7F8`) - `irq.c`'s own notes
     already established that combining even just the first pair into
     one struct changes agbcc's literal-pool codegen for already-matched
@@ -4817,7 +4817,7 @@ tiny `mem_free`/`mem_alloc` wrappers:
 - **`IwramFree`/`IwramAlloc`**: trivial `mem_free`/`mem_alloc`
   wrappers, the latter always requesting the `0x80000000` flag
   (IWRAM-preferring allocation, per `mem_alloc`'s own established
-  `arg1` semantics in `src/system/memory.c`).
+  `arg1` semantics in `src/system/memory.cpp`).
 
 Needed an explicit trailing `asm(".align 2, 0");` after `IwramAlloc`
 (the last function in the file) - without it, the assembler's default
@@ -4849,7 +4849,7 @@ contribution workflow:
 - **`UpdateCtrl`**: empty function; needed the usual trailing
   `asm(".align 2, 0");` for the ROM's zero-fill padding before the next
   function.
-- **`ShowBitmapScreen`** (`src/gfx/bitmap_screen.c` - a separate file
+- **`ShowBitmapScreen`** (`src/gfx/bitmap_screen.cpp` - a separate file
   from `boot.c` despite being boot-adjacent, since `main.c`/
   `memory.c`/`irq.c` sit between them in real ROM order and file order
   has to follow ROM address order, not "logical" grouping). Sets up BG2
@@ -5094,7 +5094,7 @@ project's "one `.c` file per contiguous ROM region" rule):
     one at the loop's end) into a single merged pool, 4 bytes short.
     The "newly pressed" key read also needed the established
     `addr = &gKeys; keys = *(u16 *)((u8 *)addr + 2);`
-    idiom from `WaitForKeyPress` (`src/system/input.c`) - folding the
+    idiom from `WaitForKeyPress` (`src/system/input.cpp`) - folding the
     `+2` into the literal constant itself compiles to `ldrh r1,[r0]`
     with no offset, not the ROM's `ldrh r1,[r0,#2]`.
   - `LanguageSelectInput`'s bit-3/bit-0 "confirm" cases share their `PlaySfx`
@@ -5361,10 +5361,10 @@ count was 24. Matched 14, left 10 untouched in the raw `.s` files (with
 reasons below) rather than force low-confidence reconstructions of the
 chunk's biggest, least-understood cluster in one pass.
 
-**Matched, new `src/system/main_loop.c`:**
+**Matched, new `src/system/main_loop.cpp`:**
 
 - **`MainLoop`** (ROM `0x08026EEC`): the game's actual top-level loop,
-  called once from `AgbMain` (`src/system/main.c`). Sets up the central
+  called once from `AgbMain` (`src/system/main.cpp`). Sets up the central
   per-level state object (`gLevelState`, via `GetLevelState`/
   `PlayBootCutscene`/`ShowCompanyLogos`/`PlayIntroCutscene` - none of those four are
   understood beyond "state setup", left as opaque `extern` calls), the
@@ -5523,7 +5523,7 @@ anticipation; the actual `CpuSet` definition was still raw here.
   `CpuFastSet`, `CpuSet`, `LZ77UnCompVram`, `ObjAffineSet`,
   `RLUnCompVram`, `Sqrt`, `VBlankIntrWait` with `r2` zeroed first).
   `LZ77UnCompVram`/`RLUnCompVram` already had their real names
-  from `src/system/asset.c`'s `extern` declarations; the rest stay
+  from `src/system/asset.cpp`'s `extern` declarations; the rest stay
   `sub_XXXXXXXX`.
 - **`EEPROMConfigure`** - picks a 12-byte config table
   (`struct EepromConfig`, in `eeprom_timer.c`) by a "chip type" code (4 or
@@ -5546,7 +5546,7 @@ anticipation; the actual `CpuSet` definition was still raw here.
   `_call_via_r4`/`_call_via_r5`/`_call_via_r6`/`_call_via_r7`**
   (`lib/libgcc/lib1funcs.s`) - the `bx r0`..`bx sp` "call through
   whatever's already in this register" trampoline table already
-  referenced by name from `src/system/irq.c`'s `VBlankHandler`
+  referenced by name from `src/system/irq.cpp`'s `VBlankHandler`
   (`_call_via_r0()`, relying on `r0` still holding a function pointer
   from the preceding `if (*p != 0)` comparison) and several actor and
   object files. `_call_via_r7` alone covers the `r7`-`sp` entries as one
@@ -5658,7 +5658,7 @@ Matched (`src/player/action_ctrl_states.c`/`action_ctrl_land.c`):
   sequence; the `GetDpadDirection(dummy)` call's dummy-argument load
   (`gInput`, ignored by the real callee - same shape as
   `WaitForKeyPress`'s `UpdateKeys(gInput)` in
-  `src/system/input.c`) also had to be hoisted into its own
+  `src/system/input.cpp`) also had to be hoisted into its own
   statement *before* the boolean computation to match the ROM's literal
   instruction order, matching neither statement order alone reproduces
   once both are present in the same function.

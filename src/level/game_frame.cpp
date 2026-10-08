@@ -23,7 +23,7 @@ extern "C" {
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
  * docs/matching.md). Called once per frame from `MainLoop`
- * (src/system/main_loop.c) with `self` = `gLevelState`, the
+ * (src/system/main_loop.cpp) with `self` = `gLevelState`, the
  * central per-level state object every other function in this
  * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.c; the
  * `self+0x80`-`0xc4`/`+2` accessor family, level_state.cpp) also shares.

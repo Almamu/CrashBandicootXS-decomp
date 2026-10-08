@@ -700,9 +700,9 @@ def scan_asm_defs():
 # Declarations kept in a .c file on purpose, by policy (docs/headers_plan.md,
 # "Exceptions"). Anything else is "remaining" work for a header.
 DOCUMENTED = {
-    # the one-argument SWI wrappers asset.c calls (docs/libraries.md)
-    ('src/system/asset.c', 'LZ77UnCompVram'),
-    ('src/system/asset.c', 'RLUnCompVram'),
+    # the one-argument SWI wrappers asset.cpp calls (docs/libraries.md)
+    ('src/system/asset.cpp', 'LZ77UnCompVram'),
+    ('src/system/asset.cpp', 'RLUnCompVram'),
 }
 
 

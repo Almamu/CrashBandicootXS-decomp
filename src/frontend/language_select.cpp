@@ -22,7 +22,7 @@ extern "C" {
  * with the last of CompanyLogos's and LogoActor's methods
  * (company_logos.cpp). */
 
-/* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.c)
+/* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.cpp)
  * into a freshly allocated buffer, then DMAs it to `dest`. A method of
  * the logo screen (LoadVvLogoGraphics's), which it doesn't use. */
 void CompanyLogos::LoadAssetBuffered(const void *asset, void *dest)

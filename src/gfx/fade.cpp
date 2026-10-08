@@ -1,8 +1,10 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
 #include "gfx.h"
+}
 
-/* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_step.c)
+/* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_step.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 
@@ -103,7 +105,7 @@ void FadeBrightness(u8 flags, s32 frameDelay, u8 sync)
     }
 }
 
-/* Sits right after FadeBrightness (ROM 0x0800132C, in src/gfx/fade.c)
+/* Sits right after FadeBrightness (ROM 0x0800132C, in src/gfx/fade.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 /* A BGR555 palette entry as its channels, in a word-sized union: the

@@ -1,8 +1,6 @@
-#include "core.h"
-#include "text.h"
-#include <libgcc.h>
+#include "font.hpp"
 
-/* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset.c)
+/* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset.cpp)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
 /* Returns the length of the next "word" starting at `s`: the number of
@@ -39,21 +37,15 @@ done:
 }
 
 /* Thin wrapper around DrawWrappedText (src/text/wrapped_text.cpp):
- * stashes `params->x` into `self`'s own `marginX`, computes a
- * line-count limit as `params->h / self->lineHeight`, then
+ * sets `self`'s margin to `box->x`, computes a line-count limit as
+ * `box->h / self->lineHeight` (Font::HeightToLines), then
  * forwards to DrawWrappedText with that limit and returns its result
  * (unused by the one call site matched so far, in `src/menus/power_dialog_draw.cpp`'s
  * still-parked `DrawPowerDialog`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */
-s32 DrawWrappedTextInBox(u8 *text, struct bitmap_font *self, struct aabb *params, s32 mode)
+s32 DrawWrappedTextInBox(u8 *text, Font *self, struct aabb *box, s32 mode)
 {
-    s32 limit;
-
-    {
-        s32 v = params->x;
-        self->marginX = v;
-    }
-    limit = __udivsi3(params->h, self->lineHeight);
-    return DrawWrappedText(text, self, params, limit, mode);
+    self->SetMargin(box->x);
+    return DrawWrappedText(text, self, box, self->HeightToLines(box->h), mode);
 }

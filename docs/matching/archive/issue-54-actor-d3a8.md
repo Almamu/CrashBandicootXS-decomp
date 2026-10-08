@@ -267,7 +267,7 @@ records involved. Reading both functions' disassembly side by side
 resolved it: both use the exact same 6-halfword layout,
 `{s16 x, y, z, sizeX, sizeY, sizeZ}`, compared axis-by-axis in Z/Y/X
 order (matching the ROM's own instruction order, not storage order) -
-the same shape as `struct aabb` (`src/util/aabb.c`) generalized
+the same shape as `struct aabb` (`src/util/aabb.cpp`) generalized
 from 2 axes to 3, just never previously named because it hadn't been
 read carefully enough end to end. `UpdateYeti`'s "static" box A is
 `gYetiCatchBox`, and `IsTouchingYeti`'s is `gYetiBox` -

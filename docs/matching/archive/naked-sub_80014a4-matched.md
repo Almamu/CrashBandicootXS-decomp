@@ -1,6 +1,6 @@
 # `FadePaletteToBlack` converted from NAKED transcription to real matched C
 
-`FadePaletteToBlack` (`src/gfx/fade_to_black.c`, the fade-to-black
+`FadePaletteToBlack` (`src/gfx/fade_to_black.cpp`, the fade-to-black
 palette DMA loop) had been parked as a byte-correct NAKED asm
 transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)

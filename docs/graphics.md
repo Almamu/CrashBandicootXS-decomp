@@ -277,7 +277,7 @@ the three menu-text palettes on OBJ banks 13-15), and `RunTitleScreen`
 is its menu loop ("new game" / "load game" / "credits"). The notes below
 are kept as written, with the functions' current names.
 
-Traced from the other direction as planned: `AgbMain` (`src/system/main.c`) calls
+Traced from the other direction as planned: `AgbMain` (`src/system/main.cpp`) calls
 `MainLoop`, which contains the game's true main loop (an unconditional
 `b` back to itself, calling `UpdateGameFrame` every iteration - this never
 returns during normal play, which is why `AgbMain`'s post-loop cleanup
