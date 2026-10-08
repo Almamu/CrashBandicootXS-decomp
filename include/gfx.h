@@ -13,6 +13,7 @@
 #include "core.h"
 #include "graphics_package.h"
 #include "hitbox_quad.h"
+#include "sprite_bank.h"
 
 struct aabb;
 struct actor;
@@ -49,17 +50,15 @@ struct oam_shadow_buffer;
 struct palette_cache;
 struct vram_upload_cursor;
 
-/* A sprite frame (GetSpriteFrame) as DrawSpritePieces and
- * DrawAffineSpritePieces read it: one offset and one shape/size id per
- * OBJ piece, the frame's VRAM source and its piece count. */
-struct piece_offset {
-    s16 x;
-    s16 y;
-};
-
+/* A sprite frame (sprite_bank.h's struct sprite_frame, GetSpriteFrame) as
+ * DrawSpritePieces and DrawAffineSpritePieces read it: one offset and one
+ * shape/size id per OBJ piece, the frame's VRAM source and its piece
+ * count. codegen: the piece count is read as the `tiles` word's top byte
+ * (`ldrb`), which sprite_frame's `u32 tiles` can't express. (Its
+ * `struct piece_offset` was a copy of sprite_piece_pos, #656.) */
 struct piece_info {
-    struct piece_offset *offsets; // 0x00
-    u8 *ids;                      // 0x04 - low 4 bits: shape/size index
+    struct sprite_piece_pos *offsets; // 0x00
+    u8 *ids;                          // 0x04 - low 4 bits: shape/size index
     union {
         u32 packed; // 0x08 - low 24 bits: VRAM source offset
         struct {
@@ -89,6 +88,17 @@ struct dispcnt_bits {
     u16 objWin:1;
 };
 
+/* A REG_DISPCNT value as a halfword or its bitfields: the menus', the
+ * level select's, the language select's and the continue prompt's copy of
+ * the register, which they commit whole (level_select.hpp's
+ * LevelSelectDispcnt, menus.hpp's MenuDispcnt and the classes' anonymous
+ * copies were merged into it, #656). In a class it takes a word: a union
+ * with a struct is 4-aligned. */
+union dispcnt {
+    u16 raw;
+    struct dispcnt_bits bits;
+};
+
 /* One hardware OAM entry as bitfields, as AddOamEntry copies it into the
  * shadow buffer: attributes 0-2, then the affine parameter. The u32
  * storage units of attributes 0-1 give the ROM's word-wide and/or
@@ -98,7 +108,12 @@ struct dispcnt_bits {
  * of the matrix number; otherwise they are the h/v flip. DrawSpritePieces
  * and DrawAffineSpritePieces build one on the stack (their local `struct
  * oam_pair`/`oam_attr01` and gfx.h's `oam_attr2` were copies, #574
- * batch 9e). */
+ * batch 9e), as do the credits' logos; Font::DrawGlyph builds one in the
+ * font's `oam_scratch`, and graphics_package.cpp's scaled sprite keeps
+ * one. font_glyph.cpp's `struct glyph_oam`, credits.cpp's `struct
+ * popup_oam` (byte and halfword units) and graphics_package.cpp's `struct
+ * oam_attrs_u16` (halfword units) were copies too; all of their objects
+ * compile to the same code with these units (#656). */
 struct oam_attrs {
     u32 y:8;          // 0x00
     u32 affineMode:2; // 0x01

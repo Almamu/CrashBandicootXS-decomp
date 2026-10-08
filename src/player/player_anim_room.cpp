@@ -32,7 +32,7 @@ u8 Player::HasRoomForAnim(s32 anim)
 {
     const struct hitbox_quad *box;
     u8 h;
-    struct gfx_vec pos;
+    struct vec2 pos;
     s32 origY;
     s32 probeDir;
     s32 i;
@@ -48,7 +48,7 @@ u8 Player::HasRoomForAnim(s32 anim)
     pos.y = INT_TO_Q8(box->offY) + pos.y;
     Q8_TO_INT_INPLACE(pos.x);
     Q8_TO_INT_INPLACE(pos.y);
-    if ((u8)ProbeTerrain(gLevelLayers, probeDir, (struct probe_pos *)&pos, h, &origY))
+    if ((u8)ProbeTerrain(gLevelLayers, probeDir, (struct vec2 *)&pos, h, &origY))
         return 0;
 
     i = 0;

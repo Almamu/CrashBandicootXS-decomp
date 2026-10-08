@@ -47,11 +47,11 @@ public:
     u8 unk_93;
     u8 listCount; // 0x94 - entries in `list`
     u8 unk_95[3];
-    Crate *list[5];              // 0x98 - the recently touched crates
-    Sprite *carried;             // 0xAC - the platform or crate the player stands on
-    Sprite *child;               // 0xB0 - Aku Aku, drawn with the player (Draw)
-    s32 maskTrailIdx;            // 0xB4 - the newest entry of `maskTrail`
-    struct gfx_vec maskTrail[8]; // 0xB8 - the recent positions, which Aku Aku follows
+    Crate *list[5];           // 0x98 - the recently touched crates
+    Sprite *carried;          // 0xAC - the platform or crate the player stands on
+    Sprite *child;            // 0xB0 - Aku Aku, drawn with the player (Draw)
+    s32 maskTrailIdx;         // 0xB4 - the newest entry of `maskTrail`
+    struct vec2 maskTrail[8]; // 0xB8 - the recent positions, which Aku Aku follows
     u8 unk_F8[8];
     // 0x100 - standing on terrain kind 5 (CheckPlayerContact): the player keeps
     //         sliding and skids (ActionCtrl::SetTargetAnim)
@@ -194,7 +194,7 @@ ASSERT_VIEW_FIELD(player_hpp, Player, player, halfH);
 ASSERT_VIEW_FIELD(player_hpp, Player, player, rawW);
 ASSERT_VIEW_FIELD(player_hpp, Player, player, rawH);
 ASSERT_VIEW_FIELD(player_hpp, Player, player, lastHitbox);
-ASSERT_VIEW_FIELD(player_hpp, Player, player, anim);
+ASSERT_VIEW_FIELD(player_hpp, Player, player, bank);
 ASSERT_VIEW_FIELD(player_hpp, Player, player, dir);
 ASSERT_VIEW_FIELD(player_hpp, Player, player, screenSpace);
 ASSERT_VIEW_FIELD(player_hpp, Player, player, mirror);

@@ -59,9 +59,12 @@ class Sprite : public Entity
 {
 public:
     void *lastHitbox; // 0x1C - the last hitbox record (AnchorGroundSpriteHitbox)
+    /* 0x20 - the sprite bank. A union of one: gcc gives every access to a
+     * union member alias set 0, and the ROM's code was compiled with that
+     * (a store to it doesn't kill other loads; see hud.hpp's
+     * SET_PART_BANK). */
     union {
-        struct anim_table *anim;        // 0x20 - the sprite bank
-        const struct sprite_bank *bank; // (the same pointer as sprite_bank.h has it)
+        const struct sprite_bank *bank;
     };
     u8 dir; // 0x24 - motion direction bits: 1 right, 2 left, 4 up, 8 down
     // 0x25 - 1: x/y are screen coordinates (DrawAt skips WorldToScreen;
@@ -262,19 +265,19 @@ public:
 
     /* The position and the previous position as vectors: a copy of one
      * is a block copy (both loads, then both stores). */
-    struct gfx_vec &Pos()
+    struct vec2 &Pos()
     {
-        return *(struct gfx_vec *)&x;
+        return *(struct vec2 *)&x;
     }
 
-    struct gfx_vec &PrevPos()
+    struct vec2 &PrevPos()
     {
-        return *(struct gfx_vec *)&prevX;
+        return *(struct vec2 *)&prevX;
     }
 
     void Reset(); // ResetMovingSprite
     void SetPrevPos(s32 px, s32 py);
-    struct gfx_vec GetPrevPos();
+    struct vec2 GetPrevPos();
     s32 GetPrevY(); // in pixels
     s32 GetPrevX();
     s32 ClassifyContact(struct aabb *region); // ClassifySpriteContact

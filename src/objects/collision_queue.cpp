@@ -83,8 +83,8 @@ void CollisionQueue::Resolve()
  * (crate_break.cpp). The two byte arguments are one-byte structs (the
  * ROM reads them with `ldrb` from their stack words, both addresses
  * first); a `u8` parameter loads the whole word and narrows it. */
-void CollisionQueue::Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth,
-                         struct e08c_pos pos, s32 hit, struct byte_arg p20, struct byte_arg p21)
+void CollisionQueue::Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct vec2 pos,
+                         s32 hit, struct byte_arg p20, struct byte_arg p21)
 {
     u8 f20 = p20.v;
     u8 f21 = p21.v;

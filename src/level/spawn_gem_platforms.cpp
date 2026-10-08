@@ -56,7 +56,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 7;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -84,7 +84,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 5;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -112,7 +112,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 6;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -142,7 +142,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 8;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();

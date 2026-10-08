@@ -44,7 +44,7 @@ public:
     CollisionQueue();  // ResetCollisionQueue: empties it (Player's constructor)
     ~CollisionQueue(); // DestroyCollisionQueue
     void Resolve();    // ResolveCollisionCandidates
-    void Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+    void Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct vec2 pos, s32 hit,
              struct byte_arg p20,
              struct byte_arg p21); // AddCollisionCandidate
 };

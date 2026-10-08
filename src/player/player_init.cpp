@@ -15,7 +15,7 @@ Player::Player(u16 id, u16 px, u16 py, u16 unused)
     Sprite *c = Sprite::Create(0, 0, 0, 0);
 
     child = c;
-    c->anim = (struct anim_table *)(SPRITE_BANK_BASE + (0xcc << 1));
+    c->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + (0xcc << 1));
     {
         /* One 0 for both stores, kept in a register across the calls, as
          * in the ROM (two literals give `id` and the 0 each other's

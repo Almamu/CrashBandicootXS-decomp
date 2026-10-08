@@ -286,7 +286,7 @@ void DingodileCtrl::Update(MovingSprite *part)
                 part->y = INT_TO_Q8(y);
             }
             n = 8;
-            CLAMP_INDEX(n, ((const struct sprite_bank *)part->anim)->anims[part->tag].frameCount);
+            CLAMP_INDEX(n, part->bank->anims[part->tag].frameCount);
             part->frame = n;
             {
                 s32 v = part->mirrorBits.flipX;
@@ -341,7 +341,7 @@ void DingodileCtrl::Update(MovingSprite *part)
         SetState(part, 1);
         {
             s32 n = 8;
-            CLAMP_INDEX(n, ((const struct sprite_bank *)part->anim)->anims[part->tag].frameCount);
+            CLAMP_INDEX(n, part->bank->anims[part->tag].frameCount);
             part->frame = n;
         }
         break;
@@ -479,7 +479,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     u8 *bits;
 
     p->f.b.visible = 0;
-    p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x288);
+    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
     switch (mode) {
     case 0:
         {
@@ -538,7 +538,7 @@ void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
     MovingSprite *p = MovingSprite::Create(0xFFFF, x, y, 0);
     Ctrl *ctl;
 
-    p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x30);
+    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x30);
     SetTag(p, 1);
     p->ResetFrameTimer();
     p->ResetFrameIndex();
@@ -731,7 +731,7 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
     DingodileProjectileCtrl *c;
 
     p->f.b.visible = 0;
-    p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x288);
+    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
     SetTag(p, 8);
     p->ResetFrameTimer();
     p->ResetFrameIndex();

@@ -92,7 +92,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     DingodileCtrl *hdr;
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x288);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x288);
     part->palette = part->GetAnimPaletteSlot();
     part->f.flags |= 0x10;
     part->SetKind(1);
@@ -111,7 +111,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     TinyCtrl *hdr;
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x294);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x294);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new TinyCtrl;
     part->mover = hdr;
@@ -130,7 +130,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     CortexBossCtrl *hdr;
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x27c);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x27c);
     SetTag(part, 1);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new CortexBossCtrl;

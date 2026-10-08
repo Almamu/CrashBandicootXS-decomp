@@ -41,8 +41,8 @@ extern "C" {
  * (menus.h), but the constructor reads each one twice, across calls, and
  * the ROM loads it again each time: through the const object gcc keeps the
  * first loads in registers. docs/headers_plan.md */
-extern "C" struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos");
-extern "C" struct xy_pair gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos");
+extern "C" struct vec2 gLevelSelectGemPos_rw asm("gLevelSelectGemPos");
+extern "C" struct vec2 gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos");
 
 /* The motion axes and the probe's hit axes, through an inline: both
  * values come first, and the second address is the first one's plus
@@ -378,7 +378,7 @@ LevelSelect::LevelSelect(s32 arg)
     if (gNewWorldOpened && IsNextWorldOpen()) {
         panel->Park();
     } else {
-        const struct xy_pair *pos = &positions[index];
+        const struct vec2 *pos = &positions[index];
 
         panel->Move(pos->x, pos->y - 0x18);
     }
@@ -794,7 +794,7 @@ void LevelSelect::CursorLeft()
     items[index]->SetSelected(0);
     bg2->ClearPicture();
     while (index != 0) {
-        const struct xy_pair *pos;
+        const struct vec2 *pos;
 
         index--;
         pos = &positions[index];
@@ -817,7 +817,7 @@ void LevelSelect::CursorRight()
     items[index]->SetSelected(0);
     bg2->ClearPicture();
     while (index < lastIndex) {
-        const struct xy_pair *pos;
+        const struct vec2 *pos;
 
         index++;
         pos = &positions[index];

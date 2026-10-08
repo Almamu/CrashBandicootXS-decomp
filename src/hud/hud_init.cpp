@@ -30,7 +30,7 @@ static inline void SetSlotFrame(HudPart *slot, s32 frame)
     slot->frame = frame;
 }
 
-static inline void SetSlotPos(HudPart *slot, const struct hud_pos *pos)
+static inline void SetSlotPos(HudPart *slot, const struct vec2 *pos)
 {
     SetEntityPixelPos(slot, pos->x, pos->y);
 }
@@ -178,8 +178,8 @@ void Hud::ConfigureParts(u8 iconFlag)
             switch (i) {
             case 0xE ... 0x15:
                 {
-                    const struct hud_pos *tbl = gHudPartPositions;
-                    const struct hud_pos *pos = tbl + i;
+                    const struct vec2 *tbl = gHudPartPositions;
+                    const struct vec2 *pos = tbl + i;
 
                     parts[i].x = INT_TO_Q8(pos->x);
                     parts[i].y = 0x1400;

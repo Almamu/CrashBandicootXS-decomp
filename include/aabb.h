@@ -22,6 +22,22 @@ struct aabb {
     s32 h;
 };
 
+/* A position or a vector: x, y, in pixels or fixed-point world units
+ * depending on the caller (a sprite's position and previous position,
+ * Player's mask trail, a terrain probe's position, a collision
+ * candidate's, the pickups' home position, the HUD's and the menus' screen
+ * positions in their tables). A copy is one 8-byte struct copy (the ROM's
+ * paired `ldr; ldr; str; str`). The copies (gfx_part.h's `gfx_vec`,
+ * objects.h's `e08c_pos`, level.h's `probe_pos`, hud.h's `hud_pos`,
+ * menus.h's `xy_pair` and `icon_pos`, pickups.h's `orbit_vec`,
+ * gobj_1a794.h's `pos2` and the file-local `text_vec`, `lk_point` and
+ * `gl_point`) were merged here (#656). */
+struct vec2 {
+    s32 x;
+    s32 y;
+};
+COMPILE_TIME_ASSERT(aabb_h, sizeof(struct vec2) == 8);
+
 /* A box's `w`, read through a volatile: some code re-reads a just-filled
  * box's width (a box with no width is empty) straight from its stack
  * slot rather than through the register already holding the box's

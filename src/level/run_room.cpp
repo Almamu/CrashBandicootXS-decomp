@@ -152,11 +152,6 @@ extern "C" {
  * cross-jumping. The one-byte `direction` stack argument is a BLKmode
  * struct (see `struct fx_direction`), and the post-fade player-position
  * copy holds r0/r1 while the player pointer is loaded. */
-struct gl_point {
-    s32 x;
-    s32 y;
-};
-
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
  * makes the struct BLKmode, so the compound literal is stored straight
@@ -179,7 +174,7 @@ extern void AddPaletteCycle_fx(PaletteCycles *self, u16 *targets, const u16 *lis
 
 #define PAL_RAM ((u16 *)PLTT)
 
-static inline void SetPoint(struct gl_point *point, s32 x, s32 y)
+static inline void SetPoint(struct vec2 *point, s32 x, s32 y)
 {
     point->x = x;
     point->y = y;
@@ -314,7 +309,7 @@ fade:
     if (IsRoomExitRequested()) {
         ret = 0;
         if (!(u8)IsInBonusRoom(self) && IsInBonusRound(gLevelState)) {
-            struct gl_point point;
+            struct vec2 point;
             s32 x;
 
             x = *(s32 *)GetBonusPlatform(gLevelState) + -0x1E00;
@@ -326,7 +321,7 @@ fade:
                           ((Platform *)GetBonusPlatform((struct level_state *)x))->GetExitMirror(),
                           &point.x);
         } else if (!(u8)IsInGemPathRoom(self) && IsInGemPath(gLevelState)) {
-            struct gl_point point;
+            struct vec2 point;
             Player *pl;
             MATCH_HOLD_REG(s32, hold, r0);
             MATCH_HOLD_REG(s32, hold1, r1);
@@ -341,7 +336,7 @@ fade:
             MATCH_USE(hold);
             MATCH_USE(hold1);
             /* copied as one 8-byte struct (ldr; ldr; str; str) */
-            point = *(struct gl_point *)&pl->x;
+            point = *(struct vec2 *)&pl->x;
             SetCheckpoint(gLevelState, 0, &point.x);
         } else {
             s32 count = 0;

@@ -1,12 +1,14 @@
 #ifndef GUARD_ACTOR_SELF_H
 #define GUARD_ACTOR_SELF_H
 
+#include "core.h"
+#include "vtable.h"
+
 /*
  * The C view of the 3D actors' base class, ActorSelf (actor_self.hpp;
  * C++ since #664 part 11a, src/actor/actor.cpp), for the files still in
  * C (the yeti, the IWRAM sorter): an object built by `InitActorPart`
- * (ActorSelf's constructor), its vtable pointer at +0x50, and the layout
- * of its vtable slots. The fields have the class's names and types
+ * (ActorSelf's constructor), with its vtable pointer at +0x50. The fields have the class's names and types
  * (actor_self.hpp checks their offsets). Every 3D
  * actor class is C++ since #664 part 11g, and the C macros that called
  * through them (ACTOR_PMF_CALL, ACTOR_VCALL, ...) are gone, as are the
@@ -32,25 +34,6 @@ struct anim_frame_record {
     s16 loopBase; // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
     u16 attr;     // 0x08 - packed into the high halfword of GetAnimFrameAttr's return value
     u8 unknown_0a[2];
-};
-
-/* A gcc 2.x method-table record: `this` adjustment plus code pointer. */
-struct actor_method {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
-};
-
-struct actor_vtable {
-    u8 unk_00[8];
-    struct actor_method destroy; // 0x08 - slot 1, the (virtual) destructor; called with 3 to delete
-    u8 unk_10[0x10];
-    struct actor_method m20; // 0x20 - "damage" (called on the player with a strength)
-    u8 unk_28[8];
-    // 0x30 - slot 6, "get HP": GetActorHp returns HpActor's `hp` (actor_self.hpp), the jetpack player's
-    // GetJetpackPlayerHpPercent its HP as a percentage (UpdateHudPercentCounters shows it)
-    struct actor_method getHp;
-    struct actor_method m38; // 0x38 - "release" (no argument; DamageJetpackBalloon)
 };
 
 struct anim_table_record;
@@ -99,7 +82,10 @@ struct actor_self {
     struct actor_self *prev; // 0x48 - circular actor list (rooted at the player, gActorList):
     struct actor_self *next; // 0x4C   InitActorPart appends before the head; the draw and
                              //        teardown loops walk `next` from the head
-    struct actor_vtable *vtable; // 0x50
+    // 0x50 - the class's vtable (vtable.h's slots): slot 1 the destructor (called
+    // with 3 to delete), 2 Update, 3 Draw; HpActor's 4 "damage" (a strength), 6
+    // "get HP" (GetActorHp, the jetpack player's HP percentage), 7 "release"
+    const struct vtable_slot *vtable;
 };
 
 #endif /* !GUARD_ACTOR_SELF_H */

@@ -79,41 +79,18 @@ struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlo
 /* GitHub issue #30: the sprite-box fitter and its OAM writer. Built with
  * old_agbcc - see docs/matching/archive/issue-30-old-agbcc.md. */
 
-/* gfx.h's `struct oam_attrs` with u16 storage units for attributes 0-1
- * (with gfx.h's u32 units, a DrawScaledSprite store changes).
- * One hardware OAM entry (attr0/attr1/attr2 plus the interleaved affine
- * parameter). matrixNum is split: in affine mode its bits 3-4 double as
- * the h/v-flip bits. */
-struct oam_attrs_u16 {
-    u16 y:8; // 0x00
-    u16 affineMode:2;
-    u16 objMode:2;
-    u16 mosaic:1;
-    u16 bpp:1;
-    u16 shape:2;
-    u32 x:9; // 0x02 - u32: with u16, DrawScaledSprite's stores schedule differently
-    u16 matrixNumLo:3;
-    u16 hFlip:1;
-    u16 vFlip:1;
-    u16 size:2;
-    u16 tileNum:10; // 0x04
-    u16 priority:2;
-    u16 paletteNum:4;
-    s16 affineParam; // 0x06
-};
-
 /* A sprite box: position, requested size, its OAM template and the
  * preset box it was fitted to. */
 struct gfx_box_obj {
-    s32 x;                    // 0x00
-    s32 y;                    // 0x04
-    s32 width;                // 0x08
-    s32 height;               // 0x0C
-    struct oam_attrs_u16 oam; // 0x10
-    s32 sizeIndex;            // 0x18
-    s32 color;                // 0x1C - SetScaledSpriteColor
-    s32 scaleX;               // 0x20 - Q8
-    s32 scaleY;               // 0x24 - Q8
+    s32 x;                // 0x00
+    s32 y;                // 0x04
+    s32 width;            // 0x08
+    s32 height;           // 0x0C
+    struct oam_attrs oam; // 0x10 (gfx.h)
+    s32 sizeIndex;        // 0x18
+    s32 color;            // 0x1C - SetScaledSpriteColor
+    s32 scaleX;           // 0x20 - Q8
+    s32 scaleY;           // 0x24 - Q8
 };
 
 /* Picks the smallest-area box preset (gObjSizeWidths/674) that a
@@ -179,14 +156,14 @@ void DrawScaledSprite(struct gfx_box_obj *self)
         break;
     }
     if (self->oam.affineMode == 0) {
-        self->oam.hFlip = 0;
-        self->oam.vFlip = 0;
+        self->oam.matrixBit3 = 0;
+        self->oam.matrixBit4 = 0;
     } else {
         buf = gOamBuffer;
         n = buf->matrixCount++;
-        self->oam.matrixNumLo = n;
-        self->oam.hFlip = n >> 3;
-        self->oam.vFlip = n >> 4;
+        self->oam.matrixLo = n;
+        self->oam.matrixBit3 = n >> 3;
+        self->oam.matrixBit4 = n >> 4;
         {
             /* Read through a u16 local: the ROM loads each scale with ldrh
              * ahead of its store address. */

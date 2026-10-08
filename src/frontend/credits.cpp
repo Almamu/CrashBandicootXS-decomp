@@ -193,18 +193,6 @@ void Credits::Loop()
     popups = 0;
 }
 
-/* The OAM request of a logo's 32x32 cells. */
-struct popup_oam {
-    u8 y;
-    u8 unk_1;
-    u16 x:9;
-    u16 unk_2:5;
-    u16 size:2;
-    u16 tile:10;
-    u16 unk_4:2;
-    u16 palette:4;
-};
-
 /* Draws the lines on screen: the characters with their font's slot 4,
  * the logos as 32x32 OAM cells (those on screen). */
 void Credits::DrawText()
@@ -218,7 +206,7 @@ void Credits::DrawText()
         CreditsLogo *logo;
         s32 tile;
         u32 zero;
-        struct popup_oam oam;
+        struct oam_attrs oam; // the logo's 32x32 cells
         s32 y;
         s32 i;
 
@@ -250,7 +238,7 @@ void Credits::DrawText()
                 for (j = 0; j < logo->cols; j++) {
                     if ((u32)(y + 0x1f) <= 0xbe) {
                         oam.x = x;
-                        oam.tile = tile;
+                        oam.tileNum = tile;
                         gOamBuffer->Add(&oam);
                     }
                     tile += 0x10;

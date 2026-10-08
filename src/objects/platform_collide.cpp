@@ -21,7 +21,7 @@ extern "C" void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteH
 
 /* Returns its argument: reading `pos` through it keeps the address in a
  * register, as the ROM does. */
-static inline struct pos2 *PosPtr(struct pos2 *p)
+static inline struct vec2 *PosPtr(struct vec2 *p)
 {
     return p;
 }
@@ -34,7 +34,7 @@ static inline s32 Span(s32 x, s32 w, s32 o)
 
 void Platform::ResolveCollision(void *)
 {
-    struct pos2 pos;
+    struct vec2 pos;
     s32 ox;
     s32 oy;
     s32 hdir;
@@ -61,7 +61,7 @@ void Platform::ResolveCollision(void *)
      * of being formed again from sp at each one. */
     MATCH_KEEP(pb);
     GetSpriteHitbox_p(pb, gPlayer);
-    box = (struct hitbox_quad *)&gPlayer->anim->records[gPlayer->tag].offX;
+    box = (struct hitbox_quad *)&gPlayer->bank->anims[gPlayer->tag].box[0];
     if (AabbOverlaps(&a, pb)) {
         result = 0;
         above = 0;

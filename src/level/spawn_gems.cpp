@@ -42,7 +42,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1B;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x1BC);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1BC);
         part->tag = bit;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -62,7 +62,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1D;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -86,7 +86,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1E;
         Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
         part->tag = tag;
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -105,7 +105,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x1F;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+            part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
             part->tag = tag;
             part->ResetFrameTimer();
             part->ResetFrameIndex();
@@ -127,7 +127,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x20;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+            part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
             part->tag = tag;
             part->ResetFrameTimer();
             part->ResetFrameIndex();
@@ -150,7 +150,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x22;
             Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-            part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x180);
+            part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x180);
             part->tag = bit;
             part->ResetFrameTimer();
             part->ResetFrameIndex();

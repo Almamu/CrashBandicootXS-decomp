@@ -3492,8 +3492,53 @@ still read through them. `tools/layout_audit.py views` lists them.
   `struct act_anim_record` and `struct act_anim_bank` went with the old
   field types. Every object is byte-identical.
 
+- **Batch 9, the plain-C record copies.** One type per layout, merged
+  where every object stays byte-identical:
+  - the sprite bank: Sprite's `anim`/`bank` union has one member, `const
+    struct sprite_bank *bank` (still a union, for the alias set 0 its
+    stores were compiled with: hud.hpp's SET_PART_BANK), so
+    gobj_1a794.h's `struct anim_table` and `struct anim_rec` went (about
+    60 `->anim` stores and `->anim->records[...]` reads are `->bank`
+    and `->bank->anims[...]`; `frames` is `frameCount`);
+  - actor_self.h's `struct actor_method` and `struct actor_vtable`:
+    actor_self's `vtable` points at vtable.h's `struct vtable_slot`s;
+  - the DISPCNT copies: gfx.h's `union dispcnt` (`raw`, `bits`) replaces
+    level_select.hpp's `LevelSelectDispcnt`, menus.hpp's `MenuDispcnt`
+    and the continue prompt's and language select's anonymous unions;
+  - the level spawn record: actor.h's `struct actor_spawn` (with its
+    offsets: the tail of a struct sub_effect_record), which
+    jetpack_spawn.cpp's `struct jetpack_spawn_rec` was a copy of
+    (`kind[0..2]` are `kind`, `altKind`, `bonusKind`);
+  - the {x, y} pairs: aabb.h's `struct vec2` replaces gfx_part.h's
+    `gfx_vec`, objects.h's `e08c_pos`, level.h's `probe_pos`, hud.h's
+    `hud_pos`, menus.h's `xy_pair` and `icon_pos`, pickups.h's
+    `orbit_vec`, gobj_1a794.h's `pos2` and the file-local `text_vec`,
+    `lk_point` and `gl_point` (cxx_symbols.txt's two mangled names with
+    `7xy_pair`/`8e08c_pos` say `4vec2`); level_cutscene.cpp's `struct
+    text_rect` is a `struct aabb`; gfx.h's `struct piece_offset` is
+    sprite_bank.h's `struct sprite_piece_pos`;
+  - the OAM entries: font_glyph.cpp's `struct glyph_oam`, credits.cpp's
+    `struct popup_oam` (byte and halfword units) and graphics_package.cpp's
+    `struct oam_attrs_u16` (halfword units; its comment said gfx.h's word
+    units changed a DrawScaledSprite store, which old_agbcp's C++ doesn't
+    do) are gfx.h's `struct oam_attrs`;
+  - pause_menu_loop.cpp's `struct pause_keys` is `gKeys.half`.
+
+  Kept, each with its comment: swim_ctrl.cpp's `struct keys` (its
+  zero-length array makes the copy BLKmode, on the stack, as in the
+  ROM), gfx.h's `struct piece_info` (it reads the piece count as the
+  `tiles` word's top byte), actor_anim.h's `struct sub_effect_table_end`
+  (the 12 bytes after a spawn table's last record), crates.h's `struct
+  pool_init_node` and cutscene.h's `struct cutscene_player` (batch 6).
+  run_room.cpp's `gl_input` had already gone.
+
 `tools/layout_audit.py views` on origin/main listed 90 view pairs; after
-batches 2-5 it lists 49, none of them a C view a C++ file reads through.
+batches 2-5 it lists 49, none of them a C view a C++ file reads through;
+after batches 6 and 9, 34 (`--min 1`: 273 -> 75), and `names` 7 rows in 3
+families (20 in 4 before): the C views and their classes agree, and what
+is left is unrelated layouts of the same shape (a box's `w` and a
+star's `dx`, the crate grid's node and the sprite-frame cache's) and
+CameraLead's own field at GroundSprite's `type`.
 `MATCH_HOLD_REG` stays at 411 and instruction-emitting `asm` at 49:
 the retyped code compiled to the same bytes with the pins as they were.
 

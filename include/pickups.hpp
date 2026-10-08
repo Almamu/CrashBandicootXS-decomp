@@ -53,13 +53,13 @@ static inline s32 Affine(Sprite *part)
 class ExtraLife : public Sprite
 {
 public:
-    s32 velX;                // 0x40 - the flight's step (Q8 per frame)
-    s32 velY;                // 0x44
-    u8 state;                // 0x48 - 0 on the spot, 1/2 flying off
-    u8 counter;              // 0x49 - the bob's sine index; in state 2, `affine`'s way (0 down)
-    u8 mode;                 // 0x4A - 0 bob; hop 1: to the left, 2: to the right, 3: in place
-    u8 phase;                // 0x4B - the hop's sine index
-    struct orbit_vec anchor; // 0x4C - the home position (Q8)
+    s32 velX;           // 0x40 - the flight's step (Q8 per frame)
+    s32 velY;           // 0x44
+    u8 state;           // 0x48 - 0 on the spot, 1/2 flying off
+    u8 counter;         // 0x49 - the bob's sine index; in state 2, `affine`'s way (0 down)
+    u8 mode;            // 0x4A - 0 bob; hop 1: to the left, 2: to the right, 3: in place
+    u8 phase;           // 0x4B - the hop's sine index
+    struct vec2 anchor; // 0x4C - the home position (Q8)
 
     ExtraLife();                      // InitExtraLife
     virtual s32 CheckPlayerContact(); // 1 CollideExtraLife
@@ -76,7 +76,7 @@ public:
         this->id = id;
         x = INT_TO_Q8((s32)px);
         y = INT_TO_Q8((s32)py);
-        anchor = *(struct orbit_vec *)&x;
+        anchor = *(struct vec2 *)&x;
     }
     static ExtraLife *Create(u16 id, u16 x, u16 y, s32 unused); // CreateExtraLife
     void PickUp(u8 randomize);                                  // PickUpExtraLife
@@ -108,13 +108,13 @@ COMPILE_TIME_ASSERT(pickups_hpp, sizeof(ExtraLife) == 0x54);
 class Wumpa : public Sprite
 {
 public:
-    s32 velX;                // 0x40
-    s32 velY;                // 0x44
-    u8 state;                // 0x48 - 0 on the spot, 1/2 flying off, 3 paying out
-    u8 counter;              // 0x49
-    u8 mode;                 // 0x4A - 0xFF: start the payout (SetHop)
-    u8 phase;                // 0x4B - in state 3, the wumpas dropped
-    struct orbit_vec anchor; // 0x4C
+    s32 velX;           // 0x40
+    s32 velY;           // 0x44
+    u8 state;           // 0x48 - 0 on the spot, 1/2 flying off, 3 paying out
+    u8 counter;         // 0x49
+    u8 mode;            // 0x4A - 0xFF: start the payout (SetHop)
+    u8 phase;           // 0x4B - in state 3, the wumpas dropped
+    struct vec2 anchor; // 0x4C
 
     Wumpa();                          // InitWumpa
     virtual s32 CheckPlayerContact(); // 1 CollideWumpa
@@ -132,7 +132,7 @@ public:
         this->id = id;
         x = INT_TO_Q8((s32)px);
         y = INT_TO_Q8((s32)py);
-        anchor = *(struct orbit_vec *)&x;
+        anchor = *(struct vec2 *)&x;
     }
     static Wumpa *Create(u16 id, u16 x, u16 y, u16 special); // CreateWumpa
     void PickUp(u8 randomize);                               // PickUpWumpa

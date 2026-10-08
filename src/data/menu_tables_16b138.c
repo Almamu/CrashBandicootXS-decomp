@@ -46,8 +46,8 @@ const s32 gPauseMenuPageTitles[5] = {
 /* Icon positions and frame indices of the menu screens in
  * pause_menu_pages_init.cpp (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
  * InitPauseTimeTrialPage), pause_menu_pages_draw.cpp and pause_menu_gems.cpp. */
-const struct icon_pos gPauseCrystalIconPos = { 212, 112 };
-const struct icon_pos gPausePowerIconPos[4] = {
+const struct vec2 gPauseCrystalIconPos = { 212, 112 };
+const struct vec2 gPausePowerIconPos[4] = {
     { 180, 96 },
     { 212, 96 },
     { 180, 128 },
@@ -58,7 +58,7 @@ const s32 gPausePowerIconFrames[4] = {
     3, 2, 0, 1,
 };
 
-const struct icon_pos gPauseGemIconPos[5] = {
+const struct vec2 gPauseGemIconPos[5] = {
     { 200, 90 },
     { 168, 110 },
     { 184, 110 },
@@ -70,7 +70,7 @@ const s32 gPauseGemIconFrames[5] = {
     1, 3, 2, 4, 0,
 };
 
-const struct icon_pos gPauseRelicIconPos[3] = {
+const struct vec2 gPauseRelicIconPos[3] = {
     { 172, 100 },
     { 194, 100 },
     { 216, 100 },
@@ -80,4 +80,4 @@ const s32 gPauseRelicIconFrames[3] = {
     1, 2, 0,
 };
 
-const struct icon_pos gPauseTimeTrialIconPos = { 196, 120 };
+const struct vec2 gPauseTimeTrialIconPos = { 196, 120 };

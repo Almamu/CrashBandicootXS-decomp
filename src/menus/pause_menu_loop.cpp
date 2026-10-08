@@ -33,17 +33,13 @@ extern "C" {
  * loop it lands ahead of that insertion
  * (docs/matching/archive/early-rom-naked-retry-2.md). */
 
-/* gKeys as the {held, newly pressed} key-state pair. */
-struct pause_keys {
-    u16 held;
-    u16 pressed;
-};
-#define KEYS (*(struct pause_keys *)&gKeys)
+/* gKeys as the {held, newly pressed} key-state pair (globals.h). */
+#define KEYS (gKeys.half)
 
 s32 PauseMenu::Loop()
 {
     s32 result;
-    union MenuDispcnt *disp;
+    union dispcnt *disp;
 
     while (bldy.evy != 0) {
         bldy.evy--;

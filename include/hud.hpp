@@ -26,8 +26,8 @@ extern "C" {
 #include "hud.h"
 }
 
-/* Sets a part's sprite bank. `bank` is in Sprite's anonymous union with
- * `anim`, and gcc gives every access to a union member alias set 0, so a
+/* Sets a part's sprite bank. `bank` is in Sprite's one-member union (sprite_obj.hpp),
+ * and gcc gives every access to a union member alias set 0, so a
  * plain store would make gcc reload `parts` after it. Through a pointer
  * to the member the store has the pointer's own alias set (as menus.hpp's
  * SetIconBank and level_select.hpp's SetBankNow); written in place rather

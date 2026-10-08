@@ -21,7 +21,7 @@ extern "C" {
 s32 MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
 {
     struct {
-        struct probe_pos pos;
+        struct vec2 pos;
         s32 origY;
     } f;
     u8 span = quad->w;
@@ -30,7 +30,7 @@ s32 MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
     u8 hit;
 
     f.origY = y;
-    f.pos = *(struct probe_pos *)&Pos();
+    f.pos = *(struct vec2 *)&Pos();
     OffsetToHitboxEdgeStart(&f.pos, mode, (void *)quad);
     f.pos.x = Q8_TO_INT(f.pos.x);
     f.pos.y = Q8_TO_INT(f.pos.y);
@@ -44,7 +44,7 @@ s32 MovingSprite::ProbeEdgeTerrain(s32 mode, const struct hitbox_quad *quad)
     {
         u8 saved = gLevelLayers->probeFlag;
         u8 *t2;
-        struct probe_pos *pp;
+        struct vec2 *pp;
 
         gLevelLayers->probeFlag = 0;
         t2 = tries;

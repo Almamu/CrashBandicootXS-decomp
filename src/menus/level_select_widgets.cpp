@@ -290,7 +290,7 @@ void LevelSelectEntry::SetBox(s32 kind)
 
 /* Slot 3: places the entry at pixel `pos`, the icon 3 px higher. The
  * frame's position is SetEntityPixelPos out of line, as in the ROM. */
-void LevelSelectEntry::SetPos(const struct xy_pair *pos)
+void LevelSelectEntry::SetPos(const struct vec2 *pos)
 {
     icon->SetPixelPos(pos->x, pos->y - 3);
     SetEntityPixelPos(frame, pos->x, pos->y);
@@ -479,7 +479,7 @@ void LevelSelectCursor::Hide()
  * side of the screen it is on (page turn). */
 void LevelSelectCursor::Park()
 {
-    struct xy_pair pos;
+    struct vec2 pos;
 
     if (Q8_TO_INT(part->x) <= 0x78)
         pos.x = 0x14;
@@ -533,7 +533,7 @@ void LevelSelectCursor::Move(s32 x, s32 y)
 }
 
 /* UNUSED (inlined into Park). */
-void LevelSelectCursor::MoveTo(struct xy_pair *pos)
+void LevelSelectCursor::MoveTo(struct vec2 *pos)
 {
     MoveToNow(pos);
 }

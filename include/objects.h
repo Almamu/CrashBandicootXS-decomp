@@ -22,17 +22,9 @@
 struct actor;
 struct collect_part;
 struct crate;
-struct gfx_vec;
+struct vec2;
 struct hitbox_quad;
 struct sprite_point;
-
-/* A position pair: a collision candidate's (src/objects/collision_queue.cpp),
- * which ApplyCrateCollision takes by value. Copied as one 8-byte struct
- * (the ROM's paired `ldr; ldr; str; str`). */
-struct e08c_pos {
-    s32 x;
-    s32 y;
-};
 
 /*
  * One queued collision of the player with a crate, 0x24 bytes:
@@ -50,7 +42,7 @@ struct collision_candidate {
 #else
     struct crate *neighbor; // 0x00 - the crate; its position is its first two words
 #endif
-    struct e08c_pos pos; // 0x04
+    struct vec2 pos;     // 0x04
     s32 kind;            // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
     s32 code;            // 0x10
     s32 edge;            // 0x14

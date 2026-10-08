@@ -18,7 +18,7 @@ extern "C" {
 /* A crate (CreateCrate allocates 0x64 bytes): a sprite with the fall
  * state, the per-kind parameters and the stack links. `kind` is the crate
  * type (CRATE_KIND_*, constants/crates.h), `state` the state and busy
- * bits (CRATE_STATE_*). The head is Sprite's: `anim` the sprite bank,
+ * bits (CRATE_STATE_*). The head is Sprite's: `bank` the sprite bank,
  * `tag` the animation, `frame` its step (FinishBrokenCrate blasts on the
  * first tick of `stepTimer`), and `animDone` set once it ends (UpdateCrate
  * then resets `frame` and clears the busy bit). */
@@ -128,7 +128,7 @@ public:
 
     /* The hits, breaks and explosions (crate_break.cpp, part 7g). */
     void QueuePlayerCollision(s32 idx); // QueueCratePlayerCollision
-    void ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+    void ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec2 pos, s32 hit,
                         bool limited, bool above, bool forced); // ApplyCrateCollision
     void ClearStackTouched();                                   // ClearCrateStackTouched
     void MarkStackTouched(struct aabb *box);                    // MarkCrateStackTouched
@@ -186,7 +186,7 @@ public:
  * flags passed as one-byte structs, which go to their stack slots with
  * `strb`, as in the ROM (a bool argument is stored as a word). */
 extern "C" void ApplyCrateCollision(Crate *self, s32 kind, s32 code, s32 edge, s32 depth,
-                                    struct e08c_pos pos, s32 hit, struct byte_arg p20,
+                                    struct vec2 pos, s32 hit, struct byte_arg p20,
                                     struct byte_arg p21, struct byte_arg pforced);
 
 COMPILE_TIME_ASSERT(crate_hpp, sizeof(Crate) == 0x64);

@@ -16,6 +16,7 @@
  * declares those by tag. */
 
 #include "core.h"
+#include "aabb.h"
 #include "level_state.h"
 #include "level_data.h"
 #include "constants/bosses.h"
@@ -64,12 +65,6 @@ struct tile_cache {
     u8 buf[16][0x100]; /* 0x020 - 0x1020, 16 decoded 256-byte chunks */
     s32 id[16];        /* 0x1020 - 0x105c, record IDs resident in `buf` */
     s32 nextSlot;      /* 0x1060 */
-};
-
-/* A terrain probe's position (ProbeTerrain and its helpers). */
-struct probe_pos {
-    s32 x;
-    s32 y;
 };
 
 /* The level-layers singleton (gLevelLayersSingleton, gLevelLayers): the
@@ -436,18 +431,18 @@ extern void SpawnStartMarker(u32 arg, u16 x, u16 y, u16 z);
 
 /* src/level/terrain.c */
 extern s32 GetTerrainFlagsAt(void *arg, s32 x, s32 y);
-extern s32 ProbeFloorHeight(void *player, struct probe_pos *pos, s32 *outValue);
-extern s32 ProbeSolidFloorHeight(void *player, struct probe_pos *pos, s32 *outValue);
+extern s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
+extern s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
 extern s32 sub_8026C80(void *arg, s32 arg1, s32 *arg2);
 extern s32 sub_8026C8C(void);
 
 /* src/level/terrain_probe.c */
-extern s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *outValue);
+extern s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue);
 
 /* src/level/terrain_probe_axes.c */
-extern s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
+extern s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
                          s32 submode);
-extern s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
+extern s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
                          s32 submode);
 
 /* src/level/tile_cache.cpp (C linkage) */

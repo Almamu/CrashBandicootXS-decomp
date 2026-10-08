@@ -154,7 +154,7 @@ void LevelSelect::RefreshPage()
     StartAnim(sprites[0], gLevelSelectWorldAnims[world]);
     LIMIT_MAX(index, lastIndex);
     {
-        const struct xy_pair *pos = &positions[index];
+        const struct vec2 *pos = &positions[index];
 
         panel->Move(pos->x, pos->y - 0x18);
     }

@@ -30,15 +30,6 @@ extern "C" {
  *
  * Built with old_agbcp (as the C was with old_agbcc). */
 
-/* A level spawn record, as passed to `SpawnJetpackActor`. */
-struct jetpack_spawn_rec {
-    u8 kind[3]; // 0x00 - normal / alternate-mode / `alt`-gated kind
-    u8 pad;
-    s32 x; // 0x04 - tile units (<< 8 to Q8)
-    s32 y; // 0x08
-    s32 z; // 0x0C
-};
-
 /* Clamps a steering speed to +-0x240, keeping its sign. */
 #define CLAMP_SPEED(v)                                                         \
     if (ABS_BRANCHLESS(v) > 0x240)                                             \
@@ -61,20 +52,20 @@ void YetiStateStop(void)
 }
 
 /* Spawns the object a level spawn record describes: its kind comes from
- * byte 0, byte 1 in the alternate game mode (kind 0x17 there becomes
- * 0x14) or byte 2 when `alt` is set. Kind 0x1d only spawns while
+ * `kind`, `altKind` in the alternate game mode (kind 0x17 there becomes
+ * 0x14) or `bonusKind` when `alt` is set. Kind 0x1d only spawns while
  * `IsCrystalSaved` allows it; kinds 0, 0x3e and 0x20-0x25 never do. */
-void *SpawnJetpackActor(struct jetpack_spawn_rec *rec, u8 alt, s32 dz)
+void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz)
 {
-    u8 kind = rec->kind[0];
+    u8 kind = rec->kind;
     s32 x, y, z;
 
     if (gLevelState->timeTrial != 0) {
-        kind = rec->kind[1];
+        kind = rec->altKind;
         if (kind == 0x17)
             kind = 0x14;
     } else if (alt != 0) {
-        kind = rec->kind[2];
+        kind = rec->bonusKind;
     }
     if (kind == 0x1d && !(u8)IsCrystalSaved(gLevelState))
         return 0;

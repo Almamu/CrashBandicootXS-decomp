@@ -18,19 +18,12 @@
 
 #include "core.h"
 #include "math_util.h"
+#include "aabb.h"
 
 /* The HUD object (`gHud`, class Hud, include/hud.hpp: 0x68 bytes). No C
  * file reads its fields: the C callers of its methods (below) only pass
  * the pointer, so the C side has the tag alone. */
 struct hud_counter;
-
-/* A HUD part's position, in pixels. */
-struct hud_pos {
-    s32 x;
-    s32 y;
-};
-
-COMPILE_TIME_ASSERT(hud_h, sizeof(struct hud_pos) == 0x8);
 
 /* The vertical offset HudPart::Draw adds to every part, set by the
  * counters while they slide (src/iwram/iwram_data.c). */
@@ -39,7 +32,7 @@ extern s32 gHudSlideOffset;
 /* Each of the 35 parts' starting animation and position
  * (src/data/hud_fonts_174be0.c). */
 extern const u32 gHudPartAnims[35];
-extern const struct hud_pos gHudPartPositions[35];
+extern const struct vec2 gHudPartPositions[35];
 
 /* src/hud/hud.cpp */
 extern void UpdateHud(struct hud_counter *self);

@@ -15,14 +15,14 @@
 #include "core.h"
 #include "actor.h"
 #include "actor_self.h"
-#include "gfx_part.h"
+#include "aabb.h"
 #include "vtable.h"
 #include "objects.h"
 #include "constants/action_states.h"
 #include "constants/attack_kinds.h"
 
 struct follow_child;
-struct anim_table;
+struct sprite_bank;
 
 /* The swim controller's turn: speedX at each frame of the turn animation
  * (state 4), copied to the stack in one go by StartPlayerCtrlStroke
@@ -44,9 +44,9 @@ struct level_anim {
  * against the class's), a ground sprite (GroundSprite's 0x80-byte base)
  * with the player's own fields after it. The fields have the class's
  * names and types; the class's notes describe them. Where the class has
- * an anonymous union (Sprite's `anim`/`bank` and `mirror` bits), which
- * agbcc can't express, the view has its first member, and a class
- * pointer is a `void *`. Only bonus_round.c reads it (x, y). */
+ * an anonymous union (Sprite's `bank` and `mirror` bits), which agbcc
+ * can't express, the view has its first member, and a class pointer is a
+ * `void *`. Only bonus_round.c reads it (x, y). */
 struct player {
     s32 x;   // 0x00 - Q8
     s32 y;   // 0x04 - Q8
@@ -60,10 +60,10 @@ struct player {
     u8 rawW;             // 0x14
     u8 rawH;             // 0x15
     u8 unused_16[2];
-    const void *vtable;      // 0x18 - gPlayerVtable (the class's vtable pointer)
-    void *lastHitbox;        // 0x1C
-    struct anim_table *anim; // 0x20 - the sprite bank
-    u8 dir;                  // 0x24 - PLAYER_DIR_*
+    const void *vtable;             // 0x18 - gPlayerVtable (the class's vtable pointer)
+    void *lastHitbox;               // 0x1C
+    const struct sprite_bank *bank; // 0x20 - the sprite bank (sprite_bank.h)
+    u8 dir;                         // 0x24 - PLAYER_DIR_*
 /* `dir`'s bits (motion direction, ApplyPlayerVelocity); also struct
  * camera_target.dir (level.h), the same byte (PlayRoom points
  * gCamera->target at gPlayer). */
@@ -117,11 +117,11 @@ struct player {
     u8 unk_93;
     u8 listCount; // 0x94
     u8 unk_95[3];
-    void *list[5];               // 0x98 - Crate *s
-    void *carried;               // 0xAC - a Sprite *
-    void *child;                 // 0xB0 - a Sprite *
-    s32 maskTrailIdx;            // 0xB4
-    struct gfx_vec maskTrail[8]; // 0xB8 (gfx_part.h)
+    void *list[5];            // 0x98 - Crate *s
+    void *carried;            // 0xAC - a Sprite *
+    void *child;              // 0xB0 - a Sprite *
+    s32 maskTrailIdx;         // 0xB4
+    struct vec2 maskTrail[8]; // 0xB8 (aabb.h)
     u8 unk_F8[8];
     u8 slippery;  // 0x100
     u8 hanging;   // 0x101

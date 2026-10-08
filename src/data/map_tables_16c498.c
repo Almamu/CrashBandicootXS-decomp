@@ -6,23 +6,23 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* `struct xy_pair` (menus.h) positions and animation ids of the level-select
+/* `struct vec2` (menus.h) positions and animation ids of the level-select
  * screens: level_select.cpp (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
  * InitLaunchPad) and level_select_pages.cpp (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
-const struct xy_pair gLevelSelectWorldPos = { 16, 32 };
-const struct xy_pair gLevelSelectCrashIconPos = { 16, 60 };
-const struct xy_pair gLevelSelectCrystalPos = { 40, 33 };
-const struct xy_pair gLevelSelectGemPos = { 50, 32 };
-const struct xy_pair gLevelSelectTrialIconPos = { 66, 34 };
-const struct xy_pair gLevelSelectTimePos = { 166, 34 };
-const struct xy_pair gLevelSelectNextWorldArrowPos = { 201, 70 };
-const struct xy_pair gLevelSelectPrevWorldArrowPos = { 201, 87 };
+const struct vec2 gLevelSelectWorldPos = { 16, 32 };
+const struct vec2 gLevelSelectCrashIconPos = { 16, 60 };
+const struct vec2 gLevelSelectCrystalPos = { 40, 33 };
+const struct vec2 gLevelSelectGemPos = { 50, 32 };
+const struct vec2 gLevelSelectTrialIconPos = { 66, 34 };
+const struct vec2 gLevelSelectTimePos = { 166, 34 };
+const struct vec2 gLevelSelectNextWorldArrowPos = { 201, 70 };
+const struct vec2 gLevelSelectPrevWorldArrowPos = { 201, 87 };
 
-const struct xy_pair gLevelSelectEntryPositions[6] = {
+const struct vec2 gLevelSelectEntryPositions[6] = {
     { 30, 120 }, { 70, 132 }, { 120, 136 }, { 170, 132 }, { 210, 120 }, { 0, 0 },
 };
-const struct xy_pair gLevelSelectEntryPositionsAllCleared[6] = {
+const struct vec2 gLevelSelectEntryPositionsAllCleared[6] = {
     { 26, 118 }, { 58, 130 }, { 99, 136 }, { 141, 136 }, { 182, 130 }, { 214, 118 },
 };
 const u32 gLevelSelectWorldEntryBoxAnims[4] = {

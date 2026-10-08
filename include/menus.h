@@ -18,6 +18,7 @@
  * game_progress`. */
 
 #include "core.h"
+#include "aabb.h"
 #include "vtable.h"
 #include "graphics_package.h"
 #include "constants/levels.h"
@@ -27,19 +28,6 @@ struct follow_child;
 struct game_progress;
 struct level_item;
 struct level_menu;
-
-/* A screen position, as the level-select tables store them. */
-struct xy_pair {
-    s32 x;
-    s32 y;
-};
-
-/* A fixed {x, y} screen-position pair, as consumed by SetEntityPixelPos
- * (the pause menu's icon positions). */
-struct icon_pos {
-    s32 x;
-    s32 y;
-};
 
 /* One row of the pause menu (gPauseMenuRows, PauseMenu::rows): a
  * GetUiText label id, then the row's type (4/5 are the music/sound
@@ -69,21 +57,21 @@ extern u8 gNewWorldOpened;
 /* The level-select tables (src/data/map_tables_16c498.c,
  * map_tables_16c5f0.c, image_table_16c5a0.c, bg_package_16c58c.c,
  * data/data.s). */
-extern const struct xy_pair gLevelSelectWorldPos;
-extern const struct xy_pair gLevelSelectCrashIconPos;
-extern const struct xy_pair gLevelSelectCrystalPos;
-extern const struct xy_pair gLevelSelectGemPos;
-extern const struct xy_pair gLevelSelectTrialIconPos;
-extern const struct xy_pair gLevelSelectTimePos;
-extern const struct xy_pair gLevelSelectNextWorldArrowPos;
-extern const struct xy_pair gLevelSelectPrevWorldArrowPos;
-extern const struct xy_pair gLevelSelectEntryPositions[6];
-extern const struct xy_pair gLevelSelectEntryPositionsAllCleared[6];
+extern const struct vec2 gLevelSelectWorldPos;
+extern const struct vec2 gLevelSelectCrashIconPos;
+extern const struct vec2 gLevelSelectCrystalPos;
+extern const struct vec2 gLevelSelectGemPos;
+extern const struct vec2 gLevelSelectTrialIconPos;
+extern const struct vec2 gLevelSelectTimePos;
+extern const struct vec2 gLevelSelectNextWorldArrowPos;
+extern const struct vec2 gLevelSelectPrevWorldArrowPos;
+extern const struct vec2 gLevelSelectEntryPositions[6];
+extern const struct vec2 gLevelSelectEntryPositionsAllCleared[6];
 extern const u32 gLevelSelectWorldEntryBoxAnims[4];
 extern const u32 gLevelSelectWorldAnims[4];
 extern const u32 gLevelSelectRankAnims[5];
 extern const u16 gLevelSelectPalette[16];
-extern const struct xy_pair gZoomBgSlotOffsets[4];
+extern const struct vec2 gZoomBgSlotOffsets[4];
 extern const u32 gLevelSelectEntryBoxAnims[5];
 extern const u32 gLevelSelectEntryWorldAnims[4];
 extern const u32 gLevelSelectCursorAnims[4];
@@ -94,14 +82,14 @@ extern const u8 gLevelSelectCursorZoomTiles[];
 /* The pause menu tables (src/data/menu_tables_16b138.c,
  * pause_rows_16b298.c, bg_package_16b284.c). */
 extern const s32 gPauseMenuPageTitles[5];
-extern const struct icon_pos gPauseCrystalIconPos;
-extern const struct icon_pos gPausePowerIconPos[4];
+extern const struct vec2 gPauseCrystalIconPos;
+extern const struct vec2 gPausePowerIconPos[4];
 extern const s32 gPausePowerIconFrames[4];
-extern const struct icon_pos gPauseGemIconPos[5];
+extern const struct vec2 gPauseGemIconPos[5];
 extern const s32 gPauseGemIconFrames[5];
-extern const struct icon_pos gPauseRelicIconPos[3];
+extern const struct vec2 gPauseRelicIconPos[3];
 extern const s32 gPauseRelicIconFrames[3];
-extern const struct icon_pos gPauseTimeTrialIconPos;
+extern const struct vec2 gPauseTimeTrialIconPos;
 extern const struct pause_row gPauseMenuRows[5];
 extern const u16 gPauseMenuPalette[16];
 extern const struct bg_package gPauseMenuBg;

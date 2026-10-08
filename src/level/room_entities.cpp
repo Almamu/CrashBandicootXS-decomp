@@ -73,16 +73,11 @@ extern "C" {
  *   which put `actor = a` next to `move:`.
  * - Separate `k`/`k2`/`k3` search counters, `i` declared at function
  *   scope (stack-slot order), `n > 0` guard + do-while for the link
- *   scan, `struct lk_point *pp = &p` for the move call, and a
+ *   scan, `struct vec2 *pp = &p` for the move call, and a
  *   `u32 zero` for the DMA fills.
  * - The first search's id is pinned to r1 (see the comment there); the
  *   C++ still needs it.
  */
-struct lk_point {
-    s32 x;
-    s32 y;
-};
-
 static inline Crate *Slot(s32 i)
 {
     return gCrateList->slots[i];
@@ -247,8 +242,8 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
         move:
             if (got && actor != 0) {
                 s32 lift = INT_TO_Q8(actor->GetBounds()->h + 1);
-                struct lk_point p;
-                struct lk_point *pp = &p;
+                struct vec2 p;
+                struct vec2 *pp = &p;
 
                 do {
                     p.x = actor->x;

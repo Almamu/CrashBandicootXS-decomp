@@ -186,7 +186,7 @@ void ActionCtrl::StateWarpIn()
         motionYKeepSpeed = 0;
         motionYPending = 1;
         motionY = 0;
-        gPaletteCache->LoadSlot(part->palette, part->anim->records[part->tag].paletteId);
+        gPaletteCache->LoadSlot(part->palette, part->bank->anims[part->tag].paletteId);
     }
 }
 

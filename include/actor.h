@@ -58,7 +58,20 @@ struct anim_table_record;
 struct category_vtable;
 struct sub_effect_record;
 
-struct actor_spawn;
+/* A level spawn record as SpawnActor and SpawnJetpackActor (vehicle.h)
+ * take it: the actor kinds, then the position in tile units (<< 8 to Q8).
+ * It is the tail of a spawn table's struct sub_effect_record (actor_anim.h)
+ * from its `kind` on, and the next record's `depth` (actor_factory.cpp's
+ * and jetpack_spawn.cpp's copies were merged here, #656). */
+struct actor_spawn {
+    u8 kind;      // 0x00 - the normal kind
+    u8 altKind;   // 0x01 - in time trial mode
+    u8 bonusKind; // 0x02 - when the bonus kinds are on (`useBonus`, `alt`)
+    u8 unk_03;
+    s32 x; // 0x04
+    s32 y; // 0x08
+    s32 z; // 0x0C
+};
 
 /* The actor zone (src/actor/): the 3D actor object (`struct actor_self`),
  * its animation, spawning, category frame and backgrounds. */

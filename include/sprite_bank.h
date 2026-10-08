@@ -13,10 +13,12 @@
  * Readers: GetSpriteTileBase (tileBase), GetSpriteFrame (anim -> seq -> frame),
  * DrawAffineSpritePieces/DrawSpritePieces (the pieces), GetSpriteAttackBox/GetSpriteBodyBox and
  * GetSpriteFrameAnchor-GetSpriteFrameBodyBox (the frame's boxes and anchor, picked by the
- * layout type), GetPaletteSlot (the OBJ palettes). Older files read the
- * same records through views with only the fields they use (struct
- * act_anim_record in player.h, struct anim_rec/anim_table in
- * gobj_1a794.h, struct piece_info in gfx.h). The menus' copies
+ * layout type), GetPaletteSlot (the OBJ palettes). Sprite's `bank`
+ * (sprite_obj.hpp) is a `const struct sprite_bank *`; the copies the older
+ * files read the records through (player.h's struct act_anim_record and
+ * act_anim_bank, gobj_1a794.h's struct anim_rec and anim_table, the HUD's
+ * and gfx_part.h's) are merged into these (#656). gfx.h's struct
+ * piece_info is the frame header's view. The menus' copies
  * (level_menu.h's, level_select_parts.h, level_select.c) and the file-local ones
  * (time_trial.cpp, dingodile.cpp, tiny_update.cpp, spawn_objects.cpp,
  * affine_sprite_pieces.cpp's kf_record) use these types since #574 batch 9e.

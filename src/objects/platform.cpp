@@ -86,7 +86,7 @@ static inline const struct speed_ramp *MoverRamp(PlatformMover *self)
 static inline void HoldFirstFrame(MovingSprite *part)
 {
     s32 f = 0;
-    s32 n = part->anim->records[part->tag].frames;
+    s32 n = part->bank->anims[part->tag].frameCount;
 
     CLAMP_INDEX(f, n);
     part->frame = f;

@@ -79,7 +79,7 @@
 /* `self` is gLevelLayers; the bounds are layer 0's `widthPx`/`heightPx`
  * (struct bg_scroll_layer), the right/lower edge of the level, compared
  * directly against the caller's plain-int probe position, not Q8. */
-s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *outValue)
+s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue)
 {
     s32 hit = 0;
 
