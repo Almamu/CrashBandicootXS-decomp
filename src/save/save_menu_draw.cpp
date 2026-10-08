@@ -123,30 +123,23 @@ void SaveMenu::DrawCancel(u8 highlight)
  * clear/overwrite step rather than a width probe (the return value is
  * never used).
  *
- * Once a NAKED transcription; it matches as plain C under both
- * compilers. The ROM keeps the record offset 0x130 in r8 and the Y
- * constant 0x87 in sb: `y` is pinned to r9 and set after the
- * manager pointer is loaded (the unpinned draft swapped the two, as
- * global-alloc ranks 0x87 slightly above 0x130). */
+ * Once a NAKED transcription. The ROM keeps the record offset 0x130 in
+ * r8 and the Y constant 0x87 in sb; with the 0x87 written as a literal
+ * at each SetPos, as here, gcc shares it the ROM's way (the C kept it in
+ * a `y` pinned to r9; #662 round 2). */
 void SaveMenu::DrawYesNoPrompt(s32 value)
 {
     s32 w;
-    MATCH_HOLD_REG(s32, y, r9); // r9, as in the ROM (see above); still needed in C++
 
     gSmallFont->SetPalette(0);
     w = gSmallFont->MeasureText((u8 *)GetUiText(value));
-    {
-        s32 x = 0xa0 - w;
-        Font *m = gSmallFont;
-        y = 0x87;
-        m->SetPos(x, y);
-    }
+    gSmallFont->SetPos(0xa0 - w, 0x87);
     gSmallFont->DrawText((u8 *)GetUiText(value));
     gSmallFont->SetPalette(((flags >> 2) & 1) ? 1 : 2);
     if (!cursor) {
-        gSmallFont->SetPos(0xa8, y);
+        gSmallFont->SetPos(0xa8, 0x87);
         gSmallFont->DrawText((u8 *)gMenuCursorText);
-        gSmallFont->SetPos(0xb0, y);
+        gSmallFont->SetPos(0xb0, 0x87);
         gSmallFont->DrawText((u8 *)GetUiText(0x29));
     } else {
         gSmallFont->SetPos(0xa8, 0x91);
