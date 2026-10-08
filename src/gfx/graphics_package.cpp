@@ -2,7 +2,6 @@
 extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "graphics_package.h"
 #include "gfx.h"
 #include "gba/gba.h"
@@ -182,79 +181,29 @@ void DrawScaledSprite(struct gfx_box_obj *self)
 /* UNUSED - no caller anywhere in the ROM (no `bl` in expected/*.s, no
  * pointer to it in baserom.gba), like the other three setters below and
  * FitScaledSprite/DrawScaledSprite above, whose `struct gfx_box_obj` they
- * all take (as a byte pointer). Sets the sprite box's solid color `arg1`
- * (a 256-color index): stores it in `color` (+0x1c), puts its palette
- * bank (`arg1 >> 4`) in the OAM template's palette bits (+0x15, attr2
- * bits 12-15), and fills OBJ tile 0x3C0 (`0x06017800`) with the color's
+ * all take. Sets the sprite box's solid color `color` (a 256-color
+ * index): stores it in `color` (+0x1c), puts its palette bank
+ * (`color / 16`) in the OAM template's palette bits (attr2 bits 12-15),
+ * and fills 64 OBJ tiles from tile 0x3C0 (`0x06017800`) with the color's
  * low nibble through a 16-bit fixed-source DMA3 transfer. */
-void SetScaledSpriteColor(u8 *self, s32 arg1)
+void SetScaledSpriteColor(struct gfx_box_obj *self, s32 color)
 {
-    MATCH_HOLD_REG(s32, val, r3);
-    s32 aligned;
-    MATCH_HOLD_REG(u32, mask, r1);
-    MATCH_HOLD_REG(u32, acc, r0);
-    u16 buf;
-    u32 dadVal;
-    vu32 *dma;
+    u32 nibble;
+    u32 dest;
 
-    val = arg1;
-    ((struct gfx_box_obj *)self)->color = val;
-    aligned = val;
-    if (val < 0) {
-        aligned += 0xf;
-    }
-    aligned >>= 4;
-    aligned <<= 4;
-
-    mask = 0xf;
-    acc = mask;
-    MATCH_KEEP(acc);
-    acc &= self[0x15];
-    acc |= aligned;
-    self[0x15] = acc;
-
-    mask &= val;
-    acc = mask << 4;
-    aligned = mask << 8;
-    acc |= aligned;
-    aligned = mask << 0xc;
-    acc |= aligned;
-    mask |= acc;
-
-    dadVal = (u32)(OBJ_VRAM0 + 0x3C0 * TILE_SIZE_4BPP);
-    buf = mask;
-    dma = (vu32 *)REG_ADDR_DMA3SAD;
-    dma[0] = (u32)&buf;
-    dma[1] = dadVal;
-    dma[2] = 0x81000400;
-    dma[2];
+    self->color = color;
+    self->oam.palette = color / 16;
+    nibble = color & 0xf;
+    nibble |= nibble << 4 | nibble << 8 | nibble << 12;
+    dest = (u32)(OBJ_VRAM0 + 0x3C0 * TILE_SIZE_4BPP);
+    DmaFill16(3, nibble, dest, 0x800);
 }
 
-/* UNUSED (see SetScaledSpriteColor). Sets the sprite box's OAM priority:
- * `arg1`'s low 2 bits into bits 2-3 of the template's byte +0x15 (attr2
- * bits 10-11).
- *
- * The two `& 3`/`neg`-mask constants land in the ROM's own registers
- * (both in r2, one right after the other - a fresh `mov r2,#0xd`
- * reload, not a reuse of the earlier `#3` value) once the second mask
- * is materialized via an opaque `mov #N; neg` asm idiom (the pause
- * menu's icon constructors used the same one while they were C) instead
- * of a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
-void SetScaledSpritePriority(u8 *self, u32 arg1)
+/* UNUSED (see SetScaledSpriteColor). Sets the sprite box's OAM priority
+ * (attr2 bits 10-11). */
+void SetScaledSpritePriority(struct gfx_box_obj *self, u32 priority)
 {
-    s32 mask1;
-    MATCH_HOLD_REG(u32, shifted, r1);
-    s32 mask2;
-    u8 byte;
-
-    mask1 = 3;
-    shifted = arg1 & mask1;
-    shifted = shifted << 2;
-    asm volatile("mov %0, #0xd\n\tneg %0, %0" : "=r"(mask2));
-    byte = self[0x15];
-    mask2 &= byte;
-    mask2 |= shifted;
-    self[0x15] = mask2;
+    self->oam.priority = priority;
 }
 
 /* UNUSED (see SetScaledSpriteColor). Sets the sprite box's position
@@ -267,18 +216,12 @@ void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2)
 
 /* UNUSED (see SetScaledSpriteColor). Resets the OAM template's
  * attributes FitScaledSprite doesn't own: the object mode, mosaic, color
- * mode and shape bits of attr0 (byte +0x11 masked with ~0xc, ~0x10,
- * ~0x20 and 0x3f, i.e. bits 10-15 cleared) and the priority (byte +0x15
- * masked with ~0xc). */
-void ResetScaledSpriteAttrs(u8 *self)
+ * mode and shape bits of attr0 and the priority. */
+void ResetScaledSpriteAttrs(struct gfx_box_obj *self)
 {
-    s32 mask = -0xd;
-    s32 b = mask & self[0x11];
-
-    b &= -0x11;
-    b &= -0x21;
-    b &= 0x3f;
-    self[0x11] = b;
-    mask &= self[0x15];
-    self[0x15] = mask;
+    self->oam.objMode = 0;
+    self->oam.mosaic = 0;
+    self->oam.bpp = 0;
+    self->oam.shape = 0;
+    self->oam.priority = 0;
 }
