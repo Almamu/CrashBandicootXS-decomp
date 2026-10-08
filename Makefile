@@ -307,6 +307,10 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/menus/pause_menu_loop.o \
                   $(C_BUILDDIR)/menus/pause_menu_gems.o \
                   $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
+                  $(C_BUILDDIR)/menus/power_dialog.o \
+                  $(C_BUILDDIR)/menus/power_dialog_draw.o \
+                  $(C_BUILDDIR)/menus/pause_menu.o \
+                  $(C_BUILDDIR)/menus/continue_prompt_init.o \
                   $(C_BUILDDIR)/level/spawn_gem_platforms.o \
                   $(C_BUILDDIR)/level/entity_spawner.o \
                   $(C_BUILDDIR)/level/bg_layer.o \

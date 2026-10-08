@@ -19,8 +19,8 @@ extern "C" {
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions), C++ since
  * #664 part 10c (include/frontend.hpp). The file starts with the last
  * methods of the continue prompt (ContinuePrompt: Draw, Blink,
- * CommitFrame, the destructor and Run; its constructor and loop are
- * still C, src/menus/continue_prompt*.c), then the credits screen
+ * CommitFrame, the destructor and Run; its constructor, InitGraphics and
+ * Loop are in src/menus/continue_prompt*.cpp), then the credits screen
  * (Credits). See docs/matching/archive/issue-64-0x08034aa4-actor.md.
  *
  * gSmallFont and gLargeFont are still C (src/text/): their virtual calls
@@ -82,7 +82,7 @@ void ContinuePrompt::CommitFrame()
     WaitForVBlank();
     CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
-    REG_DISPCNT = dispcnt;
+    REG_DISPCNT = dispcnt.raw;
 }
 
 /* Frees the three BG buffers. */

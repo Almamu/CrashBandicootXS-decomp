@@ -6,9 +6,8 @@
  *
  *   Starfield       0x14                     src/frontend/starfield.cpp
  *   Credits         0x98                     src/frontend/credits.cpp
- *   ContinuePrompt  0x24                     src/frontend/credits.cpp
- *                                            (and src/menus/continue_prompt*.c,
- *                                            still C)
+ *   ContinuePrompt  0x24                     src/frontend/credits.cpp,
+ *                                            src/menus/continue_prompt*.cpp
  *   CompanyLogos    0x44C                    src/frontend/company_logos.cpp,
  *                                            language_select.cpp
  *                                            (and title_screen.c, still C)
@@ -25,9 +24,9 @@
  * object when bit 0 is set).
  *
  * The C files see these objects through C structs (frontend.h's struct
- * logo_screen and struct actor_self, menus.h's struct continue_prompt;
- * struct language_select and struct credits_screen are opaque tags) and
- * prototypes; cxx_symbols.txt maps the methods to those names.
+ * logo_screen and struct actor_self; struct language_select and struct
+ * credits_screen are opaque tags) and prototypes; cxx_symbols.txt maps
+ * the methods to those names.
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
 #pragma interface
@@ -124,33 +123,37 @@ public:
 
 COMPILE_TIME_ASSERT(frontend_hpp, sizeof(Credits) == 0x98);
 
-/* The continue prompt ("Continue? Yes/No", 0x24 bytes; menus.h's struct
- * continue_prompt is its C view). Its constructor and loop are still C
- * (src/menus/continue_prompt*.c); its other methods start credits.cpp. */
+/* The continue prompt ("Continue? Yes/No" over the Uka Uka background,
+ * 0x24 bytes). Its constructor, InitGraphics and Loop are in
+ * src/menus/continue_prompt*.cpp (part 10d); its other methods start
+ * credits.cpp. */
 class ContinuePrompt
 {
 public:
     struct bg_setup *bg1Buf; // 0x00 - BG1
     struct bg_setup *bg0Buf; // 0x04 - BG0
     struct bg_setup *bg2Buf; // 0x08 - BG2
-    u16 dispcnt;             // 0x0C - REG_DISPCNT
-    u8 unused_0e[2];
-    u32 blend; // 0x10 - REG_BLDCNT/BLDALPHA
+    union {
+        u16 raw;
+        struct dispcnt_bits bits;
+    } dispcnt;         // 0x0C - REG_DISPCNT (a word: a struct is 4-aligned)
+    union blend blend; // 0x10 - REG_BLDCNT/BLDALPHA; Loop pulses `eva`
     u8 unused_14[4];
     struct bitmap_font *icons; // 0x18 - gSmallFont
     s32 blinkCounter;          // 0x1C - the selected option's blink counter
     s32 selection;             // 0x20 - the Yes/No cursor, 0/1
 
-    ContinuePrompt();      // InitContinuePrompt (still C)
+    ContinuePrompt();      // InitContinuePrompt
     ~ContinuePrompt();     // DestroyContinuePrompt
     static u8 Run();       // RunContinuePrompt
-    s32 Loop();            // ContinuePromptLoop (still C)
+    void InitGraphics();   // InitContinuePromptGraphics
+    s32 Loop();            // ContinuePromptLoop
     void Draw();           // DrawContinuePrompt
     s32 Blink(s32 option); // GetContinuePromptBlink
     void CommitFrame();    // CommitContinuePromptFrame
 };
 
-COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == sizeof(struct continue_prompt));
+COMPILE_TIME_ASSERT(frontend_hpp, sizeof(ContinuePrompt) == 0x24);
 
 /* The 0x44C-byte company-logo screen (ShowCompanyLogos, level_state.c):
  * the Vicarious Visions logo's 20 pieces (struct logo_piece), the frame

@@ -185,7 +185,7 @@ s32 PauseMenuCursorUp(struct pause_menu *self)
 /* Decimal `itoa`: writes `value`'s decimal digits (unsigned, most
  * significant first) to `dest`, NUL-terminated, and returns the digit
  * count. Shared by every settings-row/results-widget number label in
- * this ROM region (`src/menus/pause_menu_pages_init.c`/`pause_menu_widgets.c`
+ * this ROM region (`src/menus/pause_menu_pages_init.cpp`/`pause_menu_widgets.c`
  * already call it as an `extern`). Builds the digits least-significant
  * first into a small stack buffer via the div/mod library primitives
  * (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`.

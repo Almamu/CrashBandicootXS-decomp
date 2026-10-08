@@ -988,3 +988,24 @@ DrawText__7Credits DrawCreditsText
 UpdateText__7Credits UpdateCreditsText
 LoadLogos__7Credits LoadCreditsLogos
 CommitFrame__7Credits CommitCreditsFrame
+#
+# part 10d: the pause menu and the power dialog (include/menus.hpp;
+# src/menus/pause_menu*.cpp, power_dialog*.cpp)
+__9PauseMenu InitPauseMenu
+_._9PauseMenu DestroyPauseMenu
+Run__9PauseMenu RunPauseMenu
+InitInfo__9PauseMenu InitPauseMenuInfo
+Loop__9PauseMenu PauseMenuLoop
+InitCrystalsPage__9PauseMenu InitPauseCrystalsPage
+InitPowersPage__9PauseMenu InitPausePowersPage
+InitGemsPage__9PauseMenu InitPauseGemsPage
+InitRelicsPage__9PauseMenu InitPauseRelicsPage
+InitTimeTrialPage__9PauseMenu InitPauseTimeTrialPage
+__11PowerDialogiii InitPowerDialog
+_._11PowerDialog DestroyPowerDialog
+Show__11PowerDialogiii ShowPowerDialog
+Draw__11PowerDialog DrawPowerDialog
+Animate__11PowerDialog AnimatePowerDialog
+CommitFrame__11PowerDialog CommitPowerDialogFrame
+Loop__11PowerDialog PowerDialogLoop
+InitGraphics__14ContinuePrompt InitContinuePromptGraphics

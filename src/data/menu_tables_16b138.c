@@ -12,7 +12,7 @@ const u8 gMenuCursorText[] = ">";
 
 /* InitSaveMenuIcons (save_menu_draw.c) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
- * (the same four as continue_prompt.c's gContinuePromptPalette0 ... 0817C572). */
+ * (the same four as continue_prompt.cpp's gContinuePromptPalette0 ... 0817C572). */
 const u16 gSaveMenuPalette0[16] = {
     0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,
     0x0ABE, 0xA27F, 0x09BE, 0x1D5F, 0x886B, 0x94DF, 0x0C9B, 0x0873,
@@ -44,7 +44,7 @@ const s32 gPauseMenuPageTitles[5] = {
 };
 
 /* Icon positions and frame indices of the menu screens in
- * pause_menu_pages_init.c (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
+ * pause_menu_pages_init.cpp (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
  * InitPauseTimeTrialPage), pause_menu_pages_draw.c and pause_menu_gems.c. */
 const struct icon_pos gPauseCrystalIconPos = { 212, 112 };
 const struct icon_pos gPausePowerIconPos[4] = {

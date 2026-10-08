@@ -4,7 +4,7 @@ How graphics assets were located and extracted from the ROM, and ongoing
 notes on the sprite/actor rendering system. For byte-exact matching
 decompilation notes (workflow, register-allocation gotchas, per-function
 parked/matched log across the whole codebase, including the
-graphics-adjacent functions in `src/gfx/graphics.c`/`src/menus/power_dialog_draw.c`/
+graphics-adjacent functions in `src/gfx/graphics.c`/`src/menus/power_dialog_draw.cpp`/
 `src/actor/actor_anim.c`), see [matching.md](./matching.md) instead.
 
 ## Background/tileset extraction (done)

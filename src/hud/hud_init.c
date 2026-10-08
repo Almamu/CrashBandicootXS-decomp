@@ -111,8 +111,8 @@ struct hud_counter *InitHud(struct hud_counter *self)
 /* `InitHud`'s own tail: stores `iconFlag` into `self->icon_flag`,
  * finishes the two slots `InitHud` set up part of already (a
  * position/frame-index pair from a shared table, then the same
- * `field_29`-low-nibble update `pause_menu_pages_init.c`'s
- * `UPDATE_ICON_FRAME_NIBBLE` macro names for the unrelated
+ * `field_29`-low-nibble update the pause menu's icons do
+ * (Sprite::palette, pause_menu_pages_init.cpp) for the unrelated
  * `struct settings_icon_actor` family - `GetSpriteAnimPaletteSlot`'s result feeds the
  * same low-nibble-preserving update here too), then loops over the
  * remaining slots (index 0-34 again) repositioning/re-clamping a

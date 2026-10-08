@@ -254,9 +254,9 @@ void SetScaledSpriteColor(u8 *selfArg, s32 arg1)
  * The two `& 3`/`neg`-mask constants land in the ROM's own registers
  * (both in r2, one right after the other - a fresh `mov r2,#0xd`
  * reload, not a reuse of the earlier `#3` value) once the second mask
- * is materialized via the same `mov #N; neg` opaque-asm idiom as
- * `UPDATE_ICON_FRAME_NIBBLE` (src/menus/pause_menu_pages_init.c) instead of
- * a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
+ * is materialized via an opaque `mov #N; neg` asm idiom (the pause
+ * menu's icon constructors used the same one while they were C) instead
+ * of a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
 void SetScaledSpritePriority(u8 *self, u32 arg1)
 {
     MATCH_HOLD_REG(s32, mask1, r2);

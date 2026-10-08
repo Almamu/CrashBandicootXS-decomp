@@ -13,7 +13,7 @@ extern const u8 gMenuSkyBgMap[];
 
 /* BG0 graphics package shared by LoadSaveMenuBg (save_menu_ui.c),
  * LoadLanguageSelectBg (language_select_setup.cpp), RunLevelSelect
- * (level_select.cpp) and power_dialog.c. */
+ * (level_select.cpp) and power_dialog.cpp. */
 const struct bg_package gMenuSkyBg = {
     0x20,
     0x14,

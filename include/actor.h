@@ -22,14 +22,14 @@
  * a pointer to a per-category data table (offset/text record pairs read
  * at several different fixed offsets by src/gfx/graphics.cpp's
  * IsEntityNearCamera/CheckEntityPlayerContact/IsEntityInsideRect/UpdateEntity/ResetEntity/etc. and
- * by power_dialog_draw.c's DestroyPowerDialog - none of that table's own shape is
+ * by power_dialog_draw.cpp's DestroyPowerDialog - none of that table's own shape is
  * understood yet, so it stays a raw `void *` here). Exactly 0x1c bytes -
  * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. The
  * fields at 0x0B, 0x0D-0x0F and 0x16-0x17 aren't understood beyond their
  * offset yet - named `unusedNN` rather than guessed. `id` and `kind`
  * have the same offsets and roles as `struct gobj`'s and `struct
  * player`'s. `struct power_dialog.icon` (in
- * power_dialog_draw.c) points at one of these. */
+ * power_dialog_draw.cpp) points at one of these. */
 struct actor {
     s32 x; // 0x00 - Q8 fixed-point screen position
     s32 y; // 0x04 - Q8 fixed-point screen position
