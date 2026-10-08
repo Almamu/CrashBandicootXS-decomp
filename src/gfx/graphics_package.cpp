@@ -187,11 +187,10 @@ void DrawScaledSprite(struct gfx_box_obj *self)
  * bank (`arg1 >> 4`) in the OAM template's palette bits (+0x15, attr2
  * bits 12-15), and fills OBJ tile 0x3C0 (`0x06017800`) with the color's
  * low nibble through a 16-bit fixed-source DMA3 transfer. */
-void SetScaledSpriteColor(u8 *selfArg, s32 arg1)
+void SetScaledSpriteColor(u8 *self, s32 arg1)
 {
-    MATCH_HOLD_REG(u8 *, self, r4) = selfArg;
     MATCH_HOLD_REG(s32, val, r3);
-    MATCH_HOLD_REG(s32, aligned, r2);
+    s32 aligned;
     MATCH_HOLD_REG(u32, mask, r1);
     MATCH_HOLD_REG(u32, acc, r0);
     u16 buf;
@@ -243,10 +242,10 @@ void SetScaledSpriteColor(u8 *selfArg, s32 arg1)
  * of a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
 void SetScaledSpritePriority(u8 *self, u32 arg1)
 {
-    MATCH_HOLD_REG(s32, mask1, r2);
+    s32 mask1;
     MATCH_HOLD_REG(u32, shifted, r1);
-    MATCH_HOLD_REG(s32, mask2, r2);
-    MATCH_HOLD_REG(u8, byte, r3);
+    s32 mask2;
+    u8 byte;
 
     mask1 = 3;
     shifted = arg1 & mask1;
@@ -273,12 +272,9 @@ void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2)
  * masked with ~0xc). */
 void ResetScaledSpriteAttrs(u8 *self)
 {
-    MATCH_HOLD_REG(s32, mask, r3) = -0xd;
-    MATCH_HOLD_REG(s32, b, r1);
+    s32 mask = -0xd;
+    s32 b = mask & self[0x11];
 
-    b = mask;
-    MATCH_KEEP(b);
-    b &= self[0x11];
     b &= -0x11;
     b &= -0x21;
     b &= 0x3f;

@@ -59,12 +59,9 @@ void InitObjTileFreeList(void *base)
     len = (s32)((u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE - (u8 *)base);
 
     {
-        MATCH_HOLD_REG(u16 *, addr, r1);
-        MATCH_HOLD_REG(u16, val, r0);
+        u16 *addr = &zero;
 
-        addr = &zero;
-        val = 0;
-        *addr = val;
+        *addr = 0;
         DMA3.src = (u32)addr;
     }
     DMA3.dst = (u32)base;
@@ -431,11 +428,10 @@ void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority)
     }
 
     {
-        MATCH_HOLD_REG(s32, count, r1);
+        s32 count = gSpriteOamQueueCount;
         MATCH_HOLD_REG(struct queued_oam_entry *, base, r2);
-        MATCH_HOLD_REG(s32, offset, r0);
+        s32 offset;
 
-        count = gSpriteOamQueueCount;
         base = gSpriteOamQueue;
         offset = count << 3;
         asm volatile("add %0, %0, %1" : "+r"(offset) : "r"(base));
@@ -486,13 +482,10 @@ void InitSpriteFrameOamQueue(void)
     gSpriteAffineQueueCount = 0;
 
     {
-        MATCH_HOLD_REG(u16 *, addr, r1);
-        MATCH_HOLD_REG(u16, tmp, r2);
+        u16 *addr = &hideValue;
         MATCH_HOLD_REG(u16, val, r0);
 
-        addr = &hideValue;
-        tmp = 0x80 << 2;
-        val = tmp;
+        val = 0x80 << 2;
         *addr = val;
     }
     DMA3.src = (u32)&hideValue;
@@ -565,9 +558,8 @@ s32 LoadSpriteFrameTiles(u8 *frame)
     spareSlot = &gSpriteFrameCacheSpares;
 
     {
-        MATCH_HOLD_REG(void *, vramAddr, r1);
+        void *vramAddr = AllocVramTileBlock(byteCount);
 
-        vramAddr = AllocVramTileBlock(byteCount);
         node->vramAddr = vramAddr;
         while (vramAddr == NULL) {
             struct sprite_frame_cache_node *victim = gSpriteFrameCachePrevious.prev;
@@ -597,16 +589,12 @@ s32 LoadSpriteFrameTiles(u8 *frame)
  * `priority` (used only for the affine-scale path). */
 void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
 {
-    MATCH_HOLD_REG(s32, w, r1);
-    MATCH_HOLD_REG(s32, h, r0);
-    MATCH_HOLD_REG(u32, shapeBits, r2);
-    u16 packed;
+    u32 shapeBits;
+    u16 packed = (u16)arg2;
+    s32 w = frame[0];
+    s32 h = frame[1];
     s32 tileIdx;
 
-    packed = (u16)arg2;
-
-    w = frame[0];
-    h = frame[1];
     if (w == h) {
         shapeBits = 0;
         if (w == 8) {
@@ -617,7 +605,7 @@ void SetupSpriteFrameOam(u8 *frame, u32 attr01, u32 arg2, s32 priority)
             shapeBits = 0x80 << 23;
         }
     } else {
-        MATCH_HOLD_REG(s32, diff, r0);
+        s32 diff;
 
         shapeBits = 0x80 << 7;
         if (w < h) {
@@ -712,17 +700,13 @@ void InitSpriteFrameCache(void)
  * for the record format. Identical logic is also inlined directly into
  * `SetupSpriteFrameOam` below (the ROM compiles that copy separately
  * rather than calling this one - see that function's own comment).
- * `result`/`diff`/`mask` are pinned to r2/r0/r1 - without them this
- * compiler picks a different register for `result` (r3, not r2) and
- * spills the abs-value sign mask through an extra register-to-register
- * copy instead of reusing `w`/`h`'s own registers in place, the same
- * kind of register-shuffle gap tracked on `AllocVramTileBlock`/
- * `QueueSpriteFrameOam` above - confirmed by rebuilding without the
- * pins (docs/workflow.md step 7). */
+ * The abs-value sign mask `mask` is pinned to r1, the same kind of
+ * register-shuffle fix as on `AllocVramTileBlock`/`QueueSpriteFrameOam`
+ * above; `result` and `diff` land in the ROM's r2/r0 on their own. */
 u32 GetSpriteShapeSizeBits(u8 *frame)
 {
-    MATCH_HOLD_REG(u32, result, r2);
-    MATCH_HOLD_REG(s32, diff, r0);
+    u32 result;
+    s32 diff;
     s32 w = frame[0];
     s32 h = frame[1];
 
