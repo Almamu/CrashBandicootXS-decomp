@@ -538,6 +538,17 @@ counts them by kind) and what the C++ still needs.
 | `src/actor/actor_anim.cpp` | `AnimPart` (actor_self.hpp): `GetAnimFrameBaseOffset`, `GetAnimFrameAttr`, `GetAnimFrameData`, `SetAnim` (`SetActorAnim`); `HpActor`'s `GetHp`, `Damage`, `IsUnshootable`; 36 subclasses' destructors, and the checkpoint banners' and the jetpack explosion's methods (include/vehicle.hpp, include/boss_actors.hpp); 3 implicit destructors (C linkage) | 49 + 3 | **old_agbcp** (was agbcc) | 27 pins, 2 `asm`, 1 retyped store, 3 `destroy` slot calls -> 1 const | 11a |
 | `src/vehicle/polar_player_dispatch.cpp` | `PolarPlayer::RunState` (include/vehicle.hpp): `(this->*stateFuncs[state])()` | 1 | agbcp | `ACTOR_PMF_CALL` -> 0 | 11a |
 | `src/data/actor_pmf_17a6b8.cpp` | `PolarPlayer::stateFuncs`, the first pointer-to-member table in C++ (`&PolarPlayer::StateMount`, ...) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11a |
+| `src/bosses/airship_fireball.cpp` | `AirshipFireball` (include/boss_actors.hpp): constructor (`CreateAirshipFireball`), `Update`, `Damage`, `IsUnshootable`, `RunState`, `StateExplode` | 6 | agbcp | 9 pins, 2 retyped stores, 2 `ACTOR_PMF_CALL`s, the `destroy` slot call -> 0 | 11i |
+| `src/data/actor_pmf_17c2b8.cpp` | `AirshipFireball::stateFuncs` (split from actor_pmf_17c260.c, whose two tables are still C) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11i |
+| `src/bosses/airship.cpp` | the airship (an `AnimPart`, gAirship): `SteerAirship`, `CreateAirship` (`new AnimPart`), `SpawnAirship`, `UpdateAirship`, `UpdateAirshipBg2` (C linkage) | 0 + 5 | agbcp | the inline `AllocActor`/`InitAnimPart` pair, the `_call_via_r0` call -> 0 | 11i |
+| `src/bosses/airship_damage.cpp` | `DamageAirship` (C linkage) | 0 + 1 | agbcp | 9 pins, 1 `asm`, 2 retyped stores -> 0 | 11i |
+| `src/bosses/airship_explode.cpp` | `AirshipStateExplode` (C linkage) | 0 + 1 | agbcp | 0 -> 0 | 11i |
+| `src/bosses/airship_fall.cpp` | `AirshipStateFall` (C linkage) | 0 + 1 | agbcp | 8 pins, 1 `asm`, 2 retyped stores -> 0 | 11i |
+| `src/bosses/airship_states.cpp` | `AirshipStateApproach`, `AirshipStateFireballs`, `AirshipStateCannon` (C linkage) | 0 + 3 | agbcp | 9 pins, 1 `asm`, 2 retyped stores -> 0 | 11i |
+| `src/bosses/airship_graphics.cpp` | `ConvertAirshipTiles`, `UpdateAirshipFlashColor`, `AnimateAirshipPalette` (C linkage) | 0 + 3 | agbcp | 1 const, 1 memory keep -> the same | 11i |
+| `src/bosses/airship_load_graphics.cpp` | `LoadAirshipGraphics` (C linkage) | 0 + 1 | agbcp | 0 -> 0 | 11i |
+| `src/bosses/airship_map.cpp` | `DrawAirshipMap` (C linkage) | 0 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 | 11i |
+| `src/bosses/airship_touch.cpp` | `IsTouchingAirship` (C linkage) | 0 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 | 11i |
 | `src/actor/actor_factory.cpp` | `PolarPlayer`'s constructor (`ConstructActorPart`, include/vehicle.hpp), with `CreateActor`, `SpawnActor`, `ConstructAnimTableState`, `CreatePolarCheckpointText`, `SpawnPolarCollectedWumpa`, `SpawnPolarAkuAku` (C linkage): the polar actors' `new`s, the crates', wumpa's, riderless polar's and checkpoint banner's constructors inline | 1 + 6 | agbcp | 0 -> 0; 3 macros of hand-written `new`s (allocation, base constructor, vtable store), the `REC_AT` index cast and `AllocActor` go | 11b |
 | `src/actor/actor_spawn.cpp` | the category hooks and spawn accessors (C linkage): `DestroyAllActors` (`delete`), `CanPauseActorCategory`, ... | 0 + 16 | agbcp | 3 pins, 3 `asm` -> 1 pin | 11b |
 | `src/actor/actor_category_frame.cpp` | `RunActorCategoryFrame` (the `Update`/`Draw` virtual calls), `FindShotTarget` (`IsUnshootable`), `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` (C linkage) | 0 + 4 | old_agbcp | 0 -> 0; the slot-offset structs, the explicit `MemCopy32` self-copies and the frame struct go | 11b |
@@ -2205,6 +2216,62 @@ projection first, with every spelling tried, and the pin is the C's), and
 helper's flag argument were 0; g++ folds any spelling of the 0, the C
 wrote the `orr` in asm (and pinned 23 registers in that function).
 
+### The airship (part 11i)
+
+Part 11i in numbers: the ten src/bosses/airship*.c files (ROM
+0x08030530-0x08031784), 23 functions, and the fireball's pointer-to-member table, split
+into src/data/actor_pmf_17c2b8.cpp. Project-wide: `MATCH_HOLD_REG` 1039
+-> 1004, instruction-emitting `asm` 101 -> 98, retyped field stores 191
+-> 183. Every object matches under the compiler its C had: agbcp, and
+old_agbcp for airship_map.o and airship_touch.o (already in
+`OLD_AGBCC_OBJS`; neither matches under agbcp). No pins or `asm` are
+left in the family but `ConvertAirshipTiles`'s `MATCH_CONST` and
+`MATCH_KEEP_MEM`, which are not about C++ (the mask as the AND's first
+operand, the height re-read; both tried without, and both still needed).
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `AirshipFireball : HpActor` | 0x6C | gAirshipFireballVtable (7 slots) | airship_fireball.cpp (all but `StateOrbit` and `StateSpiralIn`, still C in jetpack_plane.c), its table in actor_pmf_17c2b8.cpp |
+| the airship | 0x1C | none | a bare `AnimPart` (gAirship) and globals; its functions keep their C names |
+
+- **`AirshipFireball`** gets its fields (bosses.h's `struct actor_orbit`
+  is its C view, with a `sizeof` check): the orbit's centre, its Z step,
+  the radius and the `exploding` flag. Its constructor is `HpActor(rec,
+  x, y, z, 2)` and the body's stores, with no pins: the C pinned `b`,
+  `c` and `d` to get the stack argument fetched in the ROM's place, which
+  g++'s constructor does on its own. `Damage` is `hp -= amount` and the
+  inline `SetState(2, 1)`, where the C pinned the state, the index and
+  the zeros (5 pins) and stored `animTimer` and `animDone` through casts.
+  `Update` is `(this->*stateFuncs[state])()`, then `delete this` once the
+  explosion is done or `ActorSelf::Update()`.
+- **The table is C++**: no C file reads gAirshipFireballStateFuncs any
+  more (its two dispatches were airship_fireball.c's). It was the last of
+  actor_pmf_17c260.c's three tables, and that file's other two
+  (`JetpackPlane`'s and `JetpackBomber`'s) are 11f's, so the table moves
+  to a file of its own, actor_pmf_17c2b8.cpp, linked right after
+  actor_pmf_17c260.o (ldscript.txt, data/data.s, docs/data.md). Its two
+  flight states are still C (jetpack_plane.c, 11f) and are mapped to
+  their C names, as part 11a's polar player states.
+- **The airship is an `AnimPart`**: `gAirship` is an `AnimPart *` to
+  C++ (a `__cplusplus` declaration in bosses.h, as `gActorList`'s), and
+  `CreateAirship`'s inline `AllocActor` and `InitAnimPart` are `gAirship
+  = new AnimPart(gAirshipKeyframes, gAirshipMapFrames, 1)`. Everything
+  else is globals stepped through gAirshipStateFuncs, a plain function
+  table, which C++ calls directly (`gAirshipStateFuncs[gAirshipState]()`,
+  the ROM's `bl _call_via_r0`). The functions keep C linkage: their C
+  prototypes in bosses.h are what the table, the jetpack files and the
+  category vtables use.
+- **One state change for the airship**, `SetAirshipState(st, idx)` in
+  boss_actors.hpp: the state and its timer, then animation `idx` with the
+  frame kept unless it is past the new animation's end. Five copies of
+  it were C: three `static inline BossSetState`s and three hand-expanded
+  ones (`DamageAirship`, `AirshipStateFall`, `AirshipStateApproach`), each
+  with 8 or 9 pins, an `add` in `asm` for the record address and two
+  retyped stores. As g++ inlines it, all of them match without.
+- `AirshipStateApproach` takes both speed globals' addresses first
+  (`s32 *velX = &gAirshipVelX; ...`), where the ROM loads them before the
+  zero.
+
 ### The polar actors' constructors and the category frame (part 11b)
 
 Part 11b in numbers: actor_factory.c, actor_spawn.c, actor_category_frame.c
@@ -2327,10 +2394,11 @@ player, then the first item here, is C++ since part 8):
   pointer-to-member tables (src/data/actor_pmf_*.c, actor_state_*.c,
   `ACTOR_PMF_CALL`): the rest of src/actor/, the vehicle levels
   (src/vehicle/: the jetpack, polar and yeti files) and the 3D bosses
-  (airship*.c, hovercraft*.c). Part 11a converted the base classes
-  (actor.c, actor_anim.c), the polar player's dispatch and its table, part
-  11b the actor factory, the spawn hooks and the category frame; the plan
-  for the rest is [below](#the-3d-actors-part-11).
+  (hovercraft*.c). Part 11a converted the base classes
+  (actor.c, actor_anim.c), the polar player's dispatch and its table,
+  part 11b the actor factory, the spawn hooks and the category frame,
+  part 11i the airship (airship*.c); the plan for the rest is
+  [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
   fonts (src/text/), the menus (the save menu, and the pause menu's and
   the power dialog's plain-C files; all of src/frontend/ is C++: the
@@ -2430,7 +2498,7 @@ and, once no C file reads one, its PMF table to C++.
 | 11f | vehicle/jetpack_plane.c, jetpack_balloon.c | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | 43, 21, 0 | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs | 11e |
 | 11g | vehicle/jetpack_crates.c | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | 30, 62, 3 | gJetpackBalloonCrateStateFuncs | 11e |
 | 11h | bosses/hovercraft.c (old), hovercraft_cannon.c, hovercraft_cannon_flash.c, hovercraft_launcher.c, hovercraft_side_gun.c, hovercraft_parts.c | the hovercraft's weapons (`HovercraftFireball`, `HovercraftCannon`, ...), `JetpackRing`'s and `JetpackCollectedWumpa`'s constructors and methods (in hovercraft.c), the hovercraft singleton | 70, 110, 4 | gHovercraftFireballStateFuncs, gHovercraftCannonStateFuncs, gHovercraftLauncherStateFuncs | 11e |
-| 11i | bosses/airship*.c (10 files; airship_map.c, airship_touch.c old) | `AirshipFireball`; the airship (an `AnimPart` singleton) | 23, 35, 3 | gAirshipFireballStateFuncs | 11f |
+| ~~11i~~ | ~~bosses/airship*.c (10 files; airship_map.c, airship_touch.c old)~~ | `AirshipFireball` (but its two flight states, 11f's); the airship (an `AnimPart` singleton) | done | gAirshipFireballStateFuncs (split into actor_pmf_17c2b8.cpp) | |
 | 11j | actor/actor_bg.c, actor_category_init.c (old), actor_category_stats.c, actor_vram_pool.c, bg_picture.c (old), cell_anim.c; vehicle/yeti*.c (yeti_graphics.c, yeti_update.c old) | none: C-like (no C++ trait), only if the family's files should all be C++ | 43, 33, 3 | | |
 
 After 11i every 3D actor class is C++: actor_self.h's `ACTOR_PMF_CALL`,
@@ -2847,6 +2915,10 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   r0`) can't be spelled: g++ folds the 0 from a variable, a parameter or
   an inline's argument. `MATCH_CONST(flag, 0)` right before the OR gives
   it (`DrawJetpackCheckpointText`, part 11a).
+- **A PMF table in a data file with tables still read from C** moves to a
+  data file of its own, split at its ROM address and linked right after
+  the old one (actor_pmf_17c2b8.cpp, part 11i): a file is either C or
+  C++, and the other tables' classes are another part's.
 - **A pointer-to-member table in C++** (`const X::StateFunc X::t[] = {
   &X::f, ... }`) is the C's `{0, -1, fn}` records in `.rodata`, with no
   static constructor; the data file becomes a `.cpp` and the methods'

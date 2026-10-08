@@ -1,20 +1,19 @@
-#include "core.h"
-#include "actor_self.h"
-#include "actor_anim.h"
-#include "memory.h"
+#include "boss_actors.hpp"
+
+extern "C" {
 #include <libgcc.h>
 #include "actor.h"
-#include "bosses.h"
 #include "gfx.h"
 #include "globals.h"
 #include "math_util.h"
+}
 
-/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
- * airship_fall.c - see airship_fireball.c's header comment and
+/* N. Gin's airship (#664 part 11i): a bare AnimPart, gAirship, and its
+ * globals (include/boss_actors.hpp). See
  * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Position-easing helper, called from `AirshipStateFireballs`/`AirshipStateCannon`
- * (airship_states.c): advances the position
+ * (airship_states.cpp): advances the position
  * accumulators (`gAirshipX`/`gAirshipY`) by their
  * per-frame deltas (`gAirshipVelX`/`gAirshipVelY`), then
  * computes the player's (`gActorList`) signed distance from a
@@ -39,7 +38,7 @@ void SteerAirship(void)
 {
     s32 vx;
     s32 dx, dy, cx, cy, px, py;
-    struct actor_self *pl;
+    ActorSelf *pl;
 
     gAirshipX += gAirshipVelX;
     gAirshipY += gAirshipVelY;
@@ -111,86 +110,28 @@ dy_done:
     }
 }
 
-/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
- * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/archive/issue-58-0x08030334-actor.md.
- *
- * Constructor for the small tracker object (`gAirship`):
- * stashes its level-index argument into `gAirshipLevel`, and - if
- * `GetActorCheckpoint` (a level-index/mode query) returns zero - clears
- * `gAirshipCheckpointCount`'s spawn-budget counter. Seeds the row/column
- * dimensions (`gAirshipMapCols`/`gAirshipMapRows`) from
- * `gAirshipPicture`'s first two halfwords, allocates the 0x1c-byte
- * tracker object, wires its event table (`gAirshipKeyframes`) and
- * part table (`gAirshipMapFrames`) pointers plus a fixed `+0x18` flag,
- * registers it via `SetActorAnim`, and stores it into
- * `gAirship`. Resets both boss-weapon state globals
- * (`gAirshipState`/`gAirshipStateTimer`) and fires the tracker's own
- * state-0/table-index-0 transition (anim frame from its own part-table
- * pointer at `+0`). Finishes by running `LoadAirshipGraphics` once (the DMA/
- * tile-cache setup + palette fade, airship_load_graphics.c) and clearing
- * `gAirshipBg2PageFlip`'s "apply now" latch.
- *
- * Matched as the inlined C++ `gAirship = new Tracker(...)`:
- * the destination's address is taken before the allocation, the size
- * goes through an `operator new`-style inline wrapper (materialized
- * before the heap flags), and the part-table setup is an inlined
- * constructor taking its values as arguments (all loaded before the
- * stores). */
-
-static inline void BossSetState(s32 st, s32 idx)
-{
-    struct actor_self *self;
-    gAirshipState = st;
-    gAirshipStateTimer = 0;
-    self = gAirship;
-    self->animIndex = idx;
-    self->animTimer = self->anims[idx].duration;
-    self->animDone = 0;
-    if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold)
-        self->animTime = 0;
-}
-
-static inline struct actor_self *AllocActor(u32 size)
-{
-    return (struct actor_self *)mem_alloc(size, MEM_HEAP_IWRAM);
-}
-
-static inline void InitAnimPart(struct actor_self *self, struct anim_frame_record *anims,
-                                u32 *offsets, s32 flag)
-{
-    self->anims = anims;
-    self->frameOffsets = offsets;
-    self->palette = flag;
-    SetActorAnim(self, 0);
-}
-
+/* Sets the airship up for level `level`: the picture's size, its
+ * animation (`new AnimPart`, an IWRAM allocation; the ROM takes
+ * &gAirship before the allocation, as g++ does), state 0 (inactive) and
+ * its graphics. The checkpoint count restarts unless the level was
+ * entered from a checkpoint. */
 void CreateAirship(s32 level)
 {
-    struct actor_self *t;
-    struct actor_self **slot;
-
     gAirshipLevel = level;
     if (GetActorCheckpoint() == 0)
         gAirshipCheckpointCount = 0;
     gAirshipMapCols = BOSS_PICTURE_SIZE(gAirshipPicture)->cols;
     gAirshipMapRows = BOSS_PICTURE_SIZE(gAirshipPicture)->rows;
-    slot = &gAirship;
-    t = AllocActor(0x1c);
-    InitAnimPart(t, (struct anim_frame_record *)gAirshipKeyframes, (u32 *)gAirshipMapFrames, 1);
-    *slot = t;
-    BossSetState(0, 0);
+    gAirship =
+        new AnimPart((struct anim_frame_record *)gAirshipKeyframes, (u32 *)gAirshipMapFrames, 1);
+    SetAirshipState(0, 0);
     LoadAirshipGraphics();
     gAirshipBg2PageFlip = 0;
 }
 
-/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
- * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/archive/issue-58-0x08030334-actor.md.
- *
- * A large "spawn/arm this weapon-kind instance" setup routine: resets
- * the ramp/velocity globals, fires the tracker object's state-1/
- * table-index-0 transition, seeds the position accumulators
+/* A large "spawn/arm this weapon-kind instance" setup routine: resets
+ * the ramp/velocity globals, enters state 1 (approach) with
+ * animation 0, seeds the position accumulators
  * (`gAirshipX`/`gAirshipY`/`gAirshipZ`) from
  * its own three arguments, looks up a per-kind keyframe-table record
  * (`gAirshipAttacks`, indexed by both `gAirshipLevel` - the
@@ -198,8 +139,8 @@ void CreateAirship(s32 level)
  * argument) and copies several of its fields into
  * `gAirshipFireTimer`/`gAirshipHp`, resets the DMA-refresh/
  * palette-strip counters, recomputes the BG2 zoom scale/offset via
- * `GetCellAnimDistance`/`__divsi3`/`SetActorBgLayerDepth`, blits the tracker's
- * current keyframe-table box via `DrawAirshipMap`, sets DISPCNT's bit10,
+ * `GetCellAnimDistance`/`__divsi3`/`SetActorBgLayerDepth`, blits the airship's
+ * current frame via `DrawAirshipMap`, sets DISPCNT's bit10,
  * recomputes the BG2 affine matrix (`UpdateAirshipBg2`), and finally queues
  * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
  *
@@ -212,10 +153,10 @@ void CreateAirship(s32 level)
 void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
 {
     s32 scale;
-    struct actor_self *self;
+    AnimPart *self;
 
     gAirshipVelZ = 0x66;
-    BossSetState(1, 0);
+    SetAirshipState(1, 0);
     gAirshipX = x * 5;
     gAirshipY = y * 2;
     gAirshipZ = z + 0xA000;
@@ -243,42 +184,25 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     REG_DISPCNT |= DISPCNT_BG2_ON;
     UpdateAirshipBg2();
     gAirshipHitFlashTimer = 0;
-    QueueVramDmaTransfer(gAirshipHitFlashPalettes, (void *)(BG_PLTT + 0x20), 0x20, 0x10);
+    QueueVramDmaTransfer((void *)gAirshipHitFlashPalettes, (void *)(BG_PLTT + 0x20), 0x20, 0x10);
 }
 
-/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
- * airship_fall.c - see airship_fireball.c's header comment and
- * docs/matching/archive/issue-58-0x08030334-actor.md.
- *
- * A large per-frame "advance this weapon-kind instance" driver: fires
- * a stride-4 trampoline (`gAirshipStateFuncs`, indexed by the
- * tracker's own state global `gAirshipState`) via `_call_via_r0`,
- * refreshes the palette-strip animation (`AnimateAirshipPalette`), and advances
- * `gAirshipStateTimer`'s frame counter. While the tracker's state is
- * nonzero: advances its own anim-frame accumulator (`+8`, by its part-
- * table's `+0x10` halfword) and, once `GetAnimFrameBaseOffset` crosses
- * the current keyframe-table entry's threshold, both re-arms the
- * accumulator against the *next* entry's own delta and sets the "loop"
- * flag (`+0x12`). Always recomputes the BG2 zoom scale/offset the same
- * way `SpawnAirship` (above) does (`GetCellAnimDistance`/
- * `__divsi3`/`SetActorBgLayerDepth`), and - only when the tracker's
- * accumulator (`+8`, `>>8`) actually crossed to a new keyframe-table
- * index this frame - re-blits its box via `DrawAirshipMap` and re-arms
- * the "apply now" latch (`gAirshipBg2PageFlip`).
+/* The airship's frame: the state function (gAirshipStateFuncs, a plain
+ * function table), the hit flash, and, once it is active, its animation
+ * step, the BG2 zoom from its distance, and the picture's map again when
+ * the animation moved on to another frame.
  *
  * Matching notes: the zoom divide is a plain call to `__divsi3`
  * (not `/`, whose libcall the compiler would treat as not clobbering
  * memory - the ROM reloads `gAirshipDistance` after it), and the
- * re-blit tail reads the tracker through a fresh local (a separate
+ * re-blit tail reads the airship through a fresh local (a separate
  * pseudo from the head's own `self`). */
-extern s32 _call_via_r0(void *fn);
-
 void UpdateAirship(void)
 {
     s32 prev = Q8_TO_INT(gAirship->animTime);
-    struct actor_self *self;
+    AnimPart *self;
 
-    _call_via_r0(gAirshipStateFuncs[gAirshipState]);
+    gAirshipStateFuncs[gAirshipState]();
     AnimateAirshipPalette();
     gAirshipStateTimer++;
     if (gAirshipState != 0) {
@@ -287,7 +211,7 @@ void UpdateAirship(void)
         self = gAirship;
         self->animTime += (s16)self->animTimer;
         self->animDone = 0;
-        if (GetAnimFrameBaseOffset(self) >= self->anims[self->animIndex].loopThreshold) {
+        if (self->GetAnimFrameBaseOffset() >= self->anims[self->animIndex].loopThreshold) {
             ANIM_REWIND(self->animTime, self->anims[self->animIndex]);
             self->animDone = 1;
         }
@@ -297,7 +221,7 @@ void UpdateAirship(void)
         gAirshipScreenY = Q12_MUL(scale, gAirshipY);
         SetActorBgLayerDepth(gAirshipDistance);
         {
-            struct actor_self *cur = gAirship;
+            AnimPart *cur = gAirship;
             s32 t = Q8_TO_INT(cur->animTime);
             if (prev != t) {
                 DrawAirshipMap((u16 *)cur->frameOffsets[cur->anims[cur->animIndex].frameIndex + t]);
@@ -307,8 +231,8 @@ void UpdateAirship(void)
     }
 }
 
-/* Same boss-weapon subsystem as airship_fireball.c/airship_fall.c - see
- * airship_fireball.c's header comment and
+/* Same boss-weapon subsystem as airship_fireball.cpp/airship_fall.cpp - see
+ * airship_fireball.cpp's header comment and
  * docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* If `gAirshipBg2PageFlip` (an "apply now" latch) is set, toggles

@@ -1,11 +1,11 @@
 #include "core.h"
 #include "actor_self.h"
-#include "bosses.h"
 #include "vehicle.h"
 
 /*
- * ROM 0x0817C260-0x0817C2D0: three per-state member-function-pointer
- * tables (ACTOR_PMF_CALL, include/actor_self.h). Linked in ROM order
+ * ROM 0x0817C260-0x0817C2B8: two per-state member-function-pointer
+ * tables (ACTOR_PMF_CALL, include/actor_self.h); the third, the airship
+ * fireball's, follows in actor_pmf_17c2b8.cpp. Linked in ROM order
  * between data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
@@ -27,12 +27,4 @@ const struct actor_pmf gJetpackBomberStateFuncs[7] = {
     ACTOR_PMF(JetpackBomberStateCircle),
     ACTOR_PMF(JetpackBomberStateDrop),
     ACTOR_PMF(JetpackBomberStateDying),
-};
-
-/* Dispatched by UpdateAirshipFireball (airship_fireball.c) and RunAirshipFireballState
- * (airship_fireball.c). */
-const struct actor_pmf gAirshipFireballStateFuncs[3] = {
-    ACTOR_PMF(AirshipFireballStateOrbit),
-    ACTOR_PMF(AirshipFireballStateSpiralIn),
-    ACTOR_PMF(AirshipFireballStateExplode),
 };

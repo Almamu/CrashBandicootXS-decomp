@@ -227,7 +227,8 @@ The first batch (all pointer tables, all byte-exact):
 | `anim_family_17aa6c.c` | `0x0817AA6C` | a palette, 2 boxes, then categories 3-6: 2 OBJ palettes, animation table `gCategoryFamily1AnimTable`, keyframe and frame arrays |
 | `actor_pmf_17c1c0.c` | `0x0817C1C0` | 1 actor PMF table |
 | `palette_strip_17c200.c` | `0x0817C200` | a 3-frame palette strip |
-| `actor_pmf_17c260.c` | `0x0817C260` | 3 actor PMF tables |
+| `actor_pmf_17c260.c` | `0x0817C260` | 2 actor PMF tables |
+| `actor_pmf_17c2b8.cpp` | `0x0817C2B8` | 1 actor PMF table, in C++ (`AirshipFireball::stateFuncs`, docs/cplusplus.md) |
 | `weapon_kind_17c2d0.c` | `0x0817C2D0` | 6 weapon-kind records, a 3-frame palette strip, a box, 2 keyframes |
 | `actor_state_17c3fc.c` | `0x0817C3FC` | 1 function table, 2 actor PMF tables |
 | `actor_box_17c444.c` | `0x0817C444` | 1 `struct anim_box` |

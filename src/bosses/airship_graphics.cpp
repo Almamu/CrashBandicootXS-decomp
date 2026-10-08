@@ -1,11 +1,13 @@
-#include "core.h"
+#include "boss_actors.hpp"
+
+extern "C" {
 #include "match.h"
 #include <libgcc.h>
-#include "bosses.h"
 #include "gfx.h"
+}
 
-/* Same boss-weapon subsystem as airship_fireball.c/airship_load_graphics.c - see
- * airship_fireball.c's header comment and
+/* Same boss-weapon subsystem as airship_fireball.cpp/airship_load_graphics.cpp - see
+ * airship_fireball.cpp's header comment and
  * docs/matching/archive/issue-58-0x08030334-actor.md.
  *
  * Per docs/rom_map.md ("A new mechanism: a procedurally-generated VRAM
@@ -102,7 +104,7 @@ void ConvertAirshipTiles(void)
     }
 }
 
-/* Same boss-weapon subsystem as airship_fireball.c - see that file's header
+/* Same boss-weapon subsystem as airship_fireball.cpp - see that file's header
  * comment and docs/matching/archive/issue-58-0x08030334-actor.md. */
 
 /* Sets BG palette bank 1's last color (index 15) to either a near-white

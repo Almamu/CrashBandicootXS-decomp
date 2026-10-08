@@ -1109,6 +1109,18 @@ StateFinish__11PolarPlayer PolarPlayerStateFinish
 StateFinishLeap__11PolarPlayer PolarPlayerStateFinishLeap
 StateShocked__11PolarPlayer PolarPlayerStateShocked
 StateRecover__11PolarPlayer PolarPlayerStateRecover
+# part 11i: the airship's fireball (include/boss_actors.hpp;
+# src/bosses/airship_fireball.cpp, src/data/actor_pmf_17c2b8.cpp)
+_vt.15AirshipFireball gAirshipFireballVtable
+__15AirshipFireballPC17anim_table_recordiii CreateAirshipFireball
+Update__15AirshipFireball UpdateAirshipFireball
+Damage__15AirshipFireballi DamageAirshipFireball
+IsUnshootable__15AirshipFireball IsAirshipFireballUnshootable
+RunState__15AirshipFireball RunAirshipFireballState
+StateOrbit__15AirshipFireball AirshipFireballStateOrbit
+StateSpiralIn__15AirshipFireball AirshipFireballStateSpiralIn
+StateExplode__15AirshipFireball AirshipFireballStateExplode
+_15AirshipFireball.stateFuncs gAirshipFireballStateFuncs
 #
 # part 11b: the polar actors' constructors, the actor factory and the
 # category frame (include/vehicle.hpp; src/actor/actor_factory.cpp,

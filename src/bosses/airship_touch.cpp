@@ -1,16 +1,16 @@
-#include "core.h"
-#include "actor_self.h"
-#include "actor_anim.h"
-#include "system.h"
-#include "bosses.h"
-#include "math_util.h"
+#include "boss_actors.hpp"
 
-/* Same "boss-weapon self" object family as airship_fireball.c (see that
+extern "C" {
+#include "system.h"
+#include "math_util.h"
+}
+
+/* Same "boss-weapon self" object family as airship_fireball.cpp (see that
  * file's header comment and docs/matching/archive/issue-58-0x08030334-actor.md),
  * and the same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` AABB-overlap
  * shape as `IsTouchingYeti`/`UpdateYeti` (yeti_graphics.c/yeti_update.c,
  * see docs/matching/archive/issue-54-actor-d3a8.md) - only runs while the small
- * tracker object's state global (`gAirshipState`) is 2 or 3. Box A:
+ * airship's state global (`gAirshipState`) is 2 or 3. Box A:
  * `gAirshipBox` (a fixed keyframe-table box) with the boss-
  * weapon's own screen-space accumulators (`gAirshipX`/`0x1544`/
  * `0x1548`, all `>>8`) added into its `x`/`y`/`z`. Box B: `self+0x38`'s
@@ -34,7 +34,7 @@ static inline void BoxOffset(struct anim_box *b, s32 x, s32 y, s32 z)
 
 u8 IsTouchingAirship(void *selfArg)
 {
-    struct actor_self *self = selfArg;
+    ActorSelf *self = (ActorSelf *)selfArg;
 
     if ((u32)(gAirshipState - 2) <= 1) {
         struct {
@@ -44,7 +44,7 @@ u8 IsTouchingAirship(void *selfArg)
 
         f.a = gAirshipBox;
         BoxOffset(&f.a, Q8_TO_INT(gAirshipX), Q8_TO_INT(gAirshipY), Q8_TO_INT(gAirshipZ));
-        f.t = *(struct anim_box *)self->box;
+        f.t = self->box;
         BoxOffset(&f.t, Q8_TO_INT(self->x), Q8_TO_INT(self->y), Q8_TO_INT(self->z));
         f.c = f.t;
         pc = &f.c;
