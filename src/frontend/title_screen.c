@@ -25,7 +25,7 @@
  * half) only matches with it (its inner loop is written up-counting and
  * strength reduction reverses it). The shared declarations below are
  * copied from the first half. Everything from `DrawVvLogoPieces` on lives in
- * `company_logos.c`, which needs strength reduction on. See
+ * `company_logos.cpp`, which needs strength reduction on. See
  * docs/matching/archive/issue-64-65-naked-retry-2.md and
  * docs/matching/archive/sr65-naked-retry.md. */
 

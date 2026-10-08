@@ -986,7 +986,7 @@ void PlayIntroCutscene(void *self)
 void ShowCompanyLogos(void *unused)
 {
     /* `InitCompanyLogos` is a real no-op (`bx lr`) but, split into its own
-     * translation unit (src/frontend/language_select.c), an ordinary call
+     * translation unit (src/frontend/language_select.cpp), an ordinary call
      * forces the allocated block's pointer into a callee-saved register
      * *before* the call, one instruction earlier than the ROM (which
      * keeps it in r0 across the call and only moves it afterward - only

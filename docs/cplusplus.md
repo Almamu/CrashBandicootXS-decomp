@@ -520,6 +520,9 @@ counts them by kind) and what the C++ still needs.
 | `src/menus/level_select_pages.cpp` | `LevelSelect`'s page turns, exits and entry refresh; `LevelSelectPageBg`; `ZoomBg`'s constructor; with `SetNewWorldOpened` (C linkage) | 24 + 1 | old_agbcp | 0 -> 0; the entries' 2 function-pointer vcalls go | 10 |
 | `src/menus/level_select_widgets.cpp` | `ZoomBg`, `LevelSelectEntry`, `LevelSelectCursor` | 41 | old_agbcp | 0 -> 0; `DELETE_PART` (the parts' slot-10 calls) goes | 10 |
 | `src/player/input_ctrl.cpp` (again) | `InputCtrl::StateStart`: `new CameraLead`, `CollidableList()->Add`, `cameraLead->Reset()`; `Update` and `StateDead`: `MarkGone()` | 0 | old_agbcp | 2 `ENTITY_MARK_GONE`s -> 0 | 10 |
+| `src/frontend/company_logos.cpp` | `CompanyLogos::DrawVvLogoPieces`, `LoadUniversalLogoBg`; `LogoActor`'s constructor, `Update`, `Draw` (include/frontend.hpp; `ActorSelf`, its base, in include/actor_self.hpp) | 5 | old_agbcp | 2 pins, 2 uses, 3 barriers -> 1 pin, 3 barriers | 10b |
+| `src/frontend/language_select.cpp` | `CompanyLogos`'s constructor, destructor, `LoadAssetBuffered`; `LogoActor`'s destructor; `LanguageSelect::Run`, `Input`, `Draw`, `InitGraphics` | 8 | agbcp | 0 -> 0; a goto and the hand-written destructors' vtable stores, unlink and frees go | 10b |
+| `src/frontend/language_select_setup.cpp` | `LanguageSelect`'s constructor, destructor, `LoadBg`, `Blink`, `CommitFrame`, `Open`, `Close` | 7 | **old_agbcp** (was agbcc) | 2 pins, a retyped store and read (the DISPCNT bytes) -> 0 | 10b |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1707,6 +1710,81 @@ no anonymous structs for a union view). `sub_801B85C` stores the byte at
 0x32, inside `Sprite::frame`, through a byte pointer: nothing else
 touches it.
 
+### The front end (part 10b)
+
+Part 10b in numbers: the first three objects of src/frontend/
+(company_logos.c, language_select.c, language_select_setup.c; ROM
+0x0803686C-0x08037648), 20 functions and three classes in the new
+include/frontend.hpp, plus a minimal `ActorSelf`, the 3D actors' base, in
+the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
+1249, `MATCH_USE` 54 -> 52, retyped field stores 196 -> 195 and reads 78
+-> 76. `language_select_setup.o` moves to `OLD_AGBCC_OBJS`;
+`company_logos.o` was old_agbcc C already, `language_select.o` stays agbcc.
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `ActorSelf` | 0x54 | gActorVtable (a root class: the vtable pointer at +0x50) | still C (src/actor/actor.c) |
+| `LogoActor` | 0x54 | gLogoActorVtable (an `ActorSelf`) | company_logos.cpp, language_select.cpp (destructor) |
+| `CompanyLogos` | 0x44C | none | company_logos.cpp, language_select.cpp, and title_screen.c (still C) |
+| `LanguageSelect` | 0x14 | none | language_select.cpp, language_select_setup.cpp |
+| `Starfield` | 0x14 | none | still C (src/frontend/starfield.c) |
+
+- **The logo actor is the first 3D actor in C++.** `ActorSelf` declares
+  only what `LogoActor` needs: the fields of `struct actor_self`, the
+  constructor (`InitActorPart`), slots 1-3 (the destructor, `Update`,
+  `Draw`; DestroyActor, UpdateActor and DrawActor), `GetAnimFrameBaseOffset`
+  and an inline `SetState` (actor_self.h's `ACTOR_SET_STATE`). Its
+  destructor is inline, the unlink from the actor list: g++ puts it into
+  `~LogoActor` after the body, with the vtable pointer stores the C wrote
+  out. The actors live in mem_alloc's 0x80000000 heap and are freed with a
+  direct `mem_free`, not `OperatorDelete`: that is the class's own
+  `operator new` and `operator delete` (inline), which the deleting
+  destructor calls. `InitLogoActor` is `LogoActor(anim) : ActorSelf(anim,
+  0, 0, 0x100)`. Part 11 builds the rest of the 3D actors on this class.
+- **The screens are plain classes.** `CompanyLogos` (the C's `struct
+  logo_screen`, which title_screen.c still uses) has an empty constructor
+  and destructor (`InitCompanyLogos`, `DestroyCompanyLogos`), and
+  `LoadTaggedAssetBuffered`, whose unused first argument is the screen
+  (LoadVvLogoGraphics's), is its method `LoadAssetBuffered`.
+  `LanguageSelect`'s constructor is `new Starfield` and its destructor
+  `delete starfield` (a null test and `DestroyStarfield(p, 3)`); `Open` and
+  `Close` are `new LanguageSelect` and `delete gLanguageSelect`. `Starfield`
+  is declared for those, with starfield.c still C.
+- **The C view goes** for the language select: no C file reads `struct
+  language_select`'s fields, so it is an opaque tag (frontend.h), and
+  `gLanguageSelect` is a `LanguageSelect *` to C++ (a `__cplusplus`
+  declaration, as `gPlayer`'s). frontend.h keeps the C prototypes (the C
+  names), for the vtable data and the C callers (main_loop.c,
+  level_state.c, title_screen.c).
+- **The fonts are still C** (src/text/): `DrawLanguageSelect`'s virtual
+  calls stay spelled out through the record's slots.
+
+What made the C++ match:
+
+- **`LoadLanguageSelectBg`'s DISPCNT** is bitfield stores into a `struct
+  dispcnt_bits` view (`dispcnt.bits.objMap1D = 1; ... obj = 1;`), which
+  g++ merges into one `ldrb`/`strb` per byte. Under old_agbcp each
+  constant is loaded before its byte, as in the ROM; the C was built with
+  agbcc, wrote the two bytes as `u8`s and pinned two registers for that
+  order. `CommitFrame` writes `dispcnt.raw`.
+- **`DrawLogoActor`'s attribute 2** is `(palette << 12) | tile` with the
+  tile number in a local: the tile is computed first (r0) and the palette
+  ORed into r1, where the C pinned the tile to r0.
+- `new u16[n]`/`delete[]` for the scratch buffers (the C's
+  `OperatorNewArray` and null-tested `OperatorDeleteArray`), `Input`'s two
+  confirm paths written out (the cross-jump shares the `PlaySfx`; the C had
+  a `goto`), and `Run`'s pressed keys read into a local before the
+  `gLanguageSelect` call (the C took `&gKeys.half` into a pointer).
+
+Kept, each with a comment: `DrawVvLogoPieces`'s r2 pin on the DMA base
+(unpinned, it and `&frames` swap r2 and r3) and its three
+`MATCH_BARRIER`s (instruction-count padding for the loop optimizer's
+hoisting order, #481). Its two `MATCH_USE`s went. C idioms kept: the
+unsigned `switch ((u32)state)` of `LogoActor::Update` (one bounds check),
+the `u8 z = 0` store of the sound-cue flag, `InitGraphics`'s inline icon
+helpers and shared `zero`, and the `(struct dispcnt_bits *)gDispcnt`
+views.
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -1759,8 +1837,8 @@ player, then the first item here, is C++ since part 8):
   (airship*.c, hovercraft*.c).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
   fonts (src/text/), the menus and frontend screens (pause menu, power
-  dialog, save menu, title screen, company logos, language select), the
-  cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
+  dialog, save menu, title screen, credits; the language select and the
+  logo actor are C++ since part 10b), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
   in system/boot.c) and the room code (play_room.c, run_room.c).
 
 ### Next batches
@@ -1808,15 +1886,18 @@ PR, as before):
    launch pad as `MovingSprite` subclasses, and the whole level select,
    include/level_select.hpp; `InputCtrl::StateStart`'s `AddToPartList` is
    `CollidableList()->Add`). The other C++-trait objects of the frontend and
-   the menus are next, a few files per part: frontend/company_logos.c and
-   language_select.c (the two with vtables), then credits.c,
-   title_screen*.c, language_select_setup.c and starfield.c, then the pause
+   the menus are next, a few files per part: ~~frontend/company_logos.c,
+   language_select.c and language_select_setup.c~~ (part 10b: the logo
+   actor, the first `ActorSelf`, and the language select), then
+   starfield.c, credits.c and title_screen*.c (`Starfield`, the credits,
+   `CompanyLogos`'s other methods and the title screen), then the pause
    menu and the power dialog (menus/pause_menu*.c, power_dialog*.c,
    continue_prompt_init.c).
 9. **The 3D actors** (part 11 onwards): `ActorSelf` (vtable pointer at
-   +0x50), actor*.c first, then the vehicles and the 3D bosses; the PMF
-   tables become `const StateFunc t[] = { &X::f, ... }` (experiment 3) and
-   `ACTOR_PMF_CALL` goes.
+   +0x50; part 10b declared it, include/actor_self.hpp), actor*.c first,
+   then the vehicles and the 3D bosses; the PMF tables become `const
+   StateFunc t[] = { &X::f, ... }` (experiment 3) and `ACTOR_PMF_CALL`
+   goes.
 10. **Then the vtables** (plan item 5 below): once a family has no C class
    left, let g++ emit its vtables and check them against the ROM's.
 
@@ -2157,3 +2238,12 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
 - **A constant held in a callee-saved register across calls** (stored
   before and after them) is a variable set before the calls; a literal 0
   is loaded again at each store (the powers' tags, part 9).
+- **A destructor that frees with something other than `OperatorDelete`**
+  (the 3D actors' direct `mem_free`) is a class with its own inline
+  `operator delete`: the deleting destructor calls it, and it is inlined.
+  The matching `operator new` (`mem_alloc(size, 0x80000000)`) goes with it
+  (`ActorSelf`, part 10b).
+- **An inline base destructor** is expanded into the derived one after the
+  body, with its own vtable pointer store: the C's two stores (the class's
+  table, then the base's) and the base's code after the body are g++'s
+  (`~LogoActor` with `~ActorSelf`'s actor list unlink inlined; part 10b).

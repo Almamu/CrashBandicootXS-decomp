@@ -518,7 +518,7 @@ static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 p
     buf->table[idx + 2].attr[3] = pc;
 }
 
-/* `self`'s logo piece `i`, the pieces starting at +0x10 (company_logos.c's
+/* `self`'s logo piece `i`, the pieces starting at +0x10 (company_logos.cpp's
  * SLOT_AT, a different macro, starts them at `self`). */
 #define SLOT_AT(self, i) (&((struct logo_piece *)((u8 *)(self) + 0x10))[i])
 

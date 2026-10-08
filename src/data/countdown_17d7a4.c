@@ -10,7 +10,7 @@
 extern const u8 gUniversalLogoBgPalette[];
 extern const u8 gUniversalLogoBgTiles[];
 extern const u8 gUniversalLogoBgMap[];
-/* The BG2 picture LoadUniversalLogoBg (company_logos.c) loads. */
+/* The BG2 picture LoadUniversalLogoBg (company_logos.cpp) loads. */
 const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gUniversalLogoBgPalette, (void *)gUniversalLogoBgTiles, (void *)gUniversalLogoBgMap };
 
 /* The motion sequences of the twenty countdown slots of InitVvLogoPieces
@@ -198,7 +198,7 @@ const struct delta_record gVvLogoPieceMotion19[4] = {
 };
 
 /* The language names the language menu draws (DrawLanguageSelect,
- * language_select.c, through digit_glyphs_17e714.c's
+ * language_select.cpp, through digit_glyphs_17e714.c's
  * gLanguageNames), in the order of the language setting. */
 const u8 gLanguageNameEnglish[] = "english";
 const u8 gLanguageNameFrench[] = "fran\347ais";

@@ -9,7 +9,7 @@
 #include "gfx.h"
 #include "globals.h"
 
-/* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.c) - reset
+/* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.cpp) - reset
  * the DISPCNT shadow (`dispcnt`) and set its two bytes one at a time,
  * request a BG tile/map graphics package, set BG0's
  * control register from it - plus zeroing `frame`, which LoadLanguageSelectBg's
