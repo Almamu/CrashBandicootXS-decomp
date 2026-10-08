@@ -27,7 +27,7 @@ extern const u8 gCreditsUniversalLogoTiles[];
 extern const u8 gCreditsVvLogoTiles[];
 
 /* Five popup glyph sources, each a {w, h, palette, tiles, 0}
- * package (LoadCreditsLogos, credits.c, reads them as its
+ * package (LoadCreditsLogos, credits.cpp, reads them as its
  * `struct popup_glyph_src`). */
 const struct bg_package gCreditsLogos[5] = {
     { 0x10, 0x4, (void *)gCreditsCosmigoLogoPalette, (void *)gCreditsCosmigoLogoTiles, NULL },

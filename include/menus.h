@@ -16,7 +16,7 @@
  * tags). The level select's objects are C++ classes (level_select.hpp):
  * the prototypes below are their C names (cxx_symbols.txt), for the C
  * callers and the vtables, with opaque struct tags. The continue
- * prompt's functions at the start of src/frontend/credits.c
+ * prompt's functions at the start of src/frontend/credits.cpp
  * (DrawContinuePrompt..RunContinuePrompt) are here too. */
 
 #include "core.h"
@@ -69,7 +69,8 @@ struct image_pair {
 /* The continue prompt ("Continue? Yes/No" over the Uka Uka background,
  * 0x24 bytes): InitContinuePrompt/InitContinuePromptGraphics build it,
  * ContinuePromptLoop runs it, and DrawContinuePrompt..DestroyContinuePrompt
- * (src/frontend/credits.c) draw, commit and free it. */
+ * (src/frontend/credits.cpp) draw, commit and free it. Its class,
+ * ContinuePrompt, is in frontend.hpp. */
 struct continue_prompt {
     struct bg_setup *bg1Buf; /* 0x00 - BG1 */
     struct bg_setup *bg0Buf; /* 0x04 - BG0 */
@@ -206,7 +207,7 @@ extern struct continue_prompt *InitContinuePrompt(struct continue_prompt *self);
 extern void InitContinuePromptGraphics(struct continue_prompt *self);
 extern s32 ContinuePromptLoop(struct continue_prompt *self);
 
-/* src/frontend/credits.c */
+/* src/frontend/credits.cpp (C++, frontend.hpp: ContinuePrompt's methods) */
 extern void DrawContinuePrompt(struct continue_prompt *self);
 extern s32 GetContinuePromptBlink(struct continue_prompt *self, s32 mode);
 extern void CommitContinuePromptFrame(struct continue_prompt *self);

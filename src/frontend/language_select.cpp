@@ -181,7 +181,7 @@ void LanguageSelect::Draw()
  *
  * Was NAKED: the ROM rematerializes the 0x108/0x12c/0x130 field-offset
  * constants after every call instead of keeping them in callee-saved
- * registers. Matched with the idiom from credits.c's
+ * registers. Matched with the idiom from credits.cpp's
  * `InitCredits`: the two icon-manager steps as `static inline` helpers
  * taking the manager as a parameter (each expansion recomputes its own
  * offsets; the E0 base is read from DC before E0 itself), plus one

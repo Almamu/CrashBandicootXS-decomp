@@ -11,7 +11,7 @@
  * (docs/headers_plan.md).
  *
  * Not here, by ownership (docs/headers_plan.md, "Who owns a symbol"):
- * the continue prompt functions at the start of credits.c
+ * the continue prompt functions at the start of credits.cpp
  * (DrawContinuePrompt..RunContinuePrompt) are in menus.h, with the rest
  * of the continue prompt. LoadTaggedAssetBuffered
  * (language_select.cpp, CompanyLogos::LoadAssetBuffered) is in system.h,
@@ -78,44 +78,9 @@ COMPILE_TIME_ASSERT(frontend_h, sizeof(struct title_screen) == 0x220);
 
 #define TITLE_SCREEN(self) ((struct title_screen *)(self))
 
-/* The credits screen (RunCredits, 0x98 bytes): a starfield plus the
- * credits text (gCreditsText) as floating lines and logos, run from the
- * title menu and after the ending (game_frame.c). */
-
-/* One timed text-popup node (0x18 bytes, `OperatorNew`-allocated by
- * UpdateCreditsText, drawn by DrawCreditsText). */
-struct popup_node {
-    struct popup_node *next; /* 0x00 */
-    s32 x;                   /* 0x04 */
-    s32 y;                   /* 0x08 - counts down while alive */
-    s32 timer;               /* 0x0c - node dies once y + timer <= 0 */
-    s32 mode;                /* 0x10 - 0/1: text via icon manager DC/E0, 2: glyph */
-    u8 index;                /* 0x14 - glyph index / character */
-};
-
-/* One of the five logos LoadCreditsLogos loads from gCreditsLogos (0x18
- * bytes each, at `credits_screen+0x1c`). */
-struct popup_glyph {
-    s32 cols;    /* 0x00 - width in 32-px OAM cells */
-    s32 rows;    /* 0x04 - height in 32-px OAM cells */
-    s32 height;  /* 0x08 - pixel height */
-    s32 width;   /* 0x0c - pixel advance */
-    u8 palette;  /* 0x10 */
-    void *tiles; /* 0x14 - heap buffer, freed by DestroyCredits */
-};
-
-struct credits_screen {
-    struct popup_node *popupListHead; /* 0x00 - timed text-popup node list, see UpdateCreditsText */
-    const void *streamBase;           /* 0x04 - popup byte-opcode stream base */
-    const void *streamCursor;         /* 0x08 - popup byte-opcode stream cursor */
-    void *starfield;                  /* 0x0c - the starfield, InitStarfield */
-    s32 drawMode;                     /* 0x10 */
-    s32 suppressCounter;              /* 0x14 */
-    u8 unused_18[4];
-    struct popup_glyph glyphs[5]; /* 0x1c */
-    u32 frameParity;              /* 0x94 */
-};
-COMPILE_TIME_ASSERT(frontend_h, sizeof(struct credits_screen) == 0x98);
+/* The credits screen (RunCredits, 0x98 bytes). Its class, Credits, is
+ * in frontend.hpp; no C file reads its fields. */
+struct credits_screen;
 
 /* The language select, between OpenLanguageSelect and
  * CloseLanguageSelect (src/iwram/iwram_data.c). */
@@ -193,7 +158,8 @@ extern struct actor_self *InitLogoActor(struct actor_self *self, const void *ani
 extern void UpdateLogoActor(struct actor_self *self);
 extern void DrawLogoActor(struct actor_self *self);
 
-/* src/frontend/credits.c */
+/* src/frontend/credits.cpp (C++, frontend.hpp: the C names of Credits's
+ * methods, for the C callers) */
 extern struct credits_screen *InitCredits(struct credits_screen *self);
 extern void CreditsLoop(struct credits_screen *self);
 extern void DrawCreditsText(struct credits_screen *self);
@@ -221,7 +187,7 @@ extern void *InitLanguageSelect(struct language_select *self);
 extern void CloseLanguageSelect(void);
 extern void OpenLanguageSelect(void);
 
-/* src/frontend/starfield.c */
+/* src/frontend/starfield.cpp (C++, frontend.hpp: Starfield's methods) */
 extern void *InitStarfield(void *self);
 extern void DrawStarfield(void *self);
 extern void SpawnStar(void *mgr, s32 idx);
