@@ -48,7 +48,7 @@ extern s32 DrawWrappedTextInBox(u8 *text, class Font *self, struct aabb *box, s3
 extern s32 DrawWrappedTextInBox(u8 *text, struct bitmap_font *self, struct aabb *box, s32 mode);
 #endif
 
-/* src/text/wrapped_text.c */
+/* src/text/wrapped_text.cpp (C linkage) */
 #ifdef __cplusplus
 extern s32 DrawWrappedText(u8 *text, class Font *self, struct aabb *box, s32 limit, s32 mode);
 #else

@@ -8,8 +8,8 @@ extern "C" {
 }
 
 /* The pause menu's five info pages (PauseMenu, menus.hpp), built by
- * InitPauseMenuInfo (still C): each page's icons, and its numbers as
- * text for the C drawing code. Built with old_agbcc, now old_agbcp
+ * InitInfo (pause_menu_info.cpp): each page's icons, and its numbers as
+ * text for the drawing code. Built with old_agbcc, now old_agbcp
  * (Makefile OLD_AGBCC_OBJS). */
 
 /* Puts an icon at a fixed position. The ROM calls Entity::SetPixelPos

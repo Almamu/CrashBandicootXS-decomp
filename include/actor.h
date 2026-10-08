@@ -28,8 +28,7 @@
  * fields at 0x0B, 0x0D-0x0F and 0x16-0x17 aren't understood beyond their
  * offset yet - named `unusedNN` rather than guessed. `id` and `kind`
  * have the same offsets and roles as `struct gobj`'s and `struct
- * player`'s. `struct power_dialog.icon` (in
- * power_dialog_draw.cpp) points at one of these. */
+ * player`'s. */
 struct actor {
     s32 x; // 0x00 - Q8 fixed-point screen position
     s32 y; // 0x04 - Q8 fixed-point screen position

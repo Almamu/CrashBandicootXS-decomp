@@ -593,7 +593,7 @@
     "DrawPauseMenuPageTitle"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.c"
+    "menus/pause_menu_pages_draw.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -618,7 +618,7 @@
     "DrawPauseCrystalsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.c",
+    "menus/pause_menu_pages_draw.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -692,7 +692,7 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_gems.c",
+    "menus/pause_menu_gems.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -742,7 +742,7 @@
     "InitPauseRelicsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_gems.c",
+    "menus/pause_menu_gems.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -793,7 +793,7 @@
     "DrawPauseTimeTrialPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_draw.c",
+    "menus/pause_menu_pages_draw.cpp",
     "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
@@ -2984,7 +2984,7 @@
     "menus/level_select.c",
     "level/spawn_bosses.cpp",
     "menus/power_dialog_draw.cpp",
-    "menus/pause_menu_info.c",
+    "menus/pause_menu_info.cpp",
     "menus/pause_menu_pages_init.cpp",
     "level/level_query.c",
     "level/run_room.c"

@@ -38,14 +38,14 @@ const s32 gSaveMenuOptions[5] = {
     0x1B, 0x1C, 0x1E, 0x1D, 0x20,
 };
 
-/* The label text ids DrawPauseMenuPageTitle (pause_menu_pages_draw.c) picks from. */
+/* The label text ids DrawPauseMenuPageTitle (pause_menu_pages_draw.cpp) picks from. */
 const s32 gPauseMenuPageTitles[5] = {
     0x36, 0x35, 0x37, 0x38, 0x39,
 };
 
 /* Icon positions and frame indices of the menu screens in
  * pause_menu_pages_init.cpp (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
- * InitPauseTimeTrialPage), pause_menu_pages_draw.c and pause_menu_gems.c. */
+ * InitPauseTimeTrialPage), pause_menu_pages_draw.cpp and pause_menu_gems.cpp. */
 const struct icon_pos gPauseCrystalIconPos = { 212, 112 };
 const struct icon_pos gPausePowerIconPos[4] = {
     { 180, 96 },

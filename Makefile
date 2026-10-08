@@ -309,6 +309,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/menus/power_dialog_loop.o \
                   $(C_BUILDDIR)/menus/pause_menu_loop.o \
                   $(C_BUILDDIR)/menus/pause_menu_gems.o \
+                  $(C_BUILDDIR)/menus/pause_menu_powers.o \
                   $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
                   $(C_BUILDDIR)/menus/power_dialog.o \
                   $(C_BUILDDIR)/menus/power_dialog_draw.o \

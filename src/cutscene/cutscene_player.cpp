@@ -32,7 +32,7 @@ extern "C" {
  *   flush (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/
  *   `CommitOamBuffer` on `gOamBuffer`) and a nested text-paging loop
  *   through each slide's `struct cutscene_page`, rendering each string
- *   via `DrawWrappedText` (wrapped_text.c) with `font` into `box`,
+ *   via `DrawWrappedText` (wrapped_text.cpp) with `font` into `box`,
  *   continuing to the next string while a held-input mask (9, versus
  *   `RunSlideshow`'s 8) stays set. `box.h` divided by the font's line
  *   height gives the per-call text-wrap `limit`.
