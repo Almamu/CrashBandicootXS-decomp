@@ -398,23 +398,23 @@ SECTIONS
          * .gnu.linkonce.d._vt.<class> section in its key-method object,
          * the others are C tables (src/data/entity_vtables_7e3bec.c,
          * .rodata.<name>). See docs/cplusplus.md, "Emitting the vtables". */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gEntityVtable);
+        build/crashbandicootxs/src/gfx/graphics.o(.gnu.linkonce.d._vt.6Entity); /* gEntityVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gSpriteObjVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gUiSpriteObjVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gMovingSpriteVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gGroundSpriteVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlayerVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCtrlVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gEnemyCtrlVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPeriodicSpawnerVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gKnockedEnemyCtrlVtable);
+        build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.gnu.linkonce.d._vt.9EnemyCtrl); /* gEnemyCtrlVtable */
+        build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.15PeriodicSpawner); /* gPeriodicSpawnerVtable */
+        build/crashbandicootxs/src/enemies/enemy_ctrl.o(.gnu.linkonce.d._vt.16KnockedEnemyCtrl); /* gKnockedEnemyCtrlVtable */
         build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.10EffectCtrl); /* gEffectCtrlVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCrateVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gExtraLifeVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gWumpaVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gStopwatchVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gActionCtrlVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlayerCtrlVtable);
+        build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.10PlayerCtrl); /* gPlayerCtrlVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gInputCtrlVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBossCtrlVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gMegaMixCtrlVtable);
@@ -441,7 +441,7 @@ SECTIONS
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerBaseVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPooledBgLayerVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHudPartVtable);
+        build/crashbandicootxs/src/gfx/palette_cycle.o(.gnu.linkonce.d._vt.7HudPart); /* gHudPartVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLargeFontVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gSmallFontVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gFontVtable);

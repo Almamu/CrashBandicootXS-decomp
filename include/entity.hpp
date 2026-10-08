@@ -12,9 +12,9 @@
  * interface`: the file that defines its first non-inline virtual method
  * (CheckPlayerContact, in graphics.cpp) gets the vtable and, at its end,
  * the out-of-line copies of the inline virtual ones. The vtable it emits
- * is a weak symbol in a `.gnu.linkonce.d` section, which the linker
- * script discards; the ROM's table is still the C data in
- * src/data/entity_vtables_7e3bec.c. */
+ * is a weak symbol in a `.gnu.linkonce.d` section, which ldscript.txt
+ * places at gEntityVtable's ROM address (docs/cplusplus.md, "Emitting
+ * the vtables"). */
 
 extern "C" {
 #include "core.h"

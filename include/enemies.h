@@ -37,11 +37,6 @@ struct periodic_spawner {
 
 struct entry_set;
 
-/* The method tables (src/data/entity_vtables_7e3bec.c). */
-extern const struct vtable_slot gEnemyCtrlVtable[13];
-extern const struct vtable_slot gPeriodicSpawnerVtable[11];
-extern const struct vtable_slot gKnockedEnemyCtrlVtable[13];
-
 /* The motion entry set ResetEnemyCtrl gives every controller
  * (`manager`, src/data/object_tables_16bb6c.c). */
 extern const struct entry_set gEnemyCtrlMotionSet;
@@ -54,19 +49,13 @@ extern s32 gHomingEnemyXSaved;
 extern s32 gHomingEnemyY;
 extern s32 gHomingEnemyYSaved;
 
-/* src/enemies/enemy_ctrl.cpp: the vtables' slots, and GetSfxVolumeAt
+/* src/enemies/enemy_ctrl.cpp: a C table's slot, and GetSfxVolumeAt
  * (C linkage). The other methods have no C caller left and no C name
  * here (cxx_symbols.txt has them). */
 extern void AttachEnemyCtrl(struct part_ctrl *self, struct ctrl_target *target);
 extern s32 GetSfxVolumeAt(s32 x, s32 y);
-extern void DestroyEnemyCtrl(struct part_ctrl *self, s32 flags);
-extern void UpdatePeriodicSpawner(struct periodic_spawner *self);
-extern void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags);
-extern void UpdateKnockedEnemyCtrl(void *self, struct actor *other);
-extern void DestroyKnockedEnemyCtrl(void *self, s32 flags);
 
 /* src/enemies/enemy_ctrl_update.cpp */
-extern void UpdateEnemyCtrl(struct part_ctrl *self);
 extern void HitEnemy(struct part_ctrl *self, s32 unused, s32 state);
 
 #endif /* GUARD_ENEMIES_H */

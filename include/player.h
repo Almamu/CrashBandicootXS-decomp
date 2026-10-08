@@ -306,7 +306,6 @@ struct boss_ctrl {
 /* The method tables (src/data/entity_vtables_7e3bec.c). */
 extern const struct vtable_slot gPlayerVtable[15];
 extern const struct vtable_slot gActionCtrlVtable[13];
-extern const struct vtable_slot gPlayerCtrlVtable[13];
 extern const struct vtable_slot gInputCtrlVtable[13];
 extern const struct vtable_slot gBossCtrlVtable[13];
 
@@ -581,9 +580,7 @@ extern void DestroyPlayer(struct player *self, u32 arg1);
  * under their C names (cxx_symbols.txt), for the vtable, the state table
  * and the C callers. */
 extern void CheckPlayerCtrlTurn(struct player_ctrl *self);
-extern void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 arg);
 extern void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
-extern void UpdatePlayerCtrl(struct player_ctrl *self);
 extern void ApplyPlayerCtrlMotion(struct player_ctrl *self);
 extern void PlayerCtrlStateIdle(struct player_ctrl *self);
 extern void PlayerCtrlStateSwim(struct player_ctrl *self);
@@ -593,7 +590,6 @@ extern void PlayerCtrlStateTurn(struct player_ctrl *self);
 extern void PlayerCtrlStateSwimStart(struct player_ctrl *self);
 extern void PlayerCtrlStateStop(struct player_ctrl *self);
 extern void PlayerCtrlStateDead(struct player_ctrl *self);
-extern void AttachPlayerCtrl(struct player_ctrl *self, struct player *target);
 extern void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct player *target, s32 idx);
 extern void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct player *target, s32 idx);
 /* SetPlayerCtrlState's `timer`/`timerMax` value that keeps the current
@@ -604,7 +600,6 @@ extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
 extern s32 GetPlayerSwimDriftStep(s32 v);
 extern void ApplyPlayerCtrlTilt(struct player_ctrl *self);
 extern void StartPlayerCtrlSwim(struct player_ctrl *self);
-extern void DestroyPlayerCtrl(struct player_ctrl *self, s32 flags);
 extern struct player_ctrl *InitPlayerCtrl(struct player_ctrl *self);
 extern void sub_801750C(struct player_ctrl *self);
 extern void SetPlayerCtrlMotionYPending(struct player_ctrl *self);

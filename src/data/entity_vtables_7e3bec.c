@@ -29,23 +29,6 @@
  * own inheritance. See docs/data.md.
  */
 
-/* Used by aabb_setup.c, enemy_ctrl.cpp, wumpa.cpp,
- * sprite_obj.cpp (DestroySpriteObj), sprite_anim.cpp, graphics.cpp (nullsub_12,
- * ResetEntity, DestroyEntity). */
-const struct vtable_slot gEntityVtable[11] VTABLE_SECTION(gEntityVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(CheckEntityPlayerContact),
-    VTABLE_SLOT(GetEntityBounds),
-    VTABLE_SLOT(UpdateEntity),
-    VTABLE_SLOT(DrawEntity),
-    VTABLE_SLOT(IsEntityOnScreen),
-    VTABLE_SLOT(EntityOverlapsRect),
-    VTABLE_SLOT(IsEntityNearCamera),
-    VTABLE_SLOT(IsEntityInsideRect),
-    VTABLE_SLOT(GetEntityClassId),
-    VTABLE_SLOT(DestroyEntity),
-};
-
 /* Used by sprite_obj.cpp (GetSpriteObjPriority, DestroySpriteObj), sprite_anim.cpp. */
 const struct vtable_slot gSpriteObjVtable[13] VTABLE_SECTION(gSpriteObjVtable) = {
     VTABLE_SLOT(NULL),
@@ -155,55 +138,6 @@ const struct vtable_slot gCtrlVtable[13] VTABLE_SECTION(gCtrlVtable) = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by enemy_ctrl_update.cpp, enemy_ctrl.cpp. */
-const struct vtable_slot gEnemyCtrlVtable[13] VTABLE_SECTION(gEnemyCtrlVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(UpdateEnemyCtrl),
-    VTABLE_SLOT(HitEnemy),
-    VTABLE_SLOT(AttachEnemyCtrl),
-    VTABLE_SLOT(SetCtrlMode),
-    VTABLE_SLOT(StartCtrlTargetMotionX),
-    VTABLE_SLOT(StartCtrlTargetMotionY),
-    VTABLE_SLOT(SetCtrlTargetMotionX),
-    VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(DestroyEnemyCtrl),
-    VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
-    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
-};
-
-/* Used by enemy_ctrl.cpp. */
-const struct vtable_slot gPeriodicSpawnerVtable[11] VTABLE_SECTION(gPeriodicSpawnerVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(CheckEntityPlayerContact),
-    VTABLE_SLOT(GetEntityBounds),
-    VTABLE_SLOT(UpdatePeriodicSpawner),
-    VTABLE_SLOT(DrawEntity),
-    VTABLE_SLOT(IsEntityOnScreen),
-    VTABLE_SLOT(EntityOverlapsRect),
-    VTABLE_SLOT(IsEntityNearCamera),
-    VTABLE_SLOT(IsEntityInsideRect),
-    VTABLE_SLOT(GetEntityClassId),
-    VTABLE_SLOT(DestroyPeriodicSpawner),
-};
-
-/* Used by enemy_ctrl_update.cpp, enemy_ctrl.cpp. */
-const struct vtable_slot gKnockedEnemyCtrlVtable[13] VTABLE_SECTION(gKnockedEnemyCtrlVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(UpdateKnockedEnemyCtrl),
-    VTABLE_SLOT(CtrlHandleEvent),
-    VTABLE_SLOT(AttachCtrl),
-    VTABLE_SLOT(SetCtrlMode),
-    VTABLE_SLOT(StartCtrlTargetMotionX),
-    VTABLE_SLOT(StartCtrlTargetMotionY),
-    VTABLE_SLOT(SetCtrlTargetMotionX),
-    VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(DestroyKnockedEnemyCtrl),
-    VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
-    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
-};
-
 /* Used by crate.cpp (DestroyCrate), crate_create.cpp (CreateCrate). */
 const struct vtable_slot gCrateVtable[13] VTABLE_SECTION(gCrateVtable) = {
     VTABLE_SLOT(NULL),
@@ -288,23 +222,6 @@ const struct vtable_slot gActionCtrlVtable[13] VTABLE_SECTION(gActionCtrlVtable)
     VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyActionCtrl),
     VTABLE_SLOT(ActionCtrlSetTargetAnim),
-    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
-    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
-};
-
-/* Used by swim_ctrl.cpp (DestroyPlayerCtrl). */
-const struct vtable_slot gPlayerCtrlVtable[13] VTABLE_SECTION(gPlayerCtrlVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(UpdatePlayerCtrl),
-    VTABLE_SLOT(PlayerCtrlHandleEvent),
-    VTABLE_SLOT(AttachPlayerCtrl),
-    VTABLE_SLOT(SetCtrlMode),
-    VTABLE_SLOT(StartCtrlTargetMotionX),
-    VTABLE_SLOT(StartCtrlTargetMotionY),
-    VTABLE_SLOT(SetCtrlTargetMotionX),
-    VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(DestroyPlayerCtrl),
-    VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
@@ -697,23 +614,6 @@ const struct vtable_slot gPooledBgLayerVtable[10] VTABLE_SECTION(gPooledBgLayerV
     VTABLE_SLOT(DrawPooledBgLayerColumn),
     VTABLE_SLOT(ClipPooledBgLayerColumns),
     VTABLE_SLOT(ClipPooledBgLayerRows),
-};
-
-/* Used by palette_cycle.cpp (InitHudPart, DestroyHudPart). */
-const struct vtable_slot gHudPartVtable[13] VTABLE_SECTION(gHudPartVtable) = {
-    VTABLE_SLOT(NULL),
-    VTABLE_SLOT(CheckSpritePickup),
-    VTABLE_SLOT(GetSpriteObjHitbox),
-    VTABLE_SLOT(UpdateSpriteObj),
-    VTABLE_SLOT(DrawSpriteObj),
-    VTABLE_SLOT(IsSpriteObjOnScreen),
-    VTABLE_SLOT(SpriteObjOverlapsRect),
-    VTABLE_SLOT(IsSpriteObjNearCamera),
-    VTABLE_SLOT(IsSpriteObjInsideRect),
-    VTABLE_SLOT(GetSpriteObjClassId),
-    VTABLE_SLOT(DestroyHudPart),
-    VTABLE_SLOT(GetSpritePriority),
-    VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
 /* Used by aabb_setup.c, font_glyph.c (FontDrawGlyph). */
