@@ -4,7 +4,8 @@ The decompilation itself is done: all 2059 of the ROM's functions are
 byte-exact C (two of them through a locally patched agbcc_arm, #553),
 and all of its data is source. What's left is making the code better to read without changing a
 byte of the ROM: real names for the remaining placeholders, compiler
-warnings, formatting, and documenting the matching workarounds. That
+warnings, formatting, and the matching workarounds still left (README.md's
+"Current state" has the count). That
 work is tracked as GitHub issues. Anyone - human or AI agent - can pick
 one up. This doc is the short version; the pieces it links to have the
 real detail.
@@ -62,7 +63,10 @@ matched code - read it before starting.** In short:
   one-statement idioms (`MATCH_CONST`, `MATCH_KEEP`, `BOX_ADDR`, ...):
   use those rather than spelling the `asm` out. CI runs
   `tools/match_idioms.py --check`, which fails on a hand-spelled idiom
-  (see "Writing new matching code" in that doc).
+  (see "Writing new matching code" in that doc). After a build,
+  `tools/match_idioms.py --functions` counts the functions with no
+  workaround at all (README.md's number; refresh it when you remove the
+  last one in a function), and `--functions --files` lists the others.
 - **Pruning workarounds** (#662): `python3 tools/match_prune.py PATH...`
   tries removing each workaround site in the given `.c`/`.cpp` files or
   directories, one at a time and then in pairs and pin bundles until a

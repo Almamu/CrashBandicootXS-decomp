@@ -19,6 +19,9 @@ plainer version doesn't.
   macros expand to the spellings they replace (`--check-macros`),
   converts a kind to its macro (`--convert K`) and fails if an idiom
   that has a macro is written out by hand (`--check`, run by CI).
+  `--functions` (after a build) counts the functions with no workaround
+  at all, the number in README.md, and `--functions --files` lists the
+  others with their kinds.
 - [tools/match_prune.py](../tools/match_prune.py) finds the workarounds
   that are no longer needed (#662): it removes each site, alone and
   then in pairs and pin bundles, rebuilds the object through the
@@ -77,8 +80,10 @@ plainer version doesn't.
 ### old_agbcc vs agbcc
 
 The original build used two versions of the Thumb compiler, per
-translation unit. `tools/agbcc/bin/old_agbcc` builds the 94 objects in
-the Makefile's `OLD_AGBCC_OBJS`; the rest use the current `agbcc`.
+translation unit. `tools/agbcc/bin/old_agbcc` (or `old_agbcp` for C++)
+builds the 146 objects in the Makefile's `OLD_AGBCC_OBJS`; the rest use
+the current `agbcc` (`agbcp`). `tools/match_idioms.py` prints the
+current size of every per-object list.
 
 How to tell, from the ROM's code:
 
@@ -188,7 +193,8 @@ programmer did, not by workarounds. The recurring ones:
 - **Hoisting.** If gcc hoists an invariant the ROM recomputes in the
   loop, put a `MATCH_KEEP_VOLATILE(base)` at the use
   ([sub_8009150-loop-invariant-hoist-matched.md](./matching/archive/sub_8009150-loop-invariant-hoist-matched.md),
-  `LinkCrateToActiveBucket`; `src/crates/crate_grid_link.c`).
+  `LinkCrateToActiveBucket` in its C; the C++ in
+  `src/crates/crate_grid_link.cpp` needs none).
 - **Insn counts.** loop.c's decision to move an invariant depends on the
   loop's insn count; `MATCH_BARRIER()`s in the body change it
   (`src/frontend/company_logos.cpp`).
@@ -328,7 +334,7 @@ both compile to these exact sequences.
   one-byte struct, `struct byte_arg` ([include/byte_arg.h](../include/byte_arg.h)).
   A packed struct literal is built in a register before the slot address;
   adding `u8 pad[0]` makes it BLKmode and stores it address-first
-  (`RunRoom`, `src/level/run_room.c`;
+  (`RunRoom`, `src/level/run_room.cpp`;
   [hard-register-hold-retry.md](./matching/archive/hard-register-hold-retry.md)).
   See [issue-55-naked-retry.md](./matching/archive/issue-55-naked-retry.md).
 
@@ -345,7 +351,7 @@ instead of computing it in locals. The spelling matters: in `DrawPlayer`
 to put an `add r0, sp, #K` after the other arguments, compute those in a
 block before the call. See
 [inline-arg-order-retry.md](./matching/archive/inline-arg-order-retry.md)
-and `src/player/player_event.c`.
+and `src/player/player_event.cpp`.
 
 ### Asm-label aliases
 
@@ -424,8 +430,7 @@ model registers the ROM leaves unused. See
 [hard-register-hold-retry.md](./matching/archive/hard-register-hold-retry.md)
 (`InitSaveMenuIcons`, `DrawPauseMenu`),
 [huge-naked-retry-3.md](./matching/archive/huge-naked-retry-3.md)
-(the round-robin wrapping), and `src/crates/crate_list_update.c`,
-`src/level/run_room.c`.
+(the round-robin wrapping), and `src/level/run_room.cpp`.
 
 ### Spill-slot order
 
@@ -437,8 +442,8 @@ hash table's size is half the function's insn count. So:
 - moving a declaration can reorder the user variables' slots;
 - changing the insn count anywhere reshuffles the GCSE temporaries'
   slots. `MATCH_BARRIER()`s at the top of the function are the padding
-  knob (three in `InitSaveMenuIcons`, `src/save/save_menu_draw.c`; four
-  in GAX's `gax_work_size.c`);
+  knob (four in GAX's `gax_work_size.c`; `InitSaveMenuIcons`' C had
+  three, which its C++ doesn't need);
 - a different return type of a called function can swap slots.
 
 If slot order is the only difference left, fix the rest first: it often
@@ -467,8 +472,8 @@ gcc 2.9:
   can merge two identical ones and flow deletes it when the output is
   dead. `asm volatile` stops all three and makes it a full scheduling
   barrier. The `_VOLATILE` macros are for the sites where the plain form
-  was moved or merged (the recheck in
-  `src/bosses/hovercraft_cannon_flash.cpp`).
+  was moved or merged. Only `MATCH_USE2_VOLATILE` (`lib/gax/src/gax_swi.c`)
+  and one spelled-out `asm volatile` keep (below) are left.
 
 | Spelling | Macro | What gcc 2.9 does with it | Typical use |
 |---|---|---|---|
@@ -490,9 +495,9 @@ The rarer forms, a few sites each:
 
 | Spelling | Macro | Sites | What it does |
 |---|---|---|---|
-| `asm("" : : "r"(a), "r"(b))` | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | 3 | `MATCH_USE` of two values in one insn. Not the same as two `MATCH_USE`s, which are two insns. |
-| `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 3 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.c`); also forces a reload of whatever it held (`src/level/play_room.c`). |
-| `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 2 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for (`src/frontend/title_screen.cpp`). |
+| `asm("" : : "r"(a), "r"(b))` | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | 2 | `MATCH_USE` of two values in one insn. Not the same as two `MATCH_USE`s, which are two insns. |
+| `asm("" : : : "r5")` | `MATCH_CLOBBER(r5)`, `MATCH_CLOBBER_VOLATILE(r4)` | 2 | Tells gcc the register is clobbered, so the prologue saves it even though nothing uses it, as the ROM does ([issue-9-raw-asm-pass.md](./matching/archive/issue-9-raw-asm-pass.md), `UpdateEnemyBob`; `src/enemies/enemy_ctrl.cpp`); it also forces a reload of whatever the register held. |
+| `asm volatile("" ::: "memory")` | `MATCH_MEMORY_BARRIER()` | 0 | Makes gcc forget memory and acts as a barrier. It does not stop address CSE, which is what it was usually tried for. No site needs it any more. |
 | `asm("" : "+m"(x))` | `MATCH_KEEP_MEM(x)` | 2 | `x` is in memory here with an unknown value, so a later read is a real load (the `ldm r1!` re-read in `ConvertAirshipTiles`). |
 | `asm("" : : "m"(x))` | `MATCH_USE_MEM(x)` | 1 | `x` must be in memory here: keeps it in its stack slot across a call (`src/level/spawn_enemies.cpp`). |
 
@@ -507,7 +512,7 @@ are `ALLOWED_SPELLED` in `tools/match_idioms.py`:
 - `asm volatile("" : : "m"(src), "m"(dst))` in `lib/gax/src/gax_swi.c`:
   two `"m"` inputs in one insn (`mem_ref`).
 - `asm volatile("" : "+r"(flags) : "r"(m))` in
-  `src/player/action_ctrl_moves.c`: a keep and a use in one insn
+  `src/player/action_ctrl_moves.cpp`: a keep and a use in one insn
   (`keep_volatile`).
 - `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
   `src/save/save_transfer.c`: an opaque copy whose input isn't tied to
@@ -516,13 +521,14 @@ are `ALLOWED_SPELLED` in `tools/match_idioms.py`:
 
 ## Memory accesses
 
-- **Retyped field stores** `*(T *)&s->field = v` (191 sites) and reads
-  (71): access a field with another mode or width than its declared type
-  (`str` vs `strb`, sharing a constant between a byte and a word store),
-  or stop gcc treating it as a struct member when it decides where to
-  build a zero (`src/actor/actor.c`, the `animTimer`/`animDone` pairs).
+- **Retyped field stores** `*(T *)&s->field = v` (6 sites left, from
+  191 when they were first counted) and reads (17, from 71): access a
+  field with another mode or width than its declared type (`str` vs
+  `strb`, sharing a constant between a byte and a word store), or stop
+  gcc treating it as a struct member when it decides where to build a
+  zero (the `animTimer`/`animDone` pairs of `actor.c`, gone in its C++).
   Prefer fixing the field's declared type when that's byte-neutral.
-- **Scoped volatile** `*(volatile T *)&x`, or a block-local
+- **Scoped volatile** (9 sites) `*(volatile T *)&x`, or a block-local
   `volatile u8 *p`: forces a real load or store at that point, including
   a dead load the ROM has (`(void)*(volatile s32 *)&p->field;`), or
   keeps an address computed into the ROM's register
@@ -580,18 +586,20 @@ the ROM, so the layout shifts.
 `asm(".pool")` places the literal pool only for literals that asm
 statements themselves load (`ldr rX, =sym`); gcc puts its own literals at
 the end of the function and ignores the marker. Splitting a pool
-mid-function therefore means writing those loads in asm
-(`src/crates/crate_stack.c`, `src/actor/actor.c`). Conversely, an
+mid-function therefore means writing those loads in asm (one site is
+left, `src/save/save_transfer_poll.c`). Conversely, an
 `ldr =K` written in asm can land in the wrong pool; let gcc generate the
 address when it can
 ([sub_8009150-loop-invariant-hoist-matched.md](./matching/archive/sub_8009150-loop-invariant-hoist-matched.md)).
 
 ### Instruction asm
 
-253 asm statements emit real instructions (`add %0, %0, %1`,
-`mov %0, #0x10; neg %0, %0`, whole call-setup tails). They are the last
-resort, for orders gcc can't be talked into, and every one should say
-why. An asm tail is also never cross-jumped with C tails
+17 asm statements emit real instructions (from 253 when the #576 survey
+counted them): `swi`/`svc` calls with their registers, GAX2's
+hardware settle delays (`.byte`-encoded) and call-into-ARM sequence, two
+`ldrsh` forms, a pair of `lsl`/`lsr` halfword truncations and
+`FindSubstring`'s case folding. They are the last
+resort, for orders gcc can't be talked into, and every one says why. An asm tail is also never cross-jumped with C tails
 ([naked-sub_800fdc8-matched.md](./matching/archive/naked-sub_800fdc8-matched.md)).
 They have no macro: each is a specific instruction sequence.
 
@@ -601,7 +609,8 @@ The build is `-Wall ... -Werror`. Where the ROM really uses an
 uninitialized register (a `bestIdx` when the count is 0), an initializer
 would add code, so the variable stays uninitialized and is
 self-initialized: `s32 sel = sel;` emits nothing and silences
-`-Wuninitialized` (4 sites). A `& 0xFFFF0000` on garbage before ORing in
+`-Wuninitialized` (2 sites, both in lib/: `GAX_fx` and
+`EEPROMWrite1_check`). A `& 0xFFFF0000` on garbage before ORing in
 BGxCNT bits is a `union bgcnt` local (`graphics_package.h`) instead:
 agbcc pads the union to a word, `cnt.raw = 0` clears only its low half,
 and `-Wuninitialized` doesn't check aggregates (`src/frontend/starfield.cpp`,
@@ -743,82 +752,102 @@ removable were kept on purpose; a dry run still lists them:
   the one start, step 2 dropped it (`ReleaseHang`, `PauseMenu::Draw`,
   `GAX2_init`) and said so in the comment.
 
-Step 3 (frontend, menus, save, link): trying the other compiler on each
-object is cheap and worth doing first. `save_data.o` and
-`save_transfer.o` come out byte-identical under old_agbcc as they stood,
-and under it `SetSaveFlags`/`ClearSaveFlags` are plain `|=`/`&= ~`
-(four pins and an instruction asm gone); `pause_menu_draw.o` also
-matches under old_agbcp, but that frees none of its sites.
+Step 3 (#733-#737) rewrote the sites the tool couldn't remove, one
+subsystem at a time. What it found, for the next workaround to look at:
 
-Step 3 (system, util, audio, iwram, lib): `input.o`, `irq.o`, `aabb.o`
-and `audio.o` joined old_agbcc (Makefile, own `+=` block); its copy
-before an AND (`adds r1, r7, #0` ahead of the load) and its BLDY address
-derived from BLDCNT's are what the `add %0, %1, #0` / `str; add #4` asms
-and the DISPSTAT pins imitated. The other big lesson: rewrite from the
-ROM's code as plain C before tuning a draft. GaxChannelSetInstrument
-(ex-NAKED, 5 pins and 2 asms), GaxDrawText (7 pins, 2 asms),
-GaxFxChannelInit, GAX_set_music_volume and GaxMixerInit match as
-straight field stores and loops; their workarounds were fixing
-artefacts of the first draft's shape. Two smaller ones:
-- ClearKeys is the KeyInput constructor and returns `self`; that, not
-  an allocator whim, is why the ROM keeps r0 out of its stores.
-- FormatPaddedNumber's tail is an inlined strcpy and strlen
-  (`static inline` copies in number_format.c): the ROM's
-  re-materialized `movs r0, #0` for the terminator is the inline's own
-  `*dst = 0`, which a plain loop folds into the known-zero byte.
+**What proved removable.** Most of the remaining workarounds were
+fixing the draft, not the compiler:
 
-Step 3 (actors, bosses, crates, enemies, player, vehicles) replaced
-these with plain C/C++:
-
-- **A re-read for the ROM's register copy.** Reading the field again
-  (`table->kind == 0x1b` after `u8 v = table->kind`) gives cse a load
-  it turns into `adds r0, r1, #0`, where the asm wrote that copy
-  (`CountCategoryCrates`).
-- **A `u8` copy that stays a copy.** An `s32` copy of a loaded byte is
-  folded into it; a `u8` one keeps its own register (`UpdateSkidAnim`'s
-  `tagCopy`, found by decomp-permuter).
-- **Constant field stores instead of zero locals.** `bc->animDone = 0`
-  loads its 0 into a byte-mode register that cse doesn't share with an
-  `s32` 0, so the ROM's two `movs rN, #0` come out without pinning
-  either (`YetiStateChase`, `YetiStateCharge`).
-- **An inline helper for the argument order.** `CreateYeti`'s
-  `movs r0, #0x1c` before the heap flag is the actors' operator new
-  inlined: the size goes in as the helper's argument (`AllocIwram`),
-  which [inline-argument order](#inline-argument-order) puts first.
-- **`bool` for a tested 0/1 result.** With an `s32` inline result, cse
-  folds `if (StepCannonFlash(this))` on both paths; a `bool` keeps the
-  ROM's `movs r0, #0/#1; cmp r0, #0`.
-- **One local per axis.** `UpdateActorBgScroll` reused one `target` and
-  one `delta` for X and Y; separate `targetX`/`targetY` and
-  `deltaX`/`deltaY` (decomp-permuter) and `MIN` for the clamp replace
-  three pins.
-- **Read the globals directly.** `UpdateYetiBg2`'s address locals and
-  r1 pin go when the flags are read and written by name.
-
-Step 3 in gfx/, objects/ and text/ (62 sites, 53 removed):
-
-- **The compiler first.** display.o, fade.o and sprite_frame.o load the
-  constant before the `ldrb`; under old_agbcc their plain C matches,
-  including `AllocVramTileBlock`, which had been an asm island with
-  hand-placed labels and a `.pool`. Their pins and instruction asm were
-  making agbcc imitate old_agbcc.
-- **A value built in one register from pieces** (`and #0xFFFF0000;
-  orr`, never zeroed: the C's `x = x` self-init) is a word-sized union
-  of bitfields held in a local (`DarkenPalette`'s channels,
-  `QueueSpriteFrameOam`'s affine x/y pair).
-- **Types.** `DrawAffinePieces`' matrix scales as `s16`, not `u16`, keep
-  the call result in the ROM's register (a `MATCH_USE` before).
-- **decomp-permuter on the C++ ports** found a `volatile` DMA source
-  halfword (`SetScaledSpriteColor`: `DmaFill16`), an `s32` copy of a
-  `u8` argument before a bitfield store, which stops reload turning the
-  field mask's `1` into an add (`Platform::SetExitMirror`), and two
-  copies of a pointer for the two registers the ROM keeps it in
+- **The compiler first.** Many pins and instruction asms were making
+  agbcc imitate old_agbcc: its constant loaded before the `ldrb`, its
+  copy before an AND (`adds r1, r7, #0` ahead of the load), its BLDY
+  address derived from BLDCNT's. Trying the other compiler on an object
+  is cheap; save_data.o, save_transfer.o, input.o, irq.o, aabb.o,
+  audio.o, display.o, fade.o, sprite_frame.o, level_state.o and
+  level_query.o moved to `OLD_AGBCC_OBJS` (146 objects now), and their
+  plain C matches: `SetSaveFlags` is a plain `|=`, `AllocVramTileBlock`,
+  an asm island with hand-placed labels and a `.pool`, is a loop. Not
+  every move pays: pause_menu_draw.o matches under old_agbcp too, but
+  that frees none of its sites.
+- **Rewrite from the ROM's code, not the draft.** GaxChannelSetInstrument
+  (ex-NAKED, 5 pins and 2 asms), GaxDrawText (7 pins, 2 asms) and three
+  more GAX2 functions match as straight field stores and loops; their
+  workarounds were fixing artefacts of the first draft's shape.
+- **What the function really is.** ClearKeys is the KeyInput
+  constructor and returns `self`, which is why the ROM keeps r0 out of
+  its stores; FormatPaddedNumber's tail is an inlined strcpy and strlen,
+  whose own `*dst = 0` is the ROM's re-materialized `movs r0, #0`;
+  `CreateYeti`'s `movs r0, #0x1c` before the heap flag is the actors'
+  operator new inlined, with the size as the helper's argument
+  ([inline-argument order](#inline-argument-order)).
+- **Locals, types and reads.** A field read again instead of a copy
+  (`CountCategoryCrates`: cse turns the second load into the ROM's
+  `adds r0, r1, #0`); a `u8` copy of a byte, which keeps its own
+  register where an `s32` one is folded (`UpdateSkidAnim`); constant
+  field stores instead of a zero local (`YetiStateChase`); a `bool`
+  result where an `s32` one is folded on both paths (`StepCannonFlash`);
+  one local per axis (`UpdateActorBgScroll`); globals read by name
+  instead of through address locals (`UpdateYetiBg2`); `s16` matrix
+  scales (`DrawAffinePieces`). The ones in
+  [Types and expressions](#types-and-expressions) marked #662 step 3
+  (`FreezeLevelClock`, `UnpackSaveData`) are from this pass too.
+- **A value built from pieces in one register** (`and #0xFFFF0000;
+  orr`, never zeroed, which the C wrote with an `x = x` self-init) is a
+  word-sized union of bitfields held in a local (`DarkenPalette`,
+  `QueueSpriteFrameOam`, `TitleScreen::LoadBg`).
+- **decomp-permuter on a C port of the function** ([NON_MATCHING](#non_matching))
+  found several of these: the `u8` copy, the per-axis locals, a
+  `volatile` DMA source halfword (`SetScaledSpriteColor`), an `s32` copy
+  of a `u8` argument before a bitfield store (`Platform::SetExitMirror`)
+  and two copies of a pointer for the two registers the ROM keeps it in
   (`ProbeEdgeTerrain`).
-- **Kept**, each with its comment: `Sprite::CheckPlayerContact`'s shared
-  1 in r6, `PlatformMover::Update`'s frame count in r5 and 0x300 in r2,
-  `ResolveCollision`'s `pb` in a register, and `DrawWrappedText`'s `len`
-  priority and r1 hold. The permuter brought each of them down only
-  with an uninitialized value or a no-op (`len++; len--;`).
+
+**What proved unavoidable.** Each kept site has a comment saying what
+the ROM does that the plain C doesn't. Where the permuter got below
+them, it was only with C that changes the function (an uninitialized
+value) or a no-op (`len++; len--;`). The patterns, with one example
+each:
+
+- **Register choice the allocator won't make** (`MATCH_HOLD_REG`, 89
+  pins): `ActionCtrl::StartTornadoFall` pins `entry` to r2, where agbcp
+  swaps `this` and `entry` between r2 and r3.
+- **A pin whose register an asm template names** (kept even where the
+  tool can remove it, see step 2): `itoa_arm`'s `num` for its `swi`.
+- **A register busy over a span** (`MATCH_HOLD` with a pin, 8): the
+  r0/r1 hold in `RunRoom`, so the global's address and the player
+  pointer both land in r2, as in the ROM.
+- **Allocation priority and live ranges** (`MATCH_USE`, 47): the extra
+  reference that makes `&gActorSpawnIndex` outrank `base` in
+  `SelectActorCategory` (r7, not r8).
+- **A value gcc mustn't see through** (`MATCH_KEEP`, 14): `pb = &b` in
+  `Platform::ResolveCollision`, which stays in r4 for the overlap tests
+  instead of being formed again from sp at each one.
+- **A constant loaded where the ROM loads it** (`MATCH_CONST`, 13):
+  `ActionCtrl::HandleEvent`'s separate 1 in r5, which cse otherwise
+  shares with the test's own 1.
+- **Insn-count padding and tail separation** (`MATCH_BARRIER`, 13):
+  the four in `GAX2_estimate` for the spill-slot order, the two in
+  `HeapSortActorsByKey` against cross-jumping.
+- **A stack-box address recomputed before each call** (`BOX_ADDR`, 12):
+  `Crate::PlayerAnimWouldTouch` ([spill-slot order](#spill-slot-order)).
+- **A struct value in a register pair** (pins): g++ keeps a `struct
+  vec2` value in memory, so `SpawnRoomExit` and `SpawnCrateGemMarker`
+  pin what C would hold in DImode.
+- **A callee-saved register pushed but unused** (`MATCH_CLOBBER`, 2):
+  `EnemyCtrl::UpdateBob`'s r5.
+- **A re-read from memory** (`MATCH_KEEP_MEM`/`MATCH_USE_MEM`, 3): the
+  `ldm r1!` re-read in `ConvertAirshipTiles`.
+- **Instructions no C produces** (17 instruction asms): `swi` calls,
+  GAX2's hardware settle delays and call into ARM code.
+- **Accesses of another width or a forced load** (23 retyped field
+  accesses, 9 scoped volatiles): `PlayerCtrl::StartStroke`'s byte
+  re-store of `tag`, `Player::HandleEvent`'s dead load of `maskLevel`.
+- **An uninitialized register the ROM really uses** (2 self-inits, both
+  in lib/): `GAX_fx`'s `sel`.
+
+After step 3, `tools/match_idioms.py --functions` counts 1955 of the
+2059 functions with no workaround at all (README.md has the
+per-directory table).
 
 ## Survey and conversion record (#576)
 
@@ -839,10 +868,11 @@ The conversion is complete. `tools/match_idioms.py` after part 4
 | other empty asms | - | 1 (untied `"=r"`/`"r"`) | none | - |
 | `BOX_ADDR` | 12 / 3 | 0 | in match.h | part 1 (definition moved) |
 
-The 8 spelled-out sites are `tools/match_idioms.py`'s `ALLOWED_SPELLED`
-list, which `--check` (and CI) enforces; they're described under
-[Register pins](#register-pins) and
-[Other empty-asm forms](#other-empty-asm-forms).
+The 8 spelled-out sites were `tools/match_idioms.py`'s `ALLOWED_SPELLED`
+list, which `--check` (and CI) enforces. The cortex.c pins went with its
+C++ conversion; the 3 left are described under
+[Other empty-asm forms](#other-empty-asm-forms). The counts in these
+tables are as of part 4; `tools/match_idioms.py` gives the current ones.
 
 These have no macro, by design:
 
@@ -875,7 +905,7 @@ functions and 100% data).
   step, and the [Writing new matching code](#writing-new-matching-code)
   section.
 
-Not done: re-testing whether individual pins and nudges are still needed
-(the optional item in #576). Removing one is fine whenever a clean
-rebuild shows the object stays identical; `tools/match_prune.py` does
-that for every site ([above](#pruning-workarounds), #662).
+Re-testing whether individual pins and nudges are still needed (the
+optional item in #576) was left to #662: `tools/match_prune.py` does it
+for every site. With it, the rewrites after it and the C++ conversion
+(#664), the pins went from 2153 to 89 ([above](#pruning-workarounds)).

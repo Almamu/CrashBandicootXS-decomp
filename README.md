@@ -28,10 +28,50 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
   (no `sub_XXXXXXXX` function names left), the library split (#573), the
   file layout (#575) and the headers (#574: every function and global is
   declared once, in a header).
+- **Matching workarounds: 1955/2059 functions have none.** The other
+  104 still need at least one register pin, empty-asm nudge
+  (`include/match.h`), instruction asm, `BOX_ADDR`, retyped field
+  access, scoped `volatile` or self-init to come out byte-exact, each
+  with a comment saying why (#662,
+  [docs/matching_techniques.md](./docs/matching_techniques.md)). After
+  a build, `tools/match_idioms.py --functions` prints these numbers and
+  the table below; `--functions --files` lists the 104 functions.
 - **What's left** is code quality: the remaining placeholder names
   (`gUnknown_`, `gStaticData_`, `nullsub_N`, `unk_XX` fields), compiler
-  warnings, formatting, and documenting the matching workarounds. It's
+  warnings, formatting, and the matching workarounds above. It's
   tracked as `cleanup` issues on GitHub.
+
+<details>
+<summary>Functions with no matching workarounds, per directory</summary>
+
+| Directory | Functions | No workarounds | With workarounds |
+|---|---:|---:|---:|
+| `lib/agb_eeprom/` | 10 | 9 | 1 |
+| `lib/gax/` | 49 | 35 | 14 |
+| `lib/libgcc/` | 3 | 3 | 0 |
+| `src/actor/` | 136 | 131 | 5 |
+| `src/audio/` | 27 | 23 | 4 |
+| `src/bosses/` | 165 | 155 | 10 |
+| `src/crates/` | 93 | 87 | 6 |
+| `src/cutscene/` | 33 | 32 | 1 |
+| `src/enemies/` | 41 | 34 | 7 |
+| `src/frontend/` | 57 | 51 | 6 |
+| `src/gfx/` | 140 | 140 | 0 |
+| `src/hud/` | 18 | 18 | 0 |
+| `src/iwram/` | 10 | 7 | 3 |
+| `src/level/` | 321 | 308 | 13 |
+| `src/link/` | 12 | 9 | 3 |
+| `src/menus/` | 140 | 134 | 6 |
+| `src/objects/` | 198 | 194 | 4 |
+| `src/pickups/` | 37 | 36 | 1 |
+| `src/player/` | 202 | 194 | 8 |
+| `src/save/` | 65 | 59 | 6 |
+| `src/system/` | 30 | 28 | 2 |
+| `src/text/` | 26 | 25 | 1 |
+| `src/util/` | 33 | 32 | 1 |
+| `src/vehicle/` | 213 | 211 | 2 |
+
+</details>
 
 `src/` has one directory per subsystem (`system/`, `gfx/`, `text/`,
 `audio/`, `objects/`, `player/`, `crates/`, `enemies/`, `level/`,

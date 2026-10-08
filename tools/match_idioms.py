@@ -25,6 +25,11 @@ Usage:
                                      ALLOWED_SPELLED, or a kind the build
                                      made redundant (REDUNDANT_KINDS)
                                      appears at all (run by CI)
+  tools/match_idioms.py --functions  "N/2059 functions with no matching
+                                     workarounds" and a per-directory
+                                     table (README.md's numbers; needs a
+                                     build); with --files, also list each
+                                     function that has one, and its kinds
 """
 
 import argparse
@@ -251,7 +256,10 @@ def line_of(text, pos):
     return text.count("\n", 0, pos) + 1
 
 
-def scan_file(path, rel, hits):
+def scan_file(path, rel, hits, offsets=None):
+    """Add the file's sites to hits[kind] as (rel, line). With `offsets`
+    (a list), also append (kind, offset) to it. Returns the
+    comment-stripped text the offsets index."""
     with open(path, encoding="utf-8", errors="replace") as f:
         raw = f.read()
     text = strip_comments(raw)
@@ -259,6 +267,8 @@ def scan_file(path, rel, hits):
 
     def add(kind, pos):
         hits[kind].append((rel, line_of(text, pos)))
+        if offsets is not None:
+            offsets.append((kind, pos))
 
     for m in ASM_START.finditer(text):
         end = balanced(text, m.end() - 1)
@@ -301,6 +311,7 @@ def scan_file(path, rel, hits):
         if depths[m.start()] > 0 and \
                 not re.search(r"\b(?:asm|__asm__)\s*$", text[max(0, m.start() - 12):m.start()]):
             add("volatile_local", m.start())
+    return text
 
 
 def makefile_flags():
@@ -609,6 +620,251 @@ def check_spelled(hits):
     return 1 if bad else 0
 
 
+# --functions: which ROM functions still carry a workaround (#662). A
+# site of one of these kinds inside a function's definition (or in an
+# inline function or macro the function uses) counts against it.
+# asm_label (a symbol alias) and the file-scope kinds don't change a
+# function's code, so they don't count, except a file-scope asm block
+# that defines a function (`.type NAME, function`), which counts as one
+# function with a workaround.
+WORKAROUND_KINDS = (
+    "pin", "pin_macro", "empty", "empty_volatile", "barrier_macro", "use", "use_volatile",
+    "use_macro", "keep", "keep_volatile", "keep_macro", "hold", "hold_volatile", "hold_macro",
+    "const", "const_volatile", "const_macro", "mem_barrier", "mem_barrier_macro",
+    "reg_clobber", "clobber_macro", "mem_ref", "mem_ref_macro", "empty_other", "insn", "pool",
+    "box_addr", "field_cast_store", "field_cast_load", "self_init", "non_matching", "naked",
+    "volatile_local")
+# Any include/match.h macro, including the ones with no kind of their own
+# (MATCH_KEEP_EXPR).
+ANY_MATCH_MACRO = re.compile(r"\bMATCH_[A-Z0-9_]+\s*\(")
+FUNC_NAME = re.compile(r"(?:operator\s*\S+|~?[A-Za-z_]\w*(?:\s*::\s*~?[A-Za-z_]\w*)*)\s*$")
+NOT_FUNC_NAME = {"__attribute__", "asm", "__asm__", "if", "while", "for", "switch", "return",
+                 "sizeof"}
+ASM_FUNCTION = re.compile(r"\.type\s+(\w+)\s*,\s*[%@]?function")
+DEFINE = re.compile(r"^[ \t]*#[ \t]*define[ \t]+(\w+)(?:[^\n]*\\\n)*[^\n]*", re.M)
+
+
+def blank_preprocessor(text):
+    """Blank the preprocessor lines (and their continuations), keeping
+    every offset."""
+    out = list(text)
+    for m in re.finditer(r"^[ \t]*#(?:[^\n]*\\\n)*[^\n]*", text, re.M):
+        for i in range(m.start(), m.end()):
+            if out[i] != "\n":
+                out[i] = " "
+    return "".join(out)
+
+
+def head_function_name(head):
+    """The name a definition's head (the text before its `{`) declares:
+    the identifier (`f`, `Class::Method`, `~Class`) before the first
+    top-level `(`, or None if it isn't a function head."""
+    depth = 0
+    for i, c in enumerate(head):
+        if c == "(":
+            if depth == 0:
+                m = FUNC_NAME.search(head[:i])
+                if m:
+                    name = re.sub(r"\s+", "", m.group(0))
+                    if name.split("::")[-1] not in NOT_FUNC_NAME:
+                        return name
+            depth += 1
+        elif c == ")":
+            depth -= 1
+    return None
+
+
+def function_spans(text):
+    """The function definitions in comment- and preprocessor-blanked
+    text, at file scope, in `extern "C" {}`/namespaces or in a class body:
+    [(name, head_start, end, head)], `end` just past the closing brace."""
+    found = []
+    stack = []  # one kind per open brace: func, other, class, open
+    last = 0  # where the current declaration's head starts
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c in "\"'":
+            j = i + 1
+            while j < n and text[j] != c:
+                j += 2 if text[j] == "\\" else 1
+            i = j + 1
+            continue
+        if stack and stack[-1][0] in ("func", "other"):
+            if c == "{":
+                stack.append(("other", None))
+            elif c == "}":
+                kind, info = stack.pop()
+                if kind == "func":
+                    found.append(info + (i + 1,))
+                    last = i + 1
+            i += 1
+            continue
+        if c == ";":
+            last = i + 1
+        elif c == "{":
+            head = text[last:i]
+            h = head.strip()
+            if re.fullmatch(r'extern\s+"C"', h) or re.match(r"namespace\b", h):
+                stack.append(("open", None))
+            elif "=" in re.sub(r"\([^()]*\)", "", h) and "operator" not in h:
+                stack.append(("other", None))  # an initialiser
+            elif re.search(r"\b(?:struct|class|union|enum)\b", h) and "(" not in h:
+                stack.append(("class", None))
+            else:
+                name = head_function_name(h)
+                if name:
+                    start = last + len(head) - len(head.lstrip())
+                    stack.append(("func", (name, start, h)))
+                else:
+                    stack.append(("other", None))
+            last = i + 1
+        elif c == "}":
+            if stack:
+                stack.pop()
+            last = i + 1
+        elif c == ":" and stack and stack[-1][0] == "class" \
+                and re.search(r"\b(?:public|private|protected)\s*$", text[last:i]):
+            last = i + 1
+        i += 1
+    return [(name, start, end, h) for name, start, h, end in found]
+
+
+def report_objects():
+    """The objects tools/report_units.py turns into report units, as
+    paths relative to build/crashbandicootxs/ without `.o`: the code
+    decomp.dev counts (crt0/boot and the hand-written assembly have no
+    unit)."""
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    import report_units
+    objs = set()
+    for _, base, _ in report_units.UNITS + report_units.IWRAM_UNITS:
+        if base and base != report_units.HANDWRITTEN:
+            objs.add(os.path.splitext(base)[0])
+    return objs
+
+
+def object_function_count(obj):
+    """The number of functions (FUNC symbols) defined in a built object."""
+    import subprocess
+    out = subprocess.run(["arm-none-eabi-readelf", "-sW", obj], capture_output=True,
+                         text=True, check=True).stdout
+    return sum(1 for ln in out.splitlines()
+               if re.search(r"\sFUNC\s", ln) and not re.search(r"\sUND\s", ln))
+
+
+def workaround_functions():
+    """Every function definition, as {(rel, name): [kinds]} for those with
+    a workaround, plus the set of ROM-function definitions [(rel, name)]
+    (the non-inline ones in .c/.cpp files and file-scope asm functions)."""
+    defs = []  # (rel, name, inline, body_text, kinds)
+    macros = {}  # macro name -> kinds
+    for d in SCAN_DIRS:
+        for dirpath, _, files in sorted(os.walk(os.path.join(ROOT, d))):
+            for fn in sorted(files):
+                p = os.path.join(dirpath, fn)
+                rel = os.path.relpath(p, ROOT)
+                if not fn.endswith((".c", ".h", ".cpp", ".hpp")) or rel in SKIP_FILES:
+                    continue
+                offsets = []
+                text = scan_file(p, rel, collections.defaultdict(list), offsets)
+                sites = [(k, pos) for k, pos in offsets if k in WORKAROUND_KINDS]
+                seen = set(pos for _, pos in offsets)
+                sites += [(m.group(0).rstrip("( \t\n"), m.start())
+                          for m in ANY_MATCH_MACRO.finditer(text) if m.start() not in seen]
+                for m in DEFINE.finditer(text):
+                    kinds = [k for k, pos in sites if m.start() <= pos < m.end()]
+                    if kinds:
+                        macros[m.group(1)] = kinds
+                header = fn.endswith((".h", ".hpp"))
+                for name, start, end, head in function_spans(blank_preprocessor(text)):
+                    kinds = [k for k, pos in sites if start <= pos < end]
+                    inline = header or bool(re.search(r"\binline\b", head))
+                    defs.append((rel, name, inline, text[start:end], kinds))
+                for k, pos in offsets:
+                    if k == "file_asm_other":
+                        end = balanced(text, text.index("(", pos))
+                        for m in ASM_FUNCTION.finditer(text[pos:end]):
+                            defs.append((rel, m.group(1), False, "", ["file_asm"]))
+    # An inline function's or macro's workaround is in the code of every
+    # function that uses it (the inline function itself isn't a ROM
+    # function unless it's emitted out of line, which isn't counted).
+    carriers = dict(macros)
+    changed = True
+    while changed:
+        changed = False
+        for rel, name, inline, body, kinds in defs:
+            key = name.split("::")[-1]
+            if not inline:
+                continue
+            used = [c for c in carriers if c != key and re.search(r"\b%s\b" % c, body)]
+            if (kinds or used) and key not in carriers:
+                carriers[key] = kinds or ["via " + used[0]]
+                changed = True
+    dirty = {}
+    rom = []
+    for rel, name, inline, body, kinds in defs:
+        if inline:
+            continue
+        rom.append((rel, name))
+        used = ["via " + c for c in carriers if re.search(r"\b%s\b" % c, body)]
+        if kinds or used:
+            dirty[(rel, name)] = sorted(set(kinds)) + used
+    return dirty, rom
+
+
+def functions_report(list_dirty):
+    """--functions: how many ROM functions have no workaround, overall and
+    per directory. The totals are the FUNC symbols of the built objects
+    the progress report counts, so it needs a build (`make`)."""
+    dirty, rom = workaround_functions()
+    total = collections.Counter()
+    missing = []
+    for obj in sorted(report_objects()):
+        path = os.path.join(ROOT, "build", "crashbandicootxs", obj + ".o")
+        if not os.path.exists(path):
+            missing.append(obj)
+            continue
+        total[obj] = object_function_count(path)
+    if missing:
+        print("not built: %s%s; run `make` first"
+              % (", ".join(missing[:5]), " ..." if len(missing) > 5 else ""), file=sys.stderr)
+        return 1
+    with_wa = collections.Counter()
+    for rel, name in dirty:
+        obj = os.path.splitext(rel)[0]
+        if obj not in total:
+            continue  # not a report unit (boot.cpp)
+        with_wa[obj] += 1
+    for obj in total:
+        if with_wa[obj] > total[obj]:
+            print("%s: %d functions with a workaround but only %d in the object"
+                  % (obj, with_wa[obj], total[obj]), file=sys.stderr)
+            return 1
+    n = sum(total.values())
+    w = sum(with_wa.values())
+    print("%d/%d functions with no matching workarounds (%.1f%%); %d with at least one"
+          % (n - w, n, 100.0 * (n - w) / n, w))
+    print()
+    print("| Directory | Functions | No workarounds | With workarounds |")
+    print("|---|---:|---:|---:|")
+    by_dir = collections.defaultdict(lambda: [0, 0])
+    for obj, t in total.items():
+        d = os.path.dirname(obj)
+        if d.startswith("lib/"):
+            d = "/".join(d.split("/")[:2])
+        by_dir[d][0] += t
+        by_dir[d][1] += with_wa[obj]
+    for d, (t, wa) in sorted(by_dir.items()):
+        print("| `%s/` | %d | %d | %d |" % (d, t, t - wa, wa))
+    if list_dirty:
+        print()
+        for (rel, name), kinds in sorted(dirty.items()):
+            if os.path.splitext(rel)[0] in total:
+                print("%s: %s: %s" % (rel, name, ", ".join(kinds)))
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--files", action="store_true", help="list files per kind")
@@ -625,7 +881,14 @@ def main():
     ap.add_argument("--check", action="store_true",
                     help="fail if an idiom that has a match.h macro is spelled out "
                          "outside ALLOWED_SPELLED, or a REDUNDANT_KINDS site appears")
+    ap.add_argument("--functions", action="store_true",
+                    help="count the functions with no matching workarounds, overall and "
+                         "per directory (needs a build); with --files, also list the "
+                         "functions that have one")
     args = ap.parse_args()
+
+    if args.functions:
+        return functions_report(args.files)
 
     if args.check_macros:
         return check_macros()
