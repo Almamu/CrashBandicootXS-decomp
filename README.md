@@ -28,14 +28,14 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
   (no `sub_XXXXXXXX` function names left), the library split (#573), the
   file layout (#575) and the headers (#574: every function and global is
   declared once, in a header).
-- **Matching workarounds: 1955/2059 functions have none.** The other
-  104 still need at least one register pin, empty-asm nudge
+- **Matching workarounds: 1958/2059 functions have none.** The other
+  101 still need at least one register pin, empty-asm nudge
   (`include/match.h`), instruction asm, `BOX_ADDR`, retyped field
   access, scoped `volatile` or self-init to come out byte-exact, each
   with a comment saying why (#662,
   [docs/matching_techniques.md](./docs/matching_techniques.md)). After
   a build, `tools/match_idioms.py --functions` prints these numbers and
-  the table below; `--functions --files` lists the 104 functions.
+  the table below; `--functions --files` lists the 101 functions.
 - **What's left** is code quality: the remaining placeholder names
   (`gUnknown_`, `gStaticData_`, `nullsub_N`, `unk_XX` fields), compiler
   warnings, formatting, and the matching workarounds above. It's
@@ -50,7 +50,7 @@ songs and WAV samples. `baserom.gba` isn't needed to build it.
 | `lib/gax/` | 49 | 35 | 14 |
 | `lib/libgcc/` | 3 | 3 | 0 |
 | `src/actor/` | 136 | 131 | 5 |
-| `src/audio/` | 27 | 23 | 4 |
+| `src/audio/` | 27 | 26 | 1 |
 | `src/bosses/` | 165 | 155 | 10 |
 | `src/crates/` | 93 | 87 | 6 |
 | `src/cutscene/` | 33 | 32 | 1 |
