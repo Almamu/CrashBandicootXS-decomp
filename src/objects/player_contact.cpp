@@ -46,7 +46,10 @@ void MovingSprite::TouchPlayer()
 
     /* Kept from the C: a volatile read, so that `w` is read at sp+24
      * rather than through the register holding box2's address (which
-     * also gives `this` r5 instead of r4). */
+     * also gives `this` r5 instead of r4). #662 round 2: a `w` local,
+     * nested ifs, reusing `box` and an inline test of the box all keep
+     * the register read; the permuter (score 30 of 80) only with an
+     * uninitialized pointer. */
     if (*(volatile s32 *)&box2.w != 0 && gPlayer->TouchesBox(&box2))
         ResolvePlayerContact();
 }

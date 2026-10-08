@@ -232,7 +232,11 @@ void PlatformMover::Update(MovingSprite *part)
     s32 k = kind;
     /* The frame count crosses the __umodsi3 call. Unpinned, old_agbcp's
      * global allocator ranks it above `part` and gives it r4, so `part`
-     * and every temporary after it swap r4 and r5 (the C pinned `part`). */
+     * and every temporary after it swap r4 and r5 (the C pinned `part`).
+     * #662 round 2: per-axis inline turn helpers give the same swap; the
+     * permuter on the unpinned C++ got only to 20 of 365, by wrapping the
+     * distance and turn blocks in a `do { } while (0)` (its loop notes
+     * weight their references). */
     MATCH_HOLD_REG(u32, now, r5);
 
     if (k == 5 && timer > 0 && gRoomFrameCount - timer == 60) {

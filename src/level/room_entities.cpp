@@ -205,7 +205,10 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                             for (k2 = 0; k2 < gCrateList->count; k2++) {
                                 /* Pinned: the ROM keeps the item pointer in
                                  * r0 and the id in r1. As a local temporary
-                                 * the id is allocated first and takes r0. */
+                                 * the id is allocated first and takes r0.
+                                 * Still so with the id read directly, through
+                                 * an inline or in the assignment's value
+                                 * (#662 round 2; the permuter stays at 25). */
                                 MATCH_HOLD_REG(u16, aid, r1);
 
                                 actor = Slot(k2);
