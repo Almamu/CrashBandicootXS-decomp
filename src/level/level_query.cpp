@@ -1,3 +1,4 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "level_state.h"
@@ -6,6 +7,7 @@
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
@@ -25,18 +27,24 @@
  * descriptor's `entities` list, whose `typeCounts` LevelHasEntityType
  * reads. */
 
-/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/), nor is
- * nullsub_25: a destructor (if bit 0 of `flags` is set, frees `self` via
- * `OperatorDelete`) and an empty constructor, of an object nothing
- * creates. */
-void sub_802425C(void *self, s32 flags)
+/* UNUSED - no caller anywhere in the ROM (checked src/ and asm/): the
+ * destructor (sub_802425C; g++'s deleting destructor frees `this` when
+ * bit 0 of its __in_chrg is set) and the empty constructor (nullsub_25,
+ * which returns `this` by leaving r0 alone) of a class with no fields and
+ * no vtable that nothing creates. C++ since the #664 cleanup; the rest of
+ * the file has C linkage. */
+class UnusedLevelObject
 {
-    if (flags & 1) {
-        OperatorDelete(self);
-    }
+public:
+    UnusedLevelObject();  // nullsub_25
+    ~UnusedLevelObject(); // sub_802425C
+};
+
+UnusedLevelObject::~UnusedLevelObject()
+{
 }
 
-void nullsub_25(void)
+UnusedLevelObject::UnusedLevelObject()
 {
 }
 

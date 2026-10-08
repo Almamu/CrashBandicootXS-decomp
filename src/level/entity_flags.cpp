@@ -1,8 +1,19 @@
+#include "spawners.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "match.h"
 #include "memory.h"
 #include "level.h"
+}
+
+/* The room's entity flags (LevelEntityFlags, include/spawners.hpp;
+ * gEntityFlags): the "gone" and "activated" bitmaps by entity id, and the
+ * crate count of a room's entity list. C++ since the #664 cleanup, built
+ * with old_agbcp (current agbcc was the C's); the methods keep their C
+ * names (cxx_symbols.txt) for the callers, which call them through
+ * level.h's prototypes. */
 
 /* GitHub issue #41: 0x08025894-0x08025FC8. Counts, across every group
  * in `list` and every entity in each group,
@@ -17,63 +28,25 @@
  * `list->params`, and the effective type is the `s16` eight bytes past
  * that.
  *
- * The `item->type == 0x1a` lookup does its whole four-load chain
- * using only `r0`/`r1` as scratch in the ROM, aggressively overwriting
- * each value the instant it's dead (item's own address is destroyed
- * by the very read that uses it, the table address is destroyed by
- * the read that dereferences it, and so on) - every plain-C shape
- * tried here kept at least one of those values alive in a third
- * register, colliding with the outer loop's `i` counter (pinned to
- * `r2` by the surrounding loop structure) and forcing an extra `r7`
- * push/pop the ROM does not have. Matched by emitting that one block
- * as an opaque `asm volatile` computing the effective type directly
- * from `l`/`item`, with `r0`/`r1` named explicitly in the asm text -
- * this keeps the block's own internal register churn invisible to the
- * surrounding function-level allocator, so `i` stays cleanly in `r2`
- * and the `r7` push/pop disappears. Splitting `i`'s own init
- * (`l->groupCount` then `- 1`) into two statements was also needed:
- * as one combined expression this compiler loads the count into a
- * scratch register before subtracting into `i`'s register, instead of
- * the ROM's direct load-then-decrement-in-place into the same
- * register - see docs/matching/archive/issue-41-game-loop-25894.md. */
-s32 CountCrateEntities(void *self, const struct level_entity_list *list)
+ * Under old_agbcp (the Makefile's OLD_AGBCC_OBJS) the plain lookup
+ * matches: under agbcc the C needed the lookup as an `asm volatile` block
+ * and `i`'s init split in two (docs/matching/archive/issue-41-game-loop-25894.md). */
+s32 LevelEntityFlags::CountCrateEntities(const struct level_entity_list *list)
 {
-    const struct level_entity_list *l = list;
     s32 count = 0;
     s32 i;
 
-    i = l->groupCount;
-    i -= 1;
-
-    for (; i >= 0; i--) {
-        const struct level_entity_group *group = &l->groups[i];
+    for (i = list->groupCount - 1; i >= 0; i--) {
+        const struct level_entity_group *group = &list->groups[i];
         s32 j;
 
         for (j = 0; j < group->count; j++) {
             const struct level_entity *item = &group->entities[j];
             s32 type = item->type;
 
-            if (type == 0x1a) {
-                MATCH_HOLD_REG(const void *, itemReg, r1) = item;
-                MATCH_HOLD_REG(s32, result, r0);
-
-                // clang-format off
-                asm volatile (
-                    "ldr r0, [%1, #8]\n\t"
-                    "ldrh r1, [r1, #6]\n\t"
-                    "lsl r1, r1, #1\n\t"
-                    "add r1, r1, r0\n\t"
-                    "ldr r0, [%1, #0xc]\n\t"
-                    "ldrh r1, [r1]\n\t"
-                    "add r0, r1, r0\n\t"
-                    "mov r1, #8\n\t"
-                    "ldrsh r0, [r0, r1]\n\t"
-                    : "=r" (result)
-                    : "r" (l), "r" (itemReg)
-                );
-                // clang-format on
-                type = result;
-            }
+            if (type == 0x1a)
+                type =
+                    *(const s16 *)((const u8 *)list->params + list->paramOffsets[item->param] + 8);
 
             // clang-format off
             switch (type) {
@@ -103,9 +76,9 @@ s32 CountCrateEntities(void *self, const struct level_entity_list *list)
  * UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Sets
  * bit `n` of `bits0` (floor-divided into a 32-bit-word row, same idiom as
  * `SetBitmapBit` in collision_map.c). */
-void SetEntityIdGone(void *self, s32 n)
+void LevelEntityFlags::SetGone(s32 n)
 {
-    u8 *base = (u8 *)self;
+    u8 *base = (u8 *)this;
     s32 t = n;
     s32 wordIndex, shifted, bitIndex, mask;
     s32 *word;
@@ -125,9 +98,9 @@ void SetEntityIdGone(void *self, s32 n)
 
 /* Tests bit `n` of `bits0`, the committed "gone" set `SetEntityIdGone`
  * sets. */
-s32 IsEntityIdGone(void *self, s32 n)
+s32 LevelEntityFlags::IsGone(s32 n)
 {
-    u8 *base = (u8 *)self;
+    u8 *base = (u8 *)this;
     s32 result = 0;
     s32 t = n;
     s32 wordIndex, shifted, bitIndex, mask;
@@ -151,9 +124,9 @@ s32 IsEntityIdGone(void *self, s32 n)
 
 /* Tests bit `n` of `bits1` (`self+0x208`), the committed "activated"
  * set. */
-s32 IsEntityIdActivated(void *self, s32 n)
+s32 LevelEntityFlags::IsActivated(s32 n)
 {
-    u8 *base = (u8 *)self;
+    u8 *base = (u8 *)this;
     s32 result = 0;
     s32 t = n;
     s32 wordIndex, shifted, bitIndex, mask;
@@ -193,7 +166,7 @@ s32 IsEntityIdActivated(void *self, s32 n)
  * a *separate* register, r0), reusing the untouched `t` again later
  * for `bitIndex` - a second local (`adjusted`) instead of adjusting
  * `t` in place reproduces that split. */
-void SetEntityIdActivated(void *self, s32 n)
+void LevelEntityFlags::SetActivated(s32 n)
 {
     MATCH_HOLD_REG(u8 *, base, ip);
     MATCH_HOLD_REG(s32, t, r2);
@@ -203,7 +176,7 @@ void SetEntityIdActivated(void *self, s32 n)
     MATCH_HOLD_REG(s32, shifted, r3);
     MATCH_HOLD_REG(s32, addr, r1);
 
-    asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(base), "=r"(t) : "r"(self), "r"(n));
+    asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(base), "=r"(t) : "r"(this), "r"(n));
 
     adjusted = t;
     if (t < 0) {
@@ -228,9 +201,9 @@ void SetEntityIdActivated(void *self, s32 n)
 /* Sets bit `n` of `bits1Copy` (`self+0x308`) only: the live "activated"
  * set, committed at the next checkpoint (ActivateIronSwitchCrate: the
  * switch itself and the outline crates it makes solid). */
-void MarkEntityIdActivated(void *self, s32 n)
+void LevelEntityFlags::MarkActivated(s32 n)
 {
-    u8 *base = (u8 *)self;
+    u8 *base = (u8 *)this;
     s32 t = n;
     s32 wordIndex, shifted, bitIndex, mask;
     s32 *word;
@@ -250,25 +223,21 @@ void MarkEntityIdActivated(void *self, s32 n)
 
 /* UNUSED - no caller anywhere in the ROM (checked src/ and asm/). Stores
  * the Q8 `val` as pixels in `pos` (`self+4`), as SpawnRoomEntities does. */
-void SetEntityFlagsPos(void *self, s32 val)
+void LevelEntityFlags::SetPos(s32 val)
 {
-    ((struct entity_flags *)self)->pos = Q8_TO_INT(val);
+    pos = Q8_TO_INT(val);
 }
 
-/* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
- * conditional-destroy shape as entity_spawner.cpp's
- * near-identical `DestroyEntitySpawnerObj`. */
-void DestroyEntityFlags(void *self, s32 flags)
+/* DestroyEntityFlags: nothing to tear down; g++'s deleting destructor
+ * frees the object when bit 0 of its __in_chrg is set (the same shape as
+ * EntitySpawner's, entity_spawner.cpp). */
+LevelEntityFlags::~LevelEntityFlags()
 {
-    if (flags & 1) {
-        OperatorDelete(self);
-    }
 }
 
-/* Clears `list` and `pos`. */
-void *InitEntityFlags(void *self)
+/* InitEntityFlags: clears `list` and `pos`. */
+LevelEntityFlags::LevelEntityFlags()
 {
-    ((struct entity_flags *)self)->list = NULL;
-    ((struct entity_flags *)self)->pos = 0;
-    return self;
+    list = 0;
+    pos = 0;
 }

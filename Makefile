@@ -327,6 +327,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_create.o \
                   $(C_BUILDDIR)/cutscene/slideshow.o \
                   $(C_BUILDDIR)/level/tile_cache.o \
+                  $(C_BUILDDIR)/level/entity_flags.o \
                   $(C_BUILDDIR)/level/time_trial.o \
                   $(C_BUILDDIR)/level/room_entities.o \
                   $(C_BUILDDIR)/crates/crate_hit.o \

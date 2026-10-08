@@ -50,6 +50,26 @@ static inline void AddUpdateOnly(Entity *e)
     ((PartList *)gUpdateOnlyPartList)->Add((Sprite *)e);
 }
 
+/* The room's entity flags (gEntityFlags; src/level/entity_flags.cpp):
+ * level.h's struct entity_flags, the room's entity list and its "gone"
+ * and "activated" bitmaps, with the bitmaps' accessors. It has no vtable.
+ * InitLevelState (spawn_pickups.cpp) makes it. */
+class LevelEntityFlags : public entity_flags
+{
+public:
+    LevelEntityFlags();                                           // InitEntityFlags
+    ~LevelEntityFlags();                                          // DestroyEntityFlags
+    s32 CountCrateEntities(const struct level_entity_list *list); // CountCrateEntities
+    void SetGone(s32 n);                                          // SetEntityIdGone (UNUSED)
+    s32 IsGone(s32 n);                                            // IsEntityIdGone
+    s32 IsActivated(s32 n);                                       // IsEntityIdActivated
+    void SetActivated(s32 n);                                     // SetEntityIdActivated
+    void MarkActivated(s32 n);                                    // MarkEntityIdActivated
+    void SetPos(s32 val);                                         // SetEntityFlagsPos (UNUSED)
+};
+
+COMPILE_TIME_ASSERT(spawners_hpp, sizeof(LevelEntityFlags) == 0x408);
+
 /* The key input object (gInput; system.h): UpdateKeys and
  * GetDpadDirection take it but read gKeys. Its constructor is ClearKeys
  * (src/system/irq.c, still C, declared `void ClearKeys(void)` there),

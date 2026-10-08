@@ -90,7 +90,7 @@ void LevelLayers::LoadRoom(const struct level_room *args)
 LevelLayers::LevelLayers()
 {
     layer0 = new PooledBgLayer(0);
-    tiles = InitTileCache((struct tile_cache *)operator new(0x1064));
+    tiles = new TileCache;
     layers[0] = new BgLayer(1);
     layers[1] = new BgLayer(2);
     layers[2] = new BgLayer(3);
@@ -107,8 +107,7 @@ LevelLayers::~LevelLayers()
         delete[] (u8 *)asset;
 
     delete layer0;
-    if (tiles != NULL)
-        DestroyTileCache(tiles, 3);
+    delete tiles;
     delete layers[0];
     delete layers[1];
     delete layers[2];

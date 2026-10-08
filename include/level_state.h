@@ -106,9 +106,9 @@ COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_state) == 0x1CC);
  * The room block of `struct level_state`, from `level` (+0x0C4) on: the
  * record the room functions take (game_frame.c passes
  * `&gLevelState->level`): SelectRoom, NextRoom, EnterBonusRoom and the
- * other level_query.c functions, PlayRoom (play_room.cpp) and RunRoom
+ * other level_query.cpp functions, PlayRoom (play_room.cpp) and RunRoom
  * (run_room.cpp). Field names are the level state's. It merges the three
- * file-local views `level_progress` (level_query.c), `level_start_args`
+ * file-local views `level_progress` (level_query.cpp), `level_start_args`
  * (play_room.cpp; `spawnX`/`spawnY` were `checkpointX`/`checkpointY`) and
  * `gl_self` (run_room.cpp; `widget` was `cat`) (#574, batch 9e).
  */

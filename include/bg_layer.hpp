@@ -241,25 +241,38 @@ public:
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
 
+/* The collision tile cache (src/level/tile_cache.cpp; LevelLayers'
+ * `tiles`, 0x1064 bytes): level.h's struct tile_cache, which the lookups
+ * (bg_layer_base.cpp, tile_cache.cpp, collision_map.c, ...) take, with a
+ * constructor and destructor. It has no vtable. */
+class TileCache : public tile_cache
+{
+public:
+    TileCache();  // InitTileCache
+    ~TileCache(); // DestroyTileCache
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileCache) == 0x1064);
+
 /* The level-layers singleton (gLevelLayersSingleton, gLevelLayers;
  * src/level/level_layers.cpp): BG layer 0, the three other BG layers, the
- * collision tile cache (tile_cache.c, still C) and the level asset.
+ * collision tile cache and the level asset.
  * level.h's struct level_layers is its C view. It has no vtable. */
 class LevelLayers
 {
 public:
-    s32 maxScrollX;           // 0x00 - pixels
-    s32 maxScrollY;           // 0x04
-    s32 scrollX;              // 0x08 - pixels
-    s32 scrollY;              // 0x0C
-    PooledBgLayer *layer0;    // 0x10
-    BgLayer *layers[3];       // 0x14
-    struct tile_cache *tiles; // 0x20 - 0x1064 bytes
-    void *asset;              // 0x24
-    u8 assetOwned;            // 0x28
-    u8 kind;                  // 0x29
-    u8 probeFlag;             // 0x2A
-    u8 raiseObjPriority;      // 0x2B
+    s32 maxScrollX;        // 0x00 - pixels
+    s32 maxScrollY;        // 0x04
+    s32 scrollX;           // 0x08 - pixels
+    s32 scrollY;           // 0x0C
+    PooledBgLayer *layer0; // 0x10
+    BgLayer *layers[3];    // 0x14
+    TileCache *tiles;      // 0x20
+    void *asset;           // 0x24
+    u8 assetOwned;         // 0x28
+    u8 kind;               // 0x29
+    u8 probeFlag;          // 0x2A
+    u8 raiseObjPriority;   // 0x2B
 
     LevelLayers();                                // InitLevelLayers
     ~LevelLayers();                               // DestroyLevelLayers

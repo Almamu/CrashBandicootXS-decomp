@@ -1554,3 +1554,28 @@ IncCrateTotal__3Hud IncHudCrateTotal
 # #664 cleanup C: the sprite pieces (SpriteRenderer, include/sprite_obj.hpp)
 DrawPieces__14SpriteRendererP6SpritePi DrawSpritePieces
 DrawAffinePieces__14SpriteRendererP6SpritePi DrawAffineSpritePieces
+# #664 cleanup D1: the level destructors (TileCache, include/bg_layer.hpp; LevelEntityFlags, include/spawners.hpp; ...)
+__9TileCache InitTileCache
+_._9TileCache DestroyTileCache
+CountCrateEntities__16LevelEntityFlagsPC17level_entity_list CountCrateEntities
+SetGone__16LevelEntityFlagsi SetEntityIdGone
+IsGone__16LevelEntityFlagsi IsEntityIdGone
+IsActivated__16LevelEntityFlagsi IsEntityIdActivated
+SetActivated__16LevelEntityFlagsi SetEntityIdActivated
+MarkActivated__16LevelEntityFlagsi MarkEntityIdActivated
+SetPos__16LevelEntityFlagsi SetEntityFlagsPos
+_._16LevelEntityFlags DestroyEntityFlags
+__16LevelEntityFlags InitEntityFlags
+_._17UnusedLevelObject sub_802425C
+__17UnusedLevelObject nullsub_25
+BeginSlide__9Slideshowi BeginSlide
+Run__9Slideshow RunSlideshow
+Skip__9SlideshowiUc SkipSlides
+ShowPicture__9Slideshowi ShowSlidePicture
+EndSlide__9Slideshowi EndSlide
+_._9Slideshow DestroySlideshow
+Reset__9Slideshow ResetSlideshow
+__9Slideshow InitSlideshow
+Run__14CutscenePlayer RunCutscenePlayer
+_._14CutscenePlayer DestroyCutscenePlayer
+__14CutscenePlayer InitCutscenePlayer

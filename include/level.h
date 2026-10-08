@@ -182,14 +182,13 @@ extern void ClearBitmapBit(void *self, s32 n);
 extern void ClearBitmap(void *dst);
 extern void *InitBitmap(void *self);
 
-/* src/level/entity_flags.c */
+/* src/level/entity_flags.cpp: LevelEntityFlags's methods (include/spawners.hpp)
+ * under their C names (cxx_symbols.txt), for the callers. */
 extern s32 CountCrateEntities(void *self, const struct level_entity_list *list);
-extern void SetEntityIdGone(void *self, s32 n);
 extern s32 IsEntityIdGone(void *self, s32 n);
 extern s32 IsEntityIdActivated(void *self, s32 n);
 extern void SetEntityIdActivated(void *self, s32 n);
 extern void MarkEntityIdActivated(void *self, s32 n);
-extern void SetEntityFlagsPos(void *self, s32 val);
 extern void DestroyEntityFlags(void *self, s32 flags);
 extern void *InitEntityFlags(void *self);
 
@@ -211,9 +210,7 @@ extern s32 sub_80269DC(void *self, s32 arg1, s32 *arg2, s32 arg3);
 extern s32 sub_80269F8(void *self, s32 arg1, s32 *arg2, s32 arg3);
 extern s32 sub_8026A14(void);
 
-/* src/level/level_query.c */
-extern void sub_802425C(void *self, s32 flags);
-extern void nullsub_25(void);
+/* src/level/level_query.cpp (C linkage) */
 extern s32 CountLevelCrates(s32 idx);
 extern s32 LevelHasEntityType(s32 idx, s32 flagIdx);
 extern s32 IsInGemPathRoom(struct level_progress *self);
@@ -463,9 +460,7 @@ extern s32 ProbeTerrainY(struct level_layers *self, struct probe_pos *pos, s32 s
 extern s32 ProbeTerrainX(struct level_layers *self, struct probe_pos *pos, s32 span, s32 *outValue,
                          s32 submode);
 
-/* src/level/tile_cache.c */
-extern void DestroyTileCache(void *self, u32 flags);
-extern struct tile_cache *InitTileCache(struct tile_cache *self);
+/* src/level/tile_cache.cpp (C linkage) */
 extern u16 GetTerrainType(struct tile_cache *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
 
 /* src/level/tile_slot_pool.cpp: layer 0's VRAM tile-slot pool */

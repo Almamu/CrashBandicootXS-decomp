@@ -91,22 +91,14 @@ extern const struct cutscene_page *const gCutsceneTextDutch[11];
  * Mode 4 frame) to the VRAM bank it streamed the picture into. */
 extern u32 gSlideshowDispcnt;
 
-/* src/cutscene/slideshow.c */
-extern void BeginSlide(struct cutscene_player *self, s32 idx);
-extern void RunSlideshow(struct cutscene_player *self);
-extern s32 SkipSlides(struct cutscene_player *self, s32 startIdx, u8 condFlag);
-extern void ShowSlidePicture(struct cutscene_player *self, s32 idx);
-
-/* src/cutscene/slideshow_display.c */
+/* src/cutscene/slideshow_display.cpp (C linkage) */
 extern void SetSlideshowDispcnt(u32 value);
-extern void EndSlide(struct cutscene_player *self, s32 idx);
-extern void DestroySlideshow(struct cutscene_player *self, s32 flags);
-extern void ResetSlideshow(struct cutscene_player *self);
 
-/* src/cutscene/cutscene_player.cpp */
-extern struct cutscene_player *InitSlideshow(struct cutscene_player *self);
+/* src/cutscene/cutscene_player.cpp: CutscenePlayer's (include/cutscene.hpp)
+ * constructor, Run and destructor under their C names (cxx_symbols.txt),
+ * for PlayCutscene (level_cutscene.c). */
+extern struct cutscene_player *InitCutscenePlayer(struct cutscene_player *self);
 extern void RunCutscenePlayer(struct cutscene_player *self);
 extern void DestroyCutscenePlayer(struct cutscene_player *self, s32 flags);
-extern struct cutscene_player *InitCutscenePlayer(struct cutscene_player *self);
 
 #endif // GUARD_CUTSCENE_H

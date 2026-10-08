@@ -290,8 +290,7 @@ struct level_state *InitLevelState(struct level_state *self)
     gOamBuffer = (struct oam_shadow_buffer *)new OamBuffer;
     gObjVramCursor = (struct vram_upload_cursor *)new ObjVramCursor(0);
     gInput = new KeyInput;
-    gEntityFlags =
-        (struct entity_flags *)InitEntityFlags(operator new(sizeof(struct entity_flags)));
+    gEntityFlags = new LevelEntityFlags;
     gPaletteCycles = (struct palette_cycler *)new PaletteCycles;
     {
         u16 *dispcnt = (u16 *)gDispcnt;
