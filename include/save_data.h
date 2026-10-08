@@ -29,7 +29,7 @@ COMPILE_TIME_ASSERT(save_data_h, sizeof(struct save_slot) == 0x70);
  * holds two copies: the cartridge's (`cartSave`) and the one received
  * over the link cable (`linkSave`). Formerly
  * `struct settings_sync_record`. See docs/matching/archive/issue-5-overlay-ui-sync.md.
- * Shared (via this header) between src/save/save_data.c and
+ * Shared (via this header) between src/save/save_data.cpp and
  * save_menu_input.cpp, split apart so the two parked
  * functions between them (SendSaveTransferChunk/ReceiveSaveTransferChunk/PollSaveTransfer,
  * SaveGameToSlot) can stay raw asm without breaking ROM link order. */

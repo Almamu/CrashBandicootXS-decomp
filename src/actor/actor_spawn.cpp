@@ -117,7 +117,7 @@ s32 GetActorSpawnX(s32 idx)
 /* Spawn `idx`'s kind as SpawnActor picks it (`kind`, `altKind` in a time
  * trial (gLevelState+0x8c), `bonusKind` while gActorSpawnUseBonus is set),
  * less 0x20: the index into the homing actors' speed tables
- * (iwram_data.c) - see docs/rom_map.md's "sub_802A5xx siblings" entry.
+ * (iwram_data.cpp) - see docs/rom_map.md's "sub_802A5xx siblings" entry.
  * This one *is* record[idx] itself (not idx+1), with the table pointer
  * loaded before the index is scaled; its fields fold straight into the
  * `ldrb` offsets. */

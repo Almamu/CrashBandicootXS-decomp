@@ -57,7 +57,7 @@ plainer version doesn't.
 ## Contents
 
 1. [Compilers and flags](#compilers-and-flags): old_agbcc vs agbcc,
-   -O1 SDK code, per-object flags, agbcc_arm and agbcc_arm_patched
+   -O1 SDK code, per-object flags, agbcc_arm and agbcp_arm_patched
 2. [Source shape](#source-shape): loops, early returns, switches,
    signedness, statement blocks
 3. [Calls](#calls): PMF dispatch, struct-by-value and one-byte-struct
@@ -140,12 +140,12 @@ comment with its evidence.
 | `-fno-rerun-loop-opt` | `link_session_reset.o` | The second loop pass reverses `ResetLinkSessionState`'s copy loop; the flag breaks `HandleLinkSerial`, hence the split. |
 | `-O1` | `lib/agb_eeprom` (4 objects) | SDK code, above. |
 | no `-mthumb-interwork` | libgcc2 (`__divdi3`, ...) | The only ROM functions that return with `pop {r4-r7, pc}`. |
-| agbcc_arm, `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)). |
-| **agbcc_arm_patched** (instead of agbcc_arm), `-mleaf-no-lr-save`, `-fno-schedule-insns -fno-schedule-insns2` | `string_arm.o` | `itoa_arm` pushes r4-r6 without lr, which stock agbcc_arm can't; and the ROM keeps its loop increments, terminator store and swap in source order, which either scheduling pass reorders. The four other functions come out the same either way. |
-| **agbcc_arm_patched** (instead of agbcc_arm), `-minterwork-return-lr` | `sprite_arm.o` | `LookupSpriteFrameCache`'s three returns pop into lr (`ldmfd sp!, {lr}; bx lr`); stock agbcc_arm pops into ip. The four other functions come out the same either way (and need scheduling). |
+| agbcp_arm_patched (the ARM C++ compiler), `-fomit-frame-pointer` | `string_arm.o`, `sprite_arm.o` | ARM code of the IWRAM image ([matching/iwram-image.md](./matching/iwram-image.md)); C++ like the rest of the game, the output is agbcc_arm's without the two options below. |
+| **agbcp_arm_patched**'s `-mleaf-no-lr-save`, `-fno-schedule-insns -fno-schedule-insns2` | `string_arm.o` | `itoa_arm` pushes r4-r6 without lr, which stock agbcc_arm can't; and the ROM keeps its loop increments, terminator store and swap in source order, which either scheduling pass reorders. The four other functions come out the same either way. |
+| **agbcp_arm_patched**'s `-minterwork-return-lr` | `sprite_arm.o` | `LookupSpriteFrameCache`'s three returns pop into lr (`ldmfd sp!, {lr}; bx lr`); stock agbcc_arm pops into ip. The four other functions come out the same either way (and need scheduling). |
 
-**agbcc_arm_patched is a locally patched compiler, not a real
-toolchain.** The ROM's ARM code was built by a later build of
+**agbcc_arm_patched and agbcp_arm_patched are locally patched
+compilers, not a real toolchain.** The ROM's ARM code was built by a later build of
 agbcc_arm's own Cygnus/Red Hat line that has never been released; its
 code generation is agbcc_arm's except for two fixed strings in the
 prologue and return code, which no C reaches (fifth pass of
@@ -154,8 +154,13 @@ prologue and return code, which no C reaches (fifth pass of
 [tools/agbcc_patches/agbcc_arm_prologue_return.patch](../tools/agbcc_patches/agbcc_arm_prologue_return.patch),
 which adds one opt-in option for each behaviour. Without the options
 its output is byte-identical to agbcc_arm's (checked on every C file in
-the repo). `tools/build_patched_agbcc_arm.sh` builds it (INSTALL.md); the
-Makefile uses it only for `PATCHED_ARM_OBJS`. Don't use it, or add
+the repo). Since the C++ conversion the two files are C++, built with
+agbcp_arm_patched: the same patch on notyourav/agbcc's ARM C++ compiler
+(`g++_arm`), built by `tools/build_agbccpp.sh` (INSTALL.md), whose
+output is the C compiler's with and without the options
+(iwram-image.md, "Eighth step"). `tools/build_patched_agbcc_arm.sh`
+still builds the C one. The Makefile uses agbcp_arm_patched only for
+`ARM_OBJS`. Don't use either, or add
 options to the patch, for anything else without the same kind of
 evidence: a back-end path in agbcc_arm's source that no C can reach.
 
@@ -515,7 +520,7 @@ are `ALLOWED_SPELLED` in `tools/match_idioms.py`:
   `src/player/action_ctrl_moves.cpp`: a keep and a use in one insn
   (`keep_volatile`).
 - `asm volatile("" : "=r"(ch) : "r"(c + 0x108))` in
-  `src/save/save_transfer.c`: an opaque copy whose input isn't tied to
+  `src/save/save_transfer.cpp`: an opaque copy whose input isn't tied to
   the output (`"r"`, not `MATCH_CONST`'s `"0"`), so `ch` gets no copy
   preference for the input's register (`empty_other`).
 
@@ -586,8 +591,9 @@ the ROM, so the layout shifts.
 `asm(".pool")` places the literal pool only for literals that asm
 statements themselves load (`ldr rX, =sym`); gcc puts its own literals at
 the end of the function and ignores the marker. Splitting a pool
-mid-function therefore means writing those loads in asm (one site is
-left, `src/save/save_transfer_poll.c`). Conversely, an
+mid-function therefore means writing those loads in asm (none is left:
+the last, PollSaveTransfer's, became C++ in the C++ conversion, which
+needed a `volatile` field instead). Conversely, an
 `ldr =K` written in asm can land in the wrong pool; let gcc generate the
 address when it can
 ([sub_8009150-loop-invariant-hoist-matched.md](./matching/archive/sub_8009150-loop-invariant-hoist-matched.md)).
@@ -627,7 +633,8 @@ can't be matched yet keeps its C draft under `#if NON_MATCHING` and the
 checked-in `NAKED` transcription under `#else`; the progress report
 scores the C draft. Both builds have to work. No function uses this any
 more: the last two, `itoa_arm` and `LookupSpriteFrameCache` (#553), are
-real C built with agbcc_arm_patched ([per-object flags](#per-object-flags),
+real C built with agbcc_arm_patched (C++ built with agbcp_arm_patched
+since the C++ conversion; [per-object flags](#per-object-flags),
 [matching/iwram-image.md](./matching/iwram-image.md), seventh pass). See
 [naked-transcription-parked-functions.md](./matching/archive/naked-transcription-parked-functions.md)
 for the history.
@@ -700,7 +707,7 @@ How it decides, in short (the tool's docstring has the details):
   into a temporary directory per parallel worker. The worker's source
   directory mirrors the file's own one with symlinks, holding the trial
   version of the file in place of its link. So each object gets the
-  ROM build's compiler and flags (old_agbcc, agbcp, agbcc_arm_patched,
+  ROM build's compiler and flags (old_agbcc, agbcp, agbcp_arm_patched,
   `-fno-implement-inlines`, ...), and build/ and src/ are never written.
   A site in a preprocessor arm the ROM build doesn't compile is found
   by preprocessing through the same rule and is not tried.
@@ -735,13 +742,12 @@ Step 2 applied them, and lib/'s 31, with the diffs reviewed by hand:
 de-pinned locals folded into their uses where the object stayed the
 same, and the comments that described a removed pin rewritten. That
 C cleanup made 7 more sites removable (six of DarkenPalette's pins,
-strcat's `i`), so 237 sites went in all. Seven sites the tool finds
+strcat's `i`), so 237 sites went in all. Six sites the tool finds
 removable were kept on purpose; a dry run still lists them:
 
 - **A pin whose register the asm template names.** `itoa_arm`'s `num`
   (the `swi` reads r0), `DivMod`'s `quotient`/`remainder` (`svc #6`),
-  `PollSaveTransfer`'s `result` (the template computes in r0) and
-  `GaxInfoPlay`'s `cnt`/`cnt2` (`ldrsh r1, ...` writes r1 while the
+  and `GaxInfoPlay`'s `cnt`/`cnt2` (`ldrsh r1, ...` writes r1 while the
   output operand is `%0`). Without the pin the code is only right
   because the allocator happens to pick that register, so the object
   stays the same while the C is wrong. Check this before applying a

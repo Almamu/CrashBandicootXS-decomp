@@ -9,7 +9,7 @@
  * ticking (GaxStopDma, still raw, has the same hardware-register
  * NOP-delay compiler quirk documented for GaxResetSoundHardware), zeroes the
  * whole BG VRAM, decompresses a font tileset (gGaxHaltFont, the
- * Huffman-compressed font in the IWRAM image - src/iwram/iwram_data.c)
+ * Huffman-compressed font in the IWRAM image - src/iwram/iwram_data.cpp)
  * via the HuffUnComp
  * SWI wrapper into BG char block 1, blanks its first tile (the "space"
  * glyph), draws the '.', ':' and '_' glyphs the font lacks, draws a fixed

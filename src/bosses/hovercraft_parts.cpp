@@ -24,7 +24,7 @@ void StartHovercraftHitFlash(void)
 }
 
 /* Colour 15 of the hovercraft's BG and OBJ palettes (gFlashBgPalette,
- * gFlashObjPalette, iwram_data.c): white when `flag` is set, or else the
+ * gFlashObjPalette, iwram_data.cpp): white when `flag` is set, or else the
  * colour saved by the first call.
  *
  * Kept: the colour's r1 pin (the C had two more, on the pointers). The

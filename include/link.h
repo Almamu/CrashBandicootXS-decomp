@@ -14,11 +14,11 @@
 
 /* The link session the link IRQ handlers and the save transfer work on:
  * allocated by InitSaveMenu, freed by DestroySaveMenu
- * (src/save/save_menu_input.cpp). Defined in src/iwram/iwram_data.c. */
+ * (src/save/save_menu_input.cpp). Defined in src/iwram/iwram_data.cpp. */
 extern struct link_session *gLinkSession;
 
 /* Set by ResetLinkSessionState, cleared by LinkExchangeSaveData
- * (src/save/save_menu_draw.cpp). Defined in src/iwram/iwram_data.c. */
+ * (src/save/save_menu_draw.cpp). Defined in src/iwram/iwram_data.cpp. */
 extern u8 gLinkSessionReset;
 
 /* The CRC-16 table MakeLinkHandshakeId and HandleLinkSerial hash with
@@ -30,7 +30,7 @@ extern const u16 gCrc16Table[256];
 extern const char gCrash2LinkText[];
 extern const char gCrash3LinkText[];
 
-/* src/link/link_sio.c */
+/* src/link/link_sio.cpp */
 extern s32 LinkStart(struct link_session *self, u32 flags);
 extern s32 LinkSetupSio(void);
 extern s32 ResetLinkSession(struct link_session *self);
@@ -39,15 +39,15 @@ extern struct link_session *InitLinkSession(struct link_session *self);
 extern void LinkSerialIntr(void);
 extern void LinkTimer3Intr(void);
 
-/* src/link/link_handshake.c */
+/* src/link/link_handshake.cpp */
 extern void MakeLinkHandshakeId(u8 *self);
 extern s32 LinkStop(struct link_session *self);
 
-/* src/link/link_session.c */
+/* src/link/link_session.cpp */
 extern s32 UpdateLinkSession(struct link_session *self);
 extern void HandleLinkSerial(struct link_session *self, u16 *data);
 
-/* src/link/link_session_reset.c */
+/* src/link/link_session_reset.cpp */
 extern s32 ResetLinkSessionState(struct link_session *self);
 
 #endif /* GUARD_LINK_H */

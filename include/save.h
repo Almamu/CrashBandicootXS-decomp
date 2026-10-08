@@ -16,7 +16,7 @@
 #include "save_data.h"
 
 /* The save menu, between OpenSaveMenu and CloseSaveMenu. Defined in
- * src/iwram/iwram_data.c. The C++ files see it as its class, SaveMenu
+ * src/iwram/iwram_data.cpp. The C++ files see it as its class, SaveMenu
  * (save_menu.hpp). */
 #ifdef __cplusplus
 extern class SaveMenu *gSaveMenu;
@@ -25,12 +25,12 @@ extern struct save_menu *gSaveMenu;
 #endif
 
 /* Set until the first EEPROM access has run AgbEepromInit
- * (src/iwram/iwram_data.c). */
+ * (src/iwram/iwram_data.cpp). */
 extern u8 gEepromNeedsInit;
 
 /* The "data from Crash Bandicoot 2/3" messages SaveMenuLinkInput shows
  * when the save received over the link cable is another game's
- * (src/iwram/iwram_data.c). */
+ * (src/iwram/iwram_data.cpp). */
 extern const u8 *gCrash2LinkTextPtr;
 extern const u8 *gCrash3LinkTextPtr;
 
@@ -43,7 +43,7 @@ extern const u16 gSaveMenuPalette1[16];
 extern const u16 gSaveMenuPalette2[16];
 extern const u16 gSaveMenuPalette3[16];
 
-/* src/save/save_data.c */
+/* src/save/save_data.cpp */
 extern s32 ReadSaveData(void *self, s32 len);
 extern s32 WriteSaveData(void *self, s32 len);
 extern s32 LoadSaveData(struct save_data *self);
@@ -60,12 +60,12 @@ extern u8 IsSaveSlotEmpty(struct save_data *self, s32 row);
 extern u8 TestSaveFlags(struct save_data *self, u8 flags);
 extern void ClearSaveFlags(struct save_data *self, u8 flags);
 
-/* src/save/save_transfer.c */
+/* src/save/save_transfer.cpp */
 extern void SetSaveFlags(struct save_data *self, u8 flags);
 extern void SendSaveTransferChunk(struct save_transfer *self);
 extern void ReceiveSaveTransferChunk(struct save_transfer *self, s32 playerIndex);
 
-/* src/save/save_transfer_poll.c */
+/* src/save/save_transfer_poll.cpp */
 extern s32 PollSaveTransfer(struct save_transfer *self);
 
 /* The save menu (C++, include/save_menu.hpp: class SaveMenu; the methods

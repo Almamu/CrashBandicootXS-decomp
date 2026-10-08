@@ -22,7 +22,7 @@ extern irq_handler_t gIntrTable[14];
 extern irq_handler_t gPrevIntrTable[14];
 /* gIntrTable[INTR_INDEX_TIMER2] under its own sym_iwram.txt name: the
  * slot SetEepromTimerIntr() installs the EEPROM timer handler in
- * (save_data.c). */
+ * (save_data.cpp). */
 extern void (*gIntrTableTimer2)(void);
 extern struct vblank_callbacks gVBlankCallbacks;
 /* IntrMain's IWRAM copy (asm/intr_main.s), what INTR_VECTOR points at. */

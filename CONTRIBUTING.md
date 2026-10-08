@@ -1,7 +1,7 @@
 # Contributing
 
 The decompilation itself is done: all 2059 of the ROM's functions are
-byte-exact C (two of them through a locally patched agbcc_arm, #553),
+byte-exact C (two of them through a locally patched ARM compiler, #553),
 and all of its data is source. What's left is making the code better to read without changing a
 byte of the ROM: real names for the remaining placeholders, compiler
 warnings, formatting, and the matching workarounds still left (README.md's
@@ -241,8 +241,8 @@ full rules and the history (#574). For new code:
 ### Compiler warnings
 
 The build is warning-free and stays that way (#577). Every C object,
-whichever compiler builds it (agbcc, old_agbcc, agbcc_arm or
-agbcc_arm_patched, including the per-object flag overrides), gets the Makefile's `WARNFLAGS`:
+whichever compiler builds it (agbcc, old_agbcc, agbcp, old_agbcp or
+agbcp_arm_patched, including the per-object flag overrides), gets the Makefile's `WARNFLAGS`:
 
 ```
 -Wall -Wmissing-prototypes -Wstrict-prototypes -Wpointer-arith -Wnested-externs -Wredundant-decls -Werror

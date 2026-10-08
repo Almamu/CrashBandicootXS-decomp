@@ -13,8 +13,11 @@
 #
 # The patch adds two opt-in options (-mleaf-no-lr-save,
 # -minterwork-return-lr). Without them the output is byte-identical to
-# agbcc_arm's. The Makefile uses it for the two IWRAM objects that need
-# them (PATCHED_ARM_OBJS); see docs/matching/iwram-image.md.
+# agbcc_arm's. The build doesn't need it any more: the two IWRAM objects
+# that need the options are C++, built by agbcp_arm_patched, the same
+# patch on notyourav/agbcc's ARM C++ compiler (tools/build_agbccpp.sh).
+# This C build of the patch stays for comparisons; see
+# docs/matching/iwram-image.md ("Seventh pass", "Eighth step: C++").
 set -e
 
 if [ -z "$1" ]; then

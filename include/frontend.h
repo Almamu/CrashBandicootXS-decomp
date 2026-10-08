@@ -58,7 +58,7 @@ struct slot_seed {
 struct credits_screen;
 
 /* The language select, between OpenLanguageSelect and
- * CloseLanguageSelect (src/iwram/iwram_data.c). */
+ * CloseLanguageSelect (src/iwram/iwram_data.cpp). */
 #ifdef __cplusplus
 extern class LanguageSelect *gLanguageSelect;
 #else
@@ -99,7 +99,7 @@ extern const s32 gTitleArrowPieceOffsets[8][2];
 /* The title screen's graphics (src/data/level_gfx_17cff4.c): the menu
  * palettes InitTitleScreen DMAs to OBJ palettes 13-15, the BG2 package
  * LoadTitleScreenBg loads and the four OBJ packages LoadTitleScreenObjTiles
- * loads (gTitleObjPackages, src/iwram/iwram_data.c). */
+ * loads (gTitleObjPackages, src/iwram/iwram_data.cpp). */
 extern const u16 gTitleMenuPalette[16];
 extern const u16 gTitleMenuSelectedPalette[16];
 extern const u16 gTitleMenuBlinkPalette[16];

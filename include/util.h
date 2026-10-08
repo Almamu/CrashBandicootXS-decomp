@@ -21,7 +21,7 @@
 
 struct level_state;
 
-/* The RNG's state (src/iwram/iwram_data.c). */
+/* The RNG's state (src/iwram/iwram_data.cpp). */
 extern u32 gRandSeed;
 
 /* src/util/aabb.cpp */

@@ -10,17 +10,17 @@ script and the report. Contents:
 | IWRAM | Name | Source | Status |
 |---|---|---|---|
 | `03000000` | `IntrMain` (alias `IntrMain_Buffer`) | `asm/intr_main.s` | hand-written ARM, `HANDWRITTEN` |
-| `030000D4` | `strlen_arm` | `src/iwram/string_arm.c` | matched, UNUSED |
+| `030000D4` | `strlen_arm` | `src/iwram/string_arm.cpp` | matched, UNUSED |
 | `030000FC` | `strcpy_arm` | same | matched, UNUSED |
 | `03000120` | `strncpy_arm` | same | matched (second pass), UNUSED |
 | `0300015C` | `strcat_arm` | same | matched, UNUSED |
 | `03000198` | `itoa_arm` | same | matched (seventh pass, agbcc_arm_patched), UNUSED |
-| `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.c` | matched |
+| `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.cpp` | matched |
 | `0300036C` | `DrawMirroredTilemap` (`gDrawMirroredTilemapFunc`) | same | matched |
 | `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | matched (fourth pass) |
 | `03000634` | `UnpackRleSpriteFrame` (`gUnpackRleSpriteFrameFunc`) | same | matched |
 | `030006FC` | `LookupSpriteFrameCache` (`gLookupSpriteFrameCacheFunc`) | same | matched (seventh pass, agbcc_arm_patched) |
-| `030007CC`-`030009E8` | initialised globals | `src/iwram/iwram_data.c` | typed C, data |
+| `030007CC`-`030009E8` | initialised globals | `src/iwram/iwram_data.cpp` | typed C++, data |
 
 The five string routines have no caller: none of their addresses occurs
 as a word anywhere in the ROM, and Thumb code can only reach ARM code
@@ -44,6 +44,14 @@ and return code that agbcc_arm can't produce. Since the seventh pass both
 objects are built with `agbcc_arm_patched`, agbcc_arm with two opt-in
 options added (`PATCHED_ARM_OBJS`; see "Seventh pass" below). Without
 the options its output is agbcc_arm's, byte for byte.
+
+Since the C++ conversion the two files are C++ (`string_arm.cpp`,
+`sprite_arm.cpp`), like the rest of the game, and the Makefile builds
+them with `agbcp_arm_patched`: notyourav/agbcc's `cp` branch's ARM C++
+compiler (`g++_arm`, the same gcc 2.9-arm-000512 with the C++ front end)
+with the same patch, built by `tools/build_agbccpp.sh`. Both objects
+are byte-identical to the agbcc_arm_patched C build; see "Eighth step:
+C++" below and docs/cplusplus.md, "The IWRAM ARM code".
 
 ## Why three are parked
 
@@ -328,7 +336,7 @@ the first stops the entry test from matching the bottom one, the
 second the reverse. With only the first, the bottom test is
 cross-jumped instead.
 
-The C is in `src/iwram/sprite_arm.c`. The `NAKED` transcription and the
+The C is in `src/iwram/sprite_arm.cpp`. The `NAKED` transcription and the
 `NON_MATCHING` draft are gone. Without the barriers the function is
 19 instruction lines off (the two jumps and their shifted offsets).
 
@@ -612,7 +620,8 @@ of the 1999 configure checks otherwise fail to compile and answer wrong,
 checkout's objects are stock and the Makefile doesn't track `arm.h` -
 and `make cc1`), and installs `cc1` as
 `tools/agbcc/bin/agbcc_arm_patched`. agbcc, old_agbcc and agbcc_arm
-stay as they are. CI runs it after "Install agbcc".
+stay as they are. CI ran it after "Install agbcc" until the eighth step,
+which builds the C++ twin of this compiler instead.
 
 **Which objects.** The Makefile's `PATCHED_ARM_OBJS` builds
 `string_arm.o` and `sprite_arm.o` with agbcc_arm_patched, each with only
@@ -679,10 +688,43 @@ the SWI takes it in r0, so it stays.)
 `NAKED` transcriptions and `#if NON_MATCHING` drafts are gone. Every
 function in the ROM is now matched.
 
+## Eighth step: C++
+
+The game is C++ (docs/cplusplus.md), and notyourav/agbcc's `cp` branch,
+whose Thumb `g++/` tree gives agbcp, also has an ARM one, `g++_arm`:
+agbcc_arm's gcc 2.9-arm-000512 (same version string, same
+`config/arm/arm.c` and `arm.h`) with the C++ front end. Its `cc1plus` is
+`agbcp_arm`. `tools/build_agbccpp.sh` builds it with this patch applied
+(the hunks' `gcc_arm/` paths rewritten to `g++_arm/`; it applies
+cleanly) and installs it as `tools/agbcc/bin/agbcp_arm_patched`, with
+the same configure line as the branch's `build.sh` and agbcp's host
+flags.
+
+The two files compile as C++ unchanged but for their includes (wrapped
+in `extern "C"`, so the functions keep their C names) and
+HeapSortActorsByKey's list, now `ActorSelf **`, as its caller and the
+`gHeapSortActorsByKeyFunc` hook declare it in C++. Checked, on both
+files (assembled code compared, `-O2 -fomit-frame-pointer
+-mthumb-interwork`):
+
+- agbcc_arm (C) against stock agbcp_arm and agbcp_arm_patched (C++)
+  without the options, with and without the scheduling passes: the same
+  code.
+- agbcc_arm_patched (C) against agbcp_arm_patched (C++) with each option
+  and with both: the same code.
+- The Makefile build (agbcp_arm_patched, the objects' flags plus
+  `-fno-rtti -fno-exceptions`): `string_arm.o` and `sprite_arm.o` are
+  byte-identical to the agbcc_arm_patched objects, and `make compare`
+  prints `crashbandicootxs.gba: OK`.
+
+So the Makefile builds them as C++ (`ARM_OBJS`), and CI no longer
+builds agbcc_arm_patched: `tools/build_patched_agbcc_arm.sh` stays as
+the C build of the same patch, for comparisons like the ones above.
+
 ## Data
 
-`iwram_data.c` defines every global from `0x030007CC` up to
-`gIntrTable`, with an initialiser each so agbcc puts them all in
+`iwram_data.cpp` defines every global from `0x030007CC` up to
+`gIntrTable`, with an initialiser each so agbcp puts them all in
 `.data` in definition order (checked with `nm`). The hook pointers now
 point at the ARM functions by name, the cutscene language table
 `gCutsceneTexts` at `src/data/cutscenes_16d1c8.c`'s six tables, and

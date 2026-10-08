@@ -578,12 +578,12 @@ UNITS = [
 # the addresses are IWRAM (run) addresses and the targets are sliced from
 # expected/iwram.s, the frozen ARM disassembly of the image - see
 # docs/decomp_dev.md's "The IWRAM image". Its initialised data
-# (src/iwram/iwram_data.c) is a data unit, see IWRAM_DATA below.
+# (src/iwram/iwram_data.cpp) is a data unit, see IWRAM_DATA below.
 IWRAM_CODE = ROOT / "expected" / "iwram.s"
 IWRAM_UNITS = [
     (0x03000000, HANDWRITTEN, None),  # IntrMain (asm/intr_main.s), the interrupt dispatcher - hand-written ARM, excluded from progress
-    (0x030000D4, "src/iwram/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strncpy_arm/strcat_arm/itoa_arm (real C, ARM, agbcc_arm_patched -mleaf-no-lr-save, no scheduling) - docs/matching/iwram-image.md
-    (0x0300024C, "src/iwram/sprite_arm.o", "graphics"),  # UnpackNibbleTiles/DrawMirroredTilemap/HeapSortActorsByKey/UnpackRleSpriteFrame/LookupSpriteFrameCache (real C, ARM, agbcc_arm_patched -minterwork-return-lr) - docs/matching/iwram-image.md
+    (0x030000D4, "src/iwram/string_arm.o", "util"),  # strlen_arm/strcpy_arm/strncpy_arm/strcat_arm/itoa_arm (C++, ARM, agbcp_arm_patched -mleaf-no-lr-save, no scheduling) - docs/matching/iwram-image.md
+    (0x0300024C, "src/iwram/sprite_arm.o", "graphics"),  # UnpackNibbleTiles/DrawMirroredTilemap/HeapSortActorsByKey/UnpackRleSpriteFrame/LookupSpriteFrameCache (C++, ARM, agbcp_arm_patched -minterwork-return-lr) - docs/matching/iwram-image.md
     (0x030007CC, None, None),  # sentinel: the image's initialised data starts here
 ]
 
@@ -706,7 +706,7 @@ DATA_CATEGORY = "data"
 DATA_END = 0x087E5FCC
 # The IWRAM image (ldscript.txt's `iwram` section) is stored in ROM from
 # IWRAM_LMA, right after the "/* Data */" block. Its code is counted as
-# code (IWRAM_UNITS); its initialised data, src/iwram/iwram_data.c's
+# code (IWRAM_UNITS); its initialised data, src/iwram/iwram_data.cpp's
 # .data, is the last data unit, at IWRAM_LMA + (its IWRAM offset).
 IWRAM_LMA = 0x087E55E4
 IWRAM_DATA = ("src/iwram/iwram_data.o", ".data", IWRAM_LMA + IWRAM_UNITS[-1][0] - 0x03000000)

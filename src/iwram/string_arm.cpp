@@ -1,19 +1,21 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "iwram.h"
+}
 
 /*
  * IWRAM 0x030000D4-0x0300024C (stored in ROM at 0x087E56B8): ARM copies
  * of the string helpers the Thumb code also has (src/util/number_format.cpp,
  * src/util/string.cpp), part of the IWRAM image crt0 copies to
- * 0x03000000 at boot (see src/iwram/iwram_data.c and docs/data.md).
+ * 0x03000000 at boot (see src/iwram/iwram_data.cpp and docs/data.md).
  *
- * Built as ARM code (Makefile ARM_OBJS) with agbcc_arm_patched,
- * -mleaf-no-lr-save and no instruction scheduling (PATCHED_ARM_OBJS).
- * strlen_arm, strcpy_arm, strncpy_arm and strcat_arm come out the same
- * under stock agbcc_arm's flags. itoa_arm needs the rest: the ROM's ARM
- * gcc saves r4-r6 without lr, which agbcc_arm can't - see its comment
- * and docs/matching/iwram-image.md.
+ * Built as ARM code (Makefile ARM_OBJS) from C++ with agbcp_arm_patched,
+ * -mleaf-no-lr-save and no instruction scheduling (docs/cplusplus.md,
+ * "The IWRAM ARM code"). strlen_arm, strcpy_arm, strncpy_arm and
+ * strcat_arm come out the same under stock agbcc_arm's flags. itoa_arm
+ * needs the rest: the ROM's ARM gcc saves r4-r6 without lr, which stock
+ * agbcc_arm can't - see its comment and docs/matching/iwram-image.md.
  *
  * UNUSED - no caller anywhere in the ROM (checked: none of these five
  * addresses appears as a word in baserom.gba, and ARM code can only be
@@ -101,7 +103,7 @@ void strcat_arm(u8 *dst, u8 *src)
  *
  * The ROM saves r4-r6 without lr (`push {r4, r5, r6}` ... `pop {r4, r5,
  * r6}; bx lr`), which stock agbcc_arm can't do: it adds lr to every
- * register push. string_arm.o is built with agbcc_arm_patched's
+ * register push. string_arm.o is built with agbcp_arm_patched's
  * -mleaf-no-lr-save, which leaves lr out when the function never uses
  * it, and with both scheduling passes off (the ROM keeps each loop's
  * `add`/`cmp`, the terminator store and the swap's `add`/`sub` in

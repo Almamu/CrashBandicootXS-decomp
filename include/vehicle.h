@@ -192,7 +192,7 @@ extern const u16 gPolarPlayerShockBlinkPalette[16];
 extern const u16 gPolarPlayerShockPalette[16];
 extern const s32 gYetiChargeParams[6][3];
 
-/* src/iwram/iwram_data.c */
+/* src/iwram/iwram_data.cpp */
 extern s32 gPolarPenguinSpeeds[3];
 extern s32 gJetpackPlaneHopSpeeds[6];
 extern void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock);

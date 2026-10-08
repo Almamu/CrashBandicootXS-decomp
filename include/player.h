@@ -152,7 +152,7 @@ extern const struct speed_table gPlayerCtrlTurnSpeeds;
  * gLastSpriteVelY is the moving sprites'). Nothing reads it. */
 extern s32 gLastPlayerVelY;
 
-/* Aku Aku's orbit frame counters (DrawPlayer, src/iwram/iwram_data.c). */
+/* Aku Aku's orbit frame counters (DrawPlayer, src/iwram/iwram_data.cpp). */
 extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
 

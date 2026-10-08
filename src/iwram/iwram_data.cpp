@@ -1,3 +1,4 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
 #include "cutscene.h"
@@ -16,18 +17,19 @@
 #include "iwram.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
  * the initialised IWRAM globals, the end of the IWRAM image crt0 copies
  * to 0x03000000 at boot. The image is IntrMain (asm/intr_main.s), the ARM
- * code (src/iwram/string_arm.c, src/iwram/sprite_arm.c) and this file's
+ * code (src/iwram/string_arm.cpp, src/iwram/sprite_arm.cpp) and this file's
  * .data, linked to run at 0x03000000 and stored after the vtables in ROM
  * (the `iwram` section in ldscript.txt, docs/decomp_dev.md). Everything
  * after 0x030009E8 is uninitialised (sym_iwram.txt).
  *
  * The globals are in address order, each defined with an initialiser
- * (zero ones too) so agbcc puts them all in .data, in this order. The
+ * (zero ones too) so agbcp puts them all in .data, in this order. The
  * types are the plainest ones the users agree on; where users declare
  * different local structs, see the comment.
  */
@@ -35,8 +37,8 @@
 
 /* src/system/memory.cpp's heaps, and their free space right after
  * mem_heap_init (checked by mem_heap_shutdown). */
-struct mem_heap *mem_iwram_heap_pointer = NULL;
-struct mem_heap *mem_ewram_heap_pointer = NULL;
+struct mem_heap *mem_iwram_heap_pointer = 0;
+struct mem_heap *mem_ewram_heap_pointer = 0;
 s32 mem_initial_free_bytes = 0;
 
 /* irq.cpp: the frame counter the VBlank handler increments, and the
@@ -62,11 +64,11 @@ u32 gSfxVoiceToggle = 0;
 
 /* Link cable (src/link/*.c, src/save/*.c): gLinkSession is the
  * session object the link IRQ handlers work on. gEepromNeedsInit is the
- * save code's (save_data.c): set until its first EEPROMConfigure. */
+ * save code's (save_data.cpp): set until its first EEPROMConfigure. */
 u8 gLinkSessionReset = 1;
-struct link_session *gLinkSession = NULL;
+struct link_session *gLinkSession = 0;
 u8 gEepromNeedsInit = 1;
-struct save_menu *gSaveMenu = NULL;
+SaveMenu *gSaveMenu = 0;
 /* The two link compatibility messages, stored after the CRC table
  * (src/data/link_crc_16af10.c): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
 const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;
@@ -77,9 +79,9 @@ const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
  * following the player (levels 1-2). */
 s32 gAkuAkuInvincibleFrame = 0;
 s32 gAkuAkuFollowFrame = 0;
-struct level_menu *gLevelSelect = NULL;
+LevelSelect *gLevelSelect = 0;
 u8 gNewWorldOpened = 0;
-struct level_state *gLevelStateSingleton = NULL;
+struct level_state *gLevelStateSingleton = 0;
 u32 gRoomFrameCount = 0;
 u8 gRoomExitRequested = 0;
 
@@ -90,7 +92,7 @@ const struct cutscene_page *const *gCutsceneTexts[6] = {
     gCutsceneTextSpanish, gCutsceneTextItalian, gCutsceneTextDutch,
 };
 
-struct level_layers *gLevelLayersSingleton = NULL;
+LevelLayers *gLevelLayersSingleton = 0;
 
 /* Per-language string tables (main_loop.cpp indexes them by
  * gLanguage), src/data/ui_text_172cd4.c. */
@@ -103,13 +105,13 @@ const u8 *const *gUiTextTables[6] = {
 s32 gLanguage = 3;
 s32 gHudSlideOffset = 0;
 
-/* Hooks into the ARM code (see sprite_arm.c). */
+/* Hooks into the ARM code (see sprite_arm.cpp). */
 s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = LookupSpriteFrameCache;
 void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame) = UnpackRleSpriteFrame;
 s32 gActorCheckpoint = 0;
 void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
-void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list) = HeapSortActorsByKey;
-struct actor_self *gActorList = NULL;
+void (*gHeapSortActorsByKeyFunc)(s32 n, ActorSelf **list) = HeapSortActorsByKey;
+ActorSelf *gActorList = 0;
 s32 gCollectedSpawnCount = 0;
 /* The polar penguin's Z speed toward a path point, indexed by the
  * point's spawn kind minus 0x20 (GetActorSpawnKindIndex; AimPolarPenguin). */
@@ -132,7 +134,7 @@ const void *gTitleObjPackages[4] = {
     &gTitleBandicootObj,
 };
 
-struct language_select *gLanguageSelect = NULL;
+LanguageSelect *gLanguageSelect = 0;
 
 /* GAX2's fatal-error screen font (gax_fatal_error.c), Huffman-compressed
  * for the BIOS HuffUnComp: 8-bit symbols, 0x4A0 bytes (37 4bpp tiles)

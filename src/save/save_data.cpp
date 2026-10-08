@@ -1,3 +1,6 @@
+#include "audio.hpp"
+
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "audio.h"
@@ -6,6 +9,7 @@
 #include "save.h"
 #include "system.h"
 #include "globals.h"
+}
 
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
@@ -20,7 +24,7 @@
  * The IME-save/IE-clear/IME-restore snippet (repeated once per exit
  * path) matches the ROM's exact "no extra copy" shape here as plain
  * C (`u16 savedIme = REG_IME; ...`), the same phrasing already proven
- * for `LinkStop` (src/link/link_handshake.c) - the previously
+ * for `LinkStop` (src/link/link_handshake.cpp) - the previously
  * suspected register-pressure gap didn't reproduce with this
  * function's actual field/loop structure. Byte-identical to the ROM,
  * confirmed via a direct `.text`-section `cmp` against
@@ -144,23 +148,18 @@ fail_restore:
  * marker), 3 (checksum mismatch) or 0 (fully valid). */
 s32 LoadSaveData(struct save_data *self)
 {
-    struct audio_context *audio;
-    s32 flag;
-    s32 wasPlaying;
+    AudioContext *audio;
+    bool wasPlaying;
     u32 savedSong;
     s32 i;
     s32 result;
 
     audio = gAudioContext;
-    flag = 0;
-    if (audio->state == 1) {
-        flag = 1;
-    }
-    wasPlaying = flag;
+    wasPlaying = audio->IsPlaying();
 
-    savedSong = GetCurrentSong(audio);
+    savedSong = audio->GetCurrentSong();
     if (wasPlaying) {
-        StopSong(gAudioContext);
+        gAudioContext->StopSong();
     }
 
     i = 0;
@@ -170,7 +169,7 @@ s32 LoadSaveData(struct save_data *self)
     } while (i <= 2 && result != 0);
 
     if (wasPlaying) {
-        PlaySong(gAudioContext, savedSong);
+        gAudioContext->PlaySong(savedSong);
     }
 
     if (result != 0) {
@@ -193,7 +192,7 @@ s32 LoadSaveData(struct save_data *self)
  * this one) and, if it fails, repairs the record in place: DMA-fills
  * the whole 0x200 bytes with 0 (raw DMA3 register pokes rather than a
  * `DmaFill16` call - a different, earlier style than
- * `src/save/save_data.c`'s `ResetSaveData` uses for the same
+ * `src/save/save_data.cpp`'s `ResetSaveData` uses for the same
  * "reset to blank" operation), marks every row selected
  * (`EraseSaveSlot`), re-stamps the two marker bytes, clears
  * `flags`/`field_1fb`, and refreshes the checksum (`UpdateSaveChecksum`).
@@ -281,7 +280,7 @@ u32 CheckSaveChecksum(struct save_data *self)
 /* Recomputes and stores this record's additive word-sum checksum over
  * its first 0x1fc bytes (127 words) into `checksum`. Every function
  * that mutates `flags`/`slotEmpty` calls this afterward to keep the
- * checksum in sync - see src/save/save_data.c's header
+ * checksum in sync - see src/save/save_data.cpp's header
  * comment, which already anticipated this function (it was matched
  * from a later chunk, issue #5, before this one). */
 void UpdateSaveChecksum(struct save_data *self)
@@ -304,30 +303,25 @@ u32 GetSaveGameId(struct save_data *self)
 
 /* Saves the settings record to EEPROM (`WriteSaveData`, retried up to 5
  * times), muting the music player across the transfer the same way
- * `LoadSaveData` (src/save/save_data.c) does (checksum
+ * `LoadSaveData` (src/save/save_data.cpp) does (checksum
  * refreshed first via `UpdateSaveChecksum`, before the mute). Returns 4
  * (EEPROM write failed after retries) or 0 (success). */
 s32 StoreSaveData(struct save_data *self)
 {
-    struct audio_context *audio;
-    s32 flag;
-    s32 wasPlaying;
+    AudioContext *audio;
+    bool wasPlaying;
     u32 savedSong;
     s32 i;
     s32 result;
 
     audio = gAudioContext;
-    flag = 0;
-    if (audio->state == 1) {
-        flag = 1;
-    }
-    wasPlaying = flag;
+    wasPlaying = audio->IsPlaying();
 
-    savedSong = GetCurrentSong(audio);
+    savedSong = audio->GetCurrentSong();
     UpdateSaveChecksum(self);
 
     if (wasPlaying) {
-        StopSong(gAudioContext);
+        gAudioContext->StopSong();
     }
 
     i = 0;
@@ -337,7 +331,7 @@ s32 StoreSaveData(struct save_data *self)
     } while (i <= 4 && result != 0);
 
     if (wasPlaying) {
-        PlaySong(gAudioContext, savedSong);
+        gAudioContext->PlaySong(savedSong);
     }
 
     if (result != 0) {

@@ -1,24 +1,29 @@
+#include "actor_self.hpp"
+
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "iwram.h"
 #include "gfx.h"
-#include "actor_self.h"
+}
 
 /*
  * IWRAM 0x0300024C-0x030007CC (stored in ROM at 0x087E5830): the ARM
  * graphics routines of the IWRAM image crt0 copies to 0x03000000 at boot.
  * The Thumb code calls them through the function pointers in
- * src/iwram/iwram_data.c (gUnpackNibbleTilesFunc,
+ * src/iwram/iwram_data.cpp (gUnpackNibbleTilesFunc,
  * gDrawMirroredTilemapFunc, gHeapSortActorsByKeyFunc,
  * gUnpackRleSpriteFrameFunc and gLookupSpriteFrameCacheFunc).
  *
- * Built as ARM code (Makefile ARM_OBJS) with agbcc_arm_patched and
- * -minterwork-return-lr (PATCHED_ARM_OBJS). UnpackNibbleTiles,
- * DrawMirroredTilemap and UnpackRleSpriteFrame match as plain C, and
- * HeapSortActorsByKey as C with two empty-asm barriers; their output is
- * the same as stock agbcc_arm's. LookupSpriteFrameCache needs the option:
- * the ROM's ARM gcc pops its returns into lr, where agbcc_arm pops into
- * ip. See its comment and docs/matching/iwram-image.md.
+ * Built as ARM code (Makefile ARM_OBJS) from C++ with agbcp_arm_patched
+ * and -minterwork-return-lr (docs/cplusplus.md, "The IWRAM ARM code").
+ * UnpackNibbleTiles, DrawMirroredTilemap and UnpackRleSpriteFrame match
+ * as plain code, and HeapSortActorsByKey with two empty-asm barriers;
+ * their output is the same without the option. LookupSpriteFrameCache
+ * needs it: the ROM's ARM gcc pops its returns into lr, where stock
+ * agbcc_arm pops into ip. See its comment and
+ * docs/matching/iwram-image.md. HeapSortActorsByKey sorts the actor
+ * list as ActorSelf pointers (actor_category_frame.cpp's draw list).
  */
 
 static inline u32 ExpandNibble(u32 nibble)
@@ -105,7 +110,7 @@ void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h)
  * Indices rather than pointers: each inlined `child + 1` argument is its
  * own pseudo, which is why the ROM reloads a[child + 1] for the second
  * test instead of reusing it. */
-static inline u8 KeyGreater(struct actor_self **a, s32 i, s32 j, u8 one, u8 zero)
+static inline u8 KeyGreater(ActorSelf **a, s32 i, s32 j, u8 one, u8 zero)
 {
     if ((u32)a[i]->sortKey <= (u32)a[j]->sortKey)
         return zero;
@@ -117,11 +122,11 @@ static inline u8 KeyGreater(struct actor_self **a, s32 i, s32 j, u8 one, u8 zero
  * Both phases spell out the sift-down loop on the shared `root`/`child`
  * (an inline sift function allocates them to other registers). See
  * docs/matching/iwram-image.md, "Fourth pass". */
-void HeapSortActorsByKey(s32 n, struct actor_self **list)
+void HeapSortActorsByKey(s32 n, ActorSelf **list)
 {
-    struct actor_self **a = list;
+    ActorSelf **a = list;
     s32 i, root, child;
-    struct actor_self *t;
+    ActorSelf *t;
 
     for (i = n / 2; i > 0;) {
         i--;
@@ -213,7 +218,7 @@ static inline s32 ObjTileIndex(u32 vramAddr)
  * exit sequence mean three `return` insns (the text epilogue is printed
  * once per function), and stock agbcc_arm pops an interworking return
  * without a frame pointer into ip (`ldmfd sp!, {ip}; bx ip`). So
- * sprite_arm.o is built with agbcc_arm_patched's -minterwork-return-lr,
+ * sprite_arm.o is built with agbcp_arm_patched's -minterwork-return-lr,
  * which pops into lr instead (Makefile PATCHED_ARM_OBJS; see
  * docs/matching/iwram-image.md, fifth and seventh passes). */
 s32 LookupSpriteFrameCache(u8 *frame)

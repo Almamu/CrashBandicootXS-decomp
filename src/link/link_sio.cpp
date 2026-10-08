@@ -1,7 +1,9 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
 #include "link.h"
 #include "util.h"
+}
 
 /* "Start" step of the link session - counterpart to `LinkStop`
  * above. Disables the Serial/Timer3 IRQ lines (same IME-guarded

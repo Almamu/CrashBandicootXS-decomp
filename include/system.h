@@ -15,7 +15,7 @@
 #include "irq.h"
 #include "memory.h"
 
-/* src/iwram/iwram_data.c */
+/* src/iwram/iwram_data.cpp */
 extern u32 gVBlankCounter;
 extern u8 gFrameLimitEnabled;
 /* The language picked at boot (0-5), set by MainLoop. */

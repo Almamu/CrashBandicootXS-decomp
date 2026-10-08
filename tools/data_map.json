@@ -426,8 +426,8 @@
     "HandleLinkSerial"
    ],
    "consumer_files": [
-    "link/link_handshake.c",
-    "link/link_session.c"
+    "link/link_handshake.cpp",
+    "link/link_session.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,

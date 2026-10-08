@@ -52,7 +52,7 @@ const u16 gTitleMenuBlinkPalette[16] = {
 };
 
 /* The four OBJ sprites LoadTitleScreenObjTiles (title_screen_init.cpp) uploads,
- * through the IWRAM table gTitleObjPackages (src/iwram/iwram_data.c),
+ * through the IWRAM table gTitleObjPackages (src/iwram/iwram_data.cpp),
  * which lists them in the order 0817D0A8, 0817D0D0, 0817D0BC, 0817D094. */
 const struct bg_package gTitleBandicootObj = { 4, 6, (void *)gTitleBandicootObjPalette, (void *)gTitleBandicootObjTiles, (void *)gTitleBandicootObjMap };
 const struct bg_package gTitleCrashObj = { 8, 40, (void *)gTitleCrashObjPalette, (void *)gTitleCrashObjTiles, (void *)gTitleCrashObjMap };

@@ -182,7 +182,7 @@ struct brightness_fade {
 #define FADE_FLAG_WHITE 1    /* fade through white (BLDCNT lighten), not black (darken) */
 #define FADE_FLAG_IN    0x80 /* count BLDY down from 0x10 (fade in), not up from 0 */
 
-/* One node of the sprite frame cache (sprite_frame.cpp, sprite_arm.c): the
+/* One node of the sprite frame cache (sprite_frame.cpp, sprite_arm.cpp): the
  * frame record and the OBJ VRAM its pixel data was DMA'd into. Nodes live
  * in a fixed pool (`gSpriteFrameCacheSpares`, seeded by
  * InitSpriteFrameCache) and move between two ring lists as they age:
@@ -302,7 +302,7 @@ extern const struct sprite_bank_table gSpriteBankTable;
 extern class PaletteCycles *gPaletteCycles;
 #endif
 
-/* src/iwram/iwram_data.c */
+/* src/iwram/iwram_data.cpp */
 extern struct brightness_fade gBrightnessFade;
 extern s32 gBrightnessFadeStep;
 extern s32 gBrightnessFadeTimer;
@@ -342,7 +342,7 @@ extern s32 *gSpriteAffineQueue;
 extern s32 gSpriteOamQueueCount;    /* gSpriteOamQueue count */
 extern s32 gSpriteAffineQueueCount; /* gSpriteAffineQueue count */
 
-/* sym_iwram.txt: the sprite frame cache (sprite_frame.cpp, sprite_arm.c) */
+/* sym_iwram.txt: the sprite frame cache (sprite_frame.cpp, sprite_arm.cpp) */
 extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent; /* "this frame" MRU list sentinel */
 /* "last frame" eviction list sentinel */
 extern struct sprite_frame_cache_node gSpriteFrameCachePrevious;

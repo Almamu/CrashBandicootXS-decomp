@@ -13,8 +13,8 @@ OBJCOPY  := $(PREFIX)objcopy
 GFX := tools/gbagfx/gbagfx
 GRIT := tools/grit/grit
 
-# Warnings (#577). Every C object, whichever compiler builds it (agbcc,
-# old_agbcc, agbcc_arm), gets this set, and -Werror makes any warning
+# Warnings (#577). Every C and C++ object, whichever compiler builds it
+# (agbcc, old_agbcc, agbcp, old_agbcp, agbcp_arm_patched), gets this set, and -Werror makes any warning
 # fail the build, locally and in CI. A fix must keep the ROM matching;
 # see "Compiler warnings" in CONTRIBUTING.md for how to handle a warning
 # byte-neutrally and the per-site escape hatches.
@@ -420,11 +420,11 @@ NO_IMPLEMENT_INLINES_OBJS := $(C_BUILDDIR)/actor/actor.o \
 $(NO_IMPLEMENT_INLINES_OBJS): CC1FLAGS += -fno-implement-inlines
 
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
-# link_session_reset.c holds only ResetLinkSessionState, which is real C: it keeps the
+# link_session_reset.cpp holds only ResetLinkSessionState, which is real C: it keeps the
 # ROM's up-counting inner copy loop only with this flag (the rerun pass
 # reverses it; without the flag the matching C is 147 halfwords off and
 # 16 bytes long). The flag changes the matching HandleLinkSerial, which is
-# why ResetLinkSessionState was split out of link_handshake.c. See
+# why ResetLinkSessionState was split out of link_handshake.cpp. See
 # docs/matching/archive/last-ten-naked-retry.md and
 # docs/matching/archive/last-eleven-naked-retry.md.
 NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/link/link_session_reset.o
@@ -466,26 +466,22 @@ NO_INTERWORK_OBJS := $(LIBGCC2_OBJS)
 $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 
 # ARM-state code of the IWRAM image (ldscript.txt's `iwram` section),
-# built with agbcc_arm, the ARM-targeting build of the same gcc 2.9.
-# -fomit-frame-pointer: the ROM's ARM functions have no APCS frame (the
-# Thumb agbcc never sets one up, the ARM one does by default). The
-# prologue bugfix and -fhex-asm are Thumb agbcc-only options. See
-# docs/matching/iwram-image.md.
-CC1_ARM  := tools/agbcc/bin/agbcc_arm
-ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
-            $(C_BUILDDIR)/iwram/sprite_arm.o
-$(ARM_OBJS): CC1 := $(CC1_ARM)
-$(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer
-
-# The two ARM objects whose last function needs agbcc_arm_patched:
-# agbcc_arm plus tools/agbcc_patches/agbcc_arm_prologue_return.patch,
-# built by tools/build_patched_agbcc_arm.sh. The ROM's ARM compiler is a
-# later, unreleased build of agbcc_arm's line whose prologue and return
-# code differ in two fixed strings; the patch adds an opt-in option for
-# each. Without the options the patched compiler's output is identical
-# to agbcc_arm's, so the objects' other functions are unaffected (checked
-# with and without the options). See docs/matching/iwram-image.md,
-# "Seventh pass".
+# written as C++ like the rest of the game and built with
+# agbcp_arm_patched: the ARM-targeting C++ compiler of notyourav/agbcc's
+# `cp` branch (its g++_arm tree, agbcc_arm's gcc 2.9-arm-000512 with the
+# C++ front end) plus tools/agbcc_patches/agbcc_arm_prologue_return.patch,
+# built by tools/build_agbccpp.sh. -fomit-frame-pointer: the ROM's ARM
+# functions have no APCS frame (the Thumb agbcc never sets one up, the
+# ARM one does by default). The prologue bugfix and -fhex-asm are Thumb
+# agbcc-only options. See docs/matching/iwram-image.md and
+# docs/cplusplus.md, "The IWRAM ARM code".
+#
+# The ROM's ARM compiler is a later, unreleased build of agbcc_arm's line
+# whose prologue and return code differ in two fixed strings; the patch
+# adds an opt-in option for each. Without the options the patched
+# compiler's output is identical to agbcc_arm's (and agbcp_arm's), so the
+# objects' other functions are unaffected (checked with and without the
+# options). See docs/matching/iwram-image.md, "Seventh pass".
 # - string_arm.o: itoa_arm pushes r4-r6 without lr (-mleaf-no-lr-save).
 #   It also needs both scheduling passes off: its loop increments,
 #   terminator store and swap stay in source order in the ROM, where
@@ -494,10 +490,11 @@ $(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer
 # - sprite_arm.o: LookupSpriteFrameCache's three returns pop into lr
 #   (-minterwork-return-lr). Its other four functions need scheduling,
 #   so it keeps it.
-CC1_ARM_PATCHED  := tools/agbcc/bin/agbcc_arm_patched
-PATCHED_ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
-                    $(C_BUILDDIR)/iwram/sprite_arm.o
-$(PATCHED_ARM_OBJS): CC1 := $(CC1_ARM_PATCHED)
+CXX1_ARM := tools/agbcc/bin/agbcp_arm_patched
+ARM_OBJS := $(C_BUILDDIR)/iwram/string_arm.o \
+            $(C_BUILDDIR)/iwram/sprite_arm.o
+$(ARM_OBJS): CXX1 := $(CXX1_ARM)
+$(ARM_OBJS): CC1FLAGS := -mthumb-interwork $(WARNFLAGS) -O2 -fomit-frame-pointer -fno-rtti -fno-exceptions
 $(C_BUILDDIR)/iwram/string_arm.o: CC1FLAGS += -mleaf-no-lr-save -fno-schedule-insns -fno-schedule-insns2
 $(C_BUILDDIR)/iwram/sprite_arm.o: CC1FLAGS += -minterwork-return-lr
 
