@@ -36,14 +36,14 @@ Once those packages are installed you'll need to provide agbcc, which is the com
    ```
    tools/build_patched_agbcc_arm.sh path/to/agbcc
    ```
-   This copies the checkout to a temporary directory, applies `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, builds `gcc_arm` the way agbcc's `build.sh` does, and installs it as `tools/agbcc/bin/agbcc_arm_patched` (the stock compilers are left as they are).
+   This copies the checkout to a temporary directory, applies `tools/agbcc_patches/agbcc_arm_prologue_return.patch`, builds `gcc_arm` the way agbcc's `build.sh` does (with `-std=gnu99 -w`, plus `-fpermissive` on gcc 14 and later, so its 1999 configure checks work on a current host gcc), and installs it as `tools/agbcc/bin/agbcc_arm_patched` (the stock compilers are left as they are). A checkout that already has the patch applied works too.
    Two IWRAM ARM functions need it: the ROM's ARM compiler was a later build than agbcc_arm, and the patch adds two opt-in options that reproduce its prologue and return code (see [docs/matching/iwram-image.md](docs/matching/iwram-image.md), "Seventh pass").
 5. Build the C++ compilers from the `cp` branch of [notyourav/agbcc](https://github.com/notyourav/agbcc) (the g++ 2.9 front end, decomp.me's "agbccpp"). From the decomp project's directory:
    ```
    git clone -b cp https://github.com/notyourav/agbcc path/to/agbcc-cp
    tools/build_agbccpp.sh path/to/agbcc-cp
    ```
-   This copies the checkout, applies `tools/agbcc_patches/agbcp_agbcc_options.patch` (agbcc's `-fprologue-bugfix` and old-compiler switches) and installs `tools/agbcc/bin/agbcp` and `tools/agbcc/bin/old_agbcp`. The game objects written as C++ (`src/*/*.cpp`) need them; see [docs/cplusplus.md](docs/cplusplus.md).
+   This copies the checkout, applies `tools/agbcc_patches/agbcp_agbcc_options.patch` (agbcc's `-fprologue-bugfix` and old-compiler switches) and installs `tools/agbcc/bin/agbcp` and `tools/agbcc/bin/old_agbcp`. A checkout that already has the patch applied works too. The game objects written as C++ (`src/*/*.cpp`) need them; see [docs/cplusplus.md](docs/cplusplus.md).
 6. Build the ROM with `make compare`
 7. A crashbandicootxs.gba file should be created and the message `crashbandicootxs.gba: OK` should appear
 
