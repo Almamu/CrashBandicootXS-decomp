@@ -819,7 +819,7 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
- * jetpack_crates.c, hovercraft.c (DestroyJetpackCollectedWumpa), polar_player_actions.c,
+ * jetpack_crates.c, hovercraft.c (DestroyJetpackCollectedWumpa), polar_player_actions.cpp,
  * polar_pickups.c, jetpack_player.cpp, actor.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
@@ -844,7 +844,7 @@ const struct vtable_slot gPolarCheckpointTextVtable[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by polar_player.c, polar_player_actions.c, actor_factory.cpp
+/* Used by polar_player.cpp, polar_player_actions.cpp, actor_factory.cpp
  * (ConstructAnimTableState). */
 const struct vtable_slot gPolarPlayerVtable[4] = {
     VTABLE_SLOT(NULL),
@@ -853,7 +853,7 @@ const struct vtable_slot gPolarPlayerVtable[4] = {
     VTABLE_SLOT(DrawPolarPlayer),
 };
 
-/* Used by polar_player_actions.c, polar_pickups.c. */
+/* Used by polar_player_actions.cpp, polar_pickups.c. */
 const struct vtable_slot gPolarCollectedWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarCollectedWumpa),
@@ -861,7 +861,7 @@ const struct vtable_slot gPolarCollectedWumpaVtable[4] = {
     VTABLE_SLOT(DrawPolarCollectedWumpa),
 };
 
-/* Used by polar_player_actions.c, polar_pickups.c, actor_factory.cpp. */
+/* Used by polar_player_actions.cpp, polar_pickups.c, actor_factory.cpp. */
 const struct vtable_slot gPolarWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyPolarWumpa),

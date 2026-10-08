@@ -174,7 +174,7 @@ void HeapSortActorsByKey(s32 n, struct actor_self **list)
 
 /* gUnpackRleSpriteFrameFunc(dst, frame): unpacks a frame's w*h tiles into `dst`,
  * zero runs with a DMA3 fill and literal runs with a DMA3 copy. Called
- * by polar_player.c, jetpack_spawn.cpp and company_logos.cpp. */
+ * by polar_player.cpp, jetpack_spawn.cpp and company_logos.cpp. */
 void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
 {
     u16 *end = dst + frame->h * frame->w * 16;

@@ -100,7 +100,7 @@ gSfxTable:
 
 @ gPolarCategoryPalette..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.c
 
-@ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.c
+@ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.cpp
 
 @ gPolarPlayerShockPalette..gYetiChargeParams: src/data/actor_tables_17a728.c
 

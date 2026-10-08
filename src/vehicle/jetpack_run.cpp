@@ -14,7 +14,7 @@ extern "C" {
 /* JetpackPlayer's course end, ring pass and VRAM tile buffers (#664 part
  * 11e, include/vehicle.hpp). Built with old_agbcp: AllocTiles's products
  * (`adds r2, r3, #0; muls r2, r1; adds r0, r2, #0`) are old_agbcc's, as in
- * AllocPolarPlayerTiles (polar_player.c); the C wrote them in asm. See
+ * AllocPolarPlayerTiles (polar_player.cpp); the C wrote them in asm. See
  * docs/matching/archive/issue-56-0x0802f0dc-actor.md. */
 
 /* AnimPart::GetAnimFrameData (actor_anim.cpp), inlined. */
