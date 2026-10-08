@@ -1,7 +1,6 @@
 #include "bg_layer.hpp"
 
 extern "C" {
-#include "match.h"
 #include "gfx.h"
 #include "memory.h"
 }
@@ -145,22 +144,8 @@ u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile)
     ref.raw = tile;
     {
         s32 id = ref.bits.id;
-        MATCH_HOLD_REG(u32, cur, r0);
-        MATCH_HOLD_REG(u32, none, r1);
 
-        /* The ROM materializes 0x200 before loading the entry; gcc always
-         * loads a compare's memory operand first. The "m" operand keeps
-         * the address computation (and its ordering) in the compiler's
-         * hands - only the constant and the load are fixed here. Still
-         * needed in C++ (old_agbcp): a plain test, also through an inline
-         * with the constant as a parameter, loads the entry first and
-         * reuses it for `slot`, where the ROM loads it again. */
-        // clang-format off
-        asm("mov %1, #0x80\n\tlsl %1, %1, #2\n\tldrh %0, %2"
-            : "=r"(cur), "=&r"(none)
-            : "m"(pool->slotForTile[id]));
-        // clang-format on
-        if (cur != none)
+        if (pool->slotForTile[id] != TILE_SLOT_NONE)
             slot = GetTileSlot(pool, id);
         else {
             slot = PopFreeSlot(pool);

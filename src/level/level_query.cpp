@@ -146,11 +146,8 @@ struct AudioContext;
  * 0. `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` below are thin wrappers baking in
  * a constant `flagIdx`.
  *
- * `flagIdx` is kept in `ip`/r12 for the whole function (via the
- * `MATCH_HOLD_REG(..., ip)` pin) rather than a normally-allocated
- * register, matching the ROM's own register-pressure-driven choice -
- * without the pin, gcc allocates it to a plain low register instead and
- * the codegen diverges throughout. The `table`/`v` locals in each of
+ * `flagIdx` stays in `ip`/r12 for the whole function, as in the ROM,
+ * with no pin. The `table`/`v` locals in each of
  * the three (loop, extra1, extra2) flag-table reads also need explicit
  * register pins (and, for `table`, a plain-integer type instead of a
  * pointer type) to reproduce the ROM's exact register choice and
@@ -163,14 +160,13 @@ struct AudioContext;
  * and docs/matching.md for other instances of this class of fix. */
 s32 LevelHasEntityType(s32 idx, s32 flagIdx)
 {
-    MATCH_HOLD_REG(s32, fi, ip) = flagIdx;
     s32 result = 0;
     const struct level_room_list *list = gLevelTable[idx].rooms;
     s32 i = 0;
 
     if (result < list->count) {
         const struct level_room *const *itemPtr = list->rooms;
-        s32 shift = fi << 1;
+        s32 shift = flagIdx << 1;
         s32 n = list->count;
 
         do {
@@ -191,7 +187,7 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
     if (result == 0 && list->extra1 != 0 && list->extra1->kind != ROOM_KIND_CATEGORY) {
         const struct level_entity_list *nested = list->extra1->desc->entities;
         MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
-        s32 shift = fi << 1;
+        s32 shift = flagIdx << 1;
         MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
 
         result = (u32)(-(s32)v | v) >> 31;
@@ -200,7 +196,7 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
     if (result == 0 && list->extra2 != 0 && list->extra2->kind != ROOM_KIND_CATEGORY) {
         const struct level_entity_list *nested = list->extra2->desc->entities;
         MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
-        s32 shift = fi << 1;
+        s32 shift = flagIdx << 1;
         MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
 
         result = (u32)(-(s32)v | v) >> 31;

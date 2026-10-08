@@ -102,17 +102,13 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
  *
  * The trigger half uses the same `FreezeLevelClock` register-pinning recipe
  * (see its comment above) for the `GetPaletteSlot`/`LoadPaletteSlot` cross-
- * call pair. Two more pins close the rest: `addr`/`countdown` pinned
- * to `r1`/`r3` reproduce the ROM's exact front-of-function map (the
- * countdown pointer and its loaded value), and that same `addr`
- * register variable is *reused* (reassigned, not redeclared) for the
- * digit-cascade's own address-chasing in the `else` branch, which is
- * what makes gcc emit the ROM's `subs r1,#4` chain-decrement instead
- * of recomputing `self+0x98`/`self+0x94` fresh from `self` each time.
- * `newCountdown` is pinned to `r0` because otherwise gcc decrements
- * `countdown`'s own register (`r3`) in place - functionally fine since
- * the two branches are mutually exclusive, but a different instruction
- * encoding (`subs r3,#1` vs the ROM's `subs r0,r3,#1`) than the ROM's.
+ * call pair. The countdown pointer `addr` is *reused* (reassigned, not
+ * redeclared) for the digit-cascade's own address-chasing in the `else`
+ * branch, which is what makes gcc emit the ROM's `subs r1,#4`
+ * chain-decrement instead of recomputing `self+0x98`/`self+0x94` fresh
+ * from `self` each time. `newCountdown` is its own local: decrementing
+ * `countdown` in place gives `subs r3,#1` where the ROM has
+ * `subs r0,r3,#1`.
  * The digit-cascade's four levels are each written test-true-first
  * (`if (val == N) { nested / return } else { val + 1 }`) rather than
  * test-false-first (`if (val != N) { val + 1 } else { nested }`) -
@@ -126,11 +122,11 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
  * reusing the register the comparison already loaded. */
 void TickLevelClock(struct level_state *self)
 {
-    MATCH_HOLD_REG(s32 *, addr, r1) = &self->countdown;
-    MATCH_HOLD_REG(s32, countdown, r3) = *addr;
+    s32 *addr = &self->countdown;
+    s32 countdown = *addr;
 
     if (countdown != 0) {
-        MATCH_HOLD_REG(s32, newCountdown, r0) = countdown - 1;
+        s32 newCountdown = countdown - 1;
         *addr = newCountdown;
 
         if (newCountdown == 0) {
@@ -215,12 +211,12 @@ void AddBrokenCrate(struct level_state *self)
 
             if (level->kind == ROOM_KIND_CATEGORY) {
                 u8 *flags = GetCurrentLevelFlags(self);
-                /* Register pins reproduce the ROM's "build the OR
-                 * mask before loading the byte" order - a plain
+                /* Separate `mask`/`value` locals reproduce the ROM's
+                 * "build the OR mask before loading the byte" order - a plain
                  * `*flags |= LEVEL_FLAG_CRATE_GEM;` loads the byte first regardless of
                  * statement order (see docs/workflow.md step 7). */
-                MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
-                MATCH_HOLD_REG(s32, value, r2) = *flags;
+                s32 mask = LEVEL_FLAG_CRATE_GEM;
+                s32 value = *flags;
                 mask |= value;
                 *flags = mask;
             } else {
@@ -256,8 +252,8 @@ void PressSwitchCrate(struct level_state *self)
 
         if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
-            MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
-            MATCH_HOLD_REG(s32, value, r2) = *flags;
+            s32 mask = LEVEL_FLAG_CRATE_GEM;
+            s32 value = *flags;
             mask |= value;
             *flags = mask;
         } else {
@@ -338,12 +334,11 @@ s32 TestUnusedFlags(struct level_state *self, s32 mask)
  * GiveDoubleJump set. */
 void ClearPowers(struct level_state *self)
 {
-    /* Register pins reproduce the ROM's exact accumulator/mask split -
-     * see docs/workflow.md step 7 - a plain local otherwise lets gcc
-     * reuse the still-live -0x11 constant to derive -0x41 via a single
-     * SUB instead of a fresh mov+neg pair. */
-    MATCH_HOLD_REG(s32, acc, r1) = -0x11;
-    MATCH_HOLD_REG(s32, tmp, r2) = self->progress.flags;
+    /* The step-by-step accumulator/mask split reproduces the ROM's
+     * sequence (a fresh mov+neg pair for -0x41, then `tmp += 0x20`); a
+     * plain `&= ~0xf0` compiles to a different one. */
+    s32 acc = -0x11;
+    s32 tmp = self->progress.flags;
     acc &= tmp;
     tmp = -0x41;
     acc &= tmp;
@@ -357,37 +352,37 @@ void ClearPowers(struct level_state *self)
 /* Each of these four builds its OR mask into `r1` *before* loading the
  * byte into `r2` (the ROM's `movs r1,#N; ldrb r2,[r0,#2]` order) - a
  * plain `*flags |= N;` loads the byte first regardless of statement
- * order, so the mask/value roles are pinned explicitly (see
+ * order, so the mask and the value are separate locals (see
  * docs/workflow.md step 7, and the identical fix on `AddBrokenCrate`/
  * `PressSwitchCrate`'s `*flags |= 2;` above). */
 void GiveTornadoSpin(struct level_state *self)
 {
-    MATCH_HOLD_REG(s32, mask, r1) = 0x40;
-    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
+    s32 mask = 0x40;
+    s32 value = self->progress.flags;
     mask |= value;
     self->progress.flags = mask;
 }
 
 void GiveSuperBodySlam(struct level_state *self)
 {
-    MATCH_HOLD_REG(s32, mask, r1) = 0x20;
-    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
+    s32 mask = 0x20;
+    s32 value = self->progress.flags;
     mask |= value;
     self->progress.flags = mask;
 }
 
 void GiveTurboRun(struct level_state *self)
 {
-    MATCH_HOLD_REG(s32, mask, r1) = 0x10;
-    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
+    s32 mask = 0x10;
+    s32 value = self->progress.flags;
     mask |= value;
     self->progress.flags = mask;
 }
 
 void GiveDoubleJump(struct level_state *self)
 {
-    MATCH_HOLD_REG(s32, mask, r1) = 0x80;
-    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
+    s32 mask = 0x80;
+    s32 value = self->progress.flags;
     mask |= value;
     self->progress.flags = mask;
 }
@@ -451,12 +446,8 @@ struct AudioContext;
  * holding `state`. */
 void SetMaskLevel(void *selfArg, s32 stateArg)
 {
-    /* Register-pinned so the ROM's own `adds r4,r0,#0` (self) /
-     * `adds r5,r1,#0` (state) copy order is reproduced - a plain pair
-     * of locals lets this compiler swap the order since `state` is
-     * referenced first, in the `if` condition below. */
-    MATCH_HOLD_REG(struct level_state *, self, r4) = (struct level_state *)selfArg;
-    MATCH_HOLD_REG(s32, state, r5) = stateArg;
+    struct level_state *self = (struct level_state *)selfArg;
+    s32 state = stateArg;
 
     if (state == MASK_LEVEL_INVINCIBLE) {
         StartSong(gAudioContext, SONG_DRUMS);
@@ -829,25 +820,24 @@ void CheckAllCratesBroken(void *selfArg)
 
         if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
-            MATCH_HOLD_REG(s32, mask, r1) = LEVEL_FLAG_CRATE_GEM;
-            MATCH_HOLD_REG(s32, value, r2) = *flags;
+            s32 mask = LEVEL_FLAG_CRATE_GEM;
+            s32 value = *flags;
             mask |= value;
             *flags = mask;
         } else {
-            /* Register-pinned to reproduce the ROM's exact map: `magic`
-             * (the 3rd `SpawnCrateGem` argument's true value) loaded into
-             * r0 early rather than right before the call, and `off`
-             * kept in r3 across its own +4 increment instead of being
-             * recomputed from scratch for the second field - see
+            /* Reproduces the ROM's exact map: `magic` (the 3rd
+             * `SpawnCrateGem` argument's true value) is loaded into r0
+             * early rather than right before the call, and `off` is
+             * pinned to r3 and kept across its own +4 increment instead
+             * of being recomputed from scratch for the second field - see
              * docs/workflow.md step 7 / matching_decomp_register_pinning
              * memory. */
-            MATCH_HOLD_REG(s32, magic, r0) = 0xffff;
+            s32 magic = 0xffff;
             MATCH_HOLD_REG(s32, off, r3) = 0xe0 << 1;
-            MATCH_HOLD_REG(u16 *, addr1, r1) = (u16 *)((u8 *)self + off); /* &self->crateGemX */
+            u16 *addr1 = (u16 *)((u8 *)self + off); /* &self->crateGemX */
             u16 b = *addr1;
             MATCH_HOLD_REG(u16 *, addr2, r2);
             u16 c;
-            MATCH_KEEP_VOLATILE(b);
             off += 4;
             MATCH_KEEP_VOLATILE(off);
             addr2 = (u16 *)((u8 *)self + off); /* &self->crateGemY */
@@ -919,10 +909,9 @@ void RestoreCheckpoint(struct level_state *self)
  * into `self->0xd4`/`0xd8`, flushes two spans of the
  * `gEntityFlags` bitmap via the `CpuSet` wrapper, then stashes the
  * `0xe4`-byte snapshot block (see `RestoreCheckpoint` above). */
-void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
+void SetCheckpoint(void *selfArg, s32 flag, s32 *pair)
 {
-    MATCH_HOLD_REG(struct level_state *, self, r5) = (struct level_state *)selfArg;
-    MATCH_HOLD_REG(s32 *, pair, r4) = pairArg;
+    struct level_state *self = (struct level_state *)selfArg;
     u8 tmp;
 
     self->room.checkpointFlags = flag;
@@ -932,9 +921,9 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
     ClearSpawnAtStart(self);
     ResetDeaths(self);
     {
-        MATCH_HOLD_REG(s32 *, dst, r2) = &self->room.checkpointX;
-        MATCH_HOLD_REG(s32, px, r0) = pair[0];
-        MATCH_HOLD_REG(s32, py, r1) = pair[1];
+        s32 *dst = &self->room.checkpointX;
+        s32 px = pair[0];
+        s32 py = pair[1];
         dst[0] = px;
         dst[1] = py;
     }
@@ -949,8 +938,8 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
     {
         void *a = (u8 *)pair + 0x308;
         void *b = (u8 *)pair + 0x208;
-        MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
-        CpuSet(a, b, ctrl);
+
+        CpuSet(a, b, CPU_SET_32BIT | 0x40);
     }
 
     MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
@@ -1020,7 +1009,7 @@ void nullsub_24(void)
  * block. */
 void UnpackSaveData(struct level_state *self, const struct game_progress *src)
 {
-    MATCH_HOLD_REG(u8 *, snap, r5) = self->saveData.packedStats;
+    u8 *snap = self->saveData.packedStats;
     /* Register pins reproduce the ROM's exact "freshly loaded value in
      * one register, shifted result in another" shape for both the byte
      * and halfword extracts below (see docs/workflow.md step 7). */
@@ -1068,7 +1057,7 @@ void UnpackSaveData(struct level_state *self, const struct game_progress *src)
 struct game_progress *PackSaveData(void *selfArg)
 {
     MATCH_HOLD_REG(struct level_state *, self, r3) = (struct level_state *)selfArg;
-    MATCH_HOLD_REG(struct game_progress *, snap, r0);
+    struct game_progress *snap;
     u8 byte0;
     u16 packed;
     MATCH_HOLD_REG(s32, t, r2);
@@ -1077,7 +1066,7 @@ struct game_progress *PackSaveData(void *selfArg)
     snap = &self->saveData;
     t &= PACKED_STATS_LIVES_MASK;
     {
-        MATCH_HOLD_REG(s32, mask, r1);
+        s32 mask;
         asm volatile("mov %0, #0x80\n\tneg %0, %0" : "=r"(mask));
         mask &= snap->packedStats[0];
         byte0 = mask | t;
@@ -1086,9 +1075,9 @@ struct game_progress *PackSaveData(void *selfArg)
 
     {
         s32 field6c = self->wumpa;
-        MATCH_HOLD_REG(u32, off, r5) = offsetof(struct level_state, saveData.packedStats[1]);
+        u32 off = offsetof(struct level_state, saveData.packedStats[1]);
         s32 shifted = field6c << 1;
-        MATCH_HOLD_REG(s32, one, r1) = 1;
+        s32 one = 1;
         MATCH_HOLD_REG(u32, raw, r4);
         asm volatile("ldrb %0, [%1, %2]" : "=r"(raw) : "r"(off), "r"(self));
         one &= raw;
@@ -1097,8 +1086,8 @@ struct game_progress *PackSaveData(void *selfArg)
     }
 
     {
-        MATCH_HOLD_REG(s32, shifted, r2) = (self->maskLevel & 3) << PACKED_STATS_MASK_LEVEL_SHIFT;
-        MATCH_HOLD_REG(s32, mask, r1) = ~PACKED_STATS_MASK_LEVEL_MASK;
+        s32 shifted = (self->maskLevel & 3) << PACKED_STATS_MASK_LEVEL_SHIFT;
+        s32 mask = ~PACKED_STATS_MASK_LEVEL_MASK;
         MATCH_HOLD_REG(u16, loaded, r5) = *(u16 *)snap->packedStats;
         mask &= loaded;
         packed = mask | shifted;

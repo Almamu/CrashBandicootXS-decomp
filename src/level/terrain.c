@@ -1,6 +1,5 @@
 #include "core.h"
 #include "math_util.h"
-#include "match.h"
 #include "level.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `CollidePlayer`
@@ -192,10 +191,7 @@ s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 
     if (row != NULL) {
         s32 y = pos->y;
-        MATCH_HOLD_REG(s8 *, addr, r0) = row + (pos->x & 7);
-        MATCH_HOLD_REG(s32, height, r1) = 0;
-
-        asm("ldrsb %0, [%1, %0]" : "+r"(height) : "r"(addr));
+        s32 height = row[pos->x & 7];
 
         *outValue += INT_TO_Q8((tileY << 3) + height - y);
         return 1;

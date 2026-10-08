@@ -112,12 +112,6 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
     if (level->kind == ROOM_KIND_CATEGORY) {
         self->room.checkpointCrateCount = GetCrateCount(self);
 
-        /* Barrier: without this, the compiler notices `self + 0xa9`
-         * is `(self + 0xcc) - 0x23` and reuses the field-0xcc pointer
-         * (`subs r1, #0x23`) instead of recomputing fresh from `self`
-         * the way the ROM does (`adds r0, r6, #0; adds r0, #0xa9`). */
-        MATCH_KEEP_VOLATILE(self);
-
         {
             MATCH_HOLD_REG(u8 *, p, r0) = (u8 *)self + 0xa9;
             u8 value = *p;
@@ -135,8 +129,6 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
 
         self->room.checkpointFlags = arg1;
         self->room.checkpointCrateCount = GetCrateCount(self);
-
-        MATCH_KEEP_VOLATILE(self);
 
         {
             MATCH_HOLD_REG(u8 *, p, r0) = (u8 *)self + 0xa9;
@@ -170,22 +162,16 @@ void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
              * r2, =0x04000040`) rather than hoisted into one shared
              * register across both calls - see `SetCheckpoint`'s
              * identical gotcha in docs/matching/issue-37-game-loop-
-             * 234e8.md for why this needs its own `register` block
-             * declared right before each call, after the two pointer
-             * arguments are already computed. */
+             * 234e8.md. The first call's control word is pinned to r2
+             * after the two pointer arguments are computed; the second
+             * call needs nothing. */
             void *a = (u8 *)base + 0x108;
             void *b = (u8 *)base + 8;
             MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
 
             CpuSet(a, b, ctrl);
         }
-        {
-            void *a = (u8 *)base + 0x308;
-            void *b = (u8 *)base + 0x208;
-            MATCH_HOLD_REG(u32, ctrl, r2) = CPU_SET_32BIT | 0x40;
-
-            CpuSet(a, b, ctrl);
-        }
+        CpuSet((u8 *)base + 0x308, (u8 *)base + 0x208, CPU_SET_32BIT | 0x40);
 
         MemCopy32((u8 *)self + 0xe4, self, 0x68);
     }
