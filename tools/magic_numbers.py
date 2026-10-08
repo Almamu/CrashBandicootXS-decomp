@@ -82,7 +82,6 @@ CALLS = [
     ("event", r"PhysCall3", 3),
     # Wrappers around the event slot (vtable +0x68).
     ("event", r"CALL_M68H?", 2),
-    ("event", r"CALL_HIT", 2),
     ("event", r"Call68", 2),
     ("event", r"OBJ_CALL68", 2),
     ("event", r"D18C_CALL68", 1),

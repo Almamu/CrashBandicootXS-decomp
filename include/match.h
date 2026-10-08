@@ -30,7 +30,9 @@
  * if its output is dead. `asm volatile` stops all three and also makes
  * the insn a scheduling barrier (sched.c treats a volatile asm as using
  * and clobbering every register and all of memory). The _VOLATILE
- * variants are for the sites where the plain form was moved or merged. */
+ * variants are for the sites where the plain form was moved or merged;
+ * MATCH_USE and MATCH_CONST have none since the C++ conversion (#664) left
+ * no site that needed one. */
 
 /* MATCH_HOLD_REG(T, name, reg): declare `name` as a local register
  * variable pinned to the hard register `reg` (r0-r12, written without
@@ -66,7 +68,6 @@
  * a register-allocation priority, and to end a MATCH_HOLD. Volatile
  * (no outputs), so it is also a scheduling barrier. */
 #define MATCH_USE(x) asm("" : : "r"(x))
-#define MATCH_USE_VOLATILE(x) asm volatile("" : : "r"(x))
 
 /* MATCH_USE2(a, b): `asm("" : : "r"(a), "r"(b))`, MATCH_USE of two
  * values in one asm. It isn't the same as two MATCH_USEs: those are two
@@ -108,10 +109,8 @@
  * doubled live range `v = K` plus a MATCH_KEEP would give it. Use it
  * when the ROM loads a constant at a specific point, once per use, or
  * into a specific register. K can be any expression (a variable, an
- * address, a cast); the point is the same: an opaque copy made here. The
- * _VOLATILE form also can't be moved, merged or deleted. */
+ * address, a cast); the point is the same: an opaque copy made here. */
 #define MATCH_CONST(v, K) asm("" : "=r"(v) : "0"(K))
-#define MATCH_CONST_VOLATILE(v, K) asm volatile("" : "=r"(v) : "0"(K))
 
 /* MATCH_CLOBBER(reg): `asm("" : : : "reg")` (r0-r12, written without
  * quotes). Emits nothing, but tells gcc the hard register `reg` is

@@ -116,8 +116,7 @@ public:
     struct anim_box GetWorldBox();    // GetActorWorldBox
     u8 IsVisible();                   // IsActorVisible
 
-    /* State `st`, restarting animation sequence `idx` (actor_self.h's
-     * ACTOR_SET_STATE). */
+    /* State `st`, restarting animation sequence `idx`. */
     void SetState(s32 st, s32 idx)
     {
         state = st;

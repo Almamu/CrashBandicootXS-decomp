@@ -612,10 +612,10 @@ comment saying what it fixes.
 |---|---|
 | `MATCH_HOLD_REG(T, name, rN)` | `register T name asm("rN")` |
 | `MATCH_BARRIER()` | `asm("")` |
-| `MATCH_USE(x)`, `MATCH_USE_VOLATILE(x)` | `asm("" : : "r"(x))`, `asm volatile(...)` |
+| `MATCH_USE(x)` | `asm("" : : "r"(x))` |
 | `MATCH_KEEP(x)`, `MATCH_KEEP_VOLATILE(x)` | `asm("" : "+r"(x))`, `asm volatile(...)` |
 | `MATCH_HOLD(x)`, `MATCH_HOLD_VOLATILE(x)` | `asm("" : "=r"(x))`, `asm volatile(...)` |
-| `MATCH_CONST(v, K)`, `MATCH_CONST_VOLATILE(v, K)` | `asm("" : "=r"(v) : "0"(K))`, `asm volatile(...)` |
+| `MATCH_CONST(v, K)` | `asm("" : "=r"(v) : "0"(K))` |
 | `MATCH_USE2(a, b)`, `MATCH_USE2_VOLATILE(a, b)` | `asm("" : : "r"(a), "r"(b))`, `asm volatile(...)` |
 | `MATCH_CLOBBER(rN)`, `MATCH_CLOBBER_VOLATILE(rN)` | `asm("" : : : "rN")`, `asm volatile(...)` |
 | `MATCH_MEMORY_BARRIER()` | `asm volatile("" : : : "memory")` |

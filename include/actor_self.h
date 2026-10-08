@@ -108,24 +108,4 @@ struct actor_self {
     struct actor_vtable *vtable; // 0x50
 };
 
-/* Resets `self` into state `st`, restarting animation sequence `idx`:
- * the C spelling of ActorSelf::SetState (actor_self.hpp). No C file uses
- * it any more (every 3D actor class is C++, #664 part 11). Both values go
- * through locals so constant pairs are materialized before the stores,
- * as the ROM does; the `if (1) { ... } else (void)0` wrapper, rather than
- * `do { ... } while (0)`, is because agbcc treats the latter as a real
- * loop when weighing register priorities. */
-#define ACTOR_SET_STATE(self, st, idx)                                         \
-    if (1)                                                                     \
-    {                                                                          \
-        s32 _st = (st);                                                        \
-        s32 _idx = (idx);                                                      \
-        (self)->state = _st;                                                   \
-        (self)->stateTime = 0;                                                 \
-        (self)->animIndex = _idx;                                              \
-        (self)->animTimer = (self)->anims[_idx].duration;                      \
-        (self)->animDone = 0;                                                  \
-        (self)->animTime = 0;                                                  \
-    } else (void)0
-
 #endif /* !GUARD_ACTOR_SELF_H */
