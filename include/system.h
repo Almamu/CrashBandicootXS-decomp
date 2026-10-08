@@ -38,7 +38,7 @@ extern u32 gFrameLimitInterval;
  * (src/data/boss_pictures_167ad4.c). */
 extern const u8 gDpadDirectionTable[16];
 
-/* src/system/asset.c */
+/* src/system/asset.cpp */
 extern void LoadTaggedAsset(const void *asset, void *dest);
 extern void LoadBackgroundTileAndPalette(const void *asset);
 
@@ -46,22 +46,22 @@ extern void LoadBackgroundTileAndPalette(const void *asset);
 extern s32 DivMod(s32 number, s32 denom, s32 *remainderOut);
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 
-/* src/system/input.c */
+/* src/system/input.cpp */
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 
-/* src/system/irq.c. UpdateKeys and GetDpadDirection take the input
- * object (every caller passes gInput) but read gKeys directly. */
+/* src/system/irq.cpp. UpdateKeys and GetDpadDirection take the input
+ * object (every caller passes gInput) but read gKeys directly; its
+ * constructor, ClearKeys, is KeyInput's (spawners.hpp). */
 extern void WaitForVBlank(void);
 extern void DisableFrameLimit(void);
 extern void SetFrameLimit(u32 interval);
 extern u8 GetDpadDirection(void *input);
 extern s32 UpdateKeys(void *input);
-extern void *ClearKeys(void *self);
 
-/* src/system/main.c */
+/* src/system/main.cpp */
 extern s32 AgbMain(void);
 
-/* src/system/main_loop.c. GetUiText returns the string's address as an
+/* src/system/main_loop.cpp. GetUiText returns the string's address as an
  * s32 (its callers store it in s32 fields). */
 extern s32 MainLoop(void);
 extern s32 GetUiText(s32 index);

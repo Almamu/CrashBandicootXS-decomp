@@ -657,6 +657,14 @@ counts them by kind) and what the C++ needed when it was converted.
 | text.h, cutscene.h, frontend.hpp, level_select.hpp, and 11 `.cpp` files | `gSmallFont`/`gLargeFont` are `Font *`s to C++; the fonts' callers make virtual calls and use the inline accessors | 0 | (unchanged) | 31 spelled-out slot calls -> 0 | step 10b |
 | `src/audio/audio.cpp` | `AudioContext` (new include/audio.hpp; derives from audio.h's struct audio_context): its 22 methods, constructor (`InitAudioContext`), destructor (`DestroyAudioContext`), `DisableVCountIrq`; with `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (C linkage) | 25 + 2 | old_agbcp (old_agbcc C already) | 2 pins, 1 use, 1 volatile cast -> 1 volatile cast | [audio](#the-audio-context) |
 | globals.h, audio.h, 75 `.cpp` files | `gAudioContext` is an `AudioContext *` to C++; the callers' `PlaySfx(gAudioContext, ...)` & co. are method calls, LevelState's constructor and destructor `new AudioContext` and `delete gAudioContext`; the two `PlayAmbientSfx` callers pass a `bool` (the C's `struct byte_arg`) | 0 | (unchanged) | 0 -> 0 | [audio](#the-audio-context) |
+| `src/gfx/bitmap_screen.cpp`, `fade_to_black.cpp` | `ShowBitmapScreen`; `FadePaletteToBlack`, `IsBrightnessFadeActive` (C linkage) | 0 + 3 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/gfx/display.cpp`, `fade.cpp` | the DISPCNT helpers (`SetDispcntMode` ... `CommitDispcnt`); `StepBrightnessFade`, `FadeBrightness`, `DarkenPalette` (C linkage) | 0 + 17 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/gfx/sprite_frame.cpp` | the OBJ tile allocator, the overflow OAM queue and the sprite frame cache (C linkage); FlushSpriteFrameOamQueue calls `gOamBuffer->Append`, `HideUnused`, `SetAffineScales` (sprite_obj.hpp), whose C prototypes go | 0 + 18 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/system/asset.cpp`, `main.cpp`, `main_loop.cpp`, `memory.cpp` | `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`; `AgbMain`; `MainLoop`, `GetUiText`; the heap (`mem_*`, C linkage) | 0 + 12 | agbcp | 1 file-scope asm -> 1 (`mem_walk_heaps`) | all-C++: gfx, system, util, text |
+| `src/system/input.cpp`, `irq.cpp` | `WaitForKeyPress`; the IRQ table, the VBlank handler and callbacks, the key reading (C linkage), and `KeyInput`'s constructor (`ClearKeys`, spawners.hpp), whose C prototype goes | 1 + 17 | old_agbcp | 1 pin -> 1 pin | all-C++: gfx, system, util, text |
+| `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/util/aabb.cpp` | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
+| `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring`, `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -3616,6 +3624,56 @@ trait, and they stay C for now.
 
 `MATCH_HOLD_REG` 89 -> 87, `MATCH_USE` 47 -> 46 project-wide
 (tools/match_idioms.py); 203 -> 204 `.cpp` files under src/.
+
+### The last C files: gfx, system, util, text
+
+The 21 C-like game files of src/gfx/, src/system/, src/text/ and
+src/util/ are C++ now (98 functions; the "What stays C" list of [the
+final cleanup](#the-final-cleanup) predates this): bitmap_screen,
+display, fade, fade_to_black, sprite_frame; asset, input, irq, main,
+main_loop, memory; text_box; aabb, fixed_math, line, line_step,
+number_format, printf, rand, string, time_format. Each is built by the
+compiler its C used (old_agbcp for the six objects in `OLD_AGBCC_OBJS`:
+display, fade, sprite_frame, input, irq, aabb; agbcp for the rest), and
+every object is byte-identical to its C build, symbol table included.
+
+As experiment 4 predicted, the conversion is mostly mechanical: the C
+headers are included inside `extern "C" { }`, so every function keeps
+its C name (crt0's `AgbMain`, the IRQ handlers, the ldscript and the
+remaining C files) with no cxx_symbols.txt entry. What C++ rejected:
+
+- **`NULL`** is `((void *)0)` (stddef.h), which C++ doesn't convert to
+  another pointer type: `0`, as the other `.cpp` files write it
+  (sprite_frame, irq, memory).
+- **Local declarations of external functions** get C++ linkage:
+  asset's one-argument `LZ77UnCompVram`/`RLUnCompVram` and irq's
+  `_call_via_r0` are `extern "C"`; sprite_frame's own
+  `void *_call_via_r1(...)` went for gobj_1a794.h's `s32` one.
+- **`asm(... :: "r0")`**: `::` is one token in C++ (printf, `: :`).
+- **Signed/unsigned comparisons** are a warning (an error with
+  `-Werror`) in g++'s `-Wall`: mem_alloc's two compares of the block's
+  `int` size against the `u32` request spell the C's implicit
+  conversion, `(u32)`.
+
+What reads as C++ now: FlushSpriteFrameOamQueue calls the OAM shadow
+buffer's methods (`gOamBuffer->Append`, `HideUnused`, `SetAffineScales`;
+gfx.h's three C prototypes went), DrawWrappedTextInBox takes a `Font *`
+and uses its inline `SetMargin` and `HeightToLines` (text.h's C
+prototypes of it and DrawWrappedText went: no C caller), and ClearKeys
+is `KeyInput::KeyInput()` (spawners.hpp; cxx_symbols.txt already mapped
+`__8KeyInput`; system.h's `void *ClearKeys(void *self)` went). The
+other functions stay free functions: UpdateKeys and GetDpadDirection
+take `gInput`, a `void *` to their many callers, and the rest have no
+class.
+
+Kept, each still needed under C++ (tools/match_prune.py, every site
+tried): WaitForKeyPress's r4 pin (`.text` differs at +0x6 without),
+FindSubstring's two pins (ip: 8 bytes longer; r3: differs at +0x242)
+and its five instruction `asm`s (the four lower-casing folds also
+tried as an inline function under agbcp: still a conditional move),
+string's `strcpy`/`strlen` asm labels and memory's hand-written
+`mem_walk_heaps`. `MATCH_HOLD_REG` 87 -> 87 and instruction-emitting
+`asm` 17 -> 17 project-wide (tools/match_idioms.py).
 
 ### Next batches
 

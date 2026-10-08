@@ -1,5 +1,7 @@
+extern "C" {
 #include "core.h"
 #include "memory.h"
+}
 
 static inline void mem_free_bytes_update(s32 flags)
 {
@@ -61,7 +63,7 @@ static inline void mem_collect_join_blocks(struct mem_block *into, struct mem_bl
 static inline void mem_collect_heap(struct mem_heap_header *start)
 {
     struct mem_block *heapblock = &start->header;
-    u8 *buffer = NULL;
+    u8 *buffer = 0;
     struct mem_block *current = heapblock->next;
 
     if (current == heapblock) {
@@ -80,7 +82,7 @@ static inline void mem_collect_heap(struct mem_heap_header *start)
 
         buffer = current->buffer;
 
-        if (buffer == NULL) {
+        if (buffer == 0) {
             goto next_iteration;
         }
 
@@ -229,10 +231,10 @@ void *mem_alloc(u32 requestedSize, u32 flags)
     current = heap->base.nextFreeBlock;
     end = current->tail;
 
-    for (; current->status != MEMORY_STATUS_FREE || current->size < alignedSize;
+    for (; current->status != MEMORY_STATUS_FREE || (u32)current->size < alignedSize;
          current = current->next) {
         if (current == end) {
-            return NULL;
+            return 0;
         }
     }
 
@@ -240,7 +242,7 @@ void *mem_alloc(u32 requestedSize, u32 flags)
 
     // do not bother updating sizes if the difference in bytes
     // is not enough to fit a decent block of free data
-    if (freeBytesAfterReservation > 0x40U) {
+    if ((u32)freeBytesAfterReservation > 0x40U) {
         struct mem_block *newBlockAfter = (struct mem_block *)((u32)current + alignedSize);
         struct mem_block *temp_r1_3;
 
@@ -267,7 +269,7 @@ void mem_free(void *address)
     struct mem_block *adjacent;
     struct mem_block *current;
 
-    if (address == NULL) {
+    if (address == 0) {
         return;
     }
 

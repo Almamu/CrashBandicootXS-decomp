@@ -661,7 +661,7 @@ def build_target(name, start, end, source=None):
         out_s.write_text(text)
         run(AS + ["-o", str(out_o), str(out_s)])
     else:
-        # Straddles both frozen sources (only irq.c does) - slice each
+        # Straddles both frozen sources (only irq.cpp does) - slice each
         # half separately, then merge.
         legacy_text = slice_source(LEGACY, start, CODE3_START)
         code3_text = slice_source(CODE3, CODE3_START, end)

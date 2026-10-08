@@ -34,12 +34,12 @@ and [graphics_loading.md](./graphics_loading.md).
   `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
   `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`,
   `CountClearGems`, `CountCrystals`
-- `src/gfx/fade.c`: `StepBrightnessFade`, `FadeBrightness`
-- `src/gfx/fade.c`: `DarkenPalette`
+- `src/gfx/fade.cpp`: `StepBrightnessFade`, `FadeBrightness`
+- `src/gfx/fade.cpp`: `DarkenPalette`
 - `src/actor/actor_anim.c`: `GetAnimFrameBaseOffset`
-- `src/gfx/fade_to_black.c` (new file - `FadePaletteToBlack`,
+- `src/gfx/fade_to_black.cpp` (new file - `FadePaletteToBlack`,
   `IsBrightnessFadeActive`) and
-  `src/gfx/display.c` (new file - `SetDispcntMode`,
+  `src/gfx/display.cpp` (new file - `SetDispcntMode`,
   `HideBg3`,
   `HideBg2`, `HideBg1`, `HideBg0`, `HideObj`,
   `ShowBg3`, `ShowBg2`, `ShowBg1`, `ShowBg0`,
@@ -59,7 +59,7 @@ and [graphics_loading.md](./graphics_loading.md).
   object joined `OLD_AGBCC_OBJS`); see
   [strag3-naked-retry.md](../matching/archive/strag3-naked-retry.md).
 
-- `src/util/aabb.c` (new file): `CommitBlendRegs` (BLDCNT/
+- `src/util/aabb.cpp` (new file): `CommitBlendRegs` (BLDCNT/
   BLDALPHA/BLDY shadow commit - was previously NAKED, now matched as
   real C via an inline-asm-materialized store-and-increment pair
   opaque to the peephole fusion that otherwise always combines it into
@@ -69,7 +69,7 @@ and [graphics_loading.md](./graphics_loading.md).
   overlap tests (one already referenced by name from `actor.md`'s
   `player_update.c`) plus `mem_free`/`mem_alloc` wrappers.
 
-- `src/gfx/bitmap_screen.c` (new file, replacing `asm/code_3_1.s` -
+- `src/gfx/bitmap_screen.cpp` (new file, replacing `asm/code_3_1.s` -
   boot-adjacent but not part of `src/system/boot.c` since
   `main.c`/`memory.c`/`irq.c` sit between them in ROM order):
   `ShowBitmapScreen` - BG2 affine setup for a full-screen intro image; see

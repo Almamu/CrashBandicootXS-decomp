@@ -186,7 +186,7 @@ now gone) - see
 Picked up the last big raw piece of the `UpdateGameFrame`-`MainLoop`
 cluster: `UpdateGameFrame` itself (ROM `0x080225A0`-`0x08022BF0`, ~730
 instructions), called once a frame from `MainLoop`
-(`src/system/main_loop.c`) with `self` = `gLevelState` - the same
+(`src/system/main_loop.cpp`) with `self` = `gLevelState` - the same
 per-level state object `EndBonusRound`/`SetCheckpointAtPlayer` (`bonus_round.c`) and
 the `self+0x80`-`0xc4`/`+2` accessor family (`level_state.c`) already
 operate on. `docs/matching.md`'s original entry for this chunk (search

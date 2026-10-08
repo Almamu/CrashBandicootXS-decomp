@@ -7,11 +7,11 @@ category page - see [game_loop.md](./game_loop.md).
 
 ## Matched
 
-- `src/system/main.c`: `AgbMain`
-- `src/system/memory.c`: `mem_heap_init`, `mem_collect`, `mem_free_bytes`,
+- `src/system/main.cpp`: `AgbMain`
+- `src/system/memory.cpp`: `mem_heap_init`, `mem_collect`, `mem_free_bytes`,
   `mem_alloc`, `mem_free`, `mem_heap_shutdown`, `mem_walk_heaps` (unreachable -
   see `docs/decomp_dev.md` for what it is and why it's kept)
-- `src/system/irq.c`: `IrqDisable`, `IrqSetup`, `IrqEmptyHandler`,
+- `src/system/irq.cpp`: `IrqDisable`, `IrqSetup`, `IrqEmptyHandler`,
   `EnableVBlankHandler`, `DisableVBlankHandler`, `RemoveVBlankCallback`, `AddVBlankCallback` (2025,
   original `code_1.s`/`code_2.s` lineage), plus `WaitForVBlank`,
   `DisableFrameLimit`, `SetFrameLimit`, `VBlankHandler`, `GetDpadDirection`,
@@ -24,8 +24,8 @@ category page - see [game_loop.md](./game_loop.md).
   and `LookupSpriteFrameCache` in the seventh with agbcc_arm_patched) and `src/iwram/iwram_data.c` (the
   initialised IWRAM globals) - see
   [iwram-image.md](../matching/iwram-image.md).
-- `src/system/asset.c`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
-- `src/system/input.c`: `WaitForKeyPress` (input-poll-until-button/
+- `src/system/asset.cpp`: `LoadTaggedAsset`, `LoadBackgroundTileAndPalette`
+- `src/system/input.cpp`: `WaitForKeyPress` (input-poll-until-button/
   timeout helper) - was previously NAKED, now matched as real C by
   writing the count-limited loop's cancel-check block textually before
   the poll/confirm-check code (matching the ROM's own basic-block

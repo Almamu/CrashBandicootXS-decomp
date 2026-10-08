@@ -81,7 +81,7 @@ rename nullsub_10 IrqEmptyHandler
 
 # The original disassembly has a local label here (`_0800039C:`, likely
 # because something branches to it) but never recognized it as its own
-# function - src/system/memory.c now has this as a properly-disassembled
+# function - src/system/memory.cpp now has this as a properly-disassembled
 # (if unreachable) `sub_800039C`, see its comment there.
 split 0x0800039C mem_walk_heaps
 
@@ -100,7 +100,7 @@ split 0x0803B5E0 DamageActor
 split 0x0803B5E4 IsJetpackPlayerUnshootable
 
 # GitHub issue #47, graphics_loading (sprite frame VRAM pool/OAM queue
-# cluster at 0x08028BA0-0x080291A4) - see src/gfx/sprite_frame.c.
+# cluster at 0x08028BA0-0x080291A4) - see src/gfx/sprite_frame.cpp.
 rename sub_8028C48 FreeVramTileBlock
 rename sub_8028CD4 AllocVramTileBlock
 rename sub_8028DB8 FreeObjTileFreeList
@@ -116,7 +116,7 @@ rename sub_8029168 FreeCategorySpriteSheet
 # sub_8028D6C's (WalkVramTileBlocks') real body runs to 0x08028D94, then a second, separate
 # function starts there with no thumb_func_start of its own in the
 # original disassembly (same pattern as sub_800039C above) - see
-# src/gfx/sprite_frame.c's comment on GetFreeVramTileBytes.
+# src/gfx/sprite_frame.cpp's comment on GetFreeVramTileBytes.
 split 0x08028D94 GetFreeVramTileBytes
 
 # src/crates/slot_crate.c: sub_8010AF8 follows sub_8010AEC's (GetCrateFallSpeed) padding

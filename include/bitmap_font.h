@@ -67,7 +67,7 @@ struct bitmap_font {
     u32 marginX;
     /* Line height: added to `posY` on a newline character; also used
      * as a plain divisor by `FontHeightToLines`/`DrawWrappedTextInBox`
-     * (src/text/text_box.c). */
+     * (src/text/text_box.cpp). */
     s32 lineHeight;
     /* Advance width contributed by a literal space character, in place
      * of a `glyphRecords` lookup. */

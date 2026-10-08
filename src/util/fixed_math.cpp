@@ -1,8 +1,10 @@
+extern "C" {
 #include "core.h"
 #include <agb_syscall.h>
 #include <libgcc.h>
 #include "util.h"
 #include "math_util.h"
+}
 
 /* Fixed-point helpers on the game's 24.8 coordinates (the s16 ones on
  * 8.8 values).

@@ -8,16 +8,16 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
 
 ## Matched
 
-- **`InitObjTileFreeList`**, **`FreeVramTileBlock`** (`src/gfx/sprite_frame.c`,
+- **`InitObjTileFreeList`**, **`FreeVramTileBlock`** (`src/gfx/sprite_frame.cpp`,
   the OBJ-tile VRAM free-list allocator's init/free pair) - matched.
-- **`AllocVramTileBlock`** (`src/gfx/sprite_frame.c`) - matched.
+- **`AllocVramTileBlock`** (`src/gfx/sprite_frame.cpp`) - matched.
   The `mem_alloc`-shaped next-fit search over that same free list, closed
   via one continuous `asm volatile` island spanning the search loop
   through the free-list split - see
   [issue-47-graphics-loading.md](../matching/archive/issue-47-graphics-loading.md)
   for the full writeup of the gcc-2.9 cross-jump/tail-merging gap this
   closed and the technique used.
-- **`WalkVramTileBlocks`**, **`GetFreeVramTileBytes`** (`src/gfx/sprite_frame.c`) -
+- **`WalkVramTileBlocks`**, **`GetFreeVramTileBytes`** (`src/gfx/sprite_frame.cpp`) -
   matched, both `UNUSED` (no caller anywhere in the ROM). `GetFreeVramTileBytes`
   never had its own `thumb_func_start` in the original disassembly - see
   `expected/corrections.txt`'s `split 0x08028D94` entry.
@@ -26,7 +26,7 @@ family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked a
   **`LoadSpriteFrameTiles`**, **`SetupSpriteFrameOam`**, **`FreeSpriteFrameCache`**,
   **`AgeSpriteFrameCache`**, **`InitSpriteFrameCache`**, **`GetSpriteShapeSizeBits`**,
   **`FreeCategorySpriteSheet`**, **`DecompressCategorySpriteSheet`**
-  (`src/gfx/sprite_frame.c`) - the per-frame overflow OAM/affine
+  (`src/gfx/sprite_frame.cpp`) - the per-frame overflow OAM/affine
   queue and the sprite-frame VRAM cache built on top of the allocator
   above; matched. See
   [issue-47-graphics-loading.md](../matching/archive/issue-47-graphics-loading.md)

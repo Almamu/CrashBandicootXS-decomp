@@ -47,7 +47,7 @@
 
 /* The Q8 product of two Q8 values (or a Q8 value and a Q8 scale):
  * multiplies, then drops the extra 8 fraction bits. Overflows for large
- * operands, unlike util/fixed_math.c's FixedMul, which shifts first. */
+ * operands, unlike util/fixed_math.cpp's FixedMul, which shifts first. */
 #define Q8_MUL(a, b) (((a) * (b)) >> 8)
 
 /* The Q8 quotient `a / b` (a ratio or scale, e.g. `Q8_DIV(depth,

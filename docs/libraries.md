@@ -51,7 +51,7 @@ Game code includes a library's public header and nothing else from it:
   `EEPROMWrite`, `EEPROMCompare`, `EEPROMWrite1_check`, `struct
   EepromConfig` and `gEepromConfig`. The timer state and helpers are in
   `lib/agb_eeprom/src/agb_eeprom_internal.h`.
-- `<agb_syscall.h>`: the SWI wrappers. `src/system/asset.c` keeps its
+- `<agb_syscall.h>`: the SWI wrappers. `src/system/asset.cpp` keeps its
   own one-argument `LZ77UnCompVram`/`RLUnCompVram` declarations: its
   callers leave the destination in r1 from their own argument, and the
   two-argument call compiles differently.

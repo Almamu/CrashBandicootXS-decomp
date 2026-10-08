@@ -1,8 +1,10 @@
+extern "C" {
 #include "core.h"
 #include "memory.h"
 #include "util.h"
 #include "level.h"
 #include "gfx.h"
+}
 
 /* Sits right after the parked CommitBlendRegs (asm/code_3_1_9.s) and
  * before the still-raw pause-menu/SIO cluster. */

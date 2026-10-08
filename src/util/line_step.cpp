@@ -1,9 +1,11 @@
+extern "C" {
 #include "core.h"
 #include "util.h"
+}
 
-/* Sits right after DrawWrappedTextInBox (ROM 0x08001214, in src/text/text_box.c)
+/* Sits right after DrawWrappedTextInBox (ROM 0x08001214, in src/text/text_box.cpp)
  * and before StepBrightnessFade (still raw in asm/code_3_1_7.s). Not adjacent
- * to InitBresenhamLine (src/util/line.c) in ROM address order - kept in its
+ * to InitBresenhamLine (src/util/line.cpp) in ROM address order - kept in its
  * own file purely because that file's object already links much
  * earlier; both share the struct definition from include/line_util.h. */
 

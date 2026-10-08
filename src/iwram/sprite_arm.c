@@ -204,7 +204,7 @@ static inline s32 ObjTileIndex(u32 vramAddr)
 }
 
 /* gLookupSpriteFrameCacheFunc(frame), LoadSpriteFrameTiles's override hook (see
- * sprite_frame.c): returns the OBJ tile index of `frame` if it is
+ * sprite_frame.cpp): returns the OBJ tile index of `frame` if it is
  * already in VRAM, or -1. Hits in this frame's list are returned as they
  * are; a hit in last frame's list is moved to the head of this frame's
  * list first.

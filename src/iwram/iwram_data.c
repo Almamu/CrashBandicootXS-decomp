@@ -33,13 +33,13 @@
  */
 
 
-/* src/system/memory.c's heaps, and their free space right after
+/* src/system/memory.cpp's heaps, and their free space right after
  * mem_heap_init (checked by mem_heap_shutdown). */
 struct mem_heap *mem_iwram_heap_pointer = NULL;
 struct mem_heap *mem_ewram_heap_pointer = NULL;
 s32 mem_initial_free_bytes = 0;
 
-/* irq.c: the frame counter the VBlank handler increments, and the
+/* irq.cpp: the frame counter the VBlank handler increments, and the
  * frame-rate limiter's enable flag. */
 u32 gVBlankCounter = 0;
 u8 gFrameLimitEnabled = 0;
@@ -47,13 +47,13 @@ u8 gFrameLimitEnabled = 0;
  * (audio.cpp). */
 u8 gGaxIrqEnabled = 0;
 
-/* Held keys and newly pressed keys (irq.c's UpdateKeys). */
+/* Held keys and newly pressed keys (irq.cpp's UpdateKeys). */
 union key_state gKeys = { { 0, 0 } };
 
-/* rand.c's seed. */
+/* rand.cpp's seed. */
 u32 gRandSeed = 1;
 
-/* fade.c's brightness fade state. */
+/* fade.cpp's brightness fade state. */
 struct brightness_fade gBrightnessFade = { -1, -1, 0 };
 
 s32 gBrightnessFadeStep = 0;
@@ -92,14 +92,14 @@ const struct cutscene_page *const *gCutsceneTexts[6] = {
 
 struct level_layers *gLevelLayersSingleton = NULL;
 
-/* Per-language string tables (main_loop.c indexes them by
+/* Per-language string tables (main_loop.cpp indexes them by
  * gLanguage), src/data/ui_text_172cd4.c. */
 const u8 *const *gUiTextTables[6] = {
     gUiTextEnglish, gUiTextFrench, gUiTextGerman, gUiTextSpanish, gUiTextItalian, gUiTextDutch,
 };
 
 /* The language, 0-5 (English, French, German, Spanish, Italian, Dutch);
- * main_loop.c sets it at boot. */
+ * main_loop.cpp sets it at boot. */
 s32 gLanguage = 3;
 s32 gHudSlideOffset = 0;
 

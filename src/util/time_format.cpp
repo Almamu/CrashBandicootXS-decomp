@@ -1,6 +1,8 @@
+extern "C" {
 #include "core.h"
 #include <libgcc.h>
 #include "util.h"
+}
 
 /* Sits between the still-parked DrawWrappedText (asm/code_3_1_3.s) and
  * WaitForKeyPress (asm/code_3_1_4.s). */

@@ -1,11 +1,13 @@
+extern "C" {
 #include "core.h"
 #include "system.h"
+}
 
 /* Sits right after the still-parked WaitForKeyPress (asm/code_3_1_5.s) and
  * before whatever's still raw in asm/code_3_1_6.s. */
 
-extern void LZ77UnCompVram(void *src);
-extern void RLUnCompVram(void *src);
+extern "C" void LZ77UnCompVram(void *src);
+extern "C" void RLUnCompVram(void *src);
 
 /* Decompresses (or raw-DMA-copies) a "tagged" asset into `dest`. The
  * asset's first word's high nibble (bits 28-31) selects the format:

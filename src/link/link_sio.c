@@ -11,7 +11,7 @@
  * reload/control word. Always ends with IME re-enabled. `self` (the
  * session pointer every sibling function in this file takes) is never
  * read past the prologue - the ROM genuinely ignores it here, same as
- * `WaitForVBlank` in src/system/irq.c. */
+ * `WaitForVBlank` in src/system/irq.cpp. */
 s32 LinkStart(struct link_session *self, u32 flags)
 {
     u8 arm3 = (u8)flags;
@@ -65,7 +65,7 @@ s32 ResetLinkSession(struct link_session *self)
  * `&players[4]` back to `players` (4 iterations, result unused - the
  * empty destructor loop of the `players` array), then - only if `flags` bit
  * 0 is set - tears the session down (`IwramFree`, matched in
- * src/util/aabb.c, also AudioContext's operator delete in
+ * src/util/aabb.cpp, also AudioContext's operator delete in
  * include/audio.hpp - the IWRAM heap's free).
  */
 void DestroyLinkSession(struct link_session *self, u32 flags)

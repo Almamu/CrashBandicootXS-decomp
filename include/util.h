@@ -11,9 +11,9 @@
  *
  * DestroyLargeFont/DestroySmallFont (src/util/aabb_setup.cpp) are
  * LargeFont's and SmallFont's destructors (include/font.hpp).
- * strcpy/strlen (src/util/string.c, defined under the C names
+ * strcpy/strlen (src/util/string.cpp, defined under the C names
  * CopyString/StringLength to avoid gcc's built-ins) are not declared
- * here: nothing outside string.c calls them. */
+ * here: nothing outside string.cpp calls them. */
 
 #include "core.h"
 #include "aabb.h"
@@ -24,7 +24,7 @@ struct level_state;
 /* The RNG's state (src/iwram/iwram_data.c). */
 extern u32 gRandSeed;
 
-/* src/util/aabb.c */
+/* src/util/aabb.cpp */
 extern void CommitBlendRegs(void);
 extern u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b);
 extern u8 AabbOverlaps(struct aabb *a, struct aabb *b);
@@ -36,7 +36,7 @@ extern void SetAabbSize(struct aabb *dest, s32 w, s32 h);
 extern void SetAabbPos(struct aabb *dest, s32 x, s32 y);
 extern s32 GetLives(struct level_state *self);
 
-/* src/util/fixed_math.c */
+/* src/util/fixed_math.cpp */
 extern s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2);
 extern u32 FixedDist(s32 x1, s32 x2, s32 y1, s32 y2);
 extern s32 FixedDiv(s32 a, s32 b);
@@ -45,30 +45,30 @@ extern s32 FixedInverse16(s32 a);
 extern s32 FixedDiv16(s32 a, s32 b);
 extern s32 FixedMul16(s32 a, s32 b);
 
-/* src/util/line.c, src/util/line_step.c */
+/* src/util/line.cpp, src/util/line_step.cpp */
 extern void InitBresenhamLine(struct bresenham_line *line);
 extern void StepBresenhamLine(struct bresenham_line *line);
 
-/* src/util/number_format.c */
+/* src/util/number_format.cpp */
 extern s32 itoa(s32 value, u8 *buffer, s32 base);
 extern u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar, s32 *charsConsumedPtr);
 
-/* src/util/printf.c */
+/* src/util/printf.cpp */
 extern void vsprintf(u8 *dest, u8 *fmt, u32 *args);
 extern void sprintf(u8 *dest, u8 *fmt, ...);
 extern u8 *FindSubstring(u8 *haystack, u8 *needle, s32 caseInsensitive);
 
-/* src/util/rand.c */
+/* src/util/rand.cpp */
 extern void srand(u32 seed);
 extern u16 RandRange(s32 max);
 extern u16 rand(void);
 
-/* src/util/string.c */
+/* src/util/string.cpp */
 extern s32 CountNonSpaceChars(u8 *s);
 extern void strcat(u8 *dst, u8 *src);
 extern void strncpy(u8 *dst, u8 *src, s32 n);
 
-/* src/util/time_format.c */
+/* src/util/time_format.cpp */
 extern void FormatCentiseconds(s32 value, u8 *buf);
 
 #endif /* GUARD_UTIL_H */

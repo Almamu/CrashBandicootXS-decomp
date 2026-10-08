@@ -325,7 +325,7 @@
     "GetDpadDirection"
    ],
    "consumer_files": [
-    "system/irq.c"
+    "system/irq.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,

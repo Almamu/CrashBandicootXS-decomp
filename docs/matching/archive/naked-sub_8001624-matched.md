@@ -1,6 +1,6 @@
 # `CommitBlendRegs` converted from NAKED transcription to real matched C
 
-`CommitBlendRegs` (`src/util/aabb.c`) had been parked as a
+`CommitBlendRegs` (`src/util/aabb.cpp`) had been parked as a
 byte-correct NAKED asm transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real

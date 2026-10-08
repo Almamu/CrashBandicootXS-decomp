@@ -40,7 +40,7 @@ behavior. This pass worked those three:
   `self->field_10 = InitStarfield(OperatorNew(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same
-  quartet already matched in `src/gfx/display.c`); zeroes
+  quartet already matched in `src/gfx/display.cpp`); zeroes
   the scratch object's first two words; and starts song `0xb` via
   `StartSong(gAudioContext, 0xb)` (`gAudioContext` is the
   `struct AudioContext *` from `include/audio.h`/`src/audio/audio.c`).

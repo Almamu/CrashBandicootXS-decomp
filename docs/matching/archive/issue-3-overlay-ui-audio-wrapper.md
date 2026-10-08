@@ -174,7 +174,7 @@ ROM does, no matter how the field access or pointer arithmetic was
 phrased. Since the semantics were already fully confirmed (this
 document's own derivation), the function was converted to a
 byte-verified NAKED asm transcription instead - the established pattern
-for this class of gap (see `src/util/printf.c`'s `FindSubstring`).
+for this class of gap (see `src/util/printf.cpp`'s `FindSubstring`).
 Every instruction now matches the ROM exactly; verified via a full
 clean `make compare` (`La suma coincide`). `PlayAmbientSfx` no longer sits
 under `asm/code_3_1_10_2.s` (deleted) - its NAKED definition lives

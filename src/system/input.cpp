@@ -1,9 +1,11 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "system.h"
 #include "globals.h"
+}
 
-/* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_format.c) and
+/* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_format.cpp) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
 /* Polls input (via WaitForVBlank/UpdateKeys, the same VBlank-wait-then-
@@ -17,7 +19,7 @@
  * clear and `count == 0`, it returns 1 immediately without polling at
  * all. Reads the "newly pressed this frame" keys (`gKeys`'s
  * companion u16 at +2, see `UpdateKeys`'s own notes in
- * `src/system/irq.c`) fresh each poll (no caching across polls, since
+ * `src/system/irq.cpp`) fresh each poll (no caching across polls, since
  * `UpdateKeys`'s call in between could change it). `UpdateKeys`
  * takes the input object (`gInput`, in r0 at every call) but never
  * reads it (system.h). Built with old_agbcc: agbcc loads `pressed`

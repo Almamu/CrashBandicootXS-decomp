@@ -447,7 +447,7 @@ AudioContext::AudioContext()
 }
 
 /* Disables the GBA's V-Count interrupt - a counterpart to
- * `DisableVBlankHandler` (VBlank) in src/system/irq.c. `this` is unused;
+ * `DisableVBlankHandler` (VBlank) in src/system/irq.cpp. `this` is unused;
  * LevelState's destructor calls it on gAudioContext. */
 void AudioContext::DisableVCountIrq()
 {

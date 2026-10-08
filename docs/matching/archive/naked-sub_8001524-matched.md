@@ -1,6 +1,6 @@
 # `SetDispcntMode` converted from NAKED transcription to real matched C
 
-`SetDispcntMode` (`src/gfx/display.c`) had been parked as a
+`SetDispcntMode` (`src/gfx/display.cpp`) had been parked as a
 byte-correct NAKED asm transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real

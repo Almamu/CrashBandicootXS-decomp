@@ -9,7 +9,7 @@ extern "C" {
 /* Sits right after the permanent hand-written `start`/`init_vector`
  * boot stub in asm/crt0.s (never decompiled - it's the CPU-mode/stack
  * setup and BIOS RegisterRamReset call every GBA ROM needs before
- * `AgbMain` in src/system/main.c can run) and before main.c itself. */
+ * `AgbMain` in src/system/main.cpp can run) and before main.cpp itself. */
 
 /* BIOS `Div` (SWI 6) wrapper exposing both the quotient (return value)
  * and the remainder (via `remainderOut`). Written with inline asm

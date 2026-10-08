@@ -1,12 +1,14 @@
+extern "C" {
 #include "core.h"
 #include "gfx.h"
 #include "util.h"
 #include "system.h"
+}
 
-/* Sits right after src/system/irq.c's matched functions and before
- * src/util/fixed_math.c - the only function in this address range,
+/* Sits right after src/system/irq.cpp's matched functions and before
+ * src/util/fixed_math.cpp - the only function in this address range,
  * non-adjacent to boot.cpp's MemCopy32/UpdateCtrl since
- * main.c/memory.c/irq.c sit between them. Replaced the raw
+ * main.cpp/memory.c/irq.c sit between them. Replaced the raw
  * asm/code_3_1.s (now deleted - this was its only function). */
 
 /* Sets up BG2 for an affine full-screen image (mode 1, BG2 as an
