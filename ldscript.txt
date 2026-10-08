@@ -393,7 +393,104 @@ SECTIONS
         build/crashbandicootxs/lib/agb_eeprom/data/eeprom_5a9eec.o(.rodata);
         build/crashbandicootxs/src/data/cutscene_pictures_5a9f70.o(.rodata);
         build/crashbandicootxs/data/data.o(.rodata.0861BADC);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata);
+        /* The 93 vtables (0x087E3BEC-0x087E55E4), one section each, in
+         * ROM order: a g++-emitted one is its class's
+         * .gnu.linkonce.d._vt.<class> section in its key-method object,
+         * the others are C tables (src/data/entity_vtables_7e3bec.c,
+         * .rodata.<name>). See docs/cplusplus.md, "Emitting the vtables". */
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gEntityVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gSpriteObjVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gUiSpriteObjVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gMovingSpriteVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gGroundSpriteVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlayerVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCtrlVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gEnemyCtrlVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPeriodicSpawnerVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gKnockedEnemyCtrlVtable);
+        build/crashbandicootxs/src/objects/effect_ctrl.o(.gnu.linkonce.d._vt.10EffectCtrl); /* gEffectCtrlVtable */
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gExtraLifeVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gWumpaVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gStopwatchVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gActionCtrlVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlayerCtrlVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gInputCtrlVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBossCtrlVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gMegaMixCtrlVtable);
+        build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */
+        build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.gnu.linkonce.d._vt.15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gUnusedOneShotAnimCtrlVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gTinyVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexBossGemVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexBossPlatformMoverVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexShotVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexTargetVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexCannonVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexBossVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileSharkVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileProjectileVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileShieldVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlatformVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlatformMoverVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCameraLeadVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLaunchPadVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLevelSelectEntryVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgStreamerVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerBaseVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBgLayerVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPooledBgLayerVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHudPartVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLargeFontVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gSmallFontVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gFontVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gActorVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gRiderlessPolarVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarCheckpointTextVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarPlayerVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarCollectedWumpaVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarWumpaVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarTimeCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarQuestionCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarAkuAkuCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarNitroCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarLifeCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarFourWumpaCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarBasicCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarElectricFenceVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarObstacleVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarLauncherVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarPenguinVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarIcicleVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarAkuAkuVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarGoalVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarBoostPadVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPolarCheckpointCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackCheckpointTextVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackExplosionVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackPlayerVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackShotVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackPlaneVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackBomberVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackCannonballVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gAirshipFireballVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackBalloonVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackHealthCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackTimeCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackQuestionCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackBalloonCrateVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackParachuteNitroVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackRocketVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackRingVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gJetpackCollectedWumpaVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftFireballVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftCannonVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftLauncherVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftSideGunVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gHovercraftCannonFlashVtable);
+        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gLogoActorVtable);
 
 	} = 0
 

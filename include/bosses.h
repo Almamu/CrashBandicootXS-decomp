@@ -164,13 +164,12 @@ extern void AirshipStateCannon(void);
 /* src/bosses/airship_touch.cpp */
 extern u8 IsTouchingAirship(void *self);
 
-/* src/bosses/cortex.cpp: the methods of OneShotAnimCtrl (include/ctrl.hpp),
- * UnusedOneShotAnimCtrl, TinyCtrl, CortexBossCtrl, CortexTargetCtrl,
- * CortexShotCtrl, CortexBossGemCtrl (include/boss_ctrl.hpp) and
+/* src/bosses/cortex.cpp: the methods of UnusedOneShotAnimCtrl, TinyCtrl,
+ * CortexBossCtrl, CortexTargetCtrl, CortexShotCtrl, CortexBossGemCtrl
+ * (include/boss_ctrl.hpp) and
  * CortexBossPlatformMover (include/platform.hpp) under their C names
  * (cxx_symbols.txt), for the vtables. nullsub_19 and SpawnCortexBossGem
  * (spawn_gems.cpp calls it) have C linkage. */
-extern void DestroyOneShotAnimCtrl(void *self, s32 flags);
 extern void UpdateUnusedOneShotAnimCtrl(void *self, void *part);
 extern void DestroyUnusedOneShotAnimCtrl(void *self, s32 flags);
 extern void nullsub_19(void *self, void *part);
@@ -294,14 +293,6 @@ extern void ResetMegaMixCtrl(void *self);
 extern void DestroyMegaMixCtrl(void *self, s32 flags);
 extern void UpdateMegaMix(void *self, void *part);
 
-/* src/bosses/tiny_hop_pad.cpp: StompedHopPadCtrl's methods and
- * OneShotAnimCtrl's Update (include/ctrl.hpp)
- * under their C names (cxx_symbols.txt), for the vtables and the C
- * callers. */
-extern void UpdateStompedHopPad(void *obj, void *other);
-extern void DestroyStompedHopPadCtrl(void *self, s32 flags);
-extern void UpdateOneShotAnimCtrl(void *unused, void *other);
-
 /* src/bosses/tiny_update.cpp: TinyCtrl's methods (include/boss_ctrl.hpp)
  * under their C names (cxx_symbols.txt), for the vtable. */
 extern void UpdateTiny(void *self, void *part);
@@ -424,8 +415,6 @@ extern const struct vtable_slot gHovercraftFireballVtable[7];
 extern const struct vtable_slot gHovercraftLauncherVtable[7];
 extern const struct vtable_slot gHovercraftSideGunVtable[7];
 extern const struct vtable_slot gMegaMixCtrlVtable[13];
-extern const struct vtable_slot gOneShotAnimCtrlVtable[13];
-extern const struct vtable_slot gStompedHopPadVtable[13];
 extern const struct vtable_slot gTinyVtable[13];
 extern const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13];
 

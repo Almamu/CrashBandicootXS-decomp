@@ -4,11 +4,13 @@
 /* The controller classes as C++ (#664, docs/cplusplus.md), for the
  * objects built by agbcp/old_agbcp (the Makefile's CXX_OBJS).
  *
- * `#pragma interface` keeps g++ from emitting the classes' vtables: the
- * ROM's are the C tables in src/data/entity_vtables_7e3bec.c, and
- * cxx_symbols.txt maps the mangled vtable, method, constructor and
- * destructor names onto those tables' and functions' C names. */
-#pragma interface
+ * No `#pragma interface`: g++ emits each class's vtable in the object
+ * that defines its first non-inline virtual method (its key method),
+ * and ldscript.txt places it at its ROM address (docs/cplusplus.md,
+ * "Emitting the vtables"). Ctrl's own, gCtrlVtable, is still C data
+ * (src/data/entity_vtables_7e3bec.c): its key method, Update
+ * (UpdateCtrl), is C. cxx_symbols.txt maps the mangled vtable, method,
+ * constructor and destructor names onto their C names. */
 
 extern "C" {
 #include "core.h"

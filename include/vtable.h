@@ -20,4 +20,10 @@ struct vtable_slot {
 
 #define VTABLE_SLOT(func) { 0, 0, (void *)(func) }
 
+/* Puts a C table in a section of its own, `.rodata.<name>`, so that
+ * ldscript.txt can place each table at its ROM address, between the
+ * tables g++ emits (`.gnu.linkonce.d._vt.<class>` in the class's
+ * key-method object: docs/cplusplus.md, "Emitting the vtables"). */
+#define VTABLE_SECTION(name) __attribute__((section(".rodata." #name)))
+
 #endif /* !GUARD_VTABLE_H */

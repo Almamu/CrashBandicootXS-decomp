@@ -158,14 +158,6 @@ extern void AttachCtrl(void *self, s32 val);
 extern void DestroyCtrl(void *self, s32 flags);
 extern s32 GetCtrlMode(void *self);
 
-/* src/objects/effect_ctrl.cpp: EffectCtrl's methods (include/ctrl.hpp) under
- * their C names (cxx_symbols.txt), for gEffectCtrlVtable and the C
- * callers. */
-extern void UpdateEffectCtrl(void *self, void *part);
-extern void EffectCtrlHandleEvent(void *self, void *sender, s32 event, s32 arg);
-extern void ResetEffectCtrl(void *self);
-extern void DestroyEffectCtrl(void *self, s32 flags);
-
 /* src/objects/ground_sprite.cpp */
 extern void DrawGroundSprite(void *self);
 extern s32 GetGroundSpriteClassId(void);
@@ -381,7 +373,6 @@ extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 
 /* The method tables (src/data/entity_vtables_7e3bec.c) */
 extern const struct vtable_slot gCtrlVtable[13];
-extern const struct vtable_slot gEffectCtrlVtable[13];
 extern const struct vtable_slot gGroundSpriteVtable[15];
 extern const struct vtable_slot gMovingSpriteVtable[15];
 extern const struct vtable_slot gPlatformVtable[15];
