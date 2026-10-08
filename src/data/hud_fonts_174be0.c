@@ -54,7 +54,7 @@ const struct hud_pos gHudPartPositions[35] = {
 };
 
 /* The two HUD fonts built by InitSmallFont and InitLargeFont
- * (font_glyph.c): the characters each font has, in glyph
+ * (SmallFont/LargeFont, font_glyph.cpp): the characters each font has, in glyph
  * order (the widget's charLookup maps a character to its position
  * here), then each glyph's metrics. Latin-1. */
 const u8 gSmallFontChars[] = "abcdefghijklmnopqrstuvwxyz0123456789-+!:,?.'%<>\344\340\341\342\353\350\351\352\357\354\355\356\366\362\363\364\374\371\372\373\361\337\347\277\241\264?\234ABLR";

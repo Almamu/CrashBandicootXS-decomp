@@ -5,7 +5,7 @@
 
 /* An axis-aligned box: position and size, in pixels or fixed-point
  * world units depending on the caller. SetAabbPos/SetAabbSize
- * (src/util/aabb_setup.c) fill one, AabbOverlaps/AabbOverlapsInclusiveX
+ * (src/util/aabb_setup.cpp) fill one, AabbOverlaps/AabbOverlapsInclusiveX
  * (src/util/aabb.c) test two for overlap, and the text renderer
  * (DrawWrappedText/DrawWrappedTextInBox, include/text.h) uses one as the
  * text rectangle. GetSpriteHitbox and the other sprite box getters

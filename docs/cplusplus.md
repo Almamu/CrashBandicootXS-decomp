@@ -61,8 +61,9 @@ ROM). The region is nothing but vtables (831 * 8 bytes = 0x19F8). Their
 order follows the order of the classes' code: taking each table's
 destructor as its class's marker, 85 of the 93 are in ascending code
 order, which is what you get when each vtable is emitted with its class's
-first virtual method. Since step 10, g++ emits 85 of them from the
-classes ([Emitting the vtables](#emitting-the-vtables-step-10)).
+first virtual method. Since step 10b, g++ emits all 93 from the classes
+([Emitting the vtables](#emitting-the-vtables-step-10), [the last C
+vtables](#the-last-c-vtables-step-10b)).
 
 **What is C.** The libraries under `lib/`: Shin'en's GAX2, Nintendo's
 AgbEeprom SDK, libgcc and the BIOS wrappers ([libraries.md](libraries.md))
@@ -381,22 +382,25 @@ $(OBJCOPY) --redefine-syms=cxx_symbols.txt foo.o
   "C" { }`, with the same warning flags and `-Werror`. C++-only
   declarations go in `.hpp` headers (`include/ctrl.hpp`,
   `include/sprite_obj.hpp`), next to the C structs they mirror (see
-  [Progress](#progress)). Two C declarations have a C++ type: globals.h
+  [Progress](#progress)). A few C declarations have a C++ type: globals.h
   declares `gPlayer` as a `Player *` under `__cplusplus` (`extern class
   Player *gPlayer;`, still C linkage) and as a `struct player *` for C
   (part 8), and `gEntitySpawner` as an `EntitySpawner *` and a `struct
-  entity_spawner *` (part 9).
+  entity_spawner *` (part 9); text.h `gSmallFont`/`gLargeFont` as `Font
+  *`s and DrawWrappedText's and DrawWrappedTextInBox's font parameter as
+  a `Font *`, cutscene.h `struct cutscene_player`'s `font` field, and
+  level.h `gLevelLayersSingleton` as a `LevelLayers *` (step 10b).
 - **Vtables are g++'s.** A class header has no `#pragma interface`, so
   g++ emits each class's vtable in its key-method object, as a weak
   symbol in a `.gnu.linkonce.d._vt.<len><Class>` section, and
   ldscript.txt places that section at the table's ROM address. A key-method
   object that would also get out-of-line copies of the class's inline
   methods the ROM doesn't have is in the Makefile's
-  `NO_IMPLEMENT_INLINES_OBJS` (`-fno-implement-inlines`). Only the 8
-  tables whose classes' key methods are C stay C arrays in
-  `src/data/entity_vtables_7e3bec.c`. See [Emitting the
-  vtables](#emitting-the-vtables-step-10); until step 10 every header
-  but entity.hpp had `#pragma interface` and all 93 tables were C.
+  `NO_IMPLEMENT_INLINES_OBJS` (`-fno-implement-inlines`). See [Emitting
+  the vtables](#emitting-the-vtables-step-10); until step 10 every header
+  but entity.hpp had `#pragma interface` and all 93 tables were C, and
+  until step 10b the 8 whose classes' key methods were C stayed C arrays
+  (src/data/entity_vtables_7e3bec.c, gone).
   Headers with no polymorphic class (crate_list.hpp, menus.hpp,
   spawners.hpp) keep the pragma.
 - **Names.** `cxx_symbols.txt` maps each mangled name the C++ objects
@@ -589,6 +593,21 @@ counts them by kind) and what the C++ still needs.
 | `src/vehicle/jetpack_crates.cpp` | `JetpackBalloonCrate` (include/vehicle.hpp): `Update`, `Damage`, `Break`, `IsUnshootable`, the destructor, the out-of-line constructor (`InitJetpackBalloonCrate`, unused), `ClearBalloon`, `RunState` (unused), 3 states; `JetpackHealthCrate`, `JetpackTimeCrate`, `JetpackQuestionCrate`: constructors (`CreateJetpack*Crate`), `Update`, `Damage`; `JetpackParachuteNitro`, `JetpackRocket`: constructors, `Update`, `Damage`, `IsUnshootable`, `JetpackRocket::Launch`; `JetpackRing::Update` | 30 | agbcp (both match) | 62 pins, 3 `asm`, a file-scope `asm` literal pool, 30 retyped stores, 19 retyped reads, 2 `ACTOR_PMF_CALL`s, 2 `ACTOR_VCALL`s, 5 hand-written slot calls, the `goto` dispatch chains, a `__divsi3` call -> 0 | 11g |
 | `src/data/actor_pmf_17c42c.cpp` | `JetpackBalloonCrate::stateFuncs` (gJetpackBalloonCrateStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11g |
 | `src/vehicle/jetpack_spawn.cpp` (again) | the crates', the parachute nitro's and the rocket's spawners: `new` | 0 + 1 | old_agbcp | 6 C-constructor calls on `AllocActor` (and `AllocActor`) -> 0 | 11g |
+| `src/system/boot.cpp` | `Ctrl::Update` (`UpdateCtrl`), with `DivMod` and `MemCopy32` (C linkage) | 1 + 2 | agbcp | 3 pins, 1 asm -> the same (`DivMod`'s SVC) | step 10b |
+| `src/cutscene/cutscene_player.cpp` | `BgStreamer` and `BgLayerBase`'s constructor, destructor and scroll steps (include/bg_layer.hpp), with the cutscene player's 4 functions (C linkage) | 21 + 4 | old_agbcp | 0 -> 0; 4 vtable stores, 4 slot calls -> 0 | step 10b |
+| `src/level/bg_layer_base.cpp` | `BgLayerBase`'s `Scroll`, `Reset`, `SetSource` and accessors, with the terrain tile cache's lookups (C linkage) | 10 + 5 | old_agbcp | 1 use -> 1 use | step 10b |
+| `src/level/bg_layer_init.cpp` | `BgLayer`'s constructor, `GrowRows`, `GrowColumns`, `ClipColumns`, `ClipRows` | 5 | **old_agbcp** (was agbcc) | 9 pins, 6 asm, a file-scope asm pool -> 0 | step 10b |
+| `src/level/bg_layer.cpp` | `BgLayer`'s other methods, and the out-of-line copies of its inline ones (`GetScreenIndex` ... the destructor) | 19 | old_agbcp | 0 -> 0; 6 slot calls -> 0 | step 10b |
+| `src/level/pooled_bg_layer.cpp` | `PooledBgLayer`'s overrides, `ReleaseColumn`, `ReleaseRow` (split from bg_layer.c), with `nullsub_26` | 9 + 1 | old_agbcp | 0 -> 0 | step 10b |
+| `src/level/tile_slot_pool.cpp` | `PooledBgLayer`'s constructor, destructor, `GetPriority`, with the tile-slot pool (C linkage) | 3 + 5 | **old_agbcp** (was agbcc) | 4 pins, 3 asm -> 2 pins, 1 asm | step 10b |
+| `src/level/level_layers.cpp` | `LevelLayers` (bg_layer.hpp), with `sub_80269DC`, `sub_80269F8`, `sub_8026A14` (C linkage) | 8 + 3 | agbcp | 0 -> 0; 6 slot calls -> 0 | step 10b |
+| `src/text/font.cpp` | `Font` (include/font.hpp): `MeasureText` (font_measure.c), `UploadTiles`, `SetPalette`, `ResetPalette`, and the out-of-line copies of its inline constructor, accessors and destructor | 15 | old_agbcp (font.c was agbcc) | 5 pins, 2 keeps, 2 asm, 1 asm label -> 1 asm label | step 10b |
+| `src/text/font_glyph.cpp` | `Font::DrawGlyph`, `PutChar`; `SmallFont`'s and `LargeFont`'s constructors | 4 | old_agbcp | 8 pins, 3 asm, gotos -> 0 | step 10b |
+| `src/text/font_draw_text.cpp` | `Font::DrawText`, `MeasureChars` | 2 | old_agbcp | 3 pins, gotos -> 0 | step 10b |
+| `src/text/font_draw_chars.cpp` | `Font::DrawChars` | 1 | agbcp | 0 -> 0 | step 10b |
+| `src/text/font_height.cpp` | `Font::TextHeight` | 1 | agbcp | 0 -> 0 | step 10b |
+| `src/util/aabb_setup.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | 2 + 3 | agbcp | 4 asm -> 0 | step 10b |
+| text.h, cutscene.h, frontend.hpp, level_select.hpp, and 11 `.cpp` files | `gSmallFont`/`gLargeFont` are `Font *`s to C++; the fonts' callers make virtual calls and use the inline accessors | 0 | (unchanged) | 31 spelled-out slot calls -> 0 | step 10b |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1633,7 +1652,8 @@ agbcc to old_agbcc's constant-before-`ldrb` order) and move to
   `this`. The globals keep their C types (the C files use them), so the
   new objects are stored through casts to their C views. The audio
   context, the fonts and the entity flags are still C and are built by
-  their C constructors.
+  their C constructors (the fonts are C++ since step 10b: `new
+  SmallFont`, `new LargeFont`).
 - **The parameter records.** text_popup.h's `struct level_record` is
   level_data.h's `struct entity_params` now (level_menu.h has a `union
   level_record`, and C++ has one tag namespace for both), and
@@ -1790,8 +1810,8 @@ three objects were old_agbcc C already and match under old_agbcp.
 - **`InputCtrl`** holds a `CameraLead *`: `new CameraLead`,
   `CollidableList()->Add(cameraLead)`, `cameraLead->Reset()`, and
   `MarkGone()` for its two `ENTITY_MARK_GONE`s.
-- **The fonts are still C** (src/text/, `struct bitmap_font`): their
-  virtual calls stay spelled out through the record's slots.
+- **The fonts were still C** (C++ since step 10b; src/text/, `struct bitmap_font`): their
+  virtual calls stayed spelled out through the record's slots.
 
 What made the C++ match:
 
@@ -1881,8 +1901,8 @@ the new include/actor_self.hpp. Project-wide: `MATCH_HOLD_REG` 1252 ->
   declaration, as `gPlayer`'s). frontend.h keeps the C prototypes (the C
   names), for the vtable data and the C callers (main_loop.c,
   level_state.c, title_screen.c).
-- **The fonts are still C** (src/text/): `DrawLanguageSelect`'s virtual
-  calls stay spelled out through the record's slots.
+- **The fonts were still C** (C++ since step 10b; src/text/): `DrawLanguageSelect`'s virtual
+  calls stayed spelled out through the record's slots.
 
 What made the C++ match:
 
@@ -1939,7 +1959,7 @@ Project-wide: `MATCH_HOLD_REG` 1249 -> 1230, instruction-emitting `asm`
   callers (game_frame.c, continue_prompt.c, title_screen*.c). Part 10d
   converted the continue prompt's C files, and `struct continue_prompt`
   went.
-- **The fonts are still C** (src/text/): the font calls stay spelled out
+- **The fonts were still C** (C++ since step 10b; src/text/): the font calls stayed spelled out
   through the record's slots.
 
 What made the C++ match:
@@ -2009,7 +2029,7 @@ workaround.
   file, vtable or C++ file uses (the level select's, the camera lead's,
   the continue prompt's, and the new classes'). 54 are left: the vtables'
   slots, the C callers' and the free functions.
-- **The fonts are still C** (src/text/): the font calls stay spelled out.
+- **The fonts were still C** (C++ since step 10b; src/text/): the font calls stayed spelled out.
 
 What made the C++ match:
 
@@ -2094,7 +2114,7 @@ Makefile's `NO_STRENGTH_REDUCE_OBJS` with it.
   starfield's seven, the title screen's but the three game_frame.c calls,
   `CompanyLogos`'s but `RunCompanyLogos` (level_state.c), and
   `InitLogoActor`, `DrawVvLogoPieces` and `LoadUniversalLogoBg`.
-- **The fonts are still C** (src/text/): the font calls stay spelled out
+- **The fonts were still C** (C++ since step 10b; src/text/): the font calls stayed spelled out
   (`ICON_TEXT_CALL`, `SetFontTileBase`).
 
 What made the C++ match:
@@ -2875,19 +2895,23 @@ player, then the first item here, is C++ since part 8):
   part 11g the balloon crates, the parachute nitro, the rocket and their
   table; the plan for the rest is
   [below](#the-3d-actors-part-11).
-- **The rest with C++ traits**: the background layers (bg_layer*.c), the
-  fonts (src/text/), the menus (the save menu, and the pause menu's and
+- ~~**The background layers and the fonts**~~ (bg_layer*.c,
+  tile_slot_pool.c, level_layers.c, the streamer in cutscene_player.c;
+  src/text/'s fonts): C++ since step 10b, with `Ctrl::Update`.
+- **The rest with C++ traits**: the menus (the save menu, and the pause menu's and
   the power dialog's plain-C files; all of src/frontend/ is C++: the
   language select and the logo actor since part 10b, the starfield, the
   credits and part of the continue prompt since part 10c, the title
   screen since part 10c-2; the pause menu, the power dialog and the rest
-  of the continue prompt since part 10d), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
-  in system/boot.c) and the room code (play_room.c, run_room.c).
+  of the continue prompt since part 10d), the cutscene player's C files
+  (slideshow*.c), the text box (text_box.c, wrapped_text.c), the HUD and
+  the room code (play_room.c, run_room.c).
 
 ### Emitting the vtables (step 10)
 
-**85 of the 93 vtables are emitted by g++** from the class declarations,
-and only 8 are still C data. Each emitted table comes out byte for byte
+**85 of the 93 vtables are emitted by g++** from the class declarations
+since step 10, and the other 8 since [step
+10b](#the-last-c-vtables-step-10b). Each emitted table comes out byte for byte
 as the ROM has it, so the compiler now checks the hierarchy: a slot out
 of order, a missing override or an extra virtual would change the bytes
 and fail `make compare`. The report stays 2059/2059 functions and 100%
@@ -2903,8 +2927,8 @@ data.
   weak symbol `_vt.<len><Class>`. The contents are the ROM's: slot 0 is
   `{0, 0, 0}` (with `-fno-rtti`) and every slot is `{0, 0, fn}`, with the
   base's methods where the class doesn't override them. A class whose
-  key method is C (`Ctrl`: `Update` is `UpdateCtrl` in system/boot.c) or
-  defined in no object gets no vtable anywhere.
+  key method is C (until step 10b, `Ctrl`: `Update` was `UpdateCtrl` in
+  system/boot.c) or defined in no object gets no vtable anywhere.
 - **The names.** objcopy's `--redefine-syms` (cxx_symbols.txt) already
   renamed `_vt.<len><Class>` to the C table's name, and the relocations
   in the table to the C names of the methods, so nothing else changes:
@@ -2912,11 +2936,10 @@ data.
   remaining C files' references still resolve. Only the section keeps
   its mangled name.
 - **The placement.** ldscript.txt lists the 93 tables one by one, in ROM
-  order (0x087E3BEC-0x087E55E4): an emitted one as
-  `<key-method object>(.gnu.linkonce.d._vt.<len><Class>)`, a C one as
-  `entity_vtables_7e3bec.o(.rodata.<name>)`. For that, every C table is
-  in a section of its own (`VTABLE_SECTION(name)`, include/vtable.h: an
-  `__attribute__((section(".rodata.<name>")))`). Naming the object
+  order (0x087E3BEC-0x087E55E4), each as `<key-method
+  object>(.gnu.linkonce.d._vt.<len><Class>)` (until step 10b, a C one as
+  `entity_vtables_7e3bec.o(.rodata.<name>)`, in a section of its own
+  from include/vtable.h's `VTABLE_SECTION`; both went). Naming the object
   makes the build check that g++ emitted the table where expected: in
   another object, the link fails. A `.gnu.linkonce.d` section the script
   doesn't list is still dropped by `/DISCARD/`: HpActor's, the one
@@ -2938,7 +2961,7 @@ data.
   Their ROM copies are the C-linkage `DestroyPolarCrate` and
   `DestroyJetpack{Health,Time,Question}Crate` in actor_anim.cpp, and
   cxx_symbols.txt maps the mangled destructors (`_._10PolarCrate`, ...)
-  to them; likewise `Update__4CtrlP12MovingSprite` to C's `UpdateCtrl`.
+  to them.
 - **The report.** tools/report_units.py reads an emitted table as a data
   blob of its object, like a src/data table (its symbol is weak, `w`,
   not `g`); each one is a 100% data unit named after its `.cpp`.
@@ -2952,18 +2975,16 @@ data.
 | `src/bosses/dingodile.cpp` | 5 | `CortexCannonCtrl`, `DingodileSharkCtrl`, `DingodileProjectileCtrl`, `DingodileShieldCtrl`, `DingodileCtrl` |
 | `src/vehicle/jetpack_crates.cpp` | 4 | `JetpackBalloonCrate` and its three kinds |
 | `src/enemies/enemy_ctrl.cpp`, `src/pickups/wumpa.cpp`, `src/bosses/tiny_hop_pad.cpp`, `src/menus/level_select.cpp`, `src/vehicle/polar_pickups.cpp` | 2 each | `PeriodicSpawner`, `KnockedEnemyCtrl`; `Wumpa`, `Stopwatch`; `StompedHopPadCtrl`, `OneShotAnimCtrl`; `CameraLead`, `LaunchPad`; `PolarCollectedWumpa`, `PolarCrate` |
-| 23 others | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (hovercraft.cpp), `LogoActor` |
+| `src/cutscene/cutscene_player.cpp`, `src/util/aabb_setup.cpp` (step 10b) | 2 each | `BgStreamer`, `BgLayerBase`; `LargeFont`, `SmallFont` |
+| 29 others (4 of them since step 10b) | 1 each | `Entity` (graphics), `Sprite`, `UiSprite`, `MovingSprite`, `GroundSprite`, `Player`, `EnemyCtrl`, `EffectCtrl`, `Crate`, `ExtraLife`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `BossCtrl`, `MegaMixCtrl`, `TinyCtrl`, `Platform`, `PlatformMover`, `LevelSelectEntry`, `HudPart`, `ActorSelf` (gActorVtable), `PolarPlayer`, `JetpackPlayer`, `JetpackCollectedWumpa` (hovercraft.cpp), `LogoActor`; `Ctrl` (system/boot.cpp), `BgLayer` (level/bg_layer.cpp), `PooledBgLayer` (level/tile_slot_pool.cpp), `Font` (text/font.cpp) |
 
-**Still C** (src/data/entity_vtables_7e3bec.c), 8 tables whose class's
-key method is C code:
-
-- `gCtrlVtable`: `Ctrl::Update` is `UpdateCtrl`, an empty function in
-  system/boot.c. It goes once boot.c (or that function) is C++.
-- `gBgStreamerVtable`, `gBgLayerBaseVtable`, `gBgLayerVtable`,
-  `gPooledBgLayerVtable`: the background layers (level/bg_layer*.c,
-  tile_slot_pool.c, cutscene_player.c) are C.
-- `gLargeFontVtable`, `gSmallFontVtable`, `gFontVtable`: the fonts
-  (src/text/) are C.
+**Still C after step 10** (src/data/entity_vtables_7e3bec.c), 8 tables
+whose class's key method was C code: `gCtrlVtable` (`Ctrl::Update` was
+`UpdateCtrl`, an empty function in system/boot.c), the background layers'
+four (`gBgStreamerVtable`, `gBgLayerBaseVtable`, `gBgLayerVtable`,
+`gPooledBgLayerVtable`) and the fonts' three (`gLargeFontVtable`,
+`gSmallFontVtable`, `gFontVtable`). Step 10b converted their classes
+([below](#the-last-c-vtables-step-10b)); the file is gone.
 
 The headers that still have `#pragma interface` (crate_list.hpp,
 menus.hpp, spawners.hpp) have no class with a vtable.
@@ -2982,6 +3003,98 @@ split or method order differs. The explicit placement keeps the bytes
 right either way; moving those methods is a possible follow-up, not
 needed for the match.
 
+### The last C vtables (step 10b)
+
+**Every vtable is g++'s now.** Step 10b converted the classes of the 8
+tables step 10 left as C data, and src/data/entity_vtables_7e3bec.c
+went, with include/vtable.h's `VTABLE_SECTION` and `VTABLE_SLOT` (the
+header keeps `struct vtable_slot`, the layout the C files read a vtable
+through). The report stays 2059/2059 functions and 100% data.
+
+- **`Ctrl::Update`** is the empty `UpdateCtrl` in system/boot.c, the
+  ROM's second object (after crt0). boot.c is boot.cpp now (agbcp, its
+  three functions unchanged, `DivMod`'s SVC asm and pins with them), and
+  `void Ctrl::Update(MovingSprite *) {}` is Ctrl's key method, so g++
+  emits gCtrlVtable in boot.o. No function moved.
+- **The BG layers** (include/bg_layer.hpp): the tile-map ring buffer
+  `BgStreamer` (gBgStreamerVtable: only its destructor), `BgLayerBase`
+  (gBgLayerBaseVtable: the position, the parallax step and the
+  streamer), `BgLayer` (gBgLayerVtable: a hardware BG layer's resident
+  window) and `PooledBgLayer` (gPooledBgLayerVtable: BG layer 0, its
+  tiles through the VRAM tile-slot pool), and `LevelLayers`, the
+  singleton that owns them (no vtable). bg_scroll_layer.h's struct
+  bg_scroll_layer stays the C view of a layer (the C++ files that read
+  `gLevelLayers->layer0` keep it too); `struct bg_streamer`,
+  `struct pooled_layer` and the method-table structs went.
+- **The fonts** (include/font.hpp): `Font` (gFontVtable) and its
+  `SmallFont` and `LargeFont` (their own vtables: they override only the
+  destructor). bitmap_font.h's struct bitmap_font stays the C view, for
+  the C files (the save menu, the pause menu's C files, the HUD, the text
+  box). The C++ files see gSmallFont and gLargeFont as `Font *`s (text.h,
+  under `__cplusplus`) and make virtual calls where they spelled out the
+  record's slots: the front end, the menus, the level select, the
+  continue prompt and the cutscene player.
+
+**Out-of-line copies of inline methods.** Twice the ROM showed the
+pattern graphics.cpp has (a class's inline methods emitted at the end of
+the object that gets its vtable, in the reverse of their declaration
+order), and it says which functions were inline and where a file ended:
+
+- bg_layer.c ended `GetBgLayerScreenIndex`, `WrapBgLayerColumn`,
+  `WrapBgLayerRow`, the four BGnCNT setters and a getter,
+  `WriteBgLayerOffsetRegs`, `WriteBgLayerCntReg` and `DestroyBgLayer`,
+  none of them called. They are `BgLayer`'s inline methods (the
+  destructor declared first, `GetScreenIndex` last, after the wraps it
+  calls), and the code that had them written out in place uses them now
+  (`DrawColumn`'s `GetScreenIndex(col, rowLo)`, `Reset`'s
+  `WriteCntReg()`, ...). With the destructor inline, `BgLayer`'s key
+  method is `Reset`, in bg_layer.cpp, and g++ emits the copies at its end
+  in the ROM's order. `PooledBgLayer`'s methods, which followed in the C
+  file, are pooled_bg_layer.cpp. The inline setters also gave
+  `InitPooledBgLayer` its `& 0x7f` before the `| 0x80`: through an
+  inline's parameter a constant bitfield store is a general insert (the
+  part 9 gotcha), which the C wrote as an asm block.
+- font.c ended `InitFont`, `FontHeightToLines`, `FontGetTileCount`,
+  `FontSetPos`, `FontNewLineAt`, `FontGetMargin`, `FontSetMargin`,
+  `FontGetY`, `FontGetX`, `FontSetTileBase` and `DestroyFont`, none
+  called: `Font`'s inline constructor, accessors and destructor. The
+  subclasses' constructors expand the constructor (the C's
+  `InitIconManager`), their destructors the destructor (the C's two
+  stores to `+0x130` in a row, each behind an asm address anchor), and
+  the callers the accessors (`HeightToLines` is RunCutscenePlayer's
+  `__udivsi3`, `SetTileBase` the menus' slot-6 helpers). With the
+  destructor inline, `Font`'s key method is `MeasureText`, which was
+  font_measure.c, the object before font.c: the two are one object,
+  font.cpp (old_agbcp, as font_measure.c was; font.c's code matches under
+  it too).
+
+**Per object** (`tools/match_idioms.py`'s kinds, C -> C++):
+
+| Object | Classes | Compiler | Workarounds: C -> C++ |
+|---|---|---|---|
+| `src/system/boot.cpp` | `Ctrl::Update` (ctrl.hpp), with `DivMod` and `MemCopy32` (C linkage) | agbcp | 3 pins, 1 asm (DivMod's SVC) -> the same |
+| `src/cutscene/cutscene_player.cpp` | `BgStreamer`, `BgLayerBase`'s constructor, destructor, `ClampScrollStep`, `ClampScrollMax`, `ScaleScroll`, `StepScroll`, with the cutscene player's 4 functions (C linkage) | old_agbcp | 0 -> 0; 4 vtable stores, 4 slot calls -> 0 |
+| `src/level/bg_layer_base.cpp` | `BgLayerBase`'s `Scroll`, `Reset`, `SetSource` and accessors, with the terrain tile cache's lookups (C linkage) | old_agbcp | 1 use -> 1 use (`DecodeCollisionChunk`'s: without it r3/r4 swap) |
+| `src/level/bg_layer_init.cpp` | `BgLayer`'s constructor, `GrowRows`, `GrowColumns`, `ClipColumns`, `ClipRows` | **old_agbcp** (was agbcc) | 9 pins, 6 asm, a file-scope asm pool -> 0; 5 slot calls -> 0 |
+| `src/level/bg_layer.cpp` | `BgLayer`'s other methods, and the copies of its inline ones | old_agbcp | 0 -> 0; 6 slot calls, a vtable store -> 0 |
+| `src/level/pooled_bg_layer.cpp` (new) | `PooledBgLayer`'s overrides, `ReleaseColumn`, `ReleaseRow`, with `nullsub_26` | old_agbcp | 0 -> 0 |
+| `src/level/tile_slot_pool.cpp` | `PooledBgLayer`'s constructor, destructor, `GetPriority`, with the tile-slot pool (C linkage) | **old_agbcp** (was agbcc) | 4 pins, 3 asm, 3 vtable stores -> 2 pins, 1 asm (`AcquireTileSlot`'s residency test: the ROM loads 0x200 before the entry and loads the entry again; neither a plain test nor an inline with the constant as a parameter does) |
+| `src/level/level_layers.cpp` | `LevelLayers` | agbcp | 0 -> 0; 6 slot calls (the layers' `delete`s, `Scroll`s and `Reset`s) -> 0 |
+| `src/text/font.cpp` (font_measure.c and font.c) | `Font`'s `MeasureText`, `UploadTiles`, `SetPalette`, `ResetPalette`, and the copies of its inline methods | old_agbcp (font.c was agbcc) | 5 pins, 2 keeps, 2 asm, 1 asm label, 2 slot calls, 2 vtable stores -> the asm label (`GetPaletteSlot`'s `s32` return) |
+| `src/text/font_glyph.cpp` | `Font::DrawGlyph`, `PutChar`; `SmallFont`'s and `LargeFont`'s constructors | old_agbcp | 8 pins, 3 asm, gotos, 2 slot calls, 3 vtable stores -> 0 (`PutChar` is a `switch`, as `MeasureText` is) |
+| `src/text/font_draw_text.cpp` | `Font::DrawText`, `MeasureChars` | old_agbcp | 3 pins, gotos, 2 slot calls -> 0 (a `switch`) |
+| `src/text/font_draw_chars.cpp` | `Font::DrawChars` | agbcp | 0 -> 0; 2 slot calls -> 0 |
+| `src/text/font_height.cpp` | `Font::TextHeight` | agbcp | 0 -> 0 |
+| `src/util/aabb_setup.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | agbcp | 4 asm, 4 vtable stores -> 0 |
+| the font callers: credits.cpp, language_select.cpp, title_screen.cpp, title_screen_init.cpp, continue_prompt.cpp, level_select.cpp, pause_menu.cpp, power_dialog.cpp, power_dialog_draw.cpp, cutscene_player.cpp, spawn_pickups.cpp | virtual calls and the inline accessors for the fonts' record-slot calls (`ICON_TEXT_CALL`, `_call_via_rN`) and their own copies of the accessors (`SetFontPos`, `SetFontTileBase`, `mgr_12c`, ...); `new SmallFont`/`new LargeFont` | (unchanged) | 0 -> 0; 31 spelled-out slot calls (`ICON_TEXT_CALL`s, `_call_via_rN`s and the helpers') -> 0 |
+
+**In numbers** (project-wide, `tools/match_idioms.py`): `MATCH_HOLD_REG`
+528 -> 501, instruction-emitting `asm` 78 -> 61, `MATCH_KEEP` 27 -> 25,
+file-scope asm blocks 3 -> 2, retyped field reads 19 -> 17;
+`OLD_AGBCC_OBJS` 131 -> 134 objects (bg_layer_init.o, tile_slot_pool.o
+and the new pooled_bg_layer.o; font.o replaces font_measure.o); 14 more
+C++ objects (153 -> 167 `.cpp` files under src/).
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -2991,9 +3104,9 @@ Bigger controllers, roughly in order (function counts from
    C callers, the level spawners (`spawn_enemies.c`, `spawn_objects.c`'s
    SpawnSealSpawner), are C++ since parts 9 and 9b; Dingodile's shark
    (`DingodileSharkCtrl`, part 6b) derives from it.
-2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3. Only
-   `Ctrl::Update` (`UpdateCtrl`, an empty function in `system/boot.c`)
-   is still C.
+2. ~~**The rest of `Ctrl` and `InputCtrl`**~~: done in part 3, and
+   `Ctrl::Update` (`UpdateCtrl`, an empty function in system/boot.c) in
+   step 10b.
 3. ~~**The swim controller**~~ (`PlayerCtrl`): done in part 4; its
    `Reset`/`Restart` (in `action_ctrl.cpp`) in part 5a. **The action
    controller** (`ActionCtrl`): part 5a converted `action_ctrl.c`,
@@ -3043,9 +3156,10 @@ PR, as before):
    tables become `const StateFunc t[] = { &X::f, ... }` (experiment 3,
    part 11a's actor_pmf_17a6b8.cpp) and `ACTOR_PMF_CALL` goes.
 10. ~~**Then the vtables**~~ (plan item 5 below): done in step 10, for
-   every class whose key method is C++: 85 of the 93 tables
+   every class whose key method was C++: 85 of the 93 tables
    ([Emitting the vtables](#emitting-the-vtables-step-10)). The other 8
-   (`Ctrl`, the BG layers, the fonts) follow their classes' C files.
+   (`Ctrl`, the BG layers, the fonts) in step 10b, with their classes
+   ([The last C vtables](#the-last-c-vtables-step-10b)).
 
 #### The 3D actors (part 11)
 
@@ -3143,8 +3257,8 @@ in experiment 2 no matching workarounds at all. Plan:
    or `make compare` fails. ldscript.txt places each
    `.gnu.linkonce.d._vt.<class>` section at its ROM address, between the
    C tables left. Done in step 10 for 85 of the 93
-   ([Emitting the vtables](#emitting-the-vtables-step-10)); a class
-   converted later drops its C table the same way.
+   ([Emitting the vtables](#emitting-the-vtables-step-10)) and in step
+   10b for the last 8 ([The last C vtables](#the-last-c-vtables-step-10b)).
 6. **Leave C as C:** `lib/` (GAX2, AgbEeprom, libgcc, BIOS wrappers), the
    IWRAM ARM code (agbcc_arm; the `cp` branch also has an ARM `agbcp_arm`,
    untried), and the data tables.
@@ -3194,6 +3308,15 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   `-fno-implement-inlines` (`NO_IMPLEMENT_INLINES_OBJS`) drops them.
   Defining the inline method `inline` in the `.cpp` instead of in the
   class doesn't help: it is still emitted.
+- **Uncalled functions at the end of a file are inline methods' copies.**
+  A run of small functions nothing calls, ending with a destructor, at
+  the end of a C file (often UNUSED-tagged accessors) is the out-of-line
+  copies g++ emitted for a class whose vtable that object had: the
+  methods were inline, and their callers have them written out in place.
+  Make them inline methods in reverse emission order (the destructor
+  declared first) and use them; the file may have to end there
+  (bg_layer.cpp, step 10b) or take in the object before it that has the
+  key method (font.cpp, step 10b).
 - **`-fno-implement-inlines` drops inline virtual methods too** in this
   g++ snapshot (later gccs keep them), so a vtable that points at an
   inline or implicit destructor gets an undefined `_._<len><Class>`.

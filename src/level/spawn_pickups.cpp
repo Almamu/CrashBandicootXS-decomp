@@ -253,9 +253,9 @@ void CreateEntitySpawner(void)
  * clears the display control and the level state's unused flags.
  *
  * The globals keep their C types (the C files use them), so the new
- * objects of the C++ classes are stored through their C views. The audio
- * context, the fonts and the entity flags are still C, built by their C
- * constructors. */
+ * objects of the C++ classes are stored through their C views (the fonts
+ * are `Font *`s to C++, text.h). The audio context and the entity flags
+ * are still C, built by their C constructors. */
 struct level_state *InitLevelState(struct level_state *self)
 {
     {
