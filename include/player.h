@@ -10,7 +10,8 @@
  *
  * All of the player's code is C++. `struct player` below is the C view of
  * Player (gPlayer, globals.h); no C file reads it any more (bonus_round.c
- * was the last, C++ since). This header keeps the data the C++ code and the data tables share. */
+ * was the last). This header keeps the data the C++ code and the data
+ * tables share. */
 
 #include "core.h"
 #include "actor.h"
