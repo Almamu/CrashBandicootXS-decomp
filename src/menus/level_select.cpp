@@ -450,36 +450,20 @@ void LevelSelect::Update()
 
 /* Updates the two page-arrow sprites (8/9): palettes from
  * GetAnimPaletteSlot, frame 0/1 by whether the previous/next page is
- * open. */
+ * open. The next-page arrow's ShowFrame is in both arms of the `if`, as
+ * the ROM's two `ldr r1, [r6, #0x60]` show: the two copies share
+ * everything after their frame constants (#662 round 2; the C pinned
+ * the arrow to r1 and `&tag` to r3 for this). */
 void LevelSelect::UpdatePageArrows()
 {
     sprites[8]->palette = sprites[8]->GetAnimPaletteSlot();
     sprites[9]->palette = sprites[9]->GetAnimPaletteSlot();
     if (world <= 2) {
-        /* Two pins kept (the C had 24 and a keep): the ROM has the arrow
-         * in r1 and `&tag` in r3; unpinned, old_agbcp (and agbcp) give the
-         * arrow r3 or swap `&tag` with the animation table's r2. The copy
-         * `t` is the register the ROM's frame store and draw call use. */
-        MATCH_HOLD_REG(UiSprite *, s, r1);
-        s32 f;
-
-        if (IsNextWorldOpen()) {
-            s = sprites[8];
-            f = 0;
-        } else {
-            s = sprites[8];
-            f = 1;
-        }
-        {
-            const struct sprite_bank *b = s->bank;
-            MATCH_HOLD_REG(u8 *, tag, r3) = &s->tag;
-            s32 n = b->anims[*tag].frameCount;
-            UiSprite *t = s;
-
-            CLAMP_INDEX(f, n);
-            t->frame = f;
-            t->DrawWithOffset(0, 0);
-        }
+        if (IsNextWorldOpen())
+            ShowFrame(sprites[8], 0);
+        else
+            ShowFrame(sprites[8], 1);
+        sprites[8]->DrawWithOffset(0, 0);
     }
     if (HasPrevWorld()) {
         UiSprite *s = sprites[9];
