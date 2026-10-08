@@ -7,7 +7,7 @@
  * chase. Every function they define is declared here, including those
  * that the file layout put in actor or bosses files for ROM order (the
  * teardown functions in actor_anim.cpp, the per-category hooks in actor.cpp,
- * actor_category_frame.c and actor_spawn.c, the jetpack ring and
+ * actor_category_frame.cpp and actor_spawn.cpp, the jetpack ring and
  * collected wumpa in hovercraft.c, ...), plus their globals and data
  * tables.
  *
@@ -122,16 +122,20 @@ extern void DestroyJetpackParachuteNitro(struct actor_self *self, u32 flags);
 extern void DestroyJetpackRocket(struct actor_self *self, u32 flags);
 extern void DestroyJetpackRing(struct actor_self *self, u32 flags);
 
-/* src/actor/actor_category_frame.c */
-extern s32 PolarIsTouchingPlayer(struct actor_self *self);
-extern s32 JetpackIsTouchingPlayer(struct actor_self *self);
+/* src/actor/actor_category_frame.cpp */
+extern s32 PolarIsTouchingPlayer(void *self);
+extern s32 JetpackIsTouchingPlayer(void *self);
 
-/* src/actor/actor_factory.c */
+/* src/actor/actor_factory.cpp */
 extern void CreatePolarCheckpointText(s32 x, s32 y, s32 z);
 extern void SpawnPolarCollectedWumpa(s32 x, s32 y, s32 z);
+#ifdef __cplusplus
+extern class ActorSelf *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
+#else
 extern struct actor_self *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg);
+#endif
 
-/* src/actor/actor_spawn.c */
+/* src/actor/actor_spawn.cpp */
 extern s32 JetpackIsPauseLocked(void);
 extern s32 PolarIsPauseLocked(void);
 

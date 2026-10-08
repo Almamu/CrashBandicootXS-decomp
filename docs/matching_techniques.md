@@ -450,7 +450,7 @@ gcc 2.9:
 Cases: [near-miss-polish-3.md](./matching/archive/near-miss-polish-3.md)
 (constant-init), [sp-box-retry.md](./matching/archive/sp-box-retry.md)
 (`"+r"` vs `"=r"/"0"`), `src/actor/cell_anim.c` (`MATCH_CONST` as an
-opaque pointer copy), `src/actor/actor_category_select.c` (use).
+opaque pointer copy), `src/actor/actor_category_select.cpp` (use).
 
 ### Other empty-asm forms
 

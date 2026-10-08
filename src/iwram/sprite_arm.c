@@ -119,7 +119,7 @@ static inline u8 KeyGreater(struct sort_entry **a, s32 i, s32 j, u8 one, u8 zero
 }
 
 /* gHeapSortActorsByKeyFunc(n, list): heapsorts `n` actor pointers into
- * ascending order of the u32 at +0x14. Called by actor_category_frame.c.
+ * ascending order of the u32 at +0x14. Called by actor_category_frame.cpp.
  * Both phases spell out the sift-down loop on the shared `root`/`child`
  * (an inline sift function allocates them to other registers). See
  * docs/matching/iwram-image.md, "Fourth pass". */

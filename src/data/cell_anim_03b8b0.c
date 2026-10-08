@@ -36,7 +36,7 @@ const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
 };
 
 /* Category 0's spawnTable (gActorCategories[0].spawnTable,
- * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.cpp) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(164) gCategory0SpawnTable = {
     {
         { 4000, 164, 3, 3, 3, 0, -1, 54 },

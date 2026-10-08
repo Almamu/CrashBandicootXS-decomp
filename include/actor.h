@@ -110,14 +110,14 @@ extern void CommitActorBgScroll(void);
 extern s32 GetActorBgCenterY(void);
 extern s32 GetActorBgCenterX(void);
 
-/* src/actor/actor_category_frame.c */
+/* src/actor/actor_category_frame.cpp */
 extern s32 RunActorCategoryFrame(void);
 extern void *FindShotTarget(struct actor_self *self);
 
 /* src/actor/actor_category_init.c */
 extern s32 InitActorCategory(s32 category);
 
-/* src/actor/actor_category_select.c */
+/* src/actor/actor_category_select.cpp */
 extern void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable,
                                 u8 active, s32 variant, s32 checkpoint);
 
@@ -127,14 +127,17 @@ extern void AddActorMissedNitro(void);
 extern s32 GetActorMissedNitros(void);
 extern s32 GetActorCheckpoint(void);
 
-/* src/actor/actor_factory.c */
+/* src/actor/actor_factory.cpp */
+#ifdef __cplusplus
+extern class ActorSelf *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
+extern class ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
+#else
 extern struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
-extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
 extern struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset);
-extern struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec,
-                                             s32 z);
+#endif
+extern void ConstructAnimTableState(struct anim_table_record *table, s32 z);
 
-/* src/actor/actor_spawn.c */
+/* src/actor/actor_spawn.cpp */
 extern s32 GetActorCategoryFrameCount(void);
 extern s32 GetActorSpawnOffset(void);
 extern void ResumeActorSpawns(void);
@@ -196,7 +199,11 @@ extern s32 gActorCategoryFrameCount;
 extern const struct category_vtable *gActorCategoryVtable;
 extern s32 gActorCheckpointMissedNitros;
 extern s32 gActorDrawCount;
+#ifdef __cplusplus
+extern class ActorSelf **gActorDrawList;
+#else
 extern struct actor_self **gActorDrawList;
+#endif
 extern s32 gActorFarClipDepth;
 /* A frame-tick counter, incremented every category-load-loop tick
  * (InitActorCategory) and snapshotted at the top of SelectActorCategory
@@ -253,7 +260,11 @@ extern u8 gActorSpawnUseBonus;
 extern s32 gActorCheckpoint;
 extern s32 gCollectedSpawnCount;
 extern void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h);
+#ifdef __cplusplus
+extern void (*gHeapSortActorsByKeyFunc)(s32 n, class ActorSelf **list);
+#else
 extern void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list);
+#endif
 
 /* src/data/palette_cycle_175760.c */
 extern const u16 gActorPaletteCycleFrames[32][14 * 16];
