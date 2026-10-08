@@ -242,7 +242,7 @@ extern void SpawnStartMarker(u32 arg, u16 x, u16 y, u16 z);
 extern s32 GetTerrainFlagsAt(void *arg, s32 x, s32 y);
 extern s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
 extern s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
-extern s32 sub_8026C80(void *arg, s32 arg1, s32 *arg2);
+extern s32 sub_8026C80(void *arg, s32 arg1, volatile s32 *arg2);
 extern s32 sub_8026C8C(void);
 
 /* src/level/terrain_probe.cpp */
