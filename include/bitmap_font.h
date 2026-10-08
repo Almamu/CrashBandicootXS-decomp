@@ -111,15 +111,4 @@ struct bitmap_font {
 
 COMPILE_TIME_ASSERT(bitmap_font_h, sizeof(struct bitmap_font) == 0x134);
 
-/* Calls `record->slots[n]` on an icon manager with `label` (slot 0
- * measures and returns the pixel width, slot 2 draws) - a gcc 2.x
- * virtual call through libgcc's `_call_via_r2`. A statement macro so
- * `this` is computed before the label argument, as in the ROM. */
-#define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
-    ({                                                                          \
-        struct bitmap_font *_m = (mgrExpr);                                    \
-        struct icon_slot *_s = &_m->record->slots[n];                           \
-        _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
-    })
-
 #endif /* __BITMAP_FONT_H__ */

@@ -36,7 +36,7 @@ struct ctrl_target {
     u8 solid:1;
     u8 unk_0D_4:4;
     u8 unk_0E[0xA];
-    u8 *vtable; // 0x18 - method table, see PART_METHOD
+    u8 *vtable; // 0x18 - the vtable (Entity's, include/entity.hpp)
     u8 unk_1C[4];
     struct keyframe **keyframes; // 0x20
     u8 unk_24[4];

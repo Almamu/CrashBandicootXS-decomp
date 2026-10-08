@@ -223,7 +223,6 @@ header that owns their type:
 | `actor_self.h` | `VTABLE_CALL2`, `VTABLE_CALL3` | virtual calls through `vtable` via `_call_via_r2`/`_call_via_r3` |
 | `actor_self.h` | `ACTOR_LINK_NEXT` | the actor list's `next` link (was also `ACTOR_NEXT`) |
 | `aabb.h` | `AABB_VALID(box)` | a box's `w`, read through a volatile (the "box isn't empty" re-read) |
-| `bitmap_font.h` | `ICON_TEXT_CALL` | an icon manager's `record->slots[n]` text call |
 | `gfx_part.h` | `PART_FLAG_SET(part, shift)` | a +0x28 flag bit tested as a sign test |
 | `gba/dma_macros.h` | `DMA3` | channel 3's registers as a `struct dma_regs` |
 | `frontend.h` | `CLEAR_OAM(oam)` | the logo screens' one-entry OAM clear |

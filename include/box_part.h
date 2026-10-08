@@ -36,17 +36,6 @@ struct keyframe {
 
 #define KEYFRAME_SIZE 0x1c
 
-/* A gcc 2.x method-table record: `this` adjustment plus code pointer.
- * A part's method table (`vtable`) is indexed by byte offset - see
- * PART_METHOD. */
-struct part_method {
-    s16 thisOffset;
-    u8 unk_02[2];
-    void *fn;
-};
-
-#define PART_METHOD(obj, off) ((struct part_method *)((obj)->vtable + (off)))
-
 struct box_part {
     s32 x;   // 0x00 - Q8 fixed-point
     s32 y;   // 0x04 - Q8 fixed-point
@@ -56,7 +45,7 @@ struct box_part {
     u8 flags;  // 0x0C - bit 0 gone, bit 2 visible, bit 3 touched (PART_FLAG_*)
     u8 flags2; // 0x0D - bit 3: solid (pushes the player out)
     u8 unk_0E[0xa];
-    u8 *vtable; // 0x18 - method table, see PART_METHOD
+    u8 *vtable; // 0x18 - the vtable (Entity's, include/entity.hpp)
     u8 unk_1C[4];
     struct keyframe **keyframes; // 0x20
     u8 moveAxes;                 // 0x24 - bits 0-1: X probe mode, bits 2-3: Y probe mode
