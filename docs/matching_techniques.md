@@ -575,11 +575,14 @@ They have no macro: each is a specific instruction sequence.
 ## Warnings
 
 The build is `-Wall ... -Werror`. Where the ROM really uses an
-uninitialized register (a `& 0xFFFF0000` on garbage before ORing in
-BGxCNT bits, a `bestIdx` when the count is 0), an initializer would add
-code, so the variable stays uninitialized and is self-initialized:
-`u32 bg0cnt = bg0cnt;` emits nothing and silences `-Wuninitialized`
-(6 sites; `src/frontend/starfield.cpp`,
+uninitialized register (a `bestIdx` when the count is 0), an initializer
+would add code, so the variable stays uninitialized and is
+self-initialized: `s32 sel = sel;` emits nothing and silences
+`-Wuninitialized` (4 sites). A `& 0xFFFF0000` on garbage before ORing in
+BGxCNT bits is a `union bgcnt` local (`graphics_package.h`) instead:
+agbcc pads the union to a word, `cnt.raw = 0` clears only its low half,
+and `-Wuninitialized` doesn't check aggregates (`src/frontend/starfield.cpp`,
+`TitleScreen::LoadBg`; #662 step 3, formerly self-inits,
 [issue-65-naked-retry.md](./matching/archive/issue-65-naked-retry.md)).
 The order of escape hatches (self-init, `UNUSED`, a per-object
 `-Wno-...`) is in CONTRIBUTING.md's "Compiler warnings".
@@ -707,6 +710,13 @@ removable were kept on purpose; a dry run still lists them:
   is live from the top of the function anyway, so where a hold has only
   the one start, step 2 dropped it (`ReleaseHang`, `PauseMenu::Draw`,
   `GAX2_init`) and said so in the comment.
+
+Step 3 (frontend, menus, save, link): trying the other compiler on each
+object is cheap and worth doing first. `save_data.o` and
+`save_transfer.o` come out byte-identical under old_agbcc as they stood,
+and under it `SetSaveFlags`/`ClearSaveFlags` are plain `|=`/`&= ~`
+(four pins and an instruction asm gone); `pause_menu_draw.o` also
+matches under old_agbcp, but that frees none of its sites.
 
 ## Survey and conversion record (#576)
 
