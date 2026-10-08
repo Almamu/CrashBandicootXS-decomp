@@ -43,13 +43,35 @@ public:
     virtual ~RiderlessPolar(); // 1 DestroyRiderlessPolar
 };
 
-/* The polar run's player (gPolarPlayerVtable). */
+/* The polar run's player (gPolarPlayerVtable; src/vehicle/polar_player.cpp,
+ * polar_player_states.cpp, polar_player_actions.cpp and
+ * polar_player_dispatch.cpp): it rides the polar bear, steered left and
+ * right, and jumps; the rest of its state is in the gPolar* globals
+ * (vehicle.h), as the ROM has it. ConstructAnimTableState
+ * (actor_factory.cpp) makes it gActorList, the actor list's root. The
+ * methods the other actors call on gActorList (Hurt, QueueWumpa, ...)
+ * keep their C prototypes in vehicle.h for the C files. */
 class PolarPlayer : public ActorSelf
 {
 public:
     PolarPlayer(const struct anim_table_record *rec, s32 z); // ConstructActorPart
-    void RunState();                                         // RunPolarPlayerState
-    void AllocTiles();                                       // AllocPolarPlayerTiles
+    virtual ~PolarPlayer();                                  // 1 DestroyPolarPlayer
+    virtual void Update();                                   // 2 UpdatePolarPlayer
+    virtual void Draw();                                     // 3 DrawPolarPlayer
+
+    s32 Hurt();             // HurtPolarPlayer
+    s32 Shock();            // ShockPolarPlayer
+    void AllocTiles();      // AllocPolarPlayerTiles
+    void DispenseWumpa();   // DispensePolarWumpa
+    s32 IsPauseLocked();    // IsPolarPauseLocked
+    void FinishRun();       // FinishPolarRun
+    void Catch();           // CatchPolarPlayer
+    void QueueWumpa(s32 n); // QueuePolarWumpa
+    void GiveLife();        // GivePolarPlayerLife
+    void Boost(s32 x);      // BoostPolarPlayer
+    void GiveMask();        // GivePolarPlayerMask
+    void Launch();          // LaunchPolarPlayer
+    void RunState();        // RunPolarPlayerState
 
     /* The states, indexed by `state` (stateFuncs, gPolarPlayerStateFuncs). */
     void StateMount();      // PolarPlayerStateMount
@@ -70,6 +92,8 @@ public:
     typedef void (PolarPlayer::*StateFunc)();
     static const StateFunc stateFuncs[14];
 };
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(PolarPlayer) == sizeof(struct actor_self));
 
 class PolarCheckpointText : public ActorSelf
 {

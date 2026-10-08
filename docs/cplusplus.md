@@ -559,6 +559,9 @@ counts them by kind) and what the C++ still needs.
 | `src/vehicle/jetpack_run.cpp` | `JetpackPlayer::FinishRun`, `PassRing`, `AllocTiles` | 3 | **old_agbcp** (was agbcc) | 32 pins, 4 `asm`, 4 retyped stores -> 0 | 11e |
 | `src/vehicle/jetpack_shot.cpp` | `JetpackShot` (include/vehicle.hpp): `Update`, constructor (`CreateJetpackShot`), `IsUnshootable` | 3 | agbcp | 1 pin, 2 `asm`, 3 slot calls and gotos -> 0 | 11e |
 | `src/data/actor_pmf_17c1c0.cpp` | `JetpackPlayer::stateFuncs` (gJetpackPlayerStateFuncs) | data | agbcp | the `ACTOR_PMF` records -> 0 | 11e |
+| `src/vehicle/polar_player.cpp` | `PolarPlayer` (include/vehicle.hpp): `Update`, `Draw`, `Hurt`, `Shock`, `AllocTiles`, `StateMount`, `StateRun`, `StateJump`, `StateDash`, `StateShocked`, `StateCaught` | 11 | old_agbcp (old_agbcc C already) | 38 pins, 14 retyped stores, 1 retyped read, `ACTOR_PMF_CALL`, 5 `ACTOR_SET_STATE`s, the `destroy` slot call, 7 gotos -> 0 | 11c |
+| `src/vehicle/polar_player_states.cpp` | `PolarPlayer`'s `DispenseWumpa`, `IsPauseLocked`, `StateRecover`, `StateFinishLeap`, `StateCarriedOff`, `StateKnockedOff`, `StateBoost` | 7 | agbcp | 11 pins, 4 retyped stores, 2 retyped reads -> 0 | 11c |
+| `src/vehicle/polar_player_actions.cpp` | `PolarPlayer`'s `StateLaunched`, `StateFinish`, `StateLand`, `FinishRun`, `Catch`, `QueueWumpa`, `GiveLife`, `Boost`, `GiveMask`, `Launch`, destructor | 11 | agbcp | 40 pins, 1 `asm`, 12 retyped stores, 6 retyped reads, the hand-written destructor -> 0 | 11c |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -2415,6 +2418,64 @@ extra-reference nudge, still needed), and the four `GetActorSpawn*`
 accessors' byte-offset arithmetic (`base + 0x18` before the index:
 indexing the struct folds the offset into the load).
 
+### The polar player (part 11c)
+
+Part 11c in numbers: polar_player.c, polar_player_states.c and
+polar_player_actions.c (ROM 0x0802B364-0x0802C1BC), 29 functions, all
+C++ now with no pins and no `asm`. Project-wide (against part 11e):
+`MATCH_HOLD_REG` 950 -> 861, instruction-emitting `asm` 89 -> 88,
+retyped field stores 171 -> 141 and reads 65 -> 56. The objects keep
+their compilers: polar_player.o old_agbcp (it doesn't match under
+agbcp), the other two agbcp (they match under both).
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `PolarPlayer : ActorSelf` | 0x54 | gPolarPlayerVtable (slots 1-3) | polar_player.cpp, polar_player_states.cpp, polar_player_actions.cpp (and its constructor in actor_factory.cpp, `RunState` in polar_player_dispatch.cpp); its state is the gPolar* globals |
+
+- **gPolarPlayerStateFuncs has no C user left**: `PolarPlayer::Update` is
+  `(this->*stateFuncs[state])()`, and the table's C view
+  (`struct actor_pmf gPolarPlayerStateFuncs[14]`, vehicle.h) goes. The 14
+  states are methods (part 11a mapped their names).
+- **The methods the other polar actors call on gActorList** (`Hurt`,
+  `Shock`, `Launch`, `Boost`, `Catch`, `FinishRun`, `QueueWumpa`,
+  `GiveLife`, `GiveMask`, `IsPauseLocked`, `AllocTiles`) keep their C
+  prototypes in vehicle.h: the polar crates, pickups, objects, Aku Aku and
+  the yeti are still C (11d, 11j). The prototypes of the states,
+  `DispensePolarWumpa` and `RunPolarPlayerState` go (no C caller).
+  `AllocPolarPlayerTiles` takes a `void *`, as `AllocJetpackPlayerTiles`
+  does, so actor.cpp's cast goes.
+- **`~PolarPlayer`** is the body only (drain the queued wumpas, free the two
+  tile buffers), as `~JetpackPlayer`: the vtable stores and the unlink are
+  g++'s.
+- **`StateMount`** deletes the riderless bear with `delete gRiderlessPolar`
+  (the C's `ACTOR_VCALL(..., destroy, 3)`) and restarts its animation with
+  `RestartAnim(1)`. gRiderlessPolar and gPolarAkuAku are `ActorSelf *` to
+  C++ (`__cplusplus` declarations in vehicle.h, as gYeti's).
+
+What made the C++ match:
+
+- **The animation resets** are `SetState` and `RestartAnim`: 22 of them,
+  where the C pinned the state, the index, the zeros and the duration (most
+  of the 89 pins) and stored through `*(u16 *)`/`*(u8 *)` casts. Where the
+  ROM stores a register it just tested against 0 as the zeros
+  (`LaunchPolarPlayer`'s `str r3`, `PolarPlayerStateBoost`'s), `SetState`
+  after the test gives it: CSE knows the register is 0 on that path.
+- **`StateRun`** is plain if/else: `RestartAnim(0)`, `RestartAnim(1)` when
+  `RandRange(3) == 0`, else `RestartAnim(0)`. The C wrote it with five
+  `goto`s into shared tails and 17 pins; cross-jumping merges the tails as
+  the ROM has them.
+- **`Hurt` and `Shock`** take both globals' addresses first (`s32 *timer =
+  &gPolarInvulnTimer; ... ActorSelf **aku = &gPolarAkuAku;`), as part 11e's
+  `PassRing`: the ROM loads them before the tests and keeps them for the
+  else branch. The C pinned all three and shared the `return` with a goto.
+- **`StateJump`'s A test** is `(gKeys.all & 1) == 0`; `!(gKeys.all & 1)`
+  in the `&&` chain gets an `eor`.
+- **The B test before `state = 2`** (`StateRun`, `StateBoost`) is a mask
+  variable the AND overwrites: `u32 bit = B_BUTTON; bit = keys &= bit;`.
+  With `gKeys.all & 2`, CSE reuses the mask's register for the 2 stored
+  into `state` (`str r1`), where the ROM loads it again; the C pinned the
+  state to r0.
+
 ### The entity family is done
 
 With 7b', part 7 is complete: `Entity` and every class built on it whose
@@ -2469,7 +2530,8 @@ player, then the first item here, is C++ since part 8):
   (actor.c, actor_anim.c), the polar player's dispatch and its table,
   part 11b the actor factory, the spawn hooks and the category frame,
   part 11i the airship (airship*.c), part 11e the jetpack player, its
-  shot, the jetpack spawners and their table; the plan for the rest is
+  shot, the jetpack spawners and their table, part 11c the polar player;
+  the plan for the rest is
   [below](#the-3d-actors-part-11).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
   fonts (src/text/), the menus (the save menu, and the pause menu's and
@@ -2564,7 +2626,7 @@ and, once no C file reads one, its PMF table to C++.
 |---|---|---|---|---|---|
 | ~~11a~~ | ~~actor/actor.c, actor_anim.c; vehicle/polar_player_dispatch.c; data/actor_pmf_17a6b8.c~~ | `AnimPart`, `ActorSelf`, `HpActor`; the subclasses' destructors; `PolarPlayer::RunState` | done | gPolarPlayerStateFuncs | |
 | ~~11b~~ | ~~actor/actor_factory.c, actor_spawn.c, actor_category_frame.c (old), actor_category_select.c~~ | the polar actors' constructors (CreateActor's inlined `new`s, `ConstructActorPart` = `PolarPlayer`'s), `FindShotTarget`, the category frame's virtual calls | done | | 11a |
-| 11c | vehicle/polar_player.c (old), polar_player_actions.c, polar_player_states.c | `PolarPlayer` (its fields, `Update`, `Draw`, the 14 states, the destructor) | 29, 89, 1 | (gPolarPlayerStateFuncs' last C user) | 11a |
+| ~~11c~~ | ~~vehicle/polar_player.c (old), polar_player_actions.c, polar_player_states.c~~ | `PolarPlayer` (`Update`, `Draw`, the 14 states, the destructor, the methods the polar actors call) | done | (gPolarPlayerStateFuncs' last C user) | 11a |
 | 11d | vehicle/polar_crates.c, polar_pickups.c, polar_objects.c, polar_aku_aku.c, polar_nitro.c (old) | the polar crates (`PolarCrate` and its kinds), wumpas, hazards, Aku Aku, goal, boost pad | 51, 145, 3 | | 11b |
 | ~~11e~~ | ~~vehicle/jetpack_spawn.c (old), jetpack_player.c, jetpack_run.c, jetpack_shot.c~~ | `HpActor`'s constructor, `JetpackPlayer`, `JetpackShot`, the jetpack spawners | done | gJetpackPlayerStateFuncs | 11a |
 | 11f | vehicle/jetpack_plane.c, jetpack_balloon.c | `JetpackPlane`, `JetpackBomber`, `JetpackCannonball`, `JetpackBalloon`; two of `AirshipFireball`'s states | 43, 21, 0 | gJetpackPlaneStateFuncs, gJetpackBomberStateFuncs, gJetpackBalloonStateFuncs | 11e |
@@ -3025,3 +3087,14 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   `(palette << 12) | tile`, with the tile in a local, puts the tile in r0 and
   the palette in r1, as the ROM has it, where `tile | (palette << 12)` swaps
   them (`JetpackPlayer::Draw`, part 11e).
+- **A constant equal to an AND's mask** (`gKeys.all & 2`, then `state =
+  2` on the taken path) is CSE'd to the mask's register (`str r1`), where
+  the ROM loads it again (`movs r0, #2`). Make the mask a variable that
+  the AND overwrites (`u32 bit = B_BUTTON; bit = keys &= bit;`): the
+  register no longer holds 2 (`PolarPlayer::StateBoost`, `StateRun`, part
+  11c).
+- **Stores of a register just tested against 0** (`cmp r3, #0; bne`, then
+  `str r3` for the zeros of a state reset) are an inline `SetState(st,
+  idx)` after the test: CSE knows the register is 0 on that path and uses
+  it for the inline's zero stores (`PolarPlayer::Launch`, `StateBoost`,
+  part 11c).

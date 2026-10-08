@@ -12,8 +12,8 @@
 #include "level.h"
 #include "globals.h"
 
-/* Continuation of polar_player_actions.c's player/action-object family, right
- * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
+/* Continuation of polar_player_actions.cpp's player/action-object family, right
+ * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.cpp) - same `self`
  * object and conventions documented there. */
 
 /* `self` with the velocity pair this class adds after the common
@@ -205,7 +205,7 @@ void DrawPolarCollectedWumpa(void *selfArg)
     }
 }
 
-/* Continuation of polar_player_actions.c's player/action-object family, right
+/* Continuation of polar_player_actions.cpp's player/action-object family, right
  * after `DrawPolarCollectedWumpa` (above) - same `self`
  * object and conventions documented there. */
 
@@ -312,7 +312,7 @@ void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spa
     return self;
 }
 
-/* Continuation of polar_player_actions.c's player/action-object family, right
+/* Continuation of polar_player_actions.cpp's player/action-object family, right
  * after `CreatePolarCollectedWumpa` (above) - same `self`
  * object (`struct actor_self`) and conventions documented there. The
  * animation-reset blocks (the `anim`/`zero1`/`zero2` register trios)
