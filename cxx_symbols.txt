@@ -20,6 +20,8 @@ __builtin_vec_delete OperatorDeleteArray
 _vt.4Ctrl gCtrlVtable
 __4Ctrl InitCtrl
 _._4Ctrl DestroyCtrl
+# Ctrl::Update is C (system/boot.c); the emitted vtables point at it
+Update__4CtrlP12MovingSprite UpdateCtrl
 StartTargetMotionYFromSet__4CtrlP12MovingSpritei StartCtrlTargetMotionYFromSet
 SetTargetMotionX__4CtrlP12MovingSpritePCi SetCtrlTargetMotionX
 StartTargetMotionX__4CtrlP12MovingSpritePCi StartCtrlTargetMotionX

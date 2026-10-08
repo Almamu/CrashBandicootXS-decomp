@@ -49,13 +49,8 @@ extern s32 gHomingEnemyXSaved;
 extern s32 gHomingEnemyY;
 extern s32 gHomingEnemyYSaved;
 
-/* src/enemies/enemy_ctrl.cpp: a C table's slot, and GetSfxVolumeAt
- * (C linkage). The other methods have no C caller left and no C name
- * here (cxx_symbols.txt has them). */
-extern void AttachEnemyCtrl(struct part_ctrl *self, struct ctrl_target *target);
+/* src/enemies/enemy_ctrl.cpp: GetSfxVolumeAt (C linkage). The methods
+ * have no C caller left and no C name here (cxx_symbols.txt has them). */
 extern s32 GetSfxVolumeAt(s32 x, s32 y);
-
-/* src/enemies/enemy_ctrl_update.cpp */
-extern void HitEnemy(struct part_ctrl *self, s32 unused, s32 state);
 
 #endif /* GUARD_ENEMIES_H */

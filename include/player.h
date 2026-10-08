@@ -307,7 +307,6 @@ struct boss_ctrl {
 extern const struct vtable_slot gPlayerVtable[15];
 extern const struct vtable_slot gActionCtrlVtable[13];
 extern const struct vtable_slot gInputCtrlVtable[13];
-extern const struct vtable_slot gBossCtrlVtable[13];
 
 /* The controllers' state functions, indexed by state
  * (src/data/action_table_16bf20.c, player_pmf_16c250.c). */
@@ -488,8 +487,6 @@ extern void QueueInputCtrlMotionYKeepSpeed(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionXKeepSpeed(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionY(struct input_ctrl *self, u8 val);
 extern void QueueInputCtrlMotionX(struct input_ctrl *self, u8 val);
-extern void BossCtrlHandleEvent(struct boss_ctrl *self, s32 arg1, s32 a, s32 b);
-extern void DestroyBossCtrl(struct boss_ctrl *self, s32 flags);
 extern void *GetCtrlTarget(struct boss_ctrl *self);
 
 /* src/player/kill_player.cpp */

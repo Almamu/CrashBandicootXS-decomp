@@ -4,9 +4,9 @@
 /* The boss controllers as C++ (#664, docs/cplusplus.md): BossCtrl and
  * the bosses' controllers built on it (src/bosses/).
  *
- * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp);
- * cxx_symbols.txt maps their mangled names onto the C names. */
-#pragma interface
+ * No `#pragma interface`: g++ emits their vtables, each in its key-method
+ * object (see ctrl.hpp); cxx_symbols.txt maps their mangled names onto
+ * the C names. */
 
 #include "ctrl.hpp"
 #include "sprite_obj.hpp"

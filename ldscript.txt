@@ -416,22 +416,22 @@ SECTIONS
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gActionCtrlVtable);
         build/crashbandicootxs/src/player/swim_ctrl.o(.gnu.linkonce.d._vt.10PlayerCtrl); /* gPlayerCtrlVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gInputCtrlVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gBossCtrlVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gMegaMixCtrlVtable);
+        build/crashbandicootxs/src/player/input_ctrl_queue.o(.gnu.linkonce.d._vt.8BossCtrl); /* gBossCtrlVtable */
+        build/crashbandicootxs/src/bosses/mega_mix_update.o(.gnu.linkonce.d._vt.11MegaMixCtrl); /* gMegaMixCtrlVtable */
         build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.gnu.linkonce.d._vt.17StompedHopPadCtrl); /* gStompedHopPadVtable */
         build/crashbandicootxs/src/bosses/tiny_hop_pad.o(.gnu.linkonce.d._vt.15OneShotAnimCtrl); /* gOneShotAnimCtrlVtable */
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gUnusedOneShotAnimCtrlVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gTinyVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexBossGemVtable);
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.21UnusedOneShotAnimCtrl); /* gUnusedOneShotAnimCtrlVtable */
+        build/crashbandicootxs/src/bosses/tiny_update.o(.gnu.linkonce.d._vt.8TinyCtrl); /* gTinyVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.17CortexBossGemCtrl); /* gCortexBossGemVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexBossPlatformMoverVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexShotVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexTargetVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexCannonVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCortexBossVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileSharkVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileProjectileVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileShieldVtable);
-        build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gDingodileVtable);
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.14CortexShotCtrl); /* gCortexShotVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.16CortexTargetCtrl); /* gCortexTargetVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.16CortexCannonCtrl); /* gCortexCannonVtable */
+        build/crashbandicootxs/src/bosses/cortex.o(.gnu.linkonce.d._vt.14CortexBossCtrl); /* gCortexBossVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.18DingodileSharkCtrl); /* gDingodileSharkVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.23DingodileProjectileCtrl); /* gDingodileProjectileVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.19DingodileShieldCtrl); /* gDingodileShieldVtable */
+        build/crashbandicootxs/src/bosses/dingodile.o(.gnu.linkonce.d._vt.13DingodileCtrl); /* gDingodileVtable */
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlatformVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gPlatformMoverVtable);
         build/crashbandicootxs/src/data/entity_vtables_7e3bec.o(.rodata.gCameraLeadVtable);
