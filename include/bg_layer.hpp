@@ -213,7 +213,33 @@ public:
 };
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayer) == 0x5C);
+
+/* bg_scroll_layer.h's struct bg_scroll_layer, the C view (its `vtable` is
+ * the class's vtable pointer). */
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(BgLayer) == sizeof(struct bg_scroll_layer));
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, x);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, y);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, maxX);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, maxY);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, widthPx);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, heightPx);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, widthTiles);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, heightTiles);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, scaleX);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, scaleY);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, enabled);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, streamer);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, cnt);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, cntReg);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, rowLo);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, rowHi);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, colLo);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, colHi);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, screen);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, tileData);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, hofs);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, vofs);
+ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, ofsReg);
 
 /* BG layer 0 (0x60 bytes): a BgLayer whose tiles go through a VRAM tile
  * slot pool (struct tile_slot_pool, src/level/tile_slot_pool.cpp) instead
@@ -284,6 +310,20 @@ public:
     void Reset();                                 // ResetLevelLayers
 };
 
+
+/* level.h's struct level_layers, the C view. */
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(LevelLayers) == sizeof(struct level_layers));
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, maxScrollX);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, maxScrollY);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, scrollX);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, scrollY);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, layer0);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, layers);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, tiles);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, asset);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, assetOwned);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, kind);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, probeFlag);
+ASSERT_VIEW_FIELD(bg_layer_hpp, LevelLayers, level_layers, raiseObjPriority);
 
 #endif /* !GUARD_BG_LAYER_HPP */

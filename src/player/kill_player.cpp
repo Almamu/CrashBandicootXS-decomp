@@ -59,7 +59,7 @@ void ActionCtrl::KillPlayer(s32 anim)
     part->f.b.vulnerable = 0;
     part->dead = 1;
     LoseLife(gLevelState);
-    gPaletteCache->LoadSlot(part->palette, part->anim->records[part->tag].paletteId);
+    gPaletteCache->LoadSlot(part->palette, part->bank->anims[part->tag].paletteId);
 }
 
 /* Update calls this when the player's `slippery` changed. On slippery

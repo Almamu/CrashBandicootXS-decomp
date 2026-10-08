@@ -2,6 +2,7 @@
 #define __ACTOR_ANIM_H__
 
 #include "constants/categories.h"
+#include "actor_self.h"
 
 /*
  * The category-descriptor -> vtable -> animation-table -> keyframe ->
@@ -19,15 +20,7 @@
  * ahead of that so the two can be matched up directly once it is.
  */
 
-/* A box in the actors' 16-bit world units: position then size. The
- * anim_table_record's box_14, `actor_self.box` and several small src/data
- * tables are this. A fixed box is copied into an actor by struct
- * assignment (`box = gJetpackRocketBox`): the ROM's `ldm`/`stm`. */
-struct anim_box {
-    s16 x, y, z;
-    s16 w, h, d;
-}; // 0xC
-COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
+/* struct anim_box, the actors' boxes, is actor_self.h's. */
 
 struct anim_frame_record; /* actor_self.h */
 

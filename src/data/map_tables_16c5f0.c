@@ -8,7 +8,7 @@
  */
 
 /* InitZoomBg (level_select_pages.cpp): the four slots' offsets. */
-const struct xy_pair gZoomBgSlotOffsets[4] = {
+const struct vec2 gZoomBgSlotOffsets[4] = {
     { 4, -4 },
     { -4, -4 },
     { 4, 4 },

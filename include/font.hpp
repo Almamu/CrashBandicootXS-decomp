@@ -134,7 +134,22 @@ public:
     }
 };
 
+
+/* bitmap_font.h's struct bitmap_font, the C view (its `record` is the
+ * class's vtable pointer). */
 COMPILE_TIME_ASSERT(font_hpp, sizeof(Font) == sizeof(struct bitmap_font));
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, oam_scratch);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, charLookup);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, tileBase);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, glyphRecords);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, posX);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, posY);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, marginX);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, lineHeight);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, spaceWidth);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, glyphTileStride);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, tiles);
+ASSERT_VIEW_FIELD(font_hpp, Font, bitmap_font, tileCount);
 
 /* gSmallFont: 9-pixel lines, 4-pixel spaces, 2 tiles per glyph
  * (InitSmallFont, src/text/font_glyph.cpp; ~SmallFont, aabb_setup.cpp). */

@@ -8,7 +8,6 @@
 
 extern "C" {
 #include "match.h"
-#include "vram_pool.h"
 #include "pickups.h"
 #include "util.h"
 #include "audio.h"
@@ -46,7 +45,7 @@ static inline CollisionQueue *PlayerQueue()
 /* Returns its argument. Writing a position's y through it (instead of a
  * `pp` pointer local) lets gcse make the ROM's pointer copy: the store goes
  * through `add r0, sp, #N` and the copy (`adds r2, r0, #0`) is used after. */
-static inline struct e08c_pos *PosPtr(struct e08c_pos *p)
+static inline struct vec2 *PosPtr(struct vec2 *p)
 {
     return p;
 }
@@ -177,10 +176,10 @@ void Crate::QueuePlayerCollision(s32 idx)
         struct aabb c;
         struct aabb b;
         u8 found;
-        struct e08c_pos p1;
-        struct e08c_pos p2;
-        struct e08c_pos p3;
-        struct e08c_pos pos;
+        struct vec2 p1;
+        struct vec2 p2;
+        struct vec2 p3;
+        struct vec2 pos;
     } f;
     s32 px;
     s32 py;
@@ -200,7 +199,7 @@ void Crate::QueuePlayerCollision(s32 idx)
     s32 n;
     s32 r; /* shared by both slope checks, so both get r2 as in the ROM */
     const struct hitbox_quad *q;
-    struct e08c_pos *pp;
+    struct vec2 *pp;
     const struct hitbox_quad *hb;
     struct aabb *bb;
     /* &state, kept for the `case 1`/`case 2` test. Declared last, it
@@ -783,7 +782,7 @@ tail:
  * first); set off; or a checkpoint opened. Unless the hit returned early,
  * the player is moved to `pos` (if nothing else committed its position
  * this frame) and bumped. */
-void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec2 pos, s32 hit,
                            bool limited, bool above, bool forcedIn)
 {
     bool forced;
@@ -859,7 +858,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct e08
                     gPlayer->hitAxes = m;
                 }
                 {
-                    struct e08c_pos *pp = &pos;
+                    struct vec2 *pp = &pos;
                     s32 py = gPlayer->y;
 
                     pp->y = py - INT_TO_Q8(depth - 1);

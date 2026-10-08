@@ -55,7 +55,7 @@ s32 GroundSprite::ProbeTerrainAxes()
 {
     s32 origX;
     s32 origY;
-    struct probe_pos pos;
+    struct vec2 pos;
     u8 unused;
     u8 floorMiss;
     s32 result;
@@ -80,7 +80,7 @@ s32 GroundSprite::ProbeTerrainAxes()
         u8 c;
 
         origY = y;
-        pos = *(struct probe_pos *)&Pos();
+        pos = *(struct vec2 *)&Pos();
         OffsetToHitboxEdge(&pos, 8, (void *)quad);
         pos.x = Q8_TO_INT(pos.x);
         pos.y = Q8_TO_INT(pos.y);
@@ -112,7 +112,7 @@ s32 GroundSprite::ProbeTerrainAxes()
     if (mode && !hit) {
         s32 span;
 
-        pos = *(struct probe_pos *)&Pos();
+        pos = *(struct vec2 *)&Pos();
         span = quad->h - 0x10;
         origX = x;
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
@@ -129,7 +129,7 @@ y_probe:
     if (mode && !hit) {
         s32 span;
 
-        pos = *(struct probe_pos *)&Pos();
+        pos = *(struct vec2 *)&Pos();
         span = quad->w;
         origX = x;
         origY = y;
@@ -146,7 +146,7 @@ y_probe:
     if (mode && !hit) {
         s32 span;
 
-        pos = *(struct probe_pos *)&Pos();
+        pos = *(struct vec2 *)&Pos();
         span = quad->h;
         origX = x;
         OffsetToHitboxEdgeStart(&pos, mode, (void *)quad);
@@ -172,11 +172,11 @@ done:
 u8 GroundSprite::ProbeFloor(const struct hitbox_quad *quad, u8 *outFlag)
 {
     s32 origY = y;
-    struct probe_pos pos;
+    struct vec2 pos;
     u8 hit;
     s32 grounded;
 
-    pos = *(struct probe_pos *)&Pos();
+    pos = *(struct vec2 *)&Pos();
     OffsetToHitboxEdge(&pos, 8, (void *)quad);
     pos.x = Q8_TO_INT(pos.x);
     pos.y = Q8_TO_INT(pos.y);

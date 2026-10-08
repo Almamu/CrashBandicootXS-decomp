@@ -56,7 +56,7 @@ void Sprite::Reset()
     f.b.collides = 0;
     f.b.vulnerable = 0;
     screenSpace = 0;
-    anim = 0;
+    bank = 0;
     tag = 0;
     frame = 0;
     stepTimer = 0;

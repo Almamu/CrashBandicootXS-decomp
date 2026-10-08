@@ -43,8 +43,9 @@ union key_state {
 };
 
 /* The sprite bank set (`gSpriteBankSet`, 4 bytes, built by
- * InitLevelState): it holds the sprite bank table the level's sprites
- * come from (&gSpriteBankTable). Its users take the first bank's animations
+ * InitLevelState; the C view of class SpriteBankSet, sprite_obj.hpp, which
+ * checks it): it holds the sprite bank table the level's sprites come
+ * from (&gSpriteBankTable). Its users take the first bank's animations
  * (`table->banks`) as the base of their byte offsets. */
 struct sprite_bank_set {
     const struct sprite_bank_table *table;
@@ -88,8 +89,8 @@ extern class SpriteBankSet *gSpriteBankSet;
 extern struct sprite_bank_set *gSpriteBankSet;
 #endif
 /* The entity spawner (CreateEntitySpawner): the C++ files see it as its
- * class, EntitySpawner (spawners.hpp), the C files as level.h's struct
- * entity_spawner. */
+ * class, EntitySpawner (spawners.hpp), the C files as level.h's `struct
+ * entity_spawner` tag. */
 #ifdef __cplusplus
 extern class EntitySpawner *gEntitySpawner;
 #else
@@ -107,7 +108,7 @@ extern struct oam_shadow_buffer *gOamBuffer;
 #endif
 extern void *gInput; /* UpdateKeys's object; it only reads gKeys */
 /* The HUD (game_frame.cpp builds it): a Hud (hud.hpp) to the C++ files,
- * its C view, struct hud_counter (hud.h), to the C ones. */
+ * hud.h's `struct hud_counter` tag to the C ones. */
 #ifdef __cplusplus
 extern class Hud *gHud;
 #else

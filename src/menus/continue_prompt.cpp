@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "match.h"
-#include "vram_pool.h"
 #include "text.h"
 #include "system.h"
 #include "audio.h"

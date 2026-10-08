@@ -15,9 +15,9 @@
  *   src/hud/hud_counters.cpp  UpdateCrates, UpdateWumpa, UpdatePercentCounters
  *   src/hud/hud_slide.cpp     the slides, the crate total, destructor
  *
- * hud.h's struct hud_counter stays the C view, for the C files (the
- * level and actor code); the C prototypes there keep the methods' C
- * names, which cxx_symbols.txt maps them to. */
+ * The C files (the level and actor code) see gHud as hud.h's `struct
+ * hud_counter` tag; the C prototypes there keep the methods' C names,
+ * which cxx_symbols.txt maps them to. */
 
 #include "part_list.hpp"
 
@@ -26,8 +26,8 @@ extern "C" {
 #include "hud.h"
 }
 
-/* Sets a part's sprite bank. `bank` is in Sprite's anonymous union with
- * `anim`, and gcc gives every access to a union member alias set 0, so a
+/* Sets a part's sprite bank. `bank` is in Sprite's one-member union (sprite_obj.hpp),
+ * and gcc gives every access to a union member alias set 0, so a
  * plain store would make gcc reload `parts` after it. Through a pointer
  * to the member the store has the pointer's own alias set (as menus.hpp's
  * SetIconBank and level_select.hpp's SetBankNow); written in place rather
@@ -47,33 +47,40 @@ extern "C" {
         _p->frame = _f;                                                        \
     }
 
+/* The HUD object (`gHud`, 0x68 bytes). The lives, wumpa and crate
+ * counters each have a {slide state, slide timer} pair (hud.h), stepped by
+ * StepSlide. Each counter keeps the value it is showing (`shown*`), so it
+ * only updates its digits when the value changes. */
 class Hud
 {
 public:
     s32 livesSlide;            // 0x00 - the lives counter's slide state (hud.h)
     s32 livesSlideTimer;       // 0x04
-    s32 wumpaSlide;            // 0x08
+    s32 wumpaSlide;            // 0x08 - the wumpa counter's; Update only draws the time-trial
+                               //        clock while neither counter is shown
     s32 wumpaSlideTimer;       // 0x0C
-    s32 crateSlide;            // 0x10
+    s32 crateSlide;            // 0x10 - the crate counter's
     s32 crateSlideTimer;       // 0x14
-    u8 icon_flag;              // 0x18 - the jetpack categories' percentage counters
+    u8 icon_flag;              // 0x18 - the jetpack categories' percentage counters: Update's
+                               //        gate for UpdatePercentCounters (ConfigureParts' argument)
     u8 unknown_19[3];          // 0x19
     s32 lives;                 // 0x1C
     s32 wumpa;                 // 0x20
     s32 crateCount;            // 0x24
-    s32 crateTotal;            // 0x28
-    s32 shownMinutes;          // 0x2C
+    s32 crateTotal;            // 0x28 - SetCrateTotal/IncCrateTotal
+    s32 shownMinutes;          // 0x2C - UpdateClock's caches of GetClockMinutes/Seconds/Tenths
     s32 shownSeconds;          // 0x30
     s32 shownTenths;           // 0x34
-    s32 playerHpPercent;       // 0x38
-    s32 airshipHpPercent;      // 0x3C
+    s32 playerHpPercent;       // 0x38 - UpdatePercentCounters' first percentage: the jetpack
+                               //        player's HP
+    s32 airshipHpPercent;      // 0x3C - its second (GetAirshipHpPercent)
     s32 shownLives;            // 0x40 - ConfigureParts fills +0x40..+0x63 with -1
     s32 shownWumpa;            // 0x44
     s32 shownCrateCount;       // 0x48
     s32 shownCrateTotal;       // 0x4C
     u8 unknown_50[0xC];        // 0x50
-    s32 shownPlayerHpPercent;  // 0x5C
-    s32 shownAirshipHpPercent; // 0x60
+    s32 shownPlayerHpPercent;  // 0x5C - the cache of `playerHpPercent`
+    s32 shownAirshipHpPercent; // 0x60 - of `airshipHpPercent`
     HudPart *parts;            // 0x64 - the 35 parts
 
     Hud();                                                 // InitHud
@@ -96,6 +103,6 @@ public:
     void IncCrateTotal();                                  // IncHudCrateTotal
 };
 
-COMPILE_TIME_ASSERT(hud_hpp, sizeof(Hud) == sizeof(struct hud_counter));
+COMPILE_TIME_ASSERT(hud_hpp, sizeof(Hud) == 0x68);
 
 #endif /* !GUARD_HUD_HPP */

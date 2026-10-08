@@ -54,7 +54,7 @@ s32 Wumpa::CheckPlayerContact()
 void Wumpa::SetHome(s32 px, s32 py)
 {
     SetPixelPos(px, py);
-    anchor = *(struct orbit_vec *)&x;
+    anchor = *(struct vec2 *)&x;
 }
 
 /* Starts hop `mode` from its start; 0xFF starts the payout instead. */

@@ -32,7 +32,6 @@ struct spawn_arg {
 struct anim_box;
 struct anim_table_record;
 struct actor_283c;
-struct jetpack_spawn_rec;
 
 /* src/actor/actor.cpp */
 extern void JetpackReloadPlayerTiles(void *arg0);
@@ -76,7 +75,7 @@ extern u8 IsJetpackPlayerInactive(void);
 
 /* src/vehicle/jetpack_spawn.cpp: the spawners (C linkage) */
 extern void YetiStateStop(void);
-extern void *SpawnJetpackActor(struct jetpack_spawn_rec *rec, u8 alt, s32 dz);
+extern void *SpawnJetpackActor(struct actor_spawn *rec, u8 alt, s32 dz);
 extern void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn);
 extern void CreateJetpackCheckpointText(void);
 extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);

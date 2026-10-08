@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "audio.h"
-#include "vram_pool.h"
 #include "system.h"
 #include <agb_syscall.h>
 #include "text.h"

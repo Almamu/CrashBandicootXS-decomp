@@ -69,25 +69,21 @@ LevelState::~LevelState()
     gLevelStateSingleton = 0;
 }
 
-struct text_vec {
-    s32 x;
-    s32 y;
-};
-
-struct text_rect {
-    struct text_vec pos;
-    struct text_vec size;
-};
-
 /* Through an inline's parameters both values of a pair are loaded before
  * the two stores, as in the ROM (the C needed a brace-initialized struct
  * returned by value; returned by value in C++, the pair goes through a
  * stack temporary, and stored field by field, each constant is loaded
  * right before its store). */
-static inline void SetVec(struct text_vec *v, s32 x, s32 y)
+static inline void SetBoxPos(struct aabb *b, s32 x, s32 y)
 {
-    v->x = x;
-    v->y = y;
+    b->x = x;
+    b->y = y;
+}
+
+static inline void SetBoxSize(struct aabb *b, s32 w, s32 h)
+{
+    b->w = w;
+    b->h = h;
 }
 
 void PlayCutscene(void *self, s32 idx)
@@ -96,7 +92,7 @@ void PlayCutscene(void *self, s32 idx)
      * separate locals, the pager's field stores go through the register
      * holding &pager instead. */
     struct {
-        struct text_rect box;
+        struct aabb box;
         u16 fill;
         struct cutscene_player pager;
     } f;
@@ -104,8 +100,8 @@ void PlayCutscene(void *self, s32 idx)
     u16 mode;
     u16 *dispcnt;
 
-    SetVec(&f.box.pos, 7, 0x7E);
-    SetVec(&f.box.size, 0xE4, 0x1E);
+    SetBoxPos(&f.box, 7, 0x7E);
+    SetBoxSize(&f.box, 0xE4, 0x1E);
     dispcnt = (u16 *)gDispcnt;
     zero = 0;
     mode = 0x40;
@@ -137,15 +133,15 @@ void PlayCutscene(void *self, s32 idx)
         /* f.pager.box = f.box, spelled out: the ROM stores the two x
          * words sp-relative and the two y words through one pointer
          * register - see docs/matching/archive/gap-22354-game-context.md. */
-        s32 x0 = f.box.pos.x;
-        s32 y0 = f.box.pos.y;
+        s32 x0 = f.box.x;
+        s32 y0 = f.box.y;
         s32 *d = &f.pager.box.x;
         s32 x1, y1;
 
         d[0] = x0;
         d[1] = y0;
-        x1 = f.box.size.x;
-        y1 = f.box.size.y;
+        x1 = f.box.w;
+        y1 = f.box.h;
         f.pager.box.w = x1;
         d[3] = y1;
     }

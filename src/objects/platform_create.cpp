@@ -105,7 +105,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     }
     TouchableList()->Add(obj);
-    obj->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x1D4);
+    obj->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1D4);
     obj->tag = kind;
     obj->ResetFrameTimer();
     obj->ResetFrameIndex();
@@ -113,7 +113,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
     obj->mirrorFlags.mirrorX = 0;
     obj->mirrorFlags.mirrorY = 0;
     {
-        struct anim_rec *r = obj->anim->records;
+        const struct sprite_anim *r = obj->bank->anims;
         u32 slot;
 
         r += obj->tag;

@@ -6,7 +6,6 @@
 extern "C" {
 #include "core.h"
 #include "match.h"
-#include "vram_pool.h"
 #include "level_state.h"
 #include "actor.h"
 #include <agb_syscall.h>

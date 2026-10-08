@@ -209,7 +209,7 @@ static inline void SetTag(MovingSprite *p, s32 tag)
 /* Sets the frame, clamped to the current animation's frame count. */
 static inline void SetFrame(MovingSprite *part, s32 frame)
 {
-    const struct sprite_bank *bank = (const struct sprite_bank *)part->anim;
+    const struct sprite_bank *bank = part->bank;
     u8 *tag = &part->tag;
     const struct sprite_anim *records = bank->anims;
     s32 count = records[*tag].frameCount;
@@ -349,7 +349,7 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
     Ctrl *ctrl;
     s32 x;
 
-    p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x294);
+    p->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x294);
     /* through an s32: a constant stored straight is loaded after the
      * address, where the ROM loads it first */
     SetTag(p, 5);

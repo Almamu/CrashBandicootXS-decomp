@@ -77,7 +77,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * split out of `docs/matching/archive/issue-9-0x0800a178-graphics.md`'s existing
  * write-up - both callers (`ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`, GitHub issue
  * #9/#10, `src/objects/ground_sprite_collide.cpp`) already fully placed their
- * argument roles: `s32 fn(void *player, struct probe_pos *pos, s32
+ * argument roles: `s32 fn(void *player, struct vec2 *pos, s32
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
  * `player+0x20`'s terrain-data pointer (the same `struct tile_cache *`
  * field `GetTerrainFlagsAt` (above) already established that offset
@@ -103,7 +103,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  *
  * Both are Y-axis (floor-height) probes - matching how `ProbeGroundSpriteTerrain`
  * only ever uses them against `self.y`/`self->y`, never `self.x`.
- * `struct probe_pos` reuses `terrain_probe.c`'s own plain-int (not Q8)
+ * `struct vec2` reuses `terrain_probe.c`'s own plain-int (not Q8)
  * probe-position layout unchanged (same "duplicate only what's needed,
  * no shared header" precedent `struct tile_cache` itself already set
  * between `bg_layer_base.cpp`/`tile_cache.cpp`).
@@ -184,7 +184,7 @@ struct tile_cache;
  * GetTerrainHeights): adds the distance from `pos->y` to that column's
  * surface, Q8, to `*outValue` and returns 1, or returns 0 when the cell has
  * none (ProbeGroundSpriteFloor). */
-s32 ProbeFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
+s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 {
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
@@ -206,7 +206,7 @@ s32 ProbeFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
 /* The same for the solid terrain types (0x24 and above), whose surface is
  * the type's mode-0 value (GetSolidTerrainModeValue) rather than a height
  * per column (ProbeGroundSpriteTerrain). */
-s32 ProbeSolidFloorHeight(void *player, struct probe_pos *pos, s32 *outValue)
+s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 {
     u8 scratch;
     s32 tileX = pos->x >> 3;

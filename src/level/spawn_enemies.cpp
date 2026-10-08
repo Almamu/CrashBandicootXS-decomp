@@ -16,10 +16,10 @@ extern "C" {
  * collidable list; the tails set the controller's animations, ranges and
  * state. Built with old_agbcp. */
 
-/* The animation table at `offset` in the sprite banks. */
-static inline struct anim_table *BankAnim(u32 offset)
+/* The sprite bank at `offset` in the sprite banks. */
+static inline const struct sprite_bank *BankAnim(u32 offset)
 {
-    return (struct anim_table *)(SPRITE_BANK_BASE + offset);
+    return (const struct sprite_bank *)(SPRITE_BANK_BASE + offset);
 }
 
 /* The setters below are inline because old_agbcp schedules a store's
@@ -110,7 +110,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x9c);
+    part->bank = BankAnim(0x9c);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -137,7 +137,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
-    part->anim = BankAnim(0x84);
+    part->bank = BankAnim(0x84);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -163,7 +163,7 @@ void SpawnVenusFlytrap(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
-    part->anim = BankAnim(0x78);
+    part->bank = BankAnim(0x78);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -195,7 +195,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0xa8);
+    part->bank = BankAnim(0xa8);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -224,7 +224,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec2;
     s32 mid;
 
-    part->anim = BankAnim(0x90);
+    part->bank = BankAnim(0x90);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -255,7 +255,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0xb4);
+    part->bank = BankAnim(0xb4);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -286,7 +286,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
-    part->anim = BankAnim(0xcc);
+    part->bank = BankAnim(0xcc);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -313,7 +313,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0xc0);
+    part->bank = BankAnim(0xc0);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -341,7 +341,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x3c);
+    part->bank = BankAnim(0x3c);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -373,7 +373,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x30);
+    part->bank = BankAnim(0x30);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -402,7 +402,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
-    part->anim = BankAnim(0x24);
+    part->bank = BankAnim(0x24);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -433,7 +433,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x60);
+    part->bank = BankAnim(0x60);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -462,7 +462,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
-    part->anim = BankAnim(0x54);
+    part->bank = BankAnim(0x54);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -486,7 +486,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x6c);
+    part->bank = BankAnim(0x6c);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -511,7 +511,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
-    part->anim = BankAnim(0x12c);
+    part->bank = BankAnim(0x12c);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -546,7 +546,7 @@ void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x144);
+    part->bank = BankAnim(0x144);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -578,7 +578,7 @@ void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x120);
+    part->bank = BankAnim(0x120);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -610,7 +610,7 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x15c);
+    part->bank = BankAnim(0x15c);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -639,7 +639,7 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x138);
+    part->bank = BankAnim(0x138);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -689,7 +689,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     Sprite::MirrorFlags *q;
     MATCH_HOLD_REG(s32, h3, r3);
 
-    part->anim = BankAnim(0x114);
+    part->bank = BankAnim(0x114);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -745,7 +745,7 @@ void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x108);
+    part->bank = BankAnim(0x108);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -776,7 +776,7 @@ void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0xf0);
+    part->bank = BankAnim(0xf0);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -803,7 +803,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0xfc);
+    part->bank = BankAnim(0xfc);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -828,7 +828,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     EnemyCtrl *hdr;
     const struct entity_params *rec;
 
-    part->anim = BankAnim(0xe4);
+    part->bank = BankAnim(0xe4);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -855,7 +855,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0x48);
+    part->bank = BankAnim(0x48);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);
@@ -884,7 +884,7 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     const struct entity_params *rec;
     const struct entity_params *rec2;
 
-    part->anim = BankAnim(0xd8);
+    part->bank = BankAnim(0xd8);
     part->palette = part->GetAnimPaletteSlot();
     hdr = new EnemyCtrl;
     hdr->Attach(part);

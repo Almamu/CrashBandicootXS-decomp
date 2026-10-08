@@ -1,16 +1,12 @@
 #ifndef GUARD_GFX_PART_H
 #define GUARD_GFX_PART_H
 
-/* Two helpers of the sprite pieces' draw loops (src/gfx/sprite_pieces.cpp,
- * affine_sprite_pieces.cpp) and the sprites' position pair. The C view
- * this header was named after, `struct gfx_part` (a moving sprite, as
- * include/sprite_obj.hpp's MovingSprite has it) and its `struct
- * anim_bank`/`anim_record` records, went with their last users (#656). */
-
-struct gfx_vec {
-    s32 x;
-    s32 y;
-};
+/* A helper of the sprite pieces' draw loops (src/gfx/sprite_pieces.cpp,
+ * affine_sprite_pieces.cpp). The C view this header was named after,
+ * `struct gfx_part` (a moving sprite, as include/sprite_obj.hpp's
+ * MovingSprite has it) and its `struct anim_bank`/`anim_record` records,
+ * went with their last users, and its `struct gfx_vec` is aabb.h's
+ * `struct vec2` (#656). */
 
 /* Bit `7 - (shift - 24)` of the flags byte at +0x28 (the OBJ mode, mirror
  * and 8bpp bits), tested as a sign test (`lsl #shift; cmp #0; bge`), as

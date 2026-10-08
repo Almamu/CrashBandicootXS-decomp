@@ -4,7 +4,6 @@
 extern "C" {
 #include "math_util.h"
 #include "match.h"
-#include "vram_pool.h"
 #include "util.h"
 #include "gfx.h"
 #include "memory.h"
@@ -54,7 +53,7 @@ s32 Sprite::GetAnimPaletteSlot()
  * left, 4 up, 8 down) to the object's origin. */
 void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
 {
-    struct gfx_vec *dest = (struct gfx_vec *)destArg;
+    struct vec2 *dest = (struct vec2 *)destArg;
     struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
 
     switch (kind) {
@@ -80,7 +79,7 @@ void OffsetFromHitboxEdge(void *destArg, s32 kind, void *recArg)
  * use it with 8 for the point under the object's feet. */
 void OffsetToHitboxEdge(void *destArg, s32 kind, void *recArg)
 {
-    struct gfx_vec *dest = (struct gfx_vec *)destArg;
+    struct vec2 *dest = (struct vec2 *)destArg;
     struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
 
     switch (kind) {
@@ -107,7 +106,7 @@ void OffsetToHitboxEdge(void *destArg, s32 kind, void *recArg)
  * end of the top or bottom edge (x - w/2; the scan runs right over `w`). */
 void OffsetToHitboxEdgeStart(void *destArg, s32 kind, void *recArg)
 {
-    struct gfx_vec *dest = (struct gfx_vec *)destArg;
+    struct vec2 *dest = (struct vec2 *)destArg;
     struct hitbox_quad *rec = (struct hitbox_quad *)recArg;
 
     switch (kind) {
@@ -480,12 +479,12 @@ void Sprite::SetPalette(s32 value)
 
 void Sprite::SetBank(void *value)
 {
-    anim = (struct anim_table *)value;
+    bank = (const struct sprite_bank *)value;
 }
 
 void *Sprite::GetBank()
 {
-    return anim;
+    return (void *)bank;
 }
 
 u8 Sprite::IsAnimLooping()

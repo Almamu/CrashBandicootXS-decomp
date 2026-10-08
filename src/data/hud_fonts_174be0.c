@@ -15,7 +15,7 @@ const u32 gHudPartAnims[35] = {
     10, 0, 0, 0, 0, 12, 0, 0, 0, 0, 11,
 };
 
-const struct hud_pos gHudPartPositions[35] = {
+const struct vec2 gHudPartPositions[35] = {
     { 212, 16 },
     { 227, 16 },
     { 190, 16 },

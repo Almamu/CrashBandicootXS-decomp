@@ -76,7 +76,7 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
         }
     }
     special = 0;
-    self->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x174);
+    self->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x174);
     switch (type) {
     case CRATE_KIND_CHECKPOINT:
     case CRATE_KIND_LIFE:

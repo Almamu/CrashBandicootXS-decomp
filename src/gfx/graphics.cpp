@@ -7,7 +7,6 @@ extern "C" {
 #include "math_util.h"
 #include "gfx.h"
 #include "memory.h"
-#include "vram_pool.h"
 #include "util.h"
 #include <libgcc.h>
 #include "menus.h"

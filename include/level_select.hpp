@@ -59,8 +59,8 @@ static inline const struct sprite_bank *AnimTable(s32 offset)
     return (const struct sprite_bank *)(SPRITE_BANK_BASE + offset);
 }
 
-/* Sets the sprite's bank. `bank` is in Sprite's anonymous union with
- * `anim`, and gcc gives every access to a union member alias set 0, so a
+/* Sets the sprite's bank. `bank` is in Sprite's one-member union (sprite_obj.hpp),
+ * and gcc gives every access to a union member alias set 0, so a
  * store to it would make gcc reload everything after it (the ROM's class
  * had a plain member). Through a pointer to the member, the store has the
  * pointer's own alias set. */
@@ -150,16 +150,16 @@ public:
     UiSprite *frame; // 0x0C
     // 0x10: the vtable pointer
 
-    LevelSelectEntry();                             // CreateLevelSelectEntry
-    virtual void Animate(s32 phase);                // 1 AnimateLevelSelectEntry
-    virtual void SetLevel(s32 world, s32 index);    // 2 SetLevelSelectEntryLevel
-    virtual void SetPos(const struct xy_pair *pos); // 3 SetLevelSelectEntryPos
-    virtual void Draw();                            // 4 DrawLevelSelectEntry: empty
-    virtual ~LevelSelectEntry();                    // 5 DestroyLevelSelectEntry
-    u8 IsSelected();                                // IsLevelSelectEntrySelected
-    s32 GetLevel();                                 // GetLevelSelectEntryLevel
-    void SetSelected(u8 value);                     // SetLevelSelectEntrySelected
-    void SetBox(s32 kind);                          // SetLevelSelectEntryBox
+    LevelSelectEntry();                          // CreateLevelSelectEntry
+    virtual void Animate(s32 phase);             // 1 AnimateLevelSelectEntry
+    virtual void SetLevel(s32 world, s32 index); // 2 SetLevelSelectEntryLevel
+    virtual void SetPos(const struct vec2 *pos); // 3 SetLevelSelectEntryPos
+    virtual void Draw();                         // 4 DrawLevelSelectEntry: empty
+    virtual ~LevelSelectEntry();                 // 5 DestroyLevelSelectEntry
+    u8 IsSelected();                             // IsLevelSelectEntrySelected
+    s32 GetLevel();                              // GetLevelSelectEntryLevel
+    void SetSelected(u8 value);                  // SetLevelSelectEntrySelected
+    void SetBox(s32 kind);                       // SetLevelSelectEntryBox
 };
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectEntry) == 0x14);
@@ -316,29 +316,23 @@ public:
     void Park();
     void Glide();
     u8 HasArrived();
-    void Move(s32 x, s32 y);          // MoveLevelSelectCursor
-    void MoveTo(struct xy_pair *pos); // UNUSED (Park has it inlined)
-    void SetPos(s32 x, s32 y);        // SetLevelSelectCursorPos
-    void ResetIdleTimer();            // ResetLevelSelectCursorIdleTimer
+    void Move(s32 x, s32 y);       // MoveLevelSelectCursor
+    void MoveTo(struct vec2 *pos); // UNUSED (Park has it inlined)
+    void SetPos(s32 x, s32 y);     // SetLevelSelectCursorPos
+    void ResetIdleTimer();         // ResetLevelSelectCursorIdleTimer
 
     /* ResetIdleTimer's and MoveTo's bodies, which other methods inline. */
     void ResetIdleTimerNow()
     {
         timer = (u16)RandRange(300) + 600;
     }
-    void MoveToNow(struct xy_pair *pos)
+    void MoveToNow(struct vec2 *pos)
     {
         Move(pos->x, pos->y);
     }
 };
 
 COMPILE_TIME_ASSERT(level_select_hpp, sizeof(LevelSelectCursor) == 0x54);
-
-/* REG_DISPCNT's shadow as a halfword or its bitfields. */
-union LevelSelectDispcnt {
-    u16 raw;
-    struct dispcnt_bits bits;
-};
 
 /* The level-select screen (RunLevelSelect): five levels per page (a
  * world), each level's fixed record (name text, three time-trial
@@ -350,32 +344,32 @@ class LevelSelect
 public:
     u8 result; // 0x00 - returned by RunLevelSelect
     u8 unk_01[3];
-    s32 lastIndex;                   // 0x04 - last valid `index` on this page
-    s32 index;                       // 0x08 - cursor, 0-5
-    s32 world;                       // 0x0C - page
-    s32 levelId;                     // 0x10 - gLevelTable index
-    s32 nameText;                    // 0x14 - the level name's text
-    const struct xy_pair *positions; // 0x18 - cursor position per index
-    LevelSelectPageBg *bg1;          // 0x1C - BG1, the page strip
-    ZoomBg *bg2;                     // 0x20 - BG2, the level picture
-    LevelSelectEntry *items[6];      // 0x24
-    LevelSelectCursor *panel;        // 0x3C - the cursor
-    UiSprite *sprites[10];           // 0x40
-    u8 timeText[9];                  // 0x68 - best time
-    u8 recordText[9];                // 0x71 - next threshold to beat
+    s32 lastIndex;                // 0x04 - last valid `index` on this page
+    s32 index;                    // 0x08 - cursor, 0-5
+    s32 world;                    // 0x0C - page
+    s32 levelId;                  // 0x10 - gLevelTable index
+    s32 nameText;                 // 0x14 - the level name's text
+    const struct vec2 *positions; // 0x18 - cursor position per index
+    LevelSelectPageBg *bg1;       // 0x1C - BG1, the page strip
+    ZoomBg *bg2;                  // 0x20 - BG2, the level picture
+    LevelSelectEntry *items[6];   // 0x24
+    LevelSelectCursor *panel;     // 0x3C - the cursor
+    UiSprite *sprites[10];        // 0x40
+    u8 timeText[9];               // 0x68 - best time
+    u8 recordText[9];             // 0x71 - next threshold to beat
     u8 unk_7A[2];
-    u32 scroll;                       // 0x7C - BG0 auto-scroll counter
-    s32 panelSlideX;                  // 0x80 - x offset of the record panel
-    s32 clearedIconY;                 // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
-    s32 flag1IconY;                   // 0x88 - sprite 3's
-    s32 gemIconY;                     // 0x8C - sprite 4's (the `rank` gem icon)
-    s32 trialIconY;                   // 0x90 - sprite 5's (time-trial icons)
-    s32 trialIcon2Y;                  // 0x94 - sprite 6's
-    s32 rank;                         // 0x98 - LoadRecord's classification, 5 = none
-    struct game_progress *save;       // 0x9C - PackSaveData's save block
-    union blend blend;                // 0xA0 - REG_BLDCNT + REG_BLDALPHA
-    struct bldy bldy;                 // 0xA4 - REG_BLDY
-    union LevelSelectDispcnt dispcnt; // 0xA8 - REG_DISPCNT
+    u32 scroll;                 // 0x7C - BG0 auto-scroll counter
+    s32 panelSlideX;            // 0x80 - x offset of the record panel
+    s32 clearedIconY;           // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadRecord
+    s32 flag1IconY;             // 0x88 - sprite 3's
+    s32 gemIconY;               // 0x8C - sprite 4's (the `rank` gem icon)
+    s32 trialIconY;             // 0x90 - sprite 5's (time-trial icons)
+    s32 trialIcon2Y;            // 0x94 - sprite 6's
+    s32 rank;                   // 0x98 - LoadRecord's classification, 5 = none
+    struct game_progress *save; // 0x9C - PackSaveData's save block
+    union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
+    struct bldy bldy;           // 0xA4 - REG_BLDY
+    union dispcnt dispcnt;      // 0xA8 - REG_DISPCNT (gfx.h)
 
     LevelSelect(s32 arg); // InitLevelSelect
     ~LevelSelect();       // DestroyLevelSelect

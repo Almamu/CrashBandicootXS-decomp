@@ -25,33 +25,11 @@ extern "C" {
 #include "entity_bits.h"
 }
 
-/* The entity flags byte at +0x0C and the one after it, +0x0D (actor.h's
- * `flags`, box_part.h's `flags`/`flags2`). */
-union EntityFlags {
-    u8 flags; // 0x0C
-    struct {
-        u8 gone:1;       // removed (SetGone); the lists drop it
-        u8 unk_1:1;      // Get/Set/ClearFlag1
-        u8 visible:1;    // in contact with the player (Is/Enable/DisableContact)
-        u8 bit3:1;       // touched by the player or another object; SetTargetAnim clears it
-        u8 active:1;     // always active: skips the camera tests (updated off screen too)
-        u8 unk_5:1;      // Get/Set/ClearSpriteObjFlag5
-        u8 vulnerable:1; // the player's attacks hit it
-        u8 collides:1;   // Is/Enable/DisableCollision
-        u8 floorProbe:1; // 0x0D - a ground sprite probes the floor (Enable/DisableFloorProbe)
-        u8 grounded:1;   // a ground sprite stands on the floor (ProbeFloor)
-        u8 blink:1;      // hidden this frame (a blinking part; Is/ToggleHidden)
-        u8 solid:1;      // pushes the player out (Is/Set/ClearSolid)
-        u8 unk_0D_4:4;
-    } b; // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
-    struct {
-        u8 flags;  // 0x0C
-        u8 flags2; // 0x0D
-    } bytes;
-};
+/* union EntityFlags, the flags at +0x0C, is actor.h's (struct player, the
+ * C view of the player, has it too). */
 
 /* The entity: a position, the spawn's id, a kind, the flags and a size;
- * then the vtable pointer. struct actor (actor.h) is its C view. Each
+ * then the vtable pointer. Each
  * virtual method's slot is its declaration order, from slot 1. */
 class Entity
 {
@@ -243,7 +221,7 @@ public:
     }
 };
 
-COMPILE_TIME_ASSERT(entity_hpp, sizeof(Entity) == sizeof(struct actor));
+COMPILE_TIME_ASSERT(entity_hpp, sizeof(Entity) == 0x1C);
 
 /* graphics.cpp's out-of-line copies of SetPixelPos and SetPos (above),
  * under their C names (cxx_symbols.txt). The ROM calls them out of line

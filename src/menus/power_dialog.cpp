@@ -2,7 +2,6 @@
 #include "font.hpp"
 
 extern "C" {
-#include "vram_pool.h"
 #include "system.h"
 #include "text.h"
 #include "audio.h"

@@ -131,7 +131,7 @@ void Player::HandleEvent(s32 from, s32 event, s32 arg)
         break;
     case EVENT_MASK_GAIN:
         if (gLevelState->maskLevel == MASK_LEVEL_NONE) {
-            struct gfx_vec *h = maskTrail;
+            struct vec2 *h = maskTrail;
             s32 i;
 
             for (i = 7; i >= 0; i--)

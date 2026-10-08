@@ -14,16 +14,9 @@
  * range; it is in player.h. */
 
 #include "core.h"
+#include "aabb.h"
 #include "actor.h"
 #include "vtable.h"
-
-/* A position pair: the pickups' home position (`anchor`), which their
- * constructors copy from the head of the object in one go (the ROM's
- * paired `ldr; ldr; str; str`). */
-struct orbit_vec {
-    s32 x;
-    s32 y;
-};
 
 /* A copy of one of the hop width tables, as the struct UpdateExtraLifeHop
  * and UpdateWumpaHop copy onto the stack in one go. */

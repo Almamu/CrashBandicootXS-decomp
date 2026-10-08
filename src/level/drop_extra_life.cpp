@@ -26,7 +26,7 @@ ExtraLife *EntitySpawner::DropExtraLife(u32 x, u32 y, u32 p3, u32 p5, bool toHud
         part->counter = p3;
         part->mode = p5;
         part->phase = state;
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x8d * 4);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x8d * 4);
         SetTag(part, 0xa);
         part->ResetFrameTimer();
         part->ResetFrameIndex();

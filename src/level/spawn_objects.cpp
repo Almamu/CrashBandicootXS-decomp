@@ -37,7 +37,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     MovingSprite *part = MovingSprite::Create(arg0, arg1, arg2, arg3);
     MegaMixCtrl *hdr;
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x168);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x168);
     part->x = INT_TO_Q8(arg1);
     part->y = INT_TO_Q8(arg2);
     SetTag(part, 0);
@@ -65,7 +65,7 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x21c);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x21c);
     SetTag(part, 0);
     part->ResetFrameTimer();
     part->ResetFrameIndex();
@@ -83,7 +83,7 @@ void SpawnSeaweedNoAnimReset(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x21c);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x21c);
     part->palette = part->GetAnimPaletteSlot();
     part->f.b.collides = 0;
     part->f.b.visible = 0;
@@ -98,7 +98,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     Sprite *part = Sprite::Create(arg0, arg1, arg2, arg3);
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x210);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x210);
     SetTag(part, 0);
     part->ResetFrameTimer();
     part->ResetFrameIndex();

@@ -42,15 +42,9 @@ extern "C" {
 #include "objects.h"
 }
 
-/* REG_DISPCNT's shadow as a halfword or its bitfields. */
-union MenuDispcnt {
-    u16 raw;
-    struct dispcnt_bits bits;
-};
-
 /* Sets an icon's sprite bank to the one at `offset` in the sprite bank
- * data. `bank` is in Sprite's anonymous union with `anim`, and gcc gives
- * every access to a union member alias set 0, so a plain store would make
+ * data. `bank` is in Sprite's one-member union (sprite_obj.hpp), and gcc
+ * gives every access to a union member alias set 0, so a plain store would make
  * gcc reload everything after it. Through a pointer to the member, the
  * store has the pointer's own alias set (as level_select.hpp's
  * SetBankNow). */
@@ -108,7 +102,7 @@ public:
     s32 blinkTimer;                 // 0xC4 - frames to the next blink
     union blend blend;              // 0xC8 - REG_BLDCNT
     struct bldy bldy;               // 0xCC - REG_BLDY
-    union MenuDispcnt dispcnt;      // 0xD0 - REG_DISPCNT (a word: a struct is 4-aligned)
+    union dispcnt dispcnt;          // 0xD0 - REG_DISPCNT (gfx.h)
 
     PauseMenu();                                 // InitPauseMenu
     ~PauseMenu();                                // DestroyPauseMenu
@@ -147,14 +141,14 @@ COMPILE_TIME_ASSERT(menus_hpp, sizeof(PauseMenu) == 0xD4);
 class PowerDialog
 {
 public:
-    struct bg_setup bg;        // 0x00 - BG0
-    s32 titleText;             // 0x10 - GetUiText's result
-    s32 descText;              // 0x14
-    UiSprite *icon;            // 0x18 - the power's icon
-    u32 frame;                 // 0x1C - frame counter; BG0HOFS = frame >> 3
-    union blend blend;         // 0x20 - REG_BLDCNT
-    struct bldy bldy;          // 0x24 - REG_BLDY, faded 16 -> 0 -> 16 by Loop
-    union MenuDispcnt dispcnt; // 0x28 - REG_DISPCNT (a word: a struct is 4-aligned)
+    struct bg_setup bg;    // 0x00 - BG0
+    s32 titleText;         // 0x10 - GetUiText's result
+    s32 descText;          // 0x14
+    UiSprite *icon;        // 0x18 - the power's icon
+    u32 frame;             // 0x1C - frame counter; BG0HOFS = frame >> 3
+    union blend blend;     // 0x20 - REG_BLDCNT
+    struct bldy bldy;      // 0x24 - REG_BLDY, faded 16 -> 0 -> 16 by Loop
+    union dispcnt dispcnt; // 0x28 - REG_DISPCNT (gfx.h)
 
     PowerDialog(s32 titleText, s32 descText, s32 type); // InitPowerDialog
     ~PowerDialog();                                     // DestroyPowerDialog

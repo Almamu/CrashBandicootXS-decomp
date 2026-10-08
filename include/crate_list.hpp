@@ -47,6 +47,14 @@ struct CrateGridNode {
 
 COMPILE_TIME_ASSERT(crate_list_hpp, sizeof(CrateGridNode) == 0x14);
 
+/* crates.h's struct pool_init_node, the codegen view ResetGrid (below)
+ * zeroes the nodes through. */
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, data);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, next);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, wrap);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, link);
+ASSERT_VIEW_FIELD(crate_list_hpp, CrateGridNode, pool_init_node, mark);
+
 /* An entry of the free list: a node not in use, and the next entry. */
 struct CrateGridLink {
     CrateGridNode *node; // 0x00

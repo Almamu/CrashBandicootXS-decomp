@@ -126,16 +126,6 @@ void ConstructAnimTableState(struct anim_table_record *table, s32 z)
     gActorList = new PolarPlayer(gActorAnimTable, z);
 }
 
-struct actor_spawn {
-    u8 kind;
-    u8 altKind;
-    u8 bonusKind;
-    u8 unk_03;
-    s32 x;
-    s32 y;
-    s32 z;
-};
-
 ActorSelf *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset)
 {
     u8 kind = spawn->kind;

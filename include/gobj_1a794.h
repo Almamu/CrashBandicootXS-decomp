@@ -17,33 +17,10 @@
  * 0x0801A794-0x0801B85C): the platforms are C++ (include/platform.hpp's
  * Platform and PlatformMover, src/objects/platform*.cpp), and `struct
  * gobj`, their and the ground sprites' C view, went with its last user
- * (#656). Kept here: the sprite bank as the older code reads it (`struct
- * anim_table`, the type of Sprite's `anim`, and its 0x1C-byte `struct
- * anim_rec` records; sprite_bank.h's `struct sprite_bank` is the same
- * data), the platform collision's position pair and the platform spawn
- * record (CreatePlatform). */
-
-struct anim_rec {
-    u8 unk_00[4];
-    s16 offX; // 0x04 - a struct hitbox_quad (gfx.h)
-    s16 offY; // 0x06
-    u8 padX;  // 0x08
-    u8 padY;  // 0x09
-    u8 unk_0A[0xA];
-    u8 paletteId; // 0x14 - GetPaletteSlot(gPaletteCache, paletteId) gives the OBJ palette slot
-    u8 unk_15;
-    u8 frames; // 0x16
-    u8 unk_17[5];
-};
-
-struct anim_table {
-    struct anim_rec *records;
-};
-
-struct pos2 {
-    s32 x;
-    s32 y;
-};
+ * (#656), as did the sprite bank's copies (`struct anim_table` and its
+ * `struct anim_rec` records: Sprite's `bank` is sprite_bank.h's `struct
+ * sprite_bank`). Kept here: the platform collision's position pair and
+ * the platform spawn record (CreatePlatform). */
 
 struct spawn_rec {
     u8 flags; // 0x00

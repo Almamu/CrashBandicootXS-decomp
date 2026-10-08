@@ -4,7 +4,6 @@
 extern "C" {
 #include "gba/dma_macros.h"
 #include "system.h"
-#include "vram_pool.h"
 #include "text.h"
 #include "audio.h"
 #include "gfx.h"
@@ -157,7 +156,7 @@ void LanguageSelect::Draw()
 }
 
 /* Resets several OAM-manager globals, then hand-fills
- * `gPaletteCache`'s (`struct palette_cache`, include/vram_pool.h)
+ * `gPaletteCache`'s (PaletteCache, include/sprite_obj.hpp)
  * `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
  * `gLanguageSelectPalette0`..`gLanguageSelectPalette3`, and finally sets
  * `gSmallFont`'s/`gLargeFont`'s tile base (Font::SetTileBase, which

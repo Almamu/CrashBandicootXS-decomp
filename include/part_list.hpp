@@ -44,12 +44,15 @@ public:
     CollisionQueue();  // ResetCollisionQueue: empties it (Player's constructor)
     ~CollisionQueue(); // DestroyCollisionQueue
     void Resolve();    // ResolveCollisionCandidates
-    void Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+    void Add(Crate *neighbor, s32 kind, s32 code, s32 edge, s32 depth, struct vec2 pos, s32 hit,
              struct byte_arg p20,
              struct byte_arg p21); // AddCollisionCandidate
 };
 
 COMPILE_TIME_ASSERT(part_list_hpp, sizeof(CollisionQueue) == sizeof(struct collision_queue));
+ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, count);
+ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, posCommitted);
+ASSERT_VIEW_FIELD(part_list_hpp, CollisionQueue, collision_queue, candidates);
 
 /* Up to three palette colour cycles (gPaletteCycles, `new
  * PaletteCycles`, 0x48 bytes). run_room.cpp adds them (Add) with

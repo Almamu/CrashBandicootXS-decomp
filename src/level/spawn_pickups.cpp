@@ -36,7 +36,7 @@ static inline Sprite *SpawnTouchable(u32 a0, u16 a1, u16 a2, u16 a3, s32 bank, u
 {
     Sprite *part = Sprite::Create(a0, a1, a2, a3);
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + bank);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + bank);
     part->tag = tag;
     part->ResetFrameTimer();
     part->ResetFrameIndex();
@@ -90,7 +90,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     if ((u8)IsCrystalSaved(gLevelState)) {
         Stopwatch *part = Stopwatch::Create(arg0, arg1, arg2, arg3);
 
-        part->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x1b0);
+        part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x1b0);
         SetTag(part, 0);
         part->ResetFrameTimer();
         part->ResetFrameIndex();
@@ -158,7 +158,7 @@ void *CreateTouchableSprite(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16
 {
     Sprite *part = Sprite::Create(cx, cy, cw, ch);
 
-    part->anim = (struct anim_table *)(SPRITE_BANK_BASE + index * 12);
+    part->bank = (const struct sprite_bank *)(SPRITE_BANK_BASE + index * 12);
     part->tag = tag;
     part->ResetFrameTimer();
     part->ResetFrameIndex();

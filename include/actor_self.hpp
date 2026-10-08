@@ -136,7 +136,29 @@ public:
 };
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == 0x54);
+
+/* actor_self.h's struct actor_self, the C view (its `vtable` is the
+ * class's vtable pointer). */
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(ActorSelf) == sizeof(struct actor_self));
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, anims);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, frameOffsets);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animTime);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animIndex);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animTimer);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, animDone);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, sortKey);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, palette);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, x);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, y);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, z);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, state);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, visible);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, record);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, depth);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, box);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, stateTime);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, prev);
+ASSERT_VIEW_FIELD(actor_self_hpp, ActorSelf, actor_self, next);
 
 /* actor.cpp defines ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE for its own copy. */
 #ifndef ACTOR_SELF_DESTRUCTOR_OUT_OF_LINE

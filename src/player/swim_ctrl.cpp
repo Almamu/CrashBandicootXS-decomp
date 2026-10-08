@@ -189,7 +189,7 @@ void PlayerCtrl::KillPlayer(s32 anim)
     target->f.b.vulnerable = 0;
     target->dead = 1;
     LoseLife(gLevelState);
-    gPaletteCache->LoadSlot(target->palette, target->anim->records[target->tag].paletteId);
+    gPaletteCache->LoadSlot(target->palette, target->bank->anims[target->tag].paletteId);
 }
 
 /* the out-of-line copy is SetDriftX */

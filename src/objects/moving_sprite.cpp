@@ -60,7 +60,7 @@ void MovingSprite::SetPrevPos(s32 px, s32 py)
     prevY = py;
 }
 
-struct gfx_vec MovingSprite::GetPrevPos()
+struct vec2 MovingSprite::GetPrevPos()
 {
     return PrevPos();
 }

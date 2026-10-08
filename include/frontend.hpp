@@ -135,11 +135,8 @@ public:
     struct bg_setup *bg1Buf; // 0x00 - BG1
     struct bg_setup *bg0Buf; // 0x04 - BG0
     struct bg_setup *bg2Buf; // 0x08 - BG2
-    union {
-        u16 raw;
-        struct dispcnt_bits bits;
-    } dispcnt;         // 0x0C - REG_DISPCNT (a word: a struct is 4-aligned)
-    union blend blend; // 0x10 - REG_BLDCNT/BLDALPHA; Loop pulses `eva`
+    union dispcnt dispcnt;   // 0x0C - REG_DISPCNT (gfx.h)
+    union blend blend;       // 0x10 - REG_BLDCNT/BLDALPHA; Loop pulses `eva`
     u8 unused_14[4];
     Font *icons;      // 0x18 - gSmallFont
     s32 blinkCounter; // 0x1C - the selected option's blink counter
@@ -301,12 +298,9 @@ public:
     s32 frame; // 0x00 - frame counter, wraps at 0x100; bit 2 blinks the selection
     u8 done;   // 0x04
     u8 pad_5[3];
-    s32 language; // 0x08 - the selected entry, 0-5
-    union {
-        u16 raw;
-        struct dispcnt_bits bits;
-    } dispcnt;            // 0x0C - the DISPCNT value CommitFrame writes
-    Starfield *starfield; // 0x10
+    s32 language;          // 0x08 - the selected entry, 0-5
+    union dispcnt dispcnt; // 0x0C - the DISPCNT value CommitFrame writes (gfx.h)
+    Starfield *starfield;  // 0x10
 
     LanguageSelect();     // InitLanguageSelect
     ~LanguageSelect();    // DestroyLanguageSelect

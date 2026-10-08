@@ -70,10 +70,10 @@ s32 PlayRoom(struct level_progress *self)
             ctrl->SetAnimSet(&gActionCtrlMotionSet);
             gPlayer->ctrlMode = mode;
             {
-                struct anim_table *bank = (struct anim_table *)SPRITE_BANK_BASE;
+                const struct sprite_bank *bank = (const struct sprite_bank *)SPRITE_BANK_BASE;
                 Player *pl = gPlayer;
 
-                pl->anim = bank;
+                pl->bank = bank;
                 pl->mover = ctrl;
                 ctrl->Attach(pl);
             }
@@ -85,10 +85,11 @@ s32 PlayRoom(struct level_progress *self)
             ((PlayerCtrl *)gPlayerCtrl)->SetAnimSet(&gPlayerCtrlMotionSet);
             gPlayer->ctrlMode = mode;
             {
-                struct anim_table *bank = (struct anim_table *)(SPRITE_BANK_BASE + 0xc);
+                const struct sprite_bank *bank =
+                    (const struct sprite_bank *)(SPRITE_BANK_BASE + 0xc);
                 Player *pl = gPlayer;
 
-                pl->anim = bank;
+                pl->bank = bank;
                 {
                     u8 anim = 0x1f;
 
@@ -119,10 +120,11 @@ s32 PlayRoom(struct level_progress *self)
                 pl->ctrlMode = hover;
             }
             {
-                struct anim_table *bank = (struct anim_table *)(SPRITE_BANK_BASE + 0x18);
+                const struct sprite_bank *bank =
+                    (const struct sprite_bank *)(SPRITE_BANK_BASE + 0x18);
                 Player *pl = gPlayer;
 
-                pl->anim = bank;
+                pl->bank = bank;
                 pl->mover = ctrl;
                 ctrl->Attach(pl);
             }

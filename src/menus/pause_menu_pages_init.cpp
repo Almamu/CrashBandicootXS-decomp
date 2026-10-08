@@ -15,7 +15,7 @@ extern "C" {
 /* Puts an icon at a fixed position. The ROM calls Entity::SetPixelPos
  * out of line here (an inline method, which g++ would inline), so this
  * calls its C name, SetEntityPixelPos, as level_select.cpp does. */
-static inline void SetIconPos(Sprite *s, const struct icon_pos *p)
+static inline void SetIconPos(Sprite *s, const struct vec2 *p)
 {
     SetEntityPixelPos(s, p->x, p->y);
 }
