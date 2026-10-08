@@ -15,6 +15,8 @@ virtual calls, `new`, pointer-to-member calls) compiles to exactly what
 the ROM has, with none of the C emulation. The recommendation is to
 convert gradually, class family by class family, through the Makefile's
 `CXX_OBJS`, starting with the controllers. The libraries stay C.
+That conversion is done: every game object with a C++ trait is C++
+source since [the final cleanup](#the-final-cleanup).
 
 Contents:
 
@@ -77,7 +79,8 @@ with no C++ constructs can't be told apart.
 ## Survey: which objects are C++
 
 `tools/cpp_survey.py` classifies each object by the C++ runtime
-structures its C writes out by hand. Its output on this branch:
+structures its C writes out by hand. Its output when #685 landed (after
+the conversion, see [the final cleanup](#the-final-cleanup)):
 
 | Trait | Game objects | Count | What it is |
 |---|---:|---:|---|
@@ -426,6 +429,48 @@ object that is now built from C++ source; "workarounds" counts the
 counts them by kind) and what the C++ still needs.
 
 | Object | Classes (include/ctrl.hpp unless noted) | Functions | Compiler | Workarounds: C -> C++ | Part |
+| include/objects.h, player.h, crates.h, gfx.h, bosses.h, pickups.h, frontend.h, actor.h, vehicle.h, system.h | the 391 C prototypes of C++ methods with no C caller go, with the C views only a class's size check used (struct ctrl, boss_ctrl, mega_mix_ctrl, part_ctrl and ctrl_anchor, periodic_spawner, spawner, actor_orbit, cannon_flash, actor_hp, jetpack_ring, orbit_part and orbit_part.h); the classes check the ROM sizes | 0 | (unchanged) | 0 -> 0 | cleanup |
+| actor_self.h, box_part.h, match.h | `ACTOR_SET_STATE`, `CALL_HIT`, `MATCH_USE_VOLATILE`, `MATCH_CONST_VOLATILE` (no user left) go | 0 | (unchanged) | 0 -> 0 | cleanup |
+| actor_self.hpp, `src/actor/actor_category_frame.cpp`, `src/vehicle/polar_nitro.cpp` | `BoxOverlap` and `WorldBox`, the two files' identical inlines, are actor_self.hpp's | 0 | (unchanged) | 0 -> 0 | cleanup |
+| `src/actor/actor.cpp`, `actor_spawn.cpp`, `src/bosses/hovercraft.cpp`, `airship_explode.cpp` | the category hooks call `JetpackPlayer`'s and `PolarPlayer`'s `AllocTiles`, `FinishRun`, `IsPauseLocked`, `SetCheckpoint` directly; their C prototypes go (`CatchPolarPlayer` stays, for yeti_update.c) | 0 | (unchanged) | 0 -> 0 | cleanup |
+| `src/menus/pause_menu_draw.cpp` | `PauseMenu::Animate`, `Draw`, `DrawRows` (menus.hpp) | 3 | agbcp | 2 pins, 2 holds, 3 uses (`MATCH_USE` x2, `MATCH_USE2`), 14 slot calls -> 2 pins, 2 holds, 3 uses | cleanup |
+| `src/menus/pause_menu_gems.cpp` | `PauseMenu::DrawGemsPage`, `DrawRelicsPage` | 2 | old_agbcp | 0 -> 0; 4 slot calls -> 0 | cleanup |
+| `src/menus/pause_menu_info.cpp` | `PauseMenu::InitInfo` | 1 | agbcp | 0 -> 0 | cleanup |
+| `src/menus/pause_menu_loop.cpp` | `PauseMenu::Loop` | 1 | old_agbcp | 2 pins -> 2 pins | cleanup |
+| `src/menus/pause_menu_pages_draw.cpp` | `PauseMenu::DrawTimeTrialPage`, `DrawCrystalsPage`, `DrawPageTitle`, `CommitFrame` | 4 | agbcp | 1 pin, 1 `asm`, 4 slot calls -> 0 | cleanup |
+| `src/menus/pause_menu_powers.cpp` | `PauseMenu::DrawPowersPage` | 1 | **old_agbcp** (was agbcc) | 12 pins, 2 slot calls -> 0 | cleanup |
+| `src/menus/pause_menu_widgets.cpp` | `PauseMenu::DrawFraction`, `VolumeDown`, `VolumeUp`, `CursorDown`, `CursorUp`, `FormatVolume` (`FormatVolumePercent`, its unused first argument is `this`), with `FormatDecimal` (C linkage) | 6 + 1 | agbcp | 1 pin, 3 slot calls -> 1 pin (`FormatDecimal`'s) | cleanup |
+| `src/menus/power_dialog_loop.cpp` | `PowerDialog::Loop` | 1 | old_agbcp | 0 -> 0 | cleanup |
+| `src/text/wrapped_text.cpp` | `DrawWrappedText` (C linkage) | 0 + 1 | old_agbcp | 1 pin, 1 hold, 2 uses, 5 slot calls -> the same pin, hold and uses | cleanup |
+| `src/save/save_menu.cpp` | `SaveMenu` (include/save_menu.hpp): `MessageInput`, `CommitFrame`; with `CloseSaveMenu` (`delete gSaveMenu`), `OpenSaveMenu` (`new SaveMenu`) (C linkage) | 2 + 2 | agbcp | 0 -> 0; the destructor's direct `(.., 3)` call -> `delete` | cleanup |
+| `src/save/save_menu_draw.cpp` | `SaveMenu::LinkExchange` (`new`/`delete` of the save transfer), `DrawMessageLines`, `DrawCancel`, `DrawYesNoPrompt`, `DrawSlotStats`, `DrawSlots`, `InitIcons` (`new UiSprite`) | 7 | old_agbcp (old_agbcc C already) | 3 pins, 1 hold, 1 use, 3 barriers -> 3 pins, 1 hold, 1 use; the font record-slot calls (`ICON_TEXT_CALL`, `_call_via_r1`), `OperatorNew`/`OperatorDelete` -> virtual calls, `new`/`delete` | cleanup |
+| `src/save/save_menu_input.cpp` | `SaveMenu`'s constructor (`InitSaveMenu`), destructor (`DestroySaveMenu`), `Input`, the state handlers, `SaveToSlot`, `DrawMain`; with the save transfer's accessors and `RunSaveMenu` (C linkage) | 13 + 4 | agbcp (both match) | 16 pins, 4 asm (2 of them DrawMain's ROM transcription, 1 `.pool`) -> 0; 6 `PART_METHOD` slot calls -> `delete`/`Update()` | cleanup |
+| `src/save/save_menu_ui.cpp` | `SaveMenu`'s `LoadBg`, `RefreshSlotSummaries`, `LoadData`, `SummarizeProgress`, `DrawEmptySlotLabel`, `DrawTitle`, `GetBlinkPalette`, the link transfer's begin/end, the per-state draws, `Draw`, `DeleteSlot` | 18 | **old_agbcp** (was agbcc) | 1 pin -> 0; `ICON_TEXT_CALL`s -> virtual calls | cleanup |
+| `src/hud/hud_init.cpp` | `Hud` (include/hud.hpp): constructor (`InitHud`: `new HudPart[35]`), `ConfigureParts` | 2 | old_agbcp | 0 -> 0; the hand-written `OperatorNewArray` + count word + `InitHudPart` loop goes (3 bank stores through `SET_PART_BANK`, a retyped store) | cleanup |
+| `src/hud/hud.cpp` | `Hud::Update` | 1 | agbcp | 1 pin -> 0 | cleanup |
+| `src/hud/hud_boss_clock.cpp` | `Hud::UpdateBoss`, `UpdateClock` | 2 | old_agbcp | 0 -> 0 | cleanup |
+| `src/hud/hud_lives.cpp` | `Hud::UpdateLives` | 1 | **old_agbcp** (was agbcc) | 34 pins, 5 `asm`, 1 volatile hold -> 0 | cleanup |
+| `src/hud/hud_counters.cpp` | `Hud::UpdateCrates`, `UpdateWumpa`, `UpdatePercentCounters` | 3 | old_agbcp | 0 -> 0; the `getHp` slot call is `HpActor::GetHp` | cleanup |
+| `src/hud/hud_slide.cpp` | `Hud`'s slides (`UpdateSlides`, the four `Show*`, `StepSlide`), `SetCrateTotal`, `IncCrateTotal`, destructor (`DestroyHud`: `delete[] parts`) | 9 | agbcp | 0 -> 0; the slot-10 destructor loop and `OperatorDeleteArray` go | cleanup |
+| `src/gfx/sprite_pieces.cpp` | `SpriteRenderer::DrawPieces` (`DrawSpritePieces`, sprite_obj.hpp) | 1 | old_agbcp | 0 -> 0; the slot-11 call is `Sprite::GetPriority`, the `struct oam_part` view goes | cleanup |
+| `src/gfx/affine_sprite_pieces.cpp` | `SpriteRenderer::DrawAffinePieces` (`DrawAffineSpritePieces`) | 1 | old_agbcp | 1 use -> 1 use; the slot-11 call is `Sprite::GetPriority`, the `struct affine_part` view goes | cleanup |
+| `src/gfx/graphics_package.cpp` | `LoadGraphicsPackage`, the BG setup and sprite-box functions (C linkage) | 0 + 8 | old_agbcp | 0 -> 0; `OperatorNewArray`/`OperatorDeleteArray` -> `new u16[]`/`delete[]` | cleanup |
+| globals.h, hud.h, part_list.hpp, objects.h, gfx.h, extra_life.cpp, wumpa_update.cpp, crate_break.cpp, player_event.cpp, sprite.cpp, sprite_anim.cpp | `gHud` is a `Hud *` to C++; the C++ callers' `ShowHud*(gHud)` are methods, the pieces' callers `SpriteRenderer` methods; struct hud_digit_part, hud_anim_record/data, HUD_CLAMP_FRAME and 15 dead prototypes go | 0 | (unchanged) | 0 -> 0 | cleanup |
+| `src/level/tile_cache.cpp` | `TileCache` (include/bg_layer.hpp; derives from level.h's struct tile_cache): constructor, destructor; with `GetTerrainType` (C linkage) | 2 + 1 | old_agbcp (old_agbcc C already) | 0 -> 0 |  cleanup |
+| `src/level/level_layers.cpp` (again) | `LevelLayers`: `new TileCache`, `delete tiles` (`InitTileCache(operator new(0x1064))`, `DestroyTileCache(tiles, 3)` before) | 0 | old_agbcp | 0 -> 0 | cleanup |
+| `src/level/entity_flags.cpp` | `LevelEntityFlags` (include/spawners.hpp; derives from struct entity_flags; `EntityFlags` is taken by entity.hpp's union): `CountCrateEntities`, the bitmap accessors, constructor, destructor | 9 | **old_agbcp** (was agbcc) | 8 pins, 2 asm -> 6 pins, 1 asm (`SetEntityIdActivated`'s `ip`/`r2` block: no plain form found under either compiler) | cleanup |
+| `src/level/spawn_pickups.cpp` (again) | `LevelState`'s constructor (InitLevelState, include/level_state.hpp; C linkage before); `new LevelEntityFlags` | 0 | old_agbcp | 0 -> 0 | cleanup |
+| `src/level/level_query.cpp` | `UnusedLevelObject` (file-local): the unused destructor and empty constructor (`sub_802425C`, `nullsub_25`); the medal tallies and room selection (C linkage) | 2 + 15 | agbcp | 0 -> 0 | cleanup |
+| `src/cutscene/slideshow.cpp` | `Slideshow` (new include/cutscene.hpp): `BeginSlide`, `Run` (UNUSED), `Skip`, `ShowPicture` | 4 | old_agbcp (old_agbcc C already) | 7 pins, 1 asm, 1 memory barrier -> 0 | cleanup |
+| `src/cutscene/slideshow_display.cpp` | `Slideshow`'s `EndSlide`, destructor, `Reset`; with `SetSlideshowDispcnt` (C linkage) | 3 + 1 | agbcp | 1 pin -> 0 | cleanup |
+| `src/cutscene/cutscene_player.cpp` (again) | `Slideshow`'s constructor; `CutscenePlayer` (cutscene.hpp): constructor, `Run`, destructor (all C linkage before) | 4 | old_agbcp | 0 -> 0 | cleanup |
+| `src/level/game_frame.cpp` | `UpdateGameFrame` (C linkage): `new TitleScreen`/`delete`, `new LevelEntityFlags`/`delete`, `new Hud`/`delete gHud` and the Hud's methods | 1 | old_agbcp (old_agbcc C already) | 0 -> 0; the `(void *)` conversion of InitHud's result goes | cleanup |
+| `src/level/level_cutscene.cpp` | `LevelState`'s destructor (DestroyLevelState, UNUSED); `PlayCutscene` (C linkage) | 1 + 1 | agbcp | 0 -> 0; `DESTROY_FONT`'s slot calls, the slot-6 `SetTileBase` call, 9 spelled-out destructor calls -> `delete`s and virtual calls | cleanup |
+| `src/level/level_state.cpp` | the level state's 87 functions (C linkage): `GetLevelState`'s `new LevelState`, `ShowCompanyLogos`' `new CompanyLogos`/`delete` | 0 + 87 | agbcp | 50 pins, 4 asm -> 49 pins, 3 asm (`ShowCompanyLogos`' asm `bl InitCompanyLogos` and its r0 pin go; PackSaveData's and the rest stay) | cleanup |
+| `src/level/room_frame.cpp` | `UpdateRoomFrame`, `SetupRoomBlend` (C linkage): the player's `IsOnScreen` and `Draw` virtual calls | 0 + 2 | old_agbcp (old_agbcc C already) | 0 -> 0; 2 hand-written slot calls (struct player_vtable) -> 0 | cleanup |
+| `src/level/room_entities.cpp` | `SpawnRoomEntities` (C linkage): the links walk `Crate *`s (`GetBounds()->h`, `SetAbove`, `SetBelow`, `GetAbove`), `gEntitySpawner->Spawn` | 0 + 1 | old_agbcp (old_agbcc C already) | 1 pin -> 1 pin; the `height` slot call and the lk_vtable/lk_actor views -> 0 | cleanup |
+| `src/level/run_room.cpp` | `RunRoom` (C linkage): `Player::ResetForRoom`, `IsNearCamera`, `Update`, `GetAnimPaletteSlot`, the controller's `SetMode`, the crates' `GetClassId`, `Platform::GetExitMirror` | 0 + 1 | old_agbcp (old_agbcc C already) | 2 pins, 2 holds, 2 uses, 1 asm label -> the same; `PMF_CALL` and the gl_* vtable structs (4 slot calls) -> 0 | cleanup |
+| `src/level/play_room.cpp` | `PlayRoom` (C linkage): `new PartList`, `CrateList`, `Player`, `ActionCtrl`, `PlayerCtrl`, `InputCtrl`, `ctrl->Attach(pl)`, the `delete`s | 0 + 1 | **old_agbcp** (was agbcc) | 14 pins, 1 clobber -> 0; 3 attach slot calls, the player's destroy slot call, the widget vtable structs -> 0 | cleanup |
 |---|---|---:|---|---|---|
 | `src/objects/effect_ctrl.cpp` | `EffectCtrl` | 5 | old_agbcp | 0 -> 0 | #685 |
 | `src/objects/ctrl.cpp` | `Ctrl` | 10 | old_agbcp (was agbcc) | 7 pins, 2 asm -> 0 | 1 |
@@ -2871,45 +2916,13 @@ player 17. `MATCH_BARRIER` (17), the clobbers (3), the memory barriers (2)
 and the `BOX_ADDR`s (12) are unchanged. Every remaining workaround in a C++
 object is listed, with its reason, in its part's notes above.
 
-**What is still C** (the game's other 168 objects outside src/data/ after
-7b'; 77 of them have C++ traits, `tools/cpp_survey.py --objects`; the
-player, then the first item here, is C++ since part 8):
-
-- ~~**The level select's sprites**~~: the camera lead and launch pad, with
-  the rest of the level select (level_select_widgets.c,
-  level_select_pages.c), are C++ since part 10.
-- ~~**The enemy spawners**~~ (level/spawn_enemies.c): C++ since part 9b,
-  with the effect-part spawner and the other level spawners since part 9.
-- **The C prototypes of C++ methods with no C caller**: about 350 left
-  in objects.h, crates.h, player.h, gfx.h, bosses.h and pickups.h (the C
-  names the vtables and C files use stay). Part 9b dropped enemies.h's and
-  the constructors', part 10d menus.h's.
-- **The 3D actors** (`struct actor_self`, vtable pointer at +0x50) and their
-  pointer-to-member tables (src/data/actor_pmf_*.c, actor_state_*.c,
-  `ACTOR_PMF_CALL`): the rest of src/actor/, the vehicle levels
-  (src/vehicle/: the jetpack, polar and yeti files) and the 3D bosses
-  (hovercraft*.c). Part 11a converted the base classes
-  (actor.c, actor_anim.c), the polar player's dispatch and its table,
-  part 11b the actor factory, the spawn hooks and the category frame,
-  part 11i the airship (airship*.c), part 11e the jetpack player, its
-  shot, the jetpack spawners and their table, part 11c the polar player,
-  part 11f the planes, bombers, cannonballs and balloons and their tables,
-  part 11h the hovercraft (hovercraft*.c), its weapons and their tables,
-  part 11d the other polar actors (every polar class is C++ now),
-  part 11g the balloon crates, the parachute nitro, the rocket and their
-  table; the plan for the rest is
-  [below](#the-3d-actors-part-11).
-- ~~**The background layers and the fonts**~~ (bg_layer*.c,
-  tile_slot_pool.c, level_layers.c, the streamer in cutscene_player.c;
-  src/text/'s fonts): C++ since step 10b, with `Ctrl::Update`.
-- **The rest with C++ traits**: the menus (the save menu, and the pause menu's and
-  the power dialog's plain-C files; all of src/frontend/ is C++: the
-  language select and the logo actor since part 10b, the starfield, the
-  credits and part of the continue prompt since part 10c, the title
-  screen since part 10c-2; the pause menu, the power dialog and the rest
-  of the continue prompt since part 10d), the cutscene player's C files
-  (slideshow*.c), the text box (text_box.c, wrapped_text.c), the HUD and
-  the room code (play_room.c, run_room.c).
+**What is still C**: since [the final cleanup](#the-final-cleanup),
+nothing with a C++ trait. Every item this list had (the level select's
+sprites, the enemy spawners, the 3D actors, the background layers and
+fonts, the C prototypes of C++ methods, the save menu, the pause menu's
+and the power dialog's C files, the cutscene player's C files, the text
+box's wrapper, the HUD and the room code) is done; what stays C, and why,
+is listed there.
 
 ### Emitting the vtables (step 10)
 
@@ -3033,8 +3046,8 @@ through). The report stays 2059/2059 functions and 100% data.
 - **The fonts** (include/font.hpp): `Font` (gFontVtable) and its
   `SmallFont` and `LargeFont` (their own vtables: they override only the
   destructor). bitmap_font.h's struct bitmap_font stays the C view, for
-  the C files (the save menu, the pause menu's C files, the HUD, the text
-  box). The C++ files see gSmallFont and gLargeFont as `Font *`s (text.h,
+  the C files (the text box only, since [the final
+  cleanup](#the-final-cleanup)). The C++ files see gSmallFont and gLargeFont as `Font *`s (text.h,
   under `__cplusplus`) and make virtual calls where they spelled out the
   record's slots: the front end, the menus, the level select, the
   continue prompt and the cutscene player.
@@ -3098,6 +3111,266 @@ file-scope asm blocks 3 -> 2, retyped field reads 19 -> 17;
 `OLD_AGBCC_OBJS` 131 -> 134 objects (bg_layer_init.o, tile_slot_pool.o
 and the new pooled_bg_layer.o; font.o replaces font_measure.o); 14 more
 C++ objects (153 -> 167 `.cpp` files under src/).
+
+### The final cleanup
+
+**#664 is complete.** No game object outside lib/ is C with a C++ trait
+any more: `tools/cpp_survey.py --objects` lists 201 objects under src/
+built from C++ source and 49 C-like ones (plus the data tables), and
+the only traits it still finds in C files are plain function pointers
+(the IRQ table, the yeti's state table, the sprite-frame cache hook,
+GAX's mixer), which aren't C++. The report stays 2059/2059 functions
+and 100% data.
+
+- **The dead C declarations.** 391 C prototypes had no user left in a
+  .c, .cpp or .s file, ldscript.txt, sym_*.txt or another header: the C
+  names of C++ methods whose last C callers were converted (objects.h
+  111, player.h 118, crates.h 65, gfx.h 31, bosses.h 23, pickups.h 16,
+  frontend.h 16, actor.h 9). They went, with the C structs whose only use
+  was a class's size check (struct ctrl, part_ctrl, orbit_part, ...: the
+  classes check the ROM sizes now) and orbit_part.h. The conversions
+  below removed about 100 more (each family's notes list them). The C
+  names that data tables, the linker script or C files use stay.
+- **The dead macros.** `ACTOR_SET_STATE` (ActorSelf::SetState since part
+  11), `CALL_HIT` (box_part.h), `MATCH_USE_VOLATILE` and
+  `MATCH_CONST_VOLATILE` had no user. tools/match_idioms.py still counts
+  and rejects the two spelled-out volatile forms; a site that needs one
+  would add its macro back. The save menu's conversion took
+  `PART_METHOD`/`struct part_method` and `ICON_TEXT_CALL` with it.
+- **The small follow-ups.** `BoxOverlap`/`WorldBox` are actor_self.hpp's
+  (actor_category_frame.cpp and polar_nitro.cpp had identical copies),
+  and the vehicle category hooks (actor.cpp, actor_spawn.cpp) and
+  hovercraft.cpp/airship_explode.cpp call the vehicle players' methods
+  directly, so those methods' last C prototypes went.
+- **The last C files with C++ traits**, one family per commit: the pause
+  menu's and the power dialog's C files and DrawWrappedText (the font
+  callers), the save menu (`SaveMenu`, include/save_menu.hpp), the HUD
+  (`Hud`, include/hud.hpp) and the sprite pieces, the level and cutscene
+  destructors (`TileCache`, `LevelEntityFlags`, `Slideshow`,
+  `CutscenePlayer`, `LevelState`'s constructor and destructor), the game
+  frame, the level state's file, and the room code. Their rows are at the
+  end of the [Progress](#progress) table; the notes follow.
+
+Every object is byte-identical to origin/main's except
+save_menu_input.o, whose code and relocations are identical but whose
+symbol table differs (the undefined symbols' order, and DrawMain's size:
+the C's inline-asm transcription put its literal pool inside the
+function, g++ puts it after).
+
+**In numbers** (project-wide, `tools/match_idioms.py`, before -> after
+the cleanup): `MATCH_HOLD_REG` 501 -> 411, instruction-emitting `asm` 61
+-> 49, `MATCH_BARRIER` 17 -> 14, `MATCH_HOLD` 13 -> 12,
+`MATCH_MEMORY_BARRIER` 2 -> 1, `MATCH_CLOBBER` 3 -> 2, `.pool` in asm 3
+-> 2; `OLD_AGBCC_OBJS` 134 -> 139 objects (hud_lives.o, entity_flags.o,
+pause_menu_powers.o, play_room.o, save_menu_ui.o); 167 -> 201 `.cpp`
+files under src/.
+
+**What stays C**, on purpose:
+
+- lib/ (GAX2, AgbEeprom, libgcc, the BIOS wrappers) and the IWRAM ARM
+  routines (agbcc_arm), as planned.
+- The 49 C-like game objects: the actor zone's C helpers (actor_bg.c,
+  actor_category_init.c, actor_category_stats.c, actor_vram_pool.c,
+  bg_picture.c, cell_anim.c), the yeti (yeti*.c: a singleton driven by a
+  plain function table), audio, the display and fades, the link cable
+  and save data/transfer code, the terrain and collision maps, the
+  system and util code, text_box.c, and camera.c (with the game's
+  `operator new`/`delete` replacements, `OperatorNew` & co., which keep
+  their C names). None has a C++ trait; a C++ compile would give the same
+  bytes (experiment 4), so converting them is only worth it with their
+  callers' classes.
+- Possible follow-ups, not needed for the match: level_state.cpp's 87
+  functions as `LevelState` methods (they keep C linkage and the
+  `struct level_state *` parameter; renaming them touches every caller),
+  graphics_package.cpp's BgSetup as a class (its C++ callers'
+  `InitBgSetup(&bg, ...)` would become constructors), and the C views
+  the remaining C files still use (struct player, struct hud_counter,
+  struct bitmap_font, struct actor_self, ...).
+
+**The pause menu, the power dialog and DrawWrappedText (cleanup A).** The
+last C files of PauseMenu and PowerDialog (menus.hpp) are their methods
+now, so both classes are all C++, and DrawWrappedText (the font
+callers' last C file in src/text/) is C++ with C linkage. The 32 font
+slot calls (`_call_via_r2`/`_call_via_r3` through `struct icon_record`)
+are Font's virtual `MeasureText`, `DrawText`, `DrawChars`, `MeasureChars`,
+`DrawGlyph` and `PutChar`, and the files' calls into each other method
+calls; the new method names are one block at the end of cxx_symbols.txt.
+menus.h's 27 prototypes of these methods, pause_menu.h's struct
+pause_menu and menus.h's struct power_dialog went (no C user left;
+menus.hpp checks the classes against the ROM sizes, 0xD4 and 0x2C).
+pause_menu.h keeps struct settings_icon_actor for save_menu_draw.c.
+`MATCH_HOLD_REG` 501 -> 488, instruction-emitting `asm` 61 -> 60.
+
+What made them match:
+- **DrawPowersPage** matches as plain C++ under old_agbcp (the object
+  moves to OLD_AGBCC_OBJS): its four flag tests load the mask before the
+  byte, the old compiler's order, which the C pinned 12 registers to get
+  out of agbcc.
+- **CommitFrame** writes `dispcnt.raw` plainly: the C's asm address anchor
+  (pinned to r0, so `self`'s register wasn't reused for the address) isn't
+  needed.
+- **DrawRows** casts MeasureText's `s32` result to `u32` before halving
+  it (the C's slot call returned `u32`: `lsr`, not `asr`).
+- **DrawWrappedText**'s `/b` handler reads the position as
+  `self->SetPos(self->GetX(), self->GetY() + 4)`: through the inline
+  getters' `this` the reads share the loop-hoisted `&posX`/`&posY` with
+  the stores, as the C's address-returning accessors did. With the C's
+  accessors kept, the hoisted `&posY` spill lands inside the loop
+  instead of before the first test (38 lines off).
+- **FormatVolume** is FormatVolumePercent with its ignored first argument
+  as `this` (InitInfo passed `(s32)self`).
+
+Kept, each with its comment: DrawPauseMenu's two r2 holds over the
+computed-x SetPos calls (without them y and x swap registers), Loop's
+`key`/`pressed` pins (r3/r1; without either the input tests change, 8-18
+lines), DrawWrappedText's `MATCH_USE(len)` (r7 priority; 340 lines
+without) and r1 hold (48 lines without), FormatDecimal's r5 pin.
+
+Left C: src/text/text_box.c (GetWordLength, DrawWrappedTextInBox: no C++
+trait; the box wrapper only reads two font fields).
+
+**The save menu (cleanup B).** The save menu is class SaveMenu (include/save_menu.hpp, `#pragma
+interface`: no vtable; 0xE4 bytes), the object OpenSaveMenu `new`s into
+gSaveMenu (save.h declares it as a `SaveMenu *` under `__cplusplus`) and
+CloseSaveMenu deletes: the C's `if (gSaveMenu) DestroySaveMenu(gSaveMenu,
+3)` is `delete gSaveMenu`, and DestroySaveMenu's `if (flags & 1)
+OperatorDelete(self)` is the g++ destructor's own. Its 40 methods map to
+their C names in cxx_symbols.txt; save.h keeps only the C-linkage
+functions game_frame.cpp calls (OpenSaveMenu, RunSaveMenu, CloseSaveMenu)
+and the save transfer's three accessors; struct save_menu (save_menu.h) is
+now only a tag. The slot list's 15 icons are `UiSprite *`s (`new
+UiSprite`, the C's `InitUiSpriteObj(OperatorNew(0x40))`); their
+PART_METHOD slot calls are `rowObjA[i]->Update()` (slot 3) and `delete
+rowObjA[i]` (slot 10, with its null test). The save transfer (struct
+settings_sync_pump) and the save data stay C structs, `new`/`delete`d as
+PODs: save_data.c and save_transfer*.c have no C++ trait.
+
+What made it match: DrawMain, two inline-asm transcriptions of the ROM in
+the C, is plain C++ once the option's label is loaded inside the
+MeasureText argument (after the vtable lookup, as in the ROM) and the
+stack-passed `struct byte_arg` is set before the loop: its 0 then has no
+register of its own and is rematerialized after the argument slot's
+address (`mov r1, sp; movs r0, #0; strb`), as in the ROM; set at the call,
+the 0 comes first. The constructor matches with the two saves' addresses
+taken up front (`cartSaveAddr`/`linkSaveAddr`, the C's pinned r9/r8) and
+no pin. In LinkInput the C's local `state` would shadow the member: it is
+`result`. save_menu_ui.cpp matches without LoadBg's r1 pin under
+old_agbcp, so it moved to OLD_AGBCC_OBJS.
+
+Kept: InitIcons' frame-0 address pin and r1 hold (2 pins, 1 hold, 1 use;
+without them the frame-0 icon's tag store and palette mask take other
+registers), and DrawYesNoPrompt's `y` pin (r9; without it the 0x87 and
+0x130 swap registers). The C's three MATCH_BARRIER()s of insn-count
+padding in InitIcons go. The `affine` store stays a plain `u16 *` store:
+written as a field store, old_agbcp's read-modify-write leaves a dead
+zero that loop.c hoists instead of the 0x80.
+
+Gone with the conversion: box_part.h's PART_METHOD and struct
+part_method, bitmap_font.h's ICON_TEXT_CALL (both had no other user), and
+objects.h's InitUiSpriteObj prototype.
+
+`MATCH_HOLD_REG` 501 -> 484, instruction-emitting `asm` 61 -> 58,
+`MATCH_BARRIER` 17 -> 14, `.pool` in asm 3 -> 2; OLD_AGBCC_OBJS +1
+(save_menu_ui.o).
+
+**The HUD, the sprite pieces and the BG package loader (cleanup C).** The HUD (gHud, 0x68 bytes, no vtable) is class Hud in include/hud.hpp;
+struct hud_counter (hud.h) stays its C view for the C callers left
+(bonus_round.c, actor_category_init.c, actor_vram_pool.c), which keep the C names (cxx_symbols.txt block "#664
+cleanup C: the HUD"). `new HudPart[35]` and `delete[] parts` reproduce the
+ROM's hand-written array construction (count word, constructor loop) and
+destruction (each part's virtual destructor, slot 10, back to front, then
+OperatorDeleteArray) exactly. The only workaround added is SET_PART_BANK
+(hud.hpp), a retyped store of Sprite's `bank`: it is a union member (alias
+set 0), so a plain store makes gcc reload `parts`, and the menus'
+pointer-to-member helper (SetIconBank) moves the store's base register; the
+retyped store in place gives `str rN, [part, #0x20]`. UpdateHudLives was the
+most pinned function of the HUD (34 pins, 5 instruction asm): as plain C++
+under old_agbcp it matches once the second digit's `__modsi3` is computed
+before its part's address (moved to OLD_AGBCC_OBJS). DrawAffinePieces keeps
+MATCH_USE(pa) (without it the pa/pd registers swap). graphics_package.cpp
+keeps C linkage: making BgSetup a class means changing its C++ callers'
+`InitBgSetup(&bg, ...)` to constructors (level select, pause menu, power
+dialog, continue prompt, language select, the save menu); a follow-up. Project-wide (match_idioms.py): MATCH_HOLD_REG 501 -> 466,
+instruction asm 61 -> 56, MATCH_HOLD 13 -> 12. Nothing in this family was left C.
+
+**The level and cutscene destructors, the game frame and the level state
+(cleanup D1).**
+
+- **The destructors.** A g++ destructor with nothing to tear down is
+  `X::~X() {}`: g++ passes `__in_chrg` and frees `this` on bit 0, the
+  `if (flags & 1) OperatorDelete(self)` the C spelled out. A derived
+  class's (CutscenePlayer's, DestroyCutscenePlayer) passes its
+  `__in_chrg` unchanged to the base's, which frees: the C's forwarding
+  trampoline. An object destroyed at scope end gets `__in_chrg` 2
+  (PlayCutscene's `DestroyCutscenePlayer(&f.pager, 2)`).
+- **Deriving from the C struct.** TileCache, LevelEntityFlags and
+  LevelState are `class X : public <c struct>`: the C struct stays the
+  one field list, the lookups that take the struct (bg_layer_base.cpp,
+  collision_map.c, the level-state accessors) take the class through the
+  implicit conversion, and `new X` / `delete p` match the ROM.
+- **`new` and an empty out-of-line constructor** (ShowCompanyLogos):
+  g++ keeps `__builtin_new`'s result in r0 across the constructor call
+  and copies it to a callee-saved register only after, which the C could
+  only write as an asm `bl` with r0 pinned.
+- **`delete` of a class with no destructor** (KeyInput, gInput) calls
+  `__builtin_delete` with no null test; the ROM tests, so the destructor
+  keeps `if (gInput != NULL)`.
+- **Struct return.** An inline returning a struct by value goes through a
+  stack temporary in g++ (PlayCutscene's frame grew by 0x10); the pair
+  is set through an inline taking a pointer instead.
+- **ShowSlidePicture** needed no workaround as a C++ method under
+  old_agbcp, only the DISPCNT shadow rebuild's mask and byte in `s32`
+  locals (word AND, `movs #17; negs`, not a byte `0xef`).
+- **Left as C-like code:** level_state.cpp's 87 functions stay C-linkage
+  functions taking `struct level_state *` (making them LevelState methods
+  is mechanical but touches every C caller's names; their 49 pins are
+  plain register-allocation workarounds, and removing them all changes
+  most functions); entity_flags.cpp's SetEntityIdActivated keeps its pins
+  and asm (5 plain variants tried under old_agbcp). With the HUD's class
+  (cleanup C) merged, game_frame.cpp's `InitHud(operator new(0x68))` is
+  `new Hud` and its `DestroyHud(gHud, 3)` `delete gHud` (still
+  byte-identical), and level_state.cpp calls the Hud's methods.
+- **Gone C prototypes:** InitTileCache, DestroyTileCache, SetEntityIdGone,
+  SetEntityFlagsPos, InitEntityFlags, DestroyEntityFlags, sub_802425C,
+  nullsub_25, BeginSlide, RunSlideshow, SkipSlides, ShowSlidePicture,
+  EndSlide, DestroySlideshow, ResetSlideshow, InitSlideshow,
+  InitTitleScreen, RunTitleScreen, DestroyTitleScreen, InitLevelState,
+  DestroyLevelState, DestroyOamBuffer, DestroyObjVramCursor,
+  DestroyPaletteCache, DestroySpriteBankSet, DestroyPaletteCycles,
+  DestroySpriteRenderer, DestroyCompanyLogos, RunCompanyLogos (and struct
+  title_screen's tag).
+
+Project-wide (tools/match_idioms.py): MATCH_HOLD_REG 501 -> 490,
+instruction-emitting asm 61 -> 58, MATCH_MEMORY_BARRIER 2 -> 1.
+OLD_AGBCC_OBJS +1 (entity_flags.o). 8 more `.cpp` files.
+
+**The room code (cleanup D2).** The four files of the room loop are C++,
+all under old_agbcp. room_frame.cpp needed nothing beyond the two virtual
+calls. room_entities.cpp walks the crate list as `Crate *`s; its one
+`MATCH_HOLD_REG` (the first search's id in r1) is still needed: without it
+r0/r1 swap at the search's load, under both compilers. run_room.cpp
+matched once the wait loop's flag test was written `(gPlayer->f.bytes.flags
+& 1) == 0`: `!(... & 1)` in C++ comes out as an `eor`/`and` pair (the C's
+`!` folded to a `beq`). Its post-fade hard-register hold (2 pins, 2
+`MATCH_HOLD`s, 2 `MATCH_USE`s, keeping r0/r1 live while the player pointer
+is loaded) is still needed: plain, or as two field copies, the global's
+address and the player land in r0/r1. The `AddPaletteCycle_fx` asm-label
+alias (the one-byte BLKmode struct argument) stays too. play_room.cpp is
+plain C++ with no workaround: it matches under old_agbcp only (agbcp loads
+the flag byte before the `0x10`), so play_room.o joins `OLD_AGBCC_OBJS`;
+the ROM's locals are kept (each controller case reads `gPlayer` once into
+`pl` after the sprite bank, and the two constant stores, `tag = 0x1f` and
+`ctrlMode = 3`, go through `u8` locals so the constant is loaded before
+the field's address). No cxx_symbols.txt entry was needed (every mangled
+name was already mapped). The C prototypes these files were the last
+users of went (InitPlayer, ResetPlayerForRoom, InitActionCtrl,
+CreateInputCtrl, InitPlayerCtrl, SetCtrlAnimSet, InitPartList,
+DestroyPartList, InitCrateList, DestroyCrateList, GetLevelLayers,
+DestroyLevelLayers, SpawnEntity, GetPlatformExitMirror, GetCrateAbove,
+SetCrateAbove, SetCrateBelow), with player.h's `struct player_vtable`
+(`struct player`'s `vtable` is a `const void *` now). Project-wide:
+`MATCH_HOLD_REG` 501 -> 487, `MATCH_CLOBBER` sites 3 -> 2, instruction asm
+61 -> 61. No file of the family was left C.
 
 ### Next batches
 
@@ -3193,7 +3466,7 @@ and, once no C file reads one, its PMF table to C++.
 | ~~11g~~ | ~~vehicle/jetpack_crates.c~~ | `JetpackBalloonCrate` and its kinds, `JetpackParachuteNitro`, `JetpackRocket`, `JetpackRing::Update` | done | gJetpackBalloonCrateStateFuncs | 11e |
 | ~~11h~~ | ~~bosses/hovercraft.c (old), hovercraft_cannon.c, hovercraft_cannon_flash.c, hovercraft_launcher.c, hovercraft_side_gun.c, hovercraft_parts.c~~ | the hovercraft's weapons (`HovercraftFireball`, `HovercraftCannon`, ...), `JetpackRing`'s and `JetpackCollectedWumpa`'s constructors and methods (in hovercraft.c), the hovercraft (an `AnimPart` singleton) | done | gHovercraftFireballStateFuncs, gHovercraftCannonStateFuncs, gHovercraftLauncherStateFuncs | 11e |
 | ~~11i~~ | ~~bosses/airship*.c (10 files; airship_map.c, airship_touch.c old)~~ | `AirshipFireball` (but its two flight states, 11f's); the airship (an `AnimPart` singleton) | done | gAirshipFireballStateFuncs (split into actor_pmf_17c2b8.cpp) | |
-| 11j | actor/actor_bg.c, actor_category_init.c (old), actor_category_stats.c, actor_vram_pool.c, bg_picture.c (old), cell_anim.c; vehicle/yeti*.c (yeti_graphics.c, yeti_update.c old) | none: C-like (no C++ trait), only if the family's files should all be C++ | 43, 33, 3 | | |
+| 11j | actor/actor_bg.c, actor_category_init.c (old), actor_category_stats.c, actor_vram_pool.c, bg_picture.c (old), cell_anim.c; vehicle/yeti*.c (yeti_graphics.c, yeti_update.c old) | none: C-like (no C++ trait), only if the family's files should all be C++; left C ([the final cleanup](#the-final-cleanup)) | 43, 33, 3 | | |
 
 Since 11g every 3D actor class is C++: actor_self.h's `ACTOR_PMF_CALL`,
 `ACTOR_VCALL`, `VTABLE_CALL2`/`3`, `VCALL1`/`2` and the `ACTOR_RECORD`/
