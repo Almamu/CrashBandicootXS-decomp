@@ -106,7 +106,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * collected (bit 3 of the level state's gem flags). */
 void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (gLevelState->flags & 8)
+    if (gLevelState->progress.flags & 8)
         return;
     u8 tag = 4;
     u8 kind = 0x21;

@@ -2,9 +2,10 @@
 #define GUARD_CONSTANTS_LEVEL_FLAGS_H
 
 /*
- * The bits of a level's progress word, `level_state.levelFlags[level]`
- * (GetLevelFlags/GetCurrentLevelFlags return its address; the save menus
- * read the same words as `menu_save.levels[]`, `union level_record`).
+ * The bits of a level's progress word, `game_progress.levels[level]`
+ * (`union level_record`, level_state.h; GetLevelFlags/GetCurrentLevelFlags
+ * return its address in `level_state.progress`, and the menus read the
+ * words of the block PackSaveData returns).
  * It is saved with the rest of the attempt block (PackSaveData).
  *
  * - Bit 0, the crystal: set by player event 27 (the crystal pickup,
@@ -24,7 +25,7 @@
  *   with the level's gLevelTable times.
  *
  * CountGems/CountClearGems count bits 1 and 2 (the clear gems); the
- * four colored gems are bits 0-3 of `level_state.flags` instead.
+ * four colored gems are bits 0-3 of `game_progress.flags` instead.
  */
 
 #define LEVEL_FLAG_CRYSTAL (1 << 0)

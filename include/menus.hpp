@@ -63,46 +63,46 @@ static inline void SetIconBank(Sprite *p, s32 offset)
 class PauseMenu
 {
 public:
-    struct bg_setup bg;           // 0x00 - BG0
-    struct menu_save *progress;   // 0x10 - PackSaveData(gLevelState)
-    const struct pause_row *rows; // 0x14 - gPauseMenuRows
-    s32 cursor;                   // 0x18 - the selected row
-    s32 rowCount;                 // 0x1C - 4, or 5 in a time trial
-    s32 rowSpacing;               // 0x20 - 16
-    s32 page;                     // 0x24 - the info page shown (0-4)
-    s32 pageTimer;                // 0x28 - frames to the next page
-    u8 crystalCount[3];           // 0x2C - the info pages' numbers, as text
-    u8 clearGemCount[3];          // 0x2F
-    u8 gemCount[3];               // 0x32
-    u8 relicCount[3];             // 0x35
-    u8 sapphireCount[3];          // 0x38
-    u8 goldCount[3];              // 0x3B
-    u8 platinumCount[3];          // 0x3E
-    u8 percentText[5];            // 0x41 - InitPauseMenuInfo
-    u8 crystalTotal[3];           // 0x46
-    u8 gemTotal[3];               // 0x49
-    u8 relicTotal[3];             // 0x4C
-    u8 soundVolumeText[8];        // 0x4F
-    u8 musicVolumeText[9];        // 0x57
-    s32 musicVolume;              // 0x60 - 0-20, in 5% steps
-    s32 soundVolume;              // 0x64
-    s32 flashTimer;               // 0x68
-    u8 trialEarned;               // 0x6C
-    u8 unused_6d[3];              // 0x6D
-    void *levelName;              // 0x70
-    void *levelLabel;             // 0x74
-    u8 levelNumber[4];            // 0x78
-    u8 timeText[0xC];             // 0x7C
-    UiSprite *crystalIcon;        // 0x88
-    UiSprite *powerIcons[4];      // 0x8C
-    UiSprite *gemIcons[5];        // 0x9C
-    UiSprite *relicIcons[3];      // 0xB0
-    UiSprite *trialIcon;          // 0xBC
-    UiSprite *blinkEyes;          // 0xC0 - the eyelids over the background
-    s32 blinkTimer;               // 0xC4 - frames to the next blink
-    union blend blend;            // 0xC8 - REG_BLDCNT
-    struct bldy bldy;             // 0xCC - REG_BLDY
-    union MenuDispcnt dispcnt;    // 0xD0 - REG_DISPCNT (a word: a struct is 4-aligned)
+    struct bg_setup bg;             // 0x00 - BG0
+    struct game_progress *progress; // 0x10 - PackSaveData(gLevelState)
+    const struct pause_row *rows;   // 0x14 - gPauseMenuRows
+    s32 cursor;                     // 0x18 - the selected row
+    s32 rowCount;                   // 0x1C - 4, or 5 in a time trial
+    s32 rowSpacing;                 // 0x20 - 16
+    s32 page;                       // 0x24 - the info page shown (0-4)
+    s32 pageTimer;                  // 0x28 - frames to the next page
+    u8 crystalCount[3];             // 0x2C - the info pages' numbers, as text
+    u8 clearGemCount[3];            // 0x2F
+    u8 gemCount[3];                 // 0x32
+    u8 relicCount[3];               // 0x35
+    u8 sapphireCount[3];            // 0x38
+    u8 goldCount[3];                // 0x3B
+    u8 platinumCount[3];            // 0x3E
+    u8 percentText[5];              // 0x41 - InitPauseMenuInfo
+    u8 crystalTotal[3];             // 0x46
+    u8 gemTotal[3];                 // 0x49
+    u8 relicTotal[3];               // 0x4C
+    u8 soundVolumeText[8];          // 0x4F
+    u8 musicVolumeText[9];          // 0x57
+    s32 musicVolume;                // 0x60 - 0-20, in 5% steps
+    s32 soundVolume;                // 0x64
+    s32 flashTimer;                 // 0x68
+    u8 trialEarned;                 // 0x6C
+    u8 unused_6d[3];                // 0x6D
+    void *levelName;                // 0x70
+    void *levelLabel;               // 0x74
+    u8 levelNumber[4];              // 0x78
+    u8 timeText[0xC];               // 0x7C
+    UiSprite *crystalIcon;          // 0x88
+    UiSprite *powerIcons[4];        // 0x8C
+    UiSprite *gemIcons[5];          // 0x9C
+    UiSprite *relicIcons[3];        // 0xB0
+    UiSprite *trialIcon;            // 0xBC
+    UiSprite *blinkEyes;            // 0xC0 - the eyelids over the background
+    s32 blinkTimer;                 // 0xC4 - frames to the next blink
+    union blend blend;              // 0xC8 - REG_BLDCNT
+    struct bldy bldy;               // 0xCC - REG_BLDY
+    union MenuDispcnt dispcnt;      // 0xD0 - REG_DISPCNT (a word: a struct is 4-aligned)
 
     PauseMenu();                                 // InitPauseMenu
     ~PauseMenu();                                // DestroyPauseMenu

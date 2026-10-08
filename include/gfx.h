@@ -18,6 +18,7 @@
 struct aabb;
 struct actor;
 struct dma_queue;
+struct game_progress;
 struct gfx_box_obj;
 struct queued_oam_entry;
 struct rle_frame;
@@ -259,7 +260,7 @@ extern void FadePaletteToBlack(void);
 extern s32 IsBrightnessFadeActive(void);
 
 /* src/gfx/graphics.cpp: the OAM shadow buffer */
-extern s32 GetCompletionPercent(void *progress);
+extern s32 GetCompletionPercent(const struct game_progress *progress);
 extern void SetOamAffineScales(void *table, u16 *scales, s32 count);
 extern void AppendOamEntries(struct oam_shadow_buffer *self, void *entries, s32 count);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *self);

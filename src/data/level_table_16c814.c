@@ -22,7 +22,11 @@
 
 COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_info) == 0x24);
 COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room_list) == 0x10);
+COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room_blend) == 4);
 COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room) == 0x14);
+COMPILE_TIME_ASSERT(level_table_16c814_c, offsetof(struct level_room, param) == 0x10);
+COMPILE_TIME_ASSERT(level_table_16c814_c, offsetof(struct level_room, param.blend.eva) == 0x12);
+COMPILE_TIME_ASSERT(level_table_16c814_c, offsetof(struct level_room, param.blend.evb) == 0x13);
 
 /* The rooms' palettes and descriptors (src/data/level_rooms_*.c). */
 extern const u16 gRoom00Palette[];
@@ -358,55 +362,55 @@ const u8 gThemeMusicCues[11] = {
 
 /* The extra rooms of the room lists (rooms 00-16). */
 const struct level_room gLevelRoom00 = {
-    gRoom00Palette, &gRoom00Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom00Palette, &gRoom00Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room00_264730 */
 const struct level_room gLevelRoom01 = {
-    gRoom01Palette, &gRoom01Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom01Palette, &gRoom01Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room01_263f4c */
 const struct level_room gLevelRoom02 = {
-    gRoom02Palette, &gRoom02Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom02Palette, &gRoom02Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room02_2636e0 */
 const struct level_room gLevelRoom03 = {
-    gRoom03Palette, &gRoom03Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom03Palette, &gRoom03Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room03_270bcc */
 const struct level_room gLevelRoom04 = {
-    gRoom04Palette, &gRoom04Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom04Palette, &gRoom04Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room04_262e64 */
 const struct level_room gLevelRoom05 = {
-    gRoom05Palette, &gRoom05Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom05Palette, &gRoom05Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room05_270154 */
 const struct level_room gLevelRoom06 = {
-    gRoom06Palette, &gRoom06Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom06Palette, &gRoom06Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room06_267428 */
 const struct level_room gLevelRoom07 = {
-    gRoom07Palette, &gRoom07Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom07Palette, &gRoom07Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room07_264e64 */
 const struct level_room gLevelRoom08 = {
-    gRoom08Palette, &gRoom08Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom08Palette, &gRoom08Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room08_265804 */
 const struct level_room gLevelRoom09 = {
-    gRoom09Palette, &gRoom09Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom09Palette, &gRoom09Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room09_262654 */
 const struct level_room gLevelRoom10 = {
-    gRoom10Palette, &gRoom10Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom10Palette, &gRoom10Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room10_266194 */
 const struct level_room gLevelRoom11 = {
-    gRoom11Palette, &gRoom11Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom11Palette, &gRoom11Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room11_26f5c0 */
 const struct level_room gLevelRoom12 = {
-    gRoom12Palette, &gRoom12Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom12Palette, &gRoom12Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room12_266b40 */
 const struct level_room gLevelRoom13 = {
-    gRoom13Palette, &gRoom13Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom13Palette, &gRoom13Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room13_2bbde0 */
 const struct level_room gLevelRoom14 = {
-    gRoom14Palette, &gRoom14Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom14Palette, &gRoom14Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room14_2bcf40 */
 const struct level_room gLevelRoom15 = {
-    gRoom15Palette, &gRoom15Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom15Palette, &gRoom15Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room15_2bdf98 */
 const struct level_room gLevelRoom16 = {
-    gRoom16Palette, &gRoom16Desc, ROOM_KIND_HOVER, 0, 0, 0
+    gRoom16Palette, &gRoom16Desc, ROOM_KIND_HOVER, 0, { { 0, 0, 0 } }
 }; /* data/levels/room16_2beadc */
 
 /* The rooms of each level, in play order. */
@@ -438,82 +442,95 @@ const struct level_room *const gLevel21Rooms[1] = { &gLevelStage6 };
 
 /* The rooms of the lists above (rooms 17-40 and the category stages). */
 const struct level_room gLevelRoom17 = {
-    gRoom17Palette, &gRoom17Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom17Palette, &gRoom17Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room17_25e7dc */
-const struct level_room gLevelRoom18 = { gRoom18Palette, &gRoom18Desc, ROOM_KIND_UNDERWATER, 0, 1,
-                                         0x1004 }; /* data/levels/room18_261c40 */
+const struct level_room gLevelRoom18 = {
+    gRoom18Palette, &gRoom18Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
+}; /* data/levels/room18_261c40 */
 const struct level_room gLevelRoom19 = {
-    gRoom19Palette, &gRoom19Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom19Palette, &gRoom19Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room19_260768 */
 const struct level_room gLevelRoom20 = {
-    gRoom20Palette, &gRoom20Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom20Palette, &gRoom20Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room20_25f11c */
 const struct level_room gLevelStage0 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, CATEGORY_FROSTBITE_CAVERN, 0
+    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_FROSTBITE_CAVERN }
 };
 const struct level_room gLevelRoom21 = {
-    gRoom21Palette, &gRoom21Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom21Palette, &gRoom21Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room21_25d81c */
-const struct level_room gLevelRoom22 = { gRoom22Palette, &gRoom22Desc, ROOM_KIND_ON_FOOT, 0, 1,
-                                         0x1004 }; /* data/levels/room22_26e760 */
+const struct level_room gLevelRoom22 = {
+    gRoom22Palette, &gRoom22Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
+}; /* data/levels/room22_26e760 */
 const struct level_room gLevelRoom23 = {
-    gRoom23Palette, &gRoom23Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom23Palette, &gRoom23Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room23_25cf20 */
 const struct level_room gLevelStage1 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, CATEGORY_SNOW_CRASH, 0
+    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_SNOW_CRASH }
 };
 const struct level_room gLevelRoom24 = {
-    gRoom24Palette, &gRoom24Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom24Palette, &gRoom24Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room24_25c640 */
-const struct level_room gLevelStage3 = { NULL, NULL, ROOM_KIND_CATEGORY, 0, CATEGORY_ROCKET_RACKET,
-                                         0 };
-const struct level_room gLevelRoom25 = { gRoom25Palette, &gRoom25Desc, ROOM_KIND_ON_FOOT, 0, 1,
-                                         0x1004 }; /* data/levels/room25_26d388 */
-const struct level_room gLevelRoom26 = { gRoom26Palette, &gRoom26Desc, ROOM_KIND_UNDERWATER, 0, 1,
-                                         0x1004 }; /* data/levels/room26_25bcdc */
+const struct level_room gLevelStage3 = {
+    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_ROCKET_RACKET }
+};
+const struct level_room gLevelRoom25 = {
+    gRoom25Palette, &gRoom25Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
+}; /* data/levels/room25_26d388 */
+const struct level_room gLevelRoom26 = {
+    gRoom26Palette, &gRoom26Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
+}; /* data/levels/room26_25bcdc */
 const struct level_room gLevelRoom27 = {
-    gRoom27Palette, &gRoom27Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom27Palette, &gRoom27Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room27_25a390 */
 const struct level_room gLevelRoom28 = {
-    gRoom28Palette, &gRoom28Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom28Palette, &gRoom28Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room28_254ed0 */
-const struct level_room gLevelStage2 = { NULL, NULL, ROOM_KIND_CATEGORY, 0, CATEGORY_SNOW_JOB, 0 };
+const struct level_room gLevelStage2 = {
+    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_SNOW_JOB }
+};
 const struct level_room gLevelRoom29 = {
-    gRoom29Palette, &gRoom29Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom29Palette, &gRoom29Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room29_2544fc */
 const struct level_room gLevelRoom30 = {
-    gRoom30Palette, &gRoom30Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom30Palette, &gRoom30Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room30_26ac10 */
-const struct level_room gLevelRoom31 = { gRoom31Palette, &gRoom31Desc, ROOM_KIND_UNDERWATER, 0, 1,
-                                         0x1004 }; /* data/levels/room31_2539b0 */
+const struct level_room gLevelRoom31 = {
+    gRoom31Palette, &gRoom31Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
+}; /* data/levels/room31_2539b0 */
 const struct level_room gLevelRoom32 = {
-    gRoom32Palette, &gRoom32Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom32Palette, &gRoom32Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room32_24e104 */
-const struct level_room gLevelStage4 = { NULL, NULL, ROOM_KIND_CATEGORY, 0, CATEGORY_BLIMP_BONANZA,
-                                         0 };
-const struct level_room gLevelRoom33 = {
-    gRoom33Palette, &gRoom33Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
-}; /* data/levels/room33_25233c */
-const struct level_room gLevelRoom34 = { gRoom34Palette, &gRoom34Desc, ROOM_KIND_UNDERWATER, 0, 1,
-                                         0x1004 }; /* data/levels/room34_24c400 */
-const struct level_room gLevelStage5 = {
-    NULL, NULL, ROOM_KIND_CATEGORY, 0, CATEGORY_NO_FLY_ZONE, 0
+const struct level_room gLevelStage4 = {
+    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_BLIMP_BONANZA }
 };
-const struct level_room gLevelRoom35 = { gRoom35Palette, &gRoom35Desc, ROOM_KIND_ON_FOOT, 0, 1,
-                                         0x1004 }; /* data/levels/room35_26c1bc */
+const struct level_room gLevelRoom33 = {
+    gRoom33Palette, &gRoom33Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
+}; /* data/levels/room33_25233c */
+const struct level_room gLevelRoom34 = {
+    gRoom34Palette, &gRoom34Desc, ROOM_KIND_UNDERWATER, 0, { { 1, 4, 16 } }
+}; /* data/levels/room34_24c400 */
+const struct level_room gLevelStage5 = {
+    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_NO_FLY_ZONE }
+};
+const struct level_room gLevelRoom35 = {
+    gRoom35Palette, &gRoom35Desc, ROOM_KIND_ON_FOOT, 0, { { 1, 4, 16 } }
+}; /* data/levels/room35_26c1bc */
 const struct level_room gLevelRoom36 = {
-    gRoom36Palette, &gRoom36Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom36Palette, &gRoom36Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room36_268cf0 */
 const struct level_room gLevelRoom37 = {
-    gRoom37Palette, &gRoom37Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom37Palette, &gRoom37Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room37_2b9ed0 */
 const struct level_room gLevelRoom38 = {
-    gRoom38Palette, &gRoom38Desc, ROOM_KIND_UNDERWATER, 0, 0, 0
+    gRoom38Palette, &gRoom38Desc, ROOM_KIND_UNDERWATER, 0, { { 0, 0, 0 } }
 }; /* data/levels/room38_2bac1c */
 const struct level_room gLevelRoom39 = {
-    gRoom39Palette, &gRoom39Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom39Palette, &gRoom39Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room39_2ba810 */
 const struct level_room gLevelRoom40 = {
-    gRoom40Palette, &gRoom40Desc, ROOM_KIND_ON_FOOT, 0, 0, 0
+    gRoom40Palette, &gRoom40Desc, ROOM_KIND_ON_FOOT, 0, { { 0, 0, 0 } }
 }; /* data/levels/room40_2bb094 */
-const struct level_room gLevelStage6 = { NULL, NULL, ROOM_KIND_CATEGORY, 0, CATEGORY_N_GIN, 0 };
+const struct level_room gLevelStage6 = {
+    NULL, NULL, ROOM_KIND_CATEGORY, 0, { .catIndex = CATEGORY_N_GIN }
+};

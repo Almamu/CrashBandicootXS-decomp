@@ -315,7 +315,7 @@ LevelSelect::LevelSelect(s32 arg)
         index = 5;
     }
     nameText = 0;
-    save = (struct menu_save *)PackSaveData(gLevelState);
+    save = PackSaveData(gLevelState);
     result = 0;
     bg1 = new LevelSelectPageBg(0, 0x1D);
     InitBgSetup(&bg0cnt, 2, 0x1E, 2, 3);

@@ -103,7 +103,7 @@ PauseMenu::PauseMenu()
     dispcnt.bits.bg0 = 1;
     dispcnt.bits.obj = 1;
     LoadGraphicsPackage(&bg, &gPauseMenuBg);
-    progress = (struct menu_save *)PackSaveData(gLevelState);
+    progress = PackSaveData(gLevelState);
     InitInfo();
     {
         UiSprite *s;

@@ -111,7 +111,7 @@ void PauseMenu::InitRelicsPage()
 }
 
 /* The time trial page (docs/rom_map.md's overlay_ui "Correction"
- * section): the level's best time (the save block's `time:13`, level_menu.h)
+ * section): the level's best time (the save block's `time:13`, level_state.h)
  * as text, and the medal icon, the best relic the time won against the
  * level's thresholds in gLevelTable. `trialEarned` is set for a time
  * within times[0], the sapphire. */
@@ -126,7 +126,7 @@ void PauseMenu::InitTimeTrialPage()
     {
         /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
          * computed before the base is loaded. */
-        s32 off = levelIdx * 4 + 4;
+        s32 off = levelIdx * 4 + offsetof(struct game_progress, levels);
 
         time = (u16)*(u32 *)((u8 *)progress + off) >> 3;
     }

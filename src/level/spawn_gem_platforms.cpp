@@ -42,7 +42,7 @@ extern "C" {
  * stores it from there afterwards. */
 void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->flags & 1;
+    u8 bit = gLevelState->progress.flags & 1;
 
     if (bit) {
         Platform *snd;
@@ -70,7 +70,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->flags & 2;
+    u8 bit = gLevelState->progress.flags & 2;
 
     if (bit) {
         Platform *snd;
@@ -98,7 +98,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->flags & 4;
+    u8 bit = gLevelState->progress.flags & 4;
 
     if (bit) {
         Platform *snd;
@@ -128,7 +128,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
  * it in a callee-saved register for both uses. */
 void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->flags & 8;
+    u8 bit = gLevelState->progress.flags & 8;
 
     if (bit) {
         Platform *snd;

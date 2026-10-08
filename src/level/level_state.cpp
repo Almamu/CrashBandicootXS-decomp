@@ -85,7 +85,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     recordId = recordb[4].paletteId;
     LoadPaletteSlot(gPaletteCache, slot, recordId);
 
-    level = self->cat;
+    level = self->room.cat;
     if (level->kind == ROOM_KIND_CATEGORY) {
         UploadPaletteSlot(gPaletteCache, slot);
     }
@@ -156,7 +156,7 @@ void TickLevelClock(struct level_state *self)
             recordId = recordb[1].paletteId;
             LoadPaletteSlot(gPaletteCache, slot, recordId);
 
-            level = self->cat;
+            level = self->room.cat;
             if (level->kind == ROOM_KIND_CATEGORY) {
                 UploadPaletteSlot(gPaletteCache, slot);
             }
@@ -211,7 +211,7 @@ void AddBrokenCrate(struct level_state *self)
 
     if (self->crateCount == self->crateTotal) {
         if (!IsInBonusRound(self) && !IsInGemPath(self)) {
-            const struct level_room *level = self->cat;
+            const struct level_room *level = self->room.cat;
 
             if (level->kind == ROOM_KIND_CATEGORY) {
                 u8 *flags = GetCurrentLevelFlags(self);
@@ -252,7 +252,7 @@ void PressSwitchCrate(struct level_state *self)
     }
 
     if (!IsInBonusRound(self) && !IsInGemPath(self)) {
-        const struct level_room *level = self->cat;
+        const struct level_room *level = self->room.cat;
 
         if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
@@ -343,7 +343,7 @@ void ClearPowers(struct level_state *self)
      * reuse the still-live -0x11 constant to derive -0x41 via a single
      * SUB instead of a fresh mov+neg pair. */
     MATCH_HOLD_REG(s32, acc, r1) = -0x11;
-    MATCH_HOLD_REG(s32, tmp, r2) = self->flags;
+    MATCH_HOLD_REG(s32, tmp, r2) = self->progress.flags;
     acc &= tmp;
     tmp = -0x41;
     acc &= tmp;
@@ -351,7 +351,7 @@ void ClearPowers(struct level_state *self)
     acc &= tmp;
     tmp = 0x7f;
     acc &= tmp;
-    self->flags = acc;
+    self->progress.flags = acc;
 }
 
 /* Each of these four builds its OR mask into `r1` *before* loading the
@@ -363,33 +363,33 @@ void ClearPowers(struct level_state *self)
 void GiveTornadoSpin(struct level_state *self)
 {
     MATCH_HOLD_REG(s32, mask, r1) = 0x40;
-    MATCH_HOLD_REG(s32, value, r2) = self->flags;
+    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
     mask |= value;
-    self->flags = mask;
+    self->progress.flags = mask;
 }
 
 void GiveSuperBodySlam(struct level_state *self)
 {
     MATCH_HOLD_REG(s32, mask, r1) = 0x20;
-    MATCH_HOLD_REG(s32, value, r2) = self->flags;
+    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
     mask |= value;
-    self->flags = mask;
+    self->progress.flags = mask;
 }
 
 void GiveTurboRun(struct level_state *self)
 {
     MATCH_HOLD_REG(s32, mask, r1) = 0x10;
-    MATCH_HOLD_REG(s32, value, r2) = self->flags;
+    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
     mask |= value;
-    self->flags = mask;
+    self->progress.flags = mask;
 }
 
 void GiveDoubleJump(struct level_state *self)
 {
     MATCH_HOLD_REG(s32, mask, r1) = 0x80;
-    MATCH_HOLD_REG(s32, value, r2) = self->flags;
+    MATCH_HOLD_REG(s32, value, r2) = self->progress.flags;
     mask |= value;
-    self->flags = mask;
+    self->progress.flags = mask;
 }
 
 /* These three read a single flag bit back out of `self+2` as a plain
@@ -400,17 +400,17 @@ void GiveDoubleJump(struct level_state *self)
  * `!= 0` test (see docs/workflow.md step 7 / matching.md). */
 s32 HasTornadoSpin(struct level_state *self)
 {
-    return (u32)(self->flags << 25) >> 31;
+    return (u32)(self->progress.flags << 25) >> 31;
 }
 
 s32 HasSuperBodySlam(struct level_state *self)
 {
-    return (u32)(self->flags << 26) >> 31;
+    return (u32)(self->progress.flags << 26) >> 31;
 }
 
 s32 HasTurboRun(struct level_state *self)
 {
-    return (u32)(self->flags << 27) >> 31;
+    return (u32)(self->progress.flags << 27) >> 31;
 }
 
 /* GitHub issues #35/#36: 0x080231CC-0x08023488, the remainder of the
@@ -422,7 +422,7 @@ s32 HasTurboRun(struct level_state *self)
  * file's own family already covers bits 4-6 of. */
 s32 HasDoubleJump(struct level_state *self)
 {
-    return self->flags >> 7;
+    return self->progress.flags >> 7;
 }
 
 /* self+0x70/self+0xbc form a counter/threshold pair (`AddBrokenCrate`/
@@ -447,7 +447,7 @@ struct AudioContext;
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
  * invincibility mask) always fires a jingle (`StartSong(
  * gAudioContext, SONG_DRUMS)`) and skips the rest; leaving level 3 re-fires
- * `PlayRoomMusic(&self->level)` once. Either way `maskLevel` ends up
+ * `PlayRoomMusic(&self->room)` once. Either way `maskLevel` ends up
  * holding `state`. */
 void SetMaskLevel(void *selfArg, s32 stateArg)
 {
@@ -462,7 +462,7 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
         StartSong(gAudioContext, SONG_DRUMS);
     } else if (self->maskLevel == MASK_LEVEL_INVINCIBLE) {
         self->maskLevel = state;
-        PlayRoomMusic((struct level_progress *)&self->level);
+        PlayRoomMusic(&self->room);
     }
     self->maskLevel = state;
 }
@@ -632,24 +632,24 @@ void SetLevelBoss(struct level_state *self, void *value)
     self->boss = (struct level_state_1c8 *)value;
 }
 
-/* Plain getter/getter/setter trio for `roomIndex` (`self+0xc8`, the
+/* Plain getter/getter/setter trio for `room.roomIndex` (`self+0xc8`, the
  * current room's index in the level's room list; SpawnRoomExit tests it
- * for the first room) and `level` (`self+0xc4`) - the
+ * for the first room) and `room.level` (`self+0xc4`) - the
  * latter is the "current index" field `GetBossHealth`/`GetBossIndex`/
  * `GetCurrentLevelFlags`/`IsCrystalSaved` below all read. */
 s32 GetRoomIndex(struct level_state *self)
 {
-    return self->roomIndex;
+    return self->room.roomIndex;
 }
 
 s32 GetCurrentLevel(struct level_state *self)
 {
-    return self->level;
+    return self->room.level;
 }
 
 void SetCurrentLevel(struct level_state *self, s32 value)
 {
-    self->level = value;
+    self->room.level = value;
 }
 
 /* Five thin two-argument wrappers that drop `self` entirely and forward
@@ -680,7 +680,7 @@ s32 LevelHasGemPathGem(void *self, s32 idx)
     return LevelHasGemPathGemEntity(idx);
 }
 
-/* Dispatches on `self+0xc4`'s "current index" field: index `0x15` fires
+/* Dispatches on the "current index" field `room.level` (`self+0xc4`): index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
  * `hovercraft_parts.cpp`); indices `0x14`/`0x16`/`0x17` instead compute
  * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `SetLevelBoss`
@@ -688,7 +688,7 @@ s32 LevelHasGemPathGem(void *self, s32 idx)
  * else returns `0`. */
 s32 GetBossHealth(struct level_state *self)
 {
-    s32 idx = self->level;
+    s32 idx = self->room.level;
 
     switch (idx) {
     case LEVEL_N_GIN:
@@ -713,7 +713,7 @@ s32 GetBossHealth(struct level_state *self)
     }
 }
 
-/* Same `self+0xc4` "current index" field, the level, mapped through a
+/* Same "current index" field (`room.level`), the level, mapped through a
  * 5-entry table (the boss levels) to the boss's HUD icon animation
  * (`{9, 8, 6, 7}`) minus a shared `BOSS_HUD_ANIM_BASE`, giving BOSS_* -
  * LEVEL_MEGA_MIX and any other level both skip the shared
@@ -724,7 +724,7 @@ s32 GetBossHealth(struct level_state *self)
  * so the subtraction has to stay a genuine runtime step). */
 s32 GetBossIndex(struct level_state *self)
 {
-    s32 idx = self->level;
+    s32 idx = self->room.level;
     s32 result;
 
     switch (idx) {
@@ -747,18 +747,18 @@ s32 GetBossIndex(struct level_state *self)
     return result - BOSS_HUD_ANIM_BASE;
 }
 
-/* Address-of-slot helper: level `idx`'s word in `levelFlags`. */
+/* Address-of-slot helper: level `idx`'s word in `progress.levels`. */
 u8 *GetLevelFlags(struct level_state *self, s32 idx)
 {
-    return (u8 *)&self->levelFlags[idx];
+    return (u8 *)&self->progress.levels[idx];
 }
 
-/* Resolves the "current index" field (`self+0xc4`) into its own slot
+/* Resolves the "current index" field (`room.level`, `self+0xc4`) into its own slot
  * address via `GetLevelFlags` - the address this file's `AddBrokenCrate`/
  * `PressSwitchCrate`/`CheckAllCratesBroken` all call "flags" and OR a bit into. */
 u8 *GetCurrentLevelFlags(struct level_state *self)
 {
-    s32 idx = self->level;
+    s32 idx = self->room.level;
     return GetLevelFlags(self, idx);
 }
 
@@ -768,14 +768,14 @@ s32 GetCrateCount(struct level_state *self)
     return self->crateCount;
 }
 
-/* Bit-0 getter on the current level's `levelFlags` word in the
- * `saveData` copy of the attempt block (`idx` from `level`). Spelled as
- * `self + idx * 4 + offset`: taking `&...levelFlags[idx]` inside the
+/* Bit-0 getter on the current level's word in the `saveData` copy of
+ * the progress block (`idx` from `room.level`). Spelled as
+ * `self + idx * 4 + offset`: taking `&...levels[idx]` inside the
  * snapshot adds the constant first, which the ROM doesn't. */
 s32 IsCrystalSaved(struct level_state *self)
 {
-    s32 idx = self->level;
-    u8 *addr = (u8 *)self + idx * 4 + offsetof(struct level_state, saveData[4]);
+    s32 idx = self->room.level;
+    u8 *addr = (u8 *)self + idx * 4 + offsetof(struct level_state, saveData.levels);
 
     return (u32)(*addr << 31) >> 31;
 }
@@ -825,7 +825,7 @@ void CheckAllCratesBroken(void *selfArg)
     MATCH_HOLD_REG(struct level_state *, self, r4) = (struct level_state *)selfArg;
 
     if (self->crateCount == self->crateTotal && !IsInBonusRound(self) && !IsInGemPath(self)) {
-        const struct level_room *level = self->cat;
+        const struct level_room *level = self->room.cat;
 
         if (level->kind == ROOM_KIND_CATEGORY) {
             u8 *flags = GetCurrentLevelFlags(self);
@@ -907,10 +907,10 @@ void RestoreCheckpoint(struct level_state *self)
 {
     u8 tmp;
 
-    self->crateCount = self->checkpointCrateCount;
-    tmp = self->checkpointSwitchPressed;
+    self->crateCount = self->room.checkpointCrateCount;
+    tmp = self->room.checkpointSwitchPressed;
     self->switchPressed = tmp;
-    MemCopy32(self, self->checkpointData, 0x68);
+    MemCopy32(&self->progress, &self->checkpointData, sizeof(struct game_progress));
 }
 
 /* Re-arms a level/checkpoint transition: stores `flag` at `self->0xe0`,
@@ -925,14 +925,14 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
     MATCH_HOLD_REG(s32 *, pair, r4) = pairArg;
     u8 tmp;
 
-    self->checkpointFlags = flag;
-    self->checkpointCrateCount = GetCrateCount(self);
+    self->room.checkpointFlags = flag;
+    self->room.checkpointCrateCount = GetCrateCount(self);
     tmp = self->switchPressed;
-    self->checkpointSwitchPressed = tmp;
+    self->room.checkpointSwitchPressed = tmp;
     ClearSpawnAtStart(self);
     ResetDeaths(self);
     {
-        MATCH_HOLD_REG(s32 *, dst, r2) = &self->checkpointX;
+        MATCH_HOLD_REG(s32 *, dst, r2) = &self->room.checkpointX;
         MATCH_HOLD_REG(s32, px, r0) = pair[0];
         MATCH_HOLD_REG(s32, py, r1) = pair[1];
         dst[0] = px;
@@ -953,7 +953,7 @@ void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
         CpuSet(a, b, ctrl);
     }
 
-    MemCopy32(self->checkpointData, self, 0x68);
+    MemCopy32(&self->checkpointData, &self->progress, sizeof(struct game_progress));
 }
 
 /* When `flag` is set, accumulates `self->0xb4` into `self->0x70`,
@@ -971,10 +971,10 @@ void EndGemPath(struct level_state *self, u8 flag)
         gHud->SetCrateTotal(self->crateTotal);
         {
             Player *player = gPlayer;
-            s32 *p = &self->checkpointX;
+            s32 *p = &self->room.checkpointX;
             SetEntityPos((struct actor *)player, p[0], p[1]);
         }
-        SetCheckpointAtPlayer(self, self->checkpointFlags);
+        SetCheckpointAtPlayer(self, self->room.checkpointFlags);
     } else {
         ResetCrateCount(self);
     }
@@ -1018,9 +1018,9 @@ void nullsub_24(void)
  * first refreshes the snapshot itself: copies `src` into `self`'s first
  * `0x68` bytes, then re-copies `self` into the `0x14c`-based snapshot
  * block. */
-void UnpackSaveData(struct level_state *self, void *src)
+void UnpackSaveData(struct level_state *self, const struct game_progress *src)
 {
-    MATCH_HOLD_REG(u8 *, snap, r5) = self->saveData;
+    MATCH_HOLD_REG(u8 *, snap, r5) = self->saveData.packedStats;
     /* Register pins reproduce the ROM's exact "freshly loaded value in
      * one register, shifted result in another" shape for both the byte
      * and halfword extracts below (see docs/workflow.md step 7). */
@@ -1028,14 +1028,14 @@ void UnpackSaveData(struct level_state *self, void *src)
     MATCH_HOLD_REG(s32, val, r0);
     MATCH_HOLD_REG(u16, packed, r5);
 
-    MemCopy32(self, src, 0x68);
-    MemCopy32(snap, self, 0x68);
+    MemCopy32(&self->progress, src, sizeof(struct game_progress));
+    MemCopy32(snap, &self->progress, sizeof(struct game_progress));
 
     raw = *snap;
     val = PACKED_STATS_LIVES(raw);
     self->lives = val;
 
-    self->wumpa = self->saveData[1] >> 1;
+    self->wumpa = self->saveData.packedStats[1] >> 1;
 
     packed = *(u16 *)snap;
     val = PACKED_STATS_MASK_LEVEL(packed);
@@ -1044,8 +1044,7 @@ void UnpackSaveData(struct level_state *self, void *src)
 
 /* Packs `self->0x74`/`0x6c`/`0x78` back into the halfword at
  * `self->0x14c`/`0x14d` - the inverse of `UnpackSaveData` above - and
- * returns the `self->0x14c` snapshot pointer (matching the `void *`
- * externs used at its call sites in pause_menu.cpp/save_menu_input.c).
+ * returns the `self->0x14c` snapshot, `&self->saveData`.
  *
  * Register-pinned to reproduce three ROM-specific shapes plain C
  * phrasing alone didn't reach (see docs/workflow.md step 7):
@@ -1066,28 +1065,28 @@ void UnpackSaveData(struct level_state *self, void *src)
  *    up already sitting in r0 at the end, the epilogue's LR-restore
  *    register naturally lands on r1 instead of r0, matching the ROM's
  *    `pop {r1}; bx r1` without any extra hint. */
-void *PackSaveData(void *selfArg)
+struct game_progress *PackSaveData(void *selfArg)
 {
     MATCH_HOLD_REG(struct level_state *, self, r3) = (struct level_state *)selfArg;
-    MATCH_HOLD_REG(u8 *, snap, r0);
+    MATCH_HOLD_REG(struct game_progress *, snap, r0);
     u8 byte0;
     u16 packed;
     MATCH_HOLD_REG(s32, t, r2);
 
     t = self->lives;
-    snap = self->saveData;
+    snap = &self->saveData;
     t &= PACKED_STATS_LIVES_MASK;
     {
         MATCH_HOLD_REG(s32, mask, r1);
         asm volatile("mov %0, #0x80\n\tneg %0, %0" : "=r"(mask));
-        mask &= *snap;
+        mask &= snap->packedStats[0];
         byte0 = mask | t;
     }
-    *snap = byte0;
+    snap->packedStats[0] = byte0;
 
     {
         s32 field6c = self->wumpa;
-        MATCH_HOLD_REG(u32, off, r5) = offsetof(struct level_state, saveData[1]);
+        MATCH_HOLD_REG(u32, off, r5) = offsetof(struct level_state, saveData.packedStats[1]);
         s32 shifted = field6c << 1;
         MATCH_HOLD_REG(s32, one, r1) = 1;
         MATCH_HOLD_REG(u32, raw, r4);
@@ -1100,11 +1099,11 @@ void *PackSaveData(void *selfArg)
     {
         MATCH_HOLD_REG(s32, shifted, r2) = (self->maskLevel & 3) << PACKED_STATS_MASK_LEVEL_SHIFT;
         MATCH_HOLD_REG(s32, mask, r1) = ~PACKED_STATS_MASK_LEVEL_MASK;
-        MATCH_HOLD_REG(u16, loaded, r5) = *(u16 *)snap;
+        MATCH_HOLD_REG(u16, loaded, r5) = *(u16 *)snap->packedStats;
         mask &= loaded;
         packed = mask | shifted;
     }
-    *(u16 *)snap = packed;
+    *(u16 *)snap->packedStats = packed;
 
     return snap;
 }

@@ -339,7 +339,7 @@ void SaveMenu::LoadInput(u32 keys, struct save_data *handle)
         }
         PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
         ReadSaveSlot(handle, cursor, &buf);
-        UnpackSaveData(gLevelState, &buf);
+        UnpackSaveData(gLevelState, &buf.progress);
         SetCurrentLevel(gLevelState, buf.level);
         SetSfxVolume(gAudioContext, buf.sfxVolume);
         SetMusicVolume(gAudioContext, buf.musicVolume);
@@ -440,8 +440,8 @@ void SaveMenu::SaveToSlot(s32 rowIndex)
          * MemCopy32, not the other way around) - a plain nested call
          * expression here lets this compiler compute the pointer
          * argument first instead. */
-        void *result = PackSaveData(*c0Addr);
-        MemCopy32(&buf[1], result, 0x68);
+        struct game_progress *result = PackSaveData(*c0Addr);
+        MemCopy32(&buf[1].progress, result, sizeof(struct game_progress));
     }
     buf[1].level = (u8)GetCurrentLevel(*c0Addr);
 

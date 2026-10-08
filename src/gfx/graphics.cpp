@@ -38,9 +38,8 @@ struct dma_queue {
 
 /* The save's completion percentage: the crystals, gems, relics (a
  * sapphire counts half) and the four secret flags, out of 72. */
-s32 GetCompletionPercent(void *arg0)
+s32 GetCompletionPercent(const struct game_progress *self)
 {
-    struct menu_save *self = (struct menu_save *)arg0;
     s32 total = CountCrystals(self);
     s32 gems = CountGems(self);
     s32 sapphires = CountSapphireRelics(self);

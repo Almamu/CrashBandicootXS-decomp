@@ -24,7 +24,6 @@
 #include "constants/chunk_tokens.h"
 
 struct camera;
-struct level_ctx;
 struct level_progress;
 struct part_list;
 struct tile_slot_pool;
@@ -309,8 +308,8 @@ extern void PlayIntroCutscene(void *self);
 extern void ShowCompanyLogos(void *unused);
 extern void PlayBootCutscene(void *self);
 extern void nullsub_24(void);
-extern void UnpackSaveData(struct level_state *self, void *src);
-extern void *PackSaveData(void *self);
+extern void UnpackSaveData(struct level_state *self, const struct game_progress *src);
+extern struct game_progress *PackSaveData(void *self);
 extern struct level_state *GetLevelState(void);
 
 /* src/level/play_room.cpp */
@@ -328,8 +327,8 @@ extern void SpawnRoomEntities(struct entity_flags *self, const struct level_enti
                               const struct level_link_list *links, s32 pos, s32 unused);
 
 /* src/level/room_frame.cpp */
-extern void UpdateRoomFrame(void *self);
-extern void SetupRoomBlend(struct level_ctx *self);
+extern void UpdateRoomFrame(struct level_progress *self);
+extern void SetupRoomBlend(struct level_progress *self);
 
 /* src/level/run_room.cpp */
 extern s32 RunRoom(struct level_progress *self);

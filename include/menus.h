@@ -25,6 +25,7 @@
 
 struct bg_package;
 struct follow_child;
+struct game_progress;
 struct level_item;
 struct level_menu;
 struct settings_icon_actor;
@@ -141,13 +142,13 @@ extern void ShowTurboRunDialog(void);
 extern void ShowTornadoSpinDialog(void);
 extern void ShowDoubleJumpDialog(void);
 extern void ShowSuperBodySlamDialog(void);
-extern s32 GetProgressLives(void *arg0);
-extern s32 CountPlatinumRelics(void *arg0);
-extern s32 CountGoldRelics(void *arg0);
-extern s32 CountSapphireRelics(void *arg0);
-extern s32 CountRelics(void *arg0);
-extern s32 CountGems(void *arg0);
-extern s32 CountClearGems(void *arg0);
-extern s32 CountCrystals(void *arg0);
+extern s32 GetProgressLives(const struct game_progress *save);
+extern s32 CountPlatinumRelics(const struct game_progress *save);
+extern s32 CountGoldRelics(const struct game_progress *save);
+extern s32 CountSapphireRelics(const struct game_progress *save);
+extern s32 CountRelics(const struct game_progress *save);
+extern s32 CountGems(const struct game_progress *save);
+extern s32 CountClearGems(const struct game_progress *save);
+extern s32 CountCrystals(const struct game_progress *save);
 
 #endif /* GUARD_MENUS_H */

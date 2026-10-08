@@ -52,19 +52,19 @@ void SaveMenu::LoadBg()
 void SaveMenu::RefreshSlotSummaries(struct save_data *handle)
 {
     struct settings_row_stats *row;
-    u8 buf[0x70];
+    struct save_slot buf;
     s32 i;
 
     i = 0;
     row = &rowStats[0];
     do {
         if (!IsSaveSlotEmpty(handle, i)) {
-            ReadSaveSlot(handle, i, buf);
-            row->gems = CountClearGems(buf);
-            row->relics = CountRelics(buf);
-            row->lives = GetProgressLives(buf);
-            row->crystals = CountCrystals(buf);
-            row->percent = GetCompletionPercent(buf);
+            ReadSaveSlot(handle, i, &buf);
+            row->gems = CountClearGems(&buf.progress);
+            row->relics = CountRelics(&buf.progress);
+            row->lives = GetProgressLives(&buf.progress);
+            row->crystals = CountCrystals(&buf.progress);
+            row->percent = GetCompletionPercent(&buf.progress);
         }
         row++;
         i++;
@@ -83,7 +83,7 @@ void SaveMenu::LoadData()
 /* Fills `dest` from `src` using the same five-function battery as the
  * loop in RefreshSlotSummaries above - `this` is passed but never used,
  * matching the ROM exactly. */
-void SaveMenu::SummarizeProgress(struct settings_row_stats *dest, void *src)
+void SaveMenu::SummarizeProgress(struct settings_row_stats *dest, const struct game_progress *src)
 {
     dest->gems = CountClearGems(src);
     dest->relics = CountRelics(src);

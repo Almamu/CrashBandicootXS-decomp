@@ -4,11 +4,13 @@
 /*
  * The level/session state object `gLevelState` points at (0x1CC
  * bytes). Its accessor family is src/level/level_state.cpp
- * (FreezeLevelClock through CheckAllCratesBroken); game_frame.cpp's level loop still carries
- * its own copy of the same layout (`struct level_state` there).
+ * (FreezeLevelClock through CheckAllCratesBroken); the level loop
+ * (UpdateGameFrame, game_frame.cpp) and the bonus-round/checkpoint
+ * functions (bonus_round.c) use it too.
  *
- * The first 0x68 bytes are the per-attempt block the frame loop
- * snapshots into `checkpointData`/`saveData` and restores from (game_frame.cpp).
+ * The first 0x68 bytes are the per-attempt progress block (`progress`,
+ * struct game_progress) the frame loop snapshots into `checkpointData`/
+ * `saveData` and restores from (game_frame.cpp).
  */
 
 #include "level_data.h"
@@ -18,17 +20,126 @@
 
 struct level_state_1c8;
 
-struct level_state {
-    // 0x000 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8)
+/* One level's progress word (`game_progress.levels[level]`;
+ * constants/level_flags.h, LEVEL_FLAG_*). */
+struct level_save {
+    u32 cleared:1; // LEVEL_FLAG_CRYSTAL
+    u32 flag1:1;   // LEVEL_FLAG_CRATE_GEM
+    u32 flag2:1;   // LEVEL_FLAG_GEM_PATH_GEM
+    u32 time:13;   // best time, tenths of a second (0 = none; UpdateGameFrame)
+    u32 unk_16:16;
+};
+
+/* The same word with halfword bitfields: the level select's reads load it
+ * with `ldrh` (byte 2 of the progress block itself holds four more flags
+ * LoadLevelSelectRecord tests). */
+struct level_save_h {
+    u16 cleared:1;
+    u16 flag1:1;
+    u16 flag2:1;
+    u16 time:13; // best time, tenths of a second (0 = none; UpdateGameFrame)
+    u16 unk_16;
+};
+
+/* The same word, read a byte at a time. The three upper bytes are
+ * separate fields, not a `u8 [3]`: an array member would give this struct,
+ * and so union level_record, BLKmode, and UpdateGameFrame's word read of
+ * `w.time` (`ldr`, then two shifts) would become an `ldrh`. */
+struct level_save_b {
+    u8 cleared:1;
+    u8 flag1:1;
+    u8 flag2:1;
+    u8 unk_0_3:5;
+    u8 unk_1;
+    u8 unk_2;
+    u8 unk_3;
+};
+
+/* A level's progress word, read through whichever access width its user
+ * needs. It merges game_frame.cpp's `union level_best_time` (`f` was `w`,
+ * `raw` is `low`; #656, batch 8). */
+union level_record {
+    struct level_save w;
+    struct level_save_h h;
+    struct level_save_b b;
+    // the low halfword as a whole: UpdateGameFrame's "no best time yet"
+    // test (`low & LEVEL_FLAG_TIME_MASK`) reads it as one
+    u16 low;
+};
+
+/*
+ * The 0x68-byte progress block: the head of `struct level_state`
+ * (`progress`), its snapshots `checkpointData` (the last checkpoint) and
+ * `saveData` (the committed progress), the block PackSaveData returns
+ * to the menus (the level select, the pause menu, the power dialog and
+ * the save menu's summaries, which count it: CountGems, CountCrystals,
+ * GetCompletionPercent, ...) and a save slot's `progress`
+ * (settings_sync.h). It merges level_menu.h's `struct menu_save` and the
+ * raw `u8 [0x68]` blocks (#656, batch 8).
+ */
+struct game_progress {
+    // 0x00 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8)
     // (UnpackSaveData/PackSaveData; PACKED_STATS_*)
     u8 packedStats[2];
-    // 0x002 - bits 0-3: colored gems (CountGems); bits 4-7: powers
-    // (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump)
+    // 0x02 - bits 0-3: colored gems (CountGems, DrawPauseGemsPage); bits 4-7:
+    // powers (HasTurboRun, HasSuperBodySlam, HasTornadoSpin, HasDoubleJump);
+    // bits 5/7/6 make level-select pages 1/2/3 reachable
     u8 flags;
     u8 unk_03;
-    // 0x004 - one word per level, indexed by `level`
-    // (GetLevelFlags); LEVEL_FLAG_* (crystal, the two clear gems, best time)
-    u32 levelFlags[LEVEL_COUNT];
+    // 0x04 - one word per level, indexed by `level` (GetLevelFlags);
+    // LEVEL_FLAG_* (crystal, the two clear gems, best time); five per
+    // level-select page
+    union level_record levels[LEVEL_COUNT];
+};
+
+COMPILE_TIME_ASSERT(level_state_h, sizeof(union level_record) == 4);
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct game_progress, flags) == 0x02);
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct game_progress, levels) == 0x04);
+COMPILE_TIME_ASSERT(level_state_h, sizeof(struct game_progress) == 0x68);
+
+/*
+ * The room block of `struct level_state` (`room`, +0x0C4): the record the
+ * room functions take (game_frame.c passes `&gLevelState->room`):
+ * SelectRoom, NextRoom, EnterBonusRoom and the other level_query.c
+ * functions, PlayRoom (play_room.c), RunRoom (run_room.c),
+ * ResumeRoomAfterPause (room.c), UpdateRoomFrame and SetupRoomBlend
+ * (room_frame.c). It merges the four file-local views `level_progress`
+ * (level_query.c), `level_start_args` (play_room.c; `spawnX`/`spawnY`
+ * were `checkpointX`/`checkpointY`), `gl_self` (run_room.c; `widget` was
+ * `cat`) (#574, batch 9e) and room_frame.cpp's `level_ctx` (`blend` was
+ * `cat`; #656, batch 7). Offsets in brackets are the level state's.
+ */
+struct level_progress {
+    s32 level; // 0x00 (0x0C4) - index into gLevelTable
+    // 0x04 (0x0C8) - the current room's index in the level's room list
+    // (SelectRoom, NextRoom, GetRoomIndex)
+    s32 roomIndex;
+    // 0x08 (0x0CC) - checkpoint copy of crateCount (SetCheckpoint/RestoreCheckpoint)
+    s32 checkpointCrateCount;
+    u8 checkpointSwitchPressed; // 0x0C (0x0D0) - checkpoint copy of switchPressed
+    u8 unk_0d[3];
+    // 0x10 (0x0D4) - the player's position at the checkpoint, where PlayRoom
+    // places the player
+    s32 checkpointX;
+    s32 checkpointY; // 0x14 (0x0D8)
+    // 0x18 (0x0DC) - the current room (SelectRoom); kind 3 is a stage
+    // played in an actor category
+    const struct level_room *cat;
+    // 0x1C (0x0E0) - checkpoint flags (SetCheckpoint, SetCheckpointAtPlayer);
+    // bit 0: PlayRoom starts the player X-mirrored. Not the level state's
+    // own `flags` (+0x002, the gems and powers)
+    u8 checkpointFlags;
+    u8 unk_1d[3];
+};
+
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_progress, cat) == 0x18);
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_progress, checkpointFlags) == 0x1C);
+COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_progress) == 0x20);
+
+struct level_state {
+    // 0x000 - the per-attempt progress block, snapshotted into
+    // `checkpointData`/`saveData` and restored from them (UpdateGameFrame)
+    struct game_progress progress;
     s32 unk_68; // 0x068
     s32 wumpa;  // 0x06C - at 100 it wraps and adds a life (CollectWumpa)
     // 0x070 - crates broken (AddBrokenCrate); reaching
@@ -70,27 +181,13 @@ struct level_state {
     // 0x0C0 - bit mask, zeroed by InitLevelState; only the unused
     // SetUnusedFlags/TestUnusedFlags touch it
     s32 unusedFlags;
-    s32 level; // 0x0C4 - also the head of the room block (struct level_progress, below)
-    // 0x0C8 - the current room's index in the level's room list (SelectRoom,
-    // NextRoom, GetRoomIndex)
-    s32 roomIndex;
-    // 0x0CC - checkpoint copy of crateCount (SetCheckpoint/RestoreCheckpoint)
-    s32 checkpointCrateCount;
-    u8 checkpointSwitchPressed; // 0x0D0 - checkpoint copy of switchPressed
-    u8 unk_d1[3];
-    s32 checkpointX; // 0x0D4 - the player's position at the checkpoint
-    s32 checkpointY; // 0x0D8
-    // 0x0DC - the current room (SelectRoom); kind 3 is a stage played in an actor category
-    const struct level_room *cat;
-    // 0x0E0 - checkpoint flags (SetCheckpoint, SetCheckpointAtPlayer); bit 0:
-    // PlayRoom starts the player X-mirrored (level_progress.flags)
-    u8 checkpointFlags;
-    u8 unk_e1[3];
+    // 0x0C4 - the current level and room, and the checkpoint
+    struct level_progress room;
     // 0x0E4 - the first 0x68 bytes at the last checkpoint (SetCheckpoint/RestoreCheckpoint)
-    u8 checkpointData[0x68];
+    struct game_progress checkpointData;
     // 0x14C - the committed progress: restored before each level,
     // updated when one is won, packed for the save menus (PackSaveData)
-    u8 saveData[0x68];
+    struct game_progress saveData;
     struct entity_flags
         *savedBitmap;    // 0x1B4 - gEntityFlags, while a bonus round or gem path has its own
     void *bonusPlatform; // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
@@ -101,29 +198,12 @@ struct level_state {
     struct level_state_1c8 *boss; // 0x1C8 - SetLevelBoss
 };
 
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, unk_68) == 0x068);
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, room) == 0x0C4);
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, checkpointData) == 0x0E4);
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, saveData) == 0x14C);
+COMPILE_TIME_ASSERT(level_state_h, offsetof(struct level_state, savedBitmap) == 0x1B4);
 COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_state) == 0x1CC);
-
-/*
- * The room block of `struct level_state`, from `level` (+0x0C4) on: the
- * record the room functions take (game_frame.cpp passes
- * `&gLevelState->level`): SelectRoom, NextRoom, EnterBonusRoom and the
- * other level_query.cpp functions, PlayRoom (play_room.cpp) and RunRoom
- * (run_room.cpp). Field names are the level state's. It merges the three
- * file-local views `level_progress` (level_query.cpp), `level_start_args`
- * (play_room.cpp; `spawnX`/`spawnY` were `checkpointX`/`checkpointY`) and
- * `gl_self` (run_room.cpp; `widget` was `cat`) (#574, batch 9e).
- */
-struct level_progress {
-    s32 level;                  // 0x00 (0x0C4) - index into gLevelTable
-    s32 roomIndex;              // 0x04 (0x0C8) - the current room's index in the room list
-    s32 checkpointCrateCount;   // 0x08 (0x0CC)
-    u8 checkpointSwitchPressed; // 0x0C (0x0D0)
-    u8 unk_0d[3];
-    s32 checkpointX;              // 0x10 (0x0D4) - where PlayRoom places the player
-    s32 checkpointY;              // 0x14 (0x0D8)
-    const struct level_room *cat; // 0x18 (0x0DC) - the current room
-    u8 flags;                     // 0x1C (0x0E0) - bit 0: start X-mirrored (PlayRoom)
-};
 
 /* The record `level_state.boss` points at (GetBossHealth). */
 struct level_state_1c8 {
