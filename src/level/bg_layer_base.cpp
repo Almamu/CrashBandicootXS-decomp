@@ -9,8 +9,8 @@ extern "C" {
 
 /* BgLayerBase's other methods (include/bg_layer.hpp; the constructor,
  * destructor and scroll steps are in src/cutscene/cutscene_player.cpp),
- * then the terrain tile cache's lookups (level.h's `struct tile_cache`,
- * plain C functions). */
+ * then the collision tile cache's lookups (TileCache's, include/bg_layer.hpp;
+ * free functions taking a `struct tile_cache *` until #752). */
 
 /* Scales the move `delta` by the layer's parallax factors and steps the
  * layer's position toward the result. */
@@ -117,67 +117,57 @@ s32 BgLayerBase::GetWidth()
 }
 
 /* Returns the cache slot holding decoded record recordId. On a miss,
- * decodes it (DecodeCollisionChunk) into the slot just behind the ring cursor and
+ * decodes it (DecodeChunk) into the slot just behind the ring cursor and
  * advances the cursor. */
-void *GetCollisionChunk(struct tile_cache *self, s32 recordId)
+void *TileCache::GetChunk(s32 recordId)
 {
-    if (recordId == self->id[0])
-        return self->buf[0];
-    if (recordId == self->id[1])
-        return self->buf[1];
-    if (recordId == self->id[2])
-        return self->buf[2];
-    if (recordId == self->id[3])
-        return self->buf[3];
-    if (recordId == self->id[4])
-        return self->buf[4];
-    if (recordId == self->id[5])
-        return self->buf[5];
-    if (recordId == self->id[6])
-        return self->buf[6];
-    if (recordId == self->id[7])
-        return self->buf[7];
-    if (recordId == self->id[8])
-        return self->buf[8];
-    if (recordId == self->id[9])
-        return self->buf[9];
-    if (recordId == self->id[10])
-        return self->buf[10];
-    if (recordId == self->id[11])
-        return self->buf[11];
-    if (recordId == self->id[12])
-        return self->buf[12];
-    if (recordId == self->id[13])
-        return self->buf[13];
-    if (recordId == self->id[14])
-        return self->buf[14];
-    if (recordId == self->id[15])
-        return self->buf[15];
+    if (recordId == id[0])
+        return buf[0];
+    if (recordId == id[1])
+        return buf[1];
+    if (recordId == id[2])
+        return buf[2];
+    if (recordId == id[3])
+        return buf[3];
+    if (recordId == id[4])
+        return buf[4];
+    if (recordId == id[5])
+        return buf[5];
+    if (recordId == id[6])
+        return buf[6];
+    if (recordId == id[7])
+        return buf[7];
+    if (recordId == id[8])
+        return buf[8];
+    if (recordId == id[9])
+        return buf[9];
+    if (recordId == id[10])
+        return buf[10];
+    if (recordId == id[11])
+        return buf[11];
+    if (recordId == id[12])
+        return buf[12];
+    if (recordId == id[13])
+        return buf[13];
+    if (recordId == id[14])
+        return buf[14];
+    if (recordId == id[15])
+        return buf[15];
     {
-        s32 slot = (self->nextSlot + 15) & 0xf;
-        u8 *dest = self->buf[slot];
+        s32 slot = (nextSlot + 15) & 0xf;
+        u8 *dest = buf[slot];
 
-        DecodeCollisionChunk(self, recordId, dest);
-        self->id[slot] = recordId;
-        self->nextSlot = (self->nextSlot + 1) & 0xf;
+        DecodeChunk(recordId, dest);
+        id[slot] = recordId;
+        nextSlot = (nextSlot + 1) & 0xf;
         return dest;
     }
-}
-
-/* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
- * slot per tile record. */
-static inline u16 GetCell(struct tile_cache *self, s32 x, s32 y)
-{
-    s32 tileX = x >> 4;
-    s32 tileY = y >> 3;
-    u16 *buf = (u16 *)GetCollisionChunk(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
-    return buf[(y & 7) * 16 + (x & 0xf)];
 }
 
 /* The terrain-property row (36 bytes, gTerrainHeights0) for the cell at
  * pixel (x, y), or NULL when out of bounds or the type is 0 or above 0x23.
  * The cell's flag nibble goes to a local nothing reads. */
-void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y)
+void *TileCache::GetTerrainHeights(s32 x, s32 y)
 {
     u8 hi;
     u8 *hiOut = &hi;
@@ -187,7 +177,7 @@ void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y)
 
     if (x < 0 || y < 0)
         return NULL;
-    cell = GetCell(self, x, y);
+    cell = CellAt(x, y);
     nibble = (cell >> 8) & 0xf;
     if (nibble)
         *hiOut = nibble;
@@ -200,7 +190,7 @@ void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y)
 /* Like GetTerrainHeights with a collision mode (0-3): each mode has its own
  * property table and its own "not solid" bit in the cell's top nibble.
  * The flag nibble is written to flagsOut. */
-void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
+void *TileCache::GetSolidTerrainHeights(s32 x, s32 y, s32 mode, u8 *flagsOut)
 {
     void *result = NULL;
     s32 hi = 0;
@@ -209,7 +199,7 @@ void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8
     if (x < 0 || y < 0)
         type = 0;
     else {
-        u16 cell = GetCell(self, x, y);
+        u16 cell = CellAt(x, y);
         u8 nibble;
 
         hi = cell >> 12;
@@ -252,7 +242,7 @@ void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8
 /* The mode byte (0-3) of the cell's terrain type at pixel (x, y): -1
  * when out of bounds or the type is 0x23 or below, 0 when the mode's
  * "not solid" bit is set in the cell's top nibble. */
-s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
+s8 TileCache::GetSolidTerrainModeValue(s32 x, s32 y, s32 mode, u8 *flagsOut)
 {
     s8 result = 0;
     s32 hi = 0;
@@ -261,7 +251,7 @@ s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 
     if (x < 0 || y < 0)
         type = 0;
     else {
-        u16 cell = GetCell(self, x, y);
+        u16 cell = CellAt(x, y);
         u8 nibble;
 
         hi = cell >> 12;
@@ -303,11 +293,11 @@ s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 
 
 /* Custom RLE/delta token-stream decoder (docs/rom_map.md's "A new find:
  * a custom RLE/delta token-stream decoder"): looks up a base pointer
- * via `self->decodeBase` indexed by `recordId`, then decodes a token
+ * via `decodeBase` indexed by `recordId`, then decodes a token
  * stream, budget-limited to 0x7f halfwords, with three run modes per
  * token byte - a literal-fill run, a signed-delta-accumulate run, and a
  * raw-copy run - writing the decoded halfwords into `dest` (a linear
- * 256-byte cache slot in `GetCollisionChunk`'s caller).
+ * 256-byte cache slot of `GetChunk`).
  *
  * Matched (near-miss sweep 2, old_agbcc). Three pieces closed the old
  * 33-halfword gap:
@@ -323,10 +313,10 @@ s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 
  *   emits no code, see #468) gives `n` one more reference, so the pair
  *   loop's run counter wins r3 and `acc` keeps r4. Without it the
  *   allocator swaps the two. Still needed in C++ (old_agbcp). */
-void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
+void TileCache::DecodeChunk(s32 recordId, void *dest)
 {
     u16 *out = (u16 *)dest;
-    u16 *src = (u16 *)self->decodeBase;
+    u16 *src = (u16 *)decodeBase;
     s32 budget;
     s32 written;
 

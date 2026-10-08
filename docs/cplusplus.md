@@ -689,6 +689,11 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp` | none: free functions, C linkage; LoadSaveData and StoreSaveData call `AudioContext`'s `IsPlaying`, `GetCurrentSong`, `StopSong`, `PlaySong` | 15 + 3 + 1 | old_agbcp, old_agbcp, agbcp | 1 instruction asm (PollSaveTransfer, with its pin) -> 0, with `volatile` on `struct link_session`'s `playerId` | all-C++: link, save, iwram |
 | `src/iwram/iwram_data.cpp` | the IWRAM image's initialised globals; `gSaveMenu`, `gLevelSelect`, `gLevelLayersSingleton`, `gActorList`, `gLanguageSelect` and `gHeapSortActorsByKeyFunc` defined with their C++ types | 0 | agbcp | 0 -> 0 | all-C++: link, save, iwram |
 | `src/iwram/string_arm.cpp`, `sprite_arm.cpp` | none: the IWRAM image's ARM routines, C linkage; HeapSortActorsByKey takes `ActorSelf **` | 5 + 5 | agbcp_arm_patched (new; agbcc_arm_patched C) | 0 -> 0 | all-C++: link, save, iwram |
+| `src/level/tile_slot_pool.cpp` (again) | `TileSlotPool` (include/bg_layer.hpp; was the file-local struct tile_slot_pool): `Reset`, `Acquire`, `Release`, `Upload`, `SetSource` (the C names stay), its five `static inline` helpers private inline methods | 5 | old_agbcp | 0 -> 0 | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
+| `src/level/bg_layer_base.cpp`, `collision_map.cpp`, `tile_cache.cpp` (again) | `TileCache` (include/bg_layer.hpp; level.h's struct tile_cache's fields move into it): `GetChunk` (GetCollisionChunk), `GetTerrainHeights`, `GetSolidTerrainHeights`, `GetSolidTerrainModeValue`, `DecodeChunk` (DecodeCollisionChunk); `GetCell` (GetCollisionCell), `SetSource` (SetCollisionSource); `GetTerrainType`; the two files' `GetCell` inline is the private `CellAt` | 5 + 2 + 1 | old_agbcp, agbcp, old_agbcp | 1 use -> 1 use (DecodeChunk's `MATCH_USE(n)`) | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
+| `src/level/pooled_bg_layer.cpp`, `level_layers.cpp`, `terrain.cpp`, `terrain_probe_axes.cpp` (again) | callers: `pool->Acquire(...)`, `tiles->SetSource(...)`, `tiles->GetTerrainType(...)` & co.; level.h's struct level_layers holds a `TileCache *` for C++ | 0 | (unchanged) | 0 -> 0 | [#752](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
+| `src/gfx/graphics_package.cpp` (again) | `BgSetup` (new include/graphics_package.hpp; was graphics_package.h's struct bg_setup): constructor (InitBgSetup), `Load` (LoadGraphicsPackage), `GetControl` (GetBgSetupControl); `ScaledSprite` (was the file-local struct gfx_box_obj; all UNUSED): `Fit`, `Draw`, `SetColor`, `SetPriority`, `SetPos`, `ResetAttrs` | 3 + 6 | old_agbcp | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
+| `src/menus/pause_menu.cpp`, `power_dialog.cpp`, `level_select_pages.cpp`, `level_select.cpp`, `continue_prompt_init.cpp`, `src/save/save_menu_ui.cpp`, `src/frontend/language_select_setup.cpp` (again) | callers: `BgSetup` members built in the mem-initializer list, stack ones declared at their construction, `new BgSetup(...)`; `bg.Load(...)`, `bg.GetControl()` | 0 | (unchanged) | 0 -> 0 | [#753](#the-tile-slot-pool-the-tile-cache-and-the-bg-setup-752-753) |
 | `src/link/link_sio.cpp`, `link_handshake.cpp`, `link_session.cpp`, `link_session_reset.cpp` (again) | `LinkSession` (new include/link_session.hpp, with `LinkRing` and `LinkPlayer`): constructor (`InitLinkSession`: `new LinkSession`), destructor (`DestroyLinkSession`: `delete gLinkSession`), `Start` (UNUSED), `Reset`, `Stop`, `Update`, `HandleSerial`, `ResetState`; LinkSetupSio (UNUSED), MakeLinkHandshakeId and the two IRQ handlers keep C linkage | 8 | (unchanged) | 3 keeps, 1 `MATCH_KEEP_EXPR`, 14 uses, 1 const, 1 barrier -> the same (tools/match_prune.py: none removable); the constructor's ring loop and the destructor's empty players loop are g++'s | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
 | `src/save/save_data.cpp`, `save_transfer.cpp`, `save_transfer_poll.cpp`, `save_menu_input.cpp` (again) | `SaveData` and `SaveTransfer` (new include/save_data.hpp): `SaveData`'s `Load`, `Validate` (UNUSED), `CheckChecksum` (the out-of-line copy of the inline `ChecksumOk` that `Validate` expands), `UpdateChecksum`, `GetGameId`, `Store`, the slot and flag accessors, `SetFlags`; `SaveTransfer`'s `SendChunk`, `ReceiveChunk`, `Poll`, `SetRecord`, `GetData`, `Reset`; ReadSaveData and WriteSaveData (a `void *` buffer) keep C linkage | 14 + 6 | (unchanged) | 4 pins, 1 use, 1 empty-template asm -> the same | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
 | `src/save/save_menu.cpp`, `save_menu_draw.cpp`, `save_menu_input.cpp`, `save_menu_ui.cpp`, `src/iwram/iwram_data.cpp` | the callers: SaveMenu's `cartSave`/`linkSave` are `SaveData *` (`new SaveData`; `P9save_data` -> `P8SaveData` in cxx_symbols.txt), the link exchange `new`s a `SaveTransfer`, `gLinkSession` is a `LinkSession *` (link.h) | 0 | (unchanged) | 0 -> 0 | [#751](#the-link-session-the-save-data-and-the-save-transfer) |
@@ -3228,8 +3233,7 @@ section had.
 - Possible follow-ups, not needed for the match: level_state.cpp's 87
   functions as `LevelState` methods (they keep C linkage and the
   `struct level_state *` parameter; renaming them touches every caller),
-  graphics_package.cpp's BgSetup as a class (its C++ callers'
-  `InitBgSetup(&bg, ...)` would become constructors), the link session
+  ~~graphics_package.cpp's BgSetup as a class~~ (done, #753), the link session
   as a `LinkSession` class (`InitLinkSession`/`DestroyLinkSession` are
   its `new`/`delete`), and the C views of classes that no C file reads
   any more (struct player and others): they can go now that every game
@@ -3924,6 +3928,39 @@ CpuSet control word), bg_picture.cpp's two `MATCH_USE`s, yeti_states.cpp's
 cell_anim.cpp and actor_category_init.cpp (the call leaves r1 as it is);
 tools/match_prune.py removes none of them. asm-label aliases 12 -> 11
 project-wide (tools/match_idioms.py); 17 more `.cpp` files under src/.
+
+### The tile-slot pool, the tile cache and the BG setup (#752, #753)
+
+Three plain structs whose functions all took them as `self` are classes
+now, with no vtable; every object is byte-identical, and the C names
+stay (cxx_symbols.txt's `#752` and `#753` blocks):
+
+- **TileSlotPool** (include/bg_layer.hpp, PooledBgLayer's `pool`): the
+  pool's five functions are methods, and its `static inline` free-stack
+  and slot-table helpers private inline methods (they still make g++
+  recompute `this + 0x4808`/`this + 0x408`). PooledBgLayer's
+  constructor allocates it with `new TileSlotPool` (no constructor: the
+  ROM's plain OperatorNew) and its Reset empties it.
+- **TileCache** (include/bg_layer.hpp, LevelLayers' `tiles`) had only its
+  constructor and destructor; its eight lookups (bg_layer_base.cpp,
+  collision_map.cpp, tile_cache.cpp) are methods now, and level.h's
+  struct tile_cache, its base, is gone: the fields are the class's, and
+  struct level_layers (the probes' C view) holds a `class TileCache *`
+  for C++ (C sees an opaque `struct tile_cache *`). The `GetCell` inline
+  both files had is one private `CellAt`.
+- **BgSetup** (new include/graphics_package.hpp; graphics_package.h's
+  struct bg_setup goes, no C file read it): `InitBgSetup` is its
+  constructor. A member (the pause menu's, the power dialog's, the level
+  select page strip's `bg`, all at offset 0 and set first) is built in the
+  mem-initializer list; a stack one (the level select's sky, the save
+  menu's and the language select's) is declared where InitBgSetup was
+  called; the continue prompt's three are `new BgSetup(...)`, which g++
+  compiles to the same OperatorNew and constructor call with no null test.
+  `LoadGraphicsPackage` and `GetBgSetupControl` are `Load` and
+  `GetControl`.
+- **ScaledSprite** (graphics_package.hpp; was graphics_package.cpp's
+  struct gfx_box_obj): the six sprite-box functions, all UNUSED, are its
+  methods; gfx.h's nine prototypes went.
 
 ### Next batches
 

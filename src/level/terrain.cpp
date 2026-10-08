@@ -1,3 +1,5 @@
+#include "bg_layer.hpp"
+
 extern "C" {
 #include "core.h"
 #include "math_util.h"
@@ -17,7 +19,7 @@ extern "C" {
  * `GetTerrainFlagsAt(arg0, x, y)` is a small wrapper around the already-
  * matched terrain-tile-cache lookup `GetTerrainType` (`src/level/
  * tile_cache.cpp`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
- * `struct tile_cache`, converts `x`/`y` into that cache's own lookup
+ * TileCache (include/bg_layer.hpp), converts `x`/`y` into that cache's own lookup
  * units via a plain `>>3` (clamped to a minimum of 0 on each axis
  * independently - `ProbeTerrain`'s own bounds-clamp neighbors use the
  * same "clamp each axis, don't just floor a negative tile index"
@@ -38,9 +40,8 @@ extern "C" {
  * `CollidePlayer`'s own doc already established other fields of
  * (`+0x29`/`+0x2a`) for - not given its own named struct here since
  * this function only ever touches the one field, following the same
- * "duplicate only what's needed, no shared header" precedent
- * `struct tile_cache` itself already set between `bg_layer_base.cpp`/
- * `tile_cache.cpp`.
+ * "duplicate only what's needed, no shared header" precedent the tile
+ * cache itself once set between `bg_layer_base.cpp`/`tile_cache.cpp`.
  *
  * Matched as real C on the first isolated-compile attempt - no
  * register pins or opaque asm needed, following `ProbeTerrain`'s own
@@ -69,7 +70,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
     LIMIT_MIN(tileX, 0);
     LIMIT_MIN(tileY, 0);
 
-    GetTerrainType(((struct level_layers *)arg0)->tiles, tileX, tileY, &flagsOut, &hiOut);
+    ((struct level_layers *)arg0)->tiles->GetTerrainType(tileX, tileY, &flagsOut, &hiOut);
 
     return flagsOut;
 }
@@ -80,7 +81,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * #9/#10, `src/objects/ground_sprite_collide.cpp`) already fully placed their
  * argument roles: `s32 fn(void *player, struct vec2 *pos, s32
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
- * `player+0x20`'s terrain-data pointer (the same `struct tile_cache *`
+ * `player+0x20`'s terrain-data pointer (the same `TileCache *`
  * field `GetTerrainFlagsAt` (above) already established that offset
  * for on the same `player`/`arg0` global, `gLevelLayers`).
  *
@@ -106,8 +107,8 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * only ever uses them against `self.y`/`self->y`, never `self.x`.
  * `struct vec2` reuses `terrain_probe.cpp`'s own plain-int (not Q8)
  * probe-position layout unchanged (same "duplicate only what's needed,
- * no shared header" precedent `struct tile_cache` itself already set
- * between `bg_layer_base.cpp`/`tile_cache.cpp`).
+ * no shared header" precedent the tile cache itself once set between
+ * `bg_layer_base.cpp`/`tile_cache.cpp`).
  *
  * Both reload `pos->x`/`pos->y` a second time from memory after their
  * respective lookup call rather than keeping the pre-shifted tile
@@ -179,8 +180,6 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * Real bytes formerly the start of `asm/code_3_2_17_26bf8.s` (that file
  * is now trimmed to begin at `StepCameraDirectional`). */
 
-struct tile_cache;
-
 /* The floor under pixel `pos` from the sloped terrain types (1-0x23,
  * GetTerrainHeights): adds the distance from `pos->y` to that column's
  * surface, Q8, to `*outValue` and returns 1, or returns 0 when the cell has
@@ -189,7 +188,7 @@ s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
 {
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 *row = (s8 *)GetTerrainHeights(((struct level_layers *)player)->tiles, tileX, tileY);
+    s8 *row = (s8 *)((struct level_layers *)player)->tiles->GetTerrainHeights(tileX, tileY);
 
     if (row != NULL) {
         s32 y = pos->y;
@@ -210,7 +209,7 @@ s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue)
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
     s8 height =
-        GetSolidTerrainModeValue(((struct level_layers *)player)->tiles, tileX, tileY, 0, &scratch);
+        ((struct level_layers *)player)->tiles->GetSolidTerrainModeValue(tileX, tileY, 0, &scratch);
 
     if (height >= 0) {
         s32 y = pos->y;

@@ -27,7 +27,7 @@ void PooledBgLayer::DrawColumn(s32 col)
     s32 r;
 
     for (r = rowLo; r <= rowHi; r++) {
-        screen[idx] = AcquireTileSlot(pool, src[srcRow * 64]);
+        screen[idx] = pool->Acquire(src[srcRow * 64]);
         srcRow = (srcRow + 1) & 0x1F;
         idx = (idx + 32) % 0x400;
     }
@@ -50,7 +50,7 @@ void PooledBgLayer::ReleaseColumn(s32 col)
     s32 r;
 
     for (r = rowLo; r <= rowHi; r++) {
-        ReleaseTileSlot(pool, src[srcRow * 64]);
+        pool->Release(src[srcRow * 64]);
         srcRow = (srcRow + 1) & 0x1F;
     }
 }
@@ -63,7 +63,7 @@ void PooledBgLayer::ReleaseRow(s32 row)
     s32 c;
 
     for (c = colLo; c <= colHi; c++) {
-        ReleaseTileSlot(pool, src[srcCol++]);
+        pool->Release(src[srcCol++]);
         srcCol &= 0x3F;
     }
 }
@@ -107,7 +107,7 @@ void PooledBgLayer::DrawRow(s32 row)
     for (c = colLo; c <= colHi; c++) {
         s32 i = WrapColumn(c);
 
-        dst[i] = AcquireTileSlot(pool, src[srcCol++]);
+        dst[i] = pool->Acquire(src[srcCol++]);
         srcCol &= 0x3F;
     }
 }
@@ -115,7 +115,7 @@ void PooledBgLayer::DrawRow(s32 row)
 /* Layer-0 Reset (slot 2): empties the pool, then the base reset. */
 void PooledBgLayer::Reset(const s32 *pos)
 {
-    ResetTileSlotPool(pool);
+    pool->Reset();
     BgLayer::Reset(pos);
 }
 
@@ -126,7 +126,7 @@ void PooledBgLayer::LoadTiles()
 {
     u32 tiles = (u32)tileData;
 
-    SetTileSlotPoolSource(pool, GetCharBase(), tiles + 4);
+    pool->SetSource(GetCharBase(), tiles + 4);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/, expected/, src/

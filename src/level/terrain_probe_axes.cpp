@@ -1,3 +1,5 @@
+#include "bg_layer.hpp"
+
 extern "C" {
 #include "core.h"
 #include "math_util.h"
@@ -19,11 +21,9 @@ extern "C" {
  *     4`/`8` in `ProbeTerrain`): scans `pos->x` over `[x, x+span-1]>>3`
  *     at a fixed `pos->y>>3` tile row, clamping the start index up to
  *     0 if it computes to exactly -1 and the end index down by one if
- *     it lands exactly on `(*(struct tile_cache **)(self+0x20))+0x10`
- *     (that cache's own cached width-in-tiles field, `struct
- *     tile_cache::unk010` in `bg_layer_base.cpp` - confirmed genuinely read
- *     here, unlike that struct's own comment there which predates this
- *     pass), calling `GetSolidTerrainHeights(self->0x20, tileX, tileY, submode,
+ *     it lands exactly on `self->tiles->widthTiles` (the tile cache's
+ *     width in tiles, TileCache in include/bg_layer.hpp), calling
+ *     `self->tiles->GetSolidTerrainHeights(tileX, tileY, submode,
  *     &scratch)` (matched, `bg_layer_base.cpp`) per tile until a hit or the
  *     range is exhausted. On a hit, accumulates into `*outValue` using
  *     `pos->y & 7`: `submode == 2` adds `(8-(y&7))<<8`, `submode == 0`
@@ -32,8 +32,8 @@ extern "C" {
  *     only ever passes `0`/`2` here).
  *   - `ProbeTerrainX` (the X-axis/wall resolver, `mode == 1`/`2`): the
  *     same shape, scanning `pos->y` over the same span at a fixed
- *     `pos->x>>3` tile column, clamped against `unk014` (the cache's
- *     cached height-in-tiles field) instead of `unk010`. On a hit,
+ *     `pos->x>>3` tile column, clamped against `heightTiles` (the cache's
+ *     height in tiles) instead of `widthTiles`. On a hit,
  *     using `pos->x & 7`: `submode == 3` adds `1+(8-(x&7))<<8`
  *     (`(*outValue+1)` is read before the shift-add, giving the extra
  *     `+1` epsilon term `ProbeTerrain`'s own doc flagged as this
@@ -69,7 +69,7 @@ s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, s32 *ou
     if (end == self->tiles->widthTiles)
         end--;
     for (; x <= end && !hit; x++) {
-        if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))
+        if (self->tiles->GetSolidTerrainHeights(x, y, submode, &flag))
             hit = 1;
     }
     if (hit) {
@@ -107,7 +107,7 @@ s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *ou
     if (end == self->tiles->heightTiles)
         end--;
     for (; y <= end && !hit; y++) {
-        if (GetSolidTerrainHeights(self->tiles, x, y, submode, &flag))
+        if (self->tiles->GetSolidTerrainHeights(x, y, submode, &flag))
             hit = 1;
     }
     if (hit) {

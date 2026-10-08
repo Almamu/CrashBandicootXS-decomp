@@ -241,15 +241,71 @@ ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, hofs);
 ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, vofs);
 ASSERT_VIEW_FIELD(bg_layer_hpp, BgLayer, bg_scroll_layer, ofsReg);
 
+#define TILE_SLOT_NONE 0x200
+
+/* Layer 0's VRAM tile-slot pool (PooledBgLayer::pool, 0x480C bytes;
+ * src/level/tile_slot_pool.cpp): up to 0x2000 source tiles mapped onto
+ * 0x200 reference-counted VRAM tile slots. PooledBgLayer's constructor
+ * allocates it (`new TileSlotPool`, no constructor) and Reset empties it.
+ * It has no vtable. */
+class TileSlotPool
+{
+public:
+    u32 vramBase;            // 0x0000
+    u32 srcBase;             // 0x0004
+    u16 refCount[0x200];     // 0x0008
+    u16 slotForTile[0x2000]; // 0x0408 - TILE_SLOT_NONE when not resident
+    u16 freeSlots[0x200];    // 0x4408
+    s32 freeTop;             // 0x4808
+
+    void Reset();                          // ResetTileSlotPool
+    u16 Acquire(u16 tile);                 // AcquireTileSlot
+    void Release(u32 tile);                // ReleaseTileSlot
+    void Upload(s32 tileId, s32 slot);     // UploadTileSlot
+    void SetSource(s32 charBase, u32 src); // SetTileSlotPoolSource
+
+private:
+    /* The free-stack push and the slot-table accessors: as inline
+     * functions they make the ROM recompute `this + 0x4808`/`this +
+     * 0x408` instead of reusing one address register (code written in
+     * place CSEs them). */
+    void PushFreeSlot(s32 slot)
+    {
+        freeSlots[--freeTop] = slot;
+    }
+
+    void ClearSlot(s32 id)
+    {
+        slotForTile[id] = TILE_SLOT_NONE;
+    }
+
+    u16 PopFreeSlot()
+    {
+        return freeSlots[freeTop++];
+    }
+
+    void SetSlot(s32 id, u16 slot)
+    {
+        slotForTile[id] = slot;
+    }
+
+    u16 GetSlot(s32 id)
+    {
+        return slotForTile[id];
+    }
+};
+
+COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileSlotPool) == 0x480C);
+
 /* BG layer 0 (0x60 bytes): a BgLayer whose tiles go through a VRAM tile
- * slot pool (struct tile_slot_pool, src/level/tile_slot_pool.cpp) instead
+ * slot pool (TileSlotPool, src/level/tile_slot_pool.cpp) instead
  * of the layer's own character block, releasing the tiles of the rows and
  * columns that scroll out. Its methods are in src/level/pooled_bg_layer.cpp
  * and src/level/tile_slot_pool.cpp. */
 class PooledBgLayer : public BgLayer
 {
 public:
-    struct tile_slot_pool *pool; // 0x5C
+    TileSlotPool *pool; // 0x5C
 
     PooledBgLayer(s32 bgIndex);               // InitPooledBgLayer
     virtual ~PooledBgLayer();                 // 1 DestroyPooledBgLayer
@@ -267,15 +323,54 @@ public:
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(PooledBgLayer) == 0x60);
 
-/* The collision tile cache (src/level/tile_cache.cpp; LevelLayers'
- * `tiles`, 0x1064 bytes): level.h's struct tile_cache, which the lookups
- * (bg_layer_base.cpp, tile_cache.cpp, collision_map.cpp, ...) take, with a
- * constructor and destructor. It has no vtable. */
-class TileCache : public tile_cache
+/* The collision tile cache (LevelLayers' `tiles`, 0x1064 bytes; level.h's
+ * struct level_layers sees a `TileCache *`): a 16-slot decode/LRU cache of
+ * the room's collision tile records (docs/rom_map.md's "Collision/terrain-map
+ * streamer"). `id[N]` holds the record ID currently decoded into the
+ * matching 256-byte `buf[N]` slot; `nextSlot` is the ring-buffer eviction
+ * cursor GetChunk advances every time it decodes a new record (evicting
+ * slot `(nextSlot - 1) & 0xf`, the slot filled just before the cursor).
+ * `source` is the level_layer_desc SetSource was given, read as a pointer
+ * to the record grid. It has no vtable. Its methods are in
+ * src/level/bg_layer_base.cpp (GetChunk, the terrain lookups, DecodeChunk),
+ * src/level/tile_cache.cpp (the constructor, destructor and GetTerrainType)
+ * and src/level/collision_map.cpp (GetCell, SetSource). */
+class TileCache
 {
 public:
-    TileCache();  // InitTileCache
-    ~TileCache(); // DestroyTileCache
+    void *source;      // 0x000
+    void *decodeBase;  // 0x004 - gLevelLayers->asset + source->assetOffset; DecodeChunk's table
+    s32 widthPx;       // 0x008 - widthTiles << 3; nothing reads it
+    s32 heightPx;      // 0x00C - heightTiles << 3; nothing reads it
+    s32 widthTiles;    // 0x010 - source->widthTiles (ProbeTerrainY's right edge)
+    s32 heightTiles;   // 0x014 - source->heightTiles (ProbeTerrainX's bottom edge)
+    s32 width;         // 0x018 - tiles, source->gridWidth
+    s32 height;        // 0x01C - tiles, source->gridHeight; nothing reads it
+    u8 buf[16][0x100]; // 0x020 - 16 decoded 256-byte chunks
+    s32 id[16];        // 0x1020 - the record IDs resident in `buf`
+    s32 nextSlot;      // 0x1060
+
+    TileCache();                           // InitTileCache
+    ~TileCache();                          // DestroyTileCache
+    void *GetChunk(s32 recordId);          // GetCollisionChunk
+    void *GetTerrainHeights(s32 x, s32 y); // GetTerrainHeights
+    void *GetSolidTerrainHeights(s32 x, s32 y, s32 mode, u8 *flagsOut);
+    s8 GetSolidTerrainModeValue(s32 x, s32 y, s32 mode, u8 *flagsOut);
+    void DecodeChunk(s32 recordId, void *dest); // DecodeCollisionChunk
+    u16 GetTerrainType(s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
+    u16 GetCell(s32 x, s32 y);                       // GetCollisionCell
+    void SetSource(struct level_layer_desc *source); // SetCollisionSource
+
+private:
+    /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte
+     * cache slot per tile record. Inlined into the terrain lookups. */
+    u16 CellAt(s32 x, s32 y)
+    {
+        s32 tileX = x >> 4;
+        s32 tileY = y >> 3;
+        u16 *cell = (u16 *)GetChunk((*(u16 **)source)[tileY * width + tileX]);
+        return cell[(y & 7) * 16 + (x & 0xf)];
+    }
 };
 
 COMPILE_TIME_ASSERT(bg_layer_hpp, sizeof(TileCache) == 0x1064);

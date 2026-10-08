@@ -19,7 +19,6 @@ extern "C" {
  * background on BG0: the sky (gMenuSkyBg), unscrolled. */
 void LanguageSelect::LoadBg()
 {
-    struct bg_setup buf;
     u32 zero = 0;
 
     dispcnt.raw = zero;
@@ -29,9 +28,9 @@ void LanguageSelect::LoadBg()
     dispcnt.bits.bg1 = 0;
     dispcnt.bits.obj = 1;
 
-    InitBgSetup(&buf, 2, 0x1e, 1, 3);
-    LoadGraphicsPackage(&buf, &gMenuSkyBg);
-    REG_BG0CNT = GetBgSetupControl(&buf);
+    BgSetup buf(2, 0x1e, 1, 3);
+    buf.Load(&gMenuSkyBg);
+    REG_BG0CNT = buf.GetControl();
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 

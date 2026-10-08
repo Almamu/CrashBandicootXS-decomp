@@ -19,7 +19,6 @@ struct aabb;
 struct actor;
 struct dma_queue;
 struct game_progress;
-struct gfx_box_obj;
 struct queued_oam_entry;
 struct rle_frame;
 struct sprite_bank_table;
@@ -252,18 +251,6 @@ extern void nullsub_12(void);
 extern void SetEntityPixelPos(struct actor *self, s32 x, s32 y);
 extern void SetEntityPos(struct actor *self, s32 x, s32 y);
 #endif
-
-/* src/gfx/graphics_package.cpp */
-extern void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg);
-extern u16 GetBgSetupControl(struct bg_setup *self);
-extern struct bg_setup *InitBgSetup(struct bg_setup *self, u32 charBlock, u32 screenBlock,
-                                    u32 paletteBank, u32 priority);
-extern void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height);
-extern void DrawScaledSprite(struct gfx_box_obj *self);
-extern void SetScaledSpriteColor(struct gfx_box_obj *self, s32 color);
-extern void SetScaledSpritePriority(struct gfx_box_obj *self, u32 priority);
-extern void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2);
-extern void ResetScaledSpriteAttrs(struct gfx_box_obj *self);
 
 /* src/gfx/sprite_frame.cpp */
 extern void InitObjTileFreeList(void *base);

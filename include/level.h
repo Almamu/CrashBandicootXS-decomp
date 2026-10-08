@@ -26,7 +26,6 @@
 
 struct camera;
 struct level_progress;
-struct tile_slot_pool;
 
 /* The terrain types of the level collision maps (bg_layer_base.cpp): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
@@ -39,33 +38,9 @@ struct terrain_type {
     u8 heights[4][8];
 };
 
-/* The 16-slot decode/LRU tile-record cache used throughout this cluster
- * of files (`bg_layer_base.cpp`/`tile_cache.cpp`/`collision_map.cpp`, gLevelLayers->tiles; docs/rom_map.md's
- * "Collision/terrain-map streamer" / "`GetCollisionChunk` (16-slot LRU
- * cache/decode dispatcher)"). `id[N]` holds the record ID currently
- * decoded into the matching 256-byte `buf[N]` slot; `nextSlot` is the
- * ring-buffer eviction cursor this function advances every time it
- * decodes a new record (evicting slot `(nextSlot - 1) & 0xf`, i.e. the
- * slot filled just before the current cursor position). The descriptor
- * this cache is built from (`source` below, populated by `SetCollisionSource`
- * in collision_map.cpp) is kept as raw offsets rather than its own struct -
- * it's never allocated by any function in this cluster, so its full
- * shape isn't confirmed enough to commit to one. (terrain_probe_axes.cpp
- * reads `unk010`/`unk014` as the width and height in tiles.) */
-struct tile_cache {
-    void *source; /* 0x000 */
-    /* 0x004 - gLevelLayers's camera offset + source->4; DecodeCollisionChunk's decode-table base */
-    void *decodeBase;
-    s32 widthPx;       /* 0x008 - widthTiles << 3; nothing reads it */
-    s32 heightPx;      /* 0x00c - heightTiles << 3; nothing reads it */
-    s32 widthTiles;    /* 0x010 - source->widthTiles (ProbeTerrainY's right edge) */
-    s32 heightTiles;   /* 0x014 - source->heightTiles (ProbeTerrainX's bottom edge) */
-    s32 width;         /* 0x018 - tiles, copy of source->0x16 */
-    s32 height;        /* 0x01c - tiles, copy of source->0x18; not read anywhere in this cluster */
-    u8 buf[16][0x100]; /* 0x020 - 0x1020, 16 decoded 256-byte chunks */
-    s32 id[16];        /* 0x1020 - 0x105c, record IDs resident in `buf` */
-    s32 nextSlot;      /* 0x1060 */
-};
+/* The collision tile cache (gLevelLayers->tiles, 0x1064 bytes): the class
+ * TileCache (include/bg_layer.hpp), opaque to C. */
+struct tile_cache;
 
 /* The level-layers singleton (gLevelLayersSingleton, gLevelLayers): the
  * level's scroll position and limits, BG layer 0 (a PooledBgLayer, 0x60
@@ -79,9 +54,13 @@ struct level_layers {
     s32 scrollY;                       // 0x0C
     struct bg_scroll_layer *layer0;    // 0x10 - a PooledBgLayer
     struct bg_scroll_layer *layers[3]; // 0x14
-    struct tile_cache *tiles;          // 0x20 - 0x1064 bytes
-    void *asset;                       // 0x24
-    u8 assetOwned;                     // 0x28
+#ifdef __cplusplus
+    class TileCache *tiles; // 0x20 - 0x1064 bytes
+#else
+    struct tile_cache *tiles; // 0x20
+#endif
+    void *asset;   // 0x24
+    u8 assetOwned; // 0x28
     // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set
     // (ProbeTerrainX/Y; terrain_probe_axes.cpp's `nibble`)
     u8 kind;
@@ -148,14 +127,6 @@ struct camera {
  * PooledBgLayer's, include/bg_layer.hpp) */
 extern void nullsub_26(void);
 
-/* src/level/bg_layer_base.cpp: the terrain tile cache's lookups (the BG
- * layer methods are BgLayerBase's, include/bg_layer.hpp) */
-extern void *GetCollisionChunk(struct tile_cache *self, s32 recordId);
-extern void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y);
-extern void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
-extern s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
-extern void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest);
-
 /* src/level/bonus_round.cpp */
 extern void EndBonusRound(struct level_state *self, u8 arg1);
 extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
@@ -167,8 +138,6 @@ extern void SnapCamera(struct camera *cam);
 extern void UpdateCamera(struct camera *cam);
 
 /* src/level/collision_map.cpp */
-extern u16 GetCollisionCell(struct tile_cache *self, s32 x, s32 y);
-extern void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source);
 extern s32 SetBitmapBit(void *self, s32 n);
 extern void ClearBitmapBit(void *self, s32 n);
 extern void ClearBitmap(void *dst);
@@ -441,16 +410,6 @@ extern s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, 
                          s32 submode);
 extern s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
                          s32 submode);
-
-/* src/level/tile_cache.cpp (C linkage) */
-extern u16 GetTerrainType(struct tile_cache *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
-
-/* src/level/tile_slot_pool.cpp: layer 0's VRAM tile-slot pool */
-extern void ResetTileSlotPool(struct tile_slot_pool *pool);
-extern u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile);
-extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
-extern void UploadTileSlot(struct tile_slot_pool *pool, s32 tileId, s32 slot);
-extern void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src);
 
 /* src/level/time_trial.cpp */
 extern void StartTimeTrial(struct level_state *self);

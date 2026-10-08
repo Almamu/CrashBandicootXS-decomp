@@ -9,53 +9,42 @@ extern "C" {
  * (`level_layers.cpp`) and the VRAM tile-slot pool it owns.
  *
  * Layer 0 is a PooledBgLayer (include/bg_layer.hpp): a BgLayer
- * extended with a `struct tile_slot_pool` at `+0x5C`. Its constructor
- * sets the 256-colour bit and char base 0 and allocates the pool, its
- * destructor frees it and then expands BgLayer's inline one. The
- * destructor is the class's key method: g++ emits gPooledBgLayerVtable
- * here. `GetPriority` reads the BG priority.
+ * extended with a TileSlotPool at `+0x5C`. Its constructor sets the
+ * 256-colour bit and char base 0 and allocates the pool, its destructor
+ * frees it and then expands BgLayer's inline one. The destructor is the
+ * class's key method: g++ emits gPooledBgLayerVtable here. `GetPriority`
+ * reads the BG priority.
  *
- * The pool maps up to 0x2000 source tiles onto 0x200 reference-counted
- * VRAM tile slots:
- * - `ResetTileSlotPool` - reset: every slot free, every source tile
+ * The pool (TileSlotPool, include/bg_layer.hpp; a class since #752) maps
+ * up to 0x2000 source tiles onto 0x200 reference-counted VRAM tile slots:
+ * - `Reset` (ResetTileSlotPool) - every slot free, every source tile
  *   non-resident, all counts zero.
- * - `AcquireTileSlot(pool, tile)` - acquire: if source tile `tile & 0x3FFF`
+ * - `Acquire(tile)` (AcquireTileSlot) - if source tile `tile & 0x3FFF`
  *   isn't resident, pops a free slot and queues a 64-byte (8bpp tile)
- *   VRAM DMA of it via `UploadTileSlot`; bumps the slot's count and returns
- *   a BG map entry: the slot number with `tile`'s top two bits moved to
- *   bits 10-11 (the map entry's flip bits). Upper bits of the returned
- *   entry are never set.
- * - `ReleaseTileSlot(pool, tile)` - release: drops the count and returns the
+ *   VRAM DMA of it via `Upload`; bumps the slot's count and returns a BG
+ *   map entry: the slot number with `tile`'s top two bits moved to bits
+ *   10-11 (the map entry's flip bits). Upper bits of the returned entry
+ *   are never set.
+ * - `Release(tile)` (ReleaseTileSlot) - drops the count and returns the
  *   slot to the free stack when it reaches zero.
- * - `SetTileSlotPoolSource(pool, charBase, src)` - sets the VRAM destination to
- *   character base block `charBase` and the source tile data.
+ * - `SetSource(charBase, src)` (SetTileSlotPoolSource) - sets the VRAM
+ *   destination to character base block `charBase` and the source tile
+ *   data.
  *
  * Matching notes: the free-stack push and the slot-table accessors are
- * small `static inline` helpers - that is what makes the ROM recompute
- * `pool + 0x4808`/`pool + 0x408` instead of reusing one address
- * register (plain inline code CSEs them). The tile reference and the
- * returned map entry are 4-byte unions of a `u16` and a `u32` bitfield
- * struct, reproducing the ROM's register-held `& 0xFFFF0000 | tile`
- * and `lsl #18/lsr #18`, `lsl #16/lsr #30` field extraction. Built with
+ * small inline methods - that is what makes the ROM recompute
+ * `this + 0x4808`/`this + 0x408` instead of reusing one address register
+ * (plain inline code CSEs them). The tile reference and the returned map
+ * entry are 4-byte unions of a `u16` and a `u32` bitfield struct,
+ * reproducing the ROM's register-held `& 0xFFFF0000 | tile` and
+ * `lsl #18/lsr #18`, `lsl #16/lsr #30` field extraction. Built with
  * old_agbcp (the Makefile's OLD_AGBCC_OBJS). As C it needed an asm block
  * for the constructor's BGnCNT update, two in `AcquireTileSlot` and a pin
- * in `ReleaseTileSlot`; as C++ only `AcquireTileSlot`'s residency test
- * keeps its asm block (see the comment there). See
+ * in `ReleaseTileSlot`; the C++ needs none. See
  * docs/matching/archive/issue-43-level-layers.md.
  *
  * Real bytes formerly the tail of `asm/code_3_2_17_25fc8.s` (that file
  * now ends at `nullsub_26`). */
-
-struct tile_slot_pool {
-    u32 vramBase;            // 0x0000
-    u32 srcBase;             // 0x0004
-    u16 refCount[0x200];     // 0x0008
-    u16 slotForTile[0x2000]; // 0x0408 - TILE_SLOT_NONE when not resident
-    u16 freeSlots[0x200];    // 0x4408
-    s32 freeTop;             // 0x4808
-};
-
-#define TILE_SLOT_NONE 0x200
 
 union tile_ref {
     u16 raw;
@@ -74,31 +63,6 @@ union bg_entry {
     } bits;
 };
 
-static inline void PushFreeSlot(struct tile_slot_pool *pool, s32 slot)
-{
-    pool->freeSlots[--pool->freeTop] = slot;
-}
-
-static inline void ClearTileSlot(struct tile_slot_pool *pool, s32 id)
-{
-    pool->slotForTile[id] = TILE_SLOT_NONE;
-}
-
-static inline u16 PopFreeSlot(struct tile_slot_pool *pool)
-{
-    return pool->freeSlots[pool->freeTop++];
-}
-
-static inline void SetTileSlot(struct tile_slot_pool *pool, s32 id, u16 slot)
-{
-    pool->slotForTile[id] = slot;
-}
-
-static inline u16 GetTileSlot(struct tile_slot_pool *pool, s32 id)
-{
-    return pool->slotForTile[id];
-}
-
 PooledBgLayer::~PooledBgLayer()
 {
     if (pool != NULL)
@@ -112,7 +76,7 @@ PooledBgLayer::PooledBgLayer(s32 bgIndex) : BgLayer(bgIndex)
 {
     SetColors256(1);
     SetCharBase(0);
-    pool = new tile_slot_pool;
+    pool = new TileSlotPool;
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked src/, asm/ and the
@@ -122,20 +86,20 @@ u32 PooledBgLayer::GetPriority()
     return cnt.bits.priority;
 }
 
-void ResetTileSlotPool(struct tile_slot_pool *pool)
+void TileSlotPool::Reset()
 {
     s32 i;
 
-    pool->freeTop = TILE_SLOT_NONE;
+    freeTop = TILE_SLOT_NONE;
     for (i = 0; i < 0x200; i++)
-        PushFreeSlot(pool, i);
+        PushFreeSlot(i);
     for (i = 0; i < 0x2000; i++)
-        pool->slotForTile[i] = TILE_SLOT_NONE;
+        slotForTile[i] = TILE_SLOT_NONE;
     for (i = 0; i < 0x200; i++)
-        pool->refCount[i] = 0;
+        refCount[i] = 0;
 }
 
-u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile)
+u16 TileSlotPool::Acquire(u16 tile)
 {
     union tile_ref ref;
     union bg_entry out;
@@ -145,39 +109,39 @@ u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile)
     {
         s32 id = ref.bits.id;
 
-        if (pool->slotForTile[id] != TILE_SLOT_NONE)
-            slot = GetTileSlot(pool, id);
+        if (slotForTile[id] != TILE_SLOT_NONE)
+            slot = GetSlot(id);
         else {
-            slot = PopFreeSlot(pool);
-            SetTileSlot(pool, id, slot);
-            UploadTileSlot(pool, id, slot);
+            slot = PopFreeSlot();
+            SetSlot(id, slot);
+            Upload(id, slot);
         }
     }
-    pool->refCount[slot]++;
+    refCount[slot]++;
     out.raw = slot;
     out.bits.flip = ref.bits.flip;
     return out.raw;
 }
 
-void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile)
+void TileSlotPool::Release(u32 tile)
 {
     s32 id = tile & 0x3FFF;
-    u16 slot = pool->slotForTile[id];
+    u16 slot = slotForTile[id];
 
-    if (--pool->refCount[slot] == 0) {
-        PushFreeSlot(pool, slot);
-        ClearTileSlot(pool, id);
+    if (--refCount[slot] == 0) {
+        PushFreeSlot(slot);
+        ClearSlot(id);
     }
 }
 
-void UploadTileSlot(struct tile_slot_pool *pool, s32 tileId, s32 slot)
+void TileSlotPool::Upload(s32 tileId, s32 slot)
 {
-    QueueVramDmaTransfer((void *)(pool->srcBase + tileId * 64),
-                         (void *)(pool->vramBase + slot * 64), 0x40, 0x10);
+    QueueVramDmaTransfer((void *)(srcBase + tileId * 64), (void *)(vramBase + slot * 64), 0x40,
+                         0x10);
 }
 
-void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src)
+void TileSlotPool::SetSource(s32 charBase, u32 src)
 {
-    pool->vramBase = VRAM + (charBase << 14);
-    pool->srcBase = src;
+    vramBase = VRAM + (charBase << 14);
+    srcBase = src;
 }
