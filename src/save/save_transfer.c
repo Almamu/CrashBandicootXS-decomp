@@ -6,12 +6,7 @@
 
 void SetSaveFlags(struct save_data *self, u8 flags)
 {
-    MATCH_HOLD_REG(u8, loaded, r3);
-    MATCH_HOLD_REG(u8, v, r1);
-
-    loaded = self->flags;
-    v = loaded | flags;
-    self->flags = v;
+    self->flags |= flags;
     UpdateSaveChecksum(self);
 }
 
