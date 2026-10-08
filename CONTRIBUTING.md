@@ -161,6 +161,24 @@ full rules and the history (#574). For new code:
   exception covers, and `--views` lists `.c`-file structs that have the
   layout of a header struct (often a copy or a view of it; check the
   readers before merging).
+- **Struct and class layouts:** `python3 tools/layout_audit.py` (#656)
+  compiles every game TU again with `-g` (the Makefile's own rules and
+  per-object compilers and flags, into a temporary directory; build/ is
+  left alone) and reads the layouts from the DWARF. It finds what the
+  source-level `extern_audit.py --views` can't see, such as C++ classes
+  and their bases, bitfields and nested structs:
+
+  ```
+  tools/layout_audit.py --db /tmp/layouts.json views [NAME...]  # prefix/partial views of another layout
+  tools/layout_audit.py --db /tmp/layouts.json diff A B [C...]  # side by side; flags name/type/shape
+  tools/layout_audit.py --db /tmp/layouts.json names [NAME...]  # same bytes, different names in a family
+  tools/layout_audit.py --db /tmp/layouts.json show NAME        # one layout, flattened
+  ```
+
+  `--db` keeps the layout database between runs (`--rebuild` after
+  editing headers). A NAME is a struct/class name, with `@file` to pick
+  one definition (`actor@actor.h`). Use it before merging or renaming a
+  C view of a class, and after, to check the view and the class agree.
 
 ### Compiler warnings
 

@@ -150,7 +150,11 @@ incomplete pass and should be finished before moving on.
      the log. `python3 tools/extern_audit.py` (after a build) must
      still report "remaining: 0" and no struct name defined in two `.c`
      files; `--remaining` lists the uncovered declarations and `--views`
-     the `.c`-file structs shaped like a header struct.
+     the `.c`-file structs shaped like a header struct. When the work
+     touches a struct that has a C view or a class twin,
+     `python3 tools/layout_audit.py diff A B` compares their layouts
+     from the compiler's debug info (`views` and `names` survey the whole
+     tree; see CONTRIBUTING.md).
    - Replace magic numeric constants with an existing named constant
      when one already covers this exact value/meaning elsewhere in the
      project (`OAM_ENTRY_COUNT`, `DMA_ENABLE`, and so on); don't invent a

@@ -1090,7 +1090,11 @@ a `COMPILE_TIME_ASSERT` that its size is the C struct's (the `.hpp` includes the
 fields keep the C names and offset comments. The C prototypes of the
 converted methods stay in the C headers, under their C names, for the
 vtable data and the C callers. When the last C user of a struct is
-converted, the struct can go.
+converted, the struct can go. `tools/layout_audit.py` (#656) checks the
+pairs from the compiler's debug info: `views` lists every C view of a
+class (and every other struct that is a prefix or partial view of
+another), `diff Class view` puts the two side by side, and `names`
+lists the bytes a family names differently.
 
 **Sprite objects.** `include/entity.hpp` has `Entity` and
 `include/sprite_obj.hpp` the classes built on it (part 7a, above), shared
