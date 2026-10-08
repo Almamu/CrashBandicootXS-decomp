@@ -1,6 +1,5 @@
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "level_state.h"
 #include "audio.h"
 #include "actor.h"
@@ -147,17 +146,7 @@ struct AudioContext;
  * a constant `flagIdx`.
  *
  * `flagIdx` stays in `ip`/r12 for the whole function, as in the ROM,
- * with no pin. The `table`/`v` locals in each of
- * the three (loop, extra1, extra2) flag-table reads also need explicit
- * register pins (and, for `table`, a plain-integer type instead of a
- * pointer type) to reproduce the ROM's exact register choice and
- * operand order for the `table + shift` address computation - without
- * the plain-integer type, C's usual pointer-arithmetic canonicalization
- * (which always puts the pointer operand first) overrides the source
- * order regardless of how the addition is written, so `shift + table`
- * and `table + shift` compiled identically until `table` stopped being
- * a pointer type. See docs/workflow.md's register-pinning techniques
- * and docs/matching.md for other instances of this class of fix. */
+ * with no pin (old_agbcp; agbcp needs pins for the table reads). */
 s32 LevelHasEntityType(s32 idx, s32 flagIdx)
 {
     s32 result = 0;
@@ -166,40 +155,24 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
 
     if (result < list->count) {
         const struct level_room *const *itemPtr = list->rooms;
-        s32 shift = flagIdx << 1;
-        s32 n = list->count;
 
         do {
             const struct level_room *item = *itemPtr;
 
             if (item->kind != ROOM_KIND_CATEGORY) {
-                const struct level_entity_list *nested = item->desc->entities;
-                MATCH_HOLD_REG(u32, table, r1) = (u32)nested->typeCounts;
-                MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
-
-                result = (u32)(-(s32)v | v) >> 31;
+                result = item->desc->entities->typeCounts[flagIdx] != 0;
             }
             itemPtr++;
             i++;
-        } while (i < n && result == 0);
+        } while (i < list->count && result == 0);
     }
 
     if (result == 0 && list->extra1 != 0 && list->extra1->kind != ROOM_KIND_CATEGORY) {
-        const struct level_entity_list *nested = list->extra1->desc->entities;
-        MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
-        s32 shift = flagIdx << 1;
-        MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
-
-        result = (u32)(-(s32)v | v) >> 31;
+        result = list->extra1->desc->entities->typeCounts[flagIdx] != 0;
     }
 
     if (result == 0 && list->extra2 != 0 && list->extra2->kind != ROOM_KIND_CATEGORY) {
-        const struct level_entity_list *nested = list->extra2->desc->entities;
-        MATCH_HOLD_REG(u32, table, r0) = (u32)nested->typeCounts;
-        s32 shift = flagIdx << 1;
-        MATCH_HOLD_REG(u16, v, r3) = *(u16 *)(shift + table);
-
-        result = (u32)(-(s32)v | v) >> 31;
+        result = list->extra2->desc->entities->typeCounts[flagIdx] != 0;
     }
 
     return result;
