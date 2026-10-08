@@ -1,10 +1,10 @@
 #include "menus.hpp"
 #include "font.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "system.h"
 #include "text.h"
-#include "audio.h"
 #include "globals.h"
 }
 
@@ -98,5 +98,5 @@ PowerDialog::PowerDialog(s32 titleText, s32 descText, s32 type)
     icon->palette = icon->GetAnimPaletteSlot();
     REG_BG0CNT = GetBgSetupControl(&bg);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    PlaySong(gAudioContext, SONG_INTRO);
+    gAudioContext->PlaySong(SONG_INTRO);
 }

@@ -1,9 +1,9 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
-#include "audio.h"
 #include "actor.h"
 #include "globals.h"
 }
@@ -92,7 +92,7 @@ void JetpackBalloon::Damage(s32 amount)
         crate->Break();
         crate = 0;
     }
-    PlaySfx(gAudioContext, SFX_UNKNOWN_2E, 0x100);
+    gAudioContext->PlaySfx(SFX_UNKNOWN_2E, 0x100);
     SetState(2, 1);
 }
 

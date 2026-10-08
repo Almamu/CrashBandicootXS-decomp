@@ -2,12 +2,11 @@
 #include "enemy_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
-#include "byte_arg.h"
 #include "util.h"
-#include "audio.h"
 #include "memory.h"
 #include "level.h"
 #include "globals.h"
@@ -70,8 +69,10 @@ static inline u32 TargetHit(MovingSprite *t)
  * - state 18's second `animDone` test reads the byte through a
  *   `vu8`, so jump threading can't fold it into the first test (the
  *   ROM reloads the target and tests again);
- * - `zero.v = 0` is stored before the distance math, and the volume
- *   is a separate local;
+ * - PlayAmbientSfx's `false` is a literal at the call (in a `bool`
+ *   local, the 0 gets a register of its own the later stores reuse; the
+ *   ROM rematerializes it after the argument slot's address), and the
+ *   volume is a separate local;
  * - state 5's height tests read `t->y` into a local first, and the
  *   second test goes through its own `t2`;
  * - state 9 reads each position into a local before storing it. */
@@ -108,7 +109,7 @@ void EnemyCtrl::Update(MovingSprite *)
             MovingSprite *t = target;
 
             if (t->frame == 0 && t->stepTimer == 0 && t->IsOnScreen())
-                PlaySfx(gAudioContext, SFX_UNKNOWN_13, 0x100);
+                gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
         }
         break;
     case 5:
@@ -140,22 +141,20 @@ void EnemyCtrl::Update(MovingSprite *)
             Player *p = gPlayer;
             s32 dx = ABS_BRANCHLESS(x - Q8_TO_INT(p->x));
             s32 d = ABS_BRANCHLESS(y - Q8_TO_INT(p->y));
-            struct byte_arg zero;
             s32 vol;
 
-            zero.v = 0;
             LIMIT_MIN(d, dx);
             d = CLAMP_MIN(d, 0x20);
             LIMIT_MAX(d, 0xa0);
             vol = 0x100 - (d - 0x20) * 2;
-            PlayAmbientSfx(gAudioContext, SFX_SAUCER_HUM, 8, vol, zero);
+            gAudioContext->PlayAmbientSfx(SFX_SAUCER_HUM, 8, vol, false);
         }
         if (target->animDone && mode == 3) {
             MovingSprite *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, target);
 
             popup = pop;
             pop->kind = 3;
-            PlaySfx(gAudioContext, SFX_SAUCER_ATTACK, 0x100);
+            gAudioContext->PlaySfx(SFX_SAUCER_ATTACK, 0x100);
         } else if (*(vu8 *)&target->animDone && mode == 5) {
             MarkGone(popup);
             popup = 0;
@@ -241,7 +240,7 @@ void EnemyCtrl::Update(MovingSprite *)
         /* A sea mine that touched something explodes: it hits itself. */
         if (TargetHit(target) && kind == ENEMY_KIND_SEA_MINE) {
             HandleEvent(0, EVENT_HIT, 0);
-            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         }
         break;
     case 15:
@@ -308,7 +307,7 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
     if (gPlayer->ctrlMode == 1) {
         MarkGone(target);
         SpawnAt(0x28, Q8_TO_INT(target->x), Q8_TO_INT(target->y));
-        PlaySfx(gAudioContext, SFX_UNKNOWN_5A, 0x80);
+        gAudioContext->PlaySfx(SFX_UNKNOWN_5A, 0x80);
         return;
     }
     if (popup)
@@ -337,7 +336,7 @@ void EnemyCtrl::HandleEvent(MovingSprite *, s32 event, s32)
                 SetVelY(t2, v, 0, v);
                 t2->f.b.visible = 0;
             }
-            PlaySfx(gAudioContext, SFX_ENEMY_KNOCKED_AWAY, 0x80);
+            gAudioContext->PlaySfx(SFX_ENEMY_KNOCKED_AWAY, 0x80);
             delete this;
         }
         break;

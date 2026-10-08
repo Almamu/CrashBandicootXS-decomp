@@ -1,9 +1,9 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "util.h"
-#include "audio.h"
 #include "actor.h"
 #include "level.h"
 #include "globals.h"
@@ -81,19 +81,19 @@ void JetpackQuestionCrate::Update()
         SetState(2, 1);
         switch ((u8)record->index) {
         case 0x14:
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             Player()->QueueWumpa(1);
             break;
         case 0x15:
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             Player()->QueueWumpa(3);
             break;
         case 0x16:
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             Player()->QueueWumpa(5);
             break;
         case 0x17:
-            PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
+            gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
             MarkSpawnCollected(spawn);
             AddLife(gLevelState);
             break;
@@ -120,19 +120,19 @@ void JetpackQuestionCrate::Damage(s32 amount)
     SetState(2, 1);
     switch ((u8)record->index) {
     case 0x14:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         Player()->QueueWumpa(1);
         break;
     case 0x15:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         Player()->QueueWumpa(3);
         break;
     case 0x16:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         Player()->QueueWumpa(5);
         break;
     case 0x17:
-        PlaySfx(gAudioContext, SFX_EXTRA_LIFE, 0x100);
+        gAudioContext->PlaySfx(SFX_EXTRA_LIFE, 0x100);
         MarkSpawnCollected(spawn);
         AddLife(gLevelState);
         break;
@@ -154,7 +154,7 @@ void JetpackHealthCrate::Update()
     if (kind == 0 && (u8)IsTouchingPlayer(this)) {
         SetState(2, 1);
         Player()->Heal(0x14);
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         if (balloon != 0) {
             AddBrokenCrate(gLevelState);
             balloon->Release();
@@ -177,19 +177,19 @@ void JetpackTimeCrate::Update()
         SetState(2, 1);
         switch ((u8)record->index) {
         case 0x18:
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             FreezeLevelClock(gLevelState, 1);
             break;
         case 0x19:
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             FreezeLevelClock(gLevelState, 2);
             break;
         case 0x1A:
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             FreezeLevelClock(gLevelState, 3);
             break;
         case 0x1D:
-            PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
+            gAudioContext->PlaySfx(SFX_CLOCK, 0x100);
             StartTimeTrial(gLevelState);
             break;
         }
@@ -217,19 +217,19 @@ void JetpackTimeCrate::Damage(s32 amount)
     SetState(2, 1);
     switch ((u8)record->index) {
     case 0x18:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         FreezeLevelClock(gLevelState, 1);
         break;
     case 0x19:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         FreezeLevelClock(gLevelState, 2);
         break;
     case 0x1A:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         FreezeLevelClock(gLevelState, 3);
         break;
     case 0x1D:
-        PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
+        gAudioContext->PlaySfx(SFX_CLOCK, 0x100);
         StartTimeTrial(gLevelState);
         break;
     }
@@ -259,7 +259,7 @@ void JetpackHealthCrate::Damage(s32 amount)
 
     SetState(2, 1);
     Player()->Heal(0x14);
-    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+    gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     if (balloon != 0) {
         AddBrokenCrate(gLevelState);
         balloon->Release();
@@ -310,7 +310,7 @@ void JetpackBalloonCrate::Damage(s32 amount)
 
     SetState(2, 1);
     if (balloon != 0) {
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         AddBrokenCrate(gLevelState);
         balloon->Release();
         balloon = 0;
@@ -403,7 +403,7 @@ void JetpackParachuteNitro::Update()
     if ((u8)IsTouchingPlayer(this)) {
         Player()->Damage(0x14);
         AddBrokenCrate(gLevelState);
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         RestartAnim(1);
         dead = 1;
     }
@@ -424,7 +424,7 @@ void JetpackParachuteNitro::Damage(s32 amount)
     }
 
     dead = 1;
-    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     RestartAnim(1);
     AddBrokenCrate(gLevelState);
 }
@@ -495,7 +495,7 @@ tail:
 void JetpackRocket::Launch()
 {
     triggered = 1;
-    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     palette = 7;
     RestartAnim(1);
 }
@@ -510,7 +510,7 @@ void JetpackRocket::Damage(s32 amount)
 
     triggered = 1;
     hit = 1;
-    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     palette = 4;
     RestartAnim(2);
 }
@@ -530,7 +530,7 @@ JetpackRocket::JetpackRocket(const struct anim_table_record *rec, s32 x, s32 y, 
     stepY = (limitY - 0xFA00) / 0xC6;
     hit = 0;
     triggered = 0;
-    PlaySfx(gAudioContext, SFX_JETPACK_ROCKET, 0x100);
+    gAudioContext->PlaySfx(SFX_JETPACK_ROCKET, 0x100);
 }
 
 /* Slot 5: exploded or shot. */
@@ -550,7 +550,7 @@ void JetpackRing::Update()
         player->PassRing(x - record->spawnX, y);
         if (cued == 0) {
             cued = 1;
-            PlaySfx(gAudioContext, SFX_JETPACK_RING, 0x100);
+            gAudioContext->PlaySfx(SFX_JETPACK_RING, 0x100);
         }
     }
 

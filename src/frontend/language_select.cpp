@@ -1,11 +1,11 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "gba/dma_macros.h"
 #include "system.h"
 #include "text.h"
-#include "audio.h"
 #include "gfx.h"
 #include "globals.h"
 }
@@ -101,22 +101,22 @@ void LanguageSelect::Input(u32 flags)
 {
     if (flags & START_BUTTON) {
         done = 1;
-        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
     } else if (flags & A_BUTTON) {
         done = 1;
-        PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
     } else if (flags & DPAD_UP) {
         language--;
         if (language < 0) {
             language = 5;
         }
-        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
     } else if (flags & DPAD_DOWN) {
         language++;
         if (language > 5) {
             language = 0;
         }
-        PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
     }
     frame = (frame + 1) & 0xff;
 }

@@ -1,11 +1,11 @@
 #include "cutscene.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
 #include "gba/dma_macros.h"
 #include "cutscene.h"
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "globals.h"
 }
@@ -17,8 +17,6 @@ extern "C" {
  * cleanup), built with old_agbcp as the C was with old_agbcc - see
  * docs/matching/archive/game-loop-old-agbcc.md. */
 
-struct AudioContext;
-
 /* Starts sound cue `slides[idx]->cue` on the audio context. If the
  * channel already reports that cue, plays the item's secondary sfx
  * (unless it is the SFX_NONE sentinel, 0x63) and then starts the item's
@@ -29,17 +27,17 @@ void Slideshow::BeginSlide(s32 idx)
     Slideshow *self = this;
     const struct cutscene_slide *item;
 
-    PlaySong(gAudioContext, self->slides[idx]->cue);
-    if (GetCurrentSong(gAudioContext) == (item = self->slides[idx])->cue) {
+    gAudioContext->PlaySong(self->slides[idx]->cue);
+    if (gAudioContext->GetCurrentSong() == (item = self->slides[idx])->cue) {
         if (item->sfx != SFX_NONE)
-            PlaySfx(gAudioContext, item->sfx, 0x100);
+            gAudioContext->PlaySfx(item->sfx, 0x100);
         FadeBrightness(self->slides[idx]->fade | -0x80, 1, 0);
     } else {
         FadeBrightness(item->fade | -0x80, 1, 0);
         if (self->slides[idx]->sfx != SFX_NONE) {
-            while (GetCurrentSong(gAudioContext) != self->slides[idx]->cue)
+            while (gAudioContext->GetCurrentSong() != self->slides[idx]->cue)
                 ;
-            PlaySfx(gAudioContext, self->slides[idx]->sfx, 0x100);
+            gAudioContext->PlaySfx(self->slides[idx]->sfx, 0x100);
         }
     }
 }
@@ -72,7 +70,7 @@ void Slideshow::Run()
         checkButtons = (u8)WaitForKeyPress(item->wait, item->buttons, 8);
 
         if (self->slides[i]->duckMusic != 0) {
-            FadeOutMusic(gAudioContext, 0);
+            gAudioContext->FadeOutMusic(0);
         }
 
         {
@@ -87,7 +85,7 @@ void Slideshow::Run()
             const struct cutscene_slide *item2 = self->slides[i];
 
             if (item2->rearmSfx != 0 && item2->sfx != SFX_NONE) {
-                StopSfx(gAudioContext, item2->sfx);
+                gAudioContext->StopSfx(item2->sfx);
             }
         }
 

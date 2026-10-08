@@ -1,12 +1,12 @@
 #include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "sprite_bank.h"
 #include "util.h"
-#include "audio.h"
 #include "memory.h"
 #include "level.h"
 #include "box_part.h"
@@ -54,7 +54,7 @@ void TinyCtrl::Update(MovingSprite *part)
         pad->mover = ctrl;
         ctrl->Attach(pad);
         stomped = -1;
-        PlaySfx(gAudioContext, SFX_UNKNOWN_39, 0x100);
+        gAudioContext->PlaySfx(SFX_UNKNOWN_39, 0x100);
     }
 
     if (this->state == 8) {
@@ -103,7 +103,7 @@ void TinyCtrl::Update(MovingSprite *part)
             part->y = y;
             if (steps != 0)
                 break;
-            PlaySfx(gAudioContext, SFX_TINY_LAND, 0x100);
+            gAudioContext->PlaySfx(SFX_TINY_LAND, 0x100);
             if (this->state == 15) {
                 if ((u8)HasTornadoSpin(gLevelState))
                     RequestRoomExit();
@@ -116,7 +116,7 @@ void TinyCtrl::Update(MovingSprite *part)
                 nextState = 12;
                 SetState(part, 5);
             } else {
-                PlaySfx(gAudioContext, SFX_UNKNOWN_3D, 0x100);
+                gAudioContext->PlaySfx(SFX_UNKNOWN_3D, 0x100);
                 SetState(part, 8);
             }
             break;
@@ -194,7 +194,7 @@ void TinyCtrl::Update(MovingSprite *part)
             SetState(part, 14);
         if (part->animDone) {
             SetState(part, 10);
-            PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+            gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         }
         break;
     }
@@ -281,7 +281,7 @@ void TinyCtrl::SetState(MovingSprite *part, s32 next)
         timer = 0xB4;
         break;
     case 9:
-        PlaySfx(gAudioContext, SFX_BOSS_HIT, 0x100);
+        gAudioContext->PlaySfx(SFX_BOSS_HIT, 0x100);
         if (++counter > 2) {
             s32 x = part->x;
 
@@ -389,5 +389,5 @@ void TinyCtrl::SpawnFallingLeaves(MovingSprite *part, s32 n)
         m &= -0x41;
         p->f.flags = m;
     }
-    PlaySfx(gAudioContext, SFX_UNKNOWN_13, 0x100);
+    gAudioContext->PlaySfx(SFX_UNKNOWN_13, 0x100);
 }

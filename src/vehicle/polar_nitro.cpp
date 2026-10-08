@@ -1,7 +1,7 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -29,7 +29,7 @@ void PolarNitroCrate::DetonateNearby()
     do {
         if ((u8)n->record->index == 4 && n != this && ActorsOverlap(this, n) &&
             n->animIndex != 0x12) {
-            PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+            gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
             AddBrokenCrate(gLevelState);
             static_cast<PolarNitroCrate *>(n)->Explode();
         }

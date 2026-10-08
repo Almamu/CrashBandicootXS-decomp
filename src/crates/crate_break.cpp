@@ -5,12 +5,12 @@
 #include "pickups.hpp"
 #include "player.hpp"
 #include "hud.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "pickups.h"
 #include "util.h"
-#include "audio.h"
 #include "player.h"
 #include "memory.h"
 #include "level.h"
@@ -802,7 +802,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
             if (k != CRATE_KIND_REINFORCED) {
                 if (attack == ATTACK_KIND_JUMP) {
                     if (k == CRATE_KIND_ARROW || k == CRATE_KIND_IRON_ARROW) {
-                        PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
+                        gAudioContext->PlaySfx(SFX_ARROW_CRATE_BOUNCE, 0x100);
                         gPlayer->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
                     } else
                         gPlayer->HandleEvent(0, EVENT_BOUNCE, 8);
@@ -812,7 +812,7 @@ void Crate::ApplyCollision(s32 attack, s32 code, s32 edge, s32 depth, struct vec
                     gPlayer->rampY.target = 0;
                 } else if ((u32)(attack - ATTACK_KIND_BODY_SLAM) <= 1 &&
                            k == CRATE_KIND_IRON_ARROW) {
-                    PlaySfx(gAudioContext, SFX_ARROW_CRATE_BOUNCE, 0x100);
+                    gAudioContext->PlaySfx(SFX_ARROW_CRATE_BOUNCE, 0x100);
                     gPlayer->HandleEvent(0, EVENT_BOUNCE_HIGH, 8);
                     gPlayer->speedY = 0;
                     gPlayer->rampY.start = 0;
@@ -1032,7 +1032,7 @@ void Crate::LightTnt()
     a = &anims[tag];
     slot = gPaletteCache->GetSlot(a->paletteId);
     palette = slot;
-    PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
+    gAudioContext->PlaySfx(SFX_TNT_TICK, 0x100);
     timer = 0x3c;
 }
 
@@ -1065,7 +1065,7 @@ void Crate::OpenCheckpoint()
     puff->mirrorBits.flipX = 0;
     PuffSetMotion(puff, -0x180, 8, -0x10);
     SetTag(0x1b);
-    PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
+    gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
     {
         u16 eid = id;
 
@@ -1206,7 +1206,7 @@ void Crate::Break(u32 arg1)
     case CRATE_KIND_ARROW:
     case CRATE_KIND_BOUNCY_WUMPA:
     case CRATE_KIND_REINFORCED:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         break;
     case CRATE_KIND_NITRO:
     case CRATE_KIND_TNT:
@@ -1236,7 +1236,7 @@ void Crate::Break(u32 arg1)
             gEntitySpawner->DropWumpa(px, py, 0, 3, chained);
         }
         if (flag == 0)
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         break;
     case 22:
         break;
@@ -1247,7 +1247,7 @@ void Crate::Break(u32 arg1)
  * loaded before the volume. */
 static inline void Sfx(s32 sfx)
 {
-    PlaySfx(gAudioContext, sfx, 0x100);
+    gAudioContext->PlaySfx(sfx, 0x100);
 }
 
 /* The "?" crate: its contents (paramB; 9: picked at random) - wumpa
@@ -1256,7 +1256,7 @@ static inline void Sfx(s32 sfx)
  * Cases 7 and 8 are OpenAkuAku and OpenLife inlined. */
 void Crate::OpenMystery(bool flag)
 {
-    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+    gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     if (paramB == 9) {
         u8 r = (u16)rand() >> 8;
 
@@ -1359,12 +1359,12 @@ void Crate::OpenMystery(bool flag)
  * order. */
 void Crate::OpenSlot(bool flag)
 {
-    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+    gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     switch (slotState & CRATE_SLOT_PHASE_MASK) {
     case 0:
         break;
     case 1:
-        PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+        gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
         {
             u16 eid = id;
 
@@ -1495,7 +1495,7 @@ void Crate::Explode(u8 near)
     if (gCrateKindCounted[kind])
         AddBrokenCrate(gLevelState);
     ENTITY_SET_GONE_BIT(id);
-    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     DropAbove();
 
     if ((gPlayer->f.flags >> 6) & 1 && !PlayerInvulnerable()) {
@@ -1656,7 +1656,7 @@ void Crate::ActivateNitroSwitch()
         palette = slot;
         DetonateNitroCrates();
         gHud->ShowCrates();
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
         pressed = 1;
         PressSwitchCrate(gLevelState);
     }
@@ -1763,7 +1763,7 @@ void Crate::SolidifyOutlines()
                 if (o->kind == CRATE_KIND_OUTLINE && paramA >= o->paramB) {
                     o->SolidifyOutline();
                     if (!played) {
-                        PlaySfx(gAudioContext, SFX_OUTLINE_CRATES_SOLIDIFY, 0x100);
+                        gAudioContext->PlaySfx(SFX_OUTLINE_CRATES_SOLIDIFY, 0x100);
                         played = TRUE;
                     }
                 }
@@ -1929,13 +1929,13 @@ void Crate::UpdateTntCountdown()
     switch (k) {
     case CRATE_KIND_TNT_LIT_3:
         SetTag(0x13);
-        PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
+        gAudioContext->PlaySfx(SFX_TNT_TICK, 0x100);
         kind = CRATE_KIND_TNT_LIT_2;
         timer = 0x3c;
         break;
     case CRATE_KIND_TNT_LIT_2:
         SetTag(0x12);
-        PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
+        gAudioContext->PlaySfx(SFX_TNT_TICK, 0x100);
         kind = CRATE_KIND_TNT_LIT_1;
         timer = 0x3c;
         break;
@@ -2111,7 +2111,7 @@ void Crate::UpdateSlot()
             palette = slot;
         }
         if (slotState & CRATE_SLOT_STAGE_MASK)
-            PlaySfx(gAudioContext, SFX_SLOT_CRATE_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SLOT_CRATE_SPIN, 0x100);
     }
 }
 

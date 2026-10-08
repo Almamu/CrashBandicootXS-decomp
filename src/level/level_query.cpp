@@ -1,7 +1,7 @@
+#include "audio.hpp"
 extern "C" {
 #include "core.h"
 #include "level_state.h"
-#include "audio.h"
 #include "actor.h"
 #include "memory.h"
 #include "level.h"
@@ -132,8 +132,6 @@ s32 CountLevelCrates(s32 idx)
  * region" rule) and runs through SelectRoom, the last matched function
  * before the BeginSlide..ShowSlidePicture run (parked/left in
  * asm/code_3_2_17_24590.s). */
-
-struct AudioContext;
 
 /* Scans `gLevelTable[idx]`'s item list (`rooms[]`, plus the two
  * extra single-item slots, same shape CountLevelCrates above
@@ -284,7 +282,7 @@ void PlayRoomMusic(struct level_progress *self)
         id = gThemeMusicCues[offset];
     }
 
-    PlaySong(gAudioContext, id);
+    gAudioContext->PlaySong(id);
 }
 
 /* Advances `self->roomIndex` (a cursor into `gLevelTable[self->level]`'s

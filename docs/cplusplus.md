@@ -655,6 +655,8 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/text/font_height.cpp` | `Font::TextHeight` | 1 | agbcp | 0 -> 0 | step 10b |
 | `src/util/aabb_setup.cpp` | `LargeFont`'s and `SmallFont`'s destructors, with `SetAabbSize`, `SetAabbPos`, `GetLives` (C linkage) | 2 + 3 | agbcp | 4 asm -> 0 | step 10b |
 | text.h, cutscene.h, frontend.hpp, level_select.hpp, and 11 `.cpp` files | `gSmallFont`/`gLargeFont` are `Font *`s to C++; the fonts' callers make virtual calls and use the inline accessors | 0 | (unchanged) | 31 spelled-out slot calls -> 0 | step 10b |
+| `src/audio/audio.cpp` | `AudioContext` (new include/audio.hpp; derives from audio.h's struct audio_context): its 22 methods, constructor (`InitAudioContext`), destructor (`DestroyAudioContext`), `DisableVCountIrq`; with `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (C linkage) | 25 + 2 | old_agbcp (old_agbcc C already) | 2 pins, 1 use, 1 volatile cast -> 1 volatile cast | [audio](#the-audio-context) |
+| globals.h, audio.h, 75 `.cpp` files | `gAudioContext` is an `AudioContext *` to C++; the callers' `PlaySfx(gAudioContext, ...)` & co. are method calls, LevelState's constructor and destructor `new AudioContext` and `delete gAudioContext`; the two `PlayAmbientSfx` callers pass a `bool` (the C's `struct byte_arg`) | 0 | (unchanged) | 0 -> 0 | [audio](#the-audio-context) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -3182,7 +3184,7 @@ files under src/.
 - The 49 C-like game objects: the actor zone's C helpers (actor_bg.c,
   actor_category_init.c, actor_category_stats.c, actor_vram_pool.c,
   bg_picture.c, cell_anim.c), the yeti (yeti*.c: a singleton driven by a
-  plain function table), audio, the display and fades, the link cable
+  plain function table), the display and fades, the link cable
   and save data/transfer code, the terrain and collision maps, the
   system and util code, text_box.c, and camera.c (with the game's
   `operator new`/`delete` replacements, `OperatorNew` & co., which keep
@@ -3553,6 +3555,67 @@ star's `dx`, the crate grid's node and the sprite-frame cache's) and
 CameraLead's own field at GroundSprite's `type`.
 `MATCH_HOLD_REG` stays at 411 and instruction-emitting `asm` at 49:
 the retyped code compiled to the same bytes with the pins as they were.
+
+### The audio context
+
+src/audio/audio.c, listed above as C-like, was C++: the music and
+sound-effect front end is class AudioContext (include/audio.hpp, no
+vtable, `#pragma interface`), and audio.cpp is its methods. The survey
+missed it because a class with no vtable has no vptr store, so its
+constructor and destructor don't look like ones. The traits:
+
+- **The destructor** takes `__in_chrg` and frees on bit 0
+  (DestroyAudioContext's `StopSong(self); gGaxIrqEnabled = 0; if (flags &
+  1) IwramFree(self)`), and its one caller tested the pointer and passed
+  3 (`if (gAudioContext != NULL) DestroyAudioContext(gAudioContext, 3)`):
+  `delete gAudioContext`.
+- **The constructor** returns `this` (InitAudioContext), and its one
+  caller allocated with IwramAlloc first (`InitAudioContext(IwramAlloc(0x2094))`):
+  `new AudioContext`, with the class's own inline operator new and delete
+  calling IwramAlloc and IwramFree (the IWRAM heap, as ActorSelf's).
+- **The state tests** every method repeats (`flag = 0; if (state == 1)
+  flag = 1; if (flag)`) are inline `bool` methods (IsStopped, IsPlaying,
+  IsPaused). In StartSong and StopSong the ROM builds the flag in one
+  register and copies it to a second, whose known 0 is then stored to
+  `state` and `gGaxIrqEnabled`: that copy is the inline's return value.
+  The C needed a `MATCH_HOLD_REG` for it in each function (`wasStopped`
+  in r1, `isStopped` in r2); `if (!IsStopped())` gives it with no pin.
+  PlaySfx's `MATCH_USE(&gSfxVoiceToggle)` (an extra reference that lifted
+  the global's address above `self` and `id` in global-alloc's ranking)
+  isn't needed either, nor its `pself` copy of `self`: with `this`, the
+  ranking comes out as the ROM's.
+- **DisableMusicVCountIrq** takes the context and ignores it: a method
+  (`DisableVCountIrq`) that doesn't touch `this`. EnableMusicVCountIrq
+  and MusicVCountIrqHandler (`gAudioContext->Update()`) keep C linkage:
+  they take nothing, and the IRQ table points at the handler.
+
+The whole object matches on the first try under old_agbcp; agbcp gives
+the same methods and differs only in the two DISPSTAT updates (it loads
+the byte before the mask), which is why audio.o was an old_agbcc object
+already. PlayAmbientSfx's fifth argument is a `bool` (the stack-passed
+byte the C spelled as a `struct byte_arg`); its two C++ callers pass a
+literal: through a `bool` local, the saucer's 0 got a register of its own
+that the later stores reused, where the ROM rematerializes it after the
+argument slot's address (enemy_ctrl_update.cpp). yeti_states.c keeps its
+asm-label alias.
+
+struct audio_context (audio.h; it was `struct AudioContext`, now the
+class's name) is the field list and the C view. The C files left,
+save_data.c and yeti_states.c, call PlaySfx, GetCurrentSong, PlaySong and
+StopSong by their C names; audio.h keeps only those prototypes (the 21
+others went). The 75 C++ files that called the C names make method calls
+(`gAudioContext->PlaySfx(SFX_JUMP, 0x100)`, about 300 calls), and every
+object is byte-identical.
+
+Kept: TickAmbientSfx's volatile read of `ambientSfxVolume` after its store
+(the ROM reloads it; plain, CSE passes the stored value's register and
+the zero after it moves). Not converted: save_data.c's LoadSaveData and
+StoreSaveData test `audio->state == 1` with the same flag shape, so they
+are probably C++ that inlined IsPlaying too; the save data has no other
+trait, and they stay C for now.
+
+`MATCH_HOLD_REG` 89 -> 87, `MATCH_USE` 47 -> 46 project-wide
+(tools/match_idioms.py); 203 -> 204 `.cpp` files under src/.
 
 ### Next batches
 
@@ -4184,3 +4247,11 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   inline function's parameter, such as the inline base constructor's:
   `HpActor(rec, x, -0xFA00, z, 2)` (`JetpackParachuteNitro`, part 11g).
   Written directly as a call argument, it is loaded before the store.
+- **A class with no vtable is invisible to tools/cpp_survey.py:** it has
+  no vptr store, so its constructor and destructor aren't recognised.
+  Look for a `Destroy*(self, flags)` that frees on bit 0, a caller that
+  allocates and then calls an `Init*` returning `self`, and a state test
+  repeated in the `flag = 0; if (x == k) flag = 1; if (flag)` shape (an
+  inline `bool` method): the audio context was C++ ([The audio
+  context](#the-audio-context)), where a copy of that flag into a second
+  register had needed a pin.

@@ -1,8 +1,8 @@
 #include "menus.hpp"
 #include "font.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "system.h"
 #include <agb_syscall.h>
 #include "text.h"
@@ -40,7 +40,7 @@ s32 PauseMenu::Run()
     s32 result;
 
     mem_free_bytes(MEM_HEAP_BOTH);
-    StopAmbientSfx(gAudioContext);
+    gAudioContext->StopAmbientSfx();
     WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;

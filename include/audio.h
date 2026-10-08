@@ -2,7 +2,6 @@
 #define __AUDIO_H__
 
 #include "core.h"
-#include "byte_arg.h"
 #include <gax.h>
 #include "constants/sfx.h"
 #include "constants/songs.h"
@@ -41,7 +40,7 @@ struct SfxRecord {
     s32 volume;   // target the owning ambientSfxVolume fade ramps toward
 };
 
-struct AudioContext {
+struct audio_context {
     u32 unused_00;   // 0x00 - never read or written (InitAudioContext skips it too)
     u32 state;       // 0x04 - 0 = stopped, 1 = playing, 2 = paused
     u32 currentSong; // 0x08 - index into gSongTable (SONG_*); SONG_NONE = none
@@ -74,7 +73,7 @@ struct AudioContext {
     u8 gaxWork[0x2000];       // 0x94 - GAX2's work RAM (gax.workBuf)
 };
 
-COMPILE_TIME_ASSERT(audio_h, sizeof(struct AudioContext) == 0x2094);
+COMPILE_TIME_ASSERT(audio_h, sizeof(struct audio_context) == 0x2094);
 
 /* One record of the 99-entry sound-effect trigger table at ROM
  * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound
@@ -103,33 +102,14 @@ extern u8 gGaxIrqEnabled;
 /* PlaySfx's two-voice round robin. */
 extern u32 gSfxVoiceToggle;
 
-/* src/audio/audio.c */
-extern void UpdateAudio(struct AudioContext *self);
-extern void StartSong(struct AudioContext *self, u32 songIndex);
-extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
-extern void TickAmbientSfx(struct AudioContext *self);
-extern void StopSfx(struct AudioContext *self, u32 id);
-extern void ResetAmbientSfx(struct AudioContext *self);
-extern void StopAmbientSfx(struct AudioContext *self);
-extern void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul,
-                           struct byte_arg force);
-extern u32 GetCurrentSong(struct AudioContext *self);
-extern s32 GetSfxVolume(struct AudioContext *self);
-extern s32 GetMusicVolume(struct AudioContext *self);
-extern void FadeOutMusic(struct AudioContext *self, u32 value);
-extern void FadeInMusic(struct AudioContext *self);
-extern void FadeOutMasterVolume(struct AudioContext *self, u32 value);
-extern void FadeInMasterVolume(struct AudioContext *self, u32 value);
-extern void SetMusicFilter(struct AudioContext *self, u32 value);
-extern void SetMusicVolume(struct AudioContext *self, u32 value);
-extern void SetSfxVolume(struct AudioContext *self, u32 value);
-extern void PlaySong(struct AudioContext *self, u32 id);
-extern void ResumeSong(struct AudioContext *self);
-extern void PauseSong(struct AudioContext *self);
-extern void StopSong(struct AudioContext *self);
-extern void DestroyAudioContext(struct AudioContext *self, u32 flags);
-extern struct AudioContext *InitAudioContext(struct AudioContext *self);
-extern void DisableMusicVCountIrq(struct AudioContext *self);
+/* src/audio/audio.cpp */
+/* The C names of AudioContext's methods (include/audio.hpp) the C files
+ * call (save_data.c, yeti_states.c); cxx_symbols.txt maps the methods to
+ * them. */
+extern void PlaySfx(struct audio_context *self, u32 id, u32 volumeParam);
+extern u32 GetCurrentSong(struct audio_context *self);
+extern void PlaySong(struct audio_context *self, u32 id);
+extern void StopSong(struct audio_context *self);
 extern void EnableMusicVCountIrq(void);
 extern void MusicVCountIrqHandler(void);
 

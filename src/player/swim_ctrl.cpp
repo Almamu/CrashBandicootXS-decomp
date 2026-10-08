@@ -1,10 +1,10 @@
 #include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
@@ -182,7 +182,7 @@ void PlayerCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
 
 void PlayerCtrl::KillPlayer(s32 anim)
 {
-    PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
+    gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
     SetMode(7);
     SetTargetAnim(target, anim);
     target->f.b.collides = 0;

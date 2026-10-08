@@ -4,6 +4,7 @@
 #include "hud.hpp"
 #include "platform.hpp"
 #include "crate.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
@@ -11,7 +12,6 @@ extern "C" {
 #include "hud.h"
 #include "util.h"
 #include "system.h"
-#include "audio.h"
 #include "menus.h"
 #include "crates.h"
 #include "player.h"
@@ -252,7 +252,7 @@ s32 RunRoom(struct level_progress *self)
             (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom(self))) {
             gPlayer->f.bytes.flags &= 0x7F;
             RestartPlayerAnim(gPlayer, 0x29);
-            PlaySfx(gAudioContext, SFX_WARP, 0x100);
+            gAudioContext->PlaySfx(SFX_WARP, 0x100);
             gPlayer->mover->SetMode(0x29);
             RefreshPlayerTiles();
             gHud->ShowCounters();

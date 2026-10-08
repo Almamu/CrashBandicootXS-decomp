@@ -1,9 +1,9 @@
 #include "spawners.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "level_state.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -46,6 +46,6 @@ void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
         (GetLives(gLevelState) == 0 && !IsInBonusRound(gLevelState) &&
          gLevelState->maskLevel == MASK_LEVEL_NONE)) {
         gPlayer->HandleEvent(0, EVENT_MASK_GAIN, 0);
-        PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
+        gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);
     }
 }

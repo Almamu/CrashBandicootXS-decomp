@@ -1,10 +1,10 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -151,7 +151,7 @@ void ActionCtrl::SetMode(s32 mode)
 void ActionCtrl::StartSpin()
 {
     if (spinCooldown == 0) {
-        PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+        gAudioContext->PlaySfx(SFX_SPIN, 0x100);
         frame = 0;
         frames = 0x18;
         SetTargetAnim(part, 0x10);
@@ -168,7 +168,7 @@ void ActionCtrl::StartSpin()
 void ActionCtrl::StartHangSpin()
 {
     if (spinCooldown == 0) {
-        PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+        gAudioContext->PlaySfx(SFX_SPIN, 0x100);
         frame = 0;
         frames = 0x18;
         tornadoVariant = 0;

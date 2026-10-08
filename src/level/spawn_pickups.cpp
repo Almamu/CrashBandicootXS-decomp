@@ -4,9 +4,9 @@
 #include "part_list.hpp"
 #include "font.hpp"
 #include "level_state.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "util.h"
 #include "text.h"
 #include "gfx.h"
@@ -259,17 +259,17 @@ void CreateEntitySpawner(void)
  * It is LevelState's constructor (include/level_state.hpp). The globals
  * keep their C types (the C files use them), so the new objects of the
  * C++ classes are stored through their C views (the fonts are `Font *`s
- * to C++, text.h). The audio context is still C, built by its C
- * constructor. */
+ * to C++, text.h). The audio context is `new AudioContext` (its own
+ * operator new, IwramAlloc: include/audio.hpp). */
 LevelState::LevelState()
 {
     {
-        struct AudioContext **audio = &gAudioContext;
+        AudioContext **audio = &gAudioContext;
 
-        *audio = InitAudioContext((struct AudioContext *)IwramAlloc(0x2094));
+        *audio = new AudioContext;
         EnableMusicVCountIrq();
-        SetSfxVolume(*audio, 0xc0);
-        SetMusicVolume(*audio, 0xc0);
+        (*audio)->SetSfxVolume(0xc0);
+        (*audio)->SetMusicVolume(0xc0);
     }
     gSpriteRenderer = new SpriteRenderer;
     {

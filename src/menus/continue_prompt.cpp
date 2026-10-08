@@ -1,11 +1,11 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "text.h"
 #include "system.h"
-#include "audio.h"
 #include "globals.h"
 }
 
@@ -87,7 +87,7 @@ s32 ContinuePrompt::Loop()
     s32 i = 0;
     s32 level = blend.bits.eva;
     struct held_pressed_pair *input = &gKeys.half;
-    struct AudioContext **audio = &gAudioContext;
+    AudioContext **audio = &gAudioContext;
 
     while (dir >= 0) {
         MATCH_USE(audio); /* extra reference: audio outranks i for r7 */
@@ -100,16 +100,16 @@ s32 ContinuePrompt::Loop()
             // clang-format off
             if ((k.pressed & A_BUTTON) || ({ MATCH_KEEP(k); (u16)(k.pressed & START_BUTTON); })) {
                 // clang-format on
-                PlaySfx(*audio, SFX_MENU_SELECT, 0x100);
+                (*audio)->PlaySfx(SFX_MENU_SELECT, 0x100);
                 break;
             }
             if ((k.pressed & DPAD_UP) && selection == 1) {
-                PlaySfx(*audio, SFX_MENU_MOVE, 0x100);
+                (*audio)->PlaySfx(SFX_MENU_MOVE, 0x100);
                 selection = 0;
             }
         }
         if ((input->pressed & DPAD_DOWN) && selection == 0) {
-            PlaySfx(*audio, SFX_MENU_MOVE, 0x100);
+            (*audio)->PlaySfx(SFX_MENU_MOVE, 0x100);
             selection = 1;
         }
         Draw();

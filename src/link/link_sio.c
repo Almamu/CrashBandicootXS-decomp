@@ -65,8 +65,8 @@ s32 ResetLinkSession(struct link_session *self)
  * `&players[4]` back to `players` (4 iterations, result unused - the
  * empty destructor loop of the `players` array), then - only if `flags` bit
  * 0 is set - tears the session down (`IwramFree`, matched in
- * src/util/aabb.c, also used by src/audio/audio.c's
- * `DestroyAudioContext` on an unrelated object - a generic free/release call).
+ * src/util/aabb.c, also AudioContext's operator delete in
+ * include/audio.hpp - the IWRAM heap's free).
  */
 void DestroyLinkSession(struct link_session *self, u32 flags)
 {

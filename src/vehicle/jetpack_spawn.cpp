@@ -1,12 +1,11 @@
 #include "vehicle.hpp"
 #include "boss_actors.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "match.h"
-#include "byte_arg.h"
 #include "system.h"
-#include "audio.h"
 #include "actor.h"
 #include "bosses.h"
 #include "gfx.h"
@@ -131,14 +130,14 @@ void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
 /* Plays sfx 0x17 and spawns the checkpoint banner (record 46). */
 void CreateJetpackCheckpointText(void)
 {
-    PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
+    gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
     new JetpackCheckpointText(&gJetpackAnimTable[46], 0, 0, 0);
 }
 
 /* Plays sfx 4 and spawns an explosion (record 45) at (x, y, z). */
 void CreateJetpackExplosion(s32 x, s32 y, s32 z)
 {
-    PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+    gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     new JetpackExplosion(&gJetpackAnimTable[45], x, y, z);
 }
 
@@ -183,21 +182,21 @@ void SpawnHovercraftCannon(s32 a, s32 b, s32 c)
 /* Plays sfx 0x38 and spawns a kind-39 object. */
 void SpawnHovercraftFireball(s32 x, s32 y, s32 z)
 {
-    PlaySfx(gAudioContext, SFX_FIREBALL_LAUNCH, 0x100);
+    gAudioContext->PlaySfx(SFX_FIREBALL_LAUNCH, 0x100);
     new HovercraftFireball(&gJetpackAnimTable[39], x, y, z);
 }
 
 /* Plays sfx 0x38 and spawns an airship fireball (record 38). */
 void SpawnAirshipFireball(s32 x, s32 y, s32 z)
 {
-    PlaySfx(gAudioContext, SFX_FIREBALL_LAUNCH, 0x100);
+    gAudioContext->PlaySfx(SFX_FIREBALL_LAUNCH, 0x100);
     new AirshipFireball(&gJetpackAnimTable[38], x, y, z);
 }
 
 /* Plays sfx 0x30 and fires a cannonball (record 3) at (d, e). */
 void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e)
 {
-    PlaySfx(gAudioContext, SFX_CANNONBALL_FIRE, 0x100);
+    gAudioContext->PlaySfx(SFX_CANNONBALL_FIRE, 0x100);
     new JetpackCannonball(&gJetpackAnimTable[3], a, b, c, d, e);
 }
 
@@ -268,7 +267,7 @@ void JetpackPlayer::Update()
             gJetpackBomberSfxTimer = 0x16;
             vol = gJetpackBomberCount * 48;
             LIMIT_MAX(vol, 0x100);
-            PlaySfx(gAudioContext, SFX_JETPACK_BOMBER, vol);
+            gAudioContext->PlaySfx(SFX_JETPACK_BOMBER, vol);
         }
         gJetpackBomberCount = 0;
     }
@@ -393,7 +392,7 @@ void JetpackPlayer::Damage(s32 dmg)
     gJetpackFlashTimer = 0x12;
     if (hp <= 0) {
         hp = 0;
-        PlaySfx(gAudioContext, SFX_JETPACK_PLAYER_DOWN, 0x100);
+        gAudioContext->PlaySfx(SFX_JETPACK_PLAYER_DOWN, 0x100);
         SetState(4, 3);
         if (gLevelState->timeTrial == 0)
             LoseLife(gLevelState);
@@ -405,7 +404,7 @@ void JetpackPlayer::Damage(s32 dmg)
         CLAMP_SPEED(gJetpackPlayerVelX);
         gJetpackPlayerVelX /= 2;
     } else {
-        PlaySfx(gAudioContext, SFX_UNKNOWN_42, 0x100);
+        gAudioContext->PlaySfx(SFX_UNKNOWN_42, 0x100);
     }
 }
 
@@ -472,19 +471,17 @@ void JetpackPlayer::StateFly()
 
         if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             SetState(2, 1);
         } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             SetState(3, 2);
         } else if (gJetpackShotCooldown == 0 && (keys.held & 1)) {
-            struct byte_arg one;
             s32 sx, sy;
 
             gJetpackShotCooldown = 0x12;
-            one.v = 1;
-            PlayAmbientSfx(gAudioContext, SFX_JETPACK_SHOOT, 1000, 0xa0, one);
+            gAudioContext->PlayAmbientSfx(SFX_JETPACK_SHOOT, 1000, 0xa0, true);
             sx = x + 0x1200;
             sy = y - 0x1800;
             SpawnJetpackShot(sx, sy, z + 10, Q12_MUL(sx, 0x199), Q12_MUL(sy, 0x199));
@@ -512,11 +509,11 @@ void JetpackPlayer::StateRollLeft()
 
         if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             SetState(2, 1);
         } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             SetState(3, 2);
         }
     }
@@ -542,11 +539,11 @@ void JetpackPlayer::StateRollRight()
 
         if (keys.held & L_BUTTON) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             SetState(2, 1);
         } else if (keys.held & R_BUTTON) {
             gJetpackFlashTimer = 0x12;
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             SetState(3, 2);
         }
     }

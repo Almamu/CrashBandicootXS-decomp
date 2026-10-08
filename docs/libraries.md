@@ -102,7 +102,7 @@ No library object uses old_agbcc, agbcc_arm(_patched) or
   `gGaxDefaultSong`, the engine's default handler layout: it sits at the
   end of the music block and `tools/gax_audio.py` builds it with the songs
   (docs/audio.md).
-- **The game-side audio code**: the audio manager (`src/audio/audio.c`), the song
+- **The game-side audio code**: the audio manager (`src/audio/audio.cpp`), the song
   table (`src/data/song_table_16aa20.c`) and the sound-effect table
   (`sound/sfx_table.json`). They call GAX2 through `<gax.h>`.
 - **GAX2's IWRAM variables**: `gGaxIrqEnabled` is the game's flag (its

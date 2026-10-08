@@ -1,8 +1,8 @@
 #include "menus.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
-#include "audio.h"
 #include "system.h"
 #include "gfx.h"
 #include "level.h"
@@ -36,8 +36,8 @@ void PauseMenu::InitInfo()
         percentText[count + 1] = 0;
     }
 
-    musicVolume = (GetMusicVolume(gAudioContext) + 0xc) * 20 / 256;
-    soundVolume = (GetSfxVolume(gAudioContext) + 0xc) * 20 / 256;
+    musicVolume = (gAudioContext->GetMusicVolume() + 0xc) * 20 / 256;
+    soundVolume = (gAudioContext->GetSfxVolume() + 0xc) * 20 / 256;
 
     FormatVolume(musicVolume, musicVolumeText);
     FormatVolume(soundVolume, soundVolumeText);

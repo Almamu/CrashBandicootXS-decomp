@@ -1,8 +1,8 @@
 #include "crate.hpp"
 #include "spawners.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -15,7 +15,7 @@ extern "C" {
  * pixels below the crate. */
 void Crate::OpenLife(bool flag6)
 {
-    PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+    gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
     u16 eid = id;
     if (eid != 0xFFFF) {
         if ((u8)IsEntityIdActivated(gEntityFlags, eid) == 0)

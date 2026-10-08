@@ -15,7 +15,7 @@
 #include "core.h"
 #include "vtable.h"
 
-struct AudioContext;
+struct audio_context;
 struct actor_self;
 struct camera;
 struct entity_flags;
@@ -75,7 +75,12 @@ extern class PaletteCache *gPaletteCache;
 #else
 extern struct palette_cache *gPaletteCache;
 #endif
-extern struct AudioContext *gAudioContext;
+/* class AudioContext (audio.hpp) to the C++ files. */
+#ifdef __cplusplus
+extern class AudioContext *gAudioContext;
+#else
+extern struct audio_context *gAudioContext;
+#endif
 /* An empty 4-byte object (DrawSprite ignores it): class SpriteRenderer
  * (sprite_obj.hpp) to the C++ files. */
 #ifdef __cplusplus

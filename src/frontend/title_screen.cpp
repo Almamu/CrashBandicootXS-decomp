@@ -1,5 +1,6 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
@@ -10,7 +11,6 @@ extern "C" {
 #include "util.h"
 #include <libgcc.h>
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "globals.h"
 #include "math_util.h"
@@ -75,7 +75,7 @@ u32 TitleScreen::CheatInput(u32 pressed)
     else if (pressed & START_BUTTON)
         HashInput(0x828A048B);
     if (cheatHash == 0x3034AF3B) {
-        PlaySong(gAudioContext, SONG_MAIN_MENU_JAPAN);
+        gAudioContext->PlaySong(SONG_MAIN_MENU_JAPAN);
         cheatHash = 0;
     }
     return 0;
@@ -169,19 +169,19 @@ seedLoop:
         pressed = gKeys.half.pressed;
         pressed = CheatInput(pressed);
         if (pressed & (A_BUTTON | START_BUTTON)) {
-            PlaySfx(gAudioContext, SFX_MENU_SELECT, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_SELECT, 0x100);
             fade = 0;
             goto fadeLoop;
         }
         if (pressed & DPAD_UP) {
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
             if (selection != 0)
                 selection--;
             else
                 selection = 2;
         }
         if (pressed & DPAD_DOWN) {
-            PlaySfx(gAudioContext, SFX_MENU_MOVE, 0x100);
+            gAudioContext->PlaySfx(SFX_MENU_MOVE, 0x100);
             selection++;
             selection = selection % 3;
         }
@@ -387,7 +387,7 @@ void CompanyLogos::Run()
         WaitForVBlank();
         bg->Update();
     }
-    PlaySfx(gAudioContext, SFX_UNIVERSAL_LOGO_IN, 0x100);
+    gAudioContext->PlaySfx(SFX_UNIVERSAL_LOGO_IN, 0x100);
     scale = 0x2000;
     fade = -1;
     do {
@@ -403,7 +403,7 @@ void CompanyLogos::Run()
         CommitDispcnt();
         if (fade != -1) {
             if (fade == 0x40)
-                PlaySfx(gAudioContext, SFX_UNIVERSAL_LOGO_OUT, 0x100);
+                gAudioContext->PlaySfx(SFX_UNIVERSAL_LOGO_OUT, 0x100);
             v = fade;
             if (v <= 0x40) {
                 s32 a = v >> 2;
@@ -609,7 +609,7 @@ void CompanyLogos::UpdateVvLogoPieces()
     if (timer > 0) {
         if (--timer != 0)
             return;
-        PlaySfx(gAudioContext, SFX_UNKNOWN_50, 0x100);
+        gAudioContext->PlaySfx(SFX_UNKNOWN_50, 0x100);
     }
     if (timer == 0) {
         s32 allDone = 1;

@@ -137,14 +137,14 @@ fail_restore:
 
 /* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
- * resume after, matching `src/audio/audio.c`'s established
+ * resume after, matching `src/audio/audio.cpp`'s established
  * `AudioContext` helpers), then validates the loaded record's two
  * marker bytes and checksum. Returns 4 (EEPROM read failed after
  * retries), 2 (bad `magic` marker), 1 (bad `versionNibble`
  * marker), 3 (checksum mismatch) or 0 (fully valid). */
 s32 LoadSaveData(struct save_data *self)
 {
-    struct AudioContext *audio;
+    struct audio_context *audio;
     s32 flag;
     s32 wasPlaying;
     u32 savedSong;
@@ -309,7 +309,7 @@ u32 GetSaveGameId(struct save_data *self)
  * (EEPROM write failed after retries) or 0 (success). */
 s32 StoreSaveData(struct save_data *self)
 {
-    struct AudioContext *audio;
+    struct audio_context *audio;
     s32 flag;
     s32 wasPlaying;
     u32 savedSong;

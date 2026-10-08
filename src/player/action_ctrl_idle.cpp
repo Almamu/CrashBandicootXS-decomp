@@ -1,11 +1,11 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "util.h"
 #include "system.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 }
@@ -45,7 +45,7 @@ skip:
         Player *p = gPlayer;
 
         if (p->speedX == 0 && p->bank->animCount != 0x12 && idleFidget == 0) {
-            StopSfx(gAudioContext, SFX_SKID);
+            gAudioContext->StopSfx(SFX_SKID);
             SetTargetAnim(gPlayer, 0x12);
         }
     }
@@ -143,7 +143,7 @@ skip:
         if (left)
             return;
         if (INPUT_PRESSED(in) & 1) {
-            PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+            gAudioContext->PlaySfx(SFX_JUMP, 0x100);
             SetMode(ACTION_STATE_JUMP);
             SetTargetAnim(part, 0x13);
             frame = left;

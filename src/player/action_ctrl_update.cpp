@@ -2,10 +2,10 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "system.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 #include "math_util.h"
@@ -167,7 +167,7 @@ u8 ActionCtrl::TryDoubleJump()
                 SetTargetAnim(part, 6);
                 QueueX(jumps, one, 0xD);
                 QueueY(jumps, one, 0xD);
-                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+                gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
                 return 1;
             } else if (part->tag == 0xB && part->frame >= 0) {
                 frame++;
@@ -175,7 +175,7 @@ u8 ActionCtrl::TryDoubleJump()
                 SetTargetAnim(part, 0xA);
                 QueueNowX(0xE);
                 QueueNowY(0xE);
-                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+                gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
                 return 1;
             } else if (part->tag == 0xC) {
                 frame++;
@@ -183,7 +183,7 @@ u8 ActionCtrl::TryDoubleJump()
                 SetTargetAnim(part, 0xA);
                 QueueNowX(0xC);
                 QueueNowY(0xC);
-                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+                gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
                 return 1;
             }
         }

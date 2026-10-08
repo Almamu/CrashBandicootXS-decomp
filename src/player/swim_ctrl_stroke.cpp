@@ -1,11 +1,11 @@
 #include "player_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "util.h"
 #include "system.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 #include "math_util.h"
@@ -141,7 +141,7 @@ void PlayerCtrl::StartSpin()
 
     speed = 960;
     flag = 0;
-    PlaySfx(gAudioContext, SFX_UNKNOWN_09, 256);
+    gAudioContext->PlaySfx(SFX_UNKNOWN_09, 256);
     if ((target->hitAxes & 3) && GetDpadDirection(gInput) <= 2)
         flag = 1;
 

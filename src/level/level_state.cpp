@@ -2,6 +2,7 @@
 #include "frontend.hpp"
 #include "level_state.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
@@ -12,7 +13,6 @@ extern "C" {
 #include "hud.h"
 #include "frontend.h"
 #include "system.h"
-#include "audio.h"
 #include "bosses.h"
 #include "gfx.h"
 #include "level.h"
@@ -41,7 +41,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
 {
     u8 recordId, slot;
 
-    PlaySfx(gAudioContext, SFX_CLOCK, 0x100);
+    gAudioContext->PlaySfx(SFX_CLOCK, 0x100);
 
     self->countdown += seconds * 60;
 
@@ -384,8 +384,6 @@ void ResetLives(struct level_state *self)
     self->lives = 5;
 }
 
-struct AudioContext;
-
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
  * invincibility mask) always fires a jingle (`StartSong(
  * gAudioContext, SONG_DRUMS)`) and skips the rest; leaving level 3 re-fires
@@ -397,7 +395,7 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
     s32 state = stateArg;
 
     if (state == MASK_LEVEL_INVINCIBLE) {
-        StartSong(gAudioContext, SONG_DRUMS);
+        gAudioContext->StartSong(SONG_DRUMS);
     } else if (self->maskLevel == MASK_LEVEL_INVINCIBLE) {
         self->maskLevel = state;
         PlayRoomMusic(&self->room);
@@ -775,8 +773,6 @@ void CheckAllCratesBroken(struct level_state *self)
     }
 }
 
-struct AudioContext;
-
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
  * `SetCrateGemPos` two-word setter below). */
 void SetGemPlatform(struct level_state *self, void *value)
@@ -903,7 +899,7 @@ void PlayNewGameCutscene(void *self)
 void PlayIntroCutscene(void *self)
 {
     PlayCutscene(self, 1);
-    StopSfx(gAudioContext, SFX_SPACE_STATION_AMBIENCE);
+    gAudioContext->StopSfx(SFX_SPACE_STATION_AMBIENCE);
 }
 
 /* The company logos (CompanyLogos, frontend.hpp; 0x44c bytes): made, run

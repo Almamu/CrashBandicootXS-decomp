@@ -1,7 +1,7 @@
 #include "boss_actors.hpp"
+#include "audio.hpp"
 
 extern "C" {
-#include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
 #include "globals.h"
@@ -89,9 +89,9 @@ void HovercraftCannon::Damage(s32 amount)
         dead = 1;
         LoseHovercraftPart();
         SetState(2, 2);
-        PlaySfx(gAudioContext, SFX_EXPLOSION, 0x100);
+        gAudioContext->PlaySfx(SFX_EXPLOSION, 0x100);
     } else {
-        PlaySfx(gAudioContext, SFX_HOVERCRAFT_PART_HIT, 0x100);
+        gAudioContext->PlaySfx(SFX_HOVERCRAFT_PART_HIT, 0x100);
     }
 }
 

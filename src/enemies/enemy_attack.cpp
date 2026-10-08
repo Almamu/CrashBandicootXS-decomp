@@ -1,12 +1,12 @@
 #include "enemy_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "util.h"
 #include <libgcc.h>
-#include "audio.h"
 #include "player.h"
 #include "objects.h"
 #include "level.h"
@@ -84,15 +84,15 @@ void EnemyCtrl::UpdateAttackCycle()
             SetAnimMode(4);
             if (kind == ENEMY_KIND_WOODEN_CRUSHER || kind == ENEMY_KIND_PISTON_CRUSHER) {
                 target->f.b.solid = 1;
-                PlaySfx(gAudioContext, SFX_CRUSHER_SLAM, 0x100);
+                gAudioContext->PlaySfx(SFX_CRUSHER_SLAM, 0x100);
             } else if (kind == ENEMY_KIND_PENGUIN) {
-                PlaySfx(gAudioContext, SFX_UNKNOWN_09, 0x100);
+                gAudioContext->PlaySfx(SFX_UNKNOWN_09, 0x100);
             }
         }
         if (kind == ENEMY_KIND_FLAMETHROWER_LAB_ASSISTANT && target->frame == 9 &&
             target->stepTimer == 0) {
             SpawnPart(0x17, 4, -0x2d, 2, 0, target)->kind = 2;
-            PlaySfx(gAudioContext, SFX_FLAMETHROWER, 0x100);
+            gAudioContext->PlaySfx(SFX_FLAMETHROWER, 0x100);
         }
         break;
     case 5:
@@ -103,7 +103,7 @@ void EnemyCtrl::UpdateAttackCycle()
             SetMotionX(1);
         }
         if (kind == ENEMY_KIND_PENGUIN && target->frame == 8 && target->stepTimer == 0)
-            PlaySfx(gAudioContext, SFX_UNKNOWN_23, 0x100);
+            gAudioContext->PlaySfx(SFX_UNKNOWN_23, 0x100);
         break;
     }
 }

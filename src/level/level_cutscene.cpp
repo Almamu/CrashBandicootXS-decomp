@@ -3,6 +3,7 @@
 #include "part_list.hpp"
 #include "spawners.hpp"
 #include "font.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
@@ -12,7 +13,6 @@ extern "C" {
 #include "text.h"
 #include "cutscene.h"
 #include "system.h"
-#include "audio.h"
 #include "gfx.h"
 #include "objects.h"
 #include "level.h"
@@ -56,9 +56,8 @@ LevelState::~LevelState()
     delete gObjVramCursor;
     if (gInput != NULL) /* KeyInput has no destructor: `delete` alone tests nothing */
         delete (KeyInput *)gInput;
-    DisableMusicVCountIrq(gAudioContext);
-    if (gAudioContext != NULL)
-        DestroyAudioContext(gAudioContext, 3);
+    gAudioContext->DisableVCountIrq();
+    delete gAudioContext;
     delete gLargeFont;
     delete gSmallFont;
     delete gSpriteRenderer;

@@ -1,11 +1,11 @@
 #include "menus.hpp"
 #include "font.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "core.h"
 #include "text.h"
 #include <libgcc.h>
-#include "audio.h"
 #include "globals.h"
 }
 
@@ -80,7 +80,7 @@ void PauseMenu::VolumeDown()
             count--;
             musicVolume = count;
             FormatPercent(musicVolumeText, count * 5);
-            SetMusicVolume(gAudioContext, ((musicVolume << 8) + 1) / 20);
+            gAudioContext->SetMusicVolume(((musicVolume << 8) + 1) / 20);
         }
         break;
     case 5:
@@ -89,8 +89,8 @@ void PauseMenu::VolumeDown()
             count--;
             soundVolume = count;
             FormatPercent(soundVolumeText, count * 5);
-            SetSfxVolume(gAudioContext, ((soundVolume << 8) + 1) / 20);
-            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
+            gAudioContext->SetSfxVolume(((soundVolume << 8) + 1) / 20);
+            gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
         }
         break;
     }
@@ -108,7 +108,7 @@ void PauseMenu::VolumeUp()
             count++;
             musicVolume = count;
             FormatPercent(musicVolumeText, count * 5);
-            SetMusicVolume(gAudioContext, ((musicVolume << 8) + 1) / 20);
+            gAudioContext->SetMusicVolume(((musicVolume << 8) + 1) / 20);
         }
         break;
     case 5:
@@ -117,8 +117,8 @@ void PauseMenu::VolumeUp()
             count++;
             soundVolume = count;
             FormatPercent(soundVolumeText, count * 5);
-            SetSfxVolume(gAudioContext, ((soundVolume << 8) + 1) / 20);
-            PlaySfx(gAudioContext, SFX_HUD_COLLECT, 0x100);
+            gAudioContext->SetSfxVolume(((soundVolume << 8) + 1) / 20);
+            gAudioContext->PlaySfx(SFX_HUD_COLLECT, 0x100);
         }
         break;
     }

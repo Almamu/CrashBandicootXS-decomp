@@ -1,9 +1,9 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "level_state.h"
-#include "audio.h"
 #include "actor.h"
 #include "level.h"
 #include "globals.h"
@@ -28,7 +28,7 @@ s32 PolarAkuAku::RemoveMask()
 {
     s32 level;
 
-    PlaySfx(gAudioContext, SFX_AKU_AKU_LOSE, 0x100);
+    gAudioContext->PlaySfx(SFX_AKU_AKU_LOSE, 0x100);
     level = gLevelState->maskLevel;
     if (level != MASK_LEVEL_NONE) {
         level -= 1;
@@ -44,7 +44,7 @@ s32 PolarAkuAku::AddMask()
 {
     s32 level;
 
-    PlaySfx(gAudioContext, SFX_AKU_AKU_GAIN, 0x100);
+    gAudioContext->PlaySfx(SFX_AKU_AKU_GAIN, 0x100);
     level = gLevelState->maskLevel;
     if (level != MASK_LEVEL_INVINCIBLE) {
         level += 1;
@@ -100,7 +100,7 @@ void PolarBoostPad::Update()
     if ((u8)IsTouchingPlayer(this)) {
         static_cast<PolarPlayer *>(gActorList)->Boost(x);
         if (once == 0) {
-            PlaySfx(gAudioContext, SFX_BOOST_PAD, 0x100);
+            gAudioContext->PlaySfx(SFX_BOOST_PAD, 0x100);
             once = 1;
         }
     }
@@ -136,7 +136,7 @@ void PolarCheckpointCrate::Update()
     if (animIndex == 0) {
         if ((u8)IsTouchingPlayer(this)) {
             RestartAnim(1);
-            PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
+            gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
             AddBrokenCrate(gLevelState);
             SetActorCheckpoint(z);
             CreatePolarCheckpointText(x, y - 0xF00, z);
@@ -145,7 +145,7 @@ void PolarCheckpointCrate::Update()
         if (animIndex == 0 && IsTouchingYeti(this)) {
             RestartAnim(3);
             palette = 1;
-            PlaySfx(gAudioContext, SFX_CRATE_BREAK, 0x100);
+            gAudioContext->PlaySfx(SFX_CRATE_BREAK, 0x100);
             AddBrokenCrate(gLevelState);
         }
     }
@@ -163,6 +163,6 @@ PolarCheckpointCrate::PolarCheckpointCrate(const struct anim_table_record *rec, 
 {
     if (GetActorCheckpoint() == z) {
         RestartAnim(2);
-        PlaySfx(gAudioContext, SFX_CHECKPOINT, 0x100);
+        gAudioContext->PlaySfx(SFX_CHECKPOINT, 0x100);
     }
 }

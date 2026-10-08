@@ -1,4 +1,5 @@
 #include "vehicle.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "math_util.h"
@@ -6,7 +7,6 @@ extern "C" {
 #include "level_state.h"
 #include <libgcc.h>
 #include "system.h"
-#include "audio.h"
 #include "actor.h"
 #include "gfx.h"
 #include "level.h"
@@ -59,7 +59,7 @@ void JetpackPlayer::DispenseWumpa()
         gJetpackQueuedWumpa -= 8;
     }
 
-    PlaySfx(gAudioContext, SFX_WUMPA, 0x100);
+    gAudioContext->PlaySfx(SFX_WUMPA, 0x100);
 }
 
 /* Counts a bomber in the air this frame (Update plays their engine sound

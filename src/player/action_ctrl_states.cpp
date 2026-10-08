@@ -2,10 +2,10 @@
 #include "spawners.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "system.h"
-#include "audio.h"
 #include "level.h"
 #include "globals.h"
 #include "math_util.h"
@@ -62,7 +62,7 @@ void ActionCtrl::StateAirborne()
             (u32)(state - ACTION_STATE_AIRBORNE_BODY_SLAM) > 1) {
             s32 frames;
 
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             frames = 0x18;
             SetMode(ACTION_STATE_AIR_SPIN);
             SetTargetAnim(part, 0x10);
@@ -176,7 +176,7 @@ void ActionCtrl::StateAirborne()
                 if (this->state == ACTION_STATE_AIRBORNE_SUPER_BODY_SLAM)
                     DoSuperBodySlamShockwave();
                 if (this->state != ACTION_STATE_DYING) {
-                    PlaySfx(gAudioContext, SFX_BODY_SLAM_LAND, 0x100);
+                    gAudioContext->PlaySfx(SFX_BODY_SLAM_LAND, 0x100);
                     SetMode(ACTION_STATE_BODY_SLAM_LAND);
                     SetTargetAnim(part, 0x11);
                     motionYKeepSpeed = bit4;
@@ -260,7 +260,7 @@ void ActionCtrl::StateSlide()
             QueueNowY(5);
         } else if (INPUT_HELD(in) & 1) {
             if (p->HasRoomForAnim(0xB) == 1) {
-                PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+                gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
                 ActAndFlags0D(part, -2);
                 ActAndFlags0D(part, -3);
                 StartHighJump();
@@ -498,7 +498,7 @@ void ActionCtrl::StateCrouchDown()
     fire = INPUT_PRESSED(in) & 1;
 
     if (fire) {
-        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
         StartHighJump();
@@ -534,7 +534,7 @@ void ActionCtrl::StateCrouch()
         dir = GetDpadDirection(pad);
     }
     if ((INPUT_PRESSED(in) & 1) && part->HasRoomForAnim(0xB) == 1) {
-        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
         StartHighJump();
@@ -637,7 +637,7 @@ void ActionCtrl::StateCrawlStart()
     u32 in = gKeys.all;
 
     if ((INPUT_PRESSED(in) & 1) != 0 && part->HasRoomForAnim(0xB) == 1) {
-        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
         StartHighJump();
@@ -663,7 +663,7 @@ void ActionCtrl::StateCrawl()
     u32 held;
 
     if ((INPUT_PRESSED(in) & 1) && part->HasRoomForAnim(0xB) == 1) {
-        PlaySfx(gAudioContext, SFX_HIGH_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_HIGH_JUMP, 0x100);
         ActAndFlags0D(part, -2);
         ActAndFlags0D(part, -3);
         StartHighJump();

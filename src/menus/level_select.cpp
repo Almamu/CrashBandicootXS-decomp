@@ -1,11 +1,11 @@
 #include "level_select.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include <agb_syscall.h>
 #include <libgcc.h>
 #include "text.h"
-#include "audio.h"
 #include "level.h"
 #include "math_util.h"
 }
@@ -261,7 +261,7 @@ s32 RunLevelSelect(s32 *arg)
     }
     IconReserve(&gLargeFont);
     gObjVramCursor->Mark();
-    PlaySong(gAudioContext, SONG_WARP_ROOM);
+    gAudioContext->PlaySong(SONG_WARP_ROOM);
     {
         LevelSelect **menuAddr = &gLevelSelect;
 
@@ -694,7 +694,7 @@ s32 LevelSelect::Loop()
         BeginFrame();
         bg2->Update();
     }
-    PlaySfx(gAudioContext, SFX_ZOOM_BG_SHOWN, 0x100);
+    gAudioContext->PlaySfx(SFX_ZOOM_BG_SHOWN, 0x100);
     blend.raw = 0;
     blend.bits.bg0Second = 1;
     blend.bits.bg1Second = 1;
@@ -788,7 +788,7 @@ void LevelSelect::SettlePage()
 void LevelSelect::CursorLeft()
 {
     if (index == 0) {
-        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
         return;
     }
     items[index]->SetSelected(0);
@@ -811,7 +811,7 @@ void LevelSelect::CursorLeft()
 void LevelSelect::CursorRight()
 {
     if (index == lastIndex) {
-        PlaySfx(gAudioContext, SFX_MENU_ERROR, 0x100);
+        gAudioContext->PlaySfx(SFX_MENU_ERROR, 0x100);
         return;
     }
     items[index]->SetSelected(0);

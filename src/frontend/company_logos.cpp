@@ -1,5 +1,6 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
@@ -10,7 +11,6 @@ extern "C" {
 #include "util.h"
 #include <libgcc.h>
 #include "system.h"
-#include "audio.h"
 #include "actor.h"
 #include "gfx.h"
 #include "globals.h"
@@ -115,7 +115,7 @@ void CompanyLogos::DrawVvLogoPieces()
                         u8 z = 0;
 
                         *flag = z;
-                        PlaySfx(gAudioContext, SFX_UNKNOWN_4E, 0x100);
+                        gAudioContext->PlaySfx(SFX_UNKNOWN_4E, 0x100);
                     }
                     SetAffine(gOamBuffer, matrix, pa, 0, 0, pd);
                     oamB.affineMode = 1;
@@ -150,7 +150,7 @@ void CompanyLogos::DrawVvLogoPieces()
         MATCH_HOLD_REG(struct dma_regs *, dma, r2);
 
         if (*flag) {
-            PlaySfx(gAudioContext, SFX_UNKNOWN_4D, 0x100);
+            gAudioContext->PlaySfx(SFX_UNKNOWN_4D, 0x100);
             *flag = 0;
         }
         slot = &slots[0];
@@ -315,7 +315,7 @@ void LogoActor::Update()
     case 1:
         if (Q8_TO_INT(animTime) == 0x12) {
             SetState(2, 7);
-            PlaySfx(gAudioContext, SFX_UNKNOWN_4F, 0x100);
+            gAudioContext->PlaySfx(SFX_UNKNOWN_4F, 0x100);
         }
         break;
     case 2:
@@ -323,7 +323,7 @@ void LogoActor::Update()
             animTimer = 0;
             state = 3;
             stateTime = 0;
-            PlaySfx(gAudioContext, SFX_PLAYER_HURT, 0x100);
+            gAudioContext->PlaySfx(SFX_PLAYER_HURT, 0x100);
         }
         break;
     case 3:

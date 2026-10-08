@@ -1,10 +1,10 @@
 #include "sprite_obj.hpp"
 #include "frontend.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "gba/io_reg.h"
-#include "audio.h"
 #include "gba/dma_macros.h"
 #include <agb_syscall.h>
 #include "text.h"
@@ -135,7 +135,7 @@ Credits::Credits()
     gDispcnt[1] |= 0x10;
     CommitDispcnt();
     frameParity = 0;
-    PlaySong(gAudioContext, SONG_CREDITS);
+    gAudioContext->PlaySong(SONG_CREDITS);
 }
 
 /* Runs the credits until A or START, then fades out over 17 frames and
@@ -161,7 +161,7 @@ void Credits::Loop()
         starfield->Update();
     }
 
-    FadeOutMusic(gAudioContext, 0);
+    gAudioContext->FadeOutMusic(0);
 
     for (i = 0; i <= 0x10; i++) {
         frameParity = (frameParity + 1) & 1;

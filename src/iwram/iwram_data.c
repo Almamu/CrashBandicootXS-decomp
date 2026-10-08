@@ -44,7 +44,7 @@ s32 mem_initial_free_bytes = 0;
 u32 gVBlankCounter = 0;
 u8 gFrameLimitEnabled = 0;
 /* Set while the music player's per-frame update is installed
- * (audio.c). */
+ * (audio.cpp). */
 u8 gGaxIrqEnabled = 0;
 
 /* Held keys and newly pressed keys (irq.c's UpdateKeys). */

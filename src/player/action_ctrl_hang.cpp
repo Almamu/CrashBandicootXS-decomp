@@ -1,11 +1,11 @@
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
+#include "audio.hpp"
 
 extern "C" {
 #include "match.h"
 #include "system.h"
-#include "audio.h"
 #include "crates.h"
 #include "gfx.h"
 #include "level.h"
@@ -167,7 +167,7 @@ void ActionCtrl::StateDying()
     Player *p = part;
 
     if (p->tag == 0x2F && p->frame == 3 && p->stepTimer == 0)
-        PlaySfx(gAudioContext, SFX_UNKNOWN_2E, 0x100);
+        gAudioContext->PlaySfx(SFX_UNKNOWN_2E, 0x100);
     p = part;
     if (p->animDone)
         p->MarkGone();
@@ -207,7 +207,7 @@ void ActionCtrl::StateHang()
             break;
         }
     if (INPUT_PRESSED(in) & 1) {
-        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         ReleaseHang();
         return;
     }
@@ -227,7 +227,7 @@ void ActionCtrl::StateUnusedHang()
     s32 fire = INPUT_PRESSED(in) & 1;
 
     if (fire) {
-        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         ReleaseHang();
         return;
     }
@@ -277,7 +277,7 @@ void ActionCtrl::StateHangMoveStart()
     s32 v = INPUT_PRESSED(in) & 1;
 
     if (v) {
-        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         QueuePendingX(0, 0);
         ReleaseHang();
         return;
@@ -345,7 +345,7 @@ void ActionCtrl::StateHangMove()
         SetTag(p, 0x21);
     fire = INPUT_PRESSED(in) & 1;
     if (fire) {
-        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         QueuePendingX(0, 0);
         ReleaseHang();
         return;
@@ -445,7 +445,7 @@ void ActionCtrl::StateHangStop()
     u16 alt;
 
     if (fire) {
-        PlaySfx(gAudioContext, SFX_JUMP, 0x100);
+        gAudioContext->PlaySfx(SFX_JUMP, 0x100);
         QueueNowX(0);
         ReleaseHang();
         return;
@@ -537,7 +537,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
         SetTargetAnim(part, idx);
         frame = zero;
         frames = wait;
-        PlaySfx(gAudioContext, tornadoVariant + SFX_TORNADO_SPIN, 0x100);
+        gAudioContext->PlaySfx(tornadoVariant + SFX_TORNADO_SPIN, 0x100);
         if (++tornadoTurn >= charge) {
             tornadoUnwinding = 1;
             if (tornadoTurn > 1)
@@ -566,7 +566,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
             SetTargetAnim(part, idx);
             frame = zero;
             frames = wait;
-            PlaySfx(gAudioContext, tornadoVariant + SFX_TORNADO_SPIN, 0x100);
+            gAudioContext->PlaySfx(tornadoVariant + SFX_TORNADO_SPIN, 0x100);
         } else {
             u8 *p21 = &tornadoVariant;
             s32 zero = 0;
@@ -579,7 +579,7 @@ void ActionCtrl::StartTornadoSpin(s32 id, s32 param2)
             SetTargetAnim(part, 0x10);
             frame = zero;
             frames = wait;
-            PlaySfx(gAudioContext, SFX_SPIN, 0x100);
+            gAudioContext->PlaySfx(SFX_SPIN, 0x100);
             spinCooldown = 0x63;
         }
         tornadoTurn--;
