@@ -379,7 +379,13 @@ static inline void new_row_icon(UiSprite **slot, u32 tblOff, u32 frame)
  * docs/matching/archive/early-rom-naked-retry-2.md); the frame-0 address
  * pin and the r1 hold fix the last 6 halfwords. The C also needed three
  * MATCH_BARRIER()s of insn-count padding to keep the rowObj pointers'
- * stack slots in the ROM's order; the C++ doesn't. */
+ * stack slots in the ROM's order; the C++ doesn't.
+ * #662 round 2: `icon->tag = Opaque(frame)` for all three frames gets the
+ * frame-0 store right with no pin, and then the palette as the plain
+ * `palette = GetAnimPaletteSlot()` field store and `affine = 0x80` leave
+ * only the 0x80's place in the loop pre-header off;
+ * with the byte-wise palette store, the 0x80 needs a `u16` local to land
+ * there. */
 void SaveMenu::InitIcons()
 {
     u16 (*pal)[16];

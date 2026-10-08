@@ -80,7 +80,11 @@ void ContinuePrompt::InitGraphics()
  *    test's shift a fresh value, so CSE doesn't share it with the first,
  *    and the first test keeps the ROM's `movs r0, #1; ands r0, r1`
  *    register choice. The START test's `u16` result is the 0 the ROM
- *    then stores into `selection`. */
+ *    then stores into `selection`.
+ * #662 round 2: without the MATCH_KEEP the only difference is that shared
+ * shift (inline u16 helpers, a union copy, swapped operands and `!= 0`
+ * don't separate it), and `gAudioContext->` written directly gives the
+ * counter r7 and the pointer r8. */
 s32 ContinuePrompt::Loop()
 {
     s32 dir = 1;

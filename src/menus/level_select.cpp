@@ -78,7 +78,9 @@ void CameraLead::Reset()
     /* One pin kept (the C had five): the ROM tests `blink` with a 1 of its
      * own in r1 and loads another for ToggleHidden's; unpinned, gcc shares
      * one constant between the two, with every spelling of the test and
-     * the toggle tried (u8/s32/bool tests, a switch, `^ 1`, `== 0`). */
+     * the toggle tried (u8/s32/bool tests, a switch, `^ 1`, `== 0`; in
+     * round 2 also IsHidden-style inline helpers returning s32 or bool,
+     * the bitfield test and `blink = 1`). */
     MATCH_HOLD_REG(u32, one, r1) = 1;
 
     if (!(v & one))
@@ -715,7 +717,10 @@ loop:
             NextWorld();
         /* The ROM copies the key word between the 0x80 test's `ands`
          * and its `cmp`, and tests 0x20 on the copy; gcc merges a plain
-         * copy, so the (code-free) asm keeps `k` a separate value. */
+         * copy, so the (code-free) asm keeps `k` a separate value.
+         * #662 round 2: a copy in the else arm, a held_pressed_pair copy
+         * and inline helpers taking the keys by value (a register-sized
+         * struct goes to the stack) don't reproduce it. */
         else if (({
                      u32 hit = keys.half.pressed & DPAD_DOWN;
 

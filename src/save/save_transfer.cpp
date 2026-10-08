@@ -51,7 +51,12 @@ void SaveTransfer::SendChunk()
  * `"+r"` escape the ring pointer inherited that preference and pushed
  * the wrap loop's `old` out of r2. The wrap loop's count pointer is
  * pinned to r1 (the ROM's register), and the loop is an explicit
- * `if` + `do`/`while` so the pin is set after the zero-trip test. */
+ * `if` + `do`/`while` so the pin is set after the zero-trip test.
+ * #662 round 2: written as `s->players[playerIndex].ring.count` and an
+ * inline LinkRing pop (SendChunk's LinkRing::Push in reverse, with the
+ * wrap loop's `next = 0; if (old != 0x7f) ...`), both loops come out as
+ * the ROM's, but gcc computes `playerIndex * 0xc8 + s` once and reuses
+ * it for the ring pointer, where the ROM multiplies twice. */
 void SaveTransfer::ReceiveChunk(s32 playerIndex)
 {
     LinkSession *s = gLinkSession;

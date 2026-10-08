@@ -54,7 +54,15 @@ extern "C" {
  * - The MATCH_BARRIER() after the nibble decrement lengthens `self + i *
  *   0xc8`'s life by one insn; that breaks its priority tie with the
  *   nibble pointer, so the pointer gets r4 and the base ip, as in the
- *   ROM. */
+ *   ROM.
+ * #662 round 2: the copy loops are halfword copies through a packed
+ * `struct { u16 v; }` (that reproduces their ldrb/orr/and/strb exactly,
+ * the same as the explicit `lo = w & 0xff`), and written naturally that
+ * way, with the player fields by name, `self` takes r4 and `id` is
+ * recomputed. With the copies in an inline CopyPacket `id` gets r4 and
+ * `self` r5 as in the ROM, but the first loop then walks `id` instead of
+ * reading `prevPacket + 8`, and the rxSeq/nibble addresses differ; the
+ * permuter (45 minutes) got its score from 3340 to 2110 only. */
 s32 LinkSession::ResetState()
 {
     s32 i, j;

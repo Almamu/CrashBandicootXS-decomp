@@ -122,7 +122,11 @@ void PauseMenu::Draw()
          * to `x` (r3). */
         MATCH_USE(t);
         /* Hard-register hold (no code): `hold`, never assigned, keeps r2
-         * live from its declaration to here, so y takes it afterwards. */
+         * live from its declaration to here, so y takes it afterwards.
+         * #662 round 2: SetPos with the expressions as arguments or an
+         * `x` local give x r1 and y r3 (direct posX/posY stores are
+         * further off), and the permuter found nothing in 43k
+         * iterations. */
         MATCH_USE(hold);
         gLargeFont->SetPos(x, 0xe);
     }

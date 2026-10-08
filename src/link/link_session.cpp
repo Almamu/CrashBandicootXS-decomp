@@ -43,7 +43,9 @@ extern "C" {
  *   constant's register.
  * - `MATCH_KEEP(arm3)` between the eor and the and stops combine
  *   from folding `(x ^ 1) & 1` into a `bic`, which the ROM doesn't have.
- * Both asm statements emit no code. Matches under both compilers. As
+ * Both asm statements emit no code (#662 round 2 also tried the tests as
+ * `!(REG_SIOCNT & 8)`/`!(REG_SIOCNT & 4)`-style bool expressions and as a
+ * volatile SioMultiCnt bitfield struct). Matches under both compilers. As
  * C++, the ready test is written `(v & 1) == 0`: g++'s `!(v & 1)` is a
  * bool negation, which combine turns into an eor/and pair. */
 s32 LinkSession::Update()

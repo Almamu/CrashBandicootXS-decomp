@@ -347,6 +347,11 @@ u8 SaveData::IsSlotEmpty(s32 rowIndex)
     return slotEmpty[rowIndex];
 }
 
+/* `v` pinned to r1 (mask's register) keeps the ROM's zero-extension of
+ * `mask` at the entry: unpinned, combine folds it into the `and` with
+ * the zero-extended byte load, with every spelling tried in #662 round 2
+ * (`(mask & flags) != 0`, a ternary, a bool, s8/s16/u16/s32/u32 for `v`
+ * and the result, `flags & mask`, `mask &= flags`). */
 u8 SaveData::TestFlags(u8 mask)
 {
     MATCH_HOLD_REG(u8, v, r1);
