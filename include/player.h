@@ -121,27 +121,6 @@ union player_mirror {
     } __attribute__((packed)) sbits;
 } __attribute__((packed));
 
-/* The player's method table (gPlayerVtable), as the C callers read it
- * (room_frame.c): a `this` adjustment and the function of each slot. The
- * slot names are the functions gPlayerVtable holds. */
-struct player_vtable {
-    struct actor_method unk_00;             // 0x00 - empty (no RTTI)
-    struct actor_method collide;            // 0x08 - CollidePlayer
-    struct actor_method getHitbox;          // 0x10 - GetSpriteObjHitbox
-    struct actor_method update;             // 0x18 - UpdatePlayer
-    struct actor_method draw;               // 0x20 - DrawPlayer
-    struct actor_method isOnScreen;         // 0x28 - IsSpriteObjOnScreen
-    struct actor_method overlapsRect;       // 0x30 - SpriteObjOverlapsRect
-    struct actor_method isNearCamera;       // 0x38 - IsSpriteObjNearCamera
-    struct actor_method isInsideRect;       // 0x40 - IsSpriteObjInsideRect
-    struct actor_method getClassId;         // 0x48 - GetGroundSpriteClassId
-    struct actor_method destroy;            // 0x50 - DestroyPlayer
-    struct actor_method getPriority;        // 0x58 - GetSpriteObjPriority
-    struct actor_method applyVelocity;      // 0x60 - ApplyPlayerVelocity
-    struct actor_method handleEvent;        // 0x68 - PlayerHandleEvent (the hit handler)
-    struct actor_method collideWithObjects; // 0x70 - CollidePlayerWithObjects
-};
-
 /* The player object (gPlayer) as the C files see it: the C view of class
  * Player (include/player.hpp, which checks the size), a ground sprite
  * (InitGroundSprite, the same 0x80-byte base as gobj_1a794.h's `struct
@@ -159,8 +138,8 @@ struct player {
                               //        (set by PlayRoom), 6 vulnerable, 7 collision enabled
     u8 flags2;                // 0x0D
     u8 unk_0E[0xA];
-    const struct player_vtable *vtable; // 0x18 - gPlayerVtable
-    void *lastHitbox;                   // 0x1C - struct gobj.lastHitbox
+    const void *vtable; // 0x18 - gPlayerVtable (class Player's)
+    void *lastHitbox;   // 0x1C - struct gobj.lastHitbox
     // 0x20 - the sprite bank (struct sprite_bank, sprite_bank.h)
     struct act_anim_bank *anim;
     // 0x24 - motion direction bits (ApplyPlayerVelocity): 1 right,
@@ -268,7 +247,7 @@ COMPILE_TIME_ASSERT(player_h, sizeof(struct player) == 0x350);
  * player is moved by the input alone. The C view of
  * include/input_ctrl.hpp's class InputCtrl, which keeps the same layout
  * (checked there). Its code is all C++; the C files only pass it around
- * (play_room.c creates it). */
+ * (play_room.cpp creates it). */
 struct input_ctrl {
     u8 unk_00[4];
     const struct entry_set *animSet;  // 0x04
@@ -334,7 +313,6 @@ extern void ActionCtrlStateNop6(void);
 extern void ActionCtrlStateTurboRun(struct act *self);
 extern void ActionCtrlStateNop2(void);
 extern void ActionCtrlStateUnusedIdle(struct act *self);
-extern struct act *InitActionCtrl(struct act *self);
 
 /* src/player/action_ctrl_hang.cpp */
 extern void ActionCtrlStateLeftGround(struct act *self);
@@ -390,7 +368,6 @@ extern void InputCtrlStateStart(struct input_ctrl *self);
 extern void InputCtrlStateDead(struct input_ctrl *self);
 extern void InputCtrlStateUnusedRide(struct input_ctrl *self);
 extern void InputCtrlStateRide(struct input_ctrl *self);
-extern struct input_ctrl *CreateInputCtrl(struct input_ctrl *self);
 
 /* src/player/kill_player.cpp */
 extern void KillPlayer(struct act *self, s32 id);
@@ -403,15 +380,6 @@ extern u8 CollidePlayer(struct player *self);
 
 /* src/player/player_flags.cpp: Player's accessors (include/player.hpp). */
 extern void SetPlayerBusy(struct player *self, u8 arg1);
-/* Ctrl's methods (include/ctrl.hpp) under their C names
- * (cxx_symbols.txt), for the C callers. */
-extern void SetCtrlAnimSet(void *self, s32 val);
-
-/* src/player/player_init.cpp */
-extern struct player *InitPlayer(struct player *self, u16 arg1, u16 arg2, u16 arg3, u16 unused);
-
-/* src/player/player_reset.cpp */
-extern void ResetPlayerForRoom(struct player *self);
 
 /* src/player/swim_ctrl.cpp, swim_ctrl_drift.cpp, swim_ctrl_stroke.cpp:
  * the swim controller's methods (PlayerCtrl, include/player_ctrl.hpp)
@@ -428,6 +396,5 @@ extern void PlayerCtrlStateDead(struct player_ctrl *self);
 /* SetPlayerCtrlState's `timer`/`timerMax` value that keeps the current
  * one. */
 #define CTRL_KEEP 0x7FFFFFFF
-extern struct player_ctrl *InitPlayerCtrl(struct player_ctrl *self);
 
 #endif /* GUARD_PLAYER_H */

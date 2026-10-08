@@ -1,3 +1,8 @@
+#include "player.hpp"
+#include "platform.hpp"
+#include "crate.hpp"
+
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "hud.h"
@@ -11,6 +16,7 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* GitHub issue #37 follow-up to `docs/matching/archive/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -88,8 +94,8 @@
  * checks); on success, clears the player's busy bit 7 (`+0xc &=
  * 0x7f`), re-stamps `+0x2d` to `0x29`, refreshes the OAM entry again,
  * plays a sound effect (`gAudioContext` as the sample id, priority
- * `0x2c`) via `PlaySfx`, fires the `player+0x44`-table's trampoline
- * (`_call_via_r2`, mode `0x29`), repeats the same `LoadPaletteSlot` tile-
+ * `0x2c`) via `PlaySfx`, sets the player's controller's mode to `0x29`
+ * (`mover->SetMode`, a virtual call), repeats the same `LoadPaletteSlot` tile-
  * cache call, and pings `gHud` (`ShowHudCounters`).
  *
  * Either way, this converges on culling the four object lists
@@ -106,8 +112,8 @@
  * dispatch that can early-exit this whole function with return value
  * `1` or `2` via `ResumeRoomAfterPause`'s level-end teardown, a `gUnknown_
  * 030007E0` input-flag-gated `ShowHudCounters` ping, `UpdatePartList` on
- * three ring-buffer managers, `_call_via_r1` trampoline probes against
- * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `UpdateCrateList` on
+ * three ring-buffer managers, the player's `IsNearCamera` and `Update`
+ * (virtual calls), `UpdateCrateList` on
  * `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
  * gated `TickLevelClock` call) before looping back. Once ready, fires the
  * fade (`FadePaletteToBlack`) - the concrete trigger `rom_map.md` originally
@@ -118,8 +124,8 @@
  * dispatches gated by `IsInBonusRoom`/`IsInBonusRound`/`GetBonusPlatform` or
  * `IsInGemPathRoom`/`IsInGemPath` (both skip straight to the flush tail on
  * failure); falling through both, loops `gCrateList` counting
- * entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
- * own `+0x4e` tag is `0xa` (the same physics-subsystem state tag
+ * crates whose `GetClassId` (virtual) returns `3` *and* whose
+ * `kind` (`+0x4e`) is `0xa` (the same physics-subsystem state tag
  * `gCrateHitResponse` indexes, `docs/matching/
  * issue-12-physics-collision.md`), then calls `AddPendingSwitchCrates(gUnknown_
  * 030012C0, count)`. **Final tail** (`_08023F92`, also every early-out
@@ -136,47 +142,16 @@
  * as plain C under old_agbcc since the hard-register hold pass
  * (docs/matching/archive/hard-register-hold-retry.md), so this object is on the
  * Makefile's OLD_AGBCC_OBJS list (it is the file's only function;
- * agbcc is 42 halfwords off). The shared `_08023BA6` tail is ordinary
+ * agbcc is 42 halfwords off). C++ since the #664 cleanup (old_agbcp): the
+ * player's and the crates' virtual calls replace the hand-written slot
+ * calls; the wait loop's flag test is written `(... & 1) == 0`, as `!`
+ * on it gives an `eor` in C++. The shared `_08023BA6` tail is ordinary
  * cross-jumping. The one-byte `direction` stack argument is a BLKmode
  * struct (see `struct fx_direction`), and the post-fade player-position
  * copy holds r0/r1 while the player pointer is loaded. */
 struct gl_point {
     s32 x;
     s32 y;
-};
-
-struct gl_vtable {
-    u8 unk_00[0x18];
-    struct actor_method m18; /* +0x18 */
-    u8 unk_20[0x18];
-    struct actor_method m38; /* +0x38 */
-    u8 unk_40[8];
-    struct actor_method m48; /* +0x48 */
-};
-
-struct gl_attach_vtable {
-    u8 unk_00[0x20];
-    struct actor_method attach; /* +0x20 */
-};
-
-struct gl_attach {
-    u8 unk_00[0xC];
-    struct gl_attach_vtable *vtable; /* +0x0C */
-};
-
-struct gl_entity {
-    u8 unk_00[0x18];
-    struct gl_vtable *vtable; /* +0x18 */
-    u8 unk_1C[0x32];
-    u8 tag; /* +0x4E */
-};
-
-union gl_input {
-    u32 held;
-    struct {
-        u16 lo;
-        u16 hi;
-    } half;
 };
 
 /* The direction flag travels as a one-byte struct by value - the ROM
@@ -199,17 +174,8 @@ extern void AddPaletteCycle_fx(struct palette_cycler *self, u16 *targets, const 
 #define FX_CYCLE(lists, rate, count, dir) \
     AddPaletteCycle_fx(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
                 (struct fx_direction){ (dir) })
-extern s32 _call_via_r2(void *self, s32 arg, void *fn);
-extern s32 _call_via_r1(void *self, void *fn);
 
 #define PAL_RAM ((u16 *)PLTT)
-
-/* obj->vtable->slot(obj), through `_call_via_r1`. */
-#define PMF_CALL(obj, slot)                                                    \
-    ({                                                                         \
-        __typeof__(&(obj)->vtable->slot) _m = &(obj)->vtable->slot;            \
-        _call_via_r1((u8 *)(obj) + _m->thisOffset, _m->fn);                     \
-    })
 
 static inline void SetPoint(struct gl_point *point, s32 x, s32 y)
 {
@@ -217,31 +183,20 @@ static inline void SetPoint(struct gl_point *point, s32 x, s32 y)
     point->y = y;
 }
 
-static inline void SpawnNearPlayer(s32 x, s32 y)
-{
-    struct gl_point point;
-    struct level_state *level;
-
-    point.x = x;
-    point.y = y;
-    level = gLevelState;
-    SetCheckpoint(level, GetPlatformExitMirror((struct gobj *)GetBonusPlatform(level)), &point.x);
-}
-
-static inline void RestartPlayerAnim(struct player *p, s32 anim)
+static inline void RestartPlayerAnim(Player *p, s32 anim)
 {
     p->tag = anim;
-    ResetSpriteFrameTimer(p);
-    ResetSpriteFrameIndex(p);
-    SetSpriteAnimDone(p, 0);
+    p->ResetFrameTimer();
+    p->ResetFrameIndex();
+    p->SetAnimDone(0);
 }
 
 static inline void RefreshPlayerTiles(void)
 {
-    void *cache = gPaletteCache;
-    struct player *p = gPlayer;
+    struct palette_cache *cache = gPaletteCache;
+    Player *p = gPlayer;
 
-    LoadPaletteSlot(cache, p->slot, p->anim->records[p->tag].paletteId);
+    LoadPaletteSlot(cache, p->palette, p->bank->anims[p->tag].paletteId);
 }
 
 s32 RunRoom(struct level_progress *self)
@@ -249,7 +204,7 @@ s32 RunRoom(struct level_progress *self)
     s32 ret = 1;
     s32 i;
 
-    ResetPlayerForRoom(gPlayer);
+    gPlayer->ResetForRoom();
     gCamera->target = (struct camera_target *)gPlayer;
     gCamera->mode = ret;
     LoadRoom(gLevelLayers, self->cat);
@@ -290,7 +245,7 @@ s32 RunRoom(struct level_progress *self)
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->mode = 2;
     }
-    gPlayer->slot = GetSpriteAnimPaletteSlot((struct actor *)gPlayer);
+    gPlayer->palette = gPlayer->GetAnimPaletteSlot();
     RefreshPlayerTiles();
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
@@ -298,13 +253,10 @@ s32 RunRoom(struct level_progress *self)
     if (self->cat->kind == ROOM_KIND_ON_FOOT) {
         if ((IsInBonusRound(gLevelState) && (u8)IsInBonusRoom(self)) ||
             (IsInGemPath(gLevelState) && (u8)IsInGemPathRoom(self))) {
-            struct gl_attach *a;
-
-            gPlayer->flags.all &= 0x7F;
+            gPlayer->f.bytes.flags &= 0x7F;
             RestartPlayerAnim(gPlayer, 0x29);
             PlaySfx(gAudioContext, SFX_WARP, 0x100);
-            a = gPlayer->ctrl;
-            _call_via_r2((u8 *)a + a->vtable->attach.thisOffset, 0x29, a->vtable->attach.fn);
+            gPlayer->mover->SetMode(0x29);
             RefreshPlayerTiles();
             ShowHudCounters(gHud);
         }
@@ -320,7 +272,7 @@ s32 RunRoom(struct level_progress *self)
     CommitDispcnt();
     CommitBlendRegs();
 
-    while (!IsRoomExitRequested() && !(gPlayer->flags.all & 1)) {
+    while (!IsRoomExitRequested() && (gPlayer->f.bytes.flags & 1) == 0) {
         ResetObjBuffers();
         UpdateRoomFrame(self);
         UpdateKeys(gInput);
@@ -344,8 +296,8 @@ s32 RunRoom(struct level_progress *self)
             ShowHudCounters(gHud);
         UpdatePartList(gForegroundList);
         UpdatePartList(gUpdateOnlyPartList);
-        if ((u8)PMF_CALL(gPlayer, isNearCamera))
-            PMF_CALL(gPlayer, update);
+        if (gPlayer->IsNearCamera())
+            gPlayer->Update();
         UpdateCrateList(gCrateList);
         UpdatePartList(gTouchableList);
         UpdatePartList(gCollidableList);
@@ -369,11 +321,11 @@ fade:
             point.y = i;
             x = (s32)gLevelState;
             SetCheckpoint((void *)x,
-                          GetPlatformExitMirror((struct gobj *)GetBonusPlatform((void *)x)),
+                          ((Platform *)GetBonusPlatform((struct level_state *)x))->GetExitMirror(),
                           &point.x);
         } else if (!(u8)IsInGemPathRoom(self) && IsInGemPath(gLevelState)) {
             struct gl_point point;
-            struct player *pl;
+            Player *pl;
             MATCH_HOLD_REG(s32, hold, r0);
             MATCH_HOLD_REG(s32, hold1, r1);
 
@@ -397,9 +349,9 @@ fade:
             if (count < gCrateList->activeCount) {
                 list = &gCrateList;
                 do {
-                    struct gl_entity *e = (struct gl_entity *)(*list)->slotArray[i];
+                    Crate *e = (Crate *)(*list)->slotArray[i];
 
-                    if (PMF_CALL(e, m48) == 3 && e->tag == 0xA)
+                    if (e->GetClassId() == 3 && e->kind == 0xA)
                         count++;
                     i++;
                 } while (i < (*list)->activeCount);

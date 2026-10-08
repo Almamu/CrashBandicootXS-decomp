@@ -1,6 +1,8 @@
+#include "player.hpp"
+
+extern "C" {
 #include "core.h"
 #include "actor.h"
-#include "vtable.h"
 #include "level_menu.h"
 #include "hud.h"
 #include "system.h"
@@ -9,15 +11,15 @@
 #include "objects.h"
 #include "level.h"
 #include "globals.h"
-#include "player.h"
+}
 
-/* Built with old_agbcc - see docs/matching/archive/game-loop-old-agbcc.md. */
+/* Built with old_agbcp (old_agbcc as C) - see
+ * docs/matching/archive/game-loop-old-agbcc.md. C++ since the #664
+ * cleanup: the player's IsOnScreen and Draw are virtual calls. */
 
 struct palette_cache;
 struct part_list;
 struct oam_shadow_buffer;
-
-extern void *_call_via_r1(void *arg0, void *arg1);
 
 /* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA
@@ -34,18 +36,8 @@ void UpdateRoomFrame(void *self)
         UpdateHud(gHud);
         DrawPartList(gForegroundList);
 
-        {
-            struct player *p = gPlayer;
-            const struct player_vtable *tbl = p->vtable;
-            // clang-format off
-            if ((u8)(s32)_call_via_r1((u8 *)p + tbl->isOnScreen.thisOffset,
-                                      tbl->isOnScreen.fn) != 0) {
-                // clang-format on
-                struct player *p2 = gPlayer;
-                const struct player_vtable *tbl2 = p2->vtable;
-                _call_via_r1((u8 *)p2 + tbl2->draw.thisOffset, tbl2->draw.fn);
-            }
-        }
+        if (gPlayer->IsOnScreen())
+            gPlayer->Draw();
 
         DrawPartList(gCollidableList);
         DrawPartList(gTouchableList);

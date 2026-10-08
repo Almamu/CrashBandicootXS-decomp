@@ -107,7 +107,7 @@ struct level_layers {
  * `bits0` and copies `bits0`/`bits1` to `bits0Copy`/`bits1Copy` when the
  * room loads; MarkEntityGone and its inline copies set an entity's bit
  * in `bits0Copy` when it is collected, broken or killed, and
- * SetCheckpointAtPlayer copies the two back. The names are room_entities.c's
+ * SetCheckpointAtPlayer copies the two back. The names are room_entities.cpp's
  * (`struct lk_self`); dingodile.c called the object `struct entity_flags`
  * (`bits0Copy` was `bitmap`, the list `struct collect_info`), time_trial.cpp
  * `struct collision_map` (`seen`), the enemy spawners' text_popup.h a
@@ -141,7 +141,7 @@ struct camera_target {
 
 /* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.c):
  * a Q8 position, a Q8 look-ahead offset, the followed object and the
- * mode. run_room.c called it `struct gl_scratch`, action_ctrl_event.c
+ * mode. run_room.cpp called it `struct gl_scratch`, action_ctrl_event.c
  * `struct follow_state` and level_select.c `struct follow_owner`. */
 struct camera {
     s32 x;                        // 0x00 - Q8
@@ -193,10 +193,6 @@ extern void SetEntityFlagsPos(void *self, s32 val);
 extern void DestroyEntityFlags(void *self, s32 flags);
 extern void *InitEntityFlags(void *self);
 
-/* src/level/entity_spawner.cpp: EntitySpawner (include/spawners.hpp).
- * The C callers' prototype: room_entities.c's spawns. */
-extern void SpawnEntity(struct entity_spawner *self, u32 id, const struct level_entity *rec);
-
 /* src/level/game_frame.c */
 extern void UpdateGameFrame(struct level_state *self);
 
@@ -207,8 +203,6 @@ extern void PlayCutscene(void *self, s32 idx);
 /* src/level/level_layers.cpp: LevelLayers's methods (include/bg_layer.hpp)
  * under their C names (cxx_symbols.txt), for the C callers */
 extern void LoadRoom(struct level_layers *self, const struct level_room *args);
-extern void DestroyLevelLayers(struct level_layers *self, u32 flags);
-extern struct level_layers *GetLevelLayers(void);
 extern void SetLevelScroll(struct level_layers *self, s32 x, s32 y);
 extern void CommitLevelScroll(struct level_layers *self);
 extern void ScrollLevelLayers(struct level_layers *self);
@@ -325,7 +319,7 @@ extern void UnpackSaveData(struct level_state *self, void *src);
 extern void *PackSaveData(void *self);
 extern struct level_state *GetLevelState(void);
 
-/* src/level/play_room.c */
+/* src/level/play_room.cpp */
 extern s32 PlayRoom(struct level_progress *self);
 
 /* src/level/room.c */
@@ -335,15 +329,15 @@ extern u8 IsRoomExitRequested(void);
 extern void ResumeRoomAfterPause(struct level_progress *self);
 extern void ResetObjBuffers(void);
 
-/* src/level/room_entities.c */
+/* src/level/room_entities.cpp */
 extern void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
                               const struct level_link_list *links, s32 pos, s32 unused);
 
-/* src/level/room_frame.c */
+/* src/level/room_frame.cpp */
 extern void UpdateRoomFrame(void *self);
 extern void SetupRoomBlend(struct level_ctx *self);
 
-/* src/level/run_room.c */
+/* src/level/run_room.cpp */
 extern s32 RunRoom(struct level_progress *self);
 
 /* src/level/spawn_bosses.cpp */

@@ -118,15 +118,10 @@ extern s32 ClassifySpriteContact(void *part, void *region);
 
 /* src/objects/part_list.cpp */
 extern void DrawPartList(struct part_list *manager);
-extern void DestroyPartList(struct part_list *manager, s32 flags);
-extern struct part_list *InitPartList(struct part_list *manager, s32 count);
 
 /* src/objects/part_list_cull.cpp */
 extern void CullPartList(struct part_list *manager);
 extern void ClearPartList(struct part_list *manager);
-
-/* src/objects/platform.cpp */
-extern s32 GetPlatformExitMirror(struct gobj *self);
 
 /* src/objects/player_contact.cpp */
 extern void CheckPlayerContact(void *part);

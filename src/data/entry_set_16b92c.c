@@ -11,7 +11,7 @@
 extern const u32 gActionCtrlMotionEntries[][2];
 extern const u32 gPlayerCtrlMotionEntries[][2];
 
-/* The sets PlayRoom (play_room.c) gives the two HUD widgets it
+/* The sets PlayRoom (play_room.cpp) gives the two HUD widgets it
  * builds, through SetCtrlAnimSet (which stores them at +0x04). */
 const struct entry_set gActionCtrlMotionSet = {
     gActionCtrlMotionEntries, 0x100,

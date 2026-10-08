@@ -90,7 +90,7 @@ extern struct hud_counter *gHud;
 extern u8 gJetpackPlayerInactive;
 
 /* sym_iwram.txt: the level's objects. game_frame.c builds the level
- * state and the entity flags; PlayRoom (play_room.c) builds the rest per
+ * state and the entity flags; PlayRoom (play_room.cpp) builds the rest per
  * room. The structs are in level_state.h (struct level_state), level.h
  * (struct level_layers, entity_flags, camera), box_part.h (struct
  * part_list) and crates.h (struct pool_manager, the crate list). */

@@ -78,7 +78,7 @@ PartList::PartList(s32 n)
         items[i] = 0;
 }
 
-/* InitCrateList: an empty list for `n` sprites (play_room.c's
+/* InitCrateList: an empty list for `n` sprites (play_room.cpp's
  * `InitCrateList(OperatorNew(0x818), 0xC0)`), the slots cleared and every
  * node on the free list. */
 CrateList::CrateList(s32 n)

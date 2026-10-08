@@ -74,8 +74,7 @@ struct pool_init_node {
  * `freeListArray` is `capacity` free-list entries threaded into a
  * singly-linked list, `freeListHead` pointing at its first still-free
  * entry. ResetCrateList and InitCrateList saw it as `struct pool_init`.
- * The C view of crate_list.hpp's CrateList, for the C files (play_room.c,
- * run_room.c, ...) and three of crate_break.cpp's loops. */
+ * The C view of crate_list.hpp's CrateList, for the C files and three of crate_break.cpp's loops. */
 struct pool_manager {
     s32 activeCount;                 // 0x000
     s32 capacity;                    // 0x004
@@ -112,9 +111,6 @@ extern void UpdateTntCountdown(struct crate *self);
 
 /* src/crates/crate.cpp */
 extern void ResolvePlayerCollisions(void);
-extern struct crate *GetCrateAbove(struct crate *self);
-extern void SetCrateBelow(struct crate *self, struct crate *val);
-extern void SetCrateAbove(struct crate *self, struct crate *val);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
  * (include/crate.hpp). */
 
@@ -122,17 +118,11 @@ extern void SetCrateAbove(struct crate *self, struct crate *val);
 extern u8 PlayerHitboxOverlapsAt(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
                                  s32 xOffset, s32 yOffset);
 
-/* src/crates/crate_list.cpp */
-extern void DestroyCrateList(struct pool_manager *manager, s32 flags);
-
 /* src/crates/crate_list_draw.cpp */
 extern void DrawCrateList(struct pool_manager *manager);
 
 /* src/crates/crate_list_reset.cpp */
 extern void ResetCrateList(struct pool_manager *m);
-
-/* src/objects/part_list.cpp (for ROM order) */
-extern struct pool_manager *InitCrateList(struct pool_manager *m, s32 count);
 
 /* src/crates/crate_list_update.cpp */
 extern void UpdateCrateList(struct pool_manager *manager);

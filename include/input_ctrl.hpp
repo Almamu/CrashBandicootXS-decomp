@@ -12,7 +12,7 @@
 #include "level_select.hpp"
 
 /* The input controller (gInputCtrlVtable, struct input_ctrl in player.h):
- * the player's controller in room kind 2 (play_room.c creates it), where
+ * the player's controller in room kind 2 (play_room.cpp creates it), where
  * the player uses sprite bank 2 (Crash riding a hover vehicle) and the
  * D-pad alone moves him. Each frame Update reads the D-pad, queues the
  * target's motion entries (up/down pick `motionY`, left/right `motionX`

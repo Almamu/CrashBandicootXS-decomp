@@ -1589,7 +1589,7 @@ void Crate::BlastNearby(s32 dist)
     blastState = 0xff;
 }
 
-/* The crate list's update pass (run_room.c): DetonateNitroCrates, then
+/* The crate list's update pass (run_room.cpp): DetonateNitroCrates, then
  * each crate of the list is updated, and a crate that is gone is removed
  * and deleted; all of it again while the list keeps changing. */
 void UpdateCrates(void)

@@ -1,12 +1,16 @@
+#include "crate.hpp"
+#include "spawners.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "match.h"
-#include "actor_self.h"
 #include <agb_syscall.h>
 #include "crates.h"
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
@@ -37,16 +41,17 @@
  * never-reset-per-group counter as its own `self` argument, indexing
  * `gEntitySpawner`'s table.
  *
- * Second half (skipped when `links` is NULL): each actor in
+ * Second half (skipped when `links` is NULL): each crate in
  * `gCrateList` whose id is a link's `from` is chained
- * (`SetCrateAbove`/`SetCrateBelow`) to the actor with the link's `to` id,
+ * (`Crate::SetAbove`/`SetBelow`) to the crate with the link's `to` id,
  * following further links while `to` isn't spawned. Then each link whose
- * `from` actor doesn't exist resolves its `to` chain to a spawned actor
- * and moves that actor's neighbour chain (`GetCrateAbove`/`SetEntityPos`)
- * up by its `+0x10` method's height.
+ * `from` crate doesn't exist resolves its `to` chain to a spawned crate
+ * and moves that crate's stack (`GetAbove`/`SetEntityPos`) up by the
+ * height of its box (`GetBounds()->h`, a virtual call).
  *
- * Built with old_agbcc (room_entities.o is on OLD_AGBCC_OBJS; this file
- * holds only this function). Earlier passes had it NAKED (153, then 219
+ * C++ since the #664 cleanup (include/crate.hpp's Crate), built with
+ * old_agbcp (room_entities.o is on OLD_AGBCC_OBJS; this file holds only
+ * this function; agbcp loads the group count into another register). Earlier passes had it NAKED (153, then 219
  * halfwords off); the third pass (docs/matching/archive/big-naked-retry-3.md)
  * closed it:
  * - old_agbcc's expand_end_loop rotation does not stop at a nested
@@ -60,7 +65,7 @@
  *   and the "got an actor" exits jump to `move:`. The dead
  *   `mov r0, #0; cmp r0, #0` tests are `got` tests after gcse has
  *   proved `got` is 0 on every path that reaches them; `got = 0` has to
- *   sit before the loop for that. `if (got && actor != NULL)` lets the
+ *   sit before the loop for that. `if (got && actor != 0)` lets the
  *   no-link exit jump straight past the move.
  * - No `continue` before `move:`: loop.c moves a block that jumps out
  *   of a loop to just before its target when it finds a barrier there,
@@ -69,26 +74,18 @@
  *   scope (stack-slot order), `n > 0` guard + do-while for the link
  *   scan, `struct lk_point *pp = &p` for the move call, and a
  *   `u32 zero` for the DMA fills.
- * - The first search's id is pinned to r1 (see the comment there).
+ * - The first search's id is pinned to r1 (see the comment there); the
+ *   C++ still needs it.
  */
 struct lk_point {
     s32 x;
     s32 y;
 };
 
-struct lk_vtable {
-    u8 unk_00[0x10];
-    struct actor_method height; /* +0x10 */
-};
-
-struct lk_actor {
-    struct lk_point pos; /* +0x00 */
-    u16 id;              /* +0x08 */
-    u8 unk_0A[0xE];
-    struct lk_vtable *vtable; /* +0x18 */
-};
-
-extern u8 *_call_via_r1(void *self, void *fn);
+static inline Crate *Slot(s32 i)
+{
+    return (Crate *)gCrateList->slotArray[i];
+}
 
 void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list *list,
                        const struct level_link_list *links, s32 posArg, s32 unused)
@@ -116,19 +113,19 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
 
         for (k = 0; k < group->count; k++) {
             if (!(u8)IsEntityIdGone(self, counter))
-                SpawnEntity(gEntitySpawner, counter, &group->entities[k]);
+                gEntitySpawner->Spawn(counter, &group->entities[k]);
             counter++;
         }
     }
 
-    if (links == NULL)
+    if (links == 0)
         return;
     n = links->count;
     lk = links->links;
 
     {
         for (i = gCrateList->activeCount - 1; i >= 0; i--) {
-            struct lk_actor *actor = (struct lk_actor *)gCrateList->slotArray[i];
+            Crate *actor = Slot(i);
             u16 id = actor->id;
             s32 j;
 
@@ -143,11 +140,11 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                         s32 m;
 
                         for (k = gCrateList->activeCount - 1; k >= 0; k--) {
-                            struct lk_actor *other = (struct lk_actor *)gCrateList->slotArray[k];
+                            Crate *other = Slot(k);
 
                             if (to == other->id) {
-                                SetCrateAbove((struct crate *)actor, (struct crate *)other);
-                                SetCrateBelow((struct crate *)other, (struct crate *)actor);
+                                actor->SetAbove(other);
+                                other->SetBelow(actor);
                                 done = 1;
                                 break;
                             }
@@ -180,7 +177,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
             s32 k;
             s32 k2;
             s32 k3;
-            struct lk_actor *actor;
+            Crate *actor;
             s32 to;
             s32 missing;
             s32 next;
@@ -188,7 +185,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
             s32 m;
 
             for (k = 0; k < gCrateList->activeCount; k++) {
-                if (((struct lk_actor *)gCrateList->slotArray[k])->id == from) {
+                if ((Slot(k))->id == from) {
                     found = 1;
                     goto chk;
                 }
@@ -198,7 +195,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                 continue;
 
             to = (u16)lk[j].to;
-            actor = NULL;
+            actor = 0;
             got = 0;
             for (;;) {
                 missing = 1;
@@ -215,7 +212,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                                  * the id is allocated first and takes r0. */
                                 MATCH_HOLD_REG(u16, aid, r1);
 
-                                actor = (struct lk_actor *)gCrateList->slotArray[k2];
+                                actor = Slot(k2);
                                 aid = actor->id;
                                 if (aid == to) {
                                     got = 1;
@@ -230,7 +227,7 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                     goto move;
                 if (missing) {
                     for (k3 = 0; k3 < gCrateList->activeCount; k3++) {
-                        struct lk_actor *a = (struct lk_actor *)gCrateList->slotArray[k3];
+                        Crate *a = Slot(k3);
 
                         if (a->id == to) {
                             actor = a;
@@ -247,18 +244,17 @@ void SpawnRoomEntities(struct entity_flags *self, const struct level_entity_list
                 to = next;
             }
         move:
-            if (got && actor != NULL) {
-                struct actor_method *hm = &actor->vtable->height;
-                s32 lift = INT_TO_Q8(_call_via_r1((u8 *)actor + hm->thisOffset, hm->fn)[5] + 1);
+            if (got && actor != 0) {
+                s32 lift = INT_TO_Q8(actor->GetBounds()->h + 1);
                 struct lk_point p;
                 struct lk_point *pp = &p;
 
                 do {
-                    p.x = actor->pos.x;
-                    pp->y = actor->pos.y + lift;
+                    p.x = actor->x;
+                    pp->y = actor->y + lift;
                     SetEntityPos((struct actor *)actor, p.x, pp->y);
-                    actor = (struct lk_actor *)GetCrateAbove((struct crate *)actor);
-                } while (actor != NULL);
+                    actor = actor->GetAbove();
+                } while (actor != 0);
             }
         }
     }
