@@ -526,6 +526,12 @@ counts them by kind) and what the C++ still needs.
 | `src/level/spawn_enemies.cpp` | the 26 enemy spawners (C linkage): `new EnemyCtrl`, `hdr->Attach(part)` | 26 | old_agbcp | 22 pins, 6 asm, 6 uses, 1 hold, 1 keep, 1 mem use, 1 asm label, 52 `POPUP_ATTACH` slot calls -> 1 pin, 5 uses, 1 hold, 1 keep, 1 mem use (all `SpawnFlamethrowerLabAssistant`'s) | 9b |
 | `src/frontend/starfield.cpp` | `Starfield` (include/frontend.hpp) | 7 | **old_agbcp** (was agbcc) | 16 pins, 5 `asm` -> 0 | 10c |
 | `src/frontend/credits.cpp` | `ContinuePrompt`'s `Draw`, `Blink`, `CommitFrame`, destructor, `Run`; `Credits` (include/frontend.hpp) | 13 | old_agbcp | 4 pins, 1 use, 1 volatile keep, 1 barrier, a retyped store -> 1 pin, 1 use, 1 volatile keep, 1 barrier | 10c |
+| `src/menus/pause_menu.cpp` | `PauseMenu::Run`, constructor, destructor (include/menus.hpp) | 3 | **old_agbcp** (was agbcc) | 25 pins, 3 `asm`, 1 `.pool` -> 0 | 10d |
+| `src/menus/pause_menu_pages_init.cpp` | `PauseMenu`'s five `Init*Page`s | 5 | old_agbcp | `UPDATE_ICON_FRAME_NIBBLE` (4 pins, 1 `asm`) -> 0 | 10d |
+| `src/menus/power_dialog.cpp` | `PowerDialog::Show`, constructor | 2 | **old_agbcp** (was agbcc) | 24 pins, 2 `asm`, 3 consts -> 0 | 10d |
+| `src/menus/power_dialog_draw.cpp` | `PowerDialog`'s `Draw`, `Animate`, `CommitFrame`, destructor; the four `Show*Dialog`s and the save block's counts (C linkage) | 4 + 12 | **old_agbcp** (was agbcc) | 18 pins, 4 `asm`, 6 retyped reads -> 0 | 10d |
+| `src/menus/continue_prompt_init.cpp` | `ContinuePrompt`'s constructor (include/frontend.hpp) | 1 | **old_agbcp** (was agbcc) | 13 pins, 4 `asm`, 1 keep -> 0 | 10d |
+| `src/menus/continue_prompt.cpp` | `ContinuePrompt::InitGraphics`, `Loop` | 2 | old_agbcp | 1 use, 1 keep -> the same | 10d |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -1859,7 +1865,7 @@ Project-wide: `MATCH_HOLD_REG` 1249 -> 1230, instruction-emitting `asm`
 |---|---:|---|---|
 | `Starfield` | 0x14 | none | starfield.cpp |
 | `Credits` | 0x98 | none | credits.cpp |
-| `ContinuePrompt` | 0x24 | none | credits.cpp (`Draw`, `Blink`, `CommitFrame`, the destructor, `Run`); its constructor and `Loop` are still C (src/menus/continue_prompt*.c) |
+| `ContinuePrompt` | 0x24 | none | credits.cpp (`Draw`, `Blink`, `CommitFrame`, the destructor, `Run`); its constructor, `InitGraphics` and `Loop` are C++ since part 10d (src/menus/continue_prompt*.cpp) |
 
 - **The classes.** All three are plain classes with a constructor and a
   destructor. `Starfield`'s `particles` and `tileBuffer` are `new
@@ -1873,7 +1879,9 @@ Project-wide: `MATCH_HOLD_REG` 1249 -> 1230, instruction-emitting `asm`
   first is an opaque tag (frontend.h) and the others went. The continue
   prompt keeps menus.h's `struct continue_prompt`, which its C files use.
   frontend.h and menus.h keep the C prototypes (the C names) for the C
-  callers (game_frame.c, continue_prompt.c, title_screen*.c).
+  callers (game_frame.c, continue_prompt.c, title_screen*.c). Part 10d
+  converted the continue prompt's C files, and `struct continue_prompt`
+  went.
 - **The fonts are still C** (src/text/): the font calls stay spelled out
   through the record's slots.
 
@@ -1901,6 +1909,98 @@ ranges give `&gPaletteCache` and `&gObjVramCursor` r4, `&gSmallFont` r6).
 C idioms kept: `DrawText`'s and `UpdateText`'s gotos, the `bg0cnt =
 bg0cnt` self-initialisation and the `UpdateText` font slot calls written
 out.
+
+### The pause menu, the power dialog and the continue prompt (part 10d)
+
+Part 10d in numbers: six objects of src/menus/ (pause_menu.c,
+pause_menu_pages_init.c, power_dialog.c, power_dialog_draw.c,
+continue_prompt_init.c and continue_prompt.c), 29 functions, two classes in
+the new include/menus.hpp and the rest of `ContinuePrompt`
+(include/frontend.hpp). Project-wide: `MATCH_HOLD_REG` 1209 -> 1125,
+instruction-emitting `asm` 128 -> 114, `MATCH_CONST` 22 -> 19, `MATCH_KEEP`
+32 -> 31, `.pool` in asm 6 -> 5 and retyped field reads 76 -> 70. Four
+objects move to `OLD_AGBCC_OBJS` (pause_menu.o, power_dialog.o,
+power_dialog_draw.o, continue_prompt_init.o); the other two were old_agbcc
+C already. Every function but `ContinuePrompt::Loop` matches with no
+workaround.
+
+| Class | Size | Vtable | Code |
+|---|---:|---|---|
+| `PauseMenu` | 0xD4 | none | pause_menu.cpp, pause_menu_pages_init.cpp; its drawing, input and `InitInfo` are still C (pause_menu_draw.c, _gems.c, _info.c, _loop.c, _pages_draw.c, _powers.c, _widgets.c) |
+| `PowerDialog` | 0x2C | none | power_dialog.cpp, power_dialog_draw.cpp; its `Loop` is still C (power_dialog_loop.c) |
+| `ContinuePrompt` | 0x24 | none | continue_prompt_init.cpp (the constructor), continue_prompt.cpp (`InitGraphics`, `Loop`), credits.cpp |
+
+- **The classes.** All three are plain classes with a constructor and a
+  destructor; their icons are `UiSprite`s. `RunPauseMenu` and
+  `ShowPowerDialog` are the static `PauseMenu::Run` and
+  `PowerDialog::Show`: `new X`, its loop, `delete`. The destructors are
+  `delete icon` for each icon (the C spelled out the slot-10 call with 3),
+  and the pause menu's palette cache is `new PaletteCache` and `delete`
+  (through casts: gPaletteCache is still a `struct palette_cache *`).
+- **The C views stay** for the C files left: pause_menu.h's `struct
+  pause_menu` and menus.h's `struct power_dialog`, with size checks in
+  menus.hpp. The plain-C files of the two classes (no C++ trait: the pause
+  menu's drawing and input, `PowerDialogLoop`) call the methods by their C
+  names; the C++ calls them as methods (`InitInfo`, `Loop`), mapped in
+  cxx_symbols.txt. menus.h's `struct continue_prompt` went: no C file uses
+  it any more.
+- **The free functions** in power_dialog_draw.cpp (the four `Show*Dialog`
+  wrappers, `GetProgressLives` and the `Count*` tallies of the save block)
+  keep C linkage through menus.h; game_frame.c, save_menu_ui.c and
+  graphics.cpp call them.
+- **menus.h's dead prototypes went:** 91 C names of C++ methods that no C
+  file, vtable or C++ file uses (the level select's, the camera lead's,
+  the continue prompt's, and the new classes'). 54 are left: the vtables'
+  slots, the C callers' and the free functions.
+- **The fonts are still C** (src/text/): the font calls stay spelled out.
+
+What made the C++ match:
+
+- **The blend and display registers** (BLDCNT, BLDY, DISPCNT) are bitfield
+  stores into `union blend`, `struct bldy` and a `dispcnt_bits` view, as in
+  the level select. Under old_agbcp each constant is loaded before its
+  byte (`movs r0, #0xc0; ldrb r1`), and CSE shares the 1 and the 16 with
+  DISPCNT's BG0 and OBJ bits, as the ROM does. The C (built with agbcc)
+  pinned every one of those registers and spelled the `str; adds #4` of the
+  register writes and the constants' order in `asm`; that is most of the
+  pins and `asm` this part removes.
+- **The icon set-up** (`palette = GetAnimPaletteSlot()`) is a plain
+  bitfield store; `UPDATE_ICON_FRAME_NIBBLE` (pause_menu.h, 4 pins and a
+  `mov #0x10; neg` asm) and the unused `SET_ICON_FRAME_NIBBLE` went.
+- **A sprite's bank** goes through `SetIconBank` (menus.hpp), a store
+  through a pointer to the member, as level_select.hpp's `SetBankNow`
+  (`bank` is a union member).
+- **`slot = new UiSprite` and the slot's address:** `blinkEyes = new
+  UiSprite; s = blinkEyes;` computes the field's address before the call
+  and keeps the result in r0 for the next stores; `powerIcons[i] = icon =
+  new UiSprite` does the same in a loop (the C needed a comma expression).
+  The ROM's `subs r4, #8` for `&blinkEyes`, after `r4 = &blend`, is
+  reload's move2add (the two pseudos got the same register), not something
+  to write: the C wrote `(u8 *)bldcntShadow - 8`.
+- **The destructor's three icon loops** each have their own counter: with
+  one shared `i`, the counter and the strength-reduced pointer swap r4 and
+  r5.
+- **`SetEntityPixelPos` is called out of line** in the pause pages: it is
+  `Entity::SetPixelPos`, an inline method, so the code calls the C name
+  (as level_select.cpp does); the pause menu's eyes use the inline method,
+  `SetPixelPos(119, 94)`, which the ROM inlines.
+- **The counts** (`CountGoldRelics`, `CountSapphireRelics`, `CountGems`,
+  `CountClearGems`, `CountCrystals`) are plain loops over the save block's
+  records (`levels[i].h.time`, a `level_save_b` byte with the two gem bits
+  named), where the C pinned 18 registers and computed the threshold
+  addresses in `asm`.
+- **The rows:** `if (gLevelState->timeTrial) rowCount = 5; else rowCount =
+  4;` places the literal pool after the `b` as the ROM does; the C needed
+  a `.pool` in `asm` (the ternary loads 4 first).
+
+Kept, each with a comment: `ContinuePrompt::Loop`'s `MATCH_USE(audio)`
+(one more reference, so `audio` outranks the pair counter for r7) and its
+`MATCH_KEEP(k)` (a fresh shift for the START test, whose `u16` result is
+the 0 the ROM then stores into `selection`); without either, the loop
+differs, also in C++. C idioms kept: `RunPauseMenu`'s `mgr_12c` accessor
+(the ROM builds the font's 0x12c offset again for each read), the time
+trial page's byte offset into the save block, and `CountGems`' shifts of
+the colored-gem flags.
 
 ### The entity family is done
 
@@ -1944,20 +2044,21 @@ player, then the first item here, is C++ since part 8):
   level_select_pages.c), are C++ since part 10.
 - ~~**The enemy spawners**~~ (level/spawn_enemies.c): C++ since part 9b,
   with the effect-part spawner and the other level spawners since part 9.
-- **The C prototypes of C++ methods with no C caller**: about 440 left
-  in objects.h, crates.h, player.h, menus.h, gfx.h, bosses.h and
-  pickups.h (the C names the vtables and C files use stay). Part 9b
-  dropped enemies.h's and the constructors'.
+- **The C prototypes of C++ methods with no C caller**: about 350 left
+  in objects.h, crates.h, player.h, gfx.h, bosses.h and pickups.h (the C
+  names the vtables and C files use stay). Part 9b dropped enemies.h's and
+  the constructors', part 10d menus.h's.
 - **The 3D actors** (`struct actor_self`, vtable pointer at +0x50) and their
   pointer-to-member tables (src/data/actor_pmf_*.c, `ACTOR_PMF_CALL`):
   src/actor/ (actor_anim.c alone has 48 methods), the vehicle levels
   (src/vehicle/: the jetpack, polar and yeti files) and the 3D bosses
   (airship*.c, hovercraft*.c).
 - **The rest with C++ traits**: the background layers (bg_layer*.c), the
-  fonts (src/text/), the menus and frontend screens (pause menu, power
-  dialog, save menu, title screen; the language select and the logo
-  actor are C++ since part 10b, the starfield, the credits and part of
-  the continue prompt since part 10c), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
+  fonts (src/text/), the menus and frontend screens (save menu, title
+  screen; the language select and the logo actor are C++ since part 10b,
+  the starfield, the credits and part of the continue prompt since part
+  10c, the pause menu, the power dialog and the rest of the continue
+  prompt since part 10d), the cutscene player, the HUD, `Ctrl::Update` (`UpdateCtrl`, an empty function
   in system/boot.c) and the room code (play_room.c, run_room.c).
 
 ### Next batches
@@ -2008,10 +2109,12 @@ PR, as before):
    language_select.c and language_select_setup.c~~ (part 10b: the logo
    actor, the first `ActorSelf`, and the language select),
    ~~starfield.c and credits.c~~ (part 10c: `Starfield`, the credits and
-   the continue prompt's last methods), then title_screen_init.c and
-   title_screen.c (`CompanyLogos`'s other methods and the title screen),
-   then the pause menu and the power dialog (menus/pause_menu*.c,
-   power_dialog*.c, continue_prompt*.c).
+   the continue prompt's last methods), ~~the pause menu and the power
+   dialog~~ (part 10d: pause_menu.c, pause_menu_pages_init.c,
+   power_dialog.c, power_dialog_draw.c and continue_prompt*.c, the objects
+   with C++ traits; the classes' plain-C files stay C), then
+   title_screen_init.c and title_screen.c (`CompanyLogos`'s other methods
+   and the title screen).
 9. **The 3D actors** (part 11 onwards): `ActorSelf` (vtable pointer at
    +0x50; part 10b declared it, include/actor_self.hpp), actor*.c first,
    then the vehicles and the 3D bosses; the PMF tables become `const
@@ -2378,3 +2481,17 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   spelling changes that, and the C's `MATCH_USE_MEM` stack slot is still
   the way (`SpawnFlamethrowerLabAssistant`'s mirror byte address, part
   9b).
+- **A field address the ROM forms from another field's** (`subs r4, #8`
+  after `r4 = this + 0xc8`) is reload's move2add: the two pseudos got the
+  same hard register, and the second constant offset became an add to the
+  first. Get the register allocation right and it follows; there is no
+  source arithmetic to write (`PauseMenu::PauseMenu`, part 10d).
+- **A strength-reduced loop's counter and pointer** swap registers when
+  several loops share one counter variable: give each loop its own
+  (`~PauseMenu`, part 10d).
+- **`a[i] = p = new X`** computes the slot's address before the
+  allocation, like `gX = new X` (part 9), and keeps `p` in r0 for the stores
+  after it (the pause menu's icons, part 10d).
+- **A union of `u16` and a `u16` bitfield struct takes a word** (a struct
+  is 4-aligned on ARM): a padding field after it must go (`union
+  MenuDispcnt`, part 10d).

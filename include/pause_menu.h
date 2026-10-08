@@ -4,7 +4,6 @@
 #include "menus.h"
 #include "graphics_package.h"
 #include "objects.h" /* GetSpriteAnimPaletteSlot */
-#include "match.h"
 
 /* A small `struct actor`-derived on-screen icon: the first 0x1c bytes
  * are a plain `struct actor` (see actor.h), then a second keyframe-
@@ -37,8 +36,10 @@ struct settings_icon_actor {
  * edit `musicVolume`/`soundVolume` in 5% steps, and PauseMenuLoop
  * returns the confirmed row's type. On the right it cycles five info
  * pages every 180 frames (`page`, AnimatePauseMenu): crystals,
- * powers, gems, relics and the level's time trial. Formerly
- * `struct pause_screen_results`. This
+ * powers, gems, relics and the level's time trial. This is the C view
+ * of class PauseMenu (menus.hpp, #664 part 10d), for the pause menu's C
+ * files (pause_menu_draw.c, _gems.c, _info.c, _loop.c, _pages_draw.c,
+ * _powers.c and _widgets.c). Formerly `struct pause_screen_results`. This
  * reconciles three previously-separate partial views of the exact same
  * 0xd4-byte allocation (confirmed by the real call chain: RunPauseMenu
  * allocates it with `OperatorNew(0xd4)`, passes it to InitPauseMenu,
@@ -46,7 +47,7 @@ struct settings_icon_actor {
  * the five Init*Page functions - and separately InitPauseMenu also passes
  * it to CommitPauseMenuFrame/PauseMenuLoop, which is the pause_menu_pages_draw.c/
  * pause_menu_widgets.c fields' own consumer):
- * - `struct pause_menu` (src/menus/pause_menu_pages_init.c,
+ * - `struct pause_menu` (src/menus/pause_menu_pages_init.cpp,
  *   originally local to that file) - the icon-widget fields.
  * - `struct pause_screen_row_counts` (src/menus/pause_menu_widgets.c) -
  *   the per-row edit-count fields.
@@ -116,42 +117,5 @@ struct pause_menu {
     u8 unused_d2[2];
 };
 COMPILE_TIME_ASSERT(pause_menu_h, sizeof(struct pause_menu) == 0xd4);
-
-/* Sets `palette`'s low nibble from GetSpriteAnimPaletteSlot's result, keeping the
- * high nibble - the recurring last step of every icon constructor that
- * touches a `struct settings_icon_actor` (see src/menus/
- * pause_menu_pages_init.c and src/menus/power_dialog.c). Written with
- * explicit register pins (matching the SUB_8006600_* macros in
- * src/menus/power_dialog_draw.c) because gcc's constant-propagation
- * otherwise folds the ROM's two-instruction "movs r1,#0x10 / rsbs
- * r1,r1,#0" -0x10 load into a single `sub` relative to the just-used
- * 0xf mask, which the ROM never does. */
-#define UPDATE_ICON_FRAME_NIBBLE(iconExpr) \
-    do { \
-        MATCH_HOLD_REG(s32, _ret, r0) = GetSpriteAnimPaletteSlot(&(iconExpr)->base); \
-        MATCH_HOLD_REG(u8 *, _addr, r2) = &(iconExpr)->palette; \
-        MATCH_HOLD_REG(s32, _mask, r1); \
-        MATCH_HOLD_REG(u8, _byte, r3); \
-        _mask = 0xf; \
-        _ret &= _mask; \
-        asm volatile("mov %0, #0x10\n\tneg %0, %0" : "=r" (_mask)); \
-        _byte = *_addr; \
-        _mask &= _byte; \
-        _mask |= _ret; \
-        *_addr = _mask; \
-    } while (0)
-
-/* `palette` viewed as the nibble pair it is: the low nibble is the
- * GetSpriteAnimPaletteSlot-derived frame bits (same byte as level_menu.h's
- * `struct sprite` `palette:4`). Assigning the bitfield gives the ROM's
- * `and #0xf / mov #0x10; neg / and / orr` sequence with no pins
- * (pause_menu_pages_init.c, save_menu_draw.c). */
-struct icon_frame_nibble {
-    u8 lo:4;
-    u8 hi:4;
-};
-
-#define SET_ICON_FRAME_NIBBLE(iconExpr) \
-    (((struct icon_frame_nibble *)&(iconExpr)->palette)->lo = GetSpriteAnimPaletteSlot(&(iconExpr)->base))
 
 #endif /* __PAUSE_MENU_H__ */

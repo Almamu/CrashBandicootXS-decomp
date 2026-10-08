@@ -331,7 +331,7 @@ see [levels.md](./levels.md).
 ### `gSpriteBankTable` (747,188 B): sprite-bank table + second GAX2 data set
 
 This is the "master asset table" of docs/rom_map.md. Its structure,
-from the matched readers (`RunPauseMenu` in `pause_menu.c`, `GetSpriteTileBase`/
+from the matched readers (`RunPauseMenu` in `pause_menu.cpp`, `GetSpriteTileBase`/
 `GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `sprite_obj.c`,
 `affine_sprite_pieces.c`, and the `**gSpriteBankSet + N` users):
 

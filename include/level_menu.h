@@ -89,7 +89,9 @@ struct level_save_h {
 /* The same word, read a byte at a time. */
 struct level_save_b {
     u8 cleared:1;
-    u8 unk_0_1:7;
+    u8 flag1:1;
+    u8 flag2:1;
+    u8 unk_0_3:5;
     u8 unk_1[3];
 };
 

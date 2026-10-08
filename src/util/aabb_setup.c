@@ -40,7 +40,7 @@ s32 GetLives(struct level_state *self)
  * store that's really in the ROM (confirmed: the two address
  * computations and both stores are distinct instructions, not a
  * disassembly artifact). The address is recomputed fresh for each
- * store via an inline-asm anchor (matching power_dialog_draw.c's established
+ * store via an inline-asm anchor (matching power_dialog_draw.cpp's established
  * technique for stopping gcc from CSE-ing/dead-store-eliminating a
  * repeated address expression, see docs/matching.md, "Matching
  * decompilation") - plain double `struct` field assignment collapses

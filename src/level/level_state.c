@@ -1047,7 +1047,7 @@ void UnpackSaveData(struct level_state *self, void *src)
 /* Packs `self->0x74`/`0x6c`/`0x78` back into the halfword at
  * `self->0x14c`/`0x14d` - the inverse of `UnpackSaveData` above - and
  * returns the `self->0x14c` snapshot pointer (matching the `void *`
- * externs used at its call sites in pause_menu.c/save_menu_input.c).
+ * externs used at its call sites in pause_menu.cpp/save_menu_input.c).
  *
  * Register-pinned to reproduce three ROM-specific shapes plain C
  * phrasing alone didn't reach (see docs/workflow.md step 7):

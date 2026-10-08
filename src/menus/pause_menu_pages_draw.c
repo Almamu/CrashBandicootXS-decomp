@@ -98,8 +98,8 @@ void DrawPauseMenuPageTitle(struct pause_menu *self)
  * for its own top-level object - see include/pause_menu.h for
  * the full reconciled struct (this function only touches bldcnt/
  * bldy/dispcnt). Distinct from - and much larger than -
- * `struct power_dialog` (src/menus/power_dialog_draw.c/power_dialog_loop.c),
- * which is the smaller per-widget object `src/menus/power_dialog_draw.c`'s
+ * `struct power_dialog` (src/menus/power_dialog_draw.cpp/power_dialog_loop.c),
+ * which is the smaller per-widget object `src/menus/power_dialog_draw.cpp`'s
  * already-matched `CommitPowerDialogFrame` uses for the same job at different
  * offsets. */
 

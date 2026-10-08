@@ -9,7 +9,7 @@
 #include "menus.h"
 #include "globals.h"
 
-/* PauseMenuLoop alone: ROM-address-adjacent to pause_menu.c's
+/* PauseMenuLoop alone: ROM-address-adjacent to pause_menu.cpp's
  * DestroyPauseMenu on one side and the already-matched AnimatePauseMenu
  * (pause_menu_draw.c) on the other, so it needs its own object file
  * to keep both neighbors' link-order positions intact (docs/workflow.md

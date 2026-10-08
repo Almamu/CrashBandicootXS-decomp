@@ -619,7 +619,7 @@
    ],
    "consumer_files": [
     "menus/pause_menu_pages_draw.c",
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -643,7 +643,7 @@
     "InitPausePowersPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -667,7 +667,7 @@
     "InitPausePowersPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -693,7 +693,7 @@
    ],
    "consumer_files": [
     "menus/pause_menu_gems.c",
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -717,7 +717,7 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -743,7 +743,7 @@
    ],
    "consumer_files": [
     "menus/pause_menu_gems.c",
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -768,7 +768,7 @@
     "InitPauseTimeTrialPage"
    ],
    "consumer_files": [
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -794,7 +794,7 @@
    ],
    "consumer_files": [
     "menus/pause_menu_pages_draw.c",
-    "menus/pause_menu_pages_init.c"
+    "menus/pause_menu_pages_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -818,7 +818,7 @@
     "InitPauseMenu"
    ],
    "consumer_files": [
-    "menus/pause_menu.c"
+    "menus/pause_menu.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -838,7 +838,7 @@
     "InitPauseMenu"
    ],
    "consumer_files": [
-    "menus/pause_menu.c"
+    "menus/pause_menu.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -859,7 +859,7 @@
     "RunPauseMenu"
    ],
    "consumer_files": [
-    "menus/pause_menu.c"
+    "menus/pause_menu.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2269,7 +2269,7 @@
    "consumer_files": [
     "frontend/language_select_setup.cpp",
     "menus/level_select.c",
-    "menus/power_dialog.c",
+    "menus/power_dialog.cpp",
     "save/save_menu_ui.c"
    ],
    "ptr_words_code": 0,
@@ -2983,9 +2983,9 @@
    "consumer_files": [
     "menus/level_select.c",
     "level/spawn_bosses.cpp",
-    "menus/power_dialog_draw.c",
+    "menus/power_dialog_draw.cpp",
     "menus/pause_menu_info.c",
-    "menus/pause_menu_pages_init.c",
+    "menus/pause_menu_pages_init.cpp",
     "level/level_query.c",
     "level/run_room.c"
    ],
@@ -4396,7 +4396,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.c"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4420,7 +4420,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.c"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4444,7 +4444,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.c"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4468,7 +4468,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "menus/continue_prompt.c"
+    "menus/continue_prompt.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4492,7 +4492,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt_init.c"
+    "menus/continue_prompt_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4512,7 +4512,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt_init.c"
+    "menus/continue_prompt_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4532,7 +4532,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "menus/continue_prompt_init.c"
+    "menus/continue_prompt_init.cpp"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -5072,7 +5072,7 @@
    ],
    "consumer_files": [
     "level/spawn_pickups.cpp",
-    "menus/pause_menu.c"
+    "menus/pause_menu.cpp"
    ],
    "ptr_words_code": 220,
    "ptr_words_data": 9413,

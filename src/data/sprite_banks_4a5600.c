@@ -137,7 +137,7 @@ extern const struct sprite_frame *const gSpriteBank09Frames[14];
 
 /* The root of the system: InitLevelState (spawn_pickups.cpp) points
  * *gSpriteBankSet here. GetSpriteTileBase returns tileBase;
- * InitLevelState and RunPauseMenu (pause_menu.c) build the palette
+ * InitLevelState and RunPauseMenu (pause_menu.cpp) build the palette
  * cache from palettes/paletteCount. */
 const struct sprite_bank_table gSpriteBankTable = {
     .banks = gSpriteBanks,

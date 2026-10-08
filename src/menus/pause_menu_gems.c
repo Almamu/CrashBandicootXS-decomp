@@ -47,7 +47,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * first `gPauseGemIconPos[0]`'s position (offset by -0x14/-4) with
  * `self->buf2f` at a fixed slot, then repositions to (0xb4, 0x80) and
  * calls `DrawPauseFraction` with `self->buf32`/`self->buf49` (the count/total
- * buffers `InitPauseGemsPage` - src/menus/pause_menu_pages_init.c - already fills
+ * buffers `InitPauseGemsPage` - src/menus/pause_menu_pages_init.cpp - already fills
  * for this same icon row). */
 void DrawPauseGemsPage(struct pause_menu *self)
 {
@@ -74,7 +74,7 @@ void DrawPauseGemsPage(struct pause_menu *self)
  * pattern as DrawPauseGemsPage's single readout) with `self->buf38`/
  * `buf3b`/`buf3e`, then a final one at (0xb4, 0x80) via `DrawPauseFraction`
  * with `self->buf35`/`buf4c` (the total/threshold buffers
- * `InitPauseRelicsPage` - src/menus/pause_menu_pages_init.c - fills for this
+ * `InitPauseRelicsPage` - src/menus/pause_menu_pages_init.cpp - fills for this
  * row). */
 void DrawPauseRelicsPage(struct pause_menu *self)
 {

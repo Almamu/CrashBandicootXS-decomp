@@ -18,7 +18,7 @@
  * 256` into `musicVolume`/`soundVolume`, then " <NN%>"-formatted into
  * `musicVolumeText`/`soundVolumeText`), then builds the five icon-widget sub-groups in
  * order (`InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`, all already matched or
- * parked - src/menus/pause_menu_pages_init.c). */
+ * parked - src/menus/pause_menu_pages_init.cpp). */
 void InitPauseMenuInfo(struct pause_menu *self)
 {
     s32 levelIdx = GetCurrentLevel(gLevelState);

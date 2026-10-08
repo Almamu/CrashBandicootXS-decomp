@@ -126,7 +126,7 @@ void DrawEmptySlotLabel(struct save_menu *self, s32 arg1, s32 arg2, u8 arg3)
 
 /* Draws a centered label (from the runtime string table via
  * GetUiText) into gLargeFont's icon pair - `self` is unused.
- * Matches DrawPowerDialog's (src/menus/power_dialog_draw.c) centered-icon shape
+ * Matches DrawPowerDialog's (src/menus/power_dialog_draw.cpp) centered-icon shape
  * exactly, just for a single label rather than flanking a number.
  *
  * Once a NAKED transcription; it matches as plain C under both

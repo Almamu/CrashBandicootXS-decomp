@@ -10,7 +10,7 @@
  * slot. */
 const u8 gContinuePromptCursorText[] = ">";
 
-/* InitContinuePromptGraphics (continue_prompt.c) fills palette-cache slot 0 from the
+/* InitContinuePromptGraphics (continue_prompt.cpp) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
  * (slot 2's are mostly 0xFFFF, which isn't a colour). The last
  * halfword of gContinuePromptPalette3 is the zero padding before the next

@@ -15,7 +15,7 @@
 /* One (OAM-slot-offset, pointer) pair, as used by _call_via_r2/
  * _call_via_r3 to draw a single OAM entry. `struct icon_record` is an
  * array of these, 8 bytes apart, starting at offset 0x10 - DrawPowerDialog
- * (src/menus/power_dialog_draw.c, parked) uses slots 0 and 2 (a wide icon spanning
+ * (src/menus/power_dialog_draw.cpp, parked) uses slots 0 and 2 (a wide icon spanning
  * two OAM entries); DrawWrappedText (src/text/wrapped_text.c, parked) uses slots
  * 1, 3, and 5 (per-glyph and newline-marker OAM entries). */
 struct icon_slot {
@@ -58,7 +58,7 @@ COMPILE_TIME_ASSERT(bitmap_font_h, sizeof(struct icon_glyph_metrics) == 0xC);
  * object.
  *
  * The leading `unused_00`/`unused_10c` regions and part of `unused_118`
- * were opaque when this struct was first written (power_dialog_draw.c/
+ * were opaque when this struct was first written (power_dialog_draw.cpp/
  * wrapped_text.c, both still not byte-matched); GitHub issue #46's chunk
  * (src/hud/hud_slide.c) reads and writes them directly and
  * fills in the real shape below. */

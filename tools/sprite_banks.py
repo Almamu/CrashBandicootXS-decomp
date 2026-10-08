@@ -307,7 +307,7 @@ def main():
             out.append("")
             out.append("/* The root of the system: InitLevelState (spawn_pickups.cpp) points")
             out.append(" * *gSpriteBankSet here. GetSpriteTileBase returns tileBase;")
-            out.append(" * InitLevelState and RunPauseMenu (pause_menu.c) build the palette")
+            out.append(" * InitLevelState and RunPauseMenu (pause_menu.cpp) build the palette")
             out.append(" * cache from palettes/paletteCount. */")
             out.append("const struct sprite_bank_table gSpriteBankTable = {")
             out.append("    .banks = gSpriteBanks,")
