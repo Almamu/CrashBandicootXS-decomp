@@ -42,10 +42,6 @@ extern const u8 gDpadDirectionTable[16];
 extern void LoadTaggedAsset(const void *asset, void *dest);
 extern void LoadBackgroundTileAndPalette(const void *asset);
 
-/* src/frontend/language_select.cpp (ROM order puts it there): the C name
- * of CompanyLogos::LoadAssetBuffered (frontend.hpp), `self` the logo screen */
-extern void LoadTaggedAssetBuffered(void *self, const void *asset, void *dest);
-
 /* src/system/boot.cpp */
 extern s32 DivMod(s32 number, s32 denom, s32 *remainderOut);
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);

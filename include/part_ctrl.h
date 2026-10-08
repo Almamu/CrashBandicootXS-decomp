@@ -13,10 +13,8 @@
  * (src/level/spawn_enemies.cpp) attach it to the sprite part they create. Only
  * the fields the code touches are named.
  *
- * `struct part_ctrl` is the C view of the C++ class EnemyCtrl
- * (include/enemy_ctrl.hpp), for the C files that still use it (the level
- * spawners); the class reads the part through
- * `struct ctrl_target` too. */
+ * The controller is the C++ class EnemyCtrl (include/enemy_ctrl.hpp),
+ * which reads the part through `struct ctrl_target`. */
 
 /* The steered part. Same object as include/box_part.h's
  * `struct box_part`, with the fields past 0x38 this cluster uses. */
@@ -63,61 +61,5 @@ struct ctrl_target {
     s32 speedY;   // 0x64
     u8 hitAxes;   // 0x68 - collision axes the terrain probe resolved (8: Y)
 };
-
-/* The controller's method table (`self->anchor`, gEnemyCtrlVtable for
- * CreateEnemyCtrl's controllers); +0x50 is the method the mode trigger
- * (SetEnemyAnimMode) calls. */
-struct ctrl_anchor {
-    u8 unk_00[0x10];
-    struct part_method bounce; // 0x10
-    struct part_method attach; // 0x18 - AttachEnemyCtrl: hands the controller its part
-    u8 unk_20[0x28];
-    struct part_method launch;  // 0x48
-    struct part_method trigger; // 0x50
-};
-
-struct part_ctrl {
-    u8 unk_00[4];
-    void *manager; // 0x04 - the motion entry set StartCtrlTargetMotionXFromSet/
-                   //        StartCtrlTargetMotionYFromSet read (gEnemyCtrlMotionSet)
-    u8 unk_08[4];
-    struct ctrl_anchor *anchor; // 0x0C
-    s32 rangeX[2];              // 0x10 - homing bounds
-    s32 rangeY[2];              // 0x18
-    s32 boxL;                   // 0x20 - hit/trigger box, relative to the target
-                                //        (UpdateEnemyTriggerBox, SetEnemyTriggerBox)
-    s32 boxT;                   // 0x24
-    s32 boxR;                   // 0x28
-    s32 boxB;                   // 0x2C
-    s32 idleTime;               // 0x30 - attack cycle (UpdateEnemyAttackCycle): frames in mode 0
-                                //        before the attack (mode 3/4) starts
-    // 0x34 - frames in the attack before it ends (mode 5); the cycle
-    //        repeats every idleTime + attackTime frames of gRoomFrameCount
-    s32 attackTime;
-    s32 cycleOffset; // 0x38 - where in the cycle the enemy starts (SetEnemyState starts it
-                     //        attacking when cycleOffset >= idleTime)
-    s32 period;      // 0x3C - oscillator (SetEnemyOscillator, UpdateEnemyOscillateX)
-    s32 phase;       // 0x40
-    s32 amplitude;   // 0x44
-    s32 shotPeriod;  // 0x48 - UpdateEnemyShooter fires every shotPeriod
-    s32 shotPhase;   // 0x4C   frames, offset by shotPhase
-    u8 unk_50[8];
-    s32 speed;                  // 0x58 - homing
-    s32 accel;                  // 0x5C
-    s32 baseX;                  // 0x60 - oscillator base / last target x
-    s32 baseY;                  // 0x64 - oscillator base / last target y
-    s32 mode;                   // 0x68 - see SetEnemyAnimMode
-    s32 kind;                   // 0x6C - the enemy kind (its sprite bank)
-    struct ctrl_target *target; // 0x70
-    s32 state;                  // 0x74 - UpdateEnemyCtrl's state
-    s32 modeB;                  // 0x78 - see SetEnemyMotionX
-    s32 modeA;                  // 0x7C - see SetEnemyMotionY
-    s32 counter;                // 0x80
-    const s32 *anims;           // 0x84 - per-mode argument of the trigger: anim mode ->
-                                //        bank anim (gEnemyDefaultAnimMap..., SetEnemyModeTable)
-    struct ctrl_target *popup;  // 0x88 - floating popup spawned in state 18
-};
-
-COMPILE_TIME_ASSERT(part_ctrl_h, sizeof(struct part_ctrl) == 0x8C);
 
 #endif /* GUARD_PART_CTRL_H */

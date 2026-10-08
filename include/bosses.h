@@ -21,59 +21,6 @@
 #include "objects.h"
 #include "player.h"
 
-/* A spawner object of the hovercraft fight (the cannon and the launcher):
- * `actor_self` plus a hit-point word, its spawn cooldown/count and a
- * "dead" flag. The C view of boss_actors.hpp's classes HovercraftCannon
- * and HovercraftLauncher, same layout. */
-struct spawner {
-    struct actor_self base;
-    s32 hp;     // 0x54
-    s32 spawnX; // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
-    s32 spawnY; // 0x5C
-    u8 unk_60[4];
-    s32 cooldown; // 0x64
-    s32 count;    // 0x68
-    u8 dead;      // 0x6C
-};
-
-/* The airship's and the hovercraft's fireballs (CreateAirshipFireball,
- * CreateHovercraftFireball): `actor_self` plus hit points, the orbit
- * that AirshipFireball::StateOrbit/StateSpiralIn
- * (jetpack_plane.cpp) fly around the constructor's `b`/`c`, and an
- * "exploding" flag. The hovercraft's sets the orbit up but never reads
- * it; it only flies straight on at `velZ`. The C view of
- * boss_actors.hpp's classes AirshipFireball and HovercraftFireball, same
- * layout. */
-struct actor_orbit {
-    struct actor_self base;
-    s32 hp;       // 0x54
-    s32 centerX;  // 0x58 - the constructor's `b`
-    s32 centerY;  // 0x5C - the constructor's `c`
-    s32 velZ;     // 0x60 - Z step, decays by 5 down to 0x14
-    s32 radius;   // 0x64
-    u8 exploding; // 0x68 - set by the StateExplode methods; the
-                  //        Is...Unshootable getters return it
-};
-
-/* The hovercraft cannon's muzzle flash (CreateHovercraftCannonFlash,
- * vtable gHovercraftCannonFlashVtable): `actor_self` plus hit points and
- * a flag that is always set. The C view of boss_actors.hpp's class
- * HovercraftCannonFlash, same layout. */
-struct cannon_flash {
-    struct actor_self base;
-    s32 hp;         // 0x54
-    u8 unshootable; // 0x58
-};
-
-/* The Mega Mix controller (CreateMegaMixCtrl, vtable gMegaMixCtrlVtable):
- * a boss controller plus a frame stamp and a latch byte. The C view of
- * include/boss_ctrl.hpp's class MegaMixCtrl, same layout. */
-struct mega_mix_ctrl {
-    struct boss_ctrl base;
-    s32 stamp; // 0x1C - reset to -1 by ResetMegaMixCtrl
-    u8 latch;  // 0x20
-};
-
 /* The airship's attack parameters, one per kind and level
  * (gAirshipAttacks, src/data/weapon_kind_17c2d0.c). SpawnAirship points
  * gAirshipAttack at one. AirshipStateFireballs fires a fireball every
@@ -155,29 +102,7 @@ extern u8 IsTouchingAirship(void *self);
  * C names (cxx_symbols.txt). nullsub_19 and SpawnCortexBossGem
  * (spawn_gems.cpp calls it) have C linkage. */
 extern void nullsub_19(void *self, void *part);
-extern void StartTinyHop(void *self, void *part);
-extern void SpawnCortexCannon(void *self, void *part);
-extern void SpawnCortexTarget(void *self, void *part);
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
-extern void SetCortexTargetState(void *self, void *part, s32 mode);
-extern void FireCortexShot(void *self, void *part, s32 kind);
-
-/* src/bosses/dingodile.cpp and dingodile_create.cpp: the methods of
- * CortexTargetCtrl, CortexCannonCtrl, CortexBossCtrl, DingodileCtrl,
- * DingodileShieldCtrl, DingodileProjectileCtrl and DingodileSharkCtrl
- * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt). */
-extern void SetCortexPlatformsKind(void *self, u8 flag);
-extern void SetCortexTargetDest(void *self, void *part, s32 x, s32 y);
-extern void SetCortexCannonState(void *self, void *part, s32 next);
-extern void SetCortexBossState(void *self, void *part, s32 next);
-extern s32 GetDingodileHits(void *self);
-extern void SetDingodileState(void *self, void *part, s32 next);
-extern void SpawnDingodileShieldOrRocket(void *self, s32 mode, u16 x, u16 y, void *owner);
-extern void SpawnDingodileShark(void *self, u16 x, u16 y, u8 facing);
-extern void SpawnDingodileStalactite(void *self, u16 x, u16 y);
-extern void StartDingodileMotion(void *self, void *part, s32 index);
-extern void SetDingodileStep(void *self, s32 value);
-extern void SetDingodileNextState(void *self, s32 value);
 
 /* src/bosses/hovercraft.cpp */
 extern void UpdateHovercraftHitFlash(void);
@@ -212,19 +137,6 @@ extern void SetHovercraftState(s32 a0, s32 a1);
 extern void HovercraftStateInactive(void);
 extern void HovercraftStateApproach(void);
 extern void HovercraftStateExplodeStub(void);
-
-/* src/bosses/mega_mix.cpp and mega_mix_update.cpp: MegaMixCtrl's methods
- * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
- * vtables and the C callers. */
-extern void SetMegaMixMotionYFromSet(void *self, void *part, s32 index);
-extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
-extern void ResetMegaMixCtrl(void *self);
-
-/* src/bosses/tiny_update.cpp: TinyCtrl's methods (include/boss_ctrl.hpp)
- * under their C names (cxx_symbols.txt). */
-extern void SetTinyState(void *self, void *part, s32 next);
-extern s32 PickTinyHopTarget(void *self);
-extern void SpawnTinyFallingLeaves(void *self, void *part, s32 n);
 
 /* src/vehicle/jetpack_balloon.cpp (C linkage) */
 extern s32 GetAirshipHpPercent(void);

@@ -12,8 +12,8 @@
 #include "sprite_obj.hpp"
 #include "enemy_ctrl.hpp"
 
-/* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp,
- * struct boss_ctrl in player.h): the base class of the bosses'
+/* The boss controller (gBossCtrlVtable, src/player/input_ctrl_queue.cpp):
+ * the base class of the bosses'
  * controllers (Mega Mix, Tiny, Neo Cortex's fight, Dingodile and his
  * shield and rocket/stalactite). Its event handler keeps the event's msg
  * and arg; nothing reads them back. The word at 0x10 is the controlled
@@ -35,10 +35,10 @@ public:
     void *GetTarget();   // GetCtrlTarget
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(BossCtrl) == sizeof(struct boss_ctrl));
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(BossCtrl) == 0x1C);
 
-/* The Mega Mix boss's controller (gMegaMixCtrlVtable, struct
- * mega_mix_ctrl in bosses.h; src/bosses/mega_mix.cpp, and its Update,
+/* The Mega Mix boss's controller (gMegaMixCtrlVtable;
+ * src/bosses/mega_mix.cpp, and its Update,
  * UpdateMegaMix, in src/bosses/mega_mix_update.cpp). Its motion records
  * are gMegaMixMotionRecords, not gCtrlMotionRecords. */
 class MegaMixCtrl : public BossCtrl
@@ -57,7 +57,7 @@ public:
     void Reset();
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == sizeof(struct mega_mix_ctrl));
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(MegaMixCtrl) == 0x24);
 
 /* The Tiny boss's controller (gTinyVtable; src/bosses/tiny_update.cpp,
  * and its constructor, destructor and StartHop in src/bosses/cortex.cpp).
@@ -124,7 +124,7 @@ public:
     void SetState(MovingSprite *part, s32 next);
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == sizeof(struct ctrl));
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(CortexCannonCtrl) == 0x10);
 
 /* The Neo Cortex fight's target, the crosshair that hops between the
  * player and the platforms (gCortexTargetVtable, 0x40 bytes). Update,
@@ -203,7 +203,7 @@ public:
     virtual ~UnusedOneShotAnimCtrl(); // DestroyUnusedOneShotAnimCtrl
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == sizeof(struct ctrl));
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(UnusedOneShotAnimCtrl) == 0x10);
 
 /* Dingodile (gDingodileVtable, src/bosses/dingodile.cpp and
  * dingodile_create.cpp): he walks the level, stopping at the approach
@@ -281,6 +281,6 @@ public:
     virtual ~DingodileSharkCtrl(); // DestroyDingodileSharkCtrl
 };
 
-COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileSharkCtrl) == sizeof(struct part_ctrl));
+COMPILE_TIME_ASSERT(boss_ctrl_hpp, sizeof(DingodileSharkCtrl) == 0x8C);
 
 #endif /* !GUARD_BOSS_CTRL_HPP */

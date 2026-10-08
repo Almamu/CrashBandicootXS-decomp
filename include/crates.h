@@ -100,70 +100,29 @@ extern const u8 gAttackKindBreakLimited[8];
 extern u8 gCrateListChanged;
 
 /* src/crates/crate_break.cpp */
-extern void QueueCratePlayerCollision(struct crate *self, s32 idx);
 extern void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
                                 struct e08c_pos pos, s32 hit, struct byte_arg p20,
                                 struct byte_arg p21, struct byte_arg pforced);
-extern void ClearCrateStackTouched(struct crate *obj);
-extern void MarkCrateStackTouched(struct crate *obj, struct aabb *ctx);
-extern void BounceWumpaCrate(struct crate *self);
-extern void LightTntCrate(struct crate *self);
-extern void OpenCheckpointCrate(struct crate *self);
-extern void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 dir);
 extern void BreakCrate(struct crate *self, u32 arg1);
-extern void OpenMysteryCrate(struct crate *self, u32 arg1);
-extern void OpenSlotCrate(struct crate *self, u32 arg1);
-extern void DropCratesAbove(struct crate *self);
 extern void ExplodeCrate(struct crate *self, u8 near);
-extern void BlastNearbyCrates(struct crate *self, s32 dist);
 extern void UpdateCrates(void);
 extern void DetonateNitroCrates(void);
-extern void ActivateNitroSwitchCrate(struct crate *self);
-extern void ActivateIronSwitchCrate(struct crate *self);
-extern void SolidifyOutlineCrates(struct crate *self);
-extern void SolidifyOutlineCrate(struct crate *self);
 extern void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height);
-extern void FinishBrokenCrate(struct crate *self);
 extern void UpdateTntCountdown(struct crate *self);
-extern void UpdateSlotCrate(struct crate *self);
-extern void UpdateCrateFall(struct crate *self);
 
 /* src/crates/crate.cpp */
 extern void ResolvePlayerCollisions(void);
-extern struct crate *GetCrateBelow(struct crate *self);
 extern struct crate *GetCrateAbove(struct crate *self);
 extern void SetCrateBelow(struct crate *self, struct crate *val);
 extern void SetCrateAbove(struct crate *self, struct crate *val);
 /* FindLineCrossingYMajor and FindLineCrossingXMajor are C++ functions
  * (include/crate.hpp). */
 
-/* src/crates/crate_grid_collide.cpp */
-extern void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused,
-                             struct box_part *other);
-extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box,
-                                           struct box_part *part);
-
-/* src/crates/crate_grid_link.cpp */
-extern void LinkCrateToActiveBucket(struct pool_manager *manager, struct box_part *obj);
-
-/* src/crates/crate_grid_unlink.cpp */
-extern void UnlinkCrateFromGrid(struct pool_manager *manager, struct box_part *item);
-
 /* src/crates/crate_hit.cpp */
 extern u8 PlayerHitboxOverlapsAt(struct crate *self, struct hitbox_quad *quad, struct aabb *box,
                                  s32 xOffset, s32 yOffset);
-extern struct crate *ResolveStackCrateHit(struct crate *self, struct aabb *box, u8 *foundFlag);
-extern void BreakCrateTouchedByPlayer(struct box_part *self);
 
 /* src/crates/crate_list.cpp */
-extern void CollideCrateGridPartWithObject(struct part_list *list, struct aabb box,
-                                           struct box_part *part, struct box_part *other);
-extern void RemoveCrateFromList(struct pool_manager *manager, struct box_part *target);
-extern void RemoveCrateListAt(struct pool_manager *manager, s32 index);
-extern void *AddCrateGridNode(struct pool_manager *manager, struct box_part *data, s32 bucket,
-                              s32 extra);
-extern void LinkCrateInGrid(struct pool_manager *manager, struct box_part *obj);
-extern void AddCrateToList(struct pool_manager *manager, struct box_part *obj);
 extern void DestroyCrateList(struct pool_manager *manager, s32 flags);
 
 /* src/crates/crate_list_draw.cpp */
@@ -178,53 +137,13 @@ extern struct pool_manager *InitCrateList(struct pool_manager *m, s32 count);
 /* src/crates/crate_list_update.cpp */
 extern void UpdateCrateList(struct pool_manager *manager);
 
-/* src/crates/crate_player_collide.cpp */
-extern void CollidePlayerWithCrates(struct pool_manager *m, s32 unused);
-
 /* src/crates/crate_reset.cpp */
 extern s32 FindLineCrossing(s32 pos, s32 count, s32 a, s32 b, s32 limit);
-extern void ResetCrate(struct crate *self);
 
 /* src/crates/crate_stack.cpp */
-extern void OpenLifeCrate(struct actor *self, u32 arg1);
 extern u8 IsCrateKindBreakable(void *arg0, u32 idx);
-extern struct crate *GetTopCrate(struct crate *self);
-extern struct crate *GetBottomCrate(struct crate *self);
-extern s32 CollideCrateWithPlayer(struct crate *self, u32 idx, s32 testX, s32 testY);
 
 /* src/crates/crate_time_trial.cpp */
 extern void ConvertCratesForTimeTrial(void);
-extern void OpenAkuAkuCrate(struct crate *crate);
-
-/* src/crates/crate_touch.cpp */
-extern u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action);
-
-/* src/crates/slot_crate.cpp */
-extern u32 GetSlotCrateStage(struct crate *self);
-extern void DecrementSlotCrateStage(struct crate *self);
-extern void SetSlotCrateStage(struct crate *self, u32 state);
-extern void ClearSlotCrateStage(struct crate *self);
-extern u32 GetSlotCrateSpins(struct crate *self);
-extern void DecrementSlotCrateSpins(struct crate *self);
-extern void SetSlotCrateSpins(struct crate *self, u32 state);
-extern void SetSlotCratePhase(struct crate *self, u32 state);
-extern u32 GetSlotCratePhase(struct crate *self);
-extern void SetCrateKind(struct crate *self, u8 val);
-extern u8 GetCrateKind(struct crate *self);
-extern void SetCrateFallDistance(struct crate *self, s32 val);
-extern s32 GetCrateFallDistance(struct crate *self);
-extern void SetCrateState(struct crate *self, u32 val);
-extern u32 GetCrateState(struct crate *self);
-extern void SetCrateFallSpeed(struct crate *self, u8 val);
-extern s32 GetCrateFallSpeed(struct crate *self);
-extern u32 IsCrateBusy(struct crate *self);
-extern void SetCrateBusy(struct crate *self);
-extern void ClearCrateBusy(struct crate *self);
-extern void SetCrateTouched(struct crate *self, u8 val);
-extern u8 GetCrateParamB(struct crate *self);
-extern u8 GetCrateParamA(struct crate *self);
-extern void SetCrateSolidKind(struct crate *self, u32 val);
-extern void SetCrateTrialKind(struct crate *self, s32 val);
-extern s32 GetCrateTrialKind(struct crate *self);
 
 #endif /* GUARD_CRATES_H */

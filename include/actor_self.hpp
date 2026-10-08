@@ -147,7 +147,7 @@ inline ActorSelf::~ActorSelf()
 }
 #endif
 
-/* The actors with hit points (vehicle.h's `struct actor_hp`): the jetpack
+/* The actors with hit points (0x58 bytes): the jetpack
  * levels' and the 3D bosses'. Its constructor is inline (the C's
  * InitHpActor): every subclass's expands it. Slot 5 has no default in the
  * ROM: the class's vtable was never emitted, and each subclass returns its

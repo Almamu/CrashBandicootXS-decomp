@@ -17,8 +17,7 @@ extern "C" {
 #include "enemies.h"
 }
 
-/* The enemy controller (gEnemyCtrlVtable; struct part_ctrl in
- * part_ctrl.h is its C view). It steers an enemy's sprite part
+/* The enemy controller (gEnemyCtrlVtable). It steers an enemy's sprite part
  * (`target`): `state` picks what Update does each frame (patrol, attack
  * cycle, oscillate, home in, ...; SetState), and `mode` is the part's
  * animation mode (SetAnimMode), which the per-state updaters step
@@ -110,7 +109,7 @@ public:
     void UpdateShooter();
 };
 
-COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == sizeof(struct part_ctrl));
+COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(EnemyCtrl) == 0x8C);
 
 /* The knocked enemy's controller (gKnockedEnemyCtrlVtable): HitEnemy
  * hands a spun or slid enemy's part to one, and it marks the part gone
@@ -124,10 +123,9 @@ public:
     void Reset();                            // ResetKnockedEnemyCtrl
 };
 
-COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == sizeof(struct ctrl));
+COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(KnockedEnemyCtrl) == 0x10);
 
-/* A periodic trigger entity (gPeriodicSpawnerVtable; struct
- * periodic_spawner in enemies.h): calls `callback` at its own position
+/* A periodic trigger entity (gPeriodicSpawnerVtable, 0x28 bytes): calls `callback` at its own position
  * once every `period` frames while near the camera. SpawnSealSpawner
  * (src/level/spawn_objects.cpp) makes one with SpawnSeal. */
 class PeriodicSpawner : public Entity
@@ -144,7 +142,7 @@ public:
     void SetCallback(void (*callback)(u32 arg, u16 x, u16 y, u16 arg3));
 };
 
-COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == sizeof(struct periodic_spawner));
+COMPILE_TIME_ASSERT(enemy_ctrl_hpp, sizeof(PeriodicSpawner) == 0x28);
 
 /* src/enemies/enemy_ctrl.cpp: EntitySpawner::LaunchEffectPart from `src`
  * (spawners.hpp), the new part harmful. C linkage, C++ callers only. */

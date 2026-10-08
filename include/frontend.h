@@ -130,29 +130,13 @@ extern const struct bg_package gCreditsLogos[5];
 
 /* src/frontend/credits.cpp (C++, frontend.hpp: the C names of Credits's
  * methods, for the C callers) */
-extern struct credits_screen *InitCredits(struct credits_screen *self);
-extern void CreditsLoop(struct credits_screen *self);
-extern void DrawCreditsText(struct credits_screen *self);
-extern void UpdateCreditsText(struct credits_screen *self);
-extern void LoadCreditsLogos(struct credits_screen *self);
-extern void CommitCreditsFrame(void *unused);
-extern void DestroyCredits(struct credits_screen *self, s32 mode);
 extern void RunCredits(void);
 
 /* src/frontend/language_select.cpp (C++, as above) */
-extern void InitCompanyLogos(void);
 extern void DestroyCompanyLogos(void *self, u32 flags);
 extern s32 RunLanguageSelect(void);
-extern void LanguageSelectInput(struct language_select *self, u32 flags);
-extern void DrawLanguageSelect(struct language_select *self);
-extern void InitLanguageSelectGraphics(void *unused);
 
 /* src/frontend/language_select_setup.cpp (C++, as above) */
-extern void LoadLanguageSelectBg(struct language_select *self);
-extern s32 LanguageSelectBlink(struct language_select *self);
-extern void CommitLanguageSelectFrame(struct language_select *self);
-extern void DestroyLanguageSelect(struct language_select *self, u32 flags);
-extern void *InitLanguageSelect(struct language_select *self);
 extern void CloseLanguageSelect(void);
 extern void OpenLanguageSelect(void);
 

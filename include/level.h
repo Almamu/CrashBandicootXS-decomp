@@ -26,7 +26,6 @@
 struct camera;
 struct level_ctx;
 struct level_progress;
-struct orbit_part;
 struct part_list;
 struct tile_slot_pool;
 

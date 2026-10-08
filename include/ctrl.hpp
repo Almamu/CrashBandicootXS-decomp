@@ -21,9 +21,8 @@ extern "C" {
 
 class MovingSprite;
 
-/* The controllers' base class (src/objects/ctrl.cpp); struct ctrl
- * (objects.h) is its C view, for the C files, and must keep the same
- * layout (checked below, like every class here against its C struct).
+/* The controllers' base class (src/objects/ctrl.cpp), 0x10 bytes
+ * (checked below, like every class here against the ROM's size).
  * g++ 2.x puts the vtable pointer after the fields of the first class
  * that has virtual methods, which is why it sits at +0x0C. Each virtual
  * method's slot in gCtrlVtable is its declaration order, from slot 1
@@ -56,7 +55,7 @@ public:
     void SetAnimSet(const struct entry_set *set);                                // SetCtrlAnimSet
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(Ctrl) == sizeof(struct ctrl));
+COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(Ctrl) == 0x10);
 
 /* The effect controller (src/objects/effect_ctrl.cpp, gEffectCtrlVtable):
  * a spawned effect part's controller. SpawnEffectPart (entity_spawner.cpp)
@@ -72,7 +71,7 @@ public:
     void Reset();          // ResetEffectCtrl
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == sizeof(struct ctrl));
+COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(EffectCtrl) == 0x10);
 
 /* The Tiny boss's stomped hop pad's controller
  * (src/bosses/tiny_hop_pad.cpp, gStompedHopPadVtable): `state` 0 plays
@@ -85,7 +84,7 @@ public:
     virtual ~StompedHopPadCtrl(); // DestroyStompedHopPadCtrl
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == sizeof(struct ctrl));
+COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(StompedHopPadCtrl) == 0x10);
 
 /* A controller that marks its sprite object gone once the animation has
  * played through (gOneShotAnimCtrlVtable). Its Update is in
@@ -99,6 +98,6 @@ public:
     virtual ~OneShotAnimCtrl();
 };
 
-COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(OneShotAnimCtrl) == sizeof(struct ctrl));
+COMPILE_TIME_ASSERT(ctrl_hpp, sizeof(OneShotAnimCtrl) == 0x10);
 
 #endif /* !GUARD_CTRL_HPP */

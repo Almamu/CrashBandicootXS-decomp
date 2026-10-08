@@ -12,32 +12,12 @@
  * tables.
  *
  * Declarations here are the functions' real prototypes, copied from
- * their definitions. Many take a file-local view of their object
- * (`struct jetpack_ring`, `struct actor_hp`, ...), declared here only
- * by tag. A .c file that needs a different local declaration for codegen
+ * their definitions. A .c file that needs a different local declaration for codegen
  * keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md). */
 
 #include "core.h"
 #include "actor.h"
-
-/* `actor_self` plus the hit-point word the jetpack actors keep at +0x54
- * (the player's is refilled by PassJetpackRing, capped at
- * gJetpackPlayerMaxHp). */
-struct actor_hp {
-    struct actor_self base;
-    s32 hp; // 0x54
-};
-
-/* A jetpack ring (CreateJetpackRing, hovercraft.cpp; vtable
- * gJetpackRingVtable): `actor_self` plus hit points and a flag that makes
- * UpdateJetpackRing play its cue only once. The C view of vehicle.hpp's
- * class JetpackRing, same layout. */
-struct jetpack_ring {
-    struct actor_self base;
-    s32 hp;  // 0x54
-    u8 cued; // 0x58
-};
 
 /* The spawn argument of CreateJetpackPlane and PolarPenguin's
  * constructor (vehicle.hpp). */
@@ -94,7 +74,6 @@ extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
 
 /* src/vehicle/jetpack_player.cpp: JetpackPlayer's methods (vehicle.hpp)
  * that the C files use, and a C-linkage getter */
-extern s32 CountJetpackBomber(void *player);
 extern void SetJetpackCheckpoint(void *self);
 extern s32 IsJetpackPauseLocked(void *player);
 extern u8 IsJetpackPlayerInactive(void);
