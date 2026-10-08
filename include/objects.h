@@ -159,9 +159,7 @@ extern void DestroyCtrl(void *self, s32 flags);
 extern s32 GetCtrlMode(void *self);
 
 /* src/objects/ground_sprite.cpp */
-extern void DrawGroundSprite(void *self);
 extern s32 GetGroundSpriteClassId(void);
-extern void DestroyGroundSprite(struct actor *self, u32 unused);
 extern void ResetGroundSprite(void *self);
 extern u8 IsGroundSpriteGrounded(void *self);
 extern void ClearGroundSpriteGrounded(void *self);
@@ -175,12 +173,10 @@ extern u8 GetSpriteObjFlag5(void *self);
 extern s32 GetMovingSpriteCtrl(void *self);
 
 /* src/objects/ground_sprite_collide.cpp */
-extern u8 CollideGroundSprite(struct box_part *self);
 extern s32 ProbeGroundSpriteTerrain(struct box_part *self);
 extern u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *outFlag);
 
 /* src/objects/ground_sprite_update.cpp */
-extern void UpdateGroundSprite(struct gobj *self);
 extern void AnchorGroundSpriteHitbox(struct gobj *self);
 
 /* src/objects/moving_sprite.cpp */
@@ -190,7 +186,6 @@ extern void GetSpritePrevPos(struct gfx_vec *dest, struct gfx_part *self);
 extern s32 GetSpritePrevY(struct gfx_part *self);
 extern s32 GetSpritePrevX(struct gfx_part *self);
 extern s32 GetMovingSpriteClassId(void);
-extern void DestroyMovingSprite(struct actor *self, u32 flags);
 extern void ResetMovingSprite(void *self);
 extern void UpdateMovingSprite(struct actor *self);
 
@@ -234,26 +229,16 @@ extern void ClearPartList(struct part_list *manager);
 extern void CollidePartsOfClass(struct part_list *manager, s32 classId);
 
 /* src/objects/platform.cpp */
-extern void UpdatePlatform(struct gobj *self);
 extern s32 GetPlatformExitMirror(struct gobj *self);
 extern void SetPlatformExitMirror(struct gobj *self, u8 value);
-extern s32 GetPlatformClassId(void);
-extern void DestroyPlatform(struct gobj *self, s32 flags);
 extern void ClearPlatformVulnerable(struct gobj *self);
-extern void UpdatePlatformMover(struct mover *self, struct gobj *obj);
 extern void MovePlayerWithPlatform(struct mover *self, struct gobj *obj);
 extern void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index);
 extern void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index);
-extern void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index);
-extern void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index);
-extern void DestroyPlatformMover(struct mover *self, s32 flags);
 extern void ClearPlatformMoverActive(struct mover *self);
 
 /* src/objects/platform_collide.cpp */
 extern void ResolvePlatformCollision(struct gobj *self, void *unused);
-
-/* src/objects/platform_contact.cpp */
-extern s32 CheckPlatformContact(struct gobj *self);
 
 /* src/objects/player_contact.cpp */
 extern void CheckPlayerContact(void *part);
@@ -268,7 +253,6 @@ extern struct aabb GetSpriteBounds(struct box_part *part);
 extern struct aabb GetSpriteHitbox(struct box_part *part);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
-extern s32 CheckSpritePickup(struct collect_part *part);
 extern s32 IsSpriteObjOnScreen(struct box_part *part);
 extern s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region);
 extern void AdvanceSpriteAnim(struct box_part *part);
@@ -300,8 +284,6 @@ extern u16 GetSpriteAffine(struct box_part *part);
 extern void SetSpriteAffine(struct box_part *part, u16 val);
 extern void DrawSpriteWithOffset(struct actor *part, s32 dx, s32 dy);
 extern void SetSpritePriority(void *part, s32 value);
-extern s32 GetSpritePriority(void *part);
-extern void DestroyUiSpriteObj(struct actor *part, u32 flags);
 extern struct actor *InitUiSpriteObj(struct actor *part);
 extern void UpdatePartList(struct part_list *list);
 extern void CollidePartList(struct part_list *list, struct aabb box, s32 unused,
@@ -316,15 +298,11 @@ extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
 extern s32 IsSpriteObjInsideRect(struct actor *part, void *box);
 extern s32 IsSpriteObjNearCamera(struct actor *part);
-extern s32 ApplySpriteObjVelocity(void);
 extern void DrawSpriteObj(void *part);
-extern void UpdateSpriteObj(struct actor *part);
 extern void *GetSpriteObjHitbox(struct actor *part);
 extern s32 GetSpriteTileBase(void *part);
 extern void *GetSpriteFrame(struct gfx_part *part);
 extern s32 GetSpriteObjPriority(void);
-extern s32 GetSpriteObjClassId(void);
-extern void DestroySpriteObj(struct actor *self, u32 flags);
 extern void *GetSpriteFrameAnchor(void *part);
 extern void *GetSpriteFrameThirdBox(void *part);
 extern void *GetSpriteFrameAttackBox(void *part);
@@ -373,12 +351,6 @@ extern const struct speed_ramp gPlatformMoverMotionRecords[3];
 
 /* The method tables (src/data/entity_vtables_7e3bec.c) */
 extern const struct vtable_slot gCtrlVtable[13];
-extern const struct vtable_slot gGroundSpriteVtable[15];
-extern const struct vtable_slot gMovingSpriteVtable[15];
-extern const struct vtable_slot gPlatformVtable[15];
-extern const struct vtable_slot gPlatformMoverVtable[13];
-extern const struct vtable_slot gSpriteObjVtable[13];
-extern const struct vtable_slot gUiSpriteObjVtable[13];
 
 /* The empty box GetSpriteFrameBodyBox and friends return for a frame
  * without one (src/data/obj_sizes_16b2e0.c). */

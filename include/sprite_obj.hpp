@@ -28,8 +28,10 @@
  * fields keep their offsets in comments. The player, a ground sprite with
  * its own fields after it, is class Player (player.hpp).
  *
- * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits the vtables of Sprite (sprite.cpp),
+ * UiSprite (sprite_anim.cpp), MovingSprite (moving_sprite_collide.cpp) and
+ * GroundSprite (ground_sprite_collide.cpp), their key-method objects (see
+ * ctrl.hpp). */
 
 #include "entity.hpp"
 

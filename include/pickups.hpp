@@ -19,8 +19,8 @@
  * the methods to those names. Their spawners (src/level/, include/spawners.hpp)
  * are C++ since part 9.
  *
- * `#pragma interface`: no vtable is emitted for these (see ctrl.hpp). */
-#pragma interface
+ * No `#pragma interface`: g++ emits the vtables in extra_life.cpp and
+ * wumpa.cpp (see ctrl.hpp). */
 
 #include "sprite_obj.hpp"
 

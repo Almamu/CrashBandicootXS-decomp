@@ -7,9 +7,10 @@
  * gobj_1a794.h's `struct gobj` and `struct mover` are their C views, for
  * the files that are still C (the level spawners).
  *
- * `#pragma interface`: no vtable is emitted (see ctrl.hpp); cxx_symbols.txt
+ * No `#pragma interface`: g++ emits the vtables, PlatformMover's in
+ * platform.cpp, Platform's in platform_contact.cpp and
+ * CortexBossPlatformMover's in cortex.cpp (see ctrl.hpp); cxx_symbols.txt
  * maps the mangled names onto the C names. */
-#pragma interface
 
 #include "sprite_obj.hpp"
 #include "ctrl.hpp"

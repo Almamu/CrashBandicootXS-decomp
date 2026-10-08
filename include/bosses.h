@@ -164,11 +164,9 @@ extern void AirshipStateCannon(void);
 /* src/bosses/airship_touch.cpp */
 extern u8 IsTouchingAirship(void *self);
 
-/* src/bosses/cortex.cpp: the methods of UnusedOneShotAnimCtrl, TinyCtrl,
- * CortexBossCtrl, CortexTargetCtrl, CortexShotCtrl, CortexBossGemCtrl
- * (include/boss_ctrl.hpp) and
- * CortexBossPlatformMover (include/platform.hpp) under their C names
- * (cxx_symbols.txt), for the vtables. nullsub_19 and SpawnCortexBossGem
+/* src/bosses/cortex.cpp: methods of TinyCtrl, CortexBossCtrl,
+ * CortexTargetCtrl and CortexShotCtrl (include/boss_ctrl.hpp) under their
+ * C names (cxx_symbols.txt). nullsub_19 and SpawnCortexBossGem
  * (spawn_gems.cpp calls it) have C linkage. */
 extern void nullsub_19(void *self, void *part);
 extern void StartTinyHop(void *self, void *part);
@@ -177,14 +175,11 @@ extern void SpawnCortexTarget(void *self, void *part);
 extern void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 extern void SetCortexTargetState(void *self, void *part, s32 mode);
 extern void FireCortexShot(void *self, void *part, s32 kind);
-extern void UpdateCortexBossPlatformMover(void *self, void *part);
-extern void DestroyCortexBossPlatformMover(void *self, s32 flags);
 
 /* src/bosses/dingodile.cpp and dingodile_create.cpp: the methods of
  * CortexTargetCtrl, CortexCannonCtrl, CortexBossCtrl, DingodileCtrl,
  * DingodileShieldCtrl, DingodileProjectileCtrl and DingodileSharkCtrl
- * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt), for the
- * vtables. */
+ * (include/boss_ctrl.hpp) under their C names (cxx_symbols.txt). */
 extern void SetCortexPlatformsKind(void *self, u8 flag);
 extern void SetCortexTargetDest(void *self, void *part, s32 x, s32 y);
 extern void SetCortexCannonState(void *self, void *part, s32 next);
@@ -373,7 +368,6 @@ extern const struct anim_frame_record gAirshipKeyframes[2];
 
 /* src/data/entity_vtables_7e3bec.c */
 extern const struct vtable_slot gAirshipFireballVtable[7];
-extern const struct vtable_slot gCortexBossPlatformMoverVtable[13];
 extern const struct vtable_slot gHovercraftCannonFlashVtable[7];
 extern const struct vtable_slot gHovercraftCannonVtable[7];
 extern const struct vtable_slot gHovercraftFireballVtable[7];
