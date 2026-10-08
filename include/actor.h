@@ -76,11 +76,9 @@ extern void UpdateActorPaletteCycle(void);
 extern void SetActorPaletteCycle(s32 idx);
 extern void EnableActorPaletteCycle(u8 flag);
 
-/* src/actor/actor_anim.cpp: the C names of AnimPart's and HpActor's methods
- * and two destructors (actor_self.hpp, vehicle.hpp) */
+/* src/actor/actor_anim.cpp: the C names of AnimPart's methods
+ * (actor_self.hpp) the yeti's C files call */
 extern s32 GetAnimFrameBaseOffset(struct actor_self *self);
-extern s32 GetAnimFrameAttr(struct actor_self *self);
-extern u8 *GetAnimFrameData(struct actor_self *self);
 extern void SetActorAnim(struct actor_self *self, s32 idx);
 
 /* src/actor/actor_bg.c */
@@ -94,7 +92,6 @@ extern s32 GetActorBgCenterX(void);
 
 /* src/actor/actor_category_frame.cpp */
 extern s32 RunActorCategoryFrame(void);
-extern void *FindShotTarget(struct actor_self *self);
 
 /* src/actor/actor_category_init.c */
 extern s32 InitActorCategory(s32 category);

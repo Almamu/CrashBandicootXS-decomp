@@ -121,9 +121,8 @@ s32 RunActorCategoryFrame(void)
 
 /* The first actor other than `self` that can be shot (slot 5 returns 0;
  * the ROM tests its low byte) and whose box overlaps `self`'s, or 0. */
-void *FindShotTarget(struct actor_self *selfArg)
+HpActor *FindShotTarget(ActorSelf *self)
 {
-    ActorSelf *self = (ActorSelf *)selfArg;
     HpActor *n = (HpActor *)gActorList->next;
 
     do {

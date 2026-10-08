@@ -203,4 +203,8 @@ public:
 
 COMPILE_TIME_ASSERT(actor_self_hpp, sizeof(HpActor) == 0x58);
 
+/* src/actor/actor_category_frame.cpp: the first actor other than `self`
+ * a shot hits (JetpackShot::Update). C linkage, C++ callers only. */
+extern "C" HpActor *FindShotTarget(ActorSelf *self);
+
 #endif /* GUARD_ACTOR_SELF_HPP */

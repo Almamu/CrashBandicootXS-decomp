@@ -3394,6 +3394,15 @@ still read through them. `tools/layout_audit.py views` lists them.
   `mirrorFlags.mirrorX`, `rampX.start`, `bank->anims[tag].frameCount`,
   ...). The six enemy objects are byte-identical, the `MATCH_HOLD_REG`
   pins (now on `MovingSprite *`s) unchanged.
+- **Batch 3, the 3D actors.** The last three .cpp users of `struct
+  actor_self` take the classes: FindShotTarget is `HpActor
+  *FindShotTarget(ActorSelf *)` (declared in actor_self.hpp, C linkage;
+  JetpackShot::Update passes `this`), and DestroyPolarCrate takes a
+  `PolarCrate *` (vehicle.hpp). actor.h's GetAnimFrameAttr and
+  GetAnimFrameData prototypes had no user (the C++ calls the AnimPart
+  methods). `struct actor_self` is now only the yeti's and the IWRAM
+  sorter's C view (and ActorSelf's size check). The objects are
+  byte-identical.
 
 ### Next batches
 
