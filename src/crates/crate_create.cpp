@@ -2,7 +2,6 @@
 #include "crate_list.hpp"
 
 extern "C" {
-#include "match.h"
 #include "objects.h"
 #include "memory.h"
 #include "level.h"
@@ -161,11 +160,10 @@ Crate *Crate::Create(u16 id, u16 x, u16 y, u16 slot, u8 type)
     case CRATE_KIND_MYSTERY:
         {
             struct crate_placement *rec = PLACEMENT(slot);
-            u8 zero;
+            /* The ROM loads the 0 before the tag's address, as for the
+             * other tags; a literal 0 argument is loaded after it. */
+            u8 zero = 0;
 
-            /* constant-init: the ROM loads the 0 before the tag's address,
-             * as for the other tags; a plain 0 is loaded after it */
-            MATCH_CONST(zero, 0);
             self->SetTag(zero);
             self->paramB = rec->param6;
         }

@@ -3,7 +3,6 @@
 
 extern "C" {
 #include "core.h"
-#include "match.h"
 #include "text.h"
 #include <libgcc.h>
 #include "audio.h"
@@ -151,18 +150,16 @@ s32 PauseMenu::CursorUp()
  * small stack buffer via the div/mod library primitives
  * (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`.
  *
- * `val`'s explicit `r5` pin (initialized from the `value` parameter,
- * rather than just using `value` directly) is required to reproduce
- * the ROM's parameter-home order: with a plain unpinned `value`, this
- * compiler always copies argument registers to their home pseudo-regs
- * in ascending source-register order (r0 before r1), but the ROM
- * copies r1 (`dest` -> r7) first, r0 (`value` -> r5) second - pinning
- * `val`'s initializer as a separate reg-var assignment defers the r0
- * copy until just before the loop that needs it, matching the ROM's
- * order, while leaving `dest` to the natural allocator. */
+ * `val`, a local copy of the `value` parameter (rather than using
+ * `value` directly), reproduces the ROM's parameter-home order: with
+ * `value` itself, this compiler copies argument registers to their home
+ * pseudo-regs in ascending source-register order (r0 before r1), but
+ * the ROM copies r1 (`dest` -> r7) first, r0 (`value` -> r5) second -
+ * the copy defers the r0 move until just before the loop that needs
+ * it. */
 s32 FormatDecimal(s32 value, u8 *dest)
 {
-    MATCH_HOLD_REG(s32, val, r5) = value;
+    s32 val = value;
     u8 buf[0xc];
     s32 count;
     s32 i;

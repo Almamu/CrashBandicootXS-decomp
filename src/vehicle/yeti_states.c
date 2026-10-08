@@ -66,20 +66,18 @@ void YetiStateChase(void)
                 void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
                 s32 a3 = 0x100;
-                MATCH_HOLD_REG(u8 *, stackPtr, r4) = &dummyStack;
-                MATCH_HOLD_REG(u8, one, r1) = 1;
+                u8 *stackPtr = &dummyStack;
 
-                *stackPtr = one;
+                *stackPtr = 1;
                 PlayAmbientSfx_4(a0, 0x3f, a2, a3);
                 ShakeActorBg(0x200);
             } else if (tier == 0x1c) {
                 void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
                 s32 a3 = 0x100;
-                MATCH_HOLD_REG(u8 *, stackPtr, r4) = &dummyStack;
-                MATCH_HOLD_REG(u8, one, r1) = 1;
+                u8 *stackPtr = &dummyStack;
 
-                *stackPtr = one;
+                *stackPtr = 1;
                 PlayAmbientSfx_4(a0, 0x40, a2, a3);
                 ShakeActorBg(0x200);
             } else if (tier == 0xd || tier == 0x1d) {
@@ -129,7 +127,7 @@ void YetiStateChase(void)
                 bc->animIndex = 1;
                 {
                     u16 anim = bc->anims[1].duration;
-                    MATCH_HOLD_REG(u8, zero1, r2) = 0;
+                    u8 zero1 = 0;
                     MATCH_HOLD_REG(s32, zero2, r3) = 0;
 
                     *(u16 *)&bc->animTimer = anim;
@@ -191,7 +189,7 @@ void YetiStateCharge(void)
 
         if (bc->animDone != 0) {
             s32 *d0 = &gYetiState;
-            MATCH_HOLD_REG(s32, zero, r1) = 0;
+            s32 zero = 0;
 
             *d0 = zero;
             bc->animIndex = zero;

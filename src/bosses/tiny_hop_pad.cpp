@@ -19,25 +19,25 @@ extern "C" {
  * 4 pixels a frame until it is 32 pixels below layer 0's bottom edge,
  * then moves to state 2, where it stays.
  *
- * The two pins are still needed in C++: unpinned, g++ gives `this` r2
- * and `part` r4 where the ROM has r3 and r2 (the C needed the same two,
- * plus gotos for the block order, which the switch gives). */
+ * The pin on `part` (r2) is still needed in C++: with neither pinned,
+ * g++ gives `this` r2 and `part` r4 where the ROM has r3 and r2; once
+ * `part` is pinned, `this` lands in r3 by itself. (The C needed a pin on
+ * both, plus gotos for the block order, which the switch gives.) */
 void StompedHopPadCtrl::Update(MovingSprite *partArg)
 {
-    MATCH_HOLD_REG(StompedHopPadCtrl *, self, r3) = this;
     MATCH_HOLD_REG(MovingSprite *, part, r2) = partArg;
     s32 y;
 
-    switch (self->state) {
+    switch (state) {
     case 0:
-        self->state = 1;
-        self->SetTargetAnim(part, 8);
+        state = 1;
+        SetTargetAnim(part, 8);
         break;
     case 1:
         y = part->y + 0x400;
         part->y = y;
         if (y >= INT_TO_Q8(gLevelLayers->layer0->heightPx) + 0x2000)
-            self->state = 2;
+            state = 2;
         break;
     case 2:
         break;

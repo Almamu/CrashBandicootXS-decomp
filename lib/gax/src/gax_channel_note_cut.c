@@ -1,5 +1,4 @@
 #include "gax_internal.h"
-#include "match.h"
 
 /* Called with a small command value (`cmd`, 0-3 seen at the call site in
  * `GaxChannelDecodeRow`, gax_sound_handler_channel_play.c) against a
@@ -10,9 +9,7 @@
  * clears `released` again. */
 void GaxChannelSetNote(struct GaxChannelState *self, u32 cmd)
 {
-    MATCH_HOLD_REG(u32, v, r3) = cmd;
-
-    if (v == 1) {
+    if (cmd == 1) {
         struct GaxChannelInstrument *inst = self->instrument;
         if (inst != NULL) {
             struct GaxEnvelope *env = inst->envelope;
@@ -27,9 +24,8 @@ void GaxChannelSetNote(struct GaxChannelState *self, u32 cmd)
         }
         self->released = 1;
     }
-    if (v > 1) {
-        MATCH_HOLD_REG(u32, tmp, r0) = v - 2;
-        u16 shifted = tmp << 5;
+    if (cmd > 1) {
+        u16 shifted = (cmd - 2) << 5;
         u8 zero = 0;
 
         self->pitch = shifted;

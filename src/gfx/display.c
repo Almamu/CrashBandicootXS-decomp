@@ -35,10 +35,10 @@ void SetDispcntMode(s32 val)
  * DISPCNT-mode shadow's second byte). */
 void HideBg3(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = -9;
+    u8 *addr = gDispcnt;
+    s32 mask = -9;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask & byte;
     addr[1] = result;
@@ -47,10 +47,10 @@ void HideBg3(void)
 /* `gDispcnt[1]` bit 2 clear. */
 void HideBg2(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = -5;
+    u8 *addr = gDispcnt;
+    s32 mask = -5;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask & byte;
     addr[1] = result;
@@ -59,10 +59,10 @@ void HideBg2(void)
 /* `gDispcnt[1]` bit 1 clear. */
 void HideBg1(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = -3;
+    u8 *addr = gDispcnt;
+    s32 mask = -3;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask & byte;
     addr[1] = result;
@@ -71,10 +71,10 @@ void HideBg1(void)
 /* `gDispcnt[1]` bit 0 clear. */
 void HideBg0(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = -2;
+    u8 *addr = gDispcnt;
+    s32 mask = -2;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask & byte;
     addr[1] = result;
@@ -83,10 +83,10 @@ void HideBg0(void)
 /* `gDispcnt[1]` bit 4 clear. */
 void HideObj(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = -0x11;
+    u8 *addr = gDispcnt;
+    s32 mask = -0x11;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask & byte;
     addr[1] = result;
@@ -95,10 +95,10 @@ void HideObj(void)
 /* `gDispcnt[1]` bit 3 set. */
 void ShowBg3(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = 8;
+    u8 *addr = gDispcnt;
+    s32 mask = 8;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask | byte;
     addr[1] = result;
@@ -107,10 +107,10 @@ void ShowBg3(void)
 /* `gDispcnt[1]` bit 2 set. */
 void ShowBg2(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = 4;
+    u8 *addr = gDispcnt;
+    s32 mask = 4;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask | byte;
     addr[1] = result;
@@ -119,10 +119,10 @@ void ShowBg2(void)
 /* `gDispcnt[1]` bit 1 set. */
 void ShowBg1(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = 2;
+    u8 *addr = gDispcnt;
+    s32 mask = 2;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask | byte;
     addr[1] = result;
@@ -131,10 +131,10 @@ void ShowBg1(void)
 /* `gDispcnt[1]` bit 0 set. */
 void ShowBg0(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = 1;
+    u8 *addr = gDispcnt;
+    s32 mask = 1;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask | byte;
     addr[1] = result;
@@ -143,10 +143,10 @@ void ShowBg0(void)
 /* `gDispcnt[1]` bit 4 set. */
 void ShowObj(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = 0x10;
+    u8 *addr = gDispcnt;
+    s32 mask = 0x10;
     MATCH_HOLD_REG(s32, byte, r2) = addr[1];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask | byte;
     addr[1] = result;
@@ -157,10 +157,10 @@ void ShowObj(void)
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
 void SetObjMapping2D(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = -0x41;
+    u8 *addr = gDispcnt;
+    s32 mask = -0x41;
     MATCH_HOLD_REG(s32, byte, r2) = addr[0];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask & byte;
     addr[0] = result;
@@ -169,10 +169,10 @@ void SetObjMapping2D(void)
 /* `gDispcnt[0]` bit 6 set. */
 void SetObjMapping1D(void)
 {
-    MATCH_HOLD_REG(u8 *, addr, r1) = gDispcnt;
-    MATCH_HOLD_REG(s32, mask, r0) = 0x40;
+    u8 *addr = gDispcnt;
+    s32 mask = 0x40;
     MATCH_HOLD_REG(s32, byte, r2) = addr[0];
-    MATCH_HOLD_REG(s32, result, r0);
+    s32 result;
 
     result = mask | byte;
     addr[0] = result;

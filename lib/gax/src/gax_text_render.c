@@ -26,13 +26,12 @@
  * lowercase glyphs), and the three remapped punctuation marks above
  * land at tiles 37-39 right after 'Z'.
  *
- * Every local here is register-pinned: this function has no calls at
- * all (nothing to save across), and the ROM keeps every one of `dst`/
- * `colIdx`/`s`/`c`/`peekSeed`/`len`/`mask`/`peek` alive simultaneously
- * across the word-wrap scan, genuinely filling every low register plus
- * `ip` - an unconstrained build reliably picks different registers
- * (verified by removing each pin in turn and rebuilding) even though
- * the generated *shape* is identical either way. `colIdx` does double
+ * The ROM keeps every one of `dst`/`colIdx`/`s`/`c`/`peekSeed`/`len`/
+ * `mask`/`peek` alive simultaneously across the word-wrap scan, filling
+ * every low register plus `ip` (this function has no calls at all,
+ * nothing to save across). `colIdx`, `peekSeed` and the r0 temporaries
+ * (`t`, `peek`, `tmp`) are pinned; the rest land in the ROM's registers
+ * on their own. `colIdx` does double
  * duty as the ROM's own r1 does: the word-wrap column index while
  * scanning ahead, then (once that's dead) reused for the char being
  * remapped into a tile index - matching the ROM's own register reuse,
@@ -46,13 +45,13 @@
  * shared `(u8)`-truncation tail. */
 void GaxDrawText(u32 col, u32 row, const char *str)
 {
-    MATCH_HOLD_REG(u8 *, dst, r3);
+    u8 *dst;
     MATCH_HOLD_REG(s32, colIdx, r1);
-    MATCH_HOLD_REG(const u8 *, s, r5);
-    MATCH_HOLD_REG(u32, c, r6);
+    const u8 *s;
+    u32 c;
     MATCH_HOLD_REG(s32, peekSeed, r2);
-    MATCH_HOLD_REG(s32, len, r4);
-    MATCH_HOLD_REG(s32, mask, ip);
+    s32 len;
+    s32 mask;
     u32 base;
 
     s = (const u8 *)str;

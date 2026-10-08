@@ -28,8 +28,9 @@
  * the loop, and reuses the loop's last-iteration register values
  * (rather than recomputing) for the final post-loop DMA setup too -
  * this compiler's loop-invariant hoisting pass never reproduces any of
- * that from plain C. Closed with register-pinned locals matching the
- * ROM's own register roles (including the "rename" copy) plus
+ * that from plain C. Closed with register-pinned locals for the DMA
+ * pointer and the two fresh field values (the "rename" copy, the loop
+ * counter and the buffer address need no pins) plus
  * inline-asm-materialized DMA-field writes (opaque to the hoisting
  * pass) for the fields the ROM keeps fresh, with the loop's own
  * asm-computed values threaded through as real operands so the
@@ -38,10 +39,10 @@
 void FadePaletteToBlack(void)
 {
     MATCH_HOLD_REG(struct dma_regs *, dma, r1);
-    MATCH_HOLD_REG(struct dma_regs *, dma2, r4);
-    MATCH_HOLD_REG(s32, factor, r5);
+    struct dma_regs *dma2;
+    s32 factor;
     u32 val;
-    MATCH_HOLD_REG(u32 *, bufAddr, r6);
+    u32 *bufAddr;
     MATCH_HOLD_REG(u32, dstVal, r3);
     MATCH_HOLD_REG(u32, cntVal, r2);
 

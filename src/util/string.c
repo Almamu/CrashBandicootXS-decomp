@@ -1,5 +1,4 @@
 #include "core.h"
-#include "match.h"
 #include "util.h"
 
 /* Sits right after FindSubstring (ROM 0x08000CBC), which is not yet
@@ -27,27 +26,23 @@ s32 CountNonSpaceChars(u8 *s)
 }
 
 /* strcat: appends src to the end of dst (in place), NUL-terminating
- * the result. `p`/`i` are pinned to r3/r2 to match the ROM, which
- * finds the end of dst via an index (`p[i]`) rather than walking a
- * pointer; the pointer computed from `p + i` is then a *separate*
- * variable (`q`, also pinned to r2 - the ROM lets `i`'s register go
- * dead and reuses it, rather than writing the sum back into `p`'s r3)
- * used for the rest of the copy loop. All plain scratch here (leaf
- * function, no calls). */
+ * the result. Like the ROM, it finds the end of dst via an index
+ * (`dst[i]`) rather than walking a pointer; the pointer computed from
+ * `dst + i` is then a *separate* variable (`q`, which takes `i`'s r2
+ * once `i` is dead, rather than the sum being written back into `dst`'s
+ * r3) used for the rest of the copy loop. */
 void strcat(u8 *dst, u8 *src)
 {
-    MATCH_HOLD_REG(u8 *, p, r3);
-    MATCH_HOLD_REG(s32, i, r2);
-    i = 0;
-    p = dst;
-    if (p[i] != 0) {
+    s32 i = 0;
+
+    if (dst[i] != 0) {
         do {
             i++;
-        } while (p[i] != 0);
+        } while (dst[i] != 0);
     }
     {
-        MATCH_HOLD_REG(u8 *, q, r2);
-        q = p + i;
+        u8 *q = dst + i;
+
         while (*src != 0) {
             *q = *src;
             src++;

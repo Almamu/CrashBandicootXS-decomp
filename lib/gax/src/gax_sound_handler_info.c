@@ -20,7 +20,7 @@ void GaxInfoResetPosition(void *self)
     struct GaxInfoHandler *p = self;
     u16 val;
     u8 zeroByte;
-    MATCH_HOLD_REG(u16, zeroHalf, r3);
+    u16 zeroHalf;
 
     /* 0xFFFF/0x4E20 need to go through a named temp before the store -
      * assigning the literal straight to the dereferenced address loads
@@ -163,8 +163,8 @@ u32 GaxInfoPlay(void *self, u32 arg1, u32 chanArg)
                 u16 v18 = p->speed;
                 u16 lo = v18 >> 8;
                 if (lo != 0) {
-                    MATCH_HOLD_REG(u16, mask, r0) = 0xff;
-                    MATCH_HOLD_REG(u32, hi, r0);
+                    u16 mask = 0xff;
+                    u32 hi;
                     hi = mask & v18;
                     hi <<= 8;
                     lo |= hi;

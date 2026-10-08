@@ -661,6 +661,8 @@ The two pins left are `StompedHopPadCtrl::Update`'s: unpinned, g++ gives
 `this` r2 and `part` r4 where the ROM has r3 and r2, with every natural
 rewrite tried (switch orders, locals, `this` copies). The C needed the
 same two pins, plus gotos for the block order, which a `switch` gives.
+(#662 step 2 dropped the `this` pin: with `part` pinned, `this` lands in
+r3 by itself.)
 
 Compilers: `ctrl.o` and `tiny_hop_pad.o` match as clean C++ only under
 old_agbcp (`SetTargetAnim`'s and `OneShotAnimCtrl::Update`'s
@@ -883,7 +885,9 @@ match only under old_agbcp, like their old_agbcc C.
   4 pins and the `UpdatePlayerFacing_u8` asm label go too.
 
 Kept, each with a comment: `ReleaseHang`'s r2 hold (one pin, one empty
-`MATCH_HOLD`/`MATCH_USE` pair, no code: the 0x600 reload must take r3),
+`MATCH_HOLD`/`MATCH_USE` pair, no code: the 0x600 reload must take r3;
+#662 step 2 dropped the `MATCH_HOLD`, the never-assigned pin is live
+from the top of the function),
 `StateJump`'s `MATCH_KEEP` and `HandleEvent`'s three `MATCH_CONST`s (a 1
 the ROM loads apart from the A test's own 1), `HandleEvent`'s dead
 `volatile` read of `state`, and `StateCrouch`'s scoped `volatile` pointer
@@ -2032,6 +2036,8 @@ pin, a `MATCH_KEEP_VOLATILE` and a `MATCH_USE`: GCSE hoists any `slot <<
 5` to the y loop's pre-test and spills it, and the ROM computes it at the
 copy) and the constructor's `MATCH_BARRIER` (no code: the longer live
 ranges give `&gPaletteCache` and `&gObjVramCursor` r4, `&gSmallFont` r6).
+#662 step 2 found the barrier, the keep and the use no longer needed;
+the r1 pin stays.
 C idioms kept: `DrawText`'s and `UpdateText`'s gotos, the `bg0cnt =
 bg0cnt` self-initialisation and the `UpdateText` font slot calls written
 out.
@@ -3095,7 +3101,7 @@ order), and it says which functions were inline and where a file ended:
 | `src/level/bg_layer_init.cpp` | `BgLayer`'s constructor, `GrowRows`, `GrowColumns`, `ClipColumns`, `ClipRows` | **old_agbcp** (was agbcc) | 9 pins, 6 asm, a file-scope asm pool -> 0; 5 slot calls -> 0 |
 | `src/level/bg_layer.cpp` | `BgLayer`'s other methods, and the copies of its inline ones | old_agbcp | 0 -> 0; 6 slot calls, a vtable store -> 0 |
 | `src/level/pooled_bg_layer.cpp` (new) | `PooledBgLayer`'s overrides, `ReleaseColumn`, `ReleaseRow`, with `nullsub_26` | old_agbcp | 0 -> 0 |
-| `src/level/tile_slot_pool.cpp` | `PooledBgLayer`'s constructor, destructor, `GetPriority`, with the tile-slot pool (C linkage) | **old_agbcp** (was agbcc) | 4 pins, 3 asm, 3 vtable stores -> 2 pins, 1 asm (`AcquireTileSlot`'s residency test: the ROM loads 0x200 before the entry and loads the entry again; neither a plain test nor an inline with the constant as a parameter does) |
+| `src/level/tile_slot_pool.cpp` | `PooledBgLayer`'s constructor, destructor, `GetPriority`, with the tile-slot pool (C linkage) | **old_agbcp** (was agbcc) | 4 pins, 3 asm, 3 vtable stores -> 2 pins, 1 asm (`AcquireTileSlot`'s residency test: the ROM loads 0x200 before the entry and loads the entry again; neither a plain test nor an inline with the constant as a parameter does). #662 step 2: the plain `pool->slotForTile[id] != TILE_SLOT_NONE` test matches now; the asm and both pins went |
 | `src/level/level_layers.cpp` | `LevelLayers` | agbcp | 0 -> 0; 6 slot calls (the layers' `delete`s, `Scroll`s and `Reset`s) -> 0 |
 | `src/text/font.cpp` (font_measure.c and font.c) | `Font`'s `MeasureText`, `UploadTiles`, `SetPalette`, `ResetPalette`, and the copies of its inline methods | old_agbcp (font.c was agbcc) | 5 pins, 2 keeps, 2 asm, 1 asm label, 2 slot calls, 2 vtable stores -> the asm label (`GetPaletteSlot`'s `s32` return) |
 | `src/text/font_glyph.cpp` | `Font::DrawGlyph`, `PutChar`; `SmallFont`'s and `LargeFont`'s constructors | old_agbcp | 8 pins, 3 asm, gotos, 2 slot calls, 3 vtable stores -> 0 (`PutChar` is a `switch`, as `MeasureText` is) |
@@ -3224,7 +3230,9 @@ Kept, each with its comment: DrawPauseMenu's two r2 holds over the
 computed-x SetPos calls (without them y and x swap registers), Loop's
 `key`/`pressed` pins (r3/r1; without either the input tests change, 8-18
 lines), DrawWrappedText's `MATCH_USE(len)` (r7 priority; 340 lines
-without) and r1 hold (48 lines without), FormatDecimal's r5 pin.
+without) and r1 hold (48 lines without), FormatDecimal's r5 pin (a
+plain copy of `value` since #662 step 2; the two holds' `MATCH_HOLD`s
+went there too).
 
 Left C: src/text/text_box.c (GetWordLength, DrawWrappedTextInBox: no C++
 trait; the box wrapper only reads two font fields).
@@ -3785,8 +3793,9 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   the arguments. Where the ROM computes an argument first, put it in a
   local (experiment 2), not in a pin.
 - **Pins can still be needed.** Register allocation isn't always
-  about the C emulation: `StompedHopPadCtrl::Update` keeps the C's two
-  `MATCH_HOLD_REG`s (`register T x asm("rN") = this;` works in C++).
+  about the C emulation: `StompedHopPadCtrl::Update` keeps one of the
+  C's two `MATCH_HOLD_REG`s, `part`'s (a `register T x asm("rN") = this;`
+  pin also works in C++).
 - **A direct call to a base method** that is virtual is
   `Ctrl::StartTargetMotionY(part, rec)`: a plain `bl` to its C name, as
   `MegaMixCtrl::StartTargetMotionYFromSet` does. cxx_symbols.txt also

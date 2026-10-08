@@ -246,7 +246,9 @@ void ActionCtrl::StateUnusedHang()
  * Kept from the C: reload loads the 0x600 into a spill register, and the
  * ROM's is r3. With r2 and r3 both free it takes r2, and every later
  * reload then rotates through {1,2,6} instead of the ROM's {1,3,6}.
- * `hold` keeps r2 live across the add, with empty asms only (no code). */
+ * `hold`, pinned to r2 and never assigned, keeps r2 live from the start
+ * of the function to its `MATCH_USE` after the add (an empty asm, no
+ * code). */
 void ActionCtrl::ReleaseHang()
 {
     Player *p;
@@ -254,9 +256,8 @@ void ActionCtrl::ReleaseHang()
     MATCH_HOLD_REG(s32, hold, r2);
 
     part->hanging = 0;
-    MATCH_HOLD(hold); /* r2 live from here: no code */
     part->y += 0x600;
-    MATCH_USE(hold); /* ...to here, so the 0x600 reload takes r3 */
+    MATCH_USE(hold); /* r2 held to here, so the 0x600 reload takes r3 */
     SetMode(ACTION_STATE_AIRBORNE_FALL);
     SetTargetAnim(part, 0x1B);
     p = part;

@@ -237,9 +237,6 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
     u16 siocnt;
     u32 one;
 
-    /* Instruction-count padding (no code): shifts gcc's temporary
-     * numbering so two stack slots come out in the ROM's order. */
-    MATCH_BARRIER();
     self->framesSinceIrq = 0;
     if (self->inSerialIrq) {
         u16 v = self->sendWord;
@@ -269,11 +266,12 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             u32 kid, kfree;
 
             /* Set before the loop, in the ROM's order: `&self->handshakeWord`,
-             * then the two compare constants, then the load pointer. The
-             * constants use the constant-init form (no code beyond the
-             * `movs`/`ldr`) so loop.c doesn't hoist them after `p`'s init. */
+             * then the two compare constants, then the load pointer.
+             * `kfree` uses the constant-init form (no code beyond the
+             * `ldr`) so loop.c doesn't hoist it after `p`'s init; `kid`
+             * stays in place as a plain assignment. */
             f20 = &self->handshakeWord;
-            MATCH_CONST(kid, 0xF0B);
+            kid = 0xF0B;
             MATCH_CONST(kfree, 0xffff);
             p = data;
             for (i = 0; i <= 3; i++) {
@@ -455,8 +453,8 @@ void HandleLinkSerial(struct link_session *self, u16 *data)
             hash = *(u16 *)&self->id[6];
             LINK_HASH(hash, &self->id[1]);
             {
-                /* The ROM sets this 0 in r0 before the hash store. */
-                MATCH_HOLD_REG(s32, z, r0) = 0;
+                /* The ROM sets this 0 before the hash store. */
+                s32 z = 0;
 
                 *(u16 *)&self->id[6] = hash;
                 self->sendRound = z;

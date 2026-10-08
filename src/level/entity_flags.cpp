@@ -168,12 +168,12 @@ s32 LevelEntityFlags::IsActivated(s32 n)
  * `t` in place reproduces that split. */
 void LevelEntityFlags::SetActivated(s32 n)
 {
-    MATCH_HOLD_REG(u8 *, base, ip);
-    MATCH_HOLD_REG(s32, t, r2);
+    u8 *base;
+    s32 t;
     s32 adjusted, wordIndex;
-    MATCH_HOLD_REG(s32, bitIndex, r0);
-    MATCH_HOLD_REG(s32, mask, r2);
-    MATCH_HOLD_REG(s32, shifted, r3);
+    s32 bitIndex;
+    s32 mask;
+    s32 shifted;
     MATCH_HOLD_REG(s32, addr, r1);
 
     asm volatile("mov %0, %2\n\tadd %1, %3, #0" : "=r"(base), "=r"(t) : "r"(this), "r"(n));

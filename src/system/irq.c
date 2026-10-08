@@ -219,14 +219,13 @@ u8 GetDpadDirection(void *input)
  * doesn't know the two globals are adjacent and emits a second,
  * non-matching literal-pool load/store pair otherwise), updates
  * gKeys to the new state, then returns 1 if the low 4 bits
- * (A/B/Select/Start) are all held - a "soft reset" combo check. All
- * four register pins below are plain caller-saved scratch (r0-r3), so
- * none of them carry the r4-r7 save/restore hazard: `addr`/`prevKeys`
- * (r2/r3) match the ROM's choice for the address/reload pair, and
- * `keysR1`/`mask` (r1/r0) match its choice for the closing mask-and-
- * compare (gcc's own unpinned allocator picks a fresh register for the
- * AND result instead of reusing r1 in place, and compares against a
- * fresh immediate instead of reusing r0's already-loaded 0xF). The
+ * (A/B/Select/Start) are all held - a "soft reset" combo check. Both
+ * register pins below are plain caller-saved scratch (r3/r0), so
+ * neither carries the r4-r7 save/restore hazard: `prevKeys` (r3)
+ * matches the ROM's choice for the reload, and `mask` (r0) its choice
+ * for the closing mask-and-compare (gcc's own unpinned allocator
+ * compares against a fresh immediate instead of reusing r0's
+ * already-loaded 0xF). The
  * inline `add %0,%1,#0` anchors a copy of `keys` into a scratch value
  * gcc would otherwise schedule after the `prevKeys` reload instead of
  * before it, despite neither having a data dependency on the other.
@@ -235,9 +234,9 @@ s32 UpdateKeys(void *input)
 {
     u16 keys;
     u16 keysCopy;
-    MATCH_HOLD_REG(struct held_pressed_pair *, addr, r2);
+    struct held_pressed_pair *addr;
     MATCH_HOLD_REG(u16, prevKeys, r3);
-    MATCH_HOLD_REG(u16, keysR1, r1);
+    u16 keysLow;
     MATCH_HOLD_REG(s32, mask, r0);
 
     keys = (u16)~REG_KEYINPUT;
@@ -246,10 +245,10 @@ s32 UpdateKeys(void *input)
     prevKeys = addr->held;
     addr->pressed = keysCopy & ~prevKeys;
     addr->held = keys;
-    keysR1 = keys;
+    keysLow = keys;
     mask = 0xF;
-    keysR1 &= mask;
-    if (mask == keysR1) {
+    keysLow &= mask;
+    if (mask == keysLow) {
         return 1;
     }
     return 0;

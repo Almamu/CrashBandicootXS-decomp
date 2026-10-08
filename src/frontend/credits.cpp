@@ -113,9 +113,6 @@ Credits::Credits()
     gPaletteCache->FreeUnlockedSlots();
     gSmallFont->ResetPalette();
     gLargeFont->SetPalette(0);
-    /* No code: it lengthens the live ranges across it, which gives
-     * &gPaletteCache and &gObjVramCursor r4 and &gSmallFont r6. */
-    MATCH_BARRIER();
     LoadLogos();
     gPaletteCache->Upload();
     gObjVramCursor->baseTile = 0;
@@ -402,15 +399,9 @@ struct popup_glyph_src {
 /* Loads the five logos: each one's tiles rearranged into 32x32 OAM cells
  * and its palette into palette-cache slots 1-5.
  *
- * GCSE's PRE hoists any `slot << 5` (even through a plain MATCH_KEEP: a
- * non-volatile asm with outputs is an ordinary hashed expression) to the
- * y loop's pre-test, next to the `slot + 1` and `i + 1` it also hoists
- * there, and spills it; the ROM computes the palette address at the
- * copy. So the palette index is a copy `ps` passed through
- * MATCH_KEEP_VOLATILE (volatile asms are never entered in GCSE's table).
- * `ps` is an r1 register variable (the ROM reloads `slot` into r1) and
- * has one more MATCH_USE after the shift, so the shift result goes to r0
- * instead of reusing r1. The same as the C's, which needed them too. */
+ * The ROM reloads `slot` into r1 and computes the palette address at
+ * the copy, so the palette index is a copy `ps` pinned to r1: with
+ * `slot << 5` itself, or a plain copy, the shift comes out elsewhere. */
 void Credits::LoadLogos()
 {
     u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
@@ -466,15 +457,13 @@ void Credits::LoadLogos()
         LoadTaggedAsset(src->palette, pal);
         {
             u16 *s = pal;
-            /* Escaped copy of `slot`: see the note above. */
+            /* Copy of `slot`: see the note above. */
             MATCH_HOLD_REG(s32, ps, r1) = slot;
             s32 sh;
             u16 *d;
             s32 k;
 
-            MATCH_KEEP_VOLATILE(ps); /* new pseudo GCSE can't hoist */
             sh = ps << 5;
-            MATCH_USE(ps); /* keeps ps live so sh doesn't reuse r1 */
             d = (u16 *)(sh + (u32)palSlots);
             for (k = 15; k >= 0; k--) {
                 *d++ = *s++;

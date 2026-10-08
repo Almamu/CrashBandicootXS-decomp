@@ -1,6 +1,5 @@
 #include "gax_internal.h"
 #include <agb_syscall.h>
-#include "match.h"
 
 /* Split out of lib/libgcc/libgcc2.c: that object is GAX2's bundled
  * libgcc code, built without -mthumb-interwork, while this helper (GAX2
@@ -19,14 +18,13 @@
  * divide-by-4 and the mask are written out explicitly (rather than as
  * a plain `count / 4`) because that's what reproduces the ROM's own
  * `lsl #9`/`lsr #0xb` combined shift-and-mask codegen; a plain `/ 4`
- * compiles to a bare `asr #2` instead. `cnt`/`remaining` are pinned to
- * `r6`/`r1` (`matching_decomp_register_pinning`) to reproduce the ROM's
- * own register choices - left unpinned, this compiler picks the same
- * logic in `r5`/`r6` instead. */
+ * compiles to a bare `asr #2` instead. The `cnt` copy of `count` and
+ * the separate `remaining` local reproduce the ROM's register choices
+ * (r6/r1); counting down `count` itself does not. */
 void GaxZeroFill(void *destArg, s32 count)
 {
     u8 *dest = destArg;
-    MATCH_HOLD_REG(s32, cnt, r6) = count;
+    s32 cnt = count;
     s32 aligned;
     u32 zero;
 
@@ -47,7 +45,7 @@ void GaxZeroFill(void *destArg, s32 count)
 
     {
         u8 *tail = dest + aligned;
-        MATCH_HOLD_REG(s32, remaining, r1) = cnt - aligned;
+        s32 remaining = cnt - aligned;
 
         if (remaining > 0) {
             do {

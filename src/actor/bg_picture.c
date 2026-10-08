@@ -35,7 +35,7 @@
  * masked, `(*nib >> 4) & 0xf` (without the mask the next-row pointer and
  * row+1 swap ip/r9).
  *
- * 7B0 also needs three empty asm statements, which emit no code but each
+ * 7B0 also needs two empty asm statements, which emit no code but each
  * add one reference to a value and so raise its register-allocation
  * priority (docs/matching/archive/late-rom-naked-retry.md):
  *  - `MATCH_USE(dest)` after MapFill's loop: without it the nibble
@@ -43,8 +43,8 @@
  *    and they trade r5/r6. The same reference in 8E8 breaks 8E8, which
  *    is why MapFill is a separate copy of the loop rather than 8E8
  *    itself declared `inline`.
- *  - two `MATCH_USE(cols)` before the call: `cols` and row+1 tie
- *    for r8/sl otherwise. */
+ *  - `MATCH_USE(cols)` before the call: `cols` and row+1 tie for
+ *    r8/sl otherwise. */
 
 static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
 {
@@ -95,9 +95,7 @@ void LoadBgPicture(u8 *pic)
     tiles = *(u32 *)pic;
     pic += 4;
     tileData = pic + ((cols * rows + 1) / 2) * 4;
-    /* two extra references: cols outranks row+1 for r8 */
-    MATCH_USE(cols);
-    MATCH_USE(cols);
+    MATCH_USE(cols); /* extra reference: cols outranks row+1 for r8 */
     MapFill(tileData + tiles * 32, (u16 *)pic, cols, rows);
     REG_DISPCNT |= DISPCNT_BG1_ON;
     REG_BG1CNT = 0x5A07;
