@@ -19,7 +19,9 @@
  * part 11h the jetpack ring and the collected wumpa
  * (src/bosses/hovercraft.cpp); part 11d the other polar actors
  * (src/vehicle/polar_crates.cpp, polar_pickups.cpp, polar_objects.cpp,
- * polar_aku_aku.cpp and polar_nitro.cpp), so every polar class is C++.
+ * polar_aku_aku.cpp and polar_nitro.cpp), so every polar class is C++;
+ * part 11g the balloon crates, the parachute nitro and the rocket
+ * (src/vehicle/jetpack_crates.cpp).
  *
  * `#pragma interface`: no vtable is emitted (see ctrl.hpp). */
 #pragma interface
@@ -606,60 +608,137 @@ public:
 
 COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloon) == 0x64);
 
-/* The crates hanging from balloons (gJetpackBalloonCrateVtable), and the
- * three kinds built on them, whose destructors are g++'s implicit ones
+/* The crates hanging from balloons (gJetpackBalloonCrateVtable,
+ * src/vehicle/jetpack_crates.cpp): each hangs from a balloon of its own
+ * (SpawnJetpackBalloon), swaying around its spawn point, until the
+ * balloon is shot (Break: it falls) or the crate is (Damage: it breaks
+ * and lets the balloon go). The three kinds built on it pay out when
+ * broken or touched; their destructors are g++'s implicit ones
  * (DestroyJetpackHealthCrate, DestroyJetpackTimeCrate and
  * DestroyJetpackQuestionCrate, actor_anim.cpp). */
 class JetpackBalloonCrate : public HpActor
 {
 public:
-    // InitJetpackBalloonCrate
+    JetpackBalloon *balloon; // 0x58 - the balloon it hangs from
+    u8 done;                 // 0x5C - broken or touched: no longer shootable
+    s32 centerX;             // 0x60 - the point it sways around
+    s32 centerY;             // 0x64
+    s32 phase;               // 0x68 - random, added to stateTime for the sway
+    s32 fallSpeed;           // 0x6C - StateFall's, capped at 0x4C0
+
+    /* InitJetpackBalloonCrate: the constructor out of line, which nothing
+     * calls; the kinds expand the inline one below. */
     JetpackBalloonCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, u8 kind);
-    virtual ~JetpackBalloonCrate(); // 1 DestroyJetpackBalloonCrate (jetpack_crates.c)
-    /* Slot 7 is declared for JetpackBalloon::Damage's call (part 11f). */
-    virtual void Break(); // 7 BreakJetpackBalloonCrate (jetpack_crates.c)
+    virtual ~JetpackBalloonCrate();  // 1 DestroyJetpackBalloonCrate
+    virtual void Update();           // 2 UpdateJetpackBalloonCrate
+    virtual void Damage(s32 amount); // 4 DamageJetpackBalloonCrate
+    virtual s32 IsUnshootable();     // 5 IsJetpackBalloonCrateUnshootable
+    virtual void Break();            // 7 BreakJetpackBalloonCrate
+
+    void ClearBalloon(); // ClearJetpackCrateBalloon
+    void RunState();     // RunJetpackBalloonCrateState
+
+    /* The states, indexed by `state` (stateFuncs,
+     * gJetpackBalloonCrateStateFuncs). */
+    void StateHang();      // JetpackBalloonCrateStateHang
+    void StateFall();      // JetpackBalloonCrateStateFall
+    void StateDestroyed(); // JetpackBalloonCrateStateDestroyed
+
+    typedef void (JetpackBalloonCrate::*StateFunc)();
+    static const StateFunc stateFuncs[3];
+
+protected:
+    /* The same constructor, inline (jetpack_crates.cpp): the kinds'
+     * constructors expand it. An `int` kind picks this one. */
+    JetpackBalloonCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 kind);
+
+    /* The constructors' body (inline, jetpack_crates.cpp). */
+    void Hang(s32 x, s32 y, s32 z, u8 kind);
 };
 
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackBalloonCrate) == 0x70);
+
+/* Heals the player (gJetpackHealthCrateVtable). */
 class JetpackHealthCrate : public JetpackBalloonCrate
 {
 public:
     // CreateJetpackHealthCrate
     JetpackHealthCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
+    virtual void Update();           // 2 UpdateJetpackHealthCrate
+    virtual void Damage(s32 amount); // 4 DamageJetpackHealthCrate
 };
 
+/* Freezes the level clock, or starts the time trial
+ * (gJetpackTimeCrateVtable). */
 class JetpackTimeCrate : public JetpackBalloonCrate
 {
 public:
     // CreateJetpackTimeCrate
     JetpackTimeCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
+    virtual void Update();           // 2 UpdateJetpackTimeCrate
+    virtual void Damage(s32 amount); // 4 DamageJetpackTimeCrate
 };
 
+/* Wumpa fruit, or an extra life (gJetpackQuestionCrateVtable). */
 class JetpackQuestionCrate : public JetpackBalloonCrate
 {
 public:
+    void *spawn; // 0x70 - the level spawn record, for MarkSpawnCollected
+
     // CreateJetpackQuestionCrate
-    JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 arg);
+    JetpackQuestionCrate(const struct anim_table_record *rec, s32 x, s32 y, s32 z, void *spawn);
+    virtual void Update();           // 2 UpdateJetpackQuestionCrate
+    virtual void Damage(s32 amount); // 4 DamageJetpackQuestionCrate
 };
 
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackQuestionCrate) == 0x74);
+
+/* A nitro crate on a parachute (gJetpackParachuteNitroVtable,
+ * src/vehicle/jetpack_crates.cpp): it rises to `limitY`, and explodes on
+ * the player or when shot. */
 class JetpackParachuteNitro : public HpActor
 {
 public:
+    u8 dead;    // 0x58 - exploded: no longer shootable
+    s32 limitY; // 0x5C
+
     // CreateJetpackParachuteNitro
     JetpackParachuteNitro(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
     virtual ~JetpackParachuteNitro(); // 1 DestroyJetpackParachuteNitro
+    virtual void Update();            // 2 UpdateJetpackParachuteNitro
+    virtual void Damage(s32 amount);  // 4 DamageJetpackParachuteNitro
+    virtual s32 IsUnshootable();      // 5 IsJetpackParachuteNitroUnshootable
 };
 
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackParachuteNitro) == 0x60);
+
+/* A rocket (gJetpackRocketVtable, src/vehicle/jetpack_crates.cpp): it
+ * swings around `originX` while it comes down by `stepY` to `limitY`,
+ * then explodes (Launch); it hurts the player once on contact. */
 class JetpackRocket : public HpActor
 {
 public:
+    s32 originX;  // 0x58
+    s32 limitY;   // 0x5C
+    s32 stepY;    // 0x60
+    u8 triggered; // 0x64 - exploded or shot: no longer shootable
+    u8 hit;       // 0x65 - it has hurt the player
+
     // CreateJetpackRocket
     JetpackRocket(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
-    virtual ~JetpackRocket(); // 1 DestroyJetpackRocket
+    virtual ~JetpackRocket();        // 1 DestroyJetpackRocket
+    virtual void Update();           // 2 UpdateJetpackRocket
+    virtual void Damage(s32 amount); // 4 DamageJetpackRocket
+    virtual s32 IsUnshootable();     // 5 IsJetpackRocketUnshootable
+
+    void Launch(); // LaunchJetpackRocket
 };
+
+COMPILE_TIME_ASSERT(vehicle_hpp, sizeof(JetpackRocket) == 0x68);
 
 /* A jetpack ring (gJetpackRingVtable; vehicle.h's `struct jetpack_ring` is
  * its C view). Its constructor and slot 5 are in src/bosses/hovercraft.cpp
- * (part 11h), its Update is still C (jetpack_crates.c, part 11g). */
+ * (part 11h), its Update in src/vehicle/jetpack_crates.cpp (part 11g). */
 class JetpackRing : public HpActor
 {
 public:
@@ -668,7 +747,7 @@ public:
     // CreateJetpackRing
     JetpackRing(const struct anim_table_record *rec, s32 x, s32 y, s32 z);
     virtual ~JetpackRing();      // 1 DestroyJetpackRing
-    virtual void Update();       // 2 UpdateJetpackRing (jetpack_crates.c)
+    virtual void Update();       // 2 UpdateJetpackRing
     virtual s32 IsUnshootable(); // 5 IsJetpackRingUnshootable
 };
 

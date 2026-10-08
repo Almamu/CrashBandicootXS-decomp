@@ -5,10 +5,10 @@
  * The C view of the 3D actors' base class, ActorSelf (actor_self.hpp;
  * C++ since #664 part 11a, src/actor/actor.cpp), for the files still in
  * C: an object built by `InitActorPart` (ActorSelf's constructor), its
- * vtable pointer at +0x50, its virtual methods called through the
- * `_call_via_rN` thunks with `this` adjusted by the slot's `thisOffset`
- * (always 0), and its state methods through pointer-to-member tables
- * (struct actor_pmf, ACTOR_PMF_CALL).
+ * vtable pointer at +0x50, and the layouts of its vtable slots and
+ * pointer-to-member records (struct actor_pmf, for the src/data tables).
+ * Every 3D actor class is C++ since #664 part 11g, and the C macros that
+ * called through them (ACTOR_PMF_CALL, ACTOR_VCALL, ...) are gone.
  *
  * Only the common prefix (0x00-0x53) is described here: every derived
  * class lays out its own fields from +0x54 on, in each translation
@@ -108,20 +108,13 @@ struct actor_self {
     struct actor_vtable *vtable; // 0x50
 };
 
-/* The record and list links as the files that read them through casts
- * spell them. */
-#define ACTOR_RECORD(self) (*(struct anim_table_record **)&(self)->record)
-#define ACTOR_LINK_PREV(self) (*(struct actor_self **)&(self)->prev)
-#define ACTOR_LINK_NEXT(self) (*(struct actor_self **)&(self)->next)
-
-/* The statement macros below are wrapped in `if (1) { ... } else (void)0`
- * rather than the usual `do { ... } while (0)`: agbcc treats the latter
- * as a real loop when weighing register priorities, which was enough to
- * change ACTOR_PMF_CALL's register allocation away from the ROM's. */
-
-/* Resets `self` into state `st`, restarting animation sequence `idx`.
- * Both values go through locals so constant pairs are materialized
- * before the stores, as the ROM does. */
+/* Resets `self` into state `st`, restarting animation sequence `idx`:
+ * the C spelling of ActorSelf::SetState (actor_self.hpp). No C file uses
+ * it any more (every 3D actor class is C++, #664 part 11). Both values go
+ * through locals so constant pairs are materialized before the stores,
+ * as the ROM does; the `if (1) { ... } else (void)0` wrapper, rather than
+ * `do { ... } while (0)`, is because agbcc treats the latter as a real
+ * loop when weighing register priorities. */
 #define ACTOR_SET_STATE(self, st, idx)                                         \
     if (1)                                                                     \
     {                                                                          \
@@ -133,86 +126,6 @@ struct actor_self {
         (self)->animTimer = (self)->anims[_idx].duration;                      \
         (self)->animDone = 0;                                                  \
         (self)->animTime = 0;                                                  \
-    } else (void)0
-
-typedef void (*actor_method_fn)(void *self, s32 arg);
-
-/* Virtual call through `obj`'s method table (a gcc 2.x C++ virtual
- * call). */
-#define ACTOR_VCALL(obj, m, arg)                                               \
-    if (1)                                                                     \
-    {                                                                          \
-        struct actor_vtable *_vt = (obj)->vtable;                              \
-        ((actor_method_fn)_vt->m.fn)((u8 *)(obj) + _vt->m.thisOffset, (arg));  \
-    } else (void)0
-
-/* Virtual calls through `obj->vtable` (`struct actor_method` entries)
- * via libgcc's `_call_via_r2`/`_call_via_r3`: take the entry's address
- * once, then read the `this` adjustment and the function, as gcc 2.x
- * lowers the call. VTABLE_CALL2 passes one argument, VTABLE_CALL3 two;
- * the argument types come from the file's `_call_via_rN` prototype. */
-#define VTABLE_CALL2(obj, m, a)                                                \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m;                           \
-        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
-    } while (0)
-#define VTABLE_CALL3(obj, m, a, b)                                             \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vtable->m;                           \
-        _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
-    } while (0)
-
-typedef void (*actor_method_ptr_fn)(void *self, void *a, s32 b);
-
-/* Virtual calls through a method table held in a `vt` field (the boss
- * parts' layout, `struct actor_method` entries): take the entry's
- * address once, then read the `this` adjustment and the function, as gcc
- * 2.x lowers the call. VCALL1 passes an `s32`, VCALL2 a pointer and an
- * `s32`. */
-#define VCALL1(obj, m, a)                                                      \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vt->m;                               \
-        ((actor_method_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));     \
-    } while (0)
-#define VCALL2(obj, m, a, b)                                                   \
-    do                                                                         \
-    {                                                                          \
-        struct actor_method *_m = &(obj)->vt->m;                               \
-        ((actor_method_ptr_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
-    } while (0)
-
-/* `(self->*table[self->state])()` - a gcc 2.x pointer-to-member-function
- * call through one of the per-state dispatch tables. The table entry is
- * re-read after the virtual/non-virtual split exactly the way the
- * compiler expanded the member-pointer call. */
-#define ACTOR_PMF_CALL(self, table)                                            \
-    if (1)                                                                     \
-    {                                                                          \
-        struct actor_method _m;                                                \
-        void (*_fn)(void *);                                                   \
-        s32 _index = (table)[(self)->state].index;                             \
-        s32 _off;                                                              \
-                                                                               \
-        if (_index > 0) {                                                      \
-            _m = (*(struct actor_method **)((u8 *)(self)                       \
-                    + (table)[(self)->state].u.vtableOffset))[_index - 1];     \
-            _fn = _m.fn;                                                       \
-        } else {                                                               \
-            _fn = (table)[(self)->state].u.fn;                                 \
-        }                                                                      \
-        _off = (table)[(self)->state].thisOffset;                              \
-        {                                                                      \
-            s32 _d;                                                            \
-            if (_index > 0) {                                                  \
-                _d = _m.thisOffset + _off;                                     \
-            } else {                                                           \
-                _d = _off;                                                     \
-            }                                                                  \
-            _fn((u8 *)(self) + _d);                                            \
-        }                                                                      \
     } else (void)0
 
 #endif /* !GUARD_ACTOR_SELF_H */

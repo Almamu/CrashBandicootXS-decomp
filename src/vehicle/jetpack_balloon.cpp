@@ -62,7 +62,7 @@ void JetpackBalloon::Update()
     UpdateDepth();
     if (depth < gActorNearClipDepth - 0x200) {
         if (crate != 0) {
-            ClearJetpackCrateBalloon(crate);
+            crate->ClearBalloon();
             crate = 0;
         }
         delete this;

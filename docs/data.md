@@ -232,7 +232,7 @@ The first batch (all pointer tables, all byte-exact):
 | `weapon_kind_17c2d0.c` | `0x0817C2D0` | 6 weapon-kind records, a 3-frame palette strip, a box, 2 keyframes |
 | `actor_state_17c3fc.c` | `0x0817C3FC` | 1 function table |
 | `actor_pmf_17c414.cpp` | `0x0817C414` | 1 actor PMF table, in C++ (`JetpackBalloon::stateFuncs`) |
-| `actor_pmf_17c42c.c` | `0x0817C42C` | 1 actor PMF table |
+| `actor_pmf_17c42c.cpp` | `0x0817C42C` | 1 actor PMF table |
 | `actor_box_17c444.c` | `0x0817C444` | 1 `struct anim_box` |
 | `actor_pmf_17c450.cpp` | `0x0817C450` | 1 actor PMF table, in C++ (`HovercraftFireball::stateFuncs`, docs/cplusplus.md) |
 | `singleton_kind_17c460.c` | `0x0817C460` | 2 singleton-kind records, a box, 1 keyframe |

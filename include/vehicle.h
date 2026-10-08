@@ -47,14 +47,6 @@ struct spawn_arg {
                 //        PolarPenguin::Aim)
 };
 
-/* An actor box (`struct anim_box`, actor_anim.h) copied as three words:
- * this shape, rather than the 6-halfword struct or three separate `s32`
- * copies, gives the ROM's `ldm`/`stm` when a fixed box is copied into an
- * actor's `box` (jetpack_crates.c). */
-struct vec3_words {
-    s32 a, b, c;
-};
-
 /* actor_anim.h, and the file-local views of the objects (defined in the
  * .c files that use them). */
 struct anim_box;
@@ -135,45 +127,33 @@ extern void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags);
 extern s32 IsJetpackCollectedWumpaUnshootable(void *self);
 
 /* src/vehicle/jetpack_balloon.cpp: a C-linkage function, and
- * JetpackBalloon's methods (vehicle.hpp) that the C files and the vtable
- * data use */
+ * JetpackBalloon's methods (vehicle.hpp) that the vtable data uses */
 extern void nullsub_30(void);
 extern void UpdateJetpackBalloon(void *self);
 extern void DamageJetpackBalloon(void *self, s32 damage);
-extern void ReleaseJetpackBalloon(void *self);
-extern void MoveJetpackBalloon(void *self, s32 x, s32 y, s32 z);
 extern s32 IsJetpackBalloonUnshootable(void *self);
 
-/* src/vehicle/jetpack_crates.c */
+/* src/vehicle/jetpack_crates.cpp: the balloon crates', the parachute
+ * nitro's, the rocket's and the ring's methods (vehicle.hpp), for the
+ * vtable data (and DestroyJetpackBalloonCrate for actor_anim.cpp's kinds'
+ * destructors) */
 extern void UpdateJetpackBalloonCrate(void *self);
 extern void UpdateJetpackQuestionCrate(void *self);
 extern void DamageJetpackQuestionCrate(void *self, s32 delta);
 extern void UpdateJetpackHealthCrate(void *self);
 extern void UpdateJetpackTimeCrate(void *self);
 extern void DamageJetpackTimeCrate(void *self, s32 delta);
-extern void *CreateJetpackTimeCrate(void *self, void *part, s32 b, s32 c, s32 d);
 extern void DamageJetpackHealthCrate(void *self, s32 delta);
-extern void *CreateJetpackHealthCrate(void *self, void *part, s32 b, s32 c, s32 d);
-extern void *CreateJetpackQuestionCrate(void *self, void *part, s32 b, s32 c, s32 d, s32 e);
-extern void ClearJetpackCrateBalloon(void *self);
 extern void BreakJetpackBalloonCrate(void *self);
 extern void DamageJetpackBalloonCrate(void *self, s32 delta);
 extern void DestroyJetpackBalloonCrate(void *self, s32 flags);
-extern void *InitJetpackBalloonCrate(void *self, void *part, s32 b, s32 c, s32 d, u8 kind);
-extern void JetpackBalloonCrateStateDestroyed(void *self);
-extern void JetpackBalloonCrateStateFall(void *self);
-extern void JetpackBalloonCrateStateHang(void *self);
-extern void RunJetpackBalloonCrateState(void *self);
-extern u8 IsJetpackBalloonCrateUnshootable(void *self);
+extern s32 IsJetpackBalloonCrateUnshootable(void *self);
 extern void UpdateJetpackParachuteNitro(void *self);
 extern void DamageJetpackParachuteNitro(void *self, s32 delta);
-extern void *CreateJetpackParachuteNitro(void *self, void *part, s32 b, s32 c, s32 d);
-extern u8 IsJetpackParachuteNitroUnshootable(void *self);
+extern s32 IsJetpackParachuteNitroUnshootable(void *self);
 extern void UpdateJetpackRocket(void *self);
-extern void LaunchJetpackRocket(void *self);
 extern void DamageJetpackRocket(void *self, s32 delta);
-extern void *CreateJetpackRocket(void *self, void *part, s32 b, s32 c, s32 d);
-extern u8 IsJetpackRocketUnshootable(void *self);
+extern s32 IsJetpackRocketUnshootable(void *self);
 extern void UpdateJetpackRing(void *self);
 
 /* src/vehicle/jetpack_plane.cpp: JetpackPlane's, JetpackBomber's and
@@ -193,14 +173,11 @@ extern s32 CountJetpackBomber(void *player);
 extern s32 GetJetpackPlayerHpPercent(void *self);
 extern void SetJetpackCheckpoint(void *self);
 extern s32 IsJetpackPauseLocked(void *player);
-extern void HealJetpackPlayer(void *self, s32 delta);
-extern void QueueJetpackWumpa(void *self, s32 delta);
 extern void DestroyJetpackPlayer(void *self, s32 flags);
 extern u8 IsJetpackPlayerInactive(void);
 
 /* src/vehicle/jetpack_run.cpp: JetpackPlayer's (vehicle.hpp) */
 extern void FinishJetpackRun(void *self);
-extern void PassJetpackRing(void *self, s32 x, s32 y);
 extern void AllocJetpackPlayerTiles(void *self);
 
 /* src/vehicle/jetpack_shot.cpp: JetpackShot's (vehicle.hpp), for the
@@ -348,9 +325,6 @@ extern s32 gYetiParamsIndex;
 extern s32 gYetiPosition;
 extern s32 gYetiState;
 extern s32 gYetiX;
-
-/* src/data/actor_pmf_17c42c.c */
-extern const struct actor_pmf gJetpackBalloonCrateStateFuncs[3];
 
 /* src/data/entity_vtables_7e3bec.c */
 extern const struct vtable_slot gJetpackBalloonCrateVtable[8];

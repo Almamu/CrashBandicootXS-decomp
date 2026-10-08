@@ -126,7 +126,7 @@ gSfxTable:
 
 @ gJetpackBalloonStateFuncs: src/data/actor_pmf_17c414.cpp
 
-@ gJetpackBalloonCrateStateFuncs: src/data/actor_pmf_17c42c.c
+@ gJetpackBalloonCrateStateFuncs: src/data/actor_pmf_17c42c.cpp
 
 @ gJetpackRocketBox: src/data/actor_box_17c444.c
 

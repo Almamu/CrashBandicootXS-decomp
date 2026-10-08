@@ -866,7 +866,7 @@ const u32 gJetpackRocketFrames[26] = {
 
 /* Record 29: the time-trial stopwatch, whole and then shattering. Kind 29
  * only spawns once the level's crystal is saved, and breaking it calls
- * StartTimeTrial (jetpack_crates.c). */
+ * StartTimeTrial (jetpack_crates.cpp). */
 const struct anim_frame_record gJetpackStopwatchKeyframes[2] = {
     { 42, 0, 1, 0, 0x0, { 0, 0 } },
     { 42, 1, 5, 4, 0x0, { 0, 0 } },

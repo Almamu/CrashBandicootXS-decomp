@@ -39,15 +39,6 @@ struct jetpack_spawn_rec {
     s32 z; // 0x0C
 };
 
-/* The actors whose classes have no fields yet (the crates, the ring, the
- * collected wumpa and the hovercraft's weapons: parts 11g and 11h) are
- * built by their C constructors on AnimPart's operator new, the
- * allocation `new` would make. */
-static inline void *AllocActor(u32 size)
-{
-    return AnimPart::operator new(size);
-}
-
 /* Clamps a steering speed to +-0x240, keeping its sign. */
 #define CLAMP_SPEED(v)                                                         \
     if (ABS_BRANCHLESS(v) > 0x240)                                             \
@@ -120,26 +111,24 @@ void *CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 9:
         return new JetpackBomber(&gJetpackAnimTable[kind], x, y, z);
     case 19:
-        return CreateJetpackHealthCrate(AllocActor(0x70), &gJetpackAnimTable[kind], x, y, z);
+        return new JetpackHealthCrate(&gJetpackAnimTable[kind], x, y, z);
     case 23:
         if ((u8)IsSpawnCollected(spawn))
-            return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[20], x, y, z,
-                                              (s32)spawn);
+            return new JetpackQuestionCrate(&gJetpackAnimTable[20], x, y, z, spawn);
         /* fallthrough */
     case 20:
     case 21:
     case 22:
-        return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[kind], x, y, z,
-                                          (s32)spawn);
+        return new JetpackQuestionCrate(&gJetpackAnimTable[kind], x, y, z, spawn);
     case 24:
     case 25:
     case 26:
     case 29:
-        return CreateJetpackTimeCrate(AllocActor(0x70), &gJetpackAnimTable[kind], x, y, z);
+        return new JetpackTimeCrate(&gJetpackAnimTable[kind], x, y, z);
     case 27:
-        return CreateJetpackParachuteNitro(AllocActor(0x60), &gJetpackAnimTable[kind], x, y, z);
+        return new JetpackParachuteNitro(&gJetpackAnimTable[kind], x, y, z);
     case 28:
-        return CreateJetpackRocket(AllocActor(0x68), &gJetpackAnimTable[kind], x, y, z);
+        return new JetpackRocket(&gJetpackAnimTable[kind], x, y, z);
     case 31:
         new JetpackRing(&gJetpackAnimTable[43],
                         x - gJetpackAnimTable[kind].spawnX + gJetpackAnimTable[43].spawnX, y, z);
@@ -169,7 +158,7 @@ void SpawnJetpackCollectedWumpa(s32 a, s32 b, s32 c)
 }
 
 /* A balloon of record `kind` holding crate `d` (the crates' constructors,
- * jetpack_crates.c). */
+ * jetpack_crates.cpp). */
 void *SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
 {
     return new JetpackBalloon(&gJetpackAnimTable[kind], a, b, c, (JetpackBalloonCrate *)d);
