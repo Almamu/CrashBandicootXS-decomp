@@ -8,7 +8,7 @@ extern "C" {
 
 /* The collision tile cache (TileCache, include/bg_layer.hpp): its
  * destructor and constructor, which LevelLayers' (level_layers.cpp) run,
- * and the terrain-type lookup (C linkage, for terrain.c). C++ since the
+ * and the terrain-type lookup (C linkage, for terrain.cpp). C++ since the
  * #664 cleanup; built with old_agbcp, as the C was with old_agbcc (see
  * docs/matching/archive/game-loop-old-agbcc.md). */
 

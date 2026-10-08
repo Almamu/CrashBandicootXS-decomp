@@ -1,3 +1,7 @@
+#include "sprite_obj.hpp"
+#include "hud.hpp"
+
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "sprite_bank.h"
@@ -7,6 +11,7 @@
 #include "vehicle.h"
 #include "gfx.h"
 #include "globals.h"
+}
 
 /* Pins the current category's tile-cache slots that every actor part
  * shares - the type-0 sprite family gets 2 slots (7/0xf), the type-1/2
@@ -31,7 +36,7 @@ void SetupActorVramPool(void)
 {
     const struct sprite_bank *entityBank;
     const struct sprite_bank *otherBank;
-    struct palette_cache *cache;
+    PaletteCache *cache;
     const struct sprite_anim *anims;
 
     InitObjTileFreeList(OBJ_VRAM0 + 0x1400);
@@ -41,7 +46,7 @@ void SetupActorVramPool(void)
     entityBank = (const struct sprite_bank *)SPRITE_BANK_BASE + 35;
     otherBank = entityBank + 12;
     cache = gPaletteCache;
-    FreeUnlockedPaletteSlots(cache);
+    cache->FreeUnlockedSlots();
 
     {
         u8 *arr = (u8 *)gActorCategories;
@@ -49,28 +54,28 @@ void SetupActorVramPool(void)
 
         if (*(s32 *)(arr + idx * 0x34) == CATEGORY_TYPE_POLAR) {
             anims = entityBank->anims;
-            BindPaletteSlot(cache, 7, anims[0].paletteId);
+            cache->BindSlot(7, anims[0].paletteId);
             anims = otherBank->anims;
-            BindPaletteSlot(cache, 0xf, anims[2].paletteId);
+            cache->BindSlot(0xf, anims[2].paletteId);
         } else {
             anims = entityBank->anims;
-            BindPaletteSlot(cache, 9, anims[0].paletteId);
+            cache->BindSlot(9, anims[0].paletteId);
             anims = otherBank->anims;
-            BindPaletteSlot(cache, 0xc, anims[2].paletteId);
+            cache->BindSlot(0xc, anims[2].paletteId);
             anims = otherBank->anims;
-            BindPaletteSlot(cache, 0xe, anims[8].paletteId);
+            cache->BindSlot(0xe, anims[8].paletteId);
             anims = otherBank->anims;
-            BindPaletteSlot(cache, 0xd, anims[5].paletteId);
+            cache->BindSlot(0xd, anims[5].paletteId);
             anims = otherBank->anims;
-            BindPaletteSlot(cache, 8, anims[12].paletteId);
+            cache->BindSlot(8, anims[12].paletteId);
         }
     }
 
     {
-        void *iconArray = gHud;
+        Hud *iconArray = gHud;
         u8 *arr = (u8 *)gActorCategories;
         s32 idx = gActorCategory;
 
-        ConfigureHudParts(iconArray, *(s32 *)(arr + idx * 0x34) != CATEGORY_TYPE_POLAR);
+        iconArray->ConfigureParts(*(s32 *)(arr + idx * 0x34) != CATEGORY_TYPE_POLAR);
     }
 }

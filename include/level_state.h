@@ -6,7 +6,7 @@
  * bytes). Its accessor family is src/level/level_state.cpp
  * (FreezeLevelClock through CheckAllCratesBroken); the level loop
  * (UpdateGameFrame, game_frame.cpp) and the bonus-round/checkpoint
- * functions (bonus_round.c) use it too.
+ * functions (bonus_round.cpp) use it too.
  *
  * The first 0x68 bytes are the per-attempt progress block (`progress`,
  * struct game_progress) the frame loop snapshots into `checkpointData`/
@@ -99,7 +99,7 @@ COMPILE_TIME_ASSERT(level_state_h, sizeof(struct game_progress) == 0x68);
  * room functions take (game_frame.c passes `&gLevelState->room`):
  * SelectRoom, NextRoom, EnterBonusRoom and the other level_query.c
  * functions, PlayRoom (play_room.c), RunRoom (run_room.c),
- * ResumeRoomAfterPause (room.c), UpdateRoomFrame and SetupRoomBlend
+ * ResumeRoomAfterPause (room.cpp), UpdateRoomFrame and SetupRoomBlend
  * (room_frame.c). It merges the four file-local views `level_progress`
  * (level_query.c), `level_start_args` (play_room.c; `spawnX`/`spawnY`
  * were `checkpointX`/`checkpointY`), `gl_self` (run_room.c; `widget` was

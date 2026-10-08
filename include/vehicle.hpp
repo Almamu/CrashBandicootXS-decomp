@@ -57,8 +57,7 @@ public:
  * (actor_factory.cpp) makes it gActorList, the actor list's root. The
  * other actors call its methods on `static_cast<PolarPlayer *>(gActorList)`,
  * as do the actor zone's C-linkage category hooks (actor.cpp,
- * actor_spawn.cpp); Catch, which yeti_update.c calls, keeps its C
- * prototype in vehicle.h. */
+ * actor_spawn.cpp) and UpdateYeti (yeti_update.cpp). */
 class PolarPlayer : public ActorSelf
 {
 public:

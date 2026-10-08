@@ -92,12 +92,7 @@ extern void UpdateActorPaletteCycle(void);
 extern void SetActorPaletteCycle(s32 idx);
 extern void EnableActorPaletteCycle(u8 flag);
 
-/* src/actor/actor_anim.cpp: the C names of AnimPart's methods
- * (actor_self.hpp) the yeti's C files call */
-extern s32 GetAnimFrameBaseOffset(struct actor_self *self);
-extern void SetActorAnim(struct actor_self *self, s32 idx);
-
-/* src/actor/actor_bg.c */
+/* src/actor/actor_bg.cpp */
 extern void ShakeActorBg(s32 arg0);
 extern void SetActorBgLayerDepth(s32 arg0);
 extern s32 GetActorBgLayerDepth(void);
@@ -109,14 +104,14 @@ extern s32 GetActorBgCenterX(void);
 /* src/actor/actor_category_frame.cpp */
 extern s32 RunActorCategoryFrame(void);
 
-/* src/actor/actor_category_init.c */
+/* src/actor/actor_category_init.cpp */
 extern s32 InitActorCategory(s32 category);
 
 /* src/actor/actor_category_select.cpp */
 extern void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable,
                                 u8 active, s32 variant, s32 checkpoint);
 
-/* src/actor/actor_category_stats.c */
+/* src/actor/actor_category_stats.cpp */
 extern s32 CountCategoryCrates(s32 categoryIdx);
 extern void AddActorMissedNitro(void);
 extern s32 GetActorMissedNitros(void);
@@ -148,14 +143,14 @@ extern void DestroyAllActors(void);
 extern void UpdateActorCategoryBg2(void);
 extern void SetActorCategoryExitStatus(s32 arg0);
 
-/* src/actor/actor_vram_pool.c */
+/* src/actor/actor_vram_pool.cpp */
 extern void SetupActorVramPool(void);
 
-/* src/actor/bg_picture.c */
+/* src/actor/bg_picture.cpp */
 extern void LoadBgPicture(u8 *pic);
 extern void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows);
 
-/* src/actor/cell_anim.c */
+/* src/actor/cell_anim.cpp */
 extern void SetActorCheckpoint(s32 arg0);
 extern s32 IsActorMaskAssistDue(void);
 extern void UploadCellAnimFrame(void);

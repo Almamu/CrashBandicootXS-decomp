@@ -35,8 +35,8 @@ label, with `regions` sub-lists for the composite blobs.
 - **Structure walkers** for the big blobs, written from the matched C:
   the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.cpp`),
   the level-descriptor walker (`level_layers.c`, `bg_layer.c`,
-  `collision_map.c`), the category-descriptor fields (`cell_anim.c`,
-  `bg_picture.c`, `include/actor_anim.h`), and a `LoadTaggedAsset`
+  `collision_map.cpp`), the category-descriptor fields (`cell_anim.cpp`,
+  `bg_picture.cpp`, `include/actor_anim.h`), and a `LoadTaggedAsset`
   header test (tag `0x00`/`0x10`/`0x30`) at every pointer target.
 
 The helper scripts are not in the repo; the algorithms are described
@@ -68,7 +68,7 @@ the appendix.
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `InitLanguageSelectGraphics` | high | **done** (C) |
 | `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_layer.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
-| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.c`, `cutscene_player.c`, `room_entities.cpp` | high | **done** (C, [levels.md](./levels.md)) |
+| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.cpp`, `cutscene_player.c`, `room_entities.cpp` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.cpp`/`sprite_pieces.cpp` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
@@ -143,7 +143,7 @@ Nothing references this label directly. It is reached through the
 category descriptors `gActorCategories[0..2]` (`include/actor_anim.h`):
 `cellAnim = 0x0803B8B0`, `cellAnimSize = 0x75B94`, and
 `sub_effect_table = 0x080B1444` for category 0. `InitActorCategory`
-passes the first two to `InitCellAnim` (`src/actor/cell_anim.c`).
+passes the first two to `InitCellAnim` (`src/actor/cell_anim.cpp`).
 That function reads a "cell record": a 256-colour palette (DMA'd whole to
 `0x05000000` by `ResetCellAnimBg`), `s16` cols and rows at `+0x200`/`+0x202`,
 then frames of `cols*rows*32` bytes of 4bpp tiles. When the category type
@@ -189,7 +189,7 @@ and cell animation B, the category 3 picture and its table too
 built too: it is the zero padding gbagfx writes after the `.lz` stream
 (docs/data.md, "LZ77 stream padding").
 
-The **BG1 picture** format, from `LoadBgPicture` (`bg_picture.c`):
+The **BG1 picture** format, from `LoadBgPicture` (`bg_picture.cpp`):
 `u16 palette[256]`, `s16 cols @0x200`, `s16 rows @0x202`,
 `u32 tiles @0x204`, `u16 map[cols*rows]` padded to 4 bytes (`((n+1)/2)*4`),
 `tiles*32` bytes of 4bpp tiles, then `(n+1)/2` bytes of palette-bank
@@ -278,7 +278,7 @@ Walking them:
   ... `08270BCC` (33) and `082B9ED0` ... `082BEADC` (8).
 - `struct bg_layer_desc` (0x20, `bg_layer.c`): `u16 *chunkGrid`,
   `u32 assetOffset` (the streamers use `level asset + assetOffset` as
-  their decode base, `collision_map.c`/`cutscene_player.c`), `tileData`,
+  their decode base, `collision_map.cpp`/`cutscene_player.c`), `tileData`,
   `scaleX`, `scaleY`, `cnt`, grid width/height in chunks
   (`+0x16`/`+0x18`), size in tiles (`+0x1A`/`+0x1C`).
 - `tileData` is either one of the built LZ77 tile sets

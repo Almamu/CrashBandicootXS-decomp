@@ -3,7 +3,7 @@
 
 /* The player as C++ (#664, docs/cplusplus.md, part 8): the class behind
  * gPlayerVtable, whose code is src/player/player_*.cpp. player.h's `struct
- * player` is its C view, for the C files (bonus_round.c); the two are
+ * player` is its C view (no C file reads it any more); the two are
  * checked against each other field by field below. cxx_symbols.txt maps the methods to the C names.
  *
  * No `#pragma interface`: g++ emits the vtable in player_collide.cpp (see

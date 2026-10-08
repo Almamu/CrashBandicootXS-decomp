@@ -1,3 +1,7 @@
+#include "actor_self.hpp"
+#include "audio.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "match.h"
@@ -7,6 +11,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "globals.h"
+}
 
 /* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A
@@ -20,14 +25,6 @@
  * flag. `YetiStateChase` and `YetiStateCharge` are two of `gYetiStateFuncs`'s
  * four vtable slots operating on this object (see
  * docs/matching/archive/issue-54-actor-d3a8.md). */
-
-/* codegen: PlayAmbientSfx takes a fifth argument, a one-byte struct on
- * the stack (audio.h). YetiStateChase stores the byte at sp itself
- * (`mov r4, sp; mov r1, #1; strb r1, [r4]`); passing a `struct byte_arg`
- * schedules the `mov r1, #1` before the `mov r4, sp`.
- * docs/headers_plan.md */
-extern void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset,
-                             s32 volumeMul) asm("PlayAmbientSfx");
 
 /* Re-derives `gYetiPosition`/`gYetiDistance` (a small per-frame ease
  * toward a `GetCellAnimDistance()`-driven target, with a `+0x99` nudge on the
@@ -44,8 +41,6 @@ extern void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset,
  * cue while `gYetiDistance <= 0x7800`). */
 void YetiStateChase(void)
 {
-    u8 dummyStack;
-
     if (GetCellAnimSpeed() == 0x24) {
         gYetiPosition = INT_TO_Q8(GetCellAnimDistance()) - gYetiDistance;
     } else {
@@ -63,22 +58,10 @@ void YetiStateChase(void)
 
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xc) {
-                void *a0 = gAudioContext;
-                s32 a2 = 0x3E8;
-                s32 a3 = 0x100;
-                u8 *stackPtr = &dummyStack;
-
-                *stackPtr = 1;
-                PlayAmbientSfx_4(a0, 0x3f, a2, a3);
+                gAudioContext->PlayAmbientSfx(0x3f, 0x3E8, 0x100, true);
                 ShakeActorBg(0x200);
             } else if (tier == 0x1c) {
-                void *a0 = gAudioContext;
-                s32 a2 = 0x3E8;
-                s32 a3 = 0x100;
-                u8 *stackPtr = &dummyStack;
-
-                *stackPtr = 1;
-                PlayAmbientSfx_4(a0, 0x40, a2, a3);
+                gAudioContext->PlayAmbientSfx(0x40, 0x3E8, 0x100, true);
                 ShakeActorBg(0x200);
             } else if (tier == 0xd || tier == 0x1d) {
                 ShakeActorBg(0x100);
@@ -122,16 +105,11 @@ void YetiStateChase(void)
         do_transition:
             gYetiState = 1;
             {
-                struct actor_self *bc = gYeti;
-
-                bc->animIndex = 1;
-                bc->animTimer = bc->anims[1].duration;
-                bc->animDone = 0;
-                bc->animTime = 0;
+                gYeti->RestartAnim(1);
             }
 
             if (gYetiDistance <= 0x7800) {
-                PlaySfx(gAudioContext, SFX_YETI_CHASE, 0x100);
+                gAudioContext->PlaySfx(SFX_YETI_CHASE, 0x100);
             }
         end_transition:;
         }
@@ -166,14 +144,14 @@ void YetiStateCharge(void)
 
         if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xb) {
-                PlaySfx(gAudioContext, SFX_YETI_STOMP_1, 0x100);
+                gAudioContext->PlaySfx(SFX_YETI_STOMP_1, 0x100);
                 /* The ROM cross-jumps only the ShakeActorBg(0x200) tail
                  * of the two cues; without the barrier the PlaySfx call
                  * is shared too (as YetiStateChase's is). */
                 MATCH_BARRIER();
                 ShakeActorBg(0x200);
             } else if (tier == 0x1b) {
-                PlaySfx(gAudioContext, SFX_YETI_STOMP_2, 0x100);
+                gAudioContext->PlaySfx(SFX_YETI_STOMP_2, 0x100);
                 ShakeActorBg(0x200);
             } else if (tier == 0xc || tier == 0x1c) {
                 ShakeActorBg(0x100);
@@ -182,14 +160,11 @@ void YetiStateCharge(void)
     }
 
     {
-        struct actor_self *bc = gYeti;
+        AnimPart *bc = gYeti;
 
         if (bc->animDone != 0) {
             gYetiState = 0;
-            bc->animIndex = 0;
-            bc->animTimer = bc->anims[0].duration;
-            bc->animDone = 0;
-            bc->animTime = 0;
+            bc->RestartAnim(0);
         }
     }
 }

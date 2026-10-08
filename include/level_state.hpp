@@ -7,7 +7,7 @@
  * (InitLevelState, src/level/spawn_pickups.cpp) and whose destructor
  * frees them (DestroyLevelState, src/level/level_cutscene.cpp; UNUSED:
  * the game never leaves MainLoop). GetLevelState (level_state.cpp) makes
- * the one instance. Its other functions (level_state.cpp, bonus_round.c,
+ * the one instance. Its other functions (level_state.cpp, bonus_round.cpp,
  * ...) keep C linkage and take the struct. It has no vtable.
  *
  * `#pragma interface`: no class here has a vtable, so there is none to

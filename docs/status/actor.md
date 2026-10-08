@@ -28,22 +28,22 @@ from "core" graphics.
   the AABB-overlap group `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `FindShotTarget`
   (`actor_category_frame.c`) and `DetonateNearbyPolarNitros` (`polar_nitro.c`) - one shared
   inline with the three boxes in one frame struct, both files moved to
-  old_agbcc; the tile-map fill `FillCellAnimTilemap` (`cell_anim.c`) and its
-  inlined twin in `ResetCellAnimBg` (`cell_anim.c`) - `tile++` in each
-  branch; `UploadCellAnimFrame` (`cell_anim.c`); and the trampolines
+  old_agbcc; the tile-map fill `FillCellAnimTilemap` (`cell_anim.cpp`) and its
+  inlined twin in `ResetCellAnimBg` (`cell_anim.cpp`) - `tile++` in each
+  branch; `UploadCellAnimFrame` (`cell_anim.cpp`); and the trampolines
   `JetpackIsPauseLocked`/`PolarIsPauseLocked` (`actor_spawn.c`), which return the
   callee's result.
 
 - **Actor-zone NAKED near-miss retry** ([docs/matching/archive/actor-zone-naked-retry.md](../matching/archive/actor-zone-naked-retry.md)):
-  the AABB-overlap trio `UpdateYeti` (`yeti_update.c`), `IsTouchingYeti`
-  (`yeti_graphics.c`) and `IsTouchingAirship` (`airship_touch.c`) - the boxes
+  the AABB-overlap trio `UpdateYeti` (`yeti_update.cpp`), `IsTouchingYeti`
+  (`yeti_graphics.cpp`) and `IsTouchingAirship` (`airship_touch.c`) - the boxes
   are members of one stack-frame struct, so their addresses are
   rematerialized from sp as in the ROM; `LoadYetiGraphics`
-  (`yeti_graphics.c`); the BG-tilemap blit twins `DrawAirshipMap`
+  (`yeti_graphics.cpp`); the BG-tilemap blit twins `DrawAirshipMap`
   (`airship_map.c`) and `DrawHovercraftMap` (`hovercraft.c`); and the
   easing helper `SteerAirship` (`airship.c`). All plain C, no
   register pins; they were NAKED. `airship_map.c`, `airship_touch.c`,
-  `yeti_graphics.c` and `hovercraft.c` moved to old_agbcc.
+  `yeti_graphics.cpp` and `hovercraft.c` moved to old_agbcc.
 
 - **`ActionCtrlStateIdle`** (`src/player/action_ctrl_idle.c`) and **`HandleActionCtrlAirInput`**
   (`src/player/action_ctrl_update.c`) - issue #16: two
@@ -541,7 +541,7 @@ from "core" graphics.
   singleton and its `self` object, non-adjacent since the parked
   `AllocJetpackPlayerTiles`/`CreateJetpackShot`, `RunJetpackPlayerState`
   (`jetpack_player.c`, now matched - see below), `LoadBgPicture`/
-  `FillBgPictureMap` (`bg_picture.c`: 8E8 matched, 7B0 still NAKED - see
+  `FillBgPictureMap` (`bg_picture.cpp`: 8E8 matched, 7B0 still NAKED - see
   below) and `UpdateJetpackPlane`
   (`jetpack_plane.c`, now matched - see below) sit interleaved between them; see
   [docs/matching/archive/issue-56-0x0802f0dc-actor.md](../matching/archive/issue-56-0x0802f0dc-actor.md)):
@@ -660,7 +660,7 @@ from "core" graphics.
   `UpdatePolarBoostPad`, `CreatePolarBoostPad`, `UpdatePolarCheckpointCrate`, `CreatePolarCheckpointCrate` -
   `InitActorPart`-based constructor variants plus the
   `gLevelState+0x78` Aku-Aku-mask-style add/remove pair.
-- `src/graphics/actor_part59.c`, now `src/vehicle/yeti_states.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part59.c`, now `src/vehicle/yeti_states.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part74.c` sits between it and `actor_part58.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
@@ -668,25 +668,25 @@ from "core" graphics.
   tracking object's two `gYetiStateFuncs` vtable-slot update
   functions (accumulate/clamp, tier-keyed `PlaySfx`/`PlayAmbientSfx`
   cues, and a shared kind/anim-reset transition tail).
-- `src/graphics/actor_part60.c`, now part of `src/vehicle/yeti.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part60.c`, now part of `src/vehicle/yeti.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part75.c` sits between it and `actor_part59.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
   `StopYeti`, `DestroyYeti`, `CreateYeti` - the
   `gYeti` object's state-flag setter, destructor, and
   constructor.
-- `src/graphics/actor_part61.c`, now part of `src/vehicle/yeti.c` (new file, GitHub issue #54, non-
+- `src/graphics/actor_part61.c`, now part of `src/vehicle/yeti.cpp` (new file, GitHub issue #54, non-
   adjacent since `actor_part76.c` sits between it and `actor_part60.c`;
   see
   [docs/matching/archive/issue-54-actor-d3a8.md](../matching/archive/issue-54-actor-d3a8.md)):
   `YetiStateCaught` - a genuine no-op stub.
-- `src/vehicle/polar_objects.c`, `yeti_update.c`, `yeti.c`
+- `src/vehicle/polar_objects.c`, `yeti_update.cpp`, `yeti.cpp`
   (GitHub issue #54, promoted from NAKED in the issue #51/#54 retry -
   see
   [docs/matching/archive/issue-51-54-naked-retry.md](../matching/archive/issue-51-54-naked-retry.md)):
   `MovePolarAkuAku` (per-state position easing), `UpdateYetiPalette`/`UpdateYetiBg2`
   (the `gYeti` gauge's palette ramp and affine BG2 setup;
-  `yeti_update.c` now builds with old_agbcc) and `BuildYetiBg2Map` (an
+  `yeti_update.cpp` now builds with old_agbcc) and `BuildYetiBg2Map` (an
   unused copy of the gauge's dot-pattern fill).
 - `src/vehicle/jetpack_spawn.c` (new file, ROM `0x0802E0A4`-
   `0x0802F0DC`, the gap between issue #54's chunk and issue #56's
@@ -763,8 +763,8 @@ from "core" graphics.
   became two named `s16` fields (`loopThreshold`/`loopBase`), both read
   by `UpdateJetpackCheckpointText`.
 
-- `src/actor/actor_vram_pool.c`/`actor_category_init.c`/`actor_category_stats.c`/
-  `cell_anim.c`/`actor_bg.c`
+- `src/actor/actor_vram_pool.cpp`/`actor_category_init.cpp`/`actor_category_stats.cpp`/
+  `cell_anim.cpp`/`actor_bg.cpp`
   (new files, GitHub issue #48, ROM 0x080291A4-0x08029E4C):
   `SetupActorVramPool` (pins the category's tile-cache slots and
   rebuilds its status-icon OAM row), `CountCategoryCrates` (counts
@@ -773,7 +773,7 @@ from "core" graphics.
   subsystem interleaved in this same ROM region (`AddActorMissedNitro`-
   `GetActorBgLayerDepth`, minus the NAKED functions below) - see
   [docs/matching/archive/issue-48-0x080291a4-actor.md](../matching/archive/issue-48-0x080291a4-actor.md).
-- `src/actor/actor_bg.c`/
+- `src/actor/actor_bg.cpp`/
   `actor_spawn.c` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C):
   `ActorCategoryEndStub`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX` (the
   BG2-affine scroll subsystem's tail), the `gActorSpawnTable`
@@ -923,7 +923,7 @@ from "core" graphics.
   level spawn record into a factory call) and the player constructor.
   All 7 real C, current agbcc (both compilers match). See
   [docs/matching/archive/issue-51-actor-2ac28.md](../matching/archive/issue-51-actor-2ac28.md).
-- **Second near-miss sweep:** `InitCellAnim` (`cell_anim.c`, console
+- **Second near-miss sweep:** `InitCellAnim` (`cell_anim.cpp`, console
   geometry setup) and `SelectActorCategory` (`actor_category_select.c`) promoted
   from NAKED to real C, both matching under either compiler. See
   [near-miss-polish-2.md](../matching/archive/near-miss-polish-2.md).
@@ -1023,7 +1023,7 @@ See [docs/matching/archive/strag2-naked-retry.md](../matching/archive/strag2-nak
 
 ### Matched in the late-ROM NAKED retry
 
-- `src/actor/bg_picture.c` - `LoadBgPicture` and `FillBgPictureMap`
+- `src/actor/bg_picture.cpp` - `LoadBgPicture` and `FillBgPictureMap`
   (the BG1 picture loader and its map repack loop, issue #56), old_agbcc
   (the object is on `OLD_AGBCC_OBJS`). 7B0 inlines a `static inline`
   copy of the loop (the ROM's 7B0 has the inlined loop's two store
@@ -1042,7 +1042,7 @@ See [docs/matching/archive/late-rom-naked-retry.md](../matching/archive/late-rom
 
 ### Matched in the category-driver NAKED retry
 
-- `src/actor/actor_category_init.c` - `InitActorCategory` (issue #48), the
+- `src/actor/actor_category_init.cpp` - `InitActorCategory` (issue #48), the
   category setup + per-VBlank loading loop, old_agbcc (object added to
   `OLD_AGBCC_OBJS`). First C draft; the "four high-register pins" were
   loop.c's own hoisting. Pointer locals for the two counters assigned at
@@ -1207,7 +1207,7 @@ plain C didn't converge.
   GitHub issue #9/#10) - the part-object movement-resolution pair
   `docs/matching/archive/issue-9-0x08007634-actor.md` flagged as built on
   `OffsetToHitboxEdge`/`ProbeTerrain`/`ProbeSolidFloorHeight`/`ProbeFloorHeight` (the first
-  two now matched, see `sprite_obj.c`/`terrain_probe.c`). `ProbeGroundSpriteFloor`
+  two now matched, see `sprite_obj.c`/`terrain_probe.cpp`). `ProbeGroundSpriteFloor`
   is a single Y-axis "floor" probe via `ProbeFloorHeight`; `ProbeGroundSpriteTerrain` is
   the larger orchestrator - two gate checks, an unconditional
   `self+0x74` zero (confirming and completing `docs/rom_map.md`'s own

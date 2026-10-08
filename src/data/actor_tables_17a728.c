@@ -46,7 +46,7 @@ const u16 gPolarAkuAkuPalette3[16] = {
     0x4E73, 0x6739, 0x56B5, 0x6F7B, 0x4631, 0x6F7B, 0x6739, 0x0000,
 };
 
-/* The records YetiStateChase and YetiStateCharge (yeti_states.c) index by
+/* The records YetiStateChase and YetiStateCharge (yeti_states.cpp) index by
  * gYetiParamsIndex: a value, then two random-roll thresholds (out of
  * 0x100) for the state change. */
 const s32 gYetiChargeParams[6][3] = {

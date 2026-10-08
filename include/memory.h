@@ -49,7 +49,9 @@ void mem_collect(s32 arg0);
 void mem_heap_shutdown(void);
 
 /* The C++ new/delete operators: EWRAM allocations through mem_alloc/
- * mem_free. src/level/camera.c holds them for ROM order. */
+ * mem_free. src/level/camera.cpp defines them as the global `operator
+ * new` & co. (for ROM order); these are their C names (cxx_symbols.txt),
+ * for the code that calls them by name. */
 extern void OperatorDeleteArray(void *ptr);
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDelete(void *ptr);

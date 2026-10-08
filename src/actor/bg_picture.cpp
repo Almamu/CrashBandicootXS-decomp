@@ -1,9 +1,11 @@
+extern "C" {
 #include "core.h"
 #include "match.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+}
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/archive/issue-56-0x0802f0dc-actor.md.

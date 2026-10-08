@@ -11,7 +11,7 @@ extern "C" {
 
 /* Aku Aku's masks, the goal, the boost pad and the checkpoint crate
  * (#664 part 11d, include/vehicle.hpp), ROM 0x0802D3A8-0x0802D5D4, between
- * polar_objects.cpp and yeti_update.c. The mask level is the level's
+ * polar_objects.cpp and yeti_update.cpp. The mask level is the level's
  * (gLevelState->maskLevel, SetMaskLevel); PolarAkuAku::Refresh
  * (polar_objects.cpp) shows it. */
 

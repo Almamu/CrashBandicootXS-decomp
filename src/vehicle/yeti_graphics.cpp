@@ -1,17 +1,20 @@
+#include "actor_self.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
-#include "actor_self.h"
 #include "actor_anim.h"
 #include "system.h"
 #include "vehicle.h"
+}
 
-/* Sits right after yeti_states.c's `YetiStateCharge` and before
- * yeti.c's `StopYeti` - the whole contiguous range that used
+/* Sits right after yeti_states.cpp's `YetiStateCharge` and before
+ * yeti.cpp's `StopYeti` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_dd9c.s`. Both functions continue the
- * `gYeti`-rooted "gauge" object documented in yeti_states.c/
- * yeti_update.c's header comments. */
+ * `gYeti`-rooted "gauge" object documented in yeti_states.cpp/
+ * yeti_update.cpp's header comments. */
 
-/* `UpdateYeti`'s (yeti_update.c) shared AABB-overlap-test tail,
+/* `UpdateYeti`'s (yeti_update.cpp) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
  * always reading the player global - used by `UpdatePolarCheckpointCrate`
  * (polar_aku_aku.cpp, already matched, called as `IsTouchingYeti(self)`)
@@ -49,7 +52,7 @@ hit:
     return 1;
 }
 
-u8 IsTouchingYeti(struct actor_self *self)
+u8 IsTouchingYeti(ActorSelf *self)
 {
     struct {
         struct anim_box a, b, t;
@@ -67,7 +70,7 @@ u8 IsTouchingYeti(struct actor_self *self)
 }
 
 /* The `gYeti` object's own initial VRAM-pattern/DMA setup
- * (called once from `CreateYeti`'s constructor, yeti.c): sets
+ * (called once from `CreateYeti`'s constructor, yeti.cpp): sets
  * `REG_DISPCNT`'s OBJ-window-enable bit (`DISPCNT_OBJWIN_ON`, bit 15),
  * then runs the same 16x16 BG2 map-fill loop twice into a
  * 0x100-byte stack buffer (`BuildYetiBg2Map`'s own loop body, parameterized
@@ -79,7 +82,7 @@ u8 IsTouchingYeti(struct actor_self *self)
  * (`gYetiBg2Page = 1`), passes the object's current frame data
  * (past its 4-byte header) to the `gUnpackNibbleTilesFunc` hook, latches
  * `gYetiBg2PageFlip`, and
- * finally calls `UpdateYetiBg2`/`UpdateYetiPalette` (yeti_update.c) to prime
+ * finally calls `UpdateYetiBg2`/`UpdateYetiPalette` (yeti_update.cpp) to prime
  * the gauge's sound/palette state immediately.
  *
  * The frame pointer goes through the usual `CurFrame()` inline with the
@@ -100,7 +103,7 @@ static inline void FillDotPattern(u8 *dst, u8 seed)
     }
 }
 
-static inline u8 *CurFrame(struct actor_self *self)
+static inline u8 *CurFrame(AnimPart *self)
 {
     s32 t = Q8_TO_INT(self->animTime);
 

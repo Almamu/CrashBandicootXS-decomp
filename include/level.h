@@ -8,7 +8,7 @@
  * definition (the BG layers are C++ classes, include/bg_layer.hpp), and
  * the globals and tables the level files use
  * (docs/headers_plan.md). OperatorNew and the other new/delete operators
- * (camera.c) are in memory.h. A .c file that needs a different local
+ * (camera.cpp) are in memory.h. A .c file that needs a different local
  * declaration for codegen keeps it as an asm-label alias with a
  * `codegen:` comment.
  *
@@ -40,7 +40,7 @@ struct terrain_type {
 };
 
 /* The 16-slot decode/LRU tile-record cache used throughout this cluster
- * of files (`bg_layer_base.cpp`/`tile_cache.cpp`/`collision_map.c`, gLevelLayers->tiles; docs/rom_map.md's
+ * of files (`bg_layer_base.cpp`/`tile_cache.cpp`/`collision_map.cpp`, gLevelLayers->tiles; docs/rom_map.md's
  * "Collision/terrain-map streamer" / "`GetCollisionChunk` (16-slot LRU
  * cache/decode dispatcher)"). `id[N]` holds the record ID currently
  * decoded into the matching 256-byte `buf[N]` slot; `nextSlot` is the
@@ -48,9 +48,9 @@ struct terrain_type {
  * decodes a new record (evicting slot `(nextSlot - 1) & 0xf`, i.e. the
  * slot filled just before the current cursor position). The descriptor
  * this cache is built from (`source` below, populated by `SetCollisionSource`
- * in collision_map.c) is kept as raw offsets rather than its own struct -
+ * in collision_map.cpp) is kept as raw offsets rather than its own struct -
  * it's never allocated by any function in this cluster, so its full
- * shape isn't confirmed enough to commit to one. (terrain_probe_axes.c
+ * shape isn't confirmed enough to commit to one. (terrain_probe_axes.cpp
  * reads `unk010`/`unk014` as the width and height in tiles.) */
 struct tile_cache {
     void *source; /* 0x000 */
@@ -83,10 +83,10 @@ struct level_layers {
     void *asset;                       // 0x24
     u8 assetOwned;                     // 0x28
     // 0x29 - the terrain kind the last probe hit, recorded while `probeFlag` is set
-    // (ProbeTerrainX/Y; terrain_probe_axes.c's `nibble`)
+    // (ProbeTerrainX/Y; terrain_probe_axes.cpp's `nibble`)
     u8 kind;
     // 0x2A - CollidePlayer sets it around its ground probe (player_collide.c's `busy`,
-    // terrain_probe_axes.c's `flagHeld`)
+    // terrain_probe_axes.cpp's `flagHeld`)
     u8 probeFlag;
     // 0x2B - set when the room's blend mode is 1 (SetupRoomBlend): sprites then
     // take layer 0's priority minus one (GetSpriteObjPriority)
@@ -122,7 +122,7 @@ struct entity_spawner;
  * CameraLead in level_select.hpp): the C view of the Sprite they both
  * derive from, with Sprite's names (include/sprite_obj.hpp checks the
  * offsets). `pos` is Sprite's x, y: the camera copies it as one 8-byte
- * struct (camera.c). */
+ * struct (camera.cpp). */
 struct camera_target {
     struct vec2 pos; // 0x00 - Q8
     u8 unk_08[0x1C]; // 0x08-0x23
@@ -131,7 +131,7 @@ struct camera_target {
     u8 mirror;       // 0x28 - bit 4 is the X mirror flag
 };
 
-/* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.c):
+/* The camera (`gCamera`, 0x18 bytes, allocated by PlayRoom; camera.cpp):
  * a Q8 position, a Q8 look-ahead offset, the followed object and the
  * mode. run_room.cpp called it `struct gl_scratch`, action_ctrl_event.c
  * `struct follow_state` and level_select.c `struct follow_owner`. */
@@ -156,17 +156,17 @@ extern void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 m
 extern s8 GetSolidTerrainModeValue(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 extern void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest);
 
-/* src/level/bonus_round.c */
+/* src/level/bonus_round.cpp */
 extern void EndBonusRound(struct level_state *self, u8 arg1);
 extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 
-/* src/level/camera.c */
+/* src/level/camera.cpp */
 extern void StepCameraDirectional(struct camera *cam);
 extern void StepCameraFacing(struct camera *cam);
 extern void SnapCamera(struct camera *cam);
 extern void UpdateCamera(struct camera *cam);
 
-/* src/level/collision_map.c */
+/* src/level/collision_map.cpp */
 extern u16 GetCollisionCell(struct tile_cache *self, s32 x, s32 y);
 extern void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source);
 extern s32 SetBitmapBit(void *self, s32 n);
@@ -188,10 +188,7 @@ extern void UpdateGameFrame(struct level_state *self);
 /* src/level/level_cutscene.cpp */
 extern void PlayCutscene(void *self, s32 idx);
 
-/* src/level/level_layers.cpp: LevelLayers's methods (include/bg_layer.hpp)
- * under their C names (cxx_symbols.txt), for the C callers */
-extern void SetLevelScroll(struct level_layers *self, s32 x, s32 y);
-extern void ResetLevelLayers(struct level_layers *self);
+/* src/level/level_layers.cpp */
 extern s32 sub_80269DC(void *self, s32 arg1, s32 *arg2, s32 arg3);
 extern s32 sub_80269F8(void *self, s32 arg1, s32 *arg2, s32 arg3);
 extern s32 sub_8026A14(void);
@@ -305,7 +302,7 @@ extern struct level_state *GetLevelState(void);
 /* src/level/play_room.cpp */
 extern s32 PlayRoom(struct level_progress *self);
 
-/* src/level/room.c */
+/* src/level/room.cpp */
 extern void ClearRoomExit(void);
 extern void RequestRoomExit(void);
 extern u8 IsRoomExitRequested(void);
@@ -429,17 +426,17 @@ extern void CreateEntitySpawner(void);
 /* src/level/spawn_start_marker.cpp */
 extern void SpawnStartMarker(u32 arg, u16 x, u16 y, u16 z);
 
-/* src/level/terrain.c */
+/* src/level/terrain.cpp */
 extern s32 GetTerrainFlagsAt(void *arg, s32 x, s32 y);
 extern s32 ProbeFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
 extern s32 ProbeSolidFloorHeight(void *player, struct vec2 *pos, s32 *outValue);
 extern s32 sub_8026C80(void *arg, s32 arg1, s32 *arg2);
 extern s32 sub_8026C8C(void);
 
-/* src/level/terrain_probe.c */
+/* src/level/terrain_probe.cpp */
 extern s32 ProbeTerrain(void *self, s32 mode, struct vec2 *pos, s32 span, s32 *outValue);
 
-/* src/level/terrain_probe_axes.c */
+/* src/level/terrain_probe_axes.cpp */
 extern s32 ProbeTerrainY(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,
                          s32 submode);
 extern s32 ProbeTerrainX(struct level_layers *self, struct vec2 *pos, s32 span, s32 *outValue,

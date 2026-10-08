@@ -1,8 +1,10 @@
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+}
 
 /* Counts how many of category `categoryIdx`'s sub-effect-table entries
  * (see `struct sub_effect_record`/`category_descriptor.spawnTable`

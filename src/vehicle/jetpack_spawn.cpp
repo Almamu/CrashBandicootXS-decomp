@@ -15,7 +15,7 @@ extern "C" {
 
 /* The jetpack levels' spawners and the jetpack player's constructor and
  * virtual methods (#664 part 11e, include/vehicle.hpp), ROM
- * 0x0802E0A4-0x0802F0DC, between yeti.c and jetpack_run.cpp:
+ * 0x0802E0A4-0x0802F0DC, between yeti.cpp and jetpack_run.cpp:
  *
  * - The level's spawn dispatcher `CreateJetpackActor` (a 31-case `switch`
  *   over the spawn "kind", indexing the per-kind record table
@@ -40,7 +40,7 @@ extern "C" {
  * from that sequence's first frame. */
 void YetiStateStop(void)
 {
-    ActorSelf *self = gYeti;
+    AnimPart *self = gYeti;
 
     if (self->animIndex != 3 && self->animDone != 0) {
         self->animIndex = 3;

@@ -8,7 +8,7 @@
  */
 
 /* Category 4's BG1 picture (gActorCategories[4].bgPicture,
- * loaded by LoadBgPicture in bg_picture.c): 38x16 map, 237 tiles. Built from
+ * loaded by LoadBgPicture in bg_picture.cpp): 38x16 map, 237 tiles. Built from
  * graphics/category_bg/151ac4_picture.png (palette and map) and
  * 151ac4_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_151ac4 {
@@ -277,7 +277,7 @@ const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
 
 /* The BG1 picture shared by categories 5 and 6
  * (gActorCategories[5..6].bgPicture, loaded by LoadBgPicture
- * in bg_picture.c): 38x16 map, 374 tiles. Built from
+ * in bg_picture.cpp): 38x16 map, 374 tiles. Built from
  * graphics/category_bg/155260_picture.png (palette and map) and
  * 155260_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_155260 {

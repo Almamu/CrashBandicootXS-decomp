@@ -11,8 +11,8 @@ extern "C" {
 /* GitHub issue #43: the level-layers singleton (LevelLayers,
  * include/bg_layer.hpp; `gLevelLayersSingleton`, 0x2C bytes, created on
  * first use by `Get`) - the object `gLevelLayers` also points at: the
- * camera (`camera.c`) clamps into its scroll fields via `SetScroll`, and
- * `terrain.c` reaches its terrain tile cache at `+0x20`.
+ * camera (`camera.cpp`) clamps into its scroll fields via `SetScroll`, and
+ * `terrain.cpp` reaches its terrain tile cache at `+0x20`.
  *
  * It owns BG layer 0 (`+0x10`, a PooledBgLayer), three BgLayers for
  * BG1-3 (`+0x14`-`+0x1C`), the terrain tile cache (`+0x20`, 0x1064 bytes,

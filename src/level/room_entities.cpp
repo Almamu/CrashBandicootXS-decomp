@@ -31,7 +31,7 @@ extern "C" {
  * seen here); either way `self+8`->`self+0x108` and
  * `self+0x208`->`self+0x308` get unconditionally `CpuSet`-copied via
  * `CpuSet(src, dst, 0x04000040)` (the same idiom `SetCheckpointAtPlayer`,
- * bonus_round.c, already documents in the opposite direction), and
+ * bonus_round.cpp, already documents in the opposite direction), and
  * `self+4` is set from `posArg >> 8` (a Q8-to-int truncation). `list`
  * is then walked as a `{count:u16 @2, groups:ptr @4}` header over
  * `{count:u16 @2, items:ptr @4}` 8-byte group records, each holding

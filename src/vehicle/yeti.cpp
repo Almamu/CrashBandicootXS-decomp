@@ -1,8 +1,12 @@
+#include "actor_self.hpp"
+
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "memory.h"
 #include "actor.h"
 #include "vehicle.h"
+}
 
 /* More of the `gYeti`-rooted object's lifecycle (see
  * polar_aku_aku.cpp's header comment): a state-flag setter, its
@@ -19,14 +23,7 @@ void StopYeti(void)
 /* Destructor: frees the object. */
 void DestroyYeti(void)
 {
-    mem_free(gYeti);
-}
-
-/* The actors' operator new (actor_self.hpp) as C: the size is the inline's
- * argument, so its `movs r0, #0x1c` is scheduled before the heap flag. */
-static inline void *AllocIwram(u32 size)
-{
-    return mem_alloc(size, MEM_HEAP_IWRAM);
+    delete gYeti;
 }
 
 /* Constructor: stashes the caller's argument in `gYetiParamsIndex`,
@@ -40,23 +37,8 @@ static inline void *AllocIwram(u32 size)
  * parked separately - see docs/matching/archive/issue-54-actor-d3a8.md). */
 void CreateYeti(void *arg0)
 {
-    struct actor_self *obj;
-    void **bcAddr;
-
     gYetiParamsIndex = (s32)arg0;
-    bcAddr = (void **)&gYeti;
-    obj = AllocIwram(0x1c);
-    {
-        struct anim_frame_record *v0 = (struct anim_frame_record *)gYetiKeyframes;
-        u32 *v1 = (u32 *)gYetiFrames;
-        s32 v2 = 0xf;
-
-        obj->anims = v0;
-        obj->frameOffsets = v1;
-        obj->palette = v2;
-    }
-    SetActorAnim(obj, 0);
-    *bcAddr = obj;
+    gYeti = new AnimPart((struct anim_frame_record *)gYetiKeyframes, (u32 *)gYetiFrames, 0xf);
 
     gYetiX = 0;
     gYetiDistance = 0xa000;
@@ -76,7 +58,7 @@ void CreateYeti(void *arg0)
  * (from `seed`) in the middle and tile 0xFF (the blank tile
  * LoadYetiGraphics clears at VRAM+0xBFC0) around it.
  *
- * A parameterized twin of `LoadYetiGraphics`'s (yeti_graphics.c) 16x16
+ * A parameterized twin of `LoadYetiGraphics`'s (yeti_graphics.cpp) 16x16
  * map-fill loop, taking the destination buffer
  * (`dst`) and seed byte (`seed`) as real parameters instead of the
  * fixed stack buffer/`0`-or-`0x80` seed constants `LoadYetiGraphics` uses for

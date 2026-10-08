@@ -11,7 +11,7 @@
 # `_vt.<len>Class` for a vtable.
 #
 # The global operators (g++ 2.x's assembler names; the game's own
-# replacements are in src/level/camera.c)
+# replacements, `operator new` & co., are in src/level/camera.cpp)
 __builtin_new OperatorNew
 __builtin_delete OperatorDelete
 __builtin_vec_new OperatorNewArray

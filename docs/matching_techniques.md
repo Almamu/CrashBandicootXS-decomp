@@ -295,7 +295,7 @@ Cases: [big-naked-retry-3.md](./matching/archive/big-naked-retry-3.md)
   stack array** (`subs r2, r1, #2; ...; adds r3, r0, #0; subs r3, #30;
   str r2, [sp]; str r3, [sp, #4]`, or a callee-saved r4 pushed for
   `r3:r4` in a leaf): a `struct vec2` *value* held in a DImode register
-  pair. In C, `struct vec2 goal = target->pos;` (camera.c) or an inline
+  pair. In C, `struct vec2 goal = target->pos;` (camera.cpp) or an inline
   returning a `struct vec2` gives it; g++ keeps a struct value in
   memory, so the C++ spawners `SpawnRoomExit` and `SpawnCrateGemMarker`
   still need pins (#662 step 3).

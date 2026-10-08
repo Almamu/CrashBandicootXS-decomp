@@ -92,30 +92,24 @@ extern void CreateJetpackPlayer(struct anim_table_record *table, s32 z);
 extern s32 GetPolarMaskLevel(void);
 extern u8 IsPolarPlayerInactive(void);
 
-/* src/vehicle/polar_player_actions.cpp: PolarPlayer::Catch (vehicle.hpp)
- * under its C name, for yeti_update.c. */
-extern void CatchPolarPlayer(void *self);
-
-/* src/vehicle/yeti.c */
+/* src/vehicle/yeti.cpp */
 extern void StopYeti(void);
 extern void DestroyYeti(void);
 extern void CreateYeti(void *arg0);
 extern void BuildYetiBg2Map(u8 *dst, u8 seed);
 extern void YetiStateCaught(void);
 
-/* src/vehicle/yeti_graphics.c */
+/* src/vehicle/yeti_graphics.cpp */
 #ifdef __cplusplus
 extern u8 IsTouchingYeti(class ActorSelf *self);
-#else
-extern u8 IsTouchingYeti(struct actor_self *self);
 #endif
 extern void LoadYetiGraphics(void);
 
-/* src/vehicle/yeti_states.c */
+/* src/vehicle/yeti_states.cpp */
 extern void YetiStateChase(void);
 extern void YetiStateCharge(void);
 
-/* src/vehicle/yeti_update.c */
+/* src/vehicle/yeti_update.cpp */
 extern void UpdateYeti(void);
 extern void UpdateYetiPalette(void);
 extern void UpdateYetiBg2(void);
@@ -167,12 +161,10 @@ extern class ActorSelf *gRiderlessPolar;
 #else
 extern struct actor_self *gRiderlessPolar;
 #endif
-/* The yeti's actor: an ActorSelf to the C++ files (actor_self.hpp), the
- * C files see its C view. */
+/* The yeti's animation: a 0x1C-byte AnimPart (actor_self.hpp), as the
+ * airship's (CreateYeti, yeti.cpp). No C file uses it. */
 #ifdef __cplusplus
-extern class ActorSelf *gYeti;
-#else
-extern struct actor_self *gYeti;
+extern class AnimPart *gYeti;
 #endif
 extern u8 gYetiBg2Page;
 extern u8 gYetiBg2PageFlip;

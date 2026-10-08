@@ -1,9 +1,11 @@
+extern "C" {
 #include "core.h"
 #include "math_util.h"
 #include "gba/io_reg.h"
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+}
 
 void ShakeActorBg(s32 arg0)
 {
@@ -26,7 +28,7 @@ s32 GetActorBgLayerDepth(void)
 
 /* Empty hook InitActorCategory calls once the category is over (after its
  * retry loop), before freeing the sprite caches. See
- * ActorCategoryAttemptEndStub (cell_anim.c). */
+ * ActorCategoryAttemptEndStub (cell_anim.cpp). */
 void ActorCategoryEndStub(void)
 {
 }

@@ -42,7 +42,7 @@ Contents:
 | `__pure_virtual` ("pure virtual method called") | none | no pure virtual slot is ever emitted |
 | exception tables, `__throw`, `__eh_*`, `terminate` | none | built with `-fno-exceptions` (or no `throw`) |
 | static constructor lists (`__CTOR_LIST__`, `.ctors`, a `__main` call) | none: crt0 calls `AgbMain` directly, and `AgbMain` calls no `__main` | no global object has a constructor |
-| `operator new`/`delete`/`new[]`/`delete[]` | `OperatorNew` & co. in `src/level/camera.c` | the game's own replacements: see below |
+| `operator new`/`delete`/`new[]`/`delete[]` | `OperatorNew` & co. in `src/level/camera.cpp` | the game's own replacements: see below |
 
 **The operators.** In g++ 2.x the global `operator new(size_t)` has the
 assembler name `__builtin_new`, and `new[]`, `delete` and `delete[]` are
@@ -50,9 +50,11 @@ assembler name `__builtin_new`, and `new[]`, `delete` and `delete[]` are
 `new X` expression calls `__builtin_new` and then the constructor; a
 `delete p` calls the destructor through the vtable with `__in_chrg` = 3.
 libgcc's own versions (new1.cc, new2.cc) call `malloc` and the new
-handler. The game's four, in camera.c, call `mem_alloc(size,
+handler. The game's four, in camera.cpp, call `mem_alloc(size,
 MEM_HEAP_EWRAM)` and `mem_free`: they are the game's replacement global
-operators, and `OperatorNew` is `__builtin_new`. None of libgcc's C++
+operators, and `OperatorNew` is `__builtin_new`. camera.cpp defines them
+as `operator delete[]`, `operator new[]`, `operator delete` and `operator
+new` (in ROM order), and cxx_symbols.txt gives them their C names. None of libgcc's C++
 support (new handler, `__pure_virtual`, `__terminate`) is linked.
 
 **Where the vtables are.** g++ 2.9 puts a vtable in a writable data
@@ -665,6 +667,23 @@ counts them by kind) and what the C++ needed when it was converted.
 | `src/text/text_box.cpp` | `GetWordLength`, `DrawWrappedTextInBox` (C linkage; takes a `Font *`, `self->SetMargin`, `HeightToLines`) | 0 + 2 | agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/aabb.cpp` | `CommitBlendRegs`, `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` (C linkage) | 0 + 5 | old_agbcp | 0 -> 0 | all-C++: gfx, system, util, text |
 | `src/util/fixed_math.cpp`, `line.cpp`, `line_step.cpp`, `number_format.cpp`, `printf.cpp`, `rand.cpp`, `string.cpp`, `time_format.cpp` | the fixed-point helpers, the Bresenham line, `itoa`, `sprintf`/`vsprintf`/`FindSubstring`, `rand`/`srand`/`RandRange`, the string functions, `FormatCentiseconds` (C linkage) | 0 + 24 | agbcp | 2 pins, 5 asm, 2 asm labels -> the same | all-C++: gfx, system, util, text |
+| `src/actor/actor_bg.cpp` | none (C linkage): the category BG scroll and shake | 0 + 7 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/actor/actor_category_init.cpp` | none (C linkage): `InitActorCategory`, with the pause round trip as an inline function | 0 + 1 | old_agbcp (old_agbcc C already) | 1 asm label -> 1 asm label; the Hud, OamBuffer and ObjVramCursor calls are methods | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/actor/actor_category_stats.cpp` | none (C linkage) | 0 + 4 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/actor/actor_vram_pool.cpp` | none (C linkage): `SetupActorVramPool` calls PaletteCache's and Hud's methods | 0 + 1 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/actor/bg_picture.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 2 uses -> 2 uses | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/actor/cell_anim.cpp` | none (C linkage) | 0 + 16 | agbcp | 1 asm label -> 1 asm label | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/vehicle/yeti.cpp` | none (C linkage): `CreateYeti` is `new AnimPart`, `DestroyYeti` `delete gYeti` | 0 + 5 | agbcp | 0 -> 0; the hand-written IWRAM allocation and `SetActorAnim` call go | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/vehicle/yeti_graphics.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/vehicle/yeti_states.cpp` | none (C linkage): AudioContext's `PlaySfx`/`PlayAmbientSfx`, `AnimPart::RestartAnim` | 0 + 2 | agbcp | 1 barrier, 1 asm label -> 1 barrier | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/vehicle/yeti_update.cpp` | none (C linkage): `PolarPlayer::Catch`, `AnimPart::GetAnimFrameBaseOffset`/`RestartAnim` | 0 + 3 | old_agbcp (old_agbcc C already) | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/bonus_round.cpp` | none (C linkage) | 0 + 2 | agbcp | 1 pin -> 1 pin | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/camera.cpp` | the camera (C linkage) and the global `operator new`, `new[]`, `delete`, `delete[]` | 0 + 8 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/collision_map.cpp` | none (C linkage) | 0 + 6 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/room.cpp` | none (C linkage): the PaletteCache, ObjVramCursor, OamBuffer and LevelLayers calls are methods | 0 + 5 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/terrain.cpp` | none (C linkage) | 0 + 5 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/terrain_probe.cpp` | none (C linkage) | 0 + 1 | agbcp | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
+| `src/level/terrain_probe_axes.cpp` | none (C linkage) | 0 + 2 | old_agbcp (old_agbcc C already) | 0 -> 0 | [everywhere](#c-everywhere-actor-vehicle-level) |
 
 Part 1 in numbers: 30 functions in 4 objects; `MATCH_HOLD_REG` 2151 ->
 2118 and instruction-emitting `asm` 249 -> 239 project-wide, plus one
@@ -3675,6 +3694,84 @@ string's `strcpy`/`strlen` asm labels and memory's hand-written
 `mem_walk_heaps`. `MATCH_HOLD_REG` 87 -> 87 and instruction-emitting
 `asm` 17 -> 17 project-wide (tools/match_idioms.py).
 
+### C++ everywhere: actor, vehicle, level
+
+The owner chose one language for the game: every game file under src/
+(not the data tables, not lib/) becomes C++. This batch is the actor
+zone's C helpers (actor_bg, actor_category_init, actor_category_stats,
+actor_vram_pool, bg_picture, cell_anim), the yeti (yeti, yeti_graphics,
+yeti_states, yeti_update) and the level's C files (bonus_round, camera,
+collision_map, room, terrain, terrain_probe, terrain_probe_axes): 17
+objects, all byte-identical to origin/main's (code, data, relocations and
+symbol table), each with the compiler its C had.
+
+Their functions keep C linkage: the headers they define are included in
+`extern "C" { }`, so the definitions get the C names with no
+cxx_symbols.txt entry. Five of the files compiled unchanged; the others
+needed the C++ types of the globals (globals.h and vehicle.h declare
+gHud, gPaletteCache, gOamBuffer, gObjVramCursor, gLevelLayers, gPlayer,
+gAudioContext and gActorList as classes to C++), which turned their C
+calls into method calls:
+
+- **The yeti** is a 0x1C-byte AnimPart, like the airship: gYeti is an
+  `AnimPart *` to C++ (it was an `ActorSelf *`; vehicle.h has no C
+  declaration left), CreateYeti is `new AnimPart(gYetiKeyframes,
+  gYetiFrames, 0xF)` (the hand-written IWRAM allocation, field stores and
+  SetActorAnim call went) and DestroyYeti `delete gYeti`. The animation
+  restarts are `RestartAnim`, UpdateYeti calls
+  `static_cast<PolarPlayer *>(gActorList)->Catch()` and
+  `GetAnimFrameBaseOffset()`, and IsTouchingYeti takes an `ActorSelf *`.
+  vehicle.h's CatchPolarPlayer prototype and actor.h's
+  GetAnimFrameBaseOffset/SetActorAnim prototypes (the yeti's C names) went.
+- **YetiStateChase's PlayAmbientSfx** is the method with a `bool`
+  argument: the asm-label alias that passed four arguments and stored the
+  stack byte by hand (`PlayAmbientSfx_4`, so that `mov r4, sp` came
+  before `mov r1, #1`) isn't needed; g++ stores the argument in the ROM's
+  order.
+- **The global operators** are `operator delete[]`, `operator new[]`,
+  `operator delete` and `operator new` in camera.cpp (`__builtin_vec_delete`
+  & co., which cxx_symbols.txt already renamed to the C names); memory.h
+  keeps the C names for the code that calls them by name.
+- **The rest** are the class methods the C called by their C names:
+  `PaletteCache::FreeUnlockedSlots`/`BindSlot`/`Upload`,
+  `Hud::ConfigureParts`/`Update`/`UpdateSlides`/`ShowCounters`/`SetCrateTotal`,
+  `OamBuffer::Rewind`/`Reset`/`Commit`, `ObjVramCursor::Reset`,
+  `LevelLayers::SetScroll`/`Reset`, `AudioContext::PlaySfx`, and
+  `SetEntityPos(gPlayer, ...)` without its cast. hud.h's five Hud
+  prototypes and level.h's SetLevelScroll/ResetLevelLayers had no C
+  caller left and went. struct player (player.h) has no C reader any more
+  (bonus_round.c was the last) but stays for now.
+
+None of these functions became methods: they act on globals (the yeti,
+the camera, the category state) or take C views no class replaces
+(struct tile_cache's lookups are free functions in tile_cache.cpp too),
+and no class was invented for them.
+
+**InitActorCategory** was the one that didn't compile to the same code
+unchanged: the stack frame grew by 4 bytes, gActorCategories was spilled
+and the two `ret = 1` exits were cross-jumped. Its RTL as the front ends
+emit it is the same; what differs is loop.c's invariant motion. The C++
+front end opens a binding level around every expression statement and,
+with no temporaries to clean up, leaves its begin note as a
+NOTE_INSN_DELETED: one note per statement. loop.c numbers every insn,
+notes included, so a register's lifetime there grows with the statements
+it spans, and `move_movables` hoists an invariant when `threshold *
+savings * lifetime >= insn_count`. The pause menu's two palette DMAs share
+the OBJ_PLTT and 0x80000100 constants across ten statements: lifetime 17
+and 15 in the C, 28 and 25 as C++, so the inner loop hoisted them into r8
+and r9 and the outer loop's gActorCategories had no register left. The
+pause round trip is an inline function now (`RunCategoryPauseMenu`):
+expand_inline_function drops NOTE_INSN_DELETED notes, so the inlined
+body's lifetimes are the C's again and the whole object matches. See
+the gotcha below.
+
+Kept, with their comments: bonus_round.cpp's r2 hold (SetCheckpointAtPlayer's
+CpuSet control word), bg_picture.cpp's two `MATCH_USE`s, yeti_states.cpp's
+`MATCH_BARRIER` and the `SetCheckpointAtPlayer_1` asm-label aliases of
+cell_anim.cpp and actor_category_init.cpp (the call leaves r1 as it is);
+tools/match_prune.py removes none of them. asm-label aliases 12 -> 11
+project-wide (tools/match_idioms.py); 17 more `.cpp` files under src/.
+
 ### Next batches
 
 Bigger controllers, roughly in order (function counts from
@@ -4313,3 +4410,12 @@ to C++" and "try old_agbcc/old_agbcp" as two more rewrites to test.
   inline `bool` method): the audio context was C++ ([The audio
   context](#the-audio-context)), where a copy of that flag into a second
   register had needed a pin.
+- **Every expression statement adds a note in the C++ front end** (a
+  NOTE_INSN_DELETED: the binding level opened for its temporaries), and
+  loop.c counts notes in a register's lifetime. A long C function whose
+  match depended on an invariant *not* being hoisted can hoist it as C++
+  (InitActorCategory: two DMA constants spanning ten statements). Moving
+  the statements between the invariant's uses into an inline function
+  fixes it: inlining drops those notes ([C++ everywhere: actor, vehicle,
+  level](#c-everywhere-actor-vehicle-level)). Compare the `.loop` dumps
+  (`-da`) of both builds: the "regno N (life L)" lines show it.

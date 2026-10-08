@@ -1,8 +1,12 @@
+#include "bg_layer.hpp"
+
+extern "C" {
 #include "core.h"
 #include "level_data.h"
 #include <agb_syscall.h>
 #include "level.h"
 #include "globals.h"
+}
 
 /* Same lookup as `GetTerrainHeights`/`GetTerrainType`, but returns the raw
  * decoded halfword unfiltered - no bounds check, no output params. */
@@ -13,7 +17,7 @@ u16 GetCollisionCell(struct tile_cache *self, s32 x, s32 y)
     void *src = self->source;
     s32 tileIdx = tileY * self->width + tileX;
     u16 recordId = (*(u16 **)src)[tileIdx];
-    u16 *cache = GetCollisionChunk(self, recordId);
+    u16 *cache = (u16 *)GetCollisionChunk(self, recordId);
     s32 my = y & 7;
     s32 mx = x & 0xf;
 

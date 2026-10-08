@@ -1,3 +1,7 @@
+#include "sprite_obj.hpp"
+#include "hud.hpp"
+
+extern "C" {
 #include "core.h"
 #include "actor_anim.h"
 #include "gba/dma_macros.h"
@@ -11,6 +15,7 @@
 #include "gfx.h"
 #include "level.h"
 #include "globals.h"
+}
 
 /* codegen: SetCheckpointAtPlayer takes (state, flag) (level.h); this
  * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
@@ -48,10 +53,48 @@ extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
  *    the gKeys literal with the `& 4` word test.
  *  - `zero` is volatile, as in the DmaFill16 idiom (address before the
  *    `strh`).
+ *  - The pause menu round trip is its own inline function. The C++ front
+ *    end puts a deleted note after every expression statement, and loop.c
+ *    counts notes in a register's lifetime; inlined bodies leave them out.
+ *    Written in line, the OBJ_PLTT and 0x80000100 constants of its two
+ *    DMAs live long enough to be hoisted out of the inner loop, which
+ *    spills gActorCategories and cross-jumps the `ret = 1` exits
+ *    (docs/cplusplus.md, "Dead ends and gotchas").
  */
 
 #define CUR_CATEGORY (gActorCategories[gActorCategory])
 #define PAUSED (gLevelState->timeTrial)
+
+/* The pause menu over a category: saves the OBJ palette to a heap buffer,
+ * frees the sprite caches, runs the menu, then rebuilds the VRAM pool,
+ * restores the palette and redraws the background. Returns the menu's
+ * result. */
+static inline s32 RunCategoryPauseMenu(struct dma_regs *dma)
+{
+    void *buf = mem_alloc(0x200, 0x80000000);
+    s32 result;
+
+    dma->src = OBJ_PLTT;
+    dma->dst = (u32)buf;
+    dma->cnt = 0x80000100;
+    dma->cnt;
+    FreeSpriteFrameCache();
+    FreeSpriteFrameOamQueue();
+    FreeObjTileFreeList();
+    result = RunPauseMenu();
+    SetupActorVramPool();
+    FadeBrightness(0x80, 1, 1);
+    dma->src = (u32)buf;
+    dma->dst = OBJ_PLTT;
+    dma->cnt = 0x80000100;
+    dma->cnt;
+    mem_free(buf);
+    ResetCellAnimBg();
+    if (CUR_CATEGORY.bgPicture != NULL)
+        LoadBgPicture((u8 *)CUR_CATEGORY.bgPicture);
+    ReloadActorCategoryGraphics();
+    return result;
+}
 
 s32 InitActorCategory(s32 category)
 {
@@ -65,7 +108,6 @@ s32 InitActorCategory(s32 category)
     s32 status;
     s32 result;
     u8 open;
-    void *buf;
 
     gActorCheckpointMissedNitros = 0;
     gActorCategory = category;
@@ -98,7 +140,7 @@ s32 InitActorCategory(s32 category)
         InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
                      gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
-            LoadBgPicture(CUR_CATEGORY.bgPicture);
+            LoadBgPicture((u8 *)CUR_CATEGORY.bgPicture);
         RestoreActorPaletteCycle();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= (s32)CUR_CATEGORY.bonusKindDeaths, variant,
@@ -115,14 +157,14 @@ s32 InitActorCategory(s32 category)
             status = RunActorCategoryFrame();
             if ((*state)->timeTrial != 0)
                 TickLevelClock(*state);
-            ResetObjVram(gObjVramCursor);
-            RewindOamBuffer(gOamBuffer);
-            UpdateHudSlides(gHud);
-            UpdateHud(gHud);
+            gObjVramCursor->Reset();
+            gOamBuffer->Rewind();
+            gHud->UpdateSlides();
+            gHud->Update();
             FlushSpriteFrameOamQueue();
             WaitForVBlank();
             CommitActorBgScroll();
-            CommitOamBuffer(gOamBuffer);
+            gOamBuffer->Commit();
             FlushVramDmaQueue();
             FlipCellAnimPage();
             UpdateActorCategoryBg2();
@@ -151,26 +193,7 @@ s32 InitActorCategory(s32 category)
                 if ((u8)IsBrightnessFadeActive() == 0 && ((gKeys.all >> 16) & 8))
                     open = -(u8)CanPauseActorCategory() < 0;
                 if (open) {
-                    buf = mem_alloc(0x200, 0x80000000);
-                    dma->src = OBJ_PLTT;
-                    dma->dst = (u32)buf;
-                    dma->cnt = 0x80000100;
-                    dma->cnt;
-                    FreeSpriteFrameCache();
-                    FreeSpriteFrameOamQueue();
-                    FreeObjTileFreeList();
-                    result = RunPauseMenu();
-                    SetupActorVramPool();
-                    FadeBrightness(0x80, 1, 1);
-                    dma->src = (u32)buf;
-                    dma->dst = OBJ_PLTT;
-                    dma->cnt = 0x80000100;
-                    dma->cnt;
-                    mem_free(buf);
-                    ResetCellAnimBg();
-                    if (CUR_CATEGORY.bgPicture != NULL)
-                        LoadBgPicture(CUR_CATEGORY.bgPicture);
-                    ReloadActorCategoryGraphics();
+                    result = RunCategoryPauseMenu(dma);
                     if (result == 2) {
                         ret = 2;
                         goto done;
@@ -185,7 +208,7 @@ s32 InitActorCategory(s32 category)
                     }
                 }
                 if (gKeys.all & 4)
-                    ShowHudCounters(gHud);
+                    gHud->ShowCounters();
                 continue;
             }
             break;

@@ -164,7 +164,7 @@ COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_table_end) == 0xC);
 #define SUB_EFFECT_TABLE(n) struct { struct sub_effect_record records[n]; struct sub_effect_table_end end; }
 
 /* The start of a BG0 cell animation (category_descriptor.cellAnim,
- * read by InitCellAnim/ResetCellAnimBg/UploadCellAnimFrame in cell_anim.c): a
+ * read by InitCellAnim/ResetCellAnimBg/UploadCellAnimFrame in cell_anim.cpp): a
  * 256-colour palette DMA'd whole to BG palette RAM, the grid size in 8x8
  * cells, then the frames, each `cols * rows` 4bpp tiles in row-major cell
  * order (plus, for type-0 categories, one 4-bit palette bank per cell
@@ -177,7 +177,7 @@ struct cell_anim_header {
 }; // 0x204, the frames follow
 
 /* The start of a BG1 picture (category_descriptor.bgPicture,
- * read by LoadBgPicture in bg_picture.c): a 256-colour palette, the map
+ * read by LoadBgPicture in bg_picture.cpp): a 256-colour palette, the map
  * size, the tile count, then `u16 map[cols * rows]` (padded to a multiple
  * of 4 bytes), `tileCount` 4bpp tiles, and one 4-bit palette bank per map
  * entry, low nibble first. */
