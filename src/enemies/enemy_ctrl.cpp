@@ -192,7 +192,7 @@ void EnemyCtrl::SetShotPeriod(s32 newPeriod, s32 newPhase)
 }
 
 /* The attack cycle (UpdateAttackCycle, SetState) - the same stores as
- * text_popup.h's inline SetEnemyAttackCycle, which the level spawners
+ * spawn_enemies.cpp's inline SetAttackCycle, which the enemy spawners
  * use instead.
  * UNUSED - no caller anywhere in the ROM (checked every src/ and lib/ .c
  * file and every word-aligned Thumb pointer in baserom.gba). */

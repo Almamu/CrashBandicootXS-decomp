@@ -22,8 +22,8 @@ extern "C" {
  * (`target`): `state` picks what Update does each frame (patrol, attack
  * cycle, oscillate, home in, ...; SetState), and `mode` is the part's
  * animation mode (SetAnimMode), which the per-state updaters step
- * through. CreateEnemyCtrl's controllers come from the level spawners
- * (include/text_popup.h), `new`ed in a 0x8C-byte block. It doesn't use
+ * through. The enemy spawners (src/level/spawn_enemies.cpp) make them
+ * with `new EnemyCtrl`, a 0x8C-byte block. It doesn't use
  * Ctrl's `owner` and `state`: Attach sets `target`, and its own `state`
  * at 0x74 hides Ctrl's. */
 class EnemyCtrl : public Ctrl

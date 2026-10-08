@@ -168,15 +168,12 @@ extern u8 IsTouchingAirship(void *self);
  * CortexBossPlatformMover (include/platform.hpp) under their C names
  * (cxx_symbols.txt), for the vtables. nullsub_19 and SpawnCortexBossGem
  * (spawn_gems.cpp calls it) have C linkage. */
-extern void *CreateOneShotAnimCtrl(void *self);
 extern void DestroyOneShotAnimCtrl(void *self, s32 flags);
 extern void UpdateUnusedOneShotAnimCtrl(void *self, void *part);
-extern void *CreateUnusedOneShotAnimCtrl(void *self);
 extern void DestroyUnusedOneShotAnimCtrl(void *self, s32 flags);
 extern void nullsub_19(void *self, void *part);
 extern void StartTinyHop(void *self, void *part);
 extern void DestroyTiny(void *self, s32 flags);
-extern void *CreateTiny(void *self);
 extern void UpdateCortexBoss(void *self, void *part);
 extern void SpawnCortexCannon(void *self, void *part);
 extern void SpawnCortexTarget(void *self, void *part);
@@ -188,11 +185,8 @@ extern void UpdateCortexShot(void *self, void *part);
 extern void UpdateCortexBossPlatformMover(void *self, void *part);
 extern void UpdateCortexBossGem(void *self, void *part);
 extern void DestroyCortexBossGemCtrl(void *self, s32 flags);
-extern void *CreateCortexBossGemCtrl(void *self, s32 kind);
 extern void DestroyCortexBossPlatformMover(void *self, s32 flags);
-extern void *CreateCortexBossPlatformMover(void *self);
 extern void DestroyCortexShotCtrl(void *self, s32 flags);
-extern void *CreateCortexShotCtrl(void *self, void *boss);
 
 /* src/bosses/dingodile.cpp and dingodile_create.cpp: the methods of
  * CortexTargetCtrl, CortexCannonCtrl, CortexBossCtrl, DingodileCtrl,
@@ -202,14 +196,11 @@ extern void *CreateCortexShotCtrl(void *self, void *boss);
 extern void SetCortexPlatformsKind(void *self, u8 flag);
 extern void SetCortexTargetDest(void *self, void *part, s32 x, s32 y);
 extern void DestroyCortexTargetCtrl(void *self, s32 flags);
-extern void *CreateCortexTargetCtrl(void *self, void *boss);
 extern void SetCortexCannonState(void *self, void *part, s32 next);
 extern void UpdateCortexCannon(void *self, void *part);
 extern void DestroyCortexCannonCtrl(void *self, s32 flags);
-extern void *CreateCortexCannonCtrl(void *self);
 extern void SetCortexBossState(void *self, void *part, s32 next);
 extern void DestroyCortexBoss(void *self, s32 flags);
-extern void *CreateCortexBoss(void *self);
 extern s32 GetDingodileHits(void *self);
 extern void UpdateDingodile(void *self, void *part);
 extern void SetDingodileState(void *self, void *part, s32 next);
@@ -219,15 +210,11 @@ extern void UpdateDingodileShield(void *self, void *part);
 extern void UpdateDingodileProjectile(void *self, void *part);
 extern void SpawnDingodileStalactite(void *self, u16 x, u16 y);
 extern void UpdateDingodileShark(void *self, void *part);
-extern void *CreateDingodileSharkCtrl(void *self);
 extern void DestroyDingodileSharkCtrl(void *self, s32 flags);
 extern void DestroyDingodileProjectileCtrl(void *self, s32 flags);
-extern void *CreateDingodileProjectileCtrl(void *self);
 extern void DestroyDingodileShieldCtrl(void *self, s32 flags);
-extern void *CreateDingodileShieldCtrl(void *self);
 extern void StartDingodileMotion(void *self, void *part, s32 index);
 extern void DestroyDingodile(void *self, s32 flags);
-extern void *CreateDingodile(void *self, u32 x, u32 y);
 extern void SetDingodileStep(void *self, s32 value);
 extern void SetDingodileNextState(void *self, s32 value);
 
@@ -315,7 +302,6 @@ extern void StartMegaMixMotionYFromSet(void *self, void *part, s32 index);
 extern void StartMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern void ResetMegaMixCtrl(void *self);
 extern void DestroyMegaMixCtrl(void *self, s32 flags);
-extern void *CreateMegaMixCtrl(void *self);
 extern void UpdateMegaMix(void *self, void *part);
 
 /* src/bosses/tiny_hop_pad.cpp: StompedHopPadCtrl's methods and
@@ -324,7 +310,6 @@ extern void UpdateMegaMix(void *self, void *part);
  * callers. */
 extern void UpdateStompedHopPad(void *obj, void *other);
 extern void DestroyStompedHopPadCtrl(void *self, s32 flags);
-extern void *CreateStompedHopPadCtrl(void *self);
 extern void UpdateOneShotAnimCtrl(void *unused, void *other);
 
 /* src/bosses/tiny_update.cpp: TinyCtrl's methods (include/boss_ctrl.hpp)
