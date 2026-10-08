@@ -117,7 +117,7 @@ Platform *Platform::Create(u16 id, u16 x, u16 y, u16 index, s32 kind)
         u32 slot;
 
         r += obj->tag;
-        slot = GetPaletteSlot(gPaletteCache, r->paletteId);
+        slot = gPaletteCache->GetSlot(r->paletteId);
 
         obj->palette = slot;
     }

@@ -1,3 +1,4 @@
+#include "crate_list.hpp"
 #include "crate.hpp"
 #include "player.hpp"
 
@@ -15,9 +16,9 @@ void ConvertCratesForTimeTrial(void)
 {
     s32 i = 0;
 
-    if (i < gCrateList->activeCount) {
+    if (i < gCrateList->count) {
         do {
-            Entity *e = (Entity *)gCrateList->slotArray[i];
+            Entity *e = gCrateList->slots[i];
 
             if (e->GetClassId() == 3) {
                 Crate *crate = (Crate *)e;
@@ -29,7 +30,7 @@ void ConvertCratesForTimeTrial(void)
                 }
             }
             i++;
-        } while (i < gCrateList->activeCount);
+        } while (i < gCrateList->count);
     }
 }
 

@@ -109,7 +109,7 @@ SaveMenu::SaveMenu()
     ResetSaveData(save);
     *linkSaveAddr = save;
 
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     InitIcons();
     LoadBg();
     PlaySong(gAudioContext, SONG_WARP_ROOM);

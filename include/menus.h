@@ -27,7 +27,6 @@ struct follow_child;
 struct game_progress;
 struct level_item;
 struct level_menu;
-struct settings_icon_actor;
 
 /* A screen position, as the level-select tables store them. */
 struct xy_pair {

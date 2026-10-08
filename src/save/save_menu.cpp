@@ -32,8 +32,8 @@ void SaveMenu::CommitFrame()
 {
     REG_DISPCNT = dispcnt;
     REG_BG0HOFS = frame >> 3;
-    UploadPaletteCache(gPaletteCache);
-    CommitOamBuffer(gOamBuffer);
+    gPaletteCache->Upload();
+    gOamBuffer->Commit();
     FlushVramDmaQueue();
 }
 
@@ -43,7 +43,7 @@ void CloseSaveMenu(void)
 {
     delete gSaveMenu;
     gSaveMenu = 0;
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
 }
 
 /* Builds the save menu into gSaveMenu (C linkage, for game_frame.cpp);
@@ -52,7 +52,7 @@ void OpenSaveMenu(void)
 {
     SaveMenu **dest;
 
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     dest = &gSaveMenu;
     *dest = new SaveMenu;
 }

@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "boss_ctrl.hpp"
 #include "player.hpp"
 
@@ -486,9 +487,9 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
 
             p->mirrorBits.gfxMode = kind;
             SetTag(p, 3);
-            ResetSpriteFrameTimer(p);
-            ResetSpriteFrameIndex(p);
-            SetSpriteAnimDone(p, 0);
+            p->ResetFrameTimer();
+            p->ResetFrameIndex();
+            p->SetAnimDone(0);
             p->kind = kind;
         }
         {
@@ -502,9 +503,9 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
     case 1:
         PlaySfx(gAudioContext, SFX_DINGODILE_ROCKET, 0x100);
         SetTag(p, 7);
-        ResetSpriteFrameTimer(p);
-        ResetSpriteFrameIndex(p);
-        SetSpriteAnimDone(p, 0);
+        p->ResetFrameTimer();
+        p->ResetFrameIndex();
+        p->SetAnimDone(0);
         p->kind = 4;
         {
             DingodileProjectileCtrl *c;
@@ -517,7 +518,7 @@ void DingodileCtrl::SpawnShieldOrRocket(s32 mode, u16 x, u16 y, MovingSprite *ow
         ctl = 0;
         break;
     }
-    p->palette = GetSpriteAnimPaletteSlot((struct actor *)p);
+    p->palette = p->GetAnimPaletteSlot();
     p->mover = ctl;
     ctl->Attach(p);
     bits = &((u8 *)gEntityFlags->list->params)[*gEntityFlags->list->paramOffsets];
@@ -539,12 +540,12 @@ void DingodileCtrl::SpawnShark(u16 x, u16 y, u8 facing)
 
     p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x30);
     SetTag(p, 1);
-    ResetSpriteFrameTimer(p);
-    ResetSpriteFrameIndex(p);
-    SetSpriteAnimDone(p, 0);
+    p->ResetFrameTimer();
+    p->ResetFrameIndex();
+    p->SetAnimDone(0);
     p->kind = 6;
     ctl = new DingodileSharkCtrl;
-    p->palette = GetSpriteAnimPaletteSlot((struct actor *)p);
+    p->palette = p->GetAnimPaletteSlot();
     p->mover = ctl;
     ctl->Attach(p);
     p->mirrorBits.flipX = facing;
@@ -650,7 +651,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
             /* the vulnerable bit, extracted (as a 1-bit field, g++ tests
              * it with `movs #0x40; ands`) */
             if ((t->f.flags >> 6) & 1) {
-                struct aabb hit = GetSpriteHitbox((struct box_part *)t);
+                struct aabb hit = t->GetAnimHitbox();
 
                 if (AabbOverlaps(&a, &hit)) {
                     owner->mover->SetMode(7);
@@ -689,7 +690,7 @@ void DingodileProjectileCtrl::Update(MovingSprite *part)
             part->rampY.step = 0;
             part->rampY.target = 0;
             SetTargetAnim(part, 8);
-            part->palette = GetSpriteAnimPaletteSlot((struct actor *)part);
+            part->palette = part->GetAnimPaletteSlot();
             SpawnStalactite(Q8_TO_INT(part->x), Q8_TO_INT(part->y));
             SetMode(2);
         }
@@ -732,13 +733,13 @@ void DingodileProjectileCtrl::SpawnStalactite(u16 x, u16 y)
     p->f.b.visible = 0;
     p->anim = (struct anim_table *)(SPRITE_BANK_BASE + 0x288);
     SetTag(p, 8);
-    ResetSpriteFrameTimer(p);
-    ResetSpriteFrameIndex(p);
-    SetSpriteAnimDone(p, 0);
+    p->ResetFrameTimer();
+    p->ResetFrameIndex();
+    p->SetAnimDone(0);
     p->kind = 1;
     c = new DingodileProjectileCtrl(this);
     c->SetMode(5);
-    p->palette = GetSpriteAnimPaletteSlot((struct actor *)p);
+    p->palette = p->GetAnimPaletteSlot();
     p->mover = c;
     c->Attach(p);
     p->f.b.active = 1;

@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "enemy_ctrl.hpp"
 #include "spawners.hpp"
 #include "player.hpp"
@@ -56,7 +57,7 @@ static inline void SetPos(MovingSprite *t, s32 x, s32 y)
  * ands`). */
 static inline u32 TargetHit(MovingSprite *t)
 {
-    return (((struct box_part *)t)->flags >> 3) & 1;
+    return (t->f.flags >> 3) & 1;
 }
 
 /* An 18-state dispatcher keyed off `state` (1-18; 0 or > 18 is a no-op,

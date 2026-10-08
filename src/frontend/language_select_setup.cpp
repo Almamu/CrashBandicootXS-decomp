@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "frontend.hpp"
 
 extern "C" {
@@ -47,8 +48,8 @@ void LanguageSelect::CommitFrame()
 {
     REG_DISPCNT = dispcnt.raw;
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    UploadPaletteCache(gPaletteCache);
-    CommitOamBuffer(gOamBuffer);
+    gPaletteCache->Upload();
+    gOamBuffer->Commit();
     FlushVramDmaQueue();
 }
 
@@ -62,7 +63,7 @@ LanguageSelect::~LanguageSelect()
  * fades in. */
 LanguageSelect::LanguageSelect()
 {
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     InitGraphics();
     LoadBg();
     starfield = new Starfield;
@@ -79,11 +80,11 @@ void LanguageSelect::Close()
     FadeBrightness(0, 1, 0);
     delete gLanguageSelect;
     gLanguageSelect = 0;
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
 }
 
 void LanguageSelect::Open()
 {
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     gLanguageSelect = new LanguageSelect;
 }

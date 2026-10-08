@@ -189,48 +189,6 @@ struct sprite_frame_cache_node {
     void *vramAddr;                       // 0x0C
 };
 
-/* Up to three palette colour cycles, at `gPaletteCycles`
- * (`OperatorNew(0x48)`, matching this struct's size). run_room.cpp
- * adds them with `targets` = BG palette RAM and `lists` = the palette
- * indices to cycle; every `periods[i]` = 60 / rate frames,
- * `TickPaletteCycles` shifts the colours at those indices by one
- * place. (docs/rom_map.md's "fx" investigation first read the pair as a
- * particle/projectile-trajectory queue and its `rate` argument as an
- * angle; `__divsi3` is plain division.)
- *
- * Reading both functions in full (docs/matching/
- * issue-45-hud-stat-widget-dispatcher.md's "Third pass" section) settled
- * the remaining fields: each of the 3 slots pairs a `targets`/`lists`
- * pointer pair with a `periods`/`counts` scalar pair, and `TickPaletteCycles`
- * (the per-frame consumer) rotates `targets[i]` by one position, once
- * every `periods[i]` frames (`gRoomFrameCount % periods[i] == 0`),
- * walking the permutation order given by `lists[i]` - forwards or
- * backwards depending on `direction`. `AddPaletteCycle` (the producer) only
- * ever appends at `count` (no wraparound seen in either function - the
- * caller resets the queue via `ClearPaletteCycles`/`InitPaletteCycles` between
- * bursts rather than this pair enforcing the 3-slot cap itself). The C
- * view of PaletteCycles (include/part_list.hpp), which checks the size. */
-struct palette_cycler {
-    u8 active;        /* +0x00 */
-    u8 unknown_01[3]; /* +0x01 */
-    s32 fields_e[3];  /* +0x04 - only ever written (to 0) by
-                       * AddPaletteCycle; never read by either function
-                       * matched here. Purpose unconfirmed. */
-    u16 *targets[3];  /* +0x10 - array TickPaletteCycles rotates. */
-    u16 *lists[3];    /* +0x1c - permutation order (as u16 indices
-                       * into `targets[i]`), `counts[i]` long. */
-    s32 periods[3];   /* +0x28 - AddPaletteCycle sets this from
-                       * __divsi3(0x3C, rate); TickPaletteCycles
-                       * rotates slot i once every `periods[i]`
-                       * frames. */
-    s32 counts[3];    /* +0x34 - `lists[i]`'s element count. */
-    s32 count;        /* +0x40 - number of active slots (0-3). */
-    u8 direction;     /* +0x44 - 0/1 selects which end of
-                       * `lists[i]` the rotation starts from. */
-    u8 unknown_45[3];
-};
-COMPILE_TIME_ASSERT(gfx_h, sizeof(struct palette_cycler) == 0x48);
-
 /* src/gfx/bitmap_screen.c */
 extern void ShowBitmapScreen(void *asset, void *palette);
 
@@ -267,38 +225,29 @@ extern void HideUnusedOamEntries(struct oam_shadow_buffer *self);
 extern void RewindOamBuffer(struct oam_shadow_buffer *self);
 extern void ResetOamBuffer(struct oam_shadow_buffer *self);
 extern void CommitOamBuffer(struct oam_shadow_buffer *self);
-extern void AddOamEntry(struct oam_shadow_buffer *self, const void *entry);
 
 /* src/gfx/graphics.cpp: the VRAM DMA queue and OBJ VRAM cursor */
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void FreeVramDmaQueue(void);
 extern s32 AllocVramDmaQueue(void);
-extern void RewindObjVram(struct vram_upload_cursor *self);
-extern void MarkObjVram(struct vram_upload_cursor *self);
-extern s32 GetObjVramTile(struct vram_upload_cursor *self);
 extern void ResetObjVram(struct vram_upload_cursor *self);
-extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
-extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
 
 /* src/gfx/graphics.cpp: the palette cache */
-extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
 extern void BindPaletteSlot(struct palette_cache *self, s32 slot, s32 index);
-extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
-extern void UnlockPalette(struct palette_cache *self, s32 index);
-extern void LockPalette(struct palette_cache *self, s32 index);
-extern void UploadPaletteSlot(struct palette_cache *self, s32 index);
 extern void UploadPaletteCache(struct palette_cache *self);
-extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
 
 /* src/gfx/graphics.cpp: the entity (`struct actor`, actor.h) */
 extern void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY);
 extern void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY);
 extern void nullsub_12(void);
+#ifndef __cplusplus
+/* Entity's out-of-line SetPixelPos and SetPos; the C++ files see them
+ * taking an Entity (entity.hpp). */
 extern void SetEntityPixelPos(struct actor *self, s32 x, s32 y);
 extern void SetEntityPos(struct actor *self, s32 x, s32 y);
+#endif
 
 /* src/gfx/graphics_package.cpp */
 extern void LoadGraphicsPackage(struct bg_setup *self, const struct bg_package *pkg);
@@ -311,10 +260,6 @@ extern void SetScaledSpriteColor(u8 *self, s32 arg1);
 extern void SetScaledSpritePriority(u8 *self, u32 arg1);
 extern void SetScaledSpritePos(struct gfx_box_obj *self, u32 arg1, u32 arg2);
 extern void ResetScaledSpriteAttrs(u8 *self);
-
-/* src/gfx/palette_cycle.cpp */
-extern void TickPaletteCycles(struct palette_cycler *self);
-extern void ClearPaletteCycles(struct palette_cycler *self);
 
 /* src/gfx/sprite_frame.c */
 extern void InitObjTileFreeList(void *base);
@@ -347,8 +292,11 @@ extern struct blend_regs gBlendRegs;
  * sprite_bank.h): its palettes seed the palette cache. */
 extern const struct sprite_bank_table gSpriteBankTable;
 
-/* The palette cycler instance (sym_iwram.txt; NULL outside a level). */
-extern struct palette_cycler *gPaletteCycles;
+/* The palette cycles (PaletteCycles, part_list.hpp; sym_iwram.txt; NULL
+ * outside a level). C++ only: no C file uses them. */
+#ifdef __cplusplus
+extern class PaletteCycles *gPaletteCycles;
+#endif
 
 /* src/iwram/iwram_data.c */
 extern struct brightness_fade gBrightnessFade;

@@ -17,7 +17,7 @@ extern "C" {
  * calls its C name, SetEntityPixelPos, as level_select.cpp does. */
 static inline void SetIconPos(Sprite *s, const struct icon_pos *p)
 {
-    SetEntityPixelPos((struct actor *)s, p->x, p->y);
+    SetEntityPixelPos(s, p->x, p->y);
 }
 
 /* Animation `frame` of the icon's bank, from its start. The frame is a

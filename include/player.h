@@ -19,8 +19,6 @@
 #include "constants/action_states.h"
 #include "constants/attack_kinds.h"
 
-struct box_part;
-struct crate;
 struct follow_child;
 
 /* The swim controller's turn: speedX at each frame of the turn animation
@@ -87,8 +85,8 @@ union player_flags {
 
 /* The mirror byte at +0x28 (bit 4: X mirrored, bit 5: Y mirrored), as a
  * byte (the action controller), as `u32` bits (the swim controller,
- * crate_hit.cpp, crate_touch.cpp) or as `s32` bits (crate_break.cpp, the
- * layout of `struct crate`). The bit views read the same, but the signed
+ * crate_hit.cpp, crate_touch.cpp) or as `s32` bits (crate_break.cpp,
+ * Sprite's `mirrorBits`). The bit views read the same, but the signed
  * one expands to more insns before optimization, which shifts the
  * `.LCB` label numbers in the `.s`. Packed, so that the union is one byte. */
 union player_mirror {
@@ -192,9 +190,9 @@ struct player {
     u8 unk_93;
     u8 listCount; // 0x94 - entries in `list`
     u8 unk_95[3];
-    struct crate *list[5];          // 0x98 - the recently touched crates
+    void *list[5];                  // 0x98 - the recently touched crates (Crate *s)
     void *carried;                  // 0xAC - the platform or crate the player stands on
-    struct box_part *child;         // 0xB0 - a sprite object InitPlayer creates (sprite bank 0xCC),
+    void *child;                    // 0xB0 - a sprite object InitPlayer creates (sprite bank 0xCC),
                                     //        drawn with the player (DrawPlayer)
     s32 maskTrailIdx;               // 0xB4 - the newest entry of `maskTrail`
     struct player_pos maskTrail[8]; // 0xB8 - the player's recent positions, which Aku Aku follows

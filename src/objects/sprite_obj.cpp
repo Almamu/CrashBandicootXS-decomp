@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {
@@ -44,7 +45,7 @@ s32 Sprite::HitboxOverlaps(struct aabb *region)
  * (GetPaletteSlot). */
 s32 Sprite::GetAnimPaletteSlot()
 {
-    return (u8)GetPaletteSlot(gPaletteCache, bank->anims[tag].paletteId);
+    return (u8)gPaletteCache->GetSlot(bank->anims[tag].paletteId);
 }
 
 /* UNUSED - no caller anywhere in the ROM. The inverse of
@@ -162,7 +163,7 @@ s32 Sprite::ApplyVelocity()
 /* Draws the sprite with the renderer (gSpriteRenderer). */
 void Sprite::Draw()
 {
-    ((SpriteRenderer *)gSpriteRenderer)->Draw(this);
+    gSpriteRenderer->Draw(this);
 }
 
 /* One frame: the animation timer, then the motion (ApplyVelocity), then

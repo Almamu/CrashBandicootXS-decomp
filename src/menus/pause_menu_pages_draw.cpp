@@ -54,8 +54,8 @@ void PauseMenu::DrawPageTitle()
 void PauseMenu::CommitFrame()
 {
     WaitForVBlank();
-    UploadPaletteCache(gPaletteCache);
-    CommitOamBuffer(gOamBuffer);
+    gPaletteCache->Upload();
+    gOamBuffer->Commit();
     FlushVramDmaQueue();
     *(vu16 *)PLTT = 0;
     *(vu32 *)REG_ADDR_BLDCNT = blend.raw;

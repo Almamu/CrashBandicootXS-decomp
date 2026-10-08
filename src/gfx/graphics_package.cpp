@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 extern "C" {
 #include "core.h"
 #include "math_util.h"
@@ -160,7 +161,7 @@ void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height)
  * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
 void DrawScaledSprite(struct gfx_box_obj *self)
 {
-    struct oam_shadow_buffer *buf;
+    OamBuffer *buf;
     s32 n;
 
     switch ((u32)self->oam.affineMode) {
@@ -198,7 +199,7 @@ void DrawScaledSprite(struct gfx_box_obj *self)
             buf->table[i + 3].attr[3] = param;
         }
     }
-    AddOamEntry(gOamBuffer, &self->oam);
+    gOamBuffer->Add(&self->oam);
 }
 
 /* UNUSED - no caller anywhere in the ROM (no `bl` in expected/*.s, no

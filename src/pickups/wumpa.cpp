@@ -14,7 +14,7 @@ extern "C" {
  * touched flag. */
 void Wumpa::Draw()
 {
-    ((SpriteRenderer *)gSpriteRenderer)->Draw(this);
+    gSpriteRenderer->Draw(this);
     if (animDone != 0)
         f.b.bit3 = 0;
 }

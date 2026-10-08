@@ -1,8 +1,8 @@
+#include "bg_layer.hpp"
 #include "spawners.hpp"
 #include "ctrl.hpp"
 
 extern "C" {
-#include "bg_scroll_layer.h"
 #include "level_data.h"
 #include "globals.h"
 }
@@ -68,7 +68,7 @@ MovingSprite *EntitySpawner::LaunchEffectPart(s32 anim, s32 tag, s32 margin, s32
 MovingSprite *EntitySpawner::SpawnEffectPart(s32 anim, s32 tag, s32 x, s32 y, s32 mirror)
 {
     MovingSprite *part;
-    struct bg_scroll_layer *layer;
+    BgLayer *layer;
     EffectCtrl *mgr;
 
     LIMIT_MIN(x, 0);

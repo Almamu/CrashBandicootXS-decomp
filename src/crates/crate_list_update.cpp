@@ -1,10 +1,10 @@
+#include "bg_layer.hpp"
 #include "crate_list.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "globals.h"
 #include "level.h"
-#include "bg_scroll_layer.h"
 }
 
 /* CrateList::Update (#664, part 7f; include/crate_list.hpp). An
@@ -39,7 +39,7 @@ static inline void Destroy(CrateList *list, Crate *sprite)
 void CrateList::Update()
 {
     struct aabb region;
-    struct bg_scroll_layer *cam;
+    BgLayer *cam;
     s32 lo;
     s32 i;
     s32 next;

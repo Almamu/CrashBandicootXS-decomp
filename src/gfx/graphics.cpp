@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "entity.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
@@ -482,7 +483,7 @@ u8 Entity::IsNearCamera()
 
     if (!result) {
         struct aabb near;
-        struct bg_scroll_layer *layer;
+        BgLayer *layer;
         s32 w = INT_TO_Q8(440);
         s32 h = INT_TO_Q8(280);
 
@@ -587,7 +588,7 @@ s32 Entity::IsInsideRect(struct aabb *box)
  * its low 24 bits). `unused` is not read. */
 void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY)
 {
-    struct bg_scroll_layer *layer = gLevelLayers->layer0;
+    BgLayer *layer = gLevelLayers->layer0;
     s32 dx = (layer->x << 8) >> 8;
     s32 dy = (layer->y << 8) >> 8;
 
@@ -598,7 +599,7 @@ void WorldToScreen(void *unused, s32 x, s32 y, s32 *outX, s32 *outY)
 /* A Q8 position (rounded) relative to the camera, in pixels. */
 void WorldPosToScreen(s32 *pos, s32 *outX, s32 *outY)
 {
-    struct bg_scroll_layer *layer;
+    BgLayer *layer;
     s32 x = pos[0];
     s32 y = pos[1];
 

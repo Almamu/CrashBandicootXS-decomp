@@ -202,7 +202,7 @@ Wumpa *Wumpa::Create(u16 id, u16 x, u16 y, u16 special)
     if (mode == 0xff)
         self->StartPayout();
     {
-        s32 slot = GetPaletteSlot(gPaletteCache, self->bank->anims->paletteId);
+        s32 slot = gPaletteCache->GetSlot(self->bank->anims->paletteId);
 
         self->palette = slot;
     }

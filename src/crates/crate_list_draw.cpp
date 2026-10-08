@@ -1,10 +1,10 @@
+#include "bg_layer.hpp"
 #include "crate_list.hpp"
 
 extern "C" {
 #include "math_util.h"
 #include "globals.h"
 #include "level.h"
-#include "bg_scroll_layer.h"
 }
 
 /* CrateList::Draw (#664, part 7f; include/crate_list.hpp). */
@@ -18,7 +18,7 @@ extern "C" {
 void CrateList::Draw()
 {
     struct aabb screen;
-    struct bg_scroll_layer *cam = gLevelLayers->layer0;
+    BgLayer *cam = gLevelLayers->layer0;
     s32 lo;
     s32 i;
     CrateGridNode *node;

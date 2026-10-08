@@ -426,8 +426,8 @@ public:
     {
         Update();
         WaitForVBlank();
-        UploadPaletteCache(gPaletteCache);
-        CommitOamBuffer(gOamBuffer);
+        gPaletteCache->Upload();
+        gOamBuffer->Commit();
         CommitDisplay();
     }
 

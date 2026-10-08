@@ -53,7 +53,7 @@ void StartTimeTrial(struct level_state *self)
         part->ResetFrameIndex();
         part->SetAnimDone(0);
         // clang-format off
-        LoadPaletteSlot(gPaletteCache, ((Platform *)self->gemPlatform)->palette,
+        gPaletteCache->LoadSlot(((Platform *)self->gemPlatform)->palette,
                         ((Platform *)self->gemPlatform)->bank->anims[
                             ((Platform *)self->gemPlatform)->tag].paletteId);
         // clang-format on

@@ -232,8 +232,8 @@ void LevelSelect::SetEntryBoxes()
 void LevelSelect::CommitFrame()
 {
     WaitForVBlank();
-    UploadPaletteCache(gPaletteCache);
-    CommitOamBuffer(gOamBuffer);
+    gPaletteCache->Upload();
+    gOamBuffer->Commit();
     CommitDisplay();
 }
 
@@ -243,7 +243,7 @@ void LevelSelect::ReloadPalette()
 {
     s32 i;
 
-    ClaimPaletteSlot(gPaletteCache, 0xF);
+    gPaletteCache->ClaimSlot(0xF);
     for (i = 0; i <= 7; i++)
         sprites[i]->palette = sprites[i]->GetAnimPaletteSlot();
     SetEntryBoxes();
@@ -383,7 +383,7 @@ ZoomBg::ZoomBg(s32 charBlock, s32 screenBlock)
         SetPalette(twinkles[i].part, twinkles[0].part->GetAnimPaletteSlot());
         RandomizeTwinkle(&twinkles[i]);
     }
-    LockPalette(gPaletteCache, twinkles[0].part->bank->anims[twinkles[0].part->tag].paletteId);
+    gPaletteCache->Lock(twinkles[0].part->bank->anims[twinkles[0].part->tag].paletteId);
     SetFlipX(twinkles[1].part, 1);
     SetFlipY(twinkles[2].part, 1);
     SetFlipX(twinkles[3].part, 1);

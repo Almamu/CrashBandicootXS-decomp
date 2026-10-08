@@ -1,6 +1,7 @@
 #include "hud.hpp"
 #include "frontend.hpp"
 #include "level_state.hpp"
+#include "player.hpp"
 
 extern "C" {
 #include "core.h"
@@ -60,7 +61,7 @@ extern "C" {
 void FreezeLevelClock(struct level_state *self, s32 seconds)
 {
     MATCH_HOLD_REG(s32, off, r2);
-    struct palette_cache *base;
+    PaletteCache *base;
     const struct sprite_bank_table *p3, *p3b;
     const struct sprite_bank *header, *headerb;
     const struct sprite_anim *record, *recordb;
@@ -77,17 +78,17 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     off = 0x8d << 2; /* &banks[47] */
     record = *(const struct sprite_anim **)((u8 *)header + off);
     recordId = record[1].paletteId;
-    slot = GetPaletteSlot(base, recordId);
+    slot = base->GetSlot(recordId);
 
     p3b = gSpriteBankSet->table;
     headerb = p3b->banks;
     recordb = headerb[47].anims;
     recordId = recordb[4].paletteId;
-    LoadPaletteSlot(gPaletteCache, slot, recordId);
+    gPaletteCache->LoadSlot(slot, recordId);
 
     level = self->room.cat;
     if (level->kind == ROOM_KIND_CATEGORY) {
-        UploadPaletteSlot(gPaletteCache, slot);
+        gPaletteCache->UploadSlot(slot);
     }
 }
 
@@ -135,7 +136,7 @@ void TickLevelClock(struct level_state *self)
 
         if (newCountdown == 0) {
             MATCH_HOLD_REG(s32, off, r2);
-            struct palette_cache *base;
+            PaletteCache *base;
             const struct sprite_bank_table *p3, *p3b;
             const struct sprite_bank *header, *headerb;
             const struct sprite_anim *record, *recordb;
@@ -148,17 +149,17 @@ void TickLevelClock(struct level_state *self)
             off = 0x8d << 2; /* &banks[47] */
             record = *(const struct sprite_anim **)((u8 *)header + off);
             recordId = record[1].paletteId;
-            slot = GetPaletteSlot(base, recordId);
+            slot = base->GetSlot(recordId);
 
             p3b = gSpriteBankSet->table;
             headerb = p3b->banks;
             recordb = headerb[47].anims;
             recordId = recordb[1].paletteId;
-            LoadPaletteSlot(gPaletteCache, slot, recordId);
+            gPaletteCache->LoadSlot(slot, recordId);
 
             level = self->room.cat;
             if (level->kind == ROOM_KIND_CATEGORY) {
-                UploadPaletteSlot(gPaletteCache, slot);
+                gPaletteCache->UploadSlot(slot);
             }
         }
     } else {
@@ -972,7 +973,7 @@ void EndGemPath(struct level_state *self, u8 flag)
         {
             Player *player = gPlayer;
             s32 *p = &self->room.checkpointX;
-            SetEntityPos((struct actor *)player, p[0], p[1]);
+            SetEntityPos(player, p[0], p[1]);
         }
         SetCheckpointAtPlayer(self, self->room.checkpointFlags);
     } else {

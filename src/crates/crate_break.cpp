@@ -483,7 +483,7 @@ tail:
                 pp = &f.p1;
                 pp->y = py2 - INT_TO_Q8(dy - 1);
                 gPlayer->speedY = 0;
-                SetEntityPos((struct actor *)gPlayer, f.p1.x, pp->y);
+                SetEntityPos(gPlayer, f.p1.x, pp->y);
                 PlayerQueue()->posCommitted = 1;
                 gPlayer->hitMask |= dirY;
                 return;
@@ -497,7 +497,7 @@ tail:
                     f.p2.x = INT_TO_Q8(dx) + f.p2.x;
                 else if (dirX == 1)
                     f.p2.x -= INT_TO_Q8(dx);
-                SetEntityPos((struct actor *)gPlayer, f.p2.x, PosPtr(&f.p2)->y);
+                SetEntityPos(gPlayer, f.p2.x, PosPtr(&f.p2)->y);
                 PlayerQueue()->posCommitted = 1;
                 gPlayer->HandleEvent(0, EVENT_BUMP, dirX);
                 gPlayer->hitMask |= dirX;
@@ -515,7 +515,7 @@ tail:
                     pp->y = INT_TO_Q8(dy) + pp->y;
                 else if (dirX == 8)
                     pp->y -= INT_TO_Q8(dy);
-                SetEntityPos((struct actor *)gPlayer, f.p3.x, pp->y);
+                SetEntityPos(gPlayer, f.p3.x, pp->y);
                 PlayerQueue()->posCommitted = 1;
                 gPlayer->HandleEvent(0, EVENT_BUMP, dirY);
                 gPlayer->hitMask |= dirY;
@@ -711,7 +711,7 @@ tail:
         if (code == 1 || code == 2) {
             PosPtr(&f.pos)->y -= INT_TO_Q8(dy - 1);
             PosPtr(&f.pos)->y &= ~0xff;
-            SetEntityPos((struct actor *)gPlayer, f.pos.x, PosPtr(&f.pos)->y);
+            SetEntityPos(gPlayer, f.pos.x, PosPtr(&f.pos)->y);
             PlayerQueue()->posCommitted = 1;
         } else if (code == 0 || code == 2)
             PosPtr(&f.pos)->y -= INT_TO_Q8(dy);
@@ -757,7 +757,7 @@ tail:
             else if (dirY == 4 && prev == 0 && (vy >= dy - 1 || dy <= 2))
                 ok = 0;
             if (ok) {
-                SetEntityPos((struct actor *)gPlayer, f.pos.x, PosPtr(&f.pos)->y);
+                SetEntityPos(gPlayer, f.pos.x, PosPtr(&f.pos)->y);
                 PlayerQueue()->posCommitted = 1;
             }
         }
@@ -766,8 +766,8 @@ tail:
     if (gPlayer->ctrlMode == 1 && kind == CRATE_KIND_TNT && code <= 1 &&
         AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         tgt->LightTnt();
-    PlayerQueue()->Add((struct crate *)tgt, attack, code, edge, dy, f.pos, hit,
-                       (struct byte_arg){ f20 }, (struct byte_arg){ f21 });
+    PlayerQueue()->Add(tgt, attack, code, edge, dy, f.pos, hit, (struct byte_arg){ f20 },
+                       (struct byte_arg){ f21 });
 }
 
 /* A queued hit resolved (ResolveCollisionCandidates, collision_queue.cpp):
@@ -924,7 +924,7 @@ commit:
         CollisionQueue *q = &p->collisionQueue;
 
         if (q->posCommitted == 0)
-            SetEntityPos((struct actor *)p, pos.x, pos.y);
+            SetEntityPos(p, pos.x, pos.y);
     }
     if (hit != 0) {
         gPlayer->HandleEvent(0, EVENT_BUMP, hit);
@@ -1031,7 +1031,7 @@ void Crate::LightTnt()
     Crates()->LinkActive(this);
     anims = bank->anims;
     a = &anims[tag];
-    slot = GetPaletteSlot(gPaletteCache, a->paletteId);
+    slot = gPaletteCache->GetSlot(a->paletteId);
     palette = slot;
     PlaySfx(gAudioContext, SFX_TNT_TICK, 0x100);
     timer = 0x3c;
@@ -1165,7 +1165,7 @@ void Crate::Break(u32 arg1)
     {
         const struct sprite_anim *anims = bank->anims;
         const struct sprite_anim *a = &anims[tag];
-        u32 slot = GetPaletteSlot(gPaletteCache, a->paletteId);
+        u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
         palette = slot;
     }
@@ -1535,14 +1535,14 @@ void Crate::BlastNearby(s32 dist)
 {
     s32 i = 0;
 
-    if (i < gCrateList->activeCount) {
+    if (i < gCrateList->count) {
         /* gCrateKindExplosive as an integer: `kind + table` is the ROM's
          * operand order; indexing it (or `kind + pointer`) adds the other
          * way round. */
         u32 commit = (u32)gCrateKindExplosive;
 
         do {
-            Crate *o = (Crate *)gCrateList->slotArray[i];
+            Crate *o = gCrateList->slots[i];
 
             if (o->GetClassId() == 3) {
                 s32 t1 = Q8_TO_INT(o->x) - Q8_TO_INT(x);
@@ -1564,7 +1564,7 @@ void Crate::BlastNearby(s32 dist)
                 }
             }
             i++;
-        } while (i < gCrateList->activeCount);
+        } while (i < gCrateList->count);
     }
 
     i = 0;
@@ -1599,8 +1599,8 @@ void UpdateCrates(void)
     DetonateNitroCrates();
     do {
         gCrateListChanged = 0;
-        for (i = 0; i < gCrateList->activeCount; i++) {
-            Entity *o = (Entity *)gCrateList->slotArray[i];
+        for (i = 0; i < gCrateList->count; i++) {
+            Entity *o = gCrateList->slots[i];
 
             if (o->GetClassId() == 3) {
                 if (o->f.flags & 1) {
@@ -1653,7 +1653,7 @@ void Crate::ActivateNitroSwitch()
         SetTag(0x23);
         anims = bank->anims;
         a = &anims[tag];
-        slot = GetPaletteSlot(gPaletteCache, a->paletteId);
+        slot = gPaletteCache->GetSlot(a->paletteId);
         palette = slot;
         DetonateNitroCrates();
         gHud->ShowCrates();
@@ -1687,7 +1687,7 @@ void Crate::ActivateIronSwitch()
     {
         const struct sprite_anim *anims = bank->anims;
         const struct sprite_anim *a = &anims[tag];
-        u32 slot = GetPaletteSlot(gPaletteCache, a->paletteId);
+        u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
         palette = slot;
     }
@@ -1715,6 +1715,8 @@ void Crate::ActivateIronSwitch()
 
         groupAllocated = 1;
         g->count = n;
+        /* Stored through the block as an array of words (`g[i + 1]`):
+         * written as `g->items[i]`, the loop's code differs from the ROM's. */
         for (i = 0; i < n; i++)
             ((Crate **)g)[i + 1] = found[i];
         group = g;
@@ -1753,7 +1755,7 @@ void Crate::SolidifyOutlines()
         if (PHYS_HAS_GROUP(g)) {
             s32 i;
             s32 n = g->count;
-            Crate **items = (Crate **)g->items;
+            Crate **items = g->items;
             s32 played = FALSE;
 
             for (i = 0; i < n; i++) {
@@ -1833,11 +1835,11 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
 {
     s32 i = 0;
 
-    if (i < gCrateList->activeCount) {
+    if (i < gCrateList->count) {
         const u8 *commit = gCrateKindExplosive;
 
         do {
-            Crate *o = (Crate *)gCrateList->slotArray[i];
+            Crate *o = gCrateList->slots[i];
 
             if (o->GetClassId() == 3) {
                 s32 t1 = Q8_TO_INT(o->x) - x;
@@ -1858,7 +1860,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
                 }
             }
             i++;
-        } while (i < gCrateList->activeCount);
+        } while (i < gCrateList->count);
     }
 }
 
@@ -2067,7 +2069,7 @@ void Crate::UpdateSlot()
         {
             const struct sprite_anim *anims = bank->anims;
             const struct sprite_anim *a = &anims[tag];
-            u32 slot = GetPaletteSlot(gPaletteCache, a->paletteId);
+            u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
             palette = slot;
         }
@@ -2105,7 +2107,7 @@ void Crate::UpdateSlot()
         {
             const struct sprite_anim *anims = bank->anims;
             const struct sprite_anim *a = &anims[tag];
-            u32 slot = GetPaletteSlot(gPaletteCache, a->paletteId);
+            u32 slot = gPaletteCache->GetSlot(a->paletteId);
 
             palette = slot;
         }

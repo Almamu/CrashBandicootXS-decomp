@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "frontend.hpp"
 
 extern "C" {
@@ -26,7 +27,7 @@ extern "C" {
  * reversed counter after the hoisted `&oamA`, which only strength
  * reduction emits. See docs/matching/archive/sr65-naked-retry.md. */
 
-static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
+static inline void SetAffine(OamBuffer *buf, s32 m, u16 pa, u16 pb, u16 pc, u16 pd)
 {
     s32 idx = m * 4;
 
@@ -39,7 +40,7 @@ static inline void SetAffine(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 p
 /* The tail's matrix write. Writing the two zero terms as literals
  * (instead of passing 0 through parameters as the slot loop does) is
  * what places the ROM's `movs r3, #0` after the entry address. */
-static inline void SetAffineZ(struct oam_shadow_buffer *buf, s32 m, u16 pa, u16 pd)
+static inline void SetAffineZ(OamBuffer *buf, s32 m, u16 pa, u16 pd)
 {
     s32 idx = m * 4;
 
@@ -85,7 +86,7 @@ void CompanyLogos::DrawVvLogoPieces()
             oamA.x = hdr->posA.h.i;
             oamA.tileNum = tiles >> 5;
             for (j = 0; j < 4; j++) {
-                AddOamEntry(gOamBuffer, &oamA);
+                gOamBuffer->Add(&oamA);
                 oamA.tileNum += 8;
                 oamA.x += 0x20;
             }
@@ -127,7 +128,7 @@ void CompanyLogos::DrawVvLogoPieces()
                 oamB.y = Q16_TO_INT(slot->posB.q) - 0x10;
                 oamB.x = slot->posA.h.i - 8;
                 oamB.tileNum = tile;
-                AddOamEntry(gOamBuffer, &oamB);
+                gOamBuffer->Add(&oamB);
             }
             tile += 8;
             slot++;
@@ -209,7 +210,7 @@ void CompanyLogos::DrawVvLogoPieces()
             oamC.x = slot->posA.h.i - 0x40;
         }
         oamC.tileNum = tile;
-        AddOamEntry(gOamBuffer, &oamC);
+        gOamBuffer->Add(&oamC);
         if (affine) {
             /* Read first, as the ROM loads posA before velA. */
             s32 x = slot->posA.h.i;
@@ -218,7 +219,7 @@ void CompanyLogos::DrawVvLogoPieces()
         } else
             oamC.x = slot->posA.h.i;
         oamC.tileNum = tile + 0x40;
-        AddOamEntry(gOamBuffer, &oamC);
+        gOamBuffer->Add(&oamC);
     }
 }
 

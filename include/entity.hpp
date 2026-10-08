@@ -245,4 +245,12 @@ public:
 
 COMPILE_TIME_ASSERT(entity_hpp, sizeof(Entity) == sizeof(struct actor));
 
+/* graphics.cpp's out-of-line copies of SetPixelPos and SetPos (above),
+ * under their C names (cxx_symbols.txt). The ROM calls them out of line
+ * from other files (the level select's sprites, the HUD, the crates, the
+ * rooms...), where a call to the inline method would be inlined, so those
+ * files call these. */
+extern "C" void SetEntityPixelPos(Entity *self, s32 x, s32 y);
+extern "C" void SetEntityPos(Entity *self, s32 x, s32 y);
+
 #endif /* !GUARD_ENTITY_HPP */

@@ -55,9 +55,9 @@ void PlayerCtrl::StartStroke()
     /* the ROM re-stores the byte it just read (ldrb/strb); a plain
      * self-assignment is deleted by the optimizer */
     *(volatile u8 *)&t->tag = t->tag;
-    ResetSpriteFrameTimer(t);
-    ResetSpriteFrameIndex(t);
-    SetSpriteAnimDone(t, 0);
+    t->ResetFrameTimer();
+    t->ResetFrameIndex();
+    t->SetAnimDone(0);
     SetState(2, 2, CTRL_KEEP, CTRL_KEEP);
 
     switch (tilt) {

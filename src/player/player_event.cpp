@@ -278,7 +278,7 @@ void Player::Draw()
         struct level_state *game = gLevelState;
 
         if (game->maskLevel == MASK_LEVEL_INVINCIBLE || !IsBlinking(this) || (gRoomFrameCount & 4))
-            ((SpriteRenderer *)gSpriteRenderer)->Draw(this);
+            gSpriteRenderer->Draw(this);
     }
     {
         struct level_state *game = gLevelState;

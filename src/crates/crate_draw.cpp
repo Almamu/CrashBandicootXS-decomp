@@ -21,7 +21,7 @@ void Crate::Draw()
             ClampFrame(0);
         }
     }
-    ((SpriteRenderer *)gSpriteRenderer)->Draw(this);
+    gSpriteRenderer->Draw(this);
     if (animDone != 0)
         ClearTouched();
 }

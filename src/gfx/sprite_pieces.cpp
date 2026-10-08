@@ -35,7 +35,7 @@ void SpriteRenderer::DrawPieces(Sprite *part, s32 *pos)
     struct oam_attrs oam;
     s32 total = 0;
     struct piece_info *info = (struct piece_info *)part->GetFrame();
-    s32 tile = GetObjVramTile(gObjVramCursor);
+    s32 tile = gObjVramCursor->GetTile();
     s32 i;
 
     oam.affineMode = 0;
@@ -76,7 +76,7 @@ void SpriteRenderer::DrawPieces(Sprite *part, s32 *pos)
                 oam.x = x;
                 oam.size = PieceSize73DC(id);
                 oam.tileNum = tile;
-                AddOamEntry(gOamBuffer, &oam);
+                gOamBuffer->Add(&oam);
             }
         }
         tiles = (w >> 3) * (h >> 3);
@@ -85,6 +85,5 @@ void SpriteRenderer::DrawPieces(Sprite *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    UploadObjVram(gObjVramCursor, (void *)(part->GetTileBase() + (info->u.packed & 0xffffff)),
-                  total);
+    gObjVramCursor->Upload((void *)(part->GetTileBase() + (info->u.packed & 0xffffff)), total);
 }

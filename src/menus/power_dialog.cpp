@@ -18,9 +18,9 @@ extern "C" {
  * RunLevelSelect's (level_select.cpp). */
 static inline void IconReserve(Font **m)
 {
-    struct vram_upload_cursor *c = gObjVramCursor;
+    ObjVramCursor *c = gObjVramCursor;
 
-    ReserveObjVram(c, (*m)->tileCount << 5);
+    c->Reserve((*m)->tileCount << 5);
 }
 
 /* Runs the dialog to completion: resets the display, the palette cache
@@ -35,12 +35,12 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
     WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     gSmallFont->ResetPalette();
     gLargeFont->ResetPalette();
     gObjVramCursor->baseTile = 0;
-    ResetObjVram(gObjVramCursor);
-    ResetObjVram(gObjVramCursor);
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
     {
@@ -49,11 +49,11 @@ void PowerDialog::Show(s32 title, s32 desc, s32 type)
         gLargeFont->SetTileBase(v);
     }
     IconReserve(&gLargeFont);
-    MarkObjVram(gObjVramCursor);
+    gObjVramCursor->Mark();
     dialog = new PowerDialog(GetUiText(title), GetUiText(desc), type);
     dialog->Loop();
     delete dialog;
-    FreeUnlockedPaletteSlots(gPaletteCache);
+    gPaletteCache->FreeUnlockedSlots();
     mem_free_bytes(0xC0000000);
 }
 

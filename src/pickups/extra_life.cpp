@@ -218,7 +218,7 @@ void ExtraLife::UpdateHop()
  * touched flag. */
 void ExtraLife::Draw()
 {
-    ((SpriteRenderer *)gSpriteRenderer)->Draw(this);
+    gSpriteRenderer->Draw(this);
     if (animDone != 0)
         f.b.bit3 = 0;
 }

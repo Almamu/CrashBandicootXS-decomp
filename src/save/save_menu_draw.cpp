@@ -4,7 +4,9 @@ extern "C" {
 #include "core.h"
 #include "match.h"
 #include "actor.h"
-#include "pause_menu.h"
+#include "menus.h"
+#include "graphics_package.h"
+#include "objects.h"
 #include "vram_pool.h"
 #include "text.h"
 #include "link.h"
@@ -311,9 +313,9 @@ void SaveMenu::DrawSlots(struct save_data *handle, s32 selectedIndex)
 /* Reserves a font's tiles in OBJ VRAM (as power_dialog.cpp's). */
 static inline void IconReserve(Font **m)
 {
-    struct vram_upload_cursor *c = gObjVramCursor;
+    ObjVramCursor *c = gObjVramCursor;
 
-    ReserveObjVram(c, (*m)->tileCount << 5);
+    c->Reserve((*m)->tileCount << 5);
 }
 
 #define SET_ROW_OBJ_POS(objExpr, px, py)                                        \
@@ -391,15 +393,15 @@ void SaveMenu::InitIcons()
     UiSprite **a, **b, **c;
     s32 i;
 
-    ResetOamBuffer(gOamBuffer);
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->Reset();
+    gOamBuffer->HideUnused();
     WaitForVBlank();
-    CommitOamBuffer(gOamBuffer);
-    FreeUnlockedPaletteSlots(gPaletteCache);
-    ClaimPaletteSlot(gPaletteCache, 0);
-    ClaimPaletteSlot(gPaletteCache, 1);
-    ClaimPaletteSlot(gPaletteCache, 2);
-    ClaimPaletteSlot(gPaletteCache, 3);
+    gOamBuffer->Commit();
+    gPaletteCache->FreeUnlockedSlots();
+    gPaletteCache->ClaimSlot(0);
+    gPaletteCache->ClaimSlot(1);
+    gPaletteCache->ClaimSlot(2);
+    gPaletteCache->ClaimSlot(3);
     pal = (u16 (*)[16])gPaletteCache->slots;
     for (i = 0; i < 16; i++) {
         pal[0][i] = gSaveMenuPalette0[i];
@@ -410,8 +412,8 @@ void SaveMenu::InitIcons()
     gSmallFont->SetPalette(0);
     gLargeFont->SetPalette(0);
     gObjVramCursor->baseTile = 0;
-    ResetObjVram(gObjVramCursor);
-    ResetObjVram(gObjVramCursor);
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
     gSmallFont->SetTileBase(0);
     IconReserve(&gSmallFont);
     {
@@ -420,7 +422,7 @@ void SaveMenu::InitIcons()
         gLargeFont->SetTileBase(v);
     }
     IconReserve(&gLargeFont);
-    MarkObjVram(gObjVramCursor);
+    gObjVramCursor->Mark();
 
     a = rowObjA;
     b = rowObjB;

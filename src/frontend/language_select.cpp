@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "frontend.hpp"
 
 extern "C" {
@@ -136,8 +137,8 @@ void LanguageSelect::Draw()
     s32 y;
     s32 i;
 
-    ResetOamBuffer(gOamBuffer);
-    RewindObjVram(gObjVramCursor);
+    gOamBuffer->Reset();
+    gObjVramCursor->Rewind();
     y = 0x32;
     for (i = 0; i <= 5; i++) {
         const u8 *glyph;
@@ -152,7 +153,7 @@ void LanguageSelect::Draw()
         gSmallFont->DrawText((u8 *)glyph);
         y += 10;
     }
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->HideUnused();
 }
 
 /* Resets several OAM-manager globals, then hand-fills
@@ -171,26 +172,26 @@ void LanguageSelect::Draw()
  * offsets; the E0 base is read from DC before E0 itself), plus one
  * `zero` local shared by the `gObjVramCursor` word 2/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
-static inline void IconReserveVram(struct vram_upload_cursor *c, Font *m)
+static inline void IconReserveVram(ObjVramCursor *c, Font *m)
 {
-    ReserveObjVram(c, m->tileCount << 5);
+    c->Reserve(m->tileCount << 5);
 }
 
 void LanguageSelect::InitGraphics()
 {
     s32 i;
 
-    ResetOamBuffer(gOamBuffer);
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->Reset();
+    gOamBuffer->HideUnused();
     WaitForVBlank();
-    CommitOamBuffer(gOamBuffer);
-    FreeUnlockedPaletteSlots(gPaletteCache);
-    ClaimPaletteSlot(gPaletteCache, 0);
-    ClaimPaletteSlot(gPaletteCache, 1);
-    ClaimPaletteSlot(gPaletteCache, 2);
-    ClaimPaletteSlot(gPaletteCache, 3);
+    gOamBuffer->Commit();
+    gPaletteCache->FreeUnlockedSlots();
+    gPaletteCache->ClaimSlot(0);
+    gPaletteCache->ClaimSlot(1);
+    gPaletteCache->ClaimSlot(2);
+    gPaletteCache->ClaimSlot(3);
     {
-        struct palette_cache *cache = gPaletteCache;
+        PaletteCache *cache = gPaletteCache;
         u16 *destA = (u16 *)cache->slots[0];
         u16 *destB = (u16 *)cache->slots[2];
 
@@ -207,8 +208,8 @@ void LanguageSelect::InitGraphics()
         gSmallFont->SetPalette(0);
         gLargeFont->SetPalette(0);
         gObjVramCursor->baseTile = zero;
-        ResetObjVram(gObjVramCursor);
-        ResetObjVram(gObjVramCursor);
+        gObjVramCursor->Reset();
+        gObjVramCursor->Reset();
         gSmallFont->SetTileBase(zero);
         IconReserveVram(gObjVramCursor, gSmallFont);
         {
@@ -218,5 +219,5 @@ void LanguageSelect::InitGraphics()
         }
         IconReserveVram(gObjVramCursor, gLargeFont);
     }
-    MarkObjVram(gObjVramCursor);
+    gObjVramCursor->Mark();
 }

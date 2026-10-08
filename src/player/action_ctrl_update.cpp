@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "action_ctrl.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"

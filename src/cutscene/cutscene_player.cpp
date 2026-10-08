@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "bg_layer.hpp"
 #include "font.hpp"
 #include "cutscene.hpp"
@@ -86,7 +87,7 @@ Slideshow::Slideshow()
 void CutscenePlayer::Run()
 {
     CutscenePlayer *self = this;
-    struct oam_shadow_buffer **oamp = &gOamBuffer;
+    OamBuffer **oamp = &gOamBuffer;
     s32 limit;
     s32 i;
 
@@ -101,10 +102,10 @@ void CutscenePlayer::Run()
         u8 res = 1;
 
         self->ShowPicture(i);
-        ResetOamBuffer(*oamp);
-        HideUnusedOamEntries(*oamp);
+        (*oamp)->Reset();
+        (*oamp)->HideUnused();
         WaitForVBlank();
-        CommitOamBuffer(*oamp);
+        (*oamp)->Commit();
         self->BeginSlide(i);
         if (self->pages[i].count == 0) {
             res = WaitForKeyPress(self->slides[i]->wait, self->slides[i]->buttons, 9);

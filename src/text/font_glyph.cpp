@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "font.hpp"
 
 extern "C" {
@@ -47,7 +48,7 @@ void Font::DrawGlyph(u8 charByte)
     }
     oam->shape = glyphRecords[glyph].shape;
     oam->tile = tileBase + glyph * glyphTileStride;
-    AddOamEntry(gOamBuffer, this);
+    gOamBuffer->Add(this);
     posX += glyphRecords[glyph].width;
 }
 

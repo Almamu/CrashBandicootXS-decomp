@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 #include "player.hpp"
 
@@ -152,9 +153,9 @@ void Sprite::DrawWithOffset(s32 dx, s32 dy)
     pos[0] = Q8_TO_INT(x) + dx;
     pos[1] = Q8_TO_INT(y) + dy;
     if (affine != 0)
-        ((SpriteRenderer *)gSpriteRenderer)->DrawAffinePieces(this, pos);
+        gSpriteRenderer->DrawAffinePieces(this, pos);
     else
-        ((SpriteRenderer *)gSpriteRenderer)->DrawPieces(this, pos);
+        gSpriteRenderer->DrawPieces(this, pos);
 }
 
 void Sprite::SetPriority(s32 value)
@@ -186,7 +187,7 @@ void PartList::Update()
         struct aabb near;
         struct aabb screen;
     } f;
-    struct bg_scroll_layer *cam;
+    BgLayer *cam;
     s32 i;
     s32 zero;
     struct aabb *ps;
@@ -282,7 +283,7 @@ void PartList::Collide(struct aabb box, s32 unused, MovingSprite *other)
 void PartList::CollideWithPlayer(struct aabb box, MovingSprite *part)
 {
     if (gLevelState->maskLevel == MASK_LEVEL_INVINCIBLE) {
-        if (!ClassifySpriteContact(part, &box))
+        if (!part->ClassifyContact(&box))
             return;
         part->HandleEvent(1, gPlayer->kind, 0);
     } else if ((part->f.bytes.flags2 >> 3) & 1) {
@@ -303,7 +304,7 @@ void PartList::CollideWithPlayer(struct aabb box, MovingSprite *part)
     } else {
         u8 kind;
 
-        switch (ClassifySpriteContact(part, &box)) {
+        switch (part->ClassifyContact(&box)) {
         case 0:
             break;
         case 1:

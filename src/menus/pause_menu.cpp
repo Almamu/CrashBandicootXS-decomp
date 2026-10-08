@@ -31,12 +31,12 @@ extern "C" {
 static inline void reserve_icon_vram(u32 n)
 {
     gObjVramCursor->baseTile = n;
-    ResetObjVram(gObjVramCursor);
+    gObjVramCursor->Reset();
 }
 
 s32 PauseMenu::Run()
 {
-    struct palette_cache *oldCache;
+    PaletteCache *oldCache;
     PauseMenu *screen;
     s32 result;
 
@@ -47,11 +47,11 @@ s32 PauseMenu::Run()
     *(vu16 *)REG_ADDR_DISPCNT = 0;
 
     oldCache = gPaletteCache;
-    gPaletteCache = (struct palette_cache *)new PaletteCache;
-    SetPaletteCacheSource(gPaletteCache, gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
-    ClaimPaletteSlot(gPaletteCache, 0xf);
+    gPaletteCache = (PaletteCache *)new PaletteCache;
+    gPaletteCache->SetSource(gSpriteBankTable.paletteCount, gSpriteBankTable.palettes);
+    gPaletteCache->ClaimSlot(0xf);
     {
-        struct palette_cache *cache = gPaletteCache;
+        PaletteCache *cache = gPaletteCache;
 
         CpuSet(gPauseMenuPalette, cache->slots[15], 0x10);
     }
@@ -65,7 +65,7 @@ s32 PauseMenu::Run()
         u32 b = gLargeFont->GetTileCount();
 
         gObjVramCursor->baseTile = a + b;
-        ResetObjVram(gObjVramCursor);
+        gObjVramCursor->Reset();
     }
 
     screen = new PauseMenu;
@@ -73,7 +73,7 @@ s32 PauseMenu::Run()
     delete screen;
 
     reserve_icon_vram(0);
-    delete (PaletteCache *)gPaletteCache;
+    delete gPaletteCache;
     gPaletteCache = oldCache;
     mem_free_bytes(MEM_HEAP_BOTH);
     return result;

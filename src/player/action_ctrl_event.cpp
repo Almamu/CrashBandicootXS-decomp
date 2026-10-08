@@ -214,7 +214,7 @@ void ActionCtrl::HandleEvent(MovingSprite *, s32 event, s32 arg)
             *f &= 0x7f;
         }
         SetModeAnim(ACTION_STATE_WARP_OUT, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
-        LoadPaletteSlot(gPaletteCache, part->palette, part->anim->records[part->tag].paletteId);
+        gPaletteCache->LoadSlot(part->palette, part->anim->records[part->tag].paletteId);
         QueueNowX(0);
         QueueNowY(0);
         break;

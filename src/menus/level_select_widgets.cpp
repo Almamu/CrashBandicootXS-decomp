@@ -36,7 +36,7 @@ extern "C" {
 /* Destructor (`LevelSelect::bg2`). */
 ZoomBg::~ZoomBg()
 {
-    UnlockPalette(gPaletteCache, twinkles[0].part->bank->anims[twinkles[0].part->tag].paletteId);
+    gPaletteCache->Unlock(twinkles[0].part->bank->anims[twinkles[0].part->tag].paletteId);
     delete twinkles[3].part;
     delete twinkles[2].part;
     delete twinkles[1].part;
@@ -293,7 +293,7 @@ void LevelSelectEntry::SetBox(s32 kind)
 void LevelSelectEntry::SetPos(const struct xy_pair *pos)
 {
     icon->SetPixelPos(pos->x, pos->y - 3);
-    SetEntityPixelPos((struct actor *)frame, pos->x, pos->y);
+    SetEntityPixelPos(frame, pos->x, pos->y);
 }
 
 /* Slot 4: the per-frame draw LevelSelect::Draw calls on every entry. Empty
@@ -311,7 +311,7 @@ LevelSelectEntry::~LevelSelectEntry()
 
 /* One affine parameter; OBJ matrix `m` is entries 4m..4m+3. An inline so
  * that the value is loaded before the address is computed. */
-static inline void SetAffineParam(struct oam_shadow_buffer *buf, s32 n, u16 v)
+static inline void SetAffineParam(OamBuffer *buf, s32 n, u16 v)
 {
     buf->table[n].attr[3] = v;
 }
@@ -335,7 +335,7 @@ LevelSelectCursor::LevelSelectCursor()
     p->bank = AnimTable(0x240);
     StartAnim(p, 0);
     part->palette = part->GetAnimPaletteSlot();
-    LockPalette(gPaletteCache, part->bank->anims[part->tag].paletteId);
+    gPaletteCache->Lock(part->bank->anims[part->tag].paletteId);
     SetPos(0x78, 0x35);
     oam.y = line.y0 - 0x20;
     oam.affineMode = 1;
@@ -419,7 +419,7 @@ void LevelSelectCursor::Update()
  * affine OBJ with its own matrix; otherwise the sprite part draws it. */
 void LevelSelectCursor::Draw()
 {
-    SetEntityPixelPos((struct actor *)part, line.x0, line.y0);
+    SetEntityPixelPos(part, line.x0, line.y0);
     switch (state) {
     case 4 ... 5:
         if (scale > 8) {
@@ -436,7 +436,7 @@ void LevelSelectCursor::Draw()
             SetAffineParam(gOamBuffer, idx * 4 + 1, matrix[1]);
             SetAffineParam(gOamBuffer, idx * 4 + 2, matrix[2]);
             SetAffineParam(gOamBuffer, idx * 4 + 3, matrix[3]);
-            AddOamEntry(gOamBuffer, &oam);
+            gOamBuffer->Add(&oam);
         }
         break;
     default:
@@ -543,7 +543,7 @@ void LevelSelectCursor::SetPos(s32 x, s32 y)
 {
     line.x0 = x;
     line.y0 = y;
-    SetEntityPixelPos((struct actor *)part, x, y);
+    SetEntityPixelPos(part, x, y);
 }
 
 void LevelSelectCursor::ResetIdleTimer()
@@ -554,6 +554,6 @@ void LevelSelectCursor::ResetIdleTimer()
 /* Destructor (`LevelSelect::panel`). */
 LevelSelectCursor::~LevelSelectCursor()
 {
-    UnlockPalette(gPaletteCache, part->bank->anims[part->tag].paletteId);
+    gPaletteCache->Unlock(part->bank->anims[part->tag].paletteId);
     delete part;
 }

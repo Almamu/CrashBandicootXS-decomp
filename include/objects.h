@@ -20,10 +20,8 @@
 #include "constants/events.h"
 
 struct actor;
-struct box_part;
 struct collect_part;
 struct crate;
-struct part_list;
 struct gfx_vec;
 struct hitbox_quad;
 struct sprite_point;
@@ -47,15 +45,19 @@ struct e08c_pos {
  * batch 9e).
  */
 struct collision_candidate {
+#ifdef __cplusplus
+    class Crate *neighbor; // 0x00 - the crate (crate.hpp)
+#else
     struct crate *neighbor; // 0x00 - the crate; its position is its first two words
-    struct e08c_pos pos;    // 0x04
-    s32 kind;               // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
-    s32 code;               // 0x10
-    s32 edge;               // 0x14
-    s32 depth;              // 0x18
-    s32 hit;                // 0x1C
-    struct byte_arg p20;    // 0x20 - passed on the stack as a byte (`strb`)
-    struct byte_arg p21;    // 0x21
+#endif
+    struct e08c_pos pos; // 0x04
+    s32 kind;            // 0x0C - ATTACK_KIND_* (constants/attack_kinds.h)
+    s32 code;            // 0x10
+    s32 edge;            // 0x14
+    s32 depth;           // 0x18
+    s32 hit;             // 0x1C
+    struct byte_arg p20; // 0x20 - passed on the stack as a byte (`strb`)
+    struct byte_arg p21; // 0x21
     u8 unk_22[2];
 };
 
@@ -109,35 +111,17 @@ struct speed_ramp {
  * under their C names (cxx_symbols.txt), for the C callers. */
 
 /* src/objects/moving_sprite_collide.cpp */
-extern s32 ClassifySpriteContact(void *part, void *region);
-
-/* src/objects/part_list.cpp */
-extern void DrawPartList(struct part_list *manager);
-
-/* src/objects/part_list_cull.cpp */
-extern void CullPartList(struct part_list *manager);
-extern void ClearPartList(struct part_list *manager);
-
-/* src/objects/player_contact.cpp */
 
 /* src/objects/sprite.cpp */
-extern struct aabb GetSpriteHitbox(struct box_part *part);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
 
 /* src/objects/sprite_anim.cpp */
-extern void ResetSpriteFrameIndex(void *part);
-extern void ResetSpriteFrameTimer(void *part);
-extern void UpdatePartList(struct part_list *list);
-extern void CollidePartList(struct part_list *list, struct aabb box, s32 unused,
-                            struct box_part *other);
 
 /* src/objects/sprite_obj.cpp */
-extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 extern void OffsetFromHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdge(void *dest, s32 kind, void *rec);
 extern void OffsetToHitboxEdgeStart(void *dest, s32 kind, void *rec);
-extern void SetSpriteAnimDone(void *part, u8 val);
 
 /* The controllers' motion records (src/data/motion_records_16b304.c),
  * read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet and

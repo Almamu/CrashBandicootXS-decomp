@@ -3420,6 +3420,51 @@ still read through them. `tools/layout_audit.py views` lists them.
   ones on a class's object into method calls). The C-linkage
   destructor copies (DestroyJetpackHealthCrate & co.) need their
   prototypes for the linkage.
+- **Batch 5, the entity family's casts.** The globals the C++ files cast
+  have their classes under `#ifdef __cplusplus`, as gPlayer already did:
+  gLevelLayers (`LevelLayers *`), gCrateList (`CrateList *`), the five
+  part lists (`PartList *`), gPaletteCycles, gPaletteCache, gOamBuffer,
+  gObjVramCursor, gSpriteBankSet and gSpriteRenderer. The part lists,
+  the crate list and the palette cycles have no C user, so they have no C
+  declaration at all; the others keep their C views for the C files.
+  Their C++ users call the methods instead of the C names
+  (`DrawPartList(gX)` is `gX->Draw()`, `GetPaletteSlot(gPaletteCache, id)`
+  `gPaletteCache->GetSlot(id)`, `CommitOamBuffer(gOamBuffer)`
+  `gOamBuffer->Commit()`: about 230 calls), and read the classes' fields
+  (`gCrateList->slots[i]`, `gLevelLayers->layer0` as a `BgLayer *`). The
+  sprite helpers the controllers and bosses called by their C names on a
+  `void *` (ResetSpriteFrameTimer, ResetSpriteFrameIndex,
+  SetSpriteAnimDone, ClassifySpriteContact, GetSpriteHitbox,
+  GetSpriteAnimPaletteSlot) are method calls too, the crates' (BreakCrate,
+  ExplodeCrate, IsCrateKindBreakable) as well, and the 30 `(struct actor
+  *)` casts went: GetSpriteAnimPaletteSlot is `p->GetAnimPaletteSlot()`;
+  SetEntityPos and SetEntityPixelPos are graphics.cpp's out-of-line copies
+  of inline methods, which the ROM calls from the other files (a method
+  call would be inlined), so entity.hpp declares them taking an `Entity
+  *` for the C++ files. The collision queue holds `Crate *`s
+  (`collision_candidate.neighbor` under `__cplusplus`,
+  `CollisionQueue::Add(Crate *, ...)`, cxx_symbols.txt updated); its
+  resolve keeps calling ApplyCrateCollision, now declared in crate.hpp
+  with a `Crate *`, because the method's bool flags are passed as words
+  where the ROM stores one-byte structs. With that, these C views had no
+  user left and went: box_part.h's `struct box_part`, `struct keyframe`
+  and `struct part_list`, crates.h's `struct pool_manager` and `struct
+  pool_node`, gfx.h's `struct palette_cycler` (its notes are
+  PaletteCycles' now), crate.h's `struct crate` (its field notes are
+  Crate's), and pause_menu.h with `struct settings_icon_actor`; 35 more C
+  prototypes of methods (DrawPartList, UpdateCrateList, LoadRoom,
+  GetPaletteSlot, AddOamEntry, ...) had no caller left. Every object is
+  byte-identical. What still casts: the actor list's root
+  (`(JetpackPlayer *)gActorList`, a downcast), gPlayerCtrl and gInput
+  (`void *`s their C and C++ users pass around as such), gEntityFlags
+  (LevelEntityFlags derives from the C struct, and entity.hpp's inline
+  methods use it before spawners.hpp can be included) and the DISPCNT
+  shadow bytes.
+
+`tools/layout_audit.py views` on origin/main listed 90 view pairs; after
+batches 2-5 it lists 49, none of them a C view a C++ file reads through.
+`MATCH_HOLD_REG` stays at 411 and instruction-emitting `asm` at 49:
+the retyped code compiled to the same bytes with the pins as they were.
 
 ### Next batches
 

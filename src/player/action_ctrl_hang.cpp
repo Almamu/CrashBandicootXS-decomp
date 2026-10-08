@@ -25,9 +25,9 @@ extern "C" {
 static inline void SetTag(Player *part, s32 tag)
 {
     part->tag = tag;
-    ResetSpriteFrameTimer(part);
-    ResetSpriteFrameIndex(part);
-    SetSpriteAnimDone(part, 0);
+    part->ResetFrameTimer();
+    part->ResetFrameIndex();
+    part->SetAnimDone(0);
 }
 
 /* The state CheckLeftGround enters when the player walks off the ground.
@@ -186,7 +186,7 @@ void ActionCtrl::StateWarpIn()
         motionYKeepSpeed = 0;
         motionYPending = 1;
         motionY = 0;
-        LoadPaletteSlot(gPaletteCache, part->palette, part->anim->records[part->tag].paletteId);
+        gPaletteCache->LoadSlot(part->palette, part->anim->records[part->tag].paletteId);
     }
 }
 

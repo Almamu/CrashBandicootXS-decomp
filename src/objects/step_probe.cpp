@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "sprite_obj.hpp"
 
 extern "C" {

@@ -1,3 +1,4 @@
+#include "crate_list.hpp"
 #include "boss_ctrl.hpp"
 #include "player.hpp"
 
@@ -154,19 +155,18 @@ void MegaMixCtrl::Update(MovingSprite *part)
             }
             /* The hitbox goes to CollidePartList by value, straight from
              * GetSpriteHitbox: a local copy is copied again (memcpy). */
-            CollidePartList(gCollidableList, GetSpriteHitbox((struct box_part *)part), 0,
-                            (struct box_part *)part);
+            gCollidableList->Collide(part->GetAnimHitbox(), 0, part);
             /* a guarded do-while: a `for` shares the list pointer between the
              * entry test and the body, where the ROM reloads it */
             i = 0;
-            if (i < gCrateList->activeCount) {
+            if (i < gCrateList->count) {
                 do {
-                    struct crate *e = (struct crate *)gCrateList->slotArray[i];
+                    Crate *e = gCrateList->slots[i];
 
-                    if (((Entity *)e)->GetClassId() == 3) {
+                    if (e->GetClassId() == 3) {
                         /* ExplodeCrate gets a copy of `e` made here, in its
                          * own register */
-                        struct crate *c = e;
+                        Crate *c = e;
 
                         if (ABS_BRANCHLESS(Q8_TO_INT(e->x) - Q8_TO_INT(part->x)) <= 0x27 &&
                             ABS_BRANCHLESS(Q8_TO_INT(e->y) - Q8_TO_INT(part->y)) <= 0x3B &&
@@ -176,13 +176,13 @@ void MegaMixCtrl::Update(MovingSprite *part)
                             /* TNT and nitro blow up */
                             if (kind == 0xE || kind == 0x13 || kind == 0x14 || kind == 0x15 ||
                                 kind == 0xA)
-                                ExplodeCrate(c, 0);
-                            else if (IsCrateKindBreakable(e, kind))
-                                BreakCrate(e, 1);
+                                c->Explode(0);
+                            else if (e->IsKindBreakable(kind))
+                                e->Break(1);
                         }
                     }
                     i++;
-                } while (i < gCrateList->activeCount);
+                } while (i < gCrateList->count);
             }
             return;
         }

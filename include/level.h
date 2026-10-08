@@ -25,7 +25,6 @@
 
 struct camera;
 struct level_progress;
-struct part_list;
 struct tile_slot_pool;
 
 /* The terrain types of the level collision maps (bg_layer_base.cpp): a
@@ -197,10 +196,7 @@ extern void PlayCutscene(void *self, s32 idx);
 
 /* src/level/level_layers.cpp: LevelLayers's methods (include/bg_layer.hpp)
  * under their C names (cxx_symbols.txt), for the C callers */
-extern void LoadRoom(struct level_layers *self, const struct level_room *args);
 extern void SetLevelScroll(struct level_layers *self, s32 x, s32 y);
-extern void CommitLevelScroll(struct level_layers *self);
-extern void ScrollLevelLayers(struct level_layers *self);
 extern void ResetLevelLayers(struct level_layers *self);
 extern s32 sub_80269DC(void *self, s32 arg1, s32 *arg2, s32 arg3);
 extern s32 sub_80269F8(void *self, s32 arg1, s32 *arg2, s32 arg3);
@@ -469,14 +465,19 @@ extern void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32
 extern void StartTimeTrial(struct level_state *self);
 
 /* sym_iwram.txt */
-extern struct part_list *gDecorationList;
+#ifdef __cplusplus
+/* The decoration parts (PartList, sprite_obj.hpp; C++ only). */
+extern class PartList *gDecorationList;
+#endif
 /* UpdateGameFrame's level state, stored once when the game starts and never
  * read. */
 extern struct level_state *gGameFrameLevelState;
 /* Updated and cleared, but never culled or drawn: the invisible objects,
  * the entity type 0x55 room-exit zones (spawn_bosses.cpp) and
  * SpawnSealSpawner's spawner. */
-extern struct part_list *gUpdateOnlyPartList;
+#ifdef __cplusplus
+extern class PartList *gUpdateOnlyPartList;
+#endif
 
 /* The enemies' anim maps (src/data/popup_tables_16b98c.c), stored in their
  * controllers by the spawners */

@@ -1,3 +1,4 @@
+#include "sprite_obj.hpp"
 #include "frontend.hpp"
 
 extern "C" {
@@ -22,24 +23,24 @@ extern "C" {
  * down-counter. */
 void ContinuePrompt::InitGraphics()
 {
-    struct palette_cache *cache;
+    PaletteCache *cache;
     s32 i;
 
     gObjVramCursor->baseTile = 0;
-    ResetObjVram(gObjVramCursor);
-    ResetObjVram(gObjVramCursor);
+    gObjVramCursor->Reset();
+    gObjVramCursor->Reset();
 
     icons = gSmallFont;
     icons->SetTileBase(0);
     icons->SetMargin(0);
-    ReserveObjVram(gObjVramCursor, icons->tileCount << 5);
-    MarkObjVram(gObjVramCursor);
+    gObjVramCursor->Reserve(icons->tileCount << 5);
+    gObjVramCursor->Mark();
 
-    FreeUnlockedPaletteSlots(gPaletteCache);
-    ClaimPaletteSlot(gPaletteCache, 0);
-    ClaimPaletteSlot(gPaletteCache, 1);
-    ClaimPaletteSlot(gPaletteCache, 2);
-    ClaimPaletteSlot(gPaletteCache, 3);
+    gPaletteCache->FreeUnlockedSlots();
+    gPaletteCache->ClaimSlot(0);
+    gPaletteCache->ClaimSlot(1);
+    gPaletteCache->ClaimSlot(2);
+    gPaletteCache->ClaimSlot(3);
 
     cache = gPaletteCache;
     {
@@ -53,14 +54,14 @@ void ContinuePrompt::InitGraphics()
             destB[i + 0x10] = gContinuePromptPalette3[i];
         }
     }
-    UploadPaletteCache(gPaletteCache);
+    gPaletteCache->Upload();
 
     dispcnt.bits.obj = 1;
 
-    ResetOamBuffer(gOamBuffer);
-    HideUnusedOamEntries(gOamBuffer);
+    gOamBuffer->Reset();
+    gOamBuffer->HideUnused();
     WaitForVBlank();
-    CommitOamBuffer(gOamBuffer);
+    gOamBuffer->Commit();
 }
 
 /* The prompt's loop: up and down move the cursor between Yes (0) and No

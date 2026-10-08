@@ -71,7 +71,7 @@ void Crate::Update()
                 SetTag(0x20);
                 anims = bank->anims;
                 anim = &anims[tag];
-                slot = GetPaletteSlot(gPaletteCache, anim->paletteId);
+                slot = gPaletteCache->GetSlot(anim->paletteId);
                 palette = slot;
             } else if (kind == CRATE_KIND_IRON_SWITCH) {
                 SetTag(0x20);

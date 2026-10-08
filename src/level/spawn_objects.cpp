@@ -44,7 +44,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->ResetFrameTimer();
     part->ResetFrameIndex();
     part->SetAnimDone(0);
-    SetPalette(part, GetPaletteSlot(gPaletteCache, part->bank->anims->paletteId));
+    SetPalette(part, gPaletteCache->GetSlot(part->bank->anims->paletteId));
     part->mirrorFlags.mirrorX = 0;
     part->mirrorFlags.mirrorY = 0;
     hdr = new MegaMixCtrl;

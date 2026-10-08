@@ -1,3 +1,4 @@
+#include "bg_layer.hpp"
 #include "input_ctrl.hpp"
 #include "player_ctrl.hpp"
 #include "sprite_obj.hpp"
@@ -91,7 +92,7 @@ void InputCtrl::KillPlayer(s32 anim)
     target->f.b.vulnerable = 0;
     target->dead = 1;
     LoseLife(gLevelState);
-    LoadPaletteSlot(gPaletteCache, target->palette, target->anim->records[target->tag].paletteId);
+    gPaletteCache->LoadSlot(target->palette, target->anim->records[target->tag].paletteId);
 }
 
 /* gInputCtrlStateFuncs[0]: state 1 on animation 0, X motion entry 1 and

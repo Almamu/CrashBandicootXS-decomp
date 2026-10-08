@@ -37,7 +37,9 @@ extern "C" {
 #include "actor_self.h"
 #include "sprite_bank.h"
 #include "level_state.h"
-#include "pause_menu.h"
+#include "menus.h"
+#include "graphics_package.h"
+#include "objects.h"
 }
 
 /* REG_DISPCNT's shadow as a halfword or its bitfields. */
